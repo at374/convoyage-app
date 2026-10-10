@@ -181,32 +181,36 @@
     const W = 320, H = 260, px = (p, z) => { const n = 256 * 2 ** z, r = p.lat * Math.PI / 180; return [(p.lng + 180) / 360 * n, (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n]; };
     const ap = p => p.precision === 'gps' || p.precision === 'adresse' || p.precision === 'rue' ? 'point précis' : p.precision === 'ville' ? 'centre de la commune (approximatif)' : 'centre du département (approximatif)';
     // Carte OpenStreetMap (gratuite) : vignettes 256 px calculées ici, sans bibliothèque ; le zoom est choisi pour que tout le tracé tienne.
-    const dessiner = (a, b, route, info) => {
-      const pts = route && route.length > 1 ? route : [[a.lng, a.lat], [b.lng, b.lat]];
+    const dessiner = (a, b, routes) => {
+      const lignes = routes.filter(r => r.coords && r.coords.length > 1), pts = lignes.length ? [].concat(...lignes.map(r => r.coords)) : [[a.lng, a.lat], [b.lng, b.lat]];
       let z = 14; for (; z > 2; z--) { const P = pts.map(q => px({ lng: q[0], lat: q[1] }, z)), xs = P.map(q => q[0]), ys = P.map(q => q[1]); if (Math.max(...xs) - Math.min(...xs) <= W * 0.8 && Math.max(...ys) - Math.min(...ys) <= H * 0.8) break; }
       const P = pts.map(q => px({ lng: q[0], lat: q[1] }, z)), xs = P.map(q => q[0]), ys = P.map(q => q[1]), ox = (Math.min(...xs) + Math.max(...xs)) / 2 - W / 2, oy = (Math.min(...ys) + Math.max(...ys)) / 2 - H / 2, N = 2 ** z;
       let tuiles = ''; for (let tx = Math.floor(ox / 256); tx <= Math.floor((ox + W) / 256); tx++) for (let ty = Math.floor(oy / 256); ty <= Math.floor((oy + H) / 256); ty++) if (ty >= 0 && ty < N) tuiles += `<img alt="" referrerpolicy="no-referrer" src="https://tile.openstreetmap.org/${z}/${((tx % N) + N) % N}/${ty}.png" style="position:absolute;left:${Math.round(tx * 256 - ox)}px;top:${Math.round(ty * 256 - oy)}px;width:256px;height:256px">`;
-      const A = px(a, z), B = px(b, z), ligne = (route && route.length > 1 ? P : [A, B]).map(q => (q[0] - ox).toFixed(1) + ',' + (q[1] - oy).toFixed(1)).join(' ');
-      return `<div class="carteVol" style="position:relative;width:${W}px;max-width:100%;height:${H}px;overflow:hidden;border-radius:10px;background:var(--accentDoux);margin:0 auto">${tuiles}<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="position:absolute;left:0;top:0" role="img" aria-label="Trajet"><polyline points="${ligne}" fill="none" stroke="#1d4ed8" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"${route && route.length > 1 ? '' : ' stroke-dasharray="8 5"'}/><circle cx="${A[0] - ox}" cy="${A[1] - oy}" r="8" fill="#16a34a" stroke="#fff" stroke-width="2"/><circle cx="${B[0] - ox}" cy="${B[1] - oy}" r="8" fill="#dc2626" stroke="#fff" stroke-width="2"/></svg><span style="position:absolute;right:3px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div>`;
+      const A = px(a, z), B = px(b, z), pl = (co, coul, dash, ep) => `<polyline points="${co.map(q => { const t = px({ lng: q[0], lat: q[1] }, z); return (t[0] - ox).toFixed(1) + ',' + (t[1] - oy).toFixed(1); }).join(' ')}" fill="none" stroke="${coul}" stroke-width="${ep}" stroke-linejoin="round" stroke-linecap="round"${dash ? ' stroke-dasharray="9 6"' : ''}/>`;
+      const traces = lignes.length ? lignes.map(r => pl(r.coords, r.couleur, r.pointille, r.ep)).join('') : pl([[a.lng, a.lat], [b.lng, b.lat]], '#1d4ed8', true, 4);
+      return `<div class="carteVol" style="position:relative;width:${W}px;max-width:100%;height:${H}px;overflow:hidden;border-radius:10px;background:var(--accentDoux);margin:0 auto">${tuiles}<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="position:absolute;left:0;top:0" role="img" aria-label="Trajet">${traces}<circle cx="${A[0] - ox}" cy="${A[1] - oy}" r="8" fill="#16a34a" stroke="#fff" stroke-width="2"/><circle cx="${B[0] - ox}" cy="${B[1] - oy}" r="8" fill="#dc2626" stroke="#fff" stroke-width="2"/></svg><span style="position:absolute;right:3px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div>`;
     };
+    // Itinéraire OSRM (OpenStreetMap, gratuit) : « normal » (autoroutes et péages autorisés) et « sans péage » (exclude=toll).
+    const itineraire = async (a, b, sansPeage) => { try { const r = await fetch('https://router.project-osrm.org/route/v1/driving/' + a.lng + ',' + a.lat + ';' + b.lng + ',' + b.lat + '?overview=simplified&geometries=geojson' + (sansPeage ? '&exclude=toll' : '')); const j = r.ok ? await r.json() : null, rt = j && j.code === 'Ok' && j.routes && j.routes[0]; return rt && rt.geometry && rt.geometry.coordinates.length > 1 ? { coords: rt.geometry.coordinates, km: rt.distance / 1000, h: rt.duration / 3600 } : null; } catch (_) { return null; } };
     const rendre = async () => {
       const a = G.coordonnees(m, 'origin'), b = G.coordonnees(m, 'destination');
-      if (!a || !b) { d.innerHTML = '<div class="popVolBoite"><button class="icone" id="popVolX" aria-label="Fermer">✕</button><h3>✈️ Trajet</h3><p>Départ ou arrivée non localisable : pas de carte possible.</p></div>'; return; }
-      const km = G.volOiseauKm(a, b), cadre = (carte, bas) => `<div class="popVolBoite"><button class="icone" id="popVolX" aria-label="Fermer">✕</button><h3>✈️ Trajet à vol d’oiseau et route</h3>${carte}<p class="doux">🟢 ${esc(m.from_city || 'Départ')} → 🔴 ${esc(m.to_city || 'Arrivée')}</p><p><b>≈ ${esc(Math.round(km))} km à vol d’oiseau</b>${bas}</p><p class="doux">🟢 Départ : ${esc(ap(a))} · 🔴 Arrivée : ${esc(ap(b))}.</p></div>`;
-      d.innerHTML = cadre(dessiner(a, b, null), ' · tracé de la route en cours de chargement…');
-      let route = null, dist = null, dur = null, communes = [];
-      try {   // tracé routier : service gratuit OSRM (OpenStreetMap) ; communes traversées : service officiel d'adresses, quelques points le long du tracé
-        const r = await fetch('https://router.project-osrm.org/route/v1/driving/' + a.lng + ',' + a.lat + ';' + b.lng + ',' + b.lat + '?overview=simplified&geometries=geojson');
-        const j = r.ok ? await r.json() : null, rt = j && j.routes && j.routes[0];
-        if (rt && rt.geometry && rt.geometry.coordinates.length > 1) { route = rt.geometry.coordinates; dist = rt.distance / 1000; dur = rt.duration / 3600; }
-      } catch (_) {}
+      const cadre = (carte, bas) => `<div class="popVolBoite"><button class="icone" id="popVolX" aria-label="Fermer">✕</button><h3>🗺️ Visualisation trajet estimé</h3>${carte}<p class="doux">🟢 ${esc(m.from_city || 'Départ')} → 🔴 ${esc(m.to_city || 'Arrivée')}</p>${bas}</div>`;
+      if (!a || !b) { d.innerHTML = '<div class="popVolBoite"><button class="icone" id="popVolX" aria-label="Fermer">✕</button><h3>🗺️ Visualisation trajet estimé</h3><p>Départ ou arrivée non localisable : pas de carte possible.</p></div>'; return; }
+      const pts = `<p class="doux">🟢 Départ : ${esc(ap(a))} · 🔴 Arrivée : ${esc(ap(b))}.</p>`;
+      d.innerHTML = cadre(dessiner(a, b, []), '<p>Calcul des deux trajets en cours…</p>' + pts);
+      const [avec, sans] = await Promise.all([itineraire(a, b, false), itineraire(a, b, true)]);
       if (!document.getElementById('popVol')) return;
-      if (route) {
-        d.innerHTML = cadre(dessiner(a, b, route), ` · route ≈ ${esc(Math.round(dist))} km, ≈ ${esc(duree(dur))} en voiture sans pause${m.distance_km ? ' (plateforme : ' + esc(m.distance_km) + ' km)' : ''}`).replace('</div><p class="doux">🟢 ', '</div><p class="doux" id="popCommunes">Communes traversées : recherche…</p><p class="doux">🟢 ');
-        const idx = [0.2, 0.4, 0.6, 0.8].map(f => route[Math.min(route.length - 1, Math.round(f * (route.length - 1)))]);
-        for (const q of idx) { try { const r = await fetch('https://api-adresse.data.gouv.fr/reverse/?limit=1&lon=' + q[0] + '&lat=' + q[1]); const j = r.ok ? await r.json() : null, f = j && j.features && j.features[0]; if (f && f.properties && f.properties.city && !communes.includes(f.properties.city)) communes.push(f.properties.city); } catch (_) {} }
-        const el = document.getElementById('popCommunes'); if (el) el.textContent = communes.length ? 'Communes sur le trajet (repères) : ' + [m.from_city].concat(communes, [m.to_city]).filter(Boolean).join(' → ') : 'Communes traversées : service indisponible.';
-      } else d.innerHTML = cadre(dessiner(a, b, null), ' · tracé de la route indisponible (service ou connexion) : ligne à vol d’oiseau seulement');
+      const meme = avec && sans && Math.abs(avec.km - sans.km) < 1;
+      const ligne = (ico, nom, r) => r ? `<p>${ico} <b>${nom} : ≈ ${esc(Math.round(r.km))} km</b> · ≈ ${esc(duree(r.h))} en voiture, sans pause</p>` : `<p>${ico} ${nom} : indisponible (service ou connexion)</p>`;
+      let bas;
+      if (meme) bas = ligne('🛣️', 'Trajet (aucun péage sur le parcours le plus rapide)', avec);
+      else bas = ligne('🛣️', 'Avec péages (autoroutes autorisées)', avec) + ligne('🟢', 'Sans péage', sans);
+      bas += (m.distance_km ? `<p class="doux">Distance donnée par la plateforme : ${esc(m.distance_km)} km.</p>` : '') + '<p class="doux" id="popCommunes">Communes sur le trajet : recherche…</p>' + pts + '<p class="doux">Les durées sont des estimations de conduite normale ; le prix des péages n’est pas calculé ici.</p>';
+      d.innerHTML = cadre(dessiner(a, b, meme ? [{ coords: avec.coords, couleur: '#1d4ed8', ep: 4 }] : [sans && { coords: sans.coords, couleur: '#16a34a', ep: 4, pointille: true }, avec && { coords: avec.coords, couleur: '#1d4ed8', ep: 4 }].filter(Boolean)), bas + (meme || !(avec && sans) ? '' : '<p class="doux">Bleu : avec péages · Vert pointillé : sans péage.</p>'));
+      const base = avec || sans; if (!base) { const el0 = document.getElementById('popCommunes'); if (el0) el0.textContent = ''; return; }
+      const route = base.coords, communes = [], idx = [0.2, 0.4, 0.6, 0.8].map(f => route[Math.min(route.length - 1, Math.round(f * (route.length - 1)))]);
+      for (const q of idx) { try { const r = await fetch('https://api-adresse.data.gouv.fr/reverse/?limit=1&lon=' + q[0] + '&lat=' + q[1]); const j = r.ok ? await r.json() : null, f = j && j.features && j.features[0]; if (f && f.properties && f.properties.city && !communes.includes(f.properties.city)) communes.push(f.properties.city); } catch (_) {} }
+      const el = document.getElementById('popCommunes'); if (el) el.textContent = communes.length ? 'Communes sur le trajet (repères) : ' + [m.from_city].concat(communes, [m.to_city]).filter(Boolean).join(' → ') : '';
     };
     pointsMission(m).finally(rendre);
   }
@@ -649,7 +653,7 @@
     const ligne = (a, b) => `<tr><td>${esc(a)}</td><td>${b}</td></tr>`;
     $('feuilleContenu').innerHTML = `<div class="doux"><span class="etiq">${esc(PLATS[m.platform])}</span> n° ${esc(m.external_id)}${m.validation === 'non_validee' ? ' · lecture non validée : vérifie sur le site' : ''}</div>
       <h2 id="feuilleTitre" class="trajet" style="font-size:20px">${esc(trajet(m))}</h2>
-      <button id="btnVol" class="second" type="button" aria-label="Voir le trajet à vol d’oiseau">✈️ Trajet à vol d’oiseau</button>
+      <button id="btnVol" class="second" type="button" aria-label="Visualisation trajet estimé">🗺️ Visualisation trajet estimé</button>
       ${lienDevis(m) ? `<a href="${esc(lienAppliHiflow() || lienDevis(m))}"${lienAppliHiflow() ? '' : ' target="_blank" rel="noopener"'} id="lienDevis" data-numero="${esc(m.external_id)}"><button style="width:100%;margin:4px 0 2px">📱 Faire le devis dans l’application Hiflow</button></a><p class="doux" style="margin:0 0 8px">Mission n° <b>${esc(m.external_id)}</b> (copié en touchant le bouton) · ${esc(trajet(m))}</p>` : ''}
       <div class="meta"><span>📅 Prise en charge : ${esc(quand(m))}</span>${m.delivery_start || m.delivery_end ? `<span>🏁 Livraison : ${esc(fmtDate(m.delivery_start || m.delivery_end))}</span>` : ''}</div>
       <div class="carte"><b>Départ</b><div>${esc(adresse(m, 'origin'))}</div><span id="gpsO">${mentionGps(m, 'origin')}</span>${etat.reglages && etat.reglages.domicile_ville && m.from_city ? liensTransports(etat.reglages.domicile_ville, '', m.from_city, m.from_department, 'a|' + (m.id || m.external_id)) : ''}${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}</div>
