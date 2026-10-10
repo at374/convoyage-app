@@ -41,6 +41,10 @@
     const r = reglages || {};
     const cout = n(r.cout_transport_km) ?? LIAISON.cout_transport_km, v = n(r.vitesse_liaison) || LIAISON.vitesse_liaison;
     if (km < 2) return { km, heures: 0, cout: 0 };   // sur place
+    // V137 : transport CHOISI dans les Réglages → prix et durée de CE moyen (sinon estimation générale, comme avant).
+    const ch = choixTransport(r);
+    if (ch === 'moins_cher') { const x = liaisonMoinsChere(km, r, null); if (x) return x; }
+    else if (ch) { const m = modeChoisi(r, ch); if (m && (!m.kmMax || km <= m.kmMax)) return { km, mode: m.mode, heures: arr(km / m.vitesse + m.accesH), cout: arr(km * m.coutKm) }; }
     return { km, heures: arr(km / v + 0.33), cout: arr(km * cout) };   // + 20 min d'accès (gare, arrêt)
   }
   // V115 : transport LE MOINS CHER qui arrive à temps. Estimations (pas de prix réels) : covoiturage, bus longue distance, train ; taxi/VTC seulement en dernier recours.
@@ -53,10 +57,18 @@
   // Cartes SNCF proposées dans les réglages (réduction estimée sur le train ; à vérifier sur SNCF Connect — aucun prix réel n'est lu).
   const CARTES_SNCF = { aucune: { nom: 'Aucune carte', facteur: 1 }, avantage_jeune: { nom: 'Carte Avantage Jeune (12-27 ans)', facteur: 0.7 }, avantage_adulte: { nom: 'Carte Avantage Adulte (27-59 ans ; -30 % surtout week-end ou avec enfant)', facteur: 0.7 }, avantage_senior: { nom: 'Carte Avantage Senior (60 ans et +)', facteur: 0.7 }, illico_liberte: { nom: 'Carte illico LIBERTÉ (TER Auvergne-Rhône-Alpes : -25 % en semaine, -50 % week-end et jours fériés ; estimé à -25 %)', facteur: 0.75 }, liberte: { nom: 'Carte Liberté / abonnement (prix variable, non estimé)', facteur: 1 } };
   const TROTTINETTE = { vitesse: 15, accesH: 0.05, kmMax: 8 };   // trottinette perso : gratuite, courte distance seulement
+  const TRANSPORTS_CHOIX = ['moins_cher', 'covoiturage', 'bus', 'train', 'taxi', 'trottinette'];
+  const choixTransport = r => { const c = (r && r.transport_choisi) || globalThis.CP_TRANSPORT_CHOISI; return TRANSPORTS_CHOIX.includes(c) ? c : null; };
+  function modeChoisi(r, ch) {
+    if (ch === 'trottinette') return { mode: 'trottinette', coutKm: 0, vitesse: TROTTINETTE.vitesse, accesH: TROTTINETTE.accesH, kmMax: n(r.trottinette_km_max) || TROTTINETTE.kmMax };
+    const f = (CARTES_SNCF[r.carte_sncf] || CARTES_SNCF.aucune).facteur, m = MODES.find(x => x.mode === ch);
+    return m ? (m.mode === 'train' ? { ...m, coutKm: Math.round(m.coutKm * f * 1e4) / 1e4 } : m) : null;
+  }
   function modesDe(reglages) {
     const r = reglages || {};
     if (Array.isArray(r.modes_transport) && r.modes_transport.length) return r.modes_transport;
     const f = (CARTES_SNCF[r.carte_sncf] || CARTES_SNCF.aucune).facteur;
+    const ch = choixTransport(r); if (ch && ch !== 'moins_cher') { const m = modeChoisi(r, ch); if (m) return [m]; }   // V137 : un seul moyen, celui choisi
     // V131 : les bus de villes et villages changent souvent d'horaires et de jours de passage : jamais comptés d'office (case « Compter les bus » dans les Réglages, à cocher seulement si tu as vérifié la ligne).
     const busOk = r.bus_actif === true || globalThis.CP_BUS_ACTIF === true;
     const l = MODES.filter(m => m.mode !== 'bus' || busOk).map(m => m.mode === 'train' ? { ...m, coutKm: Math.round(m.coutKm * f * 1e4) / 1e4 } : m);
@@ -92,7 +104,7 @@
       net, heuresMission: duree.heures, dureeEstimee: duree.estimee, heures, parHeure: heures ? arr(net / heures) : null,
       liaisonsConnues: !!(approche && retour) };
   }
-  const api = { rentabilite, dureeHeures, dureeEstimee, liaison, liaisonMoinsChere, MODES, CARTES_SNCF, rentabiliteComplete, LIAISON, VITESSE_CONDUITE };
+  const api = { TRANSPORTS_CHOIX, rentabilite, dureeHeures, dureeEstimee, liaison, liaisonMoinsChere, MODES, CARTES_SNCF, rentabiliteComplete, LIAISON, VITESSE_CONDUITE };
   root.CPCalc = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

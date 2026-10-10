@@ -23,9 +23,10 @@
     return null;
   }
   window.__cpLienAppliHiflow = lienAppliHiflow;
-  const VERSION_APP = 'V134 (2.0.34)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V137 (2.0.37)';   // affichée dans l'en-tête et les Réglages
   const LIENS = { Hiflow: 'https://partenaire.expedicar.com/', DriiveMe: 'https://www.driiveme.com/', Otoqi: 'https://drivers.otoqi.com/', PopValet: 'https://www.popvalet.com/' };
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
+  document.addEventListener('change', e => { const c = e.target && e.target.closest && e.target.closest('input[data-verif]'); if (!c) return; const t = lireLocal('cp_verif', {}) || {}; if (c.checked) t[c.dataset.verif] = new Date().toISOString(); else delete t[c.dataset.verif]; ecrireLocal('cp_verif', t); const l = c.closest('label'); if (l) { l.classList.toggle('ok', c.checked); l.lastChild.textContent = c.checked ? ' ✓ Vérifié par toi le ' + new Date().toLocaleDateString('fr-FR') + ' (horaires et prix valables le jour de la mission)' : ' Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'; } });
   const lireLocal = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d; } catch (_) { return d; } };
   const ecrireLocal = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
   window.CP_BUS_ACTIF = lireLocal('cp_bus_actif', false) === true;   // V131 : bus locaux comptés dans les liaisons seulement si tu le demandes (réglage sur cet appareil)
@@ -39,6 +40,8 @@
   const G = window.CPGeo, RT = window.CPRetours, CALC = window.CPCalc;
   { const mq = document.getElementById('marque'); if (mq && !document.getElementById('versionApp')) { const v = document.createElement('span'); v.id = 'versionApp'; v.className = 'version'; v.textContent = ' · ' + VERSION_APP; mq.appendChild(v); } }
   Object.assign(etat, lireLocal('cp_preferences', {}));
+  window.CP_TRANSPORT_CHOISI = lireLocal('cp_transport', 'general');   // V137 : transport choisi pour l'aller et le retour (gardé sur ce téléphone)
+  etat.pos = lireLocal('cp_position', null); etat.posMax = Number(etat.posMax) || 0;   // V137 : position du téléphone, prise seulement sur demande, gardée sur ce téléphone
   if (!lireLocal('cp_tri_v99', null)) { etat.tri = 'recent'; ecrireLocal('cp_tri_v99', 1); }   // V99 : tri « Plus récentes » par défaut (une seule fois, ton choix est gardé ensuite)
   // Données gardées sur l'appareil : consultables hors connexion.
   const cache = lireLocal('cp_cache', null); if (cache) { etat.factures = cache.factures || []; etat.missions = window.CPFiltres.francais(deLEdition(cache.missions)); etat.alertes = cache.alertes || []; etat.reglages = cache.reglages || null; etat.chargeLe = cache.chargeLe; }
@@ -176,15 +179,21 @@
     return CALC.rentabiliteComplete(m, etat.reglages, { approcheKm: depuis ? G.routeKm(depuis, o) : (dom && o ? G.routeKm(dom, o) : null), retourKm: dom && d ? G.routeKm(d, dom) : null });
   }
   function carteMission(m, i, extra) {
-    const r = renta(m);
-    return `<button class="mission${clsPlat(m.platform)}${estPassee(m) ? ' passe' : ''}" data-i="${i}">
+    const r = renta(m), reste = heuresRestantes(m);
+    return `<button class="mission${clsPlat(m.platform)}${estPassee(m) ? ' passe' : ''}${reste != null && reste < SEUIL_URGENT_H ? ' urgent' : ''}" data-i="${i}">
       <div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${m.validation === 'non_validee' ? ' <span class="etiq nv">non validée</span>' : ''}</span>
       <span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div>${r.connu ? `<div class="net">net ≈ ${esc(euros(r.net))}${r.parHeure ? ' · ' + esc(euros(r.parHeure)) + '/h' : ''}</div>` : ''}</span></div>
-      <div class="trajet">${esc(trajet(m))}</div>
+      ${reste != null && reste < SEUIL_URGENT_H ? `<div class="urgence">⏳ Plus que ${esc(reste < 1 ? Math.max(1, Math.round(reste * 60)) + ' min' : Math.round(reste) + ' h')} pour la faire</div>` : ''}<div class="trajet">${esc(trajet(m))}</div>
       <div class="meta"><span>📅 ${esc(quand(m))}</span>
       <span>📍 ${esc(adresse(m, 'origin'))}</span>
       <span>🏁 ${esc(adresse(m, 'destination'))}</span>
       ${m.distance_km ? `<span>🛣 ${esc(m.distance_km)} km${m.duree_h ? ' · ' + esc(duree(m.duree_h)) : ''}</span>` : ''}${m.client ? `<span>🏢 ${esc(m.client)}</span>` : ''}</div>${extra || ''}</button>`;
+  }
+  // V137 : mission dont il reste peu de temps (moins de 24 h avant la fin de la période ou l'heure de livraison) → cadre rouge qui clignote.
+  const SEUIL_URGENT_H = 24;
+  function heuresRestantes(m) {
+    const t = [m.delivery_end, m.delivery_start, m.pickup_end, m.pickup_start].map(x => Date.parse(x || '')).find(Number.isFinite);
+    return t == null ? null : (t - Date.now()) / 3600000;
   }
   let listeAffichee = [];
   const COTES = { tous: 'Départ ou arrivée', depart: 'Départ', arrivee: 'Arrivée' };
@@ -250,9 +259,10 @@
     $('ecran').innerHTML = `<div class="puces" role="group" aria-label="Plateformes">${puces}</div>
       <div class="filtres"><div class="recherche"><input id="recherche" type="search" placeholder="Ville, département ou région (3 lettres)" value="${esc(etat.recherche)}" aria-label="Rechercher un lieu" autocomplete="off" aria-autocomplete="list" aria-controls="sugg">
       <div id="sugg" class="sugg" role="listbox" hidden></div></div>
-      <select id="tri" aria-label="Trier"><option value="recent">Plus récentes</option><option value="date">Date de départ</option><option value="prix">Prix</option><option value="heure">€/heure</option></select></div>
+      <select id="tri" aria-label="Trier"><option value="recent">Plus récentes</option><option value="date">Date de départ</option><option value="prix">Prix</option><option value="heure">€/heure</option><option value="proche">Les plus proches de moi</option></select></div>
       <div class="ligneFiltres"><select id="cote" aria-label="Lieu cherché">${Object.entries(COTES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
       <select id="rayon" aria-label="Autour de la ville"${aVille ? '' : ' disabled'}><option value="0">Ville exacte</option><option value="20">Ville + 20 km</option><option value="50">Ville + 50 km</option><option value="100">Ville + 100 km</option></select></div>
+      <div class="lignePos"><button id="btnPos" class="second" type="button">📍 Ma position</button><select id="posMax" aria-label="Distance maximale depuis ma position"><option value="0">Distance depuis moi : sans limite</option>${[20, 50, 100, 150, 200, 300].map(k => `<option value="${k}">Départ à moins de ${k} km de moi</option>`).join('')}</select><span class="doux" id="posInfo"></span></div>
       ${blocPlusFiltres(dispo)}
       <div class="zones" id="zones">${etat.zones.map((z, i) => `<button class="zone" data-zone="${i}" aria-label="Retirer ce filtre">${esc(COTES[z.cote || 'tous'])} : ${esc(G.libelleZone(z))} ✕</button>`).join('')}</div>
       ${etat.erreur ? `<p class="erreur">${esc(etat.erreur)}</p>` : ''}<div id="liste"></div>`;
@@ -262,11 +272,29 @@
     $('tri').onchange = ev => { etat.tri = ev.target.value; memoriser(); listeMissions(); };
     $('cote').onchange = ev => { etat.cote = ev.target.value; memoriser(); };
     $('rayon').onchange = ev => { etat.rayon = Number(ev.target.value); memoriser(); listeMissions(); };
+    $('posMax').value = String(etat.posMax); infoPosition();
+    $('btnPos').onclick = () => localiser(true);
+    $('posMax').onchange = ev => { etat.posMax = Number(ev.target.value); memoriser(); if (etat.posMax > 0 && !positionRecente(60)) localiser(false); else listeMissions(); };
     brancherPlusFiltres();
     const champ = $('recherche');
     champ.oninput = () => { etat.recherche = champ.value; memoriser(); montrerSuggestions(); clearTimeout(vueMissions.t); vueMissions.t = setTimeout(listeMissions, 250); };
     champ.onkeydown = ev => { if (ev.key === 'Enter') { const p = document.querySelector('#sugg button'); if (p && !$('sugg').hidden) { ev.preventDefault(); p.click(); } } else if (ev.key === 'Escape') $('sugg').hidden = true; };
     listeMissions();
+  }
+  // V137 : position du téléphone (service de localisation de Google sur Android), demandée UNE FOIS quand on touche « Ma position » ou qu'on choisit une distance — jamais en continu. Gardée seulement sur ce téléphone (jamais envoyée au serveur).
+  const positionRecente = minutes => !!(etat.pos && Date.now() - etat.pos.at < minutes * 60000);
+  function infoPosition() {
+    const i = $('posInfo'); if (!i) return;
+    i.textContent = etat.pos ? 'Position prise il y a ' + (Math.max(1, Math.round((Date.now() - etat.pos.at) / 60000)) < 60 ? Math.max(1, Math.round((Date.now() - etat.pos.at) / 60000)) + ' min' : Math.round((Date.now() - etat.pos.at) / 3600000) + ' h') : (etat.posMax > 0 ? 'Position inconnue : touche « Ma position ».' : '');
+  }
+  function localiser(manuel) {
+    if (!navigator.geolocation) { if (manuel) toast('Ce téléphone ne permet pas la localisation'); return; }
+    if (manuel) toast('Localisation…');
+    navigator.geolocation.getCurrentPosition(p => {
+      etat.pos = { lat: Math.round(p.coords.latitude * 1000) / 1000, lng: Math.round(p.coords.longitude * 1000) / 1000, at: Date.now() };
+      ecrireLocal('cp_position', etat.pos); infoPosition(); if ($('liste')) listeMissions(); if (manuel) toast('Position mise à jour');
+    }, e => { if (manuel || etat.posMax > 0) toast(e && e.code === 1 ? 'Localisation refusée : autorise-la pour Convoyage (réglages du téléphone ou du site)' : 'Position introuvable pour l’instant'); },
+    { enableHighAccuracy: false, timeout: 20000, maximumAge: 5 * 60000 });   // une seule lecture, position récente (≤ 5 min) réutilisée
   }
   // Suggestions dès 3 lettres (ou un numéro de département) : villes, départements, régions.
   function montrerSuggestions() {
@@ -292,11 +320,15 @@
     if (etat.filtre !== 'toutes') l = l.filter(m => m.platform === etat.filtre);
     l = G.filtrer(l, etat.zones, etat.rayon);
     l = FI.appliquer(l, etat.plus, m => CALC.dureeEstimee(m).heures);   // V96 : client, véhicule, distance, durée
+    // V137 : distance maximale DEPUIS MA POSITION (route estimée = vol d'oiseau × 1,25) ; départ de position inconnue → gardé.
+    const kmDeMoi = m => { const c = etat.pos ? G.coordonnees(m, 'origin') : null; return c ? G.routeKm(etat.pos, c) : null; };
+    if (etat.posMax > 0 && etat.pos) l = l.filter(m => { const d = kmDeMoi(m); return d == null || d <= etat.posMax; });
     // Texte libre (sans choisir de suggestion) : recherche simple, comme avant.
     if (q) l = l.filter(m => q.split(/[\s,]+/).filter(Boolean).some(t => [m.from_city, m.to_city, m.from_department, m.to_department, m.origin_address, m.destination_address].some(v => norm(v).includes(t))));
     const cache = new Map(), ph = m => { if (!cache.has(m)) cache.set(m, renta(m)); return cache.get(m); };
     if (etat.tri === 'prix') l.sort((a, b) => (b.fee || 0) - (a.fee || 0));
     else if (etat.tri === 'heure') l.sort((a, b) => (ph(b).parHeure || 0) - (ph(a).parHeure || 0));
+    else if (etat.tri === 'proche' && etat.pos) l.sort((a, b) => (kmDeMoi(a) ?? 1e9) - (kmDeMoi(b) ?? 1e9));
     else if (etat.tri === 'date') l.sort((a, b) => String(a.pickup_start || '9').localeCompare(String(b.pickup_start || '9')));
     else l.sort((a, b) => String(b.first_seen_at || '').localeCompare(String(a.first_seen_at || '')) || String(a.pickup_start || '9').localeCompare(String(b.pickup_start || '9')));   // V99 : les plus récemment parues en haut
     listeAffichee = l;
@@ -413,7 +445,7 @@
   function vueAlertes() {
     const l = etat.alertes;
     $('ecran').innerHTML = (l.some(a => !a.lue) ? '<button id="toutLu" class="second" style="width:100%">Tout marquer comme lu</button>' : '') +
-      (l.length ? l.map(a => `<div class="carte alerte${clsPlat(a.platform)}${a.lue ? '' : ' nonlue'}${missionDeAlerte(a) ? ' cliquable' : ''}" data-alerte="${esc(a.id)}"><span>${({ hausse_prix: '📈', mission_acceptee: '✅', mission_modifiee: '✏️', mission_annulee: '❌' })[a.type] || '🆕'}</span><div><div class="msg">${esc(a.message)}</div><div class="doux">${esc(fmtDate(a.created_at))}</div></div></div>`).join('')
+      (l.length ? l.map(a => `<div class="carte alerte${clsPlat(a.platform)}${a.lue ? '' : ' nonlue'}${missionDeAlerte(a) ? ' cliquable' : ''}" data-alerte="${esc(a.id)}"><span>${({ hausse_prix: '📈', mission_acceptee: '✅', mission_modifiee: '✏️', mission_annulee: '❌' })[a.type] || '🆕'}</span><div><div class="msg">${a.lue ? '' : '<span class="etiq nv pNouveau">NOUVEAU</span> '}${esc(a.message)}</div><div class="doux">${esc(fmtDate(a.created_at))}${a.lue ? ' · ✓ déjà lue' : ''}</div></div></div>`).join('')
         : '<div class="vide">Aucune alerte. Tu seras prévenu des nouvelles missions, des hausses de prix et des missions acceptées.</div>');
     for (const el of document.querySelectorAll('[data-alerte]')) { const a = l.find(x => String(x.id) === el.dataset.alerte), m = missionDeAlerte(a); if (m) el.onclick = () => detail(m); }
     const b = $('toutLu'); if (b) b.onclick = async () => { try { await api.marquerLues(); etat.alertes.forEach(a => { a.lue = true; }); afficher(); } catch (e) { toast(e.message); } };
@@ -438,6 +470,7 @@
       <label for="rRayon">Chercher les retours jusqu’à (km du lieu de livraison)</label><input id="rRayon" type="number" step="5" min="1" max="500" inputmode="numeric">
       <label for="rAtt">Attente maximale avant le retour (heures)</label><input id="rAtt" type="number" step="1" min="1" max="96" inputmode="numeric">
       <label for="rSncf">Carte de réduction SNCF</label><select id="rSncf">${Object.entries(CALC.CARTES_SNCF).map(([k, v]) => `<option value="${k}">${esc(v.nom)}</option>`).join('')}</select>
+      <label for="rTransport">Transport pour l’aller et le retour (le prix et la durée sont calculés avec ce moyen)</label><select id="rTransport"><option value="general">Estimation générale (coût au km ci-dessous)</option><option value="moins_cher">Le moins cher disponible</option><option value="covoiturage">Covoiturage</option><option value="train">Train (avec ta carte de réduction)</option><option value="bus">Bus</option><option value="taxi">Taxi / VTC</option><option value="trottinette">Trottinette (courts trajets)</option></select>
       <label><input id="rBus" type="checkbox" style="width:auto;min-height:0"> Compter les bus dans les liaisons (les bus de villes et villages changent souvent d’horaires et de jours : à cocher seulement si tu as vérifié la ligne)</label>
       <label><input id="rTrot" type="checkbox" style="width:auto;min-height:0"> J’ai une trottinette (gratuite, utilisée pour les courts trajets jusqu’à ≈ 8 km)</label>
       <p class="doux">Les retours choisissent le moyen le moins cher qui arrive à temps ; prix et horaires estimés (réduction SNCF ≈ −30 % sur le train), pas des tarifs réels.</p>
@@ -448,7 +481,7 @@
       <div class="boutons"><button id="dOk" class="second">Se déconnecter</button><button id="eOk" class="danger">Effacer mes données</button></div></div>
       <p class="doux" style="text-align:center">Convoyage Ultra · outil d’aide à la décision : aucune mission n’est acceptée à ta place.</p>`;
     $('rStatut').value = r.statut; $('rTaux').value = r.taux_cotisations; $('rKm').value = r.cout_km; $('rMin').value = r.prix_minimum; $('rNv').checked = !!r.alertes_nouvelles; $('rPx').checked = !!r.alertes_prix;
-    $('rBus').checked = window.CP_BUS_ACTIF === true;
+    $('rBus').checked = window.CP_BUS_ACTIF === true; $('rTransport').value = window.CP_TRANSPORT_CHOISI || 'general';
     $('rDom').value = r.domicile_ville || ''; $('rTr').value = r.cout_transport_km; $('rVit').value = r.vitesse_liaison; $('rMarge').value = r.marge_minutes; $('rRayon').value = r.rayon_retour_km; $('rAtt').value = r.attente_max_h; $('rSncf').value = r.carte_sncf || 'aucune'; $('rTrot').checked = r.trottinette === true;
     let domChoisi = r.domicile_ville ? { nom: r.domicile_ville, lat: r.domicile_lat, lng: r.domicile_lng, libelle: r.domicile_ville } : null;
     $('rDom').oninput = () => {
@@ -468,7 +501,7 @@
         if (!x || x.lat == null) return toast('Ville du domicile non reconnue : choisis-la dans la liste proposée');
         Object.assign(v, { domicile_ville: x.nom, domicile_lat: Math.round(x.lat * 1e5) / 1e5, domicile_lng: Math.round(x.lng * 1e5) / 1e5 });
       }
-      window.CP_BUS_ACTIF = $('rBus').checked; ecrireLocal('cp_bus_actif', window.CP_BUS_ACTIF);
+      window.CP_BUS_ACTIF = $('rBus').checked; ecrireLocal('cp_bus_actif', window.CP_BUS_ACTIF); window.CP_TRANSPORT_CHOISI = $('rTransport').value; ecrireLocal('cp_transport', window.CP_TRANSPORT_CHOISI);
       try { await api.enregistrerReglages(v); etat.reglages = { ...r, ...v }; ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe }); toast('Réglages enregistrés'); } catch (e) { toast(e.message); }
     };
     etatNotifications();
@@ -486,15 +519,41 @@
   // si la ligne n'existe pas ou plus, le site le dit (l'appli ne peut pas le vérifier elle-même). Cars Région / TER / bus d'Auvergne-Rhône-Alpes : calculateur OùRA, seulement si les deux bouts sont dans la région.
   const slugVille = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\(.*?\)/g, ' ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   const DEP_ARA = ['01', '03', '07', '15', '26', '38', '42', '43', '63', '69', '73', '74'];
-  function liensTransports(deVille, deDep, versVille, versDep) {
+  const RESEAUX_VILLES = [
+    { slugs: ['lyon', 'villeurbanne', 'venissieux', 'vaulx-en-velin', 'bron', 'caluire-et-cuire', 'saint-fons'], dep: '69', liens: [['🚇 TCL (Lyon)', 'https://www.tcl.fr/'], ['🏙️ Citymapper', 'https://citymapper.com/']] },
+    { slugs: ['grenoble', 'echirolles', 'saint-martin-d-heres', 'fontaine', 'meylan'], dep: '38', liens: [['🚋 M réso (Grenoble)', 'https://www.reso-m.fr/']] },
+    { slugs: ['annecy', 'seynod', 'cran-gevrier', 'meythet', 'annecy-le-vieux', 'pringy'], dep: '74', liens: [['🚌 Sibra (Annecy)', 'https://www.sibra.fr/']] },
+    { slugs: ['chambery', 'la-motte-servolex', 'cognin', 'bassens', 'barberaz'], dep: '73', liens: [['🚌 Synchro (Chambéry)', 'https://www.synchro-bus.fr/']] },
+    { slugs: ['amberieu-en-bugey'], dep: '01', liens: [['🚌 Moovit (Ambérieu-en-Bugey)', 'https://moovitapp.com/']] },
+    { slugs: ['geneve', 'carouge', 'lancy', 'meyrin', 'vernier', 'onex', 'annemasse', 'ferney-voltaire', 'saint-julien-en-genevois', 'gaillard', 'thonex'], dep: '', liens: [['🚌 tpg (Genève et alentours)', 'https://www.tpg.ch/']] },
+    { slugs: ['paris'], dep: '75', liens: [['🏙️ Citymapper (Paris)', 'https://citymapper.com/']] },
+    { slugs: ['marseille'], dep: '13', liens: [['🏙️ Citymapper (Marseille)', 'https://citymapper.com/']] },
+    { slugs: ['toulouse'], dep: '31', liens: [['🏙️ Citymapper (Toulouse)', 'https://citymapper.com/']] }];
+  // V137 : réseau régional (cars + trains) de la région de chaque bout, d'après la liste donnée par Laurent (liens des sites officiels).
+  const RESEAUX_REGION = {
+    ARA: ['🚍 La Région vous transporte (Cars Région)', 'https://www.laregionvoustransporte.fr/'], BFC: ['🚍 Mobigo (Bourgogne-Franche-Comté)', 'https://www.viamobigo.fr/'],
+    BRE: ['🚍 BreizhGo (Bretagne)', 'https://www.breizhgo.bzh/'], CVL: ['🚍 Rémi (Centre-Val de Loire)', 'https://www.remi-centrevaldeloire.fr/'],
+    GES: ['🚍 Fluo (Grand Est)', 'https://www.fluo.grandest.fr/'], HDF: ['🚍 Transports Hauts-de-France', 'https://transports.hautsdefrance.fr/'],
+    IDF: ['🚍 Île-de-France Mobilités', 'https://www.iledefrance-mobilites.fr/'], NOR: ['🚍 Nomad (Normandie)', 'https://nomad.normandie.fr/'],
+    NAQ: ['🚍 Transports Nouvelle-Aquitaine', 'https://transports.nouvelle-aquitaine.fr/'], OCC: ['🚍 liO (Occitanie)', 'https://www.lio-occitanie.fr/'],
+    PDL: ['🚍 Aléop (Pays de la Loire)', 'https://aleop.paysdelaloire.fr/'], PAC: ['🚍 ZOU ! (Provence-Alpes-Côte d’Azur)', 'https://zou.maregionsud.fr/'],
+    COR: ['🚍 Transports de Corse', 'https://www.isula.corsica/']
+  };
+  const reseauRegion = dep => { const d = G.DEPARTEMENTS && G.DEPARTEMENTS[String(dep || '')]; return d && RESEAUX_REGION[d.region] ? [RESEAUX_REGION[d.region]] : []; };
+  const reseauxLocaux = (ville, dep) => { const sl = slugVille(ville), d = String(dep || ''); const r = RESEAUX_VILLES.find(x => x.slugs.includes(sl) && (!d || x.dep === d)); return r ? r.liens : []; };
+  function liensTransports(deVille, deDep, versVille, versDep, cleVerif) {
     if (!deVille || !versVille) return '';
     const a = slugVille(deVille), b = slugVille(versVille); if (!a || !b || a === b) return '';
     const gm = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(lieuTr(deVille, deDep)) + '&destination=' + encodeURIComponent(lieuTr(versVille, versDep)) + '&travelmode=transit';
     const r2 = 'https://www.rome2rio.com/map/' + encodeURIComponent(String(deVille).trim()) + '/' + encodeURIComponent(String(versVille).trim());
     const L = [['🚆 SNCF Connect', 'https://www.sncf-connect.com/billet-train'], ['🚌 Flixbus', 'https://www.flixbus.fr/voyages-car/' + a + '-' + b], ['🚗 BlaBlaCar', 'https://www.blablacar.fr/ride-sharing/' + a + '/' + b]];
-    if (DEP_ARA.includes(String(deDep || '')) && DEP_ARA.includes(String(versDep || ''))) L.push(['🚍 Cars Région / TER (OùRA)', 'https://www.oura.com/']);
+    if (DEP_ARA.includes(String(deDep || '')) || DEP_ARA.includes(String(versDep || ''))) L.push(['🚍 Cars Région / TER (OùRA)', 'https://www.oura.com/']);
+    // V137 : OùRA dès qu'un des deux bouts est dans la région (voir plus haut) ; réseaux de la ville de départ ou d'arrivée (bus, tram, métro de la ville) + Citymapper dans les grandes villes.
+    for (const x of reseauxLocaux(deVille, deDep).concat(reseauxLocaux(versVille, versDep), reseauRegion(deDep), reseauRegion(versDep))) if (!L.some(y => y[1] === x[1])) L.push(x);
     L.push(['🚆 Rome2rio', r2], ['🗺️ Maps bus/train', gm]);
-    return `<span class="liensTr">${L.map(([t, u]) => `<a href="${esc(u)}">${t}</a>`).join('')}</span><span class="doux liensNote">Horaires et prix à jour sur chaque site (le bouton retour te ramène ici) ; si la ligne n’existe pas, il l’indique.</span>`;
+    const v = cleVerif ? (lireLocal('cp_verif', {}) || {})[cleVerif] : null;
+    const caseV = cleVerif ? `<label class="liensVerif${v ? ' ok' : ''}"><input type="checkbox" data-verif="${esc(cleVerif)}"${v ? ' checked' : ''}> ${v ? '✓ Vérifié par toi le ' + esc(new Date(v).toLocaleDateString('fr-FR')) + ' (horaires et prix valables le jour de la mission)' : 'Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'}</label>` : '';
+    return `<span class="liensTr">${L.map(([t, u]) => `<a href="${esc(u)}">${t}</a>`).join('')}</span><span class="doux liensNote">⚠ Horaires et prix NON vérifiés par l’application : ouvre le site, contrôle-les pour le jour de la mission (le bouton retour te ramène ici).</span>${caseV}`;
   }
   // V78 : retours possibles après cette mission (toutes plateformes), estimés.
   function blocRetours(m) {
@@ -506,7 +565,7 @@
       <span class="doux">📅 ${esc(quand(c))}${x.attenteH ? ' · attente ≈ ' + esc(duree(x.attenteH)) : ''}</span>
       <span class="doux">${({covoiturage:'🚗',bus:'🚌',train:'🚆',taxi:'🚕'})[x.liaison.mode] || '🚆'} ${esc(x.liaison.mode || 'liaison')} (le moins cher) ≈ ${esc(x.liaison.km)} km · ${esc(duree(x.liaison.heures))} · ${esc(euros(x.liaison.cout))}</span>
       <span class="doux">💶 net ≈ ${rr.connu ? esc(euros(rr.net)) + (rr.parHeure ? ' · ' + esc(euros(rr.parHeure)) + '/h' : '') : 'prix inconnu'}${x.rapprocheKm != null ? (x.rapprocheKm > 0 ? ' · te rapproche de chez toi de ≈ ' + esc(x.rapprocheKm) + ' km' : ' · t’éloigne de chez toi de ≈ ' + esc(-x.rapprocheKm) + ' km') : ''}</span>
-      ${x.estimations.length ? `<span class="estim">estimation : ${esc(x.estimations.join(', '))}</span>` : ''}</button>${x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department) : ''}</div>`; };
+      ${x.estimations.length ? `<span class="estim">estimation : ${esc(x.estimations.join(', '))}</span>` : ''}</button>${x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department, 'r|' + (m.id || m.external_id) + '|' + (c.id || c.external_id)) : ''}</div>`; };
     const n = res.compatibles.length, r = etat.reglages || {};
     const ecartes = [[res.autreJour, 'un autre jour'], [res.tropTot, 'partent trop tôt'], [res.conflits, 'chevauchent ton agenda'], [res.horsZone, 'trop loin'], [res.tropTard, 'attente trop longue'], [res.passees, 'déjà passées']].filter(([k]) => k).map(([k, t]) => k + ' ' + t).join(', ');
     return `<div class="carte" id="retours"><h2>🔁 Retours possibles après cette mission</h2>
@@ -540,13 +599,13 @@
       <h2 id="feuilleTitre" class="trajet" style="font-size:20px">${esc(trajet(m))}</h2>
       ${lienDevis(m) ? `<a href="${esc(lienAppliHiflow() || lienDevis(m))}"${lienAppliHiflow() ? '' : ' target="_blank" rel="noopener"'} id="lienDevis" data-numero="${esc(m.external_id)}"><button style="width:100%;margin:4px 0 2px">📱 Faire le devis dans l’application Hiflow</button></a><p class="doux" style="margin:0 0 8px">Mission n° <b>${esc(m.external_id)}</b> (copié en touchant le bouton) · ${esc(trajet(m))}</p>` : ''}
       <div class="meta"><span>📅 Prise en charge : ${esc(quand(m))}</span>${m.delivery_start || m.delivery_end ? `<span>🏁 Livraison : ${esc(fmtDate(m.delivery_start || m.delivery_end))}</span>` : ''}</div>
-      <div class="carte"><b>Départ</b><div>${esc(adresse(m, 'origin'))}</div>${etat.reglages && etat.reglages.domicile_ville && m.from_city ? liensTransports(etat.reglages.domicile_ville, '', m.from_city, m.from_department) : ''}${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}</div>
+      <div class="carte"><b>Départ</b><div>${esc(adresse(m, 'origin'))}</div>${etat.reglages && etat.reglages.domicile_ville && m.from_city ? liensTransports(etat.reglages.domicile_ville, '', m.from_city, m.from_department, 'a|' + (m.id || m.external_id)) : ''}${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}</div>
       <div class="carte"><b>Arrivée</b><div>${esc(adresse(m, 'destination'))}</div>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}</div>
       <div class="carte"><h2>Rentabilité estimée</h2>${dv ? `<p class="devisSource">📄 Montants de ton devis Hiflow n° ${esc(dv.n)} (${dv.accepte ? 'accepté' : 'envoyé, en attente'})${dv.total != null ? ' — total ' + esc(euros(dv.total)) : ''}</p>` : ''}${r.connu ? `<table class="tableau">
         ${ligne(dv ? 'Prestation (devis)' : 'Prestation', esc(euros(r.prestation)))}
         ${frais.length ? ligne(dv ? '+ Frais remboursés (devis)' : '+ Remboursements prévus', esc(frais.map(([k, v]) => (FRAIS[k.toLowerCase()] || k) + ' ' + euros(v)).join(' · '))) : ''}
         ${frais.length ? ligne('− Frais avancés (remboursés)', '− ' + esc(euros(r.fraisAvances))) : ''}
-        ${ligne('− Approche' + (depuis ? ' depuis la livraison précédente' : ' depuis ton domicile'), r.approche ? `≈ ${esc(r.approche.km)} km · ${esc(duree(r.approche.heures))} · ${esc(euros(r.approche.cout))}` : '<span class="doux">inconnue — renseigne ta ville dans Réglages</span>')}
+        ${ligne('− Approche' + (depuis ? ' depuis la livraison précédente' : ' depuis ton domicile'), r.approche ? `${r.approche.mode ? esc(r.approche.mode) + ' ' : ''}≈ ${esc(r.approche.km)} km · ${esc(duree(r.approche.heures))} · ${esc(euros(r.approche.cout))}` : '<span class="doux">inconnue — renseigne ta ville dans Réglages</span>')}
         ${ligne('− Retour à ton domicile', r.retour ? `≈ ${esc(r.retour.km)} km · ${esc(duree(r.retour.heures))} · ${esc(euros(r.retour.cout))}` : '<span class="doux">inconnu</span>')}
         ${r.rembTransport && r.coutTransport ? ligne('Transport couvert par le remboursement prévu', esc(euros(Math.min(r.rembTransport, r.coutTransport)))) : ''}
         ${r.coutTransport ? (r.transportRembourse ? ligne('Transport (approche et retour)', '≈ ' + esc(euros(r.coutTransport)) + ' <span class="doux">avancé puis remboursé par Hiflow</span>') : ligne('− Transport à ta charge', '− ' + esc(euros(r.transportNonCouvert)))) : ''}
@@ -558,6 +617,7 @@
       ${m.kind === 'acceptee' ? blocHistorique(m) : ''}
       ${m.status === 'annulee' || m.status === 'terminee' || (m.kind === 'acceptee' && missionPassee(m)) ? '' : blocRetours(m)}
       ${m.vehicle ? `<p>🚗 ${esc([m.vehicle.brand, m.vehicle.model, m.vehicle.energy].filter(Boolean).join(' '))}</p>` : ''}
+      ${m.vehicle && /[ée]lectri|\bev\b|\bbev\b/i.test(String(m.vehicle.energy || '')) ? `<div class="carte"><b>🔌 Véhicule électrique : calculer la charge</b><p class="doux" style="margin:4px 0">Le prix et le temps de charge dépendent de la voiture, de la borne et de l’itinéraire : ces sites les calculent (l’appli ne les connaît pas).</p><span class="liensTr"><a href="https://abetterrouteplanner.com/">⚡ A Better Routeplanner</a><a href="https://fr.chargemap.com/">🗺️ Chargemap (bornes et prix)</a>${(m.origin_address || m.from_city) && (m.destination_address || m.to_city) ? `<a href="${esc('https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(m.origin_address || m.from_city + ' ' + (m.from_department || '')) + '&destination=' + encodeURIComponent(m.destination_address || m.to_city + ' ' + (m.to_department || '')))}">📍 Itinéraire Google Maps</a>` : ''}</span></div>` : ''}
       ${m.distance_km ? `<p>🛣 ${esc(m.distance_km)} km</p>` : ''}
       ${(m.price_history || []).length ? `<p class="doux">Historique du prix : ${m.price_history.map(h => esc(euros(h.de)) + ' → ' + esc(euros(h.a))).join(', ')}</p>` : ''}
       ${m.platform === 'Hiflow' && lienAppliHiflow() ? `<a href="${esc(lienAppliHiflow())}" class="lienAppli" data-numero="${esc(m.external_id)}"><button style="width:100%;margin-top:6px">📱 Ouvrir l’application Hiflow</button></a>` : `<a href="${esc(lien)}" target="_blank" rel="noopener"><button style="width:100%;margin-top:6px">Ouvrir sur ${esc(PLATS[m.platform])}</button></a>`}`;
@@ -605,7 +665,7 @@
     } catch (e) { toast(String(e.message || e)); }
     etatNotifications();
   }
-  function memoriser() { ecrireLocal('cp_preferences', { filtre: etat.filtre, recherche: etat.recherche, tri: etat.tri, zones: etat.zones, cote: etat.cote, rayon: etat.rayon, plan: etat.plan, plus: etat.plus }); }
+  function memoriser() { ecrireLocal('cp_preferences', { filtre: etat.filtre, recherche: etat.recherche, tri: etat.tri, zones: etat.zones, cote: etat.cote, rayon: etat.rayon, plan: etat.plan, plus: etat.plus, posMax: etat.posMax }); }
 
   // ---------- Navigation ----------
   for (const b of document.querySelectorAll('#onglets button')) b.onclick = () => { etat.onglet = b.dataset.onglet; afficher(); window.scrollTo(0, 0); };
@@ -631,6 +691,7 @@
   }
   window.__cpOuvrirMissionDemandee = ouvrirMissionDemandee;
   lireLien();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && etat.posMax > 0 && etat.onglet === 'missions' && !positionRecente(15)) localiser(false); });
   window.addEventListener('hashchange', () => { if (location.hash === '#alertes') { etat.onglet = 'alertes'; afficher(); } lireLien(); ouvrirMissionDemandee(); });
   // V122 : styles de l'application (couleurs + polices), inspirés de l'icône : noir & or, rouge, crépuscule, jour contrasté. Le bouton 🎨 fait défiler les styles.
   const STYLES = [['classique', 'Classique'], ['ultra', 'Ultra (noir & or)'], ['braise', 'Braise (noir & rouge)'], ['crepuscule', 'Crépuscule (violet & orange)'], ['jour', 'Jour contrasté (bleu & jaune)']];
