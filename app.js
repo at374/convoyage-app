@@ -190,8 +190,11 @@
       const traces = lignes.length ? lignes.map(r => pl(r.coords, r.couleur, r.pointille, r.ep)).join('') : pl([[a.lng, a.lat], [b.lng, b.lat]], '#1d4ed8', true, 4);
       return `<div class="carteVol" style="position:relative;width:${W}px;max-width:100%;height:${H}px;overflow:hidden;border-radius:10px;background:var(--accentDoux);margin:0 auto">${tuiles}<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="position:absolute;left:0;top:0" role="img" aria-label="Trajet">${traces}<circle cx="${A[0] - ox}" cy="${A[1] - oy}" r="8" fill="#16a34a" stroke="#fff" stroke-width="2"/><circle cx="${B[0] - ox}" cy="${B[1] - oy}" r="8" fill="#dc2626" stroke="#fff" stroke-width="2"/></svg><span style="position:absolute;right:3px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div>`;
     };
-    // Itinéraire OSRM (OpenStreetMap, gratuit) : « normal » (autoroutes et péages autorisés) et « sans péage » (exclude=toll).
-    const itineraire = async (a, b, sansPeage) => { try { const r = await fetch('https://router.project-osrm.org/route/v1/driving/' + a.lng + ',' + a.lat + ';' + b.lng + ',' + b.lat + '?overview=simplified&geometries=geojson' + (sansPeage ? '&exclude=toll' : '')); const j = r.ok ? await r.json() : null, rt = j && j.code === 'Ok' && j.routes && j.routes[0]; return rt && rt.geometry && rt.geometry.coordinates.length > 1 ? { coords: rt.geometry.coordinates, km: rt.distance / 1000, h: rt.duration / 3600 } : null; } catch (_) { return null; } };
+    // Itinéraires gratuits (OpenStreetMap) : Valhalla (FOSSGIS) sait éviter les péages (use_tolls 0) ou les accepter (1) ; OSRM sert de secours pour le trajet « avec péages ».
+    const decoder = (enc, prec) => { const out = []; let i = 0, lat = 0, lng = 0; while (i < enc.length) { for (const k of [0, 1]) { let r = 0, sh = 0, c; do { c = enc.charCodeAt(i++) - 63; r |= (c & 31) << sh; sh += 5; } while (c >= 32); const v = (r & 1) ? ~(r >> 1) : (r >> 1); if (k === 0) lat += v; else lng += v; } out.push([lng / 10 ** prec, lat / 10 ** prec]); } return out; };
+    const valhalla = async (a, b, peages) => { try { const r = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locations: [{ lat: a.lat, lon: a.lng }, { lat: b.lat, lon: b.lng }], costing: 'auto', costing_options: { auto: { use_tolls: peages ? 1 : 0 } }, directions_options: { units: 'kilometers' } }) }); const j = r.ok ? await r.json() : null, t = j && j.trip; return t && t.legs && t.legs[0] && t.legs[0].shape ? { coords: decoder(t.legs[0].shape, 6), km: t.summary.length, h: t.summary.time / 3600 } : null; } catch (_) { return null; } };
+    const osrm = async (a, b) => { try { const r = await fetch('https://router.project-osrm.org/route/v1/driving/' + a.lng + ',' + a.lat + ';' + b.lng + ',' + b.lat + '?overview=simplified&geometries=geojson'); const j = r.ok ? await r.json() : null, rt = j && j.code === 'Ok' && j.routes && j.routes[0]; return rt && rt.geometry && rt.geometry.coordinates.length > 1 ? { coords: rt.geometry.coordinates, km: rt.distance / 1000, h: rt.duration / 3600 } : null; } catch (_) { return null; } };
+    const itineraire = async (a, b, sansPeage) => sansPeage ? valhalla(a, b, false) : ((await valhalla(a, b, true)) || (await osrm(a, b)));
     const rendre = async () => {
       const a = G.coordonnees(m, 'origin'), b = G.coordonnees(m, 'destination');
       const cadre = (carte, bas) => `<div class="popVolBoite"><button class="icone" id="popVolX" aria-label="Fermer">✕</button><h3>🗺️ Visualisation trajet estimé</h3>${carte}<p class="doux">🟢 ${esc(m.from_city || 'Départ')} → 🔴 ${esc(m.to_city || 'Arrivée')}</p>${bas}</div>`;
@@ -201,11 +204,11 @@
       const [avec, sans] = await Promise.all([itineraire(a, b, false), itineraire(a, b, true)]);
       if (!document.getElementById('popVol')) return;
       const meme = avec && sans && Math.abs(avec.km - sans.km) < 1;
-      const ligne = (ico, nom, r) => r ? `<p>${ico} <b>${nom} : ≈ ${esc(Math.round(r.km))} km</b> · ≈ ${esc(duree(r.h))} en voiture, sans pause</p>` : `<p>${ico} ${nom} : indisponible (service ou connexion)</p>`;
+      const ligne = (ico, nom, r) => r ? `<p>${ico} <b>${nom} : ≈ ${esc(Math.round(r.km))} km</b> · ≈ ${esc(duree(r.h))} en voiture, sans pause</p>` : `<p>${ico} ${nom} : indisponible : le service gratuit de calcul n’a pas répondu depuis ce téléphone</p>`;
       let bas;
       if (meme) bas = ligne('🛣️', 'Trajet (aucun péage sur le parcours le plus rapide)', avec);
       else bas = ligne('🛣️', 'Avec péages (autoroutes autorisées)', avec) + ligne('🟢', 'Sans péage', sans);
-      bas += (m.distance_km ? `<p class="doux">Distance donnée par la plateforme : ${esc(m.distance_km)} km.</p>` : '') + '<p class="doux" id="popCommunes">Communes sur le trajet : recherche…</p>' + pts + '<p class="doux">Les durées sont des estimations de conduite normale ; le prix des péages n’est pas calculé ici.</p>';
+      bas += (m.distance_km ? `<p class="doux">Distance donnée par la plateforme : ${esc(m.distance_km)} km.</p>` : '') + '<p class="doux" id="popCommunes">Communes sur le trajet : recherche…</p>' + pts + '<p class="doux">Les durées sont des estimations de conduite normale ; le prix des péages n’est pas calculé ici. <a href="https://fr.mappy.com/itineraire" target="_blank" rel="noopener">Comparer sur Mappy</a></p>';
       d.innerHTML = cadre(dessiner(a, b, meme ? [{ coords: avec.coords, couleur: '#1d4ed8', ep: 4 }] : [sans && { coords: sans.coords, couleur: '#16a34a', ep: 4, pointille: true }, avec && { coords: avec.coords, couleur: '#1d4ed8', ep: 4 }].filter(Boolean)), bas + (meme || !(avec && sans) ? '' : '<p class="doux">Bleu : avec péages · Vert pointillé : sans péage.</p>'));
       const base = avec || sans; if (!base) { const el0 = document.getElementById('popCommunes'); if (el0) el0.textContent = ''; return; }
       const route = base.coords, communes = [], idx = [0.2, 0.4, 0.6, 0.8].map(f => route[Math.min(route.length - 1, Math.round(f * (route.length - 1)))]);
@@ -633,13 +636,14 @@
   }
   function blocHistorique(m) {
     const A = window.CPAgenda.analyser(etat.missions, etat.reglages), x = A.parCle[RT.cle(m)] || { conflits: [], etat: '' };
-    const mods = (m.modifications || []).slice().reverse();
+    // V138 : journal lisible — mêmes changements répétés regroupés, 5 plus récents visibles, le reste dans « Voir les N autres ».
+    const toutes = (m.modifications || []).slice().reverse(), vues = new Set(), mods = toutes.filter(z => { const k = [z.champ, z.de, z.a].join('|'); if (vues.has(k)) return false; vues.add(k); return true; });
     const e = ETATS[x.etat];
     if (!mods.length && !x.conflits.length && !e) return '';
     return `<div class="carte" id="historique"><h2>📋 Suivi de la mission</h2>
       ${e ? `<p><span class="etiq ${e[1]}">${esc(e[0])}</span>${x.etat === 'annulee' ? ' Elle n’apparaît plus dans tes missions acceptées sur ' + esc(PLATS[m.platform] || m.platform) + '. Vérifie sur le site avant de t’organiser autrement.' : ''}</p>` : ''}
       ${x.conflits.map(c => `<p class="conflitLigne">⚠️ ${esc(window.CPAgenda.libelleConflit(c))}</p>`).join('')}
-      ${mods.length ? '<p class="doux">Modifications relevées :</p>' + mods.map(z => `<div class="modifLigne">✏️ ${esc(window.CPAgenda.libelleModification(z))}${z.le ? ' <span class="doux">(' + esc(fmtDate(z.le)) + ')</span>' : ''}</div>`).join('') : ''}</div>`;
+      ${mods.length ? '<p class="doux">Modifications relevées :</p>' + (l => l(mods.slice(0, 5)) + (mods.length > 5 ? `<details><summary class="doux">Voir les ${mods.length - 5} autres</summary>${l(mods.slice(5))}</details>` : ''))(zs => zs.map(z => `<div class="modifLigne">✏️ ${esc(window.CPAgenda.libelleModification(z))}${z.le ? ' <span class="doux">(' + esc(fmtDate(z.le)) + ')</span>' : ''}</div>`).join('')) + (toutes.length > mods.length ? `<p class="doux">${toutes.length - mods.length} répétition(s) du même changement masquée(s).</p>` : '') : ''}</div>`;
   }
   // V95 : mission acceptée déjà livrée (fin passée) → plus de retours proposés.
   const missionPassee = m => { const f = Date.parse(m.delivery_end || m.delivery_start || ''), d = Date.parse(m.pickup_start || ''); return Number.isFinite(f) ? f < Date.now() : (Number.isFinite(d) ? d + 12 * 3600000 < Date.now() : false); };
