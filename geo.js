@@ -112,9 +112,23 @@
       (trouverVille(m[pre + '_city']) || {}).dep || null;
   }
   // Coordonnées : GPS fourni par la plateforme > ville connue > chef-lieu du département. précision indiquée.
+  // V138 : points GPS d'adresses cherchés via le service officiel d'adresses (api-adresse.data.gouv.fr), gardés sur l'appareil. Précision : 'adresse' | 'rue' | 'ville'.
+  const POINTS = {};
+  const cleAdresse = (m, cote) => { const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to'; const a = m[cote + '_address'] || p.address || p.street || '', v = m[pre + '_city'] || p.city || '', cp = p.postal_code || '', d = m[pre + '_department'] || ''; return a && v ? [a, cp || d, v].map(x => String(x).trim().toLowerCase()).join('|') : ''; };
+  async function chercherPoint(m, cote, fetchFn) {
+    const cle = cleAdresse(m, cote); if (!cle) return null;
+    const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to';
+    const q = [m[cote + '_address'] || p.address || p.street, p.postal_code, m[pre + '_city'] || p.city].filter(Boolean).join(' ');
+    const r = await fetchFn('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(q) + (p.postal_code ? '&postcode=' + encodeURIComponent(p.postal_code) : ''));
+    if (!r || !r.ok) throw new Error('service adresses');
+    const j = await r.json(), f = j && j.features && j.features[0]; if (!f || !f.geometry || !(f.properties && f.properties.score >= 0.5)) return { cle, trouve: false };
+    const t = f.properties.type, [lng, lat] = f.geometry.coordinates; if (!Number.isFinite(lat) || !Number.isFinite(lng)) return { cle, trouve: false };
+    return { cle, trouve: true, point: { lat, lng, precision: t === 'housenumber' ? 'adresse' : t === 'street' ? 'rue' : 'ville' } };
+  }
   function coordonnees(m, cote) {
     const p = m[cote]; const pre = cote === 'origin' ? 'from' : 'to';
     if (p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && p.lat !== null && p.lng !== null && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180 && !(Number(p.lat) === 0 && Number(p.lng) === 0)) return { lat: Number(p.lat), lng: Number(p.lng), precision: 'gps' };
+    const pt = POINTS[cleAdresse(m, cote)]; if (pt) return { lat: pt.lat, lng: pt.lng, precision: pt.precision };
     const dep = departementMission(m, cote);
     const v = trouverVille(m[pre + '_city'] || (p && p.city), dep); if (v) return { lat: v.lat, lng: v.lng, precision: 'ville' };
     if (dep) return { lat: DEPARTEMENTS[dep].lat, lng: DEPARTEMENTS[dep].lng, precision: 'departement' };
@@ -194,7 +208,7 @@
     if (z.type === 'region') return REGIONS[z.code] || z.code;
     return z.nom + (z.dep ? ' (' + z.dep + ')' : '');
   }
-  const api = { REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone };
+  const api = { POINTS, cleAdresse, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone };
   root.CPGeo = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

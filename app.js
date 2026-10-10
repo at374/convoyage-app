@@ -165,6 +165,31 @@
   const trajet = m => lieu(m, 'origin') + ' → ' + lieu(m, 'destination');
   // V75 : mode confidentiel Hiflow → l'adresse exacte est volontairement restée sur l'ordinateur.
   const LOCAL = 'Adresse exacte sur ton ordinateur (mode confidentiel Hiflow)';
+  // V138 : cherche (une seule fois par adresse) le point GPS des adresses connues ; échec → on réessaie dans 1 jour ; sans point exact, la ville (puis le département) sert de repère, marqué « approximatif ».
+  const gpsMem = lireLocal('cp_gps', {}) || {}; Object.assign(G.POINTS, gpsMem.pts || {}); gpsMem.pts = gpsMem.pts || {}; gpsMem.rate = gpsMem.rate || {};
+  let gpsOccupe = false, gpsTimer = null;
+  function planifierGps() { if (gpsTimer || gpsOccupe) return; gpsTimer = setTimeout(async () => { gpsTimer = null; gpsOccupe = true; let n = 0, nb = 0;
+    try { for (const m of etat.missions.slice(0, 400)) for (const cote of ['origin', 'destination']) { if (nb >= 25) break; const cle = G.cleAdresse(m, cote); if (!cle || G.POINTS[cle] || (gpsMem.rate[cle] && Date.now() - gpsMem.rate[cle] < 864e5)) continue; const c0 = m[cote]; if (c0 && Number.isFinite(Number(c0.lat)) && Number(c0.lat) !== 0) continue; nb++;
+      try { const r = await G.chercherPoint(m, cote, u => fetch(u)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } else gpsMem.rate[cle] = Date.now(); } catch (_) { gpsMem.rate[cle] = Date.now(); } }
+    } finally { gpsOccupe = false; ecrireLocal('cp_gps', gpsMem); if (n) listeMissions(); } }, 1500); }
+  const mentionGps = (m, cote) => { const c = G.coordonnees(m, cote); const t = !c ? ['⚠️', 'aucun point GPS (lieu inconnu)'] : c.precision === 'gps' ? ['📍', 'point GPS exact (donné par la plateforme)'] : c.precision === 'adresse' ? ['📍', 'point GPS de l’adresse (vérifié)'] : c.precision === 'rue' ? ['📍', 'point GPS de la rue (vérifié)'] : c.precision === 'ville' ? ['📌', 'approximatif : centre de la ville'] : ['📌', 'approximatif : centre du département']; return `<span class="doux gpsInfo">${t[0]} ${esc(t[1])}</span>`; };
+  // V138 : fenêtre « trajet à vol d'oiseau » : schéma départ → arrivée (sans fond de carte, rien n'est téléchargé), distance à vol d'oiseau et route estimée.
+  function popupVol(m) {
+    const a = G.coordonnees(m, 'origin'), b = G.coordonnees(m, 'destination'); const ancien = document.getElementById('popVol'); if (ancien) ancien.remove();
+    const d = document.createElement('div'); d.id = 'popVol'; d.className = 'popVol'; d.setAttribute('role', 'dialog');
+    let corps;
+    if (!a || !b) corps = '<p>Départ ou arrivée non localisable : pas de schéma possible.</p>';
+    else {
+      const km = G.volOiseauKm(a, b), cx = Math.cos(((a.lat + b.lat) / 2) * Math.PI / 180), dx = (b.lng - a.lng) * cx, dy = b.lat - a.lat, L = Math.max(Math.abs(dx), Math.abs(dy), 1e-6), k = 130 / L;
+      const x1 = 160 - dx * k / 2 * 1, y1 = 100 + dy * k / 2, x2 = 160 + dx * k / 2, y2 = 100 - dy * k / 2;
+      const ap = p => p.precision === 'gps' || p.precision === 'adresse' || p.precision === 'rue' ? 'point précis' : p.precision === 'ville' ? 'centre de la ville (approximatif)' : 'centre du département (approximatif)';
+      corps = `<svg viewBox="0 0 320 200" width="100%" role="img" aria-label="Schéma départ arrivée"><rect width="320" height="200" rx="10" fill="var(--accentDoux)"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--accent)" stroke-width="3" stroke-dasharray="7 5"/><circle cx="${x1}" cy="${y1}" r="8" fill="#16a34a"/><circle cx="${x2}" cy="${y2}" r="8" fill="#dc2626"/><text x="${x1}" y="${y1 + (y1 < 100 ? -14 : 24)}" text-anchor="middle" font-size="13" fill="var(--texte)">${esc(m.from_city || 'Départ')}</text><text x="${x2}" y="${y2 + (y2 < 100 ? -14 : 24)}" text-anchor="middle" font-size="13" fill="var(--texte)">${esc(m.to_city || 'Arrivée')}</text><text x="12" y="20" font-size="11" fill="var(--doux)">▲ nord en haut</text></svg>
+        <p><b>≈ ${esc(Math.round(km))} km à vol d’oiseau</b> · route estimée ≈ ${esc(Math.round(G.routeKm(a, b)))} km${m.distance_km ? ' (plateforme : ' + esc(m.distance_km) + ' km)' : ''}</p>
+        <p class="doux">🟢 Départ : ${esc(ap(a))} · 🔴 Arrivée : ${esc(ap(b))}. Schéma sans carte : seules les distances et la direction sont justes.</p>`;
+    }
+    d.innerHTML = `<div class="popVolBoite"><button class="icone" id="popVolX" aria-label="Fermer">✕</button><h3>✈️ Trajet à vol d’oiseau</h3>${corps}</div>`;
+    document.body.appendChild(d); d.onclick = ev => { if (ev.target === d || ev.target.id === 'popVolX') d.remove(); };
+  }
   function adresse(m, cote) {
     const a = m[cote + '_address']; if (a) return a;
     if (m.adresses_locales) return (cote === 'origin' ? m.from_city : m.to_city) ? (cote === 'origin' ? m.from_city : m.to_city) + (m[(cote === 'origin' ? 'from' : 'to') + '_department'] ? ' (' + m[(cote === 'origin' ? 'from' : 'to') + '_department'] + ')' : '') + ' — ' + LOCAL : LOCAL;
@@ -180,12 +205,12 @@
   }
   function carteMission(m, i, extra) {
     const r = renta(m), reste = heuresRestantes(m);
-    return `<button class="mission${clsPlat(m.platform)}${estPassee(m) ? ' passe' : ''}${reste != null && reste < SEUIL_URGENT_H ? ' urgent' : ''}" data-i="${i}">
+    return `<button class="mission${clsPlat(m.platform)}${estPassee(m) ? ' passe' : ''}${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? ' urgent' : ''}" data-i="${i}">
       <div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${m.validation === 'non_validee' ? ' <span class="etiq nv">non validée</span>' : ''}</span>
       <span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div>${r.connu ? `<div class="net">net ≈ ${esc(euros(r.net))}${r.parHeure ? ' · ' + esc(euros(r.parHeure)) + '/h' : ''}</div>` : ''}</span></div>
-      ${reste != null && reste < SEUIL_URGENT_H ? `<div class="urgence">⏳ Plus que ${esc(reste < 1 ? Math.max(1, Math.round(reste * 60)) + ' min' : Math.round(reste) + ' h')} pour la faire</div>` : ''}<div class="trajet">${esc(trajet(m))}</div>
+      ${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? `<div class="urgence">⏳ Plus que ${esc(reste < 1 ? Math.max(1, Math.round(reste * 60)) + ' min' : Math.round(reste) + ' h')} pour la faire</div>` : ''}<div class="trajet">${esc(trajet(m))}</div>
       <div class="meta"><span>📅 ${esc(quand(m))}</span>
-      <span>📍 ${esc(adresse(m, 'origin'))}</span>
+      <span>📍 ${esc(adresse(m, 'origin'))}</span>${kmVolOiseau(m) != null && etat.posMax > 0 ? `<span class="vol">✈️ ≈ ${esc(kmVolOiseau(m))} km à vol d’oiseau de ${sourceRecherche() === 'domicile' ? 'ton domicile' : 'ta position'} jusqu’au départ</span>` : ''}
       <span>🏁 ${esc(adresse(m, 'destination'))}</span>
       ${m.distance_km ? `<span>🛣 ${esc(m.distance_km)} km${m.duree_h ? ' · ' + esc(duree(m.duree_h)) : ''}</span>` : ''}${m.client ? `<span>🏢 ${esc(m.client)}</span>` : ''}</div>${extra || ''}</button>`;
   }
@@ -206,7 +231,7 @@
     const nombre = (id, lib, v, pas) => `<label>${lib}<input id="${id}" type="number" min="0" step="${pas}" inputmode="decimal" value="${esc(v == null ? '' : v)}"></label>`;
     return `<details class="plusFiltres" id="plusFiltres"${nb || etat.plusOuvert ? ' open' : ''}><summary>Plus de filtres : client, véhicule, distance, durée${nb ? ' · <b>' + nb + ' actif' + (nb > 1 ? 's' : '') + '</b>' : ''}</summary>
       <div class="grilleFiltres">${liste('fClient', 'Client', o.clients, f.client)}${liste('fType', 'Type de véhicule', o.types, f.type)}${liste('fEnergie', 'Motorisation', o.energies, f.energie)}${liste('fMarque', 'Marque', o.marques, f.marque)}
-      ${nombre('fKmMin', 'Distance min (km)', f.kmMin, 10)}${nombre('fKmMax', 'Distance max (km)', f.kmMax, 10)}${nombre('fDuree', 'Durée max (h)', f.dureeMax, 0.5)}</div>
+      ${nombre('fKmMin', 'Longueur mission min (km)', f.kmMin, 10)}${nombre('fKmMax', 'Longueur mission max (km)', f.kmMax, 10)}${nombre('fDuree', 'Durée max (h)', f.dureeMax, 0.5)}</div>
       ${o.clients.length ? '' : '<p class="doux">Clients : aucun nom de société reçu pour l’instant. Il faut l’extension V96 ou plus sur l’ordinateur, le fichier supabase/maj_V96.sql exécuté dans Supabase, puis une relecture de Hiflow.</p>'}
       ${nb ? '<button id="fEffacer" class="second">Effacer ces filtres</button>' : ''}</details>`;
   }
@@ -262,7 +287,7 @@
       <select id="tri" aria-label="Trier"><option value="recent">Plus récentes</option><option value="date">Date de départ</option><option value="prix">Prix</option><option value="heure">€/heure</option><option value="proche">Les plus proches de moi</option></select></div>
       <div class="ligneFiltres"><select id="cote" aria-label="Lieu cherché">${Object.entries(COTES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
       <select id="rayon" aria-label="Autour de la ville"${aVille ? '' : ' disabled'}><option value="0">Ville exacte</option><option value="20">Ville + 20 km</option><option value="50">Ville + 50 km</option><option value="100">Ville + 100 km</option></select></div>
-      <div class="lignePos"><button id="btnPos" class="second" type="button">📍 Ma position</button><select id="posMax" aria-label="Distance maximale depuis ma position"><option value="0">Distance depuis moi : sans limite</option>${[20, 50, 100, 150, 200, 300].map(k => `<option value="${k}">Départ à moins de ${k} km de moi</option>`).join('')}</select><span class="doux" id="posInfo"></span></div>
+      <div class="lignePos"><select id="posSource" aria-label="Chercher depuis"><option value="position">Depuis ma position GPS</option><option value="domicile">Depuis mon domicile</option></select><button id="btnPos" class="second" type="button">📍 Ma position</button><select id="posMax" aria-label="Distance maximale depuis ma position"><option value="0">Distance max depuis ma position : sans limite</option>${[20, 50, 100, 150, 200, 300].map(k => `<option value="${k}">Distance max : ${k} km depuis ma position</option>`).join('')}</select><span class="doux" id="posInfo"></span></div>
       ${blocPlusFiltres(dispo)}
       <div class="zones" id="zones">${etat.zones.map((z, i) => `<button class="zone" data-zone="${i}" aria-label="Retirer ce filtre">${esc(COTES[z.cote || 'tous'])} : ${esc(G.libelleZone(z))} ✕</button>`).join('')}</div>
       ${etat.erreur ? `<p class="erreur">${esc(etat.erreur)}</p>` : ''}<div id="liste"></div>`;
@@ -272,9 +297,9 @@
     $('tri').onchange = ev => { etat.tri = ev.target.value; memoriser(); listeMissions(); };
     $('cote').onchange = ev => { etat.cote = ev.target.value; memoriser(); };
     $('rayon').onchange = ev => { etat.rayon = Number(ev.target.value); memoriser(); listeMissions(); };
-    $('posMax').value = String(etat.posMax); infoPosition();
+    $('posMax').value = String(etat.posMax); $('posSource').value = sourceRecherche(); $('posSource').onchange = ev => { ecrireLocal('cp_depuis', ev.target.value); if (ev.target.value === 'domicile' && !RT.domicile(etat.reglages)) toast('Renseigne ton domicile dans les Réglages'); listeMissions(); }; infoPosition();
     $('btnPos').onclick = () => localiser(true);
-    $('posMax').onchange = ev => { etat.posMax = Number(ev.target.value); memoriser(); if (etat.posMax > 0 && !positionRecente(60)) localiser(false); else listeMissions(); };
+    $('posMax').onchange = ev => { etat.posMax = Number(ev.target.value); memoriser(); if (etat.posMax > 0 && sourceRecherche() === 'position' && !positionRecente(60)) localiser(false); else listeMissions(); };
     brancherPlusFiltres();
     const champ = $('recherche');
     champ.oninput = () => { etat.recherche = champ.value; memoriser(); montrerSuggestions(); clearTimeout(vueMissions.t); vueMissions.t = setTimeout(listeMissions, 250); };
@@ -282,6 +307,10 @@
     listeMissions();
   }
   // V137 : position du téléphone (service de localisation de Google sur Android), demandée UNE FOIS quand on touche « Ma position » ou qu'on choisit une distance — jamais en continu. Gardée seulement sur ce téléphone (jamais envoyée au serveur).
+  // V138 : on cherche depuis « ma position » (GPS) ou depuis le domicile habituel (réglages) — au choix, gardé sur ce téléphone.
+  const sourceRecherche = () => lireLocal('cp_depuis', 'position') === 'domicile' ? 'domicile' : 'position';
+  const pointRecherche = () => sourceRecherche() === 'domicile' ? RT.domicile(etat.reglages) : etat.pos;
+  const kmVolOiseau = m => { const p = pointRecherche(), c = p ? G.coordonnees(m, 'origin') : null; return c ? Math.round(G.volOiseauKm(p, c)) : null; };
   const positionRecente = minutes => !!(etat.pos && Date.now() - etat.pos.at < minutes * 60000);
   function infoPosition() {
     const i = $('posInfo'); if (!i) return;
@@ -312,6 +341,7 @@
     };
   }
   function listeMissions() {
+    planifierGps();
     const zoneListe = $('liste'); if (!zoneListe) return;
     const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     const q = norm(etat.recherche);
@@ -321,14 +351,14 @@
     l = G.filtrer(l, etat.zones, etat.rayon);
     l = FI.appliquer(l, etat.plus, m => CALC.dureeEstimee(m).heures);   // V96 : client, véhicule, distance, durée
     // V137 : distance maximale DEPUIS MA POSITION (route estimée = vol d'oiseau × 1,25) ; départ de position inconnue → gardé.
-    const kmDeMoi = m => { const c = etat.pos ? G.coordonnees(m, 'origin') : null; return c ? G.routeKm(etat.pos, c) : null; };
-    if (etat.posMax > 0 && etat.pos) l = l.filter(m => { const d = kmDeMoi(m); return d == null || d <= etat.posMax; });
+    const kmDeMoi = m => { const p = pointRecherche(), c = p ? G.coordonnees(m, 'origin') : null; return c ? G.routeKm(p, c) : null; };
+    if (etat.posMax > 0 && pointRecherche()) l = l.filter(m => { const d = kmDeMoi(m); return d == null || d <= etat.posMax; });
     // Texte libre (sans choisir de suggestion) : recherche simple, comme avant.
     if (q) l = l.filter(m => q.split(/[\s,]+/).filter(Boolean).some(t => [m.from_city, m.to_city, m.from_department, m.to_department, m.origin_address, m.destination_address].some(v => norm(v).includes(t))));
     const cache = new Map(), ph = m => { if (!cache.has(m)) cache.set(m, renta(m)); return cache.get(m); };
     if (etat.tri === 'prix') l.sort((a, b) => (b.fee || 0) - (a.fee || 0));
     else if (etat.tri === 'heure') l.sort((a, b) => (ph(b).parHeure || 0) - (ph(a).parHeure || 0));
-    else if (etat.tri === 'proche' && etat.pos) l.sort((a, b) => (kmDeMoi(a) ?? 1e9) - (kmDeMoi(b) ?? 1e9));
+    else if (etat.tri === 'proche' && pointRecherche()) l.sort((a, b) => (kmDeMoi(a) ?? 1e9) - (kmDeMoi(b) ?? 1e9));
     else if (etat.tri === 'date') l.sort((a, b) => String(a.pickup_start || '9').localeCompare(String(b.pickup_start || '9')));
     else l.sort((a, b) => String(b.first_seen_at || '').localeCompare(String(a.first_seen_at || '')) || String(a.pickup_start || '9').localeCompare(String(b.pickup_start || '9')));   // V99 : les plus récemment parues en haut
     listeAffichee = l;
@@ -597,10 +627,11 @@
     const ligne = (a, b) => `<tr><td>${esc(a)}</td><td>${b}</td></tr>`;
     $('feuilleContenu').innerHTML = `<div class="doux"><span class="etiq">${esc(PLATS[m.platform])}</span> n° ${esc(m.external_id)}${m.validation === 'non_validee' ? ' · lecture non validée : vérifie sur le site' : ''}</div>
       <h2 id="feuilleTitre" class="trajet" style="font-size:20px">${esc(trajet(m))}</h2>
+      <button id="btnVol" class="second" type="button" aria-label="Voir le trajet à vol d’oiseau">✈️ Trajet à vol d’oiseau</button>
       ${lienDevis(m) ? `<a href="${esc(lienAppliHiflow() || lienDevis(m))}"${lienAppliHiflow() ? '' : ' target="_blank" rel="noopener"'} id="lienDevis" data-numero="${esc(m.external_id)}"><button style="width:100%;margin:4px 0 2px">📱 Faire le devis dans l’application Hiflow</button></a><p class="doux" style="margin:0 0 8px">Mission n° <b>${esc(m.external_id)}</b> (copié en touchant le bouton) · ${esc(trajet(m))}</p>` : ''}
       <div class="meta"><span>📅 Prise en charge : ${esc(quand(m))}</span>${m.delivery_start || m.delivery_end ? `<span>🏁 Livraison : ${esc(fmtDate(m.delivery_start || m.delivery_end))}</span>` : ''}</div>
-      <div class="carte"><b>Départ</b><div>${esc(adresse(m, 'origin'))}</div>${etat.reglages && etat.reglages.domicile_ville && m.from_city ? liensTransports(etat.reglages.domicile_ville, '', m.from_city, m.from_department, 'a|' + (m.id || m.external_id)) : ''}${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}</div>
-      <div class="carte"><b>Arrivée</b><div>${esc(adresse(m, 'destination'))}</div>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}</div>
+      <div class="carte"><b>Départ</b><div>${esc(adresse(m, 'origin'))}</div>${mentionGps(m, 'origin')}${etat.reglages && etat.reglages.domicile_ville && m.from_city ? liensTransports(etat.reglages.domicile_ville, '', m.from_city, m.from_department, 'a|' + (m.id || m.external_id)) : ''}${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}</div>
+      <div class="carte"><b>Arrivée</b><div>${esc(adresse(m, 'destination'))}</div>${mentionGps(m, 'destination')}${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}</div>
       <div class="carte"><h2>Rentabilité estimée</h2>${dv ? `<p class="devisSource">📄 Montants de ton devis Hiflow n° ${esc(dv.n)} (${dv.accepte ? 'accepté' : 'envoyé, en attente'})${dv.total != null ? ' — total ' + esc(euros(dv.total)) : ''}</p>` : ''}${r.connu ? `<table class="tableau">
         ${ligne(dv ? 'Prestation (devis)' : 'Prestation', esc(euros(r.prestation)))}
         ${frais.length ? ligne(dv ? '+ Frais remboursés (devis)' : '+ Remboursements prévus', esc(frais.map(([k, v]) => (FRAIS[k.toLowerCase()] || k) + ' ' + euros(v)).join(' · '))) : ''}
@@ -625,6 +656,7 @@
     $('feuille').hidden = false; $('feuille').querySelector('.feuilleBoite').scrollTop = 0;
     const suivants = detail.retours || [], dest = G.coordonnees(m, 'destination');
     for (const b of document.querySelectorAll('[data-retour]')) b.onclick = () => detail(suivants[Number(b.dataset.retour)].mission, dest);
+    { const bv = $('btnVol'); if (bv) bv.onclick = () => popupVol(m); }
   }
 
   // ---------- V77 : notifications même application fermée (Web Push) ----------
@@ -698,6 +730,11 @@
   const styleCourant = () => { try { const v = localStorage.getItem('cp_style'); return STYLES.some(x => x[0] === v) ? v : 'ultra'; } catch (_) { return 'ultra'; } };
   const appliquerStyle = v => { document.documentElement.dataset.style = v; const c = { ultra: '#0a0a0a', braise: '#1a0608', crepuscule: '#1b1030', jour: '#0c4a6e', classique: '#101827' }[v]; const m = document.querySelector('meta[name="theme-color"]'); if (m && c) m.content = c; };
   appliquerStyle(styleCourant());
+  // V138 : polices au choix (polices du téléphone, aucune ne se télécharge) ; le bouton « Aa » les fait défiler.
+  const POLICES = [['standard', 'Standard'], ['lisible', 'Lisible (Verdana)'], ['classique', 'Classique (Georgia)'], ['arrondie', 'Arrondie'], ['machine', 'Machine (chiffres alignés)'], ['grande', 'Grande taille']];
+  const policeCourante = () => { try { const v = localStorage.getItem('cp_police'); return POLICES.some(x => x[0] === v) ? v : 'standard'; } catch (_) { return 'standard'; } };
+  document.documentElement.dataset.police = policeCourante();
+  { const b = document.getElementById('policeBtn'); if (b) b.onclick = () => { const i = POLICES.findIndex(x => x[0] === policeCourante()), n = POLICES[(i + 1) % POLICES.length]; try { localStorage.setItem('cp_police', n[0]); } catch (_) {} document.documentElement.dataset.police = n[0]; const t = document.getElementById('sousTitre'); if (t) t.textContent = 'Police : ' + n[1]; }; }
   { const b = document.getElementById('styleBtn'); if (b) b.onclick = () => { const i = STYLES.findIndex(x => x[0] === styleCourant()), n = STYLES[(i + 1) % STYLES.length]; try { localStorage.setItem('cp_style', n[0]); } catch (_) {} appliquerStyle(n[0]); const t = document.getElementById('sousTitre'); if (t) t.textContent = 'Style : ' + n[1]; }; }
   function demarrer() {
     if (!api) return ecranConfiguration();
