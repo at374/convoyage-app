@@ -23,7 +23,7 @@
     return null;
   }
   window.__cpLienAppliHiflow = lienAppliHiflow;
-  const VERSION_APP = 'V133 (2.0.33)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V134 (2.0.34)';   // affichée dans l'en-tête et les Réglages
   const LIENS = { Hiflow: 'https://partenaire.expedicar.com/', DriiveMe: 'https://www.driiveme.com/', Otoqi: 'https://drivers.otoqi.com/', PopValet: 'https://www.popvalet.com/' };
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
   const lireLocal = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d; } catch (_) { return d; } };
@@ -494,7 +494,7 @@
     const L = [['🚆 SNCF Connect', 'https://www.sncf-connect.com/billet-train'], ['🚌 Flixbus', 'https://www.flixbus.fr/voyages-car/' + a + '-' + b], ['🚗 BlaBlaCar', 'https://www.blablacar.fr/ride-sharing/' + a + '/' + b]];
     if (DEP_ARA.includes(String(deDep || '')) && DEP_ARA.includes(String(versDep || ''))) L.push(['🚍 Cars Région / TER (OùRA)', 'https://www.oura.com/']);
     L.push(['🚆 Rome2rio', r2], ['🗺️ Maps bus/train', gm]);
-    return `<span class="liensTr">${L.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${t}</a>`).join('')}</span><span class="doux liensNote">Horaires et prix à jour sur chaque site ; si la ligne n’existe pas, il l’indique.</span>`;
+    return `<span class="liensTr">${L.map(([t, u]) => `<a href="${esc(u)}">${t}</a>`).join('')}</span><span class="doux liensNote">Horaires et prix à jour sur chaque site (le bouton retour te ramène ici) ; si la ligne n’existe pas, il l’indique.</span>`;
   }
   // V78 : retours possibles après cette mission (toutes plateformes), estimés.
   function blocRetours(m) {
