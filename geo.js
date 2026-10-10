@@ -114,16 +114,16 @@
   // Coordonnées : GPS fourni par la plateforme > ville connue > chef-lieu du département. précision indiquée.
   // V138 : points GPS d'adresses cherchés via le service officiel d'adresses (api-adresse.data.gouv.fr), gardés sur l'appareil. Précision : 'adresse' | 'rue' | 'ville'.
   const POINTS = {};
-  const cleAdresse = (m, cote) => { const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to'; const a = m[cote + '_address'] || p.address || p.street || '', v = m[pre + '_city'] || p.city || '', cp = p.postal_code || '', d = m[pre + '_department'] || ''; return a && v ? [a, cp || d, v].map(x => String(x).trim().toLowerCase()).join('|') : ''; };
+  const adresseDe = (m, cote) => { const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to'; const a = String(m[cote + '_address'] || p.address || p.street || '').trim(), v = String(m[pre + '_city'] || p.city || '').trim(); const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim(); return { a, v, cp, d: m[pre + '_department'] || '' }; };
+  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v && (x.a || x.cp) ? [x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
   async function chercherPoint(m, cote, fetchFn) {
     const cle = cleAdresse(m, cote); if (!cle) return null;
-    const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to';
-    const q = [m[cote + '_address'] || p.address || p.street, p.postal_code, m[pre + '_city'] || p.city].filter(Boolean).join(' ');
-    const r = await fetchFn('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(q) + (p.postal_code ? '&postcode=' + encodeURIComponent(p.postal_code) : ''));
+    const x = adresseDe(m, cote); const q = [x.a, x.cp, x.v].filter(Boolean).join(' ');
+    const r = await fetchFn('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(q) + (x.cp ? '&postcode=' + encodeURIComponent(x.cp) : ''));
     if (!r || !r.ok) throw new Error('service adresses');
     const j = await r.json(), f = j && j.features && j.features[0]; if (!f || !f.geometry || !(f.properties && f.properties.score >= 0.5)) return { cle, trouve: false };
     const t = f.properties.type, [lng, lat] = f.geometry.coordinates; if (!Number.isFinite(lat) || !Number.isFinite(lng)) return { cle, trouve: false };
-    return { cle, trouve: true, point: { lat, lng, precision: t === 'housenumber' ? 'adresse' : t === 'street' ? 'rue' : 'ville' } };
+    return { cle, trouve: true, point: { lat, lng, precision: t === 'housenumber' ? 'adresse' : t === 'street' ? 'rue' : t === 'locality' ? 'rue' : 'ville' } };
   }
   function coordonnees(m, cote) {
     const p = m[cote]; const pre = cote === 'origin' ? 'from' : 'to';

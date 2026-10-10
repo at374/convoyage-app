@@ -23,7 +23,7 @@
     return null;
   }
   window.__cpLienAppliHiflow = lienAppliHiflow;
-  const VERSION_APP = 'V137 (2.0.37)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V138 (2.0.38)';   // affichée dans l'en-tête et les Réglages
   const LIENS = { Hiflow: 'https://partenaire.expedicar.com/', DriiveMe: 'https://www.driiveme.com/', Otoqi: 'https://drivers.otoqi.com/', PopValet: 'https://www.popvalet.com/' };
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
   document.addEventListener('change', e => { const c = e.target && e.target.closest && e.target.closest('input[data-verif]'); if (!c) return; const t = lireLocal('cp_verif', {}) || {}; if (c.checked) t[c.dataset.verif] = new Date().toISOString(); else delete t[c.dataset.verif]; ecrireLocal('cp_verif', t); const l = c.closest('label'); if (l) { l.classList.toggle('ok', c.checked); l.lastChild.textContent = c.checked ? ' ✓ Vérifié par toi le ' + new Date().toLocaleDateString('fr-FR') + ' (horaires et prix valables le jour de la mission)' : ' Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'; } });
@@ -175,21 +175,43 @@
   const mentionGps = (m, cote) => { const c = G.coordonnees(m, cote); const t = !c ? ['⚠️', 'aucun point GPS (lieu inconnu)'] : c.precision === 'gps' ? ['📍', 'point GPS exact (donné par la plateforme)'] : c.precision === 'adresse' ? ['📍', 'point GPS de l’adresse (vérifié)'] : c.precision === 'rue' ? ['📍', 'point GPS de la rue (vérifié)'] : c.precision === 'ville' ? ['📌', 'approximatif : centre de la ville'] : ['📌', 'approximatif : centre du département']; return `<span class="doux gpsInfo">${t[0]} ${esc(t[1])}</span>`; };
   // V138 : fenêtre « trajet à vol d'oiseau » : schéma départ → arrivée (sans fond de carte, rien n'est téléchargé), distance à vol d'oiseau et route estimée.
   function popupVol(m) {
-    const a = G.coordonnees(m, 'origin'), b = G.coordonnees(m, 'destination'); const ancien = document.getElementById('popVol'); if (ancien) ancien.remove();
+    const ancien = document.getElementById('popVol'); if (ancien) ancien.remove();
     const d = document.createElement('div'); d.id = 'popVol'; d.className = 'popVol'; d.setAttribute('role', 'dialog');
-    let corps;
-    if (!a || !b) corps = '<p>Départ ou arrivée non localisable : pas de schéma possible.</p>';
-    else {
-      const km = G.volOiseauKm(a, b), cx = Math.cos(((a.lat + b.lat) / 2) * Math.PI / 180), dx = (b.lng - a.lng) * cx, dy = b.lat - a.lat, L = Math.max(Math.abs(dx), Math.abs(dy), 1e-6), k = 130 / L;
-      const x1 = 160 - dx * k / 2 * 1, y1 = 100 + dy * k / 2, x2 = 160 + dx * k / 2, y2 = 100 - dy * k / 2;
-      const ap = p => p.precision === 'gps' || p.precision === 'adresse' || p.precision === 'rue' ? 'point précis' : p.precision === 'ville' ? 'centre de la ville (approximatif)' : 'centre du département (approximatif)';
-      corps = `<svg viewBox="0 0 320 200" width="100%" role="img" aria-label="Schéma départ arrivée"><rect width="320" height="200" rx="10" fill="var(--accentDoux)"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--accent)" stroke-width="3" stroke-dasharray="7 5"/><circle cx="${x1}" cy="${y1}" r="8" fill="#16a34a"/><circle cx="${x2}" cy="${y2}" r="8" fill="#dc2626"/><text x="${x1}" y="${y1 + (y1 < 100 ? -14 : 24)}" text-anchor="middle" font-size="13" fill="var(--texte)">${esc(m.from_city || 'Départ')}</text><text x="${x2}" y="${y2 + (y2 < 100 ? -14 : 24)}" text-anchor="middle" font-size="13" fill="var(--texte)">${esc(m.to_city || 'Arrivée')}</text><text x="12" y="20" font-size="11" fill="var(--doux)">▲ nord en haut</text></svg>
-        <p><b>≈ ${esc(Math.round(km))} km à vol d’oiseau</b> · route estimée ≈ ${esc(Math.round(G.routeKm(a, b)))} km${m.distance_km ? ' (plateforme : ' + esc(m.distance_km) + ' km)' : ''}</p>
-        <p class="doux">🟢 Départ : ${esc(ap(a))} · 🔴 Arrivée : ${esc(ap(b))}. Schéma sans carte : seules les distances et la direction sont justes.</p>`;
-    }
-    d.innerHTML = `<div class="popVolBoite"><button class="icone" id="popVolX" aria-label="Fermer">✕</button><h3>✈️ Trajet à vol d’oiseau</h3>${corps}</div>`;
     document.body.appendChild(d); d.onclick = ev => { if (ev.target === d || ev.target.id === 'popVolX') d.remove(); };
+    const W = 320, H = 260, px = (p, z) => { const n = 256 * 2 ** z, r = p.lat * Math.PI / 180; return [(p.lng + 180) / 360 * n, (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n]; };
+    const ap = p => p.precision === 'gps' || p.precision === 'adresse' || p.precision === 'rue' ? 'point précis' : p.precision === 'ville' ? 'centre de la commune (approximatif)' : 'centre du département (approximatif)';
+    // Carte OpenStreetMap (gratuite) : vignettes 256 px calculées ici, sans bibliothèque ; le zoom est choisi pour que tout le tracé tienne.
+    const dessiner = (a, b, route, info) => {
+      const pts = route && route.length > 1 ? route : [[a.lng, a.lat], [b.lng, b.lat]];
+      let z = 14; for (; z > 2; z--) { const P = pts.map(q => px({ lng: q[0], lat: q[1] }, z)), xs = P.map(q => q[0]), ys = P.map(q => q[1]); if (Math.max(...xs) - Math.min(...xs) <= W * 0.8 && Math.max(...ys) - Math.min(...ys) <= H * 0.8) break; }
+      const P = pts.map(q => px({ lng: q[0], lat: q[1] }, z)), xs = P.map(q => q[0]), ys = P.map(q => q[1]), ox = (Math.min(...xs) + Math.max(...xs)) / 2 - W / 2, oy = (Math.min(...ys) + Math.max(...ys)) / 2 - H / 2, N = 2 ** z;
+      let tuiles = ''; for (let tx = Math.floor(ox / 256); tx <= Math.floor((ox + W) / 256); tx++) for (let ty = Math.floor(oy / 256); ty <= Math.floor((oy + H) / 256); ty++) if (ty >= 0 && ty < N) tuiles += `<img alt="" referrerpolicy="no-referrer" src="https://tile.openstreetmap.org/${z}/${((tx % N) + N) % N}/${ty}.png" style="position:absolute;left:${Math.round(tx * 256 - ox)}px;top:${Math.round(ty * 256 - oy)}px;width:256px;height:256px">`;
+      const A = px(a, z), B = px(b, z), ligne = (route && route.length > 1 ? P : [A, B]).map(q => (q[0] - ox).toFixed(1) + ',' + (q[1] - oy).toFixed(1)).join(' ');
+      return `<div class="carteVol" style="position:relative;width:${W}px;max-width:100%;height:${H}px;overflow:hidden;border-radius:10px;background:var(--accentDoux);margin:0 auto">${tuiles}<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="position:absolute;left:0;top:0" role="img" aria-label="Trajet"><polyline points="${ligne}" fill="none" stroke="#1d4ed8" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"${route && route.length > 1 ? '' : ' stroke-dasharray="8 5"'}/><circle cx="${A[0] - ox}" cy="${A[1] - oy}" r="8" fill="#16a34a" stroke="#fff" stroke-width="2"/><circle cx="${B[0] - ox}" cy="${B[1] - oy}" r="8" fill="#dc2626" stroke="#fff" stroke-width="2"/></svg><span style="position:absolute;right:3px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div>`;
+    };
+    const rendre = async () => {
+      const a = G.coordonnees(m, 'origin'), b = G.coordonnees(m, 'destination');
+      if (!a || !b) { d.innerHTML = '<div class="popVolBoite"><button class="icone" id="popVolX" aria-label="Fermer">✕</button><h3>✈️ Trajet</h3><p>Départ ou arrivée non localisable : pas de carte possible.</p></div>'; return; }
+      const km = G.volOiseauKm(a, b), cadre = (carte, bas) => `<div class="popVolBoite"><button class="icone" id="popVolX" aria-label="Fermer">✕</button><h3>✈️ Trajet à vol d’oiseau et route</h3>${carte}<p class="doux">🟢 ${esc(m.from_city || 'Départ')} → 🔴 ${esc(m.to_city || 'Arrivée')}</p><p><b>≈ ${esc(Math.round(km))} km à vol d’oiseau</b>${bas}</p><p class="doux">🟢 Départ : ${esc(ap(a))} · 🔴 Arrivée : ${esc(ap(b))}.</p></div>`;
+      d.innerHTML = cadre(dessiner(a, b, null), ' · tracé de la route en cours de chargement…');
+      let route = null, dist = null, dur = null, communes = [];
+      try {   // tracé routier : service gratuit OSRM (OpenStreetMap) ; communes traversées : service officiel d'adresses, quelques points le long du tracé
+        const r = await fetch('https://router.project-osrm.org/route/v1/driving/' + a.lng + ',' + a.lat + ';' + b.lng + ',' + b.lat + '?overview=simplified&geometries=geojson');
+        const j = r.ok ? await r.json() : null, rt = j && j.routes && j.routes[0];
+        if (rt && rt.geometry && rt.geometry.coordinates.length > 1) { route = rt.geometry.coordinates; dist = rt.distance / 1000; dur = rt.duration / 3600; }
+      } catch (_) {}
+      if (!document.getElementById('popVol')) return;
+      if (route) {
+        d.innerHTML = cadre(dessiner(a, b, route), ` · route ≈ ${esc(Math.round(dist))} km, ≈ ${esc(duree(dur))} en voiture sans pause${m.distance_km ? ' (plateforme : ' + esc(m.distance_km) + ' km)' : ''}`).replace('</div><p class="doux">🟢 ', '</div><p class="doux" id="popCommunes">Communes traversées : recherche…</p><p class="doux">🟢 ');
+        const idx = [0.2, 0.4, 0.6, 0.8].map(f => route[Math.min(route.length - 1, Math.round(f * (route.length - 1)))]);
+        for (const q of idx) { try { const r = await fetch('https://api-adresse.data.gouv.fr/reverse/?limit=1&lon=' + q[0] + '&lat=' + q[1]); const j = r.ok ? await r.json() : null, f = j && j.features && j.features[0]; if (f && f.properties && f.properties.city && !communes.includes(f.properties.city)) communes.push(f.properties.city); } catch (_) {} }
+        const el = document.getElementById('popCommunes'); if (el) el.textContent = communes.length ? 'Communes sur le trajet (repères) : ' + [m.from_city].concat(communes, [m.to_city]).filter(Boolean).join(' → ') : 'Communes traversées : service indisponible.';
+      } else d.innerHTML = cadre(dessiner(a, b, null), ' · tracé de la route indisponible (service ou connexion) : ligne à vol d’oiseau seulement');
+    };
+    pointsMission(m).finally(rendre);
   }
+  // Cherche tout de suite (sans attendre la liste) les points GPS des deux bouts d'UNE mission ; renvoie vrai si un nouveau point a été trouvé.
+  async function pointsMission(m) { let n = 0; for (const cote of ['origin', 'destination']) { const cle = G.cleAdresse(m, cote); if (!cle || G.POINTS[cle]) continue; try { const r = await G.chercherPoint(m, cote, u => fetch(u)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } } catch (_) {} } if (n) ecrireLocal('cp_gps', gpsMem); return n > 0; }
   function adresse(m, cote) {
     const a = m[cote + '_address']; if (a) return a;
     if (m.adresses_locales) return (cote === 'origin' ? m.from_city : m.to_city) ? (cote === 'origin' ? m.from_city : m.to_city) + (m[(cote === 'origin' ? 'from' : 'to') + '_department'] ? ' (' + m[(cote === 'origin' ? 'from' : 'to') + '_department'] + ')' : '') + ' — ' + LOCAL : LOCAL;
@@ -287,7 +309,7 @@
       <select id="tri" aria-label="Trier"><option value="recent">Plus récentes</option><option value="date">Date de départ</option><option value="prix">Prix</option><option value="heure">€/heure</option><option value="proche">Les plus proches de moi</option></select></div>
       <div class="ligneFiltres"><select id="cote" aria-label="Lieu cherché">${Object.entries(COTES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
       <select id="rayon" aria-label="Autour de la ville"${aVille ? '' : ' disabled'}><option value="0">Ville exacte</option><option value="20">Ville + 20 km</option><option value="50">Ville + 50 km</option><option value="100">Ville + 100 km</option></select></div>
-      <div class="lignePos"><select id="posSource" aria-label="Chercher depuis"><option value="position">Depuis ma position GPS</option><option value="domicile">Depuis mon domicile</option></select><button id="btnPos" class="second" type="button">📍 Ma position</button><select id="posMax" aria-label="Distance maximale depuis ma position"><option value="0">Distance max depuis ma position : sans limite</option>${[20, 50, 100, 150, 200, 300].map(k => `<option value="${k}">Distance max : ${k} km depuis ma position</option>`).join('')}</select><span class="doux" id="posInfo"></span></div>
+      <div class="lignePos"><select id="posSource" aria-label="Chercher depuis"><option value="position">Depuis ma position GPS</option><option value="domicile">Depuis mon domicile</option></select><button id="btnPos" class="second" type="button">📍 Ma position</button><select id="posMax" aria-label="Distance maximale depuis ma position"><option value="0">Distance max à vol d’oiseau : sans limite</option>${[20, 50, 100, 150, 200, 300].map(k => `<option value="${k}">Max ${k} km à vol d’oiseau</option>`).join('')}</select><span class="doux" id="posInfo"></span></div>
       ${blocPlusFiltres(dispo)}
       <div class="zones" id="zones">${etat.zones.map((z, i) => `<button class="zone" data-zone="${i}" aria-label="Retirer ce filtre">${esc(COTES[z.cote || 'tous'])} : ${esc(G.libelleZone(z))} ✕</button>`).join('')}</div>
       ${etat.erreur ? `<p class="erreur">${esc(etat.erreur)}</p>` : ''}<div id="liste"></div>`;
@@ -350,8 +372,8 @@
     if (etat.filtre !== 'toutes') l = l.filter(m => m.platform === etat.filtre);
     l = G.filtrer(l, etat.zones, etat.rayon);
     l = FI.appliquer(l, etat.plus, m => CALC.dureeEstimee(m).heures);   // V96 : client, véhicule, distance, durée
-    // V137 : distance maximale DEPUIS MA POSITION (route estimée = vol d'oiseau × 1,25) ; départ de position inconnue → gardé.
-    const kmDeMoi = m => { const p = pointRecherche(), c = p ? G.coordonnees(m, 'origin') : null; return c ? G.routeKm(p, c) : null; };
+    // V137/V138 : distance maximale DEPUIS MA POSITION, comptée À VOL D'OISEAU ; départ de position inconnue → gardé.
+    const kmDeMoi = m => { const p = pointRecherche(), c = p ? G.coordonnees(m, 'origin') : null; return c ? G.volOiseauKm(p, c) : null; };
     if (etat.posMax > 0 && pointRecherche()) l = l.filter(m => { const d = kmDeMoi(m); return d == null || d <= etat.posMax; });
     // Texte libre (sans choisir de suggestion) : recherche simple, comme avant.
     if (q) l = l.filter(m => q.split(/[\s,]+/).filter(Boolean).some(t => [m.from_city, m.to_city, m.from_department, m.to_department, m.origin_address, m.destination_address].some(v => norm(v).includes(t))));
@@ -630,8 +652,8 @@
       <button id="btnVol" class="second" type="button" aria-label="Voir le trajet à vol d’oiseau">✈️ Trajet à vol d’oiseau</button>
       ${lienDevis(m) ? `<a href="${esc(lienAppliHiflow() || lienDevis(m))}"${lienAppliHiflow() ? '' : ' target="_blank" rel="noopener"'} id="lienDevis" data-numero="${esc(m.external_id)}"><button style="width:100%;margin:4px 0 2px">📱 Faire le devis dans l’application Hiflow</button></a><p class="doux" style="margin:0 0 8px">Mission n° <b>${esc(m.external_id)}</b> (copié en touchant le bouton) · ${esc(trajet(m))}</p>` : ''}
       <div class="meta"><span>📅 Prise en charge : ${esc(quand(m))}</span>${m.delivery_start || m.delivery_end ? `<span>🏁 Livraison : ${esc(fmtDate(m.delivery_start || m.delivery_end))}</span>` : ''}</div>
-      <div class="carte"><b>Départ</b><div>${esc(adresse(m, 'origin'))}</div>${mentionGps(m, 'origin')}${etat.reglages && etat.reglages.domicile_ville && m.from_city ? liensTransports(etat.reglages.domicile_ville, '', m.from_city, m.from_department, 'a|' + (m.id || m.external_id)) : ''}${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}</div>
-      <div class="carte"><b>Arrivée</b><div>${esc(adresse(m, 'destination'))}</div>${mentionGps(m, 'destination')}${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}</div>
+      <div class="carte"><b>Départ</b><div>${esc(adresse(m, 'origin'))}</div><span id="gpsO">${mentionGps(m, 'origin')}</span>${etat.reglages && etat.reglages.domicile_ville && m.from_city ? liensTransports(etat.reglages.domicile_ville, '', m.from_city, m.from_department, 'a|' + (m.id || m.external_id)) : ''}${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}</div>
+      <div class="carte"><b>Arrivée</b><div>${esc(adresse(m, 'destination'))}</div><span id="gpsD">${mentionGps(m, 'destination')}</span>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}</div>
       <div class="carte"><h2>Rentabilité estimée</h2>${dv ? `<p class="devisSource">📄 Montants de ton devis Hiflow n° ${esc(dv.n)} (${dv.accepte ? 'accepté' : 'envoyé, en attente'})${dv.total != null ? ' — total ' + esc(euros(dv.total)) : ''}</p>` : ''}${r.connu ? `<table class="tableau">
         ${ligne(dv ? 'Prestation (devis)' : 'Prestation', esc(euros(r.prestation)))}
         ${frais.length ? ligne(dv ? '+ Frais remboursés (devis)' : '+ Remboursements prévus', esc(frais.map(([k, v]) => (FRAIS[k.toLowerCase()] || k) + ' ' + euros(v)).join(' · '))) : ''}
@@ -657,6 +679,7 @@
     const suivants = detail.retours || [], dest = G.coordonnees(m, 'destination');
     for (const b of document.querySelectorAll('[data-retour]')) b.onclick = () => detail(suivants[Number(b.dataset.retour)].mission, dest);
     { const bv = $('btnVol'); if (bv) bv.onclick = () => popupVol(m); }
+    pointsMission(m).then(ok => { if (ok && $('gpsO')) { $('gpsO').innerHTML = mentionGps(m, 'origin'); if ($('gpsD')) $('gpsD').innerHTML = mentionGps(m, 'destination'); } });
   }
 
   // ---------- V77 : notifications même application fermée (Web Push) ----------
