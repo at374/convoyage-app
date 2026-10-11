@@ -409,7 +409,8 @@
     listeAffichee = items.map(x => x.mission);
     if (!A.items.length) { $('ecran').innerHTML = '<div class="vide">Aucune mission acceptée. Elles arrivent automatiquement depuis « Mes trajets » (Hiflow), « Mes réservations » (DriiveMe), « Missions réservées » (Otoqi) et « Propositions réservées » (Pop Valet), ou d’un e-mail de confirmation Hiflow collé dans l’extension.</div>'; return; }
     const resume = RT.resumeAgenda(etat.missions, etat.reglages);
-    let html = A.conflits.length ? `<div class="carte conflit" id="conflits"><h2>⚠️ ${A.conflits.length} conflit${A.conflits.length > 1 ? 's' : ''} dans ton agenda</h2>${A.conflits.map(c => `<p>${esc(window.CPAgenda.libelleConflit(c))}</p>`).join('')}<p class="doux">Estimation (durées et liaisons approximatives) : vérifie sur les plateformes.</p></div>` : '';
+    // V139 : plus de bandeau « N conflits » dans l'Agenda (les estimations produisaient des dizaines de faux conflits).
+    let html = false && A.conflits.length ? `<div class="carte conflit" id="conflits"><h2>⚠️ ${A.conflits.length} conflit${A.conflits.length > 1 ? 's' : ''} dans ton agenda</h2>${A.conflits.map(c => `<p>${esc(window.CPAgenda.libelleConflit(c))}</p>`).join('')}<p class="doux">Estimation (durées et liaisons approximatives) : vérifie sur les plateformes.</p></div>` : '';
     let jour = '';
     items.forEach((x, i) => {
       const m = x.mission, d = x.debut != null ? new Date(x.debut) : null;
@@ -419,10 +420,9 @@
       const e = ETATS[x.etat];
       const modifs = (m.modifications || []).filter(z => z.champ !== 'statut').slice(-2);
       const extra = (e ? `<div><span class="etiq ${e[1]}">${esc(e[0])}</span></div>` : '') +
-        x.conflits.map(c => `<div class="conflitLigne">⚠️ ${c.type === 'chevauchement' ? 'chevauchement' : 'enchaînement trop juste'} avec ${esc(trajet(c.a === m ? c.b : c.a))}</div>`).join('') +
         modifs.map(z => `<div class="modifLigne">✏️ ${esc(window.CPAgenda.libelleModification(z))}</div>`).join('') +
         (nb ? `<div class="retoursBadge">🔁 ${nb} retour${nb > 1 ? 's' : ''} possible${nb > 1 ? 's' : ''} après cette mission</div>` : '');
-      html += carteMission(m, i, extra).replace('class="mission', `class="mission etat-${x.etat}${x.conflits.length ? ' aConflit' : ''}`);
+      html += carteMission(m, i, extra).replace('class="mission', `class="mission etat-${x.etat}${''}`);
     });
     if (caches || etat.agendaTout) html += `<button id="agTout" class="second" style="width:100%;margin-top:10px">${etat.agendaTout ? 'Masquer les missions passées' : 'Afficher les ' + caches + ' mission(s) passée(s) de plus de 7 jours'}</button>`;
     $('ecran').innerHTML = html;
@@ -642,10 +642,9 @@
     // V138 : journal lisible — mêmes changements répétés regroupés, 5 plus récents visibles, le reste dans « Voir les N autres ».
     const toutes = (m.modifications || []).slice().reverse(), vues = new Set(), mods = toutes.filter(z => { const k = [z.champ, z.de, z.a].join('|'); if (vues.has(k)) return false; vues.add(k); return true; });
     const e = ETATS[x.etat];
-    if (!mods.length && !x.conflits.length && !e) return '';
+    if (!mods.length && !e) return '';
     return `<div class="carte" id="historique"><h2>📋 Suivi de la mission</h2>
       ${e ? `<p><span class="etiq ${e[1]}">${esc(e[0])}</span>${x.etat === 'annulee' ? ' Elle n’apparaît plus dans tes missions acceptées sur ' + esc(PLATS[m.platform] || m.platform) + '. Vérifie sur le site avant de t’organiser autrement.' : ''}</p>` : ''}
-      ${x.conflits.map(c => `<p class="conflitLigne">⚠️ ${esc(window.CPAgenda.libelleConflit(c))}</p>`).join('')}
       ${mods.length ? '<p class="doux">Modifications relevées :</p>' + (l => l(mods.slice(0, 5)) + (mods.length > 5 ? `<details><summary class="doux">Voir les ${mods.length - 5} autres</summary>${l(mods.slice(5))}</details>` : ''))(zs => zs.map(z => `<div class="modifLigne">✏️ ${esc(window.CPAgenda.libelleModification(z))}${z.le ? ' <span class="doux">(' + esc(fmtDate(z.le)) + ')</span>' : ''}</div>`).join('')) + (toutes.length > mods.length ? `<p class="doux">${toutes.length - mods.length} répétition(s) du même changement masquée(s).</p>` : '') : ''}</div>`;
   }
   // V95 : mission acceptée déjà livrée (fin passée) → plus de retours proposés.
