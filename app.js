@@ -25,7 +25,7 @@
     return null;
   }
   window.__cpLienAppliHiflow = lienAppliHiflow;
-  const VERSION_APP = 'V140 (2.0.40)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V141 (2.0.41)';   // affichée dans l'en-tête et les Réglages
   const LIENS = { Hiflow: 'https://partenaire.expedicar.com/', DriiveMe: 'https://www.driiveme.com/', Otoqi: 'https://drivers.otoqi.com/', PopValet: 'https://www.popvalet.com/' };
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
   document.addEventListener('change', e => { const c = e.target && e.target.closest && e.target.closest('input[data-verif]'); if (!c) return; const t = lireLocal('cp_verif', {}) || {}; if (c.checked) t[c.dataset.verif] = new Date().toISOString(); else delete t[c.dataset.verif]; ecrireLocal('cp_verif', t); const l = c.closest('label'); if (l) { l.classList.toggle('ok', c.checked); l.lastChild.textContent = c.checked ? ' ✓ Vérifié par toi le ' + new Date().toLocaleDateString('fr-FR') + ' (horaires et prix valables le jour de la mission)' : ' Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'; } });
@@ -291,7 +291,8 @@
     if (!etat.facturesServeur) { $('ecran').innerHTML = '<div class="vide">Factures indisponibles : le serveur n’a pas encore été mis à jour. Dans Supabase → SQL Editor, exécute le fichier <b>supabase/maj_V96.sql</b>, puis ouvre « Mes factures » sur Hiflow (ordinateur).</div>'; return; }
     const nomMois = k => { if (k === 'inconnu') return 'Date inconnue'; const d = new Date(k + '-15T12:00:00Z'); const t = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric', timeZone: 'Europe/Paris' }); return t.charAt(0).toUpperCase() + t.slice(1); };
     const jour = iso => iso ? new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Paris' }) : '?';
-    const ligne = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
+    // V141 : chaque rubrique de facturation a sa couleur (classe fr-…)
+    const ligne = (a, b) => { const t = String(a); const c = /non pay/i.test(t) ? 'att' : /^Pay/i.test(t) ? 'pay' : /B[ée]n[ée]fice/i.test(t) ? 'ben' : /^Total/i.test(t) ? 'tot' : /Cotisations|^−/.test(t) ? 'neg' : /Frais/i.test(t) ? 'fra' : /Prestation|effectu/i.test(t) ? 'pre' : /annul/i.test(t) ? 'ann' : 'aut'; return `<tr class="fr-${c}"><td>${a}</td><td>${b}</td></tr>`; };
     const nbM = x => (x || 0) + ' mission' + (x > 1 ? 's' : '');
     // V97 : missions effectuées ou annulées pas encore reprises dans une facture validée (annulation tardive = payée).
     const attente = FI.aFacturer(etat.missions.filter(m => m.platform === 'Hiflow'));
@@ -498,10 +499,10 @@
           if (l.type === 'retour') return `<div class="lignePlan">🏠 <b>${hm(l.t)}</b> retour à ${esc(domNom)}${pl.retour.km >= 2 ? `<span class="doux">🚆 ≈ ${esc(pl.retour.km)} km · ${esc(duree(pl.retour.heures))} · ${esc(euros(pl.retour.cout))}</span>` : ''}</div>`;
           const et = l.etape, m = et.mission, ie = pl.etapes.indexOf(et);
           return `<button class="lignePlan${clsPlat(m.platform)}" data-plan="${ip}" data-etape="${ie}">🚗 <b>${hm(et.debut)}–${hm(et.fin)}</b> <span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span> <b>${esc(trajet(m))}</b> · ${m.fee != null ? esc(euros(m.fee)) : '?'}${et.acceptee ? ' <span class="etiq ok">déjà acceptée</span>' : ''}
-            ${ie > 0 && et.liaison.km >= 2 ? `<span class="doux">🚆 depuis ${esc(et.depuis)} : ≈ ${esc(et.liaison.km)} km · ${esc(duree(et.liaison.heures))} · ${esc(euros(et.liaison.cout))}${et.attenteH ? ' · attente ' + esc(duree(et.attenteH)) : ''}</span>` : ''}
+            ${ie > 0 && et.liaison.km >= 2 && !(pl.nuitsLiaison || []).some(x => x && x.cle === et.cle) ? `<span class="doux">🚆 depuis ${esc(et.depuis)} : ≈ ${esc(et.liaison.km)} km · ${esc(duree(et.liaison.heures))} · ${esc(euros(et.liaison.cout))}${et.attenteH ? ' · attente ' + esc(duree(et.attenteH)) : ''}</span>` : ''}
             <span class="doux">💶 net ≈ ${esc(euros(et.net))}${et.finEstimee ? ' · fin estimée' : ''}</span></button>`;
         }).join('');
-        const dort = ij < tous.length - 1 && nuit < pl.nuits ? `<div class="nuit">🌙 Nuit à ${esc(pl.lieuxNuits[nuit++])}${pl.coutHotel > 0 ? ' (hôtel ≈ ' + esc(euros(pl.coutHotel / pl.nuits)) + ')' : ''}</div>` : '';
+        const dort = ij < tous.length - 1 && nuit < pl.nuits ? `${(pl.nuitsLiaison || [])[nuit] && pl.nuitsLiaison[nuit].km >= 2 ? `<div class="lignePlan">🚆 <b>en soirée</b> trajet de ${esc(pl.nuitsLiaison[nuit].depuis)} vers ${esc(pl.lieuxNuits[nuit])}<span class="doux">≈ ${esc(pl.nuitsLiaison[nuit].km)} km · ${esc(duree(pl.nuitsLiaison[nuit].heures))} · ${esc(euros(pl.nuitsLiaison[nuit].cout))}</span></div>` : ''}<div class="nuit">🌙 Nuit à ${esc(pl.lieuxNuits[nuit++])}${pl.coutHotel > 0 ? ' (hôtel ≈ ' + esc(euros(pl.coutHotel / pl.nuits)) + ')' : ''}</div>` : '';
         return `<div class="jour">${esc(new Date(j.t).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris' }))}</div>${lignes}${dort}`;
       }).join('');
       return `<div class="carte plan" id="plan${ip}"><div class="doux">Proposition ${ip + 1}</div>
@@ -684,7 +685,6 @@
         ${ligne('− Retour à ton domicile', r.retour ? `≈ ${esc(r.retour.km)} km · ${esc(duree(r.retour.heures))} · ${esc(euros(r.retour.cout))}` : '<span class="doux">inconnu</span>')}
         ${r.rembTransport && r.coutTransport ? ligne('Transport couvert par le remboursement prévu', esc(euros(Math.min(r.rembTransport, r.coutTransport)))) : ''}
         ${r.coutTransport ? (r.transportRembourse ? ligne('Transport (approche et retour)', '≈ ' + esc(euros(r.coutTransport)) + ' <span class="doux">avancé puis remboursé par Hiflow</span>') : ligne('− Transport à ta charge', '− ' + esc(euros(r.transportNonCouvert)))) : ''}
-        ${ligne('− Dépenses kilométriques', r.depensesConnues ? '− ' + esc(euros(r.depenses)) : 'non renseignées')}
         ${ligne('− Cotisations (' + String(r.taux).replace('.', ',') + ' %)', '− ' + esc(euros(r.cotisations)))}
         ${ligne('= Net estimé', '<b>' + esc(euros(r.net)) + '</b>')}
         ${ligne('Rentabilité horaire', r.parHeure ? `<b>${esc(euros(r.parHeure))}/h</b> (${esc(duree(r.heures))}${r.liaisonsConnues ? ' approche et retour compris' : ' hors liaisons inconnues'})` : 'durée inconnue')}</table>

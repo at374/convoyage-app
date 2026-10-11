@@ -111,8 +111,11 @@
     for (const p of finis) { if (choisis.length >= 3) break; if (!choisis.includes(p) && !choisis.some(q => q.etapes.map(e => e.cle).join() === p.etapes.map(e => e.cle).join())) choisis.push(p); }
     // Lieu de chaque nuit : destination de la dernière mission terminée avant minuit (calculé pour les plans retenus).
     for (const p of choisis) {
-      p.lieuxNuits = []; let t = p.depart;
-      for (let i = 0; i < p.nuits; i++) { const mn = minuitApres(t); const avant = p.etapes.filter(e => e.fin <= mn); const encours = p.etapes.find(e => e.debut < mn && e.fin > mn); p.lieuxNuits.push(encours ? 'en mission (' + (encours.mission.to_city || '?') + ')' : avant.length ? (avant[avant.length - 1].mission.to_city || '?') : (dom.nom || 'domicile')); t = mn + MIN; }
+      p.lieuxNuits = []; p.nuitsLiaison = []; let t = p.depart;
+      for (let i = 0; i < p.nuits; i++) { const mn = minuitApres(t); const avant = p.etapes.filter(e => e.fin <= mn); const encours = p.etapes.find(e => e.debut < mn && e.fin > mn); // V141 : on dort dans la VILLE DE DÉPART de la mission du lendemain ; le trajet (ville d'arrivée → ville de départ) se fait en soirée.
+        const suiv = encours ? null : p.etapes.find(e => e.debut >= mn);
+        if (suiv && avant.length && suiv.mission.from_city) { const l = suiv.liaison; p.lieuxNuits.push(suiv.mission.from_city); p.nuitsLiaison[i] = { cle: suiv.cle, depuis: avant[avant.length - 1].mission.to_city || '?', km: l.km, heures: l.heures, cout: l.cout }; }
+        else p.lieuxNuits.push(encours ? 'en mission (' + (encours.mission.to_city || '?') + ')' : avant.length ? (avant[avant.length - 1].mission.to_city || '?') : (dom.nom || 'domicile')); t = mn + MIN; }
     }
     res.plans = choisis; res.candidates = pool.length; res.ancres = ancres.length;
     if (ancres.length && !finis.length) res.erreurs.push('acceptees_incompatibles');

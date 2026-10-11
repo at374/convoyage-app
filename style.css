@@ -180,7 +180,7 @@ html[data-police]:not([data-police="standard"]) :is(button,input,select,textarea
 .popVolBoite h3{margin:0 0 8px}.popVolBoite #popVolX{position:absolute;right:8px;top:8px}
 /* V139 : dates et heures lisibles : plus gros, en couleur */
 .quand{display:inline-block;font-size:17px;font-weight:800;line-height:1.3;padding:3px 9px;border-radius:8px;margin:2px 0;border:2px solid currentColor}
-.quand.gros{font-size:19px}
+.quand.gros{font-size:16px}
 .quand.q-ok{color:#15803d;background:#dcfce7}
 .quand.q-proche{color:#b45309;background:#fef3c7}
 .quand.q-urgent{color:#b91c1c;background:#fee2e2}
@@ -192,7 +192,7 @@ html[data-style]:not([data-style="classique"]) .quand.q-urgent,:root[data-theme=
 html[data-style]:not([data-style="classique"]) .quand.q-passee,:root[data-theme="dark"] .quand.q-passee{color:#cbd5e1;background:#334155}
 html[data-style]:not([data-style="classique"]) .quand.q-inconnu,:root[data-theme="dark"] .quand.q-inconnu{color:#93c5fd;background:#1c2a4d}
 /* V139 : villes, adresses, km, loueur plus lisibles ; icône carte */
-.mission .trajet{font-size:21px;font-weight:900;line-height:1.25;margin:6px 0}
+.mission .trajet{font-size:18px;font-weight:900;line-height:1.25;margin:6px 0}
 .trajet .vD{color:#15803d}.trajet .vA{color:#b91c1c}.trajet .fl{opacity:.8}
 html[data-style]:not([data-style="classique"]) .trajet .vD,:root[data-theme="dark"] .trajet .vD{color:#86efac}
 html[data-style]:not([data-style="classique"]) .trajet .vA,:root[data-theme="dark"] .trajet .vA{color:#fca5a5}
@@ -201,3 +201,29 @@ html[data-style]:not([data-style="classique"]) .trajet .vA,:root[data-theme="dar
 .mission .meta .kms{font-size:17px}.mission .meta .kms b{font-weight:900}
 .mission .meta .loueur{font-size:16px}.mission .meta .loueur b{font-weight:800}
 .iconeCarte{display:inline-block;font-size:22px;margin-left:8px;padding:2px 6px;border-radius:8px;background:rgba(255,255,255,.35);cursor:pointer;vertical-align:middle}
+
+/* V141 : prise en charge / livraison et villes un peu plus petites ; facturation en couleurs, caractères plus grands */
+#ecran[data-vue="factures"] .tableau{font-size:17px}
+#ecran[data-vue="factures"] .tableau td{padding:9px 8px;border-bottom:1px solid rgba(128,128,128,.25)}
+#ecran[data-vue="factures"] .tableau tr td:first-child{border-left:6px solid #94a3b8;padding-left:10px;font-weight:600}
+#ecran[data-vue="factures"] .fr-pre td:first-child{border-left-color:#2563eb}.fr-pre td:first-child{color:#1d4ed8}
+#ecran[data-vue="factures"] .fr-fra td:first-child{border-left-color:#d97706}.fr-fra td:first-child{color:#b45309}
+#ecran[data-vue="factures"] .fr-tot td{background:rgba(37,99,235,.10);font-size:18px}
+#ecran[data-vue="factures"] .fr-tot td:first-child{border-left-color:#1d4ed8;color:#1d4ed8}
+#ecran[data-vue="factures"] .fr-pay td:first-child{border-left-color:#16a34a}.fr-pay td:first-child{color:#15803d}
+#ecran[data-vue="factures"] .fr-att td:first-child{border-left-color:#ea580c}.fr-att td:first-child{color:#c2410c}
+#ecran[data-vue="factures"] .fr-ann td:first-child{border-left-color:#64748b}
+#ecran[data-vue="factures"] .fr-neg td:first-child{border-left-color:#dc2626}.fr-neg td:first-child{color:#b91c1c}
+#ecran[data-vue="factures"] .fr-neg td:last-child{color:#b91c1c}
+#ecran[data-vue="factures"] .fr-ben td{background:rgba(22,163,74,.14);font-size:20px}
+#ecran[data-vue="factures"] .fr-ben td:first-child{border-left-color:#15803d;color:#15803d}
+#ecran[data-vue="factures"] .fr-ben td:last-child{color:#15803d}
+#ecran[data-vue="factures"] .carte h2{font-size:21px;border-bottom:3px solid #2563eb;padding-bottom:6px}
+#ecran[data-vue="factures"] .carte[data-annee] h2{border-bottom-color:#16a34a}
+#ecran[data-vue="factures"] #aFacturer h2{border-bottom-color:#ea580c}
+#ecran[data-vue="factures"] .factureLigne{font-size:16px;padding:9px 0}
+:root[data-theme="dark"] .fr-pre td:first-child,:root[data-theme="dark"] .fr-tot td:first-child{color:#93c5fd}
+:root[data-theme="dark"] .fr-fra td:first-child{color:#fcd34d}
+:root[data-theme="dark"] .fr-pay td:first-child,:root[data-theme="dark"] .fr-ben td:first-child,:root[data-theme="dark"] .fr-ben td:last-child{color:#86efac}
+:root[data-theme="dark"] .fr-att td:first-child{color:#fdba74}
+:root[data-theme="dark"] .fr-neg td:first-child,:root[data-theme="dark"] .fr-neg td:last-child{color:#fca5a5}
