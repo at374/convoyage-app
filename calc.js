@@ -43,7 +43,8 @@
     if (km < 2) return { km, heures: 0, cout: 0 };   // sur place
     // V137 : transport CHOISI dans les Réglages → prix et durée de CE moyen (sinon estimation générale, comme avant).
     const ch = choixTransport(r);
-    if (ch === 'moins_cher') { const x = liaisonMoinsChere(km, r, null); if (x) return x; }
+    if (ch === 'moyenne') { const x = liaisonMoyenne(km, r); if (x) return x; }
+    else if (ch === 'moins_cher') { const x = liaisonMoinsChere(km, r, null); if (x) return x; }
     else if (ch) { const m = modeChoisi(r, ch); if (m && (!m.kmMax || km <= m.kmMax)) return { km, mode: m.mode, heures: arr(km / m.vitesse + m.accesH), cout: arr(km * m.coutKm) }; }
     return { km, heures: arr(km / v + 0.33), cout: arr(km * cout) };   // + 20 min d'accès (gare, arrêt)
   }
@@ -52,12 +53,14 @@
   const MODES = [
     { mode: 'covoiturage', coutKm: 0.06, vitesse: 70, accesH: 0.5 },
     { mode: 'bus', coutKm: 0.05, vitesse: 55, accesH: 0.33 },
+    { mode: 'flixbus', coutKm: 0.07, vitesse: 75, accesH: 0.5 },                    // V139 : valeurs de travail (car longue distance) : à vérifier sur le site
+    { mode: 'blablacar_daily', coutKm: 0.06, vitesse: 60, accesH: 0.5, kmMax: 100 },// V139 : covoiturage du quotidien (trajets courts et réguliers) : valeurs de travail
     { mode: 'train', coutKm: 0.12, vitesse: 100, accesH: 0.33 },
     { mode: 'taxi', coutKm: 1.2, vitesse: 60, accesH: 0.1 }];
   // Cartes SNCF proposées dans les réglages (réduction estimée sur le train ; à vérifier sur SNCF Connect — aucun prix réel n'est lu).
   const CARTES_SNCF = { aucune: { nom: 'Aucune carte', facteur: 1 }, avantage_jeune: { nom: 'Carte Avantage Jeune (12-27 ans)', facteur: 0.7 }, avantage_adulte: { nom: 'Carte Avantage Adulte (27-59 ans ; -30 % surtout week-end ou avec enfant)', facteur: 0.7 }, avantage_senior: { nom: 'Carte Avantage Senior (60 ans et +)', facteur: 0.7 }, illico_liberte: { nom: 'Carte illico LIBERTÉ (TER Auvergne-Rhône-Alpes : -25 % en semaine, -50 % week-end et jours fériés ; estimé à -25 %)', facteur: 0.75 }, liberte: { nom: 'Carte Liberté / abonnement (prix variable, non estimé)', facteur: 1 } };
   const TROTTINETTE = { vitesse: 15, accesH: 0.05, kmMax: 8 };   // trottinette perso : gratuite, courte distance seulement
-  const TRANSPORTS_CHOIX = ['moins_cher', 'covoiturage', 'bus', 'train', 'taxi', 'trottinette'];
+  const TRANSPORTS_CHOIX = ['moyenne', 'moins_cher', 'covoiturage', 'blablacar_daily', 'flixbus', 'bus', 'train', 'taxi', 'trottinette'];
   const choixTransport = r => { const c = (r && r.transport_choisi) || globalThis.CP_TRANSPORT_CHOISI; return TRANSPORTS_CHOIX.includes(c) ? c : null; };
   function modeChoisi(r, ch) {
     if (ch === 'trottinette') return { mode: 'trottinette', coutKm: 0, vitesse: TROTTINETTE.vitesse, accesH: TROTTINETTE.accesH, kmMax: n(r.trottinette_km_max) || TROTTINETTE.kmMax };
@@ -74,6 +77,14 @@
     const l = MODES.filter(m => m.mode !== 'bus' || busOk).map(m => m.mode === 'train' ? { ...m, coutKm: Math.round(m.coutKm * f * 1e4) / 1e4 } : m);
     if (r.trottinette === true) l.push({ mode: 'trottinette', coutKm: 0, vitesse: TROTTINETTE.vitesse, accesH: TROTTINETTE.accesH, kmMax: n(r.trottinette_km_max) || TROTTINETTE.kmMax });
     return l;
+  }
+  // V139 : estimation = MOYENNE des prix et des durées calculés avec les moyens courants (train avec ta carte de réduction, BlaBlaCar, BlaBlaCar Daily, Flixbus, bus/car si la case est cochée) — pas le moins cher : une estimation prudente. Aucun prix réel n'est lu.
+  function liaisonMoyenne(km, reglages) {
+    const r = { ...(reglages || {}), transport_choisi: 'general' }, f = (CARTES_SNCF[r.carte_sncf] || CARTES_SNCF.aucune).facteur, busOk = r.bus_actif === true || globalThis.CP_BUS_ACTIF === true;
+    const l = MODES.filter(m => m.mode !== 'taxi' && (m.mode !== 'bus' || busOk) && (!m.kmMax || km <= m.kmMax)).map(m => m.mode === 'train' ? { ...m, coutKm: m.coutKm * f } : m);
+    if (!l.length) return null;
+    const c = l.map(m => km * m.coutKm), h = l.map(m => km / m.vitesse + m.accesH), moy = a => a.reduce((x, y) => x + y, 0) / a.length;
+    return { km, mode: 'moyenne', heures: arr(moy(h)), cout: arr(moy(c)), nbModes: l.length, modes: l.map(m => m.mode) };
   }
   function liaisonMoinsChere(km, reglages, tempsDispoH) {
     if (km == null) return null;
@@ -104,7 +115,7 @@
       net, heuresMission: duree.heures, dureeEstimee: duree.estimee, heures, parHeure: heures ? arr(net / heures) : null,
       liaisonsConnues: !!(approche && retour) };
   }
-  const api = { TRANSPORTS_CHOIX, rentabilite, dureeHeures, dureeEstimee, liaison, liaisonMoinsChere, MODES, CARTES_SNCF, rentabiliteComplete, LIAISON, VITESSE_CONDUITE };
+  const api = { liaisonMoyenne, TRANSPORTS_CHOIX, rentabilite, dureeHeures, dureeEstimee, liaison, liaisonMoinsChere, MODES, CARTES_SNCF, rentabiliteComplete, LIAISON, VITESSE_CONDUITE };
   root.CPCalc = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

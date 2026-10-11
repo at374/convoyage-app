@@ -178,3 +178,26 @@ html[data-police]:not([data-police="standard"]) :is(button,input,select,textarea
 .popVol{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
 .popVolBoite{background:var(--carte);color:var(--texte);border-radius:14px;padding:14px;max-width:420px;width:100%;position:relative;max-height:90vh;overflow:auto}
 .popVolBoite h3{margin:0 0 8px}.popVolBoite #popVolX{position:absolute;right:8px;top:8px}
+/* V139 : dates et heures lisibles : plus gros, en couleur */
+.quand{display:inline-block;font-size:17px;font-weight:800;line-height:1.3;padding:3px 9px;border-radius:8px;margin:2px 0;border:2px solid currentColor}
+.quand.gros{font-size:19px}
+.quand.q-ok{color:#15803d;background:#dcfce7}
+.quand.q-proche{color:#b45309;background:#fef3c7}
+.quand.q-urgent{color:#b91c1c;background:#fee2e2}
+.quand.q-passee{color:#475569;background:#e2e8f0;font-weight:700}
+.quand.q-inconnu{color:#1d4ed8;background:#e8efff}
+html[data-style]:not([data-style="classique"]) .quand.q-ok,:root[data-theme="dark"] .quand.q-ok{color:#86efac;background:#14301f}
+html[data-style]:not([data-style="classique"]) .quand.q-proche,:root[data-theme="dark"] .quand.q-proche{color:#fcd34d;background:#3b2f0b}
+html[data-style]:not([data-style="classique"]) .quand.q-urgent,:root[data-theme="dark"] .quand.q-urgent{color:#fca5a5;background:#4a1218}
+html[data-style]:not([data-style="classique"]) .quand.q-passee,:root[data-theme="dark"] .quand.q-passee{color:#cbd5e1;background:#334155}
+html[data-style]:not([data-style="classique"]) .quand.q-inconnu,:root[data-theme="dark"] .quand.q-inconnu{color:#93c5fd;background:#1c2a4d}
+/* V139 : villes, adresses, km, loueur plus lisibles ; icône carte */
+.mission .trajet{font-size:21px;font-weight:900;line-height:1.25;margin:6px 0}
+.trajet .vD{color:#15803d}.trajet .vA{color:#b91c1c}.trajet .fl{opacity:.8}
+html[data-style]:not([data-style="classique"]) .trajet .vD,:root[data-theme="dark"] .trajet .vD{color:#86efac}
+html[data-style]:not([data-style="classique"]) .trajet .vA,:root[data-theme="dark"] .trajet .vA{color:#fca5a5}
+.mission .meta{font-size:15px;gap:4px;color:inherit}
+.mission .meta .adr b{font-size:16px;font-weight:800}
+.mission .meta .kms{font-size:17px}.mission .meta .kms b{font-weight:900}
+.mission .meta .loueur{font-size:16px}.mission .meta .loueur b{font-weight:800}
+.iconeCarte{display:inline-block;font-size:22px;margin-left:8px;padding:2px 6px;border-radius:8px;background:rgba(255,255,255,.35);cursor:pointer;vertical-align:middle}
