@@ -233,3 +233,18 @@ html[data-style]:not([data-style="classique"]) .trajet .vA,:root[data-theme="dar
 .tPeage td{padding:6px 4px;border-bottom:1px solid rgba(128,128,128,.25);vertical-align:top}
 .tPeage td:last-child{text-align:right;white-space:nowrap;color:#b45309;font-size:16px}
 :root[data-theme="dark"] .tPeage td:last-child{color:#fcd34d}
+
+/* V143 : « Rentabilité estimée » — couleurs et gros caractères lisibles ; tout suit le style et la police choisis (variables du style, tailles en em) */
+:root{--rNeg:#b91c1c;--rMoyen:#b45309}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--rNeg:#fca5a5;--rMoyen:#fcd34d}}
+:root[data-theme="dark"]{--rNeg:#fca5a5;--rMoyen:#fcd34d}
+html[data-style]:not([data-style="classique"]):not([data-style="jour"]){--rNeg:#fca5a5;--rMoyen:#fcd34d}
+.renta .tableau{font-size:1.08em;color:var(--texte)}
+.renta .tableau td{padding:10px 8px;font-weight:600;line-height:1.35}
+.renta .tableau td:first-child{border-left:6px solid var(--ligne);padding-left:10px}
+.renta .tableau tr.r-pos td:first-child{border-left-color:var(--ok);color:var(--ok)}
+.renta .tableau tr.r-neg td:first-child{border-left-color:var(--rNeg);color:var(--rNeg)}
+.renta .tableau tr.r-net td,.renta .tableau tr.r-horaire td{background:var(--okDoux);font-size:1.2em;font-weight:800}
+.renta .tableau tr.r-net td:first-child,.renta .tableau tr.r-horaire td:first-child{border-left-color:var(--ok)}
+.renta .r-val{font-size:1.15em}.renta .r-val.bien{color:var(--ok)}.renta .r-val.moyen{color:var(--rMoyen)}.renta .r-val.mal{color:var(--rNeg)}
+.renta .tableau td .doux{color:var(--doux);font-weight:500}
