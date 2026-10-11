@@ -36,6 +36,8 @@
   let cfg = cfgFichier.url && cfgFichier.anonKey ? cfgFichier : lireLocal('cp_config', null);
   let api = cfg ? new window.CPApi(cfg.url, cfg.anonKey) : null;
 
+  // V138 : l'onglet Alertes ne montre que les NOUVELLES missions (ni missions acceptées, ni hausses de prix, ni modifications ou annulations).
+  const seulesNouvelles = l => (l || []).filter(a => !['mission_acceptee', 'hausse_prix', 'mission_modifiee', 'mission_annulee'].includes(a.type));
   const etat = { onglet: 'missions', missions: [], alertes: [], reglages: null, filtre: 'toutes', recherche: '', tri: 'recent', zones: [], cote: 'tous', rayon: 0, chargeLe: null, erreur: '', plus: {}, factures: [], facturesServeur: true, sources: undefined };
   const G = window.CPGeo, RT = window.CPRetours, CALC = window.CPCalc;
   { const mq = document.getElementById('marque'); if (mq && !document.getElementById('versionApp')) { const v = document.createElement('span'); v.id = 'versionApp'; v.className = 'version'; v.textContent = ' · ' + VERSION_APP; mq.appendChild(v); } }
@@ -44,7 +46,7 @@
   etat.pos = lireLocal('cp_position', null); etat.posMax = Number(etat.posMax) || 0;   // V137 : position du téléphone, prise seulement sur demande, gardée sur ce téléphone
   if (!lireLocal('cp_tri_v99', null)) { etat.tri = 'recent'; ecrireLocal('cp_tri_v99', 1); }   // V99 : tri « Plus récentes » par défaut (une seule fois, ton choix est gardé ensuite)
   // Données gardées sur l'appareil : consultables hors connexion.
-  const cache = lireLocal('cp_cache', null); if (cache) { etat.factures = cache.factures || []; etat.missions = window.CPFiltres.francais(deLEdition(cache.missions)); etat.alertes = cache.alertes || []; etat.reglages = cache.reglages || null; etat.chargeLe = cache.chargeLe; }
+  const cache = lireLocal('cp_cache', null); if (cache) { etat.factures = cache.factures || []; etat.missions = window.CPFiltres.francais(deLEdition(cache.missions)); etat.alertes = seulesNouvelles(cache.alertes); etat.reglages = cache.reglages || null; etat.chargeLe = cache.chargeLe; }
 
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 3500); }
   const fmtDate = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); };
@@ -106,9 +108,10 @@
       const [missions, alertes, reglages, factures] = await Promise.all([api.missions(), api.alertes(), api.reglages(), api.factures()]);
       etat.facturesServeur = factures !== null; if (factures) etat.factures = factures;   // V96
       try { etat.sources = await api.sourcesEtat(); } catch (_) { etat.sources = null; }   // V114
+      const alertesNouv = seulesNouvelles(alertes);
       const avant = new Set(etat.alertes.map(a => a.id));
-      const nouvelles = (alertes || []).filter(a => !a.lue && !avant.has(a.id));
-      Object.assign(etat, { missions: window.CPFiltres.francais(deLEdition(missions)), alertes: alertes || [], reglages, chargeLe: new Date().toISOString(), erreur: '' });
+      const nouvelles = alertesNouv.filter(a => !a.lue && !avant.has(a.id));
+      Object.assign(etat, { missions: window.CPFiltres.francais(deLEdition(missions)), alertes: alertesNouv, reglages, chargeLe: new Date().toISOString(), erreur: '' });
       ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures });
       if (etat.chargeLeDejaVu && nouvelles.length) notifier(nouvelles);
       etat.chargeLeDejaVu = true;
@@ -505,7 +508,7 @@
     const l = etat.alertes;
     $('ecran').innerHTML = (l.some(a => !a.lue) ? '<button id="toutLu" class="second" style="width:100%">Tout marquer comme lu</button>' : '') +
       (l.length ? l.map(a => `<div class="carte alerte${clsPlat(a.platform)}${a.lue ? '' : ' nonlue'}${missionDeAlerte(a) ? ' cliquable' : ''}" data-alerte="${esc(a.id)}"><span>${({ hausse_prix: '📈', mission_acceptee: '✅', mission_modifiee: '✏️', mission_annulee: '❌' })[a.type] || '🆕'}</span><div><div class="msg">${a.lue ? '' : '<span class="etiq nv pNouveau">NOUVEAU</span> '}${esc(a.message)}</div><div class="doux">${esc(fmtDate(a.created_at))}${a.lue ? ' · ✓ déjà lue' : ''}</div></div></div>`).join('')
-        : '<div class="vide">Aucune alerte. Tu seras prévenu des nouvelles missions, des hausses de prix et des missions acceptées.</div>');
+        : '<div class="vide">Aucune alerte. Tu seras prévenu des nouvelles missions.</div>');
     for (const el of document.querySelectorAll('[data-alerte]')) { const a = l.find(x => String(x.id) === el.dataset.alerte), m = missionDeAlerte(a); if (m) el.onclick = () => detail(m); }
     const b = $('toutLu'); if (b) b.onclick = async () => { try { await api.marquerLues(); etat.alertes.forEach(a => { a.lue = true; }); afficher(); } catch (e) { toast(e.message); } };
   }
