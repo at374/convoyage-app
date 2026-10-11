@@ -46,7 +46,7 @@
   Object.assign(etat, lireLocal('cp_preferences', {}));
   window.CP_TRANSPORT_CHOISI = lireLocal('cp_transport', 'moyenne');   // V137 : transport choisi pour l'aller et le retour (gardé sur ce téléphone)
   etat.pos = lireLocal('cp_position', null); etat.posMax = Number(etat.posMax) || 0;   // V137 : position du téléphone, prise seulement sur demande, gardée sur ce téléphone
-  if (!lireLocal('cp_tri_v99', null)) { etat.tri = 'recent'; ecrireLocal('cp_tri_v99', 1); }   // V99 : tri « Plus récentes » par défaut (une seule fois, ton choix est gardé ensuite)
+  if (!lireLocal('cp_tri_v143', null)) { etat.tri = 'date'; ecrireLocal('cp_tri_v143', 1); }   // V143 : tri par date de départ (la plus proche en haut), plateformes mélangées — par défaut une seule fois, ton choix est gardé ensuite
   // Données gardées sur l'appareil : consultables hors connexion.
   const cache = lireLocal('cp_cache', null); if (cache) { etat.factures = cache.factures || []; etat.missions = window.CPFiltres.francais(deLEdition(cache.missions)); etat.alertes = seulesNouvelles(cache.alertes); etat.reglages = cache.reglages || null; etat.chargeLe = cache.chargeLe; }
 
@@ -155,7 +155,7 @@
   function feuilleEtat() {
     const e = etatPlateformes();
     $('feuilleContenu').innerHTML = `<h3 style="margin:0 0 6px">État des plateformes</h3><div class="ligneEtat" style="border:0"><span class="pt ${e.couleur}"></span><div><b>${esc(e.resume)}</b></div></div>` +
-      e.details.map(d => `<div class="ligneEtat"><span class="pt ${d.couleur}"></span><div><b>${esc(d.platform)}</b><div class="doux">${esc(d.texte)}</div></div></div>`).join('') +
+      e.details.map(d => `<div class="ligneEtat"><span class="pt ${d.couleur}"></span><div><b>${esc(PLATS[d.platform] || d.platform)}</b><div class="doux">${esc(d.texte)}</div></div></div>`).join('') +
       `<p class="doux" style="margin-top:10px">Vert : lecture récente. Orange : lecture ralentie ou en pause. Rouge : pas de lecture depuis longtemps ou extension éteinte. Gris : état inconnu.</p>`;
     $('feuille').hidden = false; $('feuille').querySelector('.feuilleBoite').scrollTop = 0;
   }

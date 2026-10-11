@@ -3,7 +3,7 @@
 // Sortie : une couleur globale (vert / orange / rouge / gris) + le détail par plateforme, en français, sans jargon.
 (function (root) {
   'use strict';
-  const SEUILS = { Hiflow: [45, 120], DriiveMe: [20, 60] };   // [vert jusqu'à, orange jusqu'à] en minutes (Hiflow : lu toutes les 30 min par le téléphone, V1.11) ; au-delà : rouge
+  const SEUILS = { Hiflow: [45, 120], DriiveMe: [20, 60], PopValet: [120, 480] };   // PopValet : lu seulement quand tu ouvres l'application Pop Valet (V143)   // [vert jusqu'à, orange jusqu'à] en minutes (Hiflow : lu toutes les 30 min par le téléphone, V1.11) ; au-delà : rouge
   const DEFAUT = [15, 45], EXTENSION_MORTE_MIN = 5, ORDRE = { vert: 0, orange: 1, rouge: 2 };
   const heure = t => new Date(t).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
   function duree(min) { min = Math.max(0, Math.round(min)); if (min < 1) return 'moins d’une minute'; if (min < 60) return min + ' min'; const h = Math.floor(min / 60), m = min % 60; return h + ' h' + (m ? ' ' + String(m).padStart(2, '0') : ''); }
