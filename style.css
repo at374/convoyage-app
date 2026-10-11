@@ -227,3 +227,9 @@ html[data-style]:not([data-style="classique"]) .trajet .vA,:root[data-theme="dar
 :root[data-theme="dark"] .fr-pay td:first-child,:root[data-theme="dark"] .fr-ben td:first-child,:root[data-theme="dark"] .fr-ben td:last-child{color:#86efac}
 :root[data-theme="dark"] .fr-att td:first-child{color:#fdba74}
 :root[data-theme="dark"] .fr-neg td:first-child,:root[data-theme="dark"] .fr-neg td:last-child{color:#fca5a5}
+/* V142 : péage estimé par classe de véhicule */
+.peages{margin:6px 0}
+.tPeage{width:100%;border-collapse:collapse;font-size:15px}
+.tPeage td{padding:6px 4px;border-bottom:1px solid rgba(128,128,128,.25);vertical-align:top}
+.tPeage td:last-child{text-align:right;white-space:nowrap;color:#b45309;font-size:16px}
+:root[data-theme="dark"] .tPeage td:last-child{color:#fcd34d}

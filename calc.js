@@ -115,7 +115,22 @@
       net, heuresMission: duree.heures, dureeEstimee: duree.estimee, heures, parHeure: heures ? arr(net / heures) : null,
       liaisonsConnues: !!(approche && retour) };
   }
-  const api = { liaisonMoyenne, TRANSPORTS_CHOIX, rentabilite, dureeHeures, dureeEstimee, liaison, liaisonMoinsChere, MODES, CARTES_SNCF, rentabiliteComplete, LIAISON, VITESSE_CONDUITE };
+  // V142 : péage estimé par catégorie de véhicule (classes des autoroutes françaises). Base : voiture (classe 1) ≈ 0,09 €/km à péage
+  // (tarifs 2026 : Paris-Lyon 41,28 € / ≈ 466 km, Lyon-Marseille 28,17 € / 315 km) ; fourchette 0,08 à 0,11 €/km. Les autres classes sont des
+  // multiples indicatifs (moto ≈ 50 à 60 % de la voiture ; classes 2 à 4 : ordres de grandeur, les barèmes réels varient selon le concessionnaire).
+  const PEAGE_KM = { bas: 0.08, moyen: 0.09, haut: 0.11 };
+  const PEAGE_CLASSES = [
+    { classe: 1, nom: 'Voiture, SUV, petit utilitaire', detail: 'hauteur ≤ 2 m, PTAC ≤ 3,5 t', coef: 1 },
+    { classe: 2, nom: 'Grand utilitaire, camping-car, voiture + remorque', detail: 'hauteur 2 à 3 m, PTAC ≤ 3,5 t', coef: 1.5 },
+    { classe: 3, nom: 'Poids lourd 2 essieux, camping-car > 3 m', detail: 'hauteur ≥ 3 m ou PTAC > 3,5 t', coef: 2.2 },
+    { classe: 4, nom: 'Poids lourd 3 essieux ou plus', detail: 'hauteur ≥ 3 m ou PTAC > 3,5 t', coef: 3 },
+    { classe: 5, nom: 'Moto, scooter > 50 cm³', detail: 'deux-roues motorisés', coef: 0.6 }];
+  function estimerPeage(kmPeage) {
+    const km = n(kmPeage); if (km == null || km < 0) return null;
+    const e = x => Math.round(x * 10) / 10;
+    return PEAGE_CLASSES.map(c => ({ classe: c.classe, nom: c.nom, detail: c.detail, euros: e(km * PEAGE_KM.moyen * c.coef), min: e(km * PEAGE_KM.bas * c.coef), max: e(km * PEAGE_KM.haut * c.coef) }));
+  }
+  const api = { estimerPeage, PEAGE_CLASSES, PEAGE_KM, liaisonMoyenne, TRANSPORTS_CHOIX, rentabilite, dureeHeures, dureeEstimee, liaison, liaisonMoinsChere, MODES, CARTES_SNCF, rentabiliteComplete, LIAISON, VITESSE_CONDUITE };
   root.CPCalc = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

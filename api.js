@@ -43,6 +43,7 @@
     // V114 : état de lecture des plateformes (envoyé par l'extension). Table absente (maj_V114.sql pas exécuté) → null.
     async sourcesEtat() { try { return (await this.requete('sources_etat?select=*')) || []; } catch (_) { return null; } }
     marquerLues() { return this.requete('alertes?lue=eq.false', { method: 'PATCH', body: JSON.stringify({ lue: true }), headers: { prefer: 'return=minimal' } }); }
+    marquerLue(id) { return this.requete('alertes?id=eq.' + encodeURIComponent(id), { method: 'PATCH', body: JSON.stringify({ lue: true }), headers: { prefer: 'return=minimal' } }); }
     async reglages() { const r = await this.requete('reglages?select=*'); return (r && r[0]) || null; }
     async enregistrerReglages(v) {
       const envoi = w => this.requete('reglages?on_conflict=user_id', { method: 'POST', body: JSON.stringify([{ ...w, user_id: this.session.user_id }]), headers: { prefer: 'resolution=merge-duplicates,return=minimal' } });

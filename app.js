@@ -25,7 +25,7 @@
     return null;
   }
   window.__cpLienAppliHiflow = lienAppliHiflow;
-  const VERSION_APP = 'V141 (2.0.41)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V142 (2.0.42)';   // affichée dans l'en-tête et les Réglages
   const LIENS = { Hiflow: 'https://partenaire.expedicar.com/', DriiveMe: 'https://www.driiveme.com/', Otoqi: 'https://drivers.otoqi.com/', PopValet: 'https://www.popvalet.com/' };
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
   document.addEventListener('change', e => { const c = e.target && e.target.closest && e.target.closest('input[data-verif]'); if (!c) return; const t = lireLocal('cp_verif', {}) || {}; if (c.checked) t[c.dataset.verif] = new Date().toISOString(); else delete t[c.dataset.verif]; ecrireLocal('cp_verif', t); const l = c.closest('label'); if (l) { l.classList.toggle('ok', c.checked); l.lastChild.textContent = c.checked ? ' ✓ Vérifié par toi le ' + new Date().toLocaleDateString('fr-FR') + ' (horaires et prix valables le jour de la mission)' : ' Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'; } });
@@ -204,7 +204,7 @@
     };
     // Itinéraires gratuits (OpenStreetMap) : Valhalla (FOSSGIS) sait éviter les péages (use_tolls 0) ou les accepter (1) ; OSRM sert de secours pour le trajet « avec péages ».
     const decoder = (enc, prec) => { const out = []; let i = 0, lat = 0, lng = 0; while (i < enc.length) { for (const k of [0, 1]) { let r = 0, sh = 0, c; do { c = enc.charCodeAt(i++) - 63; r |= (c & 31) << sh; sh += 5; } while (c >= 32); const v = (r & 1) ? ~(r >> 1) : (r >> 1); if (k === 0) lat += v; else lng += v; } out.push([lng / 10 ** prec, lat / 10 ** prec]); } return out; };
-    const valhalla = async (a, b, peages) => { try { const r = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locations: [{ lat: a.lat, lon: a.lng }, { lat: b.lat, lon: b.lng }], costing: 'auto', costing_options: { auto: { use_tolls: peages ? 1 : 0 } }, directions_options: { units: 'kilometers' } }) }); const j = r.ok ? await r.json() : null, t = j && j.trip; return t && t.legs && t.legs[0] && t.legs[0].shape ? { coords: decoder(t.legs[0].shape, 6), km: t.summary.length, h: t.summary.time / 3600 } : null; } catch (_) { return null; } };
+    const valhalla = async (a, b, peages) => { try { const r = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locations: [{ lat: a.lat, lon: a.lng }, { lat: b.lat, lon: b.lng }], costing: 'auto', costing_options: { auto: { use_tolls: peages ? 1 : 0 } }, directions_options: { units: 'kilometers' } }) }); const j = r.ok ? await r.json() : null, t = j && j.trip; return t && t.legs && t.legs[0] && t.legs[0].shape ? { coords: decoder(t.legs[0].shape, 6), km: t.summary.length, h: t.summary.time / 3600, peageKm: Array.isArray(t.legs[0].maneuvers) ? t.legs[0].maneuvers.reduce((s, x) => s + (x && x.toll ? Number(x.length) || 0 : 0), 0) : null } : null; } catch (_) { return null; } };
     const osrm = async (a, b) => { try { const r = await fetch('https://router.project-osrm.org/route/v1/driving/' + a.lng + ',' + a.lat + ';' + b.lng + ',' + b.lat + '?overview=simplified&geometries=geojson'); const j = r.ok ? await r.json() : null, rt = j && j.code === 'Ok' && j.routes && j.routes[0]; return rt && rt.geometry && rt.geometry.coordinates.length > 1 ? { coords: rt.geometry.coordinates, km: rt.distance / 1000, h: rt.duration / 3600 } : null; } catch (_) { return null; } };
     const itineraire = async (a, b, sansPeage) => sansPeage ? valhalla(a, b, false) : ((await valhalla(a, b, true)) || (await osrm(a, b)));
     const rendre = async () => {
@@ -220,7 +220,12 @@
       let bas;
       if (meme) bas = ligne('🛣️', 'Trajet (aucun péage sur le parcours le plus rapide)', avec);
       else bas = ligne('🛣️', 'Avec péages (autoroutes autorisées)', avec) + ligne('🟢', 'Sans péage', sans);
-      bas += (m.distance_km ? `<p class="doux">Distance donnée par la plateforme : ${esc(m.distance_km)} km.</p>` : '') + '<p class="doux" id="popCommunes">Communes sur le trajet : recherche…</p>' + pts + '<p class="doux">Les durées sont des estimations de conduite normale ; le prix des péages n’est pas calculé ici. <a href="https://fr.mappy.com/itineraire" target="_blank" rel="noopener">Comparer sur Mappy</a></p>';
+      // V142 : péage estimé, par catégorie de véhicule (kilomètres à péage lus dans l'itinéraire « avec péages »).
+      const kmP = avec && !meme ? avec.peageKm : (meme ? 0 : null);
+      const calcP = typeof CALC !== 'undefined' ? CALC : (typeof window !== 'undefined' ? window.CPCalc : null), tarifs = kmP != null && calcP && calcP.estimerPeage ? calcP.estimerPeage(kmP < 1 ? 0 : kmP) : null;
+      if (tarifs) bas += kmP < 1 ? '<p>💶 <b>Péage : aucun</b> sur ce trajet.</p>' : `<div class="peages"><p>💶 <b>Péage estimé : ≈ ${esc(Math.round(kmP))} km à péage</b></p><table class="tPeage">${tarifs.map(t => `<tr><td><b>Classe ${t.classe}</b> · ${esc(t.nom)}<div class="doux">${esc(t.detail)}</div></td><td><b>≈ ${esc(Math.round(t.euros))} €</b><div class="doux">${esc(Math.round(t.min))}–${esc(Math.round(t.max))} €</div></td></tr>`).join('')}</table></div>`;
+      else bas += '<p class="doux">💶 Péage : kilomètres à péage non disponibles pour ce trajet.</p>';
+      bas += (m.distance_km ? `<p class="doux">Distance donnée par la plateforme : ${esc(m.distance_km)} km.</p>` : '') + '<p class="doux" id="popCommunes">Communes sur le trajet : recherche…</p>' + pts + '<p class="doux">Les durées sont des estimations de conduite normale ; le prix des péages est une estimation (≈ 0,09 € par km à péage pour une voiture, tarifs 2026 ; les autres classes sont des ordres de grandeur) : le tarif exact dépend de l’autoroute. <a href="https://fr.mappy.com/itineraire" target="_blank" rel="noopener">Comparer sur Mappy</a></p>';
       d.innerHTML = cadre(dessiner(a, b, meme ? [{ coords: avec.coords, couleur: '#1d4ed8', ep: 4 }] : [sans && { coords: sans.coords, couleur: '#16a34a', ep: 4, pointille: true }, avec && { coords: avec.coords, couleur: '#1d4ed8', ep: 4 }].filter(Boolean)), bas + (meme || !(avec && sans) ? '' : '<p class="doux">Bleu : avec péages · Vert pointillé : sans péage.</p>'));
       const base = avec || sans; if (!base) { const el0 = document.getElementById('popCommunes'); if (el0) el0.textContent = ''; return; }
       const route = base.coords, communes = [], idx = [0.2, 0.4, 0.6, 0.8].map(f => route[Math.min(route.length - 1, Math.round(f * (route.length - 1)))]);
@@ -519,7 +524,15 @@
     $('ecran').innerHTML = (l.some(a => !a.lue) ? '<button id="toutLu" class="second" style="width:100%">Tout marquer comme lu</button>' : '') +
       (l.length ? l.map(a => `<div class="carte alerte${clsPlat(a.platform)}${a.lue ? '' : ' nonlue'}${missionDeAlerte(a) ? ' cliquable' : ''}" data-alerte="${esc(a.id)}"><span>${({ hausse_prix: '📈', mission_acceptee: '✅', mission_modifiee: '✏️', mission_annulee: '❌' })[a.type] || '🆕'}</span><div><div class="msg">${a.lue ? '' : '<span class="etiq nv pNouveau">NOUVEAU</span> '}${esc(a.message)}</div><div class="doux">${esc(fmtDate(a.created_at))}${a.lue ? ' · ✓ déjà lue' : ''}</div></div></div>`).join('')
         : '<div class="vide">Aucune alerte. Tu seras prévenu des nouvelles missions.</div>');
-    for (const el of document.querySelectorAll('[data-alerte]')) { const a = l.find(x => String(x.id) === el.dataset.alerte), m = missionDeAlerte(a); if (m) el.onclick = () => detail(m); }
+    // V142 : toucher une alerte (nouvelle mission…) la marque aussitôt comme lue : couleur atténuée, étiquette « NOUVEAU » retirée, compteur mis à jour, et enregistré sur le compte.
+    const lireAlerte = (el, a) => {
+      if (!a || a.lue) return; a.lue = true; el.classList.remove('nonlue'); const e = el.querySelector('.pNouveau'); if (e) e.remove();
+      const d = el.querySelector('.doux'); if (d && !/déjà lue/.test(d.textContent)) d.textContent += ' · ✓ déjà lue';
+      const nb = etat.alertes.filter(x => !x.lue).length, bd = $('badge'); if (bd) { bd.hidden = !nb; bd.textContent = nb > 99 ? '99+' : nb; }
+      if (!nb) { const t = $('toutLu'); if (t) t.remove(); }
+      try { const r = api.marquerLue && api.marquerLue(a.id); if (r && r.catch) r.catch(() => { a.lue = false; }); } catch (_) {}
+    };
+    for (const el of document.querySelectorAll('[data-alerte]')) { const a = l.find(x => String(x.id) === el.dataset.alerte), m = missionDeAlerte(a); el.onclick = () => { lireAlerte(el, a); if (m) detail(m); }; }
     const b = $('toutLu'); if (b) b.onclick = async () => { try { await api.marquerLues(); etat.alertes.forEach(a => { a.lue = true; }); afficher(); } catch (e) { toast(e.message); } };
   }
   function vueReglages() {
