@@ -41,7 +41,16 @@
       if (r.status === 204) return null;
       const txt = await r.text(); return txt ? JSON.parse(txt) : null;
     }
-    missions() { return this.requete('missions?select=*&order=pickup_start.asc.nullslast,fee.desc.nullslast'); }
+    // V147 : le serveur ne renvoie que 1000 lignes par requête, et la liste est triée de la plus ancienne à la plus récente : les vieilles missions (passées, acceptées, « plus vues ») remplissaient les 1000 places et les missions récentes n'arrivaient jamais. On lit maintenant toutes les pages.
+    async missions() {
+      const tout = [];
+      for (let d = 0; d < 20000; d += 1000) {
+        const page = (await this.requete('missions?select=*&order=pickup_start.asc.nullslast,fee.desc.nullslast,external_id.asc&limit=1000&offset=' + d)) || [];
+        tout.push(...page);
+        if (page.length < 1000) break;
+      }
+      return tout;
+    }
     alertes() { return this.requete('alertes?select=*&order=created_at.desc&limit=100'); }
     // V96 : factures validées / payées. Serveur pas encore mis à jour (maj_V96.sql) → liste vide, sans erreur.
     async factures() { try { return (await this.requete('factures?select=*&order=emise_le.desc.nullslast&limit=500')) || []; } catch (_) { return null; } }
