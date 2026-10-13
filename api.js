@@ -6,7 +6,10 @@
   function lireSession() { try { return JSON.parse(localStorage.getItem(SESSION) || 'null'); } catch (_) { return null; } }
   function ecrireSession(s) { try { s ? localStorage.setItem(SESSION, JSON.stringify(s)) : localStorage.removeItem(SESSION); } catch (_) {} }
   class Api {
-    constructor(url, cle) { this.url = String(url || '').replace(/\/+$/, ''); this.cle = cle; this.session = lireSession(); }
+    constructor(url, cle) { this.url = String(url || '').replace(/\/+$/, ''); this.cle = cle; this.session = lireSession(); if (this.session) setTimeout(() => this._partagerNatif(), 0); }
+    // V144 : dans l'application Android, le compte n'est saisi qu'une fois ici ; la lecture des plateformes le reçoit (CPNatif), et c'est elle qui renouvelle la session.
+    _natif() { try { const N = root.CPNatif; return N && JSON.parse(N.etat()).compte ? N : null; } catch (_) { return null; } }
+    _partagerNatif() { try { const N = root.CPNatif; if (N && this.session && this.session.access_token && !JSON.parse(N.etat()).compte) N.partager(this.url, this.cle, JSON.stringify(this.session)); } catch (_) {} }
     get connecte() { return !!this.session?.access_token; }
     async _auth(chemin, corps) {
       const r = await fetch(this.url + '/auth/v1/' + chemin, { method: 'POST', headers: { apikey: this.cle, 'content-type': 'application/json' }, body: JSON.stringify(corps) });
@@ -17,12 +20,14 @@
     _garder(j) {
       if (!j?.access_token) return false;
       this.session = { access_token: j.access_token, refresh_token: j.refresh_token, expires_at: Date.now() + (Number(j.expires_in) || 3600) * 1000, email: j.user?.email || '', user_id: j.user?.id || '' };
-      ecrireSession(this.session); return true;
+      ecrireSession(this.session); this._partagerNatif(); return true;
     }
     async connexion(email, motDePasse) { this._garder(await this._auth('token?grant_type=password', { email, password: motDePasse })); }
     async creerCompte(email, motDePasse) { const j = await this._auth('signup', { email, password: motDePasse }); return this._garder(j) ? 'connecte' : 'confirmation'; }
     deconnexion() { this.session = null; ecrireSession(null); }
     async _rafraichir() {
+      const N = this._natif();
+      if (N) { try { const j = JSON.parse(N.session()); if (j && j.access_token) { this.session = { access_token: j.access_token, refresh_token: '', expires_at: j.expires_at, email: j.email || this.session?.email || '', user_id: j.user_id || this.session?.user_id || '' }; ecrireSession(this.session); return; } } catch (_) {} this.deconnexion(); throw new Error('Session expirée : reconnecte-toi.'); }
       if (!this.session?.refresh_token) throw new Error('Session expirée');
       try { this._garder(await this._auth('token?grant_type=refresh_token', { refresh_token: this.session.refresh_token })); }
       catch (e) { this.deconnexion(); throw new Error('Session expirée : reconnecte-toi.'); }
