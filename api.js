@@ -7,7 +7,7 @@
   function ecrireSession(s) { try { s ? localStorage.setItem(SESSION, JSON.stringify(s)) : localStorage.removeItem(SESSION); } catch (_) {} }
   class Api {
     constructor(url, cle) { this.url = String(url || '').replace(/\/+$/, ''); this.cle = cle; this.session = lireSession(); if (this.session) setTimeout(() => this._partagerNatif(), 0); }
-    // V144 : dans l'application Android, le compte n'est saisi qu'une fois ici ; la lecture des plateformes le reçoit (CPNatif), et c'est elle qui renouvelle la session.
+    // V145 : dans l'application Android, le compte n'est saisi qu'une fois ici ; la lecture des plateformes le reçoit (CPNatif), et c'est elle qui renouvelle la session.
     _natif() { try { const N = root.CPNatif; return N && JSON.parse(N.etat()).compte ? N : null; } catch (_) { return null; } }
     _partagerNatif() { try { const N = root.CPNatif; if (N && this.session && this.session.access_token && !JSON.parse(N.etat()).compte) N.partager(this.url, this.cle, JSON.stringify(this.session)); } catch (_) {} }
     get connecte() { return !!this.session?.access_token; }

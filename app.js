@@ -25,13 +25,13 @@
     return null;
   }
   window.__cpLienAppliHiflow = lienAppliHiflow;
-  // V144 : DriiveMe / Pop Valet / Otoqi → ouvre leur APPLICATION via « Convoyage Tel » (application Android de ce projet : elle retrouve l'appli installée) ; sans elle, le site s'ouvre.
+  // V145 : DriiveMe / Pop Valet / Otoqi → ouvre leur APPLICATION via « Convoyage Tel » (application Android de ce projet : elle retrouve l'appli installée) ; sans elle, le site s'ouvre.
   function lienAppliAutre(plat, site, ua) {
     ua = ua == null ? (navigator.userAgent || '') : ua;
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V144 (2.0.44)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V145 (2.0.45)';   // affichée dans l'en-tête et les Réglages
   const LIENS = { Hiflow: 'https://partenaire.expedicar.com/', DriiveMe: 'https://www.driiveme.com/', Otoqi: 'https://drivers.otoqi.com/', PopValet: 'https://www.popvalet.com/' };
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
   document.addEventListener('change', e => { const c = e.target && e.target.closest && e.target.closest('input[data-verif]'); if (!c) return; const t = lireLocal('cp_verif', {}) || {}; if (c.checked) t[c.dataset.verif] = new Date().toISOString(); else delete t[c.dataset.verif]; ecrireLocal('cp_verif', t); const l = c.closest('label'); if (l) { l.classList.toggle('ok', c.checked); l.lastChild.textContent = c.checked ? ' ✓ Vérifié par toi le ' + new Date().toLocaleDateString('fr-FR') + ' (horaires et prix valables le jour de la mission)' : ' Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'; } });
@@ -52,7 +52,7 @@
   Object.assign(etat, lireLocal('cp_preferences', {}));
   window.CP_TRANSPORT_CHOISI = lireLocal('cp_transport', 'moyenne');   // V137 : transport choisi pour l'aller et le retour (gardé sur ce téléphone)
   etat.pos = lireLocal('cp_position', null); etat.posMax = Number(etat.posMax) || 0;   // V137 : position du téléphone, prise seulement sur demande, gardée sur ce téléphone
-  if (!lireLocal('cp_tri_v144', null)) { etat.tri = 'date'; ecrireLocal('cp_tri_v144', 1); }   // V144 : tri par date de départ (la plus proche en haut), plateformes mélangées — par défaut une seule fois, ton choix est gardé ensuite
+  if (!lireLocal('cp_tri_v144', null)) { etat.tri = 'date'; ecrireLocal('cp_tri_v144', 1); }   // V145 : tri par date de départ (la plus proche en haut), plateformes mélangées — par défaut une seule fois, ton choix est gardé ensuite
   // Données gardées sur l'appareil : consultables hors connexion.
   const cache = lireLocal('cp_cache', null); if (cache) { etat.factures = cache.factures || []; etat.missions = window.CPFiltres.francais(deLEdition(cache.missions)); etat.alertes = seulesNouvelles(cache.alertes); etat.reglages = cache.reglages || null; etat.chargeLe = cache.chargeLe; }
 
@@ -117,8 +117,34 @@
   }
   window.__cpNormaliserServeur = normaliserServeur;
   // ---------- Données ----------
+  // ---------- V145 : heures de désactivation (nuit) : le convoyeur choisit, rien n'est imposé ----------
+  const minutesDe = t => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(t || '')); return m ? Math.min(23, +m[1]) * 60 + Math.min(59, +m[2]) : 0; };
+  const lirePause = () => { const p = lireLocal('cp_pause', null) || {}; return { choix: p.choix === 'oui' || p.choix === 'non' ? p.choix : null, debut: p.debut || '19:00', fin: p.fin || '07:00' }; };
+  function pauseActive(date) {
+    const p = lirePause(); if (p.choix !== 'oui') return false;
+    const h = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Paris' }).format(date || new Date());
+    const now = minutesDe(h.replace('h', ':').replace(/^24/, '00')), d = minutesDe(p.debut), f = minutesDe(p.fin);
+    if (d === f) return false; return d < f ? now >= d && now < f : now >= d || now < f;
+  }
+  function enregistrerPause(choix, debut, fin) {
+    const p = { choix, debut: /^\d{1,2}:\d{2}$/.test(debut) ? debut : '19:00', fin: /^\d{1,2}:\d{2}$/.test(fin) ? fin : '07:00' }; ecrireLocal('cp_pause', p);
+    try { if (window.CPNatif && window.CPNatif.reglerPause) window.CPNatif.reglerPause(JSON.stringify(p)); } catch (_) {}   // l'application Android arrête/reprend sa lecture
+    return p;
+  }
+  function questionPause() {
+    if (lirePause().choix || !$('feuille') || !api?.connecte) return;
+    $('feuilleContenu').innerHTML = `<h3 style="margin:0 0 6px">Heures de désactivation la nuit ?</h3>
+      <p class="doux">Pendant ces heures, la lecture des plateformes, la mise à jour des missions et l’envoi des alertes sont arrêtés. Tu pourras changer ce choix à tout moment dans Réglages.</p>
+      <label for="pDeb">Arrêt à</label><input id="pDeb" type="time" value="19:00"><label for="pFin">Reprise à</label><input id="pFin" type="time" value="07:00">
+      <div class="boutons" style="margin-top:12px"><button id="pOui">Oui, désactiver la nuit</button><button id="pNon" class="second">Non, toujours actif</button></div>`;
+    $('feuille').hidden = false;
+    $('pOui').onclick = () => { enregistrerPause('oui', $('pDeb').value, $('pFin').value); $('feuille').hidden = true; toast('Désactivation la nuit : activée'); };
+    $('pNon').onclick = () => { enregistrerPause('non', '19:00', '07:00'); $('feuille').hidden = true; toast('Toujours actif'); };
+  }
+
   async function charger(silencieux) {
     if (!api?.connecte) return;
+    if (silencieux && pauseActive()) return;   // V145 : heures de désactivation
     try {
       const [missions, alertes, reglages, factures] = await Promise.all([api.missions(), api.alertes(), api.reglages(), api.factures()]);
       etat.facturesServeur = factures !== null; if (factures) etat.factures = factures;   // V96
@@ -128,7 +154,7 @@
       const nouvelles = alertesNouv.filter(a => !a.lue && !avant.has(a.id));
       Object.assign(etat, { missions: window.CPFiltres.francais(deLEdition(missions)), alertes: alertesNouv, reglages, chargeLe: new Date().toISOString(), erreur: '' });
       ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures });
-      if (etat.chargeLeDejaVu && nouvelles.length) notifier(nouvelles);
+      if (etat.chargeLeDejaVu && nouvelles.length && !pauseActive()) notifier(nouvelles);
       etat.chargeLeDejaVu = true;
       if (!silencieux) toast('Missions à jour');
     } catch (e) {
@@ -412,7 +438,7 @@
     if (etat.tri === 'prix') l.sort((a, b) => (b.fee || 0) - (a.fee || 0));
     else if (etat.tri === 'heure') l.sort((a, b) => (ph(b).parHeure || 0) - (ph(a).parHeure || 0));
     else if (etat.tri === 'proche' && pointRecherche()) l.sort((a, b) => (kmDeMoi(a) ?? 1e9) - (kmDeMoi(b) ?? 1e9));
-    else if (etat.tri === 'date') { const t = m => { const d = Date.parse(m.pickup_start || ''); return Number.isFinite(d) ? d : Infinity; }; l.sort((a, b) => { const x = t(a), y = t(b); return x === y ? 0 : x < y ? -1 : 1; }); }   // V144 : date ET heure de départ (la plus proche en haut), toutes plateformes mélangées ; sans date → en bas
+    else if (etat.tri === 'date') { const t = m => { const d = Date.parse(m.pickup_start || ''); return Number.isFinite(d) ? d : Infinity; }; l.sort((a, b) => { const x = t(a), y = t(b); return x === y ? 0 : x < y ? -1 : 1; }); }   // V145 : date ET heure de départ (la plus proche en haut), toutes plateformes mélangées ; sans date → en bas
     else l.sort((a, b) => String(b.first_seen_at || '').localeCompare(String(a.first_seen_at || '')) || String(a.pickup_start || '9').localeCompare(String(b.pickup_start || '9')));   // V99 : les plus récemment parues en haut
     listeAffichee = l;
     zoneListe.innerHTML = `${etat.zones.length || q || FI.actifs(etat.plus) ? `<p class="doux" id="compte">${l.length} mission(s) sur ${total} correspondent à tes filtres <button id="toutVoir" class="lienBouton">Tout afficher</button></p>` : ''}` +
@@ -568,6 +594,9 @@
       <p class="doux">Les retours choisissent le moyen le moins cher qui arrive à temps ; prix et horaires estimés (réduction SNCF ≈ −30 % sur le train), pas des tarifs réels.</p>
       <p class="doux">Valeurs de travail : distances à vol d’oiseau × 1,25 et durées estimées, à ajuster à ton expérience.</p>
       <button id="rOk" style="width:100%;margin-top:12px">Enregistrer</button></div>
+      <div class="carte" id="cartePause"><h2>Heures de désactivation</h2><p class="doux">La nuit, la lecture des plateformes, la mise à jour et les alertes peuvent s’arrêter.</p>
+        <label><input id="pzOn" type="checkbox" style="width:auto;min-height:0"> Désactiver la nuit</label>
+        <label for="pzDeb">Arrêt à</label><input id="pzDeb" type="time"><label for="pzFin">Reprise à</label><input id="pzFin" type="time"></div>
       <div class="carte" id="carteNotif"><h2>Notifications</h2><p class="doux" id="notifEtat">Vérification…</p><div id="notifBoutons" class="boutons"></div></div>
       <div class="carte"><h2>Compte</h2><p class="doux">${esc(api?.session?.email || '')}</p>
       <div class="boutons"><button id="dOk" class="second">Se déconnecter</button><button id="eOk" class="danger">Effacer mes données</button></div></div>
@@ -597,6 +626,9 @@
       try { await api.enregistrerReglages(v); etat.reglages = { ...r, ...v }; ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe }); toast('Réglages enregistrés'); } catch (e) { toast(e.message); }
     };
     etatNotifications();
+    { const p = lirePause(); $('pzOn').checked = p.choix === 'oui'; $('pzDeb').value = p.debut; $('pzFin').value = p.fin;
+      const maj = () => { enregistrerPause($('pzOn').checked ? 'oui' : 'non', $('pzDeb').value, $('pzFin').value); toast($('pzOn').checked ? 'Désactivation la nuit : activée' : 'Toujours actif'); };
+      $('pzOn').onchange = maj; $('pzDeb').onchange = $('pzFin').onchange = () => { if ($('pzOn').checked) maj(); }; }
     { const p = document.createElement('p'); p.className = 'doux'; p.id = 'versionReglages'; p.style.textAlign = 'center'; p.textContent = 'Convoyage Ultra — version ' + VERSION_APP; $('ecran').appendChild(p); }
     { const bm = $('remettre'); if (bm) bm.onclick = () => { ecrireLocal('cp_masquees', []); toast('Missions remises : actualisation…'); charger(); }; }
     $('dOk').onclick = () => { api.deconnexion(); localStorage.removeItem('cp_cache'); Object.assign(etat, { missions: [], alertes: [], reglages: null }); ecranConnexion(); };
@@ -687,7 +719,7 @@
     const frais = Object.entries(m.fees || {}).filter(([k]) => !/^devis_/.test(k));
     const dv = m.fees && m.fees.devis_numero ? { n: m.fees.devis_numero, total: m.fees.devis_total, accepte: m.fees.devis_accepte === 1 } : null;   // V95 : montants du devis Hiflow
     const lien = m.detail_url && /^https:\/\//.test(m.detail_url) ? m.detail_url : LIENS[m.platform];
-    const ligne = (a, b) => { const t = String(a); const c = /^= /.test(t) ? 'net' : /^Rentabilit/.test(t) ? 'horaire' : /^[−-] /.test(t) ? 'neg' : /^(Prestation|\+)/.test(t) ? 'pos' : ''; return `<tr${c ? ' class="r-' + c + '"' : ''}><td>${esc(a)}</td><td>${b}</td></tr>`; };   // V144 : rangées colorées dans « Rentabilité estimée »
+    const ligne = (a, b) => { const t = String(a); const c = /^= /.test(t) ? 'net' : /^Rentabilit/.test(t) ? 'horaire' : /^[−-] /.test(t) ? 'neg' : /^(Prestation|\+)/.test(t) ? 'pos' : ''; return `<tr${c ? ' class="r-' + c + '"' : ''}><td>${esc(a)}</td><td>${b}</td></tr>`; };   // V145 : rangées colorées dans « Rentabilité estimée »
     $('feuilleContenu').innerHTML = `<div class="doux"><span class="etiq">${esc(PLATS[m.platform])}</span> n° ${esc(m.external_id)}${m.validation === 'non_validee' ? ' · lecture non validée : vérifie sur le site' : ''}</div>
       <h2 id="feuilleTitre" class="trajet" style="font-size:20px">${esc(trajet(m))}</h2>
       ${m.kind === 'acceptee' ? '<button id="btnRetirer" class="second" type="button">🚫 Pas acceptée : retirer de l’Agenda</button>' : ''}
@@ -804,7 +836,7 @@
   function demarrer() {
     if (!api) return ecranConfiguration();
     if (!api.connecte) return ecranConnexion();
-    afficher(); charger(true);
+    afficher(); charger(true); setTimeout(questionPause, 1200);
   }
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) { try { navigator.serviceWorker.register('sw.js'); } catch (_) {} }
   window.__cp = { etat, charger };

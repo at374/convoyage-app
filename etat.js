@@ -3,7 +3,7 @@
 // Sortie : une couleur globale (vert / orange / rouge / gris) + le détail par plateforme, en français, sans jargon.
 (function (root) {
   'use strict';
-  const SEUILS = { Hiflow: [45, 120], DriiveMe: [20, 60], PopValet: [45, 120], Otoqi: [45, 120] };   // PopValet : lu seulement quand tu ouvres l'application Pop Valet (V144)   // [vert jusqu'à, orange jusqu'à] en minutes (Hiflow : lu toutes les 30 min par le téléphone, V1.11) ; au-delà : rouge
+  const SEUILS = { Hiflow: [45, 120], DriiveMe: [20, 60], PopValet: [45, 120], Otoqi: [45, 120] };   // PopValet : lu seulement quand tu ouvres l'application Pop Valet (V145)   // [vert jusqu'à, orange jusqu'à] en minutes (Hiflow : lu toutes les 30 min par le téléphone, V1.11) ; au-delà : rouge
   const DEFAUT = [15, 45], EXTENSION_MORTE_MIN = 5, ORDRE = { vert: 0, orange: 1, rouge: 2 };
   const heure = t => new Date(t).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
   function duree(min) { min = Math.max(0, Math.round(min)); if (min < 1) return 'moins d’une minute'; if (min < 60) return min + ' min'; const h = Math.floor(min / 60), m = min % 60; return h + ' h' + (m ? ' ' + String(m).padStart(2, '0') : ''); }
@@ -24,7 +24,7 @@
     if (lignes == null) return { couleur: 'gris', resume: 'État inconnu : le serveur n’est pas encore à jour (exécute maj_V114.sql dans Supabase)', details: [] };
     if (!lignes.length) return { couleur: 'gris', resume: 'Aucune plateforme lue pour l’instant : ouvre l’extension sur ton ordinateur ou ton VPS', details: [] };
     const details = lignes.map(l => ligne(l, now));
-    // V144 : Pop Valet et Otoqi sont toujours listés, même avant la première lecture (gris, sans effet sur la couleur globale)
+    // V145 : Pop Valet et Otoqi sont toujours listés, même avant la première lecture (gris, sans effet sur la couleur globale)
     for (const p of ['PopValet', 'Otoqi']) if (!details.some(d => d.platform === p)) details.push({ platform: p, ageMin: null, couleur: 'gris', texte: 'pas encore lue — ouvre ' + (p === 'PopValet' ? '« En attente » dans Pop Valet' : '« Disponibles » dans Otoqi') + ' sur le téléphone (application Convoyage Tel 1.22)' });
     details.sort((a, b) => a.platform.localeCompare(b.platform, 'fr'));
     const maj = Math.max(...lignes.map(l => Date.parse(l.maj_le || '') || 0));
