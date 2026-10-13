@@ -25,13 +25,13 @@
     return null;
   }
   window.__cpLienAppliHiflow = lienAppliHiflow;
-  // V143 : DriiveMe / Pop Valet / Otoqi → ouvre leur APPLICATION via « Convoyage Tel » (application Android de ce projet : elle retrouve l'appli installée) ; sans elle, le site s'ouvre.
+  // V144 : DriiveMe / Pop Valet / Otoqi → ouvre leur APPLICATION via « Convoyage Tel » (application Android de ce projet : elle retrouve l'appli installée) ; sans elle, le site s'ouvre.
   function lienAppliAutre(plat, site, ua) {
     ua = ua == null ? (navigator.userAgent || '') : ua;
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V143 (2.0.43)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V144 (2.0.44)';   // affichée dans l'en-tête et les Réglages
   const LIENS = { Hiflow: 'https://partenaire.expedicar.com/', DriiveMe: 'https://www.driiveme.com/', Otoqi: 'https://drivers.otoqi.com/', PopValet: 'https://www.popvalet.com/' };
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
   document.addEventListener('change', e => { const c = e.target && e.target.closest && e.target.closest('input[data-verif]'); if (!c) return; const t = lireLocal('cp_verif', {}) || {}; if (c.checked) t[c.dataset.verif] = new Date().toISOString(); else delete t[c.dataset.verif]; ecrireLocal('cp_verif', t); const l = c.closest('label'); if (l) { l.classList.toggle('ok', c.checked); l.lastChild.textContent = c.checked ? ' ✓ Vérifié par toi le ' + new Date().toLocaleDateString('fr-FR') + ' (horaires et prix valables le jour de la mission)' : ' Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'; } });
@@ -52,7 +52,7 @@
   Object.assign(etat, lireLocal('cp_preferences', {}));
   window.CP_TRANSPORT_CHOISI = lireLocal('cp_transport', 'moyenne');   // V137 : transport choisi pour l'aller et le retour (gardé sur ce téléphone)
   etat.pos = lireLocal('cp_position', null); etat.posMax = Number(etat.posMax) || 0;   // V137 : position du téléphone, prise seulement sur demande, gardée sur ce téléphone
-  if (!lireLocal('cp_tri_v143', null)) { etat.tri = 'date'; ecrireLocal('cp_tri_v143', 1); }   // V143 : tri par date de départ (la plus proche en haut), plateformes mélangées — par défaut une seule fois, ton choix est gardé ensuite
+  if (!lireLocal('cp_tri_v144', null)) { etat.tri = 'date'; ecrireLocal('cp_tri_v144', 1); }   // V144 : tri par date de départ (la plus proche en haut), plateformes mélangées — par défaut une seule fois, ton choix est gardé ensuite
   // Données gardées sur l'appareil : consultables hors connexion.
   const cache = lireLocal('cp_cache', null); if (cache) { etat.factures = cache.factures || []; etat.missions = window.CPFiltres.francais(deLEdition(cache.missions)); etat.alertes = seulesNouvelles(cache.alertes); etat.reglages = cache.reglages || null; etat.chargeLe = cache.chargeLe; }
 
@@ -412,7 +412,7 @@
     if (etat.tri === 'prix') l.sort((a, b) => (b.fee || 0) - (a.fee || 0));
     else if (etat.tri === 'heure') l.sort((a, b) => (ph(b).parHeure || 0) - (ph(a).parHeure || 0));
     else if (etat.tri === 'proche' && pointRecherche()) l.sort((a, b) => (kmDeMoi(a) ?? 1e9) - (kmDeMoi(b) ?? 1e9));
-    else if (etat.tri === 'date') { const t = m => { const d = Date.parse(m.pickup_start || ''); return Number.isFinite(d) ? d : Infinity; }; l.sort((a, b) => { const x = t(a), y = t(b); return x === y ? 0 : x < y ? -1 : 1; }); }   // V143 : date ET heure de départ (la plus proche en haut), toutes plateformes mélangées ; sans date → en bas
+    else if (etat.tri === 'date') { const t = m => { const d = Date.parse(m.pickup_start || ''); return Number.isFinite(d) ? d : Infinity; }; l.sort((a, b) => { const x = t(a), y = t(b); return x === y ? 0 : x < y ? -1 : 1; }); }   // V144 : date ET heure de départ (la plus proche en haut), toutes plateformes mélangées ; sans date → en bas
     else l.sort((a, b) => String(b.first_seen_at || '').localeCompare(String(a.first_seen_at || '')) || String(a.pickup_start || '9').localeCompare(String(b.pickup_start || '9')));   // V99 : les plus récemment parues en haut
     listeAffichee = l;
     zoneListe.innerHTML = `${etat.zones.length || q || FI.actifs(etat.plus) ? `<p class="doux" id="compte">${l.length} mission(s) sur ${total} correspondent à tes filtres <button id="toutVoir" class="lienBouton">Tout afficher</button></p>` : ''}` +
@@ -687,7 +687,7 @@
     const frais = Object.entries(m.fees || {}).filter(([k]) => !/^devis_/.test(k));
     const dv = m.fees && m.fees.devis_numero ? { n: m.fees.devis_numero, total: m.fees.devis_total, accepte: m.fees.devis_accepte === 1 } : null;   // V95 : montants du devis Hiflow
     const lien = m.detail_url && /^https:\/\//.test(m.detail_url) ? m.detail_url : LIENS[m.platform];
-    const ligne = (a, b) => { const t = String(a); const c = /^= /.test(t) ? 'net' : /^Rentabilit/.test(t) ? 'horaire' : /^[−-] /.test(t) ? 'neg' : /^(Prestation|\+)/.test(t) ? 'pos' : ''; return `<tr${c ? ' class="r-' + c + '"' : ''}><td>${esc(a)}</td><td>${b}</td></tr>`; };   // V143 : rangées colorées dans « Rentabilité estimée »
+    const ligne = (a, b) => { const t = String(a); const c = /^= /.test(t) ? 'net' : /^Rentabilit/.test(t) ? 'horaire' : /^[−-] /.test(t) ? 'neg' : /^(Prestation|\+)/.test(t) ? 'pos' : ''; return `<tr${c ? ' class="r-' + c + '"' : ''}><td>${esc(a)}</td><td>${b}</td></tr>`; };   // V144 : rangées colorées dans « Rentabilité estimée »
     $('feuilleContenu').innerHTML = `<div class="doux"><span class="etiq">${esc(PLATS[m.platform])}</span> n° ${esc(m.external_id)}${m.validation === 'non_validee' ? ' · lecture non validée : vérifie sur le site' : ''}</div>
       <h2 id="feuilleTitre" class="trajet" style="font-size:20px">${esc(trajet(m))}</h2>
       ${m.kind === 'acceptee' ? '<button id="btnRetirer" class="second" type="button">🚫 Pas acceptée : retirer de l’Agenda</button>' : ''}
