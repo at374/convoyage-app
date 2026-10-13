@@ -15,7 +15,7 @@ label{display:block;font-size:13px;color:var(--doux);margin:10px 0 4px}
 .carte{background:var(--carte);border:1px solid var(--ligne);border-radius:14px;padding:14px;margin:10px 0;box-shadow:var(--ombre)}
 .carte h2{margin:0 0 6px;font-size:17px}
 .doux{color:var(--doux);font-size:13px}
-.puces{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 8px}   /* V145 : les 4 plateformes toujours visibles, sur 2 lignes si besoin */
+.puces{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0 8px}   /* V146 : les 4 plateformes toujours visibles, sur 2 lignes si besoin */
 .puce{flex:0 0 auto;border-radius:999px;padding:7px 12px;min-height:36px;background:var(--carte);color:var(--texte);border:1px solid var(--ligne);font-weight:500}
 .puce.actif{background:var(--accent);color:var(--bt,#fff);border-color:var(--accent)}
 .filtres{display:grid;grid-template-columns:1fr auto;gap:8px}
@@ -234,7 +234,7 @@ html[data-style]:not([data-style="classique"]) .trajet .vA,:root[data-theme="dar
 .tPeage td:last-child{text-align:right;white-space:nowrap;color:#b45309;font-size:16px}
 :root[data-theme="dark"] .tPeage td:last-child{color:#fcd34d}
 
-/* V145 : « Rentabilité estimée » — couleurs et gros caractères lisibles ; tout suit le style et la police choisis (variables du style, tailles en em) */
+/* V146 : « Rentabilité estimée » — couleurs et gros caractères lisibles ; tout suit le style et la police choisis (variables du style, tailles en em) */
 :root{--rNeg:#b91c1c;--rMoyen:#b45309}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--rNeg:#fca5a5;--rMoyen:#fcd34d}}
 :root[data-theme="dark"]{--rNeg:#fca5a5;--rMoyen:#fcd34d}
