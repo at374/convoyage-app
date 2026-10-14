@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V150 (2.0.50)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V151 (2.0.51)';   // affichée dans l'en-tête et les Réglages
   const LIENS = { Hiflow: 'https://partenaire.expedicar.com/', DriiveMe: 'https://www.driiveme.com/', Otoqi: 'https://drivers.otoqi.com/', PopValet: 'https://www.popvalet.com/' };
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
   document.addEventListener('change', e => { const c = e.target && e.target.closest && e.target.closest('input[data-verif]'); if (!c) return; const t = lireLocal('cp_verif', {}) || {}; if (c.checked) t[c.dataset.verif] = new Date().toISOString(); else delete t[c.dataset.verif]; ecrireLocal('cp_verif', t); const l = c.closest('label'); if (l) { l.classList.toggle('ok', c.checked); l.lastChild.textContent = c.checked ? ' ✓ Vérifié par toi le ' + new Date().toLocaleDateString('fr-FR') + ' (horaires et prix valables le jour de la mission)' : ' Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'; } });
@@ -274,7 +274,7 @@
   // Cherche tout de suite (sans attendre la liste) les points GPS des deux bouts d'UNE mission ; renvoie vrai si un nouveau point a été trouvé.
   async function pointsMission(m) { let n = 0; for (const cote of ['origin', 'destination']) { const cle = G.cleAdresse(m, cote); if (!cle || G.POINTS[cle]) continue; try { const r = await G.chercherPoint(m, cote, u => fetch(u)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } } catch (_) {} } if (n) ecrireLocal('cp_gps', gpsMem); return n > 0; }
   function adresse(m, cote) {
-    const a = m[cote + '_address']; if (a) return a;
+    const a = m[cote + '_address'] || (m.mail_info && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'] && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'].adresse); if (a) return a;
     if (m.adresses_locales) return (cote === 'origin' ? m.from_city : m.to_city) ? (cote === 'origin' ? m.from_city : m.to_city) + (m[(cote === 'origin' ? 'from' : 'to') + '_department'] ? ' (' + m[(cote === 'origin' ? 'from' : 'to') + '_department'] + ')' : '') + ' — ' + LOCAL : LOCAL;
     // V88 : ville connue → affichée ; l'adresse exacte d'une mission acceptée arrive quand « Mes trajets » Hiflow est ouvert sur l'ordinateur.
     const ville = cote === 'origin' ? m.from_city : m.to_city, dep = m[(cote === 'origin' ? 'from' : 'to') + '_department'];
@@ -287,14 +287,23 @@
     return CALC.rentabiliteComplete(m, etat.reglages, { approcheKm: depuis ? G.routeKm(depuis, o) : (dom && o ? G.routeKm(dom, o) : null), retourKm: dom && d ? G.routeKm(d, dom) : null });
   }
   // V150 : mission Hiflow ACCEPTÉE → dates et heures exactes du devis (prise en charge / livraison), comme « Mes devis » sur le site.
-  const hfDates = m => m.kind === 'acceptee' && m.platform === 'Hiflow' && !!m.pickup_start && !!m.delivery_end;
+  // V151 : e-mail de confirmation Hiflow (lu par le script Google) : adresses exactes, heures, contacts, consignes.
+  const dMail = m => { const i = m.mail_info; return i && i.pickup && i.delivery ? { pk: i.pickup, liv: i.delivery } : null; };
+  const hfDates = m => m.kind === 'acceptee' && m.platform === 'Hiflow' && !!(dMail(m) || (m.pickup_start && m.delivery_end));
+  const hfPk = m => (dMail(m) || { pk: m.pickup_start }).pk, hfLiv = m => (dMail(m) || { liv: m.delivery_end }).liv;
+  function mailBloc(m) {
+    const i = m.mail_info; if (!i) return '';
+    const c = (t, x) => x && (x.contact || x.telephone || x.horaires) ? `<p class="doux"><b>${t}</b> ${esc([x.contact, x.telephone].filter(Boolean).join(' · '))}${x.horaires ? '<br>Horaires : ' + esc(x.horaires) : ''}</p>` : '';
+    const cons = (i.consignes || []).length ? `<div class="carte"><b>📋 Consignes</b>${i.consignes.map(s => `<p>${esc(s)}</p>`).join('')}</div>` : '';
+    return `<div class="carte"><b>📞 Contacts et horaires (e-mail Hiflow)</b>${c('Départ', i.depart)}${c('Arrivée', i.arrivee)}</div>${cons}`;
+  }
   function carteMission(m, i, extra) {
     const r = renta(m), reste = m.kind === 'acceptee' ? null : heuresRestantes(m);
     return `<button class="mission${clsPlat(m.platform)}${estPassee(m) ? ' passe' : ''}${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? ' urgent' : ''}" data-i="${i}">
       <div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${m.validation === 'non_validee' ? ' <span class="etiq nv">non validée</span>' : ''} <span class="iconeCarte" role="button" tabindex="0" data-carte="${esc(m.platform + '|' + m.external_id)}" aria-label="Visualisation du trajet sur une carte" title="Visualisation du trajet sur une carte">🗺️</span></span>
       <span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div>${r.connu ? `<div class="net">net ≈ ${esc(euros(r.net))}${r.parHeure ? ' · ' + esc(euros(r.parHeure)) + '/h' : ''}</div>` : ''}</span></div>
       ${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? `<div class="urgence">⏳ Plus que ${esc(reste < 1 ? Math.max(1, Math.round(reste * 60)) + ' min' : Math.round(reste) + ' h')} pour la faire</div>` : ''}<div class="trajet">${trajetHtml(m)}</div>
-      <div class="meta">${hfDates(m) ? `<span class="quand ${classeQuand(m)}">📅 Prise en charge : <b>${esc(fmtDate(m.pickup_start))}</b></span><span class="quand q-ok">🏁 Livraison : <b>${esc(fmtDate(m.delivery_end))}</b></span>` : quandHtml(m)}
+      <div class="meta">${hfDates(m) ? `<span class="quand ${classeQuand(m)}">📅 Prise en charge : <b>${esc(fmtDate(hfPk(m)))}</b></span><span class="quand q-ok">🏁 Livraison : <b>${esc(fmtDate(hfLiv(m)))}</b></span>` : quandHtml(m)}
       <span class="adr">📍 Départ : <b>${esc(adresse(m, 'origin'))}</b></span>${kmVolOiseau(m) != null && etat.posMax > 0 ? `<span class="vol">✈️ ≈ ${esc(kmVolOiseau(m))} km à vol d’oiseau de ${sourceRecherche() === 'domicile' ? 'ton domicile' : 'ta position'} jusqu’au départ</span>` : ''}
       <span class="adr">🏁 Arrivée : <b>${esc(adresse(m, 'destination'))}</b></span>
       ${m.distance_km ? `<span class="kms">🛣 <b>${esc(m.distance_km)} km</b>${m.duree_h ? ' · <b>' + esc(duree(m.duree_h)) + '</b>' : ''}</span>` : ''}${m.client ? `<span class="loueur">🏢 Loueur : <b>${esc(m.client)}</b></span>` : ''}</div>${extra || ''}</button>`;
@@ -732,11 +741,12 @@
       ${m.kind === 'acceptee' ? '<button id="btnRetirer" class="second" type="button">🚫 Pas acceptée : retirer de l’Agenda</button>' : ''}
       <button id="btnVol" class="second" type="button" aria-label="Visualisation trajet estimé">🗺️ Visualisation trajet estimé</button>
       ${lienDevis(m) ? `<a href="${esc(lienAppliHiflow() || lienDevis(m))}"${lienAppliHiflow() ? '' : ' target="_blank" rel="noopener"'} id="lienDevis" data-numero="${esc(m.external_id)}"><button style="width:100%;margin:4px 0 2px">📱 Faire le devis dans l’application Hiflow</button></a><p class="doux" style="margin:0 0 8px">Mission n° <b>${esc(m.external_id)}</b> (copié en touchant le bouton) · ${esc(trajet(m))}</p>` : ''}
-      <div class="meta"><span class="quand gros ${classeQuand(m)}">📅 Prise en charge : ${esc(hfDates(m) ? fmtDate(m.pickup_start) : quand(m))}</span>${m.delivery_start || m.delivery_end ? `<span class="quand gros q-ok">🏁 Livraison : ${esc(fmtDate(hfDates(m) ? m.delivery_end : (m.delivery_start || m.delivery_end)))}</span>` : ''}</div>
+      <div class="meta"><span class="quand gros ${classeQuand(m)}">📅 Prise en charge : ${esc(hfDates(m) ? fmtDate(hfPk(m)) : quand(m))}</span>${m.delivery_start || m.delivery_end || dMail(m) ? `<span class="quand gros q-ok">🏁 Livraison : ${esc(fmtDate(hfDates(m) ? hfLiv(m) : (m.delivery_start || m.delivery_end)))}</span>` : ''}</div>
       ${m.vehicle ? `<p>🚗 ${esc([m.vehicle.brand, m.vehicle.model, m.vehicle.energy].filter(Boolean).join(' '))}</p>` : ''}
       ${m.distance_km ? `<p>🛣 ${esc(m.distance_km)} km</p>` : ''}
       <div class="carte"><b>Départ</b><div>${esc(adresse(m, 'origin'))}</div><span id="gpsO">${mentionGps(m, 'origin')}</span>${etat.reglages && etat.reglages.domicile_ville && m.from_city ? liensTransports(etat.reglages.domicile_ville, '', m.from_city, m.from_department, 'a|' + (m.id || m.external_id)) : ''}${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}</div>
       <div class="carte"><b>Arrivée</b><div>${esc(adresse(m, 'destination'))}</div><span id="gpsD">${mentionGps(m, 'destination')}</span>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}</div>
+      ${mailBloc(m)}
       <div class="carte renta"><h2>Rentabilité estimée</h2>${dv ? `<p class="devisSource">📄 Montants de ton devis Hiflow n° ${esc(dv.n)} (${dv.accepte ? 'accepté' : 'envoyé, en attente'})${dv.total != null ? ' — total ' + esc(euros(dv.total)) : ''}</p>` : ''}${r.connu ? `<table class="tableau">
         ${ligne(dv ? 'Prestation (devis)' : 'Prestation', esc(euros(r.prestation)))}
         ${frais.length ? ligne(dv ? '+ Frais remboursés (devis)' : '+ Remboursements prévus', esc(frais.map(([k, v]) => (FRAIS[k.toLowerCase()] || k) + ' ' + euros(v)).join(' · '))) : ''}
