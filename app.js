@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V152 (2.0.52)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V153 (2.0.53)';   // affichée dans l'en-tête et les Réglages
   const LIENS = { Hiflow: 'https://partenaire.expedicar.com/', DriiveMe: 'https://www.driiveme.com/', Otoqi: 'https://drivers.otoqi.com/', PopValet: 'https://www.popvalet.com/' };
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
   document.addEventListener('change', e => { const c = e.target && e.target.closest && e.target.closest('input[data-verif]'); if (!c) return; const t = lireLocal('cp_verif', {}) || {}; if (c.checked) t[c.dataset.verif] = new Date().toISOString(); else delete t[c.dataset.verif]; ecrireLocal('cp_verif', t); const l = c.closest('label'); if (l) { l.classList.toggle('ok', c.checked); l.lastChild.textContent = c.checked ? ' ✓ Vérifié par toi le ' + new Date().toLocaleDateString('fr-FR') + ' (horaires et prix valables le jour de la mission)' : ' Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'; } });
@@ -188,17 +188,17 @@
   // V152 : fenêtre d'alerte bien visible quand il faut se reconnecter à DriiveMe ou Hiflow
   function alerteConnexion() {
     try {
-      const lignes = (etat.sources || []).filter(s => /driiveme|conduisez|hiflow/i.test(String(s.platform)) && s.ok === false && /connect|identifi|session|login/i.test(String(s.message || '')) && !/internet|réseau|reseau|serveur/i.test(String(s.message || '')));
+      const lignes = (etat.sources || []).filter(s => /driiveme|conduisez|hiflow|pop ?valet|otoqi/i.test(String(s.platform)) && s.ok === false && /connect|identifi|session|login/i.test(String(s.message || '')) && !/internet|réseau|reseau|serveur/i.test(String(s.message || '')));
       const ancienne = document.getElementById('alerteCo');
       if (!lignes.length || pauseActive()) { if (ancienne) ancienne.remove(); return; }
       if (ancienne || (window.__coSnooze && Date.now() < window.__coSnooze)) return;
-      const noms = [...new Set(lignes.map(s => /hiflow/i.test(String(s.platform)) ? 'Hiflow' : 'DriiveMe'))];
+      const noms = [...new Set(lignes.map(s => (/hiflow/i.test(String(s.platform)) ? 'Hiflow' : /otoqi/i.test(String(s.platform)) ? 'Otoqi' : /pop ?valet/i.test(String(s.platform)) ? 'Pop Valet' : 'DriiveMe')))];
       const d = document.createElement('div'); d.id = 'alerteCo';
       d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:16px';
       d.innerHTML = '<div style="background:#fff;color:#111;border:4px solid #d32f2f;border-radius:16px;padding:20px;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.5)">' +
         '<div style="font-size:26px;font-weight:800;color:#d32f2f;margin-bottom:8px">⚠ Reconnexion nécessaire</div>' +
         '<p style="font-size:17px;line-height:1.4;margin:0 0 14px">' + noms.map(n => '<b>' + n + '</b>').join(' et ') + (noms.length > 1 ? ' ne sont plus connectés' : ' n’est plus connecté') + ' : <b>aucune mission n’est lue</b> tant que tu ne te reconnectes pas.</p>' +
-        noms.map(n => '<button type="button" data-co="' + n + '" style="display:block;width:100%;margin:0 0 10px;padding:16px;font-size:18px;font-weight:700;border:0;border-radius:12px;background:#d32f2f;color:#fff">Me reconnecter à ' + n + '</button>').join('') +
+        noms.map(n => (n === 'Otoqi' || n === 'Pop Valet') ? '<p style="font-size:16px;margin:0 0 10px;padding:12px;border-radius:12px;background:#fdecea">Ouvre l’application <b>' + n + '</b> sur le téléphone et reconnecte-toi.</p>' : '<button type="button" data-co="' + n + '" style="display:block;width:100%;margin:0 0 10px;padding:16px;font-size:18px;font-weight:700;border:0;border-radius:12px;background:#d32f2f;color:#fff">Me reconnecter à ' + n + '</button>').join('') +
         '<button type="button" id="coPlusTard" style="display:block;width:100%;padding:12px;font-size:15px;border:1px solid #999;border-radius:12px;background:#fff;color:#333">Plus tard (rappel dans 10 min)</button></div>';
       document.body.appendChild(d);
       try { if (navigator.vibrate) navigator.vibrate([300, 150, 300]); } catch (_) {}
