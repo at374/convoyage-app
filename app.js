@@ -32,6 +32,29 @@
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
   const VERSION_APP = 'V154 (2.0.54)';   // affichée dans l'en-tête et les Réglages
+  // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
+  (function () {
+    const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
+    const poser = p => { try { localStorage.setItem('cp_zoom', String(p)); } catch (_) {} document.body.style.zoom = p / 100; };
+    const monter = () => { const ref = document.getElementById('policeBtn'); if (!ref || document.getElementById('zoomMoins')) return; const mk = (id, txt, delta, titre) => { const b = document.createElement('button'); b.id = id; b.className = 'icone'; b.textContent = txt; b.title = titre; b.setAttribute('aria-label', titre); b.onclick = () => poser(Math.min(150, Math.max(80, lire() + delta))); return b; }; ref.parentNode.insertBefore(mk('zoomMoins', 'A−', -10, 'Réduire le texte'), ref); ref.parentNode.insertBefore(mk('zoomPlus', 'A+', 10, 'Agrandir le texte'), ref); };
+    const demarrer = () => { poser(lire()); monter(); };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', demarrer); else demarrer();
+  })();
+  // V154 : bandeau (application Android seulement) si les notifications ou la batterie « sans restriction » ne sont pas autorisées.
+  (function () {
+    const maj = () => {
+      try {
+        const N = window.CPNatif; if (!N || !N.autorisations) return;
+        const a = JSON.parse(N.autorisations()); let b = document.getElementById('bandeauAut');
+        if (a.batterie && a.notifs) { if (b) b.remove(); return; }
+        if (!b) { b = document.createElement('div'); b.id = 'bandeauAut'; b.className = 'bandeauAut'; document.body.prepend(b); }
+        b.innerHTML = '⚠ Pour les pop-ups de nouvelles missions et la lecture écran éteint : ' + (a.notifs ? '' : '<button id="autN">Autoriser les notifications</button> ') + (a.batterie ? '' : '<button id="autB">Batterie : sans restriction</button>');
+        const n = document.getElementById('autN'); if (n) n.onclick = () => N.autoriserNotifications();
+        const bb = document.getElementById('autB'); if (bb) bb.onclick = () => N.autoriserBatterie();
+      } catch (_) {}
+    };
+    setTimeout(maj, 2500); setInterval(maj, 20000);
+  })();
   const LIENS = { Hiflow: 'https://partenaire.expedicar.com/', DriiveMe: 'https://www.driiveme.com/', Otoqi: 'https://drivers.otoqi.com/', PopValet: 'https://www.popvalet.com/' };
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
   document.addEventListener('change', e => { const c = e.target && e.target.closest && e.target.closest('input[data-verif]'); if (!c) return; const t = lireLocal('cp_verif', {}) || {}; if (c.checked) t[c.dataset.verif] = new Date().toISOString(); else delete t[c.dataset.verif]; ecrireLocal('cp_verif', t); const l = c.closest('label'); if (l) { l.classList.toggle('ok', c.checked); l.lastChild.textContent = c.checked ? ' ✓ Vérifié par toi le ' + new Date().toLocaleDateString('fr-FR') + ' (horaires et prix valables le jour de la mission)' : ' Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'; } });
