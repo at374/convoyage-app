@@ -21,6 +21,8 @@
   const RE_PEAGE = /p[ée]age|toll/i, RE_INCLUS = /exception|except|suppl/i;
   function fraisRembourses(m) {
     const p = m.platform;
+    // Hiflow mission acceptée : seuls les montants EXACTS du devis comptent ; sans devis lu, aucun frais n'est inventé (« montant du devis non lu »).
+    if (p === 'Hiflow' && m.kind === 'acceptee' && !(m.fees && m.fees.devis_numero)) return [];
     return Object.entries(m.fees || {}).filter(([k]) => !/^(devis|facture)_/.test(k)).map(([k, v]) => [k, n(v)]).filter(([, v]) => v !== null)
       .filter(([k]) => p === 'Hiflow' || !(TRANSPORT.test(k) || RE_INCLUS.test(k) || (p !== 'DriiveMe' && RE_PEAGE.test(k))));
   }
