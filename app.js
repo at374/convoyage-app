@@ -35,7 +35,7 @@
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
-    const poser = p => { try { localStorage.setItem('cp_zoom', String(p)); } catch (_) {} document.body.style.zoom = p / 100; };
+    const poser = p => { try { localStorage.setItem('cp_zoom', String(p)); } catch (_) {} document.body.style.zoom = ''; for (const sel of ['#ecran', 'header.barre']) { const el = document.querySelector(sel); if (el) el.style.zoom = p / 100; } };   // le zoom ne touche pas la barre du bas (sinon elle sort de l'écran)
     const monter = () => { const ref = document.getElementById('policeBtn'); if (!ref || document.getElementById('zoomMoins')) return; const mk = (id, txt, delta, titre) => { const b = document.createElement('button'); b.id = id; b.className = 'icone'; b.textContent = txt; b.title = titre; b.setAttribute('aria-label', titre); b.onclick = () => poser(Math.min(150, Math.max(80, lire() + delta))); return b; }; ref.parentNode.insertBefore(mk('zoomMoins', 'A−', -10, 'Réduire le texte'), ref); ref.parentNode.insertBefore(mk('zoomPlus', 'A+', 10, 'Agrandir le texte'), ref); };
     const demarrer = () => { poser(lire()); monter(); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', demarrer); else demarrer();
