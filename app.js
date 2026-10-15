@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V157 (2.0.57)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V158 (2.0.58)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -643,8 +643,8 @@
           if (l.type === 'depart') { const e0 = pl.etapes[0]; return `<div class="lignePlan">🏠 <b>${hm(l.t)}</b> départ de ${esc(domNom)}${e0.liaison.km >= 2 ? `<span class="doux">🚆 liaison ≈ ${esc(e0.liaison.km)} km · ${esc(duree(e0.liaison.heures))} · ${esc(euros(e0.liaison.cout))}</span>` : ''}</div>`; }
           if (l.type === 'retour') return `<div class="lignePlan">🏠 <b>${hm(l.t)}</b> retour à ${esc(domNom)}${pl.retour.km >= 2 ? `<span class="doux">🚆 ≈ ${esc(pl.retour.km)} km · ${esc(duree(pl.retour.heures))} · ${esc(euros(pl.retour.cout))}</span>` : ''}</div>`;
           const et = l.etape, m = et.mission, ie = pl.etapes.indexOf(et);
-          return `<button class="lignePlan${clsPlat(m.platform)}" data-plan="${ip}" data-etape="${ie}">🚗 <b>${hm(et.debut)}–${hm(et.fin)}</b> <span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span> <b>${esc(trajet(m))}</b> · ${m.fee != null ? esc(euros(m.fee)) : '?'}${et.acceptee ? ' <span class="etiq ok">déjà acceptée</span>' : ''}
-            ${ie > 0 && et.liaison.km >= 2 && !(pl.nuitsLiaison || []).some(x => x && x.cle === et.cle) ? `<span class="doux">🚆 depuis ${esc(et.depuis)} : ≈ ${esc(et.liaison.km)} km · ${esc(duree(et.liaison.heures))} · ${esc(euros(et.liaison.cout))}${et.attenteH ? ' · attente ' + esc(duree(et.attenteH)) : ''}</span>` : ''}
+          const lienPlan = (ie > 0 && et.liaison.km >= 2 && !(pl.nuitsLiaison || []).some(x => x && x.cle === et.cle)) ? `<div class="lignePlan liaisonPlan">🚆 <b>${esc(et.depuis)} → ${esc(m.from_city || '?')}</b><span class="doux"> · ≈ ${esc(et.liaison.km)} km · ${esc(duree(et.liaison.heures))} · ${esc(euros(et.liaison.cout))}${et.attenteH ? ' · attente ' + esc(duree(et.attenteH)) : ''}</span></div>` : '';
+          return lienPlan + `<button class="lignePlan${clsPlat(m.platform)}" data-plan="${ip}" data-etape="${ie}">🚗 <b>${hm(et.debut)}–${hm(et.fin)}</b> <span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span> <b>${esc(trajet(m))}</b> · ${m.fee != null ? esc(euros(m.fee)) : '?'}${et.acceptee ? ' <span class="etiq ok">déjà acceptée</span>' : ''}
             <span class="doux">💶 net ≈ ${esc(euros(et.net))}${et.finEstimee ? ' · fin estimée' : ''}</span></button>`;
         }).join('');
         const dort = ij < tous.length - 1 && nuit < pl.nuits ? `${(pl.nuitsLiaison || [])[nuit] && pl.nuitsLiaison[nuit].km >= 2 ? `<div class="lignePlan">🚆 <b>en soirée</b> trajet de ${esc(pl.nuitsLiaison[nuit].depuis)} vers ${esc(pl.lieuxNuits[nuit])}<span class="doux">≈ ${esc(pl.nuitsLiaison[nuit].km)} km · ${esc(duree(pl.nuitsLiaison[nuit].heures))} · ${esc(euros(pl.nuitsLiaison[nuit].cout))}</span></div>` : ''}<div class="nuit">🌙 ${(() => { const nd = (pl.nuitsDom || [])[nuit]; const vl = pl.lieuxNuits[nuit++]; return nd && nd.domicile ? 'Nuit à ton domicile' + (nd.km != null && nd.km >= nd.seuil * 0.6 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km par la route)</span>' : '') : 'Nuit à ' + esc(vl) + (nd && nd.km != null && nd.km < nd.seuil * 1.4 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km du domicile)</span>' : ''); })()}${pl.coutHotel > 0 ? ' (hôtel ≈ ' + esc(euros(pl.coutHotel / pl.nuits)) + ')' : ''}</div>` : '';
