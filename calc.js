@@ -16,6 +16,19 @@
     const km = n(m.distance_km); if (km != null && km > 0) return { heures: arr(km / VITESSE_CONDUITE + 0.5), estimee: true };
     return { heures: null, estimee: true };
   }
+  // V155 : règles de frais par plateforme. Hiflow : tous les frais du devis (avancés puis remboursés). DriiveMe : péage et carburant avancés puis remboursés ;
+  // transport et frais exceptionnels inclus dans la prestation. Otoqi / Pop Valet : carburant remboursé, péage NON remboursé (à ta charge), transport et frais exceptionnels inclus.
+  const RE_PEAGE = /p[ée]age|toll/i, RE_INCLUS = /exception|except|suppl/i;
+  function fraisRembourses(m) {
+    const p = m.platform;
+    return Object.entries(m.fees || {}).filter(([k]) => !/^(devis|facture)_/.test(k)).map(([k, v]) => [k, n(v)]).filter(([, v]) => v !== null)
+      .filter(([k]) => p === 'Hiflow' || !(TRANSPORT.test(k) || RE_INCLUS.test(k) || (p !== 'DriiveMe' && RE_PEAGE.test(k))));
+  }
+  function peageACharge(m) {
+    if (m.platform !== 'Otoqi' && m.platform !== 'PopValet') return { montant: 0, absent: false };
+    const e = Object.entries(m.fees || {}).filter(([k]) => RE_PEAGE.test(k)).map(([, v]) => n(v)).filter(x => x !== null);
+    return { montant: e.reduce((s, x) => s + x, 0), absent: !e.length };
+  }
   // reglages : { taux_cotisations (%), cout_km (€/km à ta charge), prix_minimum }
   function rentabilite(m, reglages) {
     const r = reglages || {}; const fee = n(m.fee);
@@ -25,10 +38,11 @@
     const km = n(m.distance_km), coutKm = n(r.cout_km) || 0;
     const depenses = coutKm > 0 && km != null ? Math.round(km * coutKm * 100) / 100 : 0;
     const remboursements = Object.entries(m.fees || {}).filter(([k]) => !/^(devis|facture)_/.test(k)).map(([, v]) => n(v)).filter(x => x != null).reduce((s, x) => s + x, 0);   // V95 : devis_* = repères du devis, pas des frais
-    const net = Math.round((fee - cotisations - depenses) * 100) / 100;
+    const peage = peageACharge(m);
+    const net = Math.round((fee - cotisations - depenses - peage.montant) * 100) / 100;
     const h = dureeHeures(m);
     return { connu: true, prestation: fee, remboursements: Math.round(remboursements * 100) / 100, cotisations, taux, depenses, net,
-      heures: h, parHeure: h ? Math.round(net / h * 100) / 100 : null, depensesConnues: coutKm > 0 && km != null };
+      peageCharge: peage.montant, peageAbsent: peage.absent, heures: h, parHeure: h ? Math.round(net / h * 100) / 100 : null, depensesConnues: coutKm > 0 && km != null };
   }
 
   // ---------- V78 : rentabilité complète (approche et retour compris) ----------
@@ -107,7 +121,7 @@
     const transportRembourse = m.platform === 'Hiflow';
     const transportNonCouvert = transportRembourse ? 0 : arr(Math.max(0, coutTransport - rembTransport));
     const avances = base.remboursements;
-    const depenses = arr(base.depenses + avances + transportNonCouvert);
+    const depenses = arr(base.depenses + avances + transportNonCouvert + (base.peageCharge || 0));
     const net = arr(base.prestation + base.remboursements - depenses - base.cotisations);
     const duree = dureeEstimee(m);
     const heures = duree.heures == null ? null : arr(duree.heures + (approche ? approche.heures : 0) + (retour ? retour.heures : 0));
@@ -127,7 +141,7 @@
     const e = x => Math.round(x * 10) / 10;
     return PEAGE_CLASSES.map(c => ({ classe: c.classe, nom: c.nom, detail: c.detail, euros: e(km * PEAGE_KM.moyen * c.coef), min: e(km * PEAGE_KM.bas * c.coef), max: e(km * PEAGE_KM.haut * c.coef) }));
   }
-  const api = { estimerPeage, PEAGE_CLASSES, PEAGE_KM, liaisonMoyenne, TRANSPORTS_CHOIX, rentabilite, dureeHeures, dureeEstimee, liaison, liaisonMoinsChere, MODES, CARTES_SNCF, rentabiliteComplete, LIAISON, VITESSE_CONDUITE };
+  const api = { fraisRembourses, peageACharge, estimerPeage, PEAGE_CLASSES, PEAGE_KM, liaisonMoyenne, TRANSPORTS_CHOIX, rentabilite, dureeHeures, dureeEstimee, liaison, liaisonMoinsChere, MODES, CARTES_SNCF, rentabiliteComplete, LIAISON, VITESSE_CONDUITE };
   root.CPCalc = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
