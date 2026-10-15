@@ -248,3 +248,18 @@ html[data-style]:not([data-style="classique"]):not([data-style="jour"]){--rNeg:#
 .renta .tableau tr.r-net td:first-child,.renta .tableau tr.r-horaire td:first-child{border-left-color:var(--ok)}
 .renta .r-val{font-size:1.15em}.renta .r-val.bien{color:var(--ok)}.renta .r-val.moyen{color:var(--rMoyen)}.renta .r-val.mal{color:var(--rNeg)}
 .renta .tableau td .doux{color:var(--doux);font-weight:500}
+
+/* V154 : drapeaux, couleurs des villes, véhicule/énergie, vérification, variation de prix */
+.mission .vD, .vD { color: #1d4ed8 !important; font-weight: 700; }
+.mission .vA, .vA { color: #7e22ce !important; font-weight: 700; }
+.fg { font-size: .85em; margin-right: 3px; }
+.fgD { color: #2e7d32; }
+.veh { display: flex; flex-wrap: wrap; gap: 2px 14px; font-size: .88em; }
+.veh .inc { filter: grayscale(1); opacity: .8; color: #666; }
+.veh .the { color: #c2410c; }
+.veh .ele { color: #15803d; }
+.veh .hyb { color: #0f766e; }
+.verif { font-size: .68em; font-weight: 400; color: #555; margin-left: 6px; }
+.pvar { font-size: .72em; font-weight: 700; }
+.pvar.up { color: #15803d; }
+.pvar.down { color: #b91c1c; }
