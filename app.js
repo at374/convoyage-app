@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V153 (2.0.53)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V154 (2.0.54)';   // affichée dans l'en-tête et les Réglages
   const LIENS = { Hiflow: 'https://partenaire.expedicar.com/', DriiveMe: 'https://www.driiveme.com/', Otoqi: 'https://drivers.otoqi.com/', PopValet: 'https://www.popvalet.com/' };
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
   document.addEventListener('change', e => { const c = e.target && e.target.closest && e.target.closest('input[data-verif]'); if (!c) return; const t = lireLocal('cp_verif', {}) || {}; if (c.checked) t[c.dataset.verif] = new Date().toISOString(); else delete t[c.dataset.verif]; ecrireLocal('cp_verif', t); const l = c.closest('label'); if (l) { l.classList.toggle('ok', c.checked); l.lastChild.textContent = c.checked ? ' ✓ Vérifié par toi le ' + new Date().toLocaleDateString('fr-FR') + ' (horaires et prix valables le jour de la mission)' : ' Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'; } });
@@ -63,12 +63,23 @@
   // V122 : période de plusieurs jours (DriiveMe) → « du ven. 09/10 au lun. 12/10 » ; même jour → heures comme avant.
   // V139 : dates et heures de mission en GROS et en couleur : rouge < 24 h, orange < 3 jours, vert au-delà, gris si dépassée.
   // V139 : villes de départ (vert) et d'arrivée (rouge) en gros ; adresses, km, durée et loueur lisibles.
-  const trajetHtml = m => { const t = String(trajet(m)), i = t.indexOf(' → '); return i < 0 ? esc(t) : `<span class="vD">${esc(t.slice(0, i))}</span> <span class="fl">→</span> <span class="vA">${esc(t.slice(i + 3))}</span>`; };
+  const trajetHtml = m => { const t = String(trajet(m)), i = t.indexOf(' → '); return i < 0 ? esc(t) : `<span class="vD"><span class="fg fgD">⚑</span>${esc(t.slice(0, i))}</span> <span class="fl">→</span> <span class="vA"><span class="fg">🏁</span>${esc(t.slice(i + 3))}</span>`; };
   // L'icône 🗺️ d'une carte de mission ouvre la visualisation du trajet SANS ouvrir la fiche.
   document.addEventListener('click', ev => { const ic = ev.target && ev.target.closest && ev.target.closest('[data-carte]'); if (!ic) return; ev.preventDefault(); ev.stopPropagation(); const m = etat.missions.find(x => x.platform + '|' + x.external_id === ic.dataset.carte); if (m) popupVol(m); }, true);
   const classeQuand = m => { const t = Date.parse(m.pickup_start || ''); if (!Number.isFinite(t)) return 'q-inconnu'; const f = Date.parse(m.pickup_end || m.delivery_end || '') || t; if (f < Date.now()) return 'q-passee'; const h = (t - Date.now()) / 3600000; return h < 24 ? 'q-urgent' : h < 72 ? 'q-proche' : 'q-ok'; };
   const quandHtml = (m, ico) => `<span class="quand ${classeQuand(m)}">${ico || '📅'} ${esc(quand(m))}</span>`;
-  const quand = m => { if (!m.pickup_start) return m.pickup_text || 'Date non fournie'; const j0 = jourCourt(m.pickup_start), j1 = m.pickup_end ? jourCourt(m.pickup_end) : ''; if (j1 && j1 !== j0) return 'du ' + j0 + ' au ' + j1; return fmtDate(m.pickup_start) + (m.pickup_end ? '–' + heure(m.pickup_end) : ''); };
+  // V154 : créneau exact (heure de Paris). Jamais 00:00–23:59 : si l'heure n'est pas précisée, on l'écrit.
+  const heureP = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }); };
+  const quand = m => {
+    if (!m.pickup_start) return m.pickup_text || 'Date non fournie';
+    const hd = heureP(m.pickup_start), hf = m.pickup_end ? heureP(m.pickup_end) : '';
+    const j0 = jourCourt(m.pickup_start), j1 = m.pickup_end ? jourCourt(m.pickup_end) : '';
+    const journee = hd === '00:00' && (!m.pickup_end || hf === '23:59' || hf === '00:00');
+    if (journee) return (j1 && j1 !== j0 ? 'du ' + j0 + ' au ' + j1 : j0) + ' · heure non précisée';
+    if (j1 && j1 !== j0) return j0 + ' ' + hd + ' → ' + j1 + ' ' + hf;
+    if (!hf || Date.parse(m.pickup_end) <= Date.parse(m.pickup_start)) return j0 + ' · ' + hd;
+    return j0 + ' · ' + hd + '–' + hf;
+  };
 
   // ---------- Écrans d'accès ----------
   function ecranConfiguration() {
@@ -324,15 +335,35 @@
     const cons = (i.consignes || []).length ? `<div class="carte"><b>📋 Consignes</b>${i.consignes.map(s => `<p>${esc(s)}</p>`).join('')}</div>` : '';
     return `<div class="carte"><b>📞 Contacts et horaires (e-mail Hiflow)</b>${c('Départ', i.depart)}${c('Arrivée', i.arrivee)}</div>${cons}`;
   }
+  // V154 : « Disponible (vérifié le JJ/MM à HH:MM) » = dernière lecture de la plateforme ; véhicule et énergie avec symboles.
+  const cleP = x => String(x || '').toLowerCase().replace(/[^a-z]/g, '');
+  const verifLe = m => { const s = (etat.sources || []).find(x => cleP(x.platform) === cleP(m.platform)); const t = s ? Date.parse(s.lu_le || '') : NaN; if (!Number.isFinite(t)) return 'Disponible'; const d = new Date(t); return 'Disponible (vérifié le ' + d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t) + ')'; };
+  const vehInfo = m => { const v = m.vehicle; if (v && typeof v === 'object') return { type: String(v.category || v.type || '').trim(), en: String(v.energy || '').trim() }; return { type: typeof v === 'string' ? v.trim() : '', en: '' }; };
+  const vehHtml = m => {
+    const { type, en } = vehInfo(m); const n = en.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); let ic = '⛽', cl = 'inc';
+    if (/hybrid/.test(n)) { ic = '🔌'; cl = 'hyb'; } else if (/elec/.test(n)) { ic = '🔋'; cl = 'ele'; } else if (/ther|essence|diesel|gazole|gasoil|gasoline|petrol|fuel/.test(n)) { ic = '⛽'; cl = 'the'; }
+    return '<span class="veh"><span class="vt' + (type ? '' : ' inc') + '">🚗 Véhicule : <b>' + esc(type || 'inconnu') + '</b></span><span class="ve ' + cl + '">' + ic + ' Énergie : <b>' + esc(en || 'inconnue') + '</b></span></span>';
+  };
+  // Prix : on mémorise le dernier prix vu de chaque mission ; s'il change, flèche et ancien prix.
+  const prixVar = m => {
+    try {
+      if (m.fee == null || m.kind === 'acceptee') return '';
+      const k = m.platform + '|' + m.external_id; let mem = {}; try { mem = JSON.parse(localStorage.getItem('cp_prix') || '{}'); } catch (_) {}
+      const e = mem[k]; const fee = Number(m.fee); let x = e;
+      if (!e) x = { fee }; else if (e.fee !== fee) x = { fee, avant: e.fee, at: Date.now() };
+      if (JSON.stringify(x) !== JSON.stringify(e)) { mem[k] = x; const cles = Object.keys(mem); if (cles.length > 3000) for (const c of cles.slice(0, cles.length - 3000)) delete mem[c]; try { localStorage.setItem('cp_prix', JSON.stringify(mem)); } catch (_) {} }
+      if (x.avant == null) return '';
+      return '<div class="pvar ' + (fee > x.avant ? 'up' : 'down') + '">' + (fee > x.avant ? '↑' : '↓') + ' avant ' + esc(euros(x.avant)) + '</div>';
+    } catch (_) { return ''; }
+  };
   function carteMission(m, i, extra) {
     const r = renta(m), reste = m.kind === 'acceptee' ? null : heuresRestantes(m);
     return `<button class="mission${clsPlat(m.platform)}${estPassee(m) ? ' passe' : ''}${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? ' urgent' : ''}" data-i="${i}">
-      <div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${m.validation === 'non_validee' ? ' <span class="etiq nv">non validée</span>' : ''} <span class="iconeCarte" role="button" tabindex="0" data-carte="${esc(m.platform + '|' + m.external_id)}" aria-label="Visualisation du trajet sur une carte" title="Visualisation du trajet sur une carte">🗺️</span></span>
-      <span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div>${r.connu ? `<div class="net">net ≈ ${esc(euros(r.net))}${r.parHeure ? ' · ' + esc(euros(r.parHeure)) + '/h' : ''}</div>` : ''}</span></div>
+      <div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${m.kind !== 'acceptee' ? ' <span class="verif">' + esc(verifLe(m)) + '</span>' : ''} <span class="iconeCarte" role="button" tabindex="0" data-carte="${esc(m.platform + '|' + m.external_id)}" aria-label="Visualisation du trajet sur une carte" title="Visualisation du trajet sur une carte">🗺️</span></span>
+      <span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div>${prixVar(m)}${r.connu ? `<div class="net">net ≈ ${esc(euros(r.net))}${r.parHeure ? ' · ' + esc(euros(r.parHeure)) + '/h' : ''}</div>` : ''}</span></div>
       ${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? `<div class="urgence">⏳ Plus que ${esc(reste < 1 ? Math.max(1, Math.round(reste * 60)) + ' min' : Math.round(reste) + ' h')} pour la faire</div>` : ''}<div class="trajet">${trajetHtml(m)}</div>
       <div class="meta">${hfDates(m) ? `<span class="quand ${classeQuand(m)}">📅 Prise en charge : <b>${esc(fmtDate(hfPk(m)))}</b></span><span class="quand q-ok">🏁 Livraison : <b>${esc(fmtDate(hfLiv(m)))}</b></span>` : quandHtml(m)}
-      <span class="adr">📍 Départ : <b>${esc(adresse(m, 'origin'))}</b></span>${kmVolOiseau(m) != null && etat.posMax > 0 ? `<span class="vol">✈️ ≈ ${esc(kmVolOiseau(m))} km à vol d’oiseau de ${sourceRecherche() === 'domicile' ? 'ton domicile' : 'ta position'} jusqu’au départ</span>` : ''}
-      <span class="adr">🏁 Arrivée : <b>${esc(adresse(m, 'destination'))}</b></span>
+      ${vehHtml(m)}${kmVolOiseau(m) != null && etat.posMax > 0 ? `<span class="vol">✈️ ≈ ${esc(kmVolOiseau(m))} km à vol d’oiseau de ${sourceRecherche() === 'domicile' ? 'ton domicile' : 'ta position'} jusqu’au départ</span>` : ''}
       ${m.distance_km ? `<span class="kms">🛣 <b>${esc(m.distance_km)} km</b>${m.duree_h ? ' · <b>' + esc(duree(m.duree_h)) + '</b>' : ''}</span>` : ''}${m.client ? `<span class="loueur">🏢 Loueur : <b>${esc(m.client)}</b></span>` : ''}</div>${extra || ''}</button>`;
   }
   // V137 : mission dont il reste peu de temps (moins de 24 h avant la fin de la période ou l'heure de livraison) → cadre rouge qui clignote.
