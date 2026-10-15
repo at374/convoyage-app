@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V156 (2.0.56)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V157 (2.0.57)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -103,6 +103,16 @@
     if (!hf || Date.parse(m.pickup_end) <= Date.parse(m.pickup_start)) return j0 + ' · ' + hd;
     return j0 + ' · ' + hd + '–' + hf;
   };
+
+  // V157 : arrivée affichée avec le départ (créneau d'arrivée de la plateforme, sinon départ + durée estimée si l'heure de départ est connue).
+  const arriveeTxt = m => {
+    const a = m.delivery_start, b = m.delivery_end;
+    if (a || b) return quand({ pickup_start: a || b, pickup_end: a && b ? b : null, pickup_text: '' });
+    const h = Number(m.duree_h);
+    if (m.pickup_start && Number.isFinite(h) && h > 0 && heureP(m.pickup_start) !== '00:00') return '≈ ' + quand({ pickup_start: new Date(Date.parse(m.pickup_start) + h * 3600000).toISOString() }) + ' (estimée)';
+    return '';
+  };
+  const arriveeHtml = m => { const t = arriveeTxt(m); return t ? '<span class="quand q-ok">🏁 Arrivée : ' + esc(t) + '</span>' : ''; };
 
   // ---------- Écrans d'accès ----------
   function ecranConfiguration() {
@@ -385,7 +395,7 @@
       <div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${m.kind !== 'acceptee' ? ' <span class="verif">' + esc(verifLe(m)) + '</span>' : ''} <span class="iconeCarte" role="button" tabindex="0" data-carte="${esc(m.platform + '|' + m.external_id)}" aria-label="Visualisation du trajet sur une carte" title="Visualisation du trajet sur une carte">🗺️</span></span>
       <span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div>${prixVar(m)}${r.connu ? `<div class="net">net ≈ ${esc(euros(r.net))}${r.parHeure ? ' · ' + esc(euros(r.parHeure)) + '/h' : ''}</div>` : ''}</span></div>
       ${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? `<div class="urgence">⏳ Plus que ${esc(reste < 1 ? Math.max(1, Math.round(reste * 60)) + ' min' : Math.round(reste) + ' h')} pour la faire</div>` : ''}<div class="trajet">${trajetHtml(m)}</div>
-      <div class="meta">${hfDates(m) ? `<span class="quand ${classeQuand(m)}">📅 Prise en charge : <b>${esc(fmtDate(hfPk(m)))}</b></span><span class="quand q-ok">🏁 Livraison : <b>${esc(fmtDate(hfLiv(m)))}</b></span>` : quandHtml(m)}
+      <div class="meta">${hfDates(m) ? `<span class="quand ${classeQuand(m)}">📅 Prise en charge : <b>${esc(fmtDate(hfPk(m)))}</b></span><span class="quand q-ok">🏁 Livraison : <b>${esc(fmtDate(hfLiv(m)))}</b></span>` : quandHtml(m, '🚩') + arriveeHtml(m)}
       ${vehHtml(m)}${kmVolOiseau(m) != null && etat.posMax > 0 ? `<span class="vol">✈️ ≈ ${esc(kmVolOiseau(m))} km à vol d’oiseau de ${sourceRecherche() === 'domicile' ? 'ton domicile' : 'ta position'} jusqu’au départ</span>` : ''}
       ${m.distance_km ? `<span class="kms">🛣 <b>${esc(m.distance_km)} km</b>${m.duree_h ? ' · <b>' + esc(duree(m.duree_h)) + '</b>' : ''}</span>` : ''}${m.client ? `<span class="loueur">🏢 Loueur : <b>${esc(m.client)}</b></span>` : ''}</div>${extra || ''}</button>`;
   }
