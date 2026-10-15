@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V155 (2.0.55)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V156 (2.0.56)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -786,7 +786,7 @@
     if (res.raison === 'lieu_arrivee_inconnu') return '<div class="carte" id="retours"><h2>🔁 Retours possibles</h2><p class="doux">Lieu d’arrivée non localisable : recherche impossible.</p></div>';
     const item = (x, i) => { const c = x.mission, rr = x.rentabilite; return `<div class="retourBloc"><button class="retour${clsPlat(c.platform)}" data-retour="${i}"><span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span> <b>${esc(trajet(c))}</b> · ${c.fee != null ? esc(euros(c.fee)) : 'prix ?'}
       <span class="doux">${quandHtml(c)}${x.attenteH ? ' · attente ≈ ' + esc(duree(x.attenteH)) : ''}</span>
-      <span class="doux">${({covoiturage:'🚗',bus:'🚌',train:'🚆',taxi:'🚕'})[x.liaison.mode] || '🚆'} ${esc(x.liaison.mode || 'liaison')} (le moins cher) ≈ ${esc(x.liaison.km)} km · ${esc(duree(x.liaison.heures))} · ${esc(euros(x.liaison.cout))}</span>
+      <span class="doux">${({covoiturage:'🚗',bus:'🚌',train:'🚆',taxi:'🚕'})[x.liaison.mode] || '🚆'} ${esc(x.liaison.mode || 'liaison')} (le moins cher) : ${esc(m.to_city || 'arrivée')} → ${esc(c.from_city || 'départ')} ≈ ${esc(x.liaison.km)} km · ${esc(duree(x.liaison.heures))} · ${esc(euros(x.liaison.cout))}</span>
       <span class="doux">💶 net ≈ ${rr.connu ? esc(euros(rr.net)) + (rr.parHeure ? ' · ' + esc(euros(rr.parHeure)) + '/h' : '') : 'prix inconnu'}${x.rapprocheKm != null ? (x.rapprocheKm > 0 ? ' · te rapproche de chez toi de ≈ ' + esc(x.rapprocheKm) + ' km' : ' · t’éloigne de chez toi de ≈ ' + esc(-x.rapprocheKm) + ' km') : ''}</span>
       ${x.estimations.length ? `<span class="estim">estimation : ${esc(x.estimations.join(', '))}</span>` : ''}</button>${x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department, 'r|' + (m.id || m.external_id) + '|' + (c.id || c.external_id)) : ''}</div>`; };
     const n = res.compatibles.length, r = etat.reglages || {};
@@ -814,7 +814,7 @@
     if (!m) return;
     const r = renta(m, depuis);
     const itin = a => a ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a)}` : '';
-    const frais = Object.entries(m.fees || {}).filter(([k]) => !/^devis_/.test(k));
+    const frais = window.CPCalc.fraisRembourses(m);
     const dv = m.fees && m.fees.devis_numero ? { n: m.fees.devis_numero, total: m.fees.devis_total, accepte: m.fees.devis_accepte === 1 } : null;   // V95 : montants du devis Hiflow
     const lien = m.detail_url && /^https:\/\//.test(m.detail_url) ? m.detail_url : LIENS[m.platform];
     const ligne = (a, b) => { const t = String(a); const c = /^= /.test(t) ? 'net' : /^Rentabilit/.test(t) ? 'horaire' : /^[−-] /.test(t) ? 'neg' : /^(Prestation|\+)/.test(t) ? 'pos' : ''; return `<tr${c ? ' class="r-' + c + '"' : ''}><td>${esc(a)}</td><td>${b}</td></tr>`; };   // V146 : rangées colorées dans « Rentabilité estimée »
@@ -832,7 +832,9 @@
       <div class="carte renta"><h2>Rentabilité estimée</h2>${dv ? `<p class="devisSource">📄 Montants de ton devis Hiflow n° ${esc(dv.n)} (${dv.accepte ? 'accepté' : 'envoyé, en attente'})${dv.total != null ? ' — total ' + esc(euros(dv.total)) : ''}</p>` : ''}${r.connu ? `<table class="tableau">
         ${ligne(dv ? 'Prestation (devis)' : 'Prestation', esc(euros(r.prestation)))}
         ${frais.length ? ligne(dv ? '+ Frais remboursés (devis)' : '+ Remboursements prévus', esc(frais.map(([k, v]) => (FRAIS[k.toLowerCase()] || k) + ' ' + euros(v)).join(' · '))) : ''}
-        ${frais.length ? ligne('− Frais avancés (remboursés)', '− ' + esc(euros(r.fraisAvances))) : ''}
+        ${frais.length ? ligne('− Frais avancés (remboursés après)', '− ' + esc(euros(r.fraisAvances))) : ''}
+        ${m.kind === 'acceptee' && m.platform === 'Hiflow' && !dv ? ligne('Frais du devis Hiflow', '<span class="doux">montant du devis non lu</span>') : ''}
+        ${r.peageCharge > 0 ? ligne('− Péage à ta charge (non remboursé)', '− ' + esc(euros(r.peageCharge))) : (r.peageAbsent && m.kind === 'acceptee' ? ligne('Péage (non remboursé)', '<span class="doux">péage : à renseigner</span>') : '')}
         ${ligne('− Approche' + (depuis ? ' depuis la livraison précédente' : ' depuis ton domicile'), r.approche ? `${r.approche.mode ? esc(r.approche.mode) + ' ' : ''}≈ ${esc(r.approche.km)} km · ${esc(duree(r.approche.heures))} · ${esc(euros(r.approche.cout))}` : '<span class="doux">inconnue — renseigne ta ville dans Réglages</span>')}
         ${ligne('− Retour à ton domicile', r.retour ? `≈ ${esc(r.retour.km)} km · ${esc(duree(r.retour.heures))} · ${esc(euros(r.retour.cout))}` : '<span class="doux">inconnu</span>')}
         ${r.rembTransport && r.coutTransport ? ligne('Transport couvert par le remboursement prévu', esc(euros(Math.min(r.rembTransport, r.coutTransport)))) : ''}
