@@ -263,3 +263,17 @@ html[data-style]:not([data-style="classique"]):not([data-style="jour"]){--rNeg:#
 .pvar { font-size: .72em; font-weight: 700; }
 .pvar.up { color: #15803d; }
 .pvar.down { color: #b91c1c; }
+
+/* V154 : boutons de plateformes (3 par ligne, couleur de leur étiquette), « Plus de filtres » en évidence, bandeau d'autorisations */
+.puces { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.puce { width: 100%; text-align: center; padding: 7px 4px !important; font-size: .85rem; }
+.puce[data-filtre="Hiflow"] { background: var(--pf-Hiflow-bg); color: var(--pf-Hiflow-tx); border: 2px solid var(--pf-Hiflow-bd); }
+.puce[data-filtre="DriiveMe"] { background: var(--pf-DriiveMe-bg); color: var(--pf-DriiveMe-tx); border: 2px solid var(--pf-DriiveMe-bd); }
+.puce[data-filtre="Otoqi"] { background: var(--pf-Otoqi-bg); color: var(--pf-Otoqi-tx); border: 2px solid var(--pf-Otoqi-bd); }
+.puce[data-filtre="PopValet"] { background: var(--pf-PopValet-bg); color: var(--pf-PopValet-tx); border: 2px solid var(--pf-PopValet-bd); }
+.puce[data-filtre="toutes"] { background: #f4d03f; color: #3b2f00; border: 2px solid #b8860b; }
+.puce.actif { font-weight: 800; border-width: 3px !important; box-shadow: 0 0 0 3px var(--texte, #000); }
+.plusFiltres { border: 2px solid #d4a017; }
+.plusFiltres summary { font-weight: 800 !important; color: #b8860b; }
+.bandeauAut { position: sticky; top: 0; z-index: 50; background: #fde68a; color: #422006; padding: 8px 12px; font-size: .85rem; border-bottom: 2px solid #b45309; }
+.bandeauAut button { margin: 4px 6px 0 0; padding: 6px 10px; border-radius: 8px; border: 1px solid #b45309; background: #fff7d6; color: #422006; font-weight: 700; }
