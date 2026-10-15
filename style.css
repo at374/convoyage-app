@@ -277,3 +277,9 @@ html[data-style]:not([data-style="classique"]):not([data-style="jour"]){--rNeg:#
 .plusFiltres summary { font-weight: 800 !important; color: #b8860b; }
 .bandeauAut { position: sticky; top: 0; z-index: 50; background: #fde68a; color: #422006; padding: 8px 12px; font-size: .85rem; border-bottom: 2px solid #b45309; }
 .bandeauAut button { margin: 4px 6px 0 0; padding: 6px 10px; border-radius: 8px; border: 1px solid #b45309; background: #fff7d6; color: #422006; font-weight: 700; }
+
+/* V155 : propositions du planning, titres de rubriques */
+.carte.plan.propC{border:3px solid #d4a017;margin:34px 0 10px;padding-top:0;overflow:hidden}
+.propBandeau{background:#d4a017;color:#2b1d00;font-size:1.35rem;font-weight:800;padding:10px 14px;margin:0 -14px 10px;letter-spacing:.3px}
+.carte.plan.propC .resume{font-size:1.2rem;font-weight:800;color:#16a34a}
+.nuit .doux{font-weight:400;font-size:.8em}
