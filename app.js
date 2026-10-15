@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V154 (2.0.54)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V155 (2.0.55)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -577,7 +577,7 @@
   const PL = window.CPPlanning;
   const demainParis = () => { const d = new Date(Date.now() + 86400000); return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' }); };
   function vuePlanning() {
-    const p = etat.plan = { date: demainParis(), heure: '06:00', jours: 3, nuits: 2, hotel: 60, hotelOn: false, zones: [], rayon: 50, acc: true, tri: 'net', ...(etat.plan || {}) };
+    const p = etat.plan = { date: demainParis(), heure: '06:00', jours: 3, nuits: 2, hotel: 60, hotelOn: false, seuil: 150, zones: [], rayon: 50, acc: true, tri: 'net', ...(etat.plan || {}) };
     if (!p.date || p.date < new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' })) p.date = demainParis();
     const opt = (l, v, f) => l.map(x => `<option value="${x}"${String(x) === String(v) ? ' selected' : ''}>${f(x)}</option>`).join('');
     const dom = RT.domicile(etat.reglages);
@@ -588,6 +588,7 @@
       <div><label for="pNuits">Nuits hors de chez toi (max)</label><select id="pNuits">${opt([0, 1, 2, 3, 4, 5, 6], p.nuits, x => x ? x + ' nuit' + (x > 1 ? 's' : '') : 'aucune')}</select></div>
       <div><label for="pHotelOn">Frais d’hôtel</label><label style="margin:0;display:flex;align-items:center;gap:8px;min-height:44px;color:var(--texte)"><input id="pHotelOn" type="checkbox" style="width:auto;min-height:0"${p.hotelOn ? ' checked' : ''}> à compter</label></div>
       <div><label for="pHotel">Budget hôtel par nuit (€)</label><input id="pHotel" type="number" min="0" max="500" step="5" inputmode="numeric" value="${esc(p.hotel)}"${p.hotelOn ? '' : ' disabled'}></div>
+      <div><label for="pSeuil">Nuit à ton domicile si moins de (km par la route)</label><input id="pSeuil" type="number" min="0" max="2000" value="${esc(p.seuil != null ? p.seuil : 150)}"></div>
       <div><label for="pTri">Priorité</label><select id="pTri"><option value="net"${p.tri === 'net' ? ' selected' : ''}>Gagner le plus</option><option value="heure"${p.tri === 'heure' ? ' selected' : ''}>Meilleur €/heure</option></select></div></div>
       <label for="pZone">Zones de travail (vide = toute la France)</label>
       <div class="recherche"><input id="pZone" autocomplete="off" placeholder="Région, département ou ville (3 lettres)" aria-controls="pSugg"><div id="pSugg" class="sugg" role="listbox" hidden></div></div>
@@ -595,8 +596,8 @@
       <label><input id="pAcc" type="checkbox" style="width:auto;min-height:0"${p.acc ? ' checked' : ''}> Inclure obligatoirement mes missions déjà acceptées</label>
       <button id="pGo" style="width:100%;margin-top:12px"${dom ? '' : ' disabled'}>Calculer les meilleurs enchaînements</button></div>
       <div id="pRes"></div>`;
-    const lire = () => Object.assign(p, { date: $('pDate').value, heure: $('pHeure').value || '06:00', jours: Number($('pJours').value), nuits: Number($('pNuits').value), hotel: Math.max(0, Math.min(500, Number($('pHotel').value) || 0)), hotelOn: $('pHotelOn').checked, acc: $('pAcc').checked, tri: $('pTri').value });
-    for (const id of ['pDate', 'pHeure', 'pJours', 'pNuits', 'pHotel', 'pAcc', 'pTri']) $(id).onchange = () => { lire(); memoriser(); };
+    const lire = () => Object.assign(p, { date: $('pDate').value, heure: $('pHeure').value || '06:00', jours: Number($('pJours').value), nuits: Number($('pNuits').value), hotel: Math.max(0, Math.min(500, Number($('pHotel').value) || 0)), hotelOn: $('pHotelOn').checked, seuil: Math.max(0, Math.min(2000, Number($('pSeuil').value) || 150)), acc: $('pAcc').checked, tri: $('pTri').value });
+    for (const id of ['pDate', 'pHeure', 'pJours', 'pNuits', 'pHotel', 'pSeuil', 'pAcc', 'pTri']) $(id).onchange = () => { lire(); memoriser(); };
     $('pHotelOn').onchange = () => { lire(); memoriser(); $('pHotel').disabled = !p.hotelOn; };   // frais d'hôtel en option (coche)
     for (const b of document.querySelectorAll('[data-pzone]')) b.onclick = () => { lire(); p.zones.splice(Number(b.dataset.pzone), 1); memoriser(); afficher(); };
     $('pZone').oninput = () => {
@@ -610,7 +611,7 @@
   function calculerPlanning() {
     const p = etat.plan, debut = PL.parisVersMs(p.date, p.heure);
     if (debut == null) return toast('Date ou heure invalide');
-    const res = PL.planifier(etat.missions, etat.reglages, { debut, jours: p.jours, nuits_max: p.nuits, budget_hotel: p.hotelOn ? p.hotel : 0, zones: p.zones, rayon: p.rayon, inclureAcceptees: p.acc, tri: p.tri });
+    const res = PL.planifier(etat.missions, etat.reglages, { debut, jours: p.jours, nuits_max: p.nuits, budget_hotel: p.hotelOn ? p.hotel : 0, seuil_dom: p.seuil, zones: p.zones, rayon: p.rayon, inclureAcceptees: p.acc, tri: p.tri });
     etat.planResultat = res; afficherPlans(res);
     const r = $('pRes'); if (r) r.scrollIntoView({ block: 'start' });
   }
@@ -636,10 +637,10 @@
             ${ie > 0 && et.liaison.km >= 2 && !(pl.nuitsLiaison || []).some(x => x && x.cle === et.cle) ? `<span class="doux">🚆 depuis ${esc(et.depuis)} : ≈ ${esc(et.liaison.km)} km · ${esc(duree(et.liaison.heures))} · ${esc(euros(et.liaison.cout))}${et.attenteH ? ' · attente ' + esc(duree(et.attenteH)) : ''}</span>` : ''}
             <span class="doux">💶 net ≈ ${esc(euros(et.net))}${et.finEstimee ? ' · fin estimée' : ''}</span></button>`;
         }).join('');
-        const dort = ij < tous.length - 1 && nuit < pl.nuits ? `${(pl.nuitsLiaison || [])[nuit] && pl.nuitsLiaison[nuit].km >= 2 ? `<div class="lignePlan">🚆 <b>en soirée</b> trajet de ${esc(pl.nuitsLiaison[nuit].depuis)} vers ${esc(pl.lieuxNuits[nuit])}<span class="doux">≈ ${esc(pl.nuitsLiaison[nuit].km)} km · ${esc(duree(pl.nuitsLiaison[nuit].heures))} · ${esc(euros(pl.nuitsLiaison[nuit].cout))}</span></div>` : ''}<div class="nuit">🌙 Nuit à ${esc(pl.lieuxNuits[nuit++])}${pl.coutHotel > 0 ? ' (hôtel ≈ ' + esc(euros(pl.coutHotel / pl.nuits)) + ')' : ''}</div>` : '';
+        const dort = ij < tous.length - 1 && nuit < pl.nuits ? `${(pl.nuitsLiaison || [])[nuit] && pl.nuitsLiaison[nuit].km >= 2 ? `<div class="lignePlan">🚆 <b>en soirée</b> trajet de ${esc(pl.nuitsLiaison[nuit].depuis)} vers ${esc(pl.lieuxNuits[nuit])}<span class="doux">≈ ${esc(pl.nuitsLiaison[nuit].km)} km · ${esc(duree(pl.nuitsLiaison[nuit].heures))} · ${esc(euros(pl.nuitsLiaison[nuit].cout))}</span></div>` : ''}<div class="nuit">🌙 ${(() => { const nd = (pl.nuitsDom || [])[nuit]; const vl = pl.lieuxNuits[nuit++]; return nd && nd.domicile ? 'Nuit à ton domicile' + (nd.km != null && nd.km >= nd.seuil * 0.6 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km par la route)</span>' : '') : 'Nuit à ' + esc(vl) + (nd && nd.km != null && nd.km < nd.seuil * 1.4 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km du domicile)</span>' : ''); })()}${pl.coutHotel > 0 ? ' (hôtel ≈ ' + esc(euros(pl.coutHotel / pl.nuits)) + ')' : ''}</div>` : '';
         return `<div class="jour">${esc(new Date(j.t).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris' }))}</div>${lignes}${dort}`;
       }).join('');
-      return `<div class="carte plan" id="plan${ip}"><div class="doux">Proposition ${ip + 1}</div>
+      return `<div class="carte plan propC" id="plan${ip}"><div class="propBandeau">Proposition ${ip + 1}</div>
         <div class="resume">≈ ${esc(euros(pl.net))} net${pl.parHeure != null ? ' · ' + esc(euros(pl.parHeure)) + '/h' : ''} · ${pl.etapes.length} mission${pl.etapes.length > 1 ? 's' : ''} · ${pl.nuits ? pl.nuits + ' nuit' + (pl.nuits > 1 ? 's' : '') : 'sans nuit'}</div>
         <div class="bilan">Prestations ${esc(euros(pl.prestations))} → net des missions ${esc(euros(pl.netMissions))} (cotisations et liaisons déduites)${pl.coutHotel > 0 ? ' − hôtel ' + esc(euros(pl.coutHotel)) : ''} − retour ${esc(euros(pl.retour.cout))} · ${esc(duree(pl.heures))} de travail et de trajets · ≈ ${esc(pl.liaisonKm)} km de liaisons</div>
         ${jours}</div>`;
