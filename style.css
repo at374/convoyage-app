@@ -293,3 +293,6 @@ html[data-style]:not([data-style="classique"]):not([data-style="jour"]){--rNeg:#
 #ecran select:invalid,#ecran input[type=date]:invalid{color:#5b6475}
 .carte.renta .tableau td{font-size:12px;line-height:1.3}
 .carte.renta .doux{font-size:11px}
+
+/* V158 : ligne de transport entre deux missions du planning */
+.liaisonPlan{display:block;background:transparent!important;border:0!important;box-shadow:none!important;border-left:3px dashed #d4a017!important;margin:2px 0 2px 14px;padding:2px 8px;font-size:13px;font-weight:600}
