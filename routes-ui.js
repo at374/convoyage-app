@@ -3,7 +3,13 @@
   'use strict';
   const endpoint = 'https://convoyage-routes-691310598055.europe-west1.run.app/api/routes/estimate';
   const euro = v => Number(v).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
-  const session = () => { try { return JSON.parse(localStorage.getItem('cp_session') || 'null'); } catch (_) { return null; } };
+  const session = () => {
+    try {
+      const nativeSession = window.CPNatif?.session ? JSON.parse(window.CPNatif.session() || '{}') : null;
+      if (nativeSession?.access_token) return nativeSession;
+    } catch (_) {}
+    try { return JSON.parse(localStorage.getItem('cp_session') || 'null'); } catch (_) { return null; }
+  };
   const config = () => {
     try {
       if (window.CP_CONFIG?.anonKey) return window.CP_CONFIG;
