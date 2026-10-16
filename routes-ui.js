@@ -119,8 +119,9 @@
     const prix = mode === 'DRIVE' ? r.toll : r.fare;
     const libelle = mode === 'DRIVE' ? 'Péage' : 'Transport';
     const p = prix.status === 'estimation' ? '≈ ' + euro(prix.amount) : prix.status === 'aucun_peage' ? 'aucun' : (prix.status === 'prix_inconnu' && mode === 'DRIVE') ? 'oui' : 'non disponible';
-    target.innerHTML = '<p>🛣 <b>' + (r.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.durationMinutes) + '</b></p><p>💶 ' + libelle + ' : <b>' + p + '</b></p>' + (r.sansPeage ? '<p>🛣 Sans péage : <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b></p>' : '') + '<p class="doux">Données Google Routes : estimation, à vérifier avant départ.</p>';
-    if (mode === 'DRIVE' && r.polyline) { try { target.insertAdjacentHTML('beforeend', carte(r) + (target.dataset.villes ? '<p class="doux" style="margin:6px 0">' + target.dataset.villes + '</p>' : '')); } catch (_) { /* carte facultative */ } estimerPeage(r, target); }
+    const info = '<p>🛣 <b>' + (r.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.durationMinutes) + '</b></p><p>💶 ' + libelle + ' : <b>' + p + '</b></p>' + (r.sansPeage ? '<p>🛣 Sans péage : <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b></p>' : '') + '<p class="doux">Données Google Routes : estimation, à vérifier avant départ.</p>';
+    target.innerHTML = info;   // V186 : la carte et les villes passent avant les lignes d’infos
+    if (mode === 'DRIVE' && r.polyline) { try { target.innerHTML = carte(r) + (target.dataset.villes ? '<p class="doux" style="margin:6px 0">' + target.dataset.villes + '</p>' : '') + info; } catch (_) { target.innerHTML = info; } estimerPeage(r, target); }
   };
   const addBox = (host, id, origin, destination, departureTime, villes) => {
     if (!host || document.getElementById(id) || !origin || !destination) return;
