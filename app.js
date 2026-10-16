@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V158 (2.0.58)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V160 (2.0.60)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -46,11 +46,12 @@
       try {
         const N = window.CPNatif; if (!N || !N.autorisations) return;
         const a = JSON.parse(N.autorisations()); let b = document.getElementById('bandeauAut');
-        if (a.batterie && a.notifs) { if (b) b.remove(); return; }
+        if (a.batterie && a.notifs && a.accessibilite !== false) { if (b) b.remove(); return; }
         if (!b) { b = document.createElement('div'); b.id = 'bandeauAut'; b.className = 'bandeauAut'; document.body.prepend(b); }
-        b.innerHTML = '⚠ Pour les pop-ups de nouvelles missions et la lecture écran éteint : ' + (a.notifs ? '' : '<button id="autN">Autoriser les notifications</button> ') + (a.batterie ? '' : '<button id="autB">Batterie : sans restriction</button>');
+        b.innerHTML = '⚠ Pour les pop-ups de nouvelles missions et la lecture écran éteint : ' + (a.notifs ? '' : '<button id="autN">Autoriser les notifications</button> ') + (a.batterie ? '' : '<button id="autB">Batterie : sans restriction</button> ') + (a.accessibilite === false ? '<br>⚠ La lecture Otoqi / Pop Valet est coupée par Android : <button id="autA">Réactiver la lecture</button>' : '');
         const n = document.getElementById('autN'); if (n) n.onclick = () => N.autoriserNotifications();
         const bb = document.getElementById('autB'); if (bb) bb.onclick = () => N.autoriserBatterie();
+        const ba = document.getElementById('autA'); if (ba) ba.onclick = () => N.ouvrirAccessibilite();
       } catch (_) {}
     };
     setTimeout(maj, 2500); setInterval(maj, 20000);
@@ -212,14 +213,30 @@
   }
   // Notification tant que l'application est ouverte ou en arrière-plan récent. Les notifications
   // application fermée demandent l'envoi « push » (étape suivante, côté serveur).
+  // V160 : réglages « notifications » et « son » de cet appareil (aussi transmis à l'application Android et au service de notifications).
+  function prefNotif() { const l = lireLocal('cp_notif', null) || {}; return { on: l.on !== false, son: l.son !== false }; }
+  function appliquerPrefsNotif(p) {
+    ecrireLocal('cp_notif', p);
+    try { if (window.CPNatif && window.CPNatif.reglerNotifs) window.CPNatif.reglerNotifs(JSON.stringify(p)); } catch (_) {}
+    try { if ('caches' in window) caches.open('cp-prefs').then(c => c.put(new URL('prefs-notif', document.baseURI).href, new Response(JSON.stringify(p)))).catch(() => {}); } catch (_) {}
+  }
+  function brancherPrefsNotif() {
+    const a = $('nPrefOn'), s = $('nPrefSon'); if (!a || !s) return; const p = prefNotif(); a.checked = p.on; s.checked = p.son; s.disabled = !p.on; appliquerPrefsNotif(p);
+    a.onchange = async () => {
+      const q = { on: a.checked, son: s.checked }; appliquerPrefsNotif(q); s.disabled = !q.on;
+      if (!q.on) { try { const reg = await navigator.serviceWorker?.getRegistration(); const sub = reg && await reg.pushManager.getSubscription(); if (sub) { await api.desabonnerPush(sub.endpoint); await sub.unsubscribe(); } } catch (_) {} toast('Notifications coupées sur cet appareil'); etatNotifications(); }
+      else { toast('Notifications activées'); try { await activerNotifications(); } catch (_) {} }
+    };
+    s.onchange = () => { appliquerPrefsNotif({ on: a.checked, son: s.checked }); toast(s.checked ? 'Son et vibration activés' : 'Notifications sans son ni vibration'); };
+  }
   async function notifier(liste) {
     toast(liste[0].message);
     try {
-      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+      if (!prefNotif().on || !('Notification' in window) || Notification.permission !== 'granted') return;
       const reg = await navigator.serviceWorker?.getRegistration();
       for (const a of liste.slice(0, 3)) {
         const titre = ({ hausse_prix: 'Hausse de prix', mission_acceptee: 'Mission acceptée', mission_modifiee: 'Mission modifiée', mission_annulee: 'Mission annulée ?' })[a.type] || 'Nouvelle mission';
-        if (reg) reg.showNotification(titre, { body: a.message, icon: 'icones/icone-192.png', tag: 'cp-' + a.id }); else new Notification(titre, { body: a.message });
+        if (reg) reg.showNotification(titre, { body: a.message, icon: 'icones/icone-192.png', tag: 'cp-' + a.id, silent: !prefNotif().son }); else new Notification(titre, { body: a.message, silent: !prefNotif().son });
       }
     } catch (_) {}
   }
@@ -705,7 +722,7 @@
       <div class="carte" id="cartePause"><h2>Heures de désactivation</h2><p class="doux">La nuit, la lecture des plateformes, la mise à jour et les alertes peuvent s’arrêter.</p>
         <label><input id="pzOn" type="checkbox" style="width:auto;min-height:0"> Désactiver la nuit</label>
         <label for="pzDeb">Arrêt à</label><input id="pzDeb" type="time"><label for="pzFin">Reprise à</label><input id="pzFin" type="time"></div>
-      <div class="carte" id="carteNotif"><h2>Notifications</h2><p class="doux" id="notifEtat">Vérification…</p><div id="notifBoutons" class="boutons"></div></div>
+      <div class="carte" id="carteNotif"><h2>Notifications</h2><label><input id="nPrefOn" type="checkbox" style="width:auto;min-height:0"> Recevoir les notifications</label><label><input id="nPrefSon" type="checkbox" style="width:auto;min-height:0"> Son et vibration des notifications</label><p class="doux" id="notifEtat">Vérification…</p><div id="notifBoutons" class="boutons"></div></div>
       <div class="carte"><h2>Compte</h2><p class="doux">${esc(api?.session?.email || '')}</p>
       <div class="boutons"><button id="dOk" class="second">Se déconnecter</button><button id="eOk" class="danger">Effacer mes données</button></div></div>
       <p class="doux" style="text-align:center">Convoyage Ultra · outil d’aide à la décision : aucune mission n’est acceptée à ta place.</p>`;
@@ -733,7 +750,7 @@
       window.CP_BUS_ACTIF = $('rBus').checked; ecrireLocal('cp_bus_actif', window.CP_BUS_ACTIF); window.CP_TRANSPORT_CHOISI = $('rTransport').value; ecrireLocal('cp_transport', window.CP_TRANSPORT_CHOISI);
       try { await api.enregistrerReglages(v); etat.reglages = { ...r, ...v }; ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe }); toast('Réglages enregistrés'); } catch (e) { toast(e.message); }
     };
-    etatNotifications();
+    etatNotifications(); brancherPrefsNotif();
     { const p = lirePause(); $('pzOn').checked = p.choix === 'oui'; $('pzDeb').value = p.debut; $('pzFin').value = p.fin;
       const maj = () => { enregistrerPause($('pzOn').checked ? 'oui' : 'non', $('pzDeb').value, $('pzFin').value); toast($('pzOn').checked ? 'Désactivation la nuit : activée' : 'Toujours actif'); };
       $('pzOn').onchange = maj; $('pzDeb').onchange = $('pzFin').onchange = () => { if ($('pzOn').checked) maj(); }; }
@@ -794,11 +811,22 @@
     const res = RT.retours(m, etat.missions.filter(x => x.kind === 'disponible'), etat.reglages, { acceptees: m.kind === 'acceptee' ? acceptees : acceptees.concat([m]) });
     detail.retours = res.compatibles.concat(res.dateInconnue);
     if (res.raison === 'lieu_arrivee_inconnu') return '<div class="carte" id="retours"><h2>🔁 Retours possibles</h2><p class="doux">Lieu d’arrivée non localisable : recherche impossible.</p></div>';
+    // V159 : chaînage — pour chaque retour proposé, les suites possibles après lui (2 niveaux), avec distance et durée de liaison.
+    const dispoR = etat.missions.filter(z => z.kind === 'disponible');
+    const suites = (src, deja, prof) => {
+      if (prof > 2) return [];
+      let r2; try { r2 = RT.retours(src, dispoR, etat.reglages, { acceptees: acceptees.concat(deja) }); } catch (_) { return []; }
+      return r2.compatibles.filter(z => !deja.some(d => RT.cle(d) === RT.cle(z.mission))).slice(0, 2).map(z => ({ x: z, src, suite: suites(z.mission, deja.concat([z.mission]), prof + 1) }));
+    };
+    const suiteHtml = (s, prof) => { const z = s.x, c = z.mission, rr = z.rentabilite, p = s.src; return `<div class="retourSuite" style="margin-left:${prof * 12}px">↪ puis <b>${esc(trajet(c))}</b> · ${c.fee != null ? esc(euros(c.fee)) : 'prix ?'} <span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span>
+      <span class="doux">${quandHtml(c)}${z.attenteH ? ' · attente ≈ ' + esc(duree(z.attenteH)) : ''}</span>
+      <span class="doux">${({covoiturage:'🚗',bus:'🚌',train:'🚆',taxi:'🚕'})[z.liaison.mode] || '🚆'} ${esc(p.to_city || 'arrivée')} → ${esc(c.from_city || 'départ')} ≈ ${esc(z.liaison.km)} km · ${esc(duree(z.liaison.heures))} · ${esc(euros(z.liaison.cout))}${rr && rr.connu ? ' · 💶 net ≈ ' + esc(euros(rr.net)) : ''}</span></div>${s.suite.map(u => suiteHtml(u, prof + 1)).join('')}`; };
+    const chaine = (x, c, i) => (i < 4 && x.statut === 'compatible') ? suites(c, [m, c], 1).map(s => suiteHtml(s, 1)).join('') : '';
     const item = (x, i) => { const c = x.mission, rr = x.rentabilite; return `<div class="retourBloc"><button class="retour${clsPlat(c.platform)}" data-retour="${i}"><span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span> <b>${esc(trajet(c))}</b> · ${c.fee != null ? esc(euros(c.fee)) : 'prix ?'}
       <span class="doux">${quandHtml(c)}${x.attenteH ? ' · attente ≈ ' + esc(duree(x.attenteH)) : ''}</span>
       <span class="doux">${({covoiturage:'🚗',bus:'🚌',train:'🚆',taxi:'🚕'})[x.liaison.mode] || '🚆'} ${esc(x.liaison.mode || 'liaison')} (le moins cher) : ${esc(m.to_city || 'arrivée')} → ${esc(c.from_city || 'départ')} ≈ ${esc(x.liaison.km)} km · ${esc(duree(x.liaison.heures))} · ${esc(euros(x.liaison.cout))}</span>
       <span class="doux">💶 net ≈ ${rr.connu ? esc(euros(rr.net)) + (rr.parHeure ? ' · ' + esc(euros(rr.parHeure)) + '/h' : '') : 'prix inconnu'}${x.rapprocheKm != null ? (x.rapprocheKm > 0 ? ' · te rapproche de chez toi de ≈ ' + esc(x.rapprocheKm) + ' km' : ' · t’éloigne de chez toi de ≈ ' + esc(-x.rapprocheKm) + ' km') : ''}</span>
-      ${x.estimations.length ? `<span class="estim">estimation : ${esc(x.estimations.join(', '))}</span>` : ''}</button>${x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department, 'r|' + (m.id || m.external_id) + '|' + (c.id || c.external_id)) : ''}</div>`; };
+      ${x.estimations.length ? `<span class="estim">estimation : ${esc(x.estimations.join(', '))}</span>` : ''}</button>${x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department, 'r|' + (m.id || m.external_id) + '|' + (c.id || c.external_id)) : ''}${chaine(x, c, i)}</div>`; };
     const n = res.compatibles.length, r = etat.reglages || {};
     const ecartes = [[res.autreJour, 'un autre jour'], [res.tropTot, 'partent trop tôt'], [res.conflits, 'chevauchent ton agenda'], [res.horsZone, 'trop loin'], [res.tropTard, 'attente trop longue'], [res.passees, 'déjà passées']].filter(([k]) => k).map(([k, t]) => k + ' ' + t).join(', ');
     return `<div class="carte" id="retours"><h2>🔁 Retours possibles après cette mission</h2>
