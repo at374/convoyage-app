@@ -48,12 +48,28 @@
     const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="position:absolute;left:0;top:0;width:100%;height:100%">' + (B ? '<polyline points="' + d(B) + '" fill="none" stroke="#1a9850" stroke-width="4" stroke-dasharray="9 6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>' : '') + '<polyline points="' + d(A) + '" fill="none" stroke="#1e63d8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="7" fill="#1a9850" stroke="#fff" stroke-width="2"/><circle cx="' + b[0].toFixed(1) + '" cy="' + b[1].toFixed(1) + '" r="7" fill="#d93025" stroke="#fff" stroke-width="2"/></svg>';
     return '<div style="position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:8px;margin-top:8px;background:#ddd">' + tuiles + svg + '<span style="position:absolute;right:2px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div><p class="doux">' + (B ? 'Bleu : avec péages · Vert pointillé : sans péage.' : 'Bleu : trajet Google (identique avec ou sans péage).') + '</p>';
   };
+  const estimerPeage = async (r, out) => {
+    try {
+      const A = decode(r.polyline);
+      if (A.length < 2) return;
+      const a = A[0], b = A[A.length - 1];
+      const res = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locations: [{ lat: a[1], lon: a[0] }, { lat: b[1], lon: b[0] }], costing: 'auto', costing_options: { auto: { use_tolls: 1.0 } }, directions_options: { language: 'fr-FR', units: 'kilometers' } }) });
+      const j = await res.json();
+      const leg = j && j.trip && j.trip.legs && j.trip.legs[0];
+      if (!leg) return;
+      let km = 0;
+      for (const m of leg.maneuvers || []) if (m.toll) km += Number(m.length) || 0;
+      if (km < 1) return;
+      const c1 = km * 0.115, c2 = c1 * 1.55;
+      out.insertAdjacentHTML('beforeend', '<p>💶 Péage estimé (≈ ' + Math.round(km) + ' km à péage) : <b>classe 1 ≈ ' + euro(c1) + '</b> · <b>classe 2 ≈ ' + euro(c2) + '</b></p><p class="doux">Estimation d’après les grilles officielles Vinci 2026 (marge environ 15 %). Le prix exact dépend des gares d’entrée et de sortie.</p>');
+    } catch (_) { /* estimation facultative */ }
+  };
   const render = (target, r, mode) => {
     const prix = mode === 'DRIVE' ? r.toll : r.fare;
     const libelle = mode === 'DRIVE' ? 'Péage' : 'Transport';
-    const p = prix.status === 'estimation' ? '≈ ' + euro(prix.amount) : prix.status === 'aucun_peage' ? 'aucun' : (prix.status === 'prix_inconnu' && mode === 'DRIVE') ? 'oui (prix non fourni par Google)' : 'non disponible';
+    const p = prix.status === 'estimation' ? '≈ ' + euro(prix.amount) : prix.status === 'aucun_peage' ? 'aucun' : (prix.status === 'prix_inconnu' && mode === 'DRIVE') ? 'oui' : 'non disponible';
     target.innerHTML = '<p>🛣 <b>' + (r.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.durationMinutes) + '</b></p><p>💶 ' + libelle + ' : <b>' + p + '</b></p>' + (r.sansPeage ? '<p>🛣 Sans péage : <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b></p>' : '') + '<p class="doux">Données Google Routes : estimation, à vérifier avant départ.</p>';
-    if (mode === 'DRIVE' && r.polyline) { try { target.insertAdjacentHTML('beforeend', carte(r)); } catch (_) { /* carte facultative */ } }
+    if (mode === 'DRIVE' && r.polyline) { try { target.insertAdjacentHTML('beforeend', carte(r)); } catch (_) { /* carte facultative */ } estimerPeage(r, target); }
   };
   const addBox = (host, id, origin, destination, departureTime) => {
     if (!host || document.getElementById(id) || !origin || !destination) return;
