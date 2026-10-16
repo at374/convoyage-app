@@ -29,10 +29,10 @@
     if (!opts || !/^https:\/\//.test(opts.endpoint || '')) throw new Error('Service itinéraires non configuré');
     const mode = MODES[opts.mode] || opts.mode;
     if (!['DRIVE', 'TRANSIT'].includes(mode)) throw new Error('Mode non pris en charge');
-    if (!opts.accessToken) throw new Error('Reconnecte-toi pour calculer le trajet');
+    if (!opts.accessToken || !opts.supabaseApiKey) throw new Error('Reconnecte-toi pour calculer le trajet');
     const body = { origin: place(opts.origin), destination: place(opts.destination), mode };
     if (opts.departureTime) body.departureTime = opts.departureTime;
-    const res = await fetch(opts.endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + opts.accessToken }, body: JSON.stringify(body) });
+    const res = await fetch(opts.endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + opts.accessToken, 'X-Supabase-Api-Key': opts.supabaseApiKey }, body: JSON.stringify(body) });
     if (!res.ok) throw new Error(res.status === 401 ? 'Reconnecte-toi puis réessaie' : 'Service itinéraires indisponible');
     return normalizeGoogle(await res.json(), mode);
   }
