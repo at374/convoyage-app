@@ -26,17 +26,20 @@
     const p = window.CPGeo?.coordonnees(m, side);
     return p ? { lat: p.lat, lng: p.lng } : (side === 'origin' ? m.origin_address || m.from_city : m.destination_address || m.to_city);
   };
+  const hm = m => { if (!Number.isFinite(m)) return '—'; const h = Math.floor(m / 60), mm = m % 60; return h ? h + 'h' + String(mm).padStart(2, '0') : mm + ' min'; };
+  const lieu = p => typeof p === 'string' ? encodeURIComponent(p) : p.lat + ',' + p.lng;
+  const liens = (o, d) => '<p class="doux" style="margin-top:8px">Ouvrir dans : <a href="https://www.google.com/maps/dir/?api=1&origin=' + lieu(o) + '&destination=' + lieu(d) + '&travelmode=driving" target="_blank" rel="noopener">Google Maps</a> · <a href="https://waze.com/ul?' + (typeof d === 'string' ? 'q=' + encodeURIComponent(d) : 'll=' + d.lat + ',' + d.lng) + '&navigate=yes" target="_blank" rel="noopener">Waze</a></p>';
   const render = (target, r, mode) => {
     const prix = mode === 'DRIVE' ? r.toll : r.fare;
     const libelle = mode === 'DRIVE' ? 'Péage' : 'Transport';
     const p = prix.status === 'estimation' ? '≈ ' + euro(prix.amount) : prix.status === 'aucun_peage' ? 'aucun' : (prix.status === 'prix_inconnu' && mode === 'DRIVE') ? 'oui (prix non fourni par Google)' : 'non disponible';
-    target.innerHTML = '<p>🛣 <b>' + (r.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + (r.durationMinutes ?? '—') + ' min</b></p><p>💶 ' + libelle + ' : <b>' + p + '</b></p>' + (r.sansPeage ? '<p>🛣 Sans péage : <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + r.sansPeage.durationMinutes + ' min</b></p>' : '') + '<p class="doux">Données Google Routes : estimation, à vérifier avant départ.</p>';
+    target.innerHTML = '<p>🛣 <b>' + (r.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.durationMinutes) + '</b></p><p>💶 ' + libelle + ' : <b>' + p + '</b></p>' + (r.sansPeage ? '<p>🛣 Sans péage : <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b></p>' : '') + '<p class="doux">Données Google Routes : estimation, à vérifier avant départ.</p>';
   };
   const addBox = (host, id, origin, destination, departureTime) => {
     if (!host || document.getElementById(id) || !origin || !destination) return;
     const box = document.createElement('div');
     box.id = id; box.className = 'carte';
-    box.innerHTML = '<b>🧭 Trajet réel Google</b><p class="doux">Distance routière, durée et péage estimé.</p><button type="button" data-rmode="voiture">🚗 Voiture et péages</button> <button type="button" class="second" data-rmode="transport">🚌 Transports</button><div class="doux" data-routes-result style="margin-top:8px"></div>';
+    box.innerHTML = '<b>🧭 Trajet réel Google</b><p class="doux">Distance routière, durée et péage estimé.</p><button type="button" data-rmode="voiture">🚗 Voiture et péages</button> <button type="button" class="second" data-rmode="transport">🚌 Transports</button><div class="doux" data-routes-result style="margin-top:8px"></div>' + liens(origin, destination);
     host.appendChild(box);
     box.querySelectorAll('button[data-rmode]').forEach(b => b.onclick = async () => {
       const out = box.querySelector('[data-routes-result]'), mode = b.dataset.rmode;
