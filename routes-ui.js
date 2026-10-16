@@ -29,7 +29,7 @@
       const out = box.querySelector('[data-routes-result]'), mode = b.dataset.rmode;
       const s = session(), c = config(); out.textContent = 'Calcul Google en cours…';
       try {
-        const r = await window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime });
+        const r = await window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, refreshToken: s?.refresh_token, expiresAt: s?.expires_at, email: s?.email, userId: s?.user_id, supabaseUrl: c?.url, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime });
         render(out, r, mode === 'voiture' ? 'DRIVE' : 'TRANSIT');
       } catch (e) { out.textContent = String(e.message || e); }
     });
@@ -45,7 +45,8 @@
     const label = Array.from(host.querySelectorAll('p')).map(p => p.textContent || '').find(t => t.includes('🟢') && t.includes('🔴'));
     const match = label && label.match(/🟢\s*(.+?)\s*→\s*🔴\s*(.+?)(?:\.|$)/);
     if (!match) return;
-    addBox(host, 'routesGoogleEstimate', match[1].trim(), match[2].trim());
+    const contenu = host.querySelector('.popVolBoite') || host;
+    addBox(contenu, 'routesGoogleEstimate', match[1].trim(), match[2].trim());
   };
   const refresh = () => { addMissionPanel(); addEstimatePanel(); };
   new MutationObserver(refresh).observe(document.documentElement, { childList: true, subtree: true });
