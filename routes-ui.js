@@ -4,7 +4,14 @@
   const endpoint = 'https://convoyage-routes-691310598055.europe-west1.run.app/api/routes/estimate';
   const euro = v => Number(v).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
   const session = () => { try { return JSON.parse(localStorage.getItem('cp_session') || 'null'); } catch (_) { return null; } };
-  const config = () => { try { return window.CP_CONFIG?.anonKey ? window.CP_CONFIG : window.CP_CONFIG_ACTIVE?.anonKey ? window.CP_CONFIG_ACTIVE : JSON.parse(localStorage.getItem('cp_config') || 'null'); } catch (_) { return null; } };
+  const config = () => {
+    try {
+      if (window.CP_CONFIG?.anonKey) return window.CP_CONFIG;
+      if (window.CP_CONFIG_ACTIVE?.anonKey) return window.CP_CONFIG_ACTIVE;
+      const nativeConfig = window.CPNatif?.configuration ? JSON.parse(window.CPNatif.configuration() || '{}') : null;
+      return nativeConfig?.anonKey ? nativeConfig : JSON.parse(localStorage.getItem('cp_config') || 'null');
+    } catch (_) { return null; }
+  };
   const missionActive = () => {
     const title = document.getElementById('feuilleTitre')?.textContent?.trim();
     return title && window.__cp?.etat?.missions?.find(m => (m.from_city + ' → ' + m.to_city) === title);
