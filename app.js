@@ -818,15 +818,20 @@
       let r2; try { r2 = RT.retours(src, dispoR, etat.reglages, { acceptees: acceptees.concat(deja) }); } catch (_) { return []; }
       return r2.compatibles.filter(z => !deja.some(d => RT.cle(d) === RT.cle(z.mission))).slice(0, 2).map(z => ({ x: z, src, suite: suites(z.mission, deja.concat([z.mission]), prof + 1) }));
     };
-    const suiteHtml = (s, prof) => { const z = s.x, c = z.mission, rr = z.rentabilite, p = s.src; return `<div class="retourSuite" style="margin-left:${prof * 12}px">↪ puis <b>${esc(trajet(c))}</b> · ${c.fee != null ? esc(euros(c.fee)) : 'prix ?'} <span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span>
-      <span class="doux">${quandHtml(c)}${z.attenteH ? ' · attente ≈ ' + esc(duree(z.attenteH)) : ''}</span>
-      <span class="doux">${({covoiturage:'🚗',bus:'🚌',train:'🚆',taxi:'🚕'})[z.liaison.mode] || '🚆'} ${esc(p.to_city || 'arrivée')} → ${esc(c.from_city || 'départ')} ≈ ${esc(z.liaison.km)} km · ${esc(duree(z.liaison.heures))} · ${esc(euros(z.liaison.cout))}${rr && rr.connu ? ' · 💶 net ≈ ' + esc(euros(rr.net)) : ''}</span></div>${s.suite.map(u => suiteHtml(u, prof + 1)).join('')}`; };
+    // V178 : chaque information est une étiquette de couleur (puces) : plus lisible.
+    const chip = (cl, h) => '<span class="chip ' + cl + '">' + h + '</span>';
+    const ICO = { covoiturage: '🚗', bus: '🚌', train: '🚆', taxi: '🚕' };
+    const puces = (x, c, p, avecMode) => {
+      const lia = x.liaison, rr = x.rentabilite, rows = [];
+      rows.push('<span class="chips">' + chip('c-tr', (ICO[lia.mode] || '🚆') + ' ' + esc(avecMode ? (lia.mode || 'liaison') : p.to_city || 'arrivée') + (avecMode ? ' : ' + esc(p.to_city || 'arrivée') : '') + ' → ' + esc(c.from_city || 'départ')) + chip('c-di', '≈ ' + esc(lia.km) + ' km · ' + esc(duree(lia.heures))) + chip('c-co', esc(euros(lia.cout))) + '</span>');
+      const n = []; if (rr && rr.connu) { n.push(chip('c-net', '💶 net ≈ ' + esc(euros(rr.net)))); if (rr.parHeure) n.push(chip('c-ph', esc(euros(rr.parHeure)) + '/h')); } else if (avecMode) n.push(chip('c-net', '💶 prix inconnu'));
+      if (x.rapprocheKm != null) n.push(x.rapprocheKm > 0 ? chip('c-ok', 'te rapproche de chez toi de ≈ ' + esc(x.rapprocheKm) + ' km') : chip('c-ko', 't’éloigne de chez toi de ≈ ' + esc(-x.rapprocheKm) + ' km'));
+      if (n.length) rows.push('<span class="chips">' + n.join('') + '</span>');
+      return rows.join('');
+    };
+    const suiteHtml = (s, prof) => { const z = s.x, c = z.mission, p = s.src; return `<div class="retourSuite" style="margin-left:${prof * 12}px"><span class="chips"><span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span>${chip('c-trj', '↪ puis ' + esc(trajet(c)))}${chip('c-prix', c.fee != null ? esc(euros(c.fee)) : 'prix ?')}</span><span class="chips">${quandHtml(c)}${z.attenteH ? chip('c-at', 'attente ≈ ' + esc(duree(z.attenteH))) : ''}</span>${puces(z, c, p, false)}</div>${s.suite.map(u => suiteHtml(u, prof + 1)).join('')}`; };
     const chaine = (x, c, i) => (i < 4 && x.statut === 'compatible') ? suites(c, [m, c], 1).map(s => suiteHtml(s, 1)).join('') : '';
-    const item = (x, i) => { const c = x.mission, rr = x.rentabilite; return `<div class="retourBloc"><button class="retour${clsPlat(c.platform)}" data-retour="${i}"><span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span> <b>${esc(trajet(c))}</b> · ${c.fee != null ? esc(euros(c.fee)) : 'prix ?'}
-      <span class="doux">${quandHtml(c)}${x.attenteH ? ' · attente ≈ ' + esc(duree(x.attenteH)) : ''}</span>
-      <span class="doux">${({covoiturage:'🚗',bus:'🚌',train:'🚆',taxi:'🚕'})[x.liaison.mode] || '🚆'} ${esc(x.liaison.mode || 'liaison')} (le moins cher) : ${esc(m.to_city || 'arrivée')} → ${esc(c.from_city || 'départ')} ≈ ${esc(x.liaison.km)} km · ${esc(duree(x.liaison.heures))} · ${esc(euros(x.liaison.cout))}</span>
-      <span class="doux">💶 net ≈ ${rr.connu ? esc(euros(rr.net)) + (rr.parHeure ? ' · ' + esc(euros(rr.parHeure)) + '/h' : '') : 'prix inconnu'}${x.rapprocheKm != null ? (x.rapprocheKm > 0 ? ' · te rapproche de chez toi de ≈ ' + esc(x.rapprocheKm) + ' km' : ' · t’éloigne de chez toi de ≈ ' + esc(-x.rapprocheKm) + ' km') : ''}</span>
-      ${x.estimations.length ? `<span class="estim">estimation : ${esc(x.estimations.join(', '))}</span>` : ''}</button>${x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department, 'r|' + (m.id || m.external_id) + '|' + (c.id || c.external_id)) : ''}${chaine(x, c, i)}</div>`; };
+    const item = (x, i) => { const c = x.mission; return `<div class="retourBloc"><button class="retour${clsPlat(c.platform)}" data-retour="${i}"><span class="chips"><span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span>${chip('c-trj', esc(trajet(c)))}${chip('c-prix', c.fee != null ? esc(euros(c.fee)) : 'prix ?')}</span><span class="chips">${quandHtml(c)}${x.attenteH ? chip('c-at', 'attente ≈ ' + esc(duree(x.attenteH))) : ''}</span>${puces(x, c, m, true)}${x.estimations.length ? `<span class="chips">${chip('c-es', 'estimation : ' + esc(x.estimations.join(', ')))}</span>` : ''}</button>${x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department, 'r|' + (m.id || m.external_id) + '|' + (c.id || c.external_id)) : ''}${chaine(x, c, i)}</div>`; };
     const n = res.compatibles.length, r = etat.reglages || {};
     const ecartes = [[res.autreJour, 'un autre jour'], [res.tropTot, 'partent trop tôt'], [res.conflits, 'chevauchent ton agenda'], [res.horsZone, 'trop loin'], [res.tropTard, 'attente trop longue'], [res.passees, 'déjà passées']].filter(([k]) => k).map(([k, t]) => k + ' ' + t).join(', ');
     return `<div class="carte" id="retours"><h2>🔁 Retours possibles après cette mission</h2>
