@@ -29,8 +29,8 @@
   const render = (target, r, mode) => {
     const prix = mode === 'DRIVE' ? r.toll : r.fare;
     const libelle = mode === 'DRIVE' ? 'Péage' : 'Transport';
-    const p = prix.status === 'estimation' ? '≈ ' + euro(prix.amount) : prix.status === 'aucun_peage' ? 'aucun' : 'non disponible';
-    target.innerHTML = '<p>🛣 <b>' + (r.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + (r.durationMinutes ?? '—') + ' min</b></p><p>💶 ' + libelle + ' : <b>' + p + '</b></p><p class="doux">Données Google Routes : estimation, à vérifier avant départ.</p>';
+    const p = prix.status === 'estimation' ? '≈ ' + euro(prix.amount) : prix.status === 'aucun_peage' ? 'aucun' : (prix.status === 'prix_inconnu' && mode === 'DRIVE') ? 'oui (prix non fourni par Google)' : 'non disponible';
+    target.innerHTML = '<p>🛣 <b>' + (r.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + (r.durationMinutes ?? '—') + ' min</b></p><p>💶 ' + libelle + ' : <b>' + p + '</b></p>' + (r.sansPeage ? '<p>🛣 Sans péage : <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + r.sansPeage.durationMinutes + ' min</b></p>' : '') + '<p class="doux">Données Google Routes : estimation, à vérifier avant départ.</p>';
   };
   const addBox = (host, id, origin, destination, departureTime) => {
     if (!host || document.getElementById(id) || !origin || !destination) return;
