@@ -17,10 +17,16 @@
     const r = response?.routes?.[0]; if (!r) throw new Error('Aucun itinéraire trouvé');
     const toll = r.travelAdvisory?.tollInfo, fare = r.travelAdvisory?.transitFare;
     const tollPrice = toll?.estimatedPrice?.length ? money(toll.estimatedPrice[0]) : null;
+    const sp = response.sansPeage;
+    const spMin = sp && sp.duration ? Math.ceil(parseFloat(sp.duration) / 60) : null;
+    const spKm = sp && Number.isFinite(sp.distanceMeters) ? Math.round(sp.distanceMeters / 100) / 10 : null;
+    const dMin = r.duration ? Math.ceil(parseFloat(r.duration) / 60) : null;
+    const peageDetecte = mode === 'DRIVE' && !toll && spMin != null && dMin != null && (spMin - dMin >= 5 || (spKm != null && Number.isFinite(r.distanceMeters) && Math.abs(spKm - r.distanceMeters / 1000) >= 3));
     return {
+      sansPeage: spMin != null ? { distanceKm: spKm, durationMinutes: spMin } : null,
       distanceKm: Number.isFinite(r.distanceMeters) ? Math.round(r.distanceMeters / 100) / 10 : null,
       durationMinutes: r.duration ? Math.ceil(parseFloat(r.duration) / 60) : null,
-      toll: mode === 'DRIVE' ? (!toll ? { status: 'aucun_peage' } : tollPrice ? { status: 'estimation', ...tollPrice } : { status: 'prix_inconnu' }) : { status: 'non_applicable' },
+      toll: mode === 'DRIVE' ? (!toll ? (peageDetecte ? { status: 'prix_inconnu' } : { status: 'aucun_peage' }) : tollPrice ? { status: 'estimation', ...tollPrice } : { status: 'prix_inconnu' }) : { status: 'non_applicable' },
       fare: mode === 'TRANSIT' ? (money(fare) ? { status: 'estimation', ...money(fare) } : { status: 'prix_inconnu' }) : { status: 'non_applicable' },
       source: 'Google Routes API', priceIsGuaranteed: false
     };
