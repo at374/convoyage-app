@@ -296,3 +296,7 @@ html[data-style]:not([data-style="classique"]):not([data-style="jour"]){--rNeg:#
 
 /* V158 : ligne de transport entre deux missions du planning */
 .liaisonPlan{display:block;background:transparent!important;border:0!important;box-shadow:none!important;border-left:3px dashed #d4a017!important;margin:2px 0 2px 14px;padding:2px 8px;font-size:13px;font-weight:600}
+
+/* V159 : suites possibles après un retour (chaînage) */
+.retourSuite { margin-top: 6px; padding: 4px 0 4px 8px; border-left: 2px dashed #c9a227; font-size: 13px; line-height: 1.4; }
+.retourSuite .doux { display: block; }
