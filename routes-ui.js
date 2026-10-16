@@ -4,6 +4,7 @@
   const endpoint = 'https://convoyage-routes-691310598055.europe-west1.run.app/api/routes/estimate';
   const euro = v => Number(v).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
   const session = () => { try { return JSON.parse(localStorage.getItem('cp_session') || 'null'); } catch (_) { return null; } };
+  const config = () => { try { return window.CP_CONFIG?.anonKey ? window.CP_CONFIG : JSON.parse(localStorage.getItem('cp_config') || 'null'); } catch (_) { return null; } };
   const missionActive = () => {
     const title = document.getElementById('feuilleTitre')?.textContent?.trim();
     return title && window.__cp?.etat?.missions?.find(m => (m.from_city + ' → ' + m.to_city) === title);
@@ -30,9 +31,9 @@
     host.insertBefore(box, host.querySelector('.renta') || null);
     box.querySelectorAll('button[data-rmode]').forEach(b => b.onclick = async () => {
       const out = box.querySelector('#routesResult'), mode = b.dataset.rmode;
-      const s = session(); out.textContent = 'Calcul en cours…';
+      const s = session(), c = config(); out.textContent = 'Calcul en cours…';
       try {
-        const r = await window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, origin, destination, mode, departureTime: m.pickup_start || undefined });
+        const r = await window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime: m.pickup_start || undefined });
         render(out, r, mode === 'voiture' ? 'DRIVE' : 'TRANSIT');
       } catch (e) { out.textContent = String(e.message || e); }
     });
