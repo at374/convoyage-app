@@ -3,12 +3,15 @@
   'use strict';
   const endpoint = 'https://convoyage-routes-691310598055.europe-west1.run.app/api/routes/estimate';
   const euro = v => Number(v).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+  const lireNatif = () => { try { return window.CPNatif && window.CPNatif.session ? JSON.parse(window.CPNatif.session() || '{}') : null; } catch (_) { return null; } };
+  const lireLocal = () => { try { return JSON.parse(localStorage.getItem('cp_session') || 'null'); } catch (_) { return null; } };
+  const valide = s => { if (!s || !s.access_token) return false; let e = Number(s.expires_at) || 0; if (e && e < 1e12) e *= 1000; return !e || e > Date.now() + 30000; };
+  // V174 : on prend la session encore valable (celle de l'application Android si elle marche, sinon celle de la page).
   const session = () => {
-    try {
-      const nativeSession = window.CPNatif?.session ? JSON.parse(window.CPNatif.session() || '{}') : null;
-      if (nativeSession?.access_token) return nativeSession;
-    } catch (_) {}
-    try { return JSON.parse(localStorage.getItem('cp_session') || 'null'); } catch (_) { return null; }
+    const n = lireNatif(), l = lireLocal();
+    if (valide(n)) return n;
+    if (valide(l)) return l;
+    return (n && n.access_token) ? n : l;
   };
   const config = () => {
     try {
