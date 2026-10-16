@@ -60,8 +60,8 @@
       let km = 0;
       for (const m of leg.maneuvers || []) if (m.toll) km += Number(m.length) || 0;
       if (km < 1) return;
-      const c1 = km * 0.115, c2 = c1 * 1.55;
-      out.insertAdjacentHTML('beforeend', '<p>💶 Péage estimé (≈ ' + Math.round(km) + ' km à péage) : <b>classe 1 ≈ ' + euro(c1) + '</b> · <b>classe 2 ≈ ' + euro(c2) + '</b></p><p class="doux">Estimation d’après les grilles officielles Vinci 2026 (marge environ 15 %). Le prix exact dépend des gares d’entrée et de sortie.</p>');
+      const c1 = km * 0.105, c2 = c1 * 1.55;
+      out.insertAdjacentHTML('beforeend', '<p>💶 Péage estimé (≈ ' + Math.round(km) + ' km à péage) : <b>classe 1 ≈ ' + euro(c1) + '</b> · <b>classe 2 ≈ ' + euro(c2) + '</b></p><p class="doux">Estimation d’après les grilles officielles 2026 (marge environ 15 %). Le prix exact dépend des gares d’entrée et de sortie.</p>');
     } catch (_) { /* estimation facultative */ }
   };
   const render = (target, r, mode) => {
