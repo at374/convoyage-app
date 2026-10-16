@@ -63,17 +63,24 @@
   const gareProche = (P, lat, lon, max) => { let bi = -1, bd = max; P.g.forEach((g, i) => g[1].forEach(p => { const d = dist(lat, lon, p[0], p[1]); if (d < bd) { bd = d; bi = i; } })); return bi; };
   const prixExact = (P, sh, tms, km) => {
     const f = tms[0], l = tms[tms.length - 1];
-    const p0 = sh[f.begin_shape_index], p1 = sh[l.end_shape_index];
-    if (!p0 || !p1) return null;
-    const e = gareProche(P, p0[0], p0[1], 1.5);
-    let s = gareProche(P, p1[0], p1[1], 1.5);
-    if (s < 0) for (let k = l.end_shape_index; k >= f.begin_shape_index && s < 0; k--) s = gareProche(P, sh[k][0], sh[k][1], 0.15);
-    if (e < 0 || s < 0 || e === s) return null;
-    const v = P.prix.get(Math.min(e, s) * 1000 + Math.max(e, s));
-    if (!v) return null;
-    const q = v[2] / km;
-    if (q < 0.6 || q > 2.4) return null;
-    return { e: joli(P.g[e][0]), s: joli(P.g[s][0]), c1: v[0], c2: v[1] };
+    const i0 = f.begin_shape_index, i1 = l.end_shape_index;
+    if (!sh[i0] || !sh[i1]) return null;
+    const hits = [];
+    let der = -2;
+    for (let k = i0; k <= i1; k++) { const g = gareProche(P, sh[k][0], sh[k][1], 0.4); if (g >= 0 && g !== der) { hits.push({ g, k }); der = g; } }
+    if (!hits.length) return null;
+    const e = hits[0];
+    const lon = (a, b) => { let t = 0; for (let k = a; k < b; k++) t += dist(sh[k][0], sh[k][1], sh[k + 1][0], sh[k + 1][1]); return t; };
+    for (let h = hits.length - 1; h >= 1; h--) {
+      const s = hits[h];
+      if (s.g === e.g) continue;
+      const v = P.prix.get(Math.min(e.g, s.g) * 1000 + Math.max(e.g, s.g));
+      if (!v) continue;
+      const q = v[2] / Math.max(1, lon(e.k, s.k));
+      if (q < 0.7 || q > 1.9) continue;
+      return { e: joli(P.g[e.g][0]), s: joli(P.g[s.g][0]), c1: v[0], c2: v[1], reste: lon(s.k, i1) };
+    }
+    return null;
   };
   const estimerPeage = async (r, out) => {
     try {
@@ -91,8 +98,13 @@
       try {
         const P = await chargerPeages();
         const x = prixExact(P, dec6(leg.shape), tms, km);
-        if (x) {
+        if (x && x.reste < 3) {
           out.insertAdjacentHTML('beforeend', '<p>💶 Péage exact : <b>classe 1 : ' + euro(x.c1) + '</b> · <b>classe 2 : ' + euro(x.c2) + '</b></p><p class="doux">' + x.e + ' → ' + x.s + ' · tarifs officiels ' + P.v + '.</p>');
+          return;
+        }
+        if (x) {
+          const r1 = x.reste * 0.105;
+          out.insertAdjacentHTML('beforeend', '<p>💶 Péage ≈ <b>classe 1 : ' + euro(x.c1 + r1) + '</b> · <b>classe 2 : ' + euro(x.c2 + r1 * 1.55) + '</b></p><p class="doux">Exact jusqu’à ' + x.s + ' (' + euro(x.c1) + ' / ' + euro(x.c2) + ', tarifs officiels ' + P.v + '), plus environ ' + Math.round(x.reste) + ' km de péage d’un autre réseau estimés.</p>');
           return;
         }
       } catch (_) { /* repli sur l’estimation */ }
