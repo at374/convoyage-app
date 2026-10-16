@@ -48,6 +48,33 @@
     const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="position:absolute;left:0;top:0;width:100%;height:100%">' + (B ? '<polyline points="' + d(B) + '" fill="none" stroke="#1a9850" stroke-width="4" stroke-dasharray="9 6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>' : '') + '<polyline points="' + d(A) + '" fill="none" stroke="#1e63d8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="7" fill="#1a9850" stroke="#fff" stroke-width="2"/><circle cx="' + b[0].toFixed(1) + '" cy="' + b[1].toFixed(1) + '" r="7" fill="#d93025" stroke="#fff" stroke-width="2"/></svg>';
     return '<div style="position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:8px;margin-top:8px;background:#ddd">' + tuiles + svg + '<span style="position:absolute;right:2px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div><p class="doux">' + (B ? 'Bleu : avec péages · Vert pointillé : sans péage.' : 'Bleu : trajet Google (identique avec ou sans péage).') + '</p>';
   };
+  const dec6 = s => { const o = []; let i = 0, la = 0, lo = 0; while (i < s.length) { let b, sh = 0, rs = 0; do { b = s.charCodeAt(i++) - 63; rs |= (b & 31) << sh; sh += 5; } while (b >= 32); la += (rs & 1) ? ~(rs >> 1) : (rs >> 1); sh = 0; rs = 0; do { b = s.charCodeAt(i++) - 63; rs |= (b & 31) << sh; sh += 5; } while (b >= 32); lo += (rs & 1) ? ~(rs >> 1) : (rs >> 1); o.push([la / 1e6, lo / 1e6]); } return o; };
+  const dist = (a, b, c, d) => { const R = 6371, t = Math.PI / 180, x = (c - a) * t, y = (d - b) * t, h = Math.sin(x / 2) ** 2 + Math.cos(a * t) * Math.cos(c * t) * Math.sin(y / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
+  const joli = s => String(s).toLowerCase().replace(/(^|[\s\-\/'])([a-zà-ÿ])/g, (m, p, c) => p + c.toUpperCase());
+  let PEAGES = null;
+  const chargerPeages = async () => {
+    if (PEAGES) return PEAGES;
+    const j = await fetch('peages-aprr.json').then(r => r.json());
+    const prix = new Map();
+    for (const s of j.p.split(';')) { const [a, b, c1, c2, d] = s.split(','); const x = parseInt(a, 36), y = parseInt(b, 36); prix.set(Math.min(x, y) * 1000 + Math.max(x, y), [c1 / 10, c2 / 10, Number(d)]); }
+    PEAGES = { g: j.g, prix, v: j.v };
+    return PEAGES;
+  };
+  const gareProche = (P, lat, lon, max) => { let bi = -1, bd = max; P.g.forEach((g, i) => g[1].forEach(p => { const d = dist(lat, lon, p[0], p[1]); if (d < bd) { bd = d; bi = i; } })); return bi; };
+  const prixExact = (P, sh, tms, km) => {
+    const f = tms[0], l = tms[tms.length - 1];
+    const p0 = sh[f.begin_shape_index], p1 = sh[l.end_shape_index];
+    if (!p0 || !p1) return null;
+    const e = gareProche(P, p0[0], p0[1], 1.5);
+    let s = gareProche(P, p1[0], p1[1], 1.5);
+    if (s < 0) for (let k = l.end_shape_index; k >= f.begin_shape_index && s < 0; k--) s = gareProche(P, sh[k][0], sh[k][1], 0.15);
+    if (e < 0 || s < 0 || e === s) return null;
+    const v = P.prix.get(Math.min(e, s) * 1000 + Math.max(e, s));
+    if (!v) return null;
+    const q = v[2] / km;
+    if (q < 0.6 || q > 2.4) return null;
+    return { e: joli(P.g[e][0]), s: joli(P.g[s][0]), c1: v[0], c2: v[1] };
+  };
   const estimerPeage = async (r, out) => {
     try {
       const A = decode(r.polyline);
@@ -57,9 +84,18 @@
       const j = await res.json();
       const leg = j && j.trip && j.trip.legs && j.trip.legs[0];
       if (!leg) return;
+      const tms = (leg.maneuvers || []).filter(m => m.toll);
       let km = 0;
-      for (const m of leg.maneuvers || []) if (m.toll) km += Number(m.length) || 0;
+      for (const m of tms) km += Number(m.length) || 0;
       if (km < 1) return;
+      try {
+        const P = await chargerPeages();
+        const x = prixExact(P, dec6(leg.shape), tms, km);
+        if (x) {
+          out.insertAdjacentHTML('beforeend', '<p>💶 Péage exact : <b>classe 1 : ' + euro(x.c1) + '</b> · <b>classe 2 : ' + euro(x.c2) + '</b></p><p class="doux">' + x.e + ' → ' + x.s + ' · tarifs officiels ' + P.v + '.</p>');
+          return;
+        }
+      } catch (_) { /* repli sur l’estimation */ }
       const c1 = km * 0.105, c2 = c1 * 1.55;
       out.insertAdjacentHTML('beforeend', '<p>💶 Péage estimé (≈ ' + Math.round(km) + ' km à péage) : <b>classe 1 ≈ ' + euro(c1) + '</b> · <b>classe 2 ≈ ' + euro(c2) + '</b></p><p class="doux">Estimation d’après les grilles officielles 2026 (marge environ 15 %). Le prix exact dépend des gares d’entrée et de sortie.</p>');
     } catch (_) { /* estimation facultative */ }
