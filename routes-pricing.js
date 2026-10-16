@@ -48,7 +48,19 @@
     const body = { origin: place(opts.origin), destination: place(opts.destination), mode };
     if (opts.departureTime) body.departureTime = opts.departureTime;
     const res = await fetch(opts.endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, 'X-Supabase-Api-Key': opts.supabaseApiKey }, body: JSON.stringify(body) });
-    if (!res.ok) throw new Error(res.status === 401 ? 'Reconnecte-toi puis réessaie' : 'Service itinéraires indisponible');
+    if (!res.ok) {
+      const detail = await res.json().catch(() => null);
+      const code = typeof detail?.code === 'string' ? detail.code : '';
+      const message = {
+        missing_session: 'Session absente : reconnecte-toi.',
+        missing_public_key: 'Configuration de connexion absente.',
+        supabase_not_configured: 'Configuration Supabase à corriger.',
+        supabase_session_rejected: 'Session Supabase refusée : déconnecte-toi puis reconnecte-toi.',
+        supabase_timeout: 'Vérification Supabase trop lente : réessaie.',
+        supabase_unreachable: 'Supabase est momentanément inaccessible.'
+      }[code];
+      throw new Error(message || (res.status === 401 ? 'Connexion à vérifier.' : 'Service itinéraires indisponible'));
+    }
     return normalizeGoogle(await res.json(), mode);
   }
   root.CPRoutes = { estimate, normalizeGoogle, MODES };
