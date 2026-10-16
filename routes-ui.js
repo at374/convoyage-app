@@ -45,7 +45,8 @@
     const label = Array.from(host.querySelectorAll('p')).map(p => p.textContent || '').find(t => t.includes('🟢') && t.includes('🔴'));
     const match = label && label.match(/🟢\s*(.+?)\s*→\s*🔴\s*(.+?)(?:\.|$)/);
     if (!match) return;
-    addBox(host, 'routesGoogleEstimate', match[1].trim(), match[2].trim());
+    const contenu = host.querySelector('.popVolBoite') || host;
+    addBox(contenu, 'routesGoogleEstimate', match[1].trim(), match[2].trim());
   };
   const refresh = () => { addMissionPanel(); addEstimatePanel(); };
   new MutationObserver(refresh).observe(document.documentElement, { childList: true, subtree: true });
