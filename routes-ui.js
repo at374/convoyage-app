@@ -1,4 +1,4 @@
-// Convoyage Ultra — panneau des données Routes API dans la fiche mission.
+// Convoyage Ultra — panneau des données Routes API dans les fiches et l’estimation.
 (function () {
   'use strict';
   const endpoint = 'https://convoyage-routes-691310598055.europe-west1.run.app/api/routes/estimate';
@@ -19,24 +19,35 @@
     const p = prix.status === 'estimation' ? '≈ ' + euro(prix.amount) : prix.status === 'aucun_peage' ? 'aucun' : 'non disponible';
     target.innerHTML = '<p>🛣 <b>' + (r.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + (r.durationMinutes ?? '—') + ' min</b></p><p>💶 ' + libelle + ' : <b>' + p + '</b></p><p class="doux">Données Google Routes : estimation, à vérifier avant départ.</p>';
   };
-  const addPanel = () => {
-    const host = document.getElementById('feuilleContenu');
-    if (!host || document.getElementById('routesGoogle')) return;
-    const m = missionActive(); if (!m) return;
-    const origin = point(m, 'origin'), destination = point(m, 'destination');
-    if (!origin || !destination) return;
+  const addBox = (host, id, origin, destination, departureTime) => {
+    if (!host || document.getElementById(id) || !origin || !destination) return;
     const box = document.createElement('div');
-    box.id = 'routesGoogle'; box.className = 'carte';
-    box.innerHTML = '<b>🧭 Trajet réel Google</b><p class="doux">Calcule distance routière, durée et estimation.</p><button type="button" data-rmode="voiture">🚗 Voiture et péages</button> <button type="button" class="second" data-rmode="transport">🚌 Transports</button><div id="routesResult" class="doux" style="margin-top:8px"></div>';
-    host.insertBefore(box, host.querySelector('.renta') || null);
+    box.id = id; box.className = 'carte';
+    box.innerHTML = '<b>🧭 Trajet réel Google</b><p class="doux">Distance routière, durée et péage estimé.</p><button type="button" data-rmode="voiture">🚗 Voiture et péages</button> <button type="button" class="second" data-rmode="transport">🚌 Transports</button><div class="doux" data-routes-result style="margin-top:8px"></div>';
+    host.appendChild(box);
     box.querySelectorAll('button[data-rmode]').forEach(b => b.onclick = async () => {
-      const out = box.querySelector('#routesResult'), mode = b.dataset.rmode;
-      const s = session(), c = config(); out.textContent = 'Calcul en cours…';
+      const out = box.querySelector('[data-routes-result]'), mode = b.dataset.rmode;
+      const s = session(), c = config(); out.textContent = 'Calcul Google en cours…';
       try {
-        const r = await window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime: m.pickup_start || undefined });
+        const r = await window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime });
         render(out, r, mode === 'voiture' ? 'DRIVE' : 'TRANSIT');
       } catch (e) { out.textContent = String(e.message || e); }
     });
   };
-  new MutationObserver(addPanel).observe(document.documentElement, { childList: true, subtree: true });
+  const addMissionPanel = () => {
+    const host = document.getElementById('feuilleContenu'), m = missionActive();
+    if (!host || !m) return;
+    addBox(host, 'routesGoogleMission', point(m, 'origin'), point(m, 'destination'), m.pickup_start || undefined);
+  };
+  const addEstimatePanel = () => {
+    const host = document.getElementById('popVol');
+    if (!host || document.getElementById('routesGoogleEstimate')) return;
+    const label = Array.from(host.querySelectorAll('p')).map(p => p.textContent || '').find(t => t.includes('🟢') && t.includes('🔴'));
+    const match = label && label.match(/🟢\s*(.+?)\s*→\s*🔴\s*(.+?)(?:\.|$)/);
+    if (!match) return;
+    addBox(host, 'routesGoogleEstimate', match[1].trim(), match[2].trim());
+  };
+  const refresh = () => { addMissionPanel(); addEstimatePanel(); };
+  new MutationObserver(refresh).observe(document.documentElement, { childList: true, subtree: true });
+  refresh();
 })();
