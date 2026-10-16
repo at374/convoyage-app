@@ -300,3 +300,19 @@ html[data-style]:not([data-style="classique"]):not([data-style="jour"]){--rNeg:#
 /* V159 : suites possibles après un retour (chaînage) */
 .retourSuite { margin-top: 6px; padding: 4px 0 4px 8px; border-left: 2px dashed #c9a227; font-size: 13px; line-height: 1.4; }
 .retourSuite .doux { display: block; }
+
+/* V178 : étiquettes de couleur (puces) dans « Retours possibles » */
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+.chip{display:inline-block;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:700;line-height:1.35;border:1px solid rgba(0,0,0,.12);opacity:1}
+.chip.c-trj{background:#e0e7ff;color:#1e3a8a;font-size:15px}
+.chip.c-prix{background:#dcfce7;color:#14532d;font-size:15px}
+.chip.c-at{background:#ffedd5;color:#9a3412}
+.chip.c-tr{background:#ede9fe;color:#5b21b6}
+.chip.c-di{background:#e0f2fe;color:#075985}
+.chip.c-co{background:#fae8ff;color:#86198f}
+.chip.c-net{background:#fef3c7;color:#78350f}
+.chip.c-ph{background:#fde68a;color:#78350f}
+.chip.c-ok{background:#bbf7d0;color:#14532d}
+.chip.c-ko{background:#fecaca;color:#7f1d1d}
+.chip.c-es{background:#e5e7eb;color:#374151;font-weight:600}
+.retourSuite .chips{margin-top:4px}.retourSuite{margin-top:8px}
