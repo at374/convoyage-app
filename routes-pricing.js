@@ -23,7 +23,8 @@
     const dMin = r.duration ? Math.ceil(parseFloat(r.duration) / 60) : null;
     const peageDetecte = mode === 'DRIVE' && !toll && spMin != null && dMin != null && (spMin - dMin >= 5 || (spKm != null && Number.isFinite(r.distanceMeters) && Math.abs(spKm - r.distanceMeters / 1000) >= 3));
     return {
-      sansPeage: spMin != null ? { distanceKm: spKm, durationMinutes: spMin } : null,
+      sansPeage: spMin != null ? { distanceKm: spKm, durationMinutes: spMin, polyline: (sp && sp.polyline) || null } : null,
+      polyline: (r.polyline && r.polyline.encodedPolyline) || null,
       distanceKm: Number.isFinite(r.distanceMeters) ? Math.round(r.distanceMeters / 100) / 10 : null,
       durationMinutes: r.duration ? Math.ceil(parseFloat(r.duration) / 60) : null,
       toll: mode === 'DRIVE' ? (!toll ? (peageDetecte ? { status: 'prix_inconnu' } : { status: 'aucun_peage' }) : tollPrice ? { status: 'estimation', ...tollPrice } : { status: 'prix_inconnu' }) : { status: 'non_applicable' },
