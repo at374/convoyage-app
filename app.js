@@ -818,20 +818,21 @@
       let r2; try { r2 = RT.retours(src, dispoR, etat.reglages, { acceptees: acceptees.concat(deja) }); } catch (_) { return []; }
       return r2.compatibles.filter(z => !deja.some(d => RT.cle(d) === RT.cle(z.mission))).slice(0, 2).map(z => ({ x: z, src, suite: suites(z.mission, deja.concat([z.mission]), prof + 1) }));
     };
-    // V178 : chaque information est une étiquette de couleur (puces) : plus lisible.
-    const chip = (cl, h) => '<span class="chip ' + cl + '">' + h + '</span>';
+    // V179 : étiquettes titrées, sections encadrées (Quand / Transport / Rentabilité), une carte par suggestion.
+    const chip = (cl, lab, h) => '<span class="chip ' + cl + '">' + (lab ? '<i>' + lab + '</i>' : '') + h + '</span>';
+    const sect = (cl, titre, h) => '<span class="sect ' + cl + '"><span class="sectT">' + titre + '</span>' + h + '</span>';
     const ICO = { covoiturage: '🚗', bus: '🚌', train: '🚆', taxi: '🚕' };
-    const puces = (x, c, p, avecMode) => {
-      const lia = x.liaison, rr = x.rentabilite, rows = [];
-      rows.push('<span class="chips">' + chip('c-tr', (ICO[lia.mode] || '🚆') + ' ' + esc(avecMode ? (lia.mode || 'liaison') : p.to_city || 'arrivée') + (avecMode ? ' : ' + esc(p.to_city || 'arrivée') : '') + ' → ' + esc(c.from_city || 'départ')) + chip('c-di', '≈ ' + esc(lia.km) + ' km · ' + esc(duree(lia.heures))) + chip('c-co', esc(euros(lia.cout))) + '</span>');
-      const n = []; if (rr && rr.connu) { n.push(chip('c-net', '💶 net ≈ ' + esc(euros(rr.net)))); if (rr.parHeure) n.push(chip('c-ph', esc(euros(rr.parHeure)) + '/h')); } else if (avecMode) n.push(chip('c-net', '💶 prix inconnu'));
-      if (x.rapprocheKm != null) n.push(x.rapprocheKm > 0 ? chip('c-ok', 'te rapproche de chez toi de ≈ ' + esc(x.rapprocheKm) + ' km') : chip('c-ko', 't’éloigne de chez toi de ≈ ' + esc(-x.rapprocheKm) + ' km'));
-      if (n.length) rows.push('<span class="chips">' + n.join('') + '</span>');
-      return rows.join('');
+    const puces = (x, c, p) => {
+      const lia = x.liaison, rr = x.rentabilite, ic = ICO[lia.mode] || '🚆';
+      const tr = sect('s-tr', ic + ' Transport pour y aller', '<span class="chips">' + chip('c-mo', 'Moyen', esc(lia.mode || 'liaison')) + chip('c-tr', 'De → À', esc(p.to_city || 'arrivée') + ' → ' + esc(c.from_city || 'départ')) + chip('c-di', 'Distance', '≈ ' + esc(lia.km) + ' km') + chip('c-du', 'Durée', esc(duree(lia.heures))) + chip('c-co', 'Coût', esc(euros(lia.cout))) + '</span>');
+      const n = []; if (rr && rr.connu) { n.push(chip('c-net', 'Net', '≈ ' + esc(euros(rr.net)))); if (rr.parHeure) n.push(chip('c-ph', 'Par heure', esc(euros(rr.parHeure)) + '/h')); } else n.push(chip('c-net', 'Net', 'prix inconnu'));
+      if (x.rapprocheKm != null) n.push(Math.abs(x.rapprocheKm) < 1 ? chip('c-es', 'Position', 'même distance de chez toi') : x.rapprocheKm > 0 ? chip('c-ok', 'Position', 'te rapproche de chez toi de ≈ ' + esc(x.rapprocheKm) + ' km') : chip('c-ko', 'Position', 't’éloigne de chez toi de ≈ ' + esc(-x.rapprocheKm) + ' km'));
+      return tr + sect('s-re', '💶 Rentabilité', '<span class="chips">' + n.join('') + '</span>');
     };
-    const suiteHtml = (s, prof) => { const z = s.x, c = z.mission, p = s.src; return `<div class="retourSuite" style="margin-left:${prof * 12}px"><span class="chips"><span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span>${chip('c-trj', '↪ puis ' + esc(trajet(c)))}${chip('c-prix', c.fee != null ? esc(euros(c.fee)) : 'prix ?')}</span><span class="chips">${quandHtml(c)}${z.attenteH ? chip('c-at', 'attente ≈ ' + esc(duree(z.attenteH))) : ''}</span>${puces(z, c, p, false)}</div>${s.suite.map(u => suiteHtml(u, prof + 1)).join('')}`; };
+    const quand = (c, z) => sect('s-qd', '📅 Quand', '<span class="chips">' + quandHtml(c) + (z.attenteH ? chip('c-at', 'Attente', '≈ ' + esc(duree(z.attenteH))) : '') + '</span>');
+    const suiteHtml = (s, prof) => { const z = s.x, c = z.mission, p = s.src; return `<div class="retourSuite" style="margin-left:${prof * 10}px"><span class="sectT suiteT">↪ Étape ${prof + 1} : mission possible ensuite</span><span class="chips"><span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span>${chip('c-trj', 'Trajet', esc(trajet(c)))}${chip('c-prix', 'Prix', c.fee != null ? esc(euros(c.fee)) : '?')}</span>${quand(c, z)}${puces(z, c, p)}</div>${s.suite.map(u => suiteHtml(u, prof + 1)).join('')}`; };
     const chaine = (x, c, i) => (i < 4 && x.statut === 'compatible') ? suites(c, [m, c], 1).map(s => suiteHtml(s, 1)).join('') : '';
-    const item = (x, i) => { const c = x.mission; return `<div class="retourBloc"><button class="retour${clsPlat(c.platform)}" data-retour="${i}"><span class="chips"><span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span>${chip('c-trj', esc(trajet(c)))}${chip('c-prix', c.fee != null ? esc(euros(c.fee)) : 'prix ?')}</span><span class="chips">${quandHtml(c)}${x.attenteH ? chip('c-at', 'attente ≈ ' + esc(duree(x.attenteH))) : ''}</span>${puces(x, c, m, true)}${x.estimations.length ? `<span class="chips">${chip('c-es', 'estimation : ' + esc(x.estimations.join(', ')))}</span>` : ''}</button>${x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department, 'r|' + (m.id || m.external_id) + '|' + (c.id || c.external_id)) : ''}${chaine(x, c, i)}</div>`; };
+    const item = (x, i) => { const c = x.mission; return `<div class="retourBloc"><button class="retour${clsPlat(c.platform)}" data-retour="${i}"><span class="chips"><span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span>${chip('c-trj', 'Trajet', esc(trajet(c)))}${chip('c-prix', 'Prix', c.fee != null ? esc(euros(c.fee)) : '?')}</span>${quand(c, x)}${puces(x, c, m)}${x.estimations.length ? `<span class="chips">${chip('c-es', 'Estimation', esc(x.estimations.join(', ')))}</span>` : ''}</button>${x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department, 'r|' + (m.id || m.external_id) + '|' + (c.id || c.external_id)) : ''}${chaine(x, c, i)}</div>`; };
     const n = res.compatibles.length, r = etat.reglages || {};
     const ecartes = [[res.autreJour, 'un autre jour'], [res.tropTot, 'partent trop tôt'], [res.conflits, 'chevauchent ton agenda'], [res.horsZone, 'trop loin'], [res.tropTard, 'attente trop longue'], [res.passees, 'déjà passées']].filter(([k]) => k).map(([k, t]) => k + ' ' + t).join(', ');
     return `<div class="carte" id="retours"><h2>🔁 Retours possibles après cette mission</h2>
