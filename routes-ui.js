@@ -29,7 +29,7 @@
       const out = box.querySelector('[data-routes-result]'), mode = b.dataset.rmode;
       const s = session(), c = config(); out.textContent = 'Calcul Google en cours…';
       try {
-        const r = await window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime });
+        const r = await window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, refreshToken: s?.refresh_token, expiresAt: s?.expires_at, email: s?.email, userId: s?.user_id, supabaseUrl: c?.url, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime });
         render(out, r, mode === 'voiture' ? 'DRIVE' : 'TRANSIT');
       } catch (e) { out.textContent = String(e.message || e); }
     });
