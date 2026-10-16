@@ -120,14 +120,15 @@
     const libelle = mode === 'DRIVE' ? 'Péage' : 'Transport';
     const p = prix.status === 'estimation' ? '≈ ' + euro(prix.amount) : prix.status === 'aucun_peage' ? 'aucun' : (prix.status === 'prix_inconnu' && mode === 'DRIVE') ? 'oui' : 'non disponible';
     target.innerHTML = '<p>🛣 <b>' + (r.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.durationMinutes) + '</b></p><p>💶 ' + libelle + ' : <b>' + p + '</b></p>' + (r.sansPeage ? '<p>🛣 Sans péage : <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b></p>' : '') + '<p class="doux">Données Google Routes : estimation, à vérifier avant départ.</p>';
-    if (mode === 'DRIVE' && r.polyline) { try { target.insertAdjacentHTML('beforeend', carte(r)); } catch (_) { /* carte facultative */ } estimerPeage(r, target); }
+    if (mode === 'DRIVE' && r.polyline) { try { target.insertAdjacentHTML('beforeend', carte(r) + (target.dataset.villes ? '<p class="doux" style="margin:6px 0">' + target.dataset.villes + '</p>' : '')); } catch (_) { /* carte facultative */ } estimerPeage(r, target); }
   };
-  const addBox = (host, id, origin, destination, departureTime) => {
+  const addBox = (host, id, origin, destination, departureTime, villes) => {
     if (!host || document.getElementById(id) || !origin || !destination) return;
     const box = document.createElement('div');
     box.id = id; box.className = 'carte';
     box.innerHTML = '<b>🧭 Trajet réel Google</b><p class="doux">Distance routière, durée et péage estimé.</p><button type="button" data-rmode="voiture">🚗 Voiture et péages</button> <button type="button" class="second" data-rmode="transport">🚌 Transports</button><div class="doux" data-routes-result style="margin-top:8px"></div>' + liens(origin, destination);
     host.appendChild(box);
+    if (villes) box.querySelector('[data-routes-result]').dataset.villes = villes;
     box.querySelectorAll('button[data-rmode]').forEach(b => b.onclick = async () => {
       const out = box.querySelector('[data-routes-result]'), mode = b.dataset.rmode;
       const s = session(), c = config(); out.textContent = 'Calcul Google en cours…';
@@ -149,7 +150,11 @@
     const match = label && label.match(/🟢\s*(.+?)\s*→\s*🔴\s*(.+?)(?:\.|$)/);
     if (!match) return;
     const contenu = host.querySelector('.popVolBoite') || host;
-    addBox(contenu, 'routesGoogleEstimate', match[1].trim(), match[2].trim());
+    // V177 : dans la fenêtre du trajet, on ne garde que l’encart Google ; sous la carte : point vert (départ) et point rouge (arrivée).
+    if (!document.getElementById('routesGoogleStyle')) { const st = document.createElement('style'); st.id = 'routesGoogleStyle'; st.textContent = '.popVolBoite.soloGoogle>*:not(#popVolX):not(#routesGoogleEstimate){display:none!important}'; document.head.appendChild(st); }
+    const e2 = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    addBox(contenu, 'routesGoogleEstimate', match[1].trim(), match[2].trim(), undefined, '🟢 ' + e2(match[1].trim()) + ' → 🔴 ' + e2(match[2].trim()));
+    contenu.classList.add('soloGoogle');
   };
   const refresh = () => { addMissionPanel(); addEstimatePanel(); };
   new MutationObserver(refresh).observe(document.documentElement, { childList: true, subtree: true });
