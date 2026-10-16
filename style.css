@@ -200,7 +200,7 @@ html[data-style]:not([data-style="classique"]) .trajet .vA,:root[data-theme="dar
 .mission .meta .adr b{font-size:16px;font-weight:800}
 .mission .meta .kms{font-size:17px}.mission .meta .kms b{font-weight:900}
 .mission .meta .loueur{font-size:16px}.mission .meta .loueur b{font-weight:800}
-.iconeCarte{display:inline-block;font-size:22px;margin-left:8px;padding:2px 6px;border-radius:8px;background:rgba(255,255,255,.35);cursor:pointer;vertical-align:middle}
+.iconeCarte{display:inline-block;font-size:38px;line-height:1.1;margin-left:8px;padding:6px 12px;border-radius:12px;background:rgba(255,255,255,.35);cursor:pointer;vertical-align:middle}.iconeCarte .iconeTxt{display:block;font-size:12px;font-weight:700;line-height:1.2;margin-top:2px}
 
 /* V141 : prise en charge / livraison et villes un peu plus petites ; facturation en couleurs, caractères plus grands */
 #ecran[data-vue="factures"] .tableau{font-size:17px}
