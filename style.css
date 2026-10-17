@@ -356,3 +356,67 @@ html:root[data-style="ultra"] #ecran .grilleFiltres input:focus,html:root[data-s
 #ecran .filtres select:disabled,#ecran .filtres input:disabled{opacity:.55}
 html:root[data-style="ultra"] #ecran .filtres input,html:root[data-style="ultra"] #ecran .filtres select{background:linear-gradient(180deg,#241a06,#120d03);border:1.5px solid #8a6a14;box-shadow:inset 0 1px 0 rgba(255,225,140,.18)}
 html:root[data-style="ultra"] #ecran .filtres input:focus,html:root[data-style="ultra"] #ecran .filtres select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--lueur)}
+
+/* V194 : tous les champs de filtre ont le même style « relief », calculé à partir de la palette choisie (il change avec le style) */
+html:root #ecran .filtres input,
+html:root #ecran .filtres select,
+html:root #ecran .ligneFiltres select,
+html:root #ecran .ligneFiltres input,
+html:root #ecran .lignePos select,
+html:root #ecran .lignePos input,
+html:root #ecran .grilleFiltres input,
+html:root #ecran .grilleFiltres select,
+html:root #ecran .plusFiltres input,
+html:root #ecran .plusFiltres select{font-size:16px;line-height:1.3;min-height:48px;padding:12px 14px;color:var(--texte);background:linear-gradient(180deg,color-mix(in srgb,var(--champ,var(--carte)) 86%,var(--accent)),var(--champ,var(--carte)));border:1.5px solid color-mix(in srgb,var(--accent) 50%,var(--ligne));box-shadow:inset 0 1px 0 color-mix(in srgb,var(--accent) 22%,transparent)}
+html:root #ecran .filtres input:focus,
+html:root #ecran .filtres select:focus,
+html:root #ecran .ligneFiltres select:focus,
+html:root #ecran .ligneFiltres input:focus,
+html:root #ecran .lignePos select:focus,
+html:root #ecran .lignePos input:focus,
+html:root #ecran .grilleFiltres input:focus,
+html:root #ecran .grilleFiltres select:focus,
+html:root #ecran .plusFiltres input:focus,
+html:root #ecran .plusFiltres select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--lueur,transparent)}
+html:root #ecran .filtres input:disabled,
+html:root #ecran .filtres select:disabled,
+html:root #ecran .ligneFiltres select:disabled,
+html:root #ecran .ligneFiltres input:disabled,
+html:root #ecran .lignePos select:disabled,
+html:root #ecran .lignePos input:disabled,
+html:root #ecran .grilleFiltres input:disabled,
+html:root #ecran .grilleFiltres select:disabled,
+html:root #ecran .plusFiltres input:disabled,
+html:root #ecran .plusFiltres select:disabled{opacity:.55}
+html:root[data-style] #ecran .filtres input,
+html:root[data-style] #ecran .filtres select,
+html:root[data-style] #ecran .ligneFiltres select,
+html:root[data-style] #ecran .ligneFiltres input,
+html:root[data-style] #ecran .lignePos select,
+html:root[data-style] #ecran .lignePos input,
+html:root[data-style] #ecran .grilleFiltres input,
+html:root[data-style] #ecran .grilleFiltres select,
+html:root[data-style] #ecran .plusFiltres input,
+html:root[data-style] #ecran .plusFiltres select{font-size:16px;line-height:1.3;min-height:48px;padding:12px 14px;color:var(--texte);background:linear-gradient(180deg,color-mix(in srgb,var(--champ,var(--carte)) 86%,var(--accent)),var(--champ,var(--carte)));border:1.5px solid color-mix(in srgb,var(--accent) 50%,var(--ligne));box-shadow:inset 0 1px 0 color-mix(in srgb,var(--accent) 22%,transparent)}
+html:root[data-style] #ecran .filtres input:focus,
+html:root[data-style] #ecran .filtres select:focus,
+html:root[data-style] #ecran .ligneFiltres select:focus,
+html:root[data-style] #ecran .ligneFiltres input:focus,
+html:root[data-style] #ecran .lignePos select:focus,
+html:root[data-style] #ecran .lignePos input:focus,
+html:root[data-style] #ecran .grilleFiltres input:focus,
+html:root[data-style] #ecran .grilleFiltres select:focus,
+html:root[data-style] #ecran .plusFiltres input:focus,
+html:root[data-style] #ecran .plusFiltres select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--lueur,transparent)}
+html:root[data-style] #ecran .filtres input:disabled,
+html:root[data-style] #ecran .filtres select:disabled,
+html:root[data-style] #ecran .ligneFiltres select:disabled,
+html:root[data-style] #ecran .ligneFiltres input:disabled,
+html:root[data-style] #ecran .lignePos select:disabled,
+html:root[data-style] #ecran .lignePos input:disabled,
+html:root[data-style] #ecran .grilleFiltres input:disabled,
+html:root[data-style] #ecran .grilleFiltres select:disabled,
+html:root[data-style] #ecran .plusFiltres input:disabled,
+html:root[data-style] #ecran .plusFiltres select:disabled{opacity:.55}
+html:root[data-style] #ecran .filtres input::placeholder,html:root[data-style] #ecran .ligneFiltres input::placeholder,html:root[data-style] #ecran .lignePos input::placeholder,html:root[data-style] #ecran .grilleFiltres input::placeholder,html:root[data-style] #ecran .plusFiltres input::placeholder{color:var(--doux);opacity:1}
+html:root[data-style] #ecran .filtres select:invalid,html:root[data-style] #ecran .ligneFiltres select:invalid,html:root[data-style] #ecran .lignePos select:invalid,html:root[data-style] #ecran .grilleFiltres select:invalid,html:root[data-style] #ecran .plusFiltres select:invalid{color:var(--doux)}
