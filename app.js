@@ -388,7 +388,7 @@
   // V154 : « Disponible (vérifié le JJ/MM à HH:MM) » = dernière lecture de la plateforme ; véhicule et énergie avec symboles.
   const cleP = x => String(x || '').toLowerCase().replace(/[^a-z]/g, '');
   const verifLe = m => { const s = (etat.sources || []).find(x => cleP(x.platform) === cleP(m.platform)); const t = s ? Date.parse(s.lu_le || '') : NaN; if (!Number.isFinite(t)) return 'Disponible'; const d = new Date(t); return 'Disponible (vérifié le ' + d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t) + ')'; };
-  const vehInfo = m => { const v = m.vehicle; if (v && typeof v === 'object') return { type: [v.category || v.type, v.model, v.gearbox].filter(Boolean).map(x => String(x).trim()).join(' · '), en: String(v.energy || '').trim() };   // V189 : catégorie · modèle · boîte return { type: typeof v === 'string' ? v.trim() : '', en: '' }; };
+  const vehInfo = m => { const v = m.vehicle; if (v && typeof v === 'object') return { type: [v.category || v.type, v.model, v.gearbox].filter(Boolean).map(x => String(x).trim()).join(' · '), en: String(v.energy || '').trim() }; return { type: typeof v === 'string' ? v.trim() : '', en: '' }; };
   const adrHtml = m => (m.platform === 'DriiveMe' && (m.origin_address || m.destination_address)) ? '<div class="adrCarte">' + (m.origin_address ? '<div>📍 Départ : <b>' + esc(m.origin_address) + '</b></div>' : '') + (m.destination_address ? '<div>🏁 Arrivée : <b>' + esc(m.destination_address) + '</b></div>' : '') + '</div>' : '';   // V189 : adresses exactes lues sur la page détail DriiveMe
   const vehHtml = m => {
     const { type, en } = vehInfo(m); const n = en.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); let ic = '⛽', cl = 'inc';
