@@ -105,21 +105,16 @@
           out.insertAdjacentHTML('beforeend', '<p>💶 Péage exact : <b>classe 1 : ' + euro(x.c1) + '</b> · <b>classe 2 : ' + euro(x.c2) + '</b></p><p class="doux">' + x.e + ' → ' + x.s + ' · tarifs officiels ' + P.v + '.</p>');
           return;
         }
-        if (x) {
-          const r1 = x.reste * 0.105;
-          out.insertAdjacentHTML('beforeend', '<p>💶 Péage ≈ <b>classe 1 : ' + euro(x.c1 + r1) + '</b> · <b>classe 2 : ' + euro(x.c2 + r1 * 1.55) + '</b></p><p class="doux">Exact jusqu’à ' + x.s + ' (' + euro(x.c1) + ' / ' + euro(x.c2) + ', tarifs officiels ' + P.v + '), plus environ ' + Math.round(x.reste) + ' km de péage d’un autre réseau estimés.</p>');
-          return;
-        }
+
       } catch (_) { /* repli sur l’estimation */ }
-      const c1 = km * 0.105, c2 = c1 * 1.55;
-      out.insertAdjacentHTML('beforeend', '<p>💶 Péage estimé (≈ ' + Math.round(km) + ' km à péage) : <b>classe 1 ≈ ' + euro(c1) + '</b> · <b>classe 2 ≈ ' + euro(c2) + '</b></p><p class="doux">Estimation d’après les grilles officielles 2026 (marge environ 15 %). Le prix exact dépend des gares d’entrée et de sortie.</p>');
+      out.insertAdjacentHTML('beforeend', '<p>💶 Péage : <b>prix exact non disponible</b> pour ce trajet.</p><p class="doux">Aucune estimation affichée : seuls les tarifs officiels exacts sont montrés.</p>');
     } catch (_) { /* estimation facultative */ }
   };
   const render = (target, r, mode) => {
     const prix = mode === 'DRIVE' ? r.toll : r.fare;
     const libelle = mode === 'DRIVE' ? 'Péage' : 'Transport';
-    const p = prix.status === 'estimation' ? '≈ ' + euro(prix.amount) : prix.status === 'aucun_peage' ? 'aucun' : (prix.status === 'prix_inconnu' && mode === 'DRIVE') ? 'oui' : 'non disponible';
-    const info = '<p>🛣 <b>' + (r.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.durationMinutes) + '</b></p><p>💶 ' + libelle + ' : <b>' + p + '</b></p>' + (r.sansPeage ? '<p>🛣 Sans péage : <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b></p>' : '') + '<p class="doux">Données Google Routes : estimation, à vérifier avant départ.</p>';
+    const p = prix.status === 'aucun_peage' ? 'aucun' : (mode === 'DRIVE' && (prix.status === 'prix_inconnu' || prix.status === 'estimation')) ? 'oui (prix exact ci-dessous si disponible)' : 'non disponible';
+    const info = '<p>🛣 <b>' + (r.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.durationMinutes) + '</b></p><p>💶 ' + libelle + ' : <b>' + p + '</b></p>' + (r.sansPeage ? '<p>🛣 Sans péage : <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b> · ⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b></p>' : '') + '<p class="doux">Distance et durée : Google Routes, à vérifier avant départ.</p>';
     target.innerHTML = info;   // V186 : la carte et les villes passent avant les lignes d’infos
     if (mode === 'DRIVE' && r.polyline) { try { target.innerHTML = carte(r) + (target.dataset.villes ? '<p class="doux" style="margin:6px 0">' + target.dataset.villes + '</p>' : '') + info; } catch (_) { target.innerHTML = info; } estimerPeage(r, target); }
   };
@@ -127,7 +122,7 @@
     if (!host || document.getElementById(id) || !origin || !destination) return;
     const box = document.createElement('div');
     box.id = id; box.className = 'carte';
-    box.innerHTML = '<b>🧭 Trajet réel Google</b><p class="doux">Distance routière, durée et péage estimé.</p><button type="button" data-rmode="voiture">🚗 Voiture et péages</button> <button type="button" class="second" data-rmode="transport">🚌 Transports</button><div class="doux" data-routes-result style="margin-top:8px"></div>' + liens(origin, destination);
+    box.innerHTML = '<b>🧭 Trajet réel Google</b><p class="doux">Distance routière, durée et péage exact.</p><button type="button" data-rmode="voiture">🚗 Voiture et péages</button> <button type="button" class="second" data-rmode="transport">🚌 Transports</button><div class="doux" data-routes-result style="margin-top:8px"></div>' + liens(origin, destination);
     host.appendChild(box);
     if (villes) box.querySelector('[data-routes-result]').dataset.villes = villes;
     box.querySelectorAll('button[data-rmode]').forEach(b => b.onclick = async () => {
