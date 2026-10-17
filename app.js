@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V204 (2.0.65)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V205 (2.0.66)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -759,6 +759,7 @@
       let der = null; try { der = localStorage.getItem('cp_peages_maj'); if (!der) { der = new Date().toISOString(); localStorage.setItem('cp_peages_maj', der); } } catch (_) { der = null; }
       const jours = der ? Math.floor((Date.now() - Date.parse(der)) / 86400000) : 0;
       const info = document.createElement('p'); info.id = 'infoPeages'; info.textContent = 'Péages : dernière mise à jour il y a ' + jours + ' jour(s)' + (jours >= 183 ? ' — mise à jour conseillée (tous les 6 mois).' : '.'); if (jours >= 183) info.style.color = '#b45309';
+      fetch('peages-aprr.json').then(r => r.json()).then(j => { const ms = (String(j.v || '').match(/\d{4}-\d{2}/g) || []).sort(); if (!ms.length) return; const [a, m] = ms[0].split('-').map(Number); const n = new Date(); let an = n.getFullYear(); if (n.getMonth() < 1) an -= 1; const mois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']; if (a * 12 + (m - 1) < an * 12 + 1) { info.textContent = 'Nouveaux tarifs de péage en vigueur depuis le 1er février ' + an + ' : mise à jour à faire.'; info.style.color = '#b45309'; } else { info.textContent = 'Péages à jour (tarifs de ' + mois[m - 1] + ' ' + a + '). Prochaine revalorisation prévue le 1er février ' + (an + 1) + '.'; info.style.color = ''; } }).catch(() => { });
       const bt = document.createElement('button'); bt.type = 'button'; bt.id = 'majPeages'; bt.textContent = 'Mettre à jour les péages';
       bt.onclick = async () => { bt.disabled = true; try { const r = await fetch('peages-aprr.json', { cache: 'reload' }); const j = await r.json(); if (!j || !j.p) throw new Error('fichier vide'); try { const ks = await caches.keys(); for (const k of ks) { const c = await caches.open(k); await c.delete('peages-aprr.json'); await c.delete(new URL('peages-aprr.json', location.href).href); } } catch (_) { } try { localStorage.setItem('cp_peages_maj', new Date().toISOString()); } catch (_) { } toast('Péages à jour : ' + String(j.v || '').slice(0, 70)); setTimeout(() => location.reload(), 1500); } catch (e) { toast('Mise à jour impossible : ' + e.message); bt.disabled = false; } };
       bloc.appendChild(info); bloc.appendChild(bt); $('ecran').appendChild(bloc); }
