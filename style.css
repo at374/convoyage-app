@@ -336,3 +336,11 @@ html[data-style]:not([data-style="classique"]):not([data-style="jour"]){--rNeg:#
 .sect .chip.c-ok{background:#bbf7d0;color:#14532d}.sect .chip.c-ko{background:#fecaca;color:#7f1d1d}
 .retourSuite{border:3px dashed rgba(255,255,255,.6);background:rgba(0,0,0,.3)}
 .suiteT{display:block;font-size:13px;font-weight:800;text-transform:uppercase;color:#fde68a}
+
+/* V187 : champs de filtre aux couleurs du thème (plus de fond blanc), police unique qui suit A-/A+/Aa — choix « Relief or » */
+#ecran .grilleFiltres input,#ecran .grilleFiltres select,#ecran .lignePos select,#ecran .plusFiltres input,#ecran .plusFiltres select{font-size:16px;line-height:1.3;background:var(--champ,var(--carte));color:var(--texte);border:1.5px solid var(--ligne)}
+#ecran .grilleFiltres input::placeholder,#ecran .plusFiltres input::placeholder{color:var(--doux);opacity:1}
+#ecran .grilleFiltres select:invalid,#ecran .grilleFiltres input[type=date]:invalid,#ecran .plusFiltres select:invalid{color:var(--doux)}
+#ecran .lignePos button,#ecran .grilleFiltres button,#ecran .plusFiltres summary{font-size:16px}
+html:root[data-style="ultra"] #ecran .grilleFiltres input,html:root[data-style="ultra"] #ecran .grilleFiltres select,html:root[data-style="ultra"] #ecran .lignePos select,html:root[data-style="ultra"] #ecran .plusFiltres input,html:root[data-style="ultra"] #ecran .plusFiltres select{background:linear-gradient(180deg,#241a06,#120d03);border:1.5px solid #8a6a14;box-shadow:inset 0 1px 0 rgba(255,225,140,.18)}
+html:root[data-style="ultra"] #ecran .grilleFiltres input:focus,html:root[data-style="ultra"] #ecran .grilleFiltres select:focus,html:root[data-style="ultra"] #ecran .lignePos select:focus,html:root[data-style="ultra"] #ecran .plusFiltres input:focus,html:root[data-style="ultra"] #ecran .plusFiltres select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--lueur)}
