@@ -348,3 +348,11 @@ html:root[data-style="ultra"] #ecran .grilleFiltres input:focus,html:root[data-s
 /* V189 : adresses exactes DriiveMe sur l'étiquette */
 .adrCarte{margin:6px 0;font-size:.92em;line-height:1.35}
 .adrCarte b{font-weight:700}
+
+/* V192 : TOUS les champs du bloc de filtres (ville, date, départ/arrivée, ville + 20 km…) comme « Plus de filtres » : couleurs du thème, police unique */
+#ecran .filtres input,#ecran .filtres select{font-size:16px;line-height:1.3;background:var(--champ,var(--carte));color:var(--texte);border:1.5px solid var(--ligne)}
+#ecran .filtres input::placeholder{color:var(--doux);opacity:1}
+#ecran .filtres select:invalid,#ecran .filtres input[type=date]:invalid{color:var(--doux)}
+#ecran .filtres select:disabled,#ecran .filtres input:disabled{opacity:.55}
+html:root[data-style="ultra"] #ecran .filtres input,html:root[data-style="ultra"] #ecran .filtres select{background:linear-gradient(180deg,#241a06,#120d03);border:1.5px solid #8a6a14;box-shadow:inset 0 1px 0 rgba(255,225,140,.18)}
+html:root[data-style="ultra"] #ecran .filtres input:focus,html:root[data-style="ultra"] #ecran .filtres select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--lueur)}
