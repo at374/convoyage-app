@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V205 (2.0.66)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V206 (2.0.67)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -390,10 +390,12 @@
   const verifLe = m => { const s = (etat.sources || []).find(x => cleP(x.platform) === cleP(m.platform)); const t = s ? Date.parse(s.lu_le || '') : NaN; if (!Number.isFinite(t)) return 'Disponible'; const d = new Date(t); return 'Disponible (vérifié le ' + d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t) + ')'; };
   const vehInfo = m => { const v = m.vehicle; if (v && typeof v === 'object') return { type: [v.category || v.type, v.model, v.gearbox].filter(Boolean).map(x => String(x).trim()).join(' · '), en: String(v.energy || '').trim() }; return { type: typeof v === 'string' ? v.trim() : '', en: '' }; };
   const adrHtml = m => (m.platform === 'DriiveMe' && (m.origin_address || m.destination_address)) ? '<div class="adrCarte">' + (m.origin_address ? '<div>📍 Départ : <b>' + esc(m.origin_address) + '</b></div>' : '') + (m.destination_address ? '<div>🏁 Arrivée : <b>' + esc(m.destination_address) + '</b></div>' : '') + '</div>' : '';   // V189 : adresses exactes lues sur la page détail DriiveMe
+  // V206 : suites possibles lues sur la fiche DriiveMe, affichées juste sous l'étiquette de la mission (stockées dans vehicle.suites)
+  const sugHtml = m => { const L = m.vehicle && typeof m.vehicle === 'object' && Array.isArray(m.vehicle.suites) ? m.vehicle.suites : []; if (!L.length) return ''; return '<div style="margin:6px 0;padding:6px 8px;border-left:3px solid #15803d;background:rgba(21,128,61,.08);font-size:.92em;line-height:1.35"><div style="font-weight:700">↪ Suites possibles (' + L.length + ')</div>' + L.slice(0, 4).map(z => '<div>• ' + esc(String(z.t || '').replace(/\s*\|\s*/g, ' · ')) + '</div>').join('') + (L.length > 4 ? '<div class="doux">+ ' + (L.length - 4) + ' autre(s)</div>' : '') + '</div>'; };
   const vehHtml = m => {
     const { type, en } = vehInfo(m); const n = en.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); let ic = '⛽', cl = 'inc';
     if (/hybrid/.test(n)) { ic = '🔌'; cl = 'hyb'; } else if (/elec/.test(n)) { ic = '🔋'; cl = 'ele'; } else if (/ther|essence|diesel|gazole|gasoil|gasoline|petrol|fuel/.test(n)) { ic = '⛽'; cl = 'the'; }
-    return '<span class="veh"><span class="vt' + (type ? '' : ' inc') + '">🚗 Véhicule : <b>' + esc(type || 'inconnu') + '</b></span><span class="ve ' + cl + '">' + ic + ' Énergie : <b>' + esc(en || 'inconnue') + '</b></span></span>' + adrHtml(m);
+    return '<span class="veh"><span class="vt' + (type ? '' : ' inc') + '">🚗 Véhicule : <b>' + esc(type || 'inconnu') + '</b></span><span class="ve ' + cl + '">' + ic + ' Énergie : <b>' + esc(en || 'inconnue') + '</b></span></span>' + adrHtml(m) + sugHtml(m);
   };
   // Prix : on mémorise le dernier prix vu de chaque mission ; s'il change, flèche et ancien prix.
   const prixVar = m => {
