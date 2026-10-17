@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V203 (2.0.64)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V204 (2.0.65)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -755,6 +755,13 @@
     { const p = lirePause(); $('pzOn').checked = p.choix === 'oui'; $('pzDeb').value = p.debut; $('pzFin').value = p.fin;
       const maj = () => { enregistrerPause($('pzOn').checked ? 'oui' : 'non', $('pzDeb').value, $('pzFin').value); toast($('pzOn').checked ? 'Désactivation la nuit : activée' : 'Toujours actif'); };
       $('pzOn').onchange = maj; $('pzDeb').onchange = $('pzFin').onchange = () => { if ($('pzOn').checked) maj(); }; }
+    { const bloc = document.createElement('div'); bloc.className = 'doux'; bloc.style.textAlign = 'center'; bloc.style.margin = '12px 0';
+      let der = null; try { der = localStorage.getItem('cp_peages_maj'); if (!der) { der = new Date().toISOString(); localStorage.setItem('cp_peages_maj', der); } } catch (_) { der = null; }
+      const jours = der ? Math.floor((Date.now() - Date.parse(der)) / 86400000) : 0;
+      const info = document.createElement('p'); info.id = 'infoPeages'; info.textContent = 'Péages : dernière mise à jour il y a ' + jours + ' jour(s)' + (jours >= 183 ? ' — mise à jour conseillée (tous les 6 mois).' : '.'); if (jours >= 183) info.style.color = '#b45309';
+      const bt = document.createElement('button'); bt.type = 'button'; bt.id = 'majPeages'; bt.textContent = 'Mettre à jour les péages';
+      bt.onclick = async () => { bt.disabled = true; try { const r = await fetch('peages-aprr.json', { cache: 'reload' }); const j = await r.json(); if (!j || !j.p) throw new Error('fichier vide'); try { const ks = await caches.keys(); for (const k of ks) { const c = await caches.open(k); await c.delete('peages-aprr.json'); await c.delete(new URL('peages-aprr.json', location.href).href); } } catch (_) { } try { localStorage.setItem('cp_peages_maj', new Date().toISOString()); } catch (_) { } toast('Péages à jour : ' + String(j.v || '').slice(0, 70)); setTimeout(() => location.reload(), 1500); } catch (e) { toast('Mise à jour impossible : ' + e.message); bt.disabled = false; } };
+      bloc.appendChild(info); bloc.appendChild(bt); $('ecran').appendChild(bloc); }
     { const p = document.createElement('p'); p.className = 'doux'; p.id = 'versionReglages'; p.style.textAlign = 'center'; p.textContent = 'Convoyage Ultra — version ' + VERSION_APP; $('ecran').appendChild(p); }
     { const bm = $('remettre'); if (bm) bm.onclick = () => { ecrireLocal('cp_masquees', []); toast('Missions remises : actualisation…'); charger(); }; }
     $('dOk').onclick = () => { api.deconnexion(); localStorage.removeItem('cp_cache'); Object.assign(etat, { missions: [], alertes: [], reglages: null }); ecranConnexion(); };
