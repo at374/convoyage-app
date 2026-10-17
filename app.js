@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V209 (2.0.70)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V210 (2.0.71)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -393,6 +393,8 @@
   const adrHtml = m => (m.platform === 'DriiveMe' && (m.origin_address || m.destination_address)) ? '<div class="adrCarte">' + (m.origin_address ? '<div>📍 Départ : <b>' + esc(m.origin_address) + '</b></div>' : '') + (m.destination_address ? '<div>🏁 Arrivée : <b>' + esc(m.destination_address) + '</b></div>' : '') + '</div>' : '';   // V189 : adresses exactes lues sur la page détail DriiveMe
   // V206 : suites possibles lues sur la fiche DriiveMe, affichées juste sous l'étiquette de la mission (stockées dans vehicle.suites)
   const sugHtml = m => { const L = Array.isArray(m.suites) && m.suites.length ? m.suites : (vehObj(m) && typeof vehObj(m) === 'object' && Array.isArray(vehObj(m).suites) ? vehObj(m).suites : []); if (!L.length) return ''; return '<div style="margin:6px 0;padding:6px 8px;border-left:3px solid #15803d;background:rgba(21,128,61,.08);font-size:.92em;line-height:1.35"><div style="font-weight:700">↪ Suites possibles (' + L.length + ')</div>' + L.slice(0, 4).map(z => '<div>• ' + esc(String(z.t || '').replace(/\s*\|\s*/g, ' · ')) + '</div>').join('') + (L.length > 4 ? '<div class="doux">+ ' + (L.length - 4) + ' autre(s)</div>' : '') + '</div>'; };
+  const sugListe = m => Array.isArray(m.suites) && m.suites.length ? m.suites : (vehObj(m) && typeof vehObj(m) === 'object' && Array.isArray(vehObj(m).suites) ? vehObj(m).suites : []);
+  const sugDetail = m => { const L = sugListe(m); if (!L.length) return ''; return '<div class="carte"><b>↪ Suites possibles (' + L.length + ')</b>' + L.map(z => { const ok = etat.missions.some(x => x.platform === m.platform && String(x.external_id) === String(z.id)); return '<button type="button" class="second" data-suite="' + esc(String(z.id)) + '" style="display:block;width:100%;text-align:left;margin:6px 0">• ' + esc(String(z.t || '').replace(/\s*\|\s*/g, ' · ')) + (ok ? ' ▸' : ' <span class="doux">(fiche pas encore lue)</span>') + '</button>'; }).join('') + '</div>'; };
   const vehHtml = m => {
     const { type, en } = vehInfo(m); const n = en.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); let ic = '⛽', cl = 'inc';
     if (/hybrid/.test(n)) { ic = '🔌'; cl = 'hyb'; } else if (/elec/.test(n)) { ic = '🔋'; cl = 'ele'; } else if (/ther|essence|diesel|gazole|gasoil|gasoline|petrol|fuel/.test(n)) { ic = '⛽'; cl = 'the'; }
@@ -882,6 +884,7 @@
       ${lienDevis(m) ? `<a href="${esc(lienAppliHiflow() || lienDevis(m))}"${lienAppliHiflow() ? '' : ' target="_blank" rel="noopener"'} id="lienDevis" data-numero="${esc(m.external_id)}"><button style="width:100%;margin:4px 0 2px">📱 Faire le devis dans l’application Hiflow</button></a><p class="doux" style="margin:0 0 8px">Mission n° <b>${esc(m.external_id)}</b> (copié en touchant le bouton) · ${esc(trajet(m))}</p>` : ''}
       <div class="meta"><span class="quand gros ${classeQuand(m)}">📅 Prise en charge : ${esc(hfDates(m) ? fmtDate(hfPk(m)) : quand(m))}</span>${m.delivery_start || m.delivery_end || dMail(m) ? `<span class="quand gros q-ok">🏁 Livraison : ${esc(fmtDate(hfDates(m) ? hfLiv(m) : (m.delivery_start || m.delivery_end)))}</span>` : ''}</div>
       ${m.vehicle ? `<p>🚗 ${esc([m.vehicle.brand, m.vehicle.model, m.vehicle.energy].filter(Boolean).join(' '))}</p>` : ''}
+      ${sugDetail(m)}
       ${m.distance_km ? `<p>🛣 ${esc(m.distance_km)} km</p>` : ''}
       <div class="carte"><b>Départ</b><div>${esc(adresse(m, 'origin'))}</div><span id="gpsO">${mentionGps(m, 'origin')}</span>${etat.reglages && etat.reglages.domicile_ville && m.from_city ? liensTransports(etat.reglages.domicile_ville, '', m.from_city, m.from_department, 'a|' + (m.id || m.external_id)) : ''}${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}</div>
       <div class="carte"><b>Arrivée</b><div>${esc(adresse(m, 'destination'))}</div><span id="gpsD">${mentionGps(m, 'destination')}</span>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}</div>
@@ -906,6 +909,7 @@
       ${(m.price_history || []).length ? `<p class="doux">Historique du prix : ${m.price_history.map(h => esc(euros(h.de)) + ' → ' + esc(euros(h.a))).join(', ')}</p>` : ''}
       ${m.platform === 'Hiflow' && lienAppliHiflow() ? `<a href="${esc(lienAppliHiflow())}" class="lienAppli" data-numero="${esc(m.external_id)}"><button style="width:100%;margin-top:6px">📱 Ouvrir l’application Hiflow</button></a>` : (lienAppliAutre(m.platform, lien) ? `<a href="${esc(lienAppliAutre(m.platform, lien))}"><button style="width:100%;margin-top:6px">📱 Ouvrir l’application ${esc(PLATS[m.platform])}</button></a>` : `<a href="${esc(lien)}" target="_blank" rel="noopener"><button style="width:100%;margin-top:6px">Ouvrir sur ${esc(PLATS[m.platform])}</button></a>`)}`;
     for (const a of document.querySelectorAll('#feuilleContenu [data-numero]')) a.addEventListener('click', () => { try { navigator.clipboard && navigator.clipboard.writeText(a.dataset.numero).then(() => toast('N° ' + a.dataset.numero + ' copié : colle-le dans la recherche de l’application Hiflow'), () => {}); } catch (_) {} });
+    for (const b of document.querySelectorAll('#feuilleContenu [data-suite]')) b.addEventListener('click', () => { const z = etat.missions.find(x => x.platform === m.platform && String(x.external_id) === b.dataset.suite); if (z) detail(z); });
     $('feuille').hidden = false; $('feuille').querySelector('.feuilleBoite').scrollTop = 0;
     const suivants = detail.retours || [], dest = G.coordonnees(m, 'destination');
     for (const b of document.querySelectorAll('[data-retour]')) b.onclick = () => detail(suivants[Number(b.dataset.retour)].mission, dest);
