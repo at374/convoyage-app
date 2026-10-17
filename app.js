@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V199 (2.0.60)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V200 (2.0.61)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -72,7 +72,7 @@
   const seulesNouvelles = l => (l || []).filter(a => !['mission_acceptee', 'hausse_prix', 'mission_modifiee', 'mission_annulee'].includes(a.type));
   const etat = { onglet: 'missions', missions: [], alertes: [], reglages: null, filtre: 'toutes', recherche: '', tri: 'recent', zones: [], cote: 'tous', rayon: 0, chargeLe: null, erreur: '', plus: {}, factures: [], facturesServeur: true, sources: undefined };
   const G = window.CPGeo, RT = window.CPRetours, CALC = window.CPCalc;
-  { const mq = document.getElementById('marque'); if (mq && !document.getElementById('versionApp')) { const v = document.createElement('span'); v.id = 'versionApp'; v.className = 'version'; v.textContent = ' · ' + VERSION_APP; mq.appendChild(v); } }
+  { const mq = document.getElementById('marque'); if (mq && !document.getElementById('versionApp')) { const v = document.createElement('span'); v.id = 'versionApp'; v.className = 'version'; v.textContent = VERSION_APP; mq.appendChild(v); } }
   Object.assign(etat, lireLocal('cp_preferences', {}));
   window.CP_TRANSPORT_CHOISI = lireLocal('cp_transport', 'moyenne');   // V137 : transport choisi pour l'aller et le retour (gardé sur ce téléphone)
   etat.pos = lireLocal('cp_position', null); etat.posMax = Number(etat.posMax) || 0;   // V137 : position du téléphone, prise seulement sur demande, gardée sur ce téléphone
