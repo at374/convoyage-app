@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V207 (2.0.68)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V208 (2.0.69)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -348,9 +348,9 @@
       // V142 : péage estimé, par catégorie de véhicule (kilomètres à péage lus dans l'itinéraire « avec péages »).
       const kmP = avec && !meme ? avec.peageKm : (meme ? 0 : null);
       const calcP = typeof CALC !== 'undefined' ? CALC : (typeof window !== 'undefined' ? window.CPCalc : null), tarifs = kmP != null && calcP && calcP.estimerPeage ? calcP.estimerPeage(kmP < 1 ? 0 : kmP) : null;
-      if (tarifs) bas += kmP < 1 ? '<p>💶 <b>Péage : aucun</b> sur ce trajet.</p>' : `<div class="peages"><p>💶 <b>Péage estimé : ≈ ${esc(Math.round(kmP))} km à péage</b></p><table class="tPeage">${tarifs.map(t => `<tr><td><b>Classe ${t.classe}</b> · ${esc(t.nom)}<div class="doux">${esc(t.detail)}</div></td><td><b>≈ ${esc(Math.round(t.euros))} €</b><div class="doux">${esc(Math.round(t.min))}–${esc(Math.round(t.max))} €</div></td></tr>`).join('')}</table></div>`;
-      else bas += '<p class="doux">💶 Péage : kilomètres à péage non disponibles pour ce trajet.</p>';
-      bas += (m.distance_km ? `<p class="doux">Distance donnée par la plateforme : ${esc(m.distance_km)} km.</p>` : '') + '<p class="doux" id="popCommunes">Communes sur le trajet : recherche…</p>' + pts + '<p class="doux">Les durées sont des estimations de conduite normale ; le prix des péages est une estimation (≈ 0,09 € par km à péage pour une voiture, tarifs 2026 ; les autres classes sont des ordres de grandeur) : le tarif exact dépend de l’autoroute. <a href="https://fr.mappy.com/itineraire" target="_blank" rel="noopener">Comparer sur Mappy</a></p>';
+      if (tarifs) bas += kmP < 1 ? '<p>💶 <b>Péage : aucun</b> sur ce trajet.</p>' : '<p>💶 <b>Péage : oui</b> · le prix exact (tarifs officiels) s’affiche dans « Trajet réel Google ».</p>';
+      else bas += '<p class="doux">💶 Péage : prix exact non disponible pour ce trajet.</p>';
+      bas += (m.distance_km ? `<p class="doux">Distance donnée par la plateforme : ${esc(m.distance_km)} km.</p>` : '') + '<p class="doux" id="popCommunes">Communes sur le trajet : recherche…</p>' + pts + '<p class="doux">Les durées sont des estimations de conduite normale. <a href="https://fr.mappy.com/itineraire" target="_blank" rel="noopener">Comparer sur Mappy</a></p>';
       d.innerHTML = cadre(dessiner(a, b, meme ? [{ coords: avec.coords, couleur: '#1d4ed8', ep: 4 }] : [sans && { coords: sans.coords, couleur: '#16a34a', ep: 4, pointille: true }, avec && { coords: avec.coords, couleur: '#1d4ed8', ep: 4 }].filter(Boolean)), bas + (meme || !(avec && sans) ? '' : '<p class="doux">Bleu : avec péages · Vert pointillé : sans péage.</p>'));
       const base = avec || sans; if (!base) { const el0 = document.getElementById('popCommunes'); if (el0) el0.textContent = ''; return; }
       const route = base.coords, communes = [], idx = [0.2, 0.4, 0.6, 0.8].map(f => route[Math.min(route.length - 1, Math.round(f * (route.length - 1)))]);
@@ -391,7 +391,7 @@
   const vehInfo = m => { const v = m.vehicle; if (v && typeof v === 'object') return { type: [v.category || v.type, v.model, v.gearbox].filter(Boolean).map(x => String(x).trim()).join(' · '), en: String(v.energy || '').trim() }; return { type: typeof v === 'string' ? v.trim() : '', en: '' }; };
   const adrHtml = m => (m.platform === 'DriiveMe' && (m.origin_address || m.destination_address)) ? '<div class="adrCarte">' + (m.origin_address ? '<div>📍 Départ : <b>' + esc(m.origin_address) + '</b></div>' : '') + (m.destination_address ? '<div>🏁 Arrivée : <b>' + esc(m.destination_address) + '</b></div>' : '') + '</div>' : '';   // V189 : adresses exactes lues sur la page détail DriiveMe
   // V206 : suites possibles lues sur la fiche DriiveMe, affichées juste sous l'étiquette de la mission (stockées dans vehicle.suites)
-  const sugHtml = m => { const L = m.vehicle && typeof m.vehicle === 'object' && Array.isArray(m.vehicle.suites) ? m.vehicle.suites : []; if (!L.length) return ''; return '<div style="margin:6px 0;padding:6px 8px;border-left:3px solid #15803d;background:rgba(21,128,61,.08);font-size:.92em;line-height:1.35"><div style="font-weight:700">↪ Suites possibles (' + L.length + ')</div>' + L.slice(0, 4).map(z => '<div>• ' + esc(String(z.t || '').replace(/\s*\|\s*/g, ' · ')) + '</div>').join('') + (L.length > 4 ? '<div class="doux">+ ' + (L.length - 4) + ' autre(s)</div>' : '') + '</div>'; };
+  const sugHtml = m => { const L = Array.isArray(m.suites) && m.suites.length ? m.suites : (m.vehicle && typeof m.vehicle === 'object' && Array.isArray(m.vehicle.suites) ? m.vehicle.suites : []); if (!L.length) return ''; return '<div style="margin:6px 0;padding:6px 8px;border-left:3px solid #15803d;background:rgba(21,128,61,.08);font-size:.92em;line-height:1.35"><div style="font-weight:700">↪ Suites possibles (' + L.length + ')</div>' + L.slice(0, 4).map(z => '<div>• ' + esc(String(z.t || '').replace(/\s*\|\s*/g, ' · ')) + '</div>').join('') + (L.length > 4 ? '<div class="doux">+ ' + (L.length - 4) + ' autre(s)</div>' : '') + '</div>'; };
   const vehHtml = m => {
     const { type, en } = vehInfo(m); const n = en.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); let ic = '⛽', cl = 'inc';
     if (/hybrid/.test(n)) { ic = '🔌'; cl = 'hyb'; } else if (/elec/.test(n)) { ic = '🔋'; cl = 'ele'; } else if (/ther|essence|diesel|gazole|gasoil|gasoline|petrol|fuel/.test(n)) { ic = '⛽'; cl = 'the'; }
