@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V211 (2.0.72)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V212 (2.0.73)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -390,16 +390,20 @@
   const verifLe = m => { const s = (etat.sources || []).find(x => cleP(x.platform) === cleP(m.platform)); const t = s ? Date.parse(s.lu_le || '') : NaN; if (!Number.isFinite(t)) return 'Disponible'; const d = new Date(t); return 'Disponible (vérifié le ' + d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t) + ')'; };
   const vehObj = m => { let v = m.vehicle; if (typeof v === 'string' && v.trim().charAt(0) === '{') { try { v = JSON.parse(v); } catch (_) {} } return v; };
   const vehInfo = m => { const v = vehObj(m); if (v && typeof v === 'object') return { type: [v.category || v.type, v.model, v.gearbox].filter(Boolean).map(x => String(x).trim()).join(' · '), en: String(v.energy || '').trim() }; return { type: typeof v === 'string' ? v.trim() : '', en: '' }; };
-  const adrHtml = m => (m.platform === 'DriiveMe' && (m.origin_address || m.destination_address)) ? '<div class="bk bkLieu">' + (m.origin_address ? '<div>📍 <b>Départ</b> : ' + esc(m.origin_address) + '</div>' : '') + (m.destination_address ? '<div>🏁 <b>Arrivée</b> : ' + esc(m.destination_address) + '</div>' : '') + '</div>' : '';   // V211 : bloc coloré
   // V206 : suites possibles lues sur la fiche DriiveMe, affichées juste sous l'étiquette de la mission (stockées dans vehicle.suites)
-  const sugLigne = z => { const p = String(z.t || '').split(/\s*\|\s*/).map(s => s.trim()).filter(Boolean); if (p.length >= 3) { const dm = p[0].match(/^(.+?\(\s*\d+\s*km\s*\))\s*(.+)$/); const tete = dm ? 'Départ : <b>' + esc(dm[1]) + '</b><br>Arrivée : <b>' + esc(dm[2]) + '</b>' : '<b>' + esc(p[0]) + '</b>'; return '<div class="bkL">' + tete + '<br>' + esc(p.slice(1, -1).join(' · ')) + ' · <b>' + esc(p[p.length - 1].replace(/\s+,/, ',')) + '</b></div>'; } return '<div class="bkL">' + esc(p.join(' · ')) + '</div>'; };
-  const sugHtml = m => { const L = Array.isArray(m.suites) && m.suites.length ? m.suites : (vehObj(m) && typeof vehObj(m) === 'object' && Array.isArray(vehObj(m).suites) ? vehObj(m).suites : []); if (!L.length) return ''; return '<div class="bk bkSuite"><div class="bkT">↪ Suites possibles (' + L.length + ')</div>' + L.slice(0, 4).map(sugLigne).join('') + (L.length > 4 ? '<div class="bkL">+ ' + (L.length - 4) + ' autre(s) dans la fiche</div>' : '') + '</div>'; };
+  // V212 : rubriques en blocs colorés, titre en étiquette (modèle C)
+  const bk = (cls, titre, h) => '<div class="bk bkC ' + cls + '"><div class="bkt">' + titre + '</div>' + h + '</div>';
+  const adrHtml = m => (m.platform === 'DriiveMe' && (m.origin_address || m.destination_address)) ? bk('bkLieu', 'LIEUX', (m.origin_address ? '<div>📍 <b>Départ</b> : ' + esc(m.origin_address) + '</div>' : '') + (m.destination_address ? '<div>🏁 <b>Arrivée</b> : ' + esc(m.destination_address) + '</div>' : '')) : '';
+  const sugTexte = z => { const p = String(z.t || '').split(/\s*\|\s*/).map(s => s.trim()).filter(Boolean); if (p.length >= 3) { const dm = p[0].match(/^(.+?\(\s*\d+\s*km\s*\))\s*(.+)$/); const tete = dm ? 'Départ : <b>' + esc(dm[1]) + '</b><br>Arrivée : <b>' + esc(dm[2]) + '</b>' : '<b>' + esc(p[0]) + '</b>'; return tete + '<br>' + esc(p.slice(1, -1).join(' · ')) + ' · <b>' + esc(p[p.length - 1].replace(/\s+,/, ',')) + '</b>'; } return esc(p.join(' · ')); };
   const sugListe = m => Array.isArray(m.suites) && m.suites.length ? m.suites : (vehObj(m) && typeof vehObj(m) === 'object' && Array.isArray(vehObj(m).suites) ? vehObj(m).suites : []);
-  const sugDetail = m => { const L = sugListe(m); if (!L.length) return ''; return '<div class="carte"><b>↪ Suites possibles (' + L.length + ')</b>' + L.map(z => { const ok = etat.missions.some(x => x.platform === m.platform && String(x.external_id) === String(z.id)); return '<button type="button" class="second" data-suite="' + esc(String(z.id)) + '" style="display:block;width:100%;text-align:left;margin:6px 0">• ' + esc(String(z.t || '').replace(/\s*\|\s*/g, ' · ')) + (ok ? ' ▸' : ' <span class="doux">(fiche pas encore lue)</span>') + '</button>'; }).join('') + '</div>'; };
+  const sugHtml = m => { const L = sugListe(m); if (!L.length) return ''; return bk('bkSuite', '↪ SUITES POSSIBLES (' + L.length + ')', L.slice(0, 4).map(z => '<div class="bkL">' + sugTexte(z) + '</div>').join('') + (L.length > 4 ? '<div class="bkL">+ ' + (L.length - 4) + ' autre(s) dans la fiche</div>' : '')); };
+  const sugDetail = m => { const L = sugListe(m); if (!L.length) return ''; return bk('bkSuite', '↪ SUITES POSSIBLES (' + L.length + ')', L.map(z => { const ok = etat.missions.some(x => x.platform === m.platform && String(x.external_id) === String(z.id)); return '<button type="button" class="sugBtn" data-suite="' + esc(String(z.id)) + '">' + sugTexte(z) + (ok ? ' <b>▸</b>' : '<div class="petit">(fiche pas encore lue)</div>') + '</button>'; }).join('')); };
+  const bkDates = (m, lv) => { const pk = hfDates(m) ? fmtDate(hfPk(m)) : quand(m); return (pk ? bk('bkD1', 'PRISE EN CHARGE', '🚩 ' + esc(pk)) : '') + (lv ? bk('bkD2', 'LIVRAISON', '🏁 ' + esc(lv)) : ''); };
+  const blocKm = (m, avecVol) => { const p = []; if (m.distance_km) p.push('🛣 <b>' + esc(m.distance_km) + ' km</b>' + (m.duree_h ? ' · <b>' + esc(duree(m.duree_h)) + '</b>' : '')); if (m.client) p.push('🏢 <b>' + esc(m.client) + '</b>'); const vol = avecVol && kmVolOiseau(m) != null && etat.posMax > 0 ? '<div>✈️ ≈ ' + esc(kmVolOiseau(m)) + ' km à vol d’oiseau de ' + (sourceRecherche() === 'domicile' ? 'ton domicile' : 'ta position') + ' jusqu’au départ</div>' : ''; if (!p.length && !vol) return ''; return bk('bkKm', 'TRAJET · PRESTATAIRE', (p.length ? '<div>' + p.join(' · ') + '</div>' : '') + vol); };
   const vehHtml = m => {
     const { type, en } = vehInfo(m); const n = en.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); let ic = '⛽', cl = 'inc';
     if (/hybrid/.test(n)) { ic = '🔌'; cl = 'hyb'; } else if (/elec/.test(n)) { ic = '🔋'; cl = 'ele'; } else if (/ther|essence|diesel|gazole|gasoil|gasoline|petrol|fuel/.test(n)) { ic = '⛽'; cl = 'the'; }
-    return '<div class="bk bkVeh"><span class="vt' + (type ? '' : ' inc') + '">🚗 <b>Véhicule</b> : ' + esc(type || 'inconnu') + '</span><span class="ve ' + cl + '">' + ic + ' <b>Énergie</b> : ' + esc(en || 'inconnue') + '</span></div>' + sugHtml(m);
+    return bk('bkVeh', 'VÉHICULE', '<div>🚗 ' + esc(type || 'inconnu') + '</div><div class="ve ' + cl + '">' + ic + ' Énergie : ' + esc(en || 'inconnue') + '</div>');
   };
   // Prix : on mémorise le dernier prix vu de chaque mission ; s'il change, flèche et ancien prix.
   const prixVar = m => {
@@ -419,9 +423,8 @@
       <div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${m.kind !== 'acceptee' ? ' <span class="verif">' + esc(verifLe(m)) + '</span>' : ''} <span class="iconeCarte" role="button" tabindex="0" data-carte="${esc(m.platform + '|' + m.external_id)}" aria-label="Visualisation du trajet sur une carte" title="Visualisation du trajet sur une carte">🗺️</span></span>
       <span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div>${prixVar(m)}${r.connu ? `<div class="net">net ≈ ${esc(euros(r.net))}${r.parHeure ? ' · ' + esc(euros(r.parHeure)) + '/h' : ''}</div>` : ''}</span></div>
       ${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? `<div class="urgence">⏳ Plus que ${esc(reste < 1 ? Math.max(1, Math.round(reste * 60)) + ' min' : Math.round(reste) + ' h')} pour la faire</div>` : ''}<div class="trajet">${trajetHtml(m)}</div>${adrHtml(m)}
-      <div class="meta">${hfDates(m) ? `<span class="quand ${classeQuand(m)}">📅 Prise en charge : <b>${esc(fmtDate(hfPk(m)))}</b></span><span class="quand q-ok">🏁 Livraison : <b>${esc(fmtDate(hfLiv(m)))}</b></span>` : quandHtml(m, '🚩') + arriveeHtml(m)}
-      ${vehHtml(m)}${kmVolOiseau(m) != null && etat.posMax > 0 ? `<span class="vol">✈️ ≈ ${esc(kmVolOiseau(m))} km à vol d’oiseau de ${sourceRecherche() === 'domicile' ? 'ton domicile' : 'ta position'} jusqu’au départ</span>` : ''}
-      ${m.distance_km ? `<span class="kms">🛣 <b>${esc(m.distance_km)} km</b>${m.duree_h ? ' · <b>' + esc(duree(m.duree_h)) + '</b>' : ''}</span>` : ''}${m.client ? `<span class="loueur">🏢 Loueur : <b>${esc(m.client)}</b></span>` : ''}</div>${extra || ''}</button>`;
+      <div class="meta">${bkDates(m, hfDates(m) ? fmtDate(hfLiv(m)) : arriveeTxt(m))}
+      ${vehHtml(m)}${blocKm(m, true)}${sugHtml(m)}</div>${extra || ''}</button>`;
   }
   // V137 : mission dont il reste peu de temps (moins de 24 h avant la fin de la période ou l'heure de livraison) → cadre rouge qui clignote.
   const SEUIL_URGENT_H = 24;
@@ -878,6 +881,27 @@
   }
   // V95 : mission acceptée déjà livrée (fin passée) → plus de retours proposés.
   const missionPassee = m => { const f = Date.parse(m.delivery_end || m.delivery_start || ''), d = Date.parse(m.pickup_start || ''); return Number.isFinite(f) ? f < Date.now() : (Number.isFinite(d) ? d + 12 * 3600000 < Date.now() : false); };
+  // V212 : rentabilité en bloc : prestation, transport (approche, retour), cotisations en gras ; net et par heure en vert (rentable) ou rouge.
+  function blocRenta(m, r, frais, dv, depuis) {
+    if (!r.connu) return bk('bkRen', 'RENTABILITÉ', '<div class="doux">Prix non connu.</div>');
+    const ph = r.parHeure, ok = r.net > 0 && (!ph || ph >= 15);
+    const row = (x, y, c) => '<div class="rd' + (c ? ' ' + c : '') + '"><span>' + x + '</span><span>' + y + '</span></div>';
+    const L = [];
+    if (dv) L.push('<div class="petit">📄 Montants de ton devis Hiflow n° ' + esc(dv.n) + ' (' + (dv.accepte ? 'accepté' : 'envoyé, en attente') + ')' + (dv.total != null ? ' — total ' + esc(euros(dv.total)) : '') + '</div>');
+    L.push(row('Prestation', esc(euros(r.prestation)), 'gras'));
+    if (frais.length) { L.push(row(dv ? '+ Frais remboursés (devis)' : '+ Remboursements prévus', esc(frais.map(([k, v]) => (FRAIS[k.toLowerCase()] || k) + ' ' + euros(v)).join(' · ')))); L.push(row('− Frais avancés (remboursés après)', '− ' + esc(euros(r.fraisAvances)))); }
+    if (m.kind === 'acceptee' && m.platform === 'Hiflow' && !dv) L.push(row('Frais du devis Hiflow', '<span class="doux">montant du devis non lu</span>'));
+    if (r.peageCharge > 0) L.push(row('− Péage à ta charge (non remboursé)', '− ' + esc(euros(r.peageCharge)))); else if (r.peageAbsent && m.kind === 'acceptee') L.push(row('Péage (non remboursé)', '<span class="doux">à renseigner</span>'));
+    L.push(r.coutTransport ? (r.transportRembourse ? row('Transport', '≈ ' + esc(euros(r.coutTransport)) + ' <span class="petit">avancé puis remboursé par Hiflow</span>', 'gras') : row('Transport à ta charge', '− ' + esc(euros(r.transportNonCouvert)), 'gras')) : row('Transport', '<span class="doux">inconnu</span>', 'gras'));
+    L.push(row('↳ Approche' + (depuis ? ' depuis la livraison précédente' : ' depuis ton domicile'), r.approche ? (r.approche.mode ? esc(r.approche.mode) + ' ' : '') + '≈ ' + esc(r.approche.km) + ' km · ' + esc(duree(r.approche.heures)) + ' · ' + esc(euros(r.approche.cout)) : '<span class="doux">inconnue — renseigne ta ville dans Réglages</span>', 'sub'));
+    L.push(row('↳ Retour à ton domicile', r.retour ? '≈ ' + esc(r.retour.km) + ' km · ' + esc(duree(r.retour.heures)) + ' · ' + esc(euros(r.retour.cout)) : '<span class="doux">inconnu</span>', 'sub'));
+    if (r.rembTransport && r.coutTransport) L.push(row('↳ Couvert par le remboursement prévu', esc(euros(Math.min(r.rembTransport, r.coutTransport))), 'sub'));
+    L.push(row('Cotisations (' + String(r.taux).replace('.', ',') + ' %)', '− ' + esc(euros(r.cotisations)), 'gras'));
+    L.push(row('Net estimé', esc(euros(r.net)), 'gras gros ' + (ok ? 'ok' : 'ko')));
+    L.push(row('Par heure', ph ? esc(euros(ph)) + '/h <span class="petit">(' + esc(duree(r.heures)) + (r.liaisonsConnues ? ', approche et retour compris' : ', hors liaisons inconnues') + ')</span>' : 'durée inconnue', 'gras ' + (ph ? (ph >= 15 ? 'ok' : 'ko') : (ok ? 'ok' : 'ko'))));
+    L.push('<div class="petit" style="margin-top:4px">Vert : rentable (net positif et au moins 15 €/h). Rouge : non rentable. Estimation' + (r.dureeEstimee && r.heuresMission ? ', durée de conduite estimée d’après la distance' : '') + ' · distances à vol d’oiseau × 1,25 · cotisations sur la prestation seule.</div>');
+    return bk('bkRen ' + (ok ? 'bkRenOk' : 'bkRenKo'), 'RENTABILITÉ', L.join(''));
+  }
   function detail(m, depuis) {
     if (!m) return;
     const r = renta(m, depuis);
@@ -889,33 +913,20 @@
     $('feuilleContenu').innerHTML = `<div class="doux"><span class="etiq">${esc(PLATS[m.platform])}</span> n° ${esc(m.external_id)}${m.validation === 'non_validee' ? ' · lecture non validée : vérifie sur le site' : ''}</div>
       <h2 id="feuilleTitre" class="trajet" style="font-size:20px">${esc(trajet(m))}</h2>
       ${m.kind === 'acceptee' ? '<button id="btnRetirer" class="second" type="button">🚫 Pas acceptée : retirer de l’Agenda</button>' : ''}
-      <button id="btnVol" class="second" type="button" aria-label="Visualisation trajet estimé">🗺️ Visualisation trajet estimé</button>
       ${lienDevis(m) ? `<a href="${esc(lienAppliHiflow() || lienDevis(m))}"${lienAppliHiflow() ? '' : ' target="_blank" rel="noopener"'} id="lienDevis" data-numero="${esc(m.external_id)}"><button style="width:100%;margin:4px 0 2px">📱 Faire le devis dans l’application Hiflow</button></a><p class="doux" style="margin:0 0 8px">Mission n° <b>${esc(m.external_id)}</b> (copié en touchant le bouton) · ${esc(trajet(m))}</p>` : ''}
-      <div class="meta"><span class="quand gros ${classeQuand(m)}">📅 Prise en charge : ${esc(hfDates(m) ? fmtDate(hfPk(m)) : quand(m))}</span>${m.delivery_start || m.delivery_end || dMail(m) ? `<span class="quand gros q-ok">🏁 Livraison : ${esc(fmtDate(hfDates(m) ? hfLiv(m) : (m.delivery_start || m.delivery_end)))}</span>` : ''}</div>
-      ${m.vehicle ? `<p>🚗 ${esc([m.vehicle.brand, m.vehicle.model, m.vehicle.energy].filter(Boolean).join(' '))}</p>` : ''}
+      ${bkDates(m, hfDates(m) ? fmtDate(hfLiv(m)) : ((m.delivery_start || m.delivery_end || dMail(m)) ? fmtDate(m.delivery_start || m.delivery_end) : ''))}
+      ${vehHtml(m)}
+      ${blocKm(m, false)}
+      <button id="btnVol" class="btnVert" type="button" aria-label="Visualisation trajet estimé">🗺️ Visualisation trajet estimé</button>
       ${sugDetail(m)}
-      ${m.distance_km ? `<p>🛣 ${esc(m.distance_km)} km</p>` : ''}
-      <div class="carte"><b>Départ</b><div>${esc(adresse(m, 'origin'))}</div><span id="gpsO">${mentionGps(m, 'origin')}</span>${etat.reglages && etat.reglages.domicile_ville && m.from_city ? liensTransports(etat.reglages.domicile_ville, '', m.from_city, m.from_department, 'a|' + (m.id || m.external_id)) : ''}${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}</div>
-      <div class="carte"><b>Arrivée</b><div>${esc(adresse(m, 'destination'))}</div><span id="gpsD">${mentionGps(m, 'destination')}</span>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}</div>
+      ${bk('bkLieu', 'LIEUX', `<div>📍 <b>Départ</b> : ${esc(adresse(m, 'origin'))}</div><div id="gpsO">${mentionGps(m, 'origin')}</div>${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}<div style="margin-top:8px">🏁 <b>Arrivée</b> : ${esc(adresse(m, 'destination'))}</div><div id="gpsD">${mentionGps(m, 'destination')}</div>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}`)}
       ${mailBloc(m)}
-      <div class="carte renta"><h2>Rentabilité estimée</h2>${dv ? `<p class="devisSource">📄 Montants de ton devis Hiflow n° ${esc(dv.n)} (${dv.accepte ? 'accepté' : 'envoyé, en attente'})${dv.total != null ? ' — total ' + esc(euros(dv.total)) : ''}</p>` : ''}${r.connu ? `<table class="tableau">
-        ${ligne(dv ? 'Prestation (devis)' : 'Prestation', esc(euros(r.prestation)))}
-        ${frais.length ? ligne(dv ? '+ Frais remboursés (devis)' : '+ Remboursements prévus', esc(frais.map(([k, v]) => (FRAIS[k.toLowerCase()] || k) + ' ' + euros(v)).join(' · '))) : ''}
-        ${frais.length ? ligne('− Frais avancés (remboursés après)', '− ' + esc(euros(r.fraisAvances))) : ''}
-        ${m.kind === 'acceptee' && m.platform === 'Hiflow' && !dv ? ligne('Frais du devis Hiflow', '<span class="doux">montant du devis non lu</span>') : ''}
-        ${r.peageCharge > 0 ? ligne('− Péage à ta charge (non remboursé)', '− ' + esc(euros(r.peageCharge))) : (r.peageAbsent && m.kind === 'acceptee' ? ligne('Péage (non remboursé)', '<span class="doux">péage : à renseigner</span>') : '')}
-        ${ligne('− Approche' + (depuis ? ' depuis la livraison précédente' : ' depuis ton domicile'), r.approche ? `${r.approche.mode ? esc(r.approche.mode) + ' ' : ''}≈ ${esc(r.approche.km)} km · ${esc(duree(r.approche.heures))} · ${esc(euros(r.approche.cout))}` : '<span class="doux">inconnue — renseigne ta ville dans Réglages</span>')}
-        ${ligne('− Retour à ton domicile', r.retour ? `≈ ${esc(r.retour.km)} km · ${esc(duree(r.retour.heures))} · ${esc(euros(r.retour.cout))}` : '<span class="doux">inconnu</span>')}
-        ${r.rembTransport && r.coutTransport ? ligne('Transport couvert par le remboursement prévu', esc(euros(Math.min(r.rembTransport, r.coutTransport)))) : ''}
-        ${r.coutTransport ? (r.transportRembourse ? ligne('Transport (approche et retour)', '≈ ' + esc(euros(r.coutTransport)) + ' <span class="doux">avancé puis remboursé par Hiflow</span>') : ligne('− Transport à ta charge', '− ' + esc(euros(r.transportNonCouvert)))) : ''}
-        ${ligne('− Cotisations (' + String(r.taux).replace('.', ',') + ' %)', '− ' + esc(euros(r.cotisations)))}
-        ${ligne('= Net estimé', '<b class="r-val ' + (r.net < 0 ? 'mal' : 'bien') + '">' + esc(euros(r.net)) + '</b>')}
-        ${ligne('Rentabilité horaire', r.parHeure ? `<b class="r-val ${r.parHeure >= 15 ? 'bien' : r.parHeure > 0 ? 'moyen' : 'mal'}">${esc(euros(r.parHeure))}/h</b> (${esc(duree(r.heures))}${r.liaisonsConnues ? ' approche et retour compris' : ' hors liaisons inconnues'})` : 'durée inconnue')}</table>
-        <p class="doux">Estimation${r.dureeEstimee && r.heuresMission ? ' · durée de conduite estimée d’après la distance' : ''} · distances à vol d’oiseau × 1,25 · cotisations sur la prestation seule (à vérifier selon ta situation).</p>` : '<p class="doux">Prix non connu.</p>'}</div>
+      ${blocRenta(m, r, frais, dv, depuis)}
+      ${(() => { const lt = etat.reglages && etat.reglages.domicile_ville && m.from_city ? liensTransports(etat.reglages.domicile_ville, '', m.from_city, m.from_department, 'a|' + (m.id || m.external_id)) : ''; return lt ? bk('bkTr', 'TRANSPORTS · ALLER DEPUIS TON DOMICILE', lt) : ''; })()}
       ${m.kind === 'acceptee' ? blocHistorique(m) : ''}
       ${m.status === 'annulee' || m.status === 'terminee' || (m.kind === 'acceptee' && missionPassee(m)) ? '' : blocRetours(m)}
       ${m.vehicle && /[ée]lectri|\bev\b|\bbev\b/i.test(String(m.vehicle.energy || '')) ? `<div class="carte"><b>🔌 Véhicule électrique : calculer la charge</b><p class="doux" style="margin:4px 0">Le prix et le temps de charge dépendent de la voiture, de la borne et de l’itinéraire : ces sites les calculent (l’appli ne les connaît pas).</p><span class="liensTr"><a href="https://abetterrouteplanner.com/">⚡ A Better Routeplanner</a><a href="https://fr.chargemap.com/">🗺️ Chargemap (bornes et prix)</a>${(m.origin_address || m.from_city) && (m.destination_address || m.to_city) ? `<a href="${esc('https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(m.origin_address || m.from_city + ' ' + (m.from_department || '')) + '&destination=' + encodeURIComponent(m.destination_address || m.to_city + ' ' + (m.to_department || '')))}">📍 Itinéraire Google Maps</a>` : ''}</span></div>` : ''}
-      ${(m.price_history || []).length ? `<p class="doux">Premier prix : <b>${esc(euros(m.price_history[0].de))}</b> · dernier prix : <b>${esc(euros(m.price_history[m.price_history.length - 1].a))}</b></p>` : ''}
+      ${(m.price_history || []).length ? bk('bkKm', 'PRIX', 'Premier prix : <b>' + esc(euros(m.price_history[0].de)) + '</b> · dernier prix : <b>' + esc(euros(m.price_history[m.price_history.length - 1].a)) + '</b>') : ''}
       ${m.platform === 'Hiflow' && lienAppliHiflow() ? `<a href="${esc(lienAppliHiflow())}" class="lienAppli" data-numero="${esc(m.external_id)}"><button style="width:100%;margin-top:6px">📱 Ouvrir l’application Hiflow</button></a>` : (lienAppliAutre(m.platform, lien) ? `<a href="${esc(lienAppliAutre(m.platform, lien))}"><button style="width:100%;margin-top:6px">📱 Ouvrir l’application ${esc(PLATS[m.platform])}</button></a>` : `<a href="${esc(lien)}" target="_blank" rel="noopener"><button style="width:100%;margin-top:6px">Ouvrir sur ${esc(PLATS[m.platform])}</button></a>`)}`;
     for (const a of document.querySelectorAll('#feuilleContenu [data-numero]')) a.addEventListener('click', () => { try { navigator.clipboard && navigator.clipboard.writeText(a.dataset.numero).then(() => toast('N° ' + a.dataset.numero + ' copié : colle-le dans la recherche de l’application Hiflow'), () => {}); } catch (_) {} });
     for (const b of document.querySelectorAll('#feuilleContenu [data-suite]')) b.addEventListener('click', () => { const z = etat.missions.find(x => x.platform === m.platform && String(x.external_id) === b.dataset.suite); if (z) detail(z); });
