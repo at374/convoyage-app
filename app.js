@@ -399,7 +399,7 @@
   const vehHtml = m => {
     const { type, en } = vehInfo(m); const n = en.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); let ic = '⛽', cl = 'inc';
     if (/hybrid/.test(n)) { ic = '🔌'; cl = 'hyb'; } else if (/elec/.test(n)) { ic = '🔋'; cl = 'ele'; } else if (/ther|essence|diesel|gazole|gasoil|gasoline|petrol|fuel/.test(n)) { ic = '⛽'; cl = 'the'; }
-    return '<div class="bk bkVeh"><span class="vt' + (type ? '' : ' inc') + '">🚗 <b>Véhicule</b> : ' + esc(type || 'inconnu') + '</span><span class="ve ' + cl + '">' + ic + ' <b>Énergie</b> : ' + esc(en || 'inconnue') + '</span></div>' + adrHtml(m) + sugHtml(m);
+    return '<div class="bk bkVeh"><span class="vt' + (type ? '' : ' inc') + '">🚗 <b>Véhicule</b> : ' + esc(type || 'inconnu') + '</span><span class="ve ' + cl + '">' + ic + ' <b>Énergie</b> : ' + esc(en || 'inconnue') + '</span></div>' + sugHtml(m);
   };
   // Prix : on mémorise le dernier prix vu de chaque mission ; s'il change, flèche et ancien prix.
   const prixVar = m => {
@@ -418,7 +418,7 @@
     return `<button class="mission${clsPlat(m.platform)}${estPassee(m) ? ' passe' : ''}${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? ' urgent' : ''}" data-i="${i}">
       <div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${m.kind !== 'acceptee' ? ' <span class="verif">' + esc(verifLe(m)) + '</span>' : ''} <span class="iconeCarte" role="button" tabindex="0" data-carte="${esc(m.platform + '|' + m.external_id)}" aria-label="Visualisation du trajet sur une carte" title="Visualisation du trajet sur une carte">🗺️</span></span>
       <span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div>${prixVar(m)}${r.connu ? `<div class="net">net ≈ ${esc(euros(r.net))}${r.parHeure ? ' · ' + esc(euros(r.parHeure)) + '/h' : ''}</div>` : ''}</span></div>
-      ${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? `<div class="urgence">⏳ Plus que ${esc(reste < 1 ? Math.max(1, Math.round(reste * 60)) + ' min' : Math.round(reste) + ' h')} pour la faire</div>` : ''}<div class="trajet">${trajetHtml(m)}</div>
+      ${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? `<div class="urgence">⏳ Plus que ${esc(reste < 1 ? Math.max(1, Math.round(reste * 60)) + ' min' : Math.round(reste) + ' h')} pour la faire</div>` : ''}<div class="trajet">${trajetHtml(m)}</div>${adrHtml(m)}
       <div class="meta">${hfDates(m) ? `<span class="quand ${classeQuand(m)}">📅 Prise en charge : <b>${esc(fmtDate(hfPk(m)))}</b></span><span class="quand q-ok">🏁 Livraison : <b>${esc(fmtDate(hfLiv(m)))}</b></span>` : quandHtml(m, '🚩') + arriveeHtml(m)}
       ${vehHtml(m)}${kmVolOiseau(m) != null && etat.posMax > 0 ? `<span class="vol">✈️ ≈ ${esc(kmVolOiseau(m))} km à vol d’oiseau de ${sourceRecherche() === 'domicile' ? 'ton domicile' : 'ta position'} jusqu’au départ</span>` : ''}
       ${m.distance_km ? `<span class="kms">🛣 <b>${esc(m.distance_km)} km</b>${m.duree_h ? ' · <b>' + esc(duree(m.duree_h)) + '</b>' : ''}</span>` : ''}${m.client ? `<span class="loueur">🏢 Loueur : <b>${esc(m.client)}</b></span>` : ''}</div>${extra || ''}</button>`;
