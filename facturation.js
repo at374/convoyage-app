@@ -187,7 +187,7 @@
     c.ecran.querySelectorAll('[data-fact]').forEach(el => {
       const fa = (c.factures || []).find(f => cle(f) === el.dataset.fact); if (!fa) return;
       el.style.cursor = 'pointer'; if (vs[cle(fa)]) el.insertAdjacentHTML('beforeend', ' <span class="etiq ok">validée ✓</span>');
-      el.onclick = () => feuilleFacture(fa);
+      el.onclick = () => { try { feuilleFacture(fa); } catch (e) { c.toast('Facture : erreur ' + (e && e.message)); } };
     });
     const t = $id('fValTout'); if (t) t.onclick = () => { let n = 0; for (const f of c.factures || []) if (!valides()[cle(f)] && verifier(f, c.missions).ok) { valider(f, true); n++; } c.toast(n + ' facture(s) validée(s)'); c.rafraichir(); };
     $id('fLivre').onclick = feuilleLivre; $id('fAbbyReg').onclick = feuilleAbby;
