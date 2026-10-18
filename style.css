@@ -432,3 +432,27 @@ html:root .barre #marque{display:flex !important;justify-content:space-between !
 html:root .barre #marque .version{font-size:13px !important;text-align:right !important;white-space:nowrap !important;font-style:normal !important;opacity:.9}
 html:root .barre #sousTitre{text-align:right !important;font-size:13px !important;line-height:1.3 !important}
 html:root .barre > button{flex:0 0 auto !important}
+
+/* V211 : étiquettes en blocs de couleur (exemple A), couleurs selon le style choisi en haut de l'application */
+:root{--bkVehF:#dbeafe;--bkVehT:#1e3a8a;--bkLieuF:#ffedd5;--bkLieuT:#7c2d12;--bkSuiteF:#ede9fe;--bkSuiteT:#4c1d95}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bkVehF:#1d3a52;--bkVehT:#cfe8ff;--bkLieuF:#4a3410;--bkLieuT:#ffe2b0;--bkSuiteF:#3b2457;--bkSuiteT:#e9d7ff}}
+html:root[data-style="ultra"]{--bkVehF:#1c3350;--bkVehT:#d4e8ff;--bkLieuF:#4a3410;--bkLieuT:#ffe2b0;--bkSuiteF:#3a2457;--bkSuiteT:#ead9ff}
+html:root[data-style="braise"]{--bkVehF:#3a1c2e;--bkVehT:#ffd6e6;--bkLieuF:#4d2a0e;--bkLieuT:#ffd9b0;--bkSuiteF:#2f2250;--bkSuiteT:#e6dcff}
+html:root[data-style="crepuscule"]{--bkVehF:#1f3a5c;--bkVehT:#d6e8ff;--bkLieuF:#6b3a12;--bkLieuT:#ffe0b8;--bkSuiteF:#5a2f8f;--bkSuiteT:#f1e2ff}
+html:root[data-style="jour"]{--bkVehF:#dbeafe;--bkVehT:#0b2f66;--bkLieuF:#fef3c7;--bkLieuT:#6b3a00;--bkSuiteF:#ede9fe;--bkSuiteT:#3b1b7a}
+html:root[data-style="classique"]{--bkVehF:#dbeafe;--bkVehT:#1e3a8a;--bkLieuF:#ffedd5;--bkLieuT:#7c2d12;--bkSuiteF:#ede9fe;--bkSuiteT:#4c1d95}
+.bk{display:block;border-radius:10px;padding:7px 10px;margin:6px 0;line-height:1.35;font-size:.9em;text-align:left;font-style:normal}
+.bk b{font-weight:700}
+.bkVeh{background:var(--bkVehF);color:var(--bkVehT)}
+.bkVeh .vt,.bkVeh .ve{display:block}.bkVeh .ve,.bkVeh .vt .inc{color:inherit;filter:none;opacity:1}
+.bkLieu{background:var(--bkLieuF);color:var(--bkLieuT)}
+.bkSuite{background:var(--bkSuiteF);color:var(--bkSuiteT)}
+.bkT{font-weight:800;margin-bottom:3px}.bkL{margin:5px 0}
+.mission .haut>span:last-child{text-align:right}
+.mission .prix{display:inline-block;background:#ffd93b;color:#111;font-weight:800;font-size:15px;padding:2px 9px;border-radius:8px;font-style:normal;letter-spacing:0}
+/* V211 : caractères plus petits en bas de la fiche mission */
+#feuilleContenu .liensTr a{font-size:.78em;padding:5px 9px}
+#feuilleContenu .liensNote,#feuilleContenu .liensVerif{font-size:.72em}
+#feuilleContenu .retourBloc .doux,#feuilleContenu .retourSuite,#feuilleContenu .chips{font-size:.85em}
+#feuilleContenu .carte.renta .tableau,#feuilleContenu .carte .tableau{font-size:.85em}
+#feuilleContenu>p.doux{font-size:.8em}
