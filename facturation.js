@@ -151,9 +151,9 @@
 
   function carteOutils() {
     const fa = ctx.factures || [], vs = valides();
-    let ok = 0, ecart = 0, fait = 0;
-    for (const f of fa) { const v = verifier(f, ctx.missions); if (vs[cle(f)]) fait++; else if (v.ok) ok++; else ecart++; }
-    return '<div class="carte" id="outilsFact"><h2>Contrôle des factures</h2><table class="tableau"><tr><td>Validées par toi</td><td><b>' + fait + '</b></td></tr><tr><td>Sans écart, à valider</td><td><b>' + ok + '</b></td></tr><tr><td>Avec écart à vérifier</td><td><b>' + ecart + '</b></td></tr></table>' +
+    let ok = 0, ecart = 0, fait = 0, nonv = 0;
+    for (const f of fa) { const v = verifier(f, ctx.missions); if (vs[cle(f)]) fait++; else if (v.ok) ok++; else if (!v.liees.length) nonv++; else ecart++; }
+    return '<div class="carte" id="outilsFact"><h2>Contrôle des factures</h2><table class="tableau"><tr><td>Validées par toi</td><td><b>' + fait + '</b></td></tr><tr><td>Sans écart, à valider</td><td><b>' + ok + '</b></td></tr><tr><td>Avec écart à vérifier</td><td><b>' + ecart + '</b></td></tr><tr><td>Non vérifiables (missions non retrouvées)</td><td><b>' + nonv + '</b></td></tr></table>' +
       '<div class="boutons"><button id="fValTout"' + (ok ? '' : ' disabled') + '>Valider les ' + ok + ' sans écart</button><button class="second" id="fLivre">Livre des recettes</button><button class="second" id="fAbbyReg">Réglage Abby</button></div>' +
       '<p class="doux">Touche une facture ci-dessous pour voir ses missions, la vérification des totaux et le texte à recopier dans Abby.</p></div>';
   }
@@ -161,7 +161,7 @@
     const v = verifier(fa, ctx.missions), vs = valides(), val = !!vs[cle(fa)];
     const ligne = (a, b) => '<tr><td>' + a + '</td><td>' + b + '</td></tr>';
     const verif = '<table class="tableau">' + ligne('Prestations — missions / facture', esc(eur(v.sp)) + ' / ' + (v.fp == null ? '?' : esc(eur(v.fp)))) + ligne('Frais — missions / facture', esc(eur(v.sf)) + ' / ' + (v.ff == null ? '?' : esc(eur(v.ff)))) + ligne('Missions — retrouvées / facture', v.liees.length + ' / ' + (fa.nb_trajets == null ? '?' : esc(fa.nb_trajets))) + '</table>' +
-      (v.ok ? '<p>' + etiq('ok', 'Aucun écart') + '</p>' : '<p>' + etiq('ko', 'À vérifier') + '</p><ul>' + v.probleme.map(p => '<li>' + esc(p) + '</li>').join('') + '</ul>');
+      (v.ok ? '<p>' + etiq('ok', 'Aucun écart') + '</p>' : '<p>' + (v.liees.length ? etiq('ko', 'À vérifier') : etiq('nv', 'Non vérifiable')) + '</p>' + (v.liees.length ? '' : '<p class="doux">Les missions de cette facture ne sont plus liées à elle dans l’application : les montants viennent de la facture Hiflow elle-même.</p>') + '<ul>' + v.probleme.map(p => '<li>' + esc(p) + '</li>').join('') + '</ul>');
     const missions = v.liees.map((m, i) => { const x = v.fiches[i], k = m.platform + '|' + m.external_id, env = L('cp_abby_envoye', {})[k];
       return '<details class="carte"><summary><b>' + esc(lieu(m.from_city, m.from_department)) + ' → ' + esc(lieu(m.to_city, m.to_department)) + '</b> · ' + esc(eur(x.total)) + '</summary><table class="tableau">' + ligne(esc(x.prestation.designation), esc(eur(x.prestation.montant))) + x.frais.map(y => ligne(esc(y.designation) + ' <small>(débours)</small>', esc(eur(y.montant)))).join('') + '</table><p class="doux">Mission n° ' + esc(x.reference) + '</p>' +
         '<div class="boutons"><button class="second" data-cop="' + i + '">Copier pour Abby</button><button data-abby="' + i + '"' + (env ? ' disabled' : '') + '>' + (env ? 'Brouillon déjà créé' : 'Brouillon Abby') + '</button></div></details>'; }).join('');
