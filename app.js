@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V212 (2.0.73)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V215 (2.0.75)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -825,11 +825,13 @@
     if (DEP_ARA.includes(String(deDep || '')) || DEP_ARA.includes(String(versDep || ''))) L.push(['🚍 Cars Région / TER (OùRA)', 'https://www.oura.com/']);
     // V137 : OùRA dès qu'un des deux bouts est dans la région (voir plus haut) ; réseaux de la ville de départ ou d'arrivée (bus, tram, métro de la ville) + Citymapper dans les grandes villes.
     for (const x of reseauxLocaux(deVille, deDep).concat(reseauxLocaux(versVille, versDep), reseauRegion(deDep), reseauRegion(versDep))) if (!L.some(y => y[1] === x[1]) && !(/laregionvoustransporte/.test(x[1]) && L.some(y => /oura\.com/.test(y[1])))) L.push(x);
-    L.push(['🚆 Rome2rio', r2], ['🗺️ Maps bus/train', gm]);
+    L.unshift(['🚆 Rome2rio', r2]); L.push(['🗺️ Maps bus/train', gm]);
     const v = cleVerif ? (lireLocal('cp_verif', {}) || {})[cleVerif] : null;
     const caseV = cleVerif ? `<label class="liensVerif${v ? ' ok' : ''}"><input type="checkbox" data-verif="${esc(cleVerif)}"${v ? ' checked' : ''}> ${v ? '✓ Vérifié par toi le ' + esc(new Date(v).toLocaleDateString('fr-FR')) + ' (horaires et prix valables le jour de la mission)' : 'Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'}</label>` : '';
     return `<span class="liensTr">${L.map(([t, u]) => `<a href="${esc(u)}">${t}</a>`).join('')}</span><span class="doux liensNote">⚠ Horaires et prix NON vérifiés par l’application : ouvre le site, contrôle-les pour le jour de la mission (le bouton retour te ramène ici).</span>${caseV}`;
   }
+  // V215 : exposé à la fenêtre « Trajet réel » (onglet Transports) : Rome2rio en premier, sites de transport seulement, sans les outils d'itinéraire routier.
+  window.CPLiensTr = (a, ad, b, bd) => { const h = liensTransports(a, ad, b, bd, ''); return h ? h.replace(/<a href="[^"]*travelmode=transit[^"]*">[^<]*<\/a>/, '') : ''; };
   // V78 : retours possibles après cette mission (toutes plateformes), estimés.
   function blocRetours(m) {
     const acceptees = etat.missions.filter(x => x.kind === 'acceptee');
