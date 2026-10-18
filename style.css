@@ -510,3 +510,9 @@ html:root .btnVert,html:root[data-style] .btnVert{background:#16a34a !important;
 .carte.plan .bkC.nuit .doux{color:inherit;opacity:.85}
 .carte.plan .bkC.bilan{font-size:.85rem}
 .carte.plan button.mission{display:block;width:100%;margin:10px 0}
+
+/* V226 : Réglages = mêmes couleurs et caractères que les filtres */
+#ecran .carte.plusFiltres h2{font-weight:800;color:#b8860b;font-size:1rem}
+#ecran .carte.plusFiltres label{font-size:.82em;font-weight:600}
+#ecran .carte.plusFiltres .doux{font-size:.8em}
+html:root #ecran .carte.plusFiltres input[type=checkbox]{padding:0!important;min-height:0!important;width:auto!important;background:none!important;border:0!important;box-shadow:none!important}
