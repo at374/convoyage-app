@@ -98,7 +98,7 @@
       o.innerHTML = '<style>@media print{body>*:not(#cpPrint){display:none!important}#cpPrint{position:static!important;overflow:visible!important}.noprint{display:none!important}}</style><div class="noprint" style="display:flex;gap:8px;margin-bottom:12px"><button id="cpImp" style="flex:1;padding:12px">Imprimer / enregistrer en PDF</button><button id="cpFerme" style="flex:1;padding:12px">Fermer</button></div>' + html;
       document.body.appendChild(o);
       document.getElementById('cpFerme').onclick = () => o.remove();
-      document.getElementById('cpImp').onclick = () => { try { window.print(); } catch (_) {} };
+      document.getElementById('cpImp').onclick = () => { try { if (window.CPNatif && typeof window.CPNatif.imprimer === 'function') window.CPNatif.imprimer(document.title || 'Document'); else window.print(); } catch (_) {} };
       return true;
     } catch (_) { return false; }
   }
@@ -112,7 +112,7 @@
     try { document.getElementById('cpDl').href = URL.createObjectURL(new Blob([texte], { type: 'text/csv;charset=utf-8' })); } catch (_) {}
     document.getElementById('cpFer').onclick = () => o.remove();
     document.getElementById('cpCop').onclick = async () => { try { await navigator.clipboard.writeText(ta.value); ms.textContent = 'Copié : colle-le dans un tableur.'; } catch (_) { ta.select(); ms.textContent = 'Texte sélectionné : copie-le avec le menu de ton téléphone.'; } };
-    document.getElementById('cpPar').onclick = async () => { try { if (navigator.share) { await navigator.share({ title: 'Livre des recettes', text: ta.value }); } else ms.textContent = 'Partage indisponible : utilise Copier.'; } catch (e) { if (!e || e.name !== 'AbortError') ms.textContent = 'Partage impossible : utilise Copier.'; } };
+    document.getElementById('cpPar').onclick = async () => { try { if (window.CPNatif && typeof window.CPNatif.partager === 'function') { window.CPNatif.partager('Livre des recettes', ta.value); } else if (navigator.share) { await navigator.share({ title: 'Livre des recettes', text: ta.value }); } else ms.textContent = 'Partage indisponible : utilise Copier (mets à jour l’APK 2.06 pour le partage).'; } catch (e) { if (!e || e.name !== 'AbortError') ms.textContent = 'Partage impossible : utilise Copier.'; } };
   }
   function pdfLivre(mois) {
     return pagePdf('Livre des recettes', '<h1>Livre des recettes</h1><small>Encaissements enregistrés à la date de paiement par la plateforme (virement). TVA non applicable, art. 293 B du CGI.</small>' +
