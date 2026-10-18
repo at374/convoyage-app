@@ -492,3 +492,13 @@ html:root .btnVert,html:root[data-style] .btnVert{background:#16a34a !important;
 .mission .trajet .vD,.mission .trajet .vA,.carte .trajet .vD,.carte .trajet .vA{display:inline-block;background:#ffd93b !important;color:#111 !important;padding:1px 9px;border-radius:8px;font-style:normal;margin:1px 0}
 .mission .trajet .vD *,.mission .trajet .vA *{color:#111 !important}
 .mission .trajet .vD .fg,.mission .trajet .vA .fg{color:inherit !important}
+
+/* V218 : retours / suites au même format que les autres missions */
+.retour .haut{display:flex;justify-content:space-between;align-items:center;gap:8px}.retour .haut>span:last-child{text-align:right}
+.retour .prix{display:inline-block;background:#ffd93b;color:#111;font-weight:800;font-size:15px;padding:2px 9px;border-radius:8px;font-style:normal}
+.retour .trajet{font-size:18px;font-weight:900;line-height:1.25;margin:6px 0}
+.retour .trajet .vD,.retour .trajet .vA{display:inline-block;background:#ffd93b !important;color:#111 !important;padding:1px 9px;border-radius:8px;font-style:normal;margin:1px 0}
+.retour .trajet .vD *,.retour .trajet .vA *{color:#111 !important}
+#retours .retourBloc{border:0;background:none;padding:0;margin:0 0 14px}
+#retours .retourSuite{display:block;border:0;border-left:5px dashed #c9a227;border-radius:12px;padding:10px 12px;margin-top:8px;font-size:inherit}
+.suiteT2{font-weight:800;font-size:.78rem;letter-spacing:.4px;margin-bottom:4px;opacity:.95}
