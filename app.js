@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V218 (2.0.77)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V219 (2.0.78)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -837,6 +837,26 @@
     const acceptees = etat.missions.filter(x => x.kind === 'acceptee');
     const res = RT.retours(m, etat.missions.filter(x => x.kind === 'disponible'), etat.reglages, { acceptees: m.kind === 'acceptee' ? acceptees : acceptees.concat([m]) });
     detail.retours = res.compatibles.concat(res.dateInconnue);
+    const sugIds = new Set(m.platform === 'DriiveMe' ? sugListe(m).map(z => String(z.id)) : []);
+    const estSug = x => sugIds.has(String(x.mission.external_id)) && x.mission.platform === m.platform;
+    res.compatibles.concat(res.dateInconnue).forEach(x => { if (estSug(x)) x.sug = true; });
+    const extras = [];
+    if (sugIds.size && res.arriveeSource) {
+      const dejaC = new Set(res.compatibles.concat(res.dateInconnue).map(x => RT.cle(x.mission)));
+      const rg = etat.reglages || {}, dom = (rg.domicile_lat != null && rg.domicile_lat !== '' && rg.domicile_lng != null && rg.domicile_lng !== '' && Number.isFinite(Number(rg.domicile_lat)) && Number.isFinite(Number(rg.domicile_lng))) ? { lat: Number(rg.domicile_lat), lng: Number(rg.domicile_lng) } : null;
+      for (const c of etat.missions) {
+        if (c.platform !== m.platform || !sugIds.has(String(c.external_id)) || dejaC.has(RT.cle(c)) || c.kind === 'acceptee' || RT.cle(c) === RT.cle(m)) continue;
+        try {
+          const o = G.coordonnees(c, 'origin'); if (!o) continue;
+          const km = G.routeKm(res.arriveeSource, o), cd = G.coordonnees(c, 'destination'), lien = CALC.liaisonMoinsChere(km, rg); if (!lien) continue;
+          const dk = dom ? G.routeKm(res.arriveeSource, dom) : null, rk = dom && cd ? G.routeKm(cd, dom) : null;
+          const rr = CALC.rentabiliteComplete(c, rg, { approcheKm: km, retourKm: rk, approcheLiaison: lien });
+          extras.push({ mission: c, liaison: lien, rentabilite: rr, rapprocheKm: dk != null && rk != null ? dk - rk : null, retourDomicileKm: rk, estimations: [], sug: true, horsCriteres: true });
+        } catch (_) {}
+      }
+    }
+    const baseIdx = detail.retours.length; detail.retours = detail.retours.concat(extras);
+    const estProche = x => x.rapprocheKm != null ? x.rapprocheKm > 0 : (x.retourDomicileKm != null && x.retourDomicileKm <= 50);
     if (res.raison === 'lieu_arrivee_inconnu') return '<div class="carte" id="retours"><h2>🔁 Retours possibles</h2><p class="doux">Lieu d’arrivée non localisable : recherche impossible.</p></div>';
     // V159 : chaînage — pour chaque retour proposé, les suites possibles après lui (2 niveaux), avec distance et durée de liaison.
     const dispoR = etat.missions.filter(z => z.kind === 'disponible');
@@ -861,13 +881,13 @@
     const suiteHtml = (s, prof) => { const z = s.x, c = z.mission, p = s.src; return '<div class="retour retourSuite' + clsPlat(c.platform) + '" style="margin-left:' + (prof * 8) + 'px"><div class="suiteT2">↪ ÉTAPE ' + (prof + 1) + ' : MISSION POSSIBLE ENSUITE</div>' + tete(c) + quand(c, z) + puces(z, c, p) + '</div>' + s.suite.map(u => suiteHtml(u, prof + 1)).join(''); };
     const chaine = (x, c, i) => (i < 4 && x.statut === 'compatible') ? suites(c, [m, c], 1).map(s => suiteHtml(s, 1)).join('') : '';
     const dernLiens = (() => { let k = -1; res.compatibles.slice(0, 6).forEach((z, q) => { if (z.liaison && z.liaison.km >= 2) k = q; }); return k; })();   // V211 : sites de transport une seule fois, sous la dernière étiquette
-    const item = (x, i) => { const c = x.mission; return '<div class="retourBloc"><button class="retour' + clsPlat(c.platform) + '" data-retour="' + i + '">' + tete(c) + quand(c, x) + puces(x, c, m) + (x.estimations.length ? bk('bkTr', 'ESTIMATION', esc(x.estimations.join(', '))) : '') + '</button>' + (i === dernLiens && x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department, 'r|' + (m.id || m.external_id) + '|' + (c.id || c.external_id)) : '') + chaine(x, c, i) + '</div>'; };
+    const item = (x, i) => { const c = x.mission; return '<div class="retourBloc"><button class="retour' + clsPlat(c.platform) + '" data-retour="' + i + '">' + (x.sug ? bk('bkSuite', '↪ SUITE PROPOSÉE PAR DRIIVEME', 'Cette mission figure dans les suites de la fiche DriiveMe' + (x.horsCriteres ? ' (hors des critères de l’application : distance, jour ou délai).' : '.')) : '') + tete(c) + quand(c, x) + puces(x, c, m) + (x.estimations.length ? bk('bkTr', 'ESTIMATION', esc(x.estimations.join(', '))) : '') + '</button>' + (i === dernLiens && x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department, 'r|' + (m.id || m.external_id) + '|' + (c.id || c.external_id)) : '') + chaine(x, c, i) + '</div>'; };
     const dP = Date.parse(m.pickup_start || ''), dF = Date.parse(m.delivery_end || m.delivery_start || ''), multi = Number.isFinite(dP) && Number.isFinite(dF) && new Date(dP).toDateString() !== new Date(dF).toDateString();
     const n = res.compatibles.length, r = etat.reglages || {};
     const ecartes = [[res.autreJour, 'un autre jour'], [res.tropTot, 'partent trop tôt'], [res.conflits, 'chevauchent ton agenda'], [res.horsZone, 'trop loin'], [res.tropTard, 'attente trop longue'], [res.passees, 'déjà passées']].filter(([k]) => k).map(([k, t]) => k + ' ' + t).join(', ');
     return `<div class="carte" id="retours">
       <p class="doux">Départ à moins de ${esc(r.rayon_retour_km ?? 60)} km de ${esc(m.to_city ? lieu(m, 'destination') : 'l’arrivée')}, même jour que l’arrivée, moyen de transport le moins cher qui arrive à temps (covoiturage, bus, train…, estimations), marge de sécurité ${esc(r.marge_minutes ?? 60)} min${res.finSource && res.finSource.estimee ? ', heure de livraison estimée' : ''}. Toutes plateformes.</p>
-      ${n ? (() => { const L = res.compatibles.slice(0, 6).map((x, i) => [x, i]), prox = L.filter(([x]) => (x.retourDomicileKm != null && x.retourDomicileKm <= 50)), suite = L.filter(([x]) => !(x.retourDomicileKm != null && x.retourDomicileKm <= 50)), T = s => '<h2>' + s + '</h2>'; return (prox.length ? T('Mission retour possible') + prox.map(([x, i]) => item(x, i)).join('') : '') + (suite.length ? T('Mission à la suite possible') + suite.map(([x, i]) => item(x, i)).join('') : ''); })() : '<p>Aucun retour compatible pour l’instant.</p>'}
+      ${(n || extras.length) ? (() => { const L = res.compatibles.slice(0, 6).map((x, i) => [x, i]).concat(extras.map((x, k) => [x, baseIdx + k])), prox = L.filter(([x]) => estProche(x)), suite = L.filter(([x]) => !estProche(x)), T = s => '<h2>' + s + '</h2>'; return (prox.length ? T('Retour possible vers le domicile') + prox.map(([x, i]) => item(x, i)).join('') : '') + (suite.length ? T('Mission à la suite possible') + suite.map(([x, i]) => item(x, i)).join('') : ''); })() : '<p>Aucun retour compatible pour l’instant.</p>'}
       ${res.dateInconnue.length ? `<p class="doux">À vérifier (horaire non fourni) :</p>${res.dateInconnue.slice(0, 3).map((x, i) => item(x, n + i)).join('')}` : ''}
       ${ecartes ? `<p class="doux">Écartées : ${esc(ecartes)}.</p>` : ''}
       <p class="doux">Rien n’est réservé : ouvre la mission sur sa plateforme pour la prendre.</p></div>`;
