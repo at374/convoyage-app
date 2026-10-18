@@ -456,3 +456,35 @@ html:root[data-style="classique"]{--bkVehF:#dbeafe;--bkVehT:#1e3a8a;--bkLieuF:#f
 #feuilleContenu .retourBloc .doux,#feuilleContenu .retourSuite,#feuilleContenu .chips{font-size:.85em}
 #feuilleContenu .carte.renta .tableau,#feuilleContenu .carte .tableau{font-size:.85em}
 #feuilleContenu>p.doux{font-size:.8em}
+
+/* V212 : modèle C, rubriques en blocs colorés avec titre en étiquette */
+:root{--bkD1F:#fde2e4;--bkD1T:#7a1020;--bkD2F:#d9f5e3;--bkD2T:#0b4a2a;--bkVehF:#dbeafe;--bkVehT:#0b2f66;--bkLieuF:#fef3c7;--bkLieuT:#6b3a00;--bkSuiteF:#ede9fe;--bkSuiteT:#3b1b7a;--bkKmF:#ccfbf1;--bkKmT:#0b4a45;--bkRenF:#fef9c3;--bkRenT:#5a4a00;--bkTrF:#e5e7eb;--bkTrT:#1f2937;--bkOkV:#0b7a3a;--bkKoV:#c01c1c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bkD1F:#4a1a22;--bkD1T:#ffd6da;--bkD2F:#173b2a;--bkD2T:#c9f7dc;--bkVehF:#1c3350;--bkVehT:#d4e8ff;--bkLieuF:#4a3410;--bkLieuT:#ffe2b0;--bkSuiteF:#3a2457;--bkSuiteT:#ead9ff;--bkKmF:#12403f;--bkKmT:#c8f5f2;--bkRenF:#2b2b12;--bkRenT:#f3f0b5;--bkTrF:#33303a;--bkTrT:#e6e2f0;--bkOkV:#4ade80;--bkKoV:#ff6b6b}}
+html:root[data-style="ultra"]{--bkD1F:#4a1a22;--bkD1T:#ffd6da;--bkD2F:#173b2a;--bkD2T:#c9f7dc;--bkVehF:#1c3350;--bkVehT:#d4e8ff;--bkLieuF:#4a3410;--bkLieuT:#ffe2b0;--bkSuiteF:#3a2457;--bkSuiteT:#ead9ff;--bkKmF:#12403f;--bkKmT:#c8f5f2;--bkRenF:#2b2b12;--bkRenT:#f3f0b5;--bkTrF:#33303a;--bkTrT:#e6e2f0;--bkOkV:#4ade80;--bkKoV:#ff6b6b}
+html:root[data-style="braise"]{--bkD1F:#5a1620;--bkD1T:#ffd6da;--bkD2F:#1a3a2a;--bkD2T:#c9f7dc;--bkVehF:#3a1c2e;--bkVehT:#ffd6e6;--bkLieuF:#4d2a0e;--bkLieuT:#ffd9b0;--bkSuiteF:#2f2250;--bkSuiteT:#e6dcff;--bkKmF:#3a2a1a;--bkKmT:#ffe6c8;--bkRenF:#42201a;--bkRenT:#ffd9cf;--bkTrF:#3a2430;--bkTrT:#f0dce6;--bkOkV:#4ade80;--bkKoV:#ff8a8a}
+html:root[data-style="crepuscule"]{--bkD1F:#6a2447;--bkD1T:#ffd9ea;--bkD2F:#1f4a47;--bkD2T:#cff7f0;--bkVehF:#1f3a5c;--bkVehT:#d6e8ff;--bkLieuF:#6b3a12;--bkLieuT:#ffe0b8;--bkSuiteF:#5a2f8f;--bkSuiteT:#f1e2ff;--bkKmF:#1f4a47;--bkKmT:#cff7f0;--bkRenF:#5a4a12;--bkRenT:#fff0b8;--bkTrF:#4a3a70;--bkTrT:#eadfff;--bkOkV:#6ee7a0;--bkKoV:#ff8a8a}
+html:root[data-style="jour"],html:root[data-style="classique"]{--bkD1F:#fde2e4;--bkD1T:#7a1020;--bkD2F:#d9f5e3;--bkD2T:#0b4a2a;--bkVehF:#dbeafe;--bkVehT:#0b2f66;--bkLieuF:#fef3c7;--bkLieuT:#6b3a00;--bkSuiteF:#ede9fe;--bkSuiteT:#3b1b7a;--bkKmF:#ccfbf1;--bkKmT:#0b4a45;--bkRenF:#fef9c3;--bkRenT:#5a4a00;--bkTrF:#e5e7eb;--bkTrT:#1f2937;--bkOkV:#0b7a3a;--bkKoV:#c01c1c}
+.bkC{position:relative;display:block;margin:15px 0 6px;padding:16px 10px 8px;border-radius:10px;font-size:.9rem;font-weight:400;line-height:1.4;text-align:left;font-style:normal;letter-spacing:0;background:var(--f);color:var(--t)}
+.bkC b{font-weight:700}
+.bkC .bkt{position:absolute;top:-9px;left:10px;background:var(--t);color:var(--f);border-radius:8px;padding:0 8px;font-size:.68rem;font-weight:800;line-height:1.55;letter-spacing:.4px}
+.bkD1{--f:var(--bkD1F);--t:var(--bkD1T)}.bkD2{--f:var(--bkD2F);--t:var(--bkD2T)}.bkVeh{--f:var(--bkVehF);--t:var(--bkVehT)}.bkLieu{--f:var(--bkLieuF);--t:var(--bkLieuT)}
+.bkSuite{--f:var(--bkSuiteF);--t:var(--bkSuiteT)}.bkKm{--f:var(--bkKmF);--t:var(--bkKmT)}.bkRen{--f:var(--bkRenF);--t:var(--bkRenT)}.bkTr{--f:var(--bkTrF);--t:var(--bkTrT)}
+.bkC .ve{color:inherit;filter:none;opacity:1}
+.bkC a{color:inherit;text-decoration:underline}
+.bkC .doux,.bkC .gpsInfo{color:inherit;opacity:.8;font-size:.85em}
+.bkC .petit{font-size:.8em;opacity:.85}
+.bkC .bkL{margin:5px 0}
+.bkC .rd{display:flex;justify-content:space-between;gap:10px;margin:2px 0}
+.bkC .rd.gras{font-weight:800}.bkC .rd.sub{padding-left:12px;font-size:.88em}.bkC .rd.gros{font-size:1.05em}
+.bkC .rd.ok{color:var(--bkOkV)}.bkC .rd.ko{color:var(--bkKoV)}
+.bkRenOk{border-left:6px solid var(--bkOkV)}.bkRenKo{border-left:6px solid var(--bkKoV)}
+.sugBtn{display:block;width:100%;text-align:left;margin:6px 0;background:rgba(255,255,255,.16);color:inherit;border:0;border-radius:8px;padding:6px 8px;font:inherit}
+.bkTr .liensTr{display:flex;flex-wrap:wrap;gap:5px}
+.bkTr .liensTr a{background:rgba(255,255,255,.16);border-radius:12px;padding:3px 8px;font-size:.8rem;text-decoration:none}
+.bkTr .liensNote,.bkTr .liensVerif{font-size:.75rem;display:block;margin-top:4px}
+#feuilleContenu .carte{font-size:.88rem}
+#feuilleContenu .carte h2{font-size:1.05rem}
+#retours p,#retours .doux{font-size:.8rem}
+.btnVert{display:block;width:100%;margin:6px 0 4px;padding:11px 12px;border:0;border-radius:10px;background:#16a34a;color:#fff;font-weight:800;font-size:1rem;box-shadow:0 0 0 2px #86efac inset}
+html:root .sugBtn,html:root[data-style] .sugBtn{background:rgba(255,255,255,.16) !important;background-image:none !important;color:inherit !important;box-shadow:none !important;border:0 !important;font-style:normal !important;text-shadow:none !important}
+html:root .btnVert,html:root[data-style] .btnVert{background:#16a34a !important;background-image:none !important;color:#fff !important;font-style:normal !important;text-shadow:none !important}
