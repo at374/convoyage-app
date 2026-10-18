@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V223 (2.0.82)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V224 (2.0.83)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -487,8 +487,9 @@
       mois.map(g => `<div class="carte mois" data-mois="${esc(g.mois)}"><h2>${esc(nomMois(g.mois))}</h2><table class="tableau">
         ${ligne('Prestations (HT)', esc(euros(g.prestation)))}${ligne('Frais remboursés', esc(euros(g.frais)))}${ligne('Total facturé', '<b>' + esc(euros(g.total)) + '</b>')}
         ${ligne('Missions facturées', esc(nbM(g.trajets)))}${ligne('Payées — ' + esc(nbM(g.trajetsPayes)), '<b>' + esc(euros(g.paye)) + '</b>')}${ligne('Facturées, non payées — ' + esc(nbM(g.trajetsEnAttente)), '<b>' + esc(euros(g.enAttente)) + '</b>')}${ligne('= Bénéfice estimé', '<b>' + esc(euros(g.benefice)) + '</b>')}</table>
-        ${g.factures.map(f => `<div class="factureLigne"><span><b>Facture n° ${esc(f.numero || f.external_id)}</b> · ${esc(jour(f.emise_le))} · ${esc(f.nb_trajets || 0)} trajet${f.nb_trajets > 1 ? 's' : ''}</span><span>${esc(euros(f.total))} <span class="etiq ${f.statut === 'payee' ? 'ok' : 'nv'}">${f.statut === 'payee' ? 'payée' + (f.payee_le ? ' le ' + esc(jour(f.payee_le)) : '') : 'validée, en attente'}</span></span></div>`).join('')}</div>`).join('') +
+        ${g.factures.map(f => `<div class="factureLigne" data-fact="${esc(f.external_id)}"><span><b>Facture n° ${esc(f.numero || f.external_id)}</b> · ${esc(jour(f.emise_le))} · ${esc(f.nb_trajets || 0)} trajet${f.nb_trajets > 1 ? 's' : ''}</span><span>${esc(euros(f.total))} <span class="etiq ${f.statut === 'payee' ? 'ok' : 'nv'}">${f.statut === 'payee' ? 'payée' + (f.payee_le ? ' le ' + esc(jour(f.payee_le)) : '') : 'validée, en attente'}</span></span></div>`).join('')}</div>`).join('') +
       '<p class="doux">Seules les factures validées par Hiflow sont comptées. Bénéfice estimé = prestations − cotisations (taux des Réglages) ; les frais sont avancés puis remboursés. Estimation à vérifier selon ta situation.</p>';
+    if (window.CPFact) window.CPFact.monter({ ecran: $('ecran'), factures: etat.factures, missions: etat.missions, feuille: $('feuille'), contenu: $('feuilleContenu'), toast, rafraichir: vueFactures });   // V224
   }
   // V99 : mission réellement disponible = statut disponible, date non dépassée depuis plus d'un jour, pas une ligne de « Mes trajets » (plaque devant la ville).
   const PLAQUE_VILLE = /^\s*[A-Z]{1,2}-?\d{3}-?[A-Z]{2}\b/;
