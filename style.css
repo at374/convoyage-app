@@ -488,3 +488,7 @@ html:root[data-style="jour"],html:root[data-style="classique"]{--bkD1F:#fde2e4;-
 .btnVert{display:block;width:100%;margin:6px 0 4px;padding:11px 12px;border:0;border-radius:10px;background:#16a34a;color:#fff;font-weight:800;font-size:1rem;box-shadow:0 0 0 2px #86efac inset}
 html:root .sugBtn,html:root[data-style] .sugBtn{background:rgba(255,255,255,.16) !important;background-image:none !important;color:inherit !important;box-shadow:none !important;border:0 !important;font-style:normal !important;text-shadow:none !important}
 html:root .btnVert,html:root[data-style] .btnVert{background:#16a34a !important;background-image:none !important;color:#fff !important;font-style:normal !important;text-shadow:none !important}
+/* V217 villes jaunes : départ et arrivée sur le même jaune que le prix */
+.mission .trajet .vD,.mission .trajet .vA,.carte .trajet .vD,.carte .trajet .vA{display:inline-block;background:#ffd93b !important;color:#111 !important;padding:1px 9px;border-radius:8px;font-style:normal;margin:1px 0}
+.mission .trajet .vD *,.mission .trajet .vA *{color:#111 !important}
+.mission .trajet .vD .fg,.mission .trajet .vA .fg{color:inherit !important}
