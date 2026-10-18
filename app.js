@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V220 (2.0.79)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V221 (2.0.80)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -855,7 +855,7 @@
       }
     }
     const baseIdx = detail.retours.length; detail.retours = detail.retours.concat(extras);
-    const estProche = x => x.rapprocheKm != null ? x.rapprocheKm > 0 : (x.retourDomicileKm != null && x.retourDomicileKm <= 50);
+    const estProche = x => x.retourDomicileKm != null && x.retourDomicileKm <= 50;   // V221 : « retour vers le domicile » = la mission arrive à 50 km ou moins du domicile
     if (res.raison === 'lieu_arrivee_inconnu') return '<div class="carte" id="retours"><h2>🔁 Retours possibles</h2><p class="doux">Lieu d’arrivée non localisable : recherche impossible.</p></div>';
     // V159 : chaînage — pour chaque retour proposé, les suites possibles après lui (2 niveaux), avec distance et durée de liaison.
     const dispoR = etat.missions.filter(z => z.kind === 'disponible');
