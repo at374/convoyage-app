@@ -128,6 +128,13 @@
   const ABBY = 'https://api.app-abby.com';
   async function appelAbby(chemin, methode, corps) {
     const k = L('cp_abby_cle', ''); if (!k) throw new Error('Clé Abby non enregistrée');
+    if (window.CPNatif && typeof window.CPNatif.abby === 'function') {   // APK 2.07 : appel fait par Android (pas de blocage CORS)
+      let rep = ''; try { rep = String(window.CPNatif.abby(methode || 'GET', chemin, k, corps ? JSON.stringify(corps) : '')); } catch (e) { throw new Error('Appel Abby impossible depuis l’application'); }
+      const i = rep.indexOf('\n'), code = parseInt(rep.slice(0, i), 10), tx = rep.slice(i + 1); let j = null; try { j = JSON.parse(tx); } catch (_) {}
+      if (!code) throw new Error('Connexion à Abby impossible (' + tx.slice(0, 60) + ')');
+      if (code >= 400) throw new Error('Abby a répondu ' + code);
+      return j;
+    }
     const c = new AbortController(), t = setTimeout(() => c.abort(), 20000);
     try {
       const r = await fetch(ABBY + chemin, { method: methode || 'GET', headers: { authorization: 'Bearer ' + k, 'content-type': 'application/json' }, body: corps ? JSON.stringify(corps) : undefined, signal: c.signal });
