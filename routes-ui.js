@@ -31,7 +31,7 @@
   };
   const hm = m => { if (!Number.isFinite(m)) return '—'; const h = Math.floor(m / 60), mm = m % 60; return h ? h + 'h' + String(mm).padStart(2, '0') : mm + ' min'; };
   const lieu = p => typeof p === 'string' ? encodeURIComponent(p) : p.lat + ',' + p.lng;
-  const liens = (o, d) => '<div class="bk bkC bkTr"><div class="bkt">OUVRIR CE TRAJET DANS</div><div class="liensTr"><a href="https://www.google.com/maps/dir/?api=1&origin=' + lieu(o) + '&destination=' + lieu(d) + '&travelmode=driving&dir_action=navigate" target="_blank" rel="noopener">🗺️ Google Maps</a><a href="https://waze.com/ul?' + (typeof d === 'string' ? 'q=' + encodeURIComponent(d) : 'll=' + d.lat + ',' + d.lng) + '&navigate=yes" target="_blank" rel="noopener">🚙 Waze</a><a class="r2r" style="display:none" href="https://www.rome2rio.com/map/' + lieu(o) + '/' + lieu(d) + '" target="_blank" rel="noopener">🚆 Rome2rio</a><a href="https://www.viamichelin.fr/web/Itineraires?departure=' + lieu(o) + '&arrival=' + lieu(d) + '" target="_blank" rel="noopener">🧭 ViaMichelin</a><a href="https://fr.mappy.com/itineraire" target="_blank" rel="noopener">📍 Mappy</a><a class="rm" href="https://www.roole.fr/application-roole-map" target="_blank" rel="noopener">🛣️ Roole Map</a></div></div>';
+  const liens = (o, d) => '<div class="bk bkC bkTr bkIt"><div class="bkt">OUVRIR CE TRAJET DANS</div><div class="liensTr"><a href="https://www.google.com/maps/dir/?api=1&origin=' + lieu(o) + '&destination=' + lieu(d) + '&travelmode=driving&dir_action=navigate" target="_blank" rel="noopener">🗺️ Google Maps</a><a href="https://waze.com/ul?' + (typeof d === 'string' ? 'q=' + encodeURIComponent(d) : 'll=' + d.lat + ',' + d.lng) + '&navigate=yes" target="_blank" rel="noopener">🚙 Waze</a><a href="https://www.viamichelin.fr/web/Itineraires?departure=' + lieu(o) + '&arrival=' + lieu(d) + '" target="_blank" rel="noopener">🧭 ViaMichelin</a><a href="https://fr.mappy.com/itineraire" target="_blank" rel="noopener">📍 Mappy</a><a class="rm" href="https://www.roole.fr/application-roole-map" target="_blank" rel="noopener">🛣️ Roole Map</a></div></div>';
   const decode = s => { const out = []; let i = 0, lat = 0, lng = 0; while (i < s.length) { let b, sh = 0, res = 0; do { b = s.charCodeAt(i++) - 63; res |= (b & 31) << sh; sh += 5; } while (b >= 32); lat += (res & 1) ? ~(res >> 1) : (res >> 1); sh = 0; res = 0; do { b = s.charCodeAt(i++) - 63; res |= (b & 31) << sh; sh += 5; } while (b >= 32); lng += (res & 1) ? ~(res >> 1) : (res >> 1); out.push([lng / 1e5, lat / 1e5]); } return out; };
   const carte = r => {
     const W = 480, H = 540, A = decode(r.polyline);
@@ -125,16 +125,16 @@
     target.innerHTML = info;   // V186 : la carte et les villes passent avant les lignes d’infos
     if (mode === 'DRIVE' && r.polyline) { try { target.innerHTML = carte(r) + (target.dataset.villes ? BK('bkLieu', 'ITINÉRAIRE', target.dataset.villes) : '') + info; } catch (_) { target.innerHTML = info; } estimerPeage(r, target); }
   };
-  const addBox = (host, id, origin, destination, departureTime, villes) => {
+  const addBox = (host, id, origin, destination, departureTime, villes, tr) => {
     if (!host || document.getElementById(id) || !origin || !destination) return;
     const box = document.createElement('div');
     box.id = id; box.className = 'carte';
-    box.innerHTML = '<b>🧭 Trajet réel Google</b><p class="doux">Distance routière, durée et péage exact.</p><button type="button" data-rmode="voiture">🚗 Voiture et péages</button> <button type="button" class="second" data-rmode="transport">🚌 Transports</button><div class="doux" data-routes-result style="margin-top:8px"></div>' + liens(origin, destination);
+    box.innerHTML = '<b>🧭 Trajet réel Google</b><p class="doux">Distance routière, durée et péage exact.</p><button type="button" data-rmode="voiture">🚗 Voiture et péages</button> <button type="button" class="second" data-rmode="transport">🚌 Transports</button><div class="doux" data-routes-result style="margin-top:8px"></div>' + liens(origin, destination) + '<div class="bk bkC bkTr bkTn" style="display:none"><div class="bkt">TRANSPORTS EN COMMUN · SITES</div><div class="tnZone"></div></div>';
     host.appendChild(box);
     if (villes) box.querySelector('[data-routes-result]').dataset.villes = villes;
     box.querySelectorAll('button[data-rmode]').forEach(b => b.onclick = async () => {
       const out = box.querySelector('[data-routes-result]'), mode = b.dataset.rmode;
-      const s = session(), c = config(); out.textContent = 'Calcul Google en cours…'; box.querySelectorAll('.r2r').forEach(a => { a.style.display = mode === 'transport' ? '' : 'none'; }); box.querySelectorAll('.rm').forEach(a => { a.style.display = mode === 'transport' ? 'none' : ''; });
+      const s = session(), c = config(); out.textContent = 'Calcul Google en cours…'; const tn = mode === 'transport'; box.querySelectorAll('.bkIt').forEach(a => { a.style.display = tn ? 'none' : ''; }); box.querySelectorAll('.bkTn').forEach(a => { a.style.display = tn ? '' : 'none'; }); if (tn) { const z = box.querySelector('.tnZone'); try { z.innerHTML = window.CPLiensTr && tr ? window.CPLiensTr(tr[0], tr[1], tr[2], tr[3]) : ''; } catch (_) { z.innerHTML = ''; } if (!z.innerHTML) z.innerHTML = '<span class="doux">Sites de transport indisponibles pour ce trajet.</span>'; }
       try {
         const r = await window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, refreshToken: s?.refresh_token, expiresAt: s?.expires_at, email: s?.email, userId: s?.user_id, supabaseUrl: c?.url, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime });
         render(out, r, mode === 'voiture' ? 'DRIVE' : 'TRANSIT');
@@ -144,7 +144,7 @@
   const addMissionPanel = () => {
     const host = document.getElementById('feuilleContenu'), m = missionActive();
     if (!host || !m) return;
-    addBox(host, 'routesGoogleMission', point(m, 'origin'), point(m, 'destination'), m.pickup_start || undefined);
+    addBox(host, 'routesGoogleMission', point(m, 'origin'), point(m, 'destination'), m.pickup_start || undefined, undefined, [m.from_city, m.from_department, m.to_city, m.to_department]);
   };
   const addEstimatePanel = () => {
     const host = document.getElementById('popVol');
@@ -156,7 +156,7 @@
     // V177 : dans la fenêtre du trajet, on ne garde que l’encart Google ; sous la carte : point vert (départ) et point rouge (arrivée).
     if (!document.getElementById('routesGoogleStyle')) { const st = document.createElement('style'); st.id = 'routesGoogleStyle'; st.textContent = '.popVolBoite.soloGoogle>*:not(#popVolX):not(#routesGoogleEstimate){display:none!important}'; document.head.appendChild(st); }
     const e2 = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-    addBox(contenu, 'routesGoogleEstimate', match[1].trim(), match[2].trim(), undefined, '🟢 ' + e2(match[1].trim()) + ' → 🔴 ' + e2(match[2].trim()));
+    addBox(contenu, 'routesGoogleEstimate', match[1].trim(), match[2].trim(), undefined, '🟢 ' + e2(match[1].trim()) + ' → 🔴 ' + e2(match[2].trim()), [match[1].trim(), '', match[2].trim(), '']);
     contenu.classList.add('soloGoogle');
   };
   const refresh = () => { addMissionPanel(); addEstimatePanel(); };
