@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V210 (2.0.71)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V211 (2.0.72)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -390,15 +390,16 @@
   const verifLe = m => { const s = (etat.sources || []).find(x => cleP(x.platform) === cleP(m.platform)); const t = s ? Date.parse(s.lu_le || '') : NaN; if (!Number.isFinite(t)) return 'Disponible'; const d = new Date(t); return 'Disponible (vérifié le ' + d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t) + ')'; };
   const vehObj = m => { let v = m.vehicle; if (typeof v === 'string' && v.trim().charAt(0) === '{') { try { v = JSON.parse(v); } catch (_) {} } return v; };
   const vehInfo = m => { const v = vehObj(m); if (v && typeof v === 'object') return { type: [v.category || v.type, v.model, v.gearbox].filter(Boolean).map(x => String(x).trim()).join(' · '), en: String(v.energy || '').trim() }; return { type: typeof v === 'string' ? v.trim() : '', en: '' }; };
-  const adrHtml = m => (m.platform === 'DriiveMe' && (m.origin_address || m.destination_address)) ? '<div class="adrCarte">' + (m.origin_address ? '<div>📍 Départ : <b>' + esc(m.origin_address) + '</b></div>' : '') + (m.destination_address ? '<div>🏁 Arrivée : <b>' + esc(m.destination_address) + '</b></div>' : '') + '</div>' : '';   // V189 : adresses exactes lues sur la page détail DriiveMe
+  const adrHtml = m => (m.platform === 'DriiveMe' && (m.origin_address || m.destination_address)) ? '<div class="bk bkLieu">' + (m.origin_address ? '<div>📍 <b>Départ</b> : ' + esc(m.origin_address) + '</div>' : '') + (m.destination_address ? '<div>🏁 <b>Arrivée</b> : ' + esc(m.destination_address) + '</div>' : '') + '</div>' : '';   // V211 : bloc coloré
   // V206 : suites possibles lues sur la fiche DriiveMe, affichées juste sous l'étiquette de la mission (stockées dans vehicle.suites)
-  const sugHtml = m => { const L = Array.isArray(m.suites) && m.suites.length ? m.suites : (vehObj(m) && typeof vehObj(m) === 'object' && Array.isArray(vehObj(m).suites) ? vehObj(m).suites : []); if (!L.length) return ''; return '<div style="margin:6px 0;padding:6px 8px;border-left:3px solid #15803d;background:rgba(21,128,61,.08);font-size:.92em;line-height:1.35"><div style="font-weight:700">↪ Suites possibles (' + L.length + ')</div>' + L.slice(0, 4).map(z => '<div>• ' + esc(String(z.t || '').replace(/\s*\|\s*/g, ' · ')) + '</div>').join('') + (L.length > 4 ? '<div class="doux">+ ' + (L.length - 4) + ' autre(s)</div>' : '') + '</div>'; };
+  const sugLigne = z => { const p = String(z.t || '').split(/\s*\|\s*/).map(s => s.trim()).filter(Boolean); if (p.length >= 3) { const dm = p[0].match(/^(.+?\(\s*\d+\s*km\s*\))\s*(.+)$/); const tete = dm ? 'Départ : <b>' + esc(dm[1]) + '</b><br>Arrivée : <b>' + esc(dm[2]) + '</b>' : '<b>' + esc(p[0]) + '</b>'; return '<div class="bkL">' + tete + '<br>' + esc(p.slice(1, -1).join(' · ')) + ' · <b>' + esc(p[p.length - 1].replace(/\s+,/, ',')) + '</b></div>'; } return '<div class="bkL">' + esc(p.join(' · ')) + '</div>'; };
+  const sugHtml = m => { const L = Array.isArray(m.suites) && m.suites.length ? m.suites : (vehObj(m) && typeof vehObj(m) === 'object' && Array.isArray(vehObj(m).suites) ? vehObj(m).suites : []); if (!L.length) return ''; return '<div class="bk bkSuite"><div class="bkT">↪ Suites possibles (' + L.length + ')</div>' + L.slice(0, 4).map(sugLigne).join('') + (L.length > 4 ? '<div class="bkL">+ ' + (L.length - 4) + ' autre(s) dans la fiche</div>' : '') + '</div>'; };
   const sugListe = m => Array.isArray(m.suites) && m.suites.length ? m.suites : (vehObj(m) && typeof vehObj(m) === 'object' && Array.isArray(vehObj(m).suites) ? vehObj(m).suites : []);
   const sugDetail = m => { const L = sugListe(m); if (!L.length) return ''; return '<div class="carte"><b>↪ Suites possibles (' + L.length + ')</b>' + L.map(z => { const ok = etat.missions.some(x => x.platform === m.platform && String(x.external_id) === String(z.id)); return '<button type="button" class="second" data-suite="' + esc(String(z.id)) + '" style="display:block;width:100%;text-align:left;margin:6px 0">• ' + esc(String(z.t || '').replace(/\s*\|\s*/g, ' · ')) + (ok ? ' ▸' : ' <span class="doux">(fiche pas encore lue)</span>') + '</button>'; }).join('') + '</div>'; };
   const vehHtml = m => {
     const { type, en } = vehInfo(m); const n = en.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); let ic = '⛽', cl = 'inc';
     if (/hybrid/.test(n)) { ic = '🔌'; cl = 'hyb'; } else if (/elec/.test(n)) { ic = '🔋'; cl = 'ele'; } else if (/ther|essence|diesel|gazole|gasoil|gasoline|petrol|fuel/.test(n)) { ic = '⛽'; cl = 'the'; }
-    return '<span class="veh"><span class="vt' + (type ? '' : ' inc') + '">🚗 Véhicule : <b>' + esc(type || 'inconnu') + '</b></span><span class="ve ' + cl + '">' + ic + ' Énergie : <b>' + esc(en || 'inconnue') + '</b></span></span>' + adrHtml(m) + sugHtml(m);
+    return '<div class="bk bkVeh"><span class="vt' + (type ? '' : ' inc') + '">🚗 <b>Véhicule</b> : ' + esc(type || 'inconnu') + '</span><span class="ve ' + cl + '">' + ic + ' <b>Énergie</b> : ' + esc(en || 'inconnue') + '</span></div>' + adrHtml(m) + sugHtml(m);
   };
   // Prix : on mémorise le dernier prix vu de chaque mission ; s'il change, flèche et ancien prix.
   const prixVar = m => {
@@ -430,7 +431,14 @@
   }
   let listeAffichee = [];
   const COTES = { tous: 'Départ ou arrivée', depart: 'Départ', arrivee: 'Arrivée' };
-  const villesConnues = () => G.villesDesMissions(etat.missions);
+  // V211 : plus de plaques d'immatriculation dans les villes proposées ; les communes sont cherchées sur internet (API officielle geo.api.gouv.fr) dès 3 lettres.
+  const NET = [], netVu = new Set(), netReq = new Set();
+  const plaqueRE = /^[A-Z]{1,2}-?\d{2,4}-?[A-Z]{1,2}\s+/i;
+  const villesConnues = () => G.villesDesMissions(etat.missions).map(v => { const nom = String(v.nom).replace(plaqueRE, '').trim(); return Object.assign({}, v, { nom, n: G.norm(nom) }); }).filter(v => v.nom && !/\d/.test(v.nom)).concat(NET);
+  function chargerVillesNet(texte, apres) {
+    const k = G.norm(texte); if (k.length < 3 || netReq.has(k)) return; netReq.add(k);
+    try { fetch('https://geo.api.gouv.fr/communes?nom=' + encodeURIComponent(String(texte).trim()) + '&fields=nom,codeDepartement,centre&boost=population&limit=10').then(r => r.ok ? r.json() : []).then(L => { let n = 0; for (const c of L || []) { if (!c || !c.nom || !c.centre || !c.centre.coordinates) continue; const key = G.norm(c.nom) + '|' + c.codeDepartement; if (netVu.has(key)) continue; netVu.add(key); NET.push({ nom: c.nom, dep: c.codeDepartement, lat: c.centre.coordinates[1], lng: c.centre.coordinates[0], n: G.norm(c.nom), source: 'internet' }); n++; } if (n && apres) apres(); }).catch(() => {}); } catch (_) {}
+  }
   // V96 : filtres par client (société), véhicule, distance et durée.
   const FI = window.CPFiltres;
   function blocPlusFiltres(dispo) {
@@ -537,7 +545,7 @@
   // Suggestions dès 3 lettres (ou un numéro de département) : villes, départements, régions.
   function montrerSuggestions() {
     const box = $('sugg'); if (!box) return;
-    const l = G.suggestions(etat.recherche, { villes: villesConnues(), max: 7 });
+    const l = G.suggestions(etat.recherche, { villes: villesConnues(), max: 7 }); chargerVillesNet(etat.recherche, montrerSuggestions);
     if (!l.length) { box.hidden = true; box.innerHTML = ''; return; }
     box.innerHTML = l.map((s, i) => `<button role="option" data-sugg="${i}">${esc(s.libelle)}<small>${esc(s.detail)}</small></button>`).join('');
     box.hidden = false;
@@ -634,7 +642,7 @@
     $('pHotelOn').onchange = () => { lire(); memoriser(); $('pHotel').disabled = !p.hotelOn; };   // frais d'hôtel en option (coche)
     for (const b of document.querySelectorAll('[data-pzone]')) b.onclick = () => { lire(); p.zones.splice(Number(b.dataset.pzone), 1); memoriser(); afficher(); };
     $('pZone').oninput = () => {
-      const box = $('pSugg'), l = G.suggestions($('pZone').value, { villes: villesConnues(), max: 6 });
+      const box = $('pSugg'), l = G.suggestions($('pZone').value, { villes: villesConnues(), max: 6 }); chargerVillesNet($('pZone').value, () => { if ($('pZone')) $('pZone').oninput(); });
       box.innerHTML = l.map((x, i) => `<button role="option" data-pz="${i}">${esc(x.libelle)}<small>${esc(x.detail)}</small></button>`).join(''); box.hidden = !l.length;
       for (const b of box.querySelectorAll('[data-pz]')) b.onclick = () => { const x = l[Number(b.dataset.pz)]; lire(); p.zones.push(x.type === 'ville' ? { type: 'ville', nom: x.nom, dep: x.dep, lat: x.lat, lng: x.lng } : { type: x.type, code: x.code }); memoriser(); afficher(); };
     };
@@ -737,7 +745,7 @@
     $('rDom').value = r.domicile_ville || ''; $('rTr').value = r.cout_transport_km; $('rVit').value = r.vitesse_liaison; $('rMarge').value = r.marge_minutes; $('rRayon').value = r.rayon_retour_km; $('rAtt').value = r.attente_max_h; $('rSncf').value = r.carte_sncf || 'aucune'; $('rTrot').checked = r.trottinette === true;
     let domChoisi = r.domicile_ville ? { nom: r.domicile_ville, lat: r.domicile_lat, lng: r.domicile_lng, libelle: r.domicile_ville } : null;
     $('rDom').oninput = () => {
-      const box = $('rDomSugg'), l = G.suggestions($('rDom').value, { types: ['ville'], villes: villesConnues().filter(v => v.lat != null), max: 6 });
+      const box = $('rDomSugg'), l = G.suggestions($('rDom').value, { types: ['ville'], villes: villesConnues().filter(v => v.lat != null), max: 6 }); chargerVillesNet($('rDom').value, () => { if ($('rDom')) $('rDom').oninput(); });
       box.innerHTML = l.map((x, i) => `<button role="option" data-dom="${i}">${esc(x.libelle)}<small>${esc(x.detail)}</small></button>`).join(''); box.hidden = !l.length;
       for (const b of box.querySelectorAll('[data-dom]')) b.onclick = () => { const x = l[Number(b.dataset.dom)]; domChoisi = { nom: x.nom, lat: x.lat, lng: x.lng, libelle: x.nom }; $('rDom').value = x.nom; box.hidden = true; };
     };
@@ -813,7 +821,7 @@
     const L = [['🚆 SNCF Connect', 'https://www.sncf-connect.com/billet-train'], ['🚌 Flixbus', 'https://www.flixbus.fr/voyages-car/' + a + '-' + b], ['🚗 BlaBlaCar', 'https://www.blablacar.fr/ride-sharing/' + a + '/' + b], ['🚙 BlaBlaCar Daily', 'https://www.blablacar.fr/blablacar-daily']];
     if (DEP_ARA.includes(String(deDep || '')) || DEP_ARA.includes(String(versDep || ''))) L.push(['🚍 Cars Région / TER (OùRA)', 'https://www.oura.com/']);
     // V137 : OùRA dès qu'un des deux bouts est dans la région (voir plus haut) ; réseaux de la ville de départ ou d'arrivée (bus, tram, métro de la ville) + Citymapper dans les grandes villes.
-    for (const x of reseauxLocaux(deVille, deDep).concat(reseauxLocaux(versVille, versDep), reseauRegion(deDep), reseauRegion(versDep))) if (!L.some(y => y[1] === x[1])) L.push(x);
+    for (const x of reseauxLocaux(deVille, deDep).concat(reseauxLocaux(versVille, versDep), reseauRegion(deDep), reseauRegion(versDep))) if (!L.some(y => y[1] === x[1]) && !(/laregionvoustransporte/.test(x[1]) && L.some(y => /oura\.com/.test(y[1])))) L.push(x);
     L.push(['🚆 Rome2rio', r2], ['🗺️ Maps bus/train', gm]);
     const v = cleVerif ? (lireLocal('cp_verif', {}) || {})[cleVerif] : null;
     const caseV = cleVerif ? `<label class="liensVerif${v ? ' ok' : ''}"><input type="checkbox" data-verif="${esc(cleVerif)}"${v ? ' checked' : ''}> ${v ? '✓ Vérifié par toi le ' + esc(new Date(v).toLocaleDateString('fr-FR')) + ' (horaires et prix valables le jour de la mission)' : 'Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'}</label>` : '';
@@ -846,7 +854,8 @@
     const quand = (c, z) => sect('s-qd', '📅 Quand', '<span class="chips">' + quandHtml(c) + (z.attenteH ? chip('c-at', 'Attente', '≈ ' + esc(duree(z.attenteH))) : '') + '</span>');
     const suiteHtml = (s, prof) => { const z = s.x, c = z.mission, p = s.src; return `<div class="retourSuite" style="margin-left:${prof * 10}px"><span class="sectT suiteT">↪ Étape ${prof + 1} : mission possible ensuite</span><span class="chips"><span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span>${chip('c-trj', 'Trajet', esc(trajet(c)))}${chip('c-prix', 'Prix', c.fee != null ? esc(euros(c.fee)) : '?')}</span>${quand(c, z)}${puces(z, c, p)}</div>${s.suite.map(u => suiteHtml(u, prof + 1)).join('')}`; };
     const chaine = (x, c, i) => (i < 4 && x.statut === 'compatible') ? suites(c, [m, c], 1).map(s => suiteHtml(s, 1)).join('') : '';
-    const item = (x, i) => { const c = x.mission; return `<div class="retourBloc"><button class="retour${clsPlat(c.platform)}" data-retour="${i}"><span class="chips"><span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span>${chip('c-trj', 'Trajet', esc(trajet(c)))}${chip('c-prix', 'Prix', c.fee != null ? esc(euros(c.fee)) : '?')}</span>${quand(c, x)}${puces(x, c, m)}${x.estimations.length ? `<span class="chips">${chip('c-es', 'Estimation', esc(x.estimations.join(', ')))}</span>` : ''}</button>${x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department, 'r|' + (m.id || m.external_id) + '|' + (c.id || c.external_id)) : ''}${chaine(x, c, i)}</div>`; };
+    const dernLiens = (() => { let k = -1; res.compatibles.slice(0, 6).forEach((z, q) => { if (z.liaison && z.liaison.km >= 2) k = q; }); return k; })();   // V211 : sites de transport une seule fois, sous la dernière étiquette
+    const item = (x, i) => { const c = x.mission; return `<div class="retourBloc"><button class="retour${clsPlat(c.platform)}" data-retour="${i}"><span class="chips"><span class="etiq">${esc(PLATS[c.platform] || c.platform)}</span>${chip('c-trj', 'Trajet', esc(trajet(c)))}${chip('c-prix', 'Prix', c.fee != null ? esc(euros(c.fee)) : '?')}</span>${quand(c, x)}${puces(x, c, m)}${x.estimations.length ? `<span class="chips">${chip('c-es', 'Estimation', esc(x.estimations.join(', ')))}</span>` : ''}</button>${i === dernLiens && x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department, 'r|' + (m.id || m.external_id) + '|' + (c.id || c.external_id)) : ''}${chaine(x, c, i)}</div>`; };
     const dP = Date.parse(m.pickup_start || ''), dF = Date.parse(m.delivery_end || m.delivery_start || ''), multi = Number.isFinite(dP) && Number.isFinite(dF) && new Date(dP).toDateString() !== new Date(dF).toDateString();
     const n = res.compatibles.length, r = etat.reglages || {};
     const ecartes = [[res.autreJour, 'un autre jour'], [res.tropTot, 'partent trop tôt'], [res.conflits, 'chevauchent ton agenda'], [res.horsZone, 'trop loin'], [res.tropTard, 'attente trop longue'], [res.passees, 'déjà passées']].filter(([k]) => k).map(([k, t]) => k + ' ' + t).join(', ');
@@ -906,7 +915,7 @@
       ${m.kind === 'acceptee' ? blocHistorique(m) : ''}
       ${m.status === 'annulee' || m.status === 'terminee' || (m.kind === 'acceptee' && missionPassee(m)) ? '' : blocRetours(m)}
       ${m.vehicle && /[ée]lectri|\bev\b|\bbev\b/i.test(String(m.vehicle.energy || '')) ? `<div class="carte"><b>🔌 Véhicule électrique : calculer la charge</b><p class="doux" style="margin:4px 0">Le prix et le temps de charge dépendent de la voiture, de la borne et de l’itinéraire : ces sites les calculent (l’appli ne les connaît pas).</p><span class="liensTr"><a href="https://abetterrouteplanner.com/">⚡ A Better Routeplanner</a><a href="https://fr.chargemap.com/">🗺️ Chargemap (bornes et prix)</a>${(m.origin_address || m.from_city) && (m.destination_address || m.to_city) ? `<a href="${esc('https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(m.origin_address || m.from_city + ' ' + (m.from_department || '')) + '&destination=' + encodeURIComponent(m.destination_address || m.to_city + ' ' + (m.to_department || '')))}">📍 Itinéraire Google Maps</a>` : ''}</span></div>` : ''}
-      ${(m.price_history || []).length ? `<p class="doux">Historique du prix : ${m.price_history.map(h => esc(euros(h.de)) + ' → ' + esc(euros(h.a))).join(', ')}</p>` : ''}
+      ${(m.price_history || []).length ? `<p class="doux">Premier prix : <b>${esc(euros(m.price_history[0].de))}</b> · dernier prix : <b>${esc(euros(m.price_history[m.price_history.length - 1].a))}</b></p>` : ''}
       ${m.platform === 'Hiflow' && lienAppliHiflow() ? `<a href="${esc(lienAppliHiflow())}" class="lienAppli" data-numero="${esc(m.external_id)}"><button style="width:100%;margin-top:6px">📱 Ouvrir l’application Hiflow</button></a>` : (lienAppliAutre(m.platform, lien) ? `<a href="${esc(lienAppliAutre(m.platform, lien))}"><button style="width:100%;margin-top:6px">📱 Ouvrir l’application ${esc(PLATS[m.platform])}</button></a>` : `<a href="${esc(lien)}" target="_blank" rel="noopener"><button style="width:100%;margin-top:6px">Ouvrir sur ${esc(PLATS[m.platform])}</button></a>`)}`;
     for (const a of document.querySelectorAll('#feuilleContenu [data-numero]')) a.addEventListener('click', () => { try { navigator.clipboard && navigator.clipboard.writeText(a.dataset.numero).then(() => toast('N° ' + a.dataset.numero + ' copié : colle-le dans la recherche de l’application Hiflow'), () => {}); } catch (_) {} });
     for (const b of document.querySelectorAll('#feuilleContenu [data-suite]')) b.addEventListener('click', () => { const z = etat.missions.find(x => x.platform === m.platform && String(x.external_id) === b.dataset.suite); if (z) detail(z); });
