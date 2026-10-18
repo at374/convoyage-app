@@ -162,9 +162,9 @@ html:root[data-style="jour"] .onglets button.actif{color:#fde047;text-shadow:non
 .carte.alerte.nonlue{box-shadow:0 0 0 3px var(--accent)}.carte.alerte:not(.nonlue){opacity:.55}.pNouveau{background:var(--accent)!important;color:#fff!important;font-weight:800;padding:1px 7px;border-radius:999px;font-size:11px;margin-right:4px;vertical-align:1px}
 .lignePos{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}.lignePos select{flex:1;min-width:180px}.lignePos .doux{font-size:12px;flex-basis:100%}
 /* V137 : mission urgente (moins de 24 h) : cadre rouge qui clignote ; sans animation si le téléphone la désactive */
-@keyframes clignote{0%,100%{box-shadow:0 0 0 6px #dc2626}50%{box-shadow:0 0 0 6px rgba(220,38,38,.15)}}
-.mission.urgent{animation:clignote 2s ease-in-out infinite;opacity:1}
-@media (prefers-reduced-motion:reduce){.mission.urgent{animation:none;box-shadow:0 0 0 6px #dc2626}}
+@keyframes clignote{0%,100%{opacity:1}50%{opacity:.1}}
+.mission.urgent{position:relative;box-shadow:0 0 0 3px #dc2626}.mission.urgent::after{content:"";position:absolute;top:-9px;right:-9px;bottom:-9px;left:-9px;border:5px solid #dc2626;border-radius:20px;pointer-events:none;will-change:opacity;animation:clignote 2s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.mission.urgent::after{animation:none}}
 .urgence{color:#dc2626;font-weight:800;font-size:13px;margin:2px 0}
 .liensVerif{display:block;margin-top:6px;font-size:.85rem}.liensVerif.ok{color:var(--ok,#1a7f37);font-weight:600}
 .vol{color:var(--accent,#2563eb);font-weight:600}
