@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V222 (2.0.81)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V223 (2.0.82)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -835,12 +835,16 @@
   function blocRetours(m) {
     const acceptees = etat.missions.filter(x => x.kind === 'acceptee');
     const res = RT.retours(m, etat.missions.filter(x => x.kind === 'disponible'), etat.reglages, { acceptees: m.kind === 'acceptee' ? acceptees : acceptees.concat([m]) });
+    // V223 : une mission « à la suite » doit pouvoir démarrer le MÊME JOUR que la fin de la mission précédente ; les jours suivants relèvent du Planning sur plusieurs jours
+    const jP = ms => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(ms));
+    const memeJour = (r0, x) => !(r0.finSource && x.arrivee != null) || jP(x.arrivee) === jP(r0.finSource.t);
+    res.compatibles = res.compatibles.filter(x => memeJour(res, x));
     detail.retours = res.compatibles.concat(res.dateInconnue);
     const sugIds = new Set(m.platform === 'DriiveMe' ? sugListe(m).map(z => String(z.id)) : []);
     const estSug = x => sugIds.has(String(x.mission.external_id)) && x.mission.platform === m.platform;
     res.compatibles.concat(res.dateInconnue).forEach(x => { if (estSug(x)) x.sug = true; });
     const extras = [];
-    if (sugIds.size && res.arriveeSource) {
+    if (false && sugIds.size && res.arriveeSource) {   // V223 : les suites DriiveMe hors critères (autre jour, trop loin) ne sont plus ajoutées : même règle que les autres missions
       const dejaC = new Set(res.compatibles.concat(res.dateInconnue).map(x => RT.cle(x.mission)));
       const rg = etat.reglages || {}, dom = (rg.domicile_lat != null && rg.domicile_lat !== '' && rg.domicile_lng != null && rg.domicile_lng !== '' && Number.isFinite(Number(rg.domicile_lat)) && Number.isFinite(Number(rg.domicile_lng))) ? { lat: Number(rg.domicile_lat), lng: Number(rg.domicile_lng) } : null;
       for (const c of etat.missions) {
@@ -862,7 +866,7 @@
     const suites = (src, deja, prof) => {
       if (prof > 2) return [];
       let r2; try { r2 = RT.retours(src, dispoR, etat.reglages, { acceptees: acceptees.concat(deja) }); } catch (_) { return []; }
-      return r2.compatibles.filter(z => !deja.some(d => RT.cle(d) === RT.cle(z.mission))).slice(0, 2).map(z => ({ x: z, src, suite: suites(z.mission, deja.concat([z.mission]), prof + 1) }));
+      return r2.compatibles.filter(z => memeJour(r2, z) && !deja.some(d => RT.cle(d) === RT.cle(z.mission))).slice(0, 2).map(z => ({ x: z, src, suite: suites(z.mission, deja.concat([z.mission]), prof + 1) }));
     };
     // V179 : étiquettes titrées, sections encadrées (Quand / Transport / Rentabilité), une carte par suggestion.
     const ICO = { covoiturage: '🚗', bus: '🚌', train: '🚆', taxi: '🚕' };
