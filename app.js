@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V225 (2.0.84)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V226 (2.0.85)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -711,7 +711,7 @@
   }
   function vueReglages() {
     const r = { statut: 'micro', taux_cotisations: 21.2, cout_km: 0, prix_minimum: 0, alertes_nouvelles: true, alertes_prix: true, domicile_ville: null, domicile_lat: null, domicile_lng: null, cout_transport_km: 0.12, vitesse_liaison: 60, marge_minutes: 60, rayon_retour_km: 60, attente_max_h: 24, carte_sncf: 'aucune', trottinette: false, ...(etat.reglages || {}) };
-    $('ecran').innerHTML = `<div class="carte"><h2>Rentabilité</h2>
+    $('ecran').innerHTML = `<div class="carte plusFiltres"><h2>Rentabilité</h2>
       <label for="rStatut">Statut</label><select id="rStatut"><option value="micro">Micro-entrepreneur</option><option value="autre">Autre statut</option></select>
       <label for="rTaux">Taux de cotisations (%)</label><input id="rTaux" type="number" step="0.1" min="0" max="60" inputmode="decimal">
       <p class="doux">Valeur de travail à vérifier selon ta situation : ce taux n’est pas une valeur légale fixe.</p>
@@ -736,11 +736,11 @@
       <p class="doux">Les retours choisissent le moyen le moins cher qui arrive à temps ; prix et horaires estimés (réduction SNCF ≈ −30 % sur le train), pas des tarifs réels.</p>
       <p class="doux">Valeurs de travail : distances à vol d’oiseau × 1,25 et durées estimées, à ajuster à ton expérience.</p>
       <button id="rOk" style="width:100%;margin-top:12px">Enregistrer</button></div>
-      <div class="carte" id="cartePause"><h2>Heures de désactivation</h2><p class="doux">La nuit, la lecture des plateformes, la mise à jour et les alertes peuvent s’arrêter.</p>
+      <div class="carte plusFiltres" id="cartePause"><h2>Heures de désactivation</h2><p class="doux">La nuit, la lecture des plateformes, la mise à jour et les alertes peuvent s’arrêter.</p>
         <label><input id="pzOn" type="checkbox" style="width:auto;min-height:0"> Désactiver la nuit</label>
         <label for="pzDeb">Arrêt à</label><input id="pzDeb" type="time"><label for="pzFin">Reprise à</label><input id="pzFin" type="time"></div>
-      <div class="carte" id="carteNotif"><h2>Notifications</h2><label><input id="nPrefOn" type="checkbox" style="width:auto;min-height:0"> Recevoir les notifications</label><label><input id="nPrefSon" type="checkbox" style="width:auto;min-height:0"> Son et vibration des notifications</label><p class="doux" id="notifEtat">Vérification…</p><div id="notifBoutons" class="boutons"></div></div>
-      <div class="carte"><h2>Compte</h2><p class="doux">${esc(api?.session?.email || '')}</p>
+      <div class="carte plusFiltres" id="carteNotif"><h2>Notifications</h2><label><input id="nPrefOn" type="checkbox" style="width:auto;min-height:0"> Recevoir les notifications</label><label><input id="nPrefSon" type="checkbox" style="width:auto;min-height:0"> Son et vibration des notifications</label><p class="doux" id="notifEtat">Vérification…</p><div id="notifBoutons" class="boutons"></div></div>
+      <div class="carte plusFiltres"><h2>Compte</h2><p class="doux">${esc(api?.session?.email || '')}</p>
       <div class="boutons"><button id="dOk" class="second">Se déconnecter</button><button id="eOk" class="danger">Effacer mes données</button></div></div>
       <p class="doux" style="text-align:center">Convoyage Ultra · outil d’aide à la décision : aucune mission n’est acceptée à ta place.</p>`;
     $('rStatut').value = r.statut; $('rTaux').value = r.taux_cotisations; $('rKm').value = r.cout_km; $('rMin').value = r.prix_minimum; $('rNv').checked = !!r.alertes_nouvelles; $('rPx').checked = !!r.alertes_prix;
