@@ -84,15 +84,23 @@
     for (const g of mois) for (const x of g.lignes) r.push([jourIso(x.date), x.f.numero || x.f.external_id, 'FREECARS HIFLOW', virg(x.prest), virg(x.frais), virg(x.total), 'Virement']);
     return '﻿' + r.map(l => l.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(';')).join('\r\n');
   }
-  function telecharger(nom, texte, type) {
-    try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([texte], { type })); a.download = nom; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); return true; } catch (_) { return false; }
+  async function telecharger(nom, texte, type) {
+    try { if (window.File && navigator.canShare) { const f = new File([texte], nom, { type }); if (navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: nom }); return true; } } } catch (e) { if (e && e.name === 'AbortError') return true; }
+    try { const a = document.createElement('a'); a.href = 'data:' + type + ',' + encodeURIComponent(texte); a.download = nom; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 2000); return true; } catch (_) {}
+    try { await navigator.clipboard.writeText(texte); return 'copie'; } catch (_) { return false; }
   }
-  function pagePdf(titre, corps) {
-    return '<!doctype html><meta charset="utf-8"><title>' + esc(titre) + '</title><style>body{font:14px/1.4 Arial,sans-serif;margin:24px;color:#111}h1{font-size:20px}h2{font-size:16px;margin-top:22px}table{width:100%;border-collapse:collapse;margin:8px 0}td,th{border:1px solid #999;padding:5px 7px;text-align:left}td.d,th.d{text-align:right}small{color:#555}@media print{button{display:none}}</style><button onclick="print()">Imprimer / enregistrer en PDF</button>' + corps;
-  }
+  function pagePdf(titre, corps) { return '<style>#cpPrint table{width:100%;border-collapse:collapse;margin:8px 0}#cpPrint td,#cpPrint th{border:1px solid #999;padding:5px 7px;text-align:left}#cpPrint td.d,#cpPrint th.d{text-align:right}#cpPrint h1{font-size:20px}#cpPrint h2{font-size:16px;margin-top:20px}</style>' + corps; }
   function ouvrirPage(html) {
-    try { const u = URL.createObjectURL(new Blob([html], { type: 'text/html' })); const w = window.open(u, '_blank'); if (w) return true; } catch (_) {}
-    return false;
+    try {
+      let o = document.getElementById('cpPrint'); if (o) o.remove();
+      o = document.createElement('div'); o.id = 'cpPrint';
+      o.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:0;z-index:99;overflow:auto;background:#fff;color:#111;padding:16px;font:14px/1.4 Arial,sans-serif';
+      o.innerHTML = '<style>@media print{body>*:not(#cpPrint){display:none!important}#cpPrint{position:static!important;overflow:visible!important}.noprint{display:none!important}}</style><div class="noprint" style="display:flex;gap:8px;margin-bottom:12px"><button id="cpImp" style="flex:1;padding:12px">Imprimer / enregistrer en PDF</button><button id="cpFerme" style="flex:1;padding:12px">Fermer</button></div>' + html;
+      document.body.appendChild(o);
+      document.getElementById('cpFerme').onclick = () => o.remove();
+      document.getElementById('cpImp').onclick = () => { try { window.print(); } catch (_) {} };
+      return true;
+    } catch (_) { return false; }
   }
   function pdfLivre(mois) {
     return pagePdf('Livre des recettes', '<h1>Livre des recettes</h1><small>Encaissements enregistrés à la date de paiement par la plateforme (virement). TVA non applicable, art. 293 B du CGI.</small>' +
@@ -170,7 +178,7 @@
     ouvrirFeuille('<h2>Livre des recettes</h2><p class="doux">Factures payées par Hiflow, classées à leur date de paiement.</p>' + (mois.length ? mois.map(g => '<div class="carte"><h3>' + esc(nomMois(g.mois)) + '</h3><table class="tableau"><tr><td>Prestations</td><td>' + esc(eur(g.prest)) + '</td></tr><tr><td>Débours</td><td>' + esc(eur(g.frais)) + '</td></tr><tr><td><b>Total encaissé</b></td><td><b>' + esc(eur(g.total)) + '</b></td></tr></table>' + g.lignes.map(x => '<div class="factureLigne"><span>' + esc(jourIso(x.date)) + ' · n° ' + esc(x.f.numero || x.f.external_id) + '</span><span>' + esc(eur(x.total)) + '</span></div>').join('') + '</div>').join('') : '<div class="vide">Aucune facture payée avec une date de paiement.</div>') +
       '<div class="boutons"><button id="fCsv"' + (mois.length ? '' : ' disabled') + '>Exporter en CSV</button><button class="second" id="fPdfL"' + (mois.length ? '' : ' disabled') + '>Version PDF</button></div><p class="doux" id="fMsg"></p>');
     const b1 = $id('fCsv'), b2 = $id('fPdfL');
-    if (b1) b1.onclick = () => { if (!telecharger('livre-des-recettes.csv', csv(mois), 'text/csv;charset=utf-8')) $id('fMsg').textContent = 'Téléchargement impossible'; };
+    if (b1) b1.onclick = async () => { const r = await telecharger('livre-des-recettes.csv', csv(mois), 'text/csv;charset=utf-8'); $id('fMsg').textContent = r === 'copie' ? 'CSV copié : colle-le dans un tableur ou un mail.' : r ? 'Fichier prêt.' : 'Téléchargement impossible'; };
     if (b2) b2.onclick = () => { if (!ouvrirPage(pdfLivre(mois))) $id('fMsg').textContent = 'Ouverture bloquée : autorise les fenêtres du site, puis réessaie.'; };
   }
   function feuilleAbby() {
