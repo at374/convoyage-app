@@ -102,6 +102,18 @@
       return true;
     } catch (_) { return false; }
   }
+  function ouvrirCsv(texte) {
+    let o = document.getElementById('cpCsv'); if (o) o.remove();
+    o = document.createElement('div'); o.id = 'cpCsv';
+    o.style.cssText = 'position:fixed;top:0;right:0;bottom:0;left:0;z-index:99;overflow:auto;background:#fff;color:#111;padding:16px;font:14px/1.4 Arial,sans-serif';
+    o.innerHTML = '<p><b>Livre des recettes (CSV)</b><br><small>Copie le texte puis colle-le dans un tableur (séparateur « ; »), ou partage-le.</small></p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button id="cpCop" style="flex:1;padding:12px">Copier</button><button id="cpPar" style="flex:1;padding:12px">Partager</button><a id="cpDl" download="livre-des-recettes.csv" style="flex:1;padding:12px;text-align:center;border:1px solid #888;border-radius:6px;color:#111;text-decoration:none">Télécharger</a><button id="cpFer" style="flex:1;padding:12px">Fermer</button></div><textarea id="cpTx" readonly style="width:100%;height:50vh;font:12px monospace"></textarea><p id="cpMs"></p>';
+    document.body.appendChild(o);
+    const ta = document.getElementById('cpTx'), ms = document.getElementById('cpMs'); ta.value = texte.replace(/^﻿/, '');
+    try { document.getElementById('cpDl').href = URL.createObjectURL(new Blob([texte], { type: 'text/csv;charset=utf-8' })); } catch (_) {}
+    document.getElementById('cpFer').onclick = () => o.remove();
+    document.getElementById('cpCop').onclick = async () => { try { await navigator.clipboard.writeText(ta.value); ms.textContent = 'Copié : colle-le dans un tableur.'; } catch (_) { ta.select(); ms.textContent = 'Texte sélectionné : copie-le avec le menu de ton téléphone.'; } };
+    document.getElementById('cpPar').onclick = async () => { try { if (navigator.share) { await navigator.share({ title: 'Livre des recettes', text: ta.value }); } else ms.textContent = 'Partage indisponible : utilise Copier.'; } catch (e) { if (!e || e.name !== 'AbortError') ms.textContent = 'Partage impossible : utilise Copier.'; } };
+  }
   function pdfLivre(mois) {
     return pagePdf('Livre des recettes', '<h1>Livre des recettes</h1><small>Encaissements enregistrés à la date de paiement par la plateforme (virement). TVA non applicable, art. 293 B du CGI.</small>' +
       mois.map(g => '<h2>' + esc(nomMois(g.mois)) + '</h2><table><tr><th>Date</th><th>N° facture</th><th>Client</th><th class="d">Prestations</th><th class="d">Débours</th><th class="d">Total</th></tr>' + g.lignes.map(x => '<tr><td>' + esc(jourIso(x.date)) + '</td><td>' + esc(x.f.numero || x.f.external_id) + '</td><td>FREECARS HIFLOW</td><td class="d">' + esc(eur(x.prest)) + '</td><td class="d">' + esc(eur(x.frais)) + '</td><td class="d">' + esc(eur(x.total)) + '</td></tr>').join('') + '<tr><th colspan="3">Total du mois</th><th class="d">' + esc(eur(g.prest)) + '</th><th class="d">' + esc(eur(g.frais)) + '</th><th class="d">' + esc(eur(g.total)) + '</th></tr></table>').join(''));
@@ -178,7 +190,7 @@
     ouvrirFeuille('<h2>Livre des recettes</h2><p class="doux">Factures payées par Hiflow, classées à leur date de paiement.</p>' + (mois.length ? mois.map(g => '<div class="carte" style="border-left:5px solid #16a34a"><h3>' + esc(nomMois(g.mois)) + ' <span class="etiq ok">' + g.lignes.length + ' payée' + (g.lignes.length > 1 ? 's' : '') + '</span></h3><table class="tableau"><tr class="fr-pre"><td>Prestations</td><td>' + esc(eur(g.prest)) + '</td></tr><tr class="fr-fra"><td>Débours (frais remboursés)</td><td>' + esc(eur(g.frais)) + '</td></tr><tr class="fr-pay"><td><b>Total encaissé</b></td><td><b>' + esc(eur(g.total)) + '</b></td></tr></table>' + g.lignes.map(x => '<div class="factureLigne"><span>' + esc(jourIso(x.date)) + ' · n° ' + esc(x.f.numero || x.f.external_id) + '</span><span style="color:#16a34a;font-weight:700">' + esc(eur(x.total)) + '</span></div>').join('') + '</div>').join('') : '<div class="vide">Aucune facture payée avec une date de paiement.</div>') +
       '<div class="boutons"><button id="fCsv"' + (mois.length ? '' : ' disabled') + '>Exporter en CSV</button><button class="second" id="fPdfL"' + (mois.length ? '' : ' disabled') + '>Version PDF</button></div><p class="doux" id="fMsg"></p>');
     const b1 = $id('fCsv'), b2 = $id('fPdfL');
-    if (b1) b1.onclick = async () => { const r = await telecharger('livre-des-recettes.csv', csv(mois), 'text/csv;charset=utf-8'); $id('fMsg').textContent = r === 'copie' ? 'CSV copié : colle-le dans un tableur ou un mail.' : r ? 'Fichier prêt.' : 'Téléchargement impossible'; };
+    if (b1) b1.onclick = () => ouvrirCsv(csv(mois));
     if (b2) b2.onclick = () => { if (!ouvrirPage(pdfLivre(mois))) $id('fMsg').textContent = 'Ouverture bloquée : autorise les fenêtres du site, puis réessaie.'; };
   }
   function feuilleAbby() {
