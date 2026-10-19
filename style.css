@@ -527,3 +527,19 @@ html:root #ecran .carte.plusFiltres input[type=checkbox]{padding:0!important;min
 #ecran .ligneFiltres label{font-size:.82em;font-weight:600;flex:1;min-width:0}
 #ecran[data-vue="reglages"] :is(.carte h2,.carte h3){font-weight:900;color:#b8860b}
 html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] :is(.carte h2,.carte h3){font-family:var(--titre-sport);font-style:italic}
+
+/* V229 : grosse alerte retour vers le domicile */
+#cpRetourAlerte{position:fixed;inset:0;z-index:100000;background:rgba(8,8,8,.9);display:flex;align-items:center;justify-content:center;padding:14px}
+#cpRetourAlerte .rcBoite{width:100%;max-width:520px;background:#fff7d6;color:#111;border:6px solid #16a34a;border-radius:22px;padding:18px 16px;text-align:center;box-shadow:0 0 44px #16a34a;animation:rcPulse .9s ease-in-out infinite alternate}
+#cpRetourAlerte .rcTitre{font-size:1.55rem;font-weight:900;color:#166534;line-height:1.15}
+#cpRetourAlerte .rcSous{font-size:.9rem;font-weight:700;margin:6px 0 10px}
+#cpRetourAlerte .rcPlat{display:inline-block;background:#111;color:#ffd83d;font-weight:800;padding:3px 12px;border-radius:999px}
+#cpRetourAlerte .rcTrajet{font-size:1.35rem;font-weight:900;margin:10px 0 4px}
+#cpRetourAlerte .rcPrix{font-size:1.25rem;font-weight:800;color:#b45309}
+#cpRetourAlerte .rcInfo{font-size:.95rem;font-weight:700;margin-top:6px}
+#cpRetourAlerte button{display:block;width:100%;margin-top:12px;font-size:1.1rem;font-weight:800;padding:14px;border-radius:14px;border:0;min-height:52px}
+#cpRetourAlerte .rcVoir{background:#16a34a;color:#fff}
+#cpRetourAlerte .rcPf{background:#2563eb;color:#fff}
+#cpRetourAlerte .rcFermer{background:transparent;color:#444;font-size:.9rem;min-height:36px;margin-top:6px}
+#cpRetourAlerte a{text-decoration:none}
+@keyframes rcPulse{from{box-shadow:0 0 14px #16a34a}to{box-shadow:0 0 58px #22c55e}}
