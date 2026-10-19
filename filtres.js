@@ -30,7 +30,7 @@
       const km = n(m.distance_km);
       if (kmMin != null && (km == null || km < kmMin)) return false;
       if (kmMax != null && (km == null || km > kmMax)) return false;
-      if (f.dateDeb) { const j = jourParis(m.pickup_end || m.pickup_start || m.delivery_start); if (!j || j < f.dateDeb) return false; }
+      if (f.dateDeb) { const j = jourParis(m.pickup_start || m.pickup_end || m.delivery_start); if (!j || j < f.dateDeb) return false; }
       if (f.dateFin) { const j = jourParis(m.delivery_end || m.delivery_start || m.pickup_start); if (!j || j > f.dateFin) return false; }
       if (dMax != null) { const h = n(m.duree_h) ?? (dureeDe ? n(dureeDe(m)) : null); if (h == null || h > dMax) return false; }
       return true;
