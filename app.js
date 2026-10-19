@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V227 (2.0.86)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V228 (2.0.87)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -403,11 +403,11 @@
   // V227 : on ne garde que les suites possibles LE MÊME JOUR, après la mission (celles des jours d'après sont dans « Multi Jours »).
   const sugFiltrees = m => { const L = sugListe(m); const fin = Date.parse(m.delivery_end || m.delivery_start || ''); if (!L.length || !Number.isFinite(fin)) return L;
     const jourP = t => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(t)), jf = jourP(fin);
-    const dureeMs = z => { const s = String(z.t || ''); const h = s.match(/(\d+)\s*heures?/i), mi = s.match(/(\d+)\s*mins?/i); return ((h ? +h[1] : 0) * 60 + (mi ? +mi[1] : 0)) * 60000; };
+    const dureeMs = (z, x) => { const hx = Number(x && x.duree_h); if (Number.isFinite(hx) && hx > 0) return hx * 3600000; const s = String(z.t || '').split('|').map(q => q.trim()).find(q => /\d\s*(h|min)/i.test(q) && !/km/i.test(q)) || ''; const h = s.match(/(\d+)\s*h/i), mi = s.match(/(\d+)\s*min/i), h2 = s.match(/\bh\s*(\d+)/i); if (!h && !mi) return -1; return ((h ? +h[1] : 0) * 60 + (mi ? +mi[1] : (h2 ? +h2[1] : 0))) * 60000; };
     return L.filter(z => { const x = etat.missions.find(y => y.platform === m.platform && String(y.external_id) === String(z.id)); if (!x) return false;
       const a = Date.parse(x.pickup_start || ''), b = Date.parse(x.pickup_end || x.pickup_start || ''); if (!Number.isFinite(a)) return false;
       if (jourP(a) > jf || (Number.isFinite(b) && jourP(b) < jf)) return false;
-      const debut = Math.max(fin, a); return jourP(debut + dureeMs(z)) === jf; }); };
+      const d = dureeMs(z, x), debut = Math.max(fin, a); if (d < 0) return jourP(a) === jf && jourP(debut) === jf; return jourP(debut + d) === jf; }); };
   const sugHtml = m => { const L = sugFiltrees(m); if (!L.length) return ''; return bk('bkSuite', '↪ SUITES POSSIBLES (' + L.length + ')', L.slice(0, 4).map(z => '<div class="bkL">' + sugTexte(z) + '</div>').join('') + (L.length > 4 ? '<div class="bkL">+ ' + (L.length - 4) + ' autre(s) dans la fiche</div>' : '')); };
   const sugDetail = m => { const L = sugFiltrees(m); if (!L.length) return ''; return bk('bkSuite', '↪ SUITES POSSIBLES (' + L.length + ')', L.map(z => { const ok = etat.missions.some(x => x.platform === m.platform && String(x.external_id) === String(z.id)); return '<button type="button" class="sugBtn" data-suite="' + esc(String(z.id)) + '">' + sugTexte(z) + (ok ? ' <b>▸</b>' : '<div class="petit">(fiche pas encore lue)</div>') + '</button>'; }).join('')); };
   const bkDates = (m, lv) => { const pk = hfDates(m) ? fmtDate(hfPk(m)) : quand(m); return (pk ? bk('bkD1', 'PRISE EN CHARGE', '🚩 ' + esc(pk)) : '') + (lv ? bk('bkD2', 'LIVRAISON', '🏁 ' + esc(lv)) : ''); };
