@@ -516,3 +516,14 @@ html:root .btnVert,html:root[data-style] .btnVert{background:#16a34a !important;
 #ecran .carte.plusFiltres label{font-size:.82em;font-weight:600}
 #ecran .carte.plusFiltres .doux{font-size:.8em}
 html:root #ecran .carte.plusFiltres input[type=checkbox]{padding:0!important;min-height:0!important;width:auto!important;background:none!important;border:0!important;box-shadow:none!important}
+
+/* V227 */
+#ecran .mission .verif{display:inline-block;font-size:.78em!important;font-weight:700!important;padding:2px 8px;border-radius:999px;background:#dcfce7!important;color:#166534!important;border:1px solid #16a34a;margin-left:6px}
+.prixKm{font-size:.85em;font-weight:800;text-align:right;margin-top:2px}
+.prixKmOk{color:#16a34a}
+.prixKmKo{color:#dc2626}
+.plaqueW{margin:6px 0 2px}
+.plaqueW svg{display:block;max-width:100%;height:auto}
+#ecran .ligneFiltres label{font-size:.82em;font-weight:600;flex:1;min-width:0}
+#ecran[data-vue="reglages"] :is(.carte h2,.carte h3){font-weight:900;color:#b8860b}
+html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] :is(.carte h2,.carte h3){font-family:var(--titre-sport);font-style:italic}
