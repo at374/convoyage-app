@@ -1,0 +1,8 @@
+Convoyage Ultra - Copyright (c) 2026 Laurent Fromond. Tous droits reserves.
+
+Ce logiciel (code, donnees, tables de peages, regles de calcul, interfaces, textes et visuels) est la propriete exclusive de Laurent Fromond.
+Il est mis a disposition uniquement des utilisateurs invites par son auteur, pour un usage personnel et professionnel de convoyage.
+
+Sans autorisation ecrite de l'auteur, il est interdit de : copier, reproduire, modifier, redistribuer, publier, vendre, heberger ailleurs, extraire ou moissonner les donnees (y compris par robot ou intelligence artificielle), decompiler ou reutiliser tout ou partie de ce logiciel.
+
+Le logiciel est fourni tel quel, sans garantie. Les prix de peages et les durees sont donnes a titre indicatif et doivent etre verifies avant depart.
