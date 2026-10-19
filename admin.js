@@ -167,8 +167,31 @@
       const b = document.getElementById('cpApkBtn'); if (b) b.textContent = '📲 Android';
     } catch (e) { C.textContent = 'Erreur : ' + e.message; }
   }
+  // --- iPhone / iPad : installation de la version web sur l'écran d'accueil (Safari) ---
+  const estIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const dejaInstallee = () => window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  function ouvrirIos() {
+    css();
+    let d = document.getElementById('cpApk'); if (d) d.remove();
+    d = document.createElement('div'); d.id = 'cpApk';
+    const safari = !/CriOS|FxiOS|EdgiOS|OPiOS/.test(navigator.userAgent);
+    d.innerHTML = '<button id="cpApkF" class="gris" style="float:right">Fermer</button><h2>📲 Installer sur iPhone</h2><div class="bloc">' +
+      (safari ? '' : '<p><b>⚠️ Ouvre cette page dans Safari</b> (l\'icône boussole bleue). L\'ajout à l\'écran d\'accueil ne marche bien que depuis Safari.</p>') +
+      '<ol style="padding-left:20px;line-height:1.7"><li>Ouvre <b>Convoyage Ultra</b> dans <b>Safari</b>.</li><li>Appuie sur le bouton <b>Partager</b> (le carré avec une flèche vers le haut, en bas de l\'écran).</li><li>Fais défiler le menu et appuie sur <b>« Sur l\'écran d\'accueil »</b>.</li><li>Appuie sur <b>« Ajouter »</b> en haut à droite.</li><li>Ouvre l\'appli depuis la nouvelle icône sur ton écran d\'accueil, et connecte-toi.</li></ol>' +
+      '<p>Pour recevoir les notifications, ouvre l\'appli depuis l\'icône de l\'écran d\'accueil, puis autorise les notifications quand l\'appli le demande (iPhone avec iOS 16.4 ou plus récent).</p>' +
+      '<p>Les mises à jour se font toutes seules : rien à télécharger.</p></div>';
+    document.body.appendChild(d);
+    document.getElementById('cpApkF').onclick = () => d.remove();
+  }
+
   async function boutonApk(admin) {
     if (window.CPNatif) return;
+    if (estIOS()) {
+      if (dejaInstallee()) return;
+      css();
+      if (!document.getElementById('cpApkBtn')) { const bi = document.createElement('button'); bi.id = 'cpApkBtn'; bi.textContent = '📲 iPhone'; bi.onclick = ouvrirIos; bi.style.bottom = admin ? '130px' : '84px'; document.body.appendChild(bi); }
+      return;
+    }
     css();
     let b = document.getElementById('cpApkBtn');
     if (!b) { b = document.createElement('button'); b.id = 'cpApkBtn'; b.textContent = '📲 Android'; b.onclick = ouvrirApk; b.style.bottom = admin ? '130px' : '84px'; document.body.appendChild(b); }
