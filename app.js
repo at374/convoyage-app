@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V226 (2.0.85)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V227 (2.0.86)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -289,7 +289,7 @@
     $('onglets').hidden = false; $('actualiser').hidden = false; majPastille();
     const nonLues = etat.alertes.filter(a => !a.lue).length; const b = $('badge'); b.hidden = !nonLues; b.textContent = nonLues > 99 ? '99+' : nonLues;
     for (const x of document.querySelectorAll('#onglets button')) x.classList.toggle('actif', x.dataset.onglet === etat.onglet);
-    const titres = { missions: 'Missions disponibles', agenda: 'Agenda — missions acceptées', planning: 'Planning sur plusieurs jours', factures: 'Factures validées et bénéfice', alertes: 'Alertes', reglages: 'Réglages' };
+    const titres = { missions: 'Missions disponibles', agenda: 'Agenda — missions acceptées', planning: 'Multi Jours', factures: 'Factures validées et bénéfice', alertes: 'Alertes', reglages: 'Réglages' };
     $('sousTitre').textContent = titres[etat.onglet] + (etat.chargeLe ? ' · mis à jour ' + heure(etat.chargeLe) : '');
     $('ecran').dataset.vue = etat.onglet;   // V122 : habillage propre à chaque écran (couleurs de fond, polices)
     ({ missions: vueMissions, agenda: vueAgenda, planning: vuePlanning, factures: vueFactures, alertes: vueAlertes, reglages: vueReglages })[etat.onglet]();
@@ -395,9 +395,21 @@
   const bk = (cls, titre, h) => '<div class="bk bkC ' + cls + '"><div class="bkt">' + titre + '</div>' + h + '</div>';
   const adrHtml = m => ((m.platform === 'DriiveMe' || m.platform === 'Hiflow') && (m.origin_address || m.destination_address)) ? bk('bkLieu', 'LIEUX', (m.origin_address ? '<div>📍 <b>Départ</b> : ' + esc(m.origin_address) + '</div>' : '') + (m.destination_address ? '<div>🏁 <b>Arrivée</b> : ' + esc(m.destination_address) + '</div>' : '')) : '';
   const sugTexte = z => { const p = String(z.t || '').split(/\s*\|\s*/).map(s => s.trim()).filter(Boolean); if (p.length >= 3) { const dm = p[0].match(/^(.+?\(\s*\d+\s*km\s*\))\s*(.+)$/); const tete = dm ? 'Départ : <b>' + esc(dm[1]) + '</b><br>Arrivée : <b>' + esc(dm[2]) + '</b>' : '<b>' + esc(p[0]) + '</b>'; return tete + '<br>' + esc(p.slice(1, -1).join(' · ')) + ' · <b>' + esc(p[p.length - 1].replace(/\s+,/, ',')) + '</b>'; } return esc(p.join(' · ')); };
+  // V227 : plaque W (garage) — dessin de la nouvelle plaque rose quand la fiche de la plateforme l'exige.
+  const RE_PLAQUE_W = /plaques?[^a-z0-9]{0,3}(?:de\s+|type\s+)?WW?\b|\bW\s*garage|\bWW\b/i;
+  const plaqueW = m => { try { if (!RE_PLAQUE_W.test(JSON.stringify({ ...m, suites: null }))) return ''; return '<div class="plaqueW" title="Plaque W (garage) exigée"><svg viewBox="0 0 520 110" width="150" height="32" role="img" aria-label="Plaque W garage"><rect x="2" y="2" width="516" height="106" rx="14" fill="#f0559f" stroke="#a8326f" stroke-width="3"/><path d="M16 2H62V108H16A14 14 0 0 1 2 94V16A14 14 0 0 1 16 2Z" fill="#1b3fbf"/><text x="32" y="88" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#fff" text-anchor="middle">F</text><text x="292" y="82" font-family="Arial,sans-serif" font-size="72" font-weight="800" fill="#111" text-anchor="middle">W-123-AA</text></svg></div>'; } catch (_) { return ''; } };
+  const prixKm = (m, r) => { const km = Number(m.distance_km), f = Number(m.fee); if (!Number.isFinite(km) || km <= 0 || !Number.isFinite(f) || m.fee === null) return ''; const ok = r && r.connu && r.net > 0; return '<div class="prixKm ' + (ok ? 'prixKmOk' : 'prixKmKo') + '">' + (f / km).toFixed(2).replace('.', ',') + ' € /km</div>'; };
   const sugListe = m => Array.isArray(m.suites) && m.suites.length ? m.suites : (vehObj(m) && typeof vehObj(m) === 'object' && Array.isArray(vehObj(m).suites) ? vehObj(m).suites : []);
-  const sugHtml = m => { const L = sugListe(m); if (!L.length) return ''; return bk('bkSuite', '↪ SUITES POSSIBLES (' + L.length + ')', L.slice(0, 4).map(z => '<div class="bkL">' + sugTexte(z) + '</div>').join('') + (L.length > 4 ? '<div class="bkL">+ ' + (L.length - 4) + ' autre(s) dans la fiche</div>' : '')); };
-  const sugDetail = m => { const L = sugListe(m); if (!L.length) return ''; return bk('bkSuite', '↪ SUITES POSSIBLES (' + L.length + ')', L.map(z => { const ok = etat.missions.some(x => x.platform === m.platform && String(x.external_id) === String(z.id)); return '<button type="button" class="sugBtn" data-suite="' + esc(String(z.id)) + '">' + sugTexte(z) + (ok ? ' <b>▸</b>' : '<div class="petit">(fiche pas encore lue)</div>') + '</button>'; }).join('')); };
+  // V227 : on ne garde que les suites possibles LE MÊME JOUR, après la mission (celles des jours d'après sont dans « Multi Jours »).
+  const sugFiltrees = m => { const L = sugListe(m); const fin = Date.parse(m.delivery_end || m.delivery_start || ''); if (!L.length || !Number.isFinite(fin)) return L;
+    const jourP = t => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(t)), jf = jourP(fin);
+    const dureeMs = z => { const s = String(z.t || ''); const h = s.match(/(\d+)\s*heures?/i), mi = s.match(/(\d+)\s*mins?/i); return ((h ? +h[1] : 0) * 60 + (mi ? +mi[1] : 0)) * 60000; };
+    return L.filter(z => { const x = etat.missions.find(y => y.platform === m.platform && String(y.external_id) === String(z.id)); if (!x) return false;
+      const a = Date.parse(x.pickup_start || ''), b = Date.parse(x.pickup_end || x.pickup_start || ''); if (!Number.isFinite(a)) return false;
+      if (jourP(a) > jf || (Number.isFinite(b) && jourP(b) < jf)) return false;
+      const debut = Math.max(fin, a); return jourP(debut + dureeMs(z)) === jf; }); };
+  const sugHtml = m => { const L = sugFiltrees(m); if (!L.length) return ''; return bk('bkSuite', '↪ SUITES POSSIBLES (' + L.length + ')', L.slice(0, 4).map(z => '<div class="bkL">' + sugTexte(z) + '</div>').join('') + (L.length > 4 ? '<div class="bkL">+ ' + (L.length - 4) + ' autre(s) dans la fiche</div>' : '')); };
+  const sugDetail = m => { const L = sugFiltrees(m); if (!L.length) return ''; return bk('bkSuite', '↪ SUITES POSSIBLES (' + L.length + ')', L.map(z => { const ok = etat.missions.some(x => x.platform === m.platform && String(x.external_id) === String(z.id)); return '<button type="button" class="sugBtn" data-suite="' + esc(String(z.id)) + '">' + sugTexte(z) + (ok ? ' <b>▸</b>' : '<div class="petit">(fiche pas encore lue)</div>') + '</button>'; }).join('')); };
   const bkDates = (m, lv) => { const pk = hfDates(m) ? fmtDate(hfPk(m)) : quand(m); return (pk ? bk('bkD1', 'PRISE EN CHARGE', '🚩 ' + esc(pk)) : '') + (lv ? bk('bkD2', 'LIVRAISON', '🏁 ' + esc(lv)) : ''); };
   const blocKm = (m, avecVol) => { const p = []; if (m.distance_km) p.push('🛣 <b>' + esc(m.distance_km) + ' km</b>' + (m.duree_h ? ' · <b>' + esc(duree(m.duree_h)) + '</b>' : '')); if (m.client) p.push('🏢 <b>' + esc(m.client) + '</b>'); const vol = avecVol && kmVolOiseau(m) != null && etat.posMax > 0 ? '<div>✈️ ≈ ' + esc(kmVolOiseau(m)) + ' km à vol d’oiseau de ' + (sourceRecherche() === 'domicile' ? 'ton domicile' : 'ta position') + ' jusqu’au départ</div>' : ''; if (!p.length && !vol) return ''; return bk('bkKm', 'TRAJET · PRESTATAIRE', (p.length ? '<div>' + p.join(' · ') + '</div>' : '') + vol); };
   const vehHtml = m => {
@@ -420,11 +432,11 @@
   function carteMission(m, i, extra) {
     const r = renta(m), reste = m.kind === 'acceptee' ? null : heuresRestantes(m);
     return `<button class="mission${clsPlat(m.platform)}${estPassee(m) ? ' passe' : ''}${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? ' urgent' : ''}" data-i="${i}">
-      <div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${m.kind !== 'acceptee' ? ' <span class="verif">' + esc(verifLe(m)) + '</span>' : ''} <span class="iconeCarte" role="button" tabindex="0" data-carte="${esc(m.platform + '|' + m.external_id)}" aria-label="Visualisation du trajet sur une carte" title="Visualisation du trajet sur une carte">🗺️</span></span>
-      <span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div>${prixVar(m)}${r.connu ? `<div class="net">net ≈ ${esc(euros(r.net))}${r.parHeure ? ' · ' + esc(euros(r.parHeure)) + '/h' : ''}</div>` : ''}</span></div>
+      <div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${m.kind !== 'acceptee' ? ' <span class="verif">' + esc(verifLe(m)) + '</span>' : ''}</span>
+      <span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div>${prixVar(m)}${prixKm(m, r)}${r.connu ? `<div class="net">net ≈ ${esc(euros(r.net))}${r.parHeure ? ' · ' + esc(euros(r.parHeure)) + '/h' : ''}</div>` : ''}</span></div>
       ${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? `<div class="urgence">⏳ Plus que ${esc(reste < 1 ? Math.max(1, Math.round(reste * 60)) + ' min' : Math.round(reste) + ' h')} pour la faire</div>` : ''}<div class="trajet">${trajetHtml(m)}</div>${adrHtml(m)}
       <div class="meta">${bkDates(m, hfDates(m) ? fmtDate(hfLiv(m)) : arriveeTxt(m))}
-      ${vehHtml(m)}${blocKm(m, true)}${sugHtml(m)}</div>${extra || ''}</button>`;
+      ${vehHtml(m)}${plaqueW(m)}${blocKm(m, true)}${sugHtml(m)}</div>${extra || ''}</button>`;
   }
   // V137 : mission dont il reste peu de temps (moins de 24 h avant la fin de la période ou l'heure de livraison) → cadre rouge qui clignote.
   const SEUIL_URGENT_H = 24;
@@ -445,7 +457,7 @@
   // V96 : filtres par client (société), véhicule, distance et durée.
   const FI = window.CPFiltres;
   function blocPlusFiltres(dispo) {
-    const o = FI.options(dispo), f = etat.plus || {}, nb = FI.actifs(f);
+    const o = FI.options(dispo), f = etat.plus || {}, nb = FI.actifs({ ...f, dateDeb: '', dateFin: '' });
     const liste = (id, lib, l, v) => `<label>${lib}<select id="${id}"><option value="">Tous</option>${l.map(x => `<option value="${esc(x)}"${x === v ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select></label>`;
     const nombre = (id, lib, v, pas) => `<label>${lib}<input id="${id}" type="number" min="0" step="${pas}" inputmode="decimal" value="${esc(v == null ? '' : v)}"></label>`;
     return `<details class="plusFiltres" id="plusFiltres"${nb || etat.plusOuvert ? ' open' : ''}><summary>Plus de filtres : client, véhicule, distance, durée${nb ? ' · <b>' + nb + ' actif' + (nb > 1 ? 's' : '') + '</b>' : ''}</summary>
@@ -457,7 +469,7 @@
   function brancherPlusFiltres() {
     const d = $('plusFiltres'); if (!d) return;
     d.ontoggle = () => { etat.plusOuvert = d.open; };
-    const lire = () => { etat.plus = { client: $('fClient').value, type: $('fType').value, energie: $('fEnergie').value, marque: $('fMarque').value, kmMin: $('fKmMin').value, kmMax: $('fKmMax').value, dureeMax: $('fDuree').value }; etat.plusOuvert = true; memoriser(); };
+    const lire = () => { etat.plus = { ...etat.plus, client: $('fClient').value, type: $('fType').value, energie: $('fEnergie').value, marque: $('fMarque').value, kmMin: $('fKmMin').value, kmMax: $('fKmMax').value, dureeMax: $('fDuree').value }; etat.plusOuvert = true; memoriser(); };
     for (const id of ['fClient', 'fType', 'fEnergie', 'fMarque']) $(id).onchange = () => { lire(); afficher(); };
     for (const id of ['fKmMin', 'fKmMax', 'fDuree']) $(id).onchange = () => { lire(); listeMissions(); };
     const e = $('fEffacer'); if (e) e.onclick = () => { etat.plus = {}; memoriser(); afficher(); };
@@ -506,6 +518,7 @@
       <div class="filtres"><div class="recherche"><input id="recherche" type="search" placeholder="Ville, département ou région (3 lettres)" value="${esc(etat.recherche)}" aria-label="Rechercher un lieu" autocomplete="off" aria-autocomplete="list" aria-controls="sugg">
       <div id="sugg" class="sugg" role="listbox" hidden></div></div>
       <select id="tri" aria-label="Trier"><option value="recent">Plus récentes</option><option value="date">Date de départ</option><option value="prix">Prix</option><option value="heure">€/heure</option><option value="proche">Les plus proches de moi</option></select></div>
+      <div class="ligneFiltres"><label>Date début<input id="fDateDeb" type="date" value="${esc((etat.plus || {}).dateDeb || '')}"></label><label>Date fin<input id="fDateFin" type="date" value="${esc((etat.plus || {}).dateFin || '')}"></label></div>
       <div class="ligneFiltres"><select id="cote" aria-label="Lieu cherché">${Object.entries(COTES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
       <select id="rayon" aria-label="Autour de la ville"${aVille ? '' : ' disabled'}><option value="0">Ville exacte</option><option value="20">Ville + 20 km</option><option value="50">Ville + 50 km</option><option value="100">Ville + 100 km</option></select></div>
       <div class="lignePos"><select id="posSource" aria-label="Chercher depuis"><option value="position">Depuis ma position GPS</option><option value="domicile">Depuis mon domicile</option></select><button id="btnPos" class="second" type="button">📍 Ma position</button><select id="posMax" aria-label="Distance maximale depuis ma position"><option value="0">Distance max à vol d’oiseau : sans limite</option>${[20, 50, 100, 150, 200, 300].map(k => `<option value="${k}">Max ${k} km à vol d’oiseau</option>`).join('')}</select><span class="doux" id="posInfo"></span></div>
@@ -517,6 +530,7 @@
     for (const b of document.querySelectorAll('[data-zone]')) b.onclick = () => { etat.zones.splice(Number(b.dataset.zone), 1); memoriser(); afficher(); };
     $('tri').onchange = ev => { etat.tri = ev.target.value; memoriser(); listeMissions(); };
     $('cote').onchange = ev => { etat.cote = ev.target.value; memoriser(); };
+    for (const id of ['fDateDeb', 'fDateFin']) $(id).onchange = () => { etat.plus = { ...etat.plus, dateDeb: $('fDateDeb').value, dateFin: $('fDateFin').value }; memoriser(); listeMissions(); };
     $('rayon').onchange = ev => { etat.rayon = Number(ev.target.value); memoriser(); listeMissions(); };
     $('posMax').value = String(etat.posMax); $('posSource').value = sourceRecherche(); $('posSource').onchange = ev => { ecrireLocal('cp_depuis', ev.target.value); if (ev.target.value === 'domicile' && !RT.domicile(etat.reglages)) toast('Renseigne ton domicile dans les Réglages'); listeMissions(); }; infoPosition();
     $('btnPos').onclick = () => localiser(true);
@@ -678,10 +692,11 @@
           if (l.type === 'depart') { const e0 = pl.etapes[0]; return bk('bkTr', '🏠 DÉPART', '<b>' + hm(l.t) + '</b> départ de ' + esc(domNom) + (e0.liaison.km >= 2 ? '<br>🚆 liaison ≈ ' + esc(e0.liaison.km) + ' km · ' + esc(duree(e0.liaison.heures)) + ' · ' + esc(euros(e0.liaison.cout)) : '')); }
           if (l.type === 'retour') return bk('bkTr', '🏠 RETOUR', '<b>' + hm(l.t) + '</b> retour à ' + esc(domNom) + (pl.retour.km >= 2 ? '<br>🚆 ≈ ' + esc(pl.retour.km) + ' km · ' + esc(duree(pl.retour.heures)) + ' · ' + esc(euros(pl.retour.cout)) : ''));
           const et = l.etape, m = et.mission, ie = pl.etapes.indexOf(et);
-          const lienPlan = (ie > 0 && et.liaison.km >= 2 && !(pl.nuitsLiaison || []).some(x => x && x.cle === et.cle)) ? bk('bkTr', '🚆 TRANSPORT', '<b>' + esc(et.depuis) + ' → ' + esc(m.from_city || '?') + '</b><br>≈ ' + esc(et.liaison.km) + ' km · ' + esc(duree(et.liaison.heures)) + ' · ' + esc(euros(et.liaison.cout)) + (et.attenteH ? ' · attente ' + esc(duree(et.attenteH)) : '')) : '';
+          const nlM = (pl.nuitsLiaison || []).find(x => x && x.cle === et.cle && x.matin);
+          const lienPlan = nlM ? bk('bkTr', '🚆 LE MATIN', '<b>Domicile → ' + esc(m.from_city || '?') + '</b><br>≈ ' + esc(Math.round(nlM.matin.km)) + ' km · ' + esc(duree(nlM.matin.heures)) + ' · ' + esc(euros(nlM.matin.cout))) : (ie > 0 && et.liaison.km >= 2 && !(pl.nuitsLiaison || []).some(x => x && x.cle === et.cle)) ? bk('bkTr', '🚆 TRANSPORT', '<b>' + esc(et.depuis) + ' → ' + esc(m.from_city || '?') + '</b><br>≈ ' + esc(et.liaison.km) + ' km · ' + esc(duree(et.liaison.heures)) + ' · ' + esc(euros(et.liaison.cout)) + (et.attenteH ? ' · attente ' + esc(duree(et.attenteH)) : '')) : '';
           return lienPlan + `<button class="mission${clsPlat(m.platform)}" data-plan="${ip}" data-etape="${ie}"><div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${et.acceptee ? ' <span class="etiq ok">déjà acceptée</span>' : ''}</span><span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div><div class="net">net ≈ ${esc(euros(et.net))}</div></span></div><div class="trajet">${trajetHtml(m)}</div><div class="meta">${bk('bkD1', 'PRISE EN CHARGE', '🚩 ' + hm(et.debut))}${bk('bkD2', 'LIVRAISON', '🏁 ' + hm(et.fin) + (et.finEstimee ? ' (fin estimée)' : ''))}</div></button>`;
         }).join('');
-        const dort = ij < tous.length - 1 && nuit < pl.nuits ? `${(pl.nuitsLiaison || [])[nuit] && pl.nuitsLiaison[nuit].km >= 2 ? bk('bkTr', '🚆 EN SOIRÉE', '<b>' + esc(pl.nuitsLiaison[nuit].depuis) + ' → ' + esc(pl.lieuxNuits[nuit]) + '</b><br>≈ ' + esc(pl.nuitsLiaison[nuit].km) + ' km · ' + esc(duree(pl.nuitsLiaison[nuit].heures)) + ' · ' + esc(euros(pl.nuitsLiaison[nuit].cout))) : ''}<div class="bk bkC bkSuite nuit"><div class="bkt">🌙 NUIT</div>${(() => { const nd = (pl.nuitsDom || [])[nuit]; const vl = pl.lieuxNuits[nuit++]; return nd && nd.domicile ? 'Nuit à ton domicile' + (nd.km != null && nd.km >= nd.seuil * 0.6 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km par la route)</span>' : '') : 'Nuit à ' + esc(vl) + (nd && nd.km != null && nd.km < nd.seuil * 1.4 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km du domicile)</span>' : ''); })()}${pl.coutHotel > 0 ? ' (hôtel ≈ ' + esc(euros(pl.coutHotel / pl.nuits)) + ')' : ''}</div>` : '';
+        const dort = ij < tous.length - 1 && nuit < pl.nuits ? `${(pl.nuitsLiaison || [])[nuit] && pl.nuitsLiaison[nuit].km >= 2 ? bk('bkTr', '🚆 EN SOIRÉE', '<b>' + esc(pl.nuitsLiaison[nuit].depuis) + ' → ' + esc(pl.nuitsLiaison[nuit].soir ? 'Domicile' : pl.lieuxNuits[nuit]) + '</b><br>≈ ' + esc(Math.round((pl.nuitsLiaison[nuit].soir || pl.nuitsLiaison[nuit]).km)) + ' km · ' + esc(duree((pl.nuitsLiaison[nuit].soir || pl.nuitsLiaison[nuit]).heures)) + ' · ' + esc(euros((pl.nuitsLiaison[nuit].soir || pl.nuitsLiaison[nuit]).cout))) : ''}<div class="bk bkC bkSuite nuit"><div class="bkt">🌙 NUIT</div>${(() => { const nd = (pl.nuitsDom || [])[nuit]; const vl = pl.lieuxNuits[nuit++]; return nd && nd.domicile ? 'Nuit à ton domicile' + (nd.km != null && nd.km >= nd.seuil * 0.6 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km par la route)</span>' : '') : 'Nuit à ' + esc(vl) + (nd && nd.km != null && nd.km < nd.seuil * 1.4 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km du domicile)</span>' : ''); })()}${pl.coutHotel > 0 ? ' (hôtel ≈ ' + esc(euros(pl.coutHotel / pl.nuits)) + ')' : ''}</div>` : '';
         return `<div class="jour">${esc(new Date(j.t).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris' }))}</div>${lignes}${dort}`;
       }).join('');
       return `<div class="carte plan propC" id="plan${ip}"><div class="propBandeau">Proposition ${ip + 1}</div>
@@ -718,7 +733,6 @@
       <label for="rKm">Coût à ta charge par km (€/km, 0 si remboursé)</label><input id="rKm" type="number" step="0.01" min="0" max="5" inputmode="decimal">
       <label for="rMin">Prix minimum pour être alerté (€)</label><input id="rMin" type="number" step="1" min="0" inputmode="numeric">
       <label><input id="rNv" type="checkbox" style="width:auto;min-height:0"> Alerte nouvelles missions</label>
-      <label><input id="rPx" type="checkbox" style="width:auto;min-height:0"> Alerte hausses de prix</label>
       <h2 style="margin-top:16px">Approche, retours et liaisons</h2>
       <label for="rDom">Ville de ton domicile (point de départ et de retour)</label>
       <div class="recherche"><input id="rDom" autocomplete="off" placeholder="3 lettres puis choisis dans la liste" aria-controls="rDomSugg"><div id="rDomSugg" class="sugg" role="listbox" hidden></div></div>
@@ -743,7 +757,7 @@
       <div class="carte plusFiltres"><h2>Compte</h2><p class="doux">${esc(api?.session?.email || '')}</p>
       <div class="boutons"><button id="dOk" class="second">Se déconnecter</button><button id="eOk" class="danger">Effacer mes données</button></div></div>
       <p class="doux" style="text-align:center">Convoyage Ultra · outil d’aide à la décision : aucune mission n’est acceptée à ta place.</p>`;
-    $('rStatut').value = r.statut; $('rTaux').value = r.taux_cotisations; $('rKm').value = r.cout_km; $('rMin').value = r.prix_minimum; $('rNv').checked = !!r.alertes_nouvelles; $('rPx').checked = !!r.alertes_prix;
+    $('rStatut').value = r.statut; $('rTaux').value = r.taux_cotisations; $('rKm').value = r.cout_km; $('rMin').value = r.prix_minimum; $('rNv').checked = !!r.alertes_nouvelles;
     $('rBus').checked = window.CP_BUS_ACTIF === true; $('rTransport').value = window.CP_TRANSPORT_CHOISI || 'general';
     $('rDom').value = r.domicile_ville || ''; $('rTr').value = r.cout_transport_km; $('rVit').value = r.vitesse_liaison; $('rMarge').value = r.marge_minutes; $('rRayon').value = r.rayon_retour_km; $('rAtt').value = r.attente_max_h; $('rSncf').value = r.carte_sncf || 'aucune'; $('rTrot').checked = r.trottinette === true;
     let domChoisi = r.domicile_ville ? { nom: r.domicile_ville, lat: r.domicile_lat, lng: r.domicile_lng, libelle: r.domicile_ville } : null;
@@ -753,7 +767,7 @@
       for (const b of box.querySelectorAll('[data-dom]')) b.onclick = () => { const x = l[Number(b.dataset.dom)]; domChoisi = { nom: x.nom, lat: x.lat, lng: x.lng, libelle: x.nom }; $('rDom').value = x.nom; box.hidden = true; };
     };
     $('rOk').onclick = async () => {
-      const v = { statut: $('rStatut').value, taux_cotisations: Number($('rTaux').value), cout_km: Number($('rKm').value), prix_minimum: Number($('rMin').value), alertes_nouvelles: $('rNv').checked, alertes_prix: $('rPx').checked,
+      const v = { statut: $('rStatut').value, taux_cotisations: Number($('rTaux').value), cout_km: Number($('rKm').value), prix_minimum: Number($('rMin').value), alertes_nouvelles: $('rNv').checked, alertes_prix: false,
         cout_transport_km: Number($('rTr').value), vitesse_liaison: Number($('rVit').value), marge_minutes: Math.round(Number($('rMarge').value)), rayon_retour_km: Math.round(Number($('rRayon').value)), attente_max_h: Math.round(Number($('rAtt').value)), carte_sncf: $('rSncf').value, trottinette: $('rTrot').checked };
       if (!(v.taux_cotisations >= 0 && v.taux_cotisations <= 60) || !(v.cout_km >= 0 && v.cout_km <= 5) || !(v.prix_minimum >= 0)) return toast('Valeurs hors limites');
       if (!(v.cout_transport_km >= 0 && v.cout_transport_km <= 2) || !(v.vitesse_liaison >= 10 && v.vitesse_liaison <= 300) || !(v.marge_minutes >= 0 && v.marge_minutes <= 600) || !(v.rayon_retour_km >= 1 && v.rayon_retour_km <= 500) || !(v.attente_max_h >= 1 && v.attente_max_h <= 96)) return toast('Valeurs de liaison hors limites');
