@@ -185,7 +185,26 @@
   }
 
   async function boutonApk(admin) {
-    if (window.CPNatif) return;
+    if (window.CPNatif) {
+      // V233 : dans l'APK, prévenir si une version plus récente est disponible dans le coffre.
+      try {
+        const inst = typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '') : '';
+        if (!inst || document.getElementById('cpApkAvis')) return;
+        const u = await signer('version.json'); if (!u) return;
+        const j = await (await fetch(u)).json(); if (!j || !j.version) return;
+        const n = s => String(s).split('.').map(x => parseInt(x, 10) || 0), a = n(j.version), c = n(inst);
+        let plus = false; for (let k = 0; k < 3; k++) { if ((a[k] || 0) > (c[k] || 0)) { plus = true; break; } if ((a[k] || 0) < (c[k] || 0)) break; }
+        if (!plus || sessionStorage.getItem('cp_apk_avis_ferme') === String(j.version)) return;
+        css();
+        const d = document.createElement('div'); d.id = 'cpApkAvis';
+        d.style.cssText = 'position:fixed;left:10px;right:10px;top:10px;z-index:9700;background:#221c12;color:#f3ead6;border:2px solid #b8860b;border-radius:12px;padding:12px 14px;font:15px/1.4 system-ui,sans-serif;box-shadow:0 4px 18px #0008';
+        d.innerHTML = '<b>📲 Nouvelle version ' + String(j.version).replace(/[^0-9.]/g, '') + ' disponible</b><br>Tu as la version ' + inst.replace(/[^0-9.]/g, '') + '. Installe la nouvelle pour avoir les dernières améliorations.<div style="display:flex;gap:8px;margin-top:10px"><button id="cpApkAvisOk" style="flex:1;padding:10px;border:0;border-radius:9px;background:#b8860b;color:#fff;font-weight:700">Télécharger</button><button id="cpApkAvisNon" style="padding:10px 14px;border:0;border-radius:9px;background:#3d321c;color:#f3ead6">Plus tard</button></div>';
+        document.body.appendChild(d);
+        document.getElementById('cpApkAvisOk').onclick = () => { d.remove(); ouvrirApk(); };
+        document.getElementById('cpApkAvisNon').onclick = () => { try { sessionStorage.setItem('cp_apk_avis_ferme', String(j.version)); } catch (_) {} d.remove(); };
+      } catch (_) {}
+      return;
+    }
     if (estIOS()) {
       if (dejaInstallee()) return;
       css();
