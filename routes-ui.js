@@ -86,6 +86,7 @@
     return null;
   };
   const BK = (cls, titre, h) => '<div class="bk bkC ' + cls + '"><div class="bkt">' + titre + '</div>' + h + '</div>';
+  const valRoute = async (body) => { let err = null; for (let n = 0; n < 4; n++) { try { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000); const rr = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal }); clearTimeout(to); if (rr.ok) return await rr.json(); err = new Error('http ' + rr.status); } catch (e) { err = e; } await new Promise(s => setTimeout(s, 1500 * (n + 1))); } throw err; };
   const estimerPeage = async (r, out) => {
     const zone = out.querySelector('[data-peage]');
     const put = (h, ok) => { if (!zone) return; zone.innerHTML = h; const b = zone.closest('.bk'); if (b) b.classList.add(ok ? 'bkRenOk' : 'bkRenKo'); };
@@ -94,8 +95,7 @@
       const A = decode(r.polyline);
       if (A.length < 2) { put(KO, false); return; }
       const a = A[0], b = A[A.length - 1];
-      const res = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locations: [{ lat: a[1], lon: a[0] }, { lat: b[1], lon: b[0] }], costing: 'auto', costing_options: { auto: { use_tolls: 1.0 } }, directions_options: { language: 'fr-FR', units: 'kilometers' } }) });
-      const j = await res.json();
+      const j = await valRoute({ locations: [{ lat: a[1], lon: a[0] }, { lat: b[1], lon: b[0] }], costing: 'auto', costing_options: { auto: { use_tolls: 1.0 } }, directions_options: { language: 'fr-FR', units: 'kilometers' } });
       const leg = j && j.trip && j.trip.legs && j.trip.legs[0];
       if (!leg) { put(KO, false); return; }
       const tms = (leg.maneuvers || []).filter(m => m.toll);
@@ -112,7 +112,7 @@
 
       } catch (_) { /* repli sur l’estimation */ }
       put(KO, false);
-    } catch (_) { put(KO, false); }
+    } catch (_) { put('⚠️ <b>Calcul du péage impossible pour l’instant</b> : le serveur de tracé ne répond pas.<div class="rd sub"><span>Ce n’est pas un prix inconnu. Vérifie ta connexion (wifi/4G) puis appuie de nouveau sur « Voiture et péages ».</span></div>', false); }
   };
   const render = (target, r, mode) => {
     const prix = mode === 'DRIVE' ? r.toll : r.fare;
@@ -138,7 +138,7 @@
       try {
         const r = await window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, refreshToken: s?.refresh_token, expiresAt: s?.expires_at, email: s?.email, userId: s?.user_id, supabaseUrl: c?.url, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime });
         render(out, r, mode === 'voiture' ? 'DRIVE' : 'TRANSIT');
-      } catch (e) { out.textContent = String(e.message || e); }
+      } catch (e) { out.textContent = /failed to fetch|networkerror|load failed|aborted/i.test(String(e.message || e)) ? 'Connexion au serveur de trajets impossible. Vérifie ta connexion (wifi ou 4G), puis réessaie.' : String(e.message || e); }
     });
   };
   const addMissionPanel = () => {
