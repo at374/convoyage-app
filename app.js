@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V231 (2.0.90)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V232 (2.0.91)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -69,7 +69,7 @@
   let api = cfg ? new window.CPApi(cfg.url, cfg.anonKey) : null;
 
   // V138 : l'onglet Alertes ne montre que les NOUVELLES missions (ni missions acceptées, ni hausses de prix, ni modifications ou annulations).
-  const seulesNouvelles = l => (l || []).filter(a => !['mission_acceptee', 'hausse_prix', 'mission_modifiee', 'mission_annulee'].includes(a.type));
+  const seulesNouvelles = l => (l || []).filter(a => !['mission_acceptee', 'hausse_prix', 'mission_modifiee', 'mission_annulee'].includes(a.type) && (!a.platform || !window.CP_EDITION || !window.CP_EDITION.plateformes || window.CP_EDITION.plateformes.includes(a.platform)));   // V232 : seulement les plateformes choisies
   const etat = { onglet: 'missions', missions: [], alertes: [], reglages: null, filtre: 'toutes', recherche: '', tri: 'recent', zones: [], cote: 'tous', rayon: 0, chargeLe: null, erreur: '', plus: {}, factures: [], facturesServeur: true, sources: undefined };
   const G = window.CPGeo, RT = window.CPRetours, CALC = window.CPCalc;
   { const mq = document.getElementById('marque'); if (mq && !document.getElementById('versionApp')) { const v = document.createElement('span'); v.id = 'versionApp'; v.className = 'version'; v.textContent = VERSION_APP; mq.appendChild(v); } }
