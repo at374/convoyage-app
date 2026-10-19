@@ -4,6 +4,7 @@
   'use strict';
   const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
   const n = v => (v == null || v === '' || !Number.isFinite(Number(v))) ? null : Number(v);
+  const jourParis = iso => { const t = Date.parse(iso || ''); return Number.isFinite(t) ? new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(t)) : ''; };
   const tri = l => [...new Set(l.filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr'));
   // V99 : libellés bruts de la plateforme → français (missions déjà enregistrées comprises).
   const LIBELLES = { energy: { plugin_hybrid: 'Hybride rechargeable', plug_in_hybrid: 'Hybride rechargeable', hybrid_plugin: 'Hybride rechargeable' }, category: { particular: 'Particulière' } };
@@ -29,11 +30,13 @@
       const km = n(m.distance_km);
       if (kmMin != null && (km == null || km < kmMin)) return false;
       if (kmMax != null && (km == null || km > kmMax)) return false;
+      if (f.dateDeb) { const j = jourParis(m.pickup_end || m.pickup_start || m.delivery_start); if (!j || j < f.dateDeb) return false; }
+      if (f.dateFin) { const j = jourParis(m.delivery_end || m.delivery_start || m.pickup_start); if (!j || j > f.dateFin) return false; }
       if (dMax != null) { const h = n(m.duree_h) ?? (dureeDe ? n(dureeDe(m)) : null); if (h == null || h > dMax) return false; }
       return true;
     });
   }
-  const actifs = f => ['client', 'type', 'energie', 'marque', 'kmMin', 'kmMax', 'dureeMax'].filter(k => f && f[k] != null && f[k] !== '').length;
+  const actifs = f => ['client', 'type', 'energie', 'marque', 'kmMin', 'kmMax', 'dureeMax', 'dateDeb', 'dateFin'].filter(k => f && f[k] != null && f[k] !== '').length;
 
   // ---------- Factures : uniquement les factures VALIDÉES par la plateforme (dont payées) ----------
   // Bénéfice estimé = prestation facturée − cotisations (taux des Réglages) ; les frais sont avancés puis remboursés (effet nul).
