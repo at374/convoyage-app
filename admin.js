@@ -54,6 +54,8 @@
     if (document.getElementById('cpAdminCss')) return;
     const s = document.createElement('style'); s.id = 'cpAdminCss';
     s.textContent = '#cpAdminBtn{position:fixed;right:12px;bottom:84px;z-index:9000;background:#b8860b;color:#fff;border:0;border-radius:22px;padding:9px 14px;font:700 14px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4)}' +
+      '#cpApkBtn{position:fixed;right:12px;bottom:84px;z-index:9000;background:#2e6b3a;color:#fff;border:0;border-radius:22px;padding:9px 14px;font:700 14px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4)}' +
+      '#cpApk{position:fixed;inset:0;z-index:9500;background:#14110c;color:#f3ead6;overflow:auto;font:15px/1.4 system-ui,sans-serif;padding:14px 14px 90px}#cpApk h2{margin:6px 0 10px;font-size:20px;color:#e0b84c}#cpApk .bloc{background:#221c12;border:1px solid #3d321c;border-radius:12px;padding:12px;margin:10px 0}#cpApk button{padding:9px 12px;border-radius:9px;border:0;background:#4a4231;color:#fff;font-weight:700}' +
       '#cpAdmin,#cpAbo{position:fixed;inset:0;z-index:9500;background:#14110c;color:#f3ead6;overflow:auto;font:15px/1.4 system-ui,sans-serif;padding:14px 14px 90px}' +
       '#cpAdmin h2,#cpAbo h2{margin:6px 0 10px;font-size:20px;color:#e0b84c}' +
       '#cpAdmin .bloc{background:#221c12;border:1px solid #3d321c;border-radius:12px;padding:12px;margin:10px 0}' +
@@ -134,6 +136,48 @@
     rafraichir();
   }
 
+  // --- APK Android : coffre privé Supabase (bucket « apk ») ---
+  async function signer(nom) {
+    const c = cfg(), t = await jeton();
+    if (!c.url || !t) throw new Error('Non connecté');
+    const base = String(c.url).replace(/\/+$/, '');
+    const r = await fetch(base + '/storage/v1/object/sign/apk/' + nom, { method: 'POST', headers: { apikey: c.anonKey, Authorization: 'Bearer ' + t, 'Content-Type': 'application/json' }, body: JSON.stringify({ expiresIn: 3600 }) });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j && j.signedURL ? base + '/storage/v1' + j.signedURL : null;
+  }
+  async function ouvrirApk() {
+    css();
+    let d = document.getElementById('cpApk'); if (d) d.remove();
+    d = document.createElement('div'); d.id = 'cpApk';
+    d.innerHTML = '<button id="cpApkF" class="gris" style="float:right">Fermer</button><h2>📲 Application Android</h2><div class="bloc" id="cpApkC">Chargement…</div>';
+    document.body.appendChild(d);
+    document.getElementById('cpApkF').onclick = () => d.remove();
+    const C = document.getElementById('cpApkC');
+    try {
+      const [u, v] = await Promise.all([signer('convoyage-ultra.apk'), signer('version.json')]);
+      let ver = '';
+      if (v) { try { const j = await (await fetch(v)).json(); ver = j && j.version ? String(j.version) : ''; } catch (_) {} }
+      if (!u) { C.innerHTML = 'L\'application Android n\'est pas encore disponible. Demande à l\'administrateur.'; return; }
+      C.innerHTML = (ver ? '<p>Dernière version : <b>' + esc(ver) + '</b></p>' : '') +
+        '<p><a href="' + esc(u) + '" style="display:inline-block;background:#b8860b;color:#fff;padding:12px 16px;border-radius:10px;font-weight:700;text-decoration:none">⬇️ Télécharger l\'APK</a></p>' +
+        '<p><b>Important :</b> Android demande d\'<b>autoriser l\'installation des applications inconnues</b> (source : ton navigateur). Quand il te le propose, appuie sur « Paramètres » puis active « Autoriser depuis cette source », reviens en arrière et installe.</p>' +
+        '<p>Le lien est valable 1 heure. Ne le partage pas : l\'accès est réservé aux convoyeurs inscrits.</p>';
+      try { if (ver) localStorage.setItem('cp_apk_vue', ver); } catch (_) {}
+      const b = document.getElementById('cpApkBtn'); if (b) b.textContent = '📲 Android';
+    } catch (e) { C.textContent = 'Erreur : ' + e.message; }
+  }
+  async function boutonApk(admin) {
+    if (window.CPNatif) return;
+    css();
+    let b = document.getElementById('cpApkBtn');
+    if (!b) { b = document.createElement('button'); b.id = 'cpApkBtn'; b.textContent = '📲 Android'; b.onclick = ouvrirApk; b.style.bottom = admin ? '130px' : '84px'; document.body.appendChild(b); }
+    try {
+      const v = await signer('version.json');
+      if (v) { const j = await (await fetch(v)).json(); const vu = localStorage.getItem('cp_apk_vue'); if (j && j.version && vu && vu !== String(j.version)) b.textContent = '📲 Nouvelle version !'; }
+    } catch (_) {}
+  }
+
   function boutonAdmin() {
     css();
     if (document.getElementById('cpAdminBtn')) return;
@@ -145,14 +189,14 @@
   async function verifier() {
     const s = lire();
     const cle = s && s.access_token ? (s.user_id || s.email || 'x') : '';
-    if (!cle) { dernier = ''; const b = document.getElementById('cpAdminBtn'); if (b) b.remove(); const a = document.getElementById('cpAbo'); if (a) a.remove(); return; }
+    if (!cle) { dernier = ''; const b = document.getElementById('cpAdminBtn'); if (b) b.remove(); const k = document.getElementById('cpApkBtn'); if (k) k.remove(); const a = document.getElementById('cpAbo'); if (a) a.remove(); return; }
     if (cle === dernier) return;
     try {
       const st = await statut();
       dernier = cle;
-      if (st && st.role === 'admin') { boutonAdmin(); return; }
+      if (st && st.role === 'admin') { boutonAdmin(); boutonApk(true); return; }
       if (st && st.existe === false) { ecranAbo(st); return; }
-      if (st && st.valide === false) ecranAbo(st);
+      if (st && st.valide === false) ecranAbo(st); else boutonApk(false);
     } catch (_) { /* hors ligne ou fonction absente : on ne bloque pas l'affichage */ }
   }
   window.CPAdmin = { ouvrir: ouvrirAdmin, verifier };
