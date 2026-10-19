@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V228 (2.0.87)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V229 (2.0.88)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -201,7 +201,7 @@
       const nouvelles = alertesNouv.filter(a => !a.lue && !avant.has(a.id));
       Object.assign(etat, { missions: window.CPFiltres.francais(deLEdition(missions)), alertes: alertesNouv, reglages, chargeLe: new Date().toISOString(), erreur: '' });
       ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures });
-      if (etat.chargeLeDejaVu && nouvelles.length && !pauseActive()) notifier(nouvelles);
+      if (etat.chargeLeDejaVu && nouvelles.length && !pauseActive()) { notifier(nouvelles); alerteRetour(nouvelles); }
       etat.chargeLeDejaVu = true;
       if (!silencieux) toast('Missions à jour');
     } catch (e) {
@@ -228,6 +228,42 @@
       else { toast('Notifications activées'); try { await activerNotifications(); } catch (_) {} }
     };
     s.onchange = () => { appliquerPrefsNotif({ on: a.checked, son: s.checked }); toast(s.checked ? 'Son et vibration activés' : 'Notifications sans son ni vibration'); };
+  }
+  // V229 : GROSSE ALERTE quand une nouvelle mission te ramène vers ton domicile pendant une mission commencée (règles de l'onglet Retours).
+  const missionEnCours = () => { const now = Date.now(); return etat.missions.find(m => { if (m.kind !== 'acceptee') return false; const p = Date.parse(m.pickup_start || ''), f = Date.parse(m.delivery_end || m.delivery_start || ''); return Number.isFinite(p) && Number.isFinite(f) && p <= now && now <= f + 3600000; }) || null; };
+  const retourVus = new Set();
+  function alerteRetour(nouvelles) {
+    try {
+      const src = missionEnCours(); if (!src || !RT.domicile(etat.reglages)) return;
+      const acceptees = etat.missions.filter(x => x.kind === 'acceptee'), jP = ms => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(ms));
+      const trouves = [];
+      for (const al of nouvelles) {
+        const c = missionDeAlerte(al); if (!c || c.kind === 'acceptee' || retourVus.has(RT.cle(c))) continue;
+        const res = RT.retours(src, [c], etat.reglages, { acceptees });
+        const z = res.compatibles.find(x => RT.cle(x.mission) === RT.cle(c) && Number.isFinite(x.rapprocheKm) && x.rapprocheKm > 0 && !(res.finSource && x.arrivee != null && jP(x.arrivee) !== jP(res.finSource.t)));
+        if (z) trouves.push({ c, z });
+      }
+      if (!trouves.length) return;
+      trouves.sort((a, b) => b.z.rapprocheKm - a.z.rapprocheKm);
+      for (const x of trouves) retourVus.add(RT.cle(x.c));
+      grosseAlerteRetour(trouves);
+    } catch (_) {}
+  }
+  function grosseAlerteRetour(liste) {
+    const c = liste[0].c, z = liste[0].z, nom = PLATS[c.platform] || c.platform;
+    const lien = c.detail_url && /^https:\/\//.test(c.detail_url) ? c.detail_url : LIENS[c.platform];
+    const href = lienAppliAutre(c.platform, lien) || lien || '#';
+    const net = z.rentabilite && Number.isFinite(Number(z.rentabilite.net)) ? 'net ≈ ' + euros(z.rentabilite.net) : '';
+    const ancien = document.getElementById('cpRetourAlerte'); if (ancien) ancien.remove();
+    const d = document.createElement('div'); d.id = 'cpRetourAlerte'; d.setAttribute('role', 'alertdialog');
+    d.innerHTML = '<div class="rcBoite"><div class="rcTitre">🏠 RETOUR VERS TON DOMICILE</div><div class="rcSous">Nouvelle mission pendant ta mission en cours</div><div class="rcPlat">' + esc(nom) + '</div><div class="rcTrajet">' + esc(c.from_city || '?') + ' → ' + esc(c.to_city || '?') + '</div><div class="rcPrix">' + (c.fee !== null && c.fee !== undefined ? esc(euros(c.fee)) : '—') + (net ? ' · ' + esc(net) : '') + '</div><div class="rcInfo">Te rapproche de ' + Math.round(z.rapprocheKm) + ' km · il resterait ' + Math.round(z.retourDomicileKm || 0) + ' km jusqu’à chez toi</div>' + (liste.length > 1 ? '<div class="rcInfo">+ ' + (liste.length - 1) + ' autre(s) retour(s) possible(s)</div>' : '') + '<button class="rcVoir" id="rcVoir">👁️ Voir la mission</button><a class="rcLien" href="' + esc(href) + '" target="_blank" rel="noopener"><button class="rcPf">➡️ Aller sur ' + esc(nom) + '</button></a><button class="rcFermer" id="rcFermer">Ignorer</button></div>';
+    document.body.appendChild(d);
+    const fermer = () => { try { d.remove(); } catch (_) {} };
+    document.getElementById('rcVoir').onclick = () => { fermer(); try { detail(c); } catch (_) {} };
+    document.getElementById('rcFermer').onclick = fermer;
+    try { if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 900]); } catch (_) {}
+    try { const ac = new (window.AudioContext || window.webkitAudioContext)(); [0, 0.35, 0.7].forEach(s => { const o = ac.createOscillator(), g = ac.createGain(); o.connect(g); g.connect(ac.destination); o.frequency.value = 880; g.gain.value = 0.2; o.start(ac.currentTime + s); o.stop(ac.currentTime + s + 0.2); }); } catch (_) {}
+    try { if (prefNotif().on && 'Notification' in window && Notification.permission === 'granted' && navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(reg => { if (reg) reg.showNotification('🏠 Retour vers ton domicile', { body: (c.from_city || '?') + ' → ' + (c.to_city || '?') + ' · ' + nom, icon: 'icones/icone-192.png', tag: 'retour-domicile', requireInteraction: true, vibrate: [500, 200, 500, 200, 900] }); }); } catch (_) {}
   }
   async function notifier(liste) {
     toast(liste[0].message);
