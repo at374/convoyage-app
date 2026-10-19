@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V230 (2.0.89)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V231 (2.0.90)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -891,9 +891,9 @@
     const jP = ms => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(ms));
     const jSrc = (res.finSource && res.finSource.t) ? jP(res.finSource.t) : (Number.isFinite(Date.parse(m.delivery_end || m.delivery_start || '')) ? jP(Date.parse(m.delivery_end || m.delivery_start)) : '');
     const jMis = z => { const q = Date.parse(z.pickup_start || z.pickup_end || z.delivery_start || ''); return Number.isFinite(q) ? jP(q) : ''; };
-    const memeJour = (r0, x) => { if (!jSrc) return true; if (x.arrivee != null && jP(x.arrivee) !== jSrc) return false; const jm = jMis(x.mission || {}); return !jm || jm === jSrc; };
+    const memeJour = (r0, x) => { if (!jSrc) return true; if (x.arrivee != null && jP(x.arrivee) !== jSrc) return false; const jm = jMis(x.mission || {}); return jm ? jm === jSrc : x.arrivee != null; };   // V231 : sans preuve du même jour -> retiré (étapes 2 et 3 comprises) ; le reste va dans Planning sur plusieurs jours
     res.compatibles = res.compatibles.filter(x => memeJour(res, x));
-    res.dateInconnue = (res.dateInconnue || []).filter(x => memeJour(res, x));
+    res.dateInconnue = jSrc ? [] : (res.dateInconnue || []);   // V231 : sans horaire on ne peut pas prouver que c'est le même jour -> on les retire
     detail.retours = res.compatibles.concat(res.dateInconnue);
     const sugIds = new Set(m.platform === 'DriiveMe' ? sugListe(m).map(z => String(z.id)) : []);
     const estSug = x => sugIds.has(String(x.mission.external_id)) && x.mission.platform === m.platform;
