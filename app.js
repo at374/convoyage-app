@@ -250,20 +250,21 @@
     } catch (_) {}
   }
   function grosseAlerteRetour(liste) {
-    const c = liste[0].c, z = liste[0].z, nom = PLATS[c.platform] || c.platform;
-    const lien = c.detail_url && /^https:\/\//.test(c.detail_url) ? c.detail_url : LIENS[c.platform];
-    const href = lienAppliAutre(c.platform, lien) || lien || '#';
-    const net = z.rentabilite && Number.isFinite(Number(z.rentabilite.net)) ? 'net ≈ ' + euros(z.rentabilite.net) : '';
     const ancien = document.getElementById('cpRetourAlerte'); if (ancien) ancien.remove();
     const d = document.createElement('div'); d.id = 'cpRetourAlerte'; d.setAttribute('role', 'alertdialog');
-    d.innerHTML = '<div class="rcBoite"><div class="rcTitre">🏠 RETOUR VERS TON DOMICILE</div><div class="rcSous">Nouvelle mission pendant ta mission en cours</div><div class="rcPlat">' + esc(nom) + '</div><div class="rcTrajet">' + esc(c.from_city || '?') + ' → ' + esc(c.to_city || '?') + '</div><div class="rcPrix">' + (c.fee !== null && c.fee !== undefined ? esc(euros(c.fee)) : '—') + (net ? ' · ' + esc(net) : '') + '</div><div class="rcInfo">Te rapproche de ' + Math.round(z.rapprocheKm) + ' km · il resterait ' + Math.round(z.retourDomicileKm || 0) + ' km jusqu’à chez toi</div>' + (liste.length > 1 ? '<div class="rcInfo">+ ' + (liste.length - 1) + ' autre(s) retour(s) possible(s)</div>' : '') + '<button class="rcVoir" id="rcVoir">👁️ Voir la mission</button><a class="rcLien" href="' + esc(href) + '" target="_blank" rel="noopener"><button class="rcPf">➡️ Aller sur ' + esc(nom) + '</button></a><button class="rcFermer" id="rcFermer">Ignorer</button></div>';
+    const carte = (e, k) => { const c = e.c, z = e.z, nom = PLATS[c.platform] || c.platform;
+      const lien = c.detail_url && /^https:\/\//.test(c.detail_url) ? c.detail_url : LIENS[c.platform];
+      const href = lienAppliAutre(c.platform, lien) || lien || '#';
+      const net = z.rentabilite && Number.isFinite(Number(z.rentabilite.net)) ? 'net ≈ ' + euros(z.rentabilite.net) : '';
+      return '<div class="rcCarte" style="' + (k ? 'border-top:3px dashed #16a34a;margin-top:14px;padding-top:12px' : '') + '"><div class="rcPlat">' + esc(nom) + '</div><div class="rcTrajet">' + esc(c.from_city || '?') + ' → ' + esc(c.to_city || '?') + '</div><div class="rcPrix">' + (c.fee !== null && c.fee !== undefined ? esc(euros(c.fee)) : '—') + (net ? ' · ' + esc(net) : '') + '</div><div class="rcInfo">Te rapproche de ' + Math.round(z.rapprocheKm) + ' km · il resterait ' + Math.round(z.retourDomicileKm || 0) + ' km jusqu’à chez toi</div><button class="rcVoir" data-k="' + k + '">👁️ Voir la mission</button><a class="rcLien" href="' + esc(href) + '" target="_blank" rel="noopener"><button class="rcPf">➡️ Aller sur ' + esc(nom) + '</button></a></div>'; };
+    d.innerHTML = '<div class="rcBoite" style="max-height:94vh;overflow-y:auto"><div class="rcTitre">🏠 RETOUR VERS TON DOMICILE</div><div class="rcSous">' + (liste.length > 1 ? liste.length + ' nouvelles missions' : 'Nouvelle mission') + ' pendant ta mission en cours</div>' + liste.map(carte).join('') + '<button class="rcFermer" id="rcFermer">Ignorer</button></div>';
     document.body.appendChild(d);
     const fermer = () => { try { d.remove(); } catch (_) {} };
-    document.getElementById('rcVoir').onclick = () => { fermer(); try { detail(c); } catch (_) {} };
+    for (const b of d.querySelectorAll('.rcVoir')) b.onclick = () => { fermer(); try { detail(liste[Number(b.dataset.k)].c); } catch (_) {} };
     document.getElementById('rcFermer').onclick = fermer;
     try { if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 900]); } catch (_) {}
     try { const ac = new (window.AudioContext || window.webkitAudioContext)(); [0, 0.35, 0.7].forEach(s => { const o = ac.createOscillator(), g = ac.createGain(); o.connect(g); g.connect(ac.destination); o.frequency.value = 880; g.gain.value = 0.2; o.start(ac.currentTime + s); o.stop(ac.currentTime + s + 0.2); }); } catch (_) {}
-    try { if (prefNotif().on && 'Notification' in window && Notification.permission === 'granted' && navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(reg => { if (reg) reg.showNotification('🏠 Retour vers ton domicile', { body: (c.from_city || '?') + ' → ' + (c.to_city || '?') + ' · ' + nom, icon: 'icones/icone-192.png', tag: 'retour-domicile', requireInteraction: true, vibrate: [500, 200, 500, 200, 900] }); }); } catch (_) {}
+    try { if (prefNotif().on && 'Notification' in window && Notification.permission === 'granted' && navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(reg => { if (reg) reg.showNotification('🏠 Retour vers ton domicile', { body: liste.map(e => (e.c.from_city || '?') + ' → ' + (e.c.to_city || '?')).join(' | '), icon: 'icones/icone-192.png', tag: 'retour-domicile', requireInteraction: true, vibrate: [500, 200, 500, 200, 900] }); }); } catch (_) {}
   }
   async function notifier(liste) {
     toast(liste[0].message);
