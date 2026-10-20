@@ -201,7 +201,9 @@
       const nouvelles = alertesNouv.filter(a => !a.lue && !avant.has(a.id));
       Object.assign(etat, { missions: window.CPFiltres.francais(deLEdition(missions)), alertes: alertesNouv, reglages, chargeLe: new Date().toISOString(), erreur: '' });
       ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures });
-      if (etat.chargeLeDejaVu && nouvelles.length && !pauseActive()) { notifier(nouvelles); alerteRetour(nouvelles); }
+      if (etat.chargeLeDejaVu && nouvelles.length && !pauseActive()) notifier(nouvelles);
+      // V233 : à chaque ouverture / retour au premier plan, on réexamine les alertes non lues de moins de 6 h (une alerte arrivée écran éteint n'était montrée qu'en petite notification)
+      if (!pauseActive()) alerteRetour(alertesNouv.filter(a => { if (a.lue) return false; const d = Date.parse(a.created_at || a.cree_le || a.date || ''); return !Number.isFinite(d) || Date.now() - d < 6 * 3600000; }));
       etat.chargeLeDejaVu = true;
       if (!silencieux) toast('Missions à jour');
     } catch (e) {
@@ -231,7 +233,8 @@
   }
   // V229 : GROSSE ALERTE quand une nouvelle mission te ramène vers ton domicile pendant une mission commencée (règles de l'onglet Retours).
   const missionEnCours = () => { const now = Date.now(); return etat.missions.find(m => { if (m.kind !== 'acceptee') return false; const p = Date.parse(m.pickup_start || ''), f = Date.parse(m.delivery_end || m.delivery_start || ''); return Number.isFinite(p) && Number.isFinite(f) && p <= now && now <= f + 3600000; }) || null; };
-  const retourVus = new Set();
+  const retourVus = new Set(lireLocal('cp_retour_vus', []));   // V233 : mémorisé, pour ne jamais perdre ni répéter une alerte de retour
+  const memoRetourVus = () => ecrireLocal('cp_retour_vus', [...retourVus].slice(-200));
   function alerteRetour(nouvelles) {
     try {
       const src = missionEnCours(); if (!src || !RT.domicile(etat.reglages)) return;
@@ -246,6 +249,7 @@
       if (!trouves.length) return;
       trouves.sort((a, b) => b.z.rapprocheKm - a.z.rapprocheKm);
       for (const x of trouves) retourVus.add(RT.cle(x.c));
+      memoRetourVus();
       grosseAlerteRetour(trouves);
     } catch (_) {}
   }
