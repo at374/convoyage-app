@@ -116,11 +116,31 @@
     return vus;
   };
   const garesTraversees = (P, sh, i0, i1) => { let n = 0, der = -2; for (let k = i0; k <= i1; k++) { if (!sh[k]) continue; const g = gareProche(P, sh[k][0], sh[k][1], 0.4); if (g >= 0 && g !== der) { n++; der = g; } } return n; };
+  // V239 : à la demande de Laurent, quand le prix exact manque, estimation clairement marquée « ≈ » : gares officielles les plus proches de l'entrée et de la sortie du tronçon à péage qui ont un tarif officiel entre elles.
+  const prixApprox = (P, sh, i0, i1, km) => {
+    if (!sh[i0] || !sh[i1]) return null;
+    const near = pt => P.g.map((g, i) => { let d = 1e9; for (const p of g[1]) d = Math.min(d, dist(pt[0], pt[1], p[0], p[1])); return { i, d }; }).sort((a, b) => a.d - b.d).slice(0, 6);
+    const E = near(sh[i0]), S = near(sh[i1]); let best = null;
+    for (const a of E) for (const b of S) {
+      if (a.i === b.i) continue;
+      const v = P.prix.get(Math.min(a.i, b.i) * 1000 + Math.max(a.i, b.i)); if (!v) continue;
+      if (km > 3 && (v[2] < km * 0.6 || v[2] > km * 1.6)) continue;
+      const s = a.d + b.d; if (!best || s < best.s) best = { a, b, v, s };
+    }
+    if (!best || best.a.d > 25 || best.b.d > 25) return null;
+    return { e: joli(P.g[best.a.i][0]), s: joli(P.g[best.b.i][0]), c1: best.v[0], c2: best.v[1], de: best.a.d, ds: best.b.d };
+  };
   const BK = (cls, titre, h) => '<div class="bk bkC ' + cls + '"><div class="bkt">' + titre + '</div>' + h + '</div>';
   const valRoute = async (body) => { let err = null; for (let n = 0; n < 4; n++) { try { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000); const rr = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal }); clearTimeout(to); if (rr.ok) return await rr.json(); err = new Error('http ' + rr.status); } catch (e) { err = e; } await new Promise(s => setTimeout(s, 1500 * (n + 1))); } throw err; };
   const estimerPeage = async (r, out) => {
     const zone = out.querySelector('[data-peage]');
     const put = (h, ok) => { if (!zone) return; zone.innerHTML = h; const b = zone.closest('.bk'); if (b) b.classList.add(ok ? 'bkRenOk' : 'bkRenKo'); };
+    const aprox = (P, sh, i0, i1, km) => {
+      let v = null; try { v = prixApprox(P, sh, i0, i1, km); } catch (_) { v = null; }
+      if (!v) return false;
+      put('<div class="rd gros ok gras"><span>Classe 1 (estimation)</span><b>≈ ' + euro(v.c1) + '</b></div><div class="rd"><span>Classe 2 (estimation)</span><b>≈ ' + euro(v.c2) + '</b></div><div class="rd sub"><span>⚠️ Estimation : prix exact non disponible. Calcul sur les gares officielles les plus proches : ' + v.e + ' (à ' + v.de.toFixed(1) + ' km) → ' + v.s + ' (à ' + v.ds.toFixed(1) + ' km).</span></div>', true);
+      return true;
+    };
     const KO = '💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Aucune estimation affichée : seuls les tarifs officiels exacts sont montrés.</span></div>';
     try {
       const A = decode(r.polyline);
@@ -152,7 +172,7 @@
             put('<div class="rd gros ok gras"><span>Classe 1</span><b>' + euro(c1) + '</b></div><div class="rd"><span>Classe 2</span><b>' + euro(c2) + '</b></div><div class="rd sub"><span>' + (legOk ? x.e + ' → ' + x.s + ' + ' : '') + 'barrière(s) : ' + noms + '</span></div><div class="rd sub"><span>Source : tarifs officiels 2026' + (croise ? ' (relecture en cours, à vérifier)' : '') + '</span></div>', true);
             return;
           }
-          put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Barrière(s) détectée(s) : ' + noms + '. Un tarif officiel manque : aucun total n’est affiché.</span></div>', false);
+          if (aprox(P, sh, i0, i1, km)) return; put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Barrière(s) détectée(s) : ' + noms + '. Un tarif officiel manque : aucun total n’est affiché.</span></div>', false);
           return;
         }
         if (x && x.reste < 3) {
@@ -160,6 +180,7 @@
           return;
         }
 
+        if (aprox(P, sh, i0, i1, km)) return;
       } catch (_) { /* repli sur l’estimation */ }
       put(KO, false);
     } catch (_) { put('⚠️ <b>Calcul du péage impossible pour l’instant</b> : le serveur de tracé ne répond pas.<div class="rd sub"><span>Ce n’est pas un prix inconnu. Vérifie ta connexion (wifi/4G) puis appuie de nouveau sur « Voiture et péages ».</span></div>', false); }
