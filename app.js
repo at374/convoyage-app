@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V232 (2.0.91)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V234 (2.0.92)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -1000,7 +1000,7 @@
       ${m.kind === 'acceptee' ? '<button id="btnRetirer" class="second" type="button">🚫 Pas acceptée : retirer de l’Agenda</button>' : ''}
       ${lienDevis(m) ? `<a href="${esc(lienAppliHiflow() || lienDevis(m))}"${lienAppliHiflow() ? '' : ' target="_blank" rel="noopener"'} id="lienDevis" data-numero="${esc(m.external_id)}"><button style="width:100%;margin:4px 0 2px">📱 Faire le devis dans l’application Hiflow</button></a><p class="doux" style="margin:0 0 8px">Mission n° <b>${esc(m.external_id)}</b> (copié en touchant le bouton) · ${esc(trajet(m))}</p>` : ''}
       ${bkDates(m, hfDates(m) ? fmtDate(hfLiv(m)) : ((m.delivery_start || m.delivery_end || dMail(m)) ? fmtDate(m.delivery_start || m.delivery_end) : ''))}
-      ${vehHtml(m)}
+      ${vehHtml(m)}${plaqueW(m)}
       ${blocKm(m, false)}
       <button id="btnVol" class="btnVert" type="button" aria-label="Visualisation trajet estimé">🗺️ Visualisation trajet estimé</button>
       ${bk('bkLieu', 'LIEUX', `<div>📍 <b>Départ</b> : ${esc(adresse(m, 'origin'))}</div><div id="gpsO">${mentionGps(m, 'origin')}</div>${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}<div style="margin-top:8px">🏁 <b>Arrivée</b> : ${esc(adresse(m, 'destination'))}</div><div id="gpsD">${mentionGps(m, 'destination')}</div>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}`)}
