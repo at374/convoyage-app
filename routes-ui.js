@@ -85,6 +85,30 @@
     }
     return null;
   };
+  // V233 : péages « barrière » (sans gare d'entrée/sortie : ponts, tunnels, barrières pleine voie) — tarifs officiels versionnés, jamais d'estimation.
+  let OVERLAY = null;
+  const chargerOverlay = async () => {
+    if (OVERLAY !== null) return OVERLAY;
+    try {
+      if (!window.CPPeage) await new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'peage-engine.js'; s.onload = ok; s.onerror = ko; document.head.appendChild(s); });
+      const j = await fetch('peages-overlay.json').then(r => r.json());
+      const versions = j.tarifs.map(t => ({ id: t.id, barrier_station_id: t.b || null, vehicle_class: t.c, amount_eur: t.a, status: t.s, effective_from: t.f, effective_to: t.t || null, tariff_context: t.k || null, source_url: t.u == null ? null : j.u[t.u] }));
+      OVERLAY = { m: window.CPPeage.creerMoteur({ versions }), b: j.barrieres, v: j.v };
+    } catch (_) { OVERLAY = false; }
+    return OVERLAY;
+  };
+  // Barrières franchies le long du tracé ; une barrière vue sur des points voisins (deux sens) ne compte qu'une fois.
+  const barrieresTraversees = (O, sh, i0, i1) => {
+    const vus = []; let der = null, dernierK = -999;
+    for (let k = i0; k <= i1; k++) {
+      if (!sh[k]) continue;
+      for (const b of O.b) {
+        if (b.points.some(p => dist(sh[k][0], sh[k][1], p[0], p[1]) < 0.3)) { if (b.id !== der || k - dernierK > 50) vus.push({ id: b.id, k }); der = b.id; dernierK = k; break; }
+      }
+    }
+    return vus;
+  };
+  const garesTraversees = (P, sh, i0, i1) => { let n = 0, der = -2; for (let k = i0; k <= i1; k++) { if (!sh[k]) continue; const g = gareProche(P, sh[k][0], sh[k][1], 0.4); if (g >= 0 && g !== der) { n++; der = g; } } return n; };
   const BK = (cls, titre, h) => '<div class="bk bkC ' + cls + '"><div class="bkt">' + titre + '</div>' + h + '</div>';
   const valRoute = async (body) => { let err = null; for (let n = 0; n < 4; n++) { try { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000); const rr = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal }); clearTimeout(to); if (rr.ok) return await rr.json(); err = new Error('http ' + rr.status); } catch (e) { err = e; } await new Promise(s => setTimeout(s, 1500 * (n + 1))); } throw err; };
   const estimerPeage = async (r, out) => {
@@ -104,7 +128,26 @@
       if (km < 1) { put('💶 <b>Aucun péage</b> sur ce trajet.', true); return; }
       try {
         const P = await chargerPeages();
-        const x = prixExact(P, dec6(leg.shape), tms, km);
+        const sh = dec6(leg.shape);
+        const x = prixExact(P, sh, tms, km);
+        const O = await chargerOverlay();
+        const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
+        const bar = O ? barrieresTraversees(O, sh, i0, i1) : [];
+        if (bar.length) {
+          const auj = new Date().toISOString().slice(0, 10), pas = bar.map((v, n) => ({ type: 'barriere', station: v.id, group: v.id, passage: n }));
+          const t1 = O.m.trajet(pas, 1, auj), t2 = O.m.trajet(pas, 2, auj);
+          const noms = bar.map(v => joli(v.id.replace(/-/g, ' '))).join(', ');
+          const legOk = !!(x && x.reste < 3);
+          if (t1.complet && t2.complet && (legOk || garesTraversees(P, sh, i0, i1) === 0)) {
+            const r2 = n => Math.round(n * 100) / 100;
+            const c1 = r2((legOk ? x.c1 : 0) + t1.total), c2 = r2((legOk ? x.c2 : 0) + t2.total);
+            const croise = t1.status !== 'PROUVE' || t2.status !== 'PROUVE';
+            put('<div class="rd gros ok gras"><span>Classe 1</span><b>' + euro(c1) + '</b></div><div class="rd"><span>Classe 2</span><b>' + euro(c2) + '</b></div><div class="rd sub"><span>' + (legOk ? x.e + ' → ' + x.s + ' + ' : '') + 'barrière(s) : ' + noms + '</span></div><div class="rd sub"><span>Source : tarifs officiels 2026' + (croise ? ' (relecture en cours, à vérifier)' : '') + '</span></div>', true);
+            return;
+          }
+          put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Barrière(s) détectée(s) : ' + noms + '. Un tarif officiel manque : aucun total n’est affiché.</span></div>', false);
+          return;
+        }
         if (x && x.reste < 3) {
           put('<div class="rd gros ok gras"><span>Classe 1</span><b>' + euro(x.c1) + '</b></div><div class="rd"><span>Classe 2</span><b>' + euro(x.c2) + '</b></div><div class="rd sub"><span>' + x.e + ' → ' + x.s + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + P.v + '</span></div>', true);
           return;
