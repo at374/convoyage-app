@@ -31,7 +31,8 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V241 (2.0.99)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V242 (2.0.100)';
+  const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -72,7 +73,7 @@
   const seulesNouvelles = l => (l || []).filter(a => !['mission_acceptee', 'hausse_prix', 'mission_modifiee', 'mission_annulee'].includes(a.type) && (!a.platform || !window.CP_EDITION || !window.CP_EDITION.plateformes || window.CP_EDITION.plateformes.includes(a.platform)));   // V232 : seulement les plateformes choisies
   const etat = { onglet: 'missions', missions: [], alertes: [], reglages: null, filtre: 'toutes', recherche: '', tri: 'recent', zones: [], cote: 'tous', rayon: 0, chargeLe: null, erreur: '', plus: {}, factures: [], facturesServeur: true, sources: undefined };
   const G = window.CPGeo, RT = window.CPRetours, CALC = window.CPCalc;
-  { const mq = document.getElementById('marque'); if (mq && !document.getElementById('versionApp')) { const v = document.createElement('span'); v.id = 'versionApp'; v.className = 'version'; v.textContent = VERSION_APP; mq.appendChild(v); } }
+  { const mq = document.getElementById('marque'); if (mq && !document.getElementById('versionApp')) { const v = document.createElement('span'); v.id = 'versionApp'; v.className = 'version'; v.textContent = VERSION_APP + versionApk(); mq.appendChild(v); } }
   Object.assign(etat, lireLocal('cp_preferences', {}));
   window.CP_TRANSPORT_CHOISI = lireLocal('cp_transport', 'moyenne');   // V137 : transport choisi pour l'aller et le retour (gardé sur ce téléphone)
   etat.pos = lireLocal('cp_position', null); etat.posMax = Number(etat.posMax) || 0;   // V137 : position du téléphone, prise seulement sur demande, gardée sur ce téléphone
@@ -138,6 +139,7 @@
       <div class="erreur" id="lErr" ${msg ? '' : 'hidden'}>${esc(msg || '')}</div>
       <button id="lOk" style="width:100%;margin-top:14px">Se connecter</button>
       <button id="lCree" class="second" style="width:100%;margin-top:8px">Créer un compte</button>
+      <button id="lOubli" class="second" style="width:100%;margin-top:8px">Mot de passe oublié ?</button>
       ${cfgFichier.url ? '' : '<p class="doux" style="margin-top:14px"><a href="#" id="lServeur">Changer de serveur</a></p>'}</div>`;
     const go = async creer => {
       const e = $('lEmail').value.trim(), p = $('lMdp').value; const err = $('lErr');
@@ -151,6 +153,18 @@
       finally { const a = $('lOk'), b = $('lCree'); if (a) a.disabled = false; if (b) b.disabled = false; }
     };
     $('lOk').onclick = () => go(false); $('lCree').onclick = () => go(true);
+    // V242 : mot de passe oublié → mail de réinitialisation (le lien ramène ici sur l'écran « Choisissez votre mot de passe »).
+    $('lOubli').onclick = async () => {
+      const e = $('lEmail').value.trim(), err = $('lErr');
+      if (!e.includes('@')) { err.textContent = 'Écrivez d’abord votre e-mail dans la case ci-dessus.'; err.hidden = false; return; }
+      $('lOubli').disabled = true;
+      try {
+        const r = await fetch(api.url + '/auth/v1/recover', { method: 'POST', headers: { apikey: api.cle, 'content-type': 'application/json' }, body: JSON.stringify({ email: e }) });
+        if (!r.ok) { let j = null; try { j = await r.json(); } catch (_) {} throw new Error((j && (j.msg || j.message || j.error_description)) || ('Erreur ' + r.status)); }
+        err.textContent = 'Si ce compte existe, un e-mail vient d’être envoyé (pensez à regarder les indésirables). Appuyez sur le lien qu’il contient.'; err.hidden = false;
+      } catch (x) { err.textContent = String(x.message || x); err.hidden = false; }
+      finally { const b = $('lOubli'); if (b) b.disabled = false; }
+    };
     const s = $('lServeur'); if (s) s.onclick = ev => { ev.preventDefault(); localStorage.removeItem('cp_config'); cfg = null; api = null; ecranConfiguration(); };
   }
 
@@ -842,7 +856,7 @@
       const bt = document.createElement('button'); bt.type = 'button'; bt.id = 'majPeages'; bt.textContent = 'Mettre à jour les péages';
       bt.onclick = async () => { bt.disabled = true; try { const r = await fetch('peages-aprr.json', { cache: 'reload' }); const j = await r.json(); if (!j || !j.p) throw new Error('fichier vide'); try { const ks = await caches.keys(); for (const k of ks) { const c = await caches.open(k); await c.delete('peages-aprr.json'); await c.delete(new URL('peages-aprr.json', location.href).href); } } catch (_) { } try { localStorage.setItem('cp_peages_maj', new Date().toISOString()); } catch (_) { } toast('Péages à jour : ' + String(j.v || '').slice(0, 70)); setTimeout(() => location.reload(), 1500); } catch (e) { toast('Mise à jour impossible : ' + e.message); bt.disabled = false; } };
       bloc.appendChild(info); bloc.appendChild(bt); $('ecran').appendChild(bloc); }
-    { const p = document.createElement('p'); p.className = 'doux'; p.id = 'versionReglages'; p.style.textAlign = 'center'; p.textContent = 'Convoyage Ultra — version ' + VERSION_APP; $('ecran').appendChild(p); }
+    { const p = document.createElement('p'); p.className = 'doux'; p.id = 'versionReglages'; p.style.textAlign = 'center'; p.textContent = 'Convoyage Ultra — version ' + VERSION_APP + versionApk(); $('ecran').appendChild(p); }
     { const bm = $('remettre'); if (bm) bm.onclick = () => { ecrireLocal('cp_masquees', []); toast('Missions remises : actualisation…'); charger(); }; }
     $('dOk').onclick = () => { api.deconnexion(); localStorage.removeItem('cp_cache'); Object.assign(etat, { missions: [], alertes: [], reglages: null }); ecranConnexion(); };
     $('eOk').onclick = async () => {
@@ -1108,9 +1122,50 @@
   document.documentElement.dataset.police = policeCourante();
   { const b = document.getElementById('policeBtn'); if (b) b.onclick = () => { const i = POLICES.findIndex(x => x[0] === policeCourante()), n = POLICES[(i + 1) % POLICES.length]; try { localStorage.setItem('cp_police', n[0]); } catch (_) {} document.documentElement.dataset.police = n[0]; const t = document.getElementById('sousTitre'); if (t) t.textContent = 'Police : ' + n[1]; }; }
   { const b = document.getElementById('styleBtn'); if (b) b.onclick = () => { const i = STYLES.findIndex(x => x[0] === styleCourant()), n = STYLES[(i + 1) % STYLES.length]; try { localStorage.setItem('cp_style', n[0]); } catch (_) {} appliquerStyle(n[0]); const t = document.getElementById('sousTitre'); if (t) t.textContent = 'Style : ' + n[1]; }; }
+  // V242 : lien reçu par e-mail (invitation ou mot de passe oublié) → l'adresse contient une connexion temporaire : on demande de choisir un mot de passe.
+  function lienAcces() {
+    try {
+      const h = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+      const t = h.get('access_token'), ty = h.get('type');
+      if (t && (ty === 'invite' || ty === 'recovery')) return { token: t, refresh: h.get('refresh_token') || '', exp: Number(h.get('expires_in')) || 3600, type: ty };
+    } catch (_) {}
+    return null;
+  }
+  function erreurLien() {
+    try {
+      const h = new URLSearchParams((location.hash || '').replace(/^#/, ''));
+      if (h.get('error') || h.get('error_code')) { history.replaceState(null, '', location.pathname + location.search); return 'Ce lien a expiré ou a déjà été utilisé. Appuyez sur « Mot de passe oublié ? » pour recevoir un nouveau lien.'; }
+    } catch (_) {}
+    return '';
+  }
+  function ecranMotDePasse(lien) {
+    try { api.deconnexion(); } catch (_) {}
+    $('onglets').hidden = true; $('actualiser').hidden = true; $('pastille').hidden = true; $('sousTitre').textContent = lien.type === 'invite' ? 'Bienvenue' : 'Nouveau mot de passe';
+    $('ecran').innerHTML = `<div class="carte"><h2>${lien.type === 'invite' ? 'Bienvenue sur Convoyage Ultra' : 'Nouveau mot de passe'}</h2>
+      <p class="doux">Choisissez votre mot de passe (8 caractères minimum). Vous l’utiliserez pour vous connecter ensuite.</p>
+      <label for="mp1">Mot de passe</label><input id="mp1" type="password" autocomplete="new-password">
+      <label for="mp2">Confirmez le mot de passe</label><input id="mp2" type="password" autocomplete="new-password">
+      <div class="erreur" id="mpErr" hidden></div>
+      <button id="mpOk" style="width:100%;margin-top:14px">Enregistrer et entrer</button></div>`;
+    $('mpOk').onclick = async () => {
+      const a = $('mp1').value, b = $('mp2').value, err = $('mpErr');
+      if (a.length < 8) { err.textContent = 'Le mot de passe doit faire 8 caractères au minimum.'; err.hidden = false; return; }
+      if (a !== b) { err.textContent = 'Les deux mots de passe ne sont pas identiques.'; err.hidden = false; return; }
+      $('mpOk').disabled = true;
+      try {
+        const r = await fetch(api.url + '/auth/v1/user', { method: 'PUT', headers: { apikey: api.cle, authorization: 'Bearer ' + lien.token, 'content-type': 'application/json' }, body: JSON.stringify({ password: a }) });
+        let j = null; try { j = await r.json(); } catch (_) {}
+        if (!r.ok) throw new Error((j && (j.msg || j.message || j.error_description)) || ('Erreur ' + r.status));
+        api._garder({ access_token: lien.token, refresh_token: lien.refresh, expires_in: lien.exp, user: j });
+        history.replaceState(null, '', location.pathname + location.search);
+        demarrer();
+      } catch (x) { err.textContent = 'Impossible : ' + String(x.message || x); err.hidden = false; $('mpOk').disabled = false; }
+    };
+  }
   function demarrer() {
     if (!api) return ecranConfiguration();
-    if (!api.connecte) return ecranConnexion();
+    const lien = lienAcces(); if (lien) return ecranMotDePasse(lien);
+    if (!api.connecte) return ecranConnexion(erreurLien());
     afficher(); charger(true); setTimeout(questionPause, 1200);
   }
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) { try { navigator.serviceWorker.register('sw.js'); } catch (_) {} }
