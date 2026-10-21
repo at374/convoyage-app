@@ -262,10 +262,12 @@
   window.addEventListener('error', e => noterErreur('erreur: ' + (e.message || '') + ' @' + String(e.filename || '').split('/').pop() + ':' + (e.lineno || '')));
   window.addEventListener('unhandledrejection', e => noterErreur('promesse: ' + ((e.reason && e.reason.message) || e.reason)));
   (function () {
-    let t0 = Date.now(), debut = Date.now();
+    let t0 = Date.now(), debut = Date.now(), tv = 0;
+    // V242 : une pause pendant que l'appli était en arrière-plan (téléphone verrouillé, autre appli) n'est PAS un blocage.
+    ['visibilitychange', 'pageshow', 'pagehide', 'resume', 'freeze', 'focus', 'blur'].forEach(ev => { try { (ev === 'focus' || ev === 'blur' || ev === 'pageshow' || ev === 'pagehide' ? window : document).addEventListener(ev, () => { tv = Date.now(); }); } catch (_) {} });
     setInterval(() => {
-      const n = Date.now(), ecart = n - t0; t0 = n;
-      if (ecart > 5000 && !document.hidden) noterErreur('gel: l\'appli est restée bloquée ' + Math.round(ecart / 1000) + ' s');
+      const n = Date.now(), ecart = n - t0, prec = t0; t0 = n;
+      if (ecart > 5000 && !document.hidden && tv < prec) noterErreur('gel: l\'appli est restée bloquée ' + Math.round(ecart / 1000) + ' s');
       const e = document.getElementById('ecran');
       if (e && !document.hidden && n - debut > 10000 && !e.children.length && !(e.textContent || '').trim()) {
         if (!document.getElementById('cpBlanc')) { const b = document.createElement('button'); b.id = 'cpBlanc'; b.textContent = '↻ Écran vide : recharger'; b.style.cssText = 'position:fixed;left:50%;top:40%;transform:translateX(-50%);z-index:9800;padding:14px 18px;border:0;border-radius:12px;background:#b8860b;color:#fff;font:700 16px system-ui'; b.onclick = () => location.reload(); document.body.appendChild(b); noterErreur('écran vide détecté'); }
