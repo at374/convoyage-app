@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V239 (2.0.97)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V240 (2.0.98)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -478,7 +478,7 @@
       <span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div>${prixVar(m)}${prixKm(m, r)}${r.connu ? `<div class="net">net ≈ ${esc(euros(r.net))}${r.parHeure ? ' · ' + esc(euros(r.parHeure)) + '/h' : ''}</div>` : ''}</span></div>
       ${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? `<div class="urgence">⏳ Plus que ${esc(reste < 1 ? Math.max(1, Math.round(reste * 60)) + ' min' : Math.round(reste) + ' h')} pour la faire</div>` : ''}<div class="trajet">${trajetHtml(m)}</div>${adrHtml(m)}
       <div class="meta">${bkDates(m, hfDates(m) ? fmtDate(hfLiv(m)) : arriveeTxt(m))}
-      ${m.fees && m.fees.devis_numero && m.kind !== 'acceptee' && m.fees.devis_accepte !== 1 ? '<div style="background:#ffe8a3;color:#222;border-radius:8px;padding:4px 8px;margin:4px 0;font-weight:600">📝 Devis proposé</div>' : ''}${vehHtml(m)}${blocKm(m, true)}${sugHtml(m)}</div>${extra || ''}</button>`;
+      ${devisAccepte(m) ? '<div style="background:#c9f2cf;color:#173;border-radius:8px;padding:4px 8px;margin:4px 0;font-weight:600">✅ Devis accepté</div>' : ''}${m.fees && m.fees.devis_numero && m.kind !== 'acceptee' && m.fees.devis_accepte !== 1 ? '<div style="background:#ffe8a3;color:#222;border-radius:8px;padding:4px 8px;margin:4px 0;font-weight:600">📝 Devis proposé</div>' : ''}${vehHtml(m)}${blocKm(m, true)}${sugHtml(m)}</div>${extra || ''}</button>`;
   }
   // V137 : mission dont il reste peu de temps (moins de 24 h avant la fin de la période ou l'heure de livraison) → cadre rouge qui clignote.
   const SEUIL_URGENT_H = 24;
@@ -549,7 +549,13 @@
   const PLAQUE_VILLE = /^\s*[A-Z]{1,2}-?\d{3}-?[A-Z]{2}\b/;
   // V122 : « passée » = la FIN de la période est dépassée (une mission DriiveMe ouverte du 05/10 au 15/10 reste claire jusqu'au 15/10).
   const estPassee = m => { const t = Date.parse((m.platform === 'DriiveMe' ? (m.delivery_end || m.pickup_end || m.pickup_start) : m.pickup_start) || ''); return Number.isFinite(t) && t < Date.now() - (m.platform === 'DriiveMe' ? 0 : 86400000); };
+  // V240 : un devis Hiflow accepté devient une mission de l'Agenda : il ne reste plus dans la liste des missions disponibles.
+  let _accRef = null, _accSet = new Set(), _devRef = null, _devSet = new Set();
+  const clesAcceptees = () => { if (_accRef !== etat.missions) { _accRef = etat.missions; _accSet = new Set(etat.missions.filter(x => x && x.kind === 'acceptee').map(x => x.platform + '|' + x.external_id)); } return _accSet; };
+  const clesDevis = () => { if (_devRef !== etat.missions) { _devRef = etat.missions; _devSet = new Set(etat.missions.filter(x => x && x.kind === 'disponible' && x.fees && x.fees.devis_numero).map(x => x.platform + '|' + x.external_id)); } return _devSet; };
+  const devisAccepte = m => !!m && m.platform === 'Hiflow' && ((m.kind === 'acceptee' && (clesDevis().has(m.platform + '|' + m.external_id) || !!(m.fees && m.fees.devis_numero))) || (m.fees && m.fees.devis_accepte === 1));
   const estDisponible = m => { if (!m || m.kind !== 'disponible' || m.status !== 'disponible') return false;
+    if (clesAcceptees().has(m.platform + '|' + m.external_id) || (m.fees && m.fees.devis_accepte === 1)) return false;
     if (PLAQUE_VILLE.test(String(m.from_city || '')) || PLAQUE_VILLE.test(String(m.to_city || ''))) return false;
     const d = Date.parse(m.delivery_end || m.delivery_start || m.pickup_start || ''); return !(Number.isFinite(d) && d < Date.now()); };   // V123 : plus aucune marge — une mission dont l'heure est dépassée disparaît toute seule   // V122 : une mission DriiveMe dont la période est finie (ex. « ven. 09/10 00:00-23:59 » vue le 10/10) n'est plus disponible
   function vueMissions() {
@@ -640,7 +646,7 @@
     else l.sort((a, b) => String(b.first_seen_at || '').localeCompare(String(a.first_seen_at || '')) || String(a.pickup_start || '9').localeCompare(String(b.pickup_start || '9')));   // V99 : les plus récemment parues en haut
     listeAffichee = l;
     zoneListe.innerHTML = `${etat.zones.length || q || FI.actifs(etat.plus) ? `<p class="doux" id="compte">${l.length} mission(s) sur ${total} correspondent à tes filtres <button id="toutVoir" class="lienBouton">Tout afficher</button></p>` : ''}` +
-      (l.length ? l.map((m, i) => carteMission(m, i)).join('') : `<div class="vide">${total ? 'Aucune mission ne correspond à tes filtres.' : 'Aucune mission reçue pour l’instant. Vérifie que l’extension de ton ordinateur est connectée à ton compte (Sources → Application téléphone).'}</div>`);
+      (l.length ? (() => { let jr = ''; return l.map((m, i) => { let h = ''; { const d = Date.parse(m.pickup_start || ''); const j = Number.isFinite(d) ? new Date(d).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long' }) : 'Date à préciser'; if (j !== jr) { h = '<div class="jour">' + esc(j) + '</div>'; jr = j; } } return h + carteMission(m, i); }).join(''); })() : `<div class="vide">${total ? 'Aucune mission ne correspond à tes filtres.' : 'Aucune mission reçue pour l’instant. Vérifie que l’extension de ton ordinateur est connectée à ton compte (Sources → Application téléphone).'}</div>`);
     for (const b of zoneListe.querySelectorAll('.mission')) b.onclick = () => detail(listeAffichee[Number(b.dataset.i)]);
     const tv = $('toutVoir'); if (tv) tv.onclick = () => { etat.zones = []; etat.recherche = ''; etat.plus = {}; etat.filtre = 'toutes'; memoriser(); afficher(); };   // V99 : retirer tous les filtres d'un coup
   }
