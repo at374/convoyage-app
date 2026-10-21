@@ -88,7 +88,7 @@
       if (!v) continue;
       const q = v[2] / Math.max(1, lon(e.k, s.k));
       if (q < 0.7 || q > 1.9) continue;
-      return { e: joli(P.g[e.g][0]), s: joli(P.g[s.g][0]), c1: v[0], c2: v[1], reste: h < hits.length - 1 ? 0 : lon(s.k, i1) };
+      return { e: joli(P.g[e.g][0]), s: joli(P.g[s.g][0]), c1: v[0], c2: v[1], reste: lon(s.k, i1) };
     }
     return null;
   };
