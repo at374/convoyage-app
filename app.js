@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V240 (2.0.98)';   // affichée dans l'en-tête et les Réglages
+  const VERSION_APP = 'V241 (2.0.99)';   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
     const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
@@ -553,7 +553,7 @@
   let _accRef = null, _accSet = new Set(), _devRef = null, _devSet = new Set();
   const clesAcceptees = () => { if (_accRef !== etat.missions) { _accRef = etat.missions; _accSet = new Set(etat.missions.filter(x => x && x.kind === 'acceptee').map(x => x.platform + '|' + x.external_id)); } return _accSet; };
   const clesDevis = () => { if (_devRef !== etat.missions) { _devRef = etat.missions; _devSet = new Set(etat.missions.filter(x => x && x.kind === 'disponible' && x.fees && x.fees.devis_numero).map(x => x.platform + '|' + x.external_id)); } return _devSet; };
-  const devisAccepte = m => !!m && m.platform === 'Hiflow' && ((m.kind === 'acceptee' && (clesDevis().has(m.platform + '|' + m.external_id) || !!(m.fees && m.fees.devis_numero))) || (m.fees && m.fees.devis_accepte === 1));
+  const devisAccepte = m => !!m && m.platform === 'Hiflow' && (m.kind === 'acceptee' || !!(m.fees && m.fees.devis_accepte === 1));   // V241 : toute mission Hiflow de l'Agenda vient d'un devis accepté
   const estDisponible = m => { if (!m || m.kind !== 'disponible' || m.status !== 'disponible') return false;
     if (clesAcceptees().has(m.platform + '|' + m.external_id) || (m.fees && m.fees.devis_accepte === 1)) return false;
     if (PLAQUE_VILLE.test(String(m.from_city || '')) || PLAQUE_VILLE.test(String(m.to_city || ''))) return false;
@@ -655,7 +655,8 @@
   function vueAgenda() {
     const A = window.CPAgenda.analyser(etat.missions, etat.reglages);
     const items = A.items.filter(x => etat.agendaTout || !((x.etat === 'passee' || x.etat === 'terminee') && x.fin && Date.now() - x.fin.t > 7 * 86400000));
-    items.sort((x, y) => (y.debut ?? -1) - (x.debut ?? -1));   // V90 : les plus récentes (dates les plus lointaines) en haut ; date inconnue en bas
+    const debutAff = x => { try { if (hfDates(x.mission)) { const t = Date.parse(hfPk(x.mission)); if (Number.isFinite(t)) return t; } } catch (_) {} return x.debut; };   // V241 : la date du groupe = la date de prise en charge affichée sur la fiche
+    items.sort((x, y) => (debutAff(y) ?? -1) - (debutAff(x) ?? -1));   // V90 : les plus récentes (dates les plus lointaines) en haut ; date inconnue en bas
     const caches = A.items.length - items.length;
     listeAffichee = items.map(x => x.mission);
     if (!A.items.length) { $('ecran').innerHTML = '<div class="vide">Aucune mission acceptée. Elles arrivent automatiquement depuis « Mes trajets » (Hiflow), « Mes réservations » (DriiveMe), « Missions réservées » (Otoqi) et « Propositions réservées » (Pop Valet), ou d’un e-mail de confirmation Hiflow collé dans l’extension.</div>'; return; }
@@ -664,8 +665,8 @@
     let html = false && A.conflits.length ? `<div class="carte conflit" id="conflits"><h2>⚠️ ${A.conflits.length} conflit${A.conflits.length > 1 ? 's' : ''} dans ton agenda</h2>${A.conflits.map(c => `<p>${esc(window.CPAgenda.libelleConflit(c))}</p>`).join('')}<p class="doux">Estimation (durées et liaisons approximatives) : vérifie sur les plateformes.</p></div>` : '';
     let jour = '';
     items.forEach((x, i) => {
-      const m = x.mission, d = x.debut != null ? new Date(x.debut) : null;
-      const j = d ? d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : 'Date à préciser';
+      const m = x.mission, te = debutAff(x), d = te != null ? new Date(te) : null;
+      const j = d ? d.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long' }) : 'Date à préciser';
       if (j !== jour) { html += `<div class="jour">${esc(j)}</div>`; jour = j; }
       const nb = (x.etat === 'a_venir' || x.etat === 'en_cours') ? resume[x.cle] : 0;
       const e = ETATS[x.etat];
