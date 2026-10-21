@@ -93,7 +93,9 @@
       '<div id="cpAdEssai" style="display:none"><label>Nombre de jours d\'essai (à partir de sa première connexion)</label><input id="cpAdJours" type="number" min="1" value="14"></div>' +
       '<label>Note (facultatif)</label><input id="cpAdNote" type="text" placeholder="ex. collègue de Lyon">' +
       '<button id="cpAdEnvoi">Envoyer l\'invitation</button><div class="msg" id="cpAdMsg"></div></div>' +
-      '<div class="bloc"><b>Convoyeurs</b><div id="cpAdListe">Chargement…</div></div>';
+      '<div class="bloc"><b>Convoyeurs</b><div id="cpAdListe">Chargement…</div></div>' +
+      '<div class="bloc"><b>Diagnostic (ce téléphone)</b><div id="cpAdErr" style="font-size:12px;white-space:pre-wrap;margin-top:6px"></div></div>';
+    try { const er = JSON.parse(localStorage.getItem('cp_erreurs') || '[]'); d.querySelector('#cpAdErr').textContent = er.length ? er.slice().reverse().join('\n') : 'Aucune erreur ni gel enregistré.'; } catch (_) {}
     document.body.appendChild(d);
     const $ = id => document.getElementById(id);
     $('cpAdFermer').onclick = () => d.remove();
@@ -118,11 +120,12 @@
           const ok = valide(p);
           return '<div class="ligne" data-id="' + esc(p.user_id) + '"><b>' + esc(p.email || '(sans e-mail)') + '</b>' + (p.role === 'admin' ? ' 🛡️' : '') + '<br>' +
             '<span class="' + (ok ? 'ok' : 'ko') + '">' + (p.actif ? (ok ? 'Actif' : 'Terminé') : 'Désactivé') + '</span> · ' + esc(finTexte(p)) + (p.note ? '<br><i>' + esc(p.note) + '</i>' : '') +
-            (p.role === 'admin' ? '' : '<br><button data-a="mois">+1 mois</button><button data-a="sem">+7 jours</button><button data-a="illim" class="gris">Illimité</button><button data-a="onoff" class="gris">' + (p.actif ? 'Désactiver' : 'Réactiver') + '</button>') + '</div>';
+            (p.role === 'admin' ? '' : '<br><button data-a="modif">✏️ Modifier</button><button data-a="mois">+1 mois</button><button data-a="sem">+7 jours</button><button data-a="illim" class="gris">Illimité</button><button data-a="onoff" class="gris">' + (p.actif ? 'Désactiver' : 'Réactiver') + '</button>') + '</div>';
         }).join('') : 'Aucun convoyeur.';
         L.querySelectorAll('.ligne').forEach(l => { const id = l.dataset.id, p = rows.find(x => x.user_id === id); l.querySelectorAll('button').forEach(b => b.onclick = async () => {
           try {
             const a = b.dataset.a; let ch = {};
+            if (a === 'modif') { formModif(l, p, rafraichir, (t, ok) => { $('cpAdMsg').className = 'msg ' + (ok ? 'ok' : 'ko'); $('cpAdMsg').textContent = t; }); return; }
             const base = p.type_abonnement === 'essai' || !p.fin || p.fin < jour() ? jour() : p.fin;
             if (a === 'mois') ch = { type_abonnement: p.type_abonnement === 'essai' ? 'mensuel' : (p.type_abonnement === 'illimite' ? 'mensuel' : p.type_abonnement), debut: p.debut && p.fin && p.fin >= jour() ? p.debut : jour(), fin: plusMois(base, 1), actif: true };
             else if (a === 'sem') ch = { type_abonnement: p.type_abonnement === 'essai' || p.type_abonnement === 'illimite' ? 'dates' : p.type_abonnement, debut: p.debut && p.fin && p.fin >= jour() ? p.debut : jour(), fin: plusJours(base, 7), actif: true };
@@ -226,6 +229,49 @@
     const b = document.createElement('button'); b.id = 'cpAdminBtn'; b.textContent = '🛡️ Admin'; b.onclick = ouvrirAdmin;
     document.body.appendChild(b);
   }
+
+  // V240 : modifier un convoyeur (type, dates, essai, note, actif) directement depuis la liste.
+  function formModif(ligne, p, fini, msg) {
+    const ancien = ligne.querySelector('.cpModif'); if (ancien) { ancien.remove(); return; }
+    const f = document.createElement('div'); f.className = 'cpModif'; f.style.cssText = 'margin-top:8px;padding:10px;border:1px solid #5a4a26;border-radius:10px;background:#1a150d';
+    const tp = p.type_abonnement || 'dates';
+    f.innerHTML = '<label>Type d\'abonnement</label><select data-f="type"><option value="dates">De date à date</option><option value="mensuel">Mensuel renouvelable</option><option value="essai">Jours d\'essai</option><option value="illimite">Illimité</option></select>' +
+      '<div data-f="bdates"><label>Date de début</label><input data-f="debut" type="date" value="' + esc(p.debut || '') + '"><label>Date de fin</label><input data-f="fin" type="date" value="' + esc(p.fin || '') + '"></div>' +
+      '<div data-f="bessai" style="display:none"><label>Jours d\'essai (à partir de la 1re connexion)</label><input data-f="jours" type="number" min="1" value="' + esc(p.essai_jours || 14) + '"></div>' +
+      '<label>Note</label><input data-f="note" type="text" value="' + esc(p.note || '') + '">' +
+      '<label style="display:flex;align-items:center;gap:8px"><input data-f="actif" type="checkbox" style="width:auto"' + (p.actif ? ' checked' : '') + '> Compte actif</label>' +
+      '<button data-f="ok">Enregistrer</button><button data-f="non" class="gris">Annuler</button>';
+    ligne.appendChild(f);
+    const q = n => f.querySelector('[data-f="' + n + '"]');
+    q('type').value = ['dates', 'mensuel', 'essai', 'illimite'].includes(tp) ? tp : 'dates';
+    const aff = () => { const t = q('type').value; q('bdates').style.display = (t === 'dates' || t === 'mensuel') ? '' : 'none'; q('bessai').style.display = t === 'essai' ? '' : 'none'; };
+    q('type').onchange = aff; aff();
+    q('non').onclick = () => f.remove();
+    q('ok').onclick = async () => {
+      const t = q('type').value, ch = { type_abonnement: t, note: q('note').value.trim() || null, actif: q('actif').checked };
+      if (t === 'dates' || t === 'mensuel') {
+        ch.debut = q('debut').value || null; ch.fin = q('fin').value || null;
+        if (!ch.debut || !ch.fin) { msg('Indique la date de début ET la date de fin.', false); return; }
+        if (ch.fin < ch.debut) { msg('La date de fin est avant la date de début.', false); return; }
+      } else if (t === 'essai') { ch.essai_jours = Math.max(1, Number(q('jours').value) || 14); }
+      try { await maj(p.user_id, ch); msg('Modifié : ' + (p.email || ''), true); fini(); } catch (e) { msg('Impossible : ' + e.message, false); }
+    };
+  }
+  // V240 : diagnostic — erreurs et gels de l'appli gardés sur ce téléphone (visibles dans Admin) + écran vide → bouton Recharger.
+  const noterErreur = m => { try { const a = JSON.parse(localStorage.getItem('cp_erreurs') || '[]'); a.push(new Date().toISOString().slice(5, 19).replace('T', ' ') + ' ' + String(m).slice(0, 260)); localStorage.setItem('cp_erreurs', JSON.stringify(a.slice(-25))); } catch (_) {} };
+  window.addEventListener('error', e => noterErreur('erreur: ' + (e.message || '') + ' @' + String(e.filename || '').split('/').pop() + ':' + (e.lineno || '')));
+  window.addEventListener('unhandledrejection', e => noterErreur('promesse: ' + ((e.reason && e.reason.message) || e.reason)));
+  (function () {
+    let t0 = Date.now(), debut = Date.now();
+    setInterval(() => {
+      const n = Date.now(), ecart = n - t0; t0 = n;
+      if (ecart > 5000 && !document.hidden) noterErreur('gel: l\'appli est restée bloquée ' + Math.round(ecart / 1000) + ' s');
+      const e = document.getElementById('ecran');
+      if (e && !document.hidden && n - debut > 10000 && !e.children.length && !(e.textContent || '').trim()) {
+        if (!document.getElementById('cpBlanc')) { const b = document.createElement('button'); b.id = 'cpBlanc'; b.textContent = '↻ Écran vide : recharger'; b.style.cssText = 'position:fixed;left:50%;top:40%;transform:translateX(-50%);z-index:9800;padding:14px 18px;border:0;border-radius:12px;background:#b8860b;color:#fff;font:700 16px system-ui'; b.onclick = () => location.reload(); document.body.appendChild(b); noterErreur('écran vide détecté'); }
+      } else { const b = document.getElementById('cpBlanc'); if (b) b.remove(); }
+    }, 1000);
+  })();
 
   let dernier = '';
   async function verifier() {
