@@ -60,6 +60,9 @@
     const j = await fetch('peages-aprr.json').then(r => r.json());
     const prix = new Map();
     for (const s of j.p.split(';')) { const [a, b, c1, c2, d] = s.split(','); const x = parseInt(a, 36), y = parseInt(b, 36); prix.set(Math.min(x, y) * 1000 + Math.max(x, y), [c1 / 10, c2 / 10, Number(d)]); }
+    // V248 : position corrigée de la barrière « St Martin Bellevue A41 N » : la grille officielle (31 km depuis Annecy Centre) la place à la jonction A41/A40 de Saint-Julien, pas à Allonzier.
+    const CORR = { 'ST MARTIN BELLEVUE A41 N': [[46.1293, 6.0978], [46.1318, 6.1]] };
+    j.g.forEach(g => { if (CORR[g[0]]) g[1] = CORR[g[0]]; });
     PEAGES = { g: j.g, prix, v: j.v };
     // V233 : stations et liaisons ajoutées (grilles officielles relues) — on ajoute seulement, on ne modifie jamais les 16 918 tarifs d'origine.
     try {
@@ -103,7 +106,7 @@
     const r2 = n => Math.round(n * 100) / 100;
     // V246 : Valhalla marque « péage » des tronçons gratuits (rocades, entrées de ville) : le reste après la dernière gare n'est plus refusé ; il contient forcément 0 gare.
     // Seules les gares dont la position est douteuse (voir audit) bloquent le prix.
-    const SUSPECTES = ['CLERMONT-BARRIERE', 'LA BOISSE', 'SAINT MAURICE', 'ST MARTIN BELLEVUE A410', 'ST MARTIN BELLEVUE A41 N', 'ALLONZIER', 'CRUSEILLES A'];
+    const SUSPECTES = ['CLERMONT-BARRIERE', 'LA BOISSE', 'SAINT MAURICE', 'ST MARTIN BELLEVUE A410', 'CRUSEILLES A'];
     const dout = segs.some(q => SUSPECTES.includes(P.g[q.p.a][0]) || SUSPECTES.includes(P.g[q.p.b][0]));
     return { e: joli(P.g[segs[0].p.a][0]), s: joli(P.g[segs[segs.length - 1].p.b][0]), c1: r2(segs.reduce((n, q) => n + q.p.v[0], 0)), c2: r2(segs.reduce((n, q) => n + q.p.v[1], 0)), det: segs.map(q => joli(P.g[q.p.a][0]) + ' → ' + joli(P.g[q.p.b][0])).join(' + '), reste: dout ? 99 : 0 };
   };
