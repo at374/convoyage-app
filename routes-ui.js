@@ -70,7 +70,7 @@
     } catch (_) { /* sans ajouts : tarifs d'origine seuls */ }
     return PEAGES;
   };
-  const gareProche = (P, lat, lon, max) => { let bi = -1, bd = max; P.g.forEach((g, i) => g[1].forEach(p => { const d = dist(lat, lon, p[0], p[1]); if (d < bd) { bd = d; bi = i; } })); return bi; };
+  const gareProche = (P, lat, lon, max) => { let bi = -1, bd = max; const dl = max / 111, dn = max / (111 * Math.max(0.2, Math.cos(lat * Math.PI / 180))); P.g.forEach((g, i) => g[1].forEach(p => { if (Math.abs(p[0] - lat) > dl || Math.abs(p[1] - lon) > dn) return; const d = dist(lat, lon, p[0], p[1]); if (d < bd) { bd = d; bi = i; } })); return bi; };
   const prixExact = (P, sh, tms, km) => {
     const f = tms[0], l = tms[tms.length - 1];
     const i0 = f.begin_shape_index, i1 = l.end_shape_index;
@@ -79,9 +79,11 @@
     let der = -2;
     for (let k = i0; k <= i1; k++) { const g = gareProche(P, sh[k][0], sh[k][1], 0.4); if (g >= 0 && g !== der) { hits.push({ g, k }); der = g; } }
     if (!hits.length) return null;
-    const lon = (a, b) => { let t = 0; for (let k = a; k < b; k++) t += dist(sh[k][0], sh[k][1], sh[k + 1][0], sh[k + 1][1]); return t; };
+    const cum = new Float64Array(sh.length); for (let k = 1; k < sh.length; k++) cum[k] = cum[k - 1] + dist(sh[k - 1][0], sh[k - 1][1], sh[k][0], sh[k][1]);
+    const lon = (a, b) => cum[b] - cum[a];   // V247 : distances cumulées (le téléphone ne se fige plus)
     // V246 : gares « jumelles » (mêmes coordonnées, ex. Dourdan / La Folie-B) : on essaie la plus proche d'abord, puis ses jumelles.
-    const jum = g => { const r = [g]; P.g.forEach((o, i) => { if (i !== g && o[1].some(p => P.g[g][1].some(q => dist(p[0], p[1], q[0], q[1]) < 0.06))) r.push(i); }); return r; };
+    const jc = new Map();
+    const jum = g => { if (jc.has(g)) return jc.get(g); const r = [g]; jc.set(g, r); P.g.forEach((o, i) => { if (i !== g && o[1].some(p => P.g[g][1].some(q => dist(p[0], p[1], q[0], q[1]) < 0.06))) r.push(i); }); return r; };
     // V245 : un trajet peut traverser plusieurs mailles tarifaires séparées (ex. A41 Annecy→Chambéry puis Chignin→Crolles) : on additionne les tronçons officiels.
     const paire = (x, y) => { const d = lon(x.k, y.k); for (const a of jum(x.g)) for (const b of jum(y.g)) { if (a === b) continue; const v = P.prix.get(Math.min(a, b) * 1000 + Math.max(a, b)); if (!v) continue; const q = v[2] / Math.max(1, d); if (q >= 0.7 && q <= 1.9) return { v, a, b }; } return null; };
     const segs = [];
@@ -101,7 +103,7 @@
     const r2 = n => Math.round(n * 100) / 100;
     // V246 : Valhalla marque « péage » des tronçons gratuits (rocades, entrées de ville) : le reste après la dernière gare n'est plus refusé ; il contient forcément 0 gare.
     // Seules les gares dont la position est douteuse (voir audit) bloquent le prix.
-    const SUSPECTES = ['CLERMONT-BARRIERE', 'LA BOISSE', 'SAINT MAURICE', 'VILLEFRANCHE-LIMAS', 'ST MARTIN BELLEVUE A410', 'ST MARTIN BELLEVUE A41 N', 'ALLONZIER', 'CRUSEILLES A'];
+    const SUSPECTES = ['CLERMONT-BARRIERE', 'LA BOISSE', 'SAINT MAURICE', 'ST MARTIN BELLEVUE A410', 'ST MARTIN BELLEVUE A41 N', 'ALLONZIER', 'CRUSEILLES A'];
     const dout = segs.some(q => SUSPECTES.includes(P.g[q.p.a][0]) || SUSPECTES.includes(P.g[q.p.b][0]));
     return { e: joli(P.g[segs[0].p.a][0]), s: joli(P.g[segs[segs.length - 1].p.b][0]), c1: r2(segs.reduce((n, q) => n + q.p.v[0], 0)), c2: r2(segs.reduce((n, q) => n + q.p.v[1], 0)), det: segs.map(q => joli(P.g[q.p.a][0]) + ' → ' + joli(P.g[q.p.b][0])).join(' + '), reste: dout ? 99 : 0 };
   };
@@ -207,7 +209,7 @@
     });
   };
   // V247 : le prix exact du péage s'affiche tout seul dans la fiche du trajet (agenda), sans appuyer sur « Voiture et péages » : seuls les deux points du trajet sont nécessaires.
-  window.CPPeageAuto = (a, b, out) => estimerPeage({ pts: [[a.lng, a.lat], [b.lng, b.lat]] }, out);
+  window.CPPeageAuto = (a, b, out) => setTimeout(() => estimerPeage({ pts: [[a.lng, a.lat], [b.lng, b.lat]] }, out), 400);
   const addMissionPanel = () => {
     const host = document.getElementById('feuilleContenu'), m = missionActive();
     if (!host || !m) return;
