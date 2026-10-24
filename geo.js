@@ -108,6 +108,21 @@
   for (const [nom, dep, lat, lng] of V) ajouterVille(nom, dep, lat, lng, 'reference');
   for (const [nom, dep, lat, lng] of VF) ajouterVille(nom, dep, lat, lng, 'reference_etranger');
 
+  // V246 (demande de Laurent) : TOUTES les communes des pays limitrophes à moins de 150 km de la France (Suisse, Belgique,
+  // Luxembourg, Allemagne, Italie, Espagne, Monaco, Andorre — 5817 communes, source GeoNames), pas seulement les grandes
+  // villes de VF ci-dessus. Chargé une seule fois au démarrage (fichier séparé : trop volumineux pour être inline ici).
+  let villesFrontalieresChargees = false;
+  async function chargerVillesFrontalieres(fetchFn) {
+    if (villesFrontalieresChargees) return 0;
+    const r = await fetchFn('villes-frontalieres.json');
+    if (!r || !r.ok) throw new Error('villes-frontalieres.json');
+    const j = await r.json();
+    if (!Array.isArray(j)) throw new Error('villes-frontalieres.json invalide');
+    for (const [nom, pays, lat, lng] of j) ajouterVille(nom, '', lat, lng, 'frontaliere_' + pays);
+    villesFrontalieresChargees = true;
+    return j.length;
+  }
+
   // Code département à partir de « 69 », « FR-69 », « 2a », « 974 » ou d'un code postal.
   function codeDepartement(v) {
     const s = String(v == null ? '' : v).trim().toUpperCase().replace(/^FR[-\s]?/, '');
@@ -252,7 +267,7 @@
     if (z.type === 'region') return REGIONS[z.code] || z.code;
     return z.nom + (z.dep ? ' (' + z.dep + ')' : '');
   }
-  const api = { POINTS, cleAdresse, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone };
+  const api = { POINTS, cleAdresse, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone, chargerVillesFrontalieres };
   root.CPGeo = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

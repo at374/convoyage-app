@@ -1230,6 +1230,10 @@
     if (!api.connecte) return ecranConnexion(erreurLien());
     afficher(); charger(true); setTimeout(questionPause, 1200);
     setTimeout(autoMajPeagesSiNecessaire, 4000);   // V243 : après l'affichage, sans gêner le démarrage ; indépendant de la connexion aux plateformes
+    // V246 (demande de Laurent) : communes des pays limitrophes (Suisse, Belgique, Luxembourg, Allemagne, Italie,
+    // Espagne, Monaco, Andorre), chargées une fois au démarrage pour que le filtre « Ville + rayon » et les distances
+    // sachent repérer ces villes sans attendre une recherche réseau par mission.
+    setTimeout(() => { G.chargerVillesFrontalieres(u => fetch(u)).then(n => { if (n) try { listeMissions(); } catch (_) {} }).catch(() => {}); }, 2000);
   }
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) { try { navigator.serviceWorker.register('sw.js'); } catch (_) {} }
   window.__cp = { etat, charger };
