@@ -115,15 +115,31 @@
   // V138 : points GPS d'adresses cherchés via le service officiel d'adresses (api-adresse.data.gouv.fr), gardés sur l'appareil. Précision : 'adresse' | 'rue' | 'ville'.
   const POINTS = {};
   const adresseDe = (m, cote) => { const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to'; const a = String(m[cote + '_address'] || p.address || p.street || '').trim(), v = String(m[pre + '_city'] || p.city || '').trim(); const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim(); return { a, v, cp, d: m[pre + '_department'] || '' }; };
-  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v && (x.a || x.cp || x.d) ? [x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
+  const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? [x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
   async function chercherPoint(m, cote, fetchFn) {
     const cle = cleAdresse(m, cote); if (!cle) return null;
-    const x = adresseDe(m, cote); const q = [x.a, x.cp || (x.a ? '' : x.d), x.v].filter(Boolean).join(' ');   // V243 : commune seule (sans adresse) → on cherche « Commune 74 » comme commune
-    const r = await fetchFn('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(q) + (x.cp ? '&postcode=' + encodeURIComponent(x.cp) : '') + (!x.a && !x.cp ? '&type=municipality' : ''));
-    if (!r || !r.ok) throw new Error('service adresses');
-    const j = await r.json(), f = j && j.features && j.features[0]; if (!f || !f.geometry || !(f.properties && f.properties.score >= 0.5)) return { cle, trouve: false };
-    const t = f.properties.type, [lng, lat] = f.geometry.coordinates; if (!Number.isFinite(lat) || !Number.isFinite(lng)) return { cle, trouve: false };
-    return { cle, trouve: true, point: { lat, lng, precision: t === 'housenumber' ? 'adresse' : t === 'street' ? 'rue' : t === 'locality' ? 'rue' : 'ville' } };
+    const x = adresseDe(m, cote), txt = [x.a, x.v, x.d].join(' ');
+    // V243 : pays limitrophes (Suisse, Italie, Espagne, Belgique, Allemagne, Luxembourg, Monaco, Andorre) : le service français ne les connaît pas → recherche de la commune par son nom.
+    const PAYS = [['CH', /suisse|switzerland|schweiz|svizzera/i], ['IT', /italie|italy|italia/i], ['ES', /espagne|spain|espa[nñ]a/i], ['BE', /belgique|belgium|belgi[eë]/i], ['DE', /allemagne|germany|deutschland/i], ['LU', /luxembourg/i], ['MC', /monaco/i], ['AD', /andorr/i]];
+    let pays = ''; for (const [c, re] of PAYS) if (re.test(txt)) { pays = c; break; } if (!pays && /^(CH|IT|ES|BE|DE|LU|MC|AD)$/i.test(String(x.d).trim())) pays = String(x.d).trim().toUpperCase();
+    if (!pays) {
+      const q = [x.a, x.cp || (x.a ? '' : x.d), x.v].filter(Boolean).join(' ');   // commune seule (sans adresse) → on cherche « Commune 74 » comme commune
+      const r = await fetchFn('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(q) + (x.cp ? '&postcode=' + encodeURIComponent(x.cp) : '') + (!x.a && !x.cp ? '&type=municipality' : ''));
+      if (!r || !r.ok) throw new Error('service adresses');
+      const j = await r.json(), f = j && j.features && j.features[0];
+      if (f && f.geometry && f.properties && f.properties.score >= 0.5) {
+        const t = f.properties.type, [lng, lat] = f.geometry.coordinates;
+        if (Number.isFinite(lat) && Number.isFinite(lng)) return { cle, trouve: true, point: { lat, lng, precision: t === 'housenumber' ? 'adresse' : t === 'street' ? 'rue' : t === 'locality' ? 'rue' : 'ville' } };
+      }
+      if (codeDepartement(x.d)) return { cle, trouve: false };   // département français connu : pas de recherche à l'étranger
+    }
+    if (!x.v) return { cle, trouve: false };
+    const r2 = await fetchFn('https://geocoding-api.open-meteo.com/v1/search?count=10&language=fr&format=json&name=' + encodeURIComponent(x.v));
+    if (!r2 || !r2.ok) throw new Error('service communes');
+    const j2 = await r2.json(), LIM = ['FR', 'CH', 'IT', 'ES', 'BE', 'DE', 'LU', 'MC', 'AD'];
+    const l = ((j2 && j2.results) || []).filter(e => Number.isFinite(e.latitude) && Number.isFinite(e.longitude) && LIM.indexOf(String(e.country_code || '').toUpperCase()) >= 0);
+    const e = (pays && l.find(z => String(z.country_code).toUpperCase() === pays)) || (!pays && l[0]) || null;
+    return e ? { cle, trouve: true, point: { lat: e.latitude, lng: e.longitude, precision: 'ville' } } : { cle, trouve: false };
   }
   function coordonnees(m, cote) {
     const p = m[cote]; const pre = cote === 'origin' ? 'from' : 'to';
