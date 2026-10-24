@@ -551,3 +551,5 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .bkAvec{--f:#1e63d8;--t:#fff}.bkSans{--f:#1a9850;--t:#fff}
 .bkAvec .rd.ok,.bkAvec .rd.ko,.bkSans .rd.ok,.bkSans .rd.ko{color:#fff}
 .bkAvec .bkt{color:#1e63d8}.bkSans .bkt{color:#1a9850}
+.bkMixte{--f:#f59e0b;--t:#1f1300}
+.bkMixte .bkt{color:#b45309}
