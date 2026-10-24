@@ -4,6 +4,8 @@
   // V254 : mesure des blocages sur le téléphone (affichée en bas de la fenêtre du trajet) : chaque arrêt de l'écran de plus de 0,3 s est noté avec l'étape en cours.
   const GAPS = []; let dernier = performance.now();
   window.CPPh = x => { window.__ph = x; };
+  const TPS = []; window.CPT = (n, t0) => { TPS.push(n + ' ' + Math.round(performance.now() - t0) + ' ms'); if (TPS.length > 8) TPS.shift(); };
+  const EST = new Map();   // V256 : un seul appel Google par trajet, même si la fenêtre est redessinée pendant l'attente
   setInterval(() => { const n = performance.now(), g = n - dernier - 250; dernier = n; if (g > 300) { GAPS.push(Math.round(g) + ' ms · ' + (window.__ph || '?')); if (GAPS.length > 12) GAPS.shift(); } }, 250);
   const endpoint = 'https://convoyage-routes-691310598055.europe-west1.run.app/api/routes/estimate';
   const euro = v => Number(v).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
@@ -191,7 +193,9 @@
       const A = r.pts || decode(r.polyline);
       if (A.length < 2) { put(KO, false); return; }
       const a = A[0], b = A[A.length - 1];
+      const tV = performance.now();
       const j = await valRoute({ locations: [{ lat: a[1], lon: a[0] }, { lat: b[1], lon: b[0] }], costing: 'auto', costing_options: { auto: { use_tolls: 1.0 } }, directions_options: { language: 'fr-FR', units: 'kilometers' } });
+      window.CPT('tracé péage', tV);
       const leg = j && j.trip && j.trip.legs && j.trip.legs[0];
       if (!leg) { put(KO, false); return; }
       try { suisse = passeEnSuisse(dec6(leg.shape)); } catch (_) { suisse = false; }
@@ -201,7 +205,9 @@
       if (km < 1) { put('💶 <b>Aucun péage</b> sur ce trajet.', true); return; }
       try {
         const sh = dec6(leg.shape);
+        const tC = performance.now();
         const R = await calculPeage(sh, tms, km), x = R.x;
+        window.CPT('calcul péage', tC);
         const O = await chargerOverlay();
         const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
         const bar = O ? barrieresTraversees(O, sh, i0, i1) : [];
@@ -247,15 +253,14 @@
     box.innerHTML = '<b>🧭 Trajet réel Google</b><p class="doux">Distance routière, durée et péage exact.</p><button type="button" data-rmode="voiture">🚗 Voiture et péages</button> <button type="button" class="second" data-rmode="transport">🚌 Transports</button><div class="doux" data-routes-result style="margin-top:8px"></div>' + liens(origin, destination) + '<div class="bk bkC bkTr bkTn" style="display:none"><div class="bkt">TRANSPORTS EN COMMUN · SITES</div><div class="tnZone"></div></div>';
     host.appendChild(box);
     // V252 : comme avant, la mini carte et le prix exact du péage s'affichent d'un seul coup (un seul calcul, pas de doublon) : « Voiture et péages » est déclenché tout seul, une fois, quand la fenêtre est prête.
-    const auto = n => setTimeout(() => { try { if (!document.body.contains(box) || box.dataset.auto) return; const pv = document.getElementById('popVol'); if (pv && n < 25 && /Calcul des deux trajets/.test(pv.textContent || '')) return auto(n + 1); box.dataset.auto = '1'; const b = box.querySelector('button[data-rmode="voiture"]'); if (b) b.click(); } catch (_) { } }, n ? 500 : 900);
-    auto(0);
+    setTimeout(() => { try { if (!document.body.contains(box) || box.dataset.auto) return; box.dataset.auto = '1'; const b = box.querySelector('button[data-rmode="voiture"]'); if (b) b.click(); } catch (_) { } }, 300);
     if (villes) box.querySelector('[data-routes-result]').dataset.villes = villes;
-    { const dg = document.createElement('div'); dg.className = 'doux'; dg.style.cssText = 'font-size:.68rem;margin-top:6px'; box.appendChild(dg); const iv = setInterval(() => { if (!document.body.contains(box)) { clearInterval(iv); return; } dg.textContent = '🩺 ' + (GAPS.length ? 'blocages mesurés : ' + GAPS.slice(-6).join(' | ') : 'aucun blocage mesuré'); }, 1500); }
+    { const dg = document.createElement('div'); dg.className = 'doux'; dg.style.cssText = 'font-size:.68rem;margin-top:6px'; box.appendChild(dg); const iv = setInterval(() => { if (!document.body.contains(box)) { clearInterval(iv); return; } dg.textContent = '🩺 ' + (GAPS.length ? 'blocages mesurés : ' + GAPS.slice(-6).join(' | ') : 'aucun blocage mesuré') + (TPS.length ? ' · durées : ' + TPS.join(' | ') : ''); }, 1500); }
     box.querySelectorAll('button[data-rmode]').forEach(b => b.onclick = async () => {
       const out = box.querySelector('[data-routes-result]'), mode = b.dataset.rmode;
       const s = session(), c = config(); out.textContent = 'Calcul Google en cours…'; const tn = mode === 'transport'; box.querySelectorAll('.bkIt').forEach(a => { a.style.display = tn ? 'none' : ''; }); box.querySelectorAll('.bkTn').forEach(a => { a.style.display = tn ? '' : 'none'; }); if (tn) { const z = box.querySelector('.tnZone'); try { z.innerHTML = window.CPLiensTr && tr ? window.CPLiensTr(tr[0], tr[1], tr[2], tr[3]) : ''; } catch (_) { z.innerHTML = ''; } if (!z.innerHTML) z.innerHTML = '<span class="doux">Sites de transport indisponibles pour ce trajet.</span>'; }
       try {
-        const r = await window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, refreshToken: s?.refresh_token, expiresAt: s?.expires_at, email: s?.email, userId: s?.user_id, supabaseUrl: c?.url, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime });
+        const kk = mode + '|' + lieu(origin) + '|' + lieu(destination) + '|' + (departureTime || ''); let pr = EST.get(kk); if (!pr) { const t0 = performance.now(); pr = window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, refreshToken: s?.refresh_token, expiresAt: s?.expires_at, email: s?.email, userId: s?.user_id, supabaseUrl: c?.url, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime }); EST.set(kk, pr); pr.then(() => window.CPT('Google', t0), () => EST.delete(kk)); setTimeout(() => EST.delete(kk), 120000); } const r = await pr;
         render(out, r, mode === 'voiture' ? 'DRIVE' : 'TRANSIT');
       } catch (e) { out.textContent = /failed to fetch|networkerror|load failed|aborted/i.test(String(e.message || e)) ? 'Connexion au serveur de trajets impossible. Vérifie ta connexion (wifi ou 4G), puis réessaie.' : String(e.message || e); }
     });
