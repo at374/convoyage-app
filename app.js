@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V253 (2.0.105)';
+  const VERSION_APP = 'V254 (2.0.106)';
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
@@ -374,6 +374,7 @@
     const ap = p => p.precision === 'gps' || p.precision === 'adresse' || p.precision === 'rue' ? 'point précis' : p.precision === 'ville' ? 'centre de la commune (approximatif)' : 'centre du département (approximatif)';
     // Carte OpenStreetMap (gratuite) : vignettes 256 px calculées ici, sans bibliothèque ; le zoom est choisi pour que tout le tracé tienne.
     const dessiner = (a, b, routes) => {
+      if (window.CPPh) window.CPPh('dessin de la carte');
       const maigre = c => { const n = c.length, p = Math.ceil(n / 400); return p > 1 ? c.filter((_, i) => i % p === 0 || i === n - 1) : c; };
       const lignes = routes.filter(r => r.coords && r.coords.length > 1).map(r => Object.assign({}, r, { coords: maigre(r.coords) })), pts = lignes.length ? [].concat(...lignes.map(r => r.coords)) : [[a.lng, a.lat], [b.lng, b.lat]];
       let z = 14; for (; z > 2; z--) { const P = pts.map(q => px({ lng: q[0], lat: q[1] }, z)), xs = P.map(q => q[0]), ys = P.map(q => q[1]); if (Math.max(...xs) - Math.min(...xs) <= W * 0.8 && Math.max(...ys) - Math.min(...ys) <= H * 0.8) break; }
@@ -396,7 +397,9 @@
       d.dataset.pts = [a.lat, a.lng, b.lat, b.lng].join(',');   // V249 : points du trajet pour le calcul automatique du péage
       const pts = `<p class="doux">🟢 Départ : ${esc(ap(a))} · 🔴 Arrivée : ${esc(ap(b))}.</p>`;
       d.innerHTML = cadre(dessiner(a, b, []), '<p>Calcul des deux trajets en cours…</p>' + pts);
+      if (window.CPPh) window.CPPh('attente des itinéraires');
       const [avec, sans] = await Promise.all([itineraire(a, b, false), itineraire(a, b, true)]);
+      if (window.CPPh) window.CPPh('affichage des résultats');
       if (!document.getElementById('popVol')) return;
       const meme = avec && sans && Math.abs(avec.km - sans.km) < 1;
       const ligne = (ico, nom, r) => r ? `<p>${ico} <b>${nom} : ≈ ${esc(Math.round(r.km))} km</b> · ≈ ${esc(duree(r.h))} en voiture, sans pause</p>` : `<p>${ico} ${nom} : indisponible : le service gratuit de calcul n’a pas répondu depuis ce téléphone</p>`;
