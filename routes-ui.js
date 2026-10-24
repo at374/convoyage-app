@@ -79,18 +79,25 @@
     let der = -2;
     for (let k = i0; k <= i1; k++) { const g = gareProche(P, sh[k][0], sh[k][1], 0.4); if (g >= 0 && g !== der) { hits.push({ g, k }); der = g; } }
     if (!hits.length) return null;
-    const e = hits[0];
     const lon = (a, b) => { let t = 0; for (let k = a; k < b; k++) t += dist(sh[k][0], sh[k][1], sh[k + 1][0], sh[k + 1][1]); return t; };
-    for (let h = hits.length - 1; h >= 1; h--) {
-      const s = hits[h];
-      if (s.g === e.g) continue;
-      const v = P.prix.get(Math.min(e.g, s.g) * 1000 + Math.max(e.g, s.g));
-      if (!v) continue;
-      const q = v[2] / Math.max(1, lon(e.k, s.k));
-      if (q < 0.7 || q > 1.9) continue;
-      return { e: joli(P.g[e.g][0]), s: joli(P.g[s.g][0]), c1: v[0], c2: v[1], reste: lon(s.k, i1) };
+    // V245 : un trajet peut traverser plusieurs mailles tarifaires séparées (ex. A41 Annecy→Chambéry puis Chignin→Crolles) : on additionne les tronçons officiels.
+    const paire = (x, y) => { if (x.g === y.g) return null; const v = P.prix.get(Math.min(x.g, y.g) * 1000 + Math.max(x.g, y.g)); if (!v) return null; const q = v[2] / Math.max(1, lon(x.k, y.k)); return q < 0.7 || q > 1.9 ? null : v; };
+    const segs = [];
+    let i = 0;
+    while (i < hits.length) {
+      let ok = null;
+      for (let h = hits.length - 1; h > i && !ok; h--) { const v = paire(hits[i], hits[h]); if (v) ok = { h, e: hits[i], s: hits[h], v }; }
+      if (!ok) {
+        // gare isolée sans tarif : tolérée uniquement après le dernier tronçon tarifé, jamais au milieu du trajet
+        if (!segs.length) return null;
+        for (let a = i; a < hits.length; a++) for (let c = a + 1; c < hits.length; c++) if (paire(hits[a], hits[c])) return null;
+        break;
+      }
+      segs.push(ok); i = ok.h + 1;
     }
-    return null;
+    if (!segs.length) return null;
+    const r2 = n => Math.round(n * 100) / 100, L = segs[segs.length - 1];
+    return { e: joli(P.g[segs[0].e.g][0]), s: joli(P.g[L.s.g][0]), c1: r2(segs.reduce((n, q) => n + q.v[0], 0)), c2: r2(segs.reduce((n, q) => n + q.v[1], 0)), det: segs.map(q => joli(P.g[q.e.g][0]) + ' → ' + joli(P.g[q.s.g][0])).join(' + '), reste: L.h < hits.length - 1 ? 0 : lon(L.s.k, i1) };
   };
   // V233 : péages « barrière » (sans gare d'entrée/sortie : ponts, tunnels, barrières pleine voie) — tarifs officiels versionnés, jamais d'estimation.
   let OVERLAY = null;
@@ -152,14 +159,14 @@
             const r2 = n => Math.round(n * 100) / 100;
             const c1 = r2((legOk ? x.c1 : 0) + t1.total), c2 = r2((legOk ? x.c2 : 0) + t2.total);
             const croise = t1.status !== 'PROUVE' || t2.status !== 'PROUVE';
-            put('<div class="rd gros ok gras"><span>Classe 1</span><b>' + euro(c1) + '</b></div><div class="rd"><span>Classe 2</span><b>' + euro(c2) + '</b></div><div class="rd sub"><span>' + (legOk ? x.e + ' → ' + x.s + ' + ' : '') + 'barrière(s) : ' + noms + '</span></div><div class="rd sub"><span>Source : tarifs officiels 2026' + (croise ? ' (relecture en cours, à vérifier)' : '') + '</span></div>', true);
+            put('<div class="rd gros ok gras"><span>Classe 1</span><b>' + euro(c1) + '</b></div><div class="rd"><span>Classe 2</span><b>' + euro(c2) + '</b></div><div class="rd sub"><span>' + (legOk ? x.det + ' + ' : '') + 'barrière(s) : ' + noms + '</span></div><div class="rd sub"><span>Source : tarifs officiels 2026' + (croise ? ' (relecture en cours, à vérifier)' : '') + '</span></div>', true);
             return;
           }
           put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Barrière(s) détectée(s) : ' + noms + '. Un tarif officiel manque : aucun total n’est affiché.</span></div>', false);
           return;
         }
         if (x && x.reste < 3) {
-          put('<div class="rd gros ok gras"><span>Classe 1</span><b>' + euro(x.c1) + '</b></div><div class="rd"><span>Classe 2</span><b>' + euro(x.c2) + '</b></div><div class="rd sub"><span>' + x.e + ' → ' + x.s + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + P.v + '</span></div>', true);
+          put('<div class="rd gros ok gras"><span>Classe 1</span><b>' + euro(x.c1) + '</b></div><div class="rd"><span>Classe 2</span><b>' + euro(x.c2) + '</b></div><div class="rd sub"><span>' + x.det + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + P.v + '</span></div>', true);
           return;
         }
       } catch (_) { /* pas de prix officiel exact trouvé : KO plus bas, jamais d'estimation */ }
