@@ -139,7 +139,7 @@
     const put = (h, ok) => { if (!zone) return; zone.innerHTML = h; const b = zone.closest('.bk'); if (b) b.classList.add(ok ? 'bkRenOk' : 'bkRenKo'); };
     const KO = '💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Aucune estimation affichée : seuls les tarifs officiels exacts sont montrés.</span></div>';
     try {
-      const A = decode(r.polyline);
+      const A = r.pts || decode(r.polyline);
       if (A.length < 2) { put(KO, false); return; }
       const a = A[0], b = A[A.length - 1];
       const j = await valRoute({ locations: [{ lat: a[1], lon: a[0] }, { lat: b[1], lon: b[0] }], costing: 'auto', costing_options: { auto: { use_tolls: 1.0 } }, directions_options: { language: 'fr-FR', units: 'kilometers' } });
@@ -206,6 +206,8 @@
       } catch (e) { out.textContent = /failed to fetch|networkerror|load failed|aborted/i.test(String(e.message || e)) ? 'Connexion au serveur de trajets impossible. Vérifie ta connexion (wifi ou 4G), puis réessaie.' : String(e.message || e); }
     });
   };
+  // V247 : le prix exact du péage s'affiche tout seul dans la fiche du trajet (agenda), sans appuyer sur « Voiture et péages » : seuls les deux points du trajet sont nécessaires.
+  window.CPPeageAuto = (a, b, out) => estimerPeage({ pts: [[a.lng, a.lat], [b.lng, b.lat]] }, out);
   const addMissionPanel = () => {
     const host = document.getElementById('feuilleContenu'), m = missionActive();
     if (!host || !m) return;
