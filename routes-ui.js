@@ -59,8 +59,8 @@
     const pos = q => { const p = px(q, z); return [p[0] - ox, p[1] - oy]; };
     const d = L => L.map(q => pos(q).map(v => v.toFixed(1)).join(',')).join(' ');
     const a = pos(A[0]), b = pos(A[A.length - 1]);
-    const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="position:absolute;left:0;top:0;width:100%;height:100%">' + (B ? '<polyline points="' + d(B) + '" fill="none" stroke="#1a9850" stroke-width="4" stroke-dasharray="9 6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>' : '') + '<polyline points="' + d(A) + '" fill="none" stroke="#1e63d8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' + (C ? '<polyline points="' + d(C) + '" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' : '') + '<circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="7" fill="#1a9850" stroke="#fff" stroke-width="2"/><circle cx="' + b[0].toFixed(1) + '" cy="' + b[1].toFixed(1) + '" r="7" fill="#d93025" stroke="#fff" stroke-width="2"/></svg>';
-    return '<div style="position:relative;width:100%;aspect-ratio:480/540;overflow:hidden;border-radius:8px;margin-top:8px;background:#ddd">' + tuiles + svg + '<span style="position:absolute;right:2px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div><p class="doux">' + (B ? 'Bleu : avec péages · Vert pointillé : sans péage.' : 'Bleu : trajet Google (identique avec ou sans péage).') + (C ? ' Orange : trajet mixte.' : '') + '</p>';
+    const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="position:absolute;left:0;top:0;width:100%;height:100%">' + (B ? '<polyline points="' + d(B) + '" fill="none" stroke="#1a9850" stroke-width="4" stroke-dasharray="9 6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>' : '') + '<polyline points="' + d(A) + '" fill="none" stroke="#1e63d8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' + (C ? '<polyline points="' + d(C) + '" fill="none" stroke="#8e24aa" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' : '') + '<circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="7" fill="#1a9850" stroke="#fff" stroke-width="2"/><circle cx="' + b[0].toFixed(1) + '" cy="' + b[1].toFixed(1) + '" r="7" fill="#d93025" stroke="#fff" stroke-width="2"/></svg>';
+    return '<div style="position:relative;width:100%;aspect-ratio:480/540;overflow:hidden;border-radius:8px;margin-top:8px;background:#ddd">' + tuiles + svg + '<span style="position:absolute;right:2px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div><p class="doux">' + (B ? 'Bleu : avec péages · Vert pointillé : sans péage.' : 'Bleu : trajet Google (identique avec ou sans péage).') + (C ? ' Violet : trajet mixte.' : '') + '</p>';
   };
   const dec6 = s => { const o = []; let i = 0, la = 0, lo = 0; while (i < s.length) { let b, sh = 0, rs = 0; do { b = s.charCodeAt(i++) - 63; rs |= (b & 31) << sh; sh += 5; } while (b >= 32); la += (rs & 1) ? ~(rs >> 1) : (rs >> 1); sh = 0; rs = 0; do { b = s.charCodeAt(i++) - 63; rs |= (b & 31) << sh; sh += 5; } while (b >= 32); lo += (rs & 1) ? ~(rs >> 1) : (rs >> 1); o.push([la / 1e6, lo / 1e6]); } return o; };
   const dist = (a, b, c, d) => { const R = 6371, t = Math.PI / 180, x = (c - a) * t, y = (d - b) * t, h = Math.sin(x / 2) ** 2 + Math.cos(a * t) * Math.cos(c * t) * Math.sin(y / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
@@ -241,14 +241,14 @@
             const r2 = n => Math.round(n * 100) / 100;
             const c1 = r2((legOk ? x.c1 : 0) + t1.total), c2 = r2((legOk ? x.c2 : 0) + t2.total);
             const croise = t1.status !== 'PROUVE' || t2.status !== 'PROUVE';
-            put('<div class="rd gros ok gras"><span>Classe 1</span><b>' + euro(c1) + '</b></div><div class="rd"><span>Classe 2</span><b>' + euro(c2) + '</b></div><div class="rd sub"><span>' + (legOk ? x.det + ' + ' : '') + 'barrière(s) : ' + noms + '</span></div><div class="rd sub"><span>Source : tarifs officiels 2026' + (croise ? ' (relecture en cours, à vérifier)' : '') + '</span></div>', true);
+            put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(c2) + '</b></div><div class="rd sub"><span>' + (legOk ? x.det + ' + ' : '') + 'barrière(s) : ' + noms + '</span></div><div class="rd sub"><span>Source : tarifs officiels 2026' + (croise ? ' (relecture en cours, à vérifier)' : '') + '</span></div>', true);
             return;
           }
           put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Barrière(s) détectée(s) : ' + noms + '. Un tarif officiel manque : aucun total n’est affiché.</span></div>', false);
           return;
         }
         if (x && x.reste < 3) {
-          put('<div class="rd gros ok gras"><span>Classe 1</span><b>' + euro(x.c1) + '</b></div><div class="rd"><span>Classe 2</span><b>' + euro(x.c2) + '</b></div><div class="rd sub"><span>' + x.det + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + R.v + '</span></div>', true);
+          put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(x.c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(x.c2) + '</b></div><div class="rd sub"><span>' + x.det + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + R.v + '</span></div>', true);
           return;
         }
       } catch (_) { /* pas de prix officiel exact trouvé : KO plus bas, jamais d'estimation */ }
@@ -266,7 +266,7 @@
     const ko = t => { zone.innerHTML = '<div class="doux">' + t + '</div>'; };
     const B = window.__cpMix;
     if (!B) { ko('Relance « Voiture et péages » puis réessaie.'); return; }
-    zone.innerHTML = '<div class="doux">🟠 Recherche du meilleur trajet mixte…</div>';
+    zone.innerHTML = '<div class="doux">🟣 Recherche du meilleur trajet mixte…</div>';
     try {
       window.CPPh('mixte');
       const pf = await prixTroncon(r.polyline);
@@ -300,11 +300,13 @@
       const m0 = target.children[0], m1 = target.children[1];
       if (m0 && m1 && m0.querySelector('svg') && tmp.children.length >= 2) { target.replaceChild(tmp.children[0], m0); target.replaceChild(tmp.children[0], m1); }
       const k1 = n => Math.round(n * 10) / 10;
-      const ligL = (de, a) => '🟢 <b>Sans péage</b> ' + esc(de) + ' → ' + esc(a) + ' : ' + k1(best.lib.km) + ' km · ' + hm(best.lib.min);
-      const ligP = (de, a) => '🔵 <b>Avec péage</b> ' + esc(de) + ' → ' + esc(a) + ' : ' + k1(best.pay.km) + ' km · ' + hm(best.pay.min) + ' · ' + euro(best.c1) + ' (cl. 1) / ' + euro(best.c2) + ' (cl. 2)';
-      const dmin = best.min - fast.min, eco = Math.round((fast.c1 - best.c1) * 100) / 100;
-      const corps = (best.ordre === 'FT' ? ligL(dep, piv) + '<br>' + ligP(piv, arr) : ligP(dep, piv) + '<br>' + ligL(piv, arr)) + '<br><b>Total</b> : ' + k1(best.km) + ' km · ' + hm(best.min) + ' (rapide : ' + k1(fast.km) + ' km · ' + hm(fast.min) + ')<br>Péage ' + euro(best.c1) + ' au lieu de ' + euro(fast.c1) + ' : <b>économie ' + euro(eco) + '</b>, ' + (dmin >= 0 ? '+' + dmin : '−' + Math.abs(dmin)) + ' min.<br><span class="doux">Prix : tarifs officiels. Distance et durée : Google Routes, à vérifier avant départ.</span>';
-      zone.innerHTML = BK('bkMixte', 'TRAJET MIXTE (ORANGE SUR LA CARTE)', corps);
+      const P12 = (x1, x2) => '<span class="pc1">Cl. 1 : ' + euro(x1) + '</span> · <span class="pc2">Cl. 2 : ' + euro(x2) + '</span>';
+      const ligL = (de, a) => '🟢 <b>SANS PÉAGE</b> ' + esc(de) + ' → ' + esc(a) + '<br>' + k1(best.lib.km) + ' km · ' + hm(best.lib.min);
+      const ligP = (de, a) => '🔵 <b>AVEC PÉAGE</b> ' + esc(de) + ' → ' + esc(a) + '<br>' + k1(best.pay.km) + ' km · ' + hm(best.pay.min) + '<br>' + P12(best.c1, best.c2);
+      const dmin = best.min - fast.min, eco1 = Math.round((fast.c1 - best.c1) * 100) / 100, eco2 = Math.round((fast.c2 - best.c2) * 100) / 100;
+      const gros = '<div class="mixGros"><span class="mixEco">💰 Économie : ' + euro(eco1) + ' (cl. 1) · ' + euro(eco2) + ' (cl. 2)</span><span class="mixPlus">⏱️ ' + (dmin >= 0 ? '+' + dmin : '−' + Math.abs(dmin)) + ' min par rapport au trajet avec péage</span></div>';
+      const corps = gros + (best.ordre === 'FT' ? ligL(dep, piv) + '<br><br>' + ligP(piv, arr) : ligP(dep, piv) + '<br><br>' + ligL(piv, arr)) + '<br><br><b>TOTAL MIXTE</b> : ' + k1(best.km) + ' km · ' + hm(best.min) + '<br><b>Trajet avec péage</b> : ' + k1(fast.km) + ' km · ' + hm(fast.min) + '<br>' + P12(fast.c1, fast.c2) + '<br><span class="doux">Prix : tarifs officiels. Distance et durée : Google Routes, à vérifier avant départ.</span>';
+      zone.innerHTML = BK('bkMixte', 'TRAJET MIXTE (VIOLET SUR LA CARTE)', corps);
     } catch (e) { ko('Trajet mixte indisponible pour l’instant (' + esc(String(e && e.message || e).slice(0, 80)) + ').'); }
   };
   const render = (target, r, mode) => {
@@ -313,10 +315,10 @@
     const p = prix.status === 'aucun_peage' ? 'aucun' : (mode === 'DRIVE' && (prix.status === 'prix_inconnu' || prix.status === 'estimation')) ? 'oui (prix exact ci-dessous si disponible)' : 'non disponible';
     const kmH = '🛣 <b>' + (r.distanceKm ?? '—') + ' km</b>' + '<br>⏱️ <b>' + hm(r.durationMinutes) + '</b>';
     const info = mode === 'DRIVE'
-      ? BK('bkKm', 'TRAJET LE PLUS RAPIDE', kmH) + BK('bkAvec', 'AVEC PÉAGE', '<div data-peage>' + (prix.status === 'aucun_peage' ? '💶 <b>Aucun péage</b> sur ce trajet.' : '💶 Calcul du prix exact…') + '</div>') + (r.sansPeage ? BK('bkSans', 'SANS PÉAGE', '🛣 <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b><br>⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b>') : '') + (prix.status !== 'aucun_peage' && r.sansPeage ? '<div data-mixte><button type="button" class="sugBtn" data-mixte-go>🟠 Chercher un trajet mixte moins cher</button></div>' : '') + '<p class="doux" style="font-size:.8rem">Distance et durée : Google Routes, à vérifier avant départ.</p>'
+      ? BK('bkKm', 'TRAJET LE PLUS RAPIDE', kmH) + BK('bkAvec', 'AVEC PÉAGE', '<div data-peage>' + (prix.status === 'aucun_peage' ? '💶 <b>Aucun péage</b> sur ce trajet.' : '💶 Calcul du prix exact…') + '</div>') + (r.sansPeage ? BK('bkSans', 'SANS PÉAGE', '🛣 <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b><br>⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b>') : '') + (prix.status !== 'aucun_peage' && r.sansPeage ? '<div data-mixte><div class="doux">🟣 Recherche du trajet mixte moins cher…</div></div>' : '') + '<p class="doux" style="font-size:.8rem">Distance et durée : Google Routes, à vérifier avant départ.</p>'
       : '<p class="doux" style="font-size:.75rem;margin:6px 0 2px">Calculé par Google Routes en mode transports en commun.</p>' + BK('bkKm', 'TRANSPORTS EN COMMUN', kmH) + BK('bkRen', 'PRIX', '🎟️ Le prix sera détaillé quand le calcul des prix SNCF et des autres transports sera activé.') + '<p class="doux" style="font-size:.8rem">Horaires et prix à vérifier sur le site du transporteur (liens ci-dessous).</p>';
     target.innerHTML = info; LAY('résultat');   // V186 : la carte et les villes passent avant les lignes d’infos
-    if (mode === 'DRIVE' && r.polyline) { try { target.innerHTML = carte(r) + (target.dataset.villes ? BK('bkLieu', 'ITINÉRAIRE', target.dataset.villes) : '') + info; } catch (_) { target.innerHTML = info; } estimerPeage(r, target); const mb = target.querySelector('[data-mixte-go]'); if (mb) mb.onclick = () => chercherMixte(r, target); }
+    if (mode === 'DRIVE' && r.polyline) { try { target.innerHTML = carte(r) + (target.dataset.villes ? BK('bkLieu', 'ITINÉRAIRE', target.dataset.villes) : '') + info; } catch (_) { target.innerHTML = info; } estimerPeage(r, target).then(() => setTimeout(() => chercherMixte(r, target), 300), () => { }); }
   };
   const PEAGE_MEMO = new Map();
   const addBox = (host, id, origin, destination, departureTime, villes, tr, pts) => {
