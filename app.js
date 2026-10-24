@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V249 (2.0.102)';
+  const VERSION_APP = 'V251 (2.0.103)';
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
@@ -374,7 +374,8 @@
     const ap = p => p.precision === 'gps' || p.precision === 'adresse' || p.precision === 'rue' ? 'point précis' : p.precision === 'ville' ? 'centre de la commune (approximatif)' : 'centre du département (approximatif)';
     // Carte OpenStreetMap (gratuite) : vignettes 256 px calculées ici, sans bibliothèque ; le zoom est choisi pour que tout le tracé tienne.
     const dessiner = (a, b, routes) => {
-      const lignes = routes.filter(r => r.coords && r.coords.length > 1), pts = lignes.length ? [].concat(...lignes.map(r => r.coords)) : [[a.lng, a.lat], [b.lng, b.lat]];
+      const maigre = c => { const n = c.length, p = Math.ceil(n / 400); return p > 1 ? c.filter((_, i) => i % p === 0 || i === n - 1) : c; };
+      const lignes = routes.filter(r => r.coords && r.coords.length > 1).map(r => Object.assign({}, r, { coords: maigre(r.coords) })), pts = lignes.length ? [].concat(...lignes.map(r => r.coords)) : [[a.lng, a.lat], [b.lng, b.lat]];
       let z = 14; for (; z > 2; z--) { const P = pts.map(q => px({ lng: q[0], lat: q[1] }, z)), xs = P.map(q => q[0]), ys = P.map(q => q[1]); if (Math.max(...xs) - Math.min(...xs) <= W * 0.8 && Math.max(...ys) - Math.min(...ys) <= H * 0.8) break; }
       const P = pts.map(q => px({ lng: q[0], lat: q[1] }, z)), xs = P.map(q => q[0]), ys = P.map(q => q[1]), ox = (Math.min(...xs) + Math.max(...xs)) / 2 - W / 2, oy = (Math.min(...ys) + Math.max(...ys)) / 2 - H / 2, N = 2 ** z;
       let tuiles = ''; for (let tx = Math.floor(ox / 256); tx <= Math.floor((ox + W) / 256); tx++) for (let ty = Math.floor(oy / 256); ty <= Math.floor((oy + H) / 256); ty++) if (ty >= 0 && ty < N) tuiles += `<img alt="" referrerpolicy="no-referrer" src="https://tile.openstreetmap.org/${z}/${((tx % N) + N) % N}/${ty}.png" style="position:absolute;left:${Math.round(tx * 256 - ox)}px;top:${Math.round(ty * 256 - oy)}px;width:256px;height:256px">`;
@@ -384,8 +385,9 @@
     };
     // Itinéraires gratuits (OpenStreetMap) : Valhalla (FOSSGIS) sait éviter les péages (use_tolls 0) ou les accepter (1) ; OSRM sert de secours pour le trajet « avec péages ».
     const decoder = (enc, prec) => { const out = []; let i = 0, lat = 0, lng = 0; while (i < enc.length) { for (const k of [0, 1]) { let r = 0, sh = 0, c; do { c = enc.charCodeAt(i++) - 63; r |= (c & 31) << sh; sh += 5; } while (c >= 32); const v = (r & 1) ? ~(r >> 1) : (r >> 1); if (k === 0) lat += v; else lng += v; } out.push([lng / 10 ** prec, lat / 10 ** prec]); } return out; };
-    const valhalla = async (a, b, peages) => { try { const r = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locations: [{ lat: a.lat, lon: a.lng }, { lat: b.lat, lon: b.lng }], costing: 'auto', costing_options: { auto: { use_tolls: peages ? 1 : 0 } }, directions_options: { units: 'kilometers' } }) }); const j = r.ok ? await r.json() : null, t = j && j.trip; return t && t.legs && t.legs[0] && t.legs[0].shape ? { coords: decoder(t.legs[0].shape, 6), km: t.summary.length, h: t.summary.time / 3600, peageKm: Array.isArray(t.legs[0].maneuvers) ? t.legs[0].maneuvers.reduce((s, x) => s + (x && x.toll ? Number(x.length) || 0 : 0), 0) : null } : null; } catch (_) { return null; } };
-    const osrm = async (a, b) => { try { const r = await fetch('https://router.project-osrm.org/route/v1/driving/' + a.lng + ',' + a.lat + ';' + b.lng + ',' + b.lat + '?overview=simplified&geometries=geojson'); const j = r.ok ? await r.json() : null, rt = j && j.code === 'Ok' && j.routes && j.routes[0]; return rt && rt.geometry && rt.geometry.coordinates.length > 1 ? { coords: rt.geometry.coordinates, km: rt.distance / 1000, h: rt.duration / 3600 } : null; } catch (_) { return null; } };
+    const fetchT = (u, o) => { const c = new AbortController(), t = setTimeout(() => c.abort(), 20000); return fetch(u, Object.assign({}, o, { signal: c.signal })).finally(() => clearTimeout(t)); };
+    const valhalla = async (a, b, peages) => { try { const r = await fetchT('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ locations: [{ lat: a.lat, lon: a.lng }, { lat: b.lat, lon: b.lng }], costing: 'auto', costing_options: { auto: { use_tolls: peages ? 1 : 0 } }, directions_options: { units: 'kilometers' } }) }); const j = r.ok ? await r.json() : null, t = j && j.trip; return t && t.legs && t.legs[0] && t.legs[0].shape ? { coords: decoder(t.legs[0].shape, 6), km: t.summary.length, h: t.summary.time / 3600, peageKm: Array.isArray(t.legs[0].maneuvers) ? t.legs[0].maneuvers.reduce((s, x) => s + (x && x.toll ? Number(x.length) || 0 : 0), 0) : null } : null; } catch (_) { return null; } };
+    const osrm = async (a, b) => { try { const r = await fetchT('https://router.project-osrm.org/route/v1/driving/' + a.lng + ',' + a.lat + ';' + b.lng + ',' + b.lat + '?overview=simplified&geometries=geojson'); const j = r.ok ? await r.json() : null, rt = j && j.code === 'Ok' && j.routes && j.routes[0]; return rt && rt.geometry && rt.geometry.coordinates.length > 1 ? { coords: rt.geometry.coordinates, km: rt.distance / 1000, h: rt.duration / 3600 } : null; } catch (_) { return null; } };
     const itineraire = async (a, b, sansPeage) => sansPeage ? valhalla(a, b, false) : ((await valhalla(a, b, true)) || (await osrm(a, b)));
     const rendre = async () => {
       const a = G.coordonnees(m, 'origin'), b = G.coordonnees(m, 'destination');
@@ -413,7 +415,7 @@
       for (const q of idx) { try { const r = await fetch('https://api-adresse.data.gouv.fr/reverse/?limit=1&lon=' + q[0] + '&lat=' + q[1]); const j = r.ok ? await r.json() : null, f = j && j.features && j.features[0]; if (f && f.properties && f.properties.city && !communes.includes(f.properties.city)) communes.push(f.properties.city); } catch (_) {} }
       const el = document.getElementById('popCommunes'); if (el) el.textContent = communes.length ? 'Communes sur le trajet (repères) : ' + [m.from_city].concat(communes, [m.to_city]).filter(Boolean).join(' → ') : '';
     };
-    pointsMission(m).finally(rendre);
+    pointsMission(m).catch(() => { }).finally(() => rendre().catch(() => { const x = document.getElementById('popVol'); const p = x && Array.from(x.querySelectorAll('p')).find(q => /Calcul des deux/.test(q.textContent)); if (p) p.textContent = 'Le calcul du trajet a échoué sur ce téléphone. Referme et réessaie.'; }));
   }
   // Cherche tout de suite (sans attendre la liste) les points GPS des deux bouts d'UNE mission ; renvoie vrai si un nouveau point a été trouvé.
   async function pointsMission(m) { let n = 0; for (const cote of ['origin', 'destination']) { const cle = G.cleAdresse(m, cote); if (!cle || G.POINTS[cle]) continue; try { const r = await G.chercherPoint(m, cote, u => fetch(u)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } } catch (_) {} } if (n) ecrireLocal('cp_gps', gpsMem); return n > 0; }
