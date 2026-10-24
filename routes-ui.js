@@ -146,6 +146,24 @@
   const NOTE_CH = '<div class="rd sub"><span>🇨🇭 Ce trajet passe en Suisse : <b>vignette autoroutière suisse obligatoire</b> (40 CHF, valable un an, à avoir avant la frontière ; amende de 200 CHF sans vignette). Elle n’est pas comprise dans le total des péages.</span></div>';
   const BK = (cls, titre, h) => '<div class="bk bkC ' + cls + '"><div class="bkt">' + titre + '</div>' + h + '</div>';
   const valRoute = async (body) => { let err = null; for (let n = 0; n < 4; n++) { try { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000); const rr = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal }); clearTimeout(to); if (rr.ok) return await rr.json(); err = new Error('http ' + rr.status); } catch (e) { err = e; } await new Promise(s => setTimeout(s, 1500 * (n + 1))); } throw err; };
+  // V250 : tout le calcul du péage se fait dans un « worker » (second fil du téléphone) : l'écran ne peut plus se figer, même sur un téléphone lent.
+  let WK = null, WKID = 0; const WKATT = new Map();
+  const CODE_WORKER = () => 'const dist=' + dist + ';const joli=' + joli + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';' +
+    'let P=null;const charger=async base=>{const j=await (await fetch(base+"peages-aprr.json")).json();const prix=new Map();for(const s of j.p.split(";")){const [a,b,c1,c2,d]=s.split(",");const x=parseInt(a,36),y=parseInt(b,36);prix.set(Math.min(x,y)*1000+Math.max(x,y),[c1/10,c2/10,Number(d)]);}' +
+    'const CORR={"ST MARTIN BELLEVUE A41 N":[[46.1293,6.0978],[46.1318,6.1]]};j.g.forEach(g=>{if(CORR[g[0]])g[1]=CORR[g[0]];});const Q={g:j.g,prix,v:j.v};' +
+    'try{const o=await (await fetch(base+"peages-overlay.json")).json();for(const n of (o.gares||[])){if(!Q.g.some(g=>g[0]===n.nom))Q.g.push([n.nom,n.points]);}const ix=nom=>Q.g.findIndex(g=>g[0]===nom);for(const q of (o.paires||[])){const x=ix(q[0]),y=ix(q[1]);const k=Math.min(x,y)*1000+Math.max(x,y);if(x>=0&&y>=0&&!prix.has(k))prix.set(k,[q[2],q[3],q[4]]);}}catch(_){}return Q;};' +
+    'onmessage=async e=>{const m=e.data;try{if(!P)P=await charger(m.base);const x=prixExact(P,m.sh,m.tms,0);const n=garesTraversees(P,m.sh,m.i0,m.i1);postMessage({id:m.id,x,n,v:P.v});}catch(err){postMessage({id:m.id,err:String(err)});}};';
+  const calculPeage = async (sh, tms, km) => {
+    const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
+    try {
+      if (typeof Worker === 'undefined' || typeof Blob === 'undefined') throw new Error('pas de worker');
+      if (!WK) { WK = new Worker(URL.createObjectURL(new Blob([CODE_WORKER()], { type: 'text/javascript' }))); WK.onmessage = e => { const f = WKATT.get(e.data.id); if (f) { WKATT.delete(e.data.id); e.data.err ? f.ko(new Error(e.data.err)) : f.ok(e.data); } }; WK.onerror = () => { const l = [...WKATT.values()]; WKATT.clear(); WK = null; l.forEach(f => f.ko(new Error('worker'))); }; }
+      return await new Promise((ok, ko) => { const id = ++WKID; WKATT.set(id, { ok, ko }); setTimeout(() => { if (WKATT.has(id)) { WKATT.delete(id); ko(new Error('délai')); } }, 40000); WK.postMessage({ id, base: new URL('.', location.href).href, sh, tms: [{ begin_shape_index: tms[0].begin_shape_index, end_shape_index: tms[0].end_shape_index }, { begin_shape_index: tms[tms.length - 1].begin_shape_index, end_shape_index: tms[tms.length - 1].end_shape_index }], i0, i1 }); });
+    } catch (_) {
+      const P = await chargerPeages();   // secours : calcul direct (ancienne méthode)
+      return { x: prixExact(P, sh, tms, km), n: garesTraversees(P, sh, i0, i1), v: P.v };
+    }
+  };
   const estimerPeage = async (r, out) => {
     const zone = out.querySelector('[data-peage]');
     let suisse = false;
@@ -164,9 +182,8 @@
       for (const m of tms) km += Number(m.length) || 0;
       if (km < 1) { put('💶 <b>Aucun péage</b> sur ce trajet.', true); return; }
       try {
-        const P = await chargerPeages();
         const sh = dec6(leg.shape);
-        const x = prixExact(P, sh, tms, km);
+        const R = await calculPeage(sh, tms, km), x = R.x;
         const O = await chargerOverlay();
         const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
         const bar = O ? barrieresTraversees(O, sh, i0, i1) : [];
@@ -175,7 +192,7 @@
           const t1 = O.m.trajet(pas, 1, auj), t2 = O.m.trajet(pas, 2, auj);
           const noms = bar.map(v => joli(v.id.replace(/-/g, ' '))).join(', ');
           const legOk = !!(x && x.reste < 3);
-          if (t1.complet && t2.complet && (legOk || garesTraversees(P, sh, i0, i1) === 0)) {
+          if (t1.complet && t2.complet && (legOk || R.n === 0)) {
             const r2 = n => Math.round(n * 100) / 100;
             const c1 = r2((legOk ? x.c1 : 0) + t1.total), c2 = r2((legOk ? x.c2 : 0) + t2.total);
             const croise = t1.status !== 'PROUVE' || t2.status !== 'PROUVE';
@@ -186,7 +203,7 @@
           return;
         }
         if (x && x.reste < 3) {
-          put('<div class="rd gros ok gras"><span>Classe 1</span><b>' + euro(x.c1) + '</b></div><div class="rd"><span>Classe 2</span><b>' + euro(x.c2) + '</b></div><div class="rd sub"><span>' + x.det + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + P.v + '</span></div>', true);
+          put('<div class="rd gros ok gras"><span>Classe 1</span><b>' + euro(x.c1) + '</b></div><div class="rd"><span>Classe 2</span><b>' + euro(x.c2) + '</b></div><div class="rd sub"><span>' + x.det + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + R.v + '</span></div>', true);
           return;
         }
       } catch (_) { /* pas de prix officiel exact trouvé : KO plus bas, jamais d'estimation */ }
