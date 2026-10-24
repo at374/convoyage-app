@@ -543,3 +543,7 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 #cpRetourAlerte .rcFermer{background:transparent;color:#444;font-size:.9rem;min-height:36px;margin-top:6px}
 #cpRetourAlerte a{text-decoration:none}
 @keyframes rcPulse{from{box-shadow:0 0 14px #16a34a}to{box-shadow:0 0 58px #22c55e}}
+
+/* V257 : la page contient des centaines de cartes ; chaque modification dans la fenêtre du trajet obligeait le téléphone à recalculer la mise en page de TOUTE la liste (≈0,75 s à chaque fois). Les cartes hors écran ne sont plus calculées, et les fenêtres sont isolées. */
+.mission:not(.urgent){content-visibility:auto;contain-intrinsic-size:auto 260px}
+#feuille,.popVol{contain:layout style}
