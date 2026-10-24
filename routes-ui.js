@@ -328,15 +328,39 @@
     ['petite', /twingo|yaris|\b10[78]\b|\bc1\b|aygo|\bup\b|fiat 500|\b500\b|panda|picanto|\bi10\b|sandero|spark|\bmii\b|citigo|\bka\b|smart|mini one/],
     ['moyenne', /clio|scenic|golf|\b208\b|\b308\b|megane|polo|focus|corsa|astra|\bc3\b|\bc4\b|leon|ibiza|fiesta|captur|2008|kadjar|juke|qashqai|duster|\bi20\b|\bi30\b|ceed|\brio\b|fabia|octavia|arkana|taigo|t-?roc|puma|kamiq|yaris cross|c-?hr|megane|cooper|swift|vitara|tipo|bipper|punto/]
   ];
-  const vehiculeConso = () => { try { const m = missionActive(); if (!m || !m.vehicle) return null; let v = m.vehicle; if (typeof v === 'string' && v.trim().charAt(0) === '{') { try { v = JSON.parse(v); } catch (_) {} } const txt = sansAcc(typeof v === 'object' ? [v.category, v.type, v.model, v.brand, v.make, v.name, v.label].filter(Boolean).join(' ') : v); const en = sansAcc(typeof v === 'object' ? v.energy : ''); let cat = null; for (const [k, re] of CAT) if (re.test(txt)) { cat = k; break; } if (!cat) for (const [k, re] of [['petite', /citadine|mini|city/], ['moyenne', /berline|compacte|break|polyvalente/], ['routiere', /suv|monospace|routiere|crossover|4x4/]]) if (re.test(txt)) { cat = k; break; } const q = (typeof v === 'object' ? [v.brand || v.make, v.model].filter(Boolean).join(' ') : String(v)).replace(/\s+/g, ' ').trim().slice(0, 80); return { cat, en, q, ev: /electri|\bev\b|\bbev\b/.test(en) && !/hybrid/.test(en) }; } catch (_) { return null; } };
+  const vehiculeConso = () => { try { const m = missionActive(); if (!m || !m.vehicle) return null; let v = m.vehicle; if (typeof v === 'string' && v.trim().charAt(0) === '{') { try { v = JSON.parse(v); } catch (_) {} } const txt = sansAcc(typeof v === 'object' ? [v.category, v.type, v.model, v.brand, v.make, v.name, v.label].filter(Boolean).join(' ') : v); const en = sansAcc(typeof v === 'object' ? v.energy : ''); let cat = null; for (const [k, re] of CAT) if (re.test(txt)) { cat = k; break; } if (!cat) for (const [k, re] of [['petite', /citadine|mini|city/], ['moyenne', /berline|compacte|break|polyvalente/], ['routiere', /suv|monospace|routiere|crossover|4x4/]]) if (re.test(txt)) { cat = k; break; } const mdl = sansAcc(typeof v === 'object' ? v.model : String(v)).toUpperCase().replace(/[^A-Z0-9+ -]/g, ' ').replace(/\s+/g, ' ').trim(); const tk = mdl.split(' ').filter(Boolean); const mod = tk.filter(w => !/^(NOUVEAU|NOUVELLE|NEW|II|III)$/.test(w))[0] || ''; const mod2 = tk.length > 1 && /^[A-Z]/.test(tk[1]) && !/HYBRID|HDI|TCE|DCI|TDI|TSI|PURETECH|BLUE|ESSENCE|DIESEL/.test(tk[1]) ? mod + ' ' + tk[1] : ''; const chm = (' ' + mdl + ' ').match(/ (\d{2,3}) /g) || []; const ch = chm.map(x => Number(x)).filter(n => n >= 50 && n <= 450 && String(n) !== mod)[0] || 0; const nrj = /hybrid/.test(en) ? (/non|hnr/.test(en) ? 'HNR' : 'HR') : /diesel|gazole|gasoil/.test(en) ? 'GAZOLE' : /essence|ther|gasoline|petrol/.test(en) ? 'ESSENCE' : ''; return { cat, en, mod, mod2, ch, nrj, ev: /electri|\bev\b|\bbev\b/.test(en) && !/hybrid/.test(en) }; } catch (_) { return null; } };
   const sgn = (v, u) => (v >= 0 ? '+' : '−') + Math.abs(Math.round(v * 10) / 10).toLocaleString('fr-FR') + ' ' + u;
   const sgnMin = v => (v >= 0 ? '+' : '−') + (Math.abs(v) >= 60 ? hm(Math.abs(v)) : Math.abs(v) + ' min');
-  const NOCALC = '';
-  const etqConso = km => { const V = window.__cpMix && window.__cpMix.veh; if (V && V.ev) return ''; if (!V || !V.cat || !Number.isFinite(km)) return NOCALC; const C = lireConso(); let l100 = Number(C.c[V.cat]); if (!(l100 > 0)) return NOCALC; const hyb = /hybrid/.test(V.en); if (hyb) l100 *= 0.8; const L = km * l100 / 100; const diesel = /diesel|gazole|gasoil/.test(V.en), ess = /essence|gasoline|petrol|hybrid|ther/.test(V.en); const prix = diesel ? Number(C.p.gazole) : ess ? Number(C.p.essence) : 0; if (!(prix > 0)) return NOCALC; return '<span class="etq etqC">⛽ ' + (Math.round(L * 10) / 10).toLocaleString('fr-FR') + ' L · ' + euro(L * prix) + '</span>'; };
+  const ADK = 'cp_ademe', ADU = 'https://data.ademe.fr/data-fair/api/v1/datasets/ademe-car-labelling/lines?size=200&select=Energie,Conso_vitesse_mixte_Min,Conso_vitesse_mixte_Max,Puissance_maximale&qs=';
+  const ademeLire = () => { try { return JSON.parse(localStorage.getItem(ADK) || '{}') || {}; } catch (_) { return {}; } };
+  const ademeCle = V => [V.mod, V.mod2, V.nrj, V.ch].join('|');
+  const ademeEnCours = {};
+  const txtConso = km => {
+    const V = window.__cpMix && window.__cpMix.veh; if (!V || V.ev || !Number.isFinite(km)) return '';
+    const C = lireConso(); const A = ademeLire()[ademeCle(V)]; let l100 = 0, gaz = /diesel|gazole|gasoil/.test(V.en);
+    if (A && A.l > 0) { l100 = A.l; gaz = A.e === 'gazole'; } else { if (!V.cat) return ''; l100 = Number(C.c[V.cat]); if (/hybrid/.test(V.en)) l100 *= 0.8; }
+    if (!(l100 > 0)) return ''; const prix = gaz ? Number(C.p.gazole) : Number(C.p.essence); if (!(prix > 0) || (!gaz && !A && !/essence|gasoline|petrol|hybrid|ther/.test(V.en))) return '';
+    const L = km * l100 / 100; return '⛽ ' + (Math.round(L * 10) / 10).toLocaleString('fr-FR') + ' L · ' + euro(L * prix);
+  };
+  const majConso = () => { document.querySelectorAll('.etqC[data-ckm]').forEach(s => { const x = txtConso(Number(s.dataset.ckm)); s.textContent = x; s.style.display = x ? '' : 'none'; }); };
+  const ademeCharger = async V => {
+    const k = ademeCle(V); if (!V.mod || ademeEnCours[k] || ademeLire()[k] !== undefined) return; ademeEnCours[k] = 1;
+    try {
+      let rows = [];
+      for (const m of [V.mod2, V.mod].filter(Boolean)) { const r = await fetch(ADU + encodeURIComponent('Modèle:"' + m + '"')); if (!r.ok) throw new Error('ademe'); rows = (await r.json()).results || []; if (rows.length) break; }
+      rows = rows.filter(x => !/^ELECTRIC/.test(x.Energie || '') && Number.isFinite(x.Conso_vitesse_mixte_Min));
+      const f = { HNR: /HNR/, HR: /HR/, GAZOLE: /^GAZOLE$/, ESSENCE: /^ESSENCE$/ }[V.nrj]; if (f) rows = rows.filter(x => f.test(x.Energie || ''));
+      if (V.ch && rows.length > 1) { const kw = V.ch * 0.7355, p = rows.filter(x => Math.abs((x.Puissance_maximale || 0) - kw) <= kw * 0.15); if (p.length) rows = p; }
+      const c = ademeLire();
+      if (rows.length) { const l = rows.reduce((s, x) => s + (x.Conso_vitesse_mixte_Min + (x.Conso_vitesse_mixte_Max || x.Conso_vitesse_mixte_Min)) / 2, 0) / rows.length * 1.15; c[k] = { l: Math.round(l * 100) / 100, e: /GAZOLE/.test(rows[0].Energie || '') ? 'gazole' : 'essence' }; } else c[k] = { l: 0 };
+      try { localStorage.setItem(ADK, JSON.stringify(c)); } catch (_) {}
+      majConso();
+    } catch (_) { /* hors ligne : on garde la valeur par défaut */ } finally { delete ademeEnCours[k]; }
+  };
+  const etqConso = km => { const V = window.__cpMix && window.__cpMix.veh; if (!V || V.ev || !Number.isFinite(km)) return ''; ademeCharger(V); const x = txtConso(km); return '<span class="etq etqC" data-ckm="' + km + '"' + (x ? '' : ' style="display:none"') + '>' + x + '</span>'; };
   const evLiens = () => { const V = window.__cpMix && window.__cpMix.veh; if (!V || !V.ev) return ''; return '<a class="etq etqE" href="https://abetterrouteplanner.com/" target="_blank" rel="noopener">⚡ ABRP</a><a class="etq etqE" href="https://fr.chargemap.com/" target="_blank" rel="noopener">🗺️ Chargemap</a><a class="etq etqE" href="https://www.miio.pt/fr" target="_blank" rel="noopener">🔌 Miio</a>'; };
   const etqs = h => h ? '<div class="etqs">' + h + '</div>' : '';
-  const lienGoogle = () => { const V = window.__cpMix && window.__cpMix.veh; if (!V || V.ev || !V.q) return ''; return '<a class="etq etqE" href="https://www.google.com/search?q=' + encodeURIComponent('consommation réelle ' + V.q) + '" target="_blank" rel="noopener">🔎 Conso exacte (Google)</a>'; };
-  const tagsRapide = r => etqs(etqConso(r.distanceKm) + evLiens() + lienGoogle());
+  const tagsRapide = r => etqs(etqConso(r.distanceKm) + evLiens());
   const tagsSans = r => { const sp = r.sansPeage; if (!sp || !Number.isFinite(sp.distanceKm) || !Number.isFinite(r.distanceKm)) return ''; return etqs('<span class="etq etqK">' + sgn(sp.distanceKm - r.distanceKm, 'km') + '</span><span class="etq etqT">' + sgnMin(sp.durationMinutes - r.durationMinutes) + '</span>' + etqConso(sp.distanceKm)); };
   const addConsoReglages = () => {
     const ec = document.getElementById('ecran'); if (!ec || ec.dataset.vue !== 'reglages' || document.getElementById('consoReg')) return;
