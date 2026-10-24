@@ -59,7 +59,9 @@
     if (PEAGES) return PEAGES;
     const j = await fetch('peages-aprr.json').then(r => r.json());
     const prix = new Map();
-    for (const s of j.p.split(';')) { const [a, b, c1, c2, d] = s.split(','); const x = parseInt(a, 36), y = parseInt(b, 36); prix.set(Math.min(x, y) * 1000 + Math.max(x, y), [c1 / 10, c2 / 10, Number(d)]); }
+    // V249 : lecture des 17 000 tarifs par petits paquets (le téléphone reste fluide, l'écran ne se fige plus).
+    const lignes = j.p.split(';');
+    for (let i = 0; i < lignes.length; i++) { const [a, b, c1, c2, d] = lignes[i].split(','); const x = parseInt(a, 36), y = parseInt(b, 36); prix.set(Math.min(x, y) * 1000 + Math.max(x, y), [c1 / 10, c2 / 10, Number(d)]); if (i % 3000 === 2999) await new Promise(ok => setTimeout(ok, 0)); }
     // V248 : position corrigée de la barrière « St Martin Bellevue A41 N » : la grille officielle (31 km depuis Annecy Centre) la place à la jonction A41/A40 de Saint-Julien, pas à Allonzier.
     const CORR = { 'ST MARTIN BELLEVUE A41 N': [[46.1293, 6.0978], [46.1318, 6.1]] };
     j.g.forEach(g => { if (CORR[g[0]]) g[1] = CORR[g[0]]; });
@@ -202,12 +204,24 @@
     target.innerHTML = info;   // V186 : la carte et les villes passent avant les lignes d’infos
     if (mode === 'DRIVE' && r.polyline) { try { target.innerHTML = carte(r) + (target.dataset.villes ? BK('bkLieu', 'ITINÉRAIRE', target.dataset.villes) : '') + info; } catch (_) { target.innerHTML = info; } estimerPeage(r, target); }
   };
-  const addBox = (host, id, origin, destination, departureTime, villes, tr) => {
+  const PEAGE_MEMO = new Map();
+  const addBox = (host, id, origin, destination, departureTime, villes, tr, pts) => {
     if (!host || document.getElementById(id) || !origin || !destination) return;
     const box = document.createElement('div');
     box.id = id; box.className = 'carte';
     box.innerHTML = '<b>🧭 Trajet réel Google</b><p class="doux">Distance routière, durée et péage exact.</p><button type="button" data-rmode="voiture">🚗 Voiture et péages</button> <button type="button" class="second" data-rmode="transport">🚌 Transports</button><div class="doux" data-routes-result style="margin-top:8px"></div>' + liens(origin, destination) + '<div class="bk bkC bkTr bkTn" style="display:none"><div class="bkt">TRANSPORTS EN COMMUN · SITES</div><div class="tnZone"></div></div>';
     host.appendChild(box);
+    // V249 : prix exact du péage calculé tout seul, sans bloquer l'écran (différé, par petits paquets), affiché au-dessus du bouton Google.
+    try {
+      const pp = pts || (typeof origin !== 'string' && typeof destination !== 'string' ? [origin.lat, origin.lng, destination.lat, destination.lng] : null);
+      if (pp && pp.every(Number.isFinite)) {
+        const z = document.createElement('div'); z.className = 'bk bkC bkRen'; z.innerHTML = '<div class="bkt">PÉAGE · PRIX EXACT</div><div data-peage>💶 Calcul du prix exact…</div>';
+        box.insertBefore(z, box.querySelector('[data-routes-result]'));
+        const cle = pp.map(n => n.toFixed(3)).join('|');
+        if (PEAGE_MEMO.has(cle)) { z.querySelector('[data-peage]').innerHTML = PEAGE_MEMO.get(cle); }
+        else setTimeout(async () => { try { await estimerPeage({ pts: [[pp[1], pp[0]], [pp[3], pp[2]]] }, z); const zz = z.querySelector('[data-peage]'); if (zz && !/Calcul du prix/.test(zz.textContent)) PEAGE_MEMO.set(cle, zz.innerHTML); } catch (_) { } }, 1500);
+      }
+    } catch (_) { }
     if (villes) box.querySelector('[data-routes-result]').dataset.villes = villes;
     box.querySelectorAll('button[data-rmode]').forEach(b => b.onclick = async () => {
       const out = box.querySelector('[data-routes-result]'), mode = b.dataset.rmode;
@@ -219,7 +233,7 @@
     });
   };
   // V247 : le prix exact du péage s'affiche tout seul dans la fiche du trajet (agenda), sans appuyer sur « Voiture et péages » : seuls les deux points du trajet sont nécessaires.
-  window.CPPeageAuto = (a, b, out) => setTimeout(() => estimerPeage({ pts: [[a.lng, a.lat], [b.lng, b.lat]] }, out), 400);
+  window.CPPeageAuto = () => { };   // V249 : remplacé par le bloc « Péage » ajouté dans addBox
   const addMissionPanel = () => {
     const host = document.getElementById('feuilleContenu'), m = missionActive();
     if (!host || !m) return;
@@ -235,7 +249,7 @@
     // V177 : dans la fenêtre du trajet, on ne garde que l’encart Google ; sous la carte : point vert (départ) et point rouge (arrivée).
     if (!document.getElementById('routesGoogleStyle')) { const st = document.createElement('style'); st.id = 'routesGoogleStyle'; st.textContent = '.popVolBoite.soloGoogle>*:not(#popVolX):not(#routesGoogleEstimate){display:none!important}'; document.head.appendChild(st); }
     const e2 = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-    addBox(contenu, 'routesGoogleEstimate', match[1].trim(), match[2].trim(), undefined, '🟢 ' + e2(match[1].trim()) + ' → 🔴 ' + e2(match[2].trim()), [match[1].trim(), '', match[2].trim(), '']);
+    addBox(contenu, 'routesGoogleEstimate', match[1].trim(), match[2].trim(), undefined, '🟢 ' + e2(match[1].trim()) + ' → 🔴 ' + e2(match[2].trim()), [match[1].trim(), '', match[2].trim(), ''], (() => { const q = String((document.getElementById('popVol') || {}).dataset?.pts || '').split(',').map(Number); return q.length === 4 ? q : null; })());
     contenu.classList.add('soloGoogle');
   };
   const refresh = () => { addMissionPanel(); addEstimatePanel(); };
