@@ -47,7 +47,8 @@
     const W = 480, H = 540, A = mg(decode(r.polyline));
     if (A.length < 2) return '';
     const B = r.sansPeage && r.sansPeage.polyline && r.sansPeage.polyline !== r.polyline ? mg(decode(r.sansPeage.polyline)) : null;
-    const pts = A.concat(B || []);
+    const C = r.mixte && r.mixte.pts && r.mixte.pts.length > 1 ? mg(r.mixte.pts) : null;
+    const pts = A.concat(B || []).concat(C || []);
     const px = (q, z) => { const n = 256 * 2 ** z, s = Math.sin(q[1] * Math.PI / 180); return [(q[0] + 180) / 360 * n, (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * n]; };
     let z = 14;
     for (; z > 2; z--) { const P = pts.map(q => px(q, z)), xs = P.map(q => q[0]), ys = P.map(q => q[1]); if (Math.max(...xs) - Math.min(...xs) <= W * 0.88 && Math.max(...ys) - Math.min(...ys) <= H * 0.88) break; }
@@ -58,8 +59,8 @@
     const pos = q => { const p = px(q, z); return [p[0] - ox, p[1] - oy]; };
     const d = L => L.map(q => pos(q).map(v => v.toFixed(1)).join(',')).join(' ');
     const a = pos(A[0]), b = pos(A[A.length - 1]);
-    const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="position:absolute;left:0;top:0;width:100%;height:100%">' + (B ? '<polyline points="' + d(B) + '" fill="none" stroke="#1a9850" stroke-width="4" stroke-dasharray="9 6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>' : '') + '<polyline points="' + d(A) + '" fill="none" stroke="#1e63d8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="7" fill="#1a9850" stroke="#fff" stroke-width="2"/><circle cx="' + b[0].toFixed(1) + '" cy="' + b[1].toFixed(1) + '" r="7" fill="#d93025" stroke="#fff" stroke-width="2"/></svg>';
-    return '<div style="position:relative;width:100%;aspect-ratio:480/540;overflow:hidden;border-radius:8px;margin-top:8px;background:#ddd">' + tuiles + svg + '<span style="position:absolute;right:2px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div><p class="doux">' + (B ? 'Bleu : avec péages · Vert pointillé : sans péage.' : 'Bleu : trajet Google (identique avec ou sans péage).') + '</p>';
+    const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="position:absolute;left:0;top:0;width:100%;height:100%">' + (B ? '<polyline points="' + d(B) + '" fill="none" stroke="#1a9850" stroke-width="4" stroke-dasharray="9 6" stroke-linecap="round" vector-effect="non-scaling-stroke"/>' : '') + '<polyline points="' + d(A) + '" fill="none" stroke="#1e63d8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' + (C ? '<polyline points="' + d(C) + '" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' : '') + '<circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="7" fill="#1a9850" stroke="#fff" stroke-width="2"/><circle cx="' + b[0].toFixed(1) + '" cy="' + b[1].toFixed(1) + '" r="7" fill="#d93025" stroke="#fff" stroke-width="2"/></svg>';
+    return '<div style="position:relative;width:100%;aspect-ratio:480/540;overflow:hidden;border-radius:8px;margin-top:8px;background:#ddd">' + tuiles + svg + '<span style="position:absolute;right:2px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div><p class="doux">' + (B ? 'Bleu : avec péages · Vert pointillé : sans péage.' : 'Bleu : trajet Google (identique avec ou sans péage).') + (C ? ' Orange : trajet mixte.' : '') + '</p>';
   };
   const dec6 = s => { const o = []; let i = 0, la = 0, lo = 0; while (i < s.length) { let b, sh = 0, rs = 0; do { b = s.charCodeAt(i++) - 63; rs |= (b & 31) << sh; sh += 5; } while (b >= 32); la += (rs & 1) ? ~(rs >> 1) : (rs >> 1); sh = 0; rs = 0; do { b = s.charCodeAt(i++) - 63; rs |= (b & 31) << sh; sh += 5; } while (b >= 32); lo += (rs & 1) ? ~(rs >> 1) : (rs >> 1); o.push([la / 1e6, lo / 1e6]); } return o; };
   const dist = (a, b, c, d) => { const R = 6371, t = Math.PI / 180, x = (c - a) * t, y = (d - b) * t, h = Math.sin(x / 2) ** 2 + Math.cos(a * t) * Math.cos(c * t) * Math.sin(y / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
@@ -178,13 +179,13 @@
     'let P=null;const charger=async base=>{const j=await (await fetch(base+"peages-aprr.json")).json();const prix=new Map();for(const s of j.p.split(";")){const [a,b,c1,c2,d]=s.split(",");const x=parseInt(a,36),y=parseInt(b,36);prix.set(Math.min(x,y)*1000+Math.max(x,y),[c1/10,c2/10,Number(d)]);}' +
     'const CORR={"ST MARTIN BELLEVUE A41 N":[[46.1293,6.0978],[46.1318,6.1]]};j.g.forEach(g=>{if(CORR[g[0]])g[1]=CORR[g[0]];});const Q={g:j.g,prix,v:j.v};' +
     'try{const o=await (await fetch(base+"peages-overlay.json")).json();for(const n of (o.gares||[])){if(!Q.g.some(g=>g[0]===n.nom))Q.g.push([n.nom,n.points]);}const ix=nom=>Q.g.findIndex(g=>g[0]===nom);for(const q of (o.paires||[])){const x=ix(q[0]),y=ix(q[1]);const k=Math.min(x,y)*1000+Math.max(x,y);if(x>=0&&y>=0&&!prix.has(k))prix.set(k,[q[2],q[3],q[4]]);}}catch(_){}return Q;};' +
-    'onmessage=async e=>{const m=e.data;try{if(!P)P=await charger(m.base);const x=prixExact(P,m.sh,m.tms,0);const n=garesTraversees(P,m.sh,m.i0,m.i1);postMessage({id:m.id,x,n,v:P.v});}catch(err){postMessage({id:m.id,err:String(err)});}};';
-  const calculPeage = async (sh, tms, km) => {
+    'onmessage=async e=>{const m=e.data;try{if(!P)P=await charger(m.base);const x=prixExact(P,m.sh,m.tms,0);const n=garesTraversees(P,m.sh,m.i0,m.i1);const h=[];if(m.hits){let der=-2;for(let k=m.i0;k<=m.i1;k++){const g=gareProche(P,m.sh[k][0],m.sh[k][1],0.4);if(g>=0&&g!==der){h.push([m.sh[k][0],m.sh[k][1],P.g[g][0]]);der=g;}}}postMessage({id:m.id,x,n,v:P.v,h});}catch(err){postMessage({id:m.id,err:String(err)});}};';
+  const calculPeage = async (sh, tms, km, hits) => {
     const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
     try {
       if (typeof Worker === 'undefined' || typeof Blob === 'undefined') throw new Error('pas de worker');
       if (!WK) { WK = new Worker(URL.createObjectURL(new Blob([CODE_WORKER()], { type: 'text/javascript' }))); WK.onmessage = e => { const f = WKATT.get(e.data.id); if (f) { WKATT.delete(e.data.id); e.data.err ? f.ko(new Error(e.data.err)) : f.ok(e.data); } }; WK.onerror = () => { const l = [...WKATT.values()]; WKATT.clear(); WK = null; l.forEach(f => f.ko(new Error('worker'))); }; }
-      return await new Promise((ok, ko) => { const id = ++WKID; WKATT.set(id, { ok, ko }); setTimeout(() => { if (WKATT.has(id)) { WKATT.delete(id); ko(new Error('délai')); } }, 40000); WK.postMessage({ id, base: new URL('.', location.href).href, sh, tms: [{ begin_shape_index: tms[0].begin_shape_index, end_shape_index: tms[0].end_shape_index }, { begin_shape_index: tms[tms.length - 1].begin_shape_index, end_shape_index: tms[tms.length - 1].end_shape_index }], i0, i1 }); });
+      return await new Promise((ok, ko) => { const id = ++WKID; WKATT.set(id, { ok, ko }); setTimeout(() => { if (WKATT.has(id)) { WKATT.delete(id); ko(new Error('délai')); } }, 40000); WK.postMessage({ id, hits: !!hits, base: new URL('.', location.href).href, sh, tms: [{ begin_shape_index: tms[0].begin_shape_index, end_shape_index: tms[0].end_shape_index }, { begin_shape_index: tms[tms.length - 1].begin_shape_index, end_shape_index: tms[tms.length - 1].end_shape_index }], i0, i1 }); });
     } catch (_) {
       const P = await chargerPeages();   // secours : calcul direct (ancienne méthode)
       return { x: prixExact(P, sh, tms, km), n: garesTraversees(P, sh, i0, i1), v: P.v };
@@ -255,16 +256,67 @@
       put(KO, false);
     } catch (_) { put('⚠️ <b>Calcul du péage impossible pour l’instant</b> : le serveur de tracé ne répond pas.<div class="rd sub"><span>Ce n’est pas un prix inconnu. Vérifie ta connexion (wifi/4G) puis appuie de nouveau sur « Voiture et péages ».</span></div>', false); }
   };
+  // V263 : trajet mixte (une partie sans péage, une partie avec péage) : on coupe le trajet à une gare, on demande à Google les deux moitiés (rapide / sans péage) et on garde la combinaison la moins chère (prix exact officiel) avec peu de temps en plus.
+  const dens = A => { const sh = [[A[0][1], A[0][0]]]; for (let q = 1; q < A.length; q++) { const p0 = sh[sh.length - 1], p1 = [A[q][1], A[q][0]], n = Math.ceil(dist(p0[0], p0[1], p1[0], p1[1]) / 0.15); for (let u = 1; u < n; u++) sh.push([p0[0] + (p1[0] - p0[0]) * u / n, p0[1] + (p1[1] - p0[1]) * u / n]); sh.push(p1); } return sh; };
+  const prixTroncon = async poly => { try { if (!poly) return null; const sh = dens(decode(poly)); const R = await calculPeage(sh, [{ begin_shape_index: 0, end_shape_index: sh.length - 1 }], 100, true); const O = await chargerOverlay(); if (O && barrieresTraversees(O, sh, 0, sh.length - 1).length) return { x: null, h: R.h || [] }; return { x: R.x && R.x.reste < 3 ? R.x : null, h: R.h || [] }; } catch (_) { return null; } };
+  const nomLieu = async (la, lo) => { try { const j = await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=fr&lat=' + la + '&lon=' + lo).then(x => x.json()); const a = j.address || {}; return a.city || a.town || a.village || a.municipality || a.county || null; } catch (_) { return null; } };
+  const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const chercherMixte = async (r, target) => {
+    const zone = target.querySelector('[data-mixte]'); if (!zone) return;
+    const ko = t => { zone.innerHTML = '<div class="doux">' + t + '</div>'; };
+    const B = window.__cpMix;
+    if (!B) { ko('Relance « Voiture et péages » puis réessaie.'); return; }
+    zone.innerHTML = '<div class="doux">🟠 Recherche du meilleur trajet mixte…</div>';
+    try {
+      window.CPPh('mixte');
+      const pf = await prixTroncon(r.polyline);
+      if (!pf || !pf.x) { ko('Trajet mixte impossible : le prix exact du trajet rapide n’est pas disponible.'); return; }
+      const H = pf.h.filter((g, i, T) => i === 0 || dist(g[0], g[1], T[i - 1][0], T[i - 1][1]) > 3);
+      const inner = []; for (let i = 1; i < H.length - 1; i++) inner.push(i);
+      if (!inner.length) { ko('Pas de trajet mixte utile : le péage ne se découpe pas sur ce trajet.'); return; }
+      const pick = inner.length <= 4 ? inner : [0, 1, 2, 3].map(k => inner[Math.round(k * (inner.length - 1) / 3)]);
+      const est = o => window.CPRoutes.estimate(Object.assign({}, B, { mode: 'voiture' }, o)).catch(() => null);
+      const legs = await Promise.all([...new Set(pick)].map(async i => { const p = { lat: H[i][0], lng: H[i][1] }; const [a, b] = await Promise.all([est({ destination: p }), est({ origin: p })]); return { p, a, b }; }));
+      const libre = L => L ? ((L.toll && L.toll.status === 'aucun_peage') ? { km: L.distanceKm, min: L.durationMinutes, poly: L.polyline } : (L.sansPeage ? { km: L.sansPeage.distanceKm, min: L.sansPeage.durationMinutes, poly: L.sansPeage.polyline || L.polyline } : null)) : null;
+      const payant = L => (L && !(L.toll && L.toll.status === 'aucun_peage')) ? { km: L.distanceKm, min: L.durationMinutes, poly: L.polyline } : null;
+      const cands = [];
+      for (const L of legs) {
+        const aF = libre(L.a), bF = libre(L.b), aT = payant(L.a), bT = payant(L.b);
+        if (aF && bT) cands.push({ p: L.p, lib: aF, pay: bT, ordre: 'FT' });
+        if (aT && bF) cands.push({ p: L.p, lib: bF, pay: aT, ordre: 'TF' });
+      }
+      for (const c of cands) { const q = await prixTroncon(c.pay.poly); c.x = q && q.x; }
+      const fast = { km: r.distanceKm, min: r.durationMinutes, c1: pf.x.c1, c2: pf.x.c2 };
+      const ok = cands.filter(c => c.x && c.lib.min != null && c.pay.min != null).map(c => Object.assign(c, { km: c.lib.km + c.pay.km, min: c.lib.min + c.pay.min, c1: c.x.c1, c2: c.x.c2 })).filter(c => fast.c1 - c.c1 >= 1);
+      ok.forEach(c => { c.score = (fast.c1 - c.c1) - 0.2 * Math.max(0, c.min - fast.min); });
+      ok.sort((a, b) => b.score - a.score);
+      const best = ok[0];
+      if (!best || best.score < 0.5) { ko('Aucun trajet mixte intéressant : le trajet rapide reste le meilleur compromis (ou le prix exact d’une partie n’est pas disponible).'); return; }
+      const dep = typeof B.origin === 'string' ? B.origin : 'départ', arr = typeof B.destination === 'string' ? B.destination : 'arrivée';
+      const piv = (await nomLieu(best.p.lat, best.p.lng)) || 'point intermédiaire';
+      const pts = best.ordre === 'FT' ? decode(best.lib.poly).concat(decode(best.pay.poly)) : decode(best.pay.poly).concat(decode(best.lib.poly));
+      r.mixte = { pts };
+      const tmp = document.createElement('div'); tmp.innerHTML = carte(r);
+      const m0 = target.children[0], m1 = target.children[1];
+      if (m0 && m1 && m0.querySelector('svg') && tmp.children.length >= 2) { target.replaceChild(tmp.children[0], m0); target.replaceChild(tmp.children[0], m1); }
+      const k1 = n => Math.round(n * 10) / 10;
+      const ligL = (de, a) => '🟢 <b>Sans péage</b> ' + esc(de) + ' → ' + esc(a) + ' : ' + k1(best.lib.km) + ' km · ' + hm(best.lib.min);
+      const ligP = (de, a) => '🔵 <b>Avec péage</b> ' + esc(de) + ' → ' + esc(a) + ' : ' + k1(best.pay.km) + ' km · ' + hm(best.pay.min) + ' · ' + euro(best.c1) + ' (cl. 1) / ' + euro(best.c2) + ' (cl. 2)';
+      const dmin = best.min - fast.min, eco = Math.round((fast.c1 - best.c1) * 100) / 100;
+      const corps = (best.ordre === 'FT' ? ligL(dep, piv) + '<br>' + ligP(piv, arr) : ligP(dep, piv) + '<br>' + ligL(piv, arr)) + '<br><b>Total</b> : ' + k1(best.km) + ' km · ' + hm(best.min) + ' (rapide : ' + k1(fast.km) + ' km · ' + hm(fast.min) + ')<br>Péage ' + euro(best.c1) + ' au lieu de ' + euro(fast.c1) + ' : <b>économie ' + euro(eco) + '</b>, ' + (dmin >= 0 ? '+' + dmin : '−' + Math.abs(dmin)) + ' min.<br><span class="doux">Prix : tarifs officiels. Distance et durée : Google Routes, à vérifier avant départ.</span>';
+      zone.innerHTML = BK('bkMixte', 'TRAJET MIXTE (ORANGE SUR LA CARTE)', corps);
+    } catch (e) { ko('Trajet mixte indisponible pour l’instant (' + esc(String(e && e.message || e).slice(0, 80)) + ').'); }
+  };
   const render = (target, r, mode) => {
     const prix = mode === 'DRIVE' ? r.toll : r.fare;
     const libelle = mode === 'DRIVE' ? 'Péage' : 'Transport';
     const p = prix.status === 'aucun_peage' ? 'aucun' : (mode === 'DRIVE' && (prix.status === 'prix_inconnu' || prix.status === 'estimation')) ? 'oui (prix exact ci-dessous si disponible)' : 'non disponible';
     const kmH = '🛣 <b>' + (r.distanceKm ?? '—') + ' km</b>' + '<br>⏱️ <b>' + hm(r.durationMinutes) + '</b>';
     const info = mode === 'DRIVE'
-      ? BK('bkKm', 'TRAJET LE PLUS RAPIDE', kmH) + BK('bkAvec', 'AVEC PÉAGE', '<div data-peage>' + (prix.status === 'aucun_peage' ? '💶 <b>Aucun péage</b> sur ce trajet.' : '💶 Calcul du prix exact…') + '</div>') + (r.sansPeage ? BK('bkSans', 'SANS PÉAGE', '🛣 <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b><br>⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b>') : '') + '<p class="doux" style="font-size:.8rem">Distance et durée : Google Routes, à vérifier avant départ.</p>'
+      ? BK('bkKm', 'TRAJET LE PLUS RAPIDE', kmH) + BK('bkAvec', 'AVEC PÉAGE', '<div data-peage>' + (prix.status === 'aucun_peage' ? '💶 <b>Aucun péage</b> sur ce trajet.' : '💶 Calcul du prix exact…') + '</div>') + (r.sansPeage ? BK('bkSans', 'SANS PÉAGE', '🛣 <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b><br>⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b>') : '') + (prix.status !== 'aucun_peage' && r.sansPeage ? '<div data-mixte><button type="button" class="sugBtn" data-mixte-go>🟠 Chercher un trajet mixte moins cher</button></div>' : '') + '<p class="doux" style="font-size:.8rem">Distance et durée : Google Routes, à vérifier avant départ.</p>'
       : '<p class="doux" style="font-size:.75rem;margin:6px 0 2px">Calculé par Google Routes en mode transports en commun.</p>' + BK('bkKm', 'TRANSPORTS EN COMMUN', kmH) + BK('bkRen', 'PRIX', '🎟️ Le prix sera détaillé quand le calcul des prix SNCF et des autres transports sera activé.') + '<p class="doux" style="font-size:.8rem">Horaires et prix à vérifier sur le site du transporteur (liens ci-dessous).</p>';
     target.innerHTML = info; LAY('résultat');   // V186 : la carte et les villes passent avant les lignes d’infos
-    if (mode === 'DRIVE' && r.polyline) { try { target.innerHTML = carte(r) + (target.dataset.villes ? BK('bkLieu', 'ITINÉRAIRE', target.dataset.villes) : '') + info; } catch (_) { target.innerHTML = info; } estimerPeage(r, target); }
+    if (mode === 'DRIVE' && r.polyline) { try { target.innerHTML = carte(r) + (target.dataset.villes ? BK('bkLieu', 'ITINÉRAIRE', target.dataset.villes) : '') + info; } catch (_) { target.innerHTML = info; } estimerPeage(r, target); const mb = target.querySelector('[data-mixte-go]'); if (mb) mb.onclick = () => chercherMixte(r, target); }
   };
   const PEAGE_MEMO = new Map();
   const addBox = (host, id, origin, destination, departureTime, villes, tr, pts) => {
@@ -279,7 +331,7 @@
     { const dg = document.createElement('div'); dg.className = 'doux'; dg.style.cssText = 'font-size:.68rem;margin-top:6px'; box.appendChild(dg); const iv = setInterval(() => { if (!document.body.contains(box)) { clearInterval(iv); return; } dg.textContent = '🩺 ' + (GAPS.length ? 'blocages mesurés : ' + GAPS.slice(-6).join(' | ') : 'aucun blocage mesuré') + (TPS.length ? ' · durées : ' + TPS.join(' | ') : ''); }, 1500); }
     box.querySelectorAll('button[data-rmode]').forEach(b => b.onclick = async () => {
       const out = box.querySelector('[data-routes-result]'), mode = b.dataset.rmode;
-      const s = session(), c = config(); out.textContent = 'Calcul Google en cours…'; const tn = mode === 'transport'; box.querySelectorAll('.bkIt').forEach(a => { a.style.display = tn ? 'none' : ''; }); box.querySelectorAll('.bkTn').forEach(a => { a.style.display = tn ? '' : 'none'; }); if (tn) { const z = box.querySelector('.tnZone'); try { z.innerHTML = window.CPLiensTr && tr ? window.CPLiensTr(tr[0], tr[1], tr[2], tr[3]) : ''; } catch (_) { z.innerHTML = ''; } if (!z.innerHTML) z.innerHTML = '<span class="doux">Sites de transport indisponibles pour ce trajet.</span>'; }
+      const s = session(), c = config(); out.textContent = 'Calcul Google en cours…'; window.__cpMix = { endpoint, accessToken: s?.access_token, refreshToken: s?.refresh_token, expiresAt: s?.expires_at, email: s?.email, userId: s?.user_id, supabaseUrl: c?.url, supabaseApiKey: c?.anonKey, origin, destination, departureTime }; const tn = mode === 'transport'; box.querySelectorAll('.bkIt').forEach(a => { a.style.display = tn ? 'none' : ''; }); box.querySelectorAll('.bkTn').forEach(a => { a.style.display = tn ? '' : 'none'; }); if (tn) { const z = box.querySelector('.tnZone'); try { z.innerHTML = window.CPLiensTr && tr ? window.CPLiensTr(tr[0], tr[1], tr[2], tr[3]) : ''; } catch (_) { z.innerHTML = ''; } if (!z.innerHTML) z.innerHTML = '<span class="doux">Sites de transport indisponibles pour ce trajet.</span>'; }
       try {
         const kk = mode + '|' + lieu(origin) + '|' + lieu(destination) + '|' + (departureTime || ''); let pr = EST.get(kk); if (!pr) { const t0 = performance.now(); pr = window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, refreshToken: s?.refresh_token, expiresAt: s?.expires_at, email: s?.email, userId: s?.user_id, supabaseUrl: c?.url, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime }); EST.set(kk, pr); pr.then(() => window.CPT('Google', t0), () => EST.delete(kk)); setTimeout(() => EST.delete(kk), 120000); } const r = await pr;
         render(out, r, mode === 'voiture' ? 'DRIVE' : 'TRANSIT');
