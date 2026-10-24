@@ -54,7 +54,7 @@
     const P = pts.map(q => px(q, z)), xs = P.map(q => q[0]), ys = P.map(q => q[1]);
     const ox = (Math.min(...xs) + Math.max(...xs)) / 2 - W / 2, oy = (Math.min(...ys) + Math.max(...ys)) / 2 - H / 2, N = 2 ** z;
     let tuiles = '';
-    for (let tx = Math.floor(ox / 256); tx <= Math.floor((ox + W) / 256); tx++) for (let ty = Math.floor(oy / 256); ty <= Math.floor((oy + H) / 256); ty++) if (ty >= 0 && ty < N) tuiles += '<img alt="" referrerpolicy="no-referrer" src="https://tile.openstreetmap.org/' + z + '/' + (((tx % N) + N) % N) + '/' + ty + '.png" style="position:absolute;left:' + ((tx * 256 - ox) / W * 100) + '%;top:' + ((ty * 256 - oy) / H * 100) + '%;width:' + (256 / W * 100) + '%;height:' + (256 / H * 100) + '%">';
+    for (let tx = Math.floor(ox / 256); tx <= Math.floor((ox + W) / 256); tx++) for (let ty = Math.floor(oy / 256); ty <= Math.floor((oy + H) / 256); ty++) if (ty >= 0 && ty < N) tuiles += '<img alt="" decoding="async" loading="lazy" referrerpolicy="no-referrer" src="https://tile.openstreetmap.org/' + z + '/' + (((tx % N) + N) % N) + '/' + ty + '.png" style="position:absolute;left:' + ((tx * 256 - ox) / W * 100) + '%;top:' + ((ty * 256 - oy) / H * 100) + '%;width:' + (256 / W * 100) + '%;height:' + (256 / H * 100) + '%">';
     const pos = q => { const p = px(q, z); return [p[0] - ox, p[1] - oy]; };
     const d = L => L.map(q => pos(q).map(v => v.toFixed(1)).join(',')).join(' ');
     const a = pos(A[0]), b = pos(A[A.length - 1]);
@@ -195,7 +195,10 @@
       if (A.length < 2) { put(KO, false); return; }
       const a = A[0], b = A[A.length - 1];
       const tV = performance.now();
-      const j = await valRoute({ locations: [{ lat: a[1], lon: a[0] }, { lat: b[1], lon: b[0] }], costing: 'auto', costing_options: { auto: { use_tolls: 1.0 } }, directions_options: { language: 'fr-FR', units: 'kilometers' } });
+      // V258 : le tracé « avec péages » déjà demandé par la fenêtre du trajet est réutilisé (au lieu d'un 2e appel de 4 à 9 s sur un téléphone en 4G).
+      let j = null;
+      try { const ck = [a[1], a[0], b[1], b[0]].map(n => Number(n).toFixed(3)).join('|'), pp = window.CPValP && window.CPValP[ck]; if (pp) j = await pp; } catch (_) { j = null; }
+      if (!(j && j.trip && j.trip.legs && j.trip.legs[0] && j.trip.legs[0].maneuvers)) j = await valRoute({ locations: [{ lat: a[1], lon: a[0] }, { lat: b[1], lon: b[0] }], costing: 'auto', costing_options: { auto: { use_tolls: 1.0 } }, directions_options: { language: 'fr-FR', units: 'kilometers' } });
       window.CPT('tracé péage', tV);
       const leg = j && j.trip && j.trip.legs && j.trip.legs[0];
       if (!leg) { put(KO, false); return; }
