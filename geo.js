@@ -73,6 +73,30 @@
     ['Orange', '84', 44.138, 4.807], ['Carpentras', '84', 44.055, 5.048], ['Cavaillon', '84', 43.837, 5.038],
     ['Cannes', '06', 43.552, 7.017], ['Antibes', '06', 43.580, 7.125], ['Grasse', '06', 43.659, 6.922], ['Menton', '06', 43.775, 7.497], ['Fréjus', '83', 43.433, 6.737], ['Hyères', '83', 43.120, 6.130]
   ];
+  // V245 (demande de Laurent) : villes des pays limitrophes, pour les missions transfrontalières — la base géographique
+  // ci-dessus et la recherche d'adresse (api-adresse.data.gouv.fr) sont France uniquement, donc une mission vers ces
+  // villes n'avait aucun point GPS fiable (filtre « rayon / distance max » et trajets faux ou sans résultat). dep = ''
+  // (pas de département français) ; [nom, dep, lat, lng].
+  const VF = [
+    // Suisse
+    ['Genève', '', 46.204, 6.143], ['Lausanne', '', 46.520, 6.633], ['Nyon', '', 46.383, 6.240], ['Montreux', '', 46.430, 6.911],
+    ['Fribourg', '', 46.806, 7.161], ['Bâle', '', 47.559, 7.588], ['Bienne', '', 47.136, 7.247], ['Neuchâtel', '', 46.990, 6.931],
+    ['Lugano', '', 46.004, 8.952], ['Vevey', '', 46.461, 6.842], ['Sion', '', 46.233, 7.360],
+    // Belgique
+    ['Bruxelles', '', 50.850, 4.352], ['Mons', '', 50.454, 3.952], ['Charleroi', '', 50.412, 4.444], ['Tournai', '', 50.606, 3.389],
+    ['Liège', '', 50.633, 5.567], ['Namur', '', 50.467, 4.867], ['Mouscron', '', 50.744, 3.217],
+    // Luxembourg
+    ['Luxembourg', '', 49.611, 6.132], ['Esch-sur-Alzette', '', 49.496, 5.981],
+    // Allemagne (zone frontalière)
+    ['Fribourg-en-Brisgau', '', 47.999, 7.842], ['Karlsruhe', '', 49.006, 8.404], ['Sarrebruck', '', 49.235, 6.996],
+    ['Kehl', '', 48.573, 7.811], ['Bade-Bade', '', 48.760, 8.240],
+    // Italie (zone frontalière)
+    ['Turin', '', 45.070, 7.687], ['Aoste', '', 45.737, 7.320], ['Vintimille', '', 43.791, 7.608], ['Coni', '', 44.384, 7.543], ['Suse', '', 45.137, 7.049],
+    // Espagne (zone frontalière)
+    ['Barcelone', '', 41.385, 2.174], ['Gérone', '', 41.983, 2.825], ['Saint-Sébastien', '', 43.263, -1.972], ['Figueras', '', 42.267, 2.962], ['Pampelune', '', 42.813, -1.646],
+    // Autres micro-États voisins
+    ['Andorre-la-Vieille', '', 42.506, 1.522], ['Monaco', '', 43.738, 7.425]
+  ];
   const norm = s => String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’'`\-_.]/g, ' ')
     .replace(/\bst\b/g, 'saint').replace(/\bste\b/g, 'sainte').replace(/\s+/g, ' ').trim();
 
@@ -82,6 +106,7 @@
   const ajouterVille = (nom, dep, lat, lng, source) => { const k = norm(nom) + '|' + dep; if (vu.has(k)) return; vu.add(k); VILLES.push({ nom, dep, lat, lng, n: norm(nom), source }); };
   for (const d of Object.values(DEPARTEMENTS)) ajouterVille(d.chefLieu, d.code, d.lat, d.lng, 'reference');
   for (const [nom, dep, lat, lng] of V) ajouterVille(nom, dep, lat, lng, 'reference');
+  for (const [nom, dep, lat, lng] of VF) ajouterVille(nom, dep, lat, lng, 'reference_etranger');
 
   // Code département à partir de « 69 », « FR-69 », « 2a », « 974 » ou d'un code postal.
   function codeDepartement(v) {
