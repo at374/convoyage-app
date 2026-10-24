@@ -553,3 +553,14 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .bkAvec .bkt{color:#1e63d8}.bkSans .bkt{color:#1a9850}
 .bkMixte{--f:#f59e0b;--t:#1f1300}
 .bkMixte .bkt{color:#b45309}
+/* V264 : étiquettes plus lisibles, classes 1/2 en deux couleurs, trajet mixte violet, temps en plus bien visible */
+.bkMixte{--f:#6a1b9a;--t:#fff}.bkMixte .bkt{color:#6a1b9a}
+.bkC{font-size:1.02rem;font-weight:700;line-height:1.5}
+.bkC .bkt{font-size:.88rem;font-weight:900;letter-spacing:.7px;padding:1px 11px}
+.bkC b{font-weight:900}
+.bkC .rd.c1,.bkC .rd.c1 b{color:#ffe14d;font-size:1.3rem;font-weight:900}
+.bkC .rd.c2,.bkC .rd.c2 b{color:#7df9ff;font-size:1.3rem;font-weight:900}
+.pc1{color:#ffe14d;font-weight:900;font-size:1.1em}.pc2{color:#7df9ff;font-weight:900;font-size:1.1em}
+.mixGros{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}
+.mixEco{background:#fff;color:#14532d;border-radius:9px;padding:4px 10px;font-weight:900}
+.mixPlus{background:#ffe14d;color:#3b0764;border-radius:9px;padding:4px 10px;font-weight:900;font-size:1.12em}
