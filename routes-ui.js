@@ -228,17 +228,9 @@
     box.id = id; box.className = 'carte';
     box.innerHTML = '<b>🧭 Trajet réel Google</b><p class="doux">Distance routière, durée et péage exact.</p><button type="button" data-rmode="voiture">🚗 Voiture et péages</button> <button type="button" class="second" data-rmode="transport">🚌 Transports</button><div class="doux" data-routes-result style="margin-top:8px"></div>' + liens(origin, destination) + '<div class="bk bkC bkTr bkTn" style="display:none"><div class="bkt">TRANSPORTS EN COMMUN · SITES</div><div class="tnZone"></div></div>';
     host.appendChild(box);
-    // V249 : prix exact du péage calculé tout seul, sans bloquer l'écran (différé, par petits paquets), affiché au-dessus du bouton Google.
-    try {
-      const pp = pts || (typeof origin !== 'string' && typeof destination !== 'string' ? [origin.lat, origin.lng, destination.lat, destination.lng] : null);
-      if (pp && pp.every(Number.isFinite)) {
-        const z = document.createElement('div'); z.className = 'bk bkC bkRen'; z.innerHTML = '<div class="bkt">PÉAGE · PRIX EXACT</div><div data-peage>💶 Calcul du prix exact…</div>';
-        box.insertBefore(z, box.querySelector('[data-routes-result]'));
-        const cle = pp.map(n => n.toFixed(3)).join('|');
-        if (PEAGE_MEMO.has(cle)) { z.querySelector('[data-peage]').innerHTML = PEAGE_MEMO.get(cle); }
-        else setTimeout(async () => { try { await estimerPeage({ pts: [[pp[1], pp[0]], [pp[3], pp[2]]] }, z); const zz = z.querySelector('[data-peage]'); if (zz && !/Calcul du prix/.test(zz.textContent)) PEAGE_MEMO.set(cle, zz.innerHTML); } catch (_) { } }, 1500);
-      }
-    } catch (_) { }
+    // V252 : comme avant, la mini carte et le prix exact du péage s'affichent d'un seul coup (un seul calcul, pas de doublon) : « Voiture et péages » est déclenché tout seul, une fois, quand la fenêtre est prête.
+    const auto = n => setTimeout(() => { try { if (!document.body.contains(box) || box.dataset.auto) return; const pv = document.getElementById('popVol'); if (pv && n < 25 && /Calcul des deux trajets/.test(pv.textContent || '')) return auto(n + 1); box.dataset.auto = '1'; const b = box.querySelector('button[data-rmode="voiture"]'); if (b) b.click(); } catch (_) { } }, n ? 500 : 900);
+    auto(0);
     if (villes) box.querySelector('[data-routes-result]').dataset.villes = villes;
     box.querySelectorAll('button[data-rmode]').forEach(b => b.onclick = async () => {
       const out = box.querySelector('[data-routes-result]'), mode = b.dataset.rmode;
