@@ -310,9 +310,10 @@
       const ligL = (de, a) => '🟢 <b>SANS PÉAGE</b> ' + esc(de) + ' → ' + esc(a) + '<br>' + k1(best.lib.km) + ' km · ' + hm(best.lib.min);
       const ligP = (de, a) => '🔵 <b>AVEC PÉAGE</b> ' + esc(de) + ' → ' + esc(a) + '<br>' + k1(best.pay.km) + ' km · ' + hm(best.pay.min) + '<br>' + P12(best.c1, best.c2);
       const dmin = best.min - fast.min, eco1 = Math.round((fast.c1 - best.c1) * 100) / 100, eco2 = Math.round((fast.c2 - best.c2) * 100) / 100;
-      const gros = '<div class="mixGros"><span class="mixEco">💰 Économie : ' + euro(eco1) + ' (cl. 1) · ' + euro(eco2) + ' (cl. 2)</span><span class="mixPlus">⏱️ ' + (dmin >= 0 ? '+' + dmin : '−' + Math.abs(dmin)) + ' min par rapport au trajet avec péage</span></div>';
-      const corps = gros + (best.ordre === 'FT' ? ligL(dep, piv) + '<br><br>' + ligP(piv, arr) : ligP(dep, piv) + '<br><br>' + ligL(piv, arr)) + '<br><br><b>TOTAL MIXTE</b> : ' + k1(best.km) + ' km · ' + hm(best.min) + '<br><b>Trajet avec péage</b> : ' + k1(fast.km) + ' km · ' + hm(fast.min) + '<br>' + P12(fast.c1, fast.c2) + '<br><span class="doux">Prix : tarifs officiels. Distance et durée : Google Routes, à vérifier avant départ.</span>';
-      zone.innerHTML = BK('bkMixte', 'TRAJET MIXTE (VIOLET SUR LA CARTE)', corps);
+      const sg = v => (v >= 0 ? '−' : '+') + euro(Math.abs(v));
+      const gros = '<div class="mixGros"><span class="mixPlus">⏱️ ' + (dmin >= 0 ? '+' + dmin : '−' + Math.abs(dmin)) + ' min par rapport au trajet avec péage</span><span class="mixEco">💰 ' + sg(eco1) + ' (cl. 1) · ' + sg(eco2) + ' (cl. 2) par rapport au trajet avec péage</span></div>';
+      const corps = (best.ordre === 'FT' ? ligL(dep, piv) + '<br><br>' + ligP(piv, arr) : ligP(dep, piv) + '<br><br>' + ligL(piv, arr)) + '<br><br><b>TOTAL MIXTE</b> : ' + k1(best.km) + ' km · ' + hm(best.min) + '<br>' + P12(best.c1, best.c2) + gros + '<span class="doux">Prix : tarifs officiels. Distance et durée : Google Routes, à vérifier avant départ.</span>';
+      zone.innerHTML = BK('bkMixte', 'TRAJET MIXTE', corps);
     } catch (e) { ko('Trajet mixte indisponible pour l’instant (' + esc(String(e && e.message || e).slice(0, 80)) + ').'); }
   };
   const render = (target, r, mode) => {
