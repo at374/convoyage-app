@@ -203,21 +203,31 @@
       const tV = performance.now();
       // V258 : le tracé « avec péages » déjà demandé par la fenêtre du trajet est réutilisé (au lieu d'un 2e appel de 4 à 9 s sur un téléphone en 4G).
       let j = null;
-      try { const ck = [a[1], a[0], b[1], b[0]].map(n => Number(n).toFixed(3)).join('|'), pp = window.CPValP && window.CPValP[ck]; if (pp) j = await pp; } catch (_) { j = null; }
-      if (!(j && j.trip && j.trip.legs && j.trip.legs[0] && j.trip.legs[0].maneuvers)) j = await valRoute({ locations: [{ lat: a[1], lon: a[0] }, { lat: b[1], lon: b[0] }], costing: 'auto', costing_options: { auto: { use_tolls: 1.0 } }, directions_options: { language: 'fr-FR', units: 'kilometers' } });
+      const att = p => Promise.race([p, new Promise(ok => setTimeout(() => ok(null), 8000))]);   // V261 : le serveur de tracé gratuit peut mettre 20 s ou tomber : on n'attend plus que 8 s
+      try { const ck = [a[1], a[0], b[1], b[0]].map(n => Number(n).toFixed(3)).join('|'), pp = window.CPValP && window.CPValP[ck]; if (pp) j = await att(pp); } catch (_) { j = null; }
+      if (!(j && j.trip && j.trip.legs && j.trip.legs[0] && j.trip.legs[0].maneuvers)) j = await att(valRoute({ locations: [{ lat: a[1], lon: a[0] }, { lat: b[1], lon: b[0] }], costing: 'auto', costing_options: { auto: { use_tolls: 1.0 } }, directions_options: { language: 'fr-FR', units: 'kilometers' } }));
       window.CPT('tracé péage', tV);
       const leg = j && j.trip && j.trip.legs && j.trip.legs[0];
-      if (!leg) { put(KO, false); return; }
-      try { suisse = passeEnSuisse(dec6(leg.shape)); } catch (_) { suisse = false; }
-      const tms = (leg.maneuvers || []).filter(m => m.toll);
-      let km = 0;
-      for (const m of tms) km += Number(m.length) || 0;
-      if (km < 1) { put('💶 <b>Aucun péage</b> sur ce trajet.', true); return; }
+      // V261 : si le serveur de tracé ne répond pas, le prix se calcule sur l'itinéraire Google déjà reçu (points rapprochés tous les 150 m).
+      let sh, tms, km = 0, viaGoogle = false;
+      if (leg && leg.maneuvers) {
+        try { suisse = passeEnSuisse(dec6(leg.shape)); } catch (_) { suisse = false; }
+        tms = leg.maneuvers.filter(m => m.toll);
+        for (const m of tms) km += Number(m.length) || 0;
+        if (km < 1) { put('💶 <b>Aucun péage</b> sur ce trajet.', true); return; }
+        sh = dec6(leg.shape);
+      } else {
+        viaGoogle = true;
+        sh = [A[0].length ? [A[0][1], A[0][0]] : A[0]];
+        for (let q = 1; q < A.length; q++) { const p0 = sh[sh.length - 1], p1 = [A[q][1], A[q][0]], n = Math.ceil(dist(p0[0], p0[1], p1[0], p1[1]) / 0.15); for (let u = 1; u < n; u++) sh.push([p0[0] + (p1[0] - p0[0]) * u / n, p0[1] + (p1[1] - p0[1]) * u / n]); sh.push(p1); }
+        try { suisse = passeEnSuisse(sh); } catch (_) { suisse = false; }
+        tms = [{ begin_shape_index: 0, end_shape_index: sh.length - 1 }];
+        km = Number(r.distanceKm) || 100;
+      }
       try {
-        const sh = dec6(leg.shape);
         const tC = performance.now();
         const R = await calculPeage(sh, tms, km), x = R.x;
-        window.CPT('calcul péage', tC);
+        window.CPT('calcul péage' + (viaGoogle ? ' (Google)' : ''), tC);
         const O = await chargerOverlay();
         const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
         const bar = O ? barrieresTraversees(O, sh, i0, i1) : [];
@@ -241,6 +251,7 @@
           return;
         }
       } catch (_) { /* pas de prix officiel exact trouvé : KO plus bas, jamais d'estimation */ }
+      if (viaGoogle && r.toll && r.toll.status === 'aucun_peage') { put('💶 <b>Aucun péage</b> sur ce trajet.', true); return; }
       put(KO, false);
     } catch (_) { put('⚠️ <b>Calcul du péage impossible pour l’instant</b> : le serveur de tracé ne répond pas.<div class="rd sub"><span>Ce n’est pas un prix inconnu. Vérifie ta connexion (wifi/4G) puis appuie de nouveau sur « Voiture et péages ».</span></div>', false); }
   };
