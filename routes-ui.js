@@ -80,13 +80,15 @@
     for (let k = i0; k <= i1; k++) { const g = gareProche(P, sh[k][0], sh[k][1], 0.4); if (g >= 0 && g !== der) { hits.push({ g, k }); der = g; } }
     if (!hits.length) return null;
     const lon = (a, b) => { let t = 0; for (let k = a; k < b; k++) t += dist(sh[k][0], sh[k][1], sh[k + 1][0], sh[k + 1][1]); return t; };
+    // V246 : gares « jumelles » (mêmes coordonnées, ex. Dourdan / La Folie-B) : on essaie la plus proche d'abord, puis ses jumelles.
+    const jum = g => { const r = [g]; P.g.forEach((o, i) => { if (i !== g && o[1].some(p => P.g[g][1].some(q => dist(p[0], p[1], q[0], q[1]) < 0.06))) r.push(i); }); return r; };
     // V245 : un trajet peut traverser plusieurs mailles tarifaires séparées (ex. A41 Annecy→Chambéry puis Chignin→Crolles) : on additionne les tronçons officiels.
-    const paire = (x, y) => { if (x.g === y.g) return null; const v = P.prix.get(Math.min(x.g, y.g) * 1000 + Math.max(x.g, y.g)); if (!v) return null; const q = v[2] / Math.max(1, lon(x.k, y.k)); return q < 0.7 || q > 1.9 ? null : v; };
+    const paire = (x, y) => { const d = lon(x.k, y.k); for (const a of jum(x.g)) for (const b of jum(y.g)) { if (a === b) continue; const v = P.prix.get(Math.min(a, b) * 1000 + Math.max(a, b)); if (!v) continue; const q = v[2] / Math.max(1, d); if (q >= 0.7 && q <= 1.9) return { v, a, b }; } return null; };
     const segs = [];
     let i = 0;
     while (i < hits.length) {
       let ok = null;
-      for (let h = hits.length - 1; h > i && !ok; h--) { const v = paire(hits[i], hits[h]); if (v) ok = { h, e: hits[i], s: hits[h], v }; }
+      for (let h = hits.length - 1; h > i && !ok; h--) { const p = paire(hits[i], hits[h]); if (p) ok = { h, p }; }
       if (!ok) {
         // gare isolée sans tarif : tolérée uniquement après le dernier tronçon tarifé, jamais au milieu du trajet
         if (!segs.length) return null;
@@ -96,8 +98,12 @@
       segs.push(ok); i = ok.h + 1;
     }
     if (!segs.length) return null;
-    const r2 = n => Math.round(n * 100) / 100, L = segs[segs.length - 1];
-    return { e: joli(P.g[segs[0].e.g][0]), s: joli(P.g[L.s.g][0]), c1: r2(segs.reduce((n, q) => n + q.v[0], 0)), c2: r2(segs.reduce((n, q) => n + q.v[1], 0)), det: segs.map(q => joli(P.g[q.e.g][0]) + ' → ' + joli(P.g[q.s.g][0])).join(' + '), reste: L.h < hits.length - 1 ? 0 : lon(L.s.k, i1) };
+    const r2 = n => Math.round(n * 100) / 100;
+    // V246 : Valhalla marque « péage » des tronçons gratuits (rocades, entrées de ville) : le reste après la dernière gare n'est plus refusé ; il contient forcément 0 gare.
+    // Seules les gares dont la position est douteuse (voir audit) bloquent le prix.
+    const SUSPECTES = ['CLERMONT-BARRIERE', 'LA BOISSE', 'SAINT MAURICE', 'VILLEFRANCHE-LIMAS', 'ST MARTIN BELLEVUE A410', 'ST MARTIN BELLEVUE A41 N', 'ALLONZIER', 'CRUSEILLES A'];
+    const dout = segs.some(q => SUSPECTES.includes(P.g[q.p.a][0]) || SUSPECTES.includes(P.g[q.p.b][0]));
+    return { e: joli(P.g[segs[0].p.a][0]), s: joli(P.g[segs[segs.length - 1].p.b][0]), c1: r2(segs.reduce((n, q) => n + q.p.v[0], 0)), c2: r2(segs.reduce((n, q) => n + q.p.v[1], 0)), det: segs.map(q => joli(P.g[q.p.a][0]) + ' → ' + joli(P.g[q.p.b][0])).join(' + '), reste: dout ? 99 : 0 };
   };
   // V233 : péages « barrière » (sans gare d'entrée/sortie : ponts, tunnels, barrières pleine voie) — tarifs officiels versionnés, jamais d'estimation.
   let OVERLAY = null;
