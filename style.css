@@ -547,3 +547,7 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 /* V257 : la page contient des centaines de cartes ; chaque modification dans la fenêtre du trajet obligeait le téléphone à recalculer la mise en page de TOUTE la liste (≈0,75 s à chaque fois). Les cartes hors écran ne sont plus calculées, et les fenêtres sont isolées. */
 .mission:not(.urgent){content-visibility:auto;contain-intrinsic-size:auto 260px}
 #feuille,.popVol{contain:layout style}
+/* V262 : résultats péage aux couleurs du tracé : bleu = avec péage, vert = sans péage */
+.bkAvec{--f:#1e63d8;--t:#fff}.bkSans{--f:#1a9850;--t:#fff}
+.bkAvec .rd.ok,.bkAvec .rd.ko,.bkSans .rd.ok,.bkSans .rd.ko{color:#fff}
+.bkAvec .bkt{color:#1e63d8}.bkSans .bkt{color:#1a9850}
