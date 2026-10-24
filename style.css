@@ -564,3 +564,9 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .mixGros{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}
 .mixEco{background:#fff;color:#14532d;border-radius:9px;padding:4px 10px;font-weight:900}
 .mixPlus{background:#ffe14d;color:#3b0764;border-radius:9px;padding:4px 10px;font-weight:900;font-size:1.12em}
+/* V266 : polices un peu plus petites */
+.bkC{font-size:.92rem;line-height:1.45}
+.bkC .bkt{font-size:.76rem;white-space:nowrap}
+.bkC .rd.c1,.bkC .rd.c1 b,.bkC .rd.c2,.bkC .rd.c2 b{font-size:1.08rem}
+.pc1,.pc2{font-size:1.02em}
+.mixEco,.mixPlus{font-size:.95em;padding:3px 9px}
