@@ -98,7 +98,11 @@
     const hits = [];
     let der = -2;
     for (let k = i0; k <= i1; k++) { const g = gareProche(P, sh[k][0], sh[k][1], 0.4); if (g >= 0 && g !== der) { hits.push({ g, k }); der = g; } }
-    if (!hits.length) return null;
+    // V259 : barrières « système ouvert » à tarif fixe (grilles officielles APRR/AREA, ligne « Système Ouvert ») : sans gare de couple, on ajoute simplement leur tarif.
+    const OUV = { 'CROTTET': [0.8, 1.2], 'FONTAINE-LARIVIERE': [3.1, 4.9], 'GENAY': [1.7, 2.5], 'LUSSE': [6.8, 10.7], 'MIONNAY': [1, 1.5], 'MYENNES': [4.2, 6], 'QUINCIEUX': [3.6, 5.6], 'VICHY': [1.2, 1.9] };
+    const ouv = [];
+    for (let q = hits.length - 1; q >= 0; q--) { if (OUV[P.g[hits[q].g][0]]) { if (!ouv.some(o => o.g === hits[q].g)) ouv.unshift(hits[q]); hits.splice(q, 1); } }
+    if (!hits.length && !ouv.length) return null;
     const cum = new Float64Array(sh.length); for (let k = 1; k < sh.length; k++) cum[k] = cum[k - 1] + dist(sh[k - 1][0], sh[k - 1][1], sh[k][0], sh[k][1]);
     const lon = (a, b) => cum[b] - cum[a];   // V247 : distances cumulées (le téléphone ne se fige plus)
     // V254 : A410 (AREA) : la barrière « St Martin Bellevue A410 » facture depuis la jonction A40 (tronçon gratuit jusqu'à La Roche-sur-Foron compris, 37 km au tarif) : la distance se mesure depuis le début/jusqu'à la fin du tronçon à péage ; la gare de Cruseilles, avant la barrière, n'est qu'une bretelle.
@@ -124,13 +128,15 @@
       }
       segs.push(ok); i = ok.h + 1;
     }
-    if (!segs.length) return null;
+    if (!segs.length && !ouv.length) return null;
     const r2 = n => Math.round(n * 100) / 100;
     // V246 : Valhalla marque « péage » des tronçons gratuits (rocades, entrées de ville) : le reste après la dernière gare n'est plus refusé ; il contient forcément 0 gare.
     // Seules les gares dont la position est douteuse (voir audit) bloquent le prix.
     const SUSPECTES = ['CLERMONT-BARRIERE', 'LA BOISSE', 'SAINT MAURICE', 'CRUSEILLES A'];
     const dout = segs.some(q => SUSPECTES.includes(P.g[q.p.a][0]) || SUSPECTES.includes(P.g[q.p.b][0]));
-    return { e: joli(P.g[segs[0].p.a][0]), s: joli(P.g[segs[segs.length - 1].p.b][0]), c1: r2(segs.reduce((n, q) => n + q.p.v[0], 0)), c2: r2(segs.reduce((n, q) => n + q.p.v[1], 0)), det: segs.map(q => joli(P.g[q.p.a][0]) + ' → ' + joli(P.g[q.p.b][0])).join(' + '), reste: dout ? 99 : 0 };
+    const nO = ouv.map(o => P.g[o.g][0]);
+    const detS = segs.map(q => joli(P.g[q.p.a][0]) + ' → ' + joli(P.g[q.p.b][0])).concat(nO.map(n => 'barrière ' + joli(n)));
+    return { e: segs.length ? joli(P.g[segs[0].p.a][0]) : joli(nO[0]), s: segs.length ? joli(P.g[segs[segs.length - 1].p.b][0]) : joli(nO[nO.length - 1]), c1: r2(segs.reduce((n, q) => n + q.p.v[0], 0) + nO.reduce((n, x) => n + OUV[x][0], 0)), c2: r2(segs.reduce((n, q) => n + q.p.v[1], 0) + nO.reduce((n, x) => n + OUV[x][1], 0)), det: detS.join(' + '), reste: dout ? 99 : 0 };
   };
   // V233 : péages « barrière » (sans gare d'entrée/sortie : ponts, tunnels, barrières pleine voie) — tarifs officiels versionnés, jamais d'estimation.
   let OVERLAY = null;
