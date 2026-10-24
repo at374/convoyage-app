@@ -82,7 +82,12 @@
     } catch (_) { /* sans ajouts : tarifs d'origine seuls */ }
     return PEAGES;
   };
-  const gareProche = (P, lat, lon, max) => { let bi = -1, bd = max; const dl = max / 111, dn = max / (111 * Math.max(0.2, Math.cos(lat * Math.PI / 180))); P.g.forEach((g, i) => g[1].forEach(p => { if (Math.abs(p[0] - lat) > dl || Math.abs(p[1] - lon) > dn) return; const d = dist(lat, lon, p[0], p[1]); if (d < bd) { bd = d; bi = i; } })); return bi; };
+  const gareProche = (P, lat, lon, max) => {
+    if (!P.gi) { const gi = new Map(); P.g.forEach((g, i) => g[1].forEach(p => { const c = Math.floor(p[0] / 0.02) + ',' + Math.floor(p[1] / 0.02); let L = gi.get(c); if (!L) gi.set(c, L = []); L.push([i, p[0], p[1]]); })); P.gi = gi; }   // V255 : index par carreaux de 2 km (avant : toutes les gares testées pour chaque point du tracé = écran figé sur téléphone)
+    let bi = -1, bd = max; const dl = max / 111, dn = max / (111 * Math.max(0.2, Math.cos(lat * Math.PI / 180)));
+    for (let a = Math.floor((lat - dl) / 0.02); a <= Math.floor((lat + dl) / 0.02); a++) for (let b = Math.floor((lon - dn) / 0.02); b <= Math.floor((lon + dn) / 0.02); b++) { const L = P.gi.get(a + ',' + b); if (!L) continue; for (const q of L) { if (Math.abs(q[1] - lat) > dl || Math.abs(q[2] - lon) > dn) continue; const d = dist(lat, lon, q[1], q[2]); if (d < bd || (d === bd && bi >= 0 && q[0] < bi)) { bd = d; bi = q[0]; } } }
+    return bi;
+  };
   const prixExact = (P, sh, tms, km) => {
     const f = tms[0], l = tms[tms.length - 1];
     const i0 = f.begin_shape_index, i1 = l.end_shape_index;
@@ -142,7 +147,7 @@
     for (let k = i0; k <= i1; k++) {
       if (!sh[k]) continue;
       for (const b of O.b) {
-        if (b.points.some(p => dist(sh[k][0], sh[k][1], p[0], p[1]) < 0.3)) { if (b.id !== der || k - dernierK > 50) vus.push({ id: b.id, k }); der = b.id; dernierK = k; break; }
+        if (b.points.some(p => Math.abs(sh[k][0] - p[0]) < 0.01 && Math.abs(sh[k][1] - p[1]) < 0.015 && dist(sh[k][0], sh[k][1], p[0], p[1]) < 0.3)) { if (b.id !== der || k - dernierK > 50) vus.push({ id: b.id, k }); der = b.id; dernierK = k; break; }
       }
     }
     return vus;
