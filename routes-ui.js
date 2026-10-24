@@ -1,6 +1,10 @@
 // Convoyage Ultra — panneau des données Routes API dans les fiches et l’estimation.
 (function () {
   'use strict';
+  // V254 : mesure des blocages sur le téléphone (affichée en bas de la fenêtre du trajet) : chaque arrêt de l'écran de plus de 0,3 s est noté avec l'étape en cours.
+  const GAPS = []; let dernier = performance.now();
+  window.CPPh = x => { window.__ph = x; };
+  setInterval(() => { const n = performance.now(), g = n - dernier - 250; dernier = n; if (g > 300) { GAPS.push(Math.round(g) + ' ms · ' + (window.__ph || '?')); if (GAPS.length > 12) GAPS.shift(); } }, 250);
   const endpoint = 'https://convoyage-routes-691310598055.europe-west1.run.app/api/routes/estimate';
   const euro = v => Number(v).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
   const lireNatif = () => { try { return window.CPNatif && window.CPNatif.session ? JSON.parse(window.CPNatif.session() || '{}') : null; } catch (_) { return null; } };
@@ -36,6 +40,7 @@
   // V253 : le tracé est réduit à ≈500 points avant tout calcul de carte (un téléphone lent se figeait sur des dizaines de milliers de points).
   const mg = L => { const p = Math.ceil(L.length / 500); return p > 1 ? L.filter((_, i) => i % p === 0 || i === L.length - 1) : L; };
   const carte = r => {
+    window.CPPh('carte');
     const W = 480, H = 540, A = mg(decode(r.polyline));
     if (A.length < 2) return '';
     const B = r.sansPeage && r.sansPeage.polyline && r.sansPeage.polyline !== r.polyline ? mg(decode(r.sansPeage.polyline)) : null;
@@ -88,11 +93,16 @@
     if (!hits.length) return null;
     const cum = new Float64Array(sh.length); for (let k = 1; k < sh.length; k++) cum[k] = cum[k - 1] + dist(sh[k - 1][0], sh[k - 1][1], sh[k][0], sh[k][1]);
     const lon = (a, b) => cum[b] - cum[a];   // V247 : distances cumulées (le téléphone ne se fige plus)
+    // V254 : A410 (AREA) : la barrière « St Martin Bellevue A410 » facture depuis la jonction A40 (tronçon gratuit jusqu'à La Roche-sur-Foron compris, 37 km au tarif) : la distance se mesure depuis le début/jusqu'à la fin du tronçon à péage ; la gare de Cruseilles, avant la barrière, n'est qu'une bretelle.
+    const ENT = 'ST MARTIN BELLEVUE A410';
+    const eN = hits.findIndex(q => P.g[q.g][0] === ENT);
+    if (eN > 0 && hits.slice(0, eN).every(q => P.g[q.g][0] === 'CRUSEILLES A')) hits.splice(0, eN);
+    hits.forEach(q => { if (P.g[q.g][0] === ENT) q.ent = true; });
     // V246 : gares « jumelles » (mêmes coordonnées, ex. Dourdan / La Folie-B) : on essaie la plus proche d'abord, puis ses jumelles.
     const jc = new Map();
     const jum = g => { if (jc.has(g)) return jc.get(g); const r = [g]; jc.set(g, r); P.g.forEach((o, i) => { if (i !== g && o[1].some(p => P.g[g][1].some(q => dist(p[0], p[1], q[0], q[1]) < 0.06))) r.push(i); }); return r; };
     // V245 : un trajet peut traverser plusieurs mailles tarifaires séparées (ex. A41 Annecy→Chambéry puis Chignin→Crolles) : on additionne les tronçons officiels.
-    const paire = (x, y) => { const d = lon(x.k, y.k); for (const a of jum(x.g)) for (const b of jum(y.g)) { if (a === b) continue; const v = P.prix.get(Math.min(a, b) * 1000 + Math.max(a, b)); if (!v) continue; const q = v[2] / Math.max(1, d); if (q >= 0.7 && q <= 1.9) return { v, a, b }; } return null; };
+    const paire = (x, y) => { const d = x.ent ? lon(i0, y.k) : y.ent ? lon(x.k, i1) : lon(x.k, y.k); for (const a of jum(x.g)) for (const b of jum(y.g)) { if (a === b) continue; const v = P.prix.get(Math.min(a, b) * 1000 + Math.max(a, b)); if (!v) continue; const q = v[2] / Math.max(1, d); if (q >= 0.7 && q <= 1.9) return { v, a, b }; } return null; };
     const segs = [];
     let i = 0;
     while (i < hits.length) {
@@ -110,7 +120,7 @@
     const r2 = n => Math.round(n * 100) / 100;
     // V246 : Valhalla marque « péage » des tronçons gratuits (rocades, entrées de ville) : le reste après la dernière gare n'est plus refusé ; il contient forcément 0 gare.
     // Seules les gares dont la position est douteuse (voir audit) bloquent le prix.
-    const SUSPECTES = ['CLERMONT-BARRIERE', 'LA BOISSE', 'SAINT MAURICE', 'ST MARTIN BELLEVUE A410', 'CRUSEILLES A'];
+    const SUSPECTES = ['CLERMONT-BARRIERE', 'LA BOISSE', 'SAINT MAURICE', 'CRUSEILLES A'];
     const dout = segs.some(q => SUSPECTES.includes(P.g[q.p.a][0]) || SUSPECTES.includes(P.g[q.p.b][0]));
     return { e: joli(P.g[segs[0].p.a][0]), s: joli(P.g[segs[segs.length - 1].p.b][0]), c1: r2(segs.reduce((n, q) => n + q.p.v[0], 0)), c2: r2(segs.reduce((n, q) => n + q.p.v[1], 0)), det: segs.map(q => joli(P.g[q.p.a][0]) + ' → ' + joli(P.g[q.p.b][0])).join(' + '), reste: dout ? 99 : 0 };
   };
@@ -167,6 +177,7 @@
     }
   };
   const estimerPeage = async (r, out) => {
+    window.CPPh('péage');
     const zone = out.querySelector('[data-peage]');
     let suisse = false;
     const put = (h, ok) => { if (!zone) return; zone.innerHTML = h + (suisse ? NOTE_CH : ''); const b = zone.closest('.bk'); if (b) b.classList.add(ok ? 'bkRenOk' : 'bkRenKo'); };
@@ -234,6 +245,7 @@
     const auto = n => setTimeout(() => { try { if (!document.body.contains(box) || box.dataset.auto) return; const pv = document.getElementById('popVol'); if (pv && n < 25 && /Calcul des deux trajets/.test(pv.textContent || '')) return auto(n + 1); box.dataset.auto = '1'; const b = box.querySelector('button[data-rmode="voiture"]'); if (b) b.click(); } catch (_) { } }, n ? 500 : 900);
     auto(0);
     if (villes) box.querySelector('[data-routes-result]').dataset.villes = villes;
+    { const dg = document.createElement('div'); dg.className = 'doux'; dg.style.cssText = 'font-size:.68rem;margin-top:6px'; box.appendChild(dg); const iv = setInterval(() => { if (!document.body.contains(box)) { clearInterval(iv); return; } dg.textContent = '🩺 ' + (GAPS.length ? 'blocages mesurés : ' + GAPS.slice(-6).join(' | ') : 'aucun blocage mesuré'); }, 1500); }
     box.querySelectorAll('button[data-rmode]').forEach(b => b.onclick = async () => {
       const out = box.querySelector('[data-routes-result]'), mode = b.dataset.rmode;
       const s = session(), c = config(); out.textContent = 'Calcul Google en cours…'; const tn = mode === 'transport'; box.querySelectorAll('.bkIt').forEach(a => { a.style.display = tn ? 'none' : ''; }); box.querySelectorAll('.bkTn').forEach(a => { a.style.display = tn ? '' : 'none'; }); if (tn) { const z = box.querySelector('.tnZone'); try { z.innerHTML = window.CPLiensTr && tr ? window.CPLiensTr(tr[0], tr[1], tr[2], tr[3]) : ''; } catch (_) { z.innerHTML = ''; } if (!z.innerHTML) z.innerHTML = '<span class="doux">Sites de transport indisponibles pour ce trajet.</span>'; }
