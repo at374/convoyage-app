@@ -349,10 +349,10 @@
       let rows = [];
       for (const m of [V.mod2, V.mod].filter(Boolean)) { const r = await fetch(ADU + encodeURIComponent('Modèle:"' + m + '"')); if (!r.ok) throw new Error('ademe'); rows = (await r.json()).results || []; if (rows.length) break; }
       rows = rows.filter(x => !/^ELECTRIC/.test(x.Energie || '') && Number.isFinite(x.Conso_vitesse_mixte_Min));
-      const f = { HNR: /HNR/, HR: /HR/, GAZOLE: /^GAZOLE$/, ESSENCE: /^ESSENCE$/ }[V.nrj]; if (f) rows = rows.filter(x => f.test(x.Energie || ''));
+      const f = { HNR: /HNR/, HR: /HR/, GAZOLE: /^GAZOLE$/, ESSENCE: /^ESSENCE$/ }[V.nrj]; let fk = 1; if (f) { const tous = rows; rows = rows.filter(x => f.test(x.Energie || '')); if (!rows.length && (V.nrj === 'HNR' || V.nrj === 'HR')) { rows = tous.filter(x => /^ESSENCE$/.test(x.Energie || '')); fk = 0.9; } }
       if (V.ch && rows.length > 1) { const kw = V.ch * 0.7355, p = rows.filter(x => Math.abs((x.Puissance_maximale || 0) - kw) <= kw * 0.15); if (p.length) rows = p; }
       const c = ademeLire();
-      if (rows.length) { const l = rows.reduce((s, x) => s + (x.Conso_vitesse_mixte_Min + (x.Conso_vitesse_mixte_Max || x.Conso_vitesse_mixte_Min)) / 2, 0) / rows.length * 1.15; c[k] = { l: Math.round(l * 100) / 100, e: /GAZOLE/.test(rows[0].Energie || '') ? 'gazole' : 'essence' }; } else c[k] = { l: 0 };
+      if (rows.length) { const l = rows.reduce((s, x) => s + (x.Conso_vitesse_mixte_Min + (x.Conso_vitesse_mixte_Max || x.Conso_vitesse_mixte_Min)) / 2, 0) / rows.length * 1.15 * fk; c[k] = { l: Math.round(l * 100) / 100, e: /GAZOLE/.test(rows[0].Energie || '') ? 'gazole' : 'essence' }; } else c[k] = { l: 0 };
       try { localStorage.setItem(ADK, JSON.stringify(c)); } catch (_) {}
       majConso();
     } catch (_) { /* hors ligne : on garde la valeur par défaut */ } finally { delete ademeEnCours[k]; }
