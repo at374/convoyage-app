@@ -790,7 +790,6 @@
   // V243 : mise à jour des péages (fichiers peages-aprr.json + peages-overlay.json), avec indicateur d'avancement
   // (nombre de barrières/gares traitées) et déclenchement automatique quand une nouvelle grille tarifaire entre
   // en vigueur (chaque 1er février), sans attendre que Laurent clique lui-même sur le bouton des Réglages.
-  let dernierResultatMajPeages = null;
   async function executerMajPeages(onProgress) {
     const [r1, r2] = await Promise.all([fetch('peages-aprr.json', { cache: 'reload' }), fetch('peages-overlay.json', { cache: 'reload' })]);
     const [j1, j2] = await Promise.all([r1.json(), r2.json()]);
@@ -815,9 +814,10 @@
       if (i + 40 < total) await new Promise(ok => setTimeout(ok, 0));
     }
     const versions = [j1.v, j2.v].filter(Boolean).join(' · ');
-    try { localStorage.setItem('cp_peages_maj', new Date().toISOString()); } catch (_) {}
-    dernierResultatMajPeages = { total, versions, le: new Date().toISOString() };
-    return dernierResultatMajPeages;
+    const resultat = { total, versions, le: new Date().toISOString() };
+    try { localStorage.setItem('cp_peages_maj', resultat.le); } catch (_) {}
+    ecrireLocal('cp_peages_maj_detail', resultat);   // persisté (pas qu'en mémoire) : reste affiché après un rechargement ou un redémarrage de l'appli
+    return resultat;
   }
   // Déclenchement automatique : dès qu'une nouvelle grille (1er février) est détectée ET qu'elle n'a pas déjà
   // été appliquée automatiquement pour cette revalorisation, on lance la mise à jour sans intervention de Laurent.
@@ -905,7 +905,9 @@
       const barre = document.createElement('progress'); barre.id = 'majPeagesBarre'; barre.style.width = '100%'; barre.max = 1;
       const texteProg = document.createElement('p'); texteProg.className = 'doux'; texteProg.id = 'majPeagesTexte';
       prog.appendChild(barre); prog.appendChild(texteProg);
-      if (dernierResultatMajPeages) { const d = dernierResultatMajPeages; info.textContent = 'Péages à jour : ' + d.total + ' barrières/gares mises à jour le ' + new Date(d.le).toLocaleString('fr-FR') + '.'; info.style.color = ''; }
+      const detailInfo = document.createElement('p'); detailInfo.className = 'doux'; detailInfo.id = 'infoPeagesDetail';
+      const d = lireLocal('cp_peages_maj_detail', null);
+      if (d) { detailInfo.textContent = d.total + ' barrières/gares mises à jour le ' + new Date(d.le).toLocaleString('fr-FR') + (d.versions ? ' · sources : ' + d.versions : '') + '.'; }
       bt.onclick = async () => {
         bt.disabled = true; prog.hidden = false; barre.removeAttribute('value'); texteProg.textContent = 'Mise à jour en cours…';
         try {
@@ -915,7 +917,7 @@
           setTimeout(() => location.reload(), 1500);
         } catch (e) { toast('Mise à jour impossible : ' + e.message); bt.disabled = false; prog.hidden = true; }
       };
-      bloc.appendChild(info); bloc.appendChild(prog); bloc.appendChild(bt); $('ecran').appendChild(bloc); }
+      bloc.appendChild(info); bloc.appendChild(detailInfo); bloc.appendChild(prog); bloc.appendChild(bt); $('ecran').appendChild(bloc); }
     { const p = document.createElement('p'); p.className = 'doux'; p.id = 'versionReglages'; p.style.textAlign = 'center'; p.textContent = 'Convoyage Ultra — version ' + VERSION_APP + versionApk(); $('ecran').appendChild(p); }
     { const bm = $('remettre'); if (bm) bm.onclick = () => { ecrireLocal('cp_masquees', []); toast('Missions remises : actualisation…'); charger(); }; }
     $('dOk').onclick = () => { api.deconnexion(); localStorage.removeItem('cp_cache'); Object.assign(etat, { missions: [], alertes: [], reglages: null }); ecranConnexion(); };
