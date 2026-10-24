@@ -228,7 +228,10 @@
     if (zone.type === 'ville') {
       const nomM = norm(m[pre + '_city'] || (m[c] && m[c].city));
       if (nomM && nomM === norm(zone.nom)) { const d = departementMission(m, c); if (!zone.dep || !d || d === zone.dep) return true; }
-      if (rayonKm > 0 && zone.lat != null) { const p = coordonnees(m, c); if (p && p.precision !== 'departement') return routeKm(zone, p) <= rayonKm; }
+      // V246 (demande de Laurent) : une ville non répertoriée ou sans point GPS précis ne doit pas disparaître silencieusement
+      // du filtre « Ville + rayon » — on la garde (comme le fait déjà le filtre « distance depuis ma position »), le badge
+      // de précision (mentionGps) indiquant ensuite qu'elle est approximative ou inconnue.
+      if (rayonKm > 0 && zone.lat != null) { const p = coordonnees(m, c); if (!p || p.precision === 'departement') return true; return routeKm(zone, p) <= rayonKm; }
       return false;
     }
     return false;
