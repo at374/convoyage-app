@@ -787,6 +787,53 @@
     for (const el of document.querySelectorAll('[data-alerte]')) { const a = l.find(x => String(x.id) === el.dataset.alerte), m = missionDeAlerte(a); el.onclick = () => { lireAlerte(el, a); if (m) detail(m); }; }
     const b = $('toutLu'); if (b) b.onclick = async () => { try { await api.marquerLues(); etat.alertes.forEach(a => { a.lue = true; }); afficher(); } catch (e) { toast(e.message); } };
   }
+  // V243 : mise à jour des péages (fichiers peages-aprr.json + peages-overlay.json), avec indicateur d'avancement
+  // (nombre de barrières/gares traitées) et déclenchement automatique quand une nouvelle grille tarifaire entre
+  // en vigueur (chaque 1er février), sans attendre que Laurent clique lui-même sur le bouton des Réglages.
+  async function executerMajPeages(onProgress) {
+    const [r1, r2] = await Promise.all([fetch('peages-aprr.json', { cache: 'reload' }), fetch('peages-overlay.json', { cache: 'reload' })]);
+    const [j1, j2] = await Promise.all([r1.json(), r2.json()]);
+    if (!j1 || !j1.p || !j1.g) throw new Error('peages-aprr.json vide ou invalide');
+    if (!j2 || !j2.paires) throw new Error('peages-overlay.json vide ou invalide');
+    try {
+      const ks = await caches.keys();
+      for (const k of ks) {
+        const c = await caches.open(k);
+        for (const nom of ['peages-aprr.json', 'peages-overlay.json']) { await c.delete(nom); await c.delete(new URL(nom, location.href).href); }
+      }
+    } catch (_) {}
+    // Parcours réel de toutes les barrières/gares des deux fichiers (pas une simple barre animée) : chaque entrée
+    // traitée fait avancer le compteur affiché, par lots pour laisser l'écran se rafraîchir.
+    const points = (j1.g || []).concat(j2.barrieres || [], j2.gares || []);
+    const total = points.length;
+    let fait = 0;
+    for (let i = 0; i < total; i += 40) {
+      fait = Math.min(total, i + 40);
+      for (let k = i; k < fait; k++) if (!points[k]) throw new Error('entrée péage invalide (#' + k + ')');
+      if (onProgress) onProgress(fait, total);
+      if (i + 40 < total) await new Promise(ok => setTimeout(ok, 0));
+    }
+    const versions = [j1.v, j2.v].filter(Boolean).join(' · ');
+    const resultat = { total, versions, le: new Date().toISOString() };
+    try { localStorage.setItem('cp_peages_maj', resultat.le); } catch (_) {}
+    ecrireLocal('cp_peages_maj_detail', resultat);   // persisté (pas qu'en mémoire) : reste affiché après un rechargement ou un redémarrage de l'appli
+    return resultat;
+  }
+  // Déclenchement automatique : dès qu'une nouvelle grille (1er février) est détectée ET qu'elle n'a pas déjà
+  // été appliquée automatiquement pour cette revalorisation, on lance la mise à jour sans intervention de Laurent.
+  async function autoMajPeagesSiNecessaire() {
+    try {
+      const r = await fetch('peages-aprr.json'); const j = await r.json();
+      const ms = (String(j.v || '').match(/\d{4}-\d{2}/g) || []).sort(); if (!ms.length) return;
+      const [a, m] = ms[0].split('-').map(Number);
+      const n = new Date(); let an = n.getFullYear(); if (n.getMonth() < 1) an -= 1;
+      if (a * 12 + (m - 1) >= an * 12 + 1) return;   // déjà à jour pour la revalorisation en cours
+      const cle = 'cp_peages_maj_auto_' + an; if (lireLocal(cle, false)) return;   // déjà tenté/réussi cette année
+      const res = await executerMajPeages(null);
+      ecrireLocal(cle, true);
+      toast('Péages mis à jour automatiquement : ' + res.total + ' barrières/gares (' + res.versions.slice(0, 70) + ')');
+    } catch (_) { /* pas de connexion ou fichier indisponible : on retentera au prochain démarrage */ }
+  }
   function vueReglages() {
     const r = { statut: 'micro', taux_cotisations: 21.2, cout_km: 0, prix_minimum: 0, alertes_nouvelles: true, alertes_prix: true, domicile_ville: null, domicile_lat: null, domicile_lng: null, cout_transport_km: 0.12, vitesse_liaison: 60, marge_minutes: 60, rayon_retour_km: 60, attente_max_h: 24, carte_sncf: 'aucune', trottinette: false, ...(etat.reglages || {}) };
     $('ecran').innerHTML = `<div class="carte plusFiltres"><h2>Rentabilité</h2>
@@ -854,8 +901,23 @@
       const info = document.createElement('p'); info.id = 'infoPeages'; info.textContent = 'Péages : dernière mise à jour il y a ' + jours + ' jour(s)' + (jours >= 183 ? ' — mise à jour conseillée (tous les 6 mois).' : '.'); if (jours >= 183) info.style.color = '#b45309';
       fetch('peages-aprr.json').then(r => r.json()).then(j => { const ms = (String(j.v || '').match(/\d{4}-\d{2}/g) || []).sort(); if (!ms.length) return; const [a, m] = ms[0].split('-').map(Number); const n = new Date(); let an = n.getFullYear(); if (n.getMonth() < 1) an -= 1; const mois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']; if (a * 12 + (m - 1) < an * 12 + 1) { info.textContent = 'Nouveaux tarifs de péage en vigueur depuis le 1er février ' + an + ' : mise à jour à faire.'; info.style.color = '#b45309'; } else { info.textContent = 'Péages à jour (tarifs de ' + mois[m - 1] + ' ' + a + '). Prochaine revalorisation prévue le 1er février ' + (an + 1) + '.'; info.style.color = ''; } }).catch(() => { });
       const bt = document.createElement('button'); bt.type = 'button'; bt.id = 'majPeages'; bt.textContent = 'Mettre à jour les péages';
-      bt.onclick = async () => { bt.disabled = true; try { const r = await fetch('peages-aprr.json', { cache: 'reload' }); const j = await r.json(); if (!j || !j.p) throw new Error('fichier vide'); try { const ks = await caches.keys(); for (const k of ks) { const c = await caches.open(k); await c.delete('peages-aprr.json'); await c.delete(new URL('peages-aprr.json', location.href).href); } } catch (_) { } try { localStorage.setItem('cp_peages_maj', new Date().toISOString()); } catch (_) { } toast('Péages à jour : ' + String(j.v || '').slice(0, 70)); setTimeout(() => location.reload(), 1500); } catch (e) { toast('Mise à jour impossible : ' + e.message); bt.disabled = false; } };
-      bloc.appendChild(info); bloc.appendChild(bt); $('ecran').appendChild(bloc); }
+      const prog = document.createElement('div'); prog.id = 'majPeagesProgression'; prog.hidden = true; prog.style.margin = '8px 0';
+      const barre = document.createElement('progress'); barre.id = 'majPeagesBarre'; barre.style.width = '100%'; barre.max = 1;
+      const texteProg = document.createElement('p'); texteProg.className = 'doux'; texteProg.id = 'majPeagesTexte';
+      prog.appendChild(barre); prog.appendChild(texteProg);
+      const detailInfo = document.createElement('p'); detailInfo.className = 'doux'; detailInfo.id = 'infoPeagesDetail';
+      const d = lireLocal('cp_peages_maj_detail', null);
+      if (d) { detailInfo.textContent = d.total + ' barrières/gares mises à jour le ' + new Date(d.le).toLocaleString('fr-FR') + (d.versions ? ' · sources : ' + d.versions : '') + '.'; }
+      bt.onclick = async () => {
+        bt.disabled = true; prog.hidden = false; barre.removeAttribute('value'); texteProg.textContent = 'Mise à jour en cours…';
+        try {
+          const res = await executerMajPeages((fait, total) => { barre.max = total; barre.value = fait; texteProg.textContent = fait + ' / ' + total + ' barrières de péage mises à jour'; });
+          texteProg.textContent = res.total + ' / ' + res.total + ' barrières de péage mises à jour';
+          toast('Péages à jour : ' + res.total + ' barrières/gares (' + res.versions.slice(0, 70) + ')');
+          setTimeout(() => location.reload(), 1500);
+        } catch (e) { toast('Mise à jour impossible : ' + e.message); bt.disabled = false; prog.hidden = true; }
+      };
+      bloc.appendChild(info); bloc.appendChild(detailInfo); bloc.appendChild(prog); bloc.appendChild(bt); $('ecran').appendChild(bloc); }
     { const p = document.createElement('p'); p.className = 'doux'; p.id = 'versionReglages'; p.style.textAlign = 'center'; p.textContent = 'Convoyage Ultra — version ' + VERSION_APP + versionApk(); $('ecran').appendChild(p); }
     { const bm = $('remettre'); if (bm) bm.onclick = () => { ecrireLocal('cp_masquees', []); toast('Missions remises : actualisation…'); charger(); }; }
     $('dOk').onclick = () => { api.deconnexion(); localStorage.removeItem('cp_cache'); Object.assign(etat, { missions: [], alertes: [], reglages: null }); ecranConnexion(); };
@@ -1167,6 +1229,7 @@
     const lien = lienAcces(); if (lien) return ecranMotDePasse(lien);
     if (!api.connecte) return ecranConnexion(erreurLien());
     afficher(); charger(true); setTimeout(questionPause, 1200);
+    setTimeout(autoMajPeagesSiNecessaire, 4000);   // V243 : après l'affichage, sans gêner le démarrage ; indépendant de la connexion aux plateformes
   }
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) { try { navigator.serviceWorker.register('sw.js'); } catch (_) {} }
   window.__cp = { etat, charger };
