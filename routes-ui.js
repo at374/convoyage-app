@@ -5,6 +5,7 @@
   const GAPS = []; let dernier = performance.now();
   window.CPPh = x => { window.__ph = x; };
   const TPS = []; window.CPT = (n, t0) => { TPS.push(n + ' ' + Math.round(performance.now() - t0) + ' ms'); if (TPS.length > 8) TPS.shift(); };
+  const LAY = n => { const t0 = performance.now(); void document.body.offsetHeight; window.CPT('mise en page ' + n, t0); };   // V257 : coût d'un recalcul de mise en page sur ce téléphone
   const EST = new Map();   // V256 : un seul appel Google par trajet, même si la fenêtre est redessinée pendant l'attente
   setInterval(() => { const n = performance.now(), g = n - dernier - 250; dernier = n; if (g > 300) { GAPS.push(Math.round(g) + ' ms · ' + (window.__ph || '?')); if (GAPS.length > 12) GAPS.shift(); } }, 250);
   const endpoint = 'https://convoyage-routes-691310598055.europe-west1.run.app/api/routes/estimate';
@@ -187,7 +188,7 @@
     window.CPPh('péage');
     const zone = out.querySelector('[data-peage]');
     let suisse = false;
-    const put = (h, ok) => { if (!zone) return; zone.innerHTML = h + (suisse ? NOTE_CH : ''); const b = zone.closest('.bk'); if (b) b.classList.add(ok ? 'bkRenOk' : 'bkRenKo'); };
+    const put = (h, ok) => { if (!zone) return; zone.innerHTML = h + (suisse ? NOTE_CH : ''); LAY('péage'); const b = zone.closest('.bk'); if (b) b.classList.add(ok ? 'bkRenOk' : 'bkRenKo'); };
     const KO = '💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Aucune estimation affichée : seuls les tarifs officiels exacts sont montrés.</span></div>';
     try {
       const A = r.pts || decode(r.polyline);
@@ -242,7 +243,7 @@
     const info = mode === 'DRIVE'
       ? BK('bkKm', 'TRAJET LE PLUS RAPIDE', kmH) + BK('bkRen', 'AVEC PÉAGE', '<div data-peage>' + (prix.status === 'aucun_peage' ? '💶 <b>Aucun péage</b> sur ce trajet.' : '💶 Calcul du prix exact…') + '</div>') + (r.sansPeage ? BK('bkVeh', 'SANS PÉAGE', '🛣 <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b><br>⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b>') : '') + '<p class="doux" style="font-size:.8rem">Distance et durée : Google Routes, à vérifier avant départ.</p>'
       : '<p class="doux" style="font-size:.75rem;margin:6px 0 2px">Calculé par Google Routes en mode transports en commun.</p>' + BK('bkKm', 'TRANSPORTS EN COMMUN', kmH) + BK('bkRen', 'PRIX', '🎟️ Le prix sera détaillé quand le calcul des prix SNCF et des autres transports sera activé.') + '<p class="doux" style="font-size:.8rem">Horaires et prix à vérifier sur le site du transporteur (liens ci-dessous).</p>';
-    target.innerHTML = info;   // V186 : la carte et les villes passent avant les lignes d’infos
+    target.innerHTML = info; LAY('résultat');   // V186 : la carte et les villes passent avant les lignes d’infos
     if (mode === 'DRIVE' && r.polyline) { try { target.innerHTML = carte(r) + (target.dataset.villes ? BK('bkLieu', 'ITINÉRAIRE', target.dataset.villes) : '') + info; } catch (_) { target.innerHTML = info; } estimerPeage(r, target); }
   };
   const PEAGE_MEMO = new Map();
@@ -285,7 +286,8 @@
     addBox(contenu, 'routesGoogleEstimate', match[1].trim(), match[2].trim(), undefined, '🟢 ' + e2(match[1].trim()) + ' → 🔴 ' + e2(match[2].trim()), [match[1].trim(), '', match[2].trim(), ''], (() => { const q = String((document.getElementById('popVol') || {}).dataset?.pts || '').split(',').map(Number); return q.length === 4 ? q : null; })());
     contenu.classList.add('soloGoogle');
   };
-  const refresh = () => { addMissionPanel(); addEstimatePanel(); };
+  let rafale = false;
+  const refresh = () => { if (rafale) return; rafale = true; setTimeout(() => { rafale = false; try { addMissionPanel(); addEstimatePanel(); } catch (_) { } }, 150); };
   new MutationObserver(refresh).observe(document.documentElement, { childList: true, subtree: true });
   refresh();
 })();
