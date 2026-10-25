@@ -23,7 +23,7 @@
     const p = m.platform;
     // Hiflow mission acceptée : seuls les montants EXACTS du devis comptent ; sans devis lu, aucun frais n'est inventé (« montant du devis non lu »).
     if (p === 'Hiflow' && m.kind === 'acceptee' && !(m.fees && m.fees.devis_numero)) return [];
-    return Object.entries(m.fees || {}).filter(([k]) => !/^(devis|facture)_/.test(k)).map(([k, v]) => [k, n(v)]).filter(([, v]) => v !== null)
+    return Object.entries(m.fees || {}).filter(([k]) => !/^(devis|facture)_/.test(k) && k !== 'transport_rembourse_confirme').map(([k, v]) => [k, n(v)]).filter(([, v]) => v !== null)
       .filter(([k]) => p === 'Hiflow' || !(TRANSPORT.test(k) || RE_INCLUS.test(k) || (p !== 'DriiveMe' && RE_PEAGE.test(k))));
   }
   function peageACharge(m) {
@@ -114,7 +114,7 @@
   function rentabiliteComplete(m, reglages, options = {}) {
     const base = rentabilite(m, reglages);
     if (!base.connu) return base;
-    const frais = Object.entries(m.fees || {}).filter(([k]) => !/^(devis|facture)_/.test(k)).map(([k, v]) => [k, n(v)]).filter(([, v]) => v != null);
+    const frais = Object.entries(m.fees || {}).filter(([k]) => !/^(devis|facture)_/.test(k) && k !== 'transport_rembourse_confirme').map(([k, v]) => [k, n(v)]).filter(([, v]) => v != null);
     const rembTransport = arr(frais.filter(([k]) => TRANSPORT.test(k)).reduce((s, [, v]) => s + v, 0));
     const approche = options.approcheLiaison || liaison(n(options.approcheKm), reglages), retour = liaison(n(options.retourKm), reglages);
     const coutTransport = arr((approche ? approche.cout : 0) + (retour ? retour.cout : 0));
