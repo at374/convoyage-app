@@ -51,11 +51,18 @@
       // Une recherche simultanée partage le réseau, mais chaque écran doit
       // recevoir les résultats via son propre callback.
       const actif = enCours.get(key);
-      if (typeof options.surResultat === 'function') actif.ecouteurs.add(options.surResultat);
+      if (typeof options.surResultat === 'function') {
+        // Rejouer les fournisseurs déjà terminés avant l'abonnement.
+        // Les nouveaux résultats sont diffusés à tous les abonnés.
+        for (const precedent of actif.diffuses) {
+          try { options.surResultat(precedent); } catch (_) {}
+        }
+        actif.ecouteurs.add(options.surResultat);
+      }
       return actif.promesse;
     }
     const timeoutMs = Math.max(250, Math.min(15000, Number(options.timeoutMs) || 3500));
-    const ecouteurs = new Set();
+    const ecouteurs = new Set(), diffuses = [];
     if (typeof options.surResultat === 'function') ecouteurs.add(options.surResultat);
     const action = (async () => {
       const resultats = await Promise.all(sources.map(async f => {
@@ -68,8 +75,10 @@
           const valides = Array.isArray(lignes) ? lignes.map(valider).filter(Boolean) : [];
           // Afficher immédiatement les résultats de chaque fournisseur rapide,
           // sans attendre les autres. Le résultat final reste consolidé.
+          const notification = { fournisseur: propre(f.nom), trajets: valides };
+          diffuses.push(notification);
           for (const ecouteur of ecouteurs) {
-            try { ecouteur({ fournisseur: propre(f.nom), trajets: valides }); } catch (_) {}
+            try { ecouteur(notification); } catch (_) {}
           }
           return { fournisseur: propre(f.nom), lignes: valides, erreur: null };
         } catch (e) { return { fournisseur: propre(f.nom), lignes: [], erreur: e && e.message || 'indisponible' }; }
@@ -85,7 +94,7 @@
       }
       return valeur;
     })();
-    enCours.set(key, { promesse: action, ecouteurs });
+    enCours.set(key, { promesse: action, ecouteurs, diffuses });
     try { return await action; } finally { enCours.delete(key); }
   }
   const api = { rechercher, valider, viderCache: () => cache.clear() };
