@@ -39,7 +39,7 @@
     const cotisations = Math.round(fee * taux) / 100;
     const km = n(m.distance_km), coutKm = n(r.cout_km) || 0;
     const depenses = coutKm > 0 && km != null ? Math.round(km * coutKm * 100) / 100 : 0;
-    const remboursements = Object.entries(m.fees || {}).filter(([k]) => !/^(devis|facture)_/.test(k)).map(([, v]) => n(v)).filter(x => x != null).reduce((s, x) => s + x, 0);   // V95 : devis_* = repères du devis, pas des frais
+    const remboursements = Object.entries(m.fees || {}).filter(([k]) => !/^(devis|facture)_/.test(k) && k !== 'transport_rembourse_confirme').map(([, v]) => n(v)).filter(x => x != null).reduce((s, x) => s + x, 0);   // V95 : devis_* = repères du devis, pas des frais
     const peage = peageACharge(m);
     const net = Math.round((fee - cotisations - depenses - peage.montant) * 100) / 100;
     const h = dureeHeures(m);
