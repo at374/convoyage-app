@@ -942,6 +942,9 @@
       const dateCarteValide = d => !d || (/^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d)) && new Date(d).toISOString().slice(0, 10) === d);
       if ($('rCartesFin').value.split(/\r?\n/).some(x => x.trim() && !x.includes('|')) ||
           !Object.values(v.cartesExpiration).every(d => d && dateCarteValide(d))) return toast('Validité : NOM DE CARTE | AAAA-MM-JJ');
+      if (Object.keys(v.cartesExpiration).some(nom => !v.cartesReduction.includes(nom))) {
+        return toast('La date de validité doit correspondre exactement à une carte enregistrée');
+      }
       if (!(v.taux_cotisations >= 0 && v.taux_cotisations <= 60) || !(v.cout_km >= 0 && v.cout_km <= 5) || !(v.prix_minimum >= 0)) return toast('Valeurs hors limites');
       if (!(v.cout_transport_km >= 0 && v.cout_transport_km <= 2) || !(v.vitesse_liaison >= 10 && v.vitesse_liaison <= 300) || !(v.marge_minutes >= 0 && v.marge_minutes <= 600) || !(v.rayon_retour_km >= 1 && v.rayon_retour_km <= 500) || !(v.attente_max_h >= 1 && v.attente_max_h <= 96)) return toast('Valeurs de liaison hors limites');
       const texteDom = $('rDom').value.trim();
@@ -1074,7 +1077,6 @@
                 const expiration = (etat.reglages.cartesExpiration || {})[c];
                 return !expiration || expiration >= ((document.querySelector('#feuilleContenu [data-transport-date="' + sens + '"]') || {}).value || dateTransportMission(m, retour));
               }) : [],
-          cartesExpiration: etat.reglages && etat.reglages.cartesExpiration || {},
           cartesExpiration: etat.reglages && etat.reglages.cartesExpiration || {},
           // Date-limite exacte pour les API de recherche de transport.
           // L'aller vise une arrivée avant cette heure ; le retour un départ après.
