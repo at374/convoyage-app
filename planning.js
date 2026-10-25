@@ -113,8 +113,8 @@
       if (retour > finFenetre) return null;
       const nuits = jourParis(retour) - jourParis(s.depart);
       if (nuits > nuitsMax) return null;
-      // Nuit à domicile : pas de budget hôtel. En mission à minuit, conserver
-      // l'estimation existante (une pause/hébergement peut rester nécessaire).
+      // Facturer l'hôtel uniquement pour une nuit sans mission en cours,
+      // et lorsque le soir ou le lendemain matin est éloigné du domicile.
       let nuitsHotel = 0;
       let instantNuit = s.depart;
       const seuilDomicile = Math.max(0, n(o.seuil_dom) ?? 150);
@@ -138,12 +138,14 @@
         }
         // Une mission en cours à minuit n'est pas une nuit d'hôtel.
         if (!encours && !aDomicile) nuitsHotel++;
+        // Conserver le motif de chaque nuit pour un affichage non ambigu.
+        (s._nuitsDetails = s._nuitsDetails || [])[i] = { enMission: encours, domicile: !encours && aDomicile, hotel: !encours && !aDomicile };
         instantNuit = minuit + MIN;
       }
       const coutHotel = arr(nuitsHotel * hotel), coutRetour = lien.cout;
       const net = arr(s.net - coutRetour - coutHotel), heures = arr(s.heures + lien.heures);
       const brut = arr(s.etapes.reduce((x, e) => x + (n(e.mission.fee) || 0), 0));
-      return { etapes: s.etapes, depart: s.depart, retour: { km, heures: lien.heures, cout: coutRetour, arrivee: retour }, nuits, coutHotel,
+      return { etapes: s.etapes, depart: s.depart, nuitsDetails: s._nuitsDetails || [], retour: { km, heures: lien.heures, cout: coutRetour, arrivee: retour }, nuits, coutHotel,
         prestations: brut, netMissions: arr(s.net), net, heures, parHeure: heures > 0 ? arr(net / heures) : null, liaisonKm: s.liaisonKm + km, coutLiaisons: arr(s.coutLiaisons + coutRetour),
         estimations: s.etapes.some(e => e.finEstimee) ? ['heure de fin estimée pour au moins une mission'] : [] };
     };
