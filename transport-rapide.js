@@ -2,7 +2,9 @@
 // Une source doit fournir des trajets datés et vérifiables ; aucun tarif inventé.
 (function (root) {
   'use strict';
-  const cache = new Map(), enCours = new Map();
+  const cache = new Map(), enCours = new Map(), idsFournisseurs = new WeakMap();
+  let prochainId = 1;
+  const idFournisseur = f => { if (!idsFournisseurs.has(f)) idsFournisseurs.set(f, prochainId++); return idsFournisseurs.get(f); };
   const DUREE_CACHE = 3 * 60 * 1000, MAX_CACHE = 120;
   const propre = v => String(v == null ? '' : v).trim();
   const dateValide = v => Number.isFinite(Date.parse(v));
@@ -17,12 +19,12 @@
   }
   async function rechercher(q, fournisseurs, options = {}) {
     if (!q || !propre(q.depart) || !propre(q.arrivee) || !dateValide(q.date)) throw new Error('Trajet ou date invalide');
-    const key = cle(q), maintenant = Date.now();
+    const sources = Array.isArray(fournisseurs) ? fournisseurs.filter(f => f && typeof f.rechercher === 'function') : [];
+    const key = JSON.stringify([cle(q), sources.map(idFournisseur)]), maintenant = Date.now();
     const precedent = cache.get(key);
     if (!options.rafraichir && precedent && precedent.expire > maintenant) return { ...precedent.valeur, cache: true };
     if (enCours.has(key)) return enCours.get(key);
     const timeoutMs = Math.max(250, Math.min(15000, Number(options.timeoutMs) || 3500));
-    const sources = Array.isArray(fournisseurs) ? fournisseurs.filter(f => f && typeof f.rechercher === 'function') : [];
     const action = (async () => {
       const resultats = await Promise.all(sources.map(async f => {
         let minuterie;
@@ -39,8 +41,10 @@
         .sort((a, b) => Date.parse(a.departAt) - Date.parse(b.departAt));
       const valeur = { trajets, sources: resultats.map(({ fournisseur, erreur }) => ({ fournisseur, erreur })), cache: false,
         avertissement: 'Horaires et prix non confirmés tant qu’une source fiable ne les a pas vérifiés.' };
-      if (cache.size >= MAX_CACHE) cache.clear();
-      cache.set(key, { valeur, expire: Date.now() + DUREE_CACHE });
+      if (sources.length && resultats.every(r => !r.erreur)) {
+        if (cache.size >= MAX_CACHE) cache.clear();
+        cache.set(key, { valeur, expire: Date.now() + DUREE_CACHE });
+      }
       return valeur;
     })();
     enCours.set(key, action);
