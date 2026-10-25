@@ -1061,7 +1061,9 @@
         const afficherLignes = () => { if (!cible.isConnected) return; cible.textContent = lignes.length ? lignes.map(t =>
           new Date(t.departAt).toLocaleString('fr-FR', {timeZone:'Europe/Paris'}) + ' → ' +
           new Date(t.arriveeAt).toLocaleString('fr-FR', {timeZone:'Europe/Paris'}) + ' · ' +
-          (t.prixEUR == null ? 'prix indisponible' : t.prixEUR + ' €') +
+          (t.prixEUR == null ? 'prix indisponible' : t.prixEUR.toLocaleString('fr-FR', {style:'currency',currency:'EUR'})) +
+          ' · ' + Math.round((Date.parse(t.arriveeAt) - Date.parse(t.departAt)) / 60000) + ' min' +
+          (t.fournisseur ? ' · ' + t.fournisseur : '') +
           (t.confirme ? ' · confirmé par la source' : ' · à vérifier')).join(' | ') : 'Recherche en cours…'; };
         cible.textContent = 'Recherche en cours…'; btn.disabled = true;
         try {
