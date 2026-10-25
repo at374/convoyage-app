@@ -743,7 +743,7 @@
       <div id="pRes"></div><div id="pInter"></div>`;
     const lire = () => Object.assign(p, { date: $('pDate').value, heure: $('pHeure').value || '06:00', occurrence: Number($('pOccurrence').value), jours: Number($('pJours').value), nuits: Number($('pNuits').value), hotel: Math.max(0, Math.min(500, Number($('pHotel').value) || 0)), hotelOn: $('pHotelOn').checked, seuil: Math.max(0, Math.min(2000, Number($('pSeuil').value) || 150)), acc: $('pAcc').checked, tri: $('pTri').value, longue: $('pLongue').checked });
     for (const id of ['pDate', 'pHeure', 'pOccurrence', 'pJours', 'pNuits', 'pHotel', 'pSeuil', 'pAcc', 'pTri']) $(id).onchange = () => { lire(); memoriser(); };
-    const actualiserOccurrence = () => { const p1 = PL.parisVersMs($('pDate').value, $('pHeure').value, 1), p2 = PL.parisVersMs($('pDate').value, $('pHeure').value, 2); $('pOccurrenceBox').hidden = !(p1 != null && p2 != null); };
+    const actualiserOccurrence = () => { const p1 = PL.parisVersMs($('pDate').value, $('pHeure').value, 1), p2 = PL.parisVersMs($('pDate').value, $('pHeure').value, 2); const repetee = p1 != null && p2 != null; $('pOccurrenceBox').hidden = !repetee; if (!repetee && $('pOccurrence').value !== '1') { $('pOccurrence').value = '1'; p.occurrence = 1; memoriser(); } };
     $('pDate').addEventListener('change', actualiserOccurrence); $('pHeure').addEventListener('change', actualiserOccurrence); actualiserOccurrence();
     $('pLongue').onchange = () => { lire(); if (!p.longue && p.jours > 7) p.jours = 7; memoriser(); afficher(); };
     $('pHotelOn').onchange = () => { lire(); memoriser(); $('pHotel').disabled = !p.hotelOn; };   // frais d'hôtel en option (coche)
