@@ -113,6 +113,9 @@
       if (retour > finFenetre) return null;
       const nuits = jourParis(retour) - jourParis(s.depart);
       if (nuits > nuitsMax) return null;
+      // Une nuit traversée uniquement pendant le trajet final vers le
+      // domicile ne nécessite pas d'hôtel. Les frais de retour sont déjà
+      // comptabilisés dans la liaison finale.
       // Facturer l'hôtel uniquement pour une nuit sans mission en cours,
       // et lorsque le soir ou le lendemain matin est éloigné du domicile.
       let nuitsHotel = 0, surcoutRetoursDomicile = 0, heuresDetoursDomicile = 0;
@@ -120,7 +123,8 @@
       const seuilDomicile = Math.max(0, n(o.seuil_dom) ?? 150);
       for (let i = 0; i < nuits; i++) {
         const minuit = minuitApres(instantNuit);
-        const encours = s.etapes.some(e => e.debut < minuit && e.fin > minuit);
+        const retourEnCours = s.t <= minuit && minuit < retour;
+        const encours = retourEnCours || s.etapes.some(e => e.debut < minuit && e.fin > minuit);
         const suivantes = s.etapes.find(e => e.debut >= minuit);
         const terminees = s.etapes.filter(e => e.fin <= minuit);
         // Pour considérer une nuit au domicile, l'arrivée du soir ET le
@@ -159,7 +163,7 @@
         }
         if (!encours && !aDomicile) nuitsHotel++;
         // Conserver le motif de chaque nuit pour un affichage non ambigu.
-        (s._nuitsDetails = s._nuitsDetails || [])[i] = { enMission: encours, domicile: !encours && aDomicile, hotel: !encours && !aDomicile };
+        (s._nuitsDetails = s._nuitsDetails || [])[i] = { enMission: encours && !retourEnCours, retourEnCours, domicile: !encours && aDomicile, hotel: !encours && !aDomicile };
         instantNuit = minuit + MIN;
       }
       const coutHotel = arr(nuitsHotel * hotel), coutRetour = lien.cout;
