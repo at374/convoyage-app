@@ -1426,7 +1426,20 @@
         choix.onchange=()=>{suivante=possibles[Number(choix.value)]||null;rendre();};label.append(choix);boite.append(label);
       }
       rendre();
-      const fermer=document.createElement('button');fermer.type='button';fermer.textContent='Fermer';fermer.onclick=()=>fond.remove();boite.append(fermer);fond.onclick=e=>{if(e.target===fond)fond.remove();};fond.append(boite);document.body.append(fond);
+      const precedentFocus=document.activeElement;
+      const fermerDialog=()=>{fond.remove();document.removeEventListener('keydown',clavierDialog);if(precedentFocus&&typeof precedentFocus.focus==='function'&&precedentFocus.isConnected)precedentFocus.focus();};
+      const clavierDialog=e=>{
+        if(e.key==='Escape'){e.preventDefault();fermerDialog();return;}
+        if(e.key!=='Tab')return;
+        const boutons=[...fond.querySelectorAll('button:not([disabled]),select:not([disabled]),a[href],input:not([disabled])')].filter(el=>el.getClientRects().length);
+        if(!boutons.length)return;
+        const premier=boutons[0],dernier=boutons[boutons.length-1];
+        if(e.shiftKey&&document.activeElement===premier){e.preventDefault();dernier.focus();}
+        else if(!e.shiftKey&&document.activeElement===dernier){e.preventDefault();premier.focus();}
+      };
+      const fermer=document.createElement('button');fermer.type='button';fermer.textContent='Fermer';fermer.onclick=fermerDialog;boite.append(fermer);
+      fond.onclick=e=>{if(e.target===fond)fermerDialog();};
+      fond.append(boite);document.body.append(fond);document.addEventListener('keydown',clavierDialog);fermer.focus();
     }; }
     { const bv = $('btnVol'); if (bv) bv.onclick = () => popupVol(m); }
     { const br = $('btnRetirer'); if (br) br.onclick = () => { if (!window.confirm('Retirer cette mission de ton Agenda sur ce téléphone ? (rien n’est supprimé chez Hiflow ni sur le serveur ; tu peux tout remettre dans Réglages)')) return; const t = lireLocal('cp_masquees', []) || []; const k = m.platform + '|' + m.external_id; if (!t.includes(k)) t.push(k); ecrireLocal('cp_masquees', t); etat.missions = etat.missions.filter(x => !(x.kind === 'acceptee' && x.platform + '|' + x.external_id === k)); ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures }); $('feuille').hidden = true; afficher(); toast('Retirée de l’Agenda'); }; }
