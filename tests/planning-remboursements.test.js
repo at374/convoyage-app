@@ -1,0 +1,22 @@
+// node tests/planning-remboursements.test.js — real calculator, mocked geography.
+'use strict';
+const assert=require('node:assert/strict');
+global.CPGeo={coordonnees:(m,w)=>m[w],routeKm:(a,b)=>Math.abs(a.lat-b.lat)*10};
+global.CPRetours={domicile:()=>({lat:0,nom:'domicile'}),debut:m=>Date.parse(m.pickup_start),fin:m=>({t:Date.parse(m.delivery_end),estimee:false}),cle:m=>m.id};
+require('../calc.js');
+const {planifier}=require('../planning.js');
+const mk=(platform,fees={})=>({kind:'disponible',id:'x',platform,fee:100,fees,pickup_start:'2026-11-02T09:00:00Z',delivery_end:'2026-11-02T10:00:00Z',origin:{lat:10},destination:{lat:20}});
+const opts={debut:Date.parse('2026-11-02T06:00:00Z'),jours:2,nuits_max:3,heureMin:null};
+const plan=(platform,fees)=>planifier([mk(platform,fees)],{},opts).plans[0];
+const base=plan('Otoqi',{}),partial=plan('Otoqi',{train:5}),capped=plan('Otoqi',{train:20}),hiflow=plan('Hiflow',{});
+assert.equal(base.prestations,100);
+assert.equal(base.coutLiaisons,36);
+assert.equal(base.retour.cout,24);
+assert.equal(base.net,42.8);
+assert.equal(partial.net,47.8);
+assert.equal(partial.etapes[0].rentabilite.transportNonCouvert,7);
+assert.equal(capped.net,54.8);
+assert.equal(capped.etapes[0].rentabilite.transportNonCouvert,0);
+assert.equal(hiflow.etapes[0].rentabilite.transportNonCouvert,0);
+assert.equal(hiflow.net,54.8);
+console.log('Transport reimbursement and return: 10 assertions passed');
