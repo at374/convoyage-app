@@ -169,7 +169,11 @@
     const utc = Date.UTC(+m[1], +m[2] - 1, +m[3], +h[1], +h[2]);
     const FH = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     const dec = t => { const p = {}; for (const x of FH.formatToParts(new Date(t))) p[x.type] = x.value; return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute) - t; };
-    let t = utc - dec(utc); t = utc - dec(t); return t;
+    let t = utc - dec(utc); t = utc - dec(t);
+    // Une heure locale inexistante lors du passage à l'heure d'été ne doit pas être décalée silencieusement.
+    const parts = {}; for (const x of FH.formatToParts(new Date(t))) parts[x.type] = x.value;
+    if (+parts.year !== +m[1] || +parts.month !== +m[2] || +parts.day !== +m[3] || +parts.hour !== +h[1] || +parts.minute !== +h[2]) return null;
+    return t;
   }
   const api = { planifier, parJour, jourParis, minutesParis, parisVersMs, DEFAUTS };
   root.CPPlanning = api;
