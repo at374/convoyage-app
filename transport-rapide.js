@@ -10,7 +10,7 @@
   const dateValide = v => Number.isFinite(Date.parse(v));
   const jourValide = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) &&
     Number.isFinite(Date.parse(v)) && new Date(v).toISOString().slice(0, 10) === v;
-  const cle = q => JSON.stringify([propre(q.depart).toLowerCase(), propre(q.arrivee).toLowerCase(), propre(q.date), propre(q.heure), propre(q.reduction), propre(q.contrainte), propre(q.departAdresse), propre(q.arriveeAdresse), propre(q.margeMinutes), propre(q.limiteMissionAt)]);
+  const cle = q => JSON.stringify([propre(q.depart).toLowerCase(), propre(q.arrivee).toLowerCase(), propre(q.date), propre(q.heure), propre(q.reduction), JSON.stringify(q.cartesReduction || []), propre(q.contrainte), propre(q.departAdresse), propre(q.arriveeAdresse), propre(q.margeMinutes), propre(q.limiteMissionAt)]);
   function valider(trajet) {
     if (!trajet || !dateValide(trajet.departAt) || !dateValide(trajet.arriveeAt) ||
       Date.parse(trajet.arriveeAt) <= Date.parse(trajet.departAt)) return null;
