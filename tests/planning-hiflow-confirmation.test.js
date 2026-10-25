@@ -1,0 +1,21 @@
+// node tests/planning-hiflow-confirmation.test.js — explicit reimbursement only.
+'use strict';
+const assert=require('node:assert/strict');
+global.CPGeo={coordonnees:(m,w)=>m[w],routeKm:(a,b)=>Math.abs(a.lat-b.lat)*10};
+global.CPRetours={domicile:()=>({lat:0,nom:'domicile'}),debut:m=>Date.parse(m.pickup_start),fin:m=>({t:Date.parse(m.delivery_end),estimee:false}),cle:m=>m.id};
+require('../calc.js');
+const {planifier}=require('../planning.js');
+const mk=(platform,confirmed,fees={})=>({kind:'disponible',id:'x',platform,fee:100,fees,transport_rembourse_confirme:confirmed,pickup_start:'2026-11-02T09:00:00Z',delivery_end:'2026-11-02T10:00:00Z',origin:{lat:10},destination:{lat:20}});
+const opts={debut:Date.parse('2026-11-02T06:00:00Z'),jours:2,nuits_max:3,heureMin:null};
+const plan=m=>planifier([m],{},opts).plans[0];
+const unknown=plan(mk('Hiflow',false)),confirmed=plan(mk('Hiflow',true)),feeFlag=plan(mk('Hiflow',false,{transport_rembourse_confirme:true})),other=plan(mk('Otoqi',true));
+assert.equal(unknown.net,42.8);
+assert.equal(unknown.etapes[0].rentabilite.transportRembourse,false);
+assert.equal(unknown.etapes[0].rentabilite.transportNonCouvert,12);
+assert.equal(confirmed.net,54.8);
+assert.equal(confirmed.etapes[0].rentabilite.transportRembourse,true);
+assert.equal(confirmed.etapes[0].rentabilite.transportNonCouvert,0);
+assert.equal(feeFlag.net,54.8);
+assert.equal(other.net,42.8);
+assert.equal(other.etapes[0].rentabilite.transportRembourse,false);
+console.log('Hiflow explicit confirmation: 9 assertions passed');
