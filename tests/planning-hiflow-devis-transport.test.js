@@ -2,7 +2,6 @@
 'use strict';
 const assert=require('node:assert/strict');
 const calc=require('../calc.js');
-const planning=require('../planning.js');
 // Injecter les dépendances avant le chargement de planning.js dans un contexte isolé
 // si le moteur utilise les dépendances globales (CPGeo/CPRetours).
 const root={CPGeo:{coordonnees:(m,w)=>m[w],routeKm:(x,y)=>Math.abs(x.lat-y.lat)*10},
