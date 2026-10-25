@@ -30,7 +30,17 @@
     const sources = Array.isArray(fournisseurs) ? fournisseurs.filter(f => f && typeof f.rechercher === 'function') : [];
     const key = JSON.stringify([cle(q), sources.map(idFournisseur)]), maintenant = Date.now();
     const precedent = cache.get(key);
-    if (!options.rafraichir && precedent && precedent.expire > maintenant) return { ...precedent.valeur, cache: true };
+    if (!options.rafraichir && precedent && precedent.expire > maintenant) {
+      const valeur = { ...precedent.valeur, cache: true };
+      if (typeof options.surResultat === 'function') {
+        // Même en cas de réponse instantanée du cache, alimenter l'interface.
+        for (const fournisseur of sources) {
+          const nom = propre(fournisseur.nom);
+          try { options.surResultat({ fournisseur: nom, trajets: valeur.trajets.filter(t => t.fournisseur === nom), cache: true }); } catch (_) {}
+        }
+      }
+      return valeur;
+    }
     if (enCours.has(key)) return enCours.get(key);
     const timeoutMs = Math.max(250, Math.min(15000, Number(options.timeoutMs) || 3500));
     const action = (async () => {
