@@ -1,0 +1,26 @@
+// node tests/planning-calc-integration.test.js — real CPCalc + CPPlanning, mocked geography only.
+'use strict';
+const assert=require('node:assert/strict');
+global.CPGeo={coordonnees:(m,w)=>m[w],routeKm:(a,b)=>Math.abs(a.lat-b.lat)*10};
+global.CPRetours={domicile:()=>({lat:0,nom:'domicile'}),debut:m=>Date.parse(m.pickup_start),fin:m=>({t:Date.parse(m.delivery_end),estimee:false}),cle:m=>m.id};
+const calc=require('../calc.js');
+const {planifier}=require('../planning.js');
+const mk=(kind,id,start,end,from,to,platform='Otoqi')=>({kind,id,platform,fee:100,pickup_start:start,delivery_end:end,origin:{lat:from},destination:{lat:to}});
+const a=mk('acceptee','a','2026-11-02T09:00:00Z','2026-11-02T10:00:00Z',0,10);
+const b=mk('acceptee','b','2026-11-02T17:00:00Z','2026-11-02T18:00:00Z',20,0);
+const opts={debut:Date.parse('2026-11-02T06:00:00Z'),jours:2,nuits_max:3,heureMin:null,inclureAcceptees:true};
+const plans=planifier([a,b],{marge_minutes:60},opts).plans;
+assert.equal(plans.length,1);
+const p=plans[0];
+assert.equal(p.prestations,200);
+assert.equal(p.coutLiaisons,12);
+assert.equal(p.net,145.6);
+assert.equal(p.netMissions,145.6);
+assert.equal(p.etapes[1].rentabilite.transportNonCouvert,12);
+assert.equal(p.etapes[1].rentabilite.cotisations,21.2);
+const hiflow={...b,platform:'Hiflow'};
+const h=planifier([a,hiflow],{marge_minutes:60},opts).plans[0];
+assert.ok(h);
+assert.equal(h.etapes[1].rentabilite.transportNonCouvert,0);
+assert.equal(h.net,157.6);
+console.log('Real calc/planner integration: 9 assertions passed');
