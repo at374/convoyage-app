@@ -1324,12 +1324,19 @@
       const ville = etat.reglages && etat.reglages.domicile_ville || '';
       const jour = s => { const t=Date.parse(s||''); return Number.isFinite(t) ? new Date(t).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}) : ''; };
       const heure = s => { const t=Date.parse(s||''); return Number.isFinite(t) ? new Date(t).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Paris'}) : ''; };
-      const ouvrir = (a,b,borne,type) => { if(!a||!b){ toast('Adresse de transport manquante');return; } const dateMs=Date.parse(borne||'');const marge=Number(margeTransportMinutes())||15;const cible=Number.isFinite(dateMs)?dateMs+(type==='arriver avant'?-marge*60000:0):null;const params=new URLSearchParams({api:'1',origin:a,destination:b,travelmode:'transit'});window.open('https://www.google.com/maps/dir/?'+params.toString(),'_blank','noopener,noreferrer'); };
+      const ouvrir = (a,b,borne,type) => {
+        if(!a||!b){toast('Adresse de transport manquante');return;}
+        const params=new URLSearchParams({api:'1',origin:a,destination:b,travelmode:'transit'});
+        window.open('https://www.google.com/maps/dir/?'+params.toString(),'_blank','noopener,noreferrer');
+      };
       const ancien = document.getElementById('cpTransportMissionDialog');if(ancien)ancien.remove();
       const fond=document.createElement('div');fond.id='cpTransportMissionDialog';fond.setAttribute('role','dialog');fond.setAttribute('aria-modal','true');fond.style.cssText='position:fixed;inset:0;background:#0009;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px';
       const boite=document.createElement('div');boite.style.cssText='background:var(--fond,#fff);color:var(--texte,#111);max-width:560px;width:100%;max-height:90vh;overflow:auto;padding:18px;border-radius:12px';
       const titre=document.createElement('h3');titre.textContent='🚆 Transports de tes missions';boite.append(titre);
       const info=document.createElement('p');info.textContent='Les horaires et tarifs sont à confirmer chez les transporteurs. Les liens ouvrent une recherche externe : aucune disponibilité n’est garantie.';boite.append(info);
+      const dateAlerte=document.createElement('p');
+      dateAlerte.textContent='Recherche pour les missions enregistrées : vérifie les dates, les heures et les arrêts dans le planificateur de transports.';
+      boite.append(dateAlerte);
       const avert=document.createElement('p');avert.textContent='Attention : Google Maps ne reçoit pas de garantie sur les heures via ces liens. Vérifie manuellement le jour et l’heure dans le planificateur, ainsi que le temps de trajet réel entre les deux missions.';boite.append(avert);
       const trajets=document.createElement('div');boite.append(trajets);
       const ajouter=(nom,a,b,borne,type)=>{
