@@ -79,7 +79,7 @@
           const valides = Array.isArray(lignes) ? lignes.map(valider).filter(Boolean) : [];
           // Afficher immédiatement les résultats de chaque fournisseur rapide,
           // sans attendre les autres. Le résultat final reste consolidé.
-          const notification = { fournisseur: propre(f.nom), trajets: valides };
+          const notification = { fournisseur: propre(f.nom), trajets: valides.map(t=>({...t,fournisseur:propre(f.nom)})) };
           diffuses.push(notification);
           for (const ecouteur of ecouteurs) {
             try { ecouteur(notification); } catch (_) {}
