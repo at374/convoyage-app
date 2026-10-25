@@ -705,6 +705,36 @@
         (nb ? `<div class="retoursBadge">🔁 ${nb} retour${nb > 1 ? 's' : ''} possible${nb > 1 ? 's' : ''} après cette mission</div>` : '');
       html += carteMission(m, i, extra).replace('class="mission', `class="mission etat-${x.etat}${''}`);
     });
+    // Carnet de liaison séparé des étiquettes et fiches de missions.
+    // Les horaires de transport non validés ne sont jamais présentés comme confirmés.
+    const dateParis = t => new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(t));
+    const jourCible = dateParis(Date.now() + 86400000);
+    const missionsDemain = items.filter(x => {
+      const t = debutAff(x);
+      return t != null && Number.isFinite(Number(t)) && dateParis(Number(t)) === jourCible;
+    }).sort((a,b) => debutAff(a) - debutAff(b));
+    if (missionsDemain.length) {
+      const domicile = [etat.reglages && etat.reglages.domicile_adresse, etat.reglages && etat.reglages.domicile_ville].filter(Boolean).join(', ') || 'Domicile à préciser dans les réglages';
+      const horaires = x => { const d = new Date(x); return Number.isFinite(d.getTime()) ? d.toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}) : 'à confirmer'; };
+      const adr = (m, cote) => {
+        const mi = m.mail_info || {};
+        const val = cote === 'origin' ? (m.origin_address || (mi.depart && mi.depart.adresse) || m.from_city) : (m.destination_address || (mi.arrivee && mi.arrivee.adresse) || m.to_city);
+        return String(val || 'Adresse à confirmer');
+      };
+      const debutMission = x => debutAff(x);
+      const finMission = x => x.fin && Number.isFinite(Number(x.fin.t)) ? Number(x.fin.t) : (x.fin && Number.isFinite(Number(x.fin)) ? Number(x.fin) : null);
+      const segment = (titre, a, b, note) => '<div class="bk bkC" style="margin:8px 0;padding:12px"><strong>'+esc(titre)+'</strong><div>'+esc(a)+' → '+esc(b)+'</div><small class="doux">'+esc(note)+'</small></div>';
+      let carnet = segment('🏠 Avant la première mission',domicile,adr(missionsDemain[0].mission,'origin'),'Arriver avant '+horaires(debutMission(missionsDemain[0]))+' ; trajet, horaires et coût à vérifier.');
+      for (let i=0;i<missionsDemain.length;i++) {
+        const x = missionsDemain[i], suivante = missionsDemain[i+1];
+        if (suivante) {
+          carnet += segment('🚌 Entre les missions '+(i+1)+' et '+(i+2),adr(x.mission,'destination'),adr(suivante.mission,'origin'),'Livraison prévue '+(finMission(x)?horaires(finMission(x)):'heure à confirmer')+' ; prise en charge suivante '+horaires(debutMission(suivante))+' ; lignes, correspondances, marche et prix NON CONFIRMÉS.');
+        } else {
+          carnet += segment('🏠 Retour après la dernière mission',adr(x.mission,'destination'),domicile,'Après livraison '+(finMission(x)?horaires(finMission(x)):'heure à confirmer')+' ; transports et horaires NON CONFIRMÉS.');
+        }
+      }
+      html += '<section class="carte" aria-label="Détails des transports de demain" style="margin-top:16px"><h2>🚌 Transports de demain — hors étiquettes des missions</h2><p class="doux">Carnet séparé : missions récupérées automatiquement, transports à vérifier. Aucune réservation effectuée.</p>'+carnet+'</section>';
+    }
     if (caches || etat.agendaTout) html += `<button id="agTout" class="second" style="width:100%;margin-top:10px">${etat.agendaTout ? 'Masquer les missions passées' : 'Afficher les ' + caches + ' mission(s) passée(s) de plus de 7 jours'}</button>`;
     if (inter && inter.intervalles.length) {
       html += '<div class="carte"><h2>🔎 Missions entre deux engagements</h2><p class="doux">Suggestions estimées. Transports et horaires à confirmer avant acceptation.</p>' +
