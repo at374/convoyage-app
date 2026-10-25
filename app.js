@@ -1321,7 +1321,6 @@
       const debutPremiere = Date.parse(hfDates(m) ? hfPk(m) : m.pickup_start || '');
       const dateLocale = ms => Number.isFinite(ms) ? new Date(ms).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}) : '';
       const dateMission = dateLocale(debutPremiere);
-      const dateAujourdHui=dateLocale(Date.now());
       const estMissionPassee=Number.isFinite(debutPremiere)&&debutPremiere<Date.now()-3600000;
       const missionAutorisee = !autorisees || autorisees.includes(m.platform);
       const finPremiere = Date.parse(hfDates(m) ? hfLiv(m) : m.delivery_end || '');
@@ -1335,7 +1334,12 @@
         const params=new URLSearchParams({api:'1',origin:a,destination:b,travelmode:'transit'});
         window.open('https://www.google.com/maps/dir/?'+params.toString(),'_blank','noopener,noreferrer');
       };
-      const ancien = document.getElementById('cpTransportMissionDialog');if(ancien)ancien.remove();
+      const ancien = document.getElementById('cpTransportMissionDialog');
+      if(ancien){
+        // La fermeture précédente doit retirer aussi son écouteur clavier.
+        if(typeof ancien.cpFermer==='function')ancien.cpFermer();
+        else ancien.remove();
+      }
       const fond=document.createElement('div');fond.id='cpTransportMissionDialog';fond.setAttribute('role','dialog');fond.setAttribute('aria-modal','true');fond.style.cssText='position:fixed;inset:0;background:#0009;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px';
       const boite=document.createElement('div');boite.style.cssText='background:var(--fond,#fff);color:var(--texte,#111);max-width:560px;width:100%;max-height:90vh;overflow:auto;padding:18px;border-radius:12px';
       const titre=document.createElement('h3');titre.textContent='🚆 Transports de tes missions';boite.append(titre);
@@ -1450,6 +1454,7 @@
       rendre();
       const precedentFocus=document.activeElement;
       const fermerDialog=()=>{fond.remove();document.removeEventListener('keydown',clavierDialog);if(precedentFocus&&typeof precedentFocus.focus==='function'&&precedentFocus.isConnected)precedentFocus.focus();};
+      fond.cpFermer=fermerDialog;
       const clavierDialog=e=>{
         if(e.key==='Escape'){e.preventDefault();fermerDialog();return;}
         if(e.key!=='Tab')return;
