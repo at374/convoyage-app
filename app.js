@@ -1058,6 +1058,13 @@
         if (!cible || !window.CPTransportRapide) return;
         const fournisseurs = window.CPFournisseursTransports || [];
         if (!fournisseurs.length) { cible.textContent = 'Aucune source d’horaires en direct connectée. Utilise les liens des transporteurs et vérifie les prix et horaires.'; return; }
+        const trajetJourChoisi = t => {
+          const dateDepart = new Date(t.departAt);
+          if (!Number.isFinite(dateDepart.getTime())) return false;
+          // La date du formulaire correspond au jour de départ local en France.
+          return dateDepart.toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' }) === q.date;
+        };
+        const trajetRetenu = t => trajetJourChoisi(t) && trajetCompatibleMission(t, m, retour);
         const lignes = [];
         const afficherLignes = () => {
           if (!cible.isConnected) return;
@@ -1090,11 +1097,11 @@
         cible.textContent = 'Recherche en cours…'; btn.disabled = true;
         try {
           const res = await window.CPTransportRapide.rechercher(q, fournisseurs, {
-            surResultat: r => { lignes.push(...r.trajets.filter(t => trajetCompatibleMission(t, m, retour))); afficherLignes(); }
+            surResultat: r => { lignes.push(...r.trajets.filter(trajetRetenu)); afficherLignes(); }
           });
           // Le résultat final est la référence : il évite les doublons si un
           // fournisseur a déjà été affiché via les notifications progressives.
-          lignes.splice(0, lignes.length, ...res.trajets.filter(t => trajetCompatibleMission(t, m, retour)));
+          lignes.splice(0, lignes.length, ...res.trajets.filter(trajetRetenu));
           afficherLignes();
           if (!lignes.length && cible.isConnected) {
             const pannes = res.sources.filter(x => x.erreur);
