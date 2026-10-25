@@ -54,8 +54,15 @@
 
     const repos = new Set((o.joursReposHebdo || []).map(x => String(x).toLowerCase()));
     const joursBloques = new Set((o.joursSansTravail || []).filter(x => typeof x === 'string'));
+    const indisponible = (a,b) => {
+      if (!joursBloques.size && !repos.size) return false;
+      const bloquee = t => joursBloques.has(FMT.format(new Date(t))) || jourRepos(t);
+      if (bloquee(a) || bloquee(b)) return true;
+      for (let t=a+H;t<b;t+=H) if (bloquee(t)) return true;
+      return false;
+    };
     const jourRepos = t => repos.has(new Date(t).toLocaleDateString('en-US', {timeZone:'Europe/Paris',weekday:'short'}).toLowerCase());
-    const surRepos = (a,b) => { for (let t=a;t<=b;t+=H) if (jourRepos(t)) return true; return jourRepos(b); };
+
     const actives = Array.isArray(o.plateformesActives) ? new Set(o.plateformesActives) : null;
     // Missions utilisables (dates, lieux, zone, période).
     const pool = [];
@@ -64,13 +71,7 @@
       if (acceptee ? (!o.inclureAcceptees || m.status === 'annulee' || m.status === 'terminee') : (m.kind !== 'disponible' || (m.status && m.status !== 'disponible'))) continue;
       const d = R.debut(m), f = R.fin(m);
       if (!acceptee && actives && !actives.has(m.platform)) continue;
-      if (!acceptee && d != null && f && surRepos(d,f.t)) continue;
-      if (!acceptee && joursBloques.size && d != null && f) {
-        const jour = t => FMT.format(new Date(t));
-        let refuse = joursBloques.has(jour(d)) || joursBloques.has(jour(f.t));
-        for (let t=d; !refuse && t<f.t; t+=H) refuse = joursBloques.has(jour(t));
-        if (refuse) continue;
-      }
+      if (!acceptee && d != null && f && indisponible(d,f.t)) continue;
       if (d == null || !f) { if (!acceptee) res.ecartees.sansDate++; continue; }
       if (d < debut || f.t > finFenetre) { if (!acceptee) res.ecartees.horsPeriode++; continue; }
       const po = G.coordonnees(m, 'origin'), pd = G.coordonnees(m, 'destination');
