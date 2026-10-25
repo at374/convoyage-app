@@ -113,7 +113,26 @@
       if (retour > finFenetre) return null;
       const nuits = jourParis(retour) - jourParis(s.depart);
       if (nuits > nuitsMax) return null;
-      const coutHotel = arr(nuits * hotel), coutRetour = lien.cout;
+      // Nuit à domicile : pas de budget hôtel. En mission à minuit, conserver
+      // l'estimation existante (une pause/hébergement peut rester nécessaire).
+      let nuitsHotel = 0;
+      let instantNuit = s.depart;
+      const seuilDomicile = Math.max(0, n(o.seuil_dom) ?? 150);
+      for (let i = 0; i < nuits; i++) {
+        const minuit = minuitApres(instantNuit);
+        const encours = s.etapes.some(e => e.debut < minuit && e.fin > minuit);
+        const suivantes = s.etapes.find(e => e.debut >= minuit);
+        const terminees = s.etapes.filter(e => e.fin <= minuit);
+        const point = suivantes ? G.coordonnees(suivantes.mission, 'origin') :
+          terminees.length ? G.coordonnees(terminees[terminees.length - 1].mission, 'destination') : dom;
+        let aDomicile = false;
+        if (!encours && point && dom) {
+          try { const distance = G.routeKm(point, dom); aDomicile = Number.isFinite(distance) && distance < seuilDomicile; } catch (e) {}
+        }
+        if (!aDomicile) nuitsHotel++;
+        instantNuit = minuit + MIN;
+      }
+      const coutHotel = arr(nuitsHotel * hotel), coutRetour = lien.cout;
       const net = arr(s.net - coutRetour - coutHotel), heures = arr(s.heures + lien.heures);
       const brut = arr(s.etapes.reduce((x, e) => x + (n(e.mission.fee) || 0), 0));
       return { etapes: s.etapes, depart: s.depart, retour: { km, heures: lien.heures, cout: coutRetour, arrivee: retour }, nuits, coutHotel,
