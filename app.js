@@ -1064,7 +1064,14 @@
           });
           if (!lignes.length) lignes.push(...res.trajets.filter(t => trajetCompatibleMission(t, m, retour)));
           afficherLignes();
-          if (!lignes.length && cible.isConnected) cible.textContent = 'Aucun trajet compatible avec les horaires de la mission trouvé. Consulte les liens des transporteurs.';
+          if (!lignes.length && cible.isConnected) {
+            const pannes = res.sources.filter(x => x.erreur);
+            cible.textContent = pannes.length
+              ? 'Recherche incomplète : ' + pannes.length + ' fournisseur(s) indisponible(s). Réessaie ou consulte directement les transporteurs.'
+              : 'Aucun trajet compatible avec les horaires de la mission trouvé. Consulte les liens des transporteurs.';
+          } else if (cible.isConnected && res.sources.some(x => x.erreur)) {
+            cible.textContent += ' | Résultats partiels : certains fournisseurs sont indisponibles.';
+          }
         } catch (e) { if (cible.isConnected) cible.textContent = 'Recherche indisponible : consulte les transporteurs.'; }
         finally { if (btn.isConnected) btn.disabled = false; }
       };
