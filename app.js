@@ -1070,7 +1070,10 @@
           // Profil facultatif : les réductions ne sont jamais calculées localement
           // sans confirmation des conditions et du tarif par le transporteur.
           cartesReduction: Array.isArray(etat.reglages && etat.reglages.cartesReduction)
-            ? etat.reglages.cartesReduction : [],
+            ? etat.reglages.cartesReduction.filter(c => {
+                const expiration = (etat.reglages.cartesExpiration || {})[c];
+                return !expiration || expiration >= ((document.querySelector('#feuilleContenu [data-transport-date="' + sens + '"]') || {}).value || dateTransportMission(m, retour));
+              }) : [],
           // Date-limite exacte pour les API de recherche de transport.
           // L'aller vise une arrivée avant cette heure ; le retour un départ après.
           limiteMissionAt: retour ? (m.delivery_end || m.delivery_start) : (m.pickup_start || m.pickup_end) };
