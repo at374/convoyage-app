@@ -1051,6 +1051,10 @@
           departAdresse: retour ? (m.destination_address || m.to_city) : ville,
           arriveeAdresse: retour ? ville : (m.origin_address || m.from_city),
           margeMinutes: margeTransportMinutes(),
+          // Profil facultatif : les réductions ne sont jamais calculées localement
+          // sans confirmation des conditions et du tarif par le transporteur.
+          cartesReduction: Array.isArray(etat.reglages && etat.reglages.cartesReduction)
+            ? etat.reglages.cartesReduction : [],
           // Date-limite exacte pour les API de recherche de transport.
           // L'aller vise une arrivée avant cette heure ; le retour un départ après.
           limiteMissionAt: retour ? (m.delivery_end || m.delivery_start) : (m.pickup_start || m.pickup_end) };
