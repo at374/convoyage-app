@@ -16,15 +16,28 @@
     const km = n(m.distance_km); if (km != null && km > 0) return { heures: arr(km / VITESSE_CONDUITE + 0.5), estimee: true };
     return { heures: null, estimee: true };
   }
-  // V155 : règles de frais par plateforme. Hiflow : tous les frais du devis (avancés puis remboursés). DriiveMe : péage et carburant avancés puis remboursés ;
-  // transport et frais exceptionnels inclus dans la prestation. Otoqi / Pop Valet : carburant remboursé, péage NON remboursé (à ta charge), transport et frais exceptionnels inclus.
+  // Règles par plateforme : aucun remboursement supposé hors catégorie éligible.
+  // Hiflow : frais du devis ; carburant supplémentaire seulement après accord.
   const RE_PEAGE = /p[ée]age|toll/i, RE_INCLUS = /exception|except|suppl/i;
+  const RE_CARBURANT = /carburant|essence|diesel|gazole|fuel/i;
+  const RE_LAVAGE = /lavage|nettoyage|wash/i;
   function fraisRembourses(m) {
-    const p = m.platform;
-    // Hiflow mission acceptée : seuls les montants EXACTS du devis comptent ; sans devis lu, aucun frais n'est inventé (« montant du devis non lu »).
-    if (p === 'Hiflow' && m.kind === 'acceptee' && !(m.fees && m.fees.devis_numero)) return [];
-    return Object.entries(m.fees || {}).filter(([k]) => !/^(devis|facture)_/.test(k) && k !== 'transport_rembourse_confirme').map(([k, v]) => [k, n(v)]).filter(([, v]) => v !== null)
-      .filter(([k]) => p === 'Hiflow' || !(TRANSPORT.test(k) || RE_INCLUS.test(k) || (p !== 'DriiveMe' && RE_PEAGE.test(k))));
+    const p = m.platform, fees = m.fees || {};
+    const devis = !!fees.devis_numero;
+    return Object.entries(fees)
+      .filter(([k]) => !/^(devis|facture)_/.test(k) && !/_confirme$|_accord$|_demande$|_demande_effectuee$/.test(k))
+      .map(([k,v]) => [k,n(v)]).filter(([,v]) => v != null && v > 0)
+      .filter(([k]) => {
+        if (TRANSPORT.test(k)) return false; // Traité séparément, Hiflow uniquement.
+        if (p === 'Otoqi') return RE_CARBURANT.test(k) || (RE_LAVAGE.test(k) && (m.lavage_demande === true || fees.lavage_demande === true));
+        if (p === 'DriiveMe') return RE_PEAGE.test(k) || RE_LAVAGE.test(k);
+        if (p === 'PopValet') return RE_CARBURANT.test(k);
+        if (p === 'Hiflow') {
+          if (RE_CARBURANT.test(k)) return m.carburant_supplementaire_accord === true || fees.carburant_supplementaire_accord === true;
+          return devis && (RE_LAVAGE.test(k) || RE_PEAGE.test(k) || RE_INCLUS.test(k));
+        }
+        return false;
+      });
   }
   function peageACharge(m) {
     if (m.platform !== 'Otoqi' && m.platform !== 'PopValet') return { montant: 0, absent: false };
