@@ -19,4 +19,4 @@ assert.ok(risky.plans.every(p=>p.etapes.every(e=>!e.acceptee||e.debut===Date.par
 assert.ok(risky.plans.every(p=>!p.etapes.some(e=>e.cle==='close')));
 const safe=planifier([early,accepted],{marge_minutes:60},opts);
 assert.ok(safe.plans.some(p=>p.etapes.some(e=>e.cle==='early')&&p.etapes.some(e=>e.cle==='accepted')));
-console.log('Accepted mission scheduling: 5 assertions passed');
+console.log('Accepted mission scheduling: 6 assertions passed');
