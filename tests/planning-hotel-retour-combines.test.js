@@ -14,15 +14,15 @@ const base={id:'H1',kind:'disponible',platform:'Hiflow',fee:200,fees:{},origin:{
 const run=(lat,budget_hotel)=>root.CPPlanning.planifier([{...base,destination:{lat}}],{},
  {debut:Date.parse('2026-10-27T07:00:00+01:00'),jours:2,nuits_max:1,
  budget_hotel,domicile:{lat:0,nom:'domicile'}});
-for(const [lat,budget,retour,net] of [[0,40,0,117.6],[5,40,6,111.6],[10,75,12,70.6]]){
+for(const [lat,budget,retour,net] of [[0,40,0,157.6],[5,40,6,151.6],[10,75,12,145.6]]){
  const r=run(lat,budget);
  assert.equal(r.plans.length,1,'overnight plan feasible');
  const p=r.plans[0];
  assert.equal(p.nuits,1,'one overnight');
- assert.equal(p.coutHotel,budget,'hotel counted once');
+ assert.equal(p.coutHotel,0,'working through midnight does not incur hotel');
  assert.equal(p.retour.cout,retour,'return counted once');
  assert.equal(p.netMissions,157.6,'mission net unchanged');
  assert.equal(p.net,net,'combined net');
- assert.equal(p.net,Math.round((p.netMissions-budget-retour)*100)/100,'hotel and return each deducted once');
+ assert.equal(p.net,Math.round((p.netMissions-p.coutHotel-retour)*100)/100,'hotel and return each deducted once');
 }
 console.log('Hotel and return combined: 21 assertions passed');
