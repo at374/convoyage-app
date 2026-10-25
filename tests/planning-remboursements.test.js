@@ -8,7 +8,7 @@ const {planifier}=require('../planning.js');
 const mk=(platform,fees={})=>({kind:'disponible',id:'x',platform,fee:100,fees,pickup_start:'2026-11-02T09:00:00Z',delivery_end:'2026-11-02T10:00:00Z',origin:{lat:10},destination:{lat:20}});
 const opts={debut:Date.parse('2026-11-02T06:00:00Z'),jours:2,nuits_max:3,heureMin:null};
 const plan=(platform,fees)=>planifier([mk(platform,fees)],{},opts).plans[0];
-const base=plan('Otoqi',{}),partial=plan('Otoqi',{train:5}),capped=plan('Otoqi',{train:20}),hiflow=plan('Hiflow',{});
+const base=plan('Otoqi',{}),partial=plan('Otoqi',{train:5}),capped=plan('Otoqi',{train:20}),hiflow=plan('Hiflow',{transport_rembourse_confirme:true});
 assert.equal(base.prestations,100);
 assert.equal(base.coutLiaisons,36);
 assert.equal(base.retour.cout,24);
