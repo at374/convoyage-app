@@ -14,8 +14,11 @@
       Date.parse(trajet.arriveeAt) <= Date.parse(trajet.departAt)) return null;
     const prix = trajet.prixEUR == null ? null : Number(trajet.prixEUR);
     if (prix !== null && (!Number.isFinite(prix) || prix < 0)) return null;
-    return { ...trajet, prixEUR: prix, confirme: trajet.confirme === true,
-      source: propre(trajet.source), verifieLe: propre(trajet.verifieLe) };
+    const source = propre(trajet.source), verifieLe = propre(trajet.verifieLe);
+    // Une simple déclaration « confirmé » ne suffit pas : conserver une trace
+    // vérifiable de la source et de la date de consultation.
+    const confirme = trajet.confirme === true && !!source && dateValide(verifieLe);
+    return { ...trajet, prixEUR: prix, confirme, source, verifieLe };
   }
   async function rechercher(q, fournisseurs, options = {}) {
     if (!q || !propre(q.depart) || !propre(q.arrivee) || !dateValide(q.date)) throw new Error('Trajet ou date invalide');
