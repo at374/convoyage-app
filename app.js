@@ -198,6 +198,7 @@
       <p class="doux">Pendant ces heures, la lecture des plateformes, la mise à jour des missions et l’envoi des alertes sont arrêtés. Tu pourras changer ce choix à tout moment dans Réglages.</p>
       <label for="pDeb">Arrêt à</label><input id="pDeb" type="time" value="19:00"><label for="pFin">Reprise à</label><input id="pFin" type="time" value="07:00">
       <div class="boutons" style="margin-top:12px"><button id="pOui">Oui, désactiver la nuit</button><button id="pNon" class="second">Non, toujours actif</button></div>`;
+    activerRechercheTransport(m);
     $('feuille').hidden = false;
     $('pOui').onclick = () => { enregistrerPause('oui', $('pDeb').value, $('pFin').value); $('feuille').hidden = true; toast('Désactivation la nuit : activée'); };
     $('pNon').onclick = () => { enregistrerPause('non', '19:00', '07:00'); $('feuille').hidden = true; toast('Toujours actif'); };
@@ -1004,6 +1005,50 @@
   // Cache borné des liens par trajet : évite de recalculer les réseaux et URL
   // pour chaque carte mission/agenda à chaque rafraîchissement.
   const cacheLiensTransports = new Map();
+  // Fournisseurs raccordables sans modifier les fiches missions ni l'agenda.
+  // Aucune réponse fictive : sans connecteur réel, le panneau le signale.
+  window.CPFournisseursTransports = window.CPFournisseursTransports || [];
+  const dateTransportMission = (m, retour) => {
+    const t = retour ? (m.delivery_end || m.delivery_start) : (m.pickup_start || m.pickup_end);
+    return t && Number.isFinite(Date.parse(t)) ? new Date(t).toISOString().slice(0, 10) : '';
+  };
+  function blocRechercheTransport(m, retour) {
+    const ville = etat.reglages && etat.reglages.domicile_ville;
+    const depart = retour ? m.to_city : ville, arrivee = retour ? ville : m.from_city;
+    if (!depart || !arrivee || !dateTransportMission(m, retour)) return '';
+    const sens = retour ? 'retour' : 'aller';
+    return `<div class="bk bkTr"><div class="bkt">🔎 RECHERCHE RAPIDE · ${sens.toUpperCase()}</div><button type="button" class="second" data-transport-rapide="${sens}">Chercher les horaires et tarifs</button><div data-transport-resultat="${sens}" class="doux" role="status" aria-live="polite"></div></div>`;
+  }
+  function activerRechercheTransport(m) {
+    for (const btn of document.querySelectorAll('#feuilleContenu [data-transport-rapide]')) {
+      btn.onclick = async () => {
+        const sens = btn.dataset.transportRapide, retour = sens === 'retour';
+        const ville = etat.reglages && etat.reglages.domicile_ville;
+        const q = { depart: retour ? m.to_city : ville, arrivee: retour ? ville : m.from_city,
+          date: dateTransportMission(m, retour), heure: '' };
+        const cible = document.querySelector('#feuilleContenu [data-transport-resultat="' + sens + '"]');
+        if (!cible || !window.CPTransportRapide) return;
+        const fournisseurs = window.CPFournisseursTransports || [];
+        if (!fournisseurs.length) { cible.textContent = 'Aucune source d’horaires en direct connectée. Utilise les liens des transporteurs et vérifie les prix et horaires.'; return; }
+        const lignes = [];
+        const afficherLignes = () => { if (!cible.isConnected) return; cible.textContent = lignes.length ? lignes.map(t =>
+          new Date(t.departAt).toLocaleString('fr-FR', {timeZone:'Europe/Paris'}) + ' → ' +
+          new Date(t.arriveeAt).toLocaleString('fr-FR', {timeZone:'Europe/Paris'}) + ' · ' +
+          (t.prixEUR == null ? 'prix indisponible' : t.prixEUR + ' €') +
+          (t.confirme ? ' · confirmé par la source' : ' · à vérifier')).join(' | ') : 'Recherche en cours…'; };
+        cible.textContent = 'Recherche en cours…'; btn.disabled = true;
+        try {
+          const res = await window.CPTransportRapide.rechercher(q, fournisseurs, {
+            surResultat: r => { lignes.push(...r.trajets); afficherLignes(); }
+          });
+          if (!lignes.length) lignes.push(...res.trajets);
+          afficherLignes();
+          if (!lignes.length && cible.isConnected) cible.textContent = 'Aucun trajet vérifié trouvé. Consulte les liens des transporteurs.';
+        } catch (e) { if (cible.isConnected) cible.textContent = 'Recherche indisponible : consulte les transporteurs.'; }
+        finally { if (btn.isConnected) btn.disabled = false; }
+      };
+    }
+  }
   function liensTransports(deVille, deDep, versVille, versDep, cleVerif) {
     if (!deVille || !versVille) return '';
     const a = slugVille(deVille), b = slugVille(versVille); if (!a || !b || a === b) return '';
@@ -1149,6 +1194,7 @@
       ${blocRenta(m, r, frais, dv, depuis)}
       ${(() => { const lt = etat.reglages && etat.reglages.domicile_ville && m.from_city ? liensTransports(etat.reglages.domicile_ville, '', m.from_city, m.from_department, 'a|' + (m.id || m.external_id)) : ''; return lt ? bk('bkTr', 'TRANSPORTS · ALLER DEPUIS TON DOMICILE', lt) : ''; })()}
       ${(() => { const ville = etat.reglages && etat.reglages.domicile_ville; if (!ville || !m.to_city) return ''; const lt = liensTransports(m.to_city, m.to_department, ville, '', 'retour|' + (m.id || m.external_id)); return lt ? bk('bkTr', 'TRANSPORTS · RETOUR VERS TON DOMICILE', lt) : ''; })()}
+      ${blocRechercheTransport(m, false)}${blocRechercheTransport(m, true)}
       ${m.kind === 'acceptee' ? blocHistorique(m) : ''}
       ${m.status === 'annulee' || m.status === 'terminee' || (m.kind === 'acceptee' && missionPassee(m)) ? '' : blocRetours(m)}
       ${m.vehicle && /[ée]lectri|\bev\b|\bbev\b/i.test(String(m.vehicle.energy || '')) ? `<div class="carte"><b>🔌 Véhicule électrique : calculer la charge</b><p class="doux" style="margin:4px 0">Le prix et le temps de charge dépendent de la voiture, de la borne et de l’itinéraire : ces sites les calculent (l’appli ne les connaît pas).</p><span class="liensTr"><a href="https://abetterrouteplanner.com/">⚡ A Better Routeplanner</a><a href="https://fr.chargemap.com/">🗺️ Chargemap (bornes et prix)</a>${(m.origin_address || m.from_city) && (m.destination_address || m.to_city) ? `<a href="${esc('https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(m.origin_address || m.from_city + ' ' + (m.from_department || '')) + '&destination=' + encodeURIComponent(m.destination_address || m.to_city + ' ' + (m.to_department || '')))}">📍 Itinéraire Google Maps</a>` : ''}</span></div>` : ''}
