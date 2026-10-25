@@ -33,7 +33,13 @@
             Promise.resolve().then(() => f.rechercher(q)),
             new Promise((_, reject) => { minuterie = setTimeout(() => reject(new Error('délai dépassé')), timeoutMs); })
           ]);
-          return { fournisseur: propre(f.nom), lignes: Array.isArray(lignes) ? lignes.map(valider).filter(Boolean) : [], erreur: null };
+          const valides = Array.isArray(lignes) ? lignes.map(valider).filter(Boolean) : [];
+          // Afficher immédiatement les résultats de chaque fournisseur rapide,
+          // sans attendre les autres. Le résultat final reste consolidé.
+          if (typeof options.surResultat === 'function') {
+            try { options.surResultat({ fournisseur: propre(f.nom), trajets: valides }); } catch (_) {}
+          }
+          return { fournisseur: propre(f.nom), lignes: valides, erreur: null };
         } catch (e) { return { fournisseur: propre(f.nom), lignes: [], erreur: e && e.message || 'indisponible' }; }
         finally { clearTimeout(minuterie); }
       }));
