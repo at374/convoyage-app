@@ -1345,7 +1345,8 @@
         trajets.append(p);
         const bouton=document.createElement('button');bouton.type='button';bouton.textContent='🔎 Ouvrir les transports';bouton.disabled=!a||!b||!Number.isFinite(Date.parse(borne||''));
         bouton.onclick=()=>ouvrir(a,b,borne,type);trajets.append(bouton);
-        const sources=window.CPFournisseursTransports||[];
+        const sources=Array.isArray(window.CPFournisseursTransports)?window.CPFournisseursTransports.filter(f=>f&&typeof f.rechercher==='function'):[];
+        if(!sources.length){const etatSource=document.createElement('p');etatSource.textContent='Horaires en direct non connectés : ouvre les transports et vérifie les horaires sur le service officiel.';trajets.append(etatSource);}
         if(window.CPTransportRapide && sources.length && Number.isFinite(Date.parse(borne||''))){
           const recherche=document.createElement('button');recherche.type='button';recherche.textContent='🚌 Rechercher les horaires connectés';
           const resultat=document.createElement('div');resultat.setAttribute('role','status');resultat.setAttribute('aria-live','polite');
@@ -1360,7 +1361,7 @@
               const res=await window.CPTransportRapide.rechercher(q,sources);
               const valides=(res.trajets||[]).filter(t=>{
                 const d=Date.parse(t.departAt||''),f=Date.parse(t.arriveeAt||'');
-                return Number.isFinite(d)&&Number.isFinite(f)&&f>d&&(type==='arriver avant'?f<=limite:d>=limite);
+                return Number.isFinite(d)&&Number.isFinite(f)&&f>d&&(type==='arriver avant'?f<=limite:d>=limite)&&new Date(d).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'})===dateLocal;
               }).sort((x,y)=>Date.parse(x.departAt)-Date.parse(y.departAt)).slice(0,15);
               resultat.replaceChildren();
               const titre=document.createElement('p');titre.textContent=valides.length+' trajet(s) respectant la limite horaire, sous réserve des données du fournisseur.';resultat.append(titre);
