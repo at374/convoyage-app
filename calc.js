@@ -121,13 +121,15 @@
     // Les frais remboursés sont avancés puis rendus : effet nul. Seul le transport NON couvert par un remboursement prévu est une dépense.
     // Prudence : le remboursement Hiflow n'est acquis que s'il est explicitement confirmé pour cette mission.
     const transportRembourse = m.platform === 'Hiflow' && (m.transport_rembourse_confirme === true || m.fees?.transport_rembourse_confirme === true);
-    const transportNonCouvert = transportRembourse ? 0 : arr(Math.max(0, coutTransport - rembTransport));
+    const montantPartiel = n(m.transport_rembourse_montant_confirme);
+    const couverture = transportRembourse ? coutTransport : Math.min(coutTransport, Math.max(0, montantPartiel ?? rembTransport));
+    const transportNonCouvert = arr(Math.max(0, coutTransport - couverture));
     const avances = base.remboursements;
     const depenses = arr(base.depenses + avances + transportNonCouvert + (base.peageCharge || 0));
     const net = arr(base.prestation + base.remboursements - depenses - base.cotisations);
     const duree = dureeEstimee(m);
     const heures = duree.heures == null ? null : arr(duree.heures + (approche ? approche.heures : 0) + (retour ? retour.heures : 0));
-    return { ...base, complet: true, approche, retour, rembTransport, coutTransport, transportNonCouvert, transportRembourse, fraisAvances: avances, depensesTotales: depenses,
+    return { ...base, complet: true, approche, retour, rembTransport, coutTransport, couverture, transportNonCouvert, transportRembourse, fraisAvances: avances, depensesTotales: depenses,
       net, heuresMission: duree.heures, dureeEstimee: duree.estimee, heures, parHeure: heures ? arr(net / heures) : null,
       liaisonsConnues: !!(approche && retour) };
   }
