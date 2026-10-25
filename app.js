@@ -1019,18 +1019,25 @@
     return t && Number.isFinite(Date.parse(t))
       ? new Date(t).toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hour12: false }) : '';
   };
+  const margeTransportMinutes = () => {
+    // Marge de sécurité paramétrable ; 15 minutes par défaut.
+    const v = Number(etat.reglages && etat.reglages.marge_transport_minutes);
+    return Number.isFinite(v) && v >= 0 && v <= 180 ? v : 15;
+  };
   const trajetCompatibleMission = (trajet, m, retour) => {
     const limite = Date.parse(retour ? (m.delivery_end || m.delivery_start) : (m.pickup_start || m.pickup_end));
     if (!Number.isFinite(limite)) return false;
-    // Aller : arriver AVANT la prise en charge. Retour : partir APRÈS la livraison.
-    return retour ? Date.parse(trajet.departAt) >= limite : Date.parse(trajet.arriveeAt) <= limite;
+    const marge = margeTransportMinutes() * 60000;
+    // Aller : arriver AVANT la prise en charge moins la marge.
+    // Retour : partir APRÈS la livraison plus la marge.
+    return retour ? Date.parse(trajet.departAt) >= limite + marge : Date.parse(trajet.arriveeAt) <= limite - marge;
   };
   function blocRechercheTransport(m, retour) {
     const ville = etat.reglages && etat.reglages.domicile_ville;
     const depart = retour ? m.to_city : ville, arrivee = retour ? ville : m.from_city;
     if (!depart || !arrivee || !dateTransportMission(m, retour)) return '';
     const sens = retour ? 'retour' : 'aller';
-    return `<div class="bk bkTr"><div class="bkt">🔎 RECHERCHE RAPIDE · ${sens.toUpperCase()}</div><button type="button" class="second" data-transport-rapide="${sens}">Chercher les horaires et tarifs</button><div data-transport-resultat="${sens}" class="doux" role="status" aria-live="polite"></div></div>`;
+    return `<div class="bk bkTr"><div class="bkt">🔎 RECHERCHE RAPIDE · ${sens.toUpperCase()} · marge ${margeTransportMinutes()} min</div><button type="button" class="second" data-transport-rapide="${sens}">Chercher les horaires et tarifs</button><div data-transport-resultat="${sens}" class="doux" role="status" aria-live="polite"></div></div>`;
   }
   function activerRechercheTransport(m) {
     for (const btn of document.querySelectorAll('#feuilleContenu [data-transport-rapide]')) {
