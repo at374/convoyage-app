@@ -20,9 +20,11 @@ const { creer } = require('../transport-serveur.js');
     assert.equal(appels[0].options.credentials, 'same-origin');
     global.fetch = async () => ({ ok: true, json: async () => ({ erreurs: [] }) });
     await assert.rejects(() => creer().rechercher({}), /invalide/);
+    global.fetch = async () => ({ ok: true, json: async () => ({ trajets: Array.from({ length: 501 }, () => ({})) }) });
+    await assert.rejects(() => creer().rechercher({}), /volumineuse/);
     global.fetch = async () => ({ ok: false, status: 503 });
     await assert.rejects(() => creer().rechercher({}), /503/);
-    console.log('Transport serveur: 9 assertions passed');
+    console.log('Transport serveur: 10 assertions passed');
   } finally {
     global.fetch = precedent;
   }
