@@ -54,11 +54,16 @@ const q={depart:'Annecy',arrivee:'Lyon',date:'2026-11-02',heure:'09:00'};
  assert.equal(appelsPartages.length,2,'simultaneous views share one request per provider');
  assert.deepEqual(premiereVue,['rapide-partage','lent-partage'],'initial view gets all provider results');
  assert.deepEqual(secondeVue,['rapide-partage','lent-partage'],'late view replays completed provider then receives pending provider');
+ for (const invalide of ['2026-02-30','2026-13-01','02/11/2026','2026-11-02T09:00:00']) {
+   let rejete=false;
+   try { await T.rechercher({...q,date:invalide},[]); } catch (_) { rejete=true; }
+   assert.equal(rejete,true,'invalid calendar date rejected: '+invalide);
+ }
  const empty=await T.rechercher({...q,heure:'10:00'},[]);
  assert.equal(empty.trajets.length,0,'no provider never invents a trip');
  const timeout=await T.rechercher({...q,heure:'11:00'},[{nom:'lent',rechercher:()=>new Promise(()=>{})}],{timeoutMs:250});
  assert.equal(timeout.trajets.length,0,'timeout never invents a trip');
  assert.ok(timeout.sources[0].erreur,'timeout reported');
  assert.equal(T.valider({departAt:'2026-11-02T11:00:00+01:00',arriveeAt:'2026-11-02T09:00:00+01:00'}),null,'reverse times rejected');
- console.log('Transport rapide: 26 assertions passed');
+ console.log('Transport rapide: 30 assertions passed');
 })().catch(e=>{console.error(e);process.exitCode=1;});
