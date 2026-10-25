@@ -18,7 +18,7 @@ assert.ok(plans.some(p=>p.etapes.some(e=>e.cle==='good')));
 assert.ok(plans.every(p=>!p.etapes.some(e=>e.cle==='bad')));
 assert.ok(plans.every(p=>p.etapes.filter(e=>e.acceptee).every(e=>e.debut===Date.parse(e.mission.pickup_start))));
 const distantA=mk('acceptee','far-a','2026-11-02T09:00:00Z','2026-11-02T10:00:00Z',0,10);
-const distantB=mk('acceptee','far-b','2026-11-02T17:00:00Z','2026-11-02T18:00:00Z',10,0);
+const distantB=mk('acceptee','far-b','2026-11-02T17:00:00Z','2026-11-02T18:00:00Z',20,0);
 const distant=planifier([distantA,distantB],{marge_minutes:60},opts).plans;
 assert.ok(distant.length>0);
 assert.ok(distant.every(p=>p.coutLiaisons>0));
