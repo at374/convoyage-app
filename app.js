@@ -1068,7 +1068,9 @@
           const res = await window.CPTransportRapide.rechercher(q, fournisseurs, {
             surResultat: r => { lignes.push(...r.trajets.filter(t => trajetCompatibleMission(t, m, retour))); afficherLignes(); }
           });
-          if (!lignes.length) lignes.push(...res.trajets.filter(t => trajetCompatibleMission(t, m, retour)));
+          // Le résultat final est la référence : il évite les doublons si un
+          // fournisseur a déjà été affiché via les notifications progressives.
+          lignes.splice(0, lignes.length, ...res.trajets.filter(t => trajetCompatibleMission(t, m, retour)));
           afficherLignes();
           if (!lignes.length && cible.isConnected) {
             const pannes = res.sources.filter(x => x.erreur);
