@@ -8,7 +8,7 @@
   const DUREE_CACHE = 3 * 60 * 1000, MAX_CACHE = 120;
   const propre = v => String(v == null ? '' : v).trim();
   const dateValide = v => Number.isFinite(Date.parse(v));
-  const cle = q => JSON.stringify([propre(q.depart).toLowerCase(), propre(q.arrivee).toLowerCase(), propre(q.date), propre(q.heure), propre(q.reduction), propre(q.contrainte), propre(q.departAdresse), propre(q.arriveeAdresse), propre(q.margeMinutes)]);
+  const cle = q => JSON.stringify([propre(q.depart).toLowerCase(), propre(q.arrivee).toLowerCase(), propre(q.date), propre(q.heure), propre(q.reduction), propre(q.contrainte), propre(q.departAdresse), propre(q.arriveeAdresse), propre(q.margeMinutes), propre(q.limiteMissionAt)]);
   function valider(trajet) {
     if (!trajet || !dateValide(trajet.departAt) || !dateValide(trajet.arriveeAt) ||
       Date.parse(trajet.arriveeAt) <= Date.parse(trajet.departAt)) return null;
