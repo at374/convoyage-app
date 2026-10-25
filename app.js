@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V272 (2.0.121)';
+  const VERSION_APP = 'V273 (2.0.122)';
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
@@ -688,7 +688,7 @@
     listeAffichee = items.map(x => x.mission);
     if (!A.items.length) { $('ecran').innerHTML = '<div class="vide">Aucune mission acceptée. Elles arrivent automatiquement depuis « Mes trajets » (Hiflow), « Mes réservations » (DriiveMe), « Missions réservées » (Otoqi) et « Propositions réservées » (Pop Valet), ou d’un e-mail de confirmation Hiflow collé dans l’extension.</div>'; return; }
     const resume = RT.resumeAgenda(etat.missions, etat.reglages);
-    const inter = window.CPIntermissions && window.CPIntermissions.recherche(etat.missions, etat.reglages, {limite:5});
+    const inter = window.CPIntermissions && window.CPIntermissions.recherche(etat.missions, etat.reglages, {limite:5,plateformesActives:window.CP_EDITION&&window.CP_EDITION.plateformes});
     // V139 : plus de bandeau « N conflits » dans l'Agenda (les estimations produisaient des dizaines de faux conflits).
     let html = false && A.conflits.length ? `<div class="carte conflit" id="conflits"><h2>⚠️ ${A.conflits.length} conflit${A.conflits.length > 1 ? 's' : ''} dans ton agenda</h2>${A.conflits.map(c => `<p>${esc(window.CPAgenda.libelleConflit(c))}</p>`).join('')}<p class="doux">Estimation (durées et liaisons approximatives) : vérifie sur les plateformes.</p></div>` : '';
     let jour = '';
@@ -709,7 +709,7 @@
       html += '<div class="carte"><h2>🔎 Missions entre deux engagements</h2><p class="doux">Suggestions estimées. Transports et horaires à confirmer avant acceptation.</p>' +
         inter.intervalles.map(g => '<div class="bk bkC bkSuite"><div class="bkt">Créneau libre</div>' +
           '<p>' + esc(new Date(g.debut).toLocaleDateString('fr-FR', {timeZone:'Europe/Paris'})) + ' → ' + esc(new Date(g.fin).toLocaleDateString('fr-FR', {timeZone:'Europe/Paris'})) + '</p>' +
-          (g.propositions.length ? g.propositions.map(z => '<p>🚗 ' + esc(z.mission.from_city || '?') + ' → ' + esc(z.mission.to_city || '?') + ' · ' + esc(z.mission.platform) + ' · net estimé ' + esc(euros(z.netMissionEstime)) + '<br><small>Transport non confirmé — vérifiez vous-même les transports avant d’accepter cette mission.</small></p>').join('') : '<p class="doux">Aucune mission compatible identifiée.</p>') + '</div>').join('') + '</div>';
+          (g.propositions.length ? g.propositions.map(z => '<p>🚗 ' + esc(z.mission.from_city || '?') + ' → ' + esc(z.mission.to_city || '?') + ' · ' + esc(z.mission.platform) + ' · gain additionnel estimé ' + esc(euros(z.netIncrementalEstime)) + '<br><small>Transport non confirmé — vérifiez vous-même les transports avant d’accepter cette mission.</small></p>').join('') : '<p class="doux">Aucune mission compatible identifiée.</p>') + '</div>').join('') + '</div>';
     }
     $('ecran').innerHTML = html;
     for (const b of document.querySelectorAll('.mission')) b.onclick = () => detail(listeAffichee[Number(b.dataset.i)]);
@@ -757,10 +757,10 @@
     etat.planResultat = res; afficherPlans(res);
     const ip = $('pInter');
     if (ip && window.CPIntermissions) {
-      const gaps = window.CPIntermissions.recherche(etat.missions, etat.reglages, {limite:5}).intervalles;
+      const gaps = window.CPIntermissions.recherche(etat.missions, etat.reglages, {limite:5,plateformesActives:window.CP_EDITION&&window.CP_EDITION.plateformes}).intervalles;
       ip.innerHTML = gaps.length ? '<div class="carte"><h2>🔎 Missions entre engagements acceptés</h2><p class="doux">Ces suggestions ne modifient aucune mission acceptée. Déplacements estimés, non vérifiés.</p>' +
         gaps.map(g => '<p><b>' + esc(new Date(g.debut).toLocaleDateString('fr-FR')) + ' → ' + esc(new Date(g.fin).toLocaleDateString('fr-FR')) + '</b> : ' +
-          (g.propositions.length ? g.propositions.map(z => esc(z.mission.from_city || '?') + ' → ' + esc(z.mission.to_city || '?') + ' (' + esc(z.mission.platform) + ', ≈ ' + esc(euros(z.netMissionEstime)) + ')').join(' ; ') : 'aucune proposition') + '</p>').join('') +
+          (g.propositions.length ? g.propositions.map(z => esc(z.mission.from_city || '?') + ' → ' + esc(z.mission.to_city || '?') + ' (' + esc(z.mission.platform) + ', ≈ ' + esc(euros(z.netIncrementalEstime)) + ')').join(' ; ') : 'aucune proposition') + '</p>').join('') +
         '<p class="doux">Transport non confirmé — vérifiez vous-même les transports avant d’accepter cette mission.</p></div>' : '';
     }
     const r = $('pRes'); if (r) r.scrollIntoView({ block: 'start' });
