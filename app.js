@@ -792,7 +792,9 @@
     const duree = h => { const t = Math.round(h * 60); return t < 60 ? t + ' min' : Math.floor(t / 60) + ' h' + (t % 60 ? String(t % 60).padStart(2, '0') : ''); };
     const hm = t => new Date(t).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
     const domNom = (etat.reglages && etat.reglages.domicile_ville) || 'domicile';
-    box.innerHTML = res.plans.map((pl, ip) => {
+    // Les trajets et coûts de liaison du planning sont estimatifs, jamais une réservation confirmée.
+    const avertissementTransport = '<div class="carte" role="note"><strong>⚠️ Transport non confirmé — vérifiez vous-même les transports avant d’accepter cette mission.</strong></div>';
+    box.innerHTML = avertissementTransport + res.plans.map((pl, ip) => {
       let nuit = 0;
       const jours = PL.parJour(pl).map((j, ij, tous) => {
         const lignes = j.lignes.map(l => {
