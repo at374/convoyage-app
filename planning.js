@@ -129,7 +129,8 @@
         if (!encours && point && dom) {
           try { const distance = G.routeKm(point, dom); aDomicile = Number.isFinite(distance) && distance < seuilDomicile; } catch (e) {}
         }
-        if (!aDomicile) nuitsHotel++;
+        // Une mission en cours à minuit n'est pas une nuit d'hôtel.
+        if (!encours && !aDomicile) nuitsHotel++;
         instantNuit = minuit + MIN;
       }
       const coutHotel = arr(nuitsHotel * hotel), coutRetour = lien.cout;
