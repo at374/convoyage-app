@@ -132,8 +132,16 @@
         if (!encours && pointSoir && pointMatin && dom) {
           try {
             const dSoir = G.routeKm(pointSoir, dom), dMatin = G.routeKm(pointMatin, dom);
+            // Proximité géographique insuffisante : vérifier aussi la durée
+            // estimée des deux trajets et le temps réellement disponible.
+            const lSoir = C.liaison(dSoir, reg), lMatin = C.liaison(dMatin, reg);
+            const finSoir = terminees.length ? terminees[terminees.length - 1].fin : s.depart;
+            const debutMatin = suivantes ? suivantes.debut : retour;
+            const margeRetour = Math.max(0, n(o.marge_retour_domicile_min) ?? 0) * MIN;
             aDomicile = Number.isFinite(dSoir) && Number.isFinite(dMatin) &&
-              dSoir < seuilDomicile && dMatin < seuilDomicile;
+              dSoir < seuilDomicile && dMatin < seuilDomicile &&
+              Number.isFinite(lSoir.heures) && Number.isFinite(lMatin.heures) &&
+              finSoir + lSoir.heures * H + lMatin.heures * H + margeRetour <= debutMatin;
           } catch (e) {}
         }
         // Une mission en cours à minuit n'est pas une nuit d'hôtel.
