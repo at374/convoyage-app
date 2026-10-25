@@ -65,10 +65,13 @@
       }
       return actif.promesse;
     }
+    // Budget global court : chaque fournisseur travaille en parallèle.
+    // Un fournisseur lent ne doit pas retarder l'affichage des autres.
     const timeoutMs = Math.max(250, Math.min(15000, Number(options.timeoutMs) || 3500));
     const ecouteurs = new Set(), diffuses = [];
     if (typeof options.surResultat === 'function') ecouteurs.add(options.surResultat);
     const action = (async () => {
+      // Aucun fournisseur : retour immédiat et explicite, sans réseau.
       const resultats = await Promise.all(sources.map(async f => {
         let minuterie;
         try {
@@ -100,7 +103,9 @@
         .sort((a, b) => Date.parse(a.departAt) - Date.parse(b.departAt));
       const valeur = { trajets, sources: resultats.map(({ fournisseur, erreur }) => ({ fournisseur, erreur })), cache: false,
         avertissement: 'Horaires et prix non confirmés tant qu’une source fiable ne les a pas vérifiés.' };
-      if (sources.length && resultats.every(r => !r.erreur)) {
+      // Les réponses partielles valides sont réutilisables pendant une courte
+      // durée même lorsqu'un fournisseur secondaire échoue.
+      if (sources.length && trajets.length && resultats.some(r => !r.erreur)) {
         if (cache.size >= MAX_CACHE) cache.clear();
         cache.set(key, { valeur, expire: Date.now() + DUREE_CACHE });
       }
