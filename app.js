@@ -1064,7 +1064,17 @@
           // La date du formulaire correspond au jour de départ local en France.
           return dateDepart.toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' }) === q.date;
         };
-        const trajetRetenu = t => trajetJourChoisi(t) && trajetCompatibleMission(t, m, retour);
+        const trajetRetenu = t => {
+          if (!trajetJourChoisi(t) || !trajetCompatibleMission(t, m, retour)) return false;
+          // L'heure choisie affine la recherche sans modifier la limite de mission.
+          // Aller : ne pas partir avant l'heure souhaitée.
+          // Retour : ne pas partir après l'heure souhaitée.
+          const depart = new Date(t.departAt);
+          const heureLocale = depart.toLocaleTimeString('fr-FR', {
+            timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hour12: false
+          });
+          return !q.heure || (retour ? heureLocale <= q.heure : heureLocale >= q.heure);
+        };
         const lignes = [];
         const afficherLignes = () => {
           if (!cible.isConnected) return;
