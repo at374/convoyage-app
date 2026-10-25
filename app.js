@@ -1046,7 +1046,10 @@
         const ville = etat.reglages && etat.reglages.domicile_ville;
         const q = { depart: retour ? m.to_city : ville, arrivee: retour ? ville : m.from_city,
           date: dateTransportMission(m, retour), heure: heureTransportMission(m, retour),
-          contrainte: retour ? 'depart_apres_livraison' : 'arrivee_avant_prise_en_charge' };
+          contrainte: retour ? 'depart_apres_livraison' : 'arrivee_avant_prise_en_charge',
+          departAdresse: retour ? (m.destination_address || m.to_city) : ville,
+          arriveeAdresse: retour ? ville : (m.origin_address || m.from_city),
+          margeMinutes: margeTransportMinutes() };
         const cible = document.querySelector('#feuilleContenu [data-transport-resultat="' + sens + '"]');
         if (!cible || !window.CPTransportRapide) return;
         const fournisseurs = window.CPFournisseursTransports || [];
