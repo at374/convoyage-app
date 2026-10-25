@@ -1298,6 +1298,7 @@
       ${vehHtml(m)}${repriseHtml(m)}${plaqueW(m)}${compHtml(m)}
       ${blocKm(m, false)}
       <button id="btnVol" class="btnVert" type="button" aria-label="Visualisation trajet estimé">🗺️ Visualisation trajet estimé</button>
+      <button id="btnTransportMission" type="button" style="width:100%;background:#2563eb;color:white;margin:5px 0 8px">🚆 Transports (aller / enchaînement / retour)</button>
       ${bk('bkLieu', 'LIEUX', `<div>📍 <b>Départ</b> : ${esc(adresse(m, 'origin'))}</div><div id="gpsO">${mentionGps(m, 'origin')}</div>${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}<div style="margin-top:8px">🏁 <b>Arrivée</b> : ${esc(adresse(m, 'destination'))}</div><div id="gpsD">${mentionGps(m, 'destination')}</div>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}`)}
       ${mailBloc(m)}
       ${blocRenta(m, r, frais, dv, depuis)}
@@ -1314,6 +1315,27 @@
     $('feuille').hidden = false; $('feuille').querySelector('.feuilleBoite').scrollTop = 0;
     const suivants = detail.retours || [], dest = G.coordonnees(m, 'destination');
     for (const b of document.querySelectorAll('[data-retour]')) b.onclick = () => detail(suivants[Number(b.dataset.retour)].mission, dest);
+    // Raccordement transport ponctuel : aucune modification de synchronisation des missions.
+    { const bt = $('btnTransportMission'); if (bt) bt.onclick = () => {
+      const autorisees = window.CP_EDITION && window.CP_EDITION.plateformes;
+      const possibles = (etat.missions || []).filter(x => x !== m && x.kind === 'acceptee' && (!autorisees || autorisees.includes(x.platform)) && Date.parse(x.pickup_start || '') >= Date.parse(m.delivery_end || '') && Date.parse(x.pickup_start || '') < Date.parse(m.delivery_end || '') + 86400000).sort((a,b) => Date.parse(a.pickup_start)-Date.parse(b.pickup_start));
+      const suivante = possibles[0] || null;
+      const ville = etat.reglages && etat.reglages.domicile_ville || '';
+      const jour = s => { const t=Date.parse(s||''); return Number.isFinite(t) ? new Date(t).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}) : ''; };
+      const heure = s => { const t=Date.parse(s||''); return Number.isFinite(t) ? new Date(t).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Paris'}) : ''; };
+      const ouvrir = (a,b,date,limite,nom) => { if(!a||!b){ toast('Adresse de transport manquante');return; } const url='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(a)+'&destination='+encodeURIComponent(b)+'&travelmode=transit'; window.open(url,'_blank','noopener,noreferrer'); };
+      const ancien = document.getElementById('cpTransportMissionDialog');if(ancien)ancien.remove();
+      const fond=document.createElement('div');fond.id='cpTransportMissionDialog';fond.setAttribute('role','dialog');fond.setAttribute('aria-modal','true');fond.style.cssText='position:fixed;inset:0;background:#0009;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px';
+      const boite=document.createElement('div');boite.style.cssText='background:var(--fond,#fff);color:var(--texte,#111);max-width:560px;width:100%;max-height:90vh;overflow:auto;padding:18px;border-radius:12px';
+      const titre=document.createElement('h3');titre.textContent='🚆 Transports de tes missions';boite.append(titre);
+      const info=document.createElement('p');info.textContent='Les horaires et tarifs sont à confirmer chez les transporteurs. Les liens ouvrent une recherche externe : aucune disponibilité n’est garantie.';boite.append(info);
+      const ajouter=(nom,a,b,borne,type)=>{const p=document.createElement('p');p.textContent=nom+' : '+(a||'adresse manquante')+' → '+(b||'adresse manquante')+(borne?' · '+type+' '+jour(borne)+' '+heure(borne):'');boite.append(p);const bouton=document.createElement('button');bouton.type='button';bouton.textContent='🔎 Chercher cet itinéraire';bouton.disabled=!a||!b;bouton.onclick=()=>ouvrir(a,b,jour(borne),borne,nom);boite.append(bouton);};
+      ajouter('Aller',ville,m.origin_address||m.from_city,m.pickup_start,'arriver avant');
+      if(suivante)ajouter('Enchaînement',m.destination_address||m.to_city,suivante.origin_address||suivante.from_city,suivante.pickup_start,'arriver avant');
+      else {const p=document.createElement('p');p.textContent='Enchaînement : aucune seconde mission acceptée et chronologiquement compatible identifiée automatiquement.';boite.append(p);}
+      const fin=suivante||m;ajouter('Retour',fin.destination_address||fin.to_city,ville,fin.delivery_end,'après livraison');
+      const fermer=document.createElement('button');fermer.type='button';fermer.textContent='Fermer';fermer.onclick=()=>fond.remove();boite.append(fermer);fond.onclick=e=>{if(e.target===fond)fond.remove();};fond.append(boite);document.body.append(fond);
+    }; }
     { const bv = $('btnVol'); if (bv) bv.onclick = () => popupVol(m); }
     { const br = $('btnRetirer'); if (br) br.onclick = () => { if (!window.confirm('Retirer cette mission de ton Agenda sur ce téléphone ? (rien n’est supprimé chez Hiflow ni sur le serveur ; tu peux tout remettre dans Réglages)')) return; const t = lireLocal('cp_masquees', []) || []; const k = m.platform + '|' + m.external_id; if (!t.includes(k)) t.push(k); ecrireLocal('cp_masquees', t); etat.missions = etat.missions.filter(x => !(x.kind === 'acceptee' && x.platform + '|' + x.external_id === k)); ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures }); $('feuille').hidden = true; afficher(); toast('Retirée de l’Agenda'); }; }
     pointsMission(m).then(ok => { if (ok && $('gpsO')) { $('gpsO').innerHTML = mentionGps(m, 'origin'); if ($('gpsD')) $('gpsD').innerHTML = mentionGps(m, 'destination'); } });
