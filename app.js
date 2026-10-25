@@ -902,8 +902,8 @@
       <label for="rSncf">Carte de réduction SNCF</label><select id="rSncf">${Object.entries(CALC.CARTES_SNCF).map(([k, v]) => `<option value="${k}">${esc(v.nom)}</option>`).join('')}</select>
       <label for="rCartesAutres">Autres cartes et abonnements de transport (un par ligne)</label>
       <textarea id="rCartesAutres" rows="4" maxlength="1500" placeholder="Ex. SIBRA Annecy — abonnement annuel&#10;TER Auvergne-Rhône-Alpes — carte personnelle"></textarea>
-      <label for="rCartesFin">Dates de fin de validité des cartes ci-dessus (facultatif, une date AAAA-MM-JJ par ligne, dans le même ordre)</label>
-      <textarea id="rCartesFin" rows="3" maxlength="500" placeholder="Ex. 2027-09-30&#10;2027-12-31"></textarea>
+      <label for="rCartesFin">Dates de validité (facultatif : NOM DE CARTE | AAAA-MM-JJ, une par ligne)</label>
+      <textarea id="rCartesFin" rows="3" maxlength="1500" placeholder="SIBRA Annecy — abonnement annuel | 2027-09-30&#10;TER Auvergne-Rhône-Alpes — carte personnelle | 2027-12-31"></textarea>
       <p class="doux">Déclare uniquement les cartes que tu possèdes. Le prix réduit doit être confirmé par le transporteur ; aucune réduction n’est garantie automatiquement.</p>
       ${(lireLocal('cp_masquees', []) || []).length ? `<p class="doux">${(lireLocal('cp_masquees', []) || []).length} mission(s) retirée(s) de l’Agenda : <button id="remettre" class="lienBouton" type="button">Tout remettre</button></p>` : ''}
       <label for="rTransport">Transport pour l’aller et le retour (le prix et la durée sont calculés avec ce moyen)</label><select id="rTransport"><option value="moyenne">Moyenne des moyens (train avec ta carte, BlaBlaCar, BlaBlaCar Daily, Flixbus…)</option><option value="general">Estimation générale (coût au km ci-dessous)</option><option value="moins_cher">Le moins cher disponible</option><option value="covoiturage">Covoiturage BlaBlaCar</option><option value="blablacar_daily">BlaBlaCar Daily (trajets du quotidien)</option><option value="flixbus">Flixbus / car longue distance</option><option value="train">Train (avec ta carte de réduction)</option><option value="bus">Bus</option><option value="taxi">Taxi / VTC</option><option value="trottinette">Trottinette (courts trajets)</option></select>
@@ -924,7 +924,7 @@
     $('rDom').value = r.domicile_ville || ''; $('rTr').value = r.cout_transport_km; $('rVit').value = r.vitesse_liaison; $('rMarge').value = r.marge_minutes; $('rRayon').value = r.rayon_retour_km; $('rAtt').value = r.attente_max_h; $('rSncf').value = r.carte_sncf || 'aucune'; $('rTrot').checked = r.trottinette === true;
     $('rCartesAutres').value = (Array.isArray(r.cartesReduction) ? r.cartesReduction : [])
       .filter(c => typeof c === 'string' && c.trim() && !c.startsWith('sncf:')).join('\n');
-    $('rCartesFin').value = (Array.isArray(r.cartesValidite) ? r.cartesValidite : []).join('\n');
+    $('rCartesFin').value = Object.entries(r.cartesExpiration || {}).map(([nom, date]) => nom + ' | ' + date).join('\n');
     let domChoisi = r.domicile_ville ? { nom: r.domicile_ville, lat: r.domicile_lat, lng: r.domicile_lng, libelle: r.domicile_ville } : null;
     $('rDom').oninput = () => {
       const box = $('rDomSugg'), l = G.suggestions($('rDom').value, { types: ['ville'], villes: villesConnues().filter(v => v.lat != null), max: 6 }); chargerVillesNet($('rDom').value, () => { if ($('rDom')) $('rDom').oninput(); });
@@ -936,9 +936,12 @@
         cout_transport_km: Number($('rTr').value), vitesse_liaison: Number($('rVit').value), marge_minutes: Math.round(Number($('rMarge').value)), rayon_retour_km: Math.round(Number($('rRayon').value)), attente_max_h: Math.round(Number($('rAtt').value)), carte_sncf: $('rSncf').value, trottinette: $('rTrot').checked,
         cartesReduction: [...new Set([...($('rSncf').value !== 'aucune' ? ['sncf:' + $('rSncf').value] : []),
           ...$('rCartesAutres').value.split(/\r?\n/).map(x => x.trim()).filter(x => x && !x.toLowerCase().startsWith('sncf:'))])].slice(0, 30),
-        cartesValidite: $('rCartesFin').value.split(/\r?\n/).map(x => x.trim()).slice(0, 30) };
+        cartesExpiration: Object.fromEntries($('rCartesFin').value.split(/\r?\n/).map(x => x.trim()).filter(Boolean)
+          .map(x => { const i = x.lastIndexOf('|'); return i < 0 ? ['', ''] : [x.slice(0, i).trim(), x.slice(i + 1).trim()]; })
+          .filter(([nom]) => nom).slice(0, 30)) };
       const dateCarteValide = d => !d || (/^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(d)) && new Date(d).toISOString().slice(0, 10) === d);
-      if (!v.cartesValidite.every(dateCarteValide)) return toast('Date de fin de validité invalide (AAAA-MM-JJ)');
+      if ($('rCartesFin').value.split(/\r?\n/).some(x => x.trim() && !x.includes('|')) ||
+          !Object.values(v.cartesExpiration).every(d => d && dateCarteValide(d))) return toast('Validité : NOM DE CARTE | AAAA-MM-JJ');
       if (!(v.taux_cotisations >= 0 && v.taux_cotisations <= 60) || !(v.cout_km >= 0 && v.cout_km <= 5) || !(v.prix_minimum >= 0)) return toast('Valeurs hors limites');
       if (!(v.cout_transport_km >= 0 && v.cout_transport_km <= 2) || !(v.vitesse_liaison >= 10 && v.vitesse_liaison <= 300) || !(v.marge_minutes >= 0 && v.marge_minutes <= 600) || !(v.rayon_retour_km >= 1 && v.rayon_retour_km <= 500) || !(v.attente_max_h >= 1 && v.attente_max_h <= 96)) return toast('Valeurs de liaison hors limites');
       const texteDom = $('rDom').value.trim();
