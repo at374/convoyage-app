@@ -31,7 +31,13 @@
     const key = JSON.stringify([cle(q), sources.map(idFournisseur)]), maintenant = Date.now();
     const precedent = cache.get(key);
     if (!options.rafraichir && precedent && precedent.expire > maintenant) {
-      const valeur = { ...precedent.valeur, cache: true };
+      // Recalculer la fraîcheur au moment de la lecture du cache.
+      // Une confirmation devenue ancienne ne doit pas rester « confirmée ».
+      const valeur = {
+        ...precedent.valeur,
+        trajets: precedent.valeur.trajets.map(t => valider(t)).filter(Boolean),
+        cache: true
+      };
       if (typeof options.surResultat === 'function') {
         // Même en cas de réponse instantanée du cache, alimenter l'interface.
         for (const fournisseur of sources) {
