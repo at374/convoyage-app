@@ -23,4 +23,4 @@ const h=planifier([a,hiflow],{marge_minutes:60},opts).plans[0];
 assert.ok(h);
 assert.equal(h.etapes[1].rentabilite.transportNonCouvert,0);
 assert.equal(h.net,157.6);
-console.log('Real calc/planner integration: 9 assertions passed');
+console.log('Real calc/planner integration: 10 assertions passed');
