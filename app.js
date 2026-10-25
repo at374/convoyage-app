@@ -1010,7 +1010,20 @@
   window.CPFournisseursTransports = window.CPFournisseursTransports || [];
   const dateTransportMission = (m, retour) => {
     const t = retour ? (m.delivery_end || m.delivery_start) : (m.pickup_start || m.pickup_end);
-    return t && Number.isFinite(Date.parse(t)) ? new Date(t).toISOString().slice(0, 10) : '';
+    // La date de mission est une date française, pas le jour UTC.
+    return t && Number.isFinite(Date.parse(t))
+      ? new Date(t).toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' }) : '';
+  };
+  const heureTransportMission = (m, retour) => {
+    const t = retour ? (m.delivery_end || m.delivery_start) : (m.pickup_start || m.pickup_end);
+    return t && Number.isFinite(Date.parse(t))
+      ? new Date(t).toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+  };
+  const trajetCompatibleMission = (trajet, m, retour) => {
+    const limite = Date.parse(retour ? (m.delivery_end || m.delivery_start) : (m.pickup_start || m.pickup_end));
+    if (!Number.isFinite(limite)) return false;
+    // Aller : arriver AVANT la prise en charge. Retour : partir APRÈS la livraison.
+    return retour ? Date.parse(trajet.departAt) >= limite : Date.parse(trajet.arriveeAt) <= limite;
   };
   function blocRechercheTransport(m, retour) {
     const ville = etat.reglages && etat.reglages.domicile_ville;
@@ -1025,7 +1038,8 @@
         const sens = btn.dataset.transportRapide, retour = sens === 'retour';
         const ville = etat.reglages && etat.reglages.domicile_ville;
         const q = { depart: retour ? m.to_city : ville, arrivee: retour ? ville : m.from_city,
-          date: dateTransportMission(m, retour), heure: '' };
+          date: dateTransportMission(m, retour), heure: heureTransportMission(m, retour),
+          contrainte: retour ? 'depart_apres_livraison' : 'arrivee_avant_prise_en_charge' };
         const cible = document.querySelector('#feuilleContenu [data-transport-resultat="' + sens + '"]');
         if (!cible || !window.CPTransportRapide) return;
         const fournisseurs = window.CPFournisseursTransports || [];
@@ -1039,11 +1053,11 @@
         cible.textContent = 'Recherche en cours…'; btn.disabled = true;
         try {
           const res = await window.CPTransportRapide.rechercher(q, fournisseurs, {
-            surResultat: r => { lignes.push(...r.trajets); afficherLignes(); }
+            surResultat: r => { lignes.push(...r.trajets.filter(t => trajetCompatibleMission(t, m, retour))); afficherLignes(); }
           });
-          if (!lignes.length) lignes.push(...res.trajets);
+          if (!lignes.length) lignes.push(...res.trajets.filter(t => trajetCompatibleMission(t, m, retour)));
           afficherLignes();
-          if (!lignes.length && cible.isConnected) cible.textContent = 'Aucun trajet vérifié trouvé. Consulte les liens des transporteurs.';
+          if (!lignes.length && cible.isConnected) cible.textContent = 'Aucun trajet compatible avec les horaires de la mission trouvé. Consulte les liens des transporteurs.';
         } catch (e) { if (cible.isConnected) cible.textContent = 'Recherche indisponible : consulte les transporteurs.'; }
         finally { if (btn.isConnected) btn.disabled = false; }
       };
