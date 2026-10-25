@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V278 (2.0.127)';
+  const VERSION_APP = 'V279 (2.0.128)';
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
@@ -751,10 +751,10 @@
       box.innerHTML = l.map((x, i) => `<button role="option" data-pz="${i}">${esc(x.libelle)}<small>${esc(x.detail)}</small></button>`).join(''); box.hidden = !l.length;
       for (const b of box.querySelectorAll('[data-pz]')) b.onclick = () => { const x = l[Number(b.dataset.pz)]; lire(); p.zones.push(x.type === 'ville' ? { type: 'ville', nom: x.nom, dep: x.dep, lat: x.lat, lng: x.lng } : { type: x.type, code: x.code }); memoriser(); afficher(); };
     };
-    for (const el of document.querySelectorAll('[data-repos]')) el.onchange = () => { ecrireLocal('cp_jours_repos_hebdo', [...document.querySelectorAll('[data-repos]:checked')].map(x=>x.dataset.repos)); };
+    for (const el of document.querySelectorAll('[data-repos]')) el.onchange = () => { ecrireLocal('cp_jours_repos_hebdo', [...document.querySelectorAll('[data-repos]:checked')].map(x=>x.dataset.repos)); etat.planResultat = null; };
     $('pJourOffAdd').onclick = () => {
       const d = $('pJourOff').value;
-      if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(d)) return toast('Choisis une date valide');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return toast('Choisis une date valide');
       const dates = [...new Set([...(lireLocal('cp_jours_sans_travail',[])||[]),d])].sort();
       ecrireLocal('cp_jours_sans_travail',dates); afficher();
     };
