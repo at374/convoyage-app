@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V279 (2.0.128)';
+  const VERSION_APP = 'V280 (2.0.129)';
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
@@ -717,10 +717,10 @@
   }
   // ---------- V80 : planning sur plusieurs jours ----------
   const PL = window.CPPlanning;
-  const demainParis = () => { const d = new Date(Date.now() + 86400000); return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' }); };
+  const demainParis = () => { const d = new Date(Date.now() + 86400000); return d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' }); };
   function vuePlanning() {
     const p = etat.plan = { date: demainParis(), heure: '06:00', jours: 3, nuits: 2, hotel: 60, hotelOn: false, seuil: 150, zones: [], rayon: 50, acc: true, tri: 'net', longue: false, ...(etat.plan || {}) };
-    if (!p.date || p.date < new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' })) p.date = demainParis();
+    if (!p.date || p.date < new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' })) p.date = demainParis();
     const opt = (l, v, f) => l.map(x => `<option value="${x}"${String(x) === String(v) ? ' selected' : ''}>${f(x)}</option>`).join('');
     const dom = RT.domicile(etat.reglages);
     $('ecran').innerHTML = `<div class="carte plusFiltres"><h2>🗺️ Préparer plusieurs jours</h2>
@@ -751,15 +751,15 @@
       box.innerHTML = l.map((x, i) => `<button role="option" data-pz="${i}">${esc(x.libelle)}<small>${esc(x.detail)}</small></button>`).join(''); box.hidden = !l.length;
       for (const b of box.querySelectorAll('[data-pz]')) b.onclick = () => { const x = l[Number(b.dataset.pz)]; lire(); p.zones.push(x.type === 'ville' ? { type: 'ville', nom: x.nom, dep: x.dep, lat: x.lat, lng: x.lng } : { type: x.type, code: x.code }); memoriser(); afficher(); };
     };
-    for (const el of document.querySelectorAll('[data-repos]')) el.onchange = () => { ecrireLocal('cp_jours_repos_hebdo', [...document.querySelectorAll('[data-repos]:checked')].map(x=>x.dataset.repos)); etat.planResultat = null; };
+    for (const el of document.querySelectorAll('[data-repos]')) el.onchange = () => { ecrireLocal('cp_jours_repos_hebdo', [...document.querySelectorAll('[data-repos]:checked')].map(x=>x.dataset.repos)); etat.planResultat = null; lire(); memoriser(); };
     $('pJourOffAdd').onclick = () => {
       const d = $('pJourOff').value;
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return toast('Choisis une date valide');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !Number.isFinite(Date.parse(d+'T12:00:00Z'))) return toast('Choisis une date valide');
       const dates = [...new Set([...(lireLocal('cp_jours_sans_travail',[])||[]),d])].sort();
-      ecrireLocal('cp_jours_sans_travail',dates); afficher();
+      ecrireLocal('cp_jours_sans_travail',dates); etat.planResultat = null; lire(); memoriser(); afficher();
     };
     for (const b of document.querySelectorAll('[data-jour-off]')) b.onclick = () => {
-      ecrireLocal('cp_jours_sans_travail',(lireLocal('cp_jours_sans_travail',[])||[]).filter(d=>d!==b.dataset.jourOff)); afficher();
+      ecrireLocal('cp_jours_sans_travail',(lireLocal('cp_jours_sans_travail',[])||[]).filter(d=>d!==b.dataset.jourOff)); etat.planResultat = null; lire(); memoriser(); afficher();
     };
     $('pGo').onclick = () => { lire(); memoriser(); calculerPlanning(); };
     if (etat.planResultat) afficherPlans(etat.planResultat);
