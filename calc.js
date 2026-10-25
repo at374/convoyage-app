@@ -135,7 +135,12 @@
     // Prudence : le remboursement Hiflow n'est acquis que s'il est explicitement confirmé pour cette mission.
     const transportRembourse = m.platform === 'Hiflow' && (m.transport_rembourse_confirme === true || m.fees?.transport_rembourse_confirme === true);
     const montantPartiel = n(m.transport_rembourse_montant_confirme);
-    const couverture = m.platform !== 'Hiflow' ? 0 : transportRembourse ? coutTransport : Math.min(coutTransport, Math.max(0, montantPartiel ?? 0));
+    const transportDevis = m.platform === 'Hiflow' && !!m.fees?.devis_numero
+      ? arr(frais.filter(([k]) => TRANSPORT.test(k)).reduce((total, [, v]) => total + Math.max(0, v), 0))
+      : 0;
+    // Priorité au montant exact inscrit au devis ; ne pas transformer un montant du devis en remboursement illimité.
+    const couverture = m.platform !== 'Hiflow' ? 0
+      : Math.min(coutTransport, Math.max(0, montantPartiel ?? (transportDevis > 0 ? transportDevis : (transportRembourse ? coutTransport : 0))));
     const transportNonCouvert = arr(Math.max(0, coutTransport - couverture));
     // Montant couvert uniquement : un tarif saisi dans fees.train/bus n'est pas un remboursement confirmé.
     const rembTransport = couverture;
