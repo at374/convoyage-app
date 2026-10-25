@@ -1345,6 +1345,32 @@
         trajets.append(p);
         const bouton=document.createElement('button');bouton.type='button';bouton.textContent='🔎 Ouvrir les transports';bouton.disabled=!a||!b||!Number.isFinite(Date.parse(borne||''));
         bouton.onclick=()=>ouvrir(a,b,borne,type);trajets.append(bouton);
+        const sources=window.CPFournisseursTransports||[];
+        if(window.CPTransportRapide && sources.length && Number.isFinite(Date.parse(borne||''))){
+          const recherche=document.createElement('button');recherche.type='button';recherche.textContent='🚌 Rechercher les horaires connectés';
+          const resultat=document.createElement('div');resultat.setAttribute('role','status');resultat.setAttribute('aria-live','polite');
+          recherche.onclick=async()=>{
+            recherche.disabled=true;resultat.textContent='Recherche en cours…';
+            const marge=Math.max(0,Number(margeTransportMinutes())||15);
+            const borneMs=Date.parse(borne);
+            const limite=type==='arriver avant'?borneMs-marge*60000:borneMs;
+            const dateLocal=new Date(limite).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'});
+            const q={depart:a,arrivee:b,departAdresse:a,arriveeAdresse:b,date:dateLocal,heure:'',margeMinutes:marge,contrainte:type==='arriver avant'?'arrivee_avant_prise_en_charge':'depart_apres_livraison',limiteMissionAt:new Date(limite).toISOString()};
+            try{
+              const res=await window.CPTransportRapide.rechercher(q,sources);
+              const valides=(res.trajets||[]).filter(t=>{
+                const d=Date.parse(t.departAt||''),f=Date.parse(t.arriveeAt||'');
+                return Number.isFinite(d)&&Number.isFinite(f)&&f>d&&(type==='arriver avant'?f<=limite:d>=limite);
+              }).sort((x,y)=>Date.parse(x.departAt)-Date.parse(y.departAt)).slice(0,15);
+              resultat.replaceChildren();
+              const titre=document.createElement('p');titre.textContent=valides.length+' trajet(s) respectant la limite horaire, sous réserve des données du fournisseur.';resultat.append(titre);
+              for(const t of valides){const ligne=document.createElement('p');ligne.textContent=new Date(t.departAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' → '+new Date(t.arriveeAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' · '+(t.prixEUR==null?'tarif inconnu':Number(t.prixEUR).toLocaleString('fr-FR',{style:'currency',currency:'EUR'}))+' · '+(t.fournisseur||'source non précisée')+(t.confirme?' · source confirmée':' · à vérifier');resultat.append(ligne);}
+              if((res.sources||[]).some(x=>x.erreur)){const p=document.createElement('p');p.textContent='Résultats partiels : certains fournisseurs sont indisponibles.';resultat.append(p);}
+            }catch(e){resultat.textContent='Recherche indisponible : consulte directement les transporteurs.';}
+            finally{recherche.disabled=false;}
+          };
+          trajets.append(recherche,resultat);
+        }
       };
       const rendre=()=>{
         trajets.replaceChildren();
