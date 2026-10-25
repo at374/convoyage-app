@@ -5,7 +5,7 @@
   const cache = new Map(), enCours = new Map(), idsFournisseurs = new WeakMap();
   let prochainId = 1;
   const idFournisseur = f => { if (!idsFournisseurs.has(f)) idsFournisseurs.set(f, prochainId++); return idsFournisseurs.get(f); };
-  const DUREE_CACHE = 3 * 60 * 1000, MAX_CACHE = 120;
+  const DUREE_CACHE = 3 * 60 * 1000, DUREE_CACHE_PARTIEL = 20 * 1000, MAX_CACHE = 120;
   const propre = v => String(v == null ? '' : v).trim();
   const dateValide = v => Number.isFinite(Date.parse(v));
   const jourValide = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) &&
@@ -46,7 +46,7 @@
         // Même en cas de réponse instantanée du cache, alimenter l'interface.
         for (const fournisseur of sources) {
           const nom = propre(fournisseur.nom);
-          try { options.surResultat({ fournisseur: nom, trajets: valeur.trajets.filter(t => t.fournisseur === nom), cache: true }); } catch (_) {}
+          try { const statut = valeur.sources.find(s => s.fournisseur === nom); options.surResultat({ fournisseur: nom, trajets: valeur.trajets.filter(t => t.fournisseur === nom), erreur: statut && statut.erreur || null, cache: true }); } catch (_) {}
         }
       }
       return valeur;
@@ -107,7 +107,7 @@
       // durée même lorsqu'un fournisseur secondaire échoue.
       if (sources.length && trajets.length && resultats.some(r => !r.erreur)) {
         if (cache.size >= MAX_CACHE) cache.clear();
-        cache.set(key, { valeur, expire: Date.now() + DUREE_CACHE });
+        cache.set(key, { valeur, expire: Date.now() + (resultats.some(r => r.erreur) ? DUREE_CACHE_PARTIEL : DUREE_CACHE) });
       }
       return valeur;
     })();
