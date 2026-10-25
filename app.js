@@ -1074,6 +1074,7 @@
                 const expiration = (etat.reglages.cartesExpiration || {})[c];
                 return !expiration || expiration >= ((document.querySelector('#feuilleContenu [data-transport-date="' + sens + '"]') || {}).value || dateTransportMission(m, retour));
               }) : [],
+          cartesExpiration: etat.reglages && etat.reglages.cartesExpiration || {},
           // Date-limite exacte pour les API de recherche de transport.
           // L'aller vise une arrivée avant cette heure ; le retour un départ après.
           limiteMissionAt: retour ? (m.delivery_end || m.delivery_start) : (m.pickup_start || m.pickup_end) };
