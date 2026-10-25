@@ -1343,6 +1343,7 @@
         const p=document.createElement('p');
         p.textContent=nom+' : '+(a||'adresse manquante')+' → '+(b||'adresse manquante')+(borne?' · '+type+' '+jour(borne)+' '+heure(borne):'');
         trajets.append(p);
+        if(a&&b&&((a===ville)||(b===ville))){const precis=document.createElement('small');precis.textContent=' Domicile renseigné par ville uniquement : point de départ/arrivée approximatif.';trajets.append(precis);}
         const bouton=document.createElement('button');bouton.type='button';bouton.textContent='🔎 Ouvrir les transports';bouton.disabled=!a||!b||!Number.isFinite(Date.parse(borne||''));
         bouton.onclick=()=>ouvrir(a,b,borne,type);trajets.append(bouton);
         const sources=Array.isArray(window.CPFournisseursTransports)?window.CPFournisseursTransports.filter(f=>f&&typeof f.rechercher==='function'):[];
@@ -1374,15 +1375,21 @@
           trajets.append(recherche,resultat);
         }
       };
+      const adresseTransport=(mission,cote)=>{
+        const champ=cote==='origin'?'origin_address':'destination_address';
+        const villeMission=cote==='origin'?mission.from_city:mission.to_city;
+        const mail=mission.mail_info&&mission.mail_info[cote==='origin'?'depart':'arrivee'];
+        return (mission[champ]&&String(mission[champ]).trim())||(mail&&mail.adresse&&String(mail.adresse).trim())||villeMission||'';
+      };
       const rendre=()=>{
         trajets.replaceChildren();
-        ajouter('Aller',ville,m.origin_address||m.from_city,hfDates(m)?hfPk(m):m.pickup_start,'arriver avant');
+        ajouter('Aller',ville,adresseTransport(m,'origin'),hfDates(m)?hfPk(m):m.pickup_start,'arriver avant');
         if(suivante){
           const delta=Math.round((Date.parse(hfDates(suivante)?hfPk(suivante):suivante.pickup_start)-finPremiere)/60000);
           const p=document.createElement('p');p.textContent='Temps entre livraison et prise en charge : '+delta+' min (transport, marche et marge NON vérifiés).';trajets.append(p);
-          ajouter('Enchaînement',m.destination_address||m.to_city,suivante.origin_address||suivante.from_city,hfDates(suivante)?hfPk(suivante):suivante.pickup_start,'arriver avant',finPremiere);
+          ajouter('Enchaînement',adresseTransport(m,'destination'),adresseTransport(suivante,'origin'),hfDates(suivante)?hfPk(suivante):suivante.pickup_start,'arriver avant',finPremiere);
         } else {const p=document.createElement('p');p.textContent='Enchaînement : sélectionne une seconde mission acceptée, si disponible.';trajets.append(p);}
-        const fin=suivante||m;ajouter('Retour',fin.destination_address||fin.to_city,ville,hfDates(fin)?hfLiv(fin):fin.delivery_end,'après livraison');
+        const fin=suivante||m;ajouter('Retour',adresseTransport(fin,'destination'),ville,hfDates(fin)?hfLiv(fin):fin.delivery_end,'après livraison');
       };
       if(possibles.length>1){
         const label=document.createElement('label');label.textContent='Deuxième mission : ';
