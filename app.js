@@ -1393,7 +1393,20 @@
               }).filter((t,i,l)=>l.findIndex(x=>x.departAt===t.departAt&&x.arriveeAt===t.arriveeAt&&x.fournisseur===t.fournisseur)===i).sort((x,y)=>Date.parse(x.departAt)-Date.parse(y.departAt)).slice(0,15);
               resultat.replaceChildren();
               const titre=document.createElement('p');titre.textContent=valides.length+' trajet(s) respectant les limites horaires indiquées (marge de '+marge+' min avant prise en charge ou après livraison ; recherche limitée à 24 h). Correspondances, marche et retards non vérifiés. Aucun billet ni siège réservé.';resultat.append(titre);
-              for(const t of valides){const ligne=document.createElement('p');ligne.textContent=new Date(t.departAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' → '+new Date(t.arriveeAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' · '+(t.prixEUR==null?'tarif inconnu':Number(t.prixEUR).toLocaleString('fr-FR',{style:'currency',currency:'EUR'}))+' · '+(t.fournisseur||'source non précisée')+(t.confirme?' · source confirmée':' · à vérifier');resultat.append(ligne);}
+              for(const t of valides){
+                const ligne=document.createElement('p');
+                ligne.textContent=new Date(t.departAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' → '+new Date(t.arriveeAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' · '+(t.prixEUR==null?'tarif inconnu':Number(t.prixEUR).toLocaleString('fr-FR',{style:'currency',currency:'EUR'}))+' · '+(t.fournisseur||'source non précisée')+(t.confirme?' · source confirmée':' · à vérifier');
+                const adresseSource=t.source;
+                if(typeof adresseSource==='string'){
+                  try{
+                    const url=new URL(adresseSource);
+                    if(url.protocol==='https:'||url.protocol==='http:'){
+                      const lien=document.createElement('a');lien.href=url.href;lien.target='_blank';lien.rel='noopener noreferrer';lien.textContent=' · Vérifier auprès de la source';ligne.append(lien);
+                    }
+                  }catch(_){}
+                }
+                resultat.append(ligne);
+              }
               if(recherches.some(res=>(res.sources||[]).some(x=>x.erreur))){const p=document.createElement('p');p.textContent='Résultats partiels : certains fournisseurs sont indisponibles.';resultat.append(p);}
             }catch(e){resultat.textContent='Recherche indisponible : consulte directement les transporteurs.';}
             finally{recherche.disabled=false;}
