@@ -9,6 +9,7 @@
       throw new Error('Chemin de transport local invalide');
     }
     const nom = options.nom || 'Calculateur de transports';
+    const maxResultats = 500;
     return {
       nom,
       async rechercher(q) {
@@ -24,7 +25,7 @@
           });
           if (!reponse.ok) throw new Error('Service transport indisponible (' + reponse.status + ')');
           const donnees = await reponse.json();
-          if (!donnees || !Array.isArray(donnees.trajets) || donnees.trajets.length > 500) {
+          if (!donnees || !Array.isArray(donnees.trajets) || donnees.trajets.length > maxResultats) {
             throw new Error('Réponse transport invalide ou trop volumineuse');
           }
           // Le moteur principal valide ensuite chaque horaire, prix et source.
