@@ -1339,7 +1339,7 @@
       boite.append(dateAlerte);
       const avert=document.createElement('p');avert.textContent='Attention : Google Maps ne reçoit pas de garantie sur les heures via ces liens. Vérifie manuellement le jour et l’heure dans le planificateur, ainsi que le temps de trajet réel entre les deux missions.';boite.append(avert);
       const trajets=document.createElement('div');boite.append(trajets);
-      const ajouter=(nom,a,b,borne,type)=>{
+      const ajouter=(nom,a,b,borne,type,departMin)=>{
         const p=document.createElement('p');
         p.textContent=nom+' : '+(a||'adresse manquante')+' → '+(b||'adresse manquante')+(borne?' · '+type+' '+jour(borne)+' '+heure(borne):'');
         trajets.append(p);
@@ -1356,12 +1356,13 @@
             const borneMs=Date.parse(borne);
             const limite=type==='arriver avant'?borneMs-marge*60000:borneMs;
             const dateLocal=new Date(limite).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'});
-            const q={depart:a,arrivee:b,departAdresse:a,arriveeAdresse:b,date:dateLocal,heure:'',margeMinutes:marge,contrainte:type==='arriver avant'?'arrivee_avant_prise_en_charge':'depart_apres_livraison',limiteMissionAt:new Date(limite).toISOString()};
+            const jourDepartMin=Number.isFinite(departMin)?new Date(departMin).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}):dateLocal;
+            const q={depart:a,arrivee:b,departAdresse:a,arriveeAdresse:b,date:type==='arriver avant'?jourDepartMin:dateLocal,heure:'',margeMinutes:marge,contrainte:type==='arriver avant'?'arrivee_avant_prise_en_charge':'depart_apres_livraison',limiteMissionAt:new Date(limite).toISOString()};
             try{
               const res=await window.CPTransportRapide.rechercher(q,sources);
               const valides=(res.trajets||[]).filter(t=>{
                 const d=Date.parse(t.departAt||''),f=Date.parse(t.arriveeAt||'');
-                return Number.isFinite(d)&&Number.isFinite(f)&&f>d&&(type==='arriver avant'?f<=limite:d>=limite)&&new Date(d).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'})===dateLocal;
+                return Number.isFinite(d)&&Number.isFinite(f)&&f>d&&(type==='arriver avant'?f<=limite:d>=limite)&&(!Number.isFinite(departMin)||d>=departMin)&&new Date(d).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'})===q.date;
               }).sort((x,y)=>Date.parse(x.departAt)-Date.parse(y.departAt)).slice(0,15);
               resultat.replaceChildren();
               const titre=document.createElement('p');titre.textContent=valides.length+' trajet(s) respectant la limite horaire, sous réserve des données du fournisseur.';resultat.append(titre);
@@ -1379,7 +1380,7 @@
         if(suivante){
           const delta=Math.round((Date.parse(hfDates(suivante)?hfPk(suivante):suivante.pickup_start)-finPremiere)/60000);
           const p=document.createElement('p');p.textContent='Temps entre livraison et prise en charge : '+delta+' min (transport, marche et marge NON vérifiés).';trajets.append(p);
-          ajouter('Enchaînement',m.destination_address||m.to_city,suivante.origin_address||suivante.from_city,hfDates(suivante)?hfPk(suivante):suivante.pickup_start,'arriver avant');
+          ajouter('Enchaînement',m.destination_address||m.to_city,suivante.origin_address||suivante.from_city,hfDates(suivante)?hfPk(suivante):suivante.pickup_start,'arriver avant',finPremiere);
         } else {const p=document.createElement('p');p.textContent='Enchaînement : sélectionne une seconde mission acceptée, si disponible.';trajets.append(p);}
         const fin=suivante||m;ajouter('Retour',fin.destination_address||fin.to_city,ville,hfDates(fin)?hfLiv(fin):fin.delivery_end,'après livraison');
       };
