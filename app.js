@@ -1363,7 +1363,7 @@
             recherche.disabled=true;resultat.textContent='Recherche en cours…';
             const marge=Math.max(0,Number(margeTransportMinutes())||15);
             const borneMs=Date.parse(borne);
-            const limite=type==='arriver avant'?borneMs-marge*60000:borneMs;
+            const limite=type==='arriver avant'?borneMs-marge*60000:borneMs+marge*60000;
             const dateLocal=new Date(limite).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'});
             const jourDepartMin=Number.isFinite(departMin)?new Date(departMin).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}):dateLocal;
             const q={depart:a,arrivee:b,departAdresse:a,arriveeAdresse:b,date:type==='arriver avant'?jourDepartMin:dateLocal,heure:'',margeMinutes:marge,contrainte:type==='arriver avant'?'arrivee_avant_prise_en_charge':'depart_apres_livraison',limiteMissionAt:new Date(limite).toISOString()};
@@ -1392,7 +1392,7 @@
                 return Number.isFinite(d)&&Number.isFinite(f)&&f>d&&(type==='arriver avant'?(f<=limite&&d>=debutFenetre):(d>=limite&&d<=limite+24*3600000))&&(!Number.isFinite(departMin)||d>=departMin)&&jours.includes(new Date(d).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}));
               }).filter((t,i,l)=>l.findIndex(x=>x.departAt===t.departAt&&x.arriveeAt===t.arriveeAt&&x.fournisseur===t.fournisseur)===i).sort((x,y)=>Date.parse(x.departAt)-Date.parse(y.departAt)).slice(0,15);
               resultat.replaceChildren();
-              const titre=document.createElement('p');titre.textContent=valides.length+' trajet(s) respectant les limites horaires indiquées (recherche limitée à 24 h). Correspondances, marche et retards non vérifiés. Aucun billet ni siège réservé.';resultat.append(titre);
+              const titre=document.createElement('p');titre.textContent=valides.length+' trajet(s) respectant les limites horaires indiquées (marge de '+marge+' min avant prise en charge ou après livraison ; recherche limitée à 24 h). Correspondances, marche et retards non vérifiés. Aucun billet ni siège réservé.';resultat.append(titre);
               for(const t of valides){const ligne=document.createElement('p');ligne.textContent=new Date(t.departAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' → '+new Date(t.arriveeAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' · '+(t.prixEUR==null?'tarif inconnu':Number(t.prixEUR).toLocaleString('fr-FR',{style:'currency',currency:'EUR'}))+' · '+(t.fournisseur||'source non précisée')+(t.confirme?' · source confirmée':' · à vérifier');resultat.append(ligne);}
               if(recherches.some(res=>(res.sources||[]).some(x=>x.erreur))){const p=document.createElement('p');p.textContent='Résultats partiels : certains fournisseurs sont indisponibles.';resultat.append(p);}
             }catch(e){resultat.textContent='Recherche indisponible : consulte directement les transporteurs.';}
