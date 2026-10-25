@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V270 (2.0.120)';
+  const VERSION_APP = 'V272 (2.0.121)';
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
@@ -688,6 +688,7 @@
     listeAffichee = items.map(x => x.mission);
     if (!A.items.length) { $('ecran').innerHTML = '<div class="vide">Aucune mission acceptée. Elles arrivent automatiquement depuis « Mes trajets » (Hiflow), « Mes réservations » (DriiveMe), « Missions réservées » (Otoqi) et « Propositions réservées » (Pop Valet), ou d’un e-mail de confirmation Hiflow collé dans l’extension.</div>'; return; }
     const resume = RT.resumeAgenda(etat.missions, etat.reglages);
+    const inter = window.CPIntermissions && window.CPIntermissions.recherche(etat.missions, etat.reglages, {limite:5});
     // V139 : plus de bandeau « N conflits » dans l'Agenda (les estimations produisaient des dizaines de faux conflits).
     let html = false && A.conflits.length ? `<div class="carte conflit" id="conflits"><h2>⚠️ ${A.conflits.length} conflit${A.conflits.length > 1 ? 's' : ''} dans ton agenda</h2>${A.conflits.map(c => `<p>${esc(window.CPAgenda.libelleConflit(c))}</p>`).join('')}<p class="doux">Estimation (durées et liaisons approximatives) : vérifie sur les plateformes.</p></div>` : '';
     let jour = '';
@@ -704,6 +705,12 @@
       html += carteMission(m, i, extra).replace('class="mission', `class="mission etat-${x.etat}${''}`);
     });
     if (caches || etat.agendaTout) html += `<button id="agTout" class="second" style="width:100%;margin-top:10px">${etat.agendaTout ? 'Masquer les missions passées' : 'Afficher les ' + caches + ' mission(s) passée(s) de plus de 7 jours'}</button>`;
+    if (inter && inter.intervalles.length) {
+      html += '<div class="carte"><h2>🔎 Missions entre deux engagements</h2><p class="doux">Suggestions estimées. Transports et horaires à confirmer avant acceptation.</p>' +
+        inter.intervalles.map(g => '<div class="bk bkC bkSuite"><div class="bkt">Créneau libre</div>' +
+          '<p>' + esc(new Date(g.debut).toLocaleDateString('fr-FR', {timeZone:'Europe/Paris'})) + ' → ' + esc(new Date(g.fin).toLocaleDateString('fr-FR', {timeZone:'Europe/Paris'})) + '</p>' +
+          (g.propositions.length ? g.propositions.map(z => '<p>🚗 ' + esc(z.mission.from_city || '?') + ' → ' + esc(z.mission.to_city || '?') + ' · ' + esc(z.mission.platform) + ' · net estimé ' + esc(euros(z.netMissionEstime)) + '<br><small>Transport non confirmé — vérifiez vous-même les transports avant d’accepter cette mission.</small></p>').join('') : '<p class="doux">Aucune mission compatible identifiée.</p>') + '</div>').join('') + '</div>';
+    }
     $('ecran').innerHTML = html;
     for (const b of document.querySelectorAll('.mission')) b.onclick = () => detail(listeAffichee[Number(b.dataset.i)]);
     const t = $('agTout'); if (t) t.onclick = () => { etat.agendaTout = !etat.agendaTout; afficher(); };
@@ -730,7 +737,7 @@
       <div class="zones" id="pZones">${p.zones.map((z, i) => `<button class="zone" data-pzone="${i}" aria-label="Retirer cette zone">${esc(G.libelleZone(z))} ✕</button>`).join('')}</div>
       <label><input id="pAcc" type="checkbox" style="width:auto;min-height:0"${p.acc ? ' checked' : ''}> Inclure obligatoirement mes missions déjà acceptées</label>
       <button id="pGo" style="width:100%;margin-top:12px"${dom ? '' : ' disabled'}>Calculer les meilleurs enchaînements</button></div>
-      <div id="pRes"></div>`;
+      <div id="pRes"></div><div id="pInter"></div>`;
     const lire = () => Object.assign(p, { date: $('pDate').value, heure: $('pHeure').value || '06:00', jours: Number($('pJours').value), nuits: Number($('pNuits').value), hotel: Math.max(0, Math.min(500, Number($('pHotel').value) || 0)), hotelOn: $('pHotelOn').checked, seuil: Math.max(0, Math.min(2000, Number($('pSeuil').value) || 150)), acc: $('pAcc').checked, tri: $('pTri').value });
     for (const id of ['pDate', 'pHeure', 'pJours', 'pNuits', 'pHotel', 'pSeuil', 'pAcc', 'pTri']) $(id).onchange = () => { lire(); memoriser(); };
     $('pHotelOn').onchange = () => { lire(); memoriser(); $('pHotel').disabled = !p.hotelOn; };   // frais d'hôtel en option (coche)
@@ -748,6 +755,14 @@
     if (debut == null) return toast('Date ou heure invalide');
     const res = PL.planifier(etat.missions, etat.reglages, { debut, jours: p.jours, nuits_max: p.nuits, budget_hotel: p.hotelOn ? p.hotel : 0, seuil_dom: p.seuil, zones: p.zones, rayon: p.rayon, inclureAcceptees: p.acc, tri: p.tri });
     etat.planResultat = res; afficherPlans(res);
+    const ip = $('pInter');
+    if (ip && window.CPIntermissions) {
+      const gaps = window.CPIntermissions.recherche(etat.missions, etat.reglages, {limite:5}).intervalles;
+      ip.innerHTML = gaps.length ? '<div class="carte"><h2>🔎 Missions entre engagements acceptés</h2><p class="doux">Ces suggestions ne modifient aucune mission acceptée. Déplacements estimés, non vérifiés.</p>' +
+        gaps.map(g => '<p><b>' + esc(new Date(g.debut).toLocaleDateString('fr-FR')) + ' → ' + esc(new Date(g.fin).toLocaleDateString('fr-FR')) + '</b> : ' +
+          (g.propositions.length ? g.propositions.map(z => esc(z.mission.from_city || '?') + ' → ' + esc(z.mission.to_city || '?') + ' (' + esc(z.mission.platform) + ', ≈ ' + esc(euros(z.netMissionEstime)) + ')').join(' ; ') : 'aucune proposition') + '</p>').join('') +
+        '<p class="doux">Transport non confirmé — vérifiez vous-même les transports avant d’accepter cette mission.</p></div>' : '';
+    }
     const r = $('pRes'); if (r) r.scrollIntoView({ block: 'start' });
   }
   function afficherPlans(res) {
