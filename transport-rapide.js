@@ -8,6 +8,8 @@
   const DUREE_CACHE = 3 * 60 * 1000, MAX_CACHE = 120;
   const propre = v => String(v == null ? '' : v).trim();
   const dateValide = v => Number.isFinite(Date.parse(v));
+  const jourValide = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) &&
+    Number.isFinite(Date.parse(v)) && new Date(v).toISOString().slice(0, 10) === v;
   const cle = q => JSON.stringify([propre(q.depart).toLowerCase(), propre(q.arrivee).toLowerCase(), propre(q.date), propre(q.heure), propre(q.reduction), propre(q.contrainte), propre(q.departAdresse), propre(q.arriveeAdresse), propre(q.margeMinutes), propre(q.limiteMissionAt)]);
   function valider(trajet) {
     if (!trajet || !dateValide(trajet.departAt) || !dateValide(trajet.arriveeAt) ||
@@ -26,7 +28,7 @@
     return { ...trajet, prixEUR: prix, confirme, source, verifieLe };
   }
   async function rechercher(q, fournisseurs, options = {}) {
-    if (!q || !propre(q.depart) || !propre(q.arrivee) || !dateValide(q.date)) throw new Error('Trajet ou date invalide');
+    if (!q || !propre(q.depart) || !propre(q.arrivee) || !jourValide(q.date)) throw new Error('Trajet ou date invalide');
     const sources = Array.isArray(fournisseurs) ? fournisseurs.filter(f => f && typeof f.rechercher === 'function') : [];
     const key = JSON.stringify([cle(q), sources.map(idFournisseur)]), maintenant = Date.now();
     const precedent = cache.get(key);
