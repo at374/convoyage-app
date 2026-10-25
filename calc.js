@@ -122,7 +122,7 @@
     // Prudence : le remboursement Hiflow n'est acquis que s'il est explicitement confirmé pour cette mission.
     const transportRembourse = m.platform === 'Hiflow' && (m.transport_rembourse_confirme === true || m.fees?.transport_rembourse_confirme === true);
     const montantPartiel = n(m.transport_rembourse_montant_confirme);
-    const couverture = transportRembourse ? coutTransport : Math.min(coutTransport, Math.max(0, montantPartiel ?? (m.transport_rembourse_confirme === true || m.fees?.transport_rembourse_confirme === true ? rembTransport : 0)));
+    const couverture = m.platform !== 'Hiflow' ? 0 : transportRembourse ? coutTransport : Math.min(coutTransport, Math.max(0, montantPartiel ?? 0));
     const transportNonCouvert = arr(Math.max(0, coutTransport - couverture));
     const avances = base.remboursements;
     const depenses = arr(base.depenses + avances + transportNonCouvert + (base.peageCharge || 0));
