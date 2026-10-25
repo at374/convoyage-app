@@ -1049,7 +1049,10 @@
           contrainte: retour ? 'depart_apres_livraison' : 'arrivee_avant_prise_en_charge',
           departAdresse: retour ? (m.destination_address || m.to_city) : ville,
           arriveeAdresse: retour ? ville : (m.origin_address || m.from_city),
-          margeMinutes: margeTransportMinutes() };
+          margeMinutes: margeTransportMinutes(),
+          // Date-limite exacte pour les API de recherche de transport.
+          // L'aller vise une arrivée avant cette heure ; le retour un départ après.
+          limiteMissionAt: retour ? (m.delivery_end || m.delivery_start) : (m.pickup_start || m.pickup_end) };
         const cible = document.querySelector('#feuilleContenu [data-transport-resultat="' + sens + '"]');
         if (!cible || !window.CPTransportRapide) return;
         const fournisseurs = window.CPFournisseursTransports || [];
