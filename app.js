@@ -1085,6 +1085,8 @@
           ' · ' + Math.round((Date.parse(t.arriveeAt) - Date.parse(t.departAt)) / 60000) + ' min' +
           (t.fournisseur ? ' · ' + t.fournisseur : '') +
           (t.confirme ? ' · confirmé par la source' : ' · à vérifier')).join(' | ') : 'Recherche en cours…'; };
+        const selectTri = document.querySelector('#feuilleContenu [data-transport-tri="' + sens + '"]');
+        if (selectTri) selectTri.onchange = afficherLignes;
         cible.textContent = 'Recherche en cours…'; btn.disabled = true;
         try {
           const res = await window.CPTransportRapide.rechercher(q, fournisseurs, {
