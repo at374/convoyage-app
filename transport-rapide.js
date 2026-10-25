@@ -47,8 +47,16 @@
       }
       return valeur;
     }
-    if (enCours.has(key)) return enCours.get(key);
+    if (enCours.has(key)) {
+      // Une recherche simultanée partage le réseau, mais chaque écran doit
+      // recevoir les résultats via son propre callback.
+      const actif = enCours.get(key);
+      if (typeof options.surResultat === 'function') actif.ecouteurs.add(options.surResultat);
+      return actif.promesse;
+    }
     const timeoutMs = Math.max(250, Math.min(15000, Number(options.timeoutMs) || 3500));
+    const ecouteurs = new Set();
+    if (typeof options.surResultat === 'function') ecouteurs.add(options.surResultat);
     const action = (async () => {
       const resultats = await Promise.all(sources.map(async f => {
         let minuterie;
@@ -60,8 +68,8 @@
           const valides = Array.isArray(lignes) ? lignes.map(valider).filter(Boolean) : [];
           // Afficher immédiatement les résultats de chaque fournisseur rapide,
           // sans attendre les autres. Le résultat final reste consolidé.
-          if (typeof options.surResultat === 'function') {
-            try { options.surResultat({ fournisseur: propre(f.nom), trajets: valides }); } catch (_) {}
+          for (const ecouteur of ecouteurs) {
+            try { ecouteur({ fournisseur: propre(f.nom), trajets: valides }); } catch (_) {}
           }
           return { fournisseur: propre(f.nom), lignes: valides, erreur: null };
         } catch (e) { return { fournisseur: propre(f.nom), lignes: [], erreur: e && e.message || 'indisponible' }; }
@@ -77,7 +85,7 @@
       }
       return valeur;
     })();
-    enCours.set(key, action);
+    enCours.set(key, { promesse: action, ecouteurs });
     try { return await action; } finally { enCours.delete(key); }
   }
   const api = { rechercher, valider, viderCache: () => cache.clear() };
