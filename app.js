@@ -1037,7 +1037,7 @@
     const depart = retour ? m.to_city : ville, arrivee = retour ? ville : m.from_city;
     if (!depart || !arrivee || !dateTransportMission(m, retour)) return '';
     const sens = retour ? 'retour' : 'aller';
-    return `<div class="bk bkTr"><div class="bkt">🔎 RECHERCHE RAPIDE · ${sens.toUpperCase()} · marge ${margeTransportMinutes()} min</div><label>Date du trajet <input type="date" data-transport-date="${sens}" value="${dateTransportMission(m, retour)}"></label> <label>Heure souhaitée <input type="time" data-transport-heure="${sens}" value="${heureTransportMission(m, retour)}"></label> <button type="button" class="second" data-transport-rapide="${sens}">Chercher les horaires et tarifs</button><div data-transport-resultat="${sens}" class="doux" role="status" aria-live="polite"></div></div>`;
+    return `<div class="bk bkTr"><div class="bkt">🔎 RECHERCHE RAPIDE · ${sens.toUpperCase()} · marge ${margeTransportMinutes()} min</div><label>Date du trajet <input type="date" data-transport-date="${sens}" value="${dateTransportMission(m, retour)}"></label> <label>Heure souhaitée <input type="time" data-transport-heure="${sens}" value="${heureTransportMission(m, retour)}"></label> <label>Trier <select data-transport-tri="${sens}"><option value="depart">Départ</option><option value="prix">Prix croissant</option><option value="duree">Durée croissante</option></select></label> <button type="button" class="second" data-transport-rapide="${sens}">Chercher les horaires et tarifs</button><div data-transport-resultat="${sens}" class="doux" role="status" aria-live="polite"></div></div>`;
   }
   function activerRechercheTransport(m) {
     for (const btn of document.querySelectorAll('#feuilleContenu [data-transport-rapide]')) {
@@ -1061,6 +1061,14 @@
         const lignes = [];
         const afficherLignes = () => {
           if (!cible.isConnected) return;
+          const tri = (document.querySelector('#feuilleContenu [data-transport-tri="' + sens + '"]') || {}).value || 'depart';
+          const lignesTriees = [...lignes].sort((a, b) => tri === 'prix'
+            ? (a.prixEUR === null ? Infinity : a.prixEUR) - (b.prixEUR === null ? Infinity : b.prixEUR) ||
+              Date.parse(a.departAt) - Date.parse(b.departAt)
+            : tri === 'duree'
+              ? (Date.parse(a.arriveeAt) - Date.parse(a.departAt)) -
+                (Date.parse(b.arriveeAt) - Date.parse(b.departAt))
+              : Date.parse(a.departAt) - Date.parse(b.departAt));
           const tarifsConnus = lignes.filter(t => t.prixEUR !== null);
           const moinsCher = tarifsConnus.length ? Math.min(...tarifsConnus.map(t => t.prixEUR)) : null;
           const plusRapide = lignes.length ? Math.min(...lignes.map(t =>
@@ -1070,7 +1078,7 @@
               (moinsCher === null ? ' · tarif non communiqué' : ' · dès ' + moinsCher.toLocaleString('fr-FR', {style:'currency',currency:'EUR'})) +
               ' · durée minimale ' + plusRapide + ' min · prix et disponibilité à confirmer | '
             : '';
-          cible.textContent = lignes.length ? resume + lignes.map(t =>
+          cible.textContent = lignes.length ? resume + lignesTriees.map(t =>
           new Date(t.departAt).toLocaleString('fr-FR', {timeZone:'Europe/Paris'}) + ' → ' +
           new Date(t.arriveeAt).toLocaleString('fr-FR', {timeZone:'Europe/Paris'}) + ' · ' +
           (t.prixEUR == null ? 'prix indisponible' : t.prixEUR.toLocaleString('fr-FR', {style:'currency',currency:'EUR'})) +
