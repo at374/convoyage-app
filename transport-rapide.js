@@ -14,7 +14,9 @@
   function valider(trajet) {
     if (!trajet || !dateValide(trajet.departAt) || !dateValide(trajet.arriveeAt) ||
       Date.parse(trajet.arriveeAt) <= Date.parse(trajet.departAt)) return null;
-    const prix = trajet.prixEUR == null ? null : Number(trajet.prixEUR);
+    // Ne pas interpréter une chaîne vide comme un tarif gratuit (Number('') === 0).
+    const prix = trajet.prixEUR == null || (typeof trajet.prixEUR === 'string' && !trajet.prixEUR.trim())
+      ? null : Number(trajet.prixEUR);
     if (prix !== null && (!Number.isFinite(prix) || prix < 0)) return null;
     const source = propre(trajet.source), verifieLe = propre(trajet.verifieLe);
     // Une simple déclaration « confirmé » ne suffit pas : conserver une trace
