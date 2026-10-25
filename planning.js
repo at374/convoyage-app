@@ -34,6 +34,7 @@
     const res = { plans: [], ecartees: { sansDate: 0, sansLieu: 0, horsZone: 0, horsPeriode: 0 }, erreurs: [] };
     if (!dom) { res.erreurs.push('domicile'); return res; }
     const debut = n(o.debut); if (debut == null) { res.erreurs.push('date'); return res; }
+    // Calendar horizon in Europe/Paris: DST transitions must not shift the selected final day.
     const finFenetre = debut + o.jours * 24 * H;
     const heureMin = o.heureMin === null ? null : (n(o.heureMin) ?? minutesParis(debut));   // par défaut : l'heure de départ choisie, valable chaque jour
     const marge = (n(reg.marge_minutes) ?? 60) * MIN, attenteMax = (n(reg.attente_max_h) ?? 24) * H;
@@ -51,6 +52,13 @@
       const d = R.debut(m), f = R.fin(m);
       if (!acceptee && actives && !actives.has(m.platform)) continue;
       if (!acceptee && d != null && f && surRepos(d,f.t)) continue;
+      if (!acceptee && o.joursSansTravail && o.joursSansTravail.length && d != null && f) {
+        const blocked = new Set(o.joursSansTravail);
+        const jour = t => new Date(t).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'});
+        let refuse = blocked.has(jour(d)) || blocked.has(jour(f.t));
+        for (let t=d; !refuse && t<f.t; t+=H) refuse = blocked.has(jour(t));
+        if (refuse) continue;
+      }
       if (d == null || !f) { if (!acceptee) res.ecartees.sansDate++; continue; }
       if (d < debut || f.t > finFenetre) { if (!acceptee) res.ecartees.horsPeriode++; continue; }
       const po = G.coordonnees(m, 'origin'), pd = G.coordonnees(m, 'destination');
