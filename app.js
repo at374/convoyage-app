@@ -1321,6 +1321,8 @@
       const debutPremiere = Date.parse(hfDates(m) ? hfPk(m) : m.pickup_start || '');
       const dateLocale = ms => Number.isFinite(ms) ? new Date(ms).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}) : '';
       const dateMission = dateLocale(debutPremiere);
+      const dateAujourdHui=dateLocale(Date.now());
+      const estMissionPassee=Number.isFinite(debutPremiere)&&debutPremiere<Date.now()-3600000;
       const missionAutorisee = !autorisees || autorisees.includes(m.platform);
       const finPremiere = Date.parse(hfDates(m) ? hfLiv(m) : m.delivery_end || '');
       const possibles = missionAutorisee && Number.isFinite(finPremiere) ? (etat.missions || []).filter(x => x !== m && x.kind === 'acceptee' && (!autorisees || autorisees.includes(x.platform)) && Number.isFinite(Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '')) && Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '') >= finPremiere && Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '') < finPremiere + 86400000 && dateLocale(Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '')) === dateMission).sort((a,b) => Date.parse(hfDates(a) ? hfPk(a) : a.pickup_start)-Date.parse(hfDates(b) ? hfPk(b) : b.pickup_start)) : [];
@@ -1390,7 +1392,7 @@
                 return Number.isFinite(d)&&Number.isFinite(f)&&f>d&&(type==='arriver avant'?(f<=limite&&d>=debutFenetre):(d>=limite&&d<=limite+24*3600000))&&(!Number.isFinite(departMin)||d>=departMin)&&jours.includes(new Date(d).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}));
               }).filter((t,i,l)=>l.findIndex(x=>x.departAt===t.departAt&&x.arriveeAt===t.arriveeAt&&x.fournisseur===t.fournisseur)===i).sort((x,y)=>Date.parse(x.departAt)-Date.parse(y.departAt)).slice(0,15);
               resultat.replaceChildren();
-              const titre=document.createElement('p');titre.textContent=valides.length+' trajet(s) respectant les limites horaires indiquées (recherche limitée à 24 h). Correspondances, marche et retards non vérifiés.';resultat.append(titre);
+              const titre=document.createElement('p');titre.textContent=valides.length+' trajet(s) respectant les limites horaires indiquées (recherche limitée à 24 h). Correspondances, marche et retards non vérifiés. Aucun billet ni siège réservé.';resultat.append(titre);
               for(const t of valides){const ligne=document.createElement('p');ligne.textContent=new Date(t.departAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' → '+new Date(t.arriveeAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' · '+(t.prixEUR==null?'tarif inconnu':Number(t.prixEUR).toLocaleString('fr-FR',{style:'currency',currency:'EUR'}))+' · '+(t.fournisseur||'source non précisée')+(t.confirme?' · source confirmée':' · à vérifier');resultat.append(ligne);}
               if(recherches.some(res=>(res.sources||[]).some(x=>x.erreur))){const p=document.createElement('p');p.textContent='Résultats partiels : certains fournisseurs sont indisponibles.';resultat.append(p);}
             }catch(e){resultat.textContent='Recherche indisponible : consulte directement les transporteurs.';}
@@ -1409,6 +1411,7 @@
         trajets.replaceChildren();
         if(!missionAutorisee){const p=document.createElement('p');p.textContent='Cette mission appartient à une plateforme désactivée pour ce convoyeur : recherche non proposée.';trajets.append(p);return;}
         if(!dateMission){const p=document.createElement('p');p.textContent='Heure de prise en charge manquante : vérifie les détails de la mission avant de chercher un transport.';trajets.append(p);}
+        if(estMissionPassee){const p=document.createElement('p');p.textContent='Cette mission a déjà commencé : les horaires affichés peuvent être historiques et ne prouvent aucune disponibilité actuelle.';trajets.append(p);}
         ajouter('Aller',ville,adresseTransport(m,'origin'),hfDates(m)?hfPk(m):m.pickup_start,'arriver avant');
         if(suivante){
           const delta=Math.round((Date.parse(hfDates(suivante)?hfPk(suivante):suivante.pickup_start)-finPremiere)/60000);
