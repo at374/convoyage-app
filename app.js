@@ -1318,8 +1318,11 @@
     // Raccordement transport ponctuel : aucune modification de synchronisation des missions.
     { const bt = $('btnTransportMission'); if (bt) bt.onclick = () => {
       const autorisees = window.CP_EDITION && window.CP_EDITION.plateformes;
+      const debutPremiere = Date.parse(hfDates(m) ? hfPk(m) : m.pickup_start || '');
+      const dateLocale = ms => Number.isFinite(ms) ? new Date(ms).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}) : '';
+      const dateMission = dateLocale(debutPremiere);
       const finPremiere = Date.parse(hfDates(m) ? hfLiv(m) : m.delivery_end || '');
-      const possibles = Number.isFinite(finPremiere) ? (etat.missions || []).filter(x => x !== m && x.kind === 'acceptee' && (!autorisees || autorisees.includes(x.platform)) && Number.isFinite(Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '')) && Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '') >= finPremiere && Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '') < finPremiere + 86400000).sort((a,b) => Date.parse(hfDates(a) ? hfPk(a) : a.pickup_start)-Date.parse(hfDates(b) ? hfPk(b) : b.pickup_start)) : [];
+      const possibles = Number.isFinite(finPremiere) ? (etat.missions || []).filter(x => x !== m && x.kind === 'acceptee' && (!autorisees || autorisees.includes(x.platform)) && Number.isFinite(Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '')) && Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '') >= finPremiere && Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '') < finPremiere + 86400000 && dateLocale(Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '')) === dateMission).sort((a,b) => Date.parse(hfDates(a) ? hfPk(a) : a.pickup_start)-Date.parse(hfDates(b) ? hfPk(b) : b.pickup_start)) : [];
       let suivante = possibles[0] || null;
       const ville = etat.reglages && etat.reglages.domicile_ville || '';
       const jour = s => { const t=Date.parse(s||''); return Number.isFinite(t) ? new Date(t).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}) : ''; };
