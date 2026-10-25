@@ -1420,18 +1420,27 @@
         const mail=mission.mail_info&&mission.mail_info[cote==='origin'?'depart':'arrivee'];
         return (mission[champ]&&String(mission[champ]).trim())||(mail&&mail.adresse&&String(mail.adresse).trim())||villeMission||'';
       };
+      const adresseApproximative=(mission,cote)=>{
+        const champ=cote==='origin'?'origin_address':'destination_address';
+        const mail=mission.mail_info&&mission.mail_info[cote==='origin'?'depart':'arrivee'];
+        return !(mission[champ]&&String(mission[champ]).trim())&&!(mail&&mail.adresse&&String(mail.adresse).trim());
+      };
       const rendre=()=>{
         trajets.replaceChildren();
         if(!missionAutorisee){const p=document.createElement('p');p.textContent='Cette mission appartient à une plateforme désactivée pour ce convoyeur : recherche non proposée.';trajets.append(p);return;}
         if(!dateMission){const p=document.createElement('p');p.textContent='Heure de prise en charge manquante : vérifie les détails de la mission avant de chercher un transport.';trajets.append(p);}
         if(estMissionPassee){const p=document.createElement('p');p.textContent='Cette mission a déjà commencé : les horaires affichés peuvent être historiques et ne prouvent aucune disponibilité actuelle.';trajets.append(p);}
+        if(adresseApproximative(m,'origin')){const p=document.createElement('p');p.textContent='⚠️ Aller : adresse exacte de prise en charge absente. Le trajet est recherché vers la ville seulement.';trajets.append(p);}
         ajouter('Aller',ville,adresseTransport(m,'origin'),hfDates(m)?hfPk(m):m.pickup_start,'arriver avant');
         if(suivante){
           const delta=Math.round((Date.parse(hfDates(suivante)?hfPk(suivante):suivante.pickup_start)-finPremiere)/60000);
           const p=document.createElement('p');p.textContent='Temps entre livraison et prise en charge : '+delta+' min (transport, marche et marge NON vérifiés).';trajets.append(p);
+          if(adresseApproximative(m,'destination')||adresseApproximative(suivante,'origin')){const p=document.createElement('p');p.textContent='⚠️ Enchaînement : une adresse exacte manque. La correspondance porte sur une ville et doit être vérifiée.';trajets.append(p);}
           ajouter('Enchaînement',adresseTransport(m,'destination'),adresseTransport(suivante,'origin'),hfDates(suivante)?hfPk(suivante):suivante.pickup_start,'arriver avant',finPremiere);
         } else {const p=document.createElement('p');p.textContent='Enchaînement : sélectionne une seconde mission acceptée, si disponible.';trajets.append(p);}
-        const fin=suivante||m;ajouter('Retour',adresseTransport(fin,'destination'),ville,hfDates(fin)?hfLiv(fin):fin.delivery_end,'après livraison');
+        const fin=suivante||m;
+        if(adresseApproximative(fin,'destination')){const p=document.createElement('p');p.textContent='⚠️ Retour : adresse exacte de livraison absente. Le trajet est recherché depuis la ville seulement.';trajets.append(p);}
+        ajouter('Retour',adresseTransport(fin,'destination'),ville,hfDates(fin)?hfLiv(fin):fin.delivery_end,'après livraison');
       };
       if(possibles.length>1){
         const label=document.createElement('label');label.textContent='Deuxième mission : ';
