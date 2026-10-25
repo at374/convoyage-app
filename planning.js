@@ -173,6 +173,12 @@
     // Une heure locale inexistante lors du passage à l'heure d'été ne doit pas être décalée silencieusement.
     const parts = {}; for (const x of FH.formatToParts(new Date(t))) parts[x.type] = x.value;
     if (+parts.year !== +m[1] || +parts.month !== +m[2] || +parts.day !== +m[3] || +parts.hour !== +h[1] || +parts.minute !== +h[2]) return null;
+    // L'heure d'hiver répète certaines heures locales : sans décalage explicite,
+    // choisir arbitrairement un des deux instants risquerait de décaler une mission.
+    for (const other of [t - 3600000, t + 3600000]) {
+      const q = {}; for (const x of FH.formatToParts(new Date(other))) q[x.type] = x.value;
+      if (+q.year === +m[1] && +q.month === +m[2] && +q.day === +m[3] && +q.hour === +h[1] && +q.minute === +h[2]) return null;
+    }
     return t;
   }
   const api = { planifier, parJour, jourParis, minutesParis, parisVersMs, DEFAUTS };
