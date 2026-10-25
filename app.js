@@ -1351,6 +1351,8 @@
         const bouton=document.createElement('button');bouton.type='button';bouton.textContent='🔎 Ouvrir les transports';bouton.disabled=!a||!b||!Number.isFinite(Date.parse(borne||''));
         bouton.onclick=()=>ouvrir(a,b,borne,type);trajets.append(bouton);
         const sources=Array.isArray(window.CPFournisseursTransports)?window.CPFournisseursTransports.filter(f=>f&&typeof f.rechercher==='function'):[];
+        if(!a||!b){const manque=document.createElement('p');manque.textContent='Recherche impossible : adresse de départ ou d’arrivée manquante.';trajets.append(manque);return;}
+        if(!Number.isFinite(Date.parse(borne||''))){const manque=document.createElement('p');manque.textContent='Recherche horaire impossible : échéance de mission absente ou invalide.';trajets.append(manque);return;}
         if(!sources.length){const etatSource=document.createElement('p');etatSource.textContent='Horaires en direct non connectés : ouvre les transports et vérifie les horaires sur le service officiel.';trajets.append(etatSource);}
         if(window.CPTransportRapide && sources.length && Number.isFinite(Date.parse(borne||''))){
           const recherche=document.createElement('button');recherche.type='button';recherche.textContent='🚌 Rechercher les horaires connectés';
@@ -1365,6 +1367,11 @@
             const q={depart:a,arrivee:b,departAdresse:a,arriveeAdresse:b,date:type==='arriver avant'?jourDepartMin:dateLocal,heure:'',margeMinutes:marge,contrainte:type==='arriver avant'?'arrivee_avant_prise_en_charge':'depart_apres_livraison',limiteMissionAt:new Date(limite).toISOString()};
             try{
               const jours=[q.date];
+              // Les horaires de la veille ne doivent pas être retenus lorsque
+              // la mission commence après le début de la fenêtre utile.
+              const debutFenetre=type==='arriver avant'
+                ? Math.max(Number.isFinite(departMin)?departMin:-Infinity,limite-24*3600000)
+                : limite;
               // Si une livraison ou une prise en charge est proche de minuit,
               // les trains de la veille / du lendemain peuvent être pertinents.
               const dateParis=ms=>new Date(ms).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'});
@@ -1380,7 +1387,7 @@
               const candidats=recherches.flatMap(res=>res.trajets||[]);
               const valides=candidats.filter(t=>{
                 const d=Date.parse(t.departAt||''),f=Date.parse(t.arriveeAt||'');
-                return Number.isFinite(d)&&Number.isFinite(f)&&f>d&&(type==='arriver avant'?(f<=limite&&d>=limite-24*3600000):(d>=limite&&d<=limite+24*3600000))&&(!Number.isFinite(departMin)||d>=departMin)&&jours.includes(new Date(d).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}));
+                return Number.isFinite(d)&&Number.isFinite(f)&&f>d&&(type==='arriver avant'?(f<=limite&&d>=debutFenetre):(d>=limite&&d<=limite+24*3600000))&&(!Number.isFinite(departMin)||d>=departMin)&&jours.includes(new Date(d).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}));
               }).filter((t,i,l)=>l.findIndex(x=>x.departAt===t.departAt&&x.arriveeAt===t.arriveeAt&&x.fournisseur===t.fournisseur)===i).sort((x,y)=>Date.parse(x.departAt)-Date.parse(y.departAt)).slice(0,15);
               resultat.replaceChildren();
               const titre=document.createElement('p');titre.textContent=valides.length+' trajet(s) respectant les limites horaires indiquées (recherche limitée à 24 h). Correspondances, marche et retards non vérifiés.';resultat.append(titre);
