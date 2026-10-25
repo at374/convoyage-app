@@ -140,7 +140,7 @@
       : 0;
     // Priorité au montant exact inscrit au devis ; ne pas transformer un montant du devis en remboursement illimité.
     const couverture = m.platform !== 'Hiflow' ? 0
-      : Math.min(coutTransport, Math.max(0, montantPartiel ?? (transportDevis > 0 ? transportDevis : (transportRembourse ? coutTransport : 0))));
+      : Math.min(coutTransport, Math.max(0, montantPartiel ?? (transportDevis > 0 ? transportDevis : (m.kind === 'acceptee' && m.fees?.devis_numero ? 0 : (transportRembourse ? coutTransport : 0)))));
     const transportNonCouvert = arr(Math.max(0, coutTransport - couverture));
     // Montant couvert uniquement : un tarif saisi dans fees.train/bus n'est pas un remboursement confirmé.
     const rembTransport = couverture;
