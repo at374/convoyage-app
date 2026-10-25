@@ -86,11 +86,15 @@
       const km = G.routeKm(s.pos, c.po), lien = C.liaison(km, reg);
       const premier = !s.etapes.length;
       const arrivee = s.t + lien.heures * H + (premier && km < 2 ? 0 : marge);   // marge de sécurité entre deux missions, même sur place
+      if (!Number.isFinite(lien.heures) || lien.heures < 0 || !Number.isFinite(lien.cout)) return null;
+      // Les engagements acceptés ont des horaires fixes : ne jamais les décaler.
+      if (c.acceptee && arrivee > c.d) return null;
       if (!premier && c.limite < arrivee) return null;
       const departDom = c.d - lien.heures * H - (km < 2 ? 0 : marge);
       if (premier && (departDom < debut || (heureMin != null && minutesParis(departDom) < heureMin))) return null;   // pas de départ du domicile avant l'heure choisie (chaque jour)
       const attente = premier ? 0 : Math.max(0, c.d - arrivee);
       const decalage = premier ? 0 : Math.max(0, arrivee - c.d);   // arrivée dans le créneau, après son ouverture : mission décalée d'autant
+      if (c.acceptee && decalage > 0) return null;
       if (attente > attenteMax) return null;
       // Mission acceptée suivante non encore faite : on ne peut pas partir sur une mission qui commence après elle.
       const prochaine = ancres.find(a => !s.faites.has(a.cle));
