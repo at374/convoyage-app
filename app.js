@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V271 (2.0.121)';
+  const VERSION_APP = 'V272 (2.0.122)';
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
@@ -452,7 +452,9 @@
   }
   // V154 : « Disponible (vérifié le JJ/MM à HH:MM) » = dernière lecture de la plateforme ; véhicule et énergie avec symboles.
   const cleP = x => String(x || '').toLowerCase().replace(/[^a-z]/g, '');
-  const verifLe = m => { const s = (etat.sources || []).find(x => cleP(x.platform) === cleP(m.platform)); const t = s ? Date.parse(s.lu_le || '') : NaN; if (!Number.isFinite(t)) return 'Disponible'; const d = new Date(t); return 'Disponible (vérifié le ' + d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t) + ')'; };
+  const verifLe = m => { if (m.platform === 'DriiveMe') { const t0 = Date.parse(m.last_seen_at || ''); if (Number.isFinite(t0)) return 'Disponible (vérifié le ' + new Date(t0).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t0) + ')'; } const s = (etat.sources || []).find(x => cleP(x.platform) === cleP(m.platform)); const t = s ? Date.parse(s.lu_le || '') : NaN; if (!Number.isFinite(t)) return 'Disponible'; const d = new Date(t); return 'Disponible (vérifié le ' + d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t) + ')'; };
+  // V272 : date et heure de la dernière vérification de CETTE mission (DriiveMe : dernière fois vue dans la liste) dans la fiche
+  const verifFiche = m => { let t = m.platform === 'DriiveMe' ? Date.parse(m.last_seen_at || '') : NaN; if (!Number.isFinite(t)) { const s = (etat.sources || []).find(x => cleP(x.platform) === cleP(m.platform)); t = s ? Date.parse(s.lu_le || '') : NaN; } if (!Number.isFinite(t)) t = Date.parse(m.last_seen_at || ''); if (!Number.isFinite(t)) return ''; const age = Math.max(0, Math.round((Date.now() - t) / 60000)); const ago = age < 60 ? 'il y a ' + age + ' min' : 'il y a ' + Math.floor(age / 60) + ' h' + (age % 60 ? ' ' + String(age % 60).padStart(2, '0') : ''); return 'dernière vérification le ' + new Date(t).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t) + ' (' + ago + ')' + (m.platform === 'DriiveMe' && age > 90 ? ' ⚠️ ancienne : vérifie sur le site' : ''); };
   const vehObj = m => { let v = m.vehicle; if (typeof v === 'string' && v.trim().charAt(0) === '{') { try { v = JSON.parse(v); } catch (_) {} } return v; };
   const vehInfo = m => { const v = vehObj(m); if (v && typeof v === 'object') return { type: [v.category || v.type, v.model, v.gearbox].filter(Boolean).map(x => String(x).trim()).join(' · '), en: String(v.energy || '').trim() }; return { type: typeof v === 'string' ? v.trim() : '', en: '' }; };
   // V206 : suites possibles lues sur la fiche DriiveMe, affichées juste sous l'étiquette de la mission (stockées dans vehicle.suites)
@@ -1094,7 +1096,7 @@
     const dv = m.fees && m.fees.devis_numero ? { n: m.fees.devis_numero, total: m.fees.devis_total, accepte: m.fees.devis_accepte === 1 } : null;   // V95 : montants du devis Hiflow
     const lien = m.detail_url && /^https:\/\//.test(m.detail_url) ? m.detail_url : LIENS[m.platform];
     const ligne = (a, b) => { const t = String(a); const c = /^= /.test(t) ? 'net' : /^Rentabilit/.test(t) ? 'horaire' : /^[−-] /.test(t) ? 'neg' : /^(Prestation|\+)/.test(t) ? 'pos' : ''; return `<tr${c ? ' class="r-' + c + '"' : ''}><td>${esc(a)}</td><td>${b}</td></tr>`; };   // V146 : rangées colorées dans « Rentabilité estimée »
-    $('feuilleContenu').innerHTML = `<div class="doux"><span class="etiq">${esc(PLATS[m.platform])}</span> n° ${esc(m.external_id)}${m.validation === 'non_validee' ? ' · lecture non validée : vérifie sur le site' : ''}</div>
+    $('feuilleContenu').innerHTML = `<div class="doux"><span class="etiq">${esc(PLATS[m.platform])}</span> n° ${esc(m.external_id)}${m.validation === 'non_validee' ? ' · lecture non validée : vérifie sur le site' : ''}${verifFiche(m) ? '<br>🕒 ' + esc(verifFiche(m)) : ''}</div>
       <h2 id="feuilleTitre" class="trajet" style="font-size:20px">${esc(trajet(m))}</h2>
       ${dv && !dv.accepte && m.kind !== 'acceptee' ? `<div style="background:#ffe8a3;color:#222;border-radius:8px;padding:6px 10px;margin:6px 0;font-weight:600">📝 Devis proposé · n° ${esc(dv.n)} (envoyé, en attente)${dv.total != null ? ' · total ' + esc(euros(dv.total)) : ''}</div>` : ''}
       ${m.kind === 'acceptee' ? '<button id="btnRetirer" class="second" type="button">🚫 Pas acceptée : retirer de l’Agenda</button>' : ''}
