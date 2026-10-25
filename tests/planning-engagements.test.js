@@ -1,0 +1,22 @@
+// node tests/planning-engagements.test.js — deterministic checks, no external transport API.
+'use strict';
+const assert=require('node:assert/strict');
+global.CPGeo={coordonnees:(m,w)=>m[w],routeKm:(a,b)=>Math.abs(a.lat-b.lat)*10};
+global.CPCalc={liaison:km=>({km,heures:km/50,cout:km/10}),rentabiliteComplete:m=>({connu:true,net:m.fee,heures:1})};
+global.CPRetours={domicile:()=>({lat:0,nom:'domicile'}),debut:m=>Date.parse(m.pickup_start),fin:m=>({t:Date.parse(m.delivery_end),estimee:false}),cle:m=>m.id};
+const {planifier}=require('../planning.js');
+const mk=(kind,id,start,end,from=0,to=0)=>({kind,id,platform:'Otoqi',fee:100,pickup_start:start,delivery_end:end,origin:{lat:from},destination:{lat:to}});
+const opts={debut:Date.parse('2026-11-02T06:00:00Z'),jours:2,nuits_max:3,heureMin:null,inclureAcceptees:true,profondeur:5};
+const accepted=mk('acceptee','accepted','2026-11-02T14:00:00Z','2026-11-02T15:00:00Z');
+const close=mk('disponible','close','2026-11-02T13:00:00Z','2026-11-02T13:45:00Z');
+const early=mk('disponible','early','2026-11-02T09:00:00Z','2026-11-02T10:00:00Z');
+const baseline=planifier([accepted],{marge_minutes:60},opts);
+assert.ok(baseline.plans.length);
+assert.equal(baseline.plans[0].etapes[0].debut,Date.parse(accepted.pickup_start));
+const risky=planifier([close,accepted],{marge_minutes:60},opts);
+assert.ok(risky.plans.length);
+assert.ok(risky.plans.every(p=>p.etapes.every(e=>!e.acceptee||e.debut===Date.parse(e.mission.pickup_start))));
+assert.ok(risky.plans.every(p=>!p.etapes.some(e=>e.cle==='close')));
+const safe=planifier([early,accepted],{marge_minutes:60},opts);
+assert.ok(safe.plans.some(p=>p.etapes.some(e=>e.cle==='early')&&p.etapes.some(e=>e.cle==='accepted')));
+console.log('Accepted mission scheduling: 5 assertions passed');
