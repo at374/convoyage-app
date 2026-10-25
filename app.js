@@ -1001,19 +1001,29 @@
   };
   const reseauRegion = dep => { const d = G.DEPARTEMENTS && G.DEPARTEMENTS[String(dep || '')]; return d && RESEAUX_REGION[d.region] ? [RESEAUX_REGION[d.region]] : []; };
   const reseauxLocaux = (ville, dep) => { const sl = slugVille(ville), d = String(dep || ''); const r = RESEAUX_VILLES.find(x => x.slugs.includes(sl) && (!d || x.dep === d)); return r ? r.liens : []; };
+  // Cache borné des liens par trajet : évite de recalculer les réseaux et URL
+  // pour chaque carte mission/agenda à chaque rafraîchissement.
+  const cacheLiensTransports = new Map();
   function liensTransports(deVille, deDep, versVille, versDep, cleVerif) {
     if (!deVille || !versVille) return '';
     const a = slugVille(deVille), b = slugVille(versVille); if (!a || !b || a === b) return '';
-    const gm = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(lieuTr(deVille, deDep)) + '&destination=' + encodeURIComponent(lieuTr(versVille, versDep)) + '&travelmode=transit';
-    const r2 = 'https://www.rome2rio.com/map/' + encodeURIComponent(String(deVille).trim()) + '/' + encodeURIComponent(String(versVille).trim());
-    const L = [['🚆 SNCF Connect', 'https://www.sncf-connect.com/billet-train'], ['🚌 Flixbus', 'https://www.flixbus.fr/voyages-car/' + a + '-' + b], ['🚗 BlaBlaCar', 'https://www.blablacar.fr/ride-sharing/' + a + '/' + b], ['🚙 BlaBlaCar Daily', 'https://www.blablacar.fr/blablacar-daily']];
-    if (DEP_ARA.includes(String(deDep || '')) || DEP_ARA.includes(String(versDep || ''))) L.push(['🚍 Cars Région / TER (OùRA)', 'https://www.oura.com/']);
-    // V137 : OùRA dès qu'un des deux bouts est dans la région (voir plus haut) ; réseaux de la ville de départ ou d'arrivée (bus, tram, métro de la ville) + Citymapper dans les grandes villes.
-    for (const x of reseauxLocaux(deVille, deDep).concat(reseauxLocaux(versVille, versDep), reseauRegion(deDep), reseauRegion(versDep))) if (!L.some(y => y[1] === x[1]) && !(/laregionvoustransporte/.test(x[1]) && L.some(y => /oura\.com/.test(y[1])))) L.push(x);
-    L.unshift(['🚆 Rome2rio', r2]); L.push(['🗺️ Maps bus/train', gm]);
+    const cacheCle = JSON.stringify([deVille, deDep, versVille, versDep]);
+    let liensHtml = cacheLiensTransports.get(cacheCle);
+    if (liensHtml === undefined) {
+      const gm = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(lieuTr(deVille, deDep)) + '&destination=' + encodeURIComponent(lieuTr(versVille, versDep)) + '&travelmode=transit';
+      const r2 = 'https://www.rome2rio.com/map/' + encodeURIComponent(String(deVille).trim()) + '/' + encodeURIComponent(String(versVille).trim());
+      const L = [['🚆 SNCF Connect', 'https://www.sncf-connect.com/billet-train'], ['🚌 Flixbus', 'https://www.flixbus.fr/voyages-car/' + a + '-' + b], ['🚗 BlaBlaCar', 'https://www.blablacar.fr/ride-sharing/' + a + '/' + b], ['🚙 BlaBlaCar Daily', 'https://www.blablacar.fr/blablacar-daily']];
+      if (DEP_ARA.includes(String(deDep || '')) || DEP_ARA.includes(String(versDep || ''))) L.push(['🚍 Cars Région / TER (OùRA)', 'https://www.oura.com/']);
+      // V137 : OùRA dès qu'un des deux bouts est dans la région (voir plus haut) ; réseaux de la ville de départ ou d'arrivée (bus, tram, métro de la ville) + Citymapper dans les grandes villes.
+      for (const x of reseauxLocaux(deVille, deDep).concat(reseauxLocaux(versVille, versDep), reseauRegion(deDep), reseauRegion(versDep))) if (!L.some(y => y[1] === x[1]) && !(/laregionvoustransporte/.test(x[1]) && L.some(y => /oura\.com/.test(y[1])))) L.push(x);
+      L.unshift(['🚆 Rome2rio', r2]); L.push(['🗺️ Maps bus/train', gm]);
+        liensHtml = L.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${t}</a>`).join('');
+      if (cacheLiensTransports.size >= 150) cacheLiensTransports.clear();
+      cacheLiensTransports.set(cacheCle, liensHtml);
+    }
     const v = cleVerif ? (lireLocal('cp_verif', {}) || {})[cleVerif] : null;
     const caseV = cleVerif ? `<label class="liensVerif${v ? ' ok' : ''}"><input type="checkbox" data-verif="${esc(cleVerif)}"${v ? ' checked' : ''}> ${v ? '✓ Vérifié par toi le ' + esc(new Date(v).toLocaleDateString('fr-FR')) + ' (horaires et prix valables le jour de la mission)' : 'Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'}</label>` : '';
-    return `<span class="liensTr">${L.map(([t, u]) => `<a href="${esc(u)}">${t}</a>`).join('')}</span><span class="doux liensNote">⚠ Horaires et prix NON vérifiés par l’application : ouvre le site, contrôle-les pour le jour de la mission (le bouton retour te ramène ici).</span>${caseV}`;
+    return `<span class="liensTr">${liensHtml}</span><span class="doux liensNote">⚠ Horaires et prix NON vérifiés par l’application : ouvre le site, contrôle-les pour le jour de la mission (le bouton retour te ramène ici).</span>${caseV}`;
   }
   // V215 : exposé à la fenêtre « Trajet réel » (onglet Transports) : Rome2rio en premier, sites de transport seulement, sans les outils d'itinéraire routier.
   window.CPLiensTr = (a, ad, b, bd) => { const h = liensTransports(a, ad, b, bd, ''); return h ? h.replace(/<a href="[^"]*travelmode=transit[^"]*">[^<]*<\/a>/, '') : ''; };
