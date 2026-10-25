@@ -115,7 +115,7 @@
     const base = rentabilite(m, reglages);
     if (!base.connu) return base;
     const frais = Object.entries(m.fees || {}).filter(([k]) => !/^(devis|facture)_/.test(k) && k !== 'transport_rembourse_confirme').map(([k, v]) => [k, n(v)]).filter(([, v]) => v != null);
-    const rembTransport = arr(frais.filter(([k]) => TRANSPORT.test(k)).reduce((s, [, v]) => s + v, 0));
+    const transportDeclare = arr(frais.filter(([k]) => TRANSPORT.test(k)).reduce((s, [, v]) => s + v, 0));
     const approche = options.approcheLiaison || liaison(n(options.approcheKm), reglages), retour = liaison(n(options.retourKm), reglages);
     const coutTransport = arr((approche ? approche.cout : 0) + (retour ? retour.cout : 0));
     // Les frais remboursés sont avancés puis rendus : effet nul. Seul le transport NON couvert par un remboursement prévu est une dépense.
@@ -124,12 +124,14 @@
     const montantPartiel = n(m.transport_rembourse_montant_confirme);
     const couverture = m.platform !== 'Hiflow' ? 0 : transportRembourse ? coutTransport : Math.min(coutTransport, Math.max(0, montantPartiel ?? 0));
     const transportNonCouvert = arr(Math.max(0, coutTransport - couverture));
+    // Montant couvert uniquement : un tarif saisi dans fees.train/bus n'est pas un remboursement confirmé.
+    const rembTransport = couverture;
     const avances = base.remboursements;
     const depenses = arr(base.depenses + avances + transportNonCouvert + (base.peageCharge || 0));
     const net = arr(base.prestation + base.remboursements - depenses - base.cotisations);
     const duree = dureeEstimee(m);
     const heures = duree.heures == null ? null : arr(duree.heures + (approche ? approche.heures : 0) + (retour ? retour.heures : 0));
-    return { ...base, complet: true, approche, retour, rembTransport, coutTransport, couverture, transportNonCouvert, transportRembourse, fraisAvances: avances, depensesTotales: depenses,
+    return { ...base, complet: true, approche, retour, rembTransport, transportDeclare, coutTransport, couverture, transportNonCouvert, transportRembourse, fraisAvances: avances, depensesTotales: depenses,
       net, heuresMission: duree.heures, dureeEstimee: duree.estimee, heures, parHeure: heures ? arr(net / heures) : null,
       liaisonsConnues: !!(approche && retour) };
   }
