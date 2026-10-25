@@ -123,11 +123,18 @@
         const encours = s.etapes.some(e => e.debut < minuit && e.fin > minuit);
         const suivantes = s.etapes.find(e => e.debut >= minuit);
         const terminees = s.etapes.filter(e => e.fin <= minuit);
-        const point = suivantes ? G.coordonnees(suivantes.mission, 'origin') :
-          terminees.length ? G.coordonnees(terminees[terminees.length - 1].mission, 'destination') : dom;
+        // Pour considérer une nuit au domicile, l'arrivée du soir ET le
+        // départ du lendemain doivent être proches du domicile. Une seule
+        // extrémité proche ne prouve pas que le convoyeur a pu rentrer.
+        const pointSoir = terminees.length ? G.coordonnees(terminees[terminees.length - 1].mission, 'destination') : dom;
+        const pointMatin = suivantes ? G.coordonnees(suivantes.mission, 'origin') : pointSoir;
         let aDomicile = false;
-        if (!encours && point && dom) {
-          try { const distance = G.routeKm(point, dom); aDomicile = Number.isFinite(distance) && distance < seuilDomicile; } catch (e) {}
+        if (!encours && pointSoir && pointMatin && dom) {
+          try {
+            const dSoir = G.routeKm(pointSoir, dom), dMatin = G.routeKm(pointMatin, dom);
+            aDomicile = Number.isFinite(dSoir) && Number.isFinite(dMatin) &&
+              dSoir < seuilDomicile && dMatin < seuilDomicile;
+          } catch (e) {}
         }
         // Une mission en cours à minuit n'est pas une nuit d'hôtel.
         if (!encours && !aDomicile) nuitsHotel++;
