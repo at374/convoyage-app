@@ -10,7 +10,7 @@ const run=(missions,start,options={})=>planifier(missions,{}, {debut:Date.parse(
 const monday=mission('disponible','monday','2026-11-02T09:00:00Z','2026-11-02T10:00:00Z');
 const accepted=mission('acceptee','accepted','2026-11-02T13:00:00Z','2026-11-02T14:00:00Z');
 const original=JSON.stringify([monday,accepted]);
-assert.equal(run([monday,accepted],'2026-11-02T06:00:00Z').candidates,2);
+assert.equal(run([monday,accepted],'2026-11-02T06:00:00Z',{inclureAcceptees:true}).candidates,2);
 const rest=run([monday,accepted],'2026-11-02T06:00:00Z',{joursReposHebdo:['mon'],inclureAcceptees:true});
 assert.equal(rest.candidates,1);
 assert.equal(rest.ancres,1);
