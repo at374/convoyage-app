@@ -1360,15 +1360,28 @@
             const jourDepartMin=Number.isFinite(departMin)?new Date(departMin).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}):dateLocal;
             const q={depart:a,arrivee:b,departAdresse:a,arriveeAdresse:b,date:type==='arriver avant'?jourDepartMin:dateLocal,heure:'',margeMinutes:marge,contrainte:type==='arriver avant'?'arrivee_avant_prise_en_charge':'depart_apres_livraison',limiteMissionAt:new Date(limite).toISOString()};
             try{
-              const res=await window.CPTransportRapide.rechercher(q,sources);
-              const valides=(res.trajets||[]).filter(t=>{
+              const jours=[q.date];
+              // Si une livraison ou une prise en charge est proche de minuit,
+              // les trains de la veille / du lendemain peuvent être pertinents.
+              const dateParis=ms=>new Date(ms).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'});
+              if(type==='arriver avant'){
+                const veille=dateParis(limite-24*3600000);
+                if(veille!==q.date && (!Number.isFinite(departMin)||departMin<limite-12*3600000)) jours.unshift(veille);
+                if(dateLocal!==q.date&&!jours.includes(dateLocal))jours.push(dateLocal);
+              }else{
+                const lendemain=dateParis(limite+24*3600000);
+                if(lendemain!==q.date)jours.push(lendemain);
+              }
+              const recherches=await Promise.all(jours.map(date=>window.CPTransportRapide.rechercher({...q,date},sources)));
+              const candidats=recherches.flatMap(res=>res.trajets||[]);
+              const valides=candidats.filter(t=>{
                 const d=Date.parse(t.departAt||''),f=Date.parse(t.arriveeAt||'');
-                return Number.isFinite(d)&&Number.isFinite(f)&&f>d&&(type==='arriver avant'?f<=limite:d>=limite)&&(!Number.isFinite(departMin)||d>=departMin)&&new Date(d).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'})===q.date;
-              }).sort((x,y)=>Date.parse(x.departAt)-Date.parse(y.departAt)).slice(0,15);
+                return Number.isFinite(d)&&Number.isFinite(f)&&f>d&&(type==='arriver avant'?f<=limite:d>=limite)&&(!Number.isFinite(departMin)||d>=departMin)&&jours.includes(new Date(d).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}));
+              }).filter((t,i,l)=>l.findIndex(x=>x.departAt===t.departAt&&x.arriveeAt===t.arriveeAt&&x.fournisseur===t.fournisseur)===i).sort((x,y)=>Date.parse(x.departAt)-Date.parse(y.departAt)).slice(0,15);
               resultat.replaceChildren();
               const titre=document.createElement('p');titre.textContent=valides.length+' trajet(s) respectant la limite horaire, sous réserve des données du fournisseur.';resultat.append(titre);
               for(const t of valides){const ligne=document.createElement('p');ligne.textContent=new Date(t.departAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' → '+new Date(t.arriveeAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+' · '+(t.prixEUR==null?'tarif inconnu':Number(t.prixEUR).toLocaleString('fr-FR',{style:'currency',currency:'EUR'}))+' · '+(t.fournisseur||'source non précisée')+(t.confirme?' · source confirmée':' · à vérifier');resultat.append(ligne);}
-              if((res.sources||[]).some(x=>x.erreur)){const p=document.createElement('p');p.textContent='Résultats partiels : certains fournisseurs sont indisponibles.';resultat.append(p);}
+              if(recherches.some(res=>(res.sources||[]).some(x=>x.erreur))){const p=document.createElement('p');p.textContent='Résultats partiels : certains fournisseurs sont indisponibles.';resultat.append(p);}
             }catch(e){resultat.textContent='Recherche indisponible : consulte directement les transporteurs.';}
             finally{recherche.disabled=false;}
           };
