@@ -115,7 +115,7 @@
       if (nuits > nuitsMax) return null;
       // Facturer l'hôtel uniquement pour une nuit sans mission en cours,
       // et lorsque le soir ou le lendemain matin est éloigné du domicile.
-      let nuitsHotel = 0;
+      let nuitsHotel = 0, surcoutRetoursDomicile = 0;
       let instantNuit = s.depart;
       const seuilDomicile = Math.max(0, n(o.seuil_dom) ?? 150);
       for (let i = 0; i < nuits; i++) {
@@ -145,15 +145,25 @@
           } catch (e) {}
         }
         // Une mission en cours à minuit n'est pas une nuit d'hôtel.
+        if (!encours && aDomicile && terminees.length && suivantes) {
+          try {
+            const directKm = G.routeKm(pointSoir, pointMatin);
+            const soirKm = G.routeKm(pointSoir, dom), matinKm = G.routeKm(dom, pointMatin);
+            const direct = C.liaison(directKm, reg), soir = C.liaison(soirKm, reg), matin = C.liaison(matinKm, reg);
+            if ([direct.cout, soir.cout, matin.cout].every(Number.isFinite)) {
+              surcoutRetoursDomicile += Math.max(0, soir.cout + matin.cout - direct.cout);
+            }
+          } catch (e) {}
+        }
         if (!encours && !aDomicile) nuitsHotel++;
         // Conserver le motif de chaque nuit pour un affichage non ambigu.
         (s._nuitsDetails = s._nuitsDetails || [])[i] = { enMission: encours, domicile: !encours && aDomicile, hotel: !encours && !aDomicile };
         instantNuit = minuit + MIN;
       }
       const coutHotel = arr(nuitsHotel * hotel), coutRetour = lien.cout;
-      const net = arr(s.net - coutRetour - coutHotel), heures = arr(s.heures + lien.heures);
+      const net = arr(s.net - coutRetour - coutHotel - surcoutRetoursDomicile), heures = arr(s.heures + lien.heures);
       const brut = arr(s.etapes.reduce((x, e) => x + (n(e.mission.fee) || 0), 0));
-      return { etapes: s.etapes, depart: s.depart, nuitsDetails: s._nuitsDetails || [], retour: { km, heures: lien.heures, cout: coutRetour, arrivee: retour }, nuits, coutHotel,
+      return { etapes: s.etapes, depart: s.depart, nuitsDetails: s._nuitsDetails || [], retour: { km, heures: lien.heures, cout: coutRetour, arrivee: retour }, nuits, coutHotel, surcoutRetoursDomicile: arr(surcoutRetoursDomicile),
         prestations: brut, netMissions: arr(s.net), net, heures, parHeure: heures > 0 ? arr(net / heures) : null, liaisonKm: s.liaisonKm + km, coutLiaisons: arr(s.coutLiaisons + coutRetour),
         estimations: s.etapes.some(e => e.finEstimee) ? ['heure de fin estimée pour au moins une mission'] : [] };
     };
