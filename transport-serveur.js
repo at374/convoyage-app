@@ -24,7 +24,9 @@
           });
           if (!reponse.ok) throw new Error('Service transport indisponible (' + reponse.status + ')');
           const donnees = await reponse.json();
-          if (!donnees || !Array.isArray(donnees.trajets)) throw new Error('Réponse transport invalide');
+          if (!donnees || !Array.isArray(donnees.trajets) || donnees.trajets.length > 500) {
+            throw new Error('Réponse transport invalide ou trop volumineuse');
+          }
           // Le moteur principal valide ensuite chaque horaire, prix et source.
           return donnees.trajets;
         } finally {
