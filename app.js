@@ -1037,7 +1037,7 @@
     const depart = retour ? m.to_city : ville, arrivee = retour ? ville : m.from_city;
     if (!depart || !arrivee || !dateTransportMission(m, retour)) return '';
     const sens = retour ? 'retour' : 'aller';
-    return `<div class="bk bkTr"><div class="bkt">🔎 RECHERCHE RAPIDE · ${sens.toUpperCase()} · marge ${margeTransportMinutes()} min</div><label>Date du trajet <input type="date" data-transport-date="${sens}" value="${dateTransportMission(m, retour)}"></label> <button type="button" class="second" data-transport-rapide="${sens}">Chercher les horaires et tarifs</button><div data-transport-resultat="${sens}" class="doux" role="status" aria-live="polite"></div></div>`;
+    return `<div class="bk bkTr"><div class="bkt">🔎 RECHERCHE RAPIDE · ${sens.toUpperCase()} · marge ${margeTransportMinutes()} min</div><label>Date du trajet <input type="date" data-transport-date="${sens}" value="${dateTransportMission(m, retour)}"></label> <label>Heure souhaitée <input type="time" data-transport-heure="${sens}" value="${heureTransportMission(m, retour)}"></label> <button type="button" class="second" data-transport-rapide="${sens}">Chercher les horaires et tarifs</button><div data-transport-resultat="${sens}" class="doux" role="status" aria-live="polite"></div></div>`;
   }
   function activerRechercheTransport(m) {
     for (const btn of document.querySelectorAll('#feuilleContenu [data-transport-rapide]')) {
@@ -1046,7 +1046,7 @@
         const ville = etat.reglages && etat.reglages.domicile_ville;
         const q = { depart: retour ? m.to_city : ville, arrivee: retour ? ville : m.from_city,
           date: (document.querySelector('#feuilleContenu [data-transport-date="' + sens + '"]') || {}).value || dateTransportMission(m, retour),
-          heure: heureTransportMission(m, retour),
+          heure: (document.querySelector('#feuilleContenu [data-transport-heure="' + sens + '"]') || {}).value || heureTransportMission(m, retour),
           contrainte: retour ? 'depart_apres_livraison' : 'arrivee_avant_prise_en_charge',
           departAdresse: retour ? (m.destination_address || m.to_city) : ville,
           arriveeAdresse: retour ? ville : (m.origin_address || m.from_city),
