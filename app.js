@@ -1058,7 +1058,18 @@
         const fournisseurs = window.CPFournisseursTransports || [];
         if (!fournisseurs.length) { cible.textContent = 'Aucune source d’horaires en direct connectée. Utilise les liens des transporteurs et vérifie les prix et horaires.'; return; }
         const lignes = [];
-        const afficherLignes = () => { if (!cible.isConnected) return; cible.textContent = lignes.length ? lignes.map(t =>
+        const afficherLignes = () => {
+          if (!cible.isConnected) return;
+          const tarifsConnus = lignes.filter(t => t.prixEUR !== null);
+          const moinsCher = tarifsConnus.length ? Math.min(...tarifsConnus.map(t => t.prixEUR)) : null;
+          const plusRapide = lignes.length ? Math.min(...lignes.map(t =>
+            Math.round((Date.parse(t.arriveeAt) - Date.parse(t.departAt)) / 60000))) : null;
+          const resume = lignes.length
+            ? lignes.length + ' trajet(s) compatible(s)' +
+              (moinsCher === null ? ' · tarif non communiqué' : ' · dès ' + moinsCher.toLocaleString('fr-FR', {style:'currency',currency:'EUR'})) +
+              ' · durée minimale ' + plusRapide + ' min · prix et disponibilité à confirmer | '
+            : '';
+          cible.textContent = lignes.length ? resume + lignes.map(t =>
           new Date(t.departAt).toLocaleString('fr-FR', {timeZone:'Europe/Paris'}) + ' → ' +
           new Date(t.arriveeAt).toLocaleString('fr-FR', {timeZone:'Europe/Paris'}) + ' · ' +
           (t.prixEUR == null ? 'prix indisponible' : t.prixEUR.toLocaleString('fr-FR', {style:'currency',currency:'EUR'})) +
