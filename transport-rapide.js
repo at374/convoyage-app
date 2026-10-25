@@ -85,7 +85,15 @@
             try { ecouteur(notification); } catch (_) {}
           }
           return { fournisseur: propre(f.nom), lignes: valides, erreur: null };
-        } catch (e) { return { fournisseur: propre(f.nom), lignes: [], erreur: e && e.message || 'indisponible' }; }
+        } catch (e) {
+          const erreur=e && e.message || 'indisponible';
+          // Ne pas laisser l'interface attendre la fin des autres sources
+          // pour signaler un fournisseur indisponible ou trop lent.
+          const notification={ fournisseur: propre(f.nom), trajets: [], erreur };
+          diffuses.push(notification);
+          for(const ecouteur of ecouteurs){try{ecouteur(notification);}catch(_){}}
+          return { fournisseur: propre(f.nom), lignes: [], erreur };
+        }
         finally { clearTimeout(minuterie); }
       }));
       const trajets = resultats.flatMap(r => r.lignes.map(t => ({ ...t, fournisseur: r.fournisseur })))
