@@ -164,7 +164,7 @@
     return [...jours.values()];
   }
   // « 2030-10-01 » + « 06:00 » (heure de Paris) → instant (ms).
-  function parisVersMs(date, heure) {
+  function parisVersMs(date, heure, occurrence) {
     const m = String(date || '').match(/^(\d{4})-(\d{2})-(\d{2})$/), h = String(heure || '00:00').match(/^(\d{1,2}):(\d{2})$/); if (!m || !h) return null;
     const utc = Date.UTC(+m[1], +m[2] - 1, +m[3], +h[1], +h[2]);
     const FH = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
@@ -175,11 +175,15 @@
     if (+parts.year !== +m[1] || +parts.month !== +m[2] || +parts.day !== +m[3] || +parts.hour !== +h[1] || +parts.minute !== +h[2]) return null;
     // L'heure d'hiver répète certaines heures locales : sans décalage explicite,
     // choisir arbitrairement un des deux instants risquerait de décaler une mission.
-    for (const other of [t - 3600000, t + 3600000]) {
-      const q = {}; for (const x of FH.formatToParts(new Date(other))) q[x.type] = x.value;
-      if (+q.year === +m[1] && +q.month === +m[2] && +q.day === +m[3] && +q.hour === +h[1] && +q.minute === +h[2]) return null;
+    const correspondances = [t - 3600000, t, t + 3600000].filter(instant => {
+      const q = {}; for (const x of FH.formatToParts(new Date(instant))) q[x.type] = x.value;
+      return +q.year === +m[1] && +q.month === +m[2] && +q.day === +m[3] && +q.hour === +h[1] && +q.minute === +h[2];
+    }).sort((a, b) => a - b);
+    if (correspondances.length > 1) {
+      if (occurrence !== 1 && occurrence !== 2) return null;
+      return correspondances[occurrence - 1];
     }
-    return t;
+    return occurrence == null || occurrence === 1 ? t : null;
   }
   const api = { planifier, parJour, jourParis, minutesParis, parisVersMs, DEFAUTS };
   root.CPPlanning = api;
