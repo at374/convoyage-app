@@ -1,0 +1,26 @@
+// node tests/planning-multi-engagements.test.js — offline regression checks.
+'use strict';
+const assert=require('node:assert/strict');
+global.CPGeo={coordonnees:(m,w)=>m[w],routeKm:(a,b)=>Math.abs(a.lat-b.lat)*10};
+global.CPCalc={liaison:km=>({km,heures:km/50,cout:km/10}),rentabiliteComplete:(m,reg,opts)=>({connu:true,net:m.fee-(opts.approcheKm||0)/10,heures:1})};
+global.CPRetours={domicile:()=>({lat:0,nom:'domicile'}),debut:m=>Date.parse(m.pickup_start),fin:m=>({t:Date.parse(m.delivery_end),estimee:false}),cle:m=>m.id};
+const {planifier}=require('../planning.js');
+const mk=(kind,id,start,end,from=0,to=0)=>({kind,id,platform:'Otoqi',fee:100,pickup_start:start,delivery_end:end,origin:{lat:from},destination:{lat:to}});
+const opts={debut:Date.parse('2026-11-02T06:00:00Z'),jours:2,nuits_max:3,heureMin:null,inclureAcceptees:true,profondeur:6};
+const a=mk('acceptee','a','2026-11-02T09:00:00Z','2026-11-02T10:00:00Z');
+const b=mk('acceptee','b','2026-11-02T17:00:00Z','2026-11-02T18:00:00Z');
+const good=mk('disponible','good','2026-11-02T12:00:00Z','2026-11-02T13:00:00Z');
+const bad=mk('disponible','bad','2026-11-02T16:30:00Z','2026-11-02T16:50:00Z');
+const plans=planifier([a,b,good,bad],{marge_minutes:60},opts).plans;
+assert.ok(plans.length>0);
+assert.ok(plans.every(p=>p.etapes.some(e=>e.cle==='a')&&p.etapes.some(e=>e.cle==='b')));
+assert.ok(plans.some(p=>p.etapes.some(e=>e.cle==='good')));
+assert.ok(plans.every(p=>!p.etapes.some(e=>e.cle==='bad')));
+assert.ok(plans.every(p=>p.etapes.filter(e=>e.acceptee).every(e=>e.debut===Date.parse(e.mission.pickup_start))));
+const distantA=mk('acceptee','far-a','2026-11-02T09:00:00Z','2026-11-02T10:00:00Z',0,10);
+const distantB=mk('acceptee','far-b','2026-11-02T17:00:00Z','2026-11-02T18:00:00Z',10,0);
+const distant=planifier([distantA,distantB],{marge_minutes:60},opts).plans;
+assert.ok(distant.length>0);
+assert.ok(distant.every(p=>p.coutLiaisons>0));
+assert.ok(distant.every(p=>p.net<p.prestations));
+console.log('Multiple commitments: 8 assertions passed');
