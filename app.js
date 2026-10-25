@@ -1318,22 +1318,23 @@
     // Raccordement transport ponctuel : aucune modification de synchronisation des missions.
     { const bt = $('btnTransportMission'); if (bt) bt.onclick = () => {
       const autorisees = window.CP_EDITION && window.CP_EDITION.plateformes;
-      const possibles = (etat.missions || []).filter(x => x !== m && x.kind === 'acceptee' && (!autorisees || autorisees.includes(x.platform)) && Date.parse(x.pickup_start || '') >= Date.parse(m.delivery_end || '') && Date.parse(x.pickup_start || '') < Date.parse(m.delivery_end || '') + 86400000).sort((a,b) => Date.parse(a.pickup_start)-Date.parse(b.pickup_start));
+      const finPremiere = Date.parse(hfDates(m) ? hfLiv(m) : m.delivery_end || '');
+      const possibles = Number.isFinite(finPremiere) ? (etat.missions || []).filter(x => x !== m && x.kind === 'acceptee' && (!autorisees || autorisees.includes(x.platform)) && Number.isFinite(Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '')) && Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '') >= finPremiere && Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '') < finPremiere + 86400000).sort((a,b) => Date.parse(hfDates(a) ? hfPk(a) : a.pickup_start)-Date.parse(hfDates(b) ? hfPk(b) : b.pickup_start)) : [];
       const suivante = possibles[0] || null;
       const ville = etat.reglages && etat.reglages.domicile_ville || '';
       const jour = s => { const t=Date.parse(s||''); return Number.isFinite(t) ? new Date(t).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}) : ''; };
       const heure = s => { const t=Date.parse(s||''); return Number.isFinite(t) ? new Date(t).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Paris'}) : ''; };
-      const ouvrir = (a,b,date,limite,nom) => { if(!a||!b){ toast('Adresse de transport manquante');return; } const url='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(a)+'&destination='+encodeURIComponent(b)+'&travelmode=transit'; window.open(url,'_blank','noopener,noreferrer'); };
+      const ouvrir = (a,b,borne,type) => { if(!a||!b){ toast('Adresse de transport manquante');return; } const dateMs=Date.parse(borne||'');const marge=Number(margeTransportMinutes())||15;const cible=Number.isFinite(dateMs)?dateMs+(type==='arriver avant'?-marge*60000:0):null;const params=new URLSearchParams({api:'1',origin:a,destination:b,travelmode:'transit'});if(cible!==null){params.set(type==='arriver avant'?'arrival_time':'departure_time',String(Math.floor(cible/1000)));}window.open('https://www.google.com/maps/dir/?'+params.toString(),'_blank','noopener,noreferrer'); };
       const ancien = document.getElementById('cpTransportMissionDialog');if(ancien)ancien.remove();
       const fond=document.createElement('div');fond.id='cpTransportMissionDialog';fond.setAttribute('role','dialog');fond.setAttribute('aria-modal','true');fond.style.cssText='position:fixed;inset:0;background:#0009;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px';
       const boite=document.createElement('div');boite.style.cssText='background:var(--fond,#fff);color:var(--texte,#111);max-width:560px;width:100%;max-height:90vh;overflow:auto;padding:18px;border-radius:12px';
       const titre=document.createElement('h3');titre.textContent='🚆 Transports de tes missions';boite.append(titre);
       const info=document.createElement('p');info.textContent='Les horaires et tarifs sont à confirmer chez les transporteurs. Les liens ouvrent une recherche externe : aucune disponibilité n’est garantie.';boite.append(info);
-      const ajouter=(nom,a,b,borne,type)=>{const p=document.createElement('p');p.textContent=nom+' : '+(a||'adresse manquante')+' → '+(b||'adresse manquante')+(borne?' · '+type+' '+jour(borne)+' '+heure(borne):'');boite.append(p);const bouton=document.createElement('button');bouton.type='button';bouton.textContent='🔎 Chercher cet itinéraire';bouton.disabled=!a||!b;bouton.onclick=()=>ouvrir(a,b,jour(borne),borne,nom);boite.append(bouton);};
-      ajouter('Aller',ville,m.origin_address||m.from_city,m.pickup_start,'arriver avant');
-      if(suivante)ajouter('Enchaînement',m.destination_address||m.to_city,suivante.origin_address||suivante.from_city,suivante.pickup_start,'arriver avant');
+      const ajouter=(nom,a,b,borne,type)=>{const p=document.createElement('p');p.textContent=nom+' : '+(a||'adresse manquante')+' → '+(b||'adresse manquante')+(borne?' · '+type+' '+jour(borne)+' '+heure(borne):'');boite.append(p);const bouton=document.createElement('button');bouton.type='button';bouton.textContent='🔎 Chercher cet itinéraire';bouton.disabled=!a||!b||!Number.isFinite(Date.parse(borne||''));bouton.onclick=()=>ouvrir(a,b,borne,type);boite.append(bouton);};
+      ajouter('Aller',ville,m.origin_address||m.from_city,hfDates(m)?hfPk(m):m.pickup_start,'arriver avant');
+      if(suivante)ajouter('Enchaînement',m.destination_address||m.to_city,suivante.origin_address||suivante.from_city,hfDates(suivante)?hfPk(suivante):suivante.pickup_start,'arriver avant');
       else {const p=document.createElement('p');p.textContent='Enchaînement : aucune seconde mission acceptée et chronologiquement compatible identifiée automatiquement.';boite.append(p);}
-      const fin=suivante||m;ajouter('Retour',fin.destination_address||fin.to_city,ville,fin.delivery_end,'après livraison');
+      const fin=suivante||m;ajouter('Retour',fin.destination_address||fin.to_city,ville,hfDates(fin)?hfLiv(fin):fin.delivery_end,'après livraison');
       const fermer=document.createElement('button');fermer.type='button';fermer.textContent='Fermer';fermer.onclick=()=>fond.remove();boite.append(fermer);fond.onclick=e=>{if(e.target===fond)fond.remove();};fond.append(boite);document.body.append(fond);
     }; }
     { const bv = $('btnVol'); if (bv) bv.onclick = () => popupVol(m); }
