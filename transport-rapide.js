@@ -17,7 +17,12 @@
     const source = propre(trajet.source), verifieLe = propre(trajet.verifieLe);
     // Une simple déclaration « confirmé » ne suffit pas : conserver une trace
     // vérifiable de la source et de la date de consultation.
-    const confirme = trajet.confirme === true && !!source && dateValide(verifieLe);
+    const ageVerification = Date.now() - Date.parse(verifieLe);
+    // Un horaire ancien ou une vérification datée dans le futur ne prouve
+    // pas une disponibilité actuelle. Les résultats restent consultables.
+    const confirmationRecente = Number.isFinite(ageVerification) &&
+      ageVerification >= 0 && ageVerification <= 15 * 60 * 1000;
+    const confirme = trajet.confirme === true && !!source && confirmationRecente;
     return { ...trajet, prixEUR: prix, confirme, source, verifieLe };
   }
   async function rechercher(q, fournisseurs, options = {}) {
