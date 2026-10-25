@@ -14,7 +14,7 @@
   const DEFAUTS = { nuits_max: 2, budget_hotel: 0, jours: 3, largeur: 60, profondeur: 10 };
 
   // Jour calendaire à Paris (nombre de jours depuis 1970) : sert à compter les nuits hors du domicile.
-  const FMT = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const FMT = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' });
   const cacheJour = new Map();
   const jourParis = t => { const k = Math.floor(t / 900000); let v = cacheJour.get(k); if (v === undefined) { const [y, m, d] = FMT.format(new Date(k * 900000)).split('-').map(Number); v = Math.round(Date.UTC(y, m - 1, d) / 86400000); if (cacheJour.size > 50000) cacheJour.clear(); cacheJour.set(k, v); } return v; };   // au quart d'heure près
   const FMH = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', hourCycle: 'h23', hour: '2-digit', minute: '2-digit' });
@@ -39,12 +39,18 @@
     const marge = (n(reg.marge_minutes) ?? 60) * MIN, attenteMax = (n(reg.attente_max_h) ?? 24) * H;
     const nuitsMax = Math.max(0, Math.round(n(o.nuits_max) ?? DEFAUTS.nuits_max)), hotel = Math.max(0, n(o.budget_hotel) ?? DEFAUTS.budget_hotel);
 
+    const repos = new Set((o.joursReposHebdo || []).map(x => String(x).toLowerCase()));
+    const jourRepos = t => repos.has(new Date(t).toLocaleDateString('en-US', {timeZone:'Europe/Paris',weekday:'short'}).toLowerCase());
+    const surRepos = (a,b) => { for (let t=a;t<=b;t+=H) if (jourRepos(t)) return true; return jourRepos(b); };
+    const actives = Array.isArray(o.plateformesActives) ? new Set(o.plateformesActives) : null;
     // Missions utilisables (dates, lieux, zone, période).
     const pool = [];
     for (const m of missions || []) {
       const acceptee = m.kind === 'acceptee';
       if (acceptee ? (!o.inclureAcceptees || m.status === 'annulee' || m.status === 'terminee') : (m.kind !== 'disponible' || (m.status && m.status !== 'disponible'))) continue;
       const d = R.debut(m), f = R.fin(m);
+      if (!acceptee && actives && !actives.has(m.platform)) continue;
+      if (!acceptee && d != null && f && surRepos(d,f.t)) continue;
       if (d == null || !f) { if (!acceptee) res.ecartees.sansDate++; continue; }
       if (d < debut || f.t > finFenetre) { if (!acceptee) res.ecartees.horsPeriode++; continue; }
       const po = G.coordonnees(m, 'origin'), pd = G.coordonnees(m, 'destination');
