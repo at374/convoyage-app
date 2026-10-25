@@ -1321,8 +1321,9 @@
       const debutPremiere = Date.parse(hfDates(m) ? hfPk(m) : m.pickup_start || '');
       const dateLocale = ms => Number.isFinite(ms) ? new Date(ms).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}) : '';
       const dateMission = dateLocale(debutPremiere);
+      const missionAutorisee = !autorisees || autorisees.includes(m.platform);
       const finPremiere = Date.parse(hfDates(m) ? hfLiv(m) : m.delivery_end || '');
-      const possibles = Number.isFinite(finPremiere) ? (etat.missions || []).filter(x => x !== m && x.kind === 'acceptee' && (!autorisees || autorisees.includes(x.platform)) && Number.isFinite(Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '')) && Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '') >= finPremiere && Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '') < finPremiere + 86400000 && dateLocale(Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '')) === dateMission).sort((a,b) => Date.parse(hfDates(a) ? hfPk(a) : a.pickup_start)-Date.parse(hfDates(b) ? hfPk(b) : b.pickup_start)) : [];
+      const possibles = missionAutorisee && Number.isFinite(finPremiere) ? (etat.missions || []).filter(x => x !== m && x.kind === 'acceptee' && (!autorisees || autorisees.includes(x.platform)) && Number.isFinite(Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '')) && Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '') >= finPremiere && Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '') < finPremiere + 86400000 && dateLocale(Date.parse(hfDates(x) ? hfPk(x) : x.pickup_start || '')) === dateMission).sort((a,b) => Date.parse(hfDates(a) ? hfPk(a) : a.pickup_start)-Date.parse(hfDates(b) ? hfPk(b) : b.pickup_start)) : [];
       let suivante = possibles[0] || null;
       const ville = etat.reglages && etat.reglages.domicile_ville || '';
       const jour = s => { const t=Date.parse(s||''); return Number.isFinite(t) ? new Date(t).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'}) : ''; };
@@ -1399,6 +1400,8 @@
       };
       const rendre=()=>{
         trajets.replaceChildren();
+        if(!missionAutorisee){const p=document.createElement('p');p.textContent='Cette mission appartient à une plateforme désactivée pour ce convoyeur : recherche non proposée.';trajets.append(p);return;}
+        if(!dateMission){const p=document.createElement('p');p.textContent='Heure de prise en charge manquante : vérifie les détails de la mission avant de chercher un transport.';trajets.append(p);}
         ajouter('Aller',ville,adresseTransport(m,'origin'),hfDates(m)?hfPk(m):m.pickup_start,'arriver avant');
         if(suivante){
           const delta=Math.round((Date.parse(hfDates(suivante)?hfPk(suivante):suivante.pickup_start)-finPremiere)/60000);
