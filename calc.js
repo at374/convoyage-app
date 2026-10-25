@@ -119,8 +119,8 @@
     const approche = options.approcheLiaison || liaison(n(options.approcheKm), reglages), retour = liaison(n(options.retourKm), reglages);
     const coutTransport = arr((approche ? approche.cout : 0) + (retour ? retour.cout : 0));
     // Les frais remboursés sont avancés puis rendus : effet nul. Seul le transport NON couvert par un remboursement prévu est une dépense.
-    // V96 : sur Hiflow, les frais de transport (approche et retour) sont avancés puis REMBOURSÉS via le devis → effet nul sur le net.
-    const transportRembourse = m.platform === 'Hiflow';
+    // Prudence : le remboursement Hiflow n'est acquis que s'il est explicitement confirmé pour cette mission.
+    const transportRembourse = m.platform === 'Hiflow' && (m.transport_rembourse_confirme === true || m.fees?.transport_rembourse_confirme === true);
     const transportNonCouvert = transportRembourse ? 0 : arr(Math.max(0, coutTransport - rembTransport));
     const avances = base.remboursements;
     const depenses = arr(base.depenses + avances + transportNonCouvert + (base.peageCharge || 0));
