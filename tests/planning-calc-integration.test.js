@@ -18,7 +18,7 @@ assert.equal(p.net,145.6);
 assert.equal(p.netMissions,145.6);
 assert.equal(p.etapes[1].rentabilite.transportNonCouvert,12);
 assert.equal(p.etapes[1].rentabilite.cotisations,21.2);
-const hiflow={...b,platform:'Hiflow'};
+const hiflow={...b,platform:'Hiflow',transport_rembourse_confirme:true};
 const h=planifier([a,hiflow],{marge_minutes:60},opts).plans[0];
 assert.ok(h);
 assert.equal(h.etapes[1].rentabilite.transportNonCouvert,0);
