@@ -1,0 +1,20 @@
+// node tests/calc-transport-confirmation.test.js
+'use strict';
+const assert=require('node:assert/strict');
+const calc=require('../calc.js');
+const mk=(platform,fees={},extra={})=>({kind:'disponible',platform,fee:100,fees,...extra});
+const run=m=>calc.rentabiliteComplete(m,{}, {approcheKm:100});
+const otoqi=run(mk('Otoqi',{train:5}));
+const hiflow=run(mk('Hiflow',{train:5}));
+const confirmed=run(mk('Hiflow',{train:5},{transport_rembourse_confirme:true}));
+const partial=run(mk('Hiflow',{train:5},{transport_rembourse_montant_confirme:3}));
+assert.equal(otoqi.couverture,0);
+assert.equal(otoqi.transportNonCouvert,12);
+assert.equal(hiflow.couverture,0);
+assert.equal(hiflow.net,66.8);
+assert.equal(confirmed.couverture,12);
+assert.equal(confirmed.transportNonCouvert,0);
+assert.equal(partial.couverture,3);
+assert.equal(partial.transportNonCouvert,9);
+assert.equal(partial.net,69.8);
+console.log('Transport confirmation: 9 assertions passed');
