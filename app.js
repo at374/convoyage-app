@@ -931,8 +931,8 @@
     $('rOk').onclick = async () => {
       const v = { statut: $('rStatut').value, taux_cotisations: Number($('rTaux').value), cout_km: Number($('rKm').value), prix_minimum: Number($('rMin').value), alertes_nouvelles: $('rNv').checked, alertes_prix: false,
         cout_transport_km: Number($('rTr').value), vitesse_liaison: Number($('rVit').value), marge_minutes: Math.round(Number($('rMarge').value)), rayon_retour_km: Math.round(Number($('rRayon').value)), attente_max_h: Math.round(Number($('rAtt').value)), carte_sncf: $('rSncf').value, trottinette: $('rTrot').checked,
-        cartesReduction: [...($('rSncf').value !== 'aucune' ? ['sncf:' + $('rSncf').value] : []),
-          ...$('rCartesAutres').value.split(/\r?\n/).map(x => x.trim()).filter(Boolean)].slice(0, 30) };
+        cartesReduction: [...new Set([...($('rSncf').value !== 'aucune' ? ['sncf:' + $('rSncf').value] : []),
+          ...$('rCartesAutres').value.split(/\r?\n/).map(x => x.trim()).filter(x => x && !x.toLowerCase().startsWith('sncf:'))])].slice(0, 30) };
       if (!(v.taux_cotisations >= 0 && v.taux_cotisations <= 60) || !(v.cout_km >= 0 && v.cout_km <= 5) || !(v.prix_minimum >= 0)) return toast('Valeurs hors limites');
       if (!(v.cout_transport_km >= 0 && v.cout_transport_km <= 2) || !(v.vitesse_liaison >= 10 && v.vitesse_liaison <= 300) || !(v.marge_minutes >= 0 && v.marge_minutes <= 600) || !(v.rayon_retour_km >= 1 && v.rayon_retour_km <= 500) || !(v.attente_max_h >= 1 && v.attente_max_h <= 96)) return toast('Valeurs de liaison hors limites');
       const texteDom = $('rDom').value.trim();
