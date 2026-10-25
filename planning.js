@@ -34,13 +34,26 @@
     const res = { plans: [], ecartees: { sansDate: 0, sansLieu: 0, horsZone: 0, horsPeriode: 0 }, erreurs: [] };
     if (!dom) { res.erreurs.push('domicile'); return res; }
     const debut = n(o.debut); if (debut == null) { res.erreurs.push('date'); return res; }
-    // Calendar horizon in Europe/Paris: DST transitions must not shift the selected final day.
-    const finFenetre = debut + o.jours * 24 * H;
+    // Respecte le nombre de jours calendaires à Paris, même lors des changements d'heure.
+    const joursFenetre = Math.max(1, Math.min(28, Math.round(n(o.jours) ?? DEFAUTS.jours)));
+    const jourDepart = FMT.format(new Date(debut));
+    const [an, mois, quantieme] = jourDepart.split('-').map(Number);
+    const dateLimite = new Date(Date.UTC(an, mois - 1, quantieme + joursFenetre));
+    const jourLimite = dateLimite.toISOString().slice(0, 10);
+    // Recherche par dichotomie du premier instant du jour suivant à Paris.
+    let borneBasse = debut, borneHaute = debut + (joursFenetre + 2) * 24 * H;
+    while (borneHaute - borneBasse > MIN) {
+      const milieu = Math.floor((borneBasse + borneHaute) / (2 * MIN)) * MIN;
+      if (FMT.format(new Date(milieu)) < jourLimite) borneBasse = milieu + MIN;
+      else borneHaute = milieu;
+    }
+    const finFenetre = borneHaute;
     const heureMin = o.heureMin === null ? null : (n(o.heureMin) ?? minutesParis(debut));   // par défaut : l'heure de départ choisie, valable chaque jour
     const marge = (n(reg.marge_minutes) ?? 60) * MIN, attenteMax = (n(reg.attente_max_h) ?? 24) * H;
     const nuitsMax = Math.max(0, Math.round(n(o.nuits_max) ?? DEFAUTS.nuits_max)), hotel = Math.max(0, n(o.budget_hotel) ?? DEFAUTS.budget_hotel);
 
     const repos = new Set((o.joursReposHebdo || []).map(x => String(x).toLowerCase()));
+    const joursBloques = new Set((o.joursSansTravail || []).filter(x => typeof x === 'string'));
     const jourRepos = t => repos.has(new Date(t).toLocaleDateString('en-US', {timeZone:'Europe/Paris',weekday:'short'}).toLowerCase());
     const surRepos = (a,b) => { for (let t=a;t<=b;t+=H) if (jourRepos(t)) return true; return jourRepos(b); };
     const actives = Array.isArray(o.plateformesActives) ? new Set(o.plateformesActives) : null;
@@ -52,11 +65,10 @@
       const d = R.debut(m), f = R.fin(m);
       if (!acceptee && actives && !actives.has(m.platform)) continue;
       if (!acceptee && d != null && f && surRepos(d,f.t)) continue;
-      if (!acceptee && o.joursSansTravail && o.joursSansTravail.length && d != null && f) {
-        const blocked = new Set(o.joursSansTravail);
-        const jour = t => new Date(t).toLocaleDateString('sv-SE',{timeZone:'Europe/Paris'});
-        let refuse = blocked.has(jour(d)) || blocked.has(jour(f.t));
-        for (let t=d; !refuse && t<f.t; t+=H) refuse = blocked.has(jour(t));
+      if (!acceptee && joursBloques.size && d != null && f) {
+        const jour = t => FMT.format(new Date(t));
+        let refuse = joursBloques.has(jour(d)) || joursBloques.has(jour(f.t));
+        for (let t=d; !refuse && t<f.t; t+=H) refuse = joursBloques.has(jour(t));
         if (refuse) continue;
       }
       if (d == null || !f) { if (!acceptee) res.ecartees.sansDate++; continue; }
