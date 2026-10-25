@@ -1,0 +1,22 @@
+// node tests/intermissions.test.js — offline smoke tests, no external API.
+'use strict';
+const assert=require('node:assert/strict');
+global.CPRetours={debut:m=>Date.parse(m.pickup_start),fin:m=>({t:Date.parse(m.delivery_end),estimee:false})};
+global.CPGeo={coordonnees:(m,where)=>m[where],routeKm:(a,b)=>Math.abs(a.lat-b.lat)*10};
+global.CPCalc={liaison:km=>({km,heures:km/50,cout:km/10}),rentabilite:m=>({connu:true,net:m.fee}),rentabiliteComplete:m=>({connu:true,net:m.fee})};
+const {recherche}=require('../intermissions.js');
+const mk=(kind,platform,id,start,end,from,to,fee=100)=>({kind,platform,external_id:id,pickup_start:start,delivery_end:end,origin:{lat:from},destination:{lat:to},fee});
+const a=mk('acceptee','Hiflow','a','2026-11-02T08:00:00Z','2026-11-02T09:00:00Z',0,0);
+const b=mk('acceptee','DriiveMe','b','2026-11-02T18:00:00Z','2026-11-02T19:00:00Z',0,0);
+const good=mk('disponible','Otoqi','c','2026-11-02T12:00:00Z','2026-11-02T13:00:00Z',0,0);
+const wrong=mk('disponible','PopValet','d','2026-11-02T12:00:00Z','2026-11-02T13:00:00Z',0,0);
+const missions=[a,b,good,wrong],before=JSON.stringify(missions);
+const opts={maintenant:Date.parse('2026-11-01T00:00:00Z'),plateformesActives:['Otoqi']};
+const r=recherche(missions,{marge_minutes:30},opts);
+assert.equal(r.intervalles.length,1);
+assert.deepEqual(r.intervalles[0].propositions.map(x=>x.cle),['Otoqi|c']);
+assert.equal(r.intervalles[0].propositions[0].netIncrementalEstime,100);
+assert.equal(JSON.stringify(missions),before,'accepted and available missions must remain unchanged');
+assert.equal(recherche(missions,{}, {...opts,joursSansTravail:['2026-11-02']}).intervalles[0].propositions.length,0);
+assert.equal(recherche(missions,{}, {...opts,joursReposHebdo:['mon']}).intervalles[0].propositions.length,0);
+console.log('Intermissions: 5 checks passed');

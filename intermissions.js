@@ -6,6 +6,7 @@ const R=root.CPRetours||(typeof require==='function'?require('./retours.js'):nul
 const G=root.CPGeo||(typeof require==='function'?require('./geo.js'):null);
 const C=root.CPCalc||(typeof require==='function'?require('./calc.js'):null);
 const H=3600000;
+const money=v=>Math.round(v*100)/100;
 const key=m=>String(m.platform||'')+'|'+String(m.external_id||m.id||'');
 const time=v=>{const x=Date.parse(v||'');return Number.isFinite(x)?x:null;};
 const dateParis=t=>new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(t));
@@ -23,7 +24,7 @@ function recherche(missions,reglages={},opts={}){
   const kmDirect=G.routeKm(pa,pb),direct=C.liaison(kmDirect,reglages);
   const base={avant:key(a.m),apres:key(b.m),debut:a.f.t,fin:b.d,liaisonDirecteEstimee:direct,propositions:[]};
   for(const m of dispo){
-   const d=R.debut(m),f=R.fin(m);if(d==null||!f||d<now||d<a.f.t||f.t>b.d||off(d,opts)||off(f.t,opts))continue;
+   const d=R.debut(m),f=R.fin(m);if(d==null||!f||f.t<d||d<now||d<a.f.t||f.t>b.d||off(d,opts)||off(f.t,opts))continue;
    // Évite de proposer une mission qui traverse un jour déclaré sans travail.
    if(dateParis(d)!==dateParis(f.t)){let blocked=false;for(let t=d;t<=f.t;t+=H)if(off(t,opts))blocked=true;if(blocked)continue;}
    const p=G.coordonnees(m,'origin'),q=G.coordonnees(m,'destination');if(!p||!q)continue;
@@ -33,11 +34,11 @@ function recherche(missions,reglages={},opts={}){
    if(acc.some(x=>x!==a&&x!==b&&d<x.f.t&&f.t>x.d))continue;
    const rent=C.rentabiliteComplete(m,reglages,{approcheKm:l1.km,retourKm:l2.km});
    const deltaTransport=l1.cout+l2.cout-(direct?direct.cout:0);
-   const netIncrementalEstime=Math.round((rent.net+(m.platform==='Hiflow'?0:Math.max(0,l2.cout))- (m.platform==='Hiflow'?0:Math.max(0,deltaTransport)))*100)/100;
-   if(!rent.connu)continue;
+   const netIncrementalEstime=money(C.rentabilite(m,reglages).net-(m.platform==='Hiflow'?0:deltaTransport));
+   if(!rent.connu||!Number.isFinite(netIncrementalEstime))continue;
    base.propositions.push({mission:m,cle:key(m),netMissionEstime:rent.net,netIncrementalEstime,liaisonAvantEstimee:l1,liaisonApresEstimee:l2,transportNonConfirme:true,avertissement:'Transport non confirmé — vérifiez vous-même les transports avant d’accepter cette mission.'});
   }
-  base.propositions.sort((x,y)=>y.netMissionEstime-x.netMissionEstime);
+  base.propositions.sort((x,y)=>y.netIncrementalEstime-x.netIncrementalEstime);
   base.propositions=base.propositions.slice(0,Math.max(1,Math.min(30,opts.limite||10)));
   gaps.push(base);
  }
