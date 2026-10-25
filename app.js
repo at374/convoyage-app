@@ -719,13 +719,13 @@
   const PL = window.CPPlanning;
   const demainParis = () => { const d = new Date(Date.now() + 86400000); return d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' }); };
   function vuePlanning() {
-    const p = etat.plan = { date: demainParis(), heure: '06:00', jours: 3, nuits: 2, hotel: 60, hotelOn: false, seuil: 150, zones: [], rayon: 50, acc: true, tri: 'net', longue: false, ...(etat.plan || {}) };
+    const p = etat.plan = { date: demainParis(), heure: '06:00', occurrence: 1, jours: 3, nuits: 2, hotel: 60, hotelOn: false, seuil: 150, zones: [], rayon: 50, acc: true, tri: 'net', longue: false, ...(etat.plan || {}) };
     if (!p.date || p.date < new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Paris' })) p.date = demainParis();
     const opt = (l, v, f) => l.map(x => `<option value="${x}"${String(x) === String(v) ? ' selected' : ''}>${f(x)}</option>`).join('');
     const dom = RT.domicile(etat.reglages);
     $('ecran').innerHTML = `<div class="carte plusFiltres"><h2>🗺️ Préparer plusieurs jours</h2>
       ${dom ? `<p class="doux">Départ et retour : ${esc(etat.reglages.domicile_ville)} (Réglages). Liaisons, marge et attente maximale : tes réglages.</p>` : '<p class="erreur">Renseigne d’abord la ville de ton domicile dans Réglages → « Approche, retours et liaisons ».</p>'}
-      <div class="grilleFiltres"><div><label for="pDate">Départ le</label><input id="pDate" type="date" value="${esc(p.date)}"></div><div><label for="pHeure">à partir de</label><input id="pHeure" type="time" value="${esc(p.heure)}"></div>
+      <div class="grilleFiltres"><div><label for="pDate">Départ le</label><input id="pDate" type="date" value="${esc(p.date)}"></div><div><label for="pHeure">à partir de</label><input id="pHeure" type="time" value="${esc(p.heure)}"></div><div id="pOccurrenceBox" hidden><label for="pOccurrence">Heure répétée (passage à l’heure d’hiver)</label><select id="pOccurrence"><option value="1"${p.occurrence === 1 ? ' selected' : ''}>Première occurrence (heure d’été)</option><option value="2"${p.occurrence === 2 ? ' selected' : ''}>Deuxième occurrence (heure d’hiver)</option></select></div>
       <div><label for="pJours">Durée</label><select id="pJours">${opt(p.longue ? [1,2,3,4,5,6,7,14,21,28] : [1,2,3,4,5,6,7], p.jours, x => x + ' jour' + (x > 1 ? 's' : ''))}</select></div>
       <div><label for="pLongue">Planification longue</label><label style="display:flex;align-items:center;gap:8px"><input id="pLongue" type="checkbox" style="width:auto;min-height:0"${p.longue ? ' checked' : ''}> Autoriser 14, 21 ou 28 jours</label></div>
       <div><label for="pNuits">Nuits hors de chez toi (max)</label><select id="pNuits">${opt([0, 1, 2, 3, 4, 5, 6], p.nuits, x => x ? x + ' nuit' + (x > 1 ? 's' : '') : 'aucune')}</select></div>
@@ -741,8 +741,10 @@
       <label><input id="pAcc" type="checkbox" style="width:auto;min-height:0"${p.acc ? ' checked' : ''}> Inclure obligatoirement mes missions déjà acceptées</label>
       <button id="pGo" style="width:100%;margin-top:12px"${dom ? '' : ' disabled'}>Calculer les meilleurs enchaînements</button></div>
       <div id="pRes"></div><div id="pInter"></div>`;
-    const lire = () => Object.assign(p, { date: $('pDate').value, heure: $('pHeure').value || '06:00', jours: Number($('pJours').value), nuits: Number($('pNuits').value), hotel: Math.max(0, Math.min(500, Number($('pHotel').value) || 0)), hotelOn: $('pHotelOn').checked, seuil: Math.max(0, Math.min(2000, Number($('pSeuil').value) || 150)), acc: $('pAcc').checked, tri: $('pTri').value, longue: $('pLongue').checked });
-    for (const id of ['pDate', 'pHeure', 'pJours', 'pNuits', 'pHotel', 'pSeuil', 'pAcc', 'pTri']) $(id).onchange = () => { lire(); memoriser(); };
+    const lire = () => Object.assign(p, { date: $('pDate').value, heure: $('pHeure').value || '06:00', occurrence: Number($('pOccurrence').value), jours: Number($('pJours').value), nuits: Number($('pNuits').value), hotel: Math.max(0, Math.min(500, Number($('pHotel').value) || 0)), hotelOn: $('pHotelOn').checked, seuil: Math.max(0, Math.min(2000, Number($('pSeuil').value) || 150)), acc: $('pAcc').checked, tri: $('pTri').value, longue: $('pLongue').checked });
+    for (const id of ['pDate', 'pHeure', 'pOccurrence', 'pJours', 'pNuits', 'pHotel', 'pSeuil', 'pAcc', 'pTri']) $(id).onchange = () => { lire(); memoriser(); };
+    const actualiserOccurrence = () => { const p1 = PL.parisVersMs($('pDate').value, $('pHeure').value, 1), p2 = PL.parisVersMs($('pDate').value, $('pHeure').value, 2); $('pOccurrenceBox').hidden = !(p1 != null && p2 != null); };
+    $('pDate').addEventListener('change', actualiserOccurrence); $('pHeure').addEventListener('change', actualiserOccurrence); actualiserOccurrence();
     $('pLongue').onchange = () => { lire(); if (!p.longue && p.jours > 7) p.jours = 7; memoriser(); afficher(); };
     $('pHotelOn').onchange = () => { lire(); memoriser(); $('pHotel').disabled = !p.hotelOn; };   // frais d'hôtel en option (coche)
     for (const b of document.querySelectorAll('[data-pzone]')) b.onclick = () => { lire(); p.zones.splice(Number(b.dataset.pzone), 1); memoriser(); afficher(); };
@@ -765,7 +767,7 @@
     if (etat.planResultat) afficherPlans(etat.planResultat);
   }
   function calculerPlanning() {
-    const p = etat.plan, debut = PL.parisVersMs(p.date, p.heure);
+    const p = etat.plan, debut = PL.parisVersMs(p.date, p.heure, p.occurrence);
     if (debut == null) return toast('Date ou heure invalide');
     const res = PL.planifier(etat.missions, etat.reglages, { debut, jours: p.jours, nuits_max: p.nuits, budget_hotel: p.hotelOn ? p.hotel : 0, seuil_dom: p.seuil, zones: p.zones, rayon: p.rayon, inclureAcceptees: p.acc, tri: p.tri, joursReposHebdo:lireLocal('cp_jours_repos_hebdo',[]), joursSansTravail:lireLocal('cp_jours_sans_travail',[]), plateformesActives:window.CP_EDITION&&window.CP_EDITION.plateformes });
     etat.planResultat = res; afficherPlans(res);
