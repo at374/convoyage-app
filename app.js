@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V274 (2.0.123)';
+  const VERSION_APP = 'V275 (2.0.124)';
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
@@ -688,7 +688,7 @@
     listeAffichee = items.map(x => x.mission);
     if (!A.items.length) { $('ecran').innerHTML = '<div class="vide">Aucune mission acceptée. Elles arrivent automatiquement depuis « Mes trajets » (Hiflow), « Mes réservations » (DriiveMe), « Missions réservées » (Otoqi) et « Propositions réservées » (Pop Valet), ou d’un e-mail de confirmation Hiflow collé dans l’extension.</div>'; return; }
     const resume = RT.resumeAgenda(etat.missions, etat.reglages);
-    const inter = window.CPIntermissions && window.CPIntermissions.recherche(etat.missions, etat.reglages, {limite:5,plateformesActives:window.CP_EDITION&&window.CP_EDITION.plateformes});
+    const inter = window.CPIntermissions && window.CPIntermissions.recherche(etat.missions, etat.reglages, {limite:5,plateformesActives:window.CP_EDITION&&window.CP_EDITION.plateformes,joursReposHebdo:lireLocal('cp_jours_repos_hebdo',[])});
     // V139 : plus de bandeau « N conflits » dans l'Agenda (les estimations produisaient des dizaines de faux conflits).
     let html = false && A.conflits.length ? `<div class="carte conflit" id="conflits"><h2>⚠️ ${A.conflits.length} conflit${A.conflits.length > 1 ? 's' : ''} dans ton agenda</h2>${A.conflits.map(c => `<p>${esc(window.CPAgenda.libelleConflit(c))}</p>`).join('')}<p class="doux">Estimation (durées et liaisons approximatives) : vérifie sur les plateformes.</p></div>` : '';
     let jour = '';
@@ -735,6 +735,7 @@
       <label for="pZone">Zones de travail (vide = toute la France)</label>
       <div class="recherche"><input id="pZone" autocomplete="off" placeholder="Région, département ou ville (3 lettres)" aria-controls="pSugg"><div id="pSugg" class="sugg" role="listbox" hidden></div></div>
       <div class="zones" id="pZones">${p.zones.map((z, i) => `<button class="zone" data-pzone="${i}" aria-label="Retirer cette zone">${esc(G.libelleZone(z))} ✕</button>`).join('')}</div>
+      <div class="carte"><label>Jours de repos hebdomadaires (aucun coché = travail possible 7 j/7)</label><div class="zones" id="pRepos">${[['mon','Lun'],['tue','Mar'],['wed','Mer'],['thu','Jeu'],['fri','Ven'],['sat','Sam'],['sun','Dim']].map(([code,nom]) => '<label style="display:inline-flex;gap:4px;align-items:center;margin-right:8px"><input type="checkbox" data-repos="'+code+'" style="width:auto;min-height:0"'+(lireLocal('cp_jours_repos_hebdo',[]).includes(code)?' checked':'')+'>'+nom+'</label>').join('')}</div></div>
       <label><input id="pAcc" type="checkbox" style="width:auto;min-height:0"${p.acc ? ' checked' : ''}> Inclure obligatoirement mes missions déjà acceptées</label>
       <button id="pGo" style="width:100%;margin-top:12px"${dom ? '' : ' disabled'}>Calculer les meilleurs enchaînements</button></div>
       <div id="pRes"></div><div id="pInter"></div>`;
@@ -747,6 +748,7 @@
       box.innerHTML = l.map((x, i) => `<button role="option" data-pz="${i}">${esc(x.libelle)}<small>${esc(x.detail)}</small></button>`).join(''); box.hidden = !l.length;
       for (const b of box.querySelectorAll('[data-pz]')) b.onclick = () => { const x = l[Number(b.dataset.pz)]; lire(); p.zones.push(x.type === 'ville' ? { type: 'ville', nom: x.nom, dep: x.dep, lat: x.lat, lng: x.lng } : { type: x.type, code: x.code }); memoriser(); afficher(); };
     };
+    for (const el of document.querySelectorAll('[data-repos]')) el.onchange = () => { ecrireLocal('cp_jours_repos_hebdo', [...document.querySelectorAll('[data-repos]:checked')].map(x=>x.dataset.repos)); };
     $('pGo').onclick = () => { lire(); memoriser(); calculerPlanning(); };
     if (etat.planResultat) afficherPlans(etat.planResultat);
   }
@@ -757,7 +759,7 @@
     etat.planResultat = res; afficherPlans(res);
     const ip = $('pInter');
     if (ip && window.CPIntermissions) {
-      const gaps = window.CPIntermissions.recherche(etat.missions, etat.reglages, {limite:5,plateformesActives:window.CP_EDITION&&window.CP_EDITION.plateformes}).intervalles;
+      const gaps = window.CPIntermissions.recherche(etat.missions, etat.reglages, {limite:5,plateformesActives:window.CP_EDITION&&window.CP_EDITION.plateformes,joursReposHebdo:lireLocal('cp_jours_repos_hebdo',[])}).intervalles;
       ip.innerHTML = gaps.length ? '<div class="carte"><h2>🔎 Missions entre engagements acceptés</h2><p class="doux">Ces suggestions ne modifient aucune mission acceptée. Déplacements estimés, non vérifiés.</p>' +
         gaps.map(g => '<p><b>' + esc(new Date(g.debut).toLocaleDateString('fr-FR')) + ' → ' + esc(new Date(g.fin).toLocaleDateString('fr-FR')) + '</b> : ' +
           (g.propositions.length ? g.propositions.map(z => esc(z.mission.from_city || '?') + ' → ' + esc(z.mission.to_city || '?') + ' (' + esc(z.mission.platform) + ', ≈ ' + esc(euros(z.netIncrementalEstime)) + ')').join(' ; ') : 'aucune proposition') + '</p>').join('') +
