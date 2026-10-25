@@ -723,7 +723,13 @@
       };
       const debutMission = x => debutAff(x);
       const finMission = x => x.fin && Number.isFinite(Number(x.fin.t)) ? Number(x.fin.t) : (x.fin && Number.isFinite(Number(x.fin)) ? Number(x.fin) : null);
-      const segment = (titre, a, b, note) => '<div class="bk bkC" style="margin:8px 0;padding:12px"><strong>'+esc(titre)+'</strong><div>'+esc(a)+' → '+esc(b)+'</div><small class="doux">'+esc(note)+'</small></div>';
+      const segment = (titre, a, b, note) => {
+        // Lien vers le calculateur officiel, sans inventer un résultat ni transmettre
+        // les données des missions à un service tiers automatiquement.
+        const lienM = 'https://www.reso-m.fr/7-itineraire.htm';
+        const recherche = 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(a)+'&destination='+encodeURIComponent(b)+'&travelmode=transit';
+        return '<div class="bk bkC" style="margin:8px 0;padding:12px"><strong>'+esc(titre)+'</strong><div>'+esc(a)+' → '+esc(b)+'</div><small class="doux">'+esc(note)+'</small><div style="margin-top:8px"><a href="'+lienM+'" target="_blank" rel="noopener noreferrer">🚌 Calculateur officiel M réso</a> · <a href="'+esc(recherche)+'" target="_blank" rel="noopener noreferrer">Comparer les correspondances</a></div></div>';
+      };
       let carnet = segment('🏠 Avant la première mission',domicile,adr(missionsDemain[0].mission,'origin'),'Arriver avant '+horaires(debutMission(missionsDemain[0]))+' ; trajet, horaires et coût à vérifier.');
       for (let i=0;i<missionsDemain.length;i++) {
         const x = missionsDemain[i], suivante = missionsDemain[i+1];
