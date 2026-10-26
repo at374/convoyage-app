@@ -15,8 +15,15 @@ function correspondances(trajets, options={}){
   const cle = s=>String(s).trim().toLocaleLowerCase('fr-FR');
   // Indexation des arrêts par identifiant officiel lorsqu'il existe.
   // Sinon, le nom reste un rapprochement indicatif.
-  const arretDepart = t => t.departStopId ? 'id:' + String(t.departStopId) : 'nom:' + cle(t.departArret);
-  const arretArrivee = t => t.arriveeStopId ? 'id:' + String(t.arriveeStopId) : 'nom:' + cle(t.arriveeArret);
+  // Les identifiants d'arrêt ne sont uniques qu'à l'intérieur d'un réseau.
+  // Deux réseaux peuvent tous deux utiliser "1234" pour des lieux différents.
+  const espace = t => cle(t.reseau || t.networkId || t.agence || t.fournisseur || '');
+  const arretDepart = t => t.departStopId
+    ? 'id:' + espace(t) + ':' + String(t.departStopId)
+    : 'nom:' + cle(t.departArret);
+  const arretArrivee = t => t.arriveeStopId
+    ? 'id:' + espace(t) + ':' + String(t.arriveeStopId)
+    : 'nom:' + cle(t.arriveeArret);
   const parDepart = new Map();
   for(const t of normalises){
     const k=arretDepart(t);
