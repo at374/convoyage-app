@@ -43,6 +43,16 @@ function analyser(fichiers){
   const trips=new Set(tables.trips.map(v=>v.trip_id));
   const routes=new Set(tables.routes.map(v=>v.route_id));
   const erreurs=[];
+  const calendrier = typeof fichiers['calendar.txt']==='string'
+    ? csv(fichiers['calendar.txt']) : [];
+  const exceptions = typeof fichiers['calendar_dates.txt']==='string'
+    ? csv(fichiers['calendar_dates.txt']) : [];
+  const services = new Set([...calendrier,...exceptions].map(v=>v.service_id).filter(Boolean));
+  if(!services.size)erreurs.push('aucun calendrier de circulation disponible');
+  for(const t of tables.trips){
+    if(!t.service_id || !services.has(t.service_id))
+      erreurs.push('service absent: '+t.trip_id+'/'+(t.service_id||'?'));
+  }
   for(const t of tables.trips)if(!routes.has(t.route_id))erreurs.push('route absente: '+t.route_id);
   for(const st of tables.stop_times){
     if(!trips.has(st.trip_id))erreurs.push('course absente: '+st.trip_id);
@@ -54,8 +64,9 @@ function analyser(fichiers){
     nombreErreurs:erreurs.length,
     compteurs:Object.fromEntries(Object.entries(tables).map(([k,v])=>[k,v.length])),
     // Les données ne sont pas utilisables sans calendrier de service.
-    calendrierPresent:typeof fichiers['calendar.txt']==='string'||
-      typeof fichiers['calendar_dates.txt']==='string'};
+    calendrierPresent:services.size>0,
+    services:services.size,
+    exceptions:exceptions.length};
 }
 const api={csv,heureGTFS,analyser};
 root.CPGTFSValidation=api;
