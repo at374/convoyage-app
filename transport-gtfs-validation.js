@@ -127,7 +127,7 @@ function trajetsDirects(fichiers,date,departStopId,arriveeStopId,options={}){
     for(let i=0;i<p.length-1;i++){
       if(p[i].stopId!==departStopId||p[i].departSecondes<apres)continue;
       for(let j=i+1;j<p.length;j++){
-        if(p[j].stopId!==arriveeStopId||p[j].arriveeSecondes>avant)continue;
+        if(p[j].stopId!==arriveeStopId||p[j].arriveeSecondes>avant||p[j].arriveeSecondes<p[i].departSecondes)continue;
         sorties.push({tripId:course.tripId,routeId:course.routeId,
           departStopId,arriveeStopId,dateService:date,
           departSecondes:p[i].departSecondes,arriveeSecondes:p[j].arriveeSecondes,
@@ -285,7 +285,7 @@ function preparerReseau(fichiers){
           if(p.stopId!==depart||p.departSecondes<apres)continue;
           for(let j=i+1;j<t.passages.length;j++){
             const q=t.passages[j];
-            if(q.stopId!==arrivee||q.arriveeSecondes>avant)continue;
+            if(q.stopId!==arrivee||q.arriveeSecondes>avant||q.arriveeSecondes<p.departSecondes)continue;
             sorties.push({tripId:t.tripId,routeId:t.routeId,departStopId:depart,
               arriveeStopId:arrivee,dateService:date,departSecondes:p.departSecondes,
               arriveeSecondes:q.arriveeSecondes,source:'GTFS statique',
