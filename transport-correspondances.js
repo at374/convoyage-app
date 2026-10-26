@@ -4,7 +4,8 @@
 'use strict';
 const ms = v => Date.parse(v);
 function correspondances(trajets, options={}){
-  const minimum = Math.max(0, Math.min(120, Number(options.minimumMinutes) || 8))*60000;
+  const minimumSaisi = Number(options.minimumMinutes);
+  const minimum = Math.max(0, Math.min(120, Number.isFinite(minimumSaisi) ? minimumSaisi : 8))*60000;
   const maximum = Math.max(minimum, Math.min(360, Number(options.maximumMinutes) || 90)*60000);
   const limite = Math.max(1, Math.min(200, Number(options.limite) || 30));
   const normalises = (Array.isArray(trajets)?trajets:[]).filter(t=>
@@ -25,6 +26,10 @@ function correspondances(trajets, options={}){
       const attente=ms(second.departAt)-ms(premier.arriveeAt);
       if(attente<minimum || attente>maximum) continue;
       if(premier===second || (premier.tripId && premier.tripId===second.tripId)) continue;
+      // Sans identité d'arrêt stable, un même nom peut désigner deux quais
+      // éloignés : ne jamais annoncer la correspondance comme garantie.
+      if (premier.arriveeStopId && second.departStopId &&
+          premier.arriveeStopId !== second.departStopId) continue;
       if(options.arriveeAvant && ms(second.arriveeAt)>ms(options.arriveeAvant)) continue;
       if(options.departApres && ms(premier.departAt)<ms(options.departApres)) continue;
       // L'égalité de nom d'arrêt ne garantit pas un quai accessible.
