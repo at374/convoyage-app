@@ -1197,7 +1197,22 @@
             delete cible.dataset.correspondances;
           }
           afficherLignes();
-          if (!lignes.length && cible.isConnected) {
+          if (correspondances.length && cible.isConnected) {
+            const heure = v => new Date(v).toLocaleTimeString('fr-FR', {
+              timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'
+            });
+            const details = correspondances.slice(0, 8).map((t, i) => {
+              const a = t.segments[0], b = t.segments[1];
+              const nom = s => [s.fournisseur, s.ligne || s.numero || 'ligne non précisée'].filter(Boolean).join(' · ');
+              return (i + 1) + '. ' + nom(a) + ' ' + heure(a.departAt) + ' → ' +
+                heure(a.arriveeAt) + ' ; changement à ' + t.correspondanceArret +
+                ' (' + t.attenteMinutes + ' min) ; ' + nom(b) + ' ' +
+                heure(b.departAt) + ' → ' + heure(b.arriveeAt);
+            });
+            cible.textContent += ' | Correspondances possibles (quais et disponibilité à vérifier) : ' +
+              details.join(' | ') + ' | Tarifs combinés non vérifiés.';
+          }
+          if (!lignes.length && cible.isConnected && !correspondances.length) {
             const pannes = res.sources.filter(x => x.erreur);
             cible.textContent = pannes.length
               ? 'Recherche incomplète : ' + pannes.length + ' fournisseur(s) indisponible(s). Réessaie ou consulte directement les transporteurs.'
