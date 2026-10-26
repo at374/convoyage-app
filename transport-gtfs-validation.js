@@ -139,6 +139,23 @@ function trajetsDirects(fichiers,date,departStopId,arriveeStopId,options={}){
   const limite=Number.isInteger(options.limite)&&options.limite>0?Math.min(options.limite,200):30;
   return sorties.slice(0,limite);
 }
+// Résolution des passages GTFS après minuit : les heures 24:xx et plus
+// sont rattachées au jour civil suivant sans changer le jour de service.
+function datePassageGTFS(dateService,secondes){
+  if(!dateGTFS(dateService)||!Number.isInteger(secondes)||secondes<0||secondes>=172800)
+    throw new Error('Date ou secondes GTFS invalides');
+  const date=new Date(0);
+  date.setUTCFullYear(Number(dateService.slice(0,4)),Number(dateService.slice(4,6))-1,Number(dateService.slice(6,8)));
+  date.setUTCHours(0,0,0,0);
+  date.setUTCSeconds(secondes);
+  const y=String(date.getUTCFullYear()).padStart(4,'0');
+  const m=String(date.getUTCMonth()+1).padStart(2,'0');
+  const d=String(date.getUTCDate()).padStart(2,'0');
+  const h=String(date.getUTCHours()).padStart(2,'0');
+  const min=String(date.getUTCMinutes()).padStart(2,'0');
+  const s=String(date.getUTCSeconds()).padStart(2,'0');
+  return {date:y+m+d,heure:h+':'+min+':'+s,jourSupplementaire:Math.floor(secondes/86400)};
+}
 function analyser(fichiers){
   if(!fichiers||typeof fichiers!=='object')throw new TypeError('Fichiers GTFS manquants');
   const requis={stops:'stop_id',routes:'route_id',trips:'trip_id',stop_times:'trip_id'};
@@ -190,7 +207,7 @@ function analyser(fichiers){
     services:services.size,
     exceptions:exceptions.length};
 }
-const api={csv,heureGTFS,dateGTFS,circule,coursesDuJour,trajetsDirects,analyser};
+const api={csv,heureGTFS,dateGTFS,circule,coursesDuJour,trajetsDirects,datePassageGTFS,analyser};
 root.CPGTFSValidation=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
