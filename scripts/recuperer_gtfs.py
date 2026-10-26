@@ -38,14 +38,29 @@ def main():
     args.destination.mkdir(parents=True, exist_ok=True)
     archive = args.destination / (name + ".zip")
     temp = args.destination / (name + ".zip.part")
+    def pan_host(host):
+        return host == "transport.data.gouv.fr" or (
+            host is not None and host.endswith(".transport.data.gouv.fr")
+        ) or host == "data.gouv.fr" or (
+            host is not None and host.endswith(".data.gouv.fr")
+        )
+
+    class PanRedirectHandler(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, request, fp, code, msg, headers, newurl):
+            dest = urllib.parse.urlparse(newurl)
+            if dest.scheme != "https" or not pan_host(dest.hostname):
+                raise ValueError("Redirection hors du domaine officiel PAN")
+            return super().redirect_request(request, fp, code, msg, headers, newurl)
+
+    opener = urllib.request.build_opener(PanRedirectHandler)
     req = urllib.request.Request(args.url, headers={"User-Agent": "ConvoyageUltra-GTFS-Audit/1.0"})
     digest = hashlib.sha256()
     size = 0
     try:
-        with urllib.request.urlopen(req, timeout=35) as response, temp.open("wb") as out:
+        with opener.open(req, timeout=35) as response, temp.open("wb") as out:
             final = urllib.parse.urlparse(response.geturl())
-            if final.scheme != "https":
-                raise ValueError("Redirection vers une URL non HTTPS")
+            if final.scheme != "https" or not pan_host(final.hostname):
+                raise ValueError("Destination de téléchargement non officielle")
             while True:
                 chunk = response.read(1024 * 1024)
                 if not chunk:
@@ -70,6 +85,12 @@ def main():
                 raise ValueError("Calendrier GTFS absent")
             if z.testzip() is not None:
                 raise ValueError("Archive ZIP corrompue")
+        audit = Path(__file__).with_name("auditer_gtfs.py")
+        rapport = args.destination / (name + ".audit.json")
+        resultat = subprocess.call([sys.executable, str(audit), str(temp),
+                                   "--source", args.url, "--rapport", str(rapport)])
+        if resultat != 0:
+            raise ValueError("Audit GTFS refusé : archive précédente conservée")
         temp.replace(archive)
     except Exception as exc:
         temp.unlink(missing_ok=True)
@@ -83,10 +104,7 @@ def main():
     }
     (args.destination / (name + ".provenance.json")).write_text(
         json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    audit = Path(__file__).with_name("auditer_gtfs.py")
-    return subprocess.call([sys.executable, str(audit), str(archive),
-                            "--source", args.url, "--rapport",
-                            str(args.destination / (name + ".audit.json"))])
+    return 0
 
 
 if __name__ == "__main__":
