@@ -32,8 +32,12 @@
   async function rechercher(q, fournisseurs, options = {}) {
     if (!q || !propre(q.depart) || !propre(q.arrivee) || !jourValide(q.date)) throw new Error('Trajet ou date invalide');
     const sources = Array.isArray(fournisseurs) ? fournisseurs.filter(f => f && typeof f.rechercher === 'function') : [];
-    const key = JSON.stringify([cle(q), sources.map(idFournisseur)]), maintenant = Date.now();
+    // Éviter les requêtes redondantes quand un même fournisseur est enregistré
+    // plusieurs fois (par exemple lors d'un rechargement de configuration).
+    const uniques = [...new Set(sources)];
+    const key = JSON.stringify([cle(q), uniques.map(idFournisseur)]), maintenant = Date.now();
     const precedent = cache.get(key);
+    if (precedent && precedent.expire <= maintenant) cache.delete(key);
     if (!options.rafraichir && precedent && precedent.expire > maintenant) {
       // Recalculer la fraîcheur au moment de la lecture du cache.
       // Une confirmation devenue ancienne ne doit pas rester « confirmée ».
@@ -44,7 +48,7 @@
       };
       if (typeof options.surResultat === 'function') {
         // Même en cas de réponse instantanée du cache, alimenter l'interface.
-        for (const fournisseur of sources) {
+        for (const fournisseur of uniques) {
           const nom = propre(fournisseur.nom);
           try { const statut = valeur.sources.find(s => s.fournisseur === nom); options.surResultat({ fournisseur: nom, trajets: valeur.trajets.filter(t => t.fournisseur === nom), erreur: statut && statut.erreur || null, cache: true }); } catch (_) {}
         }
@@ -72,7 +76,7 @@
     if (typeof options.surResultat === 'function') ecouteurs.add(options.surResultat);
     const action = (async () => {
       // Aucun fournisseur : retour immédiat et explicite, sans réseau.
-      const resultats = await Promise.all(sources.map(async f => {
+      const resultats = await Promise.all(uniques.map(async f => {
         let minuterie;
         try {
           const lignes = await Promise.race([
