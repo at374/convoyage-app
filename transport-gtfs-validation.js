@@ -95,7 +95,7 @@ function coursesDuJour(fichiers, date, options={}){
     const arrivee=heureGTFS(p.arrival_time),depart=heureGTFS(p.departure_time);
     if(arrivee===null||depart===null||depart<arrivee)continue;
     const ordre=Number(p.stop_sequence);
-    if(!Number.isInteger(ordre)||ordre<0)continue;
+    if(!p.stop_sequence||!Number.isInteger(ordre)||ordre<0)continue;
     course.passages.push({stopId:p.stop_id,ordre,arriveeSecondes:arrivee,departSecondes:depart});
   }
   const resultats=[];
@@ -252,7 +252,7 @@ function preparerReseau(fichiers){
     const t=courses.get(p.trip_id);
     if(!t||!arrets.has(p.stop_id))continue;
     const a=heureGTFS(p.arrival_time),d=heureGTFS(p.departure_time),ordre=Number(p.stop_sequence);
-    if(a===null||d===null||d<a||!Number.isInteger(ordre)||ordre<0)continue;
+    if(a===null||d===null||d<a||!p.stop_sequence||!Number.isInteger(ordre)||ordre<0)continue;
     t.passages.push({stopId:p.stop_id,ordre,arriveeSecondes:a,departSecondes:d});
   }
   const index=[];
@@ -384,6 +384,8 @@ function analyser(fichiers){
   }
   for(const t of tables.trips)if(!routes.has(t.route_id))erreurs.push('route absente: '+t.route_id);
   for(const st of tables.stop_times){
+    if(!st.stop_sequence||!Number.isInteger(Number(st.stop_sequence))||Number(st.stop_sequence)<0)
+      erreurs.push('ordre arrêt invalide: '+st.trip_id+'/'+st.stop_id);
     if(!trips.has(st.trip_id))erreurs.push('course absente: '+st.trip_id);
     if(!stops.has(st.stop_id))erreurs.push('arrêt absent: '+st.stop_id);
     if(heureGTFS(st.arrival_time)===null||heureGTFS(st.departure_time)===null)
