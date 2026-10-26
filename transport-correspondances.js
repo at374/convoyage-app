@@ -4,10 +4,17 @@
 'use strict';
 const ms = v => Date.parse(v);
 function correspondances(trajets, options={}){
+  // Refuser les bornes horaires invalides au lieu de les ignorer.
+  if ((options.arriveeAvant != null && !Number.isFinite(ms(options.arriveeAvant))) ||
+      (options.departApres != null && !Number.isFinite(ms(options.departApres)))) return [];
   const minimumSaisi = Number(options.minimumMinutes);
   const minimum = Math.max(0, Math.min(120, Number.isFinite(minimumSaisi) ? minimumSaisi : 8))*60000;
-  const maximum = Math.max(minimum, Math.min(360, Number(options.maximumMinutes) || 90)*60000);
-  const limite = Math.max(1, Math.min(200, Number(options.limite) || 30));
+  const maximumSaisi = options.maximumMinutes == null ? 90 : Number(options.maximumMinutes);
+  if (!Number.isFinite(maximumSaisi) || maximumSaisi < 0) return [];
+  const maximum = Math.max(minimum, Math.min(360, maximumSaisi)*60000);
+  const limiteSaisie = options.limite == null ? 30 : Number(options.limite);
+  if (!Number.isFinite(limiteSaisie) || limiteSaisie < 1) return [];
+  const limite = Math.max(1, Math.min(200, Math.floor(limiteSaisie)));
   const normalises = (Array.isArray(trajets)?trajets:[]).filter(t=>
     t && t.departArret && t.arriveeArret &&
     Number.isFinite(ms(t.departAt)) && Number.isFinite(ms(t.arriveeAt)) &&
