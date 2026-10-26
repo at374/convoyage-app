@@ -263,6 +263,16 @@ function preparerReseau(fichiers){
       p.arriveeSecondes<t.passages[i-1].departSecondes)))continue;
     index.push(t);
   }
+  // Index inversé : seules les courses passant par l'arrêt de départ
+  // sont examinées lors d'une recherche, au lieu de tout le réseau.
+  const coursesParArret=new Map();
+  for(const t of index){
+    const uniques=new Set(t.passages.map(p=>p.stopId));
+    for(const stopId of uniques){
+      if(!coursesParArret.has(stopId))coursesParArret.set(stopId,[]);
+      coursesParArret.get(stopId).push(t);
+    }
+  }
   return Object.freeze({
     compteurs:verification.compteurs,
     coursesDuJour(date,options={}){
@@ -278,7 +288,7 @@ function preparerReseau(fichiers){
       const avant=options.arriveeAvantSecondes==null?172799:Number(options.arriveeAvantSecondes);
       if(!Number.isInteger(apres)||!Number.isInteger(avant)||apres<0||avant>172799||avant<apres)return [];
       const sorties=[];
-      for(const t of index){
+      for(const t of (coursesParArret.get(depart)||[])){
         if(!actif(t.serviceId,date))continue;
         for(let i=0;i<t.passages.length-1;i++){
           const p=t.passages[i];
