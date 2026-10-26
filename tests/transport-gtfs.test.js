@@ -41,4 +41,14 @@ assert.equal(gtfs.circule(fichiers,'INCONNU','20261027'),false);
 const contradictoires={...fichiers,'calendar_dates.txt':
   fichiers['calendar_dates.txt']+'SEMAINE,20261026,1\n'};
 assert.throws(()=>gtfs.circule(contradictoires,'SEMAINE','20261026'));
+// Le 28 octobre à 00:10, la course T2 relève du service du 27.
+const nocturnes=gtfs.trajetsDateCivile(fichiers,'20261028','A','C',{
+  departApresSecondes:0,arriveeAvantSecondes:3600
+});
+assert.equal(nocturnes.length,1);
+assert.equal(nocturnes[0].tripId,'T2');
+assert.equal(nocturnes[0].dateService,'20261027');
+assert.equal(nocturnes[0].dateDepart.heure,'00:10:00');
+assert.equal(nocturnes[0].dateArrivee.heure,'00:30:00');
+assert.equal(gtfs.trajetsDateCivile(fichiers,'20261026','A','C').length,0);
 console.log('Tests GTFS réussis');
