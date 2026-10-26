@@ -415,6 +415,18 @@ function analyser(fichiers){
       erreurs.push('exceptions contradictoires: '+cle);
     exceptionsVues.set(cle,x.exception_type);
   }
+  // Les colonnes GTFS obligatoires doivent être présentes, y compris
+  // quand un fichier contient seulement son en-tête.
+  const colonnesRequises={
+    stops:['stop_id'],routes:['route_id'],trips:['route_id','service_id','trip_id'],
+    stop_times:['trip_id','arrival_time','departure_time','stop_id','stop_sequence']
+  };
+  for(const [nom,colonnes] of Object.entries(colonnesRequises)){
+    const entete=(fichiers[nom+'.txt']||'').split(/\r?\n/,1)[0]
+      .replace(/^\uFEFF/,'').split(',');
+    for(const colonne of colonnes)
+      if(!entete.includes(colonne))erreurs.push('colonne obligatoire absente: '+nom+'/'+colonne);
+  }
   for(const [tripId,passages] of sequencesParCourse){
     const sequences=new Set();
     let precedent=null;
