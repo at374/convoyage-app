@@ -219,6 +219,76 @@ function preparerCalendrier(fichiers){
     return s[jour]==='1';
   };
 }
+// Prépare les données d'un réseau une seule fois pour les requêtes répétées.
+// Les données restent en mémoire ; aucune connexion ni requête payante.
+function preparerReseau(fichiers){
+  const verification=analyser(fichiers);
+  if(!verification.valide)throw new Error('GTFS invalide: '+verification.erreurs.slice(0,3).join('; '));
+  const services=preparerCalendrier(fichiers);
+  const arrets=new Set(csv(fichiers['stops.txt']).map(x=>x.stop_id));
+  const lignes=new Set(csv(fichiers['routes.txt']).map(x=>x.route_id));
+  const frequences=new Set((typeof fichiers['frequencies.txt']==='string'
+    ?csv(fichiers['frequencies.txt']):[]).map(x=>x.trip_id));
+  const courses=new Map();
+  for(const t of csv(fichiers['trips.txt'])){
+    if(!lignes.has(t.route_id)||frequences.has(t.trip_id))continue;
+    courses.set(t.trip_id,{tripId:t.trip_id,routeId:t.route_id,
+      serviceId:t.service_id,passages:[]});
+  }
+  for(const p of csv(fichiers['stop_times.txt'])){
+    const t=courses.get(p.trip_id);
+    if(!t||!arrets.has(p.stop_id))continue;
+    const a=heureGTFS(p.arrival_time),d=heureGTFS(p.departure_time),ordre=Number(p.stop_sequence);
+    if(a===null||d===null||d<a||!Number.isInteger(ordre)||ordre<0)continue;
+    t.passages.push({stopId:p.stop_id,ordre,arriveeSecondes:a,departSecondes:d});
+  }
+  const index=[];
+  for(const t of courses.values()){
+    t.passages.sort((a,b)=>a.ordre-b.ordre);
+    if(t.passages.length<2)continue;
+    if(t.passages.some((p,i)=>i>0&&(p.ordre<=t.passages[i-1].ordre||
+      p.arriveeSecondes<t.passages[i-1].departSecondes)))continue;
+    index.push(t);
+  }
+  return Object.freeze({
+    compteurs:verification.compteurs,
+    coursesDuJour(date,options={}){
+      if(!dateGTFS(date))throw new Error('Date GTFS invalide');
+      const limite=Number.isInteger(options.limite)&&options.limite>0
+        ?Math.min(options.limite,100000):100000;
+      return index.filter(t=>services(t.serviceId,date)).slice(0,limite);
+    },
+    trajetsDirects(date,depart,arrivee,options={}){
+      if(!dateGTFS(date))throw new Error('Date GTFS invalide');
+      if(!depart||!arrivee||depart===arrivee)return [];
+      const apres=options.departApresSecondes==null?0:Number(options.departApresSecondes);
+      const avant=options.arriveeAvantSecondes==null?172799:Number(options.arriveeAvantSecondes);
+      if(!Number.isInteger(apres)||!Number.isInteger(avant)||apres<0||avant>172799||avant<apres)return [];
+      const sorties=[];
+      for(const t of index){
+        if(!services(t.serviceId,date))continue;
+        for(let i=0;i<t.passages.length-1;i++){
+          const p=t.passages[i];
+          if(p.stopId!==depart||p.departSecondes<apres)continue;
+          for(let j=i+1;j<t.passages.length;j++){
+            const q=t.passages[j];
+            if(q.stopId!==arrivee||q.arriveeSecondes>avant)continue;
+            sorties.push({tripId:t.tripId,routeId:t.routeId,departStopId:depart,
+              arriveeStopId:arrivee,dateService:date,departSecondes:p.departSecondes,
+              arriveeSecondes:q.arriveeSecondes,source:'GTFS statique',
+              tempsReel:false,prixEUR:null});
+            break;
+          }
+        }
+      }
+      sorties.sort((a,b)=>a.arriveeSecondes-b.arriveeSecondes||
+        a.departSecondes-b.departSecondes);
+      const limite=Number.isInteger(options.limite)&&options.limite>0
+        ?Math.min(options.limite,200):30;
+      return sorties.slice(0,limite);
+    }
+  });
+}
 function analyser(fichiers){
   if(!fichiers||typeof fichiers!=='object')throw new TypeError('Fichiers GTFS manquants');
   const requis={stops:'stop_id',routes:'route_id',trips:'trip_id',stop_times:'trip_id'};
@@ -270,7 +340,7 @@ function analyser(fichiers){
     services:services.size,
     exceptions:exceptions.length};
 }
-const api={csv,heureGTFS,dateGTFS,circule,coursesDuJour,trajetsDirects,trajetsDateCivile,datePassageGTFS,preparerCalendrier,analyser};
+const api={csv,heureGTFS,dateGTFS,circule,coursesDuJour,trajetsDirects,trajetsDateCivile,datePassageGTFS,preparerCalendrier,preparerReseau,analyser};
 root.CPGTFSValidation=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
