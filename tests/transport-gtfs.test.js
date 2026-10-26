@@ -32,4 +32,13 @@ assert.equal(gtfs.circule(sansService,'SEMAINE','20261031'),false);
 const frequences={...fichiers,'frequencies.txt':'trip_id,start_time,end_time,headway_secs\nT1,08:00:00,09:00:00,600\n'};
 assert.equal(gtfs.coursesDuJour(frequences,'20261027').length,1);
 assert.equal(gtfs.analyser(fichiers).valide,true);
+// Cas limites : CSV avec virgules, correspondances impossibles et services absents.
+assert.equal(gtfs.csv('id,name\n1,"Gare, centre"\n')[0].name,'Gare, centre');
+assert.equal(gtfs.trajetsDirects(fichiers,'20261027','C','A').length,0);
+assert.equal(gtfs.trajetsDirects(fichiers,'20261027','A','C',{departApresSecondes:90000}).length,0);
+assert.equal(gtfs.trajetsDirects(fichiers,'20261027','A','C',{arriveeAvantSecondes:30000}).length,0);
+assert.equal(gtfs.circule(fichiers,'INCONNU','20261027'),false);
+const contradictoires={...fichiers,'calendar_dates.txt':
+  fichiers['calendar_dates.txt']+'SEMAINE,20261026,1\n'};
+assert.throws(()=>gtfs.circule(contradictoires,'SEMAINE','20261026'));
 console.log('Tests GTFS réussis');
