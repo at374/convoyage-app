@@ -104,6 +104,32 @@ function coursesDuJour(fichiers, date, options={}){
   const limite=Number.isInteger(options.limite)&&options.limite>0?Math.min(options.limite,100000):100000;
   return resultats.slice(0,limite);
 }
+// Recherche de trajets directs entre deux arrêts officiels sur un jour de service.
+// Horaires en secondes GTFS : pas de conversion hasardeuse de fuseau ni de tarif estimé.
+function trajetsDirects(fichiers,date,departStopId,arriveeStopId,options={}){
+  if(!departStopId||!arriveeStopId||departStopId===arriveeStopId)return [];
+  const apres=options.departApresSecondes==null?0:Number(options.departApresSecondes);
+  const avant=options.arriveeAvantSecondes==null?172799:Number(options.arriveeAvantSecondes);
+  if(!Number.isFinite(apres)||!Number.isFinite(avant)||apres<0||avant<apres)return [];
+  const sorties=[];
+  for(const course of coursesDuJour(fichiers,date)){
+    const p=course.passages;
+    for(let i=0;i<p.length-1;i++){
+      if(p[i].stopId!==departStopId||p[i].departSecondes<apres)continue;
+      for(let j=i+1;j<p.length;j++){
+        if(p[j].stopId!==arriveeStopId||p[j].arriveeSecondes>avant)continue;
+        sorties.push({tripId:course.tripId,routeId:course.routeId,
+          departStopId,arriveeStopId,dateService:date,
+          departSecondes:p[i].departSecondes,arriveeSecondes:p[j].arriveeSecondes,
+          source:'GTFS statique',tempsReel:false,prixEUR:null});
+        break;
+      }
+    }
+  }
+  sorties.sort((a,b)=>a.arriveeSecondes-b.arriveeSecondes||a.departSecondes-b.departSecondes);
+  const limite=Number.isInteger(options.limite)&&options.limite>0?Math.min(options.limite,200):30;
+  return sorties.slice(0,limite);
+}
 function analyser(fichiers){
   if(!fichiers||typeof fichiers!=='object')throw new TypeError('Fichiers GTFS manquants');
   const requis={stops:'stop_id',routes:'route_id',trips:'trip_id',stop_times:'trip_id'};
@@ -155,7 +181,7 @@ function analyser(fichiers){
     services:services.size,
     exceptions:exceptions.length};
 }
-const api={csv,heureGTFS,dateGTFS,circule,coursesDuJour,analyser};
+const api={csv,heureGTFS,dateGTFS,circule,coursesDuJour,trajetsDirects,analyser};
 root.CPGTFSValidation=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
