@@ -40,9 +40,13 @@
       if (!t) return false;
       // Une date de service est obligatoire : ne jamais afficher comme
       // compatible un trajet d'un autre jour (y compris après minuit).
-      const dateParis = instant => new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
-      }).format(new Date(instant));
+      const dateParis = instant => {
+        const morceaux = new Intl.DateTimeFormat('fr-FR', {
+          timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
+        }).formatToParts(new Date(instant));
+        const valeurs = Object.fromEntries(morceaux.map(p => [p.type, p.value]));
+        return valeurs.year + '-' + valeurs.month + '-' + valeurs.day;
+      };
       const jour = dateParis(t.departAt);
       if (jour !== q.date && dateParis(t.arriveeAt) !== q.date) return false;
       if (Number.isFinite(limite)) {
