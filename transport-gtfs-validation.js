@@ -64,6 +64,46 @@ function circule(fichiers, serviceId, date){
   const jour=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][jourDate.getUTCDay()];
   return ligne[jour]==='1';
 }
+// Courses prévues à une date civile, sans inventer de temps réel.
+// Les heures GTFS sont conservées en secondes depuis minuit du jour de service.
+function coursesDuJour(fichiers, date, options={}){
+  if(!dateGTFS(date))throw new Error('Date GTFS invalide');
+  const courses=csv(fichiers['trips.txt']||'');
+  const passages=csv(fichiers['stop_times.txt']||'');
+  const arrets=csv(fichiers['stops.txt']||'');
+  const lignes=csv(fichiers['routes.txt']||'');
+  const arretsConnus=new Set(arrets.map(s=>s.stop_id));
+  const lignesConnues=new Set(lignes.map(l=>l.route_id));
+  const services=new Map();
+  const actives=new Map();
+  for(const t of courses){
+    if(!services.has(t.service_id))
+      services.set(t.service_id,circule(fichiers,t.service_id,date));
+    if(services.get(t.service_id)&&lignesConnues.has(t.route_id))
+      actives.set(t.trip_id,{tripId:t.trip_id,routeId:t.route_id,serviceId:t.service_id,passages:[]});
+  }
+  for(const p of passages){
+    const course=actives.get(p.trip_id);
+    if(!course||!arretsConnus.has(p.stop_id))continue;
+    const arrivee=heureGTFS(p.arrival_time),depart=heureGTFS(p.departure_time);
+    if(arrivee===null||depart===null||depart<arrivee)continue;
+    const ordre=Number(p.stop_sequence);
+    if(!Number.isInteger(ordre)||ordre<0)continue;
+    course.passages.push({stopId:p.stop_id,ordre,arriveeSecondes:arrivee,departSecondes:depart});
+  }
+  const resultats=[];
+  for(const course of actives.values()){
+    course.passages.sort((a,b)=>a.ordre-b.ordre);
+    if(course.passages.length<2)continue;
+    let coherent=true;
+    for(let i=1;i<course.passages.length;i++)
+      if(course.passages[i].arriveeSecondes<course.passages[i-1].departSecondes ||
+         course.passages[i].ordre===course.passages[i-1].ordre)coherent=false;
+    if(coherent)resultats.push(course);
+  }
+  const limite=Number.isInteger(options.limite)&&options.limite>0?Math.min(options.limite,100000):100000;
+  return resultats.slice(0,limite);
+}
 function analyser(fichiers){
   if(!fichiers||typeof fichiers!=='object')throw new TypeError('Fichiers GTFS manquants');
   const requis={stops:'stop_id',routes:'route_id',trips:'trip_id',stop_times:'trip_id'};
@@ -115,7 +155,7 @@ function analyser(fichiers){
     services:services.size,
     exceptions:exceptions.length};
 }
-const api={csv,heureGTFS,dateGTFS,circule,analyser};
+const api={csv,heureGTFS,dateGTFS,circule,coursesDuJour,analyser};
 root.CPGTFSValidation=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
