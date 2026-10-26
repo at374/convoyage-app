@@ -302,6 +302,40 @@ function preparerReseau(fichiers){
     }
   });
 }
+// Cherche sur un index préparé sans relire les fichiers CSV.
+// Le jour civil inclut les passages du service de la veille après minuit.
+function trajetsDateCivileIndex(index,dateCivile,depart,arrivee,options={}){
+  if(!index||typeof index.trajetsDirects!=='function')
+    throw new TypeError('Index GTFS préparé requis');
+  if(!dateGTFS(dateCivile))throw new Error('Date civile invalide');
+  const apres=options.departApresSecondes==null?0:Number(options.departApresSecondes);
+  const avant=options.arriveeAvantSecondes==null?86399:Number(options.arriveeAvantSecondes);
+  if(!Number.isInteger(apres)||!Number.isInteger(avant)||apres<0||avant>86399||avant<apres)return [];
+  const d=new Date(0);
+  d.setUTCFullYear(Number(dateCivile.slice(0,4)),Number(dateCivile.slice(4,6))-1,Number(dateCivile.slice(6,8)));
+  d.setUTCHours(0,0,0,0);
+  d.setUTCDate(d.getUTCDate()-1);
+  const veille=String(d.getUTCFullYear()).padStart(4,'0')+
+    String(d.getUTCMonth()+1).padStart(2,'0')+
+    String(d.getUTCDate()).padStart(2,'0');
+  const resultats=[];
+  for(const [date,decalage] of [[veille,86400],[dateCivile,0]]){
+    for(const trajet of index.trajetsDirects(date,depart,arrivee,{
+      departApresSecondes:apres+decalage,
+      arriveeAvantSecondes:avant+decalage,
+      limite:200
+    })){
+      resultats.push({...trajet,
+        dateDepart:datePassageGTFS(date,trajet.departSecondes),
+        dateArrivee:datePassageGTFS(date,trajet.arriveeSecondes)});
+    }
+  }
+  resultats.sort((a,b)=>a.dateDepart.heure.localeCompare(b.dateDepart.heure)||
+    a.dateArrivee.heure.localeCompare(b.dateArrivee.heure));
+  const limite=Number.isInteger(options.limite)&&options.limite>0
+    ?Math.min(options.limite,200):30;
+  return resultats.slice(0,limite);
+}
 function analyser(fichiers){
   if(!fichiers||typeof fichiers!=='object')throw new TypeError('Fichiers GTFS manquants');
   const requis={stops:'stop_id',routes:'route_id',trips:'trip_id',stop_times:'trip_id'};
@@ -353,7 +387,7 @@ function analyser(fichiers){
     services:services.size,
     exceptions:exceptions.length};
 }
-const api={csv,heureGTFS,dateGTFS,circule,coursesDuJour,trajetsDirects,trajetsDateCivile,datePassageGTFS,preparerCalendrier,preparerReseau,analyser};
+const api={csv,heureGTFS,dateGTFS,circule,coursesDuJour,trajetsDirects,trajetsDateCivile,datePassageGTFS,preparerCalendrier,preparerReseau,trajetsDateCivileIndex,analyser};
 root.CPGTFSValidation=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
