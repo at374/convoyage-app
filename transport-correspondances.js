@@ -42,7 +42,7 @@ function correspondances(trajets, options={}){
   }
   for (const groupe of Array.isArray(options.equivalencesArrets) ? options.equivalencesArrets : []) {
     if (!Array.isArray(groupe) || groupe.length < 2) continue;
-    const ids = groupe.filter(v => typeof v === 'string' && v.startsWith('id:'));
+    const ids = [...new Set(groupe.filter(v => typeof v === 'string' && /^id:[^:]+:.+/.test(v)))];
     for (const id of ids) {
       if (!equivalences.has(id)) equivalences.set(id, new Set());
       for (const autre of ids) if (autre !== id) equivalences.get(id).add(autre);
@@ -63,6 +63,9 @@ function correspondances(trajets, options={}){
       const attente=ms(second.departAt)-ms(premier.arriveeAt);
       const marche = tempsTransfert.get(arrivee + '>' + arretDepart(second)) || 0;
       if(attente<Math.max(minimum,marche) || attente>maximum) continue;
+      // Si une marche est connue, elle doit laisser au moins la marge
+      // minimale de changement demandée, en plus du déplacement à pied.
+      if(marche && attente < marche + minimum) continue;
       if(premier===second || (premier.tripId && premier.tripId===second.tripId)) continue;
       // Sans identité d'arrêt stable, un même nom peut désigner deux quais
       // éloignés : ne jamais annoncer la correspondance comme garantie.
