@@ -28,6 +28,18 @@ function correspondances(trajets, options={}){
   // explicite a été fournie (ex. deux quais vérifiés d'une même gare).
   // Aucun rapprochement géographique approximatif n'est inventé.
   const equivalences = new Map();
+  // Pour chaque transfert explicitement vérifié, la marche réelle peut
+  // nécessiter un délai supérieur au minimum global.
+  const tempsTransfert = new Map();
+  for (const regle of Array.isArray(options.transfertsVerifies) ? options.transfertsVerifies : []) {
+    if (!regle || typeof regle.de !== 'string' || typeof regle.vers !== 'string' ||
+        !regle.de.startsWith('id:') || !regle.vers.startsWith('id:')) continue;
+    const minutes = Number(regle.minutes);
+    if (!Number.isFinite(minutes) || minutes < 0 || minutes > 120) continue;
+    if (!equivalences.has(regle.de)) equivalences.set(regle.de, new Set());
+    equivalences.get(regle.de).add(regle.vers);
+    tempsTransfert.set(regle.de + '>' + regle.vers, minutes * 60000);
+  }
   for (const groupe of Array.isArray(options.equivalencesArrets) ? options.equivalencesArrets : []) {
     if (!Array.isArray(groupe) || groupe.length < 2) continue;
     const ids = groupe.filter(v => typeof v === 'string' && v.startsWith('id:'));
@@ -49,7 +61,8 @@ function correspondances(trajets, options={}){
     const cibles = [arrivee, ...(equivalences.get(arrivee) || [])];
     for(const second of cibles.flatMap(id => parDepart.get(id) || [])){
       const attente=ms(second.departAt)-ms(premier.arriveeAt);
-      if(attente<minimum || attente>maximum) continue;
+      const marche = tempsTransfert.get(arrivee + '>' + arretDepart(second)) || 0;
+      if(attente<Math.max(minimum,marche) || attente>maximum) continue;
       if(premier===second || (premier.tripId && premier.tripId===second.tripId)) continue;
       // Sans identité d'arrêt stable, un même nom peut désigner deux quais
       // éloignés : ne jamais annoncer la correspondance comme garantie.
