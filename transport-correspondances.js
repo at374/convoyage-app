@@ -48,6 +48,10 @@ function correspondances(trajets, options={}){
       for (const autre of ids) if (autre !== id) equivalences.get(id).add(autre);
     }
   }
+  // Un trajet demandé ne doit pas être confondu avec une correspondance
+  // quelconque présente dans la réponse du fournisseur.
+  const origineDemandee = typeof options.origineStopKey === 'string' ? options.origineStopKey : null;
+  const destinationDemandee = typeof options.destinationStopKey === 'string' ? options.destinationStopKey : null;
   const parDepart = new Map();
   for(const t of normalises){
     const k=arretDepart(t);
@@ -62,9 +66,11 @@ function correspondances(trajets, options={}){
   const arriveeFinale = t => arretArrivee(t);
   const resultats=[];
   for(const premier of normalises){
+    if (origineDemandee && arretDepart(premier) !== origineDemandee) continue;
     const arrivee = arretArrivee(premier);
     const cibles = [...new Set([arrivee, ...(equivalences.get(arrivee) || [])])];
     for(const second of cibles.flatMap(id => parDepart.get(id) || [])){
+      if (destinationDemandee && arretArrivee(second) !== destinationDemandee) continue;
       const attente=ms(second.departAt)-ms(premier.arriveeAt);
       const marche = tempsTransfert.get(arrivee + '>' + arretDepart(second)) || 0;
       // L'équivalence seule n'atteste pas d'un temps de marche nul.
