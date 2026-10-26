@@ -55,6 +55,8 @@
       }
       return valeur;
     }
+    // Un rafraîchissement forcé doit ignorer le cache mais partager une
+    // requête déjà active : évite une rafale d'appels simultanés.
     if (enCours.has(key)) {
       // Une recherche simultanée partage le réseau, mais chaque écran doit
       // recevoir les résultats via son propre callback.
@@ -72,6 +74,8 @@
     // Budget global court : chaque fournisseur travaille en parallèle.
     // Un fournisseur lent ne doit pas retarder l'affichage des autres.
     const timeoutMs = Math.max(250, Math.min(15000, Number(options.timeoutMs) || 3500));
+    // La clé tient compte des fournisseurs, mais pas du timeout demandé.
+    // Les appels concurrents partagent le premier budget lancé.
     const ecouteurs = new Set(), diffuses = [];
     if (typeof options.surResultat === 'function') ecouteurs.add(options.surResultat);
     const action = (async () => {
@@ -103,8 +107,17 @@
         }
         finally { clearTimeout(minuterie); }
       }));
+      // Dédupliquer les mêmes trajets renvoyés plusieurs fois par un fournisseur.
+      // Ne pas fusionner les fournisseurs distincts : leurs prix peuvent varier.
+      const vus = new Set();
       const trajets = resultats.flatMap(r => r.lignes.map(t => ({ ...t, fournisseur: r.fournisseur })))
-        .sort((a, b) => Date.parse(a.departAt) - Date.parse(b.departAt));
+        .filter(t => {
+          const identite = JSON.stringify([t.fournisseur, t.departAt, t.arriveeAt,
+            t.source, t.prixEUR, t.ligne || '', t.numero || '']);
+          if (vus.has(identite)) return false;
+          vus.add(identite);
+          return true;
+        }).sort((a, b) => Date.parse(a.departAt) - Date.parse(b.departAt));
       const valeur = { trajets, sources: resultats.map(({ fournisseur, erreur }) => ({ fournisseur, erreur })), cache: false,
         avertissement: 'Horaires et prix non confirmés tant qu’une source fiable ne les a pas vérifiés.' };
       // Les réponses partielles valides sont réutilisables pendant une courte
