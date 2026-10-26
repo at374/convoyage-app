@@ -35,6 +35,7 @@
     // Une recherche de correspondance doit respecter les limites horaires de
     // la mission, même si un fournisseur renvoie un trajet hors créneau.
     const limite = q.limiteMissionAt ? Date.parse(q.limiteMissionAt) : NaN;
+    if (q.contrainte && !q.limiteMissionAt) throw new Error('Heure limite obligatoire avec une contrainte de mission');
     // Une marge mal renseignée ne doit jamais rendre le filtre permissif.
     const margeSaisie = Number(q.margeMinutes);
     const marge = Math.max(0, Math.min(180, Number.isFinite(margeSaisie) ? margeSaisie : 0)) * 60000;
