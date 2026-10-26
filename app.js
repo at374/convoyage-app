@@ -1179,7 +1179,23 @@
           });
           // Le résultat final est la référence : il évite les doublons si un
           // fournisseur a déjà été affiché via les notifications progressives.
+          // Construire les correspondances à partir des trajets datés réellement
+          // retournés par les fournisseurs. Jamais d'horaires synthétiques.
+          const correspondances = window.CPCorrespondancesTransport
+            ? window.CPCorrespondancesTransport.correspondances(res.trajets, {
+                minimumMinutes: 8, maximumMinutes: 90, limite: 20,
+                ...(q.contrainte === 'arriverAvant' ? {arriveeAvant: q.limiteMissionAt} : {}),
+                ...(q.contrainte === 'partirApres' ? {departApres: q.limiteMissionAt} : {})
+              }).filter(t => trajetRetenu(t))
+            : [];
           lignes.splice(0, lignes.length, ...res.trajets.filter(trajetRetenu));
+          // Les correspondances restent séparées des trajets directs afin
+          // d'éviter de les présenter comme confirmées par un fournisseur.
+          if (correspondances.length && cible.isConnected) {
+            cible.dataset.correspondances = String(correspondances.length);
+          } else if (cible.isConnected) {
+            delete cible.dataset.correspondances;
+          }
           afficherLignes();
           if (!lignes.length && cible.isConnected) {
             const pannes = res.sources.filter(x => x.erreur);
