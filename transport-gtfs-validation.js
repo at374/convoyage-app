@@ -156,6 +156,37 @@ function datePassageGTFS(dateService,secondes){
   const s=String(date.getUTCSeconds()).padStart(2,'0');
   return {date:y+m+d,heure:h+':'+min+':'+s,jourSupplementaire:Math.floor(secondes/86400)};
 }
+// Recherche à date civile : inclut les courses de la veille passant après minuit.
+// Ne convertit pas les heures GTFS en instants UTC (fuseau agence inconnu).
+function trajetsDateCivile(fichiers,dateCivile,departStopId,arriveeStopId,options={}){
+  if(!dateGTFS(dateCivile))throw new Error('Date civile invalide');
+  const jour=new Date(0);
+  jour.setUTCFullYear(Number(dateCivile.slice(0,4)),Number(dateCivile.slice(4,6))-1,Number(dateCivile.slice(6,8)));
+  jour.setUTCHours(0,0,0,0);
+  jour.setUTCDate(jour.getUTCDate()-1);
+  const veille=String(jour.getUTCFullYear()).padStart(4,'0')+
+    String(jour.getUTCMonth()+1).padStart(2,'0')+
+    String(jour.getUTCDate()).padStart(2,'0');
+  const apres=options.departApresSecondes==null?0:Number(options.departApresSecondes);
+  const avant=options.arriveeAvantSecondes==null?86399:Number(options.arriveeAvantSecondes);
+  if(!Number.isFinite(apres)||!Number.isFinite(avant)||apres<0||avant>86399||avant<apres)return [];
+  const resultats=[];
+  for(const serviceDate of [veille,dateCivile]){
+    const decalage=serviceDate===veille?86400:0;
+    const directs=trajetsDirects(fichiers,serviceDate,departStopId,arriveeStopId,{
+      departApresSecondes:apres+decalage,
+      arriveeAvantSecondes:avant+decalage,limite:200
+    });
+    for(const trajet of directs)resultats.push({
+      ...trajet,dateDepart:datePassageGTFS(serviceDate,trajet.departSecondes),
+      dateArrivee:datePassageGTFS(serviceDate,trajet.arriveeSecondes)
+    });
+  }
+  resultats.sort((a,b)=>a.dateDepart.heure.localeCompare(b.dateDepart.heure)||
+    a.dateArrivee.heure.localeCompare(b.dateArrivee.heure));
+  const limite=Number.isInteger(options.limite)&&options.limite>0?Math.min(options.limite,200):30;
+  return resultats.slice(0,limite);
+}
 function analyser(fichiers){
   if(!fichiers||typeof fichiers!=='object')throw new TypeError('Fichiers GTFS manquants');
   const requis={stops:'stop_id',routes:'route_id',trips:'trip_id',stop_times:'trip_id'};
@@ -207,7 +238,7 @@ function analyser(fichiers){
     services:services.size,
     exceptions:exceptions.length};
 }
-const api={csv,heureGTFS,dateGTFS,circule,coursesDuJour,trajetsDirects,datePassageGTFS,analyser};
+const api={csv,heureGTFS,dateGTFS,circule,coursesDuJour,trajetsDirects,trajetsDateCivile,datePassageGTFS,analyser};
 root.CPGTFSValidation=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
