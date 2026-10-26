@@ -88,6 +88,18 @@ function analyser(fichiers){
     if(!t.service_id || !services.has(t.service_id))
       erreurs.push('service absent: '+t.trip_id+'/'+(t.service_id||'?'));
   }
+  // Vérifier les dates, exceptions et plages de validité avant toute recherche.
+  for(const s of calendrier){
+    if(!dateGTFS(s.start_date)||!dateGTFS(s.end_date)||s.start_date>s.end_date)
+      erreurs.push('calendrier invalide: '+(s.service_id||'?'));
+    for(const jour of ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'])
+      if(s[jour]!=='0'&&s[jour]!=='1')
+        erreurs.push('jour de circulation invalide: '+(s.service_id||'?')+'/'+jour);
+  }
+  for(const x of exceptions){
+    if(!dateGTFS(x.date)||!['1','2'].includes(x.exception_type))
+      erreurs.push('exception invalide: '+(x.service_id||'?')+'/'+(x.date||'?'));
+  }
   for(const t of tables.trips)if(!routes.has(t.route_id))erreurs.push('route absente: '+t.route_id);
   for(const st of tables.stop_times){
     if(!trips.has(st.trip_id))erreurs.push('course absente: '+st.trip_id);
