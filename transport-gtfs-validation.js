@@ -225,6 +225,19 @@ function preparerReseau(fichiers){
   const verification=analyser(fichiers);
   if(!verification.valide)throw new Error('GTFS invalide: '+verification.erreurs.slice(0,3).join('; '));
   const services=preparerCalendrier(fichiers);
+  const servicesActifsParDate=new Map();
+  function actif(serviceId,date){
+    let jour=servicesActifsParDate.get(date);
+    if(!jour){
+      jour=new Map();
+      servicesActifsParDate.set(date,jour);
+      // Borne le cache pour éviter une croissance illimitée en navigation.
+      if(servicesActifsParDate.size>14)
+        servicesActifsParDate.delete(servicesActifsParDate.keys().next().value);
+    }
+    if(!jour.has(serviceId))jour.set(serviceId,services(serviceId,date));
+    return jour.get(serviceId);
+  }
   const arrets=new Set(csv(fichiers['stops.txt']).map(x=>x.stop_id));
   const lignes=new Set(csv(fichiers['routes.txt']).map(x=>x.route_id));
   const frequences=new Set((typeof fichiers['frequencies.txt']==='string'
@@ -256,7 +269,7 @@ function preparerReseau(fichiers){
       if(!dateGTFS(date))throw new Error('Date GTFS invalide');
       const limite=Number.isInteger(options.limite)&&options.limite>0
         ?Math.min(options.limite,100000):100000;
-      return index.filter(t=>services(t.serviceId,date)).slice(0,limite);
+      return index.filter(t=>actif(t.serviceId,date)).slice(0,limite);
     },
     trajetsDirects(date,depart,arrivee,options={}){
       if(!dateGTFS(date))throw new Error('Date GTFS invalide');
@@ -266,7 +279,7 @@ function preparerReseau(fichiers){
       if(!Number.isInteger(apres)||!Number.isInteger(avant)||apres<0||avant>172799||avant<apres)return [];
       const sorties=[];
       for(const t of index){
-        if(!services(t.serviceId,date))continue;
+        if(!actif(t.serviceId,date))continue;
         for(let i=0;i<t.passages.length-1;i++){
           const p=t.passages[i];
           if(p.stopId!==depart||p.departSecondes<apres)continue;
