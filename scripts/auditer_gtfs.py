@@ -124,6 +124,41 @@ def audit(path, source):
                     errors.append("Horaires décroissants : " + str(trip_id))
                 if d is not None:
                     precedent = d
+        # Les horaires GTFS peuvent dépasser 24 h, mais jamais être négatifs.
+        # Une case vide est admise pour les arrêts intermédiaires interpolés.
+        def secondes_gtfs(value):
+            if not value:
+                return None
+            match = re.fullmatch(r"(\\d{1,2}):([0-5]\\d):([0-5]\\d)", value)
+            if not match or int(match.group(1)) > 47:
+                raise ValueError(value)
+            return int(match.group(1)) * 3600 + int(match.group(2)) * 60 + int(match.group(3))
+
+        passages_par_course = {}
+        for row in tables.get("stop_times.txt", []):
+            passages_par_course.setdefault(row.get("trip_id", ""), []).append(row)
+        for trip_id, passages in passages_par_course.items():
+            ordres = set()
+            precedant = None
+            for passage in sorted(passages, key=lambda p: int(p.get("stop_sequence") or -1)):
+                sequence = passage.get("stop_sequence", "")
+                if not sequence.isdigit() or int(sequence) < 0:
+                    errors.append("Ordre d'arrêt invalide : " + trip_id)
+                elif sequence in ordres:
+                    errors.append("Ordre d'arrêt dupliqué : " + trip_id + "/" + sequence)
+                ordres.add(sequence)
+                try:
+                    arrivee = secondes_gtfs(passage.get("arrival_time"))
+                    depart = secondes_gtfs(passage.get("departure_time"))
+                except ValueError:
+                    errors.append("Heure GTFS invalide : " + trip_id)
+                    continue
+                if arrivee is not None and depart is not None and depart < arrivee:
+                    errors.append("Départ avant arrivée : " + trip_id)
+                if precedant is not None and arrivee is not None and arrivee < precedant:
+                    errors.append("Horaires décroissants : " + trip_id)
+                if depart is not None:
+                    precedant = depart
         for row in tables.get("calendar.txt", []):
             if not date_ok(row.get("start_date")) or not date_ok(row.get("end_date")):
                 errors.append("Date de calendrier invalide")
