@@ -55,6 +55,11 @@ function correspondances(trajets, options={}){
     parDepart.get(k).push(t);
   }
   for(const lignes of parDepart.values()) lignes.sort((a,b)=>ms(a.departAt)-ms(b.departAt));
+  // Évite les itinéraires à deux segments qui reviennent au point de départ
+  // ou qui inversent la progression du voyage.
+  const memeArret = (a,b) => a === b && Boolean(a);
+  const departInitial = t => arretDepart(t);
+  const arriveeFinale = t => arretArrivee(t);
   const resultats=[];
   for(const premier of normalises){
     const arrivee = arretArrivee(premier);
@@ -68,7 +73,11 @@ function correspondances(trajets, options={}){
       // Si une marche est connue, elle doit laisser au moins la marge
       // minimale de changement demandée, en plus du déplacement à pied.
       if(marche && attente < marche + minimum) continue;
-      if(premier===second || (premier.tripId && premier.tripId===second.tripId)) continue;
+      if(premier===second || (premier.tripId && premier.tripId===second.tripId &&
+          espace(premier)===espace(second))) continue;
+      if (memeArret(departInitial(premier), arriveeFinale(second))) continue;
+      if (memeArret(departInitial(premier), arretArrivee(premier)) ||
+          memeArret(arretDepart(second), arriveeFinale(second))) continue;
       // Sans identité d'arrêt stable, un même nom peut désigner deux quais
       // éloignés : ne jamais annoncer la correspondance comme garantie.
       if (premier.arriveeStopId && second.departStopId &&
