@@ -64,4 +64,17 @@ assert.equal(gtfs.trajetsDateCivileIndex(index,'20261026','A','C').length,0);
 assert.equal(gtfs.trajetsDateCivileIndex(index,'20261028','A','C',{
   departApresSecondes:3600,arriveeAvantSecondes:0
 }).length,0);
+// Une course peut desservir deux fois le même arrêt : ne pas proposer
+// une arrivée antérieure au départ choisi.
+const boucle={...fichiers,
+  'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\n'+
+    'T1,08:00:00,08:00:00,A,1\n'+
+    'T1,08:10:00,08:10:00,C,2\n'+
+    'T1,08:20:00,08:20:00,A,3\n'+
+    'T1,08:30:00,08:30:00,C,4\n'};
+const trajetsBoucle=gtfs.trajetsDirects(boucle,'20261027','A','C');
+assert.equal(trajetsBoucle.length,2);
+assert.equal(trajetsBoucle[1].departSecondes,30000);
+assert.equal(trajetsBoucle[1].arriveeSecondes,30600);
+assert.deepEqual(gtfs.preparerReseau(boucle).trajetsDirects('20261027','A','C'),trajetsBoucle);
 console.log('Tests GTFS réussis');
