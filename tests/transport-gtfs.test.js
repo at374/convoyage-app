@@ -51,4 +51,17 @@ assert.equal(nocturnes[0].dateService,'20261027');
 assert.equal(nocturnes[0].dateDepart.heure,'00:10:00');
 assert.equal(nocturnes[0].dateArrivee.heure,'00:30:00');
 assert.equal(gtfs.trajetsDateCivile(fichiers,'20261026','A','C').length,0);
+// L'index doit produire les mêmes résultats que la recherche directe.
+const index=gtfs.preparerReseau(fichiers);
+assert.deepEqual(index.trajetsDirects('20261027','A','C'),
+  gtfs.trajetsDirects(fichiers,'20261027','A','C'));
+assert.deepEqual(gtfs.trajetsDateCivileIndex(index,'20261028','A','C',{
+  arriveeAvantSecondes:3600
+}),gtfs.trajetsDateCivile(fichiers,'20261028','A','C',{
+  arriveeAvantSecondes:3600
+}));
+assert.equal(gtfs.trajetsDateCivileIndex(index,'20261026','A','C').length,0);
+assert.equal(gtfs.trajetsDateCivileIndex(index,'20261028','A','C',{
+  departApresSecondes:3600,arriveeAvantSecondes:0
+}).length,0);
 console.log('Tests GTFS réussis');
