@@ -13,16 +13,21 @@ function correspondances(trajets, options={}){
     Number.isFinite(ms(t.departAt)) && Number.isFinite(ms(t.arriveeAt)) &&
     ms(t.arriveeAt)>ms(t.departAt));
   const cle = s=>String(s).trim().toLocaleLowerCase('fr-FR');
+  const identifiant = v => String(v).trim();
+  const cleArret = (reseau, id) => 'id:' + reseau + ':' + identifiant(id);
   // Indexation des arrêts par identifiant officiel lorsqu'il existe.
   // Sinon, le nom reste un rapprochement indicatif.
   // Les identifiants d'arrêt ne sont uniques qu'à l'intérieur d'un réseau.
   // Deux réseaux peuvent tous deux utiliser "1234" pour des lieux différents.
   const espace = t => cle(t.reseau || t.networkId || t.agence || t.fournisseur || '');
-  const arretDepart = t => t.departStopId
-    ? 'id:' + espace(t) + ':' + String(t.departStopId)
+  // Sans espace réseau connu, l'identifiant local n'est pas assez fiable
+  // pour établir une correspondance entre deux fournisseurs.
+  const arretFiable = (t, id) => id != null && identifiant(id) !== '' && espace(t) !== '';
+  const arretDepart = t => arretFiable(t,t.departStopId)
+    ? cleArret(espace(t), t.departStopId)
     : 'nom:' + cle(t.departArret);
-  const arretArrivee = t => t.arriveeStopId
-    ? 'id:' + espace(t) + ':' + String(t.arriveeStopId)
+  const arretArrivee = t => arretFiable(t,t.arriveeStopId)
+    ? cleArret(espace(t), t.arriveeStopId)
     : 'nom:' + cle(t.arriveeArret);
   // Les équivalences interréseaux ne sont acceptées que si une table
   // explicite a été fournie (ex. deux quais vérifiés d'une même gare).
