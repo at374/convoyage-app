@@ -75,6 +75,7 @@ function coursesDuJour(fichiers, date, options={}){
   const arretsConnus=new Set(arrets.map(s=>s.stop_id));
   const lignesConnues=new Set(lignes.map(l=>l.route_id));
   const services=new Map();
+  const serviceActif=preparerCalendrier(fichiers);
   const actives=new Map();
   // GTFS peut contenir des fréquences (frequencies.txt) : les passages
   // stop_times y sont des modèles, pas nécessairement des départs réels.
@@ -84,7 +85,7 @@ function coursesDuJour(fichiers, date, options={}){
   const tripsFrequence=new Set(frequences.map(f=>f.trip_id).filter(Boolean));
   for(const t of courses){
     if(!services.has(t.service_id))
-      services.set(t.service_id,circule(fichiers,t.service_id,date));
+      services.set(t.service_id,serviceActif(t.service_id,date));
     if(services.get(t.service_id)&&lignesConnues.has(t.route_id)&&!tripsFrequence.has(t.trip_id))
       actives.set(t.trip_id,{tripId:t.trip_id,routeId:t.route_id,serviceId:t.service_id,passages:[]});
   }
@@ -187,6 +188,37 @@ function trajetsDateCivile(fichiers,dateCivile,departStopId,arriveeStopId,option
   const limite=Number.isInteger(options.limite)&&options.limite>0?Math.min(options.limite,200):30;
   return resultats.slice(0,limite);
 }
+// Construit un index de services pour éviter de reparcourir les CSV de
+// calendrier à chaque course d'un gros réseau. Les exceptions priment.
+function preparerCalendrier(fichiers){
+  const calendrier=typeof fichiers['calendar.txt']==='string'?csv(fichiers['calendar.txt']):[];
+  const exceptions=typeof fichiers['calendar_dates.txt']==='string'?csv(fichiers['calendar_dates.txt']):[];
+  const services=new Map(),jours=new Map();
+  for(const s of calendrier){
+    if(!s.service_id||services.has(s.service_id))throw new Error('Service GTFS dupliqué ou vide');
+    services.set(s.service_id,s);
+  }
+  for(const x of exceptions){
+    if(!x.service_id||!dateGTFS(x.date)||!['1','2'].includes(x.exception_type))
+      throw new Error('Exception GTFS invalide');
+    const cle=x.service_id+'|'+x.date;
+    if(jours.has(cle)&&jours.get(cle)!==x.exception_type)
+      throw new Error('Exceptions GTFS contradictoires');
+    jours.set(cle,x.exception_type);
+  }
+  return function serviceActif(serviceId,date){
+    if(!dateGTFS(date)||!serviceId)throw new Error('Service ou date GTFS invalide');
+    const exception=jours.get(serviceId+'|'+date);
+    if(exception)return exception==='1';
+    const s=services.get(serviceId);
+    if(!s||!dateGTFS(s.start_date)||!dateGTFS(s.end_date)||
+       date<s.start_date||date>s.end_date)return false;
+    const d=new Date(0);
+    d.setUTCFullYear(Number(date.slice(0,4)),Number(date.slice(4,6))-1,Number(date.slice(6,8)));
+    const jour=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][d.getUTCDay()];
+    return s[jour]==='1';
+  };
+}
 function analyser(fichiers){
   if(!fichiers||typeof fichiers!=='object')throw new TypeError('Fichiers GTFS manquants');
   const requis={stops:'stop_id',routes:'route_id',trips:'trip_id',stop_times:'trip_id'};
@@ -238,7 +270,7 @@ function analyser(fichiers){
     services:services.size,
     exceptions:exceptions.length};
 }
-const api={csv,heureGTFS,dateGTFS,circule,coursesDuJour,trajetsDirects,trajetsDateCivile,datePassageGTFS,analyser};
+const api={csv,heureGTFS,dateGTFS,circule,coursesDuJour,trajetsDirects,trajetsDateCivile,datePassageGTFS,preparerCalendrier,analyser};
 root.CPGTFSValidation=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
