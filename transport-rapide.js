@@ -32,6 +32,18 @@
   async function rechercher(q, fournisseurs, options = {}) {
     if (!q || !propre(q.depart) || !propre(q.arrivee) || !jourValide(q.date)) throw new Error('Trajet ou date invalide');
     const sources = Array.isArray(fournisseurs) ? fournisseurs.filter(f => f && typeof f.rechercher === 'function') : [];
+    // Une recherche de correspondance doit respecter les limites horaires de
+    // la mission, même si un fournisseur renvoie un trajet hors créneau.
+    const limite = q.limiteMissionAt ? Date.parse(q.limiteMissionAt) : null;
+    const marge = Math.max(0, Math.min(180, Number(q.margeMinutes) || 0)) * 60000;
+    const filtreMission = t => {
+      if (!t) return false;
+      if (Number.isFinite(limite)) {
+        if (q.contrainte === 'arriverAvant' && Date.parse(t.arriveeAt) > limite - marge) return false;
+        if (q.contrainte === 'partirApres' && Date.parse(t.departAt) < limite + marge) return false;
+      }
+      return true;
+    };
     // Éviter les requêtes redondantes quand un même fournisseur est enregistré
     // plusieurs fois (par exemple lors d'un rechargement de configuration).
     const uniques = [...new Set(sources)];
@@ -43,7 +55,7 @@
       // Une confirmation devenue ancienne ne doit pas rester « confirmée ».
       const valeur = {
         ...precedent.valeur,
-        trajets: precedent.valeur.trajets.map(t => valider(t)).filter(Boolean),
+        trajets: precedent.valeur.trajets.map(t => valider(t)).filter(filtreMission),
         cache: true
       };
       if (typeof options.surResultat === 'function') {
@@ -87,7 +99,7 @@
             Promise.resolve().then(() => f.rechercher(q)),
             new Promise((_, reject) => { minuterie = setTimeout(() => reject(new Error('délai dépassé')), timeoutMs); })
           ]);
-          const valides = Array.isArray(lignes) ? lignes.map(valider).filter(Boolean) : [];
+          const valides = Array.isArray(lignes) ? lignes.map(valider).filter(filtreMission) : [];
           // Afficher immédiatement les résultats de chaque fournisseur rapide,
           // sans attendre les autres. Le résultat final reste consolidé.
           const notification = { fournisseur: propre(f.nom), trajets: valides.map(t=>({...t,fournisseur:propre(f.nom)})) };
