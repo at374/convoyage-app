@@ -13,16 +13,20 @@ function correspondances(trajets, options={}){
     Number.isFinite(ms(t.departAt)) && Number.isFinite(ms(t.arriveeAt)) &&
     ms(t.arriveeAt)>ms(t.departAt));
   const cle = s=>String(s).trim().toLocaleLowerCase('fr-FR');
+  // Indexation des arrêts par identifiant officiel lorsqu'il existe.
+  // Sinon, le nom reste un rapprochement indicatif.
+  const arretDepart = t => t.departStopId ? 'id:' + String(t.departStopId) : 'nom:' + cle(t.departArret);
+  const arretArrivee = t => t.arriveeStopId ? 'id:' + String(t.arriveeStopId) : 'nom:' + cle(t.arriveeArret);
   const parDepart = new Map();
   for(const t of normalises){
-    const k=cle(t.departArret);
+    const k=arretDepart(t);
     if(!parDepart.has(k)) parDepart.set(k,[]);
     parDepart.get(k).push(t);
   }
   for(const lignes of parDepart.values()) lignes.sort((a,b)=>ms(a.departAt)-ms(b.departAt));
   const resultats=[];
   for(const premier of normalises){
-    for(const second of parDepart.get(cle(premier.arriveeArret))||[]){
+    for(const second of parDepart.get(arretArrivee(premier))||[]){
       const attente=ms(second.departAt)-ms(premier.arriveeAt);
       if(attente<minimum || attente>maximum) continue;
       if(premier===second || (premier.tripId && premier.tripId===second.tripId)) continue;
