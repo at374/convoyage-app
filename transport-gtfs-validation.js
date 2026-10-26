@@ -116,7 +116,7 @@ function trajetsDirects(fichiers,date,departStopId,arriveeStopId,options={}){
   if(!departStopId||!arriveeStopId||departStopId===arriveeStopId)return [];
   const apres=options.departApresSecondes==null?0:Number(options.departApresSecondes);
   const avant=options.arriveeAvantSecondes==null?172799:Number(options.arriveeAvantSecondes);
-  if(!Number.isFinite(apres)||!Number.isFinite(avant)||apres<0||avant<apres)return [];
+  if(!Number.isInteger(apres)||!Number.isInteger(avant)||apres<0||avant>172799||avant<apres)return [];
   const sorties=[];
   // Les passages après minuit peuvent appartenir au service de la veille.
   // Cette recherche utilise volontairement la date de service GTFS, et non
@@ -169,7 +169,7 @@ function trajetsDateCivile(fichiers,dateCivile,departStopId,arriveeStopId,option
     String(jour.getUTCDate()).padStart(2,'0');
   const apres=options.departApresSecondes==null?0:Number(options.departApresSecondes);
   const avant=options.arriveeAvantSecondes==null?86399:Number(options.arriveeAvantSecondes);
-  if(!Number.isFinite(apres)||!Number.isFinite(avant)||apres<0||avant>86399||avant<apres)return [];
+  if(!Number.isInteger(apres)||!Number.isInteger(avant)||apres<0||avant>86399||avant<apres)return [];
   const resultats=[];
   for(const serviceDate of [veille,dateCivile]){
     const decalage=serviceDate===veille?86400:0;
