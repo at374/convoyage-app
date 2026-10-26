@@ -383,6 +383,41 @@ function analyser(fichiers){
       erreurs.push('exception invalide: '+(x.service_id||'?')+'/'+(x.date||'?'));
   }
   for(const t of tables.trips)if(!routes.has(t.route_id))erreurs.push('route absente: '+t.route_id);
+  // Vérifie les doublons et l'ordre chronologique par course.
+  for(const [nom,col] of [['stops','stop_id'],['routes','route_id'],['trips','trip_id']]){
+    const vus=new Set();
+    for(const ligne of tables[nom]){
+      const id=ligne[col];
+      if(!id)erreurs.push('identifiant vide: '+nom);
+      else if(vus.has(id))erreurs.push('identifiant dupliqué: '+nom+'/'+id);
+      vus.add(id);
+    }
+  }
+  const sequencesParCourse=new Map();
+  for(const st of tables.stop_times){
+    if(!st.trip_id)continue;
+    if(!sequencesParCourse.has(st.trip_id))sequencesParCourse.set(st.trip_id,[]);
+    sequencesParCourse.get(st.trip_id).push(st);
+  }
+  for(const [tripId,passages] of sequencesParCourse){
+    const sequences=new Set();
+    let precedent=null;
+    for(const p of passages){
+      const ordre=Number(p.stop_sequence);
+      if(p.stop_sequence&&Number.isInteger(ordre)){
+        if(sequences.has(ordre))erreurs.push('stop_sequence dupliqué: '+tripId+'/'+ordre);
+        sequences.add(ordre);
+      }
+    }
+    passages.sort((a,b)=>Number(a.stop_sequence)-Number(b.stop_sequence));
+    for(const p of passages){
+      const a=heureGTFS(p.arrival_time),d=heureGTFS(p.departure_time);
+      if(a!==null&&d!==null&&d<a)erreurs.push('départ avant arrivée: '+tripId+'/'+p.stop_id);
+      if(precedent!==null&&a!==null&&a<precedent)
+        erreurs.push('horaires décroissants: '+tripId+'/'+p.stop_id);
+      if(d!==null)precedent=d;
+    }
+  }
   for(const st of tables.stop_times){
     if(!st.stop_sequence||!Number.isInteger(Number(st.stop_sequence))||Number(st.stop_sequence)<0)
       erreurs.push('ordre arrêt invalide: '+st.trip_id+'/'+st.stop_id);
