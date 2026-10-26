@@ -1207,7 +1207,10 @@
               return (i + 1) + '. ' + nom(a) + ' ' + heure(a.departAt) + ' → ' +
                 heure(a.arriveeAt) + ' ; changement à ' + t.correspondanceArret +
                 ' (' + t.attenteMinutes + ' min) ; ' + nom(b) + ' ' +
-                heure(b.departAt) + ' → ' + heure(b.arriveeAt);
+                heure(b.departAt) + ' → ' + heure(b.arriveeAt) +
+                (t.transfertVerifie
+                  ? ' ; marche vérifiée ' + t.marcheMinutes + ' min'
+                  : ' ; temps de marche non vérifié');
             });
             cible.textContent += ' | Correspondances possibles (quais et disponibilité à vérifier) : ' +
               details.join(' | ') + ' | Tarifs combinés non vérifiés.';
