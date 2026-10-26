@@ -90,11 +90,40 @@ def audit(path, source):
                 errors.append("Course avec route inconnue : " + str(trip.get("trip_id")))
             if trip.get("service_id") not in services:
                 errors.append("Course avec service inconnu : " + str(trip.get("trip_id")))
+        passages_par_course = {}
         for stop_time in tables.get("stop_times.txt", []):
-            if stop_time.get("trip_id") not in ids.get("trips.txt", set()):
+            trip_id = stop_time.get("trip_id")
+            if trip_id not in ids.get("trips.txt", set()):
                 errors.append("Passage avec course inconnue")
             if stop_time.get("stop_id") not in ids.get("stops.txt", set()):
                 errors.append("Passage avec arrêt inconnu")
+            sequence = stop_time.get("stop_sequence", "")
+            if not sequence.isdigit() or int(sequence) < 1:
+                errors.append("Numéro de passage invalide : " + str(trip_id))
+            else:
+                passages_par_course.setdefault(trip_id, []).append((int(sequence), stop_time))
+        for trip_id, passages in passages_par_course.items():
+            if len({seq for seq, _ in passages}) != len(passages):
+                errors.append("Séquences d'arrêts dupliquées : " + str(trip_id))
+            precedent = None
+            for _, passage in sorted(passages):
+                arrivee = passage.get("arrival_time", "")
+                depart = passage.get("departure_time", "")
+                def secondes(valeur):
+                    morceaux = valeur.split(":")
+                    if len(morceaux) != 3 or not all(x.isdigit() for x in morceaux):
+                        return None
+                    h, m, s = map(int, morceaux)
+                    return h * 3600 + m * 60 + s if h < 48 and m < 60 and s < 60 else None
+                a, d = secondes(arrivee), secondes(depart)
+                if (arrivee and a is None) or (depart and d is None):
+                    errors.append("Horaire invalide : " + str(trip_id))
+                if a is not None and d is not None and d < a:
+                    errors.append("Départ avant arrivée : " + str(trip_id))
+                if precedent is not None and a is not None and a < precedent:
+                    errors.append("Horaires décroissants : " + str(trip_id))
+                if d is not None:
+                    precedent = d
         for row in tables.get("calendar.txt", []):
             if not date_ok(row.get("start_date")) or not date_ok(row.get("end_date")):
                 errors.append("Date de calendrier invalide")
