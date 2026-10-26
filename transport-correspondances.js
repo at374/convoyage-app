@@ -24,6 +24,18 @@ function correspondances(trajets, options={}){
   const arretArrivee = t => t.arriveeStopId
     ? 'id:' + espace(t) + ':' + String(t.arriveeStopId)
     : 'nom:' + cle(t.arriveeArret);
+  // Les équivalences interréseaux ne sont acceptées que si une table
+  // explicite a été fournie (ex. deux quais vérifiés d'une même gare).
+  // Aucun rapprochement géographique approximatif n'est inventé.
+  const equivalences = new Map();
+  for (const groupe of Array.isArray(options.equivalencesArrets) ? options.equivalencesArrets : []) {
+    if (!Array.isArray(groupe) || groupe.length < 2) continue;
+    const ids = groupe.filter(v => typeof v === 'string' && v.startsWith('id:'));
+    for (const id of ids) {
+      if (!equivalences.has(id)) equivalences.set(id, new Set());
+      for (const autre of ids) if (autre !== id) equivalences.get(id).add(autre);
+    }
+  }
   const parDepart = new Map();
   for(const t of normalises){
     const k=arretDepart(t);
@@ -33,14 +45,17 @@ function correspondances(trajets, options={}){
   for(const lignes of parDepart.values()) lignes.sort((a,b)=>ms(a.departAt)-ms(b.departAt));
   const resultats=[];
   for(const premier of normalises){
-    for(const second of parDepart.get(arretArrivee(premier))||[]){
+    const arrivee = arretArrivee(premier);
+    const cibles = [arrivee, ...(equivalences.get(arrivee) || [])];
+    for(const second of cibles.flatMap(id => parDepart.get(id) || [])){
       const attente=ms(second.departAt)-ms(premier.arriveeAt);
       if(attente<minimum || attente>maximum) continue;
       if(premier===second || (premier.tripId && premier.tripId===second.tripId)) continue;
       // Sans identité d'arrêt stable, un même nom peut désigner deux quais
       // éloignés : ne jamais annoncer la correspondance comme garantie.
       if (premier.arriveeStopId && second.departStopId &&
-          premier.arriveeStopId !== second.departStopId) continue;
+          arretArrivee(premier) !== arretDepart(second) &&
+          !(equivalences.get(arretArrivee(premier)) || new Set()).has(arretDepart(second))) continue;
       if(options.arriveeAvant && ms(second.arriveeAt)>ms(options.arriveeAvant)) continue;
       if(options.departApres && ms(premier.departAt)<ms(options.departApres)) continue;
       // L'égalité de nom d'arrêt ne garantit pas un quai accessible.
