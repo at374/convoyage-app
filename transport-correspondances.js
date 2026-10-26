@@ -91,6 +91,11 @@ function correspondances(trajets, options={}){
     const cibles = [...new Set([arrivee, ...(equivalences.get(arrivee) || [])])];
     for(const second of cibles.flatMap(id => parDepart.get(id) || [])){
       if (destinationDemandee && arretArrivee(second) !== destinationDemandee) continue;
+      // Un nom d'arrêt identique ne suffit pas pour relier deux réseaux :
+      // il peut désigner des quais éloignés ou des communes différentes.
+      // Sans identifiants officiels, n'accepter que le même réseau connu.
+      if (arrivee.startsWith('nom:') &&
+          (!espace(premier) || espace(premier) !== espace(second))) continue;
       const attente=ms(second.departAt)-ms(premier.arriveeAt);
       const marche = tempsTransfert.get(arrivee + '>' + arretDepart(second)) || 0;
       // L'équivalence seule n'atteste pas d'un temps de marche nul.
