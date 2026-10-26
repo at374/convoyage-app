@@ -56,11 +56,20 @@ def main():
                 digest.update(chunk)
                 out.write(chunk)
         with zipfile.ZipFile(temp) as z:
+            members = z.infolist()
+            if len(members) > 100:
+                raise ValueError("Archive GTFS avec trop de fichiers")
+            if sum(m.file_size for m in members) > 750 * 1024 * 1024:
+                raise ValueError("Archive GTFS décompressée supérieure à 750 Mo")
+            names = [Path(m.filename).name.lower() for m in members if not m.is_dir()]
+            if len(names) != len(set(names)):
+                raise ValueError("Archive GTFS contenant des fichiers dupliqués")
+            if not {"stops.txt", "routes.txt", "trips.txt", "stop_times.txt"} <= set(names):
+                raise ValueError("Fichiers GTFS obligatoires absents")
+            if not ({"calendar.txt", "calendar_dates.txt"} & set(names)):
+                raise ValueError("Calendrier GTFS absent")
             if z.testzip() is not None:
                 raise ValueError("Archive ZIP corrompue")
-            names = {Path(x).name.lower() for x in z.namelist()}
-            if not {"stops.txt", "routes.txt", "trips.txt", "stop_times.txt"} <= names:
-                raise ValueError("Fichiers GTFS obligatoires absents")
         temp.replace(archive)
     except Exception as exc:
         temp.unlink(missing_ok=True)
