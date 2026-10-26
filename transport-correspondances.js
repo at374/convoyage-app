@@ -18,8 +18,8 @@ function correspondances(trajets, options={}){
   const limite = Math.max(1, Math.min(200, Math.floor(limiteSaisie)));
   const normalises = (Array.isArray(trajets)?trajets:[]).filter(t=>
     t && t.departArret && t.arriveeArret &&
-    typeof t.departAt === 'string' && /(?:Z|[+-]\\d{2}:?\\d{2})$/i.test(t.departAt) &&
-    typeof t.arriveeAt === 'string' && /(?:Z|[+-]\\d{2}:?\\d{2})$/i.test(t.arriveeAt) &&
+    typeof t.departAt === 'string' && /(?:Z|[+-]\d{2}:?\d{2})$/i.test(t.departAt) &&
+    typeof t.arriveeAt === 'string' && /(?:Z|[+-]\d{2}:?\d{2})$/i.test(t.arriveeAt) &&
     Number.isFinite(ms(t.departAt)) && Number.isFinite(ms(t.arriveeAt)) &&
     ms(t.arriveeAt)>ms(t.departAt));
   const cle = s=>String(s).trim().toLocaleLowerCase('fr-FR');
