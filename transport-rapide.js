@@ -34,8 +34,12 @@
     const sources = Array.isArray(fournisseurs) ? fournisseurs.filter(f => f && typeof f.rechercher === 'function') : [];
     // Une recherche de correspondance doit respecter les limites horaires de
     // la mission, même si un fournisseur renvoie un trajet hors créneau.
-    const limite = q.limiteMissionAt ? Date.parse(q.limiteMissionAt) : null;
-    const marge = Math.max(0, Math.min(180, Number(q.margeMinutes) || 0)) * 60000;
+    const limite = q.limiteMissionAt ? Date.parse(q.limiteMissionAt) : NaN;
+    // Une marge mal renseignée ne doit jamais rendre le filtre permissif.
+    const margeSaisie = Number(q.margeMinutes);
+    const marge = Math.max(0, Math.min(180, Number.isFinite(margeSaisie) ? margeSaisie : 0)) * 60000;
+    if (q.limiteMissionAt && !Number.isFinite(limite)) throw new Error('Heure limite de mission invalide');
+    if (q.contrainte && !['arriverAvant', 'partirApres'].includes(q.contrainte)) throw new Error('Contrainte de mission inconnue');
     const filtreMission = t => {
       if (!t) return false;
       // Une date de service est obligatoire : ne jamais afficher comme
