@@ -7,8 +7,9 @@ function correspondances(trajets, options={}){
   // Refuser les bornes horaires invalides au lieu de les ignorer.
   if ((options.arriveeAvant != null && !Number.isFinite(ms(options.arriveeAvant))) ||
       (options.departApres != null && !Number.isFinite(ms(options.departApres)))) return [];
-  const minimumSaisi = Number(options.minimumMinutes);
-  const minimum = Math.max(0, Math.min(120, Number.isFinite(minimumSaisi) ? minimumSaisi : 8))*60000;
+  const minimumSaisi = options.minimumMinutes == null ? 8 : Number(options.minimumMinutes);
+  if (!Number.isFinite(minimumSaisi) || minimumSaisi < 0) return [];
+  const minimum = Math.min(120, minimumSaisi)*60000;
   const maximumSaisi = options.maximumMinutes == null ? 90 : Number(options.maximumMinutes);
   if (!Number.isFinite(maximumSaisi) || maximumSaisi < 0) return [];
   const maximum = Math.max(minimum, Math.min(360, maximumSaisi)*60000);
@@ -17,6 +18,8 @@ function correspondances(trajets, options={}){
   const limite = Math.max(1, Math.min(200, Math.floor(limiteSaisie)));
   const normalises = (Array.isArray(trajets)?trajets:[]).filter(t=>
     t && t.departArret && t.arriveeArret &&
+    typeof t.departAt === 'string' && /(?:Z|[+-]\\d{2}:?\\d{2})$/i.test(t.departAt) &&
+    typeof t.arriveeAt === 'string' && /(?:Z|[+-]\\d{2}:?\\d{2})$/i.test(t.arriveeAt) &&
     Number.isFinite(ms(t.departAt)) && Number.isFinite(ms(t.arriveeAt)) &&
     ms(t.arriveeAt)>ms(t.departAt));
   const cle = s=>String(s).trim().toLocaleLowerCase('fr-FR');
