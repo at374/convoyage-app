@@ -33,7 +33,10 @@ function heureGTFS(v){
 function dateGTFS(v){
   if(typeof v!=='string'||!/^\d{8}$/.test(v))return false;
   const y=Number(v.slice(0,4)),m=Number(v.slice(4,6)),d=Number(v.slice(6,8));
-  const x=new Date(Date.UTC(y,m-1,d));
+  if(y<100||m<1||m>12||d<1||d>31)return false;
+  const x=new Date(0);
+  x.setUTCFullYear(y,m-1,d);
+  x.setUTCHours(0,0,0,0);
   return x.getUTCFullYear()===y&&x.getUTCMonth()===m-1&&x.getUTCDate()===d;
 }
 function circule(fichiers, serviceId, date){
@@ -56,9 +59,9 @@ function circule(fichiers, serviceId, date){
   const ligne=lignes[0];
   if(!dateGTFS(ligne.start_date)||!dateGTFS(ligne.end_date))return false;
   if(date<ligne.start_date||date>ligne.end_date)return false;
-  const jour=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][
-    new Date(Date.UTC(Number(date.slice(0,4)),Number(date.slice(4,6))-1,Number(date.slice(6,8)))).getUTCDay()
-  ];
+  const jourDate=new Date(0);
+  jourDate.setUTCFullYear(Number(date.slice(0,4)),Number(date.slice(4,6))-1,Number(date.slice(6,8)));
+  const jour=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][jourDate.getUTCDay()];
   return ligne[jour]==='1';
 }
 function analyser(fichiers){
