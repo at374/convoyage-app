@@ -29,6 +29,38 @@ function heureGTFS(v){
   const [h,m,s]=v.split(':').map(Number);
   return h<=47&&m<60&&s<60?h*3600+m*60+s:null;
 }
+// Vérifie une date civile locale GTFS (YYYYMMDD), sans conversion UTC.
+function dateGTFS(v){
+  if(typeof v!=='string'||!/^\d{8}$/.test(v))return false;
+  const y=Number(v.slice(0,4)),m=Number(v.slice(4,6)),d=Number(v.slice(6,8));
+  const x=new Date(Date.UTC(y,m-1,d));
+  return x.getUTCFullYear()===y&&x.getUTCMonth()===m-1&&x.getUTCDate()===d;
+}
+function circule(fichiers, serviceId, date){
+  if(!dateGTFS(date)||!serviceId)throw new Error('Service ou date GTFS invalide');
+  const exceptions=typeof fichiers['calendar_dates.txt']==='string'
+    ? csv(fichiers['calendar_dates.txt']) : [];
+  // Une exception explicite prime sur le calendrier hebdomadaire.
+  const duJour=exceptions.filter(x=>x.service_id===serviceId&&x.date===date);
+  if(duJour.length){
+    const types=new Set(duJour.map(x=>x.exception_type));
+    if(types.size!==1||(!types.has('1')&&!types.has('2')))
+      throw new Error('Exceptions GTFS contradictoires');
+    return types.has('1');
+  }
+  const calendrier=typeof fichiers['calendar.txt']==='string'
+    ? csv(fichiers['calendar.txt']) : [];
+  const lignes=calendrier.filter(x=>x.service_id===serviceId);
+  if(lignes.length>1)throw new Error('Service GTFS dupliqué');
+  if(!lignes.length)return false;
+  const ligne=lignes[0];
+  if(!dateGTFS(ligne.start_date)||!dateGTFS(ligne.end_date))return false;
+  if(date<ligne.start_date||date>ligne.end_date)return false;
+  const jour=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][
+    new Date(Date.UTC(Number(date.slice(0,4)),Number(date.slice(4,6))-1,Number(date.slice(6,8)))).getUTCDay()
+  ];
+  return ligne[jour]==='1';
+}
 function analyser(fichiers){
   if(!fichiers||typeof fichiers!=='object')throw new TypeError('Fichiers GTFS manquants');
   const requis={stops:'stop_id',routes:'route_id',trips:'trip_id',stop_times:'trip_id'};
@@ -68,7 +100,7 @@ function analyser(fichiers){
     services:services.size,
     exceptions:exceptions.length};
 }
-const api={csv,heureGTFS,analyser};
+const api={csv,heureGTFS,dateGTFS,circule,analyser};
 root.CPGTFSValidation=api;
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
