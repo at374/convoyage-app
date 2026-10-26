@@ -38,6 +38,13 @@
     const marge = Math.max(0, Math.min(180, Number(q.margeMinutes) || 0)) * 60000;
     const filtreMission = t => {
       if (!t) return false;
+      // Une date de service est obligatoire : ne jamais afficher comme
+      // compatible un trajet d'un autre jour (y compris après minuit).
+      const dateParis = instant => new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
+      }).format(new Date(instant));
+      const jour = dateParis(t.departAt);
+      if (jour !== q.date && dateParis(t.arriveeAt) !== q.date) return false;
       if (Number.isFinite(limite)) {
         if (q.contrainte === 'arriverAvant' && Date.parse(t.arriveeAt) > limite - marge) return false;
         if (q.contrainte === 'partirApres' && Date.parse(t.departAt) < limite + marge) return false;
