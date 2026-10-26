@@ -399,6 +399,22 @@ function analyser(fichiers){
     if(!sequencesParCourse.has(st.trip_id))sequencesParCourse.set(st.trip_id,[]);
     sequencesParCourse.get(st.trip_id).push(st);
   }
+  // Les doublons de service et les exceptions contradictoires doivent
+  // être signalés lors de l'audit, avant de construire l'index.
+  const servicesCalendrier=new Set();
+  for(const s of calendrier){
+    if(!s.service_id)erreurs.push('service_id vide dans calendar.txt');
+    else if(servicesCalendrier.has(s.service_id))
+      erreurs.push('service dupliqué: '+s.service_id);
+    servicesCalendrier.add(s.service_id);
+  }
+  const exceptionsVues=new Map();
+  for(const x of exceptions){
+    const cle=x.service_id+'|'+x.date;
+    if(exceptionsVues.has(cle)&&exceptionsVues.get(cle)!==x.exception_type)
+      erreurs.push('exceptions contradictoires: '+cle);
+    exceptionsVues.set(cle,x.exception_type);
+  }
   for(const [tripId,passages] of sequencesParCourse){
     const sequences=new Set();
     let precedent=null;
