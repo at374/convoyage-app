@@ -50,8 +50,12 @@ function correspondances(trajets, options={}){
   }
   // Un trajet demandé ne doit pas être confondu avec une correspondance
   // quelconque présente dans la réponse du fournisseur.
-  const origineDemandee = typeof options.origineStopKey === 'string' ? options.origineStopKey : null;
-  const destinationDemandee = typeof options.destinationStopKey === 'string' ? options.destinationStopKey : null;
+  const cleDemandee = v => typeof v === 'string' && /^(id:[^:]+:.+|nom:.+)$/.test(v) ? v : null;
+  const origineDemandee = cleDemandee(options.origineStopKey);
+  const destinationDemandee = cleDemandee(options.destinationStopKey);
+  // Une contrainte invalide ne doit jamais élargir silencieusement la recherche.
+  if ((options.origineStopKey != null && !origineDemandee) ||
+      (options.destinationStopKey != null && !destinationDemandee)) return [];
   const parDepart = new Map();
   for(const t of normalises){
     const k=arretDepart(t);
