@@ -58,10 +58,12 @@ function correspondances(trajets, options={}){
   const resultats=[];
   for(const premier of normalises){
     const arrivee = arretArrivee(premier);
-    const cibles = [arrivee, ...(equivalences.get(arrivee) || [])];
+    const cibles = [...new Set([arrivee, ...(equivalences.get(arrivee) || [])])];
     for(const second of cibles.flatMap(id => parDepart.get(id) || [])){
       const attente=ms(second.departAt)-ms(premier.arriveeAt);
       const marche = tempsTransfert.get(arrivee + '>' + arretDepart(second)) || 0;
+      // L'équivalence seule n'atteste pas d'un temps de marche nul.
+      // Les transferts sans durée vérifiée restent indicatifs.
       if(attente<Math.max(minimum,marche) || attente>maximum) continue;
       // Si une marche est connue, elle doit laisser au moins la marge
       // minimale de changement demandée, en plus du déplacement à pied.
@@ -81,6 +83,9 @@ function correspondances(trajets, options={}){
         correspondanceArret:premier.arriveeArret,
         attenteMinutes:Math.round(attente/60000),
         segments:[premier,second],correspondanceConfirmee:false,
+        marcheMinutes: tempsTransfert.has(arrivee + '>' + arretDepart(second))
+          ? marche / 60000 : null,
+        transfertVerifie: tempsTransfert.has(arrivee + '>' + arretDepart(second)),
         prixEUR:null,source:'',confirme:false
       });
     }
