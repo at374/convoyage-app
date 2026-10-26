@@ -1181,8 +1181,14 @@
           // fournisseur a déjà été affiché via les notifications progressives.
           // Construire les correspondances à partir des trajets datés réellement
           // retournés par les fournisseurs. Jamais d'horaires synthétiques.
-          const correspondances = window.CPCorrespondancesTransport
+          // Ne pas présenter des tronçons quelconques comme un itinéraire
+          // origine → destination : les deux arrêts doivent être résolus.
+          const origineStopKey = q.origineStopKey || null;
+          const destinationStopKey = q.destinationStopKey || null;
+          const correspondances = window.CPCorrespondancesTransport &&
+            origineStopKey && destinationStopKey
             ? window.CPCorrespondancesTransport.correspondances(res.trajets, {
+                origineStopKey, destinationStopKey,
                 minimumMinutes: 8, maximumMinutes: 90, limite: 20,
                 ...(q.contrainte === 'arriverAvant' ? {arriveeAvant: q.limiteMissionAt} : {}),
                 ...(q.contrainte === 'partirApres' ? {departApres: q.limiteMissionAt} : {})
