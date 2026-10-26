@@ -76,10 +76,16 @@ function coursesDuJour(fichiers, date, options={}){
   const lignesConnues=new Set(lignes.map(l=>l.route_id));
   const services=new Map();
   const actives=new Map();
+  // GTFS peut contenir des fréquences (frequencies.txt) : les passages
+  // stop_times y sont des modèles, pas nécessairement des départs réels.
+  // Ne jamais annoncer ces modèles comme des horaires fixes.
+  const frequences=typeof fichiers['frequencies.txt']==='string'
+    ? csv(fichiers['frequencies.txt']) : [];
+  const tripsFrequence=new Set(frequences.map(f=>f.trip_id).filter(Boolean));
   for(const t of courses){
     if(!services.has(t.service_id))
       services.set(t.service_id,circule(fichiers,t.service_id,date));
-    if(services.get(t.service_id)&&lignesConnues.has(t.route_id))
+    if(services.get(t.service_id)&&lignesConnues.has(t.route_id)&&!tripsFrequence.has(t.trip_id))
       actives.set(t.trip_id,{tripId:t.trip_id,routeId:t.route_id,serviceId:t.service_id,passages:[]});
   }
   for(const p of passages){
@@ -112,6 +118,9 @@ function trajetsDirects(fichiers,date,departStopId,arriveeStopId,options={}){
   const avant=options.arriveeAvantSecondes==null?172799:Number(options.arriveeAvantSecondes);
   if(!Number.isFinite(apres)||!Number.isFinite(avant)||apres<0||avant<apres)return [];
   const sorties=[];
+  // Les passages après minuit peuvent appartenir au service de la veille.
+  // Cette recherche utilise volontairement la date de service GTFS, et non
+  // la date civile du passage ; l'appelant doit en tenir compte.
   for(const course of coursesDuJour(fichiers,date)){
     const p=course.passages;
     for(let i=0;i<p.length-1;i++){
