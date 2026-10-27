@@ -133,4 +133,22 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.deepEqual(departures.map(x => x.trip_id), ['active-early', 'active-late']);
 }
 
-process.stdout.write('Agenda/SIBRA tests passed: 16 scenarios\\n');
+// 17-19. Le calendrier GTFS respecte les jours de service et les exceptions de date.
+{
+  const planner = require('../sibra-planner.js');
+  const calendar = [
+    { service_id: 'weekday', start_date: '20261001', end_date: '20261231', monday: '1', tuesday: '1', wednesday: '1', thursday: '1', friday: '1', saturday: '0', sunday: '0' },
+    { service_id: 'saturday', start_date: '20261001', end_date: '20261231', monday: '0', tuesday: '0', wednesday: '0', thursday: '0', friday: '0', saturday: '1', sunday: '0' }
+  ];
+  const exceptions = [
+    { service_id: 'weekday', date: '20261027', exception_type: '2' },
+    { service_id: 'special', date: '20261027', exception_type: '1' }
+  ];
+  const active = planner.activeServiceIds(calendar, exceptions, '2026-10-27');
+  assert.equal(active.has('weekday'), false);
+  assert.equal(active.has('special'), true);
+  assert.equal(active.has('saturday'), false);
+  assert.equal(planner.activeServiceIds(calendar, exceptions, '2026-02-30').size, 0);
+}
+
+process.stdout.write('Agenda/SIBRA tests passed: 19 scenarios\\n');
