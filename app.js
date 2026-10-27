@@ -31,7 +31,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V273 (2.0.123)';
+  const VERSION_APP = 'V274 (2.0.124)';
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
@@ -654,6 +654,20 @@
       etat.recherche = ''; memoriser(); afficher();
     };
   }
+  // V274 : lignes des filtres appliqués au-dessus de la liste, avec une croix pour retirer chaque filtre
+  function puces(q) {
+    const P = [], plus = etat.plus || {};
+    const add = (cle, txt) => P.push('<button type="button" class="puceFiltre" data-rm="' + esc(cle) + '" aria-label="Retirer ce filtre" style="font-size:.85rem;padding:3px 10px;border-radius:14px;border:1px solid #c9a227;background:#2a2108;color:#f5d26b;cursor:pointer">' + esc(txt) + ' <b>✕</b></button>');
+    if (etat.filtre !== 'toutes') add('plateforme', 'Plateforme : ' + etat.filtre);
+    etat.zones.forEach((z, i) => add('zone:' + i, (COTES[z.cote || 'tous'] || 'Lieu') + ' : ' + G.libelleZone(z)));
+    if (etat.zones.length && etat.rayon > 0) add('rayon', 'Autour : ville + ' + etat.rayon + ' km');
+    if (etat.posMax > 0) add('posMax', 'Max ' + etat.posMax + ' km à vol d’oiseau depuis ' + (sourceRecherche() === 'domicile' ? 'mon domicile' : 'ma position'));
+    if (q) add('recherche', 'Recherche : ' + etat.recherche);
+    const dj = s => { const m = /^(\d{4})-(\d\d)-(\d\d)/.exec(String(s || '')); return m ? m[3] + '/' + m[2] : String(s); };
+    [['client', 'Client : ', ''], ['type', 'Véhicule : ', ''], ['energie', 'Motorisation : ', ''], ['marque', 'Marque : ', ''], ['kmMin', 'Longueur min : ', ' km'], ['kmMax', 'Longueur max : ', ' km'], ['dureeMax', 'Durée max : ', ' h'], ['dateDeb', 'Départ à partir du ', ''], ['dateFin', 'Livraison jusqu’au ', '']].forEach(([k, pre, suf]) => { const v = plus[k]; if (v !== null && v !== undefined && v !== '') add('plus:' + k, pre + (k === 'dateDeb' || k === 'dateFin' ? dj(v) : v) + suf); });
+    return { n: P.length, h: P.join('') };
+  }
+  const retirerPuce = cle => { if (cle === 'plateforme') etat.filtre = 'toutes'; else if (cle === 'rayon') etat.rayon = 0; else if (cle === 'posMax') etat.posMax = 0; else if (cle === 'recherche') etat.recherche = ''; else if (cle.startsWith('zone:')) etat.zones.splice(Number(cle.slice(5)), 1); else if (cle.startsWith('plus:')) { etat.plus = Object.assign({}, etat.plus); delete etat.plus[cle.slice(5)]; } memoriser(); afficher(); };
   function listeMissions() {
     planifierGps();
     const zoneListe = $('liste'); if (!zoneListe) return;
@@ -676,9 +690,11 @@
     else if (etat.tri === 'date') { const t = m => { const d = Date.parse(m.pickup_start || ''); return Number.isFinite(d) ? d : Infinity; }; l.sort((a, b) => { const x = t(a), y = t(b); return x === y ? 0 : x < y ? -1 : 1; }); }   // V146 : date ET heure de départ (la plus proche en haut), toutes plateformes mélangées ; sans date → en bas
     else l.sort((a, b) => String(b.first_seen_at || '').localeCompare(String(a.first_seen_at || '')) || String(a.pickup_start || '9').localeCompare(String(b.pickup_start || '9')));   // V99 : les plus récemment parues en haut
     listeAffichee = l;
-    zoneListe.innerHTML = `${etat.zones.length || q || FI.actifs(etat.plus) ? `<p class="doux" id="compte">${l.length} mission(s) sur ${total} correspondent à tes filtres <button id="toutVoir" class="lienBouton">Tout afficher</button></p>` : ''}` +
+    const lesPuces = puces(q);
+    zoneListe.innerHTML = `${lesPuces.n ? `<div id="puces" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0">${lesPuces.h}</div><p class="doux" id="compte">${l.length} mission(s) sur ${total} correspondent à tes filtres <button id="toutVoir" class="lienBouton">Tout afficher</button></p>` : ''}` +
       (l.length ? (() => { let jr = ''; return l.map((m, i) => { let h = ''; { const d = Date.parse(m.pickup_start || ''); const j = Number.isFinite(d) ? new Date(d).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long' }) : 'Date à préciser'; if (j !== jr) { h = '<div class="jour">' + esc(j) + '</div>'; jr = j; } } return h + carteMission(m, i); }).join(''); })() : `<div class="vide">${total ? 'Aucune mission ne correspond à tes filtres.' : 'Aucune mission reçue pour l’instant. Vérifie que l’extension de ton ordinateur est connectée à ton compte (Sources → Application téléphone).'}</div>`);
     for (const b of zoneListe.querySelectorAll('.mission')) b.onclick = () => detail(listeAffichee[Number(b.dataset.i)]);
+    for (const b of zoneListe.querySelectorAll('[data-rm]')) b.onclick = ev => { ev.stopPropagation(); retirerPuce(b.dataset.rm); };
     const tv = $('toutVoir'); if (tv) tv.onclick = () => { etat.zones = []; etat.recherche = ''; etat.plus = {}; etat.filtre = 'toutes'; memoriser(); afficher(); };   // V99 : retirer tous les filtres d'un coup
   }
   // V79 : Agenda complet — états (à venir, en cours, passée, annulée ?, terminée), conflits horaires, modifications.
