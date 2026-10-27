@@ -24,3 +24,5 @@ jobs:
             echo "Checking $file"
             node --check "$file"
           done < <(git ls-files '*.js')
+      - name: Run Agenda regression tests
+        run: node tests/agenda-transports.test.cjs
