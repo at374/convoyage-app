@@ -74,4 +74,27 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.ok(app.includes('Temps disponible après trajet non déterminé.'));
 }
 
-process.stdout.write('Agenda tests passed: 7 scenarios\\n');
+// 8-11. Le garde-fou SIBRA respecte la période de validité et ne confirme jamais seul un trajet.
+{
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const feed = require('../sibra-feed.js');
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'sibra', 'gtfs-sibra-manifest.json'), 'utf8'));
+
+  const inside = feed.assessDate(manifest, '2026-10-27');
+  assert.equal(inside.usable, true);
+  assert.equal(inside.transportConfirmed, false);
+
+  const after = feed.assessDate(manifest, '2026-12-21');
+  assert.equal(after.usable, false);
+  assert.equal(after.status, 'hors_periode_gtfs');
+
+  const invalid = feed.assessDate(manifest, '2026-02-30');
+  assert.equal(invalid.usable, false);
+  assert.equal(invalid.status, 'date_flux_invalide');
+
+  const malformed = feed.assessDate({ feedValidity: { from: '2026-12-01', through: '2026-10-01' } }, '2026-10-15');
+  assert.equal(malformed.usable, false);
+}
+
+process.stdout.write('Agenda/SIBRA tests passed: 11 scenarios\\n');
