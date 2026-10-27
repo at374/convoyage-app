@@ -258,7 +258,7 @@
           return;
         }
       } catch (_) { /* pas de prix officiel exact trouvé : KO plus bas, jamais d'estimation */ }
-      if (viaGoogle && r.toll && r.toll.status === 'aucun_peage') { put('💶 <b>Aucun péage</b> sur ce trajet.', true); return; }
+      if (viaGoogle && r.toll && r.toll.status === 'aucun_peage') { put('💶 <b>Aucun péage</b> sur ce trajet : le trajet le plus rapide est déjà sans péage.', true); const sp = out.querySelector('.bkSans'); if (sp) sp.remove(); return; }
       put(KO, false);
     } catch (_) { put('⚠️ <b>Calcul du péage impossible pour l’instant</b> : le serveur de tracé ne répond pas.<div class="rd sub"><span>Ce n’est pas un prix inconnu. Vérifie ta connexion (wifi/4G) puis appuie de nouveau sur « Voiture et péages ».</span></div>', false); }
   };
@@ -312,7 +312,7 @@
       const dmin = best.min - fast.min, eco1 = Math.round((fast.c1 - best.c1) * 100) / 100, eco2 = Math.round((fast.c2 - best.c2) * 100) / 100;
       const sg = v => (v >= 0 ? '−' : '+') + euro(Math.abs(v));
       const gros = '<div class="mixGros"><span class="mixPlus">⏱️ ' + (dmin >= 0 ? '+' + dmin : '−' + Math.abs(dmin)) + ' min par rapport au trajet avec péage</span><span class="mixEco">💰 ' + sg(eco1) + ' (cl. 1) · ' + sg(eco2) + ' (cl. 2) par rapport au trajet avec péage</span></div>';
-      const corps = (best.ordre === 'FT' ? ligL(dep, piv) + '<br><br>' + ligP(piv, arr) : ligP(dep, piv) + '<br><br>' + ligL(piv, arr)) + '<br><br><b>TOTAL MIXTE</b> : ' + k1(best.km) + ' km · ' + hm(best.min) + '<br>' + P12(best.c1, best.c2) + etqs(etqConso(best.km)) + gros + '<span class="doux">Prix : tarifs officiels. Distance et durée : Google Routes, à vérifier avant départ.</span>';
+      const corps = (best.ordre === 'FT' ? ligL(dep, piv) + '<br><br>' + ligP(piv, arr) : ligP(dep, piv) + '<br><br>' + ligL(piv, arr)) + '<br><br><b>TOTAL MIXTE</b> : ' + k1(best.km) + ' km · ' + hm(best.min) + '<br>' + P12(best.c1, best.c2) + etqs(etqConso(best.km, best.min)) + gros + '<span class="doux">Prix : tarifs officiels. Distance et durée : Google Routes, à vérifier avant départ.</span>';
       zone.innerHTML = BK('bkMixte', 'TRAJET MIXTE', corps);
     } catch (e) { ko('Trajet mixte indisponible pour l’instant (' + esc(String(e && e.message || e).slice(0, 80)) + ').'); }
   };
@@ -332,18 +332,23 @@
   const vehiculeConso = () => { try { let v = vehDom(); if (!v) { const m = missionActive(); if (!m || !m.vehicle) return null; v = m.vehicle; } if (typeof v === 'string' && v.trim().charAt(0) === '{') { try { v = JSON.parse(v); } catch (_) {} } const txt = sansAcc(typeof v === 'object' ? [v.category, v.type, v.model, v.brand, v.make, v.name, v.label].filter(Boolean).join(' ') : v); const en = sansAcc(typeof v === 'object' ? v.energy : ''); let cat = null; for (const [k, re] of CAT) if (re.test(txt)) { cat = k; break; } if (!cat) for (const [k, re] of [['petite', /citadine|mini|city/], ['moyenne', /berline|compacte|break|polyvalente/], ['routiere', /suv|monospace|routiere|crossover|4x4/]]) if (re.test(txt)) { cat = k; break; } const mdl = sansAcc(typeof v === 'object' ? v.model : String(v)).toUpperCase().replace(/[^A-Z0-9+ -]/g, ' ').replace(/\s+/g, ' ').trim(); const tk = mdl.split(' ').filter(Boolean); const mod = tk.filter(w => !/^(NOUVEAU|NOUVELLE|NEW|II|III)$/.test(w))[0] || ''; const mod2 = tk.length > 1 && /^[A-Z]/.test(tk[1]) && !/HYBRID|HDI|TCE|DCI|TDI|TSI|PURETECH|BLUE|ESSENCE|DIESEL/.test(tk[1]) ? mod + ' ' + tk[1] : ''; const chm = (' ' + mdl + ' ').match(/ (\d{2,3}) /g) || []; const ch = chm.map(x => Number(x)).filter(n => n >= 50 && n <= 450 && String(n) !== mod)[0] || 0; const nrj = /hybrid/.test(en) ? (/non|hnr/.test(en) ? 'HNR' : 'HR') : /diesel|gazole|gasoil/.test(en) ? 'GAZOLE' : /essence|ther|gasoline|petrol/.test(en) ? 'ESSENCE' : ''; return { cat, en, mod, mod2, ch, nrj, ev: /electri|\bev\b|\bbev\b/.test(en) && !/hybrid/.test(en) }; } catch (_) { return null; } };
   const sgn = (v, u) => (v >= 0 ? '+' : '−') + Math.abs(Math.round(v * 10) / 10).toLocaleString('fr-FR') + ' ' + u;
   const sgnMin = v => (v >= 0 ? '+' : '−') + (Math.abs(v) >= 60 ? hm(Math.abs(v)) : Math.abs(v) + ' min');
-  const ADK = 'cp_ademe', ADU = 'https://data.ademe.fr/data-fair/api/v1/datasets/ademe-car-labelling/lines?size=200&select=Energie,Conso_vitesse_mixte_Min,Conso_vitesse_mixte_Max,Puissance_maximale&qs=';
+  const ADK = 'cp_ademe2', ADU = 'https://data.ademe.fr/data-fair/api/v1/datasets/ademe-car-labelling/lines?size=200&select=Energie,Conso_vitesse_mixte_Min,Conso_vitesse_mixte_Max,Conso_basse_vitesse_Min,Conso_basse_vitesse_Max,Conso_moyenne_vitesse_Min,Conso_moyenne_vitesse_Max,Conso_haute_vitesse_Min,Conso_haute_vitesse_Max,Conso_T-haute_vitesse_Min,Conso_T-haute_vitesse_Max,Puissance_maximale&qs=';
   const ademeLire = () => { try { return JSON.parse(localStorage.getItem(ADK) || '{}') || {}; } catch (_) { return {}; } };
   const ademeCle = V => [V.mod, V.mod2, V.nrj, V.ch].join('|');
   const ademeEnCours = {};
-  const txtConso = km => {
+  const txtConso = (km, mn) => {
     const V = window.__cpMix && window.__cpMix.veh; if (!V || V.ev || !Number.isFinite(km)) return '';
-    const C = lireConso(); const A = ademeLire()[ademeCle(V)]; let l100 = 0, gaz = /diesel|gazole|gasoil/.test(V.en);
-    if (A && A.l > 0) { l100 = A.l; gaz = A.e === 'gazole'; } else { if (!V.cat) return ''; l100 = Number(C.c[V.cat]); if (/hybrid/.test(V.en)) l100 *= 0.8; }
-    if (!(l100 > 0)) return ''; const prix = gaz ? Number(C.p.gazole) : Number(C.p.essence); if (!(prix > 0) || (!gaz && !A && !/essence|gasoline|petrol|hybrid|ther/.test(V.en))) return '';
-    const L = km * l100 / 100; return '⛽ ' + (Math.round(L * 10) / 10).toLocaleString('fr-FR') + ' L · ' + euro(L * prix);
+    const C = lireConso(); const A = ademeLire()[ademeCle(V)]; let l100 = 0, gaz = /diesel|gazole|gasoil/.test(V.en), moy = false;
+    if (A && A.l > 0) {
+      l100 = A.l; gaz = A.e === 'gazole'; moy = A.e === 'moy';
+      // V274 : la consommation dépend de la vitesse moyenne du trajet (autoroute = plus de carburant que la route de montagne)
+      const pts = [[19, A.b], [39.5, A.m], [56.5, A.h], [92, A.t]].filter(p => p[1] > 0);
+      if (mn > 0 && pts.length >= 2) { const v = km / (mn / 60); if (v <= pts[0][0]) l100 = pts[0][1]; else if (v >= pts[pts.length - 1][0]) l100 = pts[pts.length - 1][1]; else for (let i = 1; i < pts.length; i++) if (v <= pts[i][0]) { const a = pts[i - 1], b = pts[i]; l100 = a[1] + (b[1] - a[1]) * (v - a[0]) / (b[0] - a[0]); break; } }
+    } else { if (!V.cat) return ''; l100 = Number(C.c[V.cat]); if (/hybrid/.test(V.en)) l100 *= 0.8; moy = !gaz && !/essence|gasoline|petrol|hybrid|ther/.test(V.en); }
+    if (!(l100 > 0)) return ''; const prix = moy ? (Number(C.p.gazole) + Number(C.p.essence)) / 2 : (gaz ? Number(C.p.gazole) : Number(C.p.essence)); if (!(prix > 0)) return '';
+    const L = km * l100 / 100; return (moy ? '⛽ ≈ ' : '⛽ ') + (Math.round(L * 10) / 10).toLocaleString('fr-FR') + ' L · ' + euro(L * prix);
   };
-  const majConso = () => { document.querySelectorAll('.etqC[data-ckm]').forEach(s => { const x = txtConso(Number(s.dataset.ckm)); s.textContent = x; s.style.display = x ? '' : 'none'; }); };
+  const majConso = () => { document.querySelectorAll('.etqC[data-ckm]').forEach(s => { const x = txtConso(Number(s.dataset.ckm), Number(s.dataset.cmin)); s.textContent = x; s.style.display = x ? '' : 'none'; }); };
   const ademeCharger = async V => {
     const k = ademeCle(V); if (!V.mod || ademeEnCours[k] || ademeLire()[k] !== undefined) return; ademeEnCours[k] = 1;
     try {
@@ -353,16 +358,24 @@
       const f = { HNR: /HNR/, HR: /HR/, GAZOLE: /^GAZOLE$/, ESSENCE: /^ESSENCE$/ }[V.nrj]; let fk = 1; if (f) { const tous = rows; rows = rows.filter(x => f.test(x.Energie || '')); if (!rows.length && (V.nrj === 'HNR' || V.nrj === 'HR')) { rows = tous.filter(x => /^ESSENCE$/.test(x.Energie || '')); fk = 0.9; } }
       if (V.ch && rows.length > 1) { const kw = V.ch * 0.7355, p = rows.filter(x => Math.abs((x.Puissance_maximale || 0) - kw) <= kw * 0.15); if (p.length) rows = p; }
       const c = ademeLire();
-      if (rows.length) { const l = rows.reduce((s, x) => s + (x.Conso_vitesse_mixte_Min + (x.Conso_vitesse_mixte_Max || x.Conso_vitesse_mixte_Min)) / 2, 0) / rows.length * 1.15 * fk; c[k] = { l: Math.round(l * 100) / 100, e: /GAZOLE/.test(rows[0].Energie || '') ? 'gazole' : 'essence' }; } else c[k] = { l: 0 };
+      if (rows.length) {
+        // V274 : consommation ADEME par phase (urbain / route / autoroute) : valeur choisie ensuite selon la vitesse moyenne du trajet ; énergie inconnue = moyenne essence + gazole
+        const moy = (rs, nom) => { const v = rs.map(x => { const a = x['Conso_' + nom + '_Min'], b = x['Conso_' + nom + '_Max']; return Number.isFinite(a) ? (Number.isFinite(b) ? (a + b) / 2 : a) : null; }).filter(n => n !== null); return v.length ? v.reduce((s, n) => s + n, 0) / v.length : null; };
+        const ph = rs => ({ mix: moy(rs, 'vitesse_mixte'), b: moy(rs, 'basse_vitesse'), m: moy(rs, 'moyenne_vitesse'), h: moy(rs, 'haute_vitesse'), t: moy(rs, 'T-haute_vitesse') });
+        const gz = rows.filter(x => /GAZOLE/.test(x.Energie || '')), es = rows.filter(x => !/GAZOLE/.test(x.Energie || ''));
+        let P, en;
+        if (gz.length && es.length) { const a = ph(gz), b = ph(es); P = {}; for (const q of Object.keys(a)) P[q] = (a[q] !== null && b[q] !== null) ? (a[q] + b[q]) / 2 : (a[q] !== null ? a[q] : b[q]); en = 'moy'; } else { P = ph(rows); en = gz.length ? 'gazole' : 'essence'; }
+        if (P.mix > 0) { const o = { l: Math.round(P.mix * 1.15 * fk * 100) / 100, e: en }; for (const q of ['b', 'm', 'h', 't']) if (P[q] > 0) o[q] = Math.round(P[q] * 1.15 * fk * 100) / 100; c[k] = o; } else c[k] = { l: 0 };
+      } else c[k] = { l: 0 };
       try { localStorage.setItem(ADK, JSON.stringify(c)); } catch (_) {}
       majConso();
     } catch (_) { /* hors ligne : on garde la valeur par défaut */ } finally { delete ademeEnCours[k]; }
   };
-  const etqConso = km => { const V = window.__cpMix && window.__cpMix.veh; if (!V || V.ev || !Number.isFinite(km)) return ''; ademeCharger(V); const x = txtConso(km); return '<span class="etq etqC" data-ckm="' + km + '"' + (x ? '' : ' style="display:none"') + '>' + x + '</span>'; };
+  const etqConso = (km, mn) => { const V = window.__cpMix && window.__cpMix.veh; if (!V || V.ev || !Number.isFinite(km)) return ''; ademeCharger(V); const x = txtConso(km, mn); return '<span class="etq etqC" data-ckm="' + km + '" data-cmin="' + (Number.isFinite(mn) ? mn : '') + '"' + (x ? '' : ' style="display:none"') + '>' + x + '</span>'; };
   const evLiens = () => { const V = window.__cpMix && window.__cpMix.veh; if (!V || !V.ev) return ''; return '<a class="etq etqE" href="https://abetterrouteplanner.com/" target="_blank" rel="noopener">⚡ ABRP</a><a class="etq etqE" href="https://fr.chargemap.com/" target="_blank" rel="noopener">🗺️ Chargemap</a><a class="etq etqE" href="https://www.miio.pt/fr" target="_blank" rel="noopener">🔌 Miio</a>'; };
   const etqs = h => h ? '<div class="etqs">' + h + '</div>' : '';
-  const tagsRapide = r => etqs(etqConso(r.distanceKm) + evLiens());
-  const tagsSans = r => { const sp = r.sansPeage; if (!sp || !Number.isFinite(sp.distanceKm) || !Number.isFinite(r.distanceKm)) return ''; return etqs('<span class="etq etqK">' + sgn(sp.distanceKm - r.distanceKm, 'km') + '</span><span class="etq etqT">' + sgnMin(sp.durationMinutes - r.durationMinutes) + '</span>' + etqConso(sp.distanceKm)); };
+  const tagsRapide = r => etqs(etqConso(r.distanceKm, r.durationMinutes) + evLiens());
+  const tagsSans = r => { const sp = r.sansPeage; if (!sp || !Number.isFinite(sp.distanceKm) || !Number.isFinite(r.distanceKm)) return ''; return etqs('<span class="etq etqK">' + sgn(sp.distanceKm - r.distanceKm, 'km') + '</span><span class="etq etqT">' + sgnMin(sp.durationMinutes - r.durationMinutes) + '</span>' + etqConso(sp.distanceKm, sp.durationMinutes)); };
   const addConsoReglages = () => {
     const ec = document.getElementById('ecran'); if (!ec || ec.dataset.vue !== 'reglages' || document.getElementById('consoReg')) return;
     const C = lireConso(), d = document.createElement('div'); d.id = 'consoReg'; d.className = 'carte';
@@ -379,7 +392,7 @@
     const p = prix.status === 'aucun_peage' ? 'aucun' : (mode === 'DRIVE' && (prix.status === 'prix_inconnu' || prix.status === 'estimation')) ? 'oui (prix exact ci-dessous si disponible)' : 'non disponible';
     const kmH = '🛣 <b>' + (r.distanceKm ?? '—') + ' km</b>' + '<br>⏱️ <b>' + hm(r.durationMinutes) + '</b>';
     const info = mode === 'DRIVE'
-      ? BK('bkKm', 'TRAJET LE PLUS RAPIDE', kmH + tagsRapide(r)) + BK('bkAvec', 'AVEC PÉAGE', '<div data-peage>' + (prix.status === 'aucun_peage' ? '💶 <b>Aucun péage</b> sur ce trajet.' : '💶 Calcul du prix exact…') + '</div>') + (r.sansPeage ? BK('bkSans', 'SANS PÉAGE', '🛣 <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b><br>⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b>' + tagsSans(r)) : '') + (prix.status !== 'aucun_peage' && r.sansPeage ? '<div data-mixte><div class="doux">🟣 Recherche du trajet mixte moins cher…</div></div>' : '') + '<p class="doux" style="font-size:.8rem">Distance et durée : Google Routes, à vérifier avant départ.</p>'
+      ? BK('bkKm', 'TRAJET LE PLUS RAPIDE', kmH + tagsRapide(r)) + BK('bkAvec', 'AVEC PÉAGE', '<div data-peage>' + (prix.status === 'aucun_peage' ? '💶 <b>Aucun péage</b> sur ce trajet.' : '💶 Calcul du prix exact…') + '</div>') + (r.sansPeage && prix.status !== 'aucun_peage' ? BK('bkSans', 'SANS PÉAGE', '🛣 <b>' + (r.sansPeage.distanceKm ?? '—') + ' km</b><br>⏱️ <b>' + hm(r.sansPeage.durationMinutes) + '</b>' + tagsSans(r)) : '') + (prix.status !== 'aucun_peage' && r.sansPeage ? '<div data-mixte><div class="doux">🟣 Recherche du trajet mixte moins cher…</div></div>' : '') + '<p class="doux" style="font-size:.8rem">Distance et durée : Google Routes, à vérifier avant départ.</p>'
       : '<p class="doux" style="font-size:.75rem;margin:6px 0 2px">Calculé par Google Routes en mode transports en commun.</p>' + BK('bkKm', 'TRANSPORTS EN COMMUN', kmH) + BK('bkRen', 'PRIX', '🎟️ Le prix sera détaillé quand le calcul des prix SNCF et des autres transports sera activé.') + '<p class="doux" style="font-size:.8rem">Horaires et prix à vérifier sur le site du transporteur (liens ci-dessous).</p>';
     target.innerHTML = info; LAY('résultat');   // V186 : la carte et les villes passent avant les lignes d’infos
     if (mode === 'DRIVE' && r.polyline) { try { target.innerHTML = carte(r) + (target.dataset.villes ? BK('bkLieu', 'ITINÉRAIRE', target.dataset.villes) : '') + info; } catch (_) { target.innerHTML = info; } estimerPeage(r, target).then(() => setTimeout(() => chercherMixte(r, target), 300), () => { }); }
