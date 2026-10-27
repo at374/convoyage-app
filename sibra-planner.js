@@ -84,6 +84,56 @@
     return hours * 3600 + minutes * 60 + seconds;
   }
 
+  /**
+   * Finds direct rides on the same active GTFS trip between two stops.
+   * Caller must pass stop_times rows for the requested service date and the
+   * trip IDs already filtered with activeTripIdsForDate().
+   */
+  function directRides(stopTimes, fromStopId, toStopId, notBeforeSeconds, activeTripIds) {
+    if (!Array.isArray(stopTimes) || typeof fromStopId !== 'string' ||
+        typeof toStopId !== 'string' || fromStopId === toStopId ||
+        !Number.isFinite(notBeforeSeconds) || !activeTripIds || typeof activeTripIds.has !== 'function') return [];
+
+    const byTrip = new Map();
+    for (const row of stopTimes) {
+      if (!row || row.trip_id == null || row.stop_id == null ||
+          !activeTripIds.has(String(row.trip_id))) continue;
+      const seq = Number(row.stop_sequence);
+      if (!Number.isFinite(seq)) continue;
+      const key = String(row.trip_id);
+      if (!byTrip.has(key)) byTrip.set(key, []);
+      byTrip.get(key).push({ ...row, _seq: seq });
+    }
+
+    const results = [];
+    for (const [tripId, rows] of byTrip) {
+      rows.sort((a, b) => a._seq - b._seq);
+      for (let i = 0; i < rows.length; i++) {
+        const origin = rows[i];
+        if (String(origin.stop_id) !== fromStopId) continue;
+        const departure = parseGtfsTime(String(origin.departure_time || ''));
+        if (departure === null || departure < notBeforeSeconds) continue;
+        const destination = rows.slice(i + 1).find(row => String(row.stop_id) === toStopId);
+        if (!destination) continue;
+        const arrival = parseGtfsTime(String(destination.arrival_time || destination.departure_time || ''));
+        if (arrival === null || arrival < departure) continue;
+        results.push({
+          trip_id: tripId,
+          from_stop_id: fromStopId,
+          to_stop_id: toStopId,
+          departure_time: origin.departure_time,
+          arrival_time: destination.arrival_time || destination.departure_time,
+          departureSeconds: departure,
+          arrivalSeconds: arrival,
+          fromStopSequence: origin._seq,
+          toStopSequence: destination._seq
+        });
+        break;
+      }
+    }
+    return results.sort((a, b) => a.departureSeconds - b.departureSeconds || a.arrivalSeconds - b.arrivalSeconds);
+  }
+
   function departuresAtStop(stopTimes, stopId, notBeforeSeconds, activeTripIds) {
     if (!Array.isArray(stopTimes) || typeof stopId !== 'string' ||
         !Number.isFinite(notBeforeSeconds) || !activeTripIds || typeof activeTripIds.has !== 'function') return [];
@@ -96,5 +146,5 @@
       .sort((a, b) => a.departureSeconds - b.departureSeconds);
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop });
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides });
 });
