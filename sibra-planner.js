@@ -36,6 +36,40 @@
       .sort((a, b) => a.distanceKm - b.distanceKm);
   }
 
+  function gtfsDateParts(day) {
+    if (typeof day !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(day)) return null;
+    const date = new Date(day + 'T00:00:00Z');
+    if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== day) return null;
+    const weekdayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    return { compact: day.replace(/-/g, ''), weekday: weekdayNames[date.getUTCDay()] };
+  }
+
+  /**
+   * Returns service IDs active on a date according to GTFS calendar.txt and
+   * calendar_dates.txt. Inputs are arrays of parsed GTFS rows.
+   */
+  function activeServiceIds(calendarRows, exceptionRows, day) {
+    const parts = gtfsDateParts(day);
+    if (!parts || !Array.isArray(calendarRows) || !Array.isArray(exceptionRows)) return new Set();
+    const active = new Set();
+
+    for (const row of calendarRows) {
+      if (!row || row.service_id == null || !row.start_date || !row.end_date) continue;
+      const start = String(row.start_date).replace(/-/g, '');
+      const end = String(row.end_date).replace(/-/g, '');
+      if (!/^\\d{8}$/.test(start) || !/^\\d{8}$/.test(end) ||
+          start > end || parts.compact < start || parts.compact > end) continue;
+      if (String(row[parts.weekday]) === '1') active.add(String(row.service_id));
+    }
+
+    for (const row of exceptionRows) {
+      if (!row || row.service_id == null || String(row.date).replace(/-/g, '') !== parts.compact) continue;
+      if (String(row.exception_type) === '1') active.add(String(row.service_id));
+      else if (String(row.exception_type) === '2') active.delete(String(row.service_id));
+    }
+    return active;
+  }
+
   function parseGtfsTime(value) {
     if (typeof value !== 'string' || !/^(\d{1,3}):([0-5]\d):([0-5]\d)$/.test(value)) return null;
     const [hours, minutes, seconds] = value.split(':').map(Number);
@@ -54,5 +88,5 @@
       .sort((a, b) => a.departureSeconds - b.departureSeconds);
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, parseGtfsTime, departuresAtStop });
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, parseGtfsTime, departuresAtStop });
 });
