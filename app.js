@@ -708,8 +708,8 @@
     const chainMap = Object.create(null);
     for (let ci = 0; ci < chainItems.length; ci++) {
       const cur = chainItems[ci], next = chainItems[ci + 1] || null;
-      const conflict = next ? A.conflits.some(c => c.a === cur.mission && c.b === next.mission || c.b === cur.mission && c.a === next.mission) : false;
-      chainMap[cur.cle] = { next, intervalMin: cur.fin && next && Number.isFinite(next.debut) ? Math.round((next.debut - cur.fin.t) / 60000) : null, conflict, blocked: unknownAccepted };
+      const conflictDetail = next ? A.conflits.find(c => c.a === cur.mission && c.b === next.mission || c.b === cur.mission && c.a === next.mission) || null : null;
+      chainMap[cur.cle] = { next, intervalMin: cur.fin && next && Number.isFinite(next.debut) ? Math.round((next.debut - cur.fin.t) / 60000) : null, intervalEstimated: !!(cur.fin && cur.fin.estimee), conflictType: conflictDetail && conflictDetail.type || null, blocked: unknownAccepted };
     }
     window.__cpAgendaChain = chainMap;
     const debutAff = x => { try { if (hfDates(x.mission)) { const t = Date.parse(hfPk(x.mission)); if (Number.isFinite(t)) return t; } } catch (_) {} return x.debut; };   // V241 : la date du groupe = la date de prise en charge affichée sur la fiche
@@ -736,8 +736,9 @@
       const chain = window.__cpAgendaChain && window.__cpAgendaChain[x.cle];
       if (chain && (x.etat === 'a_venir' || x.etat === 'en_cours')) {
         const title = chain.next ? 'Prochaine mission : ' + (chain.next.mission.from_city || chain.next.mission.origin_city || 'départ à préciser') + ' → ' + (chain.next.mission.to_city || chain.next.mission.destination_city || 'arrivée à préciser') : 'Aucune prochaine mission prévue';
-        const interval = Number.isFinite(chain.intervalMin) ? '<div><strong>Intervalle entre missions :</strong> ' + esc(String(chain.intervalMin)) + ' min</div>' : '';
-        const note = !chain.next ? 'Aucune mission suivante à analyser pour le moment.' : (chain.blocked ? 'Enchaînement à vérifier : une mission acceptée n’a pas de date exploitable.' : (chain.conflict ? '⚠️ Chevauchement horaire détecté.' : 'Transport non confirmé — vérifiez vous-même. Temps disponible après trajet non déterminé.'));
+        const interval = Number.isFinite(chain.intervalMin) ? '<div><strong>' + (chain.intervalEstimated ? 'Intervalle estimé entre missions :' : 'Intervalle entre missions :') + '</strong> ' + esc(String(chain.intervalMin)) + ' min</div>' : '';
+        const conflictNote = chain.conflictType === 'chevauchement' ? '⚠️ Chevauchement horaire détecté.' : (chain.conflictType ? '⚠️ Enchaînement potentiellement trop juste : vérifiez le trajet et la marge de sécurité.' : 'Transport non confirmé — vérifiez vous-même. Temps disponible après trajet non déterminé.');
+        const note = !chain.next ? 'Aucune mission suivante à analyser pour le moment.' : (chain.blocked ? 'Enchaînement à vérifier : une mission acceptée n’a pas de date exploitable.' : conflictNote);
         html += '<div class="carte cpAgendaChain" style="margin-top:-6px;border-top:0;border-radius:0 0 12px 12px;font-size:.94em"><strong>↔ Enchaînement des missions</strong><div>' + esc(title) + '</div>' + interval + '<div class="doux">' + esc(note) + '</div></div>';
       }
     });
