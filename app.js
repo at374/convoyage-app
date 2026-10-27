@@ -703,11 +703,15 @@
     const A = window.CPAgenda.analyser(etat.missions, etat.reglages);
     const items = A.items.filter(x => etat.agendaTout || !((x.etat === 'passee' || x.etat === 'terminee') && x.fin && Date.now() - x.fin.t > 7 * 86400000));
     // Calcule les enchaînements une seule fois par rendu. Les transports ne sont pas vérifiés par ce résumé.
-    const chainItems = A.items.filter(x => x.etat === 'a_venir' || x.etat === 'en_cours').sort((a, b) => (a.debut ?? Infinity) - (b.debut ?? Infinity));
+    const nowChain = Date.now();
+    const futureChainItems = A.items.filter(x => x.etat === 'a_venir' || x.etat === 'en_cours').sort((a, b) => (a.debut ?? Infinity) - (b.debut ?? Infinity));
+    const recentCompleted = A.items.filter(x => (x.etat === 'terminee' || x.etat === 'passee') && x.fin && Number.isFinite(x.fin.t) && nowChain - x.fin.t >= 0 && nowChain - x.fin.t <= 24 * 3600000);
+    const chainItems = [...recentCompleted, ...futureChainItems].sort((a, b) => (a.debut ?? a.fin?.t ?? Infinity) - (b.debut ?? b.fin?.t ?? Infinity));
     const unknownAccepted = A.items.some(x => x.etat === 'date_inconnue');
     const chainMap = Object.create(null);
     for (let ci = 0; ci < chainItems.length; ci++) {
-      const cur = chainItems[ci], next = chainItems[ci + 1] || null;
+      const cur = chainItems[ci];
+      const next = chainItems.slice(ci + 1).find(x => x.etat === 'a_venir' || x.etat === 'en_cours') || null;
       const conflictDetail = next ? A.conflits.find(c => c.a === cur.mission && c.b === next.mission || c.b === cur.mission && c.a === next.mission) || null : null;
       chainMap[cur.cle] = { next, intervalMin: cur.fin && next && Number.isFinite(next.debut) ? Math.round((next.debut - cur.fin.t) / 60000) : null, intervalEstimated: !!(cur.fin && cur.fin.estimee), conflictType: conflictDetail && conflictDetail.type || null, blocked: unknownAccepted };
     }
@@ -734,7 +738,7 @@
       html += carteMission(m, i, extra).replace('class="mission', `class="mission etat-${x.etat}${''}`);
       // Agenda–Transports : résumé prudent de l'enchaînement. Le trajet n'est jamais déclaré confirmé ici.
       const chain = window.__cpAgendaChain && window.__cpAgendaChain[x.cle];
-      if (chain && (x.etat === 'a_venir' || x.etat === 'en_cours')) {
+      if (chain && (x.etat === 'a_venir' || x.etat === 'en_cours' || ((x.etat === 'terminee' || x.etat === 'passee') && x.fin && Date.now() - x.fin.t <= 24 * 3600000))) {
         const title = chain.next ? 'Prochaine mission : ' + (chain.next.mission.from_city || chain.next.mission.origin_city || 'départ à préciser') + ' → ' + (chain.next.mission.to_city || chain.next.mission.destination_city || 'arrivée à préciser') : (chain.blocked ? 'Prochaine mission à déterminer' : 'Aucune prochaine mission prévue');
         const interval = Number.isFinite(chain.intervalMin) ? '<div><strong>' + (chain.intervalEstimated ? 'Intervalle estimé entre missions :' : 'Intervalle entre missions :') + '</strong> ' + esc(String(chain.intervalMin)) + ' min</div>' : '';
         const conflictNote = chain.conflictType === 'chevauchement' ? '⚠️ Chevauchement horaire détecté.' : (chain.conflictType ? '⚠️ Enchaînement potentiellement trop juste : vérifiez le trajet et la marge de sécurité.' : 'Transport non confirmé — vérifiez vous-même. Temps disponible après trajet non déterminé.');
