@@ -317,7 +317,9 @@
     } catch (e) { ko('Trajet mixte indisponible pour l’instant (' + esc(String(e && e.message || e).slice(0, 80)) + ').'); }
   };
   // V267 : consommation moyenne, écarts du trajet sans péage, liens véhicule électrique
-  const CONSO_DEF = { petite: 5.8, moyenne: 6.5, routiere: 7.2, sport: 9.5, utilitaire: 9 };
+  const CONSO_DEF = { petite: 5.0, moyenne: 5.6, routiere: 6.2, sport: 8.0, utilitaire: 7.5 };
+  // V276 : modèle voisin ADEME quand le modèle exact n'est pas dans la base (ex. 5008 → 3008)
+  const VOISIN = { '5008': '3008', 'partner': 'rifter', 'berlingo': 'rifter', 'expert': 'traveller', '5008 ii': '3008', 'c5 aircross': '3008' };
   const PRIX_DEF = { gazole: 2.36, essence: 2.14 };
   // V275 : plus de réglages carburant / consommation : consommation = ADEME ; prix = moyenne nationale officielle (data.economie.gouv.fr, flux instantané des stations), actualisée toutes les 6 h
   const lireConso = () => { let p = Object.assign({}, PRIX_DEF); try { const j = JSON.parse(localStorage.getItem('cp_prix_carb') || 'null'); if (j && j.gazole > 0 && j.essence > 0) p = { gazole: j.gazole, essence: j.essence }; } catch (_) {} return { c: Object.assign({}, CONSO_DEF), p }; };
@@ -336,7 +338,7 @@
   const vehiculeConso = () => { try { let v = vehDom(); if (!v) { const m = missionActive(); if (!m || !m.vehicle) return null; v = m.vehicle; } if (typeof v === 'string' && v.trim().charAt(0) === '{') { try { v = JSON.parse(v); } catch (_) {} } const txt = sansAcc(typeof v === 'object' ? [v.category, v.type, v.model, v.brand, v.make, v.name, v.label].filter(Boolean).join(' ') : v); const en = sansAcc(typeof v === 'object' ? v.energy : ''); let cat = null; for (const [k, re] of CAT) if (re.test(txt)) { cat = k; break; } if (!cat) for (const [k, re] of [['petite', /citadine|mini|city/], ['moyenne', /berline|compacte|break|polyvalente/], ['routiere', /suv|monospace|routiere|crossover|4x4/]]) if (re.test(txt)) { cat = k; break; } const mdl = sansAcc(typeof v === 'object' ? v.model : String(v)).toUpperCase().replace(/[^A-Z0-9+ -]/g, ' ').replace(/\s+/g, ' ').trim(); const tk = mdl.split(' ').filter(Boolean); const mod = tk.filter(w => !/^(NOUVEAU|NOUVELLE|NEW|II|III)$/.test(w))[0] || ''; const mod2 = tk.length > 1 && /^[A-Z]/.test(tk[1]) && !/HYBRID|HDI|TCE|DCI|TDI|TSI|PURETECH|BLUE|ESSENCE|DIESEL/.test(tk[1]) ? mod + ' ' + tk[1] : ''; const chm = (' ' + mdl + ' ').match(/ (\d{2,3}) /g) || []; const ch = chm.map(x => Number(x)).filter(n => n >= 50 && n <= 450 && String(n) !== mod)[0] || 0; const nrj = /hybrid/.test(en) ? (/non|hnr/.test(en) ? 'HNR' : 'HR') : /diesel|gazole|gasoil/.test(en) ? 'GAZOLE' : /essence|ther|gasoline|petrol/.test(en) ? 'ESSENCE' : ''; return { cat, en, mod, mod2, ch, nrj, ev: /electri|\bev\b|\bbev\b/.test(en) && !/hybrid/.test(en) }; } catch (_) { return null; } };
   const sgn = (v, u) => (v >= 0 ? '+' : '−') + Math.abs(Math.round(v * 10) / 10).toLocaleString('fr-FR') + ' ' + u;
   const sgnMin = v => (v >= 0 ? '+' : '−') + (Math.abs(v) >= 60 ? hm(Math.abs(v)) : Math.abs(v) + ' min');
-  const ADK = 'cp_ademe2', ADU = 'https://data.ademe.fr/data-fair/api/v1/datasets/ademe-car-labelling/lines?size=200&select=Energie,Conso_vitesse_mixte_Min,Conso_vitesse_mixte_Max,Conso_basse_vitesse_Min,Conso_basse_vitesse_Max,Conso_moyenne_vitesse_Min,Conso_moyenne_vitesse_Max,Conso_haute_vitesse_Min,Conso_haute_vitesse_Max,Conso_T-haute_vitesse_Min,Conso_T-haute_vitesse_Max,Puissance_maximale&qs=';
+  const ADK = 'cp_ademe3', ADU = 'https://data.ademe.fr/data-fair/api/v1/datasets/ademe-car-labelling/lines?size=200&select=Energie,Conso_vitesse_mixte_Min,Conso_vitesse_mixte_Max,Conso_basse_vitesse_Min,Conso_basse_vitesse_Max,Conso_moyenne_vitesse_Min,Conso_moyenne_vitesse_Max,Conso_haute_vitesse_Min,Conso_haute_vitesse_Max,Conso_T-haute_vitesse_Min,Conso_T-haute_vitesse_Max,Puissance_maximale&qs=';
   const ademeLire = () => { try { return JSON.parse(localStorage.getItem(ADK) || '{}') || {}; } catch (_) { return {}; } };
   const ademeCle = V => [V.mod, V.mod2, V.nrj, V.ch].join('|');
   const ademeEnCours = {};
@@ -348,7 +350,9 @@
       // V274 : la consommation dépend de la vitesse moyenne du trajet (autoroute = plus de carburant que la route de montagne)
       const pts = [[19, A.b], [39.5, A.m], [56.5, A.h], [92, A.t]].filter(p => p[1] > 0);
       if (mn > 0 && pts.length >= 2) { const v = km / (mn / 60); if (v <= pts[0][0]) l100 = pts[0][1]; else if (v >= pts[pts.length - 1][0]) l100 = pts[pts.length - 1][1]; else for (let i = 1; i < pts.length; i++) if (v <= pts[i][0]) { const a = pts[i - 1], b = pts[i]; l100 = a[1] + (b[1] - a[1]) * (v - a[0]) / (b[0] - a[0]); break; } }
-    } else { if (!V.cat) return ''; l100 = Number(C.c[V.cat]); if (/hybrid/.test(V.en)) l100 *= 0.8; moy = !gaz && !/essence|gasoline|petrol|hybrid|ther/.test(V.en); }
+      l100 *= 1.1; // V276 : +10 % entre le cycle WLTP de laboratoire et la conduite réelle
+    } else { if (!V.cat) return ''; l100 = Number(C.c[V.cat]); if (/hybrid/.test(V.en)) l100 *= 0.8;
+      if (mn > 0) { const pts = [[19, 1.28], [39.5, 0.975], [56.5, 0.865], [92, 1.03]], v = km / (mn / 60); let f = pts[pts.length - 1][1]; if (v <= pts[0][0]) f = pts[0][1]; else if (v < pts[pts.length - 1][0]) for (let i = 1; i < pts.length; i++) if (v <= pts[i][0]) { const a = pts[i - 1], b = pts[i]; f = a[1] + (b[1] - a[1]) * (v - a[0]) / (b[0] - a[0]); break; } l100 *= f; } moy = !gaz && !/essence|gasoline|petrol|hybrid|ther/.test(V.en); }
     if (!(l100 > 0)) return ''; const prix = moy ? (Number(C.p.gazole) + Number(C.p.essence)) / 2 : (gaz ? Number(C.p.gazole) : Number(C.p.essence)); if (!(prix > 0)) return '';
     const L = km * l100 / 100; return (moy ? '⛽ ≈ ' : '⛽ ') + (Math.round(L * 10) / 10).toLocaleString('fr-FR') + ' L · ' + euro(L * prix);
   };
@@ -357,7 +361,7 @@
     const k = ademeCle(V); if (!V.mod || ademeEnCours[k] || ademeLire()[k] !== undefined) return; ademeEnCours[k] = 1;
     try {
       let rows = [];
-      for (const m of [V.mod2, V.mod].filter(Boolean)) { const r = await fetch(ADU + encodeURIComponent('Modèle:"' + m + '"')); if (!r.ok) throw new Error('ademe'); rows = (await r.json()).results || []; if (rows.length) break; }
+      for (const m of [V.mod2, V.mod, VOISIN[String(V.mod || '').toLowerCase()]].filter(Boolean)) { const r = await fetch(ADU + encodeURIComponent('Modèle:"' + m + '"')); if (!r.ok) throw new Error('ademe'); rows = (await r.json()).results || []; if (rows.length) break; }
       rows = rows.filter(x => !/^ELECTRIC/.test(x.Energie || '') && Number.isFinite(x.Conso_vitesse_mixte_Min));
       const f = { HNR: /HNR/, HR: /HR/, GAZOLE: /^GAZOLE$/, ESSENCE: /^ESSENCE$/ }[V.nrj]; let fk = 1; if (f) { const tous = rows; rows = rows.filter(x => f.test(x.Energie || '')); if (!rows.length && (V.nrj === 'HNR' || V.nrj === 'HR')) { rows = tous.filter(x => /^ESSENCE$/.test(x.Energie || '')); fk = 0.9; } }
       if (V.ch && rows.length > 1) { const kw = V.ch * 0.7355, p = rows.filter(x => Math.abs((x.Puissance_maximale || 0) - kw) <= kw * 0.15); if (p.length) rows = p; }
