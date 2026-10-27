@@ -70,6 +70,14 @@
     return active;
   }
 
+  function activeTripIdsForDate(trips, activeServices) {
+    if (!Array.isArray(trips) || !activeServices || typeof activeServices.has !== 'function') return new Set();
+    return new Set(trips.filter(row =>
+      row && row.trip_id != null && row.service_id != null &&
+      activeServices.has(String(row.service_id))
+    ).map(row => String(row.trip_id)));
+  }
+
   function parseGtfsTime(value) {
     if (typeof value !== 'string' || !/^(\d{1,3}):([0-5]\d):([0-5]\d)$/.test(value)) return null;
     const [hours, minutes, seconds] = value.split(':').map(Number);
@@ -88,5 +96,5 @@
       .sort((a, b) => a.departureSeconds - b.departureSeconds);
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, parseGtfsTime, departuresAtStop });
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop });
 });
