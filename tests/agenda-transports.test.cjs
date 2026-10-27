@@ -151,4 +151,16 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(planner.activeServiceIds(calendar, exceptions, '2026-02-30').size, 0);
 }
 
-process.stdout.write('Agenda/SIBRA tests passed: 19 scenarios\\n');
+// 20. Les courses GTFS sont filtrées par les services actifs pour la date demandée.
+{
+  const planner = require('../sibra-planner.js');
+  const trips = [
+    { trip_id: 'T1', service_id: 'weekday' },
+    { trip_id: 'T2', service_id: 'weekend' },
+    { trip_id: 'T3', service_id: 'weekday' }
+  ];
+  const active = planner.activeTripIdsForDate(trips, new Set(['weekday']));
+  assert.deepEqual([...active].sort(), ['T1', 'T3']);
+}
+
+process.stdout.write('Agenda/SIBRA tests passed: 20 scenarios\\n');
