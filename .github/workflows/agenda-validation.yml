@@ -1,0 +1,28 @@
+name: Agenda JavaScript validation
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, "feature/agenda-transports-summary"]
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r file; do
+            echo "Checking $file"
+            node --check "$file"
+          done < <(git ls-files '*.js')
+      - name: Run Agenda regression tests
+        run: node tests/agenda-transports.test.cjs
