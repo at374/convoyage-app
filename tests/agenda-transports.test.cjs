@@ -37,7 +37,7 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   const done = mission('done', '2026-10-27T05:00:00+01:00', '2026-10-27T06:00:00+01:00', { status: 'terminee' });
   const next = mission('next', '2026-10-27T09:00:00+01:00', '2026-10-27T10:00:00+01:00');
   const result = CPAgenda.analyser([done, next], {}, now);
-  assert.equal(result.parCle[CPAgenda.etat ? result.items.find(x => x.mission.id === 'done').cle : ''].etat, 'terminee');
+  assert.equal(result.items.find(x => x.mission.id === 'done').etat, 'terminee');
   assert.equal(result.items.find(x => x.mission.id === 'next').etat, 'a_venir');
 }
 
