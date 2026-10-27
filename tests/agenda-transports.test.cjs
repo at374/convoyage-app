@@ -97,4 +97,13 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(malformed.usable, false);
 }
 
-process.stdout.write('Agenda/SIBRA tests passed: 11 scenarios\\n');
+// 12. Le module SIBRA doit être chargé avant app.js dans l'application publiée.
+{
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.ok(html.indexOf('src="sibra-feed.js"') >= 0);
+  assert.ok(html.indexOf('src="sibra-feed.js"') < html.indexOf('src="app.js"'));
+}
+
+process.stdout.write('Agenda/SIBRA tests passed: 12 scenarios\\n');
