@@ -1,0 +1,35 @@
+{
+  "network": "SIBRA",
+  "datasetPage": "https://www.data.gouv.fr/datasets/offre-de-transports-sibra-a-annecy-gtfs",
+  "resourcePage": "https://transport.data.gouv.fr/resources/80100",
+  "filename": "gtfs-sibra.zip",
+  "sha256": "ecb4c0627e47818c8fcd0e7590980f5b905f6c95ab3881bfca88f68f54f81c83",
+  "archiveBytes": 5631686,
+  "archiveIntegrity": "passed",
+  "feedValidity": {
+    "from": "2026-10-01",
+    "through": "2026-12-20",
+    "basis": "calendar_dates.txt"
+  },
+  "counts": {
+    "stops": 1861,
+    "routes": 28,
+    "trips": 18597,
+    "calendarDates": 81,
+    "stopTimes": 550167
+  },
+  "integrityChecks": {
+    "allStopsHaveCoordinates": true,
+    "stopTimesUnknownStopIds": 0,
+    "stopTimesUnknownTripIds": 0,
+    "tripsUnknownRouteIds": 0
+  },
+  "limitations": {
+    "realTimeDisruptions": false,
+    "verifiedFares": false,
+    "exactAddressWalkingRoutes": false,
+    "journeyPlannerIntegrated": false
+  },
+  "status": "static_feed_validated_not_yet_connected_to_agenda",
+  "validatedOn": "2026-10-27"
+}
