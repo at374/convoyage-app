@@ -37,7 +37,7 @@
   }
 
   function gtfsDateParts(day) {
-    if (typeof day !== 'string' || !/^\\d{4}-\\d{2}-\\d{2}$/.test(day)) return null;
+    if (typeof day !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
     const date = new Date(day + 'T00:00:00Z');
     if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== day) return null;
     const weekdayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -57,7 +57,7 @@
       if (!row || row.service_id == null || !row.start_date || !row.end_date) continue;
       const start = String(row.start_date).replace(/-/g, '');
       const end = String(row.end_date).replace(/-/g, '');
-      if (!/^\\d{8}$/.test(start) || !/^\\d{8}$/.test(end) ||
+      if (!/^\d{8}$/.test(start) || !/^\d{8}$/.test(end) ||
           start > end || parts.compact < start || parts.compact > end) continue;
       if (String(row[parts.weekday]) === '1') active.add(String(row.service_id));
     }
