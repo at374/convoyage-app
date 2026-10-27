@@ -319,7 +319,11 @@
   // V267 : consommation moyenne, écarts du trajet sans péage, liens véhicule électrique
   const CONSO_DEF = { petite: 5.8, moyenne: 6.5, routiere: 7.2, sport: 9.5, utilitaire: 9 };
   const PRIX_DEF = { gazole: 2.36, essence: 2.14 };
-  const lireConso = () => { try { const j = JSON.parse(localStorage.getItem('cp_conso') || 'null') || {}; return { c: Object.assign({}, CONSO_DEF, j.c || {}), p: Object.assign({}, PRIX_DEF, j.p || {}) }; } catch (_) { return { c: Object.assign({}, CONSO_DEF), p: Object.assign({}, PRIX_DEF) }; } };
+  // V275 : plus de réglages carburant / consommation : consommation = ADEME ; prix = moyenne nationale officielle (data.economie.gouv.fr, flux instantané des stations), actualisée toutes les 6 h
+  const lireConso = () => { let p = Object.assign({}, PRIX_DEF); try { const j = JSON.parse(localStorage.getItem('cp_prix_carb') || 'null'); if (j && j.gazole > 0 && j.essence > 0) p = { gazole: j.gazole, essence: j.essence }; } catch (_) {} return { c: Object.assign({}, CONSO_DEF), p }; };
+  const PRIX_URL = 'https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/prix-des-carburants-en-france-flux-instantane-v2/records?select=' + encodeURIComponent('avg(gazole_prix) as gazole, avg(e10_prix) as e10, count(*) as n') + '&limit=1';
+  let prixEnCours = false;
+  const prixMaj = async () => { try { const j = JSON.parse(localStorage.getItem('cp_prix_carb') || 'null'); if (j && Date.now() - j.t < 6 * 3600000) return; } catch (_) {} if (prixEnCours) return; prixEnCours = true; try { const r = await fetch(PRIX_URL); if (!r.ok) throw new Error('prix'); const x = ((await r.json()).results || [])[0]; if (x && x.gazole > 1 && x.gazole < 4 && x.e10 > 1 && x.e10 < 4 && x.n > 1000) { localStorage.setItem('cp_prix_carb', JSON.stringify({ gazole: Math.round(x.gazole * 1000) / 1000, essence: Math.round(x.e10 * 1000) / 1000, t: Date.now() })); majConso(); } } catch (_) { /* hors ligne : on garde le dernier prix connu */ } finally { prixEnCours = false; } };
   const sansAcc = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const CAT = [
     ['utilitaire', /master|transit|trafic|boxer|jumper|ducato|sprinter|vito|kangoo|partner|berlingo|expert|jumpy|movano|crafter|daily|fourgon|utilitaire|camion|doblo|combo|caddy|talento|vivaro|proace|nv ?200|nv ?300/],
@@ -371,7 +375,7 @@
       majConso();
     } catch (_) { /* hors ligne : on garde la valeur par défaut */ } finally { delete ademeEnCours[k]; }
   };
-  const etqConso = (km, mn) => { const V = window.__cpMix && window.__cpMix.veh; if (!V || V.ev || !Number.isFinite(km)) return ''; ademeCharger(V); const x = txtConso(km, mn); return '<span class="etq etqC" data-ckm="' + km + '" data-cmin="' + (Number.isFinite(mn) ? mn : '') + '"' + (x ? '' : ' style="display:none"') + '>' + x + '</span>'; };
+  const etqConso = (km, mn) => { const V = window.__cpMix && window.__cpMix.veh; if (!V || V.ev || !Number.isFinite(km)) return ''; ademeCharger(V); prixMaj(); const x = txtConso(km, mn); return '<span class="etq etqC" data-ckm="' + km + '" data-cmin="' + (Number.isFinite(mn) ? mn : '') + '"' + (x ? '' : ' style="display:none"') + '>' + x + '</span>'; };
   const evLiens = () => { const V = window.__cpMix && window.__cpMix.veh; if (!V || !V.ev) return ''; return '<a class="etq etqE" href="https://abetterrouteplanner.com/" target="_blank" rel="noopener">⚡ ABRP</a><a class="etq etqE" href="https://fr.chargemap.com/" target="_blank" rel="noopener">🗺️ Chargemap</a><a class="etq etqE" href="https://www.miio.pt/fr" target="_blank" rel="noopener">🔌 Miio</a>'; };
   const etqs = h => h ? '<div class="etqs">' + h + '</div>' : '';
   const tagsRapide = r => etqs(etqConso(r.distanceKm, r.durationMinutes) + evLiens());
@@ -438,7 +442,7 @@
     contenu.classList.add('soloGoogle');
   };
   let rafale = false;
-  const refresh = () => { if (rafale) return; rafale = true; setTimeout(() => { rafale = false; try { addMissionPanel(); addEstimatePanel(); addConsoReglages(); } catch (_) { } }, 150); };
+  const refresh = () => { if (rafale) return; rafale = true; setTimeout(() => { rafale = false; try { addMissionPanel(); addEstimatePanel(); } catch (_) { } }, 150); };
   new MutationObserver(refresh).observe(document.documentElement, { childList: true, subtree: true });
   refresh();
 })();
