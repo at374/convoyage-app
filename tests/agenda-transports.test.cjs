@@ -181,4 +181,18 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(rides[0].arrival_time, '09:20:00');
 }
 
-process.stdout.write('Agenda/SIBRA tests passed: 21 scenarios\\n');
+// 22. Composition d'une correspondance avec marge minimale et attente maximale.
+{
+  const planner = require('../sibra-planner.js');
+  const rides = [
+    { trip_id: 'T1', from_stop_id: 'A', to_stop_id: 'B', departureSeconds: 9 * 3600, arrivalSeconds: 9 * 3600 + 600 },
+    { trip_id: 'T2', from_stop_id: 'B', to_stop_id: 'C', departureSeconds: 9 * 3600 + 900, arrivalSeconds: 9 * 3600 + 1800 },
+    { trip_id: 'T3', from_stop_id: 'B', to_stop_id: 'C', departureSeconds: 9 * 3600 + 5000, arrivalSeconds: 9 * 3600 + 5600 }
+  ];
+  const journeys = planner.oneTransferJourneys(rides, 'A', 'C', 9 * 3600, { minTransferSeconds: 120, maxWaitSeconds: 1800 });
+  assert.equal(journeys.length, 1);
+  assert.equal(journeys[0].transfer_stop_id, 'B');
+  assert.equal(journeys[0].transferWaitSeconds, 300);
+}
+
+process.stdout.write('Agenda/SIBRA tests passed: 22 scenarios\\n');
