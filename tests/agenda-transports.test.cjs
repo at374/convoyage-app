@@ -106,4 +106,31 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.ok(html.indexOf('src="sibra-feed.js"') < html.indexOf('src="app.js"'));
 }
 
-process.stdout.write('Agenda/SIBRA tests passed: 12 scenarios\\n');
+// 13-16. Primitives du futur calculateur SIBRA : distance, proximité, heures GTFS et courses actives.
+{
+  const planner = require('../sibra-planner.js');
+  const d = planner.distanceKm({ lat: 45.9, lon: 6.1 }, { lat: 45.9, lon: 6.1 });
+  assert.equal(d, 0);
+  assert.equal(planner.distanceKm({ lat: 100, lon: 6 }, { lat: 45, lon: 6 }), null);
+
+  const stops = [
+    { stop_id: 'near', lat: 45.9, lon: 6.1 },
+    { stop_id: 'far', lat: 46.2, lon: 6.4 }
+  ];
+  const nearby = planner.nearbyStops({ lat: 45.9, lon: 6.1 }, stops, 1);
+  assert.equal(nearby.length, 1);
+  assert.equal(nearby[0].stop.stop_id, 'near');
+
+  assert.equal(planner.parseGtfsTime('25:10:00'), 90600);
+  assert.equal(planner.parseGtfsTime('25:70:00'), null);
+
+  const times = [
+    { trip_id: 'active-late', stop_id: 'S1', departure_time: '10:00:00' },
+    { trip_id: 'active-early', stop_id: 'S1', departure_time: '09:00:00' },
+    { trip_id: 'inactive', stop_id: 'S1', departure_time: '08:30:00' }
+  ];
+  const departures = planner.departuresAtStop(times, 'S1', 9 * 3600, new Set(['active-late', 'active-early']));
+  assert.deepEqual(departures.map(x => x.trip_id), ['active-early', 'active-late']);
+}
+
+process.stdout.write('Agenda/SIBRA tests passed: 16 scenarios\\n');
