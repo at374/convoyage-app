@@ -146,5 +146,43 @@
       .sort((a, b) => a.departureSeconds - b.departureSeconds);
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides });
+  /**
+   * Combines direct rides into one-transfer options. Caller supplies rides
+   * already filtered for the same service date; this does not infer walking
+   * links or guarantee real-time operation.
+   */
+  function oneTransferJourneys(rides, fromStopId, toStopId, notBeforeSeconds, options) {
+    if (!Array.isArray(rides) || typeof fromStopId !== 'string' ||
+        typeof toStopId !== 'string' || !Number.isFinite(notBeforeSeconds)) return [];
+    const opts = options || {};
+    const minTransfer = Number.isFinite(opts.minTransferSeconds) ? Math.max(0, opts.minTransferSeconds) : 300;
+    const maxWait = Number.isFinite(opts.maxWaitSeconds) ? Math.max(minTransfer, opts.maxWaitSeconds) : 3600;
+    const firstLegs = rides.filter(r => r && r.from_stop_id === fromStopId &&
+      r.to_stop_id !== toStopId && Number.isFinite(r.departureSeconds) &&
+      Number.isFinite(r.arrivalSeconds) && r.departureSeconds >= notBeforeSeconds);
+    const results = [];
+    for (const first of firstLegs) {
+      for (const second of rides) {
+        if (!second || second.from_stop_id !== first.to_stop_id || second.to_stop_id !== toStopId ||
+            second.trip_id === first.trip_id || !Number.isFinite(second.departureSeconds) ||
+            !Number.isFinite(second.arrivalSeconds)) continue;
+        const wait = second.departureSeconds - first.arrivalSeconds;
+        if (wait < minTransfer || wait > maxWait || second.arrivalSeconds < second.departureSeconds) continue;
+        results.push({
+          from_stop_id: fromStopId,
+          transfer_stop_id: first.to_stop_id,
+          to_stop_id: toStopId,
+          firstLeg: first,
+          secondLeg: second,
+          transferWaitSeconds: wait,
+          departureSeconds: first.departureSeconds,
+          arrivalSeconds: second.arrivalSeconds,
+          totalSeconds: second.arrivalSeconds - first.departureSeconds
+        });
+      }
+    }
+    return results.sort((a, b) => a.arrivalSeconds - b.arrivalSeconds || a.totalSeconds - b.totalSeconds);
+  }
+
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys });
 });
