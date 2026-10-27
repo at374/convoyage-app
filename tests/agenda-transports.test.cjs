@@ -163,4 +163,22 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.deepEqual([...active].sort(), ['T1', 'T3']);
 }
 
-process.stdout.write('Agenda/SIBRA tests passed: 20 scenarios\\n');
+// 21. Recherche de trajet direct : même course active, ordre des arrêts et horaire minimal.
+{
+  const planner = require('../sibra-planner.js');
+  const rows = [
+    { trip_id: 'T1', stop_id: 'A', stop_sequence: '1', departure_time: '09:00:00', arrival_time: '09:00:00' },
+    { trip_id: 'T1', stop_id: 'B', stop_sequence: '2', departure_time: '09:12:00', arrival_time: '09:12:00' },
+    { trip_id: 'T1', stop_id: 'C', stop_sequence: '3', departure_time: '09:20:00', arrival_time: '09:20:00' },
+    { trip_id: 'T2', stop_id: 'A', stop_sequence: '1', departure_time: '08:00:00', arrival_time: '08:00:00' },
+    { trip_id: 'T2', stop_id: 'C', stop_sequence: '2', departure_time: '08:10:00', arrival_time: '08:10:00' },
+    { trip_id: 'T3', stop_id: 'C', stop_sequence: '1', departure_time: '09:05:00', arrival_time: '09:05:00' },
+    { trip_id: 'T3', stop_id: 'A', stop_sequence: '2', departure_time: '09:10:00', arrival_time: '09:10:00' }
+  ];
+  const rides = planner.directRides(rows, 'A', 'C', 9 * 3600, new Set(['T1', 'T2', 'T3']));
+  assert.equal(rides.length, 1);
+  assert.equal(rides[0].trip_id, 'T1');
+  assert.equal(rides[0].arrival_time, '09:20:00');
+}
+
+process.stdout.write('Agenda/SIBRA tests passed: 21 scenarios\\n');
