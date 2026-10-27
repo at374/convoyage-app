@@ -57,4 +57,21 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(result.items.length, 1);
 }
 
-process.stdout.write('Agenda tests passed: 5 scenarios\\n');
+// 6. L'interface doit rattacher les missions terminées récemment à la prochaine mission active.
+{
+  const fs = require('node:fs');
+  const app = fs.readFileSync(require('node:path').join(__dirname, '..', 'app.js'), 'utf8');
+  assert.ok(app.includes('const recentCompleted = A.items.filter'));
+  assert.ok(app.includes('const next = chainItems.slice(ci + 1).find'));
+  assert.ok(app.includes('x.etat === \'terminee\' || x.etat === \'passee\''));
+}
+
+// 7. L'interface ne doit pas annoncer un temps de transport confirmé sans données vérifiées.
+{
+  const fs = require('node:fs');
+  const app = fs.readFileSync(require('node:path').join(__dirname, '..', 'app.js'), 'utf8');
+  assert.ok(app.includes('Transport non confirmé — vérifiez vous-même.'));
+  assert.ok(app.includes('Temps disponible après trajet non déterminé.'));
+}
+
+process.stdout.write('Agenda tests passed: 7 scenarios\\n');
