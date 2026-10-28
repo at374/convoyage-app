@@ -812,17 +812,21 @@
               const fmt = ms => new Intl.DateTimeFormat('fr-FR', {
                 timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'
               }).format(new Date(ms));
+              result.style.whiteSpace = 'pre-line';
               result.textContent = answer.itineraries.length ?
-                answer.itineraries.slice(0,5).map(it =>
+                answer.itineraries.slice(0,5).map((it, index) =>
+                  'Trajet ' + (index + 1) + ' — ' +
                   fmt(it.startTime) + ' → ' + fmt(it.endTime) + ' · ' +
+                  Math.round(it.durationSeconds / 60) + ' min · ' +
                   it.transfers + ' correspondance(s) · ' +
-                  it.legs.map(leg =>
-                    (leg.route || leg.mode) + ' : ' +
+                  Math.round(it.walkMeters) + ' m à pied' +
+                  '\\n' + it.legs.map(leg =>
+                    '  ' + (leg.route || leg.mode) + ' : ' +
                     (leg.from || 'départ non précisé') + ' ' + fmt(leg.startTime) +
                     ' → ' + (leg.to || 'arrivée non précisée') + ' ' +
                     fmt(leg.endTime)
-                  ).join(' / ')
-                ).join(' ; ') +
+                  ).join('\\n')
+                ).join('\\n\\n') +
                 (regionalHome.precision === 'gps' ?
                   '. Destination GPS renseignée.' :
                   '. Destination approximative (centre de ville), pas votre adresse exacte.') +
