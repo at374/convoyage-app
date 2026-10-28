@@ -460,5 +460,29 @@
         a.arrivalSeconds - b.arrivalSeconds || a.departureSeconds - b.departureSeconds);
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, rankSafeReturns, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
+  // Join a dated interurban bus with a dated local bus at a shared hub.
+  // A transfer without a verified walking route is never feasible.
+  function assessInterurbanLocalTransfer(interurban, local, walkingRoute,
+    interurbanStop, localStop, minimumTransferSeconds = 300) {
+    if (!interurban || !local ||
+        ![interurban.departureSeconds, interurban.arrivalSeconds,
+          local.departureSeconds, local.arrivalSeconds].every(Number.isFinite) ||
+        interurban.arrivalSeconds < interurban.departureSeconds ||
+        local.arrivalSeconds < local.departureSeconds ||
+        !Number.isFinite(minimumTransferSeconds) || minimumTransferSeconds < 0) {
+      return { feasible: false, status: 'donnees_insuffisantes', transportConfirmed: false };
+    }
+    const walkingSeconds = verifiedWalkingSeconds(walkingRoute, interurbanStop, localStop);
+    if (walkingSeconds === null) {
+      return { feasible: false, status: 'correspondance_pietonne_non_verifiee',
+        transportConfirmed: false };
+    }
+    const availableSeconds = local.departureSeconds - interurban.arrivalSeconds;
+    const feasible = availableSeconds >= walkingSeconds + minimumTransferSeconds;
+    return { feasible, status: feasible ? 'correspondance_theorique_compatible' :
+      'correspondance_trop_courte', walkingSeconds, availableSeconds,
+      transportConfirmed: false };
+  }
+
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, rankSafeReturns, assessInterurbanLocalTransfer, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
 });
