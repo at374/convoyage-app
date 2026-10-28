@@ -395,3 +395,12 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.ok(app.includes("const date = (date =>"));
   assert.ok(app.includes("const nextDate = (date =>"));
 }
+
+// Repeated searches of the same GTFS day reuse the normalized tables on mobile.
+{
+  const feed = require('../sibra-feed.js');
+  const day = { stops: [['A','A',45.9,6.1],['B','B',45.91,6.11]], routes: [['R','R']], trips: [['T','R']], stop_times: [['T','A',1,'09:00:00','09:00:00'],['T','B',2,'09:10:00','09:10:00']] };
+  const first = feed.normalizeDay(day);
+  assert.strictEqual(feed.normalizeDay(day), first);
+  assert.notStrictEqual(feed.normalizeDay({...day}), first);
+}

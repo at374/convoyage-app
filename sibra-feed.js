@@ -95,7 +95,10 @@
 
   // Convert compact day arrays to GTFS objects consumed by CPSibraPlanner.
   // Validate referential integrity before exposing rows to route search.
+  const normalizedDayCache = new WeakMap();
   function normalizeDay(data) {
+    if (data && typeof data === 'object' && normalizedDayCache.has(data))
+      return normalizedDayCache.get(data);
     if (!data || !Array.isArray(data.stops) || !Array.isArray(data.routes) ||
         !Array.isArray(data.trips) || !Array.isArray(data.stop_times)) return null;
     const stops = data.stops.map(r => Array.isArray(r) && r.length >= 4 ?
@@ -116,7 +119,9 @@
     const stopIds = new Set(stops.map(s => s.stop_id));
     const tripIds = new Set(trips.map(t => t.trip_id));
     if (stopTimes.some(t => !stopIds.has(t.stop_id) || !tripIds.has(t.trip_id))) return null;
-    return { stops, trips, stop_times: stopTimes };
+    const normalized = { stops, trips, stop_times: stopTimes };
+    normalizedDayCache.set(data, normalized);
+    return normalized;
   }
 
   // Exact-stop, same-vehicle connections using only the selected day's trips.
