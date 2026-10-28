@@ -110,7 +110,7 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   const fs = require('node:fs');
   const path = require('node:path');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  assert.ok(html.indexOf('src="sibra-feed.js"') >= 0);
+  assert.ok(/src="sibra-feed\.js(?:\?[^\"]*)?"/.test(html));
   assert.match(html, /src="app\.js(?:\?[^"<>]*)?"/);
   assert.ok(html.indexOf('src="sibra-feed.js"') < html.search(/src="app\.js(?:\?[^"<>]*)?"/));
 }
