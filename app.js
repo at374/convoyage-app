@@ -1921,6 +1921,15 @@
             timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
           }).formatToParts(delivery);
           const get = type => Number(parts.find(x => x.type === type)?.value || 0);
+          const deliveryDayParts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
+          }).formatToParts(delivery);
+          const dayValue = type => deliveryDayParts.find(x => x.type === type)?.value || '';
+          const deliveryDay = dayValue('year') + '-' + dayValue('month') + '-' + dayValue('day');
+          if (deliveryDay !== y51ServiceDay) {
+            result.textContent = 'Date de livraison incohérente avec la date du service Y51 : vérification nécessaire.';
+            return;
+          }
           const available = 11 * 60 + 43 - get('hour') * 60 - get('minute');
           const remaining = available - n;
           const latestDeparture = 11 * 60 + 43 - n;
