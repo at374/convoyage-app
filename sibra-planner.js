@@ -256,6 +256,38 @@
   }
 
   /**
+   * Request a walking route from an explicitly configured OSRM foot service.
+   * No default public driving endpoint: an absent/invalid configuration fails closed.
+   * Network errors, missing geometry and non-pedestrian profiles remain unverified.
+   */
+  async function requestPedestrianOSRM(from, to, fetchImpl, serviceBaseUrl) {
+    if (!Array.isArray(from) || !Array.isArray(to) ||
+        ![from, to].every(p => p.length === 2 &&
+          validCoordinate(Number(p[1]), Number(p[0]))) ||
+        typeof fetchImpl !== 'function' ||
+        typeof serviceBaseUrl !== 'string' ||
+        !/^https:\/\//.test(serviceBaseUrl)) return null;
+    let endpoint;
+    try {
+      const base = new URL(serviceBaseUrl);
+      if (base.username || base.password || base.search || base.hash ||
+          !base.pathname.replace(/\/$/, '').endsWith('/route/v1/foot')) return null;
+      const path = base.pathname.replace(/\/$/, '') + '/' +
+        from.map(Number).join(',') + ';' + to.map(Number).join(',');
+      endpoint = new URL(base.origin + path);
+      endpoint.searchParams.set('overview', 'full');
+      endpoint.searchParams.set('geometries', 'geojson');
+    } catch (_) { return null; }
+    try {
+      const response = await fetchImpl(endpoint.toString());
+      if (!response || !response.ok || typeof response.json !== 'function') return null;
+      const data = await response.json();
+      const route = pedestrianRouteFromOSRM(data, 'foot');
+      return route && verifiedWalkingSeconds(route, from, to) !== null ? route : null;
+    } catch (_) { return null; }
+  }
+
+  /**
    * A pedestrian leg is usable only when a route provider explicitly verified
    * a walkable itinerary. Geodesic distance alone never satisfies this check.
    */
@@ -363,5 +395,5 @@
     return { valid: errors.length === 0, errors };
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, parseGtfsCsv, validateGtfsTables });
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
 });
