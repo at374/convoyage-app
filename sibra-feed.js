@@ -56,7 +56,7 @@
     if (!isISODate(day) || typeof fetchImpl !== 'function') {
       return { usable: false, status: 'parametres_invalides', transportConfirmed: false };
     }
-    const base = typeof basePath === 'string' ? basePath.replace(/\\/$/, '') : 'data/sibra';
+    const base = typeof basePath === 'string' ? basePath.replace(/\/$/, '') : 'data/sibra';
     try {
       const response = await fetchImpl(base + '/sibra-' + day + '.json');
       if (!response || !response.ok) {
