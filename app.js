@@ -1904,6 +1904,21 @@
         const target = Array.from(backSection).find(el =>
           el.querySelector('strong')?.textContent?.includes('3. Retour au domicile'));
         (target || panel).appendChild(estimate);
+        const walkingRoute = document.createElement('a');
+        walkingRoute.textContent = '🚶 Ouvrir le trajet piéton précis depuis la livraison';
+        walkingRoute.target = '_blank';
+        walkingRoute.rel = 'noopener noreferrer';
+        if (to) {
+          walkingRoute.href = 'https://www.google.com/maps/dir/?api=1&origin=' +
+            encodeURIComponent(to) + '&destination=' +
+            encodeURIComponent('École Saint-François, Albertville, France') +
+            '&travelmode=walking';
+          estimate.appendChild(walkingRoute);
+        } else {
+          const missingAddress = document.createElement('div');
+          missingAddress.textContent = 'Adresse exacte de livraison absente : trajet piéton non calculable.';
+          estimate.appendChild(missingAddress);
+        }
         const input = estimate.querySelector('#cpY51WalkMinutes');
         const result = estimate.querySelector('#cpY51WalkResult');
         input.addEventListener('input', () => {
