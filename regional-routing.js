@@ -107,7 +107,8 @@
         planData.itineraries : Array.isArray(planData.edges) ?
         planData.edges.map(edge => edge && edge.node).filter(Boolean) : null);
       if (!Array.isArray(itineraries)) throw new Error('Reponse itineraires invalide');
-      const validItineraries = itineraries.map(parseItinerary)
+      const validItineraries = itineraries.filter(it => it && typeof it === 'object')
+        .map(parseItinerary)
         .filter(it => Number.isFinite(it.startTime) &&
           Number.isFinite(it.endTime) && it.endTime >= it.startTime &&
           it.startTime >= date.getTime() - 60000 &&
