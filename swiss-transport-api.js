@@ -59,7 +59,7 @@
     const results = validConnections.map(c=>({
       departure:c.from && c.from.departure || null,
       arrival:c.to && c.to.arrival || null,
-      sections:Array.isArray(c.sections)?c.sections.map(s=>({
+      sections:Array.isArray(c.sections)?c.sections.filter(s=>s && typeof s==='object').map(s=>({
         mode:s.walk?'WALK':s.journey && s.journey.category || 'UNKNOWN',
         line:s.journey && s.journey.number || null,
         from:s.departure && s.departure.station && s.departure.station.name || null,
