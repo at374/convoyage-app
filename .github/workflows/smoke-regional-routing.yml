@@ -1,0 +1,52 @@
+name: Smoke test regional OpenTripPlanner
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  routing-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      ROUTING_ENDPOINT: ${{ secrets.REGIONAL_ROUTING_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate endpoint configuration
+        run: |
+          if [ -z "$ROUTING_ENDPOINT" ]; then
+            echo "::error::Set REGIONAL_ROUTING_URL to the deployed HTTPS OTP GraphQL endpoint."
+            exit 1
+          fi
+      - name: Query real regional route (Annecy to Albertville)
+        shell: bash
+        run: |
+          node <<'NODE'
+          const routing = require('./regional-routing.js');
+          (async () => {
+            const date = new Date();
+            date.setUTCDate(date.getUTCDate() + 1);
+            date.setUTCHours(8,0,0,0);
+            const result = await routing.plan({
+              endpoint:process.env.ROUTING_ENDPOINT,
+              from:{lat:45.8992,lon:6.1294},
+              to:{lat:45.6755,lon:6.3927},
+              departure:date.toISOString(),
+              fetcher:fetch
+            });
+            console.log(JSON.stringify({
+              source:result.source, queriedAt:new Date().toISOString(),
+              itineraries:result.itineraries.length,
+              departures:result.itineraries.map(x=>new Date(x.startTime).toISOString()),
+              transportConfirmed:result.transportConfirmed
+            },null,2));
+            if (!result.itineraries.length) {
+              throw Error('No routes returned: check feed dates, coverage and server graph');
+            }
+            if (result.transportConfirmed !== false) {
+              throw Error('Theoretical routes must not be marked confirmed');
+            }
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          NODE
