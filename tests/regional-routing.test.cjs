@@ -121,3 +121,21 @@ test('parses ISO 8601 timestamps and discards null leg times', async () => {
   assert.equal(result.itineraries.length,1);
   assert.equal(result.itineraries[0].startTime,Date.parse(iso.startTime));
 });
+
+test('rejects overlapping or out-of-range transport legs', async () => {
+  const first = {...itinerary.legs[0],endTime:1793181000000};
+  const goodSecond = {...itinerary.legs[0],
+    startTime:1793181000000,endTime:1793182800000};
+  const overlapping = {...goodSecond,startTime:1793180900000};
+  const outOfRange = {...goodSecond,endTime:1793184000000};
+  const response = await routing.plan({...base,fetcher:async()=>({
+    ok:true,json:async()=>({data:{planConnection:{edges:[
+      {node:{...itinerary,legs:[first,overlapping]}},
+      {node:{...itinerary,legs:[first,outOfRange]}},
+      {node:{...itinerary,legs:[first,goodSecond]}}
+    ]}}})
+  })});
+  assert.equal(response.itineraries.length,1);
+  assert.equal(response.itineraries[0].legs.length,2);
+  assert.equal(response.itineraries[0].transportConfirmed,false);
+});
