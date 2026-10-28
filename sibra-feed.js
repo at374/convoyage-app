@@ -150,7 +150,6 @@
     };
     const found = [];
     for (const [tripId, rows] of byTrip) {
-      rows.sort((a, b) => a.stop_sequence - b.stop_sequence);
       for (let i = 0; i < rows.length; i++) {
         if (rows[i].stop_id !== fromStopId) continue;
         const departureSeconds = toSeconds(rows[i].departure_time);
@@ -241,7 +240,6 @@
     };
     const firstLegs = [], secondLegs = [];
     for (const [tripId, rows] of byTrip) {
-      rows.sort((a, b) => a.stop_sequence - b.stop_sequence);
       for (let i = 0; i < rows.length; i++) {
         for (let j = i + 1; j < rows.length; j++) {
           const departureSeconds = toSeconds(rows[i].departure_time);
