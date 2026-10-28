@@ -1740,8 +1740,13 @@
           encodeURIComponent(a) + '&destination=' + encodeURIComponent(b);
         const link = (mode, label) => '<a href="' + esc(base + '&travelmode=' + mode) +
           '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+        const transitExtra = '<a href="' + esc('https://www.sncf-connect.com/app/home/search' ) +
+          '" target="_blank" rel="noopener noreferrer">🚆 SNCF Connect</a>' +
+          '<a href="https://www.flixbus.fr/" target="_blank" rel="noopener noreferrer">🚌 FlixBus</a>' +
+          '<a href="https://www.blablacar.fr/bus" target="_blank" rel="noopener noreferrer">🚌 BlaBlaCar Bus</a>';
         return '<div class="liensTr">' +
           link('transit', '🚌 Bus / train') +
+          transitExtra +
           link('walking', '🚶 Marche') +
           link('bicycling', '🚲 Vélo (repère trottinette, à vérifier)') +
           '</div>' +
