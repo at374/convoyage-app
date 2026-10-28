@@ -745,7 +745,7 @@
         const interval = Number.isFinite(chain.intervalMin) ? '<div><strong>' + (chain.intervalEstimated ? 'Intervalle estimé entre missions :' : 'Intervalle entre missions :') + '</strong> ' + esc(String(chain.intervalMin)) + ' min</div>' : '';
         const conflictNote = chain.conflictType === 'chevauchement' ? '⚠️ Chevauchement horaire détecté.' : (chain.conflictType ? '⚠️ Enchaînement potentiellement trop juste : vérifiez le trajet et la marge de sécurité.' : 'Transport non confirmé — vérifiez vous-même. Temps disponible après trajet non déterminé.');
         const note = chain.blocked ? 'Enchaînement à vérifier : une mission acceptée n’a pas de date exploitable.' : (!chain.next ? 'Aucune prochaine mission prévue.' : conflictNote);
-        html += '<div class="carte cpAgendaChain" data-sibra-date="' + esc(chain.next && Number.isFinite(chain.next.debut) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(chain.next.debut)) : new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' })) + '" style="margin-top:-6px;border-top:0;border-radius:0 0 12px 12px;font-size:.94em"><strong>↔ Enchaînement des missions</strong><div>' + esc(title) + '</div>' + interval + '<div class="doux">' + esc(note) + '</div></div>';
+        html += '<div class="carte cpAgendaChain" data-sibra-date="' + esc(chain.next && Number.isFinite(chain.next.debut) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(chain.next.debut)) : (x.fin && Number.isFinite(x.fin.t) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(x.fin.t)) : '')) + '" style="margin-top:-6px;border-top:0;border-radius:0 0 12px 12px;font-size:.94em"><strong>↔ Enchaînement des missions</strong><div>' + esc(title) + '</div>' + interval + '<div class="doux">' + esc(note) + '</div></div>';
       }
     });
     if (caches || etat.agendaTout) html += `<button id="agTout" class="second" style="width:100%;margin-top:10px">${etat.agendaTout ? 'Masquer les missions passées' : 'Afficher les ' + caches + ' mission(s) passée(s) de plus de 7 jours'}</button>`;
@@ -760,7 +760,8 @@
         button.type = 'button';
         button.className = 'second';
         button.style.marginTop = '8px';
-        const requestedDate = card.getAttribute('data-sibra-date') || todayParis;
+        const requestedDate = card.getAttribute('data-sibra-date');
+        if (!requestedDate) return;
         button.textContent = '🚌 Consulter les horaires SIBRA du ' + requestedDate;
         const result = document.createElement('div');
         result.className = 'doux';
