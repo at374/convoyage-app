@@ -207,4 +207,15 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(planner.assessMissionArrival(9 * 3600, 10 * 3600, NaN, 30 * 60).feasible, false);
 }
 
-process.stdout.write('Agenda/SIBRA tests passed: 23 scenarios\\n');
+// 24. Une distance à vol d'oiseau ne remplace pas un trajet piéton vérifié.
+{
+  const planner = require('../sibra-planner.js');
+  const start = [6.1, 45.9], end = [6.11, 45.91];
+  const route = { status: 'VERIFIE_PIETON', provider: 'test-router',
+    duration_seconds: 720, distance_meters: 950, geometry: [start, end] };
+  assert.equal(planner.verifiedWalkingSeconds(route, start, end), 720);
+  assert.equal(planner.verifiedWalkingSeconds({ ...route, status: 'ESTIME' }, start, end), null);
+  assert.equal(planner.verifiedWalkingSeconds(route, start, [6.3, 46.0]), null);
+}
+
+process.stdout.write('Agenda/SIBRA tests passed: 24 scenarios\\n');
