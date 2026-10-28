@@ -55,14 +55,16 @@
     const localDate = dateParts.year + '-' + dateParts.month + '-' + dateParts.day;
     const localTime = new Intl.DateTimeFormat('en-GB', { timeZone:'Europe/Paris',
       hour:'2-digit', minute:'2-digit', hourCycle:'h23' }).format(date);
+    // OpenTripPlanner 2.x uses a planConnection query. The old plan query
+    // is retained only for installations exposing the legacy schema.
     const query = `query RegionalRoute($from: Location!, $to: Location!, $date: Date!, $time: Time!) {
-      plan(from: $from, to: $to, date: $date, time: $time,
-        numItineraries: 12, transportModes: [{mode: WALK},{mode: TRANSIT}]) {
-        itineraries {
+      planConnection(origin: $from, destination: $to, dateTime: {date: $date, time: $time},
+        first: 12, modes: {transportModes: [{mode: WALK},{mode: TRANSIT}]}) {
+        edges { node {
           startTime endTime duration walkDistance numberOfTransfers
           legs { mode startTime endTime distance
             from { name } to { name } route { shortName longName } }
-        }
+        }}
       }
     }`;
     const controller = typeof AbortController === 'function' ? new AbortController() : null;
@@ -83,7 +85,8 @@
       if (payload.errors && payload.errors.length) {
         throw new Error('Schema regional incompatible : '+String(payload.errors[0].message || 'GraphQL'));
       }
-      const planData = payload.data && payload.data.plan;
+      const planData = payload.data &&
+        (payload.data.planConnection || payload.data.plan);
       // OTP 2 installations differ: some expose plan.itineraries, others
       // expose plan.edges[].node. Accept both without inventing departures.
       const itineraries = planData && (Array.isArray(planData.itineraries) ?
