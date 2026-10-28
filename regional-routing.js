@@ -12,6 +12,11 @@
       Math.abs(Number(point.lat)) <= 90 && Math.abs(Number(point.lon)) <= 180;
   }
   function epochMilliseconds(value) {
+    if (value === null || value === undefined || value === '') return NaN;
+    if (typeof value === 'string' && /[Tt]/.test(value)) {
+      const parsed = Date.parse(value);
+      return Number.isFinite(parsed) ? parsed : NaN;
+    }
     const n = Number(value);
     if (!Number.isFinite(n) || n <= 0) return NaN;
     return n < 100000000000 ? n * 1000 : n;
