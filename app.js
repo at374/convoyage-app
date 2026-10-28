@@ -2068,19 +2068,21 @@
                   const n = key => Number(p.find(q => q.type === key)?.value || 0);
                   return (n('hour') * 60 + n('minute') - securityMarginMin) * 60;
                 })();
-                const candidates = journeys.filter(j => j.arrivalSeconds <= latestArrival).slice(0, 5);
+                const candidates = journeys.filter(j => j.arrivalSeconds +
+                  Math.ceil(j.destinationStop.straightLineMeters / 1.2) <= latestArrival).slice(0, 5);
                 // Only search a one-change alternative if no direct service fits.
                 const changes = !candidates.length &&
                   typeof window.CPSibraFeed.coordinateOneTransferDayJourneys === 'function' ?
                   window.CPSibraFeed.coordinateOneTransferDayJourneys(
                     result.data, startLat, startLon, endLat, endLon, earliest,
                     { radiusMeters: 600, minTransferSeconds: 300, limit: 10 })
-                    .filter(j => j.arrivalSeconds <= latestArrival).slice(0, 3) : [];
+                    .filter(j => j.arrivalSeconds +
+                      Math.ceil(j.destinationStop.straightLineMeters / 1.2) <= latestArrival).slice(0, 3) : [];
                 auto.textContent = candidates.length ?
                   '🚌 Jonction SIBRA automatique — horaires théoriques : ' +
                   candidates.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
                     ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
-                  '. Arrêts à 600 m maximum à vol d’oiseau. Marche, tarifs et perturbations non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                  '. Arrêts à 600 m maximum à vol d’oiseau ; marche minimale à 1,2 m/s prise en compte pour la marge de 30 min, trajet piéton non vérifié. Tarifs et perturbations non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                   (changes.length ?
                     '🚌 Jonction SIBRA avec 1 correspondance (horaires théoriques) : ' +
                     changes.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
