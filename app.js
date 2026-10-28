@@ -843,7 +843,10 @@
                 stamp + '. ' + (unique.length ?
                   'École Saint-François → Annecy gare routière : ' +
                   unique.slice(0, 8).map(ride => clock(ride.departureSeconds) +
-                    ' → ' + clock(ride.arrivalSeconds)).join(' ; ') + '.' :
+                    ' → ' + clock(ride.arrivalSeconds) +
+                    ' (temps disponible avant le car : ' +
+                    Math.floor((ride.departureSeconds - earliestY51) / 60) +
+                    ' min, trajet piéton et marge à déduire)').join(' ; ') + '.' :
                   'Aucun départ après la fin de mission identifié entre École Saint-François et Annecy gare routière' +
                   (earliestY51 === null ? ' (heure de fin de mission indisponible)' : '') +
                   ' : vérifiez les noms exacts des arrêts et les horaires GTFS.') +
