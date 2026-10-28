@@ -1980,7 +1980,7 @@
             return;
           }
           const actualValue = actualDeliveryInput.value;
-          const actualMatch = /^(\\d{2}):(\\d{2})$/.exec(actualValue);
+          const actualMatch = /^([0-2][0-9]):([0-5][0-9])$/.exec(actualValue);
           const finishMinutes = actualMatch ?
             Number(actualMatch[1]) * 60 + Number(actualMatch[2]) :
             get('hour') * 60 + get('minute');
