@@ -574,3 +574,21 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   assert.match(app, /aucun trajet direct ou avec une correspondance identifié/);
 }
+
+
+// A bus connection is only timetable-compatible when both walking legs are verified.
+{
+  const planner = require('../sibra-planner.js');
+  const a = [6.1, 45.9], b = [6.101, 45.901], c = [6.2, 45.95], d = [6.201, 45.951];
+  const route = (from, to, seconds) => ({
+    status: 'VERIFIE_PIETON', provider: 'test-foot', duration_seconds: seconds,
+    distance_meters: 120, geometry: [from, to]
+  });
+  const check = (first, last) => planner.assessVerifiedBusConnection(
+    8 * 3600, 8 * 3600 + 600, 9 * 3600, 10 * 3600,
+    first, a, b, last, c, d, 1800);
+  assert.equal(check(route(a, b, 300), route(c, d, 300)).feasible, true);
+  assert.equal(check(route(a, b, 700), route(c, d, 300)).feasible, false);
+  assert.equal(check(route(a, b, 300), null).status, 'marches_non_verifiees');
+  assert.equal(check(route(a, b, 300), route(c, d, 300)).transportConfirmed, false);
+}
