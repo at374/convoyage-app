@@ -506,6 +506,26 @@
       a.departureSeconds - b.departureSeconds);
   }
 
+  // Extract date-specific trips for a named interurban route from validated GTFS.
+  // This requires explicit route and stop IDs from an official imported feed.
+  function datedInterurbanRides(tables, serviceDate, routeId, boardingStopId,
+    arrivalStopId, notBeforeSeconds = 0) {
+    if (!gtfsDateParts(serviceDate) || !tables ||
+        typeof routeId !== 'string' || !routeId ||
+        typeof boardingStopId !== 'string' || !boardingStopId ||
+        typeof arrivalStopId !== 'string' || !arrivalStopId ||
+        !Number.isFinite(notBeforeSeconds) || notBeforeSeconds < 0 ||
+        !validateGtfsTables(tables).valid ||
+        !tables.stops.some(s => s && s.stop_id === boardingStopId) ||
+        !tables.stops.some(s => s && s.stop_id === arrivalStopId)) return [];
+    const active = activeServiceIds(tables.calendar, tables.calendar_dates, serviceDate);
+    const routeTrips = tables.trips.filter(t => t && String(t.route_id) === routeId);
+    const ids = activeTripIdsForDate(routeTrips, active);
+    return directRides(tables.stop_times, boardingStopId, arrivalStopId,
+      notBeforeSeconds, ids).map(ride => ({ ...ride, routeId, serviceDate,
+        transportConfirmed: false }));
+  }
+
   // Validate the walk from the completed mission to the interurban stop.
   // An unverified pedestrian route cannot establish a feasible departure.
   function assessInterurbanBoarding(missionEndSeconds, interurban, walkingRoute,
@@ -584,5 +604,5 @@
       transportConfirmed: false };
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, rankSafeReturns, assessInterurbanLocalTransfer, assessInterurbanBoarding, combineInterurbanLocal, combineDatedInterurbanLocal, assessDatedInterurbanLocalReturn, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, rankSafeReturns, datedInterurbanRides, assessInterurbanLocalTransfer, assessInterurbanBoarding, combineInterurbanLocal, combineDatedInterurbanLocal, assessDatedInterurbanLocalReturn, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
 });
