@@ -855,6 +855,8 @@
           }
           const formatTime = seconds => String(Math.floor(seconds / 3600) % 24).padStart(2, '0') +
             ':' + String(Math.floor(seconds / 60) % 60).padStart(2, '0');
+          const stopDistance = stop => stop && Number.isFinite(stop.straightLineMeters) ?
+            ' (à ' + stop.straightLineMeters + ' m à vol d’oiseau, marche à vérifier)' : '';
           // Route piétonne : uniquement un service foot HTTPS configuré explicitement.
           // Une durée à vol d'oiseau ne valide jamais une correspondance.
           const planner = window.CPSibraPlanner;
@@ -895,8 +897,8 @@
             journeys.slice(0, 3).map(j => (j.transferStopId ? 'Correspondance à ' +
               ((result.data.stops.find(stop => String(stop[0]) === j.transferStopId) || [null, j.transferStopId])[1]) +
               ' (attente ' + Math.round(j.transferWaitSeconds / 60) + ' min) : ' : 'Direct : ') +
-              j.originStop.name + ' ' +
-              formatTime(j.departureSeconds) + ' → ' + j.destinationStop.name + ' ' +
+              j.originStop.name + stopDistance(j.originStop) + ' ' +
+              formatTime(j.departureSeconds) + ' → ' + j.destinationStop.name + stopDistance(j.destinationStop) + ' ' +
               formatTime(j.arrivalSeconds) + ' (écart théorique avant prise en charge : ' + Math.floor((nextSeconds - j.arrivalSeconds) / 60) + ' min, hors marche et marge de sécurité)').join(' ; ') +
             '. Transport non confirmé — vérifiez vous-même.';
         }).catch(() => {
