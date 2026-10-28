@@ -72,13 +72,13 @@ if [[ "$mode" == build ]]; then
   rm -rf "$previous"
   echo "Graph created. Run this script with 'serve' to start the router."
 else
-  [[ -s "$work/graph.obj" ]] || { echo "Graph missing; run build first" >&2; exit 1; }
   command -v flock >/dev/null || { echo "flock is required for safe serving" >&2; exit 1; }
   exec 8>"$work/.serve.lock"
   if ! flock -n -s 8; then
     echo "Cannot start router while graph is being replaced" >&2
     exit 1
   fi
+  [[ -s "$work/graph.obj" ]] || { echo "Graph missing; run build first" >&2; exit 1; }
   echo "Starting OTP locally; verify its GraphQL endpoint and schema before configuring the app."
   java ${OTP_JAVA_OPTS:--Xmx8G} -jar "$OTP_JAR" --load --serve "$work"
 fi
