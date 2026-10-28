@@ -26,9 +26,16 @@
     const url=buildUrl(options);
     const fetcher=options.fetcher || root.fetch;
     if(typeof fetcher!=='function') throw new Error('Réseau indisponible');
-    const response=await fetcher(url);
-    if(!response.ok) throw new Error('API suisse indisponible ('+response.status+')');
-    const data=await response.json();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    let data;
+    try {
+      const response = await fetcher(url, {signal:controller.signal, cache:'no-store'});
+      if (!response.ok) throw new Error('API suisse indisponible ('+response.status+')');
+      data = await response.json();
+    } finally {
+      clearTimeout(timeout);
+    }
     if(!data || !Array.isArray(data.connections)) throw new Error('Réponse API suisse invalide');
     return data.connections.map(c=>({
       departure:c.from && c.from.departure || null,
