@@ -1764,6 +1764,10 @@
           (when ? '<div class="doux">Heure de référence : ' + esc(formatParis(when)) +
           ' · sélectionner la date et l’heure exactes dans le calculateur externe.</div>' : '');
       };
+      // Un moteur régional ne peut calculer qu'avec des coordonnées et un endpoint configuré.
+      // Ne jamais transformer une recherche externe en trajet prétendument confirmé.
+      const regionalEngineReady = !!(window.CPRegionalRouting &&
+        typeof window.CPRegionalRouting.plan === 'function');
       const endTime = Date.parse(m.delivery_end || m.delivery_start || '');
       const next = Number.isFinite(endTime) ? etat.missions.filter(x =>
         x !== m && (x.kind === 'acceptee' || x.status === 'acceptee') &&
@@ -1825,6 +1829,10 @@
             '&travelmode=walking') +
           '" target="_blank" rel="noopener noreferrer">marche vers École Saint-François</a>. ' +
           'Départ de 11 h 48 non confirmé pour cette date.</div>' : '') + '</div>' +
+        '<p class="doux">Moteur régional : ' +
+        (regionalEngineReady ? 'adaptateur disponible, calcul non connecté à cette fiche.' :
+          'non chargé.') +
+        ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
         '<p class="doux">Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
       bt.insertAdjacentElement('afterend', panel);
       bt.setAttribute('aria-controls', panel.id);
