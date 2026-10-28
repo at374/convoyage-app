@@ -246,4 +246,24 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(planner.validateGtfsTables({ ...tables, stop_times: [] }).valid, false);
 }
 
-process.stdout.write('Agenda/SIBRA tests passed: 26 scenarios\\n');
+// 27. Le chargeur GTFS journalier ne doit jamais confirmer un trajet théorique.
+(async () => {
+  const feed = require('../sibra-feed.js');
+  const day = '2026-10-28';
+  const valid = { date: day, transportConfirmed: false, realtime: false,
+    stops: [], routes: [], trips: [], stop_times: [] };
+  const loaded = await feed.loadDay(day, async url => {
+    assert.equal(url, 'data/sibra/sibra-2026-10-28.json');
+    return { ok: true, json: async () => valid };
+  });
+  assert.equal(loaded.usable, true);
+  assert.equal(loaded.transportConfirmed, false);
+  const absent = await feed.loadDay(day, async () => ({ ok: false }));
+  assert.equal(absent.status, 'horaires_jour_absents');
+  const unsafe = await feed.loadDay(day, async () => ({
+    ok: true, json: async () => ({ ...valid, transportConfirmed: true })
+  }));
+  assert.equal(unsafe.usable, false);
+  assert.equal((await feed.loadDay('2026-02-30', async () => ({ ok: true }))).usable, false);
+  process.stdout.write('Agenda/SIBRA tests passed: 27 scenarios\\n');
+})().catch(error => { console.error(error); process.exitCode = 1; });
