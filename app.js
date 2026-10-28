@@ -861,15 +861,22 @@
           const addStopsMapLinks = options => {
             for (const [index, journey] of options.slice(0, 3).entries()) {
               if (!journey || !journey.originStop || !journey.destinationStop) continue;
-            const a = journey.originStop, b = journey.destinationStop;
-            if (![a.latitude, a.longitude, b.latitude, b.longitude].every(Number.isFinite)) continue;
+              const a = journey.originStop, b = journey.destinationStop;
+              if (![a.latitude, a.longitude, b.latitude, b.longitude].every(Number.isFinite)) continue;
+              const transfer = journey.transferStopId && result.data.stops.find(stop => String(stop[0]) === String(journey.transferStopId));
+              const transferLat = transfer && Number(transfer[2]);
+              const transferLon = transfer && Number(transfer[3]);
+              const via = Number.isFinite(transferLat) && Number.isFinite(transferLon) &&
+                Math.abs(transferLat) <= 90 && Math.abs(transferLon) <= 180 ?
+                '&waypoints=' + encodeURIComponent(transferLat + ',' + transferLon) : '';
             const link = document.createElement('a');
             link.href = 'https://www.google.com/maps/dir/?api=1&origin=' +
               encodeURIComponent(a.latitude + ',' + a.longitude) + '&destination=' +
-              encodeURIComponent(b.latitude + ',' + b.longitude) + '&travelmode=transit';
+              encodeURIComponent(b.latitude + ',' + b.longitude) + via + '&travelmode=transit';
             link.target = '_blank';
             link.rel = 'noopener noreferrer';
-            link.textContent = '🗺️ Trajet ' + (index + 1) + ' : voir les arrêts sur la carte (à vérifier)';
+              link.textContent = '🗺️ Trajet ' + (index + 1) + (via ? ' (avec correspondance)' : '') +
+                ' : voir les arrêts sur la carte (à vérifier)';
             link.style.display = 'block';
             link.style.marginTop = '6px';
             line.appendChild(link);
