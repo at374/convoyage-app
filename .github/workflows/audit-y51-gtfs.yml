@@ -54,7 +54,21 @@ jobs:
               "calendar_dates_present": "calendar_dates.txt" in names,
               "status": "theoretical_schedule_only_not_live_confirmed"
           }
+          if not trips or not y51_times:
+              raise RuntimeError("Y51 contains no usable trips or stop times")
+          # Export only the route-specific GTFS tables; retain the calendar exceptions.
           os.makedirs("audit-output", exist_ok=True)
+          subset = {
+              "routes": y51,
+              "trips": trips,
+              "stop_times": y51_times,
+              "stops": [s for s in stops if s.get("stop_id") in used_stops],
+              "calendar": [c for c in rows("calendar.txt") if c.get("service_id") in {t.get("service_id") for t in trips}] if "calendar.txt" in names else [],
+              "calendar_dates": [c for c in rows("calendar_dates.txt") if c.get("service_id") in {t.get("service_id") for t in trips}] if "calendar_dates.txt" in names else []
+          }
+          with open("audit-output/y51-gtfs-subset.json", "w", encoding="utf-8") as f:
+              json.dump(subset, f, ensure_ascii=False, separators=(",", ":"))
+
           with open("audit-output/y51-gtfs-audit.json", "w", encoding="utf-8") as f:
               json.dump(summary, f, ensure_ascii=False, indent=2)
           print("Y51 trips:", len(trips), "stop times:", len(y51_times), "stops:", len(summary["stops"]))
