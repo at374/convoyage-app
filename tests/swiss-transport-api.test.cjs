@@ -46,5 +46,14 @@ assert.equal(summer.searchParams.get('time'),'10:00');
  assert.equal(firstResults.diagnostic.received,1);
  assert.equal(firstResults.diagnostic.valid,1);
  assert.equal(second.diagnostic.received,0);
+ const originalFetch=globalThis.fetch;
+ try {
+   globalThis.fetch=undefined;
+   await assert.rejects(()=>swiss.plan({from:'Genève',to:'Lausanne',when:'2026-12-01T10:00:00+01:00'}),/Réseau indisponible/);
+   assert.equal(swiss.lastCheck.status,'error');
+   assert.equal(swiss.lastCheck.received,0);
+ } finally {
+   globalThis.fetch=originalFetch;
+ }
  console.log('Swiss transport adapter: URL, timezones, walking and response assertions passed');
 })().catch(e=>{console.error(e);process.exitCode=1;});
