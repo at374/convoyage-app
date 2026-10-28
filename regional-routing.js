@@ -120,6 +120,7 @@
           Number.isFinite(it.walkMeters) && it.walkMeters >= 0 &&
           Number.isInteger(it.transfers) && it.transfers >= 0 &&
           it.legs.every((leg, index) => leg !== null &&
+            String(leg.mode).trim().length > 0 &&
             Number.isFinite(leg.distanceMeters) && leg.distanceMeters >= 0 &&
             Number.isFinite(leg.startTime) &&
             Number.isFinite(leg.endTime) && leg.endTime >= leg.startTime &&
