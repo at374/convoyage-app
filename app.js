@@ -1778,8 +1778,8 @@
         'Le service de 11 h 48 à École Saint-François n’est pas validé pour cette date et ce type de jour. Vérifier la grille applicable.';
       const y51WalkingWindow = (() => {
         if (!y51ScheduleApplies) return '';
-        const end = new Date(m.delivery_end || m.delivery_start || '');
-        if (!Number.isFinite(end.getTime())) return 'Heure de livraison absente : temps d’approche impossible à calculer.';
+        const end = new Date(m.delivery_end || '');
+        if (!Number.isFinite(end.getTime())) return 'Heure de fin de livraison absente : temps d’approche impossible à calculer.';
         const parts = new Intl.DateTimeFormat('en-GB', {
           timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
         }).formatToParts(end);
@@ -1938,7 +1938,7 @@
         input.addEventListener('input', () => {
           const n = Number(input.value);
           if (input.value === '') {
-            try { window.localStorage.removeItem(walkCacheKey); } catch (_) {}
+            try { if (walkCacheKey) window.localStorage.removeItem(walkCacheKey); } catch (_) {}
             result.textContent = 'Temps de marche non renseigné : aucune correspondance validée.';
             return;
           }
