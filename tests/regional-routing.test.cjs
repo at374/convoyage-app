@@ -24,6 +24,9 @@ test('rejects missing coordinates and insecure routing endpoints', async () => {
   assert.equal(routing.validPoint({lat:null,lon:6.1}),false);
   assert.equal(routing.validPoint({lat:'',lon:6.1}),false);
   assert.equal(routing.validPoint({lat:45.9,lon:6.1}),true);
+  assert.equal(routing.validPoint({lat:0,lon:0}),false);
+  assert.equal(routing.validPoint({lat:91,lon:6.1}),false);
+  assert.equal(routing.validPoint({lat:45.9,lon:181}),false);
   await assert.rejects(routing.plan({...base,from:{lat:null,lon:6.1},fetcher:async()=>{}}),
     /Coordonnees/);
   await assert.rejects(routing.plan({...base,endpoint:'http://localhost:8080',fetcher:async()=>{}}),
