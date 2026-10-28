@@ -804,11 +804,13 @@
               const stamp = data.checked_at_utc ? new Date(data.checked_at_utc).toLocaleString('fr-FR') : 'inconnue';
               // Select real stop IDs, preserving trip order and calendar exceptions.
               const normalized = value => String(value || '').normalize('NFD')
-                .replace(/[\\u0300-\\u036f]/g, '').toLowerCase();
-              const boarding = data.stops.filter(stop => /ecole saint.?francois/.test(normalized(stop.stop_name)) &&
-                /albertville/.test(normalized(stop.stop_name)));
-              const annecy = data.stops.filter(stop => /annecy/.test(normalized(stop.stop_name)) &&
-                /gare|routiere/.test(normalized(stop.stop_name)));
+                .replace(/[\u0300-\u036f]/g, '').toLowerCase();
+              const stopLabel = stop => normalized([stop.stop_name, stop.stop_desc,
+                stop.stop_code, stop.stop_id].filter(Boolean).join(' '));
+              const boarding = data.stops.filter(stop =>
+                /ecole[\\s-]*st[\\s-]*francois|ecole[\\s-]*saint[\\s-]*francois/.test(stopLabel(stop)));
+              const annecy = data.stops.filter(stop =>
+                /annecy/.test(stopLabel(stop)) && /gare|routiere/.test(stopLabel(stop)));
               const rides = [];
               if (typeof planner.datedInterurbanRides === 'function') {
                 for (const route of data.routes) for (const from of boarding) for (const to of annecy) {
