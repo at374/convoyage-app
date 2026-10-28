@@ -1,6 +1,8 @@
 name: Build SIBRA daily GTFS data
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '15 3 * * *'
   push:
     paths:
       - '.github/workflows/build-sibra-data.yml'
