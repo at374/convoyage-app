@@ -1887,6 +1887,9 @@
       refreshTransport.style.marginTop = '8px';
       refreshTransport.onclick = () => {
         if (!panel.isConnected) return;
+        // Explicit user refresh must bypass browser HTTP caches for day JSON.
+        // The timestamp is scoped to this panel only; mission sync is untouched.
+        bt.dataset.transportRefreshAt = String(Date.now());
         panel.remove();
         bt.setAttribute('aria-expanded', 'false');
         bt.removeAttribute('aria-controls');
@@ -1908,7 +1911,7 @@
           status.setAttribute('role', 'status');
           status.textContent = 'SIBRA ' + day + ' : vérification des horaires GTFS…';
           panel.appendChild(status);
-          window.CPSibraFeed.loadDay(day, window.fetch.bind(window)).then(result => {
+          window.CPSibraFeed.loadDay(day, (url, options) => window.fetch(url + (bt.dataset.transportRefreshAt ? '?refresh=' + encodeURIComponent(bt.dataset.transportRefreshAt) : ''), {...options, cache: bt.dataset.transportRefreshAt ? 'no-store' : 'default'})).then(result => {
             if (!status.isConnected) return;
             status.textContent = result && result.usable ?
               'SIBRA ' + day + ' : données horaires théoriques chargées (' +
@@ -1939,7 +1942,7 @@
                 return v('year') + '-' + v('month') + '-' + v('day');
               })() : '';
               const pickupFeed = pickupDay && pickupDay !== day ?
-                window.CPSibraFeed.loadDay(pickupDay, window.fetch.bind(window)) :
+                window.CPSibraFeed.loadDay(pickupDay, (url, options) => window.fetch(url + (bt.dataset.transportRefreshAt ? '?refresh=' + encodeURIComponent(bt.dataset.transportRefreshAt) : ''), {...options, cache: bt.dataset.transportRefreshAt ? 'no-store' : 'default'})) :
                 Promise.resolve(result);
               pickupFeed.then(pickupResult => {
               if (!status.isConnected) return;
