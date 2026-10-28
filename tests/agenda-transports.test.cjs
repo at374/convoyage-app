@@ -519,3 +519,34 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
     geometry: response.routes[0].geometry, distance: 510
   }] }, 'foot'), null);
 }
+
+
+// Foot router must be explicitly configured and endpoint geometry verified.
+{
+  const planner = require('../sibra-planner.js');
+  const from = [6.1, 45.9], to = [6.101, 45.901];
+  let calls = 0;
+  const fakeFetch = async url => {
+    calls++;
+    assert.match(url, /route\/v1\/foot/);
+    assert.match(url, /geometries=geojson/);
+    return { ok: true, json: async () => ({ code: 'Ok', routes: [{
+      duration: 500, distance: 650,
+      geometry: { type: 'LineString', coordinates: [from, to] }
+    }] }) };
+  };
+  (async () => {
+    const missing = await planner.requestPedestrianOSRM(from, to, fakeFetch,
+      'https://example.test/route/v1/driving');
+    assert.equal(missing, null);
+    assert.equal(calls, 0);
+    const route = await planner.requestPedestrianOSRM(from, to, fakeFetch,
+      'https://example.test/route/v1/foot');
+    assert.equal(route.duration_seconds, 500);
+    assert.equal(calls, 1);
+    const bad = await planner.requestPedestrianOSRM(from, to, async () => ({
+      ok: true, json: async () => ({ code: 'NoRoute' })
+    }), 'https://example.test/route/v1/foot');
+    assert.equal(bad, null);
+  })().catch(error => { process.nextTick(() => { throw error; }); });
+}
