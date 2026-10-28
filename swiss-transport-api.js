@@ -17,7 +17,7 @@
     if (!from || !to) throw new Error('Coordonnées ou arrêts manquants');
     const when=new Date(options.when);
     if (!Number.isFinite(when.getTime())) throw new Error('Date de trajet invalide');
-    const p=new URLSearchParams({from,to,date:new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Zurich',year:'numeric',month:'2-digit',day:'2-digit'}).format(when),time:new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Zurich',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(when),limit:String(Math.min(16,Math.max(1,Number(options.limit)||6)))});
+    const p=new URLSearchParams({from,to,date:(() => { const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Zurich',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(when).map(p=>[p.type,p.value]));return parts.year+'-'+parts.month+'-'+parts.day; })(),time:new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Zurich',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(when),limit:String(Math.min(16,Math.max(1,Number(options.limit)||6)))});
     if(options.arriveBy) p.set('isArrivalTime','1');
     ['train','tram','bus'].forEach(mode=>p.append('transportations[]',mode));
     return ENDPOINT+'?'+p.toString();
