@@ -1681,7 +1681,8 @@
       ${bkDates(m, hfDates(m) ? fmtDate(hfLiv(m)) : ((m.delivery_start || m.delivery_end || dMail(m)) ? fmtDate(m.delivery_start || m.delivery_end) : ''))}
       ${vehHtml(m)}${repriseHtml(m)}${plaqueW(m)}${compHtml(m)}
       ${blocKm(m, false)}
-      <button id="btnVol" class="btnVert" type="button" aria-label="Visualisation trajet estimé">🗺️ Visualisation trajet estimé</button>
+      <button id="btnVol" class="btnVert" type="button" aria-label="Visualisation trajet voiture">🚗 Visualisation trajet voiture</button>
+      <button id="btnTransportsMission" class="second" type="button" style="width:100%;margin-top:8px" aria-label="Visualisation des transports aller, jonction mission et retour">🚌 Visualisation des transports (Aller / Jonction mission / Retour)</button>
       ${bk('bkLieu', 'LIEUX', `<div>📍 <b>Départ</b> : ${esc(adresse(m, 'origin'))}</div><div id="gpsO">${mentionGps(m, 'origin')}</div>${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}<div style="margin-top:8px">🏁 <b>Arrivée</b> : ${esc(adresse(m, 'destination'))}</div><div id="gpsD">${mentionGps(m, 'destination')}</div>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}`)}
       ${mailBloc(m)}
       ${blocRenta(m, r, frais, dv, depuis)}
@@ -1722,6 +1723,46 @@
     const suivants = detail.retours || [], dest = G.coordonnees(m, 'destination');
     for (const b of document.querySelectorAll('[data-retour]')) b.onclick = () => detail(suivants[Number(b.dataset.retour)].mission, dest);
     { const bv = $('btnVol'); if (bv) bv.onclick = () => popupVol(m); }
+    { const bt = $('btnTransportsMission'); if (bt) bt.onclick = () => {
+      const existing = $('cpTransportMissionDetails');
+      if (existing) { existing.hidden = !existing.hidden; return; }
+      const panel = document.createElement('section');
+      panel.id = 'cpTransportMissionDetails';
+      panel.className = 'bk bkC bkTr';
+      panel.style.marginTop = '10px';
+      const home = etat.reglages && (etat.reglages.domicile_adresse ||
+        etat.reglages.adresse_domicile || etat.reglages.domicile_ville);
+      const from = m.origin_address || m.from_address || m.from_city;
+      const to = m.destination_address || m.to_address || m.to_city;
+      const directions = (a, b) => a && b ?
+        '<a href="' + esc('https://www.google.com/maps/dir/?api=1&origin=' +
+          encodeURIComponent(a) + '&destination=' + encodeURIComponent(b) +
+          '&travelmode=transit') +
+        '" target="_blank" rel="noopener noreferrer">🚌 Rechercher les transports en commun</a>' :
+        '<span class="doux">Adresse manquante — trajet non calculable.</span>';
+      const next = etat.missions.filter(x => x !== m &&
+        (x.kind === 'acceptee' || x.status === 'acceptee') &&
+        x.pickup_start && m.delivery_end &&
+        Date.parse(x.pickup_start) > Date.parse(m.delivery_end))
+        .sort((a,b) => Date.parse(a.pickup_start) - Date.parse(b.pickup_start))[0];
+      const nextOrigin = next && (next.origin_address || next.from_address || next.from_city);
+      panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div>' +
+        '<div><strong>1. Aller au départ de mission</strong><div>' +
+        esc(home || 'Domicile non renseigné') + ' → ' + esc(from || 'Départ non renseigné') +
+        '</div>' + directions(home, from) + '</div>' +
+        '<div style="margin-top:12px"><strong>2. Jonction vers la prochaine mission</strong><div>' +
+        (next ? esc((to || 'Livraison non renseignée') + ' → ' +
+          (nextOrigin || 'Départ suivant non renseigné')) +
+          '</div>' + directions(to, nextOrigin) :
+          '</div><span class="doux">Aucune prochaine mission prévue.</span>') + '</div>' +
+        '<div style="margin-top:12px"><strong>3. Retour au domicile</strong><div>' +
+        esc(to || 'Livraison non renseignée') + ' → ' +
+        esc(home || 'Domicile non renseigné') + '</div>' +
+        directions(to, home) + '</div>' +
+        '<p class="doux">Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
+      bt.insertAdjacentElement('afterend', panel);
+    }; }
+
     { const br = $('btnRetirer'); if (br) br.onclick = () => { if (!window.confirm('Retirer cette mission de ton Agenda sur ce téléphone ? (rien n’est supprimé chez Hiflow ni sur le serveur ; tu peux tout remettre dans Réglages)')) return; const t = lireLocal('cp_masquees', []) || []; const k = m.platform + '|' + m.external_id; if (!t.includes(k)) t.push(k); ecrireLocal('cp_masquees', t); etat.missions = etat.missions.filter(x => !(x.kind === 'acceptee' && x.platform + '|' + x.external_id === k)); ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures }); $('feuille').hidden = true; afficher(); toast('Retirée de l’Agenda'); }; }
     pointsMission(m).then(ok => { if (ok && $('gpsO')) { $('gpsO').innerHTML = mentionGps(m, 'origin'); if ($('gpsD')) $('gpsD').innerHTML = mentionGps(m, 'destination'); } });
   }
