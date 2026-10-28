@@ -1781,10 +1781,30 @@
       const y51WorksWarning = y51ServiceDay >= '2026-09-14' && y51ServiceDay <= '2026-12-18' ?
         '⚠️ Travaux rive est du lac du 14 septembre au 18 décembre 2026 : certains départs matinaux Y51 sont avancés de 15 min (05h40, 06h10 et 06h20 au départ d’Albertville notamment). Les autres horaires, dont un éventuel 11h48 à École Saint-François, ne doivent pas être déduits de cette mesure. Vérifier la fiche officielle et le suivi temps réel.' :
         'Vérifier la fiche horaire officielle en vigueur et les éventuelles perturbations.';
-      const y51Indicative = 'L’horaire de 11 h 48 signalé à École Saint-François reste à confirmer pour ce jour. ' +
-        'Ne pas confondre les horaires des différents arrêts ni utiliser une ancienne grille. ' +
-        'Aucun temps de correspondance ne peut être validé avant confirmation de l’arrêt, ' +
-        'de la date et du sens Albertville → Annecy.';
+      const y51OfficialPdf = 'https://www.mobilites-arlysere.fr/wp-content/uploads/2026/07/FHY51-sept-dec-2026.pdf';
+      const y51DayOfWeek = y51ServiceDay ?
+        new Date(y51ServiceDay + 'T12:00:00Z').getUTCDay() : -1;
+      const y51Weekday = y51DayOfWeek >= 1 && y51DayOfWeek <= 5;
+      const y51ScheduleApplies = y51ServiceDay >= '2026-09-01' &&
+        y51ServiceDay <= '2026-12-31' && y51Weekday;
+      const y51Indicative = y51ScheduleApplies ?
+        'Grille officielle septembre–décembre 2026, page 2 : École Saint-François, direction Annecy, 11 h 48 (lundi à vendredi). ' +
+        'Se présenter au moins 5 min avant, soit 11 h 43. Horaires théoriques : perturbations possibles, marche et circulation non vérifiées.' :
+        'Le service de 11 h 48 à École Saint-François n’est pas validé pour cette date et ce type de jour. Vérifier la grille applicable.';
+      const y51WalkingWindow = (() => {
+        if (!y51ScheduleApplies) return '';
+        const end = new Date(m.delivery_end || m.delivery_start || '');
+        if (!Number.isFinite(end.getTime())) return 'Heure de livraison absente : temps d’approche impossible à calculer.';
+        const parts = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+        }).formatToParts(end);
+        const minute = type => Number(parts.find(x => x.type === type)?.value || 0);
+        const available = 11 * 60 + 43 - (minute('hour') * 60 + minute('minute'));
+        return available <= 0 ?
+          '⚠️ Arrivée recommandée à l’arrêt (11 h 43) déjà dépassée à la livraison.' :
+          'Temps théorique entre livraison et arrivée recommandée à l’arrêt (11 h 43) : ' +
+          available + ' min. Durée de marche exacte non mesurée ; transport non confirmé — vérifiez vous-même.';
+      })();
       const y51SummerReference = y51ServiceDay >= '2026-07-04' && y51ServiceDay <= '2026-08-31' ?
         'Grille officielle été 2026 : École Saint-François → Annecy à 11 h 47 du lundi au vendredi (hors jours fériés). ' +
         'Horaire théorique historique de cette période uniquement ; aucune confirmation temps réel.' :
@@ -1855,11 +1875,11 @@
             encodeURIComponent('École Saint-François, Albertville') +
             '&travelmode=walking') +
           '" target="_blank" rel="noopener noreferrer">marche vers École Saint-François</a>. ' +
-          'Départ de 11 h 48 signalé par le convoyeur : horaire non vérifié à École Saint-François, sens Albertville → Annecy. ' +
-          'La grille Y51 2026–2027 doit être consultée pour le jour exact (semaine, samedi, dimanche ou vacances). ' +
+          '<a href="' + esc(y51OfficialPdf) + '" target="_blank" rel="noopener noreferrer">PDF officiel septembre–décembre 2026 (page 2)</a>. ' +
           esc(y51FeedStatus) + '<div>' + esc(y51Indicative) + '</div>' +
           '<div>' + esc(y51WorksWarning) + '</div>' +
           '<div>' + esc(y51CheckDate) + '</div>' +
+          '<div>' + esc(y51WalkingWindow) + '</div>' +
           '<div>' + esc(y51SummerReference) + '</div></div>' : '') + '</div>' +
         '<p class="doux">Moteur régional : ' +
         (regionalEngineReady ? 'adaptateur disponible, calcul non connecté à cette fiche.' :
