@@ -1769,6 +1769,18 @@
       const regionalEngineReady = !!(window.CPRegionalRouting &&
         typeof window.CPRegionalRouting.plan === 'function');
       const y51FeedStatus = 'Source horaire Y51 non chargée dans cette fiche : départs non confirmés.';
+      const y51ServiceDay = (() => {
+        const d = new Date(m.delivery_end || m.delivery_start || '');
+        if (!Number.isFinite(d.getTime())) return '';
+        const parts = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
+        }).formatToParts(d);
+        const val = type => parts.find(x => x.type === type)?.value || '';
+        return val('year') + '-' + val('month') + '-' + val('day');
+      })();
+      const y51WorksWarning = y51ServiceDay >= '2026-09-14' && y51ServiceDay <= '2026-12-18' ?
+        '⚠️ Travaux rive est du lac du 14 septembre au 18 décembre 2026 : cinq services Y51 avancés de 15 min et services supplémentaires. Vérifier la fiche travaux et le suivi temps réel avant de partir.' :
+        'Vérifier la fiche horaire officielle en vigueur et les éventuelles perturbations.';
       const y51Indicative = (() => {
         const end = Date.parse(m.delivery_end || m.delivery_start || '');
         if (!Number.isFinite(end)) return 'Heure de livraison manquante : correspondance Y51 non calculable.';
@@ -1854,7 +1866,8 @@
             '&travelmode=walking') +
           '" target="_blank" rel="noopener noreferrer">marche vers École Saint-François</a>. ' +
           'Départ de 11 h 48 indiqué par le convoyeur, non confirmé pour cette date. ' +
-          esc(y51FeedStatus) + '<div>' + esc(y51Indicative) + '</div></div>' : '') + '</div>' +
+          esc(y51FeedStatus) + '<div>' + esc(y51Indicative) + '</div>' +
+          '<div>' + esc(y51WorksWarning) + '</div></div>' : '') + '</div>' +
         '<p class="doux">Moteur régional : ' +
         (regionalEngineReady ? 'adaptateur disponible, calcul non connecté à cette fiche.' :
           'non chargé.') +
