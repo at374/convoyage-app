@@ -1779,7 +1779,7 @@
         return val('year') + '-' + val('month') + '-' + val('day');
       })();
       const y51WorksWarning = y51ServiceDay >= '2026-09-14' && y51ServiceDay <= '2026-12-18' ?
-        '⚠️ Travaux rive est du lac du 14 septembre au 18 décembre 2026 : cinq services Y51 avancés de 15 min et services supplémentaires. Vérifier la fiche travaux et le suivi temps réel avant de partir.' :
+        '⚠️ Travaux rive est du lac du 14 septembre au 18 décembre 2026 : certains départs matinaux Y51 sont avancés de 15 min (05h40, 06h10 et 06h20 au départ d’Albertville notamment). Les autres horaires, dont un éventuel 11h48 à École Saint-François, ne doivent pas être déduits de cette mesure. Vérifier la fiche officielle et le suivi temps réel.' :
         'Vérifier la fiche horaire officielle en vigueur et les éventuelles perturbations.';
       const y51Indicative = 'Attention : 11 h 48 correspond à Rue Jean Jaurès dans une ancienne grille Y51 ; ' +
         'ce n’est pas une preuve de passage à École Saint-François. ' +
