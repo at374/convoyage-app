@@ -2007,7 +2007,7 @@
               if (!status.isConnected) return;
               const valid = results.filter(accept).slice(0,5);
               status.textContent = valid.length ?
-                label + ' suisse : ' + valid.length + ' proposition(s) indicatives vers le point de domicile enregistré (adresse exacte non vérifiée) :' :
+                label + ' suisse : ' + valid.length + ' proposition(s) indicatives. Accès aux adresses exactes et temps de marche non vérifiés :' :
                 label + ' suisse : aucun itinéraire compatible. Transport non confirmé — vérifiez vous-même.';
               valid.forEach(result => {
                 const line = document.createElement('p');
