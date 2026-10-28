@@ -1938,6 +1938,7 @@
               const legs = option.sections.map(s => [s.mode === 'WALK' ? '🚶 Marche' : s.mode,s.line,s.from && s.to ? s.from+' → '+s.to : '',s.mode === 'WALK' && Number.isFinite(s.walkSeconds) ? Math.ceil(s.walkSeconds/60)+' min à pied' : ''].filter(Boolean).join(' ')).join(' · ');
               line.textContent = formatParis(option.departure) + ' → ' +
                 formatParis(option.arrival) + ' · ' + legs +
+                ' · avance avant prochaine mission : ' + Math.max(0,Math.floor((nextPickupMs-Date.parse(option.arrival))/60000)) + ' min (marge de sécurité requise : ' + securityMarginMin + ' min, approche exacte non vérifiée)' +
                 ' · tarif non communiqué · Transport non confirmé — vérifiez vous-même.';
               swissStatus.appendChild(line);
             });
