@@ -1763,6 +1763,14 @@
             hour: '2-digit', minute: '2-digit' }).format(date) : 'heure non renseignée';
       };
       const nextGapMin = next ? Math.floor((Date.parse(next.pickup_start) - endTime) / 60000) : null;
+      const securityMarginMin = 30;
+      const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
+      const connectionStatus = nextGapMin == null ? '' :
+        connectionBudgetMin <= 0 ?
+          '⚠️ Jonction non réalisable avec une marge de sécurité de 30 min, même sans trajet d’approche.' :
+          'Temps maximum théorique pour transport et approche : ' +
+          connectionBudgetMin + ' min, après réservation d’une marge de sécurité de 30 min. ' +
+          'Transport non confirmé — vérifiez vous-même.';
       const nextOrigin = next && (next.origin_address || next.from_address || next.from_city);
       panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div>' +
         '<div><strong>1. Aller au départ de mission</strong><div>' +
@@ -1775,7 +1783,8 @@
           esc(formatParis(m.delivery_end || m.delivery_start)) +
           ' · prochaine prise en charge : ' + esc(formatParis(next.pickup_start)) +
           ' · intervalle brut : ' + esc(String(nextGapMin)) +
-          ' min (hors marche, correspondances et marge de sécurité).</div>' +
+          ' min (avant marge et trajet d’approche).</div>' +
+          '<div class="doux">' + esc(connectionStatus) + '</div>' +
           directions(to, nextOrigin, next.pickup_start) :
           '</div><span class="doux">Aucune prochaine mission prévue.</span>') + '</div>' +
         '<div style="margin-top:12px"><strong>3. Retour au domicile</strong><div>' +
