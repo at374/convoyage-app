@@ -1892,6 +1892,67 @@
               'SIBRA ' + day + ' : données horaires théoriques chargées (' +
               result.data.trips.length + ' courses). Aucun trajet à cette adresse ni circulation en temps réel confirmé.' :
               'SIBRA ' + day + ' : fichier horaire quotidien indisponible. Transport non confirmé — vérifiez vous-même.';
+            if (result && result.usable && window.CPSibraFeed.directDayJourneys) {
+              const feed = result.data;
+              const picker = document.createElement('div');
+              picker.className = 'doux';
+              const label = document.createElement('strong');
+              label.textContent = 'Recherche SIBRA entre deux arrêts (horaires théoriques)';
+              picker.appendChild(label);
+              const selects = [];
+              for (const title of ['Départ', 'Arrivée']) {
+                const field = document.createElement('label');
+                field.textContent = title + ' : ';
+                const select = document.createElement('select');
+                const empty = document.createElement('option');
+                empty.value = '';
+                empty.textContent = 'Choisir un arrêt';
+                select.appendChild(empty);
+                for (const stop of feed.stops) {
+                  const option = document.createElement('option');
+                  option.value = String(stop[0]);
+                  option.textContent = String(stop[1]);
+                  select.appendChild(option);
+                }
+                field.appendChild(select);
+                picker.appendChild(field);
+                selects.push(select);
+              }
+              const timeLabel = document.createElement('label');
+              timeLabel.textContent = 'Départ après : ';
+              const timeInput = document.createElement('input');
+              timeInput.type = 'time';
+              timeInput.value = '08:00';
+              timeLabel.appendChild(timeInput);
+              picker.appendChild(timeLabel);
+              const search = document.createElement('button');
+              search.type = 'button';
+              search.className = 'second';
+              search.textContent = 'Chercher les courses SIBRA';
+              picker.appendChild(search);
+              const output = document.createElement('div');
+              output.setAttribute('role', 'status');
+              output.textContent = 'Sélectionner deux arrêts pour rechercher des horaires théoriques.';
+              picker.appendChild(output);
+              search.addEventListener('click', () => {
+                const match = /^(\\d{2}):(\\d{2})$/.exec(timeInput.value);
+                if (!selects[0].value || !selects[1].value || !match) {
+                  output.textContent = 'Sélectionner les arrêts et une heure valide.';
+                  return;
+                }
+                const earliest = (Number(match[1]) * 60 + Number(match[2])) * 60;
+                const journeys = window.CPSibraFeed.directDayJourneys(
+                  feed, selects[0].value, selects[1].value, earliest, 8);
+                const clock = seconds => String(Math.floor(seconds / 3600)).padStart(2, '0') +
+                  ':' + String(Math.floor(seconds % 3600 / 60)).padStart(2, '0');
+                output.textContent = journeys.length ?
+                  journeys.map(j => clock(j.departureSeconds) + ' → ' +
+                    clock(j.arrivalSeconds) + ' (course ' + j.tripId + ')').join(' ; ') +
+                  '. Horaires GTFS théoriques : marche, tarifs, perturbations et circulation non vérifiés.' :
+                  'Aucune course directe trouvée à ces arrêts et cette heure. Transport non confirmé — vérifiez vous-même.';
+              });
+              if (status.isConnected) status.insertAdjacentElement('afterend', picker);
+            }
           }).catch(() => {
             if (status.isConnected) status.textContent =
               'SIBRA : erreur de lecture. Transport non confirmé — vérifiez vous-même.';
