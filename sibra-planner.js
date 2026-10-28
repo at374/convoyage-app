@@ -446,5 +446,34 @@
     return { valid: errors.length === 0, errors };
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
+  /**
+   * Prioritize the earliest safe arrival home rather than a later departure.
+   * Walking-to-stop time must be verified by the caller. Unknown walks never
+   * become 'feasible' by assuming zero minutes.
+   * Input: [{ departureSeconds, arrivalSeconds, firstWalkSeconds,
+   *           lastWalkSeconds, transportConfirmed }].
+   */
+  function rankReturnJourneys(journeys, missionEndSeconds, boardingMarginSeconds = 300) {
+    if (!Array.isArray(journeys) || !Number.isFinite(missionEndSeconds) ||
+        !Number.isFinite(boardingMarginSeconds) || boardingMarginSeconds < 0) return [];
+    return journeys.filter(j => j && Number.isFinite(j.departureSeconds) &&
+      Number.isFinite(j.arrivalSeconds) && j.arrivalSeconds >= j.departureSeconds)
+      .map(j => {
+        const walk = j.firstWalkSeconds;
+        const lastWalk = j.lastWalkSeconds;
+        const walksVerified = Number.isFinite(walk) && walk >= 0 &&
+          Number.isFinite(lastWalk) && lastWalk >= 0;
+        const feasible = walksVerified &&
+          missionEndSeconds + walk + boardingMarginSeconds <= j.departureSeconds;
+        return { ...j, feasible, walksVerified,
+          homeArrivalSeconds: walksVerified ? j.arrivalSeconds + lastWalk : null,
+          transportConfirmed: false };
+      }).sort((a, b) =>
+        Number(b.feasible) - Number(a.feasible) ||
+        (a.feasible ? a.homeArrivalSeconds - b.homeArrivalSeconds :
+          a.departureSeconds - b.departureSeconds) ||
+        a.departureSeconds - b.departureSeconds);
+  }
+
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, rankReturnJourneys, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
 });
