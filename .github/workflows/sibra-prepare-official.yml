@@ -86,7 +86,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/sibra/sibra-????-??-??.json
+          # Stage only generated files from this run, not all historical daily JSONs.
+          git add -- data/sibra/sibra-????-??-??.json
           if ! git diff --cached --quiet; then
             git commit -m "data: publish SHA256-verified SIBRA theoretical day schedules"
             git push origin HEAD:main
