@@ -821,8 +821,12 @@
           const nextClock = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
             hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(chain.next.debut)).split(':');
           const nextSeconds = Number(nextClock[0]) * 3600 + Number(nextClock[1]) * 60;
-          const journeys = feed.coordinateDayJourneys(result.data,
-            origin.lat, origin.lng, destination.lat, destination.lng, earliest)
+          const directJourneys = feed.coordinateDayJourneys(result.data,
+            origin.lat, origin.lng, destination.lat, destination.lng, earliest);
+          const transferJourneys = typeof feed.coordinateOneTransferDayJourneys === 'function' ?
+            feed.coordinateOneTransferDayJourneys(result.data,
+              origin.lat, origin.lng, destination.lat, destination.lng, earliest) : [];
+          const journeys = directJourneys.concat(transferJourneys)
             .filter(j => nextDate === date && j.arrivalSeconds <= nextSeconds)
             // Préférer une arrivée à l'arrêt 30–45 min avant la mission, sans
             // considérer cet écart comme une marge réelle (marche non vérifiée).
@@ -841,7 +845,10 @@
           const formatTime = seconds => String(Math.floor(seconds / 3600) % 24).padStart(2, '0') +
             ':' + String(Math.floor(seconds / 60) % 60).padStart(2, '0');
           line.textContent = 'SIBRA (horaires théoriques, approche à pied non vérifiée) : ' +
-            journeys.slice(0, 3).map(j => j.originStop.name + ' ' +
+            journeys.slice(0, 3).map(j => (j.transferStopId ? 'Correspondance à ' +
+              ((result.data.stops.find(stop => String(stop[0]) === j.transferStopId) || [null, j.transferStopId])[1]) +
+              ' (attente ' + Math.round(j.transferWaitSeconds / 60) + ' min) : ' : 'Direct : ') +
+              j.originStop.name + ' ' +
               formatTime(j.departureSeconds) + ' → ' + j.destinationStop.name + ' ' +
               formatTime(j.arrivalSeconds) + ' (écart théorique avant prise en charge : ' + Math.floor((nextSeconds - j.arrivalSeconds) / 60) + ' min, hors marche et marge de sécurité)').join(' ; ') +
             '. Transport non confirmé — vérifiez vous-même.';
