@@ -124,16 +124,26 @@
     return normalized;
   }
 
+  // Shared across direct and transfer searches for the same validated GTFS day.
+  const tripIndexCache = new WeakMap();
+  function indexedTrips(tables) {
+    if (tripIndexCache.has(tables)) return tripIndexCache.get(tables);
+    const byTrip = new Map();
+    for (const row of tables.stop_times) {
+      if (!byTrip.has(row.trip_id)) byTrip.set(row.trip_id, []);
+      byTrip.get(row.trip_id).push(row);
+    }
+    for (const rows of byTrip.values()) rows.sort((a, b) => a.stop_sequence - b.stop_sequence);
+    tripIndexCache.set(tables, byTrip);
+    return byTrip;
+  }
+
   // Exact-stop, same-vehicle connections using only the selected day's trips.
   // Does not claim a verified pedestrian approach or realtime circulation.
   function directDayJourneys(dayData, fromStopId, toStopId, earliestDepartureSeconds, limit = 8) {
     const tables = normalizeDay(dayData);
     if (!tables || fromStopId === toStopId || !Number.isFinite(earliestDepartureSeconds)) return [];
-    const byTrip = new Map();
-    for (const t of tables.stop_times) {
-      if (!byTrip.has(t.trip_id)) byTrip.set(t.trip_id, []);
-      byTrip.get(t.trip_id).push(t);
-    }
+    const byTrip = indexedTrips(tables);
     const toSeconds = value => {
       const parts = value.split(':').map(Number);
       return parts[0] * 3600 + parts[1] * 60 + parts[2];
