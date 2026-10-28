@@ -345,3 +345,25 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.ok(app.includes('advance >= 30 && advance <= 45'));
   assert.ok(app.includes('marche non vérifiée'));
 }
+
+// Une correspondance GTFS doit respecter le même arrêt, l'ordre des bus et le délai minimal.
+{
+  const feed = require('../sibra-feed.js');
+  const day = {
+    stops: [['A', 'Départ', 45.9, 6.1], ['X', 'Correspondance', 45.91, 6.11], ['B', 'Arrivée', 45.92, 6.12]],
+    routes: [['R1', 'Ligne 1'], ['R2', 'Ligne 2']],
+    trips: [['T1', 'R1'], ['T2', 'R2']],
+    stop_times: [
+      ['T1', 'A', 1, '09:00:00', '09:00:00'],
+      ['T1', 'X', 2, '09:10:00', '09:10:00'],
+      ['T2', 'X', 1, '09:16:00', '09:16:00'],
+      ['T2', 'B', 2, '09:30:00', '09:30:00']
+    ]
+  };
+  const journeys = feed.oneTransferDayJourneys(day, 'A', 'B', 8 * 3600);
+  assert.equal(journeys.length, 1);
+  assert.equal(journeys[0].transferStopId, 'X');
+  assert.equal(journeys[0].transferWaitSeconds, 360);
+  assert.equal(journeys[0].transportConfirmed, false);
+  assert.equal(feed.oneTransferDayJourneys(day, 'A', 'B', 8 * 3600, { minTransferSeconds: 420 }).length, 0);
+}
