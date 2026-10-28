@@ -826,3 +826,11 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.match(source, /panel\.remove\(\);[\s\S]*?bt\.click\(\);/);
   assert.match(source, /panel\.appendChild\(refreshTransport\)/);
 }
+
+{
+  const fs = require('node:fs');
+  const source = fs.readFileSync(require('node:path').join(__dirname, '..', 'sibra-feed.js'), 'utf8');
+  assert.match(source, /setTimeout\(\(\) => controller\.abort\(\), 12000\)/);
+  assert.match(source, /clearTimeout\(timer\)/);
+  assert.match(source, /signal: controller\.signal/);
+}
