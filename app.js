@@ -844,33 +844,47 @@
                 ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0');
               const missionLat = Number(card.getAttribute('data-y51-lat'));
               const missionLng = Number(card.getAttribute('data-y51-lng'));
-              const boardStop = boarding.find(stop =>
-                Number.isFinite(Number(stop.stop_lat)) && Number.isFinite(Number(stop.stop_lon)));
               const footEndpoint = window.CP_PEDESTRIAN_OSRM_URL;
-              let walkMinutes = null;
-              if (card.hasAttribute('data-y51-lat') && card.hasAttribute('data-y51-lng') &&
-                  boardStop && typeof planner.requestPedestrianOSRM === 'function' &&
-                  typeof footEndpoint === 'string' && /^https:\/\//.test(footEndpoint)) {
-                const walk = await planner.requestPedestrianOSRM(
-                  [missionLng, missionLat],
-                  [Number(boardStop.stop_lon), Number(boardStop.stop_lat)],
-                  window.fetch.bind(window), footEndpoint);
-                if (walk && walk.status === 'VERIFIE_PIETON' &&
-                    Number.isFinite(walk.duration_seconds)) {
-                  walkMinutes = Math.ceil(walk.duration_seconds / 60);
-                }
-              }
               const boardingMarginMinutes = 5;
-              const boardingStatus = unique.length && walkMinutes !== null ?
-                unique.slice(0, 8).map(ride =>
-                  clock(ride.departureSeconds) + ': ' +
-                  (ride.departureSeconds - earliestY51 >=
-                    (walkMinutes + boardingMarginMinutes) * 60 ?
-                    'marche vérifiée ' + walkMinutes + ' min + marge ' +
-                    boardingMarginMinutes + ' min' :
-                    'départ trop proche pour marche ' + walkMinutes +
-                    ' min + marge ' + boardingMarginMinutes + ' min')).join(' ; ') :
-                'Marche depuis la livraison non vérifiée.';
+              const selectedRides = unique.slice(0, 8);
+              // Every GTFS trip may board at a different platform/stop ID.
+              // Never reuse an unrelated stop's walking time for another trip.
+              const stopById = new Map(data.stops.map(stop => [String(stop.stop_id), stop]));
+              const walkByStopId = new Map();
+              const boardingChecks = [];
+              for (const ride of selectedRides) {
+                const stopId = String(ride.from_stop_id);
+                const stop = stopById.get(stopId);
+                let walkMinutes = walkByStopId.get(stopId);
+                if (walkMinutes === undefined) {
+                  walkMinutes = null;
+                  if (card.hasAttribute('data-y51-lat') && card.hasAttribute('data-y51-lng') &&
+                      stop && Number.isFinite(Number(stop.stop_lat)) &&
+                      Number.isFinite(Number(stop.stop_lon)) &&
+                      typeof planner.requestPedestrianOSRM === 'function' &&
+                      typeof footEndpoint === 'string' && /^https:\/\//.test(footEndpoint)) {
+                    const walk = await planner.requestPedestrianOSRM(
+                      [missionLng, missionLat],
+                      [Number(stop.stop_lon), Number(stop.stop_lat)],
+                      window.fetch.bind(window), footEndpoint);
+                    if (walk && walk.status === 'VERIFIE_PIETON' &&
+                        Number.isFinite(walk.duration_seconds)) {
+                      walkMinutes = Math.ceil(walk.duration_seconds / 60);
+                    }
+                  }
+                  walkByStopId.set(stopId, walkMinutes);
+                }
+                const enoughTime = walkMinutes !== null &&
+                  ride.departureSeconds - earliestY51 >=
+                  (walkMinutes + boardingMarginMinutes) * 60;
+                boardingChecks.push(clock(ride.departureSeconds) + ' : ' +
+                  (walkMinutes === null ? 'marche non vérifiée' :
+                    (enoughTime ? 'approche piétonne compatible' : 'départ trop proche') +
+                    ' (' + walkMinutes + ' min à pied + ' +
+                    boardingMarginMinutes + ' min de marge)'));
+              }
+              const boardingStatus = boardingChecks.length ?
+                boardingChecks.join(' ; ') : 'Marche depuis la livraison non vérifiée.';
               y51Result.textContent = 'Y51 du ' + requestedDate + ' :' + trips.length +
                 ' courses programmées, ' + times.length + ' passages GTFS. Source vérifiée le ' +
                 stamp + '. ' + (unique.length ?
