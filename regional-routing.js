@@ -85,8 +85,10 @@
       }
     }`;
     const controller = typeof AbortController === 'function' ? new AbortController() : null;
+    if (!Number.isFinite(Number(timeoutMs)) || Number(timeoutMs) <= 0)
+      throw new Error('Delai de requete invalide');
     const timer = controller && typeof setTimeout === 'function' ?
-      setTimeout(() => controller.abort(), timeoutMs) : null;
+      setTimeout(() => controller.abort(), Number(timeoutMs)) : null;
     try {
       const response = await fetcher(endpoint, {
         method: 'POST', headers: {'Content-Type':'application/json'},
