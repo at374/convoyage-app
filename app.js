@@ -1956,8 +1956,13 @@
         estimate.appendChild(clearWalk);
         input.addEventListener('input', () => {
           const n = Number(input.value);
-          if (input.value === '' || !Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > 120) {
-            result.textContent = 'Indiquer une durée de marche valide entre 0 et 120 minutes.';
+          if (input.value === '') {
+            try { window.localStorage.removeItem(walkCacheKey); } catch (_) {}
+            result.textContent = 'Temps de marche non renseigné : aucune correspondance validée.';
+            return;
+          }
+          if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > 120) {
+            result.textContent = 'Indiquer une durée de marche entière entre 0 et 120 minutes.';
             return;
           }
           try { window.localStorage.setItem(walkCacheKey, String(n)); } catch (_) {}
@@ -1988,6 +1993,13 @@
           const finishMinutes = actualMatch ?
             Number(actualMatch[1]) * 60 + Number(actualMatch[2]) :
             get('hour') * 60 + get('minute');
+          // Une saisie d’heure seule ne permet pas de changer de date :
+          // le car de 11 h 48 ne doit jamais être raccordé au jour suivant.
+          const scheduledMinutes = get('hour') * 60 + get('minute');
+          if (actualMatch && Math.abs(finishMinutes - scheduledMinutes) > 720) {
+            result.textContent = 'Écart supérieur à 12 h : vérifier la date réelle de livraison avant de calculer le Y51.';
+            return;
+          }
           const available = 11 * 60 + 43 - finishMinutes;
           const remaining = available - n;
           const arrivalAtStop = finishMinutes + n;
