@@ -1897,6 +1897,8 @@
         estimate.style.marginTop = '8px';
         estimate.innerHTML = '<label for="cpY51WalkMinutes">🚶 Temps de marche estimé jusqu’à École Saint-François (minutes, à vérifier)</label> ' +
           '<input id="cpY51WalkMinutes" type="number" min="0" max="120" step="1" inputmode="numeric" placeholder="Ex. 10" style="max-width:90px" />' +
+          '<label for="cpY51ActualDelivery">Heure réelle de fin de livraison (facultatif)</label> ' +
+          '<input id="cpY51ActualDelivery" type="time" />' +
           '<div id="cpY51WalkResult" role="status">Renseigner le temps de marche pour tester la correspondance théorique.</div>' +
           '<div class="doux">Ce champ est une simulation manuelle, pas un calcul GPS. ' +
           'Utiliser le lien « marche vers École Saint-François » pour vérifier le trajet.</div>';
@@ -1932,6 +1934,7 @@
         estimate.appendChild(stopLocationNote);
         const input = estimate.querySelector('#cpY51WalkMinutes');
         const result = estimate.querySelector('#cpY51WalkResult');
+        const actualDeliveryInput = estimate.querySelector('#cpY51ActualDelivery');
         // Conserver uniquement une estimation de marche locale, liée à l’adresse
         // de livraison, sans enregistrer les données de mission ni les identifiants.
         const walkCacheKey = 'cp_y51_walk_' + encodeURIComponent(String(to || '').trim().toLowerCase());
@@ -1976,7 +1979,12 @@
             result.textContent = 'Date de livraison incohérente avec la date du service Y51 : vérification nécessaire.';
             return;
           }
-          const available = 11 * 60 + 43 - get('hour') * 60 - get('minute');
+          const actualValue = actualDeliveryInput.value;
+          const actualMatch = /^(\\d{2}):(\\d{2})$/.exec(actualValue);
+          const finishMinutes = actualMatch ?
+            Number(actualMatch[1]) * 60 + Number(actualMatch[2]) :
+            get('hour') * 60 + get('minute');
+          const available = 11 * 60 + 43 - finishMinutes;
           const remaining = available - n;
           const latestDeparture = 11 * 60 + 43 - n;
           const hhmm = minutes => String(Math.floor(minutes / 60)).padStart(2, '0') +
@@ -1990,6 +1998,7 @@
             hhmm(latestDeparture) + ', soit ' + (-remaining) +
             ' min avant la fin de livraison prévue.';
         });
+        actualDeliveryInput.addEventListener('input', () => input.dispatchEvent(new Event('input')));
         if (input.value !== '') input.dispatchEvent(new Event('input'));
       }
       bt.setAttribute('aria-controls', panel.id);
