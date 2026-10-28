@@ -125,8 +125,13 @@
         .sort((a,b) => a.endTime - b.endTime || a.startTime - b.startTime)
         .filter((it,index,all) => all.findIndex(other =>
           other.startTime === it.startTime && other.endTime === it.endTime &&
-          other.legs.map(leg => leg.mode + ':' + leg.route).join('|') ===
-          it.legs.map(leg => leg.mode + ':' + leg.route).join('|')) === index)
+          other.legs.length === it.legs.length &&
+          other.legs.every((leg, legIndex) => {
+            const candidate = it.legs[legIndex];
+            return leg.mode === candidate.mode && leg.route === candidate.route &&
+              leg.from === candidate.from && leg.to === candidate.to &&
+              leg.startTime === candidate.startTime && leg.endTime === candidate.endTime;
+          })) === index)
         .slice(0,MAX_RESULTS);
       return {source:'OpenTripPlanner', date:localDate, updatedAt:new Date().toISOString(),
         itineraries:validItineraries,
