@@ -740,7 +740,12 @@
       html += carteMission(m, i, extra).replace('class="mission', `class="mission etat-${x.etat}${''}`);
       // Agenda–Transports : résumé prudent de l'enchaînement. Le trajet n'est jamais déclaré confirmé ici.
       const chain = window.__cpAgendaChain && window.__cpAgendaChain[x.cle];
-      if (chain && (x.etat === 'a_venir' || x.etat === 'en_cours' || ((x.etat === 'terminee' || x.etat === 'passee') && x.fin && Date.now() - x.fin.t <= 24 * 3600000))) {
+      const isAlbertvilleDelivery = /albertville/i.test([
+        m.to_city, m.destination_city, m.to_address, m.destination_address
+      ].filter(Boolean).join(' '));
+      if (chain && (x.etat === 'a_venir' || x.etat === 'en_cours' ||
+          ((x.etat === 'terminee' || x.etat === 'passee') && x.fin &&
+            (Date.now() - x.fin.t <= 24 * 3600000 || isAlbertvilleDelivery)))) {
         const title = chain.next ? 'Prochaine mission : ' + (chain.next.mission.from_city || chain.next.mission.origin_city || 'départ à préciser') + ' → ' + (chain.next.mission.to_city || chain.next.mission.destination_city || 'arrivée à préciser') : (chain.blocked ? 'Prochaine mission à déterminer' : 'Aucune prochaine mission prévue — retour au domicile à préparer');
         const y51Origin = [m.to_address, m.destination_address, m.delivery_address].filter(Boolean).join(' ');
         const y51Gps = G.coordonnees(m, 'destination');
