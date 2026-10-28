@@ -32,7 +32,9 @@ jobs:
               with z.open(names[name]) as file:
                   return list(csv.DictReader(io.TextIOWrapper(file, encoding="utf-8-sig")))
           routes = rows("routes.txt")
-          y51 = [r for r in routes if "Y51" in " ".join((r.get("route_short_name", ""), r.get("route_long_name", ""))).upper()]
+          import re
+          y51 = [r for r in routes if re.search(r"(?<![A-Z0-9])Y51(?![A-Z0-9])",
+              " ".join((r.get("route_short_name", ""), r.get("route_long_name", ""))).upper())]
           if not y51:
               raise RuntimeError("Y51 route not found in official feed")
           ids = {r["route_id"] for r in y51}
