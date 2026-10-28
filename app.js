@@ -1933,7 +1933,7 @@
             const diagnosticLabel = diagnostic && diagnostic.status === 'success' ? ' (API : ' + diagnostic.valid + '/' + diagnostic.received + ' horaires valides)' : '';
             swissStatus.textContent = compatible.length ?
               'Jonction suisse : ' + compatible.length +
-              ' proposition(s) indicatives' + diagnosticLabel + '. Prix et circulation non confirmés :' :
+              ' proposition(s) indicatives' + diagnosticLabel + '. Horaires : opentransportdata.swiss via transport.opendata.ch. Prix et circulation non confirmés :' :
               'Jonction suisse : aucune proposition compatible' + diagnosticLabel + '. Transport non confirmé — vérifiez vous-même.';
             compatible.forEach(option => {
               const line = document.createElement('p');
@@ -2012,7 +2012,7 @@
               const diagnostic = results.diagnostic;
               const diagnosticLabel = diagnostic && diagnostic.status === 'success' ? ' (API : ' + diagnostic.valid + '/' + diagnostic.received + ' horaires valides)' : '';
               status.textContent = valid.length ?
-                label + ' suisse : ' + valid.length + ' proposition(s) indicatives' + diagnosticLabel + '. Accès aux adresses exactes et temps de marche non vérifiés :' :
+                label + ' suisse : ' + valid.length + ' proposition(s) indicatives' + diagnosticLabel + '. Horaires : opentransportdata.swiss via transport.opendata.ch. Accès aux adresses exactes et temps de marche non vérifiés :' :
                 label + ' suisse : aucun itinéraire compatible' + diagnosticLabel + '. Transport non confirmé — vérifiez vous-même.';
               valid.forEach(result => {
                 const line = document.createElement('p');
