@@ -1764,6 +1764,9 @@
       };
       const nextGapMin = next ? Math.floor((Date.parse(next.pickup_start) - endTime) / 60000) : null;
       const securityMarginMin = 30;
+      const pickupDate = Number.isFinite(Date.parse(m.pickup_start || '')) ? m.pickup_start : null;
+      const deliveryDate = Number.isFinite(Date.parse(m.delivery_end || m.delivery_start || '')) ?
+        (m.delivery_end || m.delivery_start) : null;
       const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
       const connectionStatus = nextGapMin == null ? '' :
         connectionBudgetMin <= 0 ?
@@ -1775,7 +1778,9 @@
       panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div>' +
         '<div><strong>1. Aller au départ de mission</strong><div>' +
         esc(home || 'Domicile non renseigné') + ' → ' + esc(from || 'Départ non renseigné') +
-        '</div>' + directions(home, from, m.pickup_start) + '</div>' +
+        '</div><div class="doux">Prise en charge : ' + esc(formatParis(pickupDate)) +
+        ' · avance souhaitée : 30 à 45 min.</div>' +
+        directions(home, from, m.pickup_start) + '</div>' +
         '<div style="margin-top:12px"><strong>2. Jonction vers la prochaine mission</strong><div>' +
         (next ? esc((to || 'Livraison non renseignée') + ' → ' +
           (nextOrigin || 'Départ suivant non renseigné')) +
@@ -1790,6 +1795,8 @@
         '<div style="margin-top:12px"><strong>3. Retour au domicile</strong><div>' +
         esc(to || 'Livraison non renseignée') + ' → ' +
         esc(home || 'Domicile non renseigné') + '</div>' +
+        '<div class="doux">Livraison : ' + esc(formatParis(deliveryDate)) +
+        ' · prévoir la marche jusqu’à l’arrêt.</div>' +
         directions(to, home, m.delivery_end || m.delivery_start) +
         (/albertville/i.test(String(to || '')) ?
           '<div class="doux" style="margin-top:8px">🚌 Retour Y51 Albertville → Annecy : ' +
