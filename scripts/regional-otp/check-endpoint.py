@@ -38,7 +38,13 @@ req = urllib.request.Request(url, payload, {
     "User-Agent": "ConvoyageUltra-OTP-Probe/1.0",
 }, method="POST")
 try:
-    with urllib.request.urlopen(req, timeout=15) as response:
+    # Do not follow redirects: the target could resolve to an internal host.
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self, request, fp, code, msg, headers, newurl):
+            return None
+
+    opener = urllib.request.build_opener(NoRedirect)
+    with opener.open(req, timeout=15) as response:
         body = response.read(65536)
         result = json.loads(body)
 except (urllib.error.URLError, ValueError, TimeoutError) as exc:
