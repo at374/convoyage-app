@@ -228,4 +228,22 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(planner.parseGtfsCsv('stop_id,stop_name\n1,"non termine'), null);
 }
 
-process.stdout.write('Agenda/SIBRA tests passed: 25 scenarios\\n');
+// 26. Refuser les references GTFS manquantes avant tout calcul de trajet.
+{
+  const planner = require('../sibra-planner.js');
+  const tables = {
+    stops: [{ stop_id: 'A' }, { stop_id: 'B' }],
+    trips: [{ trip_id: 'T1', service_id: 'S1' }],
+    stop_times: [
+      { trip_id: 'T1', stop_id: 'A', stop_sequence: '1', arrival_time: '09:00:00', departure_time: '09:00:00' },
+      { trip_id: 'T1', stop_id: 'B', stop_sequence: '2', arrival_time: '09:10:00', departure_time: '09:10:00' }
+    ],
+    calendar: [{ service_id: 'S1' }], calendar_dates: []
+  };
+  assert.equal(planner.validateGtfsTables(tables).valid, true);
+  assert.equal(planner.validateGtfsTables({ ...tables, stops: [{ stop_id: 'A' }] }).valid, false);
+  assert.equal(planner.validateGtfsTables({ ...tables, calendar: [] }).valid, false);
+  assert.equal(planner.validateGtfsTables({ ...tables, stop_times: [] }).valid, false);
+}
+
+process.stdout.write('Agenda/SIBRA tests passed: 26 scenarios\\n');
