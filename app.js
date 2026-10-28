@@ -2000,6 +2000,11 @@
             result.textContent = 'Écart supérieur à 12 h : vérifier la date réelle de livraison avant de calculer le Y51.';
             return;
           }
+          if (!m.delivery_end && !actualMatch) {
+            result.textContent = 'Heure de fin de livraison non renseignée : saisir l’heure réelle pour calculer la correspondance. ' +
+              'L’heure de début de livraison ne peut pas servir d’heure de fin.';
+            return;
+          }
           const available = 11 * 60 + 43 - finishMinutes;
           const remaining = available - n;
           const arrivalAtStop = finishMinutes + n;
