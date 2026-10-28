@@ -187,3 +187,17 @@ test('rejects a route containing a null transport leg', async () => {
   assert.equal(response.itineraries.length,1);
   assert.equal(response.itineraries[0].legs.length,1);
 });
+
+test('preserves distinct boarding stops even when routes and times match', async () => {
+  const alternative = {...itinerary,legs:[{
+    ...itinerary.legs[0],from:{name:'Annecy Gare Routiere'}
+  }]};
+  const response = await routing.plan({...base,fetcher:async()=>({
+    ok:true,json:async()=>({data:{planConnection:{edges:[
+      {node:itinerary},{node:alternative},{node:itinerary}
+    ]}}})
+  })});
+  assert.equal(response.itineraries.length,2);
+  assert.deepEqual(response.itineraries.map(x=>x.legs[0].from),
+    ['Annecy','Annecy Gare Routiere']);
+});
