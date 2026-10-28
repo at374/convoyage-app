@@ -111,6 +111,8 @@
         .filter(it => Number.isFinite(it.startTime) &&
           Number.isFinite(it.endTime) && it.endTime >= it.startTime &&
           it.startTime >= date.getTime() - 60000 &&
+          Number.isFinite(it.durationSeconds) && it.durationSeconds > 0 &&
+          Math.abs((it.endTime - it.startTime) / 1000 - it.durationSeconds) <= 120 &&
           it.legs.length > 0 &&
           it.legs.every((leg, index) => Number.isFinite(leg.startTime) &&
             Number.isFinite(leg.endTime) && leg.endTime >= leg.startTime &&
