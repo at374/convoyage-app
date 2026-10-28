@@ -31,11 +31,32 @@ if [[ "$mode" == build ]]; then
   if [[ "$OSM_PBF" != "$work/region.osm.pbf" ]]; then
     cp "$OSM_PBF" "$work/region.osm.pbf"
   fi
-  # Do not reuse a stale graph when the transit or street inputs change.
-  rm -f "$work/graph.obj"
+  # Keep the last working graph if a feed update or graph build fails.
+  backup="$work/graph.previous.obj"
+  if [[ -e "$backup" ]]; then
+    echo "An earlier graph backup exists; refusing to overwrite it." >&2
+    exit 1
+  fi
+  if [[ -s "$work/graph.obj" ]]; then
+    mv "$work/graph.obj" "$backup"
+  fi
+  restore_graph() {
+    if [[ -s "$backup" ]]; then
+      rm -f "$work/graph.obj"
+      mv "$backup" "$work/graph.obj"
+      echo "Previous working graph restored." >&2
+    fi
+  }
+  trap restore_graph ERR INT TERM
   echo "Building graph in $work (requires substantial memory and disk space)"
   java ${OTP_JAVA_OPTS:--Xmx8G} -jar "$OTP_JAR" --build --save "$work"
-  [[ -s "$work/graph.obj" ]] || { echo "OTP did not create graph.obj" >&2; exit 1; }
+  if [[ ! -s "$work/graph.obj" ]]; then
+    echo "OTP did not create graph.obj" >&2
+    restore_graph
+    exit 1
+  fi
+  trap - ERR INT TERM
+  rm -f "$backup"
   echo "Graph created. Run this script with 'serve' to start the router."
 else
   [[ -s "$work/graph.obj" ]] || { echo "Graph missing; run build first" >&2; exit 1; }
