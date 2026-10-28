@@ -614,3 +614,15 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(planner.assessScheduledSibraJourney(journey, 8 * 3600,
     10 * 3600, a, d, null, route(c, d)).feasible, false);
 }
+
+{
+  const planner = require('../sibra-planner.js');
+  const end = 11 * 3600 + 10 * 60;
+  const early = { departureSeconds: 11 * 3600 + 48 * 60,
+    arrivalSeconds: 13 * 3600 + 15 * 60, walkToStopSeconds: 600 };
+  const late = { departureSeconds: 12 * 3600 + 18 * 60,
+    arrivalSeconds: 13 * 3600 + 45 * 60, walkToStopSeconds: 600 };
+  assert.equal(planner.rankSafeReturns([late, early], end)[0].departureSeconds, early.departureSeconds);
+  assert.equal(planner.rankSafeReturns([late, early], 11 * 3600 + 42 * 60)[0].departureSeconds, late.departureSeconds);
+  assert.equal(planner.rankSafeReturns([{ ...early, walkToStopSeconds: null }], end)[0].feasible, false);
+}
