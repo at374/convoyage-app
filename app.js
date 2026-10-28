@@ -808,7 +808,7 @@
               const stopLabel = stop => normalized([stop.stop_name, stop.stop_desc,
                 stop.stop_code, stop.stop_id].filter(Boolean).join(' '));
               const boarding = data.stops.filter(stop =>
-                /ecole[\\s-]*st[\\s-]*francois|ecole[\\s-]*saint[\\s-]*francois/.test(stopLabel(stop)));
+                /ecole[\s-]*st[\s-]*francois|ecole[\s-]*saint[\s-]*francois/.test(stopLabel(stop)));
               const annecy = data.stops.filter(stop =>
                 /annecy/.test(stopLabel(stop)) && /gare|routiere/.test(stopLabel(stop)));
               const rides = [];
