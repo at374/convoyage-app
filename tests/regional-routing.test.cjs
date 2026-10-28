@@ -250,3 +250,12 @@ test('mission junction rejects departures before delivery and late arrivals', ()
   assert.deepEqual(routing.feasibleBetween([valid],'bad date',pickup),[]);
   assert.deepEqual(routing.feasibleBetween([valid],delivered,pickup,40),[]);
 });
+
+test('mission feasibility rejects missing dates rather than Unix epoch', () => {
+  const leg={startTime:0,endTime:1000,distanceMeters:50};
+  const itinerary={startTime:0,endTime:1000,legs:[leg]};
+  for (const missing of [null,undefined,'']) {
+    assert.deepEqual(routing.feasibleBefore([itinerary],missing,0),[]);
+    assert.deepEqual(routing.feasibleBetween([itinerary],missing,'2026-10-28T13:00:00+01:00',0),[]);
+  }
+});
