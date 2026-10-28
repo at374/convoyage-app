@@ -1971,13 +1971,27 @@
                 const clock = sec => String(Math.floor(sec / 3600)).padStart(2, '0') +
                   ':' + String(Math.floor(sec % 3600 / 60)).padStart(2, '0');
                 const show = direct.slice(0, 5);
+                const changes = !show.length &&
+                  typeof window.CPSibraFeed.coordinateOneTransferDayJourneys === 'function' ?
+                  window.CPSibraFeed.coordinateOneTransferDayJourneys(
+                    result.data, deliveryGps.lat, deliveryGps.lng,
+                    homeLat, homeLon, earliest,
+                    { radiusMeters: 600, minTransferSeconds: 300, limit: 10 }).slice(0, 3) : [];
                 ret.textContent = show.length ?
                   '🚌 Retour SIBRA indicatif vers le centre de ' +
                   (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
                   show.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
                     ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
                   '. Le domicile exact n’est PAS géolocalisé. Arrêts dans un rayon de 600 m à vol d’oiseau, marche, tarifs et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
-                  'Retour SIBRA : aucune course directe vers le centre de la ville du domicile trouvée à proximité. Transport non confirmé — vérifiez vous-même.';
+                  (changes.length ?
+                    '🚌 Retour SIBRA avec 1 correspondance (horaires théoriques) vers le centre de ' +
+                    (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
+                    changes.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
+                      ' → changement ' + clock(j.firstLeg.arrivalSeconds) + ' / ' +
+                      clock(j.secondLeg.departureSeconds) + ' → ' +
+                      j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
+                    '. Même arrêt GTFS pour le changement, domicile exact, marche et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                    'Retour SIBRA : aucune course directe ou avec 1 correspondance trouvée vers le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.');
               } else {
                 ret.textContent = 'Retour SIBRA automatique indisponible : GPS exact de livraison ou ville du domicile non renseigné.';
               }
