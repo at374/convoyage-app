@@ -1682,7 +1682,7 @@
       ${vehHtml(m)}${repriseHtml(m)}${plaqueW(m)}${compHtml(m)}
       ${blocKm(m, false)}
       <button id="btnVol" class="btnVert" type="button" aria-label="Visualisation trajet voiture">🚗 Visualisation trajet voiture</button>
-      <button id="btnTransportsMission" class="second" type="button" style="width:100%;margin-top:8px" aria-label="Visualisation des transports aller, jonction mission et retour">🚌 Visualisation des transports (Aller / Jonction mission / Retour)</button>
+      <button id="btnTransportsMission" class="second" type="button" style="width:100%;margin-top:8px;background:#cdeaff;color:#123d72;border:1px solid #70b7eb;font-weight:600" aria-label="Visualisation des transports aller, jonction mission et retour">🚌 Visualisation des transports<span style="display:block;font-size:.9em;font-weight:500;margin-top:3px">Aller / Jonction mission / Retour</span></button>
       ${bk('bkLieu', 'LIEUX', `<div>📍 <b>Départ</b> : ${esc(adresse(m, 'origin'))}</div><div id="gpsO">${mentionGps(m, 'origin')}</div>${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}<div style="margin-top:8px">🏁 <b>Arrivée</b> : ${esc(adresse(m, 'destination'))}</div><div id="gpsD">${mentionGps(m, 'destination')}</div>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}`)}
       ${mailBloc(m)}
       ${blocRenta(m, r, frais, dv, depuis)}
