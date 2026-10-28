@@ -95,8 +95,8 @@
           s.stop_lat < -90 || s.stop_lat > 90 || s.stop_lon < -180 || s.stop_lon > 180) ||
         trips.some(t => !t.trip_id || !t.route_id) ||
         stopTimes.some(t => !t.trip_id || !t.stop_id || !Number.isInteger(t.stop_sequence) ||
-          t.stop_sequence < 0 || !/^\\d{1,3}:[0-5]\\d:[0-5]\\d$/.test(t.departure_time) ||
-          !/^\\d{1,3}:[0-5]\\d:[0-5]\\d$/.test(t.arrival_time))) return null;
+          t.stop_sequence < 0 || !/^\d{1,3}:[0-5]\d:[0-5]\d$/.test(t.departure_time) ||
+          !/^\d{1,3}:[0-5]\d:[0-5]\d$/.test(t.arrival_time))) return null;
     const stopIds = new Set(stops.map(s => s.stop_id));
     const tripIds = new Set(trips.map(t => t.trip_id));
     if (stopTimes.some(t => !stopIds.has(t.stop_id) || !tripIds.has(t.trip_id))) return null;
