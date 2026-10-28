@@ -485,3 +485,19 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(planner.pedestrianRouteFromGeoJSON(feature, ''), null);
   assert.equal(planner.verifiedWalkingSeconds(walk, to, from), null);
 }
+
+
+// Missing GeoJSON duration/distance must never silently become zero.
+{
+  const planner = require('../sibra-planner.js');
+  const base = { geometry: { type: 'LineString',
+    coordinates: [[6.1, 45.9], [6.101, 45.901]] } };
+  assert.equal(planner.pedestrianRouteFromGeoJSON({ ...base,
+    properties: { distance: 500 } }, 'router'), null);
+  assert.equal(planner.pedestrianRouteFromGeoJSON({ ...base,
+    properties: { duration: 300 } }, 'router'), null);
+  assert.equal(planner.pedestrianRouteFromGeoJSON({ ...base,
+    properties: { duration: null, distance: 500 } }, 'router'), null);
+  assert.equal(planner.pedestrianRouteFromGeoJSON({ ...base,
+    properties: { duration: 0, distance: 0 } }, 'router').duration_seconds, 0);
+}
