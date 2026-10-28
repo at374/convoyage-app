@@ -95,13 +95,17 @@ jobs:
                     'status':'GTFS_ARCHIVE_VALIDATED'}
                   with open('oura-audit.json','w',encoding='utf-8') as out:
                       json.dump(summary,out,ensure_ascii=False,indent=2)
+                  # Preserve a verified source archive for the regional routing engine.
+                  # This is a CI artifact, not a large file committed to the web app.
+                  os.replace(archive, 'oura-regional.gtfs.zip')
                   print(json.dumps(summary,ensure_ascii=False,indent=2))
                   print(json.dumps({'checked_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     'source':url,'archive_bytes':os.path.getsize(archive),
                     'tables':sorted(names),'status':'GTFS_ARCHIVE_VALIDATED'},
                     ensure_ascii=False,indent=2))
           finally:
-              os.unlink(archive)
+              if os.path.exists(archive):
+                  os.unlink(archive)
       - name: Upload regional coverage report
         if: always()
         uses: actions/upload-artifact@v4
@@ -109,3 +113,11 @@ jobs:
           name: oura-regional-gtfs-audit
           path: oura-audit.json
           if-no-files-found: warn
+      - name: Upload validated regional GTFS for routing-engine build
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oura-regional-gtfs-validated
+          path: oura-regional.gtfs.zip
+          retention-days: 7
+          if-no-files-found: error
