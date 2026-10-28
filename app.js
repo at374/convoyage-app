@@ -1732,8 +1732,14 @@
       panel.style.marginTop = '10px';
       const home = etat.reglages && (etat.reglages.domicile_adresse ||
         etat.reglages.adresse_domicile || etat.reglages.domicile_ville);
-      const from = m.origin_address || m.from_address || m.from_city;
-      const to = m.destination_address || m.to_address || m.to_city;
+      const locationText = (address, city, department) => {
+        const a = String(address || '').trim(), c = String(city || '').trim();
+        if (!a) return [c, department].filter(Boolean).join(', ');
+        return c && !a.toLocaleLowerCase('fr').includes(c.toLocaleLowerCase('fr')) ?
+          [a, c, department].filter(Boolean).join(', ') : a;
+      };
+      const from = locationText(m.origin_address || m.from_address, m.from_city, m.from_department);
+      const to = locationText(m.destination_address || m.to_address, m.to_city, m.to_department);
       const directions = (a, b, when) => {
         if (!a || !b) return '<span class="doux">Adresse manquante — trajet non calculable.</span>';
         const base = 'https://www.google.com/maps/dir/?api=1&origin=' +
@@ -1779,7 +1785,8 @@
           'Temps maximum théorique pour transport et approche : ' +
           connectionBudgetMin + ' min, après réservation d’une marge de sécurité de 30 min. ' +
           'Transport non confirmé — vérifiez vous-même.';
-      const nextOrigin = next && (next.origin_address || next.from_address || next.from_city);
+      const nextOrigin = next && locationText(next.origin_address || next.from_address,
+        next.from_city, next.from_department);
       panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div>' +
         '<div><strong>1. Aller au départ de mission</strong><div>' +
         esc(home || 'Domicile non renseigné') + ' → ' + esc(from || 'Départ non renseigné') +
