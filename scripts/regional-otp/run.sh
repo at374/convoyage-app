@@ -25,38 +25,36 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 work="${OTP_WORKDIR:-$root/.local/otp-aura}"
 mkdir -p "$work"
 if [[ "$mode" == build ]]; then
-  if [[ "$OURA_GTFS" != "$work/oura-regional.gtfs.zip" ]]; then
-    cp "$OURA_GTFS" "$work/oura-regional.gtfs.zip"
-  fi
-  if [[ "$OSM_PBF" != "$work/region.osm.pbf" ]]; then
-    cp "$OSM_PBF" "$work/region.osm.pbf"
-  fi
-  # Keep the last working graph if a feed update or graph build fails.
-  backup="$work/graph.previous.obj"
-  if [[ -e "$backup" ]]; then
-    echo "An earlier graph backup exists; refusing to overwrite it." >&2
+  # Never overwrite the last valid graph or inputs until the new build succeeds.
+  candidate="$(mktemp -d "${work%/}.candidate.XXXXXX")"
+  cleanup_candidate() { rm -rf "$candidate"; }
+  trap cleanup_candidate EXIT
+  cp "$OURA_GTFS" "$candidate/oura-regional.gtfs.zip"
+  cp "$OSM_PBF" "$candidate/region.osm.pbf"
+  echo "Building candidate graph in $candidate (requires substantial memory and disk space)"
+  java ${OTP_JAVA_OPTS:--Xmx8G} -jar "$OTP_JAR" --build --save "$candidate"
+  if [[ ! -s "$candidate/graph.obj" ]]; then
+    echo "OTP did not create graph.obj; existing graph remains untouched" >&2
     exit 1
   fi
-  if [[ -s "$work/graph.obj" ]]; then
-    mv "$work/graph.obj" "$backup"
-  fi
-  restore_graph() {
-    if [[ -s "$backup" ]]; then
-      rm -f "$work/graph.obj"
-      mv "$backup" "$work/graph.obj"
-      echo "Previous working graph restored." >&2
-    fi
+  # Stage a complete new dataset and graph together; preserve the previous
+  # generation until all candidate files are present.
+  previous="$(mktemp -d "${work%/}.previous.XXXXXX")"
+  for name in graph.obj oura-regional.gtfs.zip region.osm.pbf; do
+    if [[ -e "$work/$name" ]]; then mv "$work/$name" "$previous/$name"; fi
+  done
+  rollback() {
+    for name in graph.obj oura-regional.gtfs.zip region.osm.pbf; do
+      rm -f "$work/$name"
+      if [[ -e "$previous/$name" ]]; then mv "$previous/$name" "$work/$name"; fi
+    done
   }
-  trap restore_graph ERR INT TERM
-  echo "Building graph in $work (requires substantial memory and disk space)"
-  java ${OTP_JAVA_OPTS:--Xmx8G} -jar "$OTP_JAR" --build --save "$work"
-  if [[ ! -s "$work/graph.obj" ]]; then
-    echo "OTP did not create graph.obj" >&2
-    restore_graph
-    exit 1
-  fi
+  trap rollback ERR INT TERM
+  for name in graph.obj oura-regional.gtfs.zip region.osm.pbf; do
+    mv "$candidate/$name" "$work/$name"
+  done
   trap - ERR INT TERM
-  rm -f "$backup"
+  rm -rf "$previous"
   echo "Graph created. Run this script with 'serve' to start the router."
 else
   [[ -s "$work/graph.obj" ]] || { echo "Graph missing; run build first" >&2; exit 1; }
