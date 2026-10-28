@@ -64,13 +64,13 @@
       try {
         response = await fetchImpl(base + '/sibra-' + day + '.json',
           controller ? {signal: controller.signal} : undefined);
+        if (!response || !response.ok) {
+          return { usable: false, status: 'horaires_jour_absents', transportConfirmed: false };
+        }
+        var data = await response.json();
       } finally {
         if (timer !== null) clearTimeout(timer);
       }
-      if (!response || !response.ok) {
-        return { usable: false, status: 'horaires_jour_absents', transportConfirmed: false };
-      }
-      const data = await response.json();
       if (!data || data.date !== day || !Array.isArray(data.stops) ||
           !Array.isArray(data.routes) || !Array.isArray(data.trips) ||
           !Array.isArray(data.stop_times) || !data.stops.length || !data.trips.length ||
