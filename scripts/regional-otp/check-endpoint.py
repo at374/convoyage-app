@@ -19,7 +19,12 @@ if parts.scheme != "https" or not parts.hostname or parts.username or parts.pass
     raise SystemExit("Endpoint must be a valid HTTPS URL without credentials or fragment")
 if os.environ.get("OTP_ALLOW_PRIVATE_HOST") != "1" and parts.hostname in ("localhost", "127.0.0.1", "::1"):
     raise SystemExit("Local endpoints require OTP_ALLOW_PRIVATE_HOST=1")
-payload = json.dumps({"query": "query ConvoyageHealth { __typename }"}).encode("utf-8")
+# Query the actual routing entry point used by regional-routing.js rather
+# than accepting any unrelated GraphQL server as a working OTP endpoint.
+schema_query = """query ConvoyageSchema {
+  __schema { queryType { fields { name args { name } } } }
+}"""
+payload = json.dumps({"query": schema_query}).encode("utf-8")
 req = urllib.request.Request(url, payload, {
     "Content-Type": "application/json",
     "Accept": "application/json",
@@ -33,6 +38,23 @@ except (urllib.error.URLError, ValueError, TimeoutError) as exc:
     raise SystemExit(f"OTP GraphQL endpoint unavailable: {exc}")
 if not isinstance(result, dict) or result.get("errors") or not isinstance(result.get("data"), dict):
     raise SystemExit(f"OTP GraphQL query failed: {str(result)[:400]}")
-if not result["data"].get("__typename"):
-    raise SystemExit("Endpoint did not return GraphQL __typename")
-print("GraphQL endpoint reachable. Routing schema, data coverage and live timetable NOT verified.")
+schema = result["data"].get("__schema") or {}
+query_type = schema.get("queryType") or {}
+fields = query_type.get("fields") or []
+routing = next((f for f in fields if f.get("name") == "planConnection"), None)
+if routing is None:
+    available = ", ".join(sorted(f.get("name", "") for f in fields))
+    raise SystemExit(
+        "GraphQL reachable, but planConnection is missing. "
+        f"Available root fields: {available[:500]}"
+    )
+argument_names = {arg.get("name") for arg in routing.get("args", [])}
+required = {"origin", "destination", "dateTime", "first", "modes"}
+missing = required - argument_names
+if missing:
+    raise SystemExit(
+        "GraphQL planConnection exists, but required arguments are missing: "
+        + ", ".join(sorted(missing))
+    )
+print("GraphQL endpoint reachable; planConnection arguments match the Agenda adapter.")
+print("Nested response fields, route execution, data coverage and live timetable NOT verified.")
