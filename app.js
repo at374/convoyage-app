@@ -1989,6 +1989,62 @@
           });
         }
       }
+      // Swiss API: outbound and return suggestions. Home coordinates may be a city centre.
+      // Only show indicative options; never imply door-to-door or realtime confirmation.
+      if (window.CPSwissTransport) {
+        const homeLat = Number(etat.reglages?.domicile_lat);
+        const homeLon = Number(etat.reglages?.domicile_lng);
+        const homeReady = etat.reglages?.domicile_lat != null &&
+          etat.reglages?.domicile_lng != null &&
+          window.CPSwissTransport.point({lat:homeLat,lon:homeLon});
+        const swissSuggestions = (label, from, to, when, arriveBy, accept) => {
+          const status = document.createElement('div');
+          status.className = 'doux';
+          status.setAttribute('role', 'status');
+          status.textContent = label + ' suisse : recherche des correspondances…';
+          panel.appendChild(status);
+          window.CPSwissTransport.plan({from,to,when,arriveBy,limit:6})
+            .then(results => {
+              if (!status.isConnected) return;
+              const valid = results.filter(accept).slice(0,5);
+              status.textContent = valid.length ?
+                label + ' suisse : ' + valid.length + ' proposition(s) indicatives vers le point de domicile enregistré (adresse exacte non vérifiée) :' :
+                label + ' suisse : aucun itinéraire compatible. Transport non confirmé — vérifiez vous-même.';
+              valid.forEach(result => {
+                const line = document.createElement('p');
+                const legs = result.sections.map(s =>
+                  [s.mode,s.line,s.from && s.to ? s.from+' → '+s.to : ''].filter(Boolean).join(' ')).join(' · ');
+                line.textContent = formatParis(result.departure) + ' → ' +
+                  formatParis(result.arrival) + ' · ' + legs +
+                  ' · tarif non communiqué · Transport non confirmé — vérifiez vous-même.';
+                status.appendChild(line);
+              });
+            }).catch(() => {
+              if (status.isConnected) status.textContent =
+                label + ' suisse : service indisponible. Transport non confirmé — vérifiez vous-même.';
+            });
+        };
+        if (homeReady && pickupDate && Number.isFinite(Date.parse(pickupDate))) {
+          const pickupGps = G.coordonnees(m,'origin');
+          if (pickupGps?.precision === 'gps') {
+            const limit = Date.parse(pickupDate) - securityMarginMin * 60000;
+            swissSuggestions('Aller',{lat:homeLat,lon:homeLon},
+              {lat:pickupGps.lat,lon:pickupGps.lng},new Date(limit).toISOString(),true,
+              r => Number.isFinite(Date.parse(r.departure)) &&
+                Number.isFinite(Date.parse(r.arrival)) && Date.parse(r.arrival)<=limit);
+          }
+        }
+        if (homeReady && deliveryDate && Number.isFinite(Date.parse(deliveryDate))) {
+          const finishGps = G.coordonnees(m,'destination');
+          if (finishGps?.precision === 'gps') {
+            const earliest = Date.parse(deliveryDate);
+            swissSuggestions('Retour',{lat:finishGps.lat,lon:finishGps.lng},
+              {lat:homeLat,lon:homeLon},deliveryDate,false,
+              r => Number.isFinite(Date.parse(r.departure)) &&
+                Number.isFinite(Date.parse(r.arrival)) && Date.parse(r.departure)>=earliest);
+          }
+        }
+      }
       // Regional return from the exact delivery point to the configured home
       // coordinate (which may only represent a city centre, not a door).
       if (regionalEngineReady && regionalEndpointConfigured && deliveryDate) {
