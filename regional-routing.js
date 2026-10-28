@@ -35,7 +35,7 @@
   }
   function parseItinerary(itinerary) {
     const legs = Array.isArray(itinerary.legs) ?
-      itinerary.legs.filter(leg => leg && typeof leg === 'object').map(parseLeg) : [];
+      itinerary.legs.map(leg => leg && typeof leg === 'object' ? parseLeg(leg) : null) : [];
     return {
       startTime: epochMilliseconds(itinerary.startTime),
       endTime: epochMilliseconds(itinerary.endTime),
@@ -117,7 +117,7 @@
           Number.isFinite(it.durationSeconds) && it.durationSeconds > 0 &&
           Math.abs((it.endTime - it.startTime) / 1000 - it.durationSeconds) <= 120 &&
           it.legs.length > 0 &&
-          it.legs.every((leg, index) => Number.isFinite(leg.startTime) &&
+          it.legs.every((leg, index) => leg !== null && Number.isFinite(leg.startTime) &&
             Number.isFinite(leg.endTime) && leg.endTime >= leg.startTime &&
             leg.startTime >= it.startTime - 60000 &&
             leg.endTime <= it.endTime + 60000 &&
