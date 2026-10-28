@@ -34,7 +34,8 @@
     };
   }
   function parseItinerary(itinerary) {
-    const legs = Array.isArray(itinerary.legs) ? itinerary.legs.map(parseLeg) : [];
+    const legs = Array.isArray(itinerary.legs) ?
+      itinerary.legs.filter(leg => leg && typeof leg === 'object').map(parseLeg) : [];
     return {
       startTime: epochMilliseconds(itinerary.startTime),
       endTime: epochMilliseconds(itinerary.endTime),
