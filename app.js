@@ -1944,6 +1944,51 @@
           });
         }
       }
+      // Regional return from the exact delivery point to the configured home
+      // coordinate (which may only represent a city centre, not a door).
+      if (regionalEngineReady && regionalEndpointConfigured && deliveryDate) {
+        const finishGps = G.coordonnees(m, 'destination');
+        const homeLat = Number(etat.reglages?.domicile_lat);
+        const homeLon = Number(etat.reglages?.domicile_lng);
+        const homeGpsReady = etat.reglages?.domicile_lat != null &&
+          etat.reglages?.domicile_lng != null &&
+          window.CPRegionalRouting.validPoint({lat:homeLat,lon:homeLon});
+        if (finishGps?.precision === 'gps' && homeGpsReady) {
+          const returnStatus = document.createElement('div');
+          returnStatus.className = 'doux';
+          returnStatus.setAttribute('role', 'status');
+          returnStatus.textContent = 'Retour régional : recherche des itinéraires…';
+          panel.appendChild(returnStatus);
+          window.CPRegionalRouting.plan({
+            endpoint: window.CP_REGIONAL_ROUTING_ENDPOINT,
+            from: {lat:finishGps.lat, lon:finishGps.lng},
+            to: {lat:homeLat, lon:homeLon},
+            departure:deliveryDate,
+            fetcher:window.fetch.bind(window)
+          }).then(answer => {
+            if (!returnStatus.isConnected) return;
+            const options = answer.itineraries.filter(it =>
+              it.startTime >= Date.parse(deliveryDate)).slice(0, 5);
+            returnStatus.textContent = options.length ?
+              'Retour régional : ' + options.length +
+              ' itinéraire(s) théoriques vers le point de domicile enregistré (adresse exacte non vérifiée) :' :
+              'Retour régional : aucun itinéraire trouvé. Transport non confirmé — vérifiez vous-même.';
+            options.forEach(option => {
+              const line = document.createElement('p');
+              const legs = option.legs.map(leg =>
+                [leg.mode, leg.route, leg.from + ' → ' + leg.to]
+                  .filter(Boolean).join(' ')).join(' · ');
+              line.textContent = formatParis(option.startTime) + ' → ' +
+                formatParis(option.endTime) + ' · ' + legs +
+                ' · horaire théorique, transport non confirmé.';
+              returnStatus.appendChild(line);
+            });
+          }).catch(() => {
+            if (returnStatus.isConnected) returnStatus.textContent =
+              'Retour régional : service indisponible. Transport non confirmé — vérifiez vous-même.';
+          });
+        }
+      }
       // Statut réel du fichier GTFS quotidien : ne pas annoncer de trajets sans données.
       if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
         const daySource = m.delivery_end || m.delivery_start || m.pickup_start;
