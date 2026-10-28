@@ -48,5 +48,32 @@
     };
   }
 
-  return Object.freeze({ isISODate, assessDate });
+  /**
+   * Load a generated day-scoped GTFS JSON file. A missing date file is a
+   * normal unavailable state, never a reason to invent a journey.
+   */
+  async function loadDay(day, fetchImpl, basePath) {
+    if (!isISODate(day) || typeof fetchImpl !== 'function') {
+      return { usable: false, status: 'parametres_invalides', transportConfirmed: false };
+    }
+    const base = typeof basePath === 'string' ? basePath.replace(/\\/$/, '') : 'data/sibra';
+    try {
+      const response = await fetchImpl(base + '/sibra-' + day + '.json');
+      if (!response || !response.ok) {
+        return { usable: false, status: 'horaires_jour_absents', transportConfirmed: false };
+      }
+      const data = await response.json();
+      if (!data || data.date !== day || !Array.isArray(data.stops) ||
+          !Array.isArray(data.routes) || !Array.isArray(data.trips) ||
+          !Array.isArray(data.stop_times) || data.transportConfirmed !== false ||
+          data.realtime !== false) {
+        return { usable: false, status: 'donnees_gtfs_invalides', transportConfirmed: false };
+      }
+      return { usable: true, status: 'horaires_theoriques_disponibles', data, transportConfirmed: false };
+    } catch (_) {
+      return { usable: false, status: 'chargement_gtfs_impossible', transportConfirmed: false };
+    }
+  }
+
+  return Object.freeze({ isISODate, assessDate, loadDay });
 });
