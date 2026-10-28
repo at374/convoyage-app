@@ -176,3 +176,14 @@ test('ignores null itinerary nodes without crashing the Agenda', async () => {
   assert.equal(response.itineraries.length,1);
   assert.equal(response.itineraries[0].legs[0].route,'Y51');
 });
+
+test('rejects a route containing a null transport leg', async () => {
+  const response = await routing.plan({...base,fetcher:async()=>({
+    ok:true,json:async()=>({data:{planConnection:{edges:[
+      {node:{...itinerary,legs:[null,itinerary.legs[0]]}},
+      {node:itinerary}
+    ]}}})
+  })});
+  assert.equal(response.itineraries.length,1);
+  assert.equal(response.itineraries[0].legs.length,1);
+});
