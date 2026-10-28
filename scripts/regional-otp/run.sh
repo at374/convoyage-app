@@ -56,8 +56,8 @@ if [[ "$mode" == build ]]; then
   fi
   previous="$(mktemp -d "${work%/}.previous.XXXXXX")"
   rollback() {
-    # Restore only files that were actually moved to the backup directory.
-    # An error during backup must never delete files not yet backed up.
+    # A failed backup move leaves its original file in place; restore only
+    # files already backed up, and delete only installed candidate files.
     for name in graph.obj oura-regional.gtfs.zip region.osm.pbf; do
       if [[ -e "$previous/$name" ]]; then
         rm -f "$work/$name"
