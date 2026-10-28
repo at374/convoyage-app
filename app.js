@@ -1781,30 +1781,10 @@
       const y51WorksWarning = y51ServiceDay >= '2026-09-14' && y51ServiceDay <= '2026-12-18' ?
         '⚠️ Travaux rive est du lac du 14 septembre au 18 décembre 2026 : cinq services Y51 avancés de 15 min et services supplémentaires. Vérifier la fiche travaux et le suivi temps réel avant de partir.' :
         'Vérifier la fiche horaire officielle en vigueur et les éventuelles perturbations.';
-      const y51Indicative = (() => {
-        const end = Date.parse(m.delivery_end || m.delivery_start || '');
-        if (!Number.isFinite(end)) return 'Heure de livraison manquante : correspondance Y51 non calculable.';
-        const parisDay = new Intl.DateTimeFormat('en-CA', {
-          timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
-        }).format(new Date(end));
-        const [year, month, day] = parisDay.split('-').map(Number);
-        const offset = (date) => {
-          const parts = new Intl.DateTimeFormat('en-GB', {
-            timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit',
-            hourCycle: 'h23'
-          }).formatToParts(date);
-          const h = Number(parts.find(x => x.type === 'hour').value);
-          const m = Number(parts.find(x => x.type === 'minute').value);
-          return h * 60 + m;
-        };
-        const minutes = 11 * 60 + 48 - offset(new Date(end));
-        if (minutes <= 0) return 'Départ indicatif 11 h 48 déjà passé à l’heure de livraison prévue.';
-        return 'Départ indicatif 11 h 48 : ' + minutes +
-          ' min après la livraison prévue, avant marche jusqu’à l’arrêt et aléas. ' +
-          (minutes <= 30 ? 'Marge de 30 min impossible à conserver.' :
-            'Après une marge de 30 min, il reste au maximum ' + (minutes - 30) +
-            ' min pour rejoindre l’arrêt. Temps de marche non mesuré.');
-      })();
+      const y51Indicative = 'Attention : 11 h 48 correspond à Rue Jean Jaurès dans une ancienne grille Y51 ; ' +
+        'ce n’est pas une preuve de passage à École Saint-François. ' +
+        'Aucun temps de correspondance ne peut être validé avant confirmation de l’arrêt, ' +
+        'de la date et du sens Albertville → Annecy.';
       const endTime = Date.parse(m.delivery_end || m.delivery_start || '');
       const next = Number.isFinite(endTime) ? etat.missions.filter(x =>
         x !== m && (x.kind === 'acceptee' || x.status === 'acceptee') &&
@@ -1866,7 +1846,7 @@
             encodeURIComponent('École Saint-François, Albertville') +
             '&travelmode=walking') +
           '" target="_blank" rel="noopener noreferrer">marche vers École Saint-François</a>. ' +
-          'Départ de 11 h 48 indiqué par le convoyeur : contrôler spécifiquement le sens Annecy et la date à École Saint-François (ne pas confondre avec Rue Jean Jaurès). ' +
+          'Départ de 11 h 48 signalé par le convoyeur : horaire non vérifié à École Saint-François, sens Albertville → Annecy. ' +
           esc(y51FeedStatus) + '<div>' + esc(y51Indicative) + '</div>' +
           '<div>' + esc(y51WorksWarning) + '</div></div>' : '') + '</div>' +
         '<p class="doux">Moteur régional : ' +
