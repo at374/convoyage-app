@@ -59,6 +59,8 @@ jobs:
               json.dump(summary, f, ensure_ascii=False, indent=2)
           # Keep the actual route-specific GTFS rows for a future dated Agenda import.
           # This is an audit artifact, not a published or real-time timetable.
+          if "calendar.txt" not in names and "calendar_dates.txt" not in names:
+              raise RuntimeError("No GTFS service calendar: cannot establish operating dates")
           calendar = rows("calendar.txt") if "calendar.txt" in names else []
           exceptions = rows("calendar_dates.txt") if "calendar_dates.txt" in names else []
           service_ids = {t.get("service_id") for t in trips}
