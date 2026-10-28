@@ -274,5 +274,41 @@
     });
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, verifiedWalkingSeconds, parseGtfsCsv });
+  /**
+   * Validate that the minimal GTFS tables can be joined without silently
+   * inventing stops, trips or operating dates. This is structural validation,
+   * not a claim that transport is running in real time.
+   */
+  function validateGtfsTables(tables) {
+    const required = ['stops', 'trips', 'stop_times', 'calendar', 'calendar_dates'];
+    if (!tables || required.some(key => !Array.isArray(tables[key]))) {
+      return { valid: false, errors: ['Tables GTFS manquantes ou non chargees'] };
+    }
+    const errors = [];
+    const stopIds = new Set(tables.stops.map(r => r && r.stop_id).filter(Boolean));
+    const tripIds = new Set(tables.trips.map(r => r && r.trip_id).filter(Boolean));
+    if (!stopIds.size) errors.push('Aucun arret');
+    if (!tripIds.size) errors.push('Aucune course');
+    if (!tables.stop_times.length) errors.push('Aucun horaire');
+    for (const row of tables.stop_times) {
+      if (!row || !tripIds.has(row.trip_id) || !stopIds.has(row.stop_id) ||
+          !Number.isFinite(Number(row.stop_sequence)) ||
+          parseGtfsTime(String(row.arrival_time || '')) === null ||
+          parseGtfsTime(String(row.departure_time || '')) === null) {
+        errors.push('Horaire GTFS invalide ou reference inconnue');
+        break;
+      }
+    }
+    const serviceIds = new Set([
+      ...tables.calendar.map(r => r && r.service_id),
+      ...tables.calendar_dates.map(r => r && r.service_id)
+    ].filter(Boolean));
+    if (!serviceIds.size) errors.push('Aucun service calendrier');
+    if (tables.trips.some(r => !r || !serviceIds.has(r.service_id))) {
+      errors.push('Course sans service calendrier connu');
+    }
+    return { valid: errors.length === 0, errors };
+  }
+
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, verifiedWalkingSeconds, parseGtfsCsv, validateGtfsTables });
 });
