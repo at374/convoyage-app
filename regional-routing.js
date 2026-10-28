@@ -82,7 +82,12 @@
       if (payload.errors && payload.errors.length) {
         throw new Error('Schema regional incompatible : '+String(payload.errors[0].message || 'GraphQL'));
       }
-      const itineraries = payload.data && payload.data.plan && payload.data.plan.itineraries;
+      const planData = payload.data && payload.data.plan;
+      // OTP 2 installations differ: some expose plan.itineraries, others
+      // expose plan.edges[].node. Accept both without inventing departures.
+      const itineraries = planData && (Array.isArray(planData.itineraries) ?
+        planData.itineraries : Array.isArray(planData.edges) ?
+        planData.edges.map(edge => edge && edge.node).filter(Boolean) : null);
       if (!Array.isArray(itineraries)) throw new Error('Reponse itineraires invalide');
       const validItineraries = itineraries.slice(0,MAX_RESULTS).map(parseItinerary)
         .filter(it => Number.isFinite(it.startTime) &&
