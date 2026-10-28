@@ -763,3 +763,17 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.ok(app.includes('3. Retour au domicile'));
   assert.ok(!app.includes("bk('bkTr', 'TRANSPORTS · ALLER / RETOUR'"));
 }
+
+// Régression : les trois sens doivent filtrer les bus selon la marche minimale,
+// sans présenter les trajets théoriques comme des itinéraires piétons vérifiés.
+{
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.ok(app.includes('j.originStop.straightLineMeters / 1.2'));
+  assert.ok(app.includes('j.destinationStop.straightLineMeters / 1.2'));
+  assert.ok(app.includes('j.departureSeconds >= earliest +'));
+  assert.ok(app.includes('j.arrivalSeconds +'));
+  assert.ok(app.includes('pickupFeed.then(pickupResult =>'));
+  assert.ok(app.includes('Transport non confirmé — vérifiez vous-même.'));
+}
