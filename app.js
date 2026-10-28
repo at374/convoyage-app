@@ -1905,7 +1905,8 @@
       }
       // Regional journeys between accepted missions, only when a real HTTPS
       // OTP service is configured and both mission endpoints have exact GPS.
-      if (regionalEngineReady && regionalEndpointConfigured && next && deliveryDate) {
+      if (regionalEngineReady && regionalEndpointConfigured && next && deliveryDate &&
+          Number.isFinite(Date.parse(next.pickup_start || ''))) {
         const finishGps = G.coordonnees(m, 'destination');
         const nextGps = G.coordonnees(next, 'origin');
         if (finishGps?.precision === 'gps' && nextGps?.precision === 'gps') {
