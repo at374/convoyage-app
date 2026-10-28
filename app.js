@@ -804,7 +804,8 @@
           hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(x.fin.t)).split(':');
         const earliest = Number(timeParts[0]) * 3600 + Number(timeParts[1]) * 60;
         const card = document.querySelectorAll('.mission')[items.indexOf(x)];
-        const panel = card && card.nextElementSibling;
+        let panel = card && card.nextElementSibling;
+        while (panel && !panel.classList.contains('mission') && !panel.classList.contains('cpAgendaChain')) panel = panel.nextElementSibling;
         if (!panel || !panel.classList.contains('cpAgendaChain')) continue;
         const line = document.createElement('div');
         line.className = 'doux';
