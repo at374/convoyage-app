@@ -565,3 +565,12 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
     assert.equal(calls, 0);
   })().catch(error => { process.nextTick(() => { throw error; }); });
 }
+
+
+// Agenda empty state covers both direct and one-transfer SIBRA candidates.
+{
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.match(app, /aucun trajet direct ou avec une correspondance identifié/);
+}

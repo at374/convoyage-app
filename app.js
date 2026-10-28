@@ -841,7 +841,7 @@
               return score(a) - score(b) || a.arrivalSeconds - b.arrivalSeconds;
             });
           if (!journeys.length) {
-            line.textContent = 'SIBRA : aucun trajet direct identifié entre arrêts proches — transport non confirmé.';
+            line.textContent = 'SIBRA : aucun trajet direct ou avec une correspondance identifié entre arrêts proches — transport non confirmé.';
             return;
           }
           const formatTime = seconds => String(Math.floor(seconds / 3600) % 24).padStart(2, '0') +
