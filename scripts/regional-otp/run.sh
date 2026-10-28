@@ -56,9 +56,11 @@ if [[ "$mode" == build ]]; then
   fi
   previous="$(mktemp -d "${work%/}.previous.XXXXXX")"
   rollback() {
+    # Remove partially installed candidate files, then restore the complete
+    # previous generation. Missing backups indicate a first-time build.
     for name in graph.obj oura-regional.gtfs.zip region.osm.pbf; do
+      rm -f "$work/$name"
       if [[ -e "$previous/$name" ]]; then
-        rm -f "$work/$name"
         mv "$previous/$name" "$work/$name"
       fi
     done
