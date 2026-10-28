@@ -37,7 +37,11 @@
       clearTimeout(timeout);
     }
     if(!data || !Array.isArray(data.connections)) throw new Error('Réponse API suisse invalide');
-    return data.connections.filter(c => c && c.from && c.to && Number.isFinite(Date.parse(c.from.departure)) && Number.isFinite(Date.parse(c.to.arrival)) && Date.parse(c.to.arrival) >= Date.parse(c.from.departure)).map(c=>({
+    // Diagnostic is local to the browser and never includes user GPS or addresses.
+    root.CPSwissTransport.lastCheck = {checkedAt:new Date().toISOString(),received:data.connections.length,valid:0};
+    const validConnections = data.connections.filter(c => c && c.from && c.to && Number.isFinite(Date.parse(c.from.departure)) && Number.isFinite(Date.parse(c.to.arrival)) && Date.parse(c.to.arrival) >= Date.parse(c.from.departure));
+    root.CPSwissTransport.lastCheck.valid = validConnections.length;
+    return validConnections.map(c=>({
       departure:c.from && c.from.departure || null,
       arrival:c.to && c.to.arrival || null,
       sections:Array.isArray(c.sections)?c.sections.map(s=>({
