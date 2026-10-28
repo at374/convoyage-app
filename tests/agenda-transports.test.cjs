@@ -777,3 +777,41 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.ok(app.includes('pickupFeed.then(pickupResult =>'));
   assert.ok(app.includes('Transport non confirmé — vérifiez vous-même.'));
 }
+
+/* OpenTripPlanner contract: simulated server, never interpreted as live timetable. */
+{
+  const routing = require('../regional-routing.js');
+  const start = Date.parse('2026-10-28T09:15:00+01:00');
+  const end = start + 1800000;
+  const itinerary = {
+    startTime:start, endTime:end, duration:1800, walkDistance:500,
+    numberOfTransfers:0, legs:[{
+      mode:'WALK', startTime:start, endTime:start+600000, distance:500,
+      from:{name:'Départ'}, to:{name:'Arrêt'}
+    },{
+      mode:'BUS', startTime:start+600000, endTime:end, distance:9000,
+      from:{name:'Arrêt'}, to:{name:'Arrivée'}, route:{shortName:'Y51'}
+    }]
+  };
+  const from={lat:45.899,lon:6.129}, to={lat:45.675,lon:6.392};
+  const departure='2026-10-28T09:00:00+01:00';
+  const fetcher=async (url, options)=>{
+    assert.equal(url,'https://routing.example.test/graphql');
+    assert.equal(options.method,'POST');
+    const request=JSON.parse(options.body);
+    assert.equal(request.variables.date,'2026-10-28');
+    assert.match(request.query,/planConnection/);
+    return {ok:true,json:async()=>({data:{planConnection:{edges:[
+      {node:itinerary},{node:itinerary},{node:{...itinerary,endTime:start-1000}}
+    ]}}})};
+  };
+  routing.plan({endpoint:'https://routing.example.test/graphql',from,to,departure,fetcher})
+    .then(result=>{
+      assert.equal(result.itineraries.length,1);
+      assert.equal(result.itineraries[0].legs.length,2);
+      assert.equal(result.transportConfirmed,false);
+    }).catch(error=>{console.error(error);process.exitCode=1;});
+  routing.plan({endpoint:'http://routing.example.test/graphql',from,to,departure,fetcher})
+    .then(()=>{throw Error('HTTP endpoint accepted');})
+    .catch(error=>assert.match(error.message,/HTTPS/));
+}
