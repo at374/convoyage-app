@@ -5,6 +5,10 @@
 (function(root) {
   'use strict';
   const ENDPOINT = 'https://transport.opendata.ch/v1/connections';
+  // API /connections accepts WGS84 "latitude,longitude" directly, and can
+  // return street-walking sections to/from stops (Swiss OSM coverage).
+  // Cross-border French street approaches still require separate verification.
+  // Source: https://transport.opendata.ch/docs.html
   function point(value) {
     if (typeof value === 'string' && value.trim()) return value.trim();
     if (!value || value.lat == null || (value.lon == null && value.lng == null)) return null;
