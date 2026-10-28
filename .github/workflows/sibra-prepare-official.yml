@@ -19,7 +19,7 @@ on:
         default: '2026-11-03'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   prepare:
@@ -61,3 +61,14 @@ jobs:
           path: data/sibra/sibra-????-??-??.json
           if-no-files-found: error
           retention-days: 14
+
+      - name: Publish validated daily files on main only
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/sibra/sibra-????-??-??.json
+          if ! git diff --cached --quiet; then
+            git commit -m "data: publish SHA256-verified SIBRA theoretical day schedules"
+            git push origin HEAD:main
+          fi
