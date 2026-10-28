@@ -139,3 +139,15 @@ test('rejects overlapping or out-of-range transport legs', async () => {
   assert.equal(response.itineraries[0].legs.length,2);
   assert.equal(response.itineraries[0].transportConfirmed,false);
 });
+
+test('rejects itinerary duration inconsistent with arrival and departure', async () => {
+  const response = await routing.plan({...base,fetcher:async()=>({
+    ok:true,json:async()=>({data:{planConnection:{edges:[
+      {node:{...itinerary,duration:100}},
+      {node:{...itinerary,duration:null}},
+      {node:itinerary}
+    ]}}})
+  })});
+  assert.equal(response.itineraries.length,1);
+  assert.equal(response.itineraries[0].durationSeconds,3600);
+});
