@@ -823,7 +823,17 @@
           const nextSeconds = Number(nextClock[0]) * 3600 + Number(nextClock[1]) * 60;
           const journeys = feed.coordinateDayJourneys(result.data,
             origin.lat, origin.lng, destination.lat, destination.lng, earliest)
-            .filter(j => nextDate === date && j.arrivalSeconds <= nextSeconds);
+            .filter(j => nextDate === date && j.arrivalSeconds <= nextSeconds)
+            // Préférer une arrivée à l'arrêt 30–45 min avant la mission, sans
+            // considérer cet écart comme une marge réelle (marche non vérifiée).
+            .sort((a, b) => {
+              const score = j => {
+                const advance = (nextSeconds - j.arrivalSeconds) / 60;
+                return advance >= 30 && advance <= 45 ? 0 :
+                  advance > 45 ? advance - 45 : 30 - advance;
+              };
+              return score(a) - score(b) || a.arrivalSeconds - b.arrivalSeconds;
+            });
           if (!journeys.length) {
             line.textContent = 'SIBRA : aucun trajet direct identifié entre arrêts proches — transport non confirmé.';
             return;
