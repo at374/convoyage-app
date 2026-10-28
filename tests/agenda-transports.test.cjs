@@ -626,3 +626,21 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(planner.rankSafeReturns([late, early], 11 * 3600 + 42 * 60)[0].departureSeconds, late.departureSeconds);
   assert.equal(planner.rankSafeReturns([{ ...early, walkToStopSeconds: null }], end)[0].feasible, false);
 }
+
+{
+  const planner = require('../sibra-planner.js');
+  const stopA = [6.12, 45.9], stopB = [6.121, 45.901];
+  const walk = { status: 'VERIFIE_PIETON', provider: 'test-foot',
+    duration_seconds: 240, distance_meters: 150, geometry: [stopA, stopB] };
+  const interurban = { departureSeconds: 11 * 3600 + 48 * 60,
+    arrivalSeconds: 13 * 3600 + 45 * 60 };
+  const local = { departureSeconds: 14 * 3600,
+    arrivalSeconds: 14 * 3600 + 30 * 60 };
+  assert.equal(planner.assessInterurbanLocalTransfer(
+    interurban, local, walk, stopA, stopB).feasible, true);
+  assert.equal(planner.assessInterurbanLocalTransfer(
+    interurban, { ...local, departureSeconds: 13 * 3600 + 50 * 60 },
+    walk, stopA, stopB).feasible, false);
+  assert.equal(planner.assessInterurbanLocalTransfer(
+    interurban, local, null, stopA, stopB).feasible, false);
+}
