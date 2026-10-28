@@ -1903,6 +1903,47 @@
         refreshed.textContent = 'Actualisation réseau demandée : si les données sont indisponibles, aucun horaire récent ne sera confirmé.';
         panel.appendChild(refreshed);
       }
+      // Regional journeys between accepted missions, only when a real HTTPS
+      // OTP service is configured and both mission endpoints have exact GPS.
+      if (regionalEngineReady && regionalEndpointConfigured && next && deliveryDate) {
+        const finishGps = G.coordonnees(m, 'destination');
+        const nextGps = G.coordonnees(next, 'origin');
+        if (finishGps?.precision === 'gps' && nextGps?.precision === 'gps') {
+          const regionalStatus = document.createElement('div');
+          regionalStatus.className = 'doux';
+          regionalStatus.setAttribute('role', 'status');
+          regionalStatus.textContent = 'Jonction régionale : recherche des correspondances…';
+          panel.appendChild(regionalStatus);
+          window.CPRegionalRouting.plan({
+            endpoint: window.CP_REGIONAL_ROUTING_ENDPOINT,
+            from: {lat: finishGps.lat, lon: finishGps.lng},
+            to: {lat: nextGps.lat, lon: nextGps.lng},
+            departure: deliveryDate,
+            fetcher: window.fetch.bind(window)
+          }).then(answer => {
+            if (!regionalStatus.isConnected) return;
+            const options = window.CPRegionalRouting.feasibleBetween(
+              answer.itineraries, deliveryDate, next.pickup_start, securityMarginMin);
+            regionalStatus.textContent = options.length ?
+              'Jonction régionale : ' + options.length +
+              ' proposition(s) théoriques, horaires et circulation à vérifier :' :
+              'Jonction régionale : aucune correspondance compatible avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
+            options.slice(0, 5).forEach(option => {
+              const line = document.createElement('p');
+              const legs = option.legs.map(leg => [
+                leg.mode, leg.route, leg.from + ' → ' + leg.to
+              ].filter(Boolean).join(' ')).join(' · ');
+              line.textContent = formatParis(option.startTime) + ' → ' +
+                formatParis(option.endTime) + ' · ' + legs +
+                ' · horaire théorique, transport non confirmé.';
+              regionalStatus.appendChild(line);
+            });
+          }).catch(() => {
+            if (regionalStatus.isConnected) regionalStatus.textContent =
+              'Service régional indisponible ou incompatible. Transport non confirmé — vérifiez vous-même.';
+          });
+        }
+      }
       // Statut réel du fichier GTFS quotidien : ne pas annoncer de trajets sans données.
       if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
         const daySource = m.delivery_end || m.delivery_start || m.pickup_start;
