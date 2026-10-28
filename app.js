@@ -885,8 +885,8 @@
                 (j.transferStopId ? 'Correspondance à ' +
                   ((result.data.stops.find(stop => String(stop[0]) === j.transferStopId) || [null, j.transferStopId])[1]) +
                   ' (attente ' + Math.round(j.transferWaitSeconds / 60) + ' min) : ' : 'Direct : ') +
-                j.originStop.name + ' ' + formatTime(j.departureSeconds) + ' → ' +
-                j.destinationStop.name + ' ' + formatTime(j.arrivalSeconds) + ' — ' +
+                j.originStop.name + stopDistance(j.originStop) + ' ' + formatTime(j.departureSeconds) + ' → ' +
+                j.destinationStop.name + stopDistance(j.destinationStop) + ' ' + formatTime(j.arrivalSeconds) + ' — ' +
                 (check.feasible ? 'marche départ ' + Math.ceil(check.firstWalkSeconds / 60) + ' min, marche arrivée ' + Math.ceil(check.lastWalkSeconds / 60) + ' min, arrivée à l’adresse ' + formatTime(check.arrivalAtNextMissionSeconds) + ', avance ' + Math.floor(check.advanceSeconds / 60) + ' min (horaires théoriques)' :
                   check.status === 'marches_non_verifiees' ? 'marche non vérifiée' :
                   'enchaînement non réalisable avec la marche et la marge de sécurité')
