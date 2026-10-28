@@ -22,5 +22,7 @@ assert.equal(summer.searchParams.get('time'),'10:00');
  assert.equal(walking[0].sections[0].mode,'WALK');
  assert.equal(walking[0].sections[0].walkSeconds,420);
  assert.equal(Math.ceil(walking[0].sections[0].walkSeconds/60),7);
+ const malformed=await swiss.plan({from:'Genève',to:'Lausanne',when:'2026-12-01T10:00:00+01:00',fetcher:async()=>({ok:true,json:async()=>({connections:[null,{from:{departure:'invalid'},to:{arrival:'2026-12-01T10:00:00+01:00'}},{from:{departure:'2026-12-01T11:00:00+01:00'},to:{arrival:'2026-12-01T10:00:00+01:00'}}]})})});
+ assert.equal(malformed.length,0);
  console.log('Swiss transport adapter: URL, timezones, walking and response assertions passed');
 })().catch(e=>{console.error(e);process.exitCode=1;});
