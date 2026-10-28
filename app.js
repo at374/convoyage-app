@@ -770,6 +770,52 @@
         button.style.marginTop = '8px';
         const requestedDate = card.getAttribute('data-sibra-date');
         if (!requestedDate) return;
+        // Y51: read the published official GTFS export on demand, not a guessed timetable.
+        // This panel does not assert live service or walking feasibility.
+        if (/Y51 Albertville/.test(card.textContent || '')) {
+          const y51Button = document.createElement('button');
+          y51Button.type = 'button';
+          y51Button.className = 'second';
+          y51Button.style.marginTop = '8px';
+          y51Button.textContent = '🚌 Vérifier les courses officielles Y51 du ' + requestedDate;
+          const y51Result = document.createElement('div');
+          y51Result.className = 'doux';
+          y51Result.setAttribute('aria-live', 'polite');
+          y51Button.addEventListener('click', async () => {
+            y51Button.disabled = true;
+            y51Result.textContent = 'Chargement des données officielles Y51…';
+            try {
+              const response = await window.fetch('data/interurban/y51-gtfs-source.json', { cache: 'no-cache' });
+              if (!response.ok) throw new Error('GTFS unavailable');
+              const data = await response.json();
+              const planner = window.CPSibraPlanner;
+              if (!planner || typeof planner.activeServiceIds !== 'function' ||
+                  !Array.isArray(data.trips) || !Array.isArray(data.stop_times) ||
+                  !Array.isArray(data.routes) || !Array.isArray(data.stops) ||
+                  !Array.isArray(data.calendar) || !Array.isArray(data.calendar_dates)) {
+                throw new Error('Invalid Y51 data');
+              }
+              const services = planner.activeServiceIds(data.calendar, data.calendar_dates, requestedDate);
+              const routeIds = new Set(data.routes.map(route => String(route.route_id)));
+              const trips = data.trips.filter(trip => routeIds.has(String(trip.route_id)) &&
+                services.has(String(trip.service_id)));
+              const ids = new Set(trips.map(trip => String(trip.trip_id)));
+              const times = data.stop_times.filter(time => ids.has(String(time.trip_id)));
+              const stamp = data.checked_at_utc ? new Date(data.checked_at_utc).toLocaleString('fr-FR') : 'inconnue';
+              y51Result.textContent = 'Y51 du ' + requestedDate + ' : ' + trips.length +
+                ' courses programmées, ' + times.length + ' passages GTFS. Source vérifiée le ' +
+                stamp + '. Arrêt, sens, marche et correspondances non encore calculés. ' +
+                'Transport non confirmé — vérifiez vous-même.';
+            } catch (_) {
+              y51Result.textContent = 'Données officielles Y51 indisponibles ou non exploitables pour cette date. ' +
+                'Transport non confirmé — vérifiez vous-même.';
+            } finally {
+              y51Button.disabled = false;
+            }
+          });
+          card.appendChild(y51Button);
+          card.appendChild(y51Result);
+        }
         button.textContent = '🚌 Consulter les horaires SIBRA du ' + requestedDate;
         const result = document.createElement('div');
         result.className = 'doux';
