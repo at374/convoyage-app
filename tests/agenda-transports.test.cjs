@@ -265,6 +265,10 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
     ok: true, json: async () => ({ ...valid, transportConfirmed: true })
   }));
   assert.equal(unsafe.usable, false);
+  const empty = await feed.loadDay(day, async () => ({
+    ok: true, json: async () => ({ ...valid, stop_times: [] })
+  }));
+  assert.equal(empty.status, 'donnees_gtfs_invalides');
   assert.equal((await feed.loadDay('2026-02-30', async () => ({ ok: true }))).usable, false);
   process.stdout.write('Agenda/SIBRA tests passed: 27 scenarios\\n');
 })().catch(error => { console.error(error); process.exitCode = 1; });
