@@ -968,10 +968,36 @@
                       const transferCompatible = transferWalkMinutes !== null &&
                         bus.departureSeconds - ride.arrivalSeconds >=
                         (transferWalkMinutes + 5) * 60;
-                      return { ride, bus, transferWalkMinutes, transferCompatible };
+                      // The saved home location is city-level, not the exact address.
+                      // Calculate the last pedestrian leg as an indicative estimate only.
+                      let lastWalkMinutes = null;
+                      const alight = bus.destinationStop;
+                      if (alight && Number.isFinite(Number(alight.latitude)) &&
+                          Number.isFinite(Number(alight.longitude)) &&
+                          typeof planner.requestPedestrianOSRM === 'function' &&
+                          typeof footService === 'string' && /^https:\/\//.test(footService)) {
+                        const key = 'home:' + Number(alight.latitude) + ':' +
+                          Number(alight.longitude) + ':' + home.lat + ':' + home.lng;
+                        if (!walkCache.has(key)) {
+                          walkCache.set(key, planner.requestPedestrianOSRM(
+                            [Number(alight.longitude), Number(alight.latitude)],
+                            [home.lng, home.lat], window.fetch.bind(window),
+                            footService).catch(() => null));
+                        }
+                        const walk = await walkCache.get(key);
+                        if (walk && walk.status === 'VERIFIE_PIETON' &&
+                            Number.isFinite(walk.duration_seconds)) {
+                          lastWalkMinutes = Math.ceil(walk.duration_seconds / 60);
+                        }
+                      }
+                      return { ride, bus, transferWalkMinutes, transferCompatible,
+                        lastWalkMinutes, estimatedHomeSeconds: lastWalkMinutes === null ?
+                          null : bus.arrivalSeconds + lastWalkMinutes * 60 };
                     }));
                     combinations.sort((a, b) =>
                       Number(b.transferCompatible) - Number(a.transferCompatible) ||
+                      (a.estimatedHomeSeconds ?? Infinity) -
+                        (b.estimatedHomeSeconds ?? Infinity) ||
                       a.bus.arrivalSeconds - b.bus.arrivalSeconds);
                     sibraLine.textContent = combinations.length ?
                       'Correspondances théoriques Y51 → SIBRA : ' +
@@ -987,6 +1013,9 @@
                         (x.transferWalkMinutes === null ? 'marche non vérifiée' :
                           x.transferWalkMinutes + ' min à pied, ' +
                           (x.transferCompatible ? 'délai théorique suffisant' : 'délai insuffisant')) +
+                        ', fin de trajet : ' + (x.estimatedHomeSeconds === null ?
+                          'marche non vérifiée' : clock(x.estimatedHomeSeconds) +
+                          ' estimé au point domicile enregistré (précision ville)') +
                         ')').join(' ; ') +
                         '. Marches de correspondance et vers le domicile non vérifiées. ' +
                         'Transport non confirmé — vérifiez vous-même.' :
