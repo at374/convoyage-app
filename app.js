@@ -1931,7 +1931,8 @@
                 const latest = (v('hour') * 60 + v('minute') - 30) * 60;
                 const rides = window.CPSibraFeed.coordinateDayJourneys(
                   pickupResult.data, homeLat, homeLon, pickupGps.lat, pickupGps.lng, 0,
-                  { radiusMeters: 600 }).filter(j => j.arrivalSeconds <= latest).slice(0, 5);
+                  { radiusMeters: 600 }).filter(j =>
+                    j.arrivalSeconds + Math.ceil(j.destinationStop.straightLineMeters / 1.2) <= latest).slice(0, 5);
                 const clock = sec => String(Math.floor(sec / 3600)).padStart(2, '0') +
                   ':' + String(Math.floor(sec % 3600 / 60)).padStart(2, '0');
                 const changes = !rides.length &&
@@ -1939,13 +1940,14 @@
                   window.CPSibraFeed.coordinateOneTransferDayJourneys(
                     pickupResult.data, homeLat, homeLon, pickupGps.lat, pickupGps.lng, 0,
                     { radiusMeters: 600, minTransferSeconds: 300, limit: 10 })
-                    .filter(j => j.arrivalSeconds <= latest).slice(0, 3) : [];
+                    .filter(j => j.arrivalSeconds +
+                      Math.ceil(j.destinationStop.straightLineMeters / 1.2) <= latest).slice(0, 3) : [];
                 outbound.textContent = rides.length ?
                   '🚌 Aller SIBRA indicatif depuis le centre de ' +
                   (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
                   rides.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
                     ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
-                  '. Arrivée théorique au moins 30 min avant la prise en charge, hors marche. Domicile exact, approche piétonne, tarifs et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                  '. Marge de 30 min après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, approche piétonne, tarifs et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                   (changes.length ?
                     '🚌 Aller SIBRA avec 1 correspondance (horaires théoriques) depuis le centre de ' +
                     (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
@@ -1953,7 +1955,7 @@
                       ' → changement ' + clock(j.firstLeg.arrivalSeconds) + ' / ' +
                       clock(j.secondLeg.departureSeconds) + ' → ' +
                       j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
-                    '. Arrivée au moins 30 min avant la mission, hors marche. Domicile exact, marche et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                    '. Marge de 30 min après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, marche et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                     'Aller SIBRA : aucun bus direct ou avec 1 correspondance trouvé avec 30 min de marge depuis le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.');
               } else {
                 outbound.textContent = pickupDay && !pickupResult?.usable ?
