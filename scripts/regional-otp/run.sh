@@ -48,6 +48,11 @@ if [[ "$mode" == build ]]; then
   fi
   # Stage a complete new dataset and graph together; preserve the previous
   # generation until all candidate files are present.
+  # Refuse to swap the graph while a local router holds the shared lock.
+  if ! flock -n -x 9; then
+    echo "Cannot replace graph while regional router is serving" >&2
+    exit 1
+  fi
   previous="$(mktemp -d "${work%/}.previous.XXXXXX")"
   for name in graph.obj oura-regional.gtfs.zip region.osm.pbf; do
     if [[ -e "$work/$name" ]]; then mv "$work/$name" "$previous/$name"; fi
@@ -67,6 +72,12 @@ if [[ "$mode" == build ]]; then
   echo "Graph created. Run this script with 'serve' to start the router."
 else
   [[ -s "$work/graph.obj" ]] || { echo "Graph missing; run build first" >&2; exit 1; }
+  command -v flock >/dev/null || { echo "flock is required for safe serving" >&2; exit 1; }
+  exec 8>"$work/.serve.lock"
+  if ! flock -n -s 8; then
+    echo "Cannot start router while graph is being replaced" >&2
+    exit 1
+  fi
   echo "Starting OTP locally; verify its GraphQL endpoint and schema before configuring the app."
   java ${OTP_JAVA_OPTS:--Xmx8G} -jar "$OTP_JAR" --load --serve "$work"
 fi
