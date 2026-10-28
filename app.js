@@ -788,6 +788,52 @@
         card.appendChild(result);
       });
     }
+    // SIBRA: affichage distinct des étiquettes de missions. Recherche seulement si
+    // deux adresses possèdent des coordonnées GPS précises et des horaires connus.
+    const feed = window.CPSibraFeed;
+    if (feed && typeof feed.loadDayCached === 'function' && typeof feed.coordinateDayJourneys === 'function') {
+      for (const x of items) {
+        const chain = chainMap[x.cle];
+        if (!chain || !chain.next || !x.fin || !Number.isFinite(x.fin.t) ||
+            !Number.isFinite(chain.next.debut) || chain.next.debut <= x.fin.t) continue;
+        const origin = G.coordonnees(x.mission, 'destination');
+        const destination = G.coordonnees(chain.next.mission, 'origin');
+        if (!origin || !destination || origin.precision !== 'gps' || destination.precision !== 'gps') continue;
+        const date = new Date(x.fin.t).toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });
+        const timeParts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
+          hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(x.fin.t)).split(':');
+        const earliest = Number(timeParts[0]) * 3600 + Number(timeParts[1]) * 60;
+        const card = document.querySelectorAll('.mission')[items.indexOf(x)];
+        const panel = card && card.nextElementSibling;
+        if (!panel || !panel.classList.contains('cpAgendaChain')) continue;
+        const line = document.createElement('div');
+        line.className = 'doux';
+        line.textContent = 'SIBRA : recherche des horaires programmés…';
+        panel.appendChild(line);
+        feed.loadDayCached(date, window.fetch.bind(window)).then(result => {
+          if (!line.isConnected) return;
+          if (!result.usable) {
+            line.textContent = 'SIBRA : horaires indisponibles pour cette date — transport non confirmé.';
+            return;
+          }
+          const journeys = feed.coordinateDayJourneys(result.data,
+            origin.lat, origin.lng, destination.lat, destination.lng, earliest);
+          if (!journeys.length) {
+            line.textContent = 'SIBRA : aucun trajet direct identifié entre arrêts proches — transport non confirmé.';
+            return;
+          }
+          const formatTime = seconds => String(Math.floor(seconds / 3600) % 24).padStart(2, '0') +
+            ':' + String(Math.floor(seconds / 60) % 60).padStart(2, '0');
+          line.textContent = 'SIBRA (horaires théoriques, approche à pied non vérifiée) : ' +
+            journeys.slice(0, 3).map(j => j.originStop.name + ' ' +
+              formatTime(j.departureSeconds) + ' → ' + j.destinationStop.name + ' ' +
+              formatTime(j.arrivalSeconds)).join(' ; ') +
+            '. Transport non confirmé — vérifiez vous-même.';
+        }).catch(() => {
+          if (line.isConnected) line.textContent = 'SIBRA : recherche indisponible — transport non confirmé.';
+        });
+      }
+    }
     for (const b of document.querySelectorAll('.mission')) b.onclick = () => detail(listeAffichee[Number(b.dataset.i)]);
     const t = $('agTout'); if (t) t.onclick = () => { etat.agendaTout = !etat.agendaTout; afficher(); };
   }
