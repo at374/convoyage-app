@@ -145,7 +145,24 @@
       if (timer !== null) clearTimeout(timer);
     }
   }
-  const api = {plan, parseItinerary, validPoint};
+  // Evaluate real routed itineraries against the mission's exact deadline.
+  // This never upgrades theoretical timetable data to confirmed transport.
+  function feasibleBefore(itineraries, deadline, marginMinutes = 30) {
+    const latest = new Date(deadline).getTime();
+    const margin = Number(marginMinutes);
+    if (!Number.isFinite(latest) || !Number.isFinite(margin) || margin < 0)
+      return [];
+    return (Array.isArray(itineraries) ? itineraries : [])
+      .filter(it => it && Number.isFinite(it.startTime) &&
+        Number.isFinite(it.endTime) && it.endTime >= it.startTime &&
+        it.endTime <= latest - margin * 60000 &&
+        Array.isArray(it.legs) && it.legs.length > 0 &&
+        it.legs.every(leg => leg && Number.isFinite(leg.startTime) &&
+          Number.isFinite(leg.endTime) && leg.endTime >= leg.startTime &&
+          Number.isFinite(leg.distanceMeters) && leg.distanceMeters >= 0))
+      .sort((a,b) => a.endTime - b.endTime || a.startTime - b.startTime);
+  }
+  const api = {plan, parseItinerary, validPoint, feasibleBefore};
   root.CPRegionalRouting = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
