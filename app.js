@@ -827,10 +827,10 @@
                     fmt(leg.endTime)
                   ).join('\n')
                 ).join('\n\n') +
-                (regionalHome.precision === 'gps' ?
-                  '. Destination GPS renseignée.' :
-                  '. Destination approximative (centre de ville), pas votre adresse exacte.') +
-                ' Horaires théoriques. Transport non confirmé — vérifiez vous-même.' :
+                '\\n\\n' + (regionalHome.precision === 'gps' ?
+                  'Destination GPS renseignée.' :
+                  'Destination approximative (centre de ville), pas votre adresse exacte.') +
+                '\\nHoraires théoriques. Transport non confirmé — vérifiez vous-même.' :
                 'Aucun itinéraire régional proposé. Transport non confirmé — vérifiez vous-même.';
             } catch (error) {
               result.textContent = 'Recherche régionale indisponible : ' +
