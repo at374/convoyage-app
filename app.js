@@ -1990,17 +1990,19 @@
             get('hour') * 60 + get('minute');
           const available = 11 * 60 + 43 - finishMinutes;
           const remaining = available - n;
+          const arrivalAtStop = finishMinutes + n;
           const latestDeparture = 11 * 60 + 43 - n;
           const hhmm = minutes => String(Math.floor(minutes / 60)).padStart(2, '0') +
             ' h ' + String(minutes % 60).padStart(2, '0');
           // Un horaire positif ne prouve pas que le chemin piéton ni le car sont disponibles.
           result.textContent = remaining >= 0 ?
-            'Départ du lieu de livraison au plus tard à ' + hhmm(latestDeparture) +
-            ' pour une arrivée à l’arrêt à 11 h 43. Marge théorique : ' + remaining +
-            ' min après la livraison. Marche et circulation non confirmées.' :
-            '⚠️ Correspondance théorique impossible : départ nécessaire à ' +
-            hhmm(latestDeparture) + ', soit ' + (-remaining) +
-            ' min avant la fin de livraison prévue.';
+            'Si départ dès la fin de livraison : arrivée estimée à l’arrêt à ' +
+            hhmm(arrivalAtStop) + '. Départ du lieu de livraison au plus tard à ' +
+            hhmm(latestDeparture) + ' pour être à l’arrêt à 11 h 43. Marge théorique : ' +
+            remaining + ' min. Marche et circulation non confirmées.' :
+            '⚠️ Correspondance théorique impossible : arrivée estimée à l’arrêt à ' +
+            hhmm(arrivalAtStop) + ', soit ' + (-remaining) +
+            ' min après 11 h 43. Départ nécessaire au plus tard à ' + hhmm(latestDeparture) + '.';
         });
         actualDeliveryInput.addEventListener('input', () => input.dispatchEvent(new Event('input')));
         if (input.value !== '') input.dispatchEvent(new Event('input'));
