@@ -544,5 +544,45 @@
       interurbanStop, localStop, minimumTransferSeconds);
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, rankSafeReturns, assessInterurbanLocalTransfer, assessInterurbanBoarding, combineInterurbanLocal, combineDatedInterurbanLocal, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
+  // Evaluate a full mission -> interurban -> local chain with three independently
+  // verified pedestrian legs. Dates and operating status are caller supplied.
+  function assessDatedInterurbanLocalReturn(missionEndSeconds, interurban, local,
+    firstWalk, missionEndCoordinates, interurbanBoardingStop,
+    transferWalk, interurbanArrivalStop, localBoardingStop,
+    finalWalk, localArrivalStop, destinationCoordinates,
+    serviceDate, boardingMarginSeconds = 300, transferMarginSeconds = 300) {
+    if (!gtfsDateParts(serviceDate) || !interurban || !local ||
+        interurban.serviceDate !== serviceDate || local.serviceDate !== serviceDate ||
+        ![interurban.departureSeconds, interurban.arrivalSeconds,
+          local.departureSeconds, local.arrivalSeconds].every(Number.isFinite) ||
+        interurban.arrivalSeconds < interurban.departureSeconds ||
+        local.arrivalSeconds < local.departureSeconds) {
+      return { feasible: false, status: 'services_dates_invalides',
+        transportConfirmed: false };
+    }
+    const boarding = assessInterurbanBoarding(missionEndSeconds, interurban,
+      firstWalk, missionEndCoordinates, interurbanBoardingStop, boardingMarginSeconds);
+    if (!boarding.feasible) {
+      return { feasible: false, status: boarding.status, boarding,
+        transportConfirmed: false };
+    }
+    const transfer = assessInterurbanLocalTransfer(interurban, local, transferWalk,
+      interurbanArrivalStop, localBoardingStop, transferMarginSeconds);
+    if (!transfer.feasible) {
+      return { feasible: false, status: transfer.status, boarding, transfer,
+        transportConfirmed: false };
+    }
+    const finalWalkSeconds = verifiedWalkingSeconds(finalWalk,
+      localArrivalStop, destinationCoordinates);
+    if (finalWalkSeconds === null) {
+      return { feasible: false, status: 'marche_finale_non_verifiee', boarding,
+        transfer, transportConfirmed: false };
+    }
+    return { feasible: true, status: 'chaine_theorique_compatible',
+      boarding, transfer, finalWalkSeconds,
+      arrivalAtDestinationSeconds: local.arrivalSeconds + finalWalkSeconds,
+      transportConfirmed: false };
+  }
+
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, rankSafeReturns, assessInterurbanLocalTransfer, assessInterurbanBoarding, combineInterurbanLocal, combineDatedInterurbanLocal, assessDatedInterurbanLocalReturn, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
 });
