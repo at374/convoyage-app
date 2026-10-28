@@ -882,6 +882,9 @@
               const ranked = assessed.sort((a, b) => Number(b.check.feasible) - Number(a.check.feasible) ||
                 a.journey.arrivalSeconds - b.journey.arrivalSeconds);
               line.textContent = 'SIBRA (horaires programmés) : ' + ranked.slice(0, 3).map(({ journey: j, check }) =>
+                (j.transferStopId ? 'Correspondance à ' +
+                  ((result.data.stops.find(stop => String(stop[0]) === j.transferStopId) || [null, j.transferStopId])[1]) +
+                  ' (attente ' + Math.round(j.transferWaitSeconds / 60) + ' min) : ' : 'Direct : ') +
                 j.originStop.name + ' ' + formatTime(j.departureSeconds) + ' → ' +
                 j.destinationStop.name + ' ' + formatTime(j.arrivalSeconds) + ' — ' +
                 (check.feasible ? 'marche départ ' + Math.ceil(check.firstWalkSeconds / 60) + ' min, marche arrivée ' + Math.ceil(check.lastWalkSeconds / 60) + ' min, arrivée à l’adresse ' + formatTime(check.arrivalAtNextMissionSeconds) + ', avance ' + Math.floor(check.advanceSeconds / 60) + ' min (horaires théoriques)' :
