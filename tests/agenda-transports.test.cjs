@@ -374,3 +374,13 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(typeof feed.coordinateOneTransferDayJourneys, 'function');
   assert.deepEqual(feed.coordinateOneTransferDayJourneys(null, 45.9, 6.1, 45.92, 6.12, 9 * 3600), []);
 }
+
+// L'Agenda affiche les correspondances théoriques sans les annoncer confirmées.
+{
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.ok(app.includes('feed.coordinateOneTransferDayJourneys'));
+  assert.ok(app.includes('Correspondance à '));
+  assert.ok(app.includes('Transport non confirmé — vérifiez vous-même.'));
+}
