@@ -77,5 +77,31 @@
     }
   }
 
-  return Object.freeze({ isISODate, assessDate, loadDay });
+  // Convert compact day arrays to GTFS objects consumed by CPSibraPlanner.
+  // Validate referential integrity before exposing rows to route search.
+  function normalizeDay(data) {
+    if (!data || !Array.isArray(data.stops) || !Array.isArray(data.routes) ||
+        !Array.isArray(data.trips) || !Array.isArray(data.stop_times)) return null;
+    const stops = data.stops.map(r => Array.isArray(r) && r.length >= 4 ?
+      { stop_id: String(r[0]), stop_name: String(r[1]), stop_lat: Number(r[2]), stop_lon: Number(r[3]) } : null);
+    const trips = data.trips.map(r => Array.isArray(r) && r.length >= 2 ?
+      { trip_id: String(r[0]), route_id: String(r[1]), trip_headsign: String(r[2] || '') } : null);
+    const stopTimes = data.stop_times.map(r => Array.isArray(r) && r.length >= 5 ?
+      { trip_id: String(r[0]), stop_id: String(r[1]), stop_sequence: Number(r[2]),
+        arrival_time: String(r[3]), departure_time: String(r[4]) } : null);
+    if (!stops.length || !trips.length || !stopTimes.length ||
+        stops.includes(null) || trips.includes(null) || stopTimes.includes(null) ||
+        stops.some(s => !s.stop_id || !Number.isFinite(s.stop_lat) || !Number.isFinite(s.stop_lon) ||
+          s.stop_lat < -90 || s.stop_lat > 90 || s.stop_lon < -180 || s.stop_lon > 180) ||
+        trips.some(t => !t.trip_id || !t.route_id) ||
+        stopTimes.some(t => !t.trip_id || !t.stop_id || !Number.isInteger(t.stop_sequence) ||
+          t.stop_sequence < 0 || !/^\\d{1,3}:[0-5]\\d:[0-5]\\d$/.test(t.departure_time) ||
+          !/^\\d{1,3}:[0-5]\\d:[0-5]\\d$/.test(t.arrival_time))) return null;
+    const stopIds = new Set(stops.map(s => s.stop_id));
+    const tripIds = new Set(trips.map(t => t.trip_id));
+    if (stopTimes.some(t => !stopIds.has(t.stop_id) || !tripIds.has(t.trip_id))) return null;
+    return { stops, trips, stop_times: stopTimes };
+  }
+
+  return Object.freeze({ isISODate, assessDate, loadDay, normalizeDay });
 });
