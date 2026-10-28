@@ -1793,6 +1793,7 @@
         Date.parse(x.pickup_start) > endTime)
         .sort((a,b) => Date.parse(a.pickup_start) - Date.parse(b.pickup_start))[0] : null;
       const formatParis = value => {
+        if (value === null || value === undefined || value === '') return 'heure non renseignée';
         const date = new Date(value);
         return Number.isFinite(date.getTime()) ?
           new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris',
@@ -1847,6 +1848,7 @@
             '&travelmode=walking') +
           '" target="_blank" rel="noopener noreferrer">marche vers École Saint-François</a>. ' +
           'Départ de 11 h 48 signalé par le convoyeur : horaire non vérifié à École Saint-François, sens Albertville → Annecy. ' +
+          'La grille Y51 2026–2027 doit être consultée pour le jour exact (semaine, samedi, dimanche ou vacances). ' +
           esc(y51FeedStatus) + '<div>' + esc(y51Indicative) + '</div>' +
           '<div>' + esc(y51WorksWarning) + '</div></div>' : '') + '</div>' +
         '<p class="doux">Moteur régional : ' +
