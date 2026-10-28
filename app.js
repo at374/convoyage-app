@@ -1999,13 +1999,16 @@
                 const direct = window.CPSibraFeed.coordinateDayJourneys(...args);
                 const clock = sec => String(Math.floor(sec / 3600)).padStart(2, '0') +
                   ':' + String(Math.floor(sec % 3600 / 60)).padStart(2, '0');
-                const show = direct.slice(0, 5);
+                const show = direct.filter(j => j.departureSeconds >= earliest +
+                  Math.ceil(j.originStop.straightLineMeters / 1.2)).slice(0, 5);
                 const changes = !show.length &&
                   typeof window.CPSibraFeed.coordinateOneTransferDayJourneys === 'function' ?
                   window.CPSibraFeed.coordinateOneTransferDayJourneys(
                     result.data, deliveryGps.lat, deliveryGps.lng,
                     homeLat, homeLon, earliest,
-                    { radiusMeters: 600, minTransferSeconds: 300, limit: 10 }).slice(0, 3) : [];
+                    { radiusMeters: 600, minTransferSeconds: 300, limit: 10 })
+                    .filter(j => j.departureSeconds >= earliest +
+                      Math.ceil(j.originStop.straightLineMeters / 1.2)).slice(0, 3) : [];
                 ret.textContent = show.length ?
                   '🚌 Retour SIBRA indicatif vers le centre de ' +
                   (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
@@ -2068,7 +2071,8 @@
                   const n = key => Number(p.find(q => q.type === key)?.value || 0);
                   return (n('hour') * 60 + n('minute') - securityMarginMin) * 60;
                 })();
-                const candidates = journeys.filter(j => j.arrivalSeconds +
+                const candidates = journeys.filter(j => j.departureSeconds >= earliest +
+                  Math.ceil(j.originStop.straightLineMeters / 1.2) && j.arrivalSeconds +
                   Math.ceil(j.destinationStop.straightLineMeters / 1.2) <= latestArrival).slice(0, 5);
                 // Only search a one-change alternative if no direct service fits.
                 const changes = !candidates.length &&
@@ -2076,7 +2080,8 @@
                   window.CPSibraFeed.coordinateOneTransferDayJourneys(
                     result.data, startLat, startLon, endLat, endLon, earliest,
                     { radiusMeters: 600, minTransferSeconds: 300, limit: 10 })
-                    .filter(j => j.arrivalSeconds +
+                    .filter(j => j.departureSeconds >= earliest +
+                      Math.ceil(j.originStop.straightLineMeters / 1.2) && j.arrivalSeconds +
                       Math.ceil(j.destinationStop.straightLineMeters / 1.2) <= latestArrival).slice(0, 3) : [];
                 auto.textContent = candidates.length ?
                   '🚌 Jonction SIBRA automatique — horaires théoriques : ' +
