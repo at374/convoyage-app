@@ -662,3 +662,43 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(result[0].transportConfirmed, false);
   assert.equal(planner.combineInterurbanLocal(interurban, local, () => null, a, b).length, 0);
 }
+
+
+// Complete dated interurban + local return: fail closed for missing walking legs,
+// impossible boarding, tight transfers and mismatched service dates.
+{
+  const planner = require('../sibra-planner.js');
+  const a = [6.1, 45.9], b = [6.101, 45.901];
+  const c = [6.2, 45.95], d = [6.201, 45.951];
+  const e = [6.3, 45.96], f = [6.301, 45.961];
+  const foot = (from, to, duration_seconds = 240) => ({
+    status: 'VERIFIE_PIETON', provider: 'test-foot', duration_seconds,
+    distance_meters: 150, geometry: [from, to]
+  });
+  const serviceDate = '2026-10-28';
+  const interurban = { serviceDate, departureSeconds: 11 * 3600 + 48 * 60,
+    arrivalSeconds: 13 * 3600 + 45 * 60 };
+  const local = { serviceDate, departureSeconds: 14 * 3600,
+    arrivalSeconds: 14 * 3600 + 30 * 60 };
+  const check = (end, car = interurban, bus = local, first = foot(a, b),
+    transfer = foot(c, d), last = foot(e, f)) =>
+    planner.assessDatedInterurbanLocalReturn(end, car, bus,
+      first, a, b, transfer, c, d, last, e, f, serviceDate);
+  const valid = check(11 * 3600 + 10 * 60);
+  assert.equal(valid.feasible, true);
+  assert.equal(valid.transportConfirmed, false);
+  assert.equal(valid.arrivalAtDestinationSeconds, local.arrivalSeconds + 240);
+  assert.equal(check(11 * 3600 + 45 * 60).feasible, false);
+  assert.equal(check(11 * 3600 + 10 * 60, interurban,
+    { ...local, departureSeconds: 13 * 3600 + 50 * 60 }).feasible, false);
+  assert.equal(check(11 * 3600 + 10 * 60, interurban,
+    { ...local, serviceDate: '2026-10-29' }).feasible, false);
+  assert.equal(check(11 * 3600 + 10 * 60, interurban, local, null).feasible, false);
+  assert.equal(check(11 * 3600 + 10 * 60, interurban, local,
+    foot(a, b), null).feasible, false);
+  assert.equal(check(11 * 3600 + 10 * 60, interurban, local,
+    foot(a, b), foot(c, d), null).feasible, false);
+  assert.equal(planner.combineDatedInterurbanLocal(
+    [interurban], [{ ...local, serviceDate: '2026-10-29' }],
+    () => foot(c, d), c, d, serviceDate).length, 0);
+}
