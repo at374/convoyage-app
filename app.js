@@ -1937,12 +1937,26 @@
                   return (n('hour') * 60 + n('minute') - securityMarginMin) * 60;
                 })();
                 const candidates = journeys.filter(j => j.arrivalSeconds <= latestArrival).slice(0, 5);
+                // Only search a one-change alternative if no direct service fits.
+                const changes = !candidates.length &&
+                  typeof window.CPSibraFeed.coordinateOneTransferDayJourneys === 'function' ?
+                  window.CPSibraFeed.coordinateOneTransferDayJourneys(
+                    result.data, startLat, startLon, endLat, endLon, earliest,
+                    { radiusMeters: 600, minTransferSeconds: 300, limit: 10 })
+                    .filter(j => j.arrivalSeconds <= latestArrival).slice(0, 3) : [];
                 auto.textContent = candidates.length ?
                   '🚌 Jonction SIBRA automatique — horaires théoriques : ' +
                   candidates.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
                     ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
                   '. Arrêts à 600 m maximum à vol d’oiseau. Marche, tarifs et perturbations non vérifiés. Transport non confirmé — vérifiez vous-même.' :
-                  'Jonction SIBRA : aucune course directe compatible trouvée dans les 600 m à vol d’oiseau avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
+                  (changes.length ?
+                    '🚌 Jonction SIBRA avec 1 correspondance (horaires théoriques) : ' +
+                    changes.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
+                      ' → correspondance ' + clock(j.firstLeg.arrivalSeconds) +
+                      ' / ' + clock(j.secondLeg.departureSeconds) +
+                      ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
+                    '. Correspondance au même arrêt GTFS, marche et circulation non vérifiées. Transport non confirmé — vérifiez vous-même.' :
+                    'Jonction SIBRA : aucune course directe ou avec une correspondance trouvée à proximité avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.');
               } else {
                 auto.textContent = 'Jonction SIBRA automatique indisponible : coordonnées GPS précises des deux missions manquantes, dates différentes ou heure de livraison absente.';
               }
