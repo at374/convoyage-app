@@ -833,7 +833,7 @@
           line.textContent = 'SIBRA (horaires théoriques, approche à pied non vérifiée) : ' +
             journeys.slice(0, 3).map(j => j.originStop.name + ' ' +
               formatTime(j.departureSeconds) + ' → ' + j.destinationStop.name + ' ' +
-              formatTime(j.arrivalSeconds)).join(' ; ') +
+              formatTime(j.arrivalSeconds) + ' (écart théorique avant prise en charge : ' + Math.floor((nextSeconds - j.arrivalSeconds) / 60) + ' min, hors marche et marge de sécurité)').join(' ; ') +
             '. Transport non confirmé — vérifiez vous-même.';
         }).catch(() => {
           if (line.isConnected) line.textContent = 'SIBRA : recherche indisponible — transport non confirmé.';
