@@ -1930,13 +1930,27 @@
                   { radiusMeters: 600 }).filter(j => j.arrivalSeconds <= latest).slice(0, 5);
                 const clock = sec => String(Math.floor(sec / 3600)).padStart(2, '0') +
                   ':' + String(Math.floor(sec % 3600 / 60)).padStart(2, '0');
+                const changes = !rides.length &&
+                  typeof window.CPSibraFeed.coordinateOneTransferDayJourneys === 'function' ?
+                  window.CPSibraFeed.coordinateOneTransferDayJourneys(
+                    result.data, homeLat, homeLon, pickupGps.lat, pickupGps.lng, 0,
+                    { radiusMeters: 600, minTransferSeconds: 300, limit: 10 })
+                    .filter(j => j.arrivalSeconds <= latest).slice(0, 3) : [];
                 outbound.textContent = rides.length ?
                   '🚌 Aller SIBRA indicatif depuis le centre de ' +
                   (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
                   rides.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
                     ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
                   '. Arrivée théorique au moins 30 min avant la prise en charge, hors marche. Domicile exact, approche piétonne, tarifs et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
-                  'Aller SIBRA : aucun bus direct trouvé avec 30 min de marge depuis le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.';
+                  (changes.length ?
+                    '🚌 Aller SIBRA avec 1 correspondance (horaires théoriques) depuis le centre de ' +
+                    (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
+                    changes.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
+                      ' → changement ' + clock(j.firstLeg.arrivalSeconds) + ' / ' +
+                      clock(j.secondLeg.departureSeconds) + ' → ' +
+                      j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
+                    '. Arrivée au moins 30 min avant la mission, hors marche. Domicile exact, marche et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                    'Aller SIBRA : aucun bus direct ou avec 1 correspondance trouvé avec 30 min de marge depuis le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.');
               } else {
                 outbound.textContent = 'Aller SIBRA automatique indisponible : GPS précis du départ, ville du domicile ou horaires GTFS de la date de prise en charge manquants.';
               }
