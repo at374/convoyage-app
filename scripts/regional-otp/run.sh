@@ -24,6 +24,15 @@ command -v java >/dev/null || { echo "Java not installed" >&2; exit 1; }
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 work="${OTP_WORKDIR:-$root/.local/otp-aura}"
 mkdir -p "$work"
+# Prevent two concurrent graph builds from replacing each other's data.
+if [[ "$mode" == build ]]; then
+  command -v flock >/dev/null || { echo "flock is required for safe builds" >&2; exit 1; }
+  exec 9>"$work/.build.lock"
+  if ! flock -n 9; then
+    echo "A regional graph build is already running" >&2
+    exit 1
+  fi
+fi
 if [[ "$mode" == build ]]; then
   # Never overwrite the last valid graph or inputs until the new build succeeds.
   candidate="$(mktemp -d "${work%/}.candidate.XXXXXX")"
