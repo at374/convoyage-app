@@ -25,8 +25,14 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 work="${OTP_WORKDIR:-$root/.local/otp-aura}"
 mkdir -p "$work"
 if [[ "$mode" == build ]]; then
-  cp "$OURA_GTFS" "$work/oura-regional.gtfs.zip"
-  cp "$OSM_PBF" "$work/region.osm.pbf"
+  if [[ "$OURA_GTFS" != "$work/oura-regional.gtfs.zip" ]]; then
+    cp "$OURA_GTFS" "$work/oura-regional.gtfs.zip"
+  fi
+  if [[ "$OSM_PBF" != "$work/region.osm.pbf" ]]; then
+    cp "$OSM_PBF" "$work/region.osm.pbf"
+  fi
+  # Do not reuse a stale graph when the transit or street inputs change.
+  rm -f "$work/graph.obj"
   echo "Building graph in $work (requires substantial memory and disk space)"
   java ${OTP_JAVA_OPTS:--Xmx8G} -jar "$OTP_JAR" --build --save "$work"
   [[ -s "$work/graph.obj" ]] || { echo "OTP did not create graph.obj" >&2; exit 1; }
