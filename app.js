@@ -817,8 +817,13 @@
             line.textContent = 'SIBRA : horaires indisponibles pour cette date — transport non confirmé.';
             return;
           }
+          const nextDate = new Date(chain.next.debut).toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });
+          const nextClock = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
+            hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(chain.next.debut)).split(':');
+          const nextSeconds = Number(nextClock[0]) * 3600 + Number(nextClock[1]) * 60;
           const journeys = feed.coordinateDayJourneys(result.data,
-            origin.lat, origin.lng, destination.lat, destination.lng, earliest);
+            origin.lat, origin.lng, destination.lat, destination.lng, earliest)
+            .filter(j => nextDate === date && j.arrivalSeconds <= nextSeconds);
           if (!journeys.length) {
             line.textContent = 'SIBRA : aucun trajet direct identifié entre arrêts proches — transport non confirmé.';
             return;
