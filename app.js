@@ -767,7 +767,7 @@
           button.disabled = true;
           result.textContent = 'Chargement des horaires SIBRA…';
           try {
-            const response = await window.CPSibraFeed.loadDay(requestedDate, window.fetch.bind(window));
+            const response = await window.CPSibraFeed.loadDayCached(requestedDate, window.fetch.bind(window));
             if (!response.usable) {
               result.textContent = 'Horaires SIBRA indisponibles pour ce jour — transport non confirmé.';
             } else {
