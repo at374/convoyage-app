@@ -1,6 +1,6 @@
 // Convoyage Ultra — service worker de l'application : met en cache l'interface (ouverture hors ligne).
 // Les données des missions ne passent jamais par ce cache (elles sont gardées par l'application).
-const CACHE = 'cp-app-v249';
+const CACHE = 'cp-app-v250';
 const FICHIERS = ['./', 'index.html', 'style.css', 'app.js', 'api.js', 'calc.js', 'edition.js', 'geo.js', 'retours.js', 'agenda.js', 'planning.js', 'filtres.js', 'facturation.js', 'etat.js', 'config.js', 'manifest.webmanifest', 'icones/icone-192.png', 'icones/icone-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHIERS.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== CACHE && x !== 'cp-prefs').map(x => caches.delete(x)))).then(() => self.clients.claim())); });
