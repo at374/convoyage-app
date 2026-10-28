@@ -69,5 +69,43 @@ if missing:
         "GraphQL planConnection exists, but required arguments are missing: "
         + ", ".join(sorted(missing))
     )
-print("GraphQL endpoint reachable; planConnection arguments match the Agenda adapter.")
-print("Nested response fields, route execution, data coverage and live timetable NOT verified.")
+# Validate the exact nested selection and input types used by the browser.
+# GraphQL validates the query before execution; an empty itinerary list is
+# acceptable here, but schema errors must block activation.
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+local_now = datetime.now(ZoneInfo("Europe/Paris"))
+route_query = """query RegionalRoute($from: Location!, $to: Location!, $date: Date!, $time: Time!) {
+  planConnection(origin: $from, destination: $to, dateTime: {date: $date, time: $time},
+    first: 12, modes: {transportModes: [{mode: WALK},{mode: TRANSIT}]}) {
+    edges { node {
+      startTime endTime duration walkDistance numberOfTransfers
+      legs { mode startTime endTime distance
+        from { name } to { name } route { shortName longName } }
+    }}
+  }
+}"""
+route_payload = json.dumps({"query": route_query, "variables": {
+    "from": {"coordinates": {"latitude": 45.899, "longitude": 6.129}},
+    "to": {"coordinates": {"latitude": 45.675, "longitude": 6.393}},
+    "date": local_now.strftime("%Y-%m-%d"),
+    "time": local_now.strftime("%H:%M"),
+}}).encode("utf-8")
+route_req = urllib.request.Request(url, route_payload, {
+    "Content-Type": "application/json", "Accept": "application/json",
+    "User-Agent": "ConvoyageUltra-OTP-Probe/1.0",
+}, method="POST")
+try:
+    with opener.open(route_req, timeout=25) as response:
+        route_result = json.loads(response.read(262144))
+except (urllib.error.URLError, ValueError, TimeoutError) as exc:
+    raise SystemExit(f"OTP sample route request failed: {exc}")
+if not isinstance(route_result, dict) or route_result.get("errors"):
+    raise SystemExit("OTP sample route query incompatible: " + str(route_result.get("errors"))[:600])
+connection = (route_result.get("data") or {}).get("planConnection")
+if not isinstance(connection, dict) or not isinstance(connection.get("edges"), list):
+    raise SystemExit("OTP sample route returned an unexpected response structure")
+print("GraphQL routing query accepted; sample route response structure valid.")
+print(f"Annecy-Albertville sample returned {len(connection['edges'])} candidate itinerary edges.")
+print("Coverage, feasibility and realtime schedules remain UNCONFIRMED.")
