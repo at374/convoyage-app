@@ -296,5 +296,18 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(near[0].straightLineMeters, 0);
   assert.equal(near[0].walkingVerified, false);
   assert.equal(feed.nearbyDayStops(compact, 95, 6.1).length, 0);
-  process.stdout.write('Agenda/SIBRA tests passed: 30 scenarios\\n');
+  // 31. Plusieurs missions le même jour ne déclenchent qu'un seul téléchargement.
+  let downloads = 0;
+  const cachedFetch = async () => {
+    downloads++;
+    return { ok: true, json: async () => valid };
+  };
+  const [first, second] = await Promise.all([
+    feed.loadDayCached(day, cachedFetch),
+    feed.loadDayCached(day, cachedFetch)
+  ]);
+  assert.equal(downloads, 1);
+  assert.equal(first.usable, true);
+  assert.equal(second.usable, true);
+  process.stdout.write('Agenda/SIBRA tests passed: 31 scenarios\\n');
 })().catch(error => { console.error(error); process.exitCode = 1; });
