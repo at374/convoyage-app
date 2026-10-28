@@ -816,7 +816,12 @@
                 answer.itineraries.slice(0,5).map(it =>
                   fmt(it.startTime) + ' → ' + fmt(it.endTime) + ' · ' +
                   it.transfers + ' correspondance(s) · ' +
-                  it.legs.map(leg => leg.route || leg.mode).join(' / ')
+                  it.legs.map(leg =>
+                    (leg.route || leg.mode) + ' : ' +
+                    (leg.from || 'départ non précisé') + ' ' + fmt(leg.startTime) +
+                    ' → ' + (leg.to || 'arrivée non précisée') + ' ' +
+                    fmt(leg.endTime)
+                  ).join(' / ')
                 ).join(' ; ') +
                 (regionalHome.precision === 'gps' ?
                   '. Destination GPS renseignée.' :
