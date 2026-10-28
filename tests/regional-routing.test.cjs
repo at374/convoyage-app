@@ -237,3 +237,16 @@ test('mission arrival feasibility keeps 30-minute buffer at destination', () => 
   assert.deepEqual(routing.feasibleBefore([good],'invalid'),[]);
   assert.equal(routing.feasibleBefore([good],deadline)[0].transportConfirmed,false);
 });
+
+test('mission junction rejects departures before delivery and late arrivals', () => {
+  const delivered='2026-10-28T11:00:00+01:00';
+  const pickup='2026-10-28T13:00:00+01:00';
+  const start=Date.parse('2026-10-28T11:15:00+01:00');
+  const end=Date.parse('2026-10-28T12:25:00+01:00');
+  const valid={startTime:start,endTime:end,legs:[{startTime:start,endTime:end,distanceMeters:800}]};
+  const tooEarly={...valid,startTime:start-20*60000};
+  const tooLate={...valid,endTime:end+10*60000};
+  assert.deepEqual(routing.feasibleBetween([tooEarly,tooLate,valid],delivered,pickup),[valid]);
+  assert.deepEqual(routing.feasibleBetween([valid],'bad date',pickup),[]);
+  assert.deepEqual(routing.feasibleBetween([valid],delivered,pickup,40),[]);
+});
