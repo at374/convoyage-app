@@ -1929,10 +1929,12 @@
               return Number.isFinite(start) && Number.isFinite(end) &&
                 start >= departureMs && end <= nextPickupMs - securityMarginMin * 60000;
             }).slice(0, 5);
+            const diagnostic = options.diagnostic;
+            const diagnosticLabel = diagnostic && diagnostic.status === 'success' ? ' (API : ' + diagnostic.valid + '/' + diagnostic.received + ' horaires valides)' : '';
             swissStatus.textContent = compatible.length ?
               'Jonction suisse : ' + compatible.length +
-              ' proposition(s) indicatives. Prix et circulation non confirmés :' :
-              'Jonction suisse : aucune proposition compatible. Transport non confirmé — vérifiez vous-même.';
+              ' proposition(s) indicatives' + diagnosticLabel + '. Prix et circulation non confirmés :' :
+              'Jonction suisse : aucune proposition compatible' + diagnosticLabel + '. Transport non confirmé — vérifiez vous-même.';
             compatible.forEach(option => {
               const line = document.createElement('p');
               const legs = option.sections.map(s => [s.mode === 'WALK' ? '🚶 Marche' : s.mode,s.line,s.from && s.to ? s.from+' → '+s.to : '',s.mode === 'WALK' && Number.isFinite(s.walkSeconds) ? Math.ceil(s.walkSeconds/60)+' min à pied' : ''].filter(Boolean).join(' ')).join(' · ');
