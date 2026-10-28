@@ -1749,6 +1749,10 @@
       // Ne jamais transformer une recherche externe en trajet prétendument confirmé.
       const regionalEngineReady = !!(window.CPRegionalRouting &&
         typeof window.CPRegionalRouting.plan === 'function');
+      // The adapter is not a connected timetable provider: without a verified
+      // endpoint, no regional journeys can be calculated in this panel.
+      const regionalEndpointConfigured = !!(window.CP_REGIONAL_ROUTING_ENDPOINT &&
+        /^https:\/\/[^\s/]+/i.test(String(window.CP_REGIONAL_ROUTING_ENDPOINT)));
       const y51FeedStatus = 'Source horaire Y51 non chargée dans cette fiche : départs non confirmés.';
       const y51ServiceDay = (() => {
         const d = new Date(m.delivery_end || m.delivery_start || '');
@@ -1867,8 +1871,10 @@
           '<div>' + esc(y51WalkingWindow) + '</div>' +
           '<div>' + esc(y51SummerReference) + '</div></div>' : '') + '</div>' +
         '<p class="doux">Moteur régional : ' +
-        (regionalEngineReady ? 'adaptateur disponible, calcul non connecté à cette fiche.' :
-          'non chargé.') +
+        (regionalEngineReady && regionalEndpointConfigured ?
+          'adaptateur et adresse de service disponibles, itinéraires non encore calculés dans cette fiche.' :
+          regionalEngineReady ? 'adaptateur chargé, aucun serveur d’itinéraires régional configuré.' :
+          'adaptateur non chargé.') +
         ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
         '<p class="doux">Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
       // Statut réel du fichier GTFS quotidien : ne pas annoncer de trajets sans données.
