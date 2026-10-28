@@ -1903,6 +1903,51 @@
         refreshed.textContent = 'Actualisation réseau demandée : si les données sont indisponibles, aucun horaire récent ne sera confirmé.';
         panel.appendChild(refreshed);
       }
+      // Swiss public transport connections for an accepted mission junction.
+      // Results are advisory until realtime validity and exact walking approaches are checked.
+      if (window.CPSwissTransport && next && deliveryDate && next.pickup_start) {
+        const swissFrom = G.coordonnees(m, 'destination');
+        const swissTo = G.coordonnees(next, 'origin');
+        const nextPickupMs = Date.parse(next.pickup_start);
+        if (swissFrom?.precision === 'gps' && swissTo?.precision === 'gps' &&
+            Number.isFinite(nextPickupMs) && nextPickupMs > Date.parse(deliveryDate)) {
+          const swissStatus = document.createElement('div');
+          swissStatus.className = 'doux';
+          swissStatus.setAttribute('role', 'status');
+          swissStatus.textContent = 'Jonction suisse : recherche des bus, trams et trains…';
+          panel.appendChild(swissStatus);
+          window.CPSwissTransport.plan({
+            from: {lat:swissFrom.lat, lon:swissFrom.lng},
+            to: {lat:swissTo.lat, lon:swissTo.lng},
+            when: deliveryDate,
+            limit: 6
+          }).then(options => {
+            if (!swissStatus.isConnected) return;
+            const departureMs = Date.parse(deliveryDate);
+            const compatible = options.filter(option => {
+              const start = Date.parse(option.departure);
+              const end = Date.parse(option.arrival);
+              return Number.isFinite(start) && Number.isFinite(end) &&
+                start >= departureMs && end <= nextPickupMs - securityMarginMin * 60000;
+            }).slice(0, 5);
+            swissStatus.textContent = compatible.length ?
+              'Jonction suisse : ' + compatible.length +
+              ' proposition(s) indicatives. Prix et circulation non confirmés :' :
+              'Jonction suisse : aucune proposition compatible. Transport non confirmé — vérifiez vous-même.';
+            compatible.forEach(option => {
+              const line = document.createElement('p');
+              const legs = option.sections.map(s => [s.mode,s.line,s.from && s.to ? s.from+' → '+s.to : ''].filter(Boolean).join(' ')).join(' · ');
+              line.textContent = formatParis(option.departure) + ' → ' +
+                formatParis(option.arrival) + ' · ' + legs +
+                ' · tarif non communiqué · Transport non confirmé — vérifiez vous-même.';
+              swissStatus.appendChild(line);
+            });
+          }).catch(() => {
+            if (swissStatus.isConnected) swissStatus.textContent =
+              'Jonction suisse : service indisponible. Transport non confirmé — vérifiez vous-même.';
+          });
+        }
+      }
       // Regional journeys between accepted missions, only when a real HTTPS
       // OTP service is configured and both mission endpoints have exact GPS.
       if (regionalEngineReady && regionalEndpointConfigured && next && deliveryDate) {
