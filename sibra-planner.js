@@ -250,6 +250,25 @@
   }
 
   /**
+   * Evaluate a date-scoped SIBRA candidate using its two verified walking legs.
+   * This remains a scheduled, not real-time, feasibility assessment.
+   */
+  function assessScheduledSibraJourney(journey, missionEndSeconds, nextMissionSeconds,
+    missionFrom, missionTo, firstWalk, lastWalk, marginSeconds = 1800) {
+    const origin = journey && journey.originStop;
+    const destination = journey && journey.destinationStop;
+    if (!origin || !destination ||
+        ![origin.lat, origin.lon, destination.lat, destination.lon].every(Number.isFinite) ||
+        !Number.isFinite(journey.departureSeconds) || !Number.isFinite(journey.arrivalSeconds)) {
+      return { feasible: false, status: 'donnees_insuffisantes', transportConfirmed: false };
+    }
+    return assessVerifiedBusConnection(missionEndSeconds, journey.departureSeconds,
+      journey.arrivalSeconds, nextMissionSeconds, firstWalk, missionFrom,
+      [origin.lon, origin.lat], lastWalk, [destination.lon, destination.lat],
+      missionTo, marginSeconds);
+  }
+
+  /**
    * Adapt a GeoJSON LineString from a pedestrian routing service.
    * Caller supplies the service identity; this never confirms bus realtime.
    */
@@ -427,5 +446,5 @@
     return { valid: errors.length === 0, errors };
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
 });
