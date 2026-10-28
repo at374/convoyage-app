@@ -644,3 +644,21 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(planner.assessInterurbanLocalTransfer(
     interurban, local, null, stopA, stopB).feasible, false);
 }
+
+{
+  const planner = require('../sibra-planner.js');
+  const a = [6.12, 45.9], b = [6.121, 45.901];
+  const foot = { status: 'VERIFIE_PIETON', provider: 'test-foot',
+    duration_seconds: 240, distance_meters: 150, geometry: [a, b] };
+  const interurban = [{ departureSeconds: 11 * 3600 + 48 * 60,
+    arrivalSeconds: 13 * 3600 + 45 * 60 }];
+  const local = [
+    { departureSeconds: 13 * 3600 + 50 * 60, arrivalSeconds: 14 * 3600 + 10 * 60 },
+    { departureSeconds: 14 * 3600, arrivalSeconds: 14 * 3600 + 20 * 60 }
+  ];
+  const result = planner.combineInterurbanLocal(interurban, local, () => foot, a, b);
+  assert.equal(result.length, 1);
+  assert.equal(result[0].local.departureSeconds, 14 * 3600);
+  assert.equal(result[0].transportConfirmed, false);
+  assert.equal(planner.combineInterurbanLocal(interurban, local, () => null, a, b).length, 0);
+}
