@@ -1769,6 +1769,30 @@
       const regionalEngineReady = !!(window.CPRegionalRouting &&
         typeof window.CPRegionalRouting.plan === 'function');
       const y51FeedStatus = 'Source horaire Y51 non chargée dans cette fiche : départs non confirmés.';
+      const y51Indicative = (() => {
+        const end = Date.parse(m.delivery_end || m.delivery_start || '');
+        if (!Number.isFinite(end)) return 'Heure de livraison manquante : correspondance Y51 non calculable.';
+        const parisDay = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date(end));
+        const [year, month, day] = parisDay.split('-').map(Number);
+        const offset = (date) => {
+          const parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit',
+            hourCycle: 'h23'
+          }).formatToParts(date);
+          const h = Number(parts.find(x => x.type === 'hour').value);
+          const m = Number(parts.find(x => x.type === 'minute').value);
+          return h * 60 + m;
+        };
+        const minutes = 11 * 60 + 48 - offset(new Date(end));
+        if (minutes <= 0) return 'Départ indicatif 11 h 48 déjà passé à l’heure de livraison prévue.';
+        return 'Départ indicatif 11 h 48 : ' + minutes +
+          ' min après la livraison prévue, avant marche jusqu’à l’arrêt et aléas. ' +
+          (minutes <= 30 ? 'Marge de 30 min impossible à conserver.' :
+            'Après une marge de 30 min, il reste au maximum ' + (minutes - 30) +
+            ' min pour rejoindre l’arrêt. Temps de marche non mesuré.');
+      })();
       const endTime = Date.parse(m.delivery_end || m.delivery_start || '');
       const next = Number.isFinite(endTime) ? etat.missions.filter(x =>
         x !== m && (x.kind === 'acceptee' || x.status === 'acceptee') &&
@@ -1830,7 +1854,7 @@
             '&travelmode=walking') +
           '" target="_blank" rel="noopener noreferrer">marche vers École Saint-François</a>. ' +
           'Départ de 11 h 48 indiqué par le convoyeur, non confirmé pour cette date. ' +
-          esc(y51FeedStatus) + '</div>' : '') + '</div>' +
+          esc(y51FeedStatus) + '<div>' + esc(y51Indicative) + '</div></div>' : '') + '</div>' +
         '<p class="doux">Moteur régional : ' +
         (regionalEngineReady ? 'adaptateur disponible, calcul non connecté à cette fiche.' :
           'non chargé.') +
