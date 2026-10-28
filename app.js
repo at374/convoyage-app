@@ -1989,6 +1989,52 @@
           });
         }
       }
+      // Regional outbound itinerary: use only a known home reference point
+      // and the exact GPS pickup, with a 30-minute arrival buffer.
+      if (regionalEngineReady && regionalEndpointConfigured && pickupDate) {
+        const pickupGps = G.coordonnees(m, 'origin');
+        const homeLat = Number(etat.reglages?.domicile_lat);
+        const homeLon = Number(etat.reglages?.domicile_lng);
+        const homeGpsReady = etat.reglages?.domicile_lat != null &&
+          etat.reglages?.domicile_lng != null &&
+          window.CPRegionalRouting.validPoint({lat:homeLat,lon:homeLon});
+        if (pickupGps?.precision === 'gps' && homeGpsReady) {
+          const outboundStatus = document.createElement('div');
+          outboundStatus.className = 'doux';
+          outboundStatus.setAttribute('role', 'status');
+          outboundStatus.textContent = 'Aller régional : recherche des itinéraires…';
+          panel.appendChild(outboundStatus);
+          const earliest = new Date(Date.parse(pickupDate) - 6 * 3600000);
+          window.CPRegionalRouting.plan({
+            endpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
+            from:{lat:homeLat,lon:homeLon},
+            to:{lat:pickupGps.lat,lon:pickupGps.lng},
+            departure:earliest.toISOString(),
+            fetcher:window.fetch.bind(window)
+          }).then(answer => {
+            if (!outboundStatus.isConnected) return;
+            const options = window.CPRegionalRouting.feasibleBefore(
+              answer.itineraries, pickupDate, securityMarginMin).slice(0, 5);
+            outboundStatus.textContent = options.length ?
+              'Aller régional : ' + options.length +
+              ' proposition(s) théoriques depuis le point de domicile enregistré (adresse exacte non vérifiée) :' :
+              'Aller régional : aucune arrivée compatible avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
+            options.forEach(option => {
+              const line = document.createElement('p');
+              const legs = option.legs.map(leg =>
+                [leg.mode, leg.route, leg.from + ' → ' + leg.to]
+                  .filter(Boolean).join(' ')).join(' · ');
+              line.textContent = formatParis(option.startTime) + ' → ' +
+                formatParis(option.endTime) + ' · ' + legs +
+                ' · horaire théorique, transport non confirmé.';
+              outboundStatus.appendChild(line);
+            });
+          }).catch(() => {
+            if (outboundStatus.isConnected) outboundStatus.textContent =
+              'Aller régional : service indisponible. Transport non confirmé — vérifiez vous-même.';
+          });
+        }
+      }
       // Statut réel du fichier GTFS quotidien : ne pas annoncer de trajets sans données.
       if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
         const daySource = m.delivery_end || m.delivery_start || m.pickup_start;
