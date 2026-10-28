@@ -1,0 +1,27 @@
+name: Test regional OTP build staging
+on:
+  push:
+    paths:
+      - 'scripts/regional-otp/run.sh'
+      - 'tests/regional-otp-staging.sh'
+      - '.github/workflows/test-regional-otp-staging.yml'
+  pull_request:
+    paths:
+      - 'scripts/regional-otp/run.sh'
+      - 'tests/regional-otp-staging.sh'
+      - '.github/workflows/test-regional-otp-staging.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  staging-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check shell syntax
+        run: |
+          bash -n scripts/regional-otp/run.sh
+          bash -n tests/regional-otp-staging.sh
+      - name: Test graph rollback and successful replacement
+        run: bash tests/regional-otp-staging.sh
