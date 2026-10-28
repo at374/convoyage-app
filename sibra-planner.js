@@ -225,8 +225,8 @@
   function pedestrianRouteFromGeoJSON(feature, provider) {
     const geometry = feature && feature.geometry;
     const properties = feature && feature.properties;
-    const duration = properties && Number(properties.duration);
-    const distance = properties && Number(properties.distance);
+    const duration = properties && typeof properties.duration === 'number' ? properties.duration : NaN;
+    const distance = properties && typeof properties.distance === 'number' ? properties.distance : NaN;
     if (typeof provider !== 'string' || !provider.trim() ||
         !geometry || geometry.type !== 'LineString' ||
         !Array.isArray(geometry.coordinates) || geometry.coordinates.length < 2 ||
