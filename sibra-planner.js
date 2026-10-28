@@ -240,6 +240,22 @@
   }
 
   /**
+   * Convert an OSRM foot-profile route to the same verified walking format.
+   * The caller must configure a genuinely pedestrian routing service; a car
+   * profile must never be passed as a walking route.
+   */
+  function pedestrianRouteFromOSRM(response, profile = 'foot') {
+    if (profile !== 'foot' || !response || response.code !== 'Ok' ||
+        !Array.isArray(response.routes) || !response.routes.length) return null;
+    const route = response.routes[0];
+    if (!route || !route.geometry || route.geometry.type !== 'LineString') return null;
+    return pedestrianRouteFromGeoJSON({
+      geometry: route.geometry,
+      properties: { duration: route.duration, distance: route.distance }
+    }, 'OSRM-foot');
+  }
+
+  /**
    * A pedestrian leg is usable only when a route provider explicitly verified
    * a walkable itinerary. Geodesic distance alone never satisfies this check.
    */
@@ -347,5 +363,5 @@
     return { valid: errors.length === 0, errors };
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, parseGtfsCsv, validateGtfsTables });
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, parseGtfsCsv, validateGtfsTables });
 });
