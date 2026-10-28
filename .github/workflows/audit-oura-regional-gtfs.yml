@@ -13,7 +13,7 @@ jobs:
       - name: Check official Oura aggregate metadata and GTFS archive
         shell: python
         run: |
-          import json, urllib.request, zipfile, tempfile, os, datetime
+          import json, urllib.request, zipfile, tempfile, os, datetime, csv, io
           api = 'https://www.data.gouv.fr/api/1/datasets/?q=agr%C3%A9gat%20O%C3%B9ra&page_size=30'
           req = urllib.request.Request(api, headers={'User-Agent':'ConvoyageUltra-GTFS-Audit/1.0'})
           with urllib.request.urlopen(req, timeout=35) as response:
@@ -40,12 +40,46 @@ jobs:
           try:
               with zipfile.ZipFile(archive) as z:
                   names = set(z.namelist())
-                  required = {'stops.txt','trips.txt','stop_times.txt','routes.txt','calendar.txt'}
+                  required = {'stops.txt','trips.txt','stop_times.txt','routes.txt'}
                   missing = required - names
                   if missing: raise SystemExit('Missing GTFS tables: '+str(sorted(missing)))
+                  if not ({'calendar.txt', 'calendar_dates.txt'} & names):
+                      raise SystemExit('No GTFS service calendar')
+                  def rows(table):
+                      if table not in names: return
+                      with z.open(table) as stream:
+                          for row in csv.DictReader(io.TextIOWrapper(stream, encoding='utf-8-sig')):
+                              yield row
+                  agencies = {r.get('agency_id') or r.get('agency_name') for r in rows('agency.txt')}
+                  routes = list(rows('routes.txt'))
+                  route_ids = {r.get('route_id') for r in routes}
+                  route_types = {}
+                  for route in routes:
+                      kind = route.get('route_type', 'unknown')
+                      route_types[kind] = route_types.get(kind, 0) + 1
+                  stop_count = sum(1 for _ in rows('stops.txt'))
+                  trip_count = sum(1 for _ in rows('trips.txt'))
+                  if not route_ids or not stop_count or not trip_count:
+                      raise SystemExit('GTFS has empty route/stop/trip tables')
+                  summary = {'checked_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    'source':url,'archive_bytes':os.path.getsize(archive),
+                    'agency_count':len(agencies),'route_count':len(route_ids),
+                    'stop_count':stop_count,'trip_count':trip_count,
+                    'route_types':route_types,'source_updated_at':resource.get('last_modified'),
+                    'status':'GTFS_ARCHIVE_VALIDATED'}
+                  with open('oura-audit.json','w',encoding='utf-8') as out:
+                      json.dump(summary,out,ensure_ascii=False,indent=2)
+                  print(json.dumps(summary,ensure_ascii=False,indent=2))
                   print(json.dumps({'checked_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     'source':url,'archive_bytes':os.path.getsize(archive),
                     'tables':sorted(names),'status':'GTFS_ARCHIVE_VALIDATED'},
                     ensure_ascii=False,indent=2))
           finally:
               os.unlink(archive)
+      - name: Upload regional coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oura-regional-gtfs-audit
+          path: oura-audit.json
+          if-no-files-found: warn
