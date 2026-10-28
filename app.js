@@ -856,7 +856,7 @@
           if (canCheckWalk) {
             const from = [Number(origin.lng), Number(origin.lat)];
             const to = [Number(destination.lng), Number(destination.lat)];
-            const selected = journeys.slice(0, 3);
+            const selected = journeys.slice(0, 12);
             Promise.all(selected.map(async j => {
               const firstStop = [Number(j.originStop.longitude), Number(j.originStop.latitude)];
               const lastStop = [Number(j.destinationStop.longitude), Number(j.destinationStop.latitude)];
@@ -868,7 +868,9 @@
                 j, earliest, nextSeconds, from, to, firstWalk, lastWalk, 1800) };
             })).then(assessed => {
               if (!line.isConnected) return;
-              line.textContent = 'SIBRA (horaires programmés) : ' + assessed.map(({ journey: j, check }) =>
+              const ranked = assessed.sort((a, b) => Number(b.check.feasible) - Number(a.check.feasible) ||
+                a.journey.arrivalSeconds - b.journey.arrivalSeconds);
+              line.textContent = 'SIBRA (horaires programmés) : ' + ranked.slice(0, 3).map(({ journey: j, check }) =>
                 j.originStop.name + ' ' + formatTime(j.departureSeconds) + ' → ' +
                 j.destinationStop.name + ' ' + formatTime(j.arrivalSeconds) + ' — ' +
                 (check.feasible ? 'marche vérifiée, horaires compatibles avec 30 min de marge' :
