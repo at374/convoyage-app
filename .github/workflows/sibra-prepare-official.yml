@@ -57,6 +57,12 @@ jobs:
         run: |
           if [ -z "$FIRST_DAY" ]; then FIRST_DAY="$(date -u +%F)"; fi
           if [ -z "$LAST_DAY" ]; then LAST_DAY="$(date -u -d "$FIRST_DAY + 6 days" +%F)"; fi
+          # Never publish dates beyond the validated archive service period.
+          # A new official GTFS archive and checksum must be reviewed first.
+          if [[ "$LAST_DAY" > "2026-12-20" ]]; then
+            echo "::error::Requested dates exceed validated GTFS validity (2026-12-20). Update official archive and SHA256 first."
+            exit 1
+          fi
           python scripts/export_sibra_range.py gtfs-sibra.zip "$FIRST_DAY" "$LAST_DAY" data/sibra
           echo "Generated SIBRA service dates: $FIRST_DAY through $LAST_DAY"
       - name: Upload generated JSON files for review (no automatic deployment)
