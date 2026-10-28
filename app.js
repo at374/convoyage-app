@@ -1936,7 +1936,7 @@
               'Jonction suisse : aucune proposition compatible. Transport non confirmé — vérifiez vous-même.';
             compatible.forEach(option => {
               const line = document.createElement('p');
-              const legs = option.sections.map(s => [s.mode,s.line,s.from && s.to ? s.from+' → '+s.to : ''].filter(Boolean).join(' ')).join(' · ');
+              const legs = option.sections.map(s => [s.mode === 'WALK' ? '🚶 Marche' : s.mode,s.line,s.from && s.to ? s.from+' → '+s.to : '',s.mode === 'WALK' && Number.isFinite(s.walkSeconds) ? Math.ceil(s.walkSeconds/60)+' min à pied' : ''].filter(Boolean).join(' ')).join(' · ');
               line.textContent = formatParis(option.departure) + ' → ' +
                 formatParis(option.arrival) + ' · ' + legs +
                 ' · tarif non communiqué · Transport non confirmé — vérifiez vous-même.';
@@ -2013,7 +2013,7 @@
               valid.forEach(result => {
                 const line = document.createElement('p');
                 const legs = result.sections.map(s =>
-                  [s.mode,s.line,s.from && s.to ? s.from+' → '+s.to : ''].filter(Boolean).join(' ')).join(' · ');
+                  [s.mode === 'WALK' ? '🚶 Marche' : s.mode,s.line,s.from && s.to ? s.from+' → '+s.to : '',s.mode === 'WALK' && Number.isFinite(s.walkSeconds) ? Math.ceil(s.walkSeconds/60)+' min à pied' : ''].filter(Boolean).join(' ')).join(' · ');
                 line.textContent = formatParis(result.departure) + ' → ' +
                   formatParis(result.arrival) + ' · ' + legs +
                   ' · tarif non communiqué · Transport non confirmé — vérifiez vous-même.';
