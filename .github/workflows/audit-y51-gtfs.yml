@@ -57,6 +57,25 @@ jobs:
           os.makedirs("audit-output", exist_ok=True)
           with open("audit-output/y51-gtfs-audit.json", "w", encoding="utf-8") as f:
               json.dump(summary, f, ensure_ascii=False, indent=2)
+          # Export the exact GTFS tables needed for dated routing, without changing the application.
+          service_ids = {t.get("service_id") for t in trips}
+          def subset(name, predicate):
+              if name not in names:
+                  return []
+              return [r for r in rows(name) if predicate(r)]
+          tables = {
+              "routes": y51,
+              "trips": trips,
+              "stop_times": y51_times,
+              "stops": summary["stops"],
+              "calendar": subset("calendar.txt", lambda r: r.get("service_id") in service_ids),
+              "calendar_dates": subset("calendar_dates.txt", lambda r: r.get("service_id") in service_ids)
+          }
+          if not tables["calendar"] and not tables["calendar_dates"]:
+              raise RuntimeError("No service calendar for Y51; dated routing cannot be trusted")
+          with open("audit-output/y51-gtfs-dated.json", "w", encoding="utf-8") as f:
+              json.dump({"source": url, "checked_at_utc": summary["checked_at_utc"], "status": summary["status"], "tables": tables}, f, ensure_ascii=False, separators=(",", ":"))
+          print("Exported Y51 GTFS tables for date-aware route calculations")
           print("Y51 trips:", len(trips), "stop times:", len(y51_times), "stops:", len(summary["stops"]))
           PY
       - name: Upload audit report
