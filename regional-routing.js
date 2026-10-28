@@ -103,8 +103,11 @@
           Number.isFinite(it.endTime) && it.endTime >= it.startTime &&
           it.startTime >= date.getTime() - 60000 &&
           it.legs.length > 0 &&
-          it.legs.every(leg => Number.isFinite(leg.startTime) &&
-            Number.isFinite(leg.endTime) && leg.endTime >= leg.startTime));
+          it.legs.every((leg, index) => Number.isFinite(leg.startTime) &&
+            Number.isFinite(leg.endTime) && leg.endTime >= leg.startTime &&
+            leg.startTime >= it.startTime - 60000 &&
+            leg.endTime <= it.endTime + 60000 &&
+            (index === 0 || leg.startTime >= it.legs[index - 1].endTime)));
       return {source:'OpenTripPlanner', date:localDate, updatedAt:new Date().toISOString(),
         itineraries:validItineraries,
         transportConfirmed:false, realtime:false};
