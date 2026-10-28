@@ -336,3 +336,12 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.ok(app.includes('écart théorique avant prise en charge'));
   assert.ok(app.includes('hors marche et marge de sécurité'));
 }
+
+// L'Agenda privilégie une fenêtre théorique de 30 à 45 minutes à l'arrêt.
+{
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.ok(app.includes('advance >= 30 && advance <= 45'));
+  assert.ok(app.includes('marche non vérifiée'));
+}
