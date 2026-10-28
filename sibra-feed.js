@@ -58,7 +58,15 @@
     }
     const base = typeof basePath === 'string' ? basePath.replace(/\/$/, '') : 'data/sibra';
     try {
-      const response = await fetchImpl(base + '/sibra-' + day + '.json');
+      const controller = typeof AbortController === 'function' ? new AbortController() : null;
+      const timer = controller ? setTimeout(() => controller.abort(), 12000) : null;
+      let response;
+      try {
+        response = await fetchImpl(base + '/sibra-' + day + '.json',
+          controller ? {signal: controller.signal} : undefined);
+      } finally {
+        if (timer !== null) clearTimeout(timer);
+      }
       if (!response || !response.ok) {
         return { usable: false, status: 'horaires_jour_absents', transportConfirmed: false };
       }
