@@ -258,13 +258,13 @@
     const origin = journey && journey.originStop;
     const destination = journey && journey.destinationStop;
     if (!origin || !destination ||
-        ![origin.lat, origin.lon, destination.lat, destination.lon].every(Number.isFinite) ||
+        ![origin.latitude, origin.longitude, destination.latitude, destination.longitude].every(Number.isFinite) ||
         !Number.isFinite(journey.departureSeconds) || !Number.isFinite(journey.arrivalSeconds)) {
       return { feasible: false, status: 'donnees_insuffisantes', transportConfirmed: false };
     }
     return assessVerifiedBusConnection(missionEndSeconds, journey.departureSeconds,
       journey.arrivalSeconds, nextMissionSeconds, firstWalk, missionFrom,
-      [origin.lon, origin.lat], lastWalk, [destination.lon, destination.lat],
+      [origin.longitude, origin.latitude], lastWalk, [destination.longitude, destination.latitude],
       missionTo, marginSeconds);
   }
 
