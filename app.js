@@ -1768,6 +1768,7 @@
       // Ne jamais transformer une recherche externe en trajet prétendument confirmé.
       const regionalEngineReady = !!(window.CPRegionalRouting &&
         typeof window.CPRegionalRouting.plan === 'function');
+      const y51FeedStatus = 'Source horaire Y51 non chargée dans cette fiche : départs non confirmés.';
       const endTime = Date.parse(m.delivery_end || m.delivery_start || '');
       const next = Number.isFinite(endTime) ? etat.missions.filter(x =>
         x !== m && (x.kind === 'acceptee' || x.status === 'acceptee') &&
@@ -1828,7 +1829,8 @@
             encodeURIComponent('École Saint-François, Albertville') +
             '&travelmode=walking') +
           '" target="_blank" rel="noopener noreferrer">marche vers École Saint-François</a>. ' +
-          'Départ de 11 h 48 non confirmé pour cette date.</div>' : '') + '</div>' +
+          'Départ de 11 h 48 indiqué par le convoyeur, non confirmé pour cette date. ' +
+          esc(y51FeedStatus) + '</div>' : '') + '</div>' +
         '<p class="doux">Moteur régional : ' +
         (regionalEngineReady ? 'adaptateur disponible, calcul non connecté à cette fiche.' :
           'non chargé.') +
