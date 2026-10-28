@@ -162,7 +162,15 @@
           Number.isFinite(leg.distanceMeters) && leg.distanceMeters >= 0))
       .sort((a,b) => a.endTime - b.endTime || a.startTime - b.startTime);
   }
-  const api = {plan, parseItinerary, validPoint, feasibleBefore};
+  // A journey connecting two missions must depart after the vehicle delivery
+  // and arrive before the next pickup, allowing a configurable safety buffer.
+  function feasibleBetween(itineraries, deliveryEnd, nextPickup, marginMinutes = 30) {
+    const earliest = new Date(deliveryEnd).getTime();
+    if (!Number.isFinite(earliest)) return [];
+    return feasibleBefore(itineraries, nextPickup, marginMinutes)
+      .filter(it => it.startTime >= earliest);
+  }
+  const api = {plan, parseItinerary, validPoint, feasibleBefore, feasibleBetween};
   root.CPRegionalRouting = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
