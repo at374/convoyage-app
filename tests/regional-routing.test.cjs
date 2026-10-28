@@ -57,3 +57,21 @@ test('reports GraphQL schema errors without claiming an itinerary', async () => 
     ok:true,json:async()=>({errors:[{message:'Unknown argument'}]})
   })}),/Schema regional incompatible/);
 });
+
+test('ignores stale departures and legs with invalid times', async () => {
+  const result = await routing.plan({...base,fetcher:async()=>({
+    ok:true,json:async()=>({data:{plan:{itineraries:[
+      {...itinerary,startTime:1793170000000},
+      {...itinerary,legs:[{...itinerary.legs[0],endTime:null}]},
+      itinerary
+    ]}}})
+  })});
+  assert.equal(result.itineraries.length,1);
+  assert.equal(result.itineraries[0].legs[0].route,'Y51');
+});
+test('accepts edge/node itinerary responses', async () => {
+  const result = await routing.plan({...base,fetcher:async()=>({
+    ok:true,json:async()=>({data:{plan:{edges:[{node:itinerary}]}}})
+  })});
+  assert.equal(result.itineraries.length,1);
+});
