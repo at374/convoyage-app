@@ -404,3 +404,13 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.strictEqual(feed.normalizeDay(day), first);
   assert.notStrictEqual(feed.normalizeDay({...day}), first);
 }
+
+// Transfer matching must ignore unrelated intermediate stops while preserving the valid connection.
+{
+  const feed = require('../sibra-feed.js');
+  const day = { stops: [['A','A',45.9,6.1],['X','X',45.91,6.11],['Y','Y',45.92,6.12],['B','B',45.93,6.13]], routes: [['R1','1'],['R2','2'],['R3','3']], trips: [['T1','R1'],['T2','R2'],['T3','R3']], stop_times: [['T1','A',1,'09:00:00','09:00:00'],['T1','X',2,'09:10:00','09:10:00'],['T2','Y',1,'09:15:00','09:15:00'],['T2','B',2,'09:30:00','09:30:00'],['T3','X',1,'09:17:00','09:17:00'],['T3','B',2,'09:35:00','09:35:00']] };
+  const results = feed.oneTransferDayJourneys(day, 'A', 'B', 8 * 3600);
+  assert.equal(results.length, 1);
+  assert.equal(results[0].transferStopId, 'X');
+  assert.equal(results[0].secondLeg.tripId, 'T3');
+}

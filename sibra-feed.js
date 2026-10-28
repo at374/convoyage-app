@@ -244,9 +244,15 @@
         }
       }
     }
+    // Index second legs by transfer stop to avoid comparing unrelated routes.
+    const secondByStop = new Map();
+    for (const leg of secondLegs) {
+      if (!secondByStop.has(leg.fromStopId)) secondByStop.set(leg.fromStopId, []);
+      secondByStop.get(leg.fromStopId).push(leg);
+    }
     const found = [];
-    for (const first of firstLegs) for (const second of secondLegs) {
-      if (first.toStopId !== second.fromStopId || first.tripId === second.tripId) continue;
+    for (const first of firstLegs) for (const second of (secondByStop.get(first.toStopId) || [])) {
+      if (first.tripId === second.tripId) continue;
       const waitSeconds = second.departureSeconds - first.arrivalSeconds;
       if (waitSeconds < minWait || waitSeconds > maxWait) continue;
       found.push({ firstLeg: first, secondLeg: second, transferStopId: first.toStopId,
