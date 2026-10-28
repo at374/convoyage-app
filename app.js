@@ -1937,10 +1937,20 @@
         const walkCacheKey = 'cp_y51_walk_' + encodeURIComponent(String(to || '').trim().toLowerCase());
         try {
           const cached = window.localStorage.getItem(walkCacheKey);
-          if (cached !== null && /^\\d{1,3}$/.test(cached) && Number(cached) <= 120) {
+          if (cached !== null && /^\d{1,3}$/.test(cached) && Number(cached) <= 120) {
             input.value = cached;
           }
         } catch (_) { /* stockage facultatif sur cet appareil */ }
+        const clearWalk = document.createElement('button');
+        clearWalk.type = 'button';
+        clearWalk.className = 'btnSec';
+        clearWalk.textContent = 'Effacer l’estimation enregistrée';
+        clearWalk.addEventListener('click', () => {
+          try { window.localStorage.removeItem(walkCacheKey); } catch (_) {}
+          input.value = '';
+          result.textContent = 'Estimation effacée. Saisir un temps de marche vérifié pour recalculer.';
+        });
+        estimate.appendChild(clearWalk);
         input.addEventListener('input', () => {
           const n = Number(input.value);
           if (input.value === '' || !Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > 120) {
