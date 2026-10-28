@@ -725,12 +725,12 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
       { service_id: 'special', date: '20261028', exception_type: '1' }
     ],
     stop_times: [
-      { trip_id: 'weekday', stop_id: 'albertville', stop_sequence: '1', departure_time: '11:00:00' },
-      { trip_id: 'weekday', stop_id: 'annecy', stop_sequence: '2', arrival_time: '12:00:00' },
-      { trip_id: 'other', stop_id: 'albertville', stop_sequence: '1', departure_time: '11:30:00' },
-      { trip_id: 'other', stop_id: 'annecy', stop_sequence: '2', arrival_time: '12:30:00' },
-      { trip_id: 'exception', stop_id: 'albertville', stop_sequence: '1', departure_time: '11:48:00' },
-      { trip_id: 'exception', stop_id: 'annecy', stop_sequence: '2', arrival_time: '13:15:00' }
+      { trip_id: 'weekday', stop_id: 'albertville', stop_sequence: '1', departure_time: '11:00:00', arrival_time: '11:00:00', departure_time: '11:00:00' },
+      { trip_id: 'weekday', stop_id: 'annecy', stop_sequence: '2', arrival_time: '12:00:00', departure_time: '12:00:00' },
+      { trip_id: 'other', stop_id: 'albertville', stop_sequence: '1', departure_time: '11:30:00', arrival_time: '11:30:00', departure_time: '11:30:00' },
+      { trip_id: 'other', stop_id: 'annecy', stop_sequence: '2', arrival_time: '12:30:00', departure_time: '12:30:00' },
+      { trip_id: 'exception', stop_id: 'albertville', stop_sequence: '1', departure_time: '11:48:00', arrival_time: '11:48:00', departure_time: '11:48:00' },
+      { trip_id: 'exception', stop_id: 'annecy', stop_sequence: '2', arrival_time: '13:15:00', departure_time: '13:15:00' }
     ]
   };
   const rides = planner.datedInterurbanRides(tables, '2026-10-28',
