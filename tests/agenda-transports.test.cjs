@@ -289,5 +289,12 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(direct[0].transportConfirmed, false);
   assert.equal(feed.directDayJourneys(compact, 'B', 'A', 0).length, 0);
   assert.equal(feed.directDayJourneys(compact, 'A', 'B', 10 * 3600).length, 0);
-  process.stdout.write('Agenda/SIBRA tests passed: 29 scenarios\\n');
+    // 30. Les arrêts proches sont des distances à vol d'oiseau, pas des trajets à pied validés.
+  const near = feed.nearbyDayStops(compact, 45.9, 6.1, 100, 5);
+  assert.equal(near.length, 1);
+  assert.equal(near[0].stopId, 'A');
+  assert.equal(near[0].straightLineMeters, 0);
+  assert.equal(near[0].walkingVerified, false);
+  assert.equal(feed.nearbyDayStops(compact, 95, 6.1).length, 0);
+  process.stdout.write('Agenda/SIBRA tests passed: 30 scenarios\\n');
 })().catch(error => { console.error(error); process.exitCode = 1; });
