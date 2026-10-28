@@ -1932,12 +1932,22 @@
         estimate.appendChild(stopLocationNote);
         const input = estimate.querySelector('#cpY51WalkMinutes');
         const result = estimate.querySelector('#cpY51WalkResult');
+        // Conserver uniquement une estimation de marche locale, liée à l’adresse
+        // de livraison, sans enregistrer les données de mission ni les identifiants.
+        const walkCacheKey = 'cp_y51_walk_' + encodeURIComponent(String(to || '').trim().toLowerCase());
+        try {
+          const cached = window.localStorage.getItem(walkCacheKey);
+          if (cached !== null && /^\\d{1,3}$/.test(cached) && Number(cached) <= 120) {
+            input.value = cached;
+          }
+        } catch (_) { /* stockage facultatif sur cet appareil */ }
         input.addEventListener('input', () => {
           const n = Number(input.value);
-          if (input.value === '' || !Number.isFinite(n) || n < 0 || n > 120) {
+          if (input.value === '' || !Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > 120) {
             result.textContent = 'Indiquer une durée de marche valide entre 0 et 120 minutes.';
             return;
           }
+          try { window.localStorage.setItem(walkCacheKey, String(n)); } catch (_) {}
           const delivery = new Date(m.delivery_end || m.delivery_start || '');
           if (!Number.isFinite(delivery.getTime())) {
             result.textContent = 'Livraison sans horaire : comparaison impossible.';
@@ -1970,6 +1980,7 @@
             hhmm(latestDeparture) + ', soit ' + (-remaining) +
             ' min avant la fin de livraison prévue.';
         });
+        if (input.value !== '') input.dispatchEvent(new Event('input'));
       }
       bt.setAttribute('aria-controls', panel.id);
       bt.setAttribute('aria-expanded', 'true');
