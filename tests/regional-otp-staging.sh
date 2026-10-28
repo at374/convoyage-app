@@ -32,3 +32,19 @@ bash "$repo/scripts/regional-otp/run.sh" build
 [[ "$(cat "$tmp/work/oura-regional.gtfs.zip")" == new-gtfs ]]
 [[ "$(cat "$tmp/work/region.osm.pbf")" == new-osm ]]
 echo "OTP staging and rollback regression tests passed"
+
+# A second build must refuse to run while the lock is held.
+(
+  flock -x 9
+  sleep 2
+) 9>"$tmp/work/.build.lock" &
+lock_pid=$!
+sleep 0.3
+if bash "$repo/scripts/regional-otp/run.sh" build; then
+  echo "Concurrent build unexpectedly acquired the lock" >&2
+  kill "$lock_pid" 2>/dev/null || true
+  exit 1
+fi
+wait "$lock_pid"
+[[ "$(cat "$tmp/work/graph.obj")" == new-graph ]]
+echo "Concurrent build protection passed"
