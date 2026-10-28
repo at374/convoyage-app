@@ -367,3 +367,10 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(journeys[0].transportConfirmed, false);
   assert.equal(feed.oneTransferDayJourneys(day, 'A', 'B', 8 * 3600, { minTransferSeconds: 420 }).length, 0);
 }
+
+// Le moteur de correspondances doit pouvoir partir des coordonnées GPS des missions.
+{
+  const feed = require('../sibra-feed.js');
+  assert.equal(typeof feed.coordinateOneTransferDayJourneys, 'function');
+  assert.deepEqual(feed.coordinateOneTransferDayJourneys(null, 45.9, 6.1, 45.92, 6.12, 9 * 3600), []);
+}

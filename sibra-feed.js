@@ -253,5 +253,25 @@
     return found.slice(0, Number.isInteger(options.limit) && options.limit > 0 ? Math.min(50, options.limit) : 10);
   }
 
-  return Object.freeze({ isISODate, assessDate, loadDay, loadDayCached, normalizeDay, directDayJourneys, nearbyDayStops, coordinateDayJourneys, oneTransferDayJourneys });
+  // Coordinate-based one-transfer candidates; approach and realtime remain unverified.
+  function coordinateOneTransferDayJourneys(dayData, fromLat, fromLon, toLat, toLon,
+    earliestDepartureSeconds, options = {}) {
+    if (!Number.isFinite(earliestDepartureSeconds)) return [];
+    const radius = Number.isFinite(options.radiusMeters) ? options.radiusMeters : 600;
+    const origins = nearbyDayStops(dayData, fromLat, fromLon, radius, 5);
+    const destinations = nearbyDayStops(dayData, toLat, toLon, radius, 5);
+    const result = [];
+    for (const origin of origins) for (const destination of destinations) {
+      if (origin.stopId === destination.stopId) continue;
+      for (const journey of oneTransferDayJourneys(dayData, origin.stopId,
+        destination.stopId, earliestDepartureSeconds, { ...options, limit: 6 })) {
+        result.push({ ...journey, originStop: origin, destinationStop: destination,
+          approachVerified: false, transportConfirmed: false, realtime: false });
+      }
+    }
+    result.sort((a, b) => a.arrivalSeconds - b.arrivalSeconds || a.departureSeconds - b.departureSeconds);
+    return result.slice(0, 10);
+  }
+
+  return Object.freeze({ isISODate, assessDate, loadDay, loadDayCached, normalizeDay, directDayJourneys, nearbyDayStops, coordinateDayJourneys, oneTransferDayJourneys, coordinateOneTransferDayJourneys });
 });
