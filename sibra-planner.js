@@ -506,5 +506,19 @@
       a.departureSeconds - b.departureSeconds);
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, rankSafeReturns, assessInterurbanLocalTransfer, combineInterurbanLocal, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
+  // Combine only services explicitly tied to the same valid operating date.
+  // Never connect a Y51 run from one day to a SIBRA run from another day.
+  function combineDatedInterurbanLocal(interurbanTrips, localTrips, getWalkingRoute,
+    interurbanStop, localStop, serviceDate, minimumTransferSeconds = 300) {
+    if (!gtfsDateParts(serviceDate) ||
+        !Array.isArray(interurbanTrips) || !Array.isArray(localTrips)) return [];
+    const datedInterurban = interurbanTrips.filter(t =>
+      t && t.serviceDate === serviceDate);
+    const datedLocal = localTrips.filter(t =>
+      t && t.serviceDate === serviceDate);
+    return combineInterurbanLocal(datedInterurban, datedLocal, getWalkingRoute,
+      interurbanStop, localStop, minimumTransferSeconds);
+  }
+
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, rankSafeReturns, assessInterurbanLocalTransfer, combineInterurbanLocal, combineDatedInterurbanLocal, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
 });
