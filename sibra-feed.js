@@ -139,5 +139,31 @@
     return found.slice(0, Number.isInteger(limit) && limit > 0 ? Math.min(limit, 50) : 8);
   }
 
-  return Object.freeze({ isISODate, assessDate, loadDay, normalizeDay, directDayJourneys });
+  // Browse nearby SIBRA stops without claiming an accessible pedestrian route.
+  function nearbyDayStops(dayData, latitude, longitude, radiusMeters = 700, limit = 6) {
+    if (!dayData || !Array.isArray(dayData.stops) ||
+        !Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+        Math.abs(latitude) > 90 || Math.abs(longitude) > 180 ||
+        !Number.isFinite(radiusMeters) || radiusMeters <= 0) return [];
+    const rad = Math.PI / 180;
+    const result = [];
+    for (const row of dayData.stops) {
+      if (!Array.isArray(row) || row.length < 4) continue;
+      const lat = Number(row[2]), lon = Number(row[3]);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) continue;
+      const a = Math.sin((lat - latitude) * rad / 2) ** 2 +
+        Math.cos(latitude * rad) * Math.cos(lat * rad) *
+        Math.sin((lon - longitude) * rad / 2) ** 2;
+      const meters = 6371000 * 2 * Math.asin(Math.min(1, Math.sqrt(a)));
+      if (meters <= radiusMeters) result.push({
+        stopId: String(row[0]), name: String(row[1]), latitude: lat, longitude: lon,
+        straightLineMeters: Math.round(meters), walkingVerified: false,
+        transportConfirmed: false
+      });
+    }
+    result.sort((a, b) => a.straightLineMeters - b.straightLineMeters);
+    return result.slice(0, Number.isInteger(limit) && limit > 0 ? Math.min(limit, 30) : 6);
+  }
+
+  return Object.freeze({ isISODate, assessDate, loadDay, normalizeDay, directDayJourneys, nearbyDayStops });
 });
