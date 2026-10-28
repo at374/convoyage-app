@@ -271,7 +271,8 @@
     try {
       const base = new URL(serviceBaseUrl);
       if (base.username || base.password || base.search || base.hash ||
-          !base.pathname.replace(/\/$/, '').endsWith('/route/v1/foot')) return null;
+          !base.pathname.replace(/\/$/, '').endsWith('/route/v1/foot') ||
+          base.protocol !== 'https:' || !base.hostname) return null;
       const path = base.pathname.replace(/\/$/, '') + '/' +
         from.map(Number).join(',') + ';' + to.map(Number).join(',');
       endpoint = new URL(base.origin + path);
