@@ -885,6 +885,17 @@
               }
               const boardingStatus = boardingChecks.length ?
                 boardingChecks.join(' ; ') : 'Marche depuis la livraison non vérifiée.';
+              // Show the actual Y51 arrival stop from GTFS for each proposed trip.
+              // These map links help locate the SIBRA transfer, without inventing it.
+              const arrivalStops = [...new Map(selectedRides.map(ride => {
+                const stop = stopById.get(String(ride.to_stop_id));
+                return [String(ride.to_stop_id), stop];
+              }).filter(entry => entry[1])).values()];
+              const arrivalLinks = arrivalStops.filter(stop =>
+                Number.isFinite(Number(stop.stop_lat)) &&
+                Number.isFinite(Number(stop.stop_lon)) &&
+                Math.abs(Number(stop.stop_lat)) <= 90 &&
+                Math.abs(Number(stop.stop_lon)) <= 180);
               y51Result.textContent = 'Y51 du ' + requestedDate + ' :' + trips.length +
                 ' courses programmées, ' + times.length + ' passages GTFS. Source vérifiée le ' +
                 stamp + '. ' + (unique.length ?
@@ -899,6 +910,17 @@
                   ' : vérifiez les noms exacts des arrêts et les horaires GTFS.') +
                 ' ' + boardingStatus + '. Correspondances et circulation réelle non vérifiées. ' +
                 'Transport non confirmé — vérifiez vous-même.';
+              for (const stop of arrivalLinks.slice(0, 3)) {
+                const link = document.createElement('a');
+                link.href = 'https://www.google.com/maps/search/?api=1&query=' +
+                  encodeURIComponent(Number(stop.stop_lat) + ',' + Number(stop.stop_lon));
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.style.display = 'block';
+                link.textContent = '🗺️ Arrivée Y51 : ' +
+                  (stop.stop_name || stop.stop_id) + ' — localiser pour la correspondance SIBRA';
+                y51Result.appendChild(link);
+              }
             } catch (_) {
               y51Result.textContent = 'Données officielles Y51 indisponibles ou non exploitables pour cette date. ' +
                 'Transport non confirmé — vérifiez vous-même.';
