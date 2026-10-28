@@ -1,0 +1,53 @@
+name: Export GTFS Y51 for Agenda
+on:
+  workflow_dispatch:
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Extract Y51 timetable and service calendars from official GTFS
+        env:
+          GTFS_URL: https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA
+        run: |
+          python3 - <<'PY'
+          import csv, io, json, os, urllib.request, zipfile
+          from datetime import datetime, timezone
+          req = urllib.request.Request(os.environ["GTFS_URL"], headers={"User-Agent":"ConvoyageUltra-GTFS-Export/1.0"})
+          with urllib.request.urlopen(req, timeout=65) as response:
+              archive = response.read(80_000_001)
+          if len(archive) > 80_000_000:
+              raise RuntimeError("GTFS archive exceeds 80 MB")
+          z = zipfile.ZipFile(io.BytesIO(archive))
+          names = {p.rsplit("/",1)[-1].lower():p for p in z.namelist()}
+          def rows(name):
+              if name not in names: return []
+              with z.open(names[name]) as f:
+                  return list(csv.DictReader(io.TextIOWrapper(f, encoding="utf-8-sig")))
+          routes = [r for r in rows("routes.txt") if "Y51" in " ".join((r.get("route_short_name",""),r.get("route_long_name",""))).upper()]
+          if not routes: raise RuntimeError("Y51 route not found")
+          route_ids = {r["route_id"] for r in routes}
+          trips = [t for t in rows("trips.txt") if t.get("route_id") in route_ids]
+          trip_ids = {t["trip_id"] for t in trips}
+          times = [t for t in rows("stop_times.txt") if t.get("trip_id") in trip_ids]
+          stop_ids = {t["stop_id"] for t in times}
+          stops = [s for s in rows("stops.txt") if s.get("stop_id") in stop_ids]
+          services = {t["service_id"] for t in trips}
+          calendar = [r for r in rows("calendar.txt") if r.get("service_id") in services]
+          exceptions = [r for r in rows("calendar_dates.txt") if r.get("service_id") in services]
+          if not times or not stops or not (calendar or exceptions):
+              raise RuntimeError("Incomplete Y51 timetable/calendar")
+          out = {"source":os.environ["GTFS_URL"],"retrieved_utc":datetime.now(timezone.utc).isoformat(),"status":"theoretical_only_unverified_live","routes":routes,"trips":trips,"stop_times":times,"stops":stops,"calendar":calendar,"calendar_dates":exceptions}
+          os.makedirs("export-output",exist_ok=True)
+          with open("export-output/y51-gtfs.json","w",encoding="utf-8") as f:
+              json.dump(out,f,ensure_ascii=False,separators=(",",":"))
+          print("Exported",len(trips),"Y51 trips,",len(times),"stop times,",len(stops),"stops,",len(calendar),"calendar rules,",len(exceptions),"exceptions")
+          PY
+      - name: Upload dated Y51 feed for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: y51-gtfs-dated-export
+          path: export-output/y51-gtfs.json
+          if-no-files-found: error
