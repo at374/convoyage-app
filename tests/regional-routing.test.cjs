@@ -262,3 +262,12 @@ test('mission feasibility rejects missing dates rather than Unix epoch', () => {
     assert.deepEqual(routing.feasibleBetween([itinerary],missing,'2026-10-28T13:00:00+01:00',0),[]);
   }
 });
+
+test('rejects invalid timeout values without issuing HTTP requests', async () => {
+  let requests = 0;
+  const fetcher = async () => { requests++; throw new Error('unexpected request'); };
+  for (const timeoutMs of [0, -1, NaN, Infinity, 'invalid']) {
+    await assert.rejects(routing.plan({...base,timeoutMs,fetcher}), /Delai de requete invalide/);
+  }
+  assert.equal(requests, 0);
+});
