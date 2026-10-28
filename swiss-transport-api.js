@@ -29,7 +29,10 @@
     const diagnostic = {checkedAt:new Date().toISOString(),received:0,valid:0,status:'pending'};
     root.CPSwissTransport.lastCheck = diagnostic;
     const fetcher=options.fetcher || root.fetch;
-    if(typeof fetcher!=='function') throw new Error('Réseau indisponible');
+    if(typeof fetcher!=='function') {
+      diagnostic.status = 'error';
+      throw new Error('Réseau indisponible');
+    }
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 12000);
     let data;
