@@ -414,3 +414,37 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(results[0].transferStopId, 'X');
   assert.equal(results[0].secondLeg.tripId, 'T3');
 }
+
+
+// SIBRA day cache: concurrent requests deduplicate; completed data expires after 15 minutes.
+{
+  const feed = require('../sibra-feed.js');
+  const originalNow = Date.now;
+  let now = 1000000, requests = 0;
+  Date.now = () => now;
+  const fetchDay = async () => {
+    requests++;
+    return { ok: true, json: async () => ({
+      date: '2026-10-28', stops: [['A','A',45.9,6.1]],
+      routes: [['R','R']], trips: [['T','R']],
+      stop_times: [['T','A',1,'09:00:00','09:00:00']],
+      transportConfirmed: false, realtime: false
+    }) };
+  };
+  (async () => {
+    try {
+      const first = await Promise.all([
+        feed.loadDayCached('2026-10-28', fetchDay, 'test-cache-ttl'),
+        feed.loadDayCached('2026-10-28', fetchDay, 'test-cache-ttl')
+      ]);
+      assert(first.every(result => result.usable));
+      assert.equal(requests, 1);
+      now += 14 * 60 * 1000;
+      await feed.loadDayCached('2026-10-28', fetchDay, 'test-cache-ttl');
+      assert.equal(requests, 1);
+      now += 2 * 60 * 1000;
+      await feed.loadDayCached('2026-10-28', fetchDay, 'test-cache-ttl');
+      assert.equal(requests, 2);
+    } finally { Date.now = originalNow; }
+  })().catch(error => { process.nextTick(() => { throw error; }); });
+}
