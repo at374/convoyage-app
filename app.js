@@ -785,7 +785,8 @@
         if (regional && typeof regional.plan === 'function' &&
             /^https:\/\//.test(String(regionalEndpoint || '')) &&
             card.hasAttribute('data-y51-lat') && card.hasAttribute('data-y51-lng') &&
-            regionalHome && regionalHome.precision === 'gps' &&
+            regionalHome && Number.isFinite(Number(regionalHome.lat)) &&
+            Number.isFinite(Number(regionalHome.lng)) &&
             Number.isFinite(regionalLat) && Number.isFinite(regionalLon) &&
             Number.isFinite(regionalEnd) && regionalEnd > 0) {
           const regionalButton = document.createElement('button');
@@ -816,7 +817,11 @@
                   fmt(it.startTime) + ' → ' + fmt(it.endTime) + ' · ' +
                   it.transfers + ' correspondance(s) · ' +
                   it.legs.map(leg => leg.route || leg.mode).join(' / ')
-                ).join(' ; ') + '. Horaires théoriques. Transport non confirmé — vérifiez vous-même.' :
+                ).join(' ; ') +
+                (regionalHome.precision === 'gps' ?
+                  '. Destination GPS renseignée.' :
+                  '. Destination approximative (centre de ville), pas votre adresse exacte.') +
+                ' Horaires théoriques. Transport non confirmé — vérifiez vous-même.' :
                 'Aucun itinéraire régional proposé. Transport non confirmé — vérifiez vous-même.';
             } catch (error) {
               result.textContent = 'Recherche régionale indisponible : ' +
