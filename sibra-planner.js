@@ -446,5 +446,19 @@
     return { valid: errors.length === 0, errors };
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
+  // Rank return options by earliest arrival, only when the approach is verified.
+  function rankSafeReturns(options, endSeconds, marginSeconds = 300) {
+    if (!Array.isArray(options) || !Number.isFinite(endSeconds)) return [];
+    return options.filter(o => o && Number.isFinite(o.departureSeconds) &&
+      Number.isFinite(o.arrivalSeconds) && o.arrivalSeconds >= o.departureSeconds)
+      .map(o => {
+        const walk = o.walkToStopSeconds;
+        const safe = Number.isFinite(walk) && walk >= 0 &&
+          endSeconds + walk + marginSeconds <= o.departureSeconds;
+        return { ...o, feasible: safe, transportConfirmed: false };
+      }).sort((a, b) => Number(b.feasible) - Number(a.feasible) ||
+        a.arrivalSeconds - b.arrivalSeconds || a.departureSeconds - b.departureSeconds);
+  }
+
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, rankSafeReturns, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
 });
