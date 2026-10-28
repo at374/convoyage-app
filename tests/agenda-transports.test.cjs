@@ -843,3 +843,12 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.ok(jsonRead >= 0 && timerClear > jsonRead,
     'The SIBRA timeout must remain active until the JSON body is read');
 }
+
+{
+  const fs = require('node:fs');
+  const source = fs.readFileSync(require('node:path').join(__dirname, '..', 'app.js'), 'utf8');
+  assert.match(source, /CPRegionalRouting\.plan\(\{/);
+  assert.match(source, /CPRegionalRouting\.feasibleBetween\(/);
+  assert.match(source, /finishGps\?\.precision === 'gps' && nextGps\?\.precision === 'gps'/);
+  assert.match(source, /options\.slice\(0, 5\)/);
+}
