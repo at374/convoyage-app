@@ -748,6 +748,45 @@
     });
     if (caches || etat.agendaTout) html += `<button id="agTout" class="second" style="width:100%;margin-top:10px">${etat.agendaTout ? 'Masquer les missions passées' : 'Afficher les ' + caches + ' mission(s) passée(s) de plus de 7 jours'}</button>`;
     $('ecran').innerHTML = html;
+    // SIBRA : consultation volontaire des horaires du jour, hors étiquettes.
+    // Aucun trajet n'est déclaré réalisable sans approche piétonne vérifiée.
+    const todayParis = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });
+    if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
+      const cards = document.querySelectorAll('.cpAgendaChain');
+      cards.forEach(card => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'second';
+        button.style.marginTop = '8px';
+        button.textContent = '🚌 Consulter les horaires SIBRA du jour';
+        const result = document.createElement('div');
+        result.className = 'doux';
+        result.setAttribute('aria-live', 'polite');
+        button.addEventListener('click', async () => {
+          button.disabled = true;
+          result.textContent = 'Chargement des horaires SIBRA…';
+          try {
+            const response = await window.CPSibraFeed.loadDay(todayParis, window.fetch.bind(window));
+            if (!response.usable) {
+              result.textContent = 'Horaires SIBRA indisponibles pour ce jour — transport non confirmé.';
+            } else {
+              const d = response.data;
+              result.textContent = 'Horaires programmés SIBRA du ' + todayParis + ' : ' +
+                d.trips.length.toLocaleString('fr-FR') + ' courses, ' +
+                d.stop_times.length.toLocaleString('fr-FR') + ' passages et ' +
+                d.stops.length.toLocaleString('fr-FR') + ' arrêts. ' +
+                'Trajet vers la mission non calculé : adresses et marche d’approche à vérifier. Transport non confirmé.';
+            }
+          } catch (_) {
+            result.textContent = 'Chargement impossible — transport non confirmé.';
+          } finally {
+            button.disabled = false;
+          }
+        });
+        card.appendChild(button);
+        card.appendChild(result);
+      });
+    }
     for (const b of document.querySelectorAll('.mission')) b.onclick = () => detail(listeAffichee[Number(b.dataset.i)]);
     const t = $('agTout'); if (t) t.onclick = () => { etat.agendaTout = !etat.agendaTout; afficher(); };
   }
