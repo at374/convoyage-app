@@ -37,7 +37,7 @@
       clearTimeout(timeout);
     }
     if(!data || !Array.isArray(data.connections)) throw new Error('Réponse API suisse invalide');
-    return data.connections.map(c=>({
+    return data.connections.filter(c => c && c.from && c.to && Number.isFinite(Date.parse(c.from.departure)) && Number.isFinite(Date.parse(c.to.arrival)) && Date.parse(c.to.arrival) >= Date.parse(c.from.departure)).map(c=>({
       departure:c.from && c.from.departure || null,
       arrival:c.to && c.to.arrival || null,
       sections:Array.isArray(c.sections)?c.sections.map(s=>({
