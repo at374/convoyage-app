@@ -1896,6 +1896,13 @@
         bt.click();
       };
       panel.appendChild(refreshTransport);
+      if (bt.dataset.transportRefreshAt) {
+        const refreshed = document.createElement('p');
+        refreshed.className = 'doux';
+        refreshed.setAttribute('role', 'status');
+        refreshed.textContent = 'Actualisation réseau demandée : si les données sont indisponibles, aucun horaire récent ne sera confirmé.';
+        panel.appendChild(refreshed);
+      }
       // Statut réel du fichier GTFS quotidien : ne pas annoncer de trajets sans données.
       if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
         const daySource = m.delivery_end || m.delivery_start || m.pickup_start;
