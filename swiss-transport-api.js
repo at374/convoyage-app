@@ -19,6 +19,8 @@
     if (!Number.isFinite(when.getTime())) throw new Error('Date de trajet invalide');
     const p=new URLSearchParams({from,to,date:(() => { const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Zurich',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(when).map(p=>[p.type,p.value]));return parts.year+'-'+parts.month+'-'+parts.day; })(),time:new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Zurich',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(when),limit:String(Math.min(16,Math.max(1,Number(options.limit)||6)))});
     if(options.arriveBy) p.set('isArrivalTime','1');
+    // transport.opendata.ch expects the Swiss transport categories in transportations[].
+    // Include S-Bahn and regional trains, in addition to intercity trains, trams and buses.
     ['train','tram','bus'].forEach(mode=>p.append('transportations[]',mode));
     return ENDPOINT+'?'+p.toString();
   }
@@ -27,7 +29,10 @@
     const diagnostic = {checkedAt:new Date().toISOString(),received:0,valid:0,status:'pending'};
     root.CPSwissTransport.lastCheck = diagnostic;
     const fetcher=options.fetcher || root.fetch;
-    if(typeof fetcher!=='function') throw new Error('Réseau indisponible');
+    if(typeof fetcher!=='function') {
+      diagnostic.status = 'error';
+      throw new Error('Réseau indisponible');
+    }
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 12000);
     let data;
