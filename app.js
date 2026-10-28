@@ -846,6 +846,40 @@
           }
           const formatTime = seconds => String(Math.floor(seconds / 3600) % 24).padStart(2, '0') +
             ':' + String(Math.floor(seconds / 60) % 60).padStart(2, '0');
+          // Route piétonne : uniquement un service foot HTTPS configuré explicitement.
+          // Une durée à vol d'oiseau ne valide jamais une correspondance.
+          const planner = window.CPSibraPlanner;
+          const footEndpoint = window.CP_PEDESTRIAN_OSRM_URL;
+          const canCheckWalk = planner && typeof planner.requestPedestrianOSRM === 'function' &&
+            typeof planner.assessScheduledSibraJourney === 'function' &&
+            typeof footEndpoint === 'string' && /^https:\/\//.test(footEndpoint);
+          if (canCheckWalk) {
+            const from = [Number(origin.lng), Number(origin.lat)];
+            const to = [Number(destination.lng), Number(destination.lat)];
+            const selected = journeys.slice(0, 3);
+            Promise.all(selected.map(async j => {
+              const firstStop = [Number(j.originStop.longitude), Number(j.originStop.latitude)];
+              const lastStop = [Number(j.destinationStop.longitude), Number(j.destinationStop.latitude)];
+              const [firstWalk, lastWalk] = await Promise.all([
+                planner.requestPedestrianOSRM(from, firstStop, window.fetch.bind(window), footEndpoint),
+                planner.requestPedestrianOSRM(lastStop, to, window.fetch.bind(window), footEndpoint)
+              ]);
+              return { journey: j, check: planner.assessScheduledSibraJourney(
+                j, earliest, nextSeconds, from, to, firstWalk, lastWalk, 1800) };
+            })).then(assessed => {
+              if (!line.isConnected) return;
+              line.textContent = 'SIBRA (horaires programmés) : ' + assessed.map(({ journey: j, check }) =>
+                j.originStop.name + ' ' + formatTime(j.departureSeconds) + ' → ' +
+                j.destinationStop.name + ' ' + formatTime(j.arrivalSeconds) + ' — ' +
+                (check.feasible ? 'marche vérifiée, horaires compatibles avec 30 min de marge' :
+                  check.status === 'marches_non_verifiees' ? 'marche non vérifiée' :
+                  'enchaînement non réalisable avec la marche et la marge de sécurité')
+              ).join(' ; ') + '. Transport non confirmé — vérifiez vous-même.';
+            }).catch(() => {
+              if (line.isConnected) line.textContent = 'SIBRA : vérification piétonne indisponible — transport non confirmé.';
+            });
+            return;
+          }
           line.textContent = 'SIBRA (horaires théoriques, approche à pied non vérifiée) : ' +
             journeys.slice(0, 3).map(j => (j.transferStopId ? 'Correspondance à ' +
               ((result.data.stops.find(stop => String(stop[0]) === j.transferStopId) || [null, j.transferStopId])[1]) +
