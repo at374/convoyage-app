@@ -1923,12 +1923,17 @@
           const get = type => Number(parts.find(x => x.type === type)?.value || 0);
           const available = 11 * 60 + 43 - get('hour') * 60 - get('minute');
           const remaining = available - n;
-          // La marche et les horaires ne sont pas vérifiés en temps réel.
-          // La marge positive ne vaut jamais confirmation de faisabilité.
+          const latestDeparture = 11 * 60 + 43 - n;
+          const hhmm = minutes => String(Math.floor(minutes / 60)).padStart(2, '0') +
+            ' h ' + String(minutes % 60).padStart(2, '0');
+          // Un horaire positif ne prouve pas que le chemin piéton ni le car sont disponibles.
           result.textContent = remaining >= 0 ?
-            'Marge théorique après marche : ' + remaining + ' min avant 11 h 43. Horaires et marche non confirmés.' :
-            '⚠️ Correspondance théorique impossible : arrivée ' + (-remaining) +
-            ' min après l’heure recommandée de 11 h 43.';
+            'Départ du lieu de livraison au plus tard à ' + hhmm(latestDeparture) +
+            ' pour une arrivée à l’arrêt à 11 h 43. Marge théorique : ' + remaining +
+            ' min après la livraison. Marche et circulation non confirmées.' :
+            '⚠️ Correspondance théorique impossible : départ nécessaire à ' +
+            hhmm(latestDeparture) + ', soit ' + (-remaining) +
+            ' min avant la fin de livraison prévue.';
         });
       }
       bt.setAttribute('aria-controls', panel.id);
