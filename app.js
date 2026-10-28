@@ -938,10 +938,31 @@
                         Number(stop.stop_lat), Number(stop.stop_lon),
                         home.lat, home.lng, ride.arrivalSeconds + 300);
                       for (const bus of departures.slice(0, 3)) {
-                        combinations.push({ ride, bus });
+                        let transferWalkMinutes = null;
+                        const board = bus.originStop;
+                        const footService = window.CP_PEDESTRIAN_OSRM_URL;
+                        if (board && Number.isFinite(Number(board.latitude)) &&
+                            Number.isFinite(Number(board.longitude)) &&
+                            typeof planner.requestPedestrianOSRM === 'function' &&
+                            typeof footService === 'string' && /^https:\/\//.test(footService)) {
+                          const walk = await planner.requestPedestrianOSRM(
+                            [Number(stop.stop_lon), Number(stop.stop_lat)],
+                            [Number(board.longitude), Number(board.latitude)],
+                            window.fetch.bind(window), footService);
+                          if (walk && walk.status === 'VERIFIE_PIETON' &&
+                              Number.isFinite(walk.duration_seconds)) {
+                            transferWalkMinutes = Math.ceil(walk.duration_seconds / 60);
+                          }
+                        }
+                        const transferCompatible = transferWalkMinutes !== null &&
+                          bus.departureSeconds - ride.arrivalSeconds >=
+                          (transferWalkMinutes + 5) * 60;
+                        combinations.push({ ride, bus, transferWalkMinutes, transferCompatible });
                       }
                     }
-                    combinations.sort((a, b) => a.bus.arrivalSeconds - b.bus.arrivalSeconds);
+                    combinations.sort((a, b) =>
+                      Number(b.transferCompatible) - Number(a.transferCompatible) ||
+                      a.bus.arrivalSeconds - b.bus.arrivalSeconds);
                     sibraLine.textContent = combinations.length ?
                       'Correspondances théoriques Y51 → SIBRA : ' +
                       combinations.slice(0, 5).map(x =>
@@ -952,6 +973,10 @@
                         (x.bus.originStop && x.bus.originStop.name || 'arrêt à vérifier') +
                         ' → ' +
                         (x.bus.destinationStop && x.bus.destinationStop.name || 'arrêt à vérifier') +
+                        ', correspondance : ' +
+                        (x.transferWalkMinutes === null ? 'marche non vérifiée' :
+                          x.transferWalkMinutes + ' min à pied, ' +
+                          (x.transferCompatible ? 'délai théorique suffisant' : 'délai insuffisant')) +
                         ')').join(' ; ') +
                         '. Marches de correspondance et vers le domicile non vérifiées. ' +
                         'Transport non confirmé — vérifiez vous-même.' :
