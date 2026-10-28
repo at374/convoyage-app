@@ -29,7 +29,7 @@
       to: leg.to && leg.to.name || '',
       startTime: epochMilliseconds(leg.startTime),
       endTime: epochMilliseconds(leg.endTime),
-      distanceMeters: Number(leg.distance) || 0,
+      distanceMeters: leg.distance === null || leg.distance === undefined || leg.distance === '' ? NaN : Number(leg.distance),
       route: leg.route && (leg.route.shortName || leg.route.longName) || ''
     };
   }
@@ -40,7 +40,7 @@
       startTime: epochMilliseconds(itinerary.startTime),
       endTime: epochMilliseconds(itinerary.endTime),
       durationSeconds: Number(itinerary.duration),
-      walkMeters: Number(itinerary.walkDistance) || 0,
+      walkMeters: itinerary.walkDistance === null || itinerary.walkDistance === undefined || itinerary.walkDistance === '' ? NaN : Number(itinerary.walkDistance),
       transfers: Number(itinerary.numberOfTransfers) || 0,
       legs,
       transportConfirmed: false,

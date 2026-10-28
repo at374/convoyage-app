@@ -802,7 +802,9 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
     assert.equal(request.variables.date,'2026-10-28');
     assert.match(request.query,/planConnection/);
     return {ok:true,json:async()=>({data:{planConnection:{edges:[
-      {node:itinerary},{node:itinerary},{node:{...itinerary,endTime:start-1000}}
+      {node:itinerary},{node:itinerary},{node:{...itinerary,endTime:start-1000}},
+      {node:{...itinerary,walkDistance:null}},
+      {node:{...itinerary,legs:[{...itinerary.legs[0],distance:null},itinerary.legs[1]]}}
     ]}}})};
   };
   routing.plan({endpoint:'https://routing.example.test/graphql',from,to,departure,fetcher})
