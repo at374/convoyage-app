@@ -148,7 +148,7 @@
   // Evaluate real routed itineraries against the mission's exact deadline.
   // This never upgrades theoretical timetable data to confirmed transport.
   function feasibleBefore(itineraries, deadline, marginMinutes = 30) {
-    const latest = new Date(deadline).getTime();
+    const latest = deadline === null || deadline === undefined || deadline === '' ? NaN : new Date(deadline).getTime();
     const margin = Number(marginMinutes);
     if (!Number.isFinite(latest) || !Number.isFinite(margin) || margin < 0)
       return [];
@@ -165,7 +165,7 @@
   // A journey connecting two missions must depart after the vehicle delivery
   // and arrive before the next pickup, allowing a configurable safety buffer.
   function feasibleBetween(itineraries, deliveryEnd, nextPickup, marginMinutes = 30) {
-    const earliest = new Date(deliveryEnd).getTime();
+    const earliest = deliveryEnd === null || deliveryEnd === undefined || deliveryEnd === '' ? NaN : new Date(deliveryEnd).getTime();
     if (!Number.isFinite(earliest)) return [];
     return feasibleBefore(itineraries, nextPickup, marginMinutes)
       .filter(it => it.startTime >= earliest);
