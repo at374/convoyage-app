@@ -181,5 +181,31 @@
     return result.slice(0, Number.isInteger(limit) && limit > 0 ? Math.min(limit, 30) : 6);
   }
 
-  return Object.freeze({ isISODate, assessDate, loadDay, loadDayCached, normalizeDay, directDayJourneys, nearbyDayStops });
+  // Candidate bus journeys between two coordinate pairs; straight-line proximity is
+  // not a walking route. Never labels a journey feasible or confirmed.
+  function coordinateDayJourneys(dayData, fromLat, fromLon, toLat, toLon,
+    earliestDepartureSeconds, options = {}) {
+    if (!Number.isFinite(earliestDepartureSeconds)) return [];
+    const radius = Number.isFinite(options.radiusMeters) ? options.radiusMeters : 600;
+    const origins = nearbyDayStops(dayData, fromLat, fromLon, radius, 5);
+    const destinations = nearbyDayStops(dayData, toLat, toLon, radius, 5);
+    if (!origins.length || !destinations.length) return [];
+    const result = [];
+    for (const origin of origins) {
+      for (const destination of destinations) {
+        if (origin.stopId === destination.stopId) continue;
+        for (const ride of directDayJourneys(dayData, origin.stopId, destination.stopId,
+          earliestDepartureSeconds, 6)) {
+          result.push({ ...ride, originStop: origin, destinationStop: destination,
+            approachVerified: false, transportConfirmed: false, realtime: false,
+            status: 'horaire_theorique_approche_non_verifiee' });
+        }
+      }
+    }
+    result.sort((a, b) => a.departureSeconds - b.departureSeconds ||
+      a.arrivalSeconds - b.arrivalSeconds);
+    return result.slice(0, 10);
+  }
+
+  return Object.freeze({ isISODate, assessDate, loadDay, loadDayCached, normalizeDay, directDayJourneys, nearbyDayStops, coordinateDayJourneys });
 });
