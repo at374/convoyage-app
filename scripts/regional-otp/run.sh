@@ -49,7 +49,8 @@ if [[ "$mode" == build ]]; then
   # Stage a complete new dataset and graph together; preserve the previous
   # generation until all candidate files are present.
   # Refuse to swap the graph while a local router holds the shared lock.
-  if ! flock -n -x 9; then
+  exec 8>"$work/.serve.lock"
+  if ! flock -n -x 8; then
     echo "Cannot replace graph while regional router is serving" >&2
     exit 1
   fi
