@@ -69,6 +69,33 @@ jobs:
                   calendar_ids = {r.get('service_id') for r in rows('calendar.txt')}
                   calendar_ids.update(r.get('service_id') for r in rows('calendar_dates.txt'))
                   unknown_services = len(service_ids - calendar_ids)
+                  # A structurally valid feed may still contain no service for
+                  # upcoming missions. Check a 45-day planning horizon.
+                  today = datetime.datetime.now(datetime.timezone.utc).date()
+                  horizon = [today + datetime.timedelta(days=i) for i in range(46)]
+                  weekdays = ('monday','tuesday','wednesday','thursday','friday','saturday','sunday')
+                  active_days = set()
+                  for rule in rows('calendar.txt'):
+                      try:
+                          start = datetime.datetime.strptime(rule['start_date'], '%Y%m%d').date()
+                          end = datetime.datetime.strptime(rule['end_date'], '%Y%m%d').date()
+                      except (KeyError, ValueError):
+                          continue
+                      for day in horizon:
+                          if start <= day <= end and rule.get(weekdays[day.weekday()]) == '1':
+                              active_days.add((rule.get('service_id'), day))
+                  for exception in rows('calendar_dates.txt'):
+                      try:
+                          day = datetime.datetime.strptime(exception['date'], '%Y%m%d').date()
+                      except (KeyError, ValueError):
+                          continue
+                      if day not in horizon: continue
+                      pair = (exception.get('service_id'), day)
+                      if exception.get('exception_type') == '1': active_days.add(pair)
+                      elif exception.get('exception_type') == '2': active_days.discard(pair)
+                  covered_days = sorted({day for service, day in active_days if service in service_ids})
+                  if not covered_days:
+                      raise SystemExit('GTFS has no active service in the next 45 days')
                   stop_time_count = 0
                   unknown_stop_references = 0
                   unknown_trip_references = 0
@@ -92,6 +119,9 @@ jobs:
                     'stop_count':stop_count,'trip_count':trip_count,
                     'stop_time_count':stop_time_count,'service_count':len(service_ids),
                     'route_types':route_types,'source_updated_at':resource.get('last_modified'),
+                    'active_days_next_46':len(covered_days),
+                    'first_active_day':covered_days[0].isoformat(),
+                    'last_active_day':covered_days[-1].isoformat(),
                     'status':'GTFS_ARCHIVE_VALIDATED'}
                   with open('oura-audit.json','w',encoding='utf-8') as out:
                       json.dump(summary,out,ensure_ascii=False,indent=2)
