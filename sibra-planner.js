@@ -484,5 +484,27 @@
       transportConfirmed: false };
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, rankSafeReturns, assessInterurbanLocalTransfer, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
+  // Enumerate interurban -> local bus combinations, without inventing a transfer.
+  // Every connection requires a provider-verified pedestrian route between stops.
+  function combineInterurbanLocal(interurbanTrips, localTrips, getWalkingRoute,
+    interurbanStop, localStop, minimumTransferSeconds = 300) {
+    if (!Array.isArray(interurbanTrips) || !Array.isArray(localTrips) ||
+        typeof getWalkingRoute !== 'function') return [];
+    const results = [];
+    for (const interurban of interurbanTrips) {
+      for (const local of localTrips) {
+        const walk = getWalkingRoute(interurban, local);
+        const check = assessInterurbanLocalTransfer(interurban, local, walk,
+          interurbanStop, localStop, minimumTransferSeconds);
+        if (!check.feasible) continue;
+        results.push({ interurban, local, transfer: check,
+          departureSeconds: interurban.departureSeconds,
+          arrivalSeconds: local.arrivalSeconds, transportConfirmed: false });
+      }
+    }
+    return results.sort((a, b) => a.arrivalSeconds - b.arrivalSeconds ||
+      a.departureSeconds - b.departureSeconds);
+  }
+
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, assessScheduledSibraJourney, rankSafeReturns, assessInterurbanLocalTransfer, combineInterurbanLocal, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
 });
