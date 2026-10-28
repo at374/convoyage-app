@@ -1693,8 +1693,20 @@
         const retour = destination && etat.reglages && etat.reglages.domicile_ville ?
           liensTransports(m.to_city || destination, m.to_department || '',
             etat.reglages.domicile_ville, '', 'r|' + (m.id || m.external_id)) : '';
+        const domicileAdresse = etat.reglages && (etat.reglages.domicile_adresse ||
+          etat.reglages.adresse_domicile || etat.reglages.domicile_ville);
+        const departAdresse = m.origin_address || m.from_address || m.from_city;
+        const arriveeAdresse = m.destination_address || m.to_address || m.to_city;
+        const mapsTransit = (from, to) => from && to ?
+          '<a target="_blank" rel="noopener noreferrer" href="' + esc(
+            'https://www.google.com/maps/dir/?api=1&origin=' +
+            encodeURIComponent(from) + '&destination=' +
+            encodeURIComponent(to) + '&travelmode=transit') +
+          '">🚌 Voir le trajet en transports sur la carte</a>' : '';
         const contenu = (lt ? '<strong>Aller vers la mission</strong>' + lt : '') +
+          mapsTransit(domicileAdresse, departAdresse) +
           (retour ? '<strong>Retour après livraison</strong>' + retour : '') +
+          mapsTransit(arriveeAdresse, domicileAdresse) +
           (!lt && !retour ? '<div class="doux">Adresses à compléter pour rechercher les transports.</div>' : '') +
           '<div class="doux">Horaires et correspondances à vérifier à la date de la mission. Transport non confirmé — vérifiez vous-même.</div>';
         return bk('bkTr', 'TRANSPORTS · ALLER / RETOUR', contenu);
