@@ -1,0 +1,51 @@
+name: Audit regional GTFS Oura
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 4 * * *'
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check official Oura aggregate metadata and GTFS archive
+        shell: python
+        run: |
+          import json, urllib.request, zipfile, tempfile, os, datetime
+          api = 'https://www.data.gouv.fr/api/1/datasets/?q=agr%C3%A9gat%20O%C3%B9ra&page_size=30'
+          req = urllib.request.Request(api, headers={'User-Agent':'ConvoyageUltra-GTFS-Audit/1.0'})
+          with urllib.request.urlopen(req, timeout=35) as response:
+              data = json.load(response)
+          datasets = [d for d in data.get('data', []) if 'oura' in
+                      __import__('unicodedata').normalize('NFKD', d.get('title','')).encode('ascii','ignore').decode().lower()]
+          if not datasets:
+              raise SystemExit('Official Oura dataset not found')
+          resources = [r for d in datasets for r in d.get('resources', [])
+                       if 'gtfs' in (r.get('format') or '').lower() and r.get('url','').startswith('https://')]
+          if not resources:
+              raise SystemExit('No HTTPS GTFS resource listed')
+          resource = max(resources, key=lambda r:r.get('last_modified') or '')
+          url = resource['url']
+          req = urllib.request.Request(url, headers={'User-Agent':'ConvoyageUltra-GTFS-Audit/1.0'})
+          with urllib.request.urlopen(req, timeout=90) as response, tempfile.NamedTemporaryFile(delete=False) as tmp:
+              while True:
+                  chunk = response.read(1024*1024)
+                  if not chunk: break
+                  tmp.write(chunk)
+                  if tmp.tell() > 400*1024*1024:
+                      raise SystemExit('Archive exceeds safe size')
+              archive = tmp.name
+          try:
+              with zipfile.ZipFile(archive) as z:
+                  names = set(z.namelist())
+                  required = {'stops.txt','trips.txt','stop_times.txt','routes.txt','calendar.txt'}
+                  missing = required - names
+                  if missing: raise SystemExit('Missing GTFS tables: '+str(sorted(missing)))
+                  print(json.dumps({'checked_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    'source':url,'archive_bytes':os.path.getsize(archive),
+                    'tables':sorted(names),'status':'GTFS_ARCHIVE_VALIDATED'},
+                    ensure_ascii=False,indent=2))
+          finally:
+              os.unlink(archive)
