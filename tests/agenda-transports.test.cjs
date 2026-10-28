@@ -111,7 +111,8 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   const path = require('node:path');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   assert.ok(html.indexOf('src="sibra-feed.js"') >= 0);
-  assert.ok(html.indexOf('src="sibra-feed.js"') < html.indexOf('src="app.js"'));
+  assert.match(html, /src="app\.js(?:\?[^"<>]*)?"/);
+  assert.ok(html.indexOf('src="sibra-feed.js"') < html.search(/src="app\.js(?:\?[^"<>]*)?"/));
 }
 
 // 13-16. Primitives du futur calculateur SIBRA : distance, proximité, heures GTFS et courses actives.
