@@ -1740,11 +1740,13 @@
           '&travelmode=transit') +
         '" target="_blank" rel="noopener noreferrer">🚌 Rechercher les transports en commun</a>' :
         '<span class="doux">Adresse manquante — trajet non calculable.</span>';
-      const next = etat.missions.filter(x => x !== m &&
+      const endTime = Date.parse(m.delivery_end || m.delivery_start || '');
+      const next = Number.isFinite(endTime) ? etat.missions.filter(x =>
+        x !== m && x.platform !== undefined &&
         (x.kind === 'acceptee' || x.status === 'acceptee') &&
-        x.pickup_start && m.delivery_end &&
-        Date.parse(x.pickup_start) > Date.parse(m.delivery_end))
-        .sort((a,b) => Date.parse(a.pickup_start) - Date.parse(b.pickup_start))[0];
+        Number.isFinite(Date.parse(x.pickup_start || '')) &&
+        Date.parse(x.pickup_start) > endTime)
+        .sort((a,b) => Date.parse(a.pickup_start) - Date.parse(b.pickup_start))[0] : null;
       const nextOrigin = next && (next.origin_address || next.from_address || next.from_city);
       panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div>' +
         '<div><strong>1. Aller au départ de mission</strong><div>' +
@@ -1758,7 +1760,17 @@
         '<div style="margin-top:12px"><strong>3. Retour au domicile</strong><div>' +
         esc(to || 'Livraison non renseignée') + ' → ' +
         esc(home || 'Domicile non renseigné') + '</div>' +
-        directions(to, home) + '</div>' +
+        directions(to, home) +
+        (/albertville/i.test(String(to || '')) ?
+          '<div class="doux" style="margin-top:8px">🚌 Retour Y51 Albertville → Annecy : ' +
+          '<a href="https://annecy.transdev.com/line/ligne-y51/" target="_blank" rel="noopener noreferrer">horaires officiels de la ligne</a> · ' +
+          '<a href="https://hawk.hanoverdisplays.com/y51/public/" target="_blank" rel="noopener noreferrer">suivi des départs</a> · ' +
+          '<a href="' + esc('https://www.google.com/maps/dir/?api=1&origin=' +
+            encodeURIComponent(to) + '&destination=' +
+            encodeURIComponent('École Saint-François, Albertville') +
+            '&travelmode=walking') +
+          '" target="_blank" rel="noopener noreferrer">marche vers École Saint-François</a>. ' +
+          'Départ de 11 h 48 non confirmé pour cette date.</div>' : '') + '</div>' +
         '<p class="doux">Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
       bt.insertAdjacentElement('afterend', panel);
     }; }
