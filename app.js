@@ -1952,7 +1952,11 @@
                     '. Arrivée au moins 30 min avant la mission, hors marche. Domicile exact, marche et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                     'Aller SIBRA : aucun bus direct ou avec 1 correspondance trouvé avec 30 min de marge depuis le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.');
               } else {
-                outbound.textContent = 'Aller SIBRA automatique indisponible : GPS précis du départ, ville du domicile ou horaires GTFS de la date de prise en charge manquants.';
+                outbound.textContent = pickupDay && pickupDay !== day ?
+                  'Aller SIBRA : prise en charge le ' + pickupDay +
+                  ', différente de la date du fichier SIBRA chargé (' + day +
+                  '). Aucun horaire du jour de départ n’a été vérifié. Transport non confirmé — vérifiez vous-même.' :
+                  'Aller SIBRA automatique indisponible : GPS précis du départ, ville du domicile ou horaires GTFS de la date de prise en charge manquants.';
               }
               if (status.isConnected) status.insertAdjacentElement('afterend', outbound);
             }
