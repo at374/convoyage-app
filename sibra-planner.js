@@ -232,5 +232,47 @@
     return route.duration_seconds;
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, verifiedWalkingSeconds });
+  /**
+   * Parse GTFS CSV records, including quoted commas, CRLF and escaped quotes.
+   * A UTF-8 BOM is accepted. Malformed unclosed quotes are rejected.
+   */
+  function parseGtfsCsv(csv) {
+    if (typeof csv !== 'string') return null;
+    const input = csv.charCodeAt(0) === 0xFEFF ? csv.slice(1) : csv;
+    const rows = [];
+    let row = [], field = '', quoted = false, closedQuote = false;
+    for (let i = 0; i < input.length; i++) {
+      const c = input[i];
+      if (quoted) {
+        if (c === '"' && input[i + 1] === '"') { field += '"'; i++; }
+        else if (c === '"') { quoted = false; closedQuote = true; }
+        else field += c;
+      } else if (c === '"' && field === '' && !closedQuote) {
+        quoted = true;
+      } else if (c === ',') {
+        row.push(field); field = ''; closedQuote = false;
+      } else if (c === '\n' || c === '\r') {
+        if (c === '\r' && input[i + 1] === '\n') i++;
+        row.push(field); field = ''; closedQuote = false;
+        if (row.some(value => value !== '')) rows.push(row);
+        row = [];
+      } else {
+        if (closedQuote) return null;
+        field += c;
+      }
+    }
+    if (quoted) return null;
+    row.push(field);
+    if (row.some(value => value !== '')) rows.push(row);
+    if (!rows.length) return [];
+    const headers = rows.shift();
+    if (!headers.length || headers.some(h => !h || headers.indexOf(h) !== headers.lastIndexOf(h))) return null;
+    return rows.map(values => {
+      const obj = {};
+      headers.forEach((key, i) => { obj[key] = values[i] === undefined ? '' : values[i]; });
+      return obj;
+    });
+  }
+
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, verifiedWalkingSeconds, parseGtfsCsv });
 });
