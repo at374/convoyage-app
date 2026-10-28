@@ -1,0 +1,66 @@
+name: Audit GTFS Haute-Savoie Y51
+on:
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - name: Download official regional GTFS and inspect Y51
+        env:
+          GTFS_URL: https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA
+        run: |
+          python3 - <<'PY'
+          import csv, io, json, os, urllib.request, zipfile
+          from datetime import datetime, timezone
+          url = os.environ["GTFS_URL"]
+          req = urllib.request.Request(url, headers={"User-Agent": "ConvoyageUltra-GTFS-Audit/1.0"})
+          with urllib.request.urlopen(req, timeout=65) as response:
+              data = response.read(80_000_001)
+          if len(data) > 80_000_000:
+              raise RuntimeError("Archive GTFS too large (>80 MB)")
+          z = zipfile.ZipFile(io.BytesIO(data))
+          names = {name.split("/")[-1].lower(): name for name in z.namelist()}
+          required = ("routes.txt", "trips.txt", "stop_times.txt", "stops.txt")
+          if not all(name in names for name in required):
+              raise RuntimeError("Required GTFS tables missing")
+          def rows(name):
+              with z.open(names[name]) as file:
+                  return list(csv.DictReader(io.TextIOWrapper(file, encoding="utf-8-sig")))
+          routes = rows("routes.txt")
+          y51 = [r for r in routes if "Y51" in " ".join((r.get("route_short_name", ""), r.get("route_long_name", ""))).upper()]
+          if not y51:
+              raise RuntimeError("Y51 route not found in official feed")
+          ids = {r["route_id"] for r in y51}
+          trips = [t for t in rows("trips.txt") if t.get("route_id") in ids]
+          stops = rows("stops.txt")
+          stop_times = rows("stop_times.txt")
+          trip_ids = {t["trip_id"] for t in trips}
+          y51_times = [t for t in stop_times if t.get("trip_id") in trip_ids]
+          used_stops = {t.get("stop_id") for t in y51_times}
+          summary = {
+              "checked_at_utc": datetime.now(timezone.utc).isoformat(),
+              "source": url,
+              "archive_bytes": len(data),
+              "routes": y51,
+              "trip_count": len(trips),
+              "stop_time_count": len(y51_times),
+              "stops": [s for s in stops if s.get("stop_id") in used_stops],
+              "calendar_present": "calendar.txt" in names,
+              "calendar_dates_present": "calendar_dates.txt" in names,
+              "status": "theoretical_schedule_only_not_live_confirmed"
+          }
+          os.makedirs("audit-output", exist_ok=True)
+          with open("audit-output/y51-gtfs-audit.json", "w", encoding="utf-8") as f:
+              json.dump(summary, f, ensure_ascii=False, indent=2)
+          print("Y51 trips:", len(trips), "stop times:", len(y51_times), "stops:", len(summary["stops"]))
+          PY
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: y51-gtfs-audit
+          path: audit-output/
+          if-no-files-found: ignore
