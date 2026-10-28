@@ -1877,6 +1877,22 @@
           'adaptateur non chargé.') +
         ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
         '<p class="doux">Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
+      // Allow an explicit fresh check when mobile connectivity has recovered.
+      // Reopen the existing transport panel so all date-scoped searches are rerun.
+      const refreshTransport = document.createElement('button');
+      refreshTransport.type = 'button';
+      refreshTransport.className = 'second';
+      refreshTransport.textContent = '🔄 Actualiser maintenant';
+      refreshTransport.setAttribute('aria-label', 'Actualiser maintenant les transports de cette mission');
+      refreshTransport.style.marginTop = '8px';
+      refreshTransport.onclick = () => {
+        if (!panel.isConnected) return;
+        panel.remove();
+        bt.setAttribute('aria-expanded', 'false');
+        bt.removeAttribute('aria-controls');
+        bt.click();
+      };
+      panel.appendChild(refreshTransport);
       // Statut réel du fichier GTFS quotidien : ne pas annoncer de trajets sans données.
       if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
         const daySource = m.delivery_end || m.delivery_start || m.pickup_start;
