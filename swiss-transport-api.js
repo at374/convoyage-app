@@ -47,7 +47,7 @@
         to:s.arrival && s.arrival.station && s.arrival.station.name || null,
         departure:s.departure && s.departure.departure || null,
         arrival:s.arrival && s.arrival.arrival || null,
-        walkSeconds:s.walk && s.walk.duration || null
+        walkSeconds:s.walk && Number.isFinite(Number(s.walk.duration)) ? Number(s.walk.duration) : null
       })):[],
       price:null, fareStatus:'non_communique', source:'transport.opendata.ch', confirmed:false
     }));
