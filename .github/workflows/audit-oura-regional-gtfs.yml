@@ -57,14 +57,40 @@ jobs:
                   for route in routes:
                       kind = route.get('route_type', 'unknown')
                       route_types[kind] = route_types.get(kind, 0) + 1
-                  stop_count = sum(1 for _ in rows('stops.txt'))
-                  trip_count = sum(1 for _ in rows('trips.txt'))
-                  if not route_ids or not stop_count or not trip_count:
-                      raise SystemExit('GTFS has empty route/stop/trip tables')
+                  stop_ids = {r.get('stop_id') for r in rows('stops.txt')}
+                  trip_ids = set()
+                  service_ids = set()
+                  unknown_trip_routes = 0
+                  for trip in rows('trips.txt'):
+                      trip_ids.add(trip.get('trip_id'))
+                      service_ids.add(trip.get('service_id'))
+                      if trip.get('route_id') not in route_ids:
+                          unknown_trip_routes += 1
+                  calendar_ids = {r.get('service_id') for r in rows('calendar.txt')}
+                  calendar_ids.update(r.get('service_id') for r in rows('calendar_dates.txt'))
+                  unknown_services = len(service_ids - calendar_ids)
+                  stop_time_count = 0
+                  unknown_stop_references = 0
+                  unknown_trip_references = 0
+                  for stop_time in rows('stop_times.txt'):
+                      stop_time_count += 1
+                      unknown_stop_references += stop_time.get('stop_id') not in stop_ids
+                      unknown_trip_references += stop_time.get('trip_id') not in trip_ids
+                  stop_count = len(stop_ids)
+                  trip_count = len(trip_ids)
+                  if not route_ids or not stop_count or not trip_count or not stop_time_count:
+                      raise SystemExit('GTFS has empty route/stop/trip/stop_time tables')
+                  if unknown_trip_routes or unknown_services or unknown_stop_references or unknown_trip_references:
+                      raise SystemExit('GTFS referential integrity failed: ' + str({
+                        'unknown_trip_routes':unknown_trip_routes,
+                        'unknown_services':unknown_services,
+                        'unknown_stop_references':unknown_stop_references,
+                        'unknown_trip_references':unknown_trip_references}))
                   summary = {'checked_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     'source':url,'archive_bytes':os.path.getsize(archive),
                     'agency_count':len(agencies),'route_count':len(route_ids),
                     'stop_count':stop_count,'trip_count':trip_count,
+                    'stop_time_count':stop_time_count,'service_count':len(service_ids),
                     'route_types':route_types,'source_updated_at':resource.get('last_modified'),
                     'status':'GTFS_ARCHIVE_VALIDATED'}
                   with open('oura-audit.json','w',encoding='utf-8') as out:
