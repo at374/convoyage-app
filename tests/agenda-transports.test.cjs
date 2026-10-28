@@ -745,3 +745,21 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(planner.datedInterurbanRides(tables, '2026-10-28',
     'Y51', 'albertville', 'annecy', 12 * 3600).length, 0);
 }
+
+// Fiche mission : deux commandes distinctes, un seul panneau de transports.
+// Ne pas réintroduire le bloc de liens historique affiché en permanence.
+{
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.ok(app.includes('id="btnVol"'));
+  assert.ok(app.includes('id="btnTransportsMission"'));
+  assert.ok(app.includes("const bv = $('btnVol')"));
+  assert.ok(app.includes("const bt = $('btnTransportsMission')"));
+  assert.ok(app.includes("panel.id = 'cpTransportMissionDetails'"));
+  assert.ok(app.includes("bt.insertAdjacentElement('afterend', panel)"));
+  assert.ok(app.includes('1. Aller au départ de mission'));
+  assert.ok(app.includes('2. Jonction vers la prochaine mission'));
+  assert.ok(app.includes('3. Retour au domicile'));
+  assert.ok(!app.includes("bk('bkTr', 'TRANSPORTS · ALLER / RETOUR'"));
+}
