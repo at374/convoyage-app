@@ -927,39 +927,49 @@
                   if (!local.usable) {
                     sibraLine.textContent = 'SIBRA indisponible à cette date — correspondance non confirmée.';
                   } else {
-                    const combinations = [];
+                    const transferCandidates = [];
                     for (const ride of selectedRides) {
                       const stop = stopById.get(String(ride.to_stop_id));
                       if (!stop || !Number.isFinite(Number(stop.stop_lat)) ||
                           !Number.isFinite(Number(stop.stop_lon))) continue;
-                      // 5 minutes is only a provisional transfer allowance;
-                      // the pedestrian connection remains unverified.
                       const departures = sibraFeed.coordinateDayJourneys(local.data,
                         Number(stop.stop_lat), Number(stop.stop_lon),
                         home.lat, home.lng, ride.arrivalSeconds + 300);
                       for (const bus of departures.slice(0, 3)) {
-                        let transferWalkMinutes = null;
-                        const board = bus.originStop;
-                        const footService = window.CP_PEDESTRIAN_OSRM_URL;
-                        if (board && Number.isFinite(Number(board.latitude)) &&
-                            Number.isFinite(Number(board.longitude)) &&
-                            typeof planner.requestPedestrianOSRM === 'function' &&
-                            typeof footService === 'string' && /^https:\/\//.test(footService)) {
-                          const walk = await planner.requestPedestrianOSRM(
-                            [Number(stop.stop_lon), Number(stop.stop_lat)],
-                            [Number(board.longitude), Number(board.latitude)],
-                            window.fetch.bind(window), footService);
-                          if (walk && walk.status === 'VERIFIE_PIETON' &&
-                              Number.isFinite(walk.duration_seconds)) {
-                            transferWalkMinutes = Math.ceil(walk.duration_seconds / 60);
-                          }
-                        }
-                        const transferCompatible = transferWalkMinutes !== null &&
-                          bus.departureSeconds - ride.arrivalSeconds >=
-                          (transferWalkMinutes + 5) * 60;
-                        combinations.push({ ride, bus, transferWalkMinutes, transferCompatible });
+                        transferCandidates.push({ ride, bus, stop });
                       }
                     }
+                    // Deduplicate walking requests between identical Y51 and SIBRA stops,
+                    // and calculate independent connections concurrently.
+                    const walkCache = new Map();
+                    const footService = window.CP_PEDESTRIAN_OSRM_URL;
+                    const combinations = await Promise.all(transferCandidates.map(async candidate => {
+                      const { ride, bus, stop } = candidate;
+                      const board = bus.originStop;
+                      let transferWalkMinutes = null;
+                      if (board && Number.isFinite(Number(board.latitude)) &&
+                          Number.isFinite(Number(board.longitude)) &&
+                          typeof planner.requestPedestrianOSRM === 'function' &&
+                          typeof footService === 'string' && /^https:\/\//.test(footService)) {
+                        const key = String(ride.to_stop_id) + ':' + String(board.stopId || '') +
+                          ':' + Number(board.latitude) + ':' + Number(board.longitude);
+                        if (!walkCache.has(key)) {
+                          walkCache.set(key, planner.requestPedestrianOSRM(
+                            [Number(stop.stop_lon), Number(stop.stop_lat)],
+                            [Number(board.longitude), Number(board.latitude)],
+                            window.fetch.bind(window), footService).catch(() => null));
+                        }
+                        const walk = await walkCache.get(key);
+                        if (walk && walk.status === 'VERIFIE_PIETON' &&
+                            Number.isFinite(walk.duration_seconds)) {
+                          transferWalkMinutes = Math.ceil(walk.duration_seconds / 60);
+                        }
+                      }
+                      const transferCompatible = transferWalkMinutes !== null &&
+                        bus.departureSeconds - ride.arrivalSeconds >=
+                        (transferWalkMinutes + 5) * 60;
+                      return { ride, bus, transferWalkMinutes, transferCompatible };
+                    }));
                     combinations.sort((a, b) =>
                       Number(b.transferCompatible) - Number(a.transferCompatible) ||
                       a.bus.arrivalSeconds - b.bus.arrivalSeconds);
