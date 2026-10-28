@@ -57,6 +57,25 @@ jobs:
           os.makedirs("audit-output", exist_ok=True)
           with open("audit-output/y51-gtfs-audit.json", "w", encoding="utf-8") as f:
               json.dump(summary, f, ensure_ascii=False, indent=2)
+          # Keep the actual route-specific GTFS rows for a future dated Agenda import.
+          # This is an audit artifact, not a published or real-time timetable.
+          calendar = rows("calendar.txt") if "calendar.txt" in names else []
+          exceptions = rows("calendar_dates.txt") if "calendar_dates.txt" in names else []
+          service_ids = {t.get("service_id") for t in trips}
+          export = {
+              "source": url,
+              "checked_at_utc": summary["checked_at_utc"],
+              "transportConfirmed": False,
+              "realtime": False,
+              "routes": y51,
+              "trips": trips,
+              "stops": summary["stops"],
+              "stop_times": y51_times,
+              "calendar": [c for c in calendar if c.get("service_id") in service_ids],
+              "calendar_dates": [c for c in exceptions if c.get("service_id") in service_ids],
+          }
+          with open("audit-output/y51-gtfs-source.json", "w", encoding="utf-8") as f:
+              json.dump(export, f, ensure_ascii=False, separators=(",", ":"))
           print("Y51 trips:", len(trips), "stop times:", len(y51_times), "stops:", len(summary["stops"]))
           PY
       - name: Upload audit report
