@@ -1980,7 +1980,11 @@
             return;
           }
           const actualValue = actualDeliveryInput.value;
-          const actualMatch = /^([0-2][0-9]):([0-5][0-9])$/.exec(actualValue);
+          const actualMatch = /^([01][0-9]|2[0-3]):([0-5][0-9])$/.exec(actualValue);
+          if (actualValue && !actualMatch) {
+            result.textContent = 'Heure réelle de livraison invalide : saisir une heure entre 00:00 et 23:59.';
+            return;
+          }
           const finishMinutes = actualMatch ?
             Number(actualMatch[1]) * 60 + Number(actualMatch[2]) :
             get('hour') * 60 + get('minute');
