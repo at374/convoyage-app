@@ -212,3 +212,15 @@ test('rejects itinerary legs with missing mode rather than treating them as walk
   assert.equal(response.itineraries.length,1);
   assert.equal(response.itineraries[0].legs[0].mode,'BUS');
 });
+
+test('rejects itineraries with unknown transfer count', async () => {
+  const response = await routing.plan({...base,fetcher:async()=>({
+    ok:true,json:async()=>({data:{planConnection:{edges:[
+      {node:{...itinerary,numberOfTransfers:null}},
+      {node:{...itinerary,numberOfTransfers:'not-a-number'}},
+      {node:itinerary}
+    ]}}})
+  })});
+  assert.equal(response.itineraries.length,1);
+  assert.equal(response.itineraries[0].transfers,1);
+});
