@@ -12,8 +12,8 @@
   // V139 : missions que TOI as retirées de l'Agenda (« pas acceptée ») : mémorisées sur ce téléphone, jamais effacées du serveur.
   const masquees = () => new Set(lireLocal('cp_masquees', []) || []);
   // V276 : une mission DriiveMe « disponible » qui n'a plus été vue depuis plus de 90 min alors que l'APK a lu DriiveMe depuis (autres missions plus récentes) n'est plus sur le site : on la retire.
-  const deLEdition = l => { const mq = masquees(); const dm = (l || []).filter(m => m.platform === 'DriiveMe' && m.kind === 'disponible' && (!m.status || m.status === 'disponible')).map(m => Date.parse(m.last_seen_at || '')).filter(Number.isFinite); const recent = dm.length ? Math.max(...dm) : 0;
-    return (l || []).filter(m => EDITION.plateformes.includes(m.platform) && !(m.kind === 'acceptee' && mq.has(m.platform + '|' + m.external_id)) && !(recent && m.platform === 'DriiveMe' && m.kind === 'disponible' && (!m.status || m.status === 'disponible') && Date.parse(m.last_seen_at || '') < recent - 90 * 60000)); };
+  const deLEdition = l => { const mq = masquees(); const dmOk = m => m.platform === 'DriiveMe' && m.kind !== 'acceptee' && (!m.status || m.status === 'disponible'); const dm = (l || []).filter(dmOk).map(m => Date.parse(m.last_seen_at || '')).filter(Number.isFinite); const recent = dm.length ? Math.max(...dm) : 0;
+    return (l || []).filter(m => EDITION.plateformes.includes(m.platform) && !(m.kind === 'acceptee' && mq.has(m.platform + '|' + m.external_id)) && !(recent && dmOk(m) && Date.parse(m.last_seen_at || '') < recent - 90 * 60000)); };
   // V90 : lien direct vers la page de devis Hiflow d'une mission disponible (le devis se fait et s'envoie sur Hiflow, par toi).
   const lienDevis = m => m && m.platform === 'Hiflow' && m.kind !== 'acceptee' && /^\d{6,9}$/.test(String(m.external_id || '')) ? (/^https:\/\/partenaire\.expedicar\.com\/transfer\/\d+\/quotation/.test(m.detail_url || '') ? m.detail_url : 'https://partenaire.expedicar.com/transfer/' + m.external_id + '/quotation') : null;
   // V93 : sur le téléphone, les devis Hiflow se font dans l'APPLICATION « Hiflow Partner » (pas sur le site) :
