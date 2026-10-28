@@ -702,3 +702,45 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
     [interurban], [{ ...local, serviceDate: '2026-10-29' }],
     () => foot(c, d), c, d, serviceDate).length, 0);
 }
+
+
+// Interurban GTFS: only dated, active route trips between the correct stops.
+{
+  const planner = require('../sibra-planner.js');
+  const tables = {
+    stops: [
+      { stop_id: 'albertville' }, { stop_id: 'annecy' }
+    ],
+    routes: [{ route_id: 'Y51' }, { route_id: 'OTHER' }],
+    trips: [
+      { trip_id: 'weekday', route_id: 'Y51', service_id: 'weekdays' },
+      { trip_id: 'other', route_id: 'OTHER', service_id: 'weekdays' },
+      { trip_id: 'exception', route_id: 'Y51', service_id: 'special' }
+    ],
+    calendar: [{ service_id: 'weekdays', start_date: '20261001',
+      end_date: '20261220', monday: '1', tuesday: '1', wednesday: '1',
+      thursday: '1', friday: '1', saturday: '0', sunday: '0' }],
+    calendar_dates: [
+      { service_id: 'weekdays', date: '20261028', exception_type: '2' },
+      { service_id: 'special', date: '20261028', exception_type: '1' }
+    ],
+    stop_times: [
+      { trip_id: 'weekday', stop_id: 'albertville', stop_sequence: '1', departure_time: '11:00:00' },
+      { trip_id: 'weekday', stop_id: 'annecy', stop_sequence: '2', arrival_time: '12:00:00' },
+      { trip_id: 'other', stop_id: 'albertville', stop_sequence: '1', departure_time: '11:30:00' },
+      { trip_id: 'other', stop_id: 'annecy', stop_sequence: '2', arrival_time: '12:30:00' },
+      { trip_id: 'exception', stop_id: 'albertville', stop_sequence: '1', departure_time: '11:48:00' },
+      { trip_id: 'exception', stop_id: 'annecy', stop_sequence: '2', arrival_time: '13:15:00' }
+    ]
+  };
+  const rides = planner.datedInterurbanRides(tables, '2026-10-28',
+    'Y51', 'albertville', 'annecy', 11 * 3600);
+  assert.equal(rides.length, 1);
+  assert.equal(rides[0].trip_id, 'exception');
+  assert.equal(rides[0].serviceDate, '2026-10-28');
+  assert.equal(rides[0].transportConfirmed, false);
+  assert.equal(planner.datedInterurbanRides(tables, '2026-10-28',
+    'Y51', 'missing', 'annecy').length, 0);
+  assert.equal(planner.datedInterurbanRides(tables, '2026-10-28',
+    'Y51', 'albertville', 'annecy', 12 * 3600).length, 0);
+}
