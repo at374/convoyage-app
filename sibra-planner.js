@@ -219,6 +219,37 @@
   }
 
   /**
+   * Check both walking legs of a scheduled bus trip. No realtime confirmation.
+   * All coordinates use [longitude, latitude] and times are GTFS seconds.
+   */
+  function assessVerifiedBusConnection(missionEndSeconds, departureSeconds,
+    arrivalSeconds, nextMissionSeconds, firstWalk, firstFrom, firstStop,
+    lastWalk, lastStop, lastTo, marginSeconds = 1800) {
+    const outboundSeconds = verifiedWalkingSeconds(firstWalk, firstFrom, firstStop);
+    const inboundSeconds = verifiedWalkingSeconds(lastWalk, lastStop, lastTo);
+    if (outboundSeconds === null || inboundSeconds === null) {
+      return { feasible: false, status: 'marches_non_verifiees',
+        transportConfirmed: false };
+    }
+    if (![missionEndSeconds, departureSeconds, arrivalSeconds,
+      nextMissionSeconds, marginSeconds].every(Number.isFinite) ||
+      marginSeconds < 0 || departureSeconds < missionEndSeconds ||
+      arrivalSeconds < departureSeconds) {
+      return { feasible: false, status: 'donnees_insuffisantes',
+        transportConfirmed: false };
+    }
+    const arrivalAtFirstStopSeconds = missionEndSeconds + outboundSeconds;
+    const arrivalAtNextMissionSeconds = arrivalSeconds + inboundSeconds;
+    const feasible = arrivalAtFirstStopSeconds <= departureSeconds &&
+      arrivalAtNextMissionSeconds + marginSeconds <= nextMissionSeconds;
+    return { feasible, status: feasible ? 'horaire_theorique_compatible' : 'horaire_incompatible',
+      firstWalkSeconds: outboundSeconds, lastWalkSeconds: inboundSeconds,
+      arrivalAtFirstStopSeconds, arrivalAtNextMissionSeconds,
+      advanceSeconds: nextMissionSeconds - arrivalAtNextMissionSeconds,
+      transportConfirmed: false };
+  }
+
+  /**
    * Adapt a GeoJSON LineString from a pedestrian routing service.
    * Caller supplies the service identity; this never confirms bus realtime.
    */
@@ -396,5 +427,5 @@
     return { valid: errors.length === 0, errors };
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, assessVerifiedBusConnection, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, pedestrianRouteFromOSRM, requestPedestrianOSRM, parseGtfsCsv, validateGtfsTables });
 });
