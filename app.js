@@ -2016,6 +2016,7 @@
                   [s.mode === 'WALK' ? '🚶 Marche' : s.mode,s.line,s.from && s.to ? s.from+' → '+s.to : '',s.mode === 'WALK' && Number.isFinite(s.walkSeconds) ? Math.ceil(s.walkSeconds/60)+' min à pied' : ''].filter(Boolean).join(' ')).join(' · ');
                 line.textContent = formatParis(result.departure) + ' → ' +
                   formatParis(result.arrival) + ' · ' + legs +
+                  (label === 'Aller' && Number.isFinite(Date.parse(pickupDate)) ? ' · avance avant prise en charge : ' + Math.max(0,Math.floor((Date.parse(pickupDate)-Date.parse(result.arrival))/60000)) + ' min (marge de sécurité requise : ' + securityMarginMin + ' min)' : '') +
                   ' · tarif non communiqué · Transport non confirmé — vérifiez vous-même.';
                 status.appendChild(line);
               });
