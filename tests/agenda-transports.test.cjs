@@ -448,3 +448,24 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
     } finally { Date.now = originalNow; }
   })().catch(error => { process.nextTick(() => { throw error; }); });
 }
+
+
+// Scheduled arrival cannot be called feasible without a provider-verified final walk.
+{
+  const planner = require('../sibra-planner.js');
+  const stop = [6.1, 45.9], missionPoint = [6.101, 45.901];
+  const unknown = planner.assessVerifiedMissionApproach(9 * 3600, 10 * 3600,
+    null, stop, missionPoint, 1800);
+  assert.equal(unknown.feasible, false);
+  assert.equal(unknown.status, 'approche_pietonne_non_verifiee');
+  const walk = { status: 'VERIFIE_PIETON', provider: 'test-routing-provider',
+    duration_seconds: 600, distance_meters: 750, geometry: [stop, missionPoint] };
+  const compatible = planner.assessVerifiedMissionApproach(9 * 3600, 10 * 3600,
+    walk, stop, missionPoint, 1800);
+  assert.equal(compatible.feasible, true);
+  assert.equal(compatible.walkingVerified, true);
+  assert.equal(compatible.transportConfirmed, false);
+  const tooLate = planner.assessVerifiedMissionApproach(9 * 3600 + 1500, 10 * 3600,
+    walk, stop, missionPoint, 1800);
+  assert.equal(tooLate.feasible, false);
+}
