@@ -1892,6 +1892,60 @@
               'SIBRA ' + day + ' : données horaires théoriques chargées (' +
               result.data.trips.length + ' courses). Aucun trajet à cette adresse ni circulation en temps réel confirmé.' :
               'SIBRA ' + day + ' : fichier horaire quotidien indisponible. Transport non confirmé — vérifiez vous-même.';
+            // Automatic SIBRA suggestions for the mission-to-mission connection.
+            // Coordinates are read from the existing mission data, never guessed from a city.
+            if (result && result.usable && next &&
+                window.CPSibraFeed.coordinateDayJourneys) {
+              const startCoords = G.coordonnees(m, 'destination');
+              const endCoords = G.coordonnees(next, 'origin');
+              const coordinates = value => {
+                if (Array.isArray(value) && value.length >= 2)
+                  return [Number(value[0]), Number(value[1])];
+                if (value && typeof value === 'object')
+                  return [Number(value.lat ?? value.latitude), Number(value.lon ?? value.lng ?? value.longitude)];
+                return [NaN, NaN];
+              };
+              const [startLat, startLon] = coordinates(startCoords);
+              const [endLat, endLon] = coordinates(endCoords);
+              const auto = document.createElement('div');
+              auto.className = 'doux';
+              auto.setAttribute('role', 'status');
+              auto.style.marginTop = '8px';
+              if ([startLat, startLon, endLat, endLon].every(Number.isFinite) &&
+                  Math.abs(startLat) <= 90 && Math.abs(endLat) <= 90 &&
+                  Math.abs(startLon) <= 180 && Math.abs(endLon) <= 180 &&
+                  Number.isFinite(endTime)) {
+                const parisTime = new Intl.DateTimeFormat('en-GB', {
+                  timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit',
+                  hourCycle: 'h23'
+                }).formatToParts(new Date(endTime));
+                const part = key => Number(parisTime.find(p => p.type === key)?.value || 0);
+                const earliest = (part('hour') * 60 + part('minute')) * 60;
+                const journeys = window.CPSibraFeed.coordinateDayJourneys(
+                  result.data, startLat, startLon, endLat, endLon, earliest,
+                  { radiusMeters: 600 });
+                const clock = seconds => String(Math.floor(seconds / 3600)).padStart(2, '0') +
+                  ':' + String(Math.floor(seconds % 3600 / 60)).padStart(2, '0');
+                const latestArrival = (() => {
+                  const p = new Intl.DateTimeFormat('en-GB', {
+                    timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit',
+                    hourCycle: 'h23'
+                  }).formatToParts(new Date(next.pickup_start));
+                  const n = key => Number(p.find(q => q.type === key)?.value || 0);
+                  return (n('hour') * 60 + n('minute') - securityMarginMin) * 60;
+                })();
+                const candidates = journeys.filter(j => j.arrivalSeconds <= latestArrival).slice(0, 5);
+                auto.textContent = candidates.length ?
+                  '🚌 Jonction SIBRA automatique — horaires théoriques : ' +
+                  candidates.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
+                    ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
+                  '. Arrêts à 600 m maximum à vol d’oiseau. Marche, tarifs et perturbations non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                  'Jonction SIBRA : aucune course directe compatible trouvée dans les 600 m à vol d’oiseau avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
+              } else {
+                auto.textContent = 'Jonction SIBRA automatique indisponible : coordonnées exactes des deux missions ou heure de livraison manquantes.';
+              }
+              if (status.isConnected) status.insertAdjacentElement('afterend', auto);
+            }
             if (result && result.usable && window.CPSibraFeed.directDayJourneys) {
               const feed = result.data;
               const picker = document.createElement('div');
