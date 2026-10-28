@@ -1781,10 +1781,13 @@
       const y51WorksWarning = y51ServiceDay >= '2026-09-14' && y51ServiceDay <= '2026-12-18' ?
         '⚠️ Travaux rive est du lac du 14 septembre au 18 décembre 2026 : certains départs matinaux Y51 sont avancés de 15 min (05h40, 06h10 et 06h20 au départ d’Albertville notamment). Les autres horaires, dont un éventuel 11h48 à École Saint-François, ne doivent pas être déduits de cette mesure. Vérifier la fiche officielle et le suivi temps réel.' :
         'Vérifier la fiche horaire officielle en vigueur et les éventuelles perturbations.';
-      const y51Indicative = 'Attention : 11 h 48 correspond à Rue Jean Jaurès dans une ancienne grille Y51 ; ' +
-        'ce n’est pas une preuve de passage à École Saint-François. ' +
+      const y51Indicative = 'L’horaire de 11 h 48 signalé à École Saint-François reste à confirmer pour ce jour. ' +
+        'Ne pas confondre les horaires des différents arrêts ni utiliser une ancienne grille. ' +
         'Aucun temps de correspondance ne peut être validé avant confirmation de l’arrêt, ' +
         'de la date et du sens Albertville → Annecy.';
+      const y51CheckDate = y51ServiceDay ?
+        'Date de service à vérifier : ' + y51ServiceDay + ' (heure locale Europe/Paris).' :
+        'Date de livraison absente : impossible de choisir le bon calendrier de circulation.';
       const endTime = Date.parse(m.delivery_end || m.delivery_start || '');
       const next = Number.isFinite(endTime) ? etat.missions.filter(x =>
         x !== m && (x.kind === 'acceptee' || x.status === 'acceptee') &&
@@ -1850,7 +1853,8 @@
           'Départ de 11 h 48 signalé par le convoyeur : horaire non vérifié à École Saint-François, sens Albertville → Annecy. ' +
           'La grille Y51 2026–2027 doit être consultée pour le jour exact (semaine, samedi, dimanche ou vacances). ' +
           esc(y51FeedStatus) + '<div>' + esc(y51Indicative) + '</div>' +
-          '<div>' + esc(y51WorksWarning) + '</div></div>' : '') + '</div>' +
+          '<div>' + esc(y51WorksWarning) + '</div>' +
+          '<div>' + esc(y51CheckDate) + '</div></div>' : '') + '</div>' +
         '<p class="doux">Moteur régional : ' +
         (regionalEngineReady ? 'adaptateur disponible, calcul non connecté à cette fiche.' :
           'non chargé.') +
