@@ -52,7 +52,8 @@
     }
     // Diagnostic is local to the browser and never includes user GPS or addresses.
     diagnostic.received = data.connections.length;
-    const validConnections = data.connections.filter(c => c && c.from && c.to && Number.isFinite(Date.parse(c.from.departure)) && Number.isFinite(Date.parse(c.to.arrival)) && Date.parse(c.to.arrival) >= Date.parse(c.from.departure));
+    // Bound client-side processing even if the upstream API ignores the requested limit.
+    const validConnections = data.connections.slice(0, 100).filter(c => c && c.from && c.to && Number.isFinite(Date.parse(c.from.departure)) && Number.isFinite(Date.parse(c.to.arrival)) && Date.parse(c.to.arrival) >= Date.parse(c.from.departure));
     diagnostic.valid = validConnections.length;
     diagnostic.status = 'success';
     const results = validConnections.map(c=>({

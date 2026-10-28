@@ -55,5 +55,9 @@ assert.equal(summer.searchParams.get('time'),'10:00');
  } finally {
    globalThis.fetch=originalFetch;
  }
+ const oversized=await swiss.plan({from:'Genève',to:'Lausanne',when:'2026-12-01T10:00:00+01:00',fetcher:async()=>({ok:true,json:async()=>({connections:Array.from({length:120},()=>({from:{departure:'2026-12-01T10:10:00+01:00'},to:{arrival:'2026-12-01T10:50:00+01:00'}}))})})});
+ assert.equal(oversized.length,100);
+ assert.equal(oversized.diagnostic.received,120);
+ assert.equal(oversized.diagnostic.valid,100);
  console.log('Swiss transport adapter: URL, timezones, walking and response assertions passed');
 })().catch(e=>{console.error(e);process.exitCode=1;});
