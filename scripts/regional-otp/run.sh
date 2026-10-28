@@ -55,16 +55,20 @@ if [[ "$mode" == build ]]; then
     exit 1
   fi
   previous="$(mktemp -d "${work%/}.previous.XXXXXX")"
+  rollback() {
+    for name in graph.obj oura-regional.gtfs.zip region.osm.pbf; do
+      if [[ -e "$previous/$name" ]]; then
+        rm -f "$work/$name"
+        mv "$previous/$name" "$work/$name"
+      fi
+    done
+  }
+  # Install rollback before moving any existing file. Without this, a failed
+  # backup move could leave the active graph missing.
+  trap rollback ERR INT TERM
   for name in graph.obj oura-regional.gtfs.zip region.osm.pbf; do
     if [[ -e "$work/$name" ]]; then mv "$work/$name" "$previous/$name"; fi
   done
-  rollback() {
-    for name in graph.obj oura-regional.gtfs.zip region.osm.pbf; do
-      rm -f "$work/$name"
-      if [[ -e "$previous/$name" ]]; then mv "$previous/$name" "$work/$name"; fi
-    done
-  }
-  trap rollback ERR INT TERM
   for name in graph.obj oura-regional.gtfs.zip region.osm.pbf; do
     mv "$candidate/$name" "$work/$name"
   done
