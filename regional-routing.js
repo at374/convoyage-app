@@ -50,7 +50,16 @@
     if (!validPoint(from) || !validPoint(to)) throw new Error('Coordonnees GPS requises');
     if (departure === null || departure === undefined ||
         !Number.isFinite(new Date(departure).getTime())) throw new Error('Date invalide');
-    if (!/^https:\/\//.test(String(endpoint || ''))) throw new Error('Endpoint HTTPS requis');
+    let routingUrl;
+    try {
+      routingUrl = new URL(String(endpoint || ''));
+    } catch (_) {
+      throw new Error('Endpoint HTTPS requis');
+    }
+    if (routingUrl.protocol !== 'https:' || !routingUrl.hostname ||
+        routingUrl.username || routingUrl.password) {
+      throw new Error('Endpoint HTTPS requis');
+    }
     if (typeof fetcher !== 'function') throw new Error('Fetch indisponible');
     const date = new Date(departure);
     const dateParts = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {
