@@ -501,3 +501,21 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(planner.pedestrianRouteFromGeoJSON({ ...base,
     properties: { duration: 0, distance: 0 } }, 'router').duration_seconds, 0);
 }
+
+
+// OSRM adapter accepts only explicitly pedestrian routes with valid GeoJSON geometry.
+{
+  const planner = require('../sibra-planner.js');
+  const response = { code: 'Ok', routes: [{
+    duration: 420, distance: 510,
+    geometry: { type: 'LineString', coordinates: [[6.1, 45.9], [6.101, 45.901]] }
+  }] };
+  const walk = planner.pedestrianRouteFromOSRM(response, 'foot');
+  assert.equal(walk.duration_seconds, 420);
+  assert.equal(walk.transportConfirmed, undefined);
+  assert.equal(planner.pedestrianRouteFromOSRM(response, 'driving'), null);
+  assert.equal(planner.pedestrianRouteFromOSRM({ ...response, code: 'NoRoute' }, 'foot'), null);
+  assert.equal(planner.pedestrianRouteFromOSRM({ code: 'Ok', routes: [{
+    geometry: response.routes[0].geometry, distance: 510
+  }] }, 'foot'), null);
+}
