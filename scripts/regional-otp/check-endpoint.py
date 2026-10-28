@@ -4,8 +4,10 @@
 Usage: python3 scripts/regional-otp/check-endpoint.py https://host/otp/routers/default/index/graphql
 Does not modify app configuration or mark transport schedules as confirmed.
 """
+import ipaddress
 import json
 import os
+import socket
 import sys
 import urllib.error
 import urllib.parse
@@ -17,8 +19,13 @@ url = sys.argv[1]
 parts = urllib.parse.urlsplit(url)
 if parts.scheme != "https" or not parts.hostname or parts.username or parts.password or parts.fragment:
     raise SystemExit("Endpoint must be a valid HTTPS URL without credentials or fragment")
-if os.environ.get("OTP_ALLOW_PRIVATE_HOST") != "1" and parts.hostname in ("localhost", "127.0.0.1", "::1"):
-    raise SystemExit("Local endpoints require OTP_ALLOW_PRIVATE_HOST=1")
+if os.environ.get("OTP_ALLOW_PRIVATE_HOST") != "1":
+    try:
+        addresses = {entry[4][0] for entry in socket.getaddrinfo(parts.hostname, None)}
+    except socket.gaierror as exc:
+        raise SystemExit(f"Cannot resolve endpoint hostname: {exc}")
+    if not addresses or any(not ipaddress.ip_address(addr).is_global for addr in addresses):
+        raise SystemExit("Endpoint must resolve only to public IP addresses; set OTP_ALLOW_PRIVATE_HOST=1 for local tests")
 # Query the actual routing entry point used by regional-routing.js rather
 # than accepting any unrelated GraphQL server as a working OTP endpoint.
 schema_query = """query ConvoyageSchema {
