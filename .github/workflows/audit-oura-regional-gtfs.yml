@@ -95,14 +95,14 @@ jobs:
                     'status':'GTFS_ARCHIVE_VALIDATED'}
                   with open('oura-audit.json','w',encoding='utf-8') as out:
                       json.dump(summary,out,ensure_ascii=False,indent=2)
-                  # Preserve a verified source archive for the regional routing engine.
-                  # This is a CI artifact, not a large file committed to the web app.
-                  os.replace(archive, 'oura-regional.gtfs.zip')
                   print(json.dumps(summary,ensure_ascii=False,indent=2))
                   print(json.dumps({'checked_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     'source':url,'archive_bytes':os.path.getsize(archive),
                     'tables':sorted(names),'status':'GTFS_ARCHIVE_VALIDATED'},
                     ensure_ascii=False,indent=2))
+                  # Move only after all archive-dependent checks and logging.
+                  # Keep the validated feed as a CI artifact, not in the mobile app.
+                  os.replace(archive, 'oura-regional.gtfs.zip')
           finally:
               if os.path.exists(archive):
                   os.unlink(archive)
