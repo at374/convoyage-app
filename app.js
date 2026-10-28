@@ -1894,6 +1894,54 @@
               'SIBRA ' + day + ' : fichier horaire quotidien indisponible. Transport non confirmé — vérifiez vous-même.';
             // Automatic SIBRA suggestions for the mission-to-mission connection.
             // Coordinates are read from the existing mission data, never guessed from a city.
+            // Outbound is an indicative city-centre departure, not an exact home
+            // address. Only the mission pickup GPS is treated as precise.
+            if (result && result.usable &&
+                window.CPSibraFeed.coordinateDayJourneys) {
+              const pickupGps = G.coordonnees(m, 'origin');
+              const homeLat = Number(etat.reglages?.domicile_lat);
+              const homeLon = Number(etat.reglages?.domicile_lng);
+              const homeKnown = etat.reglages?.domicile_lat != null &&
+                etat.reglages?.domicile_lng != null &&
+                Number.isFinite(homeLat) && Number.isFinite(homeLon) &&
+                Math.abs(homeLat) <= 90 && Math.abs(homeLon) <= 180;
+              const outbound = document.createElement('div');
+              outbound.className = 'doux';
+              outbound.style.marginTop = '8px';
+              outbound.setAttribute('role', 'status');
+              const pickupMs = Date.parse(m.pickup_start || '');
+              const pickupDay = Number.isFinite(pickupMs) ? (() => {
+                const p = new Intl.DateTimeFormat('en-GB', {
+                  timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
+                }).formatToParts(new Date(pickupMs));
+                const v = k => p.find(x => x.type === k)?.value || '';
+                return v('year') + '-' + v('month') + '-' + v('day');
+              })() : '';
+              if (pickupGps?.precision === 'gps' && homeKnown &&
+                  pickupDay === day && Number.isFinite(pickupMs)) {
+                const p = new Intl.DateTimeFormat('en-GB', {
+                  timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit',
+                  hourCycle: 'h23'
+                }).formatToParts(new Date(pickupMs));
+                const v = k => Number(p.find(x => x.type === k)?.value || 0);
+                const latest = (v('hour') * 60 + v('minute') - 30) * 60;
+                const rides = window.CPSibraFeed.coordinateDayJourneys(
+                  result.data, homeLat, homeLon, pickupGps.lat, pickupGps.lng, 0,
+                  { radiusMeters: 600 }).filter(j => j.arrivalSeconds <= latest).slice(0, 5);
+                const clock = sec => String(Math.floor(sec / 3600)).padStart(2, '0') +
+                  ':' + String(Math.floor(sec % 3600 / 60)).padStart(2, '0');
+                outbound.textContent = rides.length ?
+                  '🚌 Aller SIBRA indicatif depuis le centre de ' +
+                  (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
+                  rides.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
+                    ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
+                  '. Arrivée théorique au moins 30 min avant la prise en charge, hors marche. Domicile exact, approche piétonne, tarifs et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                  'Aller SIBRA : aucun bus direct trouvé avec 30 min de marge depuis le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.';
+              } else {
+                outbound.textContent = 'Aller SIBRA automatique indisponible : GPS précis du départ, ville du domicile ou horaires GTFS de la date de prise en charge manquants.';
+              }
+              if (status.isConnected) status.insertAdjacentElement('afterend', outbound);
+            }
             // Return suggestions use the home *city* coordinate, not a precise
             // home address. They must never be presented as door-to-door routes.
             if (result && result.usable &&
