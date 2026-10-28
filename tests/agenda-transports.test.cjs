@@ -251,7 +251,8 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   const feed = require('../sibra-feed.js');
   const day = '2026-10-28';
   const valid = { date: day, transportConfirmed: false, realtime: false,
-    stops: [], routes: [], trips: [], stop_times: [] };
+    stops: [['A', 'Arrêt A', 45.9, 6.1]], routes: [['L1', '1', 'Ligne 1']],
+    trips: [['T1', 'L1', 'Centre']], stop_times: [['T1', 'A', 1, '09:00:00', '09:00:00']] };
   const loaded = await feed.loadDay(day, async url => {
     assert.equal(url, 'data/sibra/sibra-2026-10-28.json');
     return { ok: true, json: async () => valid };
