@@ -1911,7 +1911,9 @@
               auto.className = 'doux';
               auto.setAttribute('role', 'status');
               auto.style.marginTop = '8px';
-              if ([startLat, startLon, endLat, endLon].every(Number.isFinite) &&
+              if (startCoords?.precision === 'gps' && endCoords?.precision === 'gps' &&
+                  y51ServiceDay === (() => { const d = new Date(next.pickup_start); return Number.isFinite(d.getTime()) ? (() => { const p = new Intl.DateTimeFormat('en-GB', {timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d); const v = k => p.find(x => x.type === k)?.value || ''; return v('year') + '-' + v('month') + '-' + v('day'); })() : ''; })() &&
+                  [startLat, startLon, endLat, endLon].every(Number.isFinite) &&
                   Math.abs(startLat) <= 90 && Math.abs(endLat) <= 90 &&
                   Math.abs(startLon) <= 180 && Math.abs(endLon) <= 180 &&
                   Number.isFinite(endTime)) {
@@ -1942,7 +1944,7 @@
                   '. Arrêts à 600 m maximum à vol d’oiseau. Marche, tarifs et perturbations non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                   'Jonction SIBRA : aucune course directe compatible trouvée dans les 600 m à vol d’oiseau avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
               } else {
-                auto.textContent = 'Jonction SIBRA automatique indisponible : coordonnées exactes des deux missions ou heure de livraison manquantes.';
+                auto.textContent = 'Jonction SIBRA automatique indisponible : coordonnées GPS précises des deux missions manquantes, dates différentes ou heure de livraison absente.';
               }
               if (status.isConnected) status.insertAdjacentElement('afterend', auto);
             }
