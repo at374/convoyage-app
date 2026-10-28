@@ -1917,8 +1917,13 @@
                 const v = k => p.find(x => x.type === k)?.value || '';
                 return v('year') + '-' + v('month') + '-' + v('day');
               })() : '';
+              const pickupFeed = pickupDay && pickupDay !== day ?
+                window.CPSibraFeed.loadDay(pickupDay, window.fetch.bind(window)) :
+                Promise.resolve(result);
+              pickupFeed.then(pickupResult => {
+              if (!status.isConnected) return;
               if (pickupGps?.precision === 'gps' && homeKnown &&
-                  pickupDay === day && Number.isFinite(pickupMs)) {
+                  pickupResult?.usable && Number.isFinite(pickupMs)) {
                 const p = new Intl.DateTimeFormat('en-GB', {
                   timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit',
                   hourCycle: 'h23'
@@ -1926,14 +1931,14 @@
                 const v = k => Number(p.find(x => x.type === k)?.value || 0);
                 const latest = (v('hour') * 60 + v('minute') - 30) * 60;
                 const rides = window.CPSibraFeed.coordinateDayJourneys(
-                  result.data, homeLat, homeLon, pickupGps.lat, pickupGps.lng, 0,
+                  pickupResult.data, homeLat, homeLon, pickupGps.lat, pickupGps.lng, 0,
                   { radiusMeters: 600 }).filter(j => j.arrivalSeconds <= latest).slice(0, 5);
                 const clock = sec => String(Math.floor(sec / 3600)).padStart(2, '0') +
                   ':' + String(Math.floor(sec % 3600 / 60)).padStart(2, '0');
                 const changes = !rides.length &&
                   typeof window.CPSibraFeed.coordinateOneTransferDayJourneys === 'function' ?
                   window.CPSibraFeed.coordinateOneTransferDayJourneys(
-                    result.data, homeLat, homeLon, pickupGps.lat, pickupGps.lng, 0,
+                    pickupResult.data, homeLat, homeLon, pickupGps.lat, pickupGps.lng, 0,
                     { radiusMeters: 600, minTransferSeconds: 300, limit: 10 })
                     .filter(j => j.arrivalSeconds <= latest).slice(0, 3) : [];
                 outbound.textContent = rides.length ?
@@ -1952,13 +1957,18 @@
                     '. Arrivée au moins 30 min avant la mission, hors marche. Domicile exact, marche et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                     'Aller SIBRA : aucun bus direct ou avec 1 correspondance trouvé avec 30 min de marge depuis le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.');
               } else {
-                outbound.textContent = pickupDay && pickupDay !== day ?
-                  'Aller SIBRA : prise en charge le ' + pickupDay +
-                  ', différente de la date du fichier SIBRA chargé (' + day +
-                  '). Aucun horaire du jour de départ n’a été vérifié. Transport non confirmé — vérifiez vous-même.' :
-                  'Aller SIBRA automatique indisponible : GPS précis du départ, ville du domicile ou horaires GTFS de la date de prise en charge manquants.';
+                outbound.textContent = pickupDay && !pickupResult?.usable ?
+                  'Aller SIBRA ' + pickupDay +
+                  ' : fichier horaire du jour de prise en charge indisponible. Transport non confirmé — vérifiez vous-même.' :
+                  'Aller SIBRA automatique indisponible : GPS précis du départ, ville du domicile ou heure de prise en charge manquants.';
               }
               if (status.isConnected) status.insertAdjacentElement('afterend', outbound);
+              }).catch(() => {
+                if (status.isConnected) {
+                  outbound.textContent = 'Aller SIBRA : chargement des horaires impossible. Transport non confirmé — vérifiez vous-même.';
+                  status.insertAdjacentElement('afterend', outbound);
+                }
+              });
             }
             // Return suggestions use the home *city* coordinate, not a precise
             // home address. They must never be presented as door-to-door routes.
