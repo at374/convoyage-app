@@ -1912,7 +1912,7 @@
               auto.setAttribute('role', 'status');
               auto.style.marginTop = '8px';
               if (startCoords?.precision === 'gps' && endCoords?.precision === 'gps' &&
-                  y51ServiceDay === (() => { const d = new Date(next.pickup_start); return Number.isFinite(d.getTime()) ? new Intl.DateTimeFormat('en-CA', {timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(d) : ''; })() &&
+                  y51ServiceDay === (() => { const d = new Date(next.pickup_start); return Number.isFinite(d.getTime()) ? (() => { const p = new Intl.DateTimeFormat('en-GB', {timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d); const v = k => p.find(x => x.type === k)?.value || ''; return v('year') + '-' + v('month') + '-' + v('day'); })() : ''; })() &&
                   [startLat, startLon, endLat, endLon].every(Number.isFinite) &&
                   Math.abs(startLat) <= 90 && Math.abs(endLat) <= 90 &&
                   Math.abs(startLon) <= 180 && Math.abs(endLon) <= 180 &&
