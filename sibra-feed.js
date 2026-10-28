@@ -65,7 +65,9 @@
       const data = await response.json();
       if (!data || data.date !== day || !Array.isArray(data.stops) ||
           !Array.isArray(data.routes) || !Array.isArray(data.trips) ||
-          !Array.isArray(data.stop_times) || data.transportConfirmed !== false ||
+          !Array.isArray(data.stop_times) || !data.stops.length || !data.trips.length ||
+          !data.stop_times.length || !data.routes.length ||
+          data.transportConfirmed !== false ||
           data.realtime !== false) {
         return { usable: false, status: 'donnees_gtfs_invalides', transportConfirmed: false };
       }
