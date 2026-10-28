@@ -327,3 +327,12 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(feed.coordinateDayJourneys(compact, 44, 4, 45.91, 6.11, 0).length, 0);
   process.stdout.write('Agenda/SIBRA tests passed: 32 scenarios\\n');
 })().catch(error => { console.error(error); process.exitCode = 1; });
+
+// L'écart théorique à l'arrêt ne doit pas être présenté comme une marge vérifiée.
+{
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.ok(app.includes('écart théorique avant prise en charge'));
+  assert.ok(app.includes('hors marche et marge de sécurité'));
+}
