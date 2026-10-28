@@ -910,6 +910,58 @@
                   ' : vérifiez les noms exacts des arrêts et les horaires GTFS.') +
                 ' ' + boardingStatus + '. Correspondances et circulation réelle non vérifiées. ' +
                 'Transport non confirmé — vérifiez vous-même.';
+              // First Y51 -> SIBRA connection: GTFS timetable only. The home
+              // coordinates are city-level, so this cannot certify the last walk.
+              const sibraFeed = window.CPSibraFeed;
+              const home = RT.domicile(etat.reglages);
+              if (selectedRides.length && sibraFeed &&
+                  typeof sibraFeed.loadDayCached === 'function' &&
+                  typeof sibraFeed.coordinateDayJourneys === 'function' &&
+                  home && Number.isFinite(home.lat) && Number.isFinite(home.lng)) {
+                const sibraLine = document.createElement('div');
+                sibraLine.className = 'doux';
+                sibraLine.textContent = 'Recherche des correspondances Y51 → SIBRA…';
+                y51Result.appendChild(sibraLine);
+                try {
+                  const local = await sibraFeed.loadDayCached(requestedDate, window.fetch.bind(window));
+                  if (!local.usable) {
+                    sibraLine.textContent = 'SIBRA indisponible à cette date — correspondance non confirmée.';
+                  } else {
+                    const combinations = [];
+                    for (const ride of selectedRides) {
+                      const stop = stopById.get(String(ride.to_stop_id));
+                      if (!stop || !Number.isFinite(Number(stop.stop_lat)) ||
+                          !Number.isFinite(Number(stop.stop_lon))) continue;
+                      // 5 minutes is only a provisional transfer allowance;
+                      // the pedestrian connection remains unverified.
+                      const departures = sibraFeed.coordinateDayJourneys(local.data,
+                        Number(stop.stop_lat), Number(stop.stop_lon),
+                        home.lat, home.lng, ride.arrivalSeconds + 300);
+                      for (const bus of departures.slice(0, 3)) {
+                        combinations.push({ ride, bus });
+                      }
+                    }
+                    combinations.sort((a, b) => a.bus.arrivalSeconds - b.bus.arrivalSeconds);
+                    sibraLine.textContent = combinations.length ?
+                      'Correspondances théoriques Y51 → SIBRA : ' +
+                      combinations.slice(0, 5).map(x =>
+                        'Y51 ' + clock(x.ride.departureSeconds) + '–' +
+                        clock(x.ride.arrivalSeconds) + ', SIBRA ' +
+                        clock(x.bus.departureSeconds) + '–' +
+                        clock(x.bus.arrivalSeconds) + ' (' +
+                        (x.bus.originStop && x.bus.originStop.name || 'arrêt à vérifier') +
+                        ' → ' +
+                        (x.bus.destinationStop && x.bus.destinationStop.name || 'arrêt à vérifier') +
+                        ')').join(' ; ') +
+                        '. Marches de correspondance et vers le domicile non vérifiées. ' +
+                        'Transport non confirmé — vérifiez vous-même.' :
+                      'Aucune correspondance SIBRA théorique trouvée près des arrivées Y51. ' +
+                      'Transport non confirmé — vérifiez vous-même.';
+                  }
+                } catch (_) {
+                  sibraLine.textContent = 'Calcul Y51 → SIBRA indisponible — transport non confirmé.';
+                }
+              }
               for (const stop of arrivalLinks.slice(0, 3)) {
                 const link = document.createElement('a');
                 link.href = 'https://www.google.com/maps/search/?api=1&query=' +
