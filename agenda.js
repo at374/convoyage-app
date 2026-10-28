@@ -31,7 +31,10 @@
     const ecart = limite - fa.t;
     const base = { a, b, km, liaisonMin: lien ? Math.round(lien.heures * 60) : null, ecartMin: Math.round(ecart / MIN), besoinMin: Math.round(besoin / MIN), finEstimee: fa.estimee, lieuxConnus: !!lien };
     if (db < fa.t) return { ...base, type: 'chevauchement' };
-    if (ecart < besoin) return { ...base, type: lien ? 'trop_juste' : 'marge_insuffisante' };
+    // Sans localisation exploitable, ne pas transformer une estimation en conflit de transport.
+    // L'interface conserve son avertissement « Transport non confirmé ».
+    if (!lien) return null;
+    if (ecart < besoin) return { ...base, type: 'trop_juste' };
     return null;
   }
 
