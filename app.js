@@ -1742,11 +1742,19 @@
         '<span class="doux">Adresse manquante — trajet non calculable.</span>';
       const endTime = Date.parse(m.delivery_end || m.delivery_start || '');
       const next = Number.isFinite(endTime) ? etat.missions.filter(x =>
-        x !== m && x.platform !== undefined &&
-        (x.kind === 'acceptee' || x.status === 'acceptee') &&
+        x !== m && (x.kind === 'acceptee' || x.status === 'acceptee') &&
+        x.status !== 'annulee' && x.status !== 'cancelled' &&
         Number.isFinite(Date.parse(x.pickup_start || '')) &&
         Date.parse(x.pickup_start) > endTime)
         .sort((a,b) => Date.parse(a.pickup_start) - Date.parse(b.pickup_start))[0] : null;
+      const formatParis = value => {
+        const date = new Date(value);
+        return Number.isFinite(date.getTime()) ?
+          new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris',
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit' }).format(date) : 'heure non renseignée';
+      };
+      const nextGapMin = next ? Math.floor((Date.parse(next.pickup_start) - endTime) / 60000) : null;
       const nextOrigin = next && (next.origin_address || next.from_address || next.from_city);
       panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div>' +
         '<div><strong>1. Aller au départ de mission</strong><div>' +
@@ -1755,7 +1763,12 @@
         '<div style="margin-top:12px"><strong>2. Jonction vers la prochaine mission</strong><div>' +
         (next ? esc((to || 'Livraison non renseignée') + ' → ' +
           (nextOrigin || 'Départ suivant non renseigné')) +
-          '</div>' + directions(to, nextOrigin) :
+          '</div><div class="doux">Livraison prévue : ' +
+          esc(formatParis(m.delivery_end || m.delivery_start)) +
+          ' · prochaine prise en charge : ' + esc(formatParis(next.pickup_start)) +
+          ' · intervalle brut : ' + esc(String(nextGapMin)) +
+          ' min (hors marche, correspondances et marge de sécurité).</div>' +
+          directions(to, nextOrigin) :
           '</div><span class="doux">Aucune prochaine mission prévue.</span>') + '</div>' +
         '<div style="margin-top:12px"><strong>3. Retour au domicile</strong><div>' +
         esc(to || 'Livraison non renseignée') + ' → ' +
