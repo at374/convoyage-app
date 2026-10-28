@@ -1871,6 +1871,31 @@
           'non chargé.') +
         ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
         '<p class="doux">Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
+      // Statut réel du fichier GTFS quotidien : ne pas annoncer de trajets sans données.
+      if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
+        const daySource = m.delivery_end || m.delivery_start || m.pickup_start;
+        const dayDate = new Date(daySource || '');
+        if (Number.isFinite(dayDate.getTime())) {
+          const day = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
+          }).format(dayDate);
+          const status = document.createElement('p');
+          status.className = 'doux';
+          status.setAttribute('role', 'status');
+          status.textContent = 'SIBRA ' + day + ' : vérification des horaires GTFS…';
+          panel.appendChild(status);
+          window.CPSibraFeed.loadDay(day, window.fetch.bind(window)).then(result => {
+            if (!status.isConnected) return;
+            status.textContent = result && result.usable ?
+              'SIBRA ' + day + ' : données horaires théoriques chargées (' +
+              result.data.trips.length + ' courses). Aucun trajet à cette adresse ni circulation en temps réel confirmé.' :
+              'SIBRA ' + day + ' : fichier horaire quotidien indisponible. Transport non confirmé — vérifiez vous-même.';
+          }).catch(() => {
+            if (status.isConnected) status.textContent =
+              'SIBRA : erreur de lecture. Transport non confirmé — vérifiez vous-même.';
+          });
+        }
+      }
       if (/albertville/i.test(String(to || '')) && y51ScheduleApplies) {
         const estimate = document.createElement('div');
         estimate.className = 'doux';
