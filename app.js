@@ -753,7 +753,7 @@
         const interval = Number.isFinite(chain.intervalMin) ? '<div><strong>' + (chain.intervalEstimated ? 'Intervalle estimé entre missions :' : 'Intervalle entre missions :') + '</strong> ' + esc(String(chain.intervalMin)) + ' min</div>' : '';
         const conflictNote = chain.conflictType === 'chevauchement' ? '⚠️ Chevauchement horaire détecté.' : (chain.conflictType ? '⚠️ Enchaînement potentiellement trop juste : vérifiez le trajet et la marge de sécurité.' : 'Transport non confirmé — vérifiez vous-même. Temps disponible après trajet non déterminé.');
         const note = chain.blocked ? 'Enchaînement à vérifier : une mission acceptée n’a pas de date exploitable.' : (!chain.next ? 'Retour après la dernière mission : horaires interurbains, correspondances locales et marches à vérifier. Transport non confirmé — vérifiez vous-même.' : conflictNote);
-        html += '<div class="carte cpAgendaChain" data-sibra-date="' + esc(chain.next && Number.isFinite(chain.next.debut) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(chain.next.debut)) : (x.fin && Number.isFinite(x.fin.t) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(x.fin.t)) : '')) + '" style="margin-top:-6px;border-top:0;border-radius:0 0 12px 12px;font-size:.94em"><strong>' + (chain.next ? '↔ Enchaînement des missions' : '🏠 Retour après mission') + '</strong><div>' + esc(title) + '</div>' + interval + '<div class="doux">' + esc(note) + '</div>' + y51WalkLink + y51TrafficAlert + '</div>';
+        html += '<div class="carte cpAgendaChain" data-mission-end-ms="' + (x.fin && Number.isFinite(x.fin.t) ? x.fin.t : '') + '" data-sibra-date="' + esc(chain.next && Number.isFinite(chain.next.debut) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(chain.next.debut)) : (x.fin && Number.isFinite(x.fin.t) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(x.fin.t)) : '')) + '" style="margin-top:-6px;border-top:0;border-radius:0 0 12px 12px;font-size:.94em"><strong>' + (chain.next ? '↔ Enchaînement des missions' : '🏠 Retour après mission') + '</strong><div>' + esc(title) + '</div>' + interval + '<div class="doux">' + esc(note) + '</div>' + y51WalkLink + y51TrafficAlert + '</div>';
       }
     });
     if (caches || etat.agendaTout) html += `<button id="agTout" class="second" style="width:100%;margin-top:10px">${etat.agendaTout ? 'Masquer les missions passées' : 'Afficher les ' + caches + ' mission(s) passée(s) de plus de 7 jours'}</button>`;
@@ -818,7 +818,23 @@
                     String(route.route_id), String(from.stop_id), String(to.stop_id)));
                 }
               }
-              const unique = [...new Map(rides.map(ride => [ride.trip_id + ':' + ride.departureSeconds, ride])).values()]
+              // Exclude coaches departing before the delivery has finished.
+              // No walking time is inferred: the remaining margin still needs verification.
+              const endMs = Number(card.getAttribute('data-mission-end-ms'));
+              const endDate = card.getAttribute('data-mission-end-ms') && Number.isFinite(endMs) ?
+                new Date(endMs) : null;
+              const endParts = endDate && Number.isFinite(endDate.getTime()) ?
+                new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
+                  year: 'numeric', month: '2-digit', day: '2-digit',
+                  hour: '2-digit', minute: '2-digit', second: '2-digit',
+                  hourCycle: 'h23' }).formatToParts(endDate) : [];
+              const part = type => (endParts.find(p => p.type === type) || {}).value;
+              const endDay = endParts.length ? part('year') + '-' + part('month') + '-' + part('day') : null;
+              const earliestY51 = endDay === requestedDate ?
+                Number(part('hour')) * 3600 + Number(part('minute')) * 60 + Number(part('second')) : null;
+              const unique = [...new Map(rides.filter(ride =>
+                earliestY51 !== null && ride.departureSeconds > earliestY51)
+                .map(ride => [ride.trip_id + ':' + ride.departureSeconds, ride])).values()]
                 .sort((a, b) => a.departureSeconds - b.departureSeconds);
               const clock = sec => String(Math.floor(sec / 3600) % 24).padStart(2, '0') +
                 ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0');
@@ -828,8 +844,9 @@
                   'École Saint-François → Annecy gare routière : ' +
                   unique.slice(0, 8).map(ride => clock(ride.departureSeconds) +
                     ' → ' + clock(ride.arrivalSeconds)).join(' ; ') + '.' :
-                  'Aucun trajet daté identifié entre École Saint-François et Annecy gare routière : ' +
-                  'vérifiez les noms exacts des arrêts dans le GTFS.') +
+                  'Aucun départ après la fin de mission identifié entre École Saint-François et Annecy gare routière' +
+                  (earliestY51 === null ? ' (heure de fin de mission indisponible)' : '') +
+                  ' : vérifiez les noms exacts des arrêts et les horaires GTFS.') +
                 ' Marche, correspondances et circulation réelle non vérifiées. ' +
                 'Transport non confirmé — vérifiez vous-même.';
             } catch (_) {
