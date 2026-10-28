@@ -270,5 +270,16 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   }));
   assert.equal(empty.status, 'donnees_gtfs_invalides');
   assert.equal((await feed.loadDay('2026-02-30', async () => ({ ok: true }))).usable, false);
-  process.stdout.write('Agenda/SIBRA tests passed: 27 scenarios\\n');
+    // 28. Le format compact journalier doit être normalisé et contrôlé.
+  const compact = {
+    stops: [['A', 'Arrêt A', 45.9, 6.1], ['B', 'Arrêt B', 45.91, 6.11]],
+    routes: [['L1', '1', 'Ligne 1']],
+    trips: [['T1', 'L1', 'Centre']],
+    stop_times: [['T1', 'A', 1, '09:00:00', '09:00:00'], ['T1', 'B', 2, '09:10:00', '09:10:00']]
+  };
+  const normalized = feed.normalizeDay(compact);
+  assert.equal(normalized.stop_times[1].stop_id, 'B');
+  assert.equal(feed.normalizeDay({ ...compact, stop_times: [['T1', 'INCONNU', 1, '09:00:00', '09:00:00']] }), null);
+  assert.equal(feed.normalizeDay({ ...compact, stop_times: [['T1', 'A', 1, 'bad', 'bad']] }), null);
+  process.stdout.write('Agenda/SIBRA tests passed: 28 scenarios\\n');
 })().catch(error => { console.error(error); process.exitCode = 1; });
