@@ -35,8 +35,8 @@ test('queries OTP with France local date and preserves theoretical status', asyn
     sent=JSON.parse(options.body);
     return {ok:true,json:async()=>({data:{plan:{itineraries:[itinerary]}}})};
   }});
-  assert.match(sent.query,/planConnection\\(/);
-  assert.match(sent.query,/edges\\s*\\{/);
+  assert.ok(sent.query.includes('planConnection('));
+  assert.ok(sent.query.includes('edges {'));
   assert.equal(sent.variables.date,'2026-10-28');
   assert.equal(sent.variables.time,'10:10');
   assert.equal(result.itineraries.length,1);
