@@ -201,3 +201,14 @@ test('preserves distinct boarding stops even when routes and times match', async
   assert.deepEqual(response.itineraries.map(x=>x.legs[0].from),
     ['Annecy','Annecy Gare Routiere']);
 });
+
+test('rejects itinerary legs with missing mode rather than treating them as walking', async () => {
+  const response = await routing.plan({...base,fetcher:async()=>({
+    ok:true,json:async()=>({data:{planConnection:{edges:[
+      {node:{...itinerary,legs:[{...itinerary.legs[0],mode:null}]}},
+      {node:itinerary}
+    ]}}})
+  })});
+  assert.equal(response.itineraries.length,1);
+  assert.equal(response.itineraries[0].legs[0].mode,'BUS');
+});
