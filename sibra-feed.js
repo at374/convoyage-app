@@ -128,7 +128,11 @@
   const tripIndexCache = new WeakMap();
   function indexedTrips(tables) {
     if (tripIndexCache.has(tables)) return tripIndexCache.get(tables);
-    const byTrip = indexedTrips(tables);
+    const byTrip = new Map();
+    for (const row of tables.stop_times) {
+      if (!byTrip.has(row.trip_id)) byTrip.set(row.trip_id, []);
+      byTrip.get(row.trip_id).push(row);
+    }
     for (const rows of byTrip.values()) rows.sort((a, b) => a.stop_sequence - b.stop_sequence);
     tripIndexCache.set(tables, byTrip);
     return byTrip;
