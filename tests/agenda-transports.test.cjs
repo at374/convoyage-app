@@ -281,5 +281,13 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(normalized.stop_times[1].stop_id, 'B');
   assert.equal(feed.normalizeDay({ ...compact, stop_times: [['T1', 'INCONNU', 1, '09:00:00', '09:00:00']] }), null);
   assert.equal(feed.normalizeDay({ ...compact, stop_times: [['T1', 'A', 1, 'bad', 'bad']] }), null);
-  process.stdout.write('Agenda/SIBRA tests passed: 28 scenarios\\n');
+    // 29. Une course réelle dans le tableau journalier respecte les arrêts et heures.
+  const direct = feed.directDayJourneys(compact, 'A', 'B', 8 * 3600);
+  assert.equal(direct.length, 1);
+  assert.equal(direct[0].departureSeconds, 9 * 3600);
+  assert.equal(direct[0].arrivalSeconds, 9 * 3600 + 600);
+  assert.equal(direct[0].transportConfirmed, false);
+  assert.equal(feed.directDayJourneys(compact, 'B', 'A', 0).length, 0);
+  assert.equal(feed.directDayJourneys(compact, 'A', 'B', 10 * 3600).length, 0);
+  process.stdout.write('Agenda/SIBRA tests passed: 29 scenarios\\n');
 })().catch(error => { console.error(error); process.exitCode = 1; });
