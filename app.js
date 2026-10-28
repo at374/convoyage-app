@@ -743,7 +743,7 @@
         const interval = Number.isFinite(chain.intervalMin) ? '<div><strong>' + (chain.intervalEstimated ? 'Intervalle estimé entre missions :' : 'Intervalle entre missions :') + '</strong> ' + esc(String(chain.intervalMin)) + ' min</div>' : '';
         const conflictNote = chain.conflictType === 'chevauchement' ? '⚠️ Chevauchement horaire détecté.' : (chain.conflictType ? '⚠️ Enchaînement potentiellement trop juste : vérifiez le trajet et la marge de sécurité.' : 'Transport non confirmé — vérifiez vous-même. Temps disponible après trajet non déterminé.');
         const note = chain.blocked ? 'Enchaînement à vérifier : une mission acceptée n’a pas de date exploitable.' : (!chain.next ? 'Aucune prochaine mission prévue.' : conflictNote);
-        html += '<div class="carte cpAgendaChain" style="margin-top:-6px;border-top:0;border-radius:0 0 12px 12px;font-size:.94em"><strong>↔ Enchaînement des missions</strong><div>' + esc(title) + '</div>' + interval + '<div class="doux">' + esc(note) + '</div></div>';
+        html += '<div class="carte cpAgendaChain" data-sibra-date="' + esc(chain.next && Number.isFinite(chain.next.debut) ? new Date(chain.next.debut).toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' }) : new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' })) + '" style="margin-top:-6px;border-top:0;border-radius:0 0 12px 12px;font-size:.94em"><strong>↔ Enchaînement des missions</strong><div>' + esc(title) + '</div>' + interval + '<div class="doux">' + esc(note) + '</div></div>';
       }
     });
     if (caches || etat.agendaTout) html += `<button id="agTout" class="second" style="width:100%;margin-top:10px">${etat.agendaTout ? 'Masquer les missions passées' : 'Afficher les ' + caches + ' mission(s) passée(s) de plus de 7 jours'}</button>`;
@@ -758,7 +758,8 @@
         button.type = 'button';
         button.className = 'second';
         button.style.marginTop = '8px';
-        button.textContent = '🚌 Consulter les horaires SIBRA du jour';
+        const requestedDate = card.getAttribute('data-sibra-date') || todayParis;
+        button.textContent = '🚌 Consulter les horaires SIBRA du ' + requestedDate;
         const result = document.createElement('div');
         result.className = 'doux';
         result.setAttribute('aria-live', 'polite');
@@ -766,12 +767,12 @@
           button.disabled = true;
           result.textContent = 'Chargement des horaires SIBRA…';
           try {
-            const response = await window.CPSibraFeed.loadDay(todayParis, window.fetch.bind(window));
+            const response = await window.CPSibraFeed.loadDay(requestedDate, window.fetch.bind(window));
             if (!response.usable) {
               result.textContent = 'Horaires SIBRA indisponibles pour ce jour — transport non confirmé.';
             } else {
               const d = response.data;
-              result.textContent = 'Horaires programmés SIBRA du ' + todayParis + ' : ' +
+              result.textContent = 'Horaires programmés SIBRA du ' + requestedDate + ' : ' +
                 d.trips.length.toLocaleString('fr-FR') + ' courses, ' +
                 d.stop_times.length.toLocaleString('fr-FR') + ' passages et ' +
                 d.stops.length.toLocaleString('fr-FR') + ' arrêts. ' +
