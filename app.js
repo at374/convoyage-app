@@ -1894,6 +1894,47 @@
               'SIBRA ' + day + ' : fichier horaire quotidien indisponible. Transport non confirmé — vérifiez vous-même.';
             // Automatic SIBRA suggestions for the mission-to-mission connection.
             // Coordinates are read from the existing mission data, never guessed from a city.
+            // Return suggestions use the home *city* coordinate, not a precise
+            // home address. They must never be presented as door-to-door routes.
+            if (result && result.usable &&
+                window.CPSibraFeed.coordinateDayJourneys &&
+                Number.isFinite(endTime)) {
+              const deliveryGps = G.coordonnees(m, 'destination');
+              const homeLat = Number(etat.reglages?.domicile_lat);
+              const homeLon = Number(etat.reglages?.domicile_lng);
+              const homeKnown = etat.reglages?.domicile_lat != null &&
+                etat.reglages?.domicile_lng != null &&
+                Number.isFinite(homeLat) && Number.isFinite(homeLon) &&
+                Math.abs(homeLat) <= 90 && Math.abs(homeLon) <= 180;
+              const ret = document.createElement('div');
+              ret.className = 'doux';
+              ret.style.marginTop = '8px';
+              ret.setAttribute('role', 'status');
+              if (deliveryGps?.precision === 'gps' && homeKnown) {
+                const parts = new Intl.DateTimeFormat('en-GB', {
+                  timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit',
+                  hourCycle: 'h23'
+                }).formatToParts(new Date(endTime));
+                const n = key => Number(parts.find(p => p.type === key)?.value || 0);
+                const earliest = (n('hour') * 60 + n('minute')) * 60;
+                const args = [result.data, deliveryGps.lat, deliveryGps.lng,
+                  homeLat, homeLon, earliest, { radiusMeters: 600 }];
+                const direct = window.CPSibraFeed.coordinateDayJourneys(...args);
+                const clock = sec => String(Math.floor(sec / 3600)).padStart(2, '0') +
+                  ':' + String(Math.floor(sec % 3600 / 60)).padStart(2, '0');
+                const show = direct.slice(0, 5);
+                ret.textContent = show.length ?
+                  '🚌 Retour SIBRA indicatif vers le centre de ' +
+                  (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
+                  show.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
+                    ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
+                  '. Le domicile exact n’est PAS géolocalisé. Arrêts dans un rayon de 600 m à vol d’oiseau, marche, tarifs et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                  'Retour SIBRA : aucune course directe vers le centre de la ville du domicile trouvée à proximité. Transport non confirmé — vérifiez vous-même.';
+              } else {
+                ret.textContent = 'Retour SIBRA automatique indisponible : GPS exact de livraison ou ville du domicile non renseigné.';
+              }
+              if (status.isConnected) status.insertAdjacentElement('afterend', ret);
+            }
             if (result && result.usable && next &&
                 window.CPSibraFeed.coordinateDayJourneys) {
               const startCoords = G.coordonnees(m, 'destination');
