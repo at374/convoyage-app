@@ -802,9 +802,33 @@
               const ids = new Set(trips.map(trip => String(trip.trip_id)));
               const times = data.stop_times.filter(time => ids.has(String(time.trip_id)));
               const stamp = data.checked_at_utc ? new Date(data.checked_at_utc).toLocaleString('fr-FR') : 'inconnue';
+              // Select real stop IDs, preserving trip order and calendar exceptions.
+              const normalized = value => String(value || '').normalize('NFD')
+                .replace(/[\\u0300-\\u036f]/g, '').toLowerCase();
+              const boarding = data.stops.filter(stop => /ecole saint.?francois/.test(normalized(stop.stop_name)) &&
+                /albertville/.test(normalized(stop.stop_name)));
+              const annecy = data.stops.filter(stop => /annecy/.test(normalized(stop.stop_name)) &&
+                /gare|routiere/.test(normalized(stop.stop_name)));
+              const rides = [];
+              if (typeof planner.datedInterurbanRides === 'function') {
+                for (const route of data.routes) for (const from of boarding) for (const to of annecy) {
+                  rides.push(...planner.datedInterurbanRides(data, requestedDate,
+                    String(route.route_id), String(from.stop_id), String(to.stop_id)));
+                }
+              }
+              const unique = [...new Map(rides.map(ride => [ride.trip_id + ':' + ride.departureSeconds, ride])).values()]
+                .sort((a, b) => a.departureSeconds - b.departureSeconds);
+              const clock = sec => String(Math.floor(sec / 3600) % 24).padStart(2, '0') +
+                ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0');
               y51Result.textContent = 'Y51 du ' + requestedDate + ' : ' + trips.length +
                 ' courses programmées, ' + times.length + ' passages GTFS. Source vérifiée le ' +
-                stamp + '. Arrêt, sens, marche et correspondances non encore calculés. ' +
+                stamp + '. ' + (unique.length ?
+                  'École Saint-François → Annecy gare routière : ' +
+                  unique.slice(0, 8).map(ride => clock(ride.departureSeconds) +
+                    ' → ' + clock(ride.arrivalSeconds)).join(' ; ') + '.' :
+                  'Aucun trajet daté identifié entre École Saint-François et Annecy gare routière : ' +
+                  'vérifiez les noms exacts des arrêts dans le GTFS.') +
+                ' Marche, correspondances et circulation réelle non vérifiées. ' +
                 'Transport non confirmé — vérifiez vous-même.';
             } catch (_) {
               y51Result.textContent = 'Données officielles Y51 indisponibles ou non exploitables pour cette date. ' +
