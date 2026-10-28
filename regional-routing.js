@@ -41,7 +41,7 @@
       endTime: epochMilliseconds(itinerary.endTime),
       durationSeconds: Number(itinerary.duration),
       walkMeters: itinerary.walkDistance === null || itinerary.walkDistance === undefined || itinerary.walkDistance === '' ? NaN : Number(itinerary.walkDistance),
-      transfers: Number(itinerary.numberOfTransfers) || 0,
+      transfers: itinerary.numberOfTransfers === null || itinerary.numberOfTransfers === undefined || itinerary.numberOfTransfers === '' ? NaN : Number(itinerary.numberOfTransfers),
       legs,
       transportConfirmed: false,
       realtime: false,
