@@ -202,5 +202,35 @@
     };
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival });
+  /**
+   * A pedestrian leg is usable only when a route provider explicitly verified
+   * a walkable itinerary. Geodesic distance alone never satisfies this check.
+   */
+  function verifiedWalkingSeconds(route, expectedFrom, expectedTo) {
+    if (!route || route.status !== 'VERIFIE_PIETON' ||
+        typeof route.provider !== 'string' || !route.provider.trim() ||
+        !Number.isFinite(route.duration_seconds) || route.duration_seconds < 0 ||
+        !Number.isFinite(route.distance_meters) || route.distance_meters < 0 ||
+        !Array.isArray(route.geometry) || route.geometry.length < 2 ||
+        !route.geometry.every(p => Array.isArray(p) && p.length >= 2 &&
+          validCoordinate(Number(p[1]), Number(p[0]))) ||
+        !Array.isArray(expectedFrom) || !Array.isArray(expectedTo) ||
+        ![expectedFrom, expectedTo].every(p => p.length >= 2 &&
+          validCoordinate(Number(p[1]), Number(p[0])))) return null;
+
+    const first = route.geometry[0];
+    const last = route.geometry[route.geometry.length - 1];
+    const originGap = distanceKm(
+      { lat: Number(first[1]), lon: Number(first[0]) },
+      { lat: Number(expectedFrom[1]), lon: Number(expectedFrom[0]) });
+    const destinationGap = distanceKm(
+      { lat: Number(last[1]), lon: Number(last[0]) },
+      { lat: Number(expectedTo[1]), lon: Number(expectedTo[0]) });
+    // 50 metres tolerance for map matching. Does not certify route freshness.
+    if (originGap === null || destinationGap === null ||
+        originGap > 0.05 || destinationGap > 0.05) return null;
+    return route.duration_seconds;
+  }
+
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, verifiedWalkingSeconds });
 });
