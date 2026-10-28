@@ -207,5 +207,51 @@
     return result.slice(0, 10);
   }
 
-  return Object.freeze({ isISODate, assessDate, loadDay, loadDayCached, normalizeDay, directDayJourneys, nearbyDayStops, coordinateDayJourneys });
+  // One-transfer candidates from the same date-scoped feed. The transfer is at
+  // the identical stop_id: no unverified walking connection is assumed.
+  function oneTransferDayJourneys(dayData, fromStopId, toStopId, earliestDepartureSeconds, options = {}) {
+    const tables = normalizeDay(dayData);
+    if (!tables || typeof fromStopId !== 'string' || typeof toStopId !== 'string' ||
+        fromStopId === toStopId || !Number.isFinite(earliestDepartureSeconds)) return [];
+    const minWait = Number.isFinite(options.minTransferSeconds) ? Math.max(0, options.minTransferSeconds) : 300;
+    const maxWait = Number.isFinite(options.maxWaitSeconds) ? Math.max(minWait, options.maxWaitSeconds) : 3600;
+    const byTrip = new Map();
+    for (const row of tables.stop_times) {
+      if (!byTrip.has(row.trip_id)) byTrip.set(row.trip_id, []);
+      byTrip.get(row.trip_id).push(row);
+    }
+    const toSeconds = time => {
+      const p = time.split(':').map(Number);
+      return p[0] * 3600 + p[1] * 60 + p[2];
+    };
+    const firstLegs = [], secondLegs = [];
+    for (const [tripId, rows] of byTrip) {
+      rows.sort((a, b) => a.stop_sequence - b.stop_sequence);
+      for (let i = 0; i < rows.length; i++) {
+        for (let j = i + 1; j < rows.length; j++) {
+          const departureSeconds = toSeconds(rows[i].departure_time);
+          const arrivalSeconds = toSeconds(rows[j].arrival_time);
+          if (arrivalSeconds < departureSeconds) continue;
+          if (rows[i].stop_id === fromStopId && departureSeconds >= earliestDepartureSeconds)
+            firstLegs.push({ tripId, fromStopId, toStopId: rows[j].stop_id, departureSeconds, arrivalSeconds });
+          if (rows[j].stop_id === toStopId)
+            secondLegs.push({ tripId, fromStopId: rows[i].stop_id, toStopId, departureSeconds, arrivalSeconds });
+        }
+      }
+    }
+    const found = [];
+    for (const first of firstLegs) for (const second of secondLegs) {
+      if (first.toStopId !== second.fromStopId || first.tripId === second.tripId) continue;
+      const waitSeconds = second.departureSeconds - first.arrivalSeconds;
+      if (waitSeconds < minWait || waitSeconds > maxWait) continue;
+      found.push({ firstLeg: first, secondLeg: second, transferStopId: first.toStopId,
+        transferWaitSeconds: waitSeconds, departureSeconds: first.departureSeconds,
+        arrivalSeconds: second.arrivalSeconds, transportConfirmed: false,
+        realtime: false, walkingVerified: false, status: 'correspondance_theorique' });
+    }
+    found.sort((a, b) => a.arrivalSeconds - b.arrivalSeconds || a.departureSeconds - b.departureSeconds);
+    return found.slice(0, Number.isInteger(options.limit) && options.limit > 0 ? Math.min(50, options.limit) : 10);
+  }
+
+  return Object.freeze({ isISODate, assessDate, loadDay, loadDayCached, normalizeDay, directDayJourneys, nearbyDayStops, coordinateDayJourneys, oneTransferDayJourneys });
 });
