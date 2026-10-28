@@ -218,4 +218,14 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(planner.verifiedWalkingSeconds(route, start, [6.3, 46.0]), null);
 }
 
-process.stdout.write('Agenda/SIBRA tests passed: 24 scenarios\\n');
+// 25. Lecture des fichiers GTFS CSV : BOM, guillemets, virgules et CRLF.
+{
+  const planner = require('../sibra-planner.js');
+  const rows = planner.parseGtfsCsv('\uFEFFstop_id,stop_name,stop_lat\r\n1,"Annecy, Gare",45.9\r\n2,"Arret ""Centre""",45.91\r\n');
+  assert.equal(rows.length, 2);
+  assert.equal(rows[0].stop_name, 'Annecy, Gare');
+  assert.equal(rows[1].stop_name, 'Arret "Centre"');
+  assert.equal(planner.parseGtfsCsv('stop_id,stop_name\n1,"non termine'), null);
+}
+
+process.stdout.write('Agenda/SIBRA tests passed: 25 scenarios\\n');
