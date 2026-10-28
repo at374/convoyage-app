@@ -1785,11 +1785,15 @@
       const y51DayOfWeek = y51ServiceDay ?
         new Date(y51ServiceDay + 'T12:00:00Z').getUTCDay() : -1;
       const y51Weekday = y51DayOfWeek >= 1 && y51DayOfWeek <= 5;
+      // Les jours fériés français ne peuvent pas être assimilés aux services du lundi au vendredi.
+      const y51FrenchHolidays = new Set(['2026-11-01', '2026-11-11', '2026-12-25']);
+      const y51Holiday = y51FrenchHolidays.has(y51ServiceDay);
       const y51ScheduleApplies = y51ServiceDay >= '2026-09-01' &&
-        y51ServiceDay <= '2026-12-31' && y51Weekday;
+        y51ServiceDay <= '2026-12-31' && y51Weekday && !y51Holiday;
       const y51Indicative = y51ScheduleApplies ?
         'Grille officielle septembre–décembre 2026, page 2 : École Saint-François, direction Annecy, 11 h 48 (lundi à vendredi). ' +
         'Se présenter au moins 5 min avant, soit 11 h 43. Horaires théoriques : perturbations possibles, marche et circulation non vérifiées.' :
+        (y51Holiday ? 'Jour férié : le service du lundi au vendredi ne peut pas être présumé. ' : '') +
         'Le service de 11 h 48 à École Saint-François n’est pas validé pour cette date et ce type de jour. Vérifier la grille applicable.';
       const y51WalkingWindow = (() => {
         if (!y51ScheduleApplies) return '';
