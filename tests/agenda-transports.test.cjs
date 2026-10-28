@@ -309,5 +309,13 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(downloads, 1);
   assert.equal(first.usable, true);
   assert.equal(second.usable, true);
-  process.stdout.write('Agenda/SIBRA tests passed: 31 scenarios\\n');
+  // 32. Recherche par coordonnées: horaires réels GTFS, approche non vérifiée.
+  const candidates = feed.coordinateDayJourneys(compact, 45.9, 6.1, 45.91, 6.11, 8 * 3600, { radiusMeters: 100 });
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0].originStop.stopId, 'A');
+  assert.equal(candidates[0].destinationStop.stopId, 'B');
+  assert.equal(candidates[0].approachVerified, false);
+  assert.equal(candidates[0].transportConfirmed, false);
+  assert.equal(feed.coordinateDayJourneys(compact, 44, 4, 45.91, 6.11, 0).length, 0);
+  process.stdout.write('Agenda/SIBRA tests passed: 32 scenarios\\n');
 })().catch(error => { console.error(error); process.exitCode = 1; });
