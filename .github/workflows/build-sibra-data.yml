@@ -1,0 +1,43 @@
+name: Build SIBRA daily GTFS data
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-sibra-data.yml'
+      - 'tools/build-sibra-day.py'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download official SIBRA feed published 2026-10-01
+        run: |
+          curl --fail --location --retry 3 --output /tmp/gtfs-sibra.zip \
+            'https://static.data.gouv.fr/resources/offre-de-transports-sibra-a-annecy-gtfs/20261001-085638/gtfs-sibra.zip'
+          python -m zipfile -t /tmp/gtfs-sibra.zip
+      - name: Generate today and next six days (Europe/Paris)
+        run: |
+          python - <<'PY'
+          from datetime import datetime, timedelta
+          from zoneinfo import ZoneInfo
+          import subprocess
+          today = datetime.now(ZoneInfo('Europe/Paris')).date()
+          for offset in range(7):
+              day = (today + timedelta(days=offset)).isoformat()
+              if '2026-10-01' <= day <= '2026-12-20':
+                  subprocess.run(['python', 'tools/build-sibra-day.py', '/tmp/gtfs-sibra.zip', day], check=True)
+          PY
+      - name: Commit generated timetable data
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/sibra/sibra-????-??-??.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish verified-date SIBRA GTFS daily timetable files'
+            git push
+          fi
