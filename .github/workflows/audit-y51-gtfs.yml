@@ -42,6 +42,27 @@ jobs:
           trip_ids = {t["trip_id"] for t in trips}
           y51_times = [t for t in stop_times if t.get("trip_id") in trip_ids]
           used_stops = {t.get("stop_id") for t in y51_times}
+          # Keep only Y51 rows; preserve calendars for dated trip validation.
+          service_ids = {t.get("service_id") for t in trips}
+          calendar = [r for r in rows("calendar.txt") if r.get("service_id") in service_ids] if "calendar.txt" in names else []
+          exceptions = [r for r in rows("calendar_dates.txt") if r.get("service_id") in service_ids] if "calendar_dates.txt" in names else []
+          if not calendar and not exceptions:
+              raise RuntimeError("No dated service calendar for Y51")
+          if not trips or not y51_times:
+              raise RuntimeError("Y51 has no trips or stop times")
+          os.makedirs("audit-output", exist_ok=True)
+          with open("audit-output/y51-gtfs-tables.json", "w", encoding="utf-8") as f:
+              json.dump({
+                  "source": url,
+                  "checked_at_utc": datetime.now(timezone.utc).isoformat(),
+                  "routes": y51,
+                  "trips": trips,
+                  "stop_times": y51_times,
+                  "stops": [stop for stop in stops if stop.get("stop_id") in used_stops],
+                  "calendar": calendar,
+                  "calendar_dates": exceptions,
+                  "status": "theoretical_schedule_only_not_live_confirmed"
+              }, f, ensure_ascii=False, separators=(",", ":"))
           summary = {
               "checked_at_utc": datetime.now(timezone.utc).isoformat(),
               "source": url,
