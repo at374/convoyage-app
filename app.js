@@ -857,6 +857,22 @@
             ':' + String(Math.floor(seconds / 60) % 60).padStart(2, '0');
           const stopDistance = stop => stop && Number.isFinite(stop.straightLineMeters) ?
             ' (à ' + stop.straightLineMeters + ' m à vol d’oiseau, marche à vérifier)' : '';
+          // Carte des arrêts de l'option SIBRA (ne valide ni le service ni les marches).
+          const addStopsMapLink = journey => {
+            if (!journey || !journey.originStop || !journey.destinationStop) return;
+            const a = journey.originStop, b = journey.destinationStop;
+            if (![a.latitude, a.longitude, b.latitude, b.longitude].every(Number.isFinite)) return;
+            const link = document.createElement('a');
+            link.href = 'https://www.google.com/maps/dir/?api=1&origin=' +
+              encodeURIComponent(a.latitude + ',' + a.longitude) + '&destination=' +
+              encodeURIComponent(b.latitude + ',' + b.longitude) + '&travelmode=transit';
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.textContent = '🗺️ Voir les arrêts sur la carte (itinéraire à vérifier)';
+            link.style.display = 'block';
+            link.style.marginTop = '6px';
+            line.appendChild(link);
+          };
           // Route piétonne : uniquement un service foot HTTPS configuré explicitement.
           // Une durée à vol d'oiseau ne valide jamais une correspondance.
           const planner = window.CPSibraPlanner;
@@ -891,6 +907,7 @@
                   check.status === 'marches_non_verifiees' ? 'marche non vérifiée' :
                   'enchaînement non réalisable avec la marche et la marge de sécurité')
               ).join(' ; ') + '. Transport non confirmé — vérifiez vous-même.';
+              addStopsMapLink(ranked[0] && ranked[0].journey);
             }).catch(() => {
               if (line.isConnected) line.textContent = 'SIBRA : vérification piétonne indisponible — transport non confirmé.';
             });
@@ -904,6 +921,7 @@
               formatTime(j.departureSeconds) + ' → ' + j.destinationStop.name + stopDistance(j.destinationStop) + ' ' +
               formatTime(j.arrivalSeconds) + ' (écart théorique avant prise en charge : ' + Math.floor((nextSeconds - j.arrivalSeconds) / 60) + ' min, hors marche et marge de sécurité)').join(' ; ') +
             '. Transport non confirmé — vérifiez vous-même.';
+          addStopsMapLink(journeys[0]);
         }).catch(() => {
           if (line.isConnected) line.textContent = 'SIBRA : recherche indisponible — transport non confirmé.';
         });
