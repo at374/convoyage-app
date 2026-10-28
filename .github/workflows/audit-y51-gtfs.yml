@@ -1,6 +1,8 @@
 name: Audit GTFS Haute-Savoie Y51
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '17 5 * * *'
 jobs:
   audit:
     runs-on: ubuntu-latest
