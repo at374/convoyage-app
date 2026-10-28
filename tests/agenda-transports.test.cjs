@@ -852,3 +852,14 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.match(source, /finishGps\?\.precision === 'gps' && nextGps\?\.precision === 'gps'/);
   assert.match(source, /options\.slice\(0, 5\)/);
 }
+
+{
+  const fs = require('node:fs');
+  const source = fs.readFileSync(require('node:path').join(__dirname, '..', 'app.js'), 'utf8');
+  assert.match(source, /Aller régional : recherche des itinéraires/);
+  assert.match(source, /Jonction régionale : recherche des correspondances/);
+  assert.match(source, /Retour régional : recherche des itinéraires/);
+  assert.match(source, /CPRegionalRouting\.feasibleBefore\(/);
+  assert.match(source, /CPRegionalRouting\.feasibleBetween\(/);
+  assert.match(source, /adresse exacte non vérifiée/);
+}
