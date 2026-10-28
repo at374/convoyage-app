@@ -1789,11 +1789,11 @@
         'Date de service à vérifier : ' + y51ServiceDay + ' (heure locale Europe/Paris).' :
         'Date de livraison absente : impossible de choisir le bon calendrier de circulation.';
       const endTime = Date.parse(m.delivery_end || m.delivery_start || '');
-      const next = Number.isFinite(endTime) ? etat.missions.filter(x =>
-        x !== m && (x.kind === 'acceptee' || x.status === 'acceptee') &&
-        x.status !== 'annulee' && x.status !== 'cancelled' &&
-        Number.isFinite(Date.parse(x.pickup_start || '')) &&
-        Date.parse(x.pickup_start) > endTime)
+      const next = Number.isFinite(endTime) ? (Array.isArray(etat.missions) ? etat.missions : [])
+        .filter(x => x && x !== m && (x.kind === 'acceptee' || x.status === 'acceptee') &&
+          !['annulee', 'cancelled', 'canceled', 'refusee'].includes(String(x.status || '').toLowerCase()) &&
+          Number.isFinite(Date.parse(x.pickup_start || '')) &&
+          Date.parse(x.pickup_start) > endTime)
         .sort((a,b) => Date.parse(a.pickup_start) - Date.parse(b.pickup_start))[0] : null;
       const formatParis = value => {
         if (value === null || value === undefined || value === '') return 'heure non renseignée';
@@ -1842,7 +1842,8 @@
         directions(to, home, m.delivery_end || m.delivery_start) +
         (/albertville/i.test(String(to || '')) ?
           '<div class="doux" style="margin-top:8px">🚌 Retour Y51 Albertville → Annecy : ' +
-          '<a href="https://annecy.transdev.com/line/ligne-y51/" target="_blank" rel="noopener noreferrer">horaires officiels de la ligne</a> · ' +
+          '<a href="https://annecy.transdev.com/line/ligne-y51/" target="_blank" rel="noopener noreferrer">horaires officiels 2026–2027</a> · ' +
+          '<a href="https://annecy.transdev.com/trafic/" target="_blank" rel="noopener noreferrer">perturbations et mises à jour Transdev</a> · ' +
           '<a href="https://hawk.hanoverdisplays.com/y51/public/" target="_blank" rel="noopener noreferrer">suivi des départs</a> · ' +
           '<a href="https://transports.s33d.fr/arret/ecole-saint-francois-73011" target="_blank" rel="noopener noreferrer">horaires de l’arrêt École Saint-François (données régionales)</a> · ' +
           '<a href="' + esc('https://www.google.com/maps/dir/?api=1&origin=' +
