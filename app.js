@@ -1725,7 +1725,12 @@
     { const bv = $('btnVol'); if (bv) bv.onclick = () => popupVol(m); }
     { const bt = $('btnTransportsMission'); if (bt) bt.onclick = () => {
       const existing = $('cpTransportMissionDetails');
-      if (existing) { existing.hidden = !existing.hidden; return; }
+      if (existing) {
+      existing.hidden = !existing.hidden;
+      bt.setAttribute('aria-expanded', String(!existing.hidden));
+      if (!existing.hidden) existing.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
       const panel = document.createElement('section');
       panel.id = 'cpTransportMissionDetails';
       panel.className = 'bk bkC bkTr';
@@ -1822,6 +1827,11 @@
           'Départ de 11 h 48 non confirmé pour cette date.</div>' : '') + '</div>' +
         '<p class="doux">Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
       bt.insertAdjacentElement('afterend', panel);
+      bt.setAttribute('aria-controls', panel.id);
+      bt.setAttribute('aria-expanded', 'true');
+      panel.setAttribute('role', 'region');
+      panel.setAttribute('aria-label', 'Détails des transports de la mission');
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }; }
 
     { const br = $('btnRetirer'); if (br) br.onclick = () => { if (!window.confirm('Retirer cette mission de ton Agenda sur ce téléphone ? (rien n’est supprimé chez Hiflow ni sur le serveur ; tu peux tout remettre dans Réglages)')) return; const t = lireLocal('cp_masquees', []) || []; const k = m.platform + '|' + m.external_id; if (!t.includes(k)) t.push(k); ecrireLocal('cp_masquees', t); etat.missions = etat.missions.filter(x => !(x.kind === 'acceptee' && x.platform + '|' + x.external_id === k)); ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures }); $('feuille').hidden = true; afficher(); toast('Retirée de l’Agenda'); }; }
