@@ -1785,6 +1785,10 @@
         'Ne pas confondre les horaires des différents arrêts ni utiliser une ancienne grille. ' +
         'Aucun temps de correspondance ne peut être validé avant confirmation de l’arrêt, ' +
         'de la date et du sens Albertville → Annecy.';
+      const y51SummerReference = y51ServiceDay >= '2026-07-04' && y51ServiceDay <= '2026-08-31' ?
+        'Grille officielle été 2026 : École Saint-François → Annecy à 11 h 47 du lundi au vendredi (hors jours fériés). ' +
+        'Horaire théorique historique de cette période uniquement ; aucune confirmation temps réel.' :
+        'La grille été 2026 ne doit pas être utilisée pour cette date : consulter la grille 2026–2027.';
       const y51CheckDate = y51ServiceDay ?
         'Date de service à vérifier : ' + y51ServiceDay + ' (heure locale Europe/Paris).' :
         'Date de livraison absente : impossible de choisir le bon calendrier de circulation.';
@@ -1855,7 +1859,8 @@
           'La grille Y51 2026–2027 doit être consultée pour le jour exact (semaine, samedi, dimanche ou vacances). ' +
           esc(y51FeedStatus) + '<div>' + esc(y51Indicative) + '</div>' +
           '<div>' + esc(y51WorksWarning) + '</div>' +
-          '<div>' + esc(y51CheckDate) + '</div></div>' : '') + '</div>' +
+          '<div>' + esc(y51CheckDate) + '</div>' +
+          '<div>' + esc(y51SummerReference) + '</div></div>' : '') + '</div>' +
         '<p class="doux">Moteur régional : ' +
         (regionalEngineReady ? 'adaptateur disponible, calcul non connecté à cette fiche.' :
           'non chargé.') +
