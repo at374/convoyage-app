@@ -550,3 +550,18 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
     assert.equal(bad, null);
   })().catch(error => { process.nextTick(() => { throw error; }); });
 }
+
+
+// A misleading URL prefix must not bypass HTTPS routing endpoint validation.
+{
+  const planner = require('../sibra-planner.js');
+  const from = [6.1, 45.9], to = [6.101, 45.901];
+  let calls = 0;
+  const fetchStub = async () => { calls++; throw new Error('unexpected request'); };
+  (async () => {
+    const bad = await planner.requestPedestrianOSRM(from, to, fetchStub,
+      'https://example.test/route/v1/driving');
+    assert.equal(bad, null);
+    assert.equal(calls, 0);
+  })().catch(error => { process.nextTick(() => { throw error; }); });
+}
