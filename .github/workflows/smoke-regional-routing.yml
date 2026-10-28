@@ -20,6 +20,8 @@ jobs:
             echo "::error::Set REGIONAL_ROUTING_URL to the deployed HTTPS OTP GraphQL endpoint."
             exit 1
           fi
+      - name: Verify deployed GraphQL schema and route response
+        run: python3 scripts/regional-otp/check-endpoint.py "$ROUTING_ENDPOINT"
       - name: Query real regional route (Annecy to Albertville)
         shell: bash
         run: |
