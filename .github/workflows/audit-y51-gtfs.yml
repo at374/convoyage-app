@@ -57,6 +57,22 @@ jobs:
           os.makedirs("audit-output", exist_ok=True)
           with open("audit-output/y51-gtfs-audit.json", "w", encoding="utf-8") as f:
               json.dump(summary, f, ensure_ascii=False, indent=2)
+          # Export the minimum dated GTFS tables needed by the Agenda planner.
+          service_ids = {t.get("service_id") for t in trips}
+          calendar = [r for r in rows("calendar.txt") if r.get("service_id") in service_ids] if "calendar.txt" in names else []
+          exceptions = [r for r in rows("calendar_dates.txt") if r.get("service_id") in service_ids] if "calendar_dates.txt" in names else []
+          if not calendar and not exceptions:
+              raise RuntimeError("Y51 has no usable service calendars")
+          dataset = {
+              "source": url,
+              "checked_at_utc": summary["checked_at_utc"],
+              "status": "theoretical_schedule_only_not_live_confirmed",
+              "routes": y51, "trips": trips, "stop_times": y51_times,
+              "stops": summary["stops"], "calendar": calendar,
+              "calendar_dates": exceptions
+          }
+          with open("audit-output/y51-gtfs-tables.json", "w", encoding="utf-8") as f:
+              json.dump(dataset, f, ensure_ascii=False, separators=(",", ":"))
           print("Y51 trips:", len(trips), "stop times:", len(y51_times), "stops:", len(summary["stops"]))
           PY
       - name: Upload audit report
