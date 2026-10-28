@@ -384,3 +384,14 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.ok(app.includes('Correspondance à '));
   assert.ok(app.includes('Transport non confirmé — vérifiez vous-même.'));
 }
+
+// La date SIBRA doit être au format ISO indépendamment des conventions locales du navigateur.
+{
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
+  assert.ok(app.includes("formatToParts(date)"));
+  assert.ok(app.includes("get('year') + '-' + get('month') + '-' + get('day')"));
+  assert.ok(app.includes("const date = (date =>"));
+  assert.ok(app.includes("const nextDate = (date =>"));
+}

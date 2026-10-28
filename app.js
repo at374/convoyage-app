@@ -743,7 +743,7 @@
         const interval = Number.isFinite(chain.intervalMin) ? '<div><strong>' + (chain.intervalEstimated ? 'Intervalle estimé entre missions :' : 'Intervalle entre missions :') + '</strong> ' + esc(String(chain.intervalMin)) + ' min</div>' : '';
         const conflictNote = chain.conflictType === 'chevauchement' ? '⚠️ Chevauchement horaire détecté.' : (chain.conflictType ? '⚠️ Enchaînement potentiellement trop juste : vérifiez le trajet et la marge de sécurité.' : 'Transport non confirmé — vérifiez vous-même. Temps disponible après trajet non déterminé.');
         const note = chain.blocked ? 'Enchaînement à vérifier : une mission acceptée n’a pas de date exploitable.' : (!chain.next ? 'Aucune prochaine mission prévue.' : conflictNote);
-        html += '<div class="carte cpAgendaChain" data-sibra-date="' + esc(chain.next && Number.isFinite(chain.next.debut) ? new Date(chain.next.debut).toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' }) : new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' })) + '" style="margin-top:-6px;border-top:0;border-radius:0 0 12px 12px;font-size:.94em"><strong>↔ Enchaînement des missions</strong><div>' + esc(title) + '</div>' + interval + '<div class="doux">' + esc(note) + '</div></div>';
+        html += '<div class="carte cpAgendaChain" data-sibra-date="' + esc(chain.next && Number.isFinite(chain.next.debut) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(chain.next.debut)) : new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' })) + '" style="margin-top:-6px;border-top:0;border-radius:0 0 12px 12px;font-size:.94em"><strong>↔ Enchaînement des missions</strong><div>' + esc(title) + '</div>' + interval + '<div class="doux">' + esc(note) + '</div></div>';
       }
     });
     if (caches || etat.agendaTout) html += `<button id="agTout" class="second" style="width:100%;margin-top:10px">${etat.agendaTout ? 'Masquer les missions passées' : 'Afficher les ' + caches + ' mission(s) passée(s) de plus de 7 jours'}</button>`;
@@ -799,7 +799,7 @@
         const origin = G.coordonnees(x.mission, 'destination');
         const destination = G.coordonnees(chain.next.mission, 'origin');
         if (!origin || !destination || origin.precision !== 'gps' || destination.precision !== 'gps') continue;
-        const date = new Date(x.fin.t).toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });
+        const date = (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(x.fin.t));
         const timeParts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
           hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(x.fin.t)).split(':');
         const earliest = Number(timeParts[0]) * 3600 + Number(timeParts[1]) * 60;
@@ -817,7 +817,7 @@
             line.textContent = 'SIBRA : horaires indisponibles pour cette date — transport non confirmé.';
             return;
           }
-          const nextDate = new Date(chain.next.debut).toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });
+          const nextDate = (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(chain.next.debut));
           const nextClock = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
             hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(chain.next.debut)).split(':');
           const nextSeconds = Number(nextClock[0]) * 3600 + Number(nextClock[1]) * 60;
