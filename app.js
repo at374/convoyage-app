@@ -1860,12 +1860,13 @@
           '<div class="doux" style="margin-top:8px">🚌 Retour Y51 Albertville → Annecy : ' +
           '<a href="https://annecy.transdev.com/line/ligne-y51/" target="_blank" rel="noopener noreferrer">horaires officiels de la ligne</a> · ' +
           '<a href="https://hawk.hanoverdisplays.com/y51/public/" target="_blank" rel="noopener noreferrer">suivi des départs</a> · ' +
+          '<a href="https://transports.s33d.fr/arret/ecole-saint-francois-73011" target="_blank" rel="noopener noreferrer">horaires de l’arrêt École Saint-François (données régionales)</a> · ' +
           '<a href="' + esc('https://www.google.com/maps/dir/?api=1&origin=' +
             encodeURIComponent(to) + '&destination=' +
             encodeURIComponent('École Saint-François, Albertville') +
             '&travelmode=walking') +
           '" target="_blank" rel="noopener noreferrer">marche vers École Saint-François</a>. ' +
-          'Départ de 11 h 48 indiqué par le convoyeur, non confirmé pour cette date. ' +
+          'Départ de 11 h 48 indiqué par le convoyeur : contrôler spécifiquement le sens Annecy et la date à École Saint-François (ne pas confondre avec Rue Jean Jaurès). ' +
           esc(y51FeedStatus) + '<div>' + esc(y51Indicative) + '</div>' +
           '<div>' + esc(y51WorksWarning) + '</div></div>' : '') + '</div>' +
         '<p class="doux">Moteur régional : ' +
