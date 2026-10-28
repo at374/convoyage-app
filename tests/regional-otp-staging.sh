@@ -48,3 +48,21 @@ fi
 wait "$lock_pid"
 [[ "$(cat "$tmp/work/graph.obj")" == new-graph ]]
 echo "Concurrent build protection passed"
+
+# Serving holds a shared lock; a rebuild may prepare a candidate but cannot
+# replace the graph while that server is running.
+(
+  flock -s 8
+  sleep 2
+) 8>"$tmp/work/.serve.lock" &
+serve_pid=$!
+sleep 0.3
+if bash "$repo/scripts/regional-otp/run.sh" build; then
+  echo "Build unexpectedly replaced graph during active serving" >&2
+  kill "$serve_pid" 2>/dev/null || true
+  exit 1
+fi
+wait "$serve_pid"
+[[ "$(cat "$tmp/work/graph.obj")" == new-graph ]]
+[[ "$(cat "$tmp/work/oura-regional.gtfs.zip")" == new-gtfs ]]
+echo "Active serving protects graph replacement"
