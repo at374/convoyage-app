@@ -2013,11 +2013,19 @@
           const hhmm = minutes => String(Math.floor(minutes / 60)).padStart(2, '0') +
             ' h ' + String(minutes % 60).padStart(2, '0');
           // Un horaire positif ne prouve pas que le chemin piéton ni le car sont disponibles.
+          const marginAssessment = remaining < 0 ?
+            'Correspondance théorique impossible.' :
+            remaining < 15 ?
+              '⚠️ Marge faible (moins de 15 min) : correspondance fragile en cas de retard.' :
+              remaining < 30 ?
+                'Marge de 15 à 29 min : prévoir les aléas de livraison et de marche.' :
+                'Marge d’au moins 30 min avant l’arrivée recommandée à l’arrêt.';
           result.textContent = remaining >= 0 ?
             'Si départ dès la fin de livraison : arrivée estimée à l’arrêt à ' +
             hhmm(arrivalAtStop) + '. Départ du lieu de livraison au plus tard à ' +
             hhmm(latestDeparture) + ' pour être à l’arrêt à 11 h 43. Marge théorique : ' +
-            remaining + ' min. Marche et circulation non confirmées.' :
+            remaining + ' min. ' + marginAssessment +
+            ' Marche et circulation non confirmées.' :
             '⚠️ Correspondance théorique impossible : arrivée estimée à l’arrêt à ' +
             hhmm(arrivalAtStop) + ', soit ' + (-remaining) +
             ' min après 11 h 43. Départ nécessaire au plus tard à ' + hhmm(latestDeparture) + '.';
