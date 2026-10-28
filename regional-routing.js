@@ -43,7 +43,8 @@
   }
   async function plan({ endpoint, from, to, departure, fetcher, timeoutMs = 12000 }) {
     if (!validPoint(from) || !validPoint(to)) throw new Error('Coordonnees GPS requises');
-    if (!Number.isFinite(new Date(departure).getTime())) throw new Error('Date invalide');
+    if (departure === null || departure === undefined ||
+        !Number.isFinite(new Date(departure).getTime())) throw new Error('Date invalide');
     if (!/^https:\/\//.test(String(endpoint || ''))) throw new Error('Endpoint HTTPS requis');
     if (typeof fetcher !== 'function') throw new Error('Fetch indisponible');
     const date = new Date(departure);
@@ -91,7 +92,11 @@
       if (!Array.isArray(itineraries)) throw new Error('Reponse itineraires invalide');
       const validItineraries = itineraries.slice(0,MAX_RESULTS).map(parseItinerary)
         .filter(it => Number.isFinite(it.startTime) &&
-          Number.isFinite(it.endTime) && it.endTime >= it.startTime);
+          Number.isFinite(it.endTime) && it.endTime >= it.startTime &&
+          it.startTime >= date.getTime() - 60000 &&
+          it.legs.length > 0 &&
+          it.legs.every(leg => Number.isFinite(leg.startTime) &&
+            Number.isFinite(leg.endTime) && leg.endTime >= leg.startTime));
       return {source:'OpenTripPlanner', date:localDate, updatedAt:new Date().toISOString(),
         itineraries:validItineraries,
         transportConfirmed:false, realtime:false};
