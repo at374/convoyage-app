@@ -820,13 +820,13 @@
                   Math.round(it.durationSeconds / 60) + ' min · ' +
                   it.transfers + ' correspondance(s) · ' +
                   Math.round(it.walkMeters) + ' m à pied' +
-                  '\\n' + it.legs.map(leg =>
+                  '\n' + it.legs.map(leg =>
                     '  ' + (leg.route || leg.mode) + ' : ' +
                     (leg.from || 'départ non précisé') + ' ' + fmt(leg.startTime) +
                     ' → ' + (leg.to || 'arrivée non précisée') + ' ' +
                     fmt(leg.endTime)
-                  ).join('\\n')
-                ).join('\\n\\n') +
+                  ).join('\n')
+                ).join('\n\n') +
                 (regionalHome.precision === 'gps' ?
                   '. Destination GPS renseignée.' :
                   '. Destination approximative (centre de ville), pas votre adresse exacte.') +
