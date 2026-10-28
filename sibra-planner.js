@@ -184,5 +184,23 @@
     return results.sort((a, b) => a.arrivalSeconds - b.arrivalSeconds || a.totalSeconds - b.totalSeconds);
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys });
+  // Compute a journey's clock-time feasibility, without assuming that
+  // straight-line stop distances are actual walking routes.
+  function assessMissionArrival(arrivalSeconds, missionStartSeconds, approachSeconds, marginSeconds) {
+    if (![arrivalSeconds, missionStartSeconds, approachSeconds, marginSeconds].every(Number.isFinite) ||
+        approachSeconds < 0 || marginSeconds < 0) {
+      return { feasible: false, status: 'donnees_insuffisantes', transportConfirmed: false };
+    }
+    const arrivalAtAddressSeconds = arrivalSeconds + approachSeconds;
+    const advanceSeconds = missionStartSeconds - arrivalAtAddressSeconds;
+    return {
+      feasible: advanceSeconds >= marginSeconds,
+      status: advanceSeconds >= marginSeconds ? 'horaire_theorique_compatible' : 'horaire_incompatible',
+      arrivalAtAddressSeconds,
+      advanceSeconds,
+      transportConfirmed: false
+    };
+  }
+
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival });
 });
