@@ -12,11 +12,14 @@ usage() {
 mode="${1:-}"
 [[ "$mode" == build || "$mode" == serve ]] || usage
 : "${OTP_JAR:?Set OTP_JAR to an OpenTripPlanner 2 executable jar}"
-: "${OURA_GTFS:?Set OURA_GTFS to the validated Oura GTFS archive}"
-: "${OSM_PBF:?Set OSM_PBF to a suitable OpenStreetMap extract}"
-for file in "$OTP_JAR" "$OURA_GTFS" "$OSM_PBF"; do
-  [[ -s "$file" ]] || { echo "Missing or empty file: $file" >&2; exit 1; }
-done
+[[ -s "$OTP_JAR" ]] || { echo "Missing OTP jar: $OTP_JAR" >&2; exit 1; }
+if [[ "$mode" == build ]]; then
+  : "${OURA_GTFS:?Set OURA_GTFS to the validated Oura GTFS archive}"
+  : "${OSM_PBF:?Set OSM_PBF to a suitable OpenStreetMap extract}"
+  for file in "$OURA_GTFS" "$OSM_PBF"; do
+    [[ -s "$file" ]] || { echo "Missing or empty file: $file" >&2; exit 1; }
+  done
+fi
 command -v java >/dev/null || { echo "Java not installed" >&2; exit 1; }
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 work="${OTP_WORKDIR:-$root/.local/otp-aura}"
