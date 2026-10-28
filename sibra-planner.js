@@ -203,6 +203,22 @@
   }
 
   /**
+   * Assess a scheduled bus arrival using a provider-verified final walking leg.
+   * This is a timetable-only compatibility check, never a realtime confirmation.
+   */
+  function assessVerifiedMissionApproach(arrivalSeconds, missionStartSeconds,
+    walkingRoute, stopCoordinates, missionCoordinates, marginSeconds = 1800) {
+    const walkingSeconds = verifiedWalkingSeconds(walkingRoute, stopCoordinates, missionCoordinates);
+    if (walkingSeconds === null) {
+      return { feasible: false, status: 'approche_pietonne_non_verifiee',
+        transportConfirmed: false };
+    }
+    const result = assessMissionArrival(arrivalSeconds, missionStartSeconds,
+      walkingSeconds, marginSeconds);
+    return { ...result, walkingVerified: true, walkingSeconds, transportConfirmed: false };
+  }
+
+  /**
    * A pedestrian leg is usable only when a route provider explicitly verified
    * a walkable itinerary. Geodesic distance alone never satisfies this check.
    */
@@ -310,5 +326,5 @@
     return { valid: errors.length === 0, errors };
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, verifiedWalkingSeconds, parseGtfsCsv, validateGtfsTables });
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, verifiedWalkingSeconds, parseGtfsCsv, validateGtfsTables });
 });
