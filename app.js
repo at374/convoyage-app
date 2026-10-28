@@ -1685,7 +1685,20 @@
       ${bk('bkLieu', 'LIEUX', `<div>📍 <b>Départ</b> : ${esc(adresse(m, 'origin'))}</div><div id="gpsO">${mentionGps(m, 'origin')}</div>${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}<div style="margin-top:8px">🏁 <b>Arrivée</b> : ${esc(adresse(m, 'destination'))}</div><div id="gpsD">${mentionGps(m, 'destination')}</div>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}`)}
       ${mailBloc(m)}
       ${blocRenta(m, r, frais, dv, depuis)}
-      ${(() => { const lt = etat.reglages && etat.reglages.domicile_ville && m.from_city ? liensTransports(etat.reglages.domicile_ville, '', m.from_city, m.from_department, 'a|' + (m.id || m.external_id)) : ''; return lt ? bk('bkTr', 'TRANSPORTS · ALLER DEPUIS TON DOMICILE', lt) : ''; })()}
+      ${(() => {
+        const lt = etat.reglages && etat.reglages.domicile_ville && m.from_city ?
+          liensTransports(etat.reglages.domicile_ville, '', m.from_city,
+            m.from_department, 'a|' + (m.id || m.external_id)) : '';
+        const destination = [m.destination_address, m.to_address, m.to_city].find(Boolean);
+        const retour = destination && etat.reglages && etat.reglages.domicile_ville ?
+          liensTransports(m.to_city || destination, m.to_department || '',
+            etat.reglages.domicile_ville, '', 'r|' + (m.id || m.external_id)) : '';
+        const contenu = (lt ? '<strong>Aller vers la mission</strong>' + lt : '') +
+          (retour ? '<strong>Retour après livraison</strong>' + retour : '') +
+          (!lt && !retour ? '<div class="doux">Adresses à compléter pour rechercher les transports.</div>' : '') +
+          '<div class="doux">Horaires et correspondances à vérifier à la date de la mission. Transport non confirmé — vérifiez vous-même.</div>';
+        return bk('bkTr', 'TRANSPORTS · ALLER / RETOUR', contenu);
+      })()}
       ${m.kind === 'acceptee' ? blocHistorique(m) : ''}
       ${m.status === 'annulee' || m.status === 'terminee' || (m.kind === 'acceptee' && missionPassee(m)) ? '' : blocRetours(m)}
       ${m.vehicle && /[ée]lectri|\bev\b|\bbev\b/i.test(String(m.vehicle.energy || '')) ? `<div class="carte"><b>🔌 Véhicule électrique : calculer la charge</b><p class="doux" style="margin:4px 0">Le prix et le temps de charge dépendent de la voiture, de la borne et de l’itinéraire : ces sites les calculent (l’appli ne les connaît pas).</p><span class="liensTr"><a href="https://abetterrouteplanner.com/">⚡ A Better Routeplanner</a><a href="https://fr.chargemap.com/">🗺️ Chargemap (bornes et prix)</a>${(m.origin_address || m.from_city) && (m.destination_address || m.to_city) ? `<a href="${esc('https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(m.origin_address || m.from_city + ' ' + (m.from_department || '')) + '&destination=' + encodeURIComponent(m.destination_address || m.to_city + ' ' + (m.to_department || '')))}">📍 Itinéraire Google Maps</a>` : ''}</span></div>` : ''}
