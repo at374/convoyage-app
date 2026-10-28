@@ -64,6 +64,16 @@ jobs:
           calendar = rows("calendar.txt") if "calendar.txt" in names else []
           exceptions = rows("calendar_dates.txt") if "calendar_dates.txt" in names else []
           service_ids = {t.get("service_id") for t in trips}
+          if not trips or not y51_times or not service_ids or None in service_ids:
+              raise RuntimeError("Y51 has no complete trips and service IDs")
+          calendar_ids = {c.get("service_id") for c in calendar}
+          exception_ids = {c.get("service_id") for c in exceptions}
+          if not service_ids.issubset(calendar_ids | exception_ids):
+              raise RuntimeError("Y51 services missing from GTFS calendars")
+          stop_ids = {s.get("stop_id") for s in summary["stops"]}
+          if not all(t.get("stop_id") in stop_ids and t.get("arrival_time") and
+                     t.get("departure_time") for t in y51_times):
+              raise RuntimeError("Y51 stop times contain missing stops or times")
           export = {
               "source": url,
               "checked_at_utc": summary["checked_at_utc"],
