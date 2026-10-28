@@ -55,14 +55,15 @@ if [[ "$mode" == build ]]; then
     exit 1
   fi
   previous="$(mktemp -d "${work%/}.previous.XXXXXX")"
-  swap_complete=no
   rollback() {
-    # Remove partially installed candidate files, then restore the complete
-    # previous generation. Missing backups indicate a first-time build.
+    # Restore only files that were actually moved to the backup directory.
+    # An error during backup must never delete files not yet backed up.
     for name in graph.obj oura-regional.gtfs.zip region.osm.pbf; do
-      rm -f "$work/$name"
       if [[ -e "$previous/$name" ]]; then
+        rm -f "$work/$name"
         mv "$previous/$name" "$work/$name"
+      elif [[ -n "${installed_files:-}" && " $installed_files " == *" $name "* ]]; then
+        rm -f "$work/$name"
       fi
     done
   }
@@ -72,10 +73,11 @@ if [[ "$mode" == build ]]; then
   for name in graph.obj oura-regional.gtfs.zip region.osm.pbf; do
     if [[ -e "$work/$name" ]]; then mv "$work/$name" "$previous/$name"; fi
   done
+  installed_files=""
   for name in graph.obj oura-regional.gtfs.zip region.osm.pbf; do
     mv "$candidate/$name" "$work/$name"
+    installed_files="$installed_files $name"
   done
-  swap_complete=yes
   trap - ERR INT TERM
   rm -rf "$previous"
   echo "Graph created. Run this script with 'serve' to start the router."
