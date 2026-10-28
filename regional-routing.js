@@ -117,7 +117,11 @@
           Number.isFinite(it.durationSeconds) && it.durationSeconds > 0 &&
           Math.abs((it.endTime - it.startTime) / 1000 - it.durationSeconds) <= 120 &&
           it.legs.length > 0 &&
-          it.legs.every((leg, index) => leg !== null && Number.isFinite(leg.startTime) &&
+          Number.isFinite(it.walkMeters) && it.walkMeters >= 0 &&
+          Number.isInteger(it.transfers) && it.transfers >= 0 &&
+          it.legs.every((leg, index) => leg !== null &&
+            Number.isFinite(leg.distanceMeters) && leg.distanceMeters >= 0 &&
+            Number.isFinite(leg.startTime) &&
             Number.isFinite(leg.endTime) && leg.endTime >= leg.startTime &&
             leg.startTime >= it.startTime - 60000 &&
             leg.endTime <= it.endTime + 60000 &&
