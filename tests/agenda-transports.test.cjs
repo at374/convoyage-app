@@ -195,4 +195,16 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(journeys[0].transferWaitSeconds, 300);
 }
 
-process.stdout.write('Agenda/SIBRA tests passed: 22 scenarios\\n');
+// 23. Une arrivée théorique ne confirme pas le transport réel.
+{
+  const planner = require('../sibra-planner.js');
+  const good = planner.assessMissionArrival(9 * 3600, 10 * 3600, 10 * 60, 30 * 60);
+  assert.equal(good.feasible, true);
+  assert.equal(good.transportConfirmed, false);
+  assert.equal(good.advanceSeconds, 50 * 60);
+  const late = planner.assessMissionArrival(9 * 3600 + 40 * 60, 10 * 3600, 10 * 60, 30 * 60);
+  assert.equal(late.feasible, false);
+  assert.equal(planner.assessMissionArrival(9 * 3600, 10 * 3600, NaN, 30 * 60).feasible, false);
+}
+
+process.stdout.write('Agenda/SIBRA tests passed: 23 scenarios\\n');
