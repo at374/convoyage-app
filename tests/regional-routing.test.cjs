@@ -103,3 +103,21 @@ test('parses ISO 8601 timestamps without fabricating missing leg times', async (
   assert.equal(result.itineraries[0].startTime,itinerary.startTime);
   assert.equal(result.itineraries[0].legs[0].endTime,itinerary.endTime);
 });
+
+test('parses ISO 8601 timestamps and discards null leg times', async () => {
+  const iso = {
+    ...itinerary,
+    startTime:'2026-10-28T09:20:00Z',
+    endTime:'2026-10-28T10:20:00Z',
+    legs:[{...itinerary.legs[0],startTime:'2026-10-28T09:20:00Z',
+      endTime:'2026-10-28T10:20:00Z'}]
+  };
+  const result = await routing.plan({...base,fetcher:async()=>({
+    ok:true,json:async()=>({data:{planConnection:{edges:[
+      {node:{...iso,legs:[{...iso.legs[0],startTime:null}]}},
+      {node:iso}
+    ]}}})
+  })});
+  assert.equal(result.itineraries.length,1);
+  assert.equal(result.itineraries[0].startTime,Date.parse(iso.startTime));
+});
