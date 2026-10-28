@@ -817,3 +817,12 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
     .then(()=>{throw Error('HTTP endpoint accepted');})
     .catch(error=>assert.match(error.message,/HTTPS/));
 }
+
+{
+  const fs = require('node:fs');
+  const source = fs.readFileSync(require('node:path').join(__dirname, '..', 'app.js'), 'utf8');
+  assert.match(source, /refreshTransport\.textContent = '🔄 Actualiser maintenant'/);
+  assert.match(source, /refreshTransport\.onclick = \(\) => \{/);
+  assert.match(source, /panel\.remove\(\);[\s\S]*?bt\.click\(\);/);
+  assert.match(source, /panel\.appendChild\(refreshTransport\)/);
+}
