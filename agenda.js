@@ -26,7 +26,9 @@
     const marge = (n((reglages || {}).marge_minutes) ?? 60) * MIN;
     const pa = G.coordonnees(a, 'destination'), pb = G.coordonnees(b, 'origin');
     const km = pa && pb ? G.routeKm(pa, pb) : null;
-    const lien = km != null ? C.liaison(km, reglages) : null;
+    // Une ville ou un département ne représente pas une adresse de correspondance.
+    const lieuxPrecis = !!(pa && pb && ['gps', 'adresse'].includes(pa.precision) && ['gps', 'adresse'].includes(pb.precision));
+    const lien = lieuxPrecis && km != null ? C.liaison(km, reglages) : null;
     const besoin = (lien ? lien.heures * H : 0) + marge;
     const ecart = limite - fa.t;
     const base = { a, b, km, liaisonMin: lien ? Math.round(lien.heures * 60) : null, ecartMin: Math.round(ecart / MIN), besoinMin: Math.round(besoin / MIN), finEstimee: fa.estimee, lieuxConnus: !!lien };
