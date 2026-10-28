@@ -1919,6 +1919,13 @@
           missingAddress.textContent = 'Adresse exacte de livraison absente : trajet piéton non calculable.';
           estimate.appendChild(missingAddress);
         }
+        const routingLink = document.createElement('a');
+        routingLink.textContent = '🗺️ Vérifier l’emplacement de l’arrêt École Saint-François';
+        routingLink.href = 'https://www.google.com/maps/search/?api=1&query=' +
+          encodeURIComponent('Arrêt École Saint-François Y51 Albertville');
+        routingLink.target = '_blank';
+        routingLink.rel = 'noopener noreferrer';
+        estimate.appendChild(routingLink);
         const stopLocationNote = document.createElement('div');
         stopLocationNote.className = 'doux';
         stopLocationNote.textContent = 'Vérifier que la carte pointe vers le quai Y51 direction Annecy : le nom de l’arrêt seul peut être ambigu.';
