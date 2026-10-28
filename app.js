@@ -1896,8 +1896,7 @@
             // Coordinates are read from the existing mission data, never guessed from a city.
             // Outbound is an indicative city-centre departure, not an exact home
             // address. Only the mission pickup GPS is treated as precise.
-            if (result && result.usable &&
-                window.CPSibraFeed.coordinateDayJourneys) {
+            if (typeof window.CPSibraFeed.coordinateDayJourneys === 'function') {
               const pickupGps = G.coordonnees(m, 'origin');
               const homeLat = Number(etat.reglages?.domicile_lat);
               const homeLon = Number(etat.reglages?.domicile_lng);
