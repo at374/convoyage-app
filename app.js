@@ -812,8 +812,8 @@
         if (!origin || !destination || origin.precision !== 'gps' || destination.precision !== 'gps') continue;
         const date = (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(x.fin.t));
         const timeParts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
-          hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(x.fin.t)).split(':');
-        const earliest = Number(timeParts[0]) * 3600 + Number(timeParts[1]) * 60;
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(new Date(x.fin.t)).split(':');
+        const earliest = Number(timeParts[0]) * 3600 + Number(timeParts[1]) * 60 + Number(timeParts[2]);
         const card = document.querySelectorAll('.mission')[items.indexOf(x)];
         let panel = card && card.nextElementSibling;
         while (panel && !panel.classList.contains('mission') && !panel.classList.contains('cpAgendaChain')) panel = panel.nextElementSibling;
