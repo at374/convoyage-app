@@ -2016,7 +2016,26 @@
             hhmm(arrivalAtStop) + ', soit ' + (-remaining) +
             ' min après 11 h 43. Départ nécessaire au plus tard à ' + hhmm(latestDeparture) + '.';
         });
-        actualDeliveryInput.addEventListener('input', () => input.dispatchEvent(new Event('input')));
+        actualDeliveryInput.addEventListener('input', () => {
+          if (input.value !== '') {
+            input.dispatchEvent(new Event('input'));
+            return;
+          }
+          const value = actualDeliveryInput.value;
+          if (!value) {
+            result.textContent = 'Renseigner le temps de marche pour tester la correspondance théorique.';
+            return;
+          }
+          const match = /^([01][0-9]|2[0-3]):([0-5][0-9])$/.exec(value);
+          if (!match) {
+            result.textContent = 'Heure réelle invalide : utiliser le format HH:MM.';
+            return;
+          }
+          const minutes = Number(match[1]) * 60 + Number(match[2]);
+          result.textContent = minutes >= 11 * 60 + 43 ?
+            '⚠️ Le départ Y51 de 11 h 48 n’est plus atteignable avec les 5 min d’avance, même sans marche. Chercher un autre départ.' :
+            'Fin de livraison avant 11 h 43 : indiquer le temps de marche pour vérifier la correspondance.';
+        });
         if (input.value !== '') input.dispatchEvent(new Event('input'));
       }
       bt.setAttribute('aria-controls', panel.id);
