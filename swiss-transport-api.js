@@ -24,6 +24,7 @@
   }
   async function plan(options) {
     const url=buildUrl(options);
+    root.CPSwissTransport.lastCheck = {checkedAt:new Date().toISOString(),received:0,valid:0,status:'pending'};
     const fetcher=options.fetcher || root.fetch;
     if(typeof fetcher!=='function') throw new Error('Réseau indisponible');
     const controller = new AbortController();
@@ -33,14 +34,21 @@
       const response = await fetcher(url, {signal:controller.signal, cache:'no-store'});
       if (!response.ok) throw new Error('API suisse indisponible ('+response.status+')');
       data = await response.json();
+    } catch (error) {
+      root.CPSwissTransport.lastCheck.status = 'error';
+      throw error;
     } finally {
       clearTimeout(timeout);
     }
-    if(!data || !Array.isArray(data.connections)) throw new Error('Réponse API suisse invalide');
+    if(!data || !Array.isArray(data.connections)) {
+      root.CPSwissTransport.lastCheck.status = 'invalid_response';
+      throw new Error('Réponse API suisse invalide');
+    }
     // Diagnostic is local to the browser and never includes user GPS or addresses.
-    root.CPSwissTransport.lastCheck = {checkedAt:new Date().toISOString(),received:data.connections.length,valid:0};
+    root.CPSwissTransport.lastCheck.received = data.connections.length;
     const validConnections = data.connections.filter(c => c && c.from && c.to && Number.isFinite(Date.parse(c.from.departure)) && Number.isFinite(Date.parse(c.to.arrival)) && Date.parse(c.to.arrival) >= Date.parse(c.from.departure));
     root.CPSwissTransport.lastCheck.valid = validConnections.length;
+    root.CPSwissTransport.lastCheck.status = 'success';
     return validConnections.map(c=>({
       departure:c.from && c.from.departure || null,
       arrival:c.to && c.to.arrival || null,
