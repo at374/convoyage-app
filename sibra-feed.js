@@ -103,5 +103,41 @@
     return { stops, trips, stop_times: stopTimes };
   }
 
-  return Object.freeze({ isISODate, assessDate, loadDay, normalizeDay });
+  // Exact-stop, same-vehicle connections using only the selected day's trips.
+  // Does not claim a verified pedestrian approach or realtime circulation.
+  function directDayJourneys(dayData, fromStopId, toStopId, earliestDepartureSeconds, limit = 8) {
+    const tables = normalizeDay(dayData);
+    if (!tables || fromStopId === toStopId || !Number.isFinite(earliestDepartureSeconds)) return [];
+    const byTrip = new Map();
+    for (const t of tables.stop_times) {
+      if (!byTrip.has(t.trip_id)) byTrip.set(t.trip_id, []);
+      byTrip.get(t.trip_id).push(t);
+    }
+    const toSeconds = value => {
+      const parts = value.split(':').map(Number);
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    };
+    const found = [];
+    for (const [tripId, rows] of byTrip) {
+      rows.sort((a, b) => a.stop_sequence - b.stop_sequence);
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i].stop_id !== fromStopId) continue;
+        const departureSeconds = toSeconds(rows[i].departure_time);
+        if (departureSeconds < earliestDepartureSeconds) continue;
+        for (let j = i + 1; j < rows.length; j++) {
+          if (rows[j].stop_id !== toStopId) continue;
+          const arrivalSeconds = toSeconds(rows[j].arrival_time);
+          if (arrivalSeconds < departureSeconds) continue;
+          found.push({ tripId, fromStopId, toStopId, departureSeconds, arrivalSeconds,
+            transportConfirmed: false, realtime: false, walkingVerified: false });
+          break;
+        }
+      }
+    }
+    found.sort((a, b) => a.departureSeconds - b.departureSeconds ||
+      a.arrivalSeconds - b.arrivalSeconds);
+    return found.slice(0, Number.isInteger(limit) && limit > 0 ? Math.min(limit, 50) : 8);
+  }
+
+  return Object.freeze({ isISODate, assessDate, loadDay, normalizeDay, directDayJourneys });
 });
