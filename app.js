@@ -2007,7 +2007,7 @@
             .then(results => {
               if (!status.isConnected) return;
               const valid = results.filter(accept).slice(0,5);
-              const diagnostic = window.CPSwissTransport.lastCheck;
+              const diagnostic = results.diagnostic;
               const diagnosticLabel = diagnostic && diagnostic.status === 'success' ? ' (API : ' + diagnostic.valid + '/' + diagnostic.received + ' horaires valides)' : '';
               status.textContent = valid.length ?
                 label + ' suisse : ' + valid.length + ' proposition(s) indicatives' + diagnosticLabel + '. Accès aux adresses exactes et temps de marche non vérifiés :' :

@@ -24,7 +24,8 @@
   }
   async function plan(options) {
     const url=buildUrl(options);
-    root.CPSwissTransport.lastCheck = {checkedAt:new Date().toISOString(),received:0,valid:0,status:'pending'};
+    const diagnostic = {checkedAt:new Date().toISOString(),received:0,valid:0,status:'pending'};
+    root.CPSwissTransport.lastCheck = diagnostic;
     const fetcher=options.fetcher || root.fetch;
     if(typeof fetcher!=='function') throw new Error('Réseau indisponible');
     const controller = new AbortController();
@@ -35,21 +36,21 @@
       if (!response.ok) throw new Error('API suisse indisponible ('+response.status+')');
       data = await response.json();
     } catch (error) {
-      root.CPSwissTransport.lastCheck.status = 'error';
+      diagnostic.status = 'error';
       throw error;
     } finally {
       clearTimeout(timeout);
     }
     if(!data || !Array.isArray(data.connections)) {
-      root.CPSwissTransport.lastCheck.status = 'invalid_response';
+      diagnostic.status = 'invalid_response';
       throw new Error('Réponse API suisse invalide');
     }
     // Diagnostic is local to the browser and never includes user GPS or addresses.
-    root.CPSwissTransport.lastCheck.received = data.connections.length;
+    diagnostic.received = data.connections.length;
     const validConnections = data.connections.filter(c => c && c.from && c.to && Number.isFinite(Date.parse(c.from.departure)) && Number.isFinite(Date.parse(c.to.arrival)) && Date.parse(c.to.arrival) >= Date.parse(c.from.departure));
-    root.CPSwissTransport.lastCheck.valid = validConnections.length;
-    root.CPSwissTransport.lastCheck.status = 'success';
-    return validConnections.map(c=>({
+    diagnostic.valid = validConnections.length;
+    diagnostic.status = 'success';
+    const results = validConnections.map(c=>({
       departure:c.from && c.from.departure || null,
       arrival:c.to && c.to.arrival || null,
       sections:Array.isArray(c.sections)?c.sections.map(s=>({
@@ -63,6 +64,8 @@
       })):[],
       price:null, fareStatus:'non_communique', source:'transport.opendata.ch', confirmed:false
     }));
+    results.diagnostic = {...diagnostic};
+    return results;
   }
   root.CPSwissTransport={point,buildUrl,plan};
   if(typeof module!=='undefined' && module.exports) module.exports=root.CPSwissTransport;
