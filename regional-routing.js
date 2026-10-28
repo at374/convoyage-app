@@ -107,7 +107,7 @@
         planData.itineraries : Array.isArray(planData.edges) ?
         planData.edges.map(edge => edge && edge.node).filter(Boolean) : null);
       if (!Array.isArray(itineraries)) throw new Error('Reponse itineraires invalide');
-      const validItineraries = itineraries.slice(0,MAX_RESULTS).map(parseItinerary)
+      const validItineraries = itineraries.map(parseItinerary)
         .filter(it => Number.isFinite(it.startTime) &&
           Number.isFinite(it.endTime) && it.endTime >= it.startTime &&
           it.startTime >= date.getTime() - 60000 &&
@@ -118,7 +118,13 @@
             Number.isFinite(leg.endTime) && leg.endTime >= leg.startTime &&
             leg.startTime >= it.startTime - 60000 &&
             leg.endTime <= it.endTime + 60000 &&
-            (index === 0 || leg.startTime >= it.legs[index - 1].endTime)));
+            (index === 0 || leg.startTime >= it.legs[index - 1].endTime)))
+        .sort((a,b) => a.endTime - b.endTime || a.startTime - b.startTime)
+        .filter((it,index,all) => all.findIndex(other =>
+          other.startTime === it.startTime && other.endTime === it.endTime &&
+          other.legs.map(leg => leg.mode + ':' + leg.route).join('|') ===
+          it.legs.map(leg => leg.mode + ':' + leg.route).join('|')) === index)
+        .slice(0,MAX_RESULTS);
       return {source:'OpenTripPlanner', date:localDate, updatedAt:new Date().toISOString(),
         itineraries:validItineraries,
         transportConfirmed:false, realtime:false};
