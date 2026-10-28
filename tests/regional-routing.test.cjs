@@ -151,3 +151,18 @@ test('rejects itinerary duration inconsistent with arrival and departure', async
   assert.equal(response.itineraries.length,1);
   assert.equal(response.itineraries[0].durationSeconds,3600);
 });
+
+test('sorts by earliest arrival and removes duplicate routes before limiting results', async () => {
+  const later = {...itinerary,startTime:itinerary.startTime+600000,
+    endTime:itinerary.endTime+600000,
+    legs:itinerary.legs.map(leg=>({...leg,startTime:leg.startTime+600000,
+      endTime:leg.endTime+600000}))};
+  const response = await routing.plan({...base,fetcher:async()=>({
+    ok:true,json:async()=>({data:{planConnection:{edges:[
+      {node:later},{node:itinerary},{node:itinerary}
+    ]}}})
+  })});
+  assert.equal(response.itineraries.length,2);
+  assert.equal(response.itineraries[0].startTime,itinerary.startTime);
+  assert.equal(response.itineraries[1].startTime,later.startTime);
+});
