@@ -1797,7 +1797,7 @@
       const y51CheckDate = y51ServiceDay ?
         'Date de service à vérifier : ' + y51ServiceDay + ' (heure locale Europe/Paris).' :
         'Date de livraison absente : impossible de choisir le bon calendrier de circulation.';
-      const endTime = Date.parse(m.delivery_end || m.delivery_start || '');
+      const endTime = Date.parse(m.delivery_end || ''); // Une heure de début de livraison n'est pas une heure de fin.
       const next = Number.isFinite(endTime) ? (Array.isArray(etat.missions) ? etat.missions : [])
         .filter(x => x && x !== m && (x.kind === 'acceptee' || x.status === 'acceptee') &&
           !['annulee', 'cancelled', 'canceled', 'refusee'].includes(String(x.status || '').toLowerCase()) &&
@@ -1815,8 +1815,8 @@
       const nextGapMin = next ? Math.floor((Date.parse(next.pickup_start) - endTime) / 60000) : null;
       const securityMarginMin = 30;
       const pickupDate = Number.isFinite(Date.parse(m.pickup_start || '')) ? m.pickup_start : null;
-      const deliveryDate = Number.isFinite(Date.parse(m.delivery_end || m.delivery_start || '')) ?
-        (m.delivery_end || m.delivery_start) : null;
+      const deliveryDate = Number.isFinite(Date.parse(m.delivery_end || '')) ?
+        m.delivery_end : null;
       const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
       const connectionStatus = nextGapMin == null ? '' :
         connectionBudgetMin <= 0 ?
