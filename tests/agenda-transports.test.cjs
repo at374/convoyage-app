@@ -834,3 +834,12 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.match(source, /clearTimeout\(timer\)/);
   assert.match(source, /signal: controller\.signal/);
 }
+
+{
+  const fs = require('node:fs');
+  const source = fs.readFileSync(require('node:path').join(__dirname, '..', 'sibra-feed.js'), 'utf8');
+  const jsonRead = source.indexOf('await response.json()');
+  const timerClear = source.indexOf('clearTimeout(timer)', jsonRead);
+  assert.ok(jsonRead >= 0 && timerClear > jsonRead,
+    'The SIBRA timeout must remain active until the JSON body is read');
+}
