@@ -85,3 +85,21 @@ test('parses planConnection edge nodes', async () => {
   assert.equal(result.itineraries.length,1);
   assert.equal(result.itineraries[0].transportConfirmed,false);
 });
+
+test('parses ISO 8601 timestamps without fabricating missing leg times', async () => {
+  const iso = ms => new Date(ms).toISOString();
+  const isoTrip = {...itinerary,
+    startTime:iso(itinerary.startTime),endTime:iso(itinerary.endTime),
+    legs:itinerary.legs.map(leg=>({...leg,
+      startTime:iso(leg.startTime),endTime:iso(leg.endTime)}))
+  };
+  const result = await routing.plan({...base,fetcher:async()=>({
+    ok:true,json:async()=>({data:{planConnection:{edges:[
+      {node:isoTrip},
+      {node:{...isoTrip,legs:[{...isoTrip.legs[0],startTime:null}]}}
+    ]}}})
+  })});
+  assert.equal(result.itineraries.length,1);
+  assert.equal(result.itineraries[0].startTime,itinerary.startTime);
+  assert.equal(result.itineraries[0].legs[0].endTime,itinerary.endTime);
+});
