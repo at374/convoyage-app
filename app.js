@@ -774,6 +774,58 @@
         button.style.marginTop = '8px';
         const requestedDate = card.getAttribute('data-sibra-date');
         if (!requestedDate) return;
+        // Optional regional multimodal search: use the same engine for every
+        // delivery with exact GPS, never modify platform synchronization.
+        const regional = window.CPRegionalRouting;
+        const regionalEndpoint = window.CP_REGIONAL_ROUTING_URL;
+        const regionalHome = RT.domicile(etat.reglages);
+        const regionalLat = Number(card.getAttribute('data-y51-lat'));
+        const regionalLon = Number(card.getAttribute('data-y51-lng'));
+        const regionalEnd = Number(card.getAttribute('data-mission-end-ms'));
+        if (regional && typeof regional.plan === 'function' &&
+            /^https:\/\//.test(String(regionalEndpoint || '')) &&
+            card.hasAttribute('data-y51-lat') && card.hasAttribute('data-y51-lng') &&
+            regionalHome && regionalHome.precision === 'gps' &&
+            Number.isFinite(regionalLat) && Number.isFinite(regionalLon) &&
+            Number.isFinite(regionalEnd) && regionalEnd > 0) {
+          const regionalButton = document.createElement('button');
+          regionalButton.type = 'button';
+          regionalButton.className = 'second';
+          regionalButton.style.marginTop = '8px';
+          regionalButton.textContent = '🚌 Recherche multimodale régionale';
+          card.appendChild(regionalButton);
+          regionalButton.addEventListener('click', async () => {
+            regionalButton.disabled = true;
+            const result = document.createElement('div');
+            result.className = 'doux';
+            result.textContent = 'Recherche régionale en cours…';
+            card.appendChild(result);
+            try {
+              const answer = await regional.plan({
+                endpoint: regionalEndpoint,
+                from: {lat:regionalLat,lon:regionalLon},
+                to: {lat:regionalHome.lat,lon:regionalHome.lng},
+                departure: new Date(regionalEnd + 15 * 60000).toISOString(),
+                fetcher:window.fetch.bind(window)
+              });
+              const fmt = ms => new Intl.DateTimeFormat('fr-FR', {
+                timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'
+              }).format(new Date(ms));
+              result.textContent = answer.itineraries.length ?
+                answer.itineraries.slice(0,5).map(it =>
+                  fmt(it.startTime) + ' → ' + fmt(it.endTime) + ' · ' +
+                  it.transfers + ' correspondance(s) · ' +
+                  it.legs.map(leg => leg.route || leg.mode).join(' / ')
+                ).join(' ; ') + '. Horaires théoriques. Transport non confirmé — vérifiez vous-même.' :
+                'Aucun itinéraire régional proposé. Transport non confirmé — vérifiez vous-même.';
+            } catch (error) {
+              result.textContent = 'Recherche régionale indisponible : ' +
+                String(error.message || error) + '. Transport non confirmé — vérifiez vous-même.';
+            } finally {
+              regionalButton.disabled = false;
+            }
+          });
+        }
         // Y51: read the published official GTFS export on demand, not a guessed timetable.
         // This panel does not assert live service or walking feasibility.
         if (/Y51 Albertville/.test(card.textContent || '')) {
