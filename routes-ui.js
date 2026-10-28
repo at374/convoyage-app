@@ -418,7 +418,21 @@
     { const dg = document.createElement('div'); dg.className = 'doux'; dg.style.cssText = 'font-size:.68rem;margin-top:6px'; box.appendChild(dg); const iv = setInterval(() => { if (!document.body.contains(box)) { clearInterval(iv); return; } dg.textContent = '🩺 ' + (GAPS.length ? 'blocages mesurés : ' + GAPS.slice(-6).join(' | ') : 'aucun blocage mesuré') + (TPS.length ? ' · durées : ' + TPS.join(' | ') : ''); }, 1500); }
     box.querySelectorAll('button[data-rmode]').forEach(b => b.onclick = async () => {
       const out = box.querySelector('[data-routes-result]'), mode = b.dataset.rmode;
-      const s = session(), c = config(); out.textContent = 'Calcul Google en cours…'; window.__cpMix = { endpoint, accessToken: s?.access_token, refreshToken: s?.refresh_token, expiresAt: s?.expires_at, email: s?.email, userId: s?.user_id, supabaseUrl: c?.url, supabaseApiKey: c?.anonKey, origin, destination, departureTime, veh: vehiculeConso() }; const tn = mode === 'transport'; box.querySelectorAll('.bkIt').forEach(a => { a.style.display = tn ? 'none' : ''; }); box.querySelectorAll('.bkTn').forEach(a => { a.style.display = tn ? '' : 'none'; }); if (tn) { const z = box.querySelector('.tnZone'); try { z.innerHTML = window.CPLiensTr && tr ? window.CPLiensTr(tr[0], tr[1], tr[2], tr[3]) : ''; } catch (_) { z.innerHTML = ''; } if (!z.innerHTML) z.innerHTML = '<span class="doux">Sites de transport indisponibles pour ce trajet.</span>'; }
+      const s = session(), c = config(); out.textContent = 'Calcul Google en cours…'; window.__cpMix = { endpoint, accessToken: s?.access_token, refreshToken: s?.refresh_token, expiresAt: s?.expires_at, email: s?.email, userId: s?.user_id, supabaseUrl: c?.url, supabaseApiKey: c?.anonKey, origin, destination, departureTime, veh: vehiculeConso() }; const tn = mode === 'transport'; box.querySelectorAll('.bkIt').forEach(a => { a.style.display = tn ? 'none' : ''; }); box.querySelectorAll('.bkTn').forEach(a => { a.style.display = tn ? '' : 'none'; }); if (tn) { const z = box.querySelector('.tnZone'); try { z.innerHTML = window.CPLiensTr && tr ? window.CPLiensTr(tr[0], tr[1], tr[2], tr[3]) : ''; } catch (_) { z.innerHTML = ''; } if (!z.innerHTML) z.innerHTML = '<span class="doux">Sites de transport indisponibles pour ce trajet.</span>';
+        const googleTransit = 'https://www.google.com/maps/dir/?api=1&origin=' +
+          lieu(origin) + '&destination=' + lieu(destination) + '&travelmode=transit';
+        const link = document.createElement('a');
+        link.href = googleTransit;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = '🚌 Consulter les transports et horaires dans Google Maps';
+        z.appendChild(document.createElement('div'));
+        z.appendChild(link);
+        const note = document.createElement('p');
+        note.className = 'doux';
+        note.textContent = 'Recherche entre les deux points de cette carte. Horaires et correspondances non confirmés par Convoyage Ultra.';
+        z.appendChild(note);
+      }
       try {
         const kk = mode + '|' + lieu(origin) + '|' + lieu(destination) + '|' + (departureTime || ''); let pr = EST.get(kk); if (!pr) { const t0 = performance.now(); pr = window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, refreshToken: s?.refresh_token, expiresAt: s?.expires_at, email: s?.email, userId: s?.user_id, supabaseUrl: c?.url, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime }); EST.set(kk, pr); pr.then(() => window.CPT('Google', t0), () => EST.delete(kk)); setTimeout(() => EST.delete(kk), 120000); } const r = await pr;
         render(out, r, mode === 'voiture' ? 'DRIVE' : 'TRANSIT');
