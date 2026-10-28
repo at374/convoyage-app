@@ -743,6 +743,10 @@
       if (chain && (x.etat === 'a_venir' || x.etat === 'en_cours' || ((x.etat === 'terminee' || x.etat === 'passee') && x.fin && Date.now() - x.fin.t <= 24 * 3600000))) {
         const title = chain.next ? 'Prochaine mission : ' + (chain.next.mission.from_city || chain.next.mission.origin_city || 'départ à préciser') + ' → ' + (chain.next.mission.to_city || chain.next.mission.destination_city || 'arrivée à préciser') : (chain.blocked ? 'Prochaine mission à déterminer' : 'Aucune prochaine mission prévue — retour au domicile à préparer');
         const y51Origin = [m.to_address, m.destination_address, m.delivery_address].filter(Boolean).join(' ');
+        const y51Gps = G.coordonnees(m, 'destination');
+        const y51GpsAttr = y51Gps && y51Gps.precision === 'gps' &&
+          Number.isFinite(Number(y51Gps.lat)) && Number.isFinite(Number(y51Gps.lng)) ?
+          ' data-y51-lat="' + Number(y51Gps.lat) + '" data-y51-lng="' + Number(y51Gps.lng) + '"' : '';
         const y51ExactEysseric = /1\s*,?\s*rue\s+(?:du\s+)?lieutenant\s+gustave\s+eysseric/i.test(y51Origin);
         const y51Reference = !chain.next && !chain.blocked && /albertville/i.test([m.to_city, m.destination_city, m.to_address, m.destination_address].filter(Boolean).join(' ')) ? '<div class="doux">🚌 Y51 Albertville → Annecy : <a href="https://hawk.hanoverdisplays.com/y51/public/" target="_blank" rel="noopener noreferrer">suivi officiel des départs</a> · <a href="https://annecy.transdev.com/line/ligne-y51/" target="_blank" rel="noopener noreferrer">horaires de ligne</a> · <a href="https://transport.data.gouv.fr/datasets/reseau-interurbain-cars-region-haute-savoie-74" target="_blank" rel="noopener noreferrer">données officielles GTFS Haute-Savoie</a>. Horaires théoriques : vérifiez la date de mise à jour, l’arrêt et les perturbations avant le départ. <a href="https://www.google.com/maps/dir/?api=1&amp;destination=%C3%89cole%20Saint-Fran%C3%A7ois%2C%20Albertville&amp;travelmode=walking" target="_blank" rel="noopener noreferrer">Itinéraire piéton vers École Saint-François</a> (départ à préciser dans Maps).</div>' : '';
         const y51TrafficDate = x.fin && Number.isFinite(x.fin.t) ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(x.fin.t)) : '';
@@ -753,7 +757,7 @@
         const interval = Number.isFinite(chain.intervalMin) ? '<div><strong>' + (chain.intervalEstimated ? 'Intervalle estimé entre missions :' : 'Intervalle entre missions :') + '</strong> ' + esc(String(chain.intervalMin)) + ' min</div>' : '';
         const conflictNote = chain.conflictType === 'chevauchement' ? '⚠️ Chevauchement horaire détecté.' : (chain.conflictType ? '⚠️ Enchaînement potentiellement trop juste : vérifiez le trajet et la marge de sécurité.' : 'Transport non confirmé — vérifiez vous-même. Temps disponible après trajet non déterminé.');
         const note = chain.blocked ? 'Enchaînement à vérifier : une mission acceptée n’a pas de date exploitable.' : (!chain.next ? 'Retour après la dernière mission : horaires interurbains, correspondances locales et marches à vérifier. Transport non confirmé — vérifiez vous-même.' : conflictNote);
-        html += '<div class="carte cpAgendaChain" data-mission-end-ms="' + (x.fin && Number.isFinite(x.fin.t) ? x.fin.t : '') + '" data-sibra-date="' + esc(chain.next && Number.isFinite(chain.next.debut) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(chain.next.debut)) : (x.fin && Number.isFinite(x.fin.t) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(x.fin.t)) : '')) + '" style="margin-top:-6px;border-top:0;border-radius:0 0 12px 12px;font-size:.94em"><strong>' + (chain.next ? '↔ Enchaînement des missions' : '🏠 Retour après mission') + '</strong><div>' + esc(title) + '</div>' + interval + '<div class="doux">' + esc(note) + '</div>' + y51WalkLink + y51TrafficAlert + '</div>';
+        html += '<div class="carte cpAgendaChain" data-mission-end-ms="' + (x.fin && Number.isFinite(x.fin.t) ? x.fin.t : '') + '"' + y51GpsAttr + ' data-sibra-date="' + esc(chain.next && Number.isFinite(chain.next.debut) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(chain.next.debut)) : (x.fin && Number.isFinite(x.fin.t) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(x.fin.t)) : '')) + '" style="margin-top:-6px;border-top:0;border-radius:0 0 12px 12px;font-size:.94em"><strong>' + (chain.next ? '↔ Enchaînement des missions' : '🏠 Retour après mission') + '</strong><div>' + esc(title) + '</div>' + interval + '<div class="doux">' + esc(note) + '</div>' + y51WalkLink + y51TrafficAlert + '</div>';
       }
     });
     if (caches || etat.agendaTout) html += `<button id="agTout" class="second" style="width:100%;margin-top:10px">${etat.agendaTout ? 'Masquer les missions passées' : 'Afficher les ' + caches + ' mission(s) passée(s) de plus de 7 jours'}</button>`;
@@ -838,7 +842,36 @@
                 .sort((a, b) => a.departureSeconds - b.departureSeconds);
               const clock = sec => String(Math.floor(sec / 3600) % 24).padStart(2, '0') +
                 ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0');
-              y51Result.textContent = 'Y51 du ' + requestedDate + ' : ' + trips.length +
+              const missionLat = Number(card.getAttribute('data-y51-lat'));
+              const missionLng = Number(card.getAttribute('data-y51-lng'));
+              const boardStop = boarding.find(stop =>
+                Number.isFinite(Number(stop.stop_lat)) && Number.isFinite(Number(stop.stop_lon)));
+              const footEndpoint = window.CP_PEDESTRIAN_OSRM_URL;
+              let walkMinutes = null;
+              if (card.hasAttribute('data-y51-lat') && card.hasAttribute('data-y51-lng') &&
+                  boardStop && typeof planner.requestPedestrianOSRM === 'function' &&
+                  typeof footEndpoint === 'string' && /^https:\/\//.test(footEndpoint)) {
+                const walk = await planner.requestPedestrianOSRM(
+                  [missionLng, missionLat],
+                  [Number(boardStop.stop_lon), Number(boardStop.stop_lat)],
+                  window.fetch.bind(window), footEndpoint);
+                if (walk && walk.status === 'VERIFIE_PIETON' &&
+                    Number.isFinite(walk.duration_seconds)) {
+                  walkMinutes = Math.ceil(walk.duration_seconds / 60);
+                }
+              }
+              const boardingMarginMinutes = 5;
+              const boardingStatus = unique.length && walkMinutes !== null ?
+                unique.slice(0, 8).map(ride =>
+                  clock(ride.departureSeconds) + ': ' +
+                  (ride.departureSeconds - earliestY51 >=
+                    (walkMinutes + boardingMarginMinutes) * 60 ?
+                    'marche vérifiée ' + walkMinutes + ' min + marge ' +
+                    boardingMarginMinutes + ' min' :
+                    'départ trop proche pour marche ' + walkMinutes +
+                    ' min + marge ' + boardingMarginMinutes + ' min')).join(' ; ') :
+                'Marche depuis la livraison non vérifiée.';
+              y51Result.textContent = 'Y51 du ' + requestedDate + ' :' + trips.length +
                 ' courses programmées, ' + times.length + ' passages GTFS. Source vérifiée le ' +
                 stamp + '. ' + (unique.length ?
                   'École Saint-François → Annecy gare routière : ' +
@@ -850,7 +883,7 @@
                   'Aucun départ après la fin de mission identifié entre École Saint-François et Annecy gare routière' +
                   (earliestY51 === null ? ' (heure de fin de mission indisponible)' : '') +
                   ' : vérifiez les noms exacts des arrêts et les horaires GTFS.') +
-                ' Marche, correspondances et circulation réelle non vérifiées. ' +
+                ' ' + boardingStatus + '. Correspondances et circulation réelle non vérifiées. ' +
                 'Transport non confirmé — vérifiez vous-même.';
             } catch (_) {
               y51Result.textContent = 'Données officielles Y51 indisponibles ou non exploitables pour cette date. ' +
