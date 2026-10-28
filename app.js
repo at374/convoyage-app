@@ -817,7 +817,7 @@
             line.textContent = 'SIBRA : horaires indisponibles pour cette date — transport non confirmé.';
             return;
           }
-          const nextDate = new Date(chain.next.debut).toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });
+          const nextDate = (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(chain.next.debut));
           const nextClock = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
             hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(chain.next.debut)).split(':');
           const nextSeconds = Number(nextClock[0]) * 3600 + Number(nextClock[1]) * 60;
