@@ -24,6 +24,8 @@ jobs:
           if len(data) > 80_000_000:
               raise RuntimeError("Archive GTFS too large (>80 MB)")
           z = zipfile.ZipFile(io.BytesIO(data))
+          if z.testzip() is not None:
+              raise RuntimeError("Corrupt official GTFS archive")
           names = {name.split("/")[-1].lower(): name for name in z.namelist()}
           required = ("routes.txt", "trips.txt", "stop_times.txt", "stops.txt")
           if not all(name in names for name in required):
