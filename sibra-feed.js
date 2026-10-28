@@ -77,20 +77,26 @@
     }
   }
 
-  // Cache one request per day on mobile; failed requests may be retried.
+  // Deduplicate concurrent requests, but refresh successful day files periodically.
+  // This cache only concerns SIBRA data, never platform mission synchronization.
   const dayRequests = new Map();
+  const DAY_CACHE_TTL_MS = 15 * 60 * 1000;
   async function loadDayCached(day, fetchImpl, basePath) {
     if (!isISODate(day) || typeof fetchImpl !== 'function') {
       return { usable: false, status: 'parametres_invalides', transportConfirmed: false };
     }
     const key = (typeof basePath === 'string' ? basePath : 'data/sibra') + '/' + day;
-    if (!dayRequests.has(key)) {
-      const pending = loadDay(day, fetchImpl, basePath);
-      dayRequests.set(key, pending);
-      pending.then(result => { if (!result.usable) dayRequests.delete(key); },
-        () => dayRequests.delete(key));
-    }
-    return dayRequests.get(key);
+    const cached = dayRequests.get(key);
+    if (cached && (cached.pending || Date.now() - cached.loadedAt < DAY_CACHE_TTL_MS))
+      return cached.promise;
+    const entry = { pending: true, loadedAt: 0, promise: loadDay(day, fetchImpl, basePath) };
+    dayRequests.set(key, entry);
+    entry.promise.then(result => {
+      if (dayRequests.get(key) !== entry) return;
+      if (!result.usable) dayRequests.delete(key);
+      else { entry.pending = false; entry.loadedAt = Date.now(); }
+    }, () => { if (dayRequests.get(key) === entry) dayRequests.delete(key); });
+    return entry.promise;
   }
 
   // Convert compact day arrays to GTFS objects consumed by CPSibraPlanner.
