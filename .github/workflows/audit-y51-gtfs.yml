@@ -54,7 +54,25 @@ jobs:
               "calendar_dates_present": "calendar_dates.txt" in names,
               "status": "theoretical_schedule_only_not_live_confirmed"
           }
+          # Export the actual dated timetable inputs for offline inspection and Agenda integration.
+          # No automatic publishing to the app: schedule validity and walking transfers
+          # must be verified before any itinerary can be labelled feasible.
+          calendar = [c for c in rows("calendar.txt") if c.get("service_id") in {t.get("service_id") for t in trips}] if "calendar.txt" in names else []
+          calendar_dates = [c for c in rows("calendar_dates.txt") if c.get("service_id") in {t.get("service_id") for t in trips}] if "calendar_dates.txt" in names else []
+          subset = {
+              "source": url,
+              "checked_at_utc": summary["checked_at_utc"],
+              "routes": y51,
+              "trips": trips,
+              "stop_times": y51_times,
+              "stops": summary["stops"],
+              "calendar": calendar,
+              "calendar_dates": calendar_dates,
+              "status": "theoretical_schedule_only_not_live_confirmed"
+          }
           os.makedirs("audit-output", exist_ok=True)
+          with open("audit-output/y51-gtfs-subset.json", "w", encoding="utf-8") as f:
+              json.dump(subset, f, ensure_ascii=False, separators=(",", ":"))
           with open("audit-output/y51-gtfs-audit.json", "w", encoding="utf-8") as f:
               json.dump(summary, f, ensure_ascii=False, indent=2)
           print("Y51 trips:", len(trips), "stop times:", len(y51_times), "stops:", len(summary["stops"]))
