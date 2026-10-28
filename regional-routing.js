@@ -10,6 +10,7 @@
       point.lat !== '' && point.lon !== '' &&
       Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lon)) &&
       Math.abs(Number(point.lat)) <= 90 && Math.abs(Number(point.lon)) <= 180 &&
+      // A coordinate of (0, 0) is not a usable French mission location.
       !(Number(point.lat) === 0 && Number(point.lon) === 0);
   }
   function epochMilliseconds(value) {
