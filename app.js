@@ -1734,12 +1734,20 @@
         etat.reglages.adresse_domicile || etat.reglages.domicile_ville);
       const from = m.origin_address || m.from_address || m.from_city;
       const to = m.destination_address || m.to_address || m.to_city;
-      const directions = (a, b) => a && b ?
-        '<a href="' + esc('https://www.google.com/maps/dir/?api=1&origin=' +
-          encodeURIComponent(a) + '&destination=' + encodeURIComponent(b) +
-          '&travelmode=transit') +
-        '" target="_blank" rel="noopener noreferrer">🚌 Rechercher les transports en commun</a>' :
-        '<span class="doux">Adresse manquante — trajet non calculable.</span>';
+      const directions = (a, b, when) => {
+        if (!a || !b) return '<span class="doux">Adresse manquante — trajet non calculable.</span>';
+        const base = 'https://www.google.com/maps/dir/?api=1&origin=' +
+          encodeURIComponent(a) + '&destination=' + encodeURIComponent(b);
+        const link = (mode, label) => '<a href="' + esc(base + '&travelmode=' + mode) +
+          '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+        return '<div class="liensTr">' +
+          link('transit', '🚌 Bus / train') +
+          link('walking', '🚶 Marche') +
+          link('bicycling', '🚲 Vélo (repère trottinette, à vérifier)') +
+          '</div>' +
+          (when ? '<div class="doux">Heure de référence : ' + esc(formatParis(when)) +
+          ' · sélectionner la date et l’heure exactes dans le calculateur externe.</div>' : '');
+      };
       const endTime = Date.parse(m.delivery_end || m.delivery_start || '');
       const next = Number.isFinite(endTime) ? etat.missions.filter(x =>
         x !== m && (x.kind === 'acceptee' || x.status === 'acceptee') &&
@@ -1759,7 +1767,7 @@
       panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div>' +
         '<div><strong>1. Aller au départ de mission</strong><div>' +
         esc(home || 'Domicile non renseigné') + ' → ' + esc(from || 'Départ non renseigné') +
-        '</div>' + directions(home, from) + '</div>' +
+        '</div>' + directions(home, from, m.pickup_start) + '</div>' +
         '<div style="margin-top:12px"><strong>2. Jonction vers la prochaine mission</strong><div>' +
         (next ? esc((to || 'Livraison non renseignée') + ' → ' +
           (nextOrigin || 'Départ suivant non renseigné')) +
@@ -1768,12 +1776,12 @@
           ' · prochaine prise en charge : ' + esc(formatParis(next.pickup_start)) +
           ' · intervalle brut : ' + esc(String(nextGapMin)) +
           ' min (hors marche, correspondances et marge de sécurité).</div>' +
-          directions(to, nextOrigin) :
+          directions(to, nextOrigin, next.pickup_start) :
           '</div><span class="doux">Aucune prochaine mission prévue.</span>') + '</div>' +
         '<div style="margin-top:12px"><strong>3. Retour au domicile</strong><div>' +
         esc(to || 'Livraison non renseignée') + ' → ' +
         esc(home || 'Domicile non renseigné') + '</div>' +
-        directions(to, home) +
+        directions(to, home, m.delivery_end || m.delivery_start) +
         (/albertville/i.test(String(to || '')) ?
           '<div class="doux" style="margin-top:8px">🚌 Retour Y51 Albertville → Annecy : ' +
           '<a href="https://annecy.transdev.com/line/ligne-y51/" target="_blank" rel="noopener noreferrer">horaires officiels de la ligne</a> · ' +
