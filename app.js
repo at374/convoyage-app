@@ -1887,6 +1887,42 @@
         ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
         '<p class="doux">Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
       bt.insertAdjacentElement('afterend', panel);
+      if (/albertville/i.test(String(to || '')) && y51ScheduleApplies) {
+        const estimate = document.createElement('div');
+        estimate.className = 'doux';
+        estimate.style.marginTop = '8px';
+        estimate.innerHTML = '<label for="cpY51WalkMinutes">🚶 Temps de marche estimé jusqu’à École Saint-François (minutes, à vérifier)</label> ' +
+          '<input id="cpY51WalkMinutes" type="number" min="0" max="120" step="1" inputmode="numeric" placeholder="Ex. 10" style="max-width:90px" />' +
+          '<div id="cpY51WalkResult" role="status">Renseigner le temps de marche pour tester la correspondance théorique.</div>';
+        const backSection = panel.querySelectorAll('div');
+        const target = Array.from(backSection).find(el =>
+          el.querySelector('strong')?.textContent?.includes('3. Retour au domicile'));
+        (target || panel).appendChild(estimate);
+        const input = estimate.querySelector('#cpY51WalkMinutes');
+        const result = estimate.querySelector('#cpY51WalkResult');
+        input.addEventListener('input', () => {
+          const n = Number(input.value);
+          if (input.value === '' || !Number.isFinite(n) || n < 0 || n > 120) {
+            result.textContent = 'Indiquer une durée de marche valide entre 0 et 120 minutes.';
+            return;
+          }
+          const delivery = new Date(m.delivery_end || m.delivery_start || '');
+          if (!Number.isFinite(delivery.getTime())) {
+            result.textContent = 'Livraison sans horaire : comparaison impossible.';
+            return;
+          }
+          const parts = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+          }).formatToParts(delivery);
+          const get = type => Number(parts.find(x => x.type === type)?.value || 0);
+          const available = 11 * 60 + 43 - get('hour') * 60 - get('minute');
+          const remaining = available - n;
+          result.textContent = remaining >= 0 ?
+            'Marge théorique après marche : ' + remaining + ' min avant 11 h 43. Horaires et marche non confirmés.' :
+            '⚠️ Correspondance théorique impossible : arrivée ' + (-remaining) +
+            ' min après l’heure recommandée de 11 h 43.';
+        });
+      }
       bt.setAttribute('aria-controls', panel.id);
       bt.setAttribute('aria-expanded', 'true');
       panel.setAttribute('role', 'region');
