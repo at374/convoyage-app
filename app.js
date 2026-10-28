@@ -1735,6 +1735,13 @@
       panel.id = 'cpTransportMissionDetails';
       panel.className = 'bk bkC bkTr';
       panel.style.marginTop = '10px';
+      panel.setAttribute('role', 'region');
+      panel.setAttribute('aria-label', 'Détails des transports de la mission');
+      panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div><p class="doux" role="status">Chargement des informations de transport…</p>';
+      bt.insertAdjacentElement('afterend', panel);
+      bt.setAttribute('aria-controls', panel.id);
+      bt.setAttribute('aria-expanded', 'true');
+      try {
       const home = etat.reglages && (etat.reglages.domicile_adresse ||
         etat.reglages.adresse_domicile || etat.reglages.domicile_ville);
       const locationText = (address, city, department) => {
@@ -1890,7 +1897,6 @@
           'non chargé.') +
         ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
         '<p class="doux">Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
-      bt.insertAdjacentElement('afterend', panel);
       if (/albertville/i.test(String(to || '')) && y51ScheduleApplies) {
         const estimate = document.createElement('div');
         estimate.className = 'doux';
@@ -2057,6 +2063,11 @@
       panel.setAttribute('role', 'region');
       panel.setAttribute('aria-label', 'Détails des transports de la mission');
       panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (error) {
+        console.error('Transports mission : affichage incomplet', error);
+        panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div><p role="alert">Impossible de calculer les détails de transport pour cette mission. Transport non confirmé — vérifiez vous-même.</p>';
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     }; }
 
     { const br = $('btnRetirer'); if (br) br.onclick = () => { if (!window.confirm('Retirer cette mission de ton Agenda sur ce téléphone ? (rien n’est supprimé chez Hiflow ni sur le serveur ; tu peux tout remettre dans Réglages)')) return; const t = lireLocal('cp_masquees', []) || []; const k = m.platform + '|' + m.external_id; if (!t.includes(k)) t.push(k); ecrireLocal('cp_masquees', t); etat.missions = etat.missions.filter(x => !(x.kind === 'acceptee' && x.platform + '|' + x.external_id === k)); ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures }); $('feuille').hidden = true; afficher(); toast('Retirée de l’Agenda'); }; }
