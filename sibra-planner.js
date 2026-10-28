@@ -219,6 +219,27 @@
   }
 
   /**
+   * Adapt a GeoJSON LineString from a pedestrian routing service.
+   * Caller supplies the service identity; this never confirms bus realtime.
+   */
+  function pedestrianRouteFromGeoJSON(feature, provider) {
+    const geometry = feature && feature.geometry;
+    const properties = feature && feature.properties;
+    const duration = properties && Number(properties.duration);
+    const distance = properties && Number(properties.distance);
+    if (typeof provider !== 'string' || !provider.trim() ||
+        !geometry || geometry.type !== 'LineString' ||
+        !Array.isArray(geometry.coordinates) || geometry.coordinates.length < 2 ||
+        !geometry.coordinates.every(p => Array.isArray(p) && p.length >= 2 &&
+          validCoordinate(Number(p[1]), Number(p[0]))) ||
+        !Number.isFinite(duration) || duration < 0 ||
+        !Number.isFinite(distance) || distance < 0) return null;
+    return { status: 'VERIFIE_PIETON', provider: provider.trim(),
+      duration_seconds: duration, distance_meters: distance,
+      geometry: geometry.coordinates };
+  }
+
+  /**
    * A pedestrian leg is usable only when a route provider explicitly verified
    * a walkable itinerary. Geodesic distance alone never satisfies this check.
    */
@@ -326,5 +347,5 @@
     return { valid: errors.length === 0, errors };
   }
 
-  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, verifiedWalkingSeconds, parseGtfsCsv, validateGtfsTables });
+  return Object.freeze({ validCoordinate, distanceKm, nearbyStops, gtfsDateParts, activeServiceIds, activeTripIdsForDate, parseGtfsTime, departuresAtStop, directRides, oneTransferJourneys, assessMissionArrival, assessVerifiedMissionApproach, verifiedWalkingSeconds, pedestrianRouteFromGeoJSON, parseGtfsCsv, validateGtfsTables });
 });

@@ -469,3 +469,19 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
     walk, stop, missionPoint, 1800);
   assert.equal(tooLate.feasible, false);
 }
+
+
+// Pedestrian GeoJSON adapter rejects invalid route data and preserves endpoint checks.
+{
+  const planner = require('../sibra-planner.js');
+  const from = [6.1, 45.9], to = [6.101, 45.901];
+  const feature = { type: 'Feature', geometry: { type: 'LineString',
+    coordinates: [from, to] }, properties: { duration: 540, distance: 700 } };
+  const walk = planner.pedestrianRouteFromGeoJSON(feature, 'test-pedestrian-router');
+  assert.equal(walk.duration_seconds, 540);
+  assert.equal(planner.verifiedWalkingSeconds(walk, from, to), 540);
+  assert.equal(planner.pedestrianRouteFromGeoJSON({ ...feature,
+    properties: { duration: -1, distance: 700 } }, 'test-router'), null);
+  assert.equal(planner.pedestrianRouteFromGeoJSON(feature, ''), null);
+  assert.equal(planner.verifiedWalkingSeconds(walk, to, from), null);
+}
