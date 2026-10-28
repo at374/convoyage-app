@@ -1932,6 +1932,7 @@
                 const rides = window.CPSibraFeed.coordinateDayJourneys(
                   pickupResult.data, homeLat, homeLon, pickupGps.lat, pickupGps.lng, 0,
                   { radiusMeters: 600 }).filter(j =>
+                    j.departureSeconds >= Math.ceil(j.originStop.straightLineMeters / 1.2) &&
                     j.arrivalSeconds + Math.ceil(j.destinationStop.straightLineMeters / 1.2) <= latest).slice(0, 5);
                 const clock = sec => String(Math.floor(sec / 3600)).padStart(2, '0') +
                   ':' + String(Math.floor(sec % 3600 / 60)).padStart(2, '0');
@@ -1940,7 +1941,8 @@
                   window.CPSibraFeed.coordinateOneTransferDayJourneys(
                     pickupResult.data, homeLat, homeLon, pickupGps.lat, pickupGps.lng, 0,
                     { radiusMeters: 600, minTransferSeconds: 300, limit: 10 })
-                    .filter(j => j.arrivalSeconds +
+                    .filter(j => j.departureSeconds >=
+                      Math.ceil(j.originStop.straightLineMeters / 1.2) && j.arrivalSeconds +
                       Math.ceil(j.destinationStop.straightLineMeters / 1.2) <= latest).slice(0, 3) : [];
                 outbound.textContent = rides.length ?
                   '🚌 Aller SIBRA indicatif depuis le centre de ' +
