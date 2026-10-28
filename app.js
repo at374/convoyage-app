@@ -1893,7 +1893,9 @@
         estimate.style.marginTop = '8px';
         estimate.innerHTML = '<label for="cpY51WalkMinutes">🚶 Temps de marche estimé jusqu’à École Saint-François (minutes, à vérifier)</label> ' +
           '<input id="cpY51WalkMinutes" type="number" min="0" max="120" step="1" inputmode="numeric" placeholder="Ex. 10" style="max-width:90px" />' +
-          '<div id="cpY51WalkResult" role="status">Renseigner le temps de marche pour tester la correspondance théorique.</div>';
+          '<div id="cpY51WalkResult" role="status">Renseigner le temps de marche pour tester la correspondance théorique.</div>' +
+          '<div class="doux">Ce champ est une simulation manuelle, pas un calcul GPS. ' +
+          'Utiliser le lien « marche vers École Saint-François » pour vérifier le trajet.</div>';
         const backSection = panel.querySelectorAll('div');
         const target = Array.from(backSection).find(el =>
           el.querySelector('strong')?.textContent?.includes('3. Retour au domicile'));
@@ -1917,6 +1919,8 @@
           const get = type => Number(parts.find(x => x.type === type)?.value || 0);
           const available = 11 * 60 + 43 - get('hour') * 60 - get('minute');
           const remaining = available - n;
+          // La marche et les horaires ne sont pas vérifiés en temps réel.
+          // La marge positive ne vaut jamais confirmation de faisabilité.
           result.textContent = remaining >= 0 ?
             'Marge théorique après marche : ' + remaining + ' min avant 11 h 43. Horaires et marche non confirmés.' :
             '⚠️ Correspondance théorique impossible : arrivée ' + (-remaining) +
