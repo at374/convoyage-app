@@ -392,5 +392,6 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
   assert.ok(app.includes("formatToParts(date)"));
   assert.ok(app.includes("get('year') + '-' + get('month') + '-' + get('day')"));
-  assert.ok(!app.includes("toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' })"));
+  assert.ok(app.includes("const date = (date =>"));
+  assert.ok(app.includes("const nextDate = (date =>"));
 }
