@@ -1919,6 +1919,10 @@
           missingAddress.textContent = 'Adresse exacte de livraison absente : trajet piéton non calculable.';
           estimate.appendChild(missingAddress);
         }
+        const stopLocationNote = document.createElement('div');
+        stopLocationNote.className = 'doux';
+        stopLocationNote.textContent = 'Vérifier que la carte pointe vers le quai Y51 direction Annecy : le nom de l’arrêt seul peut être ambigu.';
+        estimate.appendChild(stopLocationNote);
         const input = estimate.querySelector('#cpY51WalkMinutes');
         const result = estimate.querySelector('#cpY51WalkResult');
         input.addEventListener('input', () => {
