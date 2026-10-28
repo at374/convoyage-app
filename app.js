@@ -1876,9 +1876,11 @@
         const daySource = m.delivery_end || m.delivery_start || m.pickup_start;
         const dayDate = new Date(daySource || '');
         if (Number.isFinite(dayDate.getTime())) {
-          const day = new Intl.DateTimeFormat('en-CA', {
+          const dayParts = new Intl.DateTimeFormat('en-GB', {
             timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
-          }).format(dayDate);
+          }).formatToParts(dayDate);
+          const dayPart = type => dayParts.find(part => part.type === type)?.value || '';
+          const day = dayPart('year') + '-' + dayPart('month') + '-' + dayPart('day');
           const status = document.createElement('p');
           status.className = 'doux';
           status.setAttribute('role', 'status');
