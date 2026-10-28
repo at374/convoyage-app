@@ -32,6 +32,14 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.ok(result.conflits.some(c => c.type === 'chevauchement'));
 }
 
+// 2 bis. Une liaison sans coordonnées ne doit pas produire de faux conflit de transport.
+{
+  const a = mission('a-unknown', '2026-10-27T09:00:00+01:00', '2026-10-27T10:00:00+01:00');
+  const b = mission('b-unknown', '2026-10-27T10:10:00+01:00', '2026-10-27T11:00:00+01:00');
+  const result = CPAgenda.analyser([a, b], { marge_minutes: 45 }, now);
+  assert.equal(result.conflits.length, 0);
+}
+
 // 3. Une mission terminée ne doit pas être traitée comme une mission active à venir.
 {
   const done = mission('done', '2026-10-27T05:00:00+01:00', '2026-10-27T06:00:00+01:00', { status: 'terminee' });
