@@ -1941,7 +1941,7 @@
               line.textContent = formatParis(option.departure) + ' → ' +
                 formatParis(option.arrival) + ' · ' + legs +
                 ' · avance avant prochaine mission : ' + Math.max(0,Math.floor((nextPickupMs-Date.parse(option.arrival))/60000)) + ' min (marge de sécurité requise : ' + securityMarginMin + ' min, approche exacte non vérifiée)' +
-                ' · tarif non communiqué · Transport non confirmé — vérifiez vous-même.';
+                ' · tarif non communiqué · horaires : opentransportdata.swiss · Transport non confirmé — vérifiez vous-même.';
               swissStatus.appendChild(line);
             });
           }).catch(() => {
@@ -2021,7 +2021,7 @@
                 line.textContent = formatParis(result.departure) + ' → ' +
                   formatParis(result.arrival) + ' · ' + legs +
                   (label === 'Aller' && Number.isFinite(Date.parse(pickupDate)) ? ' · avance avant prise en charge : ' + Math.max(0,Math.floor((Date.parse(pickupDate)-Date.parse(result.arrival))/60000)) + ' min (marge de sécurité requise : ' + securityMarginMin + ' min)' : '') +
-                  ' · tarif non communiqué · Transport non confirmé — vérifiez vous-même.';
+                  ' · tarif non communiqué · horaires : opentransportdata.swiss · Transport non confirmé — vérifiez vous-même.';
                 status.appendChild(line);
               });
             }).catch(() => {
