@@ -592,3 +592,25 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(check(route(a, b, 300), null).status, 'marches_non_verifiees');
   assert.equal(check(route(a, b, 300), route(c, d, 300)).transportConfirmed, false);
 }
+
+
+// Date-scoped SIBRA candidate: exact stop coordinates and two verified walks.
+{
+  const planner = require('../sibra-planner.js');
+  const a = [6.1, 45.9], b = [6.101, 45.901], c = [6.2, 45.95], d = [6.201, 45.951];
+  const route = (from, to) => ({
+    status: 'VERIFIE_PIETON', provider: 'test-foot', duration_seconds: 300,
+    distance_meters: 120, geometry: [from, to]
+  });
+  const journey = {
+    departureSeconds: 8 * 3600 + 600, arrivalSeconds: 9 * 3600,
+    originStop: { latitude: b[1], longitude: b[0] },
+    destinationStop: { latitude: c[1], longitude: c[0] }
+  };
+  const good = planner.assessScheduledSibraJourney(journey, 8 * 3600,
+    10 * 3600, a, d, route(a, b), route(c, d));
+  assert.equal(good.feasible, true);
+  assert.equal(good.transportConfirmed, false);
+  assert.equal(planner.assessScheduledSibraJourney(journey, 8 * 3600,
+    10 * 3600, a, d, null, route(c, d)).feasible, false);
+}
