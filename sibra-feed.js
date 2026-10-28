@@ -77,6 +77,22 @@
     }
   }
 
+  // Cache one request per day on mobile; failed requests may be retried.
+  const dayRequests = new Map();
+  async function loadDayCached(day, fetchImpl, basePath) {
+    if (!isISODate(day) || typeof fetchImpl !== 'function') {
+      return { usable: false, status: 'parametres_invalides', transportConfirmed: false };
+    }
+    const key = (typeof basePath === 'string' ? basePath : 'data/sibra') + '/' + day;
+    if (!dayRequests.has(key)) {
+      const pending = loadDay(day, fetchImpl, basePath);
+      dayRequests.set(key, pending);
+      pending.then(result => { if (!result.usable) dayRequests.delete(key); },
+        () => dayRequests.delete(key));
+    }
+    return dayRequests.get(key);
+  }
+
   // Convert compact day arrays to GTFS objects consumed by CPSibraPlanner.
   // Validate referential integrity before exposing rows to route search.
   function normalizeDay(data) {
@@ -165,5 +181,5 @@
     return result.slice(0, Number.isInteger(limit) && limit > 0 ? Math.min(limit, 30) : 6);
   }
 
-  return Object.freeze({ isISODate, assessDate, loadDay, normalizeDay, directDayJourneys, nearbyDayStops });
+  return Object.freeze({ isISODate, assessDate, loadDay, loadDayCached, normalizeDay, directDayJourneys, nearbyDayStops });
 });
