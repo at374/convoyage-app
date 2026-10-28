@@ -1,14 +1,14 @@
 // Convoyage Ultra — service worker de l'application : met en cache l'interface (ouverture hors ligne).
 // Les données des missions ne passent jamais par ce cache (elles sont gardées par l'application).
-const CACHE = 'cp-app-v251-transports';
-const FICHIERS = ['./', 'index.html', 'style.css', 'app.js', 'api.js', 'calc.js', 'edition.js', 'geo.js', 'retours.js', 'agenda.js', 'planning.js', 'filtres.js', 'facturation.js', 'etat.js', 'config.js', 'manifest.webmanifest', 'icones/icone-192.png', 'icones/icone-512.png'];
+const CACHE = 'cp-app-v277-transports';
+const FICHIERS = ['./', 'index.html', 'style.css', 'app.js', 'api.js', 'calc.js', 'edition.js', 'geo.js', 'retours.js', 'agenda.js', 'planning.js', 'filtres.js', 'facturation.js', 'etat.js', 'config.js', 'plateformes.js', 'routes-pricing.js', 'sibra-feed.js', 'sibra-planner.js', 'regional-routing.js', 'routes-ui.js', 'admin.js', 'manifest.webmanifest', 'icones/icone-192.png', 'icones/icone-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHIERS.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== CACHE && x !== 'cp-prefs').map(x => caches.delete(x)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
   if (e.request.method !== 'GET' || u.origin !== location.origin) return; // serveur de données : jamais mis en cache ici
   // Réseau d'abord (nouvelle version), cache si hors ligne.
-  e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(r => { const copie = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copie)); return r; }).catch(() => caches.match(e.request).then(r => r || caches.match('index.html'))));
+  e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(r => { const copie = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copie)); return r; }).catch(() => caches.match(e.request).then(r => r || (e.request.mode === 'navigate' ? caches.match('index.html') : Response.error()))));
 });
 // V77 : notification reçue alors que l'application est fermée (message chiffré, déchiffré par le téléphone).
 // V160 : son des notifications réglable (préférence écrite par la page dans le cache cp-prefs).
