@@ -9,7 +9,8 @@
     return point && point.lat !== null && point.lon !== null &&
       point.lat !== '' && point.lon !== '' &&
       Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lon)) &&
-      Math.abs(Number(point.lat)) <= 90 && Math.abs(Number(point.lon)) <= 180;
+      Math.abs(Number(point.lat)) <= 90 && Math.abs(Number(point.lon)) <= 180 &&
+      !(Number(point.lat) === 0 && Number(point.lon) === 0);
   }
   function epochMilliseconds(value) {
     if (value === null || value === undefined || value === '') return NaN;
