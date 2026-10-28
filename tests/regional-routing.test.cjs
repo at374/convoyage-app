@@ -224,3 +224,16 @@ test('rejects itineraries with unknown transfer count', async () => {
   assert.equal(response.itineraries.length,1);
   assert.equal(response.itineraries[0].transfers,1);
 });
+
+test('mission arrival feasibility keeps 30-minute buffer at destination', () => {
+  const deadline = '2026-10-28T12:00:00+01:00';
+  const arrival = Date.parse('2026-10-28T11:30:00+01:00');
+  const good = {startTime:arrival-1800000,endTime:arrival,
+    transportConfirmed:false,legs:[{startTime:arrival-1800000,endTime:arrival,distanceMeters:900}]};
+  const late = {...good,endTime:arrival+60000};
+  const missingWalk = {...good,legs:[{...good.legs[0],distanceMeters:NaN}]};
+  assert.deepEqual(routing.feasibleBefore([late,missingWalk,good],deadline),[good]);
+  assert.deepEqual(routing.feasibleBefore([good],deadline,31),[]);
+  assert.deepEqual(routing.feasibleBefore([good],'invalid'),[]);
+  assert.equal(routing.feasibleBefore([good],deadline)[0].transportConfirmed,false);
+});
