@@ -105,7 +105,7 @@
         updatedAt:new Date().toISOString(),itineraries,transportConfirmed:false,realtime:false};
     } finally {clearTimeout(timer);}
   }
-  async function plan({ endpoint, from, to, departure, arrivalDeadline, fetcher, timeoutMs = 12000 }) {
+  async function requestPlan({ endpoint, from, to, departure, arrivalDeadline, fetcher, timeoutMs = 12000 }) {
     if (!endpoint) return planPublicM({from,to,departure,arrivalDeadline,fetcher,timeoutMs});
     if (!validPoint(from) || !validPoint(to)) throw new Error('Coordonnees GPS requises');
     if (departure === null || departure === undefined ||
@@ -229,6 +229,33 @@
     if (!Number.isFinite(earliest)) return [];
     return feasibleBefore(itineraries, nextPickup, marginMinutes)
       .filter(it => it.startTime >= earliest);
+  }
+  // Memory only: bounded lifetime, no GPS or itinerary persisted to storage.
+  const recentPlans = new Map();
+  const pendingPlans = new Map();
+  const fetcherIds = new WeakMap();
+  let nextFetcherId = 0;
+  function copyResult(value) { return JSON.parse(JSON.stringify(value)); }
+  async function plan(options) {
+    const fetcher = options.fetcher;
+    if (typeof fetcher !== 'function') return requestPlan(options);
+    if (!fetcherIds.has(fetcher)) fetcherIds.set(fetcher, ++nextFetcherId);
+    const key = JSON.stringify([fetcherIds.get(fetcher), options.endpoint || '',
+      options.from, options.to, options.departure, options.arrivalDeadline || '',
+      options.timeoutMs === undefined ? 12000 : options.timeoutMs]);
+    const now = Date.now();
+    for (const [k, entry] of recentPlans) if (entry.expires <= now) recentPlans.delete(k);
+    if (options.refresh) recentPlans.delete(key);
+    if (!options.refresh && recentPlans.has(key)) return copyResult(recentPlans.get(key).value);
+    if (pendingPlans.has(key)) return copyResult(await pendingPlans.get(key));
+    const pending = requestPlan(options).then(value => {
+      if (recentPlans.size >= 64) recentPlans.delete(recentPlans.keys().next().value);
+      recentPlans.set(key, {expires: Date.now() + 60000, value: copyResult(value)});
+      return value;
+    });
+    pendingPlans.set(key, pending);
+    try { return copyResult(await pending); }
+    finally { if (pendingPlans.get(key) === pending) pendingPlans.delete(key); }
   }
   const api = {plan, parseItinerary, validPoint, feasibleBefore, feasibleBetween, supportsPublic};
   root.CPRegionalRouting = api;

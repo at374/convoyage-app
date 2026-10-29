@@ -2,6 +2,7 @@
 // synchronisées par l'extension ; aucune action n'est faite sur les plateformes.
 (() => {
   'use strict';
+  const regionalFetch = (...args) => window.fetch(...args);
   const $ = id => document.getElementById(id);
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const euros = v => Number(v).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
@@ -811,7 +812,7 @@
                 from: {lat:regionalLat,lon:regionalLon},
                 to: {lat:regionalHome.lat,lon:regionalHome.lng},
                 departure: new Date(regionalEnd + 15 * 60000).toISOString(),
-                fetcher:window.fetch.bind(window)
+                fetcher:regionalFetch
               });
               const fmt = ms => new Intl.DateTimeFormat('fr-FR', {
                 timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'
@@ -1970,7 +1971,8 @@
             from: {lat: finishGps.lat, lon: finishGps.lng},
             to: {lat: nextGps.lat, lon: nextGps.lng},
             departure: deliveryDate,
-            fetcher: window.fetch.bind(window)
+            refresh: !!bt.dataset.transportRefreshAt,
+            fetcher: regionalFetch
           }).then(answer => {
             if (!regionalStatus.isConnected) return;
             const options = window.CPRegionalRouting.feasibleBetween(
@@ -2075,7 +2077,8 @@
             from: {lat:finishGps.lat, lon:finishGps.lng},
             to: {lat:homeLat, lon:homeLon},
             departure:deliveryDate,
-            fetcher:window.fetch.bind(window)
+            refresh: !!bt.dataset.transportRefreshAt,
+            fetcher:regionalFetch
           }).then(answer => {
             if (!returnStatus.isConnected) return;
             const options = answer.itineraries.filter(it =>
@@ -2124,7 +2127,8 @@
             departure:earliest.toISOString(),
             ...(!regionalEndpointConfigured ? {arrivalDeadline:
               new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString()} : {}),
-            fetcher:window.fetch.bind(window)
+            refresh: !!bt.dataset.transportRefreshAt,
+            fetcher:regionalFetch
           }).then(answer => {
             if (!outboundStatus.isConnected) return;
             const options = window.CPRegionalRouting.feasibleBefore(
