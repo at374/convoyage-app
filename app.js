@@ -1744,14 +1744,17 @@
           (when ? '<div class="doux">Heure de référence : ' + esc(formatParis(when)) +
           ' · sélectionner la date et l’heure exactes dans le calculateur externe.</div>' : '');
       };
-      // Un moteur régional ne peut calculer qu'avec des coordonnées et un endpoint configuré.
+      // Moteur régional : coordonnées et fournisseur existant, ou endpoint explicitement configuré.
       // Ne jamais transformer une recherche externe en trajet prétendument confirmé.
       const regionalEngineReady = !!(window.CPRegionalRouting &&
         typeof window.CPRegionalRouting.plan === 'function');
-      // The adapter is not a connected timetable provider: without a verified
-      // endpoint, no regional journeys can be calculated in this panel.
+      // A configured endpoint has priority; the public M provider is geographically gated.
       const regionalEndpointConfigured = !!(window.CP_REGIONAL_ROUTING_ENDPOINT &&
         /^https:\/\/[^\s/]+/i.test(String(window.CP_REGIONAL_ROUTING_ENDPOINT)));
+      const regionalPointsReady = (from,to) => regionalEndpointConfigured ||
+        !!(window.CPRegionalRouting?.supportsPublic && window.CPRegionalRouting.supportsPublic(from,to));
+      const regionalProviderReady = regionalEndpointConfigured ||
+        typeof window.CPRegionalRouting?.supportsPublic === 'function';
       const y51FeedStatus = 'Source horaire Y51 non chargée dans cette fiche : départs non confirmés.';
       const y51ServiceDay = (() => {
         const d = new Date(m.delivery_end || m.delivery_start || '');
@@ -1950,12 +1953,13 @@
           });
         }
       }
-      // Regional journeys between accepted missions, only when a real HTTPS
-      // OTP service is configured and both mission endpoints have exact GPS.
-      if (regionalEngineReady && regionalEndpointConfigured && next && deliveryDate) {
+      // Regional journeys use a configured endpoint or the public M provider,
+      // only when both mission endpoints have exact GPS.
+      if (regionalEngineReady && regionalProviderReady && next && deliveryDate) {
         const finishGps = G.coordonnees(m, 'destination');
         const nextGps = G.coordonnees(next, 'origin');
-        if (finishGps?.precision === 'gps' && nextGps?.precision === 'gps') {
+        if (finishGps?.precision === 'gps' && nextGps?.precision === 'gps' &&
+            regionalPointsReady({lat:finishGps.lat,lon:finishGps.lng},{lat:nextGps.lat,lon:nextGps.lng})) {
           const regionalStatus = document.createElement('div');
           regionalStatus.className = 'doux';
           regionalStatus.setAttribute('role', 'status');
@@ -2052,14 +2056,15 @@
       }
       // Regional return from the exact delivery point to the configured home
       // coordinate (which may only represent a city centre, not a door).
-      if (regionalEngineReady && regionalEndpointConfigured && deliveryDate) {
+      if (regionalEngineReady && regionalProviderReady && deliveryDate) {
         const finishGps = G.coordonnees(m, 'destination');
         const homeLat = Number(etat.reglages?.domicile_lat);
         const homeLon = Number(etat.reglages?.domicile_lng);
         const homeGpsReady = etat.reglages?.domicile_lat != null &&
           etat.reglages?.domicile_lng != null &&
           window.CPRegionalRouting.validPoint({lat:homeLat,lon:homeLon});
-        if (finishGps?.precision === 'gps' && homeGpsReady) {
+        if (finishGps?.precision === 'gps' && homeGpsReady &&
+            regionalPointsReady({lat:finishGps.lat,lon:finishGps.lng},{lat:homeLat,lon:homeLon})) {
           const returnStatus = document.createElement('div');
           returnStatus.className = 'doux';
           returnStatus.setAttribute('role', 'status');
@@ -2097,14 +2102,15 @@
       }
       // Regional outbound itinerary: use only a known home reference point
       // and the exact GPS pickup, with a 30-minute arrival buffer.
-      if (regionalEngineReady && regionalEndpointConfigured && pickupDate) {
+      if (regionalEngineReady && regionalProviderReady && pickupDate) {
         const pickupGps = G.coordonnees(m, 'origin');
         const homeLat = Number(etat.reglages?.domicile_lat);
         const homeLon = Number(etat.reglages?.domicile_lng);
         const homeGpsReady = etat.reglages?.domicile_lat != null &&
           etat.reglages?.domicile_lng != null &&
           window.CPRegionalRouting.validPoint({lat:homeLat,lon:homeLon});
-        if (pickupGps?.precision === 'gps' && homeGpsReady) {
+        if (pickupGps?.precision === 'gps' && homeGpsReady &&
+            regionalPointsReady({lat:homeLat,lon:homeLon},{lat:pickupGps.lat,lon:pickupGps.lng})) {
           const outboundStatus = document.createElement('div');
           outboundStatus.className = 'doux';
           outboundStatus.setAttribute('role', 'status');
@@ -2116,6 +2122,8 @@
             from:{lat:homeLat,lon:homeLon},
             to:{lat:pickupGps.lat,lon:pickupGps.lng},
             departure:earliest.toISOString(),
+            ...(!regionalEndpointConfigured ? {arrivalDeadline:
+              new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString()} : {}),
             fetcher:window.fetch.bind(window)
           }).then(answer => {
             if (!outboundStatus.isConnected) return;
@@ -2750,3 +2758,4 @@
   demarrer();
 })();
  
+

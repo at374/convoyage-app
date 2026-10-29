@@ -1,5 +1,5 @@
 /* Convoyage Ultra — optional regional multimodal routing adapter.
- * An OpenTripPlanner 2.x GraphQL endpoint must be deployed separately.
+ * Mobilités M public API in the Grenoble area; optional configured OTP elsewhere.
  * No credentials, mission synchronization or settings are changed here.
  */
 (function (root) {
@@ -49,7 +49,64 @@
       status: 'horaire_theorique_a_verifier'
     };
   }
-  async function plan({ endpoint, from, to, departure, fetcher, timeoutMs = 12000 }) {
+  // Conservative query perimeter, not a claim of complete network coverage.
+  function supportsPublic(from, to) {
+    return [from, to].every(p => validPoint(p) &&
+      Number(p.lat) >= 44.9 && Number(p.lat) <= 45.5 &&
+      Number(p.lon) >= 5.3 && Number(p.lon) <= 6.1);
+  }
+  async function planPublicM({from, to, departure, arrivalDeadline, fetcher, timeoutMs}) {
+    if (!supportsPublic(from,to)) throw new Error('Hors perimetre Mobilites M');
+    if (typeof fetcher !== 'function') throw new Error('Fetch indisponible');
+    const boundary = new Date(arrivalDeadline || departure);
+    if (!Number.isFinite(boundary.getTime())) throw new Error('Date invalide');
+    if (!Number.isFinite(Number(timeoutMs)) || Number(timeoutMs) <= 0)
+      throw new Error('Delai de requete invalide');
+    const parts = Object.fromEntries(new Intl.DateTimeFormat('sv-SE', {
+      timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+    }).formatToParts(boundary).map(p => [p.type,p.value]));
+    const url = new URL('https://data.mobilites-m.fr/api/routers/default/plan');
+    Object.entries({fromPlace:from.lat+','+from.lon,toPlace:to.lat+','+to.lon,
+      date:parts.year+'-'+parts.month+'-'+parts.day,time:parts.hour+':'+parts.minute,
+      arriveBy:String(!!arrivalDeadline),mode:'TRANSIT,WALK',numItineraries:'5'
+    }).forEach(([key,value]) => url.searchParams.set(key,value));
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(),Number(timeoutMs));
+    try {
+      const response = await fetcher(url.href, {signal:controller.signal,
+        credentials:'omit',referrerPolicy:'no-referrer'});
+      if (!response.ok) throw new Error('Mobilites M indisponible ('+response.status+')');
+      const payload = await response.json();
+      if (payload.error || !Array.isArray(payload.plan && payload.plan.itineraries))
+        throw new Error('Reponse Mobilites M invalide ou trajet indisponible');
+      const itineraries = payload.plan.itineraries.slice(0,100).map(it => {
+        if (!it || !Array.isArray(it.legs)) return null;
+        const converted = parseItinerary({...it,numberOfTransfers:it.transfers,
+          legs:it.legs.map(leg => ({...leg,route:{shortName:leg.routeShortName || ''}}))});
+        const allowed = ['WALK','BUS','TRAM','SUBWAY','RAIL'];
+        if (!Number.isFinite(converted.startTime) || !Number.isFinite(converted.endTime) ||
+          converted.endTime < converted.startTime || !converted.legs.length ||
+          !Number.isFinite(converted.walkMeters) || converted.walkMeters < 0 ||
+          !Number.isInteger(converted.transfers) || converted.transfers < 0 ||
+          !Number.isFinite(converted.durationSeconds) || converted.durationSeconds <= 0 ||
+          Math.abs((converted.endTime-converted.startTime)/1000-converted.durationSeconds)>120 ||
+          (arrivalDeadline ? converted.endTime > boundary.getTime() : converted.startTime < boundary.getTime()) ||
+          !converted.legs.some(leg => leg && leg.mode !== 'WALK') ||
+          !converted.legs.every((leg,i) => leg && allowed.includes(leg.mode) &&
+            Number.isFinite(leg.distanceMeters) && leg.distanceMeters >= 0 &&
+            Number.isFinite(leg.startTime) && Number.isFinite(leg.endTime) &&
+            leg.endTime >= leg.startTime && leg.startTime >= converted.startTime &&
+            leg.endTime <= converted.endTime &&
+            (i === 0 || leg.startTime >= converted.legs[i-1].endTime))) return null;
+        return converted;
+      }).filter(Boolean).slice(0,MAX_RESULTS);
+      return {source:'Mobilités M',date:parts.year+'-'+parts.month+'-'+parts.day,
+        updatedAt:new Date().toISOString(),itineraries,transportConfirmed:false,realtime:false};
+    } finally {clearTimeout(timer);}
+  }
+  async function plan({ endpoint, from, to, departure, arrivalDeadline, fetcher, timeoutMs = 12000 }) {
+    if (!endpoint) return planPublicM({from,to,departure,arrivalDeadline,fetcher,timeoutMs});
     if (!validPoint(from) || !validPoint(to)) throw new Error('Coordonnees GPS requises');
     if (departure === null || departure === undefined ||
         !Number.isFinite(new Date(departure).getTime())) throw new Error('Date invalide');
@@ -173,7 +230,8 @@
     return feasibleBefore(itineraries, nextPickup, marginMinutes)
       .filter(it => it.startTime >= earliest);
   }
-  const api = {plan, parseItinerary, validPoint, feasibleBefore, feasibleBetween};
+  const api = {plan, parseItinerary, validPoint, feasibleBefore, feasibleBetween, supportsPublic};
   root.CPRegionalRouting = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);
+
