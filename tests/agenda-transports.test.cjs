@@ -849,7 +849,7 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   const source = fs.readFileSync(require('node:path').join(__dirname, '..', 'app.js'), 'utf8');
   assert.match(source, /CPRegionalRouting\.plan\(\{/);
   assert.match(source, /CPRegionalRouting\.feasibleBetween\(/);
-  assert.match(source, /finishGps\?\.precision === 'gps' && nextGps\?\.precision === 'gps'/);
+  assert.match(source, /transportAddressPoint\(finishGps\) && transportAddressPoint\(nextGps\)/);
   assert.match(source, /options\.slice\(0, 5\)/);
 }
 
@@ -862,4 +862,44 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.match(source, /CPRegionalRouting\.feasibleBefore\(/);
   assert.match(source, /CPRegionalRouting\.feasibleBetween\(/);
   assert.match(source, /adresse exacte non vérifiée/);
+}
+
+
+// Verified address points are usable; street and city references remain approximate.
+{
+  const fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+  const app = fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+  const helper = app.slice(app.indexOf('  const transportAddressPoint'),app.indexOf('  const $ ='));
+  const usable = point => vm.runInNewContext(helper+'transportAddressPoint(point)',{point});
+  for (const precision of ['gps','adresse']) assert.equal(usable({lat:45.9,lng:6.1,precision}),true);
+  for (const precision of ['rue','ville','departement']) assert.equal(usable({lat:45.9,lng:6.1,precision}),false);
+  for (const point of [null,{lat:null,lng:6.1,precision:'adresse'},
+    {lat:95,lng:6.1,precision:'adresse'},{lat:0,lng:0,precision:'gps'}]) assert.equal(usable(point),false);
+}
+
+// A 2 November deadline must not occupy the Agenda after a planned 30 October finish.
+{
+  const fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+  const app = fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+  const helpers = app.slice(app.indexOf('  const dMail ='),app.indexOf('  function mailBloc'));
+  const a = mission('planned','2026-10-30T12:00:00+01:00','2026-11-02T10:30:00+01:00',
+    {platform:'Hiflow',external_id:'planned',duree_h:1.5});
+  const b = mission('next','2026-10-30T16:00:00+01:00','2026-10-30T18:00:00+01:00',
+    {platform:'Hiflow',external_id:'next',duree_h:1});
+  const before = JSON.stringify([a,b]);
+  const plans = new Map([['["Hiflow","planned"]','2026-10-30T12:30:00.000Z']]);
+  const context = {Intl,Date,Map,transportReturnPlans:plans,etat:{missions:[a,b]},
+    deLEdition:x=>x,RT:require('../retours.js'),m:a,
+    bk:(style,title,value)=>`[${title}] ${value}`,esc:String,
+    fmtDate:value=>new Date(value).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})};
+  vm.createContext(context);vm.runInContext(helpers,context);
+  const projected = vm.runInContext('planningMissions()',context);
+  const result = CPAgenda.analyser(projected,{},Date.parse('2026-10-29T12:00:00+01:00'));
+  assert.equal(result.items[0].fin.t,Date.parse('2026-10-30T13:30:00+01:00'));
+  assert.equal(result.conflits.length,0);
+  const html = vm.runInContext('agendaDateBlocks(m)',context);
+  for (const text of ['PRISE EN CHARGE','LIVRAISON PRÉVUE','DATE LIMITE DE LIVRAISON',
+    '30/10/2026','02/11/2026','13:30']) assert.ok(html.includes(text),text);
+  assert.equal(JSON.stringify([a,b]),before);
+  assert.equal(vm.runInContext('missionTiming(m).deadline',context),a.delivery_end);
 }
