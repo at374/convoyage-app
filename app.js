@@ -3,6 +3,29 @@
 (() => {
   'use strict';
   const regionalFetch = (...args) => window.fetch(...args);
+  // Planning data stays in this page session and never updates synchronized missions.
+  const transportReturnPlans = new Map();
+  function transportParisDate(value) {
+    if (!/^20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null;
+    const format = date => {
+      const p = Object.fromEntries(new Intl.DateTimeFormat('sv-SE', {
+        timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
+        hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+      }).formatToParts(date).map(part => [part.type,part.value]));
+      return p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute;
+    };
+    const matches = ['+01:00','+02:00'].map(offset => new Date(value+':00'+offset))
+      .filter(date => Number.isFinite(date.getTime()) && format(date) === value);
+    return matches.length === 1 ? matches[0].toISOString() : null;
+  }
+
+  const transportAddressPoint = point => !!point &&
+    ['gps', 'adresse'].includes(point.precision) &&
+    point.lat != null && point.lng != null && point.lat !== '' && point.lng !== '' &&
+    Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng)) &&
+    Math.abs(Number(point.lat)) <= 90 && Math.abs(Number(point.lng)) <= 180 &&
+    !(Number(point.lat) === 0 && Number(point.lng) === 0);
+
   const $ = id => document.getElementById(id);
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const euros = v => Number(v).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
@@ -133,6 +156,7 @@
     };
   }
   function ecranConnexion(msg) {
+    transportReturnPlans.clear();
     $('onglets').hidden = true; $('actualiser').hidden = true; $('pastille').hidden = true; $('sousTitre').textContent = 'Connexion';
     $('ecran').innerHTML = `<div class="carte"><h2>Connexion à Convoyage Ultra</h2>
       <p class="doux">Utilise le même compte que dans l’extension de ton ordinateur. Ce n’est pas ton compte Hiflow, DriiveMe, Otoqi ou Pop Valet.</p>
@@ -446,6 +470,38 @@
   const dMail = m => { const i = m.mail_info; return i && i.pickup && i.delivery ? { pk: i.pickup, liv: i.delivery } : null; };
   const hfDates = m => m.kind === 'acceptee' && m.platform === 'Hiflow' && !!(dMail(m) || (m.pickup_start && m.delivery_end));
   const hfPk = m => (dMail(m) || { pk: m.pickup_start }).pk, hfLiv = m => (dMail(m) || { liv: m.delivery_end }).liv;
+  function missionTiming(m) {
+    const original = m._cpTimingOriginal || m;
+    const pickup = hfDates(original) ? hfPk(original) : original.pickup_start;
+    const deadline = original.delivery_end || null;
+    const key = JSON.stringify([original.platform, original.external_id]);
+    const local = original.platform && original.external_id != null ? transportReturnPlans.get(key) : null;
+    const confirmation = original.kind === 'acceptee' && original.platform === 'Hiflow' ? dMail(original)?.liv : null;
+    const candidate = local || (confirmation && Date.parse(confirmation) !== Date.parse(deadline || '') ? confirmation : null);
+    const planned = candidate && Number.isFinite(Date.parse(candidate)) &&
+      Number.isFinite(Date.parse(pickup || '')) && Date.parse(candidate) >= Date.parse(pickup) &&
+      (!deadline || !Number.isFinite(Date.parse(deadline)) || Date.parse(candidate) <= Date.parse(deadline)) ? candidate : null;
+    return {original,pickup,deadline,planned,key};
+  }
+  function missionForPlanning(m) {
+    if (m.kind !== 'acceptee') return m;
+    const timing = missionTiming(m);
+    const copy = {...timing.original, pickup_start:timing.pickup, delivery_end:timing.planned,
+      delivery_start:null};
+    Object.defineProperty(copy,'_cpTimingOriginal',{value:timing.original});
+    return copy;
+  }
+  const planningMissions = () => deLEdition(etat.missions).map(missionForPlanning);
+  function agendaDateBlocks(m, plannedEnd, plannedStart) {
+    const timing = missionTiming(m);
+    const finish = plannedEnd || RT.fin(missionForPlanning(m));
+    const delivery = plannedEnd ? new Date(plannedEnd.t).toISOString() :
+      timing.planned || (finish && new Date(finish.t).toISOString());
+    return bk('bkD1','PRISE EN CHARGE',esc(fmtDate(plannedStart == null ? timing.pickup : new Date(plannedStart).toISOString()))) +
+      bk('bkD2','LIVRAISON PRÉVUE',delivery ? esc(fmtDate(delivery)) +
+        (!timing.planned || finish?.estimee ? ' (estimée, à confirmer)' : '') : 'À renseigner') +
+      (timing.deadline ? bk('bkD2','DATE LIMITE DE LIVRAISON',esc(fmtDate(timing.deadline))) : '');
+  }
   function mailBloc(m) {
     const i = m.mail_info; if (!i) return '';
     const c = (t, x) => x && (x.contact || x.telephone || x.horaires) ? `<p class="doux"><b>${t}</b> ${esc([x.contact, x.telephone].filter(Boolean).join(' · '))}${x.horaires ? '<br>Horaires : ' + esc(x.horaires) : ''}</p>` : '';
@@ -504,13 +560,13 @@
       return '<div class="pvar ' + (fee > x.avant ? 'up' : 'down') + '">' + (fee > x.avant ? '↑' : '↓') + ' avant ' + esc(euros(x.avant)) + '</div>';
     } catch (_) { return ''; }
   };
-  function carteMission(m, i, extra) {
+  function carteMission(m, i, extra, datesHtml) {
     const r = renta(m), reste = m.kind === 'acceptee' ? null : heuresRestantes(m);
     return `<button class="mission${clsPlat(m.platform)}${estPassee(m) ? ' passe' : ''}${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? ' urgent' : ''}" data-i="${i}">
       <div class="haut"><span>${plaqueW(m)}<span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${' <span class="verif">' + esc(verifPast(m)) + '</span>'}</span>
       <span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div>${prixVar(m)}${prixKm(m, r)}${r.connu ? `<div class="net">net ≈ ${esc(euros(r.net))}${r.parHeure ? ' · ' + esc(euros(r.parHeure)) + '/h' : ''}</div>` : ''}</span></div>
       ${reste != null && reste > 0 && reste < SEUIL_URGENT_H && !estPassee(m) ? `<div class="urgence">⏳ Plus que ${esc(reste < 1 ? Math.max(1, Math.round(reste * 60)) + ' min' : Math.round(reste) + ' h')} pour la faire</div>` : ''}<div class="trajet">${trajetHtml(m)}</div>${adrHtml(m)}
-      <div class="meta">${bkDates(m, hfDates(m) ? fmtDate(hfLiv(m)) : arriveeTxt(m))}
+      <div class="meta">${datesHtml || bkDates(m, hfDates(m) ? fmtDate(hfLiv(m)) : arriveeTxt(m))}
       ${devisAccepte(m) ? '<div style="background:#c9f2cf;color:#173;border-radius:8px;padding:4px 8px;margin:4px 0;font-weight:600">✅ Devis accepté</div>' : ''}${m.fees && m.fees.devis_numero && m.kind !== 'acceptee' && m.fees.devis_accepte !== 1 ? '<div style="background:#ffe8a3;color:#222;border-radius:8px;padding:4px 8px;margin:4px 0;font-weight:600">📝 Devis proposé</div>' : ''}${vehHtml(m)}${blocKm(m, true)}${sugHtml(m)}</div>${extra || ''}</button>`;
   }
   // V137 : mission dont il reste peu de temps (moins de 24 h avant la fin de la période ou l'heure de livraison) → cadre rouge qui clignote.
@@ -702,7 +758,8 @@
   // V79 : Agenda complet — états (à venir, en cours, passée, annulée ?, terminée), conflits horaires, modifications.
   const ETATS = { en_cours: ['en cours', 'ok'], annulee: ['annulée ? à vérifier', 'ko'], terminee: ['terminée', ''], passee: ['passée', ''], date_inconnue: ['date à préciser', 'nv'] };
   function vueAgenda() {
-    const A = window.CPAgenda.analyser(etat.missions, etat.reglages);
+    const agendaMissions = planningMissions();
+    const A = window.CPAgenda.analyser(agendaMissions, etat.reglages);
     const items = A.items.filter(x => etat.agendaTout || !((x.etat === 'passee' || x.etat === 'terminee') && x.fin && Date.now() - x.fin.t > 7 * 86400000));
     // Calcule les enchaînements une seule fois par rendu. Les transports ne sont pas vérifiés par ce résumé.
     const nowChain = Date.now();
@@ -723,7 +780,7 @@
     const caches = A.items.length - items.length;
     listeAffichee = items.map(x => x.mission);
     if (!A.items.length) { $('ecran').innerHTML = '<div class="vide">Aucune mission acceptée. Elles arrivent automatiquement depuis « Mes trajets » (Hiflow), « Mes réservations » (DriiveMe), « Missions réservées » (Otoqi) et « Propositions réservées » (Pop Valet), ou d’un e-mail de confirmation Hiflow collé dans l’extension.</div>'; return; }
-    const resume = RT.resumeAgenda(etat.missions, etat.reglages);
+    const resume = RT.resumeAgenda(agendaMissions, etat.reglages);
     // V139 : plus de bandeau « N conflits » dans l'Agenda (les estimations produisaient des dizaines de faux conflits).
     let html = false && A.conflits.length ? `<div class="carte conflit" id="conflits"><h2>⚠️ ${A.conflits.length} conflit${A.conflits.length > 1 ? 's' : ''} dans ton agenda</h2>${A.conflits.map(c => `<p>${esc(window.CPAgenda.libelleConflit(c))}</p>`).join('')}<p class="doux">Estimation (durées et liaisons approximatives) : vérifie sur les plateformes.</p></div>` : '';
     let jour = '';
@@ -737,7 +794,7 @@
       const extra = (e ? `<div><span class="etiq ${e[1]}">${esc(e[0])}</span></div>` : '') +
         modifs.map(z => `<div class="modifLigne">✏️ ${esc(window.CPAgenda.libelleModification(z))}</div>`).join('') +
         (nb ? `<div class="retoursBadge">🔁 ${nb} retour${nb > 1 ? 's' : ''} possible${nb > 1 ? 's' : ''} après cette mission</div>` : '');
-      html += carteMission(m, i, extra).replace('class="mission', `class="mission etat-${x.etat}${''}`);
+      html += carteMission(m, i, extra, agendaDateBlocks(m,x.fin)).replace('class="mission', `class="mission etat-${x.etat}${''}`);
       // Agenda–Transports : résumé prudent de l'enchaînement. Le trajet n'est jamais déclaré confirmé ici.
       const chain = window.__cpAgendaChain && window.__cpAgendaChain[x.cle];
       const isAlbertvilleDelivery = /albertville/i.test([
@@ -1325,7 +1382,7 @@
   function calculerPlanning() {
     const p = etat.plan, debut = PL.parisVersMs(p.date, p.heure);
     if (debut == null) return toast('Date ou heure invalide');
-    const res = PL.planifier(etat.missions, etat.reglages, { debut, jours: p.jours, nuits_max: p.nuits, budget_hotel: p.hotelOn ? p.hotel : 0, seuil_dom: p.seuil, zones: p.zones, rayon: p.rayon, inclureAcceptees: p.acc, tri: p.tri });
+    const res = PL.planifier(planningMissions(), etat.reglages, { debut, jours: p.jours, nuits_max: p.nuits, budget_hotel: p.hotelOn ? p.hotel : 0, seuil_dom: p.seuil, zones: p.zones, rayon: p.rayon, inclureAcceptees: p.acc, tri: p.tri });
     etat.planResultat = res; afficherPlans(res);
     const r = $('pRes'); if (r) r.scrollIntoView({ block: 'start' });
   }
@@ -1349,7 +1406,7 @@
           const et = l.etape, m = et.mission, ie = pl.etapes.indexOf(et);
           const nlM = (pl.nuitsLiaison || []).find(x => x && x.cle === et.cle && x.matin);
           const lienPlan = nlM ? bk('bkTr', '🚆 LE MATIN', '<b>Domicile → ' + esc(m.from_city || '?') + '</b><br>≈ ' + esc(Math.round(nlM.matin.km)) + ' km · ' + esc(duree(nlM.matin.heures)) + ' · ' + esc(euros(nlM.matin.cout))) : (ie > 0 && et.liaison.km >= 2 && !(pl.nuitsLiaison || []).some(x => x && x.cle === et.cle)) ? bk('bkTr', '🚆 TRANSPORT', '<b>' + esc(et.depuis) + ' → ' + esc(m.from_city || '?') + '</b><br>≈ ' + esc(et.liaison.km) + ' km · ' + esc(duree(et.liaison.heures)) + ' · ' + esc(euros(et.liaison.cout)) + (et.attenteH ? ' · attente ' + esc(duree(et.attenteH)) : '')) : '';
-          return lienPlan + `<button class="mission${clsPlat(m.platform)}" data-plan="${ip}" data-etape="${ie}"><div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${et.acceptee ? ' <span class="etiq ok">déjà acceptée</span>' : ''}</span><span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div><div class="net">net ≈ ${esc(euros(et.net))}</div></span></div><div class="trajet">${trajetHtml(m)}</div><div class="meta">${bk('bkD1', 'PRISE EN CHARGE', '🚩 ' + hm(et.debut))}${bk('bkD2', 'LIVRAISON', '🏁 ' + hm(et.fin) + (et.finEstimee ? ' (fin estimée)' : ''))}</div></button>`;
+          return lienPlan + `<button class="mission${clsPlat(m.platform)}" data-plan="${ip}" data-etape="${ie}"><div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${et.acceptee ? ' <span class="etiq ok">déjà acceptée</span>' : ''}</span><span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div><div class="net">net ≈ ${esc(euros(et.net))}</div></span></div><div class="trajet">${trajetHtml(m)}</div><div class="meta">${agendaDateBlocks(m,{t:et.fin,estimee:et.finEstimee},et.debut)}</div></button>`;
         }).join('');
         const dort = ij < tous.length - 1 && nuit < pl.nuits ? `${(pl.nuitsLiaison || [])[nuit] && pl.nuitsLiaison[nuit].km >= 2 ? bk('bkTr', '🚆 EN SOIRÉE', '<b>' + esc(pl.nuitsLiaison[nuit].depuis) + ' → ' + esc(pl.nuitsLiaison[nuit].soir ? 'Domicile' : pl.lieuxNuits[nuit]) + '</b><br>≈ ' + esc(Math.round((pl.nuitsLiaison[nuit].soir || pl.nuitsLiaison[nuit]).km)) + ' km · ' + esc(duree((pl.nuitsLiaison[nuit].soir || pl.nuitsLiaison[nuit]).heures)) + ' · ' + esc(euros((pl.nuitsLiaison[nuit].soir || pl.nuitsLiaison[nuit]).cout))) : ''}<div class="bk bkC bkSuite nuit"><div class="bkt">🌙 NUIT</div>${(() => { const nd = (pl.nuitsDom || [])[nuit]; const vl = pl.lieuxNuits[nuit++]; return nd && nd.domicile ? 'Nuit à ton domicile' + (nd.km != null && nd.km >= nd.seuil * 0.6 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km par la route)</span>' : '') : 'Nuit à ' + esc(vl) + (nd && nd.km != null && nd.km < nd.seuil * 1.4 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km du domicile)</span>' : ''); })()}${pl.coutHotel > 0 ? ' (hôtel ≈ ' + esc(euros(pl.coutHotel / pl.nuits)) + ')' : ''}</div>` : '';
         return `<div class="jour">${esc(new Date(j.t).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris' }))}</div>${lignes}${dort}`;
@@ -1678,7 +1735,7 @@
       ${dv && !dv.accepte && m.kind !== 'acceptee' ? `<div style="background:#ffe8a3;color:#222;border-radius:8px;padding:6px 10px;margin:6px 0;font-weight:600">📝 Devis proposé · n° ${esc(dv.n)} (envoyé, en attente)${dv.total != null ? ' · total ' + esc(euros(dv.total)) : ''}</div>` : ''}
       ${m.kind === 'acceptee' ? '<button id="btnRetirer" class="second" type="button">🚫 Pas acceptée : retirer de l’Agenda</button>' : ''}
       ${lienDevis(m) ? `<a href="${esc(lienAppliHiflow() || lienDevis(m))}"${lienAppliHiflow() ? '' : ' target="_blank" rel="noopener"'} id="lienDevis" data-numero="${esc(m.external_id)}"><button style="width:100%;margin:4px 0 2px">📱 Faire le devis dans l’application Hiflow</button></a><p class="doux" style="margin:0 0 8px">Mission n° <b>${esc(m.external_id)}</b> (copié en touchant le bouton) · ${esc(trajet(m))}</p>` : ''}
-      ${bkDates(m, hfDates(m) ? fmtDate(hfLiv(m)) : ((m.delivery_start || m.delivery_end || dMail(m)) ? fmtDate(m.delivery_start || m.delivery_end) : ''))}
+      ${m.kind === 'acceptee' ? agendaDateBlocks(m) : bkDates(m, arriveeTxt(m))}
       ${vehHtml(m)}${repriseHtml(m)}${plaqueW(m)}${compHtml(m)}
       ${blocKm(m, false)}
       <button id="btnVol" class="btnVert" type="button" aria-label="Visualisation trajet voiture">🚗 Visualisation trajet voiture</button>
@@ -1716,6 +1773,14 @@
       bt.setAttribute('aria-controls', panel.id);
       bt.setAttribute('aria-expanded', 'true');
       try {
+      // Use the same confirmed Hiflow schedule as the mission header; read only.
+      const timing = missionTiming(m);
+      const transportPickup = timing.pickup;
+      const transportPlanKey = timing.key;
+      const transportPlannedReturn = timing.planned;
+      const transportFinish = RT.fin(missionForPlanning(m));
+      const transportDelivery = transportPlannedReturn ||
+        (transportFinish ? new Date(transportFinish.t).toISOString() : null);
       const home = etat.reglages && (etat.reglages.domicile_adresse ||
         etat.reglages.adresse_domicile || etat.reglages.domicile_ville);
       const locationText = (address, city, department) => {
@@ -1758,7 +1823,7 @@
         typeof window.CPRegionalRouting?.supportsPublic === 'function';
       const y51FeedStatus = 'Source horaire Y51 non chargée dans cette fiche : départs non confirmés.';
       const y51ServiceDay = (() => {
-        const d = new Date(m.delivery_end || m.delivery_start || '');
+        const d = new Date(transportDelivery || m.delivery_start || '');
         if (!Number.isFinite(d.getTime())) return '';
         const parts = new Intl.DateTimeFormat('en-GB', {
           timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
@@ -1785,7 +1850,7 @@
         'Le service de 11 h 48 à École Saint-François n’est pas validé pour cette date et ce type de jour. Vérifier la grille applicable.';
       const y51WalkingWindow = (() => {
         if (!y51ScheduleApplies) return '';
-        const end = new Date(m.delivery_end || '');
+        const end = new Date(transportDelivery || '');
         if (!Number.isFinite(end.getTime())) return 'Heure de fin de livraison absente : temps d’approche impossible à calculer.';
         const parts = new Intl.DateTimeFormat('en-GB', {
           timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
@@ -1804,9 +1869,9 @@
       const y51CheckDate = y51ServiceDay ?
         'Date de service à vérifier : ' + y51ServiceDay + ' (heure locale Europe/Paris).' :
         'Date de livraison absente : impossible de choisir le bon calendrier de circulation.';
-      const endTime = Date.parse(m.delivery_end || ''); // Une heure de début de livraison n'est pas une heure de fin.
-      const next = Number.isFinite(endTime) ? (Array.isArray(etat.missions) ? etat.missions : [])
-        .filter(x => x && x !== m && (x.kind === 'acceptee' || x.status === 'acceptee') &&
+      const endTime = Date.parse(transportDelivery || ''); // Une heure de début de livraison n'est pas une heure de fin.
+      const next = Number.isFinite(endTime) ? planningMissions()
+        .filter(x => x && RT.cle(x) !== RT.cle(m) && (x.kind === 'acceptee' || x.status === 'acceptee') &&
           !['annulee', 'cancelled', 'canceled', 'refusee'].includes(String(x.status || '').toLowerCase()) &&
           Number.isFinite(Date.parse(x.pickup_start || '')) &&
           Date.parse(x.pickup_start) > endTime)
@@ -1821,9 +1886,9 @@
       };
       const nextGapMin = next ? Math.floor((Date.parse(next.pickup_start) - endTime) / 60000) : null;
       const securityMarginMin = 30;
-      const pickupDate = Number.isFinite(Date.parse(m.pickup_start || '')) ? m.pickup_start : null;
-      const deliveryDate = Number.isFinite(Date.parse(m.delivery_end || '')) ?
-        m.delivery_end : null;
+      const pickupDate = Number.isFinite(Date.parse(transportPickup || '')) ? transportPickup : null;
+      const deliveryDate = Number.isFinite(Date.parse(transportDelivery || '')) ?
+        transportDelivery : null;
       const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
       const connectionStatus = nextGapMin == null ? '' :
         connectionBudgetMin <= 0 ?
@@ -1838,12 +1903,12 @@
         esc(home || 'Domicile non renseigné') + ' → ' + esc(from || 'Départ non renseigné') +
         '</div><div class="doux">Prise en charge : ' + esc(formatParis(pickupDate)) +
         ' · avance souhaitée : 30 à 45 min.</div>' +
-        directions(home, from, m.pickup_start) + '</div>' +
+        directions(home, from, transportPickup) + '</div>' +
         '<div style="margin-top:12px"><strong>2. Jonction vers la prochaine mission</strong><div>' +
         (next ? esc((to || 'Livraison non renseignée') + ' → ' +
           (nextOrigin || 'Départ suivant non renseigné')) +
           '</div><div class="doux">Livraison prévue : ' +
-          esc(formatParis(m.delivery_end || m.delivery_start)) +
+          esc(formatParis(transportDelivery || m.delivery_start)) +
           ' · prochaine prise en charge : ' + esc(formatParis(next.pickup_start)) +
           ' · intervalle brut : ' + esc(String(nextGapMin)) +
           ' min (avant marge et trajet d’approche).</div>' +
@@ -1853,9 +1918,9 @@
         '<div style="margin-top:12px"><strong>3. Retour au domicile</strong><div>' +
         esc(to || 'Livraison non renseignée') + ' → ' +
         esc(home || 'Domicile non renseigné') + '</div>' +
-        '<div class="doux">Livraison : ' + esc(formatParis(deliveryDate)) +
+        '<div class="doux">' + (transportPlannedReturn ? 'Livraison prévue pour ce calcul : ' : 'Livraison estimée pour ce calcul (à confirmer) : ') + esc(formatParis(deliveryDate)) +
         ' · prévoir la marche jusqu’à l’arrêt.</div>' +
-        directions(to, home, m.delivery_end || m.delivery_start) +
+        directions(to, home, transportDelivery || m.delivery_start) +
         (/albertville/i.test(String(to || '')) ?
           '<div class="doux" style="margin-top:8px">🚌 Retour Y51 Albertville → Annecy : ' +
           '<a href="https://annecy.transdev.com/line/ligne-y51/" target="_blank" rel="noopener noreferrer">horaires officiels 2026–2027</a> · ' +
@@ -1876,10 +1941,62 @@
         '<p class="doux">Moteur régional : ' +
         (regionalEngineReady && regionalEndpointConfigured ?
           'adaptateur et adresse de service disponibles, itinéraires non encore calculés dans cette fiche.' :
-          regionalEngineReady ? 'adaptateur chargé, aucun serveur d’itinéraires régional configuré.' :
+          regionalEngineReady && regionalProviderReady ?
+          'Mobilités M disponible pour les trajets locaux du secteur Grenoble ; les trajets complets vers Annecy ou Ambérieu ne sont pas encore raccordés.' :
+          regionalEngineReady ? 'aucun fournisseur régional disponible.' :
           'adaptateur non chargé.') +
         ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
         '<p class="doux">Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
+      const planningBox = document.createElement('div');
+      planningBox.className = 'doux';
+      planningBox.style.marginTop = '10px';
+      const planningLabel = document.createElement('label');
+      planningLabel.textContent = 'Livraison prévue pour préparer le retour (heure de Paris)';
+      const planningInput = document.createElement('input');
+      planningInput.type = 'datetime-local';
+      planningInput.id = 'cpTransportPlannedReturn';
+      planningLabel.htmlFor = planningInput.id;
+      const planningButton = document.createElement('button');
+      planningButton.type = 'button';
+      planningButton.className = 'second';
+      planningButton.textContent = 'Calculer avec cette livraison prévue';
+      const planningStatus = document.createElement('p');
+      planningStatus.setAttribute('role','status');
+      planningStatus.textContent = 'La date limite de la plateforme reste inchangée. Ce choix est conservé uniquement pendant cette session.';
+      planningBox.appendChild(planningLabel);
+      planningBox.appendChild(planningInput);
+      planningBox.appendChild(planningButton);
+      planningBox.appendChild(planningStatus);
+      refreshPlanValue();
+      function refreshPlanValue() {
+        if (!transportPlannedReturn) return;
+        const p = Object.fromEntries(new Intl.DateTimeFormat('sv-SE', {
+          timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
+          hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+        }).formatToParts(new Date(transportPlannedReturn)).map(part => [part.type,part.value]));
+        planningInput.value = p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute;
+      }
+      planningButton.onclick = () => {
+        const chosen = transportParisDate(planningInput.value);
+        if (!chosen || !m.platform || m.external_id == null ||
+            !Number.isFinite(Date.parse(transportPickup || '')) ||
+            Date.parse(chosen) < Date.parse(transportPickup)) {
+          planningStatus.textContent = 'Indiquer une date et une heure valides après la prise en charge. Une heure ambiguë au changement d’heure doit être évitée.';
+          return;
+        }
+        if (timing.deadline && Number.isFinite(Date.parse(timing.deadline)) &&
+            Date.parse(chosen) > Date.parse(timing.deadline)) {
+          planningStatus.textContent = 'Cette livraison prévue dépasse la date limite de la plateforme.';
+          return;
+        }
+        if (transportReturnPlans.size >= 64) transportReturnPlans.delete(transportReturnPlans.keys().next().value);
+        transportReturnPlans.set(transportPlanKey,chosen);
+        etat.planResultat = null;
+        if (etat.onglet === 'agenda') vueAgenda();
+        panel.remove();
+        bt.click();
+      };
+      panel.appendChild(planningBox);
       // Allow an explicit fresh check when mobile connectivity has recovered.
       // Reopen the existing transport panel so all date-scoped searches are rerun.
       const refreshTransport = document.createElement('button');
@@ -1912,7 +2029,7 @@
         const swissFrom = G.coordonnees(m, 'destination');
         const swissTo = G.coordonnees(next, 'origin');
         const nextPickupMs = Date.parse(next.pickup_start);
-        if (swissFrom?.precision === 'gps' && swissTo?.precision === 'gps' &&
+        if (transportAddressPoint(swissFrom) && transportAddressPoint(swissTo) &&
             Number.isFinite(nextPickupMs) && nextPickupMs > Date.parse(deliveryDate)) {
           const swissStatus = document.createElement('div');
           swissStatus.className = 'doux';
@@ -1959,7 +2076,7 @@
       if (regionalEngineReady && regionalProviderReady && next && deliveryDate) {
         const finishGps = G.coordonnees(m, 'destination');
         const nextGps = G.coordonnees(next, 'origin');
-        if (finishGps?.precision === 'gps' && nextGps?.precision === 'gps' &&
+        if (transportAddressPoint(finishGps) && transportAddressPoint(nextGps) &&
             regionalPointsReady({lat:finishGps.lat,lon:finishGps.lng},{lat:nextGps.lat,lon:nextGps.lng})) {
           const regionalStatus = document.createElement('div');
           regionalStatus.className = 'doux';
@@ -2037,7 +2154,7 @@
         };
         if (homeReady && pickupDate && Number.isFinite(Date.parse(pickupDate))) {
           const pickupGps = G.coordonnees(m,'origin');
-          if (pickupGps?.precision === 'gps') {
+          if (transportAddressPoint(pickupGps)) {
             const limit = Date.parse(pickupDate) - securityMarginMin * 60000;
             swissSuggestions('Aller',{lat:homeLat,lon:homeLon},
               {lat:pickupGps.lat,lon:pickupGps.lng},new Date(limit).toISOString(),true,
@@ -2047,7 +2164,7 @@
         }
         if (homeReady && deliveryDate && Number.isFinite(Date.parse(deliveryDate))) {
           const finishGps = G.coordonnees(m,'destination');
-          if (finishGps?.precision === 'gps') {
+          if (transportAddressPoint(finishGps)) {
             const earliest = Date.parse(deliveryDate);
             swissSuggestions('Retour',{lat:finishGps.lat,lon:finishGps.lng},
               {lat:homeLat,lon:homeLon},deliveryDate,false,
@@ -2065,7 +2182,7 @@
         const homeGpsReady = etat.reglages?.domicile_lat != null &&
           etat.reglages?.domicile_lng != null &&
           window.CPRegionalRouting.validPoint({lat:homeLat,lon:homeLon});
-        if (finishGps?.precision === 'gps' && homeGpsReady &&
+        if (transportAddressPoint(finishGps) && homeGpsReady &&
             regionalPointsReady({lat:finishGps.lat,lon:finishGps.lng},{lat:homeLat,lon:homeLon})) {
           const returnStatus = document.createElement('div');
           returnStatus.className = 'doux';
@@ -2112,7 +2229,7 @@
         const homeGpsReady = etat.reglages?.domicile_lat != null &&
           etat.reglages?.domicile_lng != null &&
           window.CPRegionalRouting.validPoint({lat:homeLat,lon:homeLon});
-        if (pickupGps?.precision === 'gps' && homeGpsReady &&
+        if (transportAddressPoint(pickupGps) && homeGpsReady &&
             regionalPointsReady({lat:homeLat,lon:homeLon},{lat:pickupGps.lat,lon:pickupGps.lng})) {
           const outboundStatus = document.createElement('div');
           outboundStatus.className = 'doux';
@@ -2155,7 +2272,7 @@
       }
       // Statut réel du fichier GTFS quotidien : ne pas annoncer de trajets sans données.
       if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
-        const daySource = m.delivery_end || m.delivery_start || m.pickup_start;
+        const daySource = transportDelivery || m.delivery_start || transportPickup;
         const dayDate = new Date(daySource || '');
         if (Number.isFinite(dayDate.getTime())) {
           const dayParts = new Intl.DateTimeFormat('en-GB', {
@@ -2190,7 +2307,7 @@
               outbound.className = 'doux';
               outbound.style.marginTop = '8px';
               outbound.setAttribute('role', 'status');
-              const pickupMs = Date.parse(m.pickup_start || '');
+              const pickupMs = Date.parse(transportPickup || '');
               const pickupDay = Number.isFinite(pickupMs) ? (() => {
                 const p = new Intl.DateTimeFormat('en-GB', {
                   timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
@@ -2203,7 +2320,7 @@
                 Promise.resolve(result);
               pickupFeed.then(pickupResult => {
               if (!status.isConnected) return;
-              if (pickupGps?.precision === 'gps' && homeKnown &&
+              if (transportAddressPoint(pickupGps) && homeKnown &&
                   pickupResult?.usable && Number.isFinite(pickupMs)) {
                 const p = new Intl.DateTimeFormat('en-GB', {
                   timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit',
@@ -2245,7 +2362,7 @@
                 outbound.textContent = pickupDay && !pickupResult?.usable ?
                   'Aller SIBRA ' + pickupDay +
                   ' : fichier horaire du jour de prise en charge indisponible. Transport non confirmé — vérifiez vous-même.' :
-                  'Aller SIBRA automatique indisponible : GPS précis du départ, ville du domicile ou heure de prise en charge manquants.';
+                  'Aller SIBRA automatique indisponible : point de départ précis (adresse ou GPS), coordonnées du domicile ou heure de prise en charge indisponibles. Un repère de rue seul ne suffit pas.';
               }
               if (status.isConnected) status.insertAdjacentElement('afterend', outbound);
               }).catch(() => {
@@ -2271,7 +2388,7 @@
               ret.className = 'doux';
               ret.style.marginTop = '8px';
               ret.setAttribute('role', 'status');
-              if (deliveryGps?.precision === 'gps' && homeKnown) {
+              if (transportAddressPoint(deliveryGps) && homeKnown) {
                 const parts = new Intl.DateTimeFormat('en-GB', {
                   timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit',
                   hourCycle: 'h23'
@@ -2309,7 +2426,7 @@
                     '. Même arrêt GTFS pour le changement, domicile exact, marche et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                     'Retour SIBRA : aucune course directe ou avec 1 correspondance trouvée vers le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.');
               } else {
-                ret.textContent = 'Retour SIBRA automatique indisponible : GPS exact de livraison ou ville du domicile non renseigné.';
+                ret.textContent = 'Retour SIBRA automatique indisponible : point de livraison précis (adresse ou GPS) ou coordonnées du domicile indisponibles.';
               }
               if (status.isConnected) status.insertAdjacentElement('afterend', ret);
             }
@@ -2330,7 +2447,7 @@
               auto.className = 'doux';
               auto.setAttribute('role', 'status');
               auto.style.marginTop = '8px';
-              if (startCoords?.precision === 'gps' && endCoords?.precision === 'gps' &&
+              if (transportAddressPoint(startCoords) && transportAddressPoint(endCoords) &&
                   y51ServiceDay === (() => { const d = new Date(next.pickup_start); return Number.isFinite(d.getTime()) ? (() => { const p = new Intl.DateTimeFormat('en-GB', {timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d); const v = k => p.find(x => x.type === k)?.value || ''; return v('year') + '-' + v('month') + '-' + v('day'); })() : ''; })() &&
                   [startLat, startLon, endLat, endLon].every(Number.isFinite) &&
                   Math.abs(startLat) <= 90 && Math.abs(endLat) <= 90 &&
@@ -2528,7 +2645,7 @@
             return;
           }
           try { if (walkCacheKey) window.localStorage.setItem(walkCacheKey, String(n)); } catch (_) {}
-          const delivery = new Date(m.delivery_end || m.delivery_start || '');
+          const delivery = new Date(transportDelivery || m.delivery_start || '');
           if (!Number.isFinite(delivery.getTime())) {
             result.textContent = 'Livraison sans horaire : comparaison impossible.';
             return;
@@ -2562,7 +2679,7 @@
             result.textContent = 'Écart supérieur à 12 h : vérifier la date réelle de livraison avant de calculer le Y51.';
             return;
           }
-          if (!m.delivery_end && !actualMatch) {
+          if (!transportDelivery && !actualMatch) {
             result.textContent = 'Heure de fin de livraison non renseignée : saisir l’heure réelle pour calculer la correspondance. ' +
               'L’heure de début de livraison ne peut pas servir d’heure de fin.';
             return;
