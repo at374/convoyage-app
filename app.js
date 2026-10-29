@@ -1954,6 +1954,7 @@
       planningLabel.textContent = 'Livraison prévue pour préparer le retour (heure de Paris)';
       const planningInput = document.createElement('input');
       planningInput.type = 'datetime-local';
+      planningInput.required = true;
       planningInput.id = 'cpTransportPlannedReturn';
       planningLabel.htmlFor = planningInput.id;
       const planningButton = document.createElement('button');
@@ -1962,7 +1963,12 @@
       planningButton.textContent = 'Calculer avec cette livraison prévue';
       const planningStatus = document.createElement('p');
       planningStatus.setAttribute('role','status');
-      planningStatus.textContent = 'La date limite de la plateforme reste inchangée. Ce choix est conservé uniquement pendant cette session.';
+      planningStatus.setAttribute('aria-live','polite');
+      planningStatus.dataset.planningFeedback = 'true';
+      planningStatus.textContent = transportPlannedReturn ?
+        'Livraison prévue prise en compte : ' + formatParis(transportPlannedReturn) +
+        '. Agenda et recherches utilisent cet horaire. Les résultats disponibles apparaissent ci-dessous ; un trajet non raccordé ne peut pas être calculé.' :
+        'Indique la date et l’heure prévues de livraison pour recalculer. La date limite reste inchangée. Ce choix est conservé uniquement pendant cette session.';
       planningBox.appendChild(planningLabel);
       planningBox.appendChild(planningInput);
       planningBox.appendChild(planningButton);
@@ -1976,25 +1982,46 @@
         }).formatToParts(new Date(transportPlannedReturn)).map(part => [part.type,part.value]));
         planningInput.value = p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute;
       }
+      const planningError = message => {
+        planningStatus.textContent = message;
+        planningStatus.setAttribute('role','alert');
+        planningInput.focus();
+        planningStatus.scrollIntoView({behavior:'smooth',block:'nearest'});
+      };
       planningButton.onclick = () => {
         const chosen = transportParisDate(planningInput.value);
         if (!chosen || !m.platform || m.external_id == null ||
             !Number.isFinite(Date.parse(transportPickup || '')) ||
             Date.parse(chosen) < Date.parse(transportPickup)) {
-          planningStatus.textContent = 'Indiquer une date et une heure valides après la prise en charge. Une heure ambiguë au changement d’heure doit être évitée.';
+          planningError('Indiquer une date et une heure valides après la prise en charge. Une heure ambiguë au changement d’heure doit être évitée.');
           return;
         }
         if (timing.deadline && Number.isFinite(Date.parse(timing.deadline)) &&
             Date.parse(chosen) > Date.parse(timing.deadline)) {
-          planningStatus.textContent = 'Cette livraison prévue dépasse la date limite de la plateforme.';
+          planningError('Cette livraison prévue dépasse la date limite de la plateforme.');
           return;
         }
         if (transportReturnPlans.size >= 64) transportReturnPlans.delete(transportReturnPlans.keys().next().value);
         transportReturnPlans.set(transportPlanKey,chosen);
         etat.planResultat = null;
-        if (etat.onglet === 'agenda') vueAgenda();
-        panel.remove();
-        bt.click();
+        planningButton.disabled = true;
+        planningStatus.textContent = 'Livraison prévue prise en compte. Actualisation des informations…';
+        try {
+          if (etat.onglet === 'agenda') vueAgenda();
+          // Rebuild the visible mission header too, rather than clicking its old button.
+          detail(timing.original, depuis);
+          const updatedButton = $('btnTransportsMission');
+          if (!updatedButton) throw new Error('Bouton transports indisponible');
+          updatedButton.dataset.transportRefreshAt = String(Date.now());
+          updatedButton.click();
+          const feedback = $('cpTransportMissionDetails')?.querySelector('[data-planning-feedback]');
+          if (feedback) feedback.scrollIntoView({behavior:'smooth',block:'center'});
+          toast('Livraison prévue prise en compte : ' + formatParis(chosen));
+        } catch (_) {
+          planningButton.disabled = false;
+          planningError('Livraison prévue retenue, mais affichage non actualisé. Ferme puis rouvre la fiche pour réessayer.');
+          toast('Affichage des transports non actualisé. Ferme puis rouvre la fiche.');
+        }
       };
       panel.appendChild(planningBox);
       // Allow an explicit fresh check when mobile connectivity has recovered.

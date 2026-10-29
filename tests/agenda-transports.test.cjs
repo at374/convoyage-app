@@ -903,3 +903,46 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(JSON.stringify([a,b]),before);
   assert.equal(vm.runInContext('missionTiming(m).deadline',context),a.delivery_end);
 }
+
+// Planned-return button feedback and failure regression.
+{
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const app=fs.readFileSync(require('node:path').join(__dirname,'..','app.js'),'utf8');
+const helper=app.slice(app.indexOf('  const transportReturnPlans'),app.indexOf('  const transportAddressPoint'));
+const form=app.slice(app.indexOf('      const planningBox ='),app.indexOf('      // Allow an explicit fresh check'));
+class Element {constructor(){this.children=[];this.style={};this.dataset={};this.value='';this.scrolled=false;}appendChild(x){this.children.push(x);}setAttribute(){}remove(){this.removed=true;}focus(){this.focused=true;}scrollIntoView(){this.scrolled=true;}}
+function setup(mode='agenda'){
+ const m={platform:'Hiflow',external_id:'test',delivery_end:'2026-11-02T10:30:00+01:00'};
+ const panel=new Element(),newButton={dataset:{},click(){calls.push('newButton');}},feedback=new Element();
+ const calls=[];
+ const context={Intl,Date,Map,m,panel,timing:{original:m,deadline:m.delivery_end},etat:{onglet:mode},depuis:null,
+  document:{createElement:()=>new Element()},bt:{click(){throw Error('Old button must not be reused');}},
+  transportPlanKey:'["Hiflow","test"]',transportPlannedReturn:null,transportPickup:'2026-10-30T12:00:00+01:00',
+  formatParis:x=>new Date(x).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}),
+  vueAgenda(){calls.push('agenda');if(context.breakAgenda)throw Error('render failed');},
+  detail(source){assert.equal(source,m);calls.push('detail');},
+  $(id){if(id==='btnTransportsMission')return newButton;if(id==='cpTransportMissionDetails')return {querySelector:()=>feedback};},
+  toast(message){calls.push(message);}};
+ vm.createContext(context);vm.runInContext(helper+form,context);
+ return {context,calls,m,feedback,newButton};
+}
+const {context,calls,m,feedback,newButton}=setup();const before=JSON.stringify(m);
+vm.runInContext("planningInput.value='2026-10-30T13:30';planningButton.onclick();",context);
+assert.equal(vm.runInContext('transportReturnPlans.get(transportPlanKey)',context),'2026-10-30T12:30:00.000Z');
+assert.deepEqual(calls.slice(0,3),['agenda','detail','newButton']);
+assert(calls.at(-1).includes('Livraison prévue prise en compte'));assert(feedback.scrolled);assert(newButton.dataset.transportRefreshAt);
+assert.equal(JSON.stringify(m),before);
+for(const value of ['2026-10-30T11:59','2026-11-03T13:30','2026-02-30T13:30','']){
+ const result=setup();vm.runInContext(`planningInput.value=${JSON.stringify(value)};planningButton.onclick();`,result.context);
+ assert.equal(result.calls.length,0);assert(vm.runInContext('planningInput.focused && planningStatus.scrolled',result.context));
+}
+const broken=setup();broken.context.breakAgenda=true;
+vm.runInContext("planningInput.value='2026-10-30T13:30';planningButton.onclick();",broken.context);
+assert(vm.runInContext("planningStatus.textContent.includes('affichage non actualisé')",broken.context));
+assert.equal(vm.runInContext('planningButton.disabled',broken.context),false);
+assert.equal(vm.runInContext("transportParisDate('2026-03-29T02:30')",context),null);
+assert.equal(vm.runInContext("transportParisDate('2026-10-25T02:30')",context),null);
+assert.equal(vm.runInContext("transportParisDate('2026-07-30T13:30')",context),'2026-07-30T11:30:00.000Z');
+console.log('PASS: Agenda click refreshes visible mission, uses new button, confirms chosen time, focuses validation errors, reports render failure, preserves deadline and handles DST');
+
+}
