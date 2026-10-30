@@ -60,7 +60,8 @@ function crossNetworkTrips(feeds,date,origin,destination,window,{
    for(const peer of nearby){
     const second=b.second.get(peer.stopId)||[];
     for(const x of first){
-     const earliest=Date.parse(x.arrival)+minTransferMinutes*60000;
+     const minimumWalkMinutes=Math.ceil(peer.distanceMeters/60); // Lower-bound estimate, not a verified walking route.
+     const earliest=Date.parse(x.arrival)+Math.max(minTransferMinutes,minimumWalkMinutes)*60000;
      let low=0,high=second.length;
      while(low<high){const mid=(low+high)>>>1;if(Date.parse(second[mid].departure)<earliest)low=mid+1;else high=mid;}
      for(let i=low;i<second.length;i++){
