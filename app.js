@@ -388,7 +388,7 @@
   let gpsOccupe = false, gpsTimer = null;
   function planifierGps() { if (gpsTimer || gpsOccupe) return; gpsTimer = setTimeout(async () => { gpsTimer = null; gpsOccupe = true; let n = 0, nb = 0;
     try { for (const m of etat.missions.slice(0, 400)) for (const cote of ['origin', 'destination']) { if (nb >= 25) break; const cle = G.cleAdresse(m, cote); if (!cle || G.POINTS[cle] || (gpsMem.rate[cle] && Date.now() - gpsMem.rate[cle] < 864e5)) continue; const c0 = m[cote]; if (c0 && Number.isFinite(Number(c0.lat)) && Number(c0.lat) !== 0) continue; nb++;
-      try { const r = await G.chercherPoint(m, cote, u => fetch(u)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } else gpsMem.rate[cle] = Date.now(); } catch (_) { gpsMem.rate[cle] = Date.now(); } }
+      try { const r = await G.chercherPoint(m, cote, (u,o) => fetch(u,o)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } else gpsMem.rate[cle] = Date.now(); } catch (_) { gpsMem.rate[cle] = Date.now(); } }
     } finally { gpsOccupe = false; ecrireLocal('cp_gps', gpsMem); if (n) listeMissions(); } }, 1500); }
   const mentionGps = (m, cote) => { const c = G.coordonnees(m, cote); const t = !c ? ['⚠️', 'aucun point GPS (lieu inconnu)'] : c.precision === 'gps' ? ['📍', 'point GPS exact (donné par la plateforme)'] : c.precision === 'adresse' ? ['📍', 'point GPS de l’adresse (vérifié)'] : c.precision === 'rue' ? ['📍', 'point GPS de la rue (vérifié)'] : c.precision === 'ville' ? ['📌', 'approximatif : centre de la ville'] : ['📌', 'approximatif : centre du département']; return `<span class="doux gpsInfo">${t[0]} ${esc(t[1])}</span>`; };
   // V138 : fenêtre « trajet à vol d'oiseau » : schéma départ → arrivée (sans fond de carte, rien n'est téléchargé), distance à vol d'oiseau et route estimée.
@@ -451,7 +451,24 @@
     pointsMission(m).catch(() => { }).finally(() => rendre().catch(() => { const x = document.getElementById('popVol'); const p = x && Array.from(x.querySelectorAll('p')).find(q => /Calcul des deux/.test(q.textContent)); if (p) p.textContent = 'Le calcul du trajet a échoué sur ce téléphone. Referme et réessaie.'; }));
   }
   // Cherche tout de suite (sans attendre la liste) les points GPS des deux bouts d'UNE mission ; renvoie vrai si un nouveau point a été trouvé.
-  async function pointsMission(m) { let n = 0; for (const cote of ['origin', 'destination']) { const cle = G.cleAdresse(m, cote); if (!cle || G.POINTS[cle]) continue; try { const r = await G.chercherPoint(m, cote, u => fetch(u)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } } catch (_) {} } if (n) ecrireLocal('cp_gps', gpsMem); return n > 0; }
+  async function pointTransportMission(m,cote) {
+    if (!m) return null;
+    const precise = () => {
+      const p=G.coordonnees(m,cote);
+      return transportAddressPoint(p)?{lat:Number(p.lat),lon:Number(p.lng)}:null;
+    };
+    const known=precise();if(known)return known;
+    const cle=G.cleAdresse(m,cote);if(!cle)return null;
+    try {
+      const answer=await G.chercherPoint(m,cote,regionalFetch);
+      if(answer?.trouve){
+        G.POINTS[cle]=answer.point;gpsMem.pts[cle]=answer.point;
+        ecrireLocal('cp_gps',gpsMem);
+      }
+    }catch(_){}
+    return precise();
+  }
+  async function pointsMission(m) { let n = 0; for (const cote of ['origin', 'destination']) { const cle = G.cleAdresse(m, cote); if (!cle || G.POINTS[cle]) continue; try { const r = await G.chercherPoint(m, cote, (u,o) => fetch(u,o)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } } catch (_) {} } if (n) ecrireLocal('cp_gps', gpsMem); return n > 0; }
   function adresse(m, cote) {
     const a = m[cote + '_address'] || (m.mail_info && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'] && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'].adresse); if (a) return a;
     if (m.adresses_locales) return (cote === 'origin' ? m.from_city : m.to_city) ? (cote === 'origin' ? m.from_city : m.to_city) + (m[(cote === 'origin' ? 'from' : 'to') + '_department'] ? ' (' + m[(cote === 'origin' ? 'from' : 'to') + '_department'] + ')' : '') + ' — ' + LOCAL : LOCAL;
@@ -2061,6 +2078,9 @@
           home, origin:point(G.coordonnees(m,'origin')), destination:point(G.coordonnees(m,'destination')),
           nextOrigin:next ? point(G.coordonnees(next,'origin')) : null,
           pickup:pickupDate, delivery:deliveryDate, nextPickup:next?.pickup_start,
+          resolvePoint:name=>name==='origin'?pointTransportMission(m,'origin'):
+            name==='destination'?pointTransportMission(m,'destination'):
+            name==='nextOrigin'?pointTransportMission(next,'origin'):null,
           marginMinutes:securityMarginMin, refresh:!!bt.dataset.transportRefreshAt, fetcher:regionalFetch
         });
       }

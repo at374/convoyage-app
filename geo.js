@@ -156,7 +156,23 @@
   const POINTS = {};
   const adresseDe = (m, cote) => { const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to'; const a = String(m[cote + '_address'] || p.address || p.street || '').trim(), v = String(m[pre + '_city'] || p.city || '').trim(); const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim(); return { a, v, cp, d: m[pre + '_department'] || '' }; };
   const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? [x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
-  async function chercherPoint(m, cote, fetchFn) {
+  const recherchesAdresse = new Map();
+  function chercherPoint(m, cote, fetchFn, {timeoutMs=8000}={}) {
+    const cle=cleAdresse(m,cote);
+    if (!cle) return Promise.resolve(null);
+    if (recherchesAdresse.has(cle)) return recherchesAdresse.get(cle);
+    if (!Number.isFinite(timeoutMs)||timeoutMs<=0) return Promise.reject(new Error('Délai adresse invalide'));
+    const controller=new AbortController();let timer;
+    const deadline=new Promise((_,reject)=>{timer=setTimeout(()=>{
+      controller.abort();reject(new Error('Recherche adresse trop lente'));
+    },timeoutMs);});
+    const request=Promise.race([
+      chercherPointBrut(m,cote,(url)=>fetchFn(url,{signal:controller.signal,credentials:'omit'})),deadline
+    ]).finally(()=>{clearTimeout(timer);if(recherchesAdresse.get(cle)===request)recherchesAdresse.delete(cle);});
+    recherchesAdresse.set(cle,request);
+    return request;
+  }
+  async function chercherPointBrut(m, cote, fetchFn) {
     const cle = cleAdresse(m, cote); if (!cle) return null;
     const x = adresseDe(m, cote), txt = [x.a, x.v, x.d].join(' ');
     // V243 : pays limitrophes (Suisse, Italie, Espagne, Belgique, Allemagne, Luxembourg, Monaco, Andorre) : le service français ne les connaît pas → recherche de la commune par son nom.

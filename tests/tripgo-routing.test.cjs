@@ -84,7 +84,7 @@ test('network failures, quotas and timeouts produce no confirmed transport',asyn
   assert.equal(answer.status,'timeout');assert.deepEqual(answer.itineraries,[]);
 });
 
-test('panel launches three jobs concurrently and renders each independently as plain text',async()=>{
+function domHarness(){
   const fs=require('node:fs'),vm=require('node:vm');
   const stored=new Map();
   class Element {
@@ -97,7 +97,11 @@ test('panel launches three jobs concurrently and renders each independently as p
     localStorage:{getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v),removeItem:k=>stored.delete(k)}};
   sandbox.window=sandbox;
   vm.runInNewContext(fs.readFileSync(require.resolve('../tripgo-routing.js'),'utf8'),sandbox);
-  const api=sandbox.CPTripGo,settings=new Element('div');api.mountSettings(settings);
+  return {api:sandbox.CPTripGo,stored,Element};
+}
+test('panel launches three jobs concurrently and renders each independently as plain text',async()=>{
+  const {api,stored,Element}=domHarness();
+  const settings=new Element('div');api.mountSettings(settings);
   const card=settings.children[0],input=card.children.find(x=>x.type==='password');
   const choice=card.children.find(x=>x.children?.some(y=>y.type==='checkbox'));
   input.value='test-key-device-only';choice.children[0].checked=true;
@@ -128,4 +132,47 @@ test('panel launches three jobs concurrently and renders each independently as p
   assert.match(blocks[2].children[0].textContent,/1 proposition/);
   buttons.children[1].onclick();assert.equal(stored.has('cp_tripgo_device_key'),false);
   assert.equal(api.status().active,false);
+});
+
+test('late mission coordinates start each leg automatically without waiting for unrelated addresses',async()=>{
+  const {api,Element}=domHarness();api.configure('test-key-device-only');
+  const panel=new Element('div'),lookups=[],ready={},routes=[];
+  const context={home:{lat:45.9,lon:6.1},pickup:'2026-11-02T09:00:00+01:00',delivery:'2026-11-02T11:00:00+01:00',nextPickup:'2026-11-02T14:00:00+01:00',marginMinutes:30,
+    resolvePoint:name=>{lookups.push(name);return new Promise(resolve=>{ready[name]=resolve;});},
+    fetcher:async url=>{routes.push(new URL(url));return response({groups:[]});}};
+  api.mountPanel(panel,context);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.deepEqual(lookups.sort(),['destination','nextOrigin','origin']);assert.equal(routes.length,0);
+  ready.destination({lat:45.7,lon:6.3});await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(routes.length,1);assert.equal(routes[0].searchParams.get('from'),'(45.7,6.3)');
+  const blocks=panel.children[0].children.filter(x=>x.tagName==='div');
+  assert.match(blocks[0].children[0].textContent,/coordonnées/);
+  assert.match(blocks[2].children[0].textContent,/aucune proposition compatible/);
+  ready.nextOrigin({lat:45.6,lon:6.4});await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(routes.length,2);
+  ready.origin({lat:45.8,lon:6.2});await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(routes.length,3);assert.equal(routes[2].searchParams.has('arriveBefore'),true);
+  assert.equal(lookups.filter(name=>name==='destination').length,1);
+});
+test('failed or stalled coordinate resolution leaves other legs available and ends the loading state',async()=>{
+  for(const resolvePoint of [()=>Promise.reject(new Error('Offline')),()=>new Promise(()=>{})]){
+    const {api,Element}=domHarness();api.configure('test-key-device-only');
+    const panel=new Element('div');let calls=0;
+    api.mountPanel(panel,{home:{lat:45.9,lon:6.1},delivery:'2026-11-02T11:00:00+01:00',marginMinutes:30,pointTimeoutMs:5,resolvePoint,
+      fetcher:async()=>{calls++;return response({groups:[]});}});
+    await new Promise(resolve=>setTimeout(resolve,20));
+    const block=panel.children[0].children.find(x=>x.tagName==='div');
+    assert.match(block.children[0].textContent,/coordonnées précises indisponibles/);assert.equal(calls,0);
+  }
+});
+test('removing the key while coordinates load prevents a routing request',async()=>{
+  const {api,Element}=domHarness();api.configure('test-key-device-only');
+  const panel=new Element('div');let ready,calls=0;
+  api.mountPanel(panel,{home:{lat:45.9,lon:6.1},delivery:'2026-11-02T11:00:00+01:00',marginMinutes:30,
+    resolvePoint:()=>new Promise(resolve=>{ready=resolve;}),fetcher:async()=>{calls++;return response({groups:[]});}});
+  await new Promise(resolve=>setImmediate(resolve));api.configure('');
+  ready({lat:45.7,lon:6.3});await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(calls,0);
+  const block=panel.children[0].children.find(x=>x.tagName==='div');
+  assert.match(block.children[0].textContent,/interrompue/);
 });

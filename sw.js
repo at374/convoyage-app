@@ -1,7 +1,7 @@
 // Convoyage Ultra — service worker de l'application : met en cache l'interface (ouverture hors ligne).
 // Les données des missions ne passent jamais par ce cache (elles sont gardées par l'application).
-const CACHE = 'cp-app-tripgo-reviewed-20261030';
-const FICHIERS = ['./', 'index.html', 'style.css', 'app.js?v=tripgo-reviewed-20261030', 'tripgo-routing.js?v=tripgo-reviewed-20261030', 'sncf-fallback.js?v=sncf-fallback-20261030', 'api.js', 'calc.js', 'edition.js', 'geo.js?v=geoplateforme-20261030', 'retours.js', 'agenda.js', 'planning.js', 'filtres.js', 'facturation.js', 'etat.js', 'config.js', 'plateformes.js', 'routes-pricing.js', 'sibra-feed.js', 'sibra-planner.js', 'regional-routing.js?v=agenda-calculate-feedback-20261029', 'swiss-transport-api.js', 'routes-ui.js', 'admin.js', 'manifest.webmanifest', 'icones/icone-192.png', 'icones/icone-512.png'];
+const CACHE = 'cp-app-tripgo-auto-points-20261030';
+const FICHIERS = ['./', 'index.html', 'style.css', 'app.js?v=tripgo-auto-points-20261030', 'tripgo-routing.js?v=tripgo-auto-points-20261030', 'sncf-fallback.js?v=sncf-fallback-20261030', 'api.js', 'calc.js', 'edition.js', 'geo.js?v=geo-shared-lookups-20261030', 'retours.js', 'agenda.js', 'planning.js', 'filtres.js', 'facturation.js', 'etat.js', 'config.js', 'plateformes.js', 'routes-pricing.js', 'sibra-feed.js', 'sibra-planner.js', 'regional-routing.js?v=agenda-calculate-feedback-20261029', 'swiss-transport-api.js', 'routes-ui.js', 'admin.js', 'manifest.webmanifest', 'icones/icone-192.png', 'icones/icone-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHIERS.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== CACHE && x !== 'cp-prefs').map(x => caches.delete(x)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {

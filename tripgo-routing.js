@@ -168,21 +168,42 @@
     const title=d.createElement('strong');title.textContent='Transports — recherche complémentaire';section.append(title);
     container.append(section);
     if (!key) {const p=d.createElement('p');p.textContent='Active TripGo dans Paramètres pour compléter les recherches de transports.';section.append(p);return;}
+    const panelGeneration=generation,pointRequests=new Map();
+    const canResolve=typeof context.resolvePoint==='function';
+    const available=name=>validPoint(context[name])||canResolve;
+    const resolvePoint=name=>{
+      if(validPoint(context[name]))return Promise.resolve(context[name]);
+      if(!canResolve)return Promise.resolve(null);
+      if(!pointRequests.has(name)){
+        let timer;
+        const timeout=new Promise(resolve=>{timer=setTimeout(()=>resolve(null),context.pointTimeoutMs || 8500);});
+        const lookup=Promise.resolve().then(()=>context.resolvePoint(name)).catch(()=>null);
+        pointRequests.set(name,Promise.race([lookup,timeout]).finally(()=>clearTimeout(timer)));
+      }
+      return pointRequests.get(name);
+    };
     const jobs=[];
     const latest=instant(context.pickup)-context.marginMinutes*60000;
     const nextLatest=instant(context.nextPickup)-context.marginMinutes*60000;
-    if (validPoint(context.home) && validPoint(context.origin) && finite(latest))
-      jobs.push(['Aller',context.home,context.origin,null,new Date(latest).toISOString()]);
-    if (validPoint(context.destination) && validPoint(context.nextOrigin) && finite(instant(context.delivery)) && finite(nextLatest) && nextLatest>instant(context.delivery))
-      jobs.push(['Jonction mission',context.destination,context.nextOrigin,context.delivery,new Date(nextLatest).toISOString()]);
-    if (validPoint(context.destination) && validPoint(context.home) && finite(instant(context.delivery)))
-      jobs.push(['Retour',context.destination,context.home,context.delivery,null]);
+    if (available('home') && available('origin') && finite(latest))
+      jobs.push(['Aller','home','origin',null,new Date(latest).toISOString()]);
+    if (available('destination') && available('nextOrigin') && finite(instant(context.delivery)) && finite(nextLatest) && nextLatest>instant(context.delivery))
+      jobs.push(['Jonction mission','destination','nextOrigin',context.delivery,new Date(nextLatest).toISOString()]);
+    if (available('destination') && available('home') && finite(instant(context.delivery)))
+      jobs.push(['Retour','destination','home',context.delivery,null]);
     if (!jobs.length) {const p=d.createElement('p');p.textContent='Coordonnées ou horaires insuffisants pour une recherche TripGo.';section.append(p);return;}
     const note=d.createElement('p');note.textContent='Prix non communiqués : propositions classées par arrivée. Le point de domicile peut être le centre de ta ville. '+WARNING+'.';section.append(note);
-    for (const [label,from,to,departure,arrivalDeadline] of jobs) {
+    for (const [label,fromName,toName,departure,arrivalDeadline] of jobs) {
       const block=d.createElement('div'),status=d.createElement('p');status.setAttribute('role','status');
-      status.textContent=label+' : recherche TripGo…';block.append(status);section.append(block);
-      plan({from,to,departure,arrivalDeadline,refresh:context.refresh,fetcher:context.fetcher}).then(answer=>{
+      block.append(status);section.append(block);
+      const search=(from,to)=>{
+        if(!block.isConnected)return;
+        if(panelGeneration!==generation){status.textContent=label+' : recherche interrompue ou remplacée.';return;}
+        if(!validPoint(from)||!validPoint(to)){
+          status.textContent=label+' : coordonnées précises indisponibles. '+WARNING+'.';return;
+        }
+        status.textContent=label+' : recherche TripGo…';
+        plan({from,to,departure,arrivalDeadline,refresh:context.refresh,fetcher:context.fetcher}).then(answer=>{
         if (!block.isConnected) return;
         const messages={no_candidate:'aucune proposition compatible ; d’autres réseaux peuvent proposer un trajet.',
           access_denied:'clé refusée ; vérifier la clé dans Paramètres.',quota_reached:'quota atteint ; les autres calculateurs restent disponibles.',
@@ -206,7 +227,13 @@
         if (answer.updatedAt) {const stamp=d.createElement('p');stamp.textContent='Réponse du calculateur reçue le '+format(Date.parse(answer.updatedAt))+(answer.cached?' · cache de moins d’une minute':'');block.append(stamp);}
         const credits=d.createElement('p');credits.textContent='Powered by TripGo'+(answer.dataSources?.length?' · '+[...new Set(answer.dataSources.map(s=>s.name).filter(Boolean))].join(' · '):'');block.append(credits);
         for (const text of [...new Set((answer.dataSources || []).map(s=>s.disclaimer).filter(Boolean))]) {const credit=d.createElement('p');credit.textContent=text;block.append(credit);}
-      }).catch(()=>{if(block.isConnected)status.textContent=label+' : recherche indisponible. '+WARNING+'.';});
+        }).catch(()=>{if(block.isConnected)status.textContent=label+' : recherche indisponible. '+WARNING+'.';});
+      };
+      if(validPoint(context[fromName])&&validPoint(context[toName]))search(context[fromName],context[toName]);
+      else {
+        status.textContent=label+' : recherche des coordonnées de l’adresse…';
+        Promise.all([resolvePoint(fromName),resolvePoint(toName)]).then(([from,to])=>search(from,to));
+      }
     }
   }
   const api={configure,normalize,buildUrl,plan,mountSettings,mountPanel,
