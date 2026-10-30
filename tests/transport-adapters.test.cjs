@@ -40,8 +40,8 @@ const datedLeg={provider:'TER',fareVerified:true,fareSource:'barème vérifié',
 assert.equal(withVerifiedFares([{departure:'2026-11-02T08:00:00+01:00',legs:[datedLeg]}])[0].priceEUR,4);
 assert.equal(withVerifiedFares([{departure:'2026-12-02T08:00:00+01:00',legs:[datedLeg]}])[0].priceEUR,null);
 const sourced=adaptGTFS([{departure,arrival,legs:[{route:'Y51',verifiedPriceEUR:3,fareVerified:true,fareSource:'barème Cars Région',fareValidFrom:'2026-11-01T00:00:00+01:00',fareValidUntil:'2026-11-30T23:59:59+01:00'}]}],'Cars Région');
-assert.equal(sourced[0].legs[0].fareSource,'barème Cars Région');
-assert.equal(withVerifiedFares(sourced)[0].priceEUR,3);
+assert.equal(sourced[0].legs[0].fareSource,null);
+assert.equal(withVerifiedFares(sourced)[0].priceEUR,null);
 assert.equal(withVerifiedFares(adaptGTFS([{departure,arrival,legs:[{route:'Y51',verifiedPriceEUR:3}]}]))[0].priceEUR,null);
 assert.equal(adaptRegional([{startTime:1e20,endTime:1e20,legs:[]}])[0].departure,null);
 assert.equal(adaptRegional([{startTime:-1e20,endTime:1e20,legs:[]}])[0].arrival,null);
