@@ -96,6 +96,25 @@
       }))
     })),provider||'Régional');
   }
+  // Fare evidence is injected only after adapting untrusted schedule feeds.
+  // Each item must identify the itinerary, leg index and exact departure.
+  function applyFareEvidence(journeys,evidence=[]){
+    const records=Array.isArray(evidence)?evidence:[];
+    return (Array.isArray(journeys)?journeys:[]).map(journey=>({
+      ...journey,
+      legs:(Array.isArray(journey.legs)?journey.legs:[]).map((leg,index)=>{
+        const match=records.find(item=>item&&item.journeyId===journey.id&&
+          item.legIndex===index&&item.departure===leg.departure&&
+          item.provider===leg.provider&&item.line===leg.line&&
+          item.fareVerified===true&&typeof item.fareSource==='string'&&
+          item.fareSource.trim()&&Number.isFinite(item.verifiedPriceEUR)&&
+          item.verifiedPriceEUR>=0&&item.fareValidFrom&&item.fareValidUntil);
+        return match?{...leg,verifiedPriceEUR:match.verifiedPriceEUR,
+          fareVerified:true,fareSource:match.fareSource,
+          fareValidFrom:match.fareValidFrom,fareValidUntil:match.fareValidUntil}:leg;
+      })
+    }));
+  }
   function withVerifiedFares(journeys,options={}){
     const calculator=root.CPTransportFares;
     return (Array.isArray(journeys)?journeys:[]).map(journey=>{
@@ -106,7 +125,7 @@
         fareStatus:result.status,fareBreakdown:result.breakdown};
     });
   }
-  const api={adaptSNCF,adaptGTFS,adaptRegional,withVerifiedFares};
+  const api={adaptSNCF,adaptGTFS,adaptRegional,applyFareEvidence,withVerifiedFares};
   if(typeof module==='object'&&module.exports)module.exports=api;
   root.CPTransportAdapters=Object.assign(root.CPTransportAdapters||{},api);
 })(typeof window!=='undefined'?window:globalThis);
