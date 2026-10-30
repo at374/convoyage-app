@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict');
-const {parseCSV,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips,nearbyStops}=require('../transport-gtfs-index.js');
+const {parseCSV,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips,nearbyStops,nearbyDirectTrips}=require('../transport-gtfs-index.js');
 assert.deepEqual(parseCSV('id,name\n1,"Annecy, Gare"\n2,"Stop ""A"""\n'),[
  {id:'1',name:'Annecy, Gare'},{id:'2',name:'Stop "A"'}]);
 assert.deepEqual(parseCSV(''),[]);
@@ -64,4 +64,19 @@ assert.equal(close[0].stopId,'A');
 assert.equal(close[0].distanceMeters,0);
 assert.equal(close[0].accessVerified,false);
 assert.equal(nearbyStops(geo,999,6.122).length,0);
-console.log('GTFS index: 37 assertions passed');
+const doorFiles={
+ 'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nS1,Annecy,45.901,6.122\nS2,Albertville,45.675,6.390\n',
+ 'routes.txt':'route_id,route_short_name\nR1,Y51\n',
+ 'trips.txt':'route_id,service_id,trip_id\nR1,WK,T1\n',
+ 'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT1,10:30:00,10:30:00,S1,1\nT1,11:48:00,11:48:00,S2,2\n'
+};
+const doorIndex=buildIndex(doorFiles);
+const nearby=nearbyDirectTrips(calendar,doorIndex,'2026-10-29',
+ {lat:45.901,lon:6.122},{lat:45.675,lon:6.390});
+assert.equal(nearby.length,1);
+assert.equal(nearby[0].line,'Y51');
+assert.equal(nearby[0].accessVerified,false);
+assert.equal(nearby[0].serviceConfirmed,false);
+assert.equal(nearbyDirectTrips(calendar,doorIndex,'2026-10-30',
+ {lat:45.901,lon:6.122},{lat:45.675,lon:6.390}).length,0);
+console.log('GTFS index: 42 assertions passed');
