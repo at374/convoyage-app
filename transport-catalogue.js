@@ -38,6 +38,9 @@ async function downloadGTFS(resource,fetcher,limitBytes=20*1024*1024){
   if(!Number.isSafeInteger(limitBytes)||limitBytes<=0)throw new Error('Invalid size limit');
   const response=await fetcher(resource.url,{redirect:'follow'});
   if(!response?.ok)throw new Error('GTFS download failed');
+  if(response.url && !/^https:\/\//i.test(response.url))throw new Error('Insecure GTFS redirect');
+  const contentType=response.headers?.get?.('content-type')||'';
+  if(/text\/html/i.test(contentType))throw new Error('GTFS resource returned HTML');
   const declared=Number(response.headers?.get?.('content-length'));
   if(Number.isFinite(declared)&&declared>limitBytes)throw new Error('GTFS exceeds size limit');
   if(!response.body?.getReader)throw new Error('Streaming response required');
