@@ -31,5 +31,7 @@ assert.deepEqual(normalize(null),[]);
  await assert.rejects(downloadGTFS(resource,async()=>fakeResponse([1,2,3,4])),/not a ZIP/);
  await assert.rejects(downloadGTFS(resource,async()=>fakeResponse([80,75,3,4,0]),4),/size limit/);
  await assert.rejects(downloadGTFS({...resource,url:'http://example.org/feed.zip'},async()=>fakeResponse([])),/Invalid GTFS/);
- console.log('PAN catalogue: 18 assertions passed');
+ await assert.rejects(downloadGTFS(resource,async()=>({...fakeResponse([80,75,3,4,0]),url:'http://example.org/redirect.zip'})),/Insecure GTFS redirect/);
+ await assert.rejects(downloadGTFS(resource,async()=>({...fakeResponse([80,75,3,4,0]),headers:{get:()=> 'text/html'}})),/returned HTML/);
+ console.log('PAN catalogue: 20 assertions passed');
 })().catch(err=>{console.error(err);process.exitCode=1;});
