@@ -139,6 +139,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      for(const candidate of ordered){
       const key=JSON.stringify([candidate.networkId||candidate.network||'',candidate.line||'',
        candidate.interNetwork===true?'inter-network':'single-network',candidate.transferStopId||'',
+       candidate.interNetwork===true?candidate.legs?.map(leg=>[leg.networkId||leg.network||'',leg.tripId||'',leg.from,leg.to]):null,
        candidate.originStop?.stopId||candidate.from,candidate.destinationStop?.stopId||candidate.to,
        candidate.departure,candidate.arrival]);
       if(seenChoices.has(key))continue;
