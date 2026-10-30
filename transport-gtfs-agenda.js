@@ -22,7 +22,7 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
 })]);
 function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof point.lon==='number'&&
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}
-function selected(resource,task){
+function eligible(task){
  const bounds=resource?.bounds;
  return resource?.format==='GTFS'&&/^https:\/\//.test(resource.url||'')&&validPoint(task?.from)&&validPoint(task?.to)&&Array.isArray(bounds)&&bounds.length===4&&
  bounds.every(Number.isFinite)&&[task.from,task.to].every(p=>p.lat>=bounds[0]&&p.lat<=bounds[2]&&p.lon>=bounds[1]&&p.lon<=bounds[3]);
@@ -72,10 +72,13 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  let client=null,walker=null,disposed=false,observer=null;const walkChecks=[];
  const dispose=()=>{if(disposed)return;disposed=true;observer?.disconnect();client?.dispose();walker?.dispose();client=null;walker=null;};
  const taskList=Array.isArray(tasks)?tasks:[];
- const resource=(Array.isArray(resources)?resources:[]).find(r=>taskList.some(t=>selected(r,t)));
+ const resourceList=Array.isArray(resources)?resources:[];
+ const resource=resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
  if(!resource)return {dispose,done:Promise.resolve()};
- const partners=resources.filter(r=>r!==resource&&r.federate&&taskList.some(task=>selected(resource,task)&&
-  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to})))).slice(0,1);
+ const partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
+  crossEnvelopePair(resource,r,task)||(eligible(task)&&
+  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to}))))).slice(0,1);
+ const eligible=task=>selected(resource,task)||partners.some(r=>crossEnvelopePair(resource,r,task));
  const section=doc.createElement('div');section.className='bk';section.setAttribute('data-gtfs-agenda','');
  const heading=doc.createElement('h3');heading.textContent=resource.network+' — horaires aux arrêts';section.appendChild(heading);
  const sourceStatus=doc.createElement('p');sourceStatus.className='doux';sourceStatus.setAttribute('role','status');
@@ -93,14 +96,14 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  }
  const entries=taskList.map(task=>{
   const status=doc.createElement('div');status.className='doux';status.setAttribute('role','status');section.appendChild(status);
-  status.textContent=task.label+' : '+(selected(resource,task)?'recherche des horaires…':'coordonnées manquantes ou hors sélection de ce réseau.');
+  status.textContent=task.label+' : '+(eligible(task)?'recherche des horaires…':'coordonnées manquantes ou hors sélection de ce réseau.');
   return {task,status};
  });
  const done=(async()=>{
   try{
    client=clientFactory();
    const dates=new Set();
-   for(const task of taskList)if(selected(resource,task)){
+   for(const task of taskList)if(eligible(task)){
     try{for(const date of serviceDates(searchWindow(task),resource.timeZone))dates.add(date);}catch(_){}
    }
    if(!dates.size)throw new Error('No valid mission window');
@@ -111,7 +114,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
    const networks=Array.isArray(summary?.networks)?summary.networks:[summary],validNetwork=n=>n&&!n.error&&n.source&&Number.isFinite(Date.parse(n.source.loadedAt))&&n.counts&&Number.isInteger(n.counts.stops)&&n.counts.stops>=0,loaded=networks.filter(validNetwork);
    if(!loaded.length){
     sourceStatus.textContent='Flux GTFS indisponible : aucun réseau chargé. Transport non confirmé — vérifiez vous-même.';
-    for(const {task,status} of entries)if(selected(resource,task))status.textContent=task.label+' : horaires indisponibles (aucun réseau chargé).';
+    for(const {task,status} of entries)if(eligible(task))status.textContent=task.label+' : horaires indisponibles (aucun réseau chargé).';
     return;
    }
    source.href=loaded[0].source.url||resource.url;
@@ -128,7 +131,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
    }
    for(const {task,status} of entries){
     if(!active())return;
-    if(!selected(resource,task))continue;
+    if(!eligible(task))continue;
     try{
      const window=searchWindow(task),dates=serviceDates(window,resource.timeZone),rows=[];let truncated=false;
      for(const date of dates){
@@ -235,7 +238,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
   }catch(error){
    if(active()){
     sourceStatus.textContent='Flux officiel indisponible (réseau, navigateur ou archive). Aucun horaire récent confirmé.';
-    for(const {task,status} of entries)if(selected(resource,task))status.textContent=task.label+' : recherche GTFS indisponible. Les autres calculateurs restent consultables.';
+    for(const {task,status} of entries)if(eligible(task))status.textContent=task.label+' : recherche GTFS indisponible. Les autres calculateurs restent consultables.';
    }
    client?.dispose();client=null;
   }
