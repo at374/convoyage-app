@@ -62,6 +62,29 @@ function scheduledTrips(files,index,date){
  }
  return results;
 }
+function directTrips(files,index,date,originStopId,destinationStopId){
+ if(!index.stopById.has(originStopId)||!index.stopById.has(destinationStopId)||
+     originStopId===destinationStopId)return [];
+ const journeys=[];
+ for(const trip of scheduledTrips(files,index,date)){
+  const starts=trip.stops.filter(stop=>stop.stopId===originStopId);
+  for(const start of starts){
+   const end=trip.stops.find(stop=>stop.stopId===destinationStopId&&
+      stop.sequence>start.sequence);
+   if(!end||!/^\d{1,3}:[0-5]\d:[0-5]\d$/.test(start.departure||'')||
+      !/^\d{1,3}:[0-5]\d:[0-5]\d$/.test(end.arrival||''))continue;
+   journeys.push({
+    tripId:trip.tripId,line:trip.line,date,
+    from:originStopId,to:destinationStopId,
+    departure:start.departure,arrival:end.arrival,
+    serviceScheduled:true,serviceConfirmed:false,
+    exactOrigin:false,exactDestination:false,accessVerified:false,
+    priceEUR:null
+   });
+  }
+ }
+ return journeys.sort((a,b)=>a.departure.localeCompare(b.departure,undefined,{numeric:true}));
+}
 function buildIndex(files){
  if(!files||typeof files!=='object')throw new TypeError('GTFS files required');
  const stops=parseCSV(files['stops.txt']||'');
@@ -82,7 +105,7 @@ function buildIndex(files){
    counts:{stops:stopById.size,routes:routeById.size,trips:tripById.size,stopTimes:times.length},
    serviceConfirmed:false};
 }
-const api={parseCSV,activeServices,buildIndex,scheduledTrips};
+const api={parseCSV,activeServices,buildIndex,scheduledTrips,directTrips};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSIndex=api;
 })(typeof window!=='undefined'?window:globalThis);
