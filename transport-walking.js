@@ -116,7 +116,7 @@ function createRouter({fetcher=root.fetch,endpoint=DEFAULT_ENDPOINT,maxRequests=
   const key=JSON.stringify([from.lat,from.lon,to.lat,to.lon]);
   if(cache.has(key))return cache.get(key);
   if(cache.size>=maxRequests)return Promise.resolve(unavailable('budget_exceeded'));
-  const pending=new Promise(resolve=>queue.push({from:{...from},to:{...to},resolve}));
+  const pending=new Promise(resolve=>queue.push({from:{lat:from.lat,lon:from.lon},to:{lat:to.lat,lon:to.lon},resolve}));
   cache.set(key,pending);pump().catch(()=>{});return pending;
  }
  return {route,dispose:()=>{if(disposed)return;disposed=true;controller?.abort();wake?.();for(const item of queue.splice(0))item.resolve(unavailable('cancelled'));cache.clear();},

@@ -36,7 +36,7 @@ test('deduplicates directed requests and enforces the admitted-request budget',a
   const body=JSON.parse(new URL(url).searchParams.get('json'));assert.equal(body.costing,'pedestrian');
   assert.deepEqual(body.locations,[from,to]);return new Response(JSON.stringify(response()));
  }});t.after(()=>router.dispose());
- const rows=await Promise.all([router.route(from,to),router.route({...from},{...to})]);
+ const rows=await Promise.all([router.route({...from,missionId:'private'},{...to,stopId:'public-stop'}),router.route({...from},{...to})]);
  assert.equal(urls.length,1);assert.strictEqual(rows[0],rows[1]);assert.equal(rows[0].status,'calculated');
  assert.equal((await router.route(to,from)).status,'budget_exceeded');
 });
