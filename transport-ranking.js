@@ -9,13 +9,13 @@
     const departure=Date.parse(item.departure),arrival=Date.parse(item.arrival);
     const valid=Number.isFinite(departure)&&Number.isFinite(arrival)&&arrival>departure;
     const price=finite(item.priceEUR)&&item.priceEUR>=0?item.priceEUR:null;
-    const margin=finite(opts.marginMinutes)?opts.marginMinutes:30;
+    const margin=finite(opts.marginMinutes)?Math.max(15,opts.marginMinutes):30;
     const deadline=opts.deadline?Date.parse(opts.deadline):null;
     const slack=valid&&Number.isFinite(deadline)?Math.floor((deadline-arrival)/60000):null;
     const allVerified=legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
     const feasible=valid&&allVerified&&doorToDoor&&item.accessVerified===true&&
-      (slack===null||slack>=Math.max(15,margin));
+      Number.isFinite(deadline)&&slack>=margin;
     return {...item,priceEUR:price,durationMinutes:valid?Math.ceil((arrival-departure)/60000):null,
       slackMinutes:slack,feasible,displayStatus:feasible?'Réalisable':'Transport non confirmé — vérifiez vous-même'};
   }
