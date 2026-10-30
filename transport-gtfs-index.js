@@ -90,6 +90,24 @@ function minutes(time){
  const [h,m,sec]=time.split(':').map(Number);
  return h*60+m+sec/60;
 }
+function nearbyStops(index,lat,lon,radiusMeters=700){
+ if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||
+   Math.abs(lon)>180||!Number.isFinite(radiusMeters)||radiusMeters<=0)return [];
+ const rad=Math.PI/180,earth=6371000,results=[];
+ for(const stop of index.stopById.values()){
+  const a=Number(stop.stop_lat),b=Number(stop.stop_lon);
+  if(!stop.stop_lat||!stop.stop_lon||!Number.isFinite(a)||!Number.isFinite(b)||
+    Math.abs(a)>90||Math.abs(b)>180)continue;
+  const dLat=(a-lat)*rad,dLon=(b-lon)*rad;
+  const h=Math.sin(dLat/2)**2+Math.cos(lat*rad)*Math.cos(a*rad)*Math.sin(dLon/2)**2;
+  const distanceMeters=2*earth*Math.asin(Math.min(1,Math.sqrt(h)));
+  if(distanceMeters<=radiusMeters)results.push({
+    stopId:stop.stop_id,name:stop.stop_name||'',distanceMeters:Math.round(distanceMeters),
+    accessVerified:false
+  });
+ }
+ return results.sort((a,b)=>a.distanceMeters-b.distanceMeters);
+}
 function transferTrips(files,index,date,originStopId,destinationStopId,minTransferMinutes=5){
  if(!Number.isFinite(minTransferMinutes)||minTransferMinutes<0)return [];
  const trips=scheduledTrips(files,index,date);
@@ -139,7 +157,7 @@ function buildIndex(files){
    counts:{stops:stopById.size,routes:routeById.size,trips:tripById.size,stopTimes:times.length},
    serviceConfirmed:false};
 }
-const api={parseCSV,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips};
+const api={parseCSV,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips,nearbyStops};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSIndex=api;
 })(typeof window!=='undefined'?window:globalThis);
