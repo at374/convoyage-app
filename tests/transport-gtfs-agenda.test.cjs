@@ -348,3 +348,22 @@ test('Agenda preserves different interchange stops even with identical lines and
  assert.match(target.textContent,/Retour : 2 horaire/);
  session.dispose();
 });
+
+test('all failed federated GTFS loads display a clear unavailable state without querying',async()=>{
+ const target=panel();let queried=0;
+ const trip={...task,from:{lat:45.1885,lon:5.7245},to:{lat:45.276,lon:5.883}};
+ const session=agenda.mount(target,{tasks:[trip],clientFactory:()=>({
+  loadNetworks:async()=>({networks:[
+   {error:{network:'M Réso — Métropole grenobloise'}},
+   {error:{network:'M Réso — Grésivaudan'}}
+  ],partial:true}),
+  query:async()=>{queried++;return {rows:[],truncated:false};},
+  dispose(){}
+ })});
+ await session.done;
+ assert.equal(queried,0);
+ assert.match(target.textContent,/aucun réseau chargé/);
+ assert.match(target.textContent,/Transport non confirmé/);
+ assert.match(target.textContent,/Retour : horaires indisponibles/);
+ session.dispose();
+});
