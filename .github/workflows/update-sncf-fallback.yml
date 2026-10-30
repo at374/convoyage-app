@@ -1,0 +1,44 @@
+name: Refresh SNCF theoretical fallback
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/update-sncf-fallback.yml'
+      - 'scripts/build_sncf_days.py'
+      - 'scripts/refresh_sncf_fallback.py'
+  schedule:
+    - cron: '15 3,9 * * *'
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: sncf-theoretical-fallback
+  cancel-in-progress: false
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download, validate and test before replacing schedules
+        run: python3 scripts/refresh_sncf_fallback.py
+      - name: Publish only validated SNCF data
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- data/sncf
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Refresh validated SNCF theoretical schedules'
+          git push origin HEAD:main
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/pages/builds"

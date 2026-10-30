@@ -2200,6 +2200,63 @@
           }
         }
       }
+      // SNCF station-only fallback runs independently of public routing API availability.
+      // Only dated public files are fetched: addresses/GPS stay in this browser.
+      if (window.CPSncfFallback && typeof window.CPSncfFallback.plan === 'function') {
+        const railHomeName = String(etat.reglages?.domicile_ville || '').trim();
+        const railHomePoint = etat.reglages?.domicile_lat != null && etat.reglages?.domicile_lng != null ?
+          {lat:etat.reglages.domicile_lat,lon:etat.reglages.domicile_lng} :
+          G.trouverVille(railHomeName);
+        const homeStation = {name:railHomeName,point:railHomePoint};
+        const missionStation = (mission,side) => ({
+          name:String((side === 'origin' ? mission.from_city : mission.to_city) || ''),
+          point:G.coordonnees(mission,side)
+        });
+        const railSearch = (label,fromStation,toStation,when,arriveBy,latestArrival) => {
+          if (!when || (!fromStation.name && !fromStation.point) || (!toStation.name && !toStation.point) ||
+              (fromStation.name && toStation.name && fromStation.name.trim().toLocaleLowerCase('fr') === toStation.name.trim().toLocaleLowerCase('fr'))) return;
+          const status = document.createElement('div');
+          status.className = 'doux';
+          status.style.marginTop = '10px';
+          status.setAttribute('role','status');
+          status.textContent = label + ' — secours SNCF : recherche des trains de gare à gare…';
+          panel.appendChild(status);
+          window.CPSncfFallback.plan({from:fromStation,to:toStation,when,arriveBy,
+            limit:10,fetcher:regionalFetch}).then(answer => {
+            if (!status.isConnected) return;
+            const itineraries = answer.itineraries.filter(it => !latestArrival || Date.parse(it.arrival) <= latestArrival).slice(0,3);
+            status.textContent = label + ' — secours SNCF, horaires théoriques du flux ' + answer.sourceVersion + ' : ' +
+              (itineraries.length ? itineraries.length + ' proposition(s) de gare à gare.' :
+              answer.status === 'stations_not_found' ? 'gare non identifiée pour une des communes.' :
+              'aucun train direct ou avec une correspondance trouvé dans les journées chargées.');
+            itineraries.forEach(itinerary => {
+              const row = document.createElement('p');
+              row.textContent = itinerary.legs.map(leg =>
+                [leg.line,leg.trainNumber,leg.from + ' ' + formatParis(leg.departure) +
+                  ' → ' + leg.to + ' ' + formatParis(leg.arrival)].filter(Boolean).join(' ')).join(' · puis ') +
+                (itinerary.transferMinutes != null ? ' · changement en gare : ' + itinerary.transferMinutes + ' min (cheminement non vérifié)' : ' · direct') +
+                ' · prix et réservation éventuelle à vérifier.';
+              status.appendChild(row);
+            });
+            const warning = document.createElement('p');
+            warning.textContent = 'Accès aux gares, marche finale, prix et circulation réelle non vérifiés. Ce résultat ne valide pas le trajet complet jusqu’à la mission ou au domicile. Transport non confirmé — vérifiez vous-même.';
+            status.appendChild(warning);
+            const source = document.createElement('a');
+            source.href = 'https://transport.data.gouv.fr/datasets/horaires-sncf';
+            source.target = '_blank';source.rel = 'noopener noreferrer';
+            source.textContent = 'Source : SNCF Voyageurs — données ouvertes ODbL';
+            status.appendChild(source);
+          }).catch(() => {
+            if (status.isConnected) status.textContent = label +
+              ' — secours SNCF indisponible pour cette date. Aucun résultat ne prouve pas l’absence de transport. Transport non confirmé — vérifiez vous-même.';
+          });
+        };
+        if (pickupDate) railSearch('Aller',homeStation,missionStation(m,'origin'),
+          new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString(),true);
+        if (deliveryDate) railSearch('Retour',missionStation(m,'destination'),homeStation,deliveryDate,false);
+        if (next && deliveryDate) railSearch('Jonction',missionStation(m,'destination'),
+          missionStation(next,'origin'),deliveryDate,false,Date.parse(next.pickup_start)-securityMarginMin*60000);
+      }
       // Regional return from the exact delivery point to the configured home
       // coordinate (which may only represent a city centre, not a door).
       if (regionalEngineReady && regionalProviderReady && deliveryDate) {
@@ -2906,4 +2963,5 @@
   demarrer();
 })();
  
+
 

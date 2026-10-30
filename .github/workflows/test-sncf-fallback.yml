@@ -1,0 +1,31 @@
+name: Test SNCF theoretical fallback
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sncf-fallback.js'
+      - 'app.js'
+      - 'data/sncf/**'
+      - 'scripts/*sncf*'
+      - 'tests/sncf-fallback.test.cjs'
+      - '.github/workflows/*sncf*'
+  pull_request:
+    paths:
+      - 'sncf-fallback.js'
+      - 'app.js'
+      - 'data/sncf/**'
+      - 'scripts/*sncf*'
+      - 'tests/sncf-fallback.test.cjs'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node --check sncf-fallback.js
+      - run: node tests/sncf-fallback.test.cjs
