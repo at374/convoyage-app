@@ -27,6 +27,14 @@ function selected(resource,task){
  return resource?.format==='GTFS'&&/^https:\/\//.test(resource.url||'')&&validPoint(task?.from)&&validPoint(task?.to)&&Array.isArray(bounds)&&bounds.length===4&&
  bounds.every(Number.isFinite)&&[task.from,task.to].every(p=>p.lat>=bounds[0]&&p.lat<=bounds[2]&&p.lon>=bounds[1]&&p.lon<=bounds[3]);
 }
+// Candidate-only geographic pairing: both endpoints must be covered by the two official feeds.
+// This does not establish a service, a transfer or a walkable connection.
+function crossEnvelopePair(first,second,task){
+ if(!first?.federate||!second?.federate||first===second)return false;
+ if(!validPoint(task?.from)||!validPoint(task?.to))return false;
+ return (selected(first,{...task,to:task.from})&&selected(second,{...task,from:task.to}))||
+  (selected(second,{...task,to:task.from})&&selected(first,{...task,from:task.to}));
+}
 function timestamp(value){
  if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})$/.test(value))return NaN;
  const day=Date.parse(value.slice(0,10)+'T12:00:00Z');
@@ -234,7 +242,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  })();
  return {dispose,done};
 }
-const api={DEFAULT_RESOURCES,selected,searchWindow,serviceDates,mount};
+const api={DEFAULT_RESOURCES,selected,crossEnvelopePair,searchWindow,serviceDates,mount};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSAgenda=api;
 })(typeof window!=='undefined'?window:globalThis);
