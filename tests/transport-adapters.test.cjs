@@ -36,4 +36,7 @@ const passJourney=withVerifiedFares([{legs:[{provider:'SIBRA',fareVerified:true,
 assert.equal(passJourney[0].priceEUR,0);
 assert.equal(passJourney[0].fareStatus,'Tarif vérifié');
 assert.equal(withVerifiedFares([{legs:[{provider:'TER'}]}])[0].priceEUR,null);
-console.log('transport adapters: 26 assertions passed');
+const datedLeg={provider:'TER',fareVerified:true,fareSource:'barème vérifié',verifiedPriceEUR:4,fareValidFrom:'2026-11-01T00:00:00+01:00',fareValidUntil:'2026-11-30T23:59:59+01:00'};
+assert.equal(withVerifiedFares([{departure:'2026-11-02T08:00:00+01:00',legs:[datedLeg]}])[0].priceEUR,4);
+assert.equal(withVerifiedFares([{departure:'2026-12-02T08:00:00+01:00',legs:[datedLeg]}])[0].priceEUR,null);
+console.log('transport adapters: 28 assertions passed');
