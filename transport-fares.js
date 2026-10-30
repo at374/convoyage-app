@@ -8,10 +8,12 @@
     const items=Array.isArray(legs)?legs:[];
     if(!items.length)return {totalEUR:null,known:false,breakdown:[],status:'Tarif non vérifié'};
     const breakdown=items.map(leg=>{
-      const price=money(leg?.verifiedPriceEUR);
+      // A numerical amount is not evidence: require an explicit verified source.
+      const price=leg?.fareVerified===true && typeof leg?.fareSource==='string' && leg.fareSource.trim()?money(leg.verifiedPriceEUR):null;
       const covered=leg?.passAccepted===true&&
         leg?.passProduct==='SIBRA'&&options.sibraPassActive===true&&
-        leg?.passEligibilityVerified===true;
+        leg?.passEligibilityVerified===true&&
+        typeof leg?.passEligibilitySource==='string'&&leg.passEligibilitySource.trim();
       return {provider:leg?.provider||'Inconnu',amountEUR:covered?0:price,
         passApplied:covered,verified:covered||price!==null};
     });
