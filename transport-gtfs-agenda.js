@@ -108,6 +108,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
    }
    if(!dates.size)throw new Error('No valid mission window');
    const loadOptions={indexServiceDates:[...dates].sort()};
+   const needsFederation=taskList.some(task=>!selected(resource,task)&&partners.some(partner=>crossEnvelopePair(resource,partner,task)));
+   if(needsFederation&&typeof client.loadNetworks!=='function')throw new Error('Federated GTFS loading unavailable');
    const summary=partners.length&&typeof client.loadNetworks==='function'?
     await client.loadNetworks([resource,...partners],loadOptions):await client.load(resource,loadOptions);
    if(!active())return;
