@@ -110,7 +110,11 @@
           item.arrival===leg.arrival&&
           item.fareVerified===true&&typeof item.fareSource==='string'&&
           item.fareSource.trim()&&Number.isFinite(item.verifiedPriceEUR)&&
-          item.verifiedPriceEUR>=0&&item.fareValidFrom&&item.fareValidUntil);
+          item.verifiedPriceEUR>=0&&item.fareValidFrom&&item.fareValidUntil&&
+          Number.isFinite(Date.parse(item.fareValidFrom))&&
+          Number.isFinite(Date.parse(item.fareValidUntil))&&
+          Date.parse(item.fareValidFrom)<=Date.parse(leg.departure)&&
+          Date.parse(leg.departure)<=Date.parse(item.fareValidUntil));
         return match?{...leg,verifiedPriceEUR:match.verifiedPriceEUR,
           fareVerified:true,fareSource:match.fareSource,
           fareValidFrom:match.fareValidFrom,fareValidUntil:match.fareValidUntil}:leg;
