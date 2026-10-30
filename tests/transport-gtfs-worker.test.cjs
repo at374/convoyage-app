@@ -4,7 +4,7 @@ const {Worker}=require('node:worker_threads');
 const path=require('node:path');
 const {createClient}=require('../transport-gtfs-worker-client.js');
 const {crc32}=require('../transport-gtfs-loader.js');
-function archive(transfers=false){
+function archive(transfers=false,tripCount=1){
  const files={
   'agency.txt':'agency_name,agency_timezone\nFixture,Europe/Paris',
   'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nA,Start,45.9,6.1\nB,End,45.8,6.2',
@@ -18,6 +18,12 @@ function archive(transfers=false){
   files['routes.txt']='route_id,route_short_name,route_type\nR,One,3\nR2,Two,3';
   files['trips.txt']='route_id,service_id,trip_id\nR,S,T\nR2,S,T2';
   files['stop_times.txt']='trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT,11:00:00,11:00:00,A,1\nT,11:20:00,11:20:00,X,2\nT2,11:28:00,11:28:00,X,1\nT2,11:48:00,11:48:00,B,2';
+ }
+ if(tripCount>1){
+  const clock=minutes=>String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0')+':00';
+  files['trips.txt']='route_id,service_id,trip_id\n'+Array.from({length:tripCount},(_,i)=>'R,S,T'+i).join('\n');
+  files['stop_times.txt']='trip_id,arrival_time,departure_time,stop_id,stop_sequence\n'+Array.from({length:tripCount},(_,i)=>
+   `T${i},${clock(480+i)},${clock(480+i)},A,1\nT${i},${clock(490+i)},${clock(490+i)},B,2`).join('\n');
  }
  const local=[],directory=[];let offset=0;
  for(const [name,text] of Object.entries(files)){
@@ -46,7 +52,7 @@ context.importScripts=(...names)=>{for(const name of names)vm.runInContext(fs.re
 vm.runInContext(fs.readFileSync(path.join(workerData.root,'transport-gtfs-worker.js'),'utf8'),context);
 parentPort.on('message',data=>context.onmessage({data}));`;
 function factory(mode){
- const thread=new Worker(bootstrap,{eval:true,workerData:{root:path.resolve(__dirname,'..'),bytes:archive(mode===true)}});
+ const thread=new Worker(bootstrap,{eval:true,workerData:{root:path.resolve(__dirname,'..'),bytes:archive(mode===true,mode==='dense'?120:1)}});
  const adapter={postMessage:data=>thread.postMessage(data),terminate:()=>thread.terminate()};
  thread.on('message',data=>adapter.onmessage?.({data}));thread.on('error',error=>adapter.onerror?.(error));
  return adapter;
@@ -164,4 +170,21 @@ test('secondary network failure preserves the primary results and flags partial 
  assert.equal(loaded.partial,true);assert.ok(loaded.networks[1].error);
  const result=await client.query({method:'missionJourneys',date:'2026-11-02',origin:{lat:45.9,lon:6.1},destination:{lat:45.7,lon:6.3},window:{earliestDeparture:'2026-11-02T10:00:00Z',latestArrival:'2026-11-02T11:18:00Z'}});
  assert.equal(result.rows.length,1);assert.equal(result.rows[0].interNetwork,undefined);
+});
+
+test('mission departure order is applied before truncation and preserves the latest outbound trips',async t=>{
+ const client=createClient({workerFactory:()=>factory('dense')});t.after(()=>client.dispose());
+ await client.load(resource);
+ const query={method:'missionJourneys',date:'2026-11-02',origin:{lat:45.9,lon:6.1},destination:{lat:45.8,lon:6.2},
+  window:{latestArrival:'2026-11-02T12:00:00+01:00'},limit:100};
+ const early=await client.query(query),late=await client.query({...query,order:'latestDeparture'});
+ assert.equal(early.rows.length,100);assert.equal(late.rows.length,100);
+ assert.equal(early.rows[0].tripId,'T0');assert.equal(early.rows.at(-1).tripId,'T99');
+ assert.equal(late.rows[0].tripId,'T119');assert.equal(late.rows.at(-1).tripId,'T20');
+ assert.equal(early.truncated,true);assert.equal(late.truncated,true);
+ assert.equal(late.rows[0].serviceConfirmed,false);assert.equal(late.rows[0].priceEUR,null);
+ const filtered=await client.query({...query,order:'latestDeparture',limit:1,window:{latestArrival:'2026-11-02T10:00:00+01:00'}});
+ assert.equal(filtered.rows[0].tripId,'T80');assert.equal(filtered.rows[0].arrival,'2026-11-02T08:30:00.000Z');
+ await assert.rejects(client.query({...query,order:'cheapest'}),/order/);
+ await assert.rejects(client.query({...query,method:'nearbyDirectTrips',order:'latestDeparture'}),/order/);
 });

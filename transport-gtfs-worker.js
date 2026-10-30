@@ -33,6 +33,9 @@ self.onmessage=async({data})=>{
    if(!feed)throw new Error('No GTFS network loaded');
    const limit=query.limit??100;
    if(!Number.isInteger(limit)||limit<1||limit>500)throw new Error('Invalid GTFS result limit');
+   const order=query.order??'earliestDeparture';
+   if(!['earliestDeparture','latestDeparture'].includes(order)||
+      (query.order!==undefined&&!['missionDirectTrips','missionJourneys'].includes(query.method)))throw new Error('Invalid GTFS result order');
    let rows,searchTruncated=false;
    scope(feed,query.date);
    if(query.method==='directTrips')rows=CPGTFSIndex.directTrips(feed.files,feed.index,query.date,query.from,query.to);
@@ -56,7 +59,8 @@ self.onmessage=async({data})=>{
      const cross=CPGTFSFederation.crossNetworkTrips(feeds,query.date,query.origin,query.destination,query.window,{radiusMeters:radius});
      rows.push(...cross.journeys);searchTruncated=searchTruncated||cross.searchTruncated;
     }
-    if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
+    // Apply mission ordering before the result cap, including across networks.
+    if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));
    }else if(query.method==='nearbyStops')rows=CPGTFSIndex.nearbyStops(feed.index,query.lat,query.lon,query.radiusMeters??700);
    else throw new Error('Unsupported GTFS worker query');
    result={rows:rows.slice(0,limit),truncated:searchTruncated||rows.length>limit,searchTruncated,

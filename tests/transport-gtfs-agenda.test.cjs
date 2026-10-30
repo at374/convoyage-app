@@ -47,6 +47,7 @@ test('mount shares one load across tasks, deduplicates rows, uses text nodes and
  await session.done;
  assert.equal(loads,1);assert.ok(calls.length>=4);
  assert.equal(calls[0].method,'missionJourneys');assert.equal(calls[0].radiusMeters,700);
+ assert.equal(calls[0].order,'earliestDeparture');assert.ok(calls.some(q=>q.order==='latestDeparture'));
  assert.match(target.textContent,/voir l’arrêt/);
  assert.match(target.textContent,/Retour : 1 horaire/);assert.match(target.textContent,/Aller : 1 horaire/);
  assert.match(target.textContent,/École <script>/);assert.match(target.textContent,/vol d’oiseau/);
@@ -231,4 +232,18 @@ test('a rejected or throwing pedestrian prefetch preserves source status and tra
    session.dispose();
   }
  }finally{global.CPTransportWalking=previous;}
+});
+
+test('Agenda retains the latest outbound trips across service dates after worker caps',async()=>{
+ const target=panel(),calls=[];
+ const session=agenda.mount(target,{tasks:[{...task,label:'Aller',earliestDeparture:undefined,latestArrival:'2026-11-02T13:00:00Z'}],
+  clientFactory:()=>({load:async()=>summary,query:async q=>{
+   calls.push(q);
+   return {rows:[row({tripId:q.date,departure:q.date+'T10:00:00Z',arrival:q.date+'T11:00:00Z'})],truncated:true};
+  },dispose(){}})});
+ await session.done;
+ assert.ok(calls.every(q=>q.order==='latestDeparture'));
+ const text=target.textContent;
+ assert.ok(text.indexOf('02/11/2026 11:00 →')<text.indexOf('01/11/2026 11:00 →'));
+ assert.match(text,/Affichage limité/);assert.match(text,/Transport non confirmé/);session.dispose();
 });
