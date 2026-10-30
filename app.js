@@ -388,7 +388,7 @@
   let gpsOccupe = false, gpsTimer = null;
   function planifierGps() { if (gpsTimer || gpsOccupe) return; gpsTimer = setTimeout(async () => { gpsTimer = null; gpsOccupe = true; let n = 0, nb = 0;
     try { for (const m of etat.missions.slice(0, 400)) for (const cote of ['origin', 'destination']) { if (nb >= 25) break; const cle = G.cleAdresse(m, cote); if (!cle || G.POINTS[cle] || (gpsMem.rate[cle] && Date.now() - gpsMem.rate[cle] < 864e5)) continue; const c0 = m[cote]; if (c0 && Number.isFinite(Number(c0.lat)) && Number(c0.lat) !== 0) continue; nb++;
-      try { const r = await G.chercherPoint(m, cote, u => fetch(u)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } else gpsMem.rate[cle] = Date.now(); } catch (_) { gpsMem.rate[cle] = Date.now(); } }
+      try { const r = await G.chercherPoint(m, cote, (u,o) => fetch(u,o)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } else gpsMem.rate[cle] = Date.now(); } catch (_) { gpsMem.rate[cle] = Date.now(); } }
     } finally { gpsOccupe = false; ecrireLocal('cp_gps', gpsMem); if (n) listeMissions(); } }, 1500); }
   const mentionGps = (m, cote) => { const c = G.coordonnees(m, cote); const t = !c ? ['⚠️', 'aucun point GPS (lieu inconnu)'] : c.precision === 'gps' ? ['📍', 'point GPS exact (donné par la plateforme)'] : c.precision === 'adresse' ? ['📍', 'point GPS de l’adresse (vérifié)'] : c.precision === 'rue' ? ['📍', 'point GPS de la rue (vérifié)'] : c.precision === 'ville' ? ['📌', 'approximatif : centre de la ville'] : ['📌', 'approximatif : centre du département']; return `<span class="doux gpsInfo">${t[0]} ${esc(t[1])}</span>`; };
   // V138 : fenêtre « trajet à vol d'oiseau » : schéma départ → arrivée (sans fond de carte, rien n'est téléchargé), distance à vol d'oiseau et route estimée.
@@ -445,13 +445,30 @@
       d.innerHTML = cadre(dessiner(a, b, meme ? [{ coords: avec.coords, couleur: '#1d4ed8', ep: 4 }] : [sans && { coords: sans.coords, couleur: '#16a34a', ep: 4, pointille: true }, avec && { coords: avec.coords, couleur: '#1d4ed8', ep: 4 }].filter(Boolean)), bas + (meme || !(avec && sans) ? '' : '<p class="doux">Bleu : avec péages · Vert pointillé : sans péage.</p>'));
       const base = avec || sans; if (!base) { const el0 = document.getElementById('popCommunes'); if (el0) el0.textContent = ''; return; }
       const route = base.coords, communes = [], idx = [0.2, 0.4, 0.6, 0.8].map(f => route[Math.min(route.length - 1, Math.round(f * (route.length - 1)))]);
-      for (const q of idx) { try { const r = await fetch('https://api-adresse.data.gouv.fr/reverse/?limit=1&lon=' + q[0] + '&lat=' + q[1]); const j = r.ok ? await r.json() : null, f = j && j.features && j.features[0]; if (f && f.properties && f.properties.city && !communes.includes(f.properties.city)) communes.push(f.properties.city); } catch (_) {} }
+      for (const q of idx) { try { const r = await fetch('https://data.geopf.fr/geocodage/reverse?index=address&limit=1&lon=' + q[0] + '&lat=' + q[1]); const j = r.ok ? await r.json() : null, f = j && j.features && j.features[0]; if (f && f.properties && f.properties.city && !communes.includes(f.properties.city)) communes.push(f.properties.city); } catch (_) {} }
       const el = document.getElementById('popCommunes'); if (el) el.textContent = communes.length ? 'Communes sur le trajet (repères) : ' + [m.from_city].concat(communes, [m.to_city]).filter(Boolean).join(' → ') : '';
     };
     pointsMission(m).catch(() => { }).finally(() => rendre().catch(() => { const x = document.getElementById('popVol'); const p = x && Array.from(x.querySelectorAll('p')).find(q => /Calcul des deux/.test(q.textContent)); if (p) p.textContent = 'Le calcul du trajet a échoué sur ce téléphone. Referme et réessaie.'; }));
   }
   // Cherche tout de suite (sans attendre la liste) les points GPS des deux bouts d'UNE mission ; renvoie vrai si un nouveau point a été trouvé.
-  async function pointsMission(m) { let n = 0; for (const cote of ['origin', 'destination']) { const cle = G.cleAdresse(m, cote); if (!cle || G.POINTS[cle]) continue; try { const r = await G.chercherPoint(m, cote, u => fetch(u)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } } catch (_) {} } if (n) ecrireLocal('cp_gps', gpsMem); return n > 0; }
+  async function pointTransportMission(m,cote) {
+    if (!m) return null;
+    const precise = () => {
+      const p=G.coordonnees(m,cote);
+      return transportAddressPoint(p)?{lat:Number(p.lat),lon:Number(p.lng)}:null;
+    };
+    const known=precise();if(known)return known;
+    const cle=G.cleAdresse(m,cote);if(!cle)return null;
+    try {
+      const answer=await G.chercherPoint(m,cote,regionalFetch);
+      if(answer?.trouve){
+        G.POINTS[cle]=answer.point;gpsMem.pts[cle]=answer.point;
+        ecrireLocal('cp_gps',gpsMem);
+      }
+    }catch(_){}
+    return precise();
+  }
+  async function pointsMission(m) { let n = 0; for (const cote of ['origin', 'destination']) { const cle = G.cleAdresse(m, cote); if (!cle || G.POINTS[cle]) continue; try { const r = await G.chercherPoint(m, cote, (u,o) => fetch(u,o)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } } catch (_) {} } if (n) ecrireLocal('cp_gps', gpsMem); return n > 0; }
   function adresse(m, cote) {
     const a = m[cote + '_address'] || (m.mail_info && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'] && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'].adresse); if (a) return a;
     if (m.adresses_locales) return (cote === 'origin' ? m.from_city : m.to_city) ? (cote === 'origin' ? m.from_city : m.to_city) + (m[(cote === 'origin' ? 'from' : 'to') + '_department'] ? ' (' + m[(cote === 'origin' ? 'from' : 'to') + '_department'] + ')' : '') + ' — ' + LOCAL : LOCAL;
@@ -1540,6 +1557,7 @@
       window.CP_BUS_ACTIF = $('rBus').checked; ecrireLocal('cp_bus_actif', window.CP_BUS_ACTIF); window.CP_TRANSPORT_CHOISI = $('rTransport').value; ecrireLocal('cp_transport', window.CP_TRANSPORT_CHOISI);
       try { await api.enregistrerReglages(v); etat.reglages = { ...r, ...v }; ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe }); toast('Réglages enregistrés'); } catch (e) { toast(e.message); }
     };
+    window.CPTripGo?.mountSettings($('ecran'));
     etatNotifications(); brancherPrefsNotif();
     { const p = lirePause(); $('pzOn').checked = p.choix === 'oui'; $('pzDeb').value = p.debut; $('pzFin').value = p.fin;
       const maj = () => { enregistrerPause($('pzOn').checked ? 'oui' : 'non', $('pzDeb').value, $('pzFin').value); toast($('pzOn').checked ? 'Désactivation la nuit : activée' : 'Toujours actif'); };
@@ -2049,6 +2067,22 @@
         refreshed.setAttribute('role', 'status');
         refreshed.textContent = 'Actualisation réseau demandée : si les données sont indisponibles, aucun horaire récent ne sera confirmé.';
         panel.appendChild(refreshed);
+      }
+      // Independent jobs render as each provider answers. Device credentials never enter settings sync.
+      if (window.CPTripGo) {
+        const point = p => transportAddressPoint(p) ? {lat:Number(p.lat),lon:Number(p.lng)} : null;
+        const homeLat = etat.reglages?.domicile_lat, homeLon = etat.reglages?.domicile_lng;
+        const home = homeLat != null && homeLon != null && homeLat !== '' && homeLon !== '' ?
+          {lat:Number(homeLat),lon:Number(homeLon)} : null;
+        window.CPTripGo.mountPanel(panel, {
+          home, origin:point(G.coordonnees(m,'origin')), destination:point(G.coordonnees(m,'destination')),
+          nextOrigin:next ? point(G.coordonnees(next,'origin')) : null,
+          pickup:pickupDate, delivery:deliveryDate, nextPickup:next?.pickup_start,
+          resolvePoint:name=>name==='origin'?pointTransportMission(m,'origin'):
+            name==='destination'?pointTransportMission(m,'destination'):
+            name==='nextOrigin'?pointTransportMission(next,'origin'):null,
+          marginMinutes:securityMarginMin, refresh:!!bt.dataset.transportRefreshAt, fetcher:regionalFetch
+        });
       }
       // Swiss public transport connections for an accepted mission junction.
       // Results are advisory until realtime validity and exact walking approaches are checked.
