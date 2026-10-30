@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict');
-const {adaptSNCF,adaptGTFS,adaptRegional,withVerifiedFares}=require('../transport-adapters.js');
+const {adaptSNCF,adaptGTFS,adaptRegional,applyFareEvidence,withVerifiedFares}=require('../transport-adapters.js');
 const {evaluate,rank}=require('../transport-ranking.js');
 const arrival='2026-11-02T08:15:00+01:00';
 const departure='2026-11-02T07:00:00+01:00';
@@ -48,4 +48,8 @@ assert.equal(adaptRegional([{startTime:-1e20,endTime:1e20,legs:[]}])[0].arrival,
 const regionalLeg=adaptRegional([{startTime:Date.parse(departure),endTime:Date.parse(arrival),legs:[{startTime:Date.parse(departure),endTime:Date.parse(arrival)}]}]);
 assert.equal(regionalLeg[0].legs[0].departure,'2026-11-02T06:00:00.000Z');
 assert.equal(regionalLeg[0].legs[0].arrival,'2026-11-02T07:15:00.000Z');
-console.log('transport adapters: 35 assertions passed');
+const evidence={journeyId:bus[0].id,legIndex:0,departure,provider:'Cars Région',line:'Y51',verifiedPriceEUR:3,fareVerified:true,fareSource:'barème opérateur',fareValidFrom:'2026-11-01T00:00:00+01:00',fareValidUntil:'2026-11-30T23:59:59+01:00'};
+assert.equal(withVerifiedFares(applyFareEvidence(bus,[evidence]))[0].priceEUR,3);
+assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...evidence,line:'Y52'}]))[0].priceEUR,null);
+assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...evidence,fareSource:''}]))[0].priceEUR,null);
+console.log('transport adapters: 38 assertions passed');
