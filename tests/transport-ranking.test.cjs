@@ -10,4 +10,8 @@ assert.equal(evaluate({...base,arrival:'2026-11-02T08:50:00+01:00'},{deadline}).
 assert.equal(rank([{...base,priceEUR:5},{...base,priceEUR:2,arrival:'2026-11-02T08:30:00+01:00'}],{deadline}).length,2);
 assert.equal(rank([{...base,departure:'invalid'}]).length,0);
 assert.equal(evaluate(base).feasible,false);
-console.log('transport-ranking: 8 assertions passed');
+assert.equal(evaluate(base).slackMinutes,null);
+const unconfirmed={...base,priceEUR:1,exactDestination:false};
+const choices=rank([unconfirmed,{...base,priceEUR:5}],{deadline});
+assert.equal(choices[0].journey.feasible,true);
+console.log('transport-ranking: 10 assertions passed');
