@@ -16,6 +16,7 @@ on:
       - 'tests/transport-fares.test.cjs'
       - 'tests/transport-catalogue.test.cjs'
       - 'tests/transport-gtfs-index.test.cjs'
+      - 'tests/transport-gtfs-nearby.test.cjs'
       - 'tests/transport-gtfs-loader.test.cjs'
       - 'tests/transport-gtfs-worker.test.cjs'
       - '.github/workflows/test-transport-ranking.yml'
@@ -34,6 +35,7 @@ on:
       - 'tests/transport-fares.test.cjs'
       - 'tests/transport-catalogue.test.cjs'
       - 'tests/transport-gtfs-index.test.cjs'
+      - 'tests/transport-gtfs-nearby.test.cjs'
       - 'tests/transport-gtfs-loader.test.cjs'
       - 'tests/transport-gtfs-worker.test.cjs'
       - '.github/workflows/test-transport-ranking.yml'
@@ -63,3 +65,4 @@ jobs:
       - run: node tests/transport-gtfs-index.test.cjs
       - run: node --test tests/transport-gtfs-loader.test.cjs
       - run: node --test tests/transport-gtfs-worker.test.cjs
+      - run: node --test tests/transport-gtfs-nearby.test.cjs

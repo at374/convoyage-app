@@ -63,6 +63,13 @@ test('real worker loads, returns only metadata, and queries dated trips and near
  await assert.rejects(client.query({method:'directTrips',date:'2026-02-30',from:'A',to:'B'}),/Invalid service date/);
  await assert.rejects(client.query({method:'scheduledTrips'}),/Unsupported/);
  await assert.rejects(client.query({method:'nearbyStops',limit:501}),/limit/);
+ const nearby=await client.query({method:'nearbyDirectTrips',date:'2026-11-02',
+  origin:{lat:45.9,lon:6.1},destination:{lat:45.8,lon:6.2}});
+ assert.equal(nearby.rows[0].originStop.stopId,'A');
+ assert.equal(nearby.rows[0].destinationStop.stopId,'B');
+ assert.equal(nearby.rows[0].accessVerified,false);
+ assert.equal(nearby.rows[0].arrival,'11:48:00');
+ await assert.rejects(client.query({method:'nearbyDirectTrips',radiusMeters:5001}),/radius/);
  assert.equal(client.stats().pending,0);
 });
 test('replacing or clearing a worker rejects pending work and permits a fresh load',async t=>{

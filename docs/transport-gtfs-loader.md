@@ -50,7 +50,7 @@ Tous les résultats de ce chargeur portent `serviceConfirmed:false`, `faresVerif
 
 ## Worker navigateur
 
-`transport-gtfs-worker-client.js` expose `CPGTFSWorker.createClient()`. Il crée un worker classique `transport-gtfs-worker.js`, qui charge lui-même les trois dépendances locales. Aucun index ni texte CSV n’est recopié vers l’interface : le worker conserve un seul réseau, renvoie son bilan de chargement et répond aux recherches d’arrêts proches ou de trajets directs datés.
+`transport-gtfs-worker-client.js` expose `CPGTFSWorker.createClient()`. Il crée un worker classique `transport-gtfs-worker.js`, qui charge lui-même les trois dépendances locales. Aucun index ni texte CSV n’est recopié vers l’interface : le worker conserve un seul réseau, renvoie son bilan de chargement et répond aux recherches d’arrêts proches ou de trajets directs datés, entre identifiants d’arrêts ou entre coordonnées.
 
 ```js
 const client = CPGTFSWorker.createClient();
@@ -74,3 +74,19 @@ client.dispose();
 - Aucun repli sur le thread de l’interface si Worker est indisponible ou bloqué par la CSP. Servir les scripts depuis la même origine avec une politique autorisant les workers ; les téléchargements GTFS restent soumis au CORS de leur source.
 
 Validation : cinq tests supplémentaires, dont exécution du véritable script worker et de ses dépendances dans un thread Node séparé avec archive synthétique, calendrier daté, réponses simultanées, remplacement, annulation, limite de file, erreurs et délai maximal. Ces tests ne constituent pas une validation Android ou CORS. L’intégration à l’Agenda et la persistance hors ligne restent à faire ; aucun script n’est encore ajouté à `index.html` ni au service worker.
+
+### Trajets directs entre coordonnées
+
+```js
+const result = await client.query({
+  method: 'nearbyDirectTrips', date: '2026-11-02',
+  origin: {lat: 45.9, lon: 6.1}, destination: {lat: 45.8, lon: 6.2},
+  radiusMeters: 700, limit: 100
+});
+```
+
+Les coordonnées sont des entrées, pas une certification de l’adresse. Chaque résultat contient `originStop`, `destinationStop`, `accessDistanceMeters` et `egressDistanceMeters`. Ces distances sont à vol d’oiseau ; aucun temps de marche n’est déduit. Le rayon worker est limité à 5 km, 700 m par défaut. Les horaires restent des chaînes GTFS dans le fuseau du réseau et peuvent dépasser 24 h ; ils ne sont pas encore des timestamps utilisables dans les filtres horaires des missions.
+
+La recherche parcourt une fois les calendriers et les courses actives pour tous les couples d’arrêts proches. Elle évite les copies de tous les horaires pour chaque couple. Les retours sur le même arrêt, les séquences non croissantes et les arrivées antérieures au départ ne produisent pas de candidat ; les visites répétées d’un arrêt restent distinctes. Les tests comparent les résultats à une recherche par couples indépendante, couvrent les boucles, horaires après minuit, calendriers, incohérences horaires et l’appel depuis le véritable script worker. Le nombre de lectures du calendrier est vérifié, sans extrapolation de performance Android.
+
+Prochaine étape de raccordement : convertir les heures de service dans le fuseau GTFS, appliquer les fenêtres Aller/Jonction/Retour, choisir les ressources utiles et vérifier les accès piétons. L’interface Agenda ne lance pas encore ces requêtes.

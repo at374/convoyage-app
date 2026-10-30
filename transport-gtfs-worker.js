@@ -22,6 +22,10 @@ self.onmessage=async({data})=>{
    let rows;
    if(query.method==='directTrips'){
     rows=CPGTFSIndex.directTrips(feed.files,feed.index,query.date,query.from,query.to);
+   }else if(query.method==='nearbyDirectTrips'){
+    const radius=query.radiusMeters??700;
+    if(!Number.isFinite(radius)||radius<=0||radius>5000)throw new Error('Invalid GTFS search radius');
+    rows=CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,query.date,query.origin,query.destination,radius);
    }else if(query.method==='nearbyStops'){
     rows=CPGTFSIndex.nearbyStops(feed.index,query.lat,query.lon,query.radiusMeters??700);
    }else throw new Error('Unsupported GTFS worker query');

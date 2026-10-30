@@ -63,28 +63,40 @@ function scheduledTrips(files,index,date){
  }
  return results;
 }
+// Traverse the active trips once, without copying every stop of every trip for
+// each origin/destination pair. A loop may visit the origin more than once.
+function directCandidates(files,index,date,origins,destinations){
+ const services=activeServices(files,date),journeys=[];
+ if(!origins.size||!destinations.size)return journeys;
+ for(const [tripId,trip] of index.tripById){
+  if(!services.has(trip.service_id))continue;
+  const route=index.routeById.get(trip.route_id);
+  if(!route)continue;
+  const times=index.timesByTrip.get(tripId)||[];
+  for(let i=0;i<times.length;i++){
+   const start=times[i],from=origins.get(start.stop_id);
+   if(!from||minutes(start.departure_time)===null)continue;
+   const found=new Set();
+   for(let j=i+1;j<times.length;j++){
+    const end=times[j],to=destinations.get(end.stop_id);
+    if(!to||end.stop_id===start.stop_id||found.has(end.stop_id)||
+       !(Number(end.stop_sequence)>Number(start.stop_sequence)))continue;
+    found.add(end.stop_id);
+    const arrival=minutes(end.arrival_time);
+    if(arrival===null||arrival<minutes(start.departure_time))continue;
+    journeys.push({tripId,line:route.route_short_name||route.route_long_name||'',date,
+     from:start.stop_id,to:end.stop_id,departure:start.departure_time,arrival:end.arrival_time,
+     serviceScheduled:true,serviceConfirmed:false,
+     exactOrigin:false,exactDestination:false,accessVerified:false,priceEUR:null});
+   }
+  }
+ }
+ return journeys.sort((a,b)=>minutes(a.departure)-minutes(b.departure));
+}
 function directTrips(files,index,date,originStopId,destinationStopId){
  if(!index.stopById.has(originStopId)||!index.stopById.has(destinationStopId)||
      originStopId===destinationStopId)return [];
- const journeys=[];
- for(const trip of scheduledTrips(files,index,date)){
-  const starts=trip.stops.filter(stop=>stop.stopId===originStopId);
-  for(const start of starts){
-   const end=trip.stops.find(stop=>stop.stopId===destinationStopId&&
-      stop.sequence>start.sequence);
-   if(!end||!/^\d{1,3}:[0-5]\d:[0-5]\d$/.test(start.departure||'')||
-      !/^\d{1,3}:[0-5]\d:[0-5]\d$/.test(end.arrival||''))continue;
-   journeys.push({
-    tripId:trip.tripId,line:trip.line,date,
-    from:originStopId,to:destinationStopId,
-    departure:start.departure,arrival:end.arrival,
-    serviceScheduled:true,serviceConfirmed:false,
-    exactOrigin:false,exactDestination:false,accessVerified:false,
-    priceEUR:null
-   });
-  }
- }
- return journeys.sort((a,b)=>a.departure.localeCompare(b.departure,undefined,{numeric:true}));
+ return directCandidates(files,index,date,new Map([[originStopId,true]]),new Map([[destinationStopId,true]]));
 }
 function minutes(time){
  if(!/^\d{1,3}:[0-5]\d:[0-5]\d$/.test(time||''))return null;
@@ -111,20 +123,13 @@ function nearbyStops(index,lat,lon,radiusMeters=700){
 }
 function nearbyDirectTrips(files,index,date,origin,destination,radiusMeters=700){
  if(!origin||!destination)return [];
- const origins=nearbyStops(index,origin.lat,origin.lon,radiusMeters);
- const destinations=nearbyStops(index,destination.lat,destination.lon,radiusMeters);
- const journeys=[];
- for(const from of origins)for(const to of destinations){
-  for(const trip of directTrips(files,index,date,from.stopId,to.stopId)){
-   journeys.push({...trip,
-    originStop:{...from},destinationStop:{...to},
-    accessDistanceMeters:from.distanceMeters,
-    egressDistanceMeters:to.distanceMeters,
-    accessVerified:false,exactOrigin:false,exactDestination:false,
-    serviceConfirmed:false,priceEUR:null});
-  }
- }
- return journeys.sort((a,b)=>minutes(a.departure)-minutes(b.departure));
+ const origins=new Map(nearbyStops(index,origin.lat,origin.lon,radiusMeters).map(stop=>[stop.stopId,stop]));
+ const destinations=new Map(nearbyStops(index,destination.lat,destination.lon,radiusMeters).map(stop=>[stop.stopId,stop]));
+ return directCandidates(files,index,date,origins,destinations).map(trip=>{
+  const from=origins.get(trip.from),to=destinations.get(trip.to);
+  return {...trip,originStop:{...from},destinationStop:{...to},
+   accessDistanceMeters:from.distanceMeters,egressDistanceMeters:to.distanceMeters};
+ });
 }
 function transferTrips(files,index,date,originStopId,destinationStopId,minTransferMinutes=5){
  if(!Number.isFinite(minTransferMinutes)||minTransferMinutes<0)return [];
