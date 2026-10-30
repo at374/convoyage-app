@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict');
-const {parseCSV,activeServices,buildIndex,scheduledTrips,directTrips}=require('../transport-gtfs-index.js');
+const {parseCSV,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips}=require('../transport-gtfs-index.js');
 assert.deepEqual(parseCSV('id,name\n1,"Annecy, Gare"\n2,"Stop ""A"""\n'),[
  {id:'1',name:'Annecy, Gare'},{id:'2',name:'Stop "A"'}]);
 assert.deepEqual(parseCSV(''),[]);
@@ -39,4 +39,17 @@ assert.equal(direct[0].serviceConfirmed,false);
 assert.equal(direct[0].priceEUR,null);
 assert.equal(directTrips(calendar,index,'2026-10-29','S2','S1').length,0);
 assert.equal(directTrips(calendar,index,'2026-10-30','S1','S2').length,0);
-console.log('GTFS index: 26 assertions passed');
+const connectionFiles={
+ 'stops.txt':'stop_id,stop_name\nA,Annecy\nB,Chambery\nC,Grenoble\n',
+ 'routes.txt':'route_id,route_short_name\nR1,L1\nR2,L2\n',
+ 'trips.txt':'route_id,service_id,trip_id\nR1,WK,T1\nR2,WK,T2\n',
+ 'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT1,09:00:00,09:00:00,A,1\nT1,10:00:00,10:00:00,B,2\nT2,10:08:00,10:08:00,B,1\nT2,11:00:00,11:00:00,C,2\n'
+};
+const transfers=transferTrips(calendar,buildIndex(connectionFiles),'2026-10-29','A','C',5);
+assert.equal(transfers.length,1);
+assert.equal(transfers[0].transferStopId,'B');
+assert.equal(transfers[0].legs.length,2);
+assert.equal(transfers[0].serviceConfirmed,false);
+assert.equal(transferTrips(calendar,buildIndex(connectionFiles),'2026-10-29','A','C',10).length,0);
+assert.equal(transferTrips(calendar,buildIndex(connectionFiles),'2026-10-30','A','C',5).length,0);
+console.log('GTFS index: 32 assertions passed');
