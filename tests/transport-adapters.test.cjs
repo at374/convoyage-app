@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict');
-const {adaptSNCF,adaptGTFS,adaptRegional}=require('../transport-adapters.js');
+const {adaptSNCF,adaptGTFS,adaptRegional,withVerifiedFares}=require('../transport-adapters.js');
 const {evaluate,rank}=require('../transport-ranking.js');
 const arrival='2026-11-02T08:15:00+01:00';
 const departure='2026-11-02T07:00:00+01:00';
@@ -29,4 +29,6 @@ const invalid=adaptRegional([{startTime:null,endTime:NaN,legs:[]}]);
 assert.equal(invalid[0].departure,null);
 assert.equal(invalid[0].arrival,null);
 assert.equal(rank(invalid).length,0);
-console.log('transport adapters: 21 assertions passed');
+assert.equal(withVerifiedFares(adaptSNCF(raw))[0].priceEUR,null);
+assert.equal(withVerifiedFares(adaptGTFS([{departure,arrival,legs:[{route:'Y51'}]}],'Cars Région'))[0].fareStatus,'Tarif non vérifié');
+console.log('transport adapters: 23 assertions passed');
