@@ -27,7 +27,8 @@ function crossNetworkTrips(feeds,date,origin,destination,window,{
   const rows=[];let remaining=maxLegs;
   for(const day of dates){
    if(!remaining){searchTruncated=true;break;}
-   const raw=g.boundaryLegs(feed.files,feed.index,day,day===date?origins:new Map(),destinations,{maxLegs:remaining});
+   const bounds=clock.serviceWindow(feed.files,day,window);
+   const raw=g.boundaryLegs(feed.files,feed.index,day,day===date?origins:new Map(),destinations,{maxLegs:remaining,...bounds});
    searchTruncated=searchTruncated||raw.searchTruncated;
    const legs=[...raw.firstByStop.values()].flat().map(leg=>({...leg,date:day,side:'first'}))
     .concat([...raw.secondByStop.values()].flat().map(leg=>({...leg,date:day,side:'second'})));

@@ -105,3 +105,15 @@ test('GTFS minimum-transfer seconds are inclusive without fractional-minute roun
  assert.equal(search(files).journeys.length,1);assert.equal(search(files).journeys[0].minTransferSeconds,481);
  files['transfers.txt']=files['transfers.txt'].replace('481','482');assert.equal(search(files).journeys.length,0);
 });
+
+test('mission bounds filter branches before their budget with inclusive second-level limits',()=>{
+ const files=fixture(),noise=Array.from({length:10},(_,i)=>'EARLY'+i);
+ files['trips.txt']=files['trips.txt'].replace('T1,R1,S',noise.map(id=>id+',R1,S').join('\n')+'\nT1,R1,S');
+ files['stop_times.txt']+='\n'+noise.map(id=>id+',A,1,07:00:00,07:00:00,0,0\n'+id+',X,2,08:00:00,08:00:00,0,0').join('\n');
+ assert.equal(search(files,{maxLegs:2}).searchTruncated,true);
+ const bounds={maxLegs:2,minDepartureSeconds:9*3600,maxArrivalSeconds:11*3600};
+ const result=search(files,bounds);assert.equal(result.journeys.length,1);assert.equal(result.searchTruncated,false);
+ assert.equal(search(files,{...bounds,minDepartureSeconds:9*3600+0.001}).journeys.length,0);
+ assert.equal(search(files,{...bounds,maxArrivalSeconds:11*3600-0.001}).journeys.length,0);
+ assert.throws(()=>search(files,{minDepartureSeconds:NaN}),/time bounds/);
+});

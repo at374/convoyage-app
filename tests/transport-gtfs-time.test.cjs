@@ -74,3 +74,13 @@ test('timezone comes from agency and route, and conflicting or missing agency me
   assert.throws(()=>datedTrips({...files,'agency.txt':agency},index,rows,{latestArrival:'2026-11-02T12:00:00Z'}));
  }
 });
+
+test('branch window bounds share the GTFS day base, mission margin and fractional seconds',()=>{
+ const {serviceWindow}=require('../transport-gtfs-time.js'),{files}=fixture();
+ const bounds=serviceWindow(files,'2026-10-25',{
+  earliestDeparture:'2026-10-25T01:30:00.001Z',latestArrival:'2026-10-25T02:00:00Z',marginMinutes:15});
+ assert.equal(bounds.minDepartureSeconds,9000.001);assert.equal(bounds.maxArrivalSeconds,9900);
+ const night=serviceWindow(files,'2026-11-02',{earliestDeparture:'2026-11-03T00:00:00Z'});
+ assert.equal(night.minDepartureSeconds,25*3600);assert.equal(night.maxArrivalSeconds,Infinity);
+ assert.throws(()=>serviceWindow(files,'2026-11-02',{latestArrival:'2026-11-02T12:00:00'}),/timezone/);
+});

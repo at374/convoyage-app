@@ -120,3 +120,12 @@ test('multi-date federation validates explicit dates and shares the leg budget a
  a.indexServiceDates=['2026-11-02'];
  assert.throws(()=>crossNetworkTrips([a,b],'2026-11-02',origin,destination,w,{connectionDates:dates}),/scope/);
 });
+
+test('out-of-window legs do not exhaust the inter-network branch budget',()=>{
+ const a=feed('A','first'),b=feed('B','second');
+ a.files['trips.txt']=a.files['trips.txt'].replace('T,R,S','Early,R,S\nT,R,S');
+ a.files['stop_times.txt']+='\nEarly,A,1,07:00:00,07:00:00,0\nEarly,X,2,08:00:00,08:00:00,0';a.index=g.buildIndex(a.files);
+ const result=search([a,b],{maxLegs:1});
+ assert.equal(result.journeys.length,1);assert.equal(result.searchTruncated,false);
+ assert.equal(result.journeys[0].legs[0].tripId,'T');
+});

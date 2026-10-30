@@ -133,8 +133,9 @@ function nearbyDirectTrips(files,index,date,origin,destination,radiusMeters=700)
    accessDistanceMeters:from.distanceMeters,egressDistanceMeters:to.distanceMeters};
  });
 }
-function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000}={}){
+function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDepartureSeconds=-Infinity,maxArrivalSeconds=Infinity}={}){
  if(!Number.isSafeInteger(maxLegs)||maxLegs<1)throw new Error('Invalid transfer budget');
+ if([minDepartureSeconds,maxArrivalSeconds].some(n=>typeof n!=='number'||Number.isNaN(n)))throw new Error('Invalid transfer time bounds');
  const services=activeServices(files,date),firstByStop=new Map(),secondByStop=new Map();
  if(!origins.size&&!destinations.size)return {firstByStop,secondByStop,searchTruncated:false};
  let legCount=0,searchTruncated=false;
@@ -151,13 +152,13 @@ function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000}={}){
   const targets=times.flatMap((time,position)=>destinations.has(time.stop_id)?[position]:[]);
   for(let i=0;i<times.length;i++){
    const start=times[i],departureMinutes=minutes(start.departure_time);
-   if(departureMinutes===null||!regularAccess(start.pickup_type))continue;
+   if(departureMinutes===null||Math.round(departureMinutes*60)<minDepartureSeconds||!regularAccess(start.pickup_type))continue;
    const fromOrigin=origins.has(start.stop_id);
    for(const j of (fromOrigin?times.keys():targets)){
     if(j<=i)continue;
     const end=times[j];
     const arrivalMinutes=minutes(end.arrival_time);
-    if(arrivalMinutes===null||arrivalMinutes<departureMinutes||
+    if(arrivalMinutes===null||Math.round(arrivalMinutes*60)>maxArrivalSeconds||arrivalMinutes<departureMinutes||
        !(Number(end.stop_sequence)>Number(start.stop_sequence))||!regularAccess(end.drop_off_type)||start.stop_id===end.stop_id)continue;
     const leg={tripId,routeId:trip.route_id,line:route.route_short_name||route.route_long_name||'',
      from:start.stop_id,to:end.stop_id,departure:start.departure_time,arrival:end.arrival_time,
@@ -170,12 +171,13 @@ function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000}={}){
  return {firstByStop,secondByStop,searchTruncated};
 }
 function transferCandidates(files,index,date,origins,destinations,{
- minTransferMinutes=5,maxWaitMinutes=120,maxLegs=50000,maxCandidates=5000,maxExaminedPairs=100000
+ minTransferMinutes=5,maxWaitMinutes=120,maxLegs=50000,maxCandidates=5000,maxExaminedPairs=100000,
+ minDepartureSeconds=-Infinity,maxArrivalSeconds=Infinity
 }={}){
  if(!Number.isFinite(minTransferMinutes)||minTransferMinutes<0||
     !Number.isFinite(maxWaitMinutes)||maxWaitMinutes<minTransferMinutes)throw new Error('Invalid transfer interval');
  for(const limit of [maxLegs,maxCandidates,maxExaminedPairs])if(!Number.isSafeInteger(limit)||limit<1)throw new Error('Invalid transfer budget');
- const {firstByStop,secondByStop,searchTruncated:legTruncated}=boundaryLegs(files,index,date,origins,destinations,{maxLegs});
+ const {firstByStop,secondByStop,searchTruncated:legTruncated}=boundaryLegs(files,index,date,origins,destinations,{maxLegs,minDepartureSeconds,maxArrivalSeconds});
  const rules=parseCSV(files['transfers.txt']||'');let searchTruncated=legTruncated,examined=0;
  const scope=(ruleStop,id)=>!ruleStop||ruleStop===id||ruleStop===index.stopById.get(id)?.parent_station;
  const rulesByStop=new Map();

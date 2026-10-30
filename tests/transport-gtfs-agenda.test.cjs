@@ -263,3 +263,21 @@ test('Agenda retains the latest outbound trips across service dates after worker
  assert.ok(text.indexOf('02/11/2026 11:00 →')<text.indexOf('01/11/2026 11:00 →'));
  assert.match(text,/Affichage limité/);assert.match(text,/Transport non confirmé/);session.dispose();
 });
+
+test('Grenoble local tasks select only the two official Grenoble resources',async()=>{
+ const local={label:'Jonction',from:{lat:45.1905,lon:5.7145},to:{lat:45.28,lon:5.88},
+  earliestDeparture:'2026-11-02T10:00:00+01:00',latestArrival:'2026-11-02T13:00:00+01:00'},calls=[];
+ const target=panel(),session=agenda.mount(target,{tasks:[local],clientFactory:()=>({
+  loadNetworks:async(resources,options)=>{
+   calls.push({resources,options});return {networks:resources.map(r=>({...summary,source:{...summary.source,network:r.network,url:r.url}})),partial:false};
+  },query:async()=>({rows:[],truncated:false}),dispose(){}})});
+ await session.done;
+ assert.equal(calls.length,1);assert.equal(calls[0].resources.length,2);
+ assert.deepEqual(calls[0].resources.map(r=>r.datasetId),['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f']);
+ assert.ok(calls[0].resources.every(r=>r.resolveFromCatalogue));
+ assert.match(target.textContent,/Métropole grenobloise/);assert.match(target.textContent,/Grésivaudan/);
+ assert.doesNotMatch(target.textContent,/Cars Région Haute-Savoie|Sibra/);
+ session.dispose();
+ const outside={...local,from:point};
+ assert.equal(agenda.DEFAULT_RESOURCES.some(r=>agenda.selected(r,outside)),false);
+});

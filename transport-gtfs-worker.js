@@ -54,7 +54,8 @@ self.onmessage=async({data})=>{
      let found=CPGTFSIndex.nearbyDirectTrips(current.files,current.index,query.date,query.origin,query.destination,radius);
      if(query.method!=='nearbyDirectTrips')found=CPGTFSTime.datedTrips(current.files,current.index,found,query.window);
      if(query.method==='missionJourneys'){
-      const transfers=CPGTFSIndex.nearbyTransferTrips(current.files,current.index,query.date,query.origin,query.destination,radius);
+      const bounds=CPGTFSTime.serviceWindow(current.files,query.date,query.window);
+      const transfers=CPGTFSIndex.nearbyTransferTrips(current.files,current.index,query.date,query.origin,query.destination,radius,bounds);
       searchTruncated=searchTruncated||transfers.searchTruncated;
       found.push(...CPGTFSTime.datedTransferTrips(current.files,current.index,transfers.journeys,query.window));
      }

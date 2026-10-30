@@ -134,3 +134,5 @@ La fédération ne fusionne pas les identifiants entre réseaux et ne confirme a
 ### Enrichissement piéton de l’affichage
 
 Le worker ne sollicite pas le service piéton : `transport-walking.js` enrichit les propositions déjà affichées par `transport-gtfs-agenda.js`, avec file et requêtes annulées à la fermeture. Les objets GTFS ne sont pas réécrits ; les preuves de marche restent séparées. Les identifiants, budgets et flags des sources gardent leur sens. Détails et limites dans la section « Parcours piétons calculés » de `transport-gtfs-agenda.md`.
+
+`CPGTFSTime.serviceWindow(files, date, window)` expose `minDepartureSeconds` / `maxArrivalSeconds` depuis la même base de jour GTFS que `datedTrips`. Les recherches de correspondance de mission transmettent ces bornes à `boundaryLegs` avant le budget de branches ; le filtrage final des trajets datés reste conservé. L’API brute des correspondances garde ses bornes infinies par défaut. Les branches hors de la fenêtre ne saturent plus le budget à la place de branches utiles. Cela ne borne pas toutes les itérations du parcours des courses.

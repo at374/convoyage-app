@@ -44,15 +44,27 @@ function instant(value){
  }
  throw new Error('Mission timestamp must include an explicit timezone');
 }
-function datedTrips(files,index,rows,{earliestDeparture,latestArrival,marginMinutes=30}={}){
+function missionBounds({earliestDeparture,latestArrival,marginMinutes=30}={}){
  if(earliestDeparture===undefined&&latestArrival===undefined)throw new Error('A mission time window is required');
  if(!Number.isFinite(marginMinutes)||marginMinutes<0||marginMinutes>1440)throw new Error('Invalid mission safety margin');
  const first=earliestDeparture===undefined?-Infinity:instant(earliestDeparture);
  const last=latestArrival===undefined?Infinity:instant(latestArrival)-marginMinutes*60000;
+ return {first,last,marginMinutes,latestArrival};
+}
+function agencyData(files){
  const gtfs=root.CPGTFSIndex||(typeof module==='object'&&module.exports?require('./transport-gtfs-index.js'):null);
  const agencies=gtfs.parseCSV(files['agency.txt']||'');
  if(!agencies.length||agencies.some(a=>!a.agency_timezone))throw new Error('Missing GTFS agency timezone');
  if(new Set(agencies.map(a=>a.agency_timezone)).size!==1)throw new Error('Ambiguous GTFS agency timezone');
+ return {agencies,timeZone:agencies[0].agency_timezone};
+}
+function serviceWindow(files,date,window){
+ const {first,last}=missionBounds(window),{timeZone}=agencyData(files);
+ const base=serviceTimestamp(date,'00:00:00',timeZone);
+ return {minDepartureSeconds:(first-base)/1000,maxArrivalSeconds:(last-base)/1000};
+}
+function datedTrips(files,index,rows,window){
+ const {first,last,marginMinutes,latestArrival}=missionBounds(window),{agencies}=agencyData(files);
  const results=[];
  for(const row of rows){
   const trip=index.tripById.get(row.tripId),route=index.routeById.get(trip?.route_id);
@@ -92,7 +104,7 @@ function datedTransferTrips(files,index,rows,window){
  }
  return results.sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
 }
-const api={serviceTimestamp,datedTrips,datedTransferTrips};
+const api={serviceTimestamp,serviceWindow,datedTrips,datedTransferTrips};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSTime=api;
 })(typeof window!=='undefined'?window:globalThis);
