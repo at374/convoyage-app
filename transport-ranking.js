@@ -4,13 +4,15 @@
 (function(root){
   'use strict';
   function finite(v){return typeof v==='number'&&Number.isFinite(v);}
+  function validTime(v){return typeof v==='string'&&/T\\d{2}:\\d{2}/.test(v)&&/(Z|[+-]\\d{2}:\\d{2})$/i.test(v)&&Number.isFinite(Date.parse(v));}
   function evaluate(item,opts={}){
     const legs=Array.isArray(item.legs)?item.legs:[];
-    const departure=Date.parse(item.departure),arrival=Date.parse(item.arrival);
+    const departure=validTime(item.departure)?Date.parse(item.departure):NaN;
+    const arrival=validTime(item.arrival)?Date.parse(item.arrival):NaN;
     const valid=Number.isFinite(departure)&&Number.isFinite(arrival)&&arrival>departure;
     const price=finite(item.priceEUR)&&item.priceEUR>=0?item.priceEUR:null;
     const margin=finite(opts.marginMinutes)?Math.max(15,opts.marginMinutes):30;
-    const deadline=opts.deadline?Date.parse(opts.deadline):NaN;
+    const deadline=validTime(opts.deadline)?Date.parse(opts.deadline):NaN;
     const slack=valid&&Number.isFinite(deadline)?Math.floor((deadline-arrival)/60000):null;
     const allVerified=legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
@@ -24,8 +26,7 @@
     const valid=enriched.filter(x=>x.durationMinutes!==null&&
       (x.slackMinutes===null||x.slackMinutes>=15));
     const byPrice=(a,b)=>Number(b.feasible)-Number(a.feasible)||
-      (a.priceEUR??Infinity)-(b.priceEUR??Infinity)||
-      Number(b.feasible)-Number(a.feasible)||a.durationMinutes-b.durationMinutes;
+      (a.priceEUR??Infinity)-(b.priceEUR??Infinity)||a.durationMinutes-b.durationMinutes;
     const byDuration=(a,b)=>Number(b.feasible)-Number(a.feasible)||
       a.durationMinutes-b.durationMinutes||
       (a.priceEUR??Infinity)-(b.priceEUR??Infinity);
