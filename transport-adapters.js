@@ -119,6 +119,7 @@
           Date.parse(item.fareRetrievedAt)<=Date.now())));
         return match?{...leg,verifiedPriceEUR:match.verifiedPriceEUR,
           fareVerified:true,fareSource:match.fareSource,
+          fareRetrievedAt:match.fareRetrievedAt||null,
           fareValidFrom:match.fareValidFrom,fareValidUntil:match.fareValidUntil}:leg;
       })
     }));
