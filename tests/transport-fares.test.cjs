@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict');
+const {fare}=require('../transport-fares.js');
+assert.equal(fare([]).totalEUR,null);
+assert.equal(fare([{provider:'TER'}]).known,false);
+assert.equal(fare([{provider:'TER',verifiedPriceEUR:8.5}]).totalEUR,8.5);
+assert.equal(fare([{provider:'TER',verifiedPriceEUR:8.5},{provider:'Bus',verifiedPriceEUR:2}]).totalEUR,10.5);
+const sibra={provider:'SIBRA',verifiedPriceEUR:2,passAccepted:true,passProduct:'SIBRA',passEligibilityVerified:true};
+assert.equal(fare([sibra],{sibraPassActive:true}).totalEUR,0);
+assert.equal(fare([sibra],{sibraPassActive:false}).totalEUR,2);
+assert.equal(fare([{...sibra,passEligibilityVerified:false}],{sibraPassActive:true}).totalEUR,2);
+assert.equal(fare([{...sibra,verifiedPriceEUR:null,passEligibilityVerified:false}],{sibraPassActive:true}).known,false);
+assert.equal(fare([sibra,{provider:'TER'}],{sibraPassActive:true}).totalEUR,null);
+assert.equal(fare([{provider:'Bus',verifiedPriceEUR:-1}]).known,false);
+console.log('transport fares: 10 assertions passed');
