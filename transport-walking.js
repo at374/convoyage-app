@@ -161,8 +161,9 @@ function assessJourney(row,task,walks){
   if(row.legs?.length===2)needed.push(transfer!==null&&walks.transfer.endpointsMatched);
   if(needed.every(Boolean))status='fits_calculated_walks';
  }
- return {...base,status,doorDeparture:access===null?null:new Date(departure-access*1000).toISOString(),
-  doorArrival:egress===null?null:new Date(arrival+egress*1000).toISOString(),
+ // An incomplete core path cannot establish an address-level time.
+ return {...base,status,doorDeparture:access===null||walks.access.endpointsMatched!==true?null:new Date(departure-access*1000).toISOString(),
+  doorArrival:egress===null||walks.egress.endpointsMatched!==true?null:new Date(arrival+egress*1000).toISOString(),
   serviceConfirmed:false,accessVerified:false,transferVerified:false,realizable:false};
 }
 async function checkJourney(router,row,task){

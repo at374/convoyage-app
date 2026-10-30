@@ -165,9 +165,10 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      if(!check.row.interNetwork||pairs.size>=3)continue;
      const key=JSON.stringify([check.row.transferStop?.lat,check.row.transferStop?.lon,check.row.transferDestinationStop?.lat,check.row.transferDestinationStop?.lon]);
      if(pairs.has(key))continue;pairs.add(key);
-     prefetch.push(walker.route(check.row.transferStop,check.row.transferDestinationStop));
+     prefetch.push(Promise.resolve().then(()=>walker.route(check.row.transferStop,check.row.transferDestinationStop)));
     }
-    await Promise.all(prefetch);
+    // A pedestrian provider error must not replace already rendered GTFS results.
+    await Promise.allSettled(prefetch);
    }
    for(const check of walkChecks){
     if(!active())return;
@@ -177,6 +178,10 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      const result=await root.CPTransportWalking.checkJourney(walker,check.row,check.task);
      if(!active())return;
      const descriptions=[];
+     const addressTime=(value,round)=>new Intl.DateTimeFormat('fr-FR',{timeZone:check.row.timeZone,dateStyle:'short',timeStyle:'short'})
+      .format(new Date(round(Date.parse(value)/60000)*60000));
+     if(result.doorDeparture)descriptions.push('Départ estimé à l’adresse : ≈ '+addressTime(result.doorDeparture,Math.floor));
+     if(result.doorArrival)descriptions.push('Arrivée estimée à l’adresse : ≈ '+addressTime(result.doorArrival,Math.ceil));
      for(const [key,label] of [['access','Approche'],['transfer','Changement'],['egress','Sortie']]){
       const route=result.walks[key];
       if(route?.status==='not_required')continue;

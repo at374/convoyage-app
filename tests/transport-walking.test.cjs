@@ -101,3 +101,17 @@ test('a provider rate limit stops queued requests and is retained across router 
  assert.ok(results.every(r=>r.status==='rate_limited'));assert.equal(calls,1);router.dispose();
  const next=w.createRouter(options);assert.equal((await next.route(from,to)).status,'rate_limited');assert.equal(calls,1);next.dispose();
 });
+
+test('address-level times require a complete coordinate-bound approach or exit path independently',()=>{
+ const row=journey(),task={from,to},walks={access:calculated(from,to,90.5),egress:calculated(from,to,121.25)};
+ const complete=w.assessJourney(row,task,walks);
+ assert.equal(complete.doorDeparture,'2026-11-02T09:58:29.500Z');
+ assert.equal(complete.doorArrival,'2026-11-02T11:02:01.250Z');
+ walks.access.endpointsMatched=false;
+ const missingStart=w.assessJourney(row,task,walks);
+ assert.equal(missingStart.doorDeparture,null);assert.equal(missingStart.doorArrival,complete.doorArrival);
+ walks.access=calculated(to,from);walks.egress.endpointsMatched=false;
+ const incomplete=w.assessJourney(row,task,walks);
+ assert.equal(incomplete.doorDeparture,null);assert.equal(incomplete.doorArrival,null);
+ assert.equal(incomplete.realizable,false);assert.equal(incomplete.status,'partial');
+});

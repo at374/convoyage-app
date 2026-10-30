@@ -201,3 +201,34 @@ test('walking checks prioritise inter-network changes before direct candidates',
   await session.done;assert.deepEqual(calls,['cross','direct']);session.dispose();
  }finally{global.CPTransportWalking=previous;}
 });
+
+test('Agenda shows address-level times with conservative minute rounding and keeps stop times',async()=>{
+ const previous=global.CPTransportWalking;
+ global.CPTransportWalking={checkJourney:async()=>({status:'fits_calculated_walks',
+  doorDeparture:'2026-11-02T10:58:29.500Z',doorArrival:'2026-11-02T12:02:01.250Z',walks:{}})};
+ try{
+  const target=panel(),session=agenda.mount(target,{tasks:[task],clientFactory:()=>({load:async()=>summary,
+   query:async()=>({rows:[row()],truncated:false}),dispose(){}}),walkingRouterFactory:()=>({dispose(){}})});
+  await session.done;
+  assert.match(target.textContent,/Départ estimé à l’adresse : ≈ 02\/11\/2026 11:58/);
+  assert.match(target.textContent,/Arrivée estimée à l’adresse : ≈ 02\/11\/2026 13:03/);
+  assert.match(target.textContent,/02\/11\/2026 12:00 → 02\/11\/2026 13:00/);
+  assert.match(target.textContent,/Transport non confirmé/);assert.doesNotMatch(target.textContent,/Réalisable/);
+  session.dispose();
+ }finally{global.CPTransportWalking=previous;}
+});
+test('a rejected or throwing pedestrian prefetch preserves source status and transit results',async()=>{
+ const previous=global.CPTransportWalking;
+ global.CPTransportWalking={checkJourney:async()=>({status:'partial',walks:{}})};
+ try{
+  for(const route of [()=>Promise.reject(new Error('offline')),()=>{throw new Error('offline');}]){
+   const target=panel(),cross=row({interNetwork:true,transferStop:{name:'Exit'},transferDestinationStop:{name:'Board'},transferMinutes:10,transferDistanceMeters:50});
+   const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({load:async()=>summary,
+    query:async()=>({rows:[cross],truncated:false}),dispose(){}}),walkingRouterFactory:()=>({route,dispose(){}})});
+   await session.done;
+   assert.match(target.textContent,/Retour : 1 horaire/);assert.match(target.textContent,/1641 arrêts/);
+   assert.match(target.textContent,/Calcul piéton partiel/);assert.doesNotMatch(target.textContent,/Flux officiel indisponible/);
+   session.dispose();
+  }
+ }finally{global.CPTransportWalking=previous;}
+});
