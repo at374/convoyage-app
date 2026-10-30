@@ -309,3 +309,28 @@ test('Agenda retains identical schedules from different networks',async()=>{
  assert.match(target.textContent,/Retour : 2 horaire/);
  session.dispose();
 });
+
+test('Grenoble to Crolles remains within both metropolitan and Grésivaudan GTFS envelopes',async()=>{
+ const grenoble={lat:45.1885,lon:5.7245},crolles={lat:45.276,lon:5.883};
+ const trip={label:'Jonction mission',from:grenoble,to:crolles,
+  earliestDeparture:'2026-11-02T09:00:00+01:00',latestArrival:'2026-11-02T12:00:00+01:00'};
+ const eligible=agenda.DEFAULT_RESOURCES.filter(resource=>agenda.selected(resource,trip));
+ assert.deepEqual(eligible.map(resource=>resource.datasetId),
+  ['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f']);
+ const target=panel(),calls=[];
+ const session=agenda.mount(target,{tasks:[trip],clientFactory:()=>({
+  loadNetworks:async(resources,options)=>{
+   calls.push({resources,options});
+   return {networks:resources.map(resource=>({
+    ...summary,source:{...summary.source,network:resource.network,url:resource.url}
+   })),partial:false};
+  },
+  query:async()=>({rows:[],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.equal(calls.length,1);
+ assert.deepEqual(calls[0].resources.map(resource=>resource.datasetId),eligible.map(resource=>resource.datasetId));
+ assert.match(target.textContent,/Grésivaudan/);
+ assert.match(target.textContent,/Transport non confirmé|ne prouve pas l’absence de transport/);
+ session.dispose();
+});
