@@ -129,3 +129,16 @@ test('out-of-window legs do not exhaust the inter-network branch budget',()=>{
  assert.equal(result.journeys.length,1);assert.equal(result.searchTruncated,false);
  assert.equal(result.journeys[0].legs[0].tripId,'T');
 });
+
+test('cross-network transfer requires enough time even for straight-line walk',()=>{
+ const a=feed('A','first'),b=feed('B','second',{offset:0.001});
+ // Stops are roughly 100 m apart; 1 minute is insufficient even for the estimate.
+ b.files['stop_times.txt']=b.files['stop_times.txt'].replaceAll('10:10:00','10:01:00');
+ b.index=g.buildIndex(b.files);
+ assert.equal(search([a,b],{minTransferMinutes:1}).journeys.length,0);
+ b.files['stop_times.txt']=b.files['stop_times.txt'].replaceAll('10:01:00','10:10:00');
+ b.index=g.buildIndex(b.files);
+ const result=search([a,b],{minTransferMinutes:1});
+ assert.equal(result.journeys.length,1);
+ assert.equal(result.journeys[0].transferVerified,false);
+});
