@@ -45,4 +45,7 @@ assert.equal(withVerifiedFares(sourced)[0].priceEUR,3);
 assert.equal(withVerifiedFares(adaptGTFS([{departure,arrival,legs:[{route:'Y51',verifiedPriceEUR:3}]}]))[0].priceEUR,null);
 assert.equal(adaptRegional([{startTime:1e20,endTime:1e20,legs:[]}])[0].departure,null);
 assert.equal(adaptRegional([{startTime:-1e20,endTime:1e20,legs:[]}])[0].arrival,null);
-console.log('transport adapters: 33 assertions passed');
+const regionalLeg=adaptRegional([{startTime:Date.parse(departure),endTime:Date.parse(arrival),legs:[{startTime:Date.parse(departure),endTime:Date.parse(arrival)}]}]);
+assert.equal(regionalLeg[0].legs[0].departure,'2026-11-02T06:00:00.000Z');
+assert.equal(regionalLeg[0].legs[0].arrival,'2026-11-02T07:15:00.000Z');
+console.log('transport adapters: 35 assertions passed');
