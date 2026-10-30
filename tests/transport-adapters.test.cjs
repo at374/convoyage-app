@@ -54,4 +54,6 @@ assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...evidence,line:'Y52'}])
 assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...evidence,fareSource:''}]))[0].priceEUR,null);
 assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...evidence,to:'Chambéry'}]))[0].priceEUR,null);
 assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...evidence,arrival:'2026-11-02T08:30:00+01:00'}]))[0].priceEUR,null);
-console.log('transport adapters: 40 assertions passed');
+assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...evidence,fareValidFrom:'2026-11-03T00:00:00+01:00'}]))[0].priceEUR,null);
+assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...evidence,fareValidUntil:'date incorrecte'}]))[0].priceEUR,null);
+console.log('transport adapters: 42 assertions passed');
