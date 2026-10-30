@@ -2132,7 +2132,7 @@
               if (ranked.length) {
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement Jonction régionale théorique : ' +
-                  ranked.map(choice => choice.label + ' (' +
+                  ranked.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' +
                     choice.journey.durationMinutes + ' min, tarif non vérifié)').join(' · ') +
                   '. Accès aux arrêts, correspondances et circulation non confirmés.';
                 regionalStatus.appendChild(summary);
@@ -2250,7 +2250,7 @@
               if (choices.length) {
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement SNCF de gare à gare : ' +
-                  choices.map(choice => choice.label + ' (' + choice.journey.durationMinutes +
+                  choices.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' + choice.journey.durationMinutes +
                     ' min, prix non vérifié)').join(' · ') +
                   '. Aucun trajet complet confirmé.';
                 status.appendChild(summary);
@@ -2321,7 +2321,7 @@
               if (ranked.length) {
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement Retour régional théorique : ' +
-                  ranked.map(choice => choice.label + ' (' +
+                  ranked.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' +
                     choice.journey.durationMinutes + ' min, tarif non vérifié)').join(' · ') +
                   '. Accès au domicile et circulation non confirmés.';
                 returnStatus.appendChild(summary);
@@ -2384,7 +2384,7 @@
               if (ranked.length) {
                 const rankingLine = document.createElement('p');
                 rankingLine.textContent = 'Classement régional théorique : ' +
-                  ranked.map(choice => choice.label + ' (' + choice.journey.durationMinutes +
+                  ranked.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' + choice.journey.durationMinutes +
                     ' min, tarif non vérifié)').join(' · ') +
                   '. Correspondances et trajet complet non confirmés.';
                 outboundStatus.appendChild(rankingLine);
