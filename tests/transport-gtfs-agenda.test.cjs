@@ -479,3 +479,20 @@ test('cross-envelope pairing requires two official federated feeds and covered e
  assert.equal(agenda.crossEnvelopePair(a,{...b,url:'http://example.org'},journey),false);
  assert.equal(agenda.crossEnvelopePair(a,b,{...journey,to:{lat:48,lon:2}}),false);
 });
+
+test('Agenda loads both official GTFS feeds for a journey crossing geographic envelopes',async()=>{
+ const first={id:'first',network:'First',format:'GTFS',federate:true,url:'https://example.org/first.gtfs',bounds:[45,5,46,6],timeZone:'Europe/Paris'};
+ const second={id:'second',network:'Second',format:'GTFS',federate:true,url:'https://example.org/second.gtfs',bounds:[45,6,46,7],timeZone:'Europe/Paris'};
+ const journey={...task,from:{lat:45.5,lon:5.5},to:{lat:45.5,lon:6.5}};
+ let loaded=[],queried=0;
+ const target=panel(),session=agenda.mount(target,{tasks:[journey],resources:[first,second],clientFactory:()=>({
+  loadNetworks:async feeds=>{loaded=feeds;return {networks:[{source:{network:'First',loadedAt:'2026-10-30T16:00:00Z'},counts:{stops:2}},{source:{network:'Second',loadedAt:'2026-10-30T16:00:00Z'},counts:{stops:2}}]};},
+  query:async()=>{queried++;return {rows:[],truncated:false};},
+  dispose(){}
+ })});
+ await session.done;
+ assert.deepEqual(loaded.map(feed=>feed.id),['first','second']);
+ assert.ok(queried>0);
+ assert.match(target.textContent,/aucun trajet direct/);
+ session.dispose();
+});
