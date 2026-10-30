@@ -129,10 +129,19 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       row.transferStopId||null,row.legs?.map(leg=>[leg.networkId||null,leg.tripId,leg.from,leg.to,leg.departure,leg.arrival])||null]),row]));
      const ordered=[...unique.values()].sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
      if(task.label==='Aller')ordered.reverse();
-     const shown=ordered.slice(0,5);
+     // Prefer different services at the same time instead of filling the panel with duplicates.
+     const seenChoices=new Set(),distinct=[];
+     for(const candidate of ordered){
+      const key=JSON.stringify([candidate.networkId||candidate.network||'',candidate.line||'',
+       candidate.originStop?.stopId||candidate.from,candidate.destinationStop?.stopId||candidate.to,
+       candidate.departure,candidate.arrival]);
+      if(seenChoices.has(key))continue;
+      seenChoices.add(key);distinct.push(candidate);
+     }
+     const shown=distinct.slice(0,5);
      status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':'aucun trajet direct ou avec une correspondance dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.');
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
-     if(truncated||ordered.length>shown.length){const note=doc.createElement('p');note.textContent='Affichage limité : d’autres horaires peuvent exister.';status.appendChild(note);}
+     if(truncated||distinct.length>shown.length){const note=doc.createElement('p');note.textContent='Affichage limité : d’autres horaires peuvent exister.';status.appendChild(note);}
      for(const row of shown){
       const line=doc.createElement('p');
       const format=iso=>new Intl.DateTimeFormat('fr-FR',{timeZone:row.timeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(iso));
