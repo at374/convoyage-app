@@ -19,6 +19,17 @@
     const totalEUR=known?Math.round(breakdown.reduce((n,x)=>n+x.amountEUR,0)*100)/100:null;
     return {totalEUR,known,breakdown,status:known?'Tarif vérifié':'Tarif non vérifié'};
   }
-  const api={fare};if(typeof module==='object'&&module.exports)module.exports=api;
+  function describe(result){
+    if(!result||!Array.isArray(result.breakdown))return 'Tarif non vérifié';
+    const portions=result.breakdown.map((leg,index)=>{
+      const name=String(leg.provider||'Portion '+(index+1));
+      if(leg.passApplied)return name+' : 0,00 € (abonnement vérifié)';
+      return name+' : '+(leg.verified&&money(leg.amountEUR)!==null?
+        leg.amountEUR.toFixed(2).replace('.',',')+' €':'prix inconnu');
+    });
+    return (result.known?'Total : '+result.totalEUR.toFixed(2).replace('.',',')+' €':'Total inconnu')+
+      (portions.length?' · '+portions.join(' · '):'');
+  }
+  const api={fare,describe};if(typeof module==='object'&&module.exports)module.exports=api;
   root.CPTransportFares=api;
 })(typeof window!=='undefined'?window:globalThis);
