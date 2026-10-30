@@ -5,6 +5,8 @@
   const regionalFetch = (...args) => window.fetch(...args);
   // Planning data stays in this page session and never updates synchronized missions.
   const transportReturnPlans = new Map();
+  let gtfsAgendaSession = null;
+  function stopGTFSTransports() { gtfsAgendaSession?.dispose(); gtfsAgendaSession = null; }
   function transportParisDate(value) {
     if (!/^20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null;
     const format = date => {
@@ -451,7 +453,28 @@
     pointsMission(m).catch(() => { }).finally(() => rendre().catch(() => { const x = document.getElementById('popVol'); const p = x && Array.from(x.querySelectorAll('p')).find(q => /Calcul des deux/.test(q.textContent)); if (p) p.textContent = 'Le calcul du trajet a échoué sur ce téléphone. Referme et réessaie.'; }));
   }
   // Cherche tout de suite (sans attendre la liste) les points GPS des deux bouts d'UNE mission ; renvoie vrai si un nouveau point a été trouvé.
-  async function pointsMission(m) { let n = 0; for (const cote of ['origin', 'destination']) { const cle = G.cleAdresse(m, cote); if (!cle || G.POINTS[cle]) continue; try { const r = await G.chercherPoint(m, cote, u => fetch(u)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } } catch (_) {} } if (n) ecrireLocal('cp_gps', gpsMem); return n > 0; }
+  const transportPointRequests = new Map();
+  async function pointsMission(m, onPoint) {
+    let n = 0;
+    await Promise.all(['origin', 'destination'].map(async cote => {
+      const cle = G.cleAdresse(m, cote);
+      if (!cle || G.POINTS[cle]) return;
+      try {
+        if (!transportPointRequests.has(cle)) {
+          const request = Promise.resolve().then(() => G.chercherPoint(m, cote, u => fetch(u)))
+            .finally(() => transportPointRequests.delete(cle));
+          transportPointRequests.set(cle, request);
+        }
+        const r = await transportPointRequests.get(cle);
+        if (r && r.trouve) {
+          G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++;
+          ecrireLocal('cp_gps', gpsMem);
+          if (onPoint) onPoint(cote);
+        }
+      } catch (_) { /* One missing address cannot block the other endpoint. */ }
+    }));
+    return n > 0;
+  }
   function adresse(m, cote) {
     const a = m[cote + '_address'] || (m.mail_info && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'] && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'].adresse); if (a) return a;
     if (m.adresses_locales) return (cote === 'origin' ? m.from_city : m.to_city) ? (cote === 'origin' ? m.from_city : m.to_city) + (m[(cote === 'origin' ? 'from' : 'to') + '_department'] ? ' (' + m[(cote === 'origin' ? 'from' : 'to') + '_department'] + ')' : '') + ' — ' + LOCAL : LOCAL;
@@ -1724,6 +1747,7 @@
   }
   function detail(m, depuis) {
     if (!m) return;
+    stopGTFSTransports();
     const r = renta(m, depuis);
     const itin = a => a ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a)}` : '';
     const frais = window.CPCalc.fraisRembourses(m);
@@ -1757,11 +1781,14 @@
     { const bt = $('btnTransportsMission'); if (bt) bt.onclick = () => {
       const existing = $('cpTransportMissionDetails');
       if (existing) {
-      existing.hidden = !existing.hidden;
-      bt.setAttribute('aria-expanded', String(!existing.hidden));
-      if (!existing.hidden) existing.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      return;
-    }
+        stopGTFSTransports();
+        if (!existing.hidden) {
+          existing.hidden = true;
+          bt.setAttribute('aria-expanded', 'false');
+          return;
+        }
+        existing.remove();
+      }
       const panel = document.createElement('section');
       panel.id = 'cpTransportMissionDetails';
       panel.className = 'bk bkC bkTr';
@@ -2037,6 +2064,7 @@
         // Explicit user refresh must bypass browser HTTP caches for day JSON.
         // The timestamp is scoped to this panel only; mission sync is untouched.
         bt.dataset.transportRefreshAt = String(Date.now());
+        stopGTFSTransports();
         panel.remove();
         bt.setAttribute('aria-expanded', 'false');
         bt.removeAttribute('aria-controls');
@@ -2050,6 +2078,36 @@
         refreshed.textContent = 'Actualisation réseau demandée : si les données sont indisponibles, aucun horaire récent ne sera confirmé.';
         panel.appendChild(refreshed);
       }
+      // GTFS candidate search: one worker for the open panel, no mission writes.
+      if (window.CPGTFSAgenda && window.CPGTFSWorker) {
+        const runGTFS = () => {
+        if (!panel.isConnected || panel.hidden || $('feuille').hidden) return;
+        stopGTFSTransports();
+        panel.querySelector('[data-gtfs-agenda]')?.remove();
+        const point = gps => transportAddressPoint(gps) ?
+          {lat:Number(gps.lat),lon:Number(gps.lng)} : null;
+        const homeLat = etat.reglages?.domicile_lat, homeLon = etat.reglages?.domicile_lng;
+        const homePoint = homeLat != null && homeLon != null && homeLat !== '' && homeLon !== '' &&
+          Number.isFinite(Number(homeLat)) && Number.isFinite(Number(homeLon)) ?
+          {lat:Number(homeLat),lon:Number(homeLon)} : null;
+        const gtfsTasks = [];
+        if (pickupDate) gtfsTasks.push({label:'Aller',from:homePoint,
+          to:point(G.coordonnees(m,'origin')),latestArrival:pickupDate,marginMinutes:securityMarginMin});
+        if (deliveryDate) gtfsTasks.push({label:'Retour',from:point(G.coordonnees(m,'destination')),
+          to:homePoint,earliestDeparture:deliveryDate});
+        if (next && deliveryDate && next.pickup_start) gtfsTasks.push({label:'Jonction',
+          from:point(G.coordonnees(m,'destination')),to:point(G.coordonnees(next,'origin')),
+          earliestDeparture:deliveryDate,latestArrival:next.pickup_start,marginMinutes:securityMarginMin});
+        gtfsAgendaSession = window.CPGTFSAgenda.mount(panel,{tasks:gtfsTasks,
+          ...(Array.isArray(window.CP_GTFS_AGENDA_RESOURCES) ? {resources:window.CP_GTFS_AGENDA_RESOURCES} : {})});
+        };
+        bt.cpRefreshGTFS = runGTFS;
+        runGTFS();
+      }
+      if (next) pointsMission(next, () => {
+        if (!panel.isConnected || panel.hidden || $('feuille').hidden || $('btnTransportsMission') !== bt) return;
+        bt.cpRefreshGTFS?.();
+      });
       // Swiss public transport connections for an accepted mission junction.
       // Results are advisory until realtime validity and exact walking approaches are checked.
       if (window.CPSwissTransport && next && deliveryDate && next.pickup_start) {
@@ -2872,6 +2930,7 @@
       panel.setAttribute('aria-label', 'Détails des transports de la mission');
       panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) {
+        stopGTFSTransports();
         console.error('Transports mission : affichage incomplet', error);
         panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div><p role="alert">Impossible de calculer les détails de transport pour cette mission. Transport non confirmé — vérifiez vous-même.</p>';
         panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -2879,7 +2938,16 @@
     }; }
 
     { const br = $('btnRetirer'); if (br) br.onclick = () => { if (!window.confirm('Retirer cette mission de ton Agenda sur ce téléphone ? (rien n’est supprimé chez Hiflow ni sur le serveur ; tu peux tout remettre dans Réglages)')) return; const t = lireLocal('cp_masquees', []) || []; const k = m.platform + '|' + m.external_id; if (!t.includes(k)) t.push(k); ecrireLocal('cp_masquees', t); etat.missions = etat.missions.filter(x => !(x.kind === 'acceptee' && x.platform + '|' + x.external_id === k)); ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures }); $('feuille').hidden = true; afficher(); toast('Retirée de l’Agenda'); }; }
-    pointsMission(m).then(ok => { if (ok && $('gpsO')) { $('gpsO').innerHTML = mentionGps(m, 'origin'); if ($('gpsD')) $('gpsD').innerHTML = mentionGps(m, 'destination'); } });
+    const transportDetailButton = $('btnTransportsMission');
+    pointsMission(m, () => {
+      if ($('btnTransportsMission') !== transportDetailButton || $('feuille').hidden) return;
+      if ($('gpsO')) $('gpsO').innerHTML = mentionGps(m, 'origin');
+      if ($('gpsD')) $('gpsD').innerHTML = mentionGps(m, 'destination');
+      const openPanel = $('cpTransportMissionDetails');
+      if (openPanel && !openPanel.hidden) {
+        transportDetailButton.cpRefreshGTFS?.();
+      }
+    });
   }
 
   // ---------- V77 : notifications même application fermée (Web Push) ----------
@@ -2927,9 +2995,9 @@
   $('actualiser').onclick = () => charger(false);
   $('pastille').onclick = feuilleEtat;
   setInterval(majPastille, 30000);
-  $('fermer').onclick = () => { $('feuille').hidden = true; };
-  $('feuille').onclick = ev => { if (ev.target === $('feuille')) $('feuille').hidden = true; };
-  document.addEventListener('keydown', ev => { if (ev.key === 'Escape') $('feuille').hidden = true; });
+  $('fermer').onclick = () => { stopGTFSTransports(); $('feuille').hidden = true; };
+  $('feuille').onclick = ev => { if (ev.target === $('feuille')) { stopGTFSTransports(); $('feuille').hidden = true; } };
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape') { stopGTFSTransports(); $('feuille').hidden = true; } });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') charger(true); });
   setInterval(() => { if (document.visibilityState === 'visible') charger(true); }, 60000);
 

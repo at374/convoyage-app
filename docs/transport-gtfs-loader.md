@@ -44,7 +44,7 @@ Sur le même ZIP Sibra local, dans deux processus Node distincts : pic RSS de 82
 
 ## Éléments encore à raccorder
 
-Le module n’est pas encore ajouté à l’interface Agenda. La fédération des réseaux, les transferts entre leurs identifiants d’arrêts, les chemins piétons réels, les tarifs officiels et leur fraîcheur, les preuves de circulation et les trois choix classés restent à relier. Les dates de recherche viennent du calendrier du flux ; aucune borne au 15 novembre n’est ajoutée.
+Le client worker est maintenant chargé dans l’interface Agenda sur cette branche pour les trajets directs Cars Région Haute-Savoie (voir `transport-gtfs-agenda.md`). La version n’est pas déployée ni validée sur Android. La fédération des réseaux, les transferts entre leurs identifiants d’arrêts, les chemins piétons réels, les tarifs officiels et leur fraîcheur, les preuves de circulation et les trois choix classés restent à relier. Les dates de recherche viennent du calendrier du flux ; aucune borne au 15 novembre n’est ajoutée.
 
 Tous les résultats de ce chargeur portent `serviceConfirmed:false`, `faresVerified:false` et `accessVerified:false`. Un chargement réussi n’autorise donc pas l’affichage « Réalisable ».
 
@@ -73,7 +73,7 @@ client.dispose();
 - `clear()` permet un prochain chargement ; `dispose()` ferme définitivement le client. La fermeture libère les références du worker aux sources et index, sans promesse sur le délai de récupération mémoire du navigateur.
 - Aucun repli sur le thread de l’interface si Worker est indisponible ou bloqué par la CSP. Servir les scripts depuis la même origine avec une politique autorisant les workers ; les téléchargements GTFS restent soumis au CORS de leur source.
 
-Validation : cinq tests supplémentaires, dont exécution du véritable script worker et de ses dépendances dans un thread Node séparé avec archive synthétique, calendrier daté, réponses simultanées, remplacement, annulation, limite de file, erreurs et délai maximal. Ces tests ne constituent pas une validation Android ou CORS. L’intégration à l’Agenda et la persistance hors ligne restent à faire ; aucun script n’est encore ajouté à `index.html` ni au service worker.
+Validation : cinq tests supplémentaires, dont exécution du véritable script worker et de ses dépendances dans un thread Node séparé avec archive synthétique, calendrier daté, réponses simultanées, remplacement, annulation, limite de file, erreurs et délai maximal. Ces tests ne constituent pas une validation Android ou CORS. Le raccordement Agenda des trajets directs Haute-Savoie est présent sur la branche. Les scripts sont ajoutés à `index.html` et au cache de l’interface ; la persistance des données GTFS hors ligne reste à faire.
 
 ### Trajets directs entre coordonnées
 
@@ -89,7 +89,7 @@ Les coordonnées sont des entrées, pas une certification de l’adresse. Chaque
 
 La recherche parcourt une fois les calendriers et les courses actives pour tous les couples d’arrêts proches. Elle évite les copies de tous les horaires pour chaque couple. Les retours sur le même arrêt, les séquences non croissantes et les arrivées antérieures au départ ne produisent pas de candidat ; les visites répétées d’un arrêt restent distinctes. Les tests comparent les résultats à une recherche par couples indépendante, couvrent les boucles, horaires après minuit, calendriers, incohérences horaires et l’appel depuis le véritable script worker. Le nombre de lectures du calendrier est vérifié, sans extrapolation de performance Android.
 
-Prochaine étape de raccordement : choisir les ressources utiles, transmettre les fenêtres des missions depuis l’Agenda et vérifier les accès piétons. L’interface Agenda ne lance pas encore ces requêtes.
+Prochaine étape de raccordement : choisir les ressources utiles, transmettre les fenêtres des missions depuis l’Agenda et vérifier les accès piétons. Le raccordement Agenda lance ces recherches via `missionDirectTrips` pour le réseau Haute-Savoie sélectionné.
 
 ### Fenêtres horaires des missions
 
@@ -113,4 +113,4 @@ Les champs `departure` et `arrival` deviennent des ISO UTC. `serviceDate`, `time
 
 Les résultats portent `timetableOnly:true`. Le filtrage ne comprend aucun temps d’accès ou de sortie à pied et ne prouve pas qu’un départ puisse être rejoint après livraison, ni que l’adresse de prise en charge soit atteinte à temps. `accessVerified`, `serviceConfirmed`, `exactOrigin`, `exactDestination`, `faresVerified` restent à `false` et `priceEUR` reste `null`. Aucun badge « Réalisable » n’est autorisé par cette seule fenêtre.
 
-Validation : huit tests unitaires couvrent les fuseaux Paris/UTC/Katmandou, les deux changements d’heure, heures au-delà de 24 h, jour civil inexistant, dates impossibles, bornes et marges, métadonnées d’agence et préservation des indicateurs de preuve. Un test supplémentaire exécute les fenêtres dans le véritable worker avec requêtes simultanées. Aucun test Android ou contrôle d’accès piéton n’est revendiqué ; le module n’est toujours pas branché à l’interface Agenda.
+Validation : huit tests unitaires couvrent les fuseaux Paris/UTC/Katmandou, les deux changements d’heure, heures au-delà de 24 h, jour civil inexistant, dates impossibles, bornes et marges, métadonnées d’agence et préservation des indicateurs de preuve. Un test supplémentaire exécute les fenêtres dans le véritable worker avec requêtes simultanées. Aucun test Android ou contrôle d’accès piéton n’est revendiqué ; le module est branché à l’Agenda sur la branche, sans déploiement ni validation Android.

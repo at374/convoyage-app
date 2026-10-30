@@ -115,7 +115,8 @@ function nearbyStops(index,lat,lon,radiusMeters=700){
   const h=Math.sin(dLat/2)**2+Math.cos(lat*rad)*Math.cos(a*rad)*Math.sin(dLon/2)**2;
   const distanceMeters=2*earth*Math.asin(Math.min(1,Math.sqrt(h)));
   if(distanceMeters<=radiusMeters)results.push({
-    stopId:stop.stop_id,name:stop.stop_name||'',distanceMeters:Math.round(distanceMeters),
+    stopId:stop.stop_id,name:stop.stop_name||'',lat:a,lon:b,description:stop.stop_desc||null,
+    distanceMeters:Math.round(distanceMeters),
     accessVerified:false
   });
  }

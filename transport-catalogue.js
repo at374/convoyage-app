@@ -37,7 +37,7 @@ async function downloadGTFS(resource,fetcher,limitBytes=20*1024*1024,{signal}={}
       !/^https:\/\//i.test(resource.url))throw new Error('Invalid GTFS resource');
   if(!Number.isSafeInteger(limitBytes)||limitBytes<=0)throw new Error('Invalid size limit');
   if(signal?.aborted)throw new DOMException('GTFS download cancelled','AbortError');
-  const response=await fetcher(resource.url,{redirect:'follow',credentials:'omit',signal});
+  const response=await fetcher(resource.url,{redirect:'follow',credentials:'omit',cache:'no-cache',signal});
   if(!response?.ok)throw new Error('GTFS download failed');
   if(response.url && !/^https:\/\//i.test(response.url))throw new Error('Insecure GTFS redirect');
   const contentType=response.headers?.get?.('content-type')||'';

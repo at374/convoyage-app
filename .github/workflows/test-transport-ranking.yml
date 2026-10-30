@@ -10,6 +10,10 @@ on:
       - 'transport-gtfs-index.js'
       - 'transport-gtfs-loader.js'
       - 'transport-gtfs-worker.js'
+      - 'transport-gtfs-agenda.js'
+      - 'app.js'
+      - 'index.html'
+      - 'sw.js'
       - 'transport-gtfs-time.js'
       - 'transport-gtfs-worker-client.js'
       - 'tests/transport-ranking.test.cjs'
@@ -20,6 +24,7 @@ on:
       - 'tests/transport-gtfs-nearby.test.cjs'
       - 'tests/transport-gtfs-loader.test.cjs'
       - 'tests/transport-gtfs-worker.test.cjs'
+      - 'tests/transport-gtfs-agenda.test.cjs'
       - 'tests/transport-gtfs-time.test.cjs'
       - '.github/workflows/test-transport-ranking.yml'
   pull_request:
@@ -31,6 +36,10 @@ on:
       - 'transport-gtfs-index.js'
       - 'transport-gtfs-loader.js'
       - 'transport-gtfs-worker.js'
+      - 'transport-gtfs-agenda.js'
+      - 'app.js'
+      - 'index.html'
+      - 'sw.js'
       - 'transport-gtfs-time.js'
       - 'transport-gtfs-worker-client.js'
       - 'tests/transport-ranking.test.cjs'
@@ -41,6 +50,7 @@ on:
       - 'tests/transport-gtfs-nearby.test.cjs'
       - 'tests/transport-gtfs-loader.test.cjs'
       - 'tests/transport-gtfs-worker.test.cjs'
+      - 'tests/transport-gtfs-agenda.test.cjs'
       - 'tests/transport-gtfs-time.test.cjs'
       - '.github/workflows/test-transport-ranking.yml'
 permissions:
@@ -61,6 +71,7 @@ jobs:
       - run: node --check transport-gtfs-index.js
       - run: node --check transport-gtfs-loader.js
       - run: node --check transport-gtfs-worker.js
+      - run: node --check transport-gtfs-agenda.js
       - run: node --check transport-gtfs-time.js
       - run: node --check transport-gtfs-worker-client.js
       - run: node tests/transport-ranking.test.cjs
@@ -72,3 +83,4 @@ jobs:
       - run: node --test tests/transport-gtfs-worker.test.cjs
       - run: node --test tests/transport-gtfs-nearby.test.cjs
       - run: node --test tests/transport-gtfs-time.test.cjs
+      - run: node --test tests/transport-gtfs-agenda.test.cjs

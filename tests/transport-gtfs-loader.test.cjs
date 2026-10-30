@@ -36,7 +36,7 @@ function zip(input=files,{method=8,descriptor=false,prefix='',comment='',flags=0
  return Buffer.concat([...locals,directory,end,note]);
 }
 function fetcher(bytes,counter={calls:0}){return async(url,options)=>{
- counter.calls++;assert.equal(url,resource.url);assert.equal(options.credentials,'omit');
+ counter.calls++;assert.equal(url,resource.url);assert.equal(options.credentials,'omit');assert.equal(options.cache,'no-cache');
  return new Response(bytes,{headers:{'content-type':'application/zip'}});
 };}
 test('extracts stored/deflated feeds, folder prefixes and streaming ZIP descriptors',async()=>{
