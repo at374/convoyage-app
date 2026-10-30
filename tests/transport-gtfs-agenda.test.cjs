@@ -436,3 +436,18 @@ test('malformed GTFS network collections fail safely without running a journey q
   session.dispose();
  }
 });
+
+test('Agenda preserves distinct GTFS leg combinations sharing transfer stop and timetable',async()=>{
+ const target=panel();
+ const base={networkId:'Metro+Gresivaudan',interNetwork:true,transferStopId:'same-interchange'};
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,
+  query:async()=>({rows:[
+   row({...base,tripId:'connection-A',legs:[{networkId:'Metro',tripId:'M1',from:'A',to:'X'},{networkId:'Gresivaudan',tripId:'G1',from:'Y',to:'B'}]}),
+   row({...base,tripId:'connection-B',legs:[{networkId:'Metro',tripId:'M2',from:'A',to:'X'},{networkId:'Gresivaudan',tripId:'G2',from:'Y',to:'B'}]})
+  ],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 2 horaire/);
+ session.dispose();
+});
