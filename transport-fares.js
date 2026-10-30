@@ -4,12 +4,20 @@
 (function(root){
   'use strict';
   function money(value){return typeof value==='number'&&Number.isFinite(value)&&value>=0?value:null;}
+  function validForTravel(leg,travelDate){
+    if(!travelDate)return true;
+    const when=Date.parse(travelDate);
+    if(!Number.isFinite(when))return false;
+    const start=leg?.fareValidFrom?Date.parse(leg.fareValidFrom):NaN;
+    const end=leg?.fareValidUntil?Date.parse(leg.fareValidUntil):NaN;
+    return Number.isFinite(start)&&Number.isFinite(end)&&start<=when&&when<=end;
+  }
   function fare(legs,options={}){
     const items=Array.isArray(legs)?legs:[];
     if(!items.length)return {totalEUR:null,known:false,breakdown:[],status:'Tarif non vérifié'};
     const breakdown=items.map(leg=>{
       // A numerical amount is not evidence: require an explicit verified source.
-      const price=leg?.fareVerified===true && typeof leg?.fareSource==='string' && leg.fareSource.trim()?money(leg.verifiedPriceEUR):null;
+      const price=leg?.fareVerified===true && typeof leg?.fareSource==='string' && leg.fareSource.trim() && validForTravel(leg,options.travelDate)?money(leg.verifiedPriceEUR):null;
       const covered=leg?.passAccepted===true&&
         leg?.passProduct==='SIBRA'&&options.sibraPassActive===true&&
         leg?.passEligibilityVerified===true&&
