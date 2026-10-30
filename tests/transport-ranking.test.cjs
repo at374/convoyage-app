@@ -9,4 +9,5 @@ assert.equal(evaluate({...base,legs:[{serviceConfirmed:false}]},{deadline}).feas
 assert.equal(evaluate({...base,arrival:'2026-11-02T08:50:00+01:00'},{deadline}).feasible,false);
 assert.equal(rank([{...base,priceEUR:5},{...base,priceEUR:2,arrival:'2026-11-02T08:30:00+01:00'}],{deadline}).length,2);
 assert.equal(rank([{...base,departure:'invalid'}]).length,0);
-console.log('transport-ranking: 7 assertions passed');
+assert.equal(evaluate(base).feasible,false);
+console.log('transport-ranking: 8 assertions passed');
