@@ -1540,6 +1540,7 @@
       window.CP_BUS_ACTIF = $('rBus').checked; ecrireLocal('cp_bus_actif', window.CP_BUS_ACTIF); window.CP_TRANSPORT_CHOISI = $('rTransport').value; ecrireLocal('cp_transport', window.CP_TRANSPORT_CHOISI);
       try { await api.enregistrerReglages(v); etat.reglages = { ...r, ...v }; ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe }); toast('Réglages enregistrés'); } catch (e) { toast(e.message); }
     };
+    window.CPTripGo?.mountSettings($('ecran'));
     etatNotifications(); brancherPrefsNotif();
     { const p = lirePause(); $('pzOn').checked = p.choix === 'oui'; $('pzDeb').value = p.debut; $('pzFin').value = p.fin;
       const maj = () => { enregistrerPause($('pzOn').checked ? 'oui' : 'non', $('pzDeb').value, $('pzFin').value); toast($('pzOn').checked ? 'Désactivation la nuit : activée' : 'Toujours actif'); };
@@ -2049,6 +2050,19 @@
         refreshed.setAttribute('role', 'status');
         refreshed.textContent = 'Actualisation réseau demandée : si les données sont indisponibles, aucun horaire récent ne sera confirmé.';
         panel.appendChild(refreshed);
+      }
+      // Independent jobs render as each provider answers. Device credentials never enter settings sync.
+      if (window.CPTripGo) {
+        const point = p => transportAddressPoint(p) ? {lat:Number(p.lat),lon:Number(p.lng)} : null;
+        const homeLat = etat.reglages?.domicile_lat, homeLon = etat.reglages?.domicile_lng;
+        const home = homeLat != null && homeLon != null && homeLat !== '' && homeLon !== '' ?
+          {lat:Number(homeLat),lon:Number(homeLon)} : null;
+        window.CPTripGo.mountPanel(panel, {
+          home, origin:point(G.coordonnees(m,'origin')), destination:point(G.coordonnees(m,'destination')),
+          nextOrigin:next ? point(G.coordonnees(next,'origin')) : null,
+          pickup:pickupDate, delivery:deliveryDate, nextPickup:next?.pickup_start,
+          marginMinutes:securityMarginMin, refresh:!!bt.dataset.transportRefreshAt, fetcher:regionalFetch
+        });
       }
       // Swiss public transport connections for an accepted mission junction.
       // Results are advisory until realtime validity and exact walking approaches are checked.

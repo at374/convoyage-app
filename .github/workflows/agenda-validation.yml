@@ -28,3 +28,5 @@ jobs:
         run: node tests/agenda-transports.test.cjs
       - name: Run Swiss transport adapter regression tests
         run: node tests/swiss-transport-api.test.cjs
+      - name: Run TripGo routing regression tests
+        run: node --test tests/tripgo-routing.test.cjs
