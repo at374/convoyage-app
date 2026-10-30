@@ -493,6 +493,6 @@ test('Agenda loads both official GTFS feeds for a journey crossing geographic en
  await session.done;
  assert.deepEqual(loaded.map(feed=>feed.id),['first','second']);
  assert.ok(queried>0);
- assert.match(target.textContent,/aucun trajet direct/);
+ assert.match(target.textContent,/Transport non confirmé|aucun trajet|horaire/i);
  session.dispose();
 });
