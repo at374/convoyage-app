@@ -18,7 +18,7 @@
     const breakdown=items.map(leg=>{
       // A numerical amount is not evidence: require an explicit verified source.
       const price=leg?.fareVerified===true && typeof leg?.fareSource==='string' && leg.fareSource.trim() && validForTravel(leg,options.travelDate)?money(leg.verifiedPriceEUR):null;
-      const covered=validForTravel({fareValidFrom:leg?.passValidFrom,fareValidUntil:leg?.passValidUntil},options.travelDate)&&leg?.passAccepted===true&&
+      const covered=(!options.travelDate || (leg?.passValidFrom && leg?.passValidUntil && validForTravel({fareValidFrom:leg.passValidFrom,fareValidUntil:leg.passValidUntil},options.travelDate)))&&leg?.passAccepted===true&&
         leg?.passProduct==='SIBRA'&&options.sibraPassActive===true&&
         leg?.passEligibilityVerified===true&&
         typeof leg?.passEligibilitySource==='string'&&leg.passEligibilitySource.trim();
