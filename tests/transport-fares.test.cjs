@@ -14,4 +14,8 @@ assert.equal(fare([{provider:'Bus',fareVerified:true,fareSource:'source vérifi�
 assert.match(describe(fare([{provider:'TER',fareVerified:true,fareSource:'source vérifiée',verifiedPriceEUR:8.5},{provider:'Bus'}])),/Total inconnu/);
 assert.match(describe(fare([{provider:'TER',fareVerified:true,fareSource:'source vérifiée',verifiedPriceEUR:8.5}])),/Total : 8,50 €/);
 assert.match(describe(fare([sibra],{sibraPassActive:true})),/abonnement vérifié/);
-console.log('transport fares: 13 assertions passed');
+const dated={provider:'TER',verifiedPriceEUR:8.5,fareVerified:true,fareSource:'source vérifiée',fareValidFrom:'2026-11-01T00:00:00+01:00',fareValidUntil:'2026-11-30T23:59:59+01:00'};
+assert.equal(fare([dated],{travelDate:'2026-11-15T12:00:00+01:00'}).totalEUR,8.5);
+assert.equal(fare([dated],{travelDate:'2026-12-01T12:00:00+01:00'}).known,false);
+assert.equal(fare([{...dated,fareValidUntil:null}],{travelDate:'2026-11-15T12:00:00+01:00'}).known,false);
+console.log('transport fares: 16 assertions passed');
