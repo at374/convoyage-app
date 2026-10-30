@@ -367,3 +367,20 @@ test('all failed federated GTFS loads display a clear unavailable state without 
  assert.match(target.textContent,/Retour : horaires indisponibles/);
  session.dispose();
 });
+
+test('partial GTFS network failure is disclosed even if worker omits partial flag',async()=>{
+ const target=panel();
+ const trip={...task,from:{lat:45.1885,lon:5.7245},to:{lat:45.276,lon:5.883}};
+ const session=agenda.mount(target,{tasks:[trip],clientFactory:()=>({
+  loadNetworks:async()=>({networks:[
+   {...summary,source:{...summary.source,network:'M Réso — Métropole grenobloise',url:'https://example.org/metro'}},
+   {error:{network:'M Réso — Grésivaudan'}}
+  ]}),
+  query:async()=>({rows:[],truncated:false}),
+  dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Recherche partielle : un réseau est indisponible/);
+ assert.match(target.textContent,/Grésivaudan : flux indisponible/);
+ session.dispose();
+});
