@@ -334,3 +334,17 @@ test('Grenoble to Crolles remains within both metropolitan and Grésivaudan GTFS
  assert.match(target.textContent,/Transport non confirmé|ne prouve pas l’absence de transport/);
  session.dispose();
 });
+
+test('Agenda preserves different interchange stops even with identical lines and times',async()=>{
+ const target=panel();
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,
+  query:async()=>({rows:[
+   row({tripId:'connection-1',networkId:'Metro+Gresivaudan',transferStopId:'stop-A'}),
+   row({tripId:'connection-2',networkId:'Metro+Gresivaudan',transferStopId:'stop-B'})
+  ],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 2 horaire/);
+ session.dispose();
+});
