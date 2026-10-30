@@ -142,3 +142,15 @@ test('cross-network transfer requires enough time even for straight-line walk',(
  assert.equal(result.journeys.length,1);
  assert.equal(result.journeys[0].transferVerified,false);
 });
+
+test('estimated inter-network transfer threshold is exposed but never marked verified',()=>{
+ const a=feed('Metro Grenoble','first'),b=feed('Gresivaudan','second',{offset:0.001});
+ const found=search([a,b],{minTransferMinutes:1});
+ assert.equal(found.journeys.length,1);
+ const transfer=found.journeys[0];
+ assert.ok(transfer.minimumTransferMinutes>=2);
+ assert.ok(transfer.minimumTransferMinutes<=transfer.transferMinutes);
+ assert.equal(transfer.transferVerified,false);
+ assert.equal(transfer.walkingDurationSeconds,null);
+ assert.equal(transfer.serviceConfirmed,false);
+});
