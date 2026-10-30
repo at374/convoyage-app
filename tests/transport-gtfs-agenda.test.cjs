@@ -281,3 +281,31 @@ test('Grenoble local tasks select only the two official Grenoble resources',asyn
  const outside={...local,from:point};
  assert.equal(agenda.DEFAULT_RESOURCES.some(r=>agenda.selected(r,outside)),false);
 });
+
+test('Agenda collapses equivalent departures from different GTFS trip IDs',async()=>{
+ const target=panel();
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,
+  query:async()=>({rows:[
+   row({tripId:'trip-1',networkId:'network-A'}),
+   row({tripId:'trip-2',networkId:'network-A'})
+  ],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 1 horaire/);
+ assert.equal((target.textContent.match(/tarif inconnu/g)||[]).length,1);
+ session.dispose();
+});
+test('Agenda retains identical schedules from different networks',async()=>{
+ const target=panel();
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,
+  query:async()=>({rows:[
+   row({tripId:'trip-1',networkId:'network-A'}),
+   row({tripId:'trip-2',networkId:'network-B'})
+  ],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 2 horaire/);
+ session.dispose();
+});
