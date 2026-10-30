@@ -112,7 +112,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      for(const date of dates){
       if(!active())return;
       const result=await client.query({method:'missionJourneys',date,origin:task.from,destination:task.to,
-       window,limit:100,radiusMeters:700,order:task.label==='Aller'?'latestDeparture':'earliestDeparture'});
+       window,connectionDates:dates,limit:100,radiusMeters:700,order:task.label==='Aller'?'latestDeparture':'earliestDeparture'});
       if(!active())return;
       truncated=truncated||result.truncated;rows.push(...result.rows);
      }

@@ -109,7 +109,7 @@ const result = await client.query({
 
 Au moins une borne est obligatoire : `latestArrival` pour l’Aller, `earliestDeparture` pour le Retour, les deux pour la Jonction. Une borne est un timestamp ISO avec fuseau explicite ou un nombre de millisecondes Unix ; les dates sans fuseau sont rejetées. La marge est soustraite uniquement de la borne d’arrivée. Les bornes sont inclusives, les résultats sont filtrés avant leur limitation.
 
-Les champs `departure` et `arrival` deviennent des ISO UTC. `serviceDate`, `timeZone`, `departureTime` et `arrivalTime` conservent l’interprétation des données source. Une course à `25:00` conserve son jour de service même si son départ civil est le lendemain. Le paramètre `date` reste explicitement le **jour de service GTFS** : la recherche ne consulte pas automatiquement les jours de service voisins. Une future recherche Agenda traversant minuit devra interroger ces jours séparément.
+Les champs `departure` et `arrival` deviennent des ISO UTC. `serviceDate`, `timeZone`, `departureTime` et `arrivalTime` conservent l’interprétation des données source. Une course à `25:00` conserve son jour de service même si son départ civil est le lendemain. Le paramètre `date` reste explicitement le **jour de service GTFS** : la recherche ne consulte pas automatiquement les jours de service voisins. L’Agenda interroge ces jours séparément pour les départs ; la fédération peut assembler une seconde branche sur l’un des jours explicitement fournis via `connectionDates`.
 
 Les résultats portent `timetableOnly:true`. Le filtrage ne comprend aucun temps d’accès ou de sortie à pied et ne prouve pas qu’un départ puisse être rejoint après livraison, ni que l’adresse de prise en charge soit atteinte à temps. `accessVerified`, `serviceConfirmed`, `exactOrigin`, `exactDestination`, `faresVerified` restent à `false` et `priceEUR` reste `null`. Aucun badge « Réalisable » n’est autorisé par cette seule fenêtre.
 
@@ -117,7 +117,7 @@ Validation : huit tests unitaires couvrent les fuseaux Paris/UTC/Katmandou, les 
 
 ### Trajets avec une correspondance
 
-`query({method:'missionJourneys', date, origin, destination, window, radiusMeters, limit})` réunit trajets directs et correspondances au même arrêt. Les bornes et formats sont ceux de `missionDirectTrips`. Le résultat inclut `searchTruncated` pour les budgets internes, en plus de `truncated` pour les résultats transférés. Les deux indicateurs sont propagés à l’affichage. Les correspondances portent deux `legs` datées, `transferStop`, `transferMinutes` et `transferVerified:false`. Règles, exclusions et budgets sont détaillés dans `transport-gtfs-agenda.md`. L’API `missionDirectTrips` reste disponible pour une recherche directe seule.
+`query({method:'missionJourneys', date, origin, destination, window, radiusMeters, limit, connectionDates})` réunit trajets directs et correspondances au même arrêt. Les bornes et formats sont ceux de `missionDirectTrips`. Le résultat inclut `searchTruncated` pour les budgets internes, en plus de `truncated` pour les résultats transférés. Les deux indicateurs sont propagés à l’affichage. Les correspondances portent deux `legs` datées, `transferStop`, `transferMinutes` et `transferVerified:false`. Règles, exclusions et budgets sont détaillés dans `transport-gtfs-agenda.md`. L’API `missionDirectTrips` reste disponible pour une recherche directe seule.
 
 ### Index par dates et chargement de deux réseaux
 
@@ -126,6 +126,8 @@ Validation : huit tests unitaires couvrent les fuseaux Paris/UTC/Katmandou, les 
 `resource.resolveFromCatalogue:true` relit le catalogue PAN pour `resource.datasetId`, choisit la ressource GTFS la plus récemment datée, puis télécharge son URL HTTPS. La source retournée expose cette URL et la date producteur connue. Le délai et le signal d’annulation couvrent aussi cette résolution. Le champ de métadonnées PAN `updated` est reconnu.
 
 `client.loadNetworks([resourceA,resourceB], {indexServiceDates})` remplace le worker et retourne `{networks,partial}` ; les dates sont obligatoires, deux réseaux au maximum. Un élément de `networks` contient le bilan existant ou `{error:{network,message}}`. Les requêtes `missionJourneys` réunissent résultats internes et liaisons interréseaux indicatives ; les autres méthodes continuent d’interroger le premier réseau disponible. Une requête datée hors du périmètre indexé est rejetée.
+
+`connectionDates` contient de un à cinq jours explicites, incluant `date`, tous dans le périmètre indexé. Pour la fédération, la première branche conserve `date` et la seconde parcourt les calendriers demandés. Chaque branche expose son propre `serviceDate` ; le résultat expose aussi `serviceDates`. Les heures absolues, fenêtres de mission, marges et intervalles restent appliqués. Le budget de branches est partagé entre ces dates par réseau et par requête ; les recherches tronquées restent signalées. Sans ce paramètre, seul `date` est consulté. Les correspondances internes ne changent pas de jour de service.
 
 La fédération ne fusionne pas les identifiants entre réseaux et ne confirme aucun chemin piéton. Les rapprochements entre arrêts et leurs limites sont décrits dans `transport-gtfs-agenda.md`.
 

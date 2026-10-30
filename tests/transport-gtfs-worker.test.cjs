@@ -4,7 +4,7 @@ const {Worker}=require('node:worker_threads');
 const path=require('node:path');
 const {createClient}=require('../transport-gtfs-worker-client.js');
 const {crc32}=require('../transport-gtfs-loader.js');
-function archive(transfers=false,tripCount=1){
+function archive(transfers=false,tripCount=1,overnightSide=null){
  const files={
   'agency.txt':'agency_name,agency_timezone\nFixture,Europe/Paris',
   'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nA,Start,45.9,6.1\nB,End,45.8,6.2',
@@ -18,6 +18,14 @@ function archive(transfers=false,tripCount=1){
   files['routes.txt']='route_id,route_short_name,route_type\nR,One,3\nR2,Two,3';
   files['trips.txt']='route_id,service_id,trip_id\nR,S,T\nR2,S,T2';
   files['stop_times.txt']='trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT,11:00:00,11:00:00,A,1\nT,11:20:00,11:20:00,X,2\nT2,11:28:00,11:28:00,X,1\nT2,11:48:00,11:48:00,B,2';
+ }
+ if(overnightSide){
+  const first=overnightSide==='first';
+  files['trips.txt']='route_id,service_id,trip_id\nR,S,T';
+  files['stop_times.txt']='trip_id,arrival_time,departure_time,stop_id,stop_sequence\n'+(first?
+   'T,23:40:00,23:40:00,A,1\nT,24:00:00,24:00:00,X,2':
+   'T,00:10:00,00:10:00,X,1\nT,00:40:00,00:40:00,B,2');
+  files['calendar_dates.txt']='service_id,date,exception_type\nS,'+(first?'20261102':'20261103')+',1';
  }
  if(tripCount>1){
   const clock=minutes=>String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0')+':00';
@@ -46,13 +54,13 @@ const {parentPort,workerData}=require('node:worker_threads');
 const vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const context=vm.createContext({TextDecoder,TextEncoder,Uint8Array,Uint32Array,DataView,
  Blob,Response,DecompressionStream,AbortController,DOMException,Intl,setTimeout,clearTimeout,
- fetch:async url=>url.includes('missing')?new Response('missing',{status:404}):new Response(workerData.bytes),postMessage:data=>parentPort.postMessage(data)});
+ fetch:async url=>url.includes('missing')?new Response('missing',{status:404}):new Response(url.includes('overnight-second')?workerData.secondBytes:workerData.bytes),postMessage:data=>parentPort.postMessage(data)});
 context.self=context;
 context.importScripts=(...names)=>{for(const name of names)vm.runInContext(fs.readFileSync(path.join(workerData.root,name),'utf8'),context);};
 vm.runInContext(fs.readFileSync(path.join(workerData.root,'transport-gtfs-worker.js'),'utf8'),context);
 parentPort.on('message',data=>context.onmessage({data}));`;
 function factory(mode){
- const thread=new Worker(bootstrap,{eval:true,workerData:{root:path.resolve(__dirname,'..'),bytes:archive(mode===true,mode==='dense'?120:1)}});
+ const thread=new Worker(bootstrap,{eval:true,workerData:{root:path.resolve(__dirname,'..'),bytes:archive(mode===true||mode==='overnight',mode==='dense'?120:1,mode==='overnight'?'first':null),secondBytes:mode==='overnight'?archive(true,1,'second'):null}});
  const adapter={postMessage:data=>thread.postMessage(data),terminate:()=>thread.terminate()};
  thread.on('message',data=>adapter.onmessage?.({data}));thread.on('error',error=>adapter.onerror?.(error));
  return adapter;
@@ -185,6 +193,24 @@ test('mission departure order is applied before truncation and preserves the lat
  assert.equal(late.rows[0].serviceConfirmed,false);assert.equal(late.rows[0].priceEUR,null);
  const filtered=await client.query({...query,order:'latestDeparture',limit:1,window:{latestArrival:'2026-11-02T10:00:00+01:00'}});
  assert.equal(filtered.rows[0].tripId,'T80');assert.equal(filtered.rows[0].arrival,'2026-11-02T08:30:00.000Z');
+ await assert.rejects(client.query({...query,connectionDates:[]}),/service dates/);
+ await assert.rejects(client.query({...query,connectionDates:['2026-11-02','2026-02-30']}),/date/);
+ await assert.rejects(client.query({...query,method:'missionDirectTrips',connectionDates:['2026-11-02']}),/mission journey/);
  await assert.rejects(client.query({...query,order:'cheapest'}),/order/);
  await assert.rejects(client.query({...query,method:'nearbyDirectTrips',order:'latestDeparture'}),/order/);
+});
+
+test('real worker finds a two-network interchange between explicit service dates',async t=>{
+ const client=createClient({workerFactory:()=>factory('overnight')});t.after(()=>client.dispose());
+ await client.loadNetworks([{...resource,datasetId:'A'},
+  {...resource,datasetId:'B',url:'https://example.org/overnight-second.zip'}],{indexServiceDates:['2026-11-02','2026-11-03']});
+ const query={method:'missionJourneys',date:'2026-11-02',origin:{lat:45.9,lon:6.1},destination:{lat:45.7,lon:6.3},
+  window:{earliestDeparture:'2026-11-02T23:00:00+01:00',latestArrival:'2026-11-03T01:10:00+01:00'}};
+ assert.equal((await client.query(query)).rows.length,0);
+ const answer=await client.query({...query,connectionDates:['2026-11-02','2026-11-03']});
+ assert.equal(answer.rows.length,1);assert.equal(answer.truncated,false);
+ assert.deepEqual(answer.rows[0].serviceDates,['2026-11-02','2026-11-03']);
+ assert.equal(answer.rows[0].transferMinutes,10);assert.equal(answer.rows[0].serviceConfirmed,false);
+ assert.equal((await client.query({...query,date:'2026-11-03',connectionDates:['2026-11-02','2026-11-03']})).rows.length,0);
+ await assert.rejects(client.query({...query,connectionDates:['2026-11-02','2026-11-04']}),/scope/);
 });

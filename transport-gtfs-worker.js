@@ -38,6 +38,12 @@ self.onmessage=async({data})=>{
       (query.order!==undefined&&!['missionDirectTrips','missionJourneys'].includes(query.method)))throw new Error('Invalid GTFS result order');
    let rows,searchTruncated=false;
    scope(feed,query.date);
+   let connectionDates;
+   if(query.connectionDates!==undefined){
+    if(query.method!=='missionJourneys')throw new Error('Service dates require a mission journey query');
+    connectionDates=CPGTFSFederation.connectionServiceDates(query.date,query.connectionDates);
+    for(const current of feeds)for(const day of connectionDates)scope(current,day);
+   }
    if(query.method==='directTrips')rows=CPGTFSIndex.directTrips(feed.files,feed.index,query.date,query.from,query.to);
    else if(['nearbyDirectTrips','missionDirectTrips','missionJourneys'].includes(query.method)){
     const radius=query.radiusMeters??700;
@@ -56,7 +62,8 @@ self.onmessage=async({data})=>{
       network:current.source.network,legs:row.legs?.map(leg=>({...leg,network:current.source.network,networkId:current.source.datasetId||current.source.resourceId}))})));
     }
     if(query.method==='missionJourneys'&&feeds.length===2){
-     const cross=CPGTFSFederation.crossNetworkTrips(feeds,query.date,query.origin,query.destination,query.window,{radiusMeters:radius});
+     const cross=CPGTFSFederation.crossNetworkTrips(feeds,query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
+      ...(connectionDates===undefined?{}:{connectionDates})});
      rows.push(...cross.journeys);searchTruncated=searchTruncated||cross.searchTruncated;
     }
     // Apply mission ordering before the result cap, including across networks.

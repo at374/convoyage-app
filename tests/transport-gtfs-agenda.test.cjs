@@ -48,6 +48,7 @@ test('mount shares one load across tasks, deduplicates rows, uses text nodes and
  assert.equal(loads,1);assert.ok(calls.length>=4);
  assert.equal(calls[0].method,'missionJourneys');assert.equal(calls[0].radiusMeters,700);
  assert.equal(calls[0].order,'earliestDeparture');assert.ok(calls.some(q=>q.order==='latestDeparture'));
+ assert.deepEqual(calls[0].connectionDates,agenda.serviceDates(agenda.searchWindow(task),'Europe/Paris'));
  assert.match(target.textContent,/voir l’arrêt/);
  assert.match(target.textContent,/Retour : 1 horaire/);assert.match(target.textContent,/Aller : 1 horaire/);
  assert.match(target.textContent,/École <script>/);assert.match(target.textContent,/vol d’oiseau/);
