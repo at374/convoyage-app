@@ -2316,15 +2316,8 @@
               ' itinéraire(s) théoriques vers le point de domicile enregistré (adresse exacte non vérifiée) :' :
               'Retour régional : aucun itinéraire trouvé. Transport non confirmé — vérifiez vous-même.';
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
-              const normalized = options.filter(option =>
-                Number.isFinite(option.startTime) && Number.isFinite(option.endTime) &&
-                option.endTime > option.startTime).map(option => ({
-                departure:new Date(option.startTime).toISOString(),
-                arrival:new Date(option.endTime).toISOString(),
-                legs:option.legs
-              }));
               const ranked = window.CPTransportRanking.rank(
-                window.CPTransportAdapters.adaptGTFS(normalized,'Régional'));
+                window.CPTransportAdapters.adaptRegional(options,'Régional'));
               if (ranked.length) {
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement Retour régional théorique : ' +
