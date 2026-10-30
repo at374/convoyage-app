@@ -10,6 +10,7 @@ on:
       - 'transport-gtfs-index.js'
       - 'transport-gtfs-loader.js'
       - 'transport-gtfs-worker.js'
+      - 'transport-gtfs-federation.js'
       - 'transport-gtfs-agenda.js'
       - 'app.js'
       - 'index.html'
@@ -21,6 +22,7 @@ on:
       - 'tests/transport-fares.test.cjs'
       - 'tests/transport-catalogue.test.cjs'
       - 'tests/transport-gtfs-index.test.cjs'
+      - 'tests/transport-gtfs-federation.test.cjs'
       - 'tests/transport-gtfs-transfers.test.cjs'
       - 'tests/transport-gtfs-nearby.test.cjs'
       - 'tests/transport-gtfs-loader.test.cjs'
@@ -37,6 +39,7 @@ on:
       - 'transport-gtfs-index.js'
       - 'transport-gtfs-loader.js'
       - 'transport-gtfs-worker.js'
+      - 'transport-gtfs-federation.js'
       - 'transport-gtfs-agenda.js'
       - 'app.js'
       - 'index.html'
@@ -48,6 +51,7 @@ on:
       - 'tests/transport-fares.test.cjs'
       - 'tests/transport-catalogue.test.cjs'
       - 'tests/transport-gtfs-index.test.cjs'
+      - 'tests/transport-gtfs-federation.test.cjs'
       - 'tests/transport-gtfs-transfers.test.cjs'
       - 'tests/transport-gtfs-nearby.test.cjs'
       - 'tests/transport-gtfs-loader.test.cjs'
@@ -73,6 +77,7 @@ jobs:
       - run: node --check transport-gtfs-index.js
       - run: node --check transport-gtfs-loader.js
       - run: node --check transport-gtfs-worker.js
+      - run: node --check transport-gtfs-federation.js
       - run: node --check transport-gtfs-agenda.js
       - run: node --check transport-gtfs-time.js
       - run: node --check transport-gtfs-worker-client.js
@@ -87,3 +92,4 @@ jobs:
       - run: node --test tests/transport-gtfs-time.test.cjs
       - run: node --test tests/transport-gtfs-agenda.test.cjs
       - run: node --test tests/transport-gtfs-transfers.test.cjs
+      - run: node --test tests/transport-gtfs-federation.test.cjs

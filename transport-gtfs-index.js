@@ -133,16 +133,11 @@ function nearbyDirectTrips(files,index,date,origin,destination,radiusMeters=700)
    accessDistanceMeters:from.distanceMeters,egressDistanceMeters:to.distanceMeters};
  });
 }
-function transferCandidates(files,index,date,origins,destinations,{
- minTransferMinutes=5,maxWaitMinutes=120,maxLegs=50000,maxCandidates=5000,maxExaminedPairs=100000
-}={}){
- if(!Number.isFinite(minTransferMinutes)||minTransferMinutes<0||
-    !Number.isFinite(maxWaitMinutes)||maxWaitMinutes<minTransferMinutes)throw new Error('Invalid transfer interval');
- for(const limit of [maxLegs,maxCandidates,maxExaminedPairs])if(!Number.isSafeInteger(limit)||limit<1)throw new Error('Invalid transfer budget');
+function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000}={}){
+ if(!Number.isSafeInteger(maxLegs)||maxLegs<1)throw new Error('Invalid transfer budget');
  const services=activeServices(files,date),firstByStop=new Map(),secondByStop=new Map();
- const rules=parseCSV(files['transfers.txt']||'');
- if(!origins.size||!destinations.size)return {journeys:[],searchTruncated:false};
- let legCount=0,searchTruncated=false,examined=0;
+ if(!origins.size&&!destinations.size)return {firstByStop,secondByStop,searchTruncated:false};
+ let legCount=0,searchTruncated=false;
  const add=(map,leg)=>{
   if(legCount>=maxLegs){searchTruncated=true;return false;}
   if(!map.has(leg.toTransfer))map.set(leg.toTransfer,[]);
@@ -172,6 +167,16 @@ function transferCandidates(files,index,date,origins,destinations,{
    }
   }
  }
+ return {firstByStop,secondByStop,searchTruncated};
+}
+function transferCandidates(files,index,date,origins,destinations,{
+ minTransferMinutes=5,maxWaitMinutes=120,maxLegs=50000,maxCandidates=5000,maxExaminedPairs=100000
+}={}){
+ if(!Number.isFinite(minTransferMinutes)||minTransferMinutes<0||
+    !Number.isFinite(maxWaitMinutes)||maxWaitMinutes<minTransferMinutes)throw new Error('Invalid transfer interval');
+ for(const limit of [maxLegs,maxCandidates,maxExaminedPairs])if(!Number.isSafeInteger(limit)||limit<1)throw new Error('Invalid transfer budget');
+ const {firstByStop,secondByStop,searchTruncated:legTruncated}=boundaryLegs(files,index,date,origins,destinations,{maxLegs});
+ const rules=parseCSV(files['transfers.txt']||'');let searchTruncated=legTruncated,examined=0;
  const scope=(ruleStop,id)=>!ruleStop||ruleStop===id||ruleStop===index.stopById.get(id)?.parent_station;
  const rulesByStop=new Map();
  for(const stopId of firstByStop.keys())rulesByStop.set(stopId,rules.filter(r=>scope(r.from_stop_id,stopId)&&scope(r.to_stop_id,stopId)));
@@ -234,13 +239,17 @@ function nearbyTransferTrips(files,index,date,origin,destination,radiusMeters=70
  const destinations=new Map(nearbyStops(index,destination.lat,destination.lon,radiusMeters).map(stop=>[stop.stopId,stop]));
  return transferCandidates(files,index,date,origins,destinations,options);
 }
-function buildIndex(files){
+function buildIndex(files,{serviceIds=null}={}){
  if(!files||typeof files!=='object')throw new TypeError('GTFS files required');
- const stopById=new Map(),routeById=new Map(),tripById=new Map();
+ const stopById=new Map(),routeById=new Map(),tripById=new Map(),inactiveTrips=new Set();
+ if(serviceIds!==null&&!(serviceIds instanceof Set))throw new TypeError('GTFS service IDs must be a Set');
  for(const stop of csvRows(files['stops.txt']||''))if(stop.stop_id)stopById.set(stop.stop_id,stop);
  for(const route of csvRows(files['routes.txt']||''))if(route.route_id)routeById.set(route.route_id,route);
- for(const trip of csvRows(files['trips.txt']||''))if(trip.trip_id)tripById.set(trip.trip_id,trip);
- const timesByTrip=new Map(),clockValues=new Map(),sequenceValues=new Map();let stopTimes=0;
+ for(const trip of csvRows(files['trips.txt']||''))if(trip.trip_id){
+  if(serviceIds===null||serviceIds.has(trip.service_id))tripById.set(trip.trip_id,trip);
+  else inactiveTrips.add(trip.trip_id);
+ }
+ const timesByTrip=new Map(),clockValues=new Map(),sequenceValues=new Map();let stopTimes=0,skippedStopTimes=0;
  const intern=(map,value)=>{
   if(map.has(value))return map.get(value);
   if(map.size<100000)map.set(value,value);
@@ -249,6 +258,7 @@ function buildIndex(files){
  for(const time of csvRows(files['stop_times.txt']||'')){
   stopTimes++;
   const trip=tripById.get(time.trip_id),stop=stopById.get(time.stop_id);
+  if(!trip&&inactiveTrips.has(time.trip_id)&&stop){skippedStopTimes++;continue;}
   if(!trip||!stop)continue;
   time.trip_id=trip.trip_id;time.stop_id=stop.stop_id;
   for(const column of ['arrival_time','departure_time'])if(typeof time[column]==='string')time[column]=intern(clockValues,time[column]);
@@ -257,11 +267,11 @@ function buildIndex(files){
   timesByTrip.get(time.trip_id).push(time);
  }
  for(const list of timesByTrip.values())list.sort((a,b)=>Number(a.stop_sequence)-Number(b.stop_sequence));
- return {stopById,routeById,tripById,timesByTrip,
+ return {stopById,routeById,tripById,timesByTrip,skippedStopTimes,sourceTrips:tripById.size+inactiveTrips.size,
    counts:{stops:stopById.size,routes:routeById.size,trips:tripById.size,stopTimes},
    serviceConfirmed:false};
 }
-const api={parseCSV,csvRows,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips,nearbyStops,nearbyDirectTrips,nearbyTransferTrips};
+const api={parseCSV,csvRows,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips,nearbyStops,nearbyDirectTrips,nearbyTransferTrips,boundaryLegs};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSIndex=api;
 })(typeof window!=='undefined'?window:globalThis);

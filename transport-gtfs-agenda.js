@@ -6,6 +6,10 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',
  // Selection envelope only: does not assert coverage or actual walking access.
  bounds:[45.4,5.7,46.5,7.1],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'80100',datasetId:'5bd9843e634f413220f7f04a',network:'Sibra',format:'GTFS',federate:true,
+ url:'https://www.data.gouv.fr/api/1/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0',resolveFromCatalogue:true,
+ bounds:[45.7,5.9,46.1,6.5],timeZone:'Europe/Paris'
 })]);
 function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof point.lon==='number'&&
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}
@@ -53,6 +57,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const taskList=Array.isArray(tasks)?tasks:[];
  const resource=(Array.isArray(resources)?resources:[]).find(r=>taskList.some(t=>selected(r,t)));
  if(!resource)return {dispose,done:Promise.resolve()};
+ const partners=resources.filter(r=>r!==resource&&r.federate&&taskList.some(task=>selected(resource,task)&&
+  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to})))).slice(0,1);
  const section=doc.createElement('div');section.className='bk';section.setAttribute('data-gtfs-agenda','');
  const heading=doc.createElement('h3');heading.textContent=resource.network+' — horaires aux arrêts';section.appendChild(heading);
  const sourceStatus=doc.createElement('p');sourceStatus.className='doux';sourceStatus.setAttribute('role','status');
@@ -76,10 +82,28 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const done=(async()=>{
   try{
    client=clientFactory();
-   const summary=await client.load(resource);
+   const dates=new Set();
+   for(const task of taskList)if(selected(resource,task)){
+    try{for(const date of serviceDates(searchWindow(task),resource.timeZone))dates.add(date);}catch(_){}
+   }
+   if(!dates.size)throw new Error('No valid mission window');
+   const loadOptions={indexServiceDates:[...dates].sort()};
+   const summary=partners.length&&typeof client.loadNetworks==='function'?
+    await client.loadNetworks([resource,...partners],loadOptions):await client.load(resource,loadOptions);
    if(!active())return;
-   sourceStatus.textContent='Flux téléchargé le '+new Intl.DateTimeFormat('fr-FR',{timeZone:resource.timeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(summary.source.loadedAt))+
-    ' · date de mise à jour du producteur non fournie · '+summary.counts.stops+' arrêts. Circulation non confirmée.';
+   const networks=summary.networks||[summary],loaded=networks.filter(n=>!n.error);
+   source.href=loaded[0].source.url||resource.url;
+   source.textContent='Source '+(loaded[0].source.network||resource.network);
+   heading.textContent=loaded.map(n=>n.source.network||resource.network).join(' + ')+' — horaires aux arrêts';
+   sourceStatus.textContent=networks.map(n=>n.error?(n.error.network+' : flux indisponible'):
+    (n.source.network||resource.network)+' · téléchargé le '+new Intl.DateTimeFormat('fr-FR',{timeZone:resource.timeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(n.source.loadedAt))+
+    ' · '+(n.source.updatedAt?'mise à jour producteur : '+n.source.updatedAt:'date de mise à jour du producteur non fournie')+
+    ' · '+n.counts.stops+' arrêts').join(' ; ')+'. Circulation non confirmée.';
+   if(summary.partial)sourceStatus.textContent+=' Recherche partielle : un réseau est indisponible.';
+   if(loaded.length>1){
+    warning.textContent+=' Changements entre réseaux : arrêts rapprochés à 150 m à vol d’oiseau au maximum ; aucun chemin ni temps de marche vérifié.';
+    for(const other of loaded.slice(1)){const link=doc.createElement('a');link.href=other.source.url||partners[0].url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=' · Source '+other.source.network;section.appendChild(link);}
+   }
    for(const {task,status} of entries){
     if(!active())return;
     if(!selected(resource,task))continue;
@@ -92,8 +116,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(!active())return;
       truncated=truncated||result.truncated;rows.push(...result.rows);
      }
-     const unique=new Map(rows.map(row=>[JSON.stringify([row.tripId,row.from,row.to,row.departure,row.arrival,
-      row.transferStopId||null,row.legs?.map(leg=>[leg.tripId,leg.from,leg.to,leg.departure,leg.arrival])||null]),row]));
+     const unique=new Map(rows.map(row=>[JSON.stringify([row.networkId||null,row.tripId,row.from,row.to,row.departure,row.arrival,
+      row.transferStopId||null,row.legs?.map(leg=>[leg.networkId||null,leg.tripId,leg.from,leg.to,leg.departure,leg.arrival])||null]),row]));
      const ordered=[...unique.values()].sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
      if(task.label==='Aller')ordered.reverse();
      const shown=ordered.slice(0,5);
@@ -103,15 +127,16 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      for(const row of shown){
       const line=doc.createElement('p');
       const format=iso=>new Intl.DateTimeFormat('fr-FR',{timeZone:row.timeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(iso));
-      line.textContent=format(row.departure)+' → '+format(row.arrival)+' · '+row.line+' · '+
+      line.textContent=format(row.departure)+' → '+format(row.arrival)+' · '+(!row.interNetwork&&row.network?row.network+' ':'')+row.line+' · '+
        (row.originStop?.name||row.from)+' → '+(row.destinationStop?.name||row.to)+
        ' · distances à vol d’oiseau : '+row.accessDistanceMeters+' m / '+row.egressDistanceMeters+' m'+
-       (row.legs?.length===2?' · correspondance à '+(row.transferStop?.name||row.transferStopId)+' · intervalle théorique '+row.transferMinutes+' min':' · direct')+
+       (row.interNetwork?' · changement de réseau : '+row.transferStop.name+' → '+row.transferDestinationStop.name+' · séparation à vol d’oiseau '+row.transferDistanceMeters+' m, marche non vérifiée · intervalle théorique '+row.transferMinutes+' min':
+        row.legs?.length===2?' · correspondance à '+(row.transferStop?.name||row.transferStopId)+' · intervalle théorique '+row.transferMinutes+' min':' · direct')+
        ' · tarif inconnu · Transport non confirmé — vérifiez vous-même.';
       if(row.legs?.length===2){
-       for(const leg of row.legs){const detail=doc.createElement('span');detail.textContent=' · '+leg.line+' : '+format(leg.departure)+' → '+format(leg.arrival);line.appendChild(detail);}
+       for(const leg of row.legs){const detail=doc.createElement('span');detail.textContent=' · '+(leg.network?leg.network+' ':'')+leg.line+' : '+format(leg.departure)+' → '+format(leg.arrival);line.appendChild(detail);}
       }
-      for(const [label,stop] of [['Départ',row.originStop],['Correspondance',row.transferStop],['Arrivée',row.destinationStop]]){
+      for(const [label,stop] of [['Départ',row.originStop],['Correspondance',row.transferStop],['Montée après changement',row.transferDestinationStop],['Arrivée',row.destinationStop]]){
        if(!validPoint(stop))continue;
        const link=doc.createElement('a');
        link.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(stop.lat+','+stop.lon);

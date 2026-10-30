@@ -29,7 +29,7 @@ function createClient({workerURL='transport-gtfs-worker.js',workerFactory=url=>n
  function request(type,payload,{signal}={}){
   if(disposed)return Promise.reject(new Error('GTFS worker client disposed'));
   if(signal?.aborted)return Promise.reject(abortError());
-  if(type==='load'){
+  if(type==='load'||type==='loadNetworks'){
    stop(abortError());
    try{start();}catch(error){return Promise.reject(error);}
   }
@@ -47,6 +47,7 @@ function createClient({workerURL='transport-gtfs-worker.js',workerFactory=url=>n
  }
  return {
   load:(resource,{signal,...options}={})=>request('load',{resource,options},{signal}),
+  loadNetworks:(resources,{signal,...options}={})=>request('loadNetworks',{resources,options},{signal}),
   query:(query,options)=>request('query',{query},options),
   clear:()=>stop(abortError()),
   dispose:()=>{disposed=true;stop(abortError());},

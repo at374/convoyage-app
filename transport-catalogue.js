@@ -19,7 +19,7 @@ function normalize(payload){
       id:String(r.id??''),
       format:String(r.format??r.type??'').toUpperCase(),
       url:typeof r.original_url==='string'?r.original_url:(typeof r.url==='string'?r.url:null),
-      updatedAt:r.updated_at??r.last_updated_at??null,
+      updatedAt:r.updated_at??r.last_updated_at??r.updated??null,
       sourcePage:typeof dataset.page_url==='string'?dataset.page_url:null
     })).filter(r=>r.url&&/^https:\/\//i.test(r.url))
   })).filter(d=>d.id&&d.resources.length);
@@ -75,9 +75,9 @@ function byNetwork(datasets,term){
   return (Array.isArray(datasets)?datasets:[]).filter(d=>
     String(d.name||'').toLocaleLowerCase('fr').includes(query));
 }
-async function fetchCatalogue(fetcher){
+async function fetchCatalogue(fetcher,{signal}={}){
   if(typeof fetcher!=='function')throw new TypeError('fetch required');
-  const response=await fetcher(ENDPOINT);
+  const response=await fetcher(ENDPOINT,{credentials:'omit',cache:'no-cache',signal});
   if(!response?.ok)throw new Error('PAN catalogue unavailable');
   return normalize(await response.json());
 }

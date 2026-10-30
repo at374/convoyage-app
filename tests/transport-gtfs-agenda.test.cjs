@@ -140,3 +140,28 @@ test('alternative transfer stops are retained when trip pair and overall times a
  await session.done;assert.match(target.textContent,/Retour : 2 horaire/);
  assert.match(target.textContent,/correspondance à X/);assert.match(target.textContent,/correspondance à Y/);session.dispose();
 });
+test('Agenda loads scoped partners and renders a cross-network change without inventing walking time',async()=>{
+ const target=panel(),calls=[];
+ const crossed=row({networkId:'A-B',interNetwork:true,transferStop:{name:'Descente',lat:45.8,lon:6.2},
+  transferDestinationStop:{name:'Montée',lat:45.8005,lon:6.2},transferDistanceMeters:56,transferMinutes:10,
+  legs:[{network:'Sibra',line:'One',departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T11:20:00Z'},
+   {network:'Cars',line:'Two',departure:'2026-11-02T11:30:00Z',arrival:'2026-11-02T12:00:00Z'}]});
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  loadNetworks:async(resources,options)=>{calls.push({resources,options});return {networks:[summary,{...summary,source:{...summary.source,network:'Sibra',updatedAt:'2026-10-01'}}],partial:false};},
+  query:async()=>({rows:[crossed],truncated:false}),dispose(){}})});
+ await session.done;assert.equal(calls[0].resources.length,2);
+ assert.ok(calls[0].options.indexServiceDates.includes('2026-11-01'));
+ assert.match(target.textContent,/changement de réseau : Descente → Montée/);
+ assert.match(target.textContent,/séparation à vol d’oiseau 56 m, marche non vérifiée/);
+ assert.match(target.textContent,/mise à jour producteur : 2026-10-01/);
+ assert.match(target.textContent,/Montée après changement : voir l’arrêt/);
+ session.dispose();
+});
+test('partial multi-network load remains visible while the surviving source is queried',async()=>{
+ const target=panel();let queries=0;
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  loadNetworks:async()=>({networks:[summary,{error:{network:'Sibra',message:'offline'}}],partial:true}),
+  query:async()=>{queries++;return {rows:[],truncated:false};},dispose(){}})});
+ await session.done;assert.match(target.textContent,/Recherche partielle/);assert.match(target.textContent,/Sibra : flux indisponible/);
+ assert.ok(queries>0);session.dispose();
+});

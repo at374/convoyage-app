@@ -132,3 +132,36 @@ test('timeout and explicit cancellation terminate loading even if fetch ignores 
  const request=loader.loadResource(resource,{fetcher:()=>new Promise(()=>{}),signal:controller.signal});
  controller.abort();await assert.rejects(request,{name:'AbortError'});
 });
+
+test('date-scoped loads release unused source texts and distinguish filtered stop times',async()=>{
+ const feed=await loader.loadResource(resource,{fetcher:fetcher(zip()),indexServiceDates:['2026-11-02'],retainSourceTables:false});
+ assert.equal(feed.index.counts.trips,1);assert.equal(feed.indexedStopTimes,2);
+ assert.equal(feed.files['stop_times.txt'],undefined);assert.equal(feed.files['stops.txt'],undefined);
+ assert.ok(feed.files['agency.txt']);assert.ok(feed.files['calendar.txt']);assert.equal(feed.rejectedStopTimes,0);
+ const empty=await loader.loadResource(resource,{fetcher:fetcher(zip()),indexServiceDates:['2026-11-03'],retainSourceTables:false});
+ assert.equal(empty.indexedStopTimes,0);assert.equal(empty.skippedStopTimes,2);assert.equal(empty.rejectedStopTimes,0);
+ const disconnected={...files,'stop_times.txt':files['stop_times.txt'].replaceAll(',A,',',Unknown,').replaceAll(',B,',',Unknown,')};
+ await assert.rejects(loader.loadResource(resource,{fetcher:fetcher(zip(disconnected)),indexServiceDates:['2026-11-03']}),/disconnected/);
+ await assert.rejects(loader.loadResource(resource,{fetcher:fetcher(zip()),indexServiceDates:[]}),/service dates/);
+ await assert.rejects(loader.loadResource(resource,{fetcher:fetcher(zip()),indexServiceDates:['2026-02-30']}),/service date/);
+});
+test('resolves the current GTFS URL and producer update date from the national catalogue',async()=>{
+ const calls=[];
+ const fake=async(url,options)=>{
+  calls.push(url);assert.equal(options.credentials,'omit');assert.equal(options.cache,'no-cache');
+  if(url===require('../transport-catalogue.js').ENDPOINT)return new Response(JSON.stringify([{id:resource.datasetId,title:'Network',resources:[{id:resource.id,format:'GTFS',original_url:resource.url,updated:'2026-10-01T08:56:39Z'}]}]));
+  assert.equal(url,resource.url);return new Response(zip());
+ };
+ const feed=await loader.loadResource({...resource,resolveFromCatalogue:true},{fetcher:fake});
+ assert.equal(calls.length,2);assert.equal(feed.source.updatedAt,'2026-10-01T08:56:39Z');
+ await assert.rejects(loader.loadResource({...resource,resolveFromCatalogue:true},{fetcher:async()=>new Response('[]')}),/current catalogue/);
+});
+test('newer producer resources replace the former catalogue resource and retain the download URL',async()=>{
+ const latest='https://example.org/new-feed.zip';
+ const fake=async url=>url===require('../transport-catalogue.js').ENDPOINT?new Response(JSON.stringify([{id:resource.datasetId,title:'Network',resources:[
+  {id:resource.id,format:'GTFS',original_url:resource.url,updated:'2026-10-01T00:00:00Z'},
+  {id:'new-id',format:'GTFS',original_url:latest,updated:'2026-10-30T00:00:00Z'}]}])):
+  (assert.equal(url,latest),new Response(zip()));
+ const feed=await loader.loadResource({...resource,resolveFromCatalogue:true},{fetcher:fake});
+ assert.equal(feed.source.resourceId,'new-id');assert.equal(feed.source.url,latest);
+});

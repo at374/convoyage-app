@@ -40,7 +40,7 @@ const {parentPort,workerData}=require('node:worker_threads');
 const vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const context=vm.createContext({TextDecoder,TextEncoder,Uint8Array,Uint32Array,DataView,
  Blob,Response,DecompressionStream,AbortController,DOMException,Intl,setTimeout,clearTimeout,
- fetch:async()=>new Response(workerData.bytes),postMessage:data=>parentPort.postMessage(data)});
+ fetch:async url=>url.includes('missing')?new Response('missing',{status:404}):new Response(workerData.bytes),postMessage:data=>parentPort.postMessage(data)});
 context.self=context;
 context.importScripts=(...names)=>{for(const name of names)vm.runInContext(fs.readFileSync(path.join(workerData.root,name),'utf8'),context);};
 vm.runInContext(fs.readFileSync(path.join(workerData.root,'transport-gtfs-worker.js'),'utf8'),context);
@@ -143,4 +143,25 @@ test('worker combines direct search with dated single-transfer journeys',async t
  assert.equal(row.transferStop.name,'Change');assert.equal(row.transferMinutes,8);
  assert.equal(row.departure,'2026-11-02T10:00:00.000Z');assert.equal(row.arrival,'2026-11-02T10:48:00.000Z');
  assert.equal(row.transferVerified,false);assert.equal(row.serviceConfirmed,false);assert.equal(row.priceEUR,null);
+});
+
+test('two scoped networks retain namespaces and expose unverified inter-network candidates',async t=>{
+ const client=createClient({workerFactory:()=>factory(true)});t.after(()=>client.dispose());
+ const resources=[{...resource,datasetId:'A',network:'A'},{...resource,datasetId:'B',network:'B'}];
+ const loaded=await client.loadNetworks(resources,{indexServiceDates:['2026-11-02']});
+ assert.equal(loaded.networks.length,2);assert.equal(loaded.partial,false);
+ const answer=await client.query({method:'missionJourneys',date:'2026-11-02',origin:{lat:45.9,lon:6.1},destination:{lat:45.7,lon:6.3},window:{earliestDeparture:'2026-11-02T10:00:00Z',latestArrival:'2026-11-02T11:18:00Z'}});
+ const cross=answer.rows.filter(row=>row.interNetwork);
+ assert.equal(cross.length,2);assert.equal(cross[0].walkingDurationSeconds,null);
+ assert.notEqual(cross[0].legs[0].networkId,cross[0].legs[1].networkId);
+ assert.equal(cross[0].transferVerified,false);assert.equal(cross[0].priceEUR,null);
+ await assert.rejects(client.query({method:'directTrips',date:'2026-11-03',from:'A',to:'B'}),/scope/);
+});
+test('secondary network failure preserves the primary results and flags partial coverage',async t=>{
+ const client=createClient({workerFactory:()=>factory(true)});t.after(()=>client.dispose());
+ await assert.rejects(client.loadNetworks([resource]),/Service dates required/);
+ const loaded=await client.loadNetworks([{...resource,datasetId:'A'},{...resource,datasetId:'B',url:'https://example.org/missing.zip'}],{indexServiceDates:['2026-11-02']});
+ assert.equal(loaded.partial,true);assert.ok(loaded.networks[1].error);
+ const result=await client.query({method:'missionJourneys',date:'2026-11-02',origin:{lat:45.9,lon:6.1},destination:{lat:45.7,lon:6.3},window:{earliestDeparture:'2026-11-02T10:00:00Z',latestArrival:'2026-11-02T11:18:00Z'}});
+ assert.equal(result.rows.length,1);assert.equal(result.rows[0].interNetwork,undefined);
 });

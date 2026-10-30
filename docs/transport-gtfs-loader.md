@@ -118,3 +118,13 @@ Validation : huit tests unitaires couvrent les fuseaux Paris/UTC/Katmandou, les 
 ### Trajets avec une correspondance
 
 `query({method:'missionJourneys', date, origin, destination, window, radiusMeters, limit})` réunit trajets directs et correspondances au même arrêt. Les bornes et formats sont ceux de `missionDirectTrips`. Le résultat inclut `searchTruncated` pour les budgets internes, en plus de `truncated` pour les résultats transférés. Les deux indicateurs sont propagés à l’affichage. Les correspondances portent deux `legs` datées, `transferStop`, `transferMinutes` et `transferVerified:false`. Règles, exclusions et budgets sont détaillés dans `transport-gtfs-agenda.md`. L’API `missionDirectTrips` reste disponible pour une recherche directe seule.
+
+### Index par dates et chargement de deux réseaux
+
+`loadResource(resource, {indexServiceDates, retainSourceTables})` accepte une liste explicite de 1 à 7 dates de service ; sans cette option l’API historique charge toujours l’index complet. `retainSourceTables:false` conserve uniquement les textes nécessaires aux agences, calendriers, transferts et métadonnées. Le worker utilise systématiquement ce mode. `skippedStopTimes` compte les passages volontairement omis, `rejectedStopTimes` conserve son sens de références rejetées. Le budget du cache `createLoader` reste comptabilisé sur la taille décompressée initiale, une borne conservatrice même lorsque des textes sont libérés.
+
+`resource.resolveFromCatalogue:true` relit le catalogue PAN pour `resource.datasetId`, choisit la ressource GTFS la plus récemment datée, puis télécharge son URL HTTPS. La source retournée expose cette URL et la date producteur connue. Le délai et le signal d’annulation couvrent aussi cette résolution. Le champ de métadonnées PAN `updated` est reconnu.
+
+`client.loadNetworks([resourceA,resourceB], {indexServiceDates})` remplace le worker et retourne `{networks,partial}` ; les dates sont obligatoires, deux réseaux au maximum. Un élément de `networks` contient le bilan existant ou `{error:{network,message}}`. Les requêtes `missionJourneys` réunissent résultats internes et liaisons interréseaux indicatives ; les autres méthodes continuent d’interroger le premier réseau disponible. Une requête datée hors du périmètre indexé est rejetée.
+
+La fédération ne fusionne pas les identifiants entre réseaux et ne confirme aucun chemin piéton. Les rapprochements entre arrêts et leurs limites sont décrits dans `transport-gtfs-agenda.md`.

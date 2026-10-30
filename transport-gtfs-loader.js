@@ -144,7 +144,7 @@ function validateTables(files){
   new Intl.DateTimeFormat('en',{timeZone:agency.agency_timezone});
  }
 }
-async function loadResource(resource,{fetcher=root.fetch,signal,timeoutMs=30000,...options}={}){
+async function loadResource(resource,{fetcher=root.fetch,signal,timeoutMs=30000,indexServiceDates=null,retainSourceTables=true,...options}={}){
  if(!Number.isSafeInteger(timeoutMs)||timeoutMs<=0)throw new Error('Invalid GTFS timeout');
  const cap=limits(options),controller=new AbortController();let timer,rejectCancellation;
  const cancellation=new Promise((_,reject)=>{rejectCancellation=reject;});
@@ -154,15 +154,30 @@ async function loadResource(resource,{fetcher=root.fetch,signal,timeoutMs=30000,
  const deadline=new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('GTFS loading timed out'));},timeoutMs);});
  const job=(async()=>{
   aborted(controller.signal);
-  const bytes=await catalogue.downloadGTFS(resource,fetcher,cap.maxArchiveBytes,{signal:controller.signal});
+  let resolved=resource;
+  if(resource?.resolveFromCatalogue){
+   const datasets=await catalogue.fetchCatalogue(fetcher,{signal:controller.signal});
+   const candidates=catalogue.gtfsResources(datasets.filter(d=>d.id===resource.datasetId));
+   if(!candidates.length)throw new Error('GTFS network not found in current catalogue');
+   resolved=[...candidates].sort((a,b)=>(Date.parse(b.updatedAt)||0)-(Date.parse(a.updatedAt)||0)||
+    (a.id===resource.id?-1:b.id===resource.id?1:0))[0];
+  }
+  const bytes=await catalogue.downloadGTFS(resolved,fetcher,cap.maxArchiveBytes,{signal:controller.signal});
   const extracted=await extractGTFS(bytes,{...cap,signal:controller.signal});
   validateTables(extracted.files);aborted(controller.signal);
-  const index=gtfs.buildIndex(extracted.files);
+  let serviceIds=null,dates=null;
+  if(indexServiceDates!==null){
+   if(!Array.isArray(indexServiceDates)||!indexServiceDates.length||indexServiceDates.length>7)throw new Error('Invalid GTFS index service dates');
+   dates=[...new Set(indexServiceDates)];serviceIds=new Set();
+   for(const date of dates)for(const id of gtfs.activeServices(extracted.files,date))serviceIds.add(id);
+  }
+  const index=gtfs.buildIndex(extracted.files,{serviceIds});
   const indexedStopTimes=[...index.timesByTrip.values()].reduce((total,rows)=>total+rows.length,0);
-  if(!index.counts.stops||!index.counts.routes||!index.counts.trips||!indexedStopTimes)throw new Error('Empty or disconnected GTFS index');
-  return {...extracted,index,source:{datasetId:resource.datasetId||null,resourceId:resource.id||null,
-   network:resource.network||null,updatedAt:resource.updatedAt||null,loadedAt:new Date().toISOString()},
-   indexedStopTimes,rejectedStopTimes:index.counts.stopTimes-indexedStopTimes,
+  if(!index.counts.stops||!index.counts.routes||!index.sourceTrips||!index.counts.stopTimes||(!indexedStopTimes&&!index.skippedStopTimes))throw new Error('Empty or disconnected GTFS index');
+  const files=retainSourceTables?extracted.files:Object.fromEntries(Object.entries(extracted.files).filter(([name])=>['agency.txt','calendar.txt','calendar_dates.txt','transfers.txt','feed_info.txt'].includes(name)));
+  return {...extracted,files,index,indexServiceDates:dates,source:{datasetId:resolved.datasetId||null,resourceId:resolved.id||null,
+   network:resolved.network||resource.network||null,url:resolved.url,updatedAt:resolved.updatedAt||null,loadedAt:new Date().toISOString()},
+   indexedStopTimes,skippedStopTimes:index.skippedStopTimes,rejectedStopTimes:index.counts.stopTimes-indexedStopTimes-index.skippedStopTimes,
    serviceConfirmed:false,faresVerified:false,accessVerified:false};
  })();
  try{return await Promise.race([job,deadline,cancellation]);}
