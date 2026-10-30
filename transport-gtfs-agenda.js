@@ -22,7 +22,7 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
 })]);
 function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof point.lon==='number'&&
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}
-function eligible(task){
+function selected(resource,task){
  const bounds=resource?.bounds;
  return resource?.format==='GTFS'&&/^https:\/\//.test(resource.url||'')&&validPoint(task?.from)&&validPoint(task?.to)&&Array.isArray(bounds)&&bounds.length===4&&
  bounds.every(Number.isFinite)&&[task.from,task.to].every(p=>p.lat>=bounds[0]&&p.lat<=bounds[2]&&p.lon>=bounds[1]&&p.lon<=bounds[3]);
