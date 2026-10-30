@@ -108,3 +108,20 @@ test('queue limits, worker errors and structured clone failures reject cleanly',
  const broken=createClient({workerFactory:()=>({postMessage(){throw new Error('clone failed');},terminate(){}})});
  await assert.rejects(broken.load(resource),/clone failed/);assert.equal(broken.stats().pending,0);broken.dispose();
 });
+test('mission worker applies time windows before limiting and keeps timetable-only status',async t=>{
+ const client=createClient({workerFactory:factory});t.after(()=>client.dispose());
+ await client.load(resource);
+ const query={method:'missionDirectTrips',date:'2026-11-02',origin:{lat:45.9,lon:6.1},
+  destination:{lat:45.8,lon:6.2},limit:1};
+ const [valid,late]=await Promise.all([
+  client.query({...query,window:{earliestDeparture:'2026-11-02T11:00:00+01:00',latestArrival:'2026-11-02T12:18:00+01:00'}}),
+  client.query({...query,window:{earliestDeparture:'2026-11-02T11:00:01+01:00'}})
+ ]);
+ assert.equal(valid.rows.length,1);assert.equal(valid.rows[0].departure,'2026-11-02T10:00:00.000Z');
+ assert.equal(valid.rows[0].arrival,'2026-11-02T10:48:00.000Z');
+ assert.equal(valid.rows[0].timetableOnly,true);assert.equal(valid.rows[0].accessVerified,false);
+ assert.equal(valid.rows[0].priceEUR,null);assert.equal(valid.truncated,false);
+ assert.equal(late.rows.length,0);
+ await assert.rejects(client.query(query),/window/);
+ await assert.rejects(client.query({...query,window:{latestArrival:'2026-11-02T12:00:00'}}),/timezone/);
+});

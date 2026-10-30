@@ -85,8 +85,32 @@ const result = await client.query({
 });
 ```
 
-Les coordonnées sont des entrées, pas une certification de l’adresse. Chaque résultat contient `originStop`, `destinationStop`, `accessDistanceMeters` et `egressDistanceMeters`. Ces distances sont à vol d’oiseau ; aucun temps de marche n’est déduit. Le rayon worker est limité à 5 km, 700 m par défaut. Les horaires restent des chaînes GTFS dans le fuseau du réseau et peuvent dépasser 24 h ; ils ne sont pas encore des timestamps utilisables dans les filtres horaires des missions.
+Les coordonnées sont des entrées, pas une certification de l’adresse. Chaque résultat contient `originStop`, `destinationStop`, `accessDistanceMeters` et `egressDistanceMeters`. Ces distances sont à vol d’oiseau ; aucun temps de marche n’est déduit. Le rayon worker est limité à 5 km, 700 m par défaut. Cette méthode conserve les heures GTFS brutes, qui peuvent dépasser 24 h. Pour une fenêtre horaire de mission, utiliser `missionDirectTrips` ci-dessous.
 
 La recherche parcourt une fois les calendriers et les courses actives pour tous les couples d’arrêts proches. Elle évite les copies de tous les horaires pour chaque couple. Les retours sur le même arrêt, les séquences non croissantes et les arrivées antérieures au départ ne produisent pas de candidat ; les visites répétées d’un arrêt restent distinctes. Les tests comparent les résultats à une recherche par couples indépendante, couvrent les boucles, horaires après minuit, calendriers, incohérences horaires et l’appel depuis le véritable script worker. Le nombre de lectures du calendrier est vérifié, sans extrapolation de performance Android.
 
-Prochaine étape de raccordement : convertir les heures de service dans le fuseau GTFS, appliquer les fenêtres Aller/Jonction/Retour, choisir les ressources utiles et vérifier les accès piétons. L’interface Agenda ne lance pas encore ces requêtes.
+Prochaine étape de raccordement : choisir les ressources utiles, transmettre les fenêtres des missions depuis l’Agenda et vérifier les accès piétons. L’interface Agenda ne lance pas encore ces requêtes.
+
+### Fenêtres horaires des missions
+
+`transport-gtfs-time.js`, importé automatiquement par le worker, convertit les heures depuis le jour de service et le fuseau de l’agence GTFS. Il suit la [référence officielle GTFS](https://gtfs.org/documentation/schedule/reference/) : temps écoulé depuis midi local moins douze heures, y compris lors du changement d’heure. Il ne traite pas une heure de service comme une heure civile naïve. Le fuseau d’un arrêt ne remplace pas celui de l’agence. Les agences d’un même flux doivent partager leur fuseau ; une agence manquante, une route non résolue ou des fuseaux contradictoires provoquent une erreur.
+
+```js
+const result = await client.query({
+  method: 'missionDirectTrips', date: '2026-11-02',
+  origin: {lat: 45.9, lon: 6.1}, destination: {lat: 45.8, lon: 6.2},
+  window: {
+    earliestDeparture: deliveryDate, // Retour/Jonction : fin de la livraison
+    latestArrival: nextPickupDate,  // Aller/Jonction : prochaine prise en charge
+    marginMinutes: 30               // Réglable, 15 accepté
+  }
+});
+```
+
+Au moins une borne est obligatoire : `latestArrival` pour l’Aller, `earliestDeparture` pour le Retour, les deux pour la Jonction. Une borne est un timestamp ISO avec fuseau explicite ou un nombre de millisecondes Unix ; les dates sans fuseau sont rejetées. La marge est soustraite uniquement de la borne d’arrivée. Les bornes sont inclusives, les résultats sont filtrés avant leur limitation.
+
+Les champs `departure` et `arrival` deviennent des ISO UTC. `serviceDate`, `timeZone`, `departureTime` et `arrivalTime` conservent l’interprétation des données source. Une course à `25:00` conserve son jour de service même si son départ civil est le lendemain. Le paramètre `date` reste explicitement le **jour de service GTFS** : la recherche ne consulte pas automatiquement les jours de service voisins. Une future recherche Agenda traversant minuit devra interroger ces jours séparément.
+
+Les résultats portent `timetableOnly:true`. Le filtrage ne comprend aucun temps d’accès ou de sortie à pied et ne prouve pas qu’un départ puisse être rejoint après livraison, ni que l’adresse de prise en charge soit atteinte à temps. `accessVerified`, `serviceConfirmed`, `exactOrigin`, `exactDestination`, `faresVerified` restent à `false` et `priceEUR` reste `null`. Aucun badge « Réalisable » n’est autorisé par cette seule fenêtre.
+
+Validation : huit tests unitaires couvrent les fuseaux Paris/UTC/Katmandou, les deux changements d’heure, heures au-delà de 24 h, jour civil inexistant, dates impossibles, bornes et marges, métadonnées d’agence et préservation des indicateurs de preuve. Un test supplémentaire exécute les fenêtres dans le véritable worker avec requêtes simultanées. Aucun test Android ou contrôle d’accès piéton n’est revendiqué ; le module n’est toujours pas branché à l’interface Agenda.
