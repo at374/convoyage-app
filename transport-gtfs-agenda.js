@@ -113,7 +113,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
     (n.source.network||resource.network)+' · téléchargé le '+new Intl.DateTimeFormat('fr-FR',{timeZone:resource.timeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(n.source.loadedAt))+
     ' · '+(n.source.updatedAt?'mise à jour producteur : '+n.source.updatedAt:'date de mise à jour du producteur non fournie')+
     ' · '+n.counts.stops+' arrêts').join(' ; ')+'. Circulation non confirmée.';
-   if(summary.partial||networks.some(n=>!validNetwork(n)))sourceStatus.textContent+=' Recherche partielle : un réseau est indisponible.';
+   if(summary?.partial||networks.some(n=>!validNetwork(n)))sourceStatus.textContent+=' Recherche partielle : un réseau est indisponible.';
    if(loaded.length>1){
     warning.textContent+=' Changements entre réseaux : arrêts rapprochés à 150 m à vol d’oiseau au maximum ; aucun chemin ni temps de marche vérifié.';
     for(const other of loaded.slice(1)){const link=doc.createElement('a');link.href=other.source.url||partners[0].url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=' · Source '+other.source.network;section.appendChild(link);}
