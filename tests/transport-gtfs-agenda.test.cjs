@@ -439,12 +439,12 @@ test('malformed GTFS network collections fail safely without running a journey q
 
 test('Agenda preserves distinct GTFS leg combinations sharing transfer stop and timetable',async()=>{
  const target=panel();
- const base={networkId:'Metro+Gresivaudan',interNetwork:true,transferStopId:'same-interchange'};
+ const base={networkId:'Metro+Gresivaudan',interNetwork:true,transferStopId:'same-interchange',transferStop:{name:'Correspondance A'},transferDestinationStop:{name:'Correspondance B'},transferDistanceMeters:45,transferMinutes:12};
  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
   load:async()=>summary,
   query:async()=>({rows:[
-   row({...base,tripId:'connection-A',legs:[{networkId:'Metro',tripId:'M1',from:'A',to:'X'},{networkId:'Gresivaudan',tripId:'G1',from:'Y',to:'B'}]}),
-   row({...base,tripId:'connection-B',legs:[{networkId:'Metro',tripId:'M2',from:'A',to:'X'},{networkId:'Gresivaudan',tripId:'G2',from:'Y',to:'B'}]})
+   row({...base,tripId:'connection-A',legs:[{networkId:'Metro',tripId:'M1',line:'A',from:'A',to:'X',departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T11:25:00Z'},{networkId:'Gresivaudan',tripId:'G1',line:'C9',from:'Y',to:'B',departure:'2026-11-02T11:37:00Z',arrival:'2026-11-02T12:00:00Z'}]}),
+   row({...base,tripId:'connection-B',legs:[{networkId:'Metro',tripId:'M2',line:'A',from:'A',to:'X',departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T11:25:00Z'},{networkId:'Gresivaudan',tripId:'G2',line:'C9',from:'Y',to:'B',departure:'2026-11-02T11:37:00Z',arrival:'2026-11-02T12:00:00Z'}]})
   ],truncated:false}),dispose(){}
  })});
  await session.done;
