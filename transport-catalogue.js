@@ -18,8 +18,9 @@ function normalize(payload){
     resources:resources(dataset).filter(r=>r&&typeof r==='object').map(r=>({
       id:String(r.id??''),
       format:String(r.format??r.type??'').toUpperCase(),
-      url:typeof r.url==='string'?r.url:null,
-      updatedAt:r.updated_at??r.last_updated_at??null
+      url:typeof r.original_url==='string'?r.original_url:(typeof r.url==='string'?r.url:null),
+      updatedAt:r.updated_at??r.last_updated_at??null,
+      sourcePage:typeof dataset.page_url==='string'?dataset.page_url:null
     })).filter(r=>r.url&&/^https:\/\//i.test(r.url))
   })).filter(d=>d.id&&d.resources.length);
 }
