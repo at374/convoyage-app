@@ -6,18 +6,22 @@ on:
       - 'transport-ranking.js'
       - 'transport-adapters.js'
       - 'transport-fares.js'
+      - 'transport-catalogue.js'
       - 'tests/transport-ranking.test.cjs'
       - 'tests/transport-adapters.test.cjs'
       - 'tests/transport-fares.test.cjs'
+      - 'tests/transport-catalogue.test.cjs'
       - '.github/workflows/test-transport-ranking.yml'
   pull_request:
     paths:
       - 'transport-ranking.js'
       - 'transport-adapters.js'
       - 'transport-fares.js'
+      - 'transport-catalogue.js'
       - 'tests/transport-ranking.test.cjs'
       - 'tests/transport-adapters.test.cjs'
       - 'tests/transport-fares.test.cjs'
+      - 'tests/transport-catalogue.test.cjs'
       - '.github/workflows/test-transport-ranking.yml'
 permissions:
   contents: read
@@ -33,6 +37,8 @@ jobs:
       - run: node --check transport-ranking.js
       - run: node --check transport-adapters.js
       - run: node --check transport-fares.js
+      - run: node --check transport-catalogue.js
       - run: node tests/transport-ranking.test.cjs
       - run: node tests/transport-adapters.test.cjs
       - run: node tests/transport-fares.test.cjs
+      - run: node tests/transport-catalogue.test.cjs
