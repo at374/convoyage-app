@@ -21,6 +21,8 @@
     if (typeof value !== 'string' || !/(Z|[+-]\d\d:\d\d)$/.test(value)) return NaN;
     return Date.parse(value);
   }
+  const unavailable = value => value != null && String(value).toUpperCase() !== 'AVAILABLE';
+  const locationText = value => typeof value === 'string' ? value : '';
   function configure(value, {remember=false}={}) {
     const next = String(value || '').trim();
     if (next && !/^[A-Za-z0-9_-]{12,160}$/.test(next)) throw new Error('Clé TripGo invalide');
@@ -38,25 +40,30 @@
     if (!raw || !Array.isArray(raw.groups)) throw new Error('Réponse TripGo invalide');
     if (!raw.groups.length) return [];
     if (!Array.isArray(raw.segmentTemplates)) throw new Error('Segments TripGo absents');
-    const templates=new Map(raw.segmentTemplates.map(t=>[t.hashCode,t]));
+    const templates=new Map(raw.segmentTemplates.filter(t=>t && t.hashCode!=null).map(t=>[t.hashCode,t]));
     const earliest=departure ? instant(departure) : -Infinity;
     const latest=arrivalDeadline ? instant(arrivalDeadline) : Infinity;
+    if (Number.isNaN(earliest)||Number.isNaN(latest)||earliest>latest) throw new Error('Heure de recherche invalide');
     const results=[],seen=new Set();
-    for (const group of raw.groups) for (const trip of group.trips || []) {
+    for (const group of raw.groups) for (const trip of Array.isArray(group?.trips) ? group.trips : []) {
+      if (!trip || !Array.isArray(trip.segments) || unavailable(trip.availability)) continue;
       const start=trip.depart*1000,end=trip.arrive*1000;
       if (!finite(trip.depart)||!finite(trip.arrive)||trip.hideExactTimes || end<start || start<earliest || end>latest) continue;
       const legs=[]; let previous=start,transit=false,valid=true;
       for (const ref of trip.segments || []) {
+        if (!ref) {valid=false;break;}
         const template=templates.get(ref.segmentTemplateHashCode);
         if (!template) {valid=false;break;}
         const s={...template,...ref};
         const mode=s.modeInfo?.identifier || s.modeIdentifier;
         const allowed=MODES.includes(mode) || ['wa_wal','stationary_transfer','stationary_wait'].includes(mode);
-        if (!allowed || !finite(s.startTime)||!finite(s.endTime) || s.startTime*1000<previous ||
+        if (!allowed || unavailable(s.availability) || !finite(s.startTime)||!finite(s.endTime) || s.startTime*1000<previous ||
             s.endTime<s.startTime || s.endTime*1000>end) {valid=false;break;}
         previous=s.endTime*1000; transit ||= MODES.includes(mode);
-        legs.push({mode,route:s.serviceNumber || '',from:s.from?.name || s.from?.address || '',
-          to:s.to?.name || s.to?.address || '',startTime:s.startTime*1000,endTime:s.endTime*1000,
+        legs.push({mode,route:s.serviceNumber || '',from:locationText(s.from?.name) || locationText(s.from?.address),
+          to:locationText(s.to?.name) || locationText(s.to?.address),
+          fromAddress:locationText(s.from?.address),toAddress:locationText(s.to?.address),
+          startTime:s.startTime*1000,endTime:s.endTime*1000,
           operator:s.operator || s.externalData?.operatorName || '',
           walkMeters:mode==='wa_wal' && finite(s.metres) ? s.metres : null});
       }
@@ -98,22 +105,25 @@
     if (!options.refresh && pending.has(id)) return structuredClone(await pending.get(id).promise);
     if (pending.has(id)) pending.get(id).controller.abort();
     const controller=new AbortController(), credential=key, currentGeneration=generation;
-    const task={controller};
+    const task={controller,timedOut:false};
     task.promise=(async()=>{
-      const timer=setTimeout(()=>controller.abort(),timeoutMs);
+      const timer=setTimeout(()=>{task.timedOut=true;controller.abort();},timeoutMs);
       try {
         const response=await fetcher(url.href,{headers:{'X-TripGo-Key':credential,Accept:'application/json'},
           credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store',signal:controller.signal});
         if (!response.ok) return {source:'TripGo',status:[401,403].includes(response.status)?'access_denied':
           response.status===429?'quota_reached':'unavailable',itineraries:[]};
         const text=await response.text();
+        // A refresh or key removal can supersede a request while its body is loading.
+        if (controller.signal.aborted || currentGeneration!==generation || pending.get(id)!==task)
+          return {source:'TripGo',status:task.timedOut?'timeout':'cancelled',itineraries:[]};
         if (text.length>8000000) throw new Error('Réponse trop volumineuse');
         const raw=JSON.parse(text);
         if (raw.error || raw.errors) return {source:'TripGo',status:'provider_error',itineraries:[]};
         const itineraries=normalize(raw,options);
         const result={source:'TripGo',status:itineraries.length?'candidates':'no_candidate',itineraries,
           updatedAt:new Date().toISOString(),attribution:'Powered by TripGo',cached:false,
-          dataSources:raw.groups.flatMap(g=>g.sources || []).map(s=>({
+          dataSources:raw.groups.flatMap(g=>Array.isArray(g?.sources)?g.sources:[]).filter(Boolean).map(s=>({
             name:String(s.provider?.name || ''),disclaimer:String(s.disclaimer || '')})),
           transportConfirmed:false};
         if (currentGeneration===generation && pending.get(id)===task) {
@@ -122,7 +132,7 @@
         }
         return result;
       } catch(error) {
-        return {source:'TripGo',status:error.name==='AbortError'?'timeout':'unavailable',itineraries:[]};
+        return {source:'TripGo',status:controller.signal.aborted?(task.timedOut?'timeout':'cancelled'):'unavailable',itineraries:[]};
       } finally {
         clearTimeout(timer);
         if (pending.get(id)===task) pending.delete(id);
@@ -176,7 +186,7 @@
         if (!block.isConnected) return;
         const messages={no_candidate:'aucune proposition compatible ; d’autres réseaux peuvent proposer un trajet.',
           access_denied:'clé refusée ; vérifier la clé dans Paramètres.',quota_reached:'quota atteint ; les autres calculateurs restent disponibles.',
-          timeout:'réponse trop lente ; les autres calculateurs restent disponibles.',unavailable:'service indisponible.',provider_error:'erreur du calculateur.',not_configured:'clé non configurée.'};
+          timeout:'réponse trop lente ; les autres calculateurs restent disponibles.',cancelled:'recherche interrompue ou remplacée.',unavailable:'service indisponible.',provider_error:'erreur du calculateur.',not_configured:'clé non configurée.'};
         status.textContent=label+' : '+(answer.itineraries.length?answer.itineraries.length+' proposition(s) indicatives.':messages[answer.status] || 'aucune réponse exploitable.');
         const render=(parent,item)=>{
           const row=d.createElement('details'),summary=d.createElement('summary');
@@ -184,7 +194,11 @@
             item.legs.filter(l=>MODES.includes(l.mode)).map(l=>[l.route,l.operator].filter(Boolean).join(' ')).join(' · ');
           row.append(summary);
           for (const leg of item.legs) {const p=d.createElement('p');p.textContent=format(leg.startTime)+' → '+format(leg.endTime)+' · '+
-            (leg.mode==='wa_wal'?'Marche':leg.route || leg.mode)+' · '+leg.from+' → '+leg.to;row.append(p);}
+            (leg.mode==='wa_wal'?'Marche':leg.route || leg.mode)+' · '+leg.from+' → '+leg.to;row.append(p);
+            for (const [name,address] of [[leg.from,leg.fromAddress],[leg.to,leg.toAddress]]) {
+              if(address && address!==name){const location=d.createElement('p');location.textContent=name+' : '+address;row.append(location);}
+            }
+          }
           const p=d.createElement('p');p.textContent='Tarif à vérifier. '+WARNING+'.';row.append(p);parent.append(row);
         };
         answer.itineraries.slice(0,3).forEach(it=>render(block,it));

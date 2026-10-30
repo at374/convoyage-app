@@ -74,7 +74,7 @@
     ['Cannes', '06', 43.552, 7.017], ['Antibes', '06', 43.580, 7.125], ['Grasse', '06', 43.659, 6.922], ['Menton', '06', 43.775, 7.497], ['Fréjus', '83', 43.433, 6.737], ['Hyères', '83', 43.120, 6.130]
   ];
   // V245 (demande de Laurent) : villes des pays limitrophes, pour les missions transfrontalières — la base géographique
-  // ci-dessus et la recherche d'adresse (api-adresse.data.gouv.fr) sont France uniquement, donc une mission vers ces
+  // ci-dessus et la recherche d'adresse (data.geopf.fr/geocodage) sont France uniquement, donc une mission vers ces
   // villes n'avait aucun point GPS fiable (filtre « rayon / distance max » et trajets faux ou sans résultat). dep = ''
   // (pas de département français) ; [nom, dep, lat, lng].
   const VF = [
@@ -152,7 +152,7 @@
       (trouverVille(m[pre + '_city']) || {}).dep || null;
   }
   // Coordonnées : GPS fourni par la plateforme > ville connue > chef-lieu du département. précision indiquée.
-  // V138 : points GPS d'adresses cherchés via le service officiel d'adresses (api-adresse.data.gouv.fr), gardés sur l'appareil. Précision : 'adresse' | 'rue' | 'ville'.
+  // V138 : points GPS d'adresses cherchés via le service officiel d'adresses (data.geopf.fr/geocodage), gardés sur l'appareil. Précision : 'adresse' | 'rue' | 'ville'.
   const POINTS = {};
   const adresseDe = (m, cote) => { const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to'; const a = String(m[cote + '_address'] || p.address || p.street || '').trim(), v = String(m[pre + '_city'] || p.city || '').trim(); const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim(); return { a, v, cp, d: m[pre + '_department'] || '' }; };
   const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? [x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
@@ -164,7 +164,7 @@
     let pays = ''; for (const [c, re] of PAYS) if (re.test(txt)) { pays = c; break; } if (!pays && /^(CH|IT|ES|BE|DE|LU|MC|AD)$/i.test(String(x.d).trim())) pays = String(x.d).trim().toUpperCase();
     if (!pays) {
       const q = [x.a, x.cp || (x.a ? '' : x.d), x.v].filter(Boolean).join(' ');   // commune seule (sans adresse) → on cherche « Commune 74 » comme commune
-      const r = await fetchFn('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(q) + (x.cp ? '&postcode=' + encodeURIComponent(x.cp) : '') + (!x.a && !x.cp ? '&type=municipality' : ''));
+      const r = await fetchFn('https://data.geopf.fr/geocodage/search?index=address&limit=1&q=' + encodeURIComponent(q) + (x.cp ? '&postcode=' + encodeURIComponent(x.cp) : '') + (!x.a && !x.cp ? '&type=municipality' : ''));
       if (!r || !r.ok) throw new Error('service adresses');
       const j = await r.json(), f = j && j.features && j.features[0];
       if (f && f.geometry && f.properties && f.properties.score >= 0.5) {

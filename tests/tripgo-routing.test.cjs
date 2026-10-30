@@ -29,6 +29,22 @@ test('prices and exact addresses remain unverified, duplicate options collapse',
   assert.equal(rest.length,0);assert.equal(item.price,null);
   assert.equal(item.transportConfirmed,false);assert.equal(item.exactAddressVerified,false);
 });
+test('cancelled or unavailable trips and segments are rejected',()=>{
+  for(const availability of ['CANCELLED','MISSED_PREBOOKING_WINDOW','UNAVAILABLE','UNKNOWN']){
+    const trip=fixture();trip.groups[0].trips[0].availability=availability;
+    assert.equal(routing.normalize(trip,options).length,0);
+    const segment=fixture();segment.groups[0].trips[0].segments[0].availability=availability;
+    assert.equal(routing.normalize(segment,options).length,0);
+  }
+});
+test('a malformed neighbour cannot hide a valid trip; provided stop addresses survive parsing',()=>{
+  const raw=fixture();raw.segmentTemplates.unshift(null);raw.groups.unshift(null);
+  raw.groups[1].trips.unshift(null);
+  raw.segmentTemplates[1].from.address='12 rue Exemple';
+  const trips=routing.normalize(raw,options);
+  assert.equal(trips.length,1);assert.equal(trips[0].legs[0].fromAddress,'12 rue Exemple');
+  assert.throws(()=>routing.normalize(raw,{departure:'invalid'}));
+});
 test('parallel identical calls share a request; cached data is isolated; refresh calls network',async()=>{
   let calls=0;
   const fetcher=async(url,request)=>{
@@ -49,6 +65,13 @@ test('rotating credentials clears cache and removal disables requests',async()=>
   await routing.plan({...options,fetcher});assert.equal(calls,2);
   routing.configure('');assert.equal((await routing.plan({...options,fetcher})).status,'not_configured');
   assert.equal(calls,2);
+});
+test('removing a key prevents a late response from displaying or populating cache',async()=>{
+  let complete;
+  const request=routing.plan({...options,fetcher:()=>new Promise(resolve=>{complete=resolve;})});
+  routing.configure('');complete(response(fixture()));
+  const answer=await request;
+  assert.equal(answer.status,'cancelled');assert.equal(answer.itineraries.length,0);
 });
 test('network failures, quotas and timeouts produce no confirmed transport',async()=>{
   for (const [status,want] of [[403,'access_denied'],[429,'quota_reached'],[503,'unavailable']]) {
