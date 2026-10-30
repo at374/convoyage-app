@@ -2127,7 +2127,7 @@
               'Jonction régionale : aucune correspondance compatible avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
-                window.CPTransportAdapters.adaptRegional(options,'Régional'),
+                window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
                 {deadline:next.pickup_start,marginMinutes:securityMarginMin});
               if (ranked.length) {
                 const summary = document.createElement('p');
@@ -2243,7 +2243,7 @@
               answer.status === 'stations_not_found' ? 'gare non identifiée pour une des communes.' :
               'aucun train direct ou avec une correspondance trouvé dans les journées chargées.');
             if (window.CPTransportAdapters && window.CPTransportRanking) {
-              const normalized = window.CPTransportAdapters.adaptSNCF(itineraries);
+              const normalized = window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptSNCF(itineraries));
               const deadline = label === 'Aller' && pickupDate ? pickupDate :
                 label === 'Jonction' && next?.pickup_start ? next.pickup_start : null;
               const choices = window.CPTransportRanking.rank(normalized,{deadline,marginMinutes:securityMarginMin});
@@ -2317,7 +2317,7 @@
               'Retour régional : aucun itinéraire trouvé. Transport non confirmé — vérifiez vous-même.';
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
-                window.CPTransportAdapters.adaptRegional(options,'Régional'));
+                window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')));
               if (ranked.length) {
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement Retour régional théorique : ' +
@@ -2379,7 +2379,7 @@
               'Aller régional : aucune arrivée compatible avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
-                window.CPTransportAdapters.adaptRegional(options,'Régional'),
+                window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
                 {deadline:pickupDate,marginMinutes:securityMarginMin});
               if (ranked.length) {
                 const rankingLine = document.createElement('p');
