@@ -88,7 +88,11 @@
     return adaptGTFS((Array.isArray(itineraries)?itineraries:[]).map(it=>({
       departure:toISO(it.startTime),
       arrival:toISO(it.endTime),
-      legs:Array.isArray(it.legs)?it.legs:[]
+      legs:(Array.isArray(it.legs)?it.legs:[]).map(leg=>({
+        ...leg,
+        departure:toISO(leg.departure??leg.startTime),
+        arrival:toISO(leg.arrival??leg.endTime)
+      }))
     })),provider||'Régional');
   }
   function withVerifiedFares(journeys,options={}){
