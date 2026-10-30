@@ -1,0 +1,26 @@
+name: Test transport ranking
+on:
+  push:
+    branches: [feature/transport-ranking-safe]
+    paths:
+      - 'transport-ranking.js'
+      - 'tests/transport-ranking.test.cjs'
+      - '.github/workflows/test-transport-ranking.yml'
+  pull_request:
+    paths:
+      - 'transport-ranking.js'
+      - 'tests/transport-ranking.test.cjs'
+      - '.github/workflows/test-transport-ranking.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check transport-ranking.js
+      - run: node tests/transport-ranking.test.cjs
