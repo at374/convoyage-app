@@ -55,7 +55,21 @@
       detailStatus:'Accès aux arrêts, correspondances et circulation réelle à vérifier'
     }));
   }
-  const api={adaptSNCF,adaptGTFS};
+  // A timestamp may be an epoch millisecond number or an ISO string.
+  // Invalid values must not become 1970 dates.
+  function toISO(value){
+    const ms=typeof value==='number'?value:
+      typeof value==='string'?Date.parse(value):NaN;
+    return Number.isFinite(ms)?new Date(ms).toISOString():null;
+  }
+  function adaptRegional(itineraries,provider){
+    return adaptGTFS((Array.isArray(itineraries)?itineraries:[]).map(it=>({
+      departure:toISO(it.startTime),
+      arrival:toISO(it.endTime),
+      legs:Array.isArray(it.legs)?it.legs:[]
+    })),provider||'Régional');
+  }
+  const api={adaptSNCF,adaptGTFS,adaptRegional};
   if(typeof module==='object'&&module.exports)module.exports=api;
   root.CPTransportAdapters=Object.assign(root.CPTransportAdapters||{},api);
 })(typeof window!=='undefined'?window:globalThis);
