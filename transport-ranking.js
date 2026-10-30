@@ -32,8 +32,14 @@
       (a.priceEUR??Infinity)-(b.priceEUR??Infinity);
     const cheapest=[...valid].sort(byPrice)[0];
     const fastest=[...valid].sort(byDuration)[0];
-    const compromise=[...valid].sort((a,b)=>Number(b.feasible)-Number(a.feasible)||
-      (a.priceEUR??Infinity)-(b.priceEUR??Infinity)||a.durationMinutes-b.durationMinutes)[0];
+    const compromise=[...valid].sort((a,b)=>{
+      const score=x=>{
+        const price=x.priceEUR===null?100000:x.priceEUR;
+        const safety=x.slackMinutes===null?100:Math.max(0,45-x.slackMinutes)*2;
+        return price+safety+x.durationMinutes/20;
+      };
+      return Number(b.feasible)-Number(a.feasible)||score(a)-score(b);
+    })[0];
     const unique=[];for(const [label,journey] of [['Moins cher',cheapest],['Compromis',compromise],['Plus rapide',fastest]]){
       if(journey&&!unique.some(x=>x.journey===journey))unique.push({label,journey});
     }
