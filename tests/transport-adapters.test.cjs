@@ -43,4 +43,6 @@ const sourced=adaptGTFS([{departure,arrival,legs:[{route:'Y51',verifiedPriceEUR:
 assert.equal(sourced[0].legs[0].fareSource,'barème Cars Région');
 assert.equal(withVerifiedFares(sourced)[0].priceEUR,3);
 assert.equal(withVerifiedFares(adaptGTFS([{departure,arrival,legs:[{route:'Y51',verifiedPriceEUR:3}]}]))[0].priceEUR,null);
-console.log('transport adapters: 31 assertions passed');
+assert.equal(adaptRegional([{startTime:1e20,endTime:1e20,legs:[]}])[0].departure,null);
+assert.equal(adaptRegional([{startTime:-1e20,endTime:1e20,legs:[]}])[0].arrival,null);
+console.log('transport adapters: 33 assertions passed');
