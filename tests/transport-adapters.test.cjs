@@ -1,0 +1,16 @@
+const assert=require('node:assert/strict');
+const {adaptSNCF}=require('../transport-adapters.js');
+const {evaluate,rank}=require('../transport-ranking.js');
+const arrival='2026-11-02T08:15:00+01:00';
+const departure='2026-11-02T07:00:00+01:00';
+const raw=[{departure,arrival,price:1,transportConfirmed:true,legs:[{line:'TER',from:'Annecy',to:'Chambéry',departure,arrival}]}];
+const adapted=adaptSNCF(raw);
+assert.equal(adapted.length,1);
+assert.equal(adapted[0].provider,'SNCF');
+assert.equal(adapted[0].priceEUR,null);
+assert.equal(adapted[0].exactDestination,false);
+assert.equal(adapted[0].legs[0].serviceConfirmed,false);
+assert.equal(evaluate(adapted[0],{deadline:'2026-11-02T09:00:00+01:00'}).feasible,false);
+assert.equal(rank(adapted,{deadline:'2026-11-02T09:00:00+01:00'}).length,1);
+assert.deepEqual(adaptSNCF(null),[]);
+console.log('transport adapters: 8 assertions passed');
