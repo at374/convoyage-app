@@ -2126,15 +2126,8 @@
               ' proposition(s) théoriques, horaires et circulation à vérifier :' :
               'Jonction régionale : aucune correspondance compatible avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
-              const normalized = options.filter(option =>
-                Number.isFinite(option.startTime) && Number.isFinite(option.endTime) &&
-                option.endTime > option.startTime).map(option => ({
-                departure:new Date(option.startTime).toISOString(),
-                arrival:new Date(option.endTime).toISOString(),
-                legs:option.legs
-              }));
               const ranked = window.CPTransportRanking.rank(
-                window.CPTransportAdapters.adaptGTFS(normalized,'Régional'),
+                window.CPTransportAdapters.adaptRegional(options,'Régional'),
                 {deadline:next.pickup_start,marginMinutes:securityMarginMin});
               if (ranked.length) {
                 const summary = document.createElement('p');
@@ -2392,13 +2385,8 @@
               ' proposition(s) théoriques depuis le point de domicile enregistré (adresse exacte non vérifiée) :' :
               'Aller régional : aucune arrivée compatible avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
-              const gtfs = options.map(option => ({
-                departure:new Date(option.startTime).toISOString(),
-                arrival:new Date(option.endTime).toISOString(),
-                legs:option.legs
-              }));
               const ranked = window.CPTransportRanking.rank(
-                window.CPTransportAdapters.adaptGTFS(gtfs,'Régional'),
+                window.CPTransportAdapters.adaptRegional(options,'Régional'),
                 {deadline:pickupDate,marginMinutes:securityMarginMin});
               if (ranked.length) {
                 const rankingLine = document.createElement('p');
