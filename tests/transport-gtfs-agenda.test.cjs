@@ -421,3 +421,18 @@ test('GTFS sources with invalid timestamps or stop counts are rejected without q
   session.dispose();
  }
 });
+
+test('malformed GTFS network collections fail safely without running a journey query',async()=>{
+ for(const networks of [null,{},'invalid',[]]){
+  const target=panel();let queried=0;
+  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+   load:async()=>({networks}),
+   query:async()=>{queried++;return {rows:[],truncated:false};},
+   dispose(){}
+  })});
+  await session.done;
+  assert.equal(queried,0);
+  assert.match(target.textContent,/aucun réseau chargé/);
+  session.dispose();
+ }
+});
