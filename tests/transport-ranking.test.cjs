@@ -14,4 +14,6 @@ assert.equal(evaluate(base).slackMinutes,null);
 const unconfirmed={...base,priceEUR:1,exactDestination:false};
 const choices=rank([unconfirmed,{...base,priceEUR:5}],{deadline});
 assert.equal(choices[0].journey.feasible,true);
-console.log('transport-ranking: 10 assertions passed');
+assert.equal(evaluate({...base,departure:'not a date'},{deadline}).feasible,false);
+assert.equal(evaluate({...base,priceEUR:'0'},{deadline}).priceEUR,null);
+console.log('transport-ranking: 12 assertions passed');
