@@ -100,7 +100,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
    const summary=partners.length&&typeof client.loadNetworks==='function'?
     await client.loadNetworks([resource,...partners],loadOptions):await client.load(resource,loadOptions);
    if(!active())return;
-   const networks=summary.networks||[summary],loaded=networks.filter(n=>!n.error);
+   const networks=summary.networks||[summary],loaded=networks.filter(n=>n&&!n.error&&n.source&&n.counts&&Number.isFinite(n.counts.stops));
    if(!loaded.length){
     sourceStatus.textContent='Flux GTFS indisponible : aucun réseau chargé. Transport non confirmé — vérifiez vous-même.';
     for(const {task,status} of entries)if(selected(resource,task))status.textContent=task.label+' : horaires indisponibles (aucun réseau chargé).';
