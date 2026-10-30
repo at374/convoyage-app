@@ -2229,6 +2229,20 @@
               (itineraries.length ? itineraries.length + ' proposition(s) de gare à gare.' :
               answer.status === 'stations_not_found' ? 'gare non identifiée pour une des communes.' :
               'aucun train direct ou avec une correspondance trouvé dans les journées chargées.');
+            if (window.CPTransportAdapters && window.CPTransportRanking) {
+              const normalized = window.CPTransportAdapters.adaptSNCF(itineraries);
+              const deadline = label === 'Aller' && pickupDate ? pickupDate :
+                label === 'Jonction' && next?.pickup_start ? next.pickup_start : null;
+              const choices = window.CPTransportRanking.rank(normalized,{deadline,marginMinutes:securityMarginMin});
+              if (choices.length) {
+                const summary = document.createElement('p');
+                summary.textContent = 'Classement SNCF de gare à gare : ' +
+                  choices.map(choice => choice.label + ' (' + choice.journey.durationMinutes +
+                    ' min, prix non vérifié)').join(' · ') +
+                  '. Aucun trajet complet confirmé.';
+                status.appendChild(summary);
+              }
+            }
             itineraries.forEach(itinerary => {
               const row = document.createElement('p');
               row.textContent = itinerary.legs.map(leg =>
