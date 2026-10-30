@@ -2352,6 +2352,24 @@
               'Aller régional : ' + options.length +
               ' proposition(s) théoriques depuis le point de domicile enregistré (adresse exacte non vérifiée) :' :
               'Aller régional : aucune arrivée compatible avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
+            if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
+              const gtfs = options.map(option => ({
+                departure:new Date(option.startTime).toISOString(),
+                arrival:new Date(option.endTime).toISOString(),
+                legs:option.legs
+              }));
+              const ranked = window.CPTransportRanking.rank(
+                window.CPTransportAdapters.adaptGTFS(gtfs,'Régional'),
+                {deadline:pickupDate,marginMinutes:securityMarginMin});
+              if (ranked.length) {
+                const rankingLine = document.createElement('p');
+                rankingLine.textContent = 'Classement régional théorique : ' +
+                  ranked.map(choice => choice.label + ' (' + choice.journey.durationMinutes +
+                    ' min, tarif non vérifié)').join(' · ') +
+                  '. Correspondances et trajet complet non confirmés.';
+                outboundStatus.appendChild(rankingLine);
+              }
+            }
             options.forEach(option => {
               const line = document.createElement('p');
               const legs = option.legs.map(leg =>
