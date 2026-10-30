@@ -31,12 +31,13 @@ function gtfsResources(datasets){
         typeof resource.url==='string'&&resource.url.startsWith('https://'))
       .map(resource=>({...resource,datasetId:dataset.id,network:dataset.name})));
 }
-async function downloadGTFS(resource,fetcher,limitBytes=20*1024*1024){
+async function downloadGTFS(resource,fetcher,limitBytes=20*1024*1024,{signal}={}){
   if(typeof fetcher!=='function')throw new TypeError('fetch required');
   if(!resource||resource.format!=='GTFS'||typeof resource.url!=='string'||
       !/^https:\/\//i.test(resource.url))throw new Error('Invalid GTFS resource');
   if(!Number.isSafeInteger(limitBytes)||limitBytes<=0)throw new Error('Invalid size limit');
-  const response=await fetcher(resource.url,{redirect:'follow'});
+  if(signal?.aborted)throw new DOMException('GTFS download cancelled','AbortError');
+  const response=await fetcher(resource.url,{redirect:'follow',credentials:'omit',signal});
   if(!response?.ok)throw new Error('GTFS download failed');
   if(response.url && !/^https:\/\//i.test(response.url))throw new Error('Insecure GTFS redirect');
   const contentType=response.headers?.get?.('content-type')||'';
@@ -45,16 +46,21 @@ async function downloadGTFS(resource,fetcher,limitBytes=20*1024*1024){
   if(Number.isFinite(declared)&&declared>limitBytes)throw new Error('GTFS exceeds size limit');
   if(!response.body?.getReader)throw new Error('Streaming response required');
   const reader=response.body.getReader(),chunks=[];
+  const cancel=()=>{reader.cancel().catch(()=>{});};
+  signal?.addEventListener('abort',cancel,{once:true});
   let size=0;
   try{
     while(true){
+      if(signal?.aborted)throw new DOMException('GTFS download cancelled','AbortError');
       const {done,value}=await reader.read();
+      if(signal?.aborted)throw new DOMException('GTFS download cancelled','AbortError');
       if(done)break;
       size+=value.byteLength;
       if(size>limitBytes)throw new Error('GTFS exceeds size limit');
       chunks.push(value);
     }
   }catch(error){await reader.cancel().catch(()=>{});throw error;}
+  finally{signal?.removeEventListener('abort',cancel);reader.releaseLock?.();}
   const bytes=new Uint8Array(size);
   let offset=0;
   for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}

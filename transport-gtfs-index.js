@@ -1,9 +1,13 @@
 /* GTFS static CSV index. Requires already extracted, trusted text files. */
 (function(root){
 'use strict';
-function parseCSV(text){
+function* csvRows(text){
  if(typeof text!=='string')throw new TypeError('CSV text required');
- const rows=[];let row=[],field='',quoted=false;
+ let names=null,row=[],field='',quoted=false;
+ const record=values=>{
+  if(!names){names=values.map((h,i)=>i===0?h.replace(/^\uFEFF/,''):h);return null;}
+  return values.some(v=>v!=='')?Object.fromEntries(names.map((h,i)=>[h,values[i]??''])):null;
+ };
  for(let i=0;i<text.length;i++){
   const c=text[i];
   if(quoted){
@@ -12,16 +16,13 @@ function parseCSV(text){
    else field+=c;
   }else if(c==='"')quoted=true;
   else if(c===','){row.push(field);field='';}
-  else if(c==='\n'){row.push(field.replace(/\r$/,''));rows.push(row);row=[];field='';}
+  else if(c==='\n'){row.push(field.replace(/\r$/,''));const item=record(row);if(item)yield item;row=[];field='';}
   else field+=c;
  }
  if(quoted)throw new Error('Unclosed CSV quote');
- if(field||row.length){row.push(field.replace(/\r$/,''));rows.push(row);}
- const [header,...records]=rows;
- if(!header)return [];
- const names=header.map((h,i)=>i===0?h.replace(/^\uFEFF/,''):h);
- return records.filter(r=>r.some(v=>v!=='')).map(r=>Object.fromEntries(names.map((h,i)=>[h,r[i]??''])));
+ if(field||row.length){row.push(field.replace(/\r$/,''));const item=record(row);if(item)yield item;}
 }
+function parseCSV(text){return Array.from(csvRows(text));}
 function activeServices(files,date){
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date+'T00:00:00Z'))||
    new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date)
@@ -156,25 +157,32 @@ function transferTrips(files,index,date,originStopId,destinationStopId,minTransf
 }
 function buildIndex(files){
  if(!files||typeof files!=='object')throw new TypeError('GTFS files required');
- const stops=parseCSV(files['stops.txt']||'');
- const routes=parseCSV(files['routes.txt']||'');
- const trips=parseCSV(files['trips.txt']||'');
- const times=parseCSV(files['stop_times.txt']||'');
- const stopById=new Map(stops.filter(s=>s.stop_id).map(s=>[s.stop_id,s]));
- const routeById=new Map(routes.filter(r=>r.route_id).map(r=>[r.route_id,r]));
- const tripById=new Map(trips.filter(t=>t.trip_id).map(t=>[t.trip_id,t]));
- const timesByTrip=new Map();
- for(const time of times){
-  if(!tripById.has(time.trip_id)||!stopById.has(time.stop_id))continue;
+ const stopById=new Map(),routeById=new Map(),tripById=new Map();
+ for(const stop of csvRows(files['stops.txt']||''))if(stop.stop_id)stopById.set(stop.stop_id,stop);
+ for(const route of csvRows(files['routes.txt']||''))if(route.route_id)routeById.set(route.route_id,route);
+ for(const trip of csvRows(files['trips.txt']||''))if(trip.trip_id)tripById.set(trip.trip_id,trip);
+ const timesByTrip=new Map(),clockValues=new Map(),sequenceValues=new Map();let stopTimes=0;
+ const intern=(map,value)=>{
+  if(map.has(value))return map.get(value);
+  if(map.size<100000)map.set(value,value);
+  return value;
+ };
+ for(const time of csvRows(files['stop_times.txt']||'')){
+  stopTimes++;
+  const trip=tripById.get(time.trip_id),stop=stopById.get(time.stop_id);
+  if(!trip||!stop)continue;
+  time.trip_id=trip.trip_id;time.stop_id=stop.stop_id;
+  for(const column of ['arrival_time','departure_time'])if(typeof time[column]==='string')time[column]=intern(clockValues,time[column]);
+  if(typeof time.stop_sequence==='string')time.stop_sequence=intern(sequenceValues,time.stop_sequence);
   if(!timesByTrip.has(time.trip_id))timesByTrip.set(time.trip_id,[]);
   timesByTrip.get(time.trip_id).push(time);
  }
  for(const list of timesByTrip.values())list.sort((a,b)=>Number(a.stop_sequence)-Number(b.stop_sequence));
  return {stopById,routeById,tripById,timesByTrip,
-   counts:{stops:stopById.size,routes:routeById.size,trips:tripById.size,stopTimes:times.length},
+   counts:{stops:stopById.size,routes:routeById.size,trips:tripById.size,stopTimes},
    serviceConfirmed:false};
 }
-const api={parseCSV,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips,nearbyStops,nearbyDirectTrips};
+const api={parseCSV,csvRows,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips,nearbyStops,nearbyDirectTrips};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSIndex=api;
 })(typeof window!=='undefined'?window:globalThis);
