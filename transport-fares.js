@@ -5,7 +5,7 @@
   'use strict';
   function money(value){return typeof value==='number'&&Number.isFinite(value)&&value>=0?value:null;}
   function validForTravel(leg,travelDate){
-    if(!travelDate)return true;
+    if(!travelDate)return false;
     const when=Date.parse(travelDate);
     if(!Number.isFinite(when))return false;
     const start=leg?.fareValidFrom?Date.parse(leg.fareValidFrom):NaN;
