@@ -4,12 +4,16 @@ on:
     branches: [feature/transport-ranking-safe]
     paths:
       - 'transport-ranking.js'
+      - 'transport-adapters.js'
       - 'tests/transport-ranking.test.cjs'
+      - 'tests/transport-adapters.test.cjs'
       - '.github/workflows/test-transport-ranking.yml'
   pull_request:
     paths:
       - 'transport-ranking.js'
+      - 'transport-adapters.js'
       - 'tests/transport-ranking.test.cjs'
+      - 'tests/transport-adapters.test.cjs'
       - '.github/workflows/test-transport-ranking.yml'
 permissions:
   contents: read
@@ -23,4 +27,6 @@ jobs:
         with:
           node-version: '22'
       - run: node --check transport-ranking.js
+      - run: node --check transport-adapters.js
       - run: node tests/transport-ranking.test.cjs
+      - run: node tests/transport-adapters.test.cjs
