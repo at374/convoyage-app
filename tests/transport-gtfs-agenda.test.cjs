@@ -95,11 +95,11 @@ test('geocoding endpoints run independently and identical pending addresses shar
  assert.equal(await a,true);assert.equal(await b,true);
  assert.equal(context.G.POINTS.origin,undefined);assert.ok(context.G.POINTS.destination);
 });
-test('actual Agenda call passes mission windows and refreshes only GTFS when coordinates arrive',()=>{
+test('actual Agenda call passes mission windows and triggers regional refresh when coordinates arrive',()=>{
  const source=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
  const code=source.slice(source.indexOf('      // GTFS candidate search:'),source.indexOf('      // Swiss public transport connections for an accepted mission junction.'));
- const calls=[],callbacks=[];let stopped=0,removed=0;
- const button={},sheet={hidden:false},panel={isConnected:true,hidden:false,querySelector:()=>({remove(){removed++;}})};
+ const calls=[],callbacks=[];let stopped=0,removed=0,regionalRefreshes=0;
+ const button={cpRefreshRegional(){regionalRefreshes++;}},sheet={hidden:false},panel={isConnected:true,hidden:false,querySelector:()=>({remove(){removed++;}})};
  const current={o:{lat:45.9,lng:6.1,precision:'adresse'},d:{lat:45.67,lng:6.39,precision:'gps'}};
  const next={o:{lat:45.8,lng:6.2,precision:'ville'},pickup_start:'2026-11-02T15:00:00+01:00'};
  const context={window:{CPGTFSAgenda:{mount:(panel,options)=>{calls.push(options);return {dispose(){}};}},CPGTFSWorker:{}},
@@ -114,7 +114,7 @@ test('actual Agenda call passes mission windows and refreshes only GTFS when coo
  assert.equal(calls[0].tasks[1].earliestDeparture,context.deliveryDate);
  assert.equal(calls[0].tasks[2].latestArrival,next.pickup_start);assert.equal(calls[0].tasks[2].to,null);
  next.o.precision='adresse';callbacks[0]();
- assert.equal(calls.length,2);assert.equal(calls[1].tasks[2].to.lat,45.8);
+ assert.equal(calls.length,2);assert.equal(calls[1].tasks[2].to.lat,45.8);assert.equal(regionalRefreshes,1);
  assert.equal(stopped,2);assert.equal(removed,2);
  callbacks[0]();button.cpRefreshGTFS();
  next.d={lat:46,lon:6.5,precision:'adresse'};callbacks[0]();

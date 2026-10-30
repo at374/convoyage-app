@@ -2111,6 +2111,7 @@
       if (next) pointsMission(next, () => {
         if (!panel.isConnected || panel.hidden || $('feuille').hidden || $('btnTransportsMission') !== bt) return;
         bt.cpRefreshGTFS?.();
+        bt.cpRefreshRegional?.();
       });
       // Swiss public transport connections for an accepted mission junction.
       // Results are advisory until realtime validity and exact walking approaches are checked.
@@ -2160,6 +2161,35 @@
           });
         }
       }
+      // Regional refresh slots: rerun only the tasks whose precise inputs change.
+      const regionalRefreshers = [];
+      const regionalActive = () => panel.isConnected && !panel.hidden &&
+        !$('feuille').hidden && $('btnTransportsMission') === bt;
+      const regionalPoint = gps => transportAddressPoint(gps) ?
+        {lat:Number(gps.lat),lon:Number(gps.lng)} : null;
+      const regionalHome = () => {
+        const lat = etat.reglages?.domicile_lat, lon = etat.reglages?.domicile_lng;
+        return lat != null && lon != null && lat !== '' && lon !== '' ?
+          {lat:Number(lat),lon:Number(lon)} : null;
+      };
+      const regionalSlot = (inputs, render) => {
+        let signature = null, previous = null;
+        const refresh = () => {
+          if (!regionalActive()) return;
+          const key = JSON.stringify(inputs());
+          if (key === signature) return;
+          signature = key;
+          previous?.remove();
+          previous = document.createElement('div');
+          previous.setAttribute('data-regional-slot', '');
+          panel.appendChild(previous);
+          render(previous);
+        };
+        regionalRefreshers.push(refresh);
+        refresh();
+      };
+      bt.cpRefreshRegional = () => regionalRefreshers.forEach(refresh => refresh());
+      regionalSlot(() => [regionalPoint(G.coordonnees(m,'destination')),regionalPoint(next && G.coordonnees(next,'origin')),deliveryDate,next?.pickup_start,securityMarginMin], panel => {
       // Regional journeys use a configured endpoint or the public M provider,
       // only when both mission endpoints have exact GPS.
       if (regionalEngineReady && regionalProviderReady && next && deliveryDate) {
@@ -2180,7 +2210,7 @@
             refresh: !!bt.dataset.transportRefreshAt,
             fetcher: regionalFetch
           }).then(answer => {
-            if (!regionalStatus.isConnected) return;
+            if (!regionalActive() || !regionalStatus.isConnected) return;
             const options = window.CPRegionalRouting.feasibleBetween(
               answer.itineraries, deliveryDate, next.pickup_start, securityMarginMin);
             regionalStatus.textContent = options.length ?
@@ -2211,11 +2241,12 @@
               regionalStatus.appendChild(line);
             });
           }).catch(() => {
-            if (regionalStatus.isConnected) regionalStatus.textContent =
+            if (regionalActive() && regionalStatus.isConnected) regionalStatus.textContent =
               'Service régional indisponible ou incompatible. Transport non confirmé — vérifiez vous-même.';
           });
         }
       }
+      });
       // Swiss API: outbound and return suggestions. Home coordinates may be a city centre.
       // Only show indicative options; never imply door-to-door or realtime confirmation.
       if (window.CPSwissTransport) {
@@ -2348,6 +2379,7 @@
       }
       // Regional return from the exact delivery point to the configured home
       // coordinate (which may only represent a city centre, not a door).
+      regionalSlot(() => [regionalPoint(G.coordonnees(m,'destination')),regionalHome(),deliveryDate], panel => {
       if (regionalEngineReady && regionalProviderReady && deliveryDate) {
         const finishGps = G.coordonnees(m, 'destination');
         const homeLat = Number(etat.reglages?.domicile_lat);
@@ -2370,7 +2402,7 @@
             refresh: !!bt.dataset.transportRefreshAt,
             fetcher:regionalFetch
           }).then(answer => {
-            if (!returnStatus.isConnected) return;
+            if (!regionalActive() || !returnStatus.isConnected) return;
             const options = answer.itineraries.filter(it =>
               it.startTime >= Date.parse(deliveryDate)).slice(0, 5);
             returnStatus.textContent = options.length ?
@@ -2400,13 +2432,15 @@
               returnStatus.appendChild(line);
             });
           }).catch(() => {
-            if (returnStatus.isConnected) returnStatus.textContent =
+            if (regionalActive() && returnStatus.isConnected) returnStatus.textContent =
               'Retour régional : service indisponible. Transport non confirmé — vérifiez vous-même.';
           });
         }
       }
+      });
       // Regional outbound itinerary: use only a known home reference point
       // and the exact GPS pickup, with a 30-minute arrival buffer.
+      regionalSlot(() => [regionalHome(),regionalPoint(G.coordonnees(m,'origin')),pickupDate,securityMarginMin], panel => {
       if (regionalEngineReady && regionalProviderReady && pickupDate) {
         const pickupGps = G.coordonnees(m, 'origin');
         const homeLat = Number(etat.reglages?.domicile_lat);
@@ -2432,7 +2466,7 @@
             refresh: !!bt.dataset.transportRefreshAt,
             fetcher:regionalFetch
           }).then(answer => {
-            if (!outboundStatus.isConnected) return;
+            if (!regionalActive() || !outboundStatus.isConnected) return;
             const options = window.CPRegionalRouting.feasibleBefore(
               answer.itineraries, pickupDate, securityMarginMin).slice(0, 5);
             outboundStatus.textContent = options.length ?
@@ -2463,11 +2497,12 @@
               outboundStatus.appendChild(line);
             });
           }).catch(() => {
-            if (outboundStatus.isConnected) outboundStatus.textContent =
+            if (regionalActive() && outboundStatus.isConnected) outboundStatus.textContent =
               'Aller régional : service indisponible. Transport non confirmé — vérifiez vous-même.';
           });
         }
       }
+      });
       // Statut réel du fichier GTFS quotidien : ne pas annoncer de trajets sans données.
       if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
         const daySource = transportDelivery || m.delivery_start || transportPickup;
@@ -2950,6 +2985,7 @@
       const openPanel = $('cpTransportMissionDetails');
       if (openPanel && !openPanel.hidden) {
         transportDetailButton.cpRefreshGTFS?.();
+        transportDetailButton.cpRefreshRegional?.();
       }
     });
   }

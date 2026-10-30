@@ -1,0 +1,52 @@
+{
+  "retrievedAt": "2026-10-30T18:52:34.794Z",
+  "provider": "Mobilités M",
+  "rows": 4,
+  "realtime": false,
+  "transportConfirmed": false,
+  "example": {
+    "departure": "2026-11-02T09:24:04.000Z",
+    "arrival": "2026-11-02T10:05:59.000Z",
+    "transfers": 0,
+    "walkMeters": 68.82,
+    "legs": [
+      {
+        "mode": "WALK",
+        "from": "Origin",
+        "to": "Grenoble, Gares",
+        "startTime": "2026-11-02T09:24:04.000Z",
+        "endTime": "2026-11-02T09:25:00.000Z",
+        "distanceMeters": 68.82,
+        "route": ""
+      },
+      {
+        "mode": "BUS",
+        "from": "Grenoble, Gares",
+        "to": "Crolles, Crolles Mairie",
+        "startTime": "2026-11-02T09:25:00.000Z",
+        "endTime": "2026-11-02T10:05:59.000Z",
+        "distanceMeters": 22765.12,
+        "route": "C11"
+      }
+    ]
+  },
+  "request": {
+    "from": {
+      "lat": 45.1914,
+      "lon": 5.7143
+    },
+    "to": {
+      "lat": 45.28364,
+      "lon": 5.88224
+    },
+    "departure": "2026-11-02T09:00:00Z"
+  },
+  "integration": "Recorded official response → actual regional-routing.js → actual app.js regional slots with simulated DOM after delayed geocoding",
+  "limits": [
+    "Not a user mission; public points only",
+    "Timetable only; no realtime service confirmation",
+    "Computed walking is not physical access verification",
+    "No verified total fare",
+    "No Android validation or deployment"
+  ]
+}

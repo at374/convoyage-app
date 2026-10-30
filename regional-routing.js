@@ -75,7 +75,7 @@
     const timer = setTimeout(() => controller.abort(),Number(timeoutMs));
     try {
       const response = await fetcher(url.href, {signal:controller.signal,
-        credentials:'omit',referrerPolicy:'no-referrer'});
+        credentials:'omit',cache:'no-cache',referrerPolicy:'no-referrer'});
       if (!response.ok) throw new Error('Mobilites M indisponible ('+response.status+')');
       const payload = await response.json();
       if (payload.error || !Array.isArray(payload.plan && payload.plan.itineraries))

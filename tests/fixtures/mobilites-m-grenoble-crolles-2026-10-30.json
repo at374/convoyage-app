@@ -1,0 +1,1074 @@
+{
+  "source": "https://data.mobilites-m.fr/api/routers/default/plan",
+  "retrievedAt": "2026-10-30T18:48:18Z",
+  "request": {
+    "fromPlace": "45.1914,5.7143",
+    "toPlace": "45.28364,5.88224",
+    "date": "2026-11-02",
+    "time": "10:00",
+    "arriveBy": "false",
+    "mode": "TRANSIT,WALK",
+    "numItineraries": "5"
+  },
+  "response": {
+    "requestParameters": {
+      "date": "2026-11-02",
+      "mode": "TRANSIT,WALK",
+      "arriveBy": "false",
+      "fromPlace": "45.1914,5.7143",
+      "toPlace": "45.28364,5.88224",
+      "time": "10:00",
+      "numItineraries": "5"
+    },
+    "plan": {
+      "date": 1793610000000,
+      "from": {
+        "name": "Origin",
+        "lon": 5.7143,
+        "lat": 45.1914,
+        "vertexType": "NORMAL"
+      },
+      "to": {
+        "name": "Destination",
+        "lon": 5.88224,
+        "lat": 45.28364,
+        "vertexType": "NORMAL"
+      },
+      "itineraries": [
+        {
+          "duration": 3616,
+          "startTime": 1793610185000,
+          "endTime": 1793613801000,
+          "walkTime": 496,
+          "transitTime": 2580,
+          "waitingTime": 540,
+          "walkDistance": 582.19,
+          "walkLimitExceeded": false,
+          "generalizedCost": 5275,
+          "elevationLost": 2.32,
+          "elevationGained": 7.21,
+          "transfers": 1,
+          "fare": {
+            "fare": {},
+            "details": {},
+            "legProducts": [
+              {
+                "legIndices": [
+                  2
+                ],
+                "products": [
+                  {
+                    "id": "SE2:SE21",
+                    "name": "regular",
+                    "amount": {
+                      "cents": 200,
+                      "currency": {
+                        "currency": "EUR",
+                        "defaultFractionDigits": 2,
+                        "currencyCode": "EUR",
+                        "symbol": "€"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "legIndices": [
+                  1
+                ],
+                "products": [
+                  {
+                    "id": "SEM:SEM1",
+                    "name": "regular",
+                    "amount": {
+                      "cents": 200,
+                      "currency": {
+                        "currency": "EUR",
+                        "defaultFractionDigits": 2,
+                        "currencyCode": "EUR",
+                        "symbol": "€"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "legs": [
+            {
+              "startTime": 1793610185000,
+              "endTime": 1793610240000,
+              "departureDelay": 0,
+              "arrivalDelay": 0,
+              "realTime": false,
+              "distance": 67.93,
+              "generalizedCost": 108,
+              "pathway": false,
+              "mode": "WALK",
+              "transitLeg": false,
+              "route": "",
+              "agencyTimeZoneOffset": 3600000,
+              "interlineWithPreviousLeg": false,
+              "from": {
+                "name": "Origin",
+                "lon": 5.7143,
+                "lat": 45.1914,
+                "departure": 1793610185000,
+                "vertexType": "NORMAL"
+              },
+              "to": {
+                "name": "Grenoble, Gares",
+                "stopId": "SEM:0893",
+                "stopCode": "0893",
+                "lon": 5.71514,
+                "lat": 45.19149,
+                "arrival": 1793610240000,
+                "departure": 1793610240000,
+                "zoneId": "1",
+                "vertexType": "TRANSIT"
+              },
+              "legGeometry": {
+                "points": "gmyrGka{a@I_@AC?EES?iB??",
+                "length": 7
+              },
+              "legElevation": "0,NaN,15,NaN,15,211.2,16,211.2,18,211.2,26,211.1,26,NaN,68,NaN",
+              "steps": [
+                {
+                  "distance": 14.64,
+                  "relativeDirection": "DEPART",
+                  "streetName": "corridor",
+                  "absoluteDirection": "NORTHEAST",
+                  "stayOn": false,
+                  "area": true,
+                  "bogusName": false,
+                  "lon": 5.7143,
+                  "lat": 45.1914,
+                  "elevation": "",
+                  "walkingBike": false
+                },
+                {
+                  "distance": 11.82,
+                  "relativeDirection": "CONTINUE",
+                  "streetName": "steps",
+                  "absoluteDirection": "EAST",
+                  "stayOn": false,
+                  "area": false,
+                  "bogusName": true,
+                  "lon": 5.7144677,
+                  "lat": 45.1914581,
+                  "elevation": "0,211.2,1,211.2,4,211.2,12,211.1",
+                  "walkingBike": false
+                },
+                {
+                  "distance": 41.47,
+                  "relativeDirection": "SLIGHTLY_RIGHT",
+                  "streetName": "Place de la Gare",
+                  "absoluteDirection": "EAST",
+                  "stayOn": false,
+                  "area": true,
+                  "bogusName": false,
+                  "lon": 5.7146108,
+                  "lat": 45.1914916,
+                  "elevation": "",
+                  "walkingBike": false
+                }
+              ],
+              "rentedBike": false,
+              "walkingBike": false,
+              "duration": 55
+            },
+            {
+              "startTime": 1793610240000,
+              "endTime": 1793611080000,
+              "departureDelay": 0,
+              "arrivalDelay": 0,
+              "realTime": false,
+              "distance": 3809.55,
+              "generalizedCost": 1440,
+              "pathway": false,
+              "mode": "BUS",
+              "transitLeg": true,
+              "route": "Montbonnot-Saint-Martin Pré de l'Eau / Grenoble Cité Jean Macé",
+              "agencyName": "M Réso - Métropole Grenobloise",
+              "agencyUrl": "https://www.mobilites-m.fr/",
+              "agencyTimeZoneOffset": 3600000,
+              "routeColor": "F5D24D",
+              "routeType": 3,
+              "routeId": "SEM:1",
+              "routeTextColor": "000000",
+              "interlineWithPreviousLeg": false,
+              "headsign": "Montbonnot-Saint-Martin, Pré de l'Eau",
+              "agencyId": "SEM:SEM",
+              "tripId": "SEM:32140131",
+              "serviceDate": "2026-11-02",
+              "from": {
+                "name": "Grenoble, Gares",
+                "stopId": "SEM:0893",
+                "stopCode": "0893",
+                "lon": 5.71514,
+                "lat": 45.19149,
+                "arrival": 1793610240000,
+                "departure": 1793610240000,
+                "zoneId": "1",
+                "stopIndex": 2,
+                "stopSequence": 3,
+                "vertexType": "TRANSIT"
+              },
+              "to": {
+                "name": "La Tronche, Sablons",
+                "stopId": "SEM:1442",
+                "stopCode": "1442",
+                "lon": 5.75303,
+                "lat": 45.19675,
+                "arrival": 1793611080000,
+                "departure": 1793611620000,
+                "zoneId": "1",
+                "stopIndex": 9,
+                "stopSequence": 10,
+                "vertexType": "TRANSIT"
+              },
+              "legGeometry": {
+                "points": "}myrGkg{a@TKBAJELELGtBy@`@MDEAWYiDYiDAMAUQoB?E??COAMCa@OcBEm@Gq@CWAKAKCg@EYC]QuBAQE]e@{F??Go@lGqHz@_A??vBcChAoAbCqCh@s@`@e@NO??BGjAwAf@i@rA}AzBgCJSD]n@iE\\aCVoB@KBKDY@I??Dm@AUMs@EOEKEM[gAe@_BGWIUCKmBsGEOIWCKkAyDqAsEGSM_@AG??_@oASq@GQI[mCgJi@eB]iAe@oAYo@a@{@c@u@iCeG{F}JcQoYcGyHwA}B_A{AgAgB",
+                "length": 99
+              },
+              "steps": [],
+              "routeShortName": "C1",
+              "routeLongName": "Montbonnot-Saint-Martin Pré de l'Eau / Grenoble Cité Jean Macé",
+              "duration": 840
+            },
+            {
+              "startTime": 1793611620000,
+              "endTime": 1793613360000,
+              "departureDelay": 0,
+              "arrivalDelay": 0,
+              "realTime": false,
+              "distance": 13815.82,
+              "generalizedCost": 2880,
+              "pathway": false,
+              "mode": "BUS",
+              "transitLeg": true,
+              "route": "Verdun / Le Brocey",
+              "agencyName": "M Réso - Métropole Grenobloise",
+              "agencyUrl": "https://www.mobilites-m.fr/",
+              "agencyTimeZoneOffset": 3600000,
+              "routeColor": "1E71B8",
+              "routeType": 3,
+              "routeId": "SE2:80",
+              "routeTextColor": "FFFFFF",
+              "interlineWithPreviousLeg": false,
+              "headsign": "Crolles, Le Brocey",
+              "agencyId": "SE2:SE2",
+              "tripId": "SE2:32239944",
+              "serviceDate": "2026-11-02",
+              "from": {
+                "name": "La Tronche, Sablons",
+                "stopId": "SE2:1442",
+                "stopCode": "1442",
+                "lon": 5.75303,
+                "lat": 45.19675,
+                "arrival": 1793611080000,
+                "departure": 1793611620000,
+                "zoneId": "1",
+                "stopIndex": 3,
+                "stopSequence": 4,
+                "vertexType": "TRANSIT"
+              },
+              "to": {
+                "name": "Crolles, Le Brocey",
+                "stopId": "SE2:1705",
+                "stopCode": "1705",
+                "lon": 5.8775,
+                "lat": 45.2806,
+                "arrival": 1793613360000,
+                "departure": 1793613360000,
+                "zoneId": "2",
+                "stopIndex": 28,
+                "stopSequence": 29,
+                "vertexType": "TRANSIT"
+              },
+              "legGeometry": {
+                "points": "qozrGcrbb@_CsD}KsQcB_C_B_CKMOYU_@[i@S]kAeBMYSg@I[IKiBiC_@i@c@m@OSc@s@MOOSOSIMy@uA??qAsBWa@EIwC}EQYQYIMGMQWWc@??KQGM]g@IQIMeBwCgEcH??a@q@EG_@m@OQIQKQMSGMGIaAeBmGoKiEiHYe@k@aAeAiBOU_@q@KQEGKQWc@g@}@??iB}CYg@i@kAk@oAy@mBq@_BO_@K[M[Qg@U{@Ou@QqACKAK??ACG]ESCMKa@GKOOIMEMCS?Q@MFWUa@m@u@oC_EGKYg@CEQ]CO{CkGu@sCSy@Ww@k@_ASY_@a@w@_AOQMIuAgB??s@}@Y]EGOQQWKUiC_Du@_Aq@iAW_@Wa@KWMWEK]{@Q[y@}AKSYs@I[EKGM????GKk@mAk@y@IKu@eAg@u@a@k@IKg@u@U[Ui@EMKYYq@IUCI??CESg@uByFCQCG{AcJ[{B??QeAQmAm@sDMo@Ks@Ik@Yu@O_@S_@KQy@oAUg@Sy@a@}BAMCUEQEMKYOQmDuAUCa@g@mBiD_AaB??CEy@qAiBoC}@cAw@m@m@[aBe@g@KQEiF_A]O]Q_@]W]MMoAkCGQIOYq@AECCEMc@mAGO??a@_A_@y@w@gBaAmBw@uAuAaCoAsBcCiEkBsDiCuEgCuEc@o@]k@EG??_@i@m@eAg@y@c@qAK[eB}HUs@Ka@??CGk@wA}BqFEM]y@s@_Bc@gAuAyCKU??a@{@iG_Lo@cACGIQCIWq@aAsBOk@gAuCEKwBuEu@aBGM??Yi@Q[]s@EKsCaFcAiBiAwBiAuBi@eAEEGOuAeAyByAk@]i@c@AA??[UYS{DmCuAy@}B}AoE_D{@_Aa@u@Yq@[aAAGGQMk@Oq@GSGWIa@??}@iEKg@_AyBICGIEKAM?M@KGoAKoASoAI_@_@wA_AkEQy@ES??ESEOg@{BGWGYKk@_@}AyAkEGOk@aBsBaEUc@[k@_@q@KS??Q[eAmBgB_De@y@oEoIkAwB_DmEoA}A}BqCgDcEKM]_@UY[a@IK??u@}@{DqGsAcBk@]EBG@GAECEICM?KBKGc@S]IM??IMEOs@eAk@u@iBaBY]y@_Aa@s@GKQYg@oAi@wA]cAEKGQUi@w@uAS]iAqA]UUQ{@k@WOMIGICC??EEGEWQMIOKa@_@c@]q@u@II}A{Ac@g@IK]]sAi@O?]Ac@I_@QWS{@k@GEGGMKKI??IGQMMKoAaA[WmA}@[WCCOK{CgCg@Ym@c@g@q@SEK?EAGEEIAK?IIKq@gAECY]????KKcE_FGIuAgBwBuCu@kA{@sAsByD",
+                "length": 453
+              },
+              "steps": [],
+              "routeShortName": "80",
+              "routeLongName": "Verdun / Le Brocey",
+              "duration": 1740
+            },
+            {
+              "startTime": 1793613360000,
+              "endTime": 1793613801000,
+              "departureDelay": 0,
+              "arrivalDelay": 0,
+              "realTime": false,
+              "distance": 514.26,
+              "generalizedCost": 844,
+              "pathway": false,
+              "mode": "WALK",
+              "transitLeg": false,
+              "route": "",
+              "agencyTimeZoneOffset": 3600000,
+              "interlineWithPreviousLeg": false,
+              "from": {
+                "name": "Crolles, Le Brocey",
+                "stopId": "SE2:1705",
+                "stopCode": "1705",
+                "lon": 5.8775,
+                "lat": 45.2806,
+                "arrival": 1793613360000,
+                "departure": 1793613360000,
+                "zoneId": "2",
+                "vertexType": "TRANSIT"
+              },
+              "to": {
+                "name": "Destination",
+                "lon": 5.88224,
+                "lat": 45.28364,
+                "arrival": 1793613801000,
+                "vertexType": "NORMAL"
+              },
+              "legGeometry": {
+                "points": "wzjsGk}zb@BAQ[KKa@w@Q]AQDMCECGO@KAeJqPOWIIUSISCOAGCGAEq@oACGKO",
+                "length": 24
+              },
+              "legElevation": "0,251.6,5,251.6,15,251.7,25,251.8,35,251.8,45,251.8,52,251.8,62,251.8,72,251.8,80,251.6,84,251.6,88,251.6,103,252.0,113,252.0,123,251.9,133,251.8,143,251.6,153,251.5,163,251.4,173,251.3,183,251.2,193,251.1,203,251.2,213,251.4,223,251.6,233,251.8,243,252.0,253,252.2,263,252.3,273,252.3,283,252.4,293,252.4,303,252.2,313,252.0,323,251.8,333,251.8,343,252.1,353,252.5,363,252.8,373,253.1,383,253.3,393,253.6,400,253.9,413,254.5,419,254.9,429,255.6,439,256.0,450,256.2,453,256.3,457,256.4,460,256.4,470,256.7,480,256.9,490,257.0,500,257.1,501,257.1,501,257.1,510,256.8,514,256.6",
+              "steps": [
+                {
+                  "distance": 514.28,
+                  "relativeDirection": "DEPART",
+                  "streetName": "path",
+                  "absoluteDirection": "NORTHEAST",
+                  "stayOn": false,
+                  "area": false,
+                  "bogusName": true,
+                  "lon": 5.87752,
+                  "lat": 45.2805852,
+                  "elevation": "0,251.6,5,251.6,15,251.7,25,251.8,35,251.8,45,251.8,52,251.8,104,251.8,114,251.8,124,251.8,132,251.6,136,251.6,140,251.6,155,252.0,165,252.0,175,251.9,185,251.8,195,251.6,205,251.5,215,251.4,225,251.3,235,251.2,245,251.1,255,251.2,265,251.4,275,251.6,285,251.8,295,252.0,305,252.2,315,252.3,325,252.3,335,252.4,345,252.4,355,252.2,365,252.0,375,251.8,385,251.8,395,252.1,405,252.5,415,252.8,425,253.1,435,253.3,445,253.6,452,253.9,465,254.5,471,254.9,481,255.6,491,256.0,502,256.2,505,256.3,509,256.4,512,256.4,522,256.7,532,256.9,542,257.0,552,257.1,553,257.1,562,256.8,566,256.6",
+                  "walkingBike": false
+                }
+              ],
+              "rentedBike": false,
+              "walkingBike": false,
+              "duration": 441
+            }
+          ],
+          "tooSloped": false,
+          "arrivedAtDestinationWithRentedBicycle": false
+        },
+        {
+          "duration": 2515,
+          "startTime": 1793611444000,
+          "endTime": 1793613959000,
+          "walkTime": 56,
+          "transitTime": 2459,
+          "waitingTime": 0,
+          "walkDistance": 68.82,
+          "walkLimitExceeded": false,
+          "generalizedCost": 3172,
+          "elevationLost": 0.1,
+          "elevationGained": 0.02,
+          "transfers": 0,
+          "fare": {
+            "fare": {},
+            "details": {},
+            "legProducts": [
+              {
+                "legIndices": [
+                  -1
+                ],
+                "products": [
+                  {
+                    "id": "SE2:SE21",
+                    "name": "regular",
+                    "amount": {
+                      "cents": 200,
+                      "currency": {
+                        "currency": "EUR",
+                        "defaultFractionDigits": 2,
+                        "currencyCode": "EUR",
+                        "symbol": "€"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "legs": [
+            {
+              "startTime": 1793611444000,
+              "endTime": 1793611500000,
+              "departureDelay": 0,
+              "arrivalDelay": 0,
+              "realTime": false,
+              "distance": 68.82,
+              "generalizedCost": 110,
+              "pathway": false,
+              "mode": "WALK",
+              "transitLeg": false,
+              "route": "",
+              "agencyTimeZoneOffset": 3600000,
+              "interlineWithPreviousLeg": false,
+              "from": {
+                "name": "Origin",
+                "lon": 5.7143,
+                "lat": 45.1914,
+                "departure": 1793611444000,
+                "vertexType": "NORMAL"
+              },
+              "to": {
+                "name": "Grenoble, Gares",
+                "stopId": "SE2:2354",
+                "stopCode": "2354",
+                "lon": 5.71499,
+                "lat": 45.19177,
+                "arrival": 1793611500000,
+                "departure": 1793611500000,
+                "zoneId": "1",
+                "vertexType": "TRANSIT"
+              },
+              "legGeometry": {
+                "points": "gmyrGka{a@I_@AC?EESu@iAAA",
+                "length": 7
+              },
+              "legElevation": "0,NaN,15,NaN,15,211.2,16,211.2,18,211.2,26,211.1,26,NaN,69,NaN",
+              "steps": [
+                {
+                  "distance": 14.64,
+                  "relativeDirection": "DEPART",
+                  "streetName": "corridor",
+                  "absoluteDirection": "NORTHEAST",
+                  "stayOn": false,
+                  "area": true,
+                  "bogusName": false,
+                  "lon": 5.7143,
+                  "lat": 45.1914,
+                  "elevation": "",
+                  "walkingBike": false
+                },
+                {
+                  "distance": 11.82,
+                  "relativeDirection": "CONTINUE",
+                  "streetName": "steps",
+                  "absoluteDirection": "EAST",
+                  "stayOn": false,
+                  "area": false,
+                  "bogusName": true,
+                  "lon": 5.7144677,
+                  "lat": 45.1914581,
+                  "elevation": "0,211.2,1,211.2,4,211.2,12,211.1",
+                  "walkingBike": false
+                },
+                {
+                  "distance": 42.36,
+                  "relativeDirection": "SLIGHTLY_LEFT",
+                  "streetName": "Place de la Gare",
+                  "absoluteDirection": "NORTHEAST",
+                  "stayOn": false,
+                  "area": true,
+                  "bogusName": false,
+                  "lon": 5.7146108,
+                  "lat": 45.1914916,
+                  "elevation": "",
+                  "walkingBike": false
+                }
+              ],
+              "rentedBike": false,
+              "walkingBike": false,
+              "duration": 56
+            },
+            {
+              "startTime": 1793611500000,
+              "endTime": 1793613959000,
+              "departureDelay": 0,
+              "arrivalDelay": 0,
+              "realTime": false,
+              "distance": 22765.12,
+              "generalizedCost": 3061,
+              "pathway": false,
+              "mode": "BUS",
+              "transitLeg": true,
+              "route": "Voiron - Grenoble - Lumbin",
+              "agencyName": "M Réso - Métropole Grenobloise",
+              "agencyUrl": "https://www.mobilites-m.fr/",
+              "agencyTimeZoneOffset": 3600000,
+              "routeColor": "EF7C00",
+              "routeType": 3,
+              "routeId": "SE2:11",
+              "routeTextColor": "FFFFFF",
+              "interlineWithPreviousLeg": false,
+              "headsign": "Lumbin, Longs Prés",
+              "agencyId": "SE2:SE2",
+              "tripId": "SE2:32395215",
+              "serviceDate": "2026-11-02",
+              "from": {
+                "name": "Grenoble, Gares",
+                "stopId": "SE2:2354",
+                "stopCode": "2354",
+                "lon": 5.71499,
+                "lat": 45.19177,
+                "arrival": 1793611500000,
+                "departure": 1793611500000,
+                "zoneId": "1",
+                "stopIndex": 7,
+                "stopSequence": 8,
+                "vertexType": "TRANSIT"
+              },
+              "to": {
+                "name": "Crolles, Crolles Mairie",
+                "stopId": "SE2:1428",
+                "stopCode": "1428",
+                "lon": 5.88224,
+                "lat": 45.28364,
+                "arrival": 1793613959000,
+                "zoneId": "2",
+                "stopIndex": 21,
+                "stopSequence": 22,
+                "vertexType": "TRANSIT"
+              },
+              "legGeometry": {
+                "points": "soyrGcf{a@jAa@@?HCRENGPKJCFE@AhAs@^SFCCWYiDWiDAMCUOoBCUAMEa@OcBEm@Gq@CWAKAMCe@CYE]QuBAQC]CYCSC[?GGw@AKAKCQCWEo@????AOACCc@RSX]nAwA|BgCHIPUDEj@o@??HMDEn@q@~AgBVY~AiB`AiALKLGPSh@k@jAuAVYX]Zc@`BkBdAiAHQJm@j@eEZ_CViBDWJi@??BWB[B_@IYGSISEUCEIYq@}BEOGSIWeBeGEMCKGOIYmAeEsAqEGSCMIY??EOk@iBCIEQqD}LYeAy@cCWq@OYQa@c@s@_D{FQ]mBgDoBoDiAkBuBsDe@q@mTq]}@wAaA{AIM??cEwGcC}DuBoDeBgDe@aAc@cAc@mA_@aAW{@EQK]GSCQCMWmAKi@]{BuBeSuAaNk@iGk@}HyDii@{AkSu@gJ{@}JaCmWsAcM}AoM_AmHkC{Qi@kDgAyGqAaHwAwHiBqHsBwHcCsH}AqEWq@wAoD}BkFmCuF}C{FyAcCS]y@sAwCiE_DeE{FwGe@g@{E}EaFwEcFsF{AyA{@aAyAuBuAsBWg@E[Bm@JS@U?UGSKOSGSBGDINGP?R@LDRGTELSXcAdACDo@p@iBxBc@`@[\\OROGI?I@MHGLCHC\\@LDNFLLHL@PEHIFMBOLGFIDENi@FO??BQ@Sl@s@r@{@l@o@HMPUbAgALSRQPKP?PKHWDSCUCSMOSIQFGDKNELSJSBQA_@UeAq@{AcAsJoHwFcGoEiF{D}EaDcEgDqEuDiFeDaF_DaFwC_FmDiGcDeG{BsEkBkEiBiEgBuEqBsFkB}FeB_Gu@gE}@aEa@aBY{AEs@@u@NYJEHG??JML_@FOLOb@APU?a@Cc@[Ua@RMP@f@CXOR[N]Be@a@m@oAs@iD}BiJ}CaQ_CyLaCiLkA}EaA}D{CeLaC{Hy@oCeBeF_DsIcCgGaC_GyB_FgDcHoCmFqCcFuCaFuC{EyC{EiDgFc@w@c@u@c@s@cAaBc@s@Yo@[}@MgACaBGgAOu@a@k@[Ga@A_@P_@\\Yf@u@vAq@lAY^YVWLc@Ni@J}@LOB}A\\w@Vq@LwARu@BQBw@Fw@Zs@t@m@`AgBjEkAlBkAbBiBbCcAzAUP]LAEECCAE@COESM{@Eq@?U??GqAGo@CGKk@Mc@o@kBkAgBoA}AW][]Yg@Sm@OgAW{@q@wAi@q@WMBI?IAGAGEEEABe@D_A???E@c@G_@Sw@aAqAMg@BeAEo@]_Ai@q@_@KMQIWiAwIQo@Mg@kAeA]]{A}AQ]Yg@GMGK??GIMc@Ma@@SAUCIIQOKKAK@SNCFGTAJBZFPERGVGTsEnNQn@ABSVGFEN?H?HMt@]jA??i@zA_CnHSn@QTKDGJCLARBPM^Mf@yAlE}@xBg@pAmAfEIPGBIHCH?J@JDJ?\\e@`EAR??S|Ae@jGWjEOhAGr@CTAHADm@hDm@dCOr@YrA[|A_@`BQ\\I@UAu@o@CE[[????KMcE}EGIuAiBuBsCu@kA{@sA{BcEYg@Sa@KO]o@IMwAkCiAoBEKu@sA]o@k@eAu@oAOWO]EEUSIIEKG[CIGK[k@S_@GM",
+                "length": 546
+              },
+              "steps": [],
+              "routeShortName": "C11",
+              "routeLongName": "Voiron - Grenoble - Lumbin",
+              "duration": 2459
+            }
+          ],
+          "tooSloped": false,
+          "arrivedAtDestinationWithRentedBicycle": false
+        },
+        {
+          "duration": 3137,
+          "startTime": 1793612464000,
+          "endTime": 1793615601000,
+          "walkTime": 497,
+          "transitTime": 2405,
+          "waitingTime": 235,
+          "walkDistance": 583.08,
+          "walkLimitExceeded": false,
+          "generalizedCost": 4795,
+          "elevationLost": 2.32,
+          "elevationGained": 7.21,
+          "transfers": 1,
+          "fare": {
+            "fare": {},
+            "details": {},
+            "legProducts": [
+              {
+                "legIndices": [
+                  1
+                ],
+                "products": [
+                  {
+                    "id": "SE2:SE21",
+                    "name": "regular",
+                    "amount": {
+                      "cents": 200,
+                      "currency": {
+                        "currency": "EUR",
+                        "defaultFractionDigits": 2,
+                        "currencyCode": "EUR",
+                        "symbol": "€"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "legIndices": [
+                  2
+                ],
+                "products": [
+                  {
+                    "id": "SE2:SE21",
+                    "name": "regular",
+                    "amount": {
+                      "cents": 200,
+                      "currency": {
+                        "currency": "EUR",
+                        "defaultFractionDigits": 2,
+                        "currencyCode": "EUR",
+                        "symbol": "€"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "legs": [
+            {
+              "startTime": 1793612464000,
+              "endTime": 1793612520000,
+              "departureDelay": 0,
+              "arrivalDelay": 0,
+              "realTime": false,
+              "distance": 68.82,
+              "generalizedCost": 110,
+              "pathway": false,
+              "mode": "WALK",
+              "transitLeg": false,
+              "route": "",
+              "agencyTimeZoneOffset": 3600000,
+              "interlineWithPreviousLeg": false,
+              "from": {
+                "name": "Origin",
+                "lon": 5.7143,
+                "lat": 45.1914,
+                "departure": 1793612464000,
+                "vertexType": "NORMAL"
+              },
+              "to": {
+                "name": "Grenoble, Gares",
+                "stopId": "SE2:2354",
+                "stopCode": "2354",
+                "lon": 5.71499,
+                "lat": 45.19177,
+                "arrival": 1793612520000,
+                "departure": 1793612520000,
+                "zoneId": "1",
+                "vertexType": "TRANSIT"
+              },
+              "legGeometry": {
+                "points": "gmyrGka{a@I_@AC?EESu@iAAA",
+                "length": 7
+              },
+              "legElevation": "0,NaN,15,NaN,15,211.2,16,211.2,18,211.2,26,211.1,26,NaN,69,NaN",
+              "steps": [
+                {
+                  "distance": 14.64,
+                  "relativeDirection": "DEPART",
+                  "streetName": "corridor",
+                  "absoluteDirection": "NORTHEAST",
+                  "stayOn": false,
+                  "area": true,
+                  "bogusName": false,
+                  "lon": 5.7143,
+                  "lat": 45.1914,
+                  "elevation": "",
+                  "walkingBike": false
+                },
+                {
+                  "distance": 11.82,
+                  "relativeDirection": "CONTINUE",
+                  "streetName": "steps",
+                  "absoluteDirection": "EAST",
+                  "stayOn": false,
+                  "area": false,
+                  "bogusName": true,
+                  "lon": 5.7144677,
+                  "lat": 45.1914581,
+                  "elevation": "0,211.2,1,211.2,4,211.2,12,211.1",
+                  "walkingBike": false
+                },
+                {
+                  "distance": 42.36,
+                  "relativeDirection": "SLIGHTLY_LEFT",
+                  "streetName": "Place de la Gare",
+                  "absoluteDirection": "NORTHEAST",
+                  "stayOn": false,
+                  "area": true,
+                  "bogusName": false,
+                  "lon": 5.7146108,
+                  "lat": 45.1914916,
+                  "elevation": "",
+                  "walkingBike": false
+                }
+              ],
+              "rentedBike": false,
+              "walkingBike": false,
+              "duration": 56
+            },
+            {
+              "startTime": 1793612520000,
+              "endTime": 1793613185000,
+              "departureDelay": 0,
+              "arrivalDelay": 0,
+              "realTime": false,
+              "distance": 3859.88,
+              "generalizedCost": 1265,
+              "pathway": false,
+              "mode": "BUS",
+              "transitLeg": true,
+              "route": "Voiron Champfeuillet / Goncelin Gare",
+              "agencyName": "M Réso - Métropole Grenobloise",
+              "agencyUrl": "https://www.mobilites-m.fr/",
+              "agencyTimeZoneOffset": 3600000,
+              "routeColor": "EF7C00",
+              "routeType": 3,
+              "routeId": "SE2:12",
+              "routeTextColor": "FFFFFF",
+              "interlineWithPreviousLeg": false,
+              "headsign": "Goncelin, Goncelin Gare",
+              "agencyId": "SE2:SE2",
+              "tripId": "SE2:32395756",
+              "serviceDate": "2026-11-02",
+              "from": {
+                "name": "Grenoble, Gares",
+                "stopId": "SE2:2354",
+                "stopCode": "2354",
+                "lon": 5.71499,
+                "lat": 45.19177,
+                "arrival": 1793612520000,
+                "departure": 1793612520000,
+                "zoneId": "1",
+                "stopIndex": 1,
+                "stopSequence": 2,
+                "vertexType": "TRANSIT"
+              },
+              "to": {
+                "name": "La Tronche, Sablons",
+                "stopId": "SE2:1442",
+                "stopCode": "1442",
+                "lon": 5.75303,
+                "lat": 45.19675,
+                "arrival": 1793613185000,
+                "departure": 1793613420000,
+                "zoneId": "1",
+                "stopIndex": 6,
+                "stopSequence": 7,
+                "vertexType": "TRANSIT"
+              },
+              "legGeometry": {
+                "points": "uoyrGef{a@b@QxBo@f@_@t@_@ROFCCWYiDWiDAMCUOoBCUAMEa@OcBEm@?g@A[CUAUC_@Ee@Ic@K_AKqAGo@QyBC]Go@????Iu@RSZ_@nAuAzBiCHIPUDEl@o@??RW^c@p@u@h@i@b@k@VWjAsA~@eALOLCTYVYd@g@t@{@fAuAbAiA~@eAn@u@F[RsAb@eDViBViBL}@??Ho@Bc@Qm@GSGUAEKYq@}BEOGSIWeBeGEMCKGOIYmAeEsAqEGSCMIY??EOk@iBCIEQqD}LYeAy@cCWq@OYQa@c@s@_D{FQ]mBgDoBoDo@iAqCyEc@m@mTq]}@wAaA{AIM",
+                "length": 112
+              },
+              "steps": [],
+              "routeShortName": "C12",
+              "routeLongName": "Voiron Champfeuillet / Goncelin Gare",
+              "duration": 665
+            },
+            {
+              "startTime": 1793613420000,
+              "endTime": 1793615160000,
+              "departureDelay": 0,
+              "arrivalDelay": 0,
+              "realTime": false,
+              "distance": 13815.82,
+              "generalizedCost": 2575,
+              "pathway": false,
+              "mode": "BUS",
+              "transitLeg": true,
+              "route": "Verdun / Le Brocey",
+              "agencyName": "M Réso - Métropole Grenobloise",
+              "agencyUrl": "https://www.mobilites-m.fr/",
+              "agencyTimeZoneOffset": 3600000,
+              "routeColor": "1E71B8",
+              "routeType": 3,
+              "routeId": "SE2:80",
+              "routeTextColor": "FFFFFF",
+              "interlineWithPreviousLeg": false,
+              "headsign": "Crolles, Le Brocey",
+              "agencyId": "SE2:SE2",
+              "tripId": "SE2:32239945",
+              "serviceDate": "2026-11-02",
+              "from": {
+                "name": "La Tronche, Sablons",
+                "stopId": "SE2:1442",
+                "stopCode": "1442",
+                "lon": 5.75303,
+                "lat": 45.19675,
+                "arrival": 1793613185000,
+                "departure": 1793613420000,
+                "zoneId": "1",
+                "stopIndex": 3,
+                "stopSequence": 4,
+                "vertexType": "TRANSIT"
+              },
+              "to": {
+                "name": "Crolles, Le Brocey",
+                "stopId": "SE2:1705",
+                "stopCode": "1705",
+                "lon": 5.8775,
+                "lat": 45.2806,
+                "arrival": 1793615160000,
+                "departure": 1793615160000,
+                "zoneId": "2",
+                "stopIndex": 28,
+                "stopSequence": 29,
+                "vertexType": "TRANSIT"
+              },
+              "legGeometry": {
+                "points": "qozrGcrbb@_CsD}KsQcB_C_B_CKMOYU_@[i@S]kAeBMYSg@I[IKiBiC_@i@c@m@OSc@s@MOOSOSIMy@uA??qAsBWa@EIwC}EQYQYIMGMQWWc@??KQGM]g@IQIMeBwCgEcH??a@q@EG_@m@OQIQKQMSGMGIaAeBmGoKiEiHYe@k@aAeAiBOU_@q@KQEGKQWc@g@}@??iB}CYg@i@kAk@oAy@mBq@_BO_@K[M[Qg@U{@Ou@QqACKAK??ACG]ESCMKa@GKOOIMEMCS?Q@MFWUa@m@u@oC_EGKYg@CEQ]CO{CkGu@sCSy@Ww@k@_ASY_@a@w@_AOQMIuAgB??s@}@Y]EGOQQWKUiC_Du@_Aq@iAW_@Wa@KWMWEK]{@Q[y@}AKSYs@I[EKGM????GKk@mAk@y@IKu@eAg@u@a@k@IKg@u@U[Ui@EMKYYq@IUCI??CESg@uByFCQCG{AcJ[{B??QeAQmAm@sDMo@Ks@Ik@Yu@O_@S_@KQy@oAUg@Sy@a@}BAMCUEQEMKYOQmDuAUCa@g@mBiD_AaB??CEy@qAiBoC}@cAw@m@m@[aBe@g@KQEiF_A]O]Q_@]W]MMoAkCGQIOYq@AECCEMc@mAGO??a@_A_@y@w@gBaAmBw@uAuAaCoAsBcCiEkBsDiCuEgCuEc@o@]k@EG??_@i@m@eAg@y@c@qAK[eB}HUs@Ka@??CGk@wA}BqFEM]y@s@_Bc@gAuAyCKU??a@{@iG_Lo@cACGIQCIWq@aAsBOk@gAuCEKwBuEu@aBGM??Yi@Q[]s@EKsCaFcAiBiAwBiAuBi@eAEEGOuAeAyByAk@]i@c@AA??[UYS{DmCuAy@}B}AoE_D{@_Aa@u@Yq@[aAAGGQMk@Oq@GSGWIa@??}@iEKg@_AyBICGIEKAM?M@KGoAKoASoAI_@_@wA_AkEQy@ES??ESEOg@{BGWGYKk@_@}AyAkEGOk@aBsBaEUc@[k@_@q@KS??Q[eAmBgB_De@y@oEoIkAwB_DmEoA}A}BqCgDcEKM]_@UY[a@IK??u@}@{DqGsAcBk@]EBG@GAECEICM?KBKGc@S]IM??IMEOs@eAk@u@iBaBY]y@_Aa@s@GKQYg@oAi@wA]cAEKGQUi@w@uAS]iAqA]UUQ{@k@WOMIGICC??EEGEWQMIOKa@_@c@]q@u@II}A{Ac@g@IK]]sAi@O?]Ac@I_@QWS{@k@GEGGMKKI??IGQMMKoAaA[WmA}@[WCCOK{CgCg@Ym@c@g@q@SEK?EAGEEIAK?IIKq@gAECY]????KKcE_FGIuAgBwBuCu@kA{@sAsByD",
+                "length": 453
+              },
+              "steps": [],
+              "routeShortName": "80",
+              "routeLongName": "Verdun / Le Brocey",
+              "duration": 1740
+            },
+            {
+              "startTime": 1793615160000,
+              "endTime": 1793615601000,
+              "departureDelay": 0,
+              "arrivalDelay": 0,
+              "realTime": false,
+              "distance": 514.26,
+              "generalizedCost": 844,
+              "pathway": false,
+              "mode": "WALK",
+              "transitLeg": false,
+              "route": "",
+              "agencyTimeZoneOffset": 3600000,
+              "interlineWithPreviousLeg": false,
+              "from": {
+                "name": "Crolles, Le Brocey",
+                "stopId": "SE2:1705",
+                "stopCode": "1705",
+                "lon": 5.8775,
+                "lat": 45.2806,
+                "arrival": 1793615160000,
+                "departure": 1793615160000,
+                "zoneId": "2",
+                "vertexType": "TRANSIT"
+              },
+              "to": {
+                "name": "Destination",
+                "lon": 5.88224,
+                "lat": 45.28364,
+                "arrival": 1793615601000,
+                "vertexType": "NORMAL"
+              },
+              "legGeometry": {
+                "points": "wzjsGk}zb@BAQ[KKa@w@Q]AQDMCECGO@KAeJqPOWIIUSISCOAGCGAEq@oACGKO",
+                "length": 24
+              },
+              "legElevation": "0,251.6,5,251.6,15,251.7,25,251.8,35,251.8,45,251.8,52,251.8,62,251.8,72,251.8,80,251.6,84,251.6,88,251.6,103,252.0,113,252.0,123,251.9,133,251.8,143,251.6,153,251.5,163,251.4,173,251.3,183,251.2,193,251.1,203,251.2,213,251.4,223,251.6,233,251.8,243,252.0,253,252.2,263,252.3,273,252.3,283,252.4,293,252.4,303,252.2,313,252.0,323,251.8,333,251.8,343,252.1,353,252.5,363,252.8,373,253.1,383,253.3,393,253.6,400,253.9,413,254.5,419,254.9,429,255.6,439,256.0,450,256.2,453,256.3,457,256.4,460,256.4,470,256.7,480,256.9,490,257.0,500,257.1,501,257.1,501,257.1,510,256.8,514,256.6",
+              "steps": [
+                {
+                  "distance": 514.28,
+                  "relativeDirection": "DEPART",
+                  "streetName": "path",
+                  "absoluteDirection": "NORTHEAST",
+                  "stayOn": false,
+                  "area": false,
+                  "bogusName": true,
+                  "lon": 5.87752,
+                  "lat": 45.2805852,
+                  "elevation": "0,251.6,5,251.6,15,251.7,25,251.8,35,251.8,45,251.8,52,251.8,104,251.8,114,251.8,124,251.8,132,251.6,136,251.6,140,251.6,155,252.0,165,252.0,175,251.9,185,251.8,195,251.6,205,251.5,215,251.4,225,251.3,235,251.2,245,251.1,255,251.2,265,251.4,275,251.6,285,251.8,295,252.0,305,252.2,315,252.3,325,252.3,335,252.4,345,252.4,355,252.2,365,252.0,375,251.8,385,251.8,395,252.1,405,252.5,415,252.8,425,253.1,435,253.3,445,253.6,452,253.9,465,254.5,471,254.9,481,255.6,491,256.0,502,256.2,505,256.3,509,256.4,512,256.4,522,256.7,532,256.9,542,257.0,552,257.1,553,257.1,562,256.8,566,256.6",
+                  "walkingBike": false
+                }
+              ],
+              "rentedBike": false,
+              "walkingBike": false,
+              "duration": 441
+            }
+          ],
+          "tooSloped": false,
+          "arrivedAtDestinationWithRentedBicycle": false
+        },
+        {
+          "duration": 2515,
+          "startTime": 1793613244000,
+          "endTime": 1793615759000,
+          "walkTime": 56,
+          "transitTime": 2459,
+          "waitingTime": 0,
+          "walkDistance": 68.82,
+          "walkLimitExceeded": false,
+          "generalizedCost": 3172,
+          "elevationLost": 0.1,
+          "elevationGained": 0.02,
+          "transfers": 0,
+          "fare": {
+            "fare": {},
+            "details": {},
+            "legProducts": [
+              {
+                "legIndices": [
+                  -1
+                ],
+                "products": [
+                  {
+                    "id": "SE2:SE21",
+                    "name": "regular",
+                    "amount": {
+                      "cents": 200,
+                      "currency": {
+                        "currency": "EUR",
+                        "defaultFractionDigits": 2,
+                        "currencyCode": "EUR",
+                        "symbol": "€"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "legs": [
+            {
+              "startTime": 1793613244000,
+              "endTime": 1793613300000,
+              "departureDelay": 0,
+              "arrivalDelay": 0,
+              "realTime": false,
+              "distance": 68.82,
+              "generalizedCost": 110,
+              "pathway": false,
+              "mode": "WALK",
+              "transitLeg": false,
+              "route": "",
+              "agencyTimeZoneOffset": 3600000,
+              "interlineWithPreviousLeg": false,
+              "from": {
+                "name": "Origin",
+                "lon": 5.7143,
+                "lat": 45.1914,
+                "departure": 1793613244000,
+                "vertexType": "NORMAL"
+              },
+              "to": {
+                "name": "Grenoble, Gares",
+                "stopId": "SE2:2354",
+                "stopCode": "2354",
+                "lon": 5.71499,
+                "lat": 45.19177,
+                "arrival": 1793613300000,
+                "departure": 1793613300000,
+                "zoneId": "1",
+                "vertexType": "TRANSIT"
+              },
+              "legGeometry": {
+                "points": "gmyrGka{a@I_@AC?EESu@iAAA",
+                "length": 7
+              },
+              "legElevation": "0,NaN,15,NaN,15,211.2,16,211.2,18,211.2,26,211.1,26,NaN,69,NaN",
+              "steps": [
+                {
+                  "distance": 14.64,
+                  "relativeDirection": "DEPART",
+                  "streetName": "corridor",
+                  "absoluteDirection": "NORTHEAST",
+                  "stayOn": false,
+                  "area": true,
+                  "bogusName": false,
+                  "lon": 5.7143,
+                  "lat": 45.1914,
+                  "elevation": "",
+                  "walkingBike": false
+                },
+                {
+                  "distance": 11.82,
+                  "relativeDirection": "CONTINUE",
+                  "streetName": "steps",
+                  "absoluteDirection": "EAST",
+                  "stayOn": false,
+                  "area": false,
+                  "bogusName": true,
+                  "lon": 5.7144677,
+                  "lat": 45.1914581,
+                  "elevation": "0,211.2,1,211.2,4,211.2,12,211.1",
+                  "walkingBike": false
+                },
+                {
+                  "distance": 42.36,
+                  "relativeDirection": "SLIGHTLY_LEFT",
+                  "streetName": "Place de la Gare",
+                  "absoluteDirection": "NORTHEAST",
+                  "stayOn": false,
+                  "area": true,
+                  "bogusName": false,
+                  "lon": 5.7146108,
+                  "lat": 45.1914916,
+                  "elevation": "",
+                  "walkingBike": false
+                }
+              ],
+              "rentedBike": false,
+              "walkingBike": false,
+              "duration": 56
+            },
+            {
+              "startTime": 1793613300000,
+              "endTime": 1793615759000,
+              "departureDelay": 0,
+              "arrivalDelay": 0,
+              "realTime": false,
+              "distance": 22765.12,
+              "generalizedCost": 3061,
+              "pathway": false,
+              "mode": "BUS",
+              "transitLeg": true,
+              "route": "Voiron - Grenoble - Lumbin",
+              "agencyName": "M Réso - Métropole Grenobloise",
+              "agencyUrl": "https://www.mobilites-m.fr/",
+              "agencyTimeZoneOffset": 3600000,
+              "routeColor": "EF7C00",
+              "routeType": 3,
+              "routeId": "SE2:11",
+              "routeTextColor": "FFFFFF",
+              "interlineWithPreviousLeg": false,
+              "headsign": "Lumbin, Longs Prés",
+              "agencyId": "SE2:SE2",
+              "tripId": "SE2:32395216",
+              "serviceDate": "2026-11-02",
+              "from": {
+                "name": "Grenoble, Gares",
+                "stopId": "SE2:2354",
+                "stopCode": "2354",
+                "lon": 5.71499,
+                "lat": 45.19177,
+                "arrival": 1793613300000,
+                "departure": 1793613300000,
+                "zoneId": "1",
+                "stopIndex": 7,
+                "stopSequence": 8,
+                "vertexType": "TRANSIT"
+              },
+              "to": {
+                "name": "Crolles, Crolles Mairie",
+                "stopId": "SE2:1428",
+                "stopCode": "1428",
+                "lon": 5.88224,
+                "lat": 45.28364,
+                "arrival": 1793615759000,
+                "zoneId": "2",
+                "stopIndex": 21,
+                "stopSequence": 22,
+                "vertexType": "TRANSIT"
+              },
+              "legGeometry": {
+                "points": "soyrGcf{a@jAa@@?HCRENGPKJCFE@AhAs@^SFCCWYiDWiDAMCUOoBCUAMEa@OcBEm@Gq@CWAKAMCe@CYE]QuBAQC]CYCSC[?GGw@AKAKCQCWEo@????AOACCc@RSX]nAwA|BgCHIPUDEj@o@??HMDEn@q@~AgBVY~AiB`AiALKLGPSh@k@jAuAVYX]Zc@`BkBdAiAHQJm@j@eEZ_CViBDWJi@??BWB[B_@IYGSISEUCEIYq@}BEOGSIWeBeGEMCKGOIYmAeEsAqEGSCMIY??EOk@iBCIEQqD}LYeAy@cCWq@OYQa@c@s@_D{FQ]mBgDoBoDiAkBuBsDe@q@mTq]}@wAaA{AIM??cEwGcC}DuBoDeBgDe@aAc@cAc@mA_@aAW{@EQK]GSCQCMWmAKi@]{BuBeSuAaNk@iGk@}HyDii@{AkSu@gJ{@}JaCmWsAcM}AoM_AmHkC{Qi@kDgAyGqAaHwAwHiBqHsBwHcCsH}AqEWq@wAoD}BkFmCuF}C{FyAcCS]y@sAwCiE_DeE{FwGe@g@{E}EaFwEcFsF{AyA{@aAyAuBuAsBWg@E[Bm@JS@U?UGSKOSGSBGDINGP?R@LDRGTELSXcAdACDo@p@iBxBc@`@[\\OROGI?I@MHGLCHC\\@LDNFLLHL@PEHIFMBOLGFIDENi@FO??BQ@Sl@s@r@{@l@o@HMPUbAgALSRQPKP?PKHWDSCUCSMOSIQFGDKNELSJSBQA_@UeAq@{AcAsJoHwFcGoEiF{D}EaDcEgDqEuDiFeDaF_DaFwC_FmDiGcDeG{BsEkBkEiBiEgBuEqBsFkB}FeB_Gu@gE}@aEa@aBY{AEs@@u@NYJEHG??JML_@FOLOb@APU?a@Cc@[Ua@RMP@f@CXOR[N]Be@a@m@oAs@iD}BiJ}CaQ_CyLaCiLkA}EaA}D{CeLaC{Hy@oCeBeF_DsIcCgGaC_GyB_FgDcHoCmFqCcFuCaFuC{EyC{EiDgFc@w@c@u@c@s@cAaBc@s@Yo@[}@MgACaBGgAOu@a@k@[Ga@A_@P_@\\Yf@u@vAq@lAY^YVWLc@Ni@J}@LOB}A\\w@Vq@LwARu@BQBw@Fw@Zs@t@m@`AgBjEkAlBkAbBiBbCcAzAUP]LAEECCAE@COESM{@Eq@?U??GqAGo@CGKk@Mc@o@kBkAgBoA}AW][]Yg@Sm@OgAW{@q@wAi@q@WMBI?IAGAGEEEABe@D_A???E@c@G_@Sw@aAqAMg@BeAEo@]_Ai@q@_@KMQIWiAwIQo@Mg@kAeA]]{A}AQ]Yg@GMGK??GIMc@Ma@@SAUCIIQOKKAK@SNCFGTAJBZFPERGVGTsEnNQn@ABSVGFEN?H?HMt@]jA??i@zA_CnHSn@QTKDGJCLARBPM^Mf@yAlE}@xBg@pAmAfEIPGBIHCH?J@JDJ?\\e@`EAR??S|Ae@jGWjEOhAGr@CTAHADm@hDm@dCOr@YrA[|A_@`BQ\\I@UAu@o@CE[[????KMcE}EGIuAiBuBsCu@kA{@sA{BcEYg@Sa@KO]o@IMwAkCiAoBEKu@sA]o@k@eAu@oAOWO]EEUSIIEKG[CIGK[k@S_@GM",
+                "length": 546
+              },
+              "steps": [],
+              "routeShortName": "C11",
+              "routeLongName": "Voiron - Grenoble - Lumbin",
+              "duration": 2459
+            }
+          ],
+          "tooSloped": false,
+          "arrivedAtDestinationWithRentedBicycle": false
+        }
+      ]
+    },
+    "metadata": {
+      "searchWindowUsed": 3600,
+      "nextDateTime": 1793613600000,
+      "prevDateTime": 1793606400000
+    },
+    "previousPageCursor": "MXxQUkVWSU9VU19QQUdFfDIwMjYtMTEtMDJUMDc6NDA6MDBafHwxaDIwbXxTVFJFRVRfQU5EX0FSUklWQUxfVElNRXx8fHx8fA==",
+    "nextPageCursor": "MXxORVhUX1BBR0V8MjAyNi0xMS0wMlQxMDowMDowMFp8fDFoMjBtfFNUUkVFVF9BTkRfQVJSSVZBTF9USU1FfHx8fHx8",
+    "debugOutput": {
+      "precalculationTime": 16600,
+      "directStreetRouterTime": 151406800,
+      "transitRouterTime": 147701200,
+      "filteringTime": 1534700,
+      "renderingTime": 394600,
+      "totalTime": 301066300,
+      "transitRouterTimes": {
+        "tripPatternFilterTime": 19404300,
+        "accessEgressTime": 72344100,
+        "raptorSearchTime": 52916000,
+        "itineraryCreationTime": 2934300
+      }
+    },
+    "elevationMetadata": {
+      "ellipsoidToGeoidDifference": 52.025603302216346,
+      "geoidElevation": false
+    }
+  }
+}
