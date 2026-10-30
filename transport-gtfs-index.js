@@ -85,6 +85,40 @@ function directTrips(files,index,date,originStopId,destinationStopId){
  }
  return journeys.sort((a,b)=>a.departure.localeCompare(b.departure,undefined,{numeric:true}));
 }
+function minutes(time){
+ if(!/^\d{1,3}:[0-5]\d:[0-5]\d$/.test(time||''))return null;
+ const [h,m,sec]=time.split(':').map(Number);
+ return h*60+m+sec/60;
+}
+function transferTrips(files,index,date,originStopId,destinationStopId,minTransferMinutes=5){
+ if(!Number.isFinite(minTransferMinutes)||minTransferMinutes<0)return [];
+ const trips=scheduledTrips(files,index,date);
+ const legs=[];
+ for(const trip of trips){
+  for(let i=0;i<trip.stops.length;i++){
+   const start=trip.stops[i],departureMinutes=minutes(start.departure);
+   if(departureMinutes===null)continue;
+   for(let j=i+1;j<trip.stops.length;j++){
+    const end=trip.stops[j],arrivalMinutes=minutes(end.arrival);
+    if(arrivalMinutes===null||arrivalMinutes<departureMinutes)continue;
+    legs.push({tripId:trip.tripId,line:trip.line,from:start.stopId,to:end.stopId,
+      departure:start.departure,arrival:end.arrival,departureMinutes,arrivalMinutes});
+   }
+  }
+ }
+ const first=legs.filter(l=>l.from===originStopId);
+ const second=legs.filter(l=>l.to===destinationStopId);
+ const journeys=[];
+ for(const a of first)for(const b of second){
+  if(a.tripId===b.tripId||a.to!==b.from||
+     b.departureMinutes-a.arrivalMinutes<minTransferMinutes)continue;
+  journeys.push({date,legs:[a,b],transferStopId:a.to,
+    departure:a.departure,arrival:b.arrival,
+    serviceScheduled:true,serviceConfirmed:false,priceEUR:null,
+    exactOrigin:false,exactDestination:false,accessVerified:false});
+ }
+ return journeys.sort((a,b)=>minutes(a.departure)-minutes(b.departure));
+}
 function buildIndex(files){
  if(!files||typeof files!=='object')throw new TypeError('GTFS files required');
  const stops=parseCSV(files['stops.txt']||'');
@@ -105,7 +139,7 @@ function buildIndex(files){
    counts:{stops:stopById.size,routes:routeById.size,trips:tripById.size,stopTimes:times.length},
    serviceConfirmed:false};
 }
-const api={parseCSV,activeServices,buildIndex,scheduledTrips,directTrips};
+const api={parseCSV,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSIndex=api;
 })(typeof window!=='undefined'?window:globalThis);
