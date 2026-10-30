@@ -2133,7 +2133,7 @@
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement Jonction régionale théorique : ' +
                   ranked.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' +
-                    choice.journey.durationMinutes + ' min, tarif non vérifié)').join(' · ') +
+                    choice.journey.durationMinutes + ' min, ' + (choice.journey.priceEUR === null ? 'tarif non vérifié' : choice.journey.priceEUR.toFixed(2).replace('.', ',') + ' € (tarif vérifié)') + ')').join(' · ') +
                   '. Accès aux arrêts, correspondances et circulation non confirmés.';
                 regionalStatus.appendChild(summary);
               }
@@ -2251,7 +2251,7 @@
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement SNCF de gare à gare : ' +
                   choices.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' + choice.journey.durationMinutes +
-                    ' min, prix non vérifié)').join(' · ') +
+                    ' min, ' + (choice.journey.priceEUR === null ? 'prix non vérifié' : choice.journey.priceEUR.toFixed(2).replace('.', ',') + ' € (tarif vérifié)') + ')').join(' · ') +
                   '. Aucun trajet complet confirmé.';
                 status.appendChild(summary);
               }
@@ -2322,7 +2322,7 @@
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement Retour régional théorique : ' +
                   ranked.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' +
-                    choice.journey.durationMinutes + ' min, tarif non vérifié)').join(' · ') +
+                    choice.journey.durationMinutes + ' min, ' + (choice.journey.priceEUR === null ? 'tarif non vérifié' : choice.journey.priceEUR.toFixed(2).replace('.', ',') + ' € (tarif vérifié)') + ')').join(' · ') +
                   '. Accès au domicile et circulation non confirmés.';
                 returnStatus.appendChild(summary);
               }
@@ -2385,7 +2385,7 @@
                 const rankingLine = document.createElement('p');
                 rankingLine.textContent = 'Classement régional théorique : ' +
                   ranked.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' + choice.journey.durationMinutes +
-                    ' min, tarif non vérifié)').join(' · ') +
+                    ' min, ' + (choice.journey.priceEUR === null ? 'tarif non vérifié' : choice.journey.priceEUR.toFixed(2).replace('.', ',') + ' € (tarif vérifié)') + ')').join(' · ') +
                   '. Correspondances et trajet complet non confirmés.';
                 outboundStatus.appendChild(rankingLine);
               }
