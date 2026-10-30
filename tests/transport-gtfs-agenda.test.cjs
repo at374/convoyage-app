@@ -451,3 +451,17 @@ test('Agenda preserves distinct GTFS leg combinations sharing transfer stop and 
  assert.match(target.textContent,/Retour : 2 horaire/);
  session.dispose();
 });
+
+test('null GTFS worker response is reported as unavailable without crashing',async()=>{
+ const target=panel();let queries=0;
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>null,
+  query:async()=>{queries++;return {rows:[],truncated:false};},
+  dispose(){}
+ })});
+ await session.done;
+ assert.equal(queries,0);
+ assert.match(target.textContent,/aucun réseau chargé/);
+ assert.match(target.textContent,/Transport non confirmé/);
+ session.dispose();
+});
