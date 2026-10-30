@@ -108,6 +108,23 @@ function nearbyStops(index,lat,lon,radiusMeters=700){
  }
  return results.sort((a,b)=>a.distanceMeters-b.distanceMeters);
 }
+function nearbyDirectTrips(files,index,date,origin,destination,radiusMeters=700){
+ if(!origin||!destination)return [];
+ const origins=nearbyStops(index,origin.lat,origin.lon,radiusMeters);
+ const destinations=nearbyStops(index,destination.lat,destination.lon,radiusMeters);
+ const journeys=[];
+ for(const from of origins)for(const to of destinations){
+  for(const trip of directTrips(files,index,date,from.stopId,to.stopId)){
+   journeys.push({...trip,
+    originStop:{...from},destinationStop:{...to},
+    accessDistanceMeters:from.distanceMeters,
+    egressDistanceMeters:to.distanceMeters,
+    accessVerified:false,exactOrigin:false,exactDestination:false,
+    serviceConfirmed:false,priceEUR:null});
+  }
+ }
+ return journeys.sort((a,b)=>minutes(a.departure)-minutes(b.departure));
+}
 function transferTrips(files,index,date,originStopId,destinationStopId,minTransferMinutes=5){
  if(!Number.isFinite(minTransferMinutes)||minTransferMinutes<0)return [];
  const trips=scheduledTrips(files,index,date);
@@ -157,7 +174,7 @@ function buildIndex(files){
    counts:{stops:stopById.size,routes:routeById.size,trips:tripById.size,stopTimes:times.length},
    serviceConfirmed:false};
 }
-const api={parseCSV,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips,nearbyStops};
+const api={parseCSV,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips,nearbyStops,nearbyDirectTrips};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSIndex=api;
 })(typeof window!=='undefined'?window:globalThis);
