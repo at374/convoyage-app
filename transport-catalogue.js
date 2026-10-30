@@ -31,6 +31,35 @@ function gtfsResources(datasets){
         typeof resource.url==='string'&&resource.url.startsWith('https://'))
       .map(resource=>({...resource,datasetId:dataset.id,network:dataset.name})));
 }
+async function downloadGTFS(resource,fetcher,limitBytes=20*1024*1024){
+  if(typeof fetcher!=='function')throw new TypeError('fetch required');
+  if(!resource||resource.format!=='GTFS'||typeof resource.url!=='string'||
+      !/^https:\/\//i.test(resource.url))throw new Error('Invalid GTFS resource');
+  if(!Number.isSafeInteger(limitBytes)||limitBytes<=0)throw new Error('Invalid size limit');
+  const response=await fetcher(resource.url,{redirect:'follow'});
+  if(!response?.ok)throw new Error('GTFS download failed');
+  const declared=Number(response.headers?.get?.('content-length'));
+  if(Number.isFinite(declared)&&declared>limitBytes)throw new Error('GTFS exceeds size limit');
+  if(!response.body?.getReader)throw new Error('Streaming response required');
+  const reader=response.body.getReader(),chunks=[];
+  let size=0;
+  try{
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      size+=value.byteLength;
+      if(size>limitBytes)throw new Error('GTFS exceeds size limit');
+      chunks.push(value);
+    }
+  }catch(error){await reader.cancel().catch(()=>{});throw error;}
+  const bytes=new Uint8Array(size);
+  let offset=0;
+  for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+  if(size<4||bytes[0]!==0x50||bytes[1]!==0x4b||
+    !((bytes[2]===3&&bytes[3]===4)||(bytes[2]===5&&bytes[3]===6)))
+    throw new Error('GTFS is not a ZIP archive');
+  return bytes;
+}
 function byNetwork(datasets,term){
   const query=String(term||'').trim().toLocaleLowerCase('fr');
   if(!query)return [];
@@ -43,7 +72,7 @@ async function fetchCatalogue(fetcher){
   if(!response?.ok)throw new Error('PAN catalogue unavailable');
   return normalize(await response.json());
 }
-const api={ENDPOINT,normalize,gtfsResources,byNetwork,fetchCatalogue};
+const api={ENDPOINT,normalize,gtfsResources,downloadGTFS,byNetwork,fetchCatalogue};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportCatalogue=api;
 })(typeof window!=='undefined'?window:globalThis);
