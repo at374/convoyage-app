@@ -384,3 +384,20 @@ test('partial GTFS network failure is disclosed even if worker omits partial fla
  assert.match(target.textContent,/Grésivaudan : flux indisponible/);
  session.dispose();
 });
+
+test('malformed secondary GTFS network is treated as unavailable, not rendered as a valid source',async()=>{
+ const target=panel();
+ const trip={...task,from:{lat:45.1885,lon:5.7245},to:{lat:45.276,lon:5.883}};
+ const session=agenda.mount(target,{tasks:[trip],clientFactory:()=>({
+  loadNetworks:async()=>({networks:[
+   {...summary,source:{...summary.source,network:'M Réso — Métropole grenobloise',url:'https://example.org/metro'}},
+   {source:{network:'M Réso — Grésivaudan'},counts:{}}
+  ]}),
+  query:async()=>({rows:[],truncated:false}),
+  dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Recherche partielle : un réseau est indisponible/);
+ assert.match(target.textContent,/Grésivaudan : flux indisponible/);
+ session.dispose();
+});
