@@ -2125,6 +2125,26 @@
               'Jonction régionale : ' + options.length +
               ' proposition(s) théoriques, horaires et circulation à vérifier :' :
               'Jonction régionale : aucune correspondance compatible avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
+            if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
+              const normalized = options.filter(option =>
+                Number.isFinite(option.startTime) && Number.isFinite(option.endTime) &&
+                option.endTime > option.startTime).map(option => ({
+                departure:new Date(option.startTime).toISOString(),
+                arrival:new Date(option.endTime).toISOString(),
+                legs:option.legs
+              }));
+              const ranked = window.CPTransportRanking.rank(
+                window.CPTransportAdapters.adaptGTFS(normalized,'Régional'),
+                {deadline:next.pickup_start,marginMinutes:securityMarginMin});
+              if (ranked.length) {
+                const summary = document.createElement('p');
+                summary.textContent = 'Classement Jonction régionale théorique : ' +
+                  ranked.map(choice => choice.label + ' (' +
+                    choice.journey.durationMinutes + ' min, tarif non vérifié)').join(' · ') +
+                  '. Accès aux arrêts, correspondances et circulation non confirmés.';
+                regionalStatus.appendChild(summary);
+              }
+            }
             options.slice(0, 5).forEach(option => {
               const line = document.createElement('p');
               const legs = option.legs.map(leg => [
