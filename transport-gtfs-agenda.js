@@ -133,7 +133,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      const seenChoices=new Set(),distinct=[];
      for(const candidate of ordered){
       const key=JSON.stringify([candidate.networkId||candidate.network||'',candidate.line||'',
-       candidate.interNetwork?candidate.transferStopId||'':candidate.transferStopId||'',
+       candidate.transferStopId||'',
        candidate.originStop?.stopId||candidate.from,candidate.destinationStop?.stopId||candidate.to,
        candidate.departure,candidate.arrival]);
       if(seenChoices.has(key))continue;
