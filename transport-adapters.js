@@ -114,7 +114,9 @@
           Number.isFinite(Date.parse(item.fareValidFrom))&&
           Number.isFinite(Date.parse(item.fareValidUntil))&&
           Date.parse(item.fareValidFrom)<=Date.parse(leg.departure)&&
-          Date.parse(leg.departure)<=Date.parse(item.fareValidUntil));
+          Date.parse(leg.departure)<=Date.parse(item.fareValidUntil)&&
+          (!item.fareRetrievedAt || (Number.isFinite(Date.parse(item.fareRetrievedAt))&&
+          Date.parse(item.fareRetrievedAt)<=Date.now())));
         return match?{...leg,verifiedPriceEUR:match.verifiedPriceEUR,
           fareVerified:true,fareSource:match.fareSource,
           fareValidFrom:match.fareValidFrom,fareValidUntil:match.fareValidUntil}:leg;
