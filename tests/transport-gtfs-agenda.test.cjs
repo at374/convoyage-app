@@ -465,3 +465,17 @@ test('null GTFS worker response is reported as unavailable without crashing',asy
  assert.match(target.textContent,/Transport non confirmé/);
  session.dispose();
 });
+
+test('cross-envelope pairing requires two official federated feeds and covered endpoints',()=>{
+ const a={format:'GTFS',federate:true,url:'https://example.org/a.gtfs',bounds:[45,5,46,6]};
+ const b={format:'GTFS',federate:true,url:'https://example.org/b.gtfs',bounds:[45,6,46,7]};
+ const journey={from:{lat:45.5,lon:5.5},to:{lat:45.5,lon:6.5}};
+ assert.equal(agenda.selected(a,journey),false);
+ assert.equal(agenda.selected(b,journey),false);
+ assert.equal(agenda.crossEnvelopePair(a,b,journey),true);
+ assert.equal(agenda.crossEnvelopePair(b,a,journey),true);
+ assert.equal(agenda.crossEnvelopePair(a,a,journey),false);
+ assert.equal(agenda.crossEnvelopePair(a,{...b,federate:false},journey),false);
+ assert.equal(agenda.crossEnvelopePair(a,{...b,url:'http://example.org'},journey),false);
+ assert.equal(agenda.crossEnvelopePair(a,b,{...journey,to:{lat:48,lon:2}}),false);
+});
