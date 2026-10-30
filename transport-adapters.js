@@ -82,7 +82,7 @@
   function toISO(value){
     const ms=typeof value==='number'?value:
       typeof value==='string'?Date.parse(value):NaN;
-    return Number.isFinite(ms)?new Date(ms).toISOString():null;
+    return Number.isFinite(ms)&&Math.abs(ms)<=8640000000000000?new Date(ms).toISOString():null;
   }
   function adaptRegional(itineraries,provider){
     return adaptGTFS((Array.isArray(itineraries)?itineraries:[]).map(it=>({
