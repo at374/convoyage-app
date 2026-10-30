@@ -22,6 +22,25 @@ function parseCSV(text){
  const names=header.map((h,i)=>i===0?h.replace(/^\uFEFF/,''):h);
  return records.filter(r=>r.some(v=>v!=='')).map(r=>Object.fromEntries(names.map((h,i)=>[h,r[i]??''])));
 }
+function activeServices(files,date){
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date+'T00:00:00Z'))||
+   new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date)
+   throw new Error('Invalid service date');
+ const compact=date.replace(/-/g,'');
+ const weekday=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][
+   new Date(date+'T00:00:00Z').getUTCDay()];
+ const active=new Set();
+ for(const row of parseCSV(files['calendar.txt']||'')){
+  if(row.service_id&&row.start_date<=compact&&compact<=row.end_date&&row[weekday]==='1')
+   active.add(row.service_id);
+ }
+ for(const row of parseCSV(files['calendar_dates.txt']||'')){
+  if(row.date!==compact||!row.service_id)continue;
+  if(row.exception_type==='1')active.add(row.service_id);
+  else if(row.exception_type==='2')active.delete(row.service_id);
+ }
+ return active;
+}
 function buildIndex(files){
  if(!files||typeof files!=='object')throw new TypeError('GTFS files required');
  const stops=parseCSV(files['stops.txt']||'');
@@ -42,7 +61,7 @@ function buildIndex(files){
    counts:{stops:stopById.size,routes:routeById.size,trips:tripById.size,stopTimes:times.length},
    serviceConfirmed:false};
 }
-const api={parseCSV,buildIndex};
+const api={parseCSV,activeServices,buildIndex};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSIndex=api;
 })(typeof window!=='undefined'?window:globalThis);
