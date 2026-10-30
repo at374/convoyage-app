@@ -130,3 +130,13 @@ test('Agenda displays both legs, transfer stop and theoretical interval without 
  assert.match(target.textContent,/Correspondance : voir l’arrêt/);assert.doesNotMatch(target.textContent,/Réalisable/);
  session.dispose();
 });
+
+test('alternative transfer stops are retained when trip pair and overall times are identical',async()=>{
+ const target=panel(),legs=[{tripId:'First',line:'One',from:'A',to:'X',departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T11:20:00Z'},
+  {tripId:'Second',line:'Two',from:'X',to:'B',departure:'2026-11-02T11:28:00Z',arrival:'2026-11-02T12:00:00Z'}];
+ const rows=['X','Y'].map(id=>row({transferStopId:id,transferStop:{name:id},transferMinutes:8,legs}));
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({load:async()=>summary,
+  query:async()=>({rows,truncated:false}),dispose(){}})});
+ await session.done;assert.match(target.textContent,/Retour : 2 horaire/);
+ assert.match(target.textContent,/correspondance à X/);assert.match(target.textContent,/correspondance à Y/);session.dispose();
+});

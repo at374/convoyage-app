@@ -92,7 +92,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(!active())return;
       truncated=truncated||result.truncated;rows.push(...result.rows);
      }
-     const unique=new Map(rows.map(row=>[[row.tripId,row.from,row.to,row.departure,row.arrival].join('|'),row]));
+     const unique=new Map(rows.map(row=>[JSON.stringify([row.tripId,row.from,row.to,row.departure,row.arrival,
+      row.transferStopId||null,row.legs?.map(leg=>[leg.tripId,leg.from,leg.to,leg.departure,leg.arrival])||null]),row]));
      const ordered=[...unique.values()].sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
      if(task.label==='Aller')ordered.reverse();
      const shown=ordered.slice(0,5);
