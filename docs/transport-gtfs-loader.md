@@ -128,3 +128,7 @@ Validation : huit tests unitaires couvrent les fuseaux Paris/UTC/Katmandou, les 
 `client.loadNetworks([resourceA,resourceB], {indexServiceDates})` remplace le worker et retourne `{networks,partial}` ; les dates sont obligatoires, deux réseaux au maximum. Un élément de `networks` contient le bilan existant ou `{error:{network,message}}`. Les requêtes `missionJourneys` réunissent résultats internes et liaisons interréseaux indicatives ; les autres méthodes continuent d’interroger le premier réseau disponible. Une requête datée hors du périmètre indexé est rejetée.
 
 La fédération ne fusionne pas les identifiants entre réseaux et ne confirme aucun chemin piéton. Les rapprochements entre arrêts et leurs limites sont décrits dans `transport-gtfs-agenda.md`.
+
+### Enrichissement piéton de l’affichage
+
+Le worker ne sollicite pas le service piéton : `transport-walking.js` enrichit les propositions déjà affichées par `transport-gtfs-agenda.js`, avec file et requêtes annulées à la fermeture. Les objets GTFS ne sont pas réécrits ; les preuves de marche restent séparées. Les identifiants, budgets et flags des sources gardent leur sens. Détails et limites dans la section « Parcours piétons calculés » de `transport-gtfs-agenda.md`.

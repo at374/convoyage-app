@@ -50,10 +50,10 @@ function serviceDates(window,timeZone){
  if(dates.length>5)throw new Error('GTFS service horizon exceeded');
  return dates;
 }
-function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>root.CPGTFSWorker.createClient()}={}){
+function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>root.CPGTFSWorker.createClient(),walkingRouterFactory=()=>root.CPTransportWalking?.createRouter()}={}){
  const doc=panel.ownerDocument||root.document;
- let client=null,disposed=false,observer=null;
- const dispose=()=>{if(disposed)return;disposed=true;observer?.disconnect();client?.dispose();client=null;};
+ let client=null,walker=null,disposed=false,observer=null;const walkChecks=[];
+ const dispose=()=>{if(disposed)return;disposed=true;observer?.disconnect();client?.dispose();walker?.dispose();client=null;walker=null;};
  const taskList=Array.isArray(tasks)?tasks:[];
  const resource=(Array.isArray(resources)?resources:[]).find(r=>taskList.some(t=>selected(r,t)));
  if(!resource)return {dispose,done:Promise.resolve()};
@@ -144,9 +144,54 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
        link.textContent=' · '+label+' : voir l’arrêt'+(stop.description?' ('+stop.description+')':'');
        line.appendChild(link);
       }
+      if(root.CPTransportWalking||walkingRouterFactory){
+       const walking=doc.createElement('span');walking.textContent=' · Marche : en attente du calcul';line.appendChild(walking);
+       walkChecks.push({row,task,element:walking});
+      }
       status.appendChild(line);
      }
     }catch(error){if(active())status.textContent=task.label+' : recherche indisponible pour ces coordonnées ou horaires. Transport non confirmé — vérifiez vous-même.';}
+   }
+   try{walker=walkingRouterFactory?.();}catch(_){}
+   if(walker){
+    const attribution=doc.createElement('p');attribution.className='doux';attribution.textContent='Calcul piéton : Valhalla (FOSSGIS), durées indicatives ; accès réels et horaires d’ouverture à vérifier · ';
+    const osm=doc.createElement('a');osm.href='https://www.openstreetmap.org/copyright';osm.target='_blank';osm.rel='noopener noreferrer';osm.textContent='© OpenStreetMap contributors';
+    attribution.appendChild(osm);section.appendChild(attribution);
+   }
+   walkChecks.sort((a,b)=>Number(!!b.row.interNetwork)-Number(!!a.row.interNetwork));
+   if(walker?.route){
+    const pairs=new Set(),prefetch=[];
+    for(const check of walkChecks){
+     if(!check.row.interNetwork||pairs.size>=3)continue;
+     const key=JSON.stringify([check.row.transferStop?.lat,check.row.transferStop?.lon,check.row.transferDestinationStop?.lat,check.row.transferDestinationStop?.lon]);
+     if(pairs.has(key))continue;pairs.add(key);
+     prefetch.push(walker.route(check.row.transferStop,check.row.transferDestinationStop));
+    }
+    await Promise.all(prefetch);
+   }
+   for(const check of walkChecks){
+    if(!active())return;
+    if(!walker||!root.CPTransportWalking?.checkJourney){check.element.textContent=' · Marche non calculée';continue;}
+    try{
+     check.element.textContent=' · Marche : calcul des parcours piétons…';
+     const result=await root.CPTransportWalking.checkJourney(walker,check.row,check.task);
+     if(!active())return;
+     const descriptions=[];
+     for(const [key,label] of [['access','Approche'],['transfer','Changement'],['egress','Sortie']]){
+      const route=result.walks[key];
+      if(route?.status==='not_required')continue;
+      if(route?.status==='calculated'){
+       descriptions.push(label+' : ≈ '+(route.durationSeconds===0?0:Math.max(1,Math.round(route.durationSeconds/60)))+' min, '+Math.round(route.distanceMeters)+' m à pied (calcul Valhalla/OSM)'+
+        (!route.endpointsMatched?' ; extrémités à vérifier ('+Math.ceil(route.startGapMeters)+' m / '+Math.ceil(route.endGapMeters)+' m hors tracé)':''));
+      }else descriptions.push(label+' : '+({budget_exceeded:'non calculé automatiquement',unavailable:'service piéton indisponible',route_unavailable:'calcul impossible pour ces points',rate_limited:'service piéton momentanément limité',invalid_coordinates:'coordonnées manquantes',same_stop_unverified:'déplacement dans l’arrêt non vérifié'}[route?.status]||'non calculé'));
+     }
+     const labels={departure_too_early:'Le parcours calculé ne permet pas de rejoindre ce départ après la livraison.',
+      arrival_too_late:'Le parcours calculé dépasse la prochaine prise en charge avec la marge.',
+      transfer_too_short:'Intervalle insuffisant pour le parcours de changement calculé et 5 min de sécurité.',
+      fits_calculated_walks:'Horaires compatibles avec les parcours calculés ; adresses, accès réels et circulation restent à vérifier.',
+      partial:'Calcul piéton partiel ; trajet complet non confirmé.',unknown:'Horaires ou données piétonnes insuffisants.'};
+     check.element.textContent=' · '+descriptions.join(' · ')+' · '+(labels[result.status]||labels.unknown)+' Transport non confirmé — vérifiez vous-même.';
+    }catch(_){if(active())check.element.textContent=' · Marche non calculée ; transport non confirmé.';}
    }
   }catch(error){
    if(active()){

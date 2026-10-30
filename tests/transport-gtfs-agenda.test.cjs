@@ -165,3 +165,39 @@ test('partial multi-network load remains visible while the surviving source is q
  await session.done;assert.match(target.textContent,/Recherche partielle/);assert.match(target.textContent,/Sibra : flux indisponible/);
  assert.ok(queries>0);session.dispose();
 });
+test('walking refinement displays calculated paths and unmatched endpoints while retaining transit warnings',async()=>{
+ const previous=global.CPTransportWalking;let disposed=0;
+ global.CPTransportWalking={checkJourney:async()=>({status:'partial',walks:{
+  access:{status:'calculated',durationSeconds:180.539,distanceMeters:260,endpointsMatched:false,startGapMeters:4,endGapMeters:21},
+  transfer:{status:'not_required'},egress:{status:'unavailable'}}})};
+ try{
+  const target=panel(),session=agenda.mount(target,{tasks:[task],clientFactory:()=>({load:async()=>summary,
+   query:async()=>({rows:[row()],truncated:false}),dispose(){}}),walkingRouterFactory:()=>({dispose(){disposed++;}})});
+  await session.done;assert.match(target.textContent,/Approche : ≈ 3 min, 260 m à pied/);
+  assert.match(target.textContent,/extrémités à vérifier/);assert.match(target.textContent,/Sortie : service piéton indisponible/);
+  assert.match(target.textContent,/Calcul piéton partiel/);assert.match(target.textContent,/© OpenStreetMap/);
+  assert.match(target.textContent,/Transport non confirmé/);assert.doesNotMatch(target.textContent,/Réalisable/);
+  session.dispose();assert.equal(disposed,1);
+ }finally{global.CPTransportWalking=previous;}
+});
+test('late walking responses cannot update a disposed panel',async()=>{
+ const previous=global.CPTransportWalking,gate=deferred();let started=false,disposed=0;
+ global.CPTransportWalking={checkJourney:()=>{started=true;return gate.promise;}};
+ try{
+  const target=panel(),session=agenda.mount(target,{tasks:[task],clientFactory:()=>({load:async()=>summary,
+   query:async()=>({rows:[row()],truncated:false}),dispose(){}}),walkingRouterFactory:()=>({dispose(){disposed++;}})});
+  await new Promise(resolve=>setImmediate(resolve));assert.equal(started,true);
+  session.dispose();const before=target.textContent;
+  gate.resolve({status:'fits_calculated_walks',walks:{}});await session.done;
+  assert.equal(target.textContent,before);assert.equal(disposed,1);
+ }finally{global.CPTransportWalking=previous;}
+});
+test('walking checks prioritise inter-network changes before direct candidates',async()=>{
+ const previous=global.CPTransportWalking,calls=[];
+ global.CPTransportWalking={checkJourney:async(router,row)=>{calls.push(row.tripId);return {status:'partial',walks:{}};}};
+ try{
+  const target=panel(),session=agenda.mount(target,{tasks:[task],clientFactory:()=>({load:async()=>summary,
+   query:async()=>({rows:[row({tripId:'direct'}),row({tripId:'cross',interNetwork:true,transferStop:{name:'Exit'},transferDestinationStop:{name:'Board'},transferMinutes:10,transferDistanceMeters:50})],truncated:false}),dispose(){}}),walkingRouterFactory:()=>({dispose(){}})});
+  await session.done;assert.deepEqual(calls,['cross','direct']);session.dispose();
+ }finally{global.CPTransportWalking=previous;}
+});
