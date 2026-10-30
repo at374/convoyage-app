@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict');
+const {evaluate,rank}=require('../transport-ranking.js');
+const deadline='2026-11-02T09:00:00+01:00';
+const base={departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T08:15:00+01:00',priceEUR:4,exactOrigin:true,exactDestination:true,accessVerified:true,legs:[{serviceConfirmed:true}]};
+assert.equal(evaluate(base,{deadline}).feasible,true);
+assert.equal(evaluate({...base,exactDestination:false},{deadline}).feasible,false);
+assert.equal(evaluate({...base,priceEUR:null},{deadline}).priceEUR,null);
+assert.equal(evaluate({...base,legs:[{serviceConfirmed:false}]},{deadline}).feasible,false);
+assert.equal(evaluate({...base,arrival:'2026-11-02T08:50:00+01:00'},{deadline}).feasible,false);
+assert.equal(rank([{...base,priceEUR:5},{...base,priceEUR:2,arrival:'2026-11-02T08:30:00+01:00'}],{deadline}).length,2);
+assert.equal(rank([{...base,departure:'invalid'}]).length,0);
+console.log('transport-ranking: 7 assertions passed');
