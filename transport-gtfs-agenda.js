@@ -100,7 +100,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
    const summary=partners.length&&typeof client.loadNetworks==='function'?
     await client.loadNetworks([resource,...partners],loadOptions):await client.load(resource,loadOptions);
    if(!active())return;
-   const networks=summary.networks||[summary],loaded=networks.filter(n=>n&&!n.error&&n.source&&n.counts&&Number.isFinite(n.counts.stops));
+   const networks=summary.networks||[summary],validNetwork=n=>n&&!n.error&&n.source&&n.counts&&Number.isFinite(n.counts.stops),loaded=networks.filter(validNetwork);
    if(!loaded.length){
     sourceStatus.textContent='Flux GTFS indisponible : aucun réseau chargé. Transport non confirmé — vérifiez vous-même.';
     for(const {task,status} of entries)if(selected(resource,task))status.textContent=task.label+' : horaires indisponibles (aucun réseau chargé).';
@@ -109,11 +109,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
    source.href=loaded[0].source.url||resource.url;
    source.textContent='Source '+(loaded[0].source.network||resource.network);
    heading.textContent=loaded.map(n=>n.source.network||resource.network).join(' + ')+' — horaires aux arrêts';
-   sourceStatus.textContent=networks.map(n=>n.error?(n.error.network+' : flux indisponible'):
+   sourceStatus.textContent=networks.map(n=>!validNetwork(n)?((n?.error?.network||n?.source?.network||'Réseau GTFS')+' : flux indisponible'):
     (n.source.network||resource.network)+' · téléchargé le '+new Intl.DateTimeFormat('fr-FR',{timeZone:resource.timeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(n.source.loadedAt))+
     ' · '+(n.source.updatedAt?'mise à jour producteur : '+n.source.updatedAt:'date de mise à jour du producteur non fournie')+
     ' · '+n.counts.stops+' arrêts').join(' ; ')+'. Circulation non confirmée.';
-   if(summary.partial||networks.some(n=>n.error))sourceStatus.textContent+=' Recherche partielle : un réseau est indisponible.';
+   if(summary.partial||networks.some(n=>!validNetwork(n)))sourceStatus.textContent+=' Recherche partielle : un réseau est indisponible.';
    if(loaded.length>1){
     warning.textContent+=' Changements entre réseaux : arrêts rapprochés à 150 m à vol d’oiseau au maximum ; aucun chemin ni temps de marche vérifié.';
     for(const other of loaded.slice(1)){const link=doc.createElement('a');link.href=other.source.url||partners[0].url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=' · Source '+other.source.network;section.appendChild(link);}
