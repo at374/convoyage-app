@@ -58,4 +58,7 @@ assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...evidence,fareValidFrom
 assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...evidence,fareValidUntil:'date incorrecte'}]))[0].priceEUR,null);
 assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...evidence,fareRetrievedAt:'2099-01-01T00:00:00Z'}]))[0].priceEUR,null);
 assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...evidence,fareRetrievedAt:'incorrect'}]))[0].priceEUR,null);
-console.log('transport adapters: 44 assertions passed');
+const retrieved=applyFareEvidence(bus,[{...evidence,fareRetrievedAt:'2026-10-01T10:00:00Z'}]);
+assert.equal(retrieved[0].legs[0].fareRetrievedAt,'2026-10-01T10:00:00Z');
+assert.equal(withVerifiedFares(retrieved)[0].priceEUR,3);
+console.log('transport adapters: 46 assertions passed');
