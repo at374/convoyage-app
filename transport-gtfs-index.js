@@ -65,6 +65,7 @@ function scheduledTrips(files,index,date){
 }
 // Traverse the active trips once, without copying every stop of every trip for
 // each origin/destination pair. A loop may visit the origin more than once.
+function regularAccess(value){return value===undefined||value===''||value==='0';}
 function directCandidates(files,index,date,origins,destinations){
  const services=activeServices(files,date),journeys=[];
  if(!origins.size||!destinations.size)return journeys;
@@ -75,7 +76,7 @@ function directCandidates(files,index,date,origins,destinations){
   const times=index.timesByTrip.get(tripId)||[];
   for(let i=0;i<times.length;i++){
    const start=times[i],from=origins.get(start.stop_id);
-   if(!from||minutes(start.departure_time)===null)continue;
+   if(!from||!regularAccess(start.pickup_type)||minutes(start.departure_time)===null)continue;
    const found=new Set();
    for(let j=i+1;j<times.length;j++){
     const end=times[j],to=destinations.get(end.stop_id);
@@ -83,7 +84,7 @@ function directCandidates(files,index,date,origins,destinations){
        !(Number(end.stop_sequence)>Number(start.stop_sequence)))continue;
     found.add(end.stop_id);
     const arrival=minutes(end.arrival_time);
-    if(arrival===null||arrival<minutes(start.departure_time))continue;
+    if(arrival===null||arrival<minutes(start.departure_time)||!regularAccess(end.drop_off_type))continue;
     journeys.push({tripId,line:route.route_short_name||route.route_long_name||'',date,
      from:start.stop_id,to:end.stop_id,departure:start.departure_time,arrival:end.arrival_time,
      serviceScheduled:true,serviceConfirmed:false,
@@ -132,34 +133,106 @@ function nearbyDirectTrips(files,index,date,origin,destination,radiusMeters=700)
    accessDistanceMeters:from.distanceMeters,egressDistanceMeters:to.distanceMeters};
  });
 }
-function transferTrips(files,index,date,originStopId,destinationStopId,minTransferMinutes=5){
- if(!Number.isFinite(minTransferMinutes)||minTransferMinutes<0)return [];
- const trips=scheduledTrips(files,index,date);
- const legs=[];
- for(const trip of trips){
-  for(let i=0;i<trip.stops.length;i++){
-   const start=trip.stops[i],departureMinutes=minutes(start.departure);
-   if(departureMinutes===null)continue;
-   for(let j=i+1;j<trip.stops.length;j++){
-    const end=trip.stops[j],arrivalMinutes=minutes(end.arrival);
-    if(arrivalMinutes===null||arrivalMinutes<departureMinutes)continue;
-    legs.push({tripId:trip.tripId,line:trip.line,from:start.stopId,to:end.stopId,
-      departure:start.departure,arrival:end.arrival,departureMinutes,arrivalMinutes});
+function transferCandidates(files,index,date,origins,destinations,{
+ minTransferMinutes=5,maxWaitMinutes=120,maxLegs=50000,maxCandidates=5000,maxExaminedPairs=100000
+}={}){
+ if(!Number.isFinite(minTransferMinutes)||minTransferMinutes<0||
+    !Number.isFinite(maxWaitMinutes)||maxWaitMinutes<minTransferMinutes)throw new Error('Invalid transfer interval');
+ for(const limit of [maxLegs,maxCandidates,maxExaminedPairs])if(!Number.isSafeInteger(limit)||limit<1)throw new Error('Invalid transfer budget');
+ const services=activeServices(files,date),firstByStop=new Map(),secondByStop=new Map();
+ const rules=parseCSV(files['transfers.txt']||'');
+ if(!origins.size||!destinations.size)return {journeys:[],searchTruncated:false};
+ let legCount=0,searchTruncated=false,examined=0;
+ const add=(map,leg)=>{
+  if(legCount>=maxLegs){searchTruncated=true;return false;}
+  if(!map.has(leg.toTransfer))map.set(leg.toTransfer,[]);
+  map.get(leg.toTransfer).push(leg);legCount++;return true;
+ };
+ // Keep only legs starting near the origin or ending near the destination.
+ trips: for(const [tripId,trip] of index.tripById){
+  if(!services.has(trip.service_id))continue;
+  const route=index.routeById.get(trip.route_id);if(!route)continue;
+  const times=index.timesByTrip.get(tripId)||[];
+  const targets=times.flatMap((time,position)=>destinations.has(time.stop_id)?[position]:[]);
+  for(let i=0;i<times.length;i++){
+   const start=times[i],departureMinutes=minutes(start.departure_time);
+   if(departureMinutes===null||!regularAccess(start.pickup_type))continue;
+   const fromOrigin=origins.has(start.stop_id);
+   for(const j of (fromOrigin?times.keys():targets)){
+    if(j<=i)continue;
+    const end=times[j];
+    const arrivalMinutes=minutes(end.arrival_time);
+    if(arrivalMinutes===null||arrivalMinutes<departureMinutes||
+       !(Number(end.stop_sequence)>Number(start.stop_sequence))||!regularAccess(end.drop_off_type)||start.stop_id===end.stop_id)continue;
+    const leg={tripId,routeId:trip.route_id,line:route.route_short_name||route.route_long_name||'',
+     from:start.stop_id,to:end.stop_id,departure:start.departure_time,arrival:end.arrival_time,
+     departureMinutes,arrivalMinutes,serviceConfirmed:false};
+    if(fromOrigin&&!add(firstByStop,{...leg,toTransfer:end.stop_id}))break trips;
+    if(destinations.has(end.stop_id)&&!add(secondByStop,{...leg,toTransfer:start.stop_id}))break trips;
    }
   }
  }
- const first=legs.filter(l=>l.from===originStopId);
- const second=legs.filter(l=>l.to===destinationStopId);
+ const scope=(ruleStop,id)=>!ruleStop||ruleStop===id||ruleStop===index.stopById.get(id)?.parent_station;
+ const rulesByStop=new Map();
+ for(const stopId of firstByStop.keys())rulesByStop.set(stopId,rules.filter(r=>scope(r.from_stop_id,stopId)&&scope(r.to_stop_id,stopId)));
+ const required=(stopId,a,b)=>{
+  let seconds=minTransferMinutes*60;
+  for(const rule of rulesByStop.get(stopId)||[]){
+   if((rule.from_trip_id&&rule.from_trip_id!==a.tripId)||(rule.to_trip_id&&rule.to_trip_id!==b.tripId)||
+      (rule.from_route_id&&rule.from_route_id!==a.routeId)||(rule.to_route_id&&rule.to_route_id!==b.routeId))continue;
+   const type=rule.transfer_type||'0';
+   // Apply all applicable prohibitions/minima conservatively. Linked vehicle
+   // continuations (4/5), conditional access and cross-stop walking are excluded.
+   if(!['0','1','2'].includes(type))return null;
+   if(type==='2'){
+    if(!/^\d+$/.test(rule.min_transfer_time||''))return null;
+    seconds=Math.max(seconds,Number(rule.min_transfer_time));
+   }
+  }
+  return seconds;
+ };
+ const stopInfo=id=>{const stop=index.stopById.get(id);return {stopId:id,name:stop?.stop_name||'',
+  lat:stop?.stop_lat?Number(stop.stop_lat):null,lon:stop?.stop_lon?Number(stop.stop_lon):null,
+  description:stop?.stop_desc||null,accessVerified:false};};
  const journeys=[];
- for(const a of first)for(const b of second){
-  if(a.tripId===b.tripId||a.to!==b.from||
-     b.departureMinutes-a.arrivalMinutes<minTransferMinutes)continue;
-  journeys.push({date,legs:[a,b],transferStopId:a.to,
-    departure:a.departure,arrival:b.arrival,
-    serviceScheduled:true,serviceConfirmed:false,priceEUR:null,
-    exactOrigin:false,exactDestination:false,accessVerified:false});
+ pairs: for(const [stopId,first] of firstByStop){
+  const second=(secondByStop.get(stopId)||[]).sort((a,b)=>a.departureMinutes-b.departureMinutes);
+  for(const a of first){
+   let low=0,high=second.length;
+   const earliest=Math.round(a.arrivalMinutes*60)+minTransferMinutes*60;
+   while(low<high){const mid=(low+high)>>>1;if(Math.round(second[mid].departureMinutes*60)<earliest)low=mid+1;else high=mid;}
+   for(let i=low;i<second.length;i++){
+    const b=second[i],waitSeconds=Math.round(b.departureMinutes*60)-Math.round(a.arrivalMinutes*60),waitMinutes=waitSeconds/60;
+    if(waitSeconds>maxWaitMinutes*60)break;
+    if(++examined>maxExaminedPairs){searchTruncated=true;break pairs;}
+    if(a.tripId===b.tripId||a.from===b.to)continue;
+    const seconds=required(stopId,a,b);
+    if(seconds===null||waitSeconds<seconds)continue;
+    if(journeys.length>=maxCandidates){searchTruncated=true;break pairs;}
+    const from=origins.get(a.from),to=destinations.get(b.to);
+    const clean=leg=>{const {toTransfer,...value}=leg;return value;};
+    journeys.push({tripId:JSON.stringify([a.tripId,b.tripId]),date,from:a.from,to:b.to,
+     legs:[clean(a),clean(b)],line:[a.line,b.line].join(' → '),transferStopId:stopId,
+     transferStop:stopInfo(stopId),transferMinutes:waitMinutes,minTransferSeconds:seconds,
+     departure:a.departure,arrival:b.arrival,originStop:typeof from==='object'?{...from}:stopInfo(a.from),
+     destinationStop:typeof to==='object'?{...to}:stopInfo(b.to),
+     accessDistanceMeters:from?.distanceMeters??null,egressDistanceMeters:to?.distanceMeters??null,
+     serviceScheduled:true,serviceConfirmed:false,priceEUR:null,
+     exactOrigin:false,exactDestination:false,accessVerified:false,transferVerified:false});
+   }
+  }
  }
- return journeys.sort((a,b)=>minutes(a.departure)-minutes(b.departure));
+ return {journeys:journeys.sort((a,b)=>minutes(a.departure)-minutes(b.departure)),searchTruncated};
+}
+function transferTrips(files,index,date,originStopId,destinationStopId,minTransferMinutes=5){
+ if(!Number.isFinite(minTransferMinutes)||minTransferMinutes<0)return [];
+ return transferCandidates(files,index,date,new Map([[originStopId,true]]),new Map([[destinationStopId,true]]),{minTransferMinutes}).journeys;
+}
+function nearbyTransferTrips(files,index,date,origin,destination,radiusMeters=700,options={}){
+ if(!origin||!destination)return {journeys:[],searchTruncated:false};
+ const origins=new Map(nearbyStops(index,origin.lat,origin.lon,radiusMeters).map(stop=>[stop.stopId,stop]));
+ const destinations=new Map(nearbyStops(index,destination.lat,destination.lon,radiusMeters).map(stop=>[stop.stopId,stop]));
+ return transferCandidates(files,index,date,origins,destinations,options);
 }
 function buildIndex(files){
  if(!files||typeof files!=='object')throw new TypeError('GTFS files required');
@@ -188,7 +261,7 @@ function buildIndex(files){
    counts:{stops:stopById.size,routes:routeById.size,trips:tripById.size,stopTimes},
    serviceConfirmed:false};
 }
-const api={parseCSV,csvRows,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips,nearbyStops,nearbyDirectTrips};
+const api={parseCSV,csvRows,activeServices,buildIndex,scheduledTrips,directTrips,transferTrips,nearbyStops,nearbyDirectTrips,nearbyTransferTrips};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSIndex=api;
 })(typeof window!=='undefined'?window:globalThis);

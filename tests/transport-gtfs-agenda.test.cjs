@@ -46,7 +46,7 @@ test('mount shares one load across tasks, deduplicates rows, uses text nodes and
  const session=agenda.mount(target,{tasks:[task,{...task,label:'Aller',earliestDeparture:undefined,latestArrival:'2026-11-02T13:00:00Z'}],clientFactory:()=>client});
  await session.done;
  assert.equal(loads,1);assert.ok(calls.length>=4);
- assert.equal(calls[0].method,'missionDirectTrips');assert.equal(calls[0].radiusMeters,700);
+ assert.equal(calls[0].method,'missionJourneys');assert.equal(calls[0].radiusMeters,700);
  assert.match(target.textContent,/voir l’arrêt/);
  assert.match(target.textContent,/Retour : 1 horaire/);assert.match(target.textContent,/Aller : 1 horaire/);
  assert.match(target.textContent,/École <script>/);assert.match(target.textContent,/vol d’oiseau/);
@@ -115,4 +115,18 @@ test('actual Agenda call passes mission windows and refreshes only GTFS when coo
  assert.equal(calls.length,2);assert.equal(calls[1].tasks[2].to.lat,45.8);
  assert.equal(stopped,2);assert.equal(removed,2);
  sheet.hidden=true;callbacks[0]();assert.equal(calls.length,2);
+});
+
+test('Agenda displays both legs, transfer stop and theoretical interval without a feasibility badge',async()=>{
+ const target=panel();
+ const transferred=row({transferStopId:'X',transferStop:{name:'Change',lat:45.8,lon:6.2},transferMinutes:8,
+  legs:[{line:'One',departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T11:20:00Z'},
+   {line:'Two',departure:'2026-11-02T11:28:00Z',arrival:'2026-11-02T12:00:00Z'}]});
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({load:async()=>summary,
+  query:async()=>({rows:[transferred],truncated:false}),dispose(){}})});
+ await session.done;
+ assert.match(target.textContent,/correspondance à Change/);assert.match(target.textContent,/intervalle théorique 8 min/);
+ assert.match(target.textContent,/One :/);assert.match(target.textContent,/Two :/);
+ assert.match(target.textContent,/Correspondance : voir l’arrêt/);assert.doesNotMatch(target.textContent,/Réalisable/);
+ session.dispose();
 });

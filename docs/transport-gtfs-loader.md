@@ -44,7 +44,7 @@ Sur le même ZIP Sibra local, dans deux processus Node distincts : pic RSS de 82
 
 ## Éléments encore à raccorder
 
-Le client worker est maintenant chargé dans l’interface Agenda sur cette branche pour les trajets directs Cars Région Haute-Savoie (voir `transport-gtfs-agenda.md`). La version n’est pas déployée ni validée sur Android. La fédération des réseaux, les transferts entre leurs identifiants d’arrêts, les chemins piétons réels, les tarifs officiels et leur fraîcheur, les preuves de circulation et les trois choix classés restent à relier. Les dates de recherche viennent du calendrier du flux ; aucune borne au 15 novembre n’est ajoutée.
+Le client worker est maintenant chargé dans l’interface Agenda sur cette branche pour les trajets directs et à une correspondance au même arrêt Cars Région Haute-Savoie (voir `transport-gtfs-agenda.md`). La version n’est pas déployée ni validée sur Android. La fédération des réseaux, les transferts entre leurs identifiants d’arrêts, les chemins piétons réels, les tarifs officiels et leur fraîcheur, les preuves de circulation et les trois choix classés restent à relier. Les dates de recherche viennent du calendrier du flux ; aucune borne au 15 novembre n’est ajoutée.
 
 Tous les résultats de ce chargeur portent `serviceConfirmed:false`, `faresVerified:false` et `accessVerified:false`. Un chargement réussi n’autorise donc pas l’affichage « Réalisable ».
 
@@ -73,7 +73,7 @@ client.dispose();
 - `clear()` permet un prochain chargement ; `dispose()` ferme définitivement le client. La fermeture libère les références du worker aux sources et index, sans promesse sur le délai de récupération mémoire du navigateur.
 - Aucun repli sur le thread de l’interface si Worker est indisponible ou bloqué par la CSP. Servir les scripts depuis la même origine avec une politique autorisant les workers ; les téléchargements GTFS restent soumis au CORS de leur source.
 
-Validation : cinq tests supplémentaires, dont exécution du véritable script worker et de ses dépendances dans un thread Node séparé avec archive synthétique, calendrier daté, réponses simultanées, remplacement, annulation, limite de file, erreurs et délai maximal. Ces tests ne constituent pas une validation Android ou CORS. Le raccordement Agenda des trajets directs Haute-Savoie est présent sur la branche. Les scripts sont ajoutés à `index.html` et au cache de l’interface ; la persistance des données GTFS hors ligne reste à faire.
+Validation : cinq tests supplémentaires, dont exécution du véritable script worker et de ses dépendances dans un thread Node séparé avec archive synthétique, calendrier daté, réponses simultanées, remplacement, annulation, limite de file, erreurs et délai maximal. Ces tests ne constituent pas une validation Android ou CORS. Le raccordement Agenda des trajets directs et à une correspondance Haute-Savoie est présent sur la branche. Les scripts sont ajoutés à `index.html` et au cache de l’interface ; la persistance des données GTFS hors ligne reste à faire.
 
 ### Trajets directs entre coordonnées
 
@@ -114,3 +114,7 @@ Les champs `departure` et `arrival` deviennent des ISO UTC. `serviceDate`, `time
 Les résultats portent `timetableOnly:true`. Le filtrage ne comprend aucun temps d’accès ou de sortie à pied et ne prouve pas qu’un départ puisse être rejoint après livraison, ni que l’adresse de prise en charge soit atteinte à temps. `accessVerified`, `serviceConfirmed`, `exactOrigin`, `exactDestination`, `faresVerified` restent à `false` et `priceEUR` reste `null`. Aucun badge « Réalisable » n’est autorisé par cette seule fenêtre.
 
 Validation : huit tests unitaires couvrent les fuseaux Paris/UTC/Katmandou, les deux changements d’heure, heures au-delà de 24 h, jour civil inexistant, dates impossibles, bornes et marges, métadonnées d’agence et préservation des indicateurs de preuve. Un test supplémentaire exécute les fenêtres dans le véritable worker avec requêtes simultanées. Aucun test Android ou contrôle d’accès piéton n’est revendiqué ; le module est branché à l’Agenda sur la branche, sans déploiement ni validation Android.
+
+### Trajets avec une correspondance
+
+`query({method:'missionJourneys', date, origin, destination, window, radiusMeters, limit})` réunit trajets directs et correspondances au même arrêt. Les bornes et formats sont ceux de `missionDirectTrips`. Le résultat inclut `searchTruncated` pour les budgets internes, en plus de `truncated` pour les résultats transférés. Les deux indicateurs sont propagés à l’affichage. Les correspondances portent deux `legs` datées, `transferStop`, `transferMinutes` et `transferVerified:false`. Règles, exclusions et budgets sont détaillés dans `transport-gtfs-agenda.md`. L’API `missionDirectTrips` reste disponible pour une recherche directe seule.

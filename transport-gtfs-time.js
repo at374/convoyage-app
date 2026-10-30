@@ -71,7 +71,28 @@ function datedTrips(files,index,rows,{earliestDeparture,latestArrival,marginMinu
  }
  return results.sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
 }
-const api={serviceTimestamp,datedTrips};
+function datedTransferTrips(files,index,rows,window){
+ const flat=rows.flatMap((row,group)=>row.legs.map((leg,position)=>({...leg,date:row.date,group,position})));
+ const converted=datedTrips(files,index,flat,window),groups=new Map();
+ for(const leg of converted){
+  if(!groups.has(leg.group))groups.set(leg.group,[]);
+  groups.get(leg.group).push(leg);
+ }
+ const results=[];
+ for(const [group,legs] of groups){
+  if(legs.length!==2)continue;
+  legs.sort((a,b)=>a.position-b.position);
+  const [a,b]=legs,row=rows[group];
+  if(a.timeZone!==b.timeZone||Date.parse(a.arrival)>Date.parse(b.departure))continue;
+  const clean=leg=>{const {group,position,...value}=leg;return value;};
+  results.push({...row,legs:legs.map(clean),serviceDate:row.date,timeZone:a.timeZone,
+   departureTime:row.departure,arrivalTime:row.arrival,departure:a.departure,arrival:b.arrival,
+   timetableOnly:true,marginMinutes:b.marginMinutes,exactOrigin:false,exactDestination:false,
+   accessVerified:false,transferVerified:false,serviceConfirmed:false,faresVerified:false,priceEUR:null});
+ }
+ return results.sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
+}
+const api={serviceTimestamp,datedTrips,datedTransferTrips};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSTime=api;
 })(typeof window!=='undefined'?window:globalThis);

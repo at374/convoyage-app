@@ -60,7 +60,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const source=doc.createElement('a');source.href=resource.url;source.target='_blank';source.rel='noopener noreferrer';
  source.textContent='Source GTFS officielle';section.appendChild(source);
  const warning=doc.createElement('p');warning.className='doux';
- warning.textContent='Trajets directs uniquement. Recherche limitée à 48 h au maximum et au jour de service précédent. Distances à vol d’oiseau ; marche et prix non vérifiés. Transport non confirmé — vérifiez vous-même.';
+ warning.textContent='Trajets directs ou avec une correspondance au même arrêt (intervalle de 5 à 120 min, non vérifié). Recherche limitée à 48 h au maximum et au jour de service précédent. Distances à vol d’oiseau ; marche et prix non vérifiés. Transport non confirmé — vérifiez vous-même.';
  section.appendChild(warning);panel.appendChild(section);
  const active=()=>!disposed&&panel.isConnected;
  const sheet=panel.closest?.('#feuille');
@@ -87,7 +87,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      const window=searchWindow(task),dates=serviceDates(window,resource.timeZone),rows=[];let truncated=false;
      for(const date of dates){
       if(!active())return;
-      const result=await client.query({method:'missionDirectTrips',date,origin:task.from,destination:task.to,
+      const result=await client.query({method:'missionJourneys',date,origin:task.from,destination:task.to,
        window,limit:100,radiusMeters:700});
       if(!active())return;
       truncated=truncated||result.truncated;rows.push(...result.rows);
@@ -96,7 +96,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      const ordered=[...unique.values()].sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
      if(task.label==='Aller')ordered.reverse();
      const shown=ordered.slice(0,5);
-     status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':'aucun trajet direct dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.');
+     status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':'aucun trajet direct ou avec une correspondance dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.');
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
      if(truncated||ordered.length>shown.length){const note=doc.createElement('p');note.textContent='Affichage limité : d’autres horaires peuvent exister.';status.appendChild(note);}
      for(const row of shown){
@@ -105,8 +105,12 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       line.textContent=format(row.departure)+' → '+format(row.arrival)+' · '+row.line+' · '+
        (row.originStop?.name||row.from)+' → '+(row.destinationStop?.name||row.to)+
        ' · distances à vol d’oiseau : '+row.accessDistanceMeters+' m / '+row.egressDistanceMeters+' m'+
+       (row.legs?.length===2?' · correspondance à '+(row.transferStop?.name||row.transferStopId)+' · intervalle théorique '+row.transferMinutes+' min':' · direct')+
        ' · tarif inconnu · Transport non confirmé — vérifiez vous-même.';
-      for(const [label,stop] of [['Départ',row.originStop],['Arrivée',row.destinationStop]]){
+      if(row.legs?.length===2){
+       for(const leg of row.legs){const detail=doc.createElement('span');detail.textContent=' · '+leg.line+' : '+format(leg.departure)+' → '+format(leg.arrival);line.appendChild(detail);}
+      }
+      for(const [label,stop] of [['Départ',row.originStop],['Correspondance',row.transferStop],['Arrivée',row.destinationStop]]){
        if(!validPoint(stop))continue;
        const link=doc.createElement('a');
        link.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(stop.lat+','+stop.lon);

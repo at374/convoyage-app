@@ -4,7 +4,7 @@ const {Worker}=require('node:worker_threads');
 const path=require('node:path');
 const {createClient}=require('../transport-gtfs-worker-client.js');
 const {crc32}=require('../transport-gtfs-loader.js');
-function archive(){
+function archive(transfers=false){
  const files={
   'agency.txt':'agency_name,agency_timezone\nFixture,Europe/Paris',
   'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nA,Start,45.9,6.1\nB,End,45.8,6.2',
@@ -13,6 +13,12 @@ function archive(){
   'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT,11:00:00,11:00:00,A,1\nT,11:48:00,11:48:00,B,2',
   'calendar_dates.txt':'service_id,date,exception_type\nS,20261102,1'
  };
+ if(transfers){
+  files['stops.txt']='stop_id,stop_name,stop_lat,stop_lon\nA,Start,45.9,6.1\nX,Change,45.8,6.2\nB,End,45.7,6.3';
+  files['routes.txt']='route_id,route_short_name,route_type\nR,One,3\nR2,Two,3';
+  files['trips.txt']='route_id,service_id,trip_id\nR,S,T\nR2,S,T2';
+  files['stop_times.txt']='trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT,11:00:00,11:00:00,A,1\nT,11:20:00,11:20:00,X,2\nT2,11:28:00,11:28:00,X,1\nT2,11:48:00,11:48:00,B,2';
+ }
  const local=[],directory=[];let offset=0;
  for(const [name,text] of Object.entries(files)){
   const filename=Buffer.from(name),body=Buffer.from(text),header=Buffer.alloc(30),entry=Buffer.alloc(46);
@@ -39,8 +45,8 @@ context.self=context;
 context.importScripts=(...names)=>{for(const name of names)vm.runInContext(fs.readFileSync(path.join(workerData.root,name),'utf8'),context);};
 vm.runInContext(fs.readFileSync(path.join(workerData.root,'transport-gtfs-worker.js'),'utf8'),context);
 parentPort.on('message',data=>context.onmessage({data}));`;
-function factory(){
- const thread=new Worker(bootstrap,{eval:true,workerData:{root:path.resolve(__dirname,'..'),bytes:archive()}});
+function factory(mode){
+ const thread=new Worker(bootstrap,{eval:true,workerData:{root:path.resolve(__dirname,'..'),bytes:archive(mode===true)}});
  const adapter={postMessage:data=>thread.postMessage(data),terminate:()=>thread.terminate()};
  thread.on('message',data=>adapter.onmessage?.({data}));thread.on('error',error=>adapter.onerror?.(error));
  return adapter;
@@ -124,4 +130,17 @@ test('mission worker applies time windows before limiting and keeps timetable-on
  assert.equal(late.rows.length,0);
  await assert.rejects(client.query(query),/window/);
  await assert.rejects(client.query({...query,window:{latestArrival:'2026-11-02T12:00:00'}}),/timezone/);
+});
+
+test('worker combines direct search with dated single-transfer journeys',async t=>{
+ const client=createClient({workerFactory:()=>factory(true)});t.after(()=>client.dispose());
+ await client.load(resource);
+ const answer=await client.query({method:'missionJourneys',date:'2026-11-02',
+  origin:{lat:45.9,lon:6.1},destination:{lat:45.7,lon:6.3},
+  window:{earliestDeparture:'2026-11-02T11:00:00+01:00',latestArrival:'2026-11-02T12:18:00+01:00'}});
+ assert.equal(answer.rows.length,1);assert.equal(answer.searchTruncated,false);
+ const row=answer.rows[0];assert.equal(row.legs.length,2);
+ assert.equal(row.transferStop.name,'Change');assert.equal(row.transferMinutes,8);
+ assert.equal(row.departure,'2026-11-02T10:00:00.000Z');assert.equal(row.arrival,'2026-11-02T10:48:00.000Z');
+ assert.equal(row.transferVerified,false);assert.equal(row.serviceConfirmed,false);assert.equal(row.priceEUR,null);
 });
