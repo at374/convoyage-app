@@ -24,6 +24,13 @@ function normalize(payload){
     })).filter(r=>r.url&&/^https:\/\//i.test(r.url))
   })).filter(d=>d.id&&d.resources.length);
 }
+function gtfsResources(datasets){
+  return (Array.isArray(datasets)?datasets:[]).flatMap(dataset=>
+    (Array.isArray(dataset.resources)?dataset.resources:[])
+      .filter(resource=>resource.format==='GTFS'&&
+        typeof resource.url==='string'&&resource.url.startsWith('https://'))
+      .map(resource=>({...resource,datasetId:dataset.id,network:dataset.name})));
+}
 function byNetwork(datasets,term){
   const query=String(term||'').trim().toLocaleLowerCase('fr');
   if(!query)return [];
@@ -36,7 +43,7 @@ async function fetchCatalogue(fetcher){
   if(!response?.ok)throw new Error('PAN catalogue unavailable');
   return normalize(await response.json());
 }
-const api={ENDPOINT,normalize,byNetwork,fetchCatalogue};
+const api={ENDPOINT,normalize,gtfsResources,byNetwork,fetchCatalogue};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportCatalogue=api;
 })(typeof window!=='undefined'?window:globalThis);
