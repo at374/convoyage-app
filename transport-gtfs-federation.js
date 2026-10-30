@@ -75,7 +75,8 @@ function crossNetworkTrips(feeds,date,origin,destination,window,{
        departure:x.departure,arrival:y.arrival,originStop:a.origins.get(x.from),destinationStop:b.destinations.get(y.to),
        accessDistanceMeters:a.origins.get(x.from).distanceMeters,egressDistanceMeters:b.destinations.get(y.to).distanceMeters,
        transferStopId:JSON.stringify([stopId,peer.stopId]),transferStop:stop,transferDestinationStop:peer,
-       transferDistanceMeters:peer.distanceMeters,transferMinutes:interval/60000,walkingDurationSeconds:null,
+       transferDistanceMeters:peer.distanceMeters,transferMinutes:interval/60000,
+       minimumTransferMinutes:Math.max(minTransferMinutes,minimumWalkMinutes),walkingDurationSeconds:null,
        interNetwork:true,transferKind:'nearby-stops',timetableOnly:true,transferVerified:false,
        accessVerified:false,exactOrigin:false,exactDestination:false,serviceConfirmed:false,faresVerified:false,priceEUR:null});
      }
