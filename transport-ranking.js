@@ -30,7 +30,8 @@
     const byDuration=(a,b)=>Number(b.feasible)-Number(a.feasible)||
       a.durationMinutes-b.durationMinutes||
       ((a.priceEUR??Infinity)===(b.priceEUR??Infinity)?0:(a.priceEUR??Infinity)-(b.priceEUR??Infinity));
-    const cheapest=[...valid].sort(byPrice)[0];
+    const priced=valid.filter(x=>x.priceEUR!==null);
+    const cheapest=[...priced].sort(byPrice)[0];
     const fastest=[...valid].sort(byDuration)[0];
     const compromise=[...valid].sort((a,b)=>{
       const score=x=>{
