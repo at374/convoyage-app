@@ -2080,10 +2080,9 @@
       }
       // GTFS candidate search: one worker for the open panel, no mission writes.
       if (window.CPGTFSAgenda && window.CPGTFSWorker) {
+        let gtfsTaskSignature = null;
         const runGTFS = () => {
         if (!panel.isConnected || panel.hidden || $('feuille').hidden) return;
-        stopGTFSTransports();
-        panel.querySelector('[data-gtfs-agenda]')?.remove();
         const point = gps => transportAddressPoint(gps) ?
           {lat:Number(gps.lat),lon:Number(gps.lng)} : null;
         const homeLat = etat.reglages?.domicile_lat, homeLon = etat.reglages?.domicile_lng;
@@ -2098,8 +2097,13 @@
         if (next && deliveryDate && next.pickup_start) gtfsTasks.push({label:'Jonction',
           from:point(G.coordonnees(m,'destination')),to:point(G.coordonnees(next,'origin')),
           earliestDeparture:deliveryDate,latestArrival:next.pickup_start,marginMinutes:securityMarginMin});
+        const signature = JSON.stringify(gtfsTasks);
+        if (signature === gtfsTaskSignature) return;
+        stopGTFSTransports();
+        panel.querySelector('[data-gtfs-agenda]')?.remove();
         gtfsAgendaSession = window.CPGTFSAgenda.mount(panel,{tasks:gtfsTasks,
           ...(Array.isArray(window.CP_GTFS_AGENDA_RESOURCES) ? {resources:window.CP_GTFS_AGENDA_RESOURCES} : {})});
+        gtfsTaskSignature = signature;
         };
         bt.cpRefreshGTFS = runGTFS;
         runGTFS();

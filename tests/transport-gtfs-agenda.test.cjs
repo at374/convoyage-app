@@ -115,7 +115,22 @@ test('actual Agenda call passes mission windows and refreshes only GTFS when coo
  next.o.precision='adresse';callbacks[0]();
  assert.equal(calls.length,2);assert.equal(calls[1].tasks[2].to.lat,45.8);
  assert.equal(stopped,2);assert.equal(removed,2);
- sheet.hidden=true;callbacks[0]();assert.equal(calls.length,2);
+ callbacks[0]();button.cpRefreshGTFS();
+ next.d={lat:46,lon:6.5,precision:'adresse'};callbacks[0]();
+ next.o.description='Nouveau libellé';callbacks[0]();
+ assert.equal(calls.length,2);assert.equal(stopped,2);assert.equal(removed,2);
+ // Changed coordinates restart the actual search, even when precision is unchanged.
+ next.o.lat=45.81;callbacks[0]();assert.equal(calls.length,3);
+ assert.equal(calls[2].tasks[2].to.lat,45.81);
+ context.etat.reglages.domicile_lat=45.91;button.cpRefreshGTFS();
+ assert.equal(calls.length,4);assert.equal(calls[3].tasks[0].from.lat,45.91);
+ current.o.precision='ville';button.cpRefreshGTFS();
+ assert.equal(calls.length,5);assert.equal(calls[4].tasks[0].to,null);
+ assert.equal(stopped,5);assert.equal(removed,5);
+ sheet.hidden=true;next.o.lat=45.82;callbacks[0]();assert.equal(calls.length,5);
+ sheet.hidden=false;
+ // Reopening / explicit refresh constructs a new session even with identical tasks.
+ vm.runInNewContext(code,context);assert.equal(calls.length,6);
 });
 
 test('Agenda displays both legs, transfer stop and theoretical interval without a feasibility badge',async()=>{
