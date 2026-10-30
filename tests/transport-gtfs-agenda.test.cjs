@@ -401,3 +401,23 @@ test('malformed secondary GTFS network is treated as unavailable, not rendered a
  assert.match(target.textContent,/Grésivaudan : flux indisponible/);
  session.dispose();
 });
+
+test('GTFS sources with invalid timestamps or stop counts are rejected without querying',async()=>{
+ for(const invalid of [
+  {source:{...summary.source,loadedAt:'not-a-date'},counts:{stops:20}},
+  {source:{...summary.source},counts:{stops:-1}},
+  {source:{...summary.source},counts:{stops:1.5}}
+ ]){
+  const target=panel();let queries=0;
+  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+   load:async()=>invalid,
+   query:async()=>{queries++;return {rows:[],truncated:false};},
+   dispose(){}
+  })});
+  await session.done;
+  assert.equal(queries,0);
+  assert.match(target.textContent,/aucun réseau chargé/);
+  assert.match(target.textContent,/Transport non confirmé/);
+  session.dispose();
+ }
+});
