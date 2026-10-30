@@ -41,6 +41,27 @@ function activeServices(files,date){
  }
  return active;
 }
+function scheduledTrips(files,index,date){
+ const services=activeServices(files,date);
+ const results=[];
+ for(const [tripId,trip] of index.tripById){
+  if(!services.has(trip.service_id))continue;
+  const times=index.timesByTrip.get(tripId)||[];
+  if(times.length<2)continue;
+  const route=index.routeById.get(trip.route_id);
+  if(!route)continue;
+  results.push({
+   tripId,serviceId:trip.service_id,routeId:trip.route_id,
+   line:route.route_short_name||route.route_long_name||'',
+   stops:times.map(t=>({
+    stopId:t.stop_id,stopName:index.stopById.get(t.stop_id)?.stop_name||'',
+    arrival:t.arrival_time,departure:t.departure_time,sequence:Number(t.stop_sequence)
+   })),
+   serviceScheduled:true,serviceConfirmed:false
+  });
+ }
+ return results;
+}
 function buildIndex(files){
  if(!files||typeof files!=='object')throw new TypeError('GTFS files required');
  const stops=parseCSV(files['stops.txt']||'');
@@ -61,7 +82,7 @@ function buildIndex(files){
    counts:{stops:stopById.size,routes:routeById.size,trips:tripById.size,stopTimes:times.length},
    serviceConfirmed:false};
 }
-const api={parseCSV,activeServices,buildIndex};
+const api={parseCSV,activeServices,buildIndex,scheduledTrips};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSIndex=api;
 })(typeof window!=='undefined'?window:globalThis);
