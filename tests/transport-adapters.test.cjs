@@ -32,7 +32,7 @@ assert.equal(rank(invalid).length,0);
 assert.equal(withVerifiedFares(adaptSNCF(raw))[0].priceEUR,null);
 assert.equal(withVerifiedFares(adaptGTFS([{departure,arrival,legs:[{route:'Y51'}]}],'Cars Région'))[0].fareStatus,'Tarif non vérifié');
 require('../transport-fares.js');
-const passJourney=withVerifiedFares([{legs:[{provider:'SIBRA',verifiedPriceEUR:2,passAccepted:true,passProduct:'SIBRA',passEligibilityVerified:true}]}],{sibraPassActive:true});
+const passJourney=withVerifiedFares([{legs:[{provider:'SIBRA',fareVerified:true,fareSource:'source vérifiée',verifiedPriceEUR:2,passAccepted:true,passProduct:'SIBRA',passEligibilityVerified:true,passEligibilitySource:'conditions officielles'}]}],{sibraPassActive:true});
 assert.equal(passJourney[0].priceEUR,0);
 assert.equal(passJourney[0].fareStatus,'Tarif vérifié');
 assert.equal(withVerifiedFares([{legs:[{provider:'TER'}]}])[0].priceEUR,null);
