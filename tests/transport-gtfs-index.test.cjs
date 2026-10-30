@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict');
-const {parseCSV,activeServices,buildIndex,scheduledTrips}=require('../transport-gtfs-index.js');
+const {parseCSV,activeServices,buildIndex,scheduledTrips,directTrips}=require('../transport-gtfs-index.js');
 assert.deepEqual(parseCSV('id,name\n1,"Annecy, Gare"\n2,"Stop ""A"""\n'),[
  {id:'1',name:'Annecy, Gare'},{id:'2',name:'Stop "A"'}]);
 assert.deepEqual(parseCSV(''),[]);
@@ -31,4 +31,12 @@ assert.equal(dated[0].line,'Y51');
 assert.equal(dated[0].stops[1].arrival,'11:48:00');
 assert.equal(dated[0].serviceConfirmed,false);
 assert.equal(scheduledTrips(calendar,index,'2026-10-30').length,0);
-console.log('GTFS index: 19 assertions passed');
+const direct=directTrips(calendar,index,'2026-10-29','S1','S2');
+assert.equal(direct.length,1);
+assert.equal(direct[0].departure,'10:30:00');
+assert.equal(direct[0].arrival,'11:48:00');
+assert.equal(direct[0].serviceConfirmed,false);
+assert.equal(direct[0].priceEUR,null);
+assert.equal(directTrips(calendar,index,'2026-10-29','S2','S1').length,0);
+assert.equal(directTrips(calendar,index,'2026-10-30','S1','S2').length,0);
+console.log('GTFS index: 26 assertions passed');
