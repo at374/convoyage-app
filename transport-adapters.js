@@ -69,7 +69,17 @@
       legs:Array.isArray(it.legs)?it.legs:[]
     })),provider||'Régional');
   }
-  const api={adaptSNCF,adaptGTFS,adaptRegional};
+  function withVerifiedFares(journeys,options={}){
+    const calculator=root.CPTransportFares;
+    return (Array.isArray(journeys)?journeys:[]).map(journey=>{
+      if(!calculator||typeof calculator.fare!=='function')
+        return {...journey,priceEUR:null,fareStatus:'Tarif non vérifié'};
+      const result=calculator.fare(journey.legs,options);
+      return {...journey,priceEUR:result.known?result.totalEUR:null,
+        fareStatus:result.status,fareBreakdown:result.breakdown};
+    });
+  }
+  const api={adaptSNCF,adaptGTFS,adaptRegional,withVerifiedFares};
   if(typeof module==='object'&&module.exports)module.exports=api;
   root.CPTransportAdapters=Object.assign(root.CPTransportAdapters||{},api);
 })(typeof window!=='undefined'?window:globalThis);
