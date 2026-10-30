@@ -74,7 +74,7 @@
     return (Array.isArray(journeys)?journeys:[]).map(journey=>{
       if(!calculator||typeof calculator.fare!=='function')
         return {...journey,priceEUR:null,fareStatus:'Tarif non vérifié'};
-      const result=calculator.fare(journey.legs,options);
+      const result=calculator.fare(journey.legs,{...options,travelDate:options.travelDate||journey.departure});
       return {...journey,priceEUR:result.known?result.totalEUR:null,
         fareStatus:result.status,fareBreakdown:result.breakdown};
     });
