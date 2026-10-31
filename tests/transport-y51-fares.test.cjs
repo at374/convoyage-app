@@ -37,3 +37,36 @@ test('outside detours cannot use a cheaper endpoint cell and transfers are not t
  assert.match(fares.describe(mixed),/prix inconnu.*Total du trajet non calculé/);
  assert.equal(mixed.confirmedCurrentFare,false);
 });
+
+const imported=require('../data/interurban/y51-gtfs-source.json');
+const planner=require('../sibra-planner.js');
+require('../transport-gtfs-time.js');
+function recordedRide(){
+ return planner.datedInterurbanRides(imported,'2026-11-02',imported.routes[0].route_id,
+  'FR:73011:ZE:58901:HAUTExSAVOIE','FR:74010:ZE:57539:HAUTExSAVOIE',11*3600+10*60)[0];
+}
+test('imported official Y51 course reuses the tariff proof after calendar and sequence verification',()=>{
+ const ride=recordedRide();assert.ok(ride);assert.equal(ride.departure_time,'11:48:00');
+ const result=fares.fromImportedTables(imported,'2026-11-02',ride);
+ assert.equal(result.portions[0].amountEUR,8.9);assert.equal(result.confirmedCurrentFare,false);
+});
+test('imported station matching uses known identity and coordinates rather than a city word in stop name',()=>{
+ const gare=imported.stops.find(s=>s.stop_id==='FR:74010:ZE:57539:HAUTExSAVOIE');
+ assert.doesNotMatch(gare.stop_name,/annecy/i);
+ assert.equal(fares.importedStopMatches(gare,'Annecy','Gare Routiere'),true);
+ assert.equal(fares.importedStopMatches({...gare,stop_id:'other'},'Annecy','Gare Routiere'),false);
+ assert.equal(fares.importedStopMatches({...gare,stop_lat:'45'},'Annecy','Gare Routiere'),false);
+ assert.equal(fares.importedStopMatches({...gare,stop_lat:''},'Annecy','Gare Routiere'),false);
+});
+test('foreign exports and altered or inactive imported rides keep fare unknown',()=>{
+ const ride=recordedRide();
+ for(const changed of [{...ride,trip_id:'unknown'},{...ride,departureSeconds:ride.departureSeconds+1},{...ride,toStopSequence:ride.toStopSequence+1}])
+  assert.equal(fares.fromImportedTables(imported,'2026-11-02',changed).portions.length,0);
+ assert.equal(fares.fromImportedTables({...imported,source:'https://other.invalid'},'2026-11-02',ride).portions.length,0);
+ assert.equal(fares.fromImportedTables({...imported,checked_at_utc:'2099-01-01T00:00:00Z'},'2026-11-02',ride).portions.length,0);
+ assert.equal(fares.fromImportedTables(imported,'2026-02-30',ride).portions.length,0);
+ const inactive={...imported,calendar:[],calendar_dates:[]};
+ assert.equal(fares.fromImportedTables(inactive,'2026-11-02',ride).portions.length,0);
+ const saved=global.CPGTFSTime;global.CPGTFSTime=null;
+ try{assert.equal(fares.fromImportedTables(imported,'2026-11-02',ride).portions.length,0);}finally{global.CPGTFSTime=saved;}
+});

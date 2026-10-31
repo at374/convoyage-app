@@ -58,6 +58,7 @@ function archive(line='TEST',regional=false){
 async function run(){
  await fs.mkdir(output,{recursive:true});
  const zip=archive(),sibraZip=archive('4'),regionalZip=archive('Y51',true),regionalFareZip=archive('Y51','full'),errors=[],requests=[],gates=new Map(),workers=[],blockedWrites=[],regionalGates=[],activeWorkers=new Set(),abortedRequests=[];
+ const sibraGates=[];let holdSibra=false;
  let holdRegional=false,railScenario=false,tripgoScenario=false,busLiveScenario=false,regionalPassScenario=false,regionalFareScenario=false;
  const until=async(predicate,message)=>{const end=Date.now()+10000;while(!predicate()){if(Date.now()>end)throw Error(message);await new Promise(resolve=>setTimeout(resolve,20));}};
  const server=http.createServer(async(req,res)=>{
@@ -124,6 +125,7 @@ async function run(){
    const request=route.request(),url=new URL(request.url());
    if(url.origin===relayOrigin)return route.continue(); // Real cross-origin HTTP relay, not a mocked response.
    if(url.origin===origin){
+    if(holdSibra&&url.pathname.startsWith('/data/sibra/'))await new Promise(resolve=>sibraGates.push(resolve));
     if(railScenario&&url.pathname.startsWith('/data/sncf/'))return json(route,url.pathname.endsWith('/manifest.json')?railFixture.manifest:railFixture.day);
     if(url.pathname==='/config.js')return route.fulfill({contentType:'text/javascript',body:"window.CP_CONFIG={url:'https://backend.invalid',anonKey:'browser-test-only'};"});
     return route.continue();
@@ -227,14 +229,18 @@ async function run(){
   await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();
   await page.getByText(/Jonction régionale : 4 proposition/).waitFor();
   assert.ok(requests.length>before,'Explicit refresh issues new regional requests');
-  holdRegional=true;const beforeCloseRequests=requests.length,abortedBefore=abortedRequests.length;
+  holdSibra=true;  holdRegional=true;const beforeCloseRequests=requests.length,abortedBefore=abortedRequests.length;
   await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();
   await until(()=>requests.length>=beforeCloseRequests+3,'Three regional refresh requests must be in flight');
+  await until(()=>sibraGates.length>0,'A daily SIBRA response must be in flight before closing');
   await page.locator('#fermer').click();
   assert.equal(await page.locator('#feuille').isHidden(),true);
   await until(()=>abortedRequests.length>=abortedBefore+3&&activeWorkers.size===0,'Closing the mission sheet must abort regional fetches and terminate its GTFS worker');
   const pendingText=await page.locator('#cpTransportMissionDetails').textContent();
   for(const resolve of regionalGates.splice(0))resolve();
+  const lateSibra=page.waitForResponse(response=>new URL(response.url()).pathname==='/data/sibra/sibra-2026-11-02.json');
+  holdSibra=false;for(const resolve of sibraGates.splice(0))resolve();
+  await (await lateSibra).finished();
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   assert.equal(await page.locator('#cpTransportMissionDetails').textContent(),pendingText,'Late responses cannot rewrite a closed panel');
   // Second mission scenario replays a recorded subset of the published SNCF files.
@@ -361,13 +367,22 @@ async function run(){
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await fareRef.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'mobile-y51-full-fare.png')});
   await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'Y51 fare worker must stop on close');
+  const legacyY51=page.getByRole('button',{name:/Vérifier les courses officielles Y51 du/}).first();
+  await legacyY51.click();
+  const legacyResult=page.getByText(/^Y51 du 2026-11-02/).first();await legacyResult.waitFor();
+  assert.match(await legacyResult.innerText(),/11:48.*13:15/);
+  assert.match(await legacyResult.innerText(),/Référence Y51.*8,90 €/);
+  assert.match(await legacyResult.innerText(),/Source vérifiée le/);
+  assert.doesNotMatch(await legacyResult.innerText(),/Réalisable/);
+
+
   assert.equal(relayUpstreamRequests,1,'Operator feed is read through the real relay once');
   assert.deepEqual(errors,[],'No uncaught browser script errors');
   assert.deepEqual(blockedWrites,[],'No account or mission writes');
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '5-minute minimum at exact pickup GPS, final walk required','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display','Y51 Albertville–Annecy shows dated full-fare reference; SIBRA pass does not make the journey free'],
+    '5-minute minimum at exact pickup GPS, final walk required','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display','Y51 Albertville–Annecy shows dated full-fare reference; SIBRA pass does not make the journey free','legacy Agenda Y51 button identifies Annecy station and shows recorded 11:48 service with the shared fare reference'],
    relay:{crossOriginHttp:true,upstreamFixture:true,upstreamRequests:relayUpstreamRequests},regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){
@@ -379,6 +394,7 @@ async function run(){
  }finally{
   for(const list of gates.values())for(const resolve of list)resolve();
   for(const resolve of regionalGates.splice(0))resolve();
+  holdSibra=false;for(const resolve of sibraGates.splice(0))resolve();
   await context?.close();await browser?.close();relayServer.closeAllConnections();await new Promise(resolve=>relayServer.close(resolve));await new Promise(resolve=>server.close(resolve));
  }
 }

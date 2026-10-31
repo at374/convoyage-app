@@ -36,6 +36,39 @@ function reference(row){
  const legs=Array.isArray(row?.legs)&&row.legs.length?row.legs:row?[row]:[];
  return {portions:legs.map(legReference),confirmedCurrentFare:false};
 }
+function importedStopMatches(stop,area,name){
+ const pin=STOPS.get(stop?.stop_id),lat=Number(stop?.stop_lat),lon=Number(stop?.stop_lon);
+ return !!(pin&&DATA.areas[pin.area]===area&&pin.name===name&&
+  typeof stop.stop_lat==='string'&&stop.stop_lat.trim()&&typeof stop.stop_lon==='string'&&stop.stop_lon.trim()&&
+  Number.isFinite(lat)&&Number.isFinite(lon)&&Math.hypot((lat-pin.lat)*111195,(lon-pin.lon)*111195*Math.cos(pin.lat*Math.PI/180))<=50);
+}
+function fromImportedTables(tables,date,ride){
+ const planner=root.CPSibraPlanner,clock=root.CPGTFSTime;
+ const empty=()=>reference(null);
+ try{
+  if(tables?.source!=='https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA'||
+   !planner?.datedInterurbanRides||!clock?.serviceTimestamp||!ride||!Array.isArray(tables.trips)||!Array.isArray(tables.routes)||
+   !Number.isFinite(Date.parse(tables.checked_at_utc))||Date.parse(tables.checked_at_utc)>Date.now())return empty();
+  const trip=tables.trips.find(t=>t.trip_id===ride.trip_id);
+  const route=tables.routes.find(r=>r.route_id===trip?.route_id&&r.route_short_name==='Y51');
+  if(!route)return empty();
+  // Recompute the active service: never attach a price to a copied or stale ride.
+  const matched=planner.datedInterurbanRides(tables,date,route.route_id,ride.from_stop_id,ride.to_stop_id)
+   .find(r=>['trip_id','from_stop_id','to_stop_id','departure_time','arrival_time','departureSeconds','arrivalSeconds','fromStopSequence','toStopSequence'].every(k=>r[k]===ride[k]));
+  if(!matched)return empty();
+  const times=tables.stop_times.filter(t=>t.trip_id===trip.trip_id).sort((a,b)=>Number(a.stop_sequence)-Number(b.stop_sequence));
+  if(times.length>1024)return empty();
+  const path=times.filter(t=>Number(t.stop_sequence)>=matched.fromStopSequence&&Number(t.stop_sequence)<=matched.toStopSequence);
+  if(path.length<2||path.length>64||path.some((t,i)=>i&&Number(t.stop_sequence)<=Number(path[i-1].stop_sequence)))return empty();
+  const stopMap=new Map(tables.stops.map(s=>[s.stop_id,s]));
+  const number=v=>typeof v==='string'&&v.trim()&&Number.isFinite(Number(v))?Number(v):null;
+  const leg={networkId:'oura-haute-savoie',line:'Y51',tripId:trip.trip_id,from:matched.from_stop_id,to:matched.to_stop_id,
+   departure:new Date(clock.serviceTimestamp(date,matched.departure_time,'Europe/Paris')).toISOString(),
+   arrival:new Date(clock.serviceTimestamp(date,matched.arrival_time,'Europe/Paris')).toISOString()};
+  leg.fareScopePath={...leg,stops:path.map(t=>{const s=stopMap.get(t.stop_id);return {stopId:t.stop_id,lat:number(s?.stop_lat),lon:number(s?.stop_lon)};})};
+  return reference(leg);
+ }catch(_){return empty();}
+}
 function describe(result){
  if(!result?.portions?.some(Boolean))return '';
  const money=n=>n.toFixed(2).replace('.',',')+' €';
@@ -46,6 +79,6 @@ function describe(result){
   (result.portions.length>1?' · Total du trajet non calculé ; cumul des titres à vérifier.':'')+
   ' Barème du 01/03/2026, consulté le 31/10/2026 ; à revérifier avant achat.';
 }
-const api={reference,describe,SOURCE:DATA.source};
+const api={reference,describe,fromImportedTables,importedStopMatches,SOURCE:DATA.source};
 if(typeof module==='object'&&module.exports)module.exports=api;root.CPTY51Fares=api;
 })(typeof window!=='undefined'?window:globalThis);

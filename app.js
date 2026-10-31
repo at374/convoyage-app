@@ -965,7 +965,8 @@
               const boarding = data.stops.filter(stop =>
                 /ecole[\s-]*st[\s-]*francois|ecole[\s-]*saint[\s-]*francois/.test(stopLabel(stop)));
               const annecy = data.stops.filter(stop =>
-                /annecy/.test(stopLabel(stop)) && /gare|routiere/.test(stopLabel(stop)));
+                (/annecy/.test(stopLabel(stop)) && /gare|routiere/.test(stopLabel(stop))) ||
+                window.CPTY51Fares?.importedStopMatches(stop,'Annecy','Gare Routiere'));
               const rides = [];
               if (typeof planner.datedInterurbanRides === 'function') {
                 for (const route of data.routes) for (const from of boarding) for (const to of annecy) {
@@ -1047,6 +1048,10 @@
                 Number.isFinite(Number(stop.stop_lon)) &&
                 Math.abs(Number(stop.stop_lat)) <= 90 &&
                 Math.abs(Number(stop.stop_lon)) <= 180);
+              const fareForRide = ride => {
+                try { return window.CPTY51Fares?.describe(window.CPTY51Fares.fromImportedTables(data,requestedDate,ride)) || ''; }
+                catch (_) { return ''; }
+              };
               y51Result.textContent = 'Y51 du ' + requestedDate + ' :' + trips.length +
                 ' courses programmées, ' + times.length + ' passages GTFS. Source vérifiée le ' +
                 stamp + '. ' + (unique.length ?
@@ -1055,7 +1060,8 @@
                     ' → ' + clock(ride.arrivalSeconds) +
                     ' (temps disponible avant le car : ' +
                     Math.floor((ride.departureSeconds - earliestY51) / 60) +
-                    ' min, trajet piéton et marge à déduire)').join(' ; ') + '.' :
+                    ' min, trajet piéton et marge à déduire)' +
+                    fareForRide(ride)).join(' ; ') + '.' :
                   'Aucun départ après la fin de mission identifié entre École Saint-François et Annecy gare routière' +
                   (earliestY51 === null ? ' (heure de fin de mission indisponible)' : '') +
                   ' : vérifiez les noms exacts des arrêts et les horaires GTFS.') +
@@ -2651,7 +2657,7 @@
           status.textContent = 'SIBRA ' + day + ' : vérification des horaires GTFS…';
           panel.appendChild(status);
           window.CPSibraFeed.loadDay(day, (url, options) => window.fetch(url + (bt.dataset.transportRefreshAt ? '?refresh=' + encodeURIComponent(bt.dataset.transportRefreshAt) : ''), {...options, cache: bt.dataset.transportRefreshAt ? 'no-store' : 'default'})).then(result => {
-            if (!status.isConnected) return;
+            if (!regionalActive() || !status.isConnected) return;
             status.textContent = result && result.usable ?
               'SIBRA ' + day + ' : données horaires théoriques chargées (' +
               result.data.trips.length + ' courses). Aucun trajet à cette adresse ni circulation en temps réel confirmé.' :
@@ -2684,7 +2690,7 @@
                 window.CPSibraFeed.loadDay(pickupDay, (url, options) => window.fetch(url + (bt.dataset.transportRefreshAt ? '?refresh=' + encodeURIComponent(bt.dataset.transportRefreshAt) : ''), {...options, cache: bt.dataset.transportRefreshAt ? 'no-store' : 'default'})) :
                 Promise.resolve(result);
               pickupFeed.then(pickupResult => {
-              if (!status.isConnected) return;
+              if (!regionalActive() || !status.isConnected) return;
               if (transportAddressPoint(pickupGps) && homeKnown &&
                   pickupResult?.usable && Number.isFinite(pickupMs)) {
                 const p = new Intl.DateTimeFormat('en-GB', {
@@ -2729,9 +2735,9 @@
                   ' : fichier horaire du jour de prise en charge indisponible. Transport non confirmé — vérifiez vous-même.' :
                   'Aller SIBRA automatique indisponible : point de départ précis (adresse ou GPS), coordonnées du domicile ou heure de prise en charge indisponibles. Un repère de rue seul ne suffit pas.';
               }
-              if (status.isConnected) status.insertAdjacentElement('afterend', outbound);
+              if (regionalActive() && status.isConnected) status.insertAdjacentElement('afterend', outbound);
               }).catch(() => {
-                if (status.isConnected) {
+                if (regionalActive() && status.isConnected) {
                   outbound.textContent = 'Aller SIBRA : chargement des horaires impossible. Transport non confirmé — vérifiez vous-même.';
                   status.insertAdjacentElement('afterend', outbound);
                 }
@@ -2793,7 +2799,7 @@
               } else {
                 ret.textContent = 'Retour SIBRA automatique indisponible : point de livraison précis (adresse ou GPS) ou coordonnées du domicile indisponibles.';
               }
-              if (status.isConnected) status.insertAdjacentElement('afterend', ret);
+              if (regionalActive() && status.isConnected) status.insertAdjacentElement('afterend', ret);
             }
             if (result && result.usable && next &&
                 window.CPSibraFeed.coordinateDayJourneys) {
@@ -2865,7 +2871,7 @@
               } else {
                 auto.textContent = 'Jonction SIBRA automatique indisponible : coordonnées GPS précises des deux missions manquantes, dates différentes ou heure de livraison absente.';
               }
-              if (status.isConnected) status.insertAdjacentElement('afterend', auto);
+              if (regionalActive() && status.isConnected) status.insertAdjacentElement('afterend', auto);
             }
             if (result && result.usable && window.CPSibraFeed.directDayJourneys) {
               const feed = result.data;
@@ -2926,10 +2932,10 @@
                   '. Horaires GTFS théoriques : marche, tarifs, perturbations et circulation non vérifiés.' :
                   'Aucune course directe trouvée à ces arrêts et cette heure. Transport non confirmé — vérifiez vous-même.';
               });
-              if (status.isConnected) status.insertAdjacentElement('afterend', picker);
+              if (regionalActive() && status.isConnected) status.insertAdjacentElement('afterend', picker);
             }
           }).catch(() => {
-            if (status.isConnected) status.textContent =
+            if (regionalActive() && status.isConnected) status.textContent =
               'SIBRA : erreur de lecture. Transport non confirmé — vérifiez vous-même.';
           });
         }
