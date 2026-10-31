@@ -107,6 +107,8 @@ async function run(){
   page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   page.on('requestfailed',request=>{if(request.url().includes('data.mobilites-m.fr'))abortedRequests.push(request.failure()?.errorText);});
   page.on('worker',worker=>{workers.push(worker.url());activeWorkers.add(worker);worker.on('close',()=>activeWorkers.delete(worker));});
+  // Keep the synthetic November missions visible when this regression runs later.
+  await page.clock.setFixedTime(new Date('2026-10-31T08:00:00+01:00'));
   page.setDefaultTimeout(10000);
   await page.goto(origin,{waitUntil:'domcontentloaded'});
   // The real card may omit the external reference; its Agenda index remains explicit.

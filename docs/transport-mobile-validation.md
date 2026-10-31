@@ -10,7 +10,7 @@ npx playwright install --with-deps chromium
 node tests/browser/transport-mobile.cjs
 ```
 
-`CHROMIUM_EXECUTABLE` permet de sélectionner un Chromium installé. La validation locale utilise Chrome for Testing 156.0.8078.80, avec émulation Pixel 7 (412 × 839), langue française et fuseau Europe/Paris. Le workflow `Test mobile transport lifecycle` reproduit ce parcours et conserve les captures et le rapport pendant sept jours.
+`CHROMIUM_EXECUTABLE` permet de sélectionner un Chromium installé. La validation locale utilise Chrome for Testing 156.0.8078.80, avec émulation Pixel 7 (412 × 839), langue française et fuseau Europe/Paris. La date applicative du scénario est fixée au 31 octobre 2026 ; les délais réels restent actifs. Le workflow `Test mobile transport lifecycle` reproduit ce parcours et conserve les captures et le rapport pendant sept jours.
 
 ## Vérifications réalisées
 
@@ -31,3 +31,7 @@ Les tests unitaires couvrent le partage, la dernière annulation, la réponse ta
 Toutes les requêtes externes sont interceptées. Les missions, la session et l'archive GTFS sont fictives ; aucune mission réelle ni clé API n'est envoyée. Les lectures de statut et de version Android sont également simulées. Les service workers sont désactivés pour isoler le test : le fonctionnement hors connexion et la migration d'un cache installé ne sont pas validés ici.
 
 Ce test n'établit ni la circulation réelle, ni un tarif officiel, ni l'accès physique aux adresses. Les propositions restent « Transport non confirmé — vérifiez vous-même ». L'émulation Pixel ne remplace pas une validation sur appareil Android ; celle-ci reste à effectuer. Les liaisons interurbaines, la couverture nationale et les prix ne sont pas complétés par ce lot.
+
+## Exécution GitHub Actions
+
+Sur le commit `6600fe5f4543d75337e92f9a22ef119f2e5e647e`, les huit exécutions déclenchées (push et PR) réussissent, dont deux parcours mobiles. Le parcours PR utilise Chromium 151.0.7922.34 et confirme les trois annulations, zéro worker restant et aucune erreur JavaScript. [Exécution et captures](https://github.com/at374/convoyage-app/actions/runs/41179664330). Ce résultat est distinct du navigateur local et ne constitue pas un test Android.
