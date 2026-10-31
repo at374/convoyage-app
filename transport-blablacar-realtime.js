@@ -68,7 +68,7 @@ function assessJourney(feed,journey,task={},options={}){
  if(updates.some(u=>u.status==='cancelled'))return {...base,status:'cancelled'};
  if(transit.length!==1||updates.length!==1||!['observed','predicted'].includes(updates[0].status))return {...base,status:'partial'};
  const legs=journey.legs,busIndex=legs.indexOf(transit[0]),before=legs.slice(0,busIndex),after=legs.slice(busIndex+1);
- const walk=legs=>legs.every(l=>l.mode==='wa_wal'&&Number.isFinite(instant(l.departure))&&Number.isFinite(instant(l.arrival))&&instant(l.arrival)>=instant(l.departure))?
+ const walk=legs=>legs.every(l=>l?.mode==='wa_wal'&&Number.isFinite(instant(l.departure))&&Number.isFinite(instant(l.arrival))&&instant(l.arrival)>=instant(l.departure))?
   legs.reduce((n,l)=>n+instant(l.arrival)-instant(l.departure),0):null;
  const access=walk(before),egress=walk(after);
  if(access===null||egress===null)return {...base,status:'partial'};
@@ -116,7 +116,7 @@ function createClient({fetcher=root.fetch,now=()=>Date.now(),endpoint=ENDPOINT,t
    signal?.addEventListener('abort',cancel,{once:true});entry.promise.then(v=>{if(done)return;done=true;cleanup();resolve(v);},e=>{if(done)return;done=true;cleanup();reject(e);});if(signal?.aborted)cancel();
   });
  }
- return {check:async(journey,task,{signal}={})=>{if(!(journey.legs||[]).some(eligible))return {status:'unsupported',updates:[],transportConfirmed:false,serviceConfirmed:false,accessVerified:false,realizable:false};
+ return {check:async(journey,task,{signal}={})=>{if(!(Array.isArray(journey?.legs)?journey.legs:[]).some(eligible))return {status:'unsupported',updates:[],transportConfirmed:false,serviceConfirmed:false,accessVerified:false,realizable:false};
   return {...assessJourney(await load(signal),journey,task,{now:now()}),transportEndpoint:url.href};}};
 }
 const api={ENDPOINT,eligible,parse,assess,assessJourney,createClient};root.CPBlaBlaRealtime=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
