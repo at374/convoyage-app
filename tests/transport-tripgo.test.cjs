@@ -71,6 +71,7 @@ test('TripGo rejects impossible connection windows without contacting the provid
  const fetcher=async()=>{calls++;return new Response(JSON.stringify(clone()));};
  await assert.rejects(api.plan({...options,apiKey:'d'.repeat(32),fetcher,latestArrival:'2026-11-02T09:59:59+01:00'}),/Requête TripGo invalide/);
  await assert.rejects(api.plan({...options,apiKey:'d'.repeat(32),fetcher,latestArrival:'not-a-date'}),/Requête TripGo invalide/);
+ await assert.rejects(api.plan({...options,apiKey:'d'.repeat(32),fetcher,arriveBy:true,latestArrival:'2026-11-02T10:00:01+01:00'}),/Requête TripGo invalide/);
  assert.equal(calls,0);
 });
 
