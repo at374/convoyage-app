@@ -7,6 +7,34 @@ const summary=feed=>({source:feed.source,counts:feed.index.counts,archiveBytes:f
  rejectedStopTimes:feed.rejectedStopTimes,indexServiceDates:feed.indexServiceDates,
  serviceConfirmed:false,faresVerified:false,accessVerified:false});
 function scope(feed,date){if(date&&feed.indexServiceDates&&!feed.indexServiceDates.includes(date))throw new Error('Date outside GTFS index scope');}
+// Bind regional fare scope to the actual, unambiguous GTFS portion. Never use
+// endpoints alone: an intermediate stop may leave the eligible territory.
+function fareScopePath(feeds,leg){
+ const feed=feeds.find(f=>(f.source.datasetId||f.source.resourceId)===leg.networkId);
+ if(leg.networkId!=='oura-haute-savoie'||leg.line!=='Y51'||!feed)return null;
+ const trip=feed.index.tripById.get(leg.tripId),route=feed.index.routeById.get(trip?.route_id);
+ if(route?.route_short_name!=='Y51'||!leg.departureTime||!leg.arrivalTime)return null;
+ const times=feed.index.timesByTrip.get(leg.tripId)||[];
+ if(times.length>1024)return null;
+ const matches=[];
+ for(let i=0;i<times.length;i++)if(times[i].stop_id===leg.from&&times[i].departure_time===leg.departureTime){
+  for(let j=i+1;j<times.length;j++)if(times[j].stop_id===leg.to&&times[j].arrival_time===leg.arrivalTime){
+   if(j-i+1>64||matches.length)return null;matches.push(times.slice(i,j+1));
+  }
+ }
+ if(matches.length!==1)return null;
+ const stops=matches[0].map(t=>{
+  const s=feed.index.stopById.get(t.stop_id);
+  const number=value=>typeof value==='string'&&value.trim()&&Number.isFinite(Number(value))?Number(value):null;
+  return {stopId:t.stop_id,name:s?.stop_name||'',lat:number(s?.stop_lat),lon:number(s?.stop_lon)};
+ });
+ return {networkId:leg.networkId,tripId:leg.tripId,from:leg.from,to:leg.to,
+  departure:leg.departure,arrival:leg.arrival,stops};
+}
+function withFareScope(feeds,row){
+ if(Array.isArray(row.legs))return {...row,legs:row.legs.map(leg=>({...leg,fareScopePath:fareScopePath(feeds,leg)}))};
+ return {...row,fareScopePath:fareScopePath(feeds,row)};
+}
 self.onmessage=async({data})=>{
  const {id,type,resource,resources,options={},query={}}=data||{};
  try{
@@ -71,7 +99,7 @@ self.onmessage=async({data})=>{
     if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));
    }else if(query.method==='nearbyStops')rows=CPGTFSIndex.nearbyStops(feed.index,query.lat,query.lon,query.radiusMeters??700);
    else throw new Error('Unsupported GTFS worker query');
-   result={rows:rows.slice(0,limit),truncated:searchTruncated||rows.length>limit,searchTruncated,
+   result={rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,
     serviceConfirmed:false,faresVerified:false,accessVerified:false};
   }else throw new Error('Unsupported GTFS worker operation');
   self.postMessage({id,result});

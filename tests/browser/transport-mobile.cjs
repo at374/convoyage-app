@@ -24,7 +24,7 @@ const missions=[
   pickup_start:'2026-11-02T13:00:00+01:00',pickup_end:'2026-11-02T13:00:00+01:00',delivery_end:'2026-11-02T14:00:00+01:00',fee:100}
 ];
 const settings={domicile_ville:'Grenoble',domicile_lat:45.193,domicile_lng:5.711,marge_minutes:30,plateformes_choisies:['DriiveMe']};
-function archive(line='TEST'){
+function archive(line='TEST',regional=false){
  const files={
   'agency.txt':'agency_name,agency_timezone\nRéseau de test,Europe/Paris',
   'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nH,Domicile de test,45.193,5.711\nG,Grenoble Gare de test,45.1914,5.7143\nC,Crolles de test,45.28364,5.88224',
@@ -33,6 +33,12 @@ function archive(line='TEST'){
   'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nAller,08:00:00,08:00:00,H,1\nAller,08:20:00,08:20:00,G,2\nRetour,10:10:00,10:10:00,G,1\nRetour,10:20:00,10:20:00,H,2\nJonction,10:25:00,10:25:00,G,1\nJonction,11:06:00,11:06:00,C,2',
   'calendar_dates.txt':'service_id,date,exception_type\nS,20261102,1'
  };
+ if(regional){
+  const scope=require('../fixtures/y51-sibra-scope-2026-10-31.json');
+  const stops=[scope.eligibleStops.find(s=>s.stopId.includes(':57539:')),scope.eligibleStops.find(s=>s.stopId.includes(':58436:')),scope.outsideStops[0]];
+  files['stops.txt']='stop_id,stop_name,stop_lat,stop_lon\n'+stops.map(s=>[s.stopId,s.name,s.lat,s.lon].join(',')).join('\n');
+  for(const [i,id] of ['H','G','C'].entries())files['stop_times.txt']=files['stop_times.txt'].replaceAll(','+id+',',','+stops[i].stopId+',');
+ }
  const locals=[],central=[];let offset=0;
  for(const [name,text] of Object.entries(files)){
   const filename=Buffer.from(name),plain=Buffer.from(text),bytes=zlib.deflateRawSync(plain),head=Buffer.alloc(30),entry=Buffer.alloc(46);
@@ -48,8 +54,8 @@ function archive(line='TEST'){
 }
 async function run(){
  await fs.mkdir(output,{recursive:true});
- const zip=archive(),sibraZip=archive('4'),errors=[],requests=[],gates=new Map(),workers=[],blockedWrites=[],regionalGates=[],activeWorkers=new Set(),abortedRequests=[];
- let holdRegional=false,railScenario=false,tripgoScenario=false,busLiveScenario=false;
+ const zip=archive(),sibraZip=archive('4'),regionalZip=archive('Y51',true),errors=[],requests=[],gates=new Map(),workers=[],blockedWrites=[],regionalGates=[],activeWorkers=new Set(),abortedRequests=[];
+ let holdRegional=false,railScenario=false,tripgoScenario=false,busLiveScenario=false,regionalPassScenario=false;
  const until=async(predicate,message)=>{const end=Date.now()+10000;while(!predicate()){if(Date.now()>end)throw Error(message);await new Promise(resolve=>setTimeout(resolve,20));}};
  const server=http.createServer(async(req,res)=>{
   try{
@@ -96,6 +102,14 @@ async function run(){
    for(const [key,value] of Object.entries({cp_session:{access_token:'browser-test-only',user_id:'browser-fixture',expires_at:Date.now()+86400000},
     cp_cache:{missions,alertes:[],reglages:settings,chargeLe:new Date().toISOString()},cp_preferences:{onglet:'agenda'},cp_plats_choisies:['DriiveMe'],cp_pause:{choix:'non'},cp_notif:{on:false,son:false}}))localStorage.setItem(key,JSON.stringify(value));
    window.CP_GTFS_AGENDA_RESOURCES=[{id:'browser-fixture',network:'Réseau de test',format:'GTFS',url:'https://gtfs-fixture.invalid/feed.zip',bounds:[44,5,46,7],timeZone:'Europe/Paris'}];
+   if(new URL(location.href).searchParams.has('regionalpass')){
+    missions=missions.slice(0,1);missions[0].from_city='Annecy';missions[0].to_city='Duingt';
+    missions[0].origin_address='12 rue Exemple 74000 Annecy';missions[0].destination_address='14 rue Exemple 74410 Duingt';
+    settings.domicile_ville='Annecy';settings.domicile_lat=45.9016985;settings.domicile_lng=6.1201612;
+    window.CP_GTFS_AGENDA_RESOURCES[0].datasetId='oura-haute-savoie';window.CP_GTFS_AGENDA_RESOURCES[0].url+='?regional=1';
+    localStorage.setItem('cp_cache',JSON.stringify({missions,alertes:[],reglages:settings,chargeLe:new Date().toISOString()}));
+    localStorage.removeItem('cp_gps');localStorage.removeItem('cp_tripgo_key');
+   }
    if(new URL(location.href).searchParams.has('sibrapass')){
     window.CP_GTFS_AGENDA_RESOURCES[0].datasetId='5bd9843e634f413220f7f04a';
     window.CP_GTFS_AGENDA_RESOURCES[0].url+='?sibra=1';
@@ -118,16 +132,16 @@ async function run(){
     const readPost=request.method()==='POST'&&['/rest/v1/rpc/mon_statut','/storage/v1/object/sign/apk/version.json'].includes(url.pathname);
     if(request.method()!=='GET'&&!readPost)blockedWrites.push({method:request.method(),path:url.pathname});
     const tripDay=busLiveScenario?'2026-10-31':'2026-11-02';
-    const backendMissions=tripgoScenario?[{...missions[0],pickup_start:tripDay+'T08:00:00+01:00',pickup_end:tripDay+'T08:00:00+01:00',delivery_end:tripDay+'T10:00:00+01:00',to_city:'Annecy',destination_address:'14 rue Exemple 74000 Annecy'}]:railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
-    const backendSettings=tripgoScenario?{...settings,domicile_lat:45.1914,domicile_lng:5.7143}:railScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}:settings;
+    const backendMissions=regionalPassScenario?[{...missions[0],from_city:'Annecy',to_city:'Duingt',origin_address:'12 rue Exemple 74000 Annecy',destination_address:'14 rue Exemple 74410 Duingt'}]:tripgoScenario?[{...missions[0],pickup_start:tripDay+'T08:00:00+01:00',pickup_end:tripDay+'T08:00:00+01:00',delivery_end:tripDay+'T10:00:00+01:00',to_city:'Annecy',destination_address:'14 rue Exemple 74000 Annecy'}]:railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
+    const backendSettings=regionalPassScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.9016985,domicile_lng:6.1201612}:tripgoScenario?{...settings,domicile_lat:45.1914,domicile_lng:5.7143}:railScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}:settings;
     return json(route,url.pathname.endsWith('/missions')?backendMissions:url.pathname.endsWith('/reglages')?[backendSettings]:[]);
    }
-   if(url.hostname==='gtfs-fixture.invalid')return route.fulfill({status:200,contentType:'application/zip',headers:{'access-control-allow-origin':'*'},body:url.searchParams.has('sibra')?sibraZip:zip});
+   if(url.hostname==='gtfs-fixture.invalid')return route.fulfill({status:200,contentType:'application/zip',headers:{'access-control-allow-origin':'*'},body:url.searchParams.has('regional')?regionalZip:url.searchParams.has('sibra')?sibraZip:zip});
    if(url.hostname==='api-adresse.data.gouv.fr'&&url.pathname.includes('/search')){
     const q=url.searchParams.get('q')||'',match=q.match(/\b(12|14|16|18)\b/),number=match?.[1];
     if(number){
      await new Promise(resolve=>{const list=gates.get(number)||[];list.push(resolve);gates.set(number,list);});
-     const point=tripgoScenario&&number==='14'?[6.1218,45.9019]:['16','18'].includes(number)?[5.88224,45.28364]:[5.7143,45.1914];
+     const point=regionalPassScenario&&number==='14'?[6.2018053,45.827708]:tripgoScenario&&number==='14'?[6.1218,45.9019]:['16','18'].includes(number)?[5.88224,45.28364]:[5.7143,45.1914];
      return json(route,{features:[{geometry:{coordinates:point},properties:{score:1,type:'housenumber',city:number==='16'?'Crolles':tripgoScenario&&number==='14'?'Annecy':'Grenoble'}}]}).catch(()=>{});
     }
     return json(route,{features:[]});
@@ -306,13 +320,31 @@ async function run(){
   assert.equal(await page.evaluate(()=>localStorage.getItem('cp_sibra_pass_v1')),null);
   assert.equal(await page.locator('[data-sibra-pass-cost]').evaluateAll(nodes=>nodes.some(x=>x.textContent)),false);
   await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'SIBRA pass worker must stop on close');
+  await page.close();regionalPassScenario=true;
+  page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
+  page.on('worker',worker=>{workers.push(worker.url());activeWorkers.add(worker);worker.on('close',()=>activeWorkers.delete(worker));});
+  await page.clock.setFixedTime(new Date('2026-10-31T08:00:00+01:00'));
+  await page.goto(origin+'?regionalpass=1',{waitUntil:'domcontentloaded'});
+  await page.locator('.mission').filter({hasText:'Duingt'}).first().click();await page.locator('#btnTransportsMission').click();
+  await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
+  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();
+  await release('14');await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('Y51'));
+  await page.locator('#cpSibraFareReference summary').click();
+  await page.locator('#cpSibraPassFrom').fill('2026-01-01');await page.locator('#cpSibraPassThrough').fill('2026-12-31');
+  await page.getByRole('button',{name:'Utiliser mon abonnement SIBRA',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelector('[data-sibra-pass-cost]')?.innerText.includes('Y51'));
+  assert.match(await page.locator('[data-gtfs-agenda]').innerText(),/Coût supplémentaire transport : 0,00 €/);
+  assert.match(await page.locator('[data-gtfs-agenda]').innerText(),/sous réserve d’abonnement valide/);
+  await page.locator('[data-sibra-pass-cost]').first().scrollIntoViewIfNeeded();
+  await page.screenshot({path:path.join(output,'mobile-y51-pass-applied.png')});
+  await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'Y51 scope worker must stop on close');
   assert.equal(relayUpstreamRequests,1,'Operator feed is read through the real relay once');
   assert.deepEqual(errors,[],'No uncaught browser script errors');
   assert.deepEqual(blockedWrites,[],'No account or mission writes');
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '5-minute minimum at exact pickup GPS, final walk required','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost'],
+    '5-minute minimum at exact pickup GPS, final walk required','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display'],
    relay:{crossOriginHttp:true,upstreamFixture:true,upstreamRequests:relayUpstreamRequests},regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){

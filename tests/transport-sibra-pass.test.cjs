@@ -34,3 +34,35 @@ test('mixed and overnight journeys keep unknown totals and account for each port
  assert.equal(pass.assess(null,subscription).additionalEUR,null);
  assert.equal(pass.describe(pass.assess(leg,null)),'');
 });
+
+const regional=require('./fixtures/y51-sibra-scope-2026-10-31.json');
+function regionalLeg(stops=regional.eligibleStops){
+ const leg={networkId:regional.networkId,line:'Y51',tripId:'recorded-stop-scope-example',
+  from:stops[0].stopId,to:stops.at(-1).stopId,
+  departure:'2026-11-02T10:00:00+01:00',arrival:'2026-11-02T10:40:00+01:00'};
+ leg.fareScopePath={...Object.fromEntries(['networkId','tripId','from','to','departure','arrival'].map(k=>[k,leg[k]])),stops:structuredClone(stops)};
+ return leg;
+}
+test('Y51 scope is conditional only for a complete GTFS portion within pinned Grand Annecy stops',()=>{
+ const leg=regionalLeg(),result=pass.assess(leg,subscription);
+ assert.equal(result.coveredLegs,1);assert.equal(result.additionalEUR,0);
+ assert.equal(result.breakdown[0].scopeSource,regional.timetableSource);
+ assert.equal(result.transportConfirmed,false);
+ assert.equal(pass.assess(regionalLeg([...regional.eligibleStops].reverse()),subscription).coveredLegs,1);
+});
+test('Y51 scope rejects outside intermediate stops, wrong feeds and stale or misbound evidence',()=>{
+ const source=regionalLeg();
+ for(const mutate of [
+  x=>x.fareScopePath=null,x=>x.networkId=pass.DATASET,x=>x.line='Y62',
+  x=>x.fareScopePath.tripId='another-trip',x=>x.fareScopePath.arrival='2026-11-02T11:00:00Z',
+  x=>x.fareScopePath.stops.splice(1,0,regional.outsideStops[0]),
+  x=>x.fareScopePath.stops[0].lat+=0.01,
+  x=>x.fareScopePath.stops[0].lat=String(x.fareScopePath.stops[0].lat),
+  x=>x.fareScopePath.stops[0].stopId='unknown',x=>x.fareScopePath.stops=[],
+  x=>x.fareScopePath.stops=Array(65).fill(x.fareScopePath.stops[0])
+ ]){const leg=structuredClone(source);mutate(leg);assert.equal(pass.assess(leg,subscription).additionalEUR,null);}
+ const outside=regionalLeg([regional.eligibleStops[0],regional.outsideStops[0]]);
+ assert.equal(pass.assess(outside,subscription).additionalEUR,null);
+ const future=regionalLeg();future.departure='2027-07-03T10:00:00+02:00';future.fareScopePath.departure=future.departure;
+ assert.equal(pass.assess(future,{active:true,from:'2026-01-01',through:'2027-12-31'}).additionalEUR,null);
+});

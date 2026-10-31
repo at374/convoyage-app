@@ -1935,7 +1935,7 @@
         'Les lignes régionales Y21, Y22, Y51, Y62, Y63 et 272 acceptent les titres SIBRA pour les trajets dans le Grand Annecy (hors SMS). ' +
         'Des arrêts supplémentaires Y21/Y22 sont précisés dans le règlement. Ne pas étendre cette couverture à toute la ligne. ' +
         '<a href="https://www.sibra.fr/voyages-reguliers/" target="_blank" rel="noopener noreferrer">Périmètre et abonnements</a>. ' +
-        'Renseignez les dates de votre abonnement ci-dessous pour les lignes SIBRA reconnues. Les portions régionales restent à vérifier.</p></details>' +
+        'Renseignez les dates de votre abonnement ci-dessous. Sur Y51, seules les portions reconnues d’Annecy à Duingt Église peuvent être incluses ; les autres portions régionales restent à vérifier.</p></details>' +
         '<div><strong>1. Aller au départ de mission</strong><div>' +
         esc(home || 'Domicile non renseigné') + ' → ' + esc(from || 'Départ non renseigné') +
         '</div><div class="doux">Prise en charge : ' + esc(formatParis(pickupDate)) +

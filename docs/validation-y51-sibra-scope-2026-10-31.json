@@ -1,0 +1,94 @@
+{
+  "checkedAt": "2026-10-31T18:13:04.722Z",
+  "method": "Fresh official archive downloaded separately, replayed through actual worker; public stop coordinates, no real mission",
+  "gtfsSource": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA",
+  "archiveSHA256": "a435f54f90f8746c099a0af4b36142f590c42170d3b2a6c7626984d7e3bbd97a",
+  "source": {
+    "datasetId": "oura-haute-savoie",
+    "resourceId": "oura-haute-savoie",
+    "network": "Cars Région Haute-Savoie",
+    "url": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA",
+    "updatedAt": null,
+    "loadedAt": "2026-10-31T18:13:04.643Z"
+  },
+  "queriedServiceDate": "2026-11-02",
+  "candidateCount": 5,
+  "conditionallyCoveredCount": 5,
+  "examples": [
+    {
+      "line": "Y51",
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1101972x1173394:LOC",
+      "departure": "2026-11-02T08:15:00.000Z",
+      "arrival": "2026-11-02T08:38:00.000Z",
+      "from": {
+        "stopId": "FR:74010:ZE:57539:HAUTExSAVOIE",
+        "name": "Gare Routiere",
+        "lat": 45.9016985,
+        "lon": 6.1201612
+      },
+      "to": {
+        "stopId": "FR:74108:ZE:58437:HAUTExSAVOIE",
+        "name": "Eglise",
+        "lat": 45.8276579,
+        "lon": 6.2022617
+      },
+      "stopCount": 7,
+      "assessment": {
+        "breakdown": [
+          {
+            "line": "Y51",
+            "covered": true,
+            "additionalEUR": 0,
+            "source": "https://www.sibra.fr/app/uploads/2026/07/Reglement_BUS_CARS_CGV_01072026_3.pdf",
+            "scopeSource": "https://annecy.transdev.com/wp-content/uploads/2026/07/Y51_FP_2026-2027_acy-abt_Vdef.pdf",
+            "reason": "included_conditionally"
+          }
+        ],
+        "coveredLegs": 1,
+        "additionalEUR": 0,
+        "conditional": true,
+        "transportConfirmed": false,
+        "sourceCheckedOn": "2026-10-31"
+      }
+    },
+    {
+      "line": "Y51",
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1101975x1173463:LOC",
+      "departure": "2026-11-02T09:15:00.000Z",
+      "arrival": "2026-11-02T09:43:00.000Z",
+      "from": {
+        "stopId": "FR:74010:ZE:57539:HAUTExSAVOIE",
+        "name": "Gare Routiere",
+        "lat": 45.9016985,
+        "lon": 6.1201612
+      },
+      "to": {
+        "stopId": "FR:74108:ZE:58437:HAUTExSAVOIE",
+        "name": "Eglise",
+        "lat": 45.8276579,
+        "lon": 6.2022617
+      },
+      "stopCount": 17,
+      "assessment": {
+        "breakdown": [
+          {
+            "line": "Y51",
+            "covered": true,
+            "additionalEUR": 0,
+            "source": "https://www.sibra.fr/app/uploads/2026/07/Reglement_BUS_CARS_CGV_01072026_3.pdf",
+            "scopeSource": "https://annecy.transdev.com/wp-content/uploads/2026/07/Y51_FP_2026-2027_acy-abt_Vdef.pdf",
+            "reason": "included_conditionally"
+          }
+        ],
+        "coveredLegs": 1,
+        "additionalEUR": 0,
+        "conditional": true,
+        "transportConfirmed": false,
+        "sourceCheckedOn": "2026-10-31"
+      }
+    }
+  ],
+  "transportConfirmed": false,
+  "personalPass": "Synthetic dates for validation; no card checked",
+  "androidDeviceTested": false
+}

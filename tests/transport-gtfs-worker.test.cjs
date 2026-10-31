@@ -4,7 +4,7 @@ const {Worker}=require('node:worker_threads');
 const path=require('node:path');
 const {createClient}=require('../transport-gtfs-worker-client.js');
 const {crc32}=require('../transport-gtfs-loader.js');
-function archive(transfers=false,tripCount=1,overnightSide=null){
+function archive(transfers=false,tripCount=1,overnightSide=null,regionalMode=null){
  const files={
   'agency.txt':'agency_name,agency_timezone\nFixture,Europe/Paris',
   'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nA,Start,45.9,6.1\nB,End,45.8,6.2',
@@ -33,6 +33,15 @@ function archive(transfers=false,tripCount=1,overnightSide=null){
   files['stop_times.txt']='trip_id,arrival_time,departure_time,stop_id,stop_sequence\n'+Array.from({length:tripCount},(_,i)=>
    `T${i},${clock(480+i)},${clock(480+i)},A,1\nT${i},${clock(490+i)},${clock(490+i)},B,2`).join('\n');
  }
+ if(regionalMode){
+  const fixture=require('./fixtures/y51-sibra-scope-2026-10-31.json');
+  const a=fixture.eligibleStops.find(s=>s.stopId.includes(':57539:'));
+  const b=fixture.eligibleStops.find(s=>s.stopId.includes(':58436:'));
+  const stops=regionalMode==='detour'?[a,fixture.outsideStops[0],b]:[a,b];
+  files['stops.txt']='stop_id,stop_name,stop_lat,stop_lon\n'+stops.map(s=>[s.stopId,s.name,s.lat,s.lon].join(',')).join('\n');
+  files['routes.txt']='route_id,route_short_name,route_type\nR,Y51,3';
+  files['stop_times.txt']='trip_id,arrival_time,departure_time,stop_id,stop_sequence\n'+stops.map((s,i)=>`T,11:${String(i*20).padStart(2,'0')}:00,11:${String(i*20).padStart(2,'0')}:00,${s.stopId},${i+1}`).join('\n');
+ }
  const local=[],directory=[];let offset=0;
  for(const [name,text] of Object.entries(files)){
   const filename=Buffer.from(name),body=Buffer.from(text),header=Buffer.alloc(30),entry=Buffer.alloc(46);
@@ -60,7 +69,7 @@ context.importScripts=(...names)=>{for(const name of names)vm.runInContext(fs.re
 vm.runInContext(fs.readFileSync(path.join(workerData.root,'transport-gtfs-worker.js'),'utf8'),context);
 parentPort.on('message',data=>context.onmessage({data}));`;
 function factory(mode){
- const thread=new Worker(bootstrap,{eval:true,workerData:{root:path.resolve(__dirname,'..'),bytes:archive(mode===true||mode==='overnight',mode==='dense'?120:1,mode==='overnight'?'first':null),secondBytes:mode==='overnight'?archive(true,1,'second'):null}});
+ const thread=new Worker(bootstrap,{eval:true,workerData:{root:path.resolve(__dirname,'..'),bytes:archive(mode===true||mode==='overnight',mode==='dense'?120:1,mode==='overnight'?'first':null,mode==='regional'?'inside':mode==='regional-detour'?'detour':null),secondBytes:mode==='overnight'?archive(true,1,'second'):null}});
  const adapter={postMessage:data=>thread.postMessage(data),terminate:()=>thread.terminate()};
  thread.on('message',data=>adapter.onmessage?.({data}));thread.on('error',error=>adapter.onerror?.(error));
  return adapter;
@@ -213,4 +222,22 @@ test('real worker finds a two-network interchange between explicit service dates
  assert.equal(answer.rows[0].transferMinutes,10);assert.equal(answer.rows[0].serviceConfirmed,false);
  assert.equal((await client.query({...query,date:'2026-11-03',connectionDates:['2026-11-02','2026-11-03']})).rows.length,0);
  await assert.rejects(client.query({...query,connectionDates:['2026-11-02','2026-11-04']}),/scope/);
+});
+
+test('real worker binds full Y51 fare scope path to its GTFS portion and preserves outside detours',async t=>{
+ const fixture=require('./fixtures/y51-sibra-scope-2026-10-31.json'),pass=require('../transport-sibra-pass.js');
+ const origin=fixture.eligibleStops.find(s=>s.stopId.includes(':57539:'));
+ const destination=fixture.eligibleStops.find(s=>s.stopId.includes(':58436:'));
+ for(const mode of ['regional','regional-detour']){
+  const client=createClient({workerFactory:()=>factory(mode)});t.after(()=>client.dispose());
+  await client.load({...resource,datasetId:'oura-haute-savoie'},{indexServiceDates:['2026-11-02']});
+  const result=await client.query({method:'missionJourneys',date:'2026-11-02',origin,destination,radiusMeters:100,
+   window:{earliestDeparture:'2026-11-02T10:00:00+01:00',latestArrival:'2026-11-02T13:00:00+01:00',marginMinutes:0},limit:10});
+  assert.equal(result.rows.length,1);
+  const row=result.rows[0];assert.equal(row.fareScopePath.tripId,row.tripId);
+  assert.equal(row.fareScopePath.stops.length,mode==='regional'?2:3);
+  const assessment=pass.assess(row,{active:true,from:'2026-01-01',through:'2026-12-31'});
+  assert.equal(assessment.additionalEUR,mode==='regional'?0:null);
+  assert.equal(row.serviceConfirmed,false);assert.equal(row.priceEUR,null);
+ }
 });
