@@ -48,6 +48,12 @@ jobs:
             const query=await fetch(base+'/transport-realtime/blablacar?url=https://example.org');
             assert.equal(query.status,400);
             assert.deepEqual(await query.json(),{error:'query_not_allowed'});
+            const method=await fetch(base+'/transport-realtime/blablacar',{method:'POST'});
+            assert.equal(method.status,405);
+            assert.equal(method.headers.get('allow'),'GET, HEAD, OPTIONS');
+            const head=await fetch(base+'/health',{method:'HEAD'});
+            assert.equal(head.status,200);
+            assert.equal(await head.text(),'');
             const missing=await fetch(base+'/not-a-route');
             assert.equal(missing.status,404);
           })().catch(error=>{console.error(error);process.exitCode=1;});
