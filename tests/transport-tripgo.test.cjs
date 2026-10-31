@@ -108,3 +108,15 @@ test('TripGo rejects an arrive-by pickup deadline later than the requested arriv
  await assert.rejects(api.plan({...options,arriveBy:true,latestArrival:'2026-11-02T10:00:01+01:00',apiKey:'f'.repeat(32),fetcher}),/Requête TripGo invalide/);
  assert.equal(calls,0);
 });
+
+test('TripGo excludes itineraries with unsafe transfer times and disconnected stops',()=>{
+ const overlap=clone();
+ const trip=overlap.groups[0].trips.find(t=>t.segments.length>1);
+ assert.ok(trip);
+ trip.segments[1].startTime=trip.segments[0].endTime-1;
+ const overlapping=api.parse(overlap,options);
+ assert.ok(overlapping.itineraries.length<api.parse(clone(),options).itineraries.length);
+ const disconnected=clone();
+ disconnected.segmentTemplates.forEach(t=>{if(t.type==='scheduled'&&t.from)t.from.lat+=0.01;});
+ assert.equal(api.parse(disconnected,options).itineraries.length,0);
+});
