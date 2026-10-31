@@ -118,3 +118,14 @@ test('realtime assessment tolerates missing task metadata without certifying tra
   assert.equal(result.realizable,false);
  }
 });
+
+test('realtime unsupported journeys do not contact upstream even with invalid task metadata',async()=>{
+ let calls=0;
+ const client=rt.createClient({now:()=>clock,fetcher:async()=>{calls++;throw Error('unexpected upstream call');}});
+ for(const task of [null,undefined,false]){
+  const result=await client.check({legs:[]},task);
+  assert.equal(result.status,'unsupported');
+  assert.equal(result.transportConfirmed,false);
+ }
+ assert.equal(calls,0);
+});
