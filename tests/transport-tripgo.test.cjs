@@ -116,6 +116,7 @@ test('TripGo excludes itineraries with unsafe transfer times and disconnected st
  trip.segments[1].startTime=trip.segments[0].endTime-1;
  const overlapping=api.parse(overlap,options);
  assert.equal(overlapping.itineraries.length,1,'the altered eligible trip is removed while the independent future service remains');
+ assert.equal(overlapping.itineraries[0].legs[1].line,'FlixBus 1789','the independent later bus must remain available');
  const disconnected=clone();
  disconnected.segmentTemplates.forEach(t=>{if(t.type==='scheduled'&&t.from)t.from.lat+=0.01;});
  assert.equal(api.parse(disconnected,options).itineraries.length,0);
