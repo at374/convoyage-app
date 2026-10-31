@@ -271,3 +271,24 @@ test('rejects invalid timeout values without issuing HTTP requests', async () =>
   }
   assert.equal(requests, 0);
 });
+test('cancelling one subscriber preserves a shared request until the last subscriber leaves',async()=>{
+  const a=new AbortController(),b=new AbortController();let requests=0,networkSignal;
+  const fetcher=(_,options)=>{requests++;networkSignal=options.signal;return new Promise((resolve,reject)=>{
+    options.signal.addEventListener('abort',()=>reject(new DOMException('Cancelled','AbortError')),{once:true});
+  });};
+  const first=routing.plan({...base,fetcher,signal:a.signal}),second=routing.plan({...base,fetcher,signal:b.signal});
+  a.abort();await assert.rejects(first,{name:'AbortError'});assert.equal(networkSignal.aborted,false);assert.equal(requests,1);
+  b.abort();await assert.rejects(second,{name:'AbortError'});assert.equal(networkSignal.aborted,true);
+});
+test('an aborted request never populates the cache when its fetcher returns late',async()=>{
+  const controller=new AbortController();let finish,requests=0;
+  const fetcher=()=>{requests++;return new Promise(resolve=>{finish=()=>resolve({ok:true,json:async()=>({data:{planConnection:{edges:[]}}})});});};
+  const first=routing.plan({...base,fetcher,signal:controller.signal});controller.abort();
+  await assert.rejects(first,{name:'AbortError'});finish();await new Promise(resolve=>setImmediate(resolve));
+  const next=routing.plan({...base,fetcher});assert.equal(requests,2);finish();await next;
+});
+test('an already cancelled regional operation never starts its fetch',async()=>{
+  const controller=new AbortController();controller.abort();let requests=0;
+  await assert.rejects(routing.plan({...base,signal:controller.signal,fetcher:async()=>{requests++;}}),{name:'AbortError'});
+  assert.equal(requests,0);
+});

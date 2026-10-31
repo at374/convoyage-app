@@ -2165,6 +2165,14 @@
       const regionalRefreshers = [];
       const regionalActive = () => panel.isConnected && !panel.hidden &&
         !$('feuille').hidden && $('btnTransportsMission') === bt;
+      const regionalControllers=new Set();
+      const regionalObserver=typeof MutationObserver==='function'?new MutationObserver(()=>{
+        if(!regionalActive()){
+          for(const controller of regionalControllers)controller.abort();
+          regionalControllers.clear();regionalObserver.disconnect();
+        }
+      }):null;
+      regionalObserver?.observe($('feuille'),{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
       const regionalPoint = gps => transportAddressPoint(gps) ?
         {lat:Number(gps.lat),lon:Number(gps.lng)} : null;
       const regionalHome = () => {
@@ -2173,23 +2181,25 @@
           {lat:Number(lat),lon:Number(lon)} : null;
       };
       const regionalSlot = (inputs, render) => {
-        let signature = null, previous = null;
+        let signature = null, previous = null, controller = null;
         const refresh = () => {
           if (!regionalActive()) return;
           const key = JSON.stringify(inputs());
           if (key === signature) return;
           signature = key;
+          controller?.abort();regionalControllers.delete(controller);
+          controller=new AbortController();regionalControllers.add(controller);
           previous?.remove();
           previous = document.createElement('div');
           previous.setAttribute('data-regional-slot', '');
           panel.appendChild(previous);
-          render(previous);
+          render(previous,controller.signal);
         };
         regionalRefreshers.push(refresh);
         refresh();
       };
       bt.cpRefreshRegional = () => regionalRefreshers.forEach(refresh => refresh());
-      regionalSlot(() => [regionalPoint(G.coordonnees(m,'destination')),regionalPoint(next && G.coordonnees(next,'origin')),deliveryDate,next?.pickup_start,securityMarginMin], panel => {
+      regionalSlot(() => [regionalPoint(G.coordonnees(m,'destination')),regionalPoint(next && G.coordonnees(next,'origin')),deliveryDate,next?.pickup_start,securityMarginMin], (panel,signal) => {
       // Regional journeys use a configured endpoint or the public M provider,
       // only when both mission endpoints have exact GPS.
       if (regionalEngineReady && regionalProviderReady && next && deliveryDate) {
@@ -2203,6 +2213,7 @@
           regionalStatus.textContent = 'Jonction régionale : recherche des correspondances…';
           panel.appendChild(regionalStatus);
           window.CPRegionalRouting.plan({
+            signal,
             endpoint: window.CP_REGIONAL_ROUTING_ENDPOINT,
             from: {lat: finishGps.lat, lon: finishGps.lng},
             to: {lat: nextGps.lat, lon: nextGps.lng},
@@ -2379,7 +2390,7 @@
       }
       // Regional return from the exact delivery point to the configured home
       // coordinate (which may only represent a city centre, not a door).
-      regionalSlot(() => [regionalPoint(G.coordonnees(m,'destination')),regionalHome(),deliveryDate], panel => {
+      regionalSlot(() => [regionalPoint(G.coordonnees(m,'destination')),regionalHome(),deliveryDate], (panel,signal) => {
       if (regionalEngineReady && regionalProviderReady && deliveryDate) {
         const finishGps = G.coordonnees(m, 'destination');
         const homeLat = Number(etat.reglages?.domicile_lat);
@@ -2395,6 +2406,7 @@
           returnStatus.textContent = 'Retour régional : recherche des itinéraires…';
           panel.appendChild(returnStatus);
           window.CPRegionalRouting.plan({
+            signal,
             endpoint: window.CP_REGIONAL_ROUTING_ENDPOINT,
             from: {lat:finishGps.lat, lon:finishGps.lng},
             to: {lat:homeLat, lon:homeLon},
@@ -2440,7 +2452,7 @@
       });
       // Regional outbound itinerary: use only a known home reference point
       // and the exact GPS pickup, with a 30-minute arrival buffer.
-      regionalSlot(() => [regionalHome(),regionalPoint(G.coordonnees(m,'origin')),pickupDate,securityMarginMin], panel => {
+      regionalSlot(() => [regionalHome(),regionalPoint(G.coordonnees(m,'origin')),pickupDate,securityMarginMin], (panel,signal) => {
       if (regionalEngineReady && regionalProviderReady && pickupDate) {
         const pickupGps = G.coordonnees(m, 'origin');
         const homeLat = Number(etat.reglages?.domicile_lat);
@@ -2457,6 +2469,7 @@
           panel.appendChild(outboundStatus);
           const earliest = new Date(Date.parse(pickupDate) - 6 * 3600000);
           window.CPRegionalRouting.plan({
+            signal,
             endpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
             from:{lat:homeLat,lon:homeLon},
             to:{lat:pickupGps.lat,lon:pickupGps.lng},

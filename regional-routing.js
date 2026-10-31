@@ -55,7 +55,14 @@
       Number(p.lat) >= 44.9 && Number(p.lat) <= 45.5 &&
       Number(p.lon) >= 5.3 && Number(p.lon) <= 6.1);
   }
-  async function planPublicM({from, to, departure, arrivalDeadline, fetcher, timeoutMs}) {
+  const abortError = () => new DOMException('Recherche régionale annulée','AbortError');
+  function linkCancellation(controller,signal){
+    const cancel=()=>controller.abort();
+    if(signal?.aborted)throw abortError();
+    signal?.addEventListener('abort',cancel,{once:true});
+    return ()=>signal?.removeEventListener('abort',cancel);
+  }
+  async function planPublicM({from, to, departure, arrivalDeadline, fetcher, timeoutMs, signal}) {
     if (!supportsPublic(from,to)) throw new Error('Hors perimetre Mobilites M');
     if (typeof fetcher !== 'function') throw new Error('Fetch indisponible');
     const boundary = new Date(arrivalDeadline || departure);
@@ -72,6 +79,7 @@
       arriveBy:String(!!arrivalDeadline),mode:'TRANSIT,WALK',numItineraries:'5'
     }).forEach(([key,value]) => url.searchParams.set(key,value));
     const controller = new AbortController();
+    const unlink=linkCancellation(controller,signal);
     const timer = setTimeout(() => controller.abort(),Number(timeoutMs));
     try {
       const response = await fetcher(url.href, {signal:controller.signal,
@@ -103,10 +111,10 @@
       }).filter(Boolean).slice(0,MAX_RESULTS);
       return {source:'Mobilités M',date:parts.year+'-'+parts.month+'-'+parts.day,
         updatedAt:new Date().toISOString(),itineraries,transportConfirmed:false,realtime:false};
-    } finally {clearTimeout(timer);}
+    } finally {clearTimeout(timer);unlink();}
   }
-  async function requestPlan({ endpoint, from, to, departure, arrivalDeadline, fetcher, timeoutMs = 12000 }) {
-    if (!endpoint) return planPublicM({from,to,departure,arrivalDeadline,fetcher,timeoutMs});
+  async function requestPlan({ endpoint, from, to, departure, arrivalDeadline, fetcher, timeoutMs = 12000, signal }) {
+    if (!endpoint) return planPublicM({from,to,departure,arrivalDeadline,fetcher,timeoutMs,signal});
     if (!validPoint(from) || !validPoint(to)) throw new Error('Coordonnees GPS requises');
     if (departure === null || departure === undefined ||
         !Number.isFinite(new Date(departure).getTime())) throw new Error('Date invalide');
@@ -146,6 +154,7 @@
       throw new Error('Delai de requete invalide');
     const timer = controller && typeof setTimeout === 'function' ?
       setTimeout(() => controller.abort(), Number(timeoutMs)) : null;
+    const unlink=controller?linkCancellation(controller,signal):()=>{};
     try {
       const response = await fetcher(endpoint, {
         method: 'POST', headers: {'Content-Type':'application/json'},
@@ -203,6 +212,7 @@
         transportConfirmed:false, realtime:false};
     } finally {
       if (timer !== null) clearTimeout(timer);
+      unlink();
     }
   }
   // Evaluate real routed itineraries against the mission's exact deadline.
@@ -237,6 +247,7 @@
   let nextFetcherId = 0;
   function copyResult(value) { return JSON.parse(JSON.stringify(value)); }
   async function plan(options) {
+    if(options.signal?.aborted)throw abortError();
     const fetcher = options.fetcher;
     if (typeof fetcher !== 'function') return requestPlan(options);
     if (!fetcherIds.has(fetcher)) fetcherIds.set(fetcher, ++nextFetcherId);
@@ -247,15 +258,32 @@
     for (const [k, entry] of recentPlans) if (entry.expires <= now) recentPlans.delete(k);
     if (options.refresh) recentPlans.delete(key);
     if (!options.refresh && recentPlans.has(key)) return copyResult(recentPlans.get(key).value);
-    if (pendingPlans.has(key)) return copyResult(await pendingPlans.get(key));
-    const pending = requestPlan(options).then(value => {
-      if (recentPlans.size >= 64) recentPlans.delete(recentPlans.keys().next().value);
-      recentPlans.set(key, {expires: Date.now() + 60000, value: copyResult(value)});
-      return value;
+    let entry=pendingPlans.get(key);
+    if(!entry||entry.controller.signal.aborted){
+      entry={controller:new AbortController(),users:new Set(),settled:false};
+      const current=entry;
+      current.promise=requestPlan({...options,signal:current.controller.signal}).then(value=>{
+        if(!current.controller.signal.aborted){
+          if(recentPlans.size>=64)recentPlans.delete(recentPlans.keys().next().value);
+          recentPlans.set(key,{expires:Date.now()+60000,value:copyResult(value)});
+        }
+        return value;
+      }).finally(()=>{current.settled=true;if(pendingPlans.get(key)===current)pendingPlans.delete(key);});
+      pendingPlans.set(key,current);
+    }
+    return new Promise((resolve,reject)=>{
+      const user={},signal=options.signal;let finished=false;
+      entry.users.add(user);
+      const cleanup=()=>{
+        entry.users.delete(user);signal?.removeEventListener('abort',cancel);
+        if(!entry.settled&&!entry.users.size){entry.controller.abort();if(pendingPlans.get(key)===entry)pendingPlans.delete(key);}
+      };
+      const cancel=()=>{if(finished)return;finished=true;cleanup();reject(abortError());};
+      signal?.addEventListener('abort',cancel,{once:true});
+      entry.promise.then(value=>{if(finished)return;finished=true;cleanup();resolve(copyResult(value));},
+        error=>{if(finished)return;finished=true;cleanup();reject(error);});
+      if(signal?.aborted)cancel();
     });
-    pendingPlans.set(key, pending);
-    try { return copyResult(await pending); }
-    finally { if (pendingPlans.get(key) === pending) pendingPlans.delete(key); }
   }
   const api = {plan, parseItinerary, validPoint, feasibleBefore, feasibleBetween, supportsPublic};
   root.CPRegionalRouting = api;
