@@ -76,7 +76,7 @@ async function readJSON(response,signal){
 async function plan(options){
  const apiKey=options.apiKey||getKey(),fetcher=options.fetcher||root.fetch;
  if(!/^[A-Za-z0-9_-]{16,128}$/.test(apiKey))throw Error('Clé TripGo privée manquante');
- if(!point(options.from)||!point(options.to)||!Number.isFinite(time(options.when))||typeof fetcher!=='function')throw Error('Requête TripGo invalide');
+ if(!point(options.from)||!point(options.to)||!Number.isFinite(time(options.when))||(options.latestArrival!==undefined&&!Number.isFinite(time(options.latestArrival)))||(options.latestArrival!==undefined&&time(options.latestArrival)<time(options.when)&&!options.arriveBy)||typeof fetcher!=='function')throw Error('Requête TripGo invalide');
  if(options.signal?.aborted)throw new DOMException('Annulé','AbortError');
  const key=JSON.stringify([apiKey,coord(options.from),coord(options.to),options.when,!!options.arriveBy,options.latestArrival]);
  if(!options.refresh&&cache.get(key)?.until>Date.now())return JSON.parse(JSON.stringify(cache.get(key).value));
