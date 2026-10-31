@@ -111,8 +111,8 @@ test('TripGo rejects an arrive-by pickup deadline later than the requested arriv
 
 test('TripGo excludes itineraries with unsafe transfer times and disconnected stops',()=>{
  const overlap=clone();
- const trip=overlap.groups[0].trips.find(t=>t.segments.length>1);
- assert.ok(trip);
+ const trip=overlap.groups[0].trips.find(t=>t.depart*1000>=Date.parse(options.when)&&t.segments.length>1);
+ assert.ok(trip,'a future itinerary must be selected to exercise the regression');
  trip.segments[1].startTime=trip.segments[0].endTime-1;
  const overlapping=api.parse(overlap,options);
  assert.ok(overlapping.itineraries.length<api.parse(clone(),options).itineraries.length);
