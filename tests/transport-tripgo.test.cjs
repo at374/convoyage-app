@@ -77,7 +77,6 @@ test('TripGo rejects impossible connection windows without contacting the provid
 
 test('Arrive-by pickup search may specify an earlier arrival deadline',async()=>{
  let calls=0;
- const fetcher=async()=>{calls++;return new Response(JSON.stringify(clone()));};
  const when='2026-11-02T11:47:34+01:00';
  const latestArrival='2026-11-02T11:42:34+01:00';
  const response=clone();response.query.arrive=when;delete response.query.depart;
