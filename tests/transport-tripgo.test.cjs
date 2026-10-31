@@ -73,3 +73,12 @@ test('TripGo rejects impossible connection windows without contacting the provid
  await assert.rejects(api.plan({...options,apiKey:'d'.repeat(32),fetcher,latestArrival:'not-a-date'}),/Requête TripGo invalide/);
  assert.equal(calls,0);
 });
+
+test('Arrive-by pickup search may specify an earlier arrival deadline',async()=>{
+ let calls=0;
+ const fetcher=async()=>{calls++;return new Response(JSON.stringify(clone()));};
+ const when='2026-11-02T11:47:34+01:00';
+ const latestArrival='2026-11-02T11:42:34+01:00';
+ await assert.rejects(api.plan({...options,apiKey:'e'.repeat(32),fetcher,arriveBy:true,when,latestArrival}),/Réponse TripGo liée à une autre recherche/);
+ assert.equal(calls,1,'valid arrive-by windows must reach TripGo even when deadline precedes pickup');
+});
