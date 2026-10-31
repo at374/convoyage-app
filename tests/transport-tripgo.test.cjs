@@ -119,4 +119,7 @@ test('TripGo excludes itineraries with unsafe transfer times and disconnected st
  const disconnected=clone();
  disconnected.segmentTemplates.forEach(t=>{if(t.type==='scheduled'&&t.from)t.from.lat+=0.01;});
  assert.equal(api.parse(disconnected,options).itineraries.length,0);
+ const missingTransfer=clone();
+ missingTransfer.groups[0].trips.forEach(t=>{if(t.depart*1000>=Date.parse(options.when))t.segments[1].startTime=t.segments[0].endTime-60;});
+ assert.equal(api.parse(missingTransfer,options).itineraries.length,0,'all eligible journeys with overlapping boarding transfers must be rejected');
 });
