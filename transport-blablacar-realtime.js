@@ -85,7 +85,7 @@ function assessJourney(feed,journey,task={},options={}){
 function createClient({fetcher=root.fetch,now=()=>Date.now(),endpoint=ENDPOINT,timeoutMs=endpoint===ENDPOINT?8000:10000}={}){
  const url=new URL(endpoint),local=['localhost','127.0.0.1','[::1]'].includes(url.hostname);
  if(url.username||url.password||url.search||url.hash||!(url.protocol==='https:'||url.protocol==='http:'&&local)||
-  (url.href!==ENDPOINT&&url.pathname!=='/transport-realtime/blablacar'))throw Error('Relais SIRI invalide');
+  (url.href!==ENDPOINT&&(url.pathname!=='/transport-realtime/blablacar'||url.port&&url.port!=='443'&&!local)))throw Error('Relais SIRI invalide');
  if(typeof fetcher!=='function'||typeof now!=='function'||!Number.isFinite(timeoutMs)||timeoutMs<=0||timeoutMs>30000)throw Error('Client SIRI invalide');
  let cached=null,cachedUntil=0,pending=null,unavailableUntil=0;
  async function download(signal){
