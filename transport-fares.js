@@ -5,7 +5,7 @@
   'use strict';
   function money(value){return typeof value==='number'&&Number.isFinite(value)&&value>=0?value:null;}
   function validForTravel(leg,travelDate){
-    if(!travelDate)return true;
+    if(travelDate==null)return true;
     const when=Date.parse(travelDate);
     if(!Number.isFinite(when))return false;
     const start=leg?.fareValidFrom?Date.parse(leg.fareValidFrom):NaN;
@@ -16,14 +16,20 @@
     const items=Array.isArray(legs)?legs:[];
     if(!items.length)return {totalEUR:null,known:false,breakdown:[],status:'Tarif non vérifié'};
     const breakdown=items.map(leg=>{
+      // A later boarding can fall on another day (or after a pass expires).
+      // The itinerary's date is only a fallback for legs without a departure.
+      const travelDate=leg?.departure??options.travelDate;
       // A numerical amount is not evidence: require an explicit verified source.
-      const price=leg?.fareVerified===true && typeof leg?.fareSource==='string' && leg.fareSource.trim() && validForTravel(leg,options.travelDate)?money(leg.verifiedPriceEUR):null;
-      const covered=(!options.travelDate || (leg?.passValidFrom && leg?.passValidUntil && validForTravel({fareValidFrom:leg.passValidFrom,fareValidUntil:leg.passValidUntil},options.travelDate)))&&leg?.passAccepted===true&&
+      const price=leg?.fareVerified===true && typeof leg?.fareSource==='string' && leg.fareSource.trim() && validForTravel(leg,travelDate)?money(leg.verifiedPriceEUR):null;
+      const covered=Boolean((travelDate==null || (leg?.passValidFrom && leg?.passValidUntil && validForTravel({fareValidFrom:leg.passValidFrom,fareValidUntil:leg.passValidUntil},travelDate)))&&leg?.passAccepted===true&&
         leg?.passProduct==='SIBRA'&&options.sibraPassActive===true&&
         leg?.passEligibilityVerified===true&&
-        typeof leg?.passEligibilitySource==='string'&&leg.passEligibilitySource.trim();
+        typeof leg?.passEligibilitySource==='string'&&leg.passEligibilitySource.trim());
       return {provider:leg?.provider||'Inconnu',amountEUR:covered?0:price,
-        passApplied:covered,verified:covered||price!==null};
+        passApplied:covered,verified:covered||price!==null,
+        source:covered?leg.passEligibilitySource:price!==null?leg.fareSource:null,
+        validFrom:covered?leg.passValidFrom||null:price!==null?leg.fareValidFrom||null:null,
+        validUntil:covered?leg.passValidUntil||null:price!==null?leg.fareValidUntil||null:null};
     });
     const known=breakdown.every(x=>x.verified);
     const totalEUR=known?Math.round(breakdown.reduce((n,x)=>n+x.amountEUR,0)*100)/100:null;

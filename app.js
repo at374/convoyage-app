@@ -1926,6 +1926,16 @@
       const nextOrigin = next && locationText(next.origin_address || next.from_address,
         next.from_city, next.from_department);
       panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div>' +
+        '<details id="cpSibraFareReference" class="doux" style="margin:8px 0"><summary>Tarifs et abonnement SIBRA — secteur Annecy</summary>' +
+        '<p>Repères consultés le 31/10/2026 : 1 voyage à 2,50 € à bord ou 2,00 € en achat digital / rechargement (support éventuel en supplément). ' +
+        'Ce sont des prix de titres, pas le prix total de cet itinéraire. ' +
+        '<a href="https://www.sibra.fr/voyages-occasionnels/" target="_blank" rel="noopener noreferrer">Titres et conditions actuels</a> · ' +
+        '<a href="https://www.sibra.fr/app/uploads/2025/12/Reglement_BUS_CARS_CGV_06012026_VDEF_compressed.pdf" target="_blank" rel="noopener noreferrer">Barème officiel, pages 4 et 6</a>.</p>' +
+        '<p>Un abonnement SIBRA personnel valide évite un billet supplémentaire sur les portions éligibles. ' +
+        'Les lignes régionales Y21, Y22, Y51, Y62, Y63 et 272 acceptent les titres SIBRA pour les trajets dans le Grand Annecy (hors SMS). ' +
+        'Des arrêts supplémentaires Y21/Y22 sont précisés dans le règlement. Ne pas étendre cette couverture à toute la ligne. ' +
+        '<a href="https://www.sibra.fr/voyages-reguliers/" target="_blank" rel="noopener noreferrer">Périmètre et abonnements</a>. ' +
+        'L’abonnement n’est pas encore déduit des prix affichés.</p></details>' +
         '<div><strong>1. Aller au départ de mission</strong><div>' +
         esc(home || 'Domicile non renseigné') + ' → ' + esc(from || 'Départ non renseigné') +
         '</div><div class="doux">Prise en charge : ' + esc(formatParis(pickupDate)) +

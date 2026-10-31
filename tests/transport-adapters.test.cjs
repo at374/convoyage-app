@@ -62,3 +62,13 @@ const retrieved=applyFareEvidence(bus,[{...evidence,fareRetrievedAt:'2026-10-01T
 assert.equal(retrieved[0].legs[0].fareRetrievedAt,'2026-10-01T10:00:00Z');
 assert.equal(withVerifiedFares(retrieved)[0].priceEUR,3);
 console.log('transport adapters: 46 assertions passed');
+
+require('node:test')('adapted overnight itinerary never reuses first-leg tariff validity',()=>{
+  const first={...datedLeg,departure:'2026-11-30T23:50:00+01:00'};
+  const second={...datedLeg,departure:'2026-12-01T00:10:00+01:00'};
+  const result=withVerifiedFares([{departure:first.departure,legs:[first,second]}])[0];
+  assert.equal(result.priceEUR,null);
+  assert.equal(result.fareStatus,'Tarif non vérifié');
+  assert.equal(result.fareBreakdown[0].amountEUR,4);
+  assert.equal(result.fareBreakdown[1].amountEUR,null);
+});

@@ -23,3 +23,42 @@ assert.equal(fare([eligible],{sibraPassActive:true,travelDate:'2026-11-02T10:00:
 assert.equal(fare([eligible],{sibraPassActive:true,travelDate:'2027-01-02T10:00:00+01:00'}).totalEUR,null);
 assert.equal(fare([sibra],{sibraPassActive:true,travelDate:'2026-11-02T10:00:00+01:00'}).totalEUR,null);
 console.log('transport fares: 19 assertions passed');
+
+const test=require('node:test');
+test('each leg uses its own boarding date across a tariff change',()=>{
+  const first={...dated,departure:'2026-11-30T23:50:00+01:00'};
+  const second={...dated,departure:'2026-12-01T00:10:00+01:00'};
+  const result=fare([first,second],{travelDate:first.departure});
+  assert.equal(result.totalEUR,null);
+  assert.equal(result.breakdown[0].amountEUR,8.5);
+  assert.equal(result.breakdown[1].verified,false);
+  assert.equal(result.breakdown[1].source,null);
+  assert.equal(result.breakdown[0].source,dated.fareSource);
+  assert.equal(result.breakdown[0].validUntil,dated.fareValidUntil);
+});
+test('SIBRA pass expiry is evaluated at each boarding, with strict booleans',()=>{
+  const first={...eligible,departure:'2026-12-31T23:50:00+01:00'};
+  const second={...eligible,departure:'2027-01-01T00:10:00+01:00'};
+  const result=fare([first,second],{sibraPassActive:true,travelDate:first.departure});
+  assert.equal(result.totalEUR,null);
+  assert.equal(result.breakdown[0].passApplied,true);
+  assert.equal(result.breakdown[0].verified,true);
+  assert.equal(result.breakdown[0].source,eligible.passEligibilitySource);
+  assert.equal(result.breakdown[1].passApplied,false);
+  assert.equal(result.breakdown[1].verified,false);
+});
+test('leg date takes precedence over a conflicting itinerary date',()=>{
+  assert.equal(fare([{...dated,departure:'2026-12-01T12:00:00+01:00'}],{travelDate:'2026-11-02T12:00:00+01:00'}).known,false);
+  assert.equal(fare([{...dated,departure:'2026-11-02T12:00:00+01:00'}],{travelDate:'2026-12-01T12:00:00+01:00'}).known,true);
+  assert.equal(fare([{...dated,departure:'invalid'}],{travelDate:'2026-11-02T12:00:00+01:00'}).known,false);
+  assert.equal(fare([{...dated,departure:''}],{travelDate:'2026-11-02T12:00:00+01:00'}).known,false);
+  assert.equal(fare([{...eligible,departure:''}],{sibraPassActive:true}).known,false);
+  assert.equal(fare([{...dated,departure:null}],{travelDate:'2026-11-02T12:00:00+01:00'}).known,true);
+});
+test('expired pass falls back to an independently valid paid fare',()=>{
+  const leg={...eligible,departure:'2027-01-01T00:10:00+01:00',fareValidFrom:'2027-01-01T00:00:00+01:00',fareValidUntil:'2027-01-31T23:59:59+01:00'};
+  const result=fare([leg],{sibraPassActive:true});
+  assert.equal(result.totalEUR,2);
+  assert.equal(result.breakdown[0].passApplied,false);
+  assert.equal(result.breakdown[0].source,leg.fareSource);
+});

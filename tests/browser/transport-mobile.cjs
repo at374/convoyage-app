@@ -163,6 +163,16 @@ async function run(){
   assert.equal(buttonColour,'rgb(205, 234, 255)','The existing light-blue transport button is preserved');
   await page.locator('#btnTransportsMission').click();
   await page.locator('#cpTransportMissionDetails').waitFor();
+  const sibraReference=page.locator('#cpSibraFareReference');
+  await sibraReference.locator('summary').click();
+  assert.match(await sibraReference.innerText(),/2,50 €.*2,00 €/);
+  assert.match(await sibraReference.innerText(),/pas le prix total/);
+  assert.match(await sibraReference.innerText(),/272.*Grand Annecy/);
+  assert.match(await sibraReference.innerText(),/pas encore déduit des prix affichés/);
+  assert.equal(await sibraReference.locator('a[href="https://www.sibra.fr/voyages-reguliers/"]').count(),1);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await page.screenshot({path:path.join(output,'mobile-sibra-fares.png')});
+  await sibraReference.locator('summary').click();
   await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
   await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();
   await page.locator('#cpTransportMissionDetails').waitFor();
@@ -263,7 +273,7 @@ async function run(){
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '5-minute minimum at exact pickup GPS, final walk required','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines'],
+    '5-minute minimum at exact pickup GPS, final walk required','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines'],
    relay:{crossOriginHttp:true,upstreamFixture:true,upstreamRequests:relayUpstreamRequests},regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){
