@@ -124,3 +124,8 @@ test('TripGo excludes itineraries with unsafe transfer times and disconnected st
  missingTransfer.groups[0].trips.forEach(t=>{if(t.depart*1000>=Date.parse(options.when))t.segments[1].startTime=t.segments[0].endTime-60;});
  assert.equal(api.parse(missingTransfer,options).itineraries.length,0,'all eligible journeys with overlapping boarding transfers must be rejected');
 });
+
+test('TripGo parser refuses contradictory mission windows even for cached or fixture responses',()=>{
+ assert.throws(()=>api.parse(clone(),{...options,latestArrival:'2026-11-02T09:59:59+01:00'}),/Fenêtre TripGo invalide/);
+ assert.throws(()=>api.parse(clone(),{...options,arriveBy:true,latestArrival:'2026-11-02T10:00:01+01:00'}),/Fenêtre TripGo invalide/);
+});
