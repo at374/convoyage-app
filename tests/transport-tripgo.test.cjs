@@ -41,3 +41,13 @@ test('TripGo preserves provider alerts, rejects impossible dates and bounds decl
  assert.throws(()=>api.parse(data,{...options,when:'2026-02-30T10:00:00Z'}),/Fenêtre/);
  await assert.rejects(api.plan({...options,apiKey:'c'.repeat(32),fetcher:async()=>new Response('{}',{headers:{'content-length':'2000001'}})}),/trop grande/);
 });
+
+test('Agenda pickup requires a five-minute arrival buffer at the exact destination',()=>{
+ const pickup=Date.parse('2026-11-02T11:47:34+01:00');
+ const deadline=new Date(pickup-5*60000).toISOString();
+ const onTime=api.parse(clone(),{...options,latestArrival:deadline});
+ assert.equal(onTime.itineraries.length,1,'arrival exactly five minutes before pickup is permitted');
+ const earlierPickup=new Date(pickup-1000);
+ const tooLate=api.parse(clone(),{...options,latestArrival:new Date(earlierPickup-5*60000).toISOString()});
+ assert.equal(tooLate.itineraries.length,0,'arrival with less than five minutes is rejected');
+});
