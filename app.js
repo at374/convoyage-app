@@ -2399,7 +2399,7 @@
           });
         });
         if (pickupDate) railSearch('Aller',()=>({fromStation:homeStation(),toStation:missionStation(m,'origin'),
-          when:new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString(),arriveBy:true}));
+          when:new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString(),arriveBy:true,latestArrival:new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString()}));
         if (deliveryDate) railSearch('Retour',()=>({fromStation:missionStation(m,'destination'),toStation:homeStation(),when:deliveryDate,arriveBy:false}));
         if (next && deliveryDate) railSearch('Jonction',()=>({fromStation:missionStation(m,'destination'),
           toStation:missionStation(next,'origin'),when:deliveryDate,arriveBy:false,
