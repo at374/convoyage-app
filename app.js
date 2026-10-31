@@ -2563,7 +2563,7 @@
                 ' · raccordement aux coordonnées : '+Math.ceil(result.evidence.startGapMeters)+' m / '+Math.ceil(result.evidence.endGapMeters)+' m (accès physique à vérifier)'+
                 (result.alerts.length?' · Alertes fournisseur : '+result.alerts.join(' ; '):'');
               const proof=document.createElement('span');
-              const renderProof=confirmed=>{proof.textContent=' · Preuves manquantes : '+result.evidence.missing.filter(item=>!confirmed||!item.startsWith('circulation')).join(', ')+'. Transport non confirmé — vérifiez vous-même.';};
+              const renderProof=confirmed=>{proof.textContent=' · Preuves manquantes : '+result.evidence.missing.filter(item=>!confirmed||result.legs.filter(leg=>String(leg.mode||'').startsWith('pt_pub')).length!==1||!item.startsWith('circulation')).join(', ')+'. Transport non confirmé — vérifiez vous-même.';};
               renderProof(false);line.appendChild(proof);status.appendChild(line);
               if(window.CPBlaBlaRealtime&&Array.isArray(result.legs)&&result.legs.some(window.CPBlaBlaRealtime.eligible)){
                 const live=document.createElement('span');live.textContent=' · Prévisions BlaBlaCar Bus : recherche auprès de l’opérateur…';line.appendChild(live);
