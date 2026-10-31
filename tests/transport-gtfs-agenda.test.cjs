@@ -514,3 +514,15 @@ test('SIBRA pass updates existing portion costs without reloading or querying GT
   assert.doesNotMatch(target.textContent,/Abonnement SIBRA déclaré/);
  }finally{global.CPSibraPass=previous;}
 });
+
+test('dated Y51 references are displayed separately from confirmed fares and provider failures preserve timetables',async()=>{
+ const previous=global.CPTY51Fares;
+ try{
+  global.CPTY51Fares={reference:()=>({}),describe:()=>' · Référence Y51 : 8,90 € hors abonnement ; à revérifier avant achat.',SOURCE:'https://example.org/official.pdf'};
+  const target=panel();await agenda.mount(target,{tasks:[task],walkingRouterFactory:()=>null,clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[row()],truncated:false}),dispose(){}})}).done;
+  assert.match(target.textContent,/Référence Y51 : 8,90 €/);assert.match(target.textContent,/Transport non confirmé/);
+  global.CPTY51Fares.reference=()=>{throw Error('tariff unavailable');};
+  const fallback=panel();await agenda.mount(fallback,{tasks:[task],walkingRouterFactory:()=>null,clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[row()],truncated:false}),dispose(){}})}).done;
+  assert.match(fallback.textContent,/Retour : 1 horaire/);assert.doesNotMatch(fallback.textContent,/Référence Y51/);
+ }finally{global.CPTY51Fares=previous;}
+});

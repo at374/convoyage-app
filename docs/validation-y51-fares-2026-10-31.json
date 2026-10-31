@@ -1,0 +1,161 @@
+{
+  "checkedAt": "2026-10-31T20:39:46.416Z",
+  "method": "Fresh official GTFS archive replayed through actual worker; public stop coordinates, no real mission",
+  "gtfsSource": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA",
+  "archiveSHA256": "a435f54f90f8746c099a0af4b36142f590c42170d3b2a6c7626984d7e3bbd97a",
+  "source": {
+    "datasetId": "oura-haute-savoie",
+    "resourceId": "oura-haute-savoie",
+    "network": "Cars Région Haute-Savoie",
+    "url": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA",
+    "updatedAt": null,
+    "loadedAt": "2026-10-31T20:39:46.339Z"
+  },
+  "fareSource": "https://annecy.transdev.com/wp-content/uploads/2021/04/AURA-FICHES-TARIFAIRES-2026-Y51_mars-2026.pdf",
+  "pdfSHA256": "7989991c098b6acdb48898f56e18158577a227a9351d03542e61593270d02551",
+  "queriedServiceDate": "2026-11-02",
+  "origin": {
+    "name": "Albertville École Saint-François, direction Annecy",
+    "lat": 45.6696889,
+    "lon": 6.3890125
+  },
+  "destination": {
+    "name": "Annecy Gare Routière",
+    "lat": 45.9016985,
+    "lon": 6.1201612
+  },
+  "radiusMeters": 50,
+  "candidateCount": 3,
+  "matchedReferenceCount": 3,
+  "examples": [
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1101995x1173554:LOC",
+      "departure": "2026-11-02T10:48:00.000Z",
+      "arrival": "2026-11-02T12:15:00.000Z",
+      "from": "FR:73011:ZE:58901:HAUTExSAVOIE",
+      "to": "FR:74010:ZE:57539:HAUTExSAVOIE",
+      "scopeStops": 35,
+      "reference": {
+        "portions": [
+          {
+            "zone": "4",
+            "amountEUR": 8.9,
+            "digitalAlternativeEUR": null,
+            "fromArea": "Albertville",
+            "toArea": "Annecy",
+            "product": "1 voyage, plein tarif, hors abonnement",
+            "source": "https://annecy.transdev.com/wp-content/uploads/2021/04/AURA-FICHES-TARIFAIRES-2026-Y51_mars-2026.pdf",
+            "effectiveFrom": "2026-03-01",
+            "checkedOn": "2026-10-31",
+            "confirmedCurrentFare": false
+          }
+        ],
+        "confirmedCurrentFare": false
+      },
+      "sibraAssessment": {
+        "breakdown": [
+          {
+            "line": "Y51",
+            "covered": false,
+            "additionalEUR": null,
+            "source": null,
+            "scopeSource": null,
+            "reason": "scope_unverified"
+          }
+        ],
+        "coveredLegs": 0,
+        "additionalEUR": null,
+        "conditional": true,
+        "transportConfirmed": false,
+        "sourceCheckedOn": "2026-10-31"
+      }
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1103240x1175525:LOC",
+      "departure": "2026-11-02T11:18:00.000Z",
+      "arrival": "2026-11-02T12:45:00.000Z",
+      "from": "FR:73011:ZE:58901:HAUTExSAVOIE",
+      "to": "FR:74010:ZE:57539:HAUTExSAVOIE",
+      "scopeStops": 45,
+      "reference": {
+        "portions": [
+          {
+            "zone": "4",
+            "amountEUR": 8.9,
+            "digitalAlternativeEUR": null,
+            "fromArea": "Albertville",
+            "toArea": "Annecy",
+            "product": "1 voyage, plein tarif, hors abonnement",
+            "source": "https://annecy.transdev.com/wp-content/uploads/2021/04/AURA-FICHES-TARIFAIRES-2026-Y51_mars-2026.pdf",
+            "effectiveFrom": "2026-03-01",
+            "checkedOn": "2026-10-31",
+            "confirmedCurrentFare": false
+          }
+        ],
+        "confirmedCurrentFare": false
+      },
+      "sibraAssessment": {
+        "breakdown": [
+          {
+            "line": "Y51",
+            "covered": false,
+            "additionalEUR": null,
+            "source": null,
+            "scopeSource": null,
+            "reason": "scope_unverified"
+          }
+        ],
+        "coveredLegs": 0,
+        "additionalEUR": null,
+        "conditional": true,
+        "transportConfirmed": false,
+        "sourceCheckedOn": "2026-10-31"
+      }
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1103240x1175534:LOC",
+      "departure": "2026-11-02T12:58:00.000Z",
+      "arrival": "2026-11-02T14:30:00.000Z",
+      "from": "FR:73011:ZE:58901:HAUTExSAVOIE",
+      "to": "FR:74010:ZE:57539:HAUTExSAVOIE",
+      "scopeStops": 45,
+      "reference": {
+        "portions": [
+          {
+            "zone": "4",
+            "amountEUR": 8.9,
+            "digitalAlternativeEUR": null,
+            "fromArea": "Albertville",
+            "toArea": "Annecy",
+            "product": "1 voyage, plein tarif, hors abonnement",
+            "source": "https://annecy.transdev.com/wp-content/uploads/2021/04/AURA-FICHES-TARIFAIRES-2026-Y51_mars-2026.pdf",
+            "effectiveFrom": "2026-03-01",
+            "checkedOn": "2026-10-31",
+            "confirmedCurrentFare": false
+          }
+        ],
+        "confirmedCurrentFare": false
+      },
+      "sibraAssessment": {
+        "breakdown": [
+          {
+            "line": "Y51",
+            "covered": false,
+            "additionalEUR": null,
+            "source": null,
+            "scopeSource": null,
+            "reason": "scope_unverified"
+          }
+        ],
+        "coveredLegs": 0,
+        "additionalEUR": null,
+        "conditional": true,
+        "transportConfirmed": false,
+        "sourceCheckedOn": "2026-10-31"
+      }
+    }
+  ],
+  "transportConfirmed": false,
+  "confirmedCurrentFare": false,
+  "androidDeviceTested": false
+}
