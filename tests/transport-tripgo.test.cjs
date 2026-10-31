@@ -101,3 +101,10 @@ test('Return transport cannot depart before vehicle delivery is completed',()=>{
  const afterLastDeparture=api.parse(clone(),{...options,when:'2026-11-02T15:00:00+01:00'});
  assert.equal(afterLastDeparture.itineraries.length,0,'no service should be suggested when every recorded departure has already passed');
 });
+
+test('TripGo rejects an arrive-by pickup deadline later than the requested arrival before contacting provider',async()=>{
+ let calls=0;
+ const fetcher=async()=>{calls++;return new Response(JSON.stringify(clone()));};
+ await assert.rejects(api.plan({...options,arriveBy:true,latestArrival:'2026-11-02T10:00:01+01:00',apiKey:'f'.repeat(32),fetcher}),/Requête TripGo invalide/);
+ assert.equal(calls,0);
+});
