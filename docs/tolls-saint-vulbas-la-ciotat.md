@@ -34,3 +34,13 @@ Le tracé public ne doit pas déclencher La Boisse système ouvert. Plusieurs po
 - Test navigateur isolé du composant réel avec fixture enregistrée et fichiers locaux; ni mission de production, ni authentification, ni disponibilité en direct. Aucun test sur téléphone Android physique et aucun déploiement.
 
 La branche péages est indépendante de la PR transports #170 et part de `main` b6043b5742a56eca42bcc3e25b4d4af62c7d6246, qui contient des corrections péages plus récentes.
+
+## Suite — raccordement des gares ministérielles
+
+`scripts/connect-toll-stations.cjs --write` raccorde les tarifs existants au fichier ministériel local, sans appel réseau. Les noms doivent coïncider après normalisation, ne représenter qu'un seul libellé tarifaire et les points doivent être valides et regroupés dans un rayon de 1 km du premier point. Les homonymes distants et coordonnées invalides sont refusés. Les gares existantes, prix et points de vigilance ne sont jamais supprimés. Chaque ajout conserve la source, les noms officiels et identifiants routiers; `crossingConfirmed: false` rappelle que la position ne prouve pas un passage.
+
+13 gares ajoutées: Auriol, Bourges, Cagnes Est, Carnoules, Cassis, Fontenay-sur-Loing, Fréjus Est, Gignac, Monts-Sorigny, Saint-Hilaire-les-Andrésis, Saint-Jean-d'Angély, Savigny-sur-Clairis, Tours Nord. Le rapprochement est idempotent sur les données présentes. Il utilise la version ministérielle déjà dans le dépôt, qui n'est pas un contrôle en temps réel des ouvrages.
+
+Après ajout: **18 844 clés tarifaires chargeables**, contre 18 314 au premier commit de cette PR, soit **530 nouvelles clés sans doublons**. 15 129 lignes overlay raccordables contre 14 595; la différence de 534 lignes comprend des doublons et ne doit pas être annoncée comme 534 relations distinctes. Les libellés non résolus passent de 306 à **293**. Cagnes Est possède encore un tarif dont l'autre extrémité manque: une gare localisée ne garantit pas que toutes ses relations soient calculables.
+
+Validation locale après ajout: **32 tests Node**, **2 tests Python**, Chromium mobile avec vrai worker puis secours direct, tous réussis. Les tests comparent également toutes les nouvelles coordonnées au fichier ministériel, vérifient les rejets d'homonymes distants, l'idempotence et le maintien du refus d'un total partiel vers La Ciotat. Aucun nouveau test sur téléphone Android physique ni déploiement.

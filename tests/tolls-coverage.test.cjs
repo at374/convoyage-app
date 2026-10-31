@@ -75,3 +75,27 @@ test('rendered toll explanation names missing sections without claiming a total'
   assert.doesNotMatch(html,/Aprr Area Ouvert Boisse|Classe 1|rd gros/);
   assert.equal(state,'bkRenKo');
 });
+test('ministry join preserves uncertainty, rejects distant homonyms and is idempotent',()=>{
+  const {candidates}=require('../scripts/connect-toll-stations.cjs');
+  const base={g:[]},o={gares:[],paires:[['TEST','OTHER',1,2,10]]};
+  assert.equal(candidates(base,o,{d:[['Test','A1',48,2],['TEST','A2',49,3]]}).length,0);
+  assert.equal(candidates(base,o,{d:[['Test','A1',null,2]]}).length,0);
+  const small={d:[['Test','A1',48,2],['Test','A1',48.0001,2.0001]]};
+  const added=candidates(base,o,small);assert.equal(added.length,1);
+  assert.equal(added[0].provenance.crossingConfirmed,false);
+  assert.equal(candidates(base,{...o,gares:added},small).length,0);
+  assert.equal(candidates(read('peages-aprr.json'),read('peages-overlay.json'),read('data/gares-peage-officiel.json')).length,0);
+});
+test('all 13 connected stations retain exact ministry coordinates and stored tariff references',async()=>{
+  const o=read('peages-overlay.json'),m=read('data/gares-peage-officiel.json'),{api}=load(),p=await api.chargerPeages(),ix=api.indexGares(p.g);
+  const added=o.gares.filter(g=>g.provenance?.local==='data/gares-peage-officiel.json');
+  assert.equal(added.length,13);
+  for(const g of added){
+    assert.ok(ix(g.nom)>=0);
+    assert.equal(g.provenance.crossingConfirmed,false);
+    for(const point of g.points)assert.ok(m.d.some(r=>r[2]===point[0]&&r[3]===point[1]&&g.provenance.officialNames.includes(r[0])));
+    assert.ok(o.paires.some(q=>q.slice(0,2).includes(g.nom)),'station must retain a stored tariff: '+g.nom);
+  }
+  // Merely adding Cassis coordinates cannot override the unresolved route guard.
+  const {sh,tms}=route(api);assert.equal(api.prixExact(p,sh,tms,fixture.summary.length),null);
+});
