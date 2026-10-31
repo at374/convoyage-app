@@ -7,6 +7,7 @@ const {chromium,devices}=require('playwright');
 const {crc32}=require('../../transport-gtfs-loader');
 const official=require('../fixtures/mobilites-m-grenoble-crolles-2026-10-30.json');
 const railFixture=require('../fixtures/sncf-annecy-grenoble-2026-11-02.json');
+const tripgoFixture=require('../fixtures/tripgo-annecy-grenoble-2026-10-31.json');
 const root=path.resolve(__dirname,'../..');
 const output=path.resolve(process.env.TRANSPORT_BROWSER_OUTPUT||path.join(root,'tmp/transport-browser'));
 const missions=[
@@ -45,7 +46,7 @@ function archive(){
 async function run(){
  await fs.mkdir(output,{recursive:true});
  const zip=archive(),errors=[],requests=[],gates=new Map(),workers=[],blockedWrites=[],regionalGates=[],activeWorkers=new Set(),abortedRequests=[];
- let holdRegional=false,railScenario=false;
+ let holdRegional=false,railScenario=false,tripgoScenario=false;
  const until=async(predicate,message)=>{const end=Date.now()+10000;while(!predicate()){if(Date.now()>end)throw Error(message);await new Promise(resolve=>setTimeout(resolve,20));}};
  const server=http.createServer(async(req,res)=>{
   try{
@@ -72,6 +73,12 @@ async function run(){
     settings.domicile_ville='Annecy';settings.domicile_lat=45.902047;settings.domicile_lng=6.121826;
     localStorage.removeItem('cp_gps');
    }
+   if(new URL(location.href).searchParams.has('tripgo')){
+    missions=missions.slice(0,1);missions[0].pickup_start=missions[0].pickup_end='2026-11-02T08:00:00+01:00';missions[0].delivery_end='2026-11-02T10:00:00+01:00';
+    missions[0].to_city='Annecy';missions[0].destination_address='14 rue Exemple 74000 Annecy';
+    settings.domicile_ville='Grenoble';settings.domicile_lat=45.1914;settings.domicile_lng=5.7143;
+    localStorage.removeItem('cp_gps');localStorage.removeItem('cp_tripgo_key');
+   }
    for(const [key,value] of Object.entries({cp_session:{access_token:'browser-test-only',user_id:'browser-fixture',expires_at:Date.now()+86400000},
     cp_cache:{missions,alertes:[],reglages:settings,chargeLe:new Date().toISOString()},cp_preferences:{onglet:'agenda'},cp_plats_choisies:['DriiveMe'],cp_pause:{choix:'non'},cp_notif:{on:false,son:false}}))localStorage.setItem(key,JSON.stringify(value));
    window.CP_GTFS_AGENDA_RESOURCES=[{id:'browser-fixture',network:'Réseau de test',format:'GTFS',url:'https://gtfs-fixture.invalid/feed.zip',bounds:[44,5,46,7],timeZone:'Europe/Paris'}];
@@ -90,8 +97,8 @@ async function run(){
     if(url.pathname.startsWith('/functions/'))return route.fulfill({status:404,headers:{'access-control-allow-origin':'*'},body:'No notification backend in browser fixtures'});
     const readPost=request.method()==='POST'&&['/rest/v1/rpc/mon_statut','/storage/v1/object/sign/apk/version.json'].includes(url.pathname);
     if(request.method()!=='GET'&&!readPost)blockedWrites.push({method:request.method(),path:url.pathname});
-    const backendMissions=railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
-    const backendSettings=railScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}:settings;
+    const backendMissions=tripgoScenario?[{...missions[0],pickup_start:'2026-11-02T08:00:00+01:00',pickup_end:'2026-11-02T08:00:00+01:00',delivery_end:'2026-11-02T10:00:00+01:00',to_city:'Annecy',destination_address:'14 rue Exemple 74000 Annecy'}]:railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
+    const backendSettings=tripgoScenario?{...settings,domicile_lat:45.1914,domicile_lng:5.7143}:railScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}:settings;
     return json(route,url.pathname.endsWith('/missions')?backendMissions:url.pathname.endsWith('/reglages')?[backendSettings]:[]);
    }
    if(url.hostname==='gtfs-fixture.invalid')return route.fulfill({status:200,contentType:'application/zip',headers:{'access-control-allow-origin':'*'},body:zip});
@@ -99,8 +106,8 @@ async function run(){
     const q=url.searchParams.get('q')||'',match=q.match(/\b(12|14|16|18)\b/),number=match?.[1];
     if(number){
      await new Promise(resolve=>{const list=gates.get(number)||[];list.push(resolve);gates.set(number,list);});
-     const point=['16','18'].includes(number)?[5.88224,45.28364]:[5.7143,45.1914];
-     return json(route,{features:[{geometry:{coordinates:point},properties:{score:1,type:'housenumber',city:number==='16'?'Crolles':'Grenoble'}}]});
+     const point=tripgoScenario&&number==='14'?[6.1218,45.9019]:['16','18'].includes(number)?[5.88224,45.28364]:[5.7143,45.1914];
+     return json(route,{features:[{geometry:{coordinates:point},properties:{score:1,type:'housenumber',city:number==='16'?'Crolles':tripgoScenario&&number==='14'?'Annecy':'Grenoble'}}]}).catch(()=>{});
     }
     return json(route,{features:[]});
    }
@@ -109,6 +116,11 @@ async function run(){
     if(holdRegional)await new Promise(resolve=>regionalGates.push(resolve));
     const actual=url.searchParams.get('fromPlace')===official.request.fromPlace&&url.searchParams.get('toPlace')===official.request.toPlace&&url.searchParams.get('arriveBy')==='false';
     return json(route,actual?official.response:{plan:{itineraries:[]}}).catch(()=>{});
+   }
+   if(url.hostname==='api.tripgo.com'){
+    assert.equal(request.headers()['x-tripgo-key'],'a'.repeat(32),'Only a dummy browser-fixture key is used');
+    if(url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793610000')return json(route,tripgoFixture.response);
+    return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Outside recorded test query'});
    }
    if(url.hostname==='transport.opendata.ch')return json(route,{connections:[]});
    if(/valhalla/.test(url.hostname))return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Unavailable in deterministic browser test'});
@@ -190,12 +202,29 @@ async function run(){
   await page.screenshot({path:path.join(output,'mobile-annecy-grenoble.png')});
   await page.locator('#fermer').click();
   await until(()=>activeWorkers.size===0,'Rail scenario worker must stop on close');
+  // Configure the new client through the real UI, using a dummy key and public fixture.
+  railScenario=false;tripgoScenario=true;
+  await page.goto(origin+'?tripgo=1',{waitUntil:'domcontentloaded'});
+  await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();
+  await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
+  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();
+  await page.getByLabel('Clé TripGo privée sur cet appareil').fill('a'.repeat(32));
+  await page.getByRole('button',{name:'Activer TripGo sur cet appareil',exact:true}).click();
+  await release('14');
+  const tripStatus=page.getByText(/^Retour TripGo : 2 proposition/);await tripStatus.waitFor();
+  const tripText=await tripStatus.innerText();assert.match(tripText,/FlixBus 1789/);assert.match(tripText,/BlaBlaCar Bus/);
+  assert.match(tripText,/Preuves manquantes/);assert.match(tripText,/prix du transport/);assert.doesNotMatch(tripText,/Réalisable/);
+  await tripStatus.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'mobile-tripgo.png')});
+  await page.getByRole('button',{name:'Retirer la clé TripGo de cet appareil',exact:true}).click();
+  assert.equal(await page.evaluate(()=>localStorage.getItem('cp_tripgo_key')),null);
+  assert.equal(await page.getByText(/^Retour TripGo : 2 proposition/).count(),0);
+  await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'TripGo scenario worker must stop on close');
   assert.deepEqual(errors,[],'No uncaught browser script errors');
   assert.deepEqual(blockedWrites,[],'No account or mission writes');
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '5-minute minimum at exact pickup GPS, final walk required','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset'],
+    '5-minute minimum at exact pickup GPS, final walk required','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence'],
    regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){

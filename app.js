@@ -2523,6 +2523,45 @@
         }
       }
       });
+      // TripGo is optional and uses only a private key saved on this device.
+      if (window.CPTripGo) {
+        const tripgo=window.CPTripGo,config=document.createElement('div');
+        config.className='doux';config.style.marginTop='10px';
+        const keyInput=document.createElement('input');keyInput.type='password';keyInput.autocomplete='off';
+        keyInput.setAttribute('aria-label','Clé TripGo privée sur cet appareil');keyInput.placeholder='Clé TripGo privée';
+        const keyStatus=document.createElement('p');
+        const keyState=()=>{keyStatus.textContent=tripgo.getKey()?'TripGo actif sur cet appareil. La clé reste privée ; les coordonnées des recherches sont envoyées à TripGo.':'TripGo peut compléter les trajets interurbains. Sa clé privée doit être enregistrée sur cet appareil.';};
+        const saveKey=document.createElement('button');saveKey.className='second';saveKey.type='button';saveKey.textContent='Activer TripGo sur cet appareil';
+        saveKey.onclick=()=>{try{tripgo.setKey(keyInput.value);keyInput.value='';keyState();bt.cpRefreshRegional?.();}catch(_){keyStatus.textContent='Clé invalide ou stockage de cet appareil indisponible.';}};
+        const clearKey=document.createElement('button');clearKey.className='second';clearKey.type='button';clearKey.textContent='Retirer la clé TripGo de cet appareil';
+        clearKey.onclick=()=>{try{tripgo.setKey('');keyInput.value='';keyState();bt.cpRefreshRegional?.();}catch(_){keyStatus.textContent='Retrait de la clé impossible sur cet appareil.';}};
+        keyState();for(const item of [keyStatus,keyInput,saveKey,clearKey])config.appendChild(item);panel.appendChild(config);
+        const tripSearch=(label,inputs)=>regionalSlot(()=>[tripgo.getKey(),inputs()],(target,signal)=>{
+          const task=inputs();if(!tripgo.getKey()||!task?.from||!task?.to||!task.when)return;
+          const status=document.createElement('div');status.className='doux';status.setAttribute('role','status');
+          status.textContent=label+' TripGo : recherche des transports et des marches…';target.appendChild(status);
+          tripgo.plan({...task,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt}).then(answer=>{
+            if(!regionalActive()||signal.aborted||!status.isConnected)return;
+            const shown=answer.itineraries.slice(0,3);
+            status.textContent=label+' TripGo : '+(shown.length?shown.length+' proposition(s) datées, marches comprises.':'aucune proposition compatible retournée ; cela ne prouve pas l’absence de transport.');
+            for(const result of shown){
+              const line=document.createElement('p');line.textContent=formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString())+' · '+
+                result.legs.map(l=>(l.mode==='wa_wal'?'Marche':l.line||l.mode)+' '+l.from+' → '+l.to).join(' · ')+
+                ' · réponse du fournisseur reçue le '+formatParis(answer.receivedAt)+
+                ' · raccordement aux coordonnées : '+Math.ceil(result.evidence.startGapMeters)+' m / '+Math.ceil(result.evidence.endGapMeters)+' m (accès physique à vérifier)'+
+                (result.alerts.length?' · Alertes fournisseur : '+result.alerts.join(' ; '):'')+
+                ' · Preuves manquantes : '+result.evidence.missing.join(', ')+'. Transport non confirmé — vérifiez vous-même.';
+              status.appendChild(line);
+            }
+            const credit=document.createElement('p');credit.textContent='Source : TripGo / opérateurs indiqués ; marches : © contributeurs OpenStreetMap. La disponibilité annoncée ne constitue pas une réservation.';const attribution=document.createElement('a');attribution.href='https://www.openstreetmap.org/copyright';attribution.target='_blank';attribution.rel='noopener noreferrer';attribution.textContent=' Attribution OpenStreetMap';credit.appendChild(attribution);status.appendChild(credit);
+          }).catch(()=>{if(regionalActive()&&!signal.aborted&&status.isConnected)status.textContent=label+' TripGo indisponible. Horaires, circulation, accès et prix restent à vérifier.';});
+        });
+        if(pickupDate)tripSearch('Aller',()=>({from:regionalHome(),to:regionalPoint(G.coordonnees(m,'origin')),
+          when:new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString(),arriveBy:true}));
+        if(deliveryDate)tripSearch('Retour',()=>({from:regionalPoint(G.coordonnees(m,'destination')),to:regionalHome(),when:deliveryDate}));
+        if(next&&deliveryDate&&next.pickup_start)tripSearch('Jonction',()=>({from:regionalPoint(G.coordonnees(m,'destination')),to:regionalPoint(G.coordonnees(next,'origin')),
+          when:deliveryDate,latestArrival:new Date(Date.parse(next.pickup_start)-securityMarginMin*60000).toISOString()}));
+      }
       // Statut réel du fichier GTFS quotidien : ne pas annoncer de trajets sans données.
       if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
         const daySource = transportDelivery || m.delivery_start || transportPickup;

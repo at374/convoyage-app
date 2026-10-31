@@ -1,0 +1,497 @@
+{
+  "checkedAt": "2026-10-31T07:43:48.769Z",
+  "scope": "Actual API requests using public station coordinates, not real missions",
+  "keyPublished": false,
+  "healthCheck": {
+    "http": 200,
+    "healthCheckPassed": true
+  },
+  "coverageDeclaredRegions": [
+    "FR_ARA_Albertville",
+    "FR_ARA_Chambery",
+    "FR_ARA_Grenoble",
+    "FR_ARA_Lyon",
+    "FR_ARA_SaintEtienne",
+    "CH_GE_Geneva",
+    "CH_VD_Vaud"
+  ],
+  "coverageNote": "Regions advertised by API; not proof of exhaustive coverage",
+  "departAfter": {
+    "query": {
+      "from": "(45.9019,6.1218)",
+      "to": "(45.1914,5.7143)",
+      "departAfter": 1793610000,
+      "modes": "pt_pub",
+      "v": "11",
+      "locale": "fr"
+    },
+    "elapsedSeconds": 9.36,
+    "result": {
+      "source": "TripGo",
+      "receivedAt": "2026-10-31T07:43:48.769Z",
+      "itineraries": [
+        {
+          "departure": "2026-11-02T09:14:18.000Z",
+          "arrival": "2026-11-02T10:42:34.000Z",
+          "legs": [
+            {
+              "mode": "wa_wal",
+              "line": null,
+              "from": "Près de Annecy",
+              "to": "Annecy - Bus Station",
+              "fromPoint": {
+                "lat": 45.90187,
+                "lon": 6.12181
+              },
+              "toPoint": {
+                "lat": 45.90167,
+                "lon": 6.12128
+              },
+              "departure": "2026-11-02T09:14:18.000Z",
+              "arrival": "2026-11-02T09:15:00.000Z",
+              "distanceMeters": 49,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            },
+            {
+              "mode": "pt_pub",
+              "line": "BlaBlaCar Bus",
+              "from": "Annecy - Bus Station",
+              "to": "Grenoble - Bus Station",
+              "fromPoint": {
+                "lat": 45.90167,
+                "lon": 6.12128
+              },
+              "toPoint": {
+                "lat": 45.19283,
+                "lon": 5.71429
+              },
+              "departure": "2026-11-02T09:15:00.000Z",
+              "arrival": "2026-11-02T10:40:00.000Z",
+              "distanceMeters": null,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            },
+            {
+              "mode": "wa_wal",
+              "line": null,
+              "from": "Grenoble - Bus Station",
+              "to": "Près de Grenoble",
+              "fromPoint": {
+                "lat": 45.19283,
+                "lon": 5.71429
+              },
+              "toPoint": {
+                "lat": 45.19143,
+                "lon": 5.71437
+              },
+              "departure": "2026-11-02T10:40:00.000Z",
+              "arrival": "2026-11-02T10:42:34.000Z",
+              "distanceMeters": 188,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            }
+          ],
+          "priceEUR": null,
+          "source": "TripGo",
+          "receivedAt": "2026-10-31T07:43:48.769Z",
+          "transportConfirmed": false,
+          "serviceConfirmed": false,
+          "accessVerified": false,
+          "evidence": {
+            "scheduleProvided": true,
+            "endpointCoordinatesMatched": true,
+            "startGapMeters": 3.4244177379190655,
+            "endGapMeters": 6.420127850000161,
+            "walkingProvided": true,
+            "realtimeReported": false,
+            "fareVerified": false,
+            "missing": [
+              "circulation et perturbations à la date du trajet",
+              "accès physique au point GPS exact",
+              "prix du transport"
+            ]
+          }
+        },
+        {
+          "departure": "2026-11-02T11:07:50.000Z",
+          "arrival": "2026-11-02T13:07:34.000Z",
+          "legs": [
+            {
+              "mode": "wa_wal",
+              "line": null,
+              "from": "Près de Annecy",
+              "to": "Annecy (Central Bus Station)",
+              "fromPoint": {
+                "lat": 45.90187,
+                "lon": 6.12181
+              },
+              "toPoint": {
+                "lat": 45.90166,
+                "lon": 6.12032
+              },
+              "departure": "2026-11-02T11:07:50.000Z",
+              "arrival": "2026-11-02T11:10:00.000Z",
+              "distanceMeters": 150,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            },
+            {
+              "mode": "pt_pub",
+              "line": "FlixBus 1789",
+              "from": "Annecy (Central Bus Station)",
+              "to": "Grenoble (Central Bus Station)",
+              "fromPoint": {
+                "lat": 45.90166,
+                "lon": 6.12032
+              },
+              "toPoint": {
+                "lat": 45.19283,
+                "lon": 5.71394
+              },
+              "departure": "2026-11-02T11:10:00.000Z",
+              "arrival": "2026-11-02T13:05:00.000Z",
+              "distanceMeters": null,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            },
+            {
+              "mode": "wa_wal",
+              "line": null,
+              "from": "Grenoble - Bus Station",
+              "to": "Près de Grenoble",
+              "fromPoint": {
+                "lat": 45.19283,
+                "lon": 5.71429
+              },
+              "toPoint": {
+                "lat": 45.19143,
+                "lon": 5.71437
+              },
+              "departure": "2026-11-02T13:05:00.000Z",
+              "arrival": "2026-11-02T13:07:34.000Z",
+              "distanceMeters": 188,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            }
+          ],
+          "priceEUR": null,
+          "source": "TripGo",
+          "receivedAt": "2026-10-31T07:43:48.769Z",
+          "transportConfirmed": false,
+          "serviceConfirmed": false,
+          "accessVerified": false,
+          "evidence": {
+            "scheduleProvided": true,
+            "endpointCoordinatesMatched": true,
+            "startGapMeters": 3.4244177379190655,
+            "endGapMeters": 6.420127850000161,
+            "walkingProvided": true,
+            "realtimeReported": false,
+            "fareVerified": false,
+            "missing": [
+              "circulation et perturbations à la date du trajet",
+              "accès physique au point GPS exact",
+              "prix du transport"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "arriveBefore": {
+    "when": "2026-11-02T15:55:00+01:00",
+    "elapsedSeconds": 5.75,
+    "result": {
+      "source": "TripGo",
+      "receivedAt": "2026-10-31T07:43:48.766Z",
+      "itineraries": [
+        {
+          "departure": "2026-11-02T12:43:00.000Z",
+          "arrival": "2026-11-02T14:26:17.000Z",
+          "legs": [
+            {
+              "mode": "pt_pub",
+              "line": "K21",
+              "from": "Annecy",
+              "to": "Grenoble",
+              "fromPoint": {
+                "lat": 45.90203,
+                "lon": 6.12181
+              },
+              "toPoint": {
+                "lat": 45.19148,
+                "lon": 5.71454
+              },
+              "departure": "2026-11-02T12:43:00.000Z",
+              "arrival": "2026-11-02T14:26:00.000Z",
+              "distanceMeters": null,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            },
+            {
+              "mode": "wa_wal",
+              "line": null,
+              "from": "Grenoble",
+              "to": "Près de Grenoble",
+              "fromPoint": {
+                "lat": 45.19148,
+                "lon": 5.71454
+              },
+              "toPoint": {
+                "lat": 45.19143,
+                "lon": 5.71437
+              },
+              "departure": "2026-11-02T14:26:00.000Z",
+              "arrival": "2026-11-02T14:26:17.000Z",
+              "distanceMeters": 29,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            }
+          ],
+          "priceEUR": null,
+          "source": "TripGo",
+          "receivedAt": "2026-10-31T07:43:48.766Z",
+          "transportConfirmed": false,
+          "serviceConfirmed": false,
+          "accessVerified": false,
+          "evidence": {
+            "scheduleProvided": true,
+            "endpointCoordinatesMatched": false,
+            "startGapMeters": 14.476036146818172,
+            "endGapMeters": 6.420127850000161,
+            "walkingProvided": true,
+            "realtimeReported": false,
+            "fareVerified": false,
+            "missing": [
+              "circulation et perturbations à la date du trajet",
+              "accès physique au point GPS exact",
+              "prix du transport"
+            ]
+          }
+        },
+        {
+          "departure": "2026-11-02T11:43:00.000Z",
+          "arrival": "2026-11-02T13:27:17.000Z",
+          "legs": [
+            {
+              "mode": "pt_pub",
+              "line": "K21",
+              "from": "Annecy",
+              "to": "Grenoble",
+              "fromPoint": {
+                "lat": 45.90203,
+                "lon": 6.12181
+              },
+              "toPoint": {
+                "lat": 45.19148,
+                "lon": 5.71454
+              },
+              "departure": "2026-11-02T11:43:00.000Z",
+              "arrival": "2026-11-02T13:27:00.000Z",
+              "distanceMeters": null,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            },
+            {
+              "mode": "wa_wal",
+              "line": null,
+              "from": "Grenoble",
+              "to": "Près de Grenoble",
+              "fromPoint": {
+                "lat": 45.19148,
+                "lon": 5.71454
+              },
+              "toPoint": {
+                "lat": 45.19143,
+                "lon": 5.71437
+              },
+              "departure": "2026-11-02T13:27:00.000Z",
+              "arrival": "2026-11-02T13:27:17.000Z",
+              "distanceMeters": 29,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            }
+          ],
+          "priceEUR": null,
+          "source": "TripGo",
+          "receivedAt": "2026-10-31T07:43:48.766Z",
+          "transportConfirmed": false,
+          "serviceConfirmed": false,
+          "accessVerified": false,
+          "evidence": {
+            "scheduleProvided": true,
+            "endpointCoordinatesMatched": false,
+            "startGapMeters": 14.476036146818172,
+            "endGapMeters": 6.420127850000161,
+            "walkingProvided": true,
+            "realtimeReported": false,
+            "fareVerified": false,
+            "missing": [
+              "circulation et perturbations à la date du trajet",
+              "accès physique au point GPS exact",
+              "prix du transport"
+            ]
+          }
+        },
+        {
+          "departure": "2026-11-02T06:43:00.000Z",
+          "arrival": "2026-11-02T08:27:17.000Z",
+          "legs": [
+            {
+              "mode": "pt_pub",
+              "line": "K21",
+              "from": "Annecy",
+              "to": "Grenoble",
+              "fromPoint": {
+                "lat": 45.90203,
+                "lon": 6.12181
+              },
+              "toPoint": {
+                "lat": 45.19148,
+                "lon": 5.71454
+              },
+              "departure": "2026-11-02T06:43:00.000Z",
+              "arrival": "2026-11-02T08:27:00.000Z",
+              "distanceMeters": null,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            },
+            {
+              "mode": "wa_wal",
+              "line": null,
+              "from": "Grenoble",
+              "to": "Près de Grenoble",
+              "fromPoint": {
+                "lat": 45.19148,
+                "lon": 5.71454
+              },
+              "toPoint": {
+                "lat": 45.19143,
+                "lon": 5.71437
+              },
+              "departure": "2026-11-02T08:27:00.000Z",
+              "arrival": "2026-11-02T08:27:17.000Z",
+              "distanceMeters": 29,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            }
+          ],
+          "priceEUR": null,
+          "source": "TripGo",
+          "receivedAt": "2026-10-31T07:43:48.766Z",
+          "transportConfirmed": false,
+          "serviceConfirmed": false,
+          "accessVerified": false,
+          "evidence": {
+            "scheduleProvided": true,
+            "endpointCoordinatesMatched": false,
+            "startGapMeters": 14.476036146818172,
+            "endGapMeters": 6.420127850000161,
+            "walkingProvided": true,
+            "realtimeReported": false,
+            "fareVerified": false,
+            "missing": [
+              "circulation et perturbations à la date du trajet",
+              "accès physique au point GPS exact",
+              "prix du transport"
+            ]
+          }
+        },
+        {
+          "departure": "2026-11-02T05:43:00.000Z",
+          "arrival": "2026-11-02T07:27:17.000Z",
+          "legs": [
+            {
+              "mode": "pt_pub",
+              "line": "K21",
+              "from": "Annecy",
+              "to": "Grenoble",
+              "fromPoint": {
+                "lat": 45.90203,
+                "lon": 6.12181
+              },
+              "toPoint": {
+                "lat": 45.19148,
+                "lon": 5.71454
+              },
+              "departure": "2026-11-02T05:43:00.000Z",
+              "arrival": "2026-11-02T07:27:00.000Z",
+              "distanceMeters": null,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            },
+            {
+              "mode": "wa_wal",
+              "line": null,
+              "from": "Grenoble",
+              "to": "Près de Grenoble",
+              "fromPoint": {
+                "lat": 45.19148,
+                "lon": 5.71454
+              },
+              "toPoint": {
+                "lat": 45.19143,
+                "lon": 5.71437
+              },
+              "departure": "2026-11-02T07:27:00.000Z",
+              "arrival": "2026-11-02T07:27:17.000Z",
+              "distanceMeters": 29,
+              "realtimeReported": false,
+              "alerts": [],
+              "serviceConfirmed": false
+            }
+          ],
+          "priceEUR": null,
+          "source": "TripGo",
+          "receivedAt": "2026-10-31T07:43:48.766Z",
+          "transportConfirmed": false,
+          "serviceConfirmed": false,
+          "accessVerified": false,
+          "evidence": {
+            "scheduleProvided": true,
+            "endpointCoordinatesMatched": false,
+            "startGapMeters": 14.476036146818172,
+            "endGapMeters": 6.420127850000161,
+            "walkingProvided": true,
+            "realtimeReported": false,
+            "fareVerified": false,
+            "missing": [
+              "circulation et perturbations à la date du trajet",
+              "accès physique au point GPS exact",
+              "prix du transport"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "cors": {
+    "preflightHttp": 200,
+    "origin": "https://at374.github.io",
+    "allowOrigin": "*",
+    "allowHeaders": "x-tripgo-key",
+    "browserReadable": true,
+    "browserHttp": 200,
+    "browserSeconds": 12.289,
+    "browserCaveat": "Local Chrome test required environment proxy and ignored HTTPS certificate errors to isolate CORS. Not a production TLS or Android validation."
+  },
+  "remainingEvidence": [
+    "Real-time operating status and disruptions",
+    "Physical access at exact requested pickup point",
+    "Actual transport fare, no bus fare returned"
+  ]
+}
