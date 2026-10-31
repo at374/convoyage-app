@@ -73,8 +73,8 @@ function assessJourney(feed,journey,task={},options={}){
  const access=walk(before),egress=walk(after);
  if(access===null||egress===null)return {...base,status:'partial'};
  const update=updates[0],doorDeparture=instant(update.expectedDeparture)-access,doorArrival=instant(update.expectedArrival)+egress;
- const latest=task.latestArrival??(task.arriveBy?task.when:undefined),deadline=latest===undefined?null:instant(latest);
- const earliest=task.arriveBy?(options.now??Date.now()):Math.max(options.now??Date.now(),instant(task.when));
+ const safeTask=task&&typeof task==='object'?task:{},latest=safeTask.latestArrival??(safeTask.arriveBy?safeTask.when:undefined),deadline=latest===undefined?null:instant(latest);
+ const earliest=safeTask.arriveBy?(options.now??Date.now()):Math.max(options.now??Date.now(),instant(safeTask.when));
  let status='fits_prediction';
  if(latest!==undefined&&!Number.isFinite(deadline)||earliest!==null&&!Number.isFinite(earliest))status='unknown_window';
  else if(earliest!==null&&doorDeparture<earliest)status='missed_boarding';
