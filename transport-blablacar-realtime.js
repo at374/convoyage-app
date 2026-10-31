@@ -62,12 +62,12 @@ function assess(feed,leg,{now=Date.now()}={}){
   expectedDeparture:new Date(departure).toISOString(),expectedArrival:new Date(arrival).toISOString()};
 }
 function assessJourney(feed,journey,task={},options={}){
- const transit=(journey.legs||[]).filter(l=>l.mode?.startsWith('pt_pub'));
+ const transit=(Array.isArray(journey?.legs)?journey.legs:[]).filter(l=>l?.mode?.startsWith('pt_pub'));
  const updates=transit.filter(eligible).map(l=>assess(feed,l,options));
  const base={updates,transportConfirmed:false,serviceConfirmed:false,accessVerified:false,realizable:false};
  if(updates.some(u=>u.status==='cancelled'))return {...base,status:'cancelled'};
  if(transit.length!==1||updates.length!==1||!['observed','predicted'].includes(updates[0].status))return {...base,status:'partial'};
- const busIndex=journey.legs.indexOf(transit[0]),before=journey.legs.slice(0,busIndex),after=journey.legs.slice(busIndex+1);
+ const legs=journey.legs,busIndex=legs.indexOf(transit[0]),before=legs.slice(0,busIndex),after=legs.slice(busIndex+1);
  const walk=legs=>legs.every(l=>l.mode==='wa_wal'&&Number.isFinite(instant(l.departure))&&Number.isFinite(instant(l.arrival))&&instant(l.arrival)>=instant(l.departure))?
   legs.reduce((n,l)=>n+instant(l.arrival)-instant(l.departure),0):null;
  const access=walk(before),egress=walk(after);
