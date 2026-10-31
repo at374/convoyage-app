@@ -70,3 +70,15 @@ test('public relay endpoint only permits standard HTTPS port',()=>{
  assert.throws(()=>rt.createClient({endpoint:'https://relay.example:8080'+PATH}),/Relais SIRI invalide/);
  assert.doesNotThrow(()=>rt.createClient({endpoint:'http://127.0.0.1:18080'+PATH}));
 });
+
+test('relay URL validation rejects credentials, fragments and insecure remote schemes',()=>{
+ for(const endpoint of [
+  'http://relay.example'+PATH,
+  'https://relay.example'+PATH+'#fragment',
+  'https://relay.example'+PATH+'?token=secret',
+  'https://user:password@relay.example'+PATH,
+  'https://relay.example:9443'+PATH,
+  'https://relay.example/health'
+ ])assert.throws(()=>rt.createClient({endpoint}),/Relais SIRI invalide/);
+ assert.doesNotThrow(()=>rt.createClient({endpoint:'https://relay.example'+PATH}));
+});
