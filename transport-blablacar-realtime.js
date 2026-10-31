@@ -62,7 +62,7 @@ function assess(feed,leg,{now=Date.now()}={}){
   expectedDeparture:new Date(departure).toISOString(),expectedArrival:new Date(arrival).toISOString()};
 }
 function assessJourney(feed,journey,task={},options={}){
- const transit=(Array.isArray(journey?.legs)?journey.legs:[]).filter(l=>l?.mode?.startsWith('pt_pub'));
+ const transit=(Array.isArray(journey?.legs)?journey.legs:[]).filter(l=>typeof l?.mode==='string'&&l.mode.startsWith('pt_pub'));
  const updates=transit.filter(eligible).map(l=>assess(feed,l,options));
  const base={updates,transportConfirmed:false,serviceConfirmed:false,accessVerified:false,realizable:false};
  if(updates.some(u=>u.status==='cancelled'))return {...base,status:'cancelled'};
