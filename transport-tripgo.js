@@ -19,7 +19,7 @@ function setKey(value){const key=String(value||'').trim();if(key&&!/^[A-Za-z0-9_
  if(!root.localStorage)throw Error('Stockage de cet appareil indisponible');
  if(key)root.localStorage.setItem(KEY,key);else root.localStorage.removeItem(KEY);cache.clear();}
 function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Date().toISOString()}={}){
- if(!point(from)||!point(to)||!Number.isFinite(time(when))||latestArrival!==undefined&&!Number.isFinite(time(latestArrival)))throw Error('Fenêtre TripGo invalide');
+ if(!point(from)||!point(to)||!Number.isFinite(time(when))||latestArrival!==undefined&&(!Number.isFinite(time(latestArrival))||(!arriveBy&&time(latestArrival)<time(when))||(arriveBy&&time(latestArrival)>time(when))))throw Error('Fenêtre TripGo invalide');
  if(!data||!Array.isArray(data.groups)||data.groups.length>100||!Array.isArray(data.segmentTemplates)||data.segmentTemplates.length>2000)throw Error('Réponse TripGo invalide');
  if(!point(data.query?.from)||!point(data.query?.to)||gap(coord(data.query.from),coord(from))>1||gap(coord(data.query.to),coord(to))>1||
    time(data.query[arriveBy?'arrive':'depart'])!==time(when))throw Error('Réponse TripGo liée à une autre recherche');
