@@ -6,6 +6,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),http=require('nod
 const {chromium,devices}=require('playwright');
 const {crc32}=require('../../transport-gtfs-loader');
 const official=require('../fixtures/mobilites-m-grenoble-crolles-2026-10-30.json');
+const railFixture=require('../fixtures/sncf-annecy-grenoble-2026-11-02.json');
 const root=path.resolve(__dirname,'../..');
 const output=path.resolve(process.env.TRANSPORT_BROWSER_OUTPUT||path.join(root,'tmp/transport-browser'));
 const missions=[
@@ -44,7 +45,7 @@ function archive(){
 async function run(){
  await fs.mkdir(output,{recursive:true});
  const zip=archive(),errors=[],requests=[],gates=new Map(),workers=[],blockedWrites=[],regionalGates=[],activeWorkers=new Set(),abortedRequests=[];
- let holdRegional=false;
+ let holdRegional=false,railScenario=false;
  const until=async(predicate,message)=>{const end=Date.now()+10000;while(!predicate()){if(Date.now()>end)throw Error(message);await new Promise(resolve=>setTimeout(resolve,20));}};
  const server=http.createServer(async(req,res)=>{
   try{
@@ -65,6 +66,12 @@ async function run(){
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--no-sandbox']});
   context=await browser.newContext({...devices['Pixel 7'],locale:'fr-FR',timezoneId:'Europe/Paris',serviceWorkers:'block'});
   await context.addInitScript(({missions,settings,origin})=>{
+   if(new URL(location.href).searchParams.has('rail')){
+    missions=missions.slice(0,1);missions[0].pickup_start=missions[0].pickup_end='2026-11-02T16:00:00+01:00';
+    missions[0].delivery_end='2026-11-02T18:00:00+01:00';
+    settings.domicile_ville='Annecy';settings.domicile_lat=45.902047;settings.domicile_lng=6.121826;
+    localStorage.removeItem('cp_gps');
+   }
    for(const [key,value] of Object.entries({cp_session:{access_token:'browser-test-only',user_id:'browser-fixture',expires_at:Date.now()+86400000},
     cp_cache:{missions,alertes:[],reglages:settings,chargeLe:new Date().toISOString()},cp_preferences:{onglet:'agenda'},cp_plats_choisies:['DriiveMe'],cp_pause:{choix:'non'},cp_notif:{on:false,son:false}}))localStorage.setItem(key,JSON.stringify(value));
    window.CP_GTFS_AGENDA_RESOURCES=[{id:'browser-fixture',network:'Réseau de test',format:'GTFS',url:'https://gtfs-fixture.invalid/feed.zip',bounds:[44,5,46,7],timeZone:'Europe/Paris'}];
@@ -72,6 +79,7 @@ async function run(){
   await context.route('**/*',async route=>{
    const request=route.request(),url=new URL(request.url());
    if(url.origin===origin){
+    if(railScenario&&url.pathname.startsWith('/data/sncf/'))return json(route,url.pathname.endsWith('/manifest.json')?railFixture.manifest:railFixture.day);
     if(url.pathname==='/config.js')return route.fulfill({contentType:'text/javascript',body:"window.CP_CONFIG={url:'https://backend.invalid',anonKey:'browser-test-only'};"});
     return route.continue();
    }
@@ -82,7 +90,9 @@ async function run(){
     if(url.pathname.startsWith('/functions/'))return route.fulfill({status:404,headers:{'access-control-allow-origin':'*'},body:'No notification backend in browser fixtures'});
     const readPost=request.method()==='POST'&&['/rest/v1/rpc/mon_statut','/storage/v1/object/sign/apk/version.json'].includes(url.pathname);
     if(request.method()!=='GET'&&!readPost)blockedWrites.push({method:request.method(),path:url.pathname});
-    return json(route,url.pathname.endsWith('/missions')?missions:url.pathname.endsWith('/reglages')?[settings]:[]);
+    const backendMissions=railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
+    const backendSettings=railScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}:settings;
+    return json(route,url.pathname.endsWith('/missions')?backendMissions:url.pathname.endsWith('/reglages')?[backendSettings]:[]);
    }
    if(url.hostname==='gtfs-fixture.invalid')return route.fulfill({status:200,contentType:'application/zip',headers:{'access-control-allow-origin':'*'},body:zip});
    if(url.hostname==='api-adresse.data.gouv.fr'&&url.pathname.includes('/search')){
@@ -163,12 +173,29 @@ async function run(){
   for(const resolve of regionalGates.splice(0))resolve();
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   assert.equal(await page.locator('#cpTransportMissionDetails').textContent(),pendingText,'Late responses cannot rewrite a closed panel');
+  // Second mission scenario replays a recorded subset of the published SNCF files.
+  // No external routing response substitutes for its station search.
+  holdRegional=false;railScenario=true;
+  await page.goto(origin+'?rail=1',{waitUntil:'domcontentloaded'});
+  await page.locator('.mission').first().click();
+  await page.locator('#btnTransportsMission').click();
+  await release('12');
+  const rail=page.getByText(/^Aller — secours SNCF, horaires théoriques du flux/);
+  await rail.waitFor();
+  const railText=await rail.innerText();
+  assert.match(railText,/proposition\(s\) de gare à gare/);
+  assert.match(railText,/Annecy/);assert.match(railText,/Grenoble/);
+  assert.match(railText,/Transport non confirmé/);assert.doesNotMatch(railText,/Réalisable/);
+  await rail.scrollIntoViewIfNeeded();
+  await page.screenshot({path:path.join(output,'mobile-annecy-grenoble.png')});
+  await page.locator('#fermer').click();
+  await until(()=>activeWorkers.size===0,'Rail scenario worker must stop on close');
   assert.deepEqual(errors,[],'No uncaught browser script errors');
   assert.deepEqual(blockedWrites,[],'No account or mission writes');
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '30-minute outbound margin','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow'],
+    '30-minute outbound margin','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset'],
    regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){

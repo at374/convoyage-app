@@ -2320,16 +2320,21 @@
       // SNCF station-only fallback runs independently of public routing API availability.
       // Only dated public files are fetched: addresses/GPS stay in this browser.
       if (window.CPSncfFallback && typeof window.CPSncfFallback.plan === 'function') {
-        const railHomeName = String(etat.reglages?.domicile_ville || '').trim();
-        const railHomePoint = etat.reglages?.domicile_lat != null && etat.reglages?.domicile_lng != null ?
-          {lat:etat.reglages.domicile_lat,lon:etat.reglages.domicile_lng} :
-          G.trouverVille(railHomeName);
-        const homeStation = {name:railHomeName,point:railHomePoint};
+        const homeStation = () => {
+          const name=String(etat.reglages?.domicile_ville || '').trim();
+          return {name,point:etat.reglages?.domicile_lat != null && etat.reglages?.domicile_lng != null ?
+            {lat:etat.reglages.domicile_lat,lon:etat.reglages.domicile_lng} : G.trouverVille(name)};
+        };
+        const stationKey = station => [station.name,station.point?.lat ?? null,station.point?.lon ?? station.point?.lng ?? null];
         const missionStation = (mission,side) => ({
           name:String((side === 'origin' ? mission.from_city : mission.to_city) || ''),
           point:G.coordonnees(mission,side)
         });
-        const railSearch = (label,fromStation,toStation,when,arriveBy,latestArrival) => {
+        const railSearch = (label,inputs) => regionalSlot(() => {
+          const v=inputs();
+          return [stationKey(v.fromStation),stationKey(v.toStation),v.when,v.arriveBy,v.latestArrival];
+        }, (panel,signal) => {
+          const {fromStation,toStation,when,arriveBy,latestArrival}=inputs();
           if (!when || (!fromStation.name && !fromStation.point) || (!toStation.name && !toStation.point) ||
               (fromStation.name && toStation.name && fromStation.name.trim().toLocaleLowerCase('fr') === toStation.name.trim().toLocaleLowerCase('fr'))) return;
           const status = document.createElement('div');
@@ -2339,8 +2344,9 @@
           status.textContent = label + ' — secours SNCF : recherche des trains de gare à gare…';
           panel.appendChild(status);
           window.CPSncfFallback.plan({from:fromStation,to:toStation,when,arriveBy,
-            limit:10,fetcher:regionalFetch}).then(answer => {
-            if (!status.isConnected) return;
+            limit:10,fetcher:regionalFetch,signal,
+            ...(latestArrival ? {latestArrival:new Date(latestArrival).toISOString()} : {})}).then(answer => {
+            if (!regionalActive() || signal.aborted || !status.isConnected) return;
             const itineraries = answer.itineraries.filter(it => !latestArrival || Date.parse(it.arrival) <= latestArrival).slice(0,3);
             status.textContent = label + ' — secours SNCF, horaires théoriques du flux ' + answer.sourceVersion + ' : ' +
               (itineraries.length ? itineraries.length + ' proposition(s) de gare à gare.' :
@@ -2378,15 +2384,16 @@
             source.textContent = 'Source : SNCF Voyageurs — données ouvertes ODbL';
             status.appendChild(source);
           }).catch(() => {
-            if (status.isConnected) status.textContent = label +
+            if (regionalActive() && !signal.aborted && status.isConnected) status.textContent = label +
               ' — secours SNCF indisponible pour cette date. Aucun résultat ne prouve pas l’absence de transport. Transport non confirmé — vérifiez vous-même.';
           });
-        };
-        if (pickupDate) railSearch('Aller',homeStation,missionStation(m,'origin'),
-          new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString(),true);
-        if (deliveryDate) railSearch('Retour',missionStation(m,'destination'),homeStation,deliveryDate,false);
-        if (next && deliveryDate) railSearch('Jonction',missionStation(m,'destination'),
-          missionStation(next,'origin'),deliveryDate,false,Date.parse(next.pickup_start)-securityMarginMin*60000);
+        });
+        if (pickupDate) railSearch('Aller',()=>({fromStation:homeStation(),toStation:missionStation(m,'origin'),
+          when:new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString(),arriveBy:true}));
+        if (deliveryDate) railSearch('Retour',()=>({fromStation:missionStation(m,'destination'),toStation:homeStation(),when:deliveryDate,arriveBy:false}));
+        if (next && deliveryDate) railSearch('Jonction',()=>({fromStation:missionStation(m,'destination'),
+          toStation:missionStation(next,'origin'),when:deliveryDate,arriveBy:false,
+          latestArrival:Date.parse(next.pickup_start)-securityMarginMin*60000}));
       }
       // Regional return from the exact delivery point to the configured home
       // coordinate (which may only represent a city centre, not a door).
