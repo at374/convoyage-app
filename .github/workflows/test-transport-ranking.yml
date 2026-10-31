@@ -77,6 +77,8 @@ jobs:
         with:
           node-version: '22'
       - run: node --check app.js
+      - run: node --check transport-blablacar-realtime.js
+      - run: node --test tests/transport-realtime-relay.test.cjs
       - run: node --check transport-ranking.js
       - run: node --check transport-adapters.js
       - run: node --check transport-fares.js
