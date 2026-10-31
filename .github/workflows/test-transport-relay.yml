@@ -40,6 +40,14 @@ jobs:
             const denied=await fetch(base+'/health',{headers:{Origin:'https://untrusted.example'}});
             assert.equal(denied.status,403);
             assert.deepEqual(await denied.json(),{error:'origin_not_allowed'});
+            const preflight=await fetch(base+'/transport-realtime/blablacar',{method:'OPTIONS',headers:{Origin:'https://at374.github.io','Access-Control-Request-Method':'GET'}});
+            assert.equal(preflight.status,204);
+            assert.equal(preflight.headers.get('access-control-allow-origin'),'https://at374.github.io');
+            const forbiddenPreflight=await fetch(base+'/transport-realtime/blablacar',{method:'OPTIONS',headers:{Origin:'https://untrusted.example'}});
+            assert.equal(forbiddenPreflight.status,403);
+            const query=await fetch(base+'/transport-realtime/blablacar?url=https://example.org');
+            assert.equal(query.status,400);
+            assert.deepEqual(await query.json(),{error:'query_not_allowed'});
             const missing=await fetch(base+'/not-a-route');
             assert.equal(missing.status,404);
           })().catch(error=>{console.error(error);process.exitCode=1;});
