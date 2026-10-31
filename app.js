@@ -2596,7 +2596,7 @@
           }).catch(()=>{if(regionalActive()&&!signal.aborted&&status.isConnected)status.textContent=label+' TripGo indisponible. Horaires, circulation, accès et prix restent à vérifier.';});
         });
         if(pickupDate)tripSearch('Aller',()=>({from:regionalHome(),to:regionalPoint(G.coordonnees(m,'origin')),
-          when:new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString(),arriveBy:true}));
+          when:new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString(),arriveBy:true,latestArrival:new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString()}));
         if(deliveryDate)tripSearch('Retour',()=>({from:regionalPoint(G.coordonnees(m,'destination')),to:regionalHome(),when:deliveryDate}));
         if(next&&deliveryDate&&next.pickup_start)tripSearch('Jonction',()=>({from:regionalPoint(G.coordonnees(m,'destination')),to:regionalPoint(G.coordonnees(next,'origin')),
           when:deliveryDate,latestArrival:new Date(Date.parse(next.pickup_start)-securityMarginMin*60000).toISOString()}));
