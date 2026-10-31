@@ -115,7 +115,7 @@ test('TripGo excludes itineraries with unsafe transfer times and disconnected st
  assert.ok(trip,'a future itinerary must be selected to exercise the regression');
  trip.segments[1].startTime=trip.segments[0].endTime-1;
  const overlapping=api.parse(overlap,options);
- assert.ok(overlapping.itineraries.length<api.parse(clone(),options).itineraries.length);
+ assert.equal(overlapping.itineraries.length,1,'the altered eligible trip is removed while the independent future service remains');
  const disconnected=clone();
  disconnected.segmentTemplates.forEach(t=>{if(t.type==='scheduled'&&t.from)t.from.lat+=0.01;});
  assert.equal(api.parse(disconnected,options).itineraries.length,0);
