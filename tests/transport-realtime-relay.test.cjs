@@ -82,3 +82,13 @@ test('relay URL validation rejects credentials, fragments and insecure remote sc
  ])assert.throws(()=>rt.createClient({endpoint}),/Relais SIRI invalide/);
  assert.doesNotThrow(()=>rt.createClient({endpoint:'https://relay.example'+PATH}));
 });
+
+test('relay client refuses malformed endpoint URLs before network access',()=>{
+ for(const endpoint of [
+  'not-a-url',
+  'ftp://relay.example'+PATH,
+  'https://relay.example'+PATH+'?next=https://attacker.example',
+  'https://relay.example'+PATH+'#token',
+  'https://relay.example:1234'+PATH
+ ])assert.throws(()=>rt.createClient({endpoint}));
+});
