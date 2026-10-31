@@ -1,0 +1,169 @@
+{
+  "source": "https://open-data.bus.blablacar.com/api/siri-lite/estimated-timetable",
+  "scope": "One unchanged public journey retained from 388; recorded source validity, not current evidence",
+  "testNow": "2026-10-31T07:49:30Z",
+  "response": {
+    "responseTimestamp": "2026-10-31T07:49:20.167549338Z",
+    "status": true,
+    "validUntil": "2026-10-31T07:50:20.167549338Z",
+    "estimatedJourneyVersionFrame": [
+      {
+        "recordedAtTime": "2026-10-31T07:49:20.167549338Z",
+        "estimatedVehicleJourney": [
+          {
+            "lineRef": {
+              "value": "51981:2026-10-31"
+            },
+            "datedVehicleJourneyRef": {
+              "value": "51981:2026-10-31"
+            },
+            "cancellation": false,
+            "publishedLineName": [
+              {
+                "value": "51981"
+              }
+            ],
+            "vehicleJourneyName": [
+              {
+                "value": "51981"
+              }
+            ],
+            "firstOrLastJourney": "FIRST_SERVICE_OF_DAY",
+            "estimatedCalls": {
+              "estimatedCall": [
+                {
+                  "stopPointRef": {
+                    "value": "SLG"
+                  },
+                  "order": 2,
+                  "stopPointName": [
+                    {
+                      "value": "Sallanches - Bus Station",
+                      "lang": "ENG"
+                    }
+                  ],
+                  "extraCall": false,
+                  "cancellation": false,
+                  "destinationDisplay": [
+                    {
+                      "value": "Sallanches - Bus Station",
+                      "lang": "ENG"
+                    }
+                  ],
+                  "aimedDepartureTime": "2026-10-31T08:00:00Z",
+                  "expectedDepartureTime": "2026-10-31T08:00:00Z",
+                  "departureStatus": "ON_TIME",
+                  "aimedArrivalTime": "2026-10-31T07:55:00Z",
+                  "expectedArrivalTime": "2026-10-31T07:57:30Z",
+                  "arrivalStatus": "ON_TIME"
+                },
+                {
+                  "stopPointRef": {
+                    "value": "CLU"
+                  },
+                  "order": 3,
+                  "stopPointName": [
+                    {
+                      "value": "Cluses - La Maladière",
+                      "lang": "ENG"
+                    }
+                  ],
+                  "extraCall": false,
+                  "cancellation": false,
+                  "destinationDisplay": [
+                    {
+                      "value": "Cluses - La Maladière",
+                      "lang": "ENG"
+                    }
+                  ],
+                  "aimedDepartureTime": "2026-10-31T08:20:00Z",
+                  "expectedDepartureTime": "2026-10-31T08:20:00Z",
+                  "departureStatus": "ON_TIME",
+                  "aimedArrivalTime": "2026-10-31T08:15:00Z",
+                  "expectedArrivalTime": "2026-10-31T08:17:00Z",
+                  "arrivalStatus": "ON_TIME"
+                },
+                {
+                  "stopPointRef": {
+                    "value": "NCY"
+                  },
+                  "order": 4,
+                  "stopPointName": [
+                    {
+                      "value": "Annecy - Bus Station",
+                      "lang": "ENG"
+                    }
+                  ],
+                  "extraCall": false,
+                  "cancellation": false,
+                  "destinationDisplay": [
+                    {
+                      "value": "Annecy - Bus Station",
+                      "lang": "ENG"
+                    }
+                  ],
+                  "aimedDepartureTime": "2026-10-31T09:15:00Z",
+                  "expectedDepartureTime": "2026-10-31T09:15:00Z",
+                  "departureStatus": "ON_TIME",
+                  "aimedArrivalTime": "2026-10-31T09:05:00Z",
+                  "expectedArrivalTime": "2026-10-31T09:07:00Z",
+                  "arrivalStatus": "ON_TIME"
+                },
+                {
+                  "stopPointRef": {
+                    "value": "XGE"
+                  },
+                  "order": 5,
+                  "stopPointName": [
+                    {
+                      "value": "Grenoble - Bus Station",
+                      "lang": "ENG"
+                    }
+                  ],
+                  "extraCall": false,
+                  "cancellation": false,
+                  "destinationDisplay": [
+                    {
+                      "value": "Grenoble - Bus Station",
+                      "lang": "ENG"
+                    }
+                  ],
+                  "departureStatus": "NO_REPORT",
+                  "aimedArrivalTime": "2026-10-31T10:40:00Z",
+                  "expectedArrivalTime": "2026-10-31T10:42:00Z",
+                  "arrivalStatus": "ON_TIME"
+                }
+              ]
+            },
+            "recordedCalls": {
+              "recordedCall": [
+                {
+                  "stopPointRef": {
+                    "value": "CMX"
+                  },
+                  "order": 1,
+                  "stopPointName": [
+                    {
+                      "value": "Chamonix - Bus Station",
+                      "lang": "ENG"
+                    }
+                  ],
+                  "extraCall": false,
+                  "cancellation": false,
+                  "aimedArrivalTime": "2026-10-31T07:30:00Z",
+                  "actualArrivalTime": "2026-10-31T07:06:06Z",
+                  "arrivalStatus": "ON_TIME",
+                  "aimedDepartureTime": "2026-10-31T07:30:00Z",
+                  "actualDepartureTime": "2026-10-31T07:09:37Z",
+                  "departureStatus": "DEPARTED"
+                }
+              ]
+            },
+            "isCompleteStopSequence": true
+          }
+        ]
+      }
+    ],
+    "version": "2.0"
+  }
+}

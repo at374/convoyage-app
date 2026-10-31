@@ -2,9 +2,9 @@ name: Test TripGo transport evidence
 on:
   push:
     branches: [feature/transport-ranking-safe]
-    paths: ['transport-tripgo.js', 'app.js', 'tests/transport-tripgo.test.cjs', 'tests/fixtures/tripgo-*.json', '.github/workflows/test-transport-tripgo.yml']
+    paths: ['transport-tripgo.js', 'transport-blablacar-realtime.js', 'app.js', 'tests/transport-tripgo.test.cjs', 'tests/transport-blablacar-realtime.test.cjs', 'tests/fixtures/blablacar-*.json', 'tests/fixtures/tripgo-*.json', '.github/workflows/test-transport-tripgo.yml']
   pull_request:
-    paths: ['transport-tripgo.js', 'app.js', 'tests/transport-tripgo.test.cjs', 'tests/fixtures/tripgo-*.json', '.github/workflows/test-transport-tripgo.yml']
+    paths: ['transport-tripgo.js', 'transport-blablacar-realtime.js', 'app.js', 'tests/transport-tripgo.test.cjs', 'tests/transport-blablacar-realtime.test.cjs', 'tests/fixtures/blablacar-*.json', 'tests/fixtures/tripgo-*.json', '.github/workflows/test-transport-tripgo.yml']
 permissions:
   contents: read
 jobs:
@@ -17,4 +17,4 @@ jobs:
         with:
           node-version: '22'
       - run: node --check transport-tripgo.js
-      - run: node --test tests/transport-tripgo.test.cjs
+      - run: node --test tests/transport-tripgo.test.cjs tests/transport-blablacar-realtime.test.cjs

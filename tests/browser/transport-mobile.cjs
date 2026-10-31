@@ -8,6 +8,8 @@ const {crc32}=require('../../transport-gtfs-loader');
 const official=require('../fixtures/mobilites-m-grenoble-crolles-2026-10-30.json');
 const railFixture=require('../fixtures/sncf-annecy-grenoble-2026-11-02.json');
 const tripgoFixture=require('../fixtures/tripgo-annecy-grenoble-2026-10-31.json');
+const siriFixture=require('../fixtures/blablacar-siri-2026-10-31.json');
+const tripgoToday=require('../fixtures/tripgo-blablacar-2026-10-31.json');
 const root=path.resolve(__dirname,'../..');
 const output=path.resolve(process.env.TRANSPORT_BROWSER_OUTPUT||path.join(root,'tmp/transport-browser'));
 const missions=[
@@ -46,7 +48,7 @@ function archive(){
 async function run(){
  await fs.mkdir(output,{recursive:true});
  const zip=archive(),errors=[],requests=[],gates=new Map(),workers=[],blockedWrites=[],regionalGates=[],activeWorkers=new Set(),abortedRequests=[];
- let holdRegional=false,railScenario=false,tripgoScenario=false;
+ let holdRegional=false,railScenario=false,tripgoScenario=false,busLiveScenario=false;
  const until=async(predicate,message)=>{const end=Date.now()+10000;while(!predicate()){if(Date.now()>end)throw Error(message);await new Promise(resolve=>setTimeout(resolve,20));}};
  const server=http.createServer(async(req,res)=>{
   try{
@@ -73,8 +75,9 @@ async function run(){
     settings.domicile_ville='Annecy';settings.domicile_lat=45.902047;settings.domicile_lng=6.121826;
     localStorage.removeItem('cp_gps');
    }
-   if(new URL(location.href).searchParams.has('tripgo')){
-    missions=missions.slice(0,1);missions[0].pickup_start=missions[0].pickup_end='2026-11-02T08:00:00+01:00';missions[0].delivery_end='2026-11-02T10:00:00+01:00';
+   if(new URL(location.href).searchParams.has('tripgo')||new URL(location.href).searchParams.has('buslive')){
+    const day=new URL(location.href).searchParams.has('buslive')?'2026-10-31':'2026-11-02';
+    missions=missions.slice(0,1);missions[0].pickup_start=missions[0].pickup_end=day+'T08:00:00+01:00';missions[0].delivery_end=day+'T10:00:00+01:00';
     missions[0].to_city='Annecy';missions[0].destination_address='14 rue Exemple 74000 Annecy';
     settings.domicile_ville='Grenoble';settings.domicile_lat=45.1914;settings.domicile_lng=5.7143;
     localStorage.removeItem('cp_gps');localStorage.removeItem('cp_tripgo_key');
@@ -97,7 +100,8 @@ async function run(){
     if(url.pathname.startsWith('/functions/'))return route.fulfill({status:404,headers:{'access-control-allow-origin':'*'},body:'No notification backend in browser fixtures'});
     const readPost=request.method()==='POST'&&['/rest/v1/rpc/mon_statut','/storage/v1/object/sign/apk/version.json'].includes(url.pathname);
     if(request.method()!=='GET'&&!readPost)blockedWrites.push({method:request.method(),path:url.pathname});
-    const backendMissions=tripgoScenario?[{...missions[0],pickup_start:'2026-11-02T08:00:00+01:00',pickup_end:'2026-11-02T08:00:00+01:00',delivery_end:'2026-11-02T10:00:00+01:00',to_city:'Annecy',destination_address:'14 rue Exemple 74000 Annecy'}]:railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
+    const tripDay=busLiveScenario?'2026-10-31':'2026-11-02';
+    const backendMissions=tripgoScenario?[{...missions[0],pickup_start:tripDay+'T08:00:00+01:00',pickup_end:tripDay+'T08:00:00+01:00',delivery_end:tripDay+'T10:00:00+01:00',to_city:'Annecy',destination_address:'14 rue Exemple 74000 Annecy'}]:railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
     const backendSettings=tripgoScenario?{...settings,domicile_lat:45.1914,domicile_lng:5.7143}:railScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}:settings;
     return json(route,url.pathname.endsWith('/missions')?backendMissions:url.pathname.endsWith('/reglages')?[backendSettings]:[]);
    }
@@ -117,8 +121,10 @@ async function run(){
     const actual=url.searchParams.get('fromPlace')===official.request.fromPlace&&url.searchParams.get('toPlace')===official.request.toPlace&&url.searchParams.get('arriveBy')==='false';
     return json(route,actual?official.response:{plan:{itineraries:[]}}).catch(()=>{});
    }
+   if(url.hostname==='open-data.bus.blablacar.com')return busLiveScenario?json(route,siriFixture.response):route.abort('failed');
    if(url.hostname==='api.tripgo.com'){
     assert.equal(request.headers()['x-tripgo-key'],'a'.repeat(32),'Only a dummy browser-fixture key is used');
+    if(busLiveScenario&&url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793437200')return json(route,tripgoToday.response);
     if(url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793610000')return json(route,tripgoFixture.response);
     return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Outside recorded test query'});
    }
@@ -213,18 +219,38 @@ async function run(){
   await release('14');
   const tripStatus=page.getByText(/^Retour TripGo : 2 proposition/);await tripStatus.waitFor();
   const tripText=await tripStatus.innerText();assert.match(tripText,/FlixBus 1789/);assert.match(tripText,/BlaBlaCar Bus/);
+  await page.getByText(/Prévisions BlaBlaCar Bus indisponibles sur cet appareil/).waitFor();
   assert.match(tripText,/Preuves manquantes/);assert.match(tripText,/prix du transport/);assert.doesNotMatch(tripText,/Réalisable/);
   await tripStatus.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'mobile-tripgo.png')});
   await page.getByRole('button',{name:'Retirer la clé TripGo de cet appareil',exact:true}).click();
   assert.equal(await page.evaluate(()=>localStorage.getItem('cp_tripgo_key')),null);
   assert.equal(await page.getByText(/^Retour TripGo : 2 proposition/).count(),0);
   await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'TripGo scenario worker must stop on close');
+  // Positive operating-day replay, followed by expiry of the operator's validity.
+  await page.close();busLiveScenario=true;
+  page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
+  page.on('worker',worker=>{workers.push(worker.url());activeWorkers.add(worker);worker.on('close',()=>activeWorkers.delete(worker));});
+  await page.clock.install({time:new Date(siriFixture.testNow)});
+  await page.goto(origin+'?buslive=1',{waitUntil:'domcontentloaded'});
+  await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();
+  await page.locator('#cpTransportPlannedReturn').fill('2026-10-31T10:00');
+  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();
+  await page.getByLabel('Clé TripGo privée sur cet appareil').fill('a'.repeat(32));
+  await page.getByRole('button',{name:'Activer TripGo sur cet appareil',exact:true}).click();
+  await release('14');await page.getByText(/circulation observée par l’opérateur/).waitFor();
+  const observed=page.getByText(/^Retour TripGo : 1 proposition/);
+  const observedText=await observed.innerText();assert.match(observedText,/arrivée estimée après la marche finale/);
+  assert.match(observedText,/11:45/);assert.doesNotMatch(observedText,/Preuves manquantes : circulation/);assert.doesNotMatch(observedText,/Réalisable/);
+  await observed.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'mobile-blablacar-observed.png')});
+  await page.clock.fastForward(61000);await page.getByText(/Prévisions BlaBlaCar Bus expirées/).waitFor();
+  assert.match(await observed.innerText(),/Preuves manquantes : circulation/);
+  await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'Operating-day worker must stop on close');
   assert.deepEqual(errors,[],'No uncaught browser script errors');
   assert.deepEqual(blockedWrites,[],'No account or mission writes');
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '5-minute minimum at exact pickup GPS, final walk required','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence'],
+    '5-minute minimum at exact pickup GPS, final walk required','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation'],
    regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){

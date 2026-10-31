@@ -43,7 +43,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
      (mode==='wa_wal'&&Number.isFinite(s.metres)&&s.metres>10&&(end===start||s.metres/((end-start)/1000)>4))||
      !/^(wa_wal|pt_pub(?:_[a-z0-9-]+)*|stationary_(?:transfer|wait))$/.test(mode||'')||/ferry|boat|air/i.test(s.modeInfo?.identifier||'')) {valid=false;break;}
     previous=end;
-    legs.push({mode,provider:s.externalData?.operatorName||null,serviceTripId:s.serviceTripID||null,routeId:s.routeId||s.routeID||null,fromStopCode:s.from.stopCode||null,toStopCode:s.to.stopCode||null,ticketWebsiteURL:typeof s.ticketWebsiteURL==='string'?s.ticketWebsiteURL:null,line:s.serviceNumber||s.serviceName||null,from:s.from.name||s.from.address||'',to:s.to.name||s.to.address||'',
+    legs.push({mode,provider:s.externalData?.operatorName||null,serviceTripId:s.serviceTripID||null,serviceShortName:s.serviceShortName||null,routeId:s.routeId||s.routeID||null,fromStopCode:s.from.stopCode||null,toStopCode:s.to.stopCode||null,ticketWebsiteURL:typeof s.ticketWebsiteURL==='string'?s.ticketWebsiteURL:null,line:s.serviceNumber||s.serviceName||null,from:s.from.name||s.from.address||'',to:s.to.name||s.to.address||'',
      fromPoint:coord(s.from),toPoint:coord(s.to),departure:new Date(start).toISOString(),arrival:new Date(end).toISOString(),
      distanceMeters:Number.isFinite(s.metres)&&s.metres>=0?s.metres:null,realtimeReported:s.realTime===true,
      alerts:Array.isArray(s.alerts)?s.alerts.map(a=>String(a?.title||a?.text||'Alerte fournisseur')).slice(0,10):[],serviceConfirmed:false});
@@ -58,7 +58,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
     alerts:[...new Set([...legs.flatMap(l=>l.alerts),...(Array.isArray(trip.alerts)?trip.alerts:[]),...(Array.isArray(data.alerts)?data.alerts:[])].map(a=>typeof a==='string'?a:String(a?.title||a?.text||'Alerte fournisseur')))].slice(0,20),
     evidence:{scheduleProvided:true,endpointCoordinatesMatched:startGapMeters<=10&&endGapMeters<=10,startGapMeters,endGapMeters,
      walkingProvided:legs.some(l=>l.mode==='wa_wal'),realtimeReported,fareVerified:false,
-     missing:['circulation et perturbations à la date du trajet','accès physique au point GPS exact','prix du transport']}});
+     missing:['circulation à la date du trajet','perturbations éventuelles','accès physique au point GPS exact','prix du transport']}});
   }
  }
  return {source:'TripGo',receivedAt,itineraries:found.sort((a,b)=>arriveBy?Date.parse(b.departure)-Date.parse(a.departure):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,10)};

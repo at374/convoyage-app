@@ -2526,6 +2526,7 @@
       // TripGo is optional and uses only a private key saved on this device.
       if (window.CPTripGo) {
         const tripgo=window.CPTripGo,config=document.createElement('div');
+        const busRealtime=window.CPBlaBlaRealtime?.createClient({fetcher:regionalFetch});
         config.className='doux';config.style.marginTop='10px';
         const keyInput=document.createElement('input');keyInput.type='password';keyInput.autocomplete='off';
         keyInput.setAttribute('aria-label','Clé TripGo privée sur cet appareil');keyInput.placeholder='Clé TripGo privée';
@@ -2549,9 +2550,35 @@
                 result.legs.map(l=>(l.mode==='wa_wal'?'Marche':l.line||l.mode)+' '+l.from+' → '+l.to).join(' · ')+
                 ' · réponse du fournisseur reçue le '+formatParis(answer.receivedAt)+
                 ' · raccordement aux coordonnées : '+Math.ceil(result.evidence.startGapMeters)+' m / '+Math.ceil(result.evidence.endGapMeters)+' m (accès physique à vérifier)'+
-                (result.alerts.length?' · Alertes fournisseur : '+result.alerts.join(' ; '):'')+
-                ' · Preuves manquantes : '+result.evidence.missing.join(', ')+'. Transport non confirmé — vérifiez vous-même.';
-              status.appendChild(line);
+                (result.alerts.length?' · Alertes fournisseur : '+result.alerts.join(' ; '):'');
+              const proof=document.createElement('span');
+              const renderProof=confirmed=>{proof.textContent=' · Preuves manquantes : '+result.evidence.missing.filter(item=>!confirmed||!item.startsWith('circulation')).join(', ')+'. Transport non confirmé — vérifiez vous-même.';};
+              renderProof(false);line.appendChild(proof);status.appendChild(line);
+              if(busRealtime&&result.legs.some(window.CPBlaBlaRealtime.eligible)){
+                const live=document.createElement('span');live.textContent=' · Prévisions BlaBlaCar Bus : recherche auprès de l’opérateur…';line.appendChild(live);
+                busRealtime.check(result,task,{signal}).then(check=>{
+                  if(!regionalActive()||signal.aborted||!live.isConnected)return;
+                  const update=check.updates[0];
+                  const label=check.status==='cancelled'?'annulation signalée par l’opérateur':
+                    check.status==='missed_boarding'?'départ trop tôt pour l’approche disponible':
+                    check.status==='arrival_too_late'?'retard incompatible avec le minimum de 5 min au point GPS exact':
+                    update?.status==='observed'?'circulation observée par l’opérateur':
+                    update?.status==='predicted'?'prévision reçue de l’opérateur':
+                    update?.status==='stale'?'aucune donnée opérateur valide à cet instant':
+                    update?.status==='not_matched'?'aucune prévision raccordée à cette course et à ce jour':
+                    update?.status==='ambiguous'?'plusieurs versions opérateur incompatibles':'pas de prévision exploitable pour cette course';
+                  renderProof(check.serviceConfirmed===true);
+                  const exclusions={cancelled:'⛔ Annulation signalée — ne pas retenir ce trajet avant actualisation. ',arrival_too_late:'⛔ Prévision incompatible avec les 5 minutes requises — actualisez avant de retenir ce trajet. ',missed_boarding:'⛔ Embarquement incompatible avec l’approche disponible — actualisez avant de retenir ce trajet. '};
+                  if(exclusions[check.status]){const warning=document.createElement('strong');warning.textContent=exclusions[check.status];line.prepend(warning);}
+                  live.textContent=' · Prévisions BlaBlaCar Bus : '+label+
+                    (check.doorArrival?' · arrivée estimée après la marche finale : '+formatParis(new Date(Math.ceil(Date.parse(check.doorArrival)/60000)*60000).toISOString()):'')+
+                    (update?.sourceTimestamp?' · source du '+formatParis(update.sourceTimestamp):'')+'. Accès physique et prix restent à vérifier.';
+                  const expires=check.validUntil||update?.validUntil;
+                  if(expires&&Date.parse(expires)>Date.now()){const timer=setTimeout(()=>{
+                    if(regionalActive()&&live.isConnected){renderProof(false);live.textContent=' · Prévisions BlaBlaCar Bus expirées — actualisez les transports.';}
+                  },Math.max(0,Date.parse(expires)-Date.now()));signal.addEventListener('abort',()=>clearTimeout(timer),{once:true});}
+                }).catch(()=>{if(regionalActive()&&!signal.aborted&&live.isConnected)live.textContent=' · Prévisions BlaBlaCar Bus indisponibles sur cet appareil. La circulation reste à vérifier.';});
+              }
             }
             const credit=document.createElement('p');credit.textContent='Source : TripGo / opérateurs indiqués ; marches : © contributeurs OpenStreetMap. La disponibilité annoncée ne constitue pas une réservation.';const attribution=document.createElement('a');attribution.href='https://www.openstreetmap.org/copyright';attribution.target='_blank';attribution.rel='noopener noreferrer';attribution.textContent=' Attribution OpenStreetMap';credit.appendChild(attribution);status.appendChild(credit);
           }).catch(()=>{if(regionalActive()&&!signal.aborted&&status.isConnected)status.textContent=label+' TripGo indisponible. Horaires, circulation, accès et prix restent à vérifier.';});

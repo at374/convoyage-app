@@ -6,7 +6,7 @@ test('recorded TripGo response finds BlaBlaCar Bus and FlixBus, excludes past de
  const r=api.parse(clone(),options);assert.equal(r.itineraries.length,2);
  assert.equal(r.itineraries[0].legs[1].line,'BlaBlaCar Bus');assert.equal(r.itineraries[1].legs[1].line,'FlixBus 1789');
  assert.equal(r.itineraries[0].legs[1].serviceTripId,'1298787731');assert.equal(r.itineraries[0].legs[1].provider,'BlaBlaCar Bus');
- for(const t of r.itineraries){assert.equal(t.priceEUR,null);assert.equal(t.transportConfirmed,false);assert.equal(t.accessVerified,false);assert.equal(t.evidence.realtimeReported,false);assert.equal(t.evidence.walkingProvided,true);assert.equal(t.evidence.endpointCoordinatesMatched,true);assert.equal(t.evidence.missing.length,3);}
+ for(const t of r.itineraries){assert.equal(t.priceEUR,null);assert.equal(t.transportConfirmed,false);assert.equal(t.accessVerified,false);assert.equal(t.evidence.realtimeReported,false);assert.equal(t.evidence.walkingProvided,true);assert.equal(t.evidence.endpointCoordinatesMatched,true);assert.equal(t.evidence.missing.length,4);}
 });
 test('TripGo rejects a mismatched query, missing template, unavailable trip and overlapping segments',()=>{
  const other=clone();other.query.from.lat+=0.01;assert.throws(()=>api.parse(other,options),/autre recherche/);
