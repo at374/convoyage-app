@@ -1,0 +1,9 @@
+FROM node:24-bookworm-slim
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=8080
+COPY --chown=node:node transport-blablacar-realtime.js ./transport-blablacar-realtime.js
+COPY --chown=node:node server/transport-realtime-relay.cjs ./server/transport-realtime-relay.cjs
+USER node
+EXPOSE 8080
+CMD ["node", "server/transport-realtime-relay.cjs"]

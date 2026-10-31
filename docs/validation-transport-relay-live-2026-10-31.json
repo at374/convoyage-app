@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-10-31T08:25:15.827Z",
+  "browser": "156.0.8078.80",
+  "scope": "Real Chromium fetch across two local HTTP origins, actual official HTTPS operator feed, no network mocks",
+  "source": "https://open-data.bus.blablacar.com/api/siri-lite/estimated-timetable",
+  "strictUpstreamTls": true,
+  "tlsBypass": false,
+  "environmentProxyEnabled": true,
+  "allowedBrowserOrigin": "http://127.0.0.1:36889",
+  "corsReadable": true,
+  "upstreamRequests": 1,
+  "privateHeadersReceived": [
+    {
+      "cookiePresent": false,
+      "authorizationPresent": false,
+      "tripgoKeyPresent": false
+    },
+    {
+      "cookiePresent": false,
+      "authorizationPresent": false,
+      "tripgoKeyPresent": false
+    }
+  ],
+  "first": {
+    "http": 200,
+    "elapsedMs": 4389,
+    "sourceTimestamp": "2026-10-31T08:25:15.63240532Z",
+    "validUntil": "2026-10-31T08:26:15.63240532Z",
+    "journeys": 388,
+    "validAtReceipt": true
+  },
+  "cached": {
+    "http": 200,
+    "elapsedMs": 12,
+    "sourceTimestamp": "2026-10-31T08:25:15.63240532Z",
+    "validUntil": "2026-10-31T08:26:15.63240532Z",
+    "journeys": 388,
+    "validAtReceipt": true
+  },
+  "androidDeviceTested": false,
+  "remoteDeployment": false
+}

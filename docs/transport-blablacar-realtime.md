@@ -28,7 +28,7 @@ Ce sont des relectures de données enregistrées et des missions fictives. Elles
 
 Le flux officiel a de nouveau répondu HTTP 200 le 31 octobre à 08:05:51 UTC. Il était âgé de 0,66 seconde à réception, valide pendant une minute, et contenait 388 courses. **Aucun en-tête autorisant l'origine GitHub Pages n'a été retourné.** La lecture directe depuis un navigateur reste donc bloquée par CORS. Le client essaie la vérification et signale l'indisponibilité sans effacer les autres propositions ; aucun relais non autorisé n'est utilisé.
 
-Le catalogue du PAN référence le même flux, sans URL de proxy. La documentation officielle du proxy PAN réserve ce mécanisme au protobuf GTFS-RT, pas au JSON SIRI-LITE. Aucun serveur n'est créé ou déployé dans ce lot. La validation positive de l'interface utilise une réponse réseau simulée reproduisant le flux enregistré ; elle n'est pas présentée comme un accès temps réel fonctionnel sur Android.
+Le catalogue du PAN référence le même flux, sans URL de proxy. La documentation officielle du proxy PAN réserve ce mécanisme au protobuf GTFS-RT, pas au JSON SIRI-LITE. Aucun serveur distant n'a été créé ou déployé. Un relais local est maintenant préparé et testé ; voir `transport-realtime-relay.md`. Son URL reste à héberger et à configurer après validation des conditions de mise en service. La validation positive de l'interface utilise une réponse réseau simulée reproduisant le flux enregistré ; elle n'est pas présentée comme un accès temps réel fonctionnel sur Android.
 
 ## Bornes et tests
 

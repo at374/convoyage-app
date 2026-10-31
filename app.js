@@ -2526,7 +2526,8 @@
       // TripGo is optional and uses only a private key saved on this device.
       if (window.CPTripGo) {
         const tripgo=window.CPTripGo,config=document.createElement('div');
-        const busRealtime=window.CPBlaBlaRealtime?.createClient({fetcher:regionalFetch});
+        let busRealtime=null;
+        try{busRealtime=window.CPBlaBlaRealtime?.createClient({fetcher:regionalFetch,...(window.CP_BLABLACAR_REALTIME_URL?{endpoint:window.CP_BLABLACAR_REALTIME_URL}:{})});}catch(_){}
         config.className='doux';config.style.marginTop='10px';
         const keyInput=document.createElement('input');keyInput.type='password';keyInput.autocomplete='off';
         keyInput.setAttribute('aria-label','Clé TripGo privée sur cet appareil');keyInput.placeholder='Clé TripGo privée';
@@ -2554,8 +2555,9 @@
               const proof=document.createElement('span');
               const renderProof=confirmed=>{proof.textContent=' · Preuves manquantes : '+result.evidence.missing.filter(item=>!confirmed||!item.startsWith('circulation')).join(', ')+'. Transport non confirmé — vérifiez vous-même.';};
               renderProof(false);line.appendChild(proof);status.appendChild(line);
-              if(busRealtime&&result.legs.some(window.CPBlaBlaRealtime.eligible)){
+              if(window.CPBlaBlaRealtime&&result.legs.some(window.CPBlaBlaRealtime.eligible)){
                 const live=document.createElement('span');live.textContent=' · Prévisions BlaBlaCar Bus : recherche auprès de l’opérateur…';line.appendChild(live);
+                if(!busRealtime){live.textContent=' · Prévisions BlaBlaCar Bus indisponibles sur cet appareil. La circulation reste à vérifier.';continue;}
                 busRealtime.check(result,task,{signal}).then(check=>{
                   if(!regionalActive()||signal.aborted||!live.isConnected)return;
                   const update=check.updates[0];

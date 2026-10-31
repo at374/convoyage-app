@@ -2,9 +2,9 @@ name: Test mobile transport lifecycle
 on:
   push:
     branches: [feature/transport-ranking-safe]
-    paths: ['*.js', 'index.html', 'style.css', 'tests/browser/**', 'tests/fixtures/**', '.github/workflows/test-transport-mobile.yml']
+    paths: ['server/**', '*.js', 'index.html', 'style.css', 'tests/browser/**', 'tests/fixtures/**', '.github/workflows/test-transport-mobile.yml']
   pull_request:
-    paths: ['*.js', 'index.html', 'style.css', 'tests/browser/**', 'tests/fixtures/**', '.github/workflows/test-transport-mobile.yml']
+    paths: ['server/**', '*.js', 'index.html', 'style.css', 'tests/browser/**', 'tests/fixtures/**', '.github/workflows/test-transport-mobile.yml']
 permissions:
   contents: read
 jobs:

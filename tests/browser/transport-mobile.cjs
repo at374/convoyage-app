@@ -5,6 +5,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs/promises'),path=require('node:path'),http=require('node:http'),zlib=require('node:zlib');
 const {chromium,devices}=require('playwright');
 const {crc32}=require('../../transport-gtfs-loader');
+const {createRelay,PATH:relayPath}=require('../../server/transport-realtime-relay.cjs');
 const official=require('../fixtures/mobilites-m-grenoble-crolles-2026-10-30.json');
 const railFixture=require('../fixtures/sncf-annecy-grenoble-2026-11-02.json');
 const tripgoFixture=require('../fixtures/tripgo-annecy-grenoble-2026-10-31.json');
@@ -63,12 +64,22 @@ async function run(){
  });
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const origin='http://127.0.0.1:'+server.address().port;
+ let relayUpstreamRequests=0;
+ const relayServer=createRelay({allowedOrigins:[origin],now:()=>Date.parse(siriFixture.testNow),fetcher:async(url,init)=>{
+  assert.equal(url,siriFixture.source);assert.deepEqual(init.headers,{Accept:'application/json'});relayUpstreamRequests++;
+  return new Response(JSON.stringify(siriFixture.response),{headers:{'Content-Type':'application/json'}});
+ }});
+ await new Promise(resolve=>relayServer.listen(0,'127.0.0.1',resolve));
+ const relayOrigin='http://127.0.0.1:'+relayServer.address().port,relayURL=relayOrigin+relayPath;
  let browser,context,page;
  const json=(route,value)=>route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(value)});
  try{
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--no-sandbox']});
   context=await browser.newContext({...devices['Pixel 7'],locale:'fr-FR',timezoneId:'Europe/Paris',serviceWorkers:'block'});
-  await context.addInitScript(({missions,settings,origin})=>{
+  await context.addInitScript(({missions,settings,origin,relayURL})=>{
+   if(new URL(location.href).searchParams.has('buslive'))window.CP_BLABLACAR_REALTIME_URL=relayURL;
+   // An invalid optional relay must never block SNCF or the other engines.
+   if(new URL(location.href).searchParams.has('rail'))window.CP_BLABLACAR_REALTIME_URL='http://external.invalid/transport-realtime/blablacar';
    if(new URL(location.href).searchParams.has('rail')){
     missions=missions.slice(0,1);missions[0].pickup_start=missions[0].pickup_end='2026-11-02T16:00:00+01:00';
     missions[0].delivery_end='2026-11-02T18:00:00+01:00';
@@ -85,9 +96,10 @@ async function run(){
    for(const [key,value] of Object.entries({cp_session:{access_token:'browser-test-only',user_id:'browser-fixture',expires_at:Date.now()+86400000},
     cp_cache:{missions,alertes:[],reglages:settings,chargeLe:new Date().toISOString()},cp_preferences:{onglet:'agenda'},cp_plats_choisies:['DriiveMe'],cp_pause:{choix:'non'},cp_notif:{on:false,son:false}}))localStorage.setItem(key,JSON.stringify(value));
    window.CP_GTFS_AGENDA_RESOURCES=[{id:'browser-fixture',network:'Réseau de test',format:'GTFS',url:'https://gtfs-fixture.invalid/feed.zip',bounds:[44,5,46,7],timeZone:'Europe/Paris'}];
-  },{missions,settings,origin});
+  },{missions,settings,origin,relayURL});
   await context.route('**/*',async route=>{
    const request=route.request(),url=new URL(request.url());
+   if(url.origin===relayOrigin)return route.continue(); // Real cross-origin HTTP relay, not a mocked response.
    if(url.origin===origin){
     if(railScenario&&url.pathname.startsWith('/data/sncf/'))return json(route,url.pathname.endsWith('/manifest.json')?railFixture.manifest:railFixture.day);
     if(url.pathname==='/config.js')return route.fulfill({contentType:'text/javascript',body:"window.CP_CONFIG={url:'https://backend.invalid',anonKey:'browser-test-only'};"});
@@ -121,7 +133,7 @@ async function run(){
     const actual=url.searchParams.get('fromPlace')===official.request.fromPlace&&url.searchParams.get('toPlace')===official.request.toPlace&&url.searchParams.get('arriveBy')==='false';
     return json(route,actual?official.response:{plan:{itineraries:[]}}).catch(()=>{});
    }
-   if(url.hostname==='open-data.bus.blablacar.com')return busLiveScenario?json(route,siriFixture.response):route.abort('failed');
+   if(url.hostname==='open-data.bus.blablacar.com')return route.abort('failed');
    if(url.hostname==='api.tripgo.com'){
     assert.equal(request.headers()['x-tripgo-key'],'a'.repeat(32),'Only a dummy browser-fixture key is used');
     if(busLiveScenario&&url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793437200')return json(route,tripgoToday.response);
@@ -245,13 +257,14 @@ async function run(){
   await page.clock.fastForward(61000);await page.getByText(/Prévisions BlaBlaCar Bus expirées/).waitFor();
   assert.match(await observed.innerText(),/Preuves manquantes : circulation/);
   await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'Operating-day worker must stop on close');
+  assert.equal(relayUpstreamRequests,1,'Operator feed is read through the real relay once');
   assert.deepEqual(errors,[],'No uncaught browser script errors');
   assert.deepEqual(blockedWrites,[],'No account or mission writes');
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '5-minute minimum at exact pickup GPS, final walk required','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation'],
-   regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
+    '5-minute minimum at exact pickup GPS, final walk required','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines'],
+   relay:{crossOriginHttp:true,upstreamFixture:true,upstreamRequests:relayUpstreamRequests},regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){
   if(page&&!page.isClosed()){
@@ -262,7 +275,7 @@ async function run(){
  }finally{
   for(const list of gates.values())for(const resolve of list)resolve();
   for(const resolve of regionalGates.splice(0))resolve();
-  await context?.close();await browser?.close();await new Promise(resolve=>server.close(resolve));
+  await context?.close();await browser?.close();relayServer.closeAllConnections();await new Promise(resolve=>relayServer.close(resolve));await new Promise(resolve=>server.close(resolve));
  }
 }
 run().catch(error=>{console.error(error);process.exitCode=1;});

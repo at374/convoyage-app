@@ -82,11 +82,14 @@ function assessJourney(feed,journey,task={},options={}){
  return {...base,status,doorDeparture:new Date(doorDeparture).toISOString(),doorArrival:new Date(doorArrival).toISOString(),
   serviceConfirmed:update.serviceConfirmed,validUntil:update.validUntil};
 }
-function createClient({fetcher=root.fetch,now=()=>Date.now(),timeoutMs=8000}={}){
+function createClient({fetcher=root.fetch,now=()=>Date.now(),endpoint=ENDPOINT,timeoutMs=endpoint===ENDPOINT?8000:10000}={}){
+ const url=new URL(endpoint),local=['localhost','127.0.0.1','[::1]'].includes(url.hostname);
+ if(url.username||url.password||url.search||url.hash||!(url.protocol==='https:'||url.protocol==='http:'&&local)||
+  (url.href!==ENDPOINT&&url.pathname!=='/transport-realtime/blablacar'))throw Error('Relais SIRI invalide');
  if(typeof fetcher!=='function'||typeof now!=='function'||!Number.isFinite(timeoutMs)||timeoutMs<=0||timeoutMs>30000)throw Error('Client SIRI invalide');
  let cached=null,cachedUntil=0,pending=null,unavailableUntil=0;
  async function download(signal){
-  const response=await fetcher(ENDPOINT,{signal,cache:'no-cache',credentials:'omit',referrerPolicy:'no-referrer',headers:{Accept:'application/json'}});
+  const response=await fetcher(url.href,{signal,cache:'no-cache',credentials:'omit',referrerPolicy:'no-referrer',headers:{Accept:'application/json'}});
   if(!response.ok||!response.body?.getReader)throw Error('Flux SIRI indisponible');
   if(Number(response.headers?.get?.('content-length'))>2500000)throw Error('Flux SIRI trop grand');
   const reader=response.body.getReader(),chunks=[];let length=0;const cancel=()=>{reader.cancel().catch(()=>{});};signal.addEventListener('abort',cancel,{once:true});
@@ -114,7 +117,7 @@ function createClient({fetcher=root.fetch,now=()=>Date.now(),timeoutMs=8000}={})
   });
  }
  return {check:async(journey,task,{signal}={})=>{if(!(journey.legs||[]).some(eligible))return {status:'unsupported',updates:[],transportConfirmed:false,serviceConfirmed:false,accessVerified:false,realizable:false};
-  return assessJourney(await load(signal),journey,task,{now:now()});}};
+  return {...assessJourney(await load(signal),journey,task,{now:now()}),transportEndpoint:url.href};}};
 }
 const api={ENDPOINT,eligible,parse,assess,assessJourney,createClient};root.CPBlaBlaRealtime=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
