@@ -2,9 +2,9 @@ name: Test TripGo transport evidence
 on:
   push:
     branches: [feature/transport-ranking-safe]
-    paths: ['transport-tripgo.js', 'transport-blablacar-realtime.js', 'app.js', 'tests/transport-tripgo.test.cjs', 'tests/transport-blablacar-realtime.test.cjs', 'tests/fixtures/blablacar-*.json', 'tests/fixtures/tripgo-*.json', '.github/workflows/test-transport-tripgo.yml']
+    paths: ['transport-tripgo.js', 'transport-blablacar-realtime.js', 'app.js', 'tests/transport-tripgo.test.cjs', 'tests/transport-blablacar-realtime.test.cjs', 'tests/transport-realtime-relay.test.cjs', 'server/transport-realtime-relay.cjs', 'tests/fixtures/blablacar-*.json', 'tests/fixtures/tripgo-*.json', '.github/workflows/test-transport-tripgo.yml']
   pull_request:
-    paths: ['transport-tripgo.js', 'transport-blablacar-realtime.js', 'app.js', 'tests/transport-tripgo.test.cjs', 'tests/transport-blablacar-realtime.test.cjs', 'tests/fixtures/blablacar-*.json', 'tests/fixtures/tripgo-*.json', '.github/workflows/test-transport-tripgo.yml']
+    paths: ['transport-tripgo.js', 'transport-blablacar-realtime.js', 'app.js', 'tests/transport-tripgo.test.cjs', 'tests/transport-blablacar-realtime.test.cjs', 'tests/transport-realtime-relay.test.cjs', 'server/transport-realtime-relay.cjs', 'tests/fixtures/blablacar-*.json', 'tests/fixtures/tripgo-*.json', '.github/workflows/test-transport-tripgo.yml']
 permissions:
   contents: read
 jobs:
