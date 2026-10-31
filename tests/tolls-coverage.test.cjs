@@ -88,7 +88,7 @@ test('ministry join preserves uncertainty, rejects distant homonyms and is idemp
 });
 test('all 13 connected stations retain exact ministry coordinates and stored tariff references',async()=>{
   const o=read('peages-overlay.json'),m=read('data/gares-peage-officiel.json'),{api}=load(),p=await api.chargerPeages(),ix=api.indexGares(p.g);
-  const added=o.gares.filter(g=>g.provenance?.local==='data/gares-peage-officiel.json');
+  const added=o.gares.filter(g=>g.provenance?.match==='unique-normalized-name; clustered-within-1km');
   assert.equal(added.length,13);
   for(const g of added){
     assert.ok(ix(g.nom)>=0);
@@ -98,4 +98,28 @@ test('all 13 connected stations retain exact ministry coordinates and stored tar
   }
   // Merely adding Cassis coordinates cannot override the unresolved route guard.
   const {sh,tms}=route(api);assert.equal(api.prixExact(p,sh,tms,fixture.summary.length),null);
+});
+test('reviewed aliases require all expected names on the specified road',()=>{
+  const {candidates}=require('../scripts/connect-toll-stations.cjs');
+  const base={g:[]},overlay={gares:[],paires:[['BONNEVILLE EST','OTHER',1,2,10]]};
+  const alias={tariffName:'BONNEVILLE EST',officialNames:['Bonneville Est Entrée','Bonneville Est Sortie'],routes:['A40']};
+  const rows=[['Bonneville Est Entrée','A40',46.07,6.425],['Bonneville Est Sortie','A40',46.0701,6.4251]];
+  assert.equal(candidates(base,overlay,{d:rows},[alias]).length,1);
+  assert.equal(candidates(base,overlay,{d:rows.slice(0,1)},[alias]).length,0);
+  assert.equal(candidates(base,overlay,{d:rows},[{...alias,routes:['A41']}]).length,0);
+  assert.equal(candidates(base,overlay,{d:rows},[{...alias,tariffName:'BONNEVILLE OUEST'}]).length,0);
+});
+test('reviewed aliases reproduce 7 stations from the ministry and retain Bonneville Est/Ouest distinction',async()=>{
+  const {candidates}=require('../scripts/connect-toll-stations.cjs'),o=read('peages-overlay.json'),base=read('peages-aprr.json'),m=read('data/gares-peage-officiel.json'),aliases=read('data/toll-station-aliases.json').aliases;
+  const existing=o.gares.filter(g=>g.provenance?.aliases==='data/toll-station-aliases.json');
+  assert.equal(existing.length,7);
+  const regenerated=candidates(base,{...o,gares:o.gares.filter(g=>!existing.includes(g))},m,aliases);
+  assert.deepEqual(regenerated,existing);
+  assert.equal(candidates(base,o,m,aliases).length,0);
+  const {api}=load(),p=await api.chargerPeages(),ix=api.indexGares(p.g),a=ix('BONNEVILLE EST'),b=ix('SCIENTRIER');
+  assert.ok(a>=0);assert.notEqual(a,ix('BONNEVILLE OUEST'));
+  // Scientrier is a tariff boundary without a verified station position here.
+  // Locating Bonneville must not invent that missing endpoint.
+  assert.equal(b,-1);
+  assert.deepEqual(o.paires.find(q=>q[0]==='BONNEVILLE EST'&&q[1]==='SCIENTRIER'),['BONNEVILLE EST','SCIENTRIER',1.7,3.1,12]);
 });

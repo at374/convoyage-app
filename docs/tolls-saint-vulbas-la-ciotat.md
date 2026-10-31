@@ -44,3 +44,13 @@ La branche péages est indépendante de la PR transports #170 et part de `main` 
 Après ajout: **18 844 clés tarifaires chargeables**, contre 18 314 au premier commit de cette PR, soit **530 nouvelles clés sans doublons**. 15 129 lignes overlay raccordables contre 14 595; la différence de 534 lignes comprend des doublons et ne doit pas être annoncée comme 534 relations distinctes. Les libellés non résolus passent de 306 à **293**. Cagnes Est possède encore un tarif dont l'autre extrémité manque: une gare localisée ne garantit pas que toutes ses relations soient calculables.
 
 Validation locale après ajout: **32 tests Node**, **2 tests Python**, Chromium mobile avec vrai worker puis secours direct, tous réussis. Les tests comparent également toutes les nouvelles coordonnées au fichier ministériel, vérifient les rejets d'homonymes distants, l'idempotence et le maintien du refus d'un total partiel vers La Ciotat. Aucun nouveau test sur téléphone Android physique ni déploiement.
+
+## Suite — variantes de noms contrôlées sur les routes officielles
+
+`data/toll-station-aliases.json` décrit sept correspondances explicites et leurs identifiants routiers ministériels: Belleville-sur-Saône A6, Bonneville Est et Ouest A40, Dijon-Arc-sur-Tille A31, Nuits-Saint-Georges A31, L'Isle-sur-le-Doubs A36, Saint-Denis-lès-Sens A19. Aucun élargissement générique de « St », « S/ », « Est » ou « Ouest » n'est appliqué. Tous les noms attendus doivent exister sur la route spécifiée avant tout ajout.
+
+Les points sont ceux du ministère et conservent leur provenance. Les entrées/sorties d'une même gare peuvent être groupées; les barrières pleine voie et échangeurs de La Ciotat ne sont pas fusionnés. Leurs noms identiques dans OSM ne suffisent pas à prouver une équivalence tarifaire.
+
+Résultat: **18 949 clés tarifaires chargeables**, soit **105** de plus après le raccordement initial des 13 gares; **286** libellés restent sans localisation. Les 20 gares ajoutées depuis le premier commit de la PR ne signifient pas 20 prix complets disponibles sur tous leurs trajets. Les tarifs Bonneville Est/Ouest → Scientrier, notamment, restent bloqués par l'extrémité Scientrier non localisée.
+
+Validation locale finale de cette étape: **34 tests Node**, 2 Python, Chromium mobile (vrai worker puis secours), syntaxe et diff réussis. Les tests refusent les alias sur mauvaise route ou sans tous leurs noms officiels, distinguent Bonneville Est/Ouest et conservent l'incertitude Scientrier.

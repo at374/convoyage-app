@@ -8,6 +8,7 @@ on:
       - 'tests/tolls-coverage.test.cjs'
       - 'scripts/connect-toll-stations.cjs'
       - 'data/gares-peage-officiel.json'
+      - 'data/toll-station-aliases.json'
       - 'tests/browser/tolls-mobile.cjs'
       - 'tests/fixtures/tolls-*.json'
       - '.github/workflows/test-tolls-coverage.yml'
