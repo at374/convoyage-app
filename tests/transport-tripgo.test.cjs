@@ -98,7 +98,9 @@ test('Return transport cannot depart before vehicle delivery is completed',()=>{
  const journeys=api.parse(clone(),{...options,when:delivery}).itineraries;
  assert.ok(journeys.length>0);
  assert.ok(journeys.every(it=>Date.parse(it.departure)>=Date.parse(delivery)));
- const afterLastDeparture=api.parse(clone(),{...options,when:'2026-11-02T15:00:00+01:00'});
+ const lateDelivery='2026-11-02T15:00:00+01:00';
+ const lateResponse=clone();lateResponse.query.depart=lateDelivery;
+ const afterLastDeparture=api.parse(lateResponse,{...options,when:lateDelivery});
  assert.equal(afterLastDeparture.itineraries.length,0,'no service should be suggested when every recorded departure has already passed');
 });
 

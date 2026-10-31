@@ -59,3 +59,18 @@ test('recorded official SNCF subset renders Annecy–Grenoble after the ambiguou
  assert.match(outbound,/Annecy/);assert.match(outbound,/Grenoble/);assert.match(outbound,/Transport non confirmé/);
  assert.doesNotMatch(outbound,/Réalisable/);assert(urls.every(u=>!u.includes('45.191491')),'Coordinates stay local');
 });
+
+test('SNCF display accepts the exact five-minute deadline and rejects one second late for ISO and numeric limits',async()=>{
+ const itinerary=arrival=>({departure:'2026-11-02T12:00:00Z',arrival,
+  legs:[{line:'TEST',from:'A',to:'B',departure:'2026-11-02T12:00:00Z',arrival}]});
+ const s=setup(async options=>({sourceVersion:'boundary-fixture',status:'ok',
+  itineraries:[itinerary('2026-11-02T14:55:00Z'),itinerary('2026-11-02T14:55:01Z'),itinerary('2026-11-02T18:55:01Z')]}));
+ await tick();
+ const outbound=s.panel.children[0].textContent;
+ assert.match(outbound,/1 proposition\(s\) de gare à gare/);
+ assert.match(outbound,/15:55:00/);assert.doesNotMatch(outbound,/15:55:01/);
+ const junction=s.panel.children[2].textContent;
+ assert.match(junction,/2 proposition\(s\) de gare à gare/);
+ assert.doesNotMatch(junction,/19:55:01/);
+ assert.match(outbound,/Transport non confirmé/);
+});

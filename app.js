@@ -2345,6 +2345,8 @@
           return [stationKey(v.fromStation),stationKey(v.toStation),v.when,v.arriveBy,v.latestArrival];
         }, (panel,signal) => {
           const {fromStation,toStation,when,arriveBy,latestArrival}=inputs();
+          const latestArrivalMs=latestArrival==null?null:
+            typeof latestArrival==='number'?latestArrival:Date.parse(latestArrival);
           if (!when || (!fromStation.name && !fromStation.point) || (!toStation.name && !toStation.point) ||
               (fromStation.name && toStation.name && fromStation.name.trim().toLocaleLowerCase('fr') === toStation.name.trim().toLocaleLowerCase('fr'))) return;
           const status = document.createElement('div');
@@ -2357,7 +2359,7 @@
             limit:10,fetcher:regionalFetch,signal,
             ...(latestArrival ? {latestArrival:new Date(latestArrival).toISOString()} : {})}).then(answer => {
             if (!regionalActive() || signal.aborted || !status.isConnected) return;
-            const itineraries = answer.itineraries.filter(it => !latestArrival || Date.parse(it.arrival) <= latestArrival).slice(0,3);
+            const itineraries = answer.itineraries.filter(it => latestArrivalMs===null || Date.parse(it.arrival) <= latestArrivalMs).slice(0,3);
             status.textContent = label + ' — secours SNCF, horaires théoriques du flux ' + answer.sourceVersion + ' : ' +
               (itineraries.length ? itineraries.length + ' proposition(s) de gare à gare.' :
               answer.status === 'stations_not_found' ? 'gare non identifiée pour une des communes.' :
@@ -2565,6 +2567,29 @@
               const proof=document.createElement('span');
               const renderProof=confirmed=>{proof.textContent=' · Preuves manquantes : '+result.evidence.missing.filter(item=>!confirmed||result.legs.filter(leg=>String(leg.mode||'').startsWith('pt_pub')).length!==1||result.legs.some(leg=>String(leg.mode||'').startsWith('pt_pub')&&!window.CPBlaBlaRealtime.eligible(leg))||!item.startsWith('circulation')).join(', ')+'. Transport non confirmé — vérifiez vous-même.';};
               renderProof(false);line.appendChild(proof);status.appendChild(line);
+              const details=document.createElement('details');details.setAttribute('data-tripgo-details','');
+              const summary=document.createElement('summary');summary.textContent='Voir les étapes et les cartes des arrêts';details.appendChild(summary);
+              const mapNote=document.createElement('p');mapNote.className='doux';
+              mapNote.textContent='Les cartes localisent les coordonnées fournies. Le parcours piéton ouvert dans Maps fait l’objet d’un nouveau calcul ; il peut différer de la proposition. Accès réels à vérifier.';details.appendChild(mapNote);
+              const steps=document.createElement('ol');
+              const stepTime=value=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',dateStyle:'short',timeStyle:'medium'}).format(new Date(value));
+              for(const leg of result.legs){
+                const step=document.createElement('li');step.textContent=(leg.mode==='wa_wal'?'Marche':leg.line||'Correspondance')+' · '+
+                  stepTime(leg.departure)+' → '+stepTime(leg.arrival)+' · '+leg.from+' → '+leg.to;
+                const validMapPoint=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180;
+                for(const [label,point] of [['Départ',leg.fromPoint],['Arrivée',leg.toPoint]]){
+                  if(!validMapPoint(point))continue;
+                  const link=document.createElement('a');link.textContent=' · '+label+' sur la carte';link.target='_blank';link.rel='noopener noreferrer';
+                  link.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(point.lat+','+point.lon);step.appendChild(link);
+                }
+                if(leg.mode==='wa_wal'&&validMapPoint(leg.fromPoint)&&validMapPoint(leg.toPoint)){
+                  const walk=document.createElement('a');walk.textContent=' · Ouvrir la marche dans Maps';walk.target='_blank';walk.rel='noopener noreferrer';
+                  walk.href='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(leg.fromPoint.lat+','+leg.fromPoint.lon)+
+                    '&destination='+encodeURIComponent(leg.toPoint.lat+','+leg.toPoint.lon)+'&travelmode=walking';step.appendChild(walk);
+                }
+                steps.appendChild(step);
+              }
+              details.appendChild(steps);status.appendChild(details);
               if(window.CPBlaBlaRealtime&&Array.isArray(result.legs)&&result.legs.some(window.CPBlaBlaRealtime.eligible)){
                 const live=document.createElement('span');live.textContent=' · Prévisions BlaBlaCar Bus : recherche auprès de l’opérateur…';line.appendChild(live);
                 if(!busRealtime){live.textContent=' · Prévisions BlaBlaCar Bus indisponibles sur cet appareil. La circulation reste à vérifier.';continue;}

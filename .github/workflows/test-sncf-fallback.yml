@@ -1,7 +1,7 @@
 name: Test SNCF theoretical fallback
 on:
   push:
-    branches: [main]
+    branches: [main, feature/transport-ranking-safe]
     paths:
       - 'sncf-fallback.js'
       - 'app.js'

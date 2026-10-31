@@ -152,7 +152,7 @@ async function run(){
   page.setDefaultTimeout(10000);
   await page.goto(origin,{waitUntil:'domcontentloaded'});
   // The real card may omit the external reference; its Agenda index remains explicit.
-  await page.locator('.mission').first().waitFor();
+  await page.locator('.mission').filter({hasText:'Grenoble'}).first().waitFor();
   const cards=await page.locator('.mission').evaluateAll(nodes=>nodes.map(n=>({index:n.dataset.i,text:n.innerText})));
   const current=cards.find(c=>c.text.includes('Grenoble')&&!c.text.includes('Crolles'));
   assert.ok(current,'Synthetic Grenoble mission is visible in Agenda');
@@ -242,6 +242,15 @@ async function run(){
   await release('14');
   const tripStatus=page.getByText(/^Retour TripGo : 2 proposition/);await tripStatus.waitFor();
   const tripText=await tripStatus.innerText();assert.match(tripText,/FlixBus 1789/);assert.match(tripText,/BlaBlaCar Bus/);
+  const steps=tripStatus.locator('[data-tripgo-details]').first();
+  await steps.locator('summary').click();
+  assert.ok(await steps.locator('li').count()>=3,'Walking and transit legs have separate dated steps');
+  const maps=await steps.locator('a').evaluateAll(nodes=>nodes.map(x=>({href:x.href,target:x.target,rel:x.rel})));
+  assert.ok(maps.some(x=>new URL(x.href).searchParams.get('travelmode')==='walking'));
+  assert.ok(maps.every(x=>new URL(x.href).hostname==='www.google.com'&&x.target==='_blank'&&x.rel.includes('noopener')));
+  assert.ok(maps.every(x=>!x.href.includes('TripGo-Key')&&!x.href.includes('aaaaaaaa')));
+  assert.match(await steps.innerText(),/nouveau calcul/);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.getByText(/Prévisions BlaBlaCar Bus indisponibles sur cet appareil/).waitFor();
   assert.match(tripText,/Preuves manquantes/);assert.match(tripText,/prix du transport/);assert.doesNotMatch(tripText,/Réalisable/);
   await tripStatus.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'mobile-tripgo.png')});
@@ -274,7 +283,7 @@ async function run(){
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '5-minute minimum at exact pickup GPS, final walk required','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines'],
+    '5-minute minimum at exact pickup GPS, final walk required','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines'],
    relay:{crossOriginHttp:true,upstreamFixture:true,upstreamRequests:relayUpstreamRequests},regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){
