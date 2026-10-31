@@ -61,3 +61,12 @@ test('configured client can verify an operator observation through the actual lo
  assert.equal(result.transportEndpoint,endpoint);assert.equal(result.serviceConfirmed,true);assert.equal(result.transportConfirmed,false);assert.equal(result.doorArrival,'2026-10-31T10:44:34.000Z');
  for(const invalid of ['http://external.example'+PATH,'https://relay.example/other','https://key@relay.example'+PATH,'https://relay.example'+PATH+'?key=secret'])assert.throws(()=>rt.createClient({endpoint:invalid}),/Relais/);
 });
+
+test('public relay endpoint only permits standard HTTPS port',()=>{
+ const accepted='https://relay.example'+PATH;
+ assert.doesNotThrow(()=>rt.createClient({endpoint:accepted}));
+ assert.doesNotThrow(()=>rt.createClient({endpoint:'https://relay.example:443'+PATH}));
+ assert.throws(()=>rt.createClient({endpoint:'https://relay.example:8443'+PATH}),/Relais SIRI invalide/);
+ assert.throws(()=>rt.createClient({endpoint:'https://relay.example:8080'+PATH}),/Relais SIRI invalide/);
+ assert.doesNotThrow(()=>rt.createClient({endpoint:'http://127.0.0.1:18080'+PATH}));
+});
