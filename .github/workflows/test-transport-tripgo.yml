@@ -17,4 +17,6 @@ jobs:
         with:
           node-version: '22'
       - run: node --check transport-tripgo.js
-      - run: node --test tests/transport-tripgo.test.cjs tests/transport-blablacar-realtime.test.cjs
+      - run: node --check app.js
+      - run: node --check transport-blablacar-realtime.js
+      - run: node --test tests/transport-tripgo.test.cjs tests/transport-blablacar-realtime.test.cjs tests/transport-realtime-relay.test.cjs
