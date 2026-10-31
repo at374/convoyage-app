@@ -1266,7 +1266,7 @@
             feed.coordinateOneTransferDayJourneys(result.data,
               origin.lat, origin.lng, destination.lat, destination.lng, earliest) : [];
           const journeys = directJourneys.concat(transferJourneys)
-            .filter(j => nextDate === date && j.arrivalSeconds <= nextSeconds)
+            .filter(j => nextDate === date && j.arrivalSeconds <= nextSeconds - 5 * 60)
             // Préférer une arrivée à l'arrêt 30–45 min avant la mission, sans
             // considérer cet écart comme une marge réelle (marche non vérifiée).
             .sort((a, b) => {
@@ -1329,7 +1329,7 @@
                 planner.requestPedestrianOSRM(lastStop, to, window.fetch.bind(window), footEndpoint)
               ]);
               return { journey: j, check: planner.assessScheduledSibraJourney(
-                j, earliest, nextSeconds, from, to, firstWalk, lastWalk, 1800) };
+                j, earliest, nextSeconds, from, to, firstWalk, lastWalk, 300) };
             })).then(assessed => {
               if (!line.isConnected) return;
               const ranked = assessed.sort((a, b) => Number(b.check.feasible) - Number(a.check.feasible) ||
@@ -1912,16 +1912,16 @@
             hour: '2-digit', minute: '2-digit' }).format(date) : 'heure non renseignée';
       };
       const nextGapMin = next ? Math.floor((Date.parse(next.pickup_start) - endTime) / 60000) : null;
-      const securityMarginMin = 30;
+      const securityMarginMin = 5;
       const pickupDate = Number.isFinite(Date.parse(transportPickup || '')) ? transportPickup : null;
       const deliveryDate = Number.isFinite(Date.parse(transportDelivery || '')) ?
         transportDelivery : null;
       const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
       const connectionStatus = nextGapMin == null ? '' :
-        connectionBudgetMin <= 0 ?
-          '⚠️ Jonction non réalisable avec une marge de sécurité de 30 min, même sans trajet d’approche.' :
+        connectionBudgetMin < 0 ?
+          '⚠️ Jonction non réalisable avec une marge minimale de 5 min, même sans trajet d’approche.' :
           'Temps maximum théorique pour transport et approche : ' +
-          connectionBudgetMin + ' min, après réservation d’une marge de sécurité de 30 min. ' +
+          connectionBudgetMin + ' min, après réservation d’une marge minimale de 5 min. ' +
           'Transport non confirmé — vérifiez vous-même.';
       const nextOrigin = next && locationText(next.origin_address || next.from_address,
         next.from_city, next.from_department);
@@ -1929,7 +1929,7 @@
         '<div><strong>1. Aller au départ de mission</strong><div>' +
         esc(home || 'Domicile non renseigné') + ' → ' + esc(from || 'Départ non renseigné') +
         '</div><div class="doux">Prise en charge : ' + esc(formatParis(pickupDate)) +
-        ' · avance souhaitée : 30 à 45 min.</div>' +
+        ' · minimum : 5 min au point GPS exact, marche finale comprise ; préférence : 30 à 45 min.</div>' +
         directions(home, from, transportPickup) + '</div>' +
         '<div style="margin-top:12px"><strong>2. Jonction vers la prochaine mission</strong><div>' +
         (next ? esc((to || 'Livraison non renseignée') + ' → ' +
@@ -1973,7 +1973,7 @@
           regionalEngineReady ? 'aucun fournisseur régional disponible.' :
           'adaptateur non chargé.') +
         ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
-        '<p class="doux">Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
+        '<p class="doux">Le minimum de 5 min se mesure au point GPS exact de prise en charge, après la marche finale. Une arrivée à la gare ou à l’arrêt ne suffit pas. Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
       const planningBox = document.createElement('div');
       planningBox.className = 'doux';
       planningBox.style.marginTop = '10px';
@@ -2227,7 +2227,7 @@
             regionalStatus.textContent = options.length ?
               'Jonction régionale : ' + options.length +
               ' proposition(s) théoriques, horaires et circulation à vérifier :' :
-              'Jonction régionale : aucune correspondance compatible avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
+              'Jonction régionale : aucune correspondance compatible avec la marge minimale de 5 min. Transport non confirmé — vérifiez vous-même.';
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
                 window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
@@ -2492,7 +2492,7 @@
             outboundStatus.textContent = options.length ?
               'Aller régional : ' + options.length +
               ' proposition(s) théoriques depuis le point de domicile enregistré (adresse exacte non vérifiée) :' :
-              'Aller régional : aucune arrivée compatible avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
+              'Aller régional : aucune arrivée compatible avec la marge minimale de 5 min. Transport non confirmé — vérifiez vous-même.';
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
                 window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
@@ -2580,7 +2580,7 @@
                   hourCycle: 'h23'
                 }).formatToParts(new Date(pickupMs));
                 const v = k => Number(p.find(x => x.type === k)?.value || 0);
-                const latest = (v('hour') * 60 + v('minute') - 30) * 60;
+                const latest = (v('hour') * 60 + v('minute') - securityMarginMin) * 60;
                 const rides = window.CPSibraFeed.coordinateDayJourneys(
                   pickupResult.data, homeLat, homeLon, pickupGps.lat, pickupGps.lng, 0,
                   { radiusMeters: 600 }).filter(j =>
@@ -2601,7 +2601,7 @@
                   (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
                   rides.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
                     ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
-                  '. Marge de 30 min après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, approche piétonne, tarifs et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                  '. Marge minimale de 5 min après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, approche piétonne, tarifs et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                   (changes.length ?
                     '🚌 Aller SIBRA avec 1 correspondance (horaires théoriques) depuis le centre de ' +
                     (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
@@ -2609,8 +2609,8 @@
                       ' → changement ' + clock(j.firstLeg.arrivalSeconds) + ' / ' +
                       clock(j.secondLeg.departureSeconds) + ' → ' +
                       j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
-                    '. Marge de 30 min après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, marche et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
-                    'Aller SIBRA : aucun bus direct ou avec 1 correspondance trouvé avec 30 min de marge depuis le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.');
+                    '. Marge minimale de 5 min après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, marche et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                    'Aller SIBRA : aucun bus direct ou avec 1 correspondance trouvé avec 5 min de marge minimale depuis le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.');
               } else {
                 outbound.textContent = pickupDay && !pickupResult?.usable ?
                   'Aller SIBRA ' + pickupDay +
@@ -2741,7 +2741,7 @@
                   '🚌 Jonction SIBRA automatique — horaires théoriques : ' +
                   candidates.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
                     ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
-                  '. Arrêts à 600 m maximum à vol d’oiseau ; marche minimale à 1,2 m/s prise en compte pour la marge de 30 min, trajet piéton non vérifié. Tarifs et perturbations non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                  '. Arrêts à 600 m maximum à vol d’oiseau ; marche minimale à 1,2 m/s prise en compte pour la marge minimale de 5 min, trajet piéton non vérifié. Tarifs et perturbations non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                   (changes.length ?
                     '🚌 Jonction SIBRA avec 1 correspondance (horaires théoriques) : ' +
                     changes.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
@@ -2749,7 +2749,7 @@
                       ' / ' + clock(j.secondLeg.departureSeconds) +
                       ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
                     '. Correspondance au même arrêt GTFS, marche et circulation non vérifiées. Transport non confirmé — vérifiez vous-même.' :
-                    'Jonction SIBRA : aucune course directe ou avec une correspondance trouvée à proximité avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.');
+                    'Jonction SIBRA : aucune course directe ou avec une correspondance trouvée à proximité avec la marge minimale de 5 min. Transport non confirmé — vérifiez vous-même.');
               } else {
                 auto.textContent = 'Jonction SIBRA automatique indisponible : coordonnées GPS précises des deux missions manquantes, dates différentes ou heure de livraison absente.';
               }

@@ -150,8 +150,8 @@ async function run(){
   await page.getByText('Réseau de test — horaires aux arrêts',{exact:true}).waitFor();
   await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('TEST'));
   const text=await page.locator('#cpTransportMissionDetails').innerText();
-  assert.match(text,/C11/);assert.match(text,/Crolles Mairie/);assert.match(text,/30 min/);assert.doesNotMatch(text,/\bRéalisable\b/);
-  assert.ok(requests.some(r=>r.arriveBy==='true'&&r.time==='08:30'),'Outbound applies mission margin');
+  assert.match(text,/C11/);assert.match(text,/Crolles Mairie/);assert.match(text,/minimum : 5 min/);assert.doesNotMatch(text,/\bRéalisable\b/);
+  assert.ok(requests.some(r=>r.arriveBy==='true'&&r.time==='08:55'),'Outbound applies mission margin');
   assert.ok(requests.some(r=>r.fromPlace===official.request.fromPlace&&r.toPlace===official.request.toPlace),'Official regional response is rendered after late geocoding');
   assert.ok(workers.length>0,'The actual dedicated browser worker is used');
   await page.locator('[data-gtfs-agenda]').scrollIntoViewIfNeeded();
@@ -195,7 +195,7 @@ async function run(){
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '30-minute outbound margin','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset'],
+    '5-minute minimum at exact pickup GPS, final walk required','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset'],
    regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){

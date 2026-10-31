@@ -137,8 +137,8 @@ function assessJourney(row,task,walks){
  const base={walks,serviceConfirmed:false,accessVerified:false,transferVerified:false,realizable:false};
  const departure=instant(row.departure),arrival=instant(row.arrival);
  const earliest=task.earliestDeparture===undefined?null:instant(task.earliestDeparture);
- const deadline=task.latestArrival===undefined?null:instant(task.latestArrival)-(task.marginMinutes??30)*60000;
- if(!Number.isFinite(task.marginMinutes??30)||(task.marginMinutes??30)<0||(task.marginMinutes??30)>1440||
+ const deadline=task.latestArrival===undefined?null:instant(task.latestArrival)-(task.marginMinutes??5)*60000;
+ if(!Number.isFinite(task.marginMinutes??5)||(task.marginMinutes??5)<0||(task.marginMinutes??5)>1440||
     !Number.isFinite(departure)||!Number.isFinite(arrival)||arrival<departure||
     (earliest!==null&&!Number.isFinite(earliest))||(deadline!==null&&!Number.isFinite(deadline)))return {...base,status:'unknown'};
  let transferStart=null,transferEnd=null;

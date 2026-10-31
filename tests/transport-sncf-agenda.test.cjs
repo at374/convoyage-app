@@ -22,7 +22,7 @@ function setup(plan,fetcher){
  const context={AbortController,window:{CPSncfFallback:plan?{plan}:api},document:{createElement:()=>new Element()},panel,bt:button,
   $:id=>id==='feuille'?sheet:button,m:current,next,etat:{reglages:{domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}},
   G:{coordonnees:(m,side)=>m?.[side==='origin'?'o':'d'],trouverVille:()=>null},transportAddressPoint:()=>false,
-  pickupDate:'2026-11-02T16:00:00+01:00',deliveryDate:'2026-11-02T17:00:00+01:00',securityMarginMin:30,
+  pickupDate:'2026-11-02T16:00:00+01:00',deliveryDate:'2026-11-02T17:00:00+01:00',securityMarginMin:5,
   regionalFetch:fetcher,formatParis:v=>new Date(v).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}),Date};
  vm.runInNewContext(slotCode+railCode,context);return {panel,button,sheet,current,next,context};
 }
@@ -31,8 +31,8 @@ test('SNCF refreshes only changed station inputs after late geocoding, with the 
  assert.equal(calls.length,3);assert.equal(calls[0].to.point,null);
  s.current.o={...grenoble};s.button.cpRefreshRegional();assert.equal(calls.length,4);
  assert.equal(calls[0].signal.aborted,true);assert.equal(calls[1].signal.aborted,false);
- assert.equal(calls[3].to.point.lat,grenoble.lat);assert.equal(calls[3].when,'2026-11-02T14:30:00.000Z');
- assert.equal(calls[2].latestArrival,'2026-11-02T18:30:00.000Z');
+ assert.equal(calls[3].to.point.lat,grenoble.lat);assert.equal(calls[3].when,'2026-11-02T14:55:00.000Z');
+ assert.equal(calls[2].latestArrival,'2026-11-02T18:55:00.000Z');
  s.current.o.description='Same coordinates';s.button.cpRefreshRegional();assert.equal(calls.length,4);
  s.context.etat.reglages.domicile_lat=45.903;s.button.cpRefreshRegional();assert.equal(calls.length,6);
  assert.equal(calls[2].signal.aborted,false,'home changes do not restart the mission junction');

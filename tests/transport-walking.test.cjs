@@ -60,13 +60,13 @@ test('serialized requests respect the interval and reject oversized responses',a
  assert.throws(()=>w.createRouter({endpoint:'https://user:secret@example.org/route'}));
 });
 function journey(){return {departure:'2026-11-02T10:00:00Z',arrival:'2026-11-02T11:00:00Z',originStop:to,destinationStop:from};}
-test('compares access and egress with mission windows without changing confirmation flags',()=>{
- const row=journey(),task={from,to,earliestDeparture:'2026-11-02T09:59:00Z',latestArrival:'2026-11-02T11:31:00Z'};
+test('accepts exactly five minutes after the final walk, rejects 4:59 and preserves unconfirmed status',()=>{
+ const row=journey(),task={from,to,earliestDeparture:'2026-11-02T09:59:00Z',latestArrival:'2026-11-02T11:06:00Z'};
  const walks={access:calculated(from,to),egress:calculated(from,to),transfer:{status:'not_required'}};
  const fit=w.assessJourney(row,task,walks);assert.equal(fit.status,'fits_calculated_walks');
  assert.equal(fit.realizable,false);assert.equal(fit.serviceConfirmed,false);assert.equal(fit.accessVerified,false);
  assert.equal(w.assessJourney(row,{...task,earliestDeparture:'2026-11-02T09:59:01Z'},walks).status,'departure_too_early');
- assert.equal(w.assessJourney(row,{...task,latestArrival:'2026-11-02T11:30:59Z'},walks).status,'arrival_too_late');
+ assert.equal(w.assessJourney(row,{...task,latestArrival:'2026-11-02T11:05:59Z'},walks).status,'arrival_too_late');
  assert.equal(w.assessJourney(row,{...task,marginMinutes:-1},walks).status,'unknown');
  assert.equal(w.assessJourney(row,{...task,latestArrival:'2026-11-02T11:31:00'},walks).status,'unknown');
 });

@@ -54,7 +54,7 @@ function searchWindow(task){
  if(end<start)throw new Error('Inverted mission window');
  return {earliestDeparture:new Date(start).toISOString(),latestArrival:new Date(end).toISOString(),
   // The return horizon is not a mission deadline and gets no safety margin.
-  marginMinutes:Number.isFinite(late)?task.marginMinutes??30:0};
+  marginMinutes:Number.isFinite(late)?task.marginMinutes??5:0};
 }
 function serviceDates(window,timeZone){
  const formatter=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'});

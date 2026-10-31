@@ -11,7 +11,7 @@
     const arrival=validTime(item.arrival)?Date.parse(item.arrival):NaN;
     const valid=Number.isFinite(departure)&&Number.isFinite(arrival)&&arrival>departure;
     const price=finite(item.priceEUR)&&item.priceEUR>=0?item.priceEUR:null;
-    const margin=finite(opts.marginMinutes)?Math.max(15,opts.marginMinutes):30;
+    const margin=finite(opts.marginMinutes)?Math.max(5,opts.marginMinutes):5;
     const deadline=validTime(opts.deadline)?Date.parse(opts.deadline):NaN;
     const slack=valid&&Number.isFinite(deadline)?Math.floor((deadline-arrival)/60000):null;
     const allVerified=legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
@@ -24,7 +24,7 @@
   function rank(items,opts={}){
     const enriched=(Array.isArray(items)?items:[]).map(x=>evaluate(x,opts));
     const valid=enriched.filter(x=>x.durationMinutes!==null&&
-      (x.slackMinutes===null||x.slackMinutes>=15));
+      (x.slackMinutes===null||x.slackMinutes>=5));
     const byPrice=(a,b)=>Number(b.feasible)-Number(a.feasible)||
       ((a.priceEUR??Infinity)===(b.priceEUR??Infinity)?0:(a.priceEUR??Infinity)-(b.priceEUR??Infinity))||a.durationMinutes-b.durationMinutes;
     const byDuration=(a,b)=>Number(b.feasible)-Number(a.feasible)||

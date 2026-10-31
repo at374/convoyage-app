@@ -44,7 +44,7 @@ test('checks absolute mission bounds, minimum interval, maximum wait and index s
  const a=feed('A','first'),b=feed('B','second');
  assert.equal(search([a,b],{minTransferMinutes:11}).journeys.length,0);
  assert.equal(search([a,b],{maxWaitMinutes:9}).journeys.length,0);
- assert.equal(crossNetworkTrips([a,b],'2026-11-02',origin,destination,{...window,latestArrival:'2026-11-02T11:29:59+01:00'}).journeys.length,0);
+ assert.equal(crossNetworkTrips([a,b],'2026-11-02',origin,destination,{...window,latestArrival:'2026-11-02T11:04:59+01:00'}).journeys.length,0);
  a.indexServiceDates=['2026-11-03'];assert.throws(()=>search([a,b]),/scope/);
 });
 test('marks resource budgets as incomplete and rejects invalid budgets/radii',()=>{
@@ -85,7 +85,7 @@ test('joins separately active service dates after midnight without reassigning a
  assert.equal(row.transferMinutes,10);assert.equal(row.serviceConfirmed,false);assert.equal(row.walkingDurationSeconds,null);
  const missing=nightFeed('B','second','2026-11-04','00:10:00','00:40:00');
  assert.equal(crossNetworkTrips([a,missing],'2026-11-02',origin,destination,w,options).journeys.length,0);
- assert.equal(crossNetworkTrips([a,b],'2026-11-02',origin,destination,{...w,latestArrival:'2026-11-03T01:09:59+01:00'},options).journeys.length,0);
+ assert.equal(crossNetworkTrips([a,b],'2026-11-02',origin,destination,{...w,latestArrival:'2026-11-03T00:44:59+01:00'},options).journeys.length,0);
  assert.equal(crossNetworkTrips([a,b],'2026-11-02',origin,destination,w,{...options,minTransferMinutes:11}).journeys.length,0);
 });
 test('a second leg may belong to the previous service day when its GTFS clock exceeds 24 hours',()=>{

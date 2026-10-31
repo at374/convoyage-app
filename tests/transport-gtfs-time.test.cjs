@@ -41,14 +41,14 @@ function fixture(){
 }
 test('Aller filters on arrival minus margin inclusively, without confirming door-to-door travel',()=>{
  const {files,index,rows}=fixture();
- const result=datedTrips(files,index,rows,{latestArrival:'2026-11-02T11:30:00+01:00'});
+ const result=datedTrips(files,index,rows,{latestArrival:'2026-11-02T11:05:00+01:00'});
  assert.equal(result.length,1);assert.equal(result[0].arrival,'2026-11-02T10:00:00.000Z');
  assert.equal(result[0].serviceDate,'2026-11-02');assert.equal(result[0].departureTime,'10:00:00');
- assert.equal(result[0].timetableOnly,true);assert.equal(result[0].marginMinutes,30);
+ assert.equal(result[0].timetableOnly,true);assert.equal(result[0].marginMinutes,5);
  for(const key of ['serviceConfirmed','accessVerified','exactOrigin','exactDestination','faresVerified'])assert.equal(result[0][key],false);
  assert.equal(result[0].priceEUR,null);
  assert.equal(rows[0].priceEUR,999);
- assert.equal(datedTrips(files,index,rows,{latestArrival:'2026-11-02T11:29:59+01:00'}).length,0);
+ assert.equal(datedTrips(files,index,rows,{latestArrival:'2026-11-02T11:04:59+01:00'}).length,0);
  assert.equal(datedTrips(files,index,rows,{latestArrival:'2026-11-02T11:15:00+01:00',marginMinutes:15}).length,1);
 });
 test('Retour and Jonction require departure after delivery, with explicit timezone or epoch',()=>{

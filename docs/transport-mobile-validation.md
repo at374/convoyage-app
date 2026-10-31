@@ -35,3 +35,6 @@ Ce test n'établit ni la circulation réelle, ni un tarif officiel, ni l'accès 
 ## Exécution GitHub Actions
 
 Sur le commit `6600fe5f4543d75337e92f9a22ef119f2e5e647e`, les huit exécutions déclenchées (push et PR) réussissent, dont deux parcours mobiles. Le parcours PR utilise Chromium 151.0.7922.34 et confirme les trois annulations, zéro worker restant et aucune erreur JavaScript. [Exécution et captures](https://github.com/at374/convoyage-app/actions/runs/41179664330). Ce résultat est distinct du navigateur local et ne constitue pas un test Android.
+
+
+Règle actuelle précisée le 31 octobre 2026 : minimum **5 minutes au point GPS exact de prise en charge, marche finale comprise**. Les anciennes mesures à 30 minutes ci-dessus décrivent leurs scénarios historiques ; 30–45 minutes restent une préférence. Voir `transport-pickup-margin.md` et `validation-transport-pickup5-2026-10-31.json`.

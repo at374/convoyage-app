@@ -228,9 +228,9 @@ test('rejects itineraries with unknown transfer count', async () => {
   assert.equal(response.itineraries[0].transfers,1);
 });
 
-test('mission arrival feasibility keeps 30-minute buffer at destination', () => {
+test('mission arrival feasibility keeps 5-minute buffer at destination', () => {
   const deadline = '2026-10-28T12:00:00+01:00';
-  const arrival = Date.parse('2026-10-28T11:30:00+01:00');
+  const arrival = Date.parse('2026-10-28T11:55:00+01:00');
   const good = {startTime:arrival-1800000,endTime:arrival,
     transportConfirmed:false,legs:[{startTime:arrival-1800000,endTime:arrival,distanceMeters:900}]};
   const late = {...good,endTime:arrival+60000};
@@ -245,7 +245,7 @@ test('mission junction rejects departures before delivery and late arrivals', ()
   const delivered='2026-10-28T11:00:00+01:00';
   const pickup='2026-10-28T13:00:00+01:00';
   const start=Date.parse('2026-10-28T11:15:00+01:00');
-  const end=Date.parse('2026-10-28T12:25:00+01:00');
+  const end=Date.parse('2026-10-28T12:50:00+01:00');
   const valid={startTime:start,endTime:end,legs:[{startTime:start,endTime:end,distanceMeters:800}]};
   const tooEarly={...valid,startTime:start-20*60000};
   const tooLate={...valid,endTime:end+10*60000};

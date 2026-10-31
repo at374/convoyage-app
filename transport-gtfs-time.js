@@ -44,7 +44,7 @@ function instant(value){
  }
  throw new Error('Mission timestamp must include an explicit timezone');
 }
-function missionBounds({earliestDeparture,latestArrival,marginMinutes=30}={}){
+function missionBounds({earliestDeparture,latestArrival,marginMinutes=5}={}){
  if(earliestDeparture===undefined&&latestArrival===undefined)throw new Error('A mission time window is required');
  if(!Number.isFinite(marginMinutes)||marginMinutes<0||marginMinutes>1440)throw new Error('Invalid mission safety margin');
  const first=earliestDeparture===undefined?-Infinity:instant(earliestDeparture);

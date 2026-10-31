@@ -26,7 +26,7 @@ function setup(plan,fetcher){
   transportAddressPoint:p=>!!p&&['adresse','gps'].includes(p.precision),
   $:id=>id==='feuille'?sheet:button,regionalEngineReady:true,regionalProviderReady:true,regionalEndpointConfigured:false,
   regionalPointsReady:(a,b)=>api.supportsPublic(a,b),regionalFetch:fetcher,
-  pickupDate:'2026-11-02T13:00:00+01:00',deliveryDate:'2026-11-02T10:00:00+01:00',securityMarginMin:30,
+  pickupDate:'2026-11-02T13:00:00+01:00',deliveryDate:'2026-11-02T10:00:00+01:00',securityMarginMin:5,
   formatParis:value=>new Date(value).toISOString()};
  vm.runInNewContext(code,context);return {panel,button,sheet,current,next,context};
 }
@@ -44,7 +44,7 @@ test('regional tasks start independently when exact coordinates arrive and keep 
  const callback=app.slice(app.indexOf('    const transportDetailButton ='),app.indexOf('  // ---------- V77')).replace(/\n  }\s*$/, '');
  vm.runInNewContext(callback,state.context);
  state.current.o.precision='gps';notify();assert.equal(calls.length,3);
- assert.equal(calls[2].arrivalDeadline,'2026-11-02T11:30:00.000Z');
+ assert.equal(calls[2].arrivalDeadline,'2026-11-02T11:55:00.000Z');
  state.next.o.lat=45.284;state.button.cpRefreshRegional();assert.equal(calls.length,4);
  assert.equal(calls[3].to.lat,45.284);
  state.sheet.hidden=true;state.current.d.lat=45.192;state.button.cpRefreshRegional();assert.equal(calls.length,4);

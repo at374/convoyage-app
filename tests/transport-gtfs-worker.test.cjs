@@ -192,7 +192,7 @@ test('mission departure order is applied before truncation and preserves the lat
  assert.equal(early.truncated,true);assert.equal(late.truncated,true);
  assert.equal(late.rows[0].serviceConfirmed,false);assert.equal(late.rows[0].priceEUR,null);
  const filtered=await client.query({...query,order:'latestDeparture',limit:1,window:{latestArrival:'2026-11-02T10:00:00+01:00'}});
- assert.equal(filtered.rows[0].tripId,'T80');assert.equal(filtered.rows[0].arrival,'2026-11-02T08:30:00.000Z');
+ assert.equal(filtered.rows[0].tripId,'T105');assert.equal(filtered.rows[0].arrival,'2026-11-02T08:55:00.000Z');
  await assert.rejects(client.query({...query,connectionDates:[]}),/service dates/);
  await assert.rejects(client.query({...query,connectionDates:['2026-11-02','2026-02-30']}),/date/);
  await assert.rejects(client.query({...query,method:'missionDirectTrips',connectionDates:['2026-11-02']}),/mission journey/);

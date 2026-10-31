@@ -79,7 +79,7 @@ test('dated transfer windows convert both legs, preserve >24h clocks and filter 
  assert.equal(converted[0].legs[1].departure,'2026-11-02T23:08:00.000Z');
  assert.equal(converted[0].transferVerified,false);assert.equal(converted[0].timetableOnly,true);
  assert.equal(converted[0].legs[0].serviceConfirmed,false);assert.equal(converted[0].legs[0].group,undefined);
- assert.equal(time.datedTransferTrips(files,index,rows,{...window,latestArrival:'2026-11-03T01:29:59+01:00'}).length,0);
+ assert.equal(time.datedTransferTrips(files,index,rows,{...window,latestArrival:'2026-11-03T01:04:59+01:00'}).length,0);
 });
 test('indexed matching agrees with an exhaustive timetable reference on multiple connections',()=>{
  const files=fixture();files['trips.txt']+='\nT3,R1,S\nT4,R2,S';
