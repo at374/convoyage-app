@@ -95,14 +95,14 @@ test('relay client refuses malformed endpoint URLs before network access',()=>{
 
 test('realtime assessment fails safely for missing and malformed journey legs',async()=>{
  const feed=rt.parse(fixture.response,{now:clock});
- for(const journey of [null,{}, {legs:null},{legs:'invalid'},{legs:[null]}]){
+ for(const journey of [null,{}, {legs:null},{legs:'invalid'},{legs:[null]},{legs:[{mode:42}]}]){
   const assessed=rt.assessJourney(feed,journey,{}, {now:clock});
   assert.equal(assessed.transportConfirmed,false);
   assert.equal(assessed.serviceConfirmed,false);
   assert.equal(assessed.realizable,false);
  }
  const client=rt.createClient({fetcher:async()=>{throw Error('must not fetch');},now:()=>clock});
- for(const journey of [null,{}, {legs:null},{legs:'invalid'},{legs:[null]}]){
+ for(const journey of [null,{}, {legs:null},{legs:'invalid'},{legs:[null]},{legs:[{mode:42}]}]){
   const result=await client.check(journey,{});
   assert.equal(result.status,'unsupported');
   assert.equal(result.transportConfirmed,false);
