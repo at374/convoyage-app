@@ -92,3 +92,12 @@ test('TripGo missing request options return a controlled validation error',async
  await assert.rejects(api.plan(null),/Requête TripGo invalide/);
  await assert.rejects(api.plan('invalid'),/Requête TripGo invalide/);
 });
+
+test('Return transport cannot depart before vehicle delivery is completed',()=>{
+ const delivery='2026-11-02T10:00:00+01:00';
+ const journeys=api.parse(clone(),{...options,when:delivery}).itineraries;
+ assert.ok(journeys.length>0);
+ assert.ok(journeys.every(it=>Date.parse(it.departure)>=Date.parse(delivery)));
+ const afterLastDeparture=api.parse(clone(),{...options,when:'2026-11-02T12:08:00+01:00'});
+ assert.ok(afterLastDeparture.itineraries.every(it=>Date.parse(it.departure)>=Date.parse('2026-11-02T12:08:00+01:00')));
+});
