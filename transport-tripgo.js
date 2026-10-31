@@ -74,6 +74,7 @@ async function readJSON(response,signal){
  return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
 }
 async function plan(options){
+ if(!options||typeof options!=='object')throw Error('Requête TripGo invalide');
  const apiKey=options.apiKey||getKey(),fetcher=options.fetcher||root.fetch;
  if(!/^[A-Za-z0-9_-]{16,128}$/.test(apiKey))throw Error('Clé TripGo privée manquante');
  if(!point(options.from)||!point(options.to)||!Number.isFinite(time(options.when))||(options.latestArrival!==undefined&&!Number.isFinite(time(options.latestArrival)))||(options.latestArrival!==undefined&&time(options.latestArrival)<time(options.when)&&!options.arriveBy)||typeof fetcher!=='function')throw Error('Requête TripGo invalide');
