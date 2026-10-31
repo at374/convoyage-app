@@ -10,7 +10,7 @@ Le volet rappelle l’acceptation des titres SIBRA sur Y21, Y22, Y51, Y62, Y63 e
 
 - https://www.sibra.fr/voyages-occasionnels/ : conditions de correspondance et périmètre annoncé depuis le 1er juillet 2026.
 - https://www.sibra.fr/voyages-reguliers/ : périmètre des abonnements et lien vers la grille du 1er juillet 2026.
-- https://www.sibra.fr/app/uploads/2025/12/Reglement_BUS_CARS_CGV_06012026_VDEF_compressed.pdf : grille des titres page imprimée 4, limites régionales page 4, frais de support page 6. Les tarifs peuvent être révisés ; aucune date de fin de barème n’est inventée.
+- https://www.sibra.fr/app/uploads/2026/07/Reglement_BUS_CARS_CGV_01072026_3.pdf : grille des titres page imprimée 4, limites régionales page 4, frais de support page 6. Les tarifs peuvent être révisés ; aucune date de fin de barème n’est inventée.
 
 L’interface indique la date de consultation et invite à consulter les conditions actuelles. Ce volet est un repère documentaire, pas une preuve tarifaire calculée pour une mission.
 

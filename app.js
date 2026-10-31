@@ -1930,7 +1930,7 @@
         '<p>Repères consultés le 31/10/2026 : 1 voyage à 2,50 € à bord ou 2,00 € en achat digital / rechargement (support éventuel en supplément). ' +
         'Ce sont des prix de titres, pas le prix total de cet itinéraire. ' +
         '<a href="https://www.sibra.fr/voyages-occasionnels/" target="_blank" rel="noopener noreferrer">Titres et conditions actuels</a> · ' +
-        '<a href="https://www.sibra.fr/app/uploads/2025/12/Reglement_BUS_CARS_CGV_06012026_VDEF_compressed.pdf" target="_blank" rel="noopener noreferrer">Barème officiel, pages 4 et 6</a>.</p>' +
+        '<a href="https://www.sibra.fr/app/uploads/2026/07/Reglement_BUS_CARS_CGV_01072026_3.pdf" target="_blank" rel="noopener noreferrer">Barème officiel, pages 4 et 6</a>.</p>' +
         '<p>Un abonnement SIBRA personnel valide évite un billet supplémentaire sur les portions éligibles. ' +
         'Les lignes régionales Y21, Y22, Y51, Y62, Y63 et 272 acceptent les titres SIBRA pour les trajets dans le Grand Annecy (hors SMS). ' +
         'Des arrêts supplémentaires Y21/Y22 sont précisés dans le règlement. Ne pas étendre cette couverture à toute la ligne. ' +

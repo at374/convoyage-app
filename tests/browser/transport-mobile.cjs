@@ -170,6 +170,7 @@ async function run(){
   assert.match(await sibraReference.innerText(),/272.*Grand Annecy/);
   assert.match(await sibraReference.innerText(),/pas encore déduit des prix affichés/);
   assert.equal(await sibraReference.locator('a[href="https://www.sibra.fr/voyages-reguliers/"]').count(),1);
+  assert.equal(await sibraReference.locator('a[href="https://www.sibra.fr/app/uploads/2026/07/Reglement_BUS_CARS_CGV_01072026_3.pdf"]').count(),1);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.screenshot({path:path.join(output,'mobile-sibra-fares.png')});
   await sibraReference.locator('summary').click();
