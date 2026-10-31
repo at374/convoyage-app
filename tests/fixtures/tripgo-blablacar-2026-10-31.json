@@ -1,0 +1,412 @@
+{
+  "scope": "One unchanged recorded TripGo trip for the same operating day",
+  "response": {
+    "groups": [
+      {
+        "frequency": 135,
+        "sources": [
+          {
+            "provider": {
+              "name": "BlaBlaCar",
+              "website": "https://blablacar.com/"
+            }
+          },
+          {
+            "provider": {
+              "name": "FlixBus",
+              "website": "https://www.flixbus.com"
+            }
+          },
+          {
+            "disclaimer": "© OpenStreetMap contributors\n\nMap data available under the Open Database License. For more information, see http://www.openstreetmap.org/copyright.",
+            "provider": {
+              "name": "OpenStreetMap",
+              "website": "https://www.openstreetmap.org"
+            }
+          }
+        ],
+        "trips": [
+          {
+            "arrive": 1793443354,
+            "availability": "AVAILABLE",
+            "caloriesCost": 9,
+            "carbonCost": 8.8,
+            "depart": 1793438058,
+            "hassleCost": 2,
+            "hideExactTimes": false,
+            "id": "9bca7a06-a88e-4237-8d7f-67d4ab14a431",
+            "mainSegmentHashCode": -798589704,
+            "queryFrom": {
+              "address": "Near Annecy",
+              "class": "Location",
+              "lat": 45.9019,
+              "lng": 6.1218
+            },
+            "queryIsLeaveAfter": true,
+            "queryMinimumTransferSeconds": 180,
+            "queryTime": 1793437200,
+            "queryTo": {
+              "address": "Near Grenoble",
+              "class": "Location",
+              "lat": 45.1914,
+              "lng": 5.7143
+            },
+            "segments": [
+              {
+                "availability": "AVAILABLE",
+                "endTime": 1793438100,
+                "id": "uKw7Hhaa",
+                "segmentTemplateHashCode": 889255476,
+                "startTime": 1793438058
+              },
+              {
+                "availability": "AVAILABLE",
+                "endTime": 1793443200,
+                "externalData": {
+                  "operatorName": "BlaBlaCar Bus",
+                  "routeId": "8778225530",
+                  "stopCode": "NCY",
+                  "stopId": "NCY",
+                  "type": "gtfs"
+                },
+                "id": "erLRD0el",
+                "routeID": "8778225530",
+                "routeId": "8778225530",
+                "segmentTemplateHashCode": -798589704,
+                "serviceColor": {
+                  "blue": 85,
+                  "green": 84,
+                  "red": 242
+                },
+                "serviceDirection": "Xge",
+                "serviceName": "Chamonix Sud - Bus station > Sallanches > Cluses - La Maladière > Annecy > Grenoble - Bus Station",
+                "serviceNumber": "BlaBlaCar Bus",
+                "serviceShortName": "51981",
+                "serviceTextColor": {
+                  "blue": 255,
+                  "green": 255,
+                  "red": 255
+                },
+                "serviceTripID": "1298787731",
+                "startTime": 1793438100,
+                "stops": 1,
+                "ticketWebsiteURL": "https://www.blablacar.co.uk/bus?comuto_cmkt=UK_GMAPS-PRO_ALL_ALL&utm_medium=Partnership&utm_source=Gmaps&utm_campaign=UK_GMAPS-PRO_ALL_ALL",
+                "wheelchairAccessible": true
+              },
+              {
+                "availability": "AVAILABLE",
+                "endTime": 1793443354,
+                "id": "iCaIDq5b",
+                "segmentTemplateHashCode": 1657356880,
+                "startTime": 1793443200
+              }
+            ],
+            "weightedScore": 38.5
+          }
+        ]
+      }
+    ],
+    "query": {
+      "depart": "2026-10-31T09:00:00Z",
+      "from": {
+        "address": "Près de Annecy",
+        "class": "Location",
+        "lat": 45.9019,
+        "lng": 6.1218,
+        "region": "FR_ARA_Chambery",
+        "timezone": "Europe/Paris"
+      },
+      "to": {
+        "address": "Près de Grenoble",
+        "class": "Location",
+        "lat": 45.1914,
+        "lng": 5.7143,
+        "region": "FR_ARA_Grenoble",
+        "timezone": "Europe/Paris"
+      }
+    },
+    "region": "FR_ARA_Chambery",
+    "regions": [
+      "FR_ARA_Chambery",
+      "FR_ARA_Grenoble"
+    ],
+    "segmentTemplates": [
+      {
+        "action": "<TIME>: Marcher",
+        "from": {
+          "address": "Grenoble - Bus Station",
+          "class": "StopLocation",
+          "code": "XGE",
+          "id": "pt_pub|FR_ARA_Grenoble|XGE",
+          "lang": "eng",
+          "lat": 45.19283,
+          "lng": 5.71429,
+          "modeInfo": {
+            "alt": "bus",
+            "identifier": "pt_pub_bus",
+            "localIcon": "bus"
+          },
+          "name": "Grenoble - Bus Station",
+          "popularity": 101,
+          "publicTransportMode": "pt_pub_bus",
+          "region": "FR_ARA_Grenoble",
+          "services": "",
+          "stopCode": "XGE",
+          "stopType": "bus",
+          "timezone": "Europe/Paris",
+          "wheelchairAccessible": true
+        },
+        "hashCode": 1657356880,
+        "localCost": {
+          "accuracy": "internal_estimate",
+          "cost": 0,
+          "currency": "EUR"
+        },
+        "metres": 188,
+        "metresDown": 1,
+        "metresFlat": 0,
+        "metresUp": 0,
+        "mini": {
+          "description": "Près de Grenoble",
+          "instruction": "Marcher",
+          "mainValue": "200 m"
+        },
+        "modeIdentifier": "wa_wal",
+        "modeInfo": {
+          "alt": "Marcher",
+          "color": {
+            "blue": 99,
+            "green": 199,
+            "red": 30
+          },
+          "identifier": "wa_wal",
+          "localIcon": "walk"
+        },
+        "notes": "<DURATION> ⋅ 200 m",
+        "streets": [
+          {
+            "encodedWaypoints": "evyrGia{a@FD",
+            "instruction": "HEAD_TOWARDS",
+            "metres": 4,
+            "name": "Walk"
+          },
+          {
+            "encodedWaypoints": "}uyrGca{a@RNBRNGNGNENGHAB?hBs@FD",
+            "instruction": "CONTINUE_STRAIGHT",
+            "metres": 133,
+            "name": "Grenoble - Gare Routière"
+          },
+          {
+            "encodedWaypoints": "eoyrGmb{a@?ED?TMJ?DC@R?D",
+            "instruction": "TURN_LEFT",
+            "metres": 40,
+            "name": "Place de la Gare"
+          },
+          {
+            "encodedWaypoints": "umyrGkb{a@@D",
+            "instruction": "CONTINUE_STRAIGHT",
+            "metres": 1,
+            "name": "",
+            "slope": {
+              "direction": "down",
+              "steepness": "VERY-GENTLE"
+            }
+          },
+          {
+            "encodedWaypoints": "smyrGeb{a@D@@J",
+            "instruction": "TURN_SLIGHTLY_LEFT",
+            "metres": 7,
+            "name": ""
+          }
+        ],
+        "to": {
+          "address": "Près de Grenoble",
+          "class": "Location",
+          "lat": 45.19143,
+          "lng": 5.71437,
+          "region": "FR_ARA_Grenoble",
+          "timezone": "Europe/Paris"
+        },
+        "travelDirection": 176,
+        "type": "unscheduled",
+        "visibility": "in summary"
+      },
+      {
+        "action": "<TIME>: Marcher",
+        "from": {
+          "address": "Près de Annecy",
+          "class": "Location",
+          "lat": 45.90187,
+          "lng": 6.12181,
+          "region": "FR_ARA_Chambery",
+          "timezone": "Europe/Paris"
+        },
+        "hashCode": 889255476,
+        "localCost": {
+          "accuracy": "internal_estimate",
+          "cost": 0,
+          "currency": "EUR"
+        },
+        "metres": 49,
+        "metresDown": 0,
+        "metresFlat": 0,
+        "metresUp": 0,
+        "mini": {
+          "description": "Annecy - Bus Station",
+          "instruction": "Marcher",
+          "mainValue": "<100 m"
+        },
+        "modeIdentifier": "wa_wal",
+        "modeInfo": {
+          "alt": "Marcher",
+          "color": {
+            "blue": 99,
+            "green": 199,
+            "red": 30
+          },
+          "identifier": "wa_wal",
+          "localIcon": "walk"
+        },
+        "notes": "<DURATION> ⋅ <100 m",
+        "streets": [
+          {
+            "encodedWaypoints": "uedwGgtjd@@LHXDD?HLNHV?H",
+            "instruction": "HEAD_TOWARDS",
+            "metres": 49,
+            "name": ""
+          }
+        ],
+        "to": {
+          "address": "Annecy - Bus Station",
+          "class": "StopLocation",
+          "code": "NCY",
+          "id": "pt_pub|FR_ARA_Chambery|NCY",
+          "lang": "eng",
+          "lat": 45.90167,
+          "lng": 6.12128,
+          "modeInfo": {
+            "alt": "bus",
+            "identifier": "pt_pub_bus",
+            "localIcon": "bus"
+          },
+          "name": "Annecy - Bus Station",
+          "popularity": 127,
+          "publicTransportMode": "pt_pub_bus",
+          "region": "FR_ARA_Chambery",
+          "services": "",
+          "stopCode": "NCY",
+          "stopType": "bus",
+          "timezone": "Europe/Paris",
+          "wheelchairAccessible": true
+        },
+        "travelDirection": 248,
+        "type": "unscheduled",
+        "visibility": "in details"
+      },
+      {
+        "action": "<TIME>: Prendre <NUMBER>",
+        "endStopCode": "XGE",
+        "from": {
+          "address": "Annecy - Bus Station",
+          "class": "StopLocation",
+          "code": "NCY",
+          "id": "pt_pub|FR_ARA_Chambery|NCY",
+          "lang": "eng",
+          "lat": 45.90167,
+          "lng": 6.12128,
+          "modeInfo": {
+            "alt": "bus",
+            "identifier": "pt_pub_bus",
+            "localIcon": "bus"
+          },
+          "name": "Annecy - Bus Station",
+          "popularity": 127,
+          "publicTransportMode": "pt_pub_bus",
+          "region": "FR_ARA_Chambery",
+          "services": "",
+          "stopCode": "NCY",
+          "stopType": "bus",
+          "timezone": "Europe/Paris",
+          "wheelchairAccessible": true
+        },
+        "geofences": [
+          {
+            "center": {
+              "lat": 45.192833,
+              "lng": 5.714294
+            },
+            "id": "ARRIVING_AT_YOUR_STOP_1298787731",
+            "messageBody": "Préparer à débarquer à Grenoble - Bus Station",
+            "messageTitle": "Arrivée à votre arrêt proche",
+            "messageType": "ARRIVING_AT_YOUR_STOP",
+            "radius": 500,
+            "trigger": "ENTER",
+            "type": "CIRCLE"
+          }
+        ],
+        "hashCode": -798589704,
+        "mini": {
+          "description": "<DIRECTION>",
+          "instruction": "Prendre <NUMBER> ⋅ <PLATFORM>"
+        },
+        "modeIdentifier": "pt_pub",
+        "modeInfo": {
+          "alt": "Bus",
+          "color": {
+            "blue": 104,
+            "green": 197,
+            "red": 45
+          },
+          "identifier": "pt_pub_bus",
+          "localIcon": "bus"
+        },
+        "notes": "<LINE_NAME>\n<DIRECTION>\n<PLATFORM>\n<DURATION> ⋅ <STOPS>",
+        "operator": "BlaBlaCar Bus",
+        "operatorID": "eu-blablacar-0",
+        "serviceOperator": "BlaBlaCar Bus",
+        "shapes": [
+          {
+            "encodedWaypoints": "aegwGmg|h@ayX`dt@??vy[lp{A",
+            "travelled": false
+          },
+          {
+            "encodedWaypoints": "kddwG}pjd@dmiCrnnA",
+            "travelled": true
+          }
+        ],
+        "sources": [
+          {
+            "provider": "BlaBlaCar Bus"
+          }
+        ],
+        "stopCode": "NCY",
+        "to": {
+          "address": "Grenoble - Bus Station",
+          "class": "StopLocation",
+          "code": "XGE",
+          "id": "pt_pub|FR_ARA_Chambery|XGE",
+          "lang": "eng",
+          "lat": 45.19283,
+          "lng": 5.71429,
+          "modeInfo": {
+            "alt": "bus",
+            "identifier": "pt_pub_bus",
+            "localIcon": "bus"
+          },
+          "name": "Grenoble - Bus Station",
+          "popularity": 49,
+          "publicTransportMode": "pt_pub_bus",
+          "region": "FR_ARA_Chambery",
+          "services": "",
+          "stopCode": "XGE",
+          "stopType": "bus",
+          "timezone": "Europe/Paris",
+          "wheelchairAccessible": true
+        },
+        "travelDirection": 209,
+        "type": "scheduled",
+        "visibility": "in summary"
+      }
+    ]
+  }
+}

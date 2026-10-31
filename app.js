@@ -5,6 +5,8 @@
   const regionalFetch = (...args) => window.fetch(...args);
   // Planning data stays in this page session and never updates synchronized missions.
   const transportReturnPlans = new Map();
+  let gtfsAgendaSession = null;
+  function stopGTFSTransports() { gtfsAgendaSession?.dispose(); gtfsAgendaSession = null; }
   function transportParisDate(value) {
     if (!/^20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) return null;
     const format = date => {
@@ -451,7 +453,28 @@
     pointsMission(m).catch(() => { }).finally(() => rendre().catch(() => { const x = document.getElementById('popVol'); const p = x && Array.from(x.querySelectorAll('p')).find(q => /Calcul des deux/.test(q.textContent)); if (p) p.textContent = 'Le calcul du trajet a échoué sur ce téléphone. Referme et réessaie.'; }));
   }
   // Cherche tout de suite (sans attendre la liste) les points GPS des deux bouts d'UNE mission ; renvoie vrai si un nouveau point a été trouvé.
-  async function pointsMission(m) { let n = 0; for (const cote of ['origin', 'destination']) { const cle = G.cleAdresse(m, cote); if (!cle || G.POINTS[cle]) continue; try { const r = await G.chercherPoint(m, cote, u => fetch(u)); if (r && r.trouve) { G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++; } } catch (_) {} } if (n) ecrireLocal('cp_gps', gpsMem); return n > 0; }
+  const transportPointRequests = new Map();
+  async function pointsMission(m, onPoint) {
+    let n = 0;
+    await Promise.all(['origin', 'destination'].map(async cote => {
+      const cle = G.cleAdresse(m, cote);
+      if (!cle || G.POINTS[cle]) return;
+      try {
+        if (!transportPointRequests.has(cle)) {
+          const request = Promise.resolve().then(() => G.chercherPoint(m, cote, u => fetch(u)))
+            .finally(() => transportPointRequests.delete(cle));
+          transportPointRequests.set(cle, request);
+        }
+        const r = await transportPointRequests.get(cle);
+        if (r && r.trouve) {
+          G.POINTS[cle] = r.point; gpsMem.pts[cle] = r.point; n++;
+          ecrireLocal('cp_gps', gpsMem);
+          if (onPoint) onPoint(cote);
+        }
+      } catch (_) { /* One missing address cannot block the other endpoint. */ }
+    }));
+    return n > 0;
+  }
   function adresse(m, cote) {
     const a = m[cote + '_address'] || (m.mail_info && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'] && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'].adresse); if (a) return a;
     if (m.adresses_locales) return (cote === 'origin' ? m.from_city : m.to_city) ? (cote === 'origin' ? m.from_city : m.to_city) + (m[(cote === 'origin' ? 'from' : 'to') + '_department'] ? ' (' + m[(cote === 'origin' ? 'from' : 'to') + '_department'] + ')' : '') + ' — ' + LOCAL : LOCAL;
@@ -1243,7 +1266,7 @@
             feed.coordinateOneTransferDayJourneys(result.data,
               origin.lat, origin.lng, destination.lat, destination.lng, earliest) : [];
           const journeys = directJourneys.concat(transferJourneys)
-            .filter(j => nextDate === date && j.arrivalSeconds <= nextSeconds)
+            .filter(j => nextDate === date && j.arrivalSeconds <= nextSeconds - 5 * 60)
             // Préférer une arrivée à l'arrêt 30–45 min avant la mission, sans
             // considérer cet écart comme une marge réelle (marche non vérifiée).
             .sort((a, b) => {
@@ -1306,7 +1329,7 @@
                 planner.requestPedestrianOSRM(lastStop, to, window.fetch.bind(window), footEndpoint)
               ]);
               return { journey: j, check: planner.assessScheduledSibraJourney(
-                j, earliest, nextSeconds, from, to, firstWalk, lastWalk, 1800) };
+                j, earliest, nextSeconds, from, to, firstWalk, lastWalk, 300) };
             })).then(assessed => {
               if (!line.isConnected) return;
               const ranked = assessed.sort((a, b) => Number(b.check.feasible) - Number(a.check.feasible) ||
@@ -1724,6 +1747,7 @@
   }
   function detail(m, depuis) {
     if (!m) return;
+    stopGTFSTransports();
     const r = renta(m, depuis);
     const itin = a => a ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a)}` : '';
     const frais = window.CPCalc.fraisRembourses(m);
@@ -1757,11 +1781,14 @@
     { const bt = $('btnTransportsMission'); if (bt) bt.onclick = () => {
       const existing = $('cpTransportMissionDetails');
       if (existing) {
-      existing.hidden = !existing.hidden;
-      bt.setAttribute('aria-expanded', String(!existing.hidden));
-      if (!existing.hidden) existing.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      return;
-    }
+        stopGTFSTransports();
+        if (!existing.hidden) {
+          existing.hidden = true;
+          bt.setAttribute('aria-expanded', 'false');
+          return;
+        }
+        existing.remove();
+      }
       const panel = document.createElement('section');
       panel.id = 'cpTransportMissionDetails';
       panel.className = 'bk bkC bkTr';
@@ -1885,16 +1912,16 @@
             hour: '2-digit', minute: '2-digit' }).format(date) : 'heure non renseignée';
       };
       const nextGapMin = next ? Math.floor((Date.parse(next.pickup_start) - endTime) / 60000) : null;
-      const securityMarginMin = 30;
+      const securityMarginMin = 5;
       const pickupDate = Number.isFinite(Date.parse(transportPickup || '')) ? transportPickup : null;
       const deliveryDate = Number.isFinite(Date.parse(transportDelivery || '')) ?
         transportDelivery : null;
       const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
       const connectionStatus = nextGapMin == null ? '' :
-        connectionBudgetMin <= 0 ?
-          '⚠️ Jonction non réalisable avec une marge de sécurité de 30 min, même sans trajet d’approche.' :
+        connectionBudgetMin < 0 ?
+          '⚠️ Jonction non réalisable avec une marge minimale de 5 min, même sans trajet d’approche.' :
           'Temps maximum théorique pour transport et approche : ' +
-          connectionBudgetMin + ' min, après réservation d’une marge de sécurité de 30 min. ' +
+          connectionBudgetMin + ' min, après réservation d’une marge minimale de 5 min. ' +
           'Transport non confirmé — vérifiez vous-même.';
       const nextOrigin = next && locationText(next.origin_address || next.from_address,
         next.from_city, next.from_department);
@@ -1902,7 +1929,7 @@
         '<div><strong>1. Aller au départ de mission</strong><div>' +
         esc(home || 'Domicile non renseigné') + ' → ' + esc(from || 'Départ non renseigné') +
         '</div><div class="doux">Prise en charge : ' + esc(formatParis(pickupDate)) +
-        ' · avance souhaitée : 30 à 45 min.</div>' +
+        ' · minimum : 5 min au point GPS exact, marche finale comprise ; préférence : 30 à 45 min.</div>' +
         directions(home, from, transportPickup) + '</div>' +
         '<div style="margin-top:12px"><strong>2. Jonction vers la prochaine mission</strong><div>' +
         (next ? esc((to || 'Livraison non renseignée') + ' → ' +
@@ -1946,7 +1973,7 @@
           regionalEngineReady ? 'aucun fournisseur régional disponible.' :
           'adaptateur non chargé.') +
         ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
-        '<p class="doux">Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
+        '<p class="doux">Le minimum de 5 min se mesure au point GPS exact de prise en charge, après la marche finale. Une arrivée à la gare ou à l’arrêt ne suffit pas. Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
       const planningBox = document.createElement('div');
       planningBox.className = 'doux';
       planningBox.style.marginTop = '10px';
@@ -2037,6 +2064,7 @@
         // Explicit user refresh must bypass browser HTTP caches for day JSON.
         // The timestamp is scoped to this panel only; mission sync is untouched.
         bt.dataset.transportRefreshAt = String(Date.now());
+        stopGTFSTransports();
         panel.remove();
         bt.setAttribute('aria-expanded', 'false');
         bt.removeAttribute('aria-controls');
@@ -2050,6 +2078,41 @@
         refreshed.textContent = 'Actualisation réseau demandée : si les données sont indisponibles, aucun horaire récent ne sera confirmé.';
         panel.appendChild(refreshed);
       }
+      // GTFS candidate search: one worker for the open panel, no mission writes.
+      if (window.CPGTFSAgenda && window.CPGTFSWorker) {
+        let gtfsTaskSignature = null;
+        const runGTFS = () => {
+        if (!panel.isConnected || panel.hidden || $('feuille').hidden) return;
+        const point = gps => transportAddressPoint(gps) ?
+          {lat:Number(gps.lat),lon:Number(gps.lng)} : null;
+        const homeLat = etat.reglages?.domicile_lat, homeLon = etat.reglages?.domicile_lng;
+        const homePoint = homeLat != null && homeLon != null && homeLat !== '' && homeLon !== '' &&
+          Number.isFinite(Number(homeLat)) && Number.isFinite(Number(homeLon)) ?
+          {lat:Number(homeLat),lon:Number(homeLon)} : null;
+        const gtfsTasks = [];
+        if (pickupDate) gtfsTasks.push({label:'Aller',from:homePoint,
+          to:point(G.coordonnees(m,'origin')),latestArrival:pickupDate,marginMinutes:securityMarginMin});
+        if (deliveryDate) gtfsTasks.push({label:'Retour',from:point(G.coordonnees(m,'destination')),
+          to:homePoint,earliestDeparture:deliveryDate});
+        if (next && deliveryDate && next.pickup_start) gtfsTasks.push({label:'Jonction',
+          from:point(G.coordonnees(m,'destination')),to:point(G.coordonnees(next,'origin')),
+          earliestDeparture:deliveryDate,latestArrival:next.pickup_start,marginMinutes:securityMarginMin});
+        const signature = JSON.stringify(gtfsTasks);
+        if (signature === gtfsTaskSignature) return;
+        stopGTFSTransports();
+        panel.querySelector('[data-gtfs-agenda]')?.remove();
+        gtfsAgendaSession = window.CPGTFSAgenda.mount(panel,{tasks:gtfsTasks,
+          ...(Array.isArray(window.CP_GTFS_AGENDA_RESOURCES) ? {resources:window.CP_GTFS_AGENDA_RESOURCES} : {})});
+        gtfsTaskSignature = signature;
+        };
+        bt.cpRefreshGTFS = runGTFS;
+        runGTFS();
+      }
+      if (next) pointsMission(next, () => {
+        if (!panel.isConnected || panel.hidden || $('feuille').hidden || $('btnTransportsMission') !== bt) return;
+        bt.cpRefreshGTFS?.();
+        bt.cpRefreshRegional?.();
+      });
       // Swiss public transport connections for an accepted mission junction.
       // Results are advisory until realtime validity and exact walking approaches are checked.
       if (window.CPSwissTransport && next && deliveryDate && next.pickup_start) {
@@ -2098,6 +2161,45 @@
           });
         }
       }
+      // Regional refresh slots: rerun only the tasks whose precise inputs change.
+      const regionalRefreshers = [];
+      const regionalActive = () => panel.isConnected && !panel.hidden &&
+        !$('feuille').hidden && $('btnTransportsMission') === bt;
+      const regionalControllers=new Set();
+      const regionalObserver=typeof MutationObserver==='function'?new MutationObserver(()=>{
+        if(!regionalActive()){
+          for(const controller of regionalControllers)controller.abort();
+          regionalControllers.clear();regionalObserver.disconnect();
+        }
+      }):null;
+      regionalObserver?.observe($('feuille'),{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
+      const regionalPoint = gps => transportAddressPoint(gps) ?
+        {lat:Number(gps.lat),lon:Number(gps.lng)} : null;
+      const regionalHome = () => {
+        const lat = etat.reglages?.domicile_lat, lon = etat.reglages?.domicile_lng;
+        return lat != null && lon != null && lat !== '' && lon !== '' ?
+          {lat:Number(lat),lon:Number(lon)} : null;
+      };
+      const regionalSlot = (inputs, render) => {
+        let signature = null, previous = null, controller = null;
+        const refresh = () => {
+          if (!regionalActive()) return;
+          const key = JSON.stringify(inputs());
+          if (key === signature) return;
+          signature = key;
+          controller?.abort();regionalControllers.delete(controller);
+          controller=new AbortController();regionalControllers.add(controller);
+          previous?.remove();
+          previous = document.createElement('div');
+          previous.setAttribute('data-regional-slot', '');
+          panel.appendChild(previous);
+          render(previous,controller.signal);
+        };
+        regionalRefreshers.push(refresh);
+        refresh();
+      };
+      bt.cpRefreshRegional = () => regionalRefreshers.forEach(refresh => refresh());
+      regionalSlot(() => [regionalPoint(G.coordonnees(m,'destination')),regionalPoint(next && G.coordonnees(next,'origin')),deliveryDate,next?.pickup_start,securityMarginMin], (panel,signal) => {
       // Regional journeys use a configured endpoint or the public M provider,
       // only when both mission endpoints have exact GPS.
       if (regionalEngineReady && regionalProviderReady && next && deliveryDate) {
@@ -2111,6 +2213,7 @@
           regionalStatus.textContent = 'Jonction régionale : recherche des correspondances…';
           panel.appendChild(regionalStatus);
           window.CPRegionalRouting.plan({
+            signal,
             endpoint: window.CP_REGIONAL_ROUTING_ENDPOINT,
             from: {lat: finishGps.lat, lon: finishGps.lng},
             to: {lat: nextGps.lat, lon: nextGps.lng},
@@ -2118,13 +2221,26 @@
             refresh: !!bt.dataset.transportRefreshAt,
             fetcher: regionalFetch
           }).then(answer => {
-            if (!regionalStatus.isConnected) return;
+            if (!regionalActive() || !regionalStatus.isConnected) return;
             const options = window.CPRegionalRouting.feasibleBetween(
               answer.itineraries, deliveryDate, next.pickup_start, securityMarginMin);
             regionalStatus.textContent = options.length ?
               'Jonction régionale : ' + options.length +
               ' proposition(s) théoriques, horaires et circulation à vérifier :' :
-              'Jonction régionale : aucune correspondance compatible avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
+              'Jonction régionale : aucune correspondance compatible avec la marge minimale de 5 min. Transport non confirmé — vérifiez vous-même.';
+            if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
+              const ranked = window.CPTransportRanking.rank(
+                window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
+                {deadline:next.pickup_start,marginMinutes:securityMarginMin});
+              if (ranked.length) {
+                const summary = document.createElement('p');
+                summary.textContent = 'Classement Jonction régionale théorique : ' +
+                  ranked.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' +
+                    choice.journey.durationMinutes + ' min, ' + (choice.journey.priceEUR === null ? 'tarif non vérifié' : choice.journey.priceEUR.toFixed(2).replace('.', ',') + ' € (tarif vérifié)') + ')').join(' · ') +
+                  '. Accès aux arrêts, correspondances et circulation non confirmés.';
+                regionalStatus.appendChild(summary);
+              }
+            }
             options.slice(0, 5).forEach(option => {
               const line = document.createElement('p');
               const legs = option.legs.map(leg => [
@@ -2136,11 +2252,12 @@
               regionalStatus.appendChild(line);
             });
           }).catch(() => {
-            if (regionalStatus.isConnected) regionalStatus.textContent =
+            if (regionalActive() && regionalStatus.isConnected) regionalStatus.textContent =
               'Service régional indisponible ou incompatible. Transport non confirmé — vérifiez vous-même.';
           });
         }
       }
+      });
       // Swiss API: outbound and return suggestions. Home coordinates may be a city centre.
       // Only show indicative options; never imply door-to-door or realtime confirmation.
       if (window.CPSwissTransport) {
@@ -2203,16 +2320,21 @@
       // SNCF station-only fallback runs independently of public routing API availability.
       // Only dated public files are fetched: addresses/GPS stay in this browser.
       if (window.CPSncfFallback && typeof window.CPSncfFallback.plan === 'function') {
-        const railHomeName = String(etat.reglages?.domicile_ville || '').trim();
-        const railHomePoint = etat.reglages?.domicile_lat != null && etat.reglages?.domicile_lng != null ?
-          {lat:etat.reglages.domicile_lat,lon:etat.reglages.domicile_lng} :
-          G.trouverVille(railHomeName);
-        const homeStation = {name:railHomeName,point:railHomePoint};
+        const homeStation = () => {
+          const name=String(etat.reglages?.domicile_ville || '').trim();
+          return {name,point:etat.reglages?.domicile_lat != null && etat.reglages?.domicile_lng != null ?
+            {lat:etat.reglages.domicile_lat,lon:etat.reglages.domicile_lng} : G.trouverVille(name)};
+        };
+        const stationKey = station => [station.name,station.point?.lat ?? null,station.point?.lon ?? station.point?.lng ?? null];
         const missionStation = (mission,side) => ({
           name:String((side === 'origin' ? mission.from_city : mission.to_city) || ''),
           point:G.coordonnees(mission,side)
         });
-        const railSearch = (label,fromStation,toStation,when,arriveBy,latestArrival) => {
+        const railSearch = (label,inputs) => regionalSlot(() => {
+          const v=inputs();
+          return [stationKey(v.fromStation),stationKey(v.toStation),v.when,v.arriveBy,v.latestArrival];
+        }, (panel,signal) => {
+          const {fromStation,toStation,when,arriveBy,latestArrival}=inputs();
           if (!when || (!fromStation.name && !fromStation.point) || (!toStation.name && !toStation.point) ||
               (fromStation.name && toStation.name && fromStation.name.trim().toLocaleLowerCase('fr') === toStation.name.trim().toLocaleLowerCase('fr'))) return;
           const status = document.createElement('div');
@@ -2222,13 +2344,28 @@
           status.textContent = label + ' — secours SNCF : recherche des trains de gare à gare…';
           panel.appendChild(status);
           window.CPSncfFallback.plan({from:fromStation,to:toStation,when,arriveBy,
-            limit:10,fetcher:regionalFetch}).then(answer => {
-            if (!status.isConnected) return;
+            limit:10,fetcher:regionalFetch,signal,
+            ...(latestArrival ? {latestArrival:new Date(latestArrival).toISOString()} : {})}).then(answer => {
+            if (!regionalActive() || signal.aborted || !status.isConnected) return;
             const itineraries = answer.itineraries.filter(it => !latestArrival || Date.parse(it.arrival) <= latestArrival).slice(0,3);
             status.textContent = label + ' — secours SNCF, horaires théoriques du flux ' + answer.sourceVersion + ' : ' +
               (itineraries.length ? itineraries.length + ' proposition(s) de gare à gare.' :
               answer.status === 'stations_not_found' ? 'gare non identifiée pour une des communes.' :
               'aucun train direct ou avec une correspondance trouvé dans les journées chargées.');
+            if (window.CPTransportAdapters && window.CPTransportRanking) {
+              const normalized = window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptSNCF(itineraries));
+              const deadline = label === 'Aller' && pickupDate ? pickupDate :
+                label === 'Jonction' && next?.pickup_start ? next.pickup_start : null;
+              const choices = window.CPTransportRanking.rank(normalized,{deadline,marginMinutes:securityMarginMin});
+              if (choices.length) {
+                const summary = document.createElement('p');
+                summary.textContent = 'Classement SNCF de gare à gare : ' +
+                  choices.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' + choice.journey.durationMinutes +
+                    ' min, ' + (choice.journey.priceEUR === null ? 'prix non vérifié' : choice.journey.priceEUR.toFixed(2).replace('.', ',') + ' € (tarif vérifié)') + ')').join(' · ') +
+                  '. Aucun trajet complet confirmé.';
+                status.appendChild(summary);
+              }
+            }
             itineraries.forEach(itinerary => {
               const row = document.createElement('p');
               row.textContent = itinerary.legs.map(leg =>
@@ -2247,18 +2384,20 @@
             source.textContent = 'Source : SNCF Voyageurs — données ouvertes ODbL';
             status.appendChild(source);
           }).catch(() => {
-            if (status.isConnected) status.textContent = label +
+            if (regionalActive() && !signal.aborted && status.isConnected) status.textContent = label +
               ' — secours SNCF indisponible pour cette date. Aucun résultat ne prouve pas l’absence de transport. Transport non confirmé — vérifiez vous-même.';
           });
-        };
-        if (pickupDate) railSearch('Aller',homeStation,missionStation(m,'origin'),
-          new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString(),true);
-        if (deliveryDate) railSearch('Retour',missionStation(m,'destination'),homeStation,deliveryDate,false);
-        if (next && deliveryDate) railSearch('Jonction',missionStation(m,'destination'),
-          missionStation(next,'origin'),deliveryDate,false,Date.parse(next.pickup_start)-securityMarginMin*60000);
+        });
+        if (pickupDate) railSearch('Aller',()=>({fromStation:homeStation(),toStation:missionStation(m,'origin'),
+          when:new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString(),arriveBy:true}));
+        if (deliveryDate) railSearch('Retour',()=>({fromStation:missionStation(m,'destination'),toStation:homeStation(),when:deliveryDate,arriveBy:false}));
+        if (next && deliveryDate) railSearch('Jonction',()=>({fromStation:missionStation(m,'destination'),
+          toStation:missionStation(next,'origin'),when:deliveryDate,arriveBy:false,
+          latestArrival:Date.parse(next.pickup_start)-securityMarginMin*60000}));
       }
       // Regional return from the exact delivery point to the configured home
       // coordinate (which may only represent a city centre, not a door).
+      regionalSlot(() => [regionalPoint(G.coordonnees(m,'destination')),regionalHome(),deliveryDate], (panel,signal) => {
       if (regionalEngineReady && regionalProviderReady && deliveryDate) {
         const finishGps = G.coordonnees(m, 'destination');
         const homeLat = Number(etat.reglages?.domicile_lat);
@@ -2274,6 +2413,7 @@
           returnStatus.textContent = 'Retour régional : recherche des itinéraires…';
           panel.appendChild(returnStatus);
           window.CPRegionalRouting.plan({
+            signal,
             endpoint: window.CP_REGIONAL_ROUTING_ENDPOINT,
             from: {lat:finishGps.lat, lon:finishGps.lng},
             to: {lat:homeLat, lon:homeLon},
@@ -2281,13 +2421,25 @@
             refresh: !!bt.dataset.transportRefreshAt,
             fetcher:regionalFetch
           }).then(answer => {
-            if (!returnStatus.isConnected) return;
+            if (!regionalActive() || !returnStatus.isConnected) return;
             const options = answer.itineraries.filter(it =>
               it.startTime >= Date.parse(deliveryDate)).slice(0, 5);
             returnStatus.textContent = options.length ?
               'Retour régional : ' + options.length +
               ' itinéraire(s) théoriques vers le point de domicile enregistré (adresse exacte non vérifiée) :' :
               'Retour régional : aucun itinéraire trouvé. Transport non confirmé — vérifiez vous-même.';
+            if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
+              const ranked = window.CPTransportRanking.rank(
+                window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')));
+              if (ranked.length) {
+                const summary = document.createElement('p');
+                summary.textContent = 'Classement Retour régional théorique : ' +
+                  ranked.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' +
+                    choice.journey.durationMinutes + ' min, ' + (choice.journey.priceEUR === null ? 'tarif non vérifié' : choice.journey.priceEUR.toFixed(2).replace('.', ',') + ' € (tarif vérifié)') + ')').join(' · ') +
+                  '. Accès au domicile et circulation non confirmés.';
+                returnStatus.appendChild(summary);
+              }
+            }
             options.forEach(option => {
               const line = document.createElement('p');
               const legs = option.legs.map(leg =>
@@ -2299,13 +2451,15 @@
               returnStatus.appendChild(line);
             });
           }).catch(() => {
-            if (returnStatus.isConnected) returnStatus.textContent =
+            if (regionalActive() && returnStatus.isConnected) returnStatus.textContent =
               'Retour régional : service indisponible. Transport non confirmé — vérifiez vous-même.';
           });
         }
       }
+      });
       // Regional outbound itinerary: use only a known home reference point
       // and the exact GPS pickup, with a 30-minute arrival buffer.
+      regionalSlot(() => [regionalHome(),regionalPoint(G.coordonnees(m,'origin')),pickupDate,securityMarginMin], (panel,signal) => {
       if (regionalEngineReady && regionalProviderReady && pickupDate) {
         const pickupGps = G.coordonnees(m, 'origin');
         const homeLat = Number(etat.reglages?.domicile_lat);
@@ -2322,6 +2476,7 @@
           panel.appendChild(outboundStatus);
           const earliest = new Date(Date.parse(pickupDate) - 6 * 3600000);
           window.CPRegionalRouting.plan({
+            signal,
             endpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
             from:{lat:homeLat,lon:homeLon},
             to:{lat:pickupGps.lat,lon:pickupGps.lng},
@@ -2331,13 +2486,26 @@
             refresh: !!bt.dataset.transportRefreshAt,
             fetcher:regionalFetch
           }).then(answer => {
-            if (!outboundStatus.isConnected) return;
+            if (!regionalActive() || !outboundStatus.isConnected) return;
             const options = window.CPRegionalRouting.feasibleBefore(
               answer.itineraries, pickupDate, securityMarginMin).slice(0, 5);
             outboundStatus.textContent = options.length ?
               'Aller régional : ' + options.length +
               ' proposition(s) théoriques depuis le point de domicile enregistré (adresse exacte non vérifiée) :' :
-              'Aller régional : aucune arrivée compatible avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.';
+              'Aller régional : aucune arrivée compatible avec la marge minimale de 5 min. Transport non confirmé — vérifiez vous-même.';
+            if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
+              const ranked = window.CPTransportRanking.rank(
+                window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
+                {deadline:pickupDate,marginMinutes:securityMarginMin});
+              if (ranked.length) {
+                const rankingLine = document.createElement('p');
+                rankingLine.textContent = 'Classement régional théorique : ' +
+                  ranked.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' + choice.journey.durationMinutes +
+                    ' min, ' + (choice.journey.priceEUR === null ? 'tarif non vérifié' : choice.journey.priceEUR.toFixed(2).replace('.', ',') + ' € (tarif vérifié)') + ')').join(' · ') +
+                  '. Correspondances et trajet complet non confirmés.';
+                outboundStatus.appendChild(rankingLine);
+              }
+            }
             options.forEach(option => {
               const line = document.createElement('p');
               const legs = option.legs.map(leg =>
@@ -2349,10 +2517,79 @@
               outboundStatus.appendChild(line);
             });
           }).catch(() => {
-            if (outboundStatus.isConnected) outboundStatus.textContent =
+            if (regionalActive() && outboundStatus.isConnected) outboundStatus.textContent =
               'Aller régional : service indisponible. Transport non confirmé — vérifiez vous-même.';
           });
         }
+      }
+      });
+      // TripGo is optional and uses only a private key saved on this device.
+      if (window.CPTripGo) {
+        const tripgo=window.CPTripGo,config=document.createElement('div');
+        let busRealtime=null;
+        try{busRealtime=window.CPBlaBlaRealtime?.createClient({fetcher:regionalFetch,...(window.CP_BLABLACAR_REALTIME_URL?{endpoint:window.CP_BLABLACAR_REALTIME_URL}:{})});}catch(_){}
+        config.className='doux';config.style.marginTop='10px';
+        const keyInput=document.createElement('input');keyInput.type='password';keyInput.autocomplete='off';
+        keyInput.setAttribute('aria-label','Clé TripGo privée sur cet appareil');keyInput.placeholder='Clé TripGo privée';
+        const keyStatus=document.createElement('p');
+        const keyState=()=>{keyStatus.textContent=tripgo.getKey()?'TripGo actif sur cet appareil. La clé reste privée ; les coordonnées des recherches sont envoyées à TripGo.':'TripGo peut compléter les trajets interurbains. Sa clé privée doit être enregistrée sur cet appareil.';};
+        const saveKey=document.createElement('button');saveKey.className='second';saveKey.type='button';saveKey.textContent='Activer TripGo sur cet appareil';
+        saveKey.onclick=()=>{try{tripgo.setKey(keyInput.value);keyInput.value='';keyState();bt.cpRefreshRegional?.();}catch(_){keyStatus.textContent='Clé invalide ou stockage de cet appareil indisponible.';}};
+        const clearKey=document.createElement('button');clearKey.className='second';clearKey.type='button';clearKey.textContent='Retirer la clé TripGo de cet appareil';
+        clearKey.onclick=()=>{try{tripgo.setKey('');keyInput.value='';keyState();bt.cpRefreshRegional?.();}catch(_){keyStatus.textContent='Retrait de la clé impossible sur cet appareil.';}};
+        keyState();for(const item of [keyStatus,keyInput,saveKey,clearKey])config.appendChild(item);panel.appendChild(config);
+        const tripSearch=(label,inputs)=>regionalSlot(()=>[tripgo.getKey(),inputs()],(target,signal)=>{
+          const task=inputs();if(!tripgo.getKey()||!task?.from||!task?.to||!task.when)return;
+          const status=document.createElement('div');status.className='doux';status.setAttribute('role','status');
+          status.textContent=label+' TripGo : recherche des transports et des marches…';target.appendChild(status);
+          tripgo.plan({...task,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt}).then(answer=>{
+            if(!regionalActive()||signal.aborted||!status.isConnected)return;
+            const shown=answer.itineraries.slice(0,3);
+            status.textContent=label+' TripGo : '+(shown.length?shown.length+' proposition(s) datées, marches comprises.':'aucune proposition compatible retournée ; cela ne prouve pas l’absence de transport.');
+            for(const result of shown){
+              const line=document.createElement('p');line.textContent=formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString())+' · '+
+                result.legs.map(l=>(l.mode==='wa_wal'?'Marche':l.line||l.mode)+' '+l.from+' → '+l.to).join(' · ')+
+                ' · réponse du fournisseur reçue le '+formatParis(answer.receivedAt)+
+                ' · raccordement aux coordonnées : '+Math.ceil(result.evidence.startGapMeters)+' m / '+Math.ceil(result.evidence.endGapMeters)+' m (accès physique à vérifier)'+
+                (result.alerts.length?' · Alertes fournisseur : '+result.alerts.join(' ; '):'');
+              const proof=document.createElement('span');
+              const renderProof=confirmed=>{proof.textContent=' · Preuves manquantes : '+result.evidence.missing.filter(item=>!confirmed||!item.startsWith('circulation')).join(', ')+'. Transport non confirmé — vérifiez vous-même.';};
+              renderProof(false);line.appendChild(proof);status.appendChild(line);
+              if(window.CPBlaBlaRealtime&&result.legs.some(window.CPBlaBlaRealtime.eligible)){
+                const live=document.createElement('span');live.textContent=' · Prévisions BlaBlaCar Bus : recherche auprès de l’opérateur…';line.appendChild(live);
+                if(!busRealtime){live.textContent=' · Prévisions BlaBlaCar Bus indisponibles sur cet appareil. La circulation reste à vérifier.';continue;}
+                busRealtime.check(result,task,{signal}).then(check=>{
+                  if(!regionalActive()||signal.aborted||!live.isConnected)return;
+                  const update=check.updates[0];
+                  const label=check.status==='cancelled'?'annulation signalée par l’opérateur':
+                    check.status==='missed_boarding'?'départ trop tôt pour l’approche disponible':
+                    check.status==='arrival_too_late'?'retard incompatible avec le minimum de 5 min au point GPS exact':
+                    update?.status==='observed'?'circulation observée par l’opérateur':
+                    update?.status==='predicted'?'prévision reçue de l’opérateur':
+                    update?.status==='stale'?'aucune donnée opérateur valide à cet instant':
+                    update?.status==='not_matched'?'aucune prévision raccordée à cette course et à ce jour':
+                    update?.status==='ambiguous'?'plusieurs versions opérateur incompatibles':'pas de prévision exploitable pour cette course';
+                  renderProof(check.serviceConfirmed===true);
+                  const exclusions={cancelled:'⛔ Annulation signalée — ne pas retenir ce trajet avant actualisation. ',arrival_too_late:'⛔ Prévision incompatible avec les 5 minutes requises — actualisez avant de retenir ce trajet. ',missed_boarding:'⛔ Embarquement incompatible avec l’approche disponible — actualisez avant de retenir ce trajet. '};
+                  if(exclusions[check.status]){const warning=document.createElement('strong');warning.textContent=exclusions[check.status];line.prepend(warning);}
+                  live.textContent=' · Prévisions BlaBlaCar Bus : '+label+
+                    (check.doorArrival?' · arrivée estimée après la marche finale : '+formatParis(new Date(Math.ceil(Date.parse(check.doorArrival)/60000)*60000).toISOString()):'')+
+                    (update?.sourceTimestamp?' · source du '+formatParis(update.sourceTimestamp):'')+'. Accès physique et prix restent à vérifier.';
+                  const expires=check.validUntil||update?.validUntil;
+                  if(expires&&Date.parse(expires)>Date.now()){const timer=setTimeout(()=>{
+                    if(regionalActive()&&live.isConnected){renderProof(false);live.textContent=' · Prévisions BlaBlaCar Bus expirées — actualisez les transports.';}
+                  },Math.max(0,Date.parse(expires)-Date.now()));signal.addEventListener('abort',()=>clearTimeout(timer),{once:true});}
+                }).catch(()=>{if(regionalActive()&&!signal.aborted&&live.isConnected)live.textContent=' · Prévisions BlaBlaCar Bus indisponibles sur cet appareil. La circulation reste à vérifier.';});
+              }
+            }
+            const credit=document.createElement('p');credit.textContent='Source : TripGo / opérateurs indiqués ; marches : © contributeurs OpenStreetMap. La disponibilité annoncée ne constitue pas une réservation.';const attribution=document.createElement('a');attribution.href='https://www.openstreetmap.org/copyright';attribution.target='_blank';attribution.rel='noopener noreferrer';attribution.textContent=' Attribution OpenStreetMap';credit.appendChild(attribution);status.appendChild(credit);
+          }).catch(()=>{if(regionalActive()&&!signal.aborted&&status.isConnected)status.textContent=label+' TripGo indisponible. Horaires, circulation, accès et prix restent à vérifier.';});
+        });
+        if(pickupDate)tripSearch('Aller',()=>({from:regionalHome(),to:regionalPoint(G.coordonnees(m,'origin')),
+          when:new Date(Date.parse(pickupDate)-securityMarginMin*60000).toISOString(),arriveBy:true}));
+        if(deliveryDate)tripSearch('Retour',()=>({from:regionalPoint(G.coordonnees(m,'destination')),to:regionalHome(),when:deliveryDate}));
+        if(next&&deliveryDate&&next.pickup_start)tripSearch('Jonction',()=>({from:regionalPoint(G.coordonnees(m,'destination')),to:regionalPoint(G.coordonnees(next,'origin')),
+          when:deliveryDate,latestArrival:new Date(Date.parse(next.pickup_start)-securityMarginMin*60000).toISOString()}));
       }
       // Statut réel du fichier GTFS quotidien : ne pas annoncer de trajets sans données.
       if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
@@ -2411,7 +2648,7 @@
                   hourCycle: 'h23'
                 }).formatToParts(new Date(pickupMs));
                 const v = k => Number(p.find(x => x.type === k)?.value || 0);
-                const latest = (v('hour') * 60 + v('minute') - 30) * 60;
+                const latest = (v('hour') * 60 + v('minute') - securityMarginMin) * 60;
                 const rides = window.CPSibraFeed.coordinateDayJourneys(
                   pickupResult.data, homeLat, homeLon, pickupGps.lat, pickupGps.lng, 0,
                   { radiusMeters: 600 }).filter(j =>
@@ -2432,7 +2669,7 @@
                   (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
                   rides.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
                     ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
-                  '. Marge de 30 min après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, approche piétonne, tarifs et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                  '. Marge minimale de 5 min après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, approche piétonne, tarifs et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                   (changes.length ?
                     '🚌 Aller SIBRA avec 1 correspondance (horaires théoriques) depuis le centre de ' +
                     (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
@@ -2440,8 +2677,8 @@
                       ' → changement ' + clock(j.firstLeg.arrivalSeconds) + ' / ' +
                       clock(j.secondLeg.departureSeconds) + ' → ' +
                       j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
-                    '. Marge de 30 min après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, marche et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
-                    'Aller SIBRA : aucun bus direct ou avec 1 correspondance trouvé avec 30 min de marge depuis le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.');
+                    '. Marge minimale de 5 min après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, marche et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                    'Aller SIBRA : aucun bus direct ou avec 1 correspondance trouvé avec 5 min de marge minimale depuis le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.');
               } else {
                 outbound.textContent = pickupDay && !pickupResult?.usable ?
                   'Aller SIBRA ' + pickupDay +
@@ -2572,7 +2809,7 @@
                   '🚌 Jonction SIBRA automatique — horaires théoriques : ' +
                   candidates.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
                     ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
-                  '. Arrêts à 600 m maximum à vol d’oiseau ; marche minimale à 1,2 m/s prise en compte pour la marge de 30 min, trajet piéton non vérifié. Tarifs et perturbations non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                  '. Arrêts à 600 m maximum à vol d’oiseau ; marche minimale à 1,2 m/s prise en compte pour la marge minimale de 5 min, trajet piéton non vérifié. Tarifs et perturbations non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                   (changes.length ?
                     '🚌 Jonction SIBRA avec 1 correspondance (horaires théoriques) : ' +
                     changes.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
@@ -2580,7 +2817,7 @@
                       ' / ' + clock(j.secondLeg.departureSeconds) +
                       ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
                     '. Correspondance au même arrêt GTFS, marche et circulation non vérifiées. Transport non confirmé — vérifiez vous-même.' :
-                    'Jonction SIBRA : aucune course directe ou avec une correspondance trouvée à proximité avec la marge de 30 min. Transport non confirmé — vérifiez vous-même.');
+                    'Jonction SIBRA : aucune course directe ou avec une correspondance trouvée à proximité avec la marge minimale de 5 min. Transport non confirmé — vérifiez vous-même.');
               } else {
                 auto.textContent = 'Jonction SIBRA automatique indisponible : coordonnées GPS précises des deux missions manquantes, dates différentes ou heure de livraison absente.';
               }
@@ -2820,6 +3057,7 @@
       panel.setAttribute('aria-label', 'Détails des transports de la mission');
       panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) {
+        stopGTFSTransports();
         console.error('Transports mission : affichage incomplet', error);
         panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div><p role="alert">Impossible de calculer les détails de transport pour cette mission. Transport non confirmé — vérifiez vous-même.</p>';
         panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -2827,7 +3065,17 @@
     }; }
 
     { const br = $('btnRetirer'); if (br) br.onclick = () => { if (!window.confirm('Retirer cette mission de ton Agenda sur ce téléphone ? (rien n’est supprimé chez Hiflow ni sur le serveur ; tu peux tout remettre dans Réglages)')) return; const t = lireLocal('cp_masquees', []) || []; const k = m.platform + '|' + m.external_id; if (!t.includes(k)) t.push(k); ecrireLocal('cp_masquees', t); etat.missions = etat.missions.filter(x => !(x.kind === 'acceptee' && x.platform + '|' + x.external_id === k)); ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures }); $('feuille').hidden = true; afficher(); toast('Retirée de l’Agenda'); }; }
-    pointsMission(m).then(ok => { if (ok && $('gpsO')) { $('gpsO').innerHTML = mentionGps(m, 'origin'); if ($('gpsD')) $('gpsD').innerHTML = mentionGps(m, 'destination'); } });
+    const transportDetailButton = $('btnTransportsMission');
+    pointsMission(m, () => {
+      if ($('btnTransportsMission') !== transportDetailButton || $('feuille').hidden) return;
+      if ($('gpsO')) $('gpsO').innerHTML = mentionGps(m, 'origin');
+      if ($('gpsD')) $('gpsD').innerHTML = mentionGps(m, 'destination');
+      const openPanel = $('cpTransportMissionDetails');
+      if (openPanel && !openPanel.hidden) {
+        transportDetailButton.cpRefreshGTFS?.();
+        transportDetailButton.cpRefreshRegional?.();
+      }
+    });
   }
 
   // ---------- V77 : notifications même application fermée (Web Push) ----------
@@ -2875,9 +3123,9 @@
   $('actualiser').onclick = () => charger(false);
   $('pastille').onclick = feuilleEtat;
   setInterval(majPastille, 30000);
-  $('fermer').onclick = () => { $('feuille').hidden = true; };
-  $('feuille').onclick = ev => { if (ev.target === $('feuille')) $('feuille').hidden = true; };
-  document.addEventListener('keydown', ev => { if (ev.key === 'Escape') $('feuille').hidden = true; });
+  $('fermer').onclick = () => { stopGTFSTransports(); $('feuille').hidden = true; };
+  $('feuille').onclick = ev => { if (ev.target === $('feuille')) { stopGTFSTransports(); $('feuille').hidden = true; } };
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape') { stopGTFSTransports(); $('feuille').hidden = true; } });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') charger(true); });
   setInterval(() => { if (document.visibilityState === 'visible') charger(true); }, 60000);
 

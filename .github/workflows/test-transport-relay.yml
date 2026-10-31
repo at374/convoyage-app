@@ -1,0 +1,29 @@
+name: Test public transport relay
+on:
+  push:
+    branches: [feature/transport-ranking-safe]
+    paths: ['server/**', 'transport-blablacar-realtime.js', 'tests/transport-realtime-relay.test.cjs', 'tests/fixtures/blablacar-*.json', '.github/workflows/test-transport-relay.yml']
+  pull_request:
+    paths: ['server/**', 'transport-blablacar-realtime.js', 'tests/transport-realtime-relay.test.cjs', 'tests/fixtures/blablacar-*.json', '.github/workflows/test-transport-relay.yml']
+permissions:
+  contents: read
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --check server/transport-realtime-relay.cjs
+      - run: node --test tests/transport-realtime-relay.test.cjs
+      - name: Build the relay container without publishing it
+        run: docker build -f server/Dockerfile.transport-realtime -t convoyage-transport-relay:test .
+      - name: Check container startup without querying the operator
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'docker rm -f transport-relay-smoke >/dev/null 2>&1 || true' EXIT
+          docker run -d --name transport-relay-smoke -p 127.0.0.1:18080:8080 -e TRANSPORT_ALLOWED_ORIGINS=https://at374.github.io convoyage-transport-relay:test
+          curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 1 --retry-max-time 20 --max-time 2 http://127.0.0.1:18080/health

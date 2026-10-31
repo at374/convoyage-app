@@ -1,0 +1,34 @@
+{
+  "browser": "156.0.8078.80",
+  "viewport": {
+    "width": 412,
+    "height": 839
+  },
+  "locale": "fr-FR",
+  "timezone": "Europe/Paris",
+  "missionData": "Synthetic fixtures only",
+  "network": "All external requests mocked; no user account or live mission sent",
+  "scenarios": [
+    "actual Agenda and mission sheet",
+    "two separate buttons",
+    "late independent geocoding",
+    "Aller / Jonction / Retour",
+    "30-minute outbound margin",
+    "recorded Mobilités M C11 response",
+    "real GTFS browser worker",
+    "manual refresh",
+    "sheet close",
+    "in-flight network cancellation",
+    "late responses ignored",
+    "no horizontal overflow"
+  ],
+  "regionalRequests": 9,
+  "workerInstances": 5,
+  "abortedRequests": 3,
+  "remainingWorkers": 0,
+  "buttonColour": "rgb(205, 234, 255)",
+  "uncaughtErrors": [],
+  "androidDeviceTested": false,
+  "date": "2026-10-31",
+  "baselineCommit": "d205f808b8d17d21e01e0bf5cbbf524ed592b4fe"
+}

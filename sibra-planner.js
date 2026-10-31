@@ -207,7 +207,7 @@
    * This is a timetable-only compatibility check, never a realtime confirmation.
    */
   function assessVerifiedMissionApproach(arrivalSeconds, missionStartSeconds,
-    walkingRoute, stopCoordinates, missionCoordinates, marginSeconds = 1800) {
+    walkingRoute, stopCoordinates, missionCoordinates, marginSeconds = 300) {
     const walkingSeconds = verifiedWalkingSeconds(walkingRoute, stopCoordinates, missionCoordinates);
     if (walkingSeconds === null) {
       return { feasible: false, status: 'approche_pietonne_non_verifiee',
@@ -224,7 +224,7 @@
    */
   function assessVerifiedBusConnection(missionEndSeconds, departureSeconds,
     arrivalSeconds, nextMissionSeconds, firstWalk, firstFrom, firstStop,
-    lastWalk, lastStop, lastTo, marginSeconds = 1800) {
+    lastWalk, lastStop, lastTo, marginSeconds = 300) {
     const outboundSeconds = verifiedWalkingSeconds(firstWalk, firstFrom, firstStop);
     const inboundSeconds = verifiedWalkingSeconds(lastWalk, lastStop, lastTo);
     if (outboundSeconds === null || inboundSeconds === null) {
@@ -254,7 +254,7 @@
    * This remains a scheduled, not real-time, feasibility assessment.
    */
   function assessScheduledSibraJourney(journey, missionEndSeconds, nextMissionSeconds,
-    missionFrom, missionTo, firstWalk, lastWalk, marginSeconds = 1800) {
+    missionFrom, missionTo, firstWalk, lastWalk, marginSeconds = 300) {
     const origin = journey && journey.originStop;
     const destination = journey && journey.destinationStop;
     if (!origin || !destination ||

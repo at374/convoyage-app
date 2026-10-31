@@ -1,0 +1,31 @@
+{
+  "validationDate": "2026-10-30",
+  "provider": "Valhalla pedestrian / OpenStreetMap",
+  "endpoint": "https://valhalla1.openstreetmap.de/route",
+  "officialReference": "https://valhalla.github.io/valhalla/api/route/api-reference/",
+  "liveAdapterRequest": {
+    "from": {"name": "GARE QUAI SUD", "lat": 45.9010801, "lon": 6.1215734},
+    "to": {"name": "Gare Routiere", "lat": 45.9016985, "lon": 6.1201612},
+    "status": "calculated",
+    "durationSeconds": 180.539,
+    "distanceMeters": 260,
+    "startGapMeters": 4.713982693936897,
+    "endGapMeters": 20.866793810991542,
+    "endpointsMatched": false,
+    "realWorldAccessConfirmed": false,
+    "timeSpecific": false,
+    "requests": 1,
+    "corsResponse": "Access-Control-Allow-Origin: *"
+  },
+  "integration": {
+    "gtfs": "Official Sibra and Haute-Savoie archives with catalogue snapshot",
+    "worker": "Actual browser worker script executed in a Node thread",
+    "dom": "Simulated Agenda DOM",
+    "pedestrianData": "Recorded official response replayed only for matching endpoints; other pairs unavailable in fixture",
+    "calculatedPathRendered": true,
+    "endpointGapWarningRendered": true,
+    "realizableBadgeRendered": false,
+    "androidValidated": false
+  },
+  "limits": ["Indicative router duration, not physical measurement", "Physical access and opening hours are unverified", "No realtime transport confirmation", "No fares", "Not deployed"]
+}

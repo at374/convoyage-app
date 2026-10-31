@@ -8,6 +8,9 @@ on:
       - 'data/sncf/**'
       - 'scripts/*sncf*'
       - 'tests/sncf-fallback.test.cjs'
+      - 'tests/sncf-fallback-lifecycle.test.cjs'
+      - 'tests/transport-sncf-agenda.test.cjs'
+      - 'tests/fixtures/sncf-annecy-grenoble-2026-11-02.json'
       - '.github/workflows/*sncf*'
   pull_request:
     paths:
@@ -16,6 +19,9 @@ on:
       - 'data/sncf/**'
       - 'scripts/*sncf*'
       - 'tests/sncf-fallback.test.cjs'
+      - 'tests/sncf-fallback-lifecycle.test.cjs'
+      - 'tests/transport-sncf-agenda.test.cjs'
+      - 'tests/fixtures/sncf-annecy-grenoble-2026-11-02.json'
 permissions:
   contents: read
 jobs:
@@ -29,3 +35,4 @@ jobs:
           node-version: '20'
       - run: node --check sncf-fallback.js
       - run: node tests/sncf-fallback.test.cjs
+      - run: node --test tests/sncf-fallback-lifecycle.test.cjs tests/transport-sncf-agenda.test.cjs
