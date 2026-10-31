@@ -65,3 +65,11 @@ test('TripGo transport legs are chronological and bounded by the displayed itine
   }
  }
 });
+
+test('TripGo rejects impossible connection windows without contacting the provider',async()=>{
+ let calls=0;
+ const fetcher=async()=>{calls++;return new Response(JSON.stringify(clone()));};
+ await assert.rejects(api.plan({...options,apiKey:'d'.repeat(32),fetcher,latestArrival:'2026-11-02T09:59:59+01:00'}),/Requête TripGo invalide/);
+ await assert.rejects(api.plan({...options,apiKey:'d'.repeat(32),fetcher,latestArrival:'not-a-date'}),/Requête TripGo invalide/);
+ assert.equal(calls,0);
+});
