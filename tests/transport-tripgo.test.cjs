@@ -85,3 +85,9 @@ test('Arrive-by pickup search may specify an earlier arrival deadline',async()=>
  assert.equal(matched.itineraries.length,2);
  assert.ok(matched.itineraries.every(it=>Date.parse(it.arrival)<=Date.parse(latestArrival)));
 });
+
+test('TripGo missing request options return a controlled validation error',async()=>{
+ await assert.rejects(api.plan(),/Requête TripGo invalide/);
+ await assert.rejects(api.plan(null),/Requête TripGo invalide/);
+ await assert.rejects(api.plan('invalid'),/Requête TripGo invalide/);
+});
