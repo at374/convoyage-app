@@ -108,3 +108,13 @@ test('realtime assessment fails safely for missing and malformed journey legs',a
   assert.equal(result.transportConfirmed,false);
  }
 });
+
+test('realtime assessment tolerates missing task metadata without certifying transport',()=>{
+ const feed=rt.parse(fixture.response,{now:clock});
+ for(const task of [null,undefined,false]){
+  const result=rt.assessJourney(feed,{legs:[]},task,{now:clock});
+  assert.equal(result.status,'partial');
+  assert.equal(result.transportConfirmed,false);
+  assert.equal(result.realizable,false);
+ }
+});
