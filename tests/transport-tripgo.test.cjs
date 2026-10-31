@@ -90,6 +90,7 @@ test('TripGo missing request options return a controlled validation error',async
  await assert.rejects(api.plan(),/Requête TripGo invalide/);
  await assert.rejects(api.plan(null),/Requête TripGo invalide/);
  await assert.rejects(api.plan('invalid'),/Requête TripGo invalide/);
+ await assert.rejects(api.plan({apiKey:'invalid',when:'invalid'}),/Requête TripGo invalide/);
 });
 
 test('Return transport cannot depart before vehicle delivery is completed',()=>{
