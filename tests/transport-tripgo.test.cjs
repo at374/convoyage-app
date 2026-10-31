@@ -51,3 +51,17 @@ test('Agenda pickup requires a five-minute arrival buffer at the exact destinati
  const tooLate=api.parse(clone(),{...options,latestArrival:new Date(earlierPickup-5*60000).toISOString()});
  assert.equal(tooLate.itineraries.length,0,'arrival with less than five minutes is rejected');
 });
+
+test('TripGo transport legs are chronological and bounded by the displayed itinerary',()=>{
+ const journeys=api.parse(clone(),options).itineraries;
+ assert.ok(journeys.length>0);
+ for(const journey of journeys){
+  assert.equal(journey.legs[0].departure,journey.departure);
+  assert.equal(journey.legs.at(-1).arrival,journey.arrival);
+  for(let i=0;i<journey.legs.length;i++){
+   const leg=journey.legs[i];
+   assert.ok(Date.parse(leg.arrival)>=Date.parse(leg.departure));
+   if(i>0)assert.ok(Date.parse(leg.departure)>=Date.parse(journey.legs[i-1].arrival));
+  }
+ }
+});
