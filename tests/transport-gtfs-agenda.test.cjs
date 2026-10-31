@@ -496,3 +496,21 @@ test('Agenda loads both official GTFS feeds for a journey crossing geographic en
  assert.match(target.textContent,/Transport non confirmé|aucun trajet|horaire/i);
  session.dispose();
 });
+
+test('SIBRA pass updates existing portion costs without reloading or querying GTFS',async()=>{
+ const previous=global.CPSibraPass;global.CPSibraPass=require('../transport-sibra-pass.js');
+ try{
+  const target=panel();let pass=null,loads=0,queries=0;
+  const sibraRow=row({networkId:global.CPSibraPass.DATASET,line:'4'});
+  const session=agenda.mount(target,{tasks:[task],getSibraPass:()=>pass,walkingRouterFactory:()=>null,
+   clientFactory:()=>({load:async()=>{loads++;return summary;},query:async()=>{queries++;return {rows:[sibraRow],truncated:false};},dispose(){}})});
+  await session.done;assert.doesNotMatch(target.textContent,/Abonnement SIBRA déclaré/);
+  const before={loads,queries};pass={active:true,from:'2026-01-01',through:'2026-12-31'};session.refreshFares();
+  assert.match(target.textContent,/Coût supplémentaire transport : 0,00 €/);
+  assert.match(target.textContent,/sous réserve d’abonnement valide/);assert.match(target.textContent,/Transport non confirmé/);
+  assert.deepEqual({loads,queries},before);
+  pass=null;session.refreshFares();assert.doesNotMatch(target.textContent,/Abonnement SIBRA déclaré/);
+  session.dispose();pass={active:true,from:'2026-01-01',through:'2026-12-31'};session.refreshFares();
+  assert.doesNotMatch(target.textContent,/Abonnement SIBRA déclaré/);
+ }finally{global.CPSibraPass=previous;}
+});

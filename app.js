@@ -1935,7 +1935,7 @@
         'Les lignes régionales Y21, Y22, Y51, Y62, Y63 et 272 acceptent les titres SIBRA pour les trajets dans le Grand Annecy (hors SMS). ' +
         'Des arrêts supplémentaires Y21/Y22 sont précisés dans le règlement. Ne pas étendre cette couverture à toute la ligne. ' +
         '<a href="https://www.sibra.fr/voyages-reguliers/" target="_blank" rel="noopener noreferrer">Périmètre et abonnements</a>. ' +
-        'L’abonnement n’est pas encore déduit des prix affichés.</p></details>' +
+        'Renseignez les dates de votre abonnement ci-dessous pour les lignes SIBRA reconnues. Les portions régionales restent à vérifier.</p></details>' +
         '<div><strong>1. Aller au départ de mission</strong><div>' +
         esc(home || 'Domicile non renseigné') + ' → ' + esc(from || 'Départ non renseigné') +
         '</div><div class="doux">Prise en charge : ' + esc(formatParis(pickupDate)) +
@@ -1984,6 +1984,14 @@
           'adaptateur non chargé.') +
         ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
         '<p class="doux">Le minimum de 5 min se mesure au point GPS exact de prise en charge, après la marche finale. Une arrivée à la gare ou à l’arrêt ne suffit pas. Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
+      let sibraPassControls = null;
+      if (window.CPSibraPass?.mountControls) {
+        let passStorage = null;
+        try { passStorage = window.localStorage; } catch (_) {}
+        sibraPassControls = window.CPSibraPass.mountControls(panel.querySelector('#cpSibraFareReference'), {
+          storage: passStorage, onChange: () => gtfsAgendaSession?.refreshFares?.()
+        });
+      }
       const planningBox = document.createElement('div');
       planningBox.className = 'doux';
       planningBox.style.marginTop = '10px';
@@ -2112,6 +2120,7 @@
         stopGTFSTransports();
         panel.querySelector('[data-gtfs-agenda]')?.remove();
         gtfsAgendaSession = window.CPGTFSAgenda.mount(panel,{tasks:gtfsTasks,
+          getSibraPass:()=>sibraPassControls?.getPass()||null,
           ...(Array.isArray(window.CP_GTFS_AGENDA_RESOURCES) ? {resources:window.CP_GTFS_AGENDA_RESOURCES} : {})});
         gtfsTaskSignature = signature;
         };

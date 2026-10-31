@@ -67,9 +67,9 @@ function serviceDates(window,timeZone){
  if(dates.length>5)throw new Error('GTFS service horizon exceeded');
  return dates;
 }
-function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>root.CPGTFSWorker.createClient(),walkingRouterFactory=()=>root.CPTransportWalking?.createRouter()}={}){
+function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>root.CPGTFSWorker.createClient(),walkingRouterFactory=()=>root.CPTransportWalking?.createRouter(),getSibraPass=()=>null}={}){
  const doc=panel.ownerDocument||root.document;
- let client=null,walker=null,disposed=false,observer=null;const walkChecks=[];
+ let client=null,walker=null,disposed=false,observer=null;const walkChecks=[],fareChecks=[];
  const dispose=()=>{if(disposed)return;disposed=true;observer?.disconnect();client?.dispose();walker?.dispose();client=null;walker=null;};
  const taskList=Array.isArray(tasks)?tasks:[];
  const resourceList=Array.isArray(resources)?resources:[];
@@ -89,6 +89,13 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  warning.textContent='Trajets directs ou avec une correspondance au même arrêt (intervalle de 5 à 120 min, non vérifié). Recherche limitée à 48 h au maximum et au jour de service précédent. Distances à vol d’oiseau ; marche et prix non vérifiés. Transport non confirmé — vérifiez vous-même.';
  section.appendChild(warning);panel.appendChild(section);
  const active=()=>!disposed&&panel.isConnected;
+ const refreshFares=()=>{
+  if(!active())return;
+  for(const {row,element} of fareChecks){
+   try{element.textContent=root.CPSibraPass?.describe(root.CPSibraPass.assess(row,getSibraPass()))||'';}
+   catch(_){element.textContent='';}
+  }
+ };
  const sheet=panel.closest?.('#feuille');
  if(root.MutationObserver){
   observer=new root.MutationObserver(()=>{if(!panel.isConnected||panel.hidden||sheet?.hidden)dispose();});
@@ -175,6 +182,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(row.legs?.length===2){
        for(const leg of row.legs){const detail=doc.createElement('span');detail.textContent=' · '+(leg.network?leg.network+' ':'')+leg.line+' : '+format(leg.departure)+' → '+format(leg.arrival);line.appendChild(detail);}
       }
+      const passCost=doc.createElement('span');passCost.setAttribute('data-sibra-pass-cost','');line.appendChild(passCost);
+      fareChecks.push({row,element:passCost});refreshFares();
       for(const [label,stop] of [['Départ',row.originStop],['Correspondance',row.transferStop],['Montée après changement',row.transferDestinationStop],['Arrivée',row.destinationStop]]){
        if(!validPoint(stop))continue;
        const link=doc.createElement('a');
@@ -245,7 +254,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
    client?.dispose();client=null;
   }
  })();
- return {dispose,done};
+ return {dispose,done,refreshFares};
 }
 const api={DEFAULT_RESOURCES,selected,crossEnvelopePair,searchWindow,serviceDates,mount};
 if(typeof module==='object'&&module.exports)module.exports=api;

@@ -6,6 +6,7 @@ on:
       - 'transport-ranking.js'
       - 'transport-adapters.js'
       - 'transport-fares.js'
+      - 'transport-sibra-pass.js'
       - 'transport-catalogue.js'
       - 'transport-gtfs-index.js'
       - 'transport-gtfs-loader.js'
@@ -23,6 +24,7 @@ on:
       - 'tests/transport-ranking.test.cjs'
       - 'tests/transport-adapters.test.cjs'
       - 'tests/transport-fares.test.cjs'
+      - 'tests/transport-sibra-pass.test.cjs'
       - 'tests/transport-catalogue.test.cjs'
       - 'tests/transport-gtfs-index.test.cjs'
       - 'tests/transport-gtfs-federation.test.cjs'
@@ -40,6 +42,7 @@ on:
       - 'transport-ranking.js'
       - 'transport-adapters.js'
       - 'transport-fares.js'
+      - 'transport-sibra-pass.js'
       - 'transport-catalogue.js'
       - 'transport-gtfs-index.js'
       - 'transport-gtfs-loader.js'
@@ -57,6 +60,7 @@ on:
       - 'tests/transport-ranking.test.cjs'
       - 'tests/transport-adapters.test.cjs'
       - 'tests/transport-fares.test.cjs'
+      - 'tests/transport-sibra-pass.test.cjs'
       - 'tests/transport-catalogue.test.cjs'
       - 'tests/transport-gtfs-index.test.cjs'
       - 'tests/transport-gtfs-federation.test.cjs'
@@ -86,6 +90,7 @@ jobs:
       - run: node --check transport-ranking.js
       - run: node --check transport-adapters.js
       - run: node --check transport-fares.js
+      - run: node --check transport-sibra-pass.js
       - run: node --check transport-catalogue.js
       - run: node --check transport-gtfs-index.js
       - run: node --check transport-gtfs-loader.js
@@ -98,6 +103,7 @@ jobs:
       - run: node tests/transport-ranking.test.cjs
       - run: node tests/transport-adapters.test.cjs
       - run: node tests/transport-fares.test.cjs
+      - run: node --test tests/transport-sibra-pass.test.cjs
       - run: node tests/transport-catalogue.test.cjs
       - run: node tests/transport-gtfs-index.test.cjs
       - run: node --test tests/transport-gtfs-loader.test.cjs
