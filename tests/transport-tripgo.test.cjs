@@ -79,6 +79,9 @@ test('Arrive-by pickup search may specify an earlier arrival deadline',async()=>
  const fetcher=async()=>{calls++;return new Response(JSON.stringify(clone()));};
  const when='2026-11-02T11:47:34+01:00';
  const latestArrival='2026-11-02T11:42:34+01:00';
- await assert.rejects(api.plan({...options,apiKey:'e'.repeat(32),fetcher,arriveBy:true,when,latestArrival}),/Réponse TripGo liée à une autre recherche/);
+ const response=clone();response.query.arrive=when;delete response.query.depart;
+ const matched=await api.plan({...options,apiKey:'e'.repeat(32),fetcher:async()=>{calls++;return new Response(JSON.stringify(response));},arriveBy:true,when,latestArrival});
  assert.equal(calls,1,'valid arrive-by windows must reach TripGo even when deadline precedes pickup');
+ assert.equal(matched.itineraries.length,2);
+ assert.ok(matched.itineraries.every(it=>Date.parse(it.arrival)<=Date.parse(latestArrival)));
 });
