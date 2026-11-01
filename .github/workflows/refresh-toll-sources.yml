@@ -1,0 +1,30 @@
+name: Collect official toll source tables
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'toll-official-catalogue.cjs'
+      - 'scripts/refresh-toll-sources.cjs'
+      - 'data/tolls/sources-2026.json'
+      - 'tests/toll-official-catalogue.test.cjs'
+      - '.github/workflows/refresh-toll-sources.yml'
+permissions:
+  contents: read
+jobs:
+  validate-and-collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/toll-official-catalogue.test.cjs
+      - name: Fetch official source tables
+        run: node scripts/refresh-toll-sources.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: official-toll-source-tables
+          path: data/tolls/official/
+          retention-days: 7
