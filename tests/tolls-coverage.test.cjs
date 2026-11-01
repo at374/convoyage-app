@@ -7,7 +7,7 @@ const root = path.join(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'routes-ui.js'), 'utf8');
 const fixture = require('./fixtures/tolls-saint-vulbas-la-ciotat-2026-10-31.json');
 const read = name => JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
-const exposed = source.replace('  let rafale = false;', '  window.audit={chargerTarifsOfficiels,attacherTarifsOfficiels,prixOfficiel,indexGares,garesFixes,tarifsEnConflit,conflitsDuTrace,calculPeage,chargerPeages,prixExact,garesManquantes,barrieresTraversees,dec6,CODE_WORKER,estimerPeage};let rafale = false;');
+const exposed = source.replace('  let rafale = false;', '  window.audit={routeDatee,dateTarifDepart,chargerTarifsOfficiels,attacherTarifsOfficiels,prixOfficiel,indexGares,garesFixes,tarifsEnConflit,conflitsDuTrace,calculPeage,chargerPeages,prixExact,garesManquantes,barrieresTraversees,dec6,CODE_WORKER,estimerPeage};let rafale = false;');
 function load() {
   const ctx = {window:{CPPeage:require('../peage-engine.js')},document:{documentElement:{},body:{offsetHeight:0}},MutationObserver:class{observe(){}},performance:{now:()=>0},AbortController,setInterval:()=>0,
     setTimeout:(fn,ms)=>ms<10?setTimeout(fn,ms):0,clearTimeout,URL,
@@ -361,4 +361,20 @@ test('an unavailable official index has a bounded wait and cancels its download'
  ctx.setTimeout=fn=>setTimeout(fn,1);
  await assert.rejects(api.chargerTarifsOfficiels({},'https://test.local/index'),/délai/);
  assert.equal(cancelled,true);
+});
+test('pickup timestamps select the French tariff day across midnight and both DST boundaries',()=>{
+ const {api}=load();
+ for(const [stamp,day]of [['2026-06-14T22:30:00Z','2026-06-15'],['2026-09-15T22:30:00Z','2026-09-16'],
+  ['2026-11-01T23:30:00Z','2026-11-02'],['2026-03-29T00:30:00Z','2026-03-29'],
+  ['2026-03-29T01:30:00Z','2026-03-29'],['2026-10-25T00:30:00Z','2026-10-25'],
+  ['2026-10-25T01:30:00Z','2026-10-25'],['2026-06-15T00:30:00.000000+02:00','2026-06-15'],
+  ['2026-06-15T00:30','2026-06-15'],['2026-06-15','2026-06-15']])assert.equal(api.dateTarifDepart(stamp),day,stamp);
+ for(const bad of ['2026-02-30','2026-02-30T12:00:00Z','2026-06-15T25:00:00Z','next Monday',14])assert.equal(api.dateTarifDepart(bad),null);
+ const cached={polyline:'unchanged'},r=api.routeDatee(cached,'2026-06-14T22:30:00Z');
+ assert.equal(r.dateTarif,'2026-06-15');assert.equal(cached.dateTarif,undefined);assert.equal(cached.polyline,r.polyline);
+});
+test('a malformed pickup date refuses a price rather than substituting today',async()=>{
+ const {api}=load();let html='';
+ await api.estimerPeage({dateTarif:null,pts:[[2.5,48],[2.52,48]]},{querySelector:()=>({set innerHTML(s){html=s;},closest:()=>null})});
+ assert.match(html,/Date du trajet invalide/);assert.doesNotMatch(html,/Classe 1|Classe 2|Aucun péage/);
 });

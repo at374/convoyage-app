@@ -32,6 +32,19 @@
     const title = document.getElementById('feuilleTitre')?.textContent?.trim();
     return title && window.__cp?.etat?.missions?.find(m => (m.from_city + ' → ' + m.to_city) === title);
   };
+  const dateTarifDepart = depart => {
+    if (depart == null || depart === '') return undefined;
+    if (typeof depart !== 'string') return null;
+    const m = /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})?)?$/.exec(depart);
+    if (!m || !Number.isFinite(Date.parse(m[1]+'T00:00:00Z')) || new Date(m[1]+'T00:00:00Z').toISOString().slice(0,10) !== m[1] ||
+        (m[2] && (Number(m[2]) > 23 || Number(m[3]) > 59 || Number(m[4] || 0) > 59))) return null;
+    if (!m[2] || !m[5]) return m[1];
+    const instant = new Date(depart); if (!Number.isFinite(instant.getTime())) return null;
+    const parts = new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(instant);
+    const part = type => parts.find(p=>p.type === type).value;
+    return part('year')+'-'+part('month')+'-'+part('day');
+  };
+  const routeDatee = (r, depart) => ({...r,dateTarif:dateTarifDepart(depart == null || depart === '' ? new Date().toISOString() : depart)});
   const point = (m, side) => {
     const p = window.CPGeo?.coordonnees(m, side);
     return p ? { lat: p.lat, lng: p.lng } : (side === 'origin' ? m.origin_address || m.from_city : m.destination_address || m.to_city);
@@ -274,9 +287,8 @@
     }
     return noms;
   };
-  // V239 (demande de Laurent à l'époque) : estimation « ≈ » sur les gares officielles les plus proches quand le
-  // prix exact manquait. V244 : retiré à la demande de Laurent — avec la grille nationale désormais vérifiée à
-  // 100 % (18 826 + 16 918 relations, 0 gap), il ne doit plus jamais s'afficher de prix approché : exact ou rien.
+  // Les estimations au kilomètre ont été retirées à la demande de Laurent.
+  // Une ligne tarifaire ne certifie pas la couverture nationale : prix officiel vérifiable ou incertitude explicite.
   // V249 : Suisse = autoroutes gratuites AVEC vignette annuelle obligatoire (40 CHF) : message d'avertissement (jamais ajouté au total des péages).
   const CH = [[5.96,46.13],[6.05,46.25],[6.25,46.33],[6.55,46.45],[6.80,46.40],[6.85,46.15],[6.97,46.03],[7.05,45.92],[7.17,45.87],[7.45,45.92],[7.66,45.98],[7.87,45.94],[8.12,46.10],[8.45,46.25],[8.8,46.05],[8.85,45.97],[9.02,45.83],[9.15,45.9],[9.1,46.18],[9.28,46.5],[9.6,46.3],[10.05,46.2],[10.45,46.52],[10.45,46.87],[10.2,46.87],[9.88,47.0],[9.5,47.06],[9.53,47.27],[9.65,47.5],[9.4,47.65],[8.9,47.68],[8.55,47.8],[8.4,47.6],[7.9,47.57],[7.6,47.6],[7.5,47.5],[7.0,47.5],[6.9,47.3],[6.7,47.1],[6.4,46.8],[6.35,46.7],[6.15,46.45],[6.1,46.3]];
   const dansCH = (lat, lon) => { let in_ = false; for (let i = 0, j = CH.length - 1; i < CH.length; j = i++) { const [xi, yi] = CH[i], [xj, yj] = CH[j]; if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) in_ = !in_; } return in_; };
@@ -321,6 +333,8 @@
     const put = (h, ok) => { if (!zone) return; let hh = h; if (suisse) { const h2 = h.replace(/(<div class="rd gros c2">[\s\S]*?<\/div>)/, '$1' + NOTE_CH); hh = h2 !== h ? h2 : h + NOTE_CH; } zone.innerHTML = hh; LAY('péage'); const b = zone.closest('.bk'); if (b) b.classList.add(ok ? 'bkRenOk' : 'bkRenKo'); };
     const KO = '💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Aucune estimation affichée : seuls les tarifs officiels exacts sont montrés.</span></div>';
     try {
+      const dateTarif = r.dateTarif === undefined ? dateTarifDepart(new Date().toISOString()) : r.dateTarif;
+      if (typeof dateTarif !== 'string' || dateTarifDepart(dateTarif) !== dateTarif) { put(KO+'<div class="rd sub"><span>Date du trajet invalide : aucun tarif du jour n’est substitué.</span></div>',false); return; }
       const A = r.pts || decode(r.polyline);
       if (A.length < 2) { put(KO, false); return; }
       const a = A[0], b = A[A.length - 1];
@@ -352,7 +366,6 @@
       }
       try {
         const tC = performance.now();
-        const dateTarif = r.dateTarif || new Date().toISOString().slice(0,10);
         const R = await calculPeage(sh, tms, km, false, dateTarif), x = R.x;
         const preuves = x?.sources?.length ? ' · Grilles ' + [...new Set(x.sources.map(s=>s.id+' (effet '+s.effectiveFrom+', contrôle '+s.checkedOn+')'))].map(esc).join(', ') : '';
         const litiges = R.conflicts?.length ? ' Tarifs contradictoires à vérifier pour les gares proches du tracé : '+R.conflicts.map(esc).join(', ')+'.' : '';
@@ -394,7 +407,7 @@
   };
   // V263 : trajet mixte (une partie sans péage, une partie avec péage) : on coupe le trajet à une gare, on demande à Google les deux moitiés (rapide / sans péage) et on garde la combinaison la moins chère (prix exact officiel) avec peu de temps en plus.
   const dens = A => { const sh = [[A[0][1], A[0][0]]]; for (let q = 1; q < A.length; q++) { const p0 = sh[sh.length - 1], p1 = [A[q][1], A[q][0]], n = Math.ceil(dist(p0[0], p0[1], p1[0], p1[1]) / 0.15); for (let u = 1; u < n; u++) sh.push([p0[0] + (p1[0] - p0[0]) * u / n, p0[1] + (p1[1] - p0[1]) * u / n]); sh.push(p1); } return sh; };
-  const prixTroncon = async poly => { try { if (!poly) return null; const sh = dens(decode(poly)); const R = await calculPeage(sh, [{ begin_shape_index: 0, end_shape_index: sh.length - 1 }], 100, true); const O = await chargerOverlay(); if (O && barrieresTraversees(O, sh, 0, sh.length - 1).length) return { x: null, h: R.h || [] }; return { x: R.x && R.x.reste < 3 ? R.x : null, h: R.h || [] }; } catch (_) { return null; } };
+  const prixTroncon = async (poly, dateTarif) => { try { if (!poly || typeof dateTarif !== 'string' || dateTarifDepart(dateTarif) !== dateTarif) return null; const sh = dens(decode(poly)); const R = await calculPeage(sh, [{ begin_shape_index: 0, end_shape_index: sh.length - 1 }], 100, true, dateTarif); const O = await chargerOverlay(); if (O && barrieresTraversees(O, sh, 0, sh.length - 1).length) return { x: null, h: R.h || [] }; return { x: R.x && R.x.reste < 3 ? R.x : null, h: R.h || [] }; } catch (_) { return null; } };
   const nomLieu = async (la, lo) => { try { const j = await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=fr&lat=' + la + '&lon=' + lo).then(x => x.json()); const a = j.address || {}; return a.city || a.town || a.village || a.municipality || a.county || null; } catch (_) { return null; } };
   const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
   const chercherMixte = async (r, target) => {
@@ -405,7 +418,7 @@
     zone.innerHTML = '<div class="doux">🟣 Recherche du meilleur trajet mixte…</div>';
     try {
       window.CPPh('mixte');
-      const pf = await prixTroncon(r.polyline);
+      const pf = await prixTroncon(r.polyline, r.dateTarif);
       if (!pf || !pf.x) { ko('Trajet mixte impossible : le prix exact du trajet rapide n’est pas disponible.'); return; }
       const H = pf.h.filter((g, i, T) => i === 0 || dist(g[0], g[1], T[i - 1][0], T[i - 1][1]) > 3);
       const inner = []; for (let i = 1; i < H.length - 1; i++) inner.push(i);
@@ -421,7 +434,7 @@
         if (aF && bT) cands.push({ p: L.p, lib: aF, pay: bT, ordre: 'FT' });
         if (aT && bF) cands.push({ p: L.p, lib: bF, pay: aT, ordre: 'TF' });
       }
-      for (const c of cands) { const q = await prixTroncon(c.pay.poly); c.x = q && q.x; }
+      for (const c of cands) { const q = await prixTroncon(c.pay.poly, r.dateTarif); c.x = q && q.x; }
       const fast = { km: r.distanceKm, min: r.durationMinutes, c1: pf.x.c1, c2: pf.x.c2 };
       const ok = cands.filter(c => c.x && c.lib.min != null && c.pay.min != null).map(c => Object.assign(c, { km: c.lib.km + c.pay.km, min: c.lib.min + c.pay.min, c1: c.x.c1, c2: c.x.c2 })).filter(c => fast.c1 - c.c1 >= 1);
       ok.forEach(c => { c.score = (fast.c1 - c.c1) - 0.2 * Math.max(0, c.min - fast.min); });
@@ -566,7 +579,7 @@
       }
       try {
         const kk = mode + '|' + lieu(origin) + '|' + lieu(destination) + '|' + (departureTime || ''); let pr = EST.get(kk); if (!pr) { const t0 = performance.now(); pr = window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, refreshToken: s?.refresh_token, expiresAt: s?.expires_at, email: s?.email, userId: s?.user_id, supabaseUrl: c?.url, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime }); EST.set(kk, pr); pr.then(() => window.CPT('Google', t0), () => EST.delete(kk)); setTimeout(() => EST.delete(kk), 120000); } const r = await pr;
-        render(out, r, mode === 'voiture' ? 'DRIVE' : 'TRANSIT');
+        render(out, routeDatee(r,departureTime), mode === 'voiture' ? 'DRIVE' : 'TRANSIT');
       } catch (e) { out.textContent = /failed to fetch|networkerror|load failed|aborted/i.test(String(e.message || e)) ? 'Connexion au serveur de trajets impossible. Vérifie ta connexion (wifi ou 4G), puis réessaie.' : String(e.message || e); }
     });
   };
