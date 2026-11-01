@@ -133,7 +133,19 @@ test('only explicit fixed-barrier links at identical coordinates exclude ticket 
   assert.equal(api.garesFixes([['Gate',[[46.0001,6]]]],o).size,0);
 });
 function encode6(points){let lat=0,lon=0,text='';const put=n=>{let v=n<0?~(n<<1):n<<1;while(v>=32){text+=String.fromCharCode((32|(v&31))+63);v>>=5;}text+=String.fromCharCode(v+63);};for(const p of points){const a=Math.round(p[0]*1e6),b=Math.round(p[1]*1e6);put(a-lat);put(b-lon);lat=a;lon=b;}return text;}
-for(const [name,barrierId,c1,c2]of [['BONNEVILLE EST','atmb-bonneville-zi',1.7,3.1],['BONNEVILLE OUEST','atmb-bonneville-centre',1.3,2.3]]){
+test('Saint Exupery A432 fixed gate is not also treated as an unexplained ticket station',async()=>{
+ const {api}=load(),o=read('peages-overlay.json'),point=o.barrieres.find(b=>b.id==='aprr-area-ouvert-saint-exupery').points[0];
+ const gate=o.gares.find(g=>g.nom==='SAINT EXUPERY'),ministry=read('data/gares-peage-officiel.json');
+ assert.equal(gate.provenance.sourceStationCode,'03070');
+ assert.deepEqual(gate.points,ministry.d.filter(r=>r[0]==='Saint Exupery'&&r[1]==='A0432').map(r=>[r[2],r[3]]));
+ const p=await api.chargerPeages(),ix=api.indexGares(p.g);
+ assert.ok(p.verifiedGatePositions.has(ix('SAINT EXUPERY')));
+ for(const name of ['LA BOISSE','LA COTIERE'])assert.equal(p.fixes.has(ix(name)),false);
+ const sh=[[point[0]-.0006,point[1]],point,[point[0]+.0006,point[1]]],tms=[{begin_shape_index:0,end_shape_index:2,toll:true,length:.2}];
+ const r=await api.calculPeage(sh,tms,.2,false,'2026-11-02');
+ assert.equal(r.n,0);assert.equal(r.x,null);
+});
+for(const [name,barrierId,c1,c2]of [['BONNEVILLE EST','atmb-bonneville-zi',1.7,3.1],['BONNEVILLE OUEST','atmb-bonneville-centre',1.3,2.3],['SAINT EXUPERY','aprr-area-ouvert-saint-exupery',2.3,3.6]]){
  test(name+' single-gate component renders its existing fixed tariffs, direct and actual worker agree',async()=>{
   const {api,ctx}=load(),p=await api.chargerPeages(),o=read('peages-overlay.json'),g=o.gares.find(g=>g.nom===name),point=g.points[0];
   assert.ok(p.fixes.has(api.indexGares(p.g)(name)));

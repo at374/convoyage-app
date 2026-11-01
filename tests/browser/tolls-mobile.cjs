@@ -20,7 +20,7 @@ cases.push({name:'Synthetic conflicting tariff',leg:conflicting.leg,conflict:tru
 cases.push({name:'Synthetic official forward',leg:official.leg,official:true,prices:['3,25','5,50']});
 cases.push({name:'Synthetic official reverse',leg:{...official.leg,shape:encode6([[48,2.52],[48,2.5]])},official:true,prices:['4,25','6,50']});
 cases.push({name:'Synthetic official outside reviewed year',leg:official.leg,official:true,unconfirmed:true,date:'2027-01-01'});
-for(const [name,c1,c2]of [['BONNEVILLE EST','1,70','3,10'],['BONNEVILLE OUEST','1,30','2,30']]){
+for(const [name,c1,c2]of [['BONNEVILLE EST','1,70','3,10'],['BONNEVILLE OUEST','1,30','2,30'],['SAINT EXUPERY','2,30','3,60']]){
  const p=overlay.gares.find(g=>g.nom===name).points[0];
  // Synthetic single-gate component input, not a road route or real mission.
  cases.push({name,prices:[c1,c2],leg:{shape:encode6([[p[0]-.0006,p[1]],p,[p[0]+.0006,p[1]]]),maneuvers:[{begin_shape_index:0,end_shape_index:2,toll:true,length:0.2}]}});
