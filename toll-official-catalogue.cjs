@@ -52,6 +52,7 @@ function quote(snapshot,request){
    Date.parse(asOf)-Date.parse(snapshot.checkedOn)>7*86400000)return unknown('source-not-fresh');
  if(date<snapshot.effectiveFrom||Number(date.slice(0,4))!==snapshot.verifiedYear)return unknown('outside-verified-period');
  if(!Number.isInteger(request.vehicleClass)||request.vehicleClass<1||request.vehicleClass>5)return unknown('invalid-vehicle-class');
+ if(snapshot.format==='arcos-schedule')return quoteArcos(snapshot,{...request,date},unknown);
  if(snapshot.format!=='od')return unknown('calendar-time-or-payment-context-required');
  if(!request.originRoad||!request.originName||!request.destinationRoad||!request.destinationName)return unknown('road-qualified-endpoints-required');
  const h=snapshot.headers.map(normal),at=name=>h.indexOf(normal(name));
@@ -66,6 +67,33 @@ function quote(snapshot,request){
  if(amounts.some(n=>n===null||!Number.isFinite(n)))return unknown('missing-vehicle-class-price');
  if(new Set(amounts).size!==1)return unknown('contradictory-source-rows');
  return {status:'official-source-price',amount:amounts[0],currency:'EUR',sourceUrl:snapshot.sourceUrl,effectiveFrom:snapshot.effectiveFrom,checkedOn:snapshot.checkedOn,rawSha256:snapshot.rawSha256,routeVerified:false};
+}
+function quoteArcos(snapshot,request,unknown){
+ const rules=require('./data/tolls/arcos-time-bands-2026.json'),holidays=require('./data/tolls/arcos-holidays-2026.json');
+ if(snapshot.sourceId!=='arcos'||Number(request.date.slice(0,4))!==rules.year||rules.year!==holidays.year)return unknown('unreviewed-calendar');
+ const timestamp=request.passageTime;
+ if(typeof timestamp!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})$/.test(timestamp)||!validDate(timestamp.slice(0,10)))return unknown('explicit-passage-time-and-offset-required');
+ const instant=new Date(timestamp);if(!Number.isFinite(instant.getTime()))return unknown('invalid-passage-time');
+ const parts=new Intl.DateTimeFormat('en-GB',{timeZone:rules.timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(instant);
+ const part=type=>parts.find(p=>p.type===type).value,localDate=part('year')+'-'+part('month')+'-'+part('day');
+ if(localDate!==request.date)return unknown('passage-time-date-mismatch');
+ const holiday=Object.hasOwn(holidays.dates,localDate),day=holiday?0:new Date(localDate+'T12:00:00Z').getUTCDay(),minute=Number(part('hour'))*60+Number(part('minute'));
+ const bands=rules.bands.filter(b=>b.windows.some(w=>w.days.includes(day)&&minute>=w.fromMinute&&minute<=w.throughMinute));
+ if(bands.length!==1)return unknown('ambiguous-or-missing-time-band');
+ const h=snapshot.headers,at=name=>h.indexOf(name),reviewed=new Set(rules.bands.map(b=>b.labelSha256));
+ const hashes=new Map();
+ for(const row of snapshot.rows){const text=row[at('plage horaire')];if(!hashes.has(text))hashes.set(text,sha256(Buffer.from(text)));}
+ if([...hashes.values()].some(hash=>!reviewed.has(hash)))return unknown('unreviewed-time-band-text');
+ if(typeof request.route!=='string'||!request.route)return unknown('exact-published-section-required');
+ const heavy=[3,4].includes(request.vehicleClass);
+ if(heavy&&!Number.isInteger(request.euroGroup))return unknown('published-euro-group-code-required');
+ const selected=snapshot.rows.filter(r=>r[at('Trajet')]===request.route&&String(r[at('classe')])===String(request.vehicleClass)&&hashes.get(r[at('plage horaire')])===bands[0].labelSha256&&
+  String(r[at('groupe_euro')])===(heavy?String(request.euroGroup):''));
+ if(!selected.length)return unknown('no-published-price-for-this-section-class-and-time');
+ const amounts=selected.map(r=>r[at('Tarif_TTC')]);
+ if(amounts.some(n=>n===null||!Number.isFinite(n))||new Set(amounts).size!==1)return unknown('missing-or-contradictory-time-price');
+ return {status:'official-source-price',amount:amounts[0],currency:'EUR',sourceUrl:snapshot.sourceUrl,rawSha256:snapshot.rawSha256,effectiveFrom:snapshot.effectiveFrom,checkedOn:snapshot.checkedOn,
+  timeBand:bands[0].id,passageTime:timestamp,localDate,holidayApplied:holiday,calendarSource:holidays.source,ruleSource:rules.source,routeVerified:false};
 }
 function coverage(manifest){
  return {universeComplete:false,missingNationalTariffs:null,sourceCount:manifest.sources.length,successfulSources:manifest.sources.filter(s=>s.status==='fresh').length,staleSources:manifest.sources.filter(s=>s.status!=='fresh').map(s=>s.id),rowCount:manifest.sources.reduce((n,s)=>n+(s.rows||0),0),certificate:'partial-source-collection-only'};

@@ -1,0 +1,470 @@
+{
+  "schemaVersion": 1,
+  "source": "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000053417592",
+  "annex": "XI",
+  "reviewedAt": "2026-11-01",
+  "year": 2026,
+  "timeZone": "Europe/Paris",
+  "bands": [
+    {
+      "id": "A",
+      "labelSha256": "1b9088caa745a4b05e5de101dfe7c446a67b7d32f6700116b088607835f2c211",
+      "windows": [
+        {
+          "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "fromMinute": 0,
+          "throughMinute": 299
+        },
+        {
+          "days": [
+            0
+          ],
+          "fromMinute": 300,
+          "throughMinute": 359
+        },
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "fromMinute": 1170,
+          "throughMinute": 1199
+        },
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "fromMinute": 1200,
+          "throughMinute": 1229
+        },
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "fromMinute": 1230,
+          "throughMinute": 1439
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "labelSha256": "d58da5af8885d4cb9a29e01600764b16ee74691902c668f48916f8158b17286c",
+      "windows": [
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "fromMinute": 300,
+          "throughMinute": 359
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "labelSha256": "e815c6ea7341bcdcd8a592597dcf737cbce50062caa5bb427ae99a8a77b4c046",
+      "windows": [
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "fromMinute": 360,
+          "throughMinute": 389
+        }
+      ]
+    },
+    {
+      "id": "D",
+      "labelSha256": "baedd5e46fa2bf1519b64c91ab73c6eb3bfc4ddca64ab988dcd65ab1b2858925",
+      "windows": [
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "fromMinute": 390,
+          "throughMinute": 419
+        }
+      ]
+    },
+    {
+      "id": "E",
+      "labelSha256": "d77f99b67391ee8d509bc11df8a68435b412f031f9d7765860661e416d9edd97",
+      "windows": [
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "fromMinute": 420,
+          "throughMinute": 539
+        },
+        {
+          "days": [
+            5
+          ],
+          "fromMinute": 960,
+          "throughMinute": 989
+        }
+      ]
+    },
+    {
+      "id": "F",
+      "labelSha256": "22dcc8e800e84b12cd95381da1bb905fc7474ad29d1c5ca27c3fbde3345f4214",
+      "windows": [
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "fromMinute": 540,
+          "throughMinute": 929
+        }
+      ]
+    },
+    {
+      "id": "G",
+      "labelSha256": "312a4a76630c2aa3a68630a18b64b25fc095871350c6a6d77598a7ffa2993f6b",
+      "windows": [
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "fromMinute": 930,
+          "throughMinute": 959
+        }
+      ]
+    },
+    {
+      "id": "H",
+      "labelSha256": "cc32eac397570bb366e473837ba26f12a969ae7e8a5b4b4986625be65a7e8122",
+      "windows": [
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "fromMinute": 960,
+          "throughMinute": 989
+        }
+      ]
+    },
+    {
+      "id": "I",
+      "labelSha256": "812417d571ce9b100013b862ee60255e87df2befddb0418d8eadd4d2d8edb784",
+      "windows": [
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "fromMinute": 990,
+          "throughMinute": 1049
+        }
+      ]
+    },
+    {
+      "id": "J",
+      "labelSha256": "8108a6d466b8bdee7c5d4c6e31527a30fc355f62e512b920819c3b23f70bc3c3",
+      "windows": [
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "fromMinute": 1050,
+          "throughMinute": 1109
+        }
+      ]
+    },
+    {
+      "id": "K",
+      "labelSha256": "658ff017db613c653457f8f626b4ebb6cf2a8896d307faab31cff1434bb072eb",
+      "windows": [
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "fromMinute": 1110,
+          "throughMinute": 1139
+        }
+      ]
+    },
+    {
+      "id": "L",
+      "labelSha256": "a46e38d9cbbc6c1a80cb900512583e12852c5c26dc13c6028dc09d2e7d38d3fd",
+      "windows": [
+        {
+          "days": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "fromMinute": 1140,
+          "throughMinute": 1169
+        }
+      ]
+    },
+    {
+      "id": "M",
+      "labelSha256": "1c8d8a1bb87510f1962941161e23ed043e5b7ebf48cccd3fd6835c05d88b30ea",
+      "windows": [
+        {
+          "days": [
+            5,
+            6
+          ],
+          "fromMinute": 300,
+          "throughMinute": 329
+        },
+        {
+          "days": [
+            0
+          ],
+          "fromMinute": 1260,
+          "throughMinute": 1439
+        }
+      ]
+    },
+    {
+      "id": "N",
+      "labelSha256": "dca0e5b0663141f96cefdac2d22c64bb2551908e2229439e41f09cd3590eeaf7",
+      "windows": [
+        {
+          "days": [
+            5
+          ],
+          "fromMinute": 330,
+          "throughMinute": 389
+        },
+        {
+          "days": [
+            6
+          ],
+          "fromMinute": 330,
+          "throughMinute": 419
+        },
+        {
+          "days": [
+            0
+          ],
+          "fromMinute": 360,
+          "throughMinute": 449
+        }
+      ]
+    },
+    {
+      "id": "O",
+      "labelSha256": "b311b106e284a170942c9e4dfd87733ba388b9fe7ede02f70fef3cdd0e60f844",
+      "windows": [
+        {
+          "days": [
+            6
+          ],
+          "fromMinute": 420,
+          "throughMinute": 539
+        }
+      ]
+    },
+    {
+      "id": "P",
+      "labelSha256": "38d873f0f7ff0cd92d416bafec7c172bad2724fb3d97bae0d2f298eb902631d1",
+      "windows": [
+        {
+          "days": [
+            6
+          ],
+          "fromMinute": 540,
+          "throughMinute": 899
+        },
+        {
+          "days": [
+            0
+          ],
+          "fromMinute": 540,
+          "throughMinute": 1169
+        }
+      ]
+    },
+    {
+      "id": "Q",
+      "labelSha256": "64d206c87662e141d8f73283269ebffaca913d8ea8274fb173db1b5daf695e48",
+      "windows": [
+        {
+          "days": [
+            6
+          ],
+          "fromMinute": 900,
+          "throughMinute": 1139
+        }
+      ]
+    },
+    {
+      "id": "R",
+      "labelSha256": "61528c6e5e84517f8b801b30e3bde1ea214d0423631662fac75249867517b56d",
+      "windows": [
+        {
+          "days": [
+            6
+          ],
+          "fromMinute": 1140,
+          "throughMinute": 1229
+        }
+      ]
+    },
+    {
+      "id": "S",
+      "labelSha256": "282bebb0fc151c1e1279a236ed2708935547eb8837c585e6651f551d3b88cb9c",
+      "windows": [
+        {
+          "days": [
+            0
+          ],
+          "fromMinute": 450,
+          "throughMinute": 539
+        },
+        {
+          "days": [
+            0
+          ],
+          "fromMinute": 1170,
+          "throughMinute": 1259
+        }
+      ]
+    },
+    {
+      "id": "T",
+      "labelSha256": "c47a7d9c6cb6bc133b4afc4604d8591decee41ee0ed460aeef1c30a6453e0732",
+      "windows": [
+        {
+          "days": [
+            5
+          ],
+          "fromMinute": 390,
+          "throughMinute": 449
+        }
+      ]
+    },
+    {
+      "id": "U",
+      "labelSha256": "5e55a9404deb0cb8e7fede77955bb47eded350e260cf1e4fc83956580c20b6a5",
+      "windows": [
+        {
+          "days": [
+            5
+          ],
+          "fromMinute": 450,
+          "throughMinute": 539
+        }
+      ]
+    },
+    {
+      "id": "V",
+      "labelSha256": "e7e74dd13f1eb69ab3ebf854b1d49a8276232ae3501586772b3f9ebdb8c92815",
+      "windows": [
+        {
+          "days": [
+            5
+          ],
+          "fromMinute": 540,
+          "throughMinute": 839
+        }
+      ]
+    },
+    {
+      "id": "W",
+      "labelSha256": "aaa87a09b3cc81957e75cbe732bb26a4783928c4de93611066ab68bb8f480baf",
+      "windows": [
+        {
+          "days": [
+            5
+          ],
+          "fromMinute": 840,
+          "throughMinute": 959
+        }
+      ]
+    },
+    {
+      "id": "X",
+      "labelSha256": "1241826adc80bcd01ee6b9c13bf52e1a92ee38cbd850ba374b4ac6819c8eb6ad",
+      "windows": [
+        {
+          "days": [
+            5
+          ],
+          "fromMinute": 990,
+          "throughMinute": 1109
+        }
+      ]
+    },
+    {
+      "id": "Y",
+      "labelSha256": "e1bf2ba28fd2b26d857187d63d1d49f5b6396175b4d30e0bf180a70b44dfc6e2",
+      "windows": [
+        {
+          "days": [
+            5
+          ],
+          "fromMinute": 1110,
+          "throughMinute": 1139
+        }
+      ]
+    },
+    {
+      "id": "Z",
+      "labelSha256": "30cdca8568c9f65e12b8dcdafe35059f97e3fcff96110ca8b9140d10ddd7d1e3",
+      "windows": [
+        {
+          "days": [
+            5
+          ],
+          "fromMinute": 1140,
+          "throughMinute": 1199
+        }
+      ]
+    }
+  ]
+}

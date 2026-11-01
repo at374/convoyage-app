@@ -1,0 +1,349 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-11-01",
+  "scope": "French motorway concessions plus a separately tracked supplementary list of local and border charges. This is an audit worklist, not a certified national denominator.",
+  "universeComplete": false,
+  "missingNationalTariffs": null,
+  "sources": [
+    {
+      "url": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "observedInconsistency": "Introductory text mentions 20 companies, while the named section lists 22; neither count is treated as the number of physical tolls."
+    },
+    {
+      "url": "https://www.autoroutes.fr/fr/les-societes-d-autoroutes.htm",
+      "scope": "Cross-check names; includes operators and projects, not only independently tolled networks."
+    }
+  ],
+  "entities": [
+    {
+      "id": "adelac",
+      "name": "ADELAC",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "albea",
+      "name": "ALBEA",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "aliae",
+      "name": "ALIAE",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "alicorne",
+      "name": "ALICORNE",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "alienor",
+      "name": "A’LIENOR",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "alis",
+      "name": "ALIS",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "amedea",
+      "name": "AMEDEA",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "contract_listed_service_and_tariffs_to_verify",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "aprr",
+      "name": "APRR",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "arcos",
+      "name": "ARCOS",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "official_feed_and_timed_lookup_available_not_UI_connected",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "data/tolls/official/arcos.json",
+        "data/tolls/arcos-time-bands-2026.json"
+      ]
+    },
+    {
+      "id": "arcour",
+      "name": "ARCOUR",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "official_feed_captured",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "data/tolls/official/cofiroute-arcour.json"
+      ]
+    },
+    {
+      "id": "area",
+      "name": "AREA",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "asf",
+      "name": "ASF",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "official_feed_captured_and_partial_route_bindings",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "data/tolls/official/asf.json",
+        "data/tolls/route-prices.json"
+      ]
+    },
+    {
+      "id": "atlandes",
+      "name": "ATLANDES",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "atmb",
+      "name": "ATMB",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "atosca",
+      "name": "ATOSCA",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "contract_listed_service_and_tariffs_to_verify",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "ccise",
+      "name": "CCI Seine-Estuaire",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "cevm",
+      "name": "CEVM",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "cofiroute",
+      "name": "Cofiroute",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "official_feed_captured_and_partial_route_bindings",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "data/tolls/official/cofiroute-arcour.json",
+        "data/tolls/route-prices.json"
+      ]
+    },
+    {
+      "id": "escota",
+      "name": "ESCOTA",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "official_feed_captured_and_partial_route_bindings",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "data/tolls/official/escota.json",
+        "data/tolls/route-prices.json"
+      ]
+    },
+    {
+      "id": "sanef",
+      "name": "Sanef",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "sapn",
+      "name": "SAPN",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    },
+    {
+      "id": "sftrf",
+      "name": "SFTRF",
+      "inventorySource": "https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france",
+      "coverageState": "requires_exhaustive_source_comparison",
+      "tariffCompletenessVerified": false,
+      "catalogueEvidence": [
+        "peages-aprr.json",
+        "peages-overlay.json"
+      ]
+    }
+  ],
+  "facilities": [
+    {
+      "id": "pont-normandie",
+      "parentEntity": "ccise",
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "pont-tancarville",
+      "parentEntity": "ccise",
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "viaduc-millau",
+      "parentEntity": "cevm",
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "duplex-a86",
+      "parentEntity": "cofiroute",
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "tunnel-mont-blanc",
+      "parentEntity": "atmb",
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "tunnel-frejus",
+      "parentEntity": "sftrf",
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "tunnel-puymorens",
+      "parentEntity": "asf",
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "tunnel-maurice-lemaire",
+      "parentEntity": "aprr",
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "prado-carenage",
+      "parentEntity": null,
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "prado-sud",
+      "parentEntity": null,
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "bpnl",
+      "parentEntity": null,
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "pont-ile-de-re",
+      "parentEntity": null,
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "tunnel-envalira",
+      "parentEntity": null,
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    },
+    {
+      "id": "swiss-motorway-vignette",
+      "parentEntity": null,
+      "coverageState": "requires_facility_specific_audit",
+      "tariffCompletenessVerified": false
+    }
+  ],
+  "auxiliaryActors": [
+    "Egis Road Operation",
+    "Routalis",
+    "Rocade L2 Marseille"
+  ],
+  "notes": [
+    "Parent operators and their facilities must not be added together as a count of missing physical tolls.",
+    "A published contract or actor name does not establish that an infrastructure is open or that a tariff is applicable.",
+    "Residents, subscriptions, round trips, calendar bands, vehicle classes and direction can produce different products; do not flatten them into one price.",
+    "No facility may be marked fully covered merely because a source URL or one class-1/2 amount exists."
+  ]
+}
