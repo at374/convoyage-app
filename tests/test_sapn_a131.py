@@ -1,4 +1,4 @@
-import importlib.util, pathlib, unittest, xml.etree.ElementTree as ET
+import copy, importlib.util, json, pathlib, unittest, xml.etree.ElementTree as ET
 from decimal import Decimal
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('sapn',ROOT/'scripts/verify_sapn_a131.py')
@@ -28,4 +28,22 @@ class SourceCoordinates(unittest.TestCase):
     def test_rejects_duplicate_station_rows(self):
         p=page('3,40','5,80');w=ET.SubElement(p,N+'word',xMin='50',xMax='80',yMin='20',yMax='25');w.text='INCARVILLE'
         with self.assertRaises(ValueError):sapn.verify_pages([p,page('5,50','9,40')],self.spec)
+
+class ReviewedExtract(unittest.TestCase):
+    def setUp(self):
+        self.spec=json.loads((ROOT/'data/tolls/reviewed/sapn-a131-2026.json').read_text())
+        self.extract=json.loads((ROOT/'data/tolls/reviewed/sapn-a131-source-extract-2026.json').read_text())
+    def test_exact_column_across_three_known_anchors(self):
+        records=sapn.verify_extract(self.extract,self.spec)
+        self.assertEqual(len(records),8)
+        self.assertEqual([r['amountEur'] for r in records if r['vehicleClass']==2],[9.4,9.4,12.6,17.5])
+        self.assertTrue(all(r['sourceColumnIndex']==10 for r in records))
+    def test_adjacent_cell_cannot_replace_tancarville(self):
+        self.extract['rowsByClass']['2']['INCARVILLE'][10]=9.2
+        with self.assertRaises(ValueError):sapn.verify_extract(self.extract,self.spec)
+    def test_rejects_source_identity_change(self):
+        self.extract['sourceUrl']='https://example.invalid/unofficial'
+        with self.assertRaises(ValueError):sapn.verify_extract(self.extract,self.spec)
+
 if __name__=='__main__':unittest.main()
+

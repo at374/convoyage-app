@@ -87,7 +87,46 @@ def run(spec_path,output,source_copy=None):
     print('SAPN_A131_RESULT='+json.dumps(report,ensure_ascii=False,separators=(',',':')))
     return report
 
+
+def verify_extract(extract,spec):
+    if extract['sourceUrl']!=spec['sourceUrl'] or extract['effectiveFrom']!=spec['effectiveFrom']:
+        raise ValueError('Extract source identity/date mismatch')
+    result=[]
+    for cls in [1,2]:
+        rows=extract['rowsByClass'][str(cls)]
+        anchor=decimal.Decimal(str(extract['anchorAmountByClass'][str(cls)]))
+        columns=None
+        for name in extract['knownColumnAnchors']:
+            possible={i for i,value in enumerate(rows[name]) if decimal.Decimal(str(value))==anchor}
+            columns=possible if columns is None else columns & possible
+        if columns is None or len(columns)!=1:raise ValueError('Ambiguous Tancarville column in reviewed extract')
+        column=next(iter(columns))
+        for entry in spec['rows']:
+            row=rows[entry['pdfLabel']]
+            if column>=len(row):raise ValueError('Incomplete source row')
+            value=decimal.Decimal(str(row[column]))
+            if value!=decimal.Decimal(str(entry['class'+str(cls)])):raise ValueError('Reviewed cell mismatch')
+            result.append({'origin':entry['origin'],'destination':spec['destination'],'vehicleClass':cls,
+                           'amountEur':float(value),'sourcePage':extract['pages'][str(cls)],
+                           'sourceColumnIndex':column,'sourceRowLabel':entry['pdfLabel']})
+    return result
+
+def run_extract(spec_path,extract_path,output):
+    spec=json.loads(Path(spec_path).read_text(encoding='utf-8'))
+    data=Path(extract_path).read_bytes();extract=json.loads(data)
+    records=verify_extract(extract,spec)
+    report={'status':'official-extract-column-verified','sourceUrl':spec['sourceUrl'],
+            'sourceExtractSha256':hashlib.sha256(data).hexdigest(),'sourceDocumentSha256':None,
+            'effectiveFrom':spec['effectiveFrom'],'verifiedAt':dt.datetime.now(dt.timezone.utc).isoformat(),
+            'records':records,'routeVerified':False,'nationalCompletenessVerified':False,
+            'rawPdfDownload':'HTTP 403 on GitHub; source text reviewed separately'}
+    out=Path(output);out.parent.mkdir(parents=True,exist_ok=True);out.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    print('SAPN_A131_RESULT='+json.dumps(report,ensure_ascii=False,separators=(',',':')))
+    return report
+
 if __name__=='__main__':
     ap=argparse.ArgumentParser();ap.add_argument('--spec',default='data/tolls/reviewed/sapn-a131-2026.json')
-    ap.add_argument('--output',default='tmp/sapn-a131-result.json');ap.add_argument('--source-copy')
-    a=ap.parse_args();run(a.spec,a.output,a.source_copy)
+    ap.add_argument('--output',default='tmp/sapn-a131-result.json');ap.add_argument('--source-copy');ap.add_argument('--extract')
+    a=ap.parse_args()
+    if a.extract:run_extract(a.spec,a.extract,a.output)
+    else:run(a.spec,a.output,a.source_copy)
