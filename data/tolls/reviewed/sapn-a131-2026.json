@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "awaiting-source-coordinate-validation",
+  "status": "official-source-extract-verified",
   "sourceUrl": "https://www.autoroutes.sanef.com/sites/default/files/2026-01/2026_02-Grille-SAPN.pdf",
   "effectiveFrom": "2026-02-01",
   "currency": "EUR",
@@ -35,5 +35,8 @@
       "class1": 10.9,
       "class2": 17.5
     }
-  ]
+  ],
+  "sourceReceipt": "docs/validation-sapn-a131-2026-11-01.json",
+  "routeVerified": false,
+  "sourceDocumentSha256": null
 }

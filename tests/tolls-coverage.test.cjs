@@ -250,3 +250,21 @@ test('failed base downloads can be retried by both direct and worker loaders',as
   }
  }
 });
+
+test('four recovered SAPN prices retain their official source and unknown distance',async()=>{
+ const {api}=load(),p=await api.chargerPeages(),ix=api.indexGares(p.g),o=read('peages-overlay.json'),report=read('docs/validation-sapn-a131-2026-11-01.json');
+ const expected=[['INCARVILLE N°19',5.8,9.4],['HEUDEBOUVILLE N°18',5.9,9.4],['CHAUFOUR N°15 À GAILLON N°17',7.9,12.6],['POISSY/ORGEVAL N°7 À MANTES-SUD N°12',10.9,17.5]];
+ assert.equal(report.status,'official-extract-column-verified');assert.equal(report.routeVerified,false);
+ for(const [name,c1,c2]of expected){
+  const a=ix(name),b=ix('TANCARVILLE (A131)');assert.ok(a>=0&&b>=0,name);
+  const key=Math.min(a,b)*1000+Math.max(a,b);assert.deepEqual(plain(p.prix.get(key)),[c1,c2,null]);
+  assert.equal(p.conflits.has(key),false);
+  const proof=o.paires_preuves.find(r=>r.entree===name&&r.sortie==='TANCARVILLE (A131)');
+  assert.equal(proof.source_extract_sha256,report.sourceExtractSha256);assert.equal(proof.route_verified,false);
+  assert.equal(proof.distance_tarifaire_km,null);assert.deepEqual(proof.source_pages,[2,3]);
+ }
+});
+test('an official amount without a checked distance cannot fabricate a complete route',()=>{
+ const {api}=load(),p={g:[['A',[[48,2.5]]],['B',[[48,2.52]]]],prix:new Map([[1,[5.8,9.4,null]]])};
+ assert.equal(api.prixExact(p,[[48,2.5],[48,2.52]],[{begin_shape_index:0,end_shape_index:1}],2),null);
+});
