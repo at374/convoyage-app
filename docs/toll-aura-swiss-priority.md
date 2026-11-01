@@ -2,7 +2,7 @@
 
 The working order is Auvergne-Rhone-Alpes and Switzerland first, then broader France. `scripts/audit-aura-toll-coverage.cjs` separates known fixed gates from name/position mismatches and unresolved identities in the checked-in ministry data. Its 106 groups are records grouped by name/road, not a certified count of physical tolls. The source dates to 2025 and does not prove 2026 completeness. No total number of missing tariffs is inferred.
 
-The current report contains 66 name/position matches, 19 nearby identities to check, 4 named positions to check, 16 fixed-gate groups with class-1/2 prices, and one unresolved identity, St Michel amont. Cluses and Scionzier were already present as fixed barriers; they must not be counted as missing fares merely because their names are absent from the ticket-station list. Known positions still require route-wide price and access checks.
+The current report contains 67 name/position matches, 18 nearby identities to check, 4 named positions to check, 16 fixed-gate groups with class-1/2 prices, and one unresolved identity, St Michel amont. Cluses and Scionzier were already present as fixed barriers; they must not be counted as missing fares merely because their names are absent from the ticket-station list. Known positions still require route-wide price and access checks.
 
 Tarare Est open-system entry/exit points were missing from fixed-barrier detection. Their published ASF row is distinct from TARARE EST F (closed system). The two ministry points on route 69A908910CD are now linked as one fixed crossing group. The current official ASF feed gives classes 1/2/3/4/5 at 1.80/2.80/5.10/6.80/1.00 EUR; exact row, source hash and ministry names are retained in `barrieres_preuves`. No closed-system station is renamed, no old price is overwritten, and no route distance is invented. New versions are restricted to the reviewed 2026 period. Synthetic gate tests establish component behavior, not physical road access or a complete real mission.
 
@@ -19,4 +19,6 @@ Sources:
 - Grand-Saint-Bernard operator: https://letunnel.com/fr/
 - Munt La Schera operator: https://www.tunnelticket.ch/en/page/prices
 
-Further work: establish all remaining AURA identity/position bindings, distinguish the Saint-Michel A43 barrier and interchange, validate live/public road traces, connect verified Swiss tunnel crossings, and then widen the geographical audit. Do not equate this worklist or source discovery with 100% coverage.
+Saint-Michel A43 barrier/interchange lane points are now explicitly bound to their ministry identities; see `docs/toll-saint-michel-branch-review.md`. Clear trace geometry can select between them, while near-ties remain unconfirmed. The separate St Michel amont record remains unresolved.
+
+Further work: establish the remaining AURA identity/position bindings, validate live/public road traces, connect verified Swiss tunnel crossings, and then widen the geographical audit. Do not equate this worklist or source discovery with 100% coverage.

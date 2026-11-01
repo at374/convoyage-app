@@ -103,6 +103,16 @@
     }
     return fixes;
   };
+  const appliquerPositionsVerifiees = (P, overlay) => {
+    const ix=indexGares(P.g);P.verifiedGatePositions=new Set();
+    for(const g of overlay.gares||[]){
+      if(g.positionOverride!==true||g.provenance?.local!=='data/gares-peage-officiel.json'||!g.provenance?.officialNames?.length||!g.provenance?.routes?.length)continue;
+      const i=ix(g.nom);
+      if(i<0||P.g.filter(s=>s[0]===g.nom).length!==1||!g.points?.length||g.points.some(p=>!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite)||!P.g[i][1].some(q=>dist(p[0],p[1],q[0],q[1])<=.15)))continue;
+      P.g[i][1]=g.points;P.verifiedGatePositions.add(i);
+    }
+    delete P.gi;
+  };
   // Different spellings can resolve to the same pair. Keep the source amounts,
   // but never choose a conflicting price merely because it was loaded first.
   const tarifsEnConflit = (gares, prix, paires) => {
@@ -179,6 +189,7 @@
       const o = await fetch('peages-overlay.json').then(r => r.json());
       for (const n of (o.gares || [])) { if (!P.g.some(g => g[0] === n.nom)) P.g.push([n.nom, n.points]); }
       const ix = indexGares(P.g);
+      appliquerPositionsVerifiees(P,o);
       P.fixes = garesFixes(P.g, o);
       P.conflits = tarifsEnConflit(P.g, prix, o.paires);
       for (const q of (o.paires || [])) { const x = ix(q[0]), y = ix(q[1]); const k = Math.min(x, y) * 1000 + Math.max(x, y); if (x >= 0 && y >= 0 && !prix.has(k)) prix.set(k, [q[2], q[3], q[4]]); }
@@ -200,6 +211,7 @@
     return bi;
   };
   const prixExact = (P, sh, tms, km, date = new Date().toISOString().slice(0,10)) => {
+    P.ambiguities = [];
     const f = tms[0], l = tms[tms.length - 1];
     const i0 = f.begin_shape_index, i1 = l.end_shape_index;
     if (!sh[i0] || !sh[i1]) return null;
@@ -221,11 +233,61 @@
     if (eN > 0 && hits.slice(0, eN).every(q => P.g[q.g][0] === 'CRUSEILLES A')) hits.splice(0, eN);
     // V278 : « VOREPPE BARRIERE » (A48/A49, AREA) facture depuis le début du tronçon à péage (Grenoble → Voreppe compris) : tarif 35 km pour Voreppe → Rives alors que 18 km séparent la barrière de Rives. On accepte la distance mesurée sur le tracé OU depuis le début/jusqu'à la fin du tronçon.
     hits.forEach(q => { if (P.g[q.g][0] === ENT) q.ent = true; if (P.g[q.g][0] === 'VOREPPE BARRIERE') q.vo = true; });
-    // V246 : gares « jumelles » (mêmes coordonnées, ex. Dourdan / La Folie-B) : on essaie la plus proche d'abord, puis ses jumelles.
+    // Nearby identities can represent different ramps or tariff boundaries.
+    // Unverified geometry requires agreement; reviewed lane points may separate clear branches.
     const jc = new Map();
     const jum = g => { if (jc.has(g)) return jc.get(g); const r = [g]; jc.set(g, r); P.g.forEach((o, i) => { if (i !== g && o[1].some(p => P.g[g][1].some(q => dist(p[0], p[1], q[0], q[1]) < 0.06))) r.push(i); }); return r; };
+    const proximites=new Map(),groupes=new Map();
+    const proximite=g=>{
+      if(proximites.has(g))return proximites.get(g);
+      let best=Infinity;
+      for(const p of P.g[g][1]){
+        const sx=111.32*Math.cos(p[0]*Math.PI/180),sy=111.32;
+        for(let k=i0;k<i1;k++){
+          const a=sh[k],b=sh[k+1];if(!a||!b)continue;
+          if(p[0]<Math.min(a[0],b[0])-.0002||p[0]>Math.max(a[0],b[0])+.0002||p[1]<Math.min(a[1],b[1])-.0003||p[1]>Math.max(a[1],b[1])+.0003)continue;
+          const ax=(a[1]-p[1])*sx,ay=(a[0]-p[0])*sy,dx=(b[1]-a[1])*sx,dy=(b[0]-a[0])*sy;
+          const den=dx*dx+dy*dy,t=den?Math.max(0,Math.min(1,-(ax*dx+ay*dy)/den)):0;
+          best=Math.min(best,Math.hypot(ax+t*dx,ay+t*dy));
+        }
+      }
+      proximites.set(g,best);return best;
+    };
+    const candidats=g=>{
+      if(groupes.has(g))return groupes.get(g);
+      const ids=jum(g);let selected=ids;
+      if(ids.length>1&&ids.every(i=>P.verifiedGatePositions?.has(i))){
+        const ranked=ids.map(i=>({i,d:proximite(i)})).sort((a,b)=>a.d-b.d);
+        // Conservative local geometry policy, not an operator access guarantee.
+        if(ranked[0].d<=.008&&ranked[1].d-ranked[0].d>=.005)selected=[ranked[0].i];
+      }
+      groupes.set(g,selected);return selected;
+    };
     // V245 : un trajet peut traverser plusieurs mailles tarifaires séparées (ex. A41 Annecy→Chambéry puis Chignin→Crolles) : on additionne les tronçons officiels.
-    const paire = (x, y) => { const ds = x.ent ? [lon(i0, y.k)] : y.ent ? [lon(x.k, i1)] : [lon(x.k, y.k)]; if (x.vo) ds.push(lon(i0, y.k)); if (y.vo) ds.push(lon(x.k, i1)); for (const a of jum(x.g)) for (const b of jum(y.g)) { if (a === b) continue; const cle = Math.min(a, b) * 1000 + Math.max(a, b); if (P.conflits?.has(cle)) continue; const ancien = P.prix.get(cle); if (!ancien || !Number.isFinite(ancien[2]) || ancien[2] <= 0) continue; const officiel = prixOfficiel(P,a,b,date); if (officiel === null) continue; const v = officiel ? [officiel.v[0],officiel.v[1],ancien[2]] : ancien; if (ds.some(d => { const q = v[2] / Math.max(1, d); return q >= 0.7 && q <= 1.9; })) return { v, a, b, source:officiel?.source }; } return null; };
+    const ambiguities = new Set();
+    const paire = (x, y) => {
+      const ds = x.ent ? [lon(i0, y.k)] : y.ent ? [lon(x.k, i1)] : [lon(x.k, y.k)];
+      if (x.vo) ds.push(lon(i0, y.k)); if (y.vo) ds.push(lon(x.k, i1));
+      let first = null;
+      for (const a of candidats(x.g)) for (const b of candidats(y.g)) {
+        if (a === b) continue;
+        const cle = Math.min(a,b)*1000+Math.max(a,b);
+        if (P.conflits?.has(cle)) continue;
+        const ancien = P.prix.get(cle);
+        if (!ancien || !Number.isFinite(ancien[2]) || ancien[2] <= 0) continue;
+        const officiel = prixOfficiel(P,a,b,date); if (officiel === null) continue;
+        const v = officiel ? [officiel.v[0],officiel.v[1],ancien[2]] : ancien;
+        if (!ds.some(d=>{const q=v[2]/Math.max(1,d);return q>=.7&&q<=1.9;})) continue;
+        if (first && [0,1].some(c=>Math.round(first.v[c]*100)!==Math.round(v[c]*100))) {
+          if(first.a!==a){ambiguities.add(P.g[first.a][0]);ambiguities.add(P.g[a][0]);}
+          if(first.b!==b){ambiguities.add(P.g[first.b][0]);ambiguities.add(P.g[b][0]);}
+          P.ambiguities = [...ambiguities].sort();
+          return null;
+        }
+        if (!first) first = {v,a,b,source:officiel?.source};
+      }
+      return first;
+    };
     const segs = [];
     let i = 0;
     while (i < hits.length) {
@@ -240,7 +302,7 @@
       }
       segs.push(ok); i = ok.h + 1;
     }
-    if (!segs.length && !ouv.length) return null;
+    if (ambiguities.size || (!segs.length && !ouv.length)) return null;
     const r2 = n => Math.round(n * 100) / 100;
     // V246 : Valhalla marque « péage » des tronçons gratuits (rocades, entrées de ville) : le reste après la dernière gare n'est plus refusé ; il contient forcément 0 gare.
     // Seules les gares dont la position est douteuse (voir audit) bloquent le prix.
@@ -310,11 +372,11 @@
     }
     return [...names];
   };
-  const CODE_WORKER = () => 'const UNK=' + JSON.stringify(UNK) + ';const dist=' + dist + ';const joli=' + joli + ';const indexGares=' + indexGares + ';const garesFixes=' + garesFixes + ';const tarifsEnConflit=' + tarifsEnConflit + ';const attacherTarifsOfficiels=' + attacherTarifsOfficiels + ';const prixOfficiel=' + prixOfficiel + ';const chargerTarifsOfficiels=' + chargerTarifsOfficiels + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';const conflitsDuTrace=' + conflitsDuTrace + ';' +
+  const CODE_WORKER = () => 'const UNK=' + JSON.stringify(UNK) + ';const dist=' + dist + ';const joli=' + joli + ';const indexGares=' + indexGares + ';const appliquerPositionsVerifiees=' + appliquerPositionsVerifiees + ';const garesFixes=' + garesFixes + ';const tarifsEnConflit=' + tarifsEnConflit + ';const attacherTarifsOfficiels=' + attacherTarifsOfficiels + ';const prixOfficiel=' + prixOfficiel + ';const chargerTarifsOfficiels=' + chargerTarifsOfficiels + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';const conflitsDuTrace=' + conflitsDuTrace + ';' +
     'let P=null,CHARGEMENT=null;const charger=async base=>{const j=await (await fetch(base+"peages-aprr.json")).json();const prix=new Map();for(const s of j.p.split(";")){const [a,b,c1,c2,d]=s.split(",");const x=parseInt(a,36),y=parseInt(b,36);prix.set(Math.min(x,y)*1000+Math.max(x,y),[c1/10,c2/10,Number(d)]);}' +
     'const CORR={"ST MARTIN BELLEVUE A41 N":[[46.1293,6.0978],[46.1318,6.1]],"BOISSE Système Ouvert":[[45.82868,5.03099],[45.82879,5.03123]]};j.g.forEach(g=>{if(CORR[g[0]])g[1]=CORR[g[0]];});const Q={g:j.g,prix,v:j.v};' +
-    'try{const o=await (await fetch(base+"peages-overlay.json")).json();for(const n of (o.gares||[])){if(!Q.g.some(g=>g[0]===n.nom))Q.g.push([n.nom,n.points]);}const ix=indexGares(Q.g);Q.fixes=garesFixes(Q.g,o);Q.conflits=tarifsEnConflit(Q.g,prix,o.paires);for(const q of (o.paires||[])){const x=ix(q[0]),y=ix(q[1]);const k=Math.min(x,y)*1000+Math.max(x,y);if(x>=0&&y>=0&&!prix.has(k))prix.set(k,[q[2],q[3],q[4]]);}}catch(_){}try{await chargerTarifsOfficiels(Q,base+"data/tolls/route-prices.json");}catch(_){}return Q;};' +
-    'const garesManquantes='+garesManquantes+';onmessage=async e=>{const m=e.data;try{if(!P){if(!CHARGEMENT)CHARGEMENT=charger(m.base).finally(()=>{CHARGEMENT=null;});P=await CHARGEMENT;}const x=prixExact(P,m.sh,m.tms,0,m.date);const n=garesTraversees(P,m.sh,m.i0,m.i1);const h=[];if(m.hits){let der=-2;for(let k=m.i0;k<=m.i1;k++){const g=gareProche(P,m.sh[k][0],m.sh[k][1],0.4);if(g>=0&&g!==der){h.push([m.sh[k][0],m.sh[k][1],P.g[g][0]]);der=g;}}}postMessage({id:m.id,x,n,v:P.v,h,missing:garesManquantes(m.sh,m.i0,m.i1),conflicts:conflitsDuTrace(P,m.sh,m.i0,m.i1)});}catch(err){postMessage({id:m.id,err:String(err)});}};';
+    'try{const o=await (await fetch(base+"peages-overlay.json")).json();for(const n of (o.gares||[])){if(!Q.g.some(g=>g[0]===n.nom))Q.g.push([n.nom,n.points]);}const ix=indexGares(Q.g);appliquerPositionsVerifiees(Q,o);Q.fixes=garesFixes(Q.g,o);Q.conflits=tarifsEnConflit(Q.g,prix,o.paires);for(const q of (o.paires||[])){const x=ix(q[0]),y=ix(q[1]);const k=Math.min(x,y)*1000+Math.max(x,y);if(x>=0&&y>=0&&!prix.has(k))prix.set(k,[q[2],q[3],q[4]]);}}catch(_){}try{await chargerTarifsOfficiels(Q,base+"data/tolls/route-prices.json");}catch(_){}return Q;};' +
+    'const garesManquantes='+garesManquantes+';onmessage=async e=>{const m=e.data;try{if(!P){if(!CHARGEMENT)CHARGEMENT=charger(m.base).finally(()=>{CHARGEMENT=null;});P=await CHARGEMENT;}const x=prixExact(P,m.sh,m.tms,0,m.date);const n=garesTraversees(P,m.sh,m.i0,m.i1);const h=[];if(m.hits){let der=-2;for(let k=m.i0;k<=m.i1;k++){const g=gareProche(P,m.sh[k][0],m.sh[k][1],0.4);if(g>=0&&g!==der){h.push([m.sh[k][0],m.sh[k][1],P.g[g][0]]);der=g;}}}postMessage({id:m.id,x,n,v:P.v,h,missing:garesManquantes(m.sh,m.i0,m.i1),conflicts:conflitsDuTrace(P,m.sh,m.i0,m.i1),ambiguous:P.ambiguities||[]});}catch(err){postMessage({id:m.id,err:String(err)});}};';
   const calculPeage = async (sh, tms, km, hits, date = new Date().toISOString().slice(0,10)) => {
     const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
     try {
@@ -323,7 +385,7 @@
       return await new Promise((ok, ko) => { const id = ++WKID; WKATT.set(id, { ok, ko }); setTimeout(() => { if (WKATT.has(id)) { WKATT.delete(id); ko(new Error('délai')); } }, 40000); WK.postMessage({ id, date, hits: !!hits, base: new URL('.', location.href).href, sh, tms: [{ begin_shape_index: tms[0].begin_shape_index, end_shape_index: tms[0].end_shape_index }, { begin_shape_index: tms[tms.length - 1].begin_shape_index, end_shape_index: tms[tms.length - 1].end_shape_index }], i0, i1 }); });
     } catch (_) {
       const P = await chargerPeages();   // secours : calcul direct (ancienne méthode)
-      return { x: prixExact(P, sh, tms, km, date), n: garesTraversees(P, sh, i0, i1), v: P.v, missing:garesManquantes(sh,i0,i1), conflicts:conflitsDuTrace(P,sh,i0,i1) };
+      return { x: prixExact(P, sh, tms, km, date), n: garesTraversees(P, sh, i0, i1), v: P.v, missing:garesManquantes(sh,i0,i1), conflicts:conflitsDuTrace(P,sh,i0,i1), ambiguous:P.ambiguities||[] };
     }
   };
   const estimerPeage = async (r, out) => {
@@ -368,7 +430,7 @@
         const tC = performance.now();
         const R = await calculPeage(sh, tms, km, false, dateTarif), x = R.x;
         const preuves = x?.sources?.length ? ' · Grilles ' + [...new Set(x.sources.map(s=>s.id+' (effet '+s.effectiveFrom+', contrôle '+s.checkedOn+')'))].map(esc).join(', ') : '';
-        const litiges = R.conflicts?.length ? ' Tarifs contradictoires à vérifier pour les gares proches du tracé : '+R.conflicts.map(esc).join(', ')+'.' : '';
+        const litiges = (R.conflicts?.length ? ' Tarifs contradictoires à vérifier pour les gares proches du tracé : '+R.conflicts.map(esc).join(', ')+'.' : '') + (R.ambiguous?.length ? ' Entrée ou branche de péage à confirmer : '+R.ambiguous.map(n=>esc(joli(n.replace(/ BAR$/, ' Barrière').replace(/ ECH$/, ' Échangeur')))).join(', ')+'. Les prix de ces accès sont différents.' : '');
         window.CPT('calcul péage' + (viaGoogle ? ' (Google)' : ''), tC);
         const O = await chargerOverlay();
         const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;

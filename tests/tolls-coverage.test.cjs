@@ -7,7 +7,7 @@ const root = path.join(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'routes-ui.js'), 'utf8');
 const fixture = require('./fixtures/tolls-saint-vulbas-la-ciotat-2026-10-31.json');
 const read = name => JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
-const exposed = source.replace('  let rafale = false;', '  window.audit={routeDatee,dateTarifDepart,chargerTarifsOfficiels,attacherTarifsOfficiels,prixOfficiel,indexGares,garesFixes,tarifsEnConflit,conflitsDuTrace,calculPeage,chargerPeages,prixExact,garesManquantes,barrieresTraversees,dec6,CODE_WORKER,estimerPeage};let rafale = false;');
+const exposed = source.replace('  let rafale = false;', '  window.audit={appliquerPositionsVerifiees,routeDatee,dateTarifDepart,chargerTarifsOfficiels,attacherTarifsOfficiels,prixOfficiel,indexGares,garesFixes,tarifsEnConflit,conflitsDuTrace,calculPeage,chargerPeages,prixExact,garesManquantes,barrieresTraversees,dec6,CODE_WORKER,estimerPeage};let rafale = false;');
 function load() {
   const ctx = {window:{CPPeage:require('../peage-engine.js')},document:{documentElement:{},body:{offsetHeight:0}},MutationObserver:class{observe(){}},performance:{now:()=>0},AbortController,setInterval:()=>0,
     setTimeout:(fn,ms)=>ms<10?setTimeout(fn,ms):0,clearTimeout,URL,
@@ -390,4 +390,71 @@ test('Tarare Est open-system barrier is priced separately from the closed ticket
  const key=[...sh[0],...sh.at(-1)].map(n=>Number(n).toFixed(3)).join('|');ctx.window.CPValP={[key]:Promise.resolve({trip:{legs:[{shape:encode6(sh),maneuvers:tms}]}})};
  let html='';await api.estimerPeage({pts:sh.map(p=>[p[1],p[0]]),dateTarif:'2026-11-01'},{querySelector:()=>({set innerHTML(s){html=s;},closest:()=>null})});
  assert.match(html,/Tarare Est Ouvert/);assert.match(html,/1,80/);assert.match(html,/2,80/);assert.doesNotMatch(html,/Prix exact non disponible|Aucun péage/);
+});
+test('nearby station identities with different viable prices never win by catalogue order',()=>{
+ const f=read('tests/fixtures/tolls-ambiguous-branches.json'),{api}=load(),g=f.base.g;
+ for(const reversed of [false,true])for(const onlyClass2 of [false,true]){
+  const prix=new Map([[1,[3,4,2]],[2,[onlyClass2?3:5,6,2]]]),p={g,prix};
+  const sh=(reversed?[g[1][1][0],g[0][1][0]]:[g[0][1][0],g[1][1][0]]);
+  assert.equal(api.prixExact(p,sh,f.leg.maneuvers,2),null);
+  assert.deepEqual(plain(p.ambiguities),['Twin Barrière','Twin Échangeur']);
+  assert.deepEqual(plain(prix.get(1)),[3,4,2]);
+ }
+ const p={g:[g[0],g[2],g[1]],prix:new Map([[1,[5,6,2]],[2,[3,4,2]]])};
+ assert.equal(api.prixExact(p,[g[0][1][0],g[1][1][0]],f.leg.maneuvers,2),null);
+});
+test('equal branch prices remain usable and a later independent calculation clears the warning',()=>{
+ const f=read('tests/fixtures/tolls-ambiguous-branches.json'),{api}=load();
+ const g=[...f.base.g,['Gamma',[[48.1,2.5]]],['Delta',[[48.1,2.52]]]],p={g,prix:new Map([[1,[3,4,2]],[2,[5,6,2]],[3004,[7,8,2]]])},tms=f.leg.maneuvers;
+ assert.equal(api.prixExact(p,[g[0][1][0],g[1][1][0]],tms,2),null);
+ assert.equal(api.prixExact(p,[g[3][1][0],g[4][1][0]],tms,2).c1,7);assert.deepEqual(plain(p.ambiguities),[]);
+ p.prix.set(2,[3,4,2]);assert.equal(api.prixExact(p,[g[0][1][0],g[1][1][0]],tms,2).c1,3);
+ assert.deepEqual(plain(p.ambiguities),[]);
+ p.prix.set(2,[9,10,200]);assert.equal(api.prixExact(p,[g[0][1][0],g[1][1][0]],tms,2).c1,3);
+});
+test('Saint-Michel ministry lane points distinguish barrier and interchange when geometry is clear',async()=>{
+ const {api}=load(),p=await api.chargerPeages(),ix=api.indexGares(p.g),a=ix('AITON'),bar=ix('ST MICHEL MAURIENNE BAR'),ech=ix('ST MICHEL MAURIENNE ECH');
+ const m=read('data/gares-peage-officiel.json'),o=read('peages-overlay.json');
+ assert.ok([a,bar,ech].every(i=>i>=0));assert.notDeepEqual(plain(p.g[bar][1]),plain(p.g[ech][1]));
+ for(const i of [bar,ech]){const g=o.gares.find(g=>g.nom===p.g[i][0]);assert.ok(p.verifiedGatePositions.has(i));
+  assert.ok(g.points.every(point=>m.d.some(r=>g.provenance.officialNames.includes(r[0])&&g.provenance.routes.includes(r[1])&&r[2]===point[0]&&r[3]===point[1])));}
+ const key=b=>Math.min(a,b)*1000+Math.max(a,b),tms=[{begin_shape_index:0,end_shape_index:1}];
+ assert.deepEqual(plain(p.prix.get(key(bar)).slice(0,2)),[10.2,15]);assert.deepEqual(plain(p.prix.get(key(ech)).slice(0,2)),[8.2,11.9]);
+ // Synthetic endpoint components at source lane points, not public road traces.
+ for(const [i,c1,c2]of [[bar,10.2,15],[ech,8.2,11.9]]){
+  const result=api.prixExact(p,[p.g[a][1][0],p.g[i][1][0]],tms,60);assert.ok(result,p.g[i][0]);assert.equal(result.c1,c1);assert.equal(result.c2,c2);
+ }
+ const legacy={g:plain(p.g),prix:p.prix};legacy.g[bar][1]=legacy.g[ech][1]=[[45.219,6.459]];
+ assert.equal(api.prixExact(legacy,[legacy.g[a][1][0],legacy.g[bar][1][0]],tms,60),null);
+ assert.ok(legacy.ambiguities.includes('ST MICHEL MAURIENNE BAR'));assert.ok(legacy.ambiguities.includes('ST MICHEL MAURIENNE ECH'));
+});
+test('verified geometry uses line segments and keeps uncertain or unverified near-ties ambiguous',()=>{
+ const {api}=load(),g=[['Alpha',[[48,2.5]]],['Mainline',[[48,2.52]]],['Interchange',[[48.00015,2.52]]]],p={g,prix:new Map([[1,[3,4,2]],[2,[5,6,2]]]),verifiedGatePositions:new Set([1,2])};
+ const tms=[{begin_shape_index:0,end_shape_index:1}];
+ assert.equal(api.prixExact(p,[g[0][1][0],g[1][1][0]],tms,2).c1,3);
+ assert.equal(api.prixExact(p,[g[0][1][0],g[2][1][0]],tms,2).c1,5);
+ assert.equal(api.prixExact(p,[g[0][1][0],[48.00007,2.52]],tms,2),null);
+ const segment=[g[0][1][0],[47.9999,2.52],[48.0001,2.52]];
+ assert.equal(api.prixExact(p,segment,[{begin_shape_index:0,end_shape_index:2}],2).c1,3);
+ p.verifiedGatePositions.delete(2);assert.equal(api.prixExact(p,[g[0][1][0],g[1][1][0]],tms,2),null);
+});
+test('coordinate corrections require explicit nearby source positions and clear the spatial cache',()=>{
+ const {api}=load(),entry={nom:'Gate',positionOverride:true,points:[[48.0001,2.5]],provenance:{local:'data/gares-peage-officiel.json',officialNames:['Official Gate'],routes:['A0043']}};
+ const p={g:[['Gate',[[48,2.5]]]],gi:new Map()};api.appliquerPositionsVerifiees(p,{gares:[entry]});
+ assert.deepEqual(plain(p.g[0][1]),entry.points);assert.ok(p.verifiedGatePositions.has(0));assert.equal(p.gi,undefined);
+ for(const change of [e=>{e.positionOverride=false;},e=>{e.points=[[49,2.5]];},e=>{e.provenance.local='unknown';}]){
+  const e=plain(entry);change(e);const q={g:[['Gate',[[48,2.5]]]]};api.appliquerPositionsVerifiees(q,{gares:[e]});assert.equal(q.verifiedGatePositions.size,0);assert.deepEqual(plain(q.g[0][1]),[[48,2.5]]);
+ }
+});
+test('actual worker and mobile renderer expose branch ambiguity without publishing a total',async()=>{
+ const f=read('tests/fixtures/tolls-ambiguous-branches.json'),{api,ctx}=load();
+ ctx.fetch=async url=>({ok:!String(url).includes('route-prices.json'),json:async()=>plain(String(url).includes('peages-aprr.json')?f.base:f.overlay)});
+ const sh=api.dec6(f.leg.shape),tms=f.leg.maneuvers;
+ const direct=await api.calculPeage(sh,tms,2);assert.equal(direct.x,null);assert.deepEqual(plain(direct.ambiguous),['Twin Barrière','Twin Échangeur']);
+ let reply;const wk={AbortController,setTimeout,clearTimeout,fetch:ctx.fetch,postMessage:r=>{reply=r;}};vm.createContext(wk);vm.runInContext(api.CODE_WORKER(),wk);
+ await wk.onmessage({data:{id:2,sh,tms,i0:0,i1:1,base:'https://test.local/'}});
+ assert.equal(reply.err,undefined);assert.equal(reply.x,null);assert.deepEqual(plain(reply.ambiguous),plain(direct.ambiguous));
+ const key=[...sh[0],...sh.at(-1)].map(n=>Number(n).toFixed(3)).join('|');ctx.window.CPValP={[key]:Promise.resolve({trip:{legs:[f.leg]}})};
+ let html='';await api.estimerPeage({pts:sh.map(p=>[p[1],p[0]])},{querySelector:()=>({set innerHTML(s){html=s;},closest:()=>null})});
+ assert.match(html,/Entrée ou branche de péage à confirmer/);assert.match(html,/Twin Barrière/);assert.match(html,/Twin Échangeur/);assert.doesNotMatch(html,/Classe 1|Classe 2|Aucun péage/);
 });

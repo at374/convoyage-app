@@ -5,8 +5,8 @@
   "sourceDatasetYear": 2025,
   "regionalMinistryGroups": 106,
   "statusCounts": {
-    "named_station_position_matched": 66,
-    "nearby_identity_to_verify": 19,
+    "named_station_position_matched": 67,
+    "nearby_identity_to_verify": 18,
     "named_station_position_to_verify": 4,
     "fixed_gate_prices_present": 16,
     "unresolved": 1
@@ -1636,10 +1636,8 @@
           6.45917
         ]
       ],
-      "status": "nearby_identity_to_verify",
-      "catalogueNames": [],
-      "nearbyCandidates": [
-        "ST MICHEL MAURIENNE BAR",
+      "status": "named_station_position_matched",
+      "catalogueNames": [
         "ST MICHEL MAURIENNE ECH"
       ]
     },
