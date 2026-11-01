@@ -6,6 +6,8 @@ on:
       - 'data/tolls/**'
       - 'toll-official-catalogue.cjs'
       - 'toll-swiss-prices.cjs'
+      - 'toll-aprr-open.cjs'
+      - 'scripts/complete-aprr-open.cjs'
       - 'scripts/audit-aura-toll-coverage.cjs'
       - 'tests/toll-*.test.cjs'
       - 'scripts/build-toll-route-prices.cjs'

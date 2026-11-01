@@ -1,0 +1,312 @@
+{
+  "schemaVersion": 1,
+  "sourceId": "aprr-area-open-2026",
+  "sourceUrl": "https://voyage.aprr.fr/sites/default/files/2026-02/2026-%20Syst%C3%A8mes%20Ouverts%20APRR-AREA.pdf",
+  "effectiveFrom": "2026-02-01",
+  "reviewedThrough": "2026-12-31",
+  "reviewedAt": "2026-11-01",
+  "verification": {
+    "method": "official PDF page 1 visual review and indexed table cross-check",
+    "page": 1,
+    "downloadedBytesVerified": false,
+    "rawSha256": null,
+    "localDownloadError": "HTTP 403; no claim of local PDF byte verification"
+  },
+  "currency": "EUR",
+  "taxIncluded": true,
+  "classOrder": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "rows": [
+    {
+      "road": "A71",
+      "stationCode": "09078",
+      "publishedName": "GERZAT-VILLE",
+      "prices": [
+        1.4,
+        1.7,
+        3.3,
+        3.4,
+        1.1
+      ],
+      "publishedTariffKm": 18,
+      "barrierId": null
+    },
+    {
+      "road": "A6",
+      "stationCode": "09121",
+      "publishedName": "VILLEFRANCHE-VILLE",
+      "prices": [
+        2.8,
+        4.2,
+        5.6,
+        7.2,
+        1.8
+      ],
+      "publishedTariffKm": 30,
+      "barrierId": null
+    },
+    {
+      "road": "A432",
+      "stationCode": "09153",
+      "publishedName": "LA BOISSE",
+      "prices": [
+        2.4,
+        3.9,
+        6.2,
+        8,
+        1.5
+      ],
+      "publishedTariffKm": 24,
+      "barrierId": "aprr-area-ouvert-boisse-systeme-ouvert"
+    },
+    {
+      "road": "A77",
+      "stationCode": "09403",
+      "publishedName": "DORDIVES",
+      "prices": [
+        6,
+        9,
+        14.1,
+        18.9,
+        3.7
+      ],
+      "publishedTariffKm": 62,
+      "barrierId": null
+    },
+    {
+      "road": "A77",
+      "stationCode": "09404",
+      "publishedName": "LE TOURNEAU",
+      "prices": [
+        3.8,
+        5.8,
+        8.9,
+        11.9,
+        2.5
+      ],
+      "publishedTariffKm": 40,
+      "barrierId": "aprr-area-ouvert-tourneau-systeme-ouvert"
+    },
+    {
+      "road": "A77",
+      "stationCode": "09405",
+      "publishedName": "MYENNES",
+      "prices": [
+        4.2,
+        6,
+        8.4,
+        11.9,
+        2.8
+      ],
+      "publishedTariffKm": 33,
+      "barrierId": "aprr-area-ouvert-myennes"
+    },
+    {
+      "road": "A466",
+      "stationCode": "09420",
+      "publishedName": "QUINCIEUX BARRIERE",
+      "prices": [
+        3.6,
+        5.6,
+        8.3,
+        11.7,
+        2.3
+      ],
+      "publishedTariffKm": 40,
+      "barrierId": "aprr-area-ouvert-quincieux"
+    },
+    {
+      "road": "A46",
+      "stationCode": "09421",
+      "publishedName": "GENAY",
+      "prices": [
+        1.7,
+        2.5,
+        4.2,
+        5.6,
+        1
+      ],
+      "publishedTariffKm": 17,
+      "barrierId": "aprr-area-ouvert-genay"
+    },
+    {
+      "road": "A46",
+      "stationCode": "09422",
+      "publishedName": "MIONNAY",
+      "prices": [
+        1,
+        1.5,
+        2.4,
+        3.3,
+        0.5
+      ],
+      "publishedTariffKm": 9,
+      "barrierId": "aprr-area-ouvert-mionnay"
+    },
+    {
+      "road": "TML",
+      "stationCode": "09429",
+      "publishedName": "LUSSE",
+      "prices": [
+        6.8,
+        10.7,
+        19,
+        31.9,
+        4.1
+      ],
+      "publishedTariffKm": 11,
+      "barrierId": "aprr-area-ouvert-lusse"
+    },
+    {
+      "road": "A36",
+      "stationCode": "09431",
+      "publishedName": "FONTAINE-LARIVIERE",
+      "prices": [
+        3.1,
+        4.9,
+        7.8,
+        10.9,
+        1.9
+      ],
+      "publishedTariffKm": 33,
+      "barrierId": "aprr-area-ouvert-fontaine-lariviere"
+    },
+    {
+      "road": "A406",
+      "stationCode": "09443",
+      "publishedName": "CROTTET",
+      "prices": [
+        0.8,
+        1.2,
+        1.8,
+        2.3,
+        0.4
+      ],
+      "publishedTariffKm": 7,
+      "barrierId": "aprr-area-ouvert-crottet"
+    },
+    {
+      "road": "A719",
+      "stationCode": "09465",
+      "publishedName": "VICHY",
+      "prices": [
+        1.2,
+        1.9,
+        2.9,
+        4,
+        0.7
+      ],
+      "publishedTariffKm": 13,
+      "barrierId": "aprr-area-ouvert-vichy"
+    },
+    {
+      "road": "A410",
+      "stationCode": "03016",
+      "publishedName": "CRUSEILLES EST/OUEST A410",
+      "prices": [
+        3.2,
+        4.9,
+        7.4,
+        9.4,
+        1.4
+      ],
+      "publishedTariffKm": 25,
+      "barrierId": "aprr-area-ouvert-cruseilles-a"
+    },
+    {
+      "road": "A41N",
+      "stationCode": "15017",
+      "publishedName": "CRUSEILLES EST/OUEST A41N",
+      "prices": [
+        8,
+        14.9,
+        22.1,
+        27.2,
+        4.4
+      ],
+      "publishedTariffKm": 19,
+      "barrierId": null
+    },
+    {
+      "road": "A41N",
+      "stationCode": "15019",
+      "publishedName": "COPPONEX",
+      "prices": [
+        2.9,
+        5.4,
+        8.7,
+        11.1,
+        1.8
+      ],
+      "publishedTariffKm": 11,
+      "barrierId": null
+    },
+    {
+      "road": "A43",
+      "stationCode": "03027",
+      "publishedName": "CHIGNIN BRETELLE",
+      "prices": [
+        1,
+        1.6,
+        2.7,
+        3.7,
+        0.5
+      ],
+      "publishedTariffKm": 7,
+      "barrierId": null
+    },
+    {
+      "road": "A51",
+      "stationCode": "03041",
+      "publishedName": "LE CROZET",
+      "prices": [
+        4.5,
+        7.1,
+        10,
+        12.8,
+        2
+      ],
+      "publishedTariffKm": 31,
+      "barrierId": "aprr-area-ouvert-le-crozet"
+    },
+    {
+      "road": "A432",
+      "stationCode": "03070",
+      "publishedName": "SAINT EXUPERY",
+      "prices": [
+        2.3,
+        3.6,
+        5.7,
+        7,
+        1.1
+      ],
+      "publishedTariffKm": 19,
+      "barrierId": "aprr-area-ouvert-saint-exupery"
+    },
+    {
+      "road": "A43",
+      "stationCode": "03071",
+      "publishedName": "CHESNES",
+      "prices": [
+        2.3,
+        3.6,
+        5.7,
+        7,
+        1.1
+      ],
+      "publishedTariffKm": 19,
+      "barrierId": "aprr-area-ouvert-chesnes"
+    }
+  ],
+  "notes": [
+    "TML is the published Tunnel Maurice-Lemaire designation.",
+    "Published tariff kilometres are not road trace distances.",
+    "An existing barrier binding is not proof of physical passage or complete route coverage.",
+    "The six unbound source rows require separate reviewed geography; no nearby gate is guessed."
+  ]
+}
