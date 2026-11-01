@@ -206,3 +206,47 @@ test('the renderer explains a tariff contradiction and never presents the first 
  assert.match(html,/Tarifs contradictoires/);assert.match(html,/Alpha → Beta/);
  assert.doesNotMatch(html,/Classe 1|Classe 2|Aucun péage/);assert.equal(state,'bkRenKo');
 });
+function pendingCatalogue(ctx){
+ const f=require('./fixtures/tolls-conflicting-fares.json');let release,entered;
+ const waiting=new Promise(ok=>{release=ok;}),started=new Promise(ok=>{entered=ok;}),calls={base:0,overlay:0};
+ ctx.fetch=async url=>({ok:true,json:async()=>{
+  if(String(url).includes('peages-aprr.json')){calls.base++;return plain(f.base);}
+  calls.overlay++;entered();await waiting;return plain(f.overlay);
+ }});
+ return {f,calls,release,started};
+}
+test('concurrent direct requests await the complete checked catalogue and share one download',async()=>{
+ const {api,ctx}=load(),gate=pendingCatalogue(ctx);let secondResolved=false;
+ const first=api.chargerPeages();await gate.started;
+ const second=api.chargerPeages().then(p=>{secondResolved=true;return p;});
+ try{await Promise.resolve();await Promise.resolve();assert.equal(secondResolved,false);}
+ finally{gate.release();}
+ const [a,b]=await Promise.all([first,second]);assert.equal(a,b);assert.ok(a.conflits.has(1));
+ assert.deepEqual(gate.calls,{base:1,overlay:1});assert.equal(await api.chargerPeages(),a);
+ assert.deepEqual(gate.calls,{base:1,overlay:1});
+});
+test('concurrent actual worker messages share the fully checked catalogue',async()=>{
+ const {api,ctx}=load(),gate=pendingCatalogue(ctx),replies=[];
+ const worker={fetch:(...args)=>ctx.fetch(...args),postMessage:r=>replies.push(r)};vm.createContext(worker);vm.runInContext(api.CODE_WORKER(),worker);
+ const sh=api.dec6(gate.f.leg.shape),data={base:'https://test.local/',sh,tms:gate.f.leg.maneuvers,i0:0,i1:1};
+ const first=worker.onmessage({data:{...data,id:1}});await gate.started;
+ const second=worker.onmessage({data:{...data,id:2}});
+ try{await Promise.resolve();await Promise.resolve();assert.equal(replies.length,0);}
+ finally{gate.release();}
+ await Promise.all([first,second]);assert.deepEqual(gate.calls,{base:1,overlay:1});
+ assert.equal(replies.length,2);
+ for(const r of replies){assert.equal(r.err,undefined);assert.equal(r.x,null);assert.deepEqual(plain(r.conflicts),['Alpha → Beta']);}
+});
+test('failed base downloads can be retried by both direct and worker loaders',async()=>{
+ for(const useWorker of [false,true]){
+  const {api,ctx}=load(),f=require('./fixtures/tolls-conflicting-fares.json');let fail=true;
+  ctx.fetch=async url=>{if(fail){fail=false;throw new Error('fixture network failure');}return{ok:true,json:async()=>plain(String(url).includes('peages-aprr.json')?f.base:f.overlay)};};
+  if(!useWorker){await assert.rejects(api.chargerPeages(),/fixture network failure/);assert.ok((await api.chargerPeages()).conflits.has(1));}
+  else{
+   const replies=[],worker={fetch:(...args)=>ctx.fetch(...args),postMessage:r=>replies.push(r)};vm.createContext(worker);vm.runInContext(api.CODE_WORKER(),worker);
+   const data={base:'https://test.local/',sh:api.dec6(f.leg.shape),tms:f.leg.maneuvers,i0:0,i1:1};
+   await worker.onmessage({data:{...data,id:1}});assert.match(replies[0].err,/fixture network failure/);
+   await worker.onmessage({data:{...data,id:2}});assert.equal(replies[1].err,undefined);assert.deepEqual(plain(replies[1].conflicts),['Alpha → Beta']);
+  }
+ }
+});

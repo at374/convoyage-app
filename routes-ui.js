@@ -65,7 +65,7 @@
   const dec6 = s => { const o = []; let i = 0, la = 0, lo = 0; while (i < s.length) { let b, sh = 0, rs = 0; do { b = s.charCodeAt(i++) - 63; rs |= (b & 31) << sh; sh += 5; } while (b >= 32); la += (rs & 1) ? ~(rs >> 1) : (rs >> 1); sh = 0; rs = 0; do { b = s.charCodeAt(i++) - 63; rs |= (b & 31) << sh; sh += 5; } while (b >= 32); lo += (rs & 1) ? ~(rs >> 1) : (rs >> 1); o.push([la / 1e6, lo / 1e6]); } return o; };
   const dist = (a, b, c, d) => { const R = 6371, t = Math.PI / 180, x = (c - a) * t, y = (d - b) * t, h = Math.sin(x / 2) ** 2 + Math.cos(a * t) * Math.cos(c * t) * Math.sin(y / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
   const joli = s => String(s).toLowerCase().replace(/(^|[\s\-\/'])([a-zà-ÿ])/g, (m, p, c) => p + c.toUpperCase());
-  let PEAGES = null;
+  let PEAGES = null, PEAGES_EN_COURS = null;
   // Resolve spelling variants only when the normalized station is unique.
   // Keep motorway/exit qualifiers; never guess a nearby or similarly named gate.
   const indexGares = gares => {
@@ -106,8 +106,7 @@
     }
     return conflits;
   };
-  const chargerPeages = async () => {
-    if (PEAGES) return PEAGES;
+  const lirePeages = async () => {
     const j = await fetch('peages-aprr.json').then(r => r.json());
     const prix = new Map();
     // V249 : lecture des 17 000 tarifs par petits paquets (le téléphone reste fluide, l'écran ne se fige plus).
@@ -116,17 +115,24 @@
     // V248 : position corrigée de la barrière « St Martin Bellevue A41 N » : la grille officielle (31 km depuis Annecy Centre) la place à la jonction A41/A40 de Saint-Julien, pas à Allonzier.
     const CORR = { 'ST MARTIN BELLEVUE A41 N': [[46.1293, 6.0978], [46.1318, 6.1]], 'BOISSE Système Ouvert': [[45.82868,5.03099],[45.82879,5.03123]] };
     j.g.forEach(g => { if (CORR[g[0]]) g[1] = CORR[g[0]]; });
-    PEAGES = { g: j.g, prix, v: j.v };
+    const P = { g: j.g, prix, v: j.v };
     // V233 : stations et liaisons ajoutées (grilles officielles relues) — on ajoute seulement, on ne modifie jamais les 16 918 tarifs d'origine.
     try {
       const o = await fetch('peages-overlay.json').then(r => r.json());
-      for (const n of (o.gares || [])) { if (!PEAGES.g.some(g => g[0] === n.nom)) PEAGES.g.push([n.nom, n.points]); }
-      const ix = indexGares(PEAGES.g);
-      PEAGES.fixes = garesFixes(PEAGES.g, o);
-      PEAGES.conflits = tarifsEnConflit(PEAGES.g, prix, o.paires);
+      for (const n of (o.gares || [])) { if (!P.g.some(g => g[0] === n.nom)) P.g.push([n.nom, n.points]); }
+      const ix = indexGares(P.g);
+      P.fixes = garesFixes(P.g, o);
+      P.conflits = tarifsEnConflit(P.g, prix, o.paires);
       for (const q of (o.paires || [])) { const x = ix(q[0]), y = ix(q[1]); const k = Math.min(x, y) * 1000 + Math.max(x, y); if (x >= 0 && y >= 0 && !prix.has(k)) prix.set(k, [q[2], q[3], q[4]]); }
     } catch (_) { /* sans ajouts : tarifs d'origine seuls */ }
-    return PEAGES;
+    return P;
+  };
+  const chargerPeages = () => {
+    if (PEAGES_EN_COURS) return PEAGES_EN_COURS;
+    if (PEAGES) return Promise.resolve(PEAGES);
+    PEAGES_EN_COURS = lirePeages().then(p => { PEAGES = p; return p; })
+      .finally(() => { PEAGES_EN_COURS = null; });
+    return PEAGES_EN_COURS;
   };
   const gareProche = (P, lat, lon, max, ticketsSeulement = false) => {
     if (!P.gi) { const gi = new Map(); P.g.forEach((g, i) => g[1].forEach(p => { const c = Math.floor(p[0] / 0.02) + ',' + Math.floor(p[1] / 0.02); let L = gi.get(c); if (!L) gi.set(c, L = []); L.push([i, p[0], p[1]]); })); P.gi = gi; }   // V255 : index par carreaux de 2 km (avant : toutes les gares testées pour chaque point du tracé = écran figé sur téléphone)
@@ -247,10 +253,10 @@
     return [...names];
   };
   const CODE_WORKER = () => 'const UNK=' + JSON.stringify(UNK) + ';const dist=' + dist + ';const joli=' + joli + ';const indexGares=' + indexGares + ';const garesFixes=' + garesFixes + ';const tarifsEnConflit=' + tarifsEnConflit + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';const conflitsDuTrace=' + conflitsDuTrace + ';' +
-    'let P=null;const charger=async base=>{const j=await (await fetch(base+"peages-aprr.json")).json();const prix=new Map();for(const s of j.p.split(";")){const [a,b,c1,c2,d]=s.split(",");const x=parseInt(a,36),y=parseInt(b,36);prix.set(Math.min(x,y)*1000+Math.max(x,y),[c1/10,c2/10,Number(d)]);}' +
+    'let P=null,CHARGEMENT=null;const charger=async base=>{const j=await (await fetch(base+"peages-aprr.json")).json();const prix=new Map();for(const s of j.p.split(";")){const [a,b,c1,c2,d]=s.split(",");const x=parseInt(a,36),y=parseInt(b,36);prix.set(Math.min(x,y)*1000+Math.max(x,y),[c1/10,c2/10,Number(d)]);}' +
     'const CORR={"ST MARTIN BELLEVUE A41 N":[[46.1293,6.0978],[46.1318,6.1]],"BOISSE Système Ouvert":[[45.82868,5.03099],[45.82879,5.03123]]};j.g.forEach(g=>{if(CORR[g[0]])g[1]=CORR[g[0]];});const Q={g:j.g,prix,v:j.v};' +
     'try{const o=await (await fetch(base+"peages-overlay.json")).json();for(const n of (o.gares||[])){if(!Q.g.some(g=>g[0]===n.nom))Q.g.push([n.nom,n.points]);}const ix=indexGares(Q.g);Q.fixes=garesFixes(Q.g,o);Q.conflits=tarifsEnConflit(Q.g,prix,o.paires);for(const q of (o.paires||[])){const x=ix(q[0]),y=ix(q[1]);const k=Math.min(x,y)*1000+Math.max(x,y);if(x>=0&&y>=0&&!prix.has(k))prix.set(k,[q[2],q[3],q[4]]);}}catch(_){}return Q;};' +
-    'const garesManquantes='+garesManquantes+';onmessage=async e=>{const m=e.data;try{if(!P)P=await charger(m.base);const x=prixExact(P,m.sh,m.tms,0);const n=garesTraversees(P,m.sh,m.i0,m.i1);const h=[];if(m.hits){let der=-2;for(let k=m.i0;k<=m.i1;k++){const g=gareProche(P,m.sh[k][0],m.sh[k][1],0.4);if(g>=0&&g!==der){h.push([m.sh[k][0],m.sh[k][1],P.g[g][0]]);der=g;}}}postMessage({id:m.id,x,n,v:P.v,h,missing:garesManquantes(m.sh,m.i0,m.i1),conflicts:conflitsDuTrace(P,m.sh,m.i0,m.i1)});}catch(err){postMessage({id:m.id,err:String(err)});}};';
+    'const garesManquantes='+garesManquantes+';onmessage=async e=>{const m=e.data;try{if(!P){if(!CHARGEMENT)CHARGEMENT=charger(m.base).finally(()=>{CHARGEMENT=null;});P=await CHARGEMENT;}const x=prixExact(P,m.sh,m.tms,0);const n=garesTraversees(P,m.sh,m.i0,m.i1);const h=[];if(m.hits){let der=-2;for(let k=m.i0;k<=m.i1;k++){const g=gareProche(P,m.sh[k][0],m.sh[k][1],0.4);if(g>=0&&g!==der){h.push([m.sh[k][0],m.sh[k][1],P.g[g][0]]);der=g;}}}postMessage({id:m.id,x,n,v:P.v,h,missing:garesManquantes(m.sh,m.i0,m.i1),conflicts:conflitsDuTrace(P,m.sh,m.i0,m.i1)});}catch(err){postMessage({id:m.id,err:String(err)});}};';
   const calculPeage = async (sh, tms, km, hits) => {
     const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
     try {
