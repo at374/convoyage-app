@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "scope": "Official VINCI feeds only; not the complete French/border inventory",
+  "universeComplete": false,
+  "sourcePage": "https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-demploi/tarifs-peage-vinci-autoroutes/",
+  "sources": [
+    {
+      "id": "asf",
+      "format": "od",
+      "encoding": "utf-8",
+      "effectiveFrom": "2026-06-01",
+      "verifiedYear": 2026,
+      "url": "https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-asf/Tarifs_ASF.txt"
+    },
+    {
+      "id": "escota",
+      "format": "od",
+      "encoding": "utf-8",
+      "effectiveFrom": "2026-02-01",
+      "verifiedYear": 2026,
+      "url": "https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-Escota/Tarifs_ESCOTA.txt"
+    },
+    {
+      "id": "cofiroute-arcour",
+      "format": "od",
+      "encoding": "utf-8",
+      "effectiveFrom": "2026-02-01",
+      "verifiedYear": 2026,
+      "url": "https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-Cofiroute/Tarifs_Cofiroute_Arcour.txt"
+    },
+    {
+      "id": "arcos",
+      "format": "arcos-schedule",
+      "encoding": "windows-1252",
+      "effectiveFrom": "2026-02-01",
+      "verifiedYear": 2026,
+      "url": "https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-Arcos/Tarifs_Arcos.txt"
+    },
+    {
+      "id": "duplex-a86",
+      "format": "a86-schedule",
+      "encoding": "windows-1252",
+      "effectiveFrom": "2026-01-01",
+      "verifiedYear": 2026,
+      "url": "https://public-content.vinci-autoroutes.com/PDF/Tarifs-Duplex-A86/Tarifs_A86.txt"
+    }
+  ]
+}

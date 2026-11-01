@@ -1,0 +1,392 @@
+{
+  "schemaVersion": 1,
+  "sourceId": "aliae-a79-annex-xii-2026",
+  "sourceUrl": "https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum13",
+  "effectiveFrom": "2026-02-01",
+  "reviewedThrough": "2026-12-31",
+  "reviewedAt": "2026-11-01",
+  "currency": "EUR",
+  "taxIncluded": true,
+  "lightVehicleClassOrder": [
+    1,
+    2,
+    5
+  ],
+  "heavyVehicleClassOrder": [
+    3,
+    4
+  ],
+  "nativeEmissionCategories": [
+    "e",
+    "ne"
+  ],
+  "nativeEuroGroups": [
+    "0-3",
+    "4",
+    "5",
+    "6"
+  ],
+  "rows": [
+    {
+      "point": "Deux-Chaises",
+      "movement": "Ouest",
+      "light": {
+        "e": [
+          0.2,
+          0.4,
+          0.1
+        ],
+        "ne": [
+          0.2,
+          0.3,
+          0.1
+        ]
+      },
+      "heavy": {
+        "0-3": [
+          0.8,
+          1
+        ],
+        "4": [
+          0.7,
+          1
+        ],
+        "5": [
+          0.7,
+          1
+        ],
+        "6": [
+          0.7,
+          1
+        ]
+      }
+    },
+    {
+      "point": "Le Montet",
+      "movement": "Ouest",
+      "light": {
+        "e": [
+          0.4,
+          0.7,
+          0.2
+        ],
+        "ne": [
+          0.3,
+          0.5,
+          0.2
+        ]
+      },
+      "heavy": {
+        "0-3": [
+          1.2,
+          2.1
+        ],
+        "4": [
+          1.2,
+          2.1
+        ],
+        "5": [
+          1.1,
+          2
+        ],
+        "6": [
+          1.1,
+          2
+        ]
+      }
+    },
+    {
+      "point": "Le Montet",
+      "movement": "Transit",
+      "light": {
+        "e": [
+          1.2,
+          2,
+          0.7
+        ],
+        "ne": [
+          0.9,
+          1.6,
+          0.5
+        ]
+      },
+      "heavy": {
+        "0-3": [
+          3.9,
+          5.8
+        ],
+        "4": [
+          3.8,
+          5.7
+        ],
+        "5": [
+          3.7,
+          5.4
+        ],
+        "6": [
+          3.4,
+          5.3
+        ]
+      }
+    },
+    {
+      "point": "Le Montet",
+      "movement": "Est",
+      "light": {
+        "e": [
+          1.1,
+          1.7,
+          0.6
+        ],
+        "ne": [
+          0.8,
+          1.3,
+          0.4
+        ]
+      },
+      "heavy": {
+        "0-3": [
+          2.8,
+          4.4
+        ],
+        "4": [
+          2.8,
+          4.3
+        ],
+        "5": [
+          2.7,
+          4.1
+        ],
+        "6": [
+          2.5,
+          4
+        ]
+      }
+    },
+    {
+      "point": "Montbeugny",
+      "movement": "Ouest",
+      "light": {
+        "e": [
+          1.1,
+          1.7,
+          0.6
+        ],
+        "ne": [
+          0.8,
+          1.3,
+          0.4
+        ]
+      },
+      "heavy": {
+        "0-3": [
+          3.2,
+          4.7
+        ],
+        "4": [
+          3.1,
+          4.6
+        ],
+        "5": [
+          3,
+          4.4
+        ],
+        "6": [
+          2.8,
+          4.2
+        ]
+      }
+    },
+    {
+      "point": "Montbeugny",
+      "movement": "Transit",
+      "light": {
+        "e": [
+          1.9,
+          2.8,
+          1
+        ],
+        "ne": [
+          1.5,
+          2.2,
+          0.8
+        ]
+      },
+      "heavy": {
+        "0-3": [
+          6.2,
+          9.6
+        ],
+        "4": [
+          6.1,
+          9.4
+        ],
+        "5": [
+          5.8,
+          9.1
+        ],
+        "6": [
+          5.4,
+          8.8
+        ]
+      }
+    },
+    {
+      "point": "Montbeugny",
+      "movement": "Est",
+      "light": {
+        "e": [
+          1,
+          1.6,
+          0.5
+        ],
+        "ne": [
+          0.8,
+          1.2,
+          0.4
+        ]
+      },
+      "heavy": {
+        "0-3": [
+          3.2,
+          5.8
+        ],
+        "4": [
+          3.1,
+          5.7
+        ],
+        "5": [
+          3,
+          5.5
+        ],
+        "6": [
+          2.8,
+          5.3
+        ]
+      }
+    },
+    {
+      "point": "Molinet",
+      "movement": "Ouest",
+      "light": {
+        "e": [
+          1.2,
+          1.7,
+          0.5
+        ],
+        "ne": [
+          0.9,
+          1.3,
+          0.4
+        ]
+      },
+      "heavy": {
+        "0-3": [
+          3.4,
+          4.8
+        ],
+        "4": [
+          3.3,
+          4.7
+        ],
+        "5": [
+          3.2,
+          4.5
+        ],
+        "6": [
+          3,
+          4.4
+        ]
+      }
+    },
+    {
+      "point": "Molinet",
+      "movement": "Transit",
+      "light": {
+        "e": [
+          1.3,
+          2,
+          0.8
+        ],
+        "ne": [
+          1,
+          1.6,
+          0.6
+        ]
+      },
+      "heavy": {
+        "0-3": [
+          4.2,
+          6
+        ],
+        "4": [
+          4.1,
+          5.9
+        ],
+        "5": [
+          3.9,
+          5.7
+        ],
+        "6": [
+          3.6,
+          5.5
+        ]
+      }
+    },
+    {
+      "point": "Molinet",
+      "movement": "Est",
+      "light": {
+        "e": [
+          0.4,
+          0.7,
+          0.2
+        ],
+        "ne": [
+          0.3,
+          0.5,
+          0.2
+        ]
+      },
+      "heavy": {
+        "0-3": [
+          1.2,
+          1.9
+        ],
+        "4": [
+          1.2,
+          1.9
+        ],
+        "5": [
+          1.1,
+          1.8
+        ],
+        "6": [
+          1.1,
+          1.8
+        ]
+      }
+    }
+  ],
+  "verification": {
+    "method": "official Legifrance HTML tables reviewed; two native light-vehicle and four heavy-vehicle groups retained",
+    "rawSha256": null,
+    "downloadedBytesVerified": false,
+    "operatorPdfDownload": "HTTP 403; no claim of local PDF byte verification"
+  },
+  "geometry": {
+    "gpsBindingsVerified": false,
+    "automaticRouteIntegration": false,
+    "sectorSource": "https://www.autorite-transports.fr/wp-content/uploads/2025/08/declaration-secteur-set_aliae_20250506.pdf",
+    "sectorSituationDate": "2025-02-25",
+    "note": "Historical sector declaration gives directional gantry identifiers and PKs, not surveyed GPS lane coordinates. Its west Montbeugny PK differs by direction; no coordinate interpolation or direction merging is performed."
+  },
+  "movementSource": "https://paiement.aliae.com/fr/quelles-seront-les-sections-a-peage-en-flux-libre-payantes-et-les-sections-avec-gratuite-de-circulation-sur-l-a79--6430886160372004313",
+  "notes": [
+    "A native Transit product is one charge, not the sum of Ouest and Est.",
+    "Published Ouest/Est describes approach or exit relative to the interchange, not travel bearing alone.",
+    "The Deux-Chaises product does not price the upstream A71 closed-system journey.",
+    "Native categories are explicit caller inputs; no classification from fuel name, badge, registration or assumed eligibility.",
+    "No A79 geographical discovery, invoice payment or complete route confirmation is implied."
+  ]
+}

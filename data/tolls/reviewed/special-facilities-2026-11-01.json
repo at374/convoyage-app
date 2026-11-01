@@ -1,0 +1,175 @@
+{
+  "reviewedAt": "2026-11-01",
+  "scope": "Supplementary facility review; not an exhaustive national inventory",
+  "nationalCompletenessVerified": false,
+  "missingNationalTariffs": null,
+  "routeIntegrationVerified": false,
+  "facilities": [
+    {
+      "id": "prado-carenage",
+      "status": "official_publisher_confirmed",
+      "currency": "EUR",
+      "amount": 3.3,
+      "billingUnit": "single_passage_without_discount",
+      "source": "https://www.webdisclosure.com/press-release/smtpc-epa-smtpc-smtpc-rapport-financier-du-1er-semestre-2026-tqD2vkq18q2",
+      "publisher": "SMTPC",
+      "publishedAt": "2026-09-23",
+      "sourceStatedEffectiveFrom": "2026-01-01",
+      "caution": "This source also says unchanged since 2025; no historical backfill inferred. The price is not automatically applied to Prado Sud or a combined journey.",
+      "routeIdentityVerified": false
+    },
+    {
+      "id": "prado-sud",
+      "status": "current_primary_price_not_confirmed",
+      "currency": "EUR",
+      "amount": null,
+      "source": "https://www.tunnelsprado.com/nos-ouvrages/tunnel-prado-sud",
+      "secondaryCandidate": {
+        "amount": 2.9,
+        "source": "https://www.adac.de/reise-freizeit/maut-vignette/frankreich/",
+        "automaticallyApplicable": false
+      },
+      "caution": "Operator confirms a single tariff and vehicle restrictions, but no current numerical price was extracted. Historic subscription PDFs are not current base tariffs.",
+      "routeIdentityVerified": false
+    },
+    {
+      "id": "pont-ile-de-re",
+      "status": "official_seasonal_schedule_confirmed",
+      "currency": "EUR",
+      "billingUnit": "round_trip",
+      "source": "https://www.pont-iledere.fr/tarifs-et-abonnements/particuliers/tarifs-pont-ile-de-re/",
+      "regulations": "https://www.pont-iledere.fr/wp-content/uploads/2026/04/Reglement-peage-pont-de-Re-2026.pdf",
+      "rates": [
+        {
+          "vehicleClasses": [
+            1,
+            2
+          ],
+          "low": 4,
+          "medium": 8,
+          "high": 16
+        }
+      ],
+      "seasons": {
+        "low": "15 November through 1 March",
+        "medium": "2 March through 14 June and 16 September through 14 November, excluding high-season holiday weekends",
+        "high": "15 June through 15 September and extended Ascension/Pentecost weekends including their eves"
+      },
+      "effectiveFrom": null,
+      "holidayExceptionDatesVerified": false,
+      "caution": "Do not charge once per direction. Exact holiday boundaries and route identification still require integration; no unconditional fixed fare is supplied.",
+      "routeIdentityVerified": false
+    },
+    {
+      "id": "schloesing",
+      "status": "official_free_connection_confirmed",
+      "currency": "EUR",
+      "amount": 0,
+      "source": "https://www.tunnelsprado.com/faq",
+      "caution": "Only the identified Schloesing connection is free. It shares infrastructure with Prado Sud; do not apply this exemption to the whole tunnel. Operator describes payment correction/refund if recognition fails.",
+      "routeIdentityVerified": false
+    },
+    {
+      "id": "tunnel-envalira",
+      "status": "government_and_operator_confirmed",
+      "currency": "EUR",
+      "effectiveFrom": "2026-01-01",
+      "vehicleClassPrices": {
+        "1": 8.1,
+        "2": 14.2,
+        "3": 16.3,
+        "4": 20.3,
+        "5": 4.8
+      },
+      "source": "https://www.govern.ad/ca/w/aprovades-les-noves-tarifes-del-tunel-d-envalira-per-a-l-any-2026-i-la-renovacio-de-la-reduccio-tarifaria-pels-residents-i-treballadors-al-pas-de-la-casa",
+      "corroboratingSource": "https://tuneldenvalira.com/fr",
+      "routeIdentityVerified": false,
+      "caution": "Do not apply resident/worker discounts without eligibility proof. Class definitions must be checked against the operator; no route geometry is inferred. Dangerous-goods surcharge and eligible-user discounts are separate products.",
+      "dangerousGoodsSupplement": {
+        "amount": 10,
+        "source": "https://tuneldenvalira.com/fr",
+        "automaticallyApplicable": false
+      },
+      "conditionalProducts": {
+        "source": "https://tuneldenvalira.com/fr/reductions",
+        "automaticallyApplicable": false,
+        "samePaymentDeviceMonthlyFrequency": {
+          "vehicleClasses": [
+            1
+          ],
+          "eligiblePaymentDevices": [
+            "Bip&Drive",
+            "Bip&Go",
+            "Solred"
+          ],
+          "discountPercentByPublishedMonthlyBand": {
+            "6-10": 10,
+            "11-20": 20,
+            "21-30": 30,
+            "31-40": 40,
+            "more_than_40": 50
+          },
+          "caution": "Operator describes discounts by band. Eligibility, counting and invoicing must be confirmed before calculating a total; no retroactive monthly averaging is inferred."
+        },
+        "pasDeLaCasaResidentsAndWorkers": {
+          "discountPercent": 50,
+          "eligibilityProofRequired": true
+        },
+        "operatorCustomerCardAnnualRevenue": {
+          "thresholdEURAndDiscountPercent": [
+            [
+              3800,
+              2.5
+            ],
+            [
+              7600,
+              5
+            ],
+            [
+              11400,
+              7.5
+            ],
+            [
+              15200,
+              10
+            ],
+            [
+              19000,
+              12.5
+            ],
+            [
+              22800,
+              15
+            ],
+            [
+              26600,
+              17.5
+            ],
+            [
+              30400,
+              20
+            ],
+            [
+              34200,
+              22.5
+            ],
+            [
+              38000,
+              25
+            ],
+            [
+              41800,
+              27.5
+            ],
+            [
+              45600,
+              30
+            ]
+          ],
+          "eligibilityProofRequired": true,
+          "caution": "Discount accumulation, accounting basis and application date are not inferred."
+        }
+      }
+    }
+  ]
+}

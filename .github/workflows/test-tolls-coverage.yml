@@ -1,0 +1,43 @@
+name: Toll coverage and mobile renderer
+on:
+  pull_request:
+    paths:
+      - 'routes-ui.js'
+      - 'data/tolls/**'
+      - 'toll-official-catalogue.cjs'
+      - 'toll-swiss-prices.cjs'
+      - 'toll-aprr-open.cjs'
+      - 'toll-a79-prices.cjs'
+      - 'scripts/complete-aprr-open.cjs'
+      - 'scripts/audit-toll-runtime-gaps.cjs'
+      - 'scripts/import-free-flow-gantries.cjs'
+      - 'scripts/audit-aura-toll-coverage.cjs'
+      - 'tests/toll-*.test.cjs'
+      - 'scripts/build-toll-route-prices.cjs'
+      - 'peage-engine.js'
+      - 'peages-*.json'
+      - 'tests/tolls-coverage.test.cjs'
+      - 'scripts/connect-toll-stations.cjs'
+      - 'data/gares-peage-officiel.json'
+      - 'data/toll-station-aliases.json'
+      - 'tests/browser/tolls-mobile.cjs'
+      - 'tests/fixtures/tolls-*.json'
+      - '.github/workflows/test-tolls-coverage.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  toll-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check routes-ui.js
+      - run: node --test tests/*.test.cjs
+      - run: python -m unittest discover -s tests -p 'test_*.py'
+      - run: npm install --no-save --package-lock=false playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/browser/tolls-mobile.cjs

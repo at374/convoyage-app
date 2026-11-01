@@ -1,0 +1,54 @@
+{
+  "scope": "Synthetic branch-identity ambiguity test; no real station, price or road itinerary",
+  "base": {
+    "g": [
+      [
+        "Alpha",
+        [
+          [
+            48,
+            2.5
+          ]
+        ]
+      ],
+      [
+        "Twin Barrière",
+        [
+          [
+            48,
+            2.52
+          ]
+        ]
+      ],
+      [
+        "Twin Échangeur",
+        [
+          [
+            48,
+            2.52
+          ]
+        ]
+      ]
+    ],
+    "p": "0,1,u,14,2;0,2,1e,1o,2",
+    "v": "synthetic"
+  },
+  "overlay": {
+    "gares": [],
+    "paires": [],
+    "barrieres": [],
+    "tarifs": [],
+    "u": []
+  },
+  "leg": {
+    "shape": "__upzA_yqwC?_af@",
+    "maneuvers": [
+      {
+        "begin_shape_index": 0,
+        "end_shape_index": 1,
+        "length": 2,
+        "toll": true
+      }
+    ]
+  }
+}

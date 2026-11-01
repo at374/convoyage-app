@@ -1,0 +1,1932 @@
+{
+  "reviewedAt": "2026-11-01",
+  "scope": "AURA records in the checked-in ministry station dataset, not an exhaustive physical-toll inventory",
+  "source": "data/gares-peage-officiel.json",
+  "sourceDatasetYear": 2025,
+  "regionalMinistryGroups": 106,
+  "statusCounts": {
+    "named_station_position_matched": 67,
+    "nearby_identity_to_verify": 18,
+    "named_station_position_to_verify": 4,
+    "fixed_gate_prices_present": 16,
+    "unresolved": 1
+  },
+  "missingRegionalTariffs": null,
+  "nationalCompletenessVerified": false,
+  "notes": [
+    "Matched names or nearby points do not prove all route tariffs or access.",
+    "Entry/exit and lane records are not counted as distinct missing physical tolls.",
+    "Fixed prices are reported only for the supplied day and classes 1/2; subscription eligibility is not inferred."
+  ],
+  "groups": [
+    {
+      "name": "Beaupont",
+      "ministryRoute": "01A903905CD",
+      "points": [
+        [
+          46.44099,
+          5.26975
+        ],
+        [
+          46.44094,
+          5.26989
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "BEAUPONT"
+      ]
+    },
+    {
+      "name": "Bellegarde Sortie",
+      "ministryRoute": "01A904005CD",
+      "points": [
+        [
+          46.11632,
+          5.79496
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "BELLEGARDE"
+      ]
+    },
+    {
+      "name": "Bellegarde Entrée",
+      "ministryRoute": "01A904005CD",
+      "points": [
+        [
+          46.11624,
+          5.79508
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "BELLEGARDE"
+      ]
+    },
+    {
+      "name": "Sylans",
+      "ministryRoute": "01A904010CD",
+      "points": [
+        [
+          46.15858,
+          5.64842
+        ],
+        [
+          46.15867,
+          5.64835
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "SYLANS"
+      ]
+    },
+    {
+      "name": "St Martin-Du-Fresne",
+      "ministryRoute": "01A904015CD",
+      "points": [
+        [
+          46.1324,
+          5.54152
+        ],
+        [
+          46.13264,
+          5.54166
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "ST MARTIN-DU-FRESNE"
+      ]
+    },
+    {
+      "name": "Bourg Sud",
+      "ministryRoute": "01A904025CD",
+      "points": [
+        [
+          46.14571,
+          5.28624
+        ],
+        [
+          46.14563,
+          5.28637
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "BOURG SUD"
+      ]
+    },
+    {
+      "name": "Viriat",
+      "ministryRoute": "01A904030CD",
+      "points": [
+        [
+          46.23581,
+          5.27351
+        ],
+        [
+          46.23572,
+          5.27335
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "VIRIAT"
+      ]
+    },
+    {
+      "name": "Bourg Nord",
+      "ministryRoute": "01A904035CD",
+      "points": [
+        [
+          46.2599,
+          5.16696
+        ],
+        [
+          46.26,
+          5.16706
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "BOURG NORD"
+      ]
+    },
+    {
+      "name": "Saint Genis",
+      "ministryRoute": "01A904040CD",
+      "points": [
+        [
+          46.27245,
+          5.01607
+        ],
+        [
+          46.27196,
+          5.0158
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "SAINT GENIS"
+      ]
+    },
+    {
+      "name": "Replonges",
+      "ministryRoute": "01A904050CD",
+      "points": [
+        [
+          46.30172,
+          4.89603
+        ],
+        [
+          46.30077,
+          4.89585
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "REPLONGES"
+      ]
+    },
+    {
+      "name": "Feillens",
+      "ministryRoute": "01A904055CD",
+      "points": [
+        [
+          46.32878,
+          4.88231
+        ],
+        [
+          46.32887,
+          4.88252
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "FEILLENS"
+      ]
+    },
+    {
+      "name": "La Boisse",
+      "ministryRoute": "01A904220CD",
+      "points": [
+        [
+          45.827,
+          5.03152
+        ],
+        [
+          45.83411,
+          5.03244
+        ],
+        [
+          45.82733,
+          5.0321
+        ],
+        [
+          45.82788,
+          5.0328
+        ]
+      ],
+      "status": "named_station_position_to_verify",
+      "catalogueNames": [
+        "LA BOISSE"
+      ],
+      "nearbyCandidates": [
+        "BOISSE Système Ouvert",
+        "LA BOISSE",
+        "LA COTIERE"
+      ]
+    },
+    {
+      "name": "La Cotiere",
+      "ministryRoute": "01A904220CD",
+      "points": [
+        [
+          45.83423,
+          5.03237
+        ],
+        [
+          45.83457,
+          5.02953
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "LA COTIERE"
+      ]
+    },
+    {
+      "name": "La Boisse - Montluel",
+      "ministryRoute": "01A904225CD",
+      "points": [
+        [
+          45.84069,
+          5.04702
+        ],
+        [
+          45.84084,
+          5.047
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "LA BOISSE - MONTLUEL"
+      ]
+    },
+    {
+      "name": "Balan",
+      "ministryRoute": "01A904230CD",
+      "points": [
+        [
+          45.85099,
+          5.09943
+        ],
+        [
+          45.85105,
+          5.09968
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "BALAN"
+      ]
+    },
+    {
+      "name": "Perouges",
+      "ministryRoute": "01A904235CD",
+      "points": [
+        [
+          45.86074,
+          5.18116
+        ],
+        [
+          45.86089,
+          5.18134
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "PEROUGES"
+      ]
+    },
+    {
+      "name": "Amberieu",
+      "ministryRoute": "01A904240CD",
+      "points": [
+        [
+          45.97777,
+          5.31252
+        ],
+        [
+          45.97781,
+          5.31276
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "AMBERIEU"
+      ]
+    },
+    {
+      "name": "Pont D'Ain",
+      "ministryRoute": "01A904245CD",
+      "points": [
+        [
+          46.04787,
+          5.32781
+        ],
+        [
+          46.04792,
+          5.32772
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "PONT D AIN"
+      ]
+    },
+    {
+      "name": "Mionnay",
+      "ministryRoute": "01A904605CD",
+      "points": [
+        [
+          45.88305,
+          4.8991
+        ],
+        [
+          45.883,
+          4.89893
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "aprr-area-ouvert-mionnay",
+      "class1": 1,
+      "class2": 1.5
+    },
+    {
+      "name": "La Croix-Chalon",
+      "ministryRoute": "01A940405CD",
+      "points": [
+        [
+          46.17772,
+          5.5589
+        ],
+        [
+          46.17762,
+          5.55908
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "LA CROIX-CHALON"
+      ]
+    },
+    {
+      "name": "Crottet",
+      "ministryRoute": "01A940605CD",
+      "points": [
+        [
+          46.28665,
+          4.8702
+        ],
+        [
+          46.28676,
+          4.86998
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "aprr-area-ouvert-crottet",
+      "class1": 0.8,
+      "class2": 1.2
+    },
+    {
+      "name": "Foret De Troncais",
+      "ministryRoute": "03A907105CD",
+      "points": [
+        [
+          46.50654,
+          2.63023
+        ],
+        [
+          46.50638,
+          2.63038
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "FORET DE TRONCAIS"
+      ]
+    },
+    {
+      "name": "Montmarault",
+      "ministryRoute": "03A907115CD",
+      "points": [
+        [
+          46.3277,
+          2.96625
+        ],
+        [
+          46.32774,
+          2.96648
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "MONTMARAULT"
+      ]
+    },
+    {
+      "name": "Tain",
+      "ministryRoute": "26A900705CD",
+      "points": [
+        [
+          45.06842,
+          4.86855
+        ],
+        [
+          45.06841,
+          4.86827
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "Tain"
+      ]
+    },
+    {
+      "name": "Valence Nord",
+      "ministryRoute": "26A900710CD",
+      "points": [
+        [
+          44.97028,
+          4.88747
+        ],
+        [
+          44.97018,
+          4.88768
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "Valence-N"
+      ]
+    },
+    {
+      "name": "Valence Sud",
+      "ministryRoute": "26A900715CD",
+      "points": [
+        [
+          44.90478,
+          4.88002
+        ],
+        [
+          44.9051,
+          4.88018
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "Valence-S"
+      ]
+    },
+    {
+      "name": "Loriol",
+      "ministryRoute": "26A900720CD",
+      "points": [
+        [
+          44.75693,
+          4.79126
+        ],
+        [
+          44.75688,
+          4.79142
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "Loriol"
+      ]
+    },
+    {
+      "name": "Montelimar Nord",
+      "ministryRoute": "26A900725CD",
+      "points": [
+        [
+          44.66904,
+          4.7949
+        ],
+        [
+          44.66885,
+          4.79507
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "Montelimar-N"
+      ]
+    },
+    {
+      "name": "Montelimar Sud",
+      "ministryRoute": "26A900730CD",
+      "points": [
+        [
+          44.48143,
+          4.76346
+        ],
+        [
+          44.48123,
+          4.76348
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "Montelimar-S"
+      ]
+    },
+    {
+      "name": "La Baume d'Hostun",
+      "ministryRoute": "26A904905CD",
+      "points": [
+        [
+          45.06552,
+          5.2029
+        ],
+        [
+          45.06738,
+          5.20414
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "LA BAUME D'HOSTUN"
+      ]
+    },
+    {
+      "name": "Auberives",
+      "ministryRoute": "38A900705CD",
+      "points": [
+        [
+          45.38989,
+          4.80531
+        ],
+        [
+          45.38983,
+          4.80535
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "Auberives"
+      ]
+    },
+    {
+      "name": "Chanas",
+      "ministryRoute": "38A900710CD",
+      "points": [
+        [
+          45.32118,
+          4.80961
+        ],
+        [
+          45.32115,
+          4.80991
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "Chanas"
+      ]
+    },
+    {
+      "name": "Crolles Brignoud",
+      "ministryRoute": "38A904135CD",
+      "points": [
+        [
+          45.26717,
+          5.89777
+        ],
+        [
+          45.27167,
+          5.90003
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "CROLLES BRIGNOUD"
+      ]
+    },
+    {
+      "name": "Le Touvet",
+      "ministryRoute": "38A904140CD",
+      "points": [
+        [
+          45.34716,
+          5.96362
+        ],
+        [
+          45.34738,
+          5.96346
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "LE TOUVET"
+      ]
+    },
+    {
+      "name": "Pontcharrat",
+      "ministryRoute": "38A904145CD",
+      "points": [
+        [
+          45.42589,
+          5.99522
+        ],
+        [
+          45.42575,
+          5.99518
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "PONTCHARRA"
+      ]
+    },
+    {
+      "name": "Chesnes",
+      "ministryRoute": "38A904305CD",
+      "points": [
+        [
+          45.65556,
+          5.09793
+        ],
+        [
+          45.65572,
+          5.09793
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "aprr-area-ouvert-chesnes",
+      "class1": 2.3,
+      "class2": 3.6
+    },
+    {
+      "name": "Saint Quentin Fallavier Bretelle",
+      "ministryRoute": "38A904310CD",
+      "points": [
+        [
+          45.64789,
+          5.12007
+        ],
+        [
+          45.64912,
+          5.12066
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "ST QUENTIN FAL. BARRIERE",
+        "ST QUENTIN FAL. BRETELLE"
+      ]
+    },
+    {
+      "name": "Villefontaine",
+      "ministryRoute": "38A904315CD",
+      "points": [
+        [
+          45.62853,
+          5.1643
+        ],
+        [
+          45.62848,
+          5.16461
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "VILLEFONTAINE"
+      ]
+    },
+    {
+      "name": "L'Isle d'Abeau Centre",
+      "ministryRoute": "38A904320CD",
+      "points": [
+        [
+          45.60504,
+          5.23418
+        ],
+        [
+          45.60497,
+          5.23438
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "ISLE D'ABEAU CENTRE"
+      ]
+    },
+    {
+      "name": "Bourgoin",
+      "ministryRoute": "38A904325CD",
+      "points": [
+        [
+          45.58235,
+          5.30023
+        ],
+        [
+          45.58218,
+          5.30018
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "BOURGOIN"
+      ]
+    },
+    {
+      "name": "La Tour du Pin",
+      "ministryRoute": "38A904335CD",
+      "points": [
+        [
+          45.56179,
+          5.42893
+        ],
+        [
+          45.56192,
+          5.42901
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "LA TOUR DU PIN"
+      ]
+    },
+    {
+      "name": "La Tour du Pin Est",
+      "ministryRoute": "38A904340CD",
+      "points": [
+        [
+          45.55672,
+          5.46436
+        ],
+        [
+          45.55761,
+          5.46071
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "LA TOUR DU PIN EST"
+      ]
+    },
+    {
+      "name": "Les Abrets",
+      "ministryRoute": "38A904345CD",
+      "points": [
+        [
+          45.57152,
+          5.60422
+        ],
+        [
+          45.57141,
+          5.60428
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "LES ABRETS"
+      ]
+    },
+    {
+      "name": "Rives",
+      "ministryRoute": "38A904805CD",
+      "points": [
+        [
+          45.38383,
+          5.47316
+        ],
+        [
+          45.38394,
+          5.47335
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "RIVES"
+      ]
+    },
+    {
+      "name": "Voiron (Champfeuillet)",
+      "ministryRoute": "38A904810CD",
+      "points": [
+        [
+          45.34751,
+          5.56654
+        ],
+        [
+          45.34767,
+          5.56647
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "VOIRON"
+      ]
+    },
+    {
+      "name": "Moirans Nord",
+      "ministryRoute": "38A904815CD",
+      "points": [
+        [
+          45.32271,
+          5.60058
+        ],
+        [
+          45.324,
+          5.60563
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "MOIRANS NORD"
+      ]
+    },
+    {
+      "name": "Moirans Sud",
+      "ministryRoute": "38A904815CD",
+      "points": [
+        [
+          45.31941,
+          5.6078
+        ],
+        [
+          45.31974,
+          5.60852
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "MOIRANS"
+      ]
+    },
+    {
+      "name": "Tullins",
+      "ministryRoute": "38A904905CD",
+      "points": [
+        [
+          45.28672,
+          5.52202
+        ],
+        [
+          45.28672,
+          5.52183
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "TULLINS"
+      ]
+    },
+    {
+      "name": "Vinay",
+      "ministryRoute": "38A904910CD",
+      "points": [
+        [
+          45.19948,
+          5.41955
+        ],
+        [
+          45.19941,
+          5.41941
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "VINAY"
+      ]
+    },
+    {
+      "name": "Saint Marcellin",
+      "ministryRoute": "38A904915CD",
+      "points": [
+        [
+          45.13818,
+          5.32615
+        ],
+        [
+          45.13835,
+          5.32612
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "SAINT MARCELLIN"
+      ]
+    },
+    {
+      "name": "Feurs",
+      "ministryRoute": "42A907265CD",
+      "points": [
+        [
+          45.73768,
+          4.18651
+        ],
+        [
+          45.73774,
+          4.18624
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "Feurs"
+      ]
+    },
+    {
+      "name": "Montbrison",
+      "ministryRoute": "42A907270CD",
+      "points": [
+        [
+          45.6372,
+          4.19618
+        ],
+        [
+          45.63729,
+          4.19635
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "Montbrison"
+      ]
+    },
+    {
+      "name": "Noiretable",
+      "ministryRoute": "42A908905CD",
+      "points": [
+        [
+          45.85,
+          3.79361
+        ],
+        [
+          45.85004,
+          3.7937
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "Noiretable"
+      ]
+    },
+    {
+      "name": "Saint Germain Laval",
+      "ministryRoute": "42A908910CD",
+      "points": [
+        [
+          45.86118,
+          4.04178
+        ],
+        [
+          45.86105,
+          4.04174
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "St Germain L.",
+        "St-Germain-Laval"
+      ]
+    },
+    {
+      "name": "Balbigny",
+      "ministryRoute": "42A908915CD",
+      "points": [
+        [
+          45.84196,
+          4.16427
+        ],
+        [
+          45.84101,
+          4.16389
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "Balbigny"
+      ]
+    },
+    {
+      "name": "Combronde",
+      "ministryRoute": "63A907105CD",
+      "points": [
+        [
+          45.99609,
+          3.10462
+        ],
+        [
+          45.99596,
+          3.10458
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "COMBRONDE"
+      ]
+    },
+    {
+      "name": "Riom",
+      "ministryRoute": "63A907110CD",
+      "points": [
+        [
+          45.89558,
+          3.14812
+        ],
+        [
+          45.89549,
+          3.14813
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "RIOM"
+      ]
+    },
+    {
+      "name": "Gerzat-Ville",
+      "ministryRoute": "63A907115CD",
+      "points": [
+        [
+          45.84224,
+          3.15964
+        ],
+        [
+          45.84116,
+          3.15918
+        ],
+        [
+          45.84122,
+          3.16197
+        ],
+        [
+          45.84324,
+          3.16245
+        ]
+      ],
+      "status": "named_station_position_to_verify",
+      "catalogueNames": [
+        "GERZAT-VILLE"
+      ],
+      "nearbyCandidates": [
+        "CLERMONT-BARRIERE",
+        "GERZAT-VILLE"
+      ]
+    },
+    {
+      "name": "Saint Julien Sancy",
+      "ministryRoute": "63A908905CD",
+      "points": [
+        [
+          45.66635,
+          2.6822
+        ],
+        [
+          45.66647,
+          2.6825
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "ST JULIEN SANCY"
+      ]
+    },
+    {
+      "name": "Vulcania Bromont",
+      "ministryRoute": "63A908910CD",
+      "points": [
+        [
+          45.83378,
+          2.82262
+        ],
+        [
+          45.83386,
+          2.82246
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "VULCANIA BROMONT"
+      ]
+    },
+    {
+      "name": "Manzat",
+      "ministryRoute": "63A908915CD",
+      "points": [
+        [
+          45.95414,
+          2.98286
+        ],
+        [
+          45.95405,
+          2.98297
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "MANZAT"
+      ]
+    },
+    {
+      "name": "Lezoux",
+      "ministryRoute": "63A908930CD",
+      "points": [
+        [
+          45.84849,
+          3.38388
+        ],
+        [
+          45.84861,
+          3.38381
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "Lezoux"
+      ]
+    },
+    {
+      "name": "Thiers Ouest",
+      "ministryRoute": "63A908935CD",
+      "points": [
+        [
+          45.85988,
+          3.50386
+        ],
+        [
+          45.86002,
+          3.50389
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "Thiers-Ouest"
+      ]
+    },
+    {
+      "name": "Thiers Est",
+      "ministryRoute": "63A908940CD",
+      "points": [
+        [
+          45.87875,
+          3.62481
+        ],
+        [
+          45.87881,
+          3.62497
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "Thiers-Est"
+      ]
+    },
+    {
+      "name": "Belleville S/Saone",
+      "ministryRoute": "69A900605CD",
+      "points": [
+        [
+          46.10375,
+          4.75036
+        ],
+        [
+          46.10383,
+          4.75009
+        ]
+      ],
+      "status": "named_station_position_to_verify",
+      "catalogueNames": [
+        "BELLEVILLE S/SAONE",
+        "BELLEVILLE SUR SAONE"
+      ],
+      "nearbyCandidates": [
+        "BELLEVILLE S/SAONE",
+        "BELLEVILLE SUR SAONE"
+      ]
+    },
+    {
+      "name": "Villefranche Nord",
+      "ministryRoute": "69A900610CD",
+      "points": [
+        [
+          46.02254,
+          4.72209
+        ],
+        [
+          46.02231,
+          4.72209
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "VILLEFRANCHE-NORD"
+      ]
+    },
+    {
+      "name": "Villefranche-Ville",
+      "ministryRoute": "69A900615CD",
+      "points": [
+        [
+          45.97728,
+          4.73388
+        ],
+        [
+          45.97733,
+          4.73363
+        ],
+        [
+          45.97615,
+          4.73635
+        ],
+        [
+          45.97625,
+          4.73621
+        ]
+      ],
+      "status": "named_station_position_to_verify",
+      "catalogueNames": [
+        "VILLEFRANCHE-VILLE"
+      ],
+      "nearbyCandidates": [
+        "VILLEFRANCHE-LIMAS",
+        "VILLEFRANCHE-VILLE"
+      ]
+    },
+    {
+      "name": "Condrieu E",
+      "ministryRoute": "69A9007N05CD",
+      "points": [
+        [
+          45.50518,
+          4.83899
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "Condrieu"
+      ]
+    },
+    {
+      "name": "Condrieu S",
+      "ministryRoute": "69A9007N05CD",
+      "points": [
+        [
+          45.50582,
+          4.84226
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "Condrieu"
+      ]
+    },
+    {
+      "name": "Genay",
+      "ministryRoute": "69A904615CD",
+      "points": [
+        [
+          45.90033,
+          4.81937
+        ],
+        [
+          45.90041,
+          4.81929
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "aprr-area-ouvert-genay",
+      "class1": 1.7,
+      "class2": 2.5
+    },
+    {
+      "name": "Tarare Ouest",
+      "ministryRoute": "69A908905CD",
+      "points": [
+        [
+          45.8917,
+          4.40304
+        ],
+        [
+          45.89158,
+          4.40302
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "Tarare Ouest"
+      ]
+    },
+    {
+      "name": "Tarare Est Ferme",
+      "ministryRoute": "69A908910CD",
+      "points": [
+        [
+          45.87145,
+          4.50849
+        ],
+        [
+          45.8723,
+          4.50864
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "St Romain Popey",
+        "Tarare Est F"
+      ]
+    },
+    {
+      "name": "Tarare Est ouvert E",
+      "ministryRoute": "69A908910CD",
+      "points": [
+        [
+          45.87626,
+          4.52199
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "asf-tarare-est-ouvert",
+      "class1": 1.8,
+      "class2": 2.8
+    },
+    {
+      "name": "Tarare Est ouvert S",
+      "ministryRoute": "69A908910CD",
+      "points": [
+        [
+          45.87638,
+          4.5221
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "asf-tarare-est-ouvert",
+      "class1": 1.8,
+      "class2": 2.8
+    },
+    {
+      "name": "Aix Sud",
+      "ministryRoute": "73A904115CD",
+      "points": [
+        [
+          45.65369,
+          5.92159
+        ],
+        [
+          45.65359,
+          5.92149
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "AIX SUD"
+      ]
+    },
+    {
+      "name": "Aix Nord",
+      "ministryRoute": "73A904120CD",
+      "points": [
+        [
+          45.71706,
+          5.92239
+        ],
+        [
+          45.71614,
+          5.92202
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "AIX NORD"
+      ]
+    },
+    {
+      "name": "Saint Genix sur Guiers",
+      "ministryRoute": "73A904305CD",
+      "points": [
+        [
+          45.57281,
+          5.65892
+        ],
+        [
+          45.57267,
+          5.65897
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "SAINT GENIX SUR GUIERS"
+      ]
+    },
+    {
+      "name": "Aiguebelette",
+      "ministryRoute": "73A904310CD",
+      "points": [
+        [
+          45.57684,
+          5.79915
+        ],
+        [
+          45.5769,
+          5.79936
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "AIGUEBELETTE"
+      ]
+    },
+    {
+      "name": "Chignin Bretelle",
+      "ministryRoute": "73A904325CD",
+      "points": [
+        [
+          45.51194,
+          6.00185
+        ],
+        [
+          45.51319,
+          6.003
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "CHIGNIN BRETELLE"
+      ]
+    },
+    {
+      "name": "Chignin Les Marches",
+      "ministryRoute": "73A904325CD",
+      "points": [
+        [
+          45.50927,
+          6.00605
+        ],
+        [
+          45.509,
+          6.00622
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "CHIGNIN LES MARCHES"
+      ]
+    },
+    {
+      "name": "Montmelian",
+      "ministryRoute": "73A904330CD",
+      "points": [
+        [
+          45.4948,
+          6.05717
+        ],
+        [
+          45.49492,
+          6.05713
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "MONTMELIAN"
+      ]
+    },
+    {
+      "name": "Saint Pierre d'Albigny",
+      "ministryRoute": "73A904335CD",
+      "points": [
+        [
+          45.54877,
+          6.16096
+        ],
+        [
+          45.54939,
+          6.16017
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "SAINT PIERRE D'ALBIGNY"
+      ]
+    },
+    {
+      "name": "Aiton",
+      "ministryRoute": "73A904345CD",
+      "points": [
+        [
+          45.55588,
+          6.24818
+        ],
+        [
+          45.55602,
+          6.2482
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "AITON"
+      ]
+    },
+    {
+      "name": "St Pierre de Belleville",
+      "ministryRoute": "73A904350CD",
+      "points": [
+        [
+          45.46986,
+          6.28709
+        ],
+        [
+          45.46987,
+          6.28725
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "ST PIERRE BELLEVILLE"
+      ]
+    },
+    {
+      "name": "Ste Marie de Cuines",
+      "ministryRoute": "73A904355CD",
+      "points": [
+        [
+          45.34603,
+          6.3056
+        ],
+        [
+          45.34597,
+          6.30544
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "STE MARIE DE CUINES"
+      ]
+    },
+    {
+      "name": "Hermillon",
+      "ministryRoute": "73A904360CD",
+      "points": [
+        [
+          45.29892,
+          6.35491
+        ],
+        [
+          45.29893,
+          6.35566
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "HERMILLON"
+      ]
+    },
+    {
+      "name": "St Julien Mont Denis",
+      "ministryRoute": "73A904365CD",
+      "points": [
+        [
+          45.25163,
+          6.39682
+        ],
+        [
+          45.25284,
+          6.3966
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "ST JULIEN MONTDENIS"
+      ]
+    },
+    {
+      "name": "St Michel Echangeur",
+      "ministryRoute": "73A904370CD",
+      "points": [
+        [
+          45.21857,
+          6.45894
+        ],
+        [
+          45.21905,
+          6.45917
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "ST MICHEL MAURIENNE ECH"
+      ]
+    },
+    {
+      "name": "St Michel amont",
+      "ministryRoute": "73A904370CD",
+      "points": [
+        [
+          45.21646,
+          6.46587
+        ],
+        [
+          45.21659,
+          6.46595
+        ]
+      ],
+      "status": "unresolved",
+      "catalogueNames": [],
+      "nearbyCandidates": []
+    },
+    {
+      "name": "Cluses Amont S1",
+      "ministryRoute": "74A904015CD",
+      "points": [
+        [
+          46.04708,
+          6.59695
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "atmb-cluses-amont",
+      "class1": 2.5,
+      "class2": 4.3
+    },
+    {
+      "name": "Cluses Aval S1",
+      "ministryRoute": "74A904015CD",
+      "points": [
+        [
+          46.04951,
+          6.58714
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "atmb-cluses-aval",
+      "class1": 2.3,
+      "class2": 4.3
+    },
+    {
+      "name": "Cluses Aval S2",
+      "ministryRoute": "74A904015CD",
+      "points": [
+        [
+          46.04924,
+          6.58682
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "atmb-cluses-aval",
+      "class1": 2.3,
+      "class2": 4.3
+    },
+    {
+      "name": "Cluses Amont S2",
+      "ministryRoute": "74A904015CD",
+      "points": [
+        [
+          46.04649,
+          6.59648
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "atmb-cluses-amont",
+      "class1": 2.5,
+      "class2": 4.3
+    },
+    {
+      "name": "Scionzier Entrée",
+      "ministryRoute": "74A904020CD",
+      "points": [
+        [
+          46.06833,
+          6.5542
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "atmb-scionzier",
+      "class1": 2.3,
+      "class2": 4.3
+    },
+    {
+      "name": "Scionzier Sortie",
+      "ministryRoute": "74A904020CD",
+      "points": [
+        [
+          46.06821,
+          6.55402
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "atmb-scionzier",
+      "class1": 2.3,
+      "class2": 4.3
+    },
+    {
+      "name": "Bonneville Est Entrée",
+      "ministryRoute": "74A904025CD",
+      "points": [
+        [
+          46.0708,
+          6.42501
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "atmb-bonneville-zi",
+      "class1": 1.7,
+      "class2": 3.1
+    },
+    {
+      "name": "Bonneville Est Sortie",
+      "ministryRoute": "74A904025CD",
+      "points": [
+        [
+          46.07051,
+          6.42526
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "atmb-bonneville-zi",
+      "class1": 1.7,
+      "class2": 3.1
+    },
+    {
+      "name": "Bonneville Ouest S1",
+      "ministryRoute": "74A904030CD",
+      "points": [
+        [
+          46.07336,
+          6.3832
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "atmb-bonneville-centre",
+      "class1": 1.3,
+      "class2": 2.3
+    },
+    {
+      "name": "Bonneville Ouest S2",
+      "ministryRoute": "74A904030CD",
+      "points": [
+        [
+          46.07302,
+          6.38216
+        ]
+      ],
+      "status": "fixed_gate_prices_present",
+      "barrierId": "atmb-bonneville-centre",
+      "class1": 1.3,
+      "class2": 2.3
+    },
+    {
+      "name": "Eloise",
+      "ministryRoute": "74A904065CD",
+      "points": [
+        [
+          46.06521,
+          5.86382
+        ],
+        [
+          46.06506,
+          5.86391
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "ELOISE"
+      ]
+    },
+    {
+      "name": "Rumilly",
+      "ministryRoute": "74A904105CD",
+      "points": [
+        [
+          45.81594,
+          6.00695
+        ],
+        [
+          45.81578,
+          6.007
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "RUMILLY"
+      ]
+    },
+    {
+      "name": "Seynod Sud",
+      "ministryRoute": "74A904110CD",
+      "points": [
+        [
+          45.84595,
+          6.05773
+        ],
+        [
+          45.846,
+          6.05795
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "SEYNOD SUD"
+      ]
+    },
+    {
+      "name": "Annecy Centre",
+      "ministryRoute": "74A904115CD",
+      "points": [
+        [
+          45.89786,
+          6.09208
+        ],
+        [
+          45.89804,
+          6.09204
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "ANNECY CENTRE"
+      ]
+    },
+    {
+      "name": "Annecy Nord",
+      "ministryRoute": "74A904120CD",
+      "points": [
+        [
+          45.93875,
+          6.11696
+        ],
+        [
+          45.93886,
+          6.11723
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "ANNECY NORD"
+      ]
+    },
+    {
+      "name": "Allonzier",
+      "ministryRoute": "74A941002CD",
+      "points": [
+        [
+          45.99013,
+          6.12863
+        ],
+        [
+          45.99021,
+          6.12679
+        ]
+      ],
+      "status": "named_station_position_matched",
+      "catalogueNames": [
+        "ALLONZIER"
+      ]
+    },
+    {
+      "name": "Cruseilles A410",
+      "ministryRoute": "74A941002CD",
+      "points": [
+        [
+          45.99345,
+          6.12813
+        ],
+        [
+          45.99703,
+          6.12566
+        ]
+      ],
+      "status": "nearby_identity_to_verify",
+      "catalogueNames": [],
+      "nearbyCandidates": [
+        "ALLONZIER",
+        "CRUSEILLES A",
+        "ST MARTIN BELLEVUE A41 N",
+        "ST MARTIN BELLEVUE A410"
+      ]
+    }
+  ]
+}

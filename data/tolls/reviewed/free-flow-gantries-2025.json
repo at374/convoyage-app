@@ -1,0 +1,575 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "publisher": "Maxime Lopes",
+    "datasetUrl": "https://www.data.gouv.fr/datasets/autoroutes-et-peages-en-flux-libre",
+    "resourceUrl": "https://static.data.gouv.fr/resources/autoroutes-et-peages-en-flux-libre/20251025-160412/portiques-free-flow-25-10-2025.csv",
+    "publishedOn": "2025-10-25",
+    "retrievedOn": "2026-11-01",
+    "encoding": "windows-1252",
+    "license": "Other (Attribution)",
+    "indicativeOnly": true,
+    "officialSurvey": false,
+    "laneGeometryVerified": false,
+    "reuseNote": "Credit Maxime Lopes. Free reuse for bundled applications; no paid standalone gantry-alert option. Road signs and legal payment obligations take precedence; the dataset can contain errors.",
+    "rawSha256": "6b33271c9441a1170db094ad288a8e55d152f4d35cb772d33ad5978bd74457dc",
+    "downloadedBytesVerified": true
+  },
+  "records": [
+    {
+      "id": "free-flow-2025-row-2",
+      "nom": "A79 - Péage de Deux Chaises",
+      "point": [
+        46.370332954830154,
+        3.027671017213333
+      ],
+      "road": "A79",
+      "type": "BPV",
+      "sens": "1+2",
+      "pk": null,
+      "operator": "Aliaé",
+      "observations": "BPV avec arrêt sauf télépéage sans arrêt interconnexion A71",
+      "sourceLine": 2
+    },
+    {
+      "id": "free-flow-2025-row-3",
+      "nom": "Portique flux libre Le Montet Ouest",
+      "point": [
+        46.3891493669593,
+        3.033184796389492
+      ],
+      "road": "A79",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": null,
+      "operator": "Aliaé",
+      "observations": "-",
+      "sourceLine": 3
+    },
+    {
+      "id": "free-flow-2025-row-4",
+      "nom": "Portique flux libre Le Montet Est",
+      "point": [
+        46.41735692394454,
+        3.107230101015186
+      ],
+      "road": "A79",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": null,
+      "operator": "Aliaé",
+      "observations": "-",
+      "sourceLine": 4
+    },
+    {
+      "id": "free-flow-2025-row-5",
+      "nom": "Portique flux libre Montbeugny Ouest",
+      "point": [
+        46.504369873389386,
+        3.426121557058431
+      ],
+      "road": "A79",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": null,
+      "operator": "Aliaé",
+      "observations": "-",
+      "sourceLine": 5
+    },
+    {
+      "id": "free-flow-2025-row-6",
+      "nom": "Portique flux libre  Montbeugny Est",
+      "point": [
+        46.516367174388684,
+        3.468908690028212
+      ],
+      "road": "A79",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": null,
+      "operator": "Aliaé",
+      "observations": "-",
+      "sourceLine": 6
+    },
+    {
+      "id": "free-flow-2025-row-7",
+      "nom": "Portique Molinet Ouest",
+      "point": [
+        46.5073818954721,
+        3.768571795122128
+      ],
+      "road": "A79",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": null,
+      "operator": "Aliaé",
+      "observations": "-",
+      "sourceLine": 7
+    },
+    {
+      "id": "free-flow-2025-row-8",
+      "nom": "Portique Molinet Est",
+      "point": [
+        46.456290550595,
+        3.9042617671344235
+      ],
+      "road": "A79",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": null,
+      "operator": "Aliaé",
+      "observations": "-",
+      "sourceLine": 8
+    },
+    {
+      "id": "free-flow-2025-row-9",
+      "nom": "Buchelay FL",
+      "point": [
+        48.98370276677796,
+        1.6812133933960551
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": 48,
+      "operator": "SAPN",
+      "observations": "-",
+      "sourceLine": 9
+    },
+    {
+      "id": "free-flow-2025-row-10",
+      "nom": "Heudebouville FL",
+      "point": [
+        49.19146011366729,
+        1.2324629005967371
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": 90,
+      "operator": "SAPN",
+      "observations": "BPV",
+      "sourceLine": 10
+    },
+    {
+      "id": "free-flow-2025-row-11",
+      "nom": "Heudebouville FL E vers Caen",
+      "point": [
+        49.196633086459045,
+        1.2298063220911815
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "1",
+      "pk": 90,
+      "operator": "SAPN",
+      "observations": "bretelle vers Caen",
+      "sourceLine": 11
+    },
+    {
+      "id": "free-flow-2025-row-12",
+      "nom": "Heudebouville FL E vers Paris",
+      "point": [
+        49.193366094028164,
+        1.2302205867320604
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "2",
+      "pk": 90,
+      "operator": "SAPN",
+      "observations": "bretelle vers Paris",
+      "sourceLine": 12
+    },
+    {
+      "id": "free-flow-2025-row-13",
+      "nom": "Incarville FL",
+      "point": [
+        49.24562627600375,
+        1.1838234172651245
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "2",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "-",
+      "sourceLine": 13
+    },
+    {
+      "id": "free-flow-2025-row-14",
+      "nom": "Péage d'Incarville FL",
+      "point": [
+        49.24776074460694,
+        1.181451444761634
+      ],
+      "road": "A154",
+      "type": "Flux libre",
+      "sens": "1",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "interconnexion A154 A13 vers province",
+      "sourceLine": 14
+    },
+    {
+      "id": "free-flow-2025-row-15",
+      "nom": "Bourg-Achard FL Entrée",
+      "point": [
+        49.36676774745055,
+        0.8170244591204662
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "1",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "sortie 25",
+      "sourceLine": 15
+    },
+    {
+      "id": "free-flow-2025-row-16",
+      "nom": "Bourneville",
+      "point": [
+        49.37716100563025,
+        0.6255959651770168
+      ],
+      "road": "A13",
+      "type": "Barrière",
+      "sens": "2",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "bretelle entrée / D89",
+      "sourceLine": 16
+    },
+    {
+      "id": "free-flow-2025-row-17",
+      "nom": "Péage flux libre de Bourneville-Sainte-Croix -",
+      "point": [
+        49.37792946136258,
+        0.6256733008872346
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "1",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "-",
+      "sourceLine": 17
+    },
+    {
+      "id": "free-flow-2025-row-18",
+      "nom": "Bourneville FL",
+      "point": [
+        49.386299162156035,
+        0.6023747523987777
+      ],
+      "road": "A131",
+      "type": "Flux libre",
+      "sens": "1",
+      "pk": 1,
+      "operator": "SAPN",
+      "observations": "-",
+      "sourceLine": 18
+    },
+    {
+      "id": "free-flow-2025-row-19",
+      "nom": "N°27 Toutainville FL E",
+      "point": [
+        49.36465266483861,
+        0.4679990804508471
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "-",
+      "sourceLine": 19
+    },
+    {
+      "id": "free-flow-2025-row-20",
+      "nom": "Beuzeville",
+      "point": [
+        49.33779733561549,
+        0.3646729445355953
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": 167,
+      "operator": "SAPN",
+      "observations": "BPV",
+      "sourceLine": 20
+    },
+    {
+      "id": "free-flow-2025-row-21",
+      "nom": "Beuzeville FL E vers Caen",
+      "point": [
+        49.33906175878891,
+        0.3680937656860297
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "1",
+      "pk": 167,
+      "operator": "SAPN",
+      "observations": "Péage flux libre Le Torpte",
+      "sourceLine": 21
+    },
+    {
+      "id": "free-flow-2025-row-22",
+      "nom": "Beuzeville FL E vers Paris",
+      "point": [
+        49.33756226851832,
+        0.3694239039511729
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": 167,
+      "operator": "SAPN",
+      "observations": "Bretelle entrée sortie Péage flux libre Le Torpte",
+      "sourceLine": 22
+    },
+    {
+      "id": "free-flow-2025-row-23",
+      "nom": "Beuzeville - bretelle de sortie",
+      "point": [
+        49.338020203348776,
+        0.37430247666009026
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "1",
+      "pk": 167,
+      "operator": "SAPN",
+      "observations": "Bretelle de sortie depuis Paris vers D675",
+      "sourceLine": 23
+    },
+    {
+      "id": "free-flow-2025-row-24",
+      "nom": "Dozulé FL",
+      "point": [
+        49.22845962318107,
+        -0.08119395859987798
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": 203,
+      "operator": "SAPN",
+      "observations": "-",
+      "sourceLine": 24
+    },
+    {
+      "id": "free-flow-2025-row-25",
+      "nom": "Dozulé FL E",
+      "point": [
+        49.230296689641854,
+        -0.08398770657270314
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": null,
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "Bretelle entrée sortie",
+      "sourceLine": 25
+    },
+    {
+      "id": "free-flow-2025-row-26",
+      "nom": "Troarn FL",
+      "point": [
+        49.1778328116575,
+        -0.20297240384555648
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "1",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "Bretelle entrée vers Caen",
+      "sourceLine": 26
+    },
+    {
+      "id": "free-flow-2025-row-27",
+      "nom": "Troarn FL",
+      "point": [
+        49.178641969403415,
+        -0.20074405118151983
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "2",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "Bretelle sortie vers Paris",
+      "sourceLine": 27
+    },
+    {
+      "id": "free-flow-2025-row-28",
+      "nom": "Cagny FL",
+      "point": [
+        49.1683432404019,
+        -0.24499245194057515
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "1",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "Bretelle d'entrée depuis Paris",
+      "sourceLine": 28
+    },
+    {
+      "id": "free-flow-2025-row-29",
+      "nom": "Cagny FL",
+      "point": [
+        49.167953778260625,
+        -0.24843552252497111
+      ],
+      "road": "A13",
+      "type": "Flux libre",
+      "sens": "2",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "Bretelle de sortie depuis Caen",
+      "sourceLine": 29
+    },
+    {
+      "id": "free-flow-2025-row-30",
+      "nom": "Montesson FL",
+      "point": [
+        48.91348746350013,
+        2.1620305614049316
+      ],
+      "road": "A14",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "-",
+      "sourceLine": 30
+    },
+    {
+      "id": "free-flow-2025-row-31",
+      "nom": "Chambourcy",
+      "point": [
+        48.91174196525679,
+        2.0467543790780898
+      ],
+      "road": "A14",
+      "type": "Flux libre",
+      "sens": "1",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "Bretelle de sortie",
+      "sourceLine": 31
+    },
+    {
+      "id": "free-flow-2025-row-32",
+      "nom": "Chambourcy",
+      "point": [
+        48.912011825222294,
+        2.0453801818328845
+      ],
+      "road": "A14",
+      "type": "BPV",
+      "sens": "2",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "Bretelle",
+      "sourceLine": 32
+    },
+    {
+      "id": "free-flow-2025-row-33",
+      "nom": "Quetteville",
+      "point": [
+        49.32055650013019,
+        0.3111458195311986
+      ],
+      "road": "A29",
+      "type": "Flux libre",
+      "sens": "1+2",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "-",
+      "sourceLine": 33
+    },
+    {
+      "id": "free-flow-2025-row-34",
+      "nom": "Quetteville",
+      "point": [
+        49.32078572920442,
+        0.31041472149070903
+      ],
+      "road": "A29",
+      "type": "Flux libre",
+      "sens": "2",
+      "pk": null,
+      "operator": "SAPN",
+      "observations": "bretelle vers A13",
+      "sourceLine": 34
+    },
+    {
+      "id": "free-flow-2025-row-35",
+      "nom": "Boulay",
+      "point": [
+        49.140468356235324,
+        6.464721572545085
+      ],
+      "road": "A4",
+      "type": "Flux libre",
+      "sens": "2",
+      "pk": null,
+      "operator": "SANEF",
+      "observations": "-",
+      "sourceLine": 35
+    },
+    {
+      "id": "free-flow-2025-row-36",
+      "nom": "Boulay",
+      "point": [
+        49.14111107302624,
+        6.466542316558337
+      ],
+      "road": "A4",
+      "type": "Flux libre",
+      "sens": "1",
+      "pk": null,
+      "operator": "SANEF",
+      "observations": "-",
+      "sourceLine": 36
+    },
+    {
+      "id": "free-flow-2025-row-37",
+      "nom": "Parçay Meslay",
+      "point": [
+        47.45241309965617,
+        0.7393910581517196
+      ],
+      "road": "A10",
+      "type": "Mixte : Flux libre + BPV",
+      "sens": "1+2",
+      "pk": 200,
+      "operator": "Cofiroute",
+      "observations": "Diffuseur 19 - Tours Nord",
+      "sourceLine": 37
+    },
+    {
+      "id": "free-flow-2025-row-38",
+      "nom": "Tonnay Charente",
+      "point": [
+        45.955001688205954,
+        -0.8811022586435732
+      ],
+      "road": "A387",
+      "type": "Mixte : Flux libre + BPV",
+      "sens": "1+2",
+      "pk": 10,
+      "operator": "ASF",
+      "observations": "Diffuseur 33",
+      "sourceLine": 38
+    }
+  ]
+}

@@ -1,0 +1,338 @@
+{
+  "date": "2026-11-01",
+  "scope": "Canonical station-pair price contradictions; not a national completeness or validity certificate",
+  "loadedPairKeys": 19322,
+  "conflictingPairKeys": 14,
+  "sourceDataUnchanged": true,
+  "conflicts": [
+    {
+      "stations": [
+        "BEUZEVILLE N°28",
+        "POISSY/ORGEVAL N°7 À MANTES-SUD N°12"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        12.1,
+        18.8
+      ],
+      "overlayRows": [
+        [
+          "BEUZEVILLE N°28",
+          "POISSY / ORGEVAL N°7 à MANTES-SUD N°12",
+          11.6,
+          18.5,
+          97
+        ]
+      ]
+    },
+    {
+      "stations": [
+        "BEUZEVILLE N°28",
+        "CHAUFOUR N°15 À GAILLON N°17"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        9.1,
+        13.9
+      ],
+      "overlayRows": [
+        [
+          "BEUZEVILLE N°28",
+          "CHAUFOUR N°15 à GAILLON N°17",
+          8.6,
+          13.6,
+          72
+        ]
+      ]
+    },
+    {
+      "stations": [
+        "BEUZEVILLE N°28",
+        "BOURNEVILLE N°26"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        4.6,
+        6.8
+      ],
+      "overlayRows": [
+        [
+          "BEUZEVILLE N°28",
+          "BOURNEVILLE N°26",
+          4.1,
+          6.5,
+          34
+        ]
+      ]
+    },
+    {
+      "stations": [
+        "BEUZEVILLE N°28",
+        "HEUDEBOUVILLE N°18"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        7.1,
+        10.7
+      ],
+      "overlayRows": [
+        [
+          "BEUZEVILLE N°28",
+          "HEUDEBOUVILLE N°18",
+          6.6,
+          10.4,
+          55
+        ]
+      ]
+    },
+    {
+      "stations": [
+        "BEUZEVILLE N°28",
+        "BOURG-ACHARD N°25"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        4.6,
+        6.8
+      ],
+      "overlayRows": [
+        [
+          "BEUZEVILLE N°28",
+          "BOURG-ACHARD N°25",
+          4.1,
+          6.5,
+          34
+        ]
+      ]
+    },
+    {
+      "stations": [
+        "La Saulce",
+        "La Ciotat"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        20,
+        28.6
+      ],
+      "overlayRows": [
+        [
+          "La Ciotat",
+          "La Saulce",
+          20,
+          28.6,
+          186
+        ],
+        [
+          "LA SAULCE",
+          "LA CIOTAT",
+          18.6,
+          26.4,
+          196
+        ]
+      ]
+    },
+    {
+      "stations": [
+        "Sisteron Nord",
+        "La Ciotat"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        19.1,
+        27.4
+      ],
+      "overlayRows": [
+        [
+          "La Ciotat",
+          "Sisteron Nord",
+          19.1,
+          27.4,
+          155
+        ],
+        [
+          "SISTERON-NORD",
+          "LA CIOTAT",
+          17.7,
+          25.2,
+          186
+        ]
+      ]
+    },
+    {
+      "stations": [
+        "Sisteron Sud",
+        "La Ciotat"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        16.6,
+        23.8
+      ],
+      "overlayRows": [
+        [
+          "La Ciotat",
+          "Sisteron Sud",
+          16.6,
+          23.8,
+          150
+        ],
+        [
+          "SISTERON-SUD",
+          "LA CIOTAT",
+          15.2,
+          21.6,
+          160
+        ]
+      ]
+    },
+    {
+      "stations": [
+        "Aubignosc",
+        "La Ciotat"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        16,
+        21.9
+      ],
+      "overlayRows": [
+        [
+          "La Ciotat",
+          "Aubignosc",
+          16,
+          21.9,
+          146
+        ],
+        [
+          "AUBIGNOSC",
+          "LA CIOTAT",
+          14.6,
+          19.7,
+          154
+        ]
+      ]
+    },
+    {
+      "stations": [
+        "Peyruis",
+        "La Ciotat"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        14.2,
+        20.8
+      ],
+      "overlayRows": [
+        [
+          "La Ciotat",
+          "Peyruis",
+          14.2,
+          20.8,
+          135
+        ],
+        [
+          "PEYRUIS",
+          "LA CIOTAT",
+          12.8,
+          18.6,
+          135
+        ]
+      ]
+    },
+    {
+      "stations": [
+        "La Brillanne",
+        "La Ciotat"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        12.3,
+        17.3
+      ],
+      "overlayRows": [
+        [
+          "La Ciotat",
+          "La Brillanne",
+          12.3,
+          17.3,
+          118
+        ],
+        [
+          "LA BRILLANNE",
+          "LA CIOTAT",
+          10.9,
+          15.1,
+          115
+        ]
+      ]
+    },
+    {
+      "stations": [
+        "Manosque",
+        "La Ciotat"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        10.7,
+        16.2
+      ],
+      "overlayRows": [
+        [
+          "La Ciotat",
+          "Manosque",
+          10.7,
+          16.2,
+          101
+        ],
+        [
+          "MANOSQUE",
+          "LA CIOTAT",
+          9.3,
+          14,
+          98
+        ]
+      ]
+    },
+    {
+      "stations": [
+        "Pertuis",
+        "La Ciotat"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        6.5,
+        10.1
+      ],
+      "overlayRows": [
+        [
+          "La Ciotat",
+          "Pertuis",
+          6.5,
+          10.1,
+          67
+        ],
+        [
+          "PERTUIS",
+          "LA CIOTAT",
+          5.1,
+          7.9,
+          54
+        ]
+      ]
+    },
+    {
+      "stations": [
+        "Carnoules",
+        "La Ciotat"
+      ],
+      "loadedAmountKeptButNotEligible": [
+        6.7,
+        10.4
+      ],
+      "overlayRows": [
+        [
+          "La Ciotat",
+          "Carnoules",
+          6.7,
+          10.4,
+          63
+        ],
+        [
+          "CARNOULES",
+          "LA CIOTAT",
+          5.2,
+          8.6,
+          55
+        ]
+      ]
+    }
+  ]
+}

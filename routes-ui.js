@@ -32,6 +32,19 @@
     const title = document.getElementById('feuilleTitre')?.textContent?.trim();
     return title && window.__cp?.etat?.missions?.find(m => (m.from_city + ' → ' + m.to_city) === title);
   };
+  const dateTarifDepart = depart => {
+    if (depart == null || depart === '') return undefined;
+    if (typeof depart !== 'string') return null;
+    const m = /^(\d{4}-\d{2}-\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})?)?$/.exec(depart);
+    if (!m || !Number.isFinite(Date.parse(m[1]+'T00:00:00Z')) || new Date(m[1]+'T00:00:00Z').toISOString().slice(0,10) !== m[1] ||
+        (m[2] && (Number(m[2]) > 23 || Number(m[3]) > 59 || Number(m[4] || 0) > 59))) return null;
+    if (!m[2] || !m[5]) return m[1];
+    const instant = new Date(depart); if (!Number.isFinite(instant.getTime())) return null;
+    const parts = new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(instant);
+    const part = type => parts.find(p=>p.type === type).value;
+    return part('year')+'-'+part('month')+'-'+part('day');
+  };
+  const routeDatee = (r, depart) => ({...r,dateTarif:dateTarifDepart(depart == null || depart === '' ? new Date().toISOString() : depart)});
   const point = (m, side) => {
     const p = window.CPGeo?.coordonnees(m, side);
     return p ? { lat: p.lat, lng: p.lng } : (side === 'origin' ? m.origin_address || m.from_city : m.destination_address || m.to_city);
@@ -65,40 +78,146 @@
   const dec6 = s => { const o = []; let i = 0, la = 0, lo = 0; while (i < s.length) { let b, sh = 0, rs = 0; do { b = s.charCodeAt(i++) - 63; rs |= (b & 31) << sh; sh += 5; } while (b >= 32); la += (rs & 1) ? ~(rs >> 1) : (rs >> 1); sh = 0; rs = 0; do { b = s.charCodeAt(i++) - 63; rs |= (b & 31) << sh; sh += 5; } while (b >= 32); lo += (rs & 1) ? ~(rs >> 1) : (rs >> 1); o.push([la / 1e6, lo / 1e6]); } return o; };
   const dist = (a, b, c, d) => { const R = 6371, t = Math.PI / 180, x = (c - a) * t, y = (d - b) * t, h = Math.sin(x / 2) ** 2 + Math.cos(a * t) * Math.cos(c * t) * Math.sin(y / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
   const joli = s => String(s).toLowerCase().replace(/(^|[\s\-\/'])([a-zà-ÿ])/g, (m, p, c) => p + c.toUpperCase());
-  let PEAGES = null;
-  const chargerPeages = async () => {
-    if (PEAGES) return PEAGES;
+  let PEAGES = null, PEAGES_EN_COURS = null;
+  // Resolve spelling variants only when the normalized station is unique.
+  // Keep motorway/exit qualifiers; never guess a nearby or similarly named gate.
+  const indexGares = gares => {
+    const exact = new Map(), normal = new Map();
+    const cle = nom => String(nom).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    gares.forEach((g, i) => {
+      if (!exact.has(g[0])) exact.set(g[0], i);
+      const k = cle(g[0]); normal.set(k, normal.has(k) ? -1 : i);
+    });
+    return nom => exact.has(nom) ? exact.get(nom) : (cle(nom) ? (normal.get(cle(nom)) ?? -1) : -1);
+  };
+  // Only explicitly linked gates at exactly the same surveyed positions belong
+  // exclusively to the fixed-barrier engine. A nearby gate is not equivalent.
+  const garesFixes = (gares, overlay) => {
+    const fixes = new Set(), ix = indexGares(gares);
+    for (const g of overlay.gares || []) {
+      if (!g.barrierId || !g.points?.length) continue;
+      const b = (overlay.barrieres || []).find(b => b.id === g.barrierId);
+      const i = ix(g.nom);
+      if (i >= 0 && b && gares[i][1].every(p => b.points.some(q => p[0] === q[0] && p[1] === q[1])) &&
+          g.points.every(p => b.points.some(q => p[0] === q[0] && p[1] === q[1]))) fixes.add(i);
+    }
+    return fixes;
+  };
+  const appliquerPositionsVerifiees = (P, overlay) => {
+    const ix=indexGares(P.g);P.verifiedGatePositions=new Set();
+    for(const g of overlay.gares||[]){
+      if(g.positionOverride!==true||g.provenance?.local!=='data/gares-peage-officiel.json'||!g.provenance?.officialNames?.length||!g.provenance?.routes?.length)continue;
+      const i=ix(g.nom);
+      if(i<0||P.g.filter(s=>s[0]===g.nom).length!==1||!g.points?.length||g.points.some(p=>!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite)||!P.g[i][1].some(q=>dist(p[0],p[1],q[0],q[1])<=.15)))continue;
+      P.g[i][1]=g.points;P.verifiedGatePositions.add(i);
+    }
+    delete P.gi;
+  };
+  // Different spellings can resolve to the same pair. Keep the source amounts,
+  // but never choose a conflicting price merely because it was loaded first.
+  const tarifsEnConflit = (gares, prix, paires) => {
+    const ix = indexGares(gares), vus = new Map(prix), conflits = new Set();
+    const centimes = n => Math.round(Number(n) * 100);
+    for (const q of paires || []) {
+      const a = ix(q[0]), b = ix(q[1]);
+      if (a < 0 || b < 0 || a === b) continue;
+      const k = Math.min(a,b) * 1000 + Math.max(a,b), v = [q[2],q[3]];
+      if (v.some(n => n == null || n === '' || !Number.isFinite(Number(n)) || Number(n) < 0)) { conflits.add(k); continue; }
+      const avant = vus.get(k);
+      if (avant && (centimes(avant[0]) !== centimes(v[0]) || centimes(avant[1]) !== centimes(v[1]))) conflits.add(k);
+      else if (!avant) vus.set(k,v);
+    }
+    return conflits;
+  };
+  // A source price applies only to its published direction and exact bound points.
+  // Keep legacy prices intact; this separate index supplies dated evidence.
+  const attacherTarifsOfficiels = (P, j) => {
+    if (j.schemaVersion !== 1 || !Array.isArray(j.stations) || !Array.isArray(j.rows) || !Array.isArray(j.sources)) throw new Error('index officiel invalide');
+    const ix = indexGares(P.g), ids = j.stations.map(s => {
+      const i = ix(s.name);
+      return i >= 0 && /^A\d+$/.test(s.road) && s.points?.length && P.g[i][1].length === s.points.length &&
+        P.g[i][1].every(p => s.points.some(q => p[0] === q[0] && p[1] === q[1])) ? i : -1;
+    });
+    const index = new Map();
+    for (const r of j.rows) {
+      if (!Array.isArray(r) || r.length !== 5 || !r.slice(0,2).every(n => Number.isInteger(n) && n >= 0 && n < ids.length) ||
+          !Number.isInteger(r[4]) || !j.sources[r[4]] || r.slice(2,4).some(n => n !== null && (typeof n !== 'number' || !Number.isFinite(n) || n < 0))) throw new Error('ligne officielle invalide');
+      const a = ids[r[0]], b = ids[r[1]];
+      if (a < 0 || b < 0 || a === b) continue;
+      const k = a + '>' + b;
+      if (!index.has(k)) index.set(k, []);
+      index.get(k).push({ prix: r.slice(2,4), source: j.sources[r[4]] });
+    }
+    P.officiels = index;
+  };
+  const prixOfficiel = (P, a, b, date) => {
+    const lignes = P.officiels?.get(a + '>' + b);
+    if (!lignes) return undefined;
+    const valide = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && Number.isFinite(Date.parse(s+'T00:00:00Z')) && new Date(s+'T00:00:00Z').toISOString().slice(0,10) === s;
+    const auj = new Date().toISOString().slice(0,10);
+    let montant = null, source = null;
+    for (const l of lignes) {
+      const s = l.source;
+      if (!valide(date) || !valide(s.checkedOn) || !valide(s.effectiveFrom) || s.checkedOn > auj || Date.parse(auj)-Date.parse(s.checkedOn) > 7*86400000 ||
+          date < s.effectiveFrom || Number(date.slice(0,4)) !== s.verifiedYear || !/^https:\/\/public-content\.vinci-autoroutes\.com\//.test(s.url) || !/^[a-f0-9]{64}$/.test(s.rawSha256) || l.prix.some(n => n == null)) return null;
+      if (montant && (montant[0] !== l.prix[0] || montant[1] !== l.prix[1])) return null;
+      montant = l.prix; source = s;
+    }
+    return { v: montant, source };
+  };
+  const chargerTarifsOfficiels = async (P, url) => {
+    const controle = new AbortController(); let timer;
+    try {
+      const lecture = fetch(url,{signal:controle.signal}).then(r=>r.ok?r.json():null);
+      const limite = new Promise((_,ko)=>{timer=setTimeout(()=>{controle.abort();ko(new Error('délai grilles officielles'));},4000);});
+      const j = await Promise.race([lecture,limite]);
+      if (j) attacherTarifsOfficiels(P,j);
+    } finally { clearTimeout(timer); }
+  };
+  const lirePeages = async () => {
     const j = await fetch('peages-aprr.json').then(r => r.json());
     const prix = new Map();
     // V249 : lecture des 17 000 tarifs par petits paquets (le téléphone reste fluide, l'écran ne se fige plus).
     const lignes = j.p.split(';');
     for (let i = 0; i < lignes.length; i++) { const [a, b, c1, c2, d] = lignes[i].split(','); const x = parseInt(a, 36), y = parseInt(b, 36); prix.set(Math.min(x, y) * 1000 + Math.max(x, y), [c1 / 10, c2 / 10, Number(d)]); if (i % 3000 === 2999) await new Promise(ok => setTimeout(ok, 0)); }
     // V248 : position corrigée de la barrière « St Martin Bellevue A41 N » : la grille officielle (31 km depuis Annecy Centre) la place à la jonction A41/A40 de Saint-Julien, pas à Allonzier.
-    const CORR = { 'ST MARTIN BELLEVUE A41 N': [[46.1293, 6.0978], [46.1318, 6.1]] };
+    const CORR = { 'ST MARTIN BELLEVUE A41 N': [[46.1293, 6.0978], [46.1318, 6.1]], 'BOISSE Système Ouvert': [[45.82868,5.03099],[45.82879,5.03123]] };
     j.g.forEach(g => { if (CORR[g[0]]) g[1] = CORR[g[0]]; });
-    PEAGES = { g: j.g, prix, v: j.v };
+    const P = { g: j.g, prix, v: j.v };
     // V233 : stations et liaisons ajoutées (grilles officielles relues) — on ajoute seulement, on ne modifie jamais les 16 918 tarifs d'origine.
     try {
       const o = await fetch('peages-overlay.json').then(r => r.json());
-      for (const n of (o.gares || [])) { if (!PEAGES.g.some(g => g[0] === n.nom)) PEAGES.g.push([n.nom, n.points]); }
-      const ix = nom => PEAGES.g.findIndex(g => g[0] === nom);
+      for (const n of (o.gares || [])) { if (!P.g.some(g => g[0] === n.nom)) P.g.push([n.nom, n.points]); }
+      const ix = indexGares(P.g);
+      appliquerPositionsVerifiees(P,o);
+      P.fixes = garesFixes(P.g, o);
+      P.conflits = tarifsEnConflit(P.g, prix, o.paires);
       for (const q of (o.paires || [])) { const x = ix(q[0]), y = ix(q[1]); const k = Math.min(x, y) * 1000 + Math.max(x, y); if (x >= 0 && y >= 0 && !prix.has(k)) prix.set(k, [q[2], q[3], q[4]]); }
     } catch (_) { /* sans ajouts : tarifs d'origine seuls */ }
-    return PEAGES;
+    try { await chargerTarifsOfficiels(P,'data/tolls/route-prices.json'); } catch (_) { /* prix historiques conservés si le complément ne peut être chargé */ }
+    return P;
   };
-  const gareProche = (P, lat, lon, max) => {
+  const chargerPeages = () => {
+    if (PEAGES_EN_COURS) return PEAGES_EN_COURS;
+    if (PEAGES) return Promise.resolve(PEAGES);
+    PEAGES_EN_COURS = lirePeages().then(p => { PEAGES = p; return p; })
+      .finally(() => { PEAGES_EN_COURS = null; });
+    return PEAGES_EN_COURS;
+  };
+  const gareProche = (P, lat, lon, max, ticketsSeulement = false) => {
     if (!P.gi) { const gi = new Map(); P.g.forEach((g, i) => g[1].forEach(p => { const c = Math.floor(p[0] / 0.02) + ',' + Math.floor(p[1] / 0.02); let L = gi.get(c); if (!L) gi.set(c, L = []); L.push([i, p[0], p[1]]); })); P.gi = gi; }   // V255 : index par carreaux de 2 km (avant : toutes les gares testées pour chaque point du tracé = écran figé sur téléphone)
     let bi = -1, bd = max; const dl = max / 111, dn = max / (111 * Math.max(0.2, Math.cos(lat * Math.PI / 180)));
-    for (let a = Math.floor((lat - dl) / 0.02); a <= Math.floor((lat + dl) / 0.02); a++) for (let b = Math.floor((lon - dn) / 0.02); b <= Math.floor((lon + dn) / 0.02); b++) { const L = P.gi.get(a + ',' + b); if (!L) continue; for (const q of L) { if (Math.abs(q[1] - lat) > dl || Math.abs(q[2] - lon) > dn) continue; const d = dist(lat, lon, q[1], q[2]); if (d < bd || (d === bd && bi >= 0 && q[0] < bi)) { bd = d; bi = q[0]; } } }
+    for (let a = Math.floor((lat - dl) / 0.02); a <= Math.floor((lat + dl) / 0.02); a++) for (let b = Math.floor((lon - dn) / 0.02); b <= Math.floor((lon + dn) / 0.02); b++) { const L = P.gi.get(a + ',' + b); if (!L) continue; for (const q of L) { if (ticketsSeulement && P.fixes?.has(q[0])) continue; if (Math.abs(q[1] - lat) > dl || Math.abs(q[2] - lon) > dn) continue; const d = dist(lat, lon, q[1], q[2]); if (d < bd || (d === bd && bi >= 0 && q[0] < bi)) { bd = d; bi = q[0]; } } }
     return bi;
   };
-  const prixExact = (P, sh, tms, km) => {
+  const prixExact = (P, sh, tms, km, date = new Date().toISOString().slice(0,10)) => {
+    P.ambiguities = [];
     const f = tms[0], l = tms[tms.length - 1];
     const i0 = f.begin_shape_index, i1 = l.end_shape_index;
     if (!sh[i0] || !sh[i1]) return null;
     const hits = [];
     let der = -2;
-    for (let k = i0; k <= i1; k++) { const g = gareProche(P, sh[k][0], sh[k][1], 0.4); if (g >= 0 && g !== der) { hits.push({ g, k }); der = g; } }
+    for (let k = i0; k <= i1; k++) { const g = gareProche(P, sh[k][0], sh[k][1], 0.4, true); if (g >= 0 && g !== der) { hits.push({ g, k }); der = g; } }
     // V265 : si le tracé passe près d'une gare officielle dont nous n'avons aucun tarif, le prix exact est refusé (jamais de prix partiel).
     if (typeof UNK !== 'undefined') for (let k = i0; k <= i1; k++) { const w = sh[k]; if (!w) continue; for (let u = 0; u < UNK.length; u++) { const z = UNK[u]; if (Math.abs(w[0] - z[0]) < 0.006 && Math.abs(w[1] - z[1]) < 0.009 && dist(w[0], w[1], z[0], z[1]) < 0.5) return null; } }
     // V259 : barrières « système ouvert » à tarif fixe : leur tarif est ajouté par le moteur de barrières (overlay) ; ici elles sont seulement retirées de la recherche des couples de gares.
@@ -114,11 +233,61 @@
     if (eN > 0 && hits.slice(0, eN).every(q => P.g[q.g][0] === 'CRUSEILLES A')) hits.splice(0, eN);
     // V278 : « VOREPPE BARRIERE » (A48/A49, AREA) facture depuis le début du tronçon à péage (Grenoble → Voreppe compris) : tarif 35 km pour Voreppe → Rives alors que 18 km séparent la barrière de Rives. On accepte la distance mesurée sur le tracé OU depuis le début/jusqu'à la fin du tronçon.
     hits.forEach(q => { if (P.g[q.g][0] === ENT) q.ent = true; if (P.g[q.g][0] === 'VOREPPE BARRIERE') q.vo = true; });
-    // V246 : gares « jumelles » (mêmes coordonnées, ex. Dourdan / La Folie-B) : on essaie la plus proche d'abord, puis ses jumelles.
+    // Nearby identities can represent different ramps or tariff boundaries.
+    // Unverified geometry requires agreement; reviewed lane points may separate clear branches.
     const jc = new Map();
     const jum = g => { if (jc.has(g)) return jc.get(g); const r = [g]; jc.set(g, r); P.g.forEach((o, i) => { if (i !== g && o[1].some(p => P.g[g][1].some(q => dist(p[0], p[1], q[0], q[1]) < 0.06))) r.push(i); }); return r; };
+    const proximites=new Map(),groupes=new Map();
+    const proximite=g=>{
+      if(proximites.has(g))return proximites.get(g);
+      let best=Infinity;
+      for(const p of P.g[g][1]){
+        const sx=111.32*Math.cos(p[0]*Math.PI/180),sy=111.32;
+        for(let k=i0;k<i1;k++){
+          const a=sh[k],b=sh[k+1];if(!a||!b)continue;
+          if(p[0]<Math.min(a[0],b[0])-.0002||p[0]>Math.max(a[0],b[0])+.0002||p[1]<Math.min(a[1],b[1])-.0003||p[1]>Math.max(a[1],b[1])+.0003)continue;
+          const ax=(a[1]-p[1])*sx,ay=(a[0]-p[0])*sy,dx=(b[1]-a[1])*sx,dy=(b[0]-a[0])*sy;
+          const den=dx*dx+dy*dy,t=den?Math.max(0,Math.min(1,-(ax*dx+ay*dy)/den)):0;
+          best=Math.min(best,Math.hypot(ax+t*dx,ay+t*dy));
+        }
+      }
+      proximites.set(g,best);return best;
+    };
+    const candidats=g=>{
+      if(groupes.has(g))return groupes.get(g);
+      const ids=jum(g);let selected=ids;
+      if(ids.length>1&&ids.every(i=>P.verifiedGatePositions?.has(i))){
+        const ranked=ids.map(i=>({i,d:proximite(i)})).sort((a,b)=>a.d-b.d);
+        // Conservative local geometry policy, not an operator access guarantee.
+        if(ranked[0].d<=.008&&ranked[1].d-ranked[0].d>=.005)selected=[ranked[0].i];
+      }
+      groupes.set(g,selected);return selected;
+    };
     // V245 : un trajet peut traverser plusieurs mailles tarifaires séparées (ex. A41 Annecy→Chambéry puis Chignin→Crolles) : on additionne les tronçons officiels.
-    const paire = (x, y) => { const ds = x.ent ? [lon(i0, y.k)] : y.ent ? [lon(x.k, i1)] : [lon(x.k, y.k)]; if (x.vo) ds.push(lon(i0, y.k)); if (y.vo) ds.push(lon(x.k, i1)); for (const a of jum(x.g)) for (const b of jum(y.g)) { if (a === b) continue; const v = P.prix.get(Math.min(a, b) * 1000 + Math.max(a, b)); if (!v) continue; if (ds.some(d => { const q = v[2] / Math.max(1, d); return q >= 0.7 && q <= 1.9; })) return { v, a, b }; } return null; };
+    const ambiguities = new Set();
+    const paire = (x, y) => {
+      const ds = x.ent ? [lon(i0, y.k)] : y.ent ? [lon(x.k, i1)] : [lon(x.k, y.k)];
+      if (x.vo) ds.push(lon(i0, y.k)); if (y.vo) ds.push(lon(x.k, i1));
+      let first = null;
+      for (const a of candidats(x.g)) for (const b of candidats(y.g)) {
+        if (a === b) continue;
+        const cle = Math.min(a,b)*1000+Math.max(a,b);
+        if (P.conflits?.has(cle)) continue;
+        const ancien = P.prix.get(cle);
+        if (!ancien || !Number.isFinite(ancien[2]) || ancien[2] <= 0) continue;
+        const officiel = prixOfficiel(P,a,b,date); if (officiel === null) continue;
+        const v = officiel ? [officiel.v[0],officiel.v[1],ancien[2]] : ancien;
+        if (!ds.some(d=>{const q=v[2]/Math.max(1,d);return q>=.7&&q<=1.9;})) continue;
+        if (first && [0,1].some(c=>Math.round(first.v[c]*100)!==Math.round(v[c]*100))) {
+          if(first.a!==a){ambiguities.add(P.g[first.a][0]);ambiguities.add(P.g[a][0]);}
+          if(first.b!==b){ambiguities.add(P.g[first.b][0]);ambiguities.add(P.g[b][0]);}
+          P.ambiguities = [...ambiguities].sort();
+          return null;
+        }
+        if (!first) first = {v,a,b,source:officiel?.source};
+      }
+      return first;
+    };
     const segs = [];
     let i = 0;
     while (i < hits.length) {
@@ -133,7 +302,7 @@
       }
       segs.push(ok); i = ok.h + 1;
     }
-    if (!segs.length && !ouv.length) return null;
+    if (ambiguities.size || (!segs.length && !ouv.length)) return null;
     const r2 = n => Math.round(n * 100) / 100;
     // V246 : Valhalla marque « péage » des tronçons gratuits (rocades, entrées de ville) : le reste après la dernière gare n'est plus refusé ; il contient forcément 0 gare.
     // Seules les gares dont la position est douteuse (voir audit) bloquent le prix.
@@ -141,7 +310,7 @@
     const dout = segs.some(q => SUSPECTES.includes(P.g[q.p.a][0]) || SUSPECTES.includes(P.g[q.p.b][0]));
     const nO = ouv.map(o => P.g[o.g][0]);
     const detS = segs.map(q => joli(P.g[q.p.a][0]) + ' → ' + joli(P.g[q.p.b][0]));
-    return { e: segs.length ? joli(P.g[segs[0].p.a][0]) : joli(nO[0]), s: segs.length ? joli(P.g[segs[segs.length - 1].p.b][0]) : joli(nO[nO.length - 1]), c1: r2(segs.reduce((n, q) => n + q.p.v[0], 0)), c2: r2(segs.reduce((n, q) => n + q.p.v[1], 0)), det: detS.length ? detS.join(' + ') : 'Péages à tarif fixe', reste: dout ? 99 : 0, ouv: nO.map(n => n.toLowerCase().replace(/[^a-z0-9]+/g, '-')) };
+    return { e: segs.length ? joli(P.g[segs[0].p.a][0]) : joli(nO[0]), s: segs.length ? joli(P.g[segs[segs.length - 1].p.b][0]) : joli(nO[nO.length - 1]), c1: r2(segs.reduce((n, q) => n + q.p.v[0], 0)), c2: r2(segs.reduce((n, q) => n + q.p.v[1], 0)), det: detS.length ? detS.join(' + ') : 'Péages à tarif fixe', sources:segs.map(q=>q.p.source).filter(Boolean), reste: dout ? 99 : 0, ouv: nO.map(n => n.toLowerCase().replace(/[^a-z0-9]+/g, '-')) };
   };
   // V233 : péages « barrière » (sans gare d'entrée/sortie : ponts, tunnels, barrières pleine voie) — tarifs officiels versionnés, jamais d'estimation.
   let OVERLAY = null;
@@ -151,7 +320,7 @@
       if (!window.CPPeage) await new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'peage-engine.js'; s.onload = ok; s.onerror = ko; document.head.appendChild(s); });
       const j = await fetch('peages-overlay.json').then(r => r.json());
       const versions = j.tarifs.map(t => ({ id: t.id, barrier_station_id: t.b || null, vehicle_class: t.c, amount_eur: t.a, status: t.s, effective_from: t.f, effective_to: t.t || null, tariff_context: t.k || null, source_url: t.u == null ? null : j.u[t.u] }));
-      OVERLAY = { m: window.CPPeage.creerMoteur({ versions }), b: j.barrieres, v: j.v };
+      OVERLAY = { m: window.CPPeage.creerMoteur({ versions }), b: j.barrieres, v: j.v, candidats:j.portiques_candidats||[], candidatSource:j.portiques_source||null };
     } catch (_) { OVERLAY = false; }
     return OVERLAY;
   };
@@ -166,35 +335,79 @@
     }
     return vus;
   };
-  const garesTraversees = (P, sh, i0, i1) => { let n = 0, der = -2; for (let k = i0; k <= i1; k++) { if (!sh[k]) continue; const g = gareProche(P, sh[k][0], sh[k][1], 0.4); if (g >= 0 && g !== der) { n++; der = g; } } return n; };
-  // V239 (demande de Laurent à l'époque) : estimation « ≈ » sur les gares officielles les plus proches quand le
-  // prix exact manquait. V244 : retiré à la demande de Laurent — avec la grille nationale désormais vérifiée à
-  // 100 % (18 826 + 16 918 relations, 0 gap), il ne doit plus jamais s'afficher de prix approché : exact ou rien.
+  // Indicative historical points help explain an unavailable price. They never
+  // establish a charged crossing, lane, direction, tariff or complete itinerary.
+  const portiquesCandidats = (O, sh, i0, i1) => {
+    if(!O?.candidatSource?.indicativeOnly||O.candidatSource.officialSurvey!==false)return [];
+    const found=[],pointOK=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
+    for(const g of O.candidats||[]){
+      const p=g.point;if(!pointOK(p))continue;
+      let near=false;const sx=111.32*Math.cos(p[0]*Math.PI/180),sy=111.32;
+      for(let k=i0;k<=i1&&!near;k++){
+        const a=sh[k];if(!pointOK(a))continue;
+        if(Math.abs(a[0]-p[0])<=.0006&&Math.abs(a[1]-p[1])<=.001&&dist(a[0],a[1],p[0],p[1])<=.06){near=true;break;}
+        const b=k<i1?sh[k+1]:null;if(!pointOK(b))continue;
+        if(p[0]<Math.min(a[0],b[0])-.0006||p[0]>Math.max(a[0],b[0])+.0006||p[1]<Math.min(a[1],b[1])-.001||p[1]>Math.max(a[1],b[1])+.001)continue;
+        if(dist(a[0],a[1],b[0],b[1])>1)continue;
+        const ax=(a[1]-p[1])*sx,ay=(a[0]-p[0])*sy,dx=(b[1]-a[1])*sx,dy=(b[0]-a[0])*sy,den=dx*dx+dy*dy;
+        const t=den?Math.max(0,Math.min(1,-(ax*dx+ay*dy)/den)):0;
+        near=Math.hypot(ax+t*dx,ay+t*dy)<=.06;
+      }
+      if(near)found.push(g);
+    }
+    return found;
+  };
+  const garesTraversees = (P, sh, i0, i1) => { let n = 0, der = -2; for (let k = i0; k <= i1; k++) { if (!sh[k]) continue; const g = gareProche(P, sh[k][0], sh[k][1], 0.4, true); if (g >= 0 && g !== der) { n++; der = g; } } return n; };
+  const conflitsDuTrace = (P, sh, i0, i1) => {
+    if (!P.conflits?.size) return [];
+    const gares = new Set(), noms = [];
+    for (let k = i0; k <= i1; k++) if (sh[k]) {
+      const g = gareProche(P, sh[k][0], sh[k][1], 0.4, true);
+      if (g >= 0) gares.add(g);
+    }
+    for (const cle of P.conflits) {
+      const a = Math.floor(cle / 1000), b = cle % 1000;
+      if (gares.has(a) && gares.has(b)) noms.push(joli(P.g[a][0]) + ' → ' + joli(P.g[b][0]));
+    }
+    return noms;
+  };
+  // Les estimations au kilomètre ont été retirées à la demande de Laurent.
+  // Une ligne tarifaire ne certifie pas la couverture nationale : prix officiel vérifiable ou incertitude explicite.
   // V249 : Suisse = autoroutes gratuites AVEC vignette annuelle obligatoire (40 CHF) : message d'avertissement (jamais ajouté au total des péages).
   const CH = [[5.96,46.13],[6.05,46.25],[6.25,46.33],[6.55,46.45],[6.80,46.40],[6.85,46.15],[6.97,46.03],[7.05,45.92],[7.17,45.87],[7.45,45.92],[7.66,45.98],[7.87,45.94],[8.12,46.10],[8.45,46.25],[8.8,46.05],[8.85,45.97],[9.02,45.83],[9.15,45.9],[9.1,46.18],[9.28,46.5],[9.6,46.3],[10.05,46.2],[10.45,46.52],[10.45,46.87],[10.2,46.87],[9.88,47.0],[9.5,47.06],[9.53,47.27],[9.65,47.5],[9.4,47.65],[8.9,47.68],[8.55,47.8],[8.4,47.6],[7.9,47.57],[7.6,47.6],[7.5,47.5],[7.0,47.5],[6.9,47.3],[6.7,47.1],[6.4,46.8],[6.35,46.7],[6.15,46.45],[6.1,46.3]];
   const dansCH = (lat, lon) => { let in_ = false; for (let i = 0, j = CH.length - 1; i < CH.length; j = i++) { const [xi, yi] = CH[i], [xj, yj] = CH[j]; if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) in_ = !in_; } return in_; };
   const passeEnSuisse = sh => { let n = 0; for (let k = 0; k < sh.length; k += 4) { if (dansCH(sh[k][0], sh[k][1])) { if (++n >= 3) return true; } else n = 0; } return false; };
-  const NOTE_CH = '<div style="display:block;margin:6px 0;padding:5px 9px;border-radius:8px;background:#fff;color:#b00020;border:2px solid #d52b1e;font-weight:800;font-size:.95em;line-height:1.25">🇨🇭 Vignette suisse : 40 CHF <span style="font-weight:600;font-size:.85em">(à acheter avant la frontière, 1 an · hors total péages)</span></div>';
+  const NOTE_CH = '<div style="display:block;margin:6px 0;padding:5px 9px;border-radius:8px;background:#fff;color:#b00020;border:2px solid #d52b1e;font-weight:800;font-size:.95em;line-height:1.25">🇨🇭 Vignette suisse <span style="font-weight:600;font-size:.85em">déjà comptabilisée dans les péages saisis · aucun ajout automatique. Les tunnels payants sont distincts.</span></div>';
   const BK = (cls, titre, h) => '<div class="bk bkC ' + cls + '"><div class="bkt">' + titre + '</div>' + h + '</div>';
   const valRoute = async (body) => { let err = null; for (let n = 0; n < 4; n++) { try { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000); const rr = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal }); clearTimeout(to); if (rr.ok) return await rr.json(); err = new Error('http ' + rr.status); } catch (e) { err = e; } await new Promise(s => setTimeout(s, 1500 * (n + 1))); } throw err; };
   // V250 : tout le calcul du péage se fait dans un « worker » (second fil du téléphone) : l'écran ne peut plus se figer, même sur un téléphone lent.
   // V265 : gares de péage officielles (liste du ministère) dont nous n'avons aucun tarif : un trajet qui passe à moins de 500 m n'a pas de prix exact.
-  const UNK = [[43.6028,7.07258],[43.60465,7.06636],[43.60277,7.08123],[43.60452,7.08785],[43.64326,7.13402],[43.64796,7.13896],[43.65913,7.14893],[43.70388,7.19007],[43.70015,7.18812],[43.55322,5.23792],[43.49458,5.52498],[43.22574,5.58217],[43.2019,5.59417],[45.95485,-0.88122],[45.15248,1.37792],[45.15157,1.16683],[45.148,1.17478],[43.64504,1.49789],[47.45215,0.73944],[47.34919,0.70312],[47.33062,0.68813],[47.25442,0.67097],[47.55526,0.596],[43.63298,-1.39072],[43.63007,-1.39572],[43.46217,-1.49839],[43.46097,-1.50276],[43.37197,-1.67746],[43.51232,-1.22256],[48.94757,3.04036],[48.95228,3.03819],[48.91236,2.04593],[43.54423,6.80993],[43.14434,5.76838],[43.29347,6.20051],[43.48329,5.53837],[43.70774,7.19122],[48.54645,1.91114],[48.91342,2.16271],[48.91354,2.15809],[49.05393,4.28593],[49.32195,0.30849],[43.20492,5.59053],[43.14625,5.77192],[43.32435,5.59803],[43.25774,6.12279],[43.62419,-1.40083],[43.34138,-1.74961],[43.50524,1.35211],[43.64715,1.50769],[48.78189,2.15976],[48.8301,2.1485],[48.8714,2.15683],[43.36688,5.64373]];
+  const UNK = [[43.6028,7.07258,"Antibes Ouest Sortie"],[43.60465,7.06636,"Antibes Ouest Entrée"],[43.60277,7.08123,"Antibes Est Entrée 2/2"],[43.60452,7.08785,"Sophia"],[43.64326,7.13402,"Cagnes Ouest Sud"],[43.64796,7.13896,"Cagnes Ouest Nord"],[43.65913,7.14893,"Cagnes Est"],[43.70388,7.19007,"Saint Isidore Ech Ouest Sortie"],[43.70015,7.18812,"Saint Isidore Ech Ouest Entrée"],[43.55322,5.23792,"Coudoux S"],[43.49458,5.52498,"Le Canet De Meyreuil"],[43.22574,5.58217,"Cassis"],[43.2019,5.59417,"La Ciotat Ech."],[45.95485,-0.88122,"Tonnay-Charente S"],[45.15248,1.37792,"Terrasson E"],[45.15157,1.16683,"Thenon Est E"],[45.148,1.17478,"La Bachellerie Entree"],[43.64504,1.49789,"L'Union vers l'Union"],[47.45215,0.73944,"Tours Nord"],[47.34919,0.70312,"Chambray Ouest depuis RD943"],[47.33062,0.68813,"La Thibaudiere"],[47.25442,0.67097,"Monts - Sorigny"],[47.55526,0.596,"Neuille Pont Pierre Sens 1"],[43.63298,-1.39072,"Capbreton Sortie Nord"],[43.63007,-1.39572,"Capbreton Entree"],[43.46217,-1.49839,"Bayonne Sud S"],[43.46097,-1.50276,"Bayonne Sud E"],[43.37197,-1.67746,"Saint Jean De Luz Sud S"],[43.51232,-1.22256,"Guiche Sortie"],[48.94757,3.04036,"Saint Jean les Deux Jumeaux Sortie"],[48.95228,3.03819,"Saint Jean les Deux Jumeaux Entree"],[48.91236,2.04593,"Chambourcy Entree"],[43.54423,6.80993,"Les Adrets Sud Sortie"],[43.14434,5.76838,"Bandol Echangeur"],[43.29347,6.20051,"Carnoules"],[43.48329,5.53837,"La Barque BPV"],[43.70774,7.19122,"Saint Isidore BPV Sud"],[48.54645,1.91114,"Saint-Arnoult Bpv"],[48.91342,2.16271,"Montesson BPV Sens 1"],[48.91354,2.15809,"Montesson BPV Sens 2"],[49.05393,4.28593,"Ormes BPV Entree Sens 1"],[49.32195,0.30849,"Quetteville BPV Sens 1"],[43.20492,5.59053,"La Ciotat BPV"],[43.14625,5.77192,"Bandol BPV"],[43.32435,5.59803,"Pont de L'Etoile BPV"],[43.25774,6.12279,"Puget Ville BPV"],[43.62419,-1.40083,"Benesse vers Espagne"],[43.34138,-1.74961,"Biriatou vers Espagne"],[43.50524,1.35211,"Muret vers Toulouse"],[43.64715,1.50769,"Toulouse Est vers Albi"],[48.78189,2.15976,"Pont-Colbert Bpv"],[48.8301,2.1485,"Vaucresson Le Chesnay Bpv"],[48.8714,2.15683,"Rueil-Malmaison Bpv"],[43.36688,5.64373,"Auriol"]];
   let WK = null, WKID = 0; const WKATT = new Map();
-  const CODE_WORKER = () => 'const UNK=' + JSON.stringify(UNK) + ';const dist=' + dist + ';const joli=' + joli + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';' +
-    'let P=null;const charger=async base=>{const j=await (await fetch(base+"peages-aprr.json")).json();const prix=new Map();for(const s of j.p.split(";")){const [a,b,c1,c2,d]=s.split(",");const x=parseInt(a,36),y=parseInt(b,36);prix.set(Math.min(x,y)*1000+Math.max(x,y),[c1/10,c2/10,Number(d)]);}' +
-    'const CORR={"ST MARTIN BELLEVUE A41 N":[[46.1293,6.0978],[46.1318,6.1]]};j.g.forEach(g=>{if(CORR[g[0]])g[1]=CORR[g[0]];});const Q={g:j.g,prix,v:j.v};' +
-    'try{const o=await (await fetch(base+"peages-overlay.json")).json();for(const n of (o.gares||[])){if(!Q.g.some(g=>g[0]===n.nom))Q.g.push([n.nom,n.points]);}const ix=nom=>Q.g.findIndex(g=>g[0]===nom);for(const q of (o.paires||[])){const x=ix(q[0]),y=ix(q[1]);const k=Math.min(x,y)*1000+Math.max(x,y);if(x>=0&&y>=0&&!prix.has(k))prix.set(k,[q[2],q[3],q[4]]);}}catch(_){}return Q;};' +
-    'onmessage=async e=>{const m=e.data;try{if(!P)P=await charger(m.base);const x=prixExact(P,m.sh,m.tms,0);const n=garesTraversees(P,m.sh,m.i0,m.i1);const h=[];if(m.hits){let der=-2;for(let k=m.i0;k<=m.i1;k++){const g=gareProche(P,m.sh[k][0],m.sh[k][1],0.4);if(g>=0&&g!==der){h.push([m.sh[k][0],m.sh[k][1],P.g[g][0]]);der=g;}}}postMessage({id:m.id,x,n,v:P.v,h});}catch(err){postMessage({id:m.id,err:String(err)});}};';
-  const calculPeage = async (sh, tms, km, hits) => {
+  const garesManquantes = (sh, i0, i1) => {
+    const names = new Set();
+    for (const z of UNK) for (let k = i0; k <= i1; k++) {
+      const p = sh[k];
+      if (p && Math.abs(p[0]-z[0])<0.006 && Math.abs(p[1]-z[1])<0.009 && dist(p[0],p[1],z[0],z[1])<0.5) {
+        names.add(z[2]); break;
+      }
+    }
+    return [...names];
+  };
+  const CODE_WORKER = () => 'const UNK=' + JSON.stringify(UNK) + ';const dist=' + dist + ';const joli=' + joli + ';const indexGares=' + indexGares + ';const appliquerPositionsVerifiees=' + appliquerPositionsVerifiees + ';const garesFixes=' + garesFixes + ';const tarifsEnConflit=' + tarifsEnConflit + ';const attacherTarifsOfficiels=' + attacherTarifsOfficiels + ';const prixOfficiel=' + prixOfficiel + ';const chargerTarifsOfficiels=' + chargerTarifsOfficiels + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';const conflitsDuTrace=' + conflitsDuTrace + ';' +
+    'let P=null,CHARGEMENT=null;const charger=async base=>{const j=await (await fetch(base+"peages-aprr.json")).json();const prix=new Map();for(const s of j.p.split(";")){const [a,b,c1,c2,d]=s.split(",");const x=parseInt(a,36),y=parseInt(b,36);prix.set(Math.min(x,y)*1000+Math.max(x,y),[c1/10,c2/10,Number(d)]);}' +
+    'const CORR={"ST MARTIN BELLEVUE A41 N":[[46.1293,6.0978],[46.1318,6.1]],"BOISSE Système Ouvert":[[45.82868,5.03099],[45.82879,5.03123]]};j.g.forEach(g=>{if(CORR[g[0]])g[1]=CORR[g[0]];});const Q={g:j.g,prix,v:j.v};' +
+    'try{const o=await (await fetch(base+"peages-overlay.json")).json();for(const n of (o.gares||[])){if(!Q.g.some(g=>g[0]===n.nom))Q.g.push([n.nom,n.points]);}const ix=indexGares(Q.g);appliquerPositionsVerifiees(Q,o);Q.fixes=garesFixes(Q.g,o);Q.conflits=tarifsEnConflit(Q.g,prix,o.paires);for(const q of (o.paires||[])){const x=ix(q[0]),y=ix(q[1]);const k=Math.min(x,y)*1000+Math.max(x,y);if(x>=0&&y>=0&&!prix.has(k))prix.set(k,[q[2],q[3],q[4]]);}}catch(_){}try{await chargerTarifsOfficiels(Q,base+"data/tolls/route-prices.json");}catch(_){}return Q;};' +
+    'const garesManquantes='+garesManquantes+';onmessage=async e=>{const m=e.data;try{if(!P){if(!CHARGEMENT)CHARGEMENT=charger(m.base).finally(()=>{CHARGEMENT=null;});P=await CHARGEMENT;}const x=prixExact(P,m.sh,m.tms,0,m.date);const n=garesTraversees(P,m.sh,m.i0,m.i1);const h=[];if(m.hits){let der=-2;for(let k=m.i0;k<=m.i1;k++){const g=gareProche(P,m.sh[k][0],m.sh[k][1],0.4);if(g>=0&&g!==der){h.push([m.sh[k][0],m.sh[k][1],P.g[g][0]]);der=g;}}}postMessage({id:m.id,x,n,v:P.v,h,missing:garesManquantes(m.sh,m.i0,m.i1),conflicts:conflitsDuTrace(P,m.sh,m.i0,m.i1),ambiguous:P.ambiguities||[]});}catch(err){postMessage({id:m.id,err:String(err)});}};';
+  const calculPeage = async (sh, tms, km, hits, date = new Date().toISOString().slice(0,10)) => {
     const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
     try {
       if (typeof Worker === 'undefined' || typeof Blob === 'undefined') throw new Error('pas de worker');
       if (!WK) { WK = new Worker(URL.createObjectURL(new Blob([CODE_WORKER()], { type: 'text/javascript' }))); WK.onmessage = e => { const f = WKATT.get(e.data.id); if (f) { WKATT.delete(e.data.id); e.data.err ? f.ko(new Error(e.data.err)) : f.ok(e.data); } }; WK.onerror = () => { const l = [...WKATT.values()]; WKATT.clear(); WK = null; l.forEach(f => f.ko(new Error('worker'))); }; }
-      return await new Promise((ok, ko) => { const id = ++WKID; WKATT.set(id, { ok, ko }); setTimeout(() => { if (WKATT.has(id)) { WKATT.delete(id); ko(new Error('délai')); } }, 40000); WK.postMessage({ id, hits: !!hits, base: new URL('.', location.href).href, sh, tms: [{ begin_shape_index: tms[0].begin_shape_index, end_shape_index: tms[0].end_shape_index }, { begin_shape_index: tms[tms.length - 1].begin_shape_index, end_shape_index: tms[tms.length - 1].end_shape_index }], i0, i1 }); });
+      return await new Promise((ok, ko) => { const id = ++WKID; WKATT.set(id, { ok, ko }); setTimeout(() => { if (WKATT.has(id)) { WKATT.delete(id); ko(new Error('délai')); } }, 40000); WK.postMessage({ id, date, hits: !!hits, base: new URL('.', location.href).href, sh, tms: [{ begin_shape_index: tms[0].begin_shape_index, end_shape_index: tms[0].end_shape_index }, { begin_shape_index: tms[tms.length - 1].begin_shape_index, end_shape_index: tms[tms.length - 1].end_shape_index }], i0, i1 }); });
     } catch (_) {
       const P = await chargerPeages();   // secours : calcul direct (ancienne méthode)
-      return { x: prixExact(P, sh, tms, km), n: garesTraversees(P, sh, i0, i1), v: P.v };
+      return { x: prixExact(P, sh, tms, km, date), n: garesTraversees(P, sh, i0, i1), v: P.v, missing:garesManquantes(sh,i0,i1), conflicts:conflitsDuTrace(P,sh,i0,i1), ambiguous:P.ambiguities||[] };
     }
   };
   const estimerPeage = async (r, out) => {
@@ -204,6 +417,8 @@
     const put = (h, ok) => { if (!zone) return; let hh = h; if (suisse) { const h2 = h.replace(/(<div class="rd gros c2">[\s\S]*?<\/div>)/, '$1' + NOTE_CH); hh = h2 !== h ? h2 : h + NOTE_CH; } zone.innerHTML = hh; LAY('péage'); const b = zone.closest('.bk'); if (b) b.classList.add(ok ? 'bkRenOk' : 'bkRenKo'); };
     const KO = '💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Aucune estimation affichée : seuls les tarifs officiels exacts sont montrés.</span></div>';
     try {
+      const dateTarif = r.dateTarif === undefined ? dateTarifDepart(new Date().toISOString()) : r.dateTarif;
+      if (typeof dateTarif !== 'string' || dateTarifDepart(dateTarif) !== dateTarif) { put(KO+'<div class="rd sub"><span>Date du trajet invalide : aucun tarif du jour n’est substitué.</span></div>',false); return; }
       const A = r.pts || decode(r.polyline);
       if (A.length < 2) { put(KO, false); return; }
       const a = A[0], b = A[A.length - 1];
@@ -221,7 +436,9 @@
         try { suisse = passeEnSuisse(dec6(leg.shape)); } catch (_) { suisse = false; }
         tms = leg.maneuvers.filter(m => m.toll);
         for (const m of tms) km += Number(m.length) || 0;
-        if (km < 1) { put('💶 <b>Aucun péage</b> sur ce trajet.', true); return; }
+        // A short entrance/exit ramp can contain a charged gate. Distance alone
+        // must never turn a provider's explicit toll section into a free route.
+        if (!tms.length) { put('💶 <b>Aucun péage</b> sur ce trajet.', true); return; }
         sh = dec6(leg.shape);
       } else {
         viaGoogle = true;
@@ -233,29 +450,40 @@
       }
       try {
         const tC = performance.now();
-        const R = await calculPeage(sh, tms, km), x = R.x;
+        const R = await calculPeage(sh, tms, km, false, dateTarif), x = R.x;
+        const preuves = x?.sources?.length ? ' · Grilles ' + [...new Set(x.sources.map(s=>s.id+' (effet '+s.effectiveFrom+', contrôle '+s.checkedOn+')'))].map(esc).join(', ') : '';
+        const litiges = (R.conflicts?.length ? ' Tarifs contradictoires à vérifier pour les gares proches du tracé : '+R.conflicts.map(esc).join(', ')+'.' : '') + (R.ambiguous?.length ? ' Entrée ou branche de péage à confirmer : '+R.ambiguous.map(n=>esc(joli(n.replace(/ BAR$/, ' Barrière').replace(/ ECH$/, ' Échangeur')))).join(', ')+'. Les prix de ces accès sont différents.' : '');
         window.CPT('calcul péage' + (viaGoogle ? ' (Google)' : ''), tC);
         const O = await chargerOverlay();
         const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
         const bar = O ? barrieresTraversees(O, sh, i0, i1) : [];
+        const candidats=viaGoogle?[]:portiquesCandidats(O,sh,i0,i1);
+        const reperes=candidats.length?' Repères de péage à vérifier : '+[...new Set(candidats.map(g=>g.road+' · '+g.nom))].map(esc).join(', ')+'. Données indicatives '+esc(O.candidatSource.publishedOn)+' — '+esc(O.candidatSource.publisher)+'. La proximité ne confirme ni le passage ni son prix. Un passage payant reste à régler auprès de l’exploitant.':'';
         if (x && x.ouv && x.ouv.length && !x.ouv.every(n => bar.some(v => v.id === 'aprr-area-ouvert-' + n))) { put(KO, false); return; }   // V265 : barrière à tarif fixe vue par les gares mais pas par le moteur de barrières : on ne devine pas
         if (bar.length) {
-          const auj = new Date().toISOString().slice(0, 10), pas = bar.map((v, n) => ({ type: 'barriere', station: v.id, group: v.id, passage: n }));
+          const auj = dateTarif, pas = bar.map((v, n) => ({ type: 'barriere', station: v.id, group: v.id, passage: n }));
           const t1 = O.m.trajet(pas, 1, auj), t2 = O.m.trajet(pas, 2, auj);
           const noms = bar.map(v => joli(v.id.replace(/-/g, ' '))).join(', ');
           const legOk = !!(x && x.reste < 3);
-          if (t1.complet && t2.complet && (legOk || R.n === 0)) {
+          if (t1.complet && t2.complet && !R.missing?.length && (legOk || R.n === 0)) {
             const r2 = n => Math.round(n * 100) / 100;
             const c1 = r2((legOk ? x.c1 : 0) + t1.total), c2 = r2((legOk ? x.c2 : 0) + t2.total);
             const croise = t1.status !== 'PROUVE' || t2.status !== 'PROUVE';
-            put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(c2) + '</b></div><div class="rd sub"><span>' + (legOk ? x.det + ' + ' : '') + 'barrière(s) : ' + noms + '</span></div><div class="rd sub"><span>Source : tarifs officiels 2026' + (croise ? ' (relecture en cours, à vérifier)' : '') + '</span></div>', true);
+            put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(c2) + '</b></div><div class="rd sub"><span>' + (legOk ? x.det + ' + ' : '') + 'barrière(s) : ' + noms + '</span></div><div class="rd sub"><span>Source : tarifs officiels 2026' + (croise ? ' (relecture en cours, à vérifier)' : '') + preuves + '</span></div>', true);
             return;
           }
-          put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Barrière(s) détectée(s) : ' + noms + '. Un tarif officiel manque : aucun total n’est affiché.</span></div>', false);
+          put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Barrière(s) détectée(s) : ' + noms +
+            (t1.complet && t2.complet ? '. Leurs tarifs sont connus ; le raccordement des autres tronçons est incomplet.' : '. Un tarif de barrière manque pour la classe demandée.') +
+            (R.missing?.length ? ' Points tarifaires à vérifier à proximité du tracé : '+R.missing.map(esc).join(', ')+'.' : '') + litiges + reperes + ' Aucun total partiel n’est affiché.</span></div>', false);
           return;
         }
         if (x && x.reste < 3) {
-          put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(x.c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(x.c2) + '</b></div><div class="rd sub"><span>' + x.det + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + R.v + '</span></div>', true);
+          put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(x.c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(x.c2) + '</b></div><div class="rd sub"><span>' + x.det + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + R.v + preuves + '</span></div>', true);
+          return;
+        }
+        if (R.missing?.length || litiges || reperes) {
+          const points = R.missing?.length ? 'Points tarifaires à vérifier à proximité du tracé : '+R.missing.map(esc).join(', ')+'. Leur présence près du tracé ne prouve pas leur franchissement.' : '';
+          put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>'+points+litiges+reperes+' Aucun total partiel n’est affiché.</span></div>',false);
           return;
         }
       } catch (_) { /* pas de prix officiel exact trouvé : KO plus bas, jamais d'estimation */ }
@@ -265,7 +493,7 @@
   };
   // V263 : trajet mixte (une partie sans péage, une partie avec péage) : on coupe le trajet à une gare, on demande à Google les deux moitiés (rapide / sans péage) et on garde la combinaison la moins chère (prix exact officiel) avec peu de temps en plus.
   const dens = A => { const sh = [[A[0][1], A[0][0]]]; for (let q = 1; q < A.length; q++) { const p0 = sh[sh.length - 1], p1 = [A[q][1], A[q][0]], n = Math.ceil(dist(p0[0], p0[1], p1[0], p1[1]) / 0.15); for (let u = 1; u < n; u++) sh.push([p0[0] + (p1[0] - p0[0]) * u / n, p0[1] + (p1[1] - p0[1]) * u / n]); sh.push(p1); } return sh; };
-  const prixTroncon = async poly => { try { if (!poly) return null; const sh = dens(decode(poly)); const R = await calculPeage(sh, [{ begin_shape_index: 0, end_shape_index: sh.length - 1 }], 100, true); const O = await chargerOverlay(); if (O && barrieresTraversees(O, sh, 0, sh.length - 1).length) return { x: null, h: R.h || [] }; return { x: R.x && R.x.reste < 3 ? R.x : null, h: R.h || [] }; } catch (_) { return null; } };
+  const prixTroncon = async (poly, dateTarif) => { try { if (!poly || typeof dateTarif !== 'string' || dateTarifDepart(dateTarif) !== dateTarif) return null; const sh = dens(decode(poly)); const R = await calculPeage(sh, [{ begin_shape_index: 0, end_shape_index: sh.length - 1 }], 100, true, dateTarif); const O = await chargerOverlay(); if (O && barrieresTraversees(O, sh, 0, sh.length - 1).length) return { x: null, h: R.h || [] }; return { x: R.x && R.x.reste < 3 ? R.x : null, h: R.h || [] }; } catch (_) { return null; } };
   const nomLieu = async (la, lo) => { try { const j = await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=fr&lat=' + la + '&lon=' + lo).then(x => x.json()); const a = j.address || {}; return a.city || a.town || a.village || a.municipality || a.county || null; } catch (_) { return null; } };
   const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
   const chercherMixte = async (r, target) => {
@@ -276,7 +504,7 @@
     zone.innerHTML = '<div class="doux">🟣 Recherche du meilleur trajet mixte…</div>';
     try {
       window.CPPh('mixte');
-      const pf = await prixTroncon(r.polyline);
+      const pf = await prixTroncon(r.polyline, r.dateTarif);
       if (!pf || !pf.x) { ko('Trajet mixte impossible : le prix exact du trajet rapide n’est pas disponible.'); return; }
       const H = pf.h.filter((g, i, T) => i === 0 || dist(g[0], g[1], T[i - 1][0], T[i - 1][1]) > 3);
       const inner = []; for (let i = 1; i < H.length - 1; i++) inner.push(i);
@@ -292,7 +520,7 @@
         if (aF && bT) cands.push({ p: L.p, lib: aF, pay: bT, ordre: 'FT' });
         if (aT && bF) cands.push({ p: L.p, lib: bF, pay: aT, ordre: 'TF' });
       }
-      for (const c of cands) { const q = await prixTroncon(c.pay.poly); c.x = q && q.x; }
+      for (const c of cands) { const q = await prixTroncon(c.pay.poly, r.dateTarif); c.x = q && q.x; }
       const fast = { km: r.distanceKm, min: r.durationMinutes, c1: pf.x.c1, c2: pf.x.c2 };
       const ok = cands.filter(c => c.x && c.lib.min != null && c.pay.min != null).map(c => Object.assign(c, { km: c.lib.km + c.pay.km, min: c.lib.min + c.pay.min, c1: c.x.c1, c2: c.x.c2 })).filter(c => fast.c1 - c.c1 >= 1);
       ok.forEach(c => { c.score = (fast.c1 - c.c1) - 0.2 * Math.max(0, c.min - fast.min); });
@@ -437,7 +665,7 @@
       }
       try {
         const kk = mode + '|' + lieu(origin) + '|' + lieu(destination) + '|' + (departureTime || ''); let pr = EST.get(kk); if (!pr) { const t0 = performance.now(); pr = window.CPRoutes.estimate({ endpoint, accessToken: s?.access_token, refreshToken: s?.refresh_token, expiresAt: s?.expires_at, email: s?.email, userId: s?.user_id, supabaseUrl: c?.url, supabaseApiKey: c?.anonKey, origin, destination, mode, departureTime }); EST.set(kk, pr); pr.then(() => window.CPT('Google', t0), () => EST.delete(kk)); setTimeout(() => EST.delete(kk), 120000); } const r = await pr;
-        render(out, r, mode === 'voiture' ? 'DRIVE' : 'TRANSIT');
+        render(out, routeDatee(r,departureTime), mode === 'voiture' ? 'DRIVE' : 'TRANSIT');
       } catch (e) { out.textContent = /failed to fetch|networkerror|load failed|aborted/i.test(String(e.message || e)) ? 'Connexion au serveur de trajets impossible. Vérifie ta connexion (wifi ou 4G), puis réessaie.' : String(e.message || e); }
     });
   };

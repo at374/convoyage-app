@@ -1,0 +1,50 @@
+name: Verify official SAPN A131 gaps
+on:
+  pull_request:
+    paths:
+      - 'scripts/verify_sapn_a131.py'
+      - 'data/tolls/reviewed/sapn-a131*.json'
+      - 'tests/test_sapn_a131.py'
+      - '.github/workflows/verify-sapn-a131.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  reviewed-extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run offline source-coordinate and extract tests
+        run: python -m unittest discover -s tests -p 'test_*.py'
+      - name: Verify captured official table column without network
+        run: python scripts/verify_sapn_a131.py --extract data/tolls/reviewed/sapn-a131-source-extract-2026.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sapn-a131-reviewed-extract-proof
+          path: tmp/sapn-a131-result.json
+          retention-days: 14
+  live-pdf:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y poppler-utils
+      - name: Live download is a separate check; HTTP failures must remain failures
+        run: python scripts/verify_sapn_a131.py --source-copy tmp/sapn-2026-source.pdf
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sapn-a131-live-source-proof
+          path: |
+            tmp/sapn-a131-result.json
+            tmp/sapn-2026-source.pdf
+          if-no-files-found: ignore
+          retention-days: 14

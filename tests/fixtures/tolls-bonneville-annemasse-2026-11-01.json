@@ -1,0 +1,250 @@
+{
+  "source": "https://valhalla1.openstreetmap.de/route",
+  "coordinateSource": "https://geo.api.gouv.fr/communes",
+  "queriedOn": "2026-11-01",
+  "scope": "Public commune centres, not a mission or physical access validation",
+  "locations": [
+    {
+      "nom": "Bonneville",
+      "code": "74042",
+      "centre": {
+        "type": "Point",
+        "coordinates": [
+          6.404,
+          46.0786
+        ]
+      },
+      "_score": 1.13335
+    },
+    {
+      "nom": "Annemasse",
+      "code": "74012",
+      "centre": {
+        "type": "Point",
+        "coordinates": [
+          6.2476,
+          46.189
+        ]
+      },
+      "_score": 1.37628
+    }
+  ],
+  "summary": {
+    "has_time_restrictions": false,
+    "has_toll": true,
+    "has_highway": true,
+    "has_ferry": false,
+    "min_lat": 46.072672,
+    "min_lon": 6.230191,
+    "max_lat": 46.189899,
+    "max_lon": 6.40684,
+    "time": 1421.566,
+    "length": 23.371,
+    "cost": 1621.246
+  },
+  "shape": "sxl{vAuf|eKdt@mh@fKsHfPsLrP{Lv[sUtBgB~Bs@zGqG`KoJbDuBv@_AJHTLT@TILIh@lAx@lBRd@zc@rcAp@|Ap@|A`A~CPj@Vj@P\\Zh@XZXXf@^h@XfBx@Lr@Pp@Tl@Xh@\\b@^\\TdDLnAPdBNhALt@VtAf@vBVz@Xv@zCtHjGnP~CfIp@fBdM~[~CfIpAhDnAnE|@`D~@xCr@zAObCDdAB~@`@|Bx@hBjApAtAn@~A`B`BvCfFtKvNz^hPxd@t@|BjGfVvCdL`@hBvD`Pf@pCl@dDjEtXp@lFfD~Xh@rGhAfMHhAXxDzBf_@xAlv@AdOAtBCbCcAfg@wAnLq@lFYtAi@fAu@t@m@hA}I~V]rAMzAA~ALzAZtADdBEbBQ`B_@|BIj@SfBIhBKrEc@`GSbGA`GJ`GRdLJfCr@tVVhK\\lMRdG?HXnGTrGJrDp@fXJhEJlDDhBLzEj@~MT`G^|Qp@p]|Alq@j@dVJ|DtBx_At@rZlBho@NhLBzNG`O{AhTkC|Qc@nBk@`C}@dC_AfCmDdIeDhJe@fBc@fCYzCGlBEhD@jBDjDb@`NHxEBnD?zCEpCKxCa@xEg@jEm@fEaA~FgAlGsAvGcAjEiAbE_DfK_A`D_AvCmBpFyCzIaD|HcEvI{FfLcLbTcGhKiGxJae@tp@ca@|b@ep@jq@qa@~a@}z@f{@_sBntBmSlTwEhFePfQiTnVwSpVy[z`@yYh`@aObT{Q~WaQdXuQrYoOxWo[|j@}\\|n@mgAnwBmdB~hDag@paAck@deA{a@`t@mb@bs@ca@lo@ma@bn@Yb@y_@tj@i`@xi@g\\bc@a^de@_^`c@eSdVsUjX}l@fq@_n@|o@_n@bn@i]j\\{\\zZ}]h[o]zY{v@pn@wq@fh@io@dd@an@~a@obFthD_g@z\\yh@z]mm@|a@}i@z`@i]nWq]pXi_Ajw@iv@`r@ys@tr@sx@xy@}Zn\\kYx[{]xa@q\\z`@_\\ha@y\\hc@qs@r`Agl@nv@oa@jh@uDxE}ThXk[z^{VdYef@zh@ej@hk@i^|]iVbUqRjQqUpScTvQgNpLuOzLg@`@gXfTmPnMoRnNq_@zXse@b\\cZfS}k@n_@w{AnaA{TbOi`@~WqXnRcVfQsYzSwWvSkXnTsj@xd@ok@rf@ij@ne@ie@``@oe@z]iRbMaSrLmRnK_RjJoR~IqTbJoYlKgVhIi\\bK_Z`Js]xK_U~GiSdGwy@bWki@fQwX~Jwa@pPma@zQ}BjA_HnDm]nQgMdHoLfH_\\tSaWlQuWhSkV~RySzQiX`WoVxViVxWaUhWgTdXmTxYyDnF{U`]mRbZsN`VeN`VuMrVyLnUyO~[sN`[gLhW}KjXgMb\\iMf]oLz]qLt^iNvd@cPzl@aNjj@}Kpf@yJdf@}FxZmGf]oFvYea@nzBybArkFk@vCi@pDmEbZqB~Ls`@pwCiFva@mGx`@oVdyAoAzHwCtOyGz^_uBffLoQp`AyPl{@iRn}@sm@fqCynCpeMobAjsEm\\h~AaZlyAsLlm@cMtp@_Gt[qG~]mIvd@{kBvyKyW||AoOx|@}R|iAgN`t@_GxWeHtYeF`SkGlT_IfVyGxRqHvR}IfT{Nl[qKvSiKfRcGxJ{GvKiKfOkNlRyL`OySlUaQtPgLxJaLdJoKnHsVjPkb@dX{`@rW_NnJeOrKqNnKwM`K}JtImKbJqLlLgKvKcLdMqL|NmPlTyPhUme@`p@kHrJcJfLsO|PwKpLgLxKsI|HqSzPeQjNwU|Q{UhRmOjMkItHcIdI{F`G}FhGmJrKuDtEgBzBsYl]qLtOyKbPuJjPqHxNmGpM}EnKsLbYmCxGeIlSkChH{AjEm@lBi@nB_BzGuAbH_BzGe@~Aq@tAy@hAaAx@gAb@kANgBJcAgAiA}@oAa@sAEsAVa@Lk@\\}BOw@Mu@UeCeAaD}Ds@w@y@m@}@_@_AS_AGaBI_BDoAZgBr@gBj@sAPqAA}NwAaBqAcBcAiB{@iBm@gA[i@OCAm@Qug@sNqBk@i@QeD}@oDcDm@o@s@{@k@}@u@yAs@{AYeASqAIeACmABiAJmATsAZeAb@}@b@k@^_@j@a@^Qb@Oh@Kl@Ed@@b@Dj@Jb@Nh@VfDFdAEbAQz@Wn@Yl@a@n@g@x@{Cv@gCz@gCtJyWtDuJ`Nc]xYat@jC{FjDwG|EcHrCkDfDsDhD_DnDkClMsHtj@e[~HaCvAYzAYzB[`@Vd@Nd@Fd@?d@Ib@Q`@Y^a@Xg@Ti@Po@Js@Ds@fAcAv@s@`A}@lIuHf~@sh@vHaFzGiFrFwE~FuFzGuHbGqHhGsIjFqI~DoHtDqHlH{PvEsMzIsWxSun@nDkKtRcl@hMw_@fCkIpAaFz@yD|@uEj@uDf@oD`@eEZ}DVqEPiDHgDFeED}D@iDAkCEgCKeCWwE[qD_@oDa@sCo@{D{@yDk@_Cw@yCg@aBgAoDyAqE}AyDsAmCyAsCaDuFwIoTyAaDOcAOi@Qg@Sa@W_@Y[[W]Q]M_@I_@C[@[B[HcCCs@Es@Gu@Oo@Si@UcDuAeAa@oA[uA[uKgByE}@_Eq@}Ba@}Bg@{FeBiASkSyCaFeA}KqCsBg@uF_BkC_AwB}@wBiA_As@eAs@Wy@]q@_@o@e@e@e@a@k@Yk@Qk@Gm@Ai@Be@Jg@Pc@Vc@\\_@`@]f@gAAo@Ai@EkAScRaEgy@iVsPcFgXcIi[gKmGsBiD}@c@Cu@Ci@Iq@EoAa@oAg@eBeAAi@Ck@Iy@Ow@Qu@Wq@[m@]i@a@c@i@a@m@Yo@Oo@Gq@@o@Jm@Rm@\\g@f@e@j@_@t@}@Ca@Ai@Ek@Ks@SmEkByQqFuZwJoHmBuGyB_EgAqS}EiLkCqPcF_QiFuGsByEuA}ImCcQcFiM_EkGiBuFyA_L_DyAc@qFgBwKqDcGwBgCy@yAi@mHkCoOeGmLqE}H{CgC}@sIgEmWoMsFqCyViMyD}Bw@k@y@o@u@q@w@y@oBwBsAuA{A}AEy@Iw@Mw@Qs@Uo@Wm@]g@]c@a@_@c@Yg@Qe@Mg@Gi@?g@Dg@Je@Pc@Vc@\\_@b@]h@[l@Up@St@Mx@Ix@Cz@A|@Bv@Ft@Jt@Np@Rp@Tj@Xh@Zd@^^`@Z`@VtAhIdAlGNp@T|@rAhEdBdN~AhNxAjNbAbK~@`Kv@fJ",
+  "maneuvers": [
+    {
+      "begin_shape_index": 0,
+      "end_shape_index": 11,
+      "length": 0.335,
+      "street_names": [
+        "Quai du Parquet"
+      ]
+    },
+    {
+      "begin_shape_index": 11,
+      "end_shape_index": 16,
+      "length": 0.006
+    },
+    {
+      "begin_shape_index": 16,
+      "end_shape_index": 32,
+      "length": 0.158,
+      "street_names": [
+        "Avenue des Glières",
+        "D 1205"
+      ]
+    },
+    {
+      "begin_shape_index": 32,
+      "end_shape_index": 38,
+      "length": 0.013
+    },
+    {
+      "begin_shape_index": 38,
+      "end_shape_index": 58,
+      "length": 0.188,
+      "street_names": [
+        "Avenue des Glières"
+      ]
+    },
+    {
+      "begin_shape_index": 58,
+      "end_shape_index": 65,
+      "length": 0.032
+    },
+    {
+      "begin_shape_index": 65,
+      "end_shape_index": 94,
+      "length": 0.574,
+      "street_names": [
+        "Avenue des Glières"
+      ]
+    },
+    {
+      "begin_shape_index": 94,
+      "end_shape_index": 102,
+      "length": 0.062
+    },
+    {
+      "begin_shape_index": 102,
+      "end_shape_index": 143,
+      "length": 0.704,
+      "street_names": [
+        "D 1203"
+      ]
+    },
+    {
+      "begin_shape_index": 143,
+      "end_shape_index": 427,
+      "toll": true,
+      "length": 17.395,
+      "street_names": [
+        "A 40",
+        "E 25",
+        "Autoroute Blanche"
+      ]
+    },
+    {
+      "begin_shape_index": 427,
+      "end_shape_index": 451,
+      "toll": true,
+      "length": 0.407
+    },
+    {
+      "begin_shape_index": 451,
+      "end_shape_index": 458,
+      "length": 0.029
+    },
+    {
+      "begin_shape_index": 458,
+      "end_shape_index": 476,
+      "length": 0.117,
+      "street_names": [
+        "Carrefour de l'Europe"
+      ]
+    },
+    {
+      "begin_shape_index": 476,
+      "end_shape_index": 488,
+      "length": 0.129,
+      "street_names": [
+        "Route des Déportés",
+        "D 1206"
+      ]
+    },
+    {
+      "begin_shape_index": 488,
+      "end_shape_index": 522,
+      "length": 0.116,
+      "street_names": [
+        "D 1206"
+      ]
+    },
+    {
+      "begin_shape_index": 522,
+      "end_shape_index": 542,
+      "length": 0.438,
+      "street_names": [
+        "Avenue de l'Europe",
+        "D 1206"
+      ]
+    },
+    {
+      "begin_shape_index": 542,
+      "end_shape_index": 555,
+      "length": 0.027
+    },
+    {
+      "begin_shape_index": 555,
+      "end_shape_index": 611,
+      "length": 0.91,
+      "street_names": [
+        "Avenue de l'Europe",
+        "D 1206"
+      ]
+    },
+    {
+      "begin_shape_index": 611,
+      "end_shape_index": 625,
+      "length": 0.026,
+      "street_names": [
+        "Rond-Point de l'Europe"
+      ]
+    },
+    {
+      "begin_shape_index": 625,
+      "end_shape_index": 652,
+      "length": 0.25,
+      "street_names": [
+        "Avenue de l'Europe",
+        "D 1206"
+      ]
+    },
+    {
+      "begin_shape_index": 652,
+      "end_shape_index": 668,
+      "length": 0.039,
+      "street_names": [
+        "Rond-Point des Trois Noyers"
+      ]
+    },
+    {
+      "begin_shape_index": 668,
+      "end_shape_index": 686,
+      "length": 0.341,
+      "street_names": [
+        "Avenue de l'Europe",
+        "D 1206"
+      ]
+    },
+    {
+      "begin_shape_index": 686,
+      "end_shape_index": 706,
+      "length": 0.049,
+      "street_names": [
+        "Place du Maréchal de Lattre de Tassigny"
+      ]
+    },
+    {
+      "begin_shape_index": 706,
+      "end_shape_index": 752,
+      "length": 0.791,
+      "street_names": [
+        "D 1206"
+      ]
+    },
+    {
+      "begin_shape_index": 752,
+      "end_shape_index": 791,
+      "length": 0.087,
+      "street_names": [
+        "Carrefour du Beulet"
+      ]
+    },
+    {
+      "begin_shape_index": 791,
+      "end_shape_index": 802,
+      "length": 0.143,
+      "street_names": [
+        "Avenue Lucie Aubrac"
+      ]
+    },
+    {
+      "begin_shape_index": 802,
+      "end_shape_index": 802,
+      "length": 0.0
+    }
+  ]
+}

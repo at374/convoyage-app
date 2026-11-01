@@ -1,0 +1,248 @@
+{
+  "reviewedAt": "2026-11-01",
+  "scope": "Prioritised AURA access and Swiss charges; source products are not route or eligibility certificates",
+  "nationalCompletenessVerified": false,
+  "vignette": {
+    "id": "swiss-vignette-2026",
+    "source": "https://www.bazg.admin.ch/fr/faq-vignette-et-achat-d-e-vignette",
+    "corroboratingSource": "https://www.ch.ch/en/vehicles-and-traffic/how-to-behave-in-road-traffic/motorway-vignette/",
+    "edition": 2026,
+    "currency": "CHF",
+    "amount": 40,
+    "validFrom": "2025-12-01",
+    "validThrough": "2027-01-31",
+    "maxVehicleKg": 3500,
+    "maxTrailerKg": 3500,
+    "separateTrailerVignette": true,
+    "binding": {
+      "sticker": "vehicle",
+      "electronic": "country_and_registration"
+    },
+    "heavyVehicleCharge": "separate RPLP/RPLF rules; no automatic 40 CHF quotation",
+    "routeVerified": false,
+    "accounting": "Already represented in existing toll inputs; reference only, no additional automatic charge",
+    "automaticallyAddToTrip": false
+  },
+  "grandSaintBernard": {
+    "id": "grand-saint-bernard",
+    "source": "https://letunnel.com/fr/",
+    "effectiveFrom": "2026-02-01",
+    "reviewedYear": 2026,
+    "paymentCurrencyByDepartureSide": {
+      "CH": "CHF",
+      "IT": "EUR"
+    },
+    "nativeCategoriesRequired": true,
+    "productOrder": [
+      "single",
+      "roundTrip",
+      "tenPass",
+      "twentyPass"
+    ],
+    "prices": {
+      "A1": {
+        "EUR": [
+          20,
+          28,
+          130,
+          180
+        ],
+        "CHF": [
+          19,
+          26.5,
+          123.5,
+          171
+        ]
+      },
+      "A2": {
+        "EUR": [
+          33.5,
+          53.5,
+          137.5,
+          181
+        ],
+        "CHF": [
+          32,
+          51,
+          131,
+          173
+        ]
+      },
+      "B1": {
+        "EUR": [
+          52.5,
+          84,
+          315,
+          420
+        ],
+        "CHF": [
+          50,
+          80,
+          300,
+          400
+        ]
+      },
+      "B2/B3": {
+        "EUR": [
+          91.5,
+          146.5,
+          686.5,
+          1098
+        ],
+        "CHF": [
+          87,
+          139,
+          652.5,
+          1044
+        ]
+      },
+      "3A/3B": {
+        "EUR": [
+          133,
+          213,
+          997.5,
+          1596
+        ],
+        "CHF": [
+          127,
+          203,
+          952.5,
+          1524
+        ]
+      },
+      "4": {
+        "EUR": [
+          202,
+          323,
+          1515,
+          2424
+        ],
+        "CHF": [
+          192.5,
+          308,
+          1444,
+          2310
+        ]
+      }
+    },
+    "validity": {
+      "roundTripDays": 30,
+      "tenPassYears": 2,
+      "twentyPassYears": 2
+    },
+    "fiftyPass": {
+      "currency": "CHF",
+      "days": 60,
+      "prices": {
+        "A1": 285,
+        "A2": 320
+      },
+      "requiresPrivateIndividual": true,
+      "requiresSISEXContract": true,
+      "automaticallyApplicable": false
+    },
+    "categoryNotes": {
+      "A2": "Front-axle height below 1.30 m and total height at most 2 m; not an automatic French class-1 mapping",
+      "B1": "Total height above 2 m and at most 3 m; use operator category proof"
+    },
+    "promotionalReturnOffers": "Separate eligibility proof and event terms required; not applied",
+    "routeVerified": false
+  },
+  "muntLaSchera": {
+    "id": "munt-la-schera",
+    "source": "https://www.tunnelticket.ch/en/page/prices",
+    "currency": "CHF",
+    "effectiveFrom": null,
+    "validThrough": null,
+    "versionDateConfirmed": false,
+    "passengerAndDeliveryMaxSeats": 9,
+    "passengerAndDeliveryMaxKg": 3500,
+    "products": {
+      "summerMayNovember": {
+        "online": {
+          "single": 15,
+          "roundTrip": 25
+        },
+        "cashpoint": {
+          "single": 17,
+          "roundTrip": 28
+        }
+      },
+      "winterDecemberAprilSaturday": {
+        "online": {
+          "single": 29,
+          "roundTrip": 42
+        },
+        "cashpoint": {
+          "single": 35,
+          "roundTrip": 50
+        }
+      },
+      "winterDecemberAprilSundayFriday": {
+        "online": {
+          "single": 20,
+          "roundTrip": 35
+        },
+        "cashpoint": {
+          "single": 25,
+          "roundTrip": 42
+        }
+      }
+    },
+    "otherVehicleProducts": {
+      "motorcycle": {
+        "online": {
+          "single": 11,
+          "roundTrip": 17
+        },
+        "cashpoint": {
+          "single": 13,
+          "roundTrip": 20
+        }
+      },
+      "caravanCamperAndMinibus10to19Seats": {
+        "online": {
+          "single": 23,
+          "roundTrip": 41
+        },
+        "cashpoint": {
+          "single": 25,
+          "roundTrip": 44
+        }
+      },
+      "bus20plusSeats": {
+        "online": {
+          "single": 83,
+          "roundTrip": 157
+        },
+        "cashpoint": {
+          "single": 90,
+          "roundTrip": 171
+        }
+      },
+      "truck": {
+        "single": 44,
+        "roundTrip": 88
+      }
+    },
+    "prepaidCard": {
+      "faceValuesCHF": [
+        500,
+        1000
+      ],
+      "localPurchaseCHF": [
+        400,
+        750
+      ],
+      "touristPurchaseCHF": [
+        450,
+        850
+      ],
+      "localArea": "Martina–Sils i.E., Livigno, Val Müstair",
+      "eligibilityVerified": false
+    },
+    "cashEuroNote": "Page states EUR cash payment with change in CHF; no exchange rate or EUR total inferred",
+    "automaticallyApplicable": false,
+    "routeVerified": false
+  }
+}

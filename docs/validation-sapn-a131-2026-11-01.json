@@ -1,0 +1,85 @@
+{
+  "status": "official-extract-column-verified",
+  "sourceUrl": "https://www.autoroutes.sanef.com/sites/default/files/2026-01/2026_02-Grille-SAPN.pdf",
+  "sourceExtractSha256": "bc5af7732c9cc60956d393b86f98f0672362b57fbf5efcad238096e4d6be04b9",
+  "sourceDocumentSha256": null,
+  "effectiveFrom": "2026-02-01",
+  "verifiedAt": "2026-11-01T06:35:35.886175+00:00",
+  "records": [
+    {
+      "origin": "INCARVILLE N°19 / A154",
+      "destination": "TANCARVILLE (A131)",
+      "vehicleClass": 1,
+      "amountEur": 5.8,
+      "sourcePage": 2,
+      "sourceColumnIndex": 10,
+      "sourceRowLabel": "INCARVILLE"
+    },
+    {
+      "origin": "HEUDEBOUVILLE N°18",
+      "destination": "TANCARVILLE (A131)",
+      "vehicleClass": 1,
+      "amountEur": 5.9,
+      "sourcePage": 2,
+      "sourceColumnIndex": 10,
+      "sourceRowLabel": "HEUDEBOUVILLE"
+    },
+    {
+      "origin": "CHAUFOUR N°15 à GAILLON N°17",
+      "destination": "TANCARVILLE (A131)",
+      "vehicleClass": 1,
+      "amountEur": 7.9,
+      "sourcePage": 2,
+      "sourceColumnIndex": 10,
+      "sourceRowLabel": "CHAUFOUR"
+    },
+    {
+      "origin": "POISSY / ORGEVAL N°7 à MANTES-SUD N°12",
+      "destination": "TANCARVILLE (A131)",
+      "vehicleClass": 1,
+      "amountEur": 10.9,
+      "sourcePage": 2,
+      "sourceColumnIndex": 10,
+      "sourceRowLabel": "POISSY"
+    },
+    {
+      "origin": "INCARVILLE N°19 / A154",
+      "destination": "TANCARVILLE (A131)",
+      "vehicleClass": 2,
+      "amountEur": 9.4,
+      "sourcePage": 3,
+      "sourceColumnIndex": 10,
+      "sourceRowLabel": "INCARVILLE"
+    },
+    {
+      "origin": "HEUDEBOUVILLE N°18",
+      "destination": "TANCARVILLE (A131)",
+      "vehicleClass": 2,
+      "amountEur": 9.4,
+      "sourcePage": 3,
+      "sourceColumnIndex": 10,
+      "sourceRowLabel": "HEUDEBOUVILLE"
+    },
+    {
+      "origin": "CHAUFOUR N°15 à GAILLON N°17",
+      "destination": "TANCARVILLE (A131)",
+      "vehicleClass": 2,
+      "amountEur": 12.6,
+      "sourcePage": 3,
+      "sourceColumnIndex": 10,
+      "sourceRowLabel": "CHAUFOUR"
+    },
+    {
+      "origin": "POISSY / ORGEVAL N°7 à MANTES-SUD N°12",
+      "destination": "TANCARVILLE (A131)",
+      "vehicleClass": 2,
+      "amountEur": 17.5,
+      "sourcePage": 3,
+      "sourceColumnIndex": 10,
+      "sourceRowLabel": "POISSY"
+    }
+  ],
+  "routeVerified": false,
+  "nationalCompletenessVerified": false,
+  "rawPdfDownload": "HTTP 403 on GitHub; source text reviewed separately"
+}

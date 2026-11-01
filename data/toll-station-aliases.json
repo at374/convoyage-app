@@ -1,0 +1,72 @@
+{
+  "scope": "Reviewed station name aliases; no generic abbreviation expansion or removal of road/direction qualifiers",
+  "aliases": [
+    {
+      "tariffName": "BELLEVILLE SUR SAONE",
+      "officialNames": [
+        "Belleville S/Saone"
+      ],
+      "routes": [
+        "69A900605CD"
+      ]
+    },
+    {
+      "tariffName": "BONNEVILLE EST",
+      "officialNames": [
+        "Bonneville Est Entrée",
+        "Bonneville Est Sortie"
+      ],
+      "routes": [
+        "74A904025CD"
+      ],
+      "barrierId": "atmb-bonneville-zi"
+    },
+    {
+      "tariffName": "BONNEVILLE OUEST",
+      "officialNames": [
+        "Bonneville Ouest S1",
+        "Bonneville Ouest S2"
+      ],
+      "routes": [
+        "74A904030CD"
+      ],
+      "barrierId": "atmb-bonneville-centre"
+    },
+    {
+      "tariffName": "DIJON-ARC SUR TILLE",
+      "officialNames": [
+        "Dijon-Arc S/Tille"
+      ],
+      "routes": [
+        "21A903115CD"
+      ]
+    },
+    {
+      "tariffName": "NUITS-SAINT-GEORGES",
+      "officialNames": [
+        "Nuits-St-Georges"
+      ],
+      "routes": [
+        "21A903105CD"
+      ]
+    },
+    {
+      "tariffName": "L'ISLE-SUR-LE-DOUBS",
+      "officialNames": [
+        "L'Isle-S/Le-Doubs"
+      ],
+      "routes": [
+        "25A903630CD"
+      ]
+    },
+    {
+      "tariffName": "SAINT DENIS-LES-SENS",
+      "officialNames": [
+        "St-Denis-Les-Sens"
+      ],
+      "routes": [
+        "89A901905CD"
+      ]
+    }
+  ]
+}
