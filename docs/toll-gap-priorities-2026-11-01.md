@@ -30,3 +30,5 @@ Sources checked on 1 November 2026:
 - Prado Sud operator: https://www.tunnelsprado.com/nos-ouvrages/tunnel-prado-sud (no readable numerical price recovered).
 
 The Swiss motorway vignette remains in existing user toll inputs. No additional motorway or vignette charge is introduced. This investigation changes no operational prices, mission data, auth, synchronization, deployment or paid service.
+
+A79 source follow-up: `data/tolls/reviewed/aliae-a79-2026.json` and `toll-a79-prices.cjs` now retain/query all 140 conditional published amounts. `docs/toll-a79-2026.md` describes the native vehicle contexts, one-product Transit rule and subtotal-only combination. This completes source lookup for the ten published products; the nine runtime labels still lack verified GPS geometry. The earlier endpoint counts therefore remain unchanged.
