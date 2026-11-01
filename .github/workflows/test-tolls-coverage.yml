@@ -10,6 +10,7 @@ on:
       - 'toll-a79-prices.cjs'
       - 'scripts/complete-aprr-open.cjs'
       - 'scripts/audit-toll-runtime-gaps.cjs'
+      - 'scripts/import-free-flow-gantries.cjs'
       - 'scripts/audit-aura-toll-coverage.cjs'
       - 'tests/toll-*.test.cjs'
       - 'scripts/build-toll-route-prices.cjs'

@@ -10,6 +10,8 @@ const conflicting=require('../fixtures/tolls-conflicting-fares.json');
 const official=require('../fixtures/tolls-official-directed-prices.json');
 const ambiguous=require('../fixtures/tolls-ambiguous-branches.json');
 const cases=[{name:'La Ciotat unresolved public trace',leg:fixture},{name:'Bonneville / Annemasse public trace',leg:require('../fixtures/tolls-bonneville-annemasse-2026-11-01.json'),prices:['3,50','6,20']}];
+const a79Point=overlay.portiques_candidats.find(g=>g.nom==='Portique flux libre Le Montet Ouest').point;
+cases.push({name:'Synthetic A79 indicative gantry',gantry:true,leg:{shape:encode6([[a79Point[0]-.0006,a79Point[1]],a79Point,[a79Point[0]+.0006,a79Point[1]]]),maneuvers:[{begin_shape_index:0,end_shape_index:2,toll:true,length:.2}]}});
 const aiton=require('../../peages-aprr.json').g.find(g=>g[0]==='AITON')[1][0];
 for(const [name,prices]of [['ST MICHEL MAURIENNE BAR',['10,20','15,00']],['ST MICHEL MAURIENNE ECH',['8,20','11,90']]]){const p=overlay.gares.find(g=>g.nom===name).points[0];cases.push({name:'Synthetic Saint-Michel '+name,prices,leg:{shape:encode6([aiton,p]),maneuvers:[{begin_shape_index:0,end_shape_index:1,toll:true,length:60}]}});}
 const tarare=overlay.barrieres.find(b=>b.id==='asf-tarare-est-ouvert').points[0];
@@ -56,6 +58,7 @@ for(const [name,c1,c2]of [['BONNEVILLE EST','1,70','3,10'],['BONNEVILLE OUEST','
    },{fixture:scenario.leg,date:scenario.date});
    const text=await page.locator('[data-peage]').innerText();
    if(scenario.swissNoToll){assert.match(text,/Aucun péage/);assert.match(text,/déjà comptabilisée/);assert.match(text,/aucun ajout automatique/);assert.doesNotMatch(text,/40 CHF|80 CHF|Classe 1|Classe 2/);}
+   else if(scenario.gantry){assert.match(text,/Prix exact non disponible/);assert.match(text,/Repères de péage à vérifier/);assert.match(text,/Le Montet Ouest/);assert.match(text,/Maxime Lopes/);assert.match(text,/2025-10-25/);assert.match(text,/ne confirme ni le passage ni son prix/);assert.doesNotMatch(text,/Classe 1|Classe 2|Aucun péage/);}
    else if(scenario.prices){assert.match(text,/Classe 1/);assert.match(text,/Classe 2/);for(const price of scenario.prices)assert.ok(text.includes(price),text);assert.doesNotMatch(text,/Prix exact non disponible|Aucun péage/);}
    else if(scenario.unconfirmed){assert.match(text,/Prix exact non disponible/);assert.doesNotMatch(text,/Classe 1|Classe 2|Aucun péage/);}
    else if(scenario.ambiguous){assert.match(text,/Entrée ou branche de péage à confirmer/);assert.match(text,/Twin Barrière/);assert.match(text,/Twin Échangeur/);assert.doesNotMatch(text,/Classe 1|Classe 2|Aucun péage/);}

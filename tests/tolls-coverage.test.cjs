@@ -7,7 +7,7 @@ const root = path.join(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'routes-ui.js'), 'utf8');
 const fixture = require('./fixtures/tolls-saint-vulbas-la-ciotat-2026-10-31.json');
 const read = name => JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
-const exposed = source.replace('  let rafale = false;', '  window.audit={appliquerPositionsVerifiees,routeDatee,dateTarifDepart,chargerTarifsOfficiels,attacherTarifsOfficiels,prixOfficiel,indexGares,garesFixes,tarifsEnConflit,conflitsDuTrace,calculPeage,chargerPeages,prixExact,garesManquantes,barrieresTraversees,dec6,CODE_WORKER,estimerPeage};let rafale = false;');
+const exposed = source.replace('  let rafale = false;', '  window.audit={portiquesCandidats,appliquerPositionsVerifiees,routeDatee,dateTarifDepart,chargerTarifsOfficiels,attacherTarifsOfficiels,prixOfficiel,indexGares,garesFixes,tarifsEnConflit,conflitsDuTrace,calculPeage,chargerPeages,prixExact,garesManquantes,barrieresTraversees,dec6,CODE_WORKER,estimerPeage};let rafale = false;');
 function load() {
   const ctx = {window:{CPPeage:require('../peage-engine.js')},document:{documentElement:{},body:{offsetHeight:0}},MutationObserver:class{observe(){}},performance:{now:()=>0},AbortController,setInterval:()=>0,
     setTimeout:(fn,ms)=>ms<10?setTimeout(fn,ms):0,clearTimeout,URL,
@@ -17,6 +17,32 @@ function load() {
   return {api:ctx.window.audit,ctx};
 }
 const plain = value => JSON.parse(JSON.stringify(value));
+test('indicative gantry proximity respects segments, sampling gaps, windows and source status',()=>{
+ const {api}=load(),s=read('data/tolls/reviewed/free-flow-gantries-2025.json'),g=s.records.find(g=>g.nom==='Portique flux libre Le Montet Ouest'),p=g.point;
+ const o={candidatSource:s.source,candidats:[g]},sh=[[p[0]-.002,p[1]],[p[0]+.002,p[1]]];
+ assert.deepEqual(plain(api.portiquesCandidats(o,sh,0,1)),[g]);
+ assert.deepEqual(plain(api.portiquesCandidats(o,sh.slice().reverse(),0,1)),[g]);
+ assert.equal(api.portiquesCandidats(o,[[p[0]-.02,p[1]],[p[0]+.02,p[1]]],0,1).length,0);
+ assert.equal(api.portiquesCandidats(o,sh.map(q=>[q[0],q[1]+.005]),0,1).length,0);
+ assert.equal(api.portiquesCandidats(o,[p,...sh.map(q=>[q[0],q[1]+.005])],1,2).length,0);
+ assert.equal(api.portiquesCandidats({...o,candidatSource:{...s.source,officialSurvey:true}},sh,0,1).length,0);
+ assert.equal(api.portiquesCandidats(null,sh,0,1).length,0);
+ assert.equal(api.portiquesCandidats({...o,candidats:[{...g,point:[NaN,3]}]},sh,0,1).length,0);
+});
+test('unpriced A79 component names its indicative gantry without quoting a total or certifying passage',async()=>{
+ const {api,ctx}=load(),s=read('data/tolls/reviewed/free-flow-gantries-2025.json'),p=s.records.find(g=>g.nom==='Portique flux libre Le Montet Ouest').point;
+ const sh=[[p[0]-.0006,p[1]],p,[p[0]+.0006,p[1]]],tms=[{begin_shape_index:0,end_shape_index:2,toll:true,length:.2}];
+ const key=[...sh[0],...sh[2]].map(n=>Number(n).toFixed(3)).join('|');
+ ctx.window.CPValP={[key]:Promise.resolve({trip:{legs:[{shape:encode6(sh),maneuvers:tms}]}})};
+ let html='';const zone={set innerHTML(s){html=s;},closest:()=>({classList:{add(){}}})};
+ await api.estimerPeage({pts:sh.map(p=>[p[1],p[0]])},{querySelector:()=>zone});
+ assert.match(html,/Repères de péage à vérifier/);assert.match(html,/Le Montet Ouest/);assert.match(html,/2025-10-25/);assert.match(html,/Maxime Lopes/);
+ assert.match(html,/ne confirme ni le passage ni son prix/);assert.match(html,/Aucun total partiel/);assert.doesNotMatch(html,/Classe 1|Classe 2|Aucun péage/);
+ // A straight Google fallback is not a provider road trace for this diagnostic.
+ ctx.window.CPValP={[key]:Promise.resolve({trip:{legs:[]}})};
+ const fetchBase=ctx.fetch;ctx.fetch=async url=>String(url).includes('valhalla1.openstreetmap.de')?{ok:true,json:async()=>({trip:{legs:[]}})}:fetchBase(url);
+ await api.estimerPeage({pts:sh.map(p=>[p[1],p[0]])},{querySelector:()=>zone});assert.doesNotMatch(html,/Repères de péage à vérifier/);
+});
 function route(api) {
   const sh=api.dec6(fixture.shape), tms=fixture.maneuvers.filter(m=>m.toll);
   return {sh,tms,i0:tms[0].begin_shape_index,i1:tms.at(-1).end_shape_index};

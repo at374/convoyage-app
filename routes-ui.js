@@ -320,7 +320,7 @@
       if (!window.CPPeage) await new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'peage-engine.js'; s.onload = ok; s.onerror = ko; document.head.appendChild(s); });
       const j = await fetch('peages-overlay.json').then(r => r.json());
       const versions = j.tarifs.map(t => ({ id: t.id, barrier_station_id: t.b || null, vehicle_class: t.c, amount_eur: t.a, status: t.s, effective_from: t.f, effective_to: t.t || null, tariff_context: t.k || null, source_url: t.u == null ? null : j.u[t.u] }));
-      OVERLAY = { m: window.CPPeage.creerMoteur({ versions }), b: j.barrieres, v: j.v };
+      OVERLAY = { m: window.CPPeage.creerMoteur({ versions }), b: j.barrieres, v: j.v, candidats:j.portiques_candidats||[], candidatSource:j.portiques_source||null };
     } catch (_) { OVERLAY = false; }
     return OVERLAY;
   };
@@ -334,6 +334,28 @@
       }
     }
     return vus;
+  };
+  // Indicative historical points help explain an unavailable price. They never
+  // establish a charged crossing, lane, direction, tariff or complete itinerary.
+  const portiquesCandidats = (O, sh, i0, i1) => {
+    if(!O?.candidatSource?.indicativeOnly||O.candidatSource.officialSurvey!==false)return [];
+    const found=[],pointOK=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite);
+    for(const g of O.candidats||[]){
+      const p=g.point;if(!pointOK(p))continue;
+      let near=false;const sx=111.32*Math.cos(p[0]*Math.PI/180),sy=111.32;
+      for(let k=i0;k<=i1&&!near;k++){
+        const a=sh[k];if(!pointOK(a))continue;
+        if(Math.abs(a[0]-p[0])<=.0006&&Math.abs(a[1]-p[1])<=.001&&dist(a[0],a[1],p[0],p[1])<=.06){near=true;break;}
+        const b=k<i1?sh[k+1]:null;if(!pointOK(b))continue;
+        if(p[0]<Math.min(a[0],b[0])-.0006||p[0]>Math.max(a[0],b[0])+.0006||p[1]<Math.min(a[1],b[1])-.001||p[1]>Math.max(a[1],b[1])+.001)continue;
+        if(dist(a[0],a[1],b[0],b[1])>1)continue;
+        const ax=(a[1]-p[1])*sx,ay=(a[0]-p[0])*sy,dx=(b[1]-a[1])*sx,dy=(b[0]-a[0])*sy,den=dx*dx+dy*dy;
+        const t=den?Math.max(0,Math.min(1,-(ax*dx+ay*dy)/den)):0;
+        near=Math.hypot(ax+t*dx,ay+t*dy)<=.06;
+      }
+      if(near)found.push(g);
+    }
+    return found;
   };
   const garesTraversees = (P, sh, i0, i1) => { let n = 0, der = -2; for (let k = i0; k <= i1; k++) { if (!sh[k]) continue; const g = gareProche(P, sh[k][0], sh[k][1], 0.4, true); if (g >= 0 && g !== der) { n++; der = g; } } return n; };
   const conflitsDuTrace = (P, sh, i0, i1) => {
@@ -435,6 +457,8 @@
         const O = await chargerOverlay();
         const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
         const bar = O ? barrieresTraversees(O, sh, i0, i1) : [];
+        const candidats=viaGoogle?[]:portiquesCandidats(O,sh,i0,i1);
+        const reperes=candidats.length?' Repères de péage à vérifier : '+[...new Set(candidats.map(g=>g.road+' · '+g.nom))].map(esc).join(', ')+'. Données indicatives '+esc(O.candidatSource.publishedOn)+' — '+esc(O.candidatSource.publisher)+'. La proximité ne confirme ni le passage ni son prix. Un passage payant reste à régler auprès de l’exploitant.':'';
         if (x && x.ouv && x.ouv.length && !x.ouv.every(n => bar.some(v => v.id === 'aprr-area-ouvert-' + n))) { put(KO, false); return; }   // V265 : barrière à tarif fixe vue par les gares mais pas par le moteur de barrières : on ne devine pas
         if (bar.length) {
           const auj = dateTarif, pas = bar.map((v, n) => ({ type: 'barriere', station: v.id, group: v.id, passage: n }));
@@ -450,16 +474,16 @@
           }
           put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Barrière(s) détectée(s) : ' + noms +
             (t1.complet && t2.complet ? '. Leurs tarifs sont connus ; le raccordement des autres tronçons est incomplet.' : '. Un tarif de barrière manque pour la classe demandée.') +
-            (R.missing?.length ? ' Points tarifaires à vérifier à proximité du tracé : '+R.missing.map(esc).join(', ')+'.' : '') + litiges + ' Aucun total partiel n’est affiché.</span></div>', false);
+            (R.missing?.length ? ' Points tarifaires à vérifier à proximité du tracé : '+R.missing.map(esc).join(', ')+'.' : '') + litiges + reperes + ' Aucun total partiel n’est affiché.</span></div>', false);
           return;
         }
         if (x && x.reste < 3) {
           put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(x.c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(x.c2) + '</b></div><div class="rd sub"><span>' + x.det + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + R.v + preuves + '</span></div>', true);
           return;
         }
-        if (R.missing?.length || litiges) {
+        if (R.missing?.length || litiges || reperes) {
           const points = R.missing?.length ? 'Points tarifaires à vérifier à proximité du tracé : '+R.missing.map(esc).join(', ')+'. Leur présence près du tracé ne prouve pas leur franchissement.' : '';
-          put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>'+points+litiges+' Aucun total partiel n’est affiché.</span></div>',false);
+          put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>'+points+litiges+reperes+' Aucun total partiel n’est affiché.</span></div>',false);
           return;
         }
       } catch (_) { /* pas de prix officiel exact trouvé : KO plus bas, jamais d'estimation */ }

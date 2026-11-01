@@ -1,0 +1,2 @@
+# Preserve downloaded Windows-1252/CRLF source bytes for hash verification.
+data/tolls/reviewed/free-flow-gantries-2025.csv -text -diff
