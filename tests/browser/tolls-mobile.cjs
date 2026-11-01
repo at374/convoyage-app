@@ -5,7 +5,7 @@ const root=path.resolve(__dirname,'../..'),fixture=require('../fixtures/tolls-sa
 const script=fs.readFileSync(path.join(root,'routes-ui.js'),'utf8').replace('  let rafale = false;','  window.audit={dec6,estimerPeage};let rafale = false;');
 function encode6(points){let a=0,b=0,s='';const put=n=>{let v=n<0?~(n<<1):n<<1;while(v>=32){s+=String.fromCharCode((32|(v&31))+63);v>>=5;}s+=String.fromCharCode(v+63);};for(const p of points){const x=Math.round(p[0]*1e6),y=Math.round(p[1]*1e6);put(x-a);put(y-b);a=x;b=y;}return s;}
 const overlay=JSON.parse(fs.readFileSync(path.join(root,'peages-overlay.json'),'utf8'));
-const cases=[{name:'La Ciotat unresolved public trace',leg:fixture}];
+const cases=[{name:'La Ciotat unresolved public trace',leg:fixture},{name:'Bonneville / Annemasse public trace',leg:require('../fixtures/tolls-bonneville-annemasse-2026-11-01.json'),prices:['3,50','6,20']}];
 for(const [name,c1,c2]of [['BONNEVILLE EST','1,70','3,10'],['BONNEVILLE OUEST','1,30','2,30']]){
  const p=overlay.gares.find(g=>g.nom===name).points[0];
  // Synthetic single-gate component input, not a road route or real mission.

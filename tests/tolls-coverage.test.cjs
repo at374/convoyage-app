@@ -158,3 +158,12 @@ test('merged southern station names stay unique and retain precise ministry poin
   assert.ok(data.provenance.ministryPoints.every(point=>data.points.some(p=>p[0]===point[0]&&p[1]===point[1])));
  }
 });
+test('recorded public Bonneville / Annemasse trace uses fixed gates without inventing Scientrier',async()=>{
+ const f=require('./fixtures/tolls-bonneville-annemasse-2026-11-01.json'),{api}=load(),sh=api.dec6(f.shape),tms=f.maneuvers.filter(m=>m.toll);
+ const result=await api.calculPeage(sh,tms,f.summary.length,false);
+ assert.equal(result.n,0);assert.equal(result.x,null);assert.deepEqual(plain(result.missing),[]);
+ const o=read('peages-overlay.json'),bars=api.barrieresTraversees({b:o.barrieres},sh,tms[0].begin_shape_index,tms.at(-1).end_shape_index);
+ assert.deepEqual(plain(bars.map(b=>b.id)),['atmb-bonneville-centre','atmb-nangy']);
+ const p=await api.chargerPeages();assert.equal(api.indexGares(p.g)('SCIENTRIER'),-1);
+ assert.equal(f.summary.length,23.371);
+});

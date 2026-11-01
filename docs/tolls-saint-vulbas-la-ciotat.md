@@ -68,3 +68,11 @@ Ces prix s'affichent dans les tests de composant à un seul péage, avec des tra
 Validation: 38 tests Node, 2 Python; six scénarios Chromium Pixel 7 (La Ciotat, Bonneville Est, Bonneville Ouest, chacun en vrai Blob worker et en secours direct). Pas de test sur appareil Android physique ni de déploiement. Les conflits de la PR empêchaient jusque-là le lancement des contrôles pull_request; leurs résultats doivent être revérifiés après publication de la résolution.
 
 Un autre faux résultat gratuit est corrigé: un tronçon marqué à péage par le calculateur était déclaré sans péage quand sa longueur totale était inférieure à 1 km. La distance seule ne suffit plus; les tests Bonneville utilisent des sections synthétiques de 200 m et exigent les tarifs de barrière, jamais « Aucun péage ».
+
+## Essai public A40 — Bonneville → Annemasse
+
+Le 1er novembre, un appel public Valhalla a été effectué à partir des centres communaux fournis par `geo.api.gouv.fr`: Bonneville (6.404,46.0786) → Annemasse (6.2476,46.189). La réponse enregistrée dans `tests/fixtures/tolls-bonneville-annemasse-2026-11-01.json` fait 23,371 km. Le moteur y détecte Bonneville Centre et Nangy et affiche 3,50 euros en classe 1 et 6,20 euros en classe 2, cohérents avec les deux tarifs de barrières ATMB publiés. Aucun ancrage fictif à Scientrier n'est nécessaire.
+
+C'est un tracé routier réel calculé à partir de coordonnées publiques, contrairement aux cas de composant synthétiques. Il ne correspond pas à une mission et ne confirme ni l'accès physique final ni le trafic au moment d'un départ. Le navigateur rejoue la réponse enregistrée, sans solliciter de service externe dans les tests.
+
+Validation locale: **39 tests Node**, **2 Python**, **huit cas Chromium mobile** (quatre scénarios, chacun en vrai worker et en secours direct). Le commit de correction 9d32442 a passé les deux workflows GitHub; les résultats du commit ajoutant ce cas enregistré doivent être vérifiés séparément.
