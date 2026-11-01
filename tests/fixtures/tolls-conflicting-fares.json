@@ -1,0 +1,53 @@
+{
+  "scope": "Synthetic conflict test, no real station or itinerary",
+  "base": {
+    "g": [
+      [
+        "Alpha",
+        [
+          [
+            48,
+            2.5
+          ]
+        ]
+      ],
+      [
+        "Beta",
+        [
+          [
+            48,
+            2.52
+          ]
+        ]
+      ]
+    ],
+    "p": "0,1,10,20,2",
+    "v": "synthetic"
+  },
+  "overlay": {
+    "gares": [],
+    "paires": [
+      [
+        "ALPHA",
+        "BETA",
+        2,
+        3,
+        2
+      ]
+    ],
+    "barrieres": [],
+    "tarifs": [],
+    "u": []
+  },
+  "leg": {
+    "shape": "__upzA_yqwC?_af@",
+    "maneuvers": [
+      {
+        "begin_shape_index": 0,
+        "end_shape_index": 1,
+        "length": 2,
+        "toll": true
+      }
+    ]
+  }
+}

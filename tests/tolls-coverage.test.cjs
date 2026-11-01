@@ -7,7 +7,7 @@ const root = path.join(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'routes-ui.js'), 'utf8');
 const fixture = require('./fixtures/tolls-saint-vulbas-la-ciotat-2026-10-31.json');
 const read = name => JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
-const exposed = source.replace('  let rafale = false;', '  window.audit={indexGares,garesFixes,calculPeage,chargerPeages,prixExact,garesManquantes,barrieresTraversees,dec6,CODE_WORKER,estimerPeage};let rafale = false;');
+const exposed = source.replace('  let rafale = false;', '  window.audit={indexGares,garesFixes,tarifsEnConflit,conflitsDuTrace,calculPeage,chargerPeages,prixExact,garesManquantes,barrieresTraversees,dec6,CODE_WORKER,estimerPeage};let rafale = false;');
 function load() {
   const ctx = {window:{CPPeage:require('../peage-engine.js')},document:{documentElement:{},body:{offsetHeight:0}},MutationObserver:class{observe(){}},performance:{now:()=>0},setInterval:()=>0,
     setTimeout:(fn,ms)=>ms<10?setTimeout(fn,ms):0,clearTimeout,URL,
@@ -61,6 +61,8 @@ test('actual generated worker matches direct loader and unresolved-station diagn
   assert.equal(reply.err,undefined);
   assert.equal(reply.x,null);
   assert.deepEqual(plain(reply.missing),plain(api.garesManquantes(sh,i0,i1)));
+  assert.deepEqual(plain(reply.conflicts),plain(api.conflitsDuTrace(p,sh,i0,i1)));
+  assert.deepEqual(plain(vm.runInContext('[...P.conflits]',worker)),plain([...p.conflits]));
   assert.deepEqual(plain(vm.runInContext('[...P.prix]',worker)),plain([...p.prix]));
   assert.deepEqual(plain(vm.runInContext('P.g',worker)),plain(p.g));
 });
@@ -166,4 +168,41 @@ test('recorded public Bonneville / Annemasse trace uses fixed gates without inve
  assert.deepEqual(plain(bars.map(b=>b.id)),['atmb-bonneville-centre','atmb-nangy']);
  const p=await api.chargerPeages();assert.equal(api.indexGares(p.g)('SCIENTRIER'),-1);
  assert.equal(f.summary.length,23.371);
+});
+test('conflicting spellings and class-2 prices cannot silently win by loading order',()=>{
+ const {api}=load(),gares=[['Alpha',[[48,2.5]]],['Bêta',[[48,2.52]]]],base=new Map([[1,[1,2,2]]]);
+ assert.equal(api.tarifsEnConflit(gares,base,[['ALPHA','BETA',1,2,2]]).size,0);
+ assert.deepEqual([...api.tarifsEnConflit(gares,base,[['ALPHA','BETA',1,3,2]])],[1]);
+ const rows=[['Alpha','Bêta',1,2,2],['ALPHA','BETA',4,5,2]];
+ assert.deepEqual([...api.tarifsEnConflit(gares,new Map(),rows)],[1]);
+ assert.deepEqual([...api.tarifsEnConflit(gares,new Map(),[...rows].reverse())],[1]);
+ assert.deepEqual(base.get(1),[1,2,2]);
+ assert.deepEqual([...api.tarifsEnConflit(gares,new Map(),[['Alpha','Bêta',null,2,2]])],[1]);
+});
+test('a disputed pair is refused while an independent coherent route remains priced',()=>{
+ const {api}=load(),g=[['Alpha',[[48,2.5]]],['Beta',[[48,2.52]]],['Gamma',[[48.1,2.5]]],['Delta',[[48.1,2.52]]]],prix=new Map([[1,[1,2,2]],[2003,[3,4,2]]]);
+ const p={g,prix},tms=[{begin_shape_index:0,end_shape_index:1}];
+ assert.equal(api.prixExact(p,[g[0][1][0],g[1][1][0]],tms,2).c1,1);
+ p.conflits=api.tarifsEnConflit(g,prix,[['ALPHA','BETA',2,2,2]]);
+ assert.equal(api.prixExact(p,[g[0][1][0],g[1][1][0]],tms,2),null);
+ assert.equal(api.prixExact(p,[g[2][1][0],g[3][1][0]],tms,2).c1,3);
+ assert.deepEqual(plain(api.conflitsDuTrace(p,[g[0][1][0],g[1][1][0]],0,1)),['Alpha → Beta']);
+ assert.deepEqual(plain(api.conflitsDuTrace(p,[g[2][1][0],g[3][1][0]],0,1)),[]);
+});
+test('stored La Saulce / La Ciotat contradictions are exposed without replacing either source',async()=>{
+ const {api}=load(),p=await api.chargerPeages(),o=read('peages-overlay.json'),ix=api.indexGares(p.g),a=ix('LA SAULCE'),b=ix('LA CIOTAT');
+ assert.ok(a>=0&&b>=0);
+ assert.ok(p.conflits.has(Math.min(a,b)*1000+Math.max(a,b)));
+ assert.ok(o.paires.some(q=>q[0]==='La Ciotat'&&q[1]==='La Saulce'&&q[2]===20&&q[3]===28.6));
+ assert.ok(o.paires.some(q=>q[0]==='LA SAULCE'&&q[1]==='LA CIOTAT'&&q[2]===18.6&&q[3]===26.4));
+});
+test('the renderer explains a tariff contradiction and never presents the first price as exact',async()=>{
+ const f=require('./fixtures/tolls-conflicting-fares.json'),{api,ctx}=load();
+ ctx.fetch=async url=>({ok:true,json:async()=>plain(String(url).includes('peages-aprr.json')?f.base:f.overlay)});
+ const sh=api.dec6(f.leg.shape),key=[...sh[0],...sh.at(-1)].map(n=>Number(n).toFixed(3)).join('|');
+ ctx.window.CPValP={[key]:Promise.resolve({trip:{legs:[f.leg]}})};
+ let html='',state;const zone={set innerHTML(s){html=s;},closest:()=>({classList:{add:s=>{state=s;}}})};
+ await api.estimerPeage({pts:sh.map(p=>[p[1],p[0]])},{querySelector:()=>zone});
+ assert.match(html,/Tarifs contradictoires/);assert.match(html,/Alpha → Beta/);
+ assert.doesNotMatch(html,/Classe 1|Classe 2|Aucun péage/);assert.equal(state,'bkRenKo');
 });
