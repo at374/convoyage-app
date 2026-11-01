@@ -7,7 +7,7 @@ const root = path.join(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'routes-ui.js'), 'utf8');
 const fixture = require('./fixtures/tolls-saint-vulbas-la-ciotat-2026-10-31.json');
 const read = name => JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
-const exposed = source.replace('  let rafale = false;', '  window.audit={indexGares,chargerPeages,prixExact,garesManquantes,barrieresTraversees,dec6,CODE_WORKER,estimerPeage};let rafale = false;');
+const exposed = source.replace('  let rafale = false;', '  window.audit={indexGares,garesFixes,calculPeage,chargerPeages,prixExact,garesManquantes,barrieresTraversees,dec6,CODE_WORKER,estimerPeage};let rafale = false;');
 function load() {
   const ctx = {window:{CPPeage:require('../peage-engine.js')},document:{documentElement:{},body:{offsetHeight:0}},MutationObserver:class{observe(){}},performance:{now:()=>0},setInterval:()=>0,
     setTimeout:(fn,ms)=>ms<10?setTimeout(fn,ms):0,clearTimeout,URL,
@@ -93,7 +93,7 @@ test('all 13 connected stations retain exact ministry coordinates and stored tar
   for(const g of added){
     assert.ok(ix(g.nom)>=0);
     assert.equal(g.provenance.crossingConfirmed,false);
-    for(const point of g.points)assert.ok(m.d.some(r=>r[2]===point[0]&&r[3]===point[1]&&g.provenance.officialNames.includes(r[0])));
+    for(const point of (g.provenance.ministryPoints||g.points))assert.ok(m.d.some(r=>r[2]===point[0]&&r[3]===point[1]&&g.provenance.officialNames.includes(r[0])));
     assert.ok(o.paires.some(q=>q.slice(0,2).includes(g.nom)),'station must retain a stored tariff: '+g.nom);
   }
   // Merely adding Cassis coordinates cannot override the unresolved route guard.
@@ -122,4 +122,39 @@ test('reviewed aliases reproduce 7 stations from the ministry and retain Bonnevi
   // Locating Bonneville must not invent that missing endpoint.
   assert.equal(b,-1);
   assert.deepEqual(o.paires.find(q=>q[0]==='BONNEVILLE EST'&&q[1]==='SCIENTRIER'),['BONNEVILLE EST','SCIENTRIER',1.7,3.1,12]);
+});
+test('only explicit fixed-barrier links at identical coordinates exclude ticket stations',()=>{
+  const {api}=load(),g=[['Gate',[[46,6]]]],o={gares:[{nom:'Gate',points:[[46,6]],barrierId:'fixed'}],barrieres:[{id:'fixed',points:[[46,6]]}]};
+  assert.deepEqual([...api.garesFixes(g,o)],[0]);
+  assert.equal(api.garesFixes(g,{...o,barrieres:[]}).size,0);
+  assert.equal(api.garesFixes(g,{...o,gares:[{...o.gares[0],barrierId:'other'}]}).size,0);
+  assert.equal(api.garesFixes([['Gate',[[46.0001,6]]]],o).size,0);
+});
+function encode6(points){let lat=0,lon=0,text='';const put=n=>{let v=n<0?~(n<<1):n<<1;while(v>=32){text+=String.fromCharCode((32|(v&31))+63);v>>=5;}text+=String.fromCharCode(v+63);};for(const p of points){const a=Math.round(p[0]*1e6),b=Math.round(p[1]*1e6);put(a-lat);put(b-lon);lat=a;lon=b;}return text;}
+for(const [name,barrierId,c1,c2]of [['BONNEVILLE EST','atmb-bonneville-zi',1.7,3.1],['BONNEVILLE OUEST','atmb-bonneville-centre',1.3,2.3]]){
+ test(name+' single-gate component renders its existing fixed tariffs, direct and actual worker agree',async()=>{
+  const {api,ctx}=load(),p=await api.chargerPeages(),o=read('peages-overlay.json'),g=o.gares.find(g=>g.nom===name),point=g.points[0];
+  assert.ok(p.fixes.has(api.indexGares(p.g)(name)));
+  // Synthetic component trace at surveyed gate, not a public-road itinerary or mission.
+  const sh=[[point[0]-.0006,point[1]],point,[point[0]+.0006,point[1]]],tms=[{begin_shape_index:0,end_shape_index:2,toll:true,length:0.2}];
+  const r=await api.calculPeage(sh,tms,0.2,false);assert.equal(r.n,0);assert.equal(r.x,null);assert.deepEqual(plain(r.missing),[]);
+  let reply;const wk={fetch:ctx.fetch,postMessage:v=>{reply=v;}};vm.createContext(wk);vm.runInContext(api.CODE_WORKER(),wk);
+  await wk.onmessage({data:{id:4,sh,tms,i0:0,i1:2,base:'https://test.local/'}});
+  assert.equal(reply.err,undefined);assert.equal(reply.n,0);assert.deepEqual(plain(vm.runInContext('[...P.fixes]',wk)),plain([...p.fixes]));
+  assert.deepEqual(plain(api.barrieresTraversees({b:o.barrieres},sh,0,2).map(b=>b.id)),[barrierId]);
+  const key=[...sh[0],...sh[2]].map(n=>Number(n).toFixed(3)).join('|');
+  ctx.window.CPValP={[key]:Promise.resolve({trip:{legs:[{shape:encode6(sh),maneuvers:tms}]}})};
+  let html='',state;const zone={set innerHTML(s){html=s;},closest:()=>({classList:{add:s=>{state=s;}}})};
+  await api.estimerPeage({pts:sh.map(p=>[p[1],p[0]])},{querySelector:()=>zone});
+  assert.match(html,/Classe 1/);assert.match(html,/Classe 2/);assert.match(html,new RegExp(c1.toFixed(2).replace('.',',')));assert.match(html,new RegExp(c2.toFixed(2).replace('.',',')));
+  assert.doesNotMatch(html,/Prix exact non disponible|Aucun péage/);assert.equal(state,'bkRenOk');
+ });
+}
+test('merged southern station names stay unique and retain precise ministry points',async()=>{
+ const {normalize}=require('../scripts/connect-toll-stations.cjs'),{api}=load(),p=await api.chargerPeages(),ix=api.indexGares(p.g),o=read('peages-overlay.json');
+ for(const name of ['CASSIS','CARNOULES','CAGNES EST']){
+  const matches=p.g.filter(g=>normalize(g[0])===normalize(name));assert.equal(matches.length,1,name);
+  assert.ok(ix(name)>=0);const data=o.gares.find(g=>normalize(g.nom)===normalize(name));
+  assert.ok(data.provenance.ministryPoints.every(point=>data.points.some(p=>p[0]===point[0]&&p[1]===point[1])));
+ }
 });

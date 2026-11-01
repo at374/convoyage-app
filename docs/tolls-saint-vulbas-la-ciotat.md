@@ -54,3 +54,17 @@ Les points sont ceux du ministère et conservent leur provenance. Les entrées/s
 Résultat: **18 949 clés tarifaires chargeables**, soit **105** de plus après le raccordement initial des 13 gares; **286** libellés restent sans localisation. Les 20 gares ajoutées depuis le premier commit de la PR ne signifient pas 20 prix complets disponibles sur tous leurs trajets. Les tarifs Bonneville Est/Ouest → Scientrier, notamment, restent bloqués par l'extrémité Scientrier non localisée.
 
 Validation locale finale de cette étape: **34 tests Node**, 2 Python, Chromium mobile (vrai worker puis secours), syntaxe et diff réussis. Les tests refusent les alias sur mauvaise route ou sans tous leurs noms officiels, distinguent Bonneville Est/Ouest et conservent l'incertitude Scientrier.
+
+## 1er novembre — intégration de main et correction des barrières ATMB
+
+Les ajouts concurrents de `main` 43ca171534506f122196b58c96bd8736b24fc458 sont préservés: nouveaux horaires SNCF/SIBRA et 372 lignes tarifaires supplémentaires dans l'overlay. Le conflit JSON est résolu sans réinitialisation de branche. Cassis, Carnoules et Cagnes Est existent désormais sous un seul nom de gare chacun; leurs coordonnées ajoutées sur main restent présentes, et les points ministériels précis sont conservés séparément dans la provenance. Aucun prix de main n'est écrasé.
+
+La vérification ATMB a identifié une régression introduite par la localisation de Bonneville: ces péages sont déjà tarifés par le moteur de barrières fixes, mais les nouvelles gares les faisaient aussi rechercher comme des couples entrée/sortie. Les deux gares portent maintenant un lien explicite vers les barrières existantes. Le moteur de tickets les exclut seulement si les coordonnées de la gare et celles de la barrière sont exactement concordantes. Sans lien, avec un identifiant inconnu ou des coordonnées divergentes, l'exclusion est refusée. Le moteur versionné de barrières reste seul responsable du montant et de la validité à la date demandée. Aucun point fictif « Scientrier » n'est ajouté.
+
+Source opérateur vérifiée le 1er novembre: https://www.atmb.com/telepeage-tarifs/tarifs-peage-autoroute-blanche-a40-vehicules-legers/ (tarifs applicables au 1er février 2026). Bonneville Centre: classes 1/2 = 1,30/2,30 euros; Bonneville Zones Industrielles: 1,70/3,10 euros. Les montants étaient déjà dans l'overlay et ne sont pas changés. Aucun abonnement ou rabais n'est appliqué.
+
+Ces prix s'affichent dans les tests de composant à un seul péage, avec des tracés synthétiques passant par les coordonnées de la barrière; ils ne constituent pas une validation d'itinéraire réel, d'accès ou de mission. Les tests du corridor public vers La Ciotat continuent à refuser un total partiel.
+
+Validation: 38 tests Node, 2 Python; six scénarios Chromium Pixel 7 (La Ciotat, Bonneville Est, Bonneville Ouest, chacun en vrai Blob worker et en secours direct). Pas de test sur appareil Android physique ni de déploiement. Les conflits de la PR empêchaient jusque-là le lancement des contrôles pull_request; leurs résultats doivent être revérifiés après publication de la résolution.
+
+Un autre faux résultat gratuit est corrigé: un tronçon marqué à péage par le calculateur était déclaré sans péage quand sa longueur totale était inférieure à 1 km. La distance seule ne suffit plus; les tests Bonneville utilisent des sections synthétiques de 200 m et exigent les tarifs de barrière, jamais « Aucun péage ».

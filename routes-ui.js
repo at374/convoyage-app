@@ -77,6 +77,19 @@
     });
     return nom => exact.has(nom) ? exact.get(nom) : (cle(nom) ? (normal.get(cle(nom)) ?? -1) : -1);
   };
+  // Only explicitly linked gates at exactly the same surveyed positions belong
+  // exclusively to the fixed-barrier engine. A nearby gate is not equivalent.
+  const garesFixes = (gares, overlay) => {
+    const fixes = new Set(), ix = indexGares(gares);
+    for (const g of overlay.gares || []) {
+      if (!g.barrierId || !g.points?.length) continue;
+      const b = (overlay.barrieres || []).find(b => b.id === g.barrierId);
+      const i = ix(g.nom);
+      if (i >= 0 && b && gares[i][1].every(p => b.points.some(q => p[0] === q[0] && p[1] === q[1])) &&
+          g.points.every(p => b.points.some(q => p[0] === q[0] && p[1] === q[1]))) fixes.add(i);
+    }
+    return fixes;
+  };
   const chargerPeages = async () => {
     if (PEAGES) return PEAGES;
     const j = await fetch('peages-aprr.json').then(r => r.json());
@@ -93,14 +106,15 @@
       const o = await fetch('peages-overlay.json').then(r => r.json());
       for (const n of (o.gares || [])) { if (!PEAGES.g.some(g => g[0] === n.nom)) PEAGES.g.push([n.nom, n.points]); }
       const ix = indexGares(PEAGES.g);
+      PEAGES.fixes = garesFixes(PEAGES.g, o);
       for (const q of (o.paires || [])) { const x = ix(q[0]), y = ix(q[1]); const k = Math.min(x, y) * 1000 + Math.max(x, y); if (x >= 0 && y >= 0 && !prix.has(k)) prix.set(k, [q[2], q[3], q[4]]); }
     } catch (_) { /* sans ajouts : tarifs d'origine seuls */ }
     return PEAGES;
   };
-  const gareProche = (P, lat, lon, max) => {
+  const gareProche = (P, lat, lon, max, ticketsSeulement = false) => {
     if (!P.gi) { const gi = new Map(); P.g.forEach((g, i) => g[1].forEach(p => { const c = Math.floor(p[0] / 0.02) + ',' + Math.floor(p[1] / 0.02); let L = gi.get(c); if (!L) gi.set(c, L = []); L.push([i, p[0], p[1]]); })); P.gi = gi; }   // V255 : index par carreaux de 2 km (avant : toutes les gares testées pour chaque point du tracé = écran figé sur téléphone)
     let bi = -1, bd = max; const dl = max / 111, dn = max / (111 * Math.max(0.2, Math.cos(lat * Math.PI / 180)));
-    for (let a = Math.floor((lat - dl) / 0.02); a <= Math.floor((lat + dl) / 0.02); a++) for (let b = Math.floor((lon - dn) / 0.02); b <= Math.floor((lon + dn) / 0.02); b++) { const L = P.gi.get(a + ',' + b); if (!L) continue; for (const q of L) { if (Math.abs(q[1] - lat) > dl || Math.abs(q[2] - lon) > dn) continue; const d = dist(lat, lon, q[1], q[2]); if (d < bd || (d === bd && bi >= 0 && q[0] < bi)) { bd = d; bi = q[0]; } } }
+    for (let a = Math.floor((lat - dl) / 0.02); a <= Math.floor((lat + dl) / 0.02); a++) for (let b = Math.floor((lon - dn) / 0.02); b <= Math.floor((lon + dn) / 0.02); b++) { const L = P.gi.get(a + ',' + b); if (!L) continue; for (const q of L) { if (ticketsSeulement && P.fixes?.has(q[0])) continue; if (Math.abs(q[1] - lat) > dl || Math.abs(q[2] - lon) > dn) continue; const d = dist(lat, lon, q[1], q[2]); if (d < bd || (d === bd && bi >= 0 && q[0] < bi)) { bd = d; bi = q[0]; } } }
     return bi;
   };
   const prixExact = (P, sh, tms, km) => {
@@ -109,7 +123,7 @@
     if (!sh[i0] || !sh[i1]) return null;
     const hits = [];
     let der = -2;
-    for (let k = i0; k <= i1; k++) { const g = gareProche(P, sh[k][0], sh[k][1], 0.4); if (g >= 0 && g !== der) { hits.push({ g, k }); der = g; } }
+    for (let k = i0; k <= i1; k++) { const g = gareProche(P, sh[k][0], sh[k][1], 0.4, true); if (g >= 0 && g !== der) { hits.push({ g, k }); der = g; } }
     // V265 : si le tracé passe près d'une gare officielle dont nous n'avons aucun tarif, le prix exact est refusé (jamais de prix partiel).
     if (typeof UNK !== 'undefined') for (let k = i0; k <= i1; k++) { const w = sh[k]; if (!w) continue; for (let u = 0; u < UNK.length; u++) { const z = UNK[u]; if (Math.abs(w[0] - z[0]) < 0.006 && Math.abs(w[1] - z[1]) < 0.009 && dist(w[0], w[1], z[0], z[1]) < 0.5) return null; } }
     // V259 : barrières « système ouvert » à tarif fixe : leur tarif est ajouté par le moteur de barrières (overlay) ; ici elles sont seulement retirées de la recherche des couples de gares.
@@ -177,7 +191,7 @@
     }
     return vus;
   };
-  const garesTraversees = (P, sh, i0, i1) => { let n = 0, der = -2; for (let k = i0; k <= i1; k++) { if (!sh[k]) continue; const g = gareProche(P, sh[k][0], sh[k][1], 0.4); if (g >= 0 && g !== der) { n++; der = g; } } return n; };
+  const garesTraversees = (P, sh, i0, i1) => { let n = 0, der = -2; for (let k = i0; k <= i1; k++) { if (!sh[k]) continue; const g = gareProche(P, sh[k][0], sh[k][1], 0.4, true); if (g >= 0 && g !== der) { n++; der = g; } } return n; };
   // V239 (demande de Laurent à l'époque) : estimation « ≈ » sur les gares officielles les plus proches quand le
   // prix exact manquait. V244 : retiré à la demande de Laurent — avec la grille nationale désormais vérifiée à
   // 100 % (18 826 + 16 918 relations, 0 gap), il ne doit plus jamais s'afficher de prix approché : exact ou rien.
@@ -202,10 +216,10 @@
     }
     return [...names];
   };
-  const CODE_WORKER = () => 'const UNK=' + JSON.stringify(UNK) + ';const dist=' + dist + ';const joli=' + joli + ';const indexGares=' + indexGares + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';' +
+  const CODE_WORKER = () => 'const UNK=' + JSON.stringify(UNK) + ';const dist=' + dist + ';const joli=' + joli + ';const indexGares=' + indexGares + ';const garesFixes=' + garesFixes + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';' +
     'let P=null;const charger=async base=>{const j=await (await fetch(base+"peages-aprr.json")).json();const prix=new Map();for(const s of j.p.split(";")){const [a,b,c1,c2,d]=s.split(",");const x=parseInt(a,36),y=parseInt(b,36);prix.set(Math.min(x,y)*1000+Math.max(x,y),[c1/10,c2/10,Number(d)]);}' +
     'const CORR={"ST MARTIN BELLEVUE A41 N":[[46.1293,6.0978],[46.1318,6.1]],"BOISSE Système Ouvert":[[45.82868,5.03099],[45.82879,5.03123]]};j.g.forEach(g=>{if(CORR[g[0]])g[1]=CORR[g[0]];});const Q={g:j.g,prix,v:j.v};' +
-    'try{const o=await (await fetch(base+"peages-overlay.json")).json();for(const n of (o.gares||[])){if(!Q.g.some(g=>g[0]===n.nom))Q.g.push([n.nom,n.points]);}const ix=indexGares(Q.g);for(const q of (o.paires||[])){const x=ix(q[0]),y=ix(q[1]);const k=Math.min(x,y)*1000+Math.max(x,y);if(x>=0&&y>=0&&!prix.has(k))prix.set(k,[q[2],q[3],q[4]]);}}catch(_){}return Q;};' +
+    'try{const o=await (await fetch(base+"peages-overlay.json")).json();for(const n of (o.gares||[])){if(!Q.g.some(g=>g[0]===n.nom))Q.g.push([n.nom,n.points]);}const ix=indexGares(Q.g);Q.fixes=garesFixes(Q.g,o);for(const q of (o.paires||[])){const x=ix(q[0]),y=ix(q[1]);const k=Math.min(x,y)*1000+Math.max(x,y);if(x>=0&&y>=0&&!prix.has(k))prix.set(k,[q[2],q[3],q[4]]);}}catch(_){}return Q;};' +
     'const garesManquantes='+garesManquantes+';onmessage=async e=>{const m=e.data;try{if(!P)P=await charger(m.base);const x=prixExact(P,m.sh,m.tms,0);const n=garesTraversees(P,m.sh,m.i0,m.i1);const h=[];if(m.hits){let der=-2;for(let k=m.i0;k<=m.i1;k++){const g=gareProche(P,m.sh[k][0],m.sh[k][1],0.4);if(g>=0&&g!==der){h.push([m.sh[k][0],m.sh[k][1],P.g[g][0]]);der=g;}}}postMessage({id:m.id,x,n,v:P.v,h,missing:garesManquantes(m.sh,m.i0,m.i1)});}catch(err){postMessage({id:m.id,err:String(err)});}};';
   const calculPeage = async (sh, tms, km, hits) => {
     const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
@@ -242,7 +256,9 @@
         try { suisse = passeEnSuisse(dec6(leg.shape)); } catch (_) { suisse = false; }
         tms = leg.maneuvers.filter(m => m.toll);
         for (const m of tms) km += Number(m.length) || 0;
-        if (km < 1) { put('💶 <b>Aucun péage</b> sur ce trajet.', true); return; }
+        // A short entrance/exit ramp can contain a charged gate. Distance alone
+        // must never turn a provider's explicit toll section into a free route.
+        if (!tms.length) { put('💶 <b>Aucun péage</b> sur ce trajet.', true); return; }
         sh = dec6(leg.shape);
       } else {
         viaGoogle = true;

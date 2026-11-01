@@ -28,7 +28,7 @@ function candidates(base,overlay,ministry,aliases=[]){
   // Reject distant homonyms. Adjacent lanes of one station may be grouped.
   const [lat,lon]=points[0];
   if(points.some(p=>Math.hypot((p[0]-lat)*111,(p[1]-lon)*111*Math.cos(lat*Math.PI/180))>1))continue;
-  additions.push({nom:name,points,provenance:{source:'https://www.data.gouv.fr/datasets/gares-de-peage-du-reseau-routier-national-concede',local:'data/gares-peage-officiel.json',officialNames:[...new Set(rows.map(r=>r[0]))],routes:[...new Set(rows.map(r=>r[1]))],match:alias?'reviewed-name-and-road-alias; clustered-within-1km':'unique-normalized-name; clustered-within-1km',...(alias?{aliases:'data/toll-station-aliases.json'}:{}),crossingConfirmed:false}});
+  additions.push({nom:name,points,...(alias?.barrierId?{barrierId:alias.barrierId}:{}),provenance:{source:'https://www.data.gouv.fr/datasets/gares-de-peage-du-reseau-routier-national-concede',local:'data/gares-peage-officiel.json',officialNames:[...new Set(rows.map(r=>r[0]))],routes:[...new Set(rows.map(r=>r[1]))],match:alias?'reviewed-name-and-road-alias; clustered-within-1km':'unique-normalized-name; clustered-within-1km',...(alias?{aliases:'data/toll-station-aliases.json'}:{}),crossingConfirmed:false}});
  }
  return additions.sort((a,b)=>a.nom.localeCompare(b.nom,'fr'));
 }
