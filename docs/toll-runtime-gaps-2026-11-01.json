@@ -1,0 +1,2465 @@
+{
+  "reviewedAt": "2026-11-01",
+  "scope": "Stored overlay endpoint labels and existing fixed-barrier class-1/2 availability under the current strict runtime resolver",
+  "nationalInventoryComplete": false,
+  "missingPhysicalTolls": null,
+  "missingNationalTariffs": null,
+  "counts": {
+    "loadedStationIdentities": 621,
+    "storedPairRows": 20412,
+    "storedEndpointLabels": 1074,
+    "boundEndpointRowsNotRouteCertified": 15623,
+    "rowsWithUnboundEndpoints": 4789,
+    "unboundEndpointLabels": 280,
+    "rowsWithInvalidClass1Or2Amounts": 0,
+    "fixedBarrierClassGaps": 2
+  },
+  "priorityA79": {
+    "unboundLabels": [
+      "LE MONTET",
+      "LE MONTET EST",
+      "LE MONTET OUEST",
+      "MOLINET",
+      "MOLINET EST",
+      "MOLINET OUEST",
+      "MONTBEUGNY",
+      "MONTBEUGNY EST",
+      "MONTBEUGNY OUEST"
+    ],
+    "affectedStoredRows": 21,
+    "note": "These are tariff labels, not a count of physical gantries. Branch geometry and conditional tariffs remain unverified."
+  },
+  "fixedClassGaps": [
+    {
+      "barrierId": "arcos-ittenheim-barriere",
+      "missingClasses": [
+        1,
+        2
+      ]
+    },
+    {
+      "barrierId": "arcos-ittenheim-gare-laterale",
+      "missingClasses": [
+        1,
+        2
+      ]
+    }
+  ],
+  "unboundLabels": [
+    {
+      "name": "A13",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "Alencon",
+        "Sees",
+        "Gace"
+      ]
+    },
+    {
+      "name": "A68/A680",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "TOULOUSE EST"
+      ]
+    },
+    {
+      "name": "A8: AIX-EN-PROVENCE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "COUDOUX"
+      ]
+    },
+    {
+      "name": "A9: ESPAGNE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "LE BOULOU (O)"
+      ]
+    },
+    {
+      "name": "ABBEVILLE EST N°22",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "ABBEVILLE NORD N°23",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "ADOUR NORD",
+      "affectedStoredRows": 38,
+      "exampleCounterparts": [
+        "BAZAS",
+        "CAPTIEUX",
+        "ROQUEFORT"
+      ]
+    },
+    {
+      "name": "ADOUR SUD",
+      "affectedStoredRows": 20,
+      "exampleCounterparts": [
+        "BAZAS",
+        "CAPTIEUX",
+        "ROQUEFORT"
+      ]
+    },
+    {
+      "name": "AIRE-SUR-LA-LYS N°4",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "LILLERS N°5"
+      ]
+    },
+    {
+      "name": "AIX",
+      "affectedStoredRows": 9,
+      "exampleCounterparts": [
+        "PERTUIS",
+        "ST PAUL LEZ DURANCES",
+        "MANOSQUE"
+      ]
+    },
+    {
+      "name": "AIX-EN-PROVENCE",
+      "affectedStoredRows": 19,
+      "exampleCounterparts": [
+        "LA SAULCE",
+        "SISTERON-NORD",
+        "SISTERON-SUD"
+      ]
+    },
+    {
+      "name": "ALBERT N°13.1",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "AMBERIEU EN BUGEY",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "AMIENS EST (péage de Jules Verne)",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "AMIENS EST JULES VERNE",
+      "affectedStoredRows": 3,
+      "exampleCounterparts": [
+        "VILLERS BRETONNEUX",
+        "GARE TGV",
+        "ATHIES"
+      ]
+    },
+    {
+      "name": "AMIENS NORD N°20",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "AMIENS OUEST N°19",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "AMIENS SUD (péage de Dury)",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "AMIENS SUD DURY",
+      "affectedStoredRows": 3,
+      "exampleCounterparts": [
+        "NEUFCHATEL-EN-BRAY",
+        "AUMALE EST",
+        "POIX-DE-PICARDIE"
+      ]
+    },
+    {
+      "name": "ANGERS",
+      "affectedStoredRows": 4,
+      "exampleCounterparts": [
+        "ANCENIS",
+        "BEAUPREAU-SAINT GERMAIN",
+        "NANTES"
+      ]
+    },
+    {
+      "name": "ANGERS (CORZE)",
+      "affectedStoredRows": 29,
+      "exampleCounterparts": [
+        "ABLIS",
+        "ALENCON NORD",
+        "ALENCON SUD"
+      ]
+    },
+    {
+      "name": "ARRAS (A1)",
+      "affectedStoredRows": 10,
+      "exampleCounterparts": [
+        "PARIS ROISSY",
+        "SENLIS",
+        "PONT ST MAXENCE"
+      ]
+    },
+    {
+      "name": "ARRAS (A26)",
+      "affectedStoredRows": 16,
+      "exampleCounterparts": [
+        "CALAIS",
+        "VALLEE DE LA HEM",
+        "SAINT OMER"
+      ]
+    },
+    {
+      "name": "ARRAS EST (A1)",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS",
+        "SAINT-OMER",
+        "AIRE-SUR-LA-LYS"
+      ]
+    },
+    {
+      "name": "ARRAS EST (A1) N°15",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "ARRAS NORD (A26)",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS",
+        "SAINT-OMER",
+        "AIRE-SUR-LA-LYS"
+      ]
+    },
+    {
+      "name": "ARRAS NORD (A26) N°7",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "ATHIES N°54",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "AUMALE",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST",
+        "BOULOGNE SUD",
+        "NEUFCHÂTEL-HARDELOT"
+      ]
+    },
+    {
+      "name": "AUMALE EST",
+      "affectedStoredRows": 2,
+      "exampleCounterparts": [
+        "POIX-DE-PICARDIE",
+        "AMIENS SUD DURY"
+      ]
+    },
+    {
+      "name": "AUMALE N°12",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "Alencon",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "Sees",
+        "Gace",
+        "Orbec"
+      ]
+    },
+    {
+      "name": "BANDOL",
+      "affectedStoredRows": 20,
+      "exampleCounterparts": [
+        "LE CASTELLET",
+        "LA SAULCE",
+        "SISTERON-NORD"
+      ]
+    },
+    {
+      "name": "BAPAUME N°14",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "BARRIERE DE MONTREUIL AUX LIONS",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "BAYONNE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "BIARRITZ BARRIERE"
+      ]
+    },
+    {
+      "name": "BAYONNE NORD",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "BAYONNE SUD"
+      ]
+    },
+    {
+      "name": "BAYONNE SUD",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "BAYONNE NORD"
+      ]
+    },
+    {
+      "name": "BAYONNE-S JEAN LUZ N",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "BIARRITZ ECHANGEUR"
+      ]
+    },
+    {
+      "name": "BAYONNE-ST GEOURS M.",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "CAPBRETON"
+      ]
+    },
+    {
+      "name": "BAZAS",
+      "affectedStoredRows": 38,
+      "exampleCounterparts": [
+        "TOULOUSE-NORD/EST",
+        "TOULOUSE-NORD/OUEST",
+        "SAINT-JORY"
+      ]
+    },
+    {
+      "name": "BEAULIEU",
+      "affectedStoredRows": 7,
+      "exampleCounterparts": [
+        "CHATELLERAULT NORD",
+        "CHATELLERAULT SUD",
+        "FUTUROSCOPE"
+      ]
+    },
+    {
+      "name": "BEAUTOT / A151",
+      "affectedStoredRows": 5,
+      "exampleCounterparts": [
+        "ST-SAËNS N°10 / A28",
+        "BOLBEC N°7",
+        "LE HAVRE N°5 / A131"
+      ]
+    },
+    {
+      "name": "BEAUVAIS CENTRE N°14",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "BEAUVAIS NORD N°15",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "BENESSE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "ST GEOURS DE MAREMNE"
+      ]
+    },
+    {
+      "name": "BERCK N°25",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "BIARRITZ BARRIERE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "BAYONNE"
+      ]
+    },
+    {
+      "name": "BIRIATOU",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "ST JEAN DE LUZ"
+      ]
+    },
+    {
+      "name": "BOLBEC N°7",
+      "affectedStoredRows": 7,
+      "exampleCounterparts": [
+        "LE HAVRE N°5 / A131",
+        "YERVILLE N°9",
+        "YVETOT / A150"
+      ]
+    },
+    {
+      "name": "BOULAY N°36",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "BOULOGNE EST (péage d'Herquelingue)",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27",
+        "ETAPLES / LE TOUQUET N°26"
+      ]
+    },
+    {
+      "name": "BOULOGNE SUD N°28",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "NEUFCHÂTEL-HARDELOT N°27",
+        "ETAPLES / LE TOUQUET N°26"
+      ]
+    },
+    {
+      "name": "BRIVE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "MARTEL"
+      ]
+    },
+    {
+      "name": "BÉTHUNE N°6",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "CAEN",
+      "affectedStoredRows": 14,
+      "exampleCounterparts": [
+        "CRIQUEBEUF N°20 à MAISON-BRÛLEE N°24 / ROUEN LES ESSARTS (A139)",
+        "BOURNEVILLE N°26",
+        "POISSY / ORGEVAL N°7 à MANTES-SUD N°12"
+      ]
+    },
+    {
+      "name": "CALAIS (péage de Setques)",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4",
+        "LILLERS N°5"
+      ]
+    },
+    {
+      "name": "CAMBRAI N°14",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "CAPBRETON",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "BAYONNE-ST GEOURS M."
+      ]
+    },
+    {
+      "name": "CAPTIEUX",
+      "affectedStoredRows": 38,
+      "exampleCounterparts": [
+        "BAZAS",
+        "TOULOUSE-NORD/EST",
+        "TOULOUSE-NORD/OUEST"
+      ]
+    },
+    {
+      "name": "CASSIS / LA BEDOULE",
+      "affectedStoredRows": 19,
+      "exampleCounterparts": [
+        "LA SAULCE",
+        "SISTERON-NORD",
+        "SISTERON-SUD"
+      ]
+    },
+    {
+      "name": "CHAMBRAY",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "TOURS CENTRE"
+      ]
+    },
+    {
+      "name": "CHARMONT",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "CHARMONT-SOUS-BARBUISE",
+      "affectedStoredRows": 38,
+      "exampleCounterparts": [
+        "MEAUX / CRECY",
+        "ST-JEAN-LES-DEUX-JUMEAUX",
+        "MONTREUIL-AUX-LIONS"
+      ]
+    },
+    {
+      "name": "CHARMONT-SOUS-BARBUISE N°22",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "CHATEAU-RENAULT",
+      "affectedStoredRows": 162,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "AMBERIEU EN BUGEY",
+        "ARLAY"
+      ]
+    },
+    {
+      "name": "CHÂLONS-EN-CHAMPAGNE / LA VEUVE",
+      "affectedStoredRows": 34,
+      "exampleCounterparts": [
+        "MEAUX / CRECY",
+        "ST-JEAN-LES-DEUX-JUMEAUX",
+        "MONTREUIL-AUX-LIONS"
+      ]
+    },
+    {
+      "name": "CHÂLONS-EN-CHAMPAGNE / LA VEUVE N°24",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "CHÂTEAU-THIERRY N°20",
+      "affectedStoredRows": 33,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "DORMANS N°21"
+      ]
+    },
+    {
+      "name": "CLERMONT",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "CLERMONT-EN-ARGONNE N°27",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "CLUSES CENTRE",
+      "affectedStoredRows": 2,
+      "exampleCounterparts": [
+        "LE FAYET",
+        "SCIENTRIER"
+      ]
+    },
+    {
+      "name": "COMPIÈGNE OUEST N°10",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "CONDRIEU ENTREE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "CONDRIEU SORTIE"
+      ]
+    },
+    {
+      "name": "CONDRIEU SORTIE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "CONDRIEU ENTREE"
+      ]
+    },
+    {
+      "name": "COPPONEX",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "ST MARTIN BELLEVUE A41 N"
+      ]
+    },
+    {
+      "name": "COUDOUX",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "A8: AIX-EN-PROVENCE"
+      ]
+    },
+    {
+      "name": "COUTEVROULT",
+      "affectedStoredRows": 2,
+      "exampleCounterparts": [
+        "MEAUX / CRECY",
+        "ST-JEAN-LES-DEUX-JUMEAUX"
+      ]
+    },
+    {
+      "name": "CRIMOLOIS",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "CRIQUEBEUF N°20 à MAISON-BRÛLEE N°24 / ROUEN LES ESSARTS (A139)",
+      "affectedStoredRows": 13,
+      "exampleCounterparts": [
+        "CAEN",
+        "TROARN N°31",
+        "POISSY / ORGEVAL N°7 à MANTES-SUD N°12"
+      ]
+    },
+    {
+      "name": "CRUSEILLES A41 NORD",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "ST MARTIN BELLEVUE A41 N"
+      ]
+    },
+    {
+      "name": "DORMANS N°21",
+      "affectedStoredRows": 33,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "DRUYE (CANDE)",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "TOURS CENTRE (CANDE)"
+      ]
+    },
+    {
+      "name": "ELOISE / ANNECY",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "EPERNAY",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "ESSERTAUX N°17",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "ETAPLES / LE TOUQUET N°26",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "FAREBERSVILLER N°39",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "FECAMP N°8",
+      "affectedStoredRows": 7,
+      "exampleCounterparts": [
+        "YERVILLE N°9",
+        "YVETOT / A150",
+        "BOLBEC N°7"
+      ]
+    },
+    {
+      "name": "FECAMP YVETOT OUEST",
+      "affectedStoredRows": 7,
+      "exampleCounterparts": [
+        "TOTES",
+        "LE HAVRE",
+        "SAINT ROMAIN SYSTEME FERME"
+      ]
+    },
+    {
+      "name": "FONTENAY LE COMTE",
+      "affectedStoredRows": 7,
+      "exampleCounterparts": [
+        "CHATELLERAULT NORD",
+        "CHATELLERAULT SUD",
+        "FUTUROSCOPE"
+      ]
+    },
+    {
+      "name": "FRESNES (LILLE)",
+      "affectedStoredRows": 10,
+      "exampleCounterparts": [
+        "PARIS ROISSY",
+        "SENLIS",
+        "PONT ST MAXENCE"
+      ]
+    },
+    {
+      "name": "FRESNES-EN-WOËVRE N°30",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "FREYMING-MERLEBACH",
+      "affectedStoredRows": 35,
+      "exampleCounterparts": [
+        "MEAUX / CRECY",
+        "ST-JEAN-LES-DEUX-JUMEAUX",
+        "MONTREUIL-AUX-LIONS"
+      ]
+    },
+    {
+      "name": "FREYMING-MERLEBACH (A320)",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "GAILLARD",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "SCIENTRIER"
+      ]
+    },
+    {
+      "name": "GARE TGV N°53",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "GARLIN",
+      "affectedStoredRows": 37,
+      "exampleCounterparts": [
+        "BAZAS",
+        "CAPTIEUX",
+        "ROQUEFORT"
+      ]
+    },
+    {
+      "name": "GERZAT",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "GONDREVILLE LA FRANCHE NORD",
+      "affectedStoredRows": 161,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "AMBERIEU EN BUGEY",
+        "ARLAY"
+      ]
+    },
+    {
+      "name": "GONDREVILLE LA FRANCHE SUD",
+      "affectedStoredRows": 161,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "AMBERIEU EN BUGEY",
+        "ARLAY"
+      ]
+    },
+    {
+      "name": "GUICHE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "URT-BRISCOUS"
+      ]
+    },
+    {
+      "name": "GUIGNICOURT N°14",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "HARDIVILLERS N°16",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "HOCHFELDEN",
+      "affectedStoredRows": 34,
+      "exampleCounterparts": [
+        "MEAUX / CRECY",
+        "ST-JEAN-LES-DEUX-JUMEAUX",
+        "MONTREUIL-AUX-LIONS"
+      ]
+    },
+    {
+      "name": "HOCHFELDEN N°45",
+      "affectedStoredRows": 30,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "HORDAIN (péage d'Hordain)",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "INCARVILLE N°19 / A154",
+      "affectedStoredRows": 12,
+      "exampleCounterparts": [
+        "PONT L'EVÊQUE, DEAUVILLE (A132)",
+        "BOURNEVILLE N°26",
+        "POISSY / ORGEVAL N°7 à MANTES-SUD N°12"
+      ]
+    },
+    {
+      "name": "JANVILLE (ALLAINES)",
+      "affectedStoredRows": 162,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "AMBERIEU EN BUGEY",
+        "ARLAY"
+      ]
+    },
+    {
+      "name": "JARNY N°31",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "JOUE-LES-TOURS",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "TOURS CENTRE"
+      ]
+    },
+    {
+      "name": "L'ISLE-ADAM",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST",
+        "BOULOGNE SUD",
+        "NEUFCHÂTEL-HARDELOT"
+      ]
+    },
+    {
+      "name": "L'ISLE-ADAM (péage d'Amblainville)",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "LA BACHELLERIE EST",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "LA BACHELLERIE SUD"
+      ]
+    },
+    {
+      "name": "LA BACHELLERIE SUD",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "LA BACHELLERIE EST"
+      ]
+    },
+    {
+      "name": "LA CADIERE",
+      "affectedStoredRows": 19,
+      "exampleCounterparts": [
+        "LA SAULCE",
+        "SISTERON-NORD",
+        "SISTERON-SUD"
+      ]
+    },
+    {
+      "name": "LA CÔTE PICARDE N°24",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "LA FÈRE N°12",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "LAON N°13",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "LE BIGNON",
+      "affectedStoredRows": 7,
+      "exampleCounterparts": [
+        "CHATELLERAULT NORD",
+        "CHATELLERAULT SUD",
+        "FUTUROSCOPE"
+      ]
+    },
+    {
+      "name": "LE BOULOU (F)",
+      "affectedStoredRows": 44,
+      "exampleCounterparts": [
+        "BRAM",
+        "CARCASSONNE-E",
+        "CARCASSONNE-O"
+      ]
+    },
+    {
+      "name": "LE CANNET DE MEYREUIL",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "ORIGINE A8"
+      ]
+    },
+    {
+      "name": "LE CASTELLET",
+      "affectedStoredRows": 3,
+      "exampleCounterparts": [
+        "AUBAGNE EST",
+        "BANDOL",
+        "PONT DES GAUX"
+      ]
+    },
+    {
+      "name": "LE FAYET",
+      "affectedStoredRows": 2,
+      "exampleCounterparts": [
+        "CLUSES CENTRE",
+        "SCIENTRIER"
+      ]
+    },
+    {
+      "name": "LE HAVRE",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "TOTES",
+        "BOLBEC",
+        "FECAMP YVETOT OUEST"
+      ]
+    },
+    {
+      "name": "LE HAVRE N°5 / A131",
+      "affectedStoredRows": 7,
+      "exampleCounterparts": [
+        "BOLBEC N°7",
+        "YVETOT / A150",
+        "ST-SAËNS N°10 / A28"
+      ]
+    },
+    {
+      "name": "LE MONTET",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "LE MONTET OUEST",
+        "LE MONTET EST",
+        "MONTBEUGNY"
+      ]
+    },
+    {
+      "name": "LE MONTET EST",
+      "affectedStoredRows": 2,
+      "exampleCounterparts": [
+        "LE MONTET OUEST",
+        "LE MONTET"
+      ]
+    },
+    {
+      "name": "LE MONTET OUEST",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "LE MONTET",
+        "LE MONTET EST",
+        "MONTBEUGNY"
+      ]
+    },
+    {
+      "name": "LESTELLE ST MARTORY",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "MARTRES TOLOSANE"
+      ]
+    },
+    {
+      "name": "LILLE / DOURGES (péage de Fresnes)",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "LILLERS N°5",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "LIMITE A11-A85",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "CORZE",
+        "DURTAL",
+        "LE MANS SUD"
+      ]
+    },
+    {
+      "name": "LIMITE A62-A65",
+      "affectedStoredRows": 15,
+      "exampleCounterparts": [
+        "LANGON",
+        "AGEN",
+        "AGEN OUEST"
+      ]
+    },
+    {
+      "name": "LIMITE A64-A65",
+      "affectedStoredRows": 16,
+      "exampleCounterparts": [
+        "LANNEMEZAN",
+        "LESTELLE",
+        "ARTIX"
+      ]
+    },
+    {
+      "name": "LIMITE A89-A71",
+      "affectedStoredRows": 9,
+      "exampleCounterparts": [
+        "EGLETONS",
+        "MANZAT",
+        "ST GERMAIN LES VERGN"
+      ]
+    },
+    {
+      "name": "LIMITE LE MANS O A11",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "CORZE",
+        "DURTAL",
+        "LE MANS SUD"
+      ]
+    },
+    {
+      "name": "LIMITE POITIERS A10",
+      "affectedStoredRows": 27,
+      "exampleCounterparts": [
+        "AIGREFEUILLE",
+        "BEAULIEU SUR LAYON",
+        "BIGNON"
+      ]
+    },
+    {
+      "name": "LIÉVIN N°6.2",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "MANSAC",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "TERRASSON"
+      ]
+    },
+    {
+      "name": "MARQUION N°8",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "MARTRES TOLOSANE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "LESTELLE ST MARTORY"
+      ]
+    },
+    {
+      "name": "MASNIÈRES N°9",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "MEAUX (A140) / CRECY N°16",
+      "affectedStoredRows": 35,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "ST-JEAN-LES-DEUX-JUMEAUX N°18",
+        "MONTREUIL-AUX-LIONS N°19"
+      ]
+    },
+    {
+      "name": "MEAUX / CRECY",
+      "affectedStoredRows": 35,
+      "exampleCounterparts": [
+        "COUTEVROULT",
+        "ST-JEAN-LES-DEUX-JUMEAUX",
+        "MONTREUIL-AUX-LIONS"
+      ]
+    },
+    {
+      "name": "METZ",
+      "affectedStoredRows": 35,
+      "exampleCounterparts": [
+        "MEAUX / CRECY",
+        "ST-JEAN-LES-DEUX-JUMEAUX",
+        "MONTREUIL-AUX-LIONS"
+      ]
+    },
+    {
+      "name": "METZ (A31)",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "MEUNG",
+      "affectedStoredRows": 162,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "AMBERIEU EN BUGEY",
+        "ARLAY"
+      ]
+    },
+    {
+      "name": "MODANE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "ST MICHEL MAURIENNE BAR"
+      ]
+    },
+    {
+      "name": "MOLINET",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "LE MONTET OUEST",
+        "LE MONTET",
+        "MONTBEUGNY OUEST"
+      ]
+    },
+    {
+      "name": "MOLINET EST",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "LE MONTET OUEST",
+        "LE MONTET",
+        "MONTBEUGNY OUEST"
+      ]
+    },
+    {
+      "name": "MOLINET OUEST",
+      "affectedStoredRows": 2,
+      "exampleCounterparts": [
+        "MOLINET",
+        "MOLINET EST"
+      ]
+    },
+    {
+      "name": "MONDIDIER COMPIEGNE",
+      "affectedStoredRows": 10,
+      "exampleCounterparts": [
+        "PARIS ROISSY",
+        "SENLIS",
+        "PONT ST MAXENCE"
+      ]
+    },
+    {
+      "name": "MONT DE MARSAN",
+      "affectedStoredRows": 38,
+      "exampleCounterparts": [
+        "BAZAS",
+        "CAPTIEUX",
+        "ROQUEFORT"
+      ]
+    },
+    {
+      "name": "MONT-CHOISY N°18",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "MONTBEUGNY",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "LE MONTET OUEST",
+        "LE MONTET",
+        "MONTBEUGNY OUEST"
+      ]
+    },
+    {
+      "name": "MONTBEUGNY EST",
+      "affectedStoredRows": 4,
+      "exampleCounterparts": [
+        "LE MONTET OUEST",
+        "LE MONTET",
+        "MONTBEUGNY OUEST"
+      ]
+    },
+    {
+      "name": "MONTBEUGNY OUEST",
+      "affectedStoredRows": 4,
+      "exampleCounterparts": [
+        "MONTBEUGNY",
+        "MONTBEUGNY EST",
+        "MOLINET"
+      ]
+    },
+    {
+      "name": "MONTREUIL-AUX-LIONS N°19",
+      "affectedStoredRows": 2,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16"
+      ]
+    },
+    {
+      "name": "MURET",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "TOULOUSE OUEST"
+      ]
+    },
+    {
+      "name": "MURS ERIGNE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "THOUARCE"
+      ]
+    },
+    {
+      "name": "MÉRU N°13",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "NANTES",
+      "affectedStoredRows": 3,
+      "exampleCounterparts": [
+        "ANCENIS",
+        "ANGERS",
+        "VIEILLEVILLE"
+      ]
+    },
+    {
+      "name": "NEUFCHÂTEL-EN-BRAY (A28)",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST",
+        "BOULOGNE SUD",
+        "NEUFCHÂTEL-HARDELOT"
+      ]
+    },
+    {
+      "name": "NEUFCHÂTEL-EN-BRAY (A28) (péage d'Haudricourt)",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "NEUFCHÂTEL-HARDELOT N°27",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "ETAPLES / LE TOUQUET N°26"
+      ]
+    },
+    {
+      "name": "NEUILLE-PONT-PIERRE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "TOURS CENTRE"
+      ]
+    },
+    {
+      "name": "NOEUX LES MINES",
+      "affectedStoredRows": 16,
+      "exampleCounterparts": [
+        "CALAIS",
+        "VALLEE DE LA HEM",
+        "SAINT OMER"
+      ]
+    },
+    {
+      "name": "NŒUX-LES-MINES N°6.1",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "OLLIOULES",
+      "affectedStoredRows": 20,
+      "exampleCounterparts": [
+        "PONT DES GAUX",
+        "LA SAULCE",
+        "SISTERON-NORD"
+      ]
+    },
+    {
+      "name": "ORIGINE A57 TOULON",
+      "affectedStoredRows": 13,
+      "exampleCounterparts": [
+        "ORIGINE A8",
+        "BELCODENE",
+        "PAS DE TRETS"
+      ]
+    },
+    {
+      "name": "ORIGINE A8",
+      "affectedStoredRows": 12,
+      "exampleCounterparts": [
+        "LE CANNET DE MEYREUIL",
+        "BELCODENE",
+        "PAS DE TRETS"
+      ]
+    },
+    {
+      "name": "ORMES",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "PARIS (LA FOLIE BESSIN)",
+      "affectedStoredRows": 203,
+      "exampleCounterparts": [
+        "ABLIS",
+        "ALENCON NORD",
+        "ALENCON SUD"
+      ]
+    },
+    {
+      "name": "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+      "affectedStoredRows": 35,
+      "exampleCounterparts": [
+        "MEAUX (A140) / CRECY N°16",
+        "ST-JEAN-LES-DEUX-JUMEAUX N°18",
+        "MONTREUIL-AUX-LIONS N°19"
+      ]
+    },
+    {
+      "name": "PARIS / ROISSY (péage de Chamant)",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "PERIGUEUX",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "THENON EST"
+      ]
+    },
+    {
+      "name": "PHALSBOURG N°43",
+      "affectedStoredRows": 30,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "POIX-DE-PICARDIE N°13",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "PONT DES GAUX",
+      "affectedStoredRows": 2,
+      "exampleCounterparts": [
+        "LE CASTELLET",
+        "OLLIOULES"
+      ]
+    },
+    {
+      "name": "PONT ST MAXENCE",
+      "affectedStoredRows": 10,
+      "exampleCounterparts": [
+        "PARIS ROISSY",
+        "SENLIS",
+        "COMPIEGNE OUEST"
+      ]
+    },
+    {
+      "name": "PONT-SAINTE-MAXENCE N°9",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "PUGET-VILLE",
+      "affectedStoredRows": 19,
+      "exampleCounterparts": [
+        "LA SAULCE",
+        "SISTERON-NORD",
+        "SISTERON-SUD"
+      ]
+    },
+    {
+      "name": "PUTTELANGE N°40",
+      "affectedStoredRows": 26,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "PÉRONNE / VALLEE DE LA SOMME N°13",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "REIMS (péage de Courcy)",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "REIMS - TAISSY",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "REIMS - TINQUEUX",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "REIMS EST",
+      "affectedStoredRows": 34,
+      "exampleCounterparts": [
+        "MEAUX / CRECY",
+        "ST-JEAN-LES-DEUX-JUMEAUX",
+        "MONTREUIL-AUX-LIONS"
+      ]
+    },
+    {
+      "name": "REIMS EST (péage de Taissy)",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "REIMS NORD",
+      "affectedStoredRows": 33,
+      "exampleCounterparts": [
+        "MEAUX / CRECY",
+        "ST-JEAN-LES-DEUX-JUMEAUX",
+        "MONTREUIL-AUX-LIONS"
+      ]
+    },
+    {
+      "name": "REIMS NORD (péage d'Ormes)",
+      "affectedStoredRows": 4,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "REIMS OUEST",
+      "affectedStoredRows": 33,
+      "exampleCounterparts": [
+        "MEAUX / CRECY",
+        "ST-JEAN-LES-DEUX-JUMEAUX",
+        "MONTREUIL-AUX-LIONS"
+      ]
+    },
+    {
+      "name": "REIMS OUEST (péage de Thillois) N°22",
+      "affectedStoredRows": 4,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "REIMS SUD N°23",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "RESSONS N°11",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "ROCADE EST",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "L'UNION"
+      ]
+    },
+    {
+      "name": "ROCHEFORT",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "TONNAY-CHARENTE"
+      ]
+    },
+    {
+      "name": "ROMORANTIN",
+      "affectedStoredRows": 162,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "AMBERIEU EN BUGEY",
+        "ARLAY"
+      ]
+    },
+    {
+      "name": "ROQUEFORT",
+      "affectedStoredRows": 38,
+      "exampleCounterparts": [
+        "BAZAS",
+        "CAPTIEUX",
+        "TOULOUSE-NORD/EST"
+      ]
+    },
+    {
+      "name": "ROYE N°12",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "SAINT AIGNAN SUR CHER",
+      "affectedStoredRows": 162,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "AMBERIEU EN BUGEY",
+        "ARLAY"
+      ]
+    },
+    {
+      "name": "SAINT AMAND",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "SAINT ETIENNE AU TEMPLE",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "SAINT GERMAIN-LAXIS",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "SAINT GIBRIEN",
+      "affectedStoredRows": 37,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "SAINT MAIXENT / LUSIGNAN",
+      "affectedStoredRows": 7,
+      "exampleCounterparts": [
+        "CHATELLERAULT NORD",
+        "CHATELLERAULT SUD",
+        "FUTUROSCOPE"
+      ]
+    },
+    {
+      "name": "SAINT MARTIN-DU-FRESNE",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "SAINT OMER",
+      "affectedStoredRows": 14,
+      "exampleCounterparts": [
+        "AIRE SUR LA LYS",
+        "LILLERS",
+        "BETHUNE"
+      ]
+    },
+    {
+      "name": "SAINT OMER B",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "CALAIS"
+      ]
+    },
+    {
+      "name": "SAINT ROMAIN SYSTEME FERME",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "TOTES",
+        "BOLBEC",
+        "FECAMP YVETOT OUEST"
+      ]
+    },
+    {
+      "name": "SAINT-AVOLD N°37",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "SAINT-GIBRIEN",
+      "affectedStoredRows": 34,
+      "exampleCounterparts": [
+        "MEAUX / CRECY",
+        "ST-JEAN-LES-DEUX-JUMEAUX",
+        "MONTREUIL-AUX-LIONS"
+      ]
+    },
+    {
+      "name": "SAINT-GIBRIEN N°17",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "SAINT-OMER",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS",
+        "AIRE-SUR-LA-LYS",
+        "LILLERS"
+      ]
+    },
+    {
+      "name": "SAINT-OMER N°3",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "AIRE-SUR-LA-LYS N°4",
+        "LILLERS N°5"
+      ]
+    },
+    {
+      "name": "SAINT-QUENTIN NORD N°10",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "SAINT-QUENTIN SUD N°11",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "SAINT-SAENS",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "TOTES",
+        "LE HAVRE",
+        "SAINT ROMAIN SYSTEME FERME"
+      ]
+    },
+    {
+      "name": "SAINT-ÉTIENNE-AU-TEMPLE",
+      "affectedStoredRows": 34,
+      "exampleCounterparts": [
+        "MEAUX / CRECY",
+        "ST-JEAN-LES-DEUX-JUMEAUX",
+        "MONTREUIL-AUX-LIONS"
+      ]
+    },
+    {
+      "name": "SAINT-ÉTIENNE-AU-TEMPLE N°25",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "SAINTE MENEHOULD",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "SAINTE-MARIE-AUX-CHÊNES N°32",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "SAINTE-MENEHOULD",
+      "affectedStoredRows": 34,
+      "exampleCounterparts": [
+        "MEAUX / CRECY",
+        "ST-JEAN-LES-DEUX-JUMEAUX",
+        "MONTREUIL-AUX-LIONS"
+      ]
+    },
+    {
+      "name": "SAINTE-MENEHOULD N°26",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "SALOUËL N°18",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "SARRE-UNION N°42",
+      "affectedStoredRows": 30,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "SARREGUEMINES N°41",
+      "affectedStoredRows": 26,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "SAVERNE N°44",
+      "affectedStoredRows": 30,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "SCIENTRIER",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "LE FAYET",
+        "CLUSES CENTRE",
+        "SCIONZIER"
+      ]
+    },
+    {
+      "name": "SCIONZIER",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "SCIENTRIER"
+      ]
+    },
+    {
+      "name": "SELLES SUR CHER",
+      "affectedStoredRows": 162,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "AMBERIEU EN BUGEY",
+        "ARLAY"
+      ]
+    },
+    {
+      "name": "SENLIS",
+      "affectedStoredRows": 38,
+      "exampleCounterparts": [
+        "CALAIS",
+        "SAINT-OMER",
+        "AIRE-SUR-LA-LYS"
+      ]
+    },
+    {
+      "name": "SENLIS N°8",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "SIX-FOURS-LES-PLAGES",
+      "affectedStoredRows": 19,
+      "exampleCounterparts": [
+        "LA SAULCE",
+        "SISTERON-NORD",
+        "SISTERON-SUD"
+      ]
+    },
+    {
+      "name": "SOMMESOUS N°20",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "ST GEOURS DE MAREMNE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "BENESSE"
+      ]
+    },
+    {
+      "name": "ST GERMAIN LES VERGN",
+      "affectedStoredRows": 9,
+      "exampleCounterparts": [
+        "EGLETONS",
+        "LIMITE A89-A71",
+        "MANZAT"
+      ]
+    },
+    {
+      "name": "ST GERMAIN LES VERGNES",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "ARTENAY",
+        "AUXY"
+      ]
+    },
+    {
+      "name": "ST JEAN DE LUZ",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "BIRIATOU"
+      ]
+    },
+    {
+      "name": "ST JEAN DE LUZ NORD",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "ST JEAN DE LUZ SUD"
+      ]
+    },
+    {
+      "name": "ST JEAN DE LUZ SUD",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "ST JEAN DE LUZ NORD"
+      ]
+    },
+    {
+      "name": "ST LAURENT",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "MANDELIEU",
+        "ANTIBES",
+        "CAGNES OUEST"
+      ]
+    },
+    {
+      "name": "ST PIERRE D ALBIGNY",
+      "affectedStoredRows": 7,
+      "exampleCounterparts": [
+        "MONTMELIAN",
+        "CHIGNIN LES MARCHES",
+        "CHIGNIN BARRIERE"
+      ]
+    },
+    {
+      "name": "ST-CYR-LES-LECQUES",
+      "affectedStoredRows": 19,
+      "exampleCounterparts": [
+        "LA SAULCE",
+        "SISTERON-NORD",
+        "SISTERON-SUD"
+      ]
+    },
+    {
+      "name": "ST-JEAN-LES-DEUX-JUMEAUX",
+      "affectedStoredRows": 35,
+      "exampleCounterparts": [
+        "COUTEVROULT",
+        "MEAUX / CRECY",
+        "MONTREUIL-AUX-LIONS"
+      ]
+    },
+    {
+      "name": "ST-JEAN-LES-DEUX-JUMEAUX N°18",
+      "affectedStoredRows": 2,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16"
+      ]
+    },
+    {
+      "name": "ST-PAUL-LEZ-DURANCE",
+      "affectedStoredRows": 19,
+      "exampleCounterparts": [
+        "LA SAULCE",
+        "SISTERON-NORD",
+        "SISTERON-SUD"
+      ]
+    },
+    {
+      "name": "ST-ROMAIN-DE-COLBOSC N°6",
+      "affectedStoredRows": 7,
+      "exampleCounterparts": [
+        "BOLBEC N°7",
+        "YERVILLE N°9",
+        "ST-SAËNS N°10 / A28"
+      ]
+    },
+    {
+      "name": "ST-SAËNS N°10 / A28",
+      "affectedStoredRows": 5,
+      "exampleCounterparts": [
+        "BEAUTOT / A151",
+        "LE HAVRE N°5 / A131",
+        "ST-ROMAIN-DE-COLBOSC N°6"
+      ]
+    },
+    {
+      "name": "STRASBOURG (péage de Schwindratzheim)",
+      "affectedStoredRows": 30,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "TARARE EST ENTREE O",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "TARARE EST SORTIE O"
+      ]
+    },
+    {
+      "name": "TARARE EST SORTIE O",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "TARARE EST ENTREE O"
+      ]
+    },
+    {
+      "name": "TERRASSON",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "MANSAC"
+      ]
+    },
+    {
+      "name": "THENON",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "PERIGUEUX EST"
+      ]
+    },
+    {
+      "name": "THEZE",
+      "affectedStoredRows": 37,
+      "exampleCounterparts": [
+        "BAZAS",
+        "CAPTIEUX",
+        "ROQUEFORT"
+      ]
+    },
+    {
+      "name": "TONNAY-CHARENTE",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "ROCHEFORT"
+      ]
+    },
+    {
+      "name": "TOTES",
+      "affectedStoredRows": 6,
+      "exampleCounterparts": [
+        "LE HAVRE",
+        "SAINT ROMAIN SYSTEME FERME",
+        "BOLBEC"
+      ]
+    },
+    {
+      "name": "TOULON-OUEST",
+      "affectedStoredRows": 19,
+      "exampleCounterparts": [
+        "LA SAULCE",
+        "SISTERON-NORD",
+        "SISTERON-SUD"
+      ]
+    },
+    {
+      "name": "TOULOUSE EST",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "A68/A680"
+      ]
+    },
+    {
+      "name": "TOULOUSE OUEST",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "MURET"
+      ]
+    },
+    {
+      "name": "TOULOUSE-NORD/EST",
+      "affectedStoredRows": 22,
+      "exampleCounterparts": [
+        "AGEN",
+        "AGEN OUEST",
+        "AIGUILLON"
+      ]
+    },
+    {
+      "name": "TOULOUSE-SUD/OUEST",
+      "affectedStoredRows": 44,
+      "exampleCounterparts": [
+        "MAZERES SAVERDUN",
+        "NAILLOUX",
+        "PAMIERS"
+      ]
+    },
+    {
+      "name": "TOURS CENTRE",
+      "affectedStoredRows": 5,
+      "exampleCounterparts": [
+        "CHAMBRAY",
+        "JOUE-LES-TOURS",
+        "MONTS-SORIGNY"
+      ]
+    },
+    {
+      "name": "TOURS CENTRE (CANDE)",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "DRUYE (CANDE)"
+      ]
+    },
+    {
+      "name": "TOURS CENTRE (MONNAIE)",
+      "affectedStoredRows": 162,
+      "exampleCounterparts": [
+        "ALLAINVILLE",
+        "AMBERIEU EN BUGEY",
+        "ARLAY"
+      ]
+    },
+    {
+      "name": "URT-BRISCOUS",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "GUICHE"
+      ]
+    },
+    {
+      "name": "VALLEE DE L'AISNE",
+      "affectedStoredRows": 16,
+      "exampleCounterparts": [
+        "CALAIS",
+        "VALLEE DE LA HEM",
+        "SAINT OMER"
+      ]
+    },
+    {
+      "name": "VALLEE DE LA HEM",
+      "affectedStoredRows": 15,
+      "exampleCounterparts": [
+        "CALAIS",
+        "AIRE SUR LA LYS",
+        "LILLERS"
+      ]
+    },
+    {
+      "name": "VALLÉE DE L'AUBE N°21",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "VALLÉE DE LA NIÈVRE N°21",
+      "affectedStoredRows": 21,
+      "exampleCounterparts": [
+        "BOULOGNE EST (péage d'Herquelingue)",
+        "BOULOGNE SUD N°28",
+        "NEUFCHÂTEL-HARDELOT N°27"
+      ]
+    },
+    {
+      "name": "VATRY N°19",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "VERDUN N°29",
+      "affectedStoredRows": 15,
+      "exampleCounterparts": [
+        "FRESNES-EN-WOËVRE N°30",
+        "JARNY N°31",
+        "SAINTE-MARIE-AUX-CHÊNES N°32"
+      ]
+    },
+    {
+      "name": "VILLERS-BRETONNEUX N°52",
+      "affectedStoredRows": 32,
+      "exampleCounterparts": [
+        "CALAIS (péage de Setques)",
+        "SAINT-OMER N°3",
+        "AIRE-SUR-LA-LYS N°4"
+      ]
+    },
+    {
+      "name": "VOIE SACRÉE N°28",
+      "affectedStoredRows": 31,
+      "exampleCounterparts": [
+        "PARIS / NOISY-LE-GRAND (péage de Coutevroult)",
+        "MEAUX (A140) / CRECY N°16",
+        "CHÂTEAU-THIERRY N°20"
+      ]
+    },
+    {
+      "name": "Vienne Sud Entree",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "Vienne Sud Sortie"
+      ]
+    },
+    {
+      "name": "Vienne Sud Sortie",
+      "affectedStoredRows": 1,
+      "exampleCounterparts": [
+        "Vienne Sud Entree"
+      ]
+    },
+    {
+      "name": "YERVILLE N°9",
+      "affectedStoredRows": 4,
+      "exampleCounterparts": [
+        "BOLBEC N°7",
+        "FECAMP N°8",
+        "LE HAVRE N°5 / A131"
+      ]
+    },
+    {
+      "name": "YVETOT / A150",
+      "affectedStoredRows": 4,
+      "exampleCounterparts": [
+        "BOLBEC N°7",
+        "LE HAVRE N°5 / A131",
+        "FECAMP N°8"
+      ]
+    },
+    {
+      "name": "YVETOT EST",
+      "affectedStoredRows": 4,
+      "exampleCounterparts": [
+        "LE HAVRE",
+        "SAINT ROMAIN SYSTEME FERME",
+        "BOLBEC"
+      ]
+    }
+  ],
+  "limitations": [
+    "A bound name does not certify price validity, distance, direction or road coverage.",
+    "Unbound labels can be alternate names or tariff boundaries, not missing physical tolls.",
+    "A fixed price requiring time, season or vehicle context can appear unconfirmed here; never replace it with zero.",
+    "This audit does not assess every published France/border price grid."
+  ],
+  "inputSha256": {
+    "peages-aprr.json": "04989bd1e0bc1d24b9294e493cb831bae71a9fadc7723448ff09245d0f09f33d",
+    "peages-overlay.json": "e7993b3566ed64945c9ab1ad8b05efa4c0b713367631c6ac168a49c8704e28b4"
+  }
+}
