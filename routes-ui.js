@@ -106,6 +106,51 @@
     }
     return conflits;
   };
+  // A source price applies only to its published direction and exact bound points.
+  // Keep legacy prices intact; this separate index supplies dated evidence.
+  const attacherTarifsOfficiels = (P, j) => {
+    if (j.schemaVersion !== 1 || !Array.isArray(j.stations) || !Array.isArray(j.rows) || !Array.isArray(j.sources)) throw new Error('index officiel invalide');
+    const ix = indexGares(P.g), ids = j.stations.map(s => {
+      const i = ix(s.name);
+      return i >= 0 && /^A\d+$/.test(s.road) && s.points?.length && P.g[i][1].length === s.points.length &&
+        P.g[i][1].every(p => s.points.some(q => p[0] === q[0] && p[1] === q[1])) ? i : -1;
+    });
+    const index = new Map();
+    for (const r of j.rows) {
+      if (!Array.isArray(r) || r.length !== 5 || !r.slice(0,2).every(n => Number.isInteger(n) && n >= 0 && n < ids.length) ||
+          !Number.isInteger(r[4]) || !j.sources[r[4]] || r.slice(2,4).some(n => n !== null && (typeof n !== 'number' || !Number.isFinite(n) || n < 0))) throw new Error('ligne officielle invalide');
+      const a = ids[r[0]], b = ids[r[1]];
+      if (a < 0 || b < 0 || a === b) continue;
+      const k = a + '>' + b;
+      if (!index.has(k)) index.set(k, []);
+      index.get(k).push({ prix: r.slice(2,4), source: j.sources[r[4]] });
+    }
+    P.officiels = index;
+  };
+  const prixOfficiel = (P, a, b, date) => {
+    const lignes = P.officiels?.get(a + '>' + b);
+    if (!lignes) return undefined;
+    const valide = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && Number.isFinite(Date.parse(s+'T00:00:00Z')) && new Date(s+'T00:00:00Z').toISOString().slice(0,10) === s;
+    const auj = new Date().toISOString().slice(0,10);
+    let montant = null, source = null;
+    for (const l of lignes) {
+      const s = l.source;
+      if (!valide(date) || !valide(s.checkedOn) || !valide(s.effectiveFrom) || s.checkedOn > auj || Date.parse(auj)-Date.parse(s.checkedOn) > 7*86400000 ||
+          date < s.effectiveFrom || Number(date.slice(0,4)) !== s.verifiedYear || !/^https:\/\/public-content\.vinci-autoroutes\.com\//.test(s.url) || !/^[a-f0-9]{64}$/.test(s.rawSha256) || l.prix.some(n => n == null)) return null;
+      if (montant && (montant[0] !== l.prix[0] || montant[1] !== l.prix[1])) return null;
+      montant = l.prix; source = s;
+    }
+    return { v: montant, source };
+  };
+  const chargerTarifsOfficiels = async (P, url) => {
+    const controle = new AbortController(); let timer;
+    try {
+      const lecture = fetch(url,{signal:controle.signal}).then(r=>r.ok?r.json():null);
+      const limite = new Promise((_,ko)=>{timer=setTimeout(()=>{controle.abort();ko(new Error('délai grilles officielles'));},4000);});
+      const j = await Promise.race([lecture,limite]);
+      if (j) attacherTarifsOfficiels(P,j);
+    } finally { clearTimeout(timer); }
+  };
   const lirePeages = async () => {
     const j = await fetch('peages-aprr.json').then(r => r.json());
     const prix = new Map();
@@ -125,6 +170,7 @@
       P.conflits = tarifsEnConflit(P.g, prix, o.paires);
       for (const q of (o.paires || [])) { const x = ix(q[0]), y = ix(q[1]); const k = Math.min(x, y) * 1000 + Math.max(x, y); if (x >= 0 && y >= 0 && !prix.has(k)) prix.set(k, [q[2], q[3], q[4]]); }
     } catch (_) { /* sans ajouts : tarifs d'origine seuls */ }
+    try { await chargerTarifsOfficiels(P,'data/tolls/route-prices.json'); } catch (_) { /* prix historiques conservés si le complément ne peut être chargé */ }
     return P;
   };
   const chargerPeages = () => {
@@ -140,7 +186,7 @@
     for (let a = Math.floor((lat - dl) / 0.02); a <= Math.floor((lat + dl) / 0.02); a++) for (let b = Math.floor((lon - dn) / 0.02); b <= Math.floor((lon + dn) / 0.02); b++) { const L = P.gi.get(a + ',' + b); if (!L) continue; for (const q of L) { if (ticketsSeulement && P.fixes?.has(q[0])) continue; if (Math.abs(q[1] - lat) > dl || Math.abs(q[2] - lon) > dn) continue; const d = dist(lat, lon, q[1], q[2]); if (d < bd || (d === bd && bi >= 0 && q[0] < bi)) { bd = d; bi = q[0]; } } }
     return bi;
   };
-  const prixExact = (P, sh, tms, km) => {
+  const prixExact = (P, sh, tms, km, date = new Date().toISOString().slice(0,10)) => {
     const f = tms[0], l = tms[tms.length - 1];
     const i0 = f.begin_shape_index, i1 = l.end_shape_index;
     if (!sh[i0] || !sh[i1]) return null;
@@ -166,7 +212,7 @@
     const jc = new Map();
     const jum = g => { if (jc.has(g)) return jc.get(g); const r = [g]; jc.set(g, r); P.g.forEach((o, i) => { if (i !== g && o[1].some(p => P.g[g][1].some(q => dist(p[0], p[1], q[0], q[1]) < 0.06))) r.push(i); }); return r; };
     // V245 : un trajet peut traverser plusieurs mailles tarifaires séparées (ex. A41 Annecy→Chambéry puis Chignin→Crolles) : on additionne les tronçons officiels.
-    const paire = (x, y) => { const ds = x.ent ? [lon(i0, y.k)] : y.ent ? [lon(x.k, i1)] : [lon(x.k, y.k)]; if (x.vo) ds.push(lon(i0, y.k)); if (y.vo) ds.push(lon(x.k, i1)); for (const a of jum(x.g)) for (const b of jum(y.g)) { if (a === b) continue; const cle = Math.min(a, b) * 1000 + Math.max(a, b); if (P.conflits?.has(cle)) continue; const v = P.prix.get(cle); if (!v || !Number.isFinite(v[2]) || v[2] <= 0) continue; if (ds.some(d => { const q = v[2] / Math.max(1, d); return q >= 0.7 && q <= 1.9; })) return { v, a, b }; } return null; };
+    const paire = (x, y) => { const ds = x.ent ? [lon(i0, y.k)] : y.ent ? [lon(x.k, i1)] : [lon(x.k, y.k)]; if (x.vo) ds.push(lon(i0, y.k)); if (y.vo) ds.push(lon(x.k, i1)); for (const a of jum(x.g)) for (const b of jum(y.g)) { if (a === b) continue; const cle = Math.min(a, b) * 1000 + Math.max(a, b); if (P.conflits?.has(cle)) continue; const ancien = P.prix.get(cle); if (!ancien || !Number.isFinite(ancien[2]) || ancien[2] <= 0) continue; const officiel = prixOfficiel(P,a,b,date); if (officiel === null) continue; const v = officiel ? [officiel.v[0],officiel.v[1],ancien[2]] : ancien; if (ds.some(d => { const q = v[2] / Math.max(1, d); return q >= 0.7 && q <= 1.9; })) return { v, a, b, source:officiel?.source }; } return null; };
     const segs = [];
     let i = 0;
     while (i < hits.length) {
@@ -189,7 +235,7 @@
     const dout = segs.some(q => SUSPECTES.includes(P.g[q.p.a][0]) || SUSPECTES.includes(P.g[q.p.b][0]));
     const nO = ouv.map(o => P.g[o.g][0]);
     const detS = segs.map(q => joli(P.g[q.p.a][0]) + ' → ' + joli(P.g[q.p.b][0]));
-    return { e: segs.length ? joli(P.g[segs[0].p.a][0]) : joli(nO[0]), s: segs.length ? joli(P.g[segs[segs.length - 1].p.b][0]) : joli(nO[nO.length - 1]), c1: r2(segs.reduce((n, q) => n + q.p.v[0], 0)), c2: r2(segs.reduce((n, q) => n + q.p.v[1], 0)), det: detS.length ? detS.join(' + ') : 'Péages à tarif fixe', reste: dout ? 99 : 0, ouv: nO.map(n => n.toLowerCase().replace(/[^a-z0-9]+/g, '-')) };
+    return { e: segs.length ? joli(P.g[segs[0].p.a][0]) : joli(nO[0]), s: segs.length ? joli(P.g[segs[segs.length - 1].p.b][0]) : joli(nO[nO.length - 1]), c1: r2(segs.reduce((n, q) => n + q.p.v[0], 0)), c2: r2(segs.reduce((n, q) => n + q.p.v[1], 0)), det: detS.length ? detS.join(' + ') : 'Péages à tarif fixe', sources:segs.map(q=>q.p.source).filter(Boolean), reste: dout ? 99 : 0, ouv: nO.map(n => n.toLowerCase().replace(/[^a-z0-9]+/g, '-')) };
   };
   // V233 : péages « barrière » (sans gare d'entrée/sortie : ponts, tunnels, barrières pleine voie) — tarifs officiels versionnés, jamais d'estimation.
   let OVERLAY = null;
@@ -252,20 +298,20 @@
     }
     return [...names];
   };
-  const CODE_WORKER = () => 'const UNK=' + JSON.stringify(UNK) + ';const dist=' + dist + ';const joli=' + joli + ';const indexGares=' + indexGares + ';const garesFixes=' + garesFixes + ';const tarifsEnConflit=' + tarifsEnConflit + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';const conflitsDuTrace=' + conflitsDuTrace + ';' +
+  const CODE_WORKER = () => 'const UNK=' + JSON.stringify(UNK) + ';const dist=' + dist + ';const joli=' + joli + ';const indexGares=' + indexGares + ';const garesFixes=' + garesFixes + ';const tarifsEnConflit=' + tarifsEnConflit + ';const attacherTarifsOfficiels=' + attacherTarifsOfficiels + ';const prixOfficiel=' + prixOfficiel + ';const chargerTarifsOfficiels=' + chargerTarifsOfficiels + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';const conflitsDuTrace=' + conflitsDuTrace + ';' +
     'let P=null,CHARGEMENT=null;const charger=async base=>{const j=await (await fetch(base+"peages-aprr.json")).json();const prix=new Map();for(const s of j.p.split(";")){const [a,b,c1,c2,d]=s.split(",");const x=parseInt(a,36),y=parseInt(b,36);prix.set(Math.min(x,y)*1000+Math.max(x,y),[c1/10,c2/10,Number(d)]);}' +
     'const CORR={"ST MARTIN BELLEVUE A41 N":[[46.1293,6.0978],[46.1318,6.1]],"BOISSE Système Ouvert":[[45.82868,5.03099],[45.82879,5.03123]]};j.g.forEach(g=>{if(CORR[g[0]])g[1]=CORR[g[0]];});const Q={g:j.g,prix,v:j.v};' +
-    'try{const o=await (await fetch(base+"peages-overlay.json")).json();for(const n of (o.gares||[])){if(!Q.g.some(g=>g[0]===n.nom))Q.g.push([n.nom,n.points]);}const ix=indexGares(Q.g);Q.fixes=garesFixes(Q.g,o);Q.conflits=tarifsEnConflit(Q.g,prix,o.paires);for(const q of (o.paires||[])){const x=ix(q[0]),y=ix(q[1]);const k=Math.min(x,y)*1000+Math.max(x,y);if(x>=0&&y>=0&&!prix.has(k))prix.set(k,[q[2],q[3],q[4]]);}}catch(_){}return Q;};' +
-    'const garesManquantes='+garesManquantes+';onmessage=async e=>{const m=e.data;try{if(!P){if(!CHARGEMENT)CHARGEMENT=charger(m.base).finally(()=>{CHARGEMENT=null;});P=await CHARGEMENT;}const x=prixExact(P,m.sh,m.tms,0);const n=garesTraversees(P,m.sh,m.i0,m.i1);const h=[];if(m.hits){let der=-2;for(let k=m.i0;k<=m.i1;k++){const g=gareProche(P,m.sh[k][0],m.sh[k][1],0.4);if(g>=0&&g!==der){h.push([m.sh[k][0],m.sh[k][1],P.g[g][0]]);der=g;}}}postMessage({id:m.id,x,n,v:P.v,h,missing:garesManquantes(m.sh,m.i0,m.i1),conflicts:conflitsDuTrace(P,m.sh,m.i0,m.i1)});}catch(err){postMessage({id:m.id,err:String(err)});}};';
-  const calculPeage = async (sh, tms, km, hits) => {
+    'try{const o=await (await fetch(base+"peages-overlay.json")).json();for(const n of (o.gares||[])){if(!Q.g.some(g=>g[0]===n.nom))Q.g.push([n.nom,n.points]);}const ix=indexGares(Q.g);Q.fixes=garesFixes(Q.g,o);Q.conflits=tarifsEnConflit(Q.g,prix,o.paires);for(const q of (o.paires||[])){const x=ix(q[0]),y=ix(q[1]);const k=Math.min(x,y)*1000+Math.max(x,y);if(x>=0&&y>=0&&!prix.has(k))prix.set(k,[q[2],q[3],q[4]]);}}catch(_){}try{await chargerTarifsOfficiels(Q,base+"data/tolls/route-prices.json");}catch(_){}return Q;};' +
+    'const garesManquantes='+garesManquantes+';onmessage=async e=>{const m=e.data;try{if(!P){if(!CHARGEMENT)CHARGEMENT=charger(m.base).finally(()=>{CHARGEMENT=null;});P=await CHARGEMENT;}const x=prixExact(P,m.sh,m.tms,0,m.date);const n=garesTraversees(P,m.sh,m.i0,m.i1);const h=[];if(m.hits){let der=-2;for(let k=m.i0;k<=m.i1;k++){const g=gareProche(P,m.sh[k][0],m.sh[k][1],0.4);if(g>=0&&g!==der){h.push([m.sh[k][0],m.sh[k][1],P.g[g][0]]);der=g;}}}postMessage({id:m.id,x,n,v:P.v,h,missing:garesManquantes(m.sh,m.i0,m.i1),conflicts:conflitsDuTrace(P,m.sh,m.i0,m.i1)});}catch(err){postMessage({id:m.id,err:String(err)});}};';
+  const calculPeage = async (sh, tms, km, hits, date = new Date().toISOString().slice(0,10)) => {
     const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
     try {
       if (typeof Worker === 'undefined' || typeof Blob === 'undefined') throw new Error('pas de worker');
       if (!WK) { WK = new Worker(URL.createObjectURL(new Blob([CODE_WORKER()], { type: 'text/javascript' }))); WK.onmessage = e => { const f = WKATT.get(e.data.id); if (f) { WKATT.delete(e.data.id); e.data.err ? f.ko(new Error(e.data.err)) : f.ok(e.data); } }; WK.onerror = () => { const l = [...WKATT.values()]; WKATT.clear(); WK = null; l.forEach(f => f.ko(new Error('worker'))); }; }
-      return await new Promise((ok, ko) => { const id = ++WKID; WKATT.set(id, { ok, ko }); setTimeout(() => { if (WKATT.has(id)) { WKATT.delete(id); ko(new Error('délai')); } }, 40000); WK.postMessage({ id, hits: !!hits, base: new URL('.', location.href).href, sh, tms: [{ begin_shape_index: tms[0].begin_shape_index, end_shape_index: tms[0].end_shape_index }, { begin_shape_index: tms[tms.length - 1].begin_shape_index, end_shape_index: tms[tms.length - 1].end_shape_index }], i0, i1 }); });
+      return await new Promise((ok, ko) => { const id = ++WKID; WKATT.set(id, { ok, ko }); setTimeout(() => { if (WKATT.has(id)) { WKATT.delete(id); ko(new Error('délai')); } }, 40000); WK.postMessage({ id, date, hits: !!hits, base: new URL('.', location.href).href, sh, tms: [{ begin_shape_index: tms[0].begin_shape_index, end_shape_index: tms[0].end_shape_index }, { begin_shape_index: tms[tms.length - 1].begin_shape_index, end_shape_index: tms[tms.length - 1].end_shape_index }], i0, i1 }); });
     } catch (_) {
       const P = await chargerPeages();   // secours : calcul direct (ancienne méthode)
-      return { x: prixExact(P, sh, tms, km), n: garesTraversees(P, sh, i0, i1), v: P.v, missing:garesManquantes(sh,i0,i1), conflicts:conflitsDuTrace(P,sh,i0,i1) };
+      return { x: prixExact(P, sh, tms, km, date), n: garesTraversees(P, sh, i0, i1), v: P.v, missing:garesManquantes(sh,i0,i1), conflicts:conflitsDuTrace(P,sh,i0,i1) };
     }
   };
   const estimerPeage = async (r, out) => {
@@ -306,7 +352,9 @@
       }
       try {
         const tC = performance.now();
-        const R = await calculPeage(sh, tms, km), x = R.x;
+        const dateTarif = r.dateTarif || new Date().toISOString().slice(0,10);
+        const R = await calculPeage(sh, tms, km, false, dateTarif), x = R.x;
+        const preuves = x?.sources?.length ? ' · Grilles ' + [...new Set(x.sources.map(s=>s.id+' (effet '+s.effectiveFrom+', contrôle '+s.checkedOn+')'))].map(esc).join(', ') : '';
         const litiges = R.conflicts?.length ? ' Tarifs contradictoires à vérifier pour les gares proches du tracé : '+R.conflicts.map(esc).join(', ')+'.' : '';
         window.CPT('calcul péage' + (viaGoogle ? ' (Google)' : ''), tC);
         const O = await chargerOverlay();
@@ -314,7 +362,7 @@
         const bar = O ? barrieresTraversees(O, sh, i0, i1) : [];
         if (x && x.ouv && x.ouv.length && !x.ouv.every(n => bar.some(v => v.id === 'aprr-area-ouvert-' + n))) { put(KO, false); return; }   // V265 : barrière à tarif fixe vue par les gares mais pas par le moteur de barrières : on ne devine pas
         if (bar.length) {
-          const auj = new Date().toISOString().slice(0, 10), pas = bar.map((v, n) => ({ type: 'barriere', station: v.id, group: v.id, passage: n }));
+          const auj = dateTarif, pas = bar.map((v, n) => ({ type: 'barriere', station: v.id, group: v.id, passage: n }));
           const t1 = O.m.trajet(pas, 1, auj), t2 = O.m.trajet(pas, 2, auj);
           const noms = bar.map(v => joli(v.id.replace(/-/g, ' '))).join(', ');
           const legOk = !!(x && x.reste < 3);
@@ -322,7 +370,7 @@
             const r2 = n => Math.round(n * 100) / 100;
             const c1 = r2((legOk ? x.c1 : 0) + t1.total), c2 = r2((legOk ? x.c2 : 0) + t2.total);
             const croise = t1.status !== 'PROUVE' || t2.status !== 'PROUVE';
-            put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(c2) + '</b></div><div class="rd sub"><span>' + (legOk ? x.det + ' + ' : '') + 'barrière(s) : ' + noms + '</span></div><div class="rd sub"><span>Source : tarifs officiels 2026' + (croise ? ' (relecture en cours, à vérifier)' : '') + '</span></div>', true);
+            put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(c2) + '</b></div><div class="rd sub"><span>' + (legOk ? x.det + ' + ' : '') + 'barrière(s) : ' + noms + '</span></div><div class="rd sub"><span>Source : tarifs officiels 2026' + (croise ? ' (relecture en cours, à vérifier)' : '') + preuves + '</span></div>', true);
             return;
           }
           put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Barrière(s) détectée(s) : ' + noms +
@@ -331,7 +379,7 @@
           return;
         }
         if (x && x.reste < 3) {
-          put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(x.c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(x.c2) + '</b></div><div class="rd sub"><span>' + x.det + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + R.v + '</span></div>', true);
+          put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(x.c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(x.c2) + '</b></div><div class="rd sub"><span>' + x.det + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + R.v + preuves + '</span></div>', true);
           return;
         }
         if (R.missing?.length || litiges) {

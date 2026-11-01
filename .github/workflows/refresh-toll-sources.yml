@@ -5,6 +5,10 @@ on:
     paths:
       - 'toll-official-catalogue.cjs'
       - 'scripts/refresh-toll-sources.cjs'
+      - 'scripts/build-toll-route-prices.cjs'
+      - 'data/gares-peage-officiel.json'
+      - 'peages-aprr.json'
+      - 'peages-overlay.json'
       - 'data/tolls/sources-2026.json'
       - 'tests/toll-official-catalogue.test.cjs'
       - '.github/workflows/refresh-toll-sources.yml'
@@ -22,9 +26,13 @@ jobs:
       - run: node --test tests/toll-official-catalogue.test.cjs
       - name: Fetch official source tables
         run: node scripts/refresh-toll-sources.cjs
+      - name: Bind existing stations to directed source prices
+        run: node scripts/build-toll-route-prices.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: official-toll-source-tables
-          path: data/tolls/official/
+          path: |
+            data/tolls/official/
+            data/tolls/route-prices.json
           retention-days: 7

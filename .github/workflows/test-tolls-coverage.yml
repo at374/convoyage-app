@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'routes-ui.js'
+      - 'data/tolls/route-prices.json'
+      - 'scripts/build-toll-route-prices.cjs'
       - 'peage-engine.js'
       - 'peages-*.json'
       - 'tests/tolls-coverage.test.cjs'

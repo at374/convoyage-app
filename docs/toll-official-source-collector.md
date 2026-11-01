@@ -11,3 +11,15 @@ The GitHub workflow runs on collector changes and manual dispatch, with seven-da
 ARCOS and Duplex A86 schedules are collected intact, including time, day, badge and Euro-group fields. They cannot be quoted as an unconditional fixed price. Calendar-aware lookup remains to implement. No route, access or availability is verified merely by finding a published price.
 
 The source page is https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-demploi/tarifs-peage-vinci-autoroutes/ . The current reviewed effective dates are ASF 1 June 2026, ESCOTA/Cofiroute/ARCOS 1 February 2026, Duplex A86 1 January 2026. HTTP success and a new hash establish retrieval, not a new effective date; a future annual edition still needs source-date review. National missing-tariff counts remain `null`: five feeds do not establish an exhaustive France/border inventory.
+
+## Connection to the existing route calculator
+
+Run `node scripts/build-toll-route-prices.cjs` after refreshing the sources. The checked-in index currently contains 3,082 directed rows and 237 station bindings. A binding requires an unambiguous normalized station name, the published motorway, and every existing catalogue coordinate within 60 m of a ministry point for that station and motorway. Cross-motorway ambiguities are excluded. Runtime attachment also requires the exact same catalogue coordinates. No coordinates, road distances or reverse tariffs are generated.
+
+Both the actual Blob worker and direct route calculator load `data/tolls/route-prices.json` once with the rest of their catalogue. This optional request is cancelled after four seconds. On download failure the existing catalogue remains available. After a record is attached, an expired, contradictory or unavailable price blocks use of that directed record; it does not silently revert to an old price. The seven-day freshness check runs at each calculation, including offline use.
+
+A fresh directed source price can replace the amount used for an already recognized section, while retaining its independent distance check. The stored historical amount is unchanged. Existing legacy contradictions are still blocked and a source price alone cannot supply a missing distance or certify an incomplete route. This does not mean that all 3,082 rows produce a complete road itinerary.
+
+The renderer shows the contributing source identifier, effective date and retrieval day in its existing source text. `estimerPeage` accepts an explicit ISO `dateTarif` and forwards it to both ticket and fixed-barrier pricing; without it the existing current-day behavior is retained. Wiring exact mission dates in every caller remains separate work. Scheduled production refresh and the hourly pricing of ARCOS/A86 remain unfinished.
+
+Validation uses synthetic forward/reverse/different-year cases as well as the existing recorded public traces. Synthetic prices are labelled as such and are not published as real fares. No physical Android or real mission validation is implied.

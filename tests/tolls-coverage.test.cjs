@@ -7,9 +7,9 @@ const root = path.join(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'routes-ui.js'), 'utf8');
 const fixture = require('./fixtures/tolls-saint-vulbas-la-ciotat-2026-10-31.json');
 const read = name => JSON.parse(fs.readFileSync(path.join(root, name), 'utf8'));
-const exposed = source.replace('  let rafale = false;', '  window.audit={indexGares,garesFixes,tarifsEnConflit,conflitsDuTrace,calculPeage,chargerPeages,prixExact,garesManquantes,barrieresTraversees,dec6,CODE_WORKER,estimerPeage};let rafale = false;');
+const exposed = source.replace('  let rafale = false;', '  window.audit={chargerTarifsOfficiels,attacherTarifsOfficiels,prixOfficiel,indexGares,garesFixes,tarifsEnConflit,conflitsDuTrace,calculPeage,chargerPeages,prixExact,garesManquantes,barrieresTraversees,dec6,CODE_WORKER,estimerPeage};let rafale = false;');
 function load() {
-  const ctx = {window:{CPPeage:require('../peage-engine.js')},document:{documentElement:{},body:{offsetHeight:0}},MutationObserver:class{observe(){}},performance:{now:()=>0},setInterval:()=>0,
+  const ctx = {window:{CPPeage:require('../peage-engine.js')},document:{documentElement:{},body:{offsetHeight:0}},MutationObserver:class{observe(){}},performance:{now:()=>0},AbortController,setInterval:()=>0,
     setTimeout:(fn,ms)=>ms<10?setTimeout(fn,ms):0,clearTimeout,URL,
     fetch:async url=>({ok:true,json:async()=>read(new URL(String(url),'https://test.local/').pathname.slice(1))})};
   vm.createContext(ctx); vm.runInContext(exposed,ctx);
@@ -55,7 +55,7 @@ test('public Saint-Vulbas / La Ciotat trace exposes unresolved southern sections
 });
 test('actual generated worker matches direct loader and unresolved-station diagnostics',async()=>{
   const {api,ctx}=load(),{sh,tms,i0,i1}=route(api),p=await api.chargerPeages(); let reply;
-  const worker={fetch:ctx.fetch,postMessage:v=>{reply=v;}};
+  const worker={AbortController,setTimeout,clearTimeout,fetch:ctx.fetch,postMessage:v=>{reply=v;}};
   vm.createContext(worker); vm.runInContext(api.CODE_WORKER(),worker);
   await worker.onmessage({data:{id:7,base:'https://test.local/',sh,tms,i0,i1}});
   assert.equal(reply.err,undefined);
@@ -140,7 +140,7 @@ for(const [name,barrierId,c1,c2]of [['BONNEVILLE EST','atmb-bonneville-zi',1.7,3
   // Synthetic component trace at surveyed gate, not a public-road itinerary or mission.
   const sh=[[point[0]-.0006,point[1]],point,[point[0]+.0006,point[1]]],tms=[{begin_shape_index:0,end_shape_index:2,toll:true,length:0.2}];
   const r=await api.calculPeage(sh,tms,0.2,false);assert.equal(r.n,0);assert.equal(r.x,null);assert.deepEqual(plain(r.missing),[]);
-  let reply;const wk={fetch:ctx.fetch,postMessage:v=>{reply=v;}};vm.createContext(wk);vm.runInContext(api.CODE_WORKER(),wk);
+  let reply;const wk={AbortController,setTimeout,clearTimeout,fetch:ctx.fetch,postMessage:v=>{reply=v;}};vm.createContext(wk);vm.runInContext(api.CODE_WORKER(),wk);
   await wk.onmessage({data:{id:4,sh,tms,i0:0,i1:2,base:'https://test.local/'}});
   assert.equal(reply.err,undefined);assert.equal(reply.n,0);assert.deepEqual(plain(vm.runInContext('[...P.fixes]',wk)),plain([...p.fixes]));
   assert.deepEqual(plain(api.barrieresTraversees({b:o.barrieres},sh,0,2).map(b=>b.id)),[barrierId]);
@@ -209,7 +209,7 @@ test('the renderer explains a tariff contradiction and never presents the first 
 function pendingCatalogue(ctx){
  const f=require('./fixtures/tolls-conflicting-fares.json');let release,entered;
  const waiting=new Promise(ok=>{release=ok;}),started=new Promise(ok=>{entered=ok;}),calls={base:0,overlay:0};
- ctx.fetch=async url=>({ok:true,json:async()=>{
+ ctx.fetch=async url=>({ok:!String(url).includes('route-prices.json'),json:async()=>{
   if(String(url).includes('peages-aprr.json')){calls.base++;return plain(f.base);}
   calls.overlay++;entered();await waiting;return plain(f.overlay);
  }});
@@ -299,4 +299,66 @@ test('ARCOS prose schedules remain stored but cannot assert a date-only exact pr
   const m=creerMoteur({versions});
   for(const id of ['arcos-ittenheim-barriere','arcos-ittenheim-gare-laterale'])
     for(const c of [1,2]) assert.equal(m.barriere(id,c,'2026-11-01').amount,null);
+});
+function officialCase(){
+ const f=read('tests/fixtures/tolls-official-directed-prices.json'),{api,ctx}=load();
+ ctx.Date=class extends Date{constructor(...a){super(...(a.length?a:['2026-11-01T12:00:00Z']));}};
+ const p={g:f.base.g,prix:new Map([[1,[1,2,2]]])};api.attacherTarifsOfficiels(p,f.official);
+ return {api,ctx,p,f,sh:api.dec6(f.leg.shape),tms:f.leg.maneuvers};
+}
+test('dated directed official prices reach the route calculation without changing legacy amounts',()=>{
+ const {api,p,sh,tms}=officialCase();
+ const x=api.prixExact(p,sh,tms,2,'2026-11-01');assert.equal(x.c1,3.25);assert.equal(x.c2,5.5);assert.equal(x.sources[0].id,'synthetic-official');
+ assert.equal(api.prixExact(p,[...sh].reverse(),tms,2,'2026-11-01').c1,4.25);
+ assert.deepEqual(plain(p.prix.get(1)),[1,2,2]);
+ p.conflits=new Set([1]);assert.equal(api.prixExact(p,sh,tms,2,'2026-11-01'),null);
+});
+test('stale, future, unavailable or contradictory official records cannot silently fall back to an old fare',()=>{
+ for(const change of [j=>{j.sources[0].checkedOn='2026-10-01';},j=>{j.sources[0].checkedOn='2026-11-02';},
+  j=>{j.rows[0][2]=null;},j=>{j.rows.push([0,1,9,10,0]);},j=>{j.sources[0].url='https://example.com/';}]){
+  const {api,p,f,sh,tms}=officialCase();change(f.official);api.attacherTarifsOfficiels(p,f.official);
+  assert.equal(api.prixExact(p,sh,tms,2,'2026-11-01'),null);
+ }
+ const {api,p,sh,tms}=officialCase();
+ for(const date of ['2026-01-31','2027-01-01','2026-02-30'])assert.equal(api.prixExact(p,sh,tms,2,date),null);
+});
+test('station bindings reject changed geometry, distant homonyms and unsupported motorway qualifiers',()=>{
+ for(const change of [j=>{j.stations[0].points[0][0]+=.01;},j=>{j.stations[0].road='unknown';},j=>{j.stations[0].name='Alpha A8';}]){
+  const {api,p,f}=officialCase();change(f.official);api.attacherTarifsOfficiels(p,f.official);assert.equal(api.prixOfficiel(p,0,1,'2026-11-01'),undefined);
+ }
+ const {api,p,f}=officialCase();f.official.rows[0][2]='3.25';assert.throws(()=>api.attacherTarifsOfficiels(p,f.official));
+});
+test('official pricing retains the independent distance and route-completeness guards',()=>{
+ const {api,p,sh,tms}=officialCase();p.prix.set(1,[1,2,null]);assert.equal(api.prixExact(p,sh,tms,2,'2026-11-01'),null);
+ p.prix.set(1,[1,2,200]);assert.equal(api.prixExact(p,sh,tms,2,'2026-11-01'),null);
+});
+test('official source loader, actual worker and renderer agree on direction and dated evidence',async()=>{
+ const {api,ctx,f,sh,tms}=officialCase();
+ ctx.fetch=async url=>({ok:true,json:async()=>plain(String(url).includes('route-prices.json')?f.official:String(url).includes('peages-aprr.json')?f.base:f.overlay)});
+ const p=await api.chargerPeages();assert.equal(api.prixExact(p,sh,tms,2,'2026-11-01').c1,3.25);
+ let reply;const wk={AbortController,setTimeout,clearTimeout,Date:ctx.Date,fetch:ctx.fetch,postMessage:v=>{reply=v;}};vm.createContext(wk);vm.runInContext(api.CODE_WORKER(),wk);
+ await wk.onmessage({data:{id:4,date:'2026-11-01',sh,tms,i0:0,i1:1,base:'https://test.local/'}});
+ assert.equal(reply.err,undefined);assert.equal(reply.x.c1,3.25);assert.equal(reply.x.c2,5.5);
+ await wk.onmessage({data:{id:5,date:'2027-01-01',sh,tms,i0:0,i1:1,base:'https://test.local/'}});assert.equal(reply.x,null);
+ const key=[...sh[0],...sh.at(-1)].map(n=>Number(n).toFixed(3)).join('|');ctx.window.CPValP={[key]:Promise.resolve({trip:{legs:[f.leg]}})};
+ let html='';await api.estimerPeage({pts:sh.map(p=>[p[1],p[0]]),dateTarif:'2026-11-01'},{querySelector:()=>({set innerHTML(s){html=s;},closest:()=>null})});
+ assert.match(html,/3,25/);assert.match(html,/5,50/);assert.match(html,/synthetic-official/);assert.match(html,/contrôle 2026-11-01/);
+});
+test('strict source bindings are reproducible and exclude conflicting road identities',()=>{
+ const {build}=require('../scripts/build-toll-route-prices.cjs'),f=read('tests/fixtures/tolls-official-directed-prices.json');
+ const snapshots=['asf','escota','cofiroute-arcour'].map(id=>read('data/tolls/official/'+id+'.json'));
+ assert.deepEqual(build(read('peages-aprr.json'),read('peages-overlay.json'),read('data/gares-peage-officiel.json'),snapshots),read('data/tolls/route-prices.json'));
+ const snap={...snapshots[0],headers:['autoroute_entree','nom_entree','autoroute_sortie','nom_sortie','classe1','classe2'],rows:[['A7','Alpha','A8','Beta',1,2]]};
+ const m={d:[['Alpha','26A900700CD',48,2.5],['Beta','13A900800CD',48,2.52]]};
+ assert.equal(build(f.base,f.overlay,m,[snap]).rows.length,1);
+ assert.equal(build({...f.base,g:[...f.base.g,['ALPHA',[[48,2.5]]]]},f.overlay,m,[snap]).rows.length,0);
+ assert.equal(build(f.base,f.overlay,{d:m.d.map(r=>[r[0],r[1],r[2]+.1,r[3]])},[snap]).rows.length,0);
+ assert.equal(build(f.base,f.overlay,{d:[...m.d,['Alpha','26A900701CD',49,2.5]]},[snap]).rows.length,0);
+});
+test('an unavailable official index has a bounded wait and cancels its download',async()=>{
+ const {api,ctx}=load();let cancelled=false;
+ ctx.fetch=async(url,opt)=>{opt.signal.addEventListener('abort',()=>{cancelled=true;});return new Promise(()=>{});};
+ ctx.setTimeout=fn=>setTimeout(fn,1);
+ await assert.rejects(api.chargerTarifsOfficiels({},'https://test.local/index'),/délai/);
+ assert.equal(cancelled,true);
 });
