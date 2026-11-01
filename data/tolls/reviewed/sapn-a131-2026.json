@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "status": "awaiting-source-coordinate-validation",
+  "sourceUrl": "https://www.autoroutes.sanef.com/sites/default/files/2026-01/2026_02-Grille-SAPN.pdf",
+  "effectiveFrom": "2026-02-01",
+  "currency": "EUR",
+  "scope": "Four documented legacy gaps; not a national completeness certificate",
+  "destination": "TANCARVILLE (A131)",
+  "pages": {
+    "1": 2,
+    "2": 3
+  },
+  "rows": [
+    {
+      "origin": "INCARVILLE N°19 / A154",
+      "pdfLabel": "INCARVILLE",
+      "class1": 5.8,
+      "class2": 9.4
+    },
+    {
+      "origin": "HEUDEBOUVILLE N°18",
+      "pdfLabel": "HEUDEBOUVILLE",
+      "class1": 5.9,
+      "class2": 9.4
+    },
+    {
+      "origin": "CHAUFOUR N°15 à GAILLON N°17",
+      "pdfLabel": "CHAUFOUR",
+      "class1": 7.9,
+      "class2": 12.6
+    },
+    {
+      "origin": "POISSY / ORGEVAL N°7 à MANTES-SUD N°12",
+      "pdfLabel": "POISSY",
+      "class1": 10.9,
+      "class2": 17.5
+    }
+  ]
+}
