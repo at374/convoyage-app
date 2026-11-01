@@ -268,3 +268,35 @@ test('an official amount without a checked distance cannot fabricate a complete 
  const {api}=load(),p={g:[['A',[[48,2.5]]],['B',[[48,2.52]]]],prix:new Map([[1,[5.8,9.4,null]]])};
  assert.equal(api.prixExact(p,[[48,2.5],[48,2.52]],[{begin_shape_index:0,end_shape_index:1}],2),null);
 });
+
+
+test('uninterpreted tariff conditions cannot become unconditional exact prices',()=>{
+  const {contexteApplique,creerMoteur}=require('../peage-engine.js');
+  for(const ctx of ['09h-15h29 semaine', '', false, [], {}, {direction:'FR-IT'}, {periode:'01/01-31/12',heure:'09:00'}]){
+    assert.equal(contexteApplique(ctx,'2026-11-01'),false,JSON.stringify(ctx));
+    const m=creerMoteur({versions:[{id:'conditional',barrier_station_id:'x',vehicle_class:1,
+      amount_eur:4.4,status:'PROUVE',effective_from:'2026-01-01',tariff_context:ctx}]});
+    assert.equal(m.barriere('x',1,'2026-11-01').amount,null);
+  }
+  assert.equal(contexteApplique(null,'2026-11-01'),true);
+  assert.equal(contexteApplique({periode:'invalid'},'2026-11-01'),false);
+});
+test('both Millau station identities use official seasonal fares at every boundary',()=>{
+  const {creerMoteur}=require('../peage-engine.js'),j=read('peages-overlay.json');
+  const versions=j.tarifs.map(t=>({id:t.id,barrier_station_id:t.b,vehicle_class:t.c,amount_eur:t.a,
+    status:t.s,effective_from:t.f,tariff_context:t.k??null}));
+  const m=creerMoteur({versions});
+  for(const id of ['cevm-saint-germain','viaduc-millau'])
+    for(const [date,prices] of [['2026-06-14',[11.3,17]],['2026-06-15',[13.8,20.7]],
+      ['2026-09-15',[13.8,20.7]],['2026-09-16',[11.3,17]],['2026-12-31',[11.3,17]],['2027-01-01',[11.3,17]]])
+      for(const c of [1,2]) assert.equal(m.barriere(id,c,date).amount,prices[c-1],id+' '+date+' classe '+c);
+});
+test('ARCOS prose schedules remain stored but cannot assert a date-only exact price',()=>{
+  const {creerMoteur}=require('../peage-engine.js'),j=read('peages-overlay.json');
+  const versions=j.tarifs.filter(t=>t.b?.startsWith('arcos-')).map(t=>({id:t.id,
+    barrier_station_id:t.b,vehicle_class:t.c,amount_eur:t.a,status:t.s,effective_from:t.f,tariff_context:t.k}));
+  assert.equal(versions.length,4);
+  const m=creerMoteur({versions});
+  for(const id of ['arcos-ittenheim-barriere','arcos-ittenheim-gare-laterale'])
+    for(const c of [1,2]) assert.equal(m.barriere(id,c,'2026-11-01').amount,null);
+});

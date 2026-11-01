@@ -20,3 +20,10 @@ Les quatre paires sont ajoutées au catalogue sans modifier aucune ligne existan
 Aucune distance tarifaire ne figure dans cette grille : le champ reste null et le calcul géométrique refuse d'utiliser ces paires pour fabriquer un total. Les prix sont retrouvés; la validation d'itinéraires complets est une autre étape.
 
 Ce rattrapage clôt les quatre absences de classe 2 documentées dans cet historique. Il ne prouve pas une couverture actuelle à 100 % de toutes les autoroutes, ponts, tunnels, contextes horaires et frontières. Les 280 libellés non raccordés et 14 conflits précédemment recensés restent des problèmes distincts.
+
+
+## Complementary facilities and conditional fares
+
+Reviewed source records are in `data/tolls/reviewed/special-facilities-2026-11-01.json`. Prado Carenage's 3.30 EUR base passage is confirmed by the operator's regulated 2026 release; Prado Sud's 2.90 EUR remains a secondary-source candidate, not an imported official price. The Pont de Re operator publishes 4/8/16 EUR for classes 1/2 according to season, for a round trip; holiday exceptions and route identity remain to integrate. Schloesing is a specific free connection, not a blanket Prado tunnel exemption. These source findings do not imply Agenda or route integration.
+
+The fixed-price engine previously accepted free-text conditions as unconditional. Such conditions now remain unresolved. ARCOS's four stored time-dependent prices therefore cannot be used with date-only context. Millau's second station identity now has structured winter and summer records (11.30/13.80 EUR class 1; 17.00/20.70 EUR class 2), matching the existing CEVM identity and the official 2026 page. No stored ARCOS amount is deleted and no time-dependent rate is guessed.

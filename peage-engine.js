@@ -6,15 +6,17 @@
   if (typeof module === 'object' && module.exports) module.exports = factory(); else root.CPPeage = factory();
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
-  const ENGINE_VERSION = '1.0.0';
+  const ENGINE_VERSION = '1.0.1';
   const RANG = { PROUVE: 3, CROISE: 2, ESTIME_PROVISOIRE: 1, INCONNU: 0 };
   const pire = (a, b) => (RANG[a] <= RANG[b] ? a : b);
   const r2 = x => Math.round(x * 100) / 100;
   const jour = d => (d instanceof Date ? d.toISOString().slice(0, 10) : String(d).slice(0, 10));
 
-  // Contexte tarifaire : saison « JJ/MM-JJ/MM » (peut chevaucher le nouvel an). Sans période = toujours applicable.
+  // Seul un contexte saisonnier structuré est interprété. Une note libre ou une condition inconnue ne prouve jamais le prix.
   function contexteApplique(ctx, date) {
-    if (!ctx || !ctx.periode) return true;
+    if (ctx == null) return true;
+    if (typeof ctx !== 'object' || Array.isArray(ctx) || typeof ctx.periode !== 'string' ||
+        Object.keys(ctx).some(k => k !== 'periode' && k !== 'saison')) return false;
     const m = /^(\d{2})\/(\d{2})-(\d{2})\/(\d{2})$/.exec(ctx.periode);
     if (!m) return false;
     const d = jour(date), mmdd = d.slice(5, 7) + d.slice(8, 10);
