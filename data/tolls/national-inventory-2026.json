@@ -271,8 +271,12 @@
     {
       "id": "duplex-a86",
       "parentEntity": "cofiroute",
-      "coverageState": "requires_facility_specific_audit",
-      "tariffCompletenessVerified": false
+      "coverageState": "official_feed_and_timed_lookup_available_not_UI_connected",
+      "tariffCompletenessVerified": false,
+      "evidence": [
+        "data/tolls/official/duplex-a86.json",
+        "data/tolls/a86-calendar-2026.json"
+      ]
     },
     {
       "id": "tunnel-mont-blanc",
@@ -325,8 +329,11 @@
     {
       "id": "tunnel-envalira",
       "parentEntity": null,
-      "coverageState": "requires_facility_specific_audit",
-      "tariffCompletenessVerified": false
+      "coverageState": "official_prices_and_conditional_products_archived_route_not_integrated",
+      "tariffCompletenessVerified": false,
+      "evidence": [
+        "data/tolls/reviewed/special-facilities-2026-11-01.json"
+      ]
     },
     {
       "id": "swiss-motorway-vignette",

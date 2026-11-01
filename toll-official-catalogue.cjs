@@ -53,6 +53,7 @@ function quote(snapshot,request){
  if(date<snapshot.effectiveFrom||Number(date.slice(0,4))!==snapshot.verifiedYear)return unknown('outside-verified-period');
  if(!Number.isInteger(request.vehicleClass)||request.vehicleClass<1||request.vehicleClass>5)return unknown('invalid-vehicle-class');
  if(snapshot.format==='arcos-schedule')return quoteArcos(snapshot,{...request,date},unknown);
+ if(snapshot.format==='a86-schedule')return quoteA86(snapshot,{...request,date},unknown);
  if(snapshot.format!=='od')return unknown('calendar-time-or-payment-context-required');
  if(!request.originRoad||!request.originName||!request.destinationRoad||!request.destinationName)return unknown('road-qualified-endpoints-required');
  const h=snapshot.headers.map(normal),at=name=>h.indexOf(normal(name));
@@ -68,16 +69,20 @@ function quote(snapshot,request){
  if(new Set(amounts).size!==1)return unknown('contradictory-source-rows');
  return {status:'official-source-price',amount:amounts[0],currency:'EUR',sourceUrl:snapshot.sourceUrl,effectiveFrom:snapshot.effectiveFrom,checkedOn:snapshot.checkedOn,rawSha256:snapshot.rawSha256,routeVerified:false};
 }
+function passageLocal(request,timeZone){
+ const timestamp=request.passageTime;
+ if(typeof timestamp!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})$/.test(timestamp)||!validDate(timestamp.slice(0,10)))return {error:'explicit-passage-time-and-offset-required'};
+ const instant=new Date(timestamp);if(!Number.isFinite(instant.getTime()))return {error:'invalid-passage-time'};
+ const parts=new Intl.DateTimeFormat('en-GB',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(instant);
+ const part=type=>parts.find(p=>p.type===type).value,localDate=part('year')+'-'+part('month')+'-'+part('day');
+ if(localDate!==request.date)return {error:'passage-time-date-mismatch'};
+ return {localDate,minute:Number(part('hour'))*60+Number(part('minute')),weekday:new Date(localDate+'T12:00:00Z').getUTCDay()};
+}
 function quoteArcos(snapshot,request,unknown){
  const rules=require('./data/tolls/arcos-time-bands-2026.json'),holidays=require('./data/tolls/arcos-holidays-2026.json');
  if(snapshot.sourceId!=='arcos'||Number(request.date.slice(0,4))!==rules.year||rules.year!==holidays.year)return unknown('unreviewed-calendar');
- const timestamp=request.passageTime;
- if(typeof timestamp!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})$/.test(timestamp)||!validDate(timestamp.slice(0,10)))return unknown('explicit-passage-time-and-offset-required');
- const instant=new Date(timestamp);if(!Number.isFinite(instant.getTime()))return unknown('invalid-passage-time');
- const parts=new Intl.DateTimeFormat('en-GB',{timeZone:rules.timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(instant);
- const part=type=>parts.find(p=>p.type===type).value,localDate=part('year')+'-'+part('month')+'-'+part('day');
- if(localDate!==request.date)return unknown('passage-time-date-mismatch');
- const holiday=Object.hasOwn(holidays.dates,localDate),day=holiday?0:new Date(localDate+'T12:00:00Z').getUTCDay(),minute=Number(part('hour'))*60+Number(part('minute'));
+ const local=passageLocal(request,rules.timeZone);if(local.error)return unknown(local.error);
+ const {localDate,minute}=local,holiday=Object.hasOwn(holidays.dates,localDate),day=holiday?0:local.weekday;
  const bands=rules.bands.filter(b=>b.windows.some(w=>w.days.includes(day)&&minute>=w.fromMinute&&minute<=w.throughMinute));
  if(bands.length!==1)return unknown('ambiguous-or-missing-time-band');
  const h=snapshot.headers,at=name=>h.indexOf(name),reviewed=new Set(rules.bands.map(b=>b.labelSha256));
@@ -93,7 +98,27 @@ function quoteArcos(snapshot,request,unknown){
  const amounts=selected.map(r=>r[at('Tarif_TTC')]);
  if(amounts.some(n=>n===null||!Number.isFinite(n))||new Set(amounts).size!==1)return unknown('missing-or-contradictory-time-price');
  return {status:'official-source-price',amount:amounts[0],currency:'EUR',sourceUrl:snapshot.sourceUrl,rawSha256:snapshot.rawSha256,effectiveFrom:snapshot.effectiveFrom,checkedOn:snapshot.checkedOn,
-  timeBand:bands[0].id,passageTime:timestamp,localDate,holidayApplied:holiday,calendarSource:holidays.source,ruleSource:rules.source,routeVerified:false};
+  timeBand:bands[0].id,passageTime:request.passageTime,localDate,holidayApplied:holiday,calendarSource:holidays.source,ruleSource:rules.source,routeVerified:false};
+}
+function quoteA86(snapshot,request,unknown){
+ const calendar=require('./data/tolls/a86-calendar-2026.json');
+ if(snapshot.sourceId!=='duplex-a86'||Number(request.date.slice(0,4))!==calendar.year)return unknown('unreviewed-calendar');
+ if(request.vehicleClass!==1)return unknown('no-reviewed-a86-price-for-this-vehicle-class');
+ if(typeof request.badgeDetectedBoth!=='boolean')return unknown('explicit-entry-and-exit-badge-context-required');
+ const local=passageLocal(request,'Europe/Paris');if(local.error)return unknown(local.error);
+ const {localDate,minute,weekday}=local,holiday=Object.hasOwn(calendar.dates,localDate);
+ const tomorrow=new Date(Date.parse(localDate+'T12:00:00Z')+86400000).toISOString().slice(0,10);
+ const eve=Object.hasOwn(calendar.dates,tomorrow)||Object.hasOwn(calendar.nextYearDates,tomorrow);
+ const dayType=holiday||weekday===0?'Dimanches+Fêtes':localDate.slice(5,7)==='08'?'Jours ouvrables août':weekday===6?'Samedi':eve?'Veilles de fêtes':['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'][weekday];
+ const allowed=new Set(['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Veilles de fêtes','Dimanches+Fêtes','Jours ouvrables août']);
+ const h=snapshot.headers,at=n=>h.indexOf(n),col=h.indexOf(request.route);
+ if(col<4||!['Rueil_Vaucresson','Rueil_Vélizy','Vaucresson_Rueil','Vaucresson_Vélizy','Vélizy_Vaucresson','Vélizy_Rueil'].includes(request.route))return unknown('exact-published-directed-section-required');
+ if(snapshot.rows.some(r=>!allowed.has(r[at('Type_jour')])))return unknown('unreviewed-day-type');
+ const clock=s=>{const m=/^(\d{1,2})H([0-5]\d)?$/.exec(s);return m&&Number(m[1])<=24&&(Number(m[1])<24||!Number(m[2]))?Number(m[1])*60+Number(m[2]||0):NaN;};
+ const selected=snapshot.rows.filter(r=>r[at('Type_jour')]===dayType&&r[at('paiement_badge')]===(request.badgeDetectedBoth?'oui':'non')&&minute>=clock(r[at('Heure_début')])&&minute<clock(r[at('heure_fin')]));
+ if(selected.length!==1||!Number.isFinite(selected[0][col]))return unknown('missing-or-overlapping-time-price');
+ return {status:'official-source-price',amount:selected[0][col],currency:'EUR',sourceUrl:snapshot.sourceUrl,rawSha256:snapshot.rawSha256,effectiveFrom:snapshot.effectiveFrom,checkedOn:snapshot.checkedOn,
+  passageTime:request.passageTime,localDate,dayType,holidayApplied:holiday,badgeDetectedBoth:request.badgeDetectedBoth,calendarSource:calendar.source,ruleSource:calendar.ruleSource,routeVerified:false};
 }
 function coverage(manifest){
  return {universeComplete:false,missingNationalTariffs:null,sourceCount:manifest.sources.length,successfulSources:manifest.sources.filter(s=>s.status==='fresh').length,staleSources:manifest.sources.filter(s=>s.status!=='fresh').map(s=>s.id),rowCount:manifest.sources.reduce((n,s)=>n+(s.rows||0),0),certificate:'partial-source-collection-only'};
