@@ -5,6 +5,8 @@ on:
       - 'routes-ui.js'
       - 'data/tolls/**'
       - 'toll-official-catalogue.cjs'
+      - 'toll-swiss-prices.cjs'
+      - 'scripts/audit-aura-toll-coverage.cjs'
       - 'tests/toll-*.test.cjs'
       - 'scripts/build-toll-route-prices.cjs'
       - 'peage-engine.js'

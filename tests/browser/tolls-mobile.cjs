@@ -9,6 +9,9 @@ const overlay=JSON.parse(fs.readFileSync(path.join(root,'peages-overlay.json'),'
 const conflicting=require('../fixtures/tolls-conflicting-fares.json');
 const official=require('../fixtures/tolls-official-directed-prices.json');
 const cases=[{name:'La Ciotat unresolved public trace',leg:fixture},{name:'Bonneville / Annemasse public trace',leg:require('../fixtures/tolls-bonneville-annemasse-2026-11-01.json'),prices:['3,50','6,20']}];
+const tarare=overlay.barrieres.find(b=>b.id==='asf-tarare-est-ouvert').points[0];
+cases.push({name:'Synthetic Tarare Est open gate',prices:['1,80','2,80'],leg:{shape:encode6([[tarare[0]-.0006,tarare[1]],tarare,[tarare[0]+.0006,tarare[1]]]),maneuvers:[{begin_shape_index:0,end_shape_index:2,toll:true,length:.2}]}});
+cases.push({name:'Synthetic Swiss road with vignette already in toll inputs',swissNoToll:true,leg:{shape:encode6(Array.from({length:12},(_,i)=>[46.52,6.62+i*.0001])),maneuvers:[{begin_shape_index:0,end_shape_index:11,toll:false,length:.2}]}});
 cases.push({name:'Synthetic conflicting tariff',leg:conflicting.leg,conflict:true});
 cases.push({name:'Synthetic official forward',leg:official.leg,official:true,prices:['3,25','5,50']});
 cases.push({name:'Synthetic official reverse',leg:{...official.leg,shape:encode6([[48,2.52],[48,2.5]])},official:true,prices:['4,25','6,50']});
@@ -48,12 +51,13 @@ for(const [name,c1,c2]of [['BONNEVILLE EST','1,70','3,10'],['BONNEVILLE OUEST','
     await window.audit.estimerPeage({pts:[[a[1],a[0]],[b[1],b[0]]],dateTarif:date},document.body);
    },{fixture:scenario.leg,date:scenario.date});
    const text=await page.locator('[data-peage]').innerText();
-   if(scenario.prices){assert.match(text,/Classe 1/);assert.match(text,/Classe 2/);for(const price of scenario.prices)assert.ok(text.includes(price),text);assert.doesNotMatch(text,/Prix exact non disponible|Aucun péage/);}
+   if(scenario.swissNoToll){assert.match(text,/Aucun péage/);assert.match(text,/déjà comptabilisée/);assert.match(text,/aucun ajout automatique/);assert.doesNotMatch(text,/40 CHF|80 CHF|Classe 1|Classe 2/);}
+   else if(scenario.prices){assert.match(text,/Classe 1/);assert.match(text,/Classe 2/);for(const price of scenario.prices)assert.ok(text.includes(price),text);assert.doesNotMatch(text,/Prix exact non disponible|Aucun péage/);}
    else if(scenario.unconfirmed){assert.match(text,/Prix exact non disponible/);assert.doesNotMatch(text,/Classe 1|Classe 2|Aucun péage/);}
    else if(scenario.conflict){assert.match(text,/Tarifs contradictoires/);assert.match(text,/Alpha → Beta/);assert.doesNotMatch(text,/Classe 1|Classe 2|Aucun péage/);}
    else{assert.match(text,/La Ciotat BPV/);assert.match(text,/Aucun total partiel/);assert.doesNotMatch(text,/Aprr Area Ouvert Boisse|Classe 1/);}
    if(scenario.official&&scenario.prices){assert.match(text,/synthetic-official/);assert.match(text,/contrôle 2026-11-01/);}
-   assert.deepEqual(errors,[]);assert.equal(workerCount,worker?1:0);
+   assert.deepEqual(errors,[]);assert.equal(workerCount,scenario.swissNoToll?0:worker?1:0);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    console.log(`PASS mobile Chromium: ${scenario.name}, ${worker?'actual Blob worker':'direct fallback'}, correct tariff status, no overflow`);
    await context.close();

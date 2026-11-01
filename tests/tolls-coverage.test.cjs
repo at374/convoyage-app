@@ -378,3 +378,16 @@ test('a malformed pickup date refuses a price rather than substituting today',as
  await api.estimerPeage({dateTarif:null,pts:[[2.5,48],[2.52,48]]},{querySelector:()=>({set innerHTML(s){html=s;},closest:()=>null})});
  assert.match(html,/Date du trajet invalide/);assert.doesNotMatch(html,/Classe 1|Classe 2|Aucun péage/);
 });
+test('Tarare Est open-system barrier is priced separately from the closed ticket station',async()=>{
+ const {api,ctx}=load(),o=read('peages-overlay.json'),b=o.barrieres.find(b=>b.id==='asf-tarare-est-ouvert'),point=b.points[0];
+ const p=await api.chargerPeages(),closed=api.indexGares(p.g)('Tarare Est F');assert.ok(closed>=0);assert.ok(!p.fixes.has(closed));
+ const sh=[[point[0]-.0006,point[1]],point,[point[0]+.0006,point[1]]],tms=[{begin_shape_index:0,end_shape_index:2,toll:true,length:.2}];
+ const calc=await api.calculPeage(sh,tms,.2,false,'2026-11-01');assert.equal(calc.n,0);assert.equal(calc.x,null);
+ const engine=require('../peage-engine.js').creerMoteur({versions:o.tarifs.map(t=>({id:t.id,barrier_station_id:t.b,vehicle_class:t.c,amount_eur:t.a,status:t.s,effective_from:t.f,effective_to:t.t||null}))});
+ assert.equal(engine.barriere(b.id,1,'2026-11-01').amount,1.8);assert.equal(engine.barriere(b.id,2,'2026-11-01').amount,2.8);assert.equal(engine.barriere(b.id,1,'2027-01-01').amount,null);
+ const proof=o.barrieres_preuves.find(p=>p.barrierId===b.id),source=read('data/tolls/official/asf.json');assert.equal(proof.sourceRawSha256,source.rawSha256);
+ assert.deepEqual(proof.publishedClassPrices,[1.8,2.8,5.1,6.8,1]);
+ const key=[...sh[0],...sh.at(-1)].map(n=>Number(n).toFixed(3)).join('|');ctx.window.CPValP={[key]:Promise.resolve({trip:{legs:[{shape:encode6(sh),maneuvers:tms}]}})};
+ let html='';await api.estimerPeage({pts:sh.map(p=>[p[1],p[0]]),dateTarif:'2026-11-01'},{querySelector:()=>({set innerHTML(s){html=s;},closest:()=>null})});
+ assert.match(html,/Tarare Est Ouvert/);assert.match(html,/1,80/);assert.match(html,/2,80/);assert.doesNotMatch(html,/Prix exact non disponible|Aucun péage/);
+});
