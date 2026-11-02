@@ -45,8 +45,12 @@
       return name+' : '+(leg.verified&&money(leg.amountEUR)!==null?
         leg.amountEUR.toFixed(2).replace('.',',')+' €':'prix inconnu');
     });
-    return (result.known?'Total : '+result.totalEUR.toFixed(2).replace('.',',')+' €':'Total inconnu')+
-      (portions.length?' · '+portions.join(' · '):'');
+    const partial=!result.known&&result.breakdown.some(x=>x.verified);
+    const verifiedSubtotal=partial?Math.round(result.breakdown.reduce((sum,x)=>sum+(x.verified&&money(x.amountEUR)!==null?x.amountEUR:0),0)*100)/100:null;
+    const unknownCount=partial?result.breakdown.filter(x=>!x.verified).length:0;
+    const heading=result.known?'Total : '+result.totalEUR.toFixed(2).replace('.',',')+' €':
+      partial?'Total inconnu · Sous-total vérifié : '+verifiedSubtotal.toFixed(2).replace('.',',')+' € · '+unknownCount+' portion'+(unknownCount>1?'s':'')+' sans prix':'Total inconnu';
+    return heading+(portions.length?' · '+portions.join(' · '):'');
   }
   const api={fare,describe};if(typeof module==='object'&&module.exports)module.exports=api;
   root.CPTransportFares=api;
