@@ -2598,7 +2598,7 @@
               const steps=document.createElement('ol');
               const stepTime=value=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',dateStyle:'short',timeStyle:'medium'}).format(new Date(value));
               for(const [legIndex,leg] of result.legs.entries()){
-                const step=document.createElement('li');step.textContent=(leg.mode==='wa_wal'?'Marche':leg.line||'Correspondance')+' · '+
+                const step=document.createElement('li');step.textContent=(leg.mode==='wa_wal'?'Marche':leg.mode==='stationary_wait'?'Attente':leg.mode==='stationary_transfer'?'Correspondance à pied':leg.line||leg.provider||'Transport (ligne non identifiée)')+' · '+
                   stepTime(leg.departure)+' → '+stepTime(leg.arrival)+' · '+leg.from+' → '+leg.to;
                 const legFare=fareSummary?.breakdown?.[legIndex];
                 if(legFare){
