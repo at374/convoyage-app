@@ -76,3 +76,17 @@ test('partial fare exposes only verified costs and never fabricates a full total
  assert.equal(complete.knownSubtotalEUR,complete.totalEUR);
  assert.equal(complete.unknownLegCount,0);
 });
+
+test('empty itinerary has stable partial-fare metadata',()=>{
+ const result=fare([]);
+ assert.equal(result.totalEUR,null);
+ assert.equal(result.knownSubtotalEUR,0);
+ assert.equal(result.unknownLegCount,0);
+ assert.equal(result.known,false);
+});
+test('verified fare subtotal adds cents without binary floating point drift',()=>{
+ const legs=[0.1,0.2,0.3].map(verifiedPriceEUR=>({provider:'TER',fareVerified:true,fareSource:'source vérifiée',verifiedPriceEUR}));
+ const result=fare(legs);
+ assert.equal(result.knownSubtotalEUR,0.6);
+ assert.equal(result.totalEUR,0.6);
+});
