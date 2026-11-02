@@ -62,3 +62,15 @@ test('expired pass falls back to an independently valid paid fare',()=>{
   assert.equal(result.breakdown[0].passApplied,false);
   assert.equal(result.breakdown[0].source,leg.fareSource);
 });
+
+test('partial fare exposes only verified costs and never fabricates a full total',()=>{
+ const result=fare([{...dated,departure:'2026-11-15T12:00:00+01:00'},{provider:'Interurban',departure:'2026-11-15T13:00:00+01:00'}]);
+ assert.equal(result.known,false);
+ assert.equal(result.totalEUR,null);
+ assert.equal(result.knownSubtotalEUR,8.5);
+ assert.equal(result.unknownLegCount,1);
+ assert.match(describe(result),/Total inconnu/);
+ const complete=fare([{...dated,departure:'2026-11-15T12:00:00+01:00'}]);
+ assert.equal(complete.knownSubtotalEUR,complete.totalEUR);
+ assert.equal(complete.unknownLegCount,0);
+});
