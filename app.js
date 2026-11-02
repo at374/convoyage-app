@@ -2600,6 +2600,11 @@
               for(const [legIndex,leg] of result.legs.entries()){
                 const step=document.createElement('li');step.textContent=(leg.mode==='wa_wal'?'Marche':leg.mode==='stationary_wait'?'Attente':leg.mode==='stationary_transfer'?'Correspondance à pied':leg.line||leg.provider||'Transport (ligne non identifiée)')+' · '+
                   stepTime(leg.departure)+' → '+stepTime(leg.arrival)+' · '+leg.from+' → '+leg.to;
+                if(leg.mode==='wa_wal'&&Number.isFinite(leg.distanceMeters)&&leg.distanceMeters>=0){
+                  const walkingDistance=document.createElement('span');walkingDistance.setAttribute('data-tripgo-walk-distance','');
+                  walkingDistance.textContent=' · Marche : '+Math.ceil(leg.distanceMeters)+' m (distance fournisseur, cheminement à vérifier)';
+                  step.appendChild(walkingDistance);
+                }
                 const legFare=fareSummary?.breakdown?.[legIndex];
                 if(legFare){
                   const fareDetail=document.createElement('span');fareDetail.setAttribute('data-tripgo-leg-fare','');
