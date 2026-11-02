@@ -158,3 +158,12 @@ test('fare calculation tolerates null options without making unknown transit fre
  assert.equal(result.unknownLegCount,1);
  assert.equal(fare([{mode:'wa_wal'}],null).totalEUR,0);
 });
+
+test('Agenda per-leg labels are consistent with verified, pass, walk and unknown fare evidence',()=>{
+ const {describeLeg}=require('../transport-fares.js');
+ assert.equal(describeLeg(null),'Tarif inconnu');
+ assert.equal(describeLeg(fare([{mode:'wa_wal'}]).breakdown[0]),'Sans billet');
+ assert.equal(describeLeg(fare([{mode:'pt_pub_bus'}]).breakdown[0]),'Tarif inconnu');
+ assert.equal(describeLeg(fare([{provider:'TER',fareVerified:true,fareSource:'officiel',verifiedPriceEUR:8.5}]).breakdown[0]),'Tarif vérifié : 8,50 €');
+ assert.equal(describeLeg(fare([{...sibra}],{sibraPassActive:true}).breakdown[0]),'Couvert par abonnement vérifié');
+});
