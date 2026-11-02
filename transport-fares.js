@@ -13,6 +13,7 @@
     return Number.isFinite(start)&&Number.isFinite(end)&&start<=when&&when<=end;
   }
   function fare(legs,options={}){
+    options=options&&typeof options==='object'?options:{};
     const items=Array.isArray(legs)?legs:[];
     if(!items.length)return {totalEUR:null,known:false,knownSubtotalEUR:0,unknownLegCount:0,breakdown:[],status:'Tarif non vérifié'};
     const breakdown=items.map(leg=>{
