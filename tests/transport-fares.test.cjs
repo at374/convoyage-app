@@ -109,3 +109,13 @@ test('a walking-only route has zero ticket cost',()=>{
  assert.equal(result.known,true);
  assert.equal(result.unknownLegCount,0);
 });
+
+test('fare description labels walking and transfers as no-ticket, not verified transit tickets',()=>{
+ const result=fare([{mode:'wa_wal'},{mode:'stationary_wait'},{mode:'pt_pub_bus',provider:'Bus'}]);
+ assert.equal(result.unknownLegCount,1);
+ assert.equal(result.breakdown[0].nonTicketed,true);
+ assert.equal(result.breakdown[1].nonTicketed,true);
+ assert.equal(result.breakdown[2].nonTicketed,false);
+ assert.match(describe(result),/Marche \/ correspondance : sans billet/);
+ assert.doesNotMatch(describe(result),/abonnement vérifié/);
+});
