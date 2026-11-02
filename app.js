@@ -2603,7 +2603,7 @@
                 const legFare=fareSummary?.breakdown?.[legIndex];
                 if(legFare){
                   const fareDetail=document.createElement('span');fareDetail.setAttribute('data-tripgo-leg-fare','');
-                  fareDetail.textContent=legFare.nonTicketed?' · Sans billet':legFare.passApplied?' · Couvert par abonnement vérifié':legFare.verified?' · Tarif vérifié : '+legFare.amountEUR.toFixed(2).replace('.',',')+' €':' · Tarif inconnu';
+                  fareDetail.textContent=' · '+(window.CPTransportFares.describeLeg?.(legFare)||'Tarif inconnu');
                   step.appendChild(fareDetail);
                 }
                 const validMapPoint=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180;
