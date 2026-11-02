@@ -49,7 +49,7 @@
       return name+' : '+(leg.verified&&money(leg.amountEUR)!==null?
         leg.amountEUR.toFixed(2).replace('.',',')+' €':'prix inconnu');
     });
-    const partial=!result.known&&result.breakdown.some(x=>x.verified);
+    const partial=!result.known&&result.breakdown.some(x=>x.verified&&!x.nonTicketed);
     const verifiedSubtotal=partial?Math.round(result.breakdown.reduce((sum,x)=>sum+(x.verified&&money(x.amountEUR)!==null?x.amountEUR:0),0)*100)/100:null;
     const unknownCount=partial?result.breakdown.filter(x=>!x.verified).length:0;
     const heading=result.breakdown.length&&result.breakdown.every(x=>x.nonTicketed)?'Aucun billet requis':result.known?'Total : '+result.totalEUR.toFixed(2).replace('.',',')+' €':
