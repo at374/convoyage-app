@@ -2583,8 +2583,9 @@
               const renderProof=confirmed=>{proof.textContent=' · Preuves manquantes : '+result.evidence.missing.filter(item=>!confirmed||result.legs.filter(leg=>String(leg.mode||'').startsWith('pt_pub')).length!==1||result.legs.some(leg=>String(leg.mode||'').startsWith('pt_pub')&&!window.CPBlaBlaRealtime.eligible(leg))||!item.startsWith('circulation')).join(', ')+'. Transport non confirmé — vérifiez vous-même.';};
               renderProof(false);line.appendChild(proof);
               // Do not treat TripGo's unverified price estimates as official fares.
+              let fareSummary=null;
               if(window.CPTransportFares?.fare&&window.CPTransportFares?.describe){
-                const fareSummary=window.CPTransportFares.fare(result.legs,{travelDate:result.departure});
+                fareSummary=window.CPTransportFares.fare(result.legs,{travelDate:result.departure});
                 const fareLine=document.createElement('span');fareLine.setAttribute('data-tripgo-fare','');
                 fareLine.textContent=' · Tarifs : '+window.CPTransportFares.describe(fareSummary);
                 line.appendChild(fareLine);
@@ -2596,9 +2597,15 @@
               mapNote.textContent='Les cartes localisent les coordonnées fournies. Le parcours piéton ouvert dans Maps fait l’objet d’un nouveau calcul ; il peut différer de la proposition. Accès réels à vérifier.';details.appendChild(mapNote);
               const steps=document.createElement('ol');
               const stepTime=value=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',dateStyle:'short',timeStyle:'medium'}).format(new Date(value));
-              for(const leg of result.legs){
+              for(const [legIndex,leg] of result.legs.entries()){
                 const step=document.createElement('li');step.textContent=(leg.mode==='wa_wal'?'Marche':leg.line||'Correspondance')+' · '+
                   stepTime(leg.departure)+' → '+stepTime(leg.arrival)+' · '+leg.from+' → '+leg.to;
+                const legFare=fareSummary?.breakdown?.[legIndex];
+                if(legFare){
+                  const fareDetail=document.createElement('span');fareDetail.setAttribute('data-tripgo-leg-fare','');
+                  fareDetail.textContent=legFare.nonTicketed?' · Sans billet':legFare.passApplied?' · Couvert par abonnement vérifié':legFare.verified?' · Tarif vérifié : '+legFare.amountEUR.toFixed(2).replace('.',',')+' €':' · Tarif inconnu';
+                  step.appendChild(fareDetail);
+                }
                 const validMapPoint=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180;
                 for(const [label,point] of [['Départ',leg.fromPoint],['Arrivée',leg.toPoint]]){
                   if(!validMapPoint(point))continue;
