@@ -37,7 +37,8 @@
     const knownSubtotalEUR=breakdown.reduce((cents,x)=>cents+(x.verified?Math.round(x.amountEUR*100):0),0)/100;
     const unknownLegCount=breakdown.filter(x=>!x.verified).length;
     const totalEUR=known?knownSubtotalEUR:null;
-    return {totalEUR,known,knownSubtotalEUR,unknownLegCount,breakdown,status:known?'Tarif vérifié':'Tarif non vérifié'};
+    const noTicketRequired=breakdown.every(x=>x.nonTicketed);
+    return {totalEUR,known,knownSubtotalEUR,unknownLegCount,breakdown,status:noTicketRequired?'Aucun billet requis':known?'Tarif vérifié':'Tarif non vérifié'};
   }
   function describe(result){
     if(!result||!Array.isArray(result.breakdown))return 'Tarif non vérifié';
@@ -51,7 +52,7 @@
     const partial=!result.known&&result.breakdown.some(x=>x.verified);
     const verifiedSubtotal=partial?Math.round(result.breakdown.reduce((sum,x)=>sum+(x.verified&&money(x.amountEUR)!==null?x.amountEUR:0),0)*100)/100:null;
     const unknownCount=partial?result.breakdown.filter(x=>!x.verified).length:0;
-    const heading=result.known?'Total : '+result.totalEUR.toFixed(2).replace('.',',')+' €':
+    const heading=result.breakdown.length&&result.breakdown.every(x=>x.nonTicketed)?'Aucun billet requis':result.known?'Total : '+result.totalEUR.toFixed(2).replace('.',',')+' €':
       partial?'Total inconnu · Sous-total vérifié : '+verifiedSubtotal.toFixed(2).replace('.',',')+' € · '+unknownCount+' portion'+(unknownCount>1?'s':'')+' sans prix':'Total inconnu';
     return heading+(portions.length?' · '+portions.join(' · '):'');
   }
