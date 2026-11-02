@@ -141,3 +141,13 @@ test('walking leg cannot inherit a SIBRA pass or its validity metadata',()=>{
  assert.equal(result.breakdown[0].validFrom,null);
  assert.match(describe(result),/sans billet/);
 });
+
+test('pedestrian segment ignores stray paid fare evidence',()=>{
+ const leg={mode:'wa_wal',provider:'Marche',fareVerified:true,fareSource:'tarif bus',verifiedPriceEUR:9.9,fareValidFrom:'2026-01-01T00:00:00+01:00',fareValidUntil:'2026-12-31T23:59:59+01:00',departure:'2026-11-02T12:00:00+01:00'};
+ const result=fare([leg]);
+ assert.equal(result.totalEUR,0);
+ assert.equal(result.breakdown[0].source,'Aucun titre de transport requis');
+ assert.equal(result.breakdown[0].validFrom,null);
+ assert.equal(result.breakdown[0].validUntil,null);
+ assert.match(describe(result),/sans billet/);
+});
