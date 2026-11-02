@@ -14,7 +14,7 @@
   }
   function fare(legs,options={}){
     const items=Array.isArray(legs)?legs:[];
-    if(!items.length)return {totalEUR:null,known:false,breakdown:[],status:'Tarif non vérifié'};
+    if(!items.length)return {totalEUR:null,known:false,knownSubtotalEUR:0,unknownLegCount:0,breakdown:[],status:'Tarif non vérifié'};
     const breakdown=items.map(leg=>{
       // A later boarding can fall on another day (or after a pass expires).
       // The itinerary's date is only a fallback for legs without a departure.
@@ -32,7 +32,7 @@
         validUntil:covered?leg.passValidUntil||null:price!==null?leg.fareValidUntil||null:null};
     });
     const known=breakdown.every(x=>x.verified);
-    const knownSubtotalEUR=Math.round(breakdown.reduce((n,x)=>n+(x.verified?x.amountEUR:0),0)*100)/100;
+    const knownSubtotalEUR=breakdown.reduce((cents,x)=>cents+(x.verified?Math.round(x.amountEUR*100):0),0)/100;
     const unknownLegCount=breakdown.filter(x=>!x.verified).length;
     const totalEUR=known?knownSubtotalEUR:null;
     return {totalEUR,known,knownSubtotalEUR,unknownLegCount,breakdown,status:known?'Tarif vérifié':'Tarif non vérifié'};
