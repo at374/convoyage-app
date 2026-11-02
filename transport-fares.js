@@ -57,6 +57,12 @@
       partial?'Total inconnu · Sous-total vérifié : '+verifiedSubtotal.toFixed(2).replace('.',',')+' € · '+unknownCount+' portion'+(unknownCount>1?'s':'')+' sans prix':'Total inconnu';
     return heading+(portions.length?' · '+portions.join(' · '):'');
   }
-  const api={fare,describe};if(typeof module==='object'&&module.exports)module.exports=api;
+  function describeLeg(leg){
+    if(!leg||typeof leg!=='object')return 'Tarif inconnu';
+    if(leg.nonTicketed)return 'Sans billet';
+    if(leg.passApplied)return 'Couvert par abonnement vérifié';
+    return leg.verified&&money(leg.amountEUR)!==null?'Tarif vérifié : '+leg.amountEUR.toFixed(2).replace('.',',')+' €':'Tarif inconnu';
+  }
+  const api={fare,describe,describeLeg};if(typeof module==='object'&&module.exports)module.exports=api;
   root.CPTransportFares=api;
 })(typeof window!=='undefined'?window:globalThis);
