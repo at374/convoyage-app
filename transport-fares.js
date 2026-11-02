@@ -20,14 +20,16 @@
       // The itinerary's date is only a fallback for legs without a departure.
       const travelDate=leg?.departure??options.travelDate;
       // A numerical amount is not evidence: require an explicit verified source.
+      // Walking and stationary transfer/wait legs are not ticketed rides.
+      const nonTicketed=leg?.mode==='wa_wal'||leg?.mode==='stationary_transfer'||leg?.mode==='stationary_wait';
       const price=leg?.fareVerified===true && typeof leg?.fareSource==='string' && leg.fareSource.trim() && validForTravel(leg,travelDate)?money(leg.verifiedPriceEUR):null;
       const covered=Boolean((travelDate==null || (leg?.passValidFrom && leg?.passValidUntil && validForTravel({fareValidFrom:leg.passValidFrom,fareValidUntil:leg.passValidUntil},travelDate)))&&leg?.passAccepted===true&&
         leg?.passProduct==='SIBRA'&&options.sibraPassActive===true&&
         leg?.passEligibilityVerified===true&&
         typeof leg?.passEligibilitySource==='string'&&leg.passEligibilitySource.trim());
-      return {provider:leg?.provider||'Inconnu',amountEUR:covered?0:price,
-        passApplied:covered,verified:covered||price!==null,
-        source:covered?leg.passEligibilitySource:price!==null?leg.fareSource:null,
+      return {provider:leg?.provider||(nonTicketed?'Marche / correspondance':'Inconnu'),amountEUR:nonTicketed||covered?0:price,
+        passApplied:!nonTicketed&&covered,verified:nonTicketed||covered||price!==null,
+        source:nonTicketed?'Aucun titre de transport requis':covered?leg.passEligibilitySource:price!==null?leg.fareSource:null,
         validFrom:covered?leg.passValidFrom||null:price!==null?leg.fareValidFrom||null:null,
         validUntil:covered?leg.passValidUntil||null:price!==null?leg.fareValidUntil||null:null};
     });
