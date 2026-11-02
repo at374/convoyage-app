@@ -92,8 +92,10 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const refreshFares=()=>{
   if(!active())return;
   for(const {row,element} of fareChecks){
-   try{element.textContent=root.CPSibraPass?.describe(root.CPSibraPass.assess(row,getSibraPass()))||'';}
-   catch(_){element.textContent='';}
+   try{
+    const pass=root.CPSibraPass;
+    element.textContent=pass?.assess&&pass?.describe?pass.describe(pass.assess(row,getSibraPass()))||' · Couverture SIBRA non vérifiée':' · Couverture SIBRA non vérifiable';
+   }catch(_){element.textContent=' · Couverture SIBRA non vérifiable';}
   }
  };
  const sheet=panel.closest?.('#feuille');
