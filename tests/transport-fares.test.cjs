@@ -101,7 +101,8 @@ test('TripGo walking and stationary legs need no ticket but unknown bus fare rem
  assert.equal(result.breakdown[1].verified,true);
  assert.equal(result.breakdown[2].verified,false);
  assert.equal(result.breakdown[3].verified,true);
- assert.match(describe(result),/1 portion sans prix/);
+ assert.match(describe(result),/Total inconnu/);
+ assert.doesNotMatch(describe(result),/Sous-total vérifié/);
 });
 test('a walking-only route has zero ticket cost',()=>{
  const result=fare([{mode:'wa_wal'}]);
