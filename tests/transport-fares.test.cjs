@@ -70,6 +70,8 @@ test('partial fare exposes only verified costs and never fabricates a full total
  assert.equal(result.knownSubtotalEUR,8.5);
  assert.equal(result.unknownLegCount,1);
  assert.match(describe(result),/Total inconnu/);
+ assert.match(describe(result),/Sous-total vérifié : 8,50 €/);
+ assert.match(describe(result),/1 portion sans prix/);
  const complete=fare([{...dated,departure:'2026-11-15T12:00:00+01:00'}]);
  assert.equal(complete.knownSubtotalEUR,complete.totalEUR);
  assert.equal(complete.unknownLegCount,0);
