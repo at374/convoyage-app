@@ -151,3 +151,10 @@ test('pedestrian segment ignores stray paid fare evidence',()=>{
  assert.equal(result.breakdown[0].validUntil,null);
  assert.match(describe(result),/sans billet/);
 });
+
+test('fare calculation tolerates null options without making unknown transit free',()=>{
+ const result=fare([{mode:'pt_pub_bus',provider:'Bus'}],null);
+ assert.equal(result.totalEUR,null);
+ assert.equal(result.unknownLegCount,1);
+ assert.equal(fare([{mode:'wa_wal'}],null).totalEUR,0);
+});
