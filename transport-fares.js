@@ -27,7 +27,7 @@
         leg?.passProduct==='SIBRA'&&options.sibraPassActive===true&&
         leg?.passEligibilityVerified===true&&
         typeof leg?.passEligibilitySource==='string'&&leg.passEligibilitySource.trim());
-      return {provider:leg?.provider||(nonTicketed?'Marche / correspondance':'Inconnu'),amountEUR:nonTicketed||covered?0:price,
+      return {provider:leg?.provider||(nonTicketed?'Marche / correspondance':'Inconnu'),nonTicketed,amountEUR:nonTicketed||covered?0:price,
         passApplied:!nonTicketed&&covered,verified:nonTicketed||covered||price!==null,
         source:nonTicketed?'Aucun titre de transport requis':covered?leg.passEligibilitySource:price!==null?leg.fareSource:null,
         validFrom:covered?leg.passValidFrom||null:price!==null?leg.fareValidFrom||null:null,
@@ -43,6 +43,7 @@
     if(!result||!Array.isArray(result.breakdown))return 'Tarif non vérifié';
     const portions=result.breakdown.map((leg,index)=>{
       const name=String(leg.provider||'Portion '+(index+1));
+      if(leg.nonTicketed)return name+' : sans billet';
       if(leg.passApplied)return name+' : 0,00 € (abonnement vérifié)';
       return name+' : '+(leg.verified&&money(leg.amountEUR)!==null?
         leg.amountEUR.toFixed(2).replace('.',',')+' €':'prix inconnu');
