@@ -108,6 +108,8 @@ test('a walking-only route has zero ticket cost',()=>{
  assert.equal(result.totalEUR,0);
  assert.equal(result.known,true);
  assert.equal(result.unknownLegCount,0);
+ assert.equal(result.status,'Aucun billet requis');
+ assert.match(describe(result),/^Aucun billet requis/);
 });
 
 test('fare description labels walking and transfers as no-ticket, not verified transit tickets',()=>{
