@@ -2581,7 +2581,15 @@
                 (result.alerts.length?' · Alertes fournisseur : '+result.alerts.join(' ; '):'');
               const proof=document.createElement('span');
               const renderProof=confirmed=>{proof.textContent=' · Preuves manquantes : '+result.evidence.missing.filter(item=>!confirmed||result.legs.filter(leg=>String(leg.mode||'').startsWith('pt_pub')).length!==1||result.legs.some(leg=>String(leg.mode||'').startsWith('pt_pub')&&!window.CPBlaBlaRealtime.eligible(leg))||!item.startsWith('circulation')).join(', ')+'. Transport non confirmé — vérifiez vous-même.';};
-              renderProof(false);line.appendChild(proof);status.appendChild(line);
+              renderProof(false);line.appendChild(proof);
+              // Do not treat TripGo's unverified price estimates as official fares.
+              if(window.CPTransportFares?.fare&&window.CPTransportFares?.describe){
+                const fareSummary=window.CPTransportFares.fare(result.legs,{travelDate:result.departure});
+                const fareLine=document.createElement('span');fareLine.setAttribute('data-tripgo-fare','');
+                fareLine.textContent=' · Tarifs : '+window.CPTransportFares.describe(fareSummary);
+                line.appendChild(fareLine);
+              }
+              status.appendChild(line);
               const details=document.createElement('details');details.setAttribute('data-tripgo-details','');
               const summary=document.createElement('summary');summary.textContent='Voir les étapes et les cartes des arrêts';details.appendChild(summary);
               const mapNote=document.createElement('p');mapNote.className='doux';
