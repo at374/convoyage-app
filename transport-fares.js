@@ -32,8 +32,10 @@
         validUntil:covered?leg.passValidUntil||null:price!==null?leg.fareValidUntil||null:null};
     });
     const known=breakdown.every(x=>x.verified);
-    const totalEUR=known?Math.round(breakdown.reduce((n,x)=>n+x.amountEUR,0)*100)/100:null;
-    return {totalEUR,known,breakdown,status:known?'Tarif vérifié':'Tarif non vérifié'};
+    const knownSubtotalEUR=Math.round(breakdown.reduce((n,x)=>n+(x.verified?x.amountEUR:0),0)*100)/100;
+    const unknownLegCount=breakdown.filter(x=>!x.verified).length;
+    const totalEUR=known?knownSubtotalEUR:null;
+    return {totalEUR,known,knownSubtotalEUR,unknownLegCount,breakdown,status:known?'Tarif vérifié':'Tarif non vérifié'};
   }
   function describe(result){
     if(!result||!Array.isArray(result.breakdown))return 'Tarif non vérifié';
