@@ -130,3 +130,14 @@ test('walking plus unpriced bus does not imply a verified zero-euro subtotal',()
  assert.match(describe(result),/^Total inconnu/);
  assert.doesNotMatch(describe(result),/Sous-total vérifié/);
 });
+
+test('walking leg cannot inherit a SIBRA pass or its validity metadata',()=>{
+ const leg={mode:'wa_wal',provider:'Marche',passAccepted:true,passProduct:'SIBRA',passEligibilityVerified:true,passEligibilitySource:'SIBRA',passValidFrom:'2026-01-01T00:00:00+01:00',passValidUntil:'2026-12-31T23:59:59+01:00',departure:'2026-11-02T12:00:00+01:00'};
+ const result=fare([leg],{sibraPassActive:true});
+ assert.equal(result.totalEUR,0);
+ assert.equal(result.breakdown[0].nonTicketed,true);
+ assert.equal(result.breakdown[0].passApplied,false);
+ assert.equal(result.breakdown[0].source,'Aucun titre de transport requis');
+ assert.equal(result.breakdown[0].validFrom,null);
+ assert.match(describe(result),/sans billet/);
+});
