@@ -104,3 +104,16 @@ test('six SANEF stations have official geographic points without fabricated toll
     }
   }
 });
+
+test('SANEF La Neuvillette standalone barrier prices match official 2026 grid', () => {
+  const fares = overlay.tarifs.filter(row => row.b === 'sanef-la-neuvillette-15');
+  const class1 = fares.find(row => row.c === 1);
+  const class2 = fares.find(row => row.c === 2);
+  assert.ok(class1 && class2, 'Missing standalone SANEF barrier fares');
+  assert.equal(class1.a, 0.9);
+  assert.equal(class2.a, 1.3);
+  for (const row of [class1, class2]) {
+    assert.equal(row.s, 'PROUVE');
+    assert.equal(row.f, '2026-02-01');
+  }
+});
