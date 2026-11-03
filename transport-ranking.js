@@ -15,7 +15,18 @@
     const margin=finite(opts.marginMinutes)?Math.max(minimumMargin,opts.marginMinutes):minimumMargin;
     const deadline=validTime(opts.deadline)?Date.parse(opts.deadline):NaN;
     const slack=valid&&Number.isFinite(deadline)?Math.floor((deadline-arrival)/60000):null;
-    const allVerified=legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
+    // Confirmed services still need a chronological, connectable itinerary.
+    // Legacy legs without times retain their existing service-confirmation semantics.
+    let previousArrival=departure;
+    const connected=legs.every(leg=>{
+      if(!leg||leg.departure==null&&leg.arrival==null)return true;
+      if(!validTime(leg.departure)||!validTime(leg.arrival))return false;
+      const start=Date.parse(leg.departure),end=Date.parse(leg.arrival);
+      if(start<previousArrival||end<=start||end>arrival)return false;
+      previousArrival=end;
+      return true;
+    });
+    const allVerified=legs.length>0&&connected&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
     const feasible=valid&&allVerified&&doorToDoor&&item.accessVerified===true&&
       Number.isFinite(deadline)&&slack>=margin;
