@@ -131,3 +131,17 @@ test('TripGo parser refuses contradictory mission windows even for cached or fix
  assert.throws(()=>api.parse(clone(),{...options,latestArrival:'2026-11-02T09:59:59+01:00'}),/Fenêtre TripGo invalide/);
  assert.throws(()=>api.parse(clone(),{...options,arriveBy:true,latestArrival:'2026-11-02T10:00:01+01:00'}),/Fenêtre TripGo invalide/);
 });
+
+
+test('TripGo never presents a zero-duration public transport ride as usable',()=>{
+ const data=clone();
+ for(const group of data.groups)for(const trip of group.trips){
+  if(trip.depart*1000<Date.parse(options.when))continue;
+  const ride=trip.segments.find(segment=>{
+   const template=data.segmentTemplates.find(t=>t.hashCode===segment.segmentTemplateHashCode);
+   return template?.modeIdentifier?.startsWith('pt_pub');
+  });
+  if(ride)ride.endTime=ride.startTime;
+ }
+ assert.equal(api.parse(data,options).itineraries.length,0);
+});
