@@ -29,6 +29,8 @@ function boardingDay(value){
 }
 function regionalScope(leg,date){
  if(leg?.networkId!=='oura-haute-savoie'||leg.line!=='Y51'||!date||date<'2026-09-01'||date>'2027-07-02')return false;
+ const depart=Date.parse(leg.departure),arrive=Date.parse(leg.arrival);
+ if(!Number.isFinite(depart)||!Number.isFinite(arrive)||arrive<=depart||arrive-depart>86400000)return false;
  const proof=leg.fareScopePath;
  if(!proof||['networkId','tripId','from','to','departure','arrival'].some(k=>typeof leg[k]!=='string'||proof[k]!==leg[k])||
    !Array.isArray(proof.stops)||proof.stops.length<2||proof.stops.length>64||
