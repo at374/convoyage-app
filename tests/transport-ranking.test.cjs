@@ -41,3 +41,18 @@ const atTwenty={...base,arrival:'2026-11-02T08:40:00+01:00'};
 assert.equal(rank([atTwenty],{deadline,marginMinutes:30}).length,0,'Configured thirty-minute margin excludes a twenty-minute arrival');
 assert.equal(rank([atTwenty],{deadline,marginMinutes:20}).length,1,'Exactly twenty minutes meets configured margin');
 assert.equal(rank([atTwenty],{deadline,marginMinutes:30,exactGPSReliable:true}).length,0,'Reliable GPS never overrides a larger configured margin');
+
+const legTime=(departure,arrival)=>({departure,arrival,serviceConfirmed:true});
+const connectedJourney={...base,legs:[
+ legTime('2026-11-02T07:00:00+01:00','2026-11-02T07:40:00+01:00'),
+ legTime('2026-11-02T07:45:00+01:00','2026-11-02T08:15:00+01:00')
+]};
+assert.equal(evaluate(connectedJourney,{deadline}).feasible,true,'Chronological connection remains feasible');
+assert.equal(evaluate({...connectedJourney,legs:[
+ legTime('2026-11-02T07:00:00+01:00','2026-11-02T07:50:00+01:00'),
+ legTime('2026-11-02T07:45:00+01:00','2026-11-02T08:15:00+01:00')
+]},{deadline}).feasible,false,'Overlapping confirmed services cannot form a feasible journey');
+assert.equal(evaluate({...connectedJourney,legs:[
+ legTime('2026-11-02T07:00:00+01:00','2026-11-02T07:40:00+01:00'),
+ legTime('2026-11-02T08:16:00+01:00','2026-11-02T08:20:00+01:00')
+]},{deadline}).feasible,false,'Legs cannot end after itinerary arrival');
