@@ -10,7 +10,7 @@
     if(!Number.isFinite(when))return false;
     const start=leg?.fareValidFrom?Date.parse(leg.fareValidFrom):NaN;
     const end=leg?.fareValidUntil?Date.parse(leg.fareValidUntil):NaN;
-    return Number.isFinite(start)&&Number.isFinite(end)&&start<=when&&when<=end;
+    return Number.isFinite(start)&&Number.isFinite(end)&&start<=end&&start<=when&&when<=end;
   }
   function fare(legs,options={}){
     options=options&&typeof options==='object'?options:{};
