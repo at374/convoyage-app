@@ -179,3 +179,14 @@ test('TripGo only exposes HTTPS ticket links without embedded credentials',()=>{
   }
  }
 });
+
+
+test('TripGo rejects impossible GPS walking speeds when walking distance is absent',()=>{
+ const data=clone();
+ for(const group of data.groups)for(const trip of group.trips){
+  if(trip.depart*1000<Date.parse(options.when))continue;
+  const walk=trip.segments.find(segment=>data.segmentTemplates.find(t=>t.hashCode===segment.segmentTemplateHashCode)?.modeIdentifier==='wa_wal');
+  if(walk){walk.metres=null;walk.endTime=walk.startTime+1;}
+ }
+ assert.equal(api.parse(data,options).itineraries.length,0);
+});
