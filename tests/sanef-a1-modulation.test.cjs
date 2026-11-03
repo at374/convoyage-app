@@ -67,3 +67,15 @@ test('A1 tariff band rejects invalid dates even on non-eligible routes', () => {
   assert.throws(() => a1TariffBand({ passageAt: 'invalid', towardsParis: false, eligibleDay: false, exit: 'UNKNOWN' }), /Invalid passageAt/);
   assert.throws(() => a1TariffBand({ passageAt: 'invalid', towardsParis: true, eligibleDay: true, exit: 'ARSY' }), /Invalid passageAt/);
 });
+
+test('A1 never returns missing, negative or nonnumeric reference amounts', () => {
+  const opts = { origin: 'GAUCHY', destination: 'ARSY', vehicleClass: 1, towardsParis: true,
+    eligibleDay: true, passageAt: '2026-11-08T17:00:00+01:00' };
+  for (const invalid of [undefined, -1, '8.70', Number.NaN, Number.POSITIVE_INFINITY]) {
+    const badReference = { ...reference, relations: reference.relations.map(row =>
+      row.origin === 'GAUCHY' && row.destination === 'ARSY' ? { ...row, rouge: invalid } : row) };
+    assert.deepEqual(a1OfficialFare({ ...opts, reference: badReference }), {
+      status: 'unavailable', reason: 'tariff_amount_not_verified'
+    });
+  }
+});
