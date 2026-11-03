@@ -328,8 +328,8 @@ async function run(){
   await page.screenshot({path:path.join(output,'mobile-sibra-pass-applied.png')});
   await page.getByRole('button',{name:'Retirer mon abonnement SIBRA',exact:true}).click();
   assert.equal(await page.evaluate(()=>localStorage.getItem('cp_sibra_pass_v1')),null);
-  // The fare panel is recalculated asynchronously after the subscription is removed.
-  await page.waitForFunction(()=>!Array.from(document.querySelectorAll('[data-sibra-pass-cost]')).some(x=>x.textContent),{timeout:10000});
+  // Without a pass, the UI intentionally displays an explicit unverified-coverage notice, not an empty field.
+  await page.waitForFunction(()=>Array.from(document.querySelectorAll('[data-sibra-pass-cost]')).every(x=>!x.textContent.includes('0,00 € sous réserve d’abonnement valide') && x.textContent.includes('Couverture SIBRA')),null,{timeout:10000});
   await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'SIBRA pass worker must stop on close');
   await page.close();regionalPassScenario=true;
   page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
