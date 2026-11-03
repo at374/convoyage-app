@@ -237,3 +237,14 @@ test('SIBRA pass cannot create a free fare without boarding time and validity bo
  const valid=fare([{...eligible,departure:'2026-11-02T10:00:00+01:00'}],{sibraPassActive:true});
  assert.equal(valid.totalEUR,0);
 });
+
+
+test('malformed official validity bounds cannot certify fares or SIBRA coverage',()=>{
+ for(const invalid of ['2026-02-30T00:00:00+01:00','2026-11-01T24:00:00+01:00','2026-11-01 00:00:00','2026-11-01T00:00:00']){
+  const paid=fare([{...dated,departure:'2026-11-15T12:00:00+01:00',fareValidFrom:invalid}]);
+  assert.equal(paid.known,false,invalid);
+  const pass=fare([{...eligible,departure:'2026-11-15T12:00:00+01:00',passValidUntil:invalid}],{sibraPassActive:true});
+  assert.equal(pass.breakdown[0].passApplied,false,invalid);
+ }
+ assert.equal(fare([{...dated,departure:'2026-11-15T12:00:00+01:00'}]).totalEUR,8.5);
+});
