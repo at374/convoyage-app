@@ -25,8 +25,14 @@ assert.equal(unknownFares.some(choice=>choice.label==='Moins cher'),false);
 const mixedFares=rank([{...base,id:'unknown',priceEUR:null},{...base,id:'priced',priceEUR:7,departure:'2026-11-02T07:15:00+01:00'}],{deadline});
 assert.equal(mixedFares.find(choice=>choice.label==='Moins cher')?.journey.id,'priced');
 const atFive={...base,arrival:'2026-11-02T08:55:00+01:00'};
-assert.equal(evaluate(atFive,{deadline}).feasible,true,'Five minutes at the verified exact address is sufficient');
-assert.equal(evaluate({...atFive,arrival:'2026-11-02T08:55:01+01:00'},{deadline}).feasible,false,'Four minutes fifty-nine seconds is insufficient');
+assert.equal(evaluate(atFive,{deadline}).feasible,false,'Default pickup margin is fifteen minutes');
+assert.equal(evaluate(atFive,{deadline,exactGPSReliable:true}).feasible,true,'Five-minute exception requires explicit reliable exact GPS');
+assert.equal(evaluate({...atFive,arrival:'2026-11-02T08:55:01+01:00'},{deadline,exactGPSReliable:true}).feasible,false,'Four minutes fifty-nine seconds is insufficient even with reliable GPS');
 assert.equal(evaluate({...atFive,exactDestination:false},{deadline}).feasible,false,'Five minutes at an unverified stop does not confirm arrival at pickup');
 assert.equal(evaluate({...atFive,accessVerified:false},{deadline}).feasible,false);
 console.log('transport-ranking: 19 assertions passed');
+
+assert.equal(evaluate({...base,arrival:'2026-11-02T08:45:00+01:00'},{deadline}).feasible,true,'Exactly fifteen minutes is valid by default');
+assert.equal(evaluate({...base,arrival:'2026-11-02T08:45:01+01:00'},{deadline}).feasible,false,'Below fifteen minutes is not confirmed');
+assert.equal(rank([atFive],{deadline}).length,0,'Five-minute journey excluded without explicit GPS reliability');
+assert.equal(rank([atFive],{deadline,exactGPSReliable:true}).length,1,'Reliable exact GPS allows five-minute option');
