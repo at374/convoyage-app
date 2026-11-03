@@ -112,12 +112,13 @@
     const ENT = 'ST MARTIN BELLEVUE A410';
     const eN = hits.findIndex(q => P.g[q.g][0] === ENT);
     if (eN > 0 && hits.slice(0, eN).every(q => P.g[q.g][0] === 'CRUSEILLES A')) hits.splice(0, eN);
-    hits.forEach(q => { if (P.g[q.g][0] === ENT) q.ent = true; });
+    // V278 : « VOREPPE BARRIERE » (A48/A49, AREA) facture depuis le début du tronçon à péage (Grenoble → Voreppe compris) : tarif 35 km pour Voreppe → Rives alors que 18 km séparent la barrière de Rives. On accepte la distance mesurée sur le tracé OU depuis le début/jusqu'à la fin du tronçon.
+    hits.forEach(q => { if (P.g[q.g][0] === ENT) q.ent = true; if (P.g[q.g][0] === 'VOREPPE BARRIERE') q.vo = true; });
     // V246 : gares « jumelles » (mêmes coordonnées, ex. Dourdan / La Folie-B) : on essaie la plus proche d'abord, puis ses jumelles.
     const jc = new Map();
     const jum = g => { if (jc.has(g)) return jc.get(g); const r = [g]; jc.set(g, r); P.g.forEach((o, i) => { if (i !== g && o[1].some(p => P.g[g][1].some(q => dist(p[0], p[1], q[0], q[1]) < 0.06))) r.push(i); }); return r; };
     // V245 : un trajet peut traverser plusieurs mailles tarifaires séparées (ex. A41 Annecy→Chambéry puis Chignin→Crolles) : on additionne les tronçons officiels.
-    const paire = (x, y) => { const d = x.ent ? lon(i0, y.k) : y.ent ? lon(x.k, i1) : lon(x.k, y.k); for (const a of jum(x.g)) for (const b of jum(y.g)) { if (a === b) continue; const v = P.prix.get(Math.min(a, b) * 1000 + Math.max(a, b)); if (!v) continue; const q = v[2] / Math.max(1, d); if (q >= 0.7 && q <= 1.9) return { v, a, b }; } return null; };
+    const paire = (x, y) => { const ds = x.ent ? [lon(i0, y.k)] : y.ent ? [lon(x.k, i1)] : [lon(x.k, y.k)]; if (x.vo) ds.push(lon(i0, y.k)); if (y.vo) ds.push(lon(x.k, i1)); for (const a of jum(x.g)) for (const b of jum(y.g)) { if (a === b) continue; const v = P.prix.get(Math.min(a, b) * 1000 + Math.max(a, b)); if (!v) continue; if (ds.some(d => { const q = v[2] / Math.max(1, d); return q >= 0.7 && q <= 1.9; })) return { v, a, b }; } return null; };
     const segs = [];
     let i = 0;
     while (i < hits.length) {
@@ -174,7 +175,7 @@
   const CH = [[5.96,46.13],[6.05,46.25],[6.25,46.33],[6.55,46.45],[6.80,46.40],[6.85,46.15],[6.97,46.03],[7.05,45.92],[7.17,45.87],[7.45,45.92],[7.66,45.98],[7.87,45.94],[8.12,46.10],[8.45,46.25],[8.8,46.05],[8.85,45.97],[9.02,45.83],[9.15,45.9],[9.1,46.18],[9.28,46.5],[9.6,46.3],[10.05,46.2],[10.45,46.52],[10.45,46.87],[10.2,46.87],[9.88,47.0],[9.5,47.06],[9.53,47.27],[9.65,47.5],[9.4,47.65],[8.9,47.68],[8.55,47.8],[8.4,47.6],[7.9,47.57],[7.6,47.6],[7.5,47.5],[7.0,47.5],[6.9,47.3],[6.7,47.1],[6.4,46.8],[6.35,46.7],[6.15,46.45],[6.1,46.3]];
   const dansCH = (lat, lon) => { let in_ = false; for (let i = 0, j = CH.length - 1; i < CH.length; j = i++) { const [xi, yi] = CH[i], [xj, yj] = CH[j]; if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) in_ = !in_; } return in_; };
   const passeEnSuisse = sh => { let n = 0; for (let k = 0; k < sh.length; k += 4) { if (dansCH(sh[k][0], sh[k][1])) { if (++n >= 3) return true; } else n = 0; } return false; };
-  const NOTE_CH = '<div class="rd sub"><span>🇨🇭 Ce trajet passe en Suisse : <b>vignette autoroutière suisse obligatoire</b> (40 CHF, valable un an, à avoir avant la frontière ; amende de 200 CHF sans vignette). Elle n’est pas comprise dans le total des péages.</span></div>';
+  const NOTE_CH = '<div style="display:block;margin:6px 0;padding:5px 9px;border-radius:8px;background:#fff;color:#b00020;border:2px solid #d52b1e;font-weight:800;font-size:.95em;line-height:1.25">🇨🇭 Vignette suisse : 40 CHF <span style="font-weight:600;font-size:.85em">(à acheter avant la frontière, 1 an · hors total péages)</span></div>';
   const BK = (cls, titre, h) => '<div class="bk bkC ' + cls + '"><div class="bkt">' + titre + '</div>' + h + '</div>';
   const valRoute = async (body) => { let err = null; for (let n = 0; n < 4; n++) { try { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000); const rr = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal }); clearTimeout(to); if (rr.ok) return await rr.json(); err = new Error('http ' + rr.status); } catch (e) { err = e; } await new Promise(s => setTimeout(s, 1500 * (n + 1))); } throw err; };
   // V250 : tout le calcul du péage se fait dans un « worker » (second fil du téléphone) : l'écran ne peut plus se figer, même sur un téléphone lent.
@@ -201,7 +202,7 @@
     window.CPPh('péage');
     const zone = out.querySelector('[data-peage]');
     let suisse = false;
-    const put = (h, ok) => { if (!zone) return; zone.innerHTML = h + (suisse ? NOTE_CH : ''); LAY('péage'); const b = zone.closest('.bk'); if (b) b.classList.add(ok ? 'bkRenOk' : 'bkRenKo'); };
+    const put = (h, ok) => { if (!zone) return; let hh = h; if (suisse) { const h2 = h.replace(/(<div class="rd gros c2">[\s\S]*?<\/div>)/, '$1' + NOTE_CH); hh = h2 !== h ? h2 : h + NOTE_CH; } zone.innerHTML = hh; LAY('péage'); const b = zone.closest('.bk'); if (b) b.classList.add(ok ? 'bkRenOk' : 'bkRenKo'); };
     const KO = '💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Aucune estimation affichée : seuls les tarifs officiels exacts sont montrés.</span></div>';
     try {
       const A = r.pts || decode(r.polyline);
@@ -313,7 +314,8 @@
       const dmin = best.min - fast.min, eco1 = Math.round((fast.c1 - best.c1) * 100) / 100, eco2 = Math.round((fast.c2 - best.c2) * 100) / 100;
       const sg = v => (v >= 0 ? '−' : '+') + euro(Math.abs(v));
       const gros = '<div class="mixGros"><span class="mixPlus">⏱️ ' + (dmin >= 0 ? '+' + dmin : '−' + Math.abs(dmin)) + ' min par rapport au trajet avec péage</span><span class="mixEco">💰 ' + sg(eco1) + ' (cl. 1) · ' + sg(eco2) + ' (cl. 2) par rapport au trajet avec péage</span></div>';
-      const corps = (best.ordre === 'FT' ? ligL(dep, piv) + '<br><br>' + ligP(piv, arr) : ligP(dep, piv) + '<br><br>' + ligL(piv, arr)) + '<br><br><b>TOTAL MIXTE</b> : ' + k1(best.km) + ' km · ' + hm(best.min) + '<br>' + P12(best.c1, best.c2) + etqs(etqConso(best.km, best.min)) + gros + '<span class="doux">Prix : tarifs officiels. Distance et durée : Google Routes, à vérifier avant départ.</span>';
+      const chOf = p => { try { return !!p && passeEnSuisse(dens(decode(p))); } catch (_) { return false; } }; const noteMix = (chOf(best.lib.poly) || chOf(best.pay.poly)) ? NOTE_CH : '';
+      const corps = (best.ordre === 'FT' ? ligL(dep, piv) + '<br><br>' + ligP(piv, arr) : ligP(dep, piv) + '<br><br>' + ligL(piv, arr)) + '<br><br><b>TOTAL MIXTE</b> : ' + k1(best.km) + ' km · ' + hm(best.min) + '<br>' + P12(best.c1, best.c2) + noteMix + etqs(etqConso(best.km, best.min)) + gros + '<span class="doux">Prix : tarifs officiels. Distance et durée : Google Routes, à vérifier avant départ.</span>';
       zone.innerHTML = BK('bkMixte', 'TRAJET MIXTE', corps);
     } catch (e) { ko('Trajet mixte indisponible pour l’instant (' + esc(String(e && e.message || e).slice(0, 80)) + ').'); }
   };

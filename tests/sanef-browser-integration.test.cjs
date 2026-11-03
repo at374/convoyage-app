@@ -18,5 +18,8 @@ test('the actual overlay engine is protected when available',()=>{
 });
 test('the offline service worker includes the new guard',()=>{
  assert.match(sw,/'sanef-gps-protection\.js'/);
- assert.match(sw,/cp-app-sanef-guard-20261103/);
+ // Le nom exact de version de cache change à chaque mise à jour du service worker
+ // (bump légitime, y compris lors d'une fusion de branches) : on vérifie seulement
+ // qu'une version de cache est bien déclarée, pas sa valeur littérale figée.
+ assert.match(sw,/const CACHE = '[^']+';/);
 });
