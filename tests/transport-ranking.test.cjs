@@ -74,3 +74,10 @@ assert.equal(evaluate({...connectedJourney,legs:[
  legTime('2026-11-02T07:00:00+01:00','2026-11-02T07:40:00+01:00'),
  {serviceConfirmed:true}
 ]},{deadline}).feasible,false,'A confirmed multi-leg route cannot omit the final leg schedule');
+
+const gpsLegs=[
+ {...legTime('2026-11-02T07:00:00+01:00','2026-11-02T07:40:00+01:00'),fromPoint:{lat:45.901,lon:6.121},toPoint:{lat:45.902,lon:6.122}},
+ {...legTime('2026-11-02T07:45:00+01:00','2026-11-02T08:15:00+01:00'),fromPoint:{lat:45.910,lon:6.130},toPoint:{lat:45.911,lon:6.131}}
+];
+assert.equal(evaluate({...connectedJourney,legs:gpsLegs},{deadline}).feasible,false,'Disconnected stops cannot be treated as a confirmed connection');
+assert.equal(evaluate({...connectedJourney,legs:[gpsLegs[0],{...gpsLegs[1],fromPoint:{lat:45.902,lon:6.122}}]},{deadline}).feasible,true,'Connected stops preserve valid transfer');
