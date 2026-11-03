@@ -14,6 +14,7 @@ function time(value){
 const epoch=value=>Number.isSafeInteger(value)&&value>0&&value<4102444800?value*1000:NaN;
 function gap(a,b){const rad=Math.PI/180,x=(b.lat-a.lat)*rad,y=(b.lon-a.lon)*rad;
  return 12742000*Math.asin(Math.min(1,Math.sqrt(Math.sin(x/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(y/2)**2)));}
+function ticketURL(value){if(typeof value!=='string'||value.length>2048)return null;try{const url=new URL(value);return url.protocol==='https:'&&!url.username&&!url.password?url.href:null;}catch(_){return null;}}
 function getKey(){try{return root.localStorage?.getItem(KEY)||'';}catch(_){return '';}}
 function setKey(value){const key=String(value||'').trim();if(key&&!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw Error('Clé TripGo invalide');
  if(!root.localStorage)throw Error('Stockage de cet appareil indisponible');
@@ -43,7 +44,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
      (mode==='wa_wal'&&Number.isFinite(s.metres)&&s.metres>10&&(end===start||s.metres/((end-start)/1000)>4))||
      !/^(wa_wal|pt_pub(?:_[a-z0-9-]+)*|stationary_(?:transfer|wait))$/.test(mode||'')||/ferry|boat|air/i.test(mode||'')||/ferry|boat|air/i.test(s.modeInfo?.identifier||'')) {valid=false;break;}
     previous=end;
-    legs.push({mode,provider:s.externalData?.operatorName||null,serviceTripId:s.serviceTripID||null,serviceShortName:s.serviceShortName||null,routeId:s.routeId||s.routeID||null,fromStopCode:s.from.stopCode||null,toStopCode:s.to.stopCode||null,ticketWebsiteURL:typeof s.ticketWebsiteURL==='string'?s.ticketWebsiteURL:null,line:s.serviceNumber||s.serviceName||null,from:s.from.name||s.from.address||'',to:s.to.name||s.to.address||'',
+    legs.push({mode,provider:s.externalData?.operatorName||null,serviceTripId:s.serviceTripID||null,serviceShortName:s.serviceShortName||null,routeId:s.routeId||s.routeID||null,fromStopCode:s.from.stopCode||null,toStopCode:s.to.stopCode||null,ticketWebsiteURL:ticketURL(s.ticketWebsiteURL),line:s.serviceNumber||s.serviceName||null,from:s.from.name||s.from.address||'',to:s.to.name||s.to.address||'',
      fromPoint:coord(s.from),toPoint:coord(s.to),departure:new Date(start).toISOString(),arrival:new Date(end).toISOString(),
      distanceMeters:Number.isFinite(s.metres)&&s.metres>=0?s.metres:null,realtimeReported:s.realTime===true,
      alerts:Array.isArray(s.alerts)?s.alerts.map(a=>String(a?.title||a?.text||'Alerte fournisseur')).slice(0,10):[],serviceConfirmed:false});
