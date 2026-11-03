@@ -1473,6 +1473,34 @@
     const [j1, j2] = await Promise.all([r1.json(), r2.json()]);
     if (!j1 || !j1.p || !j1.g) throw new Error('peages-aprr.json vide ou invalide');
     if (!j2 || !j2.paires) throw new Error('peages-overlay.json vide ou invalide');
+    // Vérification des tarifs : un même couple de gares normalisé ne doit pas
+    // présenter deux montants contradictoires. Les noms complets et abrégés
+    // sont rapprochés sans modifier les données sources.
+    const normaliserGarePeage = nom => String(nom || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase().replace(/\s+N°\d+/g, '')
+      .replace(/\s*\(PEAGE[^)]*\)/g, '')
+      .replace(/\s*\(A\d+\)/g, '')
+      .replace(/[^A-Z0-9]/g, '');
+    const tarifsParRelation = new Map();
+    const contradictions = [];
+    for (const paire of j2.paires) {
+      if (!Array.isArray(paire) || paire.length < 4 ||
+          !Number.isFinite(paire[2]) || !Number.isFinite(paire[3])) {
+        throw new Error('relation péage invalide dans peages-overlay.json');
+      }
+      const cle = normaliserGarePeage(paire[0]) + '|' + normaliserGarePeage(paire[1]);
+      const precedent = tarifsParRelation.get(cle);
+      if (precedent && (precedent[2] !== paire[2] || precedent[3] !== paire[3])) {
+        contradictions.push(cle);
+      } else if (!precedent) {
+        tarifsParRelation.set(cle, paire);
+      }
+    }
+    if (contradictions.length) {
+      throw new Error('Mise à jour péages non validée : ' + contradictions.length +
+        ' relations à tarifs contradictoires (ex. ' + contradictions[0] + ')');
+    }
     try {
       const ks = await caches.keys();
       for (const k of ks) {
