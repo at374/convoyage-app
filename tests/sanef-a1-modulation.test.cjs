@@ -62,3 +62,8 @@ test('A1 refuses undocumented relations and classes', () => {
     status: 'unavailable', reason: 'class_not_documented'
   });
 });
+
+test('A1 tariff band rejects invalid dates even on non-eligible routes', () => {
+  assert.throws(() => a1TariffBand({ passageAt: 'invalid', towardsParis: false, eligibleDay: false, exit: 'UNKNOWN' }), /Invalid passageAt/);
+  assert.throws(() => a1TariffBand({ passageAt: 'invalid', towardsParis: true, eligibleDay: true, exit: 'ARSY' }), /Invalid passageAt/);
+});
