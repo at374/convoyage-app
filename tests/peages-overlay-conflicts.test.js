@@ -37,3 +37,18 @@ test('different-price aliases are detected', () => {
   assert.equal(conflicts([['MÉAUX (A140) / CRECY N°16','DORMANS N°21',7.2,11.1],
     ['MEAUX / CRECY','DORMANS',9.6,14.9]]).size, 1);
 });
+
+test('Meaux/Crecy aliases match the detailed 2026 SANEF tariffs in both classes', () => {
+  const detailed = new Map(overlay.paires
+    .filter(row => row[0].startsWith('MEAUX (A140)'))
+    .map(row => [normalize(row[1]), row]));
+  const simplified = overlay.paires.filter(row => row[0] === 'MEAUX / CRECY');
+  assert.equal(simplified.length, 34);
+  assert.equal(detailed.size, 34);
+  for (const row of simplified) {
+    const official = detailed.get(normalize(row[1]));
+    assert.ok(official, 'Missing detailed destination: ' + row[1]);
+    assert.equal(row[2], official[2], 'Class 1 mismatch: ' + row[1]);
+    assert.equal(row[3], official[3], 'Class 2 mismatch: ' + row[1]);
+  }
+});
