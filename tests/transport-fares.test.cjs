@@ -176,3 +176,13 @@ test('reversed validity periods never certify a fare or SIBRA coverage',()=>{
  assert.equal(fare([reversedFare]).known,false);
  assert.equal(fare([reversedPass],{sibraPassActive:true}).breakdown[0].passApplied,false);
 });
+
+
+test('non-finite and unsafe fare amounts never become verified totals',()=>{
+ for(const amount of [Infinity,NaN,1e308]){
+  const result=fare([{provider:'TER',fareVerified:true,fareSource:'source vérifiée',verifiedPriceEUR:amount}]);
+  assert.equal(result.known,false);
+  assert.equal(result.totalEUR,null);
+  assert.equal(result.unknownLegCount,1);
+ }
+});
