@@ -159,3 +159,23 @@ test('TripGo rejects ferry and air modes even if modeInfo is absent',()=>{
   assert.equal(api.parse(data,options).itineraries.length,0,forbidden);
  }
 });
+
+
+test('TripGo only exposes HTTPS ticket links without embedded credentials',()=>{
+ for(const [link,expected] of [
+  ['javascript:alert(1)',null],['http://shop.example.com/ticket',null],
+  ['https://user:secret@shop.example.com/ticket',null],
+  ['https://shop.example.com/ticket','https://shop.example.com/ticket']
+ ]){
+  const data=clone();
+  for(const trip of data.groups.flatMap(g=>g.trips))for(const segment of trip.segments){
+   const template=data.segmentTemplates.find(t=>t.hashCode===segment.segmentTemplateHashCode);
+   if(template?.modeIdentifier?.startsWith('pt_pub'))segment.ticketWebsiteURL=link;
+  }
+  const result=api.parse(data,options);
+  assert.ok(result.itineraries.length>0);
+  for(const itinerary of result.itineraries)for(const leg of itinerary.legs){
+   if(leg.mode.startsWith('pt_pub'))assert.equal(leg.ticketWebsiteURL,expected);
+  }
+ }
+});
