@@ -45,3 +45,20 @@ test('2026 SANEF reference is not used for historical journeys', () => {
   assert.equal(a1OfficialFare({ ...opts, passageAt: '2026-02-01T17:00:00+01:00' }).amount, 8.7);
   assert.throws(() => a1OfficialFare({ ...opts, passageAt: 'invalid' }), /Invalid passageAt/);
 });
+
+test('A1 uses Europe/Paris daylight-saving time, not UTC clock', () => {
+  const base = { towardsParis: true, eligibleDay: true, exit: 'ARSY' };
+  assert.equal(a1TariffBand({ ...base, passageAt: '2026-07-05T12:29:59Z' }), 'normal');
+  assert.equal(a1TariffBand({ ...base, passageAt: '2026-07-05T12:30:00Z' }), 'vert');
+  assert.equal(a1TariffBand({ ...base, passageAt: '2026-07-05T14:30:00Z' }), 'rouge');
+  assert.equal(a1TariffBand({ ...base, passageAt: '2026-07-05T18:30:00Z' }), 'vert');
+});
+test('A1 refuses undocumented relations and classes', () => {
+  const base = { reference, vehicleClass: 1, towardsParis: true, eligibleDay: true, passageAt: '2026-11-08T17:00:00+01:00' };
+  assert.deepEqual(a1OfficialFare({ ...base, origin: 'UNKNOWN', destination: 'ARSY' }), {
+    status: 'unavailable', reason: 'relation_not_documented'
+  });
+  assert.deepEqual(a1OfficialFare({ ...base, origin: 'GAUCHY', destination: 'ARSY', vehicleClass: 2 }), {
+    status: 'unavailable', reason: 'class_not_documented'
+  });
+});
