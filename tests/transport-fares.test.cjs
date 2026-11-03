@@ -198,3 +198,16 @@ test('sum of individually valid fares cannot overflow safe cent totals',()=>{
  assert.match(describe(result),/^Total inconnu/);
  assert.doesNotMatch(describe(result),/Sous-total vérifié/);
 });
+
+
+test('fractional-cent prices are not silently rounded into verified ticket costs',()=>{
+ for(const value of [0.001,1.234,2.999]){
+  const result=fare([{provider:'Bus',fareVerified:true,fareSource:'officiel',verifiedPriceEUR:value}]);
+  assert.equal(result.known,false);
+  assert.equal(result.totalEUR,null);
+  assert.equal(result.unknownLegCount,1);
+ }
+ for(const value of [0.1,1.7,2.5,8.9]){
+  assert.equal(fare([{provider:'Bus',fareVerified:true,fareSource:'officiel',verifiedPriceEUR:value}]).totalEUR,value);
+ }
+});
