@@ -37,7 +37,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
    for(const ref of trip.segments){
     const template=templates.get(ref.segmentTemplateHashCode);if(!template){valid=false;break;}
     const s={...template,...ref},mode=s.modeIdentifier,start=epoch(s.startTime),end=epoch(s.endTime);
-    if(!point(s.from)||!point(s.to)||!Number.isFinite(start)||!Number.isFinite(end)||start<previous||end<start||end>arrival||
+    if(!point(s.from)||!point(s.to)||!Number.isFinite(start)||!Number.isFinite(end)||start<previous||end<start||(mode!=='stationary_transfer'&&mode!=='stationary_wait'&&end===start)||end>arrival||
      (s.availability&&s.availability!=='AVAILABLE')||s.cancelled===true||s.canceled===true||
      (legs.length&&gap(legs.at(-1).toPoint,coord(s.from))>50)||
      (mode==='wa_wal'&&Number.isFinite(s.metres)&&s.metres>10&&(end===start||s.metres/((end-start)/1000)>4))||
