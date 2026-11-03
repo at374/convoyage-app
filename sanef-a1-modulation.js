@@ -29,6 +29,11 @@ function a1OfficialFare({ reference, origin, destination, passageAt, towardsPari
   if (!reference || reference.status !== 'REFERENCE_ONLY_NOT_APPLIED') throw new TypeError('Expected verified reference');
   if (vehicleClass !== 1) return { status: 'unavailable', reason: 'class_not_documented' };
   if (towardsParis !== true || !eligibleA1Day(passageAt, eligibleDay)) return { status: 'unavailable', reason: 'outside_modulation_scope' };
+  const date = passageAt instanceof Date ? passageAt : new Date(passageAt);
+  if (!Number.isFinite(date.getTime())) throw new TypeError('Invalid passageAt');
+  const effective = new Date(reference.effective + 'T00:00:00+01:00');
+  if (!Number.isFinite(effective.getTime())) throw new TypeError('Invalid reference effective date');
+  if (date < effective) return { status: 'unavailable', reason: 'before_reference_effective_date' };
   const row = reference.relations.find(r => r.origin === origin && r.destination === destination);
   if (!row) return { status: 'unavailable', reason: 'relation_not_documented' };
   const band = a1TariffBand({ passageAt, towardsParis, eligibleDay, exit: destination });
