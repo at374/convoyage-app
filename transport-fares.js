@@ -6,6 +6,9 @@
   function money(value){if(typeof value!=='number'||!Number.isFinite(value)||value<0)return null;const cents=value*100;return Number.isSafeInteger(Math.round(cents))&&Math.abs(cents-Math.round(cents))<1e-7?value:null;}
   function validForTravel(leg,travelDate){
     if(travelDate==null)return true;
+    if(typeof travelDate!=='string'||!/^(20\\d{2})-(\\d{2})-(\\d{2})T(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d{1,3})?)?(?:Z|[+-](?:0\\d|1[0-4]):[0-5]\\d)$/.test(travelDate))return false;
+    const day=Date.parse(travelDate.slice(0,10)+'T12:00:00Z');
+    if(!Number.isFinite(day)||new Date(day).toISOString().slice(0,10)!==travelDate.slice(0,10))return false;
     const when=Date.parse(travelDate);
     if(!Number.isFinite(when))return false;
     const start=leg?.fareValidFrom?Date.parse(leg.fareValidFrom):NaN;
