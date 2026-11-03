@@ -1,0 +1,33 @@
+name: SANEF toll safety
+on:
+  pull_request:
+    paths:
+      - 'sanef-gps-protection.js'
+      - 'peage-engine.js'
+      - 'peages-overlay.json'
+      - 'routes-pricing.js'
+      - 'routes-ui.js'
+      - 'tests/sanef-*.test.cjs'
+      - '.github/workflows/sanef-toll-safety.yml'
+  push:
+    branches: [feature/transport-ranking-safe]
+    paths:
+      - 'sanef-gps-protection.js'
+      - 'peage-engine.js'
+      - 'peages-overlay.json'
+      - 'routes-pricing.js'
+      - 'routes-ui.js'
+      - 'tests/sanef-*.test.cjs'
+      - '.github/workflows/sanef-toll-safety.yml'
+  workflow_dispatch:
+jobs:
+  sanef-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: SANEF regression tests
+        run: node --test tests/sanef-*.test.cjs
