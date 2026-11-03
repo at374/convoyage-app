@@ -63,7 +63,7 @@
     const partial=!result.known&&result.breakdown.some(x=>x.verified&&!x.nonTicketed);
     const verifiedSubtotal=partial&&money(result.knownSubtotalEUR)!==null?result.knownSubtotalEUR:null;
     const unknownCount=partial?result.breakdown.filter(x=>!x.verified).length:0;
-    const heading=result.breakdown.length&&result.breakdown.every(x=>x.nonTicketed)?'Aucun billet requis':result.known?'Total : '+result.totalEUR.toFixed(2).replace('.',',')+' €':
+    const heading=result.calculationOverflow===true?'Total indisponible : dépassement de précision du calcul':result.breakdown.length&&result.breakdown.every(x=>x.nonTicketed)?'Aucun billet requis':result.known?'Total : '+result.totalEUR.toFixed(2).replace('.',',')+' €':
       partial&&verifiedSubtotal!==null?'Total inconnu · Sous-total vérifié : '+verifiedSubtotal.toFixed(2).replace('.',',')+' € · '+unknownCount+' portion'+(unknownCount>1?'s':'')+' sans prix':'Total inconnu';
     return heading+(portions.length?' · '+portions.join(' · '):'');
   }
