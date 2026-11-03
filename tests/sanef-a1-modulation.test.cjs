@@ -79,3 +79,17 @@ test('A1 never returns missing, negative or nonnumeric reference amounts', () =>
     });
   }
 });
+
+test('A1 rejects malformed reference schema and duplicate tariff relations', () => {
+  const opts = { reference, origin: 'GAUCHY', destination: 'ARSY', vehicleClass: 1,
+    towardsParis: true, eligibleDay: true, passageAt: '2026-11-08T17:00:00+01:00' };
+  assert.deepEqual(a1OfficialFare({ ...opts, reference: { ...reference, vehicleClass: 2 } }), {
+    status: 'unavailable', reason: 'invalid_reference_schema'
+  });
+  assert.deepEqual(a1OfficialFare({ ...opts, reference: { ...reference, relations: null } }), {
+    status: 'unavailable', reason: 'invalid_reference_schema'
+  });
+  assert.deepEqual(a1OfficialFare({ ...opts, reference: { ...reference, relations: [...reference.relations, reference.relations[0]] } }), {
+    status: 'unavailable', reason: 'ambiguous_reference_relation'
+  });
+});
