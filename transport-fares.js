@@ -34,8 +34,15 @@
         validFrom:covered?leg.passValidFrom||null:price!==null?leg.fareValidFrom||null:null,
         validUntil:covered?leg.passValidUntil||null:price!==null?leg.fareValidUntil||null:null};
     });
-    const known=breakdown.every(x=>x.verified);
-    const knownSubtotalEUR=breakdown.reduce((cents,x)=>cents+(x.verified?Math.round(x.amountEUR*100):0),0)/100;
+    let subtotalCents=0,overflow=false;
+    for(const item of breakdown){
+      if(!item.verified)continue;
+      const cents=Math.round(item.amountEUR*100);
+      if(!Number.isSafeInteger(cents)||!Number.isSafeInteger(subtotalCents+cents)){overflow=true;break;}
+      subtotalCents+=cents;
+    }
+    const known=breakdown.every(x=>x.verified)&&!overflow;
+    const knownSubtotalEUR=overflow?null:subtotalCents/100;
     const unknownLegCount=breakdown.filter(x=>!x.verified).length;
     const totalEUR=known?knownSubtotalEUR:null;
     const noTicketRequired=breakdown.every(x=>x.nonTicketed);
@@ -51,10 +58,10 @@
         leg.amountEUR.toFixed(2).replace('.',',')+' €':'prix inconnu');
     });
     const partial=!result.known&&result.breakdown.some(x=>x.verified&&!x.nonTicketed);
-    const verifiedSubtotal=partial?Math.round(result.breakdown.reduce((sum,x)=>sum+(x.verified&&money(x.amountEUR)!==null?x.amountEUR:0),0)*100)/100:null;
+    const verifiedSubtotal=partial&&money(result.knownSubtotalEUR)!==null?result.knownSubtotalEUR:null;
     const unknownCount=partial?result.breakdown.filter(x=>!x.verified).length:0;
     const heading=result.breakdown.length&&result.breakdown.every(x=>x.nonTicketed)?'Aucun billet requis':result.known?'Total : '+result.totalEUR.toFixed(2).replace('.',',')+' €':
-      partial?'Total inconnu · Sous-total vérifié : '+verifiedSubtotal.toFixed(2).replace('.',',')+' € · '+unknownCount+' portion'+(unknownCount>1?'s':'')+' sans prix':'Total inconnu';
+      partial&&verifiedSubtotal!==null?'Total inconnu · Sous-total vérifié : '+verifiedSubtotal.toFixed(2).replace('.',',')+' € · '+unknownCount+' portion'+(unknownCount>1?'s':'')+' sans prix':'Total inconnu';
     return heading+(portions.length?' · '+portions.join(' · '):'');
   }
   function describeLeg(leg){
