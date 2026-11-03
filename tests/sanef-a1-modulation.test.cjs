@@ -36,3 +36,12 @@ test('Sunday eligibility is automatic in France local time', () => {
   assert.equal(a1TariffBand({ ...base, passageAt: '2026-11-08T17:00:00+01:00', eligibleDay: false }), 'normal');
   assert.equal(a1TariffBand({ ...base, passageAt: '2026-11-09T17:00:00+01:00', eligibleDay: true }), 'rouge');
 });
+
+test('2026 SANEF reference is not used for historical journeys', () => {
+  const opts = { reference, origin: 'GAUCHY', destination: 'ARSY', vehicleClass: 1, towardsParis: true, eligibleDay: true };
+  assert.deepEqual(a1OfficialFare({ ...opts, passageAt: '2025-11-09T17:00:00+01:00' }), {
+    status: 'unavailable', reason: 'before_reference_effective_date'
+  });
+  assert.equal(a1OfficialFare({ ...opts, passageAt: '2026-02-01T17:00:00+01:00' }).amount, 8.7);
+  assert.throws(() => a1OfficialFare({ ...opts, passageAt: 'invalid' }), /Invalid passageAt/);
+});
