@@ -4,6 +4,11 @@
 (function(root){
   'use strict';
   function money(value){if(typeof value!=='number'||!Number.isFinite(value)||value<0)return null;const cents=value*100;return Number.isSafeInteger(Math.round(cents))&&Math.abs(cents-Math.round(cents))<1e-7?value:null;}
+  function validTimestamp(value){
+    if(typeof value!=='string'||!/^20\d{2}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d{1,3})?)?(?:Z|[+-](?:0\d|1[0-4]):[0-5]\d)$/.test(value))return NaN;
+    const day=Date.parse(value.slice(0,10)+'T12:00:00Z');
+    return Number.isFinite(day)&&new Date(day).toISOString().slice(0,10)===value.slice(0,10)?Date.parse(value):NaN;
+  }
   function validForTravel(leg,travelDate){
     if(travelDate==null)return true;
     if(typeof travelDate!=='string'||!/^(20\d{2})-(\d{2})-(\d{2})T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d{1,3})?)?(?:Z|[+-](?:0\d|1[0-4]):[0-5]\d)$/.test(travelDate))return false;
@@ -11,8 +16,8 @@
     if(!Number.isFinite(day)||new Date(day).toISOString().slice(0,10)!==travelDate.slice(0,10))return false;
     const when=Date.parse(travelDate);
     if(!Number.isFinite(when))return false;
-    const start=leg?.fareValidFrom?Date.parse(leg.fareValidFrom):NaN;
-    const end=leg?.fareValidUntil?Date.parse(leg.fareValidUntil):NaN;
+    const start=leg?.fareValidFrom?validTimestamp(leg.fareValidFrom):NaN;
+    const end=leg?.fareValidUntil?validTimestamp(leg.fareValidUntil):NaN;
     return Number.isFinite(start)&&Number.isFinite(end)&&start<=end&&start<=when&&when<=end;
   }
   function fare(legs,options={}){
