@@ -9,10 +9,10 @@ function eligibleA1Day(passageAt, eligibleDay) {
   return new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Paris', weekday: 'short' }).format(date) === 'Sun';
 }
 function a1TariffBand({ passageAt, towardsParis, eligibleDay, exit } = {}) {
-  if (towardsParis !== true || !eligibleA1Day(passageAt, eligibleDay)) return 'normal';
-  if (!['ARSY', 'CHEVRIERES', 'SENLIS', 'CHAMANT'].includes(String(exit || '').toUpperCase())) return 'normal';
   const date = passageAt instanceof Date ? passageAt : new Date(passageAt);
   if (!Number.isFinite(date.getTime())) throw new TypeError('Invalid passageAt');
+  if (towardsParis !== true || !eligibleA1Day(date, eligibleDay)) return 'normal';
+  if (!['ARSY', 'CHEVRIERES', 'SENLIS', 'CHAMANT'].includes(String(exit || '').toUpperCase())) return 'normal';
   const parts = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit',
     hourCycle: 'h23'
