@@ -25,7 +25,7 @@
   function rank(items,opts={}){
     const enriched=(Array.isArray(items)?items:[]).map(x=>evaluate(x,opts));
     const valid=enriched.filter(x=>x.durationMinutes!==null&&
-      (x.slackMinutes===null||x.slackMinutes>=(opts.exactGPSReliable===true&&x.exactDestination===true&&x.accessVerified===true?5:15)));
+      (x.slackMinutes===null||x.slackMinutes>=(finite(opts.marginMinutes)?Math.max(opts.marginMinutes,opts.exactGPSReliable===true&&x.exactDestination===true&&x.accessVerified===true?5:15):(opts.exactGPSReliable===true&&x.exactDestination===true&&x.accessVerified===true?5:15))));
     const byPrice=(a,b)=>Number(b.feasible)-Number(a.feasible)||
       ((a.priceEUR??Infinity)===(b.priceEUR??Infinity)?0:(a.priceEUR??Infinity)-(b.priceEUR??Infinity))||a.durationMinutes-b.durationMinutes;
     const byDuration=(a,b)=>Number(b.feasible)-Number(a.feasible)||
