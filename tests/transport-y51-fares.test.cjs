@@ -70,3 +70,13 @@ test('foreign exports and altered or inactive imported rides keep fare unknown',
  const saved=global.CPGTFSTime;global.CPGTFSTime=null;
  try{assert.equal(fares.fromImportedTables(imported,'2026-11-02',ride).portions.length,0);}finally{global.CPGTFSTime=saved;}
 });
+
+
+test('Y51 references reject implausible multi-day durations without inventing a fare',()=>{
+ const normal=leg(0,14);
+ assert.equal(fares.reference(normal).portions[0].amountEUR,8.9);
+ const long=leg(0,14);
+ long.arrival='2026-11-04T11:30:00+01:00';
+ long.fareScopePath.arrival=long.arrival;
+ assert.equal(fares.reference(long).portions[0],null);
+});
