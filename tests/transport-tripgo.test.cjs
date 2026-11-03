@@ -145,3 +145,17 @@ test('TripGo never presents a zero-duration public transport ride as usable',()=
  }
  assert.equal(api.parse(data,options).itineraries.length,0);
 });
+
+
+test('TripGo rejects ferry and air modes even if modeInfo is absent',()=>{
+ for(const forbidden of ['pt_pub_ferry','pt_pub_boat','pt_pub_air']){
+  const data=clone();
+  for(const template of data.segmentTemplates){
+   if(template.modeIdentifier?.startsWith('pt_pub')){
+    template.modeIdentifier=forbidden;
+    delete template.modeInfo;
+   }
+  }
+  assert.equal(api.parse(data,options).itineraries.length,0,forbidden);
+ }
+});
