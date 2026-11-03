@@ -76,3 +76,13 @@ test('Y51 coverage rejects reversed and implausibly long journeys',()=>{
  }
  assert.equal(pass.assess(leg,subscription).coveredLegs,1);
 });
+
+
+test('Y51 SIBRA scope excludes a journey that begins and ends at the same stop',()=>{
+ const leg=regionalLeg();
+ leg.to=leg.from;
+ leg.fareScopePath.to=leg.to;
+ leg.fareScopePath.stops[leg.fareScopePath.stops.length-1]=structuredClone(leg.fareScopePath.stops[0]);
+ assert.equal(pass.assess(leg,subscription).coveredLegs,0);
+ assert.equal(pass.assess(regionalLeg(),subscription).coveredLegs,1);
+});
