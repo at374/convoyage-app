@@ -5,6 +5,15 @@
   'use strict';
   function finite(v){return typeof v==='number'&&Number.isFinite(v);}
   function validTime(v){return typeof v==='string'&&/T\d{2}:\d{2}/.test(v)&&/(Z|[+-]\d{2}:\d{2})$/i.test(v)&&Number.isFinite(Date.parse(v));}
+  function point(value){
+    return value&&finite(value.lat)&&finite(value.lon??value.lng)&&Math.abs(value.lat)<=90&&Math.abs(value.lon??value.lng)<=180;
+  }
+  function metres(a,b){
+    const rad=Math.PI/180,lat1=a.lat*rad,lat2=b.lat*rad;
+    const dLat=lat2-lat1,dLon=((b.lon??b.lng)-(a.lon??a.lng))*rad;
+    const h=Math.sin(dLat/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin(dLon/2)**2;
+    return 12742000*Math.asin(Math.min(1,Math.sqrt(h)));
+  }
   function evaluate(item,opts={}){
     const legs=Array.isArray(item.legs)?item.legs:[];
     const departure=validTime(item.departure)?Date.parse(item.departure):NaN;
@@ -17,12 +26,14 @@
     const slack=valid&&Number.isFinite(deadline)?Math.floor((deadline-arrival)/60000):null;
     // Confirmed services still need a chronological, connectable itinerary.
     // Legacy legs without times retain their existing service-confirmation semantics.
-    let previousArrival=departure;
+    let previousArrival=departure,previousPoint=null;
     const connected=legs.every(leg=>{
       if(!leg||leg.departure==null&&leg.arrival==null)return true;
       if(!validTime(leg.departure)||!validTime(leg.arrival))return false;
       const start=Date.parse(leg.departure),end=Date.parse(leg.arrival);
       if(start<previousArrival||end<=start||end>arrival)return false;
+      if(previousPoint&&point(leg.fromPoint)&&metres(previousPoint,leg.fromPoint)>50)return false;
+      previousPoint=point(leg.toPoint)?leg.toPoint:null;
       previousArrival=end;
       return true;
     });
