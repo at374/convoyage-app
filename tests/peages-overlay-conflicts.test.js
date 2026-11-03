@@ -71,3 +71,21 @@ test('duplicate tariff keys may differ in distance metadata but not in price', (
     } else seen.set(key, row);
   }
 });
+
+test('estimated kilometers never determine official class 1 or class 2 fares', () => {
+  assert.match(overlay.src_paires, /km = estimation/i);
+  const rows = overlay.paires;
+  const seen = new Map();
+  let differingEstimates = 0;
+  for (const row of rows) {
+    const key = normalize(row[0]) + '|' + normalize(row[1]);
+    const previous = seen.get(key);
+    if (!previous) { seen.set(key, row); continue; }
+    if (row[4] !== previous[4]) {
+      differingEstimates++;
+      assert.equal(row[2], previous[2], 'Class 1 changed with estimated km: ' + key);
+      assert.equal(row[3], previous[3], 'Class 2 changed with estimated km: ' + key);
+    }
+  }
+  assert.ok(differingEstimates > 0, 'Expected real-world duplicated estimated-distance fixtures');
+});
