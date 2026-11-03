@@ -1,0 +1,26 @@
+name: Test peages overlay
+on:
+  push:
+    branches: [feature/transport-ranking-safe]
+    paths:
+      - 'peages-overlay.json'
+      - 'tests/peages-overlay-conflicts.test.js'
+      - '.github/workflows/test-peages-overlay.yml'
+  pull_request:
+    paths:
+      - 'peages-overlay.json'
+      - 'tests/peages-overlay-conflicts.test.js'
+      - '.github/workflows/test-peages-overlay.yml'
+  workflow_dispatch:
+jobs:
+  verify-overlay:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate toll overlay regression tests
+        run: node --test tests/peages-overlay-conflicts.test.js
