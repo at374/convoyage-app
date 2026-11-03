@@ -151,7 +151,8 @@
       if (!window.CPPeage) await new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'peage-engine.js'; s.onload = ok; s.onerror = ko; document.head.appendChild(s); });
       const j = await fetch('peages-overlay.json').then(r => r.json());
       const versions = j.tarifs.map(t => ({ id: t.id, barrier_station_id: t.b || null, vehicle_class: t.c, amount_eur: t.a, status: t.s, effective_from: t.f, effective_to: t.t || null, tariff_context: t.k || null, source_url: t.u == null ? null : j.u[t.u] }));
-      OVERLAY = { m: window.CPPeage.creerMoteur({ versions }), b: j.barrieres, v: j.v };
+      const moteur = window.CPPeage.creerMoteur({ versions });
+      OVERLAY = { m: window.CPSanefGpsProtection ? window.CPSanefGpsProtection.protectEngine(moteur) : moteur, b: j.barrieres, v: j.v };
     } catch (_) { OVERLAY = false; }
     return OVERLAY;
   };

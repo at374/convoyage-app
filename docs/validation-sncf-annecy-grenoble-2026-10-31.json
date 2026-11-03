@@ -1,0 +1,299 @@
+{
+  "validatedAt": "2026-10-31T07:22:28.477Z",
+  "kind": "Published official SNCF snapshot replay; not live circulation or real user missions",
+  "source": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
+  "sourceVersion": "2026-10-29",
+  "sourceSha256": "c5c122aebd4aba12f40efad01669885a163b54c09bada701395f36ab246cebd3",
+  "generatedAt": "2026-10-30T05:20:21.562992+00:00",
+  "serviceDates": [
+    "2026-11-01",
+    "2026-11-02"
+  ],
+  "dayFileHashes": {
+    "2026-11-01": "947dcc02fa78ba5e2f0052846291799e7daed680eb83463c4ae291d41c70a862",
+    "2026-11-02": "8f0bab47742b9be2569b0776f5c0a56210fef063e09b07d0755eea0e371f4616"
+  },
+  "results": [
+    {
+      "query": {
+        "from": {
+          "name": "Annecy",
+          "point": {
+            "lat": 45.902047,
+            "lon": 6.121826
+          }
+        },
+        "to": {
+          "name": "Grenoble",
+          "point": {
+            "lat": 45.191491,
+            "lon": 5.714548
+          }
+        },
+        "when": "2026-11-02T15:30:00+01:00",
+        "arriveBy": true,
+        "limit": 3
+      },
+      "localSearchMs": 46,
+      "answer": {
+        "status": "ok",
+        "itineraries": [
+          {
+            "legs": [
+              {
+                "source": "SNCF GTFS",
+                "serviceDate": "2026-11-02",
+                "tripId": "OCESN17528F1187_F:TER:FR:Line::F28D551A-A369-44D2-A99B-0E546CDBEC87::87746008:87761007:17:1644:20261108",
+                "line": "K21",
+                "trainNumber": null,
+                "from": "Annecy",
+                "to": "Grenoble",
+                "fromStationId": "StopArea:OCE87746008",
+                "toStationId": "StopArea:OCE87747006",
+                "departure": 1793623380000,
+                "arrival": 1793629560000
+              }
+            ],
+            "departure": "2026-11-02T12:43:00.000Z",
+            "arrival": "2026-11-02T14:26:00.000Z",
+            "price": null,
+            "transportConfirmed": false,
+            "realtime": false,
+            "walkingVerified": false
+          },
+          {
+            "legs": [
+              {
+                "source": "SNCF GTFS",
+                "serviceDate": "2026-11-02",
+                "tripId": "OCESN883856F1187_F:TER:FR:Line::F4B0CFE6-18E1-4D06-A749-805E6E29BD07::87746008:87741009:6:1401:20261211",
+                "line": "C21",
+                "trainNumber": null,
+                "from": "Annecy",
+                "to": "Rumilly",
+                "fromStationId": "StopArea:OCE87746008",
+                "toStationId": "StopArea:OCE87746149",
+                "departure": 1793620920000,
+                "arrival": 1793622360000
+              },
+              {
+                "source": "SNCF GTFS",
+                "serviceDate": "2026-11-02",
+                "tripId": "OCESN17528F1187_F:TER:FR:Line::F28D551A-A369-44D2-A99B-0E546CDBEC87::87746008:87761007:17:1644:20261108",
+                "line": "K21",
+                "trainNumber": null,
+                "from": "Rumilly",
+                "to": "Grenoble",
+                "fromStationId": "StopArea:OCE87746149",
+                "toStationId": "StopArea:OCE87747006",
+                "departure": 1793624400000,
+                "arrival": 1793629560000
+              }
+            ],
+            "departure": "2026-11-02T12:02:00.000Z",
+            "arrival": "2026-11-02T14:26:00.000Z",
+            "transferMinutes": 34,
+            "transferWalkingVerified": false,
+            "price": null,
+            "transportConfirmed": false,
+            "realtime": false,
+            "walkingVerified": false
+          },
+          {
+            "legs": [
+              {
+                "source": "SNCF GTFS",
+                "serviceDate": "2026-11-02",
+                "tripId": "OCESN883856F1187_F:TER:FR:Line::F4B0CFE6-18E1-4D06-A749-805E6E29BD07::87746008:87741009:6:1401:20261211",
+                "line": "C21",
+                "trainNumber": null,
+                "from": "Annecy",
+                "to": "Albens",
+                "fromStationId": "StopArea:OCE87746008",
+                "toStationId": "StopArea:OCE87746115",
+                "departure": 1793620920000,
+                "arrival": 1793622780000
+              },
+              {
+                "source": "SNCF GTFS",
+                "serviceDate": "2026-11-02",
+                "tripId": "OCESN17528F1187_F:TER:FR:Line::F28D551A-A369-44D2-A99B-0E546CDBEC87::87746008:87761007:17:1644:20261108",
+                "line": "K21",
+                "trainNumber": null,
+                "from": "Albens",
+                "to": "Grenoble",
+                "fromStationId": "StopArea:OCE87746115",
+                "toStationId": "StopArea:OCE87747006",
+                "departure": 1793624940000,
+                "arrival": 1793629560000
+              }
+            ],
+            "departure": "2026-11-02T12:02:00.000Z",
+            "arrival": "2026-11-02T14:26:00.000Z",
+            "transferMinutes": 36,
+            "transferWalkingVerified": false,
+            "price": null,
+            "transportConfirmed": false,
+            "realtime": false,
+            "walkingVerified": false
+          }
+        ],
+        "truncated": false,
+        "serviceDates": [
+          "2026-11-01",
+          "2026-11-02"
+        ],
+        "transportConfirmed": false,
+        "realtime": false
+      }
+    },
+    {
+      "query": {
+        "from": {
+          "name": "Grenoble",
+          "point": {
+            "lat": 45.191491,
+            "lon": 5.714548
+          }
+        },
+        "to": {
+          "name": "Annecy",
+          "point": {
+            "lat": 45.902047,
+            "lon": 6.121826
+          }
+        },
+        "when": "2026-11-02T10:00:00+01:00",
+        "arriveBy": false,
+        "limit": 3
+      },
+      "localSearchMs": 88,
+      "answer": {
+        "status": "ok",
+        "itineraries": [
+          {
+            "legs": [
+              {
+                "source": "SNCF GTFS",
+                "serviceDate": "2026-11-02",
+                "tripId": "OCESN33154R1187_R:CTE:FR:Line::05C666F4-3B26-4DB6-A4A8-F3C6D6150B76::87335521:87741009:2:1110:20261211",
+                "line": "C1",
+                "trainNumber": null,
+                "from": "Grenoble",
+                "to": "Chambéry - Challes-les-Eaux",
+                "fromStationId": "StopArea:OCE87335521",
+                "toStationId": "StopArea:OCE87741009",
+                "departure": 1793610000000,
+                "arrival": 1793614200000
+              },
+              {
+                "source": "SNCF GTFS",
+                "serviceDate": "2026-11-02",
+                "tripId": "OCESN17570F1187_F:TER:FR:Line::F28D551A-A369-44D2-A99B-0E546CDBEC87::87741009:87746008:6:1315:20261111",
+                "line": "K21",
+                "trainNumber": null,
+                "from": "Chambéry - Challes-les-Eaux",
+                "to": "Annecy",
+                "fromStationId": "StopArea:OCE87741009",
+                "toStationId": "StopArea:OCE87746008",
+                "departure": 1793618460000,
+                "arrival": 1793621700000
+              }
+            ],
+            "departure": "2026-11-02T09:00:00.000Z",
+            "arrival": "2026-11-02T12:15:00.000Z",
+            "transferMinutes": 71,
+            "transferWalkingVerified": false,
+            "price": null,
+            "transportConfirmed": false,
+            "realtime": false,
+            "walkingVerified": false
+          },
+          {
+            "legs": [
+              {
+                "source": "SNCF GTFS",
+                "serviceDate": "2026-11-02",
+                "tripId": "OCESN17616F1187_F:TER:FR:Line::D02BC35E-F58E-45E7-968F-42B8AB630E6E::87747006:87723197:6:1144:20261212",
+                "line": "K6",
+                "trainNumber": null,
+                "from": "Grenoble",
+                "to": "Lyon Part Dieu",
+                "fromStationId": "StopArea:OCE87747006",
+                "toStationId": "StopArea:OCE87723197",
+                "departure": 1793611260000,
+                "arrival": 1793616240000
+              },
+              {
+                "source": "SNCF GTFS",
+                "serviceDate": "2026-11-02",
+                "tripId": "OCESN17978F1187_F:TER:FR:Line::6F1D7ABC-B729-498A-B3BD-DE55587C60E2::87723197:87746008:6:1407:20261212",
+                "line": "K23",
+                "trainNumber": null,
+                "from": "Lyon Part Dieu",
+                "to": "Annecy",
+                "fromStationId": "StopArea:OCE87723197",
+                "toStationId": "StopArea:OCE87746008",
+                "departure": 1793617680000,
+                "arrival": 1793624820000
+              }
+            ],
+            "departure": "2026-11-02T09:21:00.000Z",
+            "arrival": "2026-11-02T13:07:00.000Z",
+            "transferMinutes": 24,
+            "transferWalkingVerified": false,
+            "price": null,
+            "transportConfirmed": false,
+            "realtime": false,
+            "walkingVerified": false
+          },
+          {
+            "legs": [
+              {
+                "source": "SNCF GTFS",
+                "serviceDate": "2026-11-02",
+                "tripId": "OCESN33173R1187_R:CTE:FR:Line::F28D551A-A369-44D2-A99B-0E546CDBEC87::87335521:87556506:3:1155:20261211",
+                "line": "K21",
+                "trainNumber": null,
+                "from": "Grenoble",
+                "to": "Valence TGV Rhône-Alpes Sud",
+                "fromStationId": "StopArea:OCE87335521",
+                "toStationId": "StopArea:OCE87763029",
+                "departure": 1793612100000,
+                "arrival": 1793615700000
+              },
+              {
+                "source": "SNCF GTFS",
+                "serviceDate": "2026-11-02",
+                "tripId": "OCESN17574F1187_F:TER:FR:Line::F28D551A-A369-44D2-A99B-0E546CDBEC87::87761007:87746008:17:1515:20261108",
+                "line": "K21",
+                "trainNumber": null,
+                "from": "Valence TGV Rhône-Alpes Sud",
+                "to": "Annecy",
+                "fromStationId": "StopArea:OCE87763029",
+                "toStationId": "StopArea:OCE87746008",
+                "departure": 1793618640000,
+                "arrival": 1793628900000
+              }
+            ],
+            "departure": "2026-11-02T09:35:00.000Z",
+            "arrival": "2026-11-02T14:15:00.000Z",
+            "transferMinutes": 49,
+            "transferWalkingVerified": false,
+            "price": null,
+            "transportConfirmed": false,
+            "realtime": false,
+            "walkingVerified": false
+          }
+        ],
+        "truncated": false,
+        "serviceDates": [
+          "2026-11-01",
+          "2026-11-02"
+        ],
+        "transportConfirmed": false,
+        "realtime": false
+      }
+    }
+  ]
+}

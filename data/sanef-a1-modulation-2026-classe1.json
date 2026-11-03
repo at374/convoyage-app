@@ -1,0 +1,38 @@
+{
+  "source": "https://www.autoroutes.sanef.com/sites/default/files/2026-02/grille-modulee-01022026.pdf",
+  "effective": "2026-02-01",
+  "vehicleClass": 1,
+  "unit": "EUR_TTC",
+  "status": "REFERENCE_ONLY_NOT_APPLIED",
+  "note": "Official normal/vert/rouge rates; time-slot applicability must be implemented and validated before integration into pricing engine.",
+  "relations": [
+    {
+      "origin": "GAUCHY",
+      "destination": "ARSY",
+      "normal": 7.5,
+      "vert": 6.3,
+      "rouge": 8.7
+    },
+    {
+      "origin": "COURBES",
+      "destination": "ARSY",
+      "normal": 8.6,
+      "vert": 7.4,
+      "rouge": 9.8
+    },
+    {
+      "origin": "GAUCHY",
+      "destination": "CHEVRIERES",
+      "normal": 8.6,
+      "vert": 7.3,
+      "rouge": 9.9
+    },
+    {
+      "origin": "COURBES",
+      "destination": "CHEVRIERES",
+      "normal": 8.9,
+      "vert": 7.6,
+      "rouge": 10.2
+    }
+  ]
+}

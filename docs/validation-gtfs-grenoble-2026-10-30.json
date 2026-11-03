@@ -1,0 +1,97 @@
+{
+  "environment": "Fresh official archives/catalogue replayed through actual worker in a Node thread and simulated Agenda DOM; not Android",
+  "window": {
+    "earliestDeparture": "2026-11-02T10:00:00+01:00",
+    "latestArrival": "2026-11-02T13:00:00+01:00",
+    "marginMinutes": 30
+  },
+  "sources": [
+    {
+      "source": {
+        "datasetId": "5af03701b595081c1880a8a4",
+        "resourceId": "83459",
+        "network": "Réseau urbain TAG",
+        "url": "https://data.mobilites-m.fr/api/gtfs/SEM",
+        "updatedAt": "2026-10-22T22:01:32.111012Z",
+        "loadedAt": "2026-10-30T18:37:23.413Z"
+      },
+      "indexedStopTimes": 169562,
+      "skippedStopTimes": 273057,
+      "rejectedStopTimes": 0,
+      "counts": {
+        "stops": 3241,
+        "routes": 129,
+        "trips": 7405,
+        "stopTimes": 442619
+      }
+    },
+    {
+      "source": {
+        "datasetId": "5eb3510a4efd8f649ffe1b9f",
+        "resourceId": "81794",
+        "network": "Réseau urbain Tougo",
+        "url": "https://data.mobilites-m.fr/api/gtfs/GSV",
+        "updatedAt": "2026-10-16T13:36:39.086870Z",
+        "loadedAt": "2026-10-30T18:37:23.570Z"
+      },
+      "indexedStopTimes": 9714,
+      "skippedStopTimes": 17042,
+      "rejectedStopTimes": 0,
+      "counts": {
+        "stops": 1344,
+        "routes": 72,
+        "trips": 600,
+        "stopTimes": 26756
+      }
+    }
+  ],
+  "rows": 305,
+  "truncated": false,
+  "example": {
+    "lines": [
+      "A",
+      "C9"
+    ],
+    "networks": [
+      "Réseau urbain TAG",
+      "Réseau urbain Tougo"
+    ],
+    "origin": "Grenoble, Saint-Bruno",
+    "destination": "Villard-Bonnot, Brignoud Gare",
+    "changeFrom": "Grenoble, Verdun – Préfecture",
+    "changeTo": "Grenoble, Verdun - Préfecture",
+    "distanceMeters": 22,
+    "intervalMinutes": 24,
+    "departure": "2026-11-02T09:00:56.000Z",
+    "arrival": "2026-11-02T10:20:00.000Z",
+    "walkingDurationSeconds": null,
+    "serviceConfirmed": false,
+    "priceEUR": null
+  },
+  "rendered": true,
+  "noFeasibilityBadge": true,
+  "checkedDate": "2026-10-30",
+  "archives": [
+    {
+      "network": "sem",
+      "bytes": 4709031,
+      "expandedBytes": 22163077,
+      "sha256": "182e55b9ba9098e4d4ce7d4a2522724a0bbd4bd536a33c86c23aebc67288a8f5",
+      "responseCORS": "*"
+    },
+    {
+      "network": "gsv",
+      "bytes": 345973,
+      "expandedBytes": 1663982,
+      "sha256": "98a5c632cae725026a7b3a982501e1cb857eb9d491a3bbbae2536145f0c38d1e",
+      "responseCORS": "*"
+    }
+  ],
+  "limits": [
+    "No Android or real browser validation",
+    "No walking, realtime or fare confirmation",
+    "Local Grenoble and Grésivaudan selection only, at most two networks and one transfer",
+    "Grenoble station area to Crolles Mairie 10:00–13:00 returned no candidate; does not establish transport absence",
+    "No Annecy to Grenoble end-to-end coverage established"
+  ]
+}

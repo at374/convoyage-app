@@ -3,12 +3,18 @@ on:
   push:
     paths:
       - 'regional-routing.js'
+      - 'app.js'
       - 'tests/regional-routing.test.cjs'
+      - 'tests/transport-regional-agenda.test.cjs'
+      - 'tests/fixtures/mobilites-m-grenoble-crolles-2026-10-30.json'
       - '.github/workflows/test-regional-routing.yml'
   pull_request:
     paths:
       - 'regional-routing.js'
+      - 'app.js'
       - 'tests/regional-routing.test.cjs'
+      - 'tests/transport-regional-agenda.test.cjs'
+      - 'tests/fixtures/mobilites-m-grenoble-crolles-2026-10-30.json'
       - '.github/workflows/test-regional-routing.yml'
   workflow_dispatch:
 permissions:
@@ -27,4 +33,4 @@ jobs:
           node --check regional-routing.js
           node --check tests/regional-routing.test.cjs
       - name: Run regional routing unit tests
-        run: node --test tests/regional-routing.test.cjs
+        run: node --test tests/regional-routing.test.cjs tests/transport-regional-agenda.test.cjs

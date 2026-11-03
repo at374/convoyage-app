@@ -1,0 +1,60 @@
+name: Test public transport relay
+on:
+  push:
+    branches: [feature/transport-ranking-safe]
+    paths: ['server/**', 'transport-blablacar-realtime.js', 'tests/transport-realtime-relay.test.cjs', 'tests/fixtures/blablacar-*.json', '.github/workflows/test-transport-relay.yml']
+  pull_request:
+    paths: ['server/**', 'transport-blablacar-realtime.js', 'tests/transport-realtime-relay.test.cjs', 'tests/fixtures/blablacar-*.json', '.github/workflows/test-transport-relay.yml']
+permissions:
+  contents: read
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: node --check server/transport-realtime-relay.cjs
+      - run: node --test tests/transport-realtime-relay.test.cjs
+      - name: Build the relay container without publishing it
+        run: docker build -f server/Dockerfile.transport-realtime -t convoyage-transport-relay:test .
+      - name: Check container startup without querying the operator
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'docker logs transport-relay-smoke || true; docker rm -f transport-relay-smoke >/dev/null 2>&1 || true' EXIT
+          docker run -d --name transport-relay-smoke -p 127.0.0.1:18080:8080 -e TRANSPORT_ALLOWED_ORIGINS=https://at374.github.io convoyage-transport-relay:test
+          curl --noproxy '*' --fail --silent --show-error --retry 10 --retry-all-errors --retry-connrefused --retry-delay 1 --retry-max-time 20 --max-time 2 http://127.0.0.1:18080/health
+          node - <<'NODE'
+          const assert=require('node:assert/strict');
+          const base='http://127.0.0.1:18080';
+          (async()=>{
+            const health=await fetch(base+'/health');
+            assert.equal(health.status,200);
+            assert.deepEqual(await health.json(),{status:'ok',feedChecked:false});
+            const allowed=await fetch(base+'/health',{headers:{Origin:'https://at374.github.io'}});
+            assert.equal(allowed.status,200);
+            assert.equal(allowed.headers.get('access-control-allow-origin'),'https://at374.github.io');
+            const denied=await fetch(base+'/health',{headers:{Origin:'https://untrusted.example'}});
+            assert.equal(denied.status,403);
+            assert.deepEqual(await denied.json(),{error:'origin_not_allowed'});
+            const preflight=await fetch(base+'/transport-realtime/blablacar',{method:'OPTIONS',headers:{Origin:'https://at374.github.io','Access-Control-Request-Method':'GET'}});
+            assert.equal(preflight.status,204);
+            assert.equal(preflight.headers.get('access-control-allow-origin'),'https://at374.github.io');
+            const forbiddenPreflight=await fetch(base+'/transport-realtime/blablacar',{method:'OPTIONS',headers:{Origin:'https://untrusted.example'}});
+            assert.equal(forbiddenPreflight.status,403);
+            const query=await fetch(base+'/transport-realtime/blablacar?url=https://example.org');
+            assert.equal(query.status,400);
+            assert.deepEqual(await query.json(),{error:'query_not_allowed'});
+            const method=await fetch(base+'/transport-realtime/blablacar',{method:'POST'});
+            assert.equal(method.status,405);
+            assert.equal(method.headers.get('allow'),'GET, HEAD, OPTIONS');
+            const head=await fetch(base+'/health',{method:'HEAD'});
+            assert.equal(head.status,200);
+            assert.equal(await head.text(),'');
+            const missing=await fetch(base+'/not-a-route');
+            assert.equal(missing.status,404);
+          })().catch(error=>{console.error(error);process.exitCode=1;});
+          NODE

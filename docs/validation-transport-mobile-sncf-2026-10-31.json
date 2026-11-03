@@ -1,0 +1,36 @@
+{
+  "browser": "156.0.8078.80",
+  "viewport": {
+    "width": 412,
+    "height": 839
+  },
+  "locale": "fr-FR",
+  "timezone": "Europe/Paris",
+  "missionData": "Synthetic fixtures only",
+  "network": "All external requests mocked; no user account or live mission sent",
+  "scenarios": [
+    "actual Agenda and mission sheet",
+    "two separate buttons",
+    "late independent geocoding",
+    "Aller / Jonction / Retour",
+    "30-minute outbound margin",
+    "recorded Mobilités M C11 response",
+    "real GTFS browser worker",
+    "manual refresh",
+    "sheet close",
+    "in-flight network cancellation",
+    "late responses ignored",
+    "no horizontal overflow",
+    "Annecy–Grenoble with recorded official SNCF subset"
+  ],
+  "regionalRequests": 9,
+  "workerInstances": 6,
+  "abortedRequests": 3,
+  "remainingWorkers": 0,
+  "buttonColour": "rgb(205, 234, 255)",
+  "uncaughtErrors": [],
+  "androidDeviceTested": false,
+  "date": "2026-10-31",
+  "baselineCommit": "97cbc25c2a3af6b1d10b9565533d64215286a753",
+  "railData": "Recorded official SNCF subset, 2 unchanged trips and 18 stations, not exhaustive"
+}

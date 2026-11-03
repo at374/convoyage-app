@@ -1,0 +1,218 @@
+{
+  "networkId": "oura-haute-savoie",
+  "line": "Y51",
+  "scopeFrom": "2026-09-01",
+  "scopeThrough": "2027-07-02",
+  "checkedAt": "2026-10-31T18:11:27.325006+00:00",
+  "timetableSource": "https://annecy.transdev.com/wp-content/uploads/2026/07/Y51_FP_2026-2027_acy-abt_Vdef.pdf",
+  "gtfsSource": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA",
+  "gtfsSHA256": "a435f54f90f8746c099a0af4b36142f590c42170d3b2a6c7626984d7e3bbd97a",
+  "eligibleStops": [
+    {
+      "stopId": "FR:74010:ZE:57539:HAUTExSAVOIE",
+      "name": "Gare Routiere",
+      "lat": 45.9016985,
+      "lon": 6.1201612
+    },
+    {
+      "stopId": "FR:74010:ZE:57555:HAUTExSAVOIE",
+      "name": "Hôtel de Ville",
+      "lat": 45.899777,
+      "lon": 6.12817
+    },
+    {
+      "stopId": "FR:74010:ZE:57556:HAUTExSAVOIE",
+      "name": "Hôtel de Ville",
+      "lat": 45.9000241,
+      "lon": 6.128212
+    },
+    {
+      "stopId": "FR:74010:ZE:58799:HAUTExSAVOIE",
+      "name": "Marquisats",
+      "lat": 45.8933503,
+      "lon": 6.1358716
+    },
+    {
+      "stopId": "FR:74010:ZE:58800:HAUTExSAVOIE",
+      "name": "Marquisats",
+      "lat": 45.8933637,
+      "lon": 6.1359787
+    },
+    {
+      "stopId": "FR:74108:ZE:58436:HAUTExSAVOIE",
+      "name": "Eglise",
+      "lat": 45.827708,
+      "lon": 6.2018053
+    },
+    {
+      "stopId": "FR:74108:ZE:58437:HAUTExSAVOIE",
+      "name": "Eglise",
+      "lat": 45.8276579,
+      "lon": 6.2022617
+    },
+    {
+      "stopId": "FR:74108:ZE:58922:HAUTExSAVOIE",
+      "name": "Plage",
+      "lat": 45.827332,
+      "lon": 6.196979
+    },
+    {
+      "stopId": "FR:74108:ZE:58923:HAUTExSAVOIE",
+      "name": "Plage",
+      "lat": 45.8273692,
+      "lon": 6.1969119
+    },
+    {
+      "stopId": "FR:74242:ZE:57567:HAUTExSAVOIE",
+      "name": "Les Chapelles",
+      "lat": 45.8379298,
+      "lon": 6.1579781
+    },
+    {
+      "stopId": "FR:74242:ZE:57568:HAUTExSAVOIE",
+      "name": "Les Chapelles",
+      "lat": 45.8379542,
+      "lon": 6.158264
+    },
+    {
+      "stopId": "FR:74242:ZE:57569:HAUTExSAVOIE",
+      "name": "College Jean Monnet",
+      "lat": 45.8345575,
+      "lon": 6.1618635
+    },
+    {
+      "stopId": "FR:74242:ZE:57570:HAUTExSAVOIE",
+      "name": "College Jean Monnet",
+      "lat": 45.8349227,
+      "lon": 6.1620746
+    },
+    {
+      "stopId": "FR:74242:ZE:57572:HAUTExSAVOIE",
+      "name": "Gendarmerie",
+      "lat": 45.832219,
+      "lon": 6.1717336
+    },
+    {
+      "stopId": "FR:74242:ZE:57573:HAUTExSAVOIE",
+      "name": "Gendarmerie",
+      "lat": 45.8324037,
+      "lon": 6.1714453
+    },
+    {
+      "stopId": "FR:74242:ZE:57574:HAUTExSAVOIE",
+      "name": "Chez Daviet",
+      "lat": 45.8291318,
+      "lon": 6.1878668
+    },
+    {
+      "stopId": "FR:74242:ZE:57575:HAUTExSAVOIE",
+      "name": "Chez Daviet",
+      "lat": 45.8290592,
+      "lon": 6.1877524
+    },
+    {
+      "stopId": "FR:74242:ZE:58804:HAUTExSAVOIE",
+      "name": "Tuileries",
+      "lat": 45.8308474,
+      "lon": 6.1789097
+    },
+    {
+      "stopId": "FR:74242:ZE:58805:HAUTExSAVOIE",
+      "name": "Tuileries",
+      "lat": 45.8306534,
+      "lon": 6.1793191
+    },
+    {
+      "stopId": "FR:74267:ZE:57557:HAUTExSAVOIE",
+      "name": "Létraz",
+      "lat": 45.8733375,
+      "lon": 6.1413155
+    },
+    {
+      "stopId": "FR:74267:ZE:57558:HAUTExSAVOIE",
+      "name": "Létraz",
+      "lat": 45.8739445,
+      "lon": 6.1416083
+    },
+    {
+      "stopId": "FR:74267:ZE:57559:HAUTExSAVOIE",
+      "name": "Le Cret",
+      "lat": 45.8697301,
+      "lon": 6.1406339
+    },
+    {
+      "stopId": "FR:74267:ZE:57560:HAUTExSAVOIE",
+      "name": "Le Cret",
+      "lat": 45.8697323,
+      "lon": 6.1404445
+    },
+    {
+      "stopId": "FR:74267:ZE:57561:HAUTExSAVOIE",
+      "name": "Riant Port",
+      "lat": 45.8588823,
+      "lon": 6.1422619
+    },
+    {
+      "stopId": "FR:74267:ZE:57562:HAUTExSAVOIE",
+      "name": "Riant Port",
+      "lat": 45.8593442,
+      "lon": 6.1419398
+    },
+    {
+      "stopId": "FR:74267:ZE:57563:HAUTExSAVOIE",
+      "name": "L.P. Roselieres",
+      "lat": 45.8525478,
+      "lon": 6.1444409
+    },
+    {
+      "stopId": "FR:74267:ZE:57564:HAUTExSAVOIE",
+      "name": "L.P. Roselieres",
+      "lat": 45.8529488,
+      "lon": 6.1444834
+    },
+    {
+      "stopId": "FR:74267:ZE:57565:HAUTExSAVOIE",
+      "name": "Le Brouillet",
+      "lat": 45.8476612,
+      "lon": 6.1465834
+    },
+    {
+      "stopId": "FR:74267:ZE:57566:HAUTExSAVOIE",
+      "name": "Le Brouillet",
+      "lat": 45.8477898,
+      "lon": 6.1463383
+    },
+    {
+      "stopId": "FR:74267:ZE:58438:HAUTExSAVOIE",
+      "name": "Regina",
+      "lat": 45.8805187,
+      "lon": 6.1417571
+    },
+    {
+      "stopId": "FR:74267:ZE:58439:HAUTExSAVOIE",
+      "name": "Regina",
+      "lat": 45.8810307,
+      "lon": 6.1419496
+    },
+    {
+      "stopId": "FR:74267:ZE:58440:HAUTExSAVOIE",
+      "name": "Mairie",
+      "lat": 45.863937,
+      "lon": 6.14022
+    },
+    {
+      "stopId": "FR:74267:ZE:58441:HAUTExSAVOIE",
+      "name": "Mairie",
+      "lat": 45.8646501,
+      "lon": 6.1401187
+    }
+  ],
+  "outsideStops": [
+    {
+      "stopId": "FR:74104:ZE:57576:HAUTExSAVOIE",
+      "name": "Bredannaz",
+      "lat": 45.8141403,
+      "lon": 6.209516
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "browser": "156.0.8078.80",
+  "viewport": {
+    "width": 412,
+    "height": 839
+  },
+  "locale": "fr-FR",
+  "timezone": "Europe/Paris",
+  "missionData": "Synthetic fixtures only",
+  "network": "All external requests mocked; no user account or live mission sent",
+  "scenarios": [
+    "actual Agenda and mission sheet",
+    "two separate buttons",
+    "late independent geocoding",
+    "Aller / Jonction / Retour",
+    "5-minute minimum at exact pickup GPS, final walk required",
+    "recorded Mobilités M C11 response",
+    "real GTFS browser worker",
+    "manual refresh",
+    "sheet close",
+    "in-flight network cancellation",
+    "late responses ignored",
+    "no horizontal overflow",
+    "Annecy–Grenoble with recorded official SNCF subset"
+  ],
+  "regionalRequests": 9,
+  "workerInstances": 6,
+  "abortedRequests": 3,
+  "remainingWorkers": 0,
+  "buttonColour": "rgb(205, 234, 255)",
+  "uncaughtErrors": [],
+  "androidDeviceTested": false,
+  "date": "2026-10-31",
+  "baselineCommit": "73fc9d347da08a1da1860da35352be9bfc410c42",
+  "minimumAtExactPickupMinutes": 5,
+  "preferredMinutes": [
+    30,
+    45
+  ],
+  "boundaryTests": "5:00 accepted after final walk; 4:59 rejected; station-only arrival remains unconfirmed"
+}

@@ -40,22 +40,50 @@
       let previous=-1;for(const e of t[3]){if(!Array.isArray(e)||e.length!==5||!e.every(Number.isInteger)||e[0]<0||e[0]>=data.stations.length||e[1]<previous||e[1]<0||e[2]<e[1]||e[2]>259199||e[3]<0||e[3]>3||e[4]<0||e[4]>3)throw Error('Horaire SNCF invalide');previous=e[2];}}
     return data;
   }
-  async function json(url,fetcher){
-    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),8000);
-    try{const r=await fetcher(url,{signal:controller.signal,cache:'no-cache',credentials:'omit',referrerPolicy:'no-referrer'});if(!r.ok)throw Error('Index SNCF indisponible ('+r.status+')');return await r.json();}finally{clearTimeout(timer);}
+  const abortError=()=>new DOMException('Recherche SNCF annulée','AbortError');
+  function checkSignal(signal){if(signal?.aborted)throw abortError();}
+  async function json(url,fetcher,signal){
+    checkSignal(signal);
+    const controller=new AbortController(),cancel=()=>controller.abort();
+    signal?.addEventListener('abort',cancel,{once:true});
+    const timer=setTimeout(cancel,8000);
+    try{
+      const r=await fetcher(url,{signal:controller.signal,cache:'no-cache',credentials:'omit',referrerPolicy:'no-referrer'});
+      checkSignal(controller.signal);if(!r.ok)throw Error('Index SNCF indisponible ('+r.status+')');
+      const data=await r.json();checkSignal(controller.signal);return data;
+    }finally{clearTimeout(timer);signal?.removeEventListener('abort',cancel);}
   }
-  async function loadDay(day,manifest,fetcher){
-    const entry=manifest.dates[day];if(!entry||entry.file!=='sncf-'+day+'.json'||!/^[a-f0-9]{64}$/.test(entry.sha256))throw Error('Calendrier SNCF non publié pour '+day);
-    const key=manifest.sourceSha256+'|'+entry.sha256+'|'+day;
+  async function loadDay(day,manifest,fetcher,signal){
+    checkSignal(signal);
+    const resource=manifest.dates[day];if(!resource||resource.file!=='sncf-'+day+'.json'||!/^[a-f0-9]{64}$/.test(resource.sha256))throw Error('Calendrier SNCF non publié pour '+day);
+    const key=manifest.sourceSha256+'|'+resource.sha256+'|'+day;
     if(cache.has(key))return cache.get(key);
-    if(pending.has(key))return pending.get(key);
-    const promise=json(BASE+entry.file+'?v='+entry.sha256.slice(0,16),fetcher).then(value=>{
-      const data=validateDay(value,day,manifest.sourceSha256);if(cache.size>=16)cache.delete(cache.keys().next().value);cache.set(key,data);return data;
-    });pending.set(key,promise);
-    try{return await promise;}finally{pending.delete(key);}
+    let entry=pending.get(key);
+    if(!entry||entry.controller.signal.aborted){
+      entry={controller:new AbortController(),users:new Set(),settled:false};const current=entry;
+      current.promise=json(BASE+resource.file+'?v='+resource.sha256.slice(0,16),fetcher,current.controller.signal).then(value=>{
+        checkSignal(current.controller.signal);
+        const data=validateDay(value,day,manifest.sourceSha256);
+        if(cache.size>=16)cache.delete(cache.keys().next().value);cache.set(key,data);return data;
+      }).finally(()=>{current.settled=true;if(pending.get(key)===current)pending.delete(key);});
+      pending.set(key,current);
+    }
+    return new Promise((resolve,reject)=>{
+      const user={};let finished=false;entry.users.add(user);
+      const cleanup=()=>{
+        entry.users.delete(user);signal?.removeEventListener('abort',cancel);
+        if(!entry.settled&&!entry.users.size){entry.controller.abort();if(pending.get(key)===entry)pending.delete(key);}
+      };
+      const cancel=()=>{if(finished)return;finished=true;cleanup();reject(abortError());};
+      signal?.addEventListener('abort',cancel,{once:true});
+      entry.promise.then(value=>{if(finished)return;finished=true;cleanup();resolve(value);},error=>{if(finished)return;finished=true;cleanup();reject(error);});
+      if(signal?.aborted)cancel();
+    });
   }
   function search(days,options){
     const threshold=Date.parse(options.when);if(!Number.isFinite(threshold)||!/[zZ]|[+-]\d{2}:\d{2}$/.test(options.when))throw Error('Date avec fuseau requise');
+    const latest=options.latestArrival===undefined?null:Date.parse(options.latestArrival);
+    if(latest!==null&&(!Number.isFinite(latest)||!/[zZ]|[+-]\d{2}:\d{2}$/.test(options.latestArrival)))throw Error('Arrivée limite SNCF invalide');
     const margin=options.transferMinutes??10;if(!Number.isInteger(margin)||margin<5||margin>120)throw Error('Marge ferroviaire invalide');
     const limit=options.limit??5;if(!Number.isInteger(limit)||limit<1||limit>10)throw Error('Limite SNCF invalide');
     const first=[],second=new Map(),direct=[];let originFound=false,destinationFound=false;
@@ -69,7 +97,7 @@
         for(let i=0;i<events.length-1;i++){const a=events[i];if(a[3]!==0)continue;
           for(let j=i+1;j<events.length;j++){const b=events[j];if(b[4]!==0)continue;
             const dep=base+a[2]*1000,arr=base+b[1]*1000;
-            if(a[0]===b[0]||arr<dep||arr-dep>43200000)continue;
+            if(a[0]===b[0]||arr<dep||arr-dep>43200000||(latest!==null&&arr>latest))continue;
             const fromHere=origins.has(a[0]),toHere=destinations.has(b[0]);
             if(fromHere&&toHere&&(!options.arriveBy?dep>=threshold:arr<=threshold))direct.push({legs:[makeLeg(data,t,a,b,base)],departure:dep,arrival:arr});
             if(fromHere&&!destinations.has(a[0])&&(!options.arriveBy?dep>=threshold:dep>=threshold-43200000)&&arr<=threshold+43200000){first.push(makeLeg(data,t,a,b,base));}
@@ -93,12 +121,14 @@
   async function plan(options){
     const fetcher=options.fetcher||((...args)=>root.fetch(...args));
     if(typeof fetcher!=='function'||!Number.isFinite(Date.parse(options.when)))throw Error('Requête SNCF invalide');
-    const manifest=await json(BASE+'manifest.json',fetcher);
+    checkSignal(options.signal);
+    const manifest=await json(BASE+'manifest.json',fetcher,options.signal);
     if(manifest.schemaVersion!==1||!manifest.dates||!/^[a-f0-9]{64}$/.test(manifest.sourceSha256))throw Error('Catalogue SNCF invalide');
     const day=localDate(options.when);if(!manifest.dates[day])throw Error('Calendrier SNCF non publié pour '+day);
     const previous=new Date(Date.parse(day+'T12:00:00Z')-86400000).toISOString().slice(0,10);
     const dates=[...(manifest.dates[previous]?[previous]:[]),day];
-    const days=await Promise.all(dates.map(d=>loadDay(d,manifest,fetcher)));
+    const days=await Promise.all(dates.map(d=>loadDay(d,manifest,fetcher,options.signal)));
+    checkSignal(options.signal);
     return {...search(days,options),sourceVersion:manifest.sourceVersion,sourceSha256:manifest.sourceSha256,licenseUrl:manifest.licenseUrl};
   }
   const api={plan,search,stationsFor,validateDay,serviceBase};root.CPSncfFallback=api;

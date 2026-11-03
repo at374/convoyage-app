@@ -1,0 +1,124 @@
+{
+  "validationDate": "2026-10-30",
+  "environment": "Node 24.22.1 on test server; not Android",
+  "sibraLiveLoad": {
+    "source": "Official SIBRA GTFS pinned in repository",
+    "sha256": "ecb4c0627e47818c8fcd0e7590980f5b905f6c95ab3881bfca88f68f54f81c83",
+    "archiveBytes": 5631686,
+    "expandedCoreBytes": 40371050,
+    "counts": {
+      "stops": 1861,
+      "routes": 28,
+      "trips": 18597,
+      "stopTimes": 550167
+    },
+    "indexedStopTimes": 550167,
+    "rejectedStopTimes": 0,
+    "loadAndIndexMs": 14795,
+    "serviceDate": "2026-11-02",
+    "scheduledTrips": 1833,
+    "timetableMs": 29,
+    "directCandidates": 70,
+    "sample": {
+      "tripId": "HORAIRES 1_LV_nov 26C582920",
+      "line": "1",
+      "date": "2026-11-02",
+      "from": "0:1POC",
+      "to": "0:2PGLA",
+      "departure": "05:40:00",
+      "arrival": "06:21:00",
+      "serviceScheduled": true,
+      "serviceConfirmed": false,
+      "exactOrigin": false,
+      "exactDestination": false,
+      "accessVerified": false,
+      "priceEUR": null
+    },
+    "cached": true,
+    "cachedMs": 0.059,
+    "serviceConfirmed": false,
+    "faresVerified": false,
+    "accessVerified": false,
+    "memoryMiB": 895,
+    "environment": "Node 24 on test server; not Android",
+    "indexImplementation": "Before CSV memory optimization; current isolated benchmark is in sameArchiveBenchmark.after"
+  },
+  "hauteSavoieLiveLoad": {
+    "source": "Official Oura open-data Haute-Savoie GTFS",
+    "sha256": "dfa3b3fccec9a5ce80c04b8ab5c4dcd431437c19afd3eed18fef7f8729f3624e",
+    "archiveBytes": 10260404,
+    "expandedCoreBytes": 3649885,
+    "counts": {
+      "stops": 1641,
+      "routes": 24,
+      "trips": 1156,
+      "stopTimes": 26972
+    },
+    "indexedStopTimes": 26972,
+    "rejectedStopTimes": 0,
+    "loadAndIndexMs": 6979,
+    "serviceDate": "2026-11-02",
+    "scheduledTrips": 344,
+    "y51ScheduledTrips": 55,
+    "directCandidates": 23,
+    "sample": {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1101975x1173473:LOC",
+      "line": "Y51",
+      "date": "2026-11-02",
+      "from": "FR:74010:ZE:57539:HAUTExSAVOIE",
+      "to": "FR:73011:ZE:57616:HAUTExSAVOIE",
+      "departure": "06:15:00",
+      "arrival": "07:40:00",
+      "serviceScheduled": true,
+      "serviceConfirmed": false,
+      "exactOrigin": false,
+      "exactDestination": false,
+      "accessVerified": false,
+      "priceEUR": null
+    },
+    "serviceConfirmed": false,
+    "faresVerified": false,
+    "accessVerified": false,
+    "peakRssMiB": 138,
+    "environment": "Node 24 test server; not Android"
+  },
+  "sameArchiveBenchmark": {
+    "before": {
+      "mode": "before",
+      "archiveBytes": 5631686,
+      "expandedCoreBytes": 40371050,
+      "counts": {
+        "stops": 1861,
+        "routes": 28,
+        "trips": 18597,
+        "stopTimes": 550167
+      },
+      "scheduledTrips": 1833,
+      "extractionMs": 686,
+      "indexMs": 1712,
+      "peakRssMiB": 828
+    },
+    "after": {
+      "mode": "after",
+      "archiveBytes": 5631686,
+      "expandedCoreBytes": 40371050,
+      "counts": {
+        "stops": 1861,
+        "routes": 28,
+        "trips": 18597,
+        "stopTimes": 550167
+      },
+      "scheduledTrips": 1833,
+      "extractionMs": 573,
+      "indexMs": 1397,
+      "peakRssMiB": 340
+    },
+    "method": "Separate Node processes, same local ZIP, one sample per implementation; no Android inference"
+  },
+  "limits": [
+    "Static GTFS only; no realtime confirmation",
+    "No fare or walking verification",
+    "No cross-network itinerary federation in this change",
+    "Not loaded into the Android Agenda UI yet"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "validationDate": "2026-10-30",
+  "environment": "Node 24; actual browser worker script in a separate thread; simulated DOM; not Android",
+  "sources": {
+    "sibraSha256": "ecb4c0627e47818c8fcd0e7590980f5b905f6c95ab3881bfca88f68f54f81c83",
+    "hauteSavoieSha256": "dfa3b3fccec9a5ce80c04b8ab5c4dcd431437c19afd3eed18fef7f8729f3624e",
+    "catalogue": "https://transport.data.gouv.fr/api/datasets",
+    "catalogueProducerUpdate": "2026-10-01T08:56:39.298000Z"
+  },
+  "sibraIsolatedBenchmark": {
+    "method": "Two isolated Node processes, same local archive, one sample per mode; no Android inference",
+    "full": {"indexedTrips": 18597, "indexedStopTimes": 550167, "retainedSourceBytes": 40371050, "loadMs": 2282, "peakRSSMiB": 350},
+    "scoped": {"indexServiceDates": ["2026-11-01", "2026-11-02", "2026-11-03"], "indexedTrips": 2034, "indexedStopTimes": 60275, "skippedStopTimes": 489892, "rejectedStopTimes": 0, "retainedSourceBytes": 3007, "loadMs": 1835, "peakRSSMiB": 203}
+  },
+  "twoNetworkWorker": {
+    "indexedStopTimes": {"hauteSavoie": 9640, "sibra": 60275},
+    "indexServiceDates": ["2026-11-01", "2026-11-02", "2026-11-03"],
+    "lines": ["1", "Y51"],
+    "from": "POISY COLLEGE",
+    "to": "Ecole Saint-François",
+    "changeFrom": "GARE QUAI SUD",
+    "changeTo": "Gare Routiere",
+    "distanceMeters": 129,
+    "intervalMinutes": 13,
+    "departure": "2026-11-02T04:40:00.000Z",
+    "arrival": "2026-11-02T06:38:00.000Z",
+    "walkingDurationSeconds": null,
+    "transferVerified": false,
+    "serviceConfirmed": false,
+    "agendaRendered": true
+  },
+  "limits": ["Indicative stop proximity only; no verified walking route", "No Android visual validation", "No realtime or fares", "Only two networks and one cross-network interchange", "Cross-service-date interchange not implemented", "Not deployed"]
+}

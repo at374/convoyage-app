@@ -1,0 +1,210 @@
+{
+  "retrievedDate": "2026-10-30",
+  "endpoint": "https://valhalla1.openstreetmap.de/route",
+  "request": {
+    "locations": [
+      {
+        "lat": 45.9010801,
+        "lon": 6.1215734
+      },
+      {
+        "lat": 45.9016985,
+        "lon": 6.1201612
+      }
+    ],
+    "costing": "pedestrian",
+    "shape_format": "geojson",
+    "directions_options": {
+      "units": "kilometers",
+      "language": "fr-FR"
+    }
+  },
+  "response": {
+    "trip": {
+      "locations": [
+        {
+          "type": "break",
+          "lat": 45.90108,
+          "lon": 6.121573,
+          "original_index": 0
+        },
+        {
+          "type": "break",
+          "lat": 45.901698,
+          "lon": 6.120161,
+          "side_of_street": "left",
+          "original_index": 1
+        }
+      ],
+      "legs": [
+        {
+          "maneuvers": [
+            {
+              "type": 1,
+              "instruction": "Marchez vers l'ouest sur Avenue d'Aléry.",
+              "verbal_succinct_transition_instruction": "Marchez vers l'ouest.",
+              "verbal_pre_transition_instruction": "Marchez vers l'ouest sur Avenue d'Aléry.",
+              "verbal_post_transition_instruction": "Continuez pendant 80 mètres.",
+              "street_names": [
+                "Avenue d'Aléry"
+              ],
+              "bearing_after": 259,
+              "time": 58.376,
+              "length": 0.078,
+              "cost": 63.376,
+              "begin_shape_index": 0,
+              "end_shape_index": 4,
+              "travel_mode": "pedestrian",
+              "travel_type": "foot"
+            },
+            {
+              "type": 9,
+              "instruction": "Serrez à droite pour rester sur Avenue d'Aléry.",
+              "verbal_transition_alert_instruction": "Serrez à droite pour rester sur Avenue d'Aléry.",
+              "verbal_succinct_transition_instruction": "Serrez à droite. Ensuite, Serrez à droite dans Avenue de Chevêne.",
+              "verbal_pre_transition_instruction": "Serrez à droite pour rester sur Avenue d'Aléry. Ensuite, Serrez à droite dans Avenue de Chevêne.",
+              "verbal_post_transition_instruction": "Continuez pendant 10 mètres.",
+              "street_names": [
+                "Avenue d'Aléry"
+              ],
+              "bearing_before": 228,
+              "bearing_after": 253,
+              "time": 9.176,
+              "length": 0.013,
+              "cost": 9.176,
+              "begin_shape_index": 4,
+              "end_shape_index": 8,
+              "verbal_multi_cue": true,
+              "travel_mode": "pedestrian",
+              "travel_type": "foot"
+            },
+            {
+              "type": 9,
+              "instruction": "Serrez à droite dans Avenue de Chevêne.",
+              "verbal_transition_alert_instruction": "Serrez à droite dans Avenue de Chevêne.",
+              "verbal_succinct_transition_instruction": "Serrez à droite.",
+              "verbal_pre_transition_instruction": "Serrez à droite dans Avenue de Chevêne.",
+              "verbal_post_transition_instruction": "Continuez pendant 100 mètres.",
+              "street_names": [
+                "Avenue de Chevêne"
+              ],
+              "bearing_before": 253,
+              "bearing_after": 289,
+              "time": 63.585,
+              "length": 0.1,
+              "cost": 70.822,
+              "begin_shape_index": 8,
+              "end_shape_index": 24,
+              "travel_mode": "pedestrian",
+              "travel_type": "foot"
+            },
+            {
+              "type": 10,
+              "instruction": "Tournez à droite.",
+              "verbal_transition_alert_instruction": "Tournez à droite.",
+              "verbal_succinct_transition_instruction": "Tournez à droite. Ensuite, Tournez à gauche.",
+              "verbal_pre_transition_instruction": "Tournez à droite. Ensuite, Tournez à gauche.",
+              "verbal_post_transition_instruction": "Continuez pendant moins de 10 mètres.",
+              "bearing_before": 343,
+              "bearing_after": 52,
+              "time": 6.352,
+              "length": 0.009,
+              "cost": 11.352,
+              "begin_shape_index": 24,
+              "end_shape_index": 29,
+              "verbal_multi_cue": true,
+              "travel_mode": "pedestrian",
+              "travel_type": "foot"
+            },
+            {
+              "type": 15,
+              "instruction": "Tournez à gauche.",
+              "verbal_transition_alert_instruction": "Tournez à gauche.",
+              "verbal_succinct_transition_instruction": "Tournez à gauche. Ensuite, dans 10 mètres, Tournez à droite.",
+              "verbal_pre_transition_instruction": "Tournez à gauche. Ensuite, dans 10 mètres, Tournez à droite.",
+              "verbal_post_transition_instruction": "Continuez pendant 10 mètres.",
+              "bearing_before": 52,
+              "bearing_after": 356,
+              "time": 9.176,
+              "length": 0.013,
+              "cost": 9.176,
+              "begin_shape_index": 29,
+              "end_shape_index": 37,
+              "verbal_multi_cue": true,
+              "travel_mode": "pedestrian",
+              "travel_type": "foot"
+            },
+            {
+              "type": 10,
+              "instruction": "Tournez à droite.",
+              "verbal_transition_alert_instruction": "Tournez à droite.",
+              "verbal_succinct_transition_instruction": "Tournez à droite.",
+              "verbal_pre_transition_instruction": "Tournez à droite.",
+              "verbal_post_transition_instruction": "Continuez pendant 50 mètres.",
+              "bearing_before": 320,
+              "bearing_after": 49,
+              "time": 33.871,
+              "length": 0.047,
+              "cost": 633.871,
+              "begin_shape_index": 37,
+              "end_shape_index": 41,
+              "travel_mode": "pedestrian",
+              "travel_type": "foot"
+            },
+            {
+              "type": 6,
+              "instruction": "Votre destination est sur la gauche.",
+              "verbal_transition_alert_instruction": "Votre destination sera sur la gauche.",
+              "verbal_pre_transition_instruction": "Votre destination est sur la gauche.",
+              "bearing_before": 77,
+              "time": 0.0,
+              "length": 0.0,
+              "cost": 0.0,
+              "begin_shape_index": 41,
+              "end_shape_index": 41,
+              "travel_mode": "pedestrian",
+              "travel_type": "foot"
+            }
+          ],
+          "summary": {
+            "level_changes": [
+              [
+                37,
+                0.0
+              ]
+            ],
+            "has_time_restrictions": false,
+            "has_toll": false,
+            "has_highway": false,
+            "has_ferry": false,
+            "min_lat": 45.900648,
+            "min_lon": 6.119609,
+            "max_lat": 45.901515,
+            "max_lon": 6.121532,
+            "time": 180.539,
+            "length": 0.26,
+            "cost": 797.775
+          },
+          "shape": "qnqpvAwbstJlArQz@dErFfH~IxPb@pCLz@Jx@Dv@?t@Et@Ip@Ml@c@fAiAbD_A`EaHtN_BxDiBrFs@zAu@|@w@b@oDhAm@Rc@NIi@Mg@Sa@U]YW]Qa@I_@Aa@F_@N[VOPMPeBwBy@_BOeBcC{W"
+        }
+      ],
+      "summary": {
+        "has_time_restrictions": false,
+        "has_toll": false,
+        "has_highway": false,
+        "has_ferry": false,
+        "min_lat": 45.900648,
+        "min_lon": 6.119609,
+        "max_lat": 45.901515,
+        "max_lon": 6.121532,
+        "time": 180.539,
+        "length": 0.26,
+        "cost": 797.775
+      },
+      "status_message": "Found route between points",
+      "status": 0,
+      "units": "kilometers",
+      "language": "fr-FR"
+    }
+  }
+}

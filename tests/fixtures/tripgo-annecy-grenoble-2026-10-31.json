@@ -1,0 +1,854 @@
+{
+  "source": "https://api.tripgo.com/v1/routing.json",
+  "retrievedAt": "2026-10-31T07:39:14.797057+00:00",
+  "request": {
+    "from": "(45.9019,6.1218)",
+    "to": "(45.1914,5.7143)",
+    "departAfter": 1793610000,
+    "modes": "pt_pub",
+    "v": "11",
+    "locale": "fr"
+  },
+  "elapsedSeconds": 9.36,
+  "scope": "Public station coordinates; recorded 3 of 7 returned trips, unchanged; no API key or user mission",
+  "response": {
+    "groups": [
+      {
+        "frequency": 145,
+        "sources": [
+          {
+            "provider": {
+              "name": "BlaBlaCar",
+              "website": "https://blablacar.com/"
+            }
+          },
+          {
+            "provider": {
+              "name": "FlixBus",
+              "website": "https://www.flixbus.com"
+            }
+          },
+          {
+            "disclaimer": "© OpenStreetMap contributors\n\nMap data available under the Open Database License. For more information, see http://www.openstreetmap.org/copyright.",
+            "provider": {
+              "name": "OpenStreetMap",
+              "website": "https://www.openstreetmap.org"
+            }
+          }
+        ],
+        "trips": [
+          {
+            "arrive": 1793613154,
+            "availability": "AVAILABLE",
+            "caloriesCost": 12,
+            "carbonCost": 11.1,
+            "depart": 1793607770,
+            "hassleCost": 2,
+            "hideExactTimes": false,
+            "id": "bfd95032-0c90-4ac8-ae59-a56a9735ad9d",
+            "mainSegmentHashCode": -351065788,
+            "queryFrom": {
+              "address": "Near Annecy",
+              "class": "Location",
+              "lat": 45.9019,
+              "lng": 6.1218
+            },
+            "queryIsLeaveAfter": true,
+            "queryMinimumTransferSeconds": 180,
+            "queryTime": 1793610000,
+            "queryTo": {
+              "address": "Near Grenoble",
+              "class": "Location",
+              "lat": 45.1914,
+              "lng": 5.7143
+            },
+            "segments": [
+              {
+                "availability": "AVAILABLE",
+                "endTime": 1793607900,
+                "id": "woi8kiD1",
+                "segmentTemplateHashCode": 252397852,
+                "startTime": 1793607770
+              },
+              {
+                "availability": "AVAILABLE",
+                "endTime": 1793613000,
+                "externalData": {
+                  "operatorName": "FlixBus-eu",
+                  "routeId": "N839",
+                  "stopCode": "ANN",
+                  "stopId": "dcc11362-9603-11e6-9066-549f350fcb0c",
+                  "type": "gtfs"
+                },
+                "id": "tFjNvCsr",
+                "routeID": "N839",
+                "routeId": "N839",
+                "segmentTemplateHashCode": -351065788,
+                "serviceColor": {
+                  "blue": 0,
+                  "green": 215,
+                  "red": 115
+                },
+                "serviceDirection": "Grenoble (Central Bus)",
+                "serviceName": "Brussels - Luxembourg - Geneva - Grenoble",
+                "serviceNumber": "FlixBus N839",
+                "serviceShortName": "",
+                "serviceTextColor": {
+                  "blue": 255,
+                  "green": 255,
+                  "red": 255
+                },
+                "serviceTripID": "N839-1-1725112026-BNO#GBL-00",
+                "startTime": 1793607900,
+                "stops": 1,
+                "ticketWebsiteURL": "https://shop.flixbus.com"
+              },
+              {
+                "availability": "AVAILABLE",
+                "endTime": 1793613154,
+                "id": "x61UI9WO",
+                "segmentTemplateHashCode": 1657356880,
+                "startTime": 1793613000
+              }
+            ],
+            "weightedScore": 90.5
+          },
+          {
+            "arrive": 1793616154,
+            "availability": "AVAILABLE",
+            "caloriesCost": 9,
+            "carbonCost": 8.8,
+            "depart": 1793610858,
+            "hassleCost": 2,
+            "hideExactTimes": false,
+            "id": "484ac08a-878c-47a7-92c8-996622e278d5",
+            "mainSegmentHashCode": -798589704,
+            "queryFrom": {
+              "address": "Near Annecy",
+              "class": "Location",
+              "lat": 45.9019,
+              "lng": 6.1218
+            },
+            "queryIsLeaveAfter": true,
+            "queryMinimumTransferSeconds": 180,
+            "queryTime": 1793610000,
+            "queryTo": {
+              "address": "Near Grenoble",
+              "class": "Location",
+              "lat": 45.1914,
+              "lng": 5.7143
+            },
+            "segments": [
+              {
+                "availability": "AVAILABLE",
+                "endTime": 1793610900,
+                "id": "xasK0YzQ",
+                "segmentTemplateHashCode": 889255476,
+                "startTime": 1793610858
+              },
+              {
+                "availability": "AVAILABLE",
+                "endTime": 1793616000,
+                "externalData": {
+                  "operatorName": "BlaBlaCar Bus",
+                  "routeId": "8778225530",
+                  "stopCode": "NCY",
+                  "stopId": "NCY",
+                  "type": "gtfs"
+                },
+                "id": "qAkXN0ps",
+                "routeID": "8778225530",
+                "routeId": "8778225530",
+                "segmentTemplateHashCode": -798589704,
+                "serviceColor": {
+                  "blue": 85,
+                  "green": 84,
+                  "red": 242
+                },
+                "serviceDirection": "Xge",
+                "serviceName": "Chamonix Sud - Bus station > Sallanches > Cluses - La Maladière > Annecy > Grenoble - Bus Station",
+                "serviceNumber": "BlaBlaCar Bus",
+                "serviceShortName": "51981",
+                "serviceTextColor": {
+                  "blue": 255,
+                  "green": 255,
+                  "red": 255
+                },
+                "serviceTripID": "1298787731",
+                "startTime": 1793610900,
+                "stops": 1,
+                "ticketWebsiteURL": "https://www.blablacar.co.uk/bus?comuto_cmkt=UK_GMAPS-PRO_ALL_ALL&utm_medium=Partnership&utm_source=Gmaps&utm_campaign=UK_GMAPS-PRO_ALL_ALL",
+                "wheelchairAccessible": true
+              },
+              {
+                "availability": "AVAILABLE",
+                "endTime": 1793616154,
+                "id": "10JKNOjQ",
+                "segmentTemplateHashCode": 1657356880,
+                "startTime": 1793616000
+              }
+            ],
+            "weightedScore": 38.5
+          },
+          {
+            "arrive": 1793624854,
+            "availability": "AVAILABLE",
+            "caloriesCost": 12,
+            "carbonCost": 11.3,
+            "depart": 1793617670,
+            "hassleCost": 2,
+            "hideExactTimes": false,
+            "id": "322e7200-8763-40ff-9d89-1e13e93121f5",
+            "mainSegmentHashCode": 721422377,
+            "queryFrom": {
+              "address": "Near Annecy",
+              "class": "Location",
+              "lat": 45.9019,
+              "lng": 6.1218
+            },
+            "queryIsLeaveAfter": true,
+            "queryMinimumTransferSeconds": 180,
+            "queryTime": 1793610000,
+            "queryTo": {
+              "address": "Near Grenoble",
+              "class": "Location",
+              "lat": 45.1914,
+              "lng": 5.7143
+            },
+            "segments": [
+              {
+                "availability": "AVAILABLE",
+                "endTime": 1793617800,
+                "id": "DJdx32i7",
+                "segmentTemplateHashCode": 252397852,
+                "startTime": 1793617670
+              },
+              {
+                "availability": "AVAILABLE",
+                "endTime": 1793624700,
+                "externalData": {
+                  "operatorName": "FlixBus-eu",
+                  "routeId": "1789",
+                  "stopCode": "ANN",
+                  "stopId": "dcc11362-9603-11e6-9066-549f350fcb0c",
+                  "type": "gtfs"
+                },
+                "id": "CyNyoWNc",
+                "routeID": "1789",
+                "routeId": "1789",
+                "segmentTemplateHashCode": 721422377,
+                "serviceColor": {
+                  "blue": 0,
+                  "green": 215,
+                  "red": 115
+                },
+                "serviceDirection": "Montpellier (Sabines)",
+                "serviceName": "Genève - Grenoble - Montpellier",
+                "serviceNumber": "FlixBus 1789",
+                "serviceShortName": "",
+                "serviceTextColor": {
+                  "blue": 255,
+                  "green": 255,
+                  "red": 255
+                },
+                "serviceTripID": "1789-2-0910112026-GEN#MTP-00",
+                "startTime": 1793617800,
+                "stops": 3,
+                "ticketWebsiteURL": "https://shop.flixbus.com"
+              },
+              {
+                "availability": "AVAILABLE",
+                "endTime": 1793624854,
+                "id": "CbmduHtX",
+                "segmentTemplateHashCode": 1657356880,
+                "startTime": 1793624700
+              }
+            ],
+            "weightedScore": 57
+          }
+        ]
+      }
+    ],
+    "query": {
+      "depart": "2026-11-02T09:00:00Z",
+      "from": {
+        "address": "Près de Annecy",
+        "class": "Location",
+        "lat": 45.9019,
+        "lng": 6.1218,
+        "region": "FR_ARA_Chambery",
+        "timezone": "Europe/Paris"
+      },
+      "to": {
+        "address": "Près de Grenoble",
+        "class": "Location",
+        "lat": 45.1914,
+        "lng": 5.7143,
+        "region": "FR_ARA_Grenoble",
+        "timezone": "Europe/Paris"
+      }
+    },
+    "region": "FR_ARA_Chambery",
+    "regions": [
+      "FR_ARA_Chambery",
+      "FR_ARA_Grenoble"
+    ],
+    "segmentTemplates": [
+      {
+        "action": "<TIME>: Marcher",
+        "from": {
+          "address": "Près de Annecy",
+          "class": "Location",
+          "lat": 45.90187,
+          "lng": 6.12181,
+          "region": "FR_ARA_Chambery",
+          "timezone": "Europe/Paris"
+        },
+        "hashCode": 252397852,
+        "localCost": {
+          "accuracy": "internal_estimate",
+          "cost": 0,
+          "currency": "EUR"
+        },
+        "metres": 150,
+        "metresDown": 0,
+        "metresFlat": 0,
+        "metresUp": 0,
+        "mini": {
+          "description": "Annecy (Central Bus Station)",
+          "instruction": "Marcher",
+          "mainValue": "150 m"
+        },
+        "modeIdentifier": "wa_wal",
+        "modeInfo": {
+          "alt": "Marcher",
+          "color": {
+            "blue": 99,
+            "green": 199,
+            "red": 30
+          },
+          "identifier": "wa_wal",
+          "localIcon": "walk"
+        },
+        "notes": "<DURATION> ⋅ 150 m",
+        "streets": [
+          {
+            "encodedWaypoints": "uedwGgtjd@@LHXDD?HLNHVBt@LVD`@LlAKDEMSP",
+            "instruction": "HEAD_TOWARDS",
+            "metres": 150,
+            "name": ""
+          }
+        ],
+        "to": {
+          "address": "Annecy (Central Bus Station)",
+          "class": "StopLocation",
+          "code": "ANN",
+          "id": "pt_pub|FR_ARA_Chambery|ANN",
+          "lang": "eng",
+          "lat": 45.90166,
+          "lng": 6.12032,
+          "modeInfo": {
+            "alt": "bus",
+            "identifier": "pt_pub_bus",
+            "localIcon": "coach"
+          },
+          "name": "Annecy (Central Bus Station)",
+          "popularity": 435,
+          "publicTransportMode": "pt_pub_bus",
+          "region": "FR_ARA_Chambery",
+          "services": "",
+          "stopCode": "ANN",
+          "stopType": "bus",
+          "timezone": "Europe/Paris"
+        },
+        "travelDirection": 262,
+        "type": "unscheduled",
+        "visibility": "in summary"
+      },
+      {
+        "action": "<TIME>: Prendre <NUMBER>",
+        "endStopCode": "GBL",
+        "from": {
+          "address": "Annecy (Central Bus Station)",
+          "class": "StopLocation",
+          "code": "ANN",
+          "id": "pt_pub|FR_ARA_Chambery|ANN",
+          "lang": "eng",
+          "lat": 45.90166,
+          "lng": 6.12032,
+          "modeInfo": {
+            "alt": "bus",
+            "identifier": "pt_pub_bus",
+            "localIcon": "coach"
+          },
+          "name": "Annecy (Central Bus Station)",
+          "popularity": 435,
+          "publicTransportMode": "pt_pub_bus",
+          "region": "FR_ARA_Chambery",
+          "services": "",
+          "stopCode": "ANN",
+          "stopType": "bus",
+          "timezone": "Europe/Paris"
+        },
+        "geofences": [
+          {
+            "center": {
+              "lat": 45.192828,
+              "lng": 5.713938
+            },
+            "id": "ARRIVING_AT_YOUR_STOP_N839-1-1725112026-BNO#GBL-00",
+            "messageBody": "Préparer à débarquer à Grenoble (Central Bus Station)",
+            "messageTitle": "Arrivée à votre arrêt proche",
+            "messageType": "ARRIVING_AT_YOUR_STOP",
+            "radius": 500,
+            "trigger": "ENTER",
+            "type": "CIRCLE"
+          }
+        ],
+        "hashCode": -351065788,
+        "mini": {
+          "description": "<DIRECTION>",
+          "instruction": "Prendre <NUMBER> ⋅ <PLATFORM>"
+        },
+        "modeIdentifier": "pt_pub",
+        "modeInfo": {
+          "alt": "Bus",
+          "color": {
+            "blue": 104,
+            "green": 197,
+            "red": 45
+          },
+          "identifier": "pt_pub_bus",
+          "localIcon": "coach"
+        },
+        "notes": "<LINE_NAME>\n<DIRECTION>\n<PLATFORM>\n<DURATION> ⋅ <STOPS>",
+        "operator": "FlixBus-eu",
+        "operatorID": "eu-flixbus-FLIXBUS-eu",
+        "serviceOperator": "FlixBus-eu",
+        "shapes": [
+          {
+            "encodedWaypoints": "qcngHcoin@u@uCkD|@`Cl]vKaBhAz@tGti@Tx_@_AvYnA~Te@xBk@Ty@]YqARcB|CgBje@uKbM_Ahr@dEfHz@vJpCpOtJfJxJbj@ts@xH|NhDfM|A|KtBfm@pDfTnF~NjYrg@nGrR`CvPdDb_AnEtd@rBx[bB|dAz@dVpKhlAl@|LBhO]~JqFfm@]xc@qFhs@e@bVLbLlA~UrBzRpFnWlK`\\z@|IDbU~ApIlAzCnEhFtD~A~CTzC]|CsA|L{IhCm@pDGpC^nFvBdKtHvGrHnGfKvEzKlUxs@dGbMzJjNdHbHxGzEvWlN~IdGlmAteAd`@lc@hg@do@pKfQrGbPbFvQ~Hz_@bF|N~HbOfIvJzEbEzHtExaAva@fd@tVr\\tU~k@hg@jRtLtLfFtJnC~[dFxNjDzJlDfZvNlLhE`QrCbIThJ[`hBk[zK}CpIcEtIeGxIqIfHuJvVeb@dRkTbS}N|KmFnIuCjKwB~JiAfOWrI\\fpAnQxIpBdIzCpHbEvG`F|H`IvNvTfUvd@pEpGpI|IbLbIbnAfp@pXvPlY~TrPhQrTnZ~KzRnIhQlL|ZdXn{@rHfRjM~W~P~XhUnYdOhNdRnNzM`Ix[tOdW~InRvEt]nFjq@lGjf@nGx`@|Jl_@|NxIVtNsAnP`BtNlC~g@`Q|\\nE`FjBbm@z[nEjFxFxKxE`G~WlSrWzZ`[rSrFpBxEz@~ETnFUhHyAlDyAlN}JdHeDtHy@tHv@lFvBbGpFvD~FjI`TzDjF|CjCrFfCtf@nLhPxJfHvBjH`AnF?lWaFvDS~j@zDpG_@~EgBpGaFhHuMtLwi@dHgQvDuFxEsEdGmDzFgBrJu@hr@rBzUDjSe@p^}BjmAmLvN[jMd@bM`BpJzBhN`F~UlN~e@~`@dQnLbR|HfNhC|Kb@tKSzvAeHlVkBb]uEbsBoa@fOsA`LH`QzBdaJznBrZrEjOx@dMFtUuAzSmDle@aMf^cMxb@mRxrAas@nxBkhAxSyIjLuDjQ}EvSaExPyB~QyAlXo@dXBj~AlBzmBvGj[Z`KUjTeBbMkBfOmD|OaFfd@oSjQyFtCcCpIaNrEyEzLiHtJcBxD_BrLsKnY_Sd_@uUdSqJbOyEtTcE~dAsGhUeD|YqHhKmDbSuItUqMjf@qZrV}LpUcIl~@aRxSkGf\\kOnVgPvR_Q~RqTpUk[bu@wfAzYa`@fZm]d\\y[pXcUtg@g]t^sSdqAcq@hV}NrToOl^mZx_@g`@fXk\\|Vq^dH{HzC}F\\Gt@fAv@i@`Bj@h@M`ReL@e@aCwCl@sEeA_BEoBvAmEjHqM|H{IjImHbNkJbVcNvL{IjOcNpSqUxLyObU{_@rI_UWwC{IzG{E_PQeFbDiXdDsBlPyQnJ{HVmW[}}A_AaE{AiBeCe@cFd@oAo@eAoCIuBbBeGlCmCrb@cZzc@{^tc@cWjIsClEGxFt@lTjG~DZlDYrBw@hEcFtIa[jCcNnRu|BdDgWfFcYjHwZxDmLrF{JfMaOnF}LhJwc@`CqPj@cNAoIiHwkAGuQvBgYtJoq@dA}MTgRmAwVkC_XyF{_@wG}]eA{LKaIr@wLfBgJzJcWjCcJ`D}XzAeIvD}JlEkG`H{F|[_RlHoGdPaQlNiJ|IwC`HiAxd@}@~FoAlFmCjH}H~J}TdEuF~EuDdP{GjE}DrLyNtHuF|JeCzZy@nEeA|GmD`HcHvEuIrSyt@`H_QzGcMtHiKvJ_K~GiFxImE~HiBfJe@tJh@zShCxIUfF_BnDuBfQqS~DcCfEqArp@qEx^\\dLUn\\wEjJVdRbErI`AjHWzMuCpFO`G|@vMfGxKjC|LNfH}@hJgDzF_E~S{WjI}HlIkFvJ}DlN_CtLOnt@dF~E?`He@pM_EzJ}GrUwV~PsNbz@qm@j[oQbKsBvQLzLtB~KfElLrHtGdGrG`IzGdLhLjY~]rjA`FrKrFpH~IbHzIvClIn@r^gBlIXrFtApD|DnB|GzC|[nFt`@zElXfIl_@dR|s@vo@t}Btf@tmBjPvi@lFdN|L`VfIzK`JhJbHfFjIrEdo@pT~QpJdIzGfIdJtGzJfFbKpJ~XbGl\\~B~[tBjt@xDp[pGlUxQ|`@hFxNnPd|@~IfUvYxb@vIhPxDtNnC|^fEhNxGxN`U~]nHpOpGhRlQ|p@pGrQtKnSdOpQvKlIvKzF~NbFlOvCxQtAbv@UjQ^hPbBfLxBfPfFlJbE|f@hWlQbI`RbGlLtBxVhB`RI`UwBfe@sJtFo@`Ns@dQj@bLfBjMdD~_Aj]dk@rQtb@bLli@bL`|@xNhgArOvE\\dHOxXsDtGWhJv@pKlDzN|Hbx@ng@jYhUjOhP`FbIxClHnSft@lRhh@fRr[pQjSxLjJtFlCxGlB`LfAzd@|AhOlCtLtFxIlIrGxKjEzLhg@nxB|DdJbElFlHjFvIvB~F@~O_BhIv@dFlBvFfDjUtRvQrP~UdWxTpQdEfFdGfNdIv_@nDrL~G~LvInHrI|CpK`@|Eo@rHaCh\\mQjCq@xG@dClA|A|BpAvFh@zTdDxVb@lHMfNiCxZDhP~A`P~Jxf@rCpWRxMiAdKp@hJy@dIr@PVk@jLmGzHaHwBoI{BeDWp@b@MdAv@Gh@PS^r@vBnI}H~GeKjGc@@Sw@g@GOxAf@Xb@s@vDo@nAFjBnA`RfYfn@p{@dHxM|BxGnCbNx@`KPzK]hKiAhKiBxI_IvSeC`JiAzKPhNxBlMrDhIhGrGzL~HvDnDfDxElEtJxDzN~ClRhAjMb@tN]pVcFxy@sAjk@yBbTiM`h@kE|c@{BjMsF|O}OhW_EzIkDlM{BdRS`N`Cjg@InRcAlM{Fv]oAzLsCfl@kEtd@o@bOEj]pAlq@w@th@sCn^gLxy@{AvQkA`[K~W~@t\\fCl]vLpmA~Bp_@x@fXOvT{AfRyJhf@oBdR?bTtAbOxAlH~ElOtFtLdM~RfRxQp`@~UhE~DlFnHbGnLhTrj@~Pl_@xPb[lT`\\xMnOdPpMdM`Hh]tNjIzElGtGjFzJnEtPdX`dBjExSlHhTfRz]`Mz[vPhk@rMtl@rG``@xCrWj@lOv@f{@pBrShD|PzI|U~`@rs@nJvRxNj`@dJ~]|EjWxEh^|IfuAdDh^|Hfg@nKdb@beApbDvGvQxKbVhQzYdpC`vDfMhUlIpUfGlYbDlYlAj^WzWaCl\\}EzYiG`U_Otc@{FbXkAhNWxQd@lNxArNhE|RjNbd@zFhUnFz[rLn}@pIn^~FrOxJ`RdLtOp`@fe@vOpUnSh`@hO~^tJtZhu@zjCzDvRpKlu@hFrU~E`PxLvYdDdKjCbPfC~c@tDfS`EpKlPtVtFvLtBrHjJdf@|Yny@h`@pwAxKnYrVnj@xGpTjEbVzBfY^zSs@hXiC|W_EfSqG`TuIhTyDxLaArJNxLt@dF~BfH|MzUbNdZjOde@lFjUhEbVbNzeAbGf^|Lri@`Rtl@|JpVhNvYzYxe@hJrLpH|H~KdHjItBpGVhEYfG}AfD_BbHqFlXoZfH}ElG{C`OkDpIi@zED`Hj@hIfBbi@xSlPdE`LzAnMh@db@s@bOh@bHjAdHxBpU~JjNjCxQXrIa@dRkCvc@wIrIWzKn@jJtBvIrDrd@f[nMnH`MrFbR~FrTzDlMhAlo@l@p]rCfWdFnp@bTlTrE|M`BbO`AbSRxp@yBv|@gGhpA_OjPVbCo@fBiBjAeDZsDc@gGcFsRsAiKa@iJLcKdBkSdK{u@hGkt@tBkLrC}HxDgG~O}OhD}GnBiHxOqjBhFa\\`CsGzAy@t@Pt@zB?`DfVGtGl@dBjA`BdCfDjPjM}HpGsHpJgC`@xAsBbBeAkCqCf@eAj@qGtHgIbF{@?yBaAcCkLyDuD_Fi@kb@]cBgAMqCb@}@v@Yr@t@@vAiHle@yLz{AiBpMgBzF{CvF}MzMuEnGmDfJyB~KkGnu@}Lr~@aA~QDnT}@zGuEhOM|Db@fEjApCfBdBfBf@tBId`@cT`^mWbKkGbGiCxGkBfIs@vGDjJxAvExCfD`GhIve@lJdYlh@z~@bGdMrFvPfC`LpLnw@dNlo@`Lb`@da@tkA`Mrf@hHjOrh@p{@bW`j@nNx_@hMlb@jX`lAhM`b@vGzPrJ`SnKbQhRhXrI~NjHdQxFnSbCfNnBvQhAbZQdWiEpv@C|Qd@lStVhfEvDhb@~Ev\\`b@jzBdKzc@hHzSfGdNdl@`aAdY`m@fPxc@fZncAbW|s@tWfm@rnAneCdP`d@v[pfAnPza@hRb_@|PnXjR|V`VdWh\\fXnQfLxPvIdYbKdt@tQlNfE~NfHpJ|GxIpIdJjLtLhSh`@tt@`QlVnOzPrWzThj@p_@bnA|fAlV~RjX|PhVzKbQpFfMfCbWhBjTi@tQ{Bd^iGfVgBdPFrVtBvYzF~\\bLx]dQbu@jc@bKfDzF^vEg@nFsBlGcF`H{Hdd@}k@dHoN|JkYlCqDzEeCbDg@nGZbExAjOdIzFlAlCLz\\_BtKJ~N~AjO|DdDg@vUkJdBRdH~DrGgIvEaDzDqAzWgE`U|VqAtCp@v@_@|@p@v@a@z@}@F??e@sB}ApDhBtBiB~DjInJb@o@xG`KiD|H?pDLhDjBhGbBvMfATpCdCpCtHfGvCvTtS`JfAjE_Ahs@BzS_Bz`A{ApUbFzRb@dDz@zDxCxBdDzBpGdEhVnHxVhAbKGzJiArLiEv^sE`Tf@fF~A~BrAZxBIvJqDvIFnB^hFfB|D~Bzb@vZhB`@pFQzEb@zEk@~FiD~o@{UvIkAvFFdFr@vKlEnIzHhc@nt@pClC~EtClJtBfKa@|E}A`DmBxFsFhLmQnHeGjJeDvJc@xJ~AdXhLtd@zNbMvBhi@bD~RpDxU~Hlt@dYvPfFrL|BbQ|AtT?jZ_Chl@wHbHwBzHgE|TaSdL{H`J}DtXuGlOeGnNsJnQ{R`EiDzEkCbRoGtHaGzDsGnBwF`CgQAeM{CmWWyFRaMv@aH|BeJ~DgItEgF~KkH`UyJpU_FrSoApg@hArMw@tRiDfNq@l{@uTnGgAzIa@z_@hAnUvD~F@jQgAtKHlGz@dGvBdK|HxEjGtClGtDlPxBv^pAjKdE|KlE~ErDjB`Et@`K[jIgCjVmLdJ}ArKTdKjCdQvHpMbIvIrHhc@`d@pj@lc@tMtGvc@tM`K|EvZtUvMbIx@xCSdAgAr@aAa@a@gBj@yj@wJ_S{AwG[kFT}Hv@uDpGaO?_GgA}B_HsEoDgEsSwVsFoIa@XxLzOOrGhB_@pFuJ|IcU}AoD{AwQ]N[i@[mB",
+            "travelled": false
+          },
+          {
+            "encodedWaypoints": "kddwG_kjd@FDf@YrBjWtAlDqCdIqHpO{BlDq@BUi@ZoAp@Dv@|@~NbQfCdEbAbD@lFsCzNw@~Op@nGpBlIBdHx@|@lEf@dArBW`ERpLYzS`@|Dp@^`AKrE{BfFn@|`@tNhIjErMdJbS`SvrAfdB~K~KzQ`LlHlCrInBbNlAvP?bs@wAfICtJh@vGlAzIzCzJ|FhHvGhFnGvGxKr\\dr@zIzUvr@dmC`c@npBvGhW~Mh_@|IpQzInNjYx^lGfGpRfK~Y`TpV`Nng@nW|VjKtWxHnh@jKbJhCnOtGhP|KbK|JlHhJtY|f@nPzUhIzPhIpWdGbOnIvMlK`KdLtGvHnCfLpC`MxAvUVn_AuCtNLbUzAhJ?rI}@lJqCl[wPjQmGdJyAn\\uC~e@kL|P{@nIj@jNxCrTfCdGrAxK`Et\\pRbIvCxDr@~Jd@`K[ff@iGbIH|ItAzKlE`UpQlLlFzLpBb[\\rHl@xH~B`HhEhHdIjHjOrCjL`DfXxBlKzEhMnEbHpEpEjGrDlGvAzP~AzRfH|VvFhL`F`K~G|LlOfQj]dEvKpAxFOhCsAr@qAoATsCpGoGvL}SAyBuCyG]uCVsA|I{DxN_BfFmAhGqCfKeInRsUtNaUxIkPnMs]~CsCjG}CpE}E`Ne_@rEwOzPy}@|EyPhE}J`PaYvLw\\`EoH`FkElK{EvFmAbKYdHiC~KeLrIoPvScUdVwIfZcPzm@uf@xSoMte@qWlLeIlGcGrMkRhIcStFoTjQm~@`DqK|EwJnEuS`GoO|MsVjQaUzRuPhUwMvVyJnTcFdRm@tNdAtLlC~L~Dts@xV~XbLxTvLlbAzo@fJfEhJjCrKvA|IVrf@oB|Rz@zRzEni@lUfK`ChHr@bIJ|Ha@l`@oF|Ii@jMLjI|@~GxAzHpCtM~Gpp@fa@vlAvr@ne@fVta@zQlg@tR`g@tOr^nIj_AzPdPfEl[lMfZpQbWzSfZp\\xRvYvf@ry@`LrObQdSlRbQrMzJbt@nc@hp@jd@~q@nj@hq@fn@pw@t}@~h@jr@f[lg@hLvUlLxYhInWrGbWzRfcAxGnXtFvPdOd]~O~Xn\\pd@~XlZbe@rc@~QhTzPpZxGhPzFzQjI~_@jLbz@vG|s@nRxdC~t@plAtPbZwA|AwDb@{AtAWvBh@zF{@rCsQvPoHbCkE|CzPzZnClMrBzOvAbWGj@eGtDu@pDr@XtAwFbEsCu@dJsBvIrDdDr@zEcDnE",
+            "travelled": true
+          }
+        ],
+        "sources": [
+          {
+            "provider": "FlixBus-eu"
+          }
+        ],
+        "stopCode": "ANN",
+        "to": {
+          "address": "Grenoble (Central Bus Station)",
+          "class": "StopLocation",
+          "code": "GBL",
+          "id": "pt_pub|FR_ARA_Chambery|GBL",
+          "lang": "eng",
+          "lat": 45.19283,
+          "lng": 5.71394,
+          "modeInfo": {
+            "alt": "bus",
+            "identifier": "pt_pub_bus",
+            "localIcon": "coach"
+          },
+          "name": "Grenoble (Central Bus Station)",
+          "popularity": 198,
+          "publicTransportMode": "pt_pub_bus",
+          "region": "FR_ARA_Chambery",
+          "services": "",
+          "stopCode": "GBL",
+          "stopType": "bus",
+          "timezone": "Europe/Paris"
+        },
+        "travelDirection": 209,
+        "type": "scheduled",
+        "visibility": "in summary"
+      },
+      {
+        "action": "<TIME>: Marcher",
+        "from": {
+          "address": "Grenoble - Bus Station",
+          "class": "StopLocation",
+          "code": "XGE",
+          "id": "pt_pub|FR_ARA_Grenoble|XGE",
+          "lang": "eng",
+          "lat": 45.19283,
+          "lng": 5.71429,
+          "modeInfo": {
+            "alt": "bus",
+            "identifier": "pt_pub_bus",
+            "localIcon": "bus"
+          },
+          "name": "Grenoble - Bus Station",
+          "popularity": 101,
+          "publicTransportMode": "pt_pub_bus",
+          "region": "FR_ARA_Grenoble",
+          "services": "",
+          "stopCode": "XGE",
+          "stopType": "bus",
+          "timezone": "Europe/Paris",
+          "wheelchairAccessible": true
+        },
+        "hashCode": 1657356880,
+        "localCost": {
+          "accuracy": "internal_estimate",
+          "cost": 0,
+          "currency": "EUR"
+        },
+        "metres": 188,
+        "metresDown": 1,
+        "metresFlat": 0,
+        "metresUp": 0,
+        "mini": {
+          "description": "Près de Grenoble",
+          "instruction": "Marcher",
+          "mainValue": "200 m"
+        },
+        "modeIdentifier": "wa_wal",
+        "modeInfo": {
+          "alt": "Marcher",
+          "color": {
+            "blue": 99,
+            "green": 199,
+            "red": 30
+          },
+          "identifier": "wa_wal",
+          "localIcon": "walk"
+        },
+        "notes": "<DURATION> ⋅ 200 m",
+        "streets": [
+          {
+            "encodedWaypoints": "evyrGia{a@FD",
+            "instruction": "HEAD_TOWARDS",
+            "metres": 4,
+            "name": "Walk"
+          },
+          {
+            "encodedWaypoints": "}uyrGca{a@RNBRNGNGNENGHAB?hBs@FD",
+            "instruction": "CONTINUE_STRAIGHT",
+            "metres": 133,
+            "name": "Grenoble - Gare Routière"
+          },
+          {
+            "encodedWaypoints": "eoyrGmb{a@?ED?TMJ?DC@R?D",
+            "instruction": "TURN_LEFT",
+            "metres": 40,
+            "name": "Place de la Gare"
+          },
+          {
+            "encodedWaypoints": "umyrGkb{a@@D",
+            "instruction": "CONTINUE_STRAIGHT",
+            "metres": 1,
+            "name": "",
+            "slope": {
+              "direction": "down",
+              "steepness": "VERY-GENTLE"
+            }
+          },
+          {
+            "encodedWaypoints": "smyrGeb{a@D@@J",
+            "instruction": "TURN_SLIGHTLY_LEFT",
+            "metres": 7,
+            "name": ""
+          }
+        ],
+        "to": {
+          "address": "Près de Grenoble",
+          "class": "Location",
+          "lat": 45.19143,
+          "lng": 5.71437,
+          "region": "FR_ARA_Grenoble",
+          "timezone": "Europe/Paris"
+        },
+        "travelDirection": 176,
+        "type": "unscheduled",
+        "visibility": "in summary"
+      },
+      {
+        "action": "<TIME>: Marcher",
+        "from": {
+          "address": "Près de Annecy",
+          "class": "Location",
+          "lat": 45.90187,
+          "lng": 6.12181,
+          "region": "FR_ARA_Chambery",
+          "timezone": "Europe/Paris"
+        },
+        "hashCode": 889255476,
+        "localCost": {
+          "accuracy": "internal_estimate",
+          "cost": 0,
+          "currency": "EUR"
+        },
+        "metres": 49,
+        "metresDown": 0,
+        "metresFlat": 0,
+        "metresUp": 0,
+        "mini": {
+          "description": "Annecy - Bus Station",
+          "instruction": "Marcher",
+          "mainValue": "<100 m"
+        },
+        "modeIdentifier": "wa_wal",
+        "modeInfo": {
+          "alt": "Marcher",
+          "color": {
+            "blue": 99,
+            "green": 199,
+            "red": 30
+          },
+          "identifier": "wa_wal",
+          "localIcon": "walk"
+        },
+        "notes": "<DURATION> ⋅ <100 m",
+        "streets": [
+          {
+            "encodedWaypoints": "uedwGgtjd@@LHXDD?HLNHV?H",
+            "instruction": "HEAD_TOWARDS",
+            "metres": 49,
+            "name": ""
+          }
+        ],
+        "to": {
+          "address": "Annecy - Bus Station",
+          "class": "StopLocation",
+          "code": "NCY",
+          "id": "pt_pub|FR_ARA_Chambery|NCY",
+          "lang": "eng",
+          "lat": 45.90167,
+          "lng": 6.12128,
+          "modeInfo": {
+            "alt": "bus",
+            "identifier": "pt_pub_bus",
+            "localIcon": "bus"
+          },
+          "name": "Annecy - Bus Station",
+          "popularity": 127,
+          "publicTransportMode": "pt_pub_bus",
+          "region": "FR_ARA_Chambery",
+          "services": "",
+          "stopCode": "NCY",
+          "stopType": "bus",
+          "timezone": "Europe/Paris",
+          "wheelchairAccessible": true
+        },
+        "travelDirection": 248,
+        "type": "unscheduled",
+        "visibility": "in details"
+      },
+      {
+        "action": "<TIME>: Prendre <NUMBER>",
+        "endStopCode": "XGE",
+        "from": {
+          "address": "Annecy - Bus Station",
+          "class": "StopLocation",
+          "code": "NCY",
+          "id": "pt_pub|FR_ARA_Chambery|NCY",
+          "lang": "eng",
+          "lat": 45.90167,
+          "lng": 6.12128,
+          "modeInfo": {
+            "alt": "bus",
+            "identifier": "pt_pub_bus",
+            "localIcon": "bus"
+          },
+          "name": "Annecy - Bus Station",
+          "popularity": 127,
+          "publicTransportMode": "pt_pub_bus",
+          "region": "FR_ARA_Chambery",
+          "services": "",
+          "stopCode": "NCY",
+          "stopType": "bus",
+          "timezone": "Europe/Paris",
+          "wheelchairAccessible": true
+        },
+        "geofences": [
+          {
+            "center": {
+              "lat": 45.192833,
+              "lng": 5.714294
+            },
+            "id": "ARRIVING_AT_YOUR_STOP_1298787731",
+            "messageBody": "Préparer à débarquer à Grenoble - Bus Station",
+            "messageTitle": "Arrivée à votre arrêt proche",
+            "messageType": "ARRIVING_AT_YOUR_STOP",
+            "radius": 500,
+            "trigger": "ENTER",
+            "type": "CIRCLE"
+          }
+        ],
+        "hashCode": -798589704,
+        "mini": {
+          "description": "<DIRECTION>",
+          "instruction": "Prendre <NUMBER> ⋅ <PLATFORM>"
+        },
+        "modeIdentifier": "pt_pub",
+        "modeInfo": {
+          "alt": "Bus",
+          "color": {
+            "blue": 104,
+            "green": 197,
+            "red": 45
+          },
+          "identifier": "pt_pub_bus",
+          "localIcon": "bus"
+        },
+        "notes": "<LINE_NAME>\n<DIRECTION>\n<PLATFORM>\n<DURATION> ⋅ <STOPS>",
+        "operator": "BlaBlaCar Bus",
+        "operatorID": "eu-blablacar-0",
+        "serviceOperator": "BlaBlaCar Bus",
+        "shapes": [
+          {
+            "encodedWaypoints": "aegwGmg|h@ayX`dt@??vy[lp{A",
+            "travelled": false
+          },
+          {
+            "encodedWaypoints": "kddwG}pjd@dmiCrnnA",
+            "travelled": true
+          }
+        ],
+        "sources": [
+          {
+            "provider": "BlaBlaCar Bus"
+          }
+        ],
+        "stopCode": "NCY",
+        "to": {
+          "address": "Grenoble - Bus Station",
+          "class": "StopLocation",
+          "code": "XGE",
+          "id": "pt_pub|FR_ARA_Chambery|XGE",
+          "lang": "eng",
+          "lat": 45.19283,
+          "lng": 5.71429,
+          "modeInfo": {
+            "alt": "bus",
+            "identifier": "pt_pub_bus",
+            "localIcon": "bus"
+          },
+          "name": "Grenoble - Bus Station",
+          "popularity": 49,
+          "publicTransportMode": "pt_pub_bus",
+          "region": "FR_ARA_Chambery",
+          "services": "",
+          "stopCode": "XGE",
+          "stopType": "bus",
+          "timezone": "Europe/Paris",
+          "wheelchairAccessible": true
+        },
+        "travelDirection": 209,
+        "type": "scheduled",
+        "visibility": "in summary"
+      },
+      {
+        "action": "<TIME>: Prendre <NUMBER>",
+        "endStopCode": "GBL",
+        "from": {
+          "address": "Annecy (Central Bus Station)",
+          "class": "StopLocation",
+          "code": "ANN",
+          "id": "pt_pub|FR_ARA_Chambery|ANN",
+          "lang": "eng",
+          "lat": 45.90166,
+          "lng": 6.12032,
+          "modeInfo": {
+            "alt": "bus",
+            "identifier": "pt_pub_bus",
+            "localIcon": "coach"
+          },
+          "name": "Annecy (Central Bus Station)",
+          "popularity": 435,
+          "publicTransportMode": "pt_pub_bus",
+          "region": "FR_ARA_Chambery",
+          "services": "",
+          "stopCode": "ANN",
+          "stopType": "bus",
+          "timezone": "Europe/Paris"
+        },
+        "geofences": [
+          {
+            "center": {
+              "lat": 45.192828,
+              "lng": 5.713938
+            },
+            "id": "NEXT_STOP_IS_YOURS_1789-2-0910112026-GEN#MTP-00",
+            "messageBody": "Débarquer à Grenoble (Central Bus Station)",
+            "messageTitle": "Le prochain arrêt est le vôtre",
+            "messageType": "NEXT_STOP_IS_YOURS",
+            "radius": 44747,
+            "trigger": "ENTER",
+            "type": "CIRCLE"
+          }
+        ],
+        "hashCode": 721422377,
+        "mini": {
+          "description": "<DIRECTION>",
+          "instruction": "Prendre <NUMBER> ⋅ <PLATFORM>"
+        },
+        "modeIdentifier": "pt_pub",
+        "modeInfo": {
+          "alt": "Bus",
+          "color": {
+            "blue": 104,
+            "green": 197,
+            "red": 45
+          },
+          "identifier": "pt_pub_bus",
+          "localIcon": "coach"
+        },
+        "notes": "<LINE_NAME>\n<DIRECTION>\n<PLATFORM>\n<DURATION> ⋅ <STOPS>",
+        "operator": "FlixBus-eu",
+        "operatorID": "eu-flixbus-FLIXBUS-eu",
+        "serviceOperator": "FlixBus-eu",
+        "shapes": [
+          {
+            "encodedWaypoints": "gb`yGgqod@e@sB}ApDhBtBiB~DjInJb@o@xG`KiD|H?pDLhDjBhGbBvMfATpCdCpCtHfGvCvTtS`JfAjE_Ahs@BzS_Bz`A{ApUbFzRb@dDz@zDxCxBdDzBpGdEhVnHxVhAbKGzJiArLiEv^sE`Tf@fF|BlCnDBvJqDvIFnB^hFfB|D~Bzb@vZhB`@pFQzEb@zEk@~FiD~o@{UvIkAfK`@vJ~CjK~HnJxNfW~c@rHfHfIbDnDf@lFAvJ}BzGwEhOuTnIgHzEuBxEaAtKCpGpAdXhLtd@zNbMvBlb@|B~RlClTlGpw@tZzQbGrPlDbQ|A~OJnXcBhn@{HhIgBfL{F|TaSdL{H`J}DtXuGlOeGnNsJnQ{R`EiDzEkCbRoGzDgClEgFlCqFfB_GnAqIPgR{CmWWyFRaMtAgKpC_JnF_JrFuEnNiIbT{HxSsD|Ry@lg@hArJs@tRiDbMi@p|@}T`NcBdd@bAnUvD~F@jQgAtKHlGz@dGvBdK|HxEjGtClGtDlPxBv^pAjKdE|KlE~ErDjB`Et@`K[jIgCjVmLdJ}ArKTdKjCdQvHpMbIvIrHhc@`d@pj@lc@tMtGvc@tM`K|EvZtUvMbIx@xCSdAgAr@aAa@a@gBj@yj@wJ_S{AwG[kFT}Hv@uDpGaO?_GgA}B_HsEoDgEsSwVsFoIa@XxLzOOrGhB_@pFuJ|IcU}AoD{AwQ]N[i@[mB",
+            "travelled": false
+          },
+          {
+            "encodedWaypoints": "kddwG_kjd@FDf@YrBjWtAlDqCdIqHpO{BlDq@BUi@ZoAp@Dv@|@~NbQfCdEbAbD@lFsCzNw@~Op@nGpBlIBdHx@|@lEf@dArBW`ERpLYzS`@|Dp@^`AKrE{BfFn@|`@tNhIjErMdJbS`SvrAfdB~K~KzQ`LlHlCrInBbNlAvP?bs@wAfICtJh@vGlAzIzCzJ|FhHvGhFnGvGxKr\\dr@zIzUvr@dmC`c@npBvGhW~Mh_@|IpQzInNjYx^lGfGpRfK~Y`TpV`Nng@nW|VjKtWxHnh@jKbJhCnOtGhP|KbK|JlHhJtY|f@nPzUhIzPhIpWdGbOnIvMlK`KdLtGvHnCfLpC`MxAvUVn_AuCtNLbUzAhJ?rI}@lJqCl[wPjQmGdJyAn\\uC~e@kL|P{@nIj@jNxCrTfCdGrAxK`Et\\pRbIvCxDr@~Jd@`K[ff@iGbIH|ItAnHvDn@vALdC}E`WY|L{BpM_DpHcAn@?~@_DdE|CcEx@H~BoHfDoQn@uOvD{N|@qB`BcAzCVzN`LtMjFvLtAh]`@lM|C~GjEtEtE|HnNtEvPbDhXvBjKzEfMpEdHnErEjGpDjGvAzP`B~RdHxVvFjL~E`KbH~LjObQl]fErKpA|FMdCm@l@_A@w@iATsCpGoGjLsRDaDeD_JJcD|I}DvN}AhFmApKuFpIwHzTkY`Tg]vGyQzDuGpFcFv_@{W~QyBpF_BnJyFpMoLvIo^OuOv@oV_Bul@gAkJNoCjBwHw@wGVuClFsK~EkEnK}EvFmAbK[dHgC~KcLrIqPvScUfVyIdZaPbt@kk@ht@ia@|RkOhMaQbI}PbG{SrTkhAlKsW`CwMxB{GjH}OdKoQbM}OhL_LdHkFzPeKtQcIxMoEbO{CbKq@vLPjPbCpqAxc@`_@lQpgAjs@jJdEfJjCpKtA|IVtf@mB~Rx@vR|Epi@jUfKbChHr@bIJzHa@l`@qF~Ig@jMJjI|@~GzAzHpCvM~Gpp@ha@vlAtr@le@hV|l@rWve@dQn]lKr^jIj_AzPnTdG`SfIvTtLvLjI~RvPdNrN`O|Q~JfO~_@jp@nNdTrMzPfPbQl[hW`t@pc@hp@hd@`k@fd@vu@vq@tl@bq@zn@|w@hVf^|Unc@fO`_@zLba@zFfV`Pjz@zJd`@pKvX|KfUtRj[bUlZjQxRtl@hk@~K|LjPvV|HhPfI`UvFpT`Hp_@bFf^vHhv@jTbqC|t@plAvPbZwA~AyDb@yArAWxBf@zFc@xBmPbPgDnBeDv@nJ~MKjAyGvKfC|Er@zCtDxXtDs@dAfWeArKeBpGtDfDr@xEcDnE",
+            "travelled": true
+          },
+          {
+            "encodedWaypoints": "cvyrGa_{a@f@wCrG}B_Eu_@mHzEo@hCFtBc@jBuDfE_ClA{Ez@yNsBiC?wDfAcGjFgN`SiB|Di]hmAuElViGld@eDtNkVzq@wJ~PeGbHcGhFgm@pa@eUjMc_@vOiObIeq@xc@oJxJuWn_@qIxOePl^mGnKcd@bl@mNzKs^`OyNtDaAkAb@sB`OiEf@ChBpAjA|HOlD~BfCjErQ_@lAwG~CoZdEsFl@{OZq}@dL}KdCwHpCcDjByChDg_@zq@aAjHClGf@~EfK|TxIhKnDdLxJvQlBdH`CzMxAp^lAbJnn@z`DjGr^lVtz@{Xbh@}Rtr@eBjFcD~E@bAd@Th@_AvQqC~IiE`FSpK\\fO~B~|@rTlQnHfLxIfeAzaAzKzGrX~L`NpKfIzJxE~HjZdo@lJtMnIbI`M|HhGfCnb@fI|NjGbJnG`RvP|FdHjGrKhHfQnErPjDbVzChe@dDzU``@fyBfEvQvFlQxEhLdKpRlVf_@`HpI~VrVfFlH|Sh_@vFzGzNhNfF~G`FfLzL|c@~M~ZhPhc@rSza@rNr^tLlVbKvQjJdLdIrGrPnJrGzErFhFzH~JjJtQnSdm@dVjc@vGvQja@drAjDdQpEp]lExSzHlTbOnZxHfWtClPvAdNf@hM`@hf@v@jNzC|UtH~ZjGjQfR~a@dJpW|EhKdIvJhSfMpDbDdHrJrIjQnEzMvCdMnKho@hK~b@lHdTbI`PxMxQxKtK~M|JdS|JnpAlb@fMbHfM|KbMtPrGbM~v@zbBrShi@fNnh@~c@`yBdDlMrDfKzFrLfWz]zIpPxGlSpDzQpNvbBlEtX|Njp@rC`S`F`r@vDfq@jLzaA|@zQjHpaDnCny@xA`NfD~LtoCnfF~Z`n@xpAv|BtF|FnGlDdFnA`PbBfHlCnVlNpHjJtBvEnBvHxOflAL`PkAxDDz@lBn@tKpOdMlNlBhFD`CbHtDzARz@dAzBpCj@pB~AdApfAzsAr@dAl@xDxCv@~GfIvPxWtFp[GxAzBlK`CdQGxANZROj@tDQzKbLfEFd@hFlBbEhEzFlB??~MvE`MjBr@gFdXfHzLw@bDtCjIfErNrE~^rOnAbBjAxDf@?p@gBz@HJzB}DlMWdD^dIrBvNh@fJ`AvBfAJrFwEzA[tERbPbDlR|FpxAlg@pO`ElIrArPdA|M?hIc@la@uFlUkB~POzQ`AndBxTfhBxXnXlGzk@nRxUxLvUnPjmAzaArJnK`FlHnJ~QxHpUvFhYhIrh@dJr]|DdK~HxOhJ|M~FzGrQnO|Y~PbpArk@vObGbLrCtJpAfMj@jLOl`@wBxMRbObBfd@fM|LlB`w@xEd^a@n]sDni@cJxOsDtWiKre@aZtG_DxQoFzHcAbJc@zw@`Cfu@xDrY`E|s@lObStBxLb@`OBfn@gCxa@aAxbAEd\\y@tTeBxP_C`[iHxQwGvg@sUdQ{GpiAm`@tXuH`_@iGbX}Br\\m@hQx@vKzAhRrEz`@lLpb@|N~YzLb\\bSlVrTvTfXpOlVv^lr@nMvRrJ`LxLvKzIbGnLfGtVbItUdDzNf@nkB`CtStBzOvDzO~Fbk@h[v\\tN`Z~Ilo@~MrUpIxMtHvJpHnH`H|c@`g@|MrLbOlKr[hP|PvF`TrFlSjDtVnBrR^dU]bcDuWpLeB`x@kPp^aEp]oAjtAm@fYiA~z@{FjQgCdNqDlP}Gha@iSlJkCjI{@zQ?rYn@fHj@bG|AvJ`H|@HtAiA|DqXrB}EjBmBzB}@nKSqKRwB|@kBnBsB|EaEnXy@bAoAKi@qC^cAfA[|GvAxJfFpJvHhy@~y@|RrP`nDn_CtJdElK|Blc@zEbL\\pJm@xLsCh\\mN`NmHhRqOrc@{f@fIiG`HmDrImCvIgAxW?vIk@nHcBzIkEjIgHrJqNn\\ox@nRs]fQuU`VsUpUqPlcCw_BxuAqi@zd@mXrL_LpqBalCvImMlEwJ|FaSrC{RrXcdEhEqWxHmTzv@gxAzE_H`K}KhWkTbJeFrHoCti@aMjeA}XdJsCnVeKpNsCfhAuCtLR~MdCra@pQzItAhE@tGk@pFsAjh@wQnyAqP~JHtrAvQzMp@pJkAr_A{XbFaApBRx@fCSnDoFfRmCz@QdB`@bAbALl@v@nL`SdNtYlJnUrKtp@nAjMzAz]|BtJpDlDfExAt@jEpAq@lBgDxBsAbEXjCQ`SaHrMm@xD|Eh@|Fd@[vUzt@|Idl@nA|S`FlRfF~\\hJjXj@~Ip@vR{Eh@aAl@}@bBuInf@CjQg@|JjApLtCbOfDdGtf@dYxER|AjCa@lEm[bx@aE|NWtEVvFhGrTt@zJo@xJcFhWuAfMQn_@s@lJuC`JgDrEeEdDkM`H{FxEgDxF}BtIyAd]a@dAmAJg@nABdA~AfD|Anb@eBlVu@fEkAhBx@nCN~JcApVdA~IjPbd@zT|l@xG|Jr@~BvTbsCz@lNQj@^^lBrVa@~IwB`G}ClDkIlGsCvEe@rDHzIo@lFo]xvA}BpFd@v@h@rJh`@z~AEvAlAxBnNll@rBjFnKjLfCxExLvf@hGhSr@bHx@lTbArkAo@xB@nAh@`AhAAbA}C|@y@hJcE`GsEfEYnDbBjRrSfLfNvFpIt{@v}Avg@jv@|Q``@fNfc@~Hpc@jEfi@pL`sBfB~PtD~TrGzUlFlMl^|k@fRn_@nLb[zJ|\\lKjf@`Gza@tBpY`C|w@jCfWvGbZ~_@bnAtGdQhGpMnKbP|HdJ~mBvdBhH~Ep`@fR`MzIpLdNhJpPzd@xpA`k@frAdNj^xVxx@~P~u@zKfo@|@zS{@nFaCfGyQ~SwASaAgBiIo^FsAo@g@mAuDoDkTP}@c@q@iCe]xAqEjG_HnAAh@g@?eBiAwAv@aIgBbMLdAaJvJgAc@s@nAPdAn@Z`@lCfBnVItC`A`C|E|WGhArAzBtE`RlBvKJdEh@t@jAMxAwEdKcLdDwBxAU~ATvAz@lArBfFlMhEvNjQzu@rGd`@bI|t@lDbPnDpJ~DjHbFlGb]dXvd@|d@jFtGvRj\\hIzKt_@`^|GzHrFbIvGzL~DxJbOve@hFjKhFbHzJjI|TzMzj@jf@jJ~JjIjObCdHtCpMfAjI~@rRk@xVmLraBsAr]r@v_@tBfRhC`OzFdSxEvLrIvOdIpKhKzJ|LzHvHfD`VtHnJnFnG~FxGvIxJhUtCpLpEnY~E|f@bBja@`AhcA`CxX~DdUzFfSvJbUlcAnnBrl@v}@rFhL~EtNtEtTnBpQp@xMnA~p@|BpXx]lhBrL`eAlDxTbE|QpHzUrZ`v@|F|QtE|QjNjq@nJli@dOdi@rDrJxVl]hr@`u@rLtO~Vte@vI|Ml[lo@~O~UvInIhLzHxLdFpXrIjLdGhMrKrPbRx_@fn@vTbg@vH|Nfl@h{@lKzQxIzTv]biAl]x~@r`@r`AvHfOtLhRzz@xnAxM`XIxAy@lAeGnB}Am@s@P{EvIyGbN{Ojf@_GfKyIrH`AfBtAiAMg@v@q@TdA",
+            "travelled": false
+          }
+        ],
+        "sources": [
+          {
+            "provider": "FlixBus-eu"
+          }
+        ],
+        "stopCode": "ANN",
+        "to": {
+          "address": "Grenoble (Central Bus Station)",
+          "class": "StopLocation",
+          "code": "GBL",
+          "id": "pt_pub|FR_ARA_Chambery|GBL",
+          "lang": "eng",
+          "lat": 45.19283,
+          "lng": 5.71394,
+          "modeInfo": {
+            "alt": "bus",
+            "identifier": "pt_pub_bus",
+            "localIcon": "coach"
+          },
+          "name": "Grenoble (Central Bus Station)",
+          "popularity": 198,
+          "publicTransportMode": "pt_pub_bus",
+          "region": "FR_ARA_Chambery",
+          "services": "",
+          "stopCode": "GBL",
+          "stopType": "bus",
+          "timezone": "Europe/Paris"
+        },
+        "travelDirection": 209,
+        "type": "scheduled",
+        "visibility": "in summary"
+      }
+    ]
+  }
+}

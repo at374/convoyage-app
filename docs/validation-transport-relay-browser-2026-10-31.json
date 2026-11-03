@@ -1,0 +1,51 @@
+{
+  "browser": "156.0.8078.80",
+  "viewport": {
+    "width": 412,
+    "height": 839
+  },
+  "locale": "fr-FR",
+  "timezone": "Europe/Paris",
+  "missionData": "Synthetic fixtures only",
+  "network": "All external requests mocked; no user account or live mission sent",
+  "scenarios": [
+    "actual Agenda and mission sheet",
+    "two separate buttons",
+    "late independent geocoding",
+    "Aller / Jonction / Retour",
+    "5-minute minimum at exact pickup GPS, final walk required",
+    "recorded Mobilités M C11 response",
+    "real GTFS browser worker",
+    "manual refresh",
+    "sheet close",
+    "in-flight network cancellation",
+    "late responses ignored",
+    "no horizontal overflow",
+    "Annecy–Grenoble with recorded official SNCF subset",
+    "private TripGo key entry/removal",
+    "TripGo BlaBlaCar Bus and FlixBus with missing evidence",
+    "operator feed unavailable without losing alternatives",
+    "same-day operator observation and final walk",
+    "expired observation loses confirmation",
+    "actual cross-origin relay HTTP and CORS",
+    "invalid optional relay preserves other engines"
+  ],
+  "relay": {
+    "crossOriginHttp": true,
+    "upstreamFixture": true,
+    "upstreamRequests": 1
+  },
+  "regionalRequests": 9,
+  "workerInstances": 8,
+  "abortedRequests": 3,
+  "remainingWorkers": 0,
+  "buttonColour": "rgb(205, 234, 255)",
+  "uncaughtErrors": [],
+  "androidDeviceTested": false,
+  "baselineCommit": "89a9eee831d69fa5f9da40c30a67e14b85b415c5",
+  "tests": {
+    "javascript": 171,
+    "python": 2
+  },
+  "remoteDeployment": false
+}

@@ -228,9 +228,9 @@ test('rejects itineraries with unknown transfer count', async () => {
   assert.equal(response.itineraries[0].transfers,1);
 });
 
-test('mission arrival feasibility keeps 30-minute buffer at destination', () => {
+test('mission arrival feasibility keeps 5-minute buffer at destination', () => {
   const deadline = '2026-10-28T12:00:00+01:00';
-  const arrival = Date.parse('2026-10-28T11:30:00+01:00');
+  const arrival = Date.parse('2026-10-28T11:55:00+01:00');
   const good = {startTime:arrival-1800000,endTime:arrival,
     transportConfirmed:false,legs:[{startTime:arrival-1800000,endTime:arrival,distanceMeters:900}]};
   const late = {...good,endTime:arrival+60000};
@@ -245,7 +245,7 @@ test('mission junction rejects departures before delivery and late arrivals', ()
   const delivered='2026-10-28T11:00:00+01:00';
   const pickup='2026-10-28T13:00:00+01:00';
   const start=Date.parse('2026-10-28T11:15:00+01:00');
-  const end=Date.parse('2026-10-28T12:25:00+01:00');
+  const end=Date.parse('2026-10-28T12:50:00+01:00');
   const valid={startTime:start,endTime:end,legs:[{startTime:start,endTime:end,distanceMeters:800}]};
   const tooEarly={...valid,startTime:start-20*60000};
   const tooLate={...valid,endTime:end+10*60000};
@@ -270,4 +270,25 @@ test('rejects invalid timeout values without issuing HTTP requests', async () =>
     await assert.rejects(routing.plan({...base,timeoutMs,fetcher}), /Delai de requete invalide/);
   }
   assert.equal(requests, 0);
+});
+test('cancelling one subscriber preserves a shared request until the last subscriber leaves',async()=>{
+  const a=new AbortController(),b=new AbortController();let requests=0,networkSignal;
+  const fetcher=(_,options)=>{requests++;networkSignal=options.signal;return new Promise((resolve,reject)=>{
+    options.signal.addEventListener('abort',()=>reject(new DOMException('Cancelled','AbortError')),{once:true});
+  });};
+  const first=routing.plan({...base,fetcher,signal:a.signal}),second=routing.plan({...base,fetcher,signal:b.signal});
+  a.abort();await assert.rejects(first,{name:'AbortError'});assert.equal(networkSignal.aborted,false);assert.equal(requests,1);
+  b.abort();await assert.rejects(second,{name:'AbortError'});assert.equal(networkSignal.aborted,true);
+});
+test('an aborted request never populates the cache when its fetcher returns late',async()=>{
+  const controller=new AbortController();let finish,requests=0;
+  const fetcher=()=>{requests++;return new Promise(resolve=>{finish=()=>resolve({ok:true,json:async()=>({data:{planConnection:{edges:[]}}})});});};
+  const first=routing.plan({...base,fetcher,signal:controller.signal});controller.abort();
+  await assert.rejects(first,{name:'AbortError'});finish();await new Promise(resolve=>setImmediate(resolve));
+  const next=routing.plan({...base,fetcher});assert.equal(requests,2);finish();await next;
+});
+test('an already cancelled regional operation never starts its fetch',async()=>{
+  const controller=new AbortController();controller.abort();let requests=0;
+  await assert.rejects(routing.plan({...base,signal:controller.signal,fetcher:async()=>{requests++;}}),{name:'AbortError'});
+  assert.equal(requests,0);
 });

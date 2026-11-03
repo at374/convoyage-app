@@ -1,0 +1,324 @@
+{
+  "description": "Bounded subset of published SNCF schedules; retained trips and station coordinates are unchanged, station indices remapped. Not a complete network or live query.",
+  "parentDaySha256": "8f0bab47742b9be2569b0776f5c0a56210fef063e09b07d0755eea0e371f4616",
+  "manifest": {
+    "schemaVersion": 1,
+    "source": "SNCF Voyageurs / GTFS",
+    "sourceUrl": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
+    "sourceSha256": "c5c122aebd4aba12f40efad01669885a163b54c09bada701395f36ab246cebd3",
+    "sourceVersion": "2026-10-29",
+    "feedValidity": [
+      "20261029",
+      "20270331"
+    ],
+    "generatedAt": "2026-10-30T05:20:21.562992+00:00",
+    "license": "ODbL — SNCF conditions apply",
+    "licenseUrl": "https://data.sncf.com/explore/dataset/horaires-sncf/",
+    "scope": "Recorded regression subset only; not exhaustive",
+    "dates": {
+      "2026-11-02": {
+        "file": "sncf-2026-11-02.json",
+        "sha256": "d94f43d71dbc3c55ba4ccddf85a37ba48501650874fd501a2e8872f0a41fa5ac",
+        "bytes": 2086,
+        "trips": 2,
+        "stations": 18
+      }
+    }
+  },
+  "day": {
+    "schemaVersion": 1,
+    "date": "2026-11-02",
+    "timeZone": "Europe/Paris",
+    "sourceSha256": "c5c122aebd4aba12f40efad01669885a163b54c09bada701395f36ab246cebd3",
+    "sourceVersion": "2026-10-29",
+    "transportConfirmed": false,
+    "realtime": false,
+    "stations": [
+      [
+        "StopArea:OCE87335521",
+        "Grenoble",
+        45.192693,
+        5.714366
+      ],
+      [
+        "StopArea:OCE87741009",
+        "Chambéry - Challes-les-Eaux",
+        45.571302,
+        5.919547
+      ],
+      [
+        "StopArea:OCE87741132",
+        "Aix-les-Bains le Revard",
+        45.688161,
+        5.909371
+      ],
+      [
+        "StopArea:OCE87741181",
+        "Montmélian",
+        45.503082,
+        6.043175
+      ],
+      [
+        "StopArea:OCE87746008",
+        "Annecy",
+        45.902047,
+        6.121826
+      ],
+      [
+        "StopArea:OCE87746107",
+        "Grésy-sur-Aix",
+        45.724527,
+        5.922146
+      ],
+      [
+        "StopArea:OCE87746115",
+        "Albens",
+        45.785946,
+        5.948342
+      ],
+      [
+        "StopArea:OCE87746149",
+        "Rumilly",
+        45.863053,
+        5.947949
+      ],
+      [
+        "StopArea:OCE87747006",
+        "Grenoble",
+        45.191491,
+        5.714548
+      ],
+      [
+        "StopArea:OCE87747329",
+        "Moirans",
+        45.32216,
+        5.581934
+      ],
+      [
+        "StopArea:OCE87747402",
+        "Grenoble Universités - Gières",
+        45.184971,
+        5.784731
+      ],
+      [
+        "StopArea:OCE87747493",
+        "Pontcharra sur Bréda",
+        45.434091,
+        6.007859
+      ],
+      [
+        "StopArea:OCE87761007",
+        "Valence Ville",
+        44.928081,
+        4.893288
+      ],
+      [
+        "StopArea:OCE87761650",
+        "Romans - Bourg-de-Péage",
+        45.048862,
+        5.049574
+      ],
+      [
+        "StopArea:OCE87761684",
+        "Saint-Hilaire - Saint-Nazaire",
+        45.071342,
+        5.243845
+      ],
+      [
+        "StopArea:OCE87761718",
+        "Saint-Marcellin",
+        45.150885,
+        5.323654
+      ],
+      [
+        "StopArea:OCE87761759",
+        "Tullins Fures",
+        45.300905,
+        5.492174
+      ],
+      [
+        "StopArea:OCE87763029",
+        "Valence TGV Rhône-Alpes Sud",
+        44.991907,
+        4.978652
+      ]
+    ],
+    "trips": [
+      [
+        "OCESN17528F1187_F:TER:FR:Line::F28D551A-A369-44D2-A99B-0E546CDBEC87::87746008:87761007:17:1644:20261108",
+        "K21",
+        "",
+        [
+          [
+            4,
+            49380,
+            49380,
+            0,
+            1
+          ],
+          [
+            7,
+            50280,
+            50400,
+            0,
+            0
+          ],
+          [
+            6,
+            50820,
+            50940,
+            0,
+            0
+          ],
+          [
+            5,
+            51420,
+            51480,
+            0,
+            0
+          ],
+          [
+            2,
+            51840,
+            51960,
+            0,
+            0
+          ],
+          [
+            1,
+            52560,
+            52740,
+            0,
+            0
+          ],
+          [
+            3,
+            53280,
+            53340,
+            0,
+            0
+          ],
+          [
+            11,
+            53700,
+            53820,
+            0,
+            0
+          ],
+          [
+            10,
+            54960,
+            55080,
+            0,
+            0
+          ],
+          [
+            8,
+            55560,
+            55740,
+            0,
+            0
+          ],
+          [
+            9,
+            56460,
+            56580,
+            0,
+            0
+          ],
+          [
+            16,
+            56880,
+            57000,
+            0,
+            0
+          ],
+          [
+            15,
+            57840,
+            57900,
+            0,
+            0
+          ],
+          [
+            14,
+            58380,
+            58500,
+            0,
+            0
+          ],
+          [
+            13,
+            59100,
+            59220,
+            0,
+            0
+          ],
+          [
+            17,
+            59700,
+            59820,
+            0,
+            0
+          ],
+          [
+            12,
+            60240,
+            60240,
+            1,
+            0
+          ]
+        ]
+      ],
+      [
+        "OCESN883856F1187_F:TER:FR:Line::F4B0CFE6-18E1-4D06-A749-805E6E29BD07::87746008:87741009:6:1401:20261211",
+        "C21",
+        "",
+        [
+          [
+            4,
+            46920,
+            46920,
+            0,
+            1
+          ],
+          [
+            7,
+            48360,
+            48420,
+            0,
+            0
+          ],
+          [
+            6,
+            48780,
+            48900,
+            0,
+            0
+          ],
+          [
+            5,
+            49260,
+            49380,
+            0,
+            0
+          ],
+          [
+            2,
+            49740,
+            49860,
+            0,
+            0
+          ],
+          [
+            1,
+            50460,
+            50460,
+            1,
+            0
+          ]
+        ]
+      ]
+    ]
+  }
+}
