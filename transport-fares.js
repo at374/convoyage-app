@@ -46,7 +46,7 @@
     }
     const known=breakdown.every(x=>x.verified)&&!overflow;
     const knownSubtotalEUR=overflow?null:subtotalCents/100;
-    const unknownLegCount=breakdown.filter(x=>!x.verified).length;
+    const unknownLegCount=breakdown.filter(x=>!x.verified).length+(overflow?1:0);
     const totalEUR=known?knownSubtotalEUR:null;
     const noTicketRequired=breakdown.every(x=>x.nonTicketed);
     return {totalEUR,known,knownSubtotalEUR,unknownLegCount,breakdown,status:noTicketRequired?'Aucun billet requis':known?'Tarif vérifié':'Tarif non vérifié'};
