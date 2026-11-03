@@ -195,6 +195,8 @@ test('sum of individually valid fares cannot overflow safe cent totals',()=>{
  assert.equal(result.known,false);
  assert.equal(result.totalEUR,null);
  assert.equal(result.knownSubtotalEUR,null);
+ assert.equal(result.calculationOverflow,true);
+ assert.equal(result.unknownLegCount,0);
  assert.match(describe(result),/^Total inconnu/);
  assert.doesNotMatch(describe(result),/Sous-total vérifié/);
 });
