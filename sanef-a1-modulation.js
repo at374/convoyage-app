@@ -27,6 +27,9 @@ function a1TariffBand({ passageAt, towardsParis, eligibleDay, exit } = {}) {
 }
 function a1OfficialFare({ reference, origin, destination, passageAt, towardsParis, eligibleDay, vehicleClass } = {}) {
   if (!reference || reference.status !== 'REFERENCE_ONLY_NOT_APPLIED') throw new TypeError('Expected verified reference');
+  if (reference.vehicleClass !== 1 || !Array.isArray(reference.relations)) {
+    return { status: 'unavailable', reason: 'invalid_reference_schema' };
+  }
   const date = passageAt instanceof Date ? passageAt : new Date(passageAt);
   if (!Number.isFinite(date.getTime())) throw new TypeError('Invalid passageAt');
   if (vehicleClass !== 1) return { status: 'unavailable', reason: 'class_not_documented' };
@@ -34,8 +37,10 @@ function a1OfficialFare({ reference, origin, destination, passageAt, towardsPari
   const effective = new Date(reference.effective + 'T00:00:00+01:00');
   if (!Number.isFinite(effective.getTime())) throw new TypeError('Invalid reference effective date');
   if (date < effective) return { status: 'unavailable', reason: 'before_reference_effective_date' };
-  const row = reference.relations.find(r => r.origin === origin && r.destination === destination);
-  if (!row) return { status: 'unavailable', reason: 'relation_not_documented' };
+  const matches = reference.relations.filter(r => r && r.origin === origin && r.destination === destination);
+  if (matches.length === 0) return { status: 'unavailable', reason: 'relation_not_documented' };
+  if (matches.length !== 1) return { status: 'unavailable', reason: 'ambiguous_reference_relation' };
+  const row = matches[0];
   const band = a1TariffBand({ passageAt, towardsParis, eligibleDay, exit: destination });
   const amount = row[band];
   if (typeof amount !== 'number' || !Number.isFinite(amount) || amount < 0) {
