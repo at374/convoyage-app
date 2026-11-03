@@ -13,7 +13,7 @@ function travelDay(value){
 function legReference(leg){
  const day=travelDay(leg?.departure),proof=leg?.fareScopePath;
  if(leg?.networkId!=='oura-haute-savoie'||leg.line!=='Y51'||!day||day<DATA.effectiveFrom||Number(day.slice(0,4))!==DATA.referenceYear||
-  !travelDay(leg.arrival)||Date.parse(leg.arrival)<=Date.parse(leg.departure)||leg.from===leg.to||!proof||
+  !travelDay(leg.arrival)||Date.parse(leg.arrival)<=Date.parse(leg.departure)||Date.parse(leg.arrival)-Date.parse(leg.departure)>86400000||leg.from===leg.to||!proof||
   ['networkId','tripId','from','to','departure','arrival'].some(k=>typeof leg[k]!=='string'||proof[k]!==leg[k])||
   !Array.isArray(proof.stops)||proof.stops.length<2||proof.stops.length>64||proof.stops[0]?.stopId!==leg.from||proof.stops.at(-1)?.stopId!==leg.to)return null;
  const areas=[];
