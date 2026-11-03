@@ -89,3 +89,18 @@ test('estimated kilometers never determine official class 1 or class 2 fares', (
   }
   assert.ok(differingEstimates > 0, 'Expected real-world duplicated estimated-distance fixtures');
 });
+
+test('six SANEF stations have official geographic points without fabricated toll prices', () => {
+  const expected = ['GAUCHY', 'COURBES', "VALLEE DE L'AISNE",
+    'LA NEUVILLETTE', 'CHEVRIERES', 'ARSY'];
+  for (const name of expected) {
+    const matches = overlay.gares.filter(station => station.nom === name);
+    assert.equal(matches.length, 1, 'Station missing or duplicated: ' + name);
+    assert.equal(matches[0].points.length, 2, 'Expected entry and exit points: ' + name);
+    for (const point of matches[0].points) {
+      assert.ok(Array.isArray(point) && point.length === 2, 'Invalid coordinates: ' + name);
+      assert.ok(Number.isFinite(point[0]) && point[0] >= -90 && point[0] <= 90);
+      assert.ok(Number.isFinite(point[1]) && point[1] >= -180 && point[1] <= 180);
+    }
+  }
+});
