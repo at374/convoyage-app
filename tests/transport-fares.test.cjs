@@ -186,3 +186,15 @@ test('non-finite and unsafe fare amounts never become verified totals',()=>{
   assert.equal(result.unknownLegCount,1);
  }
 });
+
+
+test('sum of individually valid fares cannot overflow safe cent totals',()=>{
+ const max=Number.MAX_SAFE_INTEGER/100/2;
+ const leg={provider:'TER',fareVerified:true,fareSource:'source vérifiée',verifiedPriceEUR:max};
+ const result=fare([leg,leg,leg]);
+ assert.equal(result.known,false);
+ assert.equal(result.totalEUR,null);
+ assert.equal(result.knownSubtotalEUR,null);
+ assert.match(describe(result),/^Total inconnu/);
+ assert.doesNotMatch(describe(result),/Sous-total vérifié/);
+});
