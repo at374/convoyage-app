@@ -211,3 +211,15 @@ test('fractional-cent prices are not silently rounded into verified ticket costs
   assert.equal(fare([{provider:'Bus',fareVerified:true,fareSource:'officiel',verifiedPriceEUR:value}]).totalEUR,value);
  }
 });
+
+
+test('malformed boarding timestamps never validate dated fares or SIBRA passes',()=>{
+ for(const departure of ['2026-02-30T10:00:00+01:00','2026-11-02 10:00:00','2026-11-02T24:00:00+01:00','2026-11-02T10:00:00','2026-11-02T10:00:00+15:00']){
+  const paid=fare([{...dated,departure}]);
+  const pass=fare([{...eligible,departure}],{sibraPassActive:true});
+  assert.equal(paid.known,false,departure);
+  assert.equal(pass.breakdown[0].passApplied,false,departure);
+ }
+ assert.equal(fare([{...dated,departure:'2026-11-02T10:00:00+01:00'}]).totalEUR,8.5);
+ assert.equal(fare([{...eligible,departure:'2026-11-02T10:00:00+01:00'}],{sibraPassActive:true}).totalEUR,0);
+});
