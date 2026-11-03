@@ -65,3 +65,12 @@ assert.equal(evaluate({...connectedJourney,legs:[
  legTime('2026-11-02T07:00:00+01:00','2026-11-02T07:40:00+01:00'),
  legTime('2026-11-02T07:45:00+01:00','2026-11-02T08:10:00+01:00')
 ]},{deadline}).feasible,false,'Unmodelled arrival gap cannot be certified door to door');
+
+assert.equal(evaluate({...connectedJourney,legs:[
+ {serviceConfirmed:true},
+ legTime('2026-11-02T07:45:00+01:00','2026-11-02T08:15:00+01:00')
+]},{deadline}).feasible,false,'A confirmed multi-leg route cannot omit the first leg schedule');
+assert.equal(evaluate({...connectedJourney,legs:[
+ legTime('2026-11-02T07:00:00+01:00','2026-11-02T07:40:00+01:00'),
+ {serviceConfirmed:true}
+]},{deadline}).feasible,false,'A confirmed multi-leg route cannot omit the final leg schedule');
