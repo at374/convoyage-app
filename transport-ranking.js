@@ -26,7 +26,9 @@
       previousArrival=end;
       return true;
     });
-    const allVerified=legs.length>0&&connected&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
+    const allTimed=legs.length>0&&legs.every(leg=>leg&&validTime(leg.departure)&&validTime(leg.arrival));
+    const boundsMatch=!allTimed||(Date.parse(legs[0].departure)===departure&&Date.parse(legs.at(-1).arrival)===arrival);
+    const allVerified=legs.length>0&&connected&&boundsMatch&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
     const feasible=valid&&allVerified&&doorToDoor&&item.accessVerified===true&&
       Number.isFinite(deadline)&&slack>=margin;
