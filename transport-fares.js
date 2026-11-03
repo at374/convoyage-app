@@ -3,7 +3,7 @@
  */
 (function(root){
   'use strict';
-  function money(value){return typeof value==='number'&&Number.isFinite(value)&&value>=0&&Number.isSafeInteger(Math.round(value*100))?value:null;}
+  function money(value){if(typeof value!=='number'||!Number.isFinite(value)||value<0)return null;const cents=value*100;return Number.isSafeInteger(Math.round(cents))&&Math.abs(cents-Math.round(cents))<1e-7?value:null;}
   function validForTravel(leg,travelDate){
     if(travelDate==null)return true;
     const when=Date.parse(travelDate);
