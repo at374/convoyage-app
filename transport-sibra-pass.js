@@ -32,6 +32,7 @@ function regionalScope(leg,date){
  const depart=Date.parse(leg.departure),arrive=Date.parse(leg.arrival);
  if(!Number.isFinite(depart)||!Number.isFinite(arrive)||arrive<=depart||arrive-depart>86400000)return false;
  const proof=leg.fareScopePath;
+ if(leg.from===leg.to)return false;
  if(!proof||['networkId','tripId','from','to','departure','arrival'].some(k=>typeof leg[k]!=='string'||proof[k]!==leg[k])||
    !Array.isArray(proof.stops)||proof.stops.length<2||proof.stops.length>64||
    proof.stops[0]?.stopId!==leg.from||proof.stops.at(-1)?.stopId!==leg.to)return false;
