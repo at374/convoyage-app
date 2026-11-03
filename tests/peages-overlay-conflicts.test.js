@@ -1,4 +1,4 @@
-// Regression guard for the known SANEF Meaux/Crecy overlay conflict.
+// Regression guard for SANEF Meaux/Crecy and nationwide toll-overlay data quality.
 // Run: node --test tests/peages-overlay-conflicts.test.js
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -25,8 +25,7 @@ function conflicts(rows) {
 }
 test('national overlay conflicts are confined to the 33 known Meaux/Crecy pairs', () => {
   const bad = conflicts(overlay.paires);
-  // Known staging defect: every conflict must be reviewed, not frozen at 33 forever.
-  // Once the official tariffs are corrected, this count should reach zero.
+  // No contradictory class 1 or class 2 tariffs may enter the overlay.
   assert.equal(bad.size, 0, 'Unresolved contradictory toll tariffs: ' + [...bad].join(', '));
 });
 test('same-price aliases do not conflict', () => {
