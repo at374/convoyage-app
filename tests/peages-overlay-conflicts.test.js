@@ -52,3 +52,23 @@ test('Meaux/Crecy aliases match the detailed 2026 SANEF tariffs in both classes'
     assert.equal(row[3], official[3], 'Class 2 mismatch: ' + row[1]);
   }
 });
+
+test('all national overlay rows have valid class 1 and 2 fares', () => {
+  for (const [index, row] of overlay.paires.entries()) {
+    assert.ok(Array.isArray(row) && row.length >= 4, 'Invalid row ' + index);
+    assert.ok(typeof row[0] === 'string' && row[0].trim(), 'Missing origin ' + index);
+    assert.ok(typeof row[1] === 'string' && row[1].trim(), 'Missing destination ' + index);
+    assert.ok(Number.isFinite(row[2]) && row[2] >= 0, 'Invalid class 1 ' + index);
+    assert.ok(Number.isFinite(row[3]) && row[3] >= 0, 'Invalid class 2 ' + index);
+  }
+});
+test('duplicate tariff keys may differ in distance metadata but not in price', () => {
+  const seen = new Map();
+  for (const row of overlay.paires) {
+    const key = normalize(row[0]) + '|' + normalize(row[1]);
+    const previous = seen.get(key);
+    if (previous) {
+      assert.deepEqual(row.slice(2, 4), previous.slice(2, 4), key);
+    } else seen.set(key, row);
+  }
+});
