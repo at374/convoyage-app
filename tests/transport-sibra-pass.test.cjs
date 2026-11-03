@@ -66,3 +66,13 @@ test('Y51 scope rejects outside intermediate stops, wrong feeds and stale or mis
  const future=regionalLeg();future.departure='2027-07-03T10:00:00+02:00';future.fareScopePath.departure=future.departure;
  assert.equal(pass.assess(future,{active:true,from:'2026-01-01',through:'2027-12-31'}).additionalEUR,null);
 });
+
+
+test('Y51 coverage rejects reversed and implausibly long journeys',()=>{
+ const leg=regionalLeg();
+ for(const arrival of ['2026-11-02T09:00:00+01:00','2026-11-04T10:40:00+01:00']){
+  const changed=structuredClone(leg);changed.arrival=arrival;changed.fareScopePath.arrival=arrival;
+  assert.equal(pass.assess(changed,subscription).coveredLegs,0);
+ }
+ assert.equal(pass.assess(leg,subscription).coveredLegs,1);
+});
