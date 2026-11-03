@@ -25,8 +25,9 @@ function conflicts(rows) {
 }
 test('national overlay conflicts are confined to the 33 known Meaux/Crecy pairs', () => {
   const bad = conflicts(overlay.paires);
-  assert.equal(bad.size, 33, 'Conflict count changed: inspect tariff sources before accepting changes');
-  for (const key of bad) assert.ok(key.startsWith('MEAUXCRECY|'), key);
+  // Known staging defect: every conflict must be reviewed, not frozen at 33 forever.
+  // Once the official tariffs are corrected, this count should reach zero.
+  assert.equal(bad.size, 0, 'Unresolved contradictory toll tariffs: ' + [...bad].join(', '));
 });
 test('same-price aliases do not conflict', () => {
   assert.equal(conflicts([['MÉAUX (A140) / CRECY N°16','DORMANS N°21',7.2,11.1],
