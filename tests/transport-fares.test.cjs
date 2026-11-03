@@ -167,3 +167,12 @@ test('Agenda per-leg labels are consistent with verified, pass, walk and unknown
  assert.equal(describeLeg(fare([{provider:'TER',fareVerified:true,fareSource:'officiel',verifiedPriceEUR:8.5}]).breakdown[0]),'Tarif vérifié : 8,50 €');
  assert.equal(describeLeg(fare([{...sibra}],{sibraPassActive:true}).breakdown[0]),'Couvert par abonnement vérifié');
 });
+
+
+test('reversed validity periods never certify a fare or SIBRA coverage',()=>{
+ const travel='2026-11-02T10:00:00+01:00';
+ const reversedFare={...dated,departure:travel,fareValidFrom:'2026-11-30T23:59:59+01:00',fareValidUntil:'2026-11-01T00:00:00+01:00'};
+ const reversedPass={...eligible,departure:travel,passValidFrom:'2026-12-31T23:59:59+01:00',passValidUntil:'2026-01-01T00:00:00+01:00'};
+ assert.equal(fare([reversedFare]).known,false);
+ assert.equal(fare([reversedPass],{sibraPassActive:true}).breakdown[0].passApplied,false);
+});
