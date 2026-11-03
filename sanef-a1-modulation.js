@@ -37,6 +37,10 @@ function a1OfficialFare({ reference, origin, destination, passageAt, towardsPari
   const row = reference.relations.find(r => r.origin === origin && r.destination === destination);
   if (!row) return { status: 'unavailable', reason: 'relation_not_documented' };
   const band = a1TariffBand({ passageAt, towardsParis, eligibleDay, exit: destination });
-  return { status: 'reference_only', band, amount: row[band], currency: 'EUR', effective: reference.effective };
+  const amount = row[band];
+  if (typeof amount !== 'number' || !Number.isFinite(amount) || amount < 0) {
+    return { status: 'unavailable', reason: 'tariff_amount_not_verified' };
+  }
+  return { status: 'reference_only', band, amount, currency: 'EUR', effective: reference.effective };
 }
 module.exports = { eligibleA1Day, a1TariffBand, a1OfficialFare };
