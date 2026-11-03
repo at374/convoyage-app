@@ -36,3 +36,8 @@ assert.equal(evaluate({...base,arrival:'2026-11-02T08:45:00+01:00'},{deadline}).
 assert.equal(evaluate({...base,arrival:'2026-11-02T08:45:01+01:00'},{deadline}).feasible,false,'Below fifteen minutes is not confirmed');
 assert.equal(rank([atFive],{deadline}).length,0,'Five-minute journey excluded without explicit GPS reliability');
 assert.equal(rank([atFive],{deadline,exactGPSReliable:true}).length,1,'Reliable exact GPS allows five-minute option');
+
+const atTwenty={...base,arrival:'2026-11-02T08:40:00+01:00'};
+assert.equal(rank([atTwenty],{deadline,marginMinutes:30}).length,0,'Configured thirty-minute margin excludes a twenty-minute arrival');
+assert.equal(rank([atTwenty],{deadline,marginMinutes:20}).length,1,'Exactly twenty minutes meets configured margin');
+assert.equal(rank([atTwenty],{deadline,marginMinutes:30,exactGPSReliable:true}).length,0,'Reliable GPS never overrides a larger configured margin');
