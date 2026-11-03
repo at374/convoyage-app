@@ -190,3 +190,13 @@ test('TripGo rejects impossible GPS walking speeds when walking distance is abse
  }
  assert.equal(api.parse(data,options).itineraries.length,0);
 });
+
+
+test('TripGo refuses an itinerary that ends over ten metres from the exact mission GPS',()=>{
+ const shifted=clone();
+ for(const template of shifted.segmentTemplates){
+  if(template.modeIdentifier==='wa_wal'&&template.to?.class==='Location')template.to.lat+=0.0002;
+ }
+ assert.equal(api.parse(shifted,options).itineraries.length,0);
+ assert.equal(api.parse(clone(),options).itineraries.length,2);
+});
