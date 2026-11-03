@@ -1,8 +1,15 @@
 'use strict';
 // SANEF A1 2026: determine the applicable tariff band, never calculate prices by percentage.
-// The caller must confirm holiday eligibility and travel direction from its routing data.
+// Sundays are recognized in Europe/Paris; holiday eligibility and direction require caller confirmation.
+function eligibleA1Day(passageAt, eligibleDay) {
+  if (typeof eligibleDay === 'boolean') return eligibleDay;
+  const date = passageAt instanceof Date ? passageAt : new Date(passageAt);
+  if (!Number.isFinite(date.getTime())) throw new TypeError('Invalid passageAt');
+  // Weekday is determined locally, not in UTC (important near midnight).
+  return new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Paris', weekday: 'short' }).format(date) === 'Sun';
+}
 function a1TariffBand({ passageAt, towardsParis, eligibleDay, exit } = {}) {
-  if (towardsParis !== true || eligibleDay !== true) return 'normal';
+  if (towardsParis !== true || !eligibleA1Day(passageAt, eligibleDay)) return 'normal';
   if (!['ARSY', 'CHEVRIERES', 'SENLIS', 'CHAMANT'].includes(String(exit || '').toUpperCase())) return 'normal';
   const date = passageAt instanceof Date ? passageAt : new Date(passageAt);
   if (!Number.isFinite(date.getTime())) throw new TypeError('Invalid passageAt');
@@ -21,10 +28,10 @@ function a1TariffBand({ passageAt, towardsParis, eligibleDay, exit } = {}) {
 function a1OfficialFare({ reference, origin, destination, passageAt, towardsParis, eligibleDay, vehicleClass } = {}) {
   if (!reference || reference.status !== 'REFERENCE_ONLY_NOT_APPLIED') throw new TypeError('Expected verified reference');
   if (vehicleClass !== 1) return { status: 'unavailable', reason: 'class_not_documented' };
-  if (towardsParis !== true || eligibleDay !== true) return { status: 'unavailable', reason: 'outside_modulation_scope' };
+  if (towardsParis !== true || !eligibleA1Day(passageAt, eligibleDay)) return { status: 'unavailable', reason: 'outside_modulation_scope' };
   const row = reference.relations.find(r => r.origin === origin && r.destination === destination);
   if (!row) return { status: 'unavailable', reason: 'relation_not_documented' };
   const band = a1TariffBand({ passageAt, towardsParis, eligibleDay, exit: destination });
   return { status: 'reference_only', band, amount: row[band], currency: 'EUR', effective: reference.effective };
 }
-module.exports = { a1TariffBand, a1OfficialFare };
+module.exports = { eligibleA1Day, a1TariffBand, a1OfficialFare };
