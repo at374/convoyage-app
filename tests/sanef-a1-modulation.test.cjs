@@ -28,3 +28,11 @@ test('SANEF A1 official amounts are looked up, never computed from percentage', 
   assert.equal(a1OfficialFare({ ...options, passageAt: '2026-11-08T17:00:00+01:00' }).amount, 8.7);
   assert.equal(a1OfficialFare({ ...options, vehicleClass: 2, passageAt: '2026-11-08T17:00:00+01:00' }).status, 'unavailable');
 });
+
+test('Sunday eligibility is automatic in France local time', () => {
+  const base = { towardsParis: true, exit: 'ARSY' };
+  assert.equal(a1TariffBand({ ...base, passageAt: '2026-11-08T17:00:00+01:00' }), 'rouge');
+  assert.equal(a1TariffBand({ ...base, passageAt: '2026-11-09T17:00:00+01:00' }), 'normal');
+  assert.equal(a1TariffBand({ ...base, passageAt: '2026-11-08T17:00:00+01:00', eligibleDay: false }), 'normal');
+  assert.equal(a1TariffBand({ ...base, passageAt: '2026-11-09T17:00:00+01:00', eligibleDay: true }), 'rouge');
+});
