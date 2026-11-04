@@ -2255,6 +2255,29 @@
 
       // Optional provider integrations are explicit: no scraping and no invented
       // FlixBus/BlaBlaCar departures. Use the same abortable mission slots.
+      // Merge independently discovered junction candidates without claiming live
+      // availability. Both asynchronous sources may finish in either order.
+      let junctionRegionalJourneys=[],junctionLongDistanceResult=null;
+      const junctionCombined=document.createElement('p');
+      junctionCombined.className='doux';
+      junctionCombined.setAttribute('data-junction-combined','');
+      const refreshJunctionCombined=()=>{
+        if(!junctionLongDistanceResult||!junctionRegionalJourneys.length||
+            !window.CPTransportLongDistanceSearch?.compareWithRegional)return;
+        const result=window.CPTransportLongDistanceSearch.compareWithRegional(
+          junctionRegionalJourneys,junctionLongDistanceResult,{
+            direction:'outbound',earliestDeparture:deliveryDate,
+            latestArrival:next?.pickup_start,deadline:next?.pickup_start,
+            marginMinutes:securityMarginMin
+          });
+        const choices=result.choices||[];
+        junctionCombined.textContent='Jonction multimodale provisoire : '+
+          (choices.length?choices.map(c=>c.label+' ('+
+            (c.journey.priceEUR==null?'tarif inconnu':c.journey.priceEUR.toFixed(2)+' €')+
+            ')').join(' · '):'aucun choix compatible')+
+          '. Accès, circulation et prix non confirmés.';
+        if(!junctionCombined.isConnected)panel.appendChild(junctionCombined);
+      };
       const longDistanceEngine=window.CPTransportLongDistanceSearch;
       const longDistanceFetchers=window.CP_LONG_DISTANCE_FETCHERS;
       if(longDistanceEngine?.searchLongDistance && longDistanceFetchers &&
@@ -2289,6 +2312,10 @@
                 const providers=Array.isArray(result.providers)?result.providers:[];
                 const connected=providers.filter(p=>p.status==='candidates-unverified');
                 const offers=Array.isArray(result.offers)?result.offers:[];
+                if(label==='Jonction'){
+                  junctionLongDistanceResult=result;
+                  refreshJunctionCombined();
+                }
                 const pickupLimit=label==='Aller'?pickupDate:
                   label==='Jonction'?next?.pickup_start:null;
                 const ranked=typeof longDistanceEngine.compareWithRegional==='function'?
@@ -2359,6 +2386,11 @@
               'Jonction régionale : ' + options.length +
               ' proposition(s) théoriques, horaires et circulation à vérifier :' :
               'Jonction régionale : aucune correspondance compatible avec la marge minimale de 15 min. Transport non confirmé — vérifiez vous-même.';
+            if(window.CPTransportAdapters){
+              junctionRegionalJourneys=window.CPTransportAdapters.withVerifiedFares(
+                window.CPTransportAdapters.adaptRegional(options,'Régional'));
+              refreshJunctionCombined();
+            }
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
                 window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
