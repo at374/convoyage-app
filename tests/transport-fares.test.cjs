@@ -248,3 +248,14 @@ test('malformed official validity bounds cannot certify fares or SIBRA coverage'
  }
  assert.equal(fare([{...dated,departure:'2026-11-15T12:00:00+01:00'}]).totalEUR,8.5);
 });
+
+require('node:test')('reject impossible UTC+14:30 timestamps in fare evidence',()=>{
+  const valid='2026-11-15T12:00:00+01:00';
+  const invalid='2026-11-15T12:00:00+14:30';
+  const leg={provider:'TER',departure:valid,fareVerified:true,fareSource:'official',verifiedPriceEUR:4,
+    fareValidFrom:'2026-11-01T00:00:00+01:00',fareValidUntil:'2026-11-30T23:59:59+01:00'};
+  assert.equal(fare([{...leg,departure:invalid}]).known,false);
+  assert.equal(fare([{...leg,fareValidFrom:invalid}]).known,false);
+  assert.equal(fare([{...leg,fareValidUntil:invalid}]).known,false);
+  assert.equal(fare([leg]).totalEUR,4);
+});
