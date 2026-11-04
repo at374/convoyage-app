@@ -4,7 +4,14 @@
 (function(root){
   'use strict';
   function finite(v){return typeof v==='number'&&Number.isFinite(v);}
-  function validTime(v){return typeof v==='string'&&/T\d{2}:\d{2}/.test(v)&&/(Z|[+-]\d{2}:\d{2})$/i.test(v)&&Number.isFinite(Date.parse(v));}
+  function validTime(v){
+    if(typeof v!=='string')return false;
+    const m=/^(\d{4})-(\d{2})-(\d{2})T([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d)(?:\.\d{1,3})?)?(Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/i.exec(v);
+    if(!m)return false;
+    const year=Number(m[1]),month=Number(m[2]),day=Number(m[3]);
+    const calendar=new Date(Date.UTC(year,month-1,day));
+    return year>=100&&calendar.getUTCFullYear()===year&&calendar.getUTCMonth()===month-1&&calendar.getUTCDate()===day&&Number.isFinite(Date.parse(v));
+  }
   function evaluate(item,opts={}){
     const legs=Array.isArray(item.legs)?item.legs:[];
     const departure=validTime(item.departure)?Date.parse(item.departure):NaN;
