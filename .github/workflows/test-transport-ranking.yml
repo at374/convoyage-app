@@ -1,7 +1,7 @@
 name: Test transport ranking
 on:
   push:
-    branches: [feature/transport-ranking-safe, fix/transport-ranking-post-170]
+    branches: [main, feature/transport-ranking-safe, fix/transport-ranking-post-170]
     paths:
       - 'transport-ranking.js'
       - 'transport-adapters.js'
