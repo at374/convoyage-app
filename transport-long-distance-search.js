@@ -52,7 +52,17 @@ async function searchLongDistance(query,fetchers={}){
 function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
  const regional=Array.isArray(regionalJourneys)?regionalJourneys:[];
  const longDistance=Array.isArray(longDistanceResult?.offers)?longDistanceResult.offers:[];
- const candidates=[...regional,...longDistance];
+ // Mission windows apply to all providers before ranking. Otherwise a cheap
+ // overnight bus outside the pickup/return window can be recommended.
+ const timestamp=value=>typeof value==='string'&&Number.isFinite(Date.parse(value))?Date.parse(value):null;
+ const earliest=timestamp(options?.earliestDeparture);
+ const latest=timestamp(options?.latestArrival);
+ const candidates=[...regional,...longDistance].filter(journey=>{
+  if(!journey||typeof journey!=='object')return false;
+  const start=timestamp(journey.departure),end=timestamp(journey.arrival);
+  if(start===null||end===null||end<=start)return false;
+  return (earliest===null||start>=earliest)&&(latest===null||end<=latest);
+ });
  const choices=ranking.rank(candidates,options);
  return {candidates,choices,providerStatuses:longDistanceResult?.providers||[],
   allSourcesConnected:PROVIDERS.every(provider=>
