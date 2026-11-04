@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {assessJourney} = require('../transport-walking.js');
+const {assessJourney,checkJourney} = require('../transport-walking.js');
 
 const row = {
   departure: '2026-11-04T09:00:00+01:00',
@@ -36,4 +36,27 @@ test('valid mission with missing pedestrian paths remains unconfirmed', () => {
   assert.equal(result.status,'partial');
   assert.equal(result.doorDeparture,null);
   assert.equal(result.doorArrival,null);
+});
+
+test('malformed inter-network legs fail closed', () => {
+  for (const legs of [[null,{}],[{},null]]) {
+    const result=assessJourney({...row,interNetwork:true,legs},task,{});
+    assert.equal(result.status,'unknown');
+    assert.equal(result.realizable,false);
+  }
+});
+test('walking router errors remain unconfirmed without rejecting the journey', async () => {
+  const router={route:async()=>{throw new Error('provider unavailable');}};
+  const result=await checkJourney(router,row,task);
+  assert.equal(result.status,'partial');
+  assert.equal(result.realizable,false);
+  assert.equal(result.walks.access.status,'unavailable');
+  assert.equal(result.walks.egress.status,'unavailable');
+});
+test('missing router or mission fails closed', async () => {
+  for (const [router,journey,mission] of [[null,row,task],[{},row,task],[{route:async()=>({})},null,task],[{route:async()=>({})},row,null]]) {
+    const result=await checkJourney(router,journey,mission);
+    assert.equal(result.realizable,false);
+    assert.equal(result.status,journey&&mission?'partial':'unknown');
+  }
 });
