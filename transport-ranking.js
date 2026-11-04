@@ -37,6 +37,12 @@
       if(!Number.isFinite(previousEnd)||start<previousEnd||end<=start||end>arrival){timelineValid=false;break;}
       previousEnd=end;
     }
+    // A timed journey must cover the displayed endpoints; otherwise a hidden
+    // first/last transfer could be missing despite individually valid legs.
+    if(hasTimedLeg&&legs.length&&timelineValid){
+      timelineValid=Date.parse(legs[0].departure)===departure&&
+        Date.parse(legs[legs.length-1].arrival)===arrival;
+    }
     const allVerified=timelineValid&&legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
     const feasible=valid&&allVerified&&doorToDoor&&item.accessVerified===true&&
