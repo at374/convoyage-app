@@ -2237,7 +2237,9 @@
         let signature = null, previous = null, controller = null;
         const refresh = () => {
           if (!regionalActive()) return;
-          const key = JSON.stringify(inputs());
+          // Include explicit user refreshes even when the mission addresses
+          // and schedule have not changed; otherwise cached slots never rerun.
+          const key = JSON.stringify([inputs(),bt.dataset.transportRefreshAt||'']);
           if (key === signature) return;
           signature = key;
           controller?.abort();regionalControllers.delete(controller);
