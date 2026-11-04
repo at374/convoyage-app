@@ -60,9 +60,9 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
    const operators=[...new Set(legs.filter(l=>l.mode.startsWith('pt_pub'))
     .map(l=>l.provider).filter(name=>typeof name==='string'&&name.trim()))];
    const providerTags=operators.flatMap(name=>{
-    const normalized=name.toLowerCase();
-    if(/flixbus/.test(normalized))return ['FlixBus'];
-    if(/blablacar/.test(normalized))return [/bus/.test(normalized)?'BlaBlaCar Bus':'BlaBlaCar'];
+    const normalized=name.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+    if(/(?:^| )flixbus(?: |$)/.test(normalized))return ['FlixBus'];
+    if(/(?:^| )blablacar(?: |$)/.test(normalized))return [/\bbus\b/.test(normalized)?'BlaBlaCar Bus':'BlaBlaCar'];
     return [];
    });
    found.push({departure:new Date(departure).toISOString(),arrival:new Date(arrival).toISOString(),legs,priceEUR:null,
