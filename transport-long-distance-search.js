@@ -4,6 +4,7 @@
 'use strict';
 const adapters=root.CPTransportAdapters||(typeof module==='object'&&module.exports?require('./transport-adapters.js'):null);
 const PROVIDERS=['FlixBus','BlaBlaCar','BlaBlaCar Bus'];
+const ranking=root.CPTransportRanking||(typeof module==='object'&&module.exports?require('./transport-ranking.js'):null);
 function validQuery(query){
  if(!query||typeof query!=='object'||Array.isArray(query))throw new Error('Invalid long-distance search');
  for(const key of ['from','to'])if(typeof query[key]!=='string'||!query[key].trim()||query[key].length>200)
@@ -33,7 +34,18 @@ async function searchLongDistance(query,fetchers={}){
  return {query:input,providers:results,offers:results.flatMap(r=>r.offers),
   serviceConfirmed:false,pricesVerified:false};
 }
-const api={searchLongDistance,validQuery,PROVIDERS};
+// Combine pre-existing SNCF/TER candidates with long-distance candidates.
+// Rankings remain explicitly provisional until door-to-door evidence is available.
+function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
+ const regional=Array.isArray(regionalJourneys)?regionalJourneys:[];
+ const longDistance=Array.isArray(longDistanceResult?.offers)?longDistanceResult.offers:[];
+ const candidates=[...regional,...longDistance];
+ const choices=ranking.rank(candidates,options);
+ return {candidates,choices,providerStatuses:longDistanceResult?.providers||[],
+  allSourcesConnected:PROVIDERS.every(provider=>
+   longDistanceResult?.providers?.some(p=>p.provider===provider&&p.status==='candidates-unverified'))};
+}
+const api={searchLongDistance,compareWithRegional,validQuery,PROVIDERS};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportLongDistanceSearch=api;
 })(typeof window!=='undefined'?window:globalThis);
