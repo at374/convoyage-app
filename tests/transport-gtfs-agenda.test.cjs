@@ -529,3 +529,11 @@ test('dated Y51 references are displayed separately from confirmed fares and pro
   assert.match(fallback.textContent,/Retour : 1 horaire/);assert.doesNotMatch(fallback.textContent,/Référence Y51/);
  }finally{global.CPTY51Fares=previous;}
 });
+
+test('GTFS mission time rejects invalid timezone offsets and missing task objects',()=>{
+ for(const bad of [null,undefined,false,[]])assert.throws(()=>agenda.searchWindow(bad),/Invalid mission task/);
+ for(const invalid of ['2026-11-02T12:00:00+14:30','2026-11-02T12:00:00+15:00','2026-11-02T12:00:00-14:01','2026-11-02T12:00:00+01:60']){
+  assert.throws(()=>agenda.searchWindow({latestArrival:invalid}),/Invalid mission timestamp/);
+ }
+ assert.equal(agenda.searchWindow({latestArrival:'2026-11-02T12:00:00+14:00'}).marginMinutes,15);
+});
