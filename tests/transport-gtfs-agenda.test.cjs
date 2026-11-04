@@ -38,6 +38,11 @@ test('time windows include previous service days, explicit horizon, margin and m
  assert.throws(()=>agenda.searchWindow({}),/Missing/);
  for(const latestArrival of ['2026-02-30T12:00:00Z','2026-11-02T24:00:00Z'])assert.throws(()=>agenda.searchWindow({latestArrival}),/timestamp/);
  assert.throws(()=>agenda.searchWindow({...task,latestArrival:'2026-11-02T12:00:00'}),/timestamp/);
+ for(const bad of ['2026-11-02T12:00:00+25:00','2026-11-02T12:00:00+01:99','2026-11-02T12:00:00-24:00']){
+  assert.throws(()=>agenda.searchWindow({earliestDeparture:bad}),/timestamp/);
+  assert.throws(()=>agenda.searchWindow({latestArrival:bad}),/timestamp/);
+ }
+ assert.equal(agenda.searchWindow({earliestDeparture:'2026-11-02T12:00:00+01:00'}).earliestDeparture,'2026-11-02T11:00:00.000Z');
  assert.throws(()=>agenda.searchWindow({...task,latestArrival:'2026-11-01T12:00:00Z'}),/Inverted/);
 });
 test('mount shares one load across tasks, deduplicates rows, uses text nodes and reports limits',async()=>{
