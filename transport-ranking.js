@@ -120,11 +120,29 @@
     const transfer=finite(opts.minTransferMinutes)?Math.max(0,opts.minTransferMinutes):3;
     if(departure-arrival<transfer*60000)return null;
     const end=a[a.length-1].toPoint,start=b[0].fromPoint;
-    if(!point(end)||!point(start)||metres(end,start)>10)return null;
+    if(!point(end)||!point(start))return null;
+    const sameStop=metres(end,start)<=10;
+    // Distinct stops require an independently routed, timed walking segment.
+    // Coordinates alone never imply a pedestrian path or walking duration.
+    let walking=null;
+    if(!sameStop){
+      const walk=opts.walkingConnection;
+      if(!walk||walk.mode!=='wa_wal'||walk.routeVerified!==true||
+        !validTime(walk.departure)||!validTime(walk.arrival)||
+        !point(walk.fromPoint)||!point(walk.toPoint)||
+        metres(end,walk.fromPoint)>10||metres(start,walk.toPoint)>10||
+        Date.parse(walk.departure)<arrival||
+        Date.parse(walk.arrival)>departure||
+        Date.parse(walk.arrival)<=Date.parse(walk.departure)||
+        !finite(walk.distanceMeters)||walk.distanceMeters<0||
+        walk.distanceMeters>2*((Date.parse(walk.arrival)-Date.parse(walk.departure))/1000)+10||
+        departure-Date.parse(walk.arrival)<60000)return null;
+      walking={...walk,serviceConfirmed:false};
+    }
     const candidate={
       id:String(first.id??'regional')+'+'+String(second.id??'long-distance'),
       provider:'Multiréseau',departure:first.departure,arrival:second.arrival,
-      legs:[...a,...b],priceEUR:null,fareVerified:false,
+      legs:[...a,...(walking?[walking]:[]),...b],priceEUR:null,fareVerified:false,
       exactOrigin:first.exactOrigin===true,exactDestination:second.exactDestination===true,
       accessVerified:false,serviceConfirmed:false,
       source:'Correspondance multiréseau à vérifier',
