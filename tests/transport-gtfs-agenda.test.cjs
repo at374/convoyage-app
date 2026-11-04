@@ -638,3 +638,21 @@ test('invalid GTFS row timezone falls back to the official network timezone',asy
  assert.doesNotMatch(target.textContent,/recherche indisponible/);
  session.dispose();
 });
+
+test('Agenda rejects impossible GTFS transfer chronology',async()=>{
+ const base={departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T12:00:00Z'};
+ for(const legs of [
+  [{departure:base.departure,arrival:'2026-11-02T11:45:00Z'},{departure:'2026-11-02T11:40:00Z',arrival:base.arrival}],
+  [{departure:base.departure,arrival:'2026-11-02T11:20:00Z'},{departure:'2026-11-02T11:30:00Z',arrival:'2026-11-02T12:10:00Z'}],
+  [{departure:'2026-11-02T11:05:00Z',arrival:'2026-11-02T11:20:00Z'},{departure:'2026-11-02T11:30:00Z',arrival:base.arrival}],
+  [{departure:base.departure,arrival:'2026-11-02T11:20:00'},{departure:'2026-11-02T11:30:00Z',arrival:base.arrival}]
+ ]){
+  const target=panel();
+  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+   load:async()=>summary,query:async()=>({rows:[row({...base,legs})],truncated:false}),dispose(){}
+  })});
+  await session.done;
+  assert.match(target.textContent,/recherche indisponible/);
+  session.dispose();
+ }
+});
