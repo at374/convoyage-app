@@ -119,3 +119,8 @@ assert.equal(walkingCandidate.accessVerified,false);
 assert.equal(walkingCandidate.accessMinutes,6);
 assert.throws(()=>missionPickupCandidates(calendar,index,new Map(),'2026-10-29',
  {earliestDeparture:'07:50:00',pickupTime:'08:40:00',accessMinutes:-2}),/access duration/);
+
+assert.equal(pickup.transportConfirmed,false);
+assert.deepEqual(pickup.confirmationBlockers,['walking-access-unknown','realtime-service-unverified']);
+assert.equal(walkingCandidate.transportConfirmed,false);
+assert.deepEqual(walkingCandidate.confirmationBlockers,['walking-route-unverified','realtime-service-unverified']);
