@@ -12,6 +12,12 @@
     const calendar=new Date(Date.UTC(year,month-1,day));
     return year>=100&&calendar.getUTCFullYear()===year&&calendar.getUTCMonth()===month-1&&calendar.getUTCDate()===day&&Number.isFinite(Date.parse(v));
   }
+  function location(p){return p&&finite(p.lat)&&finite(p.lon??p.lng)&&Math.abs(p.lat)<=90&&Math.abs(p.lon??p.lng)<=180;}
+  function meters(a,b){
+    const rad=Math.PI/180,dLat=(b.lat-a.lat)*rad,dLon=((b.lon??b.lng)-(a.lon??a.lng))*rad;
+    const h=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLon/2)**2;
+    return 12742000*Math.asin(Math.min(1,Math.sqrt(h)));
+  }
   function evaluate(item,opts={}){
     const legs=Array.isArray(item.legs)?item.legs:[];
     const departure=validTime(item.departure)?Date.parse(item.departure):NaN;
@@ -42,6 +48,16 @@
     if(hasTimedLeg&&legs.length&&timelineValid){
       timelineValid=Date.parse(legs[0].departure)===departure&&
         Date.parse(legs[legs.length-1].arrival)===arrival;
+    }
+    // When providers supply stop coordinates, a transfer cannot silently
+    // jump between distant stops without a walking or other connecting leg.
+    for(let i=0;i<legs.length&&timelineValid;i++){
+      const leg=legs[i];
+      if(leg?.fromPoint!==undefined&&!location(leg.fromPoint)||leg?.toPoint!==undefined&&!location(leg.toPoint)){
+        timelineValid=false;break;
+      }
+      if(i&&legs[i-1]?.toPoint!==undefined&&leg?.fromPoint!==undefined&&
+        meters(legs[i-1].toPoint,leg.fromPoint)>50){timelineValid=false;break;}
     }
     const allVerified=timelineValid&&legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
