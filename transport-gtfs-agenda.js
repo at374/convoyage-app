@@ -163,7 +163,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       const result=await client.query({method:'missionJourneys',date,origin:task.from,destination:task.to,
        window,connectionDates:dates,limit:100,radiusMeters:700,order:task.label==='Aller'?'latestDeparture':'earliestDeparture'});
       if(!active())return;
-      truncated=truncated||result.truncated;rows.push(...result.rows);
+      if(!result||!Array.isArray(result.rows))throw new Error('Invalid GTFS journey response');
+      truncated=truncated||result.truncated===true;rows.push(...result.rows);
      }
      const unique=new Map(rows.map(row=>[JSON.stringify([row.networkId||null,row.tripId,row.from,row.to,row.departure,row.arrival,
       row.transferStopId||null,row.legs?.map(leg=>[leg.networkId||null,leg.tripId,leg.from,leg.to,leg.departure,leg.arrival])||null]),row]));
