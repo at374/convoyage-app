@@ -81,7 +81,11 @@
     }
     // Multi-leg journeys require per-leg timestamps to verify each connection.
     // A single legacy untimed leg remains supported for direct services.
-    const chronologyVerified=legs.length<=1||hasTimedLeg;
+    // A zero-minute connection is not a verified interchange unless the
+    // provider explicitly confirms continuity/transfer at that instant.
+    const zeroGap=hasTimedLeg&&legs.some((leg,i)=>i>0&&
+      Date.parse(leg?.departure)===Date.parse(legs[i-1]?.arrival));
+    const chronologyVerified=(legs.length<=1||hasTimedLeg)&&(!zeroGap||item.transferVerified===true);
     const allVerified=timelineValid&&chronologyVerified&&legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
     // Detect cross-operator transfers from leg evidence, even if the
