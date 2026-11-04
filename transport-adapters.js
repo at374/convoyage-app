@@ -113,6 +113,10 @@
       const to=typeof o.to==='string'&&o.to.trim()?o.to.trim():null;
       if(!from||!to)return [];
       const leg={provider,line:typeof o.line==='string'?o.line:null,from,to,departure,arrival,
+        serviceTripId:typeof o.serviceTripId==='string'?o.serviceTripId:null,
+        routeId:typeof o.routeId==='string'?o.routeId:null,
+        fromStopCode:typeof o.fromStopCode==='string'?o.fromStopCode:null,
+        toStopCode:typeof o.toStopCode==='string'?o.toStopCode:null,
         serviceConfirmed:false,verifiedPriceEUR:null,fareVerified:false,fareSource:null,
         fareValidFrom:null,fareValidUntil:null,passAccepted:false,passProduct:null,
         passEligibilityVerified:false,passEligibilitySource:null,passValidFrom:null,passValidUntil:null};
