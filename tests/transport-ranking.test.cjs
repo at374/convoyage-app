@@ -44,8 +44,8 @@ assert.equal(rank([atTwenty],{deadline,marginMinutes:30,exactGPSReliable:true}).
 
 const legTime=(departure,arrival)=>({departure,arrival,serviceConfirmed:true});
 const connectedJourney={...base,legs:[
- legTime('2026-11-02T07:00:00+01:00','2026-11-02T07:40:00+01:00'),
- legTime('2026-11-02T07:45:00+01:00','2026-11-02T08:15:00+01:00')
+ {...legTime('2026-11-02T07:00:00+01:00','2026-11-02T07:40:00+01:00'),fromPoint:{lat:45.9,lon:6.12},toPoint:{lat:45.91,lon:6.13}},
+ {...legTime('2026-11-02T07:45:00+01:00','2026-11-02T08:15:00+01:00'),fromPoint:{lat:45.91,lon:6.13},toPoint:{lat:45.92,lon:6.14}}
 ]};
 assert.equal(evaluate(connectedJourney,{deadline}).feasible,true,'Chronological connection remains feasible');
 assert.equal(evaluate({...connectedJourney,legs:[
@@ -81,3 +81,5 @@ const gpsLegs=[
 ];
 assert.equal(evaluate({...connectedJourney,legs:gpsLegs},{deadline}).feasible,false,'Disconnected stops cannot be treated as a confirmed connection');
 assert.equal(evaluate({...connectedJourney,legs:[gpsLegs[0],{...gpsLegs[1],fromPoint:{lat:45.902,lon:6.122}}]},{deadline}).feasible,true,'Connected stops preserve valid transfer');
+
+assert.equal(evaluate({...connectedJourney,legs:[connectedJourney.legs[0],{...connectedJourney.legs[1],fromPoint:null}]},{deadline}).feasible,false,'Missing transfer stop coordinates cannot certify a multi-leg route');
