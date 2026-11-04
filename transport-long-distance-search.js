@@ -77,7 +77,7 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
  // Apply the safety margin before ranking, even when caller omits deadline.
  const isReturn=options?.direction==='return';
  const pickupDeadline=isReturn?null:timestamp(options?.deadline)??latest;
- const requestedMargin=Number.isFinite(options?.marginMinutes)?options.marginMinutes:15;
+ const requestedMargin=Number.isFinite(options?.marginMinutes)?Math.max(0,options.marginMinutes):15;
  const minimumMargin=journey=>options?.exactGPSReliable===true&&journey.exactDestination===true&&journey.accessVerified===true?5:15;
  const marginMinutes=isReturn?0:requestedMargin;
  const safeCandidates=pickupDeadline===null?candidates:candidates.filter(journey=>
