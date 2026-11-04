@@ -2262,7 +2262,7 @@
       junctionCombined.className='doux';
       junctionCombined.setAttribute('data-junction-combined','');
       const refreshJunctionCombined=()=>{
-        if(!junctionLongDistanceResult||!junctionRegionalJourneys.length||
+        if(!regionalActive()||!junctionLongDistanceResult||!junctionRegionalJourneys.length||
             !window.CPTransportLongDistanceSearch?.compareWithRegional)return;
         const result=window.CPTransportLongDistanceSearch.compareWithRegional(
           junctionRegionalJourneys,junctionLongDistanceResult,{
@@ -2379,7 +2379,7 @@
             refresh: !!bt.dataset.transportRefreshAt,
             fetcher: regionalFetch
           }).then(answer => {
-            if (!regionalActive() || !regionalStatus.isConnected) return;
+            if (signal.aborted || !regionalActive() || !regionalStatus.isConnected) return;
             const options = window.CPRegionalRouting.feasibleBetween(
               answer.itineraries, deliveryDate, next.pickup_start, securityMarginMin);
             regionalStatus.textContent = options.length ?
