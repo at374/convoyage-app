@@ -192,3 +192,15 @@ test('malformed provider entries do not crash TripGo parsing or hide independent
  assert.equal(remaining.length,1);
  assert.equal(remaining[0].legs[1].line,'FlixBus 1789');
 });
+
+test('TripGo never suggests an explicitly cancelled itinerary even if availability remains AVAILABLE',()=>{
+ for(const field of ['cancelled','canceled']){
+  const data=clone();
+  const eligible=data.groups[0].trips.find(t=>t.depart*1000>=Date.parse(options.when)&&t.segments.length>1);
+  assert.ok(eligible);
+  eligible[field]=true;
+  const results=api.parse(data,options).itineraries;
+  assert.equal(results.length,1);
+  assert.equal(results[0].legs[1].line,'FlixBus 1789');
+ }
+});

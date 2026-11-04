@@ -32,7 +32,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
    if(!trip||typeof trip!=='object')continue;
    const departure=epoch(trip.depart),arrival=epoch(trip.arrive);
    if(!Number.isFinite(departure)||!Number.isFinite(arrival)||arrival<=departure||arrival-departure>172800000||
-    trip.availability!=='AVAILABLE'||trip.hideExactTimes===true||!Array.isArray(trip.segments)||!trip.segments.length||trip.segments.length>50||
+    trip.availability!=='AVAILABLE'||trip.cancelled===true||trip.canceled===true||trip.hideExactTimes===true||!Array.isArray(trip.segments)||!trip.segments.length||trip.segments.length>50||
     (arriveBy?arrival>time(when):departure<time(when))||latestArrival!==undefined&&arrival>time(latestArrival))continue;
    const legs=[];let valid=true,previous=departure;
    for(const ref of trip.segments){
