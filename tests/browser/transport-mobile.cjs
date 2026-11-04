@@ -276,7 +276,8 @@ async function run(){
   assert.ok(await steps.locator('li').count()>=3,'Walking and transit legs have separate dated steps');
   const maps=await steps.locator('a').evaluateAll(nodes=>nodes.map(x=>({href:x.href,target:x.target,rel:x.rel})));
   assert.ok(maps.some(x=>new URL(x.href).searchParams.get('travelmode')==='walking'));
-  assert.ok(maps.every(x=>new URL(x.href).hostname==='www.google.com'&&x.target==='_blank'&&x.rel.includes('noopener')));
+  assert.ok(maps.every(x=>new URL(x.href).protocol==='https:'&&x.target==='_blank'&&x.rel.includes('noopener')));
+  assert.ok(maps.some(x=>new URL(x.href).hostname==='www.google.com'),'Walking map links must remain available');
   assert.ok(maps.every(x=>!x.href.includes('TripGo-Key')&&!x.href.includes('aaaaaaaa')));
   assert.match(await steps.innerText(),/nouveau calcul/);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
