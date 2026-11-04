@@ -176,6 +176,7 @@ async function compareWithRoutedWalks(regionalJourneys,longDistanceResult,option
  const walkingConnections=[...(Array.isArray(options.walkingConnections)?options.walkingConnections:[])];
  const maxRoutes=12;
  let attempts=0;
+ const routedPairs=new Map();
  const regionalPool=[...regional].sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)).slice(0,100);
  const longPool=[...longDistance].sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)).slice(0,100);
  outer:for(const [firstPool,secondPool] of [[regionalPool,longPool],[longPool,regionalPool]])
@@ -189,10 +190,15 @@ async function compareWithRoutedWalks(regionalJourneys,longDistanceResult,option
    // Do not call external routing for pairs already covered by a valid walk.
    if(walkingConnections.some(w=>w?.routeVerified===true&&stopDistance(w.fromPoint,from)<=10&&
     stopDistance(w.toPoint,to)<=10&&Date.parse(w.departure)>=arrival&&Date.parse(w.arrival)<=departure))continue;
-   attempts++;
+   const pairKey=JSON.stringify([from.lat,from.lon??from.lng,to.lat,to.lon??to.lng]);
    let route;
-   try{route=await router.route({lat:from.lat,lon:from.lon??from.lng},
-    {lat:to.lat,lon:to.lon??to.lng});}catch(_){continue;}
+   if(routedPairs.has(pairKey))route=routedPairs.get(pairKey);
+   else{
+    attempts++;
+    try{route=await router.route({lat:from.lat,lon:from.lon??from.lng},
+     {lat:to.lat,lon:to.lon??to.lng});}catch(_){route=null;}
+    routedPairs.set(pairKey,route);
+   }
    if(route?.status!=='calculated'||route.endpointsMatched!==true||
     !Number.isFinite(route.durationSeconds)||route.durationSeconds<=0||
     !Number.isFinite(route.distanceMeters)||route.distanceMeters<distance-10)continue;
