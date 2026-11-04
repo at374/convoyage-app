@@ -110,3 +110,12 @@ const invalidChronology=buildIndex({
  'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT,09:00:00,09:00:00,G,1\nT,08:30:00,08:30:00,A,2\n'
 });
 assert.equal(borderSegments(invalidChronology,new Map([['G','CH'],['A','FR']])).segments.length,0);
+
+const walkingCandidate=missionPickupCandidates(calendar,index,new Map([['G','CH'],['A','FR']]),'2026-10-29',
+ {earliestDeparture:'07:50:00',pickupTime:'08:40:00',accessMinutes:6});
+assert.equal(walkingCandidate.segments.length,0);
+assert.equal(walkingCandidate.accessDurationProvided,true);
+assert.equal(walkingCandidate.accessVerified,false);
+assert.equal(walkingCandidate.accessMinutes,6);
+assert.throws(()=>missionPickupCandidates(calendar,index,new Map(),'2026-10-29',
+ {earliestDeparture:'07:50:00',pickupTime:'08:40:00',accessMinutes:-2}),/access duration/);
