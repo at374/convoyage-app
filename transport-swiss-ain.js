@@ -36,6 +36,22 @@ function crossBorderRoutes(index,{genevaBounds=GENEVA,ainBounds=AIN,maxTrips=100
  return {routes:[...found.values()],truncated,scannedTrips:Math.min(scanned,maxTrips),
   timetableOnly:true,serviceConfirmed:false};
 }
+// Normalize an externally verified country manifest without guessing from names
+// or coordinates. Conflicting duplicate stop IDs are rejected rather than
+// silently assigning a country to the wrong platform.
+function verifiedCountryMap(rows){
+ if(!Array.isArray(rows))throw new Error('Verified country manifest required');
+ const result=new Map();
+ for(const row of rows){
+  const id=typeof row?.stopId==='string'?row.stopId.trim():'';
+  const country=row?.country;
+  if(!id||!['CH','FR'].includes(country)||row?.verified!==true)
+   throw new Error('Unverified GTFS stop country');
+  if(result.has(id)&&result.get(id)!==country)throw new Error('Conflicting GTFS stop country');
+  result.set(id,country);
+ }
+ return result;
+}
 // Country codes must come from a separately verified stop-to-country dataset.
 // GTFS stop coordinates and names alone cannot establish a national border.
 // A route must actually contain consecutive boarding points on opposite sides.
@@ -127,7 +143,7 @@ function missionBorderSegments(files,index,countryByStop,date,{earliestDeparture
   return departure!==null&&arrival!==null&&departure>=start&&arrival<=end&&arrival>=departure;
  }),missionWindowChecked:true,serviceConfirmed:false};
 }
-const api={GENEVA,AIN,inside,crossBorderRoutes,verifiedBorderRoutes,borderSegments,datedBorderSegments,missionBorderSegments,missionPickupCandidates};
+const api={GENEVA,AIN,inside,crossBorderRoutes,verifiedBorderRoutes,borderSegments,datedBorderSegments,missionBorderSegments,missionPickupCandidates,verifiedCountryMap};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPSwissAinGTFS=api;
 })(typeof window!=='undefined'?window:globalThis);
