@@ -466,3 +466,23 @@ test('routed walking bridge reuses the same stop pair across multiple services',
  assert.ok(result.candidates.some(x=>x.id==='r1+c1'));
  assert.ok(result.candidates.some(x=>x.id==='r2+c2'));
 });
+
+test('routed walking bridge rejects implausibly fast pedestrian geometry',async()=>{
+ const {compareWithRoutedWalks}=require('../transport-long-distance-search.js');
+ const from={lat:45.91,lon:6.13},to={lat:45.911,lon:6.131};
+ const regional={id:'regional',departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+  legs:[{departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+   fromPoint:{lat:45.9,lon:6.12},toPoint:from}]};
+ const coach={id:'coach',departure:'2026-11-02T07:48:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+  legs:[{departure:'2026-11-02T07:48:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+   fromPoint:to,toPoint:{lat:45.92,lon:6.14}}]};
+ const options={deadline:'2026-11-02T09:00:00+01:00'};
+ const tooFast={route:async()=>({status:'calculated',endpointsMatched:true,
+  durationSeconds:30,distanceMeters:160})};
+ const wrongEndpoint={route:async()=>({status:'calculated',endpointsMatched:true,
+  durationSeconds:180,distanceMeters:160,from:{lat:45.92,lon:6.13},to})};
+ for(const router of [tooFast,wrongEndpoint]){
+  const result=await compareWithRoutedWalks([regional],{offers:[coach]},options,router);
+  assert.equal(result.candidates.some(x=>x.id==='regional+coach'),false);
+ }
+});
