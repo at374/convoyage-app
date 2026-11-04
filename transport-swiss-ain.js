@@ -36,7 +36,28 @@ function crossBorderRoutes(index,{genevaBounds=GENEVA,ainBounds=AIN,maxTrips=100
  return {routes:[...found.values()],truncated,scannedTrips:Math.min(scanned,maxTrips),
   timetableOnly:true,serviceConfirmed:false};
 }
-const api={GENEVA,AIN,inside,crossBorderRoutes};
+// Country codes must come from a separately verified stop-to-country dataset.
+// GTFS stop coordinates and names alone cannot establish a national border.
+function verifiedBorderRoutes(index,countryByStop,{maxTrips=100000}={}){
+ if(!index?.tripById||!index?.timesByTrip||!index?.routeById)throw new Error('GTFS index required');
+ if(!(countryByStop instanceof Map))throw new Error('Verified stop-country map required');
+ if(!Number.isSafeInteger(maxTrips)||maxTrips<1)throw new Error('Invalid GTFS scan limit');
+ const routes=new Map();let scanned=0,truncated=false;
+ for(const [tripId,trip] of index.tripById){
+  if(scanned>=maxTrips){truncated=true;break;}
+  scanned++;
+  const times=index.timesByTrip.get(tripId)||[];
+  const countries=new Set(times.map(t=>countryByStop.get(t.stop_id)).filter(c=>c==='CH'||c==='FR'));
+  if(!countries.has('CH')||!countries.has('FR'))continue;
+  const route=index.routeById.get(trip.route_id);if(!route)continue;
+  const key=String(trip.route_id);
+  if(!routes.has(key))routes.set(key,{routeId:key,line:route.route_short_name||route.route_long_name||key,tripCount:0});
+  routes.get(key).tripCount++;
+ }
+ return {routes:[...routes.values()],scannedTrips:scanned,truncated,
+  countryEvidence:'verified-stop-map',timetableOnly:true,serviceConfirmed:false};
+}
+const api={GENEVA,AIN,inside,crossBorderRoutes,verifiedBorderRoutes};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPSwissAinGTFS=api;
 })(typeof window!=='undefined'?window:globalThis);
