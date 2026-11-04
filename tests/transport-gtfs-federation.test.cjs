@@ -154,3 +154,15 @@ test('estimated inter-network transfer threshold is exposed but never marked ver
  assert.equal(transfer.walkingDurationSeconds,null);
  assert.equal(transfer.serviceConfirmed,false);
 });
+
+test('federation accepts a valid zero-coordinate transfer stop',()=>{
+ const a=feed('A','first'),b=feed('B','second');
+ a.files['stops.txt']=a.files['stops.txt'].replace('X,Exit,45.8,6.2','X,Exit,0,0');
+ b.files['stops.txt']=b.files['stops.txt'].replace('X,Board,45.8005,6.2','X,Board,0,0');
+ a.index=g.buildIndex(a.files);b.index=g.buildIndex(b.files);
+ const result=search([a,b]);
+ assert.equal(result.journeys.length,1);
+ assert.equal(result.journeys[0].transferStop.lat,0);
+ assert.equal(result.journeys[0].transferStop.lon,0);
+ assert.equal(result.journeys[0].transferVerified,false);
+});
