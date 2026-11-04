@@ -13,7 +13,7 @@
       exactOrigin:false,
       exactDestination:false,
       accessVerified:false,
-      legs:(Array.isArray(it.legs)?it.legs:[]).map(leg=>({
+      legs:(Array.isArray(it.legs)?it.legs:[]).filter(leg=>leg&&typeof leg==='object'&&!Array.isArray(leg)).map(leg=>({
         provider:'SNCF',
         line:leg.line||null,
         from:leg.from||null,
@@ -53,7 +53,7 @@
       exactOrigin:false,
       exactDestination:false,
       accessVerified:false,
-      legs:(Array.isArray(it.legs)?it.legs:[]).map(leg=>({
+      legs:(Array.isArray(it.legs)?it.legs:[]).filter(leg=>leg&&typeof leg==='object'&&!Array.isArray(leg)).map(leg=>({
         provider:name,
         line:leg.line||leg.route||null,
         from:leg.from||leg.fromStop||null,
@@ -89,7 +89,7 @@
     return adaptGTFS((Array.isArray(itineraries)?itineraries:[]).filter(it=>it&&typeof it==='object'&&!Array.isArray(it)).map(it=>({
       departure:toISO(it.startTime),
       arrival:toISO(it.endTime),
-      legs:(Array.isArray(it.legs)?it.legs:[]).map(leg=>({
+      legs:(Array.isArray(it.legs)?it.legs:[]).filter(leg=>leg&&typeof leg==='object'&&!Array.isArray(leg)).map(leg=>({
         ...leg,
         departure:toISO(leg.departure??leg.startTime),
         arrival:toISO(leg.arrival??leg.endTime)
