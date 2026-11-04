@@ -2767,7 +2767,7 @@
                   (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
                   rides.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
                     ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
-                  '. Marge minimale de 5 min après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, approche piétonne, tarifs et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                  '. Marge minimale de 15 min avant prise en charge, après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, approche piétonne, tarifs et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                   (changes.length ?
                     '🚌 Aller SIBRA avec 1 correspondance (horaires théoriques) depuis le centre de ' +
                     (etat.reglages.domicile_ville || 'la ville du domicile') + ' : ' +
@@ -2775,8 +2775,8 @@
                       ' → changement ' + clock(j.firstLeg.arrivalSeconds) + ' / ' +
                       clock(j.secondLeg.departureSeconds) + ' → ' +
                       j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
-                    '. Marge minimale de 5 min après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, marche et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
-                    'Aller SIBRA : aucun bus direct ou avec 1 correspondance trouvé avec 5 min de marge minimale depuis le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.');
+                    '. Marge minimale de 15 min avant prise en charge, après estimation minimale de marche à 1,2 m/s en ligne droite (non vérifiée). Domicile exact, marche et circulation non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                    'Aller SIBRA : aucun bus direct ou avec 1 correspondance trouvé avec 15 min de marge minimale depuis le centre de la ville du domicile. Transport non confirmé — vérifiez vous-même.');
               } else {
                 outbound.textContent = pickupDay && !pickupResult?.usable ?
                   'Aller SIBRA ' + pickupDay +
