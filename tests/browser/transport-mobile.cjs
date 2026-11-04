@@ -196,6 +196,13 @@ async function run(){
   assert.match(await providerStatus.innerText(),/FlixBus et BlaBlaCar/);
   assert.match(await providerStatus.innerText(),/Aucun départ ni tarif confirmé/);
   const longDistanceStatus=page.locator('[data-long-distance-search="Retour"]');
+  assert.ok(await longDistanceStatus.count(),
+    'Retour provider slot missing: '+JSON.stringify(await page.evaluate(()=>({
+      engine:!!window.CPTransportLongDistanceSearch,
+      fetchers:Object.keys(window.CP_LONG_DISTANCE_FETCHERS||{}),
+      slots:[...document.querySelectorAll('[data-long-distance-search]')].map(x=>x.getAttribute('data-long-distance-search')),
+      home:document.querySelector('#cpTransportMissionDetails')?.textContent?.slice(0,200)
+    }))));
   await page.waitForFunction(()=>{const value=document.querySelector('[data-long-distance-search="Retour"]')?.textContent||'';
     return value.includes('fournisseur(s) ayant répondu')||value.includes('indisponible')||value.includes('date invalide');
   });
