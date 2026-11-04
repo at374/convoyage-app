@@ -297,3 +297,13 @@ test('TripGo parser retains two services with identical times but different tick
  assert.ok(links.includes('https://tickets.example.org/original'));
  assert.ok(links.includes('https://tickets.example.org/alternative'));
 });
+
+
+test('TripGo ranking preserves different service IDs on identical schedules',()=>{
+ const first=api.parse(clone(),options).itineraries[0];
+ const different={...first,legs:first.legs.map((leg,index)=>index===1?{...leg,serviceTripId:'different-service-id'}:{...leg})};
+ const choices=api.selectChoices([first,different],null,3);
+ assert.equal(choices.length,2);
+ assert.equal(choices[0].journey,first);
+ assert.equal(choices[1].journey,different);
+});
