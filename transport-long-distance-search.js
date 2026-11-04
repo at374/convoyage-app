@@ -99,7 +99,8 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
   // every regional/long-distance pair.
   const walkingConnections=(Array.isArray(options?.walkingConnections)?options.walkingConnections:[])
    .filter(w=>w&&w.routeVerified===true&&timestamp(w.departure)!==null&&timestamp(w.arrival)!==null&&
-    stopDistance(w.fromPoint,w.toPoint)<Infinity);
+    stopDistance(w.fromPoint,w.toPoint)<Infinity&&
+    timestamp(w.arrival)>timestamp(w.departure));
   // Both orders matter: a regional feeder may precede a coach, or a
   // regional service may complete the journey after a long-distance arrival.
   // Stop at 100 combined candidates across both orders.
