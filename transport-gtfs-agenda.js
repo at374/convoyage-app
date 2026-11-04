@@ -166,7 +166,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(!result||!Array.isArray(result.rows))throw new Error('Invalid GTFS journey response');
       truncated=truncated||result.truncated===true;
       for(const journey of result.rows){
-       if(!journey||!Number.isFinite(Date.parse(journey.departure))||!Number.isFinite(Date.parse(journey.arrival))||
+       if(!journey||!Number.isFinite(timestamp(journey.departure))||!Number.isFinite(timestamp(journey.arrival))||
           Date.parse(journey.arrival)<Date.parse(journey.departure)||
           Date.parse(journey.departure)<Date.parse(window.earliestDeparture)||
           Date.parse(journey.arrival)>Date.parse(window.latestArrival)-window.marginMinutes*60000)
