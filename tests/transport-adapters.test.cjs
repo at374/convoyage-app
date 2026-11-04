@@ -101,3 +101,23 @@ require('node:test')('regional timestamps require explicit timezone or epoch mil
   assert.equal(source('2026-11-02T07:00:00+01:00','2026-11-02T08:00:00+01:00').departure,'2026-11-02T06:00:00.000Z');
   assert.equal(source(Date.parse(departure),Date.parse(arrival)).departure,'2026-11-02T06:00:00.000Z');
 });
+
+require('node:test')('long-distance providers normalize only valid offers without claiming verification',()=>{
+ const {adaptLongDistance}=require('../transport-adapters.js');
+ for(const provider of ['FlixBus','BlaBlaCar','BlaBlaCar Bus']){
+  const result=adaptLongDistance([{from:'Annecy',to:'Lyon',departure,arrival,priceEUR:1,
+   serviceConfirmed:true,fareVerified:true,exactOrigin:true}],provider);
+  assert.equal(result.length,1);
+  assert.equal(result[0].provider,provider);
+  assert.equal(result[0].priceEUR,null);
+  assert.equal(result[0].serviceConfirmed,false);
+  assert.equal(result[0].exactOrigin,false);
+  assert.equal(result[0].legs[0].fareVerified,false);
+  assert.equal(result[0].legs[0].verifiedPriceEUR,null);
+  assert.equal(result[0].legs[0].serviceConfirmed,false);
+ }
+ assert.equal(adaptLongDistance([{from:'A',to:'B',departure:arrival,arrival:departure}],'FlixBus').length,0);
+ assert.equal(adaptLongDistance([{from:'A',to:'B',departure:'2026-11-02T10:00:00',arrival}],'FlixBus').length,0);
+ assert.equal(adaptLongDistance([{from:'A',to:'',departure,arrival}],'FlixBus').length,0);
+ assert.throws(()=>adaptLongDistance([],'Unknown'),/Unsupported/);
+});
