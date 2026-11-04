@@ -656,3 +656,20 @@ test('Agenda rejects impossible GTFS transfer chronology',async()=>{
   session.dispose();
  }
 });
+
+test('Agenda rejects GTFS transfer intervals shorter than five or longer than 120 minutes',async()=>{
+ for(const [firstArrival,secondDeparture] of [
+  ['2026-11-02T11:20:00Z','2026-11-02T11:24:00Z'],
+  ['2026-11-02T09:00:00Z','2026-11-02T11:10:00Z']
+ ]){
+  const target=panel();
+  const legs=[{departure:'2026-11-02T08:00:00Z',arrival:firstArrival},
+   {departure:secondDeparture,arrival:'2026-11-02T12:00:00Z'}];
+  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+   load:async()=>summary,query:async()=>({rows:[row({departure:'2026-11-02T08:00:00Z',legs})],truncated:false}),dispose(){}
+  })});
+  await session.done;
+  assert.match(target.textContent,/recherche indisponible/);
+  session.dispose();
+ }
+});
