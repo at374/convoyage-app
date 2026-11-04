@@ -139,3 +139,14 @@ assert.equal(rank([base],null).length,1,'Null ranking options must not crash');
 assert.equal(rank([base],false).length,1,'Malformed ranking options must not crash');
 assert.equal(rank(null,null).length,0,'Null journeys and options return empty results');
 console.log('transport-ranking: all assertions passed');
+
+const missingConnectionArrival={...connectedJourney,legs:[
+ {...connectedJourney.legs[0],toPoint:null},connectedJourney.legs[1]
+]};
+assert.equal(evaluate(missingConnectionArrival,{deadline}).feasible,false,
+ 'Missing arrival stop GPS cannot certify a connection even if the next boarding GPS exists');
+const missingConnectionDeparture={...connectedJourney,legs:[
+ connectedJourney.legs[0],{...connectedJourney.legs[1],fromPoint:null}
+]};
+assert.equal(evaluate(missingConnectionDeparture,{deadline}).feasible,false,
+ 'Missing boarding stop GPS cannot certify a transfer');
