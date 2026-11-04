@@ -129,3 +129,17 @@ test('verified GPS five-minute exception survives final ranking',()=>{
  assert.equal(rejected.candidates.length,0);
  assert.equal(rejected.choices.length,0);
 });
+
+test('distinct provider services and boarding stops are not collapsed at identical times',async()=>{
+ const base={from:'Annecy',to:'Lyon',departure:'2026-11-02T08:00:00+01:00',arrival:'2026-11-02T10:00:00+01:00',line:'A'};
+ const result=await searchLongDistance({from:'Annecy',to:'Lyon',date:'2026-11-02'},{
+  FlixBus:async()=>[{...base,serviceTripId:'trip-a',fromStopCode:'stop-1'},
+   {...base,serviceTripId:'trip-b',fromStopCode:'stop-1'},
+   {...base,serviceTripId:'trip-a',fromStopCode:'stop-2'},
+   {...base,serviceTripId:'trip-a',fromStopCode:'stop-1'}]
+ });
+ assert.equal(result.offers.length,3);
+ assert.deepEqual(result.offers.map(x=>[x.legs[0].serviceTripId,x.legs[0].fromStopCode]),
+  [['trip-a','stop-1'],['trip-b','stop-1'],['trip-a','stop-2']]);
+ assert.ok(result.offers.every(x=>x.priceEUR===null&&x.serviceConfirmed===false));
+});
