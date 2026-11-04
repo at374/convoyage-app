@@ -44,3 +44,12 @@ assert.equal(border.segments[0].serviceConfirmed,false);
 assert.equal(borderSegments(index,new Map([['G','CH'],['A','CH']])).segments.length,0);
 assert.equal(borderSegments(index,new Map()).segments.length,0);
 assert.throws(()=>borderSegments(index,new Map(),{maxSegments:0}),/limit/);
+
+assert.equal(border.segments[0].serviceDateVerified,false);
+const unordered=buildIndex({
+ 'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nG,Geneve,46.205,6.145\nA,Ain,46.256,6.110\n',
+ 'routes.txt':'route_id,route_short_name\nR,Border\n',
+ 'trips.txt':'route_id,service_id,trip_id\nR,WK,T\n',
+ 'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT,08:00:00,08:00:00,G,1\nT,08:20:00,08:20:00,A,1\n'
+});
+assert.equal(borderSegments(unordered,new Map([['G','CH'],['A','FR']])).segments.length,0);
