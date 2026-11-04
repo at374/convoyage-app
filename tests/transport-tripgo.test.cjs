@@ -211,3 +211,13 @@ test('TripGo exposes BlaBlaCar Bus and FlixBus provider tags without verifying f
   assert.equal(itinerary.serviceConfirmed,false);
  }
 });
+
+test('TripGo operator tags do not misidentify unrelated operators with similar names',()=>{
+ const response=clone();
+ for(const group of response.groups)for(const trip of group.trips)
+  for(const segment of trip.segments)
+   if(segment.externalData?.operatorName)segment.externalData.operatorName='NotFlixBusTransport';
+ const result=api.parse(response,options);
+ assert.ok(result.itineraries.length>0);
+ assert.ok(result.itineraries.every(it=>it.providerTags.length===0));
+});
