@@ -2269,6 +2269,7 @@
         if(!regionalActive()||!junctionLongDistanceResult||
             !Number.isFinite(Date.parse(deliveryDate||''))||
             !Number.isFinite(Date.parse(next?.pickup_start||''))||
+            Date.parse(next.pickup_start)<=Date.parse(deliveryDate)||
             !window.CPTransportLongDistanceSearch?.compareWithRegional){
           junctionCombined.remove();
           return;
