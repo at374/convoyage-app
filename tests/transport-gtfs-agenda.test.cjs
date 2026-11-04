@@ -761,3 +761,14 @@ test('Agenda keeps a valid direct service when a transfer has an impossible conn
  assert.match(target.textContent,/recherche partielle/);
  session.dispose();
 });
+
+test('Android PWA offline cache includes every versioned entrypoint script',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+ const worker=fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8');
+ const scripts=[...html.matchAll(/<script\\s+src="([^"]+)"/g)].map(match=>match[1]);
+ assert.ok(scripts.length>10,'Expected application scripts');
+ for(const script of scripts){
+  assert.ok(worker.includes("'"+script+"'"),'Missing Android offline script: '+script);
+ }
+ assert.match(worker,/const CACHE = 'cp-app-android-gtfs-validation-20261104-v\\d+'/);
+});
