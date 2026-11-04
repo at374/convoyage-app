@@ -70,6 +70,13 @@
         timelineValid=false;break;
       }
       if(i){
+        // An operator-provided minimum transfer duration is a constraint,
+        // not an estimated walking time. Never invent one when absent.
+        const required=leg?.minTransferMinutes;
+        if(required!==undefined&&(!finite(required)||required<0||
+          (Date.parse(leg.departure)-Date.parse(legs[i-1].arrival))<required*60000)){
+          timelineValid=false;break;
+        }
         const previousStop=legs[i-1]?.toPoint, nextStop=leg?.fromPoint;
         // One known transfer endpoint is insufficient to verify continuity.
         // Preserve legacy connections with neither coordinate supplied.
