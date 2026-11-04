@@ -183,8 +183,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
            Date.parse(second.departure)-Date.parse(first.arrival)>120*60000)
           {invalidJourneys++;continue;}
        }
+       rows.push(journey);
       }
-      rows.push(...result.rows);
      }
      const unique=new Map(rows.map(row=>[JSON.stringify([row.networkId||null,row.tripId,row.from,row.to,row.departure,row.arrival,
       row.transferStopId||null,row.legs?.map(leg=>[leg.networkId||null,leg.tripId,leg.from,leg.to,leg.departure,leg.arrival])||null]),row]));
