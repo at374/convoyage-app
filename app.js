@@ -2598,7 +2598,7 @@
               const normalized = window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptSNCF(itineraries));
               const deadline = label === 'Aller' && pickupDate ? pickupDate :
                 label === 'Jonction' && next?.pickup_start ? next.pickup_start : null;
-              const choices = window.CPTransportRanking.rank(normalized,{deadline,marginMinutes:securityMarginMin});
+              const choices = window.CPTransportRanking.rank(normalized,{deadline,earliestDeparture:label === 'Retour'||label === 'Jonction'?deliveryDate:null,direction:label === 'Retour'?'return':'outbound',marginMinutes:securityMarginMin});
               if (choices.length) {
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement SNCF de gare à gare : ' +
@@ -2679,7 +2679,8 @@
             }
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
-                window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')));
+                window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
+                {direction:'return',earliestDeparture:deliveryDate});
               if (ranked.length) {
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement Retour régional théorique : ' +
