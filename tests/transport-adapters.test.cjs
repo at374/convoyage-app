@@ -91,3 +91,13 @@ require('node:test')('fare evidence and fare calculation ignore invalid provider
   assert.equal(withVerifiedFares(broken,null).length,1);
   assert.equal(withVerifiedFares([null],null).length,0);
 });
+
+require('node:test')('regional timestamps require explicit timezone or epoch milliseconds',()=>{
+  const source=(startTime,endTime)=>adaptRegional([{startTime,endTime,legs:[]}])[0];
+  assert.equal(source('2026-11-02T07:00:00','2026-11-02T08:00:00').departure,null);
+  assert.equal(source('2026-11-02','2026-11-03').arrival,null);
+  assert.equal(source('2026-11-02T07:00:00+14:30','2026-11-02T08:00:00Z').departure,null);
+  assert.equal(source('2026-02-30T07:00:00Z','2026-11-02T08:00:00Z').departure,null);
+  assert.equal(source('2026-11-02T07:00:00+01:00','2026-11-02T08:00:00+01:00').departure,'2026-11-02T06:00:00.000Z');
+  assert.equal(source(Date.parse(departure),Date.parse(arrival)).departure,'2026-11-02T06:00:00.000Z');
+});
