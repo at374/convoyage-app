@@ -99,3 +99,15 @@ test('multiple untimed legs cannot certify a multimodal connection',()=>{
  assert.equal(evaluate(verified,opts).displayStatus,'Transport non confirmé — vérifiez vous-même');
  assert.equal(evaluate({...verified,legs:[{serviceConfirmed:true}]},opts).feasible,true);
 });
+
+test('cross-operator timed legs require verified interchange even without interNetwork flag',()=>{
+ const verified={...trip,exactOrigin:true,exactDestination:true,accessVerified:true,
+  legs:[
+   {provider:'SIBRA',departure:'2026-11-04T09:00:00+01:00',arrival:'2026-11-04T09:25:00+01:00',serviceConfirmed:true},
+   {provider:'SNCF',departure:'2026-11-04T09:30:00+01:00',arrival:'2026-11-04T10:00:00+01:00',serviceConfirmed:true}
+  ]};
+ const opts={deadline:'2026-11-04T10:15:00+01:00'};
+ assert.equal(evaluate(verified,opts).feasible,false);
+ assert.equal(evaluate({...verified,transferVerified:true},opts).feasible,true);
+ assert.equal(evaluate({...verified,legs:verified.legs.map(leg=>({...leg,provider:'SIBRA'}))},opts).feasible,true);
+});
