@@ -115,7 +115,13 @@ function selectChoices(itineraries,ranking,maxResults=3){
  const limit=Number.isInteger(maxResults)&&maxResults>0?Math.min(maxResults,10):3;
  const identity=j=>JSON.stringify([j.departure,j.arrival,
   (Array.isArray(j.legs)?j.legs:[]).map(l=>[l.mode,l.provider,l.line,l.departure,l.arrival])]);
- const ranked=ranking&&typeof ranking.rank==='function'?ranking.rank(input,{}):[];
+ let ranked=[];
+ if(ranking&&typeof ranking.rank==='function'){
+  try{
+   const result=ranking.rank(input,{});
+   if(Array.isArray(result))ranked=result;
+  }catch(_){ranked=[];}
+ }
  const choices=[],seen=new Set();
  const add=(label,journey)=>{
   if(!journey||choices.length>=limit)return;
