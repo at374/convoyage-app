@@ -30,8 +30,18 @@ async function searchLongDistance(query,fetchers={}){
     typeof item.departure==='string'&&item.departure.slice(0,10)===input.date&&
     normalizePlace(item.from)===normalizePlace(input.from)&&
     normalizePlace(item.to)===normalizePlace(input.to));
-   const offers=adapters.adaptLongDistance(onRequestedDay,provider);
-   return {provider,status:'candidates-unverified',offers};
+   // Bound large provider responses, collapse duplicate services, and keep deterministic order.
+   const adapted=adapters.adaptLongDistance(onRequestedDay,provider);
+   const unique=new Map();
+   for(const offer of adapted){
+    const key=JSON.stringify([offer.provider,offer.departure,offer.arrival,
+     offer.legs[0]?.from,offer.legs[0]?.to,offer.legs[0]?.line]);
+    if(!unique.has(key))unique.set(key,offer);
+   }
+   const offers=[...unique.values()].sort((a,b)=>
+    Date.parse(a.departure)-Date.parse(b.departure)||a.id.localeCompare(b.id)).slice(0,100);
+   return {provider,status:'candidates-unverified',offers,
+    truncated:unique.size>offers.length};
   }catch(_){return {provider,status:'provider-error',offers:[]};}
  }));
  return {query:input,providers:results,offers:results.flatMap(r=>r.offers),
