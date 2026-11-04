@@ -2259,6 +2259,30 @@
       // FlixBus/BlaBlaCar departures. Use the same abortable mission slots.
       // Merge independently discovered junction candidates without claiming live
       // availability. Both asynchronous sources may finish in either order.
+      const combinedRegional={Aller:[],Retour:[]},combinedLongDistance={Aller:null,Retour:null},combinedLines={};
+      const refreshCombinedDirection=label=>{
+        const result=combinedLongDistance[label],compare=window.CPTransportLongDistanceSearch?.compareWithRegional;
+        if(!regionalActive()||!result||typeof compare!=='function'){combinedLines[label]?.remove();return;}
+        const ranked=compare(combinedRegional[label],result,{
+          direction:label==='Retour'?'return':'outbound',
+          ...(label==='Aller'?{deadline:pickupDate,latestArrival:pickupDate}:{earliestDeparture:deliveryDate}),
+          marginMinutes:securityMarginMin
+        });
+        const choices=Array.isArray(ranked?.choices)?ranked.choices.filter(c=>c?.journey&&
+          Number.isFinite(Date.parse(c.journey.departure||''))&&
+          Number.isFinite(Date.parse(c.journey.arrival||''))&&
+          Date.parse(c.journey.arrival)>Date.parse(c.journey.departure)).slice(0,3):[];
+        const line=combinedLines[label]||(combinedLines[label]=document.createElement('p'));
+        line.className='doux';line.setAttribute('data-combined-direction',label);
+        line.textContent=label+' multimodal provisoire : '+(choices.length?choices.map(c=>{
+          const j=c.journey;
+          const fare=Number.isFinite(j.priceEUR)&&j.priceEUR>=0?
+            j.priceEUR.toFixed(2).replace('.',',')+(j.fareVerified===true?' € vérifié':' € à vérifier'):'tarif inconnu';
+          return c.label+' : '+formatParis(j.departure)+' → '+formatParis(j.arrival)+
+            ' · '+(j.provider||'réseau non précisé')+' · '+fare;
+        }).join(' | '):'aucun choix compatible')+'. Circulation et accès non confirmés.';
+        if(!line.isConnected)panel.appendChild(line);
+      };
       let junctionRegionalJourneys=[],junctionLongDistanceResult=null;
       const junctionCombined=document.createElement('p');
       junctionCombined.className='doux';
@@ -2326,6 +2350,11 @@
               junctionLongDistanceResult=null;
               junctionCombined.remove();
             }
+            if(label==='Aller'||label==='Retour'){
+              combinedLongDistance[label]=null;
+              combinedRegional[label]=[];
+              combinedLines[label]?.remove();
+            }
             const status=document.createElement('p');status.className='doux';
             status.setAttribute('data-long-distance-search',label);
             status.textContent=label+' longue distance : recherche des fournisseurs raccordés…';
@@ -2348,6 +2377,10 @@
                 if(label==='Jonction'){
                   junctionLongDistanceResult=result;
                   refreshJunctionCombined();
+                }
+                if(label==='Aller'||label==='Retour'){
+                  combinedLongDistance[label]=result;
+                  refreshCombinedDirection(label);
                 }
                 const pickupLimit=label==='Aller'?pickupDate:
                   label==='Jonction'?next?.pickup_start:null;
@@ -2638,6 +2671,11 @@
               'Retour régional : ' + options.length +
               ' itinéraire(s) théoriques vers le point de domicile enregistré (adresse exacte non vérifiée) :' :
               'Retour régional : aucun itinéraire trouvé. Transport non confirmé — vérifiez vous-même.';
+            if(window.CPTransportAdapters){
+              combinedRegional.Retour=window.CPTransportAdapters.withVerifiedFares(
+                window.CPTransportAdapters.adaptRegional(options,'Régional'));
+              refreshCombinedDirection('Retour');
+            }
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
                 window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')));
@@ -2703,6 +2741,11 @@
               'Aller régional : ' + options.length +
               ' proposition(s) théoriques depuis le point de domicile enregistré (adresse exacte non vérifiée) :' :
               'Aller régional : aucune arrivée compatible avec la marge minimale de 15 min. Transport non confirmé — vérifiez vous-même.';
+            if(window.CPTransportAdapters){
+              combinedRegional.Aller=window.CPTransportAdapters.withVerifiedFares(
+                window.CPTransportAdapters.adaptRegional(options,'Régional'));
+              refreshCombinedDirection('Aller');
+            }
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
                 window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
