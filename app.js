@@ -2604,9 +2604,15 @@
             // create a fictional "cheapest" option.
             const tripgoRanked=window.CPTransportRanking?.rank?
               window.CPTransportRanking.rank(shown,{}):[];
-            const tripgoChoices=tripgoRanked.length?
-              tripgoRanked.map(choice=>({label:choice.label,journey:choice.journey})):
-              shown.slice(0,3).map(journey=>({label:'Proposition',journey}));
+            const tripgoChoices=tripgoRanked.map(choice=>({label:choice.label,journey:choice.journey}));
+            // Ranking labels can collapse onto one journey when fares are unknown.
+            // Preserve up to three distinct dated alternatives instead of hiding
+            // other available departures returned by TripGo.
+            for(const journey of shown){
+              if(tripgoChoices.length>=3)break;
+              if(!tripgoChoices.some(choice=>choice.journey===journey))
+                tripgoChoices.push({label:'Autre proposition',journey});
+            }
             status.textContent=label+' TripGo : '+(shown.length?shown.length+' proposition(s) datées, marches comprises.':'aucune proposition compatible retournée ; cela ne prouve pas l’absence de transport.');
             for(const {label:choiceLabel,journey:result} of tripgoChoices){
               const line=document.createElement('p');line.textContent=choiceLabel+' · '+(Array.isArray(result.providerTags)&&result.providerTags.length?'Opérateurs identifiés : '+result.providerTags.join(' + ')+' · ':'')+formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString())+' · '+
