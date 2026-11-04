@@ -100,9 +100,16 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
     Number.isFinite(Date.parse(w.departure))&&Number.isFinite(Date.parse(w.arrival))&&
     Date.parse(w.departure)>=Date.parse(first.arrival)&&
     Date.parse(w.arrival)<=Date.parse(second.departure))
-    .sort((a,b)=>Date.parse(a.arrival)-Date.parse(b.arrival))[0];
-   const connected=ranking.connectJourneys(first,second,
-    {...options,walkingConnection:matchingWalk||null});
+    .sort((a,b)=>Date.parse(a.arrival)-Date.parse(b.arrival));
+   // The earliest matching route can still be invalid (e.g. implausible
+   // distance). Try later verified alternatives before rejecting the transfer.
+   let connected=ranking.connectJourneys(first,second,
+    {...options,walkingConnection:null});
+   if(!connected)for(const walk of matchingWalk){
+    connected=ranking.connectJourneys(first,second,
+     {...options,walkingConnection:walk});
+    if(connected)break;
+   }
    if(connected)connections.push(connected);
   }
  }
