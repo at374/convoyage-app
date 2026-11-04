@@ -114,7 +114,7 @@ function selectChoices(itineraries,ranking,maxResults=3){
  const input=Array.isArray(itineraries)?itineraries.filter(j=>j&&typeof j==='object'&&!Array.isArray(j)):[];
  const limit=Number.isInteger(maxResults)&&maxResults>0?Math.min(maxResults,10):3;
  const identity=j=>JSON.stringify([j.departure,j.arrival,
-  (Array.isArray(j.legs)?j.legs:[]).map(l=>[l.mode,l.provider,l.serviceTripId,l.routeId,l.fromStopCode,l.toStopCode,l.line,l.from,l.to,l.departure,l.arrival,l.ticketWebsiteURL])]);
+  (Array.isArray(j.legs)?j.legs:[]).map(l=>[l.mode,l.provider,l.serviceTripId,l.routeId,l.fromStopCode,l.toStopCode,l.line,l.from,l.to,l.fromPoint,l.toPoint,l.departure,l.arrival,l.ticketWebsiteURL])]);
  let ranked=[];
  if(ranking&&typeof ranking.rank==='function'){
   try{
