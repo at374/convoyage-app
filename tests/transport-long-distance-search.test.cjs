@@ -510,3 +510,25 @@ test('walking route cache remains usable after twelve external lookups',async()=
  assert.equal(calls,12);
  assert.ok(result.candidates.some(x=>x.id==='r-repeat+coach'));
 });
+
+test('a failing provider does not hide valid independent provider candidates',async()=>{
+ const result=await searchLongDistance({from:'Annecy',to:'Lyon',date:'2026-11-02'},{
+  FlixBus:async()=>{throw Error('temporary outage');},
+  BlaBlaCar:async()=>[{from:'Annecy',to:'Lyon',
+   departure:'2026-11-02T08:00:00+01:00',arrival:'2026-11-02T09:00:00+01:00'}]
+ });
+ assert.deepEqual(result.providers.map(p=>p.status),
+  ['provider-error','candidates-unverified','not-connected']);
+ assert.equal(result.offers.length,1);
+ assert.equal(result.offers[0].serviceConfirmed,false);
+ assert.equal(result.pricesVerified,false);
+});
+
+test('malformed provider response cannot be counted as an available journey',async()=>{
+ const result=await searchLongDistance({from:'Annecy',to:'Lyon',date:'2026-11-02'},{
+  FlixBus:async()=>({departures:[{from:'Annecy',to:'Lyon'}]})
+ });
+ assert.equal(result.offers.length,0);
+ assert.equal(result.providers[0].status,'invalid-response');
+ assert.equal(result.serviceConfirmed,false);
+});
