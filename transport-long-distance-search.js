@@ -85,6 +85,13 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
    [regionalPool,longDistancePool],[longDistancePool,regionalPool]
   ])for(const first of firstPool)for(const second of secondPool){
    if(connections.length>=100)break outer;
+   // Avoid costly GPS and walking-route scans for impossible timetable pairs.
+   // Require the same explicit timezone-aware timestamp format as candidates.
+   const firstArrival=timestamp(first?.arrival),secondDeparture=timestamp(second?.departure);
+   const minTransfer=Number.isFinite(options?.minTransferMinutes)?
+    Math.max(0,options.minTransferMinutes):3;
+   if(firstArrival===null||secondDeparture===null||
+    secondDeparture-firstArrival<minTransfer*60000)continue;
    // A caller may supply independently routed walking connections by stop pair.
    // Never reuse a walk for unrelated endpoints.
    const walkingConnections=Array.isArray(options?.walkingConnections)?options.walkingConnections:[];
