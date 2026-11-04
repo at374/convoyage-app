@@ -146,6 +146,7 @@ function assessJourney(row,task,walks){
  let transferStart=null,transferEnd=null;
  if(row.interNetwork){
   if(!Array.isArray(row.legs)||row.legs.length!==2)return {...base,status:'unknown'};
+  if(!row.legs[0]||typeof row.legs[0]!=='object'||!row.legs[1]||typeof row.legs[1]!=='object')return {...base,status:'unknown'};
   transferStart=instant(row.legs[0].arrival);transferEnd=instant(row.legs[1].departure);
   if(!Number.isFinite(transferStart)||!Number.isFinite(transferEnd)||transferStart<departure||transferEnd<transferStart||transferEnd>arrival||
      instant(row.legs[0].departure)!==departure||instant(row.legs[1].arrival)!==arrival)return {...base,status:'unknown'};
@@ -169,9 +170,16 @@ function assessJourney(row,task,walks){
   serviceConfirmed:false,accessVerified:false,transferVerified:false,realizable:false};
 }
 async function checkJourney(router,row,task){
+ // Missing inputs and failed routing are not evidence of a usable connection.
+ if(!router||typeof router.route!=='function'||!row||typeof row!=='object'||!task||typeof task!=='object')
+  return assessJourney(row,task,{});
+ const safeRoute=async(from,to)=>{
+  try{return await router.route(from,to);}
+  catch{return {status:'unavailable'};}
+ };
  // Prioritise the interchange request. No zero-time walk is inferred at a shared stop.
- const transfer=row.interNetwork?router.route(row.transferStop,row.transferDestinationStop):Promise.resolve({status:row.legs?.length===2?'same_stop_unverified':'not_required'});
- const [middle,access,egress]=await Promise.all([transfer,router.route(task.from,row.originStop),router.route(row.destinationStop,task.to)]);
+ const transfer=row.interNetwork?safeRoute(row.transferStop,row.transferDestinationStop):Promise.resolve({status:row.legs?.length===2?'same_stop_unverified':'not_required'});
+ const [middle,access,egress]=await Promise.all([transfer,safeRoute(task.from,row.originStop),safeRoute(row.destinationStop,task.to)]);
  return assessJourney(row,task,{access,transfer:middle,egress});
 }
 const api={DEFAULT_ENDPOINT,decodePolyline,validateValhalla,createRouter,assessJourney,checkJourney};
