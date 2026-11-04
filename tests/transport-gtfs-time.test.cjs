@@ -94,3 +94,12 @@ test('mission bounds reject impossible timezone offsets but accept UTC+14',()=>{
  }
  assert.ok(Number.isFinite(missionBounds({earliestDeparture:'2026-11-02T10:00:00+14:00'}).first));
 });
+
+test('malformed mission window types produce a controlled validation error',()=>{
+ const {missionBounds,serviceWindow}=require('../transport-gtfs-time.js');
+ const {files}=fixture();
+ for(const invalid of [null,false,[],0,'2026-11-02T10:00:00Z']){
+  assert.throws(()=>missionBounds(invalid),/Invalid GTFS mission window/);
+  assert.throws(()=>serviceWindow(files,'2026-11-02',invalid),/Invalid GTFS mission window/);
+ }
+});
