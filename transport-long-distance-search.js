@@ -90,12 +90,17 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
    const walkingConnections=Array.isArray(options?.walkingConnections)?options.walkingConnections:[];
    const last=first.legs?.[first.legs.length-1]?.toPoint;
    const next=second.legs?.[0]?.fromPoint;
-   const matchingWalk=walkingConnections.find(w=>w&&w.routeVerified===true&&
+   const matchingWalk=walkingConnections.filter(w=>w&&w.routeVerified===true&&
     last&&next&&w.fromPoint&&w.toPoint&&
     typeof last.lat==='number'&&typeof last.lon==='number'&&
     typeof next.lat==='number'&&typeof next.lon==='number'&&
     Math.abs(w.fromPoint.lat-last.lat)<0.00001&&Math.abs(w.fromPoint.lon-last.lon)<0.00001&&
-    Math.abs(w.toPoint.lat-next.lat)<0.00001&&Math.abs(w.toPoint.lon-next.lon)<0.00001);
+    Math.abs(w.toPoint.lat-next.lat)<0.00001&&Math.abs(w.toPoint.lon-next.lon)<0.00001&&
+    typeof w.departure==='string'&&typeof w.arrival==='string'&&
+    Number.isFinite(Date.parse(w.departure))&&Number.isFinite(Date.parse(w.arrival))&&
+    Date.parse(w.departure)>=Date.parse(first.arrival)&&
+    Date.parse(w.arrival)<=Date.parse(second.departure))
+    .sort((a,b)=>Date.parse(a.arrival)-Date.parse(b.arrival))[0];
    const connected=ranking.connectJourneys(first,second,
     {...options,walkingConnection:matchingWalk||null});
    if(connected)connections.push(connected);
