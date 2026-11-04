@@ -9,6 +9,7 @@ on:
       - 'transport-sibra-pass.js'
       - 'transport-y51-fares.js'
       - 'transport-catalogue.js'
+      - 'transport-swiss-ain.js'
       - 'transport-gtfs-index.js'
       - 'transport-gtfs-loader.js'
       - 'transport-gtfs-worker.js'
@@ -30,6 +31,7 @@ on:
       - 'tests/transport-y51-fares.test.cjs'
       - 'tests/fixtures/y51-tariff-reference-2026-10-31.json'
       - 'tests/transport-catalogue.test.cjs'
+      - 'tests/transport-swiss-ain.test.cjs'
       - 'tests/transport-gtfs-index.test.cjs'
       - 'tests/transport-gtfs-federation.test.cjs'
       - 'tests/transport-gtfs-transfers.test.cjs'
@@ -49,6 +51,7 @@ on:
       - 'transport-sibra-pass.js'
       - 'transport-y51-fares.js'
       - 'transport-catalogue.js'
+      - 'transport-swiss-ain.js'
       - 'transport-gtfs-index.js'
       - 'transport-gtfs-loader.js'
       - 'transport-gtfs-worker.js'
@@ -70,6 +73,7 @@ on:
       - 'tests/transport-y51-fares.test.cjs'
       - 'tests/fixtures/y51-tariff-reference-2026-10-31.json'
       - 'tests/transport-catalogue.test.cjs'
+      - 'tests/transport-swiss-ain.test.cjs'
       - 'tests/transport-gtfs-index.test.cjs'
       - 'tests/transport-gtfs-federation.test.cjs'
       - 'tests/transport-gtfs-transfers.test.cjs'
@@ -101,6 +105,7 @@ jobs:
       - run: node --check transport-sibra-pass.js
       - run: node --check transport-y51-fares.js
       - run: node --check transport-catalogue.js
+      - run: node --check transport-swiss-ain.js
       - run: node --check transport-gtfs-index.js
       - run: node --check transport-gtfs-loader.js
       - run: node --check transport-gtfs-worker.js
@@ -116,6 +121,7 @@ jobs:
       - run: node --test tests/transport-sibra-pass.test.cjs
       - run: node --test tests/transport-y51-fares.test.cjs
       - run: node tests/transport-catalogue.test.cjs
+      - run: node tests/transport-swiss-ain.test.cjs
       - run: node tests/transport-gtfs-index.test.cjs
       - run: node --test tests/transport-gtfs-loader.test.cjs
       - run: node --test tests/transport-gtfs-worker.test.cjs
