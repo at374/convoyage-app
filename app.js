@@ -2283,7 +2283,8 @@
         const choices=Array.isArray(result?.choices)?
           result.choices.filter(choice=>choice&&choice.journey&&
             Number.isFinite(Date.parse(choice.journey.departure||''))&&
-            Number.isFinite(Date.parse(choice.journey.arrival||''))).slice(0,3):[];
+            Number.isFinite(Date.parse(choice.journey.arrival||''))&&
+            Date.parse(choice.journey.arrival)>Date.parse(choice.journey.departure)).slice(0,3):[];
         junctionCombined.textContent='Jonction multimodale provisoire : '+
           (choices.length?choices.map(c=>{
             const j=c.journey||{};
