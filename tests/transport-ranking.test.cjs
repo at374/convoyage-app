@@ -124,4 +124,11 @@ const unverifiedFare={...base,id:'unverified',priceEUR:1,fareVerified:false};
 assert.equal(evaluate(unverifiedFare,{deadline}).priceEUR,null,'Unverified provider fare cannot be displayed as a known price');
 assert.equal(rank([unverifiedFare,{...base,id:'verified',priceEUR:5,fareVerified:true}],{deadline}).find(x=>x.label==='Moins cher')?.journey.id,'verified','Cheapest option must not use an explicitly unverified price');
 assert.equal(evaluate({...base,priceEUR:2,priceVerified:false},{deadline}).priceEUR,null,'Explicitly unverified price cannot be ranked');
+const noBoardingBuffer={...walkingConnection,legs:[
+ walkingConnection.legs[0],walkingConnection.legs[1],
+ {...walkingConnection.legs[2],departure:'2026-11-02T07:31:00+01:00'}
+]};
+assert.equal(evaluate(noBoardingBuffer,{deadline}).feasible,false,'A bus cannot be certified with zero boarding time after walking');
+assert.equal(evaluate(noBoardingBuffer,{deadline,minBoardingMinutes:0}).feasible,true,'Explicit zero-minute boarding setting remains supported');
+assert.equal(evaluate(walkingConnection,{deadline,minBoardingMinutes:4}).feasible,false,'A requested four-minute boarding buffer rejects a three-minute gap');
 console.log('transport-ranking: all assertions passed');
