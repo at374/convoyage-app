@@ -123,4 +123,4 @@ assert.throws(()=>missionPickupCandidates(calendar,index,new Map(),'2026-10-29',
 assert.equal(pickup.transportConfirmed,false);
 assert.deepEqual(pickup.confirmationBlockers,['walking-access-unknown','realtime-service-unverified']);
 assert.equal(walkingCandidate.transportConfirmed,false);
-assert.deepEqual(walkingCandidate.confirmationBlockers,['walking-route-unverified','realtime-service-unverified']);
+assert.deepEqual(walkingCandidate.confirmationBlockers,['no-scheduled-border-candidate','walking-route-unverified','realtime-service-unverified']);
