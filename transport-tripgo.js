@@ -54,7 +54,19 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
    const startGapMeters=gap(coord(from),legs[0].fromPoint),endGapMeters=gap(coord(to),legs.at(-1).toPoint);
    if(startGapMeters>10||endGapMeters>10)continue;
    const realtimeReported=legs.filter(l=>l.mode.startsWith('pt_pub')).every(l=>l.realtimeReported);
+   // Identify TripGo operators from public-transport legs only. A mixed
+   // SNCF + FlixBus itinerary must retain all its legs, not be relabelled
+   // as a direct FlixBus journey.
+   const operators=[...new Set(legs.filter(l=>l.mode.startsWith('pt_pub'))
+    .map(l=>l.provider).filter(name=>typeof name==='string'&&name.trim()))];
+   const providerTags=operators.flatMap(name=>{
+    const normalized=name.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
+    if(/flixbus/.test(normalized))return ['FlixBus'];
+    if(/blablacar/.test(normalized))return [/bus/.test(normalized)?'BlaBlaCar Bus':'BlaBlaCar'];
+    return [];
+   });
    found.push({departure:new Date(departure).toISOString(),arrival:new Date(arrival).toISOString(),legs,priceEUR:null,
+    operators,providerTags:[...new Set(providerTags)],
     source:'TripGo',receivedAt,transportConfirmed:false,serviceConfirmed:false,accessVerified:false,
     alerts:[...new Set([...legs.flatMap(l=>l.alerts),...(Array.isArray(trip.alerts)?trip.alerts:[]),...(Array.isArray(data.alerts)?data.alerts:[])].map(a=>typeof a==='string'?a:String(a?.title||a?.text||'Alerte fournisseur')))].slice(0,20),
     evidence:{scheduleProvided:true,endpointCoordinatesMatched:startGapMeters<=10&&endGapMeters<=10,startGapMeters,endGapMeters,
