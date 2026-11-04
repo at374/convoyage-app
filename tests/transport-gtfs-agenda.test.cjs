@@ -262,10 +262,11 @@ test('a rejected or throwing pedestrian prefetch preserves source status and tra
 
 test('Agenda retains the latest outbound trips across service dates after worker caps',async()=>{
  const target=panel(),calls=[];
- const session=agenda.mount(target,{tasks:[{...task,label:'Aller',earliestDeparture:undefined,latestArrival:'2026-11-02T13:00:00Z'}],
+ const session=agenda.mount(target,{tasks:[{...task,label:'Aller',earliestDeparture:'2026-11-01T00:00:00Z',latestArrival:'2026-11-02T13:00:00Z'}],
   clientFactory:()=>({load:async()=>summary,query:async q=>{
    calls.push(q);
-   return {rows:[row({tripId:q.date,departure:q.date+'T10:00:00Z',arrival:q.date+'T11:00:00Z'})],truncated:true};
+   const valid=['2026-11-01','2026-11-02'].includes(q.date);
+   return {rows:valid?[row({tripId:q.date,departure:q.date+'T10:00:00Z',arrival:q.date+'T11:00:00Z'})]:[],truncated:true};
   },dispose(){}})});
  await session.done;
  assert.ok(calls.every(q=>q.order==='latestDeparture'));
