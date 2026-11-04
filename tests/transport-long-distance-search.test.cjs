@@ -346,3 +346,21 @@ test('comparison ignores impossible timetable pairs before considering walking r
   {deadline:'2026-11-02T09:00:00+01:00',minTransferMinutes:3});
  assert.equal(result.candidates.some(x=>x.id==='regional+coach'),false);
 });
+
+test('bounded comparison finds early regional feeder even when provider input is unsorted',()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const point={lat:45.91,lon:6.13};
+ const early={id:'early',departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+  legs:[{departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+   fromPoint:{lat:45.9,lon:6.12},toPoint:point}]};
+ const late=Array.from({length:101},(_,i)=>({...early,id:'late-'+i,
+  departure:'2026-11-02T12:00:00+01:00',arrival:'2026-11-02T12:40:00+01:00',
+  legs:[{...early.legs[0],departure:'2026-11-02T12:00:00+01:00',
+   arrival:'2026-11-02T12:40:00+01:00'}]}));
+ const coach={id:'coach',departure:'2026-11-02T07:45:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+  legs:[{departure:'2026-11-02T07:45:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+   fromPoint:point,toPoint:{lat:45.92,lon:6.14}}]};
+ const result=compareWithRegional([...late,early],{offers:[coach]},
+  {deadline:'2026-11-02T09:00:00+01:00'});
+ assert.ok(result.candidates.some(x=>x.id==='early+coach'));
+});
