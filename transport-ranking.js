@@ -21,7 +21,17 @@
     const margin=finite(opts.marginMinutes)?Math.max(5,opts.marginMinutes):5;
     const deadline=validTime(opts.deadline)?Date.parse(opts.deadline):NaN;
     const slack=valid&&Number.isFinite(deadline)?Math.floor((deadline-arrival)/60000):null;
-    const allVerified=legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
+    // A confirmed service cannot make an itinerary feasible if its supplied leg
+    // timestamps overlap or fall outside the displayed journey window.
+    let timelineValid=true,previousEnd=departure;
+    for(const leg of legs){
+      if(leg?.departure===undefined&&leg?.arrival===undefined)continue;
+      if(!validTime(leg?.departure)||!validTime(leg?.arrival)){timelineValid=false;break;}
+      const start=Date.parse(leg.departure),end=Date.parse(leg.arrival);
+      if(!Number.isFinite(previousEnd)||start<previousEnd||end<=start||end>arrival){timelineValid=false;break;}
+      previousEnd=end;
+    }
+    const allVerified=timelineValid&&legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
     const feasible=valid&&allVerified&&doorToDoor&&item.accessVerified===true&&
       Number.isFinite(deadline)&&slack>=margin;
