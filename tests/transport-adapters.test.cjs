@@ -72,3 +72,13 @@ require('node:test')('adapted overnight itinerary never reuses first-leg tariff 
   assert.equal(result.fareBreakdown[0].amountEUR,4);
   assert.equal(result.fareBreakdown[1].amountEUR,null);
 });
+
+require('node:test')('malformed provider rows do not crash adapters',()=>{
+  const bad=[null,undefined,false,{departure,arrival,legs:[null,false,{line:'TER',departure,arrival}]}];
+  assert.equal(adaptSNCF(bad).length,1);
+  assert.equal(adaptSNCF(bad)[0].legs.length,1);
+  assert.equal(adaptGTFS(bad,'Test').length,1);
+  assert.equal(adaptGTFS(bad,'Test')[0].legs.length,1);
+  assert.equal(adaptRegional(bad,'Test').length,1);
+  assert.equal(adaptRegional(bad,'Test')[0].legs.length,1);
+});
