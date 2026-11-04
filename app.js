@@ -2599,10 +2599,20 @@
           status.textContent=label+' TripGo : recherche des transports et des marches…';target.appendChild(status);
           tripgo.plan({...task,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt}).then(answer=>{
             if(!regionalActive()||signal.aborted||!status.isConnected)return;
-            const shown=(Array.isArray(answer?.itineraries)?answer.itineraries:[]).filter(result=>Array.isArray(result?.legs)&&result.legs.length>0&&result.legs.every(leg=>leg&&typeof leg==='object'&&Number.isFinite(Date.parse(leg.departure))&&Number.isFinite(Date.parse(leg.arrival))&&Date.parse(leg.arrival)>=Date.parse(leg.departure))&&result.legs.every((leg,index)=>index===0||Date.parse(leg.departure)>=Date.parse(result.legs[index-1].arrival))&&Number.isFinite(Date.parse(result.departure))&&Number.isFinite(Date.parse(result.arrival))&&Date.parse(result.arrival)>=Date.parse(result.departure)&&Date.parse(result.legs[0].departure)===Date.parse(result.departure)&&Date.parse(result.legs[result.legs.length-1].arrival)===Date.parse(result.arrival)&&(!task.latestArrival||Date.parse(result.arrival)<=Date.parse(task.latestArrival))&&result.evidence&&Array.isArray(result.evidence.missing)&&Number.isFinite(result.evidence.startGapMeters)&&result.evidence.startGapMeters>=0&&Number.isFinite(result.evidence.endGapMeters)&&result.evidence.endGapMeters>=0&&Array.isArray(result.alerts)).slice(0,3);
+            const shown=(Array.isArray(answer?.itineraries)?answer.itineraries:[]).filter(result=>Array.isArray(result?.legs)&&result.legs.length>0&&result.legs.every(leg=>leg&&typeof leg==='object'&&Number.isFinite(Date.parse(leg.departure))&&Number.isFinite(Date.parse(leg.arrival))&&Date.parse(leg.arrival)>=Date.parse(leg.departure))&&result.legs.every((leg,index)=>index===0||Date.parse(leg.departure)>=Date.parse(result.legs[index-1].arrival))&&Number.isFinite(Date.parse(result.departure))&&Number.isFinite(Date.parse(result.arrival))&&Date.parse(result.arrival)>=Date.parse(result.departure)&&Date.parse(result.legs[0].departure)===Date.parse(result.departure)&&Date.parse(result.legs[result.legs.length-1].arrival)===Date.parse(result.arrival)&&(!task.latestArrival||Date.parse(result.arrival)<=Date.parse(task.latestArrival))&&result.evidence&&Array.isArray(result.evidence.missing)&&Number.isFinite(result.evidence.startGapMeters)&&result.evidence.startGapMeters>=0&&Number.isFinite(result.evidence.endGapMeters)&&result.evidence.endGapMeters>=0&&Array.isArray(result.alerts));
+            // Rank only provider-supplied candidates. Unknown fares must never
+            // create a fictional "cheapest" option.
+            const tripgoRanked=window.CPTransportRanking?.rank?
+              window.CPTransportRanking.rank(shown,{
+                ...(task.arriveBy?{deadline:task.latestArrival||task.when}:{}),
+                marginMinutes:0
+              }):[];
+            const tripgoChoices=tripgoRanked.length?
+              tripgoRanked.map(choice=>({label:choice.label,journey:choice.journey})):
+              shown.slice(0,3).map(journey=>({label:'Proposition',journey}));
             status.textContent=label+' TripGo : '+(shown.length?shown.length+' proposition(s) datées, marches comprises.':'aucune proposition compatible retournée ; cela ne prouve pas l’absence de transport.');
-            for(const result of shown){
-              const line=document.createElement('p');line.textContent=(Array.isArray(result.providerTags)&&result.providerTags.length?'Opérateurs identifiés : '+result.providerTags.join(' + ')+' · ':'')+formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString())+' · '+
+            for(const {label:choiceLabel,journey:result} of tripgoChoices){
+              const line=document.createElement('p');line.textContent=choiceLabel+' · '+(Array.isArray(result.providerTags)&&result.providerTags.length?'Opérateurs identifiés : '+result.providerTags.join(' + ')+' · ':'')+formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString())+' · '+
                 result.legs.map(l=>(l.mode==='wa_wal'?'Marche':l.line||l.mode)+' '+l.from+' → '+l.to).join(' · ')+
                 ' · réponse du fournisseur reçue le '+formatParis(answer.receivedAt)+
                 ' · raccordement aux coordonnées : '+Math.ceil(result.evidence.startGapMeters)+' m / '+Math.ceil(result.evidence.endGapMeters)+' m (accès physique à vérifier)'+
