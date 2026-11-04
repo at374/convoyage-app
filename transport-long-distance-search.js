@@ -146,15 +146,21 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
  // For an outbound pickup, latestArrival is the mission's pickup time.
  // Apply the safety margin before ranking, even when caller omits deadline.
  const isReturn=options?.direction==='return';
- const pickupDeadline=isReturn?null:timestamp(options?.deadline)??latest;
+ const explicitDeadline=timestamp(options?.deadline);
+ const pickupDeadline=isReturn?null:explicitDeadline??latest;
+ // A return has no pickup safety margin, but an explicitly supplied arrival
+ // deadline remains binding (e.g. a later appointment at home).
+ const returnDeadline=isReturn?explicitDeadline??latest:null;
  const requestedMargin=Number.isFinite(options?.marginMinutes)?Math.max(0,options.marginMinutes):15;
  const minimumMargin=journey=>options?.exactGPSReliable===true&&journey.exactDestination===true&&journey.accessVerified===true?5:15;
  const marginMinutes=isReturn?0:requestedMargin;
- const safeCandidates=pickupDeadline===null?candidates:candidates.filter(journey=>
-  Date.parse(journey.arrival)+Math.max(minimumMargin(journey),requestedMargin)*60000<=pickupDeadline);
+ const safeCandidates=isReturn?
+  (returnDeadline===null?candidates:candidates.filter(journey=>Date.parse(journey.arrival)<=returnDeadline)):
+  (pickupDeadline===null?candidates:candidates.filter(journey=>
+   Date.parse(journey.arrival)+Math.max(minimumMargin(journey),requestedMargin)*60000<=pickupDeadline));
  // A return journey has no pickup deadline. Keep its arrival-window filter,
  // but never apply an outbound pickup margin to the homeward journey.
- const rankingOptions=isReturn?{...options,deadline:undefined,marginMinutes:0}:{
+ const rankingOptions=isReturn?{...options,deadline:returnDeadline===null?undefined:new Date(returnDeadline).toISOString(),marginMinutes:0}:{
   ...options,marginMinutes,deadline:pickupDeadline===null?options?.deadline:new Date(pickupDeadline).toISOString()
  };
  const choices=ranking.rank(safeCandidates,rankingOptions);
