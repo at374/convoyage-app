@@ -204,3 +204,17 @@ test('TripGo never suggests an explicitly cancelled itinerary even if availabili
   assert.equal(results[0].legs[1].line,'FlixBus 1789');
  }
 });
+
+test('TripGo ignores a journey with a non-string mode without hiding other available buses',()=>{
+ for(const invalid of [123,{},[],true]){
+  const data=clone();
+  const eligible=data.groups[0].trips.find(t=>t.depart*1000>=Date.parse(options.when)&&t.segments.length>1);
+  assert.ok(eligible);
+  const template=data.segmentTemplates.find(s=>s.hashCode===eligible.segments[1].segmentTemplateHashCode);
+  assert.ok(template);
+  template.modeIdentifier=invalid;
+  const results=api.parse(data,options).itineraries;
+  assert.equal(results.length,1,'invalid mode must reject only its journey');
+  assert.equal(results[0].legs[1].line,'FlixBus 1789');
+ }
+});
