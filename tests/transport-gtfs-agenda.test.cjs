@@ -393,6 +393,8 @@ test('partial GTFS network failure is disclosed even if worker omits partial fla
  await session.done;
  assert.match(target.textContent,/Recherche partielle : un réseau est indisponible/);
  assert.match(target.textContent,/Grésivaudan : flux indisponible/);
+ assert.match(target.textContent,/aucun trajet dans les résultats partiels ; recherche incomplète/);
+ assert.doesNotMatch(target.textContent,/aucun trajet direct ou avec une correspondance/);
  session.dispose();
 });
 
