@@ -165,7 +165,7 @@ test('Agenda per-leg labels are consistent with verified, pass, walk and unknown
  assert.equal(describeLeg(fare([{mode:'wa_wal'}]).breakdown[0]),'Sans billet');
  assert.equal(describeLeg(fare([{mode:'pt_pub_bus'}]).breakdown[0]),'Tarif inconnu');
  assert.equal(describeLeg(fare([{provider:'TER',fareVerified:true,fareSource:'officiel',verifiedPriceEUR:8.5}]).breakdown[0]),'Tarif vérifié : 8,50 €');
- assert.equal(describeLeg(fare([{...sibra}],{sibraPassActive:true}).breakdown[0]),'Couvert par abonnement vérifié');
+ assert.equal(describeLeg(fare([{...eligible,departure:'2026-11-02T10:00:00+01:00'}],{sibraPassActive:true}).breakdown[0]),'Couvert par abonnement vérifié');
 });
 
 
