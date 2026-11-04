@@ -150,3 +150,21 @@ const missingConnectionDeparture={...connectedJourney,legs:[
 ]};
 assert.equal(evaluate(missingConnectionDeparture,{deadline}).feasible,false,
  'Missing boarding stop GPS cannot certify a transfer');
+
+const {connectJourneys}=require('../transport-ranking.js');
+const transferPoint={lat:45.91,lon:6.13};
+const regionalPart={id:'regional',departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+ exactOrigin:true,legs:[{departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+ fromPoint:{lat:45.9,lon:6.12},toPoint:transferPoint,serviceConfirmed:true}]};
+const longDistancePart={id:'long',departure:'2026-11-02T07:45:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+ exactDestination:true,legs:[{departure:'2026-11-02T07:45:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+ fromPoint:transferPoint,toPoint:{lat:45.92,lon:6.14},serviceConfirmed:true}]};
+const assembled=connectJourneys(regionalPart,longDistancePart,{deadline});
+assert.equal(assembled.legs.length,2);
+assert.equal(assembled.priceEUR,null);
+assert.equal(assembled.accessVerified,false);
+assert.equal(evaluate(assembled,{deadline}).feasible,false,'Assembled offers remain provisional');
+assert.equal(connectJourneys(regionalPart,{...longDistancePart,departure:'2026-11-02T07:41:00+01:00',
+ legs:[{...longDistancePart.legs[0],departure:'2026-11-02T07:41:00+01:00'}]}),null,'Transfer must allow boarding time');
+assert.equal(connectJourneys(regionalPart,{...longDistancePart,legs:[{...longDistancePart.legs[0],fromPoint:{lat:45.92,lon:6.14}}]}),null,'Different stops require an explicit walking route');
+assert.equal(connectJourneys({...regionalPart,arrival:'2026-11-02T07:41:00+01:00'},longDistancePart),null,'Mismatched timetable bounds cannot be assembled');
