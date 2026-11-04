@@ -154,3 +154,17 @@ test('estimated inter-network transfer threshold is exposed but never marked ver
  assert.equal(transfer.walkingDurationSeconds,null);
  assert.equal(transfer.serviceConfirmed,false);
 });
+
+test('rejects malformed federation inputs before network traversal',()=>{
+ const a=feed('A','first'),b=feed('B','second');
+ for(const point of [null,{lat:999,lon:6.1},{lat:45.9,lon:Infinity},{lat:'45.9',lon:6.1}]){
+  assert.throws(()=>crossNetworkTrips([a,b],'2026-11-02',point,destination,window),/coordinates/);
+  assert.throws(()=>crossNetworkTrips([a,b],'2026-11-02',origin,point,window),/coordinates/);
+ }
+ for(const feeds of [[null,b],[a,{}],[a,{source:{datasetId:'B'}}]])
+  assert.throws(()=>crossNetworkTrips(feeds,'2026-11-02',origin,destination,window),/feed/);
+ for(const options of [null,[],false])
+  assert.throws(()=>crossNetworkTrips([a,b],'2026-11-02',origin,destination,window,options),/options/);
+ assert.throws(()=>crossNetworkTrips([a,b],'2026-11-02',origin,destination,null),/window/);
+ assert.equal(search([a,b]).journeys.length,1,'Valid cross-network transfer still works');
+});
