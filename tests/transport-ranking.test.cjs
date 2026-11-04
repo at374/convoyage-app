@@ -103,3 +103,10 @@ assert.equal(evaluate({...walkingConnection,legs:walkingConnection.legs.map((leg
 assert.equal(evaluate({...base,departure:'2026-02-30T07:00:00+01:00'},{deadline}).feasible,false,'Impossible calendar day must be rejected');
 assert.equal(evaluate({...base,departure:'2026-11-02T25:00:00+01:00'},{deadline}).feasible,false,'Impossible clock hour must be rejected');
 assert.equal(evaluate({...base,departure:'2026-11-02T07:00:00+15:00'},{deadline}).feasible,false,'Impossible timezone offset must be rejected');
+
+const reportedWalk={...walkingConnection,legs:walkingConnection.legs.map((leg,i)=>i===1?{...leg,distanceMeters:320}:leg)};
+assert.equal(evaluate(reportedWalk,{deadline}).feasible,false,'A provider-reported 320-metre walking route cannot fit into one minute');
+const unmeasuredWalk={...walkingConnection,legs:walkingConnection.legs.map((leg,i)=>i===1?{...leg,fromPoint:null,toPoint:null,distanceMeters:null}:leg)};
+assert.equal(evaluate(unmeasuredWalk,{deadline}).feasible,false,'A walking leg without GPS or route length cannot be certified');
+const plausibleReportedWalk={...walkingConnection,legs:walkingConnection.legs.map((leg,i)=>i===1?{...leg,distanceMeters:120}:leg)};
+assert.equal(evaluate(plausibleReportedWalk,{deadline}).feasible,true,'A measured 120-metre walk in one minute remains possible');
