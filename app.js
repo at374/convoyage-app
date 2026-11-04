@@ -2640,6 +2640,8 @@
       // Regional return from the exact delivery point to the configured home
       // coordinate (which may only represent a city centre, not a door).
       regionalSlot(() => [regionalPoint(G.coordonnees(m,'destination')),regionalHome(),deliveryDate], (panel,signal) => {
+      combinedRegional.Retour=[];
+      refreshCombinedDirection('Retour');
       if (regionalEngineReady && regionalProviderReady && deliveryDate) {
         const finishGps = G.coordonnees(m, 'destination');
         const homeLat = Number(etat.reglages?.domicile_lat);
@@ -2663,7 +2665,7 @@
             refresh: !!bt.dataset.transportRefreshAt,
             fetcher:regionalFetch
           }).then(answer => {
-            if (!regionalActive() || !returnStatus.isConnected) return;
+            if (signal.aborted || !regionalActive() || !returnStatus.isConnected) return;
             const options = answer.itineraries.filter(it =>
               it.startTime >= Date.parse(deliveryDate)).slice(0, 5);
             returnStatus.textContent = options.length ?
@@ -2707,6 +2709,8 @@
       // Regional outbound itinerary: use only a known home reference point
       // and the exact GPS pickup, with a 30-minute arrival buffer.
       regionalSlot(() => [regionalHome(),regionalPoint(G.coordonnees(m,'origin')),pickupDate,securityMarginMin], (panel,signal) => {
+      combinedRegional.Aller=[];
+      refreshCombinedDirection('Aller');
       if (regionalEngineReady && regionalProviderReady && pickupDate) {
         const pickupGps = G.coordonnees(m, 'origin');
         const homeLat = Number(etat.reglages?.domicile_lat);
@@ -2733,7 +2737,7 @@
             refresh: !!bt.dataset.transportRefreshAt,
             fetcher:regionalFetch
           }).then(answer => {
-            if (!regionalActive() || !outboundStatus.isConnected) return;
+            if (signal.aborted || !regionalActive() || !outboundStatus.isConnected) return;
             const options = window.CPRegionalRouting.feasibleBefore(
               answer.itineraries, pickupDate, securityMarginMin).slice(0, 5);
             outboundStatus.textContent = options.length ?
