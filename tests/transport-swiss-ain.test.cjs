@@ -76,3 +76,11 @@ assert.equal(missionBorderSegments(calendar,index,new Map([['G','CH'],['A','FR']
  {earliestDeparture:'08:05:00',latestArrival:'08:30:00'}).segments.length,0);
 assert.throws(()=>missionBorderSegments(calendar,index,new Map(),'2026-10-29',
  {earliestDeparture:'09:00:00',latestArrival:'08:00:00'}),/time window/);
+
+const restricted=buildIndex({
+ 'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nG,Geneve,46.205,6.145\nA,Ain,46.256,6.110\n',
+ 'routes.txt':'route_id,route_short_name\nR,Border\n',
+ 'trips.txt':'route_id,service_id,trip_id\nR,WK,T\n',
+ 'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence,pickup_type,drop_off_type\nT,08:00:00,08:00:00,G,1,1,0\nT,08:20:00,08:20:00,A,2,0,1\n'
+});
+assert.equal(borderSegments(restricted,new Map([['G','CH'],['A','FR']])).segments.length,0);
