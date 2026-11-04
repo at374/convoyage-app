@@ -233,3 +233,12 @@ test('TripGo mission selection preserves distinct providers when ranking clones 
  assert.equal(api.selectChoices(journeys,ranking,1).length,1);
  assert.equal(api.selectChoices([],ranking).length,0);
 });
+
+test('TripGo retains dated alternatives when the optional ranking engine fails',()=>{
+ const journeys=api.parse(clone(),options).itineraries;
+ const failing={rank(){throw Error('ranking unavailable');}};
+ const choices=api.selectChoices(journeys,failing,3);
+ assert.equal(choices.length,2);
+ assert.ok(choices.every(x=>x.label==='Autre proposition'));
+ assert.deepEqual(choices.map(x=>x.journey.providerTags[0]).sort(),['BlaBlaCar Bus','FlixBus']);
+});
