@@ -179,3 +179,17 @@ test('invalid or reversed mission windows never silently widen the comparison',(
   assert.equal(result.choices.length,0,JSON.stringify(options));
  }
 });
+
+test('different GPS boarding stops are retained even when their names and schedules match',async()=>{
+ const base={from:'Annecy',to:'Lyon',departure:'2026-11-02T08:00:00+01:00',arrival:'2026-11-02T10:00:00+01:00'};
+ const result=await searchLongDistance({from:'Annecy',to:'Lyon',date:'2026-11-02'}, {
+  FlixBus:async()=>[{...base,fromPoint:{lat:45.9,lon:6.1}},
+   {...base,fromPoint:{lat:45.91,lng:6.1}},
+   {...base,fromPoint:{lat:45.9,lon:6.1}},
+   {...base,fromPoint:{lat:999,lon:6.1}}]
+ });
+ assert.equal(result.offers.length,3);
+ assert.deepEqual(result.offers[1].legs[0].fromPoint,{lat:45.91,lon:6.1});
+ assert.equal(result.offers[2].legs[0].fromPoint,null);
+ assert.ok(result.offers.every(o=>o.exactOrigin===false&&o.accessVerified===false&&o.serviceConfirmed===false));
+});
