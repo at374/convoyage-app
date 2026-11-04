@@ -23,19 +23,20 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
  if(!data||!Array.isArray(data.groups)||data.groups.length>100||!Array.isArray(data.segmentTemplates)||data.segmentTemplates.length>2000)throw Error('Réponse TripGo invalide');
  if(!point(data.query?.from)||!point(data.query?.to)||gap(coord(data.query.from),coord(from))>1||gap(coord(data.query.to),coord(to))>1||
    time(data.query[arriveBy?'arrive':'depart'])!==time(when))throw Error('Réponse TripGo liée à une autre recherche');
- const templates=new Map();for(const t of data.segmentTemplates){if(!Number.isInteger(t.hashCode)||templates.has(t.hashCode))throw Error('Modèle TripGo invalide');templates.set(t.hashCode,t);}
+ const templates=new Map();for(const t of data.segmentTemplates){if(!t||typeof t!=='object'||!Number.isInteger(t.hashCode)||templates.has(t.hashCode))throw Error('Modèle TripGo invalide');templates.set(t.hashCode,t);}
  const found=[],seen=new Set();let inspected=0;
  for(const group of data.groups){
-  if(!Array.isArray(group.trips)||group.trips.length>100)throw Error('Groupe TripGo invalide');
+  if(!group||typeof group!=='object'||!Array.isArray(group.trips)||group.trips.length>100)throw Error('Groupe TripGo invalide');
   for(const trip of group.trips){
    if(++inspected>500)throw Error('Trop de trajets TripGo');
+   if(!trip||typeof trip!=='object')continue;
    const departure=epoch(trip.depart),arrival=epoch(trip.arrive);
    if(!Number.isFinite(departure)||!Number.isFinite(arrival)||arrival<=departure||arrival-departure>172800000||
     trip.availability!=='AVAILABLE'||trip.hideExactTimes===true||!Array.isArray(trip.segments)||!trip.segments.length||trip.segments.length>50||
     (arriveBy?arrival>time(when):departure<time(when))||latestArrival!==undefined&&arrival>time(latestArrival))continue;
    const legs=[];let valid=true,previous=departure;
    for(const ref of trip.segments){
-    const template=templates.get(ref.segmentTemplateHashCode);if(!template){valid=false;break;}
+    const template=ref&&typeof ref==='object'?templates.get(ref.segmentTemplateHashCode):null;if(!template){valid=false;break;}
     const s={...template,...ref},mode=s.modeIdentifier,start=epoch(s.startTime),end=epoch(s.endTime);
     if(!point(s.from)||!point(s.to)||!Number.isFinite(start)||!Number.isFinite(end)||start<previous||end<start||end>arrival||
      (mode?.startsWith('pt_pub')&&end===start)||
