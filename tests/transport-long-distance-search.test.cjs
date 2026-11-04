@@ -554,3 +554,25 @@ test('return comparator accepts confirmed homeward journey without pickup deadli
  });
  assert.equal(beforeDelivery.candidates.length,0);
 });
+
+
+test('combined comparison is independent of provider response order and never treats unknown fare as cheapest',()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const base={departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T08:00:00+01:00',
+  exactOrigin:false,exactDestination:false,accessVerified:false,legs:[]};
+ const regional=[
+  {...base,id:'regional-cheap',provider:'TER',priceEUR:4,fareVerified:true},
+  {...base,id:'regional-unknown',provider:'Régional',priceEUR:null,
+   departure:'2026-11-02T07:10:00+01:00',arrival:'2026-11-02T07:50:00+01:00'}
+ ];
+ const offers=[{...base,id:'bus-unverified',provider:'FlixBus',priceEUR:2,fareVerified:false,
+  departure:'2026-11-02T07:20:00+01:00',arrival:'2026-11-02T08:20:00+01:00'}];
+ const options={direction:'outbound',deadline:'2026-11-02T09:00:00+01:00',marginMinutes:15};
+ const first=compareWithRegional(regional,{offers,providers:[]},options);
+ const reversed=compareWithRegional([...regional].reverse(),{offers:[...offers].reverse(),providers:[]},options);
+ assert.equal(first.choices.find(x=>x.label==='Moins cher')?.journey.id,'regional-cheap');
+ assert.equal(reversed.choices.find(x=>x.label==='Moins cher')?.journey.id,'regional-cheap');
+ assert.deepEqual(first.choices.map(x=>[x.label,x.journey.id]),
+  reversed.choices.map(x=>[x.label,x.journey.id]));
+ assert.ok(first.choices.every(x=>x.journey.feasible===false));
+});
