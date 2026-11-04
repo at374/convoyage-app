@@ -254,3 +254,13 @@ test('TripGo ranking cannot inject a journey that was not returned by the provid
  assert.ok(!choices.some(choice=>choice.label==='Moins cher'));
  assert.equal(choices[0].label,'Compromis');
 });
+
+test('TripGo keeps alternatives with identical times but different boarding stops',()=>{
+ const journeys=api.parse(clone(),options).itineraries;
+ const first=journeys[0];
+ const alternative={...first,legs:first.legs.map((leg,index)=>index===0?{...leg,to:leg.to+' - quai alternatif'}:{...leg})};
+ const choices=api.selectChoices([first,alternative],null,3);
+ assert.equal(choices.length,2);
+ assert.equal(choices[0].journey,first);
+ assert.equal(choices[1].journey,alternative);
+});
