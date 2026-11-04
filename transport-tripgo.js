@@ -108,5 +108,24 @@ async function plan(options){
   const value=parse(data,options);if(cache.size>=32)cache.delete(cache.keys().next().value);cache.set(key,{until:Date.now()+60000,value});return JSON.parse(JSON.stringify(value));
  }finally{clearTimeout(timer);options.signal?.removeEventListener('abort',cancel);}
 }
-const api={parse,plan,getKey,setKey};root.CPTripGo=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
+// Select up to three distinct itineraries after ranking. Ranking creates
+// copies, so compare stable trip content rather than object identity.
+function selectChoices(itineraries,ranking,maxResults=3){
+ const input=Array.isArray(itineraries)?itineraries.filter(j=>j&&typeof j==='object'&&!Array.isArray(j)):[];
+ const limit=Number.isInteger(maxResults)&&maxResults>0?Math.min(maxResults,10):3;
+ const identity=j=>JSON.stringify([j.departure,j.arrival,
+  (Array.isArray(j.legs)?j.legs:[]).map(l=>[l.mode,l.provider,l.line,l.departure,l.arrival])]);
+ const ranked=ranking&&typeof ranking.rank==='function'?ranking.rank(input,{}):[];
+ const choices=[],seen=new Set();
+ const add=(label,journey)=>{
+  if(!journey||choices.length>=limit)return;
+  const key=identity(journey);
+  if(seen.has(key))return;
+  seen.add(key);choices.push({label,journey});
+ };
+ for(const choice of ranked)add(choice.label,choice.journey);
+ for(const journey of input)add('Autre proposition',journey);
+ return choices;
+}
+const api={parse,plan,getKey,setKey,selectChoices};root.CPTripGo=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
