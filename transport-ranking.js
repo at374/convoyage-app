@@ -135,6 +135,8 @@
         Date.parse(walk.arrival)>departure||
         Date.parse(walk.arrival)<=Date.parse(walk.departure)||
         !finite(walk.distanceMeters)||walk.distanceMeters<0||
+        // A routed walk must be at least the straight-line distance.
+        walk.distanceMeters+10<metres(walk.fromPoint,walk.toPoint)||
         walk.distanceMeters>2*((Date.parse(walk.arrival)-Date.parse(walk.departure))/1000)+10||
         departure-Date.parse(walk.arrival)<60000)return null;
       walking={...walk,serviceConfirmed:false};
