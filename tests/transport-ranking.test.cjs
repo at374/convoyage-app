@@ -135,4 +135,7 @@ assert.equal(evaluate(null,{deadline}).feasible,false,'Null provider result must
 assert.equal(evaluate(undefined,{deadline}).feasible,false,'Undefined provider result must not crash evaluation');
 assert.equal(rank([null,undefined,false,{},base],{deadline})[0].journey.feasible,true,'Malformed provider rows must be skipped');
 assert.equal(rank([null,undefined],{deadline}).length,0,'All-invalid provider response returns no journeys');
+assert.equal(rank([base],null).length,1,'Null ranking options must not crash');
+assert.equal(rank([base],false).length,1,'Malformed ranking options must not crash');
+assert.equal(rank(null,null).length,0,'Null journeys and options return empty results');
 console.log('transport-ranking: all assertions passed');
