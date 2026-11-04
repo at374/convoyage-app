@@ -102,6 +102,27 @@
       }))
     })),provider||'Régional');
   }
+  // Normalize externally retrieved long-distance offers without claiming a live search.
+  // A provider result is only a candidate until availability, address access and price are verified.
+  function adaptLongDistance(offers,provider){
+    if(!['FlixBus','BlaBlaCar','BlaBlaCar Bus'].includes(provider))throw new Error('Unsupported long-distance provider');
+    return (Array.isArray(offers)?offers:[]).filter(o=>o&&typeof o==='object'&&!Array.isArray(o)).flatMap((o,index)=>{
+      const departure=toISO(o.departure),arrival=toISO(o.arrival);
+      if(!departure||!arrival||Date.parse(arrival)<=Date.parse(departure))return [];
+      const from=typeof o.from==='string'&&o.from.trim()?o.from.trim():null;
+      const to=typeof o.to==='string'&&o.to.trim()?o.to.trim():null;
+      if(!from||!to)return [];
+      const leg={provider,line:typeof o.line==='string'?o.line:null,from,to,departure,arrival,
+        serviceConfirmed:false,verifiedPriceEUR:null,fareVerified:false,fareSource:null,
+        fareValidFrom:null,fareValidUntil:null,passAccepted:false,passProduct:null,
+        passEligibilityVerified:false,passEligibilitySource:null,passValidFrom:null,passValidUntil:null};
+      return [{id:provider.toLowerCase().replace(/\\s+/g,'-')+'-candidate-'+index,
+        provider,departure,arrival,legs:[leg],priceEUR:null,exactOrigin:false,
+        exactDestination:false,accessVerified:false,serviceConfirmed:false,
+        source:provider+' — offre externe non confirmée',fareStatus:'Prix non vérifié',
+        detailStatus:'Disponibilité, tarif, points de rendez-vous et circulation à vérifier'}];
+    });
+  }
   // Fare evidence is injected only after adapting untrusted schedule feeds.
   // Each item must identify the itinerary, leg index and exact departure.
   function applyFareEvidence(journeys,evidence=[]){
@@ -142,7 +163,7 @@
         fareStatus:result.status,fareBreakdown:result.breakdown};
     });
   }
-  const api={adaptSNCF,adaptGTFS,adaptRegional,applyFareEvidence,withVerifiedFares};
+  const api={adaptSNCF,adaptGTFS,adaptRegional,adaptLongDistance,applyFareEvidence,withVerifiedFares};
   if(typeof module==='object'&&module.exports)module.exports=api;
   root.CPTransportAdapters=Object.assign(root.CPTransportAdapters||{},api);
 })(typeof window!=='undefined'?window:globalThis);
