@@ -167,3 +167,13 @@ test('Agenda per-leg labels are consistent with verified, pass, walk and unknown
  assert.equal(describeLeg(fare([{provider:'TER',fareVerified:true,fareSource:'officiel',verifiedPriceEUR:8.5}]).breakdown[0]),'Tarif vérifié : 8,50 €');
  assert.equal(describeLeg(fare([{...sibra}],{sibraPassActive:true}).breakdown[0]),'Couvert par abonnement vérifié');
 });
+
+test('date-only fare and pass expiry includes the whole boarding day but not the next',()=>{
+ const fareLeg={...dated,fareValidFrom:'2026-11-01',fareValidUntil:'2026-11-30'};
+ assert.equal(fare([{...fareLeg,departure:'2026-11-30T23:50:00+01:00'}]).totalEUR,8.5);
+ assert.equal(fare([{...fareLeg,departure:'2026-12-01T00:10:00+01:00'}]).known,false);
+ const passLeg={...eligible,passValidFrom:'2026-01-01',passValidUntil:'2026-12-31'};
+ assert.equal(fare([{...passLeg,departure:'2026-12-31T23:50:00+01:00'}],{sibraPassActive:true}).totalEUR,0);
+ assert.equal(fare([{...passLeg,departure:'2027-01-01T00:10:00+01:00'}],{sibraPassActive:true}).known,false);
+ assert.equal(fare([{...fareLeg,fareValidUntil:'2026-11-31',departure:'2026-11-15T12:00:00+01:00'}]).known,false);
+});

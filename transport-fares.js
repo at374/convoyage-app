@@ -8,9 +8,20 @@
     if(travelDate==null)return true;
     const when=Date.parse(travelDate);
     if(!Number.isFinite(when))return false;
-    const start=leg?.fareValidFrom?Date.parse(leg.fareValidFrom):NaN;
-    const end=leg?.fareValidUntil?Date.parse(leg.fareValidUntil):NaN;
-    return Number.isFinite(start)&&Number.isFinite(end)&&start<=when&&when<=end;
+    const startValue=leg?.fareValidFrom,endValue=leg?.fareValidUntil;
+    // Date-only validity is inclusive for the full local boarding day.
+    const dateOnly=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&
+      Number.isFinite(Date.parse(value))&&new Date(Date.parse(value)).toISOString().slice(0,10)===value;
+    const boardingDay=typeof travelDate==='string'&&/^\d{4}-\d{2}-\d{2}/.test(travelDate)?travelDate.slice(0,10):null;
+    const start=dateOnly(startValue)?Date.parse(startValue+'T00:00:00Z'):Date.parse(startValue);
+    const end=dateOnly(endValue)?Date.parse(endValue+'T23:59:59.999Z'):Date.parse(endValue);
+    if((typeof startValue==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(startValue)&&!dateOnly(startValue))||
+       (typeof endValue==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(endValue)&&!dateOnly(endValue)))return false;
+    if(!Number.isFinite(start)||!Number.isFinite(end)||start>end)return false;
+    if(dateOnly(startValue)&&boardingDay&&boardingDay<startValue)return false;
+    if(dateOnly(endValue)&&boardingDay&&boardingDay>endValue)return false;
+    return (dateOnly(startValue)&&boardingDay?true:start<=when)&&
+      (dateOnly(endValue)&&boardingDay?true:when<=end);
   }
   function fare(legs,options={}){
     options=options&&typeof options==='object'?options:{};
