@@ -170,7 +170,7 @@ async function compareWithRoutedWalks(regionalJourneys,longDistanceResult,option
  const regional=Array.isArray(regionalJourneys)?regionalJourneys:[];
  const longDistance=Array.isArray(longDistanceResult?.offers)?longDistanceResult.offers:[];
  const timestamp=value=>{
-  if(typeof value!=='string'||!/^20\d{2}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.[0-5]\d)?)?(?:Z|[+-](?:0\d|1[0-4]):[0-5]\d)$/.test(value))return null;
+  if(typeof value!=='string'||!/^20\d{2}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d{1,3})?)?(?:Z|[+-](?:0\d|1[0-4]):[0-5]\d)$/.test(value))return null;
   const n=Date.parse(value);return Number.isFinite(n)?n:null;
  };
  const walkingConnections=[...(Array.isArray(options.walkingConnections)?options.walkingConnections:[])];
