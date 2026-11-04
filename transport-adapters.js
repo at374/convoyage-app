@@ -44,7 +44,7 @@
    */
   function adaptGTFS(itineraries,provider){
     const name=typeof provider==='string'&&provider.trim()?provider.trim():'Réseau GTFS';
-    return (Array.isArray(itineraries)?itineraries:[]).map((it,index)=>({
+    return (Array.isArray(itineraries)?itineraries:[]).filter(it=>it&&typeof it==='object'&&!Array.isArray(it)).map((it,index)=>({
       id:'gtfs-'+index,
       provider:name,
       departure:it.departure,
