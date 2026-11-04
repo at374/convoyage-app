@@ -105,3 +105,14 @@ test('return trips use arrival window without subtracting outbound pickup margin
  assert.equal(homeward.candidates.length,1);
  assert.equal(homeward.choices[0].journey.feasible,false);
 });
+
+
+test('GPS reliability alone cannot reduce the outbound pickup margin',()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const base={departure:'2026-11-02T08:00:00+01:00',arrival:'2026-11-02T09:50:00+01:00',legs:[]};
+ const deadline='2026-11-02T10:00:00+01:00';
+ const options={deadline,marginMinutes:5,exactGPSReliable:true};
+ assert.equal(compareWithRegional([{...base,id:'unverified',exactDestination:true,accessVerified:false}],null,options).candidates.length,0);
+ assert.equal(compareWithRegional([{...base,id:'verified',exactDestination:true,accessVerified:true}],null,options).candidates.length,1);
+ assert.equal(compareWithRegional([{...base,id:'no-destination',exactDestination:false,accessVerified:true}],null,options).candidates.length,0);
+});
