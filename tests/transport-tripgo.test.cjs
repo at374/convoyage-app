@@ -307,3 +307,15 @@ test('TripGo ranking preserves different service IDs on identical schedules',()=
  assert.equal(choices[0].journey,first);
  assert.equal(choices[1].journey,different);
 });
+
+
+test('TripGo ranking preserves alternatives with distinct route and stop codes',()=>{
+ const first=api.parse(clone(),options).itineraries[0];
+ for(const field of ['routeId','fromStopCode','toStopCode']){
+  const different={...first,legs:first.legs.map((leg,index)=>index===1?{...leg,[field]:'alternate-'+field}:{...leg})};
+  const choices=api.selectChoices([first,different],null,3);
+  assert.equal(choices.length,2,field+' must distinguish provider journeys');
+  assert.equal(choices[0].journey,first);
+  assert.equal(choices[1].journey,different);
+ }
+});
