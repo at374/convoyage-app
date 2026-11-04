@@ -36,6 +36,9 @@ test('time windows include previous service days, explicit horizon, margin and m
  const long=agenda.searchWindow({...task,latestArrival:'2026-11-09T12:00:00+01:00'});
  assert.equal(Date.parse(long.latestArrival)-Date.parse(long.earliestDeparture),48*3600000);
  assert.throws(()=>agenda.searchWindow({}),/Missing/);
+ for(const marginMinutes of [-1,Infinity,NaN,'15',1441])assert.throws(()=>agenda.searchWindow({...task,marginMinutes}),/margin/);
+ for(const invalid of [null,false,[]])assert.throws(()=>agenda.searchWindow(invalid),/window/);
+ assert.equal(agenda.searchWindow({...task,marginMinutes:15}).marginMinutes,15);
  for(const latestArrival of ['2026-02-30T12:00:00Z','2026-11-02T24:00:00Z'])assert.throws(()=>agenda.searchWindow({latestArrival}),/timestamp/);
  assert.throws(()=>agenda.searchWindow({...task,latestArrival:'2026-11-02T12:00:00'}),/timestamp/);
  for(const bad of ['2026-11-02T12:00:00+25:00','2026-11-02T12:00:00+01:99','2026-11-02T12:00:00-24:00']){
