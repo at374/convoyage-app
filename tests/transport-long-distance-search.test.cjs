@@ -274,3 +274,24 @@ test('unmatched single walking connection never leaks into a different transfer'
   {deadline:'2026-11-02T09:00:00+01:00',walkingConnection:walk});
  assert.equal(result.candidates.some(x=>x.id==='regional+coach'),false);
 });
+
+test('comparator selects a walk fitting the transfer window, not an earlier stale walk',()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const from={lat:45.91,lon:6.13},to={lat:45.911,lon:6.131};
+ const regional={id:'regional',departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+  legs:[{departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+   fromPoint:{lat:45.9,lon:6.12},toPoint:from}]};
+ const coach={id:'coach',departure:'2026-11-02T07:45:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+  legs:[{departure:'2026-11-02T07:45:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+   fromPoint:to,toPoint:{lat:45.92,lon:6.14}}]};
+ const walk={mode:'wa_wal',routeVerified:true,
+  departure:'2026-11-02T07:40:00+01:00',arrival:'2026-11-02T07:43:00+01:00',
+  fromPoint:from,toPoint:to,distanceMeters:160};
+ const stale={...walk,departure:'2026-11-02T06:40:00+01:00',
+  arrival:'2026-11-02T06:43:00+01:00'};
+ const result=compareWithRegional([regional],{offers:[coach]},
+  {deadline:'2026-11-02T09:00:00+01:00',walkingConnections:[stale,walk]});
+ const joined=result.candidates.find(x=>x.id==='regional+coach');
+ assert.ok(joined,'A later valid walk must be selected over an earlier stale one');
+ assert.equal(joined.legs[1].departure,walk.departure);
+});
