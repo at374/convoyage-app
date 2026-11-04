@@ -2262,7 +2262,11 @@
       junctionCombined.className='doux';
       junctionCombined.setAttribute('data-junction-combined','');
       const refreshJunctionCombined=()=>{
+        // Never combine candidates unless both the delivery and next pickup
+        // timestamps are valid. An absent deadline must not widen the search.
         if(!regionalActive()||!junctionLongDistanceResult||
+            !Number.isFinite(Date.parse(deliveryDate||''))||
+            !Number.isFinite(Date.parse(next?.pickup_start||''))||
             !window.CPTransportLongDistanceSearch?.compareWithRegional)return;
         const result=window.CPTransportLongDistanceSearch.compareWithRegional(
           junctionRegionalJourneys,junctionLongDistanceResult,{
