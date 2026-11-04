@@ -21,6 +21,8 @@
     return 12742000*Math.asin(Math.min(1,Math.sqrt(h)));
   }
   function evaluate(item,opts={}){
+    if(!item||typeof item!=='object'||Array.isArray(item))item={};
+    if(!opts||typeof opts!=='object')opts={};
     const legs=Array.isArray(item.legs)?item.legs:[];
     const departure=validTime(item.departure)?Date.parse(item.departure):NaN;
     const arrival=validTime(item.arrival)?Date.parse(item.arrival):NaN;
@@ -67,7 +69,7 @@
       slackMinutes:slack,feasible,displayStatus:feasible?'Réalisable':'Transport non confirmé — vérifiez vous-même'};
   }
   function rank(items,opts={}){
-    const enriched=(Array.isArray(items)?items:[]).map(x=>evaluate(x,opts));
+    const enriched=(Array.isArray(items)?items:[]).filter(x=>x&&typeof x==='object'&&!Array.isArray(x)).map(x=>evaluate(x,opts));
     const valid=enriched.filter(x=>x.durationMinutes!==null&&
       (x.slackMinutes===null||x.slackMinutes>=(finite(opts.marginMinutes)?Math.max(opts.marginMinutes,opts.exactGPSReliable===true&&x.exactDestination===true&&x.accessVerified===true?5:15):(opts.exactGPSReliable===true&&x.exactDestination===true&&x.accessVerified===true?5:15))));
     const byPrice=(a,b)=>Number(b.feasible)-Number(a.feasible)||
