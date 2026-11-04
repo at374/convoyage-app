@@ -2252,6 +2252,51 @@
         refresh();
       };
       bt.cpRefreshRegional = () => regionalRefreshers.forEach(refresh => refresh());
+
+      // Optional provider integrations are explicit: no scraping and no invented
+      // FlixBus/BlaBlaCar departures. Use the same abortable mission slots.
+      const longDistanceEngine=window.CPTransportLongDistanceSearch;
+      const longDistanceFetchers=window.CP_LONG_DISTANCE_FETCHERS;
+      if(longDistanceEngine?.searchLongDistance && longDistanceFetchers &&
+          typeof longDistanceFetchers==='object') {
+        const localDay=iso=>{
+          const date=new Date(iso);
+          return Number.isFinite(date.getTime())?
+            new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',
+              year:'numeric',month:'2-digit',day:'2-digit'}).format(date):null;
+        };
+        const providerSearch=(label,origin,destination,when)=>{
+          if(!origin||!destination||!when)return;
+          regionalSlot(()=>[origin,destination,when],(target,signal)=>{
+            const status=document.createElement('p');status.className='doux';
+            status.setAttribute('data-long-distance-search',label);
+            status.textContent=label+' longue distance : recherche des fournisseurs raccordés…';
+            target.appendChild(status);
+            const date=localDay(when);
+            if(!date){status.textContent=label+' : date invalide. Transport non confirmé.';return;}
+            longDistanceEngine.searchLongDistance({from:origin,to:destination,date},
+              longDistanceFetchers).then(result=>{
+                if(signal.aborted||!regionalActive()||!status.isConnected)return;
+                const providers=Array.isArray(result.providers)?result.providers:[];
+                const connected=providers.filter(p=>p.status==='candidates-unverified');
+                const offers=Array.isArray(result.offers)?result.offers:[];
+                status.textContent=label+' longue distance : '+offers.length+
+                  ' proposition(s) non vérifiée(s), '+connected.length+'/'+providers.length+
+                  ' fournisseur(s) ayant répondu avec un format exploitable. '+
+                  'Horaires, circulation, tarifs et accès non confirmés.';
+              }).catch(()=>{
+                if(!signal.aborted&&regionalActive()&&status.isConnected)
+                  status.textContent=label+' longue distance indisponible. Transport non confirmé.';
+              });
+          });
+        };
+        providerSearch('Aller',home,from,pickupDate);
+        providerSearch('Retour',to,home,deliveryDate);
+        if(next&&deliveryDate)
+          providerSearch('Jonction',to,locationText(next.origin_address||next.from_address,
+            next.from_city,next.from_department),deliveryDate);
+      }
+
       regionalSlot(() => [regionalPoint(G.coordonnees(m,'destination')),regionalPoint(next && G.coordonnees(next,'origin')),deliveryDate,next?.pickup_start,securityMarginMin], (panel,signal) => {
       // Regional journeys use a configured endpoint or the public M provider,
       // only when both mission endpoints have exact GPS.
