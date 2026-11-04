@@ -167,7 +167,10 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       truncated=truncated||result.truncated===true;
       for(const journey of result.rows){
        if(!journey||!Number.isFinite(Date.parse(journey.departure))||!Number.isFinite(Date.parse(journey.arrival))||
-          Date.parse(journey.arrival)<Date.parse(journey.departure))throw new Error('Invalid GTFS journey times');
+          Date.parse(journey.arrival)<Date.parse(journey.departure)||
+          Date.parse(journey.departure)<Date.parse(window.earliestDeparture)||
+          Date.parse(journey.arrival)>Date.parse(window.latestArrival)-window.marginMinutes*60000)
+        throw new Error('GTFS journey outside mission window');
       }
       rows.push(...result.rows);
      }
