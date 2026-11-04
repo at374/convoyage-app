@@ -3,6 +3,12 @@
  */
 (function(root){
   'use strict';
+  function safeStopPoint(p){
+    if(!p||typeof p!=='object'||Array.isArray(p)||
+      typeof p.lat!=='number'||!Number.isFinite(p.lat)||Math.abs(p.lat)>90)return null;
+    const lon=p.lon??p.lng;
+    return typeof lon==='number'&&Number.isFinite(lon)&&Math.abs(lon)<=180?{lat:p.lat,lon}:null;
+  }
   function adaptSNCF(itineraries){
     return (Array.isArray(itineraries)?itineraries:[]).filter(it=>it&&typeof it==='object'&&!Array.isArray(it)).map((it,index)=>({
       id:'sncf-theoretical-'+index,
@@ -20,6 +26,8 @@
         to:leg.to||null,
         departure:leg.departure,
         arrival:leg.arrival,
+        fromPoint:safeStopPoint(leg.fromPoint),
+        toPoint:safeStopPoint(leg.toPoint),
         serviceConfirmed:false,
         // Raw GTFS/SNCF feeds cannot certify tariffs by self-declaration.
         verifiedPriceEUR:null,
@@ -60,6 +68,8 @@
         to:leg.to||leg.toStop||null,
         departure:leg.departure,
         arrival:leg.arrival,
+        fromPoint:safeStopPoint(leg.fromPoint),
+        toPoint:safeStopPoint(leg.toPoint),
         serviceConfirmed:false,
         verifiedPriceEUR:leg.verifiedPriceEUR,
         fareVerified:false,
