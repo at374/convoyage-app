@@ -62,7 +62,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
    const providerTags=operators.flatMap(name=>{
     const normalized=name.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
     if(/(?:^| )flixbus(?: |$)/.test(normalized))return ['FlixBus'];
-    if(/(?:^| )blablacar(?: |$)/.test(normalized))return [/\bbus\b/.test(normalized)?'BlaBlaCar Bus':'BlaBlaCar'];
+    if(/(?:^| )blablacar(?: |$)/.test(normalized))return [normalized.split(' ').includes('bus')?'BlaBlaCar Bus':'BlaBlaCar'];
     return [];
    });
    found.push({departure:new Date(departure).toISOString(),arrival:new Date(arrival).toISOString(),legs,priceEUR:null,
