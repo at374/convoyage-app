@@ -188,6 +188,11 @@ async function run(){
   assert.equal(buttonColour,'rgb(205, 234, 255)','The existing light-blue transport button is preserved');
   await page.locator('#btnTransportsMission').click();
   await page.locator('#cpTransportMissionDetails').waitFor();
+  const providerStatus=page.locator('#cpTransportMissionDetails [data-long-distance-providers]');
+  await providerStatus.waitFor();
+  assert.match(await providerStatus.innerText(),/FlixBus et BlaBlaCar/);
+  assert.match(await providerStatus.innerText(),/Aucun départ ni tarif confirmé/);
+
   const sibraReference=page.locator('#cpSibraFareReference');
   await sibraReference.locator('summary').click();
   assert.match(await sibraReference.innerText(),/2,50 €.*2,00 €/);
