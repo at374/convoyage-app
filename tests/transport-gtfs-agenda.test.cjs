@@ -559,3 +559,15 @@ test('western Ain journey chooses Ain GTFS despite Haute-Savoie overlap',async()
  assert.equal(loaded?.id,'oura-ain');
  instance.dispose();
 });
+
+test('truncated empty GTFS results never imply a complete absence of transport',async()=>{
+ const target=panel();
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,query:async()=>({rows:[],truncated:true}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/aucun trajet dans les résultats partiels/);
+ assert.match(target.textContent,/recherche incomplète/);
+ assert.match(target.textContent,/Affichage limité/);
+ session.dispose();
+});
