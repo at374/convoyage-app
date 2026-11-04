@@ -37,7 +37,8 @@ async function searchLongDistance(query,fetchers={}){
     const key=JSON.stringify([offer.provider,offer.departure,offer.arrival,
      offer.legs[0]?.from,offer.legs[0]?.to,offer.legs[0]?.line,
      offer.legs[0]?.serviceTripId,offer.legs[0]?.routeId,
-     offer.legs[0]?.fromStopCode,offer.legs[0]?.toStopCode]);
+     offer.legs[0]?.fromStopCode,offer.legs[0]?.toStopCode,
+     offer.legs[0]?.fromPoint,offer.legs[0]?.toPoint]);
     if(!unique.has(key))unique.set(key,offer);
    }
    const offers=[...unique.values()].sort((a,b)=>
