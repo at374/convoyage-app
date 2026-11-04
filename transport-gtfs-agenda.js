@@ -7,6 +7,12 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  // Selection envelope only: does not assert coverage or actual walking access.
  bounds:[45.4,5.7,46.5,7.1],timeZone:'Europe/Paris'
 }),Object.freeze({
+ id:'oura-ain',datasetId:'reseau-interurbain-cars-region-ain-01',network:'Cars Région Ain',format:'GTFS',federate:true,
+ // Official data.gouv.fr GTFS resource; redirects to OÙRA provider CARS_REGION_AIN.
+ url:'https://www.data.gouv.fr/api/1/datasets/r/723f0cc2-476a-464c-a40e-bf8686f7bd8d',
+ // Selection envelope only, not a guarantee of lines or cross-border service.
+ bounds:[45.65,4.7,46.55,6.3],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'80100',datasetId:'5bd9843e634f413220f7f04a',network:'Sibra',format:'GTFS',federate:true,
  url:'https://www.data.gouv.fr/api/1/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0',resolveFromCatalogue:true,
  bounds:[45.7,5.9,46.1,6.5],timeZone:'Europe/Paris'
