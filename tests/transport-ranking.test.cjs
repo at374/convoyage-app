@@ -113,4 +113,11 @@ assert.equal(evaluate(plausibleReportedWalk,{deadline}).feasible,true,'A measure
 
 assert.equal(evaluate({...base,departure:'2026-11-02T07:00:00+14:30'},{deadline}).feasible,false,'UTC+14:30 is not a valid offset');
 assert.equal(evaluate({...base,departure:'2026-11-02T07:00:00-14:01'},{deadline}).feasible,false,'UTC-14:01 is not a valid offset');
+
+
+const nearButNotConnected={...connectedJourney,legs:[
+ connectedJourney.legs[0],
+ {...connectedJourney.legs[1],fromPoint:{lat:45.9102,lon:6.13}}
+]};
+assert.equal(evaluate(nearButNotConnected,{deadline}).feasible,false,'Twenty-two metre transfer needs an explicit walking segment');
 console.log('transport-ranking: all assertions passed');
