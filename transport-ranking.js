@@ -10,6 +10,8 @@
     if(!m)return false;
     const year=Number(m[1]),month=Number(m[2]),day=Number(m[3]);
     const calendar=new Date(Date.UTC(year,month-1,day));
+    const offset=m[7].match(/^([+-])(\\d{2}):(\\d{2})$/);
+    if(offset&&(Number(offset[2])>14||(Number(offset[2])===14&&Number(offset[3])!==0)))return false;
     return year>=100&&calendar.getUTCFullYear()===year&&calendar.getUTCMonth()===month-1&&calendar.getUTCDate()===day&&Number.isFinite(Date.parse(v));
   }
   function location(p){return p&&finite(p.lat)&&finite(p.lon??p.lng)&&Math.abs(p.lat)<=90&&Math.abs(p.lon??p.lng)<=180;}
