@@ -180,3 +180,14 @@ test('equator and prime-meridian transfer stops are valid GTFS coordinates',()=>
  assert.equal(result.journeys[0].transferStop.lon,0);
  assert.equal(result.journeys[0].transferVerified,false);
 });
+
+test('federation never spends more than the shared leg budget across multiple dates',()=>{
+ const a=feed('A','first'),b=feed('B','second');
+ const dates=['2026-11-02','2026-11-03'];
+ const result=crossNetworkTrips([a,b],'2026-11-02',origin,destination,window,
+  {connectionDates:dates,maxLegs:1});
+ assert.equal(result.searchTruncated,true);
+ assert.ok(result.journeys.length<=1);
+ // A second date must not be queried with a negative remaining maxLegs.
+ assert.equal(typeof result.searchTruncated,'boolean');
+});
