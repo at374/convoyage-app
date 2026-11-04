@@ -63,7 +63,8 @@
     }
     const allVerified=timelineValid&&legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
-    const feasible=valid&&allVerified&&doorToDoor&&item.accessVerified===true&&
+    const interchangeVerified=item.interNetwork!==true||item.transferVerified===true;
+    const feasible=valid&&allVerified&&doorToDoor&&interchangeVerified&&item.accessVerified===true&&
       Number.isFinite(deadline)&&slack>=margin;
     return {...item,priceEUR:price,durationMinutes:valid?Math.ceil((arrival-departure)/60000):null,
       slackMinutes:slack,feasible,displayStatus:feasible?'Réalisable':'Transport non confirmé — vérifiez vous-même'};

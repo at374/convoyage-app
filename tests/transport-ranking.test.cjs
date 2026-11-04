@@ -63,3 +63,8 @@ assert.equal(evaluate(undefined,{deadline}).feasible,false,'Missing provider can
 assert.equal(evaluate(base,null).feasible,false,'Missing ranking options must not crash');
 assert.equal(rank([null,undefined,{...base,id:'valid'}],{deadline})[0].journey.id,'valid','Malformed provider candidates must not hide a valid journey');
 assert.equal(rank([base],null).length,1,'Null ranking options must be tolerated');
+
+assert.equal(evaluate({...timed,interNetwork:true,transferVerified:false},{deadline}).feasible,false,'An unverified inter-network walk must never be called realizable');
+assert.equal(evaluate({...timed,interNetwork:true},{deadline}).feasible,false,'Missing interchange evidence cannot certify a cross-network journey');
+assert.equal(evaluate({...timed,interNetwork:true,transferVerified:true},{deadline}).feasible,true,'A verified inter-network interchange preserves feasible confirmed services');
+assert.equal(evaluate({...timed,interNetwork:false,transferVerified:false},{deadline}).feasible,true,'Ordinary journeys do not require inter-network transfer evidence');
