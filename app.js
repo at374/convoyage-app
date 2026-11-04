@@ -2608,10 +2608,16 @@
             // Ranking labels can collapse onto one journey when fares are unknown.
             // Preserve up to three distinct dated alternatives instead of hiding
             // other available departures returned by TripGo.
+            const tripgoIdentity=journey=>JSON.stringify([journey.departure,journey.arrival,
+              (journey.legs||[]).map(leg=>[leg.mode,leg.provider,leg.line,leg.departure,leg.arrival])]);
+            const displayedTripgo=new Set(tripgoChoices.map(choice=>tripgoIdentity(choice.journey)));
             for(const journey of shown){
               if(tripgoChoices.length>=3)break;
-              if(!tripgoChoices.some(choice=>choice.journey===journey))
+              const identity=tripgoIdentity(journey);
+              if(!displayedTripgo.has(identity)){
+                displayedTripgo.add(identity);
                 tripgoChoices.push({label:'Autre proposition',journey});
+              }
             }
             status.textContent=label+' TripGo : '+(tripgoChoices.length?tripgoChoices.length+' proposition(s) affichée(s) sur '+shown.length+' trajet(s) daté(s), marches comprises.':'aucune proposition compatible retournée ; cela ne prouve pas l’absence de transport.');
             for(const {label:choiceLabel,journey:result} of tripgoChoices){
