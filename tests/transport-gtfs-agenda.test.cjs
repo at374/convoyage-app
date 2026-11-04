@@ -60,6 +60,7 @@ test('mount shares one load across tasks, deduplicates rows, uses text nodes and
  assert.deepEqual(calls[0].connectionDates,agenda.serviceDates(agenda.searchWindow(task),'Europe/Paris'));
  assert.match(target.textContent,/voir l’arrêt/);
  assert.match(target.textContent,/Retour : 1 horaire/);assert.match(target.textContent,/Aller : 1 horaire/);
+ assert.match(target.textContent,/Marge avant mission : 15 min minimum/);
  assert.match(target.textContent,/École <script>/);assert.match(target.textContent,/vol d’oiseau/);
  assert.match(target.textContent,/date de mise à jour du producteur non fournie/);
  assert.match(target.textContent,/Affichage limité/);assert.match(target.textContent,/Transport non confirmé/);
