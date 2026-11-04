@@ -2603,10 +2603,7 @@
             // Rank only provider-supplied candidates. Unknown fares must never
             // create a fictional "cheapest" option.
             const tripgoRanked=window.CPTransportRanking?.rank?
-              window.CPTransportRanking.rank(shown,{
-                ...(task.arriveBy?{deadline:task.latestArrival||task.when}:{}),
-                marginMinutes:0
-              }):[];
+              window.CPTransportRanking.rank(shown,{}):[];
             const tripgoChoices=tripgoRanked.length?
               tripgoRanked.map(choice=>({label:choice.label,journey:choice.journey})):
               shown.slice(0,3).map(journey=>({label:'Proposition',journey}));
