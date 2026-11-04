@@ -729,3 +729,18 @@ test('Agenda discloses truncated coverage even when valid GTFS journeys are show
  assert.match(target.textContent,/Affichage limité/);
  session.dispose();
 });
+
+test('Agenda discloses missing GTFS network even when another network finds a journey',async()=>{
+ const target=panel();
+ const partialSummary={...summary,partial:true};
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>partialSummary,
+  query:async()=>({rows:[row({tripId:'remaining-network'})],truncated:false}),
+  dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 1 horaire/);
+ assert.match(target.textContent,/Recherche partielle/);
+ assert.match(target.textContent,/Transport non confirmé/);
+ session.dispose();
+});
