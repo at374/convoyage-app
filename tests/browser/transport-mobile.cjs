@@ -209,6 +209,13 @@ async function run(){
   assert.match(await longDistanceStatus.innerText(),/0 proposition\(s\) non vérifiée\(s\), 1\/3 fournisseur/);
   assert.equal(await page.locator('[data-junction-combined]').count(),0,
     'Do not display a combined junction when no valid regional and long-distance junction has been computed');
+  // A manual refresh must rebuild the provider slots even when the mission
+  // address and departure time are unchanged.
+  await page.locator('#cpTransportMissionDetails button[aria-label="Actualiser maintenant les transports de cette mission"]').click();
+  await page.locator('#cpTransportMissionDetails [data-long-distance-search="Aller"]').waitFor();
+  await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails [data-long-distance-search="Aller"]')?.textContent.includes('fournisseur(s) ayant répondu'));
+  assert.match(await page.locator('#cpTransportMissionDetails [data-long-distance-search="Aller"]').innerText(),
+    /0 proposition\(s\) non vérifiée\(s\), 1\/3 fournisseur/);
 
 
   const sibraReference=page.locator('#cpSibraFareReference');
