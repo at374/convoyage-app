@@ -34,6 +34,7 @@
     // Confirmed services still need a chronological, connectable itinerary.
     // Legacy legs without times retain their existing service-confirmation semantics.
     const transferMinutes=finite(opts.minTransferMinutes)?Math.max(0,opts.minTransferMinutes):3;
+    const boardingMinutes=finite(opts.minBoardingMinutes)?Math.max(0,opts.minBoardingMinutes):1;
     let previousArrival=departure,previousPoint=null,previousLeg=null;
     const connected=legs.every(leg=>{
       if(!leg||leg.departure==null&&leg.arrival==null)return true;
@@ -48,6 +49,7 @@
         if(Math.max(gpsDistance??0,reportedDistance??0)>2*((end-start)/1000)+10)return false;
       }
       if(previousLeg&&previousLeg.mode!=='wa_wal'&&leg.mode!=='wa_wal'&&start-previousArrival<transferMinutes*60000)return false;
+      if(previousLeg?.mode==='wa_wal'&&leg.mode!=='wa_wal'&&start-previousArrival<boardingMinutes*60000)return false;
       if(previousPoint&&point(leg.fromPoint)&&metres(previousPoint,leg.fromPoint)>10)return false;
       previousPoint=point(leg.toPoint)?leg.toPoint:null;
       previousArrival=end;
