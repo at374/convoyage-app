@@ -143,3 +143,15 @@ test('distinct provider services and boarding stops are not collapsed at identic
   [['trip-a','stop-1'],['trip-b','stop-1'],['trip-a','stop-2']]);
  assert.ok(result.offers.every(x=>x.priceEUR===null&&x.serviceConfirmed===false));
 });
+
+test('regional comparison rejects timezone-ambiguous and invalid schedule dates',()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const base={departure:'2026-11-02T08:00:00+01:00',arrival:'2026-11-02T09:00:00+01:00',legs:[]};
+ const candidates=[base,{...base,departure:'2026-11-02T08:00:00'},
+  {...base,arrival:'2026-11-02T09:00:00'},
+  {...base,departure:'2026-02-30T08:00:00+01:00'},
+  {...base,arrival:'2026-11-02T09:00:00+14:30'}];
+ const result=compareWithRegional(candidates,null,{});
+ assert.equal(result.candidates.length,1);
+ assert.equal(result.choices.length,1);
+});
