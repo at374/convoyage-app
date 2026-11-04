@@ -2292,7 +2292,9 @@
               j.priceEUR.toFixed(2).replace('.',',')+
                 (j.fareVerified===true?' € (tarif vérifié)':' € (tarif à vérifier)'):
               'tarif inconnu';
-            return c.label+' : '+departure+' → '+arrival+' · '+
+            const duration=Number.isFinite(j.durationMinutes)&&j.durationMinutes>0?
+              ' · '+Math.round(j.durationMinutes)+' min':'';
+            return c.label+' : '+departure+' → '+arrival+duration+' · '+
               (j.provider||'réseau non précisé')+' · '+fare;
           }).join(' | '):'aucun choix compatible')+
           '. Accès, circulation et prix non confirmés.';
@@ -2368,6 +2370,8 @@
                     'tarif inconnu';
                   item.textContent=(choice.label||'Proposition')+' · '+
                     formatParis(journey.departure)+' → '+formatParis(journey.arrival)+
+                    (Number.isFinite(journey.durationMinutes)&&journey.durationMinutes>0?
+                      ' · '+Math.round(journey.durationMinutes)+' min':'')+
                     ' · '+(journey.provider||'Transport longue distance')+
                     ' · '+fare+' · Transport non confirmé.';
                   status.appendChild(item);
