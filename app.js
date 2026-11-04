@@ -2287,10 +2287,33 @@
                 const providers=Array.isArray(result.providers)?result.providers:[];
                 const connected=providers.filter(p=>p.status==='candidates-unverified');
                 const offers=Array.isArray(result.offers)?result.offers:[];
+                const pickupLimit=label==='Aller'?pickupDate:
+                  label==='Jonction'?next?.pickup_start:null;
+                const ranked=typeof longDistanceEngine.compareWithRegional==='function'?
+                  longDistanceEngine.compareWithRegional([],result,{
+                    direction:label==='Retour'?'return':'outbound',
+                    ...(pickupLimit?{deadline:pickupLimit,latestArrival:pickupLimit}:{}),
+                    ...(label==='Retour'&&deliveryDate?{earliestDeparture:deliveryDate}:{}),
+                    marginMinutes:securityMarginMin
+                  }):null;
+                const choices=Array.isArray(ranked?.choices)?ranked.choices:[];
                 status.textContent=label+' longue distance : '+offers.length+
                   ' proposition(s) non vérifiée(s), '+connected.length+'/'+providers.length+
                   ' fournisseur(s) ayant répondu avec un format exploitable. '+
+                  choices.length+' choix respectant les fenêtres de mission. '+
                   'Horaires, circulation, tarifs et accès non confirmés.';
+                for(const choice of choices.slice(0,3)){
+                  const journey=choice.journey;
+                  if(!journey||!Number.isFinite(Date.parse(journey.departure))||
+                      !Number.isFinite(Date.parse(journey.arrival)))continue;
+                  const item=document.createElement('p');item.className='doux';
+                  item.setAttribute('data-long-distance-choice',label);
+                  item.textContent=(choice.label||'Proposition')+' · '+
+                    formatParis(journey.departure)+' → '+formatParis(journey.arrival)+
+                    ' · '+(journey.provider||'Transport longue distance')+
+                    ' · Transport non confirmé, prix non vérifié.';
+                  status.appendChild(item);
+                }
               }).catch(()=>{
                 if(!signal.aborted&&regionalActive()&&status.isConnected)
                   status.textContent=label+' longue distance indisponible. Transport non confirmé.';
