@@ -168,3 +168,11 @@ assert.equal(connectJourneys(regionalPart,{...longDistancePart,departure:'2026-1
  legs:[{...longDistancePart.legs[0],departure:'2026-11-02T07:41:00+01:00'}]}),null,'Transfer must allow boarding time');
 assert.equal(connectJourneys(regionalPart,{...longDistancePart,legs:[{...longDistancePart.legs[0],fromPoint:{lat:45.92,lon:6.14}}]}),null,'Different stops require an explicit walking route');
 assert.equal(connectJourneys({...regionalPart,arrival:'2026-11-02T07:41:00+01:00'},longDistancePart),null,'Mismatched timetable bounds cannot be assembled');
+
+assert.equal(connectJourneys({...regionalPart,legs:[
+ {...regionalPart.legs[0],arrival:'2026-11-02T07:20:00+01:00'},
+ {...regionalPart.legs[0],departure:'2026-11-02T07:15:00+01:00'}
+ ]},longDistancePart),null,'Overlapping provider legs cannot be assembled');
+assert.equal(connectJourneys(regionalPart,{...longDistancePart,legs:[
+ {...longDistancePart.legs[0],departure:'2026-11-02T08:20:00+01:00'}
+ ]}),null,'Reversed provider leg cannot be assembled');
