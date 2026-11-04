@@ -216,3 +216,20 @@ test('comparison includes provisional regional to long-distance same-stop connec
   fromPoint:{lat:45.92,lon:6.14}}]}]}, {deadline:'2026-11-02T09:00:00+01:00'});
  assert.equal(disconnected.candidates.some(x=>x.id==='regional+long'),false);
 });
+
+test('comparison joins long-distance arrival to a regional onward service',()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const point={lat:45.91,lon:6.13};
+ const long={id:'coach',departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+  legs:[{departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+   fromPoint:{lat:45.9,lon:6.12},toPoint:point,serviceConfirmed:false}]};
+ const regional={id:'regional',departure:'2026-11-02T07:45:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+  legs:[{departure:'2026-11-02T07:45:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+   fromPoint:point,toPoint:{lat:45.92,lon:6.14},serviceConfirmed:false}]};
+ const result=compareWithRegional([regional],{offers:[long],providers:[]},
+  {deadline:'2026-11-02T09:00:00+01:00'});
+ const joined=result.candidates.find(x=>x.id==='coach+regional');
+ assert.ok(joined,'A coach can feed an onward regional service');
+ assert.equal(joined.serviceConfirmed,false);
+ assert.equal(joined.priceEUR,null);
+});
