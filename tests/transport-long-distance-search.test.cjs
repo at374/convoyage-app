@@ -60,3 +60,19 @@ test('duplicate offers are collapsed and large provider results are bounded',asy
  assert.equal(result.providers[0].truncated,true);
  assert.equal(new Set(result.offers.map(o=>o.legs[0].line)).size,100);
 });
+
+test('mission windows exclude services departing too early or arriving too late',async()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const result=await searchLongDistance({from:'Annecy',to:'Lyon',date:'2026-11-02'},{
+  FlixBus:async()=>[
+   {from:'Annecy',to:'Lyon',departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T08:00:00+01:00'},
+   {from:'Annecy',to:'Lyon',departure:'2026-11-02T09:00:00+01:00',arrival:'2026-11-02T10:00:00+01:00'},
+   {from:'Annecy',to:'Lyon',departure:'2026-11-02T11:00:00+01:00',arrival:'2026-11-02T13:00:00+01:00'}
+  ]
+ });
+ const compared=compareWithRegional([],result,{earliestDeparture:'2026-11-02T08:30:00+01:00',
+  latestArrival:'2026-11-02T10:30:00+01:00',deadline:'2026-11-02T10:30:00+01:00'});
+ assert.equal(compared.candidates.length,1);
+ assert.equal(compared.candidates[0].departure,'2026-11-02T08:00:00.000Z');
+ assert.ok(compared.choices.every(c=>c.journey.feasible===false));
+});
