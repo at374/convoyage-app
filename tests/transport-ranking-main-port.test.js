@@ -37,3 +37,28 @@ test('unverified and fractional-cent prices are not ranked as cheapest',()=>{
  const valid={...trip,id:'valid',priceEUR:2.5};
  assert.equal(rank([bad,fractional,valid],{direction:'return'})[0].journey.id,'valid');
 });
+
+test('confirmed multimodal journey rejects a missing timed transfer',()=>{
+ const verified={...trip,exactOrigin:true,exactDestination:true,accessVerified:true,
+  legs:[
+   {departure:'2026-11-04T09:00:00+01:00',arrival:'2026-11-04T09:25:00+01:00',serviceConfirmed:true},
+   {serviceConfirmed:true}
+  ]};
+ assert.equal(evaluate(verified,{deadline:'2026-11-04T10:15:00+01:00'}).feasible,false);
+ assert.equal(evaluate(verified,{deadline:'2026-11-04T10:15:00+01:00'}).displayStatus,'Transport non confirmé — vérifiez vous-même');
+});
+test('confirmed multimodal journey rejects impossible transfer coordinates',()=>{
+ const a={lat:45.90,lon:6.12},b={lat:45.91,lon:6.13};
+ const verified={...trip,exactOrigin:true,exactDestination:true,accessVerified:true,interNetwork:true,transferVerified:true,
+  legs:[
+   {departure:'2026-11-04T09:00:00+01:00',arrival:'2026-11-04T09:25:00+01:00',toPoint:a,serviceConfirmed:true},
+   {departure:'2026-11-04T09:30:00+01:00',arrival:'2026-11-04T10:00:00+01:00',fromPoint:b,serviceConfirmed:true}
+  ]};
+ assert.equal(evaluate(verified,{deadline:'2026-11-04T10:15:00+01:00'}).feasible,false);
+ assert.equal(evaluate({...verified,legs:[verified.legs[0],{...verified.legs[1],fromPoint:a}]},{deadline:'2026-11-04T10:15:00+01:00'}).feasible,true);
+});
+test('return cannot be marked confirmed when it starts before delivery',()=>{
+ const verified={...trip,exactOrigin:true,exactDestination:true,accessVerified:true,legs:[{serviceConfirmed:true}]};
+ assert.equal(evaluate(verified,{direction:'return',earliestDeparture:'2026-11-04T09:05:00+01:00'}).feasible,false);
+ assert.equal(evaluate(verified,{direction:'return',earliestDeparture:'2026-11-04T09:00:00+01:00'}).feasible,true);
+});
