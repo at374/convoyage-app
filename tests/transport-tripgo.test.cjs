@@ -319,3 +319,19 @@ test('TripGo ranking preserves alternatives with distinct route and stop codes',
   assert.equal(choices[1].journey,different);
  }
 });
+
+
+test('TripGo ranking maps cloned service alternatives back to provider journeys',()=>{
+ const first=api.parse(clone(),options).itineraries[0];
+ const second={...first,legs:first.legs.map((leg,index)=>index===1?{...leg,serviceTripId:'second-provider-service'}:{...leg})};
+ const ranking={rank(journeys){return [
+  {label:'Plus rapide',journey:JSON.parse(JSON.stringify(journeys[1]))},
+  {label:'Compromis',journey:JSON.parse(JSON.stringify(journeys[0]))}
+ ];}};
+ const choices=api.selectChoices([first,second],ranking,3);
+ assert.equal(choices.length,2);
+ assert.equal(choices[0].label,'Plus rapide');
+ assert.equal(choices[0].journey,second);
+ assert.equal(choices[1].label,'Compromis');
+ assert.equal(choices[1].journey,first);
+});
