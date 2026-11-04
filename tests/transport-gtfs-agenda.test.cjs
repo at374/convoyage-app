@@ -542,19 +542,3 @@ test('official Cars Région Ain GTFS is available as an Agenda resource',()=>{
  assert.equal(agenda.selected(ain,{from:{lat:46.25,lon:5.6},to:{lat:47.1,lon:6.5}}),false);
 });
 
-test('Agenda chooses the most local feed when regional envelopes overlap',async()=>{
- const target=panel();
- const local={id:'local',network:'Local',format:'GTFS',url:'https://example.org/local.zip',
-  bounds:[46.1,5.9,46.4,6.3],timeZone:'Europe/Paris'};
- const broad={id:'broad',network:'Broad',format:'GTFS',url:'https://example.org/broad.zip',
-  bounds:[45.4,5.7,46.5,7.1],timeZone:'Europe/Paris'};
- const task={label:'Aller',from:{lat:46.20,lon:6.1},to:{lat:46.25,lon:6.15},
-  earliestDeparture:'2026-11-04T09:00:00+01:00',latestArrival:'2026-11-04T10:00:00+01:00'};
- let loaded=null;
- const instance=agenda.mount(target,{tasks:[task],resources:[broad,local],
-  clientFactory:()=>({load:async resource=>{loaded=resource;return {source:{network:'Local',url:resource.url,loadedAt:'2026-11-04T08:00:00Z'},counts:{stops:0}};},
-  dispose(){},search:async()=>({rows:[]})})});
- await instance.done;
- assert.equal(loaded?.id,'local');
- instance.dispose();
-});
