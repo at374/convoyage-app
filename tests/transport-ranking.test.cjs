@@ -83,3 +83,11 @@ assert.equal(evaluate({...connectedJourney,legs:gpsLegs},{deadline}).feasible,fa
 assert.equal(evaluate({...connectedJourney,legs:[gpsLegs[0],{...gpsLegs[1],fromPoint:{lat:45.902,lon:6.122}}]},{deadline}).feasible,true,'Connected stops preserve valid transfer');
 
 assert.equal(evaluate({...connectedJourney,legs:[connectedJourney.legs[0],{...connectedJourney.legs[1],fromPoint:null}]},{deadline}).feasible,false,'Missing transfer stop coordinates cannot certify a multi-leg route');
+
+const shortTransfer={...connectedJourney,legs:[
+ connectedJourney.legs[0],
+ {...connectedJourney.legs[1],departure:'2026-11-02T07:42:00+01:00'}
+]};
+assert.equal(evaluate(shortTransfer,{deadline}).feasible,false,'Two-minute interchange is below the three-minute default');
+assert.equal(evaluate(shortTransfer,{deadline,minTransferMinutes:2}).feasible,true,'Configured two-minute interchange is allowed');
+assert.equal(evaluate(connectedJourney,{deadline,minTransferMinutes:6}).feasible,false,'Configured six-minute interchange rejects five minutes');
