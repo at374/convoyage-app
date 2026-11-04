@@ -2613,7 +2613,7 @@
               if(!tripgoChoices.some(choice=>choice.journey===journey))
                 tripgoChoices.push({label:'Autre proposition',journey});
             }
-            status.textContent=label+' TripGo : '+(shown.length?shown.length+' proposition(s) datées, marches comprises.':'aucune proposition compatible retournée ; cela ne prouve pas l’absence de transport.');
+            status.textContent=label+' TripGo : '+(tripgoChoices.length?tripgoChoices.length+' proposition(s) affichée(s) sur '+shown.length+' trajet(s) daté(s), marches comprises.':'aucune proposition compatible retournée ; cela ne prouve pas l’absence de transport.');
             for(const {label:choiceLabel,journey:result} of tripgoChoices){
               const line=document.createElement('p');line.textContent=choiceLabel+' · '+(Array.isArray(result.providerTags)&&result.providerTags.length?'Opérateurs identifiés : '+result.providerTags.join(' + ')+' · ':'')+formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString())+' · '+
                 result.legs.map(l=>(l.mode==='wa_wal'?'Marche':l.line||l.mode)+' '+l.from+' → '+l.to).join(' · ')+
