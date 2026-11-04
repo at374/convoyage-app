@@ -168,3 +168,12 @@ test('TripGo rejects stationary transfers that silently teleport between stops',
  assert.equal(results.length,1,'the disconnected stationary transfer must be rejected');
  assert.equal(results[0].legs[1].line,'FlixBus 1789');
 });
+
+test('TripGo rejects impossible timezone offsets before provider access',async()=>{
+ let calls=0;
+ for(const when of ['2026-11-02T10:00:00+25:00','2026-11-02T10:00:00+01:99','2026-11-02T10:00:00-24:00']){
+  assert.throws(()=>api.parse(clone(),{...options,when}),/Fenêtre TripGo invalide/);
+  await assert.rejects(api.plan({...options,when,apiKey:'g'.repeat(32),fetcher:async()=>{calls++;return new Response(JSON.stringify(clone()));}}),/Requête TripGo invalide/);
+ }
+ assert.equal(calls,0);
+});

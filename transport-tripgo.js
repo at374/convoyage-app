@@ -7,7 +7,7 @@ const URL_BASE='https://api.tripgo.com/v1/routing.json',KEY='cp_tripgo_key',cach
 const point=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon??p.lng)&&Math.abs(p.lat)<=90&&Math.abs(p.lon??p.lng)<=180;
 const coord=p=>({lat:p.lat,lon:p.lon??p.lng});
 function time(value){
- if(typeof value!=='string'||!/^20\d{2}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d(:[0-5]\d(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})$/i.test(value))return NaN;
+ if(typeof value!=='string'||!/^20\d{2}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d(:[0-5]\d(\.\d{1,3})?)?(Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/i.test(value))return NaN;
  const day=Date.parse(value.slice(0,10)+'T12:00:00Z');
  return Number.isFinite(day)&&new Date(day).toISOString().slice(0,10)===value.slice(0,10)?Date.parse(value):NaN;
 }
