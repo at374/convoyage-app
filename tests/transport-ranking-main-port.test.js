@@ -111,3 +111,15 @@ test('cross-operator timed legs require verified interchange even without interN
  assert.equal(evaluate({...verified,transferVerified:true},opts).feasible,true);
  assert.equal(evaluate({...verified,legs:verified.legs.map(leg=>({...leg,provider:'SIBRA'}))},opts).feasible,true);
 });
+
+test('unidentified operators cannot silently certify a timed connection',()=>{
+ const verified={...trip,exactOrigin:true,exactDestination:true,accessVerified:true,
+  legs:[
+   {provider:'SIBRA',departure:'2026-11-04T09:00:00+01:00',arrival:'2026-11-04T09:25:00+01:00',serviceConfirmed:true},
+   {departure:'2026-11-04T09:30:00+01:00',arrival:'2026-11-04T10:00:00+01:00',serviceConfirmed:true}
+  ]};
+ const opts={deadline:'2026-11-04T10:15:00+01:00'};
+ assert.equal(evaluate(verified,opts).feasible,false);
+ assert.equal(evaluate({...verified,transferVerified:true},opts).feasible,true);
+ assert.equal(evaluate({...verified,legs:verified.legs.map(leg=>({...leg,provider:'SIBRA'}))},opts).feasible,true);
+});
