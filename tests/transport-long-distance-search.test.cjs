@@ -76,3 +76,18 @@ test('mission windows exclude services departing too early or arriving too late'
  assert.equal(compared.candidates[0].departure,'2026-11-02T08:00:00.000Z');
  assert.ok(compared.choices.every(c=>c.journey.feasible===false));
 });
+
+test('pickup margin rejects a bus arriving only five minutes before the mission',async()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const base={from:'Annecy',to:'Lyon',departure:'2026-11-02T08:00:00+01:00'};
+ const result=await searchLongDistance({from:'Annecy',to:'Lyon',date:'2026-11-02'},{
+  FlixBus:async()=>[
+   {...base,arrival:'2026-11-02T09:55:00+01:00',line:'Too late'},
+   {...base,arrival:'2026-11-02T09:40:00+01:00',line:'Safe margin'}
+  ]
+ });
+ const compared=compareWithRegional([],result,{latestArrival:'2026-11-02T10:00:00+01:00'});
+ assert.equal(compared.candidates.length,1);
+ assert.equal(compared.candidates[0].legs[0].line,'Safe margin');
+ assert.equal(compared.candidates[0].serviceConfirmed,false);
+});
