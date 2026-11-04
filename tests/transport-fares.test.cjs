@@ -233,7 +233,7 @@ test('SIBRA pass cannot create a free fare without boarding time and validity bo
  assert.equal(missingTime.totalEUR,2); // Fare has no validity bounds; only the pass requires a travel date.
  const missingBounds=fare([{...sibra,departure:'2026-11-02T10:00:00+01:00'}],{sibraPassActive:true});
  assert.equal(missingBounds.breakdown[0].passApplied,false);
- assert.equal(missingBounds.totalEUR,2);
+ assert.equal(missingBounds.totalEUR,null); // Dated fare without validity bounds is unverified.
  const valid=fare([{...eligible,departure:'2026-11-02T10:00:00+01:00'}],{sibraPassActive:true});
  assert.equal(valid.totalEUR,0);
 });
