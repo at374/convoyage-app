@@ -30,3 +30,8 @@ assert.equal(evaluate({...atFive,arrival:'2026-11-02T08:55:01+01:00'},{deadline}
 assert.equal(evaluate({...atFive,exactDestination:false},{deadline}).feasible,false,'Five minutes at an unverified stop does not confirm arrival at pickup');
 assert.equal(evaluate({...atFive,accessVerified:false},{deadline}).feasible,false);
 console.log('transport-ranking: 19 assertions passed');
+
+assert.equal(evaluate({...base,departure:'2026-02-30T07:00:00+01:00'},{deadline}).durationMinutes,null,'Reject impossible calendar dates');
+assert.equal(evaluate({...base,arrival:'2026-11-02T08:15:00+25:00'},{deadline}).durationMinutes,null,'Reject invalid timezone offsets');
+assert.equal(evaluate({...base,departure:'2026-11-02T07:00:00+01:00garbage'},{deadline}).durationMinutes,null,'Reject trailing characters');
+assert.equal(evaluate({...base,arrival:'2026-11-02T08:15:00+01:00'},{deadline}).feasible,true,'Preserve valid offset timestamps');
