@@ -2261,9 +2261,11 @@
           typeof longDistanceFetchers==='object') {
         const localDay=iso=>{
           const date=new Date(iso);
-          return Number.isFinite(date.getTime())?
-            new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',
-              year:'numeric',month:'2-digit',day:'2-digit'}).format(date):null;
+          if(!Number.isFinite(date.getTime()))return null;
+          const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',
+            year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
+          const value=type=>parts.find(part=>part.type===type)?.value;
+          return [value('year'),value('month'),value('day')].join('-');
         };
         const providerSearch=(label,origin,destination,when)=>{
           if(!origin||!destination||!when)return;
