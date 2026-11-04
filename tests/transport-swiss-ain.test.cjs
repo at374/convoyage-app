@@ -139,3 +139,15 @@ assert.equal(verifiedBorderRoutes(unusableBorder,new Map([['G','CH'],['A','FR']]
  'a border route with prohibited boarding must not be reported as usable');
 assert.equal(verifiedBorderRoutes(invalidChronology,new Map([['G','CH'],['A','FR']])).routes.length,0,
  'a route with reversed stop times must not be reported as usable');
+
+const missingStopIndex={
+ stopById:new Map([['G',{stop_name:'Geneva'}]]),
+ routeById:new Map([['R',{route_short_name:'Border'}]]),
+ tripById:new Map([['T',{route_id:'R'}]]),
+ timesByTrip:new Map([['T',[
+  {stop_id:'G',stop_sequence:'1',departure_time:'08:00:00'},
+  {stop_id:'MISSING',stop_sequence:'2',arrival_time:'08:20:00'}
+ ]]])
+};
+assert.equal(borderSegments(missingStopIndex,new Map([['G','CH'],['MISSING','FR']])).segments.length,0);
+assert.equal(verifiedBorderRoutes(missingStopIndex,new Map([['G','CH'],['MISSING','FR']])).routes.length,0);
