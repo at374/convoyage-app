@@ -79,6 +79,11 @@ test('the stale imprecise Copponex/Cruseilles A41 Nord point-to-point entries we
   assert.ok(!overlay.paires.some(p => p.includes('Cruseilles A41 Nord')));
 });
 
+test('no residual "ST MARTIN BELLEVUE A41 N" <-> "COPPONEX"/"CRUSEILLES A41 NORD" point-to-point paire exists (wrong mechanism, same bug as the lowercase entries removed above, confirmed dangling via the official ADELAC CSV)', () => {
+  assert.ok(!overlay.paires.some(p => p[0].toUpperCase() === 'COPPONEX' || p[1].toUpperCase() === 'COPPONEX'));
+  assert.ok(!overlay.paires.some(p => p[0].toUpperCase() === 'CRUSEILLES A41 NORD' || p[1].toUpperCase() === 'CRUSEILLES A41 NORD'));
+});
+
 test('Cruseilles A41 Nord (ADELAC) stays distinct from the existing Cruseilles A (AREA/A410) barriere', () => {
   const a = overlay.barrieres.find(x => x.id === 'adelac-ouvert-cruseilles-a41n').points[0];
   const b = overlay.barrieres.find(x => x.id === 'aprr-area-ouvert-cruseilles-a').points[0];
