@@ -77,8 +77,14 @@
   function rank(items,opts={}){
     if(!opts||typeof opts!=='object')opts={};
     const enriched=(Array.isArray(items)?items:[]).filter(x=>x&&typeof x==='object'&&!Array.isArray(x)).map(x=>evaluate(x,opts));
-    const valid=enriched.filter(x=>x.durationMinutes!==null&&
-      (x.slackMinutes===null||x.slackMinutes>=(finite(opts.marginMinutes)?Math.max(opts.marginMinutes,opts.exactGPSReliable===true&&x.exactDestination===true&&x.accessVerified===true?5:15):(opts.exactGPSReliable===true&&x.exactDestination===true&&x.accessVerified===true?5:15))));
+    const valid=enriched.filter(x=>{
+      if(x.durationMinutes===null)return false;
+      // Return legs have no pickup margin. A supplied deadline still bounds arrival.
+      if(opts.direction==='return')return x.slackMinutes===null||x.slackMinutes>=0;
+      const minimum=opts.exactGPSReliable===true&&x.exactDestination===true&&x.accessVerified===true?5:15;
+      const margin=finite(opts.marginMinutes)?Math.max(opts.marginMinutes,minimum):minimum;
+      return x.slackMinutes===null||x.slackMinutes>=margin;
+    });
     const byPrice=(a,b)=>Number(b.feasible)-Number(a.feasible)||
       ((a.priceEUR??Infinity)===(b.priceEUR??Infinity)?0:(a.priceEUR??Infinity)-(b.priceEUR??Infinity))||a.durationMinutes-b.durationMinutes;
     const byDuration=(a,b)=>Number(b.feasible)-Number(a.feasible)||
