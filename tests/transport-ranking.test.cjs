@@ -176,3 +176,21 @@ assert.equal(connectJourneys({...regionalPart,legs:[
 assert.equal(connectJourneys(regionalPart,{...longDistancePart,legs:[
  {...longDistancePart.legs[0],departure:'2026-11-02T08:20:00+01:00'}
  ]}),null,'Reversed provider leg cannot be assembled');
+
+const otherStop={lat:45.911,lon:6.131};
+const onwardOtherStop={...longDistancePart,legs:[{...longDistancePart.legs[0],fromPoint:otherStop}]};
+const routedWalk={mode:'wa_wal',routeVerified:true,
+ departure:'2026-11-02T07:40:00+01:00',arrival:'2026-11-02T07:43:00+01:00',
+ fromPoint:transferPoint,toPoint:otherStop,distanceMeters:160};
+assert.equal(connectJourneys(regionalPart,onwardOtherStop),null,
+ 'Different stops without routed walk must be rejected');
+assert.equal(connectJourneys(regionalPart,onwardOtherStop,{walkingConnection:{...routedWalk,routeVerified:false}}),null,
+ 'Unverified walking route must be rejected');
+const walked=connectJourneys(regionalPart,onwardOtherStop,{walkingConnection:routedWalk});
+assert.ok(walked,'Verified walking route can connect distinct stops');
+assert.equal(walked.legs.length,3);
+assert.equal(walked.legs[1].mode,'wa_wal');
+assert.equal(walked.legs[1].serviceConfirmed,false);
+assert.equal(evaluate(walked,{deadline}).feasible,false);
+assert.equal(connectJourneys(regionalPart,onwardOtherStop,{walkingConnection:{...routedWalk,distanceMeters:500}}),null,
+ 'Implausibly fast walking connection must be rejected');
