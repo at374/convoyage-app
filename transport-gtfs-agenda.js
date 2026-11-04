@@ -172,6 +172,14 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
           Date.parse(journey.departure)<Date.parse(window.earliestDeparture)||
           Date.parse(journey.arrival)>Date.parse(window.latestArrival)-window.marginMinutes*60000)
         throw new Error('GTFS journey outside mission window');
+       if(journey.legs!==undefined){
+        if(!Array.isArray(journey.legs)||journey.legs.length!==2)throw new Error('Invalid GTFS transfer legs');
+        const [first,second]=journey.legs;
+        if(journey.legs.some(leg=>!leg||!Number.isFinite(timestamp(leg.departure))||!Number.isFinite(timestamp(leg.arrival))||
+           Date.parse(leg.arrival)<Date.parse(leg.departure))||
+           first.departure!==journey.departure||second.arrival!==journey.arrival||
+           Date.parse(first.arrival)>Date.parse(second.departure))throw new Error('Inconsistent GTFS transfer chronology');
+       }
       }
       rows.push(...result.rows);
      }
