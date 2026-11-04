@@ -62,3 +62,31 @@ test('return cannot be marked confirmed when it starts before delivery',()=>{
  assert.equal(evaluate(verified,{direction:'return',earliestDeparture:'2026-11-04T09:05:00+01:00'}).feasible,false);
  assert.equal(evaluate(verified,{direction:'return',earliestDeparture:'2026-11-04T09:00:00+01:00'}).feasible,true);
 });
+
+test('verified service alone does not prove door-to-door access or a network transfer',()=>{
+ const verified={...trip,exactOrigin:true,exactDestination:true,accessVerified:true,
+  legs:[{serviceConfirmed:true}],interNetwork:true};
+ const opts={deadline:'2026-11-04T10:15:00+01:00'};
+ assert.equal(evaluate(verified,opts).feasible,false);
+ assert.equal(evaluate({...verified,transferVerified:true},opts).feasible,true);
+ assert.equal(evaluate({...verified,transferVerified:true,accessVerified:false},opts).feasible,false);
+ assert.equal(evaluate({...verified,transferVerified:true,exactDestination:false},opts).feasible,false);
+});
+test('five-minute pickup exception requires verified GPS and destination access',()=>{
+ const verified={...trip,exactOrigin:true,exactDestination:true,accessVerified:true,
+  legs:[{serviceConfirmed:true}]};
+ const opts={deadline:'2026-11-04T10:05:00+01:00'};
+ assert.equal(evaluate(verified,opts).feasible,false);
+ assert.equal(evaluate(verified,{...opts,exactGPSReliable:true}).feasible,true);
+ assert.equal(evaluate({...verified,accessVerified:false},{...opts,exactGPSReliable:true}).feasible,false);
+ assert.equal(rank([verified],opts).length,0);
+ assert.equal(rank([verified],{...opts,exactGPSReliable:true}).length,1);
+});
+test('overlapping timed legs never certify a journey',()=>{
+ const verified={...trip,exactOrigin:true,exactDestination:true,accessVerified:true,
+  legs:[
+   {departure:'2026-11-04T09:00:00+01:00',arrival:'2026-11-04T09:40:00+01:00',serviceConfirmed:true},
+   {departure:'2026-11-04T09:30:00+01:00',arrival:'2026-11-04T10:00:00+01:00',serviceConfirmed:true}
+  ]};
+ assert.equal(evaluate(verified,{deadline:'2026-11-04T10:15:00+01:00'}).feasible,false);
+});
