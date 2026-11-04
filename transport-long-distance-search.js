@@ -203,6 +203,8 @@ async function compareWithRoutedWalks(regionalJourneys,longDistanceResult,option
     !Number.isFinite(route.durationSeconds)||route.durationSeconds<=0||
     !Number.isFinite(route.distanceMeters)||route.distanceMeters<distance-10||
     !route.from||!route.to||
+    !Number.isFinite(stopDistance(route.from,from))||
+    !Number.isFinite(stopDistance(route.to,to))||
     stopDistance(route.from,from)>0.5||
     stopDistance(route.to,to)>0.5||
     route.distanceMeters>2*route.durationSeconds+10)continue;
