@@ -177,3 +177,18 @@ test('TripGo rejects impossible timezone offsets before provider access',async()
  }
  assert.equal(calls,0);
 });
+
+test('malformed provider entries do not crash TripGo parsing or hide independent valid services',()=>{
+ const invalidTemplate=clone();invalidTemplate.segmentTemplates.push(null);
+ assert.throws(()=>api.parse(invalidTemplate,options),/Modèle TripGo invalide/);
+ const invalidGroup=clone();invalidGroup.groups.push(null);
+ assert.throws(()=>api.parse(invalidGroup,options),/Groupe TripGo invalide/);
+ const invalidTrip=clone();invalidTrip.groups[0].trips.unshift(null);
+ assert.equal(api.parse(invalidTrip,options).itineraries.length,2);
+ const invalidSegment=clone();
+ const eligible=invalidSegment.groups[0].trips.find(t=>t.depart*1000>=Date.parse(options.when));
+ eligible.segments[0]=null;
+ const remaining=api.parse(invalidSegment,options).itineraries;
+ assert.equal(remaining.length,1);
+ assert.equal(remaining[0].legs[1].line,'FlixBus 1789');
+});
