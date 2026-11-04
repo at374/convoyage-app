@@ -207,6 +207,17 @@ async function run(){
     return value.includes('fournisseur(s) ayant répondu')||value.includes('indisponible')||value.includes('date invalide');
   });
   assert.match(await longDistanceStatus.innerText(),/0 proposition\(s\) non vérifiée\(s\), 1\/3 fournisseur/);
+  // Combined slots must appear even when providers return no offers; the
+  // interface must not invent a confirmed service or a fare.
+  await page.locator('#cpTransportMissionDetails [data-combined-direction="Aller"]').waitFor();
+  await page.locator('#cpTransportMissionDetails [data-combined-direction="Retour"]').waitFor();
+  for(const direction of ['Aller','Retour']){
+    const combined=await page.locator('#cpTransportMissionDetails [data-combined-direction="'+direction+'"]').innerText();
+    assert.match(combined,/multimodal provisoire/);
+    assert.match(combined,/Circulation et accès non confirmés/);
+    assert.doesNotMatch(combined,/Réalisable/);
+  }
+
   assert.equal(await page.locator('[data-junction-combined]').count(),0,
     'Do not display a combined junction when no valid regional and long-distance junction has been computed');
   // A manual refresh must rebuild the provider slots even when the mission
