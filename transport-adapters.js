@@ -115,8 +115,11 @@
           item.from===leg.from&&item.to===leg.to&&
           item.arrival===leg.arrival&&
           item.fareVerified===true&&typeof item.fareSource==='string'&&
-          item.fareSource.trim()&&Number.isFinite(item.verifiedPriceEUR)&&
-          item.verifiedPriceEUR>=0&&item.fareValidFrom&&item.fareValidUntil&&
+          item.fareSource.trim()&&typeof item.verifiedPriceEUR==='number'&&
+          Number.isFinite(item.verifiedPriceEUR)&&item.verifiedPriceEUR>=0&&
+          Number.isSafeInteger(Math.round(item.verifiedPriceEUR*100))&&
+          Math.abs(item.verifiedPriceEUR*100-Math.round(item.verifiedPriceEUR*100))<1e-7&&
+          item.fareValidFrom&&item.fareValidUntil&&
           Number.isFinite(Date.parse(item.fareValidFrom))&&
           Number.isFinite(Date.parse(item.fareValidUntil))&&
           Date.parse(item.fareValidFrom)<=Date.parse(leg.departure)&&
