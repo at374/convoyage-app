@@ -84,3 +84,13 @@ test('branch window bounds share the GTFS day base, mission margin and fractiona
  assert.equal(night.minDepartureSeconds,25*3600);assert.equal(night.maxArrivalSeconds,Infinity);
  assert.throws(()=>serviceWindow(files,'2026-11-02',{latestArrival:'2026-11-02T12:00:00'}),/timezone/);
 });
+
+test('mission bounds reject impossible timezone offsets but accept UTC+14',()=>{
+ const {missionBounds}=require('../transport-gtfs-time.js');
+ for(const invalid of ['2026-11-02T10:00:00+14:30','2026-11-02T10:00:00+15:00',
+  '2026-11-02T10:00:00-14:01','2026-11-02T10:00:00+01:60']){
+  assert.throws(()=>missionBounds({earliestDeparture:invalid}),/timezone|timestamp/i);
+  assert.throws(()=>missionBounds({latestArrival:invalid}),/timezone|timestamp/i);
+ }
+ assert.ok(Number.isFinite(missionBounds({earliestDeparture:'2026-11-02T10:00:00+14:00'}).first));
+});
