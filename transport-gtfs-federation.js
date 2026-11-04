@@ -8,15 +8,21 @@ function connectionServiceDates(date,days=[date]){
  for(const day of days)clock.serviceTimestamp(day,'12:00:00','UTC');
  return [date,...new Set(days.filter(day=>day!==date))];
 }
-function crossNetworkTrips(feeds,date,origin,destination,window,{
- radiusMeters=700,transferRadiusMeters=150,minTransferMinutes=5,maxWaitMinutes=120,
- maxLegs=20000,maxPairs=50000,maxJourneys=2000,maxStopLookups=1000,connectionDates=[date]
-}={}){
+function crossNetworkTrips(feeds,date,origin,destination,window,options={}){
+ if(!options||typeof options!=='object'||Array.isArray(options))throw new Error('Invalid federation options');
+ const {radiusMeters=700,transferRadiusMeters=150,minTransferMinutes=5,maxWaitMinutes=120,
+ maxLegs=20000,maxPairs=50000,maxJourneys=2000,maxStopLookups=1000,connectionDates=[date]}=options;
+ const validPoint=p=>p&&typeof p==='object'&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&
+  Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180;
+ if(!validPoint(origin)||!validPoint(destination))throw new Error('Invalid federation coordinates');
+ if(!window||typeof window!=='object'||Array.isArray(window))throw new Error('Invalid federation window');
  if(!Array.isArray(feeds)||feeds.length!==2)throw new Error('Exactly two GTFS networks required');
  for(const n of [radiusMeters,transferRadiusMeters,minTransferMinutes,maxWaitMinutes])if(!Number.isFinite(n)||n<=0)throw new Error('Invalid federation interval or radius');
  if(transferRadiusMeters>500||radiusMeters>5000||maxWaitMinutes<minTransferMinutes)throw new Error('Invalid federation interval or radius');
  for(const n of [maxLegs,maxPairs,maxJourneys,maxStopLookups])if(!Number.isSafeInteger(n)||n<1)throw new Error('Invalid federation budget');
  const dates=connectionServiceDates(date,connectionDates);
+ if(feeds.some(feed=>!feed||typeof feed!=='object'||!feed.source||!feed.index||!feed.files))
+  throw new Error('Invalid federation feed');
  const ids=feeds.map(feed=>feed.source.datasetId||feed.source.resourceId);
  if(ids.some(id=>!id)||new Set(ids).size!==2)throw new Error('Distinct GTFS network identifiers required');
  let searchTruncated=false,pairs=0,lookups=0;const journeys=[];
