@@ -133,3 +133,15 @@ require('node:test')('regional and SNCF adapters retain only valid stop coordina
   assert.equal(journey.exactDestination,false);
  }
 });
+
+require('node:test')('regional and SNCF adapters retain exact stop and service identifiers',()=>{
+ const leg={departure,arrival,fromStopCode:'  annecy-1 ',toStopCode:'lyon-2',serviceTripId:'trip-12',routeId:'route-4'};
+ for(const journey of [adaptSNCF([{departure,arrival,legs:[leg]}])[0],
+  adaptGTFS([{departure,arrival,legs:[leg]}],'Cars Région')[0]]){
+  assert.equal(journey.legs[0].fromStopCode,'annecy-1');
+  assert.equal(journey.legs[0].toStopCode,'lyon-2');
+  assert.equal(journey.legs[0].serviceTripId,'trip-12');
+  assert.equal(journey.legs[0].routeId,'route-4');
+  assert.equal(journey.legs[0].serviceConfirmed,false);
+ }
+});
