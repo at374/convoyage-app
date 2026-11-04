@@ -2276,9 +2276,17 @@
           });
         const choices=result.choices||[];
         junctionCombined.textContent='Jonction multimodale provisoire : '+
-          (choices.length?choices.map(c=>c.label+' ('+
-            (c.journey.priceEUR==null?'tarif inconnu':c.journey.priceEUR.toFixed(2)+' €')+
-            ')').join(' · '):'aucun choix compatible')+
+          (choices.length?choices.map(c=>{
+            const j=c.journey||{};
+            const departure=Number.isFinite(Date.parse(j.departure||''))?
+              formatParis(j.departure):'départ inconnu';
+            const arrival=Number.isFinite(Date.parse(j.arrival||''))?
+              formatParis(j.arrival):'arrivée inconnue';
+            const fare=Number.isFinite(j.priceEUR)&&j.priceEUR>=0?
+              j.priceEUR.toFixed(2).replace('.',',')+' € (tarif à vérifier)':'tarif inconnu';
+            return c.label+' : '+departure+' → '+arrival+' · '+
+              (j.provider||'réseau non précisé')+' · '+fare;
+          }).join(' | '):'aucun choix compatible')+
           '. Accès, circulation et prix non confirmés.';
         if(!junctionCombined.isConnected)panel.appendChild(junctionCombined);
       };
