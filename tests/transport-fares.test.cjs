@@ -189,7 +189,7 @@ test('non-finite and unsafe fare amounts never become verified totals',()=>{
 
 
 test('sum of individually valid fares cannot overflow safe cent totals',()=>{
- const max=Number.MAX_SAFE_INTEGER/100/2;
+ const max=40000000000000; // Exact cents per leg; three legs exceed safe integer cents.
  const leg={provider:'TER',fareVerified:true,fareSource:'source vérifiée',verifiedPriceEUR:max};
  const result=fare([leg,leg,leg]);
  assert.equal(result.known,false);
@@ -197,7 +197,7 @@ test('sum of individually valid fares cannot overflow safe cent totals',()=>{
  assert.equal(result.knownSubtotalEUR,null);
  assert.equal(result.calculationOverflow,true);
  assert.equal(result.unknownLegCount,0);
- assert.match(describe(result),/^Total inconnu/);
+ assert.match(describe(result),/^Total indisponible : dépassement de précision du calcul/);
  assert.doesNotMatch(describe(result),/Sous-total vérifié/);
 });
 
