@@ -139,7 +139,7 @@ function missionPickupCandidates(files,index,countryByStop,date,{earliestDepartu
  if(latestArrival<0)throw new Error('Mission pickup window too short');
  const clock=minutes=>String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0')+':00';
  const result=missionBorderSegments(files,index,countryByStop,date,{
-  earliestDeparture,latestArrival:clock(latestArrival),...limits});
+  ...limits,earliestDeparture,latestArrival:clock(latestArrival)});
  return {...result,pickupBufferMinutes:bufferMinutes,pickupTime,
   accessVerified:false,accessDurationProvided:accessMinutes!==undefined,accessMinutes:accessMinutes??null,
   transportConfirmed:false,confirmationBlockers:[
