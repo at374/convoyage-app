@@ -15,6 +15,8 @@
     const boardingDay=typeof travelDate==='string'&&/^\d{4}-\d{2}-\d{2}/.test(travelDate)?travelDate.slice(0,10):null;
     const start=dateOnly(startValue)?Date.parse(startValue+'T00:00:00Z'):Date.parse(startValue);
     const end=dateOnly(endValue)?Date.parse(endValue+'T23:59:59.999Z'):Date.parse(endValue);
+    if((typeof startValue==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(startValue)&&!dateOnly(startValue))||
+       (typeof endValue==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(endValue)&&!dateOnly(endValue)))return false;
     if(!Number.isFinite(start)||!Number.isFinite(end)||start>end)return false;
     if(dateOnly(startValue)&&boardingDay&&boardingDay<startValue)return false;
     if(dateOnly(endValue)&&boardingDay&&boardingDay>endValue)return false;
