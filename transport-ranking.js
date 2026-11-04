@@ -47,7 +47,7 @@
         if(Math.max(gpsDistance??0,reportedDistance??0)>2*((end-start)/1000)+10)return false;
       }
       if(previousLeg&&previousLeg.mode!=='wa_wal'&&leg.mode!=='wa_wal'&&start-previousArrival<transferMinutes*60000)return false;
-      if(previousPoint&&point(leg.fromPoint)&&metres(previousPoint,leg.fromPoint)>50)return false;
+      if(previousPoint&&point(leg.fromPoint)&&metres(previousPoint,leg.fromPoint)>10)return false;
       previousPoint=point(leg.toPoint)?leg.toPoint:null;
       previousArrival=end;
       previousLeg=leg;
