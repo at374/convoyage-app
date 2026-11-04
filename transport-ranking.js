@@ -52,6 +52,8 @@
       }
       if(previousLeg&&previousLeg.mode!=='wa_wal'&&leg.mode!=='wa_wal'&&start-previousArrival<transferMinutes*60000)return false;
       if(previousLeg?.mode==='wa_wal'&&leg.mode!=='wa_wal'&&start-previousArrival<boardingMinutes*60000)return false;
+      // A transfer with missing GPS cannot be certified, even if stop names match.
+      if(previousLeg&&(!point(previousPoint)||!point(leg.fromPoint)))return false;
       if(previousPoint&&point(leg.fromPoint)&&metres(previousPoint,leg.fromPoint)>10)return false;
       previousPoint=point(leg.toPoint)?leg.toPoint:null;
       previousArrival=end;
