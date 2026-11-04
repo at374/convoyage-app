@@ -36,7 +36,7 @@ function crossEnvelopePair(first,second,task){
   (selected(second,{...task,to:task.from})&&selected(first,{...task,from:task.to}));
 }
 function timestamp(value){
- if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})$/.test(value))return NaN;
+ if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.test(value))return NaN;
  const day=Date.parse(value.slice(0,10)+'T12:00:00Z');
  if(!Number.isFinite(day)||new Date(day).toISOString().slice(0,10)!==value.slice(0,10))return NaN;
  const clock=value.slice(11,19).split(/[Z+.-]/)[0].split(':').map(Number);
