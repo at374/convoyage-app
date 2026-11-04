@@ -5,8 +5,11 @@
 //
 // 1) Alias "/" (abreviation COFIROUTE equivalente a "S/"=SUR, "C/"=CENTRE...) confirmes
 //    par identite exacte des prix classe 1/2 sur tout le chevauchement de destinations :
-//    FONTENAY /LOING, SAVIGNY /CLAIRIS, LA FOLIE-B/PARIS, TOURS-C/MONNAIE,
-//    GONDREVILLE A77/N, GONDREVILLE A77/S.
+//    FONTENAY SUR LOING -> FONTENAY /LOING, SAVIGNY SUR CLAIRIS -> SAVIGNY /CLAIRIS,
+//    PARIS (LA FOLIE BESSIN) -> LA FOLIE-B/PARIS, TOURS CENTRE (MONNAIE) -> TOURS-C/MONNAIE,
+//    GONDREVILLE LA FRANCHE NORD -> GONDREVILLE A77/N, GONDREVILLE LA FRANCHE SUD ->
+//    GONDREVILLE A77/S (les formes "/" sont les noms exacts sources, avec GPS ; le sens
+//    initial de ce commit etait inverse et a ete corrige par un commit suivant).
 //
 // 2) Alias confirmes par un DOUBLE faisceau de preuves (prix ET geolocalisation) :
 //    CHATEAU-RENAULT=AMBOISE CH.RENAULT (le nom officiel du peage EST "Amboise/
@@ -23,7 +26,7 @@ const { test } = require('node:test');
 const overlay = require('../peages-overlay.json');
 
 test('none of the old alias labels (sous-lot 1, abreviation "/") appear literally anymore', () => {
-  const old = ['FONTENAY /LOING', 'SAVIGNY /CLAIRIS', 'LA FOLIE-B/PARIS', 'TOURS-C/MONNAIE', 'GONDREVILLE A77/N', 'GONDREVILLE A77/S'];
+  const old = ['FONTENAY SUR LOING', 'SAVIGNY SUR CLAIRIS', 'PARIS (LA FOLIE BESSIN)', 'TOURS CENTRE (MONNAIE)', 'GONDREVILLE LA FRANCHE NORD', 'GONDREVILLE LA FRANCHE SUD'];
   for (const n of old) {
     const present = overlay.paires.some(p => p[0] === n || p[1] === n);
     assert.equal(present, false, n + ' should no longer appear literally');
@@ -39,8 +42,8 @@ test('none of the old alias labels (sous-lot 2, preuve GPS+prix) appear literall
 });
 
 test('each of the 11 canonical names has at least one active relation after the merges', () => {
-  const canon = ['FONTENAY SUR LOING', 'SAVIGNY SUR CLAIRIS', 'PARIS (LA FOLIE BESSIN)', 'TOURS CENTRE (MONNAIE)',
-    'GONDREVILLE LA FRANCHE NORD', 'GONDREVILLE LA FRANCHE SUD', 'AMBOISE CH.RENAULT', 'ST HILAIRE',
+  const canon = ['FONTENAY /LOING', 'SAVIGNY /CLAIRIS', 'LA FOLIE-B/PARIS', 'TOURS-C/MONNAIE',
+    'GONDREVILLE A77/N', 'GONDREVILLE A77/S', 'AMBOISE CH.RENAULT', 'ST HILAIRE',
     'ST ROMAIN SUR CHER', 'CHEMERY', 'VILLEFRANCHE S/ CHER'];
   for (const n of canon) {
     const has = overlay.paires.some(p => p[0] === n || p[1] === n);
@@ -62,7 +65,7 @@ test('no new GPS point was added for the sous-lot 2 aliases (gares count unchang
 });
 
 test('no price, distance or GPS was altered by either sous-lot (sample)', () => {
-  const p1 = overlay.paires.find(x => x[0] === 'FONTENAY SUR LOING' || x[1] === 'FONTENAY SUR LOING');
+  const p1 = overlay.paires.find(x => x[0] === 'FONTENAY /LOING' || x[1] === 'FONTENAY /LOING');
   const p2 = overlay.paires.find(x => x[0] === 'AMBOISE CH.RENAULT' || x[1] === 'AMBOISE CH.RENAULT');
   for (const p of [p1, p2]) {
     assert.ok(p);

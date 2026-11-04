@@ -40,12 +40,16 @@ test('spot-check: the long-haul Cofiroute relations (BOURGES, TOURS CENTRE (MONN
   // SAINT AIGNAN SUR CHER and SELLES SUR CHER were themselves confirmed as
   // price-proof aliases in later commits the same day and renamed to their
   // own canonical form (BOURGES (LIM.CONC.), ALLAINES, MEUNG SUR LOIRE,
-  // AMBOISE CH.RENAULT, VILLEFRANCHE S/ CHER, ST ROMAIN SUR CHER, CHEMERY) --
-  // see tests/peages-alias-preuve-de-prix.test.cjs. Checked here under their
+  // AMBOISE CH.RENAULT, VILLEFRANCHE S/ CHER, ST ROMAIN SUR CHER, CHEMERY).
+  // FONTENAY SUR LOING/TOURS CENTRE (MONNAIE)/GONDREVILLE LA FRANCHE NORD+SUD
+  // were briefly (and wrongly) made canonical by an intermediate commit, then
+  // corrected back to their true exact-name form (FONTENAY /LOING, TOURS-C/
+  // MONNAIE, GONDREVILLE A77/N, GONDREVILLE A77/S) -- see
+  // tests/peages-alias-preuve-de-prix-batch2.test.cjs. Checked here under
   // final canonical spelling.
-  const checks = ['BOURGES (LIM.CONC.)', 'AMBOISE CH.RENAULT', 'FONTENAY SUR LOING', 'ALLAINES',
+  const checks = ['BOURGES (LIM.CONC.)', 'AMBOISE CH.RENAULT', 'FONTENAY /LOING', 'ALLAINES',
     'MEUNG SUR LOIRE', 'VILLEFRANCHE S/ CHER', 'ST ROMAIN SUR CHER', 'CHEMERY', 'VEIGNE',
-    'GONDREVILLE LA FRANCHE NORD', 'GONDREVILLE LA FRANCHE SUD'];
+    'GONDREVILLE A77/N', 'GONDREVILLE A77/S'];
   for (const n of checks) {
     const has = overlay.paires.some(p =>
       (p[0] === n && p[1] === 'ELOISE') || (p[1] === n && p[0] === 'ELOISE'));
