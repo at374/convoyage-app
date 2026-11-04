@@ -178,7 +178,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
         if(journey.legs.some(leg=>!leg||!Number.isFinite(timestamp(leg.departure))||!Number.isFinite(timestamp(leg.arrival))||
            Date.parse(leg.arrival)<Date.parse(leg.departure))||
            first.departure!==journey.departure||second.arrival!==journey.arrival||
-           Date.parse(first.arrival)>Date.parse(second.departure))throw new Error('Inconsistent GTFS transfer chronology');
+           Date.parse(second.departure)-Date.parse(first.arrival)<5*60000||
+           Date.parse(second.departure)-Date.parse(first.arrival)>120*60000)
+          throw new Error('GTFS transfer outside allowed connection interval');
        }
       }
       rows.push(...result.rows);
