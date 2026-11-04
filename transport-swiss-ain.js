@@ -85,7 +85,18 @@ function verifiedBorderRoutes(index,countryByStop,{maxTrips=100000}={}){
  return {routes:[...routes.values()],scannedTrips:scanned,truncated,
   countryEvidence:'verified-stop-map',timetableOnly:true,serviceConfirmed:false};
 }
-const api={GENEVA,AIN,inside,crossBorderRoutes,verifiedBorderRoutes,borderSegments};
+// Restrict crossing candidates to trips actually scheduled on the mission date.
+// The date is checked against GTFS calendars, not live vehicle operation.
+function datedBorderSegments(files,index,countryByStop,date,options={}){
+ const gtfs=typeof require==='function'?require('./transport-gtfs-index.js'):root.CPGTFSIndex;
+ if(!gtfs?.activeServices)throw new Error('GTFS calendar reader unavailable');
+ const active=gtfs.activeServices(files,date);
+ const scheduled=new Map([...index.tripById].filter(([,trip])=>active.has(trip.service_id)));
+ const result=borderSegments({...index,tripById:scheduled},countryByStop,options);
+ return {...result,date,segments:result.segments.map(s=>({...s,serviceDateVerified:true})),
+  timetableOnly:true,serviceConfirmed:false};
+}
+const api={GENEVA,AIN,inside,crossBorderRoutes,verifiedBorderRoutes,borderSegments,datedBorderSegments};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPSwissAinGTFS=api;
 })(typeof window!=='undefined'?window:globalThis);
