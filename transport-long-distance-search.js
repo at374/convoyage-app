@@ -56,7 +56,15 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
  const longDistance=Array.isArray(longDistanceResult?.offers)?longDistanceResult.offers:[];
  // Mission windows apply to all providers before ranking. Otherwise a cheap
  // overnight bus outside the pickup/return window can be recommended.
- const timestamp=value=>typeof value==='string'&&Number.isFinite(Date.parse(value))?Date.parse(value):null;
+ const timestamp=value=>{
+  if(typeof value!=='string'||!/^20\d{2}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d{1,3})?)?(?:Z|[+-](?:0\d|1[0-4]):[0-5]\d)$/.test(value))return null;
+  const offset=value.match(/([+-])(\d{2}):(\d{2})$/);
+  if(offset&&Number(offset[2])===14&&Number(offset[3])!==0)return null;
+  const day=Date.parse(value.slice(0,10)+'T12:00:00Z');
+  if(!Number.isFinite(day)||new Date(day).toISOString().slice(0,10)!==value.slice(0,10))return null;
+  const ms=Date.parse(value);
+  return Number.isFinite(ms)?ms:null;
+ };
  const earliest=timestamp(options?.earliestDeparture);
  const latest=timestamp(options?.latestArrival);
  const candidates=[...regional,...longDistance].filter(journey=>{
