@@ -2296,8 +2296,11 @@
               j.priceEUR.toFixed(2).replace('.',',')+
                 (j.fareVerified===true?' € (tarif vérifié)':' € (tarif à vérifier)'):
               'tarif inconnu';
-            const duration=Number.isFinite(j.durationMinutes)&&j.durationMinutes>0?
-              ' · '+Math.round(j.durationMinutes)+' min':'';
+            // Compute elapsed time from the actual instants, not a provider's
+            // optional duration field (which may be missing or inconsistent).
+            const durationMinutes=(Date.parse(j.arrival)-Date.parse(j.departure))/60000;
+            const duration=Number.isFinite(durationMinutes)&&durationMinutes>0?
+              ' · '+Math.round(durationMinutes)+' min':'';
             return c.label+' : '+departure+' → '+arrival+duration+' · '+
               (j.provider||'réseau non précisé')+' · '+fare;
           }).join(' | '):'aucun choix compatible')+
@@ -2374,8 +2377,8 @@
                     'tarif inconnu';
                   item.textContent=(choice.label||'Proposition')+' · '+
                     formatParis(journey.departure)+' → '+formatParis(journey.arrival)+
-                    (Number.isFinite(journey.durationMinutes)&&journey.durationMinutes>0?
-                      ' · '+Math.round(journey.durationMinutes)+' min':'')+
+                    (Date.parse(journey.arrival)>Date.parse(journey.departure)?
+                      ' · '+Math.round((Date.parse(journey.arrival)-Date.parse(journey.departure))/60000)+' min':'')+
                     ' · '+(journey.provider||'Transport longue distance')+
                     ' · '+fare+' · Transport non confirmé.';
                   status.appendChild(item);
