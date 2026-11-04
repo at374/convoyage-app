@@ -37,7 +37,7 @@ assert.deepEqual(normalize(null),[]);
 })().catch(err=>{console.error(err);process.exitCode=1;});
 
 const {SWISS_DATASET,swissGTFSResources,fetchSwissGTFSResources}=require('../transport-catalogue.js');
-assert.match(SWISS_DATASET,/opentransportdata\\.swiss/);
+assert.match(SWISS_DATASET,/opentransportdata\.swiss/);
 const swissPayload={success:true,result:{resources:[
  {id:'swiss-1',name:'GTFS_FP2026_20261101.zip',url:'https://data.opentransportdata.swiss/dataset/example/resource/file.zip',last_modified:'2026-11-01'},
  {id:'other',name:'HRDF',url:'https://data.opentransportdata.swiss/other.zip'},
