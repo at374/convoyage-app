@@ -121,7 +121,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
    const loadOptions={indexServiceDates:[...dates].sort()};
    const needsFederation=taskList.some(task=>!selected(resource,task)&&partners.some(partner=>crossEnvelopePair(resource,partner,task)));
    if(needsFederation&&typeof client.loadNetworks!=='function')throw new Error('Federated GTFS loading unavailable');
-   const summary=needsFederation&&typeof client.loadNetworks==='function'?
+   const summary=partners.length&&typeof client.loadNetworks==='function'?
     await client.loadNetworks([resource,...partners],loadOptions):await client.load(resource,loadOptions);
    if(!active())return;
    const networks=Array.isArray(summary?.networks)?summary.networks:[summary],validNetwork=n=>n&&!n.error&&n.source&&Number.isFinite(Date.parse(n.source.loadedAt))&&n.counts&&Number.isInteger(n.counts.stops)&&n.counts.stops>=0,loaded=networks.filter(validNetwork);
