@@ -221,3 +221,15 @@ test('TripGo operator tags do not misidentify unrelated operators with similar n
  assert.ok(result.itineraries.length>0);
  assert.ok(result.itineraries.every(it=>it.providerTags.length===0));
 });
+
+test('TripGo mission selection preserves distinct providers when ranking clones journeys',()=>{
+ const ranking=require('../transport-ranking');
+ const journeys=api.parse(clone(),options).itineraries;
+ const choices=api.selectChoices(journeys,ranking,3);
+ assert.equal(choices.length,2);
+ assert.deepEqual(choices.map(x=>x.journey.providerTags[0]).sort(),['BlaBlaCar Bus','FlixBus']);
+ assert.ok(choices.every(x=>x.journey.priceEUR===null));
+ assert.ok(choices.every(x=>x.journey.serviceConfirmed===false));
+ assert.equal(api.selectChoices(journeys,ranking,1).length,1);
+ assert.equal(api.selectChoices([],ranking).length,0);
+});
