@@ -1946,14 +1946,14 @@
             hour: '2-digit', minute: '2-digit' }).format(date) : 'heure non renseignée';
       };
       const nextGapMin = next ? Math.floor((Date.parse(next.pickup_start) - endTime) / 60000) : null;
-      const securityMarginMin = 5;
+      const securityMarginMin = 15;
       const pickupDate = Number.isFinite(Date.parse(transportPickup || '')) ? transportPickup : null;
       const deliveryDate = Number.isFinite(Date.parse(transportDelivery || '')) ?
         transportDelivery : null;
       const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
       const connectionStatus = nextGapMin == null ? '' :
         connectionBudgetMin < 0 ?
-          '⚠️ Jonction non réalisable avec une marge minimale de 5 min, même sans trajet d’approche.' :
+          '⚠️ Jonction non réalisable avec une marge minimale de 15 min, même sans trajet d’approche.' :
           'Temps maximum théorique pour transport et approche : ' +
           connectionBudgetMin + ' min, après réservation d’une marge minimale de 5 min. ' +
           'Transport non confirmé — vérifiez vous-même.';
@@ -2284,7 +2284,7 @@
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
                 window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
-                {deadline:next.pickup_start,marginMinutes:securityMarginMin});
+                {deadline:next.pickup_start,earliestDeparture:deliveryDate,marginMinutes:securityMarginMin});
               if (ranked.length) {
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement Jonction régionale théorique : ' +
@@ -2411,7 +2411,9 @@
               const normalized = window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptSNCF(itineraries));
               const deadline = label === 'Aller' && pickupDate ? pickupDate :
                 label === 'Jonction' && next?.pickup_start ? next.pickup_start : null;
-              const choices = window.CPTransportRanking.rank(normalized,{deadline,marginMinutes:securityMarginMin});
+              const choices = window.CPTransportRanking.rank(normalized,{
+                deadline,earliestDeparture:label === 'Retour' || label === 'Jonction' ? deliveryDate : null,
+                direction:label === 'Retour' ? 'return' : 'outbound',marginMinutes:securityMarginMin});
               if (choices.length) {
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement SNCF de gare à gare : ' +
@@ -2485,7 +2487,8 @@
               'Retour régional : aucun itinéraire trouvé. Transport non confirmé — vérifiez vous-même.';
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
-                window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')));
+                window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
+                {direction:'return',earliestDeparture:deliveryDate});
               if (ranked.length) {
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement Retour régional théorique : ' +
