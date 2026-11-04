@@ -201,7 +201,10 @@ async function compareWithRoutedWalks(regionalJourneys,longDistanceResult,option
    }
    if(route?.status!=='calculated'||route.endpointsMatched!==true||
     !Number.isFinite(route.durationSeconds)||route.durationSeconds<=0||
-    !Number.isFinite(route.distanceMeters)||route.distanceMeters<distance-10)continue;
+    !Number.isFinite(route.distanceMeters)||route.distanceMeters<distance-10||
+    (route.from&&stopDistance(route.from,from)>0.5)||
+    (route.to&&stopDistance(route.to,to)>0.5)||
+    route.distanceMeters>2*route.durationSeconds+10)continue;
    const walkArrival=arrival+Math.ceil(route.durationSeconds/60)*60000;
    if(walkArrival>departure-60000)continue;
    walkingConnections.push({mode:'wa_wal',routeVerified:true,
