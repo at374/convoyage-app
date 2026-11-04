@@ -69,3 +69,12 @@ assert.equal(evaluate({...timed,interNetwork:true,transferVerified:false},{deadl
 assert.equal(evaluate({...timed,interNetwork:true},{deadline}).feasible,false,'Missing interchange evidence cannot certify a cross-network journey');
 assert.equal(evaluate({...timed,interNetwork:true,transferVerified:true},{deadline}).feasible,true,'A verified inter-network interchange preserves feasible confirmed services');
 assert.equal(evaluate({...timed,interNetwork:false,transferVerified:false},{deadline}).feasible,true,'Ordinary journeys do not require inter-network transfer evidence');
+
+const connectedNetworks={...geographic,interNetwork:true,transferVerified:true,legs:[
+ {...geographic.legs[0],provider:'Sibra'},
+ {...geographic.legs[1],provider:'TER',minTransferMinutes:5}
+]};
+assert.equal(evaluate(connectedNetworks,{deadline}).feasible,true,'Verified inter-network connection with sufficient transfer time is feasible');
+assert.equal(evaluate({...connectedNetworks,legs:[connectedNetworks.legs[0],{...connectedNetworks.legs[1],minTransferMinutes:6}]},{deadline}).feasible,false,'Transfer proof does not override an operator minimum duration');
+assert.equal(evaluate({...connectedNetworks,legs:[connectedNetworks.legs[0],{...connectedNetworks.legs[1],fromPoint:{lat:45.91,lon:6.121}}]},{deadline}).feasible,false,'Transfer proof does not override disconnected GPS stops');
+assert.equal(evaluate({...connectedNetworks,transferVerified:false},{deadline}).feasible,false,'Confirmed service is not proof of a cross-network interchange');
