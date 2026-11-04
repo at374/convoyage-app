@@ -72,7 +72,10 @@
       if(i&&legs[i-1]?.toPoint!==undefined&&leg?.fromPoint!==undefined&&
         meters(legs[i-1].toPoint,leg.fromPoint)>50){timelineValid=false;break;}
     }
-    const allVerified=timelineValid&&legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
+    // Multi-leg journeys require per-leg timestamps to verify each connection.
+    // A single legacy untimed leg remains supported for direct services.
+    const chronologyVerified=legs.length<=1||hasTimedLeg;
+    const allVerified=timelineValid&&chronologyVerified&&legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
     const interchangeVerified=item.interNetwork!==true||item.transferVerified===true;
     const feasible=valid&&earliestValid&&deadlineValid&&(!earliestProvided||departure>=earliest)&&
