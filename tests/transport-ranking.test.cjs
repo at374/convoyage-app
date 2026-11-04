@@ -57,3 +57,9 @@ const geographic={...timed,legs:[
 assert.equal(evaluate(geographic,{deadline}).feasible,true,'Connected transfer remains feasible');
 assert.equal(evaluate({...geographic,legs:[geographic.legs[0],{...geographic.legs[1],fromPoint:{lat:45.910,lon:6.121}}]},{deadline}).feasible,false,'Distant stops without connecting leg cannot be feasible');
 assert.equal(evaluate({...geographic,legs:[geographic.legs[0],{...geographic.legs[1],fromPoint:{lat:999,lon:6.121}}]},{deadline}).feasible,false,'Malformed stop coordinates cannot certify feasibility');
+
+assert.equal(evaluate(null,{deadline}).feasible,false,'Null provider candidate must not crash the agenda');
+assert.equal(evaluate(undefined,{deadline}).feasible,false,'Missing provider candidate must not crash the agenda');
+assert.equal(evaluate(base,null).feasible,false,'Missing ranking options must not crash');
+assert.equal(rank([null,undefined,{...base,id:'valid'}],{deadline})[0].journey.id,'valid','Malformed provider candidates must not hide a valid journey');
+assert.equal(rank([base],null).length,1,'Null ranking options must be tolerated');
