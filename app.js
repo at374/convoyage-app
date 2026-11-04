@@ -2578,6 +2578,15 @@
         }
       }
       });
+      // The long-distance comparison module is loaded separately. Never advertise
+      // FlixBus/BlaBlaCar availability without an explicitly connected provider.
+      if (window.CPTransportLongDistanceSearch?.searchLongDistance) {
+        const providerStatus=document.createElement('p');
+        providerStatus.className='doux';
+        providerStatus.setAttribute('data-long-distance-providers','');
+        providerStatus.textContent='Comparateur longue distance disponible : FlixBus et BlaBlaCar nécessitent des fournisseurs de trajets raccordés. Aucun départ ni tarif confirmé par ce module.';
+        panel.appendChild(providerStatus);
+      }
       // TripGo is optional and uses only a private key saved on this device.
       if (window.CPTripGo) {
         const tripgo=window.CPTripGo,config=document.createElement('div');
