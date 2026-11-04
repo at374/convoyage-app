@@ -82,6 +82,10 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
   const byDeparture=(a,b)=>(timestamp(a?.departure)??Infinity)-(timestamp(b?.departure)??Infinity);
   const regionalPool=[...regional].sort(byDeparture).slice(0,100);
   const longDistancePool=[...longDistance].sort(byDeparture).slice(0,100);
+  // Parse and validate walking times once per comparison, not once for
+  // every regional/long-distance pair.
+  const walkingConnections=(Array.isArray(options?.walkingConnections)?options.walkingConnections:[])
+   .filter(w=>w&&w.routeVerified===true&&timestamp(w.departure)!==null&&timestamp(w.arrival)!==null);
   // Both orders matter: a regional feeder may precede a coach, or a
   // regional service may complete the journey after a long-distance arrival.
   // Stop at 100 combined candidates across both orders.
@@ -98,7 +102,7 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
     secondDeparture-firstArrival<minTransfer*60000)continue;
    // A caller may supply independently routed walking connections by stop pair.
    // Never reuse a walk for unrelated endpoints.
-   const walkingConnections=Array.isArray(options?.walkingConnections)?options.walkingConnections:[];
+   // Walking candidates have already passed basic timestamp validation.
    const last=first.legs?.[first.legs.length-1]?.toPoint;
    const next=second.legs?.[0]?.fromPoint;
    const matchingWalk=walkingConnections.filter(w=>w&&w.routeVerified===true&&
