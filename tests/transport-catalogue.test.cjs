@@ -51,3 +51,12 @@ assert.deepEqual(swissGTFSResources({success:false,result:swissPayload.result}),
  assert.equal(result.length,1);
  await assert.rejects(fetchSwissGTFSResources(async()=>({ok:false})),/unavailable/);
 })().catch(err=>{console.error(err);process.exitCode=1;});
+
+const {latestSwissGTFSResource}=require('../transport-catalogue.js');
+const swissVersions=swissGTFSResources({success:true,result:{resources:[
+ {id:'old',name:'GTFS_FP2026_20261028.zip',url:'https://example.org/old.zip'},
+ {id:'new',name:'GTFS_FP2026_20261101.zip',url:'https://example.org/new.zip'}
+]}});
+assert.equal(latestSwissGTFSResource(swissVersions,2026)?.id,'new');
+assert.equal(latestSwissGTFSResource(swissVersions,2027),null);
+assert.equal(latestSwissGTFSResource(swissVersions,NaN),null);
