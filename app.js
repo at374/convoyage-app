@@ -2293,7 +2293,8 @@
                   longDistanceEngine.compareWithRegional([],result,{
                     direction:label==='Retour'?'return':'outbound',
                     ...(pickupLimit?{deadline:pickupLimit,latestArrival:pickupLimit}:{}),
-                    ...(label==='Retour'&&deliveryDate?{earliestDeparture:deliveryDate}:{}),
+                    ...((label==='Retour'||label==='Jonction')&&deliveryDate?
+                      {earliestDeparture:deliveryDate}:{}),
                     marginMinutes:securityMarginMin
                   }):null;
                 const choices=Array.isArray(ranked?.choices)?ranked.choices:[];
