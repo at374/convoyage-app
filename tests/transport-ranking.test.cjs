@@ -99,3 +99,7 @@ const walkingConnection={...base,legs:[
 ]};
 assert.equal(evaluate(walkingConnection,{deadline}).feasible,true,'One-minute walk of about 111 metres is plausible');
 assert.equal(evaluate({...walkingConnection,legs:walkingConnection.legs.map((leg,i)=>i===1?{...leg,toPoint:{lat:45.903,lon:6.12}}:i===2?{...leg,fromPoint:{lat:45.903,lon:6.12}}:leg)},{deadline}).feasible,false,'One-minute walk of about 334 metres is not plausible');
+
+assert.equal(evaluate({...base,departure:'2026-02-30T07:00:00+01:00'},{deadline}).feasible,false,'Impossible calendar day must be rejected');
+assert.equal(evaluate({...base,departure:'2026-11-02T25:00:00+01:00'},{deadline}).feasible,false,'Impossible clock hour must be rejected');
+assert.equal(evaluate({...base,departure:'2026-11-02T07:00:00+15:00'},{deadline}).feasible,false,'Impossible timezone offset must be rejected');
