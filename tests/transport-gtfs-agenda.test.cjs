@@ -589,6 +589,9 @@ test('malformed GTFS worker result is reported as unavailable, not as an empty s
 test('GTFS journey timestamps must be valid and chronological',async()=>{
  for(const badRow of [
   row({departure:'not-a-date'}),
+  row({departure:'2026-11-02T11:00:00'}),
+  row({arrival:'2026-11-02T12:00:00'}),
+  row({departure:1730545200000}),
   row({arrival:'invalid'}),
   row({departure:'2026-11-02T13:00:00Z',arrival:'2026-11-02T12:00:00Z'})
  ]){
