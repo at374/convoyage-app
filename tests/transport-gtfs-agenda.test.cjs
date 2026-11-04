@@ -807,4 +807,8 @@ test('Android PWA manifest keeps the installed application identity stable',()=>
  assert.equal(manifest.orientation,'portrait');
  assert.ok(manifest.icons.some(icon=>icon.sizes==='192x192'));
  assert.ok(manifest.icons.some(icon=>icon.sizes==='512x512'));
+ const worker=fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8');
+ for(const icon of manifest.icons){
+  assert.ok(worker.includes("'"+icon.src+"'"),'Missing Android offline icon: '+icon.src);
+ }
 });
