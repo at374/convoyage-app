@@ -11,6 +11,16 @@ assert.equal(rank([{...base,priceEUR:5},{...base,priceEUR:2,arrival:'2026-11-02T
 assert.equal(rank([{...base,departure:'invalid'}]).length,0);
 assert.equal(evaluate(base).feasible,false);
 assert.equal(evaluate(base).slackMinutes,null);
+assert.equal(evaluate(base,{direction:'return'}).feasible,true,
+  'Verified return can be feasible without a pickup deadline');
+assert.equal(evaluate({...base,accessVerified:false},{direction:'return'}).feasible,false,
+  'Return still requires verified access');
+assert.equal(evaluate({...base,legs:[{serviceConfirmed:false}]},{direction:'return'}).feasible,false,
+  'Return still requires confirmed service');
+assert.equal(evaluate({...base,exactDestination:false},{direction:'return'}).feasible,false,
+  'Return still requires exact destination');
+assert.equal(rank([base],{direction:'return'})[0].journey.feasible,true,
+  'Return ranking preserves verified feasibility');
 const unconfirmed={...base,priceEUR:1,exactDestination:false};
 const choices=rank([unconfirmed,{...base,priceEUR:5}],{deadline});
 assert.equal(choices[0].journey.feasible,true);
