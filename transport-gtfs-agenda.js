@@ -8,8 +8,8 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  bounds:[45.4,5.7,46.5,7.1],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'oura-ain',datasetId:'reseau-interurbain-cars-region-ain-01',network:'Cars Région Ain',format:'GTFS',federate:true,
- // Official data.gouv.fr GTFS resource; redirects to OÙRA provider CARS_REGION_AIN.
- url:'https://www.data.gouv.fr/api/1/datasets/r/723f0cc2-476a-464c-a40e-bf8686f7bd8d',
+ // Producer's OÙRA GTFS URL, documented by Transitland and the French mobility data catalogue.
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_AIN&dataFormat=GTFS&dataProfil=OPENDATA',
  // Selection envelope only, not a guarantee of lines or cross-border service.
  bounds:[45.65,4.7,46.55,6.3],timeZone:'Europe/Paris'
 }),Object.freeze({
