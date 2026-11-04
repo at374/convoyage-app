@@ -481,7 +481,9 @@ test('routed walking bridge rejects implausibly fast pedestrian geometry',async(
   durationSeconds:30,distanceMeters:160,from,to})};
  const wrongEndpoint={route:async()=>({status:'calculated',endpointsMatched:true,
   durationSeconds:180,distanceMeters:160,from,to,from:{lat:45.92,lon:6.13},to})};
- for(const router of [tooFast,wrongEndpoint]){
+ const missingGps={route:async()=>({status:'calculated',endpointsMatched:true,
+  durationSeconds:180,distanceMeters:160,from:{lat:'invalid',lon:6.13},to})};
+ for(const router of [tooFast,wrongEndpoint,missingGps]){
   const result=await compareWithRoutedWalks([regional],{offers:[coach]},options,router);
   assert.equal(result.candidates.some(x=>x.id==='regional+coach'),false);
  }
