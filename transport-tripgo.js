@@ -123,13 +123,23 @@ function selectChoices(itineraries,ranking,maxResults=3){
   }catch(_){ranked=[];}
  }
  const choices=[],seen=new Set();
+ // Ranking is a presentation layer, not a new transport data source.
+ // Only allow ranked journeys that correspond to a provider-supplied trip.
+ const original=new Map();
+ for(const journey of input){
+  const key=identity(journey);
+  if(!original.has(key))original.set(key,journey);
+ }
  const add=(label,journey)=>{
   if(!journey||choices.length>=limit)return;
   const key=identity(journey);
-  if(seen.has(key))return;
-  seen.add(key);choices.push({label,journey});
+  if(seen.has(key)||!original.has(key))return;
+  seen.add(key);
+  choices.push({label:typeof label==='string'&&
+   ['Moins cher','Compromis','Plus rapide'].includes(label)?label:'Autre proposition',
+   journey:original.get(key)});
  };
- for(const choice of ranked)add(choice.label,choice.journey);
+ for(const choice of ranked)if(choice&&typeof choice==='object')add(choice.label,choice.journey);
  for(const journey of input)add('Autre proposition',journey);
  return choices;
 }
