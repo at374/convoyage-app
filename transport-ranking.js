@@ -38,7 +38,12 @@
       const start=Date.parse(leg.departure),end=Date.parse(leg.arrival);
       if(start<previousArrival||end<=start||end>arrival)return false;
       // A walking connection must allow enough time to cover its GPS distance.
-      if(leg.mode==='wa_wal'&&point(leg.fromPoint)&&point(leg.toPoint)&&metres(leg.fromPoint,leg.toPoint)>2*((end-start)/1000)+10)return false;
+      if(leg.mode==='wa_wal'){
+        const gpsDistance=point(leg.fromPoint)&&point(leg.toPoint)?metres(leg.fromPoint,leg.toPoint):null;
+        const reportedDistance=finite(leg.distanceMeters)&&leg.distanceMeters>=0?leg.distanceMeters:null;
+        if(gpsDistance===null&&reportedDistance===null)return false;
+        if(Math.max(gpsDistance??0,reportedDistance??0)>2*((end-start)/1000)+10)return false;
+      }
       if(previousLeg&&previousLeg.mode!=='wa_wal'&&leg.mode!=='wa_wal'&&start-previousArrival<transferMinutes*60000)return false;
       if(previousPoint&&point(leg.fromPoint)&&metres(previousPoint,leg.fromPoint)>50)return false;
       previousPoint=point(leg.toPoint)?leg.toPoint:null;
