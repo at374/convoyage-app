@@ -109,6 +109,7 @@ require('node:test')('long-distance providers normalize only valid offers withou
    serviceConfirmed:true,fareVerified:true,exactOrigin:true}],provider);
   assert.equal(result.length,1);
   assert.equal(result[0].provider,provider);
+  assert.equal(result[0].id,provider.toLowerCase().replace(/\s+/g,'-')+'-candidate-0');
   assert.equal(result[0].priceEUR,null);
   assert.equal(result[0].serviceConfirmed,false);
   assert.equal(result[0].exactOrigin,false);
