@@ -772,3 +772,19 @@ test('Android PWA offline cache includes every versioned entrypoint script',()=>
  }
  assert.match(worker,/const CACHE = 'cp-app-android-gtfs-validation-20261104-v\d+'/);
 });
+
+test('Android PWA offline cache retains the transport worker and app shell',()=>{
+ const worker=fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8');
+ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+ const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'..','manifest.webmanifest'),'utf8'));
+ assert.equal(manifest.display,'standalone');
+ assert.equal(manifest.scope,'./');
+ assert.match(html,/rel="manifest" href="manifest.webmanifest"/);
+ for(const asset of ['transport-gtfs-worker.js','transport-gtfs-loader.js',
+  'transport-gtfs-federation.js','transport-gtfs-index.js','transport-gtfs-time.js',
+  'transport-gtfs-worker-client.js','transport-walking.js','manifest.webmanifest']){
+  assert.ok(worker.includes("'"+asset+"'"),'Missing offline transport asset: '+asset);
+ }
+ assert.match(worker,/e\.request\.method !== 'GET'/);
+ assert.match(worker,/u\.origin !== location\.origin/);
+});
