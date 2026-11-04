@@ -100,7 +100,8 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
   const walkingConnections=(Array.isArray(options?.walkingConnections)?options.walkingConnections:[])
    .filter(w=>w&&w.routeVerified===true&&timestamp(w.departure)!==null&&timestamp(w.arrival)!==null&&
     stopDistance(w.fromPoint,w.toPoint)<Infinity&&
-    timestamp(w.arrival)>timestamp(w.departure));
+    timestamp(w.arrival)>timestamp(w.departure))
+   .sort((a,b)=>timestamp(a.arrival)-timestamp(b.arrival));
   // Both orders matter: a regional feeder may precede a coach, or a
   // regional service may complete the journey after a long-distance arrival.
   // Stop at 100 combined candidates across both orders.
@@ -123,8 +124,7 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
    const matchingWalk=walkingConnections.filter(w=>
     last&&next&&stopDistance(w.fromPoint,last)<=10&&stopDistance(w.toPoint,next)<=10&&
     Date.parse(w.departure)>=firstArrival&&
-    Date.parse(w.arrival)<=secondDeparture)
-    .sort((a,b)=>Date.parse(a.arrival)-Date.parse(b.arrival));
+    Date.parse(w.arrival)<=secondDeparture);
    // The earliest matching route can still be invalid (e.g. implausible
    // distance). Try later verified alternatives before rejecting the transfer.
    let connected=ranking.connectJourneys(first,second,
