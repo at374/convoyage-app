@@ -179,7 +179,9 @@ async function run(){
   // The real card may omit the external reference; its Agenda index remains explicit.
   await page.locator('.mission').filter({hasText:'Grenoble'}).first().waitFor();
   const cards=await page.locator('.mission').evaluateAll(nodes=>nodes.map(n=>({index:n.dataset.i,text:n.innerText})));
-  const current=cards.find(c=>c.text.includes('Grenoble')&&!c.text.includes('Crolles'));
+  const current=cards.find(c=>c.text.includes('Grenoble')&&c.text.includes('09:00'))||cards.find(c=>c.text.includes('Grenoble'));
+   // The Agenda card may mention the next mission in Crolles; that must not
+   // exclude the Grenoble card itself from the browser regression.
   assert.ok(current,'Synthetic Grenoble mission is visible in Agenda');
   await page.locator('.mission[data-i="'+current.index+'"]').click();
   await page.locator('#btnTransportsMission').waitFor();
