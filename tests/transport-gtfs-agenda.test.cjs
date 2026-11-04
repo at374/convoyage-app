@@ -699,3 +699,21 @@ test('Agenda retains valid journeys when one worker row is invalid',async()=>{
  assert.match(target.textContent,/Transport non confirmé/);
  session.dispose();
 });
+
+test('Agenda never displays an invalid late pickup alongside a valid option',async()=>{
+ const target=panel();
+ const mission={label:'Aller',from:point,to:{lat:45.67,lon:6.39},
+  earliestDeparture:'2026-11-02T11:00:00Z',latestArrival:'2026-11-02T12:30:00Z'};
+ const session=agenda.mount(target,{tasks:[mission],clientFactory:()=>({
+  load:async()=>summary,query:async()=>({rows:[
+   row({tripId:'good',line:'VALID',departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T12:00:00Z'}),
+   row({tripId:'late',line:'INVALID-LATE',departure:'2026-11-02T11:10:00Z',arrival:'2026-11-02T12:20:00Z'})
+  ],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Aller : 1 horaire/);
+ assert.match(target.textContent,/VALID/);
+ assert.doesNotMatch(target.textContent,/INVALID-LATE/);
+ assert.match(target.textContent,/recherche partielle/);
+ session.dispose();
+});
