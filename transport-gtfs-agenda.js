@@ -50,6 +50,7 @@ function timestamp(value){
  return Date.parse(value);
 }
 function searchWindow(task){
+ if(task.marginMinutes!==undefined&&(!Number.isFinite(task.marginMinutes)||task.marginMinutes<0||task.marginMinutes>240))throw new Error('Invalid mission margin');
  const early=timestamp(task.earliestDeparture),late=timestamp(task.latestArrival);
  if((task.earliestDeparture!==undefined&&!Number.isFinite(early))||
     (task.latestArrival!==undefined&&!Number.isFinite(late)))throw new Error('Invalid mission timestamp');
