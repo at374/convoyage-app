@@ -25,8 +25,17 @@
     const departure=validTime(item.departure)?Date.parse(item.departure):NaN;
     const arrival=validTime(item.arrival)?Date.parse(item.arrival):NaN;
     const valid=Number.isFinite(departure)&&Number.isFinite(arrival)&&arrival>departure;
-    const price=finite(item.priceEUR)&&item.priceEUR>=0?item.priceEUR:null;
-    const margin=finite(opts.marginMinutes)?Math.max(5,opts.marginMinutes):5;
+    const cents=item.priceEUR*100;
+    const price=item.fareVerified===false||item.priceVerified===false?null:
+      finite(item.priceEUR)&&item.priceEUR>=0&&Number.isSafeInteger(Math.round(cents))&&
+      Math.abs(cents-Math.round(cents))<1e-7?item.priceEUR:null;
+    const isReturn=opts.direction==='return';
+    const minimumMargin=opts.exactGPSReliable===true&&item.exactDestination===true&&item.accessVerified===true?5:15;
+    const margin=finite(opts.marginMinutes)?Math.max(minimumMargin,opts.marginMinutes):minimumMargin;
+    const earliestProvided=opts.earliestDeparture!=null;
+    const earliestValid=!earliestProvided||validTime(opts.earliestDeparture);
+    const earliest=earliestProvided&&earliestValid?Date.parse(opts.earliestDeparture):NaN;
+    const deadlineValid=opts.deadline==null||validTime(opts.deadline);
     const deadline=validTime(opts.deadline)?Date.parse(opts.deadline):NaN;
     const slack=valid&&Number.isFinite(deadline)?Math.floor((deadline-arrival)/60000):null;
     // A confirmed service cannot make an itinerary feasible if its supplied leg
@@ -64,16 +73,24 @@
     const allVerified=timelineValid&&legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
     const interchangeVerified=item.interNetwork!==true||item.transferVerified===true;
-    const feasible=valid&&allVerified&&doorToDoor&&interchangeVerified&&item.accessVerified===true&&
-      Number.isFinite(deadline)&&slack>=margin;
+    const feasible=valid&&earliestValid&&deadlineValid&&(!earliestProvided||departure>=earliest)&&
+      allVerified&&doorToDoor&&interchangeVerified&&item.accessVerified===true&&
+      (isReturn?(!Number.isFinite(deadline)||slack>=0):Number.isFinite(deadline)&&slack>=margin);
     return {...item,priceEUR:price,durationMinutes:valid?Math.ceil((arrival-departure)/60000):null,
       slackMinutes:slack,feasible,displayStatus:feasible?'Réalisable':'Transport non confirmé — vérifiez vous-même'};
   }
   function rank(items,opts={}){
     if(!opts||typeof opts!=='object')opts={};
     const enriched=(Array.isArray(items)?items:[]).map(x=>evaluate(x,opts));
-    const valid=enriched.filter(x=>x.durationMinutes!==null&&
-      (x.slackMinutes===null||x.slackMinutes>=5));
+    const valid=enriched.filter(x=>{
+      if(x.durationMinutes===null||opts.deadline!=null&&!validTime(opts.deadline)||
+        opts.earliestDeparture!=null&&!validTime(opts.earliestDeparture))return false;
+      if(opts.earliestDeparture!=null&&Date.parse(x.departure)<Date.parse(opts.earliestDeparture))return false;
+      if(opts.direction==='return')return x.slackMinutes===null||x.slackMinutes>=0;
+      const minimum=opts.exactGPSReliable===true&&x.exactDestination===true&&x.accessVerified===true?5:15;
+      const margin=finite(opts.marginMinutes)?Math.max(minimum,opts.marginMinutes):minimum;
+      return x.slackMinutes===null||x.slackMinutes>=margin;
+    });
     const byPrice=(a,b)=>Number(b.feasible)-Number(a.feasible)||
       ((a.priceEUR??Infinity)===(b.priceEUR??Infinity)?0:(a.priceEUR??Infinity)-(b.priceEUR??Infinity))||a.durationMinutes-b.durationMinutes;
     const byDuration=(a,b)=>Number(b.feasible)-Number(a.feasible)||
