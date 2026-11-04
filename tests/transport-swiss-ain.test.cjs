@@ -102,3 +102,11 @@ assert.equal(borderSegments(index,countryMap).segments.length,1);
 assert.throws(()=>verifiedCountryMap([{stopId:'G',country:'CH',verified:false}]),/Unverified/);
 assert.throws(()=>verifiedCountryMap([{stopId:'G',country:'CH',verified:true},{stopId:'G',country:'FR',verified:true}]),/Conflicting/);
 assert.throws(()=>verifiedCountryMap([{stopId:'G',country:'DE',verified:true}]),/Unverified/);
+
+const invalidChronology=buildIndex({
+ 'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nG,Geneva,46.2,6.14\nA,Ain,46.25,6.1\n',
+ 'routes.txt':'route_id,route_short_name\nR,Border\n',
+ 'trips.txt':'route_id,service_id,trip_id\nR,WK,T\n',
+ 'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT,09:00:00,09:00:00,G,1\nT,08:30:00,08:30:00,A,2\n'
+});
+assert.equal(borderSegments(invalidChronology,new Map([['G','CH'],['A','FR']])).segments.length,0);
