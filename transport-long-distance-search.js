@@ -77,7 +77,11 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
  // route, service confirmation or price is inferred from provider candidates.
  const connections=[];
  if(typeof ranking.connectJourneys==='function'){
-  const regionalPool=regional.slice(0,100),longDistancePool=longDistance.slice(0,100);
+  // Providers can return offers in arbitrary order. Compare the earliest
+  // departures first so the bounded search is deterministic.
+  const byDeparture=(a,b)=>(timestamp(a?.departure)??Infinity)-(timestamp(b?.departure)??Infinity);
+  const regionalPool=[...regional].sort(byDeparture).slice(0,100);
+  const longDistancePool=[...longDistance].sort(byDeparture).slice(0,100);
   // Both orders matter: a regional feeder may precede a coach, or a
   // regional service may complete the journey after a long-distance arrival.
   // Stop at 100 combined candidates across both orders.
