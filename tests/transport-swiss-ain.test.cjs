@@ -124,3 +124,7 @@ assert.equal(pickup.transportConfirmed,false);
 assert.deepEqual(pickup.confirmationBlockers,['walking-access-unknown','realtime-service-unverified']);
 assert.equal(walkingCandidate.transportConfirmed,false);
 assert.deepEqual(walkingCandidate.confirmationBlockers,['no-scheduled-border-candidate','walking-route-unverified','realtime-service-unverified']);
+
+const deadlineOverride=missionPickupCandidates(calendar,index,new Map([['G','CH'],['A','FR']]),'2026-10-29',
+ {earliestDeparture:'07:50:00',pickupTime:'08:30:00',latestArrival:'12:00:00'});
+assert.equal(deadlineOverride.segments.length,0,'caller-provided latestArrival must not bypass pickup safety margin');
