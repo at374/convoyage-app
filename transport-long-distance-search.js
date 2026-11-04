@@ -68,10 +68,10 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
  const isReturn=options?.direction==='return';
  const pickupDeadline=isReturn?null:timestamp(options?.deadline)??latest;
  const requestedMargin=Number.isFinite(options?.marginMinutes)?options.marginMinutes:15;
- const minimumMargin=options?.exactGPSReliable===true?5:15;
- const marginMinutes=isReturn?0:Math.max(minimumMargin,requestedMargin);
+ const minimumMargin=journey=>options?.exactGPSReliable===true&&journey.exactDestination===true&&journey.accessVerified===true?5:15;
+ const marginMinutes=isReturn?0:Math.max(15,requestedMargin);
  const safeCandidates=pickupDeadline===null?candidates:candidates.filter(journey=>
-  Date.parse(journey.arrival)+marginMinutes*60000<=pickupDeadline);
+  Date.parse(journey.arrival)+Math.max(minimumMargin(journey),requestedMargin)*60000<=pickupDeadline);
  // A return journey has no pickup deadline. Keep its arrival-window filter,
  // but never apply an outbound pickup margin to the homeward journey.
  const rankingOptions=isReturn?{...options,deadline:undefined,marginMinutes:0}:{
