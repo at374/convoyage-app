@@ -207,6 +207,8 @@ async function run(){
     return value.includes('fournisseur(s) ayant répondu')||value.includes('indisponible')||value.includes('date invalide');
   });
   assert.match(await longDistanceStatus.innerText(),/0 proposition\(s\) non vérifiée\(s\), 1\/3 fournisseur/);
+  assert.equal(await page.locator('[data-junction-combined]').count(),0,
+    'Do not display a combined junction when no valid regional and long-distance junction has been computed');
 
 
   const sibraReference=page.locator('#cpSibraFareReference');
