@@ -443,3 +443,26 @@ test('routed walking bridge accepts fractional-second provider timestamps',async
  assert.equal(calls,1);
  assert.ok(result.candidates.some(x=>x.id==='regional+coach'));
 });
+
+test('routed walking bridge reuses the same stop pair across multiple services',async()=>{
+ const {compareWithRoutedWalks}=require('../transport-long-distance-search.js');
+ const from={lat:45.91,lon:6.13},to={lat:45.911,lon:6.131};
+ const makeRegional=(id,departure,arrival)=>({id,departure,arrival,
+  legs:[{departure,arrival,fromPoint:{lat:45.9,lon:6.12},toPoint:from}]});
+ const makeCoach=(id,departure,arrival)=>({id,departure,arrival,
+  legs:[{departure,arrival,fromPoint:to,toPoint:{lat:45.92,lon:6.14}}]});
+ const regionals=[
+  makeRegional('r1','2026-11-02T07:00:00+01:00','2026-11-02T07:40:00+01:00'),
+  makeRegional('r2','2026-11-02T07:05:00+01:00','2026-11-02T07:42:00+01:00')];
+ const coaches=[
+  makeCoach('c1','2026-11-02T07:50:00+01:00','2026-11-02T08:15:00+01:00'),
+  makeCoach('c2','2026-11-02T07:55:00+01:00','2026-11-02T08:20:00+01:00')];
+ let calls=0;
+ const router={route:async()=>{calls++;return {status:'calculated',endpointsMatched:true,
+  durationSeconds:180,distanceMeters:160};}};
+ const result=await compareWithRoutedWalks(regionals,{offers:coaches},
+  {deadline:'2026-11-02T09:00:00+01:00'},router);
+ assert.equal(calls,1);
+ assert.ok(result.candidates.some(x=>x.id==='r1+c1'));
+ assert.ok(result.candidates.some(x=>x.id==='r2+c2'));
+});
