@@ -216,8 +216,8 @@ async function run(){
   await page.getByText('Réseau de test — horaires aux arrêts',{exact:true}).waitFor();
   await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('TEST'));
   const text=await page.locator('#cpTransportMissionDetails').innerText();
-  assert.match(text,/C11/);assert.match(text,/Crolles Mairie/);assert.match(text,/minimum : 5 min/);assert.doesNotMatch(text,/\bRéalisable\b/);
-  assert.ok(requests.some(r=>r.arriveBy==='true'&&r.time==='08:55'),'Outbound applies mission margin');
+  assert.match(text,/C11/);assert.match(text,/Crolles Mairie/);assert.match(text,/minimum : 15 min/);assert.doesNotMatch(text,/\bRéalisable\b/);
+  assert.ok(requests.some(r=>r.arriveBy==='true'&&r.time==='08:45'),'Outbound applies mission margin');
   assert.ok(requests.some(r=>r.fromPlace===official.request.fromPlace&&r.toPlace===official.request.toPlace),'Official regional response is rendered after late geocoding');
   assert.ok(workers.length>0,'The actual dedicated browser worker is used');
   await page.locator('[data-gtfs-agenda]').scrollIntoViewIfNeeded();
