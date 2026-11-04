@@ -796,3 +796,15 @@ test('Android PWA caches only successful same-origin network responses',()=>{
  assert.match(worker,/e\.request\.method !== 'GET'/);
  assert.match(worker,/u\.origin !== location\.origin/);
 });
+
+test('Android PWA manifest keeps the installed application identity stable',()=>{
+ const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'..','manifest.webmanifest'),'utf8'));
+ assert.equal(manifest.name,'Convoyage Ultra');
+ assert.equal(manifest.short_name,'Convoyage Ultra');
+ assert.equal(manifest.start_url,'./index.html');
+ assert.equal(manifest.scope,'./');
+ assert.equal(manifest.display,'standalone');
+ assert.equal(manifest.orientation,'portrait');
+ assert.ok(manifest.icons.some(icon=>icon.sizes==='192x192'));
+ assert.ok(manifest.icons.some(icon=>icon.sizes==='512x512'));
+});
