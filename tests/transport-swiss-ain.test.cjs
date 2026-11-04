@@ -65,3 +65,14 @@ assert.equal(activeBorder.segments[0].serviceDateVerified,true);
 assert.equal(activeBorder.serviceConfirmed,false);
 assert.equal(datedBorderSegments(calendar,index,new Map([['G','CH'],['A','FR']]),'2026-10-30').segments.length,0);
 assert.throws(()=>datedBorderSegments(calendar,index,new Map(),'2026-02-30'),/Invalid service date/);
+
+const {missionBorderSegments}=require('../transport-swiss-ain.js');
+const mission=missionBorderSegments(calendar,index,new Map([['G','CH'],['A','FR']]),'2026-10-29',
+ {earliestDeparture:'07:55:00',latestArrival:'08:30:00'});
+assert.equal(mission.segments.length,1);
+assert.equal(mission.missionWindowChecked,true);
+assert.equal(mission.serviceConfirmed,false);
+assert.equal(missionBorderSegments(calendar,index,new Map([['G','CH'],['A','FR']]),'2026-10-29',
+ {earliestDeparture:'08:05:00',latestArrival:'08:30:00'}).segments.length,0);
+assert.throws(()=>missionBorderSegments(calendar,index,new Map(),'2026-10-29',
+ {earliestDeparture:'09:00:00',latestArrival:'08:00:00'}),/time window/);
