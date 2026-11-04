@@ -602,8 +602,8 @@ test('GTFS journey timestamps must be valid and chronological',async()=>{
    load:async()=>summary,query:async()=>({rows:[badRow],truncated:false}),dispose(){}
   })});
   await session.done;
-  assert.match(target.textContent,/recherche indisponible/);
-  assert.doesNotMatch(target.textContent,/1 horaire/);
+  assert.match(target.textContent,/recherche partielle/);
+  assert.doesNotMatch(target.textContent,/Retour : 1 horaire|Aller : 1 horaire/);
   session.dispose();
  }
 });
@@ -620,8 +620,8 @@ test('Agenda independently enforces the mission pickup deadline on GTFS response
    load:async()=>summary,query:async()=>({rows:[badRow],truncated:false}),dispose(){}
   })});
   await session.done;
-  assert.match(target.textContent,/recherche indisponible/);
-  assert.doesNotMatch(target.textContent,/1 horaire/);
+  assert.match(target.textContent,/recherche partielle/);
+  assert.doesNotMatch(target.textContent,/Retour : 1 horaire|Aller : 1 horaire/);
   session.dispose();
  }
 });
@@ -652,7 +652,7 @@ test('Agenda rejects impossible GTFS transfer chronology',async()=>{
    load:async()=>summary,query:async()=>({rows:[row({...base,legs})],truncated:false}),dispose(){}
   })});
   await session.done;
-  assert.match(target.textContent,/recherche indisponible/);
+  assert.match(target.textContent,/recherche partielle/);
   session.dispose();
  }
 });
@@ -669,7 +669,7 @@ test('Agenda rejects GTFS transfer intervals shorter than five or longer than 12
    load:async()=>summary,query:async()=>({rows:[row({departure:'2026-11-02T08:00:00Z',legs})],truncated:false}),dispose(){}
   })});
   await session.done;
-  assert.match(target.textContent,/recherche indisponible/);
+  assert.match(target.textContent,/recherche partielle/);
   session.dispose();
  }
 });
@@ -685,5 +685,17 @@ test('Agenda accepts equivalent GTFS transfer instants expressed in different UT
  await session.done;
  assert.match(target.textContent,/Retour : 1 horaire/);
  assert.doesNotMatch(target.textContent,/recherche indisponible/);
+ session.dispose();
+});
+
+test('Agenda retains valid journeys when one worker row is invalid',async()=>{
+ const target=panel();
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,query:async()=>({rows:[row({tripId:'valid'}),row({tripId:'bad',arrival:'invalid'})],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 1 horaire/);
+ assert.match(target.textContent,/recherche partielle/);
+ assert.match(target.textContent,/Transport non confirmé/);
  session.dispose();
 });
