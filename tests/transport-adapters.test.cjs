@@ -122,3 +122,14 @@ require('node:test')('long-distance providers normalize only valid offers withou
  assert.equal(adaptLongDistance([{from:'A',to:'',departure,arrival}],'FlixBus').length,0);
  assert.throws(()=>adaptLongDistance([],'Unknown'),/Unsupported/);
 });
+
+require('node:test')('regional and SNCF adapters retain only valid stop coordinates without confirming service',()=>{
+ const leg={fromPoint:{lat:45.9,lng:6.12},toPoint:{lat:120,lon:6.13},departure,arrival};
+ for(const journey of [adaptSNCF([{departure,arrival,legs:[leg]}])[0],
+  adaptGTFS([{departure,arrival,legs:[leg]}],'Cars Région')[0]]){
+  assert.deepEqual(journey.legs[0].fromPoint,{lat:45.9,lon:6.12});
+  assert.equal(journey.legs[0].toPoint,null);
+  assert.equal(journey.legs[0].serviceConfirmed,false);
+  assert.equal(journey.exactDestination,false);
+ }
+});
