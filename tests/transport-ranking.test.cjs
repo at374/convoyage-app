@@ -91,3 +91,11 @@ const shortTransfer={...connectedJourney,legs:[
 assert.equal(evaluate(shortTransfer,{deadline}).feasible,false,'Two-minute interchange is below the three-minute default');
 assert.equal(evaluate(shortTransfer,{deadline,minTransferMinutes:2}).feasible,true,'Configured two-minute interchange is allowed');
 assert.equal(evaluate(connectedJourney,{deadline,minTransferMinutes:6}).feasible,false,'Configured six-minute interchange rejects five minutes');
+
+const walkingConnection={...base,legs:[
+ {...legTime('2026-11-02T07:00:00+01:00','2026-11-02T07:30:00+01:00'),mode:'pt_pub_bus',fromPoint:{lat:45.9,lon:6.12},toPoint:{lat:45.9,lon:6.12}},
+ {...legTime('2026-11-02T07:30:00+01:00','2026-11-02T07:31:00+01:00'),mode:'wa_wal',fromPoint:{lat:45.9,lon:6.12},toPoint:{lat:45.901,lon:6.12}},
+ {...legTime('2026-11-02T07:34:00+01:00','2026-11-02T08:15:00+01:00'),mode:'pt_pub_bus',fromPoint:{lat:45.901,lon:6.12},toPoint:{lat:45.902,lon:6.12}}
+]};
+assert.equal(evaluate(walkingConnection,{deadline}).feasible,true,'One-minute walk of about 111 metres is plausible');
+assert.equal(evaluate({...walkingConnection,legs:walkingConnection.legs.map((leg,i)=>i===1?{...leg,toPoint:{lat:45.903,lon:6.12}}:i===2?{...leg,fromPoint:{lat:45.903,lon:6.12}}:leg)},{deadline}).feasible,false,'One-minute walk of about 334 metres is not plausible');
