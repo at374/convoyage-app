@@ -79,7 +79,13 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const dispose=()=>{if(disposed)return;disposed=true;observer?.disconnect();client?.dispose();walker?.dispose();client=null;walker=null;};
  const taskList=Array.isArray(tasks)?tasks:[];
  const resourceList=Array.isArray(resources)?resources:[];
- const resource=resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
+ // The Haute-Savoie envelope overlaps much of Ain. Prefer the Ain feed only
+ // for a journey fully inside its conservative western core, without changing
+ // Grenoble/Grésivaudan or Annecy network precedence.
+ const ainCore=task=>[task?.from,task?.to].every(p=>validPoint(p)&&p.lat>=45.9&&p.lat<=46.5&&p.lon>=4.7&&p.lon<=5.85);
+ const ain=resourceList.find(r=>r.id==='oura-ain');
+ const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
+ const resource=preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
  if(!resource)return {dispose,done:Promise.resolve()};
  const partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
   crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
