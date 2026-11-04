@@ -30,7 +30,7 @@ assert.equal(evaluate(atFive,{deadline,exactGPSReliable:true}).feasible,true,'Fi
 assert.equal(evaluate({...atFive,arrival:'2026-11-02T08:55:01+01:00'},{deadline,exactGPSReliable:true}).feasible,false,'Four minutes fifty-nine seconds is insufficient even with reliable GPS');
 assert.equal(evaluate({...atFive,exactDestination:false},{deadline}).feasible,false,'Five minutes at an unverified stop does not confirm arrival at pickup');
 assert.equal(evaluate({...atFive,accessVerified:false},{deadline}).feasible,false);
-console.log('transport-ranking: 19 assertions passed');
+
 
 assert.equal(evaluate({...base,arrival:'2026-11-02T08:45:00+01:00'},{deadline}).feasible,true,'Exactly fifteen minutes is valid by default');
 assert.equal(evaluate({...base,arrival:'2026-11-02T08:45:01+01:00'},{deadline}).feasible,false,'Below fifteen minutes is not confirmed');
@@ -110,3 +110,7 @@ const unmeasuredWalk={...walkingConnection,legs:walkingConnection.legs.map((leg,
 assert.equal(evaluate(unmeasuredWalk,{deadline}).feasible,false,'A walking leg without GPS or route length cannot be certified');
 const plausibleReportedWalk={...walkingConnection,legs:walkingConnection.legs.map((leg,i)=>i===1?{...leg,distanceMeters:120}:leg)};
 assert.equal(evaluate(plausibleReportedWalk,{deadline}).feasible,true,'A measured 120-metre walk in one minute remains possible');
+
+assert.equal(evaluate({...base,departure:'2026-11-02T07:00:00+14:30'},{deadline}).feasible,false,'UTC+14:30 is not a valid offset');
+assert.equal(evaluate({...base,departure:'2026-11-02T07:00:00-14:01'},{deadline}).feasible,false,'UTC-14:01 is not a valid offset');
+console.log('transport-ranking: all assertions passed');
