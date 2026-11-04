@@ -50,6 +50,8 @@ function borderSegments(index,countryByStop,{maxTrips=100000,maxSegments=10000}=
   const times=index.timesByTrip.get(tripId)||[];
   for(let i=1;i<times.length;i++){
    const a=times[i-1],b=times[i],fromCountry=countryByStop.get(a.stop_id),toCountry=countryByStop.get(b.stop_id);
+   if(!a.stop_id||!b.stop_id||a.stop_id===b.stop_id||
+      !(Number(b.stop_sequence)>Number(a.stop_sequence)))continue;
    if(!((fromCountry==='CH'&&toCountry==='FR')||(fromCountry==='FR'&&toCountry==='CH')))continue;
    if(segments.length>=maxSegments){truncated=true;break;}
    const route=index.routeById.get(trip.route_id);
@@ -57,7 +59,8 @@ function borderSegments(index,countryByStop,{maxTrips=100000,maxSegments=10000}=
    segments.push({tripId,routeId:String(trip.route_id),line:route.route_short_name||route.route_long_name||String(trip.route_id),
     fromStopId:a.stop_id,toStopId:b.stop_id,fromCountry,toCountry,
     fromStopName:index.stopById.get(a.stop_id)?.stop_name||'',toStopName:index.stopById.get(b.stop_id)?.stop_name||'',
-    departure:a.departure_time,arrival:b.arrival_time,serviceConfirmed:false,timetableOnly:true});
+    departure:a.departure_time,arrival:b.arrival_time,serviceConfirmed:false,timetableOnly:true,
+    serviceDateVerified:false});
   }
   if(truncated)break;
  }
