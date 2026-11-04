@@ -49,3 +49,11 @@ assert.equal(evaluate(base,{deadline}).feasible,true,'Legacy all-untimed itinera
 assert.equal(evaluate({...timed,legs:[{...timed.legs[0],departure:'2026-11-02T07:01:00+01:00'},timed.legs[1]]},{deadline}).feasible,false,'Unaccounted first-minute transfer cannot certify a journey');
 assert.equal(evaluate({...timed,legs:[timed.legs[0],{...timed.legs[1],arrival:'2026-11-02T08:14:00+01:00'}]},{deadline}).feasible,false,'Unaccounted final transfer cannot certify exact arrival');
 assert.equal(evaluate(timed,{deadline}).feasible,true,'Fully covered timed journey remains feasible');
+
+const geographic={...timed,legs:[
+ {...timed.legs[0],fromPoint:{lat:45.900,lon:6.120},toPoint:{lat:45.901,lon:6.121}},
+ {...timed.legs[1],fromPoint:{lat:45.901,lon:6.121},toPoint:{lat:45.902,lon:6.122}}
+]};
+assert.equal(evaluate(geographic,{deadline}).feasible,true,'Connected transfer remains feasible');
+assert.equal(evaluate({...geographic,legs:[geographic.legs[0],{...geographic.legs[1],fromPoint:{lat:45.910,lon:6.121}}]},{deadline}).feasible,false,'Distant stops without connecting leg cannot be feasible');
+assert.equal(evaluate({...geographic,legs:[geographic.legs[0],{...geographic.legs[1],fromPoint:{lat:999,lon:6.121}}]},{deadline}).feasible,false,'Malformed stop coordinates cannot certify feasibility');
