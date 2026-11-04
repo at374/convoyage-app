@@ -242,3 +242,15 @@ test('TripGo retains dated alternatives when the optional ranking engine fails',
  assert.ok(choices.every(x=>x.label==='Autre proposition'));
  assert.deepEqual(choices.map(x=>x.journey.providerTags[0]).sort(),['BlaBlaCar Bus','FlixBus']);
 });
+
+test('TripGo ranking cannot inject a journey that was not returned by the provider',()=>{
+ const journeys=api.parse(clone(),options).itineraries;
+ const invented={...journeys[0],departure:'2026-11-02T01:00:00+01:00'};
+ const ranking={rank(){return [{label:'Moins cher',journey:invented},
+  {label:'Compromis',journey:{...journeys[1]}}];}};
+ const choices=api.selectChoices(journeys,ranking,3);
+ assert.equal(choices.length,2);
+ assert.ok(choices.every(choice=>journeys.includes(choice.journey)));
+ assert.ok(!choices.some(choice=>choice.label==='Moins cher'));
+ assert.equal(choices[0].label,'Compromis');
+});
