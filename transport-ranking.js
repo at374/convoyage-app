@@ -77,7 +77,11 @@
     const chronologyVerified=legs.length<=1||hasTimedLeg;
     const allVerified=timelineValid&&chronologyVerified&&legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
-    const interchangeVerified=item.interNetwork!==true||item.transferVerified===true;
+    // Detect cross-operator transfers from leg evidence, even if the
+    // itinerary-level interNetwork flag was omitted by an adapter.
+    const providers=legs.map(leg=>typeof leg?.provider==='string'?leg.provider.trim():null);
+    const crossProvider=providers.length>1&&providers.every(Boolean)&&new Set(providers).size>1;
+    const interchangeVerified=!(item.interNetwork===true||crossProvider)||item.transferVerified===true;
     const feasible=valid&&earliestValid&&deadlineValid&&(!earliestProvided||departure>=earliest)&&
       allVerified&&doorToDoor&&interchangeVerified&&item.accessVerified===true&&
       (isReturn?(!Number.isFinite(deadline)||slack>=0):Number.isFinite(deadline)&&slack>=margin);
