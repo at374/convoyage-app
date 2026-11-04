@@ -47,6 +47,8 @@ function timestamp(value){
 }
 function searchWindow(task){
  if(!task||typeof task!=='object'||Array.isArray(task))throw new Error('Invalid mission task');
+ if(task.marginMinutes!==undefined&&(!Number.isFinite(task.marginMinutes)||task.marginMinutes<0||task.marginMinutes>1440))
+  throw new Error('Invalid mission safety margin');
  const early=timestamp(task.earliestDeparture),late=timestamp(task.latestArrival);
  if((task.earliestDeparture!==undefined&&!Number.isFinite(early))||
     (task.latestArrival!==undefined&&!Number.isFinite(late)))throw new Error('Invalid mission timestamp');
@@ -57,7 +59,7 @@ function searchWindow(task){
  if(end<start)throw new Error('Inverted mission window');
  return {earliestDeparture:new Date(start).toISOString(),latestArrival:new Date(end).toISOString(),
   // The return horizon is not a mission deadline and gets no safety margin.
-  marginMinutes:Number.isFinite(late)?Math.max(15,Number.isFinite(task.marginMinutes)?task.marginMinutes:15):0};
+  marginMinutes:Number.isFinite(late)?Math.max(15,task.marginMinutes??15):0};
 }
 function serviceDates(window,timeZone){
  const formatter=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'});
