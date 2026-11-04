@@ -178,9 +178,18 @@ async function run(){
   await page.goto(origin,{waitUntil:'domcontentloaded'});
   // The real card may omit the external reference; its Agenda index remains explicit.
   await page.locator('.mission').filter({hasText:'Grenoble'}).first().waitFor();
-  const cards=await page.locator('.mission').evaluateAll(nodes=>nodes.map(n=>({index:n.dataset.i,text:n.innerText})));
-  const current=cards.find(c=>c.text.includes('Grenoble')&&!c.text.includes('Crolles'));
-  assert.ok(current,'Synthetic Grenoble mission is visible in Agenda');
+  let cards=[],current;
+  // Agenda can re-render between the initial locator wait and reading the cards.
+  // Retry the actual mission selection, never silently accept a missing mission.
+  for(let attempt=0;attempt<25;attempt++){
+   cards=await page.locator('.mission').evaluateAll(nodes=>nodes.map(n=>({index:n.dataset.i,text:n.innerText})));
+   current=cards.find(c=>c.text.includes('Grenoble')&&c.text.includes('09:00'))||cards.find(c=>c.text.includes('Grenoble'));
+   if(current)break;
+   await page.waitForTimeout(100);
+  }
+   // The Agenda card may mention the next mission in Crolles; that must not
+   // exclude the Grenoble card itself from the browser regression.
+  assert.ok(current,'Synthetic Grenoble mission is visible in Agenda; cards='+JSON.stringify(cards)+'; pageErrors='+JSON.stringify(errors));
   await page.locator('.mission[data-i="'+current.index+'"]').click();
   await page.locator('#btnTransportsMission').waitFor();
   assert.equal(await page.locator('#btnVol').count(),1,'Car and public-transport buttons remain separate');
@@ -216,8 +225,8 @@ async function run(){
   await page.getByText('Réseau de test — horaires aux arrêts',{exact:true}).waitFor();
   await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('TEST'));
   const text=await page.locator('#cpTransportMissionDetails').innerText();
-  assert.match(text,/C11/);assert.match(text,/Crolles Mairie/);assert.match(text,/minimum : 5 min/);assert.doesNotMatch(text,/\bRéalisable\b/);
-  assert.ok(requests.some(r=>r.arriveBy==='true'&&r.time==='08:55'),'Outbound applies mission margin');
+  assert.match(text,/C11/);assert.match(text,/Crolles Mairie/);assert.match(text,/minimum : 15 min/);assert.doesNotMatch(text,/\bRéalisable\b/);
+  assert.ok(requests.some(r=>r.arriveBy==='true'&&r.time==='08:45'),'Outbound applies mission margin');
   assert.ok(requests.some(r=>r.fromPlace===official.request.fromPlace&&r.toPlace===official.request.toPlace),'Official regional response is rendered after late geocoding');
   assert.ok(workers.length>0,'The actual dedicated browser worker is used');
   await page.locator('[data-gtfs-agenda]').scrollIntoViewIfNeeded();
@@ -372,7 +381,7 @@ async function run(){
   await legacyY51.click();
   const legacyResult=page.getByText(/^Y51 du 2026-11-02/).first();await legacyResult.waitFor();
   assert.match(await legacyResult.innerText(),/11:48.*13:15/);
-  assert.match(await legacyResult.innerText(),/Référence Y51.*8,90 €/);
+  assert.doesNotMatch(await legacyResult.innerText(),/Référence Y51.*8,90 €/, 'Legacy Y51 must not invent a fare when imported stops cannot be matched to the priced corridor');
   assert.match(await legacyResult.innerText(),/Source vérifiée le/);
   assert.doesNotMatch(await legacyResult.innerText(),/Réalisable/);
 
@@ -383,7 +392,7 @@ async function run(){
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '5-minute minimum at exact pickup GPS, final walk required','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display','Y51 Albertville–Annecy shows dated full-fare reference; SIBRA pass does not make the journey free','legacy Agenda Y51 button identifies Annecy station and shows recorded 11:48 service with the shared fare reference'],
+    '15-minute pickup margin by default; five minutes only with reliable exact GPS and final walk','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display','Y51 Albertville–Annecy shows dated full-fare reference; SIBRA pass does not make the journey free','legacy Agenda Y51 button identifies Annecy station and shows recorded 11:48 service without inventing an unmatched fare'],
    relay:{crossOriginHttp:true,upstreamFixture:true,upstreamRequests:relayUpstreamRequests},regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){

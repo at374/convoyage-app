@@ -10,6 +10,8 @@
     if(!m)return false;
     const year=Number(m[1]),month=Number(m[2]),day=Number(m[3]);
     const calendar=new Date(Date.UTC(year,month-1,day));
+    const offset=m[7].match(/^([+-])(\d{2}):(\d{2})$/);
+    if(offset&&(Number(offset[2])>14||(Number(offset[2])===14&&Number(offset[3])!==0)))return false;
     return year>=100&&calendar.getUTCFullYear()===year&&calendar.getUTCMonth()===month-1&&calendar.getUTCDate()===day&&Number.isFinite(Date.parse(v));
   }
   function location(p){return p&&finite(p.lat)&&finite(p.lon??p.lng)&&Math.abs(p.lat)<=90&&Math.abs(p.lon??p.lng)<=180;}
@@ -25,8 +27,17 @@
     const departure=validTime(item.departure)?Date.parse(item.departure):NaN;
     const arrival=validTime(item.arrival)?Date.parse(item.arrival):NaN;
     const valid=Number.isFinite(departure)&&Number.isFinite(arrival)&&arrival>departure;
-    const price=finite(item.priceEUR)&&item.priceEUR>=0?item.priceEUR:null;
-    const margin=finite(opts.marginMinutes)?Math.max(5,opts.marginMinutes):5;
+    const cents=item.priceEUR*100;
+    const price=item.fareVerified===false||item.priceVerified===false?null:
+      finite(item.priceEUR)&&item.priceEUR>=0&&Number.isSafeInteger(Math.round(cents))&&
+      Math.abs(cents-Math.round(cents))<1e-7?item.priceEUR:null;
+    const isReturn=opts.direction==='return';
+    const minimumMargin=opts.exactGPSReliable===true&&item.exactDestination===true&&item.accessVerified===true?5:15;
+    const margin=finite(opts.marginMinutes)?Math.max(minimumMargin,opts.marginMinutes):minimumMargin;
+    const earliestProvided=opts.earliestDeparture!=null;
+    const earliestValid=!earliestProvided||validTime(opts.earliestDeparture);
+    const earliest=earliestProvided&&earliestValid?Date.parse(opts.earliestDeparture):NaN;
+    const deadlineValid=opts.deadline==null||validTime(opts.deadline);
     const deadline=validTime(opts.deadline)?Date.parse(opts.deadline):NaN;
     const slack=valid&&Number.isFinite(deadline)?Math.floor((deadline-arrival)/60000):null;
     // A confirmed service cannot make an itinerary feasible if its supplied leg
@@ -58,22 +69,58 @@
       if(leg?.fromPoint!==undefined&&!location(leg.fromPoint)||leg?.toPoint!==undefined&&!location(leg.toPoint)){
         timelineValid=false;break;
       }
-      if(i&&legs[i-1]?.toPoint!==undefined&&leg?.fromPoint!==undefined&&
-        meters(legs[i-1].toPoint,leg.fromPoint)>50){timelineValid=false;break;}
+      if(i){
+        // An operator-provided minimum transfer duration is a constraint,
+        // not an estimated walking time. Never invent one when absent.
+        const required=leg?.minTransferMinutes;
+        if(required!==undefined&&(!finite(required)||required<0||
+          (Date.parse(leg.departure)-Date.parse(legs[i-1].arrival))<required*60000)){
+          timelineValid=false;break;
+        }
+        const previousStop=legs[i-1]?.toPoint, nextStop=leg?.fromPoint;
+        // One known transfer endpoint is insufficient to verify continuity.
+        // Preserve legacy connections with neither coordinate supplied.
+        if((previousStop===undefined)!==(nextStop===undefined)||
+          (previousStop!==undefined&&meters(previousStop,nextStop)>50)){
+          timelineValid=false;break;
+        }
+      }
     }
-    const allVerified=timelineValid&&legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
+    // Multi-leg journeys require per-leg timestamps to verify each connection.
+    // A single legacy untimed leg remains supported for direct services.
+    // A zero-minute connection is not a verified interchange unless the
+    // provider explicitly confirms continuity/transfer at that instant.
+    const zeroGap=hasTimedLeg&&legs.some((leg,i)=>i>0&&
+      Date.parse(leg?.departure)===Date.parse(legs[i-1]?.arrival));
+    const chronologyVerified=(legs.length<=1||hasTimedLeg)&&(!zeroGap||item.transferVerified===true);
+    const allVerified=timelineValid&&chronologyVerified&&legs.length>0&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
-    const interchangeVerified=item.interNetwork!==true||item.transferVerified===true;
-    const feasible=valid&&allVerified&&doorToDoor&&interchangeVerified&&item.accessVerified===true&&
-      Number.isFinite(deadline)&&slack>=margin;
+    // Detect cross-operator transfers from leg evidence, even if the
+    // itinerary-level interNetwork flag was omitted by an adapter.
+    const providers=legs.map(leg=>typeof leg?.provider==='string'?leg.provider.trim():null);
+    const crossProvider=providers.length>1&&providers.every(Boolean)&&new Set(providers).size>1;
+    // Missing operator identity on a multi-leg journey cannot prove that
+    // the connection stays within one network. Require explicit transfer proof.
+    const unknownProvider=providers.length>1&&providers.some(provider=>!provider);
+    const interchangeVerified=!(item.interNetwork===true||crossProvider||unknownProvider)||item.transferVerified===true;
+    const feasible=valid&&earliestValid&&deadlineValid&&(!earliestProvided||departure>=earliest)&&
+      allVerified&&doorToDoor&&interchangeVerified&&item.accessVerified===true&&
+      (isReturn?(!Number.isFinite(deadline)||slack>=0):Number.isFinite(deadline)&&slack>=margin);
     return {...item,priceEUR:price,durationMinutes:valid?Math.ceil((arrival-departure)/60000):null,
       slackMinutes:slack,feasible,displayStatus:feasible?'Réalisable':'Transport non confirmé — vérifiez vous-même'};
   }
   function rank(items,opts={}){
     if(!opts||typeof opts!=='object')opts={};
     const enriched=(Array.isArray(items)?items:[]).map(x=>evaluate(x,opts));
-    const valid=enriched.filter(x=>x.durationMinutes!==null&&
-      (x.slackMinutes===null||x.slackMinutes>=5));
+    const valid=enriched.filter(x=>{
+      if(x.durationMinutes===null||opts.deadline!=null&&!validTime(opts.deadline)||
+        opts.earliestDeparture!=null&&!validTime(opts.earliestDeparture))return false;
+      if(opts.earliestDeparture!=null&&Date.parse(x.departure)<Date.parse(opts.earliestDeparture))return false;
+      if(opts.direction==='return')return x.slackMinutes===null||x.slackMinutes>=0;
+      const minimum=opts.exactGPSReliable===true&&x.exactDestination===true&&x.accessVerified===true?5:15;
+      const margin=finite(opts.marginMinutes)?Math.max(minimum,opts.marginMinutes):minimum;
+      return x.slackMinutes===null||x.slackMinutes>=margin;
+    });
     const byPrice=(a,b)=>Number(b.feasible)-Number(a.feasible)||
       ((a.priceEUR??Infinity)===(b.priceEUR??Infinity)?0:(a.priceEUR??Infinity)-(b.priceEUR??Infinity))||a.durationMinutes-b.durationMinutes;
     const byDuration=(a,b)=>Number(b.feasible)-Number(a.feasible)||

@@ -25,8 +25,9 @@ assert.equal(unknownFares.some(choice=>choice.label==='Moins cher'),false);
 const mixedFares=rank([{...base,id:'unknown',priceEUR:null},{...base,id:'priced',priceEUR:7,departure:'2026-11-02T07:15:00+01:00'}],{deadline});
 assert.equal(mixedFares.find(choice=>choice.label==='Moins cher')?.journey.id,'priced');
 const atFive={...base,arrival:'2026-11-02T08:55:00+01:00'};
-assert.equal(evaluate(atFive,{deadline}).feasible,true,'Five minutes at the verified exact address is sufficient');
-assert.equal(evaluate({...atFive,arrival:'2026-11-02T08:55:01+01:00'},{deadline}).feasible,false,'Four minutes fifty-nine seconds is insufficient');
+assert.equal(evaluate(atFive,{deadline}).feasible,false,'Five minutes without explicit reliable GPS is insufficient');
+assert.equal(evaluate(atFive,{deadline,exactGPSReliable:true}).feasible,true,'Reliable exact GPS permits five minutes');
+assert.equal(evaluate({...atFive,arrival:'2026-11-02T08:55:01+01:00'},{deadline,exactGPSReliable:true}).feasible,false,'Four minutes fifty-nine seconds is insufficient even with reliable GPS');
 assert.equal(evaluate({...atFive,exactDestination:false},{deadline}).feasible,false,'Five minutes at an unverified stop does not confirm arrival at pickup');
 assert.equal(evaluate({...atFive,accessVerified:false},{deadline}).feasible,false);
 console.log('transport-ranking: 19 assertions passed');
@@ -36,7 +37,7 @@ assert.equal(evaluate({...base,arrival:'2026-11-02T08:15:00+25:00'},{deadline}).
 assert.equal(evaluate({...base,departure:'2026-11-02T07:00:00+01:00garbage'},{deadline}).durationMinutes,null,'Reject trailing characters');
 assert.equal(evaluate({...base,arrival:'2026-11-02T08:15:00+01:00'},{deadline}).feasible,true,'Preserve valid offset timestamps');
 
-const timed={...base,legs:[{serviceConfirmed:true,departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:30:00+01:00'},{serviceConfirmed:true,departure:'2026-11-02T07:35:00+01:00',arrival:'2026-11-02T08:15:00+01:00'}]};
+const timed={...base,legs:[{provider:'Réseau test',serviceConfirmed:true,departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:30:00+01:00'},{provider:'Réseau test',serviceConfirmed:true,departure:'2026-11-02T07:35:00+01:00',arrival:'2026-11-02T08:15:00+01:00'}]};
 assert.equal(evaluate(timed,{deadline}).feasible,true,'Valid timed connection remains feasible');
 assert.equal(evaluate({...timed,legs:[timed.legs[0],{...timed.legs[1],departure:'2026-11-02T07:29:00+01:00'}]},{deadline}).feasible,false,'Overlapping confirmed services cannot be feasible');
 assert.equal(evaluate({...timed,legs:[timed.legs[0],{...timed.legs[1],arrival:'2026-11-02T08:20:00+01:00'}]},{deadline}).feasible,false,'Leg cannot finish after displayed arrival');
@@ -68,3 +69,12 @@ assert.equal(evaluate({...timed,interNetwork:true,transferVerified:false},{deadl
 assert.equal(evaluate({...timed,interNetwork:true},{deadline}).feasible,false,'Missing interchange evidence cannot certify a cross-network journey');
 assert.equal(evaluate({...timed,interNetwork:true,transferVerified:true},{deadline}).feasible,true,'A verified inter-network interchange preserves feasible confirmed services');
 assert.equal(evaluate({...timed,interNetwork:false,transferVerified:false},{deadline}).feasible,true,'Ordinary journeys do not require inter-network transfer evidence');
+
+const connectedNetworks={...geographic,interNetwork:true,transferVerified:true,legs:[
+ {...geographic.legs[0],provider:'Sibra'},
+ {...geographic.legs[1],provider:'TER',minTransferMinutes:5}
+]};
+assert.equal(evaluate(connectedNetworks,{deadline}).feasible,true,'Verified inter-network connection with sufficient transfer time is feasible');
+assert.equal(evaluate({...connectedNetworks,legs:[connectedNetworks.legs[0],{...connectedNetworks.legs[1],minTransferMinutes:6}]},{deadline}).feasible,false,'Transfer proof does not override an operator minimum duration');
+assert.equal(evaluate({...connectedNetworks,legs:[connectedNetworks.legs[0],{...connectedNetworks.legs[1],fromPoint:{lat:45.91,lon:6.121}}]},{deadline}).feasible,false,'Transfer proof does not override disconnected GPS stops');
+assert.equal(evaluate({...connectedNetworks,transferVerified:false},{deadline}).feasible,false,'Confirmed service is not proof of a cross-network interchange');

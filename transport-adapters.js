@@ -96,6 +96,15 @@
       }))
     })),provider||'Régional');
   }
+  // Reject impossible calendar dates that Date.parse may normalize silently.
+  function validFareBoundary(value){
+    if(typeof value!=='string')return false;
+    if(/^\d{4}-\d{2}-\d{2}$/.test(value)){
+      const ms=Date.parse(value);
+      return Number.isFinite(ms)&&new Date(ms).toISOString().slice(0,10)===value;
+    }
+    return Number.isFinite(Date.parse(value));
+  }
   // Fare evidence is injected only after adapting untrusted schedule feeds.
   // Each item must identify the itinerary, leg index and exact departure.
   function applyFareEvidence(journeys,evidence=[]){
@@ -115,12 +124,19 @@
           item.from===leg.from&&item.to===leg.to&&
           item.arrival===leg.arrival&&
           item.fareVerified===true&&typeof item.fareSource==='string'&&
-          item.fareSource.trim()&&Number.isFinite(item.verifiedPriceEUR)&&
-          item.verifiedPriceEUR>=0&&item.fareValidFrom&&item.fareValidUntil&&
-          Number.isFinite(Date.parse(item.fareValidFrom))&&
-          Number.isFinite(Date.parse(item.fareValidUntil))&&
-          Date.parse(item.fareValidFrom)<=Date.parse(leg.departure)&&
-          Date.parse(leg.departure)<=Date.parse(item.fareValidUntil)&&
+          item.fareSource.trim()&&typeof item.verifiedPriceEUR==='number'&&
+          Number.isFinite(item.verifiedPriceEUR)&&item.verifiedPriceEUR>=0&&
+          Number.isSafeInteger(Math.round(item.verifiedPriceEUR*100))&&
+          Math.abs(item.verifiedPriceEUR*100-Math.round(item.verifiedPriceEUR*100))<1e-7&&
+          item.fareValidFrom&&item.fareValidUntil&&
+          validFareBoundary(item.fareValidFrom)&&
+          validFareBoundary(item.fareValidUntil)&&
+          ( /^\d{4}-\d{2}-\d{2}$/.test(item.fareValidFrom)?
+            leg.departure.slice(0,10)>=item.fareValidFrom:
+            Date.parse(item.fareValidFrom)<=Date.parse(leg.departure))&&
+          ( /^\d{4}-\d{2}-\d{2}$/.test(item.fareValidUntil)?
+            leg.departure.slice(0,10)<=item.fareValidUntil:
+            Date.parse(leg.departure)<=Date.parse(item.fareValidUntil))&&
           (!item.fareRetrievedAt || (Number.isFinite(Date.parse(item.fareRetrievedAt))&&
           Date.parse(item.fareRetrievedAt)<=Date.now())));
         return match?{...leg,verifiedPriceEUR:match.verifiedPriceEUR,
