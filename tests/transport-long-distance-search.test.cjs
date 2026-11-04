@@ -155,3 +155,12 @@ test('regional comparison rejects timezone-ambiguous and invalid schedule dates'
  assert.equal(result.candidates.length,1);
  assert.equal(result.choices.length,1);
 });
+
+test('negative requested margin never bypasses the fifteen-minute pickup buffer',()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const base={departure:'2026-11-02T08:00:00+01:00',arrival:'2026-11-02T09:50:00+01:00',legs:[]};
+ const opts={deadline:'2026-11-02T10:00:00+01:00',marginMinutes:-20};
+ const result=compareWithRegional([base],null,opts);
+ assert.equal(result.candidates.length,0);
+ assert.equal(result.choices.length,0);
+});
