@@ -66,7 +66,7 @@ function borderSegments(index,countryByStop,{maxTrips=100000,maxSegments=10000}=
   const times=index.timesByTrip.get(tripId)||[];
   for(let i=1;i<times.length;i++){
    const a=times[i-1],b=times[i],fromCountry=countryByStop.get(a.stop_id),toCountry=countryByStop.get(b.stop_id);
-   if(!a.stop_id||!b.stop_id||a.stop_id===b.stop_id||
+   if(!a.stop_id||!b.stop_id||!index.stopById.has(a.stop_id)||!index.stopById.has(b.stop_id)||a.stop_id===b.stop_id||
       !(Number(b.stop_sequence)>Number(a.stop_sequence))||
       (a.pickup_type!==undefined&&a.pickup_type!==''&&a.pickup_type!=='0')||
       (b.drop_off_type!==undefined&&b.drop_off_type!==''&&b.drop_off_type!=='0')||
