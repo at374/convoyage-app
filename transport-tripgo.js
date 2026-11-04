@@ -60,7 +60,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
    const operators=[...new Set(legs.filter(l=>l.mode.startsWith('pt_pub'))
     .map(l=>l.provider).filter(name=>typeof name==='string'&&name.trim()))];
    const providerTags=operators.flatMap(name=>{
-    const normalized=name.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
+    const normalized=name.toLowerCase();
     if(/flixbus/.test(normalized))return ['FlixBus'];
     if(/blablacar/.test(normalized))return [/bus/.test(normalized)?'BlaBlaCar Bus':'BlaBlaCar'];
     return [];
