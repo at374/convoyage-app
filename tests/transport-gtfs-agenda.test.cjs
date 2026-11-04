@@ -32,6 +32,9 @@ test('time windows include previous service days, explicit horizon, margin and m
  assert.deepEqual(agenda.serviceDates(w,'Europe/Paris'),['2026-11-01','2026-11-02','2026-11-03']);
  const outbound=agenda.searchWindow({latestArrival:'2026-11-02T12:00:00+01:00',marginMinutes:15});
  assert.equal(outbound.marginMinutes,15);
+ assert.equal(agenda.searchWindow({latestArrival:'2026-11-02T12:00:00+01:00'}).marginMinutes,15);
+ assert.equal(agenda.searchWindow({latestArrival:'2026-11-02T12:00:00+01:00',marginMinutes:5}).marginMinutes,15);
+ assert.equal(agenda.searchWindow({latestArrival:'2026-11-02T12:00:00+01:00',marginMinutes:25}).marginMinutes,25);
  assert.equal(Date.parse(outbound.latestArrival)-Date.parse(outbound.earliestDeparture),86400000);
  const long=agenda.searchWindow({...task,latestArrival:'2026-11-09T12:00:00+01:00'});
  assert.equal(Date.parse(long.latestArrival)-Date.parse(long.earliestDeparture),48*3600000);
