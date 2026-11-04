@@ -131,3 +131,11 @@ jobs:
       - run: node --test tests/transport-gtfs-transfers.test.cjs
       - run: node --test tests/transport-gtfs-federation.test.cjs
       - run: node --test tests/transport-walking.test.cjs
+      - run: node --test tests/transport-ranking-connect-options.test.js
+      - run: node --test tests/transport-ranking-deadline-validation.test.js
+      - run: node --test tests/transport-ranking-deterministic.test.js
+      - run: node --test tests/transport-ranking-earliest-departure.test.js
+      - run: node --test tests/transport-ranking-fare-precision.test.js
+      - run: node --test tests/transport-ranking-return-margin.test.js
+      - run: node --test tests/transport-long-distance-return-deadline.test.js
+      - run: node --test tests/transport-walking-invalid-inputs.test.js
