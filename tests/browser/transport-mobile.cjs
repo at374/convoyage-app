@@ -195,15 +195,15 @@ async function run(){
   await providerStatus.waitFor();
   assert.match(await providerStatus.innerText(),/FlixBus et BlaBlaCar/);
   assert.match(await providerStatus.innerText(),/Aucun départ ni tarif confirmé/);
-  const longDistanceStatus=page.locator('[data-long-distance-search="Retour"]');
+  const longDistanceStatus=page.locator('[data-long-distance-search="Aller"]');
   assert.ok(await longDistanceStatus.count(),
-    'Retour provider slot missing: '+JSON.stringify(await page.evaluate(()=>({
+    'Aller provider slot missing: '+JSON.stringify(await page.evaluate(()=>({
       engine:!!window.CPTransportLongDistanceSearch,
       fetchers:Object.keys(window.CP_LONG_DISTANCE_FETCHERS||{}),
       slots:[...document.querySelectorAll('[data-long-distance-search]')].map(x=>x.getAttribute('data-long-distance-search')),
       home:document.querySelector('#cpTransportMissionDetails')?.textContent?.slice(0,200)
     }))));
-  await page.waitForFunction(()=>{const value=document.querySelector('[data-long-distance-search="Retour"]')?.textContent||'';
+  await page.waitForFunction(()=>{const value=document.querySelector('[data-long-distance-search="Aller"]')?.textContent||'';
     return value.includes('fournisseur(s) ayant répondu')||value.includes('indisponible')||value.includes('date invalide');
   });
   assert.match(await longDistanceStatus.innerText(),/0 proposition\(s\) non vérifiée\(s\), 1\/3 fournisseur/);
