@@ -85,11 +85,18 @@
       const margin=finite(opts.marginMinutes)?Math.max(opts.marginMinutes,minimum):minimum;
       return x.slackMinutes===null||x.slackMinutes>=margin;
     });
+    // Provider responses can arrive in any order. Keep equal-score choices stable
+    // across refreshes without relying on arrival order or a locale-dependent sort.
+    const stableKey=x=>[x.provider,x.id,x.departure,x.arrival].map(v=>String(v??'')).join('|');
+    const stableCompare=(a,b)=>{
+      const left=stableKey(a),right=stableKey(b);
+      return left<right?-1:left>right?1:0;
+    };
     const byPrice=(a,b)=>Number(b.feasible)-Number(a.feasible)||
-      ((a.priceEUR??Infinity)===(b.priceEUR??Infinity)?0:(a.priceEUR??Infinity)-(b.priceEUR??Infinity))||a.durationMinutes-b.durationMinutes;
+      ((a.priceEUR??Infinity)===(b.priceEUR??Infinity)?0:(a.priceEUR??Infinity)-(b.priceEUR??Infinity))||a.durationMinutes-b.durationMinutes||stableCompare(a,b);
     const byDuration=(a,b)=>Number(b.feasible)-Number(a.feasible)||
       a.durationMinutes-b.durationMinutes||
-      ((a.priceEUR??Infinity)===(b.priceEUR??Infinity)?0:(a.priceEUR??Infinity)-(b.priceEUR??Infinity));
+      ((a.priceEUR??Infinity)===(b.priceEUR??Infinity)?0:(a.priceEUR??Infinity)-(b.priceEUR??Infinity))||stableCompare(a,b);
     const priced=valid.filter(x=>x.priceEUR!==null);
     const cheapest=[...priced].sort(byPrice)[0];
     const fastest=[...valid].sort(byDuration)[0];
@@ -99,7 +106,7 @@
         const safety=x.slackMinutes===null?100:Math.max(0,45-x.slackMinutes)*2;
         return price+safety+x.durationMinutes/20;
       };
-      return Number(b.feasible)-Number(a.feasible)||score(a)-score(b);
+      return Number(b.feasible)-Number(a.feasible)||score(a)-score(b)||stableCompare(a,b);
     })[0];
     const unique=[];for(const [label,journey] of [['Moins cher',cheapest],['Compromis',compromise],['Plus rapide',fastest]]){
       if(journey&&!unique.some(x=>x.journey===journey))unique.push({label,journey});
