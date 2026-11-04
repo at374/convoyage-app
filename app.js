@@ -2354,10 +2354,13 @@
                       !Number.isFinite(Date.parse(journey.arrival)))continue;
                   const item=document.createElement('p');item.className='doux';
                   item.setAttribute('data-long-distance-choice',label);
+                  const fare=Number.isFinite(journey.priceEUR)&&journey.priceEUR>=0?
+                    journey.priceEUR.toFixed(2).replace('.',',')+' € (tarif à vérifier)':
+                    'tarif inconnu';
                   item.textContent=(choice.label||'Proposition')+' · '+
                     formatParis(journey.departure)+' → '+formatParis(journey.arrival)+
                     ' · '+(journey.provider||'Transport longue distance')+
-                    ' · Transport non confirmé, prix non vérifié.';
+                    ' · '+fare+' · Transport non confirmé.';
                   status.appendChild(item);
                 }
               }).catch(()=>{
