@@ -158,7 +158,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
     if(!active())return;
     if(!eligible(task))continue;
     try{
-     const window=searchWindow(task),dates=serviceDates(window,resource.timeZone),rows=[];let truncated=false;
+     const window=searchWindow(task),dates=serviceDates(window,resource.timeZone),rows=[];let truncated=false,invalidJourneys=0;
      for(const date of dates){
       if(!active())return;
       const result=await client.query({method:'missionJourneys',date,origin:task.from,destination:task.to,
@@ -171,9 +171,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
           Date.parse(journey.arrival)<Date.parse(journey.departure)||
           Date.parse(journey.departure)<Date.parse(window.earliestDeparture)||
           Date.parse(journey.arrival)>Date.parse(window.latestArrival)-window.marginMinutes*60000)
-        throw new Error('GTFS journey outside mission window');
+        {invalidJourneys++;continue;}
        if(journey.legs!==undefined){
-        if(!Array.isArray(journey.legs)||journey.legs.length!==2)throw new Error('Invalid GTFS transfer legs');
+        if(!Array.isArray(journey.legs)||journey.legs.length!==2){invalidJourneys++;continue;}
         const [first,second]=journey.legs;
         if(journey.legs.some(leg=>!leg||!Number.isFinite(timestamp(leg.departure))||!Number.isFinite(timestamp(leg.arrival))||
            Date.parse(leg.arrival)<Date.parse(leg.departure))||
@@ -181,7 +181,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
            Date.parse(second.arrival)!==Date.parse(journey.arrival)||
            Date.parse(second.departure)-Date.parse(first.arrival)<5*60000||
            Date.parse(second.departure)-Date.parse(first.arrival)>120*60000)
-          throw new Error('GTFS transfer outside allowed connection interval');
+          {invalidJourneys++;continue;}
        }
       }
       rows.push(...result.rows);
@@ -204,7 +204,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      }
      const shown=distinct.slice(0,5);
      const marginNote=Number.isFinite(Date.parse(task.latestArrival))?' Marge avant mission : '+window.marginMinutes+' min minimum (marche et circulation à vérifier).':'';
-     status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':truncated||partialNetworks?'aucun trajet dans les résultats partiels ; recherche incomplète (réseau ou horaires manquants), d’autres horaires peuvent exister.':'aucun trajet direct ou avec une correspondance dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.')+marginNote;
+     status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':truncated||partialNetworks||invalidJourneys?'aucun trajet dans les résultats partiels ; recherche incomplète (réseau ou horaires manquants), d’autres horaires peuvent exister.':'aucun trajet direct ou avec une correspondance dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.')+marginNote+(invalidJourneys?' '+invalidJourneys+' horaire(s) incohérent(s) écarté(s) ; recherche partielle.':'');
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
      if(truncated||distinct.length>shown.length){const note=doc.createElement('p');note.textContent='Affichage limité : d’autres horaires peuvent exister.';status.appendChild(note);}
      for(const row of shown){
