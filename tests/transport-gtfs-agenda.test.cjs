@@ -601,3 +601,21 @@ test('GTFS journey timestamps must be valid and chronological',async()=>{
   session.dispose();
  }
 });
+
+test('Agenda independently enforces the mission pickup deadline on GTFS responses',async()=>{
+ const mission={label:'Aller',from:point,to:{lat:45.67,lon:6.39},
+  earliestDeparture:'2026-11-02T11:00:00Z',latestArrival:'2026-11-02T12:30:00Z'};
+ for(const badRow of [
+  row({departure:'2026-11-02T10:59:00Z',arrival:'2026-11-02T12:00:00Z'}),
+  row({departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T12:16:00Z'})
+ ]){
+  const target=panel();
+  const session=agenda.mount(target,{tasks:[mission],clientFactory:()=>({
+   load:async()=>summary,query:async()=>({rows:[badRow],truncated:false}),dispose(){}
+  })});
+  await session.done;
+  assert.match(target.textContent,/recherche indisponible/);
+  assert.doesNotMatch(target.textContent,/1 horaire/);
+  session.dispose();
+ }
+});
