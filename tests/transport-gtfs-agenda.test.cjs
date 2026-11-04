@@ -788,3 +788,11 @@ test('Android PWA offline cache retains the transport worker and app shell',()=>
  assert.match(worker,/e\.request\.method !== 'GET'/);
  assert.match(worker,/u\.origin !== location\.origin/);
 });
+
+test('Android PWA caches only successful same-origin network responses',()=>{
+ const worker=fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8');
+ assert.match(worker,/if \(r\.ok && r\.type !== 'opaque'\)/);
+ assert.match(worker,/e\.waitUntil\(caches\.open\(CACHE\)/);
+ assert.match(worker,/e\.request\.method !== 'GET'/);
+ assert.match(worker,/u\.origin !== location\.origin/);
+});
