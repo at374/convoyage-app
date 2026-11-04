@@ -413,7 +413,7 @@ test('routed walking bridge adds calculated transfer without confirming transit'
    fromPoint:to,toPoint:{lat:45.92,lon:6.14}}]};
  let calls=0;
  const router={route:async()=>{calls++;return {status:'calculated',endpointsMatched:true,
-  durationSeconds:180,distanceMeters:160,provider:'Test pedestrian router'};}};
+  durationSeconds:180,distanceMeters:160,from,to,provider:'Test pedestrian router'};}};
  const result=await compareWithRoutedWalks([regional],{offers:[coach]},
   {deadline:'2026-11-02T09:00:00+01:00'},router);
  const joined=result.candidates.find(x=>x.id==='regional+coach');
@@ -437,7 +437,7 @@ test('routed walking bridge accepts fractional-second provider timestamps',async
    arrival:'2026-11-02T08:15:00.123+01:00',fromPoint:to,toPoint:{lat:45.92,lon:6.14}}]};
  let calls=0;
  const router={route:async()=>{calls++;return {status:'calculated',endpointsMatched:true,
-  durationSeconds:180,distanceMeters:160};}};
+  durationSeconds:180,distanceMeters:160,from,to};}};
  const result=await compareWithRoutedWalks([regional],{offers:[coach]},
   {deadline:'2026-11-02T09:00:00+01:00'},router);
  assert.equal(calls,1);
@@ -459,7 +459,7 @@ test('routed walking bridge reuses the same stop pair across multiple services',
   makeCoach('c2','2026-11-02T07:55:00+01:00','2026-11-02T08:20:00+01:00')];
  let calls=0;
  const router={route:async()=>{calls++;return {status:'calculated',endpointsMatched:true,
-  durationSeconds:180,distanceMeters:160};}};
+  durationSeconds:180,distanceMeters:160,from,to};}};
  const result=await compareWithRoutedWalks(regionals,{offers:coaches},
   {deadline:'2026-11-02T09:00:00+01:00'},router);
  assert.equal(calls,1);
@@ -478,9 +478,9 @@ test('routed walking bridge rejects implausibly fast pedestrian geometry',async(
    fromPoint:to,toPoint:{lat:45.92,lon:6.14}}]};
  const options={deadline:'2026-11-02T09:00:00+01:00'};
  const tooFast={route:async()=>({status:'calculated',endpointsMatched:true,
-  durationSeconds:30,distanceMeters:160})};
+  durationSeconds:30,distanceMeters:160,from,to})};
  const wrongEndpoint={route:async()=>({status:'calculated',endpointsMatched:true,
-  durationSeconds:180,distanceMeters:160,from:{lat:45.92,lon:6.13},to})};
+  durationSeconds:180,distanceMeters:160,from,to,from:{lat:45.92,lon:6.13},to})};
  for(const router of [tooFast,wrongEndpoint]){
   const result=await compareWithRoutedWalks([regional],{offers:[coach]},options,router);
   assert.equal(result.candidates.some(x=>x.id==='regional+coach'),false);
