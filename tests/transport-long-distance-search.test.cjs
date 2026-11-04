@@ -532,3 +532,25 @@ test('malformed provider response cannot be counted as an available journey',asy
  assert.equal(result.providers[0].status,'invalid-response');
  assert.equal(result.serviceConfirmed,false);
 });
+
+
+test('return comparator accepts confirmed homeward journey without pickup deadline',()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const confirmed={id:'return-ter',provider:'SNCF',departure:'2026-11-02T16:00:00+01:00',
+  arrival:'2026-11-02T17:30:00+01:00',priceEUR:8,fareVerified:true,
+  exactOrigin:true,exactDestination:true,accessVerified:true,
+  legs:[{serviceConfirmed:true}]};
+ const result=compareWithRegional([confirmed],{offers:[],providers:[]},{
+  direction:'return',earliestDeparture:'2026-11-02T15:00:00+01:00',marginMinutes:15
+ });
+ assert.equal(result.candidates.length,1);
+ assert.equal(result.choices[0].journey.feasible,true);
+ assert.equal(result.choices[0].journey.displayStatus,'Réalisable');
+ const unverified=compareWithRegional([{...confirmed,accessVerified:false}],
+  {offers:[],providers:[]},{direction:'return',earliestDeparture:'2026-11-02T15:00:00+01:00'});
+ assert.equal(unverified.choices[0].journey.feasible,false);
+ const beforeDelivery=compareWithRegional([confirmed],{offers:[],providers:[]},{
+  direction:'return',earliestDeparture:'2026-11-02T16:30:00+01:00'
+ });
+ assert.equal(beforeDelivery.candidates.length,0);
+});
