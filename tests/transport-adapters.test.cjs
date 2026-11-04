@@ -94,3 +94,8 @@ assert.equal(withVerifiedFares(applyFareEvidence(bus,[evidence]))[0].priceEUR,3,
 assert.equal(applyFareEvidence(bus,[{...evidence,verifiedPriceEUR:3.005}])[0].legs[0].fareVerified,false,'Fractional-cent evidence must be rejected at ingestion');
 assert.equal(applyFareEvidence(bus,[{...evidence,verifiedPriceEUR:Number.MAX_SAFE_INTEGER}])[0].legs[0].fareVerified,false,'Unsafe monetary evidence must be rejected at ingestion');
 assert.equal(applyFareEvidence(bus,[{...evidence,verifiedPriceEUR:3}])[0].legs[0].fareVerified,true,'Valid cent-precise evidence remains accepted');
+
+const dateOnlyEvidence={...evidence,fareValidFrom:'2026-11-02',fareValidUntil:'2026-11-02'};
+assert.equal(withVerifiedFares(applyFareEvidence(bus,[dateOnlyEvidence]))[0].priceEUR,3,'Date-only fare remains valid throughout its last local boarding day');
+assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...dateOnlyEvidence,fareValidUntil:'2026-11-01'}]))[0].priceEUR,null,'Fare expired the previous calendar day must be rejected');
+assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...dateOnlyEvidence,fareValidFrom:'2026-11-03'}]))[0].priceEUR,null,'Fare beginning the next calendar day must be rejected');
