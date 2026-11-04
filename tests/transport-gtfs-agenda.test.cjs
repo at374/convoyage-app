@@ -531,3 +531,13 @@ test('dated Y51 references are displayed separately from confirmed fares and pro
   assert.match(fallback.textContent,/Retour : 1 horaire/);assert.doesNotMatch(fallback.textContent,/Référence Y51/);
  }finally{global.CPTY51Fares=previous;}
 });
+
+test('official Cars Région Ain GTFS is available as an Agenda resource',()=>{
+ const ain=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-ain');
+ assert.ok(ain);
+ assert.equal(ain.format,'GTFS');
+ assert.equal(ain.federate,true);
+ assert.match(ain.url,/^https:\/\/www\.data\.gouv\.fr\/api\/1\/datasets\/r\//);
+ assert.equal(agenda.selected(ain,{from:{lat:46.25,lon:5.6},to:{lat:46.30,lon:5.8}}),true);
+ assert.equal(agenda.selected(ain,{from:{lat:46.25,lon:5.6},to:{lat:47.1,lon:6.5}}),false);
+});
