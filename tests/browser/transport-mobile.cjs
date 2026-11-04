@@ -196,7 +196,9 @@ async function run(){
   assert.match(await providerStatus.innerText(),/FlixBus et BlaBlaCar/);
   assert.match(await providerStatus.innerText(),/Aucun départ ni tarif confirmé/);
   const longDistanceStatus=page.locator('[data-long-distance-search="Retour"]');
-  await page.waitForFunction(()=>document.querySelector('[data-long-distance-search="Retour"]')?.textContent.includes('fournisseur(s) ayant répondu'));
+  await page.waitForFunction(()=>{const value=document.querySelector('[data-long-distance-search="Retour"]')?.textContent||'';
+    return value.includes('fournisseur(s) ayant répondu')||value.includes('indisponible')||value.includes('date invalide');
+  });
   assert.match(await longDistanceStatus.innerText(),/0 proposition\(s\) non vérifiée\(s\), 1\/3 fournisseur/);
 
 
