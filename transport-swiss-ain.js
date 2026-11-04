@@ -96,7 +96,23 @@ function datedBorderSegments(files,index,countryByStop,date,options={}){
  return {...result,date,segments:result.segments.map(s=>({...s,serviceDateVerified:true})),
   timetableOnly:true,serviceConfirmed:false};
 }
-const api={GENEVA,AIN,inside,crossBorderRoutes,verifiedBorderRoutes,borderSegments,datedBorderSegments};
+// Match timetable candidates to the mission's local service-day clock.
+// GTFS permits times beyond 24:00 for services continuing after midnight.
+function gtfsMinutes(value){
+ if(typeof value!=='string'||!/^\\d{1,3}:[0-5]\\d:[0-5]\\d$/.test(value))return null;
+ const [h,m,s]=value.split(':').map(Number);
+ return h<=72?h*60+m+s/60:null;
+}
+function missionBorderSegments(files,index,countryByStop,date,{earliestDeparture,latestArrival,...limits}={}){
+ const start=gtfsMinutes(earliestDeparture),end=gtfsMinutes(latestArrival);
+ if(start===null||end===null||end<start)throw new Error('Invalid mission GTFS time window');
+ const result=datedBorderSegments(files,index,countryByStop,date,limits);
+ return {...result,segments:result.segments.filter(segment=>{
+  const departure=gtfsMinutes(segment.departure),arrival=gtfsMinutes(segment.arrival);
+  return departure!==null&&arrival!==null&&departure>=start&&arrival<=end&&arrival>=departure;
+ }),missionWindowChecked:true,serviceConfirmed:false};
+}
+const api={GENEVA,AIN,inside,crossBorderRoutes,verifiedBorderRoutes,borderSegments,datedBorderSegments,missionBorderSegments};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPSwissAinGTFS=api;
 })(typeof window!=='undefined'?window:globalThis);
