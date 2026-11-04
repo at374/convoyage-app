@@ -89,7 +89,7 @@ function borderSegments(index,countryByStop,{maxTrips=100000,maxSegments=10000}=
 function verifiedBorderRoutes(index,countryByStop,{maxTrips=100000}={}){
  // A route is only a border candidate if an actual trip has a usable
  // consecutive CH/FR stop pair, not merely two countries somewhere in its stops.
- const result=borderSegments(index,countryByStop,{maxTrips,maxSegments:100000});
+ const result=borderSegments(index,countryByStop,{maxTrips,maxSegments:Math.max(10000,maxTrips*4)});
  const routes=new Map(),tripsByRoute=new Map();
  for(const segment of result.segments){
   const key=segment.routeId;
