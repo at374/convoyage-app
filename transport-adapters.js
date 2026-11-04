@@ -122,10 +122,10 @@
           item.fareValidFrom&&item.fareValidUntil&&
           Number.isFinite(Date.parse(item.fareValidFrom))&&
           Number.isFinite(Date.parse(item.fareValidUntil))&&
-          ( /^\\d{4}-\\d{2}-\\d{2}$/.test(item.fareValidFrom)?
+          ( /^\d{4}-\d{2}-\d{2}$/.test(item.fareValidFrom)?
             leg.departure.slice(0,10)>=item.fareValidFrom:
             Date.parse(item.fareValidFrom)<=Date.parse(leg.departure))&&
-          ( /^\\d{4}-\\d{2}-\\d{2}$/.test(item.fareValidUntil)?
+          ( /^\d{4}-\d{2}-\d{2}$/.test(item.fareValidUntil)?
             leg.departure.slice(0,10)<=item.fareValidUntil:
             Date.parse(leg.departure)<=Date.parse(item.fareValidUntil))&&
           (!item.fareRetrievedAt || (Number.isFinite(Date.parse(item.fareRetrievedAt))&&
