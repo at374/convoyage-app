@@ -1973,7 +1973,7 @@
         '<div><strong>1. Aller au départ de mission</strong><div>' +
         esc(home || 'Domicile non renseigné') + ' → ' + esc(from || 'Départ non renseigné') +
         '</div><div class="doux">Prise en charge : ' + esc(formatParis(pickupDate)) +
-        ' · minimum : 5 min au point GPS exact, marche finale comprise ; préférence : 30 à 45 min.</div>' +
+        ' · minimum : 15 min avant prise en charge, marche finale comprise ; 5 min seulement avec GPS exact fiable ; préférence : 30 à 45 min.</div>' +
         directions(home, from, transportPickup) + '</div>' +
         '<div style="margin-top:12px"><strong>2. Jonction vers la prochaine mission</strong><div>' +
         (next ? esc((to || 'Livraison non renseignée') + ' → ' +
@@ -2017,7 +2017,7 @@
           regionalEngineReady ? 'aucun fournisseur régional disponible.' :
           'adaptateur non chargé.') +
         ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
-        '<p class="doux">Le minimum de 5 min se mesure au point GPS exact de prise en charge, après la marche finale. Une arrivée à la gare ou à l’arrêt ne suffit pas. Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
+        '<p class="doux">Prévoir au minimum 15 min avant la prise en charge, après la marche finale. La marge de 5 min n’est autorisée que si le GPS exact est fiable et vérifié. Une arrivée à la gare ou à l’arrêt ne suffit pas. Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
       let sibraPassControls = null;
       if (window.CPSibraPass?.mountControls) {
         let passStorage = null;
