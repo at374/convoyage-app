@@ -45,3 +45,7 @@ assert.equal(evaluate({...timed,legs:[{...timed.legs[0],departure:'invalid'},tim
 assert.equal(evaluate({...timed,legs:[timed.legs[0],{serviceConfirmed:true}]},{deadline}).feasible,false,'Partially timed itinerary cannot confirm an unknown connection');
 assert.equal(evaluate({...timed,legs:[{serviceConfirmed:true},timed.legs[1]]},{deadline}).feasible,false,'Missing first leg time cannot confirm connection');
 assert.equal(evaluate(base,{deadline}).feasible,true,'Legacy all-untimed itinerary remains compatible');
+
+assert.equal(evaluate({...timed,legs:[{...timed.legs[0],departure:'2026-11-02T07:01:00+01:00'},timed.legs[1]]},{deadline}).feasible,false,'Unaccounted first-minute transfer cannot certify a journey');
+assert.equal(evaluate({...timed,legs:[timed.legs[0],{...timed.legs[1],arrival:'2026-11-02T08:14:00+01:00'}]},{deadline}).feasible,false,'Unaccounted final transfer cannot certify exact arrival');
+assert.equal(evaluate(timed,{deadline}).feasible,true,'Fully covered timed journey remains feasible');
