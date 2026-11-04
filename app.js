@@ -2426,7 +2426,10 @@
               regionalStatus.appendChild(line);
             });
           }).catch(() => {
-            if (regionalActive() && regionalStatus.isConnected) regionalStatus.textContent =
+            if (signal.aborted || !regionalActive() || !regionalStatus.isConnected) return;
+            junctionRegionalJourneys=[];
+            refreshJunctionCombined();
+            regionalStatus.textContent =
               'Service régional indisponible ou incompatible. Transport non confirmé — vérifiez vous-même.';
           });
         }
