@@ -39,7 +39,8 @@
     });
     const allTimed=legs.length>0&&legs.every(leg=>leg&&validTime(leg.departure)&&validTime(leg.arrival));
     const boundsMatch=!allTimed||(Date.parse(legs[0].departure)===departure&&Date.parse(legs.at(-1).arrival)===arrival);
-    const allVerified=legs.length>0&&connected&&boundsMatch&&(legs.length===1||allTimed)&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
+    const spatialEvidence=legs.length===1||legs.every(leg=>point(leg.fromPoint)&&point(leg.toPoint));
+    const allVerified=legs.length>0&&connected&&boundsMatch&&(legs.length===1||allTimed)&&spatialEvidence&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
     const feasible=valid&&allVerified&&doorToDoor&&item.accessVerified===true&&
       Number.isFinite(deadline)&&slack>=margin;
