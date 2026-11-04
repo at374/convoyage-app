@@ -32,6 +32,10 @@ test('time windows include previous service days, explicit horizon, margin and m
  assert.deepEqual(agenda.serviceDates(w,'Europe/Paris'),['2026-11-01','2026-11-02','2026-11-03']);
  const outbound=agenda.searchWindow({latestArrival:'2026-11-02T12:00:00+01:00',marginMinutes:15});
  assert.equal(outbound.marginMinutes,15);
+ assert.equal(agenda.searchWindow({latestArrival:'2026-11-02T12:00:00+01:00'}).marginMinutes,15);
+ assert.equal(agenda.searchWindow({latestArrival:'2026-11-02T12:00:00+01:00',marginMinutes:5}).marginMinutes,15);
+ assert.equal(agenda.searchWindow({latestArrival:'2026-11-02T12:00:00+01:00',marginMinutes:25}).marginMinutes,25);
+ for(const invalidMargin of [-1,NaN,Infinity,241,'15'])assert.throws(()=>agenda.searchWindow({latestArrival:'2026-11-02T12:00:00+01:00',marginMinutes:invalidMargin}),/Invalid mission margin/);
  assert.equal(Date.parse(outbound.latestArrival)-Date.parse(outbound.earliestDeparture),86400000);
  const long=agenda.searchWindow({...task,latestArrival:'2026-11-09T12:00:00+01:00'});
  assert.equal(Date.parse(long.latestArrival)-Date.parse(long.earliestDeparture),48*3600000);
@@ -56,6 +60,7 @@ test('mount shares one load across tasks, deduplicates rows, uses text nodes and
  assert.deepEqual(calls[0].connectionDates,agenda.serviceDates(agenda.searchWindow(task),'Europe/Paris'));
  assert.match(target.textContent,/voir l’arrêt/);
  assert.match(target.textContent,/Retour : 1 horaire/);assert.match(target.textContent,/Aller : 1 horaire/);
+ assert.match(target.textContent,/Marge avant mission : 15 min minimum/);
  assert.match(target.textContent,/École <script>/);assert.match(target.textContent,/vol d’oiseau/);
  assert.match(target.textContent,/date de mise à jour du producteur non fournie/);
  assert.match(target.textContent,/Affichage limité/);assert.match(target.textContent,/Transport non confirmé/);
@@ -257,10 +262,11 @@ test('a rejected or throwing pedestrian prefetch preserves source status and tra
 
 test('Agenda retains the latest outbound trips across service dates after worker caps',async()=>{
  const target=panel(),calls=[];
- const session=agenda.mount(target,{tasks:[{...task,label:'Aller',earliestDeparture:undefined,latestArrival:'2026-11-02T13:00:00Z'}],
+ const session=agenda.mount(target,{tasks:[{...task,label:'Aller',earliestDeparture:'2026-11-01T00:00:00Z',latestArrival:'2026-11-02T13:00:00Z'}],
   clientFactory:()=>({load:async()=>summary,query:async q=>{
    calls.push(q);
-   return {rows:[row({tripId:q.date,departure:q.date+'T10:00:00Z',arrival:q.date+'T11:00:00Z'})],truncated:true};
+   const valid=['2026-11-01','2026-11-02'].includes(q.date);
+   return {rows:valid?[row({tripId:q.date,departure:q.date+'T10:00:00Z',arrival:q.date+'T11:00:00Z'})]:[],truncated:true};
   },dispose(){}})});
  await session.done;
  assert.ok(calls.every(q=>q.order==='latestDeparture'));
@@ -387,6 +393,8 @@ test('partial GTFS network failure is disclosed even if worker omits partial fla
  await session.done;
  assert.match(target.textContent,/Recherche partielle : un réseau est indisponible/);
  assert.match(target.textContent,/Grésivaudan : flux indisponible/);
+ assert.match(target.textContent,/aucun trajet dans les résultats partiels ; recherche incomplète/);
+ assert.doesNotMatch(target.textContent,/aucun trajet direct ou avec une correspondance/);
  session.dispose();
 });
 
@@ -530,4 +538,277 @@ test('dated Y51 references are displayed separately from confirmed fares and pro
   const fallback=panel();await agenda.mount(fallback,{tasks:[task],walkingRouterFactory:()=>null,clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[row()],truncated:false}),dispose(){}})}).done;
   assert.match(fallback.textContent,/Retour : 1 horaire/);assert.doesNotMatch(fallback.textContent,/Référence Y51/);
  }finally{global.CPTY51Fares=previous;}
+});
+
+test('official Cars Région Ain GTFS is available as an Agenda resource',()=>{
+ const ain=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-ain');
+ assert.ok(ain);
+ assert.equal(ain.format,'GTFS');
+ assert.equal(ain.federate,true);
+ assert.match(ain.url,/^https:\/\/api\.oura3\.cityway\.fr\/dataflow\/offre-tc\/download\?/);
+ assert.equal(agenda.selected(ain,{from:{lat:46.25,lon:5.6},to:{lat:46.30,lon:5.8}}),true);
+ assert.equal(agenda.selected(ain,{from:{lat:46.25,lon:5.6},to:{lat:47.1,lon:6.5}}),false);
+});
+
+
+test('western Ain journey chooses Ain GTFS despite Haute-Savoie overlap',async()=>{
+ const target=panel(),task={label:'Aller',from:{lat:46.20,lon:5.6},to:{lat:46.25,lon:5.7},
+ earliestDeparture:'2026-11-04T09:00:00+01:00'};
+ let loaded=null;
+ const instance=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async resource=>{loaded=resource;return {source:{network:resource.network},counts:{stops:0}};},
+  search:async()=>({rows:[]}),dispose(){}})});
+ await instance.done;
+ assert.equal(loaded?.id,'oura-ain');
+ instance.dispose();
+});
+
+test('truncated empty GTFS results never imply a complete absence of transport',async()=>{
+ const target=panel();
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,query:async()=>({rows:[],truncated:true}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/aucun trajet dans les résultats partiels/);
+ assert.match(target.textContent,/recherche incomplète/);
+ assert.match(target.textContent,/Affichage limité/);
+ session.dispose();
+});
+
+test('malformed GTFS worker result is reported as unavailable, not as an empty schedule',async()=>{
+ for(const malformed of [null,{}, {rows:null}, {rows:{}}]){
+  const target=panel();
+  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+   load:async()=>summary,query:async()=>malformed,dispose(){}
+  })});
+  await session.done;
+  assert.match(target.textContent,/recherche indisponible/);
+  assert.doesNotMatch(target.textContent,/aucun trajet direct ou avec une correspondance/);
+  session.dispose();
+ }
+});
+
+test('GTFS journey timestamps must be valid and chronological',async()=>{
+ for(const badRow of [
+  row({departure:'not-a-date'}),
+  row({departure:'2026-11-02T11:00:00'}),
+  row({arrival:'2026-11-02T12:00:00'}),
+  row({departure:1730545200000}),
+  row({arrival:'invalid'}),
+  row({departure:'2026-11-02T13:00:00Z',arrival:'2026-11-02T12:00:00Z'})
+ ]){
+  const target=panel();
+  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+   load:async()=>summary,query:async()=>({rows:[badRow],truncated:false}),dispose(){}
+  })});
+  await session.done;
+  assert.match(target.textContent,/recherche partielle/);
+  assert.doesNotMatch(target.textContent,/Retour : 1 horaire|Aller : 1 horaire/);
+  session.dispose();
+ }
+});
+
+test('Agenda independently enforces the mission pickup deadline on GTFS responses',async()=>{
+ const mission={label:'Aller',from:point,to:{lat:45.67,lon:6.39},
+  earliestDeparture:'2026-11-02T11:00:00Z',latestArrival:'2026-11-02T12:30:00Z'};
+ for(const badRow of [
+  row({departure:'2026-11-02T10:59:00Z',arrival:'2026-11-02T12:00:00Z'}),
+  row({departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T12:16:00Z'})
+ ]){
+  const target=panel();
+  const session=agenda.mount(target,{tasks:[mission],clientFactory:()=>({
+   load:async()=>summary,query:async()=>({rows:[badRow],truncated:false}),dispose(){}
+  })});
+  await session.done;
+  assert.match(target.textContent,/recherche partielle/);
+  assert.doesNotMatch(target.textContent,/Retour : 1 horaire|Aller : 1 horaire/);
+  session.dispose();
+ }
+});
+
+test('invalid GTFS row timezone falls back to the official network timezone',async()=>{
+ const target=panel();
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,
+  query:async()=>({rows:[row({timeZone:'Invalid/Timezone'})],truncated:false}),
+  dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Transport non confirmé/);
+ assert.doesNotMatch(target.textContent,/recherche indisponible/);
+ session.dispose();
+});
+
+test('Agenda rejects impossible GTFS transfer chronology',async()=>{
+ const base={departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T12:00:00Z'};
+ for(const legs of [
+  [{departure:base.departure,arrival:'2026-11-02T11:45:00Z'},{departure:'2026-11-02T11:40:00Z',arrival:base.arrival}],
+  [{departure:base.departure,arrival:'2026-11-02T11:20:00Z'},{departure:'2026-11-02T11:30:00Z',arrival:'2026-11-02T12:10:00Z'}],
+  [{departure:'2026-11-02T11:05:00Z',arrival:'2026-11-02T11:20:00Z'},{departure:'2026-11-02T11:30:00Z',arrival:base.arrival}],
+  [{departure:base.departure,arrival:'2026-11-02T11:20:00'},{departure:'2026-11-02T11:30:00Z',arrival:base.arrival}]
+ ]){
+  const target=panel();
+  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+   load:async()=>summary,query:async()=>({rows:[row({...base,legs})],truncated:false}),dispose(){}
+  })});
+  await session.done;
+  assert.match(target.textContent,/recherche partielle/);
+  session.dispose();
+ }
+});
+
+test('Agenda rejects GTFS transfer intervals shorter than five or longer than 120 minutes',async()=>{
+ for(const [firstArrival,secondDeparture] of [
+  ['2026-11-02T11:20:00Z','2026-11-02T11:24:00Z'],
+  ['2026-11-02T09:00:00Z','2026-11-02T11:10:00Z']
+ ]){
+  const target=panel();
+  const legs=[{departure:'2026-11-02T08:00:00Z',arrival:firstArrival},
+   {departure:secondDeparture,arrival:'2026-11-02T12:00:00Z'}];
+  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+   load:async()=>summary,query:async()=>({rows:[row({departure:'2026-11-02T08:00:00Z',legs})],truncated:false}),dispose(){}
+  })});
+  await session.done;
+  assert.match(target.textContent,/recherche partielle/);
+  session.dispose();
+ }
+});
+
+test('Agenda accepts equivalent GTFS transfer instants expressed in different UTC offsets',async()=>{
+ const target=panel();
+ const transferred=row({departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T12:00:00Z',
+  legs:[{line:'First',departure:'2026-11-02T12:00:00+01:00',arrival:'2026-11-02T11:20:00Z'},
+   {line:'Second',departure:'2026-11-02T11:30:00Z',arrival:'2026-11-02T13:00:00+01:00'}]});
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,query:async()=>({rows:[transferred],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 1 horaire/);
+ assert.doesNotMatch(target.textContent,/recherche indisponible/);
+ session.dispose();
+});
+
+test('Agenda retains valid journeys when one worker row is invalid',async()=>{
+ const target=panel();
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,query:async()=>({rows:[row({tripId:'valid'}),row({tripId:'bad',arrival:'invalid'})],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 1 horaire/);
+ assert.match(target.textContent,/recherche partielle/);
+ assert.match(target.textContent,/Transport non confirmé/);
+ session.dispose();
+});
+
+test('Agenda never displays an invalid late pickup alongside a valid option',async()=>{
+ const target=panel();
+ const mission={label:'Aller',from:point,to:{lat:45.67,lon:6.39},
+  earliestDeparture:'2026-11-02T11:00:00Z',latestArrival:'2026-11-02T12:30:00Z'};
+ const session=agenda.mount(target,{tasks:[mission],clientFactory:()=>({
+  load:async()=>summary,query:async()=>({rows:[
+   row({tripId:'good',line:'VALID',departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T12:00:00Z'}),
+   row({tripId:'late',line:'INVALID-LATE',departure:'2026-11-02T11:10:00Z',arrival:'2026-11-02T12:20:00Z'})
+  ],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Aller : 1 horaire/);
+ assert.match(target.textContent,/VALID/);
+ assert.doesNotMatch(target.textContent,/INVALID-LATE/);
+ assert.match(target.textContent,/recherche partielle/);
+ session.dispose();
+});
+
+test('Agenda discloses truncated coverage even when valid GTFS journeys are shown',async()=>{
+ const target=panel();
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,query:async()=>({rows:[row({tripId:'valid'})],truncated:true}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 1 horaire/);
+ assert.match(target.textContent,/Recherche partielle/);
+ assert.match(target.textContent,/Affichage limité/);
+ session.dispose();
+});
+
+test('Agenda discloses missing GTFS network even when another network finds a journey',async()=>{
+ const target=panel();
+ const partialSummary={...summary,partial:true};
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>partialSummary,
+  query:async()=>({rows:[row({tripId:'remaining-network'})],truncated:false}),
+  dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 1 horaire/);
+ assert.match(target.textContent,/Recherche partielle/);
+ assert.match(target.textContent,/Transport non confirmé/);
+ session.dispose();
+});
+
+test('Agenda keeps a valid direct service when a transfer has an impossible connection',async()=>{
+ const target=panel();
+ const direct=row({tripId:'valid-direct',line:'DIRECT-OK'});
+ const broken=row({tripId:'bad-transfer',line:'BROKEN-TRANSFER',
+  legs:[{departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T11:30:00Z'},
+   {departure:'2026-11-02T11:32:00Z',arrival:'2026-11-02T12:00:00Z'}]});
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,query:async()=>({rows:[direct,broken],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 1 horaire/);
+ assert.match(target.textContent,/DIRECT-OK/);
+ assert.doesNotMatch(target.textContent,/BROKEN-TRANSFER/);
+ assert.match(target.textContent,/recherche partielle/);
+ session.dispose();
+});
+
+test('Android PWA offline cache includes every versioned entrypoint script',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+ const worker=fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8');
+ const scripts=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(match=>match[1]);
+ assert.ok(scripts.length>10,'Expected application scripts');
+ for(const script of scripts){
+  assert.ok(worker.includes("'"+script+"'"),'Missing Android offline script: '+script);
+ }
+ assert.match(worker,/const CACHE = 'cp-app-android-gtfs-validation-20261104-v\d+'/);
+});
+
+test('Android PWA offline cache retains the transport worker and app shell',()=>{
+ const worker=fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8');
+ const html=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+ const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'..','manifest.webmanifest'),'utf8'));
+ assert.equal(manifest.display,'standalone');
+ assert.equal(manifest.scope,'./');
+ assert.match(html,/rel="manifest" href="manifest.webmanifest"/);
+ for(const asset of ['transport-gtfs-worker.js','transport-gtfs-loader.js',
+  'transport-gtfs-federation.js','transport-gtfs-index.js','transport-gtfs-time.js',
+  'transport-gtfs-worker-client.js','transport-walking.js','manifest.webmanifest']){
+  assert.ok(worker.includes("'"+asset+"'"),'Missing offline transport asset: '+asset);
+ }
+ assert.match(worker,/e\.request\.method !== 'GET'/);
+ assert.match(worker,/u\.origin !== location\.origin/);
+});
+
+test('Android PWA caches only successful same-origin network responses',()=>{
+ const worker=fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8');
+ assert.match(worker,/if \(r\.ok && r\.type !== 'opaque'\)/);
+ assert.match(worker,/e\.waitUntil\(caches\.open\(CACHE\)/);
+ assert.match(worker,/e\.request\.method !== 'GET'/);
+ assert.match(worker,/u\.origin !== location\.origin/);
+});
+
+test('Android PWA manifest keeps the installed application identity stable',()=>{
+ const manifest=JSON.parse(fs.readFileSync(path.join(__dirname,'..','manifest.webmanifest'),'utf8'));
+ assert.equal(manifest.name,'Convoyage Ultra');
+ assert.equal(manifest.short_name,'Convoyage Ultra');
+ assert.equal(manifest.start_url,'./index.html');
+ assert.equal(manifest.scope,'./');
+ assert.equal(manifest.display,'standalone');
+ assert.equal(manifest.orientation,'portrait');
+ assert.ok(manifest.icons.some(icon=>icon.sizes==='192x192'));
+ assert.ok(manifest.icons.some(icon=>icon.sizes==='512x512'));
+ const worker=fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8');
+ for(const icon of manifest.icons){
+  assert.ok(worker.includes("'"+icon.src+"'"),'Missing Android offline icon: '+icon.src);
+ }
 });
