@@ -36,8 +36,13 @@ test('ELOISE now carries at least the 31 ex-"ELOISE / ANNECY" relations plus its
 });
 
 test('spot-check: the long-haul Cofiroute relations (BOURGES, TOURS CENTRE (MONNAIE), SAVIGNY SUR CLAIRIS...) are active via ELOISE', () => {
-  const checks = ['BOURGES', 'CHATEAU-RENAULT', 'FONTENAY SUR LOING', 'JANVILLE (ALLAINES)',
-    'MEUNG', 'ROMORANTIN', 'SAINT AIGNAN SUR CHER', 'SELLES SUR CHER', 'VEIGNE',
+  // NOTE: BOURGES, JANVILLE (ALLAINES) and MEUNG were themselves confirmed as
+  // price-proof aliases in a later commit the same day and renamed to their
+  // own canonical form (BOURGES (LIM.CONC.), ALLAINES, MEUNG SUR LOIRE) --
+  // see tests/peages-alias-preuve-de-prix.test.cjs. Checked here under their
+  // final canonical spelling.
+  const checks = ['BOURGES (LIM.CONC.)', 'CHATEAU-RENAULT', 'FONTENAY SUR LOING', 'ALLAINES',
+    'MEUNG SUR LOIRE', 'ROMORANTIN', 'SAINT AIGNAN SUR CHER', 'SELLES SUR CHER', 'VEIGNE',
     'GONDREVILLE LA FRANCHE NORD', 'GONDREVILLE LA FRANCHE SUD'];
   for (const n of checks) {
     const has = overlay.paires.some(p =>
