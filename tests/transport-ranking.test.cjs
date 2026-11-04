@@ -131,4 +131,8 @@ const noBoardingBuffer={...walkingConnection,legs:[
 assert.equal(evaluate(noBoardingBuffer,{deadline}).feasible,false,'A bus cannot be certified with zero boarding time after walking');
 assert.equal(evaluate(noBoardingBuffer,{deadline,minBoardingMinutes:0}).feasible,true,'Explicit zero-minute boarding setting remains supported');
 assert.equal(evaluate(walkingConnection,{deadline,minBoardingMinutes:4}).feasible,false,'A requested four-minute boarding buffer rejects a three-minute gap');
+assert.equal(evaluate(null,{deadline}).feasible,false,'Null provider result must not crash evaluation');
+assert.equal(evaluate(undefined,{deadline}).feasible,false,'Undefined provider result must not crash evaluation');
+assert.equal(rank([null,undefined,false,{},base],{deadline})[0].journey.feasible,true,'Malformed provider rows must be skipped');
+assert.equal(rank([null,undefined],{deadline}).length,0,'All-invalid provider response returns no journeys');
 console.log('transport-ranking: all assertions passed');
