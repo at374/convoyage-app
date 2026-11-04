@@ -744,3 +744,20 @@ test('Agenda discloses missing GTFS network even when another network finds a jo
  assert.match(target.textContent,/Transport non confirmé/);
  session.dispose();
 });
+
+test('Agenda keeps a valid direct service when a transfer has an impossible connection',async()=>{
+ const target=panel();
+ const direct=row({tripId:'valid-direct',line:'DIRECT-OK'});
+ const broken=row({tripId:'bad-transfer',line:'BROKEN-TRANSFER',
+  legs:[{departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T11:30:00Z'},
+   {departure:'2026-11-02T11:32:00Z',arrival:'2026-11-02T12:00:00Z'}]});
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,query:async()=>({rows:[direct,broken],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 1 horaire/);
+ assert.match(target.textContent,/DIRECT-OK/);
+ assert.doesNotMatch(target.textContent,/BROKEN-TRANSFER/);
+ assert.match(target.textContent,/recherche partielle/);
+ session.dispose();
+});
