@@ -105,6 +105,19 @@ function gtfsMinutes(value){
  const [h,m,s]=value.split(':').map(Number);
  return h<=72?h*60+m+s/60:null;
 }
+// An explicit pre-pickup buffer is required when the candidate is used to
+// reach the next mission; GTFS arrival alone is not a punctuality guarantee.
+function missionPickupCandidates(files,index,countryByStop,date,{earliestDeparture,pickupTime,bufferMinutes=15,...limits}={}){
+ if(!Number.isInteger(bufferMinutes)||bufferMinutes<15||bufferMinutes>180)throw new Error('Invalid pickup buffer');
+ const pickup=gtfsMinutes(pickupTime);
+ if(pickup===null||pickup<bufferMinutes)throw new Error('Invalid pickup time');
+ const latestArrival=Math.floor(pickup-bufferMinutes);
+ const clock=minutes=>String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0')+':00';
+ const result=missionBorderSegments(files,index,countryByStop,date,{
+  earliestDeparture,latestArrival:clock(latestArrival),...limits});
+ return {...result,pickupBufferMinutes:bufferMinutes,pickupTime,
+  accessVerified:false,serviceConfirmed:false};
+}
 function missionBorderSegments(files,index,countryByStop,date,{earliestDeparture,latestArrival,...limits}={}){
  const start=gtfsMinutes(earliestDeparture),end=gtfsMinutes(latestArrival);
  if(start===null||end===null||end<start)throw new Error('Invalid mission GTFS time window');
@@ -114,7 +127,7 @@ function missionBorderSegments(files,index,countryByStop,date,{earliestDeparture
   return departure!==null&&arrival!==null&&departure>=start&&arrival<=end&&arrival>=departure;
  }),missionWindowChecked:true,serviceConfirmed:false};
 }
-const api={GENEVA,AIN,inside,crossBorderRoutes,verifiedBorderRoutes,borderSegments,datedBorderSegments,missionBorderSegments};
+const api={GENEVA,AIN,inside,crossBorderRoutes,verifiedBorderRoutes,borderSegments,datedBorderSegments,missionBorderSegments,missionPickupCandidates};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPSwissAinGTFS=api;
 })(typeof window!=='undefined'?window:globalThis);
