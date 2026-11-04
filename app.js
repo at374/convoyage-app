@@ -2664,14 +2664,14 @@
                   const update=check.updates[0];
                   const label=check.status==='cancelled'?'annulation signalée par l’opérateur':
                     check.status==='missed_boarding'?'départ trop tôt pour l’approche disponible':
-                    check.status==='arrival_too_late'?'retard incompatible avec le minimum de 5 min au point GPS exact':
+                    check.status==='arrival_too_late'?'retard incompatible avec la marge normale de 15 min avant prise en charge (5 min uniquement si GPS exact fiable)':
                     update?.status==='observed'?'circulation observée par l’opérateur':
                     update?.status==='predicted'?'prévision reçue de l’opérateur':
                     update?.status==='stale'?'aucune donnée opérateur valide à cet instant':
                     update?.status==='not_matched'?'aucune prévision raccordée à cette course et à ce jour':
                     update?.status==='ambiguous'?'plusieurs versions opérateur incompatibles':'pas de prévision exploitable pour cette course';
                   renderProof(check.serviceConfirmed===true);
-                  const exclusions={cancelled:'⛔ Annulation signalée — ne pas retenir ce trajet avant actualisation. ',arrival_too_late:'⛔ Prévision incompatible avec les 5 minutes requises — actualisez avant de retenir ce trajet. ',missed_boarding:'⛔ Embarquement incompatible avec l’approche disponible — actualisez avant de retenir ce trajet. '};
+                  const exclusions={cancelled:'⛔ Annulation signalée — ne pas retenir ce trajet avant actualisation. ',arrival_too_late:'⛔ Prévision incompatible avec la marge normale de 15 min (5 min uniquement si GPS exact fiable) — actualisez avant de retenir ce trajet. ',missed_boarding:'⛔ Embarquement incompatible avec l’approche disponible — actualisez avant de retenir ce trajet. '};
                   if(exclusions[check.status]){const warning=document.createElement('strong');warning.textContent=exclusions[check.status];line.prepend(warning);}
                   live.textContent=' · Prévisions BlaBlaCar Bus : '+label+
                     (check.doorArrival?' · arrivée estimée après la marche finale : '+formatParis(new Date(Math.ceil(Date.parse(check.doorArrival)/60000)*60000).toISOString()):'')+
