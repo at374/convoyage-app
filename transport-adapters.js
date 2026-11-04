@@ -112,7 +112,12 @@
       const from=typeof o.from==='string'&&o.from.trim()?o.from.trim():null;
       const to=typeof o.to==='string'&&o.to.trim()?o.to.trim():null;
       if(!from||!to)return [];
+      const validPoint=p=>p&&typeof p==='object'&&!Array.isArray(p)&&
+        typeof p.lat==='number'&&Number.isFinite(p.lat)&&Math.abs(p.lat)<=90&&
+        typeof (p.lon??p.lng)==='number'&&Number.isFinite(p.lon??p.lng)&&Math.abs(p.lon??p.lng)<=180;
+      const normalizedPoint=p=>validPoint(p)?{lat:p.lat,lon:p.lon??p.lng}:null;
       const leg={provider,line:typeof o.line==='string'?o.line:null,from,to,departure,arrival,
+        fromPoint:normalizedPoint(o.fromPoint),toPoint:normalizedPoint(o.toPoint),
         serviceTripId:typeof o.serviceTripId==='string'?o.serviceTripId:null,
         routeId:typeof o.routeId==='string'?o.routeId:null,
         fromStopCode:typeof o.fromStopCode==='string'?o.fromStopCode:null,
