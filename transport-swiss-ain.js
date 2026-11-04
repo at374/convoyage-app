@@ -17,14 +17,16 @@ function crossBorderRoutes(index,{genevaBounds=GENEVA,ainBounds=AIN,maxTrips=100
  for(const [tripId,trip] of index.tripById){
   if(scanned++>=maxTrips){truncated=true;break;}
   const times=index.timesByTrip.get(tripId)||[];
-  let geneva=false,ain=false;
+  const genevaStops=new Set(),ainStops=new Set();
   for(const t of times){
    const stop=index.stopById.get(t.stop_id);
    // The overlapping envelopes are candidate areas, not a national border.
-   if(inside(stop,genevaBounds))geneva=true;
-   if(inside(stop,ainBounds))ain=true;
+   if(inside(stop,genevaBounds))genevaStops.add(t.stop_id);
+   if(inside(stop,ainBounds))ainStops.add(t.stop_id);
   }
-  if(!geneva||!ain)continue;
+  // Distinct stops are required; a single stop in the overlapping envelopes
+  // is not evidence of a cross-border journey.
+  if(![...genevaStops].some(id=>[...ainStops].some(other=>other!==id)))continue;
   const route=index.routeById.get(trip.route_id);
   if(!route)continue;
   const key=String(trip.route_id);
