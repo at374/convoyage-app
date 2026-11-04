@@ -233,3 +233,27 @@ test('comparison joins long-distance arrival to a regional onward service',()=>{
  assert.equal(joined.serviceConfirmed,false);
  assert.equal(joined.priceEUR,null);
 });
+
+test('comparison accepts a routed walk between different stop GPS coordinates',()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const from={lat:45.91,lon:6.13},to={lat:45.911,lon:6.131};
+ const regional={id:'feeder',departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+  legs:[{departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+   fromPoint:{lat:45.9,lon:6.12},toPoint:from}]};
+ const coach={id:'coach',departure:'2026-11-02T07:45:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+  legs:[{departure:'2026-11-02T07:45:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+   fromPoint:to,toPoint:{lat:45.92,lon:6.14}}]};
+ const walk={mode:'wa_wal',routeVerified:true,
+  departure:'2026-11-02T07:40:00+01:00',arrival:'2026-11-02T07:43:00+01:00',
+  fromPoint:from,toPoint:to,distanceMeters:160};
+ const result=compareWithRegional([regional],{offers:[coach]},
+  {deadline:'2026-11-02T09:00:00+01:00',walkingConnections:[walk]});
+ const joined=result.candidates.find(x=>x.id==='feeder+coach');
+ assert.ok(joined);
+ assert.equal(joined.legs.length,3);
+ assert.equal(joined.legs[1].mode,'wa_wal');
+ assert.equal(joined.accessVerified,false);
+ const missing=compareWithRegional([regional],{offers:[coach]},
+  {deadline:'2026-11-02T09:00:00+01:00',walkingConnections:[]});
+ assert.equal(missing.candidates.some(x=>x.id==='feeder+coach'),false);
+});
