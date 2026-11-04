@@ -4,6 +4,7 @@ on:
     branches: [feature/transport-ranking-safe]
     paths:
       - 'transport-ranking.js'
+      - 'transport-long-distance-search.js'
       - 'transport-adapters.js'
       - 'transport-fares.js'
       - 'transport-sibra-pass.js'
@@ -23,6 +24,7 @@ on:
       - 'transport-gtfs-time.js'
       - 'transport-gtfs-worker-client.js'
       - 'tests/transport-ranking.test.cjs'
+      - 'tests/transport-long-distance-search.test.cjs'
       - 'tests/transport-agenda-margin.test.cjs'
       - 'tests/transport-adapters.test.cjs'
       - 'tests/transport-fares.test.cjs'
@@ -44,6 +46,7 @@ on:
   pull_request:
     paths:
       - 'transport-ranking.js'
+      - 'transport-long-distance-search.js'
       - 'transport-adapters.js'
       - 'transport-fares.js'
       - 'transport-sibra-pass.js'
@@ -63,6 +66,7 @@ on:
       - 'transport-gtfs-time.js'
       - 'transport-gtfs-worker-client.js'
       - 'tests/transport-ranking.test.cjs'
+      - 'tests/transport-long-distance-search.test.cjs'
       - 'tests/transport-agenda-margin.test.cjs'
       - 'tests/transport-adapters.test.cjs'
       - 'tests/transport-fares.test.cjs'
@@ -96,6 +100,7 @@ jobs:
       - run: node --check transport-blablacar-realtime.js
       - run: node --test tests/transport-realtime-relay.test.cjs
       - run: node --check transport-ranking.js
+      - run: node --check transport-long-distance-search.js
       - run: node --check transport-adapters.js
       - run: node --check transport-fares.js
       - run: node --check transport-sibra-pass.js
@@ -110,6 +115,7 @@ jobs:
       - run: node --check transport-gtfs-time.js
       - run: node --check transport-gtfs-worker-client.js
       - run: node tests/transport-ranking.test.cjs
+      - run: node --test tests/transport-long-distance-search.test.cjs
       - run: node tests/transport-agenda-margin.test.cjs
       - run: node tests/transport-adapters.test.cjs
       - run: node tests/transport-fares.test.cjs
