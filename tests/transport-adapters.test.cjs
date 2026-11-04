@@ -90,3 +90,7 @@ assert.equal(withVerifiedFares(applyFareEvidence([missingStop],[{...evidence,fro
 const missingJourneyId={...bus[0],id:undefined};
 assert.equal(withVerifiedFares(applyFareEvidence([missingJourneyId],[{...evidence,journeyId:undefined}]))[0].priceEUR,null,'Missing journey ID must not certify a fare');
 assert.equal(withVerifiedFares(applyFareEvidence(bus,[evidence]))[0].priceEUR,3,'Complete evidence remains valid');
+
+assert.equal(applyFareEvidence(bus,[{...evidence,verifiedPriceEUR:3.005}])[0].legs[0].fareVerified,false,'Fractional-cent evidence must be rejected at ingestion');
+assert.equal(applyFareEvidence(bus,[{...evidence,verifiedPriceEUR:Number.MAX_SAFE_INTEGER}])[0].legs[0].fareVerified,false,'Unsafe monetary evidence must be rejected at ingestion');
+assert.equal(applyFareEvidence(bus,[{...evidence,verifiedPriceEUR:3}])[0].legs[0].fareVerified,true,'Valid cent-precise evidence remains accepted');
