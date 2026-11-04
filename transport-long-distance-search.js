@@ -162,7 +162,50 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
   allSourcesConnected:PROVIDERS.every(provider=>
    longDistanceResult?.providers?.some(p=>p.provider===provider&&p.status==='candidates-unverified'))};
 }
-const api={searchLongDistance,compareWithRegional,validQuery,PROVIDERS};
+// Optional bounded bridge to an existing pedestrian router (e.g. CPTransportWalking).
+// Calculated walking geometry does not verify a scheduled transport service.
+async function compareWithRoutedWalks(regionalJourneys,longDistanceResult,options={},router){
+ if(!router||typeof router.route!=='function')
+  return compareWithRegional(regionalJourneys,longDistanceResult,options);
+ const regional=Array.isArray(regionalJourneys)?regionalJourneys:[];
+ const longDistance=Array.isArray(longDistanceResult?.offers)?longDistanceResult.offers:[];
+ const timestamp=value=>{
+  if(typeof value!=='string'||!/^20\\d{2}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.[0-5]\\d)?)?(?:Z|[+-](?:0\\d|1[0-4]):[0-5]\\d)$/.test(value))return null;
+  const n=Date.parse(value);return Number.isFinite(n)?n:null;
+ };
+ const walkingConnections=[...(Array.isArray(options.walkingConnections)?options.walkingConnections:[])];
+ const maxRoutes=12;
+ let attempts=0;
+ const regionalPool=[...regional].sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)).slice(0,100);
+ const longPool=[...longDistance].sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)).slice(0,100);
+ outer:for(const [firstPool,secondPool] of [[regionalPool,longPool],[longPool,regionalPool]])
+  for(const first of firstPool)for(const second of secondPool){
+   if(attempts>=maxRoutes)break outer;
+   const arrival=timestamp(first?.arrival),departure=timestamp(second?.departure);
+   if(arrival===null||departure===null||departure-arrival<180000)continue;
+   const from=first?.legs?.at(-1)?.toPoint,to=second?.legs?.[0]?.fromPoint;
+   const distance=stopDistance(from,to);
+   if(!Number.isFinite(distance)||distance<=10||distance>1500)continue;
+   // Do not call external routing for pairs already covered by a valid walk.
+   if(walkingConnections.some(w=>w?.routeVerified===true&&stopDistance(w.fromPoint,from)<=10&&
+    stopDistance(w.toPoint,to)<=10&&Date.parse(w.departure)>=arrival&&Date.parse(w.arrival)<=departure))continue;
+   attempts++;
+   let route;
+   try{route=await router.route({lat:from.lat,lon:from.lon??from.lng},
+    {lat:to.lat,lon:to.lon??to.lng});}catch(_){continue;}
+   if(route?.status!=='calculated'||route.endpointsMatched!==true||
+    !Number.isFinite(route.durationSeconds)||route.durationSeconds<=0||
+    !Number.isFinite(route.distanceMeters)||route.distanceMeters<distance-10)continue;
+   const walkArrival=arrival+Math.ceil(route.durationSeconds/60)*60000;
+   if(walkArrival>departure-60000)continue;
+   walkingConnections.push({mode:'wa_wal',routeVerified:true,
+    departure:new Date(arrival).toISOString(),arrival:new Date(walkArrival).toISOString(),
+    fromPoint:from,toPoint:to,distanceMeters:route.distanceMeters,
+    source:route.provider||'Pedestrian route calculated',serviceConfirmed:false});
+  }
+ return compareWithRegional(regionalJourneys,longDistanceResult,{...options,walkingConnections});
+}
+const api={searchLongDistance,compareWithRegional,compareWithRoutedWalks,validQuery,PROVIDERS};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportLongDistanceSearch=api;
 })(typeof window!=='undefined'?window:globalThis);
