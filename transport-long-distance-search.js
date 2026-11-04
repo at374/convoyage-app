@@ -63,8 +63,18 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
   if(start===null||end===null||end<=start)return false;
   return (earliest===null||start>=earliest)&&(latest===null||end<=latest);
  });
- const choices=ranking.rank(candidates,options);
- return {candidates,choices,providerStatuses:longDistanceResult?.providers||[],
+ // For an outbound pickup, latestArrival is the mission's pickup time.
+ // Apply the safety margin before ranking, even when caller omits deadline.
+ const pickupDeadline=timestamp(options?.deadline)??latest;
+ const requestedMargin=Number.isFinite(options?.marginMinutes)?options.marginMinutes:15;
+ const minimumMargin=options?.exactGPSReliable===true?5:15;
+ const marginMinutes=Math.max(minimumMargin,requestedMargin);
+ const safeCandidates=pickupDeadline===null?candidates:candidates.filter(journey=>
+  Date.parse(journey.arrival)+marginMinutes*60000<=pickupDeadline);
+ const choices=ranking.rank(safeCandidates,{
+  ...options,marginMinutes,deadline:pickupDeadline===null?options?.deadline:new Date(pickupDeadline).toISOString()
+ });
+ return {candidates:safeCandidates,choices,providerStatuses:longDistanceResult?.providers||[],
   allSourcesConnected:PROVIDERS.every(provider=>
    longDistanceResult?.providers?.some(p=>p.provider===provider&&p.status==='candidates-unverified'))};
 }
