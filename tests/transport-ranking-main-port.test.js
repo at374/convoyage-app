@@ -148,3 +148,16 @@ test('zero-minute interchange requires explicit provider proof',()=>{
  assert.equal(evaluate({...candidate,transferVerified:true},opts).feasible,true);
  assert.equal(evaluate({...candidate,legs:[candidate.legs[0],{...candidate.legs[1],departure:'2026-11-04T09:31:00+01:00'}]},opts).feasible,true);
 });
+
+test('operator minimum transfer duration must fit the actual connection gap',()=>{
+ const candidate={...trip,exactOrigin:true,exactDestination:true,accessVerified:true,
+  legs:[
+   {provider:'SIBRA',departure:'2026-11-04T09:00:00+01:00',arrival:'2026-11-04T09:25:00+01:00',serviceConfirmed:true},
+   {provider:'SIBRA',departure:'2026-11-04T09:30:00+01:00',arrival:'2026-11-04T10:00:00+01:00',serviceConfirmed:true,minTransferMinutes:6}
+  ]};
+ const opts={deadline:'2026-11-04T10:15:00+01:00'};
+ assert.equal(evaluate(candidate,opts).feasible,false);
+ assert.equal(evaluate({...candidate,legs:[candidate.legs[0],{...candidate.legs[1],minTransferMinutes:5}]},opts).feasible,true);
+ assert.equal(evaluate({...candidate,legs:[candidate.legs[0],{...candidate.legs[1],minTransferMinutes:-1}]},opts).feasible,false);
+ assert.equal(evaluate({...candidate,legs:[candidate.legs[0],{...candidate.legs[1],minTransferMinutes:'5'}]},opts).feasible,false);
+});
