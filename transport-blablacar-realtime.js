@@ -11,7 +11,9 @@ function instant(value){
  return Number.isFinite(day)&&new Date(day).toISOString().slice(0,10)===value.slice(0,10)?Date.parse(value):NaN;
 }
 function eligible(leg){return leg?.provider==='BlaBlaCar Bus'&&typeof leg.serviceShortName==='string'&&/^[A-Za-z0-9_-]{1,64}$/.test(leg.serviceShortName)&&
- typeof leg.fromStopCode==='string'&&typeof leg.toStopCode==='string'&&Number.isFinite(instant(leg.departure))&&Number.isFinite(instant(leg.arrival));}
+ typeof leg.fromStopCode==='string'&&leg.fromStopCode.trim().length>0&&typeof leg.toStopCode==='string'&&leg.toStopCode.trim().length>0&&
+ leg.fromStopCode!==leg.toStopCode&&Number.isFinite(instant(leg.departure))&&Number.isFinite(instant(leg.arrival))&&
+ instant(leg.arrival)>instant(leg.departure);}
 function parse(data,{now=Date.now()}={}){
  const timestamp=instant(data?.responseTimestamp),until=instant(data?.validUntil);
  if(data?.status!==true||!Number.isFinite(now)||!Number.isFinite(timestamp)||!Number.isFinite(until)||until<=timestamp||until-timestamp>300000||

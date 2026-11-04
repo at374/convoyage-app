@@ -70,3 +70,14 @@ test('oversized operator responses are rejected and unsupported providers do not
  assert.equal((await client.check({legs:[]},options)).status,'unsupported');assert.equal(count,0);
  await assert.rejects(client.check(journey(),options),/trop grand/);assert.equal(count,1);
 });
+
+test('real-time matching requires two distinct identified stops and a positive travel duration',()=>{
+ const leg=journey().legs[1];
+ assert.equal(rt.eligible(leg),true);
+ for(const patch of [{fromStopCode:''},{toStopCode:' '},{fromStopCode:leg.toStopCode},
+  {arrival:leg.departure},{arrival:'2026-10-31T00:00:00Z'}]){
+  const invalid={...leg,...patch};
+  assert.equal(rt.eligible(invalid),false);
+  assert.equal(rt.assess(feed(),invalid,{now:clock}).status,'unsupported');
+ }
+});
