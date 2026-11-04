@@ -38,3 +38,13 @@ test('SNCF/TER and long-distance candidates share ranking without inventing veri
  assert.ok(compared.choices.every(choice=>choice.journey.feasible===false));
  assert.ok(compared.choices.every(choice=>choice.journey.displayStatus.includes('non confirmé')));
 });
+
+test('provider responses cannot mix unrelated origins or destinations',async()=>{
+ const base={from:'Annecy',to:'Lyon',departure:'2026-11-02T08:00:00+01:00',arrival:'2026-11-02T10:00:00+01:00'};
+ const result=await searchLongDistance({from:'Annecy',to:'Lyon',date:'2026-11-02'},{
+  FlixBus:async()=>[base,{...base,from:'Grenoble'},{...base,to:'Paris'},
+   {...base,from:'ANNECY',to:'LYON'}]
+ });
+ assert.equal(result.offers.length,2);
+ assert.ok(result.offers.every(o=>o.provider==='FlixBus'));
+});
