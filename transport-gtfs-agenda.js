@@ -7,6 +7,12 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  // Selection envelope only: does not assert coverage or actual walking access.
  bounds:[45.4,5.7,46.5,7.1],timeZone:'Europe/Paris'
 }),Object.freeze({
+ id:'oura-ain',datasetId:'reseau-interurbain-cars-region-ain-01',network:'Cars Région Ain',format:'GTFS',federate:true,
+ // Producer's OÙRA GTFS URL, documented by Transitland and the French mobility data catalogue.
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_AIN&dataFormat=GTFS&dataProfil=OPENDATA',
+ // Selection envelope only, not a guarantee of lines or cross-border service.
+ bounds:[45.65,4.7,46.55,6.3],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'80100',datasetId:'5bd9843e634f413220f7f04a',network:'Sibra',format:'GTFS',federate:true,
  url:'https://www.data.gouv.fr/api/1/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0',resolveFromCatalogue:true,
  bounds:[45.7,5.9,46.1,6.5],timeZone:'Europe/Paris'
@@ -44,6 +50,7 @@ function timestamp(value){
  return Date.parse(value);
 }
 function searchWindow(task){
+ if(task.marginMinutes!==undefined&&(!Number.isFinite(task.marginMinutes)||task.marginMinutes<0||task.marginMinutes>240))throw new Error('Invalid mission margin');
  const early=timestamp(task.earliestDeparture),late=timestamp(task.latestArrival);
  if((task.earliestDeparture!==undefined&&!Number.isFinite(early))||
     (task.latestArrival!==undefined&&!Number.isFinite(late)))throw new Error('Invalid mission timestamp');
@@ -54,7 +61,7 @@ function searchWindow(task){
  if(end<start)throw new Error('Inverted mission window');
  return {earliestDeparture:new Date(start).toISOString(),latestArrival:new Date(end).toISOString(),
   // The return horizon is not a mission deadline and gets no safety margin.
-  marginMinutes:Number.isFinite(late)?task.marginMinutes??5:0};
+  marginMinutes:Number.isFinite(late)?Math.max(15,Number.isFinite(task.marginMinutes)?task.marginMinutes:15):0};
 }
 function serviceDates(window,timeZone){
  const formatter=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'});
@@ -73,7 +80,13 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const dispose=()=>{if(disposed)return;disposed=true;observer?.disconnect();client?.dispose();walker?.dispose();client=null;walker=null;};
  const taskList=Array.isArray(tasks)?tasks:[];
  const resourceList=Array.isArray(resources)?resources:[];
- const resource=resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
+ // The Haute-Savoie envelope overlaps much of Ain. Prefer the Ain feed only
+ // for a journey fully inside its conservative western core, without changing
+ // Grenoble/Grésivaudan or Annecy network precedence.
+ const ainCore=task=>[task?.from,task?.to].every(p=>validPoint(p)&&p.lat>=45.9&&p.lat<=46.5&&p.lon>=4.7&&p.lon<=5.85);
+ const ain=resourceList.find(r=>r.id==='oura-ain');
+ const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
+ const resource=preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
  if(!resource)return {dispose,done:Promise.resolve()};
  const partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
   crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
@@ -135,7 +148,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
     (n.source.network||resource.network)+' · téléchargé le '+new Intl.DateTimeFormat('fr-FR',{timeZone:resource.timeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(n.source.loadedAt))+
     ' · '+(n.source.updatedAt?'mise à jour producteur : '+n.source.updatedAt:'date de mise à jour du producteur non fournie')+
     ' · '+n.counts.stops+' arrêts').join(' ; ')+'. Circulation non confirmée.';
-   if(summary?.partial||networks.some(n=>!validNetwork(n)))sourceStatus.textContent+=' Recherche partielle : un réseau est indisponible.';
+   const partialNetworks=summary?.partial===true||networks.some(n=>!validNetwork(n));
+   if(partialNetworks)sourceStatus.textContent+=' Recherche partielle : un réseau est indisponible.';
    if(loaded.length>1){
     warning.textContent+=' Changements entre réseaux : arrêts rapprochés à 150 m à vol d’oiseau au maximum ; aucun chemin ni temps de marche vérifié.';
     for(const other of loaded.slice(1)){const link=doc.createElement('a');link.href=other.source.url||partners[0].url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=' · Source '+other.source.network;section.appendChild(link);}
@@ -144,13 +158,33 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
     if(!active())return;
     if(!eligible(task))continue;
     try{
-     const window=searchWindow(task),dates=serviceDates(window,resource.timeZone),rows=[];let truncated=false;
+     const window=searchWindow(task),dates=serviceDates(window,resource.timeZone),rows=[];let truncated=false,invalidJourneys=0;
      for(const date of dates){
       if(!active())return;
       const result=await client.query({method:'missionJourneys',date,origin:task.from,destination:task.to,
        window,connectionDates:dates,limit:100,radiusMeters:700,order:task.label==='Aller'?'latestDeparture':'earliestDeparture'});
       if(!active())return;
-      truncated=truncated||result.truncated;rows.push(...result.rows);
+      if(!result||!Array.isArray(result.rows))throw new Error('Invalid GTFS journey response');
+      truncated=truncated||result.truncated===true;
+      for(const journey of result.rows){
+       if(!journey||!Number.isFinite(timestamp(journey.departure))||!Number.isFinite(timestamp(journey.arrival))||
+          Date.parse(journey.arrival)<Date.parse(journey.departure)||
+          Date.parse(journey.departure)<Date.parse(window.earliestDeparture)||
+          Date.parse(journey.arrival)>Date.parse(window.latestArrival)-window.marginMinutes*60000)
+        {invalidJourneys++;continue;}
+       if(journey.legs!==undefined){
+        if(!Array.isArray(journey.legs)||journey.legs.length!==2){invalidJourneys++;continue;}
+        const [first,second]=journey.legs;
+        if(journey.legs.some(leg=>!leg||!Number.isFinite(timestamp(leg.departure))||!Number.isFinite(timestamp(leg.arrival))||
+           Date.parse(leg.arrival)<Date.parse(leg.departure))||
+           Date.parse(first.departure)!==Date.parse(journey.departure)||
+           Date.parse(second.arrival)!==Date.parse(journey.arrival)||
+           Date.parse(second.departure)-Date.parse(first.arrival)<5*60000||
+           Date.parse(second.departure)-Date.parse(first.arrival)>120*60000)
+          {invalidJourneys++;continue;}
+       }
+       rows.push(journey);
+      }
      }
      const unique=new Map(rows.map(row=>[JSON.stringify([row.networkId||null,row.tripId,row.from,row.to,row.departure,row.arrival,
       row.transferStopId||null,row.legs?.map(leg=>[leg.networkId||null,leg.tripId,leg.from,leg.to,leg.departure,leg.arrival])||null]),row]));
@@ -169,14 +203,18 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       seenChoices.add(key);distinct.push(candidate);
      }
      const shown=distinct.slice(0,5);
-     status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':'aucun trajet direct ou avec une correspondance dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.');
+     const marginNote=Number.isFinite(Date.parse(task.latestArrival))?' Marge avant mission : '+window.marginMinutes+' min minimum (marche et circulation à vérifier).':'';
+     const incomplete=truncated||partialNetworks||invalidJourneys>0;
+     const coverageNote=incomplete?' Recherche partielle : certains horaires ou réseaux n’ont pas pu être vérifiés.':'';
+     status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':incomplete?'aucun trajet dans les résultats partiels ; recherche incomplète (réseau ou horaires manquants), d’autres horaires peuvent exister.':'aucun trajet direct ou avec une correspondance dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.' )+marginNote+coverageNote+(invalidJourneys?' '+invalidJourneys+' horaire(s) incohérent(s) écarté(s) ; recherche partielle.':'');
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
      if(truncated||distinct.length>shown.length){const note=doc.createElement('p');note.textContent='Affichage limité : d’autres horaires peuvent exister.';status.appendChild(note);}
      for(const row of shown){
       let tariff=null,tariffDescription='';
       try{tariff=root.CPTY51Fares;tariffDescription=tariff?.describe(tariff?.reference(row))||'';}catch(_){}
       const line=doc.createElement('p');
-      const format=iso=>new Intl.DateTimeFormat('fr-FR',{timeZone:row.timeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(iso));
+      const safeZone=(()=>{try{new Intl.DateTimeFormat('fr-FR',{timeZone:row.timeZone||resource.timeZone});return row.timeZone||resource.timeZone;}catch(_){return resource.timeZone;}})();
+      const format=iso=>new Intl.DateTimeFormat('fr-FR',{timeZone:safeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(iso));
       line.textContent=format(row.departure)+' → '+format(row.arrival)+' · '+(!row.interNetwork&&row.network?row.network+' ':'')+row.line+' · '+
        (row.originStop?.name||row.from)+' → '+(row.destinationStop?.name||row.to)+
        ' · distances à vol d’oiseau : '+row.accessDistanceMeters+' m / '+row.egressDistanceMeters+' m'+
