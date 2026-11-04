@@ -197,3 +197,7 @@ assert.equal(connectJourneys(regionalPart,onwardOtherStop,{walkingConnection:{..
 
 assert.equal(connectJourneys(regionalPart,onwardOtherStop,{walkingConnection:{...routedWalk,distanceMeters:5}}),null,
  'Walking route cannot be shorter than straight-line GPS distance');
+
+assert.equal(connectJourneys(regionalPart,onwardOtherStop,{walkingConnection:{...routedWalk,
+ departure:'2026-11-02T07:40:00',arrival:'2026-11-02T07:43:00'}}),null,
+ 'Direct walking connector must reject timezone-ambiguous times');
