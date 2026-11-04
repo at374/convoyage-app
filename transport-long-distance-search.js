@@ -67,6 +67,11 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
  };
  const earliest=timestamp(options?.earliestDeparture);
  const latest=timestamp(options?.latestArrival);
+ // Invalid explicit mission windows must fail closed, never widen the search.
+ const invalidWindow=['earliestDeparture','latestArrival','deadline'].some(key=>
+  options?.[key]!=null&&timestamp(options[key])===null);
+ if(invalidWindow||earliest!==null&&latest!==null&&earliest>latest)
+  return {candidates:[],choices:[],providerStatuses:longDistanceResult?.providers||[],allSourcesConnected:false};
  const candidates=[...regional,...longDistance].filter(journey=>{
   if(!journey||typeof journey!=='object')return false;
   const start=timestamp(journey.departure),end=timestamp(journey.arrival);
