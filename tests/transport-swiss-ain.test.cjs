@@ -15,3 +15,11 @@ assert.equal(result.serviceConfirmed,false);
 assert.equal(inside({stop_lat:'',stop_lon:'6.1'},[46,6,47,7]),false);
 assert.equal(crossBorderRoutes(index,{maxTrips:1}).truncated,true);
 assert.throws(()=>crossBorderRoutes(index,{maxTrips:0}),/limit/);
+
+const single=buildIndex({
+ 'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nS,Shared envelope,46.205,6.145\n',
+ 'routes.txt':'route_id,route_short_name\nR,One stop\n',
+ 'trips.txt':'route_id,service_id,trip_id\nR,WK,T\n',
+ 'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT,08:00:00,08:00:00,S,1\n'
+});
+assert.equal(crossBorderRoutes(single).routes.length,0);
