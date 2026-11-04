@@ -47,7 +47,9 @@ function instant(value){
  }
  throw new Error('Mission timestamp must include an explicit timezone');
 }
-function missionBounds({earliestDeparture,latestArrival,marginMinutes=5}={}){
+function missionBounds(window={}){
+ if(!window||typeof window!=='object'||Array.isArray(window))throw new Error('Invalid GTFS mission window');
+ const {earliestDeparture,latestArrival,marginMinutes=5}=window;
  if(earliestDeparture===undefined&&latestArrival===undefined)throw new Error('A mission time window is required');
  if(!Number.isFinite(marginMinutes)||marginMinutes<0||marginMinutes>1440)throw new Error('Invalid mission safety margin');
  const first=earliestDeparture===undefined?-Infinity:instant(earliestDeparture);
