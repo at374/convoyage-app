@@ -164,7 +164,12 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
        window,connectionDates:dates,limit:100,radiusMeters:700,order:task.label==='Aller'?'latestDeparture':'earliestDeparture'});
       if(!active())return;
       if(!result||!Array.isArray(result.rows))throw new Error('Invalid GTFS journey response');
-      truncated=truncated||result.truncated===true;rows.push(...result.rows);
+      truncated=truncated||result.truncated===true;
+      for(const journey of result.rows){
+       if(!journey||!Number.isFinite(Date.parse(journey.departure))||!Number.isFinite(Date.parse(journey.arrival))||
+          Date.parse(journey.arrival)<Date.parse(journey.departure))throw new Error('Invalid GTFS journey times');
+      }
+      rows.push(...result.rows);
      }
      const unique=new Map(rows.map(row=>[JSON.stringify([row.networkId||null,row.tripId,row.from,row.to,row.departure,row.arrival,
       row.transferStopId||null,row.legs?.map(leg=>[leg.networkId||null,leg.tripId,leg.from,leg.to,leg.departure,leg.arrival])||null]),row]));
