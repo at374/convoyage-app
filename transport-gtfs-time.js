@@ -107,7 +107,7 @@ function datedTransferTrips(files,index,rows,window){
  }
  return results.sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
 }
-const api={serviceTimestamp,serviceWindow,datedTrips,datedTransferTrips};
+const api={serviceTimestamp,serviceWindow,datedTrips,datedTransferTrips,missionBounds};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSTime=api;
 })(typeof window!=='undefined'?window:globalThis);
