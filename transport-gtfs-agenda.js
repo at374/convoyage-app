@@ -1,14 +1,6 @@
 /* Read-only Agenda integration. At most two official networks in one worker per open panel. */
 (function(root){
 'use strict';
-// Keep regional network selection deterministic when envelopes overlap.
-// Prefer the smallest geographic envelope covering both endpoints; do not
-// infer actual service coverage from this selection alone.
-function resourceArea(resource){
- const b=resource?.bounds;
- if(!Array.isArray(b)||b.length!==4||!b.every(Number.isFinite))return Infinity;
- return Math.max(0,b[2]-b[0])*Math.max(0,b[3]-b[1]);
-}
 const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  id:'oura-haute-savoie',datasetId:'oura-haute-savoie',network:'Cars Région Haute-Savoie',format:'GTFS',
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',
@@ -87,7 +79,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const dispose=()=>{if(disposed)return;disposed=true;observer?.disconnect();client?.dispose();walker?.dispose();client=null;walker=null;};
  const taskList=Array.isArray(tasks)?tasks:[];
  const resourceList=Array.isArray(resources)?resources:[];
- const resource=[...resourceList].sort((a,b)=>resourceArea(a)-resourceArea(b)).find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
+ const resource=resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
  if(!resource)return {dispose,done:Promise.resolve()};
  const partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
   crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
