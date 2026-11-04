@@ -332,3 +332,17 @@ test('walking connectors without explicit timezone are ignored by comparator',()
   {deadline:'2026-11-02T09:00:00+01:00',walkingConnections:[walk]});
  assert.equal(result.candidates.some(x=>x.id==='regional+coach'),false);
 });
+
+test('comparison ignores impossible timetable pairs before considering walking routes',()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const point={lat:45.91,lon:6.13};
+ const regional={id:'regional',departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+  legs:[{departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+   fromPoint:{lat:45.9,lon:6.12},toPoint:point}]};
+ const coach={id:'coach',departure:'2026-11-02T07:41:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+  legs:[{departure:'2026-11-02T07:41:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+   fromPoint:point,toPoint:{lat:45.92,lon:6.14}}]};
+ const result=compareWithRegional([regional],{offers:[coach]},
+  {deadline:'2026-11-02T09:00:00+01:00',minTransferMinutes:3});
+ assert.equal(result.candidates.some(x=>x.id==='regional+coach'),false);
+});
