@@ -81,7 +81,29 @@ async function fetchCatalogue(fetcher,{signal}={}){
   if(!response?.ok)throw new Error('PAN catalogue unavailable');
   return normalize(await response.json());
 }
-const api={ENDPOINT,normalize,gtfsResources,downloadGTFS,byNetwork,fetchCatalogue};
+// Swiss national GTFS includes operators serving Geneva; coverage in Ain must be
+// verified from stop coordinates and trips, never inferred from this catalogue.
+const SWISS_DATASET='https://data.opentransportdata.swiss/api/3/action/package_show?id=timetable-2026-gtfs2020';
+function swissGTFSResources(payload){
+  if(payload?.success!==true||!Array.isArray(payload?.result?.resources))return [];
+  return payload.result.resources.filter(r=>r&&typeof r==='object'&&
+    /\\.zip(?:$|[?#])/i.test(r.url||'')&&/^https:\\/\\//i.test(r.url||'')&&
+    /GTFS/i.test(String(r.name||r.description||''))).map(r=>({
+      id:String(r.id||''),datasetId:'timetable-2026-gtfs2020',
+      network:'Transports publics suisses (GTFS national)',format:'GTFS',
+      url:r.url,updatedAt:r.last_modified||r.created||null,
+      sourcePage:'https://data.opentransportdata.swiss/fr/dataset/timetable-2026-gtfs2020',
+      // National archives may exceed the mobile loader's 20 MB safety limit.
+      requiresServerSideIndex:true
+    })).filter(r=>r.id);
+}
+async function fetchSwissGTFSResources(fetcher,{signal}={}){
+  if(typeof fetcher!=='function')throw new TypeError('fetch required');
+  const response=await fetcher(SWISS_DATASET,{credentials:'omit',cache:'no-cache',signal});
+  if(!response?.ok)throw new Error('Swiss GTFS catalogue unavailable');
+  return swissGTFSResources(await response.json());
+}
+const api={ENDPOINT,normalize,gtfsResources,downloadGTFS,byNetwork,fetchCatalogue,SWISS_DATASET,swissGTFSResources,fetchSwissGTFSResources};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportCatalogue=api;
 })(typeof window!=='undefined'?window:globalThis);
