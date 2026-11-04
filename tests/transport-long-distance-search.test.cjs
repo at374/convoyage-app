@@ -486,3 +486,25 @@ test('routed walking bridge rejects implausibly fast pedestrian geometry',async(
   assert.equal(result.candidates.some(x=>x.id==='regional+coach'),false);
  }
 });
+
+test('walking route cache remains usable after twelve external lookups',async()=>{
+ const {compareWithRoutedWalks}=require('../transport-long-distance-search.js');
+ const from={lat:45.91,lon:6.13},to={lat:45.911,lon:6.131};
+ const make=(id,departure,arrival,fromPoint,toPoint)=>({id,departure,arrival,
+  legs:[{departure,arrival,fromPoint,toPoint}]});
+ const regionals=Array.from({length:13},(_,i)=>make('r'+i,
+  '2026-11-02T07:00:00+01:00','2026-11-02T07:40:00+01:00',
+  {lat:45.9,lon:6.12},{lat:from.lat+i*0.0001,lon:from.lon}));
+ regionals.push(make('r-repeat','2026-11-02T07:01:00+01:00',
+  '2026-11-02T07:41:00+01:00',{lat:45.9,lon:6.12},from));
+ const coach=make('coach','2026-11-02T07:50:00+01:00',
+  '2026-11-02T08:15:00+01:00',to,{lat:45.92,lon:6.14});
+ let calls=0;
+ const router={route:async(origin,destination)=>{calls++;return {
+  status:'calculated',endpointsMatched:true,from:origin,to:destination,
+  durationSeconds:180,distanceMeters:170};}};
+ const result=await compareWithRoutedWalks(regionals,{offers:[coach]},
+  {deadline:'2026-11-02T09:00:00+01:00'},router);
+ assert.equal(calls,12);
+ assert.ok(result.candidates.some(x=>x.id==='r-repeat+coach'));
+});
