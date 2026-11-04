@@ -177,3 +177,12 @@ test('date-only fare and pass expiry includes the whole boarding day but not the
  assert.equal(fare([{...passLeg,departure:'2027-01-01T00:10:00+01:00'}],{sibraPassActive:true}).known,false);
  assert.equal(fare([{...fareLeg,fareValidUntil:'2026-11-31',departure:'2026-11-15T12:00:00+01:00'}]).known,false);
 });
+
+test('verified fares require exact euro cents and safe totals',()=>{
+ const priced={provider:'TER',fareVerified:true,fareSource:'Tarif officiel',verifiedPriceEUR:8.5};
+ assert.equal(fare([{...priced,verifiedPriceEUR:8.505}]).known,false);
+ assert.equal(fare([{...priced,verifiedPriceEUR:8.505}]).totalEUR,null);
+ assert.equal(fare([{...priced,verifiedPriceEUR:Number.MAX_SAFE_INTEGER}]).known,false);
+ assert.equal(fare([{...priced,verifiedPriceEUR:8.50}]).totalEUR,8.5);
+ assert.equal(fare([{...priced,verifiedPriceEUR:0}]).totalEUR,0);
+});
