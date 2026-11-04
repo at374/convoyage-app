@@ -34,3 +34,13 @@ assert.equal(verifiedBorderRoutes(index,new Map([['G','CH'],['A','CH']])).routes
 assert.equal(verifiedBorderRoutes(index,new Map()).routes.length,0);
 assert.throws(()=>verifiedBorderRoutes(index,{}),/map required/);
 assert.equal(verifiedBorderRoutes(index,new Map([['G','CH'],['A','FR']]),{maxTrips:1}).truncated,true);
+
+const {borderSegments}=require('../transport-swiss-ain.js');
+const border=borderSegments(index,new Map([['G','CH'],['A','FR']]));
+assert.equal(border.segments.length,1);
+assert.equal(border.segments[0].fromStopId,'G');
+assert.equal(border.segments[0].toStopId,'A');
+assert.equal(border.segments[0].serviceConfirmed,false);
+assert.equal(borderSegments(index,new Map([['G','CH'],['A','CH']])).segments.length,0);
+assert.equal(borderSegments(index,new Map()).segments.length,0);
+assert.throws(()=>borderSegments(index,new Map(),{maxSegments:0}),/limit/);
