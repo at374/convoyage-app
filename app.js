@@ -2468,7 +2468,7 @@
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
                 window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
-                {deadline:next.pickup_start,marginMinutes:securityMarginMin});
+                {deadline:next.pickup_start,earliestDeparture:deliveryDate,marginMinutes:securityMarginMin});
               if (ranked.length) {
                 const summary = document.createElement('p');
                 summary.textContent = 'Classement Jonction régionale théorique : ' +
