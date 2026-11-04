@@ -97,7 +97,7 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
     Math.abs(w.fromPoint.lat-last.lat)<0.00001&&Math.abs(w.fromPoint.lon-last.lon)<0.00001&&
     Math.abs(w.toPoint.lat-next.lat)<0.00001&&Math.abs(w.toPoint.lon-next.lon)<0.00001&&
     typeof w.departure==='string'&&typeof w.arrival==='string'&&
-    Number.isFinite(Date.parse(w.departure))&&Number.isFinite(Date.parse(w.arrival))&&
+    timestamp(w.departure)!==null&&timestamp(w.arrival)!==null&&
     Date.parse(w.departure)>=Date.parse(first.arrival)&&
     Date.parse(w.arrival)<=Date.parse(second.departure))
     .sort((a,b)=>Date.parse(a.arrival)-Date.parse(b.arrival));
