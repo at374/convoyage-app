@@ -104,7 +104,12 @@
       ...journey,
       legs:(Array.isArray(journey.legs)?journey.legs:[]).map((leg,index)=>{
         if(!leg||typeof leg!=='object'||Array.isArray(leg))return leg;
-        const match=records.find(item=>item&&item.journeyId===journey.id&&
+        // Never attach a fare to an incompletely identified journey or leg.
+        // Otherwise undefined === undefined can accidentally match missing fields.
+        const identified=typeof journey.id==='string'&&journey.id.trim()&&
+          ['provider','line','from','to','departure','arrival'].every(key=>
+            typeof leg[key]==='string'&&leg[key].trim());
+        const match=identified&&records.find(item=>item&&item.journeyId===journey.id&&
           item.legIndex===index&&item.departure===leg.departure&&
           item.provider===leg.provider&&item.line===leg.line&&
           item.from===leg.from&&item.to===leg.to&&
