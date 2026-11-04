@@ -5,6 +5,19 @@
 const adapters=root.CPTransportAdapters||(typeof module==='object'&&module.exports?require('./transport-adapters.js'):null);
 const PROVIDERS=['FlixBus','BlaBlaCar','BlaBlaCar Bus'];
 const ranking=root.CPTransportRanking||(typeof module==='object'&&module.exports?require('./transport-ranking.js'):null);
+// Match independently routed walking endpoints using the same 10-metre
+// tolerance as the connection assembler (including providers using lng).
+function stopDistance(a,b){
+ const lonA=a?.lon??a?.lng,lonB=b?.lon??b?.lng;
+ if(!Number.isFinite(a?.lat)||!Number.isFinite(b?.lat)||
+  !Number.isFinite(lonA)||!Number.isFinite(lonB)||
+  Math.abs(a.lat)>90||Math.abs(b.lat)>90||
+  Math.abs(lonA)>180||Math.abs(lonB)>180)return Infinity;
+ const rad=Math.PI/180,lat1=a.lat*rad,lat2=b.lat*rad;
+ const h=Math.sin((lat2-lat1)/2)**2+
+  Math.cos(lat1)*Math.cos(lat2)*Math.sin(((lonB-lonA)*rad)/2)**2;
+ return 12742000*Math.asin(Math.min(1,Math.sqrt(h)));
+}
 function validQuery(query){
  if(!query||typeof query!=='object'||Array.isArray(query))throw new Error('Invalid long-distance search');
  for(const key of ['from','to'])if(typeof query[key]!=='string'||!query[key].trim()||query[key].length>200)
@@ -107,12 +120,7 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
    const next=second.legs?.[0]?.fromPoint;
    const matchingWalk=walkingConnections.filter(w=>w&&w.routeVerified===true&&
     last&&next&&w.fromPoint&&w.toPoint&&
-    typeof last.lat==='number'&&typeof last.lon==='number'&&
-    typeof next.lat==='number'&&typeof next.lon==='number'&&
-    Math.abs(w.fromPoint.lat-last.lat)<0.00001&&Math.abs(w.fromPoint.lon-last.lon)<0.00001&&
-    Math.abs(w.toPoint.lat-next.lat)<0.00001&&Math.abs(w.toPoint.lon-next.lon)<0.00001&&
-    // Walking timestamps were validated once above.
-
+    stopDistance(w.fromPoint,last)<=10&&stopDistance(w.toPoint,next)<=10&&
     Date.parse(w.departure)>=Date.parse(first.arrival)&&
     Date.parse(w.arrival)<=Date.parse(second.departure))
     .sort((a,b)=>Date.parse(a.arrival)-Date.parse(b.arrival));
