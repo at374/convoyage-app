@@ -95,3 +95,10 @@ assert.equal(missionPickupCandidates(calendar,index,new Map([['G','CH'],['A','FR
  {earliestDeparture:'07:50:00',pickupTime:'08:30:00'}).segments.length,0);
 assert.throws(()=>missionPickupCandidates(calendar,index,new Map(),'2026-10-29',
  {earliestDeparture:'07:50:00',pickupTime:'08:40:00',bufferMinutes:10}),/pickup buffer/);
+
+const {verifiedCountryMap}=require('../transport-swiss-ain.js');
+const countryMap=verifiedCountryMap([{stopId:'G',country:'CH',verified:true},{stopId:'A',country:'FR',verified:true}]);
+assert.equal(borderSegments(index,countryMap).segments.length,1);
+assert.throws(()=>verifiedCountryMap([{stopId:'G',country:'CH',verified:false}]),/Unverified/);
+assert.throws(()=>verifiedCountryMap([{stopId:'G',country:'CH',verified:true},{stopId:'G',country:'FR',verified:true}]),/Conflicting/);
+assert.throws(()=>verifiedCountryMap([{stopId:'G',country:'DE',verified:true}]),/Unverified/);
