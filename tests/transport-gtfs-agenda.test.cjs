@@ -571,3 +571,16 @@ test('truncated empty GTFS results never imply a complete absence of transport',
  assert.match(target.textContent,/Affichage limité/);
  session.dispose();
 });
+
+test('malformed GTFS worker result is reported as unavailable, not as an empty schedule',async()=>{
+ for(const malformed of [null,{}, {rows:null}, {rows:{}}]){
+  const target=panel();
+  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+   load:async()=>summary,query:async()=>malformed,dispose(){}
+  })});
+  await session.done;
+  assert.match(target.textContent,/recherche indisponible/);
+  assert.doesNotMatch(target.textContent,/aucun trajet direct ou avec une correspondance/);
+  session.dispose();
+ }
+});
