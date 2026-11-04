@@ -6,6 +6,8 @@
   function finite(v){return typeof v==='number'&&Number.isFinite(v);}
   function validTime(v){
     if(typeof v!=='string'||!/^20\d{2}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d{1,3})?)?(?:Z|[+-](?:0\d|1[0-4]):[0-5]\d)$/.test(v))return false;
+    const offset=v.match(/([+-])(\d{2}):(\d{2})$/);
+    if(offset&&Number(offset[2])===14&&Number(offset[3])!==0)return false;
     const day=Date.parse(v.slice(0,10)+'T12:00:00Z');
     return Number.isFinite(day)&&new Date(day).toISOString().slice(0,10)===v.slice(0,10)&&Number.isFinite(Date.parse(v));
   }
