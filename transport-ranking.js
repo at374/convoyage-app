@@ -26,15 +26,18 @@
     const slack=valid&&Number.isFinite(deadline)?Math.floor((deadline-arrival)/60000):null;
     // Confirmed services still need a chronological, connectable itinerary.
     // Legacy legs without times retain their existing service-confirmation semantics.
-    let previousArrival=departure,previousPoint=null;
+    const transferMinutes=finite(opts.minTransferMinutes)?Math.max(0,opts.minTransferMinutes):3;
+    let previousArrival=departure,previousPoint=null,previousLeg=null;
     const connected=legs.every(leg=>{
       if(!leg||leg.departure==null&&leg.arrival==null)return true;
       if(!validTime(leg.departure)||!validTime(leg.arrival))return false;
       const start=Date.parse(leg.departure),end=Date.parse(leg.arrival);
       if(start<previousArrival||end<=start||end>arrival)return false;
+      if(previousLeg&&previousLeg.mode!=='wa_wal'&&leg.mode!=='wa_wal'&&start-previousArrival<transferMinutes*60000)return false;
       if(previousPoint&&point(leg.fromPoint)&&metres(previousPoint,leg.fromPoint)>50)return false;
       previousPoint=point(leg.toPoint)?leg.toPoint:null;
       previousArrival=end;
+      previousLeg=leg;
       return true;
     });
     const allTimed=legs.length>0&&legs.every(leg=>leg&&validTime(leg.departure)&&validTime(leg.arrival));
