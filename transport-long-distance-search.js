@@ -120,11 +120,10 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
    // Walking candidates have already passed basic timestamp validation.
    const last=first.legs?.[first.legs.length-1]?.toPoint;
    const next=second.legs?.[0]?.fromPoint;
-   const matchingWalk=walkingConnections.filter(w=>w&&w.routeVerified===true&&
-    last&&next&&w.fromPoint&&w.toPoint&&
-    stopDistance(w.fromPoint,last)<=10&&stopDistance(w.toPoint,next)<=10&&
-    Date.parse(w.departure)>=Date.parse(first.arrival)&&
-    Date.parse(w.arrival)<=Date.parse(second.departure))
+   const matchingWalk=walkingConnections.filter(w=>
+    last&&next&&stopDistance(w.fromPoint,last)<=10&&stopDistance(w.toPoint,next)<=10&&
+    Date.parse(w.departure)>=firstArrival&&
+    Date.parse(w.arrival)<=secondDeparture)
     .sort((a,b)=>Date.parse(a.arrival)-Date.parse(b.arrival));
    // The earliest matching route can still be invalid (e.g. implausible
    // distance). Try later verified alternatives before rejecting the transfer.
