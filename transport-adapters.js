@@ -4,7 +4,7 @@
 (function(root){
   'use strict';
   function adaptSNCF(itineraries){
-    return (Array.isArray(itineraries)?itineraries:[]).map((it,index)=>({
+    return (Array.isArray(itineraries)?itineraries:[]).filter(it=>it&&typeof it==='object'&&!Array.isArray(it)).map((it,index)=>({
       id:'sncf-theoretical-'+index,
       provider:'SNCF',
       departure:it.departure,
@@ -13,7 +13,7 @@
       exactOrigin:false,
       exactDestination:false,
       accessVerified:false,
-      legs:(Array.isArray(it.legs)?it.legs:[]).map(leg=>({
+      legs:(Array.isArray(it.legs)?it.legs:[]).filter(leg=>leg&&typeof leg==='object'&&!Array.isArray(leg)).map(leg=>({
         provider:'SNCF',
         line:leg.line||null,
         from:leg.from||null,
@@ -44,7 +44,7 @@
    */
   function adaptGTFS(itineraries,provider){
     const name=typeof provider==='string'&&provider.trim()?provider.trim():'Réseau GTFS';
-    return (Array.isArray(itineraries)?itineraries:[]).map((it,index)=>({
+    return (Array.isArray(itineraries)?itineraries:[]).filter(it=>it&&typeof it==='object'&&!Array.isArray(it)).map((it,index)=>({
       id:'gtfs-'+index,
       provider:name,
       departure:it.departure,
@@ -53,7 +53,7 @@
       exactOrigin:false,
       exactDestination:false,
       accessVerified:false,
-      legs:(Array.isArray(it.legs)?it.legs:[]).map(leg=>({
+      legs:(Array.isArray(it.legs)?it.legs:[]).filter(leg=>leg&&typeof leg==='object'&&!Array.isArray(leg)).map(leg=>({
         provider:name,
         line:leg.line||leg.route||null,
         from:leg.from||leg.fromStop||null,
@@ -86,10 +86,10 @@
     return Number.isFinite(ms)&&Math.abs(ms)<=8640000000000000?new Date(ms).toISOString():null;
   }
   function adaptRegional(itineraries,provider){
-    return adaptGTFS((Array.isArray(itineraries)?itineraries:[]).map(it=>({
+    return adaptGTFS((Array.isArray(itineraries)?itineraries:[]).filter(it=>it&&typeof it==='object'&&!Array.isArray(it)).map(it=>({
       departure:toISO(it.startTime),
       arrival:toISO(it.endTime),
-      legs:(Array.isArray(it.legs)?it.legs:[]).map(leg=>({
+      legs:(Array.isArray(it.legs)?it.legs:[]).filter(leg=>leg&&typeof leg==='object'&&!Array.isArray(leg)).map(leg=>({
         ...leg,
         departure:toISO(leg.departure??leg.startTime),
         arrival:toISO(leg.arrival??leg.endTime)

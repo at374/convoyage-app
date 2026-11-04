@@ -72,3 +72,9 @@ require('node:test')('adapted overnight itinerary never reuses first-leg tariff 
   assert.equal(result.fareBreakdown[0].amountEUR,4);
   assert.equal(result.fareBreakdown[1].amountEUR,null);
 });
+
+assert.equal(adaptSNCF([null,{departure,arrival,legs:[null,{line:'TER',departure,arrival}]}]).length,1,'Malformed SNCF journeys must be skipped');
+assert.equal(adaptSNCF([{departure,arrival,legs:[null,{line:'TER',departure,arrival}]}])[0].legs.length,1,'Malformed SNCF legs must be skipped');
+assert.equal(adaptGTFS([null,{departure,arrival,legs:[null,{route:'Y51',departure,arrival}]}]).length,1,'Malformed GTFS journeys must be skipped');
+assert.equal(adaptGTFS([{departure,arrival,legs:[null,{route:'Y51',departure,arrival}]}])[0].legs.length,1,'Malformed GTFS legs must be skipped');
+assert.equal(adaptRegional([null,{startTime:Date.parse(departure),endTime:Date.parse(arrival),legs:[null,{startTime:Date.parse(departure),endTime:Date.parse(arrival)}]}]).length,1,'Malformed regional journeys must be skipped');
