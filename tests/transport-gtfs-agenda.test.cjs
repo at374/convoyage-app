@@ -584,3 +584,20 @@ test('malformed GTFS worker result is reported as unavailable, not as an empty s
   session.dispose();
  }
 });
+
+test('GTFS journey timestamps must be valid and chronological',async()=>{
+ for(const badRow of [
+  row({departure:'not-a-date'}),
+  row({arrival:'invalid'}),
+  row({departure:'2026-11-02T13:00:00Z',arrival:'2026-11-02T12:00:00Z'})
+ ]){
+  const target=panel();
+  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+   load:async()=>summary,query:async()=>({rows:[badRow],truncated:false}),dispose(){}
+  })});
+  await session.done;
+  assert.match(target.textContent,/recherche indisponible/);
+  assert.doesNotMatch(target.textContent,/1 horaire/);
+  session.dispose();
+ }
+});
