@@ -2289,7 +2289,9 @@
             const arrival=Number.isFinite(Date.parse(j.arrival||''))?
               formatParis(j.arrival):'arrivée inconnue';
             const fare=Number.isFinite(j.priceEUR)&&j.priceEUR>=0?
-              j.priceEUR.toFixed(2).replace('.',',')+' € (tarif à vérifier)':'tarif inconnu';
+              j.priceEUR.toFixed(2).replace('.',',')+
+                (j.fareVerified===true?' € (tarif vérifié)':' € (tarif à vérifier)'):
+              'tarif inconnu';
             return c.label+' : '+departure+' → '+arrival+' · '+
               (j.provider||'réseau non précisé')+' · '+fare;
           }).join(' | '):'aucun choix compatible')+
@@ -2361,7 +2363,8 @@
                   const item=document.createElement('p');item.className='doux';
                   item.setAttribute('data-long-distance-choice',label);
                   const fare=Number.isFinite(journey.priceEUR)&&journey.priceEUR>=0?
-                    journey.priceEUR.toFixed(2).replace('.',',')+' € (tarif à vérifier)':
+                    journey.priceEUR.toFixed(2).replace('.',',')+
+                      (journey.fareVerified===true?' € (tarif vérifié)':' € (tarif à vérifier)'):
                     'tarif inconnu';
                   item.textContent=(choice.label||'Proposition')+' · '+
                     formatParis(journey.departure)+' → '+formatParis(journey.arrival)+
