@@ -52,7 +52,7 @@ function crossNetworkTrips(feeds,date,origin,destination,window,options={}){
  });
  const stopInfo=(index,id)=>{
   const stop=index.stopById.get(id);
-  if(!stop||!stop.stop_lat||!stop.stop_lon)return null;
+  if(!stop||stop.stop_lat==null||stop.stop_lon==null||String(stop.stop_lat).trim()===''||String(stop.stop_lon).trim()==='')return null;
   const lat=Number(stop.stop_lat),lon=Number(stop.stop_lon);
   if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return null;
   return {stopId:id,name:stop.stop_name||'',lat,lon,description:stop.stop_desc||null,accessVerified:false};
