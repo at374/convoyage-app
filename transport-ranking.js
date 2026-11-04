@@ -110,6 +110,12 @@
       Date.parse(a[a.length-1].arrival)!==Date.parse(first.arrival)||
       Date.parse(b[0].departure)!==Date.parse(second.departure)||
       Date.parse(b[b.length-1].arrival)!==Date.parse(second.arrival))return null;
+    // Reject internally inconsistent provider legs before composing a new itinerary.
+    const ordered=legs=>legs.every((leg,index)=>{
+      const start=Date.parse(leg.departure),end=Date.parse(leg.arrival);
+      return end>start&&(index===0||start>=Date.parse(legs[index-1].arrival));
+    });
+    if(!ordered(a)||!ordered(b))return null;
     const arrival=Date.parse(first.arrival),departure=Date.parse(second.departure);
     const transfer=finite(opts.minTransferMinutes)?Math.max(0,opts.minTransferMinutes):3;
     if(departure-arrival<transfer*60000)return null;
