@@ -423,3 +423,23 @@ test('routed walking bridge adds calculated transfer without confirming transit'
  assert.equal(joined.accessVerified,false);
  assert.equal(calls,1);
 });
+
+test('routed walking bridge accepts fractional-second provider timestamps',async()=>{
+ const {compareWithRoutedWalks}=require('../transport-long-distance-search.js');
+ const from={lat:45.91,lon:6.13},to={lat:45.911,lon:6.131};
+ const regional={id:'regional',departure:'2026-11-02T07:00:00.123+01:00',
+  arrival:'2026-11-02T07:40:00.123+01:00',
+  legs:[{departure:'2026-11-02T07:00:00.123+01:00',
+   arrival:'2026-11-02T07:40:00.123+01:00',fromPoint:{lat:45.9,lon:6.12},toPoint:from}]};
+ const coach={id:'coach',departure:'2026-11-02T07:48:00.123+01:00',
+  arrival:'2026-11-02T08:15:00.123+01:00',
+  legs:[{departure:'2026-11-02T07:48:00.123+01:00',
+   arrival:'2026-11-02T08:15:00.123+01:00',fromPoint:to,toPoint:{lat:45.92,lon:6.14}}]};
+ let calls=0;
+ const router={route:async()=>{calls++;return {status:'calculated',endpointsMatched:true,
+  durationSeconds:180,distanceMeters:160};}};
+ const result=await compareWithRoutedWalks([regional],{offers:[coach]},
+  {deadline:'2026-11-02T09:00:00+01:00'},router);
+ assert.equal(calls,1);
+ assert.ok(result.candidates.some(x=>x.id==='regional+coach'));
+});
