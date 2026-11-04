@@ -264,3 +264,17 @@ test('TripGo keeps alternatives with identical times but different boarding stop
  assert.equal(choices[0].journey,first);
  assert.equal(choices[1].journey,alternative);
 });
+
+test('TripGo retains distinct ticket links for otherwise identical trips',()=>{
+ const journeys=api.parse(clone(),options).itineraries;
+ const original=journeys[0];
+ const withLink=url=>({...original,legs:original.legs.map((leg,index)=>
+  index===0?{...leg,ticketWebsiteURL:url}:{...leg})});
+ const choices=api.selectChoices([
+  withLink('https://tickets.example.org/option-a'),
+  withLink('https://tickets.example.org/option-b')
+ ],null,3);
+ assert.equal(choices.length,2);
+ assert.notEqual(choices[0].journey.legs[0].ticketWebsiteURL,
+  choices[1].journey.legs[0].ticketWebsiteURL);
+});
