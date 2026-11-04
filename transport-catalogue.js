@@ -89,7 +89,7 @@ function swissGTFSResources(payload){
   return payload.result.resources.filter(r=>r&&typeof r==='object'&&
     /\.zip(?:$|[?#])/i.test(r.url||'')&&/^https:\/\//i.test(r.url||'')&&
     /GTFS/i.test(String(r.name||r.description||''))).map(r=>({
-      id:String(r.id||''),datasetId:'timetable-2026-gtfs2020',
+      id:String(r.id||''),name:String(r.name||''),datasetId:'timetable-2026-gtfs2020',
       network:'Transports publics suisses (GTFS national)',format:'GTFS',
       url:r.url,updatedAt:r.last_modified||r.created||null,
       sourcePage:'https://data.opentransportdata.swiss/fr/dataset/timetable-2026-gtfs2020',
@@ -97,13 +97,24 @@ function swissGTFSResources(payload){
       requiresServerSideIndex:true
     })).filter(r=>r.id);
 }
+// Select the latest published snapshot for the requested timetable year.
+// Do not mix 2026 and 2027 schedules around the December changeover.
+function latestSwissGTFSResource(resources,year){
+  if(!Number.isInteger(year)||year<2020||year>2100)return null;
+  const matches=(Array.isArray(resources)?resources:[]).filter(r=>r&&
+    r.requiresServerSideIndex===true&&r.format==='GTFS'&&
+    typeof r.url==='string'&&r.url.startsWith('https://')&&
+    r.datasetId==='timetable-'+year+'-gtfs2020'&&
+    new RegExp('(?:^|[^0-9])FP'+year+'[_-]([0-9]{8})(?:[^0-9]|$)','i').test(r.name||''));
+  return matches.sort((a,b)=>String(b.name).localeCompare(String(a.name)))[0]||null;
+}
 async function fetchSwissGTFSResources(fetcher,{signal}={}){
   if(typeof fetcher!=='function')throw new TypeError('fetch required');
   const response=await fetcher(SWISS_DATASET,{credentials:'omit',cache:'no-cache',signal});
   if(!response?.ok)throw new Error('Swiss GTFS catalogue unavailable');
   return swissGTFSResources(await response.json());
 }
-const api={ENDPOINT,normalize,gtfsResources,downloadGTFS,byNetwork,fetchCatalogue,SWISS_DATASET,swissGTFSResources,fetchSwissGTFSResources};
+const api={ENDPOINT,normalize,gtfsResources,downloadGTFS,byNetwork,fetchCatalogue,SWISS_DATASET,swissGTFSResources,fetchSwissGTFSResources,latestSwissGTFSResource};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportCatalogue=api;
 })(typeof window!=='undefined'?window:globalThis);
