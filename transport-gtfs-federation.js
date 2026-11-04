@@ -13,6 +13,13 @@ function crossNetworkTrips(feeds,date,origin,destination,window,{
  maxLegs=20000,maxPairs=50000,maxJourneys=2000,maxStopLookups=1000,connectionDates=[date]
 }={}){
  if(!Array.isArray(feeds)||feeds.length!==2)throw new Error('Exactly two GTFS networks required');
+ if(feeds.some(feed=>!feed||typeof feed!=='object'||!feed.source||!feed.index||!feed.files||
+   typeof feed.source!=='object'||typeof feed.index!=='object'||typeof feed.files!=='object'))
+  throw new Error('Invalid GTFS federation feed');
+ for(const point of [origin,destination])if(!point||typeof point!=='object'||
+   !Number.isFinite(point.lat)||!Number.isFinite(point.lon)||Math.abs(point.lat)>90||Math.abs(point.lon)>180)
+  throw new Error('Invalid federation coordinates');
+ if(!window||typeof window!=='object'||Array.isArray(window))throw new Error('Invalid federation window');
  for(const n of [radiusMeters,transferRadiusMeters,minTransferMinutes,maxWaitMinutes])if(!Number.isFinite(n)||n<=0)throw new Error('Invalid federation interval or radius');
  if(transferRadiusMeters>500||radiusMeters>5000||maxWaitMinutes<minTransferMinutes)throw new Error('Invalid federation interval or radius');
  for(const n of [maxLegs,maxPairs,maxJourneys,maxStopLookups])if(!Number.isSafeInteger(n)||n<1)throw new Error('Invalid federation budget');
