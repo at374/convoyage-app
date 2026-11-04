@@ -141,3 +141,17 @@ test('TripGo rejects zero-duration scheduled vehicle rides while preserving inde
  assert.equal(results.length,1,'an impossible instantaneous vehicle ride must not appear');
  assert.equal(results[0].legs[1].line,'FlixBus 1789');
 });
+
+test('TripGo rejects walking teleportation even when the provider omits metres',()=>{
+ const data=clone();
+ const eligible=data.groups[0].trips.find(t=>t.depart*1000>=Date.parse(options.when)&&t.segments.length>1);
+ assert.ok(eligible);
+ const walk=eligible.segments[0];
+ const template=data.segmentTemplates.find(s=>s.hashCode===walk.segmentTemplateHashCode);
+ assert.equal(template.modeIdentifier,'wa_wal');
+ delete template.metres;
+ walk.endTime=walk.startTime;
+ const results=api.parse(data,options).itineraries;
+ assert.equal(results.length,1,'a zero-second walk between different coordinates must be excluded');
+ assert.equal(results[0].legs[1].line,'FlixBus 1789');
+});
