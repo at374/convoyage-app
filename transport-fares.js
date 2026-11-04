@@ -10,9 +10,9 @@
     if(!Number.isFinite(when))return false;
     const startValue=leg?.fareValidFrom,endValue=leg?.fareValidUntil;
     // Date-only validity is inclusive for the full local boarding day.
-    const dateOnly=value=>typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value)&&
+    const dateOnly=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&
       Number.isFinite(Date.parse(value))&&new Date(Date.parse(value)).toISOString().slice(0,10)===value;
-    const boardingDay=typeof travelDate==='string'&&/^\\d{4}-\\d{2}-\\d{2}/.test(travelDate)?travelDate.slice(0,10):null;
+    const boardingDay=typeof travelDate==='string'&&/^\d{4}-\d{2}-\d{2}/.test(travelDate)?travelDate.slice(0,10):null;
     const start=dateOnly(startValue)?Date.parse(startValue+'T00:00:00Z'):Date.parse(startValue);
     const end=dateOnly(endValue)?Date.parse(endValue+'T23:59:59.999Z'):Date.parse(endValue);
     if(!Number.isFinite(start)||!Number.isFinite(end)||start>end)return false;
