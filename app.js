@@ -2280,7 +2280,7 @@
             latestArrival:next?.pickup_start,deadline:next?.pickup_start,
             marginMinutes:securityMarginMin
           });
-        const choices=result.choices||[];
+        const choices=Array.isArray(result?.choices)?result.choices:[]; 
         junctionCombined.textContent='Jonction multimodale provisoire : '+
           (choices.length?choices.map(c=>{
             const j=c.journey||{};
