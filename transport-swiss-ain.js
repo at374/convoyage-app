@@ -87,23 +87,19 @@ function borderSegments(index,countryByStop,{maxTrips=100000,maxSegments=10000}=
  return {segments,scannedTrips:scanned,truncated,countryEvidence:'verified-stop-map'};
 }
 function verifiedBorderRoutes(index,countryByStop,{maxTrips=100000}={}){
- if(!index?.tripById||!index?.timesByTrip||!index?.routeById)throw new Error('GTFS index required');
- if(!(countryByStop instanceof Map))throw new Error('Verified stop-country map required');
- if(!Number.isSafeInteger(maxTrips)||maxTrips<1)throw new Error('Invalid GTFS scan limit');
- const routes=new Map();let scanned=0,truncated=false;
- for(const [tripId,trip] of index.tripById){
-  if(scanned>=maxTrips){truncated=true;break;}
-  scanned++;
-  const times=index.timesByTrip.get(tripId)||[];
-  const countries=new Set(times.map(t=>countryByStop.get(t.stop_id)).filter(c=>c==='CH'||c==='FR'));
-  if(!countries.has('CH')||!countries.has('FR'))continue;
-  const route=index.routeById.get(trip.route_id);if(!route)continue;
-  const key=String(trip.route_id);
-  if(!routes.has(key))routes.set(key,{routeId:key,line:route.route_short_name||route.route_long_name||key,tripCount:0});
-  routes.get(key).tripCount++;
+ // A route is only a border candidate if an actual trip has a usable
+ // consecutive CH/FR stop pair, not merely two countries somewhere in its stops.
+ const result=borderSegments(index,countryByStop,{maxTrips,maxSegments:100000});
+ const routes=new Map(),tripsByRoute=new Map();
+ for(const segment of result.segments){
+  const key=segment.routeId;
+  if(!routes.has(key))routes.set(key,{routeId:key,line:segment.line,tripCount:0});
+  if(!tripsByRoute.has(key))tripsByRoute.set(key,new Set());
+  tripsByRoute.get(key).add(segment.tripId);
  }
- return {routes:[...routes.values()],scannedTrips:scanned,truncated,
-  countryEvidence:'verified-stop-map',timetableOnly:true,serviceConfirmed:false};
+ for(const [key,route] of routes)route.tripCount=tripsByRoute.get(key).size;
+ return {routes:[...routes.values()],scannedTrips:result.scannedTrips,
+  truncated:result.truncated,countryEvidence:'verified-stop-map',timetableOnly:true,serviceConfirmed:false};
 }
 // Restrict crossing candidates to trips actually scheduled on the mission date.
 // The date is checked against GTFS calendars, not live vehicle operation.
