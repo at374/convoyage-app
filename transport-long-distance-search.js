@@ -73,7 +73,18 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
   options?.[key]!=null&&timestamp(options[key])===null);
  if(invalidWindow||earliest!==null&&latest!==null&&earliest>latest)
   return {candidates:[],choices:[],providerStatuses:longDistanceResult?.providers||[],allSourcesConnected:false};
- const candidates=[...regional,...longDistance].filter(journey=>{
+ // Assemble only same-stop regional-to-long-distance transfers. No walking
+ // route, service confirmation or price is inferred from provider candidates.
+ const connections=[];
+ if(typeof ranking.connectJourneys==='function'){
+  const regionalPool=regional.slice(0,100),longDistancePool=longDistance.slice(0,100);
+  for(const first of regionalPool)for(const second of longDistancePool){
+   const connected=ranking.connectJourneys(first,second,options);
+   if(connected)connections.push(connected);
+   if(connections.length>=100)break;
+  }
+ }
+ const candidates=[...regional,...longDistance,...connections].filter(journey=>{
   if(!journey||typeof journey!=='object')return false;
   const start=timestamp(journey.departure),end=timestamp(journey.arrival);
   if(start===null||end===null||end<=start)return false;
