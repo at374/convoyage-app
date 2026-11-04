@@ -673,3 +673,17 @@ test('Agenda rejects GTFS transfer intervals shorter than five or longer than 12
   session.dispose();
  }
 });
+
+test('Agenda accepts equivalent GTFS transfer instants expressed in different UTC offsets',async()=>{
+ const target=panel();
+ const transferred=row({departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T12:00:00Z',
+  legs:[{line:'First',departure:'2026-11-02T12:00:00+01:00',arrival:'2026-11-02T11:20:00Z'},
+   {line:'Second',departure:'2026-11-02T11:30:00Z',arrival:'2026-11-02T13:00:00+01:00'}]});
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,query:async()=>({rows:[transferred],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 1 horaire/);
+ assert.doesNotMatch(target.textContent,/recherche indisponible/);
+ session.dispose();
+});
