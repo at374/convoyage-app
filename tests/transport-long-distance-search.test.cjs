@@ -91,3 +91,17 @@ test('pickup margin rejects a bus arriving only five minutes before the mission'
  assert.equal(compared.candidates[0].legs[0].line,'Safe margin');
  assert.equal(compared.candidates[0].serviceConfirmed,false);
 });
+
+test('return trips use arrival window without subtracting outbound pickup margin',async()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const result=await searchLongDistance({from:'Lyon',to:'Annecy',date:'2026-11-02'},{
+  FlixBus:async()=>[{from:'Lyon',to:'Annecy',departure:'2026-11-02T18:00:00+01:00',
+   arrival:'2026-11-02T19:55:00+01:00'}]
+ });
+ const opts={latestArrival:'2026-11-02T20:00:00+01:00'};
+ const outbound=compareWithRegional([],result,opts);
+ const homeward=compareWithRegional([],result,{...opts,direction:'return'});
+ assert.equal(outbound.candidates.length,0);
+ assert.equal(homeward.candidates.length,1);
+ assert.equal(homeward.choices[0].journey.feasible,false);
+});
