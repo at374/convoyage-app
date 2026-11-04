@@ -96,7 +96,33 @@
     }
     return unique;
   }
-  const api={evaluate,rank};
+  // Join two already discovered stop-to-stop journeys at the same GPS stop.
+  // No walking connector is invented: different stops require a routed walk.
+  // The combined candidate remains unverified until independently checked.
+  function connectJourneys(first,second,opts={}){
+    if(!first||!second||typeof first!=='object'||typeof second!=='object')return null;
+    const a=Array.isArray(first.legs)?first.legs:[],b=Array.isArray(second.legs)?second.legs:[];
+    if(!a.length||!b.length||!a.every(l=>l&&validTime(l.departure)&&validTime(l.arrival))||
+      !b.every(l=>l&&validTime(l.departure)&&validTime(l.arrival)))return null;
+    if(!validTime(first.departure)||!validTime(first.arrival)||
+      !validTime(second.departure)||!validTime(second.arrival))return null;
+    const arrival=Date.parse(first.arrival),departure=Date.parse(second.departure);
+    const transfer=finite(opts.minTransferMinutes)?Math.max(0,opts.minTransferMinutes):3;
+    if(departure-arrival<transfer*60000)return null;
+    const end=a[a.length-1].toPoint,start=b[0].fromPoint;
+    if(!point(end)||!point(start)||metres(end,start)>10)return null;
+    const candidate={
+      id:String(first.id??'regional')+'+'+String(second.id??'long-distance'),
+      provider:'Multiréseau',departure:first.departure,arrival:second.arrival,
+      legs:[...a,...b],priceEUR:null,fareVerified:false,
+      exactOrigin:first.exactOrigin===true,exactDestination:second.exactDestination===true,
+      accessVerified:false,serviceConfirmed:false,
+      source:'Correspondance multiréseau à vérifier',
+      detailStatus:'Circulation, tarifs, accès et correspondance à confirmer'
+    };
+    return evaluate(candidate,opts).durationMinutes===null?null:candidate;
+  }
+  const api={evaluate,rank,connectJourneys};
   if(typeof module==='object'&&module.exports)module.exports=api;
   root.CPTransportRanking=api;
 })(typeof window!=='undefined'?window:globalThis);
