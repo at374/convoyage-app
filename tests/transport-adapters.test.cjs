@@ -99,3 +99,6 @@ const dateOnlyEvidence={...evidence,fareValidFrom:'2026-11-02',fareValidUntil:'2
 assert.equal(withVerifiedFares(applyFareEvidence(bus,[dateOnlyEvidence]))[0].priceEUR,3,'Date-only fare remains valid throughout its last local boarding day');
 assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...dateOnlyEvidence,fareValidUntil:'2026-11-01'}]))[0].priceEUR,null,'Fare expired the previous calendar day must be rejected');
 assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...dateOnlyEvidence,fareValidFrom:'2026-11-03'}]))[0].priceEUR,null,'Fare beginning the next calendar day must be rejected');
+
+assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...dateOnlyEvidence,fareValidUntil:'2026-02-30'}]))[0].priceEUR,null,'Impossible end-of-validity calendar dates must not certify fares');
+assert.equal(withVerifiedFares(applyFareEvidence(bus,[{...dateOnlyEvidence,fareValidFrom:'2026-11-31'}]))[0].priceEUR,null,'Impossible start-of-validity calendar dates must not certify fares');
