@@ -2352,7 +2352,6 @@
             }
             if(label==='Aller'||label==='Retour'){
               combinedLongDistance[label]=null;
-              combinedRegional[label]=[];
               combinedLines[label]?.remove();
             }
             const status=document.createElement('p');status.className='doux';
