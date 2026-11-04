@@ -2633,6 +2633,19 @@
                   walkingDistance.textContent=' · Marche : '+Math.ceil(leg.distanceMeters)+' m (distance fournisseur, cheminement à vérifier)';
                   step.appendChild(walkingDistance);
                 }
+                // TripGo booking URLs are optional HTTPS references, not proof
+                // of a bookable departure or verified fare.
+                if(typeof leg.ticketWebsiteURL==='string'){
+                  try{
+                    const bookingURL=new URL(leg.ticketWebsiteURL);
+                    if(bookingURL.protocol==='https:'&&!bookingURL.username&&!bookingURL.password){
+                      const booking=document.createElement('a');
+                      booking.textContent=' · Vérifier horaires et prix chez l’opérateur';
+                      booking.href=bookingURL.href;booking.target='_blank';booking.rel='noopener noreferrer';
+                      step.appendChild(booking);
+                    }
+                  }catch(_){}
+                }
                 const legFare=fareSummary?.breakdown?.[legIndex];
                 if(legFare){
                   const fareDetail=document.createElement('span');fareDetail.setAttribute('data-tripgo-leg-fare','');
