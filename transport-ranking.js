@@ -65,8 +65,12 @@
     const spatialEvidence=legs.length===1||legs.every(leg=>point(leg.fromPoint)&&point(leg.toPoint));
     const allVerified=legs.length>0&&connected&&boundsMatch&&(legs.length===1||allTimed)&&spatialEvidence&&legs.every(leg=>leg&&leg.serviceConfirmed===true);
     const doorToDoor=item.exactOrigin===true&&item.exactDestination===true;
+    // A return journey has no pickup deadline; it still requires verified
+    // door-to-door legs, access and a valid chronological itinerary.
+    const returnJourney=opts.direction==='return';
     const feasible=valid&&allVerified&&doorToDoor&&item.accessVerified===true&&
-      Number.isFinite(deadline)&&slack>=margin;
+      (returnJourney?(!Number.isFinite(deadline)||slack>=0):
+        Number.isFinite(deadline)&&slack>=margin);
     return {...item,priceEUR:price,durationMinutes:valid?Math.ceil((arrival-departure)/60000):null,
       slackMinutes:slack,feasible,displayStatus:feasible?'Réalisable':'Transport non confirmé — vérifiez vous-même'};
   }
