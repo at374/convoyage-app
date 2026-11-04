@@ -23,6 +23,7 @@ on:
       - 'transport-gtfs-time.js'
       - 'transport-gtfs-worker-client.js'
       - 'tests/transport-ranking.test.cjs'
+      - 'tests/transport-agenda-margin.test.cjs'
       - 'tests/transport-adapters.test.cjs'
       - 'tests/transport-fares.test.cjs'
       - 'tests/transport-sibra-pass.test.cjs'
@@ -62,6 +63,7 @@ on:
       - 'transport-gtfs-time.js'
       - 'transport-gtfs-worker-client.js'
       - 'tests/transport-ranking.test.cjs'
+      - 'tests/transport-agenda-margin.test.cjs'
       - 'tests/transport-adapters.test.cjs'
       - 'tests/transport-fares.test.cjs'
       - 'tests/transport-sibra-pass.test.cjs'
@@ -108,6 +110,7 @@ jobs:
       - run: node --check transport-gtfs-time.js
       - run: node --check transport-gtfs-worker-client.js
       - run: node tests/transport-ranking.test.cjs
+      - run: node tests/transport-agenda-margin.test.cjs
       - run: node tests/transport-adapters.test.cjs
       - run: node tests/transport-fares.test.cjs
       - run: node --test tests/transport-sibra-pass.test.cjs
