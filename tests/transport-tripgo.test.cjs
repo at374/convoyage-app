@@ -278,3 +278,22 @@ test('TripGo retains distinct ticket links for otherwise identical trips',()=>{
  assert.notEqual(choices[0].journey.legs[0].ticketWebsiteURL,
   choices[1].journey.legs[0].ticketWebsiteURL);
 });
+
+
+test('TripGo parser retains two services with identical times but different ticket links',()=>{
+ const data=clone();
+ const trip=data.groups.flatMap(g=>g.trips).find(t=>t.depart*1000>=Date.parse(options.when));
+ assert.ok(trip);
+ const duplicate=JSON.parse(JSON.stringify(trip));
+ const ride=duplicate.segments.find(s=>data.segmentTemplates.find(t=>t.hashCode===s.segmentTemplateHashCode)?.modeIdentifier?.startsWith('pt_pub'));
+ assert.ok(ride);
+ ride.ticketWebsiteURL='https://tickets.example.org/alternative';
+ const originalRide=trip.segments.find(s=>s.segmentTemplateHashCode===ride.segmentTemplateHashCode);
+ originalRide.ticketWebsiteURL='https://tickets.example.org/original';
+ data.groups[0].trips.push(duplicate);
+ const result=api.parse(data,options);
+ assert.equal(result.itineraries.length,3);
+ const links=result.itineraries.flatMap(j=>j.legs.map(l=>l.ticketWebsiteURL).filter(Boolean));
+ assert.ok(links.includes('https://tickets.example.org/original'));
+ assert.ok(links.includes('https://tickets.example.org/alternative'));
+});
