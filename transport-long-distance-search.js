@@ -85,7 +85,19 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
    [regionalPool,longDistancePool],[longDistancePool,regionalPool]
   ])for(const first of firstPool)for(const second of secondPool){
    if(connections.length>=100)break outer;
-   const connected=ranking.connectJourneys(first,second,options);
+   // A caller may supply independently routed walking connections by stop pair.
+   // Never reuse a walk for unrelated endpoints.
+   const walkingConnections=Array.isArray(options?.walkingConnections)?options.walkingConnections:[];
+   const last=first.legs?.[first.legs.length-1]?.toPoint;
+   const next=second.legs?.[0]?.fromPoint;
+   const matchingWalk=walkingConnections.find(w=>w&&w.routeVerified===true&&
+    last&&next&&w.fromPoint&&w.toPoint&&
+    typeof last.lat==='number'&&typeof last.lon==='number'&&
+    typeof next.lat==='number'&&typeof next.lon==='number'&&
+    Math.abs(w.fromPoint.lat-last.lat)<0.00001&&Math.abs(w.fromPoint.lon-last.lon)<0.00001&&
+    Math.abs(w.toPoint.lat-next.lat)<0.00001&&Math.abs(w.toPoint.lon-next.lon)<0.00001);
+   const connected=ranking.connectJourneys(first,second,
+    matchingWalk?{...options,walkingConnection:matchingWalk}:options);
    if(connected)connections.push(connected);
   }
  }
