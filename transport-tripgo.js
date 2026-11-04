@@ -38,7 +38,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
    for(const ref of trip.segments){
     const template=ref&&typeof ref==='object'?templates.get(ref.segmentTemplateHashCode):null;if(!template){valid=false;break;}
     const s={...template,...ref},mode=s.modeIdentifier,start=epoch(s.startTime),end=epoch(s.endTime);
-    if(!point(s.from)||!point(s.to)||!Number.isFinite(start)||!Number.isFinite(end)||start<previous||end<start||end>arrival||
+    if(typeof mode!=='string'||!point(s.from)||!point(s.to)||!Number.isFinite(start)||!Number.isFinite(end)||start<previous||end<start||end>arrival||
      (mode?.startsWith('pt_pub')&&end===start)||
      (mode?.startsWith('stationary_')&&gap(coord(s.from),coord(s.to))>10)||
      (s.availability&&s.availability!=='AVAILABLE')||s.cancelled===true||s.canceled===true||
