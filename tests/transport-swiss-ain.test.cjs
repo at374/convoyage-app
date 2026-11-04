@@ -53,3 +53,15 @@ const unordered=buildIndex({
  'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT,08:00:00,08:00:00,G,1\nT,08:20:00,08:20:00,A,1\n'
 });
 assert.equal(borderSegments(unordered,new Map([['G','CH'],['A','FR']])).segments.length,0);
+
+const {datedBorderSegments}=require('../transport-swiss-ain.js');
+const calendar={
+ 'calendar.txt':'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\nWK,1,1,1,1,1,0,0,20261001,20261031\n',
+ 'calendar_dates.txt':'service_id,date,exception_type\nWK,20261030,2\n'
+};
+const activeBorder=datedBorderSegments(calendar,index,new Map([['G','CH'],['A','FR']]),'2026-10-29');
+assert.equal(activeBorder.segments.length,1);
+assert.equal(activeBorder.segments[0].serviceDateVerified,true);
+assert.equal(activeBorder.serviceConfirmed,false);
+assert.equal(datedBorderSegments(calendar,index,new Map([['G','CH'],['A','FR']]),'2026-10-30').segments.length,0);
+assert.throws(()=>datedBorderSegments(calendar,index,new Map(),'2026-02-30'),/Invalid service date/);
