@@ -717,3 +717,15 @@ test('Agenda never displays an invalid late pickup alongside a valid option',asy
  assert.match(target.textContent,/recherche partielle/);
  session.dispose();
 });
+
+test('Agenda discloses truncated coverage even when valid GTFS journeys are shown',async()=>{
+ const target=panel();
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,query:async()=>({rows:[row({tripId:'valid'})],truncated:true}),dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Retour : 1 horaire/);
+ assert.match(target.textContent,/Recherche partielle/);
+ assert.match(target.textContent,/Affichage limité/);
+ session.dispose();
+});
