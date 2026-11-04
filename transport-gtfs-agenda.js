@@ -44,6 +44,8 @@ function timestamp(value){
  return Date.parse(value);
 }
 function searchWindow(task){
+ if(!task||typeof task!=='object'||Array.isArray(task))throw new Error('Invalid mission window');
+ if(task.marginMinutes!==undefined&&(!Number.isFinite(task.marginMinutes)||task.marginMinutes<0||task.marginMinutes>1440))throw new Error('Invalid mission margin');
  const early=timestamp(task.earliestDeparture),late=timestamp(task.latestArrival);
  if((task.earliestDeparture!==undefined&&!Number.isFinite(early))||
     (task.latestArrival!==undefined&&!Number.isFinite(late)))throw new Error('Invalid mission timestamp');
