@@ -23,9 +23,15 @@
     const slack=valid&&Number.isFinite(deadline)?Math.floor((deadline-arrival)/60000):null;
     // A confirmed service cannot make an itinerary feasible if its supplied leg
     // timestamps overlap or fall outside the displayed journey window.
+    const hasTimedLeg=legs.some(leg=>leg&&(leg.departure!==undefined||leg.arrival!==undefined));
     let timelineValid=true,previousEnd=departure;
     for(const leg of legs){
-      if(leg?.departure===undefined&&leg?.arrival===undefined)continue;
+      // Legacy journeys may omit all leg timestamps. Mixed timed/untimed legs
+      // cannot certify the chronology of a multimodal connection.
+      if(leg?.departure===undefined&&leg?.arrival===undefined){
+        if(hasTimedLeg){timelineValid=false;break;}
+        continue;
+      }
       if(!validTime(leg?.departure)||!validTime(leg?.arrival)){timelineValid=false;break;}
       const start=Date.parse(leg.departure),end=Date.parse(leg.arrival);
       if(!Number.isFinite(previousEnd)||start<previousEnd||end<=start||end>arrival){timelineValid=false;break;}
