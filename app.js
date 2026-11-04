@@ -2262,7 +2262,7 @@
       junctionCombined.className='doux';
       junctionCombined.setAttribute('data-junction-combined','');
       const refreshJunctionCombined=()=>{
-        if(!regionalActive()||!junctionLongDistanceResult||!junctionRegionalJourneys.length||
+        if(!regionalActive()||!junctionLongDistanceResult||
             !window.CPTransportLongDistanceSearch?.compareWithRegional)return;
         const result=window.CPTransportLongDistanceSearch.compareWithRegional(
           junctionRegionalJourneys,junctionLongDistanceResult,{
@@ -2293,6 +2293,10 @@
         const providerSearch=(label,origin,destination,when)=>{
           if(!origin||!destination||!when)return;
           regionalSlot(()=>[origin,destination,when],(target,signal)=>{
+            if(label==='Jonction'){
+              junctionLongDistanceResult=null;
+              junctionCombined.remove();
+            }
             const status=document.createElement('p');status.className='doux';
             status.setAttribute('data-long-distance-search',label);
             status.textContent=label+' longue distance : recherche des fournisseurs raccordés…';
