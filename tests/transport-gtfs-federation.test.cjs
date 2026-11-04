@@ -168,3 +168,15 @@ test('rejects malformed federation inputs before network traversal',()=>{
  assert.throws(()=>crossNetworkTrips([a,b],'2026-11-02',origin,destination,null),/window/);
  assert.equal(search([a,b]).journeys.length,1,'Valid cross-network transfer still works');
 });
+
+test('equator and prime-meridian transfer stops are valid GTFS coordinates',()=>{
+ const a=feed('Equator A','first'),b=feed('Equator B','second');
+ a.files['stops.txt']=a.files['stops.txt'].replace('45.9,6.1','0.1,0.1').replace('45.8,6.2','0,0');
+ b.files['stops.txt']=b.files['stops.txt'].replace('45.8005,6.2','0.0005,0').replace('45.7,6.3','0.2,0.2');
+ a.index=g.buildIndex(a.files);b.index=g.buildIndex(b.files);
+ const result=crossNetworkTrips([a,b],'2026-11-02',{lat:0.1,lon:0.1},{lat:0.2,lon:0.2},window);
+ assert.equal(result.journeys.length,1);
+ assert.equal(result.journeys[0].transferStop.lat,0);
+ assert.equal(result.journeys[0].transferStop.lon,0);
+ assert.equal(result.journeys[0].transferVerified,false);
+});
