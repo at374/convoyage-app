@@ -100,9 +100,10 @@
   // Each item must identify the itinerary, leg index and exact departure.
   function applyFareEvidence(journeys,evidence=[]){
     const records=Array.isArray(evidence)?evidence:[];
-    return (Array.isArray(journeys)?journeys:[]).map(journey=>({
+    return (Array.isArray(journeys)?journeys:[]).filter(journey=>journey&&typeof journey==='object'&&!Array.isArray(journey)).map(journey=>({
       ...journey,
       legs:(Array.isArray(journey.legs)?journey.legs:[]).map((leg,index)=>{
+        if(!leg||typeof leg!=='object'||Array.isArray(leg))return leg;
         const match=records.find(item=>item&&item.journeyId===journey.id&&
           item.legIndex===index&&item.departure===leg.departure&&
           item.provider===leg.provider&&item.line===leg.line&&
@@ -125,8 +126,9 @@
     }));
   }
   function withVerifiedFares(journeys,options={}){
+    if(!options||typeof options!=='object'||Array.isArray(options))options={};
     const calculator=root.CPTransportFares;
-    return (Array.isArray(journeys)?journeys:[]).map(journey=>{
+    return (Array.isArray(journeys)?journeys:[]).filter(journey=>journey&&typeof journey==='object'&&!Array.isArray(journey)).map(journey=>{
       if(!calculator||typeof calculator.fare!=='function')
         return {...journey,priceEUR:null,fareStatus:'Tarif non vérifié'};
       const result=calculator.fare(journey.legs,{...options,travelDate:options.travelDate||journey.departure});
