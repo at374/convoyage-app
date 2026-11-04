@@ -129,6 +129,8 @@
       const walk=opts.walkingConnection;
       if(!walk||walk.mode!=='wa_wal'||walk.routeVerified!==true||
         !validTime(walk.departure)||!validTime(walk.arrival)||
+        !/(?:Z|[+-](?:0\d|1[0-4]):[0-5]\d)$/.test(walk.departure)||
+        !/(?:Z|[+-](?:0\d|1[0-4]):[0-5]\d)$/.test(walk.arrival)||
         !point(walk.fromPoint)||!point(walk.toPoint)||
         metres(end,walk.fromPoint)>10||metres(start,walk.toPoint)>10||
         Date.parse(walk.departure)<arrival||
