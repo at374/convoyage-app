@@ -116,3 +116,16 @@ test('GPS reliability alone cannot reduce the outbound pickup margin',()=>{
  assert.equal(compareWithRegional([{...base,id:'verified',exactDestination:true,accessVerified:true}],null,options).candidates.length,1);
  assert.equal(compareWithRegional([{...base,id:'no-destination',exactDestination:false,accessVerified:true}],null,options).candidates.length,0);
 });
+
+test('verified GPS five-minute exception survives final ranking',()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const journey={id:'gps',departure:'2026-11-02T08:00:00+01:00',arrival:'2026-11-02T09:54:00+01:00',exactDestination:true,accessVerified:true,legs:[]};
+ const opts={deadline:'2026-11-02T10:00:00+01:00',marginMinutes:5,exactGPSReliable:true};
+ const accepted=compareWithRegional([journey],null,opts);
+ assert.equal(accepted.candidates.length,1);
+ assert.equal(accepted.choices.length,1);
+ assert.equal(accepted.choices[0].journey.id,'gps');
+ const rejected=compareWithRegional([{...journey,accessVerified:false}],null,opts);
+ assert.equal(rejected.candidates.length,0);
+ assert.equal(rejected.choices.length,0);
+});
