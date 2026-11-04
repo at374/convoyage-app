@@ -87,7 +87,7 @@ const SWISS_DATASET='https://data.opentransportdata.swiss/api/3/action/package_s
 function swissGTFSResources(payload){
   if(payload?.success!==true||!Array.isArray(payload?.result?.resources))return [];
   return payload.result.resources.filter(r=>r&&typeof r==='object'&&
-    /\\.zip(?:$|[?#])/i.test(r.url||'')&&/^https:\\/\\//i.test(r.url||'')&&
+    /\.zip(?:$|[?#])/i.test(r.url||'')&&/^https:\/\//i.test(r.url||'')&&
     /GTFS/i.test(String(r.name||r.description||''))).map(r=>({
       id:String(r.id||''),datasetId:'timetable-2026-gtfs2020',
       network:'Transports publics suisses (GTFS national)',format:'GTFS',
