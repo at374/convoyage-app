@@ -1946,16 +1946,16 @@
             hour: '2-digit', minute: '2-digit' }).format(date) : 'heure non renseignée';
       };
       const nextGapMin = next ? Math.floor((Date.parse(next.pickup_start) - endTime) / 60000) : null;
-      const securityMarginMin = 5;
+      const securityMarginMin = 15;
       const pickupDate = Number.isFinite(Date.parse(transportPickup || '')) ? transportPickup : null;
       const deliveryDate = Number.isFinite(Date.parse(transportDelivery || '')) ?
         transportDelivery : null;
       const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
       const connectionStatus = nextGapMin == null ? '' :
         connectionBudgetMin < 0 ?
-          '⚠️ Jonction non réalisable avec une marge minimale de 5 min, même sans trajet d’approche.' :
+          '⚠️ Jonction non réalisable avec une marge minimale de 15 min, même sans trajet d’approche.' :
           'Temps maximum théorique pour transport et approche : ' +
-          connectionBudgetMin + ' min, après réservation d’une marge minimale de 5 min. ' +
+          connectionBudgetMin + ' min, après réservation d’une marge minimale de 15 min. ' +
           'Transport non confirmé — vérifiez vous-même.';
       const nextOrigin = next && locationText(next.origin_address || next.from_address,
         next.from_city, next.from_department);
@@ -2280,7 +2280,7 @@
             regionalStatus.textContent = options.length ?
               'Jonction régionale : ' + options.length +
               ' proposition(s) théoriques, horaires et circulation à vérifier :' :
-              'Jonction régionale : aucune correspondance compatible avec la marge minimale de 5 min. Transport non confirmé — vérifiez vous-même.';
+              'Jonction régionale : aucune correspondance compatible avec la marge minimale de 15 min. Transport non confirmé — vérifiez vous-même.';
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
                 window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
@@ -2547,7 +2547,7 @@
             outboundStatus.textContent = options.length ?
               'Aller régional : ' + options.length +
               ' proposition(s) théoriques depuis le point de domicile enregistré (adresse exacte non vérifiée) :' :
-              'Aller régional : aucune arrivée compatible avec la marge minimale de 5 min. Transport non confirmé — vérifiez vous-même.';
+              'Aller régional : aucune arrivée compatible avec la marge minimale de 15 min. Transport non confirmé — vérifiez vous-même.';
             if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
               const ranked = window.CPTransportRanking.rank(
                 window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
@@ -2907,7 +2907,7 @@
                   '🚌 Jonction SIBRA automatique — horaires théoriques : ' +
                   candidates.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
                     ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
-                  '. Arrêts à 600 m maximum à vol d’oiseau ; marche minimale à 1,2 m/s prise en compte pour la marge minimale de 5 min, trajet piéton non vérifié. Tarifs et perturbations non vérifiés. Transport non confirmé — vérifiez vous-même.' :
+                  '. Arrêts à 600 m maximum à vol d’oiseau ; marche minimale à 1,2 m/s prise en compte pour la marge minimale de 15 min, trajet piéton non vérifié. Tarifs et perturbations non vérifiés. Transport non confirmé — vérifiez vous-même.' :
                   (changes.length ?
                     '🚌 Jonction SIBRA avec 1 correspondance (horaires théoriques) : ' +
                     changes.map(j => j.originStop.name + ' ' + clock(j.departureSeconds) +
@@ -2915,7 +2915,7 @@
                       ' / ' + clock(j.secondLeg.departureSeconds) +
                       ' → ' + j.destinationStop.name + ' ' + clock(j.arrivalSeconds)).join(' ; ') +
                     '. Correspondance au même arrêt GTFS, marche et circulation non vérifiées. Transport non confirmé — vérifiez vous-même.' :
-                    'Jonction SIBRA : aucune course directe ou avec une correspondance trouvée à proximité avec la marge minimale de 5 min. Transport non confirmé — vérifiez vous-même.');
+                    'Jonction SIBRA : aucune course directe ou avec une correspondance trouvée à proximité avec la marge minimale de 15 min. Transport non confirmé — vérifiez vous-même.');
               } else {
                 auto.textContent = 'Jonction SIBRA automatique indisponible : coordonnées GPS précises des deux missions manquantes, dates différentes ou heure de livraison absente.';
               }
