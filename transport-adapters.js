@@ -4,7 +4,7 @@
 (function(root){
   'use strict';
   function adaptSNCF(itineraries){
-    return (Array.isArray(itineraries)?itineraries:[]).map((it,index)=>({
+    return (Array.isArray(itineraries)?itineraries:[]).filter(it=>it&&typeof it==='object'&&!Array.isArray(it)).map((it,index)=>({
       id:'sncf-theoretical-'+index,
       provider:'SNCF',
       departure:it.departure,
@@ -44,7 +44,7 @@
    */
   function adaptGTFS(itineraries,provider){
     const name=typeof provider==='string'&&provider.trim()?provider.trim():'Réseau GTFS';
-    return (Array.isArray(itineraries)?itineraries:[]).map((it,index)=>({
+    return (Array.isArray(itineraries)?itineraries:[]).filter(it=>it&&typeof it==='object'&&!Array.isArray(it)).map((it,index)=>({
       id:'gtfs-'+index,
       provider:name,
       departure:it.departure,
@@ -86,7 +86,7 @@
     return Number.isFinite(ms)&&Math.abs(ms)<=8640000000000000?new Date(ms).toISOString():null;
   }
   function adaptRegional(itineraries,provider){
-    return adaptGTFS((Array.isArray(itineraries)?itineraries:[]).map(it=>({
+    return adaptGTFS((Array.isArray(itineraries)?itineraries:[]).filter(it=>it&&typeof it==='object'&&!Array.isArray(it)).map(it=>({
       departure:toISO(it.startTime),
       arrival:toISO(it.endTime),
       legs:(Array.isArray(it.legs)?it.legs:[]).map(leg=>({
