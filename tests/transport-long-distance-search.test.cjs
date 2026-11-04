@@ -164,3 +164,18 @@ test('negative requested margin never bypasses the fifteen-minute pickup buffer'
  assert.equal(result.candidates.length,0);
  assert.equal(result.choices.length,0);
 });
+
+test('invalid or reversed mission windows never silently widen the comparison',()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const journey={departure:'2026-11-02T08:00:00+01:00',arrival:'2026-11-02T09:00:00+01:00',legs:[]};
+ for(const options of [
+  {deadline:'not-a-date'},
+  {latestArrival:'2026-11-02T10:00:00'},
+  {earliestDeparture:'2026-02-30T08:00:00+01:00'},
+  {earliestDeparture:'2026-11-02T10:00:00+01:00',latestArrival:'2026-11-02T09:00:00+01:00'}
+ ]){
+  const result=compareWithRegional([journey],null,options);
+  assert.equal(result.candidates.length,0,JSON.stringify(options));
+  assert.equal(result.choices.length,0,JSON.stringify(options));
+ }
+});
