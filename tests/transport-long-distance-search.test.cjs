@@ -193,3 +193,26 @@ test('different GPS boarding stops are retained even when their names and schedu
  assert.equal(result.offers[2].legs[0].fromPoint,null);
  assert.ok(result.offers.every(o=>o.exactOrigin===false&&o.accessVerified===false&&o.serviceConfirmed===false));
 });
+
+test('comparison includes provisional regional to long-distance same-stop connection',()=>{
+ const {compareWithRegional}=require('../transport-long-distance-search.js');
+ const point={lat:45.91,lon:6.13};
+ const regional={id:'regional',departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+  legs:[{departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+   fromPoint:{lat:45.9,lon:6.12},toPoint:point,serviceConfirmed:false}]};
+ const long={id:'long',departure:'2026-11-02T07:45:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+  legs:[{departure:'2026-11-02T07:45:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+   fromPoint:point,toPoint:{lat:45.92,lon:6.14},serviceConfirmed:false}]};
+ const result=compareWithRegional([regional],{offers:[long],providers:[]},
+  {deadline:'2026-11-02T09:00:00+01:00'});
+ const joined=result.candidates.find(x=>x.id==='regional+long');
+ assert.ok(joined);
+ assert.equal(joined.legs.length,2);
+ assert.equal(joined.priceEUR,null);
+ assert.equal(joined.accessVerified,false);
+ assert.equal(joined.serviceConfirmed,false);
+ assert.equal(result.choices.every(x=>x.journey.feasible===false),true);
+ const disconnected=compareWithRegional([regional],{offers:[{...long,legs:[{...long.legs[0],
+  fromPoint:{lat:45.92,lon:6.14}}]}]}, {deadline:'2026-11-02T09:00:00+01:00'});
+ assert.equal(disconnected.candidates.some(x=>x.id==='regional+long'),false);
+});
