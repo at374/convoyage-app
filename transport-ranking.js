@@ -25,7 +25,8 @@
     const departure=validTime(item.departure)?Date.parse(item.departure):NaN;
     const arrival=validTime(item.arrival)?Date.parse(item.arrival):NaN;
     const valid=Number.isFinite(departure)&&Number.isFinite(arrival)&&arrival>departure;
-    const price=finite(item.priceEUR)&&item.priceEUR>=0?item.priceEUR:null;
+    // Never present a provider-declared unverified fare as a known price.
+    const price=item.fareVerified===false||item.priceVerified===false?null:finite(item.priceEUR)&&item.priceEUR>=0?item.priceEUR:null;
     const minimumMargin=opts.exactGPSReliable===true&&item.exactDestination===true&&item.accessVerified===true?5:15;
     const margin=finite(opts.marginMinutes)?Math.max(minimumMargin,opts.marginMinutes):minimumMargin;
     const deadline=validTime(opts.deadline)?Date.parse(opts.deadline):NaN;
