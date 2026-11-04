@@ -84,3 +84,14 @@ const restricted=buildIndex({
  'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence,pickup_type,drop_off_type\nT,08:00:00,08:00:00,G,1,1,0\nT,08:20:00,08:20:00,A,2,0,1\n'
 });
 assert.equal(borderSegments(restricted,new Map([['G','CH'],['A','FR']])).segments.length,0);
+
+const {missionPickupCandidates}=require('../transport-swiss-ain.js');
+const pickup=missionPickupCandidates(calendar,index,new Map([['G','CH'],['A','FR']]),'2026-10-29',
+ {earliestDeparture:'07:50:00',pickupTime:'08:40:00'});
+assert.equal(pickup.segments.length,1);
+assert.equal(pickup.pickupBufferMinutes,15);
+assert.equal(pickup.accessVerified,false);
+assert.equal(missionPickupCandidates(calendar,index,new Map([['G','CH'],['A','FR']]),'2026-10-29',
+ {earliestDeparture:'07:50:00',pickupTime:'08:30:00'}).segments.length,0);
+assert.throws(()=>missionPickupCandidates(calendar,index,new Map(),'2026-10-29',
+ {earliestDeparture:'07:50:00',pickupTime:'08:40:00',bufferMinutes:10}),/pickup buffer/);
