@@ -125,16 +125,23 @@ function gtfsMinutes(value){
 }
 // An explicit pre-pickup buffer is required when the candidate is used to
 // reach the next mission; GTFS arrival alone is not a punctuality guarantee.
-function missionPickupCandidates(files,index,countryByStop,date,{earliestDeparture,pickupTime,bufferMinutes=15,...limits}={}){
+function missionPickupCandidates(files,index,countryByStop,date,{earliestDeparture,pickupTime,bufferMinutes=15,accessMinutes,...limits}={}){
  if(!Number.isInteger(bufferMinutes)||bufferMinutes<15||bufferMinutes>180)throw new Error('Invalid pickup buffer');
  const pickup=gtfsMinutes(pickupTime);
  if(pickup===null||pickup<bufferMinutes)throw new Error('Invalid pickup time');
- const latestArrival=Math.floor(pickup-bufferMinutes);
+ // A GTFS stop is not the mission address. When the walking access time is
+ // known, subtract it before filtering the scheduled arrival at the stop.
+ // Unknown access is never represented as verified.
+ if(accessMinutes!==undefined&&(!Number.isFinite(accessMinutes)||accessMinutes<0||accessMinutes>240))
+  throw new Error('Invalid mission stop access duration');
+ const access=accessMinutes===undefined?0:Math.ceil(accessMinutes);
+ const latestArrival=Math.floor(pickup-bufferMinutes-access);
+ if(latestArrival<0)throw new Error('Mission pickup window too short');
  const clock=minutes=>String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0')+':00';
  const result=missionBorderSegments(files,index,countryByStop,date,{
   earliestDeparture,latestArrival:clock(latestArrival),...limits});
  return {...result,pickupBufferMinutes:bufferMinutes,pickupTime,
-  accessVerified:false,serviceConfirmed:false};
+  accessVerified:accessMinutes!==undefined,accessMinutes:accessMinutes??null,serviceConfirmed:false};
 }
 function missionBorderSegments(files,index,countryByStop,date,{earliestDeparture,latestArrival,...limits}={}){
  const start=gtfsMinutes(earliestDeparture),end=gtfsMinutes(latestArrival);
