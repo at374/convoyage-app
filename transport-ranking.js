@@ -69,8 +69,15 @@
       if(leg?.fromPoint!==undefined&&!location(leg.fromPoint)||leg?.toPoint!==undefined&&!location(leg.toPoint)){
         timelineValid=false;break;
       }
-      if(i&&legs[i-1]?.toPoint!==undefined&&leg?.fromPoint!==undefined&&
-        meters(legs[i-1].toPoint,leg.fromPoint)>50){timelineValid=false;break;}
+      if(i){
+        const previousStop=legs[i-1]?.toPoint, nextStop=leg?.fromPoint;
+        // One known transfer endpoint is insufficient to verify continuity.
+        // Preserve legacy connections with neither coordinate supplied.
+        if((previousStop===undefined)!==(nextStop===undefined)||
+          (previousStop!==undefined&&meters(previousStop,nextStop)>50)){
+          timelineValid=false;break;
+        }
+      }
     }
     // Multi-leg journeys require per-leg timestamps to verify each connection.
     // A single legacy untimed leg remains supported for direct services.
