@@ -97,7 +97,7 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
     Math.abs(w.fromPoint.lat-last.lat)<0.00001&&Math.abs(w.fromPoint.lon-last.lon)<0.00001&&
     Math.abs(w.toPoint.lat-next.lat)<0.00001&&Math.abs(w.toPoint.lon-next.lon)<0.00001);
    const connected=ranking.connectJourneys(first,second,
-    matchingWalk?{...options,walkingConnection:matchingWalk}:options);
+    {...options,walkingConnection:matchingWalk||null});
    if(connected)connections.push(connected);
   }
  }
