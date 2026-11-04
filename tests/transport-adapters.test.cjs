@@ -82,3 +82,11 @@ assert.equal(adaptRegional([null,{startTime:Date.parse(departure),endTime:Date.p
 assert.equal(applyFareEvidence([null,{id:'empty',legs:[]}],[]).length,1,'Null journey cannot crash fare evidence application');
 assert.equal(applyFareEvidence([{id:'bad-leg',legs:[null]}],[])[0].legs[0],null,'Null leg cannot crash fare evidence application');
 assert.equal(withVerifiedFares([null,{id:'empty',legs:[]}]).length,1,'Null journey cannot crash fare totals');
+
+const missingLine={...bus[0],legs:[{...bus[0].legs[0],line:undefined}]};
+assert.equal(withVerifiedFares(applyFareEvidence([missingLine],[{...evidence,line:undefined}]))[0].priceEUR,null,'Incomplete line identity must not certify a fare');
+const missingStop={...bus[0],legs:[{...bus[0].legs[0],from:undefined}]};
+assert.equal(withVerifiedFares(applyFareEvidence([missingStop],[{...evidence,from:undefined}]))[0].priceEUR,null,'Missing boarding stop must not certify a fare');
+const missingJourneyId={...bus[0],id:undefined};
+assert.equal(withVerifiedFares(applyFareEvidence([missingJourneyId],[{...evidence,journeyId:undefined}]))[0].priceEUR,null,'Missing journey ID must not certify a fare');
+assert.equal(withVerifiedFares(applyFareEvidence(bus,[evidence]))[0].priceEUR,3,'Complete evidence remains valid');
