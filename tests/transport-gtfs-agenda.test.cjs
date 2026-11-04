@@ -537,3 +537,11 @@ test('GTFS mission time rejects invalid timezone offsets and missing task object
  }
  assert.equal(agenda.searchWindow({latestArrival:'2026-11-02T12:00:00+14:00'}).marginMinutes,15);
 });
+
+test('invalid pickup margins fail explicitly rather than silently changing mission feasibility',()=>{
+ for(const marginMinutes of [-1,NaN,Infinity,1441,'15',null]){
+  assert.throws(()=>agenda.searchWindow({latestArrival:'2026-11-02T12:00:00+01:00',marginMinutes}),/Invalid mission safety margin/);
+ }
+ assert.equal(agenda.searchWindow({latestArrival:'2026-11-02T12:00:00+01:00',marginMinutes:0}).marginMinutes,15);
+ assert.equal(agenda.searchWindow({earliestDeparture:'2026-11-02T12:00:00+01:00',marginMinutes:30}).marginMinutes,0);
+});
