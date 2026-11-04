@@ -82,3 +82,12 @@ require('node:test')('malformed provider rows do not crash adapters',()=>{
   assert.equal(adaptRegional(bad,'Test').length,1);
   assert.equal(adaptRegional(bad,'Test')[0].legs.length,1);
 });
+
+require('node:test')('fare evidence and fare calculation ignore invalid provider records',()=>{
+  const broken=[null,false,{id:'broken',departure,legs:[null,false,{provider:'SNCF',departure,arrival}]}];
+  const evidence=applyFareEvidence(broken,[]);
+  assert.equal(evidence.length,1);
+  assert.equal(evidence[0].legs.length,3);
+  assert.equal(withVerifiedFares(broken,null).length,1);
+  assert.equal(withVerifiedFares([null],null).length,0);
+});
