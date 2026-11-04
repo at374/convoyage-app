@@ -4,7 +4,11 @@
 (function(root){
   'use strict';
   function finite(v){return typeof v==='number'&&Number.isFinite(v);}
-  function validTime(v){return typeof v==='string'&&/T\d{2}:\d{2}/.test(v)&&/(Z|[+-]\d{2}:\d{2})$/i.test(v)&&Number.isFinite(Date.parse(v));}
+  function validTime(v){
+    if(typeof v!=='string'||!/^20\\d{2}-\\d{2}-\\d{2}T(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d{1,3})?)?(?:Z|[+-](?:0\\d|1[0-4]):[0-5]\\d)$/.test(v))return false;
+    const day=Date.parse(v.slice(0,10)+'T12:00:00Z');
+    return Number.isFinite(day)&&new Date(day).toISOString().slice(0,10)===v.slice(0,10)&&Number.isFinite(Date.parse(v));
+  }
   function point(value){
     return value&&finite(value.lat)&&finite(value.lon??value.lng)&&Math.abs(value.lat)<=90&&Math.abs(value.lon??value.lng)<=180;
   }
