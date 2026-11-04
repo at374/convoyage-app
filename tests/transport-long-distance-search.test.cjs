@@ -48,3 +48,15 @@ test('provider responses cannot mix unrelated origins or destinations',async()=>
  assert.equal(result.offers.length,2);
  assert.ok(result.offers.every(o=>o.provider==='FlixBus'));
 });
+
+test('duplicate offers are collapsed and large provider results are bounded',async()=>{
+ const base={from:'Annecy',to:'Lyon',departure:'2026-11-02T08:00:00+01:00',arrival:'2026-11-02T10:00:00+01:00'};
+ const offers=Array.from({length:110},(_,i)=>({...base,line:'Service '+i}));
+ offers.push({...base,line:'Service 0'});
+ const result=await searchLongDistance({from:'Annecy',to:'Lyon',date:'2026-11-02'},{
+  FlixBus:async()=>offers
+ });
+ assert.equal(result.offers.length,100);
+ assert.equal(result.providers[0].truncated,true);
+ assert.equal(new Set(result.offers.map(o=>o.legs[0].line)).size,100);
+});
