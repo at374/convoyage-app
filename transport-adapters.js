@@ -81,8 +81,14 @@
   // A timestamp may be an epoch millisecond number or an ISO string.
   // Invalid values must not become 1970 dates.
   function toISO(value){
+    // Reject local-time and date-only strings: parsing them depends on the host timezone.
+    const explicitZone=typeof value==='string'&&/^20\d{2}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d{1,3})?)?(?:Z|[+-](?:0\d|1[0-4]):[0-5]\d)$/.test(value);
+    const offset=explicitZone?value.match(/([+-])(\d{2}):(\d{2})$/):null;
+    const validOffset=!offset||Number(offset[2])!==14||Number(offset[3])===0;
+    const validDay=explicitZone&&Number.isFinite(Date.parse(value.slice(0,10)+'T12:00:00Z'))&&
+      new Date(value.slice(0,10)+'T12:00:00Z').toISOString().slice(0,10)===value.slice(0,10);
     const ms=typeof value==='number'?value:
-      typeof value==='string'?Date.parse(value):NaN;
+      explicitZone&&validOffset&&validDay?Date.parse(value):NaN;
     return Number.isFinite(ms)&&Math.abs(ms)<=8640000000000000?new Date(ms).toISOString():null;
   }
   function adaptRegional(itineraries,provider){
