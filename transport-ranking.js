@@ -121,7 +121,8 @@
   // No walking connector is invented: different stops require a routed walk.
   // The combined candidate remains unverified until independently checked.
   function connectJourneys(first,second,opts={}){
-    if(!first||!second||typeof first!=='object'||typeof second!=='object')return null;
+    if(!opts||typeof opts!=='object'||Array.isArray(opts))opts={};
+    if(!first||!second||typeof first!=='object'||typeof second!=='object'||Array.isArray(first)||Array.isArray(second))return null;
     const a=Array.isArray(first.legs)?first.legs:[],b=Array.isArray(second.legs)?second.legs:[];
     if(!a.length||!b.length||!a.every(l=>l&&validTime(l.departure)&&validTime(l.arrival))||
       !b.every(l=>l&&validTime(l.departure)&&validTime(l.arrival)))return null;
