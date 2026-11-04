@@ -78,3 +78,7 @@ assert.equal(adaptSNCF([{departure,arrival,legs:[null,{line:'TER',departure,arri
 assert.equal(adaptGTFS([null,{departure,arrival,legs:[null,{route:'Y51',departure,arrival}]}]).length,1,'Malformed GTFS journeys must be skipped');
 assert.equal(adaptGTFS([{departure,arrival,legs:[null,{route:'Y51',departure,arrival}]}])[0].legs.length,1,'Malformed GTFS legs must be skipped');
 assert.equal(adaptRegional([null,{startTime:Date.parse(departure),endTime:Date.parse(arrival),legs:[null,{startTime:Date.parse(departure),endTime:Date.parse(arrival)}]}]).length,1,'Malformed regional journeys must be skipped');
+
+assert.equal(applyFareEvidence([null,{id:'empty',legs:[]}],[]).length,1,'Null journey cannot crash fare evidence application');
+assert.equal(applyFareEvidence([{id:'bad-leg',legs:[null]}],[])[0].legs[0],null,'Null leg cannot crash fare evidence application');
+assert.equal(withVerifiedFares([null,{id:'empty',legs:[]}]).length,1,'Null journey cannot crash fare totals');
