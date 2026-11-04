@@ -142,9 +142,10 @@ function missionPickupCandidates(files,index,countryByStop,date,{earliestDepartu
   earliestDeparture,latestArrival:clock(latestArrival),...limits});
  return {...result,pickupBufferMinutes:bufferMinutes,pickupTime,
   accessVerified:false,accessDurationProvided:accessMinutes!==undefined,accessMinutes:accessMinutes??null,
-  transportConfirmed:false,confirmationBlockers:accessMinutes===undefined?
-   ['walking-access-unknown','realtime-service-unverified']:
-   ['walking-route-unverified','realtime-service-unverified'],serviceConfirmed:false};
+  transportConfirmed:false,confirmationBlockers:[
+   ...(result.segments.length?[]:['no-scheduled-border-candidate']),
+   accessMinutes===undefined?'walking-access-unknown':'walking-route-unverified',
+   'realtime-service-unverified'],serviceConfirmed:false};
 }
 function missionBorderSegments(files,index,countryByStop,date,{earliestDeparture,latestArrival,...limits}={}){
  const start=gtfsMinutes(earliestDeparture),end=gtfsMinutes(latestArrival);
