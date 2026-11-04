@@ -625,3 +625,16 @@ test('Agenda independently enforces the mission pickup deadline on GTFS response
   session.dispose();
  }
 });
+
+test('invalid GTFS row timezone falls back to the official network timezone',async()=>{
+ const target=panel();
+ const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async()=>summary,
+  query:async()=>({rows:[row({timeZone:'Invalid/Timezone'})],truncated:false}),
+  dispose(){}
+ })});
+ await session.done;
+ assert.match(target.textContent,/Transport non confirmé/);
+ assert.doesNotMatch(target.textContent,/recherche indisponible/);
+ session.dispose();
+});
