@@ -22,9 +22,9 @@ async function searchLongDistance(query,fetchers={}){
   try{
    const response=await fetch({...input});
    if(!Array.isArray(response))return {provider,status:'invalid-response',offers:[]};
-   const offers=adapters.adaptLongDistance(response,provider).filter(offer=>
-    offer.departure.slice(0,10)===input.date ||
-    new Date(offer.departure).toISOString().slice(0,10)===input.date);
+   // Provider integrations must enforce their requested local service date.
+   // UTC date filtering here would wrongly discard departures near midnight.
+   const offers=adapters.adaptLongDistance(response,provider);
    return {provider,status:'candidates-unverified',offers};
   }catch(_){return {provider,status:'provider-error',offers:[]};}
  }));
