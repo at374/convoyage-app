@@ -78,10 +78,15 @@ function compareWithRegional(regionalJourneys,longDistanceResult,options={}){
  const connections=[];
  if(typeof ranking.connectJourneys==='function'){
   const regionalPool=regional.slice(0,100),longDistancePool=longDistance.slice(0,100);
-  for(const first of regionalPool)for(const second of longDistancePool){
+  // Both orders matter: a regional feeder may precede a coach, or a
+  // regional service may complete the journey after a long-distance arrival.
+  // Stop at 100 combined candidates across both orders.
+  outer: for(const [firstPool,secondPool] of [
+   [regionalPool,longDistancePool],[longDistancePool,regionalPool]
+  ])for(const first of firstPool)for(const second of secondPool){
+   if(connections.length>=100)break outer;
    const connected=ranking.connectJourneys(first,second,options);
    if(connected)connections.push(connected);
-   if(connections.length>=100)break;
   }
  }
  const candidates=[...regional,...longDistance,...connections].filter(journey=>{
