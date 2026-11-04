@@ -37,7 +37,7 @@ assert.equal(evaluate({...base,arrival:'2026-11-02T08:15:00+25:00'},{deadline}).
 assert.equal(evaluate({...base,departure:'2026-11-02T07:00:00+01:00garbage'},{deadline}).durationMinutes,null,'Reject trailing characters');
 assert.equal(evaluate({...base,arrival:'2026-11-02T08:15:00+01:00'},{deadline}).feasible,true,'Preserve valid offset timestamps');
 
-const timed={...base,legs:[{serviceConfirmed:true,departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:30:00+01:00'},{serviceConfirmed:true,departure:'2026-11-02T07:35:00+01:00',arrival:'2026-11-02T08:15:00+01:00'}]};
+const timed={...base,legs:[{provider:'Réseau test',serviceConfirmed:true,departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:30:00+01:00'},{provider:'Réseau test',serviceConfirmed:true,departure:'2026-11-02T07:35:00+01:00',arrival:'2026-11-02T08:15:00+01:00'}]};
 assert.equal(evaluate(timed,{deadline}).feasible,true,'Valid timed connection remains feasible');
 assert.equal(evaluate({...timed,legs:[timed.legs[0],{...timed.legs[1],departure:'2026-11-02T07:29:00+01:00'}]},{deadline}).feasible,false,'Overlapping confirmed services cannot be feasible');
 assert.equal(evaluate({...timed,legs:[timed.legs[0],{...timed.legs[1],arrival:'2026-11-02T08:20:00+01:00'}]},{deadline}).feasible,false,'Leg cannot finish after displayed arrival');
