@@ -2362,6 +2362,9 @@
       }
 
       regionalSlot(() => [regionalPoint(G.coordonnees(m,'destination')),regionalPoint(next && G.coordonnees(next,'origin')),deliveryDate,next?.pickup_start,securityMarginMin], (panel,signal) => {
+      junctionRegionalJourneys=[];
+      junctionCombined.remove();
+      refreshJunctionCombined();
       // Regional journeys use a configured endpoint or the public M provider,
       // only when both mission endpoints have exact GPS.
       if (regionalEngineReady && regionalProviderReady && next && deliveryDate) {
