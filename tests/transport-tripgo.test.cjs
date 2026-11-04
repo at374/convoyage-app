@@ -200,3 +200,14 @@ test('TripGo refuses an itinerary that ends over ten metres from the exact missi
  assert.equal(api.parse(shifted,options).itineraries.length,0);
  assert.equal(api.parse(clone(),options).itineraries.length,2);
 });
+
+test('TripGo exposes BlaBlaCar Bus and FlixBus provider tags without verifying fares',()=>{
+ const result=api.parse(clone(),options);
+ assert.ok(result.itineraries.some(it=>it.providerTags.includes('BlaBlaCar Bus')));
+ assert.ok(result.itineraries.some(it=>it.providerTags.includes('FlixBus')));
+ for(const itinerary of result.itineraries){
+  assert.ok(Array.isArray(itinerary.operators));
+  assert.equal(itinerary.priceEUR,null);
+  assert.equal(itinerary.serviceConfirmed,false);
+ }
+});
