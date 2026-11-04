@@ -12,3 +12,14 @@ test('external offers remain unverified',async()=>{
  assert.equal(result.offers[0].priceEUR,null);
  assert.equal(result.offers[0].serviceConfirmed,false);
 });
+
+test('rejects off-date offers while retaining cross-midnight departures in provider local time',async()=>{
+ const result=await searchLongDistance({from:'Annecy',to:'Lyon',date:'2026-11-02'},{
+  FlixBus:async()=>[
+   {from:'Annecy',to:'Lyon',departure:'2026-11-02T23:50:00+01:00',arrival:'2026-11-03T01:30:00+01:00'},
+   {from:'Annecy',to:'Lyon',departure:'2026-11-03T00:10:00+01:00',arrival:'2026-11-03T02:00:00+01:00'}
+  ]
+ });
+ assert.equal(result.offers.length,1);
+ assert.equal(result.offers[0].departure,'2026-11-02T22:50:00.000Z');
+});
