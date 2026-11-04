@@ -128,3 +128,14 @@ assert.deepEqual(walkingCandidate.confirmationBlockers,['no-scheduled-border-can
 const deadlineOverride=missionPickupCandidates(calendar,index,new Map([['G','CH'],['A','FR']]),'2026-10-29',
  {earliestDeparture:'07:50:00',pickupTime:'08:30:00',latestArrival:'12:00:00'});
 assert.equal(deadlineOverride.segments.length,0,'caller-provided latestArrival must not bypass pickup safety margin');
+
+const unusableBorder=buildIndex({
+ 'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nG,Geneva,46.2,6.14\nA,Ain,46.25,6.1\n',
+ 'routes.txt':'route_id,route_short_name\nR,Border\n',
+ 'trips.txt':'route_id,service_id,trip_id\nR,WK,T\n',
+ 'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence,pickup_type,drop_off_type\nT,08:00:00,08:00:00,G,1,1,0\nT,08:20:00,08:20:00,A,2,0,0\n'
+});
+assert.equal(verifiedBorderRoutes(unusableBorder,new Map([['G','CH'],['A','FR']])).routes.length,0,
+ 'a border route with prohibited boarding must not be reported as usable');
+assert.equal(verifiedBorderRoutes(invalidChronology,new Map([['G','CH'],['A','FR']])).routes.length,0,
+ 'a route with reversed stop times must not be reported as usable');
