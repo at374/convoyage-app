@@ -39,6 +39,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
     const s={...template,...ref},mode=s.modeIdentifier,start=epoch(s.startTime),end=epoch(s.endTime);
     if(!point(s.from)||!point(s.to)||!Number.isFinite(start)||!Number.isFinite(end)||start<previous||end<start||end>arrival||
      (mode?.startsWith('pt_pub')&&end===start)||
+     (mode?.startsWith('stationary_')&&gap(coord(s.from),coord(s.to))>10)||
      (s.availability&&s.availability!=='AVAILABLE')||s.cancelled===true||s.canceled===true||
      (legs.length&&gap(legs.at(-1).toPoint,coord(s.from))>50)||
      (mode==='wa_wal'&&Math.max(Number.isFinite(s.metres)&&s.metres>=0?s.metres:0,gap(coord(s.from),coord(s.to)))>10&&

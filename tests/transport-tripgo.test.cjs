@@ -155,3 +155,16 @@ test('TripGo rejects walking teleportation even when the provider omits metres',
  assert.equal(results.length,1,'a zero-second walk between different coordinates must be excluded');
  assert.equal(results[0].legs[1].line,'FlixBus 1789');
 });
+
+test('TripGo rejects stationary transfers that silently teleport between stops',()=>{
+ const data=clone();
+ const eligible=data.groups[0].trips.find(t=>t.depart*1000>=Date.parse(options.when)&&t.segments.length>1);
+ assert.ok(eligible);
+ const ref=eligible.segments[0];
+ const template=data.segmentTemplates.find(s=>s.hashCode===ref.segmentTemplateHashCode);
+ // Replace a valid walking segment with an alleged stationary transfer without changing its geometry.
+ template.modeIdentifier='stationary_transfer';
+ const results=api.parse(data,options).itineraries;
+ assert.equal(results.length,1,'the disconnected stationary transfer must be rejected');
+ assert.equal(results[0].legs[1].line,'FlixBus 1789');
+});
