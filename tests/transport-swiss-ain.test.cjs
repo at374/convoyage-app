@@ -23,3 +23,14 @@ const single=buildIndex({
  'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT,08:00:00,08:00:00,S,1\n'
 });
 assert.equal(crossBorderRoutes(single).routes.length,0);
+
+const {verifiedBorderRoutes}=require('../transport-swiss-ain.js');
+const verified=verifiedBorderRoutes(index,new Map([['G','CH'],['A','FR'],['O','CH']]));
+assert.equal(verified.routes.length,1);
+assert.equal(verified.routes[0].line,'Border');
+assert.equal(verified.countryEvidence,'verified-stop-map');
+assert.equal(verified.serviceConfirmed,false);
+assert.equal(verifiedBorderRoutes(index,new Map([['G','CH'],['A','CH']])).routes.length,0);
+assert.equal(verifiedBorderRoutes(index,new Map()).routes.length,0);
+assert.throws(()=>verifiedBorderRoutes(index,{}),/map required/);
+assert.equal(verifiedBorderRoutes(index,new Map([['G','CH'],['A','FR']]),{maxTrips:1}).truncated,true);
