@@ -32,13 +32,14 @@ function crossNetworkTrips(feeds,date,origin,destination,window,options={}){
   const destinations=new Map(g.nearbyStops(feed.index,destination.lat,destination.lon,radiusMeters).map(stop=>[stop.stopId,stop]));
   const rows=[];let remaining=maxLegs;
   for(const day of dates){
-   if(!remaining){searchTruncated=true;break;}
+   if(remaining<=0){searchTruncated=true;break;}
    const bounds=clock.serviceWindow(feed.files,day,window);
    const raw=g.boundaryLegs(feed.files,feed.index,day,day===date?origins:new Map(),destinations,{maxLegs:remaining,...bounds});
    searchTruncated=searchTruncated||raw.searchTruncated;
    const legs=[...raw.firstByStop.values()].flat().map(leg=>({...leg,date:day,side:'first'}))
     .concat([...raw.secondByStop.values()].flat().map(leg=>({...leg,date:day,side:'second'})));
-   rows.push(...legs);remaining-=legs.length;
+   if(legs.length>remaining){searchTruncated=true;rows.push(...legs.slice(0,remaining));remaining=0;}
+   else {rows.push(...legs);remaining-=legs.length;}
   }
   const dated=clock.datedTrips(feed.files,feed.index,rows,window),first=new Map(),second=new Map();
   for(const leg of dated){
