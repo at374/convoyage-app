@@ -106,6 +106,10 @@
       !b.every(l=>l&&validTime(l.departure)&&validTime(l.arrival)))return null;
     if(!validTime(first.departure)||!validTime(first.arrival)||
       !validTime(second.departure)||!validTime(second.arrival))return null;
+    if(Date.parse(a[0].departure)!==Date.parse(first.departure)||
+      Date.parse(a[a.length-1].arrival)!==Date.parse(first.arrival)||
+      Date.parse(b[0].departure)!==Date.parse(second.departure)||
+      Date.parse(b[b.length-1].arrival)!==Date.parse(second.arrival))return null;
     const arrival=Date.parse(first.arrival),departure=Date.parse(second.departure);
     const transfer=finite(opts.minTransferMinutes)?Math.max(0,opts.minTransferMinutes):3;
     if(departure-arrival<transfer*60000)return null;
