@@ -50,7 +50,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
      alerts:Array.isArray(s.alerts)?s.alerts.map(a=>String(a?.title||a?.text||'Alerte fournisseur')).slice(0,10):[],serviceConfirmed:false});
    }
    if(!valid||!legs.length||Date.parse(legs[0].departure)!==departure||Date.parse(legs.at(-1).arrival)!==arrival||!legs.some(l=>l.mode.startsWith('pt_pub')))continue;
-   const signature=JSON.stringify(legs.map(l=>[l.mode,l.line,l.departure,l.arrival,l.fromPoint,l.toPoint]));if(seen.has(signature))continue;seen.add(signature);
+   const signature=JSON.stringify(legs.map(l=>[l.mode,l.provider,l.serviceTripId,l.line,l.departure,l.arrival,l.fromPoint,l.toPoint,l.ticketWebsiteURL]));if(seen.has(signature))continue;seen.add(signature);
    const startGapMeters=gap(coord(from),legs[0].fromPoint),endGapMeters=gap(coord(to),legs.at(-1).toPoint);
    if(startGapMeters>10||endGapMeters>10)continue;
    const realtimeReported=legs.filter(l=>l.mode.startsWith('pt_pub')).every(l=>l.realtimeReported);
