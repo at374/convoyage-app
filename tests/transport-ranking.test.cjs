@@ -194,3 +194,6 @@ assert.equal(walked.legs[1].serviceConfirmed,false);
 assert.equal(evaluate(walked,{deadline}).feasible,false);
 assert.equal(connectJourneys(regionalPart,onwardOtherStop,{walkingConnection:{...routedWalk,distanceMeters:500}}),null,
  'Implausibly fast walking connection must be rejected');
+
+assert.equal(connectJourneys(regionalPart,onwardOtherStop,{walkingConnection:{...routedWalk,distanceMeters:5}}),null,
+ 'Walking route cannot be shorter than straight-line GPS distance');
