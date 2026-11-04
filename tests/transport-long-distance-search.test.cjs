@@ -401,3 +401,25 @@ test('walking alternatives are prioritized by arrival even when supplied in reve
  assert.ok(joined);
  assert.equal(joined.legs[1].arrival,walk.arrival);
 });
+
+test('routed walking bridge adds calculated transfer without confirming transit',async()=>{
+ const {compareWithRoutedWalks}=require('../transport-long-distance-search.js');
+ const from={lat:45.91,lon:6.13},to={lat:45.911,lon:6.131};
+ const regional={id:'regional',departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+  legs:[{departure:'2026-11-02T07:00:00+01:00',arrival:'2026-11-02T07:40:00+01:00',
+   fromPoint:{lat:45.9,lon:6.12},toPoint:from}]};
+ const coach={id:'coach',departure:'2026-11-02T07:48:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+  legs:[{departure:'2026-11-02T07:48:00+01:00',arrival:'2026-11-02T08:15:00+01:00',
+   fromPoint:to,toPoint:{lat:45.92,lon:6.14}}]};
+ let calls=0;
+ const router={route:async()=>{calls++;return {status:'calculated',endpointsMatched:true,
+  durationSeconds:180,distanceMeters:160,provider:'Test pedestrian router'};}};
+ const result=await compareWithRoutedWalks([regional],{offers:[coach]},
+  {deadline:'2026-11-02T09:00:00+01:00'},router);
+ const joined=result.candidates.find(x=>x.id==='regional+coach');
+ assert.ok(joined,'calculated walk must connect the two transit legs');
+ assert.equal(joined.legs[1].mode,'wa_wal');
+ assert.equal(joined.serviceConfirmed,false);
+ assert.equal(joined.accessVerified,false);
+ assert.equal(calls,1);
+});
