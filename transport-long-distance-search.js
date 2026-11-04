@@ -179,9 +179,8 @@ async function compareWithRoutedWalks(regionalJourneys,longDistanceResult,option
  const routedPairs=new Map();
  const regionalPool=[...regional].sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)).slice(0,100);
  const longPool=[...longDistance].sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)).slice(0,100);
- outer:for(const [firstPool,secondPool] of [[regionalPool,longPool],[longPool,regionalPool]])
+ for(const [firstPool,secondPool] of [[regionalPool,longPool],[longPool,regionalPool]])
   for(const first of firstPool)for(const second of secondPool){
-   if(attempts>=maxRoutes)break outer;
    const arrival=timestamp(first?.arrival),departure=timestamp(second?.departure);
    if(arrival===null||departure===null||departure-arrival<180000)continue;
    const from=first?.legs?.at(-1)?.toPoint,to=second?.legs?.[0]?.fromPoint;
@@ -194,6 +193,7 @@ async function compareWithRoutedWalks(regionalJourneys,longDistanceResult,option
    let route;
    if(routedPairs.has(pairKey))route=routedPairs.get(pairKey);
    else{
+    if(attempts>=maxRoutes)continue;
     attempts++;
     try{route=await router.route({lat:from.lat,lon:from.lon??from.lng},
      {lat:to.lat,lon:to.lon??to.lng});}catch(_){route=null;}
