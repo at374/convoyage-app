@@ -166,3 +166,16 @@ test('federation accepts a valid zero-coordinate transfer stop',()=>{
  assert.equal(result.journeys[0].transferStop.lon,0);
  assert.equal(result.journeys[0].transferVerified,false);
 });
+
+test('invalid feed structures and geographic coordinates fail safely before search',()=>{
+ const a=feed('A','first'),b=feed('B','second');
+ for(const broken of [null,false,{}, {source:{datasetId:'A'}},{source:{datasetId:'A'},index:{}}]){
+  assert.throws(()=>search([broken,b]),/Invalid GTFS federation feed/);
+ }
+ for(const invalid of [null,{}, {lat:NaN,lon:6.1},{lat:91,lon:6.1},{lat:45.9,lon:181},{lat:'45.9',lon:6.1}]){
+  assert.throws(()=>crossNetworkTrips([a,b],'2026-11-02',invalid,destination,window),/Invalid federation coordinates/);
+  assert.throws(()=>crossNetworkTrips([a,b],'2026-11-02',origin,invalid,window),/Invalid federation coordinates/);
+ }
+ assert.throws(()=>crossNetworkTrips([a,b],'2026-11-02',origin,destination,null),/Invalid federation window/);
+ assert.equal(search([a,b]).journeys.length,1);
+});
