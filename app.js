@@ -2274,8 +2274,15 @@
             target.appendChild(status);
             const date=localDay(when);
             if(!date){status.textContent=label+' : date invalide. Transport non confirmé.';return;}
+            const providers=Object.fromEntries(
+              Object.entries(longDistanceFetchers).filter(([,fetcher])=>typeof fetcher==='function')
+                .map(([name,fetcher])=>[name,async query=>{
+                  if(signal.aborted) return [];
+                  const response=await fetcher({...query,signal});
+                  return signal.aborted?[]:response;
+                }]));
             longDistanceEngine.searchLongDistance({from:origin,to:destination,date},
-              longDistanceFetchers).then(result=>{
+              providers).then(result=>{
                 if(signal.aborted||!regionalActive()||!status.isConnected)return;
                 const providers=Array.isArray(result.providers)?result.providers:[];
                 const connected=providers.filter(p=>p.status==='candidates-unverified');
