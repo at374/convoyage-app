@@ -186,12 +186,19 @@ async function run(){
   assert.equal(await page.locator('#btnVol').count(),1,'Car and public-transport buttons remain separate');
   const buttonColour=await page.locator('#btnTransportsMission').evaluate(e=>getComputedStyle(e).backgroundColor);
   assert.equal(buttonColour,'rgb(205, 234, 255)','The existing light-blue transport button is preserved');
+  await page.evaluate(()=>{
+    window.CP_LONG_DISTANCE_FETCHERS={FlixBus:async()=>[]};
+  });
   await page.locator('#btnTransportsMission').click();
   await page.locator('#cpTransportMissionDetails').waitFor();
   const providerStatus=page.locator('#cpTransportMissionDetails [data-long-distance-providers]');
   await providerStatus.waitFor();
   assert.match(await providerStatus.innerText(),/FlixBus et BlaBlaCar/);
   assert.match(await providerStatus.innerText(),/Aucun départ ni tarif confirmé/);
+  const longDistanceStatus=page.locator('[data-long-distance-search="Retour"]');
+  await page.waitForFunction(()=>document.querySelector('[data-long-distance-search="Retour"]')?.textContent.includes('fournisseur(s) ayant répondu'));
+  assert.match(await longDistanceStatus.innerText(),/0 proposition\(s\) non vérifiée\(s\), 1\/3 fournisseur/);
+
 
   const sibraReference=page.locator('#cpSibraFareReference');
   await sibraReference.locator('summary').click();
