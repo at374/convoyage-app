@@ -127,7 +127,7 @@ test('walking plus unpriced bus does not imply a verified zero-euro subtotal',()
  const result=fare([{mode:'wa_wal'},{mode:'pt_pub_bus',provider:'Bus'}]);
  assert.equal(result.knownSubtotalEUR,0);
  assert.equal(result.unknownLegCount,1);
- assert.match(describe(result),/^Total indisponible : dépassement de précision du calcul/);
+ assert.match(describe(result),/^Total inconnu/);
  assert.doesNotMatch(describe(result),/Sous-total vérifié/);
 });
 
