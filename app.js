@@ -2269,7 +2269,10 @@
         if(!regionalActive()||!junctionLongDistanceResult||
             !Number.isFinite(Date.parse(deliveryDate||''))||
             !Number.isFinite(Date.parse(next?.pickup_start||''))||
-            !window.CPTransportLongDistanceSearch?.compareWithRegional)return;
+            !window.CPTransportLongDistanceSearch?.compareWithRegional){
+          junctionCombined.remove();
+          return;
+        }
         const result=window.CPTransportLongDistanceSearch.compareWithRegional(
           junctionRegionalJourneys,junctionLongDistanceResult,{
             direction:'outbound',earliestDeparture:deliveryDate,
