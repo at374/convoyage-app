@@ -90,3 +90,12 @@ test('overlapping timed legs never certify a journey',()=>{
   ]};
  assert.equal(evaluate(verified,{deadline:'2026-11-04T10:15:00+01:00'}).feasible,false);
 });
+
+test('multiple untimed legs cannot certify a multimodal connection',()=>{
+ const verified={...trip,exactOrigin:true,exactDestination:true,accessVerified:true,
+  legs:[{serviceConfirmed:true},{serviceConfirmed:true}]};
+ const opts={deadline:'2026-11-04T10:15:00+01:00'};
+ assert.equal(evaluate(verified,opts).feasible,false);
+ assert.equal(evaluate(verified,opts).displayStatus,'Transport non confirmé — vérifiez vous-même');
+ assert.equal(evaluate({...verified,legs:[{serviceConfirmed:true}]},opts).feasible,true);
+});
