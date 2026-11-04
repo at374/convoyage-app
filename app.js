@@ -2600,25 +2600,7 @@
           tripgo.plan({...task,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt}).then(answer=>{
             if(!regionalActive()||signal.aborted||!status.isConnected)return;
             const shown=(Array.isArray(answer?.itineraries)?answer.itineraries:[]).filter(result=>Array.isArray(result?.legs)&&result.legs.length>0&&result.legs.every(leg=>leg&&typeof leg==='object'&&Number.isFinite(Date.parse(leg.departure))&&Number.isFinite(Date.parse(leg.arrival))&&Date.parse(leg.arrival)>=Date.parse(leg.departure))&&result.legs.every((leg,index)=>index===0||Date.parse(leg.departure)>=Date.parse(result.legs[index-1].arrival))&&Number.isFinite(Date.parse(result.departure))&&Number.isFinite(Date.parse(result.arrival))&&Date.parse(result.arrival)>=Date.parse(result.departure)&&Date.parse(result.legs[0].departure)===Date.parse(result.departure)&&Date.parse(result.legs[result.legs.length-1].arrival)===Date.parse(result.arrival)&&(!task.latestArrival||Date.parse(result.arrival)<=Date.parse(task.latestArrival))&&result.evidence&&Array.isArray(result.evidence.missing)&&Number.isFinite(result.evidence.startGapMeters)&&result.evidence.startGapMeters>=0&&Number.isFinite(result.evidence.endGapMeters)&&result.evidence.endGapMeters>=0&&Array.isArray(result.alerts));
-            // Rank only provider-supplied candidates. Unknown fares must never
-            // create a fictional "cheapest" option.
-            const tripgoRanked=window.CPTransportRanking?.rank?
-              window.CPTransportRanking.rank(shown,{}):[];
-            const tripgoChoices=tripgoRanked.map(choice=>({label:choice.label,journey:choice.journey}));
-            // Ranking labels can collapse onto one journey when fares are unknown.
-            // Preserve up to three distinct dated alternatives instead of hiding
-            // other available departures returned by TripGo.
-            const tripgoIdentity=journey=>JSON.stringify([journey.departure,journey.arrival,
-              (journey.legs||[]).map(leg=>[leg.mode,leg.provider,leg.line,leg.departure,leg.arrival])]);
-            const displayedTripgo=new Set(tripgoChoices.map(choice=>tripgoIdentity(choice.journey)));
-            for(const journey of shown){
-              if(tripgoChoices.length>=3)break;
-              const identity=tripgoIdentity(journey);
-              if(!displayedTripgo.has(identity)){
-                displayedTripgo.add(identity);
-                tripgoChoices.push({label:'Autre proposition',journey});
-              }
-            }
+            const tripgoChoices=tripgo.selectChoices(shown,window.CPTransportRanking,3);
             status.textContent=label+' TripGo : '+(tripgoChoices.length?tripgoChoices.length+' proposition(s) affichée(s) sur '+shown.length+' trajet(s) daté(s), marches comprises.':'aucune proposition compatible retournée ; cela ne prouve pas l’absence de transport.');
             for(const {label:choiceLabel,journey:result} of tripgoChoices){
               const line=document.createElement('p');line.textContent=choiceLabel+' · '+(Array.isArray(result.providerTags)&&result.providerTags.length?'Opérateurs identifiés : '+result.providerTags.join(' + ')+' · ':'')+formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString())+' · '+
