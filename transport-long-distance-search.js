@@ -22,9 +22,11 @@ async function searchLongDistance(query,fetchers={}){
   try{
    const response=await fetch({...input});
    if(!Array.isArray(response))return {provider,status:'invalid-response',offers:[]};
-   // Provider integrations must enforce their requested local service date.
-   // UTC date filtering here would wrongly discard departures near midnight.
-   const offers=adapters.adaptLongDistance(response,provider);
+   // Compare the provider's explicit local departure date, never its UTC date:
+   // an overnight journey can cross midnight without changing service day.
+   const onRequestedDay=response.filter(item=>item&&typeof item==='object'&&
+    typeof item.departure==='string'&&item.departure.slice(0,10)===input.date);
+   const offers=adapters.adaptLongDistance(onRequestedDay,provider);
    return {provider,status:'candidates-unverified',offers};
   }catch(_){return {provider,status:'provider-error',offers:[]};}
  }));
