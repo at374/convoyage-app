@@ -25,6 +25,12 @@ test('invalid mission dates fail closed',()=>{
   assert.deepEqual(rank([trip],{direction:'return',deadline}),[]);
  }
 });
+test('ISO timezone offsets beyond fourteen hours are rejected',()=>{
+ for(const invalid of ['2026-11-04T09:00:00+14:01','2026-11-04T09:00:00+15:00','2026-11-04T09:00:00-14:30']){
+  assert.equal(evaluate({...trip,departure:invalid},{direction:'return'}).durationMinutes,null);
+ }
+ assert.notEqual(evaluate({...trip,departure:'2026-11-04T09:00:00+14:00'},{direction:'return'}).durationMinutes,null);
+});
 test('unverified and fractional-cent prices are not ranked as cheapest',()=>{
  const bad={...trip,priceEUR:1,fareVerified:false};
  const fractional={...trip,id:'fractional',priceEUR:0.001};
