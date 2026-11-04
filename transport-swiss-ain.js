@@ -141,7 +141,7 @@ function missionPickupCandidates(files,index,countryByStop,date,{earliestDepartu
  const result=missionBorderSegments(files,index,countryByStop,date,{
   earliestDeparture,latestArrival:clock(latestArrival),...limits});
  return {...result,pickupBufferMinutes:bufferMinutes,pickupTime,
-  accessVerified:accessMinutes!==undefined,accessMinutes:accessMinutes??null,serviceConfirmed:false};
+  accessVerified:false,accessDurationProvided:accessMinutes!==undefined,accessMinutes:accessMinutes??null,serviceConfirmed:false};
 }
 function missionBorderSegments(files,index,countryByStop,date,{earliestDeparture,latestArrival,...limits}={}){
  const start=gtfsMinutes(earliestDeparture),end=gtfsMinutes(latestArrival);
