@@ -136,3 +136,15 @@ test('half-specified transfer coordinates cannot certify a connection',()=>{
  assert.equal(evaluate({...verified,legs:[{...verified.legs[0],toPoint:undefined},{...verified.legs[1],fromPoint:point}]},opts).feasible,false);
  assert.equal(evaluate({...verified,legs:[verified.legs[0],{...verified.legs[1],fromPoint:point}]},opts).feasible,true);
 });
+
+test('zero-minute interchange requires explicit provider proof',()=>{
+ const candidate={...trip,exactOrigin:true,exactDestination:true,accessVerified:true,
+  legs:[
+   {provider:'SIBRA',departure:'2026-11-04T09:00:00+01:00',arrival:'2026-11-04T09:30:00+01:00',serviceConfirmed:true},
+   {provider:'SIBRA',departure:'2026-11-04T09:30:00+01:00',arrival:'2026-11-04T10:00:00+01:00',serviceConfirmed:true}
+  ]};
+ const opts={deadline:'2026-11-04T10:15:00+01:00'};
+ assert.equal(evaluate(candidate,opts).feasible,false);
+ assert.equal(evaluate({...candidate,transferVerified:true},opts).feasible,true);
+ assert.equal(evaluate({...candidate,legs:[candidate.legs[0],{...candidate.legs[1],departure:'2026-11-04T09:31:00+01:00'}]},opts).feasible,true);
+});
