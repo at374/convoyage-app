@@ -131,3 +131,13 @@ test('TripGo parser refuses contradictory mission windows even for cached or fix
  assert.throws(()=>api.parse(clone(),{...options,latestArrival:'2026-11-02T09:59:59+01:00'}),/Fenêtre TripGo invalide/);
  assert.throws(()=>api.parse(clone(),{...options,arriveBy:true,latestArrival:'2026-11-02T10:00:01+01:00'}),/Fenêtre TripGo invalide/);
 });
+
+test('TripGo rejects zero-duration scheduled vehicle rides while preserving independent services',()=>{
+ const data=clone();
+ const eligible=data.groups[0].trips.find(t=>t.depart*1000>=Date.parse(options.when)&&t.segments.length>1);
+ assert.ok(eligible);
+ eligible.segments[1].endTime=eligible.segments[1].startTime;
+ const results=api.parse(data,options).itineraries;
+ assert.equal(results.length,1,'an impossible instantaneous vehicle ride must not appear');
+ assert.equal(results[0].legs[1].line,'FlixBus 1789');
+});
