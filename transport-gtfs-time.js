@@ -38,6 +38,9 @@ function instant(value){
  if(typeof value==='number'&&Number.isFinite(value)&&Math.abs(value)<=8640000000000000)return value;
  if(typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})$/.test(value)){
   validDate(value.slice(0,10));
+  const offset=value.match(/([+-])(\d{2}):(\d{2})$/);
+  if(offset&&(Number(offset[2])>14||(Number(offset[2])===14&&Number(offset[3])!==0)||Number(offset[3])>59))
+   throw new Error('Invalid mission timezone offset');
   const clock=value.slice(11,19).split(/[Z+.-]/)[0].split(':').map(Number);
   if(clock[0]>23||clock[1]>59||(clock[2]??0)>59)throw new Error('Invalid mission clock');
   const parsed=Date.parse(value);if(Number.isFinite(parsed))return parsed;
