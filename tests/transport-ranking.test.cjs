@@ -41,3 +41,7 @@ assert.equal(evaluate(timed,{deadline}).feasible,true,'Valid timed connection re
 assert.equal(evaluate({...timed,legs:[timed.legs[0],{...timed.legs[1],departure:'2026-11-02T07:29:00+01:00'}]},{deadline}).feasible,false,'Overlapping confirmed services cannot be feasible');
 assert.equal(evaluate({...timed,legs:[timed.legs[0],{...timed.legs[1],arrival:'2026-11-02T08:20:00+01:00'}]},{deadline}).feasible,false,'Leg cannot finish after displayed arrival');
 assert.equal(evaluate({...timed,legs:[{...timed.legs[0],departure:'invalid'},timed.legs[1]]},{deadline}).feasible,false,'Invalid leg time cannot certify feasibility');
+
+assert.equal(evaluate({...timed,legs:[timed.legs[0],{serviceConfirmed:true}]},{deadline}).feasible,false,'Partially timed itinerary cannot confirm an unknown connection');
+assert.equal(evaluate({...timed,legs:[{serviceConfirmed:true},timed.legs[1]]},{deadline}).feasible,false,'Missing first leg time cannot confirm connection');
+assert.equal(evaluate(base,{deadline}).feasible,true,'Legacy all-untimed itinerary remains compatible');
