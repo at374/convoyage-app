@@ -25,8 +25,11 @@ async function searchLongDistance(query,fetchers={}){
    if(!Array.isArray(response))return {provider,status:'invalid-response',offers:[]};
    // Compare the provider's explicit local departure date, never its UTC date:
    // an overnight journey can cross midnight without changing service day.
+   const normalizePlace=value=>typeof value==='string'?value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('fr-FR'):'';
    const onRequestedDay=response.filter(item=>item&&typeof item==='object'&&
-    typeof item.departure==='string'&&item.departure.slice(0,10)===input.date);
+    typeof item.departure==='string'&&item.departure.slice(0,10)===input.date&&
+    normalizePlace(item.from)===normalizePlace(input.from)&&
+    normalizePlace(item.to)===normalizePlace(input.to));
    const offers=adapters.adaptLongDistance(onRequestedDay,provider);
    return {provider,status:'candidates-unverified',offers};
   }catch(_){return {provider,status:'provider-error',offers:[]};}
