@@ -116,7 +116,7 @@
         serviceConfirmed:false,verifiedPriceEUR:null,fareVerified:false,fareSource:null,
         fareValidFrom:null,fareValidUntil:null,passAccepted:false,passProduct:null,
         passEligibilityVerified:false,passEligibilitySource:null,passValidFrom:null,passValidUntil:null};
-      return [{id:provider.toLowerCase().replace(/\\s+/g,'-')+'-candidate-'+index,
+      return [{id:provider.toLowerCase().replace(/\s+/g,'-')+'-candidate-'+index,
         provider,departure,arrival,legs:[leg],priceEUR:null,exactOrigin:false,
         exactDestination:false,accessVerified:false,serviceConfirmed:false,
         source:provider+' — offre externe non confirmée',fareStatus:'Prix non vérifié',
