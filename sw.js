@@ -1,6 +1,6 @@
 // Convoyage Ultra — service worker de l'application : met en cache l'interface (ouverture hors ligne).
 // Les données des missions ne passent jamais par ce cache (elles sont gardées par l'application).
-const CACHE = 'cp-app-android-gtfs-validation-20261104-v2';
+const CACHE = 'cp-app-android-gtfs-validation-20261104-v3';
 const FICHIERS = ['./', 'index.html', 'style.css', 'app.js?v=tripgo-walking-distance-20261102', 'sncf-fallback.js?v=sncf-refresh-20261031', 'api.js', 'calc.js', 'edition.js', 'geo.js', 'retours.js', 'agenda.js', 'planning.js', 'filtres.js', 'facturation.js', 'etat.js', 'config.js', 'plateformes.js', 'routes-pricing.js', 'sanef-gps-protection.js', 'sibra-feed.js?v=325-json-timeout', 'sibra-planner.js', 'transport-blablacar-realtime.js?v=bus-relay-20261031', 'transport-tripgo.js?v=bus-relay-20261031', 'regional-routing.js?v=bus-relay-20261031', 'swiss-transport-api.js?v=350-response-cap', 'transport-gtfs-worker-client.js', 'transport-gtfs-agenda.js?v=android-gtfs-validation-20261104', 'transport-walking.js', 'transport-gtfs-worker.js', 'transport-gtfs-time.js', 'transport-gtfs-federation.js', 'transport-gtfs-loader.js', 'transport-gtfs-index.js', 'transport-catalogue.js', 'transport-fares.js?v=fares-leg-labels-20261102', 'transport-sibra-pass.js?v=sibra-pass-y51-20261031', 'transport-y51-fares.js?v=y51-fares-20261031', 'transport-ranking.js?v=ranking-min5-20261031', 'transport-adapters.js?v=adapters-20261030', 'routes-ui.js', 'admin.js', 'manifest.webmanifest', 'icones/icone-192.png', 'icones/icone-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FICHIERS.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== CACHE && x !== 'cp-prefs').map(x => caches.delete(x)))).then(() => self.clients.claim())); });
@@ -15,7 +15,7 @@ self.addEventListener('fetch', e => {
     return;
   }
   // Réseau d'abord (nouvelle version), cache si hors ligne.
-  e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(r => { const copie = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copie)); return r; }).catch(() => caches.match(e.request).then(r => r || (e.request.mode === 'navigate' ? caches.match('index.html') : Response.error()))));
+  e.respondWith(fetch(e.request, { cache: 'no-cache' }).then(r => { if (r.ok && r.type !== 'opaque') { const copie = r.clone(); e.waitUntil(caches.open(CACHE).then(c => c.put(e.request, copie)).catch(() => {})); } return r; }).catch(() => caches.match(e.request).then(r => r || (e.request.mode === 'navigate' ? caches.match('index.html') : Response.error()))));
 });
 // V77 : notification reçue alors que l'application est fermée (message chiffré, déchiffré par le téléphone).
 // V160 : son des notifications réglable (préférence écrite par la page dans le cache cp-prefs).
