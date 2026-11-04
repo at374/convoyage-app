@@ -542,3 +542,15 @@ test('official Cars Région Ain GTFS is available as an Agenda resource',()=>{
  assert.equal(agenda.selected(ain,{from:{lat:46.25,lon:5.6},to:{lat:47.1,lon:6.5}}),false);
 });
 
+
+test('western Ain journey chooses Ain GTFS despite Haute-Savoie overlap',async()=>{
+ const target=panel(),task={label:'Aller',from:{lat:46.20,lon:5.6},to:{lat:46.25,lon:5.7},
+ earliestDeparture:'2026-11-04T09:00:00+01:00'};
+ let loaded=null;
+ const instance=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+  load:async resource=>{loaded=resource;return {source:{network:resource.network},counts:{stops:0}};},
+  search:async()=>({rows:[]}),dispose(){}})});
+ await instance.done;
+ assert.equal(loaded?.id,'oura-ain');
+ instance.dispose();
+});
