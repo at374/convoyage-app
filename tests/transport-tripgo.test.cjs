@@ -335,3 +335,14 @@ test('TripGo ranking maps cloned service alternatives back to provider journeys'
  assert.equal(choices[1].label,'Compromis');
  assert.equal(choices[1].journey,first);
 });
+
+
+test('TripGo selection preserves distinct GPS boarding and alighting points',()=>{
+ const first=api.parse(clone(),options).itineraries[0];
+ for(const field of ['fromPoint','toPoint']){
+  const different={...first,legs:first.legs.map((leg,index)=>index===1?{...leg,[field]:{...leg[field],lat:leg[field].lat+0.0001}}:{...leg})};
+  const choices=api.selectChoices([first,different],null,3);
+  assert.equal(choices.length,2,field+' must distinguish precise boarding locations');
+  assert.equal(choices[1].journey,different);
+ }
+});
