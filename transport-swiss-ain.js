@@ -69,7 +69,9 @@ function borderSegments(index,countryByStop,{maxTrips=100000,maxSegments=10000}=
    if(!a.stop_id||!b.stop_id||a.stop_id===b.stop_id||
       !(Number(b.stop_sequence)>Number(a.stop_sequence))||
       (a.pickup_type!==undefined&&a.pickup_type!==''&&a.pickup_type!=='0')||
-      (b.drop_off_type!==undefined&&b.drop_off_type!==''&&b.drop_off_type!=='0'))continue;
+      (b.drop_off_type!==undefined&&b.drop_off_type!==''&&b.drop_off_type!=='0')||
+      gtfsMinutes(a.departure_time)===null||gtfsMinutes(b.arrival_time)===null||
+      gtfsMinutes(b.arrival_time)<gtfsMinutes(a.departure_time))continue;
    if(!((fromCountry==='CH'&&toCountry==='FR')||(fromCountry==='FR'&&toCountry==='CH')))continue;
    if(segments.length>=maxSegments){truncated=true;break;}
    const route=index.routeById.get(trip.route_id);
