@@ -131,6 +131,8 @@ function instant(value){
  return Date.parse(value);
 }
 function assessJourney(row,task,walks){
+ if(!row||typeof row!=='object'||!task||typeof task!=='object'||!walks||typeof walks!=='object')
+  return {walks:walks??null,serviceConfirmed:false,accessVerified:false,transferVerified:false,realizable:false,status:'unknown'};
  const calculated=route=>route?.status==='calculated'&&Number.isFinite(route.durationSeconds)&&route.durationSeconds>=0&&route.durationSeconds<=86400;
  const matches=(route,from,to)=>calculated(route)&&point(route.from)&&point(route.to)&&point(from)&&point(to)&&
   distance(route.from,from)<0.5&&distance(route.to,to)<0.5;
