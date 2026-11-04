@@ -31,7 +31,9 @@
     const price=item.fareVerified===false||item.priceVerified===false?null:finite(item.priceEUR)&&item.priceEUR>=0&&Number.isSafeInteger(Math.round(item.priceEUR*100))&&Math.abs(item.priceEUR*100-Math.round(item.priceEUR*100))<1e-7?item.priceEUR:null;
     const minimumMargin=opts.exactGPSReliable===true&&item.exactDestination===true&&item.accessVerified===true?5:15;
     const margin=finite(opts.marginMinutes)?Math.max(minimumMargin,opts.marginMinutes):minimumMargin;
-    const deadline=validTime(opts.deadline)?Date.parse(opts.deadline):NaN;
+    const deadlineProvided=opts.deadline!==undefined&&opts.deadline!==null;
+    const deadlineValid=!deadlineProvided||validTime(opts.deadline);
+    const deadline=deadlineProvided&&deadlineValid?Date.parse(opts.deadline):NaN;
     const slack=valid&&Number.isFinite(deadline)?Math.floor((deadline-arrival)/60000):null;
     // Confirmed services still need a chronological, connectable itinerary.
     // Legacy legs without times retain their existing service-confirmation semantics.
@@ -68,7 +70,7 @@
     // A return journey has no pickup deadline; it still requires verified
     // door-to-door legs, access and a valid chronological itinerary.
     const returnJourney=opts.direction==='return';
-    const feasible=valid&&allVerified&&doorToDoor&&item.accessVerified===true&&
+    const feasible=valid&&deadlineValid&&allVerified&&doorToDoor&&item.accessVerified===true&&
       (returnJourney?(!Number.isFinite(deadline)||slack>=0):
         Number.isFinite(deadline)&&slack>=margin);
     return {...item,priceEUR:price,durationMinutes:valid?Math.ceil((arrival-departure)/60000):null,
@@ -79,6 +81,8 @@
     const enriched=(Array.isArray(items)?items:[]).filter(x=>x&&typeof x==='object'&&!Array.isArray(x)).map(x=>evaluate(x,opts));
     const valid=enriched.filter(x=>{
       if(x.durationMinutes===null)return false;
+      // A malformed supplied deadline must not become an unrestricted search.
+      if(opts.deadline!=null&&!validTime(opts.deadline))return false;
       // Return legs have no pickup margin. A supplied deadline still bounds arrival.
       if(opts.direction==='return')return x.slackMinutes===null||x.slackMinutes>=0;
       const minimum=opts.exactGPSReliable===true&&x.exactDestination===true&&x.accessVerified===true?5:15;
