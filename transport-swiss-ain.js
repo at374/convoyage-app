@@ -101,7 +101,7 @@ function datedBorderSegments(files,index,countryByStop,date,options={}){
 // Match timetable candidates to the mission's local service-day clock.
 // GTFS permits times beyond 24:00 for services continuing after midnight.
 function gtfsMinutes(value){
- if(typeof value!=='string'||!/^\\d{1,3}:[0-5]\\d:[0-5]\\d$/.test(value))return null;
+ if(typeof value!=='string'||!/^\d{1,3}:[0-5]\d:[0-5]\d$/.test(value))return null;
  const [h,m,s]=value.split(':').map(Number);
  return h<=72?h*60+m+s/60:null;
 }
