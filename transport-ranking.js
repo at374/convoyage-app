@@ -69,6 +69,7 @@
       slackMinutes:slack,feasible,displayStatus:feasible?'Réalisable':'Transport non confirmé — vérifiez vous-même'};
   }
   function rank(items,opts={}){
+    if(!opts||typeof opts!=='object')opts={};
     const enriched=(Array.isArray(items)?items:[]).filter(x=>x&&typeof x==='object'&&!Array.isArray(x)).map(x=>evaluate(x,opts));
     const valid=enriched.filter(x=>x.durationMinutes!==null&&
       (x.slackMinutes===null||x.slackMinutes>=(finite(opts.marginMinutes)?Math.max(opts.marginMinutes,opts.exactGPSReliable===true&&x.exactDestination===true&&x.accessVerified===true?5:15):(opts.exactGPSReliable===true&&x.exactDestination===true&&x.accessVerified===true?5:15))));
