@@ -16,12 +16,14 @@
 // deja presente pour CALAIS<->Saint-Omer (2,8/4,4). Supprime comme doublon pur,
 // aucun prix perdu ni modifie.
 //
-// "VALLEE DE LA HEM" reste volontairement non resolu : ses prix vers les memes
-// destinations que Saint-Omer (AIRE SUR LA LYS, LILLERS, BETHUNE...) different de
-// Saint-Omer avec un ECART NON CONSTANT (ex. +1,2/+4,0 vers Aire-sur-la-Lys mais
-// +1,7/+5,0 vers Lillers) -- preuve que c'est un point physique REEL et DISTINCT
-// (pas un doublon de Saint-Omer), mais aucune source GPS fiable trouvee (ni
-// Google Places, ni recherche web) pour le localiser avec certitude.
+// "VALLEE DE LA HEM" : confirme point physique REEL et DISTINCT de Saint-Omer (ses
+// prix vers les memes destinations -- AIRE SUR LA LYS, LILLERS, BETHUNE... --
+// different avec un ECART NON CONSTANT, ex. +1,2/+4,0 vers Aire-sur-la-Lys mais
+// +1,7/+5,0 vers Lillers). GPS resolu le 5 nov. 2026 via le referentiel officiel
+// data.gouv.fr (gares-peage-officiel.json, MTE 2025) : 4 points ("Entree"/"Sortie"
+// x "Sens 1"/"Sens 2") a ~50.820,2.063, a plus de 13km de tout point deja connu --
+// largement au-dela des deux seuils de prudence (jumelle 0,06km, barriere 0,3km).
+// Voir tests/peages-audit-officiel-data-gouv-gaps.test.cjs pour la methode.
 //
 // Run: node --test tests/peages-saint-omer-b-doublon-fix.test.cjs
 const assert = require('node:assert/strict');
@@ -40,9 +42,10 @@ test('the canonical "Saint-Omer" <-> CALAIS relation (the one real value SAINT O
   assert.equal(p[3], 4.4);
 });
 
-test('"VALLEE DE LA HEM" was deliberately left without GPS (confirmed distinct real point, no reliable source found)', () => {
-  const gareNames = new Set(overlay.gares.map(g => g.nom));
-  assert.equal(gareNames.has('VALLEE DE LA HEM'), false);
+test('"VALLEE DE LA HEM" now has a verified GPS (data.gouv.fr official referential), clear of every existing point', () => {
+  const g = overlay.gares.find(x => x.nom === 'VALLEE DE LA HEM');
+  assert.ok(g, 'VALLEE DE LA HEM should now have a gare entry');
+  assert.ok(g.points.length >= 1);
   const stillDangling = overlay.paires.some(p => p[0] === 'VALLEE DE LA HEM' || p[1] === 'VALLEE DE LA HEM');
-  assert.ok(stillDangling, 'VALLEE DE LA HEM should still be present, unmerged');
+  assert.ok(stillDangling, 'VALLEE DE LA HEM paires should still be present');
 });
