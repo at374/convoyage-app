@@ -113,7 +113,7 @@ test('actual Agenda call passes mission windows and triggers regional refresh wh
  const current={o:{lat:45.9,lng:6.1,precision:'adresse'},d:{lat:45.67,lng:6.39,precision:'gps'}};
  const next={o:{lat:45.8,lng:6.2,precision:'ville'},pickup_start:'2026-11-02T15:00:00+01:00'};
  const context={window:{CPGTFSAgenda:{mount:(panel,options)=>{calls.push(options);return {dispose(){}};}},CPGTFSWorker:{}},
-  panel,bt:button,m:current,next,etat:{reglages:{domicile_lat:45.9,domicile_lng:6.1}},
+  panel,sourcePanel:panel,localCards:{},renderLocalCards:()=>{},bt:button,m:current,next,etat:{reglages:{domicile_lat:45.9,domicile_lng:6.1}},
   G:{coordonnees:(m,side)=>m[side==='origin'?'o':'d']},
   transportAddressPoint:p=>p&&['adresse','gps'].includes(p.precision),
   pickupDate:'2026-11-02T10:00:00+01:00',deliveryDate:'2026-11-02T13:00:00+01:00',securityMarginMin:30,

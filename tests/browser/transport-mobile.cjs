@@ -202,8 +202,9 @@ async function run(){
   assert.equal(await page.locator('#btnVol').count(),1,'Car and public-transport buttons remain separate');
   const buttonColour=await page.locator('#btnTransportsMission').evaluate(e=>getComputedStyle(e).backgroundColor);
   assert.equal(buttonColour,'rgb(205, 234, 255)','The existing light-blue transport button is preserved');
-  await page.locator('#btnTransportsMission').click();
   await page.locator('#cpTransportMissionDetails').waitFor();
+  assert.equal(await page.locator('#cpTransportSettings').evaluate(node=>node.open),false,'Transport results start automatically with settings collapsed');
+  await page.locator('#cpTransportSettings > summary').click();
   const sibraReference=page.locator('#cpSibraFareReference');
   await sibraReference.locator('summary').click();
   assert.match(await sibraReference.innerText(),/2,50 €.*2,00 €/);
@@ -216,7 +217,7 @@ async function run(){
   await page.screenshot({path:path.join(output,'mobile-sibra-fares.png')});
   await sibraReference.locator('summary').click();
   await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
-  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();
+  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await page.locator('#cpTransportMissionDetails').waitFor();
   const release=async number=>{
    await page.waitForFunction(()=>true);
@@ -224,13 +225,15 @@ async function run(){
    for(const resolve of gates.get(number))resolve();gates.delete(number);
   };
   await release('14');
-  await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.innerText.includes('Retour régional'));
+  await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('Retour régional'));
   await release('16');
+  await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   await page.getByText(/Jonction régionale : 4 proposition/).waitFor();
   await release('12');
-  await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.innerText.includes('Aller régional'));
+  await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('Aller régional'));
   await page.getByText('Réseau de test — horaires aux arrêts',{exact:true}).waitFor();
   await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('TEST'));
+  await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   const text=await page.locator('#cpTransportMissionDetails').innerText();
   assert.match(text,/C11/);assert.match(text,/Crolles Mairie/);assert.match(text,/minimum : 15 min/);assert.doesNotMatch(text,/\bRéalisable\b/);
   assert.ok(requests.some(r=>r.arriveBy==='true'&&r.time==='08:45'),'Outbound applies mission margin');
@@ -246,6 +249,12 @@ async function run(){
    return !!document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('#feuille');
   });
   assert.equal(await launcherCoveredBySheet(),true,'Mission sheet covers the background install launcher');
+  await page.locator('#cpTransportSettings').evaluate(node=>{node.open=false;});
+  await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=false;}));
+  await page.locator('.cp-transport-hero').scrollIntoViewIfNeeded();
+  await page.screenshot({path:path.join(output,'mobile-transport-workspace.png')});
+  await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
+  await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   const comparisonChecks=[];
   for(const [direction,heading] of [['aller','Aller · comparer'],['jonction','Jonction mission · comparer'],['retour','Retour · comparer']]){
    const title=comparison.getByRole('heading',{name:heading,exact:true});
@@ -275,15 +284,17 @@ async function run(){
   assert.ok(workers.length>0,'The actual dedicated browser worker is used');
   await page.locator('[data-gtfs-agenda]').scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(output,'mobile-transports.png')});
+  await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   await page.getByText(/Jonction régionale : 4 proposition/).scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(output,'mobile-regional.png')});
   assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'No horizontal overflow in the mobile mission sheet');
   const before=requests.length;
-  await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();
+  await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
+  await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   await page.getByText(/Jonction régionale : 4 proposition/).waitFor();
   assert.ok(requests.length>before,'Explicit refresh issues new regional requests');
   holdSibra=true;  holdRegional=true;const beforeCloseRequests=requests.length,abortedBefore=abortedRequests.length;
-  await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();
+  await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   await until(()=>requests.length>=beforeCloseRequests+3,'Three regional refresh requests must be in flight');
   await until(()=>sibraGates.length>0,'A daily SIBRA response must be in flight before closing');
   await page.locator('#fermer').click();
@@ -305,11 +316,11 @@ async function run(){
   holdRegional=false;railScenario=true;
   await page.goto(origin+'?rail=1',{waitUntil:'domcontentloaded'});
   await page.locator('.mission').first().click();
-  await page.locator('#btnTransportsMission').click();
+  await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await release('12');
-  const rail=page.getByText(/^Aller — secours SNCF, horaires théoriques du flux/);
+  const rail=page.getByRole('heading',{name:'Aller SNCF · comparer (gare à gare)',exact:true}).locator('..');
   await rail.waitFor();
-  const railText=await rail.innerText();
+  const railText=await rail.textContent();
   assert.match(railText,/proposition\(s\) de gare à gare/);
   assert.match(railText,/Annecy/);assert.match(railText,/Grenoble/);
   assert.match(railText,/Transport non confirmé/);assert.doesNotMatch(railText,/Réalisable/);
@@ -331,9 +342,9 @@ async function run(){
   // Configure the new client through the real UI, using a dummy key and public fixture.
   railScenario=false;tripgoScenario=true;
   await page.goto(origin+'?tripgo=1',{waitUntil:'domcontentloaded'});
-  await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();
+  await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
-  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();
+  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await page.getByLabel('Clé TripGo privée sur cet appareil').fill('a'.repeat(32));
   await page.getByRole('button',{name:'Activer TripGo sur cet appareil',exact:true}).click();
   await release('14');
@@ -384,9 +395,9 @@ async function run(){
   page.on('worker',worker=>{workers.push(worker.url());activeWorkers.add(worker);worker.on('close',()=>activeWorkers.delete(worker));});
   await page.clock.install({time:new Date(siriFixture.testNow)});
   await page.goto(origin+'?buslive=1',{waitUntil:'domcontentloaded'});
-  await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();
+  await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await page.locator('#cpTransportPlannedReturn').fill('2026-10-31T10:00');
-  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();
+  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await page.getByLabel('Clé TripGo privée sur cet appareil').fill('a'.repeat(32));
   await page.getByRole('button',{name:'Activer TripGo sur cet appareil',exact:true}).click();
   await release('14');await page.getByText(/circulation observée par l’opérateur/).waitFor();
@@ -406,9 +417,9 @@ async function run(){
   page.on('worker',worker=>{workers.push(worker.url());activeWorkers.add(worker);worker.on('close',()=>activeWorkers.delete(worker));});
   await page.clock.install({time:new Date('2026-11-02T07:00:00Z')});
   await page.goto(origin+'?sibrapass=1',{waitUntil:'domcontentloaded'});
-  await page.locator('.mission').filter({hasText:'Grenoble'}).first().click();await page.locator('#btnTransportsMission').click();
+  await page.locator('.mission').filter({hasText:'Grenoble'}).first().click();await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
-  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();
+  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await release('14');await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('4'));
   await page.locator('#cpSibraFareReference summary').click();
   await page.locator('#cpSibraPassFrom').fill('2026-01-01');await page.locator('#cpSibraPassThrough').fill('2026-12-31');
@@ -430,9 +441,9 @@ async function run(){
   page.on('worker',worker=>{workers.push(worker.url());activeWorkers.add(worker);worker.on('close',()=>activeWorkers.delete(worker));});
   await page.clock.setFixedTime(new Date('2026-10-31T08:00:00+01:00'));
   await page.goto(origin+'?regionalpass=1',{waitUntil:'domcontentloaded'});
-  await page.locator('.mission').filter({hasText:'Duingt'}).first().click();await page.locator('#btnTransportsMission').click();
+  await page.locator('.mission').filter({hasText:'Duingt'}).first().click();await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
-  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();
+  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await release('14');await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('Y51'));
   await page.locator('#cpSibraFareReference summary').click();
   await page.locator('#cpSibraPassFrom').fill('2026-01-01');await page.locator('#cpSibraPassThrough').fill('2026-12-31');
@@ -449,9 +460,9 @@ async function run(){
   page.on('worker',worker=>{workers.push(worker.url());activeWorkers.add(worker);worker.on('close',()=>activeWorkers.delete(worker));});
   await page.clock.setFixedTime(new Date('2026-10-31T08:00:00+01:00'));
   await page.goto(origin+'?regionalpass=1&fare=1',{waitUntil:'domcontentloaded'});
-  await page.locator('.mission').filter({hasText:'Albertville'}).first().click();await page.locator('#btnTransportsMission').click();
+  await page.locator('.mission').filter({hasText:'Albertville'}).first().click();await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
-  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();
+  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await release('14');
   await page.waitForFunction(()=>document.querySelector('[data-y51-fare-reference]')?.innerText.includes('8,90 €'));
   const fareRef=page.locator('[data-y51-fare-reference]').first();

@@ -19,9 +19,9 @@ const from={lat:45.1914,lng:5.7143,precision:'adresse'},to={lat:45.28364,lng:5.8
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
 function setup(plan,fetcher){
  const panel=new Element();panel.root=true;
- const button={dataset:{}},sheet={hidden:false},current={o:{...from,precision:'ville'},d:{...from}},next={o:{...to,precision:'ville'},pickup_start:'2026-11-02T13:00:00+01:00'};
+ const button={dataset:{},click(){}},sheet={hidden:false},current={o:{...from,precision:'ville'},d:{...from}},next={o:{...to,precision:'ville'},pickup_start:'2026-11-02T13:00:00+01:00'};
  const routing={...api,...(plan?{plan}:{})};
- const context={AbortController,window:{CPRegionalRouting:routing},panel,bt:button,document:{createElement:()=>new Element()},m:current,next,
+ const context={AbortController,window:{CPRegionalRouting:routing},panel,sourcePanel:panel,transportDestinations:{Aller:panel,Retour:panel,Jonction:panel},bt:button,document:{createElement:()=>new Element()},m:current,next,
   etat:{reglages:{domicile_lat:to.lat,domicile_lng:to.lng}},G:{coordonnees:(mission,side)=>mission?.[side==='origin'?'o':'d']},
   transportAddressPoint:p=>!!p&&['adresse','gps'].includes(p.precision),
   $:id=>id==='feuille'?sheet:button,regionalEngineReady:true,regionalProviderReady:true,regionalEndpointConfigured:false,

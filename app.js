@@ -1815,12 +1815,11 @@
     { const bt = $('btnTransportsMission'); if (bt) bt.onclick = () => {
       const existing = $('cpTransportMissionDetails');
       if (existing) {
-        stopGTFSTransports();
         if (!existing.hidden) {
-          existing.hidden = true;
-          bt.setAttribute('aria-expanded', 'false');
+          existing.scrollIntoView({behavior:'smooth',block:'start'});
           return;
         }
+        stopGTFSTransports();
         existing.remove();
       }
       const panel = document.createElement('section');
@@ -1833,6 +1832,10 @@
       // Compact comparison cards for regional options; keep existing detailed legs below.
       const showRegionalChoices = (host, ranked, heading) => {
         if (!ranked.length) return;
+        host.setAttribute('data-transport-cards','true');
+        const evidence=document.createElement('details');evidence.className='cp-transport-evidence';
+        const evidenceTitle=document.createElement('summary');evidenceTitle.textContent='Informations de la source';evidence.appendChild(evidenceTitle);
+        for(const node of Array.from(host.childNodes))evidence.appendChild(node);
         const title = document.createElement('h4');
         title.textContent = heading;
         host.appendChild(title);
@@ -1911,6 +1914,7 @@
           grid.appendChild(card);
         }
         host.appendChild(grid);
+        host.appendChild(evidence);
       };
       bt.insertAdjacentElement('afterend', panel);
       bt.setAttribute('aria-controls', panel.id);
@@ -2212,6 +2216,40 @@
         refreshed.textContent = 'Actualisation réseau demandée : si les données sont indisponibles, aucun horaire récent ne sera confirmé.';
         panel.appendChild(refreshed);
       }
+      // The mobile workspace shows journeys first; setup and source documents stay secondary.
+      const sourcePanel=document.createElement('details');sourcePanel.className='cp-transport-settings';
+      sourcePanel.id='cpTransportSettings';
+      const sourceTitle=document.createElement('summary');sourceTitle.textContent='Réglages, abonnements et autres recherches';
+      sourcePanel.appendChild(sourceTitle);
+      for(const child of Array.from(panel.childNodes))sourcePanel.appendChild(child);
+      const hero=document.createElement('header');hero.className='cp-transport-hero';
+      const eyebrow=document.createElement('span');eyebrow.className='cp-transport-eyebrow';eyebrow.textContent='CONVOYAGE ULTRA · TRANSPORTS';
+      const title=document.createElement('h2');title.textContent='Tes trajets, au même endroit';
+      const lead=document.createElement('p');lead.textContent='Recherche automatique à partir des adresses de ta mission.';
+      const margin=document.createElement('small');margin.textContent='Arrivée : 15 min minimum avant la prise en charge. Horaires et prix à vérifier avant de partir.';
+      hero.append(eyebrow,title,lead,margin);panel.appendChild(hero);
+      const transportDestinations={};
+      for(const [key,label,route] of [['Aller','01 · Aller',home+' → '+from],['Jonction','02 · Mission suivante',next?to+' → '+nextOrigin:'Aucune prochaine mission prévue'],['Retour','03 · Retour',to+' → '+home]]){
+        const section=document.createElement('section');section.className='cp-transport-direction';section.dataset.transportDirection=key;
+        const heading=document.createElement('h3');heading.textContent=label;
+        const path=document.createElement('p');path.className='cp-transport-route';path.textContent=route;
+        section.append(heading,path);transportDestinations[key]=section;panel.appendChild(section);
+      }
+      panel.appendChild(sourcePanel);
+      // Keep manual controls available without placing them ahead of automatic results.
+      sourcePanel.appendChild(refreshTransport);
+      const localCards={};
+      const renderLocalCards=({task,itineraries})=>{
+        if(!panel.isConnected||panel.hidden||$('feuille').hidden||!transportDestinations[task.label])return;
+        localCards[task.label]?.remove();
+        const host=document.createElement('div');host.className='cp-transport-local';localCards[task.label]=host;
+        transportDestinations[task.label].appendChild(host);
+        if(!itineraries.length){host.textContent='Pas d’horaire local compatible dans les données consultées.';return;}
+        const rows=itineraries.map(row=>({...row,legs:Array.isArray(row.legs)&&row.legs.length?row.legs:[{line:row.line,from:row.originStop?.name||row.from,to:row.destinationStop?.name||row.to,departure:row.departure,arrival:row.arrival}]}));
+        const normalized=window.CPTransportAdapters?.adaptGTFS(rows,'Réseau local')||[];
+        const ranked=window.CPTransportRanking?.rank(normalized,{direction:task.label==='Retour'?'return':'outbound',deadline:task.latestArrival,earliestDeparture:task.earliestDeparture,marginMinutes:15})||[];
+        showRegionalChoices(host,ranked,task.label+' · horaires locaux');
+      };
       // GTFS candidate search: one worker for the open panel, no mission writes.
       if (window.CPGTFSAgenda && window.CPGTFSWorker) {
         let gtfsTaskSignature = null;
@@ -2234,8 +2272,9 @@
         const signature = JSON.stringify(gtfsTasks);
         if (signature === gtfsTaskSignature) return;
         stopGTFSTransports();
+        for(const host of Object.values(localCards))host.remove();
         panel.querySelector('[data-gtfs-agenda]')?.remove();
-        gtfsAgendaSession = window.CPGTFSAgenda.mount(panel,{tasks:gtfsTasks,
+        gtfsAgendaSession = window.CPGTFSAgenda.mount(sourcePanel,{tasks:gtfsTasks,onResults:renderLocalCards,
           getSibraPass:()=>sibraPassControls?.getPass()||null,
           ...(Array.isArray(window.CP_GTFS_AGENDA_RESOURCES) ? {resources:window.CP_GTFS_AGENDA_RESOURCES} : {})});
         gtfsTaskSignature = signature;
@@ -2260,7 +2299,7 @@
           swissStatus.className = 'doux';
           swissStatus.setAttribute('role', 'status');
           swissStatus.textContent = 'Jonction suisse : recherche des bus, trams et trains…';
-          panel.appendChild(swissStatus);
+          sourcePanel.appendChild(swissStatus);
           window.CPSwissTransport.plan({
             from: {lat:swissFrom.lat, lon:swissFrom.lng},
             to: {lat:swissTo.lat, lon:swissTo.lng},
@@ -2315,7 +2354,7 @@
         return lat != null && lon != null && lat !== '' && lon !== '' ?
           {lat:Number(lat),lon:Number(lon)} : null;
       };
-      const regionalSlot = (inputs, render) => {
+      const regionalSlot = (direction, inputs, render) => {
         let signature = null, previous = null, controller = null;
         const refresh = () => {
           if (!regionalActive()) return;
@@ -2327,14 +2366,14 @@
           previous?.remove();
           previous = document.createElement('div');
           previous.setAttribute('data-regional-slot', '');
-          panel.appendChild(previous);
+          (transportDestinations[direction]||sourcePanel).appendChild(previous);
           render(previous,controller.signal);
         };
         regionalRefreshers.push(refresh);
         refresh();
       };
       bt.cpRefreshRegional = () => regionalRefreshers.forEach(refresh => refresh());
-      regionalSlot(() => [regionalPoint(G.coordonnees(m,'destination')),regionalPoint(next && G.coordonnees(next,'origin')),deliveryDate,next?.pickup_start,securityMarginMin], (panel,signal) => {
+      regionalSlot('Jonction', () => [regionalPoint(G.coordonnees(m,'destination')),regionalPoint(next && G.coordonnees(next,'origin')),deliveryDate,next?.pickup_start,securityMarginMin], (panel,signal) => {
       // Regional journeys use a configured endpoint or the public M provider,
       // only when both mission endpoints have exact GPS.
       if (regionalEngineReady && regionalProviderReady && next && deliveryDate) {
@@ -2401,7 +2440,7 @@
           status.className = 'doux';
           status.setAttribute('role', 'status');
           status.textContent = label + ' suisse : recherche des correspondances…';
-          panel.appendChild(status);
+          sourcePanel.appendChild(status);
           window.CPSwissTransport.plan({from,to,when,arriveBy,limit:6})
             .then(results => {
               if (!status.isConnected) return;
@@ -2460,7 +2499,7 @@
           name:String((side === 'origin' ? mission.from_city : mission.to_city) || ''),
           point:G.coordonnees(mission,side)
         });
-        const railSearch = (label,inputs) => regionalSlot(() => {
+        const railSearch = (label,inputs) => regionalSlot(label, () => {
           const v=inputs();
           return [stationKey(v.fromStation),stationKey(v.toStation),v.when,v.arriveBy,v.latestArrival];
         }, (panel,signal) => {
@@ -2529,7 +2568,7 @@
       }
       // Regional return from the exact delivery point to the configured home
       // coordinate (which may only represent a city centre, not a door).
-      regionalSlot(() => [regionalPoint(G.coordonnees(m,'destination')),regionalHome(),deliveryDate], (panel,signal) => {
+      regionalSlot('Retour', () => [regionalPoint(G.coordonnees(m,'destination')),regionalHome(),deliveryDate], (panel,signal) => {
       if (regionalEngineReady && regionalProviderReady && deliveryDate) {
         const finishGps = G.coordonnees(m, 'destination');
         const homeLat = Number(etat.reglages?.domicile_lat);
@@ -2587,7 +2626,7 @@
       });
       // Regional outbound itinerary: use only a known home reference point
       // and the exact GPS pickup, with a 30-minute arrival buffer.
-      regionalSlot(() => [regionalHome(),regionalPoint(G.coordonnees(m,'origin')),pickupDate,securityMarginMin], (panel,signal) => {
+      regionalSlot('Aller', () => [regionalHome(),regionalPoint(G.coordonnees(m,'origin')),pickupDate,securityMarginMin], (panel,signal) => {
       if (regionalEngineReady && regionalProviderReady && pickupDate) {
         const pickupGps = G.coordonnees(m, 'origin');
         const homeLat = Number(etat.reglages?.domicile_lat);
@@ -2660,8 +2699,8 @@
         saveKey.onclick=()=>{try{tripgo.setKey(keyInput.value);keyInput.value='';keyState();bt.cpRefreshRegional?.();}catch(_){keyStatus.textContent='Clé invalide ou stockage de cet appareil indisponible.';}};
         const clearKey=document.createElement('button');clearKey.className='second';clearKey.type='button';clearKey.textContent='Retirer la clé TripGo de cet appareil';
         clearKey.onclick=()=>{try{tripgo.setKey('');keyInput.value='';keyState();bt.cpRefreshRegional?.();}catch(_){keyStatus.textContent='Retrait de la clé impossible sur cet appareil.';}};
-        keyState();for(const item of [keyStatus,keyInput,saveKey,clearKey])config.appendChild(item);panel.appendChild(config);
-        const tripSearch=(label,inputs)=>regionalSlot(()=>[tripgo.getKey(),inputs()],(target,signal)=>{
+        keyState();for(const item of [keyStatus,keyInput,saveKey,clearKey])config.appendChild(item);sourcePanel.appendChild(config);
+        const tripSearch=(label,inputs)=>regionalSlot(label,()=>[tripgo.getKey(),inputs()],(target,signal)=>{
           const task=inputs();if(!tripgo.getKey()||!task?.from||!task?.to||!task.when)return;
           const status=document.createElement('div');status.className='doux';status.setAttribute('role','status');
           status.textContent=label+' TripGo : recherche des transports et des marches…';target.appendChild(status);
@@ -2783,7 +2822,7 @@
           status.className = 'doux';
           status.setAttribute('role', 'status');
           status.textContent = 'SIBRA ' + day + ' : vérification des horaires GTFS…';
-          panel.appendChild(status);
+          sourcePanel.appendChild(status);
           window.CPSibraFeed.loadDay(day, (url, options) => window.fetch(url + (bt.dataset.transportRefreshAt ? '?refresh=' + encodeURIComponent(bt.dataset.transportRefreshAt) : ''), {...options, cache: bt.dataset.transportRefreshAt ? 'no-store' : 'default'})).then(result => {
             if (!regionalActive() || !status.isConnected) return;
             status.textContent = result && result.usable ?
@@ -3244,6 +3283,7 @@
 
     { const br = $('btnRetirer'); if (br) br.onclick = () => { if (!window.confirm('Retirer cette mission de ton Agenda sur ce téléphone ? (rien n’est supprimé chez Hiflow ni sur le serveur ; tu peux tout remettre dans Réglages)')) return; const t = lireLocal('cp_masquees', []) || []; const k = m.platform + '|' + m.external_id; if (!t.includes(k)) t.push(k); ecrireLocal('cp_masquees', t); etat.missions = etat.missions.filter(x => !(x.kind === 'acceptee' && x.platform + '|' + x.external_id === k)); ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe, factures: etat.factures }); $('feuille').hidden = true; afficher(); toast('Retirée de l’Agenda'); }; }
     const transportDetailButton = $('btnTransportsMission');
+    transportDetailButton?.click();
     pointsMission(m, () => {
       if ($('btnTransportsMission') !== transportDetailButton || $('feuille').hidden) return;
       if ($('gpsO')) $('gpsO').innerHTML = mentionGps(m, 'origin');
