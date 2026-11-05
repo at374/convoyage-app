@@ -53,8 +53,8 @@
   function css() {
     if (document.getElementById('cpAdminCss')) return;
     const s = document.createElement('style'); s.id = 'cpAdminCss';
-    s.textContent = '#cpAdminBtn{position:fixed;right:12px;bottom:84px;z-index:9000;background:#b8860b;color:#fff;border:0;border-radius:22px;padding:9px 14px;font:700 14px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4)}' +
-      '#cpApkBtn{position:fixed;right:12px;bottom:84px;z-index:9000;background:#2e6b3a;color:#fff;border:0;border-radius:22px;padding:9px 14px;font:700 14px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4)}' +
+    s.textContent = '#cpAdminBtn{position:fixed;right:12px;bottom:84px;z-index:9;background:#b8860b;color:#fff;border:0;border-radius:22px;padding:9px 14px;font:700 14px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4)}' +
+      '#cpApkBtn{position:fixed;right:12px;bottom:84px;z-index:9;background:#2e6b3a;color:#fff;border:0;border-radius:22px;padding:9px 14px;font:700 14px system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.4)}' +
       '#cpApk{position:fixed;inset:0;z-index:9500;background:#14110c;color:#f3ead6;overflow:auto;font:15px/1.4 system-ui,sans-serif;padding:14px 14px 90px}#cpApk h2{margin:6px 0 10px;font-size:20px;color:#e0b84c}#cpApk .bloc{background:#221c12;border:1px solid #3d321c;border-radius:12px;padding:12px;margin:10px 0}#cpApk button{padding:9px 12px;border-radius:9px;border:0;background:#4a4231;color:#fff;font-weight:700}' +
       '#cpAdmin,#cpAbo{position:fixed;inset:0;z-index:9500;background:#14110c;color:#f3ead6;overflow:auto;font:15px/1.4 system-ui,sans-serif;padding:14px 14px 90px}' +
       '#cpAdmin h2,#cpAbo h2{margin:6px 0 10px;font-size:20px;color:#e0b84c}' +
