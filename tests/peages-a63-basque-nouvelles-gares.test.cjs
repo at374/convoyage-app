@@ -10,6 +10,9 @@
 //   par la relation deja active entre les deux dans overlay.paires).
 // - BIRIATOU : "Frontière de Irún - Péage de Biriatou", 11,11km de toute gare
 //   existante.
+// - CAPBRETON : "Péage Bénesse-Maremne Capbreton A63 Sortie N°8", 0,72km de BENESSE
+//   (la gare la plus proche, ajoutee dans ce meme lot) -- au-dela du seuil de
+//   detection de barriere.
 //
 // NB : "BIARRITZ BARRIERE" a ete examine (candidats "Péage de Biarritz - A63") mais
 // REJETE : a seulement 0,33km de la gare existante "Biarritz (échangeur)" -- juste au-
@@ -34,7 +37,7 @@ function dist(a, b) {
 test('BENESSE, ST JEAN DE LUZ SUD and BIRIATOU are new standalone gares, GPS clear of every existing point', () => {
   const all = [];
   for (const gg of aprr.g) for (const p of gg[1]) all.push(p);
-  for (const name of ['BENESSE', 'ST JEAN DE LUZ SUD', 'BIRIATOU']) {
+  for (const name of ['BENESSE', 'ST JEAN DE LUZ SUD', 'BIRIATOU', 'CAPBRETON']) {
     const g = overlay.gares.find(x => x.nom === name);
     assert.ok(g, name + ' should exist as a new overlay gare');
     const [lat, lon] = g.points[0];
