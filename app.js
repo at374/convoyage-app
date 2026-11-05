@@ -2669,7 +2669,21 @@
             if(!regionalActive()||signal.aborted||!status.isConnected)return;
             const shown=(Array.isArray(answer?.itineraries)?answer.itineraries:[]).filter(result=>Array.isArray(result?.legs)&&result.legs.length>0&&result.legs.every(leg=>leg&&typeof leg==='object'&&Number.isFinite(Date.parse(leg.departure))&&Number.isFinite(Date.parse(leg.arrival))&&Date.parse(leg.arrival)>=Date.parse(leg.departure))&&result.legs.every((leg,index)=>index===0||Date.parse(leg.departure)>=Date.parse(result.legs[index-1].arrival))&&Number.isFinite(Date.parse(result.departure))&&Number.isFinite(Date.parse(result.arrival))&&Date.parse(result.arrival)>=Date.parse(result.departure)&&Date.parse(result.legs[0].departure)===Date.parse(result.departure)&&Date.parse(result.legs[result.legs.length-1].arrival)===Date.parse(result.arrival)&&(!task.latestArrival||Date.parse(result.arrival)<=Date.parse(task.latestArrival))&&result.evidence&&Array.isArray(result.evidence.missing)&&Number.isFinite(result.evidence.startGapMeters)&&result.evidence.startGapMeters>=0&&Number.isFinite(result.evidence.endGapMeters)&&result.evidence.endGapMeters>=0&&Array.isArray(result.alerts)).slice(0,3);
             status.textContent=label+' TripGo : '+(shown.length?shown.length+' proposition(s) datées, marches comprises.':'aucune proposition compatible retournée ; cela ne prouve pas l’absence de transport.');
-            for(const result of shown){
+            if(shown.length){
+              const heading=document.createElement('h4');heading.textContent=label+' TripGo · comparer';status.appendChild(heading);
+            }
+            for(const [resultIndex,result] of shown.entries()){
+              const details=document.createElement('details');details.setAttribute('data-tripgo-details','');
+              details.style.cssText='padding:12px;border:1px solid #94a3b8;border-radius:12px;line-height:1.5;min-width:0;margin:10px 0';
+              const summary=document.createElement('summary');summary.style.cursor='pointer';
+              const name=document.createElement('strong');name.style.display='block';
+              name.textContent='Proposition '+(resultIndex+1)+' · '+[...new Set(result.legs.filter(leg=>String(leg.mode||'').startsWith('pt_pub')).map(leg=>leg.line||leg.provider||'Transport'))].join(' · ');
+              const times=document.createElement('span');times.style.display='block';
+              times.textContent=formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString());
+              const duration=document.createElement('span');duration.style.display='block';
+              duration.textContent=Math.ceil((Date.parse(result.arrival)-Date.parse(result.departure))/60000)+' min · marches comprises';
+              summary.append(name,times,duration);details.appendChild(summary);
+
               const line=document.createElement('p');line.textContent=formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString())+' · '+
                 result.legs.map(l=>(l.mode==='wa_wal'?'Marche':l.line||l.mode)+' '+l.from+' → '+l.to).join(' · ')+
                 ' · réponse du fournisseur reçue le '+formatParis(answer.receivedAt)+
@@ -2677,18 +2691,16 @@
                 (result.alerts.length?' · Alertes fournisseur : '+result.alerts.join(' ; '):'');
               const proof=document.createElement('span');
               const renderProof=confirmed=>{proof.textContent=' · Preuves manquantes : '+result.evidence.missing.filter(item=>!confirmed||result.legs.filter(leg=>String(leg.mode||'').startsWith('pt_pub')).length!==1||result.legs.some(leg=>String(leg.mode||'').startsWith('pt_pub')&&!window.CPBlaBlaRealtime.eligible(leg))||!item.startsWith('circulation')).join(', ')+'. Transport non confirmé — vérifiez vous-même.';};
-              renderProof(false);line.appendChild(proof);
+              renderProof(false);proof.style.display='block';summary.appendChild(proof);
               // Do not treat TripGo's unverified price estimates as official fares.
               let fareSummary=null;
               if(window.CPTransportFares?.fare&&window.CPTransportFares?.describe){
                 fareSummary=window.CPTransportFares.fare(result.legs,{travelDate:result.departure});
                 const fareLine=document.createElement('span');fareLine.setAttribute('data-tripgo-fare','');
                 fareLine.textContent=' · Tarifs : '+window.CPTransportFares.describe(fareSummary);
-                line.appendChild(fareLine);
+                fareLine.style.display='block';summary.appendChild(fareLine);
               }
-              status.appendChild(line);
-              const details=document.createElement('details');details.setAttribute('data-tripgo-details','');
-              const summary=document.createElement('summary');summary.textContent='Voir les étapes et les cartes des arrêts';details.appendChild(summary);
+              details.appendChild(line);
               const mapNote=document.createElement('p');mapNote.className='doux';
               mapNote.textContent='Les cartes localisent les coordonnées fournies. Le parcours piéton ouvert dans Maps fait l’objet d’un nouveau calcul ; il peut différer de la proposition. Accès réels à vérifier.';details.appendChild(mapNote);
               const steps=document.createElement('ol');
@@ -2722,7 +2734,7 @@
               }
               details.appendChild(steps);status.appendChild(details);
               if(window.CPBlaBlaRealtime&&Array.isArray(result.legs)&&result.legs.some(window.CPBlaBlaRealtime.eligible)){
-                const live=document.createElement('span');live.textContent=' · Prévisions BlaBlaCar Bus : recherche auprès de l’opérateur…';line.appendChild(live);
+                const live=document.createElement('span');live.textContent=' · Prévisions BlaBlaCar Bus : recherche auprès de l’opérateur…';live.style.display='block';summary.appendChild(live);
                 if(!busRealtime){live.textContent=' · Prévisions BlaBlaCar Bus indisponibles sur cet appareil. La circulation reste à vérifier.';continue;}
                 busRealtime.check(result,task,{signal}).then(check=>{
                   if(!regionalActive()||signal.aborted||!live.isConnected)return;
@@ -2737,7 +2749,7 @@
                     update?.status==='ambiguous'?'plusieurs versions opérateur incompatibles':'pas de prévision exploitable pour cette course';
                   renderProof(check.serviceConfirmed===true);
                   const exclusions={cancelled:'⛔ Annulation signalée — ne pas retenir ce trajet avant actualisation. ',arrival_too_late:'⛔ Prévision incompatible avec la marge normale de 15 min (5 min uniquement si GPS exact fiable) — actualisez avant de retenir ce trajet. ',missed_boarding:'⛔ Embarquement incompatible avec l’approche disponible — actualisez avant de retenir ce trajet. '};
-                  if(exclusions[check.status]){const warning=document.createElement('strong');warning.textContent=exclusions[check.status];line.prepend(warning);}
+                  if(exclusions[check.status]){const warning=document.createElement('strong');warning.textContent=exclusions[check.status];summary.prepend(warning);}
                   live.textContent=' · Prévisions BlaBlaCar Bus : '+label+
                     (check.doorArrival?' · arrivée estimée après la marche finale : '+formatParis(new Date(Math.ceil(Date.parse(check.doorArrival)/60000)*60000).toISOString()):'')+
                     (update?.sourceTimestamp?' · source du '+formatParis(update.sourceTimestamp):'')+'. Accès physique et prix restent à vérifier.';

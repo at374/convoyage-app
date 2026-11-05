@@ -339,8 +339,16 @@ async function run(){
   await release('14');
   const tripStatus=page.getByText(/^Retour TripGo : 2 proposition/);await tripStatus.waitFor();
   const tripText=await tripStatus.innerText();assert.match(tripText,/FlixBus 1789/);assert.match(tripText,/BlaBlaCar Bus/);
-  const steps=tripStatus.locator('[data-tripgo-details]').first();
+  await tripStatus.getByRole('heading',{name:'Retour TripGo · comparer',exact:true}).waitFor();
+  const tripCards=tripStatus.locator('[data-tripgo-details]');
+  assert.equal(await tripCards.count(),2,'Each recorded TripGo proposal has its own comparison card');
+  const steps=tripCards.first();
+  assert.equal(await steps.evaluate(node=>node.open),false,'TripGo card starts collapsed');
+  assert.match(await steps.locator('summary').innerText(),/min · marches comprises/);
+  assert.match(await steps.locator('summary').innerText(),/Transport non confirmé/);
+  assert.match(await steps.locator('summary').innerText(),/Tarifs/);
   await steps.locator('summary').click();
+  assert.equal(await steps.evaluate(node=>node.open),true,'TripGo card opens');
   assert.ok(await steps.locator('li').count()>=3,'Walking and transit legs have separate dated steps');
   const maps=await steps.locator('a').evaluateAll(nodes=>nodes.map(x=>({href:x.href,target:x.target,rel:x.rel})));
   assert.ok(maps.some(x=>new URL(x.href).searchParams.get('travelmode')==='walking'));
@@ -350,7 +358,10 @@ async function run(){
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.getByText(/Prévisions BlaBlaCar Bus indisponibles sur cet appareil/).waitFor();
   assert.match(tripText,/Preuves manquantes/);assert.match(tripText,/prix du transport/);assert.doesNotMatch(tripText,/Réalisable/);
-  await tripStatus.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'mobile-tripgo.png')});
+  await steps.screenshot({path:path.join(output,'mobile-tripgo.png')});
+  await steps.locator('summary').click();
+  assert.equal(await steps.evaluate(node=>node.open),false,'TripGo card closes');
+  assert.match(await tripStatus.innerText(),/Preuves manquantes/,'Missing evidence remains visible when collapsed');
   await page.getByRole('button',{name:'Retirer la clé TripGo de cet appareil',exact:true}).click();
   assert.equal(await page.evaluate(()=>localStorage.getItem('cp_tripgo_key')),null);
   assert.equal(await page.getByText(/^Retour TripGo : 2 proposition/).count(),0);
@@ -368,6 +379,7 @@ async function run(){
   await page.getByRole('button',{name:'Activer TripGo sur cet appareil',exact:true}).click();
   await release('14');await page.getByText(/circulation observée par l’opérateur/).waitFor();
   const observed=page.getByText(/^Retour TripGo : 1 proposition/);
+  assert.equal(await observed.locator('[data-tripgo-details]').first().evaluate(node=>node.open),false,'Live operator information is visible on a collapsed TripGo card');
   const observedText=await observed.innerText();assert.match(observedText,/arrivée estimée après la marche finale/);
   assert.match(observedText,/11:45/);assert.doesNotMatch(observedText,/Preuves manquantes : circulation/);assert.doesNotMatch(observedText,/Réalisable/);
   await observed.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'mobile-blablacar-observed.png')});
