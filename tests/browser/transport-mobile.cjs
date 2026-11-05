@@ -233,9 +233,9 @@ async function run(){
   for(const heading of ['Aller · comparer','Jonction mission · comparer','Retour · comparer']){
    await comparison.getByRole('heading',{name:heading}).waitFor();
   }
-  const cards=comparison.locator('details');
-  assert.ok(await cards.count()>=3,'Comparison must render interactive mobile cards');
-  const firstCard=cards.first();
+  const comparisonCards=comparison.locator('details');
+  assert.ok(await comparisonCards.count()>=3,'Comparison must render interactive mobile cards');
+  const firstCard=comparisonCards.first();
   await firstCard.locator('summary').click();
   assert.equal(await firstCard.evaluate(node=>node.open),true,'Tap expands itinerary');
   assert.match(await firstCard.innerText(),/Transport non confirmé/);
