@@ -216,6 +216,15 @@ async function run(){
    const start=Date.now();while(!gates.has(number)){if(Date.now()-start>5000)throw Error('No pending geocode '+number);await new Promise(resolve=>setTimeout(resolve,20));}
    for(const resolve of gates.get(number))resolve();gates.delete(number);
   };
+  // Explicit synthetic ranking fixture: the recorded network response alone may not rank.
+  await page.evaluate(()=>{
+   if(!window.CPTransportRanking)throw Error('Ranking module missing');
+   window.CPTransportRanking.rank=()=>[{
+    label:'Meilleur compromis',
+    journey:{durationMinutes:42,priceEUR:null,departure:'2026-11-05T08:00:00+01:00',arrival:'2026-11-05T08:42:00+01:00',
+     legs:[{line:'TEST C11',from:'Arrêt A',to:'Arrêt B',departure:'2026-11-05T08:00:00+01:00',arrival:'2026-11-05T08:42:00+01:00'}]}
+   }];
+  });
   await release('14');
   await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.innerText.includes('Retour régional'));
   await release('16');
