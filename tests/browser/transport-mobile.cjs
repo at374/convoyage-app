@@ -237,19 +237,32 @@ async function run(){
   assert.ok(requests.some(r=>r.fromPlace===official.request.fromPlace&&r.toPlace===official.request.toPlace),'Official regional response is rendered after late geocoding');
   // Verify the actual mobile DOM and interaction, not only the source code.
   const comparison=page.locator('#cpTransportMissionDetails');
-  for(const heading of ['Aller · comparer','Jonction mission · comparer','Retour · comparer']){
-   await comparison.getByRole('heading',{name:heading}).waitFor();
+  const comparisonChecks=[];
+  for(const [direction,heading] of [['aller','Aller · comparer'],['jonction','Jonction mission · comparer'],['retour','Retour · comparer']]){
+   const title=comparison.getByRole('heading',{name:heading,exact:true});
+   await title.waitFor();
+   const cards=title.locator('..').locator('details').filter({hasText:'Étapes théoriques'});
+   const count=await cards.count();
+   assert.ok(count>=1&&count<=3,heading+' renders one to three comparison cards');
+   for(let i=0;i<count;i++){
+    const card=cards.nth(i),summary=card.locator('summary');
+    assert.equal(await card.evaluate(node=>node.open),false,heading+' initially collapsed');
+    await summary.click();
+    assert.equal(await card.evaluate(node=>node.open),true,heading+' tap expands itinerary');
+    assert.match(await card.innerText(),/Transport non confirmé/);
+    assert.match(await card.innerText(),/Étapes théoriques/);
+    assert.doesNotMatch(await card.innerText(),/\bRéalisable\b/);
+    assert.ok(await card.locator('ol li').count()>0,heading+' shows actual leg details');
+    assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,heading+' expanded cards fit mobile width');
+    if(i===0){
+     await summary.scrollIntoViewIfNeeded();
+     await page.screenshot({path:path.join(output,'mobile-comparaison-'+direction+'.png')});
+    }
+    await summary.click();
+    assert.equal(await card.evaluate(node=>node.open),false,heading+' second tap collapses itinerary');
+   }
+   comparisonChecks.push({direction,cards:count,expandedAndCollapsed:true,noHorizontalOverflow:true});
   }
-  const comparisonCards=comparison.locator('details').filter({hasText:'Étapes théoriques'});
-  assert.ok(await comparisonCards.count()>=3,'Comparison must render interactive mobile cards');
-  const firstCard=comparisonCards.first();
-  await firstCard.locator('summary').click();
-  assert.equal(await firstCard.evaluate(node=>node.open),true,'Tap expands itinerary');
-  assert.match(await firstCard.innerText(),/Transport non confirmé/);
-  assert.match(await firstCard.innerText(),/Étapes théoriques/);
-  assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'Expanded cards fit mobile width');
-  await firstCard.locator('summary').click();
-  assert.equal(await firstCard.evaluate(node=>node.open),false,'Second tap collapses itinerary');
   assert.ok(workers.length>0,'The actual dedicated browser worker is used');
   await page.locator('[data-gtfs-agenda]').scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(output,'mobile-transports.png')});
@@ -412,7 +425,7 @@ async function run(){
   assert.deepEqual(errors,[],'No uncaught browser script errors');
   assert.deepEqual(blockedWrites,[],'No account or mission writes');
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
-   missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
+   comparisonChecks,missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
     '15-minute pickup margin by default; five minutes only with reliable exact GPS and final walk','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display','Y51 Albertville–Annecy shows dated full-fare reference; SIBRA pass does not make the journey free','legacy Agenda Y51 button identifies Annecy station and shows recorded 11:48 service without inventing an unmatched fare'],
    relay:{crossOriginHttp:true,upstreamFixture:true,upstreamRequests:relayUpstreamRequests},regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
