@@ -5579,6 +5579,24 @@
      6.8965766
     ]
    ]
+  },
+  {
+   "nom": "PUGET-VILLE",
+   "points": [
+    [
+     43.2578098,
+     6.1226773
+    ]
+   ]
+  },
+  {
+   "nom": "AIX-EN-PROVENCE",
+   "points": [
+    [
+     43.4828436,
+     5.5392364
+    ]
+   ]
   }
  ],
  "paires": [
@@ -26675,7 +26693,7 @@
   ],
   [
    "COUDOUX",
-   "A8: AIX-EN-PROVENCE",
+   "AIX-EN-PROVENCE",
    2,
    3.2,
    20
@@ -41710,63 +41728,63 @@
    11
   ],
   [
-   "AIX",
+   "AIX-EN-PROVENCE",
    "Pertuis",
    1.4,
    2.1,
    18
   ],
   [
-   "AIX",
+   "AIX-EN-PROVENCE",
    "St Paul Lez Durances",
    4,
    5.7,
    50
   ],
   [
-   "AIX",
+   "AIX-EN-PROVENCE",
    "Manosque",
    5.6,
    8.2,
    70
   ],
   [
-   "AIX",
+   "AIX-EN-PROVENCE",
    "La Brillanne",
    7.2,
    9.3,
    90
   ],
   [
-   "AIX",
+   "AIX-EN-PROVENCE",
    "Peyruis",
    9.1,
    12.8,
    114
   ],
   [
-   "AIX",
+   "AIX-EN-PROVENCE",
    "Aubignosc",
    10.9,
    13.9,
    136
   ],
   [
-   "AIX",
+   "AIX-EN-PROVENCE",
    "Sisteron Sud",
    11.5,
    15.8,
    144
   ],
   [
-   "AIX",
+   "AIX-EN-PROVENCE",
    "Sisteron Nord",
    14,
    19.4,
    175
   ],
   [
-   "AIX",
+   "AIX-EN-PROVENCE",
    "La Saulce",
    14.9,
    20.6,

@@ -13,7 +13,10 @@
 // canonical spelling (the one that already has verified GPS), changing no
 // price, no distance, and no GPS coordinate — a pure string-casing
 // correction. Names with zero case-insensitive match anywhere (genuine
-// gaps, e.g. "A8: AIX-EN-PROVENCE") were left untouched.
+// gaps, e.g. "A8: AIX-EN-PROVENCE") were left untouched. (NB: "A8: AIX-EN-PROVENCE"
+// was later resolved on 5 nov. 2026, renamed to "AIX-EN-PROVENCE" and given its own
+// new gare, GPS sourced to "Péage de La Barque" -- see
+// tests/peages-aix-en-provence-puget-ville-nouvelles-gares.test.cjs.)
 // Run: node --test tests/peages-casing-mismatch-fix.test.cjs
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
@@ -70,10 +73,11 @@ test('no price, distance or class amount was altered by the casing fix (sample: 
   assert.equal(typeof p[3], 'number');
 });
 
-test('names with no match anywhere (genuine gaps) were left untouched, e.g. the Coudoux -> A8: Aix-En-Provence destination', () => {
+test('the Coudoux -> AIX-EN-PROVENCE destination is present under its now-resolved canonical spelling', () => {
   const exact = exactNameSet();
   const p = overlay.paires.find(x => /coudoux/i.test(x[0]) || /coudoux/i.test(x[1]));
   assert.ok(p, 'Coudoux paire should still be present');
   const other = p[0].toLowerCase() === 'coudoux' ? p[1] : p[0];
-  assert.ok(!exact.has(other), 'the Aix-en-Provence destination should remain unresolved (no confident GPS match), not silently renamed');
+  assert.equal(other, 'AIX-EN-PROVENCE');
+  assert.ok(exact.has(other), 'AIX-EN-PROVENCE should now resolve to a real gare (new standalone gare added 5 nov. 2026)');
 });
