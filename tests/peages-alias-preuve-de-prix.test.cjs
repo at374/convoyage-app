@@ -62,11 +62,20 @@ test('price-proof precondition: rejected false-candidate pairs were never merged
   // These were considered and explicitly rejected because the price recoupement
   // disproved identity; assert the old dangling names are untouched (still
   // dangling under their own spelling, not silently merged into the rejected target).
-  const stillDangling = ['FREYMING-MERLEBACH', 'BARRIERE DE MONTREUIL AUX LIONS', 'CASSIS / LA BEDOULE'];
+  // FREYMING-MERLEBACH was never merged into the rejected "MER" candidate; it was
+  // later (5 nov. 2026) resolved properly as its own new standalone gare, canonically
+  // spelled "FREYMING-MERLEBACH (A320)" (GPS sourced to "Gare de Péage de Loupershouse",
+  // 1.7km clear of every existing point) -- so its bare spelling is checked separately
+  // below instead of in this still-dangling list.
+  const stillDangling = ['BARRIERE DE MONTREUIL AUX LIONS', 'CASSIS / LA BEDOULE'];
   for (const n of stillDangling) {
     const refs = overlay.paires.filter(p => p[0] === n || p[1] === n);
     assert.ok(refs.length > 0, n + ' should still be present under its own (unmerged) name');
   }
+  const freyming = overlay.paires.filter(p => p[0] === 'FREYMING-MERLEBACH (A320)' || p[1] === 'FREYMING-MERLEBACH (A320)');
+  assert.ok(freyming.length > 0, 'FREYMING-MERLEBACH (A320) should be present under its resolved canonical name');
+  const freymingBareStray = overlay.paires.some(p => p[0] === 'FREYMING-MERLEBACH' || p[1] === 'FREYMING-MERLEBACH');
+  assert.equal(freymingBareStray, false, 'the old bare "FREYMING-MERLEBACH" spelling should have been fully renamed');
 });
 
 test('the ambiguous "NŒUX-LES-MINES N°6.1" case (two equally price-valid candidates) was left untouched', () => {
