@@ -5714,6 +5714,15 @@
           1.3520096
         ]
       ]
+    },
+    {
+      "nom": "COUDOUX",
+      "points": [
+        [
+          43.5529706,
+          5.2386124
+        ]
+      ]
     }
   ],
   "paires": [
@@ -41167,7 +41176,7 @@
     ],
     [
       "ORIGINE A8",
-      "LE CANNET DE MEYREUIL",
+      "Cannet-de-Meyreuil",
       1,
       1.6,
       12
