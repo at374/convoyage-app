@@ -363,6 +363,17 @@ async function run(){
   assert.match(await tripStatus.innerText(),/Preuves manquantes/,'Missing evidence remains visible when collapsed');
   await page.locator('#toast').waitFor({state:'hidden'});
   await steps.screenshot({path:path.join(output,'mobile-tripgo.png')});
+  const flixCard=tripCards.nth(1);
+  assert.match(await flixCard.locator('summary').innerText(),/FlixBus/);
+  assert.equal(await flixCard.evaluate(node=>node.open),false,'FlixBus card starts collapsed');
+  await flixCard.locator('summary').click();
+  assert.equal(await flixCard.evaluate(node=>node.open),true,'FlixBus card opens');
+  assert.ok(await flixCard.locator('ol li').count()>0,'FlixBus card has dated steps');
+  assert.match(await flixCard.innerText(),/Transport non confirmé/);
+  assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'FlixBus card fits mobile width');
+  await flixCard.locator('summary').click();
+  assert.equal(await flixCard.evaluate(node=>node.open),false,'FlixBus card closes');
+  await flixCard.screenshot({path:path.join(output,'mobile-tripgo-flixbus.png')});
   await page.getByRole('button',{name:'Retirer la clé TripGo de cet appareil',exact:true}).click();
   assert.equal(await page.evaluate(()=>localStorage.getItem('cp_tripgo_key')),null);
   assert.equal(await page.getByText(/^Retour TripGo : 2 proposition/).count(),0);
