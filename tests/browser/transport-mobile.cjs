@@ -313,8 +313,19 @@ async function run(){
   assert.match(railText,/proposition\(s\) de gare à gare/);
   assert.match(railText,/Annecy/);assert.match(railText,/Grenoble/);
   assert.match(railText,/Transport non confirmé/);assert.doesNotMatch(railText,/Réalisable/);
-  await rail.scrollIntoViewIfNeeded();
-  await page.screenshot({path:path.join(output,'mobile-annecy-grenoble.png')});
+  await rail.getByRole('heading',{name:'Aller SNCF · comparer (gare à gare)',exact:true}).waitFor();
+  const railCards=rail.locator('details');
+  assert.ok(await railCards.count()>0&&await railCards.count()<=3,'SNCF ranking renders comparison cards');
+  const railCard=railCards.first();
+  await railCard.locator('summary').click();
+  assert.equal(await railCard.evaluate(node=>node.open),true,'SNCF card opens');
+  assert.match(await railCard.innerText(),/Annecy/);assert.match(await railCard.innerText(),/Grenoble/);
+  assert.match(await railCard.innerText(),/Tarif non vérifié/);
+  assert.ok(await railCard.locator('ol li').count()>0,'SNCF card shows recorded train legs');
+  assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'SNCF card fits mobile width');
+  await railCard.screenshot({path:path.join(output,'mobile-annecy-grenoble.png')});
+  await railCard.locator('summary').click();
+  assert.equal(await railCard.evaluate(node=>node.open),false,'SNCF card closes');
   await page.locator('#fermer').click();
   await until(()=>activeWorkers.size===0,'Rail scenario worker must stop on close');
   // Configure the new client through the real UI, using a dummy key and public fixture.
@@ -440,7 +451,7 @@ async function run(){
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    comparisonChecks,missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','install launcher stays behind mission sheet and becomes accessible after closing','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '15-minute pickup margin by default; five minutes only with reliable exact GPS and final walk','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display','Y51 Albertville–Annecy shows dated full-fare reference; SIBRA pass does not make the journey free','legacy Agenda Y51 button identifies Annecy station and shows recorded 11:48 service without inventing an unmatched fare'],
+    '15-minute pickup margin by default; five minutes only with reliable exact GPS and final walk','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset and expandable station-to-station ranking cards','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display','Y51 Albertville–Annecy shows dated full-fare reference; SIBRA pass does not make the journey free','legacy Agenda Y51 button identifies Annecy station and shows recorded 11:48 service without inventing an unmatched fare'],
    relay:{crossOriginHttp:true,upstreamFixture:true,upstreamRequests:relayUpstreamRequests},regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){

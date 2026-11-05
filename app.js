@@ -2493,11 +2493,9 @@
                 direction:label === 'Retour' ? 'return' : 'outbound',marginMinutes:securityMarginMin});
               if (choices.length) {
                 const summary = document.createElement('p');
-                summary.textContent = 'Classement SNCF de gare à gare : ' +
-                  choices.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' + choice.journey.durationMinutes +
-                    ' min, ' + (choice.journey.priceEUR === null ? 'prix non vérifié' : choice.journey.priceEUR.toFixed(2).replace('.', ',') + ' € (tarif vérifié)') + ')').join(' · ') +
-                  '. Aucun trajet complet confirmé.';
+                summary.textContent = 'Classement SNCF de gare à gare. Aucun trajet complet confirmé.';
                 status.appendChild(summary);
+                showRegionalChoices(status, choices, label + ' SNCF · comparer (gare à gare)');
               }
             }
             itineraries.forEach(itinerary => {
