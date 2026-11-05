@@ -5597,6 +5597,15 @@
      5.5392364
     ]
    ]
+  },
+  {
+   "nom": "L'ISLE-ADAM",
+   "points": [
+    [
+     49.2051032,
+     2.1688913
+    ]
+   ]
   }
  ],
  "paires": [
@@ -18860,126 +18869,126 @@
   ],
   [
    "BOULOGNE EST",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    25,
    37.1,
    208
   ],
   [
    "BOULOGNE SUD",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    23.8,
    34,
    198
   ],
   [
    "NEUFCHÂTEL-HARDELOT",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    21.8,
    31.8,
    182
   ],
   [
    "ETAPLES / LE TOUQUET",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    21,
    31.3,
    175
   ],
   [
    "BERCK",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    19.3,
    29.1,
    161
   ],
   [
    "LA CÔTE PICARDE",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    16.9,
    25.8,
    141
   ],
   [
    "ABBEVILLE NORD",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    15.9,
    23.3,
    132
   ],
   [
    "ABBEVILLE EST",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    14.8,
    21.7,
    123
   ],
   [
    "VALLÉE DE LA NIÈVRE",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    11.9,
    18,
    99
   ],
   [
    "AMIENS NORD",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    10.6,
    14.8,
    88
   ],
   [
    "AMIENS OUEST",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    9.7,
    13.4,
    81
   ],
   [
    "SALOUËL",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    9.6,
    13.2,
    80
   ],
   [
    "AMIENS SUD",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    10.2,
    13.7,
    85
   ],
   [
    "ESSERTAUX",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    8.1,
    10.9,
    68
   ],
   [
    "HARDIVILLERS",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    6.9,
    9.4,
    58
   ],
   [
    "BEAUVAIS NORD",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    5.1,
    6.6,
    42
   ],
   [
    "BEAUVAIS CENTRE",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    4.3,
    6.1,
    36
   ],
   [
    "MÉRU",
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    1.9,
    3,
    16
@@ -19111,7 +19120,7 @@
    67
   ],
   [
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    "POIX-DE-PICARDIE",
    10.7,
    15,
@@ -19244,7 +19253,7 @@
    79
   ],
   [
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    "AUMALE",
    12.4,
    18,
@@ -19384,7 +19393,7 @@
    92
   ],
   [
-   "L'ISLE-ADAM (péage d'Amblainville)",
+   "L'ISLE-ADAM",
    "NEUFCHÂTEL-EN-BRAY",
    14.9,
    21.7,
@@ -147702,7 +147711,7 @@
   ],
   [
    "PARIS / ROISSY",
-   "PONT ST MAXENCE",
+   "PONT-SAINTE-MAXENCE",
    3.8,
    5.6,
    40
@@ -147758,14 +147767,14 @@
   ],
   [
    "PARIS / ROISSY",
-   "FRESNES (LILLE)",
+   "LILLE / DOURGES",
    18.9,
    27.5,
    199
   ],
   [
    "SENLIS",
-   "PONT ST MAXENCE",
+   "PONT-SAINTE-MAXENCE",
    1.5,
    2,
    16
@@ -147800,63 +147809,63 @@
   ],
   [
    "SENLIS",
-   "FRESNES (LILLE)",
+   "LILLE / DOURGES",
    14.6,
    21.1,
    154
   ],
   [
-   "PONT ST MAXENCE",
+   "PONT-SAINTE-MAXENCE",
    "COMPIÈGNE OUEST",
    0.7,
    1.2,
    7
   ],
   [
-   "PONT ST MAXENCE",
+   "PONT-SAINTE-MAXENCE",
    "MONDIDIER COMPIEGNE",
    1.7,
    2.4,
    18
   ],
   [
-   "PONT ST MAXENCE",
+   "PONT-SAINTE-MAXENCE",
    "ROYE",
    3.9,
    5.8,
    41
   ],
   [
-   "PONT ST MAXENCE",
+   "PONT-SAINTE-MAXENCE",
    "PÉRONNE / VALLEE DE LA SOMME",
    5.3,
    7.8,
    56
   ],
   [
-   "PONT ST MAXENCE",
+   "PONT-SAINTE-MAXENCE",
    "ALBERT",
    5.8,
    9.2,
    61
   ],
   [
-   "PONT ST MAXENCE",
+   "PONT-SAINTE-MAXENCE",
    "BAPAUME",
    7.1,
    11.1,
    75
   ],
   [
-   "PONT ST MAXENCE",
+   "PONT-SAINTE-MAXENCE",
    "ARRAS EST",
    9.1,
    13.8,
    96
   ],
   [
-   "PONT ST MAXENCE",
-   "FRESNES (LILLE)",
+   "PONT-SAINTE-MAXENCE",
+   "LILLE / DOURGES",
    12.7,
    18.4,
    134
@@ -147905,7 +147914,7 @@
   ],
   [
    "COMPIÈGNE OUEST",
-   "FRESNES (LILLE)",
+   "LILLE / DOURGES",
    12.4,
    17.4,
    131
@@ -147947,7 +147956,7 @@
   ],
   [
    "MONDIDIER COMPIEGNE",
-   "FRESNES (LILLE)",
+   "LILLE / DOURGES",
    10.3,
    14.9,
    108
@@ -147968,7 +147977,7 @@
   ],
   [
    "ROYE",
-   "FRESNES (LILLE)",
+   "LILLE / DOURGES",
    8.5,
    12.3,
    89
@@ -147996,7 +148005,7 @@
   ],
   [
    "PÉRONNE / VALLEE DE LA SOMME",
-   "FRESNES (LILLE)",
+   "LILLE / DOURGES",
    5.5,
    9,
    58
@@ -148010,7 +148019,7 @@
   ],
   [
    "ALBERT",
-   "FRESNES (LILLE)",
+   "LILLE / DOURGES",
    4.9,
    7.3,
    52
@@ -148024,14 +148033,14 @@
   ],
   [
    "BAPAUME",
-   "FRESNES (LILLE)",
+   "LILLE / DOURGES",
    3.6,
    4.9,
    38
   ],
   [
    "ARRAS EST",
-   "FRESNES (LILLE)",
+   "LILLE / DOURGES",
    1.5,
    2,
    16
