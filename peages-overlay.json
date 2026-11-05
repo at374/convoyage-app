@@ -5759,6 +5759,42 @@
           6.4245371
         ]
       ]
+    },
+    {
+      "nom": "CONDRIEU ENTREE",
+      "points": [
+        [
+          45.5052136,
+          4.839044
+        ]
+      ]
+    },
+    {
+      "nom": "CONDRIEU SORTIE",
+      "points": [
+        [
+          45.5052136,
+          4.839044
+        ]
+      ]
+    },
+    {
+      "nom": "Vienne Sud Entree",
+      "points": [
+        [
+          45.497324,
+          4.8391836
+        ]
+      ]
+    },
+    {
+      "nom": "Vienne Sud Sortie",
+      "points": [
+        [
+          45.497324,
+          4.8391836
+        ]
+      ]
     }
   ],
   "paires": [
