@@ -6,6 +6,11 @@
 const URL_BASE='https://api.tripgo.com/v1/routing.json',KEY='cp_tripgo_key',cache=new Map();
 const point=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon??p.lng)&&Math.abs(p.lat)<=90&&Math.abs(p.lon??p.lng)<=180;
 const coord=p=>({lat:p.lat,lon:p.lon??p.lng});
+function fareQuote(cost,currency,accuracy,receivedAt){
+ if(typeof cost!=='number'||!Number.isFinite(cost)||cost<0||!Number.isSafeInteger(Math.round(cost*100))||Math.abs(cost*100-Math.round(cost*100))>1e-7||typeof currency!=='string'||!/^[A-Z]{3}$/.test(currency)||!['internal_estimate','external_estimate','confirmed'].includes(accuracy))return null;
+ return {amount:Math.round(cost*100)/100,currency,kind:accuracy==='confirmed'?'provider_reported':'estimate',accuracy,source:'TripGo',receivedAt};
+}
+
 function time(value){
  if(typeof value!=='string'||!/^20\d{2}-\d{2}-\d{2}T([01]\d|2[0-3]):[0-5]\d(:[0-5]\d(\.\d{1,3})?)?(Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/i.test(value))return NaN;
  const day=Date.parse(value.slice(0,10)+'T12:00:00Z');
@@ -49,6 +54,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
     previous=end;
     legs.push({mode,provider:s.externalData?.operatorName||null,serviceTripId:s.serviceTripID||null,serviceShortName:s.serviceShortName||null,routeId:s.routeId||s.routeID||null,fromStopCode:s.from.stopCode||null,toStopCode:s.to.stopCode||null,ticketWebsiteURL:typeof s.ticketWebsiteURL==='string'?s.ticketWebsiteURL:null,line:s.serviceNumber||s.serviceName||null,from:s.from.name||s.from.address||'',to:s.to.name||s.to.address||'',
      fromPoint:coord(s.from),toPoint:coord(s.to),departure:new Date(start).toISOString(),arrival:new Date(end).toISOString(),
+     priceQuote:fareQuote(s.localCost?.cost,s.localCost?.currency,s.localCost?.accuracy,receivedAt),
      distanceMeters:Number.isFinite(s.metres)&&s.metres>=0?s.metres:null,realtimeReported:s.realTime===true,
      alerts:Array.isArray(s.alerts)?s.alerts.map(a=>String(a?.title||a?.text||'Alerte fournisseur')).slice(0,10):[],serviceConfirmed:false});
    }
@@ -58,6 +64,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
    if(startGapMeters>50||endGapMeters>50)continue;
    const realtimeReported=legs.filter(l=>l.mode.startsWith('pt_pub')).every(l=>l.realtimeReported);
    found.push({departure:new Date(departure).toISOString(),arrival:new Date(arrival).toISOString(),legs,priceEUR:null,
+    priceQuote:fareQuote(trip.moneyCost,trip.currency,'internal_estimate',receivedAt),
     source:'TripGo',receivedAt,transportConfirmed:false,serviceConfirmed:false,accessVerified:false,
     alerts:[...new Set([...legs.flatMap(l=>l.alerts),...(Array.isArray(trip.alerts)?trip.alerts:[]),...(Array.isArray(data.alerts)?data.alerts:[])].map(a=>typeof a==='string'?a:String(a?.title||a?.text||'Alerte fournisseur')))].slice(0,20),
     evidence:{scheduleProvided:true,endpointCoordinatesMatched:startGapMeters<=10&&endGapMeters<=10,startGapMeters,endGapMeters,
@@ -65,7 +72,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
      missing:['circulation à la date du trajet','perturbations éventuelles','accès physique au point GPS exact','prix du transport']}});
   }
  }
- return {source:'TripGo',receivedAt,itineraries:found.sort((a,b)=>arriveBy?Date.parse(b.departure)-Date.parse(a.departure):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,10)};
+ return {source:'TripGo',receivedAt,itineraries:found.sort((a,b)=>arriveBy?Date.parse(b.departure)-Date.parse(a.departure):Date.parse(a.departure)-Date.parse(b.departure))};
 }
 async function readJSON(response,signal){
  const declared=Number(response.headers?.get?.('content-length'));if(declared>2000000)throw Error('Réponse TripGo trop grande');

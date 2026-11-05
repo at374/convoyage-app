@@ -169,9 +169,15 @@ async function run(){
    if(url.hostname==='api.tripgo.com'){
     assert.equal(request.headers()['x-tripgo-key'],'a'.repeat(32),'Only a dummy browser-fixture key is used');
     if(busLiveScenario&&url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793437200')return json(route,tripgoToday.response);
-    if(url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793610000')return json(route,tripgoFixture.response);
+    if(url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793610000'){
+     // Explicit synthetic fare overlay exercises display; these are not recorded market prices.
+     const response=structuredClone(tripgoFixture.response);
+     for(const group of response.groups)for(const trip of group.trips){trip.moneyCost=12.5;trip.currency='EUR';}
+     return json(route,response);
+    }
     return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Outside recorded test query'});
    }
+   if(url.hostname==='tile.openstreetmap.org')return route.fulfill({status:503,body:'Map tiles unavailable in isolated browser test'});
    if(url.hostname==='transport.opendata.ch')return json(route,{connections:[]});
    if(/valhalla/.test(url.hostname))return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Unavailable in deterministic browser test'});
    return json(route,{features:[],results:[]});
@@ -285,6 +291,7 @@ async function run(){
     assert.equal(await card.evaluate(node=>node.open),false,heading+' initially collapsed');
     await summary.click();
     assert.equal(await card.evaluate(node=>node.open),true,heading+' tap expands itinerary');
+    await card.getByRole('tab',{name:'Étapes',exact:true}).click();
     assert.match(await card.innerText(),/Transport non confirmé/);
     assert.match(await card.innerText(),/Étapes théoriques/);
     assert.doesNotMatch(await card.innerText(),/\bRéalisable\b/);
@@ -343,11 +350,17 @@ async function run(){
   assert.match(railText,/Annecy/);assert.match(railText,/Grenoble/);
   assert.match(railText,/Transport non confirmé/);assert.doesNotMatch(railText,/Réalisable/);
   await rail.getByRole('heading',{name:'Aller SNCF · comparer (gare à gare)',exact:true}).waitFor();
-  const railCards=rail.locator('details');
+  const railCards=rail.locator('details').filter({has:page.locator('.cp-transport-viewer')});
   assert.ok(await railCards.count()>0&&await railCards.count()<=3,'SNCF ranking renders comparison cards');
   const railCard=railCards.first();
   await railCard.locator('summary').click();
   assert.equal(await railCard.evaluate(node=>node.open),true,'SNCF card opens');
+  await railCard.locator('.cp-transport-map-marker').first().waitFor();
+  assert.ok(await railCard.locator('.cp-transport-map-marker').count()>=2,'SNCF station coordinates appear inside the app');
+  await railCard.getByRole('button',{name:'Agrandir',exact:true}).click();
+  await railCard.getByRole('button',{name:'Recentrer',exact:true}).click();
+  await railCard.screenshot({path:path.join(output,'mobile-sncf-map.png')});
+  await railCard.getByRole('tab',{name:'Étapes',exact:true}).click();
   assert.match(await railCard.innerText(),/Annecy/);assert.match(await railCard.innerText(),/Grenoble/);
   assert.match(await railCard.innerText(),/Tarif non vérifié/);
   assert.ok(await railCard.locator('ol li').count()>0,'SNCF card shows recorded train legs');
@@ -367,6 +380,7 @@ async function run(){
   await page.getByRole('button',{name:'Activer TripGo sur cet appareil',exact:true}).click();
   await release('14');
   const tripStatus=page.getByText(/^Retour TripGo : 2 proposition/);await tripStatus.waitFor();
+  assert.match(await tripStatus.locator('[data-tripgo-price]').first().innerText(),/Prix estimé.*12,50/);
   const tripText=await tripStatus.innerText();assert.match(tripText,/FlixBus 1789/);assert.match(tripText,/BlaBlaCar Bus/);
   await tripStatus.getByRole('heading',{name:'Retour TripGo · comparer',exact:true}).waitFor();
   const tripCards=tripStatus.locator('[data-tripgo-details]');
@@ -378,8 +392,12 @@ async function run(){
   assert.match(await steps.locator('summary').innerText(),/Tarifs/);
   await steps.locator('summary').click();
   assert.equal(await steps.evaluate(node=>node.open),true,'TripGo card opens');
+  assert.ok(await steps.locator('.cp-transport-map-marker').count()>=2,'TripGo stop coordinates appear inside the app');
+  await steps.locator('.cp-transport-map-marker').first().click();
+  assert.match(await steps.locator('.cp-transport-map-stop').innerText(),/1\./);
+  await steps.getByRole('tab',{name:'Étapes',exact:true}).click();
   assert.ok(await steps.locator('li').count()>=3,'Walking and transit legs have separate dated steps');
-  const maps=await steps.locator('a').evaluateAll(nodes=>nodes.map(x=>({href:x.href,target:x.target,rel:x.rel})));
+  const maps=await steps.locator('[id$="-steps"] a').evaluateAll(nodes=>nodes.map(x=>({href:x.href,target:x.target,rel:x.rel})));
   assert.ok(maps.some(x=>new URL(x.href).searchParams.get('travelmode')==='walking'));
   assert.ok(maps.every(x=>new URL(x.href).hostname==='www.google.com'&&x.target==='_blank'&&x.rel.includes('noopener')));
   assert.ok(maps.every(x=>!x.href.includes('TripGo-Key')&&!x.href.includes('aaaaaaaa')));
@@ -506,7 +524,7 @@ async function run(){
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    comparisonChecks,missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','install launcher stays behind mission sheet and becomes accessible after closing','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '15-minute pickup margin by default; five minutes only with reliable exact GPS and final walk','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset and expandable station-to-station ranking cards','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display','Y51 Albertville–Annecy shows dated full-fare reference; SIBRA pass does not make the journey free','legacy Agenda Y51 button identifies Annecy station and shows recorded 11:48 service without inventing an unmatched fare'],
+    '15-minute pickup margin by default; five minutes only with reliable exact GPS and final walk','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset and expandable station-to-station ranking cards','private TripGo key entry/removal','synthetic provider price quote displayed with currency and estimate label','embedded map stops, zoom and Carte / Étapes tabs with offline-tile fallback','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display','Y51 Albertville–Annecy shows dated full-fare reference; SIBRA pass does not make the journey free','legacy Agenda Y51 button identifies Annecy station and shows recorded 11:48 service without inventing an unmatched fare'],
    relay:{crossOriginHttp:true,upstreamFixture:true,upstreamRequests:relayUpstreamRequests},regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){

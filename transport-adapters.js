@@ -15,6 +15,7 @@
       accessVerified:false,
       legs:(Array.isArray(it.legs)?it.legs:[]).filter(leg=>leg&&typeof leg==='object'&&!Array.isArray(leg)).map(leg=>({
         provider:'SNCF',
+        mode:'RAIL',fromPoint:leg.fromPoint,toPoint:leg.toPoint,
         line:leg.line||null,
         from:leg.from||null,
         to:leg.to||null,
@@ -55,6 +56,7 @@
       accessVerified:false,
       legs:(Array.isArray(it.legs)?it.legs:[]).filter(leg=>leg&&typeof leg==='object'&&!Array.isArray(leg)).map(leg=>({
         provider:name,
+        mode:leg.mode,fromPoint:leg.fromPoint,toPoint:leg.toPoint,geometry:leg.geometry,encodedGeometry:leg.encodedGeometry,
         line:leg.line||leg.route||null,
         from:leg.from||leg.fromStop||null,
         to:leg.to||leg.toStop||null,

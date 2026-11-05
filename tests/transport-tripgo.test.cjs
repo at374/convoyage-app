@@ -218,3 +218,23 @@ test('TripGo ignores a journey with a non-string mode without hiding other avail
   assert.equal(results[0].legs[1].line,'FlixBus 1789');
  }
 });
+
+test('provider totals and segment quotations are retained with currency and provenance without certifying fares',()=>{
+ const data=clone();for(const group of data.groups)for(const trip of group.trips){trip.moneyCost=12.5;trip.currency='EUR';}
+ for(const segment of data.segmentTemplates)if(segment.type==='scheduled')segment.localCost={cost:8.4,currency:'EUR',accuracy:'external_estimate'};
+ const result=api.parse(data,options);
+ for(const itinerary of result.itineraries){assert.equal(itinerary.priceEUR,null);assert.equal(itinerary.priceQuote.amount,12.5);assert.equal(itinerary.priceQuote.currency,'EUR');assert.equal(itinerary.priceQuote.kind,'estimate');assert.equal(itinerary.priceQuote.source,'TripGo');assert.ok(itinerary.legs.some(leg=>leg.priceQuote?.amount===8.4));assert.equal(itinerary.evidence.fareVerified,false);}
+});
+test('missing and invalid provider prices stay unknown instead of becoming zero or a fabricated total',()=>{
+ for(const amount of [undefined,null,-1,NaN,Infinity,12.345,'12.50']){
+  const data=clone();for(const group of data.groups)for(const trip of group.trips){trip.moneyCost=amount;trip.currency='EUR';}
+  assert.ok(api.parse(data,options).itineraries.every(itinerary=>itinerary.priceQuote===null));
+ }
+});
+test('all valid distinct results in a bounded provider response survive parsing beyond the old ten-trip cap',()=>{
+ const data=clone(),departure=api.parse(data,options).itineraries[0].departure;
+ const group=data.groups.find(g=>g.trips.some(t=>new Date(t.depart*1000).toISOString()===departure));
+ const sample=group.trips.find(t=>new Date(t.depart*1000).toISOString()===departure);
+ data.groups=[{...group,trips:Array.from({length:12},(_,i)=>({...sample,depart:sample.depart+i*60,arrive:sample.arrive+i*60,segments:sample.segments.map(leg=>({...leg,startTime:leg.startTime+i*60,endTime:leg.endTime+i*60}))}))}];
+ assert.equal(api.parse(data,options).itineraries.length,12);
+});

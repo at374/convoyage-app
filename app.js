@@ -1911,6 +1911,7 @@
           caution.textContent = 'Les liens cartographiques recherchent le nom de l’arrêt : position exacte non vérifiée.';
           detail.appendChild(caution);
           card.appendChild(detail);
+          window.CPTransportMap?.mount(card,journey);
           grid.appendChild(card);
         }
         host.appendChild(grid);
@@ -2245,7 +2246,7 @@
         const host=document.createElement('div');host.className='cp-transport-local';localCards[task.label]=host;
         transportDestinations[task.label].appendChild(host);
         if(!itineraries.length){host.textContent='Pas d’horaire local compatible dans les données consultées.';return;}
-        const rows=itineraries.map(row=>({...row,legs:Array.isArray(row.legs)&&row.legs.length?row.legs:[{line:row.line,from:row.originStop?.name||row.from,to:row.destinationStop?.name||row.to,departure:row.departure,arrival:row.arrival}]}));
+        const rows=itineraries.map(row=>({...row,legs:Array.isArray(row.legs)&&row.legs.length?row.legs:[{line:row.line,from:row.originStop?.name||row.from,to:row.destinationStop?.name||row.to,fromPoint:row.originStop,toPoint:row.destinationStop,departure:row.departure,arrival:row.arrival}]}));
         const normalized=window.CPTransportAdapters?.adaptGTFS(rows,'Réseau local')||[];
         const ranked=window.CPTransportRanking?.rank(normalized,{direction:task.label==='Retour'?'return':'outbound',deadline:task.latestArrival,earliestDeparture:task.earliestDeparture,marginMinutes:15})||[];
         showRegionalChoices(host,ranked,task.label+' · horaires locaux');
@@ -2706,11 +2707,14 @@
           status.textContent=label+' TripGo : recherche des transports et des marches…';target.appendChild(status);
           tripgo.plan({...task,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt}).then(answer=>{
             if(!regionalActive()||signal.aborted||!status.isConnected)return;
-            const shown=(Array.isArray(answer?.itineraries)?answer.itineraries:[]).filter(result=>Array.isArray(result?.legs)&&result.legs.length>0&&result.legs.every(leg=>leg&&typeof leg==='object'&&Number.isFinite(Date.parse(leg.departure))&&Number.isFinite(Date.parse(leg.arrival))&&Date.parse(leg.arrival)>=Date.parse(leg.departure))&&result.legs.every((leg,index)=>index===0||Date.parse(leg.departure)>=Date.parse(result.legs[index-1].arrival))&&Number.isFinite(Date.parse(result.departure))&&Number.isFinite(Date.parse(result.arrival))&&Date.parse(result.arrival)>=Date.parse(result.departure)&&Date.parse(result.legs[0].departure)===Date.parse(result.departure)&&Date.parse(result.legs[result.legs.length-1].arrival)===Date.parse(result.arrival)&&(!task.latestArrival||Date.parse(result.arrival)<=Date.parse(task.latestArrival))&&result.evidence&&Array.isArray(result.evidence.missing)&&Number.isFinite(result.evidence.startGapMeters)&&result.evidence.startGapMeters>=0&&Number.isFinite(result.evidence.endGapMeters)&&result.evidence.endGapMeters>=0&&Array.isArray(result.alerts)).slice(0,3);
+            const shown=(Array.isArray(answer?.itineraries)?answer.itineraries:[]).filter(result=>Array.isArray(result?.legs)&&result.legs.length>0&&result.legs.every(leg=>leg&&typeof leg==='object'&&Number.isFinite(Date.parse(leg.departure))&&Number.isFinite(Date.parse(leg.arrival))&&Date.parse(leg.arrival)>=Date.parse(leg.departure))&&result.legs.every((leg,index)=>index===0||Date.parse(leg.departure)>=Date.parse(result.legs[index-1].arrival))&&Number.isFinite(Date.parse(result.departure))&&Number.isFinite(Date.parse(result.arrival))&&Date.parse(result.arrival)>=Date.parse(result.departure)&&Date.parse(result.legs[0].departure)===Date.parse(result.departure)&&Date.parse(result.legs[result.legs.length-1].arrival)===Date.parse(result.arrival)&&(!task.latestArrival||Date.parse(result.arrival)<=Date.parse(task.latestArrival))&&result.evidence&&Array.isArray(result.evidence.missing)&&Number.isFinite(result.evidence.startGapMeters)&&result.evidence.startGapMeters>=0&&Number.isFinite(result.evidence.endGapMeters)&&result.evidence.endGapMeters>=0&&Array.isArray(result.alerts));
             status.textContent=label+' TripGo : '+(shown.length?shown.length+' proposition(s) datées, marches comprises.':'aucune proposition compatible retournée ; cela ne prouve pas l’absence de transport.');
             if(shown.length){
               const heading=document.createElement('h4');heading.textContent=label+' TripGo · comparer';status.appendChild(heading);
             }
+            const extraResults=shown.length>3?document.createElement('details'):null;
+            if(extraResults){const title=document.createElement('summary');title.textContent='Voir les '+(shown.length-3)+' autres trajets trouvés';extraResults.appendChild(title);}
+            const quoteText=quote=>{if(!quote||typeof quote.amount!=='number'||!Number.isFinite(quote.amount)||quote.amount<0||typeof quote.currency!=='string'||!/^[A-Z]{3}$/.test(quote.currency))return null;let value;try{value=new Intl.NumberFormat('fr-FR',{style:'currency',currency:quote.currency}).format(quote.amount);}catch(_){return null;}return (quote.kind==='provider_reported'?'Prix communiqué : ':'Prix estimé : ')+value+' · TripGo · à confirmer avant achat';};
             for(const [resultIndex,result] of shown.entries()){
               const details=document.createElement('details');details.setAttribute('data-tripgo-details','');
               details.style.cssText='padding:12px;border:1px solid #94a3b8;border-radius:12px;line-height:1.5;min-width:0;margin:10px 0';
@@ -2721,7 +2725,10 @@
               times.textContent=formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString());
               const duration=document.createElement('span');duration.style.display='block';
               duration.textContent=Math.ceil((Date.parse(result.arrival)-Date.parse(result.departure))/60000)+' min · marches comprises';
-              summary.append(name,times,duration);details.appendChild(summary);
+              summary.append(name,times,duration);
+              const price=quoteText(result.priceQuote);
+              if(price){const amount=document.createElement('strong');amount.setAttribute('data-tripgo-price','');amount.textContent=price;summary.appendChild(amount);}
+              details.appendChild(summary);
 
               const line=document.createElement('p');line.textContent=formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString())+' · '+
                 result.legs.map(l=>(l.mode==='wa_wal'?'Marche':l.line||l.mode)+' '+l.from+' → '+l.to).join(' · ')+
@@ -2736,7 +2743,7 @@
               if(window.CPTransportFares?.fare&&window.CPTransportFares?.describe){
                 fareSummary=window.CPTransportFares.fare(result.legs,{travelDate:result.departure});
                 const fareLine=document.createElement('span');fareLine.setAttribute('data-tripgo-fare','');
-                fareLine.textContent=' · Tarifs : '+window.CPTransportFares.describe(fareSummary);
+                fareLine.textContent=' · Tarifs vérifiés : '+window.CPTransportFares.describe(fareSummary);
                 fareLine.style.display='block';summary.appendChild(fareLine);
               }
               details.appendChild(line);
@@ -2752,6 +2759,8 @@
                   walkingDistance.textContent=' · Marche : '+Math.ceil(leg.distanceMeters)+' m (distance fournisseur, cheminement à vérifier)';
                   step.appendChild(walkingDistance);
                 }
+                const quoted=quoteText(leg.priceQuote);
+                if(quoted){const price=document.createElement('div');price.textContent=quoted;step.appendChild(price);}
                 const legFare=fareSummary?.breakdown?.[legIndex];
                 if(legFare){
                   const fareDetail=document.createElement('span');fareDetail.setAttribute('data-tripgo-leg-fare','');
@@ -2771,7 +2780,7 @@
                 }
                 steps.appendChild(step);
               }
-              details.appendChild(steps);status.appendChild(details);
+              details.appendChild(steps);window.CPTransportMap?.mount(details,result);(resultIndex<3?status:extraResults).appendChild(details);
               if(window.CPBlaBlaRealtime&&Array.isArray(result.legs)&&result.legs.some(window.CPBlaBlaRealtime.eligible)){
                 const live=document.createElement('span');live.textContent=' · Prévisions BlaBlaCar Bus : recherche auprès de l’opérateur…';live.style.display='block';summary.appendChild(live);
                 if(!busRealtime){live.textContent=' · Prévisions BlaBlaCar Bus indisponibles sur cet appareil. La circulation reste à vérifier.';continue;}
@@ -2799,6 +2808,7 @@
                 }).catch(()=>{if(regionalActive()&&!signal.aborted&&live.isConnected)live.textContent=' · Prévisions BlaBlaCar Bus indisponibles sur cet appareil. La circulation reste à vérifier.';});
               }
             }
+            if(extraResults)status.appendChild(extraResults);
             const credit=document.createElement('p');credit.textContent='Source : TripGo / opérateurs indiqués ; marches : © contributeurs OpenStreetMap. La disponibilité annoncée ne constitue pas une réservation.';const attribution=document.createElement('a');attribution.href='https://www.openstreetmap.org/copyright';attribution.target='_blank';attribution.rel='noopener noreferrer';attribution.textContent=' Attribution OpenStreetMap';credit.appendChild(attribution);status.appendChild(credit);
           }).catch(()=>{if(regionalActive()&&!signal.aborted&&status.isConnected)status.textContent=label+' TripGo indisponible. Horaires, circulation, accès et prix restent à vérifier.';});
         });

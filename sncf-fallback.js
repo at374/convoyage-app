@@ -87,7 +87,7 @@
     const margin=options.transferMinutes??10;if(!Number.isInteger(margin)||margin<5||margin>120)throw Error('Marge ferroviaire invalide');
     const limit=options.limit??5;if(!Number.isInteger(limit)||limit<1||limit>10)throw Error('Limite SNCF invalide');
     const first=[],second=new Map(),direct=[];let originFound=false,destinationFound=false;
-    const makeLeg=(data,t,a,b,base)=>({source:'SNCF GTFS',serviceDate:data.date,tripId:t[0],line:t[1],trainNumber:t[2]||null,from:data.stations[a[0]][1],to:data.stations[b[0]][1],fromStationId:data.stations[a[0]][0],toStationId:data.stations[b[0]][0],departure:base+a[2]*1000,arrival:base+b[1]*1000});
+    const makeLeg=(data,t,a,b,base)=>({source:'SNCF GTFS',serviceDate:data.date,tripId:t[0],line:t[1],trainNumber:t[2]||null,from:data.stations[a[0]][1],to:data.stations[b[0]][1],fromStationId:data.stations[a[0]][0],toStationId:data.stations[b[0]][0],fromPoint:{lat:data.stations[a[0]][2],lon:data.stations[a[0]][3]},toPoint:{lat:data.stations[b[0]][2],lon:data.stations[b[0]][3]},mode:'RAIL',departure:base+a[2]*1000,arrival:base+b[1]*1000});
     for(const data of days){
       const origins=new Set(stationsFor(options.from,data.stations).map(s=>s.index));
       const destinations=new Set(stationsFor(options.to,data.stations).map(s=>s.index));
