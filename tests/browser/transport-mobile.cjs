@@ -202,8 +202,10 @@ async function run(){
   assert.equal(await page.locator('#btnVol').count(),1,'Car and public-transport buttons remain separate');
   const buttonColour=await page.locator('#btnTransportsMission').evaluate(e=>getComputedStyle(e).backgroundColor);
   assert.equal(buttonColour,'rgb(205, 234, 255)','The existing light-blue transport button is preserved');
+  assert.equal(await page.locator('#cpTransportMissionDetails').count(),0,'Mission does not open transport results before the button is pressed');
+  await page.locator('#btnTransportsMission').click();
   await page.locator('#cpTransportMissionDetails').waitFor();
-  assert.equal(await page.locator('#cpTransportSettings').evaluate(node=>node.open),false,'Transport results start automatically with settings collapsed');
+  assert.equal(await page.locator('#cpTransportSettings').evaluate(node=>node.open),false,'Settings stay collapsed after opening Transports');
   await page.locator('#cpTransportSettings > summary').click();
   const sibraReference=page.locator('#cpSibraFareReference');
   await sibraReference.locator('summary').click();
@@ -253,6 +255,22 @@ async function run(){
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=false;}));
   await page.locator('.cp-transport-hero').scrollIntoViewIfNeeded();
   await page.screenshot({path:path.join(output,'mobile-transport-workspace.png')});
+  const originalStyle=await page.evaluate(()=>document.documentElement.dataset.style);
+  for(const style of ['ultra','braise','crepuscule','jour','classique']){
+   await page.evaluate(style=>{document.documentElement.dataset.style=style;},style);
+   const palette=await page.locator('#cpTransportMissionDetails').evaluate(panel=>{
+    const probe=document.createElement('span');probe.style.cssText='background:var(--fond);color:var(--accent)';panel.appendChild(probe);
+    const expected=getComputedStyle(probe),actual=getComputedStyle(panel),title=getComputedStyle(panel.querySelector('h2'));
+    const result={background:actual.backgroundColor,expectedBackground:expected.backgroundColor,title:title.color,expectedTitle:expected.color,weight:Number(title.fontWeight)};probe.remove();return result;
+   });
+   assert.equal(palette.background,palette.expectedBackground,style+' uses the page background');
+   assert.equal(palette.title,palette.expectedTitle,style+' uses its vivid heading accent');
+   assert.ok(palette.weight>=800,style+' headings are bold');
+   await page.locator('.cp-transport-hero').scrollIntoViewIfNeeded();
+   await page.screenshot({path:path.join(output,'mobile-transport-style-'+style+'.png')});
+  }
+  await page.evaluate(style=>{if(style)document.documentElement.dataset.style=style;else delete document.documentElement.dataset.style;},originalStyle);
+
   await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   const comparisonChecks=[];
