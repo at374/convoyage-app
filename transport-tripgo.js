@@ -63,8 +63,11 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
    const startGapMeters=gap(coord(from),legs[0].fromPoint),endGapMeters=gap(coord(to),legs.at(-1).toPoint);
    if(startGapMeters>50||endGapMeters>50)continue;
    const realtimeReported=legs.filter(l=>l.mode.startsWith('pt_pub')).every(l=>l.realtimeReported);
+   const ticketedQuotes=legs.filter(leg=>leg.mode.startsWith('pt_pub')).map(leg=>leg.priceQuote);
+   const completeQuotes=ticketedQuotes.length>0&&ticketedQuotes.every(q=>q&&q.currency===ticketedQuotes[0]?.currency);
+   const summedQuote=completeQuotes?fareQuote(ticketedQuotes.reduce((sum,q)=>sum+Math.round(q.amount*100),0)/100,ticketedQuotes[0].currency,'internal_estimate',receivedAt):null;
    found.push({departure:new Date(departure).toISOString(),arrival:new Date(arrival).toISOString(),legs,priceEUR:null,
-    priceQuote:fareQuote(trip.moneyCost,trip.currency,'internal_estimate',receivedAt),
+    priceQuote:fareQuote(trip.moneyCost,trip.currency,'internal_estimate',receivedAt)||summedQuote,
     source:'TripGo',receivedAt,transportConfirmed:false,serviceConfirmed:false,accessVerified:false,
     alerts:[...new Set([...legs.flatMap(l=>l.alerts),...(Array.isArray(trip.alerts)?trip.alerts:[]),...(Array.isArray(data.alerts)?data.alerts:[])].map(a=>typeof a==='string'?a:String(a?.title||a?.text||'Alerte fournisseur')))].slice(0,20),
     evidence:{scheduleProvided:true,endpointCoordinatesMatched:startGapMeters<=10&&endGapMeters<=10,startGapMeters,endGapMeters,

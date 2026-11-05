@@ -238,3 +238,8 @@ test('all valid distinct results in a bounded provider response survive parsing 
  data.groups=[{...group,trips:Array.from({length:12},(_,i)=>({...sample,depart:sample.depart+i*60,arrive:sample.arrive+i*60,segments:sample.segments.map(leg=>({...leg,startTime:leg.startTime+i*60,endTime:leg.endTime+i*60}))}))}];
  assert.equal(api.parse(data,options).itineraries.length,12);
 });
+test('complete segment quotations give an estimated total while missing quotations do not invent one',()=>{
+ const data=clone();for(const segment of data.segmentTemplates)if(segment.type==='scheduled')segment.localCost={cost:8.4,currency:'EUR',accuracy:'external_estimate'};
+ const result=api.parse(data,options);assert.ok(result.itineraries.every(t=>t.priceQuote?.amount===8.4&&t.priceQuote.kind==='estimate'&&t.priceEUR===null));
+ const absent=clone();assert.ok(api.parse(absent,options).itineraries.every(t=>t.priceQuote===null));
+});
