@@ -392,9 +392,11 @@ async function run(){
   assert.match(await steps.locator('summary').innerText(),/Tarifs/);
   await steps.locator('summary').click();
   assert.equal(await steps.evaluate(node=>node.open),true,'TripGo card opens');
+  await steps.locator('.cp-transport-map-marker').first().waitFor();
   assert.ok(await steps.locator('.cp-transport-map-marker').count()>=2,'TripGo stop coordinates appear inside the app');
   await steps.locator('.cp-transport-map-marker').first().click();
   assert.match(await steps.locator('.cp-transport-map-stop').innerText(),/1\./);
+  await steps.screenshot({path:path.join(output,'mobile-tripgo-map.png')});
   await steps.getByRole('tab',{name:'Étapes',exact:true}).click();
   assert.ok(await steps.locator('li').count()>=3,'Walking and transit legs have separate dated steps');
   const maps=await steps.locator('[id$="-steps"] a').evaluateAll(nodes=>nodes.map(x=>({href:x.href,target:x.target,rel:x.rel})));
