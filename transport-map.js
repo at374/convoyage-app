@@ -66,16 +66,24 @@ function mount(card,journey){
   tiles.replaceChildren();markers.replaceChildren();overlay.replaceChildren();overlay.setAttribute('viewBox','0 0 '+w+' '+height);
   for(let x=Math.floor(ox/256);x<=Math.floor((ox+w)/256);x++)for(let y=Math.floor(oy/256);y<=Math.floor((oy+height)/256);y++)if(y>=0&&y<n){
    const tile=doc.createElement('img');tile.alt='';tile.referrerPolicy='strict-origin-when-cross-origin';tile.draggable=false;tile.src='https://tile.openstreetmap.org/'+zoom+'/'+((x%n+n)%n)+'/'+y+'.png';
-   tile.style.cssText='left:'+(x*256-ox)+'px;top:'+(y*256-oy)+'px';tile.onerror=()=>{info.textContent='Fond de carte indisponible. Les positions et les étapes restent consultables.';};tiles.appendChild(tile);
+   tile.style.cssText='left:'+(x*256-ox)+'px;top:'+(y*256-oy)+'px';tile.onerror=()=>{notice.textContent='Fond de carte indisponible. Les positions et les étapes restent consultables.';};tiles.appendChild(tile);
   }
   const colors={walk:'#e5a52c',bus:'#328de6',rail:'#bb6eed'};
   for(const shape of data.shapes){const line=doc.createElementNS('http://www.w3.org/2000/svg','polyline');line.setAttribute('points',shape.points.map(q=>{const v=project(q,zoom);return (v[0]-ox)+','+(v[1]-oy);}).join(' '));line.setAttribute('fill','none');line.setAttribute('stroke',colors[shape.kind]);line.setAttribute('stroke-width','5');if(shape.kind==='walk')line.setAttribute('stroke-dasharray','7 5');overlay.appendChild(line);}
-  data.stops.forEach((stop,i)=>{const v=project(stop,zoom),button=doc.createElement('button');button.type='button';button.className='cp-transport-map-marker';button.textContent=String(i+1);button.setAttribute('aria-label',stop.name);button.style.cssText='left:'+(v[0]-ox)+'px;top:'+(v[1]-oy)+'px';button.onclick=()=>{info.textContent=(i+1)+'. '+stop.name;};markers.appendChild(button);});drawn=true;
+  const groups=[];
+  data.stops.forEach((stop,i)=>{const p=project(stop,zoom),group=groups.find(g=>Math.hypot(g.p[0]-p[0],g.p[1]-p[1])<44);if(group)group.items.push({stop,index:i});else groups.push({p,items:[{stop,index:i}]});});
+  for(const group of groups){const button=doc.createElement('button'),first=group.items[0];button.type='button';button.className='cp-transport-map-marker';button.textContent=String(first.index+1)+(group.items.length>1?'+'+(group.items.length-1):'');button.setAttribute('aria-label',group.items.map(item=>item.stop.name).join(' · '));button.style.cssText='left:'+(group.p[0]-ox)+'px;top:'+(group.p[1]-oy)+'px';button.onclick=()=>{info.textContent=group.items.map(item=>(item.index+1)+'. '+item.stop.name).join(' · ');};markers.appendChild(button);}
+  drawn=true;
  }
  if(data.stops.length){
   const controls=doc.createElement('div');controls.className='cp-transport-map-controls';
   for(const [label,action] of [['Agrandir',()=>{zoom=Math.min(18,zoom+1);origin=null;draw();}],['Réduire',()=>{zoom=Math.max(2,zoom-1);origin=null;draw();}],['Recentrer',()=>{zoom=baseZoom;center={...baseCenter};origin=null;draw();}]]){const b=doc.createElement('button');b.type='button';b.textContent=label;b.onclick=action;controls.appendChild(b);}
-  map.append(controls,canvas,info);
+  const stopLabel=doc.createElement('label');stopLabel.textContent='Choisir un arrêt';
+  const stopSelect=doc.createElement('select');stopSelect.setAttribute('aria-label','Choisir un arrêt sur la carte');
+  const placeholder=doc.createElement('option');placeholder.value='';placeholder.textContent='Tous les arrêts';stopSelect.appendChild(placeholder);
+  data.stops.forEach((stop,i)=>{const option=doc.createElement('option');option.value=String(i);option.textContent=(i+1)+'. '+stop.name;stopSelect.appendChild(option);});
+  stopSelect.onchange=()=>{if(stopSelect.value===''){fit();draw();return;}const i=Number(stopSelect.value),stop=data.stops[i];if(!stop)return;center={lat:stop.lat,lon:stop.lon};zoom=17;origin=null;info.textContent=(i+1)+'. '+stop.name;draw();};
+  stopLabel.appendChild(stopSelect);map.append(controls,canvas,info,stopLabel);
   const legend=doc.createElement('p');legend.className='cp-transport-map-legend';legend.textContent='Marche : pointillés dorés · Bus : bleu · Train : violet';map.appendChild(legend);
   let drag=null;
   canvas.addEventListener('pointerdown',e=>{if(e.target.closest('button,a'))return;drag={x:e.clientX,y:e.clientY,p:origin||project(center,zoom)};canvas.setPointerCapture?.(e.pointerId);});
