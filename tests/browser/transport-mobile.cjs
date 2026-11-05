@@ -289,12 +289,12 @@ async function run(){
   await page.screenshot({path:path.join(output,'mobile-regional.png')});
   assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'No horizontal overflow in the mobile mission sheet');
   const before=requests.length;
-  await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();
+  await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   await page.getByText(/Jonction régionale : 4 proposition/).waitFor();
   assert.ok(requests.length>before,'Explicit refresh issues new regional requests');
   holdSibra=true;  holdRegional=true;const beforeCloseRequests=requests.length,abortedBefore=abortedRequests.length;
-  await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();
+  await page.getByRole('button',{name:'Actualiser maintenant les transports de cette mission'}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   await until(()=>requests.length>=beforeCloseRequests+3,'Three regional refresh requests must be in flight');
   await until(()=>sibraGates.length>0,'A daily SIBRA response must be in flight before closing');
   await page.locator('#fermer').click();
