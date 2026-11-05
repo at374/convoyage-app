@@ -237,6 +237,8 @@ async function run(){
   assert.ok(requests.some(r=>r.fromPlace===official.request.fromPlace&&r.toPlace===official.request.toPlace),'Official regional response is rendered after late geocoding');
   // Verify the actual mobile DOM and interaction, not only the source code.
   const comparison=page.locator('#cpTransportMissionDetails');
+  // Let the real transient notification disappear before visual evidence is captured.
+  await page.locator('#toast').waitFor({state:'hidden'});
   const comparisonChecks=[];
   for(const [direction,heading] of [['aller','Aller · comparer'],['jonction','Jonction mission · comparer'],['retour','Retour · comparer']]){
    const title=comparison.getByRole('heading',{name:heading,exact:true});
@@ -255,8 +257,7 @@ async function run(){
     assert.ok(await card.locator('ol li').count()>0,heading+' shows actual leg details');
     assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,heading+' expanded cards fit mobile width');
     if(i===0){
-     await summary.scrollIntoViewIfNeeded();
-     await page.screenshot({path:path.join(output,'mobile-comparaison-'+direction+'.png')});
+     await card.screenshot({path:path.join(output,'mobile-comparaison-'+direction+'.png')});
     }
     await summary.click();
     assert.equal(await card.evaluate(node=>node.open),false,heading+' second tap collapses itinerary');
