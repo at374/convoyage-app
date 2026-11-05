@@ -5606,6 +5606,15 @@
      2.1688913
     ]
    ]
+  },
+  {
+   "nom": "ST-JEAN-LES-DEUX-JUMEAUX",
+   "points": [
+    [
+     48.9525283,
+     3.0390072
+    ]
+   ]
   }
  ],
  "paires": [
@@ -23111,21 +23120,21 @@
   ],
   [
    "PARIS / NOISY-LE-GRAND",
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    2.4,
    3.8,
    20
   ],
   [
    "PARIS / NOISY-LE-GRAND",
-   "ST-JEAN-LES-DEUX-JUMEAUX N°18",
+   "ST-JEAN-LES-DEUX-JUMEAUX",
    3.9,
    5.9,
    32
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
-   "ST-JEAN-LES-DEUX-JUMEAUX N°18",
+   "MEAUX / CRECY",
+   "ST-JEAN-LES-DEUX-JUMEAUX",
    1.5,
    2.1,
    12
@@ -23138,7 +23147,7 @@
    38
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "MONTREUIL AUX LIONS",
    2.1,
    3.3,
@@ -23152,7 +23161,7 @@
    58
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "CHATEAU-THIERRY",
    4.6,
    7,
@@ -23166,7 +23175,7 @@
    80
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "DORMANS",
    7.2,
    11.1,
@@ -23187,7 +23196,7 @@
    105
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "REIMS OUEST (péage de Thillois) N°22",
    10.2,
    15.1,
@@ -23215,7 +23224,7 @@
    105
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "REIMS NORD (péage d'Ormes)",
    10.2,
    14.9,
@@ -23243,7 +23252,7 @@
    101
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "REIMS SUD",
    9.7,
    14.3,
@@ -23271,7 +23280,7 @@
    119
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "REIMS EST (TAISSY)",
    11.9,
    17.6,
@@ -23306,7 +23315,7 @@
    134
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "ST GIBRIEN",
    13.7,
    21.1,
@@ -23348,7 +23357,7 @@
    136
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "MONT CHOISY",
    13.9,
    21.2,
@@ -23397,7 +23406,7 @@
    142
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "VATRY",
    14.6,
    22.9,
@@ -23453,7 +23462,7 @@
    148
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "SOMMESOUS",
    15.3,
    23.7,
@@ -23516,7 +23525,7 @@
    168
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "VALLEE DE L'AUBE",
    17.7,
    26.7,
@@ -23586,7 +23595,7 @@
    202
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "CHARMONT (LIM.CONC)",
    21.8,
    31.8,
@@ -23663,7 +23672,7 @@
    138
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "CHALONS MOURMELON",
    14.1,
    20.8,
@@ -23747,7 +23756,7 @@
    138
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "ST ETIENNE AU TEMPLE",
    14.2,
    21.3,
@@ -23838,7 +23847,7 @@
    158
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "STE MENEHOULD",
    16.6,
    24.9,
@@ -23936,7 +23945,7 @@
    172
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "CLERMONT EN ARGONNE",
    18.3,
    26.8,
@@ -24041,7 +24050,7 @@
    189
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "VOIE SACREE",
    20.3,
    29.5,
@@ -24153,7 +24162,7 @@
    207
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "FRESNES EN WOEVRE",
    22.4,
    33.6,
@@ -24279,7 +24288,7 @@
    222
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "JARNY",
    24.3,
    35.1,
@@ -24412,7 +24421,7 @@
    246
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "SAINTE-MARIE-AUX-CHÊNES",
    27.1,
    41.2,
@@ -24552,7 +24561,7 @@
    246
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "BEAUMONT",
    27.1,
    41.2,
@@ -24699,7 +24708,7 @@
    258
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "BOULAY",
    28.6,
    43.2,
@@ -24853,7 +24862,7 @@
    286
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "SAINT-AVOLD",
    31.9,
    49.5,
@@ -25014,7 +25023,7 @@
    286
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "FREYMING-MERLEBACH (A320)",
    31.9,
    49.5,
@@ -25182,7 +25191,7 @@
    289
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "FAREBERSVILLER",
    32.3,
    50.4,
@@ -25357,7 +25366,7 @@
    294
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "PUTTELANGE",
    32.9,
    51,
@@ -25539,7 +25548,7 @@
    299
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "SARREGUEMINES",
    33.5,
    51.9,
@@ -25721,7 +25730,7 @@
    309
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "SARRE-UNION",
    34.7,
    54.3,
@@ -25903,7 +25912,7 @@
    326
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "PHALSBOURG",
    36.7,
    56.7,
@@ -26092,7 +26101,7 @@
    336
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "SAVERNE",
    37.9,
    59,
@@ -26288,7 +26297,7 @@
    356
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "HOCHFELDEN N°45",
    40.3,
    62.6,
@@ -26491,7 +26500,7 @@
    373
   ],
   [
-   "MEAUX (A140) / CRECY N°16",
+   "MEAUX / CRECY",
    "STRASBOURG",
    42.3,
    65,
@@ -141249,14 +141258,14 @@
    3
   ],
   [
-   "COUTEVROULT",
+   "PARIS / NOISY-LE-GRAND",
    "MEAUX / CRECY",
    2.4,
    3.8,
    17
   ],
   [
-   "COUTEVROULT",
+   "PARIS / NOISY-LE-GRAND",
    "ST-JEAN-LES-DEUX-JUMEAUX",
    3.9,
    5.9,
