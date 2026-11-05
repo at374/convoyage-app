@@ -1868,8 +1868,45 @@
           warning.textContent = 'Transport non confirmé';
           summary.append(name, times, facts, legs, warning);
           card.appendChild(summary);
-          const detail = document.createElement('p');
-          detail.textContent = 'Horaires, correspondances et accès aux arrêts à vérifier. Les étapes des itinéraires figurent ci-dessous.';
+          const detail = document.createElement('div');
+          const intro = document.createElement('p');
+          intro.textContent = 'Étapes théoriques · horaires et circulation à vérifier avant de partir.';
+          detail.appendChild(intro);
+          const steps = Array.isArray(journey.legs) ? journey.legs : [];
+          if (steps.length) {
+            const list = document.createElement('ol');
+            for (const leg of steps) {
+              const step = document.createElement('li');
+              const line = document.createElement('strong');
+              line.textContent = [leg.line || leg.provider || 'Transport', leg.from && leg.to ? leg.from + ' → ' + leg.to : ''].filter(Boolean).join(' · ');
+              step.appendChild(line);
+              const fromTime = clock(leg.departure), toTime = clock(leg.arrival);
+              if (fromTime || toTime) {
+                const schedule = document.createElement('div');
+                schedule.textContent = (fromTime || '?') + ' → ' + (toTime || '?');
+                step.appendChild(schedule);
+              }
+              for (const stop of [leg.from, leg.to]) {
+                if (typeof stop !== 'string' || !stop.trim()) continue;
+                const link = document.createElement('a');
+                link.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(stop);
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = '📍 Rechercher arrêt : ' + stop;
+                link.style.display = 'block';
+                step.appendChild(link);
+              }
+              list.appendChild(step);
+            }
+            detail.appendChild(list);
+          } else {
+            const missing = document.createElement('p');
+            missing.textContent = 'Détail des arrêts indisponible pour cet itinéraire.';
+            detail.appendChild(missing);
+          }
+          const caution = document.createElement('small');
+          caution.textContent = 'Les liens cartographiques recherchent le nom de l’arrêt : position exacte non vérifiée.';
+          detail.appendChild(caution);
           card.appendChild(detail);
           grid.appendChild(card);
         }
