@@ -79,53 +79,6 @@
       ]
     },
     {
-      "id": "atmb-bonneville-centre",
-      "points": [
-        [
-          46.07336,
-          6.3832
-        ],
-        [
-          46.07302,
-          6.38216
-        ]
-      ]
-    },
-    {
-      "id": "atmb-bonneville-zi",
-      "points": [
-        [
-          46.0708,
-          6.42501
-        ],
-        [
-          46.07051,
-          6.42526
-        ]
-      ]
-    },
-    {
-      "id": "atmb-cluses-amont",
-      "points": [
-        [
-          46.04708,
-          6.59695
-        ],
-        [
-          46.04649,
-          6.59648
-        ],
-        [
-          46.04699,
-          6.5965
-        ],
-        [
-          46.04671,
-          6.59635
-        ]
-      ]
-    },
-    {
       "id": "atmb-cluses-aval",
       "points": [
         [
@@ -148,19 +101,6 @@
         [
           46.15283,
           6.29515
-        ]
-      ]
-    },
-    {
-      "id": "atmb-scionzier",
-      "points": [
-        [
-          46.06833,
-          6.5542
-        ],
-        [
-          46.06821,
-          6.55402
         ]
       ]
     },
@@ -226,27 +166,6 @@
         [
           49.08542,
           2.55037
-        ]
-      ]
-    },
-    {
-      "id": "sanef-vallee-de-la-hem-2",
-      "points": [
-        [
-          50.81968,
-          2.06132
-        ],
-        [
-          50.81951,
-          2.06208
-        ],
-        [
-          50.82071,
-          2.0645
-        ],
-        [
-          50.82096,
-          2.06376
         ]
       ]
     },
@@ -592,51 +511,6 @@
   ],
   "tarifs": [
     {
-      "id": "o0",
-      "b": "sanef-vallee-de-la-hem-2",
-      "c": 1,
-      "a": 1.3,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 1
-    },
-    {
-      "id": "o1",
-      "b": "sanef-vallee-de-la-hem-2",
-      "c": 2,
-      "a": 2,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 1
-    },
-    {
-      "id": "o2",
-      "b": "sanef-vallee-de-la-hem-2",
-      "c": 3,
-      "a": 2.6,
-      "s": "CROISE",
-      "f": "2026-02-01",
-      "u": 1
-    },
-    {
-      "id": "o3",
-      "b": "sanef-vallee-de-la-hem-2",
-      "c": 4,
-      "a": 4.3,
-      "s": "CROISE",
-      "f": "2026-02-01",
-      "u": 1
-    },
-    {
-      "id": "o4",
-      "b": "sanef-vallee-de-la-hem-2",
-      "c": 5,
-      "a": 0.8,
-      "s": "CROISE",
-      "f": "2026-02-01",
-      "u": 1
-    },
-    {
       "id": "o5",
       "b": "sanef-la-neuvillette-15",
       "c": 1,
@@ -754,51 +628,6 @@
       "u": 4
     },
     {
-      "id": "o18",
-      "b": "atmb-cluses-amont",
-      "c": 1,
-      "a": 2.5,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o19",
-      "b": "atmb-cluses-amont",
-      "c": 2,
-      "a": 4.3,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o20",
-      "b": "atmb-cluses-amont",
-      "c": 3,
-      "a": 6.8,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o21",
-      "b": "atmb-cluses-amont",
-      "c": 4,
-      "a": 8.7,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o22",
-      "b": "atmb-cluses-amont",
-      "c": 5,
-      "a": 1.4,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
       "id": "o23",
       "b": "atmb-cluses-aval",
       "c": 1,
@@ -839,141 +668,6 @@
       "b": "atmb-cluses-aval",
       "c": 5,
       "a": 1.4,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o28",
-      "b": "atmb-scionzier",
-      "c": 1,
-      "a": 2.3,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o29",
-      "b": "atmb-scionzier",
-      "c": 2,
-      "a": 4.3,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o30",
-      "b": "atmb-scionzier",
-      "c": 3,
-      "a": 6.8,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o31",
-      "b": "atmb-scionzier",
-      "c": 4,
-      "a": 8.7,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o32",
-      "b": "atmb-scionzier",
-      "c": 5,
-      "a": 1.4,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o33",
-      "b": "atmb-bonneville-centre",
-      "c": 1,
-      "a": 1.3,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o34",
-      "b": "atmb-bonneville-centre",
-      "c": 2,
-      "a": 2.3,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o35",
-      "b": "atmb-bonneville-centre",
-      "c": 3,
-      "a": 3.7,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o36",
-      "b": "atmb-bonneville-centre",
-      "c": 4,
-      "a": 4.8,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o37",
-      "b": "atmb-bonneville-centre",
-      "c": 5,
-      "a": 0.9,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o38",
-      "b": "atmb-bonneville-zi",
-      "c": 1,
-      "a": 1.7,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o39",
-      "b": "atmb-bonneville-zi",
-      "c": 2,
-      "a": 3.1,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o40",
-      "b": "atmb-bonneville-zi",
-      "c": 3,
-      "a": 4.8,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o41",
-      "b": "atmb-bonneville-zi",
-      "c": 4,
-      "a": 6.3,
-      "s": "PROUVE",
-      "f": "2026-02-01",
-      "u": 0
-    },
-    {
-      "id": "o42",
-      "b": "atmb-bonneville-zi",
-      "c": 5,
-      "a": 1,
       "s": "PROUVE",
       "f": "2026-02-01",
       "u": 0
