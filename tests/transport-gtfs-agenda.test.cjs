@@ -770,7 +770,7 @@ test('Android PWA offline cache includes every versioned entrypoint script',()=>
  for(const script of scripts){
   assert.ok(worker.includes("'"+script+"'"),'Missing Android offline script: '+script);
  }
- assert.match(worker,/const CACHE = 'cp-app-android-gtfs-validation-20261104-v\d+'/);
+ assert.match(worker,/const CACHE = 'cp-app-transport-results-cards-20261105-v\d+'/);
 });
 
 test('Android PWA offline cache retains the transport worker and app shell',()=>{
