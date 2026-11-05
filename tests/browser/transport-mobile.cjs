@@ -156,7 +156,14 @@ async function run(){
     requests.push(Object.fromEntries(url.searchParams));
     if(holdRegional)await new Promise(resolve=>regionalGates.push(resolve));
     const actual=url.searchParams.get('fromPlace')===official.request.fromPlace&&url.searchParams.get('toPlace')===official.request.toPlace&&url.searchParams.get('arriveBy')==='false';
-    return json(route,actual?official.response:{plan:{itineraries:[]}}).catch(()=>{});
+    // Synthetic direct service for UI coverage; keep the recorded C11 query intact.
+    const boundary=Date.parse(url.searchParams.get('date')+'T'+url.searchParams.get('time')+':00+01:00');
+    const end=url.searchParams.get('arriveBy')==='true'?boundary:boundary+42*60000;
+    const start=end-42*60000;
+    const synthetic={plan:{itineraries:[{startTime:start,endTime:end,duration:42*60,transfers:0,walkDistance:0,
+     legs:[{mode:'BUS',routeShortName:'TEST UI',startTime:start,endTime:end,distance:1000,
+      from:{name:'Arrêt fictif A'},to:{name:'Arrêt fictif B'}}]}]}};
+    return json(route,actual?official.response:synthetic).catch(()=>{});
    }
    if(url.hostname==='open-data.bus.blablacar.com')return route.abort('failed');
    if(url.hostname==='api.tripgo.com'){
@@ -216,15 +223,6 @@ async function run(){
    const start=Date.now();while(!gates.has(number)){if(Date.now()-start>5000)throw Error('No pending geocode '+number);await new Promise(resolve=>setTimeout(resolve,20));}
    for(const resolve of gates.get(number))resolve();gates.delete(number);
   };
-  // Explicit synthetic ranking fixture: the recorded network response alone may not rank.
-  await page.evaluate(()=>{
-   if(!window.CPTransportRanking)throw Error('Ranking module missing');
-   window.CPTransportRanking.rank=()=>[{
-    label:'Meilleur compromis',
-    journey:{durationMinutes:42,priceEUR:null,departure:'2026-11-05T08:00:00+01:00',arrival:'2026-11-05T08:42:00+01:00',
-     legs:[{line:'TEST C11',from:'Arrêt A',to:'Arrêt B',departure:'2026-11-05T08:00:00+01:00',arrival:'2026-11-05T08:42:00+01:00'}]}
-   }];
-  });
   await release('14');
   await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.innerText.includes('Retour régional'));
   await release('16');
