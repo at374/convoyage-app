@@ -1850,10 +1850,23 @@
           const facts = document.createElement('span');
           facts.textContent = (Number.isFinite(journey.durationMinutes) ? journey.durationMinutes + ' min' : 'Durée inconnue') + ' · ' +
             (Number.isFinite(journey.priceEUR) ? journey.priceEUR.toFixed(2).replace('.', ',') + ' €' : 'Tarif non vérifié');
+          const times = document.createElement('span');
+          times.style.display = 'block';
+          const clock = value => {
+            const ms = typeof value === 'number' ? value : Date.parse(value);
+            return Number.isFinite(ms) ? new Intl.DateTimeFormat('fr-FR', {hour:'2-digit',minute:'2-digit',timeZone:'Europe/Paris'}).format(new Date(ms)) : null;
+          };
+          const departure = clock(journey.departure), arrival = clock(journey.arrival);
+          times.textContent = departure && arrival ? departure + ' → ' + arrival : 'Horaires non disponibles';
+          const legs = document.createElement('small');
+          legs.style.display = 'block';
+          legs.textContent = Array.isArray(journey.legs) && journey.legs.length ?
+            journey.legs.map(leg => [leg.line || leg.provider, leg.from && leg.to ? leg.from + ' → ' + leg.to : ''].filter(Boolean).join(' ')).join(' · ') :
+            'Étapes non disponibles';
           const warning = document.createElement('small');
           warning.style.display = 'block';
           warning.textContent = 'Transport non confirmé';
-          summary.append(name, facts, warning);
+          summary.append(name, times, facts, legs, warning);
           card.appendChild(summary);
           const detail = document.createElement('p');
           detail.textContent = 'Horaires, correspondances et accès aux arrêts à vérifier. Les étapes des itinéraires figurent ci-dessous.';
@@ -2578,12 +2591,7 @@
                 window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
                 {deadline:pickupDate,marginMinutes:securityMarginMin});
               if (ranked.length) {
-                const rankingLine = document.createElement('p');
-                rankingLine.textContent = 'Classement régional théorique : ' +
-                  ranked.map(choice => (choice.journey.priceEUR === null && choice.label === 'Moins cher' ? 'Tarif inconnu' : choice.label) + ' (' + choice.journey.durationMinutes +
-                    ' min, ' + (choice.journey.priceEUR === null ? 'tarif non vérifié' : choice.journey.priceEUR.toFixed(2).replace('.', ',') + ' € (tarif vérifié)') + ')').join(' · ') +
-                  '. Correspondances et trajet complet non confirmés.';
-                outboundStatus.appendChild(rankingLine);
+                showRegionalChoices(outboundStatus, ranked, 'Aller · comparer');
               }
             }
             options.forEach(option => {
