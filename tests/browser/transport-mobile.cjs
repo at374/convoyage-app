@@ -318,7 +318,7 @@ async function run(){
   await page.locator('.mission').first().click();
   await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await release('12');
-  const rail=page.getByText(/^Aller — secours SNCF, horaires théoriques du flux/);
+  const rail=page.getByRole('heading',{name:'Aller SNCF · comparer (gare à gare)',exact:true}).locator('..');
   await rail.waitFor();
   const railText=await rail.textContent();
   assert.match(railText,/proposition\(s\) de gare à gare/);
