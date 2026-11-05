@@ -579,3 +579,32 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .etqC{background:#ffd9a0;color:#7a3e00}
 .etqN{background:#eceff1;color:#455a64;font-weight:700}
 .etqE{background:#c8f7dc;color:#0b5d2f;border:1px solid #1a9850}
+
+/* Mobile transport workspace: results first, details on demand. */
+#cpTransportMissionDetails{background:#f2f5fa;color:#18263b;border:0;border-radius:22px;padding:14px;font:400 15px/1.5 system-ui,sans-serif;letter-spacing:normal;box-shadow:0 12px 32px #10233b18}
+#cpTransportMissionDetails .cp-transport-hero{background:linear-gradient(135deg,#10263f,#204a70);color:#fff;border-radius:16px;padding:22px 18px;margin-bottom:16px}
+#cpTransportMissionDetails .cp-transport-eyebrow{color:#e7c777;font-size:10px;font-weight:800;letter-spacing:1.5px}
+#cpTransportMissionDetails h2{font-size:25px;line-height:1.15;letter-spacing:-.6px;margin:10px 0;font-weight:750;color:inherit}
+#cpTransportMissionDetails .cp-transport-hero p{font-size:14px;color:#dce7f2;margin:8px 0 14px}
+#cpTransportMissionDetails .cp-transport-hero small{display:block;font-size:11px;line-height:1.5;color:#b9ccdf}
+#cpTransportMissionDetails .cp-transport-direction{border:1px solid #dbe3ec;border-radius:16px;background:#fff;padding:16px;margin:12px 0;min-width:0}
+#cpTransportMissionDetails h3{font-size:18px;font-weight:750;color:#173b5e;margin:0 0 5px}
+#cpTransportMissionDetails .cp-transport-route{font-size:13px;color:#607087;line-height:1.45;margin:0 0 14px;overflow-wrap:anywhere}
+#cpTransportMissionDetails h4{font-size:11px;color:#64758b;text-transform:uppercase;letter-spacing:.7px;margin:18px 0 8px;font-weight:700}
+#cpTransportMissionDetails .doux{color:#637187;font-size:12px;font-weight:400;line-height:1.5}
+#cpTransportMissionDetails [data-transport-cards]>div>details,#cpTransportMissionDetails [data-tripgo-details]{background:#f7f9fc;border:1px solid #d8e2ee!important;border-radius:13px!important;padding:14px!important;box-shadow:0 3px 10px #173b5e08;font-size:14px;font-weight:400;color:#233a53;overflow-wrap:anywhere}
+#cpTransportMissionDetails summary{cursor:pointer;min-height:32px}
+#cpTransportMissionDetails summary strong{font-size:15px;color:#153f67}
+#cpTransportMissionDetails summary small{font-size:11px;color:#7b5c24}
+#cpTransportMissionDetails summary span{font-size:12px;line-height:1.55}
+#cpTransportMissionDetails details[open]>summary{padding-bottom:12px;border-bottom:1px solid #dce5ef;margin-bottom:12px}
+#cpTransportMissionDetails ol{padding-left:20px;font-size:13px;line-height:1.6}
+#cpTransportMissionDetails li{padding:8px 0}
+#cpTransportMissionDetails a{color:#23639c;font-weight:500}
+#cpTransportMissionDetails .cp-transport-settings{margin-top:20px;border-top:1px solid #d6dfeb;padding-top:16px;font-size:12px}
+#cpTransportMissionDetails .cp-transport-settings>summary{color:#526982;font-weight:650;font-size:13px}
+#cpTransportMissionDetails .cp-transport-evidence{font-size:11px;color:#718096;margin-top:10px}
+#cpTransportMissionDetails [data-transport-cards]>p{display:none}
+#cpTransportMissionDetails .cp-transport-settings .bkt{font-size:13px}
+#cpTransportMissionDetails input{max-width:100%;font-size:16px}
+@media(max-width:480px){#cpTransportMissionDetails{padding:10px;margin-left:-8px;margin-right:-8px}#cpTransportMissionDetails .cp-transport-direction{padding:13px}#cpTransportMissionDetails .cp-transport-hero{padding:20px 15px}}
