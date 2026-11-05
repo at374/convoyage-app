@@ -177,3 +177,33 @@ test('date-only fare and pass expiry includes the whole boarding day but not the
  assert.equal(fare([{...passLeg,departure:'2027-01-01T00:10:00+01:00'}],{sibraPassActive:true}).known,false);
  assert.equal(fare([{...fareLeg,fareValidUntil:'2026-11-31',departure:'2026-11-15T12:00:00+01:00'}]).known,false);
 });
+
+test('verified fares require exact euro cents and safe totals',()=>{
+ const priced={provider:'TER',fareVerified:true,fareSource:'Tarif officiel',verifiedPriceEUR:8.5};
+ assert.equal(fare([{...priced,verifiedPriceEUR:8.505}]).known,false);
+ assert.equal(fare([{...priced,verifiedPriceEUR:8.505}]).totalEUR,null);
+ assert.equal(fare([{...priced,verifiedPriceEUR:Number.MAX_SAFE_INTEGER}]).known,false);
+ assert.equal(fare([{...priced,verifiedPriceEUR:8.50}]).totalEUR,8.5);
+ assert.equal(fare([{...priced,verifiedPriceEUR:0}]).totalEUR,0);
+});
+
+test('mixed SIBRA, TER and TPG itinerary never presents a partial fare as a complete price',()=>{
+  const result=fare([
+    {provider:'SIBRA',mode:'pt_pub_bus',departure:'2026-11-15T08:00:00+01:00',
+      passAccepted:true,passProduct:'SIBRA',passEligibilityVerified:true,
+      passEligibilitySource:'Conditions officielles',passValidFrom:'2026-01-01',passValidUntil:'2026-12-31'},
+    {provider:'TER',mode:'pt_pub_train',departure:'2026-11-15T09:00:00+01:00',
+      fareVerified:true,fareSource:'Tarif officiel',verifiedPriceEUR:12.4,
+      fareValidFrom:'2026-11-01',fareValidUntil:'2026-11-30'},
+    {provider:'TPG',mode:'pt_pub_bus',departure:'2026-11-15T10:00:00+01:00'}
+  ],{sibraPassActive:true});
+  assert.equal(result.totalEUR,null);
+  assert.equal(result.known,false);
+  assert.equal(result.knownSubtotalEUR,12.4);
+  assert.equal(result.unknownLegCount,1);
+  assert.equal(result.breakdown[0].passApplied,true);
+  assert.equal(result.breakdown[1].amountEUR,12.4);
+  assert.equal(result.breakdown[2].amountEUR,null);
+  assert.match(describe(result),/Sous-total vérifié : 12,40 €/);
+  assert.match(describe(result),/TPG : prix inconnu/);
+});
