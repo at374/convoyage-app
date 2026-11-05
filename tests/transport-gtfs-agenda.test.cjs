@@ -812,3 +812,17 @@ test('Android PWA manifest keeps the installed application identity stable',()=>
   assert.ok(worker.includes("'"+icon.src+"'"),'Missing Android offline icon: '+icon.src);
  }
 });
+
+test('Mobile regional transport cards cover Aller Jonction Retour and safe stop lookup',()=>{
+ const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+ for(const section of ['Aller · comparer','Jonction mission · comparer','Retour · comparer']){
+  assert.ok(app.includes(section),'Missing mobile transport comparison: '+section);
+ }
+ assert.match(app,/const showRegionalChoices = \(host, ranked, heading\) =>/);
+ assert.match(app,/ranked\.slice\(0, 3\)/);
+ assert.match(app,/document\.createElement\('details'\)/);
+ assert.match(app,/document\.createElement\('ol'\)/);
+ assert.match(app,/encodeURIComponent\(stop\)/);
+ assert.match(app,/position exacte non vérifiée/);
+ assert.match(app,/Transport non confirmé/);
+});
