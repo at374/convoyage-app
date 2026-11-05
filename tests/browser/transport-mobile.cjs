@@ -358,10 +358,11 @@ async function run(){
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.getByText(/Prévisions BlaBlaCar Bus indisponibles sur cet appareil/).waitFor();
   assert.match(tripText,/Preuves manquantes/);assert.match(tripText,/prix du transport/);assert.doesNotMatch(tripText,/Réalisable/);
-  await steps.screenshot({path:path.join(output,'mobile-tripgo.png')});
   await steps.locator('summary').click();
   assert.equal(await steps.evaluate(node=>node.open),false,'TripGo card closes');
   assert.match(await tripStatus.innerText(),/Preuves manquantes/,'Missing evidence remains visible when collapsed');
+  await page.locator('#toast').waitFor({state:'hidden'});
+  await steps.screenshot({path:path.join(output,'mobile-tripgo.png')});
   await page.getByRole('button',{name:'Retirer la clé TripGo de cet appareil',exact:true}).click();
   assert.equal(await page.evaluate(()=>localStorage.getItem('cp_tripgo_key')),null);
   assert.equal(await page.getByText(/^Retour TripGo : 2 proposition/).count(),0);
@@ -382,7 +383,9 @@ async function run(){
   assert.equal(await observed.locator('[data-tripgo-details]').first().evaluate(node=>node.open),false,'Live operator information is visible on a collapsed TripGo card');
   const observedText=await observed.innerText();assert.match(observedText,/arrivée estimée après la marche finale/);
   assert.match(observedText,/11:45/);assert.doesNotMatch(observedText,/Preuves manquantes : circulation/);assert.doesNotMatch(observedText,/Réalisable/);
-  await observed.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'mobile-blablacar-observed.png')});
+  await page.clock.fastForward(3500);
+  await page.locator('#toast').waitFor({state:'hidden'});
+  await observed.locator('[data-tripgo-details]').first().screenshot({path:path.join(output,'mobile-blablacar-observed.png')});
   await page.clock.fastForward(61000);await page.getByText(/Prévisions BlaBlaCar Bus expirées/).waitFor();
   assert.match(await observed.innerText(),/Preuves manquantes : circulation/);
   await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'Operating-day worker must stop on close');
