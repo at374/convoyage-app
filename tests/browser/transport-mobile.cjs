@@ -240,7 +240,7 @@ async function run(){
   for(const heading of ['Aller · comparer','Jonction mission · comparer','Retour · comparer']){
    await comparison.getByRole('heading',{name:heading}).waitFor();
   }
-  const comparisonCards=comparison.locator('details');
+  const comparisonCards=comparison.locator('details').filter({hasText:'Étapes théoriques'});
   assert.ok(await comparisonCards.count()>=3,'Comparison must render interactive mobile cards');
   const firstCard=comparisonCards.first();
   await firstCard.locator('summary').click();
