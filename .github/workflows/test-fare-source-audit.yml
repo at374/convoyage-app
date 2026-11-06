@@ -5,6 +5,10 @@ on:
       - 'scripts/audit_gtfs_fare_sources.py'
       - 'scripts/discover_aura_fare_documents.py'
       - 'transport-lemanpass-fares.js'
+      - 'transport-aravis-fares.js'
+      - 'tests/transport-aravis-fares.test.cjs'
+      - 'data/transport/aravis-fare-*.json'
+      - 'scripts/extract_aravis_fare_matrix.py'
       - 'tests/transport-lemanpass-fares.test.cjs'
       - 'tests/fixtures/lemanpass-annemasse-geneve-20261106.json'
       - 'tests/test_gtfs_fare_source_audit.py'
@@ -26,3 +30,5 @@ jobs:
       - run: node --test tests/transport-lemanpass-fares.test.cjs
 
       - run: python -m py_compile scripts/discover_aura_fare_documents.py
+      - run: node --test tests/transport-aravis-fares.test.cjs
+      - run: python -m py_compile scripts/extract_aravis_fare_matrix.py
