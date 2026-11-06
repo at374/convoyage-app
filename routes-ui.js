@@ -217,8 +217,11 @@
   // confirmé). Ajouté à overlay.gares/overlay.paires. Les 3 autres angles morts (Audomarois B, St Michel amont, Le
   // Mans Ouest) restent dans UNK : la grille locale AREA confirme qu'aucun tarif séparé n'existe pour « St Michel
   // amont » (seules ST MICHEL MAURIENNE BAR/ECH, déjà connues, y figurent), et la grille locale SANEF confirme la
-  // même absence pour « Audomarois B » -- ce ne sont donc pas des lacunes de recherche mais une absence confirmée
-  // de tarif publié à ces points (cohérent avec leur type « Ech »). Le Mans Ouest reste non vérifié (COFIROUTE).
+  // même absence pour « Audomarois B ». La grille locale COFIROUTE (réseau A11/A28/A85 complet, 722 Ko) confirme la
+  // même absence pour « Le Mans Ouest » (seules LE MANS ZI NORD/SUD, CENTRE UNIVERSITÉ et SUD, toutes déjà connues,
+  // y figurent). Les 3 restants ne sont donc pas des lacunes de recherche mais une absence CONFIRMÉE de tarif
+  // publié à ces points (cohérent avec leur type « Ech ») : rien à chercher de plus, UNK reste définitivement
+  // correct pour eux, à moins qu'une future grille officielle ne liste explicitement un tarif.
   const UNK = [[43.6028,7.07258],[43.60465,7.06636],[43.60277,7.08123],[43.60452,7.08785],[43.64326,7.13402],[43.64796,7.13896],[43.65913,7.14893],[43.70388,7.19007],[43.70015,7.18812],[43.55322,5.23792],[43.49458,5.52498],[43.22574,5.58217],[43.2019,5.59417],[45.95485,-0.88122],[45.15248,1.37792],[45.15157,1.16683],[45.148,1.17478],[43.64504,1.49789],[47.45215,0.73944],[47.34919,0.70312],[47.33062,0.68813],[47.25442,0.67097],[47.55526,0.596],[43.63298,-1.39072],[43.63007,-1.39572],[43.46217,-1.49839],[43.46097,-1.50276],[43.37197,-1.67746],[43.51232,-1.22256],[48.94757,3.04036],[48.95228,3.03819],[48.91236,2.04593],[43.54423,6.80993],[43.14434,5.76838],[43.29347,6.20051],[43.48329,5.53837],[43.70774,7.19122],[48.54645,1.91114],[48.91342,2.16271],[48.91354,2.15809],[49.05393,4.28593],[49.32195,0.30849],[43.20492,5.59053],[43.14625,5.77192],[43.32435,5.59803],[43.25774,6.12279],[43.62419,-1.40083],[43.34138,-1.74961],[43.50524,1.35211],[43.64715,1.50769],[48.78189,2.15976],[48.8301,2.1485],[48.8714,2.15683],[43.36688,5.64373],[50.72292,2.16534],[50.7231,2.16714],[45.21646,6.46587],[47.98195,0.05435],[48.98384,1.68125],[49.23071,-0.07124]];
   let WK = null, WKID = 0; const WKATT = new Map();
   const CODE_WORKER = () => 'const UNK=' + JSON.stringify(UNK) + ';const dist=' + dist + ';const joli=' + joli + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';' +
