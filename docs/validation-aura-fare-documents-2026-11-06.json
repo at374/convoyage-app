@@ -1,0 +1,1426 @@
+{
+  "checkedAt": "2026-11-06T05:37:43.184503+00:00",
+  "source": "https://www.laregionvoustransporte.fr/cars-region/",
+  "rootSHA256": "1b561667ca7214f3bcba6f1a8340a379d4942dca0189e2f09ab8366e38bdcf54",
+  "scope": "Official departmental HTML pages and linked PDFs only. Documents not downloaded; no prices, dates or complete line/operator coverage validated.",
+  "departmentsFound": 12,
+  "departments": [
+    {
+      "departmentPage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/",
+      "pages": [
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/",
+          "sha256": "e01349be6a4caf548b4787b22a7e6fca892b93b41453604f9612f3fdfdb3a77e"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-haute-savoie/",
+          "sha256": "dba0207431da76e33e8b94e196c542b6eccce7ebce3676e99b83d701f90baaaa"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/gare-routiere/",
+          "sha256": "747e544db9af6dd865e7e7bad254380ec40ec73556994dde747ec4efb4b58a56"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/parking-relais-en-haute-savoie/",
+          "sha256": "007480b2c868fb866fcee4c463cdd21961d2ff17abde3977a8421ac876dc7977"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/points-de-vente-cars-region-haute-savoie/",
+          "sha256": "fc6cc023b78e293a6f940d48af3a422ee4c61e7e2fc64ec01aa3ae50841cd0ef"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "sha256": "7058823ae13e8c5759ec9eaf79da9a3a23b818ab3ab7ea52b7f474d883957c8b"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/velo-a-bord-des-cars-region-de-haute-savoie/",
+          "sha256": "52844a5e3268190ba0a051b4b856f3ce6e43997bf62d31a6359d7c8579d8c7b0"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/",
+          "sha256": "dba0207431da76e33e8b94e196c542b6eccce7ebce3676e99b83d701f90baaaa"
+        }
+      ],
+      "documents": [
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/plan_reseau_haute-savoie_2025-2026.pdf",
+          "label": "Découvrir le plan réseau",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/09/Plan_reseau_haute_savoie_2026.pdf",
+          "label": "Carte du réseau de la Haute-Savoie",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_haute-savoie_reglement_exploitation.pdf",
+          "label": "Réglement d'exploitation",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/09/cars_region_haute_savoie_guide_des_transport_2026.pdf",
+          "label": "Guide des transports de Haute-Savoie",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/09/plan_reseau_haute-savoie_2026-2027-V2.pdf",
+          "label": "Plan réseau Haute-Savoie",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/car_region_haute-savoie_Reglement_Voyageurs_GR.pdf",
+          "label": "Règlement Voyageurs",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/gare-routiere/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/car_region_haute-savoie_tableau_reservations_GR74_Annecy.pdf",
+          "label": "Réservation quai gare routière d'Annecy",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/gare-routiere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/car_region_haute-savoie_tableau_reservations_GR74_Annemasse.pdf",
+          "label": "Réservation quai gare routière Annemasse",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/gare-routiere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/car_region_haute-savoie_tableau_reservations_GR74_Cluses.pdf",
+          "label": "Réservation quai gare routière Cluses",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/gare-routiere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/car_region_haute-savoie_Reglement-exploitation_GR_Annecy.pdf",
+          "label": "Règlement exploitation gare routière d’Annecy",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/gare-routiere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/car_region_haute-savoie_Reglement-exploitation_HR_Cluses.pdf",
+          "label": "Règlement halte routière de Cluses",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/gare-routiere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/car_region_haute-savoie_Reglement-exploitation_HR_Annemasse.pdf",
+          "label": "Règlement halte routière d’Annemasse",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/gare-routiere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/car_region_haute-savoie_Reglement-exploitation_HR_Bonneville.pdf",
+          "label": "Règlement halte routière de Bonneville",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/gare-routiere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/04/PR-2026-LR-V2.pdf",
+          "label": "Consulter la carte P+R Haute-Savoie",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/parking-relais-en-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/06/cars_region_haute_savoie_horaires_Y62-63_ete_2026.pdf",
+          "label": "Y62",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_haute_savoie_horaires_Y21_2025_2026.pdf",
+          "label": "Y21",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_haute_savoie_horaires_Y04_2025_2026.pdf",
+          "label": "Y04",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/07/cars_region_haute_savoie_horaires_Y92_ete_2026-V2.pdf",
+          "label": "Y92",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/06/cars_region_haute_savoie_horaires_Y83_ete_2026.pdf",
+          "label": "Y83",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_haute_savoie_horaires_Y13_2025_2026.pdf",
+          "label": "Y13",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/06/cars_region_haute_savoie_horaires_Y86_ete_2026.pdf",
+          "label": "Y86",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/04/cars_region_haute_savoie_horaires_Y02_printemps_2026.pdf",
+          "label": "Y02",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/06/cars_region_haute_savoie_horaires_Y82_ete_2026.pdf",
+          "label": "Y82",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/06/cars_region_haute_savoie_horaires_Y84_ete_2026.pdf",
+          "label": "Y84",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/07/cars_region_haute_savoie_horaires_Y51_ete_2026.pdf",
+          "label": "Y51",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_haute_savoie_horaires_272_2025-2026.pdf",
+          "label": "272",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_haute_savoie_horaires_274_modifs_printemps_2026.pdf",
+          "label": "274",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/06/cars_region_haute_savoie_horaires_Y91_ete_2026.pdf",
+          "label": "Y91",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_haute_savoie_horaires_Y03_2025_2026.pdf",
+          "label": "Y03",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/07/cars_region_haute_savoie_horaires_Y94_ete_2026.pdf",
+          "label": "Y94",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_haute_savoie_horaires_Y22_2025_2026.pdf",
+          "label": "Y22",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/06/cars_region_haute_savoie_horaires_Y85_ete_2026.pdf",
+          "label": "Y85",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y13-03-04-81-82-83-84-85-86-91-92-93-94.pdf",
+          "label": "Fiche tarifs",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y02.pdf",
+          "label": "Fiche tarifs Y02",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y21.pdf",
+          "label": "Fiche tarifs Y21",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y22.pdf",
+          "label": "Fiche tarifs Y22",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y51.pdf",
+          "label": "Fiche tarifs Y51",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y62.pdf",
+          "label": "Fiche tarifs Y62",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y63.pdf",
+          "label": "Fiche tarifs Y63",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_haute_savoie_horaires_274_2025_2026.pdf",
+          "label": "Tarifs ligne 274",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/09/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_272-VF.pdf",
+          "label": "Tarifs ligne 272",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/04/flyer_achat_m-ticket_cars_region_tarifs_plats.pdf",
+          "label": "mode d’emploi d’achat du M-Ticket.",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/PASS_Region_seniors_procedure_utilisation_2026.pdf",
+          "label": "la procédure",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_haute_savoie_carbus.pdf",
+          "label": "voir conditions",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/09/Plan_reseau_haute_savoie_2026.pdf",
+          "label": "Carte du réseau de la Haute-Savoie",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_haute-savoie_reglement_exploitation.pdf",
+          "label": "Réglement d'exploitation",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/09/cars_region_haute_savoie_guide_des_transport_2026.pdf",
+          "label": "Guide des transports de Haute-Savoie",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/09/plan_reseau_haute-savoie_2026-2027-V2.pdf",
+          "label": "Plan réseau Haute-Savoie",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/",
+          "fareCandidate": false
+        }
+      ],
+      "errors": [],
+      "pricesExtracted": false,
+      "operatorCoverageVerified": false
+    },
+    {
+      "departmentPage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-drome/",
+      "pages": [
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-drome/",
+          "sha256": "1fb0c109642ece6fbf88c3097ad65abb9e2e3eae00347f7f847224b08953d149"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-la-drome/",
+          "sha256": "062da2f0867f6882a2a668c191ab5f3b8180cf7099149291b521fdfdc1cd6b7d"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-drome/infos-et-services-cars-region-de-la-drome/points-de-vente-cars-region-drome/",
+          "sha256": "1c9dd696678734b2dfe626643fe59f257cede97f0c7b4a0124da9b7d8b8fa80d"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-drome/infos-et-services-cars-region-de-la-drome/titres-et-tarifs-de-drome/",
+          "sha256": "cad66f9e1913ee0ed61c7bdb2916ceffdd3cbe23b80b3a5ee5c208277e543428"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-drome/infos-et-services-cars-region-de-la-drome/transport-a-la-demande-de-la-drome/",
+          "sha256": "21df4f3b74a902ebd63e30edf695beb63966ee23912a2875101a57450ea207d7"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-drome/infos-et-services-cars-region-de-la-drome/velo-a-bord-des-cars-region-de-drome/",
+          "sha256": "c0731fac989f5941f14c8705ffe2265d9285e884660f61350530eeb4f8e41bd9"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-drome/infos-et-services-cars-region-de-la-drome/",
+          "sha256": "062da2f0867f6882a2a668c191ab5f3b8180cf7099149291b521fdfdc1cd6b7d"
+        }
+      ],
+      "documents": [
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/04/flyer_achat_m-ticket_cars_region_tarifs_plats.pdf",
+          "label": "mode d’emploi d’achat du M-Ticket.",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-drome/infos-et-services-cars-region-de-la-drome/titres-et-tarifs-de-drome/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/PASS_Region_seniors_procedure_utilisation_2026.pdf",
+          "label": "la procédure",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-drome/infos-et-services-cars-region-de-la-drome/titres-et-tarifs-de-drome/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/car_region_drome_tarifsmars2026.pdf",
+          "label": "guide des tarifs",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-drome/infos-et-services-cars-region-de-la-drome/titres-et-tarifs-de-drome/",
+          "fareCandidate": true
+        }
+      ],
+      "errors": [],
+      "pricesExtracted": false,
+      "operatorCoverageVerified": false
+    },
+    {
+      "departmentPage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/",
+      "pages": [
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/",
+          "sha256": "7d23c50230d3253b287ec86ab64796043d611a7e54e403ed962a0bc51a71f63d"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-la-haute-loire/",
+          "sha256": "c65cb691366074294a27982327363f3b7085d721adb16bdd30e154c141c9db60"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/infos-et-services-cars-region-de-la-haute-loire/points-de-vente-cars-region-haute-loire/",
+          "sha256": "f93bd4e5c5ae3c1e3b747a867e7764a33233f4254095627f1b38321eb46f1981"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/infos-et-services-cars-region-de-la-haute-loire/titres-et-tarifs-de-haute-loire/",
+          "sha256": "d370908c3ca000f12fa31c7f56a0bad0c9653bfab85cbf8e0d569402c5062be2"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/infos-et-services-cars-region-de-la-haute-loire/transport-a-la-demande-de-la-haute-loire/",
+          "sha256": "ab2a2372679667a49ea2ef1a39301df004502b37836a9606997bf1b663d56e50"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/infos-et-services-cars-region-de-la-haute-loire/velo-a-bord-des-cars-region-de-haute-loire/",
+          "sha256": "e46303704398516711d7f5af91049a2d5ffed0554fe9e554b464c5786636dd95"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/infos-et-services-cars-region-de-la-haute-loire/",
+          "sha256": "c65cb691366074294a27982327363f3b7085d721adb16bdd30e154c141c9db60"
+        }
+      ],
+      "documents": [
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/04/flyer_achat_m-ticket_cars_region_tarifs_plats.pdf",
+          "label": "mode d’emploi d’achat du M-Ticket.",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/infos-et-services-cars-region-de-la-haute-loire/titres-et-tarifs-de-haute-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/PASS_Region_seniors_procedure_utilisation_2026.pdf",
+          "label": "Consulter le guide pour obtenir votre Pass’ Région Séniors",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/infos-et-services-cars-region-de-la-haute-loire/titres-et-tarifs-de-haute-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_HauteLoire_Titres_tarifs_LR_vdef_2025.pdf",
+          "label": "le guide des tarifs",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/infos-et-services-cars-region-de-la-haute-loire/titres-et-tarifs-de-haute-loire/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_43_formulaire_inscript_TAD_202601.pdf",
+          "label": "le formulaire",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/infos-et-services-cars-region-de-la-haute-loire/transport-a-la-demande-de-la-haute-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_43_carte_TAD_202601.pdf",
+          "label": "toutes les infos",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/infos-et-services-cars-region-de-la-haute-loire/transport-a-la-demande-de-la-haute-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_43_reglement_TAD_202601.pdf",
+          "label": "le règlement des transports à la demande",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/infos-et-services-cars-region-de-la-haute-loire/transport-a-la-demande-de-la-haute-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_HauteLoire_Contacts_transporteurs_LR_2025_2026.pdf",
+          "label": "transporteur",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-haute-loire/infos-et-services-cars-region-de-la-haute-loire/velo-a-bord-des-cars-region-de-haute-loire/",
+          "fareCandidate": false
+        }
+      ],
+      "errors": [],
+      "pricesExtracted": false,
+      "operatorCoverageVerified": false
+    },
+    {
+      "departmentPage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/",
+      "pages": [
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/",
+          "sha256": "94aaf3ef7c82ee597a9f02dff9300f9966e867e2490ae86433dc8b0ca39f9cf6"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-la-loire/",
+          "sha256": "a208302245c3736f568999721caf8da7bd5110f5f43dabafca39bedf1d36a719"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/gares-routieres-de-la-loire/",
+          "sha256": "2577e36ee7a68c48d7ae51dcbd811e2d7e2787b8995e36da862ee6beb9c325a0"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/points-de-vente-cars-region-loire/",
+          "sha256": "fe3efe0fc07d91eae2aaca1794e93dde0d21b89ba99fd0ac58ea094383e46e22"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/titres-et-tarifs-loire/",
+          "sha256": "37871110019249b83906d071c48644f61bd66cbc5fa02beafe9e2a5fd419b84e"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/transport-a-la-demande-de-la-loire/",
+          "sha256": "5c28c3802353a4ff527c638b5f26a88a32ab6d0374da3634fbfc36ec1c09b385"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/velo-a-bord-des-cars-region-loire/",
+          "sha256": "526f719f8535ec300147eb53d35be1a64e476fbde504d02a9b3f5f3b078a5d55"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/",
+          "sha256": "a208302245c3736f568999721caf8da7bd5110f5f43dabafca39bedf1d36a719"
+        }
+      ],
+      "documents": [
+        {
+          "url": "https://mmt.vsct.fr/sites/default/files/station_map/2023%20Saint-Etienne%20Bellevue.pdf",
+          "label": "Consulter le plan du site.",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/gares-routieres-de-la-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_loire_points_de_vente_2025_2026.pdf",
+          "label": "la liste des points de vente",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/points-de-vente-cars-region-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_loire_horaires_l20_2025_2026.pdf",
+          "label": "L20",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/titres-et-tarifs-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_loire_horaires_l40_2025_2026.pdf",
+          "label": "L40",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/titres-et-tarifs-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_loire_points_de_vente_2025_2026.pdf",
+          "label": "Auprès des dépositaires",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/titres-et-tarifs-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2025/12/cars_region_loire_CGV_ticket_SMS.pdf",
+          "label": "Consulter les conditions générales de vente et les forfaits compatibles",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/titres-et-tarifs-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/sites/aura_transport/files/2026-01/PASS_senior_procedure_offres_0.pdf",
+          "label": "la procédure",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/titres-et-tarifs-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_loire_tarifs_2025_2026.pdf",
+          "label": "le guide des tarifs",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/titres-et-tarifs-loire/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_loire_horaires_l50_2025_2026.pdf",
+          "label": "L50 : St-Priest-la-Prugne > Villemontais",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/transport-a-la-demande-de-la-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_loire_horaires_l51_2025_2026.pdf",
+          "label": "L51 : Chausseterre > St-Polgues",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/transport-a-la-demande-de-la-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_loire_horaires_L53_2025_2026.pdf",
+          "label": "L53 : Direction St-Just-en-Chevalet",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/transport-a-la-demande-de-la-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_loire_horaires_L54_2025_2026.pdf",
+          "label": "L54 : Direction St-Germain-Laval",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/transport-a-la-demande-de-la-loire/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_loire_horaires_l25_2025_2026.pdf",
+          "label": "Consulter la fiche horaires",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-loire/infos-et-services-cars-region-de-la-loire/velo-a-bord-des-cars-region-loire/",
+          "fareCandidate": false
+        }
+      ],
+      "errors": [],
+      "pricesExtracted": false,
+      "operatorCoverageVerified": false
+    },
+    {
+      "departmentPage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/",
+      "pages": [
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/",
+          "sha256": "3e1a8abb88bd6438e7c9b97ed56beb966b03b7d68575c7499ddb5754a61fbb5d"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-la-savoie/",
+          "sha256": "7a32a51b6d77f44fa0fbf5b9b229cdea3b4bfcf0db71648bc437364440cc47ca"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/infos-et-services-cars-region-de-la-savoie/gare-routiere/",
+          "sha256": "022106ece71c63547e26f29a624afd3a994264b9d620ced6c287a496246861ca"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/infos-et-services-cars-region-de-la-savoie/points-de-vente-cars-region-savoie/",
+          "sha256": "6de60a128737cefe393c5ca126cd3024c8aaad4ca52a091baaca36b3631e6474"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/infos-et-services-cars-region-de-la-savoie/titres-et-tarifs-de-savoie/",
+          "sha256": "bcd98cf15204a0024923408830bea462d15e126e349f964df2407cf32724ccc2"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/infos-et-services-cars-region-de-la-savoie/transport-a-la-demande-de-la-savoie/",
+          "sha256": "4aff87b6ea6cdc729744e72dfd463e93fa29d89c5ea63a25e1735e8376afa946"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/infos-et-services-cars-region-de-la-savoie/velo-a-bord-des-cars-region-de-savoie/",
+          "sha256": "7beef3fcdbe7a0e3ac21e9db185ca40f97577cbd7b451a30b7ab77c52755cce4"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/infos-et-services-cars-region-de-la-savoie/",
+          "sha256": "7a32a51b6d77f44fa0fbf5b9b229cdea3b4bfcf0db71648bc437364440cc47ca"
+        }
+      ],
+      "documents": [
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_73_plan_du_reseau_cars_region_savoie_v1_20250120.pdf",
+          "label": "Découvrir le plan réseau",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_savoie_tarifs_mars_2026.pdf",
+          "label": ">> Consulter les tarifs",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/infos-et-services-cars-region-de-la-savoie/titres-et-tarifs-de-savoie/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/04/flyer_achat_m-ticket_cars_region_tarifs_plats.pdf",
+          "label": "mode d’emploi d’achat du M-Ticket.",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/infos-et-services-cars-region-de-la-savoie/titres-et-tarifs-de-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/cars_region_73_ticket_sms_cgv_2025_2026.pdf",
+          "label": "Consulter les conditions générales de vente",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/infos-et-services-cars-region-de-la-savoie/titres-et-tarifs-de-savoie/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/PASS_Region_seniors_procedure_utilisation_2026.pdf",
+          "label": "la procédure",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/infos-et-services-cars-region-de-la-savoie/titres-et-tarifs-de-savoie/",
+          "fareCandidate": false
+        }
+      ],
+      "errors": [],
+      "pricesExtracted": false,
+      "operatorCoverageVerified": false
+    },
+    {
+      "departmentPage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/",
+      "pages": [
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/",
+          "sha256": "8e915b1bd8225b1ff34a39c25c5592f3a414c1d15a712ec8df1b9b2e09ccdc6b"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lain/",
+          "sha256": "6a1d4cbe8149ed8cf52d6fea43767fac419feb9d5fcbde432f859ca09ec6beb0"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/points-de-vente-cars-region-ain/",
+          "sha256": "4a1c21678f30fd7eb0b26807701c33eb58d3bbade4fd94cd94891436239daabf"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "sha256": "493a9b5921b3b5d18cd0538727b7307a7759fb9106735d2e112e6754365719ed"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "sha256": "2f6e37ae62d1791d4f8c8d454a4cdf07da8890d02e0e70a6a985a36a3aed5207"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/velo-a-bord-des-cars-region-de-lain/",
+          "sha256": "0896aaa6329b9849a8d9f56b3495c2a4b50951a655653d2f8c987cd116b6a3ad"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/",
+          "sha256": "6a1d4cbe8149ed8cf52d6fea43767fac419feb9d5fcbde432f859ca09ec6beb0"
+        }
+      ],
+      "documents": [
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/09/cars_region_ain_plan_reseau_lignes_regulieres_2026_2027.pdf",
+          "label": "Découvrir le plan réseau",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_ain_points_vente.pdf",
+          "label": "points de vente",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/points-de-vente-cars-region-ain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_ain_plaquette_oura_2026.pdf",
+          "label": "toutes les informations",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_ain_formulaire_oura_rdta_2026.pdf",
+          "label": "Régie des transports de l’Ain",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_ain_formulaire_oura_philibert_2026.pdf",
+          "label": "Philibert",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_ain_formulaire_oura_maisavia_2026.pdf",
+          "label": "Maisavia",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_ain_formulaire_oura_cars_plateau_2026.pdf",
+          "label": "Cars du Plateau",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_ain_formulaire_oura_transarc_2026.pdf",
+          "label": "Transarc Segui",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_ain_plaquette_oura_2025.pdf",
+          "label": "ici",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/04/flyer_achat_m-ticket_cars_region_tarifs_plats.pdf",
+          "label": "mode d’emploi d’achat du M-Ticket.",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/PASS_Region_seniors_procedure_utilisation_2026.pdf",
+          "label": "la procédure",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/cars_region_ain_tarifs_mars-2026.pdf",
+          "label": "le guide des tarifs",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/Tarifs-a-bord-mars-2026-x25.pdf",
+          "label": "ligne X25 Villefranche-sur-Saône / Mâcon Loché TGV",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/X33_Grilles-tarifaires-01032026.pdf",
+          "label": "ligne X33 Valserhône / Divonne-les-Bains",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/CAR_RARA_TARIFS-ILLICO-AUTOCARS_X36_Bellegarde-Bourg_2026.pdf",
+          "label": "ligne X36 Bellegarde / Bourg-en-Bresse",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/CAR_RARA_TARIFS-ILLICO-AUTOCARS_X37_Nantua-St-Claude_2026.pdf",
+          "label": "ligne X37 Nantua / Saint-Claude",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/CAR_RARA_TARIFS-ILLICO-AUTOCARS_X38_Bourg-en-Bresse-Oyonnax_2026.pdf",
+          "label": "ligne X38 Oyonnax / Bourg-en-Bresse",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A10_horaires_2025_2026_amberieu_en_bugey_lagnieu_pipa.pdf",
+          "label": "A10 : Ambérieu-en-Bugey / Lagnieu / PIPA",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A11_horaires_2025-2026_meximieux_pipa.pdf",
+          "label": "A11 : Meximieux / PIPA",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A91_horaires_2025_2026_belleville_saint_trivier_villars_les_dombes.pdf",
+          "label": "A91 : Belleville / Saint-Trivier-sur-Moignans / Villars-les-Dombes",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A93_horaires_2025_2026_belley_morestel.pdf",
+          "label": "A93 : Belley / Morestel",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A01_horaires_2025_2026_chalamont_villars_les_dombes.pdf",
+          "label": "A01 : Chalamont : Villars-les-Dombes",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A02_horaires_2025_2026_chatillon_sur_chalaronne_villars_les_dombes.pdf",
+          "label": "A02 : Châtillon-sur-Chalaronne / Villars-les-Dombes",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A13_horaires_2025_2026_belleville_saint_germain_au_mont_d_or.pdfhttps://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A13_horaires_2025_2026_belleville_saint_germain_au_mont_d_or.pdf",
+          "label": "A13 : Belleville / Saint-Germain-au-Mont-d’Or",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A18_horaires_2025_2026_bourg_en_bresse_macon.pdf",
+          "label": "A18 : Bourg-en-Bresse / Mâcon",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A19_horaires_2025_2026_villefranche_sur_saone_bourg_en_bresse.pdf",
+          "label": "A19 : Villefranche-sur-Saône / Bourg-en-Bresse",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A20_horaires_2025_2026_belleville_bourg_en_bresse.pdf",
+          "label": "A20 : Belleville / Bourg-en-Bresse",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A27_horaires_2025_2026_amberieu_en_bugey_bourg_en_bresse.pdf",
+          "label": "A27 : Bourg-en-Bresse / Pont-d’Ain / Ambérieu-en-Bugey",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A29_horaires_2025_2026_meximieux_poncin.pdf",
+          "label": "A29 : Meximieux / Poncin",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A33_horaires_2025_2026_seyssel_bellegarde_sur_valserine.pdf",
+          "label": "A33 : Seyssel / Bellegarde-sur-Valserhône",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A43_horaires_2025_2026_chanay_culoz_belley.pdf",
+          "label": "A43 : Chanay / Culoz / Belley",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A45_horaires_2025_2026_virieu_le_grand_belley.pdf",
+          "label": "A45 : Virieu-le-Grand / Belley",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A47_horaires_2025_2026_brenod_hauteville_lompnes_belley.pdf",
+          "label": "A47 : Brénod / Hauteville-Lompnes / Belley",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A48_horaires_2025_2026_saint_julien_sur_suran_bourg_en_bresse.pdf",
+          "label": "A48 : Saint-Julien-sur-Suran / Bourg-en-Bresse",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A49_horaires_2025_2026_lhuis_amberieu_en_bugey.pdf",
+          "label": "A49 : Lhuis / Ambérieu-en-Bugey",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_ain_ligne_A55_horaires_2025-2026_macon_pont_de_vaux.pdf",
+          "label": "A55 : Pont-de-Vaux / Mâcon",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/transport-a-la-demande-de-lain/",
+          "fareCandidate": false
+        }
+      ],
+      "errors": [],
+      "pricesExtracted": false,
+      "operatorCoverageVerified": false
+    },
+    {
+      "departmentPage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lallier/",
+      "pages": [
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lallier/",
+          "sha256": "253e24af09b1182d77cc9e0d36c5a683064c3c3209b00697455542b1a57dc5c0"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lallier/",
+          "sha256": "038b895d7209c3e0108de22b50dbef25f427529518f50a697daa24472612f6c2"
+        }
+      ],
+      "documents": [],
+      "errors": [],
+      "pricesExtracted": false,
+      "operatorCoverageVerified": false
+    },
+    {
+      "departmentPage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lardeche/",
+      "pages": [
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lardeche/",
+          "sha256": "ac32a48fe7892218c489d701ae056584e1c585a0f3fe47b5d8c4988e6b17f889"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lardeche/",
+          "sha256": "ec16240293de1f4251a965b2a1eb95d6fa22cf535fc27d3c254afa57a4e1d187"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lardeche/titres-et-tarifs-de-lardeche/",
+          "sha256": "9e53a11303b916c9966ce1d32d2cce170526c3198655aa7d3ce0d100a3cab2e6"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lardeche/transport-a-la-demande-de-lardeche/",
+          "sha256": "0336dda6c71df6384548997af3b2b189e04ee225bc621f8a3af68266687a604f"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lardeche/infos-et-services-cars-region-de-lardeche/",
+          "sha256": "ec16240293de1f4251a965b2a1eb95d6fa22cf535fc27d3c254afa57a4e1d187"
+        }
+      ],
+      "documents": [
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_07_Carte-reseau-Ardeche_2025_2026.pdf",
+          "label": "Carte du réseau de l'Ardèche",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lardeche/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/cars_region_07_Reglement-Exploitation_commun_2024_2025.pdf",
+          "label": "Règlement des transports",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lardeche/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_07_flyer-A5-TAD-Ardeche-2025_2026.pdf",
+          "label": "Carte du réseau TAD PMR",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lardeche/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/Planche-tarifaire-AU-1ER-MARS-2026-1.pdf",
+          "label": "le guide des tarifs",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lardeche/titres-et-tarifs-de-lardeche/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/04/flyer_achat_m-ticket_cars_region_tarifs_plats.pdf",
+          "label": "mode d’emploi d’achat du M-Ticket.",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lardeche/titres-et-tarifs-de-lardeche/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/PASS_Region_seniors_procedure_utilisation_2026.pdf",
+          "label": "la procédure",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lardeche/titres-et-tarifs-de-lardeche/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/07/Flyer-TAD-PMR-07-2026.pdf",
+          "label": "Carte du réseau TAD PMR",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lardeche/transport-a-la-demande-de-lardeche/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/cars_region_07_Carte-reseau-Ardeche_2025_2026.pdf",
+          "label": "Carte du réseau de l'Ardèche",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lardeche/infos-et-services-cars-region-de-lardeche/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/cars_region_07_Reglement-Exploitation_commun_2024_2025.pdf",
+          "label": "Règlement des transports",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lardeche/infos-et-services-cars-region-de-lardeche/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/01/cars_region_07_flyer-A5-TAD-Ardeche-2025_2026.pdf",
+          "label": "Carte du réseau TAD PMR",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lardeche/infos-et-services-cars-region-de-lardeche/",
+          "fareCandidate": false
+        }
+      ],
+      "errors": [],
+      "pricesExtracted": false,
+      "operatorCoverageVerified": false
+    },
+    {
+      "departmentPage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lisere/",
+      "pages": [
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lisere/",
+          "sha256": "3edb7e8c1001c9f8348a338709c1722882fd83fd90bed56012c5d4eade35c552"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lisere/",
+          "sha256": "68540fa0063a91995cca17f53ffa50114e535e3ff792c470e14dfc685eaa328a"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lisere/infos-et-services-cars-region-de-lisere/gares-routieres-en-isere/",
+          "sha256": "aa80d874f3e22ddc0a1ec0e3a6cfb1a700d9c33ea6aeffdadbaa582238620635"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lisere/infos-et-services-cars-region-de-lisere/parking-relais-en-isere/",
+          "sha256": "ca696027ecda1ae667e71a6f213ee27bc691dd70321ec5fca95b420076f51af4"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lisere/points-de-vente-cars-region-isere/",
+          "sha256": "532429b00899d6cd76f1f6896badd4e788ba66d560dc7960c6390002031824d7"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lisere/titres-et-tarifs-de-lisere/",
+          "sha256": "07ba0332b175cd05d53fa2a1af4d2a6b74b435e30c33d5ec3c27349b3c39a970"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lisere/velo-a-bord-des-cars-region-de-lisere/",
+          "sha256": "74f38453850622477b6b361bce497d595f712daa19c55daaa9baf99fa1011198"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lisere/infos-et-services-cars-region-de-lisere/",
+          "sha256": "68540fa0063a91995cca17f53ffa50114e535e3ff792c470e14dfc685eaa328a"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lisere/infos-et-services-cars-region-de-lisere/points-de-vente-cars-region-isere/",
+          "sha256": "532429b00899d6cd76f1f6896badd4e788ba66d560dc7960c6390002031824d7"
+        }
+      ],
+      "documents": [
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_isere_infos_pratiques_transporteurs_gare_routiere_grenoble_2026.pdf",
+          "label": "ici",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lisere/infos-et-services-cars-region-de-lisere/gares-routieres-en-isere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_isere_reglement_gare_routiere_de_grenoble_mars_2026.pdf",
+          "label": "règlement de la gare routière de Grenoble",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lisere/infos-et-services-cars-region-de-lisere/gares-routieres-en-isere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/09/cars_region_isere_points_de_vente_20260930.pdf",
+          "label": "liste des points de vente",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lisere/points-de-vente-cars-region-isere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/07/cars_region_isere_carte_points_vente_20260706.pdf",
+          "label": "carte de l’Isère",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lisere/points-de-vente-cars-region-isere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/05/Formulaire-de-carte-Oura-nouveau-modele-Isere_avec_CGV_202605.pdf",
+          "label": "les conditions d’utilisation",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lisere/titres-et-tarifs-de-lisere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_isere_liste_communes_zones_20260301.pdf",
+          "label": "la liste des communes par zone tarifaire",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lisere/titres-et-tarifs-de-lisere/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/04/flyer_achat_m-ticket_cars_region_tarifs_plats.pdf",
+          "label": "mode d’emploi d’achat du M-Ticket.",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lisere/titres-et-tarifs-de-lisere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2025/12/cars_region_isere_ticket_sms_cgv_202403.pdf",
+          "label": "Consulter les conditions générales de vente",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lisere/titres-et-tarifs-de-lisere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/PASS_Region_seniors_procedure_utilisation_2026.pdf",
+          "label": "la procédure",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lisere/titres-et-tarifs-de-lisere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_isere_tarifs_20260301.pdf",
+          "label": "le guide des tarifs",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-de-lisere/titres-et-tarifs-de-lisere/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/09/cars_region_isere_points_de_vente_20260930.pdf",
+          "label": "liste des points de vente",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lisere/infos-et-services-cars-region-de-lisere/points-de-vente-cars-region-isere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/07/cars_region_isere_carte_points_vente_20260706.pdf",
+          "label": "carte de l’Isère",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lisere/infos-et-services-cars-region-de-lisere/points-de-vente-cars-region-isere/",
+          "fareCandidate": false
+        }
+      ],
+      "errors": [],
+      "pricesExtracted": false,
+      "operatorCoverageVerified": false
+    },
+    {
+      "departmentPage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/",
+      "pages": [
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/",
+          "sha256": "a1f9d182cc7f8fc8c3c5a91ce18fc2e45f89d49bd0ebcf9e565c164eeca54449"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-du-cantal/",
+          "sha256": "3a2d6fdc9a6f957f57e7b3fd0415374e09da8bf865b2d06a5b48070d6e125d6a"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/gare-routiere/",
+          "sha256": "d8043ce9501a0c744d84fff384c1465b76118aa5c2e0e00752358c6de5f5f6a2"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/points-de-vente-cars-region-cantal/",
+          "sha256": "e171f730111c1234ad372262554102e117e07a310e5e98d1a1d1d91b2a3506b8"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/titres-et-tarifs-du-cantal/",
+          "sha256": "194acf458e19d9d6a648351071f9ada9ad4468ad87907d496391970c0607197b"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/velo-a-bord-des-cars-region-du-cantal/",
+          "sha256": "0543c508afa8ffd12865e13ab3a78ce8d6767c8044f242b6593d2801c060ba47"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/",
+          "sha256": "3a2d6fdc9a6f957f57e7b3fd0415374e09da8bf865b2d06a5b48070d6e125d6a"
+        }
+      ],
+      "documents": [
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/09/cars_Region_Cantal_Plan_SRO_20260915.pdf",
+          "label": "Découvrir le plan réseau",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/20251128_Cantal_15_1425.pdf",
+          "label": "Carte du réseau du Cantal",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/Reglement-Exploitationcommun25_26-.pdf",
+          "label": "Règlement d'exploitation",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/cars_Region_Cantal_tarifs_20260301.pdf",
+          "label": "Tarifs des produits disponibles à la vente pour le réseau cars Région Cantal à partir du 1er mars 2026",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/202412_INFO_TARIF-2025-LR_VF.pdf",
+          "label": "Tarifs des produits disponibles à la vente pour le réseau cars Région Cantal jusqu'au 28 février 2026",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/cars_Region_Cantal_correspondance_GR_Aurillac_20260301-2.pdf",
+          "label": "Correspondances vers les établissements scolaires depuis la gare routière d'Aurillac",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/Carnet-de-voyage-pre-rempli-07-2023.pdf",
+          "label": "Carnet de voyage certifié FALC pré-rempli",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/Carnet-de-voyage-vierge-07-2023.pdf",
+          "label": "Carnet de voyage certifié FALC personnalisable",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/04/flyer_achat_m-ticket_cars_region_tarifs_plats.pdf",
+          "label": "mode d’emploi d’achat du M-Ticket.",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/titres-et-tarifs-du-cantal/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/PASS_Region_seniors_procedure_utilisation_2026.pdf",
+          "label": "la procédure",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/titres-et-tarifs-du-cantal/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/cars_Region_Cantal_tarifs_20260301.pdf",
+          "label": "guide des tarifs.",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/titres-et-tarifs-du-cantal/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/20251128_Cantal_15_1425.pdf",
+          "label": "Carte du réseau du Cantal",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/Reglement-Exploitationcommun25_26-.pdf",
+          "label": "Règlement d'exploitation",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/cars_Region_Cantal_tarifs_20260301.pdf",
+          "label": "Tarifs des produits disponibles à la vente pour le réseau cars Région Cantal à partir du 1er mars 2026",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/01/202412_INFO_TARIF-2025-LR_VF.pdf",
+          "label": "Tarifs des produits disponibles à la vente pour le réseau cars Région Cantal jusqu'au 28 février 2026",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/cars_Region_Cantal_correspondance_GR_Aurillac_20260301-2.pdf",
+          "label": "Correspondances vers les établissements scolaires depuis la gare routière d'Aurillac",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/Carnet-de-voyage-pre-rempli-07-2023.pdf",
+          "label": "Carnet de voyage certifié FALC pré-rempli",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/Carnet-de-voyage-vierge-07-2023.pdf",
+          "label": "Carnet de voyage certifié FALC personnalisable",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/",
+          "fareCandidate": true
+        }
+      ],
+      "errors": [],
+      "pricesExtracted": false,
+      "operatorCoverageVerified": false
+    },
+    {
+      "departmentPage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-puy-de-dome/",
+      "pages": [
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-puy-de-dome/",
+          "sha256": "d240b708e6028e7b21dfb483dfc9ba4fde6a373ce5edc94d988c8aea0d5db47b"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-du-puy-de-dome/",
+          "sha256": "86f2f7d79ebfc978631b628fde057a8bc5117503dfd95b8055c0b3d59b587802"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-puy-de-dome/infos-et-services-cars-region-du-puy-de-dome/gare-routiere/",
+          "sha256": "bab0ead792a2f9c10a35bb2f5818c0971599edbf61c1acf243d2c9c14024fdb1"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-puy-de-dome/infos-et-services-cars-region-du-puy-de-dome/points-de-vente-cars-region-puy-de-dome/",
+          "sha256": "5aed7da4f316621b67cf2a94aa4c3d75a7833dd9c045f2d37e9fa0829b6f4099"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-puy-de-dome/infos-et-services-cars-region-du-puy-de-dome/titres-et-tarifs-de-puy-de-dome/",
+          "sha256": "a62db2a91b1fdffa08452c97165f3a15376c5f7007ffaf84aac9c5038c4cc42d"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-puy-de-dome/infos-et-services-cars-region-du-puy-de-dome/transport-a-la-demande-du-puy-de-dome/",
+          "sha256": "241ffdd118f829e00e2961198031024c5426b35e8dd650d5df625641d5b9cc66"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-puy-de-dome/infos-et-services-cars-region-du-puy-de-dome/velo-a-bord-des-cars-region-puy-de-dome/",
+          "sha256": "2a7634831875519f14b7b9015906cef95f066f8075899662f00c588d8082f559"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-puy-de-dome/infos-et-services-cars-region-du-puy-de-dome/",
+          "sha256": "86f2f7d79ebfc978631b628fde057a8bc5117503dfd95b8055c0b3d59b587802"
+        }
+      ],
+      "documents": [
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/04/flyer_achat_m-ticket_cars_region_tarifs_plats.pdf",
+          "label": "mode d’emploi d’achat du M-Ticket.",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-puy-de-dome/infos-et-services-cars-region-du-puy-de-dome/titres-et-tarifs-de-puy-de-dome/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/PASS_Region_seniors_procedure_utilisation_2026.pdf",
+          "label": "Consulter le guide pour obtenir votre Pass’ Région Séniors",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-puy-de-dome/infos-et-services-cars-region-du-puy-de-dome/titres-et-tarifs-de-puy-de-dome/",
+          "fareCandidate": false
+        }
+      ],
+      "errors": [],
+      "pricesExtracted": false,
+      "operatorCoverageVerified": false
+    },
+    {
+      "departmentPage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/",
+      "pages": [
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/",
+          "sha256": "20a10106b73469e422ad4ca08d403852ac7ab39cb44eb88286345ebdc0e01241"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/infos-et-services-cars-region-du-rhone/",
+          "sha256": "79268324ec60464780591d63f8df0623fd2af108a0fcfcffaab53f3eb2854225"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/infos-et-services-cars-region-du-rhone/gare-routiere/",
+          "sha256": "7d88b96f9394903fe3d391a6e99e844b83bdf8c20972f2846d3f3e2d73023b0c"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/infos-et-services-cars-region-du-rhone/parking-relais-en-rhone/",
+          "sha256": "1946f47950ff48858d34c8bd172f08042b0151d19d99cb69c459f637178bea6d"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/infos-et-services-cars-region-du-rhone/points-de-vente-cars-region-rhone/",
+          "sha256": "808e5ed51e0a86cc446e36319b202cbeadaa539723d82cae3d8a841b077b5951"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/infos-et-services-cars-region-du-rhone/titres-et-tarifs-de-rhone/",
+          "sha256": "200c0c792af69f7a7dac3fe1e11ff340478b0c25b31ead2ef80ce0ea80b58107"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/infos-et-services-cars-region-du-rhone/velo-a-bord-des-cars-region-de-rhone/",
+          "sha256": "07e92d0a62b2413a2a097d6df276f99f723d48bdf83b5ff15b3a0dde97f70139"
+        },
+        {
+          "url": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/infos-et-services-cars-region-du-rhone/",
+          "sha256": "79268324ec60464780591d63f8df0623fd2af108a0fcfcffaab53f3eb2854225"
+        }
+      ],
+      "documents": [
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2025/12/cars_region_isere_gare_routiere_grenoble_infos_pratiques.pdf",
+          "label": "ici",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/infos-et-services-cars-region-du-rhone/gare-routiere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2025/12/cars_region_isere_gare_routiere_grenoble_reglement.pdf",
+          "label": "règlement de la gare routière de Grenoble",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/infos-et-services-cars-region-du-rhone/gare-routiere/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2025/12/cars_region_isere_tarifs_20250901.pdf",
+          "label": "le dépliant tarifaire",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/infos-et-services-cars-region-du-rhone/titres-et-tarifs-de-rhone/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2025/12/cars_region_isere_formulaire_carte_Oura_20250901.pdf",
+          "label": "les conditions d’utilisation",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/infos-et-services-cars-region-du-rhone/titres-et-tarifs-de-rhone/",
+          "fareCandidate": false
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2025/12/cars_region_isere_liste_communes_zones_20250101.pdf",
+          "label": "la liste des communes par zone tarifaire",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/infos-et-services-cars-region-du-rhone/titres-et-tarifs-de-rhone/",
+          "fareCandidate": true
+        },
+        {
+          "url": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2025/12/cars_region_isere_ticket_sms_cgv_202403.pdf",
+          "label": "Consulter les conditions générales de vente",
+          "foundOn": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-rhone/infos-et-services-cars-region-du-rhone/titres-et-tarifs-de-rhone/",
+          "fareCandidate": false
+        }
+      ],
+      "errors": [],
+      "pricesExtracted": false,
+      "operatorCoverageVerified": false
+    }
+  ],
+  "uniquePDFCount": 127,
+  "fareCandidatePDFCount": 25
+}
