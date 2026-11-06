@@ -872,3 +872,13 @@ test('Savoie tourism source has a separate identity and can cover southern valle
  assert.equal(agenda.selected(source,{from:{lat:45.20,lon:6.67},to:{lat:45.17,lon:6.65}}),true);
  assert.equal(agenda.selected(source,{from:{lat:48.85,lon:2.35},to:{lat:45.17,lon:6.65}}),false);
 });
+
+test('a full-envelope partner remains searched ahead of earlier endpoint-only candidates',async()=>{
+ const target=panel(),base={...agenda.DEFAULT_RESOURCES[0],id:'base',datasetId:'base',network:'Base',federate:true,bounds:[44,4,47,7]};
+ const partial=Array.from({length:4},(_,i)=>({...base,id:'partial'+i,datasetId:'partial'+i,network:'Partial '+i,bounds:[44,4,45.5,5.5]}));
+ const full={...base,id:'full',datasetId:'full',network:'Full'};let chosen;
+ const session=agenda.mount(target,{resources:[base,...partial,full],tasks:[{label:'Retour',from:{lat:45,lon:5},to:{lat:46,lon:6},earliestDeparture:'2026-11-06T10:00:00Z'}],
+ clientFactory:()=>({loadNetworks:async list=>{chosen=list.map(r=>r.id);return {networks:list.map(r=>({...summary,source:{...summary.source,network:r.network}}))};},query:async()=>({rows:[],truncated:false}),dispose(){}})});
+ await session.done;assert.deepEqual(chosen,['base','full','partial0','partial1']);
+ assert.match(target.textContent,/Réseaux non interrogés : Partial 2, Partial 3/);session.dispose();
+});
