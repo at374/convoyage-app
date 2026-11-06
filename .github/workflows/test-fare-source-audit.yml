@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'scripts/audit_gtfs_fare_sources.py'
+      - 'scripts/discover_aura_fare_documents.py'
       - 'transport-lemanpass-fares.js'
       - 'tests/transport-lemanpass-fares.test.cjs'
       - 'tests/fixtures/lemanpass-annemasse-geneve-20261106.json'
@@ -23,3 +24,5 @@ jobs:
         with:
           node-version: '22'
       - run: node --test tests/transport-lemanpass-fares.test.cjs
+
+      - run: python -m py_compile scripts/discover_aura_fare_documents.py
