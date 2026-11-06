@@ -90,7 +90,7 @@ test('disposing during load or query prevents stale results and terminates retai
 });
 test('source and per-task errors are visible and do not abort other task searches',async()=>{
  const target=panel();let queries=0;
- const session=agenda.mount(target,{tasks:[task,{...task,label:'Aller'}],clientFactory:()=>({
+ const session=agenda.mount(target,{resources:[agenda.DEFAULT_RESOURCES[0]],tasks:[task,{...task,label:'Aller'}],clientFactory:()=>({
   load:async()=>summary,query:async()=>{if(!queries++)throw new Error('fail');return {rows:[],truncated:false};},dispose(){}})});
  await session.done;assert.match(target.textContent,/Retour : recherche indisponible/);
  assert.match(target.textContent,/Aller : aucun trajet direct/);session.dispose();
@@ -287,7 +287,7 @@ test('Agenda retains the latest outbound trips across service dates after worker
  assert.match(text,/Affichage limité/);assert.match(text,/Transport non confirmé/);session.dispose();
 });
 
-test('Grenoble local tasks select only the two official Grenoble resources',async()=>{
+test('Grenoble local tasks retain both Grenoble feeds and nearby regional candidates',async()=>{
  const local={label:'Jonction',from:{lat:45.1905,lon:5.7145},to:{lat:45.28,lon:5.88},
   earliestDeparture:'2026-11-02T10:00:00+01:00',latestArrival:'2026-11-02T13:00:00+01:00'},calls=[];
  const target=panel(),session=agenda.mount(target,{tasks:[local],clientFactory:()=>({
@@ -295,9 +295,9 @@ test('Grenoble local tasks select only the two official Grenoble resources',asyn
    calls.push({resources,options});return {networks:resources.map(r=>({...summary,source:{...summary.source,network:r.network,url:r.url}})),partial:false};
   },query:async()=>({rows:[],truncated:false}),dispose(){}})});
  await session.done;
- assert.equal(calls.length,1);assert.equal(calls[0].resources.length,2);
- assert.deepEqual(calls[0].resources.map(r=>r.datasetId),['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f']);
- assert.ok(calls[0].resources.every(r=>r.resolveFromCatalogue));
+ assert.equal(calls.length,1);assert.equal(calls[0].resources.length,3);
+ assert.deepEqual(calls[0].resources.map(r=>r.datasetId),['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f','oura-savoie-tourism']);
+ assert.ok(calls[0].resources.slice(0,2).every(r=>r.resolveFromCatalogue));
  assert.match(target.textContent,/Métropole grenobloise/);assert.match(target.textContent,/Grésivaudan/);
  assert.doesNotMatch(target.textContent,/Cars Région Haute-Savoie|Sibra/);
  session.dispose();
@@ -352,7 +352,7 @@ test('Grenoble to Crolles remains within both metropolitan and Grésivaudan GTFS
  })});
  await session.done;
  assert.equal(calls.length,1);
- assert.deepEqual(calls[0].resources.map(resource=>resource.datasetId),eligible.map(resource=>resource.datasetId));
+ assert.deepEqual(calls[0].resources.map(resource=>resource.datasetId),[...eligible.map(resource=>resource.datasetId),'oura-savoie-tourism']);
  assert.match(target.textContent,/Grésivaudan/);
  assert.match(target.textContent,/Transport non confirmé|ne prouve pas l’absence de transport/);
  session.dispose();
@@ -861,4 +861,14 @@ test('regular Savoie source is distinct from tourist data and scoped to candidat
  assert.equal(source.resolveFromCatalogue,undefined);
  assert.equal(agenda.selected(source,{from:{lat:45.57,lon:5.92},to:{lat:45.67,lon:6.39}}),true);
  assert.equal(agenda.selected(source,{from:{lat:45.19,lon:5.72},to:{lat:45.28,lon:5.88}}),false);
+});
+
+
+test('Savoie tourism source has a separate identity and can cover southern valley candidates',()=>{
+ const source=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-savoie-tourism');
+ const regular=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-savoie');
+ assert.ok(source);assert.notEqual(source.datasetId,regular.datasetId);
+ assert.match(source.url,/provider=CARS_REGION_73_TOURISME&/);
+ assert.equal(agenda.selected(source,{from:{lat:45.20,lon:6.67},to:{lat:45.17,lon:6.65}}),true);
+ assert.equal(agenda.selected(source,{from:{lat:48.85,lon:2.35},to:{lat:45.17,lon:6.65}}),false);
 });

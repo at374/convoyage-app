@@ -30,6 +30,11 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  // Separate from the tourist resource in the same national catalogue dataset.
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',
  bounds:[45.30,5.78,45.95,7.2],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-savoie-tourism',datasetId:'oura-savoie-tourism',network:'Cars Région Savoie — lignes touristiques',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_73_TOURISME&dataFormat=GTFS&dataProfil=OPENDATA',
+ // Candidate envelope only; dated GTFS calendars determine actual availability.
+ bounds:[45.05,5.78,45.95,7.2],timeZone:'Europe/Paris'
 })]);
 function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof point.lon==='number'&&
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}
