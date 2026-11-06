@@ -34,3 +34,13 @@ test('reference survives actual GTFS adaptation and ranking without certifying t
  assert.equal(result[0].journey.priceEUR,null);assert.equal(result[0].journey.feasible,false);
  assert.equal(api.reference({...ain,departure:'2026-02-30T10:00:00+01:00'}),null);
 });
+
+test('Savoie periurban reference uses the published standard fare without generalising SMS or tourism',()=>{
+ const leg={networkId:'oura-savoie-regular',tripId:'T',departure:'2026-11-06T10:00:00+01:00'};
+ for(const line of ['S01','S03','S04','S05','S07']){
+  const ref=api.reference({...leg,line});assert.equal(ref.portions[0].amountEUR,3.4);
+  assert.equal(ref.fareVerified,false);assert.equal(ref.totalEUR,null);
+ }
+ for(const line of ['S10','S11','S12','S50','S83'])assert.equal(api.reference({...leg,line}),null);
+ assert.equal(api.reference({...leg,line:'S01',networkId:'oura-savoie-tourism'}),null);
+});
