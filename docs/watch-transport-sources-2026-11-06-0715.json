@@ -1,0 +1,54 @@
+{
+  "checkedOn": "2026-11-06",
+  "pdfChecks": [
+    {
+      "line": "Y62",
+      "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y62.pdf",
+      "sha256": "34f669ae72255c666d4742479f19d03ce9ceb17bbbae756107b2ec3ef0ad7b4b",
+      "matchesBaseline": true
+    },
+    {
+      "line": "Y63",
+      "url": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y63.pdf",
+      "sha256": "6847f43ceed6a17d1fa2eeee4fc315cf2446a1a6d26a558ff26836c5fc1d51a9",
+      "matchesBaseline": true
+    }
+  ],
+  "pan": {
+    "datasets": 816,
+    "baselineDatasets": 816,
+    "timetableDatasets": 509,
+    "baselineTimetableDatasets": 509
+  },
+  "remote": {
+    "main": "a81e21d257941c23f33a2c8b715d4d8a326f1bf8",
+    "pr208Head": "9645427c736a7cdbc1e567cd7bc29adfbd2ef9ad",
+    "pr207TestedHead": "589a373a440e740ca92de4afd68a3928b0ee4346",
+    "pr207Checks": "6 workflows completed successfully, including mobile"
+  },
+  "findings": [
+    {
+      "line": "Y03",
+      "operator": "SAT Chablais et Faucigny",
+      "source": "https://www.sat-leman.com/lignes%20regulieres/ligne-y03-thonon-bellevaux.aspx",
+      "notice": "https://www.sat-leman.com/img/os_document/1406_y03_du_1er_septembre_au_18_decembre_2026_modification_des_services.pdf",
+      "period": "2026-09-01 through 2026-12-18, year from official link title",
+      "changes": [
+        {
+          "stop": "Bellevaux – Les Mouilles",
+          "previous": "06:30",
+          "published": "06:20",
+          "direction": "Thonon"
+        },
+        {
+          "stop": "Habère Poche – Chef-Lieu",
+          "previous": "06:35",
+          "published": "06:25",
+          "direction": "Thonon"
+        }
+      ],
+      "status": "official notice newly identified; not a newly announced change; GTFS inclusion not checked; no timetable automatically patched"
+    }
+  ],
+  "limits": "PAN counts alone do not establish unchanged contents. Only Y62/Y63 PDF bytes compared. Other AURA departments, full calendars, Switzerland and commercial fare quotes not exhaustively revalidated in this pass. No deployment or merge."
+}
