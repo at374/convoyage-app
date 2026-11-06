@@ -93,7 +93,7 @@ test('source and per-task errors are visible and do not abort other task searche
  const session=agenda.mount(target,{tasks:[task,{...task,label:'Aller'}],clientFactory:()=>({
   load:async()=>summary,query:async()=>{if(!queries++)throw new Error('fail');return {rows:[],truncated:false};},dispose(){}})});
  await session.done;assert.match(target.textContent,/Retour : recherche indisponible/);
- assert.match(target.textContent,/Aller : aucun trajet direct/);session.dispose();
+ assert.match(target.textContent,/Aller : aucun trajet dans les résultats partiels/);session.dispose();
  const unavailable=panel();let terminated=0;
  await agenda.mount(unavailable,{tasks:[task],clientFactory:()=>({load:async()=>{throw new Error('CORS');},dispose(){terminated++;}})}).done;
  assert.match(unavailable.textContent,/Flux officiel indisponible/);assert.equal(terminated,1);
@@ -837,4 +837,19 @@ test('Mobile regional transport cards cover Aller Jonction Retour and safe stop 
  assert.match(app,/encodeURIComponent\(stop\)/);
  assert.match(app,/position exacte non vérifiée/);
  assert.match(app,/Transport non confirmé/);
+});
+
+
+test('omitted relevant networks are disclosed even when loaded feeds succeed',async()=>{
+ const target=panel(),received=[];
+ const base=agenda.DEFAULT_RESOURCES[0];
+ const resources=[base,{...base,id:'partner1',datasetId:'partner1',network:'Partner One',federate:true},{...base,id:'partner2',datasetId:'partner2',network:'Partner Two',federate:true}];
+ const session=agenda.mount(target,{tasks:[task],resources,
+  clientFactory:()=>({loadNetworks:async()=>({networks:[summary,summary],partial:false}),query:async()=>({rows:[],truncated:false}),dispose(){}}),
+  onResults:r=>received.push(r)});
+ await session.done;
+ assert.match(target.textContent,/Réseaux non interrogés : Partner Two/);
+ assert.equal(received[0].coverage.partial,true);
+ assert.deepEqual(received[0].coverage.omittedNetworks,['Partner Two']);
+ session.dispose();
 });

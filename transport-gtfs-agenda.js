@@ -88,9 +88,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
  const resource=preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
  if(!resource)return {dispose,done:Promise.resolve()};
- const partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
+ const partnerCandidates=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
   crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
-  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to}))))).slice(0,1);
+  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to})))));
+ const partners=partnerCandidates.slice(0,1);
+ const omittedNetworks=partnerCandidates.slice(1).map(r=>r.network||r.id);
  const eligible=task=>selected(resource,task)||partners.some(r=>crossEnvelopePair(resource,r,task));
  const section=doc.createElement('div');section.className='bk';section.setAttribute('data-gtfs-agenda','');
  const heading=doc.createElement('h3');heading.textContent=resource.network+' — horaires aux arrêts';section.appendChild(heading);
@@ -150,6 +152,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
     ' · '+n.counts.stops+' arrêts').join(' ; ')+'. Circulation non confirmée.';
    const partialNetworks=summary?.partial===true||networks.some(n=>!validNetwork(n));
    if(partialNetworks)sourceStatus.textContent+=' Recherche partielle : un réseau est indisponible.';
+   if(omittedNetworks.length)sourceStatus.textContent+=' Recherche partielle. Réseaux non interrogés : '+omittedNetworks.join(', ')+'.';
    if(loaded.length>1){
     warning.textContent+=' Changements entre réseaux : arrêts rapprochés à 150 m à vol d’oiseau au maximum ; aucun chemin ni temps de marche vérifié.';
     for(const other of loaded.slice(1)){const link=doc.createElement('a');link.href=other.source.url||partners[0].url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=' · Source '+other.source.network;section.appendChild(link);}
@@ -203,9 +206,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       seenChoices.add(key);distinct.push(candidate);
      }
      const shown=distinct;
-     if(active())onResults({task,itineraries:shown});
+     if(active())onResults({task,itineraries:shown,coverage:{omittedNetworks:[...omittedNetworks],partial:partialNetworks||omittedNetworks.length>0||truncated}});
      const marginNote=Number.isFinite(Date.parse(task.latestArrival))?' Marge avant mission : '+window.marginMinutes+' min minimum (marche et circulation à vérifier).':'';
-     const incomplete=truncated||partialNetworks||invalidJourneys>0;
+     const incomplete=truncated||partialNetworks||omittedNetworks.length>0||invalidJourneys>0;
      const coverageNote=incomplete?' Recherche partielle : certains horaires ou réseaux n’ont pas pu être vérifiés.':'';
      status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':incomplete?'aucun trajet dans les résultats partiels ; recherche incomplète (réseau ou horaires manquants), d’autres horaires peuvent exister.':'aucun trajet direct ou avec une correspondance dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.' )+marginNote+coverageNote+(invalidJourneys?' '+invalidJourneys+' horaire(s) incohérent(s) écarté(s) ; recherche partielle.':'');
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
