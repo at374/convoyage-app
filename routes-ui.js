@@ -198,6 +198,18 @@
   // aucun « prix barrière » classe1/classe2 n'existe plus à proprement parler à ces deux points. Le blocage par
   // UNK ("prix exact non disponible") n'est donc pas une lacune provisoire à combler mais la représentation
   // correcte et définitive pour ces deux points, tant que l'app ne modélise pas la tarification multi-portique.
+  // Correction supplémentaire du 6 nov. 2026 (cf. tests/peages-unk-type-ech-vs-bpv.test.cjs) : le référentiel
+  // officiel distingue deux types de points, champ « type » dans data/gares-peage-officiel.json — « Bpv »
+  // (Barrière Pleine Voie, une vraie barrière de péage à tarif fixe, comme Buchelay/Dozulé ci-dessus) et « Ech »
+  // (Échangeur, un simple point d'entrée/sortie SANS tarif propre — le prix dépend du couple entrée/sortie réel du
+  // trajet, cf. le mécanisme « système ouvert » déjà en place pour Tarare Est/Dordives/Vallée de la Hem). Les 4
+  // angles morts restants (Audomarois B, St Michel amont, Fréjus Est, Le Mans Ouest) sont TOUS de type « Ech », pas
+  // « Bpv » : chercher un « tarif de barrière » pour eux était donc la mauvaise question. S'ils ont un prix, c'est
+  // une relation point-à-point avec leur vraie destination/origine de trajet, à retrouver dans la grille officielle
+  // complète de l'exploitant concerné (SFTRF pour St Michel/A43, ESCOTA pour Fréjus/A8, COFIROUTE pour Le Mans/A11,
+  // SANEF pour Audomarois/A26) -- pas dans un simple tableau de tarifs agrégés trouvé par recherche web. En
+  // attendant cette grille complète, UNK reste la représentation correcte (aucun prix inventé, aucune omission
+  // silencieuse).
   const UNK = [[43.6028,7.07258],[43.60465,7.06636],[43.60277,7.08123],[43.60452,7.08785],[43.64326,7.13402],[43.64796,7.13896],[43.65913,7.14893],[43.70388,7.19007],[43.70015,7.18812],[43.55322,5.23792],[43.49458,5.52498],[43.22574,5.58217],[43.2019,5.59417],[45.95485,-0.88122],[45.15248,1.37792],[45.15157,1.16683],[45.148,1.17478],[43.64504,1.49789],[47.45215,0.73944],[47.34919,0.70312],[47.33062,0.68813],[47.25442,0.67097],[47.55526,0.596],[43.63298,-1.39072],[43.63007,-1.39572],[43.46217,-1.49839],[43.46097,-1.50276],[43.37197,-1.67746],[43.51232,-1.22256],[48.94757,3.04036],[48.95228,3.03819],[48.91236,2.04593],[43.54423,6.80993],[43.14434,5.76838],[43.29347,6.20051],[43.48329,5.53837],[43.70774,7.19122],[48.54645,1.91114],[48.91342,2.16271],[48.91354,2.15809],[49.05393,4.28593],[49.32195,0.30849],[43.20492,5.59053],[43.14625,5.77192],[43.32435,5.59803],[43.25774,6.12279],[43.62419,-1.40083],[43.34138,-1.74961],[43.50524,1.35211],[43.64715,1.50769],[48.78189,2.15976],[48.8301,2.1485],[48.8714,2.15683],[43.36688,5.64373],[50.72292,2.16534],[50.7231,2.16714],[45.21646,6.46587],[43.47233,6.74324],[47.98195,0.05435],[48.98384,1.68125],[49.23071,-0.07124]];
   let WK = null, WKID = 0; const WKATT = new Map();
   const CODE_WORKER = () => 'const UNK=' + JSON.stringify(UNK) + ';const dist=' + dist + ';const joli=' + joli + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';' +
