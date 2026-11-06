@@ -254,3 +254,14 @@ test('four networks retain distinct direct services and a combined budget preser
  assert.equal(partial.partial,true);
  assert.equal(partial.networks.filter(n=>n.counts).length,1);
 });
+
+test('an invalid feed pairing cannot erase independently found direct services',async t=>{
+ const client=createClient({workerFactory:factory});t.after(()=>client.dispose());
+ await client.loadNetworks([{...resource,datasetId:'same',network:'First'},{...resource,datasetId:'same',network:'Duplicate'}],{indexServiceDates:['2026-11-02']});
+ const result=await client.query({method:'missionJourneys',date:'2026-11-02',origin:{lat:45.9,lon:6.1},destination:{lat:45.8,lon:6.2},window:{earliestDeparture:'2026-11-02T09:00:00Z',latestArrival:'2026-11-02T13:00:00Z'},limit:100});
+ assert.ok(result.rows.length>0);
+ assert.equal(result.truncated,true);
+ assert.equal(result.networkErrors.length,1);
+ assert.match(result.networkErrors[0].message,/Distinct GTFS network identifiers/);
+ assert.equal(result.serviceConfirmed,false);
+});
