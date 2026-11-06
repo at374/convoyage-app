@@ -508,6 +508,23 @@
           2.0467239
         ]
       ]
+    },
+    {
+      "id": "aprr-area-ouvert-chignin-bretelle",
+      "points": [
+        [
+          45.512,
+          6.002
+        ],
+        [
+          45.513,
+          6.003
+        ],
+        [
+          45.514,
+          6
+        ]
+      ]
     }
   ],
   "tarifs": [
@@ -4264,6 +4281,24 @@
           }
         ]
       }
+    },
+    {
+      "id": "o2124",
+      "b": "aprr-area-ouvert-chignin-bretelle",
+      "c": 1,
+      "a": 1,
+      "s": "PROUVE",
+      "f": "2026-02-01",
+      "u": 16
+    },
+    {
+      "id": "o2125",
+      "b": "aprr-area-ouvert-chignin-bretelle",
+      "c": 2,
+      "a": 1.6,
+      "s": "PROUVE",
+      "f": "2026-02-01",
+      "u": 16
     }
   ],
   "gares": [
