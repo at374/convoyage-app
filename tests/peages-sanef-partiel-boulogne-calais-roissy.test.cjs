@@ -34,14 +34,24 @@
 // test. Prix deja present confirme exact : HORDAIN<->BAPAUME classe 1 = 5,2 EUR
 // dans peages-aprr.json, identique a la valeur lue directement dans la grande
 // table SANEF (section non fiable automatiquement, lue ici ponctuellement).
-// Restent 7 noms a traiter dans un futur "chantier SANEF" distinct (meme
-// rigueur que le chantier COFIROUTE) : La Cote Picarde, L'Isle-Adam, Aumale,
-// Saint-Omer, Nœux-les-Mines, Amiens Est, Senlis -- Aumale et Senlis ont
-// plusieurs sous-gares officielles proches mais distinctes (Aumale Est/Ouest,
-// Senlis-Bonsecours/Chamant) que la matrice SANEF (nom unique, sans
-// distinction Est/Ouest ni sens) ne permet pas de desambiguiser sans une
-// source GPS/distance supplementaire ; Isle-Adam, Saint-Omer et Nœux-les-Mines
-// n'ont aucune correspondance meme partielle au referentiel officiel.
+// Verification complementaire : "SENLIS N°8" dans la grille SANEF correspond
+// lui aussi a un faux absent, au moins pour sa gare de Chamant -- la gare
+// "PARIS / ROISSY (péage de Chamant)" deja presente dans peages-aprr.json est
+// geographiquement IDENTIQUE a "Senlis-Chamant Sortie" du referentiel officiel
+// (0,02km), simplement nommee par direction plutot que par lieu. Prix deja
+// present confirme exact : PARIS/ROISSY(Chamant)<->BAPAUME classe 1 = 12,9 EUR,
+// identique a la valeur lue dans la grille SANEF (SENLIS<->BAPAUME = 12,9 EUR).
+// Seule "Senlis-Bonsecours" (l'autre demi-echangeur de Senlis) reste a
+// verifier separement.
+//
+// Restent donc 6 noms reellement a traiter dans un futur "chantier SANEF"
+// distinct (meme rigueur que le chantier COFIROUTE) : La Cote Picarde,
+// L'Isle-Adam, Aumale, Saint-Omer, Nœux-les-Mines, Amiens Est -- plus la
+// verification specifique de Senlis-Bonsecours. Aumale a 2 sous-gares
+// officielles proches mais distinctes (Est/Ouest) que la matrice SANEF (nom
+// unique) ne permet pas de desambiguiser sans source supplementaire ;
+// Isle-Adam, Saint-Omer et Nœux-les-Mines n'ont aucune correspondance meme
+// partielle au referentiel officiel.
 //
 // Run: node --test tests/peages-sanef-partiel-boulogne-calais-roissy.test.cjs
 const assert = require('node:assert/strict');
@@ -145,6 +155,31 @@ test('POIX-DE-PICARDIE, HORDAIN et BAPAUME ne sont PAS des gares manquantes : co
     const dist = 111 * Math.sqrt((lat1 - lat2) ** 2 + ((lon1 - lon2) * Math.cos(lat1 * Math.PI / 180)) ** 2);
     assert.ok(dist < 1, aprrNom + ' devrait etre a moins de 1km du referentiel officiel, trouve ' + dist.toFixed(2) + 'km');
   }
+});
+
+test('"PARIS / ROISSY (péage de Chamant)" n\'est pas un bug GPS : c\'est Senlis-Chamant, nomme par direction plutot que par lieu', () => {
+  const off = require('../data/gares-peage-officiel.json');
+  const g = aprr.g.find(x => x[0] === 'PARIS / ROISSY');
+  const o = off.d.find(x => x[0] === 'Senlis-Chamant Sortie');
+  assert.ok(g && o);
+  const [lat1, lon1] = g[1][0];
+  const [, , lat2, lon2] = o;
+  const dist = 111 * Math.sqrt((lat1 - lat2) ** 2 + ((lon1 - lon2) * Math.cos(lat1 * Math.PI / 180)) ** 2);
+  assert.ok(dist < 0.5, 'devrait etre a moins de 0.5km, trouve ' + dist.toFixed(2) + 'km');
+});
+
+test('le prix SENLIS(Chamant)<->BAPAUME deja present (12,9 EUR classe 1) est confirme par lecture directe de la grande table SANEF', () => {
+  const lignes = aprr.p.split(';');
+  const prix = new Map();
+  for (const l of lignes) {
+    const [a, b, c1] = l.split(',');
+    const x = parseInt(a, 36), y = parseInt(b, 36);
+    prix.set(Math.min(x, y) * 1000 + Math.max(x, y), c1 / 10);
+  }
+  const roissy = aprr.g.findIndex(g => g[0] === 'PARIS / ROISSY');
+  const bapaume = aprr.g.findIndex(g => g[0] === 'BAPAUME');
+  const v = prix.get(Math.min(roissy, bapaume) * 1000 + Math.max(roissy, bapaume));
+  assert.equal(v, 12.9);
 });
 
 test('le prix HORDAIN<->BAPAUME deja present (5,2 / 8,1 EUR) est confirme par lecture directe de la grande table SANEF (non parsee automatiquement)', () => {
