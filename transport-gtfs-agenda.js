@@ -101,6 +101,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const partnerCandidates=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
   crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
   (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to})))));
+ partnerCandidates.sort((a,b)=>taskList.filter(t=>selected(b,t)).length-taskList.filter(t=>selected(a,t)).length);
  const partners=partnerCandidates.slice(0,3);
  const omittedNetworks=partnerCandidates.slice(3).map(r=>r.network||r.id);
  const eligible=task=>selected(resource,task)||partners.some(r=>crossEnvelopePair(resource,r,task));
