@@ -882,3 +882,15 @@ test('a full-envelope partner remains searched ahead of earlier endpoint-only ca
  await session.done;assert.deepEqual(chosen,['base','full','partial0','partial1']);
  assert.match(target.textContent,/Réseaux non interrogés : Partial 2, Partial 3/);session.dispose();
 });
+
+test('Haute-Savoie can participate in a cross-region search outside its own envelope',async()=>{
+ const target=panel(),hs=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-haute-savoie');
+ const tourist=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-savoie-tourism');
+ const journey={label:'Retour',from:{lat:45.9,lon:6.12},to:{lat:45.2,lon:6.67},earliestDeparture:'2026-11-06T10:00:00Z'};
+ assert.equal(agenda.selected(hs,journey),false);
+ assert.equal(agenda.crossEnvelopePair(hs,tourist,journey),true);
+ let selected;
+ const session=agenda.mount(target,{resources:[hs,tourist],tasks:[journey],
+ clientFactory:()=>({loadNetworks:async list=>{selected=list.map(r=>r.id);return {networks:list.map(r=>({...summary,source:{...summary.source,network:r.network}}))};},query:async()=>({rows:[],truncated:false}),dispose(){}})});
+ await session.done;assert.deepEqual(selected,['oura-haute-savoie','oura-savoie-tourism']);session.dispose();
+});
