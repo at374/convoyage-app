@@ -114,8 +114,8 @@ def main():
     parser.add_argument("--max-download-mib", type=int, default=20)
     parser.add_argument("--max-resources", type=int, default=5)
     args = parser.parse_args()
-    if not 1 <= args.max_download_mib <= 100 or not 1 <= args.max_resources <= 50:
-        parser.error("download limit must be 1–100 MiB and resources 1–50")
+    if not 1 <= args.max_download_mib <= 200 or not 1 <= args.max_resources <= 50:
+        parser.error("download limit must be 1–200 MiB and resources 1–50")
     inventory = json.loads(args.inventory.read_text())
     resources = []
     seen = set()
