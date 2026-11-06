@@ -112,8 +112,8 @@
       const wait=b.departure-a.arrival;if(wait<margin*60000||wait>7200000||b.arrival-a.departure>43200000||(a.tripId===b.tripId&&a.serviceDate===b.serviceDate)||a.fromStationId===b.toStationId)continue;
       combined.push({legs:[a,b],departure:a.departure,arrival:b.arrival,transferMinutes:wait/60000,transferWalkingVerified:false});
     }}
-    const useful=combined.filter(x=>!direct.some(d=>d.legs[0].tripId===x.legs[0].tripId&&d.legs[0].serviceDate===x.legs[0].serviceDate&&d.legs[0].fromStationId===x.legs[0].fromStationId&&d.arrival<=x.arrival));
-    const all=[...direct,...useful],seen=new Set();
+    // Without fare evidence a slower transfer cannot be declared financially inferior.
+    const all=[...direct,...combined],seen=new Set();
     all.sort((a,b)=>options.arriveBy?b.departure-a.departure||a.legs.length-b.legs.length||a.arrival-b.arrival:a.departure-b.departure||a.arrival-b.arrival||a.legs.length-b.legs.length);
     const uniqueResults=all.filter(x=>{const key=x.legs.map(l=>l.tripId+'|'+l.serviceDate+'|'+l.fromStationId+'|'+l.toStationId+'|'+l.departure).join(';');if(seen.has(key))return false;seen.add(key);return true;});
     truncated=truncated||uniqueResults.length>limit;

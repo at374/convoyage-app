@@ -25,7 +25,7 @@ assert.equal(api.search([night],{...request,when:'2026-10-30T00:30:00+01:00'}).i
 assert.equal(api.serviceBase('2026-10-25'),Date.parse('2026-10-24T23:00:00Z'));
 assert.equal(api.serviceBase('2026-07-30'),Date.parse('2026-07-29T22:00:00Z'));
 const direct=['direct','TER','',[[0,28800,28800,0,0],[1,30000,30000,0,0],[2,31200,31200,0,0]]];
-assert.equal(api.search([fixture('2026-10-30',[direct,b])],request).itineraries.length,1,'unnecessary slower transfer off a through train must be removed');
+assert.equal(api.search([fixture('2026-10-30',[direct,b])],request).itineraries.length,2,'a slower valid transfer remains available until fares can be compared');
 
 (async()=>{
  const root=process.env.SNCF_DATA_DIR||path.join(__dirname,'..','data','sncf');

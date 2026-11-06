@@ -53,3 +53,19 @@ test('SNCF exposes more than ten services and reports a requested result cap',()
  assert.equal(capped.itineraries.length,10);assert.equal(capped.truncated,true);
  assert.throws(()=>api.search([data],{...query,limit:101}),/Limite/);
 });
+
+test('a valid transfer stays available alongside a faster direct service when prices are unknown',()=>{
+ const data=fixture('e'.repeat(64));
+ data.stations.push(['C','Connection',45.05,5.05]);
+ data.trips=[
+  ['through','TER','101',[[0,30600,30600,0,0],[2,32400,32400,0,0],[1,34200,34200,0,0]]],
+  ['connection','TER','102',[[2,33300,33300,0,0],[1,36000,36000,0,0]]]
+ ];
+ const result=api.search([data],{...query,limit:100});
+ assert.equal(result.itineraries.length,2);
+ assert.equal(result.itineraries[0].legs.length,1);
+ assert.equal(result.itineraries[1].legs.length,2);
+ assert.equal(result.itineraries[1].transferMinutes,15);
+ assert.equal(result.itineraries[1].price,null);
+ assert.equal(result.itineraries[1].transportConfirmed,false);
+});
