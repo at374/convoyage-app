@@ -22,16 +22,40 @@
 //    decomposer un prix combine -- une approximation interdite par le projet.
 //    Ormes reste donc dans UNK (refus explicite), aucun prix ajoute.
 //
-// 3) 9 noms de la grille Cofiroute restent SANS AUCUNE correspondance dans le
-//    referentiel officiel data.gouv.fr (1266 gares) : Romorantin, Saint Aignan
-//    Sur Cher, Selles Sur Cher, Epernay, Tinqueux, Lusignan, Saint Maixent,
-//    Druye, Cande. Recherche web effectuee (sources: Wikipedia A85/A4/A10,
-//    Vinci Autoroutes, legifrance, assemblee-nationale) sans trouver de GPS
-//    officiel precis et fiable. Compte tenu du risque demontre dans ce meme
-//    projet (bug Monts-Sorigny : un GPS resolu via "Google Maps place
-//    resolution" s'est revele faux de 5,6km), aucun GPS non officiel n'est
-//    utilise pour positionner ces points. Ils restent non resolus -- absence
-//    confirmee de source fiable, pas une lacune de recherche.
+// 3) MISE A JOUR : "Saint Aignan Sur Cher" et "Selles Sur Cher" (Cofiroute,
+//    A85) resolus. Wikipedia (article A85, liste des sorties numerotees)
+//    confirme que la sortie 12 dessert "Saint-Romain-sur-Cher, Montrichard,
+//    Saint-Aignan" et la sortie 13 "Chemery, Contres, Selles-sur-Cher,
+//    Cheverny" -- et la grille Cofiroute elle-meme utilise les numeros
+//    d'echangeur officiels (A85;12;SAINT AIGNAN SUR CHER / A85;13;SELLES SUR
+//    CHER), confirmant qu'il s'agit des memes echangeurs que nos stations
+//    deja connues "ST ROMAIN SUR CHER" et "CHEMERY" (presentes depuis
+//    l'origine dans peages-aprr.json, sous leur nom officiel). Verification
+//    par le PRIX (pas seulement le nom) : 114 relations chacune, 0 ecart.
+//    Ce sont deux alias de tarification deja entierement couverts -- aucune
+//    donnee ajoutee, juste une correspondance de nom documentee.
+//
+//    L'hypothese inverse -- "Romorantin" (sortie 14, Cofiroute) = officiel
+//    "Blois" -- a ete TESTEE et REJETEE : 113 relations montrent un ecart de
+//    prix systematique (ex. Blere->Blois officiel 22,6/36,7 mais
+//    Blere->Romorantin Cofiroute 7,4/10,8), prouvant que Romorantin est un
+//    echangeur reel mais DISTINCT de Blois, absent de notre referentiel.
+//
+// 4) 7 noms restent sans GPS officiel trouvable : Romorantin (A85 sortie 14,
+//    reel mais distinct de Blois -- voir ci-dessus), Epernay (A4 echangeur
+//    23), Tinqueux (A4 echangeur 22, "Reims - Tinqueux"), Lusignan/Saint
+//    Maixent (A10 echangeur 31, un seul echangeur combine "Saint Maixent /
+//    Lusignan"), Druye (Cande) (A85, entree ambigue). Ces echangeurs sont
+//    REELS (numeros d'echangeur officiels Cofiroute, pas des billets
+//    combines comme Ormes) mais introuvables dans le referentiel
+//    data.gouv.fr (1266 gares) ni dans un document officiel avec GPS/PK
+//    (verifie : Wikipedia A85/A4/A10, Vinci Autoroutes, le schema directeur
+//    de signalisation A4 du bulletin officiel developpement-durable.gouv.fr
+//    -- aucun ne donne de coordonnees). Compte tenu du risque demontre dans
+//    ce meme projet (bug Monts-Sorigny : un GPS resolu via "Google Maps
+//    place resolution" s'est revele faux de 5,6km), aucun GPS non officiel
+//    n'est utilise pour positionner ces points. Absence confirmee de source
+//    fiable avec coordonnees, pas une lacune de recherche.
 //
 // Run: node --test tests/peages-chantier-cofiroute-cloture.test.cjs
 const assert = require('node:assert/strict');
@@ -114,10 +138,86 @@ test('"Ormes" reste dans UNK (aucun prix ajoute, aucune approximation)', () => {
   assert.ok(!overlay.gares.some(g => g.nom === 'Ormes'), 'aucune entree overlay.gares ne doit exister pour Ormes');
 });
 
-test('9 noms Cofiroute restent absents du referentiel officiel data.gouv.fr (confirme, pas une lacune de recherche)', () => {
-  const ABSENTS = ['ROMORANTIN', 'AIGNAN', 'SELLES', 'EPERNAY', 'TINQUEUX', 'LUSIGNAN', 'MAIXENT', 'DRUYE', 'CANDE'];
+test('"Saint Aignan Sur Cher" (Cofiroute, sortie A85 n.12) = "ST ROMAIN SUR CHER" (officiel, deja dans peages-aprr.json) : 0 ecart de prix sur 114 relations', () => {
+  const lines = fs.readFileSync(COFIROUTE_PATH, 'utf8').split('\n');
+  const prix = decoderPrix();
+  const rows = lines.filter(l => l.includes(';SAINT AIGNAN SUR CHER'));
+  const di = idx('ST ROMAIN SUR CHER');
+  assert.ok(di >= 0, 'ST ROMAIN SUR CHER doit exister dans aprr.g');
+  let matched = 0, mismatched = 0;
+  for (const r of rows) {
+    const f = r.split(';');
+    if (f.length < 9) continue;
+    const oi = idx(f[2]);
+    if (oi < 0) continue;
+    const v = prix.get(Math.min(oi, di) * 1000 + Math.max(oi, di));
+    if (!v) continue;
+    const c1 = parseFloat(f[6]), c2 = parseFloat(f[7]);
+    if (Math.abs(v[0] - c1) < 0.05 && Math.abs(v[1] - c2) < 0.05) matched++; else mismatched++;
+  }
+  assert.equal(mismatched, 0);
+  assert.ok(matched >= 100, 'trouve ' + matched);
+});
+
+test('"Selles Sur Cher" (Cofiroute, sortie A85 n.13) = "CHEMERY" (officiel, deja dans peages-aprr.json) : 0 ecart de prix sur 114 relations', () => {
+  const lines = fs.readFileSync(COFIROUTE_PATH, 'utf8').split('\n');
+  const prix = decoderPrix();
+  const rows = lines.filter(l => l.includes(';SELLES SUR CHER'));
+  const di = idx('CHEMERY');
+  assert.ok(di >= 0, 'CHEMERY doit exister dans aprr.g');
+  let matched = 0, mismatched = 0;
+  for (const r of rows) {
+    const f = r.split(';');
+    if (f.length < 9) continue;
+    const oi = idx(f[2]);
+    if (oi < 0) continue;
+    const v = prix.get(Math.min(oi, di) * 1000 + Math.max(oi, di));
+    if (!v) continue;
+    const c1 = parseFloat(f[6]), c2 = parseFloat(f[7]);
+    if (Math.abs(v[0] - c1) < 0.05 && Math.abs(v[1] - c2) < 0.05) matched++; else mismatched++;
+  }
+  assert.equal(mismatched, 0);
+  assert.ok(matched >= 100, 'trouve ' + matched);
+});
+
+test('hypothese rejetee : "Romorantin" (Cofiroute, sortie A85 n.14) n\'est PAS "BLOIS" (officiel) -- ecart de prix systematique prouvant deux echangeurs distincts', () => {
+  const lines = fs.readFileSync(COFIROUTE_PATH, 'utf8').split('\n');
+  const prix = decoderPrix();
+  const rows = lines.filter(l => l.includes(';ROMORANTIN'));
+  const di = idx('BLOIS');
+  let matched = 0, mismatched = 0;
+  for (const r of rows) {
+    const f = r.split(';');
+    if (f.length < 9) continue;
+    const oi = idx(f[2]);
+    if (oi < 0) continue;
+    const v = prix.get(Math.min(oi, di) * 1000 + Math.max(oi, di));
+    if (!v) continue;
+    const c1 = parseFloat(f[6]), c2 = parseFloat(f[7]);
+    if (Math.abs(v[0] - c1) < 0.05 && Math.abs(v[1] - c2) < 0.05) matched++; else mismatched++;
+  }
+  assert.ok(mismatched > 100, 'Romorantin et Blois doivent diverger systematiquement (confirme : deux echangeurs distincts), trouve ' + mismatched + ' ecarts');
+  assert.equal(matched, 0, 'aucune correspondance exacte ne devrait exister (sinon Romorantin=Blois serait correct)');
+});
+
+test('"Ormes" conserve ses 10 relations en billet combine (non rouvert par erreur)', () => {
+  const lines = fs.readFileSync(COFIROUTE_PATH, 'utf8').split('\n');
+  const rows = lines.filter(l => /;ORMES;/.test(l));
+  assert.ok(rows.length >= 5);
+});
+
+test('7 noms Cofiroute (echangeurs reels mais sans GPS officiel trouvable) restent absents du referentiel officiel data.gouv.fr', () => {
+  const ABSENTS = ['ROMORANTIN', 'EPERNAY', 'TINQUEUX', 'LUSIGNAN', 'MAIXENT', 'DRUYE', 'CANDE'];
   for (const terme of ABSENTS) {
     const matches = officiel.d.filter(r => r[0].toUpperCase().includes(terme));
     assert.equal(matches.length, 0, terme + ' ne devrait avoir aucune correspondance dans le referentiel officiel (1266 gares)');
+  }
+});
+
+test('"Saint Aignan Sur Cher" et "Selles Sur Cher" ne sont plus dans la liste des noms non-resolus (ce sont des alias de ST ROMAIN SUR CHER / CHEMERY, pas des absences)', () => {
+  const RESOLUS = ['AIGNAN', 'SELLES'];
+  // Garde de regression : s'assurer qu'on ne les remet pas par erreur dans la liste des absents.
+  for (const terme of RESOLUS) {
+    assert.ok(idx(terme === 'AIGNAN' ? 'ST ROMAIN SUR CHER' : 'CHEMERY') >= 0);
   }
 });
