@@ -24,14 +24,24 @@
 //
 // Resultat sur les 2 sections fiables (759 relations possibles) : 502
 // relations resolues avec un prix existant, 0 DIVERGENCE. 257 relations
-// concernent des gares non encore dans la base (candidates a un futur
-// "chantier SANEF" distinct, non traite ici : La Cote Picarde, L'Isle-Adam,
-// Poix-de-Picardie, Aumale, Saint-Omer, Nœux-les-Mines, Amiens Est, Hordain,
-// Bapaume, Senlis -- plusieurs ont un nom officiel proche mais distinct dans
-// data/gares-peage-officiel.json, ex. "Poix-de-Picardie Sortie/Entree",
-// "Aumale Est/Ouest Sortie/Entree", "Hordain BPV", "Bapaume Sortie/Entree",
-// "Senlis-Bonsecours/Chamant" -- a traiter avec la meme rigueur que le
-// chantier COFIROUTE si Laurent souhaite poursuivre).
+// concernent des noms non trouves par la simple normalisation utilisee ici --
+// MAIS une verification complementaire (6 nov. 2026) montre que 3 d'entre eux
+// sont de FAUX absents : POIX-DE-PICARDIE, HORDAIN et BAPAUME existent deja
+// dans peages-aprr.json avec des coordonnees GPS identiques au referentiel
+// officiel (data/gares-peage-officiel.json) -- la non-correspondance venait
+// uniquement du fait que le fichier SANEF colle un suffixe d'axe a leur nom
+// ("POIX-DE-PICARDIE N°13 A29", etc.), non retire par la normalisation de ce
+// test. Prix deja present confirme exact : HORDAIN<->BAPAUME classe 1 = 5,2 EUR
+// dans peages-aprr.json, identique a la valeur lue directement dans la grande
+// table SANEF (section non fiable automatiquement, lue ici ponctuellement).
+// Restent 7 noms a traiter dans un futur "chantier SANEF" distinct (meme
+// rigueur que le chantier COFIROUTE) : La Cote Picarde, L'Isle-Adam, Aumale,
+// Saint-Omer, Nœux-les-Mines, Amiens Est, Senlis -- Aumale et Senlis ont
+// plusieurs sous-gares officielles proches mais distinctes (Aumale Est/Ouest,
+// Senlis-Bonsecours/Chamant) que la matrice SANEF (nom unique, sans
+// distinction Est/Ouest ni sens) ne permet pas de desambiguiser sans une
+// source GPS/distance supplementaire ; Isle-Adam, Saint-Omer et Nœux-les-Mines
+// n'ont aucune correspondance meme partielle au referentiel officiel.
 //
 // Run: node --test tests/peages-sanef-partiel-boulogne-calais-roissy.test.cjs
 const assert = require('node:assert/strict');
@@ -116,4 +126,37 @@ test('sur les 759 relations possibles de ces 2 sections, 0 divergence de prix (5
   }
   assert.equal(mismatched, 0);
   assert.ok(matched >= 450, 'trouve ' + matched);
+});
+
+test('POIX-DE-PICARDIE, HORDAIN et BAPAUME ne sont PAS des gares manquantes : coordonnees GPS identiques au referentiel officiel, deja presentes dans peages-aprr.json', () => {
+  const off = require('../data/gares-peage-officiel.json');
+  const cas = [
+    { aprrNom: 'POIX-DE-PICARDIE', officiel: 'Poix-de-Picardie Sortie' },
+    { aprrNom: 'HORDAIN', officiel: 'Hordain BPV Sortie sens 1' },
+    { aprrNom: 'BAPAUME', officiel: 'Bapaume Sortie' },
+  ];
+  for (const { aprrNom, officiel } of cas) {
+    const g = aprr.g.find(x => x[0] === aprrNom);
+    const o = off.d.find(x => x[0] === officiel);
+    assert.ok(g, aprrNom + ' doit exister dans peages-aprr.json');
+    assert.ok(o, officiel + ' doit exister dans le referentiel officiel');
+    const [lat1, lon1] = g[1][0];
+    const [lat2, lon2] = [o[2], o[3]];
+    const dist = 111 * Math.sqrt((lat1 - lat2) ** 2 + ((lon1 - lon2) * Math.cos(lat1 * Math.PI / 180)) ** 2);
+    assert.ok(dist < 1, aprrNom + ' devrait etre a moins de 1km du referentiel officiel, trouve ' + dist.toFixed(2) + 'km');
+  }
+});
+
+test('le prix HORDAIN<->BAPAUME deja present (5,2 / 8,1 EUR) est confirme par lecture directe de la grande table SANEF (non parsee automatiquement)', () => {
+  const lignes = aprr.p.split(';');
+  const prix = new Map();
+  for (const l of lignes) {
+    const [a, b, c1, c2] = l.split(',');
+    const x = parseInt(a, 36), y = parseInt(b, 36);
+    prix.set(Math.min(x, y) * 1000 + Math.max(x, y), [c1 / 10, c2 / 10]);
+  }
+  const hordain = aprr.g.findIndex(g => g[0] === 'HORDAIN');
+  const bapaume = aprr.g.findIndex(g => g[0] === 'BAPAUME');
+  const v = prix.get(Math.min(hordain, bapaume) * 1000 + Math.max(hordain, bapaume));
+  assert.deepEqual(v, [5.2, 8.1]);
 });
