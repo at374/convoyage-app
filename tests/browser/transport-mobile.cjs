@@ -350,7 +350,7 @@ async function run(){
   assert.match(railText,/Annecy/);assert.match(railText,/Grenoble/);
   assert.match(railText,/Transport non confirmé/);assert.doesNotMatch(railText,/Réalisable/);
   await rail.getByRole('heading',{name:'Aller SNCF · comparer (gare à gare)',exact:true}).waitFor();
-  const railCards=rail.locator('details').filter({has:page.locator('.cp-transport-viewer')});
+  const railCards=rail.locator('details:has(> .cp-transport-viewer)');
   const expectedRailCount=Number(railText.match(/(\d+) proposition\(s\) de gare à gare/)?.[1]);
   assert.ok(expectedRailCount>0,'SNCF source returned compatible services');
   assert.equal(await railCards.count(),expectedRailCount,'every compatible SNCF result has a comparison card');
