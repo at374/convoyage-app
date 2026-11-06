@@ -1854,7 +1854,7 @@
           name.textContent = choice.label === 'Moins cher' && !Number.isFinite(journey.priceEUR) ? 'Tarif inconnu' : choice.label;
           const facts = document.createElement('span');
           facts.textContent = (Number.isFinite(journey.durationMinutes) ? journey.durationMinutes + ' min' : 'Durée inconnue') + ' · ' +
-            (Number.isFinite(journey.priceEUR) ? journey.priceEUR.toFixed(2).replace('.', ',') + ' €' : 'Tarif non vérifié');
+            (Number.isFinite(journey.priceEUR) ? journey.priceEUR.toFixed(2).replace('.', ',') + ' €' : 'Prix incomplet · Tarif non vérifié');
           const times = document.createElement('span');
           times.style.display = 'block';
           const clock = value => {
@@ -2731,6 +2731,14 @@
               summary.append(name,times,duration);
               const price=quoteText(result.priceQuote);
               if(price){const amount=document.createElement('strong');amount.setAttribute('data-tripgo-price','');amount.textContent=price;summary.appendChild(amount);}
+              else {
+                const incomplete=document.createElement('strong');incomplete.setAttribute('data-tripgo-price-incomplete','');
+                const portions=(result.priceCoverage?.knownSubtotals||[]).map(q=>quoteText({...q,kind:'estimate'})).filter(Boolean);
+                incomplete.textContent='Prix incomplet'+(portions.length?' · Montants de portions : '+portions.join(' ; '):' · Aucun montant exploitable fourni')+
+                  (result.priceCoverage?.unquotedLegCount?' · '+result.priceCoverage.unquotedLegCount+' portion(s) sans prix':'')+
+                  (result.priceCoverage?.reason==='mixed_currencies'?' · Devises conservées séparément, conversion non effectuée':'')+' · Total du trajet inconnu';
+                summary.appendChild(incomplete);
+              }
               details.appendChild(summary);
 
               const line=document.createElement('p');line.textContent=formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString())+' · '+
@@ -2746,7 +2754,7 @@
               if(window.CPTransportFares?.fare&&window.CPTransportFares?.describe){
                 fareSummary=window.CPTransportFares.fare(result.legs,{travelDate:result.departure});
                 const fareLine=document.createElement('span');fareLine.setAttribute('data-tripgo-fare','');
-                fareLine.textContent=' · Tarifs vérifiés : '+window.CPTransportFares.describe(fareSummary);
+                fareLine.textContent=(fareSummary.known?' · Tarifs vérifiés : ':' · Tarifs non vérifiés : ')+window.CPTransportFares.describe(fareSummary);
                 fareLine.style.display='block';summary.appendChild(fareLine);
               }
               details.appendChild(line);

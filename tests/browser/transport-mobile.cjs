@@ -351,7 +351,17 @@ async function run(){
   assert.match(railText,/Transport non confirmé/);assert.doesNotMatch(railText,/Réalisable/);
   await rail.getByRole('heading',{name:'Aller SNCF · comparer (gare à gare)',exact:true}).waitFor();
   const railCards=rail.locator('details').filter({has:page.locator('.cp-transport-viewer')});
-  assert.ok(await railCards.count()>0&&await railCards.count()<=3,'SNCF ranking renders comparison cards');
+  const expectedRailCount=Number(railText.match(/(\d+) proposition\(s\) de gare à gare/)?.[1]);
+  assert.ok(expectedRailCount>0,'SNCF source returned compatible services');
+  assert.equal(await railCards.count(),expectedRailCount,'every compatible SNCF result has a comparison card');
+  assert.match(await railCards.first().textContent(),/Prix incomplet/);
+  if(expectedRailCount>3){
+    const more=rail.locator('.cp-transport-more-results');
+    assert.equal(await more.evaluate(node=>node.open),false,'additional trains start collapsed');
+    await more.locator('summary').first().click();
+    assert.equal(await railCards.last().isVisible(),true,'last train remains accessible');
+    await more.locator('summary').first().click();
+  }
   const railCard=railCards.first();
   await railCard.locator('summary').click();
   assert.equal(await railCard.evaluate(node=>node.open),true,'SNCF card opens');

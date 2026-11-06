@@ -243,3 +243,32 @@ test('complete segment quotations give an estimated total while missing quotatio
  const result=api.parse(data,options);assert.ok(result.itineraries.every(t=>t.priceQuote?.amount===8.4&&t.priceQuote.kind==='estimate'&&t.priceEUR===null));
  const absent=clone();assert.ok(api.parse(absent,options).itineraries.every(t=>t.priceQuote===null));
 });
+
+test('partial provider prices keep per-currency subtotals without inventing a journey total',()=>{
+ // Synthetic extra transit portion tests coverage, not a real transport offer.
+ const data=clone();const walk=data.segmentTemplates.find(s=>s.hashCode===252397852);
+ walk.modeIdentifier='pt_pub';walk.localCost={cost:2.5,currency:'EUR',accuracy:'external_estimate'};
+ const result=api.parse(data,options).itineraries.find(t=>t.legs[0].mode==='pt_pub');
+ assert.ok(result);assert.equal(result.priceQuote,null);
+ assert.equal(result.priceCoverage.status,'partial_quote');
+ assert.equal(result.priceCoverage.unquotedLegCount,1);
+ assert.deepEqual(result.priceCoverage.knownSubtotals,[{currency:'EUR',amount:2.5}]);
+ assert.equal(result.priceEUR,null);
+});
+test('mixed-currency portions are never added as if they were the same money',()=>{
+ const data=clone();const walk=data.segmentTemplates.find(s=>s.hashCode===252397852);
+ walk.modeIdentifier='pt_pub';walk.localCost={cost:2.5,currency:'CHF',accuracy:'confirmed'};
+ for(const s of data.segmentTemplates)if(s.type==='scheduled')s.localCost={cost:8.4,currency:'EUR',accuracy:'external_estimate'};
+ const result=api.parse(data,options).itineraries.find(t=>t.legs[0].mode==='pt_pub');
+ assert.equal(result.priceQuote,null);assert.equal(result.priceCoverage.reason,'mixed_currencies');
+ assert.equal(result.priceCoverage.unquotedLegCount,0);
+ assert.deepEqual(result.priceCoverage.knownSubtotals,[{currency:'CHF',amount:2.5},{currency:'EUR',amount:8.4}]);
+});
+test('a supplied itinerary estimate remains distinct from missing individual leg prices',()=>{
+ const data=clone();for(const g of data.groups)for(const t of g.trips){t.moneyCost=12.5;t.currency='EUR';}
+ for(const t of api.parse(data,options).itineraries){
+  assert.equal(t.priceCoverage.status,'complete_quote');assert.equal(t.priceQuote.amount,12.5);
+  assert.equal(t.priceCoverage.quotedLegCount,0);assert.equal(t.priceEUR,null);
+ }
+ for(const t of api.parse(clone(),options).itineraries)assert.equal(t.priceCoverage.status,'missing_quote');
+});

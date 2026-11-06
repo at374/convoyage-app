@@ -66,8 +66,16 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
    const ticketedQuotes=legs.filter(leg=>leg.mode.startsWith('pt_pub')).map(leg=>leg.priceQuote);
    const completeQuotes=ticketedQuotes.length>0&&ticketedQuotes.every(q=>q&&q.currency===ticketedQuotes[0]?.currency);
    const summedQuote=completeQuotes?fareQuote(ticketedQuotes.reduce((sum,q)=>sum+Math.round(q.amount*100),0)/100,ticketedQuotes[0].currency,'internal_estimate',receivedAt):null;
+   const priceQuote=fareQuote(trip.moneyCost,trip.currency,'internal_estimate',receivedAt)||summedQuote;
+   const subtotals=new Map();
+   for(const quote of ticketedQuotes.filter(Boolean))subtotals.set(quote.currency,(subtotals.get(quote.currency)||0)+Math.round(quote.amount*100));
+   const knownSubtotals=[...subtotals].filter(([,cents])=>Number.isSafeInteger(cents)).map(([currency,cents])=>({currency,amount:cents/100}));
+   const quotedLegCount=ticketedQuotes.filter(Boolean).length;
    found.push({departure:new Date(departure).toISOString(),arrival:new Date(arrival).toISOString(),legs,priceEUR:null,
-    priceQuote:fareQuote(trip.moneyCost,trip.currency,'internal_estimate',receivedAt)||summedQuote,
+    priceQuote,
+    priceCoverage:{status:priceQuote?'complete_quote':quotedLegCount?'partial_quote':'missing_quote',
+     ticketedLegCount:ticketedQuotes.length,quotedLegCount,unquotedLegCount:ticketedQuotes.length-quotedLegCount,
+     knownSubtotals,reason:priceQuote?null:subtotals.size>1?'mixed_currencies':quotedLegCount<ticketedQuotes.length?'missing_leg_quotes':'unrepresentable_total'},
     source:'TripGo',receivedAt,transportConfirmed:false,serviceConfirmed:false,accessVerified:false,
     alerts:[...new Set([...legs.flatMap(l=>l.alerts),...(Array.isArray(trip.alerts)?trip.alerts:[]),...(Array.isArray(data.alerts)?data.alerts:[])].map(a=>typeof a==='string'?a:String(a?.title||a?.text||'Alerte fournisseur')))].slice(0,20),
     evidence:{scheduleProvided:true,endpointCoordinatesMatched:startGapMeters<=10&&endGapMeters<=10,startGapMeters,endGapMeters,
