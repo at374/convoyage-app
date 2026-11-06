@@ -57,6 +57,31 @@
 //    n'est utilise pour positionner ces points. Absence confirmee de source
 //    fiable avec coordonnees, pas une lacune de recherche.
 //
+// MISE A JOUR du 6 nov. 2026 (suite a "Continue cherche bien" puis
+// "Continue") : recherche exhaustive de toutes les sources locales
+// disponibles pour les 7 noms restants (Romorantin, Epernay, Tinqueux,
+// Lusignan, Saint Maixent, Druye, Cande), au-dela des fichiers deja utilises
+// dans ce chantier :
+//   - /mnt/user-data/uploads/Downloads/vinci_liaisons.pdf (grandes liaisons
+//     VINCI, aucune des 7 stations n'y figure)
+//   - /mnt/user-data/uploads/Downloads/sanef_a26_axis132.json,
+//     sanef_a1_axis160.json, sanef_a29_axis167.json (axes SANEF Calais/
+//     Saint-Omer, A1, A29 -- hors zone, aucune pertinence)
+//   - DOSSIER_CLAUDE_TARIFS_PEAGES_VERIFIES_2026.zip (dossier complet
+//     prepare le 23/10/2026, incluant l'archive de travail ChatGPT
+//     anterieure : reconciliation ADELAC/APRR/AREA/ASF Salon Nord, 13
+//     rapports Work, 161 gares -- aucune des 7 stations n'y figure non plus,
+//     perimetre entierement different (Alpes/frontiere suisse, pas A4/A10/
+//     A85))
+//   - 03_RAPPORT_RAPPROCHEMENT_V05.csv et 04_CONTROLES_225_GARES_V06.csv
+//     (reconciliation d'un AUTRE jeu historique de 16918 relations, non
+//     certifie) : aucune des 7 stations n'y figure non plus.
+// Recherche web complementaire (bulletin officiel developpement-durable.gouv
+// .fr, schema directeur de signalisation A4) : aucune coordonnee GPS/PK
+// trouvee. Toutes les sources locales et en ligne raisonnablement
+// accessibles ont ete epuisees -- ces 7 points restent bloques faute de
+// source avec coordonnees, pas faute d'avoir cherche.
+//
 // Run: node --test tests/peages-chantier-cofiroute-cloture.test.cjs
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
