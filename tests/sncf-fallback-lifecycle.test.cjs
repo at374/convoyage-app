@@ -42,3 +42,14 @@ test('already cancelled SNCF searches perform no manifest or schedule fetch',asy
  await assert.rejects(api.plan({...query,signal:controller.signal,fetcher:async()=>{calls++;}}),{name:'AbortError'});
  assert.equal(calls,0);
 });
+
+test('SNCF exposes more than ten services and reports a requested result cap',()=>{
+ const data=fixture('d'.repeat(64));
+ data.trips=Array.from({length:25},(_,i)=>['service-'+i,'TER',String(100+i),[[0,30600+i*60,30600+i*60,0,0],[1,32400+i*60,32400+i*60,0,0]]]);
+ const all=api.search([data],{...query,limit:100});
+ assert.equal(all.itineraries.length,25);assert.equal(all.truncated,false);
+ assert.equal(all.itineraries[24].price,null);
+ const capped=api.search([data],{...query,limit:10});
+ assert.equal(capped.itineraries.length,10);assert.equal(capped.truncated,true);
+ assert.throws(()=>api.search([data],{...query,limit:101}),/Limite/);
+});

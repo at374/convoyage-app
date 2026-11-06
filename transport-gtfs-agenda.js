@@ -202,7 +202,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(seenChoices.has(key))continue;
       seenChoices.add(key);distinct.push(candidate);
      }
-     const shown=distinct.slice(0,5);
+     const shown=distinct;
      if(active())onResults({task,itineraries:shown});
      const marginNote=Number.isFinite(Date.parse(task.latestArrival))?' Marge avant mission : '+window.marginMinutes+' min minimum (marche et circulation à vérifier).':'';
      const incomplete=truncated||partialNetworks||invalidJourneys>0;

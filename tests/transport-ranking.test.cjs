@@ -78,3 +78,12 @@ assert.equal(evaluate(connectedNetworks,{deadline}).feasible,true,'Verified inte
 assert.equal(evaluate({...connectedNetworks,legs:[connectedNetworks.legs[0],{...connectedNetworks.legs[1],minTransferMinutes:6}]},{deadline}).feasible,false,'Transfer proof does not override an operator minimum duration');
 assert.equal(evaluate({...connectedNetworks,legs:[connectedNetworks.legs[0],{...connectedNetworks.legs[1],fromPoint:{lat:45.91,lon:6.121}}]},{deadline}).feasible,false,'Transfer proof does not override disconnected GPS stops');
 assert.equal(evaluate({...connectedNetworks,transferVerified:false},{deadline}).feasible,false,'Confirmed service is not proof of a cross-network interchange');
+
+// Explicit expansion preserves every eligible service, including unknown fares.
+const expandedItems=Array.from({length:12},(_,i)=>({...base,id:'all-'+i,priceEUR:i===0?4:null}));
+const expanded=rank(expandedItems,{deadline,includeAlternatives:true});
+assert.equal(expanded.length,12);
+assert.equal(new Set(expanded.map(x=>x.journey.id)).size,12);
+assert.equal(expanded.filter(x=>x.journey.priceEUR===null).length,11);
+assert.ok(rank(expandedItems,{deadline}).length<=3);
+assert.equal(rank([...expandedItems,{...base,id:'too-late',arrival:deadline}],{deadline,includeAlternatives:true}).length,12);

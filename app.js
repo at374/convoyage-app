@@ -1841,7 +1841,9 @@
         host.appendChild(title);
         const grid = document.createElement('div');
         grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px;margin:10px 0';
-        for (const choice of ranked.slice(0, 3)) {
+        const more=document.createElement('details');more.className='cp-transport-more-results';
+        const moreTitle=document.createElement('summary');moreTitle.textContent='Voir les '+Math.max(0,ranked.length-3)+' autres trajets trouvés';more.appendChild(moreTitle);
+        for (const [choiceIndex, choice] of ranked.entries()) {
           const journey = choice.journey || {};
           const card = document.createElement('details');
           card.style.cssText = 'padding:12px;border:1px solid #94a3b8;border-radius:12px;line-height:1.5;min-width:0';
@@ -1912,9 +1914,10 @@
           detail.appendChild(caution);
           card.appendChild(detail);
           window.CPTransportMap?.mount(card,journey);
-          grid.appendChild(card);
+          (choiceIndex<3?grid:more).appendChild(card);
         }
         host.appendChild(grid);
+        if(ranked.length>3)host.appendChild(more);
         host.appendChild(evidence);
       };
       bt.insertAdjacentElement('afterend', panel);
@@ -2248,7 +2251,7 @@
         if(!itineraries.length){host.textContent='Pas d’horaire local compatible dans les données consultées.';return;}
         const rows=itineraries.map(row=>({...row,legs:Array.isArray(row.legs)&&row.legs.length?row.legs:[{line:row.line,from:row.originStop?.name||row.from,to:row.destinationStop?.name||row.to,fromPoint:row.originStop,toPoint:row.destinationStop,departure:row.departure,arrival:row.arrival}]}));
         const normalized=window.CPTransportAdapters?.adaptGTFS(rows,'Réseau local')||[];
-        const ranked=window.CPTransportRanking?.rank(normalized,{direction:task.label==='Retour'?'return':'outbound',deadline:task.latestArrival,earliestDeparture:task.earliestDeparture,marginMinutes:15})||[];
+        const ranked=window.CPTransportRanking?.rank(normalized,{includeAlternatives:true,direction:task.label==='Retour'?'return':'outbound',deadline:task.latestArrival,earliestDeparture:task.earliestDeparture,marginMinutes:15})||[];
         showRegionalChoices(host,ranked,task.label+' · horaires locaux');
       };
       // GTFS candidate search: one worker for the open panel, no mission writes.
@@ -2516,19 +2519,19 @@
           status.textContent = label + ' — secours SNCF : recherche des trains de gare à gare…';
           panel.appendChild(status);
           window.CPSncfFallback.plan({from:fromStation,to:toStation,when,arriveBy,
-            limit:10,fetcher:regionalFetch,signal,
+            limit:100,fetcher:regionalFetch,signal,
             ...(latestArrival ? {latestArrival:new Date(latestArrival).toISOString()} : {})}).then(answer => {
             if (!regionalActive() || signal.aborted || !status.isConnected) return;
-            const itineraries = answer.itineraries.filter(it => latestArrivalMs===null || Date.parse(it.arrival) <= latestArrivalMs).slice(0,3);
+            const itineraries = answer.itineraries.filter(it => latestArrivalMs===null || Date.parse(it.arrival) <= latestArrivalMs);
             status.textContent = label + ' — secours SNCF, horaires théoriques du flux ' + answer.sourceVersion + ' : ' +
-              (itineraries.length ? itineraries.length + ' proposition(s) de gare à gare.' :
+              (itineraries.length ? itineraries.length + ' proposition(s) de gare à gare.' + (answer.truncated ? ' Recherche partielle : d’autres trains peuvent exister.' : '') :
               answer.status === 'stations_not_found' ? 'gare non identifiée pour une des communes.' :
               'aucun train direct ou avec une correspondance trouvé dans les journées chargées.');
             if (window.CPTransportAdapters && window.CPTransportRanking) {
               const normalized = window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptSNCF(itineraries));
               const deadline = label === 'Aller' && pickupDate ? pickupDate :
                 label === 'Jonction' && next?.pickup_start ? next.pickup_start : null;
-              const choices = window.CPTransportRanking.rank(normalized,{
+              const choices = window.CPTransportRanking.rank(normalized,{includeAlternatives:true,
                 deadline,earliestDeparture:label === 'Retour' || label === 'Jonction' ? deliveryDate : null,
                 direction:label === 'Retour' ? 'return' : 'outbound',marginMinutes:securityMarginMin});
               if (choices.length) {

@@ -85,7 +85,7 @@
     const latest=options.latestArrival===undefined?null:Date.parse(options.latestArrival);
     if(latest!==null&&(!Number.isFinite(latest)||!/[zZ]|[+-]\d{2}:\d{2}$/.test(options.latestArrival)))throw Error('Arrivée limite SNCF invalide');
     const margin=options.transferMinutes??10;if(!Number.isInteger(margin)||margin<5||margin>120)throw Error('Marge ferroviaire invalide');
-    const limit=options.limit??5;if(!Number.isInteger(limit)||limit<1||limit>10)throw Error('Limite SNCF invalide');
+    const limit=options.limit??5;if(!Number.isInteger(limit)||limit<1||limit>100)throw Error('Limite SNCF invalide');
     const first=[],second=new Map(),direct=[];let originFound=false,destinationFound=false;
     const makeLeg=(data,t,a,b,base)=>({source:'SNCF GTFS',serviceDate:data.date,tripId:t[0],line:t[1],trainNumber:t[2]||null,from:data.stations[a[0]][1],to:data.stations[b[0]][1],fromStationId:data.stations[a[0]][0],toStationId:data.stations[b[0]][0],fromPoint:{lat:data.stations[a[0]][2],lon:data.stations[a[0]][3]},toPoint:{lat:data.stations[b[0]][2],lon:data.stations[b[0]][3]},mode:'RAIL',departure:base+a[2]*1000,arrival:base+b[1]*1000});
     for(const data of days){
@@ -115,7 +115,9 @@
     const useful=combined.filter(x=>!direct.some(d=>d.legs[0].tripId===x.legs[0].tripId&&d.legs[0].serviceDate===x.legs[0].serviceDate&&d.legs[0].fromStationId===x.legs[0].fromStationId&&d.arrival<=x.arrival));
     const all=[...direct,...useful],seen=new Set();
     all.sort((a,b)=>options.arriveBy?b.departure-a.departure||a.legs.length-b.legs.length||a.arrival-b.arrival:a.departure-b.departure||a.arrival-b.arrival||a.legs.length-b.legs.length);
-    const results=all.filter(x=>{const key=x.legs.map(l=>l.tripId+'|'+l.serviceDate+'|'+l.fromStationId+'|'+l.toStationId+'|'+l.departure).join(';');if(seen.has(key))return false;seen.add(key);return true;}).slice(0,limit).map(x=>({...x,departure:new Date(x.departure).toISOString(),arrival:new Date(x.arrival).toISOString(),price:null,transportConfirmed:false,realtime:false,walkingVerified:false}));
+    const uniqueResults=all.filter(x=>{const key=x.legs.map(l=>l.tripId+'|'+l.serviceDate+'|'+l.fromStationId+'|'+l.toStationId+'|'+l.departure).join(';');if(seen.has(key))return false;seen.add(key);return true;});
+    truncated=truncated||uniqueResults.length>limit;
+    const results=uniqueResults.slice(0,limit).map(x=>({...x,departure:new Date(x.departure).toISOString(),arrival:new Date(x.arrival).toISOString(),price:null,transportConfirmed:false,realtime:false,walkingVerified:false}));
     return {status:!originFound||!destinationFound?'stations_not_found':results.length?'ok':'no_trains_in_loaded_days',itineraries:results,truncated,serviceDates:days.map(d=>d.date),transportConfirmed:false,realtime:false};
   }
   async function plan(options){

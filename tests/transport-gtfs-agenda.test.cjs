@@ -49,6 +49,18 @@ test('time windows include previous service days, explicit horizon, margin and m
  assert.equal(agenda.searchWindow({earliestDeparture:'2026-11-02T12:00:00+01:00'}).earliestDeparture,'2026-11-02T11:00:00.000Z');
  assert.throws(()=>agenda.searchWindow({...task,latestArrival:'2026-11-01T12:00:00Z'}),/Inverted/);
 });
+test('all distinct GTFS lines reach comparison even beyond five with identical departure times',async()=>{
+ const target=panel(),received=[];
+ const rows=Array.from({length:12},(_,i)=>row({tripId:'T'+i,line:'Y'+i}));
+ const session=agenda.mount(target,{tasks:[task],resources:[agenda.DEFAULT_RESOURCES[0]],
+  clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[...rows,rows[0]],truncated:false}),dispose(){}}),
+  onResults:result=>received.push(result)});
+ await session.done;
+ assert.equal(received.length,1);
+ assert.equal(received[0].itineraries.length,12);
+ assert.equal(new Set(received[0].itineraries.map(r=>r.tripId)).size,12);
+ assert.match(target.textContent,/Retour : 12 horaire/);
+});
 test('mount shares one load across tasks, deduplicates rows, uses text nodes and reports limits',async()=>{
  const target=panel(),calls=[];let loads=0,disposed=0;
  const client={async load(){loads++;return summary;},async query(query){calls.push(query);return {rows:[row(),row()],truncated:true};},dispose(){disposed++;}};
