@@ -22,36 +22,38 @@
 // Neufchatel-en-Bray, puis Calais a Paris/Roissy) ; le reste du fichier
 // (a partir de "Coutevroult") n'est PAS verifie automatiquement ici.
 //
-// Resultat sur les 2 sections fiables (759 relations possibles) : 502
-// relations resolues avec un prix existant, 0 DIVERGENCE. 257 relations
-// concernent des noms non trouves par la simple normalisation utilisee ici --
-// MAIS une verification complementaire (6 nov. 2026) montre que 3 d'entre eux
-// sont de FAUX absents : POIX-DE-PICARDIE, HORDAIN et BAPAUME existent deja
-// dans peages-aprr.json avec des coordonnees GPS identiques au referentiel
-// officiel (data/gares-peage-officiel.json) -- la non-correspondance venait
-// uniquement du fait que le fichier SANEF colle un suffixe d'axe a leur nom
-// ("POIX-DE-PICARDIE N°13 A29", etc.), non retire par la normalisation de ce
-// test. Prix deja present confirme exact : HORDAIN<->BAPAUME classe 1 = 5,2 EUR
-// dans peages-aprr.json, identique a la valeur lue directement dans la grande
-// table SANEF (section non fiable automatiquement, lue ici ponctuellement).
-// Verification complementaire : "SENLIS N°8" dans la grille SANEF correspond
-// lui aussi a un faux absent, au moins pour sa gare de Chamant -- la gare
-// "PARIS / ROISSY (péage de Chamant)" deja presente dans peages-aprr.json est
-// geographiquement IDENTIQUE a "Senlis-Chamant Sortie" du referentiel officiel
-// (0,02km), simplement nommee par direction plutot que par lieu. Prix deja
-// present confirme exact : PARIS/ROISSY(Chamant)<->BAPAUME classe 1 = 12,9 EUR,
-// identique a la valeur lue dans la grille SANEF (SENLIS<->BAPAUME = 12,9 EUR).
-// Seule "Senlis-Bonsecours" (l'autre demi-echangeur de Senlis) reste a
-// verifier separement.
+// Resultat sur les 2 sections fiables (759 relations possibles) : apres
+// correction de la normalisation des noms (voir CORRECTIF ci-dessous), 653
+// relations resolues avec un prix existant, 0 DIVERGENCE.
 //
-// Restent donc 6 noms reellement a traiter dans un futur "chantier SANEF"
-// distinct (meme rigueur que le chantier COFIROUTE) : La Cote Picarde,
-// L'Isle-Adam, Aumale, Saint-Omer, Nœux-les-Mines, Amiens Est -- plus la
-// verification specifique de Senlis-Bonsecours. Aumale a 2 sous-gares
-// officielles proches mais distinctes (Est/Ouest) que la matrice SANEF (nom
-// unique) ne permet pas de desambiguiser sans source supplementaire ;
-// Isle-Adam, Saint-Omer et Nœux-les-Mines n'ont aucune correspondance meme
-// partielle au referentiel officiel.
+// CORRECTIF (6 nov. 2026, meme session) : la toute premiere passe trouvait
+// seulement 502 relations resolues (257 "sans donnee"), en concluant a tort
+// que 10 noms etaient absents de la base : La Cote Picarde, L'Isle-Adam,
+// Poix-de-Picardie, Aumale, Saint-Omer, Nœux-les-Mines, Amiens Est, Hordain,
+// Bapaume, Senlis. En realite, la fonction de normalisation des noms de ce
+// test ne retirait pas le libelle d'axe que certaines lignes SANEF collent
+// en fin de nom SUR LA MEME LIGNE que la gare (ex. "NŒUX-LES-MINES N°6.1
+// A26 NORD", "AMIENS EST (...) A29", "POIX-DE-PICARDIE N°13 A29") alors que
+// d'autres lignes le mettent sur une ligne separee (deja filtree). Une fois
+// ce suffixe retire par norm(), 7 des 10 noms se reverelent deja presents et
+// deja corrects dans peages-aprr.json : La Cote Picarde, Poix-de-Picardie,
+// Nœux-les-Mines, Amiens Est, Hordain, Bapaume (tous par correction directe
+// de norm()), et Senlis (indirectement : "SENLIS N°8" de la grille SANEF
+// correspond a "PARIS / ROISSY (péage de Chamant)" deja present, qui est
+// geographiquement IDENTIQUE a "Senlis-Chamant Sortie" du referentiel
+// officiel, 0,02km -- simplement nomme par direction plutot que par lieu ;
+// prix confirme exact, SENLIS/PARIS-ROISSY<->BAPAUME = 12,9 EUR classe 1
+// dans les deux sources).
+//
+// Ne restent reellement absents que 3 noms (confirmes par recherche
+// insensible aux accents sans aucune correspondance dans peages-aprr.json) :
+// L'ISLE-ADAM, AUMALE, SAINT-OMER. Chacun a bien une entree proche dans le
+// referentiel officiel (data/gares-peage-officiel.json) mais sans assez de
+// certitude GPS/routage pour les ajouter sans approximation dans cette
+// session (Aumale a notamment 2 sous-gares officielles distinctes, Est et
+// Ouest, que le nom unique "AUMALE" de la grille SANEF ne permet pas de
+// desambiguiser) -- ils restent un "chantier SANEF" distinct, de meme
+// nature que le chantier COFIROUTE deja documente.
 //
 // Run: node --test tests/peages-sanef-partiel-boulogne-calais-roissy.test.cjs
 const assert = require('node:assert/strict');
@@ -64,7 +66,17 @@ const SANEF_PATH = '/tmp/claude-0/-home-claude/c7c9ce3a-820f-532b-bac1-cdca9bdf0
 function isPureNumbers(l) { return /^[\s]*[\d,]+([\s]+[\d,]+)*[\s]*$/.test(l) && l.trim().length > 0; }
 function isAxisHeader(l) { return /AUTOROUTE/i.test(l) && !/[\d],[\d]/.test(l); }
 function isJunk(l) { return /^TARIFS DE PEAGE/.test(l.trim()) || /^\d{4}$/.test(l.trim()); }
-function norm(s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\([^)]*\)/g, '').replace(/N°[\d.]+/g, '').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); }
+function norm(s) {
+  // Certaines lignes de la grille SANEF collent le libelle d'axe en fin de
+  // nom sur la MEME ligne que la gare (ex. "NŒUX-LES-MINES N°6.1   A26 NORD",
+  // "AMIENS EST (...)   A29") alors que d'autres le mettent sur sa propre
+  // ligne (filtree par isAxisHeader). Sans ce retrait, la comparaison par
+  // nom normalise manque des gares pourtant deja presentes dans la base
+  // (decouvert le 6 nov. 2026 en re-verifiant Nœux-les-Mines/Amiens Est/
+  // La Côte Picarde apres la correction Poix-de-Picardie/Hordain/Bapaume).
+  s = s.replace(/\s*\/?\s*A\d+(\s+(NORD|SUD|EST|OUEST))?\s*$/i, '');
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\([^)]*\)/g, '').replace(/N°[\d.]+/g, '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+}
 
 function parseSection(lines) {
   const tables = []; let cur = []; let pending = [];
@@ -113,7 +125,7 @@ test('les 2 premieres sections (classe 1 et classe 2) du fichier SANEF parsent a
   assert.deepEqual(c2.map(t => t.length), [22, 33]);
 });
 
-test('sur les 759 relations possibles de ces 2 sections, 0 divergence de prix (502 relations resolues)', () => {
+test('sur les 759 relations possibles de ces 2 sections, 0 divergence de prix (653 relations resolues)', () => {
   const all = fs.readFileSync(SANEF_PATH, 'utf8').split('\n');
   const c1 = cleanTables(parseSection(all.slice(9, 118)));
   const c2 = cleanTables(parseSection(all.slice(119, 228)));
@@ -135,10 +147,19 @@ test('sur les 759 relations possibles de ces 2 sections, 0 divergence de prix (5
     }
   }
   assert.equal(mismatched, 0);
-  assert.ok(matched >= 450, 'trouve ' + matched);
+  assert.ok(matched >= 650, 'trouve ' + matched);
 });
 
-test('POIX-DE-PICARDIE, HORDAIN et BAPAUME ne sont PAS des gares manquantes : coordonnees GPS identiques au referentiel officiel, deja presentes dans peages-aprr.json', () => {
+test('seuls 4 noms restent non resolus par la seule normalisation dans ces 2 sections : AUMALE, L\'ISLE-ADAM, SAINT-OMER (reellement absents) et SENLIS (deja present ailleurs sous "PARIS / ROISSY", voir tests dedies ci-dessous)', () => {
+  const all = fs.readFileSync(SANEF_PATH, 'utf8').split('\n');
+  const c1 = cleanTables(parseSection(all.slice(9, 118)));
+  const idx = idxByNorm();
+  const absents = new Set();
+  for (const t of c1) for (const s of t) if (!idx.get(norm(s.name))) absents.add(norm(s.name));
+  assert.deepEqual([...absents].sort(), ['AUMALE', 'LISLEADAM', 'SAINTOMER', 'SENLIS']);
+});
+
+test('POIX-DE-PICARDIE, HORDAIN, BAPAUME, NŒUX-LES-MINES, AMIENS EST et LA CÔTE PICARDE ne sont PAS des gares manquantes : coordonnees GPS identiques au referentiel officiel, deja presentes dans peages-aprr.json', () => {
   const off = require('../data/gares-peage-officiel.json');
   const cas = [
     { aprrNom: 'POIX-DE-PICARDIE', officiel: 'Poix-de-Picardie Sortie' },
@@ -154,6 +175,9 @@ test('POIX-DE-PICARDIE, HORDAIN et BAPAUME ne sont PAS des gares manquantes : co
     const [lat2, lon2] = [o[2], o[3]];
     const dist = 111 * Math.sqrt((lat1 - lat2) ** 2 + ((lon1 - lon2) * Math.cos(lat1 * Math.PI / 180)) ** 2);
     assert.ok(dist < 1, aprrNom + ' devrait etre a moins de 1km du referentiel officiel, trouve ' + dist.toFixed(2) + 'km');
+  }
+  for (const n of ['NŒUX-LES-MINES', 'AMIENS EST', 'LA CÔTE PICARDE']) {
+    assert.ok(aprr.g.some(g => g[0] === n), n + ' doit exister dans peages-aprr.json');
   }
 });
 
