@@ -102,7 +102,15 @@
     // V265 : si le tracé passe près d'une gare officielle dont nous n'avons aucun tarif, le prix exact est refusé (jamais de prix partiel).
     if (typeof UNK !== 'undefined') for (let k = i0; k <= i1; k++) { const w = sh[k]; if (!w) continue; for (let u = 0; u < UNK.length; u++) { const z = UNK[u]; if (Math.abs(w[0] - z[0]) < 0.006 && Math.abs(w[1] - z[1]) < 0.009 && dist(w[0], w[1], z[0], z[1]) < 0.5) return null; } }
     // V259 : barrières « système ouvert » à tarif fixe : leur tarif est ajouté par le moteur de barrières (overlay) ; ici elles sont seulement retirées de la recherche des couples de gares.
-    const OUV = { 'CROTTET': [0.8, 1.2], 'FONTAINE-LARIVIERE': [3.1, 4.9], 'GENAY': [1.7, 2.5], 'LUSSE': [6.8, 10.7], 'MIONNAY': [1, 1.5], 'MYENNES': [4.2, 6], 'QUINCIEUX': [3.6, 5.6], 'VICHY': [1.2, 1.9] };
+    // V280 (6 nov. 2026) : « CHIGNIN BRETELLE » et « TOURNEAU Système Ouvert » ajoutés après verification exhaustive
+    // de la grille AREA/APRR complete (tests/peages-area-grille-complete-chignin-bretelle.test.cjs et
+    // tests/peages-aprr-grille-complete-le-tourneau.test.cjs) : ces 2 gares, comme les 8 autres ci-dessous, n'ont
+    // aucun tarif point-a-point propre (0 relation dans les 16918+21505 relations officielles) -- seul un tarif
+    // fixe « systeme ouvert » existe, porte par le mecanisme des barrieres (overlay). Sans cette entree, une gare
+    // isolee rencontree au milieu d'un trajet avec d'autres gares deja tarifees de part et d'autre aurait pu faire
+    // refuser (ou dans certains cas silencieusement omettre) le prix du reste du trajet -- cf. le garde-fou ligne
+    // ~284 qui verifie que chaque nom ici a bien une barriere correspondante.
+    const OUV = { 'CROTTET': [0.8, 1.2], 'FONTAINE-LARIVIERE': [3.1, 4.9], 'GENAY': [1.7, 2.5], 'LUSSE': [6.8, 10.7], 'MIONNAY': [1, 1.5], 'MYENNES': [4.2, 6], 'QUINCIEUX': [3.6, 5.6], 'VICHY': [1.2, 1.9], 'CHIGNIN BRETELLE': [1.0, 1.6], 'TOURNEAU Système Ouvert': [3.8, 5.8] };
     const ouv = [];
     for (let q = hits.length - 1; q >= 0; q--) { if (OUV[P.g[hits[q].g][0]]) { if (!ouv.some(o => o.g === hits[q].g)) ouv.unshift(hits[q]); hits.splice(q, 1); } }
     if (!hits.length && !ouv.length) return null;

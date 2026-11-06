@@ -263,8 +263,8 @@
       "id": "aprr-area-ouvert-fontaine-lariviere",
       "points": [
         [
-          47.7306,
-          6.5781
+          47.677,
+          6.986
         ]
       ]
     },
@@ -314,17 +314,17 @@
       "id": "aprr-area-ouvert-le-crozet",
       "points": [
         [
-          46.2244,
-          3.9336
+          45.046,
+          5.679
         ]
       ]
     },
     {
-      "id": "aprr-area-ouvert-tourneau-systeme-ouvert",
+      "id": "aprr-area-ouvert-tourneau-syst-me-ouvert",
       "points": [
         [
-          47.3167,
-          3.0833
+          47.993,
+          2.678
         ]
       ]
     },
@@ -1218,7 +1218,7 @@
     },
     {
       "id": "o1014",
-      "b": "aprr-area-ouvert-tourneau-systeme-ouvert",
+      "b": "aprr-area-ouvert-tourneau-syst-me-ouvert",
       "c": 1,
       "a": 3.8,
       "s": "PROUVE",
@@ -1227,7 +1227,7 @@
     },
     {
       "id": "o1015",
-      "b": "aprr-area-ouvert-tourneau-systeme-ouvert",
+      "b": "aprr-area-ouvert-tourneau-syst-me-ouvert",
       "c": 2,
       "a": 5.8,
       "s": "PROUVE",

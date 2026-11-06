@@ -19,6 +19,38 @@
 //
 // AREA est desormais integralement verifiee.
 //
+// MISE A JOUR (meme jour) : en verifiant que chaque gare du dictionnaire OUV
+// (routes-ui.js) a bien sa barriere "systeme ouvert" correspondante, deux
+// BUGS DE GPS MAJEURS decouverts sur des barrieres deja existantes (ajoutees
+// lors d'une session anterieure) :
+//   - "aprr-area-ouvert-fontaine-lariviere" etait a 31,1 km de son point
+//     officiel (47.677,6.986, confirme par data.gouv.fr ET par la gare
+//     "FONTAINE-LARIVIERE" deja connue dans peages-aprr.json).
+//   - "aprr-area-ouvert-le-crozet" etait a 188,6 km (!) de son point
+//     officiel (45.046,5.679) -- l'erreur de GPS la plus grave trouvee dans
+//     tout ce chantier, bien pire que le bug Monts-Sorigny (5,6km).
+// Un trajet reel passant par ces deux echangeurs ne declenchait donc JAMAIS
+// barrieresTraversees() (detection a moins de 0,3km) : exactement le type de
+// peage silencieusement omis que l'audit de Laurent visait a trouver. Les
+// DEUX prix (PROUVE, sources inchangees) sont corrects et n'ont pas change
+// -- seul le GPS est corrige, vers les coordonnees exactes de la gare P.g
+// deja connue (verifie : aucune nouvelle collision a moins de 0,3km).
+// Un troisieme cas, "aprr-area-ouvert-cruseilles-a" (1,5km d'ecart), n'est
+// PAS corrige ici : il figure deja dans la liste SUSPECTES de routes-ui.js
+// (ligne ~140), un garde-fou EXISTANT et DELIBERE qui degrade la confiance
+// du prix affiche (reste=99) plutot que de le bloquer ou le corriger sans
+// plus d'information -- modifier son GPS sortirait du cadre de cette
+// verification et demanderait sa propre investigation.
+//
+// Egalement : "CHIGNIN BRETELLE" et "TOURNEAU Système Ouvert" (la gare
+// renommee ci-dessus "aprr-area-ouvert-tourneau-syst-me-ouvert" pour que son
+// id corresponde exactement au slug que le moteur calcule a partir du nom
+// P.g) ont ete ajoutees au dictionnaire OUV de routes-ui.js : sans cette
+// entree, ces 2 gares isolees (aucun tarif point-a-point, seulement le tarif
+// systeme-ouvert) auraient pu, rencontrees au milieu d'un trajet avec
+// d'autres gares deja tarifees, faire refuser ou mal calculer le prix du
+// reste du trajet (cf. le garde-fou ligne ~284 de routes-ui.js).
+//
 // Run: node --test tests/peages-area-grille-complete-chignin-bretelle.test.cjs
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
@@ -117,4 +149,54 @@ test('la nouvelle barriere ne cree aucune collision a moins de 0,3km avec une au
       assert.ok(dist(p[0], p[1], q[0], q[1]) > 0.3, b.id + ' trop proche de ' + other.id);
     }
   }
+});
+
+test('GPS corrige : "aprr-area-ouvert-fontaine-lariviere" est maintenant a son point officiel (etait a 31,1km)', () => {
+  const b = overlay.barrieres.find(x => x.id === 'aprr-area-ouvert-fontaine-lariviere');
+  assert.equal(b.points[0][0], 47.677);
+  assert.equal(b.points[0][1], 6.986);
+  const t1 = overlay.tarifs.find(t => t.b === b.id && t.c === 1);
+  const t2 = overlay.tarifs.find(t => t.b === b.id && t.c === 2);
+  assert.equal(t1.a, 3.1); assert.equal(t2.a, 4.9); // prix inchange
+});
+
+test('GPS corrige : "aprr-area-ouvert-le-crozet" est maintenant a son point officiel (etait a 188,6km)', () => {
+  const b = overlay.barrieres.find(x => x.id === 'aprr-area-ouvert-le-crozet');
+  assert.equal(b.points[0][0], 45.046);
+  assert.equal(b.points[0][1], 5.679);
+  const t1 = overlay.tarifs.find(t => t.b === b.id && t.c === 1);
+  const t2 = overlay.tarifs.find(t => t.b === b.id && t.c === 2);
+  assert.equal(t1.a, 4.5); assert.equal(t2.a, 7.1); // prix inchange
+});
+
+test('les 2 GPS corriges ne creent aucune collision a moins de 0,3km avec un autre point connu', () => {
+  for (const id of ['aprr-area-ouvert-fontaine-lariviere', 'aprr-area-ouvert-le-crozet']) {
+    const b = overlay.barrieres.find(x => x.id === id);
+    for (const other of overlay.barrieres) {
+      if (other.id === id) continue;
+      for (const p of b.points) for (const q of other.points) {
+        assert.ok(dist(p[0], p[1], q[0], q[1]) > 0.3, id + ' trop proche de ' + other.id);
+      }
+    }
+  }
+});
+
+test('"Cruseilles A" (1,5km d\'ecart, deja connu) reste dans la liste SUSPECTES de routes-ui.js -- non touche ici', () => {
+  const src = fs.readFileSync(require('path').join(__dirname, '..', 'routes-ui.js'), 'utf8');
+  assert.match(src, /const SUSPECTES = \['CRUSEILLES A'\]/);
+});
+
+test('"CHIGNIN BRETELLE" et "TOURNEAU Système Ouvert" sont dans le dictionnaire OUV de routes-ui.js', () => {
+  const src = fs.readFileSync(require('path').join(__dirname, '..', 'routes-ui.js'), 'utf8');
+  assert.match(src, /'CHIGNIN BRETELLE': \[1\.0, 1\.6\]/);
+  assert.match(src, /'TOURNEAU Système Ouvert': \[3\.8, 5\.8\]/);
+});
+
+test('"aprr-area-ouvert-tourneau-syst-me-ouvert" (renomme pour correspondre au slug du moteur) a le bon prix et aucun doublon', () => {
+  const matches = overlay.barrieres.filter(b => /tourneau/i.test(b.id));
+  assert.equal(matches.length, 1, 'un seul barriere Tourneau, pas de doublon');
+  assert.equal(matches[0].id, 'aprr-area-ouvert-tourneau-syst-me-ouvert');
+  const t1 = overlay.tarifs.find(t => t.b === matches[0].id && t.c === 1);
+  const t2 = overlay.tarifs.find(t => t.b === matches[0].id && t.c === 2);
+  assert.equal(t1.a, 3.8); assert.equal(t2.a, 5.8);
 });
