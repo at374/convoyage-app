@@ -37,6 +37,12 @@ const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const OFFICIEL = require('../data/gares-peage-officiel.json');
 
+// Mise a jour du 6 nov. 2026 : "Fréjus Est" a ete resolu depuis (prix PROUVE via
+// relation point-a-point avec Mandelieu, voir tests/peages-frejus-est-escota.
+// test.cjs) et retire de UNK. Il reste dans cette liste : la resolution CONFIRME
+// la theorie Ech (un echangeur n'a pas de tarif de barriere propre, mais PEUT
+// avoir un tarif point-a-point avec sa vraie destination, exactement ce qui a
+// ete trouve). Son type officiel reste "Ech", ce qui est attendu et correct.
 const QUATRE_RESTANTS = [
   ['Audomarois B Sortie Sens 1', 50.72292, 2.16534],
   ['Audomarois B Entree Sens 2', 50.7231, 2.16714],

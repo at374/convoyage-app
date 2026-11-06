@@ -69,16 +69,24 @@ function extraireUNK() {
   return JSON.parse('[' + m[1] + ']');
 }
 
-// Les seuls 6 points genuinement sans tarif (ajoutes a UNK).
+// Les 6 points genuinement sans tarif trouves par cet audit (ajoutes a UNK ce
+// jour-la). Mise a jour du 6 nov. 2026 : "Fréjus Est" a ete resolu depuis (voir
+// tests/peages-frejus-est-escota.test.cjs) et retire de UNK -- il reste dans
+// cette liste de reference pour memoire de l'audit original, mais le test
+// ci-dessous qui verifie la presence dans UNK ne le couvre plus (voir
+// NOUVEAUX_UNK_TOUJOURS_BLOQUES).
 const NOUVEAUX_UNK = [
   [50.72292, 2.16534],   // Audomarois B (secteur Saint-Omer/A26, 0,6-0,7km de CALAIS -- distinct, pas fusionne)
   [50.7231, 2.16714],    // Audomarois B (second point, meme barriere)
   [45.21646, 6.46587],   // St Michel amont (A43, 73)
-  [43.47233, 6.74324],   // Fréjus Est (A8, 83)
+  [43.47233, 6.74324],   // Fréjus Est (A8, 83) -- RESOLU le 6 nov. 2026, retire de UNK
   [47.98195, 0.05435],   // Le Mans Ouest (A11)
   [48.98384, 1.68125],   // Buchelay BPV (A13)
   [49.23071, -0.07124],  // Dozule BPV Nord (A13)
 ];
+
+// Les 6 moins "Fréjus Est" (resolu) : ceux qui doivent encore etre dans UNK.
+const NOUVEAUX_UNK_TOUJOURS_BLOQUES = NOUVEAUX_UNK.filter(([lat, lon]) => !(lat === 43.47233 && lon === 6.74324));
 
 // Barrieres deja presentes et deja tarifees via overlay.barrieres/overlay.tarifs
 // AVANT cet audit, que la premiere passe erronee avait a tort traitees comme
@@ -131,12 +139,20 @@ test('les 10 barrieres deja correctement tarifees ne sont PAS dans UNK (ne jamai
   }
 });
 
-test('les 6 veritables angles morts (aucun tarif nulle part) sont desormais dans UNK (routes-ui.js)', () => {
+test('les angles morts encore non resolus restent dans UNK (routes-ui.js)', () => {
   const UNK = extraireUNK();
-  for (const [lat, lon] of NOUVEAUX_UNK) {
+  for (const [lat, lon] of NOUVEAUX_UNK_TOUJOURS_BLOQUES) {
     const min = Math.min(...UNK.map(([ulat, ulon]) => dist(lat, lon, ulat, ulon)));
     assert.ok(min < 0.05, 'point ' + lat + ',' + lon + ' absent de UNK (plus proche a ' + min.toFixed(3) + 'km)');
   }
+});
+
+test('"Fréjus Est" (resolu le 6 nov. 2026) n\'est plus dans UNK, mais est couvert par overlay.gares/paires', () => {
+  const UNK = extraireUNK();
+  const min = Math.min(...UNK.map(([ulat, ulon]) => dist(43.47233, 6.74324, ulat, ulon)));
+  assert.ok(min > 0.05, 'Frejus Est ne doit plus etre dans UNK');
+  const overlay = require('../peages-overlay.json');
+  assert.ok(overlay.gares.some(g => g.nom === 'Frejus Est'), 'Frejus Est doit avoir un GPS dans overlay.gares');
 });
 
 test('audit complet : chaque point du referentiel officiel est a moins de 0,5km d\'un point connu (GPS aprr/overlay.gares/overlay.barrieres) ou de UNK', () => {
