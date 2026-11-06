@@ -3,6 +3,7 @@
 'use strict';
 const HS_LINES=new Set(['Y13','Y03','Y04','Y81','Y82','Y83','Y84','Y85','Y86','Y91','Y92','Y93','Y94']);
 const SOURCES={
+ savoie:'https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_savoie_tarifs_mars_2026.pdf',
  ain:'https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/cars_region_ain_tarifs_mars-2026.pdf',
  hs:'https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y13-03-04-81-82-83-84-85-86-91-92-93-94.pdf'
 };
@@ -17,9 +18,10 @@ function portion(leg){
  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(time)).map(p=>[p.type,p.value]));
  if(parts.year+'-'+parts.month+'-'+parts.day<'2026-03-01')return null;
  const family=leg.networkId==='reseau-interurbain-cars-region-ain-01'&&/^A\d{2}$/.test(leg.line)?'ain':
-  leg.networkId==='oura-haute-savoie'&&HS_LINES.has(leg.line)?'hs':null;
+  leg.networkId==='oura-haute-savoie'&&HS_LINES.has(leg.line)?'hs':
+  leg.networkId==='oura-savoie-regular'&&/^S0[1-7]$/.test(leg.line)?'savoie':null;
  if(!family)return null;
- return {line:leg.line,amountEUR:family==='ain'?2.3:1.7,product:'1 voyage adulte, hors abonnement',
+ return {line:leg.line,amountEUR:({ain:2.3,hs:1.7,savoie:3.4})[family],product:'1 voyage adulte, hors abonnement',
   source:SOURCES[family],effectiveFrom:'2026-03-01',checkedOn:'2026-11-06',fareVerified:false};
 }
 function reference(row){
