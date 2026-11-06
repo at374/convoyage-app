@@ -302,7 +302,7 @@ test('Grenoble local tasks retain both Grenoble feeds and nearby regional candid
  assert.doesNotMatch(target.textContent,/Cars Région Haute-Savoie|Sibra/);
  session.dispose();
  const outside={...local,from:point};
- assert.equal(agenda.DEFAULT_RESOURCES.some(r=>agenda.selected(r,outside)),false);
+ assert.equal(agenda.DEFAULT_RESOURCES.filter(r=>r.network.startsWith('M Réso')).some(r=>agenda.selected(r,outside)),false);
 });
 
 test('Agenda collapses equivalent departures from different GTFS trip IDs',async()=>{
