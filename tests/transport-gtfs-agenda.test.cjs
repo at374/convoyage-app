@@ -93,7 +93,7 @@ test('source and per-task errors are visible and do not abort other task searche
  const session=agenda.mount(target,{tasks:[task,{...task,label:'Aller'}],clientFactory:()=>({
   load:async()=>summary,query:async()=>{if(!queries++)throw new Error('fail');return {rows:[],truncated:false};},dispose(){}})});
  await session.done;assert.match(target.textContent,/Retour : recherche indisponible/);
- assert.match(target.textContent,/Aller : aucun trajet dans les résultats partiels/);session.dispose();
+ assert.match(target.textContent,/Aller : aucun trajet direct/);session.dispose();
  const unavailable=panel();let terminated=0;
  await agenda.mount(unavailable,{tasks:[task],clientFactory:()=>({load:async()=>{throw new Error('CORS');},dispose(){terminated++;}})}).done;
  assert.match(unavailable.textContent,/Flux officiel indisponible/);assert.equal(terminated,1);
@@ -188,7 +188,7 @@ test('Agenda loads scoped partners and renders a cross-network change without in
  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
   loadNetworks:async(resources,options)=>{calls.push({resources,options});return {networks:[summary,{...summary,source:{...summary.source,network:'Sibra',updatedAt:'2026-10-01'}}],partial:false};},
   query:async()=>({rows:[crossed],truncated:false}),dispose(){}})});
- await session.done;assert.equal(calls[0].resources.length,2);
+ await session.done;assert.equal(calls[0].resources.length,3);
  assert.ok(calls[0].options.indexServiceDates.includes('2026-11-01'));
  assert.match(target.textContent,/changement de réseau : Descente → Montée/);
  assert.match(target.textContent,/séparation à vol d’oiseau 56 m, marche non vérifiée/);
@@ -843,13 +843,13 @@ test('Mobile regional transport cards cover Aller Jonction Retour and safe stop 
 test('omitted relevant networks are disclosed even when loaded feeds succeed',async()=>{
  const target=panel(),received=[];
  const base=agenda.DEFAULT_RESOURCES[0];
- const resources=[base,{...base,id:'partner1',datasetId:'partner1',network:'Partner One',federate:true},{...base,id:'partner2',datasetId:'partner2',network:'Partner Two',federate:true}];
+ const resources=[base,{...base,id:'partner1',datasetId:'partner1',network:'Partner One',federate:true},{...base,id:'partner2',datasetId:'partner2',network:'Partner Two',federate:true},{...base,id:'partner3',datasetId:'partner3',network:'Partner Three',federate:true},{...base,id:'partner4',datasetId:'partner4',network:'Partner Four',federate:true}];
  const session=agenda.mount(target,{tasks:[task],resources,
   clientFactory:()=>({loadNetworks:async()=>({networks:[summary,summary],partial:false}),query:async()=>({rows:[],truncated:false}),dispose(){}}),
   onResults:r=>received.push(r)});
  await session.done;
- assert.match(target.textContent,/Réseaux non interrogés : Partner Two/);
+ assert.match(target.textContent,/Réseaux non interrogés : Partner Four/);
  assert.equal(received[0].coverage.partial,true);
- assert.deepEqual(received[0].coverage.omittedNetworks,['Partner Two']);
+ assert.deepEqual(received[0].coverage.omittedNetworks,['Partner Four']);
  session.dispose();
 });

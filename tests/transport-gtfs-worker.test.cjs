@@ -241,3 +241,16 @@ test('real worker binds full Y51 fare scope path to its GTFS portion and preserv
   assert.equal(row.serviceConfirmed,false);assert.equal(row.priceEUR,null);
  }
 });
+
+test('four networks retain distinct direct services and a combined budget preserves partial results',async t=>{
+ const client=createClient({workerFactory:factory});t.after(()=>client.dispose());
+ const resources=Array.from({length:4},(_,i)=>({...resource,datasetId:'N'+i,network:'N'+i}));
+ const loaded=await client.loadNetworks(resources,{indexServiceDates:['2026-11-02']});
+ assert.equal(loaded.networks.length,4);assert.equal(loaded.partial,false);
+ const result=await client.query({method:'missionJourneys',date:'2026-11-02',origin:{lat:45.9,lon:6.1},destination:{lat:45.8,lon:6.2},window:{earliestDeparture:'2026-11-02T09:00:00Z',latestArrival:'2026-11-02T13:00:00Z'},limit:100});
+ assert.equal(new Set(result.rows.map(r=>r.networkId)).size,4);
+ const limited=createClient({workerFactory:factory});t.after(()=>limited.dispose());
+ const partial=await limited.loadNetworks(resources,{indexServiceDates:['2026-11-02'],maxRetainedExpandedBytes:loaded.networks[0].expandedBytes});
+ assert.equal(partial.partial,true);
+ assert.equal(partial.networks.filter(n=>n.counts).length,1);
+});

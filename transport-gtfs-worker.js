@@ -43,11 +43,17 @@ self.onmessage=async({data})=>{
    if(feedsPromise)throw new Error('A network is already loading; replace the worker to reload');
    if(type==='loadNetworks'&&(!Array.isArray(options.indexServiceDates)||!options.indexServiceDates.length))throw new Error('Service dates required for multiple GTFS networks');
    const list=type==='load'?[resource]:resources;
-   if(!Array.isArray(list)||!list.length||list.length>2)throw new Error('One or two GTFS networks required');
+   if(!Array.isArray(list)||!list.length||list.length>4)throw new Error('One to four GTFS networks required');
    feedsPromise=(async()=>{
-    const entries=[];
+    const entries=[];let retainedBytes=0;
+    const retainedLimit=options.maxRetainedExpandedBytes??256*1024*1024;
+    if(!Number.isSafeInteger(retainedLimit)||retainedLimit<=0||retainedLimit>256*1024*1024)throw new Error('Invalid retained GTFS budget');
     for(const item of list){
-     try{entries.push({feed:await CPGTFSLoader.loadResource(item,{...options,retainSourceTables:false})});}
+     try{
+      const remaining=retainedLimit-retainedBytes;if(remaining<=0)throw new Error('Combined GTFS memory budget exhausted');
+      const feed=await CPGTFSLoader.loadResource(item,{...options,maxExpandedBytes:Math.min(options.maxExpandedBytes??128*1024*1024,remaining),retainSourceTables:false});
+      retainedBytes+=feed.expandedBytes;entries.push({feed});
+     }
      catch(error){entries.push({error:{network:item?.network||'',message:error.message}});}
     }
     return entries;
@@ -90,10 +96,12 @@ self.onmessage=async({data})=>{
      rows.push(...found.map(row=>({...row,networkId:current.source.datasetId||current.source.resourceId,
       network:current.source.network,legs:row.legs?.map(leg=>({...leg,network:current.source.network,networkId:current.source.datasetId||current.source.resourceId}))})));
     }
-    if(query.method==='missionJourneys'&&feeds.length===2){
-     const cross=CPGTFSFederation.crossNetworkTrips(feeds,query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
+    if(query.method==='missionJourneys'&&feeds.length>1){
+     for(let i=0;i<feeds.length;i++)for(let j=i+1;j<feeds.length;j++){
+     const cross=CPGTFSFederation.crossNetworkTrips([feeds[i],feeds[j]],query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
       ...(connectionDates===undefined?{}:{connectionDates})});
      rows.push(...cross.journeys);searchTruncated=searchTruncated||cross.searchTruncated;
+     }
     }
     // Apply mission ordering before the result cap, including across networks.
     if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));

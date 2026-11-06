@@ -1,4 +1,4 @@
-/* Read-only Agenda integration. At most two official networks in one worker per open panel. */
+/* Read-only Agenda integration. At most four official networks in one worker per open panel. */
 (function(root){
 'use strict';
 const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
@@ -91,8 +91,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const partnerCandidates=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
   crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
   (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to})))));
- const partners=partnerCandidates.slice(0,1);
- const omittedNetworks=partnerCandidates.slice(1).map(r=>r.network||r.id);
+ const partners=partnerCandidates.slice(0,3);
+ const omittedNetworks=partnerCandidates.slice(3).map(r=>r.network||r.id);
  const eligible=task=>selected(resource,task)||partners.some(r=>crossEnvelopePair(resource,r,task));
  const section=doc.createElement('div');section.className='bk';section.setAttribute('data-gtfs-agenda','');
  const heading=doc.createElement('h3');heading.textContent=resource.network+' — horaires aux arrêts';section.appendChild(heading);
