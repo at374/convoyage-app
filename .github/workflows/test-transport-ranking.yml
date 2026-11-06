@@ -8,6 +8,8 @@ on:
       - 'transport-fares.js'
       - 'transport-sibra-pass.js'
       - 'transport-y51-fares.js'
+      - 'transport-cars-region-fares.js'
+      - 'tests/transport-cars-region-fares.test.cjs'
       - 'transport-catalogue.js'
       - 'transport-swiss-ain.js'
       - 'transport-gtfs-index.js'
@@ -50,6 +52,8 @@ on:
       - 'transport-fares.js'
       - 'transport-sibra-pass.js'
       - 'transport-y51-fares.js'
+      - 'transport-cars-region-fares.js'
+      - 'tests/transport-cars-region-fares.test.cjs'
       - 'transport-catalogue.js'
       - 'transport-swiss-ain.js'
       - 'transport-gtfs-index.js'
@@ -103,6 +107,8 @@ jobs:
       - run: node --check transport-adapters.js
       - run: node --check transport-fares.js
       - run: node --check transport-sibra-pass.js
+      - run: node --check transport-cars-region-fares.js
+      - run: node --test tests/transport-cars-region-fares.test.cjs
       - run: node --check transport-y51-fares.js
       - run: node --check transport-catalogue.js
       - run: node --check transport-swiss-ain.js
