@@ -1,0 +1,28 @@
+{
+  "checkedOn": "2026-11-06",
+  "source": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA",
+  "sourcePage": "https://transport.data.gouv.fr/datasets/reseau-interurbain-cars-region-savoie-73",
+  "resourceId": 81244,
+  "sha256": "0a422f51c474bde130a052900ff4d508adacfed1e6d994aef692bae745771aa0",
+  "archiveBytes": 654853,
+  "counts": {
+    "stops": 259,
+    "routes": 8,
+    "trips": 63,
+    "stopTimes": 1260
+  },
+  "indexedStopTimes": 659,
+  "lines": [
+    "S01",
+    "S03",
+    "S04",
+    "S05",
+    "S07",
+    "S11",
+    "S12",
+    "S10"
+  ],
+  "serviceConfirmed": false,
+  "faresVerified": false,
+  "scope": "Real current regular Savoie feed loaded and indexed for 2026-11-06; no claim of all tourist routes, realtime or journey coverage."
+}

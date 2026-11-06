@@ -188,7 +188,7 @@ test('Agenda loads scoped partners and renders a cross-network change without in
  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
   loadNetworks:async(resources,options)=>{calls.push({resources,options});return {networks:[summary,{...summary,source:{...summary.source,network:'Sibra',updatedAt:'2026-10-01'}}],partial:false};},
   query:async()=>({rows:[crossed],truncated:false}),dispose(){}})});
- await session.done;assert.equal(calls[0].resources.length,3);
+ await session.done;assert.equal(calls[0].resources.length,4);
  assert.ok(calls[0].options.indexServiceDates.includes('2026-11-01'));
  assert.match(target.textContent,/changement de réseau : Descente → Montée/);
  assert.match(target.textContent,/séparation à vol d’oiseau 56 m, marche non vérifiée/);
@@ -852,4 +852,13 @@ test('omitted relevant networks are disclosed even when loaded feeds succeed',as
  assert.equal(received[0].coverage.partial,true);
  assert.deepEqual(received[0].coverage.omittedNetworks,['Partner Four']);
  session.dispose();
+});
+
+
+test('regular Savoie source is distinct from tourist data and scoped to candidate endpoints',()=>{
+ const source=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-savoie');
+ assert.ok(source);assert.match(source.url,/provider=SAVOIE&/);
+ assert.equal(source.resolveFromCatalogue,undefined);
+ assert.equal(agenda.selected(source,{from:{lat:45.57,lon:5.92},to:{lat:45.67,lon:6.39}}),true);
+ assert.equal(agenda.selected(source,{from:{lat:45.19,lon:5.72},to:{lat:45.28,lon:5.88}}),false);
 });

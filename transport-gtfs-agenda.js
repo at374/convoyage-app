@@ -25,6 +25,11 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  id:'81794',datasetId:'5eb3510a4efd8f649ffe1b9f',network:'M Réso — Grésivaudan',format:'GTFS',federate:true,
  url:'https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2',resolveFromCatalogue:true,
  bounds:[45.1,5.7,45.39,6.2],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-savoie',datasetId:'oura-savoie-regular',network:'Cars Région Savoie',format:'GTFS',federate:true,
+ // Separate from the tourist resource in the same national catalogue dataset.
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[45.30,5.78,45.95,7.2],timeZone:'Europe/Paris'
 })]);
 function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof point.lon==='number'&&
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}
