@@ -89,7 +89,7 @@ async function run(){
   await context.addInitScript(({missions,settings,origin,relayURL})=>{
    if(new URL(location.href).searchParams.has('swiss')){
     localStorage.removeItem('cp_gps');
-    missions=[{...missions[0],id:'browser-swiss',external_id:'BROWSER-SWISS',destination_address:'94 rue Test Carte 38000 Grenoble'}];
+    missions=[{...missions[0],id:'browser-swiss',external_id:'BROWSER-SWISS',destination_address:'94 rue Test Suisse 38000 Grenoble'}];
    }
    if(new URL(location.href).searchParams.has('buslive'))window.CP_BLABLACAR_REALTIME_URL=relayURL;
    // An invalid optional relay must never block SNCF or the other engines.
@@ -142,7 +142,7 @@ async function run(){
     const readPost=request.method()==='POST'&&['/rest/v1/rpc/mon_statut','/storage/v1/object/sign/apk/version.json'].includes(url.pathname);
     if(request.method()!=='GET'&&!readPost)blockedWrites.push({method:request.method(),path:url.pathname});
     const tripDay=busLiveScenario?'2026-10-31':'2026-11-02';
-    const backendMissions=swissScenario?[{...missions[0],id:'browser-swiss',external_id:'BROWSER-SWISS',destination_address:'94 rue Test Carte 38000 Grenoble'}]:regionalPassScenario?[{...missions[0],from_city:'Annecy',to_city:regionalFareScenario?'Albertville':'Duingt',origin_address:'12 rue Exemple 74000 Annecy',destination_address:regionalFareScenario?'14 rue Exemple 73200 Albertville':'14 rue Exemple 74410 Duingt'}]:tripgoScenario?[{...missions[0],pickup_start:tripDay+'T08:00:00+01:00',pickup_end:tripDay+'T08:00:00+01:00',delivery_end:tripDay+'T10:00:00+01:00',to_city:'Annecy',destination_address:'14 rue Exemple 74000 Annecy'}]:railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
+    const backendMissions=swissScenario?[{...missions[0],id:'browser-swiss',external_id:'BROWSER-SWISS',destination_address:'94 rue Test Suisse 38000 Grenoble'}]:regionalPassScenario?[{...missions[0],from_city:'Annecy',to_city:regionalFareScenario?'Albertville':'Duingt',origin_address:'12 rue Exemple 74000 Annecy',destination_address:regionalFareScenario?'14 rue Exemple 73200 Albertville':'14 rue Exemple 74410 Duingt'}]:tripgoScenario?[{...missions[0],pickup_start:tripDay+'T08:00:00+01:00',pickup_end:tripDay+'T08:00:00+01:00',delivery_end:tripDay+'T10:00:00+01:00',to_city:'Annecy',destination_address:'14 rue Exemple 74000 Annecy'}]:railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
     const backendSettings=regionalPassScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.9016985,domicile_lng:6.1201612}:tripgoScenario?{...settings,domicile_lat:45.1914,domicile_lng:5.7143}:railScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}:settings;
     return json(route,url.pathname.endsWith('/missions')?backendMissions:url.pathname.endsWith('/reglages')?[backendSettings]:[]);
    }
