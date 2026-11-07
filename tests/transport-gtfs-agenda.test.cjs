@@ -333,13 +333,14 @@ test('Agenda retains identical schedules from different networks',async()=>{
  session.dispose();
 });
 
-test('Grenoble to Crolles remains within both metropolitan and Grésivaudan GTFS envelopes',async()=>{
+test('Grenoble to Crolles keeps metropolitan priority while regional GTFS remains a bounded candidate',async()=>{
  const grenoble={lat:45.1885,lon:5.7245},crolles={lat:45.276,lon:5.883};
  const trip={label:'Jonction mission',from:grenoble,to:crolles,
   earliestDeparture:'2026-11-02T09:00:00+01:00',latestArrival:'2026-11-02T12:00:00+01:00'};
  const eligible=agenda.DEFAULT_RESOURCES.filter(resource=>agenda.selected(resource,trip));
  assert.deepEqual(eligible.map(resource=>resource.datasetId),
-  ['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f']);
+  ['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f','61b36a0610344080a78cf407','607860847e79b65f245982db','5bb1caa6634f4136693d9053']);
+ const localEligible=eligible.filter(resource=>resource.resolveFromCatalogue);
  const target=panel(),calls=[];
  const session=agenda.mount(target,{tasks:[trip],clientFactory:()=>({
   loadNetworks:async(resources,options)=>{
@@ -352,7 +353,7 @@ test('Grenoble to Crolles remains within both metropolitan and Grésivaudan GTFS
  })});
  await session.done;
  assert.equal(calls.length,1);
- assert.deepEqual(calls[0].resources.map(resource=>resource.datasetId),[...eligible.map(resource=>resource.datasetId),'oura-savoie-tourism']);
+ assert.deepEqual(calls[0].resources.map(resource=>resource.datasetId),[...localEligible.map(resource=>resource.datasetId),'oura-savoie-tourism']);
  assert.match(target.textContent,/Grésivaudan/);
  assert.match(target.textContent,/Transport non confirmé|ne prouve pas l’absence de transport/);
  session.dispose();
@@ -560,6 +561,37 @@ test('official Cars Région Ain GTFS is available as an Agenda resource',()=>{
  assert.match(ain.url,/^https:\/\/api\.oura3\.cityway\.fr\/dataflow\/offre-tc\/download\?/);
  assert.equal(agenda.selected(ain,{from:{lat:46.25,lon:5.6},to:{lat:46.30,lon:5.8}}),true);
  assert.equal(agenda.selected(ain,{from:{lat:46.25,lon:5.6},to:{lat:47.1,lon:6.5}}),false);
+});
+
+test('remaining AURA departmental GTFS resources are official, bounded candidates',()=>{
+ const departments=[
+  ['oura-allier',{lat:46.18,lon:3.32},'ALLIER'],
+  ['oura-ardeche',{lat:44.74,lon:4.6},'ARDECHE'],
+  ['oura-cantal',{lat:45.05,lon:2.75},'CAR_REGION_CANTAL'],
+  ['oura-drome',{lat:44.72,lon:5.12},'DROME'],
+  ['oura-isere',{lat:45.2,lon:5.72},'ISERE'],
+  ['oura-loire',{lat:45.55,lon:4.38},'CARS_REGION_LOIRE'],
+  ['oura-haute-loire',{lat:45.05,lon:3.88},'HAUTE_LOIRE'],
+  ['oura-puy-de-dome',{lat:45.78,lon:3.12},'PUY_DE_DOME']
+ ];
+ for(const [id,point,provider] of departments){
+  const resource=agenda.DEFAULT_RESOURCES.find(r=>r.id===id);
+  assert.ok(resource,id);
+  assert.equal(resource.format,'GTFS');assert.equal(resource.federate,true);assert.equal(resource.timeZone,'Europe/Paris');
+  assert.match(resource.url,new RegExp('provider='+provider+'(?:&|$)'));
+  assert.equal(agenda.selected(resource,{from:point,to:{...point}}),true,id+' should be considered only inside its envelope');
+  assert.equal(agenda.selected(resource,{from:point,to:{lat:48.85,lon:2.35}}),false,id+' must not claim national coverage');
+ }
+});
+
+test('Cars Région Express is a separate dated timetable source, never a static fare source',()=>{
+ const express=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-cars-region-express');
+ assert.ok(express);assert.equal(express.datasetId,'61b36a0610344080a78cf407');
+ assert.equal(express.format,'GTFS');assert.equal(express.federate,true);
+ assert.match(express.url,/provider=CARS_REGION_EXPRESS&/);
+ assert.equal(agenda.selected(express,{from:{lat:46.12,lon:5.82},to:{lat:46.19,lon:6.14}}),true);
+ assert.equal(agenda.selected(express,{from:{lat:46.12,lon:5.82},to:{lat:48.85,lon:2.35}}),false);
+ assert.equal(Object.hasOwn(express,'fareEUR'),false);
 });
 
 

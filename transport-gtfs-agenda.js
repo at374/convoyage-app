@@ -1,7 +1,40 @@
 /* Read-only Agenda integration. At most four official networks in one worker per open panel. */
 (function(root){
 'use strict';
-const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
+const AURA_RESOURCES_BY_COVERAGE=Object.freeze([Object.freeze({
+ id:'oura-allier',datasetId:'6082da3e17667def63f6d47f',network:'Cars Région Allier',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=ALLIER&dataFormat=GTFS&dataProfil=OPENDATA',
+ // Department envelope only: the GTFS calendar and stop times decide service.
+ bounds:[45.65,2.7,46.85,4.6],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-ardeche',datasetId:'60785d62ee7e37e2041a9c6a',network:'Cars Région Ardèche',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=ARDECHE&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[44.2,3.5,45.5,5.05],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-cantal',datasetId:'6082bcd3f3187a37252532bd',network:'Cars Région Cantal',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CAR_REGION_CANTAL&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[44.55,2.0,45.65,3.5],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-drome',datasetId:'607860847e79b65f245982db',network:'Cars Région Drôme',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=DROME&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[44.0,4.35,45.4,5.95],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-isere',datasetId:'5bb1caa6634f4136693d9053',network:'Cars Région Isère',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=ISERE&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[44.55,4.65,46.0,6.7],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-loire',datasetId:'607862167487e5d490677f13',network:'Cars Région Loire',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_LOIRE&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[45.1,3.55,46.5,4.95],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-haute-loire',datasetId:'6082db303e52f13729b5e124',network:'Cars Région Haute-Loire',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_LOIRE&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[44.6,3.0,45.55,4.65],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-puy-de-dome',datasetId:'6082dacfd1d05e89970795f5',network:'Cars Région Puy-de-Dôme',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=PUY_DE_DOME&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[45.2,2.3,46.4,4.05],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'oura-haute-savoie',datasetId:'oura-haute-savoie',network:'Cars Région Haute-Savoie',format:'GTFS',federate:true,
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',
  // Selection envelope only: does not assert coverage or actual walking access.
@@ -35,7 +68,19 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_73_TOURISME&dataFormat=GTFS&dataProfil=OPENDATA',
  // Candidate envelope only; dated GTFS calendars determine actual availability.
  bounds:[45.05,5.78,45.95,7.2],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-cars-region-express',datasetId:'61b36a0610344080a78cf407',network:'Cars Région Express',format:'GTFS',federate:true,
+ // Official OÙRA GTFS: dated calendars decide actual service. This archive has no fare table.
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_EXPRESS&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[44.0,2.0,46.9,7.2],timeZone:'Europe/Paris'
 })]);
+// Preserve the established local-network precedence. Departmental resources
+// extend coverage; they must not displace a more specific local feed merely
+// because their source was registered later.
+const DEFAULT_RESOURCES=Object.freeze([
+ ...AURA_RESOURCES_BY_COVERAGE.slice(8),
+ ...AURA_RESOURCES_BY_COVERAGE.slice(0,8)
+]);
 function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof point.lon==='number'&&
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}
 function selected(resource,task){
@@ -98,7 +143,12 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
  const resource=preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
  if(!resource)return {dispose,done:Promise.resolve()};
- const partnerCandidates=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
+ // A department-wide feed is useful outside a local network, but loading it
+ // alongside a complete local pair only consumes a worker slot and duplicates results.
+ const localIds=new Set(['80100','83459','81794']);
+ const departmental=r=>typeof r?.id==='string'&&/^oura-(allier|ardeche|cantal|drome|isere|loire|haute-loire|puy-de-dome|cars-region-express)$/.test(r.id);
+ const hasCompleteLocal=task=>resourceList.some(r=>localIds.has(r.id)&&selected(r,task));
+ const partnerCandidates=resourceList.filter(r=>r!==resource&&r.federate&&!taskList.some(task=>departmental(r)&&hasCompleteLocal(task)&&selected(r,task))&&taskList.some(task=>
   crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
   (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to})))));
  partnerCandidates.sort((a,b)=>taskList.filter(t=>selected(b,t)).length-taskList.filter(t=>selected(a,t)).length);
