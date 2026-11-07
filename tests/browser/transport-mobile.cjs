@@ -563,6 +563,8 @@ async function run(){
   const fareRef=page.locator('[data-y51-fare-reference]').first();
   assert.match(await fareRef.innerText(),/Albertville → Annecy.*zone 4.*hors abonnement/);
   assert.match(await fareRef.innerText(),/à revérifier avant achat/);
+  const y51CardFare=page.locator('.cp-transport-local [data-direct-fare-reference]').filter({hasText:'Y51 adulte : 8,90 €'}).first();
+  await y51CardFare.waitFor();assert.match(await y51CardFare.innerText(),/prix, date et titre à confirmer/);
   assert.equal(await page.locator('[data-sibra-pass-cost]').evaluateAll(nodes=>nodes.some(x=>x.textContent.includes('0,00 €'))),false,'Active SIBRA pass must not make Albertville–Annecy free');
   assert.doesNotMatch(await page.locator('[data-gtfs-agenda]').innerText(),/Réalisable/);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);

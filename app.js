@@ -1883,7 +1883,8 @@
           }
           if(journey.directFareReference){
             const fare=journey.directFareReference,reference=document.createElement('small');reference.style.display='block';reference.setAttribute('data-direct-fare-reference','');
-            reference.textContent='Référence '+fare.line+' adulte : '+fare.amount.toFixed(2).replace('.',',')+' € · prix, date et titre à confirmer ; correspondances non comprises.';summary.appendChild(reference);
+            const digital=Number.isFinite(fare.digitalAlternativeEUR)?' à bord / '+fare.digitalAlternativeEUR.toFixed(2).replace('.',',')+' € en numérique (support éventuel en supplément)':'';
+            reference.textContent='Référence '+fare.line+' adulte : '+fare.amount.toFixed(2).replace('.',',')+' €'+digital+' · prix, date et titre à confirmer ; correspondances non comprises.';summary.appendChild(reference);
             const source=document.createElement('a');source.href=fare.source;source.target='_blank';source.rel='noopener noreferrer';source.textContent='Voir le barème officiel';detailSources.push(source);
           }
           if(journey.auraUrbanFareReference&&window.CPAuraUrbanFares){

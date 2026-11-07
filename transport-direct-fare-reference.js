@@ -4,6 +4,12 @@
 function reference(row){
  if(!row||row.legs?.length||typeof row.departure!=='string'||!Number.isFinite(Date.parse(row.departure)))return null;
  try{
+  if(row.line==='Y51'){
+   const portions=root.CPTY51Fares?.reference(row)?.portions;
+   const fare=Array.isArray(portions)&&portions.length===1?portions[0]:null;
+   return fare&&fare.confirmedCurrentFare===false&&Number.isFinite(fare.amountEUR)&&fare.amountEUR>=0?
+    {line:'Y51',amount:fare.amountEUR,digitalAlternativeEUR:fare.digitalAlternativeEUR,source:fare.source,fareVerified:false,serviceConfirmed:false}:null;
+  }
   const date=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure)).map(p=>[p.type,p.value]));
   const stop=s=>({id:s?.stopId,lat:s?.lat,lon:s?.lon});
   const input={networkId:row.networkId,line:row.line,fromStop:stop(row.originStop),toStop:stop(row.destinationStop),travelDate:date.year+'-'+date.month+'-'+date.day,profile:'adult'};
