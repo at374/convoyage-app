@@ -606,6 +606,20 @@ test('BlaBlaCar Bus GTFS is a long-distance timetable partner, never a fare clai
  await session.done;assert.deepEqual(loaded.map(r=>r.id),['local','blablacar-bus']);session.dispose();
 });
 
+test('SNCF Transilien is a bounded Île-de-France source and wins over the national coach feed for a short journey',async()=>{
+ const transilien=agenda.DEFAULT_RESOURCES.find(r=>r.id==='sncf-transilien');
+ const bus=agenda.DEFAULT_RESOURCES.find(r=>r.id==='blablacar-bus');
+ assert.ok(transilien);assert.equal(transilien.datasetId,'horaires-des-lignes-transilien-1');
+ assert.match(transilien.url,/sncf\/gtfs\/transilien-gtfs\.zip$/);assert.equal(Object.hasOwn(transilien,'fareEUR'),false);
+ const trip={label:'Retour',from:{lat:48.8566,lon:2.3522},to:{lat:48.807,lon:2.437},earliestDeparture:'2026-11-07T10:00:00+01:00'};
+ assert.equal(agenda.selected(transilien,trip),true);assert.ok(agenda.airDistanceKm(trip.from,trip.to)<75);
+ let loaded=null;const session=agenda.mount(panel(),{resources:[bus,transilien],tasks:[trip],clientFactory:()=>({
+  load:async resource=>{loaded=resource;return {...summary,source:{...summary.source,network:resource.network,url:resource.url}};},
+  query:async()=>({rows:[],truncated:false}),dispose(){}}
+ )});
+ await session.done;assert.equal(loaded?.id,'sncf-transilien');session.dispose();
+});
+
 test('Pays de Gex TPG and TAC Annemasse are bounded official border GTFS resources',async()=>{
  const gex=agenda.DEFAULT_RESOURCES.find(r=>r.id==='pays-gex-tpg');
  const tac=agenda.DEFAULT_RESOURCES.find(r=>r.id==='tac-annemasse');
@@ -843,7 +857,7 @@ test('Android PWA offline cache includes every versioned entrypoint script',()=>
  for(const script of scripts){
   assert.ok(worker.includes("'"+script+"'"),'Missing Android offline script: '+script);
  }
- assert.match(worker,/const CACHE = 'cp-app-transport-results-cards-20261105-v\d+'/);
+ assert.match(worker,/const CACHE = 'cp-app-transport-results-cards-\d{8}-v\d+'/);
 });
 
 test('Android PWA offline cache retains the transport worker and app shell',()=>{

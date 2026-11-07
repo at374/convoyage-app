@@ -88,6 +88,12 @@ const AURA_RESOURCES_BY_COVERAGE=Object.freeze([Object.freeze({
  // Official PAN GTFS updated daily. It contains no fare table: a live quote stays required.
  url:'https://www.data.gouv.fr/api/1/datasets/r/fd54f81f-4389-4e73-be75-491133d011c3',
  bounds:[41.0,-5.5,52.0,10.0],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'sncf-transilien',datasetId:'horaires-des-lignes-transilien-1',network:'SNCF Transilien',format:'GTFS',federate:true,
+ // Separate official Île-de-France timetable. The feed calendar determines
+ // service; the envelope only prevents a national-coverage claim.
+ url:'https://eu.ftp.opendatasoft.com/sncf/gtfs/transilien-gtfs.zip',
+ bounds:[48.0,1.25,49.25,3.65],timeZone:'Europe/Paris'
 })]);
 // Preserve the established local-network precedence. Departmental resources
 // extend coverage; they must not displace a more specific local feed merely
@@ -165,14 +171,17 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  // Cross-border local networks must be selected before the broad Haute-Savoie
  // envelope; otherwise their feeds can be omitted by the four-network budget.
  const borderLocal=resourceList.find(r=>['pays-gex-tpg','tac-annemasse'].includes(r.id)&&taskList.some(t=>selected(r,t)));
- const resource=preferredAin||borderLocal||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
+ // A national coach feed must not become the primary local-network source
+ // for a short urban journey merely because its selection envelope is broad.
+ const longDistanceProvider=r=>r?.id==='blablacar-bus';
+ const isLongDistance=task=>airDistanceKm(task?.from,task?.to)>=75;
+ const primaryResources=resourceList.filter(r=>!longDistanceProvider(r)||taskList.some(t=>isLongDistance(t)&&selected(r,t)));
+ const resource=preferredAin||borderLocal||primaryResources.find(r=>taskList.some(t=>selected(r,t)||primaryResources.some(other=>crossEnvelopePair(r,other,t))));
  if(!resource)return {dispose,done:Promise.resolve()};
  // A department-wide feed is useful outside a local network, but loading it
  // alongside a complete local pair only consumes a worker slot and duplicates results.
  const localIds=new Set(['80100','83459','81794']);
  const departmental=r=>typeof r?.id==='string'&&/^oura-(allier|ardeche|cantal|drome|isere|loire|haute-loire|puy-de-dome|cars-region-express)$/.test(r.id);
- const longDistanceProvider=r=>r?.id==='blablacar-bus';
- const isLongDistance=task=>airDistanceKm(task?.from,task?.to)>=75;
  const hasCompleteLocal=task=>resourceList.some(r=>localIds.has(r.id)&&selected(r,task));
  const partnerCandidates=resourceList.filter(r=>r!==resource&&r.federate&&!(longDistanceProvider(r)&&!taskList.some(task=>isLongDistance(task)&&selected(r,task)))&&!taskList.some(task=>departmental(r)&&hasCompleteLocal(task)&&selected(r,task))&&taskList.some(task=>
   crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
