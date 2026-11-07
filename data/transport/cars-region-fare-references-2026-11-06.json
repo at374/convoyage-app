@@ -1,0 +1,131 @@
+{
+  "checkedOn": "2026-11-06",
+  "status": "published_tariff_references_not_connected_to_journey_pricing",
+  "scope": "Selected verified official publications, not exhaustive AURA fares. No upper validity date supplied; recheck before applying to a future trip.",
+  "references": [
+    {
+      "id": "cars-region-ain-2026",
+      "network": "Cars Région Ain",
+      "department": "01",
+      "sourcePage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/",
+      "sourceDocument": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/cars_region_ain_tarifs_mars-2026.pdf",
+      "effectiveFrom": "2026-03-01",
+      "validUntil": null,
+      "currency": "EUR",
+      "scope": {
+        "lineFamily": "A",
+        "publishedLineCount": 32,
+        "excludedLineFamily": "X",
+        "operatorIndependent": true
+      },
+      "products": [
+        {
+          "id": "single",
+          "label": "1 voyage",
+          "price": 2.3
+        },
+        {
+          "id": "ten",
+          "label": "10 voyages",
+          "price": 17
+        },
+        {
+          "id": "monthly",
+          "label": "Mensuel",
+          "price": 44.5
+        },
+        {
+          "id": "annual-under26",
+          "label": "Pass 12 mois moins de 26 ans",
+          "price": 331
+        },
+        {
+          "id": "annual",
+          "label": "Pass 12 mois",
+          "price": 441
+        }
+      ],
+      "rules": {
+        "connectionsMinutes": 120,
+        "returnCountsAsTwoJourneys": true,
+        "monthly": "calendar_month",
+        "annual": "12_months_date_to_date",
+        "express": "Separate TER / illico AUTOCARS tariffs; never use the A-line amount."
+      },
+      "currentJourneyPriceVerified": false
+    },
+    {
+      "id": "cars-region-haute-savoie-flat-group-2026",
+      "network": "Cars Région Haute-Savoie",
+      "department": "74",
+      "sourcePage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/",
+      "sourceDocument": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y13-03-04-81-82-83-84-85-86-91-92-93-94.pdf",
+      "effectiveFrom": "2026-03-01",
+      "validUntil": null,
+      "currency": "EUR",
+      "scope": {
+        "lines": [
+          "Y13",
+          "Y03",
+          "Y04",
+          "Y81",
+          "Y82",
+          "Y83",
+          "Y84",
+          "Y85",
+          "Y86",
+          "Y91",
+          "Y92",
+          "Y93",
+          "Y94"
+        ],
+        "excluded": "Every other line, including Y02, Y21, Y22, Y51, Y62, Y63, 272 and 274, needs its own source."
+      },
+      "products": [
+        {
+          "id": "adult-single",
+          "label": "1 Voyage",
+          "price": 1.7
+        },
+        {
+          "id": "adult-two",
+          "label": "2 Voyages",
+          "price": 3.4
+        },
+        {
+          "id": "adult-ten",
+          "label": "10 Voyages",
+          "price": 13.5
+        },
+        {
+          "id": "adult-30-days",
+          "label": "Pass 30 jours",
+          "price": 33
+        },
+        {
+          "id": "declic-single",
+          "label": "1 Voyage Déclic'",
+          "price": 0.8,
+          "eligibility": "under_26_with_identity_proof"
+        },
+        {
+          "id": "declic-two",
+          "label": "2 Voyages Déclic'",
+          "price": 1.6,
+          "eligibility": "under_26_with_identity_proof"
+        },
+        {
+          "id": "declic-ten",
+          "label": "10 Voyages Déclic'",
+          "price": 6.7,
+          "eligibility": "under_26_with_identity_proof"
+        }
+      ],
+      "rules": {
+        "reduction": "Use published reduced amounts, not an arithmetic half of adult price. Other concessions and child products require their own conditions.",
+        "zoneValidation": "No coverage of special line tariffs inferred from this group."
+      },
+      "currentJourneyPriceVerified": false
+    }
+  ]
+}

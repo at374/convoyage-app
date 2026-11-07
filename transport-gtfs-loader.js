@@ -7,7 +7,10 @@ const gtfs=node?require('./transport-gtfs-index.js'):root.CPGTFSIndex;
 const DEFAULT_LIMITS=Object.freeze({maxArchiveBytes:20*1024*1024,maxFileBytes:64*1024*1024,
  maxExpandedBytes:128*1024*1024,maxEntries:128});
 const TABLES=new Set(['agency.txt','stops.txt','routes.txt','trips.txt','stop_times.txt',
- 'calendar.txt','calendar_dates.txt','transfers.txt','feed_info.txt','fare_attributes.txt','fare_rules.txt']);
+ 'calendar.txt','calendar_dates.txt','transfers.txt','feed_info.txt','fare_attributes.txt','fare_rules.txt',
+ // Keep published fare sources for later rule evaluation; presence is not verification.
+ 'fare_products.txt','fare_leg_rules.txt','fare_transfer_rules.txt','fare_media.txt',
+ 'rider_categories.txt','areas.txt','stop_areas.txt','networks.txt','route_networks.txt','timeframes.txt']);
 const REQUIRED={
  'agency.txt':['agency_name','agency_timezone'],
  'stops.txt':['stop_id','stop_name','stop_lat','stop_lon'],

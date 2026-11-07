@@ -1,0 +1,158 @@
+{
+  "checkedOn": "2026-11-06",
+  "source": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA",
+  "sha256": "c826e8353e4eea66c7e4926313661f4515528252b0f436223100680601d52bf4",
+  "y03RouteIds": [
+    "HAUTExSAVOIE:Line:1007007:LOC"
+  ],
+  "candidateStops": [
+    {
+      "id": "FR:74020:ZE:57893:HAUTExSAVOIE",
+      "name": "Chef-lieu"
+    },
+    {
+      "id": "FR:74020:ZE:57894:HAUTExSAVOIE",
+      "name": "Chef-lieu"
+    },
+    {
+      "id": "FR:74222:ZE:57895:HAUTExSAVOIE",
+      "name": "Chef-lieu - Ecole"
+    },
+    {
+      "id": "FR:74222:ZE:57896:HAUTExSAVOIE",
+      "name": "Chef-lieu - Ecole"
+    },
+    {
+      "id": "FR:74155:ZE:57899:HAUTExSAVOIE",
+      "name": "Chef-lieu (RD36)"
+    },
+    {
+      "id": "FR:74155:ZE:84798:HAUTExSAVOIE",
+      "name": "Chef-lieu (RD22)"
+    },
+    {
+      "id": "FR:74032:ZE:57904:HAUTExSAVOIE",
+      "name": "Les Mouilles"
+    },
+    {
+      "id": "FR:74140:ZE:57905:HAUTExSAVOIE",
+      "name": "Chef-lieu"
+    },
+    {
+      "id": "FR:74032:ZE:58163:HAUTExSAVOIE",
+      "name": "Chef-lieu"
+    },
+    {
+      "id": "FR:74287:ZE:58394:HAUTExSAVOIE",
+      "name": "Chef-lieu"
+    }
+  ],
+  "morningStopTimes": [
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1103041x1175228:LOC",
+      "stopId": "FR:74032:ZE:58163:HAUTExSAVOIE",
+      "stopName": "Chef-lieu",
+      "departure": "06:30:00",
+      "headsign": "Thonon-les-Bains - Les Arts",
+      "activeOn20261106": false
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1103041x1175228:LOC",
+      "stopId": "FR:74155:ZE:57899:HAUTExSAVOIE",
+      "stopName": "Chef-lieu (RD36)",
+      "departure": "06:38:00",
+      "headsign": "Thonon-les-Bains - Les Arts",
+      "activeOn20261106": false
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1103041x1175228:LOC",
+      "stopId": "FR:74287:ZE:58394:HAUTExSAVOIE",
+      "stopName": "Chef-lieu",
+      "departure": "06:43:00",
+      "headsign": "Thonon-les-Bains - Les Arts",
+      "activeOn20261106": false
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1103041x1175228:LOC",
+      "stopId": "FR:74222:ZE:57895:HAUTExSAVOIE",
+      "stopName": "Chef-lieu - Ecole",
+      "departure": "06:48:00",
+      "headsign": "Thonon-les-Bains - Les Arts",
+      "activeOn20261106": false
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1103041x1175228:LOC",
+      "stopId": "FR:74020:ZE:57893:HAUTExSAVOIE",
+      "stopName": "Chef-lieu",
+      "departure": "06:53:00",
+      "headsign": "Thonon-les-Bains - Les Arts",
+      "activeOn20261106": false
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1103042x1175230:LOC",
+      "stopId": "FR:74032:ZE:57904:HAUTExSAVOIE",
+      "stopName": "Les Mouilles",
+      "departure": "06:20:00",
+      "headsign": "Thonon-les-Bains - Lycée Versoie",
+      "activeOn20261106": true
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1103042x1175230:LOC",
+      "stopId": "FR:74032:ZE:58163:HAUTExSAVOIE",
+      "stopName": "Chef-lieu",
+      "departure": "06:27:00",
+      "headsign": "Thonon-les-Bains - Lycée Versoie",
+      "activeOn20261106": true
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1103042x1175230:LOC",
+      "stopId": "FR:74287:ZE:58394:HAUTExSAVOIE",
+      "stopName": "Chef-lieu",
+      "departure": "06:40:00",
+      "headsign": "Thonon-les-Bains - Lycée Versoie",
+      "activeOn20261106": true
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1103042x1175230:LOC",
+      "stopId": "FR:74222:ZE:57895:HAUTExSAVOIE",
+      "stopName": "Chef-lieu - Ecole",
+      "departure": "06:42:00",
+      "headsign": "Thonon-les-Bains - Lycée Versoie",
+      "activeOn20261106": true
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1103043x1175231:LOC",
+      "stopId": "FR:74140:ZE:57905:HAUTExSAVOIE",
+      "stopName": "Chef-lieu",
+      "departure": "06:25:00",
+      "headsign": "Thonon-les-Bains - College Champagne",
+      "activeOn20261106": true
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1103043x1175231:LOC",
+      "stopId": "FR:74155:ZE:84798:HAUTExSAVOIE",
+      "stopName": "Chef-lieu (RD22)",
+      "departure": "06:37:00",
+      "headsign": "Thonon-les-Bains - College Champagne",
+      "activeOn20261106": true
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1102469x1174381:LOC",
+      "stopId": "FR:74020:ZE:57894:HAUTExSAVOIE",
+      "stopName": "Chef-lieu",
+      "departure": "07:40:00",
+      "headsign": "Bellevaux - Chef-lieu",
+      "activeOn20261106": true
+    },
+    {
+      "tripId": "HAUTExSAVOIE:ServiceJourney:1102469x1174381:LOC",
+      "stopId": "FR:74222:ZE:57896:HAUTExSAVOIE",
+      "stopName": "Chef-lieu - Ecole",
+      "departure": "07:55:00",
+      "headsign": "Bellevaux - Chef-lieu",
+      "activeOn20261106": true
+    }
+  ],
+  "limitation": "Static timetable calendar checked only for 2026-11-06; no realtime confirmation or proof for every day of the notice period. Municipality-free labels require stop identification.",
+  "conclusion": "The 06:20 Les Mouilles service and 06:25 Chef-lieu service toward Thonon exist and are active on the checked day. No manual timetable patch applied."
+}
