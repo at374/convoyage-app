@@ -136,10 +136,43 @@ test('ALICORNE/A88 : aucune collision GPS (0,06 km jumelage) entre les 4 nouvell
   }
 });
 
-test('ALICORNE/A88 : chantier non résolu — la barrière Ronai (système ouvert, sortie 12) reste non modélisée', () => {
+test('ALICORNE/A88 : chantier non résolu — la barrière Ronai (système ouvert, sortie 12) reste non modélisée, et explicitement marquée UNK', () => {
   // Rônai (barrière pleine voie) existe (Wikipedia FR, A0088/gares-peage-officiel.json),
   // mais la grille tarifaire ALICORNE reçue cette session ne la mentionne pas : aucun
-  // tarif inventé, cette gare n'est pas (encore) ajoutée à aprr.g.
+  // tarif inventé, cette gare n'est pas (encore) ajoutée à aprr.g. Elle est explicitement
+  // listée dans UNK (routes-ui.js) pour refuser le prix exact plutôt que l'omettre en
+  // silence (voir tests/peages-audit-officiel-data-gouv-gaps.test.cjs : sans cela, ce
+  // point redevient un "angle mort" non couvert depuis la suppression des anciennes
+  // gares overlay "...A88" qui le couvraient accidentellement).
   assert.strictEqual(idx('Ronai'), -1);
   assert.strictEqual(idx('Ronai BPV'), -1);
+  const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'routes-ui.js'), 'utf8');
+  const m = src.match(/const UNK = \[([\s\S]*?)\];/);
+  assert.ok(m, 'UNK introuvable');
+  const UNK = JSON.parse('[' + m[1] + ']');
+  function dist(lat1, lon1, lat2, lon2) {
+    return 111 * Math.sqrt((lat1 - lat2) ** 2 + ((lon1 - lon2) * Math.cos((lat1 * Math.PI) / 180)) ** 2);
+  }
+  const min = Math.min(...UNK.map(([lat, lon]) => dist(48.8162, -0.12907, lat, lon)));
+  assert.ok(min < 0.05, 'Ronai BPV doit être dans UNK');
+});
+
+test('ALICORNE/A88 : déduplication — les anciennes gares partielles "...A88" (overlay, Légifrance, 5 liaisons incomplètes) ont été retirées', () => {
+  // peages-overlay.json contenait déjà, avant cette session, 4 gares approximatives
+  // "Falaise Ouest A88"/"Nécy A88"/"Argentan Ouest A88"/"Mortrée A88" (overlay.gares)
+  // et 9 paires partielles (overlay.paires), issues d'un arrêté Légifrance antérieur
+  // (5 des 15 liaisons seulement, Sées absente du graphe). Les valeurs croisaient
+  // EXACTEMENT celles de la grille officielle ALICORNE 2026 lue cette session (bonne
+  // confirmation croisée), mais leurs GPS étaient parfois très éloignés du point réel
+  // (ex. "Argentan Ouest A88" à 21 km de l'échangeur officiel data.gouv.fr) et auraient
+  // créé un doublon de gare (deux stations "Falaise Ouest" différentes dans l'appli).
+  // Elles ont donc été retirées d'overlay.gares/overlay.paires, remplacées par les 15
+  // liaisons complètes et mieux sourcées directement dans peages-aprr.json.
+  const overlay = require('../peages-overlay.json');
+  const noms = new Set(['Falaise Ouest A88', 'Nécy A88', 'Argentan Ouest A88', 'Mortrée A88']);
+  assert.ok(!overlay.gares.some((g) => noms.has(g.nom)), 'aucune gare "...A88" ne doit rester dans overlay.gares');
+  assert.ok(
+    !overlay.paires.some((p) => noms.has(p[0]) || noms.has(p[1])),
+    'aucune paire "...A88" ne doit rester dans overlay.paires',
+  );
 });
