@@ -336,12 +336,19 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       let tariff=null,tariffDescription='',urbanTariff=null,urbanTariffDescription='';
       try{tariff=root.CPTY51Fares;tariffDescription=tariff?.describe(tariff?.reference(row))||'';}catch(_){}
       try{urbanTariff=root.CPAuraUrbanFares;urbanTariffDescription=urbanTariff?.describe(urbanTariff?.reference(row))||'';}catch(_){}
-      let coachFare=null;
+      let coachFare=null,aravisFare=null;
       try{
        if(!row.legs?.length&&root.CP272Fares?.stopReference){
         const date=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure)).map(p=>[p.type,p.value]));
         const stop=s=>({id:s?.stopId,lat:s?.lat,lon:s?.lon});
         coachFare=root.CP272Fares.stopReference({networkId:row.networkId,line:row.line,fromStop:stop(row.originStop),toStop:stop(row.destinationStop),travelDate:date.year+'-'+date.month+'-'+date.day,product:'parcours',profile:'adult'});
+       }
+      }catch(_){}
+      try{
+       if(!row.legs?.length&&root.CPAravisFares?.createCalculator&&root.CPAravisFareData){
+        const date=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure)).map(p=>[p.type,p.value]));
+        const stop=s=>({id:s?.stopId,lat:s?.lat,lon:s?.lon});
+        aravisFare=root.CPAravisFares.createCalculator(root.CPAravisFareData).stopReference({networkId:row.networkId,line:row.line,fromStop:stop(row.originStop),toStop:stop(row.destinationStop),travelDate:date.year+'-'+date.month+'-'+date.day,profile:'adult'});
        }
       }catch(_){}
       const line=doc.createElement('p');
@@ -352,7 +359,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
        ' · distances à vol d’oiseau : '+row.accessDistanceMeters+' m / '+row.egressDistanceMeters+' m'+
        (row.interNetwork?' · changement de réseau : '+row.transferStop.name+' → '+row.transferDestinationStop.name+' · séparation à vol d’oiseau '+row.transferDistanceMeters+' m, marche non vérifiée · intervalle théorique '+row.transferMinutes+' min':
         row.legs?.length===2?' · correspondance à '+(row.transferStop?.name||row.transferStopId)+' · intervalle théorique '+row.transferMinutes+' min (minimum estimé '+row.minimumTransferMinutes+' min, marche non vérifiée)':' · direct')+
-       ' · '+(tariffDescription||urbanTariffDescription||coachFare?'prix actuel à revérifier (barème ci-dessous)':'tarif inconnu')+' · Transport non confirmé — vérifiez vous-même.';
+       ' · '+(tariffDescription||urbanTariffDescription||coachFare||aravisFare?'prix actuel à revérifier (barème ci-dessous)':'tarif inconnu')+' · Transport non confirmé — vérifiez vous-même.';
       if(row.legs?.length===2){
        for(const leg of row.legs){const detail=doc.createElement('span');detail.textContent=' · '+(leg.network?leg.network+' ':'')+leg.line+' : '+format(leg.departure)+' → '+format(leg.arrival);line.appendChild(detail);}
       }
@@ -362,6 +369,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
        const quote=doc.createElement('span');quote.setAttribute('data-272-fare-reference','');
        quote.textContent=' · Référence car 272 adulte : '+coachFare.amount.toFixed(2).replace('.',',')+' € pour ce parcours, sans circulation supplémentaire zone 10. Prix et titre à confirmer ; ne couvre pas forcément les correspondances.';line.appendChild(quote);
        const proof=doc.createElement('a');proof.href=coachFare.source;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir la grille 272';line.appendChild(proof);
+      }
+      if(aravisFare){
+       const quote=doc.createElement('span');quote.setAttribute('data-y62-fare-reference','');
+       quote.textContent=' · Référence car Y62 adulte : '+aravisFare.amount.toFixed(2).replace('.',',')+' € pour ce parcours. Prix, date et titre à confirmer ; ne couvre pas forcément les correspondances.';line.appendChild(quote);
+       const proof=doc.createElement('a');proof.href=aravisFare.source;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir la grille Y62';line.appendChild(proof);
       }
       if(tariffDescription){
         const quote=doc.createElement('span');quote.setAttribute('data-y51-fare-reference','');quote.textContent=tariffDescription;line.appendChild(quote);

@@ -7,6 +7,10 @@ on:
       - 'tests/geo-country-detection.test.cjs'
       - 'transport-272-fares.js'
       - 'tests/transport-272-fares.test.cjs'
+      - 'transport-aravis-fares.js'
+      - 'transport-aravis-fare-data.js'
+      - 'data/transport/aravis-fare-reference-2026.json'
+      - 'tests/transport-aravis-fares.test.cjs'
       - 'transport-ranking.js'
       - 'transport-adapters.js'
       - 'transport-fares.js'
@@ -55,6 +59,10 @@ on:
       - 'tests/geo-country-detection.test.cjs'
       - 'transport-272-fares.js'
       - 'tests/transport-272-fares.test.cjs'
+      - 'transport-aravis-fares.js'
+      - 'transport-aravis-fare-data.js'
+      - 'data/transport/aravis-fare-reference-2026.json'
+      - 'tests/transport-aravis-fares.test.cjs'
       - 'transport-ranking.js'
       - 'transport-adapters.js'
       - 'transport-fares.js'
@@ -113,6 +121,7 @@ jobs:
       - run: node --test tests/transport-realtime-relay.test.cjs
       - run: node --test tests/geo-country-detection.test.cjs
       - run: node --test tests/transport-272-fares.test.cjs
+      - run: node --test tests/transport-aravis-fares.test.cjs
       - run: node --check transport-ranking.js
       - run: node --check transport-adapters.js
       - run: node --check transport-fares.js
