@@ -3,6 +3,17 @@ const assert=require('node:assert/strict');
 const data=require('../data/transport/aravis-fare-reference-2026.json');
 const {createCalculator}=require('../transport-aravis-fares.js');
 const calculator=createCalculator(data);
+test('Thuy and Villards stops use their own tariff sectors in both directions and lines',()=>{
+ const fromStop={id:'FR:74280:ZE:57724:HAUTExSAVOIE',lat:45.894817,lon:6.3027046};
+ const toStop={id:'FR:74302:ZE:57761:HAUTExSAVOIE',lat:45.9060553,lon:6.3622384};
+ for(const line of ['Y62','Y63']){
+  const q={networkId:'oura-haute-savoie',line,fromStop,toStop,travelDate:'2026-11-09'};
+  const actual=calculator.stopReference(q),expected=calculator.reference({line,fromArea:'Thônes Morette / Thuy',toArea:'Les Villards-sur-Thônes',travelDate:'2026-11-09'});
+  assert.equal(actual.amount,expected.amount);assert.equal(actual.stopMappingVerified,true);assert.equal(actual.fareVerified,false);
+  assert.equal(calculator.stopReference({...q,fromStop:toStop,toStop:fromStop}).amount,expected.amount);
+  assert.equal(calculator.stopReference({...q,fromStop:{...fromStop,lon:6.5}}),null);
+ }
+});
 test('browser data matches the reviewed source matrix',()=>{
  const fs=require('node:fs'),vm=require('node:vm'),context={window:{}};
  vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../transport-aravis-fare-data.js'),'utf8'),context);

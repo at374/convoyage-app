@@ -8,6 +8,16 @@ function createCalculator(data){
  const source=JSON.parse(JSON.stringify(data));
  const y62Stops=new Map([
   ['FR:74010:ZE:57539:HAUTExSAVOIE',[45.9016985,6.1201612,'Annecy']],
+  ['FR:74280:ZE:57724:HAUTExSAVOIE',[45.894817,6.3027046,'Thônes Morette / Thuy']],
+  ['FR:74280:ZE:57725:HAUTExSAVOIE',[45.8949443,6.3027811,'Thônes Morette / Thuy']],
+  ['FR:74302:ZE:57761:HAUTExSAVOIE',[45.9060553,6.3622384,'Les Villards-sur-Thônes']],
+  ['FR:74302:ZE:57762:HAUTExSAVOIE',[45.90609,6.3620814,'Les Villards-sur-Thônes']],
+  ['FR:74302:ZE:57763:HAUTExSAVOIE',[45.9086097,6.3661244,'Les Villards-sur-Thônes']],
+  ['FR:74302:ZE:57764:HAUTExSAVOIE',[45.9084845,6.3655439,'Les Villards-sur-Thônes']],
+  ['FR:74302:ZE:57765:HAUTExSAVOIE',[45.913639,6.3741401,'Les Villards-sur-Thônes']],
+  ['FR:74302:ZE:57766:HAUTExSAVOIE',[45.9132832,6.3738411,'Les Villards-sur-Thônes']],
+  ['FR:74302:ZE:57767:HAUTExSAVOIE',[45.9186946,6.3836292,'Les Villards-sur-Thônes']],
+  ['FR:74302:ZE:57768:HAUTExSAVOIE',[45.918909,6.3841708,'Les Villards-sur-Thônes']],
   ['FR:74280:ZE:57726:HAUTExSAVOIE',[45.8829602,6.3239672,'Thônes']],
   ['FR:74280:ZE:92692:HAUTExSAVOIE',[45.8830315,6.3237866,'Thônes']],
   ['FR:74239:ZE:57771:HAUTExSAVOIE',[45.9224885,6.4099568,'Saint-Jean-de-Sixt']],
