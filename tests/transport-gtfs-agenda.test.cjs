@@ -620,6 +620,21 @@ test('SNCF Transilien is a bounded Île-de-France source and wins over the natio
  await session.done;assert.equal(loaded?.id,'sncf-transilien');session.dispose();
 });
 
+test('Synchro, STAS and T2C use current PAN-resolved official GTFS without embedding provider tokens',()=>{
+ const localNetworks=[
+  ['82272',{lat:45.57,lon:5.92}],
+  ['81023',{lat:45.44,lon:4.39}],
+  ['83465',{lat:45.78,lon:3.09}]
+ ];
+ for(const [id,point] of localNetworks){
+  const resource=agenda.DEFAULT_RESOURCES.find(r=>r.id===id);
+  assert.ok(resource,id);assert.equal(resource.format,'GTFS');assert.equal(resource.federate,true);assert.equal(resource.resolveFromCatalogue,true);
+  assert.match(resource.url,/^https:\/\/transport\.data\.gouv\.fr\/datasets\//);
+  assert.equal(agenda.selected(resource,{from:point,to:{...point}}),true);
+  assert.equal(Object.hasOwn(resource,'fareEUR'),false);
+ }
+});
+
 test('Pays de Gex TPG and TAC Annemasse are bounded official border GTFS resources',async()=>{
  const gex=agenda.DEFAULT_RESOURCES.find(r=>r.id==='pays-gex-tpg');
  const tac=agenda.DEFAULT_RESOURCES.find(r=>r.id==='tac-annemasse');

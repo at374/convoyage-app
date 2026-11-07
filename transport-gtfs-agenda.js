@@ -94,6 +94,20 @@ const AURA_RESOURCES_BY_COVERAGE=Object.freeze([Object.freeze({
  // service; the envelope only prevents a national-coverage claim.
  url:'https://eu.ftp.opendatasoft.com/sncf/gtfs/transilien-gtfs.zip',
  bounds:[48.0,1.25,49.25,3.65],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'82272',datasetId:'5bae8c2806e3e75b699dc606',network:'Synchro Bus — Grand Chambéry',format:'GTFS',federate:true,resolveFromCatalogue:true,
+ // The PAN resolves the current public GTFS URL. Do not embed its public
+ // provider token in the application source.
+ url:'https://transport.data.gouv.fr/datasets/arrets-et-horaires-theoriques-bus-temps-reel',
+ bounds:[45.35,5.55,45.85,6.15],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'81023',datasetId:'5c34c93f8b4c4104b817fb3a',network:'STAS — Saint-Étienne',format:'GTFS',federate:true,resolveFromCatalogue:true,
+ url:'https://transport.data.gouv.fr/datasets/horaires-du-reseau-stas',
+ bounds:[45.15,4.15,45.75,4.95],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'83465',datasetId:'6397c0fb7612df845fc8cd1f',network:'T2C — Clermont Auvergne Métropole',format:'GTFS',federate:true,resolveFromCatalogue:true,
+ url:'https://transport.data.gouv.fr/datasets/syndicat-mixte-des-transports-en-commun-de-lagglomeration-clermontoise-smtc-ac-reseau-t2c-gtfs-gtfs-rt',
+ bounds:[45.55,2.85,46.10,3.55],timeZone:'Europe/Paris'
 })]);
 // Preserve the established local-network precedence. Departmental resources
 // extend coverage; they must not displace a more specific local feed merely
