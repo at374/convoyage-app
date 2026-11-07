@@ -26,3 +26,22 @@ test('card reference is not a verified price or a confirmed trip',()=>{
   assert.equal(require('../transport-direct-fare-reference.js').reference({...row,legs:[{},{}]}),null);
  }finally{delete global.CP274Fares;}
 });
+test('official tariff sectors 1–4 only match pinned stops and distinguish zone 10',()=>{
+ const cases=[
+  [{id:'FR:74128:ZE:75337:HAUTExSAVOIE',lat:46.1634053,lon:6.3531174},'1',4.6,4.9],
+  [{id:'FR:74241:ZE:57655:HAUTExSAVOIE',lat:46.138307,lon:6.4579872},'2',6,6.4],
+  [{id:'FR:74304:ZE:57657:HAUTExSAVOIE',lat:46.1428742,lon:6.4185632},'2',6,6.4],
+  [{id:'FR:74311:ZE:58474:HAUTExSAVOIE',lat:46.1423931,lon:6.4033413},'2',6,6.4],
+  [{id:'FR:74042:ZE:58718:HAUTExSAVOIE',lat:46.0708039,lon:6.4249336},'3',6.4,8.1],
+  [{id:'FR:74276:ZE:57620:HAUTExSAVOIE',lat:46.1075737,lon:6.5920651},'4',7.5,8.2],
+  [{id:'FR:74183:ZE:57651:HAUTExSAVOIE',lat:46.1336799,lon:6.523335},'4',7.5,8.2]
+ ];
+ for(const [stop,zone,amount,plus] of cases){
+  const fare=fares.stopReference({...request,fromStop:stop});assert.equal(fare.zone,zone);assert.equal(fare.amount,amount);
+  assert.equal(fares.stopReference({...request,fromStop:stop,product:'parcours_zone10'}).amount,plus);
+  assert.equal(fares.stopReference({...request,fromStop:stop,travelDate:'2026-12-13'}),null);
+ }
+ // Nangy is multizone, so it must not inherit a Parcours sector fare.
+ assert.equal(fares.stopReference({...request,fromStop:{id:'FR:74197:ZE:58716:HAUTExSAVOIE',lat:46.1423557,lon:6.3179182}}),null);
+ assert.equal(fares.reference({line:'274',fromSector:'__proto__',toSector:'Genève',travelDate:'2026-11-09',product:'parcours',profile:'adult'}),null);
+});
