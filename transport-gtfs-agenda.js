@@ -327,8 +327,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
      if(truncated||distinct.length>shown.length){const note=doc.createElement('p');note.textContent='Affichage limité : d’autres horaires peuvent exister.';status.appendChild(note);}
      for(const row of shown){
-      let tariff=null,tariffDescription='';
+      let tariff=null,tariffDescription='',urbanTariff=null,urbanTariffDescription='';
       try{tariff=root.CPTY51Fares;tariffDescription=tariff?.describe(tariff?.reference(row))||'';}catch(_){}
+      try{urbanTariff=root.CPAuraUrbanFares;urbanTariffDescription=urbanTariff?.describe(urbanTariff?.reference(row))||'';}catch(_){}
       const line=doc.createElement('p');
       const safeZone=(()=>{try{new Intl.DateTimeFormat('fr-FR',{timeZone:row.timeZone||resource.timeZone});return row.timeZone||resource.timeZone;}catch(_){return resource.timeZone;}})();
       const format=iso=>new Intl.DateTimeFormat('fr-FR',{timeZone:safeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(iso));
@@ -337,7 +338,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
        ' · distances à vol d’oiseau : '+row.accessDistanceMeters+' m / '+row.egressDistanceMeters+' m'+
        (row.interNetwork?' · changement de réseau : '+row.transferStop.name+' → '+row.transferDestinationStop.name+' · séparation à vol d’oiseau '+row.transferDistanceMeters+' m, marche non vérifiée · intervalle théorique '+row.transferMinutes+' min':
         row.legs?.length===2?' · correspondance à '+(row.transferStop?.name||row.transferStopId)+' · intervalle théorique '+row.transferMinutes+' min (minimum estimé '+row.minimumTransferMinutes+' min, marche non vérifiée)':' · direct')+
-       ' · '+(tariffDescription?'prix actuel à revérifier (barème ci-dessous)':'tarif inconnu')+' · Transport non confirmé — vérifiez vous-même.';
+       ' · '+(tariffDescription||urbanTariffDescription?'prix actuel à revérifier (barème ci-dessous)':'tarif inconnu')+' · Transport non confirmé — vérifiez vous-même.';
       if(row.legs?.length===2){
        for(const leg of row.legs){const detail=doc.createElement('span');detail.textContent=' · '+(leg.network?leg.network+' ':'')+leg.line+' : '+format(leg.departure)+' → '+format(leg.arrival);line.appendChild(detail);}
       }
@@ -346,6 +347,12 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(tariffDescription){
         const quote=doc.createElement('span');quote.setAttribute('data-y51-fare-reference','');quote.textContent=tariffDescription;line.appendChild(quote);
         const proof=doc.createElement('a');proof.href=tariff.SOURCE;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir le barème officiel';line.appendChild(proof);
+      }
+      if(urbanTariffDescription){
+        const quote=doc.createElement('span');quote.setAttribute('data-aura-urban-fare-reference','');quote.textContent=' · '+urbanTariffDescription;line.appendChild(quote);
+        for(const url of new Set(urbanTariff.reference(row).portions.filter(Boolean).map(p=>p.source))){
+          const proof=doc.createElement('a');proof.href=url;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir le barème officiel';line.appendChild(proof);
+        }
       }
       for(const [label,stop] of [['Départ',row.originStop],['Correspondance',row.transferStop],['Montée après changement',row.transferDestinationStop],['Arrivée',row.destinationStop]]){
        if(!validPoint(stop))continue;
