@@ -5,3 +5,8 @@ test('unrelated network, line, stops, displaced stops and connections never matc
  for(const other of [{...row,line:'F'},{...row,networkId:'unknown'},{...row,to:'unknown'},{...row,originStop:{...row.originStop,lat:46}},{...row,legs:[{},{}]}])assert.equal(fare.reference(other),null);
 });
 test('opposite direction is accepted only at the recorded opposite platforms',()=>{assert.ok(fare.reference({...row,from:'8587918:0:S',to:'1402572:0:A',originStop:{stopId:'8587918:0:S',lat:46.23358052,lon:6.05524699},destinationStop:{stopId:'1402572:0:A',lat:46.24090613,lon:6.02920473}}));});
+test('line 64 Prévessin–Meyrin and line 52 Bois-Chatton–Bossy use only their recorded stop pairs',()=>{
+ const cases=[{line:'64',from:'1401781:0:P',to:'8594946:0:I',originStop:{stopId:'1401781:0:P',lat:46.24856001,lon:6.08665199},destinationStop:{stopId:'8594946:0:I',lat:46.23988098,lon:6.08658012}},
+ {line:'52',from:'1401814:0:F',to:'8587035:0:W',originStop:{stopId:'1401814:0:F',lat:46.29560292,lon:6.10000994},destinationStop:{stopId:'8587035:0:W',lat:46.27964291,lon:6.11408654}}];
+ for(const c of cases){const r=fare.reference({...row,...c});assert.ok(r);assert.equal(r.line,c.line);assert.equal(r.totalEUR,null);assert.match(fare.describe(r),new RegExp('ligne '+c.line));assert.equal(fare.reference({...row,...c,line:'68'}),null);}
+});
