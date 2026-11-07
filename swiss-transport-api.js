@@ -59,7 +59,7 @@
     const results = validConnections.map(c=>({
       departure:c.from && c.from.departure || null,
       arrival:c.to && c.to.arrival || null,
-      sections:Array.isArray(c.sections)?c.sections.map(s=>({
+      sections:Array.isArray(c.sections)?c.sections.slice(0,100).filter(s=>s&&typeof s==='object'&&!Array.isArray(s)).map(s=>({
         mode:s.walk?'WALK':s.journey && s.journey.category || 'UNKNOWN',
         line:s.journey && s.journey.number || null,
         from:s.departure && s.departure.station && s.departure.station.name || null,
@@ -68,6 +68,7 @@
         arrival:s.arrival && s.arrival.arrival || null,
         walkSeconds:s.walk && Number.isFinite(Number(s.walk.duration)) ? Number(s.walk.duration) : null
       })):[],
+      detailsIncomplete:!Array.isArray(c.sections)||c.sections.length>100||c.sections.some(s=>!s||typeof s!=='object'||Array.isArray(s)),
       price:null, fareStatus:'non_communique', source:'transport.opendata.ch', confirmed:false
     }));
     results.diagnostic = {...diagnostic};
