@@ -1889,6 +1889,11 @@
               detailSources.push(source);
             }
           }
+          if(journey.lemanSautPuceReference&&window.CPLemanSautPuce){
+            const reference=document.createElement('small');reference.style.display='block';reference.setAttribute('data-leman-saut-puce-reference','');
+            reference.textContent=window.CPLemanSautPuce.describe(journey.lemanSautPuceReference);summary.appendChild(reference);
+            const source=document.createElement('a');source.href=window.CPLemanSautPuce.SOURCE;source.target='_blank';source.rel='noopener noreferrer';source.textContent='Voir le barème Léman Pass';detailSources.push(source);
+          }
           card.appendChild(summary);
           const detail = document.createElement('div');
           for(const source of detailSources)detail.appendChild(source);
@@ -2280,6 +2285,7 @@
         normalized.forEach((journey,index)=>{
           journey.carsRegionReference=window.CPCarsRegionFares?.reference(itineraries[index])||null;
           journey.auraUrbanFareReference=window.CPAuraUrbanFares?.reference(itineraries[index])||null;
+          journey.lemanSautPuceReference=window.CPLemanSautPuce?.reference(itineraries[index])||null;
         });
         const ranked=window.CPTransportRanking?.rank(normalized,{includeAlternatives:true,direction:task.label==='Retour'?'return':'outbound',deadline:task.latestArrival,earliestDeparture:task.earliestDeparture,marginMinutes:15})||[];
         showRegionalChoices(host,ranked,task.label+' · horaires locaux');
