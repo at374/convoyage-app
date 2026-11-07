@@ -109,6 +109,7 @@
       sections:Array.isArray(c.sections)?c.sections.slice(0,100).filter(s=>s&&typeof s==='object'&&!Array.isArray(s)).map(s=>({
         mode:s.walk?'WALK':s.journey && s.journey.category || 'UNKNOWN',
         line:s.journey && s.journey.number || null,
+        fromId:s.departure?.station?.id || null,toId:s.arrival?.station?.id || null,
         from:s.departure && s.departure.station && s.departure.station.name || null,
         to:s.arrival && s.arrival.station && s.arrival.station.name || null,
         fromPoint:stationPoint(s.departure?.station),toPoint:stationPoint(s.arrival?.station),

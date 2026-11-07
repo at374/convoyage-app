@@ -1884,7 +1884,7 @@
           if(journey.directFareReference){
             const fare=journey.directFareReference,reference=document.createElement('small');reference.style.display='block';reference.setAttribute('data-direct-fare-reference','');
             const digital=Number.isFinite(fare.digitalAlternativeEUR)?' à bord / '+fare.digitalAlternativeEUR.toFixed(2).replace('.',',')+' € en numérique (support éventuel en supplément)':'';
-            reference.textContent='Référence '+fare.line+' adulte : '+fare.amount.toFixed(2).replace('.',',')+' €'+digital+(fare.product==='multizones_10_210'?' · multizones 10 et 210':fare.product==='france'?' · trajet intérieur France':(['272','274'].includes(fare.line)?' · sans déplacements supplémentaires en zone 10':''))+(fare.product==='multizones_10_210'?' · hors abonnement ; prix, titre et conditions de correspondance à confirmer.':' · hors abonnement ; prix, date et titre à confirmer ; correspondances non comprises.');summary.appendChild(reference);
+            reference.textContent='Référence '+fare.line+' adulte : '+fare.amount.toFixed(2).replace('.',',')+' €'+digital+(fare.product==='multizones_10_210'?' · multizones 10 et 210':fare.product==='france'?' · trajet intérieur France':(['271','272','274'].includes(fare.line)?' · sans déplacements supplémentaires en zone 10':''))+(fare.product==='multizones_10_210'?' · hors abonnement ; prix, titre et conditions de correspondance à confirmer.':' · hors abonnement ; prix, date et titre à confirmer ; correspondances non comprises.');summary.appendChild(reference);
             const source=document.createElement('a');source.href=fare.source;source.target='_blank';source.rel='noopener noreferrer';source.textContent='Voir le barème officiel';detailSources.push(source);
           }
           if(journey.sibraPassReference?.coveredLegs&&window.CPSibraPass){
@@ -2470,7 +2470,9 @@
               direction+' suisse : '+valid.length+' proposition(s) indicatives'+(valid.some(result=>result.nearestStopFallback)?' entre arrêts proches, marche non vérifiée':'')+', prix et circulation non confirmés :':
               direction+' suisse : aucune proposition compatible parmi les résultats reçus. D’autres trajets peuvent exister ; transport non confirmé.';
             if(valid.length&&window.CPTransportAdapters?.adaptSwiss&&window.CPTransportRanking){
-              const choices=window.CPTransportRanking.rank(window.CPTransportAdapters.adaptSwiss(valid),{
+              const journeys=window.CPTransportAdapters.adaptSwiss(valid);
+              journeys.forEach((journey,index)=>{journey.directFareReference=window.CP271Fares?.reference(valid[index])||null;});
+              const choices=window.CPTransportRanking.rank(journeys,{
                 includeAlternatives:true,direction:direction==='Retour'?'return':'outbound',
                 ...(arriveBy?{deadline:when}:{}),
                 ...(direction==='Jonction'?{deadline,earliestDeparture:when}:{}),

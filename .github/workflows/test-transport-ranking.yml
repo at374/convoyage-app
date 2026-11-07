@@ -5,6 +5,8 @@ on:
     paths:
       - 'geo.js'
       - 'tests/geo-country-detection.test.cjs'
+      - 'transport-271-fares.js'
+      - 'tests/transport-271-fares.test.cjs'
       - 'transport-274-fares.js'
       - 'tests/transport-274-fares.test.cjs'
       - 'transport-272-fares.js'
@@ -67,6 +69,8 @@ on:
     paths:
       - 'geo.js'
       - 'tests/geo-country-detection.test.cjs'
+      - 'transport-271-fares.js'
+      - 'tests/transport-271-fares.test.cjs'
       - 'transport-274-fares.js'
       - 'tests/transport-274-fares.test.cjs'
       - 'transport-272-fares.js'
@@ -140,6 +144,7 @@ jobs:
       - run: node --check transport-blablacar-realtime.js
       - run: node --test tests/transport-realtime-relay.test.cjs
       - run: node --test tests/geo-country-detection.test.cjs
+      - run: node --test tests/transport-271-fares.test.cjs
       - run: node --test tests/transport-274-fares.test.cjs
       - run: node --test tests/transport-272-fares.test.cjs
       - run: node --test tests/transport-aravis-fares.test.cjs
