@@ -520,6 +520,10 @@ async function run(){
   await page.locator('#cpSibraPassFrom').fill('2026-01-01');await page.locator('#cpSibraPassThrough').fill('2026-12-31');
   await page.getByRole('button',{name:'Utiliser mon abonnement SIBRA',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('[data-sibra-pass-cost]')?.innerText.includes('0,00 €'));
+  const cardPass=page.locator('.cp-transport-local [data-card-sibra-pass]').first();
+  await cardPass.waitFor();assert.match(await cardPass.innerText(),/0,00 € sous réserve d’abonnement valide/);
+  const coveredCard=cardPass.locator('xpath=ancestor::details[1]');
+  assert.match(await coveredCard.innerText(),/Prix incomplet/);assert.match(await coveredCard.innerText(),/Transport non confirmé/);
   assert.match(await page.locator('[data-gtfs-agenda]').innerText(),/sous réserve d’abonnement valide/);
   assert.doesNotMatch(await page.locator('[data-gtfs-agenda]').innerText(),/Réalisable/);
   assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('cp_sibra_pass_v1'))),{active:true,from:'2026-01-01',through:'2026-12-31'});
@@ -528,6 +532,7 @@ async function run(){
   await page.screenshot({path:path.join(output,'mobile-sibra-pass-applied.png')});
   await page.getByRole('button',{name:'Retirer mon abonnement SIBRA',exact:true}).click();
   assert.equal(await page.evaluate(()=>localStorage.getItem('cp_sibra_pass_v1')),null);
+  await page.waitForFunction(()=>document.querySelectorAll('.cp-transport-local [data-card-sibra-pass]').length===0);
   // Without a pass, the UI intentionally displays an explicit unverified-coverage notice, not an empty field.
   await page.waitForFunction(()=>Array.from(document.querySelectorAll('[data-sibra-pass-cost]')).every(x=>!x.textContent.includes('0,00 € sous réserve d’abonnement valide') && x.textContent.includes('Couverture SIBRA')),null,{timeout:10000});
   await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'SIBRA pass worker must stop on close');
@@ -544,6 +549,8 @@ async function run(){
   await page.locator('#cpSibraPassFrom').fill('2026-01-01');await page.locator('#cpSibraPassThrough').fill('2026-12-31');
   await page.getByRole('button',{name:'Utiliser mon abonnement SIBRA',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('[data-sibra-pass-cost]')?.innerText.includes('Y51'));
+  const regionalCardPass=page.locator('.cp-transport-local [data-card-sibra-pass]').filter({hasText:'Y51'}).first();
+  await regionalCardPass.waitFor();assert.match(await regionalCardPass.innerText(),/sous réserve d’abonnement valide/);
   assert.match(await page.locator('[data-gtfs-agenda]').innerText(),/Coût supplémentaire transport : 0,00 €/);
   assert.match(await page.locator('[data-gtfs-agenda]').innerText(),/sous réserve d’abonnement valide/);
   await page.locator('[data-sibra-pass-cost]').first().scrollIntoViewIfNeeded();

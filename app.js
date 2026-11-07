@@ -1884,8 +1884,12 @@
           if(journey.directFareReference){
             const fare=journey.directFareReference,reference=document.createElement('small');reference.style.display='block';reference.setAttribute('data-direct-fare-reference','');
             const digital=Number.isFinite(fare.digitalAlternativeEUR)?' à bord / '+fare.digitalAlternativeEUR.toFixed(2).replace('.',',')+' € en numérique (support éventuel en supplément)':'';
-            reference.textContent='Référence '+fare.line+' adulte : '+fare.amount.toFixed(2).replace('.',',')+' €'+digital+' · prix, date et titre à confirmer ; correspondances non comprises.';summary.appendChild(reference);
+            reference.textContent='Référence '+fare.line+' adulte : '+fare.amount.toFixed(2).replace('.',',')+' €'+digital+' · hors abonnement ; prix, date et titre à confirmer ; correspondances non comprises.';summary.appendChild(reference);
             const source=document.createElement('a');source.href=fare.source;source.target='_blank';source.rel='noopener noreferrer';source.textContent='Voir le barème officiel';detailSources.push(source);
+          }
+          if(journey.sibraPassReference?.coveredLegs&&window.CPSibraPass){
+            const pass=document.createElement('small');pass.style.display='block';pass.setAttribute('data-card-sibra-pass','');
+            pass.textContent=window.CPSibraPass.describe(journey.sibraPassReference);summary.appendChild(pass);
           }
           if(journey.auraUrbanFareReference&&window.CPAuraUrbanFares){
             const reference=document.createElement('small');reference.style.display='block';reference.setAttribute('data-aura-urban-fare-reference','');
@@ -2137,12 +2141,12 @@
           'adaptateur non chargé.') +
         ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
         '<p class="doux">Prévoir au minimum 15 min avant la prise en charge, après la marche finale. La marge de 5 min n’est autorisée que si le GPS exact est fiable et vérifié. Une arrivée à la gare ou à l’arrêt ne suffit pas. Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
-      let sibraPassControls = null;
+      let sibraPassControls = null, refreshLocalPassCards = () => {};
       if (window.CPSibraPass?.mountControls) {
         let passStorage = null;
         try { passStorage = window.localStorage; } catch (_) {}
         sibraPassControls = window.CPSibraPass.mountControls(panel.querySelector('#cpSibraFareReference'), {
-          storage: passStorage, onChange: () => gtfsAgendaSession?.refreshFares?.()
+          storage: passStorage, onChange: () => { gtfsAgendaSession?.refreshFares?.(); refreshLocalPassCards(); }
         });
       }
       const planningBox = document.createElement('div');
@@ -2279,9 +2283,10 @@
       lemanFareNote.textContent='Consulte le calculateur officiel pour vérifier le titre, les zones et le prix de ton trajet. Aucun tarif n’est récupéré automatiquement par ce lien.';
       lemanFareNote.appendChild(document.createTextNode(' '));lemanFareNote.appendChild(lemanFareLink);
       sourcePanel.appendChild(lemanFareNote);
-      const localCards={};
+      const localCards={},localCardResults={};
       const renderLocalCards=({task,itineraries})=>{
         if(!panel.isConnected||panel.hidden||$('feuille').hidden||!transportDestinations[task.label])return;
+        localCardResults[task.label]={task,itineraries};
         localCards[task.label]?.remove();
         const host=document.createElement('div');host.className='cp-transport-local';localCards[task.label]=host;
         transportDestinations[task.label].appendChild(host);
@@ -2291,12 +2296,14 @@
         normalized.forEach((journey,index)=>{
           journey.carsRegionReference=window.CPCarsRegionFares?.reference(itineraries[index])||null;
           journey.directFareReference=window.CPDirectFareReference?.reference(itineraries[index])||null;
+          journey.sibraPassReference=window.CPSibraPass?.assess(itineraries[index],sibraPassControls?.getPass()||null)||null;
           journey.auraUrbanFareReference=window.CPAuraUrbanFares?.reference(itineraries[index])||null;
           journey.lemanSautPuceReference=window.CPLemanSautPuce?.reference(itineraries[index])||null;
         });
         const ranked=window.CPTransportRanking?.rank(normalized,{includeAlternatives:true,direction:task.label==='Retour'?'return':'outbound',deadline:task.latestArrival,earliestDeparture:task.earliestDeparture,marginMinutes:15})||[];
         showRegionalChoices(host,ranked,task.label+' · horaires locaux');
       };
+      refreshLocalPassCards=()=>Object.values(localCardResults).forEach(renderLocalCards);
       // GTFS candidate search: one worker for the open panel, no mission writes.
       if (window.CPGTFSAgenda && window.CPGTFSWorker) {
         let gtfsTaskSignature = null;
@@ -2320,6 +2327,7 @@
         if (signature === gtfsTaskSignature) return;
         stopGTFSTransports();
         for(const host of Object.values(localCards))host.remove();
+        for(const key of Object.keys(localCardResults))delete localCardResults[key];
         panel.querySelector('[data-gtfs-agenda]')?.remove();
         gtfsAgendaSession = window.CPGTFSAgenda.mount(sourcePanel,{tasks:gtfsTasks,onResults:renderLocalCards,
           getSibraPass:()=>sibraPassControls?.getPass()||null,
