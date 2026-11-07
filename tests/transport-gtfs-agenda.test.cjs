@@ -15,6 +15,18 @@ class Element{
 function panel(){const doc={createElement(){return new Element(doc);}};doc.documentElement=new Element(doc);return new Element(doc);}
 function deferred(){let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};}
 const summary={source:{loadedAt:'2026-10-30T16:00:00Z'},counts:{stops:1641}};
+test('Y22 matched stops show zone 3 as a reference, not a confirmed fare',async()=>{
+ global.CPY22Fares=require('../transport-y22-fares.js');
+ try{
+  const target=panel(),mission={label:'Retour',from:{lat:45.9017,lon:6.1201},to:{lat:46.1097,lon:5.8242},earliestDeparture:'2026-11-09T05:00:00+01:00'};
+  const direct=row({networkId:'oura-haute-savoie',line:'Y22',departure:'2026-11-09T05:50:00+01:00',arrival:'2026-11-09T07:00:00+01:00',
+   originStop:{stopId:'FR:74010:ZE:57539:HAUTExSAVOIE',name:'Annecy',lat:45.9016985,lon:6.1201612},
+   destinationStop:{stopId:'FR:01033:ZE:57833:HAUTExSAVOIE',name:'Valserhône',lat:46.109695,lon:5.824159}});
+  await agenda.mount(target,{tasks:[mission],resources:[agenda.DEFAULT_RESOURCES[0]],clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[direct]}),dispose(){}})}).done;
+  assert.match(target.textContent,/Référence car Y22 adulte : 6,60 €/);assert.match(target.textContent,/Voir la grille Y22/);
+  assert.match(target.textContent,/Transport non confirmé/);assert.doesNotMatch(target.textContent,/Réalisable/);
+ }finally{delete global.CPY22Fares;}
+});
 test('Y21 matched stops show the official reference without certifying service',async()=>{
  global.CPY21Fares=require('../transport-y21-fares.js');
  try{

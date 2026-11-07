@@ -345,10 +345,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
        }
       }catch(_){}
       try{
-       if(!row.legs?.length&&root.CPY21Fares?.stopReference){
+       const westFares=row.line==='Y21'?root.CPY21Fares:row.line==='Y22'?root.CPY22Fares:null;
+       if(!row.legs?.length&&westFares?.stopReference){
         const date=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure)).map(p=>[p.type,p.value]));
         const stop=s=>({id:s?.stopId,lat:s?.lat,lon:s?.lon});
-        y21Fare=root.CPY21Fares.stopReference({networkId:row.networkId,line:row.line,fromStop:stop(row.originStop),toStop:stop(row.destinationStop),travelDate:date.year+'-'+date.month+'-'+date.day,profile:'adult'});
+        y21Fare=westFares.stopReference({networkId:row.networkId,line:row.line,fromStop:stop(row.originStop),toStop:stop(row.destinationStop),travelDate:date.year+'-'+date.month+'-'+date.day,profile:'adult'});
        }
       }catch(_){}
       try{
@@ -378,9 +379,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
        const proof=doc.createElement('a');proof.href=coachFare.source;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir la grille 272';line.appendChild(proof);
       }
       if(y21Fare){
-       const quote=doc.createElement('span');quote.setAttribute('data-y21-fare-reference','');
-       quote.textContent=' · Référence car Y21 adulte : '+y21Fare.amount.toFixed(2).replace('.',',')+' € pour ce parcours. Prix, date et titre à confirmer ; ne couvre pas forcément les correspondances.';line.appendChild(quote);
-       const proof=doc.createElement('a');proof.href=y21Fare.source;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir la grille Y21';line.appendChild(proof);
+       const quote=doc.createElement('span');quote.setAttribute(y21Fare.line==='Y22'?'data-y22-fare-reference':'data-y21-fare-reference','');
+       quote.textContent=' · Référence car '+y21Fare.line+' adulte : '+y21Fare.amount.toFixed(2).replace('.',',')+' € pour ce parcours. Prix, date et titre à confirmer ; ne couvre pas forcément les correspondances.';line.appendChild(quote);
+       const proof=doc.createElement('a');proof.href=y21Fare.source;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir la grille '+y21Fare.line;line.appendChild(proof);
       }
       if(aravisFare){
        const quote=doc.createElement('span');quote.setAttribute('data-y62-fare-reference','');

@@ -1,0 +1,7 @@
+# Y22 Annecy–Valserhône : référence ciblée
+
+Contrôle du 7 novembre 2026. La [grille officielle Y22](https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y22.pdf), liée depuis la [page tarifaire régionale](https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/), indique pour Annecy–Valserhône la zone 3, soit 6,60 € pour un voyage adulte. La cellule et la légende ont été contrôlées visuellement. Le barème est daté du 1er mars 2026 et susceptible de changer en cours d'année.
+
+Le flux officiel Haute-Savoie téléchargé le 7 novembre, SHA-256 `9d3c594378d1618793aa8b8878d3023c1eb7de7e21ddaa9dc2d2e46dc36677cb`, identifie Annecy Gare Routière `FR:74010:ZE:57539:HAUTExSAVOIE` et Valserhône Gare Routière `FR:01033:ZE:57833:HAUTExSAVOIE`. Pour le 9 novembre, le moteur y trouve 11 courses théoriques directes vers Valserhône et 10 dans le sens inverse. Cela ne prouve pas la circulation réelle.
+
+Le lecteur reconnaît uniquement ces deux arrêts et leurs coordonnées, sur la ligne et le réseau vérifiés et pour le profil adulte. Il refuse les dates après le 6 décembre 2026 : limite interne de fraîcheur, pas une expiration officielle. Le montant est une référence, jamais un prix total ou un titre acheté. L'encart Grand Annecy de cette fiche indique des prix plus anciens que d'autres documents Sibra ; il n'est pas utilisé. Les autres arrêts, réductions et correspondances restent à vérifier.
