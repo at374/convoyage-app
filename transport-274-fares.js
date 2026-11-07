@@ -2,6 +2,7 @@
 (function(root){
 'use strict';
 const SOURCE='https://jacquet-autocars.com/wp-content/uploads/2026/01/Grille-tarifaire-TRANSFRONTALIERS-2025-2026.pdf';
+const FRANCE_SOURCE='https://jacquet-autocars.com/wp-content/uploads/2025/11/Grille-tarifaire-FR-FR-2025-2026-5.pdf';
 const TO='Genève';
 const AMOUNTS=Object.freeze({
  'Nangy Findrol':{zone:'10+210',multizones_10_210:4.90},
@@ -45,14 +46,24 @@ function stopSector(stop){
  return metres<=50?pin[2]:null;
 }
 function reference({line,fromSector,toSector,travelDate,product,profile}={}){
- if(line!=='274'||profile!=='adult'||!['parcours','parcours_zone10','multizones_10_210'].includes(product))return null;
- const sector=toSector===TO?fromSector:fromSector===TO?toSector:null;
- if(!sector||!Object.hasOwn(AMOUNTS,sector)||!Object.hasOwn(AMOUNTS[sector],product))return null;
+ if(line!=='274'||profile!=='adult')return null;
+ let price,zone,source=SOURCE;
+ if(product==='france'){
+  const pairs={'Bonneville|Nangy Findrol':[3.8,'2'],'Bonneville|Sallanches':[11.3,'5'],'Nangy Findrol|Sallanches':[8.6,'4']};
+  const key=[fromSector,toSector].sort().join('|');
+  if(!Object.hasOwn(pairs,key))return null;
+  [price,zone]=pairs[key];source=FRANCE_SOURCE;
+ }else{
+  if(!['parcours','parcours_zone10','multizones_10_210'].includes(product))return null;
+  const sector=toSector===TO?fromSector:fromSector===TO?toSector:null;
+  if(!sector||!Object.hasOwn(AMOUNTS,sector)||!Object.hasOwn(AMOUNTS[sector],product))return null;
+  price=AMOUNTS[sector][product];zone=AMOUNTS[sector].zone;
+ }
  if(typeof travelDate!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(travelDate))return null;
  const ms=Date.parse(travelDate+'T12:00:00Z');
  if(!Number.isFinite(ms)||new Date(ms).toISOString().slice(0,10)!==travelDate||travelDate<'2026-11-07'||travelDate>'2026-12-12')return null;
- return {line,fromSector,toSector,travelDate,product,profile,zone:AMOUNTS[sector].zone,amount:AMOUNTS[sector][product],currency:'EUR',
-  source:SOURCE,sourceCheckedOn:'2026-11-07',publishedThrough:'2026-12-12',kind:'official_tariff_reference',
+ return {line,fromSector,toSector,travelDate,product,profile,zone,amount:price,currency:'EUR',
+  source,sourceCheckedOn:'2026-11-07',publishedThrough:'2026-12-12',kind:'official_tariff_reference',
   fareVerified:false,stopMappingVerified:false,serviceConfirmed:false};
 }
 function stopReference({networkId,line,fromStop,toStop,travelDate,product,profile}={}){
@@ -62,7 +73,7 @@ function stopReference({networkId,line,fromStop,toStop,travelDate,product,profil
  const result=reference({line,fromSector,toSector,travelDate,product,profile});
  return result?{...result,stopMappingVerified:true,gtfsSource:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',gtfsCheckedOn:'2026-11-07'}:null;
 }
-const api={reference,stopReference,SOURCE};
+const api={reference,stopReference,SOURCE,FRANCE_SOURCE};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CP274Fares=api;
 })(typeof window!=='undefined'?window:globalThis);

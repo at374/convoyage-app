@@ -64,3 +64,25 @@ test('Findrol uses the multizone ticket rather than a Parcours ticket',()=>{
   assert.equal(require('../transport-direct-fare-reference.js').reference({...row,legs:[{},{}]}),null);
  }finally{delete global.CP274Fares;}
 });
+test('France-only matrix applies only the official identified pairs and correct fare zones',()=>{
+ const franceStops=[
+  {id:'FR:74197:ZE:58716:HAUTExSAVOIE',lat:46.1423557,lon:6.3179182},
+  {id:'FR:74042:ZE:58718:HAUTExSAVOIE',lat:46.0708039,lon:6.4249336},
+  {id:'FR:74256:ZE:58792:HAUTExSAVOIE',lat:45.9618912,lon:6.6302667}
+ ];
+ for(const [a,b,amount,zone] of [[0,1,3.8,'2'],[1,2,11.3,'5'],[0,2,8.6,'4']]){
+  const input={...request,fromStop:franceStops[a],toStop:franceStops[b],product:'france'};
+  const fare=fares.stopReference(input);assert.equal(fare.amount,amount);assert.equal(fare.zone,zone);assert.equal(fare.source,fares.FRANCE_SOURCE);
+  assert.equal(fare.fareVerified,false);assert.equal(fare.serviceConfirmed,false);
+  assert.equal(fares.stopReference({...input,fromStop:input.toStop,toStop:input.fromStop}).amount,amount);
+  assert.equal(fares.stopReference({...input,travelDate:'2026-12-13'}),null);
+ }
+ assert.equal(fares.stopReference({...request,product:'france'}),null);
+ global.CP274Fares=fares;
+ try{
+  const stop=s=>({stopId:s.id,lat:s.lat,lon:s.lon});
+  const row={networkId:'oura-haute-savoie',line:'274',departure:'2026-11-09T11:00:00+01:00',originStop:stop(franceStops[0]),destinationStop:stop(franceStops[1])};
+  const card=require('../transport-direct-fare-reference.js').reference(row);
+  assert.equal(card.amount,3.8);assert.equal(card.product,'france');assert.equal(card.fareVerified,false);
+ }finally{delete global.CP274Fares;}
+});

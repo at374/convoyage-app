@@ -16,7 +16,7 @@ function reference(row){
   const api=row.line==='272'?root.CP272Fares:row.line==='274'?root.CP274Fares:row.line==='Y02'?root.CPY02Fares:row.line==='Y21'?root.CPY21Fares:row.line==='Y22'?root.CPY22Fares:
    ['Y62','Y63'].includes(row.line)&&root.CPAravisFareData?root.CPAravisFares?.createCalculator(root.CPAravisFareData):null;
   const value=api?.stopReference({...input,...(['272','274'].includes(row.line)?{product:'parcours'}:{})}) ||
-   (row.line==='274'?api?.stopReference({...input,product:'multizones_10_210'}):null);
+   (row.line==='274'?(api?.stopReference({...input,product:'multizones_10_210'})||api?.stopReference({...input,product:'france'})):null);
   return value&&value.fareVerified===false&&Number.isFinite(value.amount)&&value.amount>=0?value:null;
  }catch(_){return null;}
 }

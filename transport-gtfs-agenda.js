@@ -343,7 +343,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
         const date=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure)).map(p=>[p.type,p.value]));
         const stop=s=>({id:s?.stopId,lat:s?.lat,lon:s?.lon});
         const input={networkId:row.networkId,line:row.line,fromStop:stop(row.originStop),toStop:stop(row.destinationStop),travelDate:date.year+'-'+date.month+'-'+date.day,profile:'adult'};
-        coachFare=coachApi.stopReference({...input,product:'parcours'})||(row.line==='274'?coachApi.stopReference({...input,product:'multizones_10_210'}):null);
+        coachFare=coachApi.stopReference({...input,product:'parcours'})||(row.line==='274'?(coachApi.stopReference({...input,product:'multizones_10_210'})||coachApi.stopReference({...input,product:'france'})):null);
        }
       }catch(_){}
       try{
@@ -377,7 +377,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       fareChecks.push({row,element:passCost});refreshFares();
       if(coachFare){
        const quote=doc.createElement('span');quote.setAttribute('data-'+coachFare.line+'-fare-reference','');
-       quote.textContent=' · Référence car '+coachFare.line+' adulte : '+coachFare.amount.toFixed(2).replace('.',',')+' €'+(coachFare.product==='multizones_10_210'?' · billet multizones 10 et 210, conditions de correspondance à vérifier':' pour ce parcours, sans circulation supplémentaire zone 10')+'. Prix et titre à confirmer ; ne couvre pas forcément les correspondances.';line.appendChild(quote);
+       quote.textContent=' · Référence car '+coachFare.line+' adulte : '+coachFare.amount.toFixed(2).replace('.',',')+' €'+(coachFare.product==='multizones_10_210'?' · billet multizones 10 et 210, conditions de correspondance à vérifier':coachFare.product==='france'?' · billet intérieur France':' pour ce parcours, sans circulation supplémentaire zone 10')+'. Prix et titre à confirmer ; ne couvre pas forcément les correspondances.';line.appendChild(quote);
        const proof=doc.createElement('a');proof.href=coachFare.source;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir la grille '+coachFare.line;line.appendChild(proof);
       }
       if(y21Fare){
