@@ -5,6 +5,11 @@
 // relations (Chambray, Joue-les-Tours, Tours Nord, Monts-Sorigny,
 // Neuille-Pont-Pierre), each confirmed PROUVE against a source PDF and
 // precisely geolocated via Google Maps place resolution.
+// MISE A JOUR du 6 nov. 2026 : le GPS de "cofiroute-ouvert-monts-sorigny" (place
+// resolution Google Maps) s'est revele faux de 5,6km par rapport au point
+// officiel data.gouv.fr -- corrige, voir tests/peages-monts-sorigny-gps-
+// corrige.test.cjs pour le detail. Les 4 autres barrieres de ce lot restent
+// correctes (verifie independamment).
 // Run: node --test tests/aura-suisse-cofiroute-tours-ouvert.test.cjs
 const assert = require('node:assert/strict');
 const { test } = require('node:test');

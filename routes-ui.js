@@ -102,7 +102,15 @@
     // V265 : si le tracé passe près d'une gare officielle dont nous n'avons aucun tarif, le prix exact est refusé (jamais de prix partiel).
     if (typeof UNK !== 'undefined') for (let k = i0; k <= i1; k++) { const w = sh[k]; if (!w) continue; for (let u = 0; u < UNK.length; u++) { const z = UNK[u]; if (Math.abs(w[0] - z[0]) < 0.006 && Math.abs(w[1] - z[1]) < 0.009 && dist(w[0], w[1], z[0], z[1]) < 0.5) return null; } }
     // V259 : barrières « système ouvert » à tarif fixe : leur tarif est ajouté par le moteur de barrières (overlay) ; ici elles sont seulement retirées de la recherche des couples de gares.
-    const OUV = { 'CROTTET': [0.8, 1.2], 'FONTAINE-LARIVIERE': [3.1, 4.9], 'GENAY': [1.7, 2.5], 'LUSSE': [6.8, 10.7], 'MIONNAY': [1, 1.5], 'MYENNES': [4.2, 6], 'QUINCIEUX': [3.6, 5.6], 'VICHY': [1.2, 1.9] };
+    // V280 (6 nov. 2026) : « CHIGNIN BRETELLE » et « TOURNEAU Système Ouvert » ajoutés après verification exhaustive
+    // de la grille AREA/APRR complete (tests/peages-area-grille-complete-chignin-bretelle.test.cjs et
+    // tests/peages-aprr-grille-complete-le-tourneau.test.cjs) : ces 2 gares, comme les 8 autres ci-dessous, n'ont
+    // aucun tarif point-a-point propre (0 relation dans les 16918+21505 relations officielles) -- seul un tarif
+    // fixe « systeme ouvert » existe, porte par le mecanisme des barrieres (overlay). Sans cette entree, une gare
+    // isolee rencontree au milieu d'un trajet avec d'autres gares deja tarifees de part et d'autre aurait pu faire
+    // refuser (ou dans certains cas silencieusement omettre) le prix du reste du trajet -- cf. le garde-fou ligne
+    // ~284 qui verifie que chaque nom ici a bien une barriere correspondante.
+    const OUV = { 'CROTTET': [0.8, 1.2], 'FONTAINE-LARIVIERE': [3.1, 4.9], 'GENAY': [1.7, 2.5], 'LUSSE': [6.8, 10.7], 'MIONNAY': [1, 1.5], 'MYENNES': [4.2, 6], 'QUINCIEUX': [3.6, 5.6], 'VICHY': [1.2, 1.9], 'CHIGNIN BRETELLE': [1.0, 1.6], 'TOURNEAU Système Ouvert': [3.8, 5.8] };
     const ouv = [];
     for (let q = hits.length - 1; q >= 0; q--) { if (OUV[P.g[hits[q].g][0]]) { if (!ouv.some(o => o.g === hits[q].g)) ouv.unshift(hits[q]); hits.splice(q, 1); } }
     if (!hits.length && !ouv.length) return null;
@@ -180,7 +188,49 @@
   const valRoute = async (body) => { let err = null; for (let n = 0; n < 4; n++) { try { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000); const rr = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal }); clearTimeout(to); if (rr.ok) return await rr.json(); err = new Error('http ' + rr.status); } catch (e) { err = e; } await new Promise(s => setTimeout(s, 1500 * (n + 1))); } throw err; };
   // V250 : tout le calcul du péage se fait dans un « worker » (second fil du téléphone) : l'écran ne peut plus se figer, même sur un téléphone lent.
   // V265 : gares de péage officielles (liste du ministère) dont nous n'avons aucun tarif : un trajet qui passe à moins de 500 m n'a pas de prix exact.
-  const UNK = [[43.6028,7.07258],[43.60465,7.06636],[43.60277,7.08123],[43.60452,7.08785],[43.64326,7.13402],[43.64796,7.13896],[43.65913,7.14893],[43.70388,7.19007],[43.70015,7.18812],[43.55322,5.23792],[43.49458,5.52498],[43.22574,5.58217],[43.2019,5.59417],[45.95485,-0.88122],[45.15248,1.37792],[45.15157,1.16683],[45.148,1.17478],[43.64504,1.49789],[47.45215,0.73944],[47.34919,0.70312],[47.33062,0.68813],[47.25442,0.67097],[47.55526,0.596],[43.63298,-1.39072],[43.63007,-1.39572],[43.46217,-1.49839],[43.46097,-1.50276],[43.37197,-1.67746],[43.51232,-1.22256],[48.94757,3.04036],[48.95228,3.03819],[48.91236,2.04593],[43.54423,6.80993],[43.14434,5.76838],[43.29347,6.20051],[43.48329,5.53837],[43.70774,7.19122],[48.54645,1.91114],[48.91342,2.16271],[48.91354,2.15809],[49.05393,4.28593],[49.32195,0.30849],[43.20492,5.59053],[43.14625,5.77192],[43.32435,5.59803],[43.25774,6.12279],[43.62419,-1.40083],[43.34138,-1.74961],[43.50524,1.35211],[43.64715,1.50769],[48.78189,2.15976],[48.8301,2.1485],[48.8714,2.15683],[43.36688,5.64373]];
+  // V279 (5 nov. 2026, audit complet contre data/gares-peage-officiel.json — data.gouv.fr, MTE 2025, 1266 points)
+  // corrigé le même jour : l'audit initial comparait ces points au GPS connu (peages-aprr.json + peages-overlay.json
+  // + UNK) mais avait OUBLIÉ de vérifier aussi contre overlay.barrieres (mécanisme séparé, cf. barrieresTraversees())
+  // — ce qui avait fait ajouter ici, à tort, 11 points déjà correctement tarifés par ce mécanisme (Cluses Aval,
+  // Dordives Est, Saint Witz, Nangy, BPV Nord Saugnacq-et-Muret, BPV Sud Castets, Gares de Saint Germain, Bouville,
+  // Péage Pont Tancarville, Péage Pont Normandie, Puymorens A-PO) : les y laisser aurait BLOQUÉ à tort des trajets
+  // déjà correctement calculés. Seuls 6 points restent de véritables angles morts (aucun tarif nulle part) : Audomarois
+  // B (secteur Saint-Omer/A26, à 0,6-0,7 km de la gare tarifée « CALAIS » — au-delà du seuil de détection de barrière
+  // 0,3 km, donc traité comme un point distinct), St Michel amont (A43), Fréjus Est (A8), Le Mans Ouest (A11),
+  // Buchelay BPV et Dozulé BPV Nord (A13). Voir tests/peages-audit-officiel-data-gouv-gaps.test.cjs.
+  // Recherche du 5 nov. 2026 (sources officielles SANEF, cf. tests/peages-buchelay-dozule-flux-libre.test.cjs) :
+  // Buchelay et Dozulé ne sont PAS de simples angles morts temporaires -- les deux gares ont été démontées
+  // (dépose de l'auvent/portique de péage classique) et remplacées par le péage « flux libre » (sans arrêt, sans
+  // barrière physique, facturation par portique de détection sur la base du trajet complet). Ce mécanisme est
+  // structurellement incompatible avec notre modèle (un montant fixe classe1/classe2 par point physique unique) :
+  // aucun « prix barrière » classe1/classe2 n'existe plus à proprement parler à ces deux points. Le blocage par
+  // UNK ("prix exact non disponible") n'est donc pas une lacune provisoire à combler mais la représentation
+  // correcte et définitive pour ces deux points, tant que l'app ne modélise pas la tarification multi-portique.
+  // Correction supplémentaire du 6 nov. 2026 (cf. tests/peages-unk-type-ech-vs-bpv.test.cjs) : le référentiel
+  // officiel distingue deux types de points, champ « type » dans data/gares-peage-officiel.json — « Bpv »
+  // (Barrière Pleine Voie, une vraie barrière de péage à tarif fixe, comme Buchelay/Dozulé ci-dessus) et « Ech »
+  // (Échangeur, un simple point d'entrée/sortie SANS tarif propre — le prix dépend du couple entrée/sortie réel du
+  // trajet, cf. le mécanisme « système ouvert » déjà en place pour Tarare Est/Dordives/Vallée de la Hem). Les 4
+  // angles morts restants (Audomarois B, St Michel amont, Fréjus Est, Le Mans Ouest) sont TOUS de type « Ech », pas
+  // « Bpv » : chercher un « tarif de barrière » pour eux était donc la mauvaise question. S'ils ont un prix, c'est
+  // une relation point-à-point avec leur vraie destination/origine de trajet, à retrouver dans la grille officielle
+  // complète de l'exploitant concerné (SFTRF pour St Michel/A43, ESCOTA pour Fréjus/A8, COFIROUTE pour Le Mans/A11,
+  // SANEF pour Audomarois/A26) -- pas dans un simple tableau de tarifs agrégés trouvé par recherche web. En
+  // attendant cette grille complète, UNK reste la représentation correcte (aucun prix inventé, aucune omission
+  // silencieuse).
+  // Résolu le 6 nov. 2026 (cf. tests/peages-frejus-est-escota.test.cjs) : « Fréjus Est » (A8) retiré de UNK.
+  // Laurent a fourni localement la grille complète ESCOTA 2026 (A8/A52/A57/A50/A51) ; validée contre 123 relations
+  // déjà PROUVE sans aucune divergence, elle donne FREJUS EST -> MANDELIEU = 3,0/4,7 € (relation PROUVE, à 17,6-
+  // 18,0 km de Mandelieu et 1,16-1,23 km de « Frejus Ouest » -- au-delà des deux seuils de prudence, point distinct
+  // confirmé). Ajouté à overlay.gares/overlay.paires. Les 3 autres angles morts (Audomarois B, St Michel amont, Le
+  // Mans Ouest) restent dans UNK : la grille locale AREA confirme qu'aucun tarif séparé n'existe pour « St Michel
+  // amont » (seules ST MICHEL MAURIENNE BAR/ECH, déjà connues, y figurent), et la grille locale SANEF confirme la
+  // même absence pour « Audomarois B ». La grille locale COFIROUTE (réseau A11/A28/A85 complet, 722 Ko) confirme la
+  // même absence pour « Le Mans Ouest » (seules LE MANS ZI NORD/SUD, CENTRE UNIVERSITÉ et SUD, toutes déjà connues,
+  // y figurent). Les 3 restants ne sont donc pas des lacunes de recherche mais une absence CONFIRMÉE de tarif
+  // publié à ces points (cohérent avec leur type « Ech ») : rien à chercher de plus, UNK reste définitivement
+  // correct pour eux, à moins qu'une future grille officielle ne liste explicitement un tarif.
+  const UNK = [[43.6028,7.07258],[43.60465,7.06636],[43.60277,7.08123],[43.60452,7.08785],[43.64326,7.13402],[43.64796,7.13896],[43.65913,7.14893],[43.70388,7.19007],[43.70015,7.18812],[43.55322,5.23792],[43.49458,5.52498],[43.22574,5.58217],[43.2019,5.59417],[45.95485,-0.88122],[45.15248,1.37792],[45.15157,1.16683],[45.148,1.17478],[43.64504,1.49789],[47.45215,0.73944],[47.34919,0.70312],[47.33062,0.68813],[47.25442,0.67097],[47.55526,0.596],[43.63298,-1.39072],[43.63007,-1.39572],[43.46217,-1.49839],[43.46097,-1.50276],[43.37197,-1.67746],[43.51232,-1.22256],[48.94757,3.04036],[48.95228,3.03819],[48.91236,2.04593],[43.54423,6.80993],[43.14434,5.76838],[43.29347,6.20051],[43.48329,5.53837],[43.70774,7.19122],[48.54645,1.91114],[48.91342,2.16271],[48.91354,2.15809],[49.05393,4.28593],[49.32195,0.30849],[43.20492,5.59053],[43.14625,5.77192],[43.32435,5.59803],[43.25774,6.12279],[43.62419,-1.40083],[43.34138,-1.74961],[43.50524,1.35211],[43.64715,1.50769],[48.78189,2.15976],[48.8301,2.1485],[48.8714,2.15683],[43.36688,5.64373],[50.72292,2.16534],[50.7231,2.16714],[45.21646,6.46587],[47.98195,0.05435],[48.98384,1.68125],[49.23071,-0.07124]];
   let WK = null, WKID = 0; const WKATT = new Map();
   const CODE_WORKER = () => 'const UNK=' + JSON.stringify(UNK) + ';const dist=' + dist + ';const joli=' + joli + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';' +
     'let P=null;const charger=async base=>{const j=await (await fetch(base+"peages-aprr.json")).json();const prix=new Map();for(const s of j.p.split(";")){const [a,b,c1,c2,d]=s.split(",");const x=parseInt(a,36),y=parseInt(b,36);prix.set(Math.min(x,y)*1000+Math.max(x,y),[c1/10,c2/10,Number(d)]);}' +
