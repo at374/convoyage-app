@@ -29,7 +29,10 @@ const PAIRS={
 function near(stop,id){const point=STOPS[id];return !!point&&stop?.stopId===id&&Number.isFinite(stop.lat)&&Number.isFinite(stop.lon)&&Math.abs(stop.lat-point[0])<0.0003&&Math.abs(stop.lon-point[1])<0.0003;}
 function reference(row){
  if(!row||row.networkId!=='65a901970267d05025a905ec'||!Object.hasOwn(PAIRS,row.line)||typeof row.tripId!=='string'||!row.tripId||
-    (Array.isArray(row.legs)&&row.legs.length)||typeof row.departure!=='string'||!Number.isFinite(Date.parse(row.departure)))return null;
+    (Array.isArray(row.legs)&&row.legs.length)||typeof row.departure!=='string'||typeof row.arrival!=='string'||
+    !/(?:Z|[+-]\d{2}:\d{2})$/i.test(row.departure)||!/(?:Z|[+-]\d{2}:\d{2})$/i.test(row.arrival))return null;
+ const duration=Date.parse(row.arrival)-Date.parse(row.departure);
+ if(!Number.isFinite(duration)||duration<0||duration>30*60000)return null;
  const a=row.from,b=row.to;
  const pair=PAIRS[row.line].some(([from,to])=>from===a&&to===b);
  if(!pair||!near(row.originStop,a)||!near(row.destinationStop,b))return null;

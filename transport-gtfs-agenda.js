@@ -266,6 +266,12 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
    const partialNetworks=summary?.partial===true||networks.some(n=>!validNetwork(n));
    if(partialNetworks)sourceStatus.textContent+=' Recherche partielle : un réseau est indisponible.';
    if(omittedNetworks.length)sourceStatus.textContent+=' Recherche partielle. Réseaux non interrogés : '+omittedNetworks.join(', ')+'.';
+   if(loaded.some(n=>n.source.datasetId==='5ca4c3d2d7857ab0c49dde9b')){
+    const traffic=doc.createElement('p');traffic.className='doux';
+    traffic.textContent='TAC : les horaires affichés sont théoriques. Arrêts déplacés, déviations et temps réel sont à vérifier avant le départ. ';
+    const trafficLink=doc.createElement('a');trafficLink.href='https://www.tac-mobilites.fr/';trafficLink.target='_blank';trafficLink.rel='noopener noreferrer';
+    trafficLink.textContent='Consulter les infos trafic TAC';traffic.appendChild(trafficLink);section.appendChild(traffic);
+   }
    if(loaded.length>1){
     warning.textContent+=' Changements entre réseaux : arrêts rapprochés à 150 m à vol d’oiseau au maximum ; aucun chemin ni temps de marche vérifié.';
     for(const other of loaded.slice(1)){const link=doc.createElement('a');link.href=other.source.url||partners[0].url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=' · Source '+other.source.network;section.appendChild(link);}

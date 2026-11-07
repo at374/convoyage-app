@@ -204,6 +204,16 @@ test('partial multi-network load remains visible while the surviving source is q
  await session.done;assert.match(target.textContent,/Recherche partielle/);assert.match(target.textContent,/Sibra : flux indisponible/);
  assert.ok(queries>0);session.dispose();
 });
+test('loaded Annemasse network displays a current traffic verification link',async()=>{
+ const target=panel(),tac=agenda.DEFAULT_RESOURCES.find(r=>r.id==='tac-annemasse');
+ const trip={label:'Retour',from:{lat:46.20,lon:6.14},to:{lat:46.19,lon:6.24},earliestDeparture:'2026-11-07T10:00:00+01:00'};
+ const session=agenda.mount(target,{resources:[tac],tasks:[trip],clientFactory:()=>({
+  load:async()=>({...summary,source:{...summary.source,datasetId:tac.datasetId,network:tac.network}}),
+  query:async()=>({rows:[],truncated:false}),dispose(){}})});
+ await session.done;assert.match(target.textContent,/arrêts déplacés, déviations et temps réel sont à vérifier/i);
+ const section=target.children[0],traffic=section.children.find(x=>x.textContent.includes('Consulter les infos trafic TAC'));
+ assert.ok(traffic);assert.equal(traffic.children[0].href,'https://www.tac-mobilites.fr/');session.dispose();
+});
 test('walking refinement displays calculated paths and unmatched endpoints while retaining transit warnings',async()=>{
  const previous=global.CPTransportWalking;let disposed=0;
  global.CPTransportWalking={checkJourney:async()=>({status:'partial',walks:{
