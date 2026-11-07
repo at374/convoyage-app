@@ -1059,3 +1059,15 @@ test('Haute-Savoie can participate in a cross-region search outside its own enve
  clientFactory:()=>({loadNetworks:async list=>{selected=list.map(r=>r.id);return {networks:list.map(r=>({...summary,source:{...summary.source,network:r.network}}))};},query:async()=>({rows:[],truncated:false}),dispose(){}})});
  await session.done;assert.deepEqual(selected,['oura-haute-savoie','oura-savoie-tourism']);session.dispose();
 });
+
+test('Thonon STAR’T is selected for local journeys without claiming the 271 or any fare',async()=>{
+ const thonon=agenda.DEFAULT_RESOURCES.find(r=>r.id==='start-thonon');
+ assert.ok(thonon);assert.equal(thonon.datasetId,'6a32489a813e6bb04d3f5c27');
+ assert.match(thonon.url,/provider=THONON&dataFormat=GTFS/);
+ const trip={label:'Retour',from:{lat:46.37,lon:6.48},to:{lat:46.33,lon:6.40},earliestDeparture:'2026-11-09T10:00:00+01:00'};
+ assert.equal(agenda.selected(thonon,trip),true);
+ assert.equal(agenda.selected(thonon,{...trip,to:{lat:48.85,lon:2.35}}),false);
+ let loaded=null;
+ const session=agenda.mount(panel(),{tasks:[trip],clientFactory:()=>({load:async r=>{loaded=r;return {...summary,source:{...summary.source,network:r.network,url:r.url}};},query:async()=>({rows:[],truncated:false}),dispose(){}})});
+ await session.done;assert.equal(loaded?.id,'start-thonon');session.dispose();
+});

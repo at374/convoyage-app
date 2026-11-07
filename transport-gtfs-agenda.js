@@ -56,6 +56,11 @@ const AURA_RESOURCES_BY_COVERAGE=Object.freeze([Object.freeze({
  url:'https://www.data.gouv.fr/api/1/datasets/r/373e19e2-af0a-4939-9f33-3f1268d1e0bb',
  bounds:[45.9,5.9,46.35,6.45],timeZone:'Europe/Paris'
 }),Object.freeze({
+ id:'start-thonon',datasetId:'6a32489a813e6bb04d3f5c27',network:"STAR'T — Thonon Agglomération",format:'GTFS',federate:true,
+ // Official local timetable, not a fare source and not a claim about line 271.
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=THONON&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[46.2,6.18,46.55,6.62],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'80100',datasetId:'5bd9843e634f413220f7f04a',network:'Sibra',format:'GTFS',federate:true,
  url:'https://www.data.gouv.fr/api/1/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0',resolveFromCatalogue:true,
  bounds:[45.7,5.9,46.1,6.5],timeZone:'Europe/Paris'
@@ -184,7 +189,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
  // Cross-border local networks must be selected before the broad Haute-Savoie
  // envelope; otherwise their feeds can be omitted by the four-network budget.
- const borderLocal=resourceList.find(r=>['pays-gex-tpg','tac-annemasse'].includes(r.id)&&taskList.some(t=>selected(r,t)));
+ const borderLocal=resourceList.find(r=>['pays-gex-tpg','tac-annemasse','start-thonon'].includes(r.id)&&taskList.some(t=>selected(r,t)));
  // A national coach feed must not become the primary local-network source
  // for a short urban journey merely because its selection envelope is broad.
  const longDistanceProvider=r=>r?.id==='blablacar-bus';
