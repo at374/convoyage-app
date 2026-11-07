@@ -18,3 +18,7 @@ La recherche a utilisé des arrêts exacts, pas une mission complète d'adresse 
 ## Statut
 
 Le raccordement du barème comme référence non confirmée est préparé dans la PR #207. Ce contrôle n'établit pas une validation sur téléphone physique et ne garantit pas l'exhaustivité des lignes ou des tarifs. Aucune fusion, réservation, publication ni activation payante.
+
+## Contrôle du sens inverse
+
+Même archive et jour de service : le moteur retourne 19 courses théoriques directes de Genève-Aéroport vers Annecy Gare Routière, première 09:10–10:32 et dernière 22:00–23:12. Il retrouve également 19 courses vers Pringy Gare (identifiant `FR:74010:ZE:57875:HAUTExSAVOIE`) ; les arrivées correspondantes sont 10:20 et 23:00. Le lecteur applique la référence adulte de 11,30 € dans ce sens pour les arrêts vérifiés. Ces exemples n'établissent pas la circulation réelle, l'accès piéton, la vente ou la validité pour un autre jour.
