@@ -1933,7 +1933,7 @@
             detail.appendChild(missing);
           }
           const caution = document.createElement('small');
-          caution.textContent = 'Les liens cartographiques recherchent le nom de l’arrêt : position exacte non vérifiée.';
+          caution.textContent = (journey.detailsIncomplete ? 'Certaines étapes sont incomplètes : vérifie le trajet. ' : '') + 'Les liens cartographiques recherchent le nom de l’arrêt : position exacte non vérifiée.';
           detail.appendChild(caution);
           card.appendChild(detail);
           window.CPTransportMap?.mount(card,journey);
@@ -2454,6 +2454,14 @@
             status.textContent=valid.length?
               direction+' suisse : '+valid.length+' proposition(s) indicatives, prix et circulation non confirmés :':
               direction+' suisse : aucune proposition compatible parmi les résultats reçus. D’autres trajets peuvent exister ; transport non confirmé.';
+            if(valid.length&&window.CPTransportAdapters?.adaptSwiss&&window.CPTransportRanking){
+              const choices=window.CPTransportRanking.rank(window.CPTransportAdapters.adaptSwiss(valid),{
+                includeAlternatives:true,direction:direction==='Retour'?'return':'outbound',
+                ...(arriveBy?{deadline:when}:{}),
+                ...(direction==='Jonction'?{deadline,earliestDeparture:when}:{}),
+                ...(direction==='Retour'?{earliestDeparture:when}:{}),marginMinutes:securityMarginMin});
+              if(choices.length){showRegionalChoices(status,choices,direction+' suisse · comparer');return;}
+            }
             valid.forEach(result=>{
               const line=document.createElement('p');
               const legs=result.sections.map(s=>[s.mode==='WALK'?'🚶 Marche':s.mode,s.line,

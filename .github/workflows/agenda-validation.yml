@@ -30,3 +30,5 @@ jobs:
         run: node tests/swiss-transport-api.test.cjs
       - name: Run Swiss transport refresh regression tests
         run: node --test tests/transport-swiss-refresh.test.cjs
+      - name: Run Swiss transport map regression tests
+        run: node --test tests/transport-swiss-map.test.cjs

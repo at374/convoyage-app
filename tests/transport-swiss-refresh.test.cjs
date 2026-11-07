@@ -21,7 +21,7 @@ function setup(){
   $:id=>id==='feuille'?sheet:button,m:current,next,etat:{reglages:{domicile_lat:45.9,domicile_lng:6.1}},
   G:{coordonnees:(obj,side)=>obj?.[side==='origin'?'o':'d']},transportAddressPoint:p=>!!p&&p.precision==='adresse',
   pickupDate:'2026-11-07T09:00:00+01:00',deliveryDate:'2026-11-07T11:00:00+01:00',securityMarginMin:15,formatParis:x=>x,Date};
- vm.runInNewContext(slotCode+swissCode,context);return {panel,sheet,button,current,next,calls};
+ vm.runInNewContext(slotCode+swissCode,context);return {panel,sheet,button,current,next,calls,context};
 }
 test('Swiss searches start when precise points arrive and cancel only replaced searches',()=>{
  const s=setup();assert.equal(s.calls.length,1);assert.equal(s.calls[0].options.from.lat,46.2);
@@ -36,4 +36,13 @@ test('late Swiss responses cannot replace a newer search or update a hidden pane
  const old=s.calls[1];s.current.o.lat=46.11;s.button.cpRefreshRegional();const before=s.panel.textContent;
  old.resolve([{departure:'2026-11-07T06:00:00Z',arrival:'2026-11-07T07:00:00Z',sections:[]}]);await tick();assert.equal(s.panel.textContent,before);
  s.sheet.hidden=true;const hidden=s.panel.textContent;s.calls[2].resolve([{departure:'2026-11-07T06:00:00Z',arrival:'2026-11-07T07:00:00Z',sections:[]}]);await tick();assert.equal(s.panel.textContent,hidden);
+});
+test('valid Swiss answers are passed to comparison cards with unknown price',async()=>{
+ const s=setup(),calls=[];
+ s.context.window.CPTransportAdapters=require('../transport-adapters.js');
+ s.context.window.CPTransportRanking=require('../transport-ranking.js');
+ s.context.showRegionalChoices=(host,choices,heading)=>calls.push({choices,heading});
+ s.calls[0].resolve([{departure:'2026-11-07T10:10:00Z',arrival:'2026-11-07T10:45:00Z',sections:[{mode:'BUS',line:'64',from:'A',to:'B',fromPoint:{lat:46.2,lon:6.14},toPoint:{lat:46.24,lon:6.08},departure:'2026-11-07T10:10:00Z',arrival:'2026-11-07T10:45:00Z'}]}]);
+ await tick();assert.equal(calls.length,1);assert.equal(calls[0].heading,'Retour suisse · comparer');
+ assert.equal(calls[0].choices[0].journey.priceEUR,null);assert.equal(calls[0].choices[0].journey.feasible,false);
 });
