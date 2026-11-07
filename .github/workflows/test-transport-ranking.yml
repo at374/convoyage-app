@@ -15,6 +15,8 @@ on:
       - 'tests/transport-y21-fares.test.cjs'
       - 'transport-y22-fares.js'
       - 'tests/transport-y22-fares.test.cjs'
+      - 'transport-y02-fares.js'
+      - 'tests/transport-y02-fares.test.cjs'
       - 'transport-ranking.js'
       - 'transport-adapters.js'
       - 'transport-fares.js'
@@ -71,6 +73,8 @@ on:
       - 'tests/transport-y21-fares.test.cjs'
       - 'transport-y22-fares.js'
       - 'tests/transport-y22-fares.test.cjs'
+      - 'transport-y02-fares.js'
+      - 'tests/transport-y02-fares.test.cjs'
       - 'transport-ranking.js'
       - 'transport-adapters.js'
       - 'transport-fares.js'
@@ -132,6 +136,7 @@ jobs:
       - run: node --test tests/transport-aravis-fares.test.cjs
       - run: node --test tests/transport-y21-fares.test.cjs
       - run: node --test tests/transport-y22-fares.test.cjs
+      - run: node --test tests/transport-y02-fares.test.cjs
       - run: node --check transport-ranking.js
       - run: node --check transport-adapters.js
       - run: node --check transport-fares.js

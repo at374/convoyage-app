@@ -1,0 +1,16 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fares=require('../transport-y02-fares.js');
+const fromStop={id:'FR:74012:ZE:57669:HAUTExSAVOIE',lat:46.1996235,lon:6.2381237};
+const sixt={id:'FR:74273:ZE:57641:HAUTExSAVOIE',lat:46.053759,lon:6.773773};
+const samoens={id:'FR:74258:ZE:57644:HAUTExSAVOIE',lat:46.0829415,lon:6.7231899};
+const q={networkId:'oura-haute-savoie',line:'Y02',fromStop,toStop:sixt,travelDate:'2026-11-09',profile:'adult'};
+test('Y02 applies the reviewed zone 2 reference to both verified endpoints and directions',()=>{
+ for(const toStop of [sixt,samoens]){
+  const value=fares.stopReference({...q,toStop});assert.equal(value.amount,4);assert.equal(value.zone,'2');
+  assert.equal(value.fareVerified,false);assert.equal(value.serviceConfirmed,false);assert.equal(value.travelDateValidityKnown,false);
+  assert.equal(fares.stopReference({...q,fromStop:toStop,toStop:fromStop}).amount,4);
+ }
+});
+test('unknown stops, routes, dates and profiles do not inherit the tariff',()=>{
+ for(const c of [{line:'Y03'},{networkId:'other'},{profile:'child'},{travelDate:'2026-12-07'},{travelDate:'2026-11-31'},
+  {fromStop:{...fromStop,lat:46}},{toStop:{...sixt,id:'unknown'}},{toStop:fromStop}])assert.equal(fares.stopReference({...q,...c}),null);
+});

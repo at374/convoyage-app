@@ -15,6 +15,18 @@ class Element{
 function panel(){const doc={createElement(){return new Element(doc);}};doc.documentElement=new Element(doc);return new Element(doc);}
 function deferred(){let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};}
 const summary={source:{loadedAt:'2026-10-30T16:00:00Z'},counts:{stops:1641}};
+test('Y02 matched stops show a sourced reference without confirming service',async()=>{
+ global.CPY02Fares=require('../transport-y02-fares.js');
+ try{
+  const target=panel(),mission={label:'Retour',from:{lat:46.1996,lon:6.2381},to:{lat:46.0538,lon:6.7738},earliestDeparture:'2026-11-09T10:00:00+01:00'};
+  const direct=row({networkId:'oura-haute-savoie',line:'Y02',departure:'2026-11-09T11:00:00+01:00',arrival:'2026-11-09T12:20:00+01:00',
+   originStop:{stopId:'FR:74012:ZE:57669:HAUTExSAVOIE',name:'Annemasse',lat:46.1996235,lon:6.2381237},
+   destinationStop:{stopId:'FR:74273:ZE:57641:HAUTExSAVOIE',name:'Sixt-Fer-à-Cheval',lat:46.053759,lon:6.773773}});
+  await agenda.mount(target,{tasks:[mission],resources:[agenda.DEFAULT_RESOURCES[0]],clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[direct]}),dispose(){}})}).done;
+  assert.match(target.textContent,/Référence car Y02 adulte : 4,00 €/);assert.match(target.textContent,/Voir la grille Y02/);
+  assert.match(target.textContent,/Transport non confirmé/);assert.doesNotMatch(target.textContent,/Réalisable/);
+ }finally{delete global.CPY02Fares;}
+});
 test('Y22 matched stops show zone 3 as a reference, not a confirmed fare',async()=>{
  global.CPY22Fares=require('../transport-y22-fares.js');
  try{

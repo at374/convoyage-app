@@ -1,0 +1,7 @@
+# Y02 Annemasse–Samoëns–Sixt : référence ciblée
+
+Contrôle du 7 novembre 2026. La [grille officielle Y02](https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y02.pdf), liée depuis la [page tarifaire régionale](https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/infos-et-services-cars-region-de-haute-savoie/titres-et-tarifs-de-haute-savoie/), indique la zone 2 pour Annemasse–Samoëns et Annemasse–Sixt-Fer-à-Cheval, soit 4,00 € par voyage adulte. Matrice et légende examinées visuellement. Barème daté du 1er mars 2026, susceptible de changer en cours d'année.
+
+Le flux officiel Haute-Savoie téléchargé le 7 novembre, SHA-256 `9d3c594378d1618793aa8b8878d3023c1eb7de7e21ddaa9dc2d2e46dc36677cb`, identifie les gares routières d'Annemasse, Samoëns et Sixt. Pour le 9 novembre, le moteur retrouve 3 courses théoriques Annemasse–Sixt et 4 dans l'autre sens ; vers Samoëns, 4 et 5 respectivement. Les arrêts de Sixt utilisés diffèrent selon le sens. Cela ne prouve pas la circulation réelle.
+
+Le lecteur limite la référence aux identifiants et coordonnées vérifiés, à la ligne Y02, au profil adulte et aux seules paires Annemasse–Samoëns/Sixt. Après le 6 décembre 2026, il exige une nouvelle vérification : limite de fraîcheur interne, non date d'expiration officielle. Aucun prix total, achat, correspondance ou arrêt intermédiaire n'est automatiquement confirmé.
