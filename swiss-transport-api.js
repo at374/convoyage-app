@@ -34,17 +34,23 @@
       throw new Error('Réseau indisponible');
     }
     const controller = new AbortController();
+    const cancel=()=>controller.abort();
+    if(options.signal?.aborted)throw new DOMException('Recherche suisse annulée','AbortError');
+    options.signal?.addEventListener('abort',cancel,{once:true});
     const timeout = setTimeout(() => controller.abort(), 12000);
     let data;
     try {
       const response = await fetcher(url, {signal:controller.signal, cache:'no-store'});
+      if(controller.signal.aborted)throw new DOMException('Recherche suisse annulée','AbortError');
       if (!response.ok) throw new Error('API suisse indisponible ('+response.status+')');
       data = await response.json();
+      if(controller.signal.aborted)throw new DOMException('Recherche suisse annulée','AbortError');
     } catch (error) {
       diagnostic.status = 'error';
       throw error;
     } finally {
       clearTimeout(timeout);
+      options.signal?.removeEventListener('abort',cancel);
     }
     if(!data || !Array.isArray(data.connections)) {
       diagnostic.status = 'invalid_response';

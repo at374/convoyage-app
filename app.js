@@ -2328,54 +2328,7 @@
         bt.cpRefreshRegional?.();
       });
       // Swiss public transport connections for an accepted mission junction.
-      // Results are advisory until realtime validity and exact walking approaches are checked.
-      if (window.CPSwissTransport && next && deliveryDate && next.pickup_start) {
-        const swissFrom = G.coordonnees(m, 'destination');
-        const swissTo = G.coordonnees(next, 'origin');
-        const nextPickupMs = Date.parse(next.pickup_start);
-        if (transportAddressPoint(swissFrom) && transportAddressPoint(swissTo) &&
-            Number.isFinite(nextPickupMs) && nextPickupMs > Date.parse(deliveryDate)) {
-          const swissStatus = document.createElement('div');
-          swissStatus.className = 'doux';
-          swissStatus.setAttribute('role', 'status');
-          swissStatus.textContent = 'Jonction suisse : recherche des bus, trams et trains…';
-          sourcePanel.appendChild(swissStatus);
-          window.CPSwissTransport.plan({
-            from: {lat:swissFrom.lat, lon:swissFrom.lng},
-            to: {lat:swissTo.lat, lon:swissTo.lng},
-            when: deliveryDate,
-            limit: 6
-          }).then(options => {
-            if (!swissStatus.isConnected) return;
-            const departureMs = Date.parse(deliveryDate);
-            const compatible = options.filter(option => {
-              const start = Date.parse(option.departure);
-              const end = Date.parse(option.arrival);
-              return Number.isFinite(start) && Number.isFinite(end) &&
-                start >= departureMs && end <= nextPickupMs - securityMarginMin * 60000;
-            }).slice(0, 5);
-            const diagnostic = options.diagnostic;
-            const diagnosticLabel = diagnostic && diagnostic.status === 'success' ? ' (API : ' + diagnostic.valid + '/' + diagnostic.received + ' horaires valides)' : '';
-            swissStatus.textContent = compatible.length ?
-              'Jonction suisse : ' + compatible.length +
-              ' proposition(s) indicatives' + diagnosticLabel + '. Prix et circulation non confirmés :' :
-              'Jonction suisse : aucune proposition compatible' + diagnosticLabel + '. Transport non confirmé — vérifiez vous-même.';
-            compatible.forEach(option => {
-              const line = document.createElement('p');
-              const legs = option.sections.map(s => [s.mode === 'WALK' ? '🚶 Marche' : s.mode,s.line,s.from && s.to ? s.from+' → '+s.to : '',s.mode === 'WALK' && Number.isFinite(s.walkSeconds) ? Math.ceil(s.walkSeconds/60)+' min à pied' : ''].filter(Boolean).join(' ')).join(' · ');
-              line.textContent = formatParis(option.departure) + ' → ' +
-                formatParis(option.arrival) + ' · ' + legs +
-                ' · avance avant prochaine mission : ' + Math.max(0,Math.floor((nextPickupMs-Date.parse(option.arrival))/60000)) + ' min (marge de sécurité requise : ' + securityMarginMin + ' min, approche exacte non vérifiée)' +
-                (option.detailsIncomplete ? ' · étapes incomplètes : vérification nécessaire' : '') +
-                ' · tarif non communiqué · Transport non confirmé — vérifiez vous-même.';
-              swissStatus.appendChild(line);
-            });
-          }).catch(() => {
-            if (swissStatus.isConnected) swissStatus.textContent =
-              'Jonction suisse : service indisponible. Transport non confirmé — vérifiez vous-même.';
-          });
-        }
-      }
+      // Swiss searches are registered below with the refreshable regional slots.
       // Regional refresh slots: rerun only the tasks whose precise inputs change.
       const regionalRefreshers = [];
       const regionalActive = () => panel.isConnected && !panel.hidden &&
@@ -2468,65 +2421,55 @@
         }
       }
       });
-      // Swiss API: outbound and return suggestions. Home coordinates may be a city centre.
-      // Only show indicative options; never imply door-to-door or realtime confirmation.
-      if (window.CPSwissTransport) {
-        const homeLat = Number(etat.reglages?.domicile_lat);
-        const homeLon = Number(etat.reglages?.domicile_lng);
-        const homeReady = etat.reglages?.domicile_lat != null &&
-          etat.reglages?.domicile_lng != null &&
-          window.CPSwissTransport.point({lat:homeLat,lon:homeLon});
-        const swissSuggestions = (label, from, to, when, arriveBy, accept) => {
-          const status = document.createElement('div');
-          status.className = 'doux';
-          status.setAttribute('role', 'status');
-          status.textContent = label + ' suisse : recherche des correspondances…';
-          sourcePanel.appendChild(status);
-          window.CPSwissTransport.plan({from,to,when,arriveBy,limit:6})
-            .then(results => {
-              if (!status.isConnected) return;
-              const valid = results.filter(accept).slice(0,5);
-              const diagnostic = results.diagnostic;
-              const diagnosticLabel = diagnostic && diagnostic.status === 'success' ? ' (API : ' + diagnostic.valid + '/' + diagnostic.received + ' horaires valides)' : '';
-              status.textContent = valid.length ?
-                label + ' suisse : ' + valid.length + ' proposition(s) indicatives' + diagnosticLabel + '. Accès aux adresses exactes et temps de marche non vérifiés :' :
-                label + ' suisse : aucun itinéraire compatible' + diagnosticLabel + '. Transport non confirmé — vérifiez vous-même.';
-              valid.forEach(result => {
-                const line = document.createElement('p');
-                const legs = result.sections.map(s =>
-                  [s.mode === 'WALK' ? '🚶 Marche' : s.mode,s.line,s.from && s.to ? s.from+' → '+s.to : '',s.mode === 'WALK' && Number.isFinite(s.walkSeconds) ? Math.ceil(s.walkSeconds/60)+' min à pied' : ''].filter(Boolean).join(' ')).join(' · ');
-                line.textContent = formatParis(result.departure) + ' → ' +
-                  formatParis(result.arrival) + ' · ' + legs +
-                  (label === 'Aller' && Number.isFinite(Date.parse(pickupDate)) ? ' · avance avant prise en charge : ' + Math.max(0,Math.floor((Date.parse(pickupDate)-Date.parse(result.arrival))/60000)) + ' min (marge de sécurité requise : ' + securityMarginMin + ' min)' : '') +
-                  (result.detailsIncomplete ? ' · étapes incomplètes : vérification nécessaire' : '') +
-                  ' · tarif non communiqué · Transport non confirmé — vérifiez vous-même.';
-                status.appendChild(line);
-              });
-            }).catch(() => {
-              if (status.isConnected) status.textContent =
-                label + ' suisse : service indisponible. Transport non confirmé — vérifiez vous-même.';
-            });
+      // Swiss API: outbound, return and junction suggestions.
+      // Re-run when exact points change and ignore responses from replaced slots.
+      if (window.CPSwissTransport && typeof window.CPSwissTransport.plan === 'function') {
+        const swissInputs = direction => {
+          const home=regionalHome(), origin=regionalPoint(G.coordonnees(m,'origin')),
+            finish=regionalPoint(G.coordonnees(m,'destination')),
+            nextOrigin=regionalPoint(next && G.coordonnees(next,'origin'));
+          if (direction==='Aller') return {from:home,to:origin,when:pickupDate,arriveBy:true};
+          if (direction==='Retour') return {from:finish,to:home,when:deliveryDate,arriveBy:false};
+          return {from:finish,to:nextOrigin,when:deliveryDate,arriveBy:false,deadline:next?.pickup_start};
         };
-        if (homeReady && pickupDate && Number.isFinite(Date.parse(pickupDate))) {
-          const pickupGps = G.coordonnees(m,'origin');
-          if (transportAddressPoint(pickupGps)) {
-            const limit = Date.parse(pickupDate) - securityMarginMin * 60000;
-            swissSuggestions('Aller',{lat:homeLat,lon:homeLon},
-              {lat:pickupGps.lat,lon:pickupGps.lng},new Date(limit).toISOString(),true,
-              r => Number.isFinite(Date.parse(r.departure)) &&
-                Number.isFinite(Date.parse(r.arrival)) && Date.parse(r.arrival)<=limit);
-          }
-        }
-        if (homeReady && deliveryDate && Number.isFinite(Date.parse(deliveryDate))) {
-          const finishGps = G.coordonnees(m,'destination');
-          if (transportAddressPoint(finishGps)) {
-            const earliest = Date.parse(deliveryDate);
-            swissSuggestions('Retour',{lat:finishGps.lat,lon:finishGps.lng},
-              {lat:homeLat,lon:homeLon},deliveryDate,false,
-              r => Number.isFinite(Date.parse(r.departure)) &&
-                Number.isFinite(Date.parse(r.arrival)) && Date.parse(r.departure)>=earliest);
-          }
-        }
+        const swissSearch = direction => regionalSlot(direction,()=>{
+          const v=swissInputs(direction);
+          return [v.from,v.to,v.when,v.deadline,v.arriveBy,securityMarginMin];
+        },(host,signal)=>{
+          const {from,to,when,deadline,arriveBy}=swissInputs(direction);
+          const at=Date.parse(when), end=deadline==null?null:Date.parse(deadline);
+          if(!from||!to||!Number.isFinite(at)||(direction==='Jonction'&&(!Number.isFinite(end)||end<=at)))return;
+          const limit=arriveBy?at-securityMarginMin*60000:null;
+          const requestWhen=arriveBy?new Date(limit).toISOString():when;
+          const status=document.createElement('div');status.className='doux';status.setAttribute('role','status');
+          status.textContent=direction+' suisse : recherche des bus, trams et trains…';host.appendChild(status);
+          window.CPSwissTransport.plan({from,to,when:requestWhen,arriveBy,limit:16,signal}).then(results=>{
+            if(!regionalActive()||signal.aborted||!status.isConnected)return;
+            const valid=results.filter(result=>{
+              const start=Date.parse(result.departure),arrival=Date.parse(result.arrival);
+              return Number.isFinite(start)&&Number.isFinite(arrival)&&
+                (arriveBy?arrival<=limit:start>=at)&&
+                (direction!=='Jonction'||arrival<=end-securityMarginMin*60000);
+            });
+            status.textContent=valid.length?
+              direction+' suisse : '+valid.length+' proposition(s) indicatives, prix et circulation non confirmés :':
+              direction+' suisse : aucune proposition compatible parmi les résultats reçus. D’autres trajets peuvent exister ; transport non confirmé.';
+            valid.forEach(result=>{
+              const line=document.createElement('p');
+              const legs=result.sections.map(s=>[s.mode==='WALK'?'🚶 Marche':s.mode,s.line,
+                s.from&&s.to?s.from+' → '+s.to:'',s.mode==='WALK'&&Number.isFinite(s.walkSeconds)?Math.ceil(s.walkSeconds/60)+' min à pied':''].filter(Boolean).join(' ')).join(' · ');
+              line.textContent=formatParis(result.departure)+' → '+formatParis(result.arrival)+' · '+legs+
+                (result.detailsIncomplete?' · étapes incomplètes : vérification nécessaire':'')+
+                ' · accès exact, tarif et circulation à vérifier · Transport non confirmé.';
+              status.appendChild(line);
+            });
+          }).catch(()=>{
+            if(regionalActive()&&!signal.aborted&&status.isConnected)status.textContent=direction+' suisse : service indisponible. Transport non confirmé — vérifiez vous-même.';
+          });
+        });
+        if(pickupDate)swissSearch('Aller');
+        if(deliveryDate)swissSearch('Retour');
+        if(next&&deliveryDate&&next.pickup_start)swissSearch('Jonction');
       }
       // SNCF station-only fallback runs independently of public routing API availability.
       // Only dated public files are fetched: addresses/GPS stay in this browser.
