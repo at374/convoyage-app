@@ -2467,7 +2467,7 @@
                 (direction!=='Jonction'||arrival<=end-securityMarginMin*60000);
             });
             status.textContent=valid.length?
-              direction+' suisse : '+valid.length+' proposition(s) indicatives, prix et circulation non confirmés :':
+              direction+' suisse : '+valid.length+' proposition(s) indicatives'+(valid.some(result=>result.nearestStopFallback)?' entre arrêts proches, marche non vérifiée':'')+', prix et circulation non confirmés :':
               direction+' suisse : aucune proposition compatible parmi les résultats reçus. D’autres trajets peuvent exister ; transport non confirmé.';
             if(valid.length&&window.CPTransportAdapters?.adaptSwiss&&window.CPTransportRanking){
               const choices=window.CPTransportRanking.rank(window.CPTransportAdapters.adaptSwiss(valid),{

@@ -1,0 +1,9 @@
+# Ligne 271 : vérification du calculateur suisse le 7 novembre 2026
+
+L'opérateur [TPG](https://www.tpg.ch/fr/ligne-271) décrit la ligne 271 Thonon / Excenevex–Genève et publie sa grille tarifaire jusqu'au 12 décembre 2026. L'[API transport.opendata.ch](https://transport.opendata.ch/docs.html) est un calculateur tiers non officiel, déjà utilisé dans l'application ; elle accepte coordonnées et identifiants d'arrêt, sans fournir ici de prix vérifié.
+
+Essai réel le 7 novembre 2026 : recherche depuis les coordonnées de Thonon-les-Bains, Les Arts (46.368608, 6.479809) vers Genève, Rive (46.201862, 6.152813), le 9 novembre à 08 h heure locale. La requête directe par coordonnées ne retourne aucune proposition ; avec les identifiants d'arrêts voisins 1402653 et 8587061, le service renvoie notamment la ligne 271. Après correction, le même adaptateur reçoit 16 propositions, dont 5 contenant la 271 ; première 271 08 h 25–09 h 25. C'est un horaire théorique trouvé lors de cet essai, pas une confirmation de circulation ou de prix.
+
+Le secours ne s'exécute qu'après une réponse valide vide et pour deux coordonnées, avec deux arrêts numériques distants d'au plus 500 m à vol d'oiseau, calculés depuis leurs coordonnées ; une erreur ou un arrêt trop éloigné conserve l'absence de proposition. L'interface signale les arrêts proches et la marche non vérifiée. La durée maximale totale du fournisseur passe de 12 à 25 secondes pour permettre les trois étapes, avec annulation possible. La recherche reste limitée au nombre demandé et ne démontre pas l'exhaustivité.
+
+Aucune grille tarifaire n'est injectée dans les résultats de ce fournisseur ; le prix reste inconnu. Le trajet à pied et les correspondances ne sont pas déclarés réalisables. Aucun achat, déploiement ou modification des missions, de l'authentification ou de Supabase.
