@@ -8,6 +8,12 @@ function createCalculator(data){
  const source=JSON.parse(JSON.stringify(data));
  const y62Stops=new Map([
   ['FR:74010:ZE:57539:HAUTExSAVOIE',[45.9016985,6.1201612,'Annecy']],
+  ['FR:74280:ZE:57726:HAUTExSAVOIE',[45.8829602,6.3239672,'Thônes']],
+  ['FR:74280:ZE:92692:HAUTExSAVOIE',[45.8830315,6.3237866,'Thônes']],
+  ['FR:74239:ZE:57771:HAUTExSAVOIE',[45.9224885,6.4099568,'Saint-Jean-de-Sixt']],
+  ['FR:74239:ZE:57772:HAUTExSAVOIE',[45.9226142,6.4110797,'Saint-Jean-de-Sixt']],
+  ['FR:74239:ZE:92691:HAUTExSAVOIE',[45.9230136,6.4103621,'Saint-Jean-de-Sixt']],
+  ['FR:74136:ZE:57773:HAUTExSAVOIE',[45.9416443,6.4287024,'Le Grand-Bornand']],
   ['FR:74080:ZE:57774:HAUTExSAVOIE',[45.9067032,6.4191339,'La Clusaz']]
  ]);
  const sector=stop=>{

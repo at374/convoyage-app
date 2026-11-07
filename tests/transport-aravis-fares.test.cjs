@@ -18,6 +18,18 @@ test('verified Y62 terminal stops map to the published zone without confirming t
  assert.equal(calculator.stopReference({...query,fromStop:toStop,toStop:fromStop}).amount,8.9);
  for(const update of [{line:'Y63'},{networkId:'other'},{fromStop:{...fromStop,lat:46}},{toStop:{...toStop,id:'other'}},{travelDate:'2026-11-06'},{travelDate:'2026-11-31'}])assert.equal(calculator.stopReference({...query,...update}),null);
 });
+test('verified Y62 intermediate stops use their own sector, not the terminal fare',()=>{
+ const annecy={id:'FR:74010:ZE:57539:HAUTExSAVOIE',lat:45.9016985,lon:6.1201612};
+ const thones={id:'FR:74280:ZE:57726:HAUTExSAVOIE',lat:45.8829602,lon:6.3239672};
+ const saintJean={id:'FR:74239:ZE:57772:HAUTExSAVOIE',lat:45.9226142,lon:6.4110797};
+ const bornand={id:'FR:74136:ZE:57773:HAUTExSAVOIE',lat:45.9416443,lon:6.4287024};
+ const query={networkId:'oura-haute-savoie',line:'Y62',fromStop:annecy,toStop:thones,travelDate:'2026-11-09'};
+ assert.equal(calculator.stopReference(query).amount,4);
+ assert.equal(calculator.stopReference({...query,toStop:saintJean}).amount,6.6);
+ assert.equal(calculator.stopReference({...query,toStop:bornand}).amount,8.9);
+ assert.equal(calculator.stopReference({...query,fromStop:thones,toStop:bornand}).amount,1.7);
+ assert.equal(calculator.stopReference({...query,toStop:{...thones,lat:thones.lat+0.01}}),null);
+});
 test('visually checked endpoint cells produce distinct official area references',()=>{
  for(const line of ['Y62','Y63']){
   const ref=calculator.reference({line,fromArea:'Annecy',toArea:'La Clusaz'});
