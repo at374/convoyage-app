@@ -15,6 +15,18 @@ class Element{
 function panel(){const doc={createElement(){return new Element(doc);}};doc.documentElement=new Element(doc);return new Element(doc);}
 function deferred(){let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};}
 const summary={source:{loadedAt:'2026-10-30T16:00:00Z'},counts:{stops:1641}};
+test('Y21 matched stops show the official reference without certifying service',async()=>{
+ global.CPY21Fares=require('../transport-y21-fares.js');
+ try{
+  const target=panel(),mission={label:'Retour',from:{lat:45.9017,lon:6.1201},to:{lat:45.9578,lon:5.8369},earliestDeparture:'2026-11-09T17:00:00+01:00'};
+  const direct=row({networkId:'oura-haute-savoie',line:'Y21',departure:'2026-11-09T18:25:00+01:00',arrival:'2026-11-09T19:40:00+01:00',
+   originStop:{stopId:'FR:74010:ZE:57539:HAUTExSAVOIE',name:'Annecy',lat:45.9016985,lon:6.1201612},
+   destinationStop:{stopId:'FR:74269:ZE:57777:HAUTExSAVOIE',name:'Seyssel Petit Nice',lat:45.9578116,lon:5.8369357}});
+  await agenda.mount(target,{tasks:[mission],resources:[agenda.DEFAULT_RESOURCES[0]],clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[direct]}),dispose(){}})}).done;
+  assert.match(target.textContent,/Référence car Y21 adulte : 4,00 €/);assert.match(target.textContent,/Prix, date et titre à confirmer/);
+  assert.match(target.textContent,/Transport non confirmé/);assert.doesNotMatch(target.textContent,/Réalisable/);
+ }finally{delete global.CPY21Fares;}
+});
 test('Y62 terminal fare reference is visible but does not confirm the journey or total',async()=>{
  global.CPAravisFares=require('../transport-aravis-fares.js');
  global.CPAravisFareData=require('../data/transport/aravis-fare-reference-2026.json');
