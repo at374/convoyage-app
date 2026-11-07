@@ -35,6 +35,20 @@ test('mixed and overnight journeys keep unknown totals and account for each port
  assert.equal(pass.describe(pass.assess(leg,null)),'');
 });
 
+test('SIBRA pass never makes cross-border coaches 271, 272 or 274 free in a mixed journey',()=>{
+ // Léman Pass FAQ: these coaches require their own journey ticket and coach
+ // tickets cannot be exchanged for rail tickets: https://www.lemanpass.com/faq/
+ for(const line of ['271','272','274']){
+  for(const networkId of ['oura-haute-savoie','pays-gex-tpg',pass.DATASET]){
+   const result=pass.assess({legs:[leg,{...leg,networkId,line}]},subscription);
+   assert.equal(result.coveredLegs,1);
+   assert.equal(result.breakdown[1].covered,false);
+   assert.equal(result.additionalEUR,null);
+   assert.match(pass.describe(result),/total du trajet inconnu/);
+  }
+ }
+});
+
 const regional=require('./fixtures/y51-sibra-scope-2026-10-31.json');
 function regionalLeg(stops=regional.eligibleStops){
  const leg={networkId:regional.networkId,line:'Y51',tripId:'recorded-stop-scope-example',
