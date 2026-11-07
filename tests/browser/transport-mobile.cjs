@@ -59,7 +59,7 @@ async function run(){
  await fs.mkdir(output,{recursive:true});
  const zip=archive(),sibraZip=archive('4'),regionalZip=archive('Y51',true),regionalFareZip=archive('Y51','full'),errors=[],requests=[],gates=new Map(),workers=[],blockedWrites=[],regionalGates=[],activeWorkers=new Set(),abortedRequests=[];
  const sibraGates=[];let holdSibra=false;
- let holdRegional=false,railScenario=false,tripgoScenario=false,busLiveScenario=false,regionalPassScenario=false,regionalFareScenario=false;
+ let holdRegional=false,railScenario=false,tripgoScenario=false,busLiveScenario=false,regionalPassScenario=false,regionalFareScenario=false,swissScenario=false;
  const until=async(predicate,message)=>{const end=Date.now()+10000;while(!predicate()){if(Date.now()>end)throw Error(message);await new Promise(resolve=>setTimeout(resolve,20));}};
  const server=http.createServer(async(req,res)=>{
   try{
@@ -87,6 +87,7 @@ async function run(){
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--no-sandbox']});
   context=await browser.newContext({...devices['Pixel 7'],locale:'fr-FR',timezoneId:'Europe/Paris',serviceWorkers:'block'});
   await context.addInitScript(({missions,settings,origin,relayURL})=>{
+   if(new URL(location.href).searchParams.has('swiss'))localStorage.removeItem('cp_gps');
    if(new URL(location.href).searchParams.has('buslive'))window.CP_BLABLACAR_REALTIME_URL=relayURL;
    // An invalid optional relay must never block SNCF or the other engines.
    if(new URL(location.href).searchParams.has('rail'))window.CP_BLABLACAR_REALTIME_URL='http://external.invalid/transport-realtime/blablacar';
@@ -178,7 +179,15 @@ async function run(){
     return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Outside recorded test query'});
    }
    if(url.hostname==='tile.openstreetmap.org')return route.fulfill({status:503,body:'Map tiles unavailable in isolated browser test'});
-   if(url.hostname==='transport.opendata.ch')return json(route,{connections:[]});
+   if(url.hostname==='transport.opendata.ch'){
+    if(!swissScenario)return json(route,{connections:[]});
+    // Synthetic coordinates and timetable exercise only rendering and safety labels.
+    return json(route,{connections:[{from:{departure:'2026-11-02T10:10:00+01:00'},to:{arrival:'2026-11-02T10:35:00+01:00'},sections:[{
+     journey:{category:'BUS',number:'64'},
+     departure:{departure:'2026-11-02T10:10:00+01:00',station:{name:'Arrêt suisse fictif A',coordinate:{type:'WGS84',x:46.2,y:6.14}}},
+     arrival:{arrival:'2026-11-02T10:35:00+01:00',station:{name:'Arrêt suisse fictif B',coordinate:{type:'WGS84',x:46.23,y:6.06}}}
+    }]}]});
+   }
    if(/valhalla/.test(url.hostname))return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Unavailable in deterministic browser test'});
    return json(route,{features:[],results:[]});
   });
@@ -336,6 +345,25 @@ async function run(){
   await (await lateSibra).finished();
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   assert.equal(await page.locator('#cpTransportMissionDetails').textContent(),pendingText,'Late responses cannot rewrite a closed panel');
+  // A synthetic Swiss response exercises the actual Pixel-sized comparison map.
+  holdRegional=false;swissScenario=true;
+  await page.goto(origin+'?swiss=1',{waitUntil:'domcontentloaded'});
+  await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();
+  await release('14');
+  const swissSection=page.getByRole('heading',{name:'Retour suisse · comparer',exact:true}).locator('..');
+  await swissSection.waitFor();
+  const swissCard=swissSection.locator('details:has(> .cp-transport-viewer)').first();
+  await swissCard.locator('summary').click();
+  await swissCard.locator('.cp-transport-map-marker').first().waitFor();
+  assert.ok(await swissCard.locator('.cp-transport-map-marker').count()>=2,'Swiss stop coordinates reach the map');
+  assert.match(await swissCard.innerText(),/Prix incomplet/);assert.match(await swissCard.innerText(),/Transport non confirmé/);
+  assert.doesNotMatch(await swissCard.innerText(),/Réalisable/);
+  await swissCard.getByRole('tab',{name:'Étapes',exact:true}).click();
+  assert.match(await swissCard.innerText(),/Arrêt suisse fictif A/);assert.match(await swissCard.innerText(),/Arrêt suisse fictif B/);
+  assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'Swiss card fits mobile width');
+  await swissCard.screenshot({path:path.join(output,'mobile-swiss-map.png')});
+  await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'Swiss scenario worker must stop on close');
+  swissScenario=false;
   // Second mission scenario replays a recorded subset of the published SNCF files.
   // No external routing response substitutes for its station search.
   holdRegional=false;railScenario=true;
