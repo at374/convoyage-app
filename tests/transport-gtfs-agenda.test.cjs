@@ -15,6 +15,19 @@ class Element{
 function panel(){const doc={createElement(){return new Element(doc);}};doc.documentElement=new Element(doc);return new Element(doc);}
 function deferred(){let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};}
 const summary={source:{loadedAt:'2026-10-30T16:00:00Z'},counts:{stops:1641}};
+test('272 official reference reaches direct GTFS results without becoming a confirmed fare',async()=>{
+ global.CP272Fares=require('../transport-272-fares.js');
+ try{
+  const target=panel(),mission={label:'Retour',from:{lat:45.9017,lon:6.1201},to:{lat:46.231,lon:6.1097},earliestDeparture:'2026-11-09T09:00:00+01:00'};
+  const direct=row({networkId:'oura-haute-savoie',line:'272',departure:'2026-11-09T10:00:00+01:00',arrival:'2026-11-09T11:30:00+01:00',
+   originStop:{stopId:'FR:74010:ZE:57539:HAUTExSAVOIE',name:'Gare Routière',lat:45.9016985,lon:6.1201612},
+   destinationStop:{stopId:'FR:6623:ZE:57862:HAUTExSAVOIE',name:'Aéroport',lat:46.230964,lon:6.1096781}});
+  await agenda.mount(target,{tasks:[mission],resources:[agenda.DEFAULT_RESOURCES[0]],clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[direct]}),dispose(){}})}).done;
+  assert.match(target.textContent,/Référence car 272 adulte : 11,30 €/);
+  assert.match(target.textContent,/Prix et titre à confirmer/);assert.match(target.textContent,/Transport non confirmé/);
+  assert.doesNotMatch(target.textContent,/Réalisable/);
+ }finally{delete global.CP272Fares;}
+});
 function row(extra={}){return {tripId:'T',from:'A',to:'B',line:'Y51',timeZone:'Europe/Paris',
  departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T12:00:00Z',
  originStop:{name:'École <script>',lat:45.67,lon:6.39},destinationStop:{name:'Annecy',lat:45.9,lon:6.1},accessDistanceMeters:10,egressDistanceMeters:20,...extra};}
