@@ -45,3 +45,22 @@ test('official tariff sectors 1–4 only match pinned stops and distinguish zone
  assert.equal(fares.stopReference({...request,fromStop:{id:'FR:74197:ZE:58716:HAUTExSAVOIE',lat:46.1423557,lon:6.3179182}}),null);
  assert.equal(fares.reference({line:'274',fromSector:'__proto__',toSector:'Genève',travelDate:'2026-11-09',product:'parcours',profile:'adult'}),null);
 });
+test('Findrol uses the multizone ticket rather than a Parcours ticket',()=>{
+ const findrol={id:'FR:74197:ZE:58716:HAUTExSAVOIE',lat:46.1423557,lon:6.3179182};
+ const input={...request,fromStop:findrol};
+ assert.equal(fares.stopReference(input),null);
+ assert.equal(fares.stopReference({...input,product:'parcours_zone10'}),null);
+ const ref=fares.stopReference({...input,product:'multizones_10_210'});
+ assert.equal(ref.amount,4.9);assert.equal(ref.zone,'10+210');assert.equal(ref.fareVerified,false);assert.equal(ref.serviceConfirmed,false);
+ assert.equal(fares.stopReference({...input,product:'multizones_10_210',travelDate:'2026-12-13'}),null);
+ assert.equal(fares.stopReference({...request,product:'multizones_10_210'}),null);
+ global.CP274Fares=fares;
+ try{
+  const stop=s=>({stopId:s.id,lat:s.lat,lon:s.lon});
+  const row={networkId:'oura-haute-savoie',line:'274',departure:'2026-11-09T11:00:00+01:00',originStop:stop(findrol),destinationStop:stop(toStop)};
+  const card=require('../transport-direct-fare-reference.js').reference(row);
+  assert.equal(card.amount,4.9);assert.equal(card.product,'multizones_10_210');assert.equal(card.fareVerified,false);
+  assert.equal(require('../transport-direct-fare-reference.js').reference({...row,line:'272'}),null);
+  assert.equal(require('../transport-direct-fare-reference.js').reference({...row,legs:[{},{}]}),null);
+ }finally{delete global.CP274Fares;}
+});

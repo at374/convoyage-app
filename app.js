@@ -1884,7 +1884,7 @@
           if(journey.directFareReference){
             const fare=journey.directFareReference,reference=document.createElement('small');reference.style.display='block';reference.setAttribute('data-direct-fare-reference','');
             const digital=Number.isFinite(fare.digitalAlternativeEUR)?' à bord / '+fare.digitalAlternativeEUR.toFixed(2).replace('.',',')+' € en numérique (support éventuel en supplément)':'';
-            reference.textContent='Référence '+fare.line+' adulte : '+fare.amount.toFixed(2).replace('.',',')+' €'+digital+(['272','274'].includes(fare.line)?' · sans déplacements supplémentaires en zone 10':'')+' · hors abonnement ; prix, date et titre à confirmer ; correspondances non comprises.';summary.appendChild(reference);
+            reference.textContent='Référence '+fare.line+' adulte : '+fare.amount.toFixed(2).replace('.',',')+' €'+digital+(fare.product==='multizones_10_210'?' · multizones 10 et 210':(['272','274'].includes(fare.line)?' · sans déplacements supplémentaires en zone 10':''))+(fare.product==='multizones_10_210'?' · hors abonnement ; prix, titre et conditions de correspondance à confirmer.':' · hors abonnement ; prix, date et titre à confirmer ; correspondances non comprises.');summary.appendChild(reference);
             const source=document.createElement('a');source.href=fare.source;source.target='_blank';source.rel='noopener noreferrer';source.textContent='Voir le barème officiel';detailSources.push(source);
           }
           if(journey.sibraPassReference?.coveredLegs&&window.CPSibraPass){

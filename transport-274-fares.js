@@ -4,6 +4,7 @@
 const SOURCE='https://jacquet-autocars.com/wp-content/uploads/2026/01/Grille-tarifaire-TRANSFRONTALIERS-2025-2026.pdf';
 const TO='Genève';
 const AMOUNTS=Object.freeze({
+ 'Nangy Findrol':{zone:'10+210',multizones_10_210:4.90},
  Fillinges:{zone:'1',parcours:4.60,parcours_zone10:4.90},
  'Saint-Jeoire / Ville-en-Sallaz / Viuz-en-Sallaz':{zone:'2',parcours:6.00,parcours_zone10:6.40},
  Bonneville:{zone:'3',parcours:6.40,parcours_zone10:8.10},
@@ -13,6 +14,7 @@ const AMOUNTS=Object.freeze({
 // Exact IDs and coordinates from the official Haute-Savoie GTFS checked on
 // 2026-11-07; IDs alone are not enough to identify a stop in another feed.
 const STOPS=new Map([
+ ['FR:74197:ZE:58716:HAUTExSAVOIE',[46.1423557,6.3179182,'Nangy Findrol']],
  ['FR:74128:ZE:75337:HAUTExSAVOIE',[46.1634053,6.3531174,'Fillinges']],
  ['FR:74241:ZE:57653:HAUTExSAVOIE',[46.1362776,6.4777986,'Saint-Jeoire / Ville-en-Sallaz / Viuz-en-Sallaz']],
  ['FR:74241:ZE:57654:HAUTExSAVOIE',[46.1361914,6.4777291,'Saint-Jeoire / Ville-en-Sallaz / Viuz-en-Sallaz']],
@@ -43,9 +45,9 @@ function stopSector(stop){
  return metres<=50?pin[2]:null;
 }
 function reference({line,fromSector,toSector,travelDate,product,profile}={}){
- if(line!=='274'||profile!=='adult'||!['parcours','parcours_zone10'].includes(product))return null;
+ if(line!=='274'||profile!=='adult'||!['parcours','parcours_zone10','multizones_10_210'].includes(product))return null;
  const sector=toSector===TO?fromSector:fromSector===TO?toSector:null;
- if(!sector||!Object.hasOwn(AMOUNTS,sector))return null;
+ if(!sector||!Object.hasOwn(AMOUNTS,sector)||!Object.hasOwn(AMOUNTS[sector],product))return null;
  if(typeof travelDate!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(travelDate))return null;
  const ms=Date.parse(travelDate+'T12:00:00Z');
  if(!Number.isFinite(ms)||new Date(ms).toISOString().slice(0,10)!==travelDate||travelDate<'2026-11-07'||travelDate>'2026-12-12')return null;
