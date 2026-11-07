@@ -1881,6 +1881,14 @@
               detailSources.push(source);
             }
           }
+          if(journey.auraUrbanFareReference&&window.CPAuraUrbanFares){
+            const reference=document.createElement('small');reference.style.display='block';reference.setAttribute('data-aura-urban-fare-reference','');
+            reference.textContent=window.CPAuraUrbanFares.describe(journey.auraUrbanFareReference);summary.appendChild(reference);
+            for(const url of new Set(journey.auraUrbanFareReference.portions.filter(Boolean).map(p=>p.source))){
+              const source=document.createElement('a');source.href=url;source.target='_blank';source.rel='noopener noreferrer';source.textContent='Voir le barème officiel';
+              detailSources.push(source);
+            }
+          }
           card.appendChild(summary);
           const detail = document.createElement('div');
           for(const source of detailSources)detail.appendChild(source);
@@ -2261,7 +2269,10 @@
         if(!itineraries.length){host.textContent='Pas d’horaire local compatible dans les données consultées.';return;}
         const rows=itineraries.map(row=>({...row,legs:Array.isArray(row.legs)&&row.legs.length?row.legs:[{line:row.line,from:row.originStop?.name||row.from,to:row.destinationStop?.name||row.to,fromPoint:row.originStop,toPoint:row.destinationStop,departure:row.departure,arrival:row.arrival}]}));
         const normalized=window.CPTransportAdapters?.adaptGTFS(rows,'Réseau local')||[];
-        normalized.forEach((journey,index)=>{journey.carsRegionReference=window.CPCarsRegionFares?.reference(itineraries[index])||null;});
+        normalized.forEach((journey,index)=>{
+          journey.carsRegionReference=window.CPCarsRegionFares?.reference(itineraries[index])||null;
+          journey.auraUrbanFareReference=window.CPAuraUrbanFares?.reference(itineraries[index])||null;
+        });
         const ranked=window.CPTransportRanking?.rank(normalized,{includeAlternatives:true,direction:task.label==='Retour'?'return':'outbound',deadline:task.latestArrival,earliestDeparture:task.earliestDeparture,marginMinutes:15})||[];
         showRegionalChoices(host,ranked,task.label+' · horaires locaux');
       };

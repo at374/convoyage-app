@@ -11,6 +11,8 @@ test('AURA urban unit references stay informational and network-scoped',()=>{
  assert.deepEqual(result.portions.filter(Boolean).map(x=>x.amountEUR),[1.4,1.6,1.6]);
  assert.ok(result.portions.filter(Boolean).every(x=>x.fareVerified===false&&x.transferEligibilityVerified===false));
  assert.match(fares.describe(result),/Total non calculé/);
+ assert.match(fares.describe(result),/carte bancaire \(tram et lignes Métropoles/);
+ assert.match(fares.describe(result),/support éventuel en supplément/);
 });
 test('Unknown or malformed legs never create a fare reference',()=>{
  assert.equal(fares.reference({networkId:'5bae8c2806e3e75b699dc606',departure:'bad'}),null);
