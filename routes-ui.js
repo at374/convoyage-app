@@ -235,7 +235,24 @@
   // grille tarifaire officielle ALICORNE 2026 reçue ne mentionne pas Rônai (seulement les 7 gares d'échangeur
   // Falaise Ouest/Falaise sud/Nécy/Argentan ouest/Argentan sud/Mortrée/Sées), donc aucun tarif n'est inventé pour
   // cette barrière distincte (à 0,9-1,3 km de Nécy, donc pas un doublon).
-  const UNK = [[43.6028,7.07258],[43.60465,7.06636],[43.60277,7.08123],[43.60452,7.08785],[43.64326,7.13402],[43.64796,7.13896],[43.65913,7.14893],[43.70388,7.19007],[43.70015,7.18812],[43.55322,5.23792],[43.49458,5.52498],[43.22574,5.58217],[43.2019,5.59417],[45.95485,-0.88122],[45.15248,1.37792],[45.15157,1.16683],[45.148,1.17478],[43.64504,1.49789],[47.45215,0.73944],[47.34919,0.70312],[47.33062,0.68813],[47.25442,0.67097],[47.55526,0.596],[43.63298,-1.39072],[43.63007,-1.39572],[43.46217,-1.49839],[43.46097,-1.50276],[43.37197,-1.67746],[43.51232,-1.22256],[48.94757,3.04036],[48.95228,3.03819],[48.91236,2.04593],[43.54423,6.80993],[43.14434,5.76838],[43.29347,6.20051],[43.48329,5.53837],[43.70774,7.19122],[48.54645,1.91114],[48.91342,2.16271],[48.91354,2.15809],[49.05393,4.28593],[49.32195,0.30849],[43.20492,5.59053],[43.14625,5.77192],[43.32435,5.59803],[43.25774,6.12279],[43.62419,-1.40083],[43.34138,-1.74961],[43.50524,1.35211],[43.64715,1.50769],[48.78189,2.15976],[48.8301,2.1485],[48.8714,2.15683],[43.36688,5.64373],[50.72292,2.16534],[50.7231,2.16714],[45.21646,6.46587],[47.98195,0.05435],[48.98384,1.68125],[49.23071,-0.07124],[48.8162,-0.12907],[48.81622,-0.12936]];
+  // Nettoyage du 7 nov. 2026 (cf. tests/peages-unk-nettoyage-points-resolus.test.cjs) : 34 des 62 coordonnées
+  // UNK ci-dessous correspondaient en réalité à des gares DEJA résolues (GPS + tarif(s) officiels ajoutés lors de
+  // sessions antérieures ou de cette session même — Antibes, Cagnes-est, Cagnes-ouest, Nice St-Isidore, Cassis,
+  // La Ciotat, Cannet-de-Meyreuil, COUDOUX, AIX-EN-PROVENCE, PUGET-VILLE, Carnoules, BANDOL, TOULOUSE-SUD/OUEST,
+  // TONNAY-CHARENTE, CAPBRETON, BAYONNE NORD, BENESSE, BIRIATOU, Mansac Terrasson, Thenon Est, La Bachellerie,
+  // ST-JEAN-LES-DEUX-JUMEAUX, Les Adrets, AURIOL, et les 5 barrières "système ouvert" Cofiroute Tours-Chambray-
+  // Joué-lès-Tours-Monts-Sorigny-Neuillé-Pont-Pierre, sapn-chambourcy) : la source d'origine de ces 62 points
+  // (audit data.gouv.fr du 5 nov. 2026, cf. commentaire ci-dessus) avait figé une photo à un instant T, mais le
+  // tableau n'avait jamais été remis à jour au fur et à mesure que ces gares étaient résolues par la suite — un
+  // bug silencieux : UNK bloque INCONDITIONNELLEMENT tout calcul de prix (V265, prixExact()) dès qu'un trajet
+  // passe à moins de 0,5 km de l'une de ces coordonnées, même quand un tarif officiel existe désormais pour ce
+  // point précis. Chaque coordonnée retirée a été vérifiée à moins de 0,15 km (très en dessous du seuil de
+  // fusion jumelle 0,06 km pour la plupart, le reste restant largement en dessous du seuil barrière 0,3 km) du
+  // point résolu correspondant, ET ce point possède au moins 1 relation tarifaire officielle déjà en base (1 à
+  // 49 selon les cas) — jamais une estimation : seules des coordonnées réellement identiques au point déjà
+  // prouvé ont été retirées. Les 28 coordonnées restantes n'ont aucune correspondance à moins de 0,2 km (plus
+  // proche résidu : 0,207 km, un point clairement distinct) et restent donc des angles morts réels.
+  const UNK = [[43.60465,7.06636],[43.60277,7.08123],[43.64504,1.49789],[43.63298,-1.39072],[43.46097,-1.50276],[43.37197,-1.67746],[43.51232,-1.22256],[48.94757,3.04036],[43.14434,5.76838],[48.54645,1.91114],[48.91342,2.16271],[48.91354,2.15809],[49.05393,4.28593],[49.32195,0.30849],[43.20492,5.59053],[43.32435,5.59803],[43.64715,1.50769],[48.78189,2.15976],[48.8301,2.1485],[48.8714,2.15683],[50.72292,2.16534],[50.7231,2.16714],[45.21646,6.46587],[47.98195,0.05435],[48.98384,1.68125],[49.23071,-0.07124],[48.8162,-0.12907],[48.81622,-0.12936]];
   let WK = null, WKID = 0; const WKATT = new Map();
   const CODE_WORKER = () => 'const UNK=' + JSON.stringify(UNK) + ';const dist=' + dist + ';const joli=' + joli + ';const gareProche=' + gareProche + ';const prixExact=' + prixExact + ';const garesTraversees=' + garesTraversees + ';' +
     'let P=null;const charger=async base=>{const j=await (await fetch(base+"peages-aprr.json")).json();const prix=new Map();for(const s of j.p.split(";")){const [a,b,c1,c2,d]=s.split(",");const x=parseInt(a,36),y=parseInt(b,36);prix.set(Math.min(x,y)*1000+Math.max(x,y),[c1/10,c2/10,Number(d)]);}' +
