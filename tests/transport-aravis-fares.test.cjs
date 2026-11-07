@@ -16,7 +16,9 @@ test('verified Y62 terminal stops map to the published zone without confirming t
  assert.equal(result.amount,8.9);assert.equal(result.stopMappingVerified,true);
  assert.equal(result.fareVerified,false);assert.equal(result.travelDateValidityKnown,false);assert.equal(result.serviceConfirmed,false);
  assert.equal(calculator.stopReference({...query,fromStop:toStop,toStop:fromStop}).amount,8.9);
- for(const update of [{line:'Y63'},{networkId:'other'},{fromStop:{...fromStop,lat:46}},{toStop:{...toStop,id:'other'}},{travelDate:'2026-11-06'},{travelDate:'2026-11-31'}])assert.equal(calculator.stopReference({...query,...update}),null);
+ assert.equal(calculator.stopReference({...query,line:'Y63'}).amount,8.9);
+ assert.equal(calculator.stopReference({...query,line:'Y63'}).source,data.lines.Y63.source);
+ for(const update of [{line:'Y51'},{networkId:'other'},{fromStop:{...fromStop,lat:46}},{toStop:{...toStop,id:'other'}},{travelDate:'2026-11-06'},{travelDate:'2026-11-31'}])assert.equal(calculator.stopReference({...query,...update}),null);
 });
 test('verified Y62 intermediate stops use their own sector, not the terminal fare',()=>{
  const annecy={id:'FR:74010:ZE:57539:HAUTExSAVOIE',lat:45.9016985,lon:6.1201612};

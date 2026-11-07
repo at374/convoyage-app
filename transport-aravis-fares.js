@@ -50,7 +50,7 @@ function createCalculator(data){
    fareVerified:false,travelDateValidityKnown:false,stopMappingVerified:false,serviceConfirmed:false};
  }
  function stopReference({networkId,line,fromStop,toStop,travelDate,profile='adult',age}={}){
-  if(networkId!=='oura-haute-savoie'||line!=='Y62'||typeof travelDate!=='string'||travelDate<'2026-11-07')return null;
+  if(networkId!=='oura-haute-savoie'||!['Y62','Y63'].includes(line)||typeof travelDate!=='string'||travelDate<'2026-11-07')return null;
   const fromArea=sector(fromStop),toArea=sector(toStop);
   if(!fromArea||!toArea||fromArea===toArea)return null;
   const value=reference({line,fromArea,toArea,travelDate,profile,age});

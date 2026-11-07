@@ -26,6 +26,9 @@ test('Y62 terminal fare reference is visible but does not confirm the journey or
   await agenda.mount(target,{tasks:[mission],resources:[agenda.DEFAULT_RESOURCES[0]],clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[direct]}),dispose(){}})}).done;
   assert.match(target.textContent,/Référence car Y62 adulte : 8,90 €/);assert.match(target.textContent,/Prix, date et titre à confirmer/);
   assert.match(target.textContent,/Transport non confirmé/);assert.doesNotMatch(target.textContent,/Réalisable/);
+  const other=panel();
+  await agenda.mount(other,{tasks:[mission],resources:[agenda.DEFAULT_RESOURCES[0]],clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[{...direct,line:'Y63'}]}),dispose(){}})}).done;
+  assert.match(other.textContent,/Référence car Y63 adulte : 8,90 €/);assert.match(other.textContent,/Voir la grille Y63/);
  }finally{delete global.CPAravisFares;delete global.CPAravisFareData;}
 });
 test('272 official reference reaches direct GTFS results without becoming a confirmed fare',async()=>{

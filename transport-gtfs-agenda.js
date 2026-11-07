@@ -372,8 +372,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       }
       if(aravisFare){
        const quote=doc.createElement('span');quote.setAttribute('data-y62-fare-reference','');
-       quote.textContent=' · Référence car Y62 adulte : '+aravisFare.amount.toFixed(2).replace('.',',')+' € pour ce parcours. Prix, date et titre à confirmer ; ne couvre pas forcément les correspondances.';line.appendChild(quote);
-       const proof=doc.createElement('a');proof.href=aravisFare.source;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir la grille Y62';line.appendChild(proof);
+       quote.textContent=' · Référence car '+aravisFare.line+' adulte : '+aravisFare.amount.toFixed(2).replace('.',',')+' € pour ce parcours. Prix, date et titre à confirmer ; ne couvre pas forcément les correspondances.';line.appendChild(quote);
+       const proof=doc.createElement('a');proof.href=aravisFare.source;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir la grille '+aravisFare.line;line.appendChild(proof);
       }
       if(tariffDescription){
         const quote=doc.createElement('span');quote.setAttribute('data-y51-fare-reference','');quote.textContent=tariffDescription;line.appendChild(quote);
