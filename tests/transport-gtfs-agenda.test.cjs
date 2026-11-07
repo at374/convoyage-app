@@ -594,6 +594,23 @@ test('Cars Région Express is a separate dated timetable source, never a static 
  assert.equal(Object.hasOwn(express,'fareEUR'),false);
 });
 
+test('Pays de Gex TPG and TAC Annemasse are bounded official border GTFS resources',async()=>{
+ const gex=agenda.DEFAULT_RESOURCES.find(r=>r.id==='pays-gex-tpg');
+ const tac=agenda.DEFAULT_RESOURCES.find(r=>r.id==='tac-annemasse');
+ assert.ok(gex);assert.ok(tac);
+ assert.equal(gex.datasetId,'65a901970267d05025a905ec');assert.equal(tac.datasetId,'5ca4c3d2d7857ab0c49dde9b');
+ assert.match(gex.url,/95c73b12-d117-4faf-bb6f-abfe3c95eee1/);
+ assert.match(tac.url,/373e19e2-af0a-4939-9f33-3f1268d1e0bb/);
+ const gexTrip={label:'Retour',from:{lat:46.30,lon:6.12},to:{lat:46.35,lon:6.04},earliestDeparture:'2026-11-07T10:00:00+01:00'};
+ const tacTrip={label:'Retour',from:{lat:46.20,lon:6.14},to:{lat:46.19,lon:6.24},earliestDeparture:'2026-11-07T10:00:00+01:00'};
+ assert.equal(agenda.selected(gex,gexTrip),true);assert.equal(agenda.selected(tac,tacTrip),true);
+ assert.equal(agenda.selected(gex,{...gexTrip,to:{lat:48.85,lon:2.35}}),false);
+ for(const [trip,id] of [[gexTrip,'pays-gex-tpg'],[tacTrip,'tac-annemasse']]){
+  let loaded=null;const session=agenda.mount(panel(),{tasks:[trip],clientFactory:()=>({load:async r=>{loaded=r;return {...summary,source:{...summary.source,network:r.network,url:r.url}};},query:async()=>({rows:[],truncated:false}),dispose(){}})});
+  await session.done;assert.equal(loaded?.id,id);session.dispose();
+ }
+});
+
 
 test('western Ain journey chooses Ain GTFS despite Haute-Savoie overlap',async()=>{
  const target=panel(),task={label:'Aller',from:{lat:46.20,lon:5.6},to:{lat:46.25,lon:5.7},

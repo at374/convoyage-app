@@ -46,6 +46,16 @@ const AURA_RESOURCES_BY_COVERAGE=Object.freeze([Object.freeze({
  // Selection envelope only, not a guarantee of lines or cross-border service.
  bounds:[45.65,4.7,46.55,6.3],timeZone:'Europe/Paris'
 }),Object.freeze({
+ id:'pays-gex-tpg',datasetId:'65a901970267d05025a905ec',network:'Pays de Gex — lignes TPG',format:'GTFS',federate:true,
+ // Official PAN resource. The dated GTFS calendar, not this envelope, decides service.
+ url:'https://www.data.gouv.fr/api/1/datasets/r/95c73b12-d117-4faf-bb6f-abfe3c95eee1',
+ bounds:[46.05,5.7,46.6,6.22],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'tac-annemasse',datasetId:'5ca4c3d2d7857ab0c49dde9b',network:'TAC Mobilité — Annemasse',format:'GTFS',federate:true,
+ // Official Annemasse Agglo GTFS; realtime remains a separate, optional source.
+ url:'https://www.data.gouv.fr/api/1/datasets/r/373e19e2-af0a-4939-9f33-3f1268d1e0bb',
+ bounds:[45.9,5.9,46.35,6.45],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'80100',datasetId:'5bd9843e634f413220f7f04a',network:'Sibra',format:'GTFS',federate:true,
  url:'https://www.data.gouv.fr/api/1/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0',resolveFromCatalogue:true,
  bounds:[45.7,5.9,46.1,6.5],timeZone:'Europe/Paris'
@@ -141,7 +151,10 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const ainCore=task=>[task?.from,task?.to].every(p=>validPoint(p)&&p.lat>=45.9&&p.lat<=46.5&&p.lon>=4.7&&p.lon<=5.85);
  const ain=resourceList.find(r=>r.id==='oura-ain');
  const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
- const resource=preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
+ // Cross-border local networks must be selected before the broad Haute-Savoie
+ // envelope; otherwise their feeds can be omitted by the four-network budget.
+ const borderLocal=resourceList.find(r=>['pays-gex-tpg','tac-annemasse'].includes(r.id)&&taskList.some(t=>selected(r,t)));
+ const resource=preferredAin||borderLocal||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
  if(!resource)return {dispose,done:Promise.resolve()};
  // A department-wide feed is useful outside a local network, but loading it
  // alongside a complete local pair only consumes a worker slot and duplicates results.
