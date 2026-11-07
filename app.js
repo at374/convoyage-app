@@ -2260,6 +2260,14 @@
       panel.appendChild(sourcePanel);
       // Keep manual controls available without placing them ahead of automatic results.
       sourcePanel.appendChild(refreshTransport);
+      const lemanFareLink=document.createElement('a');
+      lemanFareLink.href='https://www.lemanpass.com/tarifs/';
+      lemanFareLink.target='_blank';lemanFareLink.rel='noopener noreferrer';
+      lemanFareLink.textContent='Tarifs officiels Léman Pass — Genève et frontière suisse';
+      const lemanFareNote=document.createElement('p');lemanFareNote.className='doux';
+      lemanFareNote.textContent='Consulte le calculateur officiel pour vérifier le titre, les zones et le prix de ton trajet. Aucun tarif n’est récupéré automatiquement par ce lien.';
+      lemanFareNote.appendChild(document.createTextNode(' '));lemanFareNote.appendChild(lemanFareLink);
+      sourcePanel.appendChild(lemanFareNote);
       const localCards={};
       const renderLocalCards=({task,itineraries})=>{
         if(!panel.isConnected||panel.hidden||$('feuille').hidden||!transportDestinations[task.label])return;
