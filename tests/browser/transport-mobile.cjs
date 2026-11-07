@@ -87,7 +87,10 @@ async function run(){
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--no-sandbox']});
   context=await browser.newContext({...devices['Pixel 7'],locale:'fr-FR',timezoneId:'Europe/Paris',serviceWorkers:'block'});
   await context.addInitScript(({missions,settings,origin,relayURL})=>{
-   if(new URL(location.href).searchParams.has('swiss'))localStorage.removeItem('cp_gps');
+   if(new URL(location.href).searchParams.has('swiss')){
+    localStorage.removeItem('cp_gps');
+    missions=missions.map((mission,index)=>index===0?{...mission,destination_address:'94 rue Test Suisse 38000 Grenoble'}:mission);
+   }
    if(new URL(location.href).searchParams.has('buslive'))window.CP_BLABLACAR_REALTIME_URL=relayURL;
    // An invalid optional relay must never block SNCF or the other engines.
    if(new URL(location.href).searchParams.has('rail'))window.CP_BLABLACAR_REALTIME_URL='http://external.invalid/transport-realtime/blablacar';
@@ -139,13 +142,13 @@ async function run(){
     const readPost=request.method()==='POST'&&['/rest/v1/rpc/mon_statut','/storage/v1/object/sign/apk/version.json'].includes(url.pathname);
     if(request.method()!=='GET'&&!readPost)blockedWrites.push({method:request.method(),path:url.pathname});
     const tripDay=busLiveScenario?'2026-10-31':'2026-11-02';
-    const backendMissions=regionalPassScenario?[{...missions[0],from_city:'Annecy',to_city:regionalFareScenario?'Albertville':'Duingt',origin_address:'12 rue Exemple 74000 Annecy',destination_address:regionalFareScenario?'14 rue Exemple 73200 Albertville':'14 rue Exemple 74410 Duingt'}]:tripgoScenario?[{...missions[0],pickup_start:tripDay+'T08:00:00+01:00',pickup_end:tripDay+'T08:00:00+01:00',delivery_end:tripDay+'T10:00:00+01:00',to_city:'Annecy',destination_address:'14 rue Exemple 74000 Annecy'}]:railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
+    const backendMissions=swissScenario?missions.map((mission,index)=>index===0?{...mission,destination_address:'94 rue Test Suisse 38000 Grenoble'}:mission):regionalPassScenario?[{...missions[0],from_city:'Annecy',to_city:regionalFareScenario?'Albertville':'Duingt',origin_address:'12 rue Exemple 74000 Annecy',destination_address:regionalFareScenario?'14 rue Exemple 73200 Albertville':'14 rue Exemple 74410 Duingt'}]:tripgoScenario?[{...missions[0],pickup_start:tripDay+'T08:00:00+01:00',pickup_end:tripDay+'T08:00:00+01:00',delivery_end:tripDay+'T10:00:00+01:00',to_city:'Annecy',destination_address:'14 rue Exemple 74000 Annecy'}]:railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
     const backendSettings=regionalPassScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.9016985,domicile_lng:6.1201612}:tripgoScenario?{...settings,domicile_lat:45.1914,domicile_lng:5.7143}:railScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}:settings;
     return json(route,url.pathname.endsWith('/missions')?backendMissions:url.pathname.endsWith('/reglages')?[backendSettings]:[]);
    }
    if(url.hostname==='gtfs-fixture.invalid')return route.fulfill({status:200,contentType:'application/zip',headers:{'access-control-allow-origin':'*'},body:url.searchParams.has('regionalfare')?regionalFareZip:url.searchParams.has('regional')?regionalZip:url.searchParams.has('sibra')?sibraZip:zip});
    if(url.hostname==='api-adresse.data.gouv.fr'&&url.pathname.includes('/search')){
-    const q=url.searchParams.get('q')||'',match=q.match(/\b(12|14|16|18)\b/),number=match?.[1];
+    const q=url.searchParams.get('q')||'',match=q.match(/\b(12|14|16|18|94)\b/),number=match?.[1];
     if(number){
      await new Promise(resolve=>{const list=gates.get(number)||[];list.push(resolve);gates.set(number,list);});
      const point=regionalFareScenario&&number==='14'?[6.3897282,45.6693897]:regionalPassScenario&&number==='14'?[6.2018053,45.827708]:tripgoScenario&&number==='14'?[6.1218,45.9019]:['16','18'].includes(number)?[5.88224,45.28364]:[5.7143,45.1914];
@@ -349,7 +352,7 @@ async function run(){
   holdRegional=false;swissScenario=true;
   await page.goto(origin+'?swiss=1',{waitUntil:'domcontentloaded'});
   await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();
-  await release('14');
+  await release('94');
   const swissSection=page.getByRole('heading',{name:'Retour suisse · comparer',exact:true}).locator('..');
   await swissSection.waitFor();
   const swissCard=swissSection.locator('details:has(> .cp-transport-viewer)').first();
