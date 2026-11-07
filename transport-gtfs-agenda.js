@@ -338,10 +338,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       try{urbanTariff=root.CPAuraUrbanFares;urbanTariffDescription=urbanTariff?.describe(urbanTariff?.reference(row))||'';}catch(_){}
       let coachFare=null,aravisFare=null,y21Fare=null;
       try{
-       if(!row.legs?.length&&root.CP272Fares?.stopReference){
+       const coachApi=row.line==='274'?root.CP274Fares:root.CP272Fares;
+       if(!row.legs?.length&&coachApi?.stopReference){
         const date=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure)).map(p=>[p.type,p.value]));
         const stop=s=>({id:s?.stopId,lat:s?.lat,lon:s?.lon});
-        coachFare=root.CP272Fares.stopReference({networkId:row.networkId,line:row.line,fromStop:stop(row.originStop),toStop:stop(row.destinationStop),travelDate:date.year+'-'+date.month+'-'+date.day,product:'parcours',profile:'adult'});
+        coachFare=coachApi.stopReference({networkId:row.networkId,line:row.line,fromStop:stop(row.originStop),toStop:stop(row.destinationStop),travelDate:date.year+'-'+date.month+'-'+date.day,product:'parcours',profile:'adult'});
        }
       }catch(_){}
       try{
@@ -374,9 +375,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       const passCost=doc.createElement('span');passCost.setAttribute('data-sibra-pass-cost','');line.appendChild(passCost);
       fareChecks.push({row,element:passCost});refreshFares();
       if(coachFare){
-       const quote=doc.createElement('span');quote.setAttribute('data-272-fare-reference','');
-       quote.textContent=' · Référence car 272 adulte : '+coachFare.amount.toFixed(2).replace('.',',')+' € pour ce parcours, sans circulation supplémentaire zone 10. Prix et titre à confirmer ; ne couvre pas forcément les correspondances.';line.appendChild(quote);
-       const proof=doc.createElement('a');proof.href=coachFare.source;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir la grille 272';line.appendChild(proof);
+       const quote=doc.createElement('span');quote.setAttribute('data-'+coachFare.line+'-fare-reference','');
+       quote.textContent=' · Référence car '+coachFare.line+' adulte : '+coachFare.amount.toFixed(2).replace('.',',')+' € pour ce parcours, sans circulation supplémentaire zone 10. Prix et titre à confirmer ; ne couvre pas forcément les correspondances.';line.appendChild(quote);
+       const proof=doc.createElement('a');proof.href=coachFare.source;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir la grille '+coachFare.line;line.appendChild(proof);
       }
       if(y21Fare){
        const quote=doc.createElement('span');quote.setAttribute('data-'+y21Fare.line.toLowerCase()+'-fare-reference','');
