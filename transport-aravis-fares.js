@@ -67,6 +67,10 @@ function createCalculator(data){
  }
  function stopReference({networkId,line,fromStop,toStop,travelDate,profile='adult',age}={}){
   if(networkId!=='oura-haute-savoie'||!['Y62','Y63'].includes(line)||typeof travelDate!=='string'||travelDate<'2026-11-07')return null;
+  // Freshness limit is our conservative review window, not a published tariff expiry.
+  // Require another documented check before reusing this undated tariff later.
+  const checked=Date.parse(source.checkedOn+'T12:00:00Z'),travel=Date.parse(travelDate+'T12:00:00Z');
+  if(!Number.isFinite(checked)||!Number.isFinite(travel)||travel>checked+30*86400000)return null;
   const fromArea=sector(fromStop,line),toArea=sector(toStop,line);
   if(!fromArea||!toArea||fromArea===toArea)return null;
   const value=reference({line,fromArea,toArea,travelDate,profile,age});

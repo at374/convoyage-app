@@ -42,6 +42,9 @@ test('verified Y62 terminal stops map to the published zone without confirming t
  assert.equal(calculator.stopReference({...query,fromStop:toStop,toStop:fromStop}).amount,8.9);
  assert.equal(calculator.stopReference({...query,line:'Y63'}).amount,8.9);
  assert.equal(calculator.stopReference({...query,line:'Y63'}).source,data.lines.Y63.source);
+ assert.equal(calculator.stopReference({...query,travelDate:'2026-12-06'}).amount,8.9);
+ assert.equal(calculator.stopReference({...query,travelDate:'2026-12-07'}),null);
+ assert.equal(calculator.stopReference({...query,travelDate:'2028-01-01'}),null);
  for(const update of [{line:'Y51'},{networkId:'other'},{fromStop:{...fromStop,lat:46}},{toStop:{...toStop,id:'other'}},{travelDate:'2026-11-06'},{travelDate:'2026-11-31'}])assert.equal(calculator.stopReference({...query,...update}),null);
 });
 test('verified Y62 intermediate stops use their own sector, not the terminal fare',()=>{
