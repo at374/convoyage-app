@@ -8,6 +8,12 @@ function createCalculator(data){
  const source=JSON.parse(JSON.stringify(data));
  const y62Stops=new Map([
   ['FR:74010:ZE:57539:HAUTExSAVOIE',[45.9016985,6.1201612,'Annecy']],
+  ['FR:74003:ZE:57757:HAUTExSAVOIE',[45.8910822,6.2386944,'Alex','Y62']],
+  ['FR:74003:ZE:57758:HAUTExSAVOIE',[45.8911653,6.2385836,'Alex','Y62']],
+  ['FR:74102:ZE:57727:HAUTExSAVOIE',[45.91015,6.2215891,'Dingy-Saint-Clair','Y63']],
+  ['FR:74102:ZE:57728:HAUTExSAVOIE',[45.9102256,6.2216854,'Dingy-Saint-Clair','Y63']],
+  ['FR:74027:ZE:57720:HAUTExSAVOIE',[45.9007615,6.276505,'La Balme-de-Thuy','Y63']],
+  ['FR:74027:ZE:57721:HAUTExSAVOIE',[45.9007332,6.2765074,'La Balme-de-Thuy','Y63']],
   ['FR:74280:ZE:57724:HAUTExSAVOIE',[45.894817,6.3027046,'Thônes Morette / Thuy']],
   ['FR:74280:ZE:57725:HAUTExSAVOIE',[45.8949443,6.3027811,'Thônes Morette / Thuy']],
   ['FR:74302:ZE:57761:HAUTExSAVOIE',[45.9060553,6.3622384,'Les Villards-sur-Thônes']],
@@ -26,9 +32,9 @@ function createCalculator(data){
   ['FR:74136:ZE:57773:HAUTExSAVOIE',[45.9416443,6.4287024,'Le Grand-Bornand']],
   ['FR:74080:ZE:57774:HAUTExSAVOIE',[45.9067032,6.4191339,'La Clusaz']]
  ]);
- const sector=stop=>{
+ const sector=(stop,line)=>{
   const p=y62Stops.get(stop?.id);
-  if(!p||!Number.isFinite(stop.lat)||!Number.isFinite(stop.lon))return null;
+  if(!p||(p[3]&&p[3]!==line)||!Number.isFinite(stop.lat)||!Number.isFinite(stop.lon))return null;
   const metres=Math.hypot((stop.lat-p[0])*111195,(stop.lon-p[1])*111195*Math.cos(p[0]*Math.PI/180));
   return metres<=50?p[2]:null;
  };
@@ -61,7 +67,7 @@ function createCalculator(data){
  }
  function stopReference({networkId,line,fromStop,toStop,travelDate,profile='adult',age}={}){
   if(networkId!=='oura-haute-savoie'||!['Y62','Y63'].includes(line)||typeof travelDate!=='string'||travelDate<'2026-11-07')return null;
-  const fromArea=sector(fromStop),toArea=sector(toStop);
+  const fromArea=sector(fromStop,line),toArea=sector(toStop,line);
   if(!fromArea||!toArea||fromArea===toArea)return null;
   const value=reference({line,fromArea,toArea,travelDate,profile,age});
   return value?{...value,stopMappingVerified:true,gtfsCheckedOn:'2026-11-07',gtfsSource:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA'}:null;

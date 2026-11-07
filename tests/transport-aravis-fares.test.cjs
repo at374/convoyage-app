@@ -3,6 +3,19 @@ const assert=require('node:assert/strict');
 const data=require('../data/transport/aravis-fare-reference-2026.json');
 const {createCalculator}=require('../transport-aravis-fares.js');
 const calculator=createCalculator(data);
+test('route-specific Alex, Dingy and La Balme stops require the correct line',()=>{
+ const start={id:'FR:74010:ZE:57539:HAUTExSAVOIE',lat:45.9016985,lon:6.1201612};
+ const alex={id:'FR:74003:ZE:57757:HAUTExSAVOIE',lat:45.8910822,lon:6.2386944};
+ const dingy={id:'FR:74102:ZE:57727:HAUTExSAVOIE',lat:45.91015,lon:6.2215891};
+ const balme={id:'FR:74027:ZE:57720:HAUTExSAVOIE',lat:45.9007615,lon:6.276505};
+ const q={networkId:'oura-haute-savoie',line:'Y62',fromStop:start,toStop:alex,travelDate:'2026-11-09'};
+ assert.equal(calculator.stopReference(q).amount,4);
+ assert.equal(calculator.stopReference({...q,line:'Y63'}),null);
+ for(const stop of [dingy,balme]){
+  assert.equal(calculator.stopReference({...q,line:'Y63',toStop:stop}).amount,4);
+  assert.equal(calculator.stopReference({...q,toStop:stop}),null);
+ }
+});
 test('Thuy and Villards stops use their own tariff sectors in both directions and lines',()=>{
  const fromStop={id:'FR:74280:ZE:57724:HAUTExSAVOIE',lat:45.894817,lon:6.3027046};
  const toStop={id:'FR:74302:ZE:57761:HAUTExSAVOIE',lat:45.9060553,lon:6.3622384};
