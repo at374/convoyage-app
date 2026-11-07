@@ -3,6 +3,11 @@ const assert=require('node:assert/strict');
 const api=require('../transport-cars-region-fares');
 const ain={networkId:'reseau-interurbain-cars-region-ain-01',line:'A33',tripId:'recorded-service-id',departure:'2026-11-06T10:00:00+01:00'};
 const hs={...ain,networkId:'oura-haute-savoie',line:'Y81'};
+test('generic reference is withheld after the review window',()=>{
+ assert.equal(api.reference({...ain,departure:'2026-12-06T10:00:00+01:00'}).portions[0].amountEUR,2.3);
+ assert.equal(api.reference({...ain,departure:'2026-12-07T10:00:00+01:00'}),null);
+ assert.equal(api.reference({...hs,departure:'2027-05-01T10:00:00+02:00'}),null);
+});
 test('published unit fares require an identified service and the correct network',()=>{
  assert.equal(api.reference(ain).portions[0].amountEUR,2.3);
  assert.equal(api.reference(hs).portions[0].amountEUR,1.7);

@@ -2,6 +2,11 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const fares=require('../transport-y51-fares.js'),data=require('./fixtures/y51-tariff-reference-2026-10-31.json');
 function pin(area,second=false){const rows=data.stops.filter(s=>s[3]===area);const s=rows[second?1:0];return {stopId:s[0],lat:s[1],lon:s[2],name:s[4]};}
 function leg(from,to){const start=pin(from),end=pin(to,from===to);const item={networkId:'oura-haute-savoie',line:'Y51',tripId:'synthetic-tariff-example',from:start.stopId,to:end.stopId,departure:'2026-11-02T10:00:00+01:00',arrival:'2026-11-02T11:30:00+01:00'};item.fareScopePath={...item,stops:[start,end]};return item;}
+test('Y51 fare is unknown after the source review window',()=>{
+ const item=leg(0,14);item.departure='2026-12-01T10:00:00+01:00';item.arrival='2026-12-01T11:30:00+01:00';
+ item.fareScopePath.departure=item.departure;item.fareScopePath.arrival=item.arrival;
+ assert.equal(fares.reference(item).portions[0],null);
+});
 test('official reference examples distinguish regional, Arly and SIBRA fares',()=>{
  for(const [a,b,amount,zone] of [[0,14,8.9,'4'],[0,9,4,'2'],[3,4,1.7,'1'],[8,14,4,'2'],[12,14,1.4,'A'],[0,3,2.5,'S']]){
   const quote=fares.reference(leg(a,b)).portions[0];assert.equal(quote.amountEUR,amount);assert.equal(quote.zone,zone);

@@ -16,7 +16,9 @@ function portion(leg){
  const time=Date.parse(leg.departure);
  if(!Number.isFinite(time))return null;
  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(time)).map(p=>[p.type,p.value]));
- if(parts.year+'-'+parts.month+'-'+parts.day<'2026-03-01')return null;
+ const localTravelDay=parts.year+'-'+parts.month+'-'+parts.day;
+ // A bounded review window, not an asserted expiry of the published tariff.
+ if(localTravelDay<'2026-03-01'||localTravelDay>'2026-12-06')return null;
  const family=leg.networkId==='reseau-interurbain-cars-region-ain-01'&&/^A\d{2}$/.test(leg.line)?'ain':
   leg.networkId==='oura-haute-savoie'&&HS_LINES.has(leg.line)?'hs':
   leg.networkId==='oura-savoie-regular'&&/^S0[1-7]$/.test(leg.line)?'savoie':null;
