@@ -3,6 +3,16 @@ const assert=require('node:assert/strict');
 const data=require('../data/transport/aravis-fare-reference-2026.json');
 const {createCalculator}=require('../transport-aravis-fares.js');
 const calculator=createCalculator(data);
+test('verified Y62 terminal stops map to the published zone without confirming the fare',()=>{
+ const fromStop={id:'FR:74010:ZE:57539:HAUTExSAVOIE',lat:45.9016985,lon:6.1201612};
+ const toStop={id:'FR:74080:ZE:57774:HAUTExSAVOIE',lat:45.9067032,lon:6.4191339};
+ const query={networkId:'oura-haute-savoie',line:'Y62',fromStop,toStop,travelDate:'2026-11-09'};
+ const result=calculator.stopReference(query);
+ assert.equal(result.amount,8.9);assert.equal(result.stopMappingVerified,true);
+ assert.equal(result.fareVerified,false);assert.equal(result.travelDateValidityKnown,false);assert.equal(result.serviceConfirmed,false);
+ assert.equal(calculator.stopReference({...query,fromStop:toStop,toStop:fromStop}).amount,8.9);
+ for(const update of [{line:'Y63'},{networkId:'other'},{fromStop:{...fromStop,lat:46}},{toStop:{...toStop,id:'other'}},{travelDate:'2026-11-06'},{travelDate:'2026-11-31'}])assert.equal(calculator.stopReference({...query,...update}),null);
+});
 test('visually checked endpoint cells produce distinct official area references',()=>{
  for(const line of ['Y62','Y63']){
   const ref=calculator.reference({line,fromArea:'Annecy',toArea:'La Clusaz'});

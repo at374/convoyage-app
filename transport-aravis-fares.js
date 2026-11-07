@@ -6,6 +6,16 @@ function createCalculator(data){
   new Set(data.areas).size!==15)throw new Error('Invalid Aravis tariff source');
  // Own a snapshot: a later caller mutation cannot alter the source silently.
  const source=JSON.parse(JSON.stringify(data));
+ const y62Stops=new Map([
+  ['FR:74010:ZE:57539:HAUTExSAVOIE',[45.9016985,6.1201612,'Annecy']],
+  ['FR:74080:ZE:57774:HAUTExSAVOIE',[45.9067032,6.4191339,'La Clusaz']]
+ ]);
+ const sector=stop=>{
+  const p=y62Stops.get(stop?.id);
+  if(!p||!Number.isFinite(stop.lat)||!Number.isFinite(stop.lon))return null;
+  const metres=Math.hypot((stop.lat-p[0])*111195,(stop.lon-p[1])*111195*Math.cos(p[0]*Math.PI/180));
+  return metres<=50?p[2]:null;
+ };
  for(const line of ['Y62','Y63']){
   const item=source.lines?.[line];
   if(!item||!/^https:\/\/storage\.googleapis\.com\//.test(item.source)||
@@ -33,7 +43,14 @@ function createCalculator(data){
    eligibilityProofRequired:profile==='declic',kind:'official_tariff_reference',
    fareVerified:false,travelDateValidityKnown:false,stopMappingVerified:false,serviceConfirmed:false};
  }
- return {reference};
+ function stopReference({networkId,line,fromStop,toStop,travelDate,profile='adult',age}={}){
+  if(networkId!=='oura-haute-savoie'||line!=='Y62'||typeof travelDate!=='string'||travelDate<'2026-11-07')return null;
+  const fromArea=sector(fromStop),toArea=sector(toStop);
+  if(!fromArea||!toArea||fromArea===toArea)return null;
+  const value=reference({line,fromArea,toArea,travelDate,profile,age});
+  return value?{...value,stopMappingVerified:true,gtfsCheckedOn:'2026-11-07',gtfsSource:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA'}:null;
+ }
+ return {reference,stopReference};
 }
 const api={createCalculator};
 if(typeof module==='object'&&module.exports)module.exports=api;

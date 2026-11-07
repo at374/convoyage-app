@@ -25,6 +25,8 @@ node --test tests/transport-aravis-fares.test.cjs
 
 Deux secteurs tarifaires ne sont pas deux arrêts GPS validés. Les matrices peuvent décrire plusieurs arrêts d’une même commune ou des sous-secteurs. Il reste à établir les correspondances explicites entre les identifiants GTFS et ces secteurs, puis à vérifier les portions et leurs correspondances.
 
+Contrôle ciblé du 7 novembre 2026 : l'archive GTFS Haute-Savoie d'empreinte `9d3c594378d1618793aa8b8878d3023c1eb7de7e21ddaa9dc2d2e46dc36677cb` associe la Y62 aux gares routières d'Annecy (`FR:74010:ZE:57539:HAUTExSAVOIE`) et de La Clusaz (`FR:74080:ZE:57774:HAUTExSAVOIE`). Le lecteur accepte seulement ces deux identifiants avec leurs coordonnées à 50 m près, pour la Y62 et ce réseau, à partir de la date de contrôle. La matrice donne une référence adulte zone 4 de 8,90 €. Le 9 novembre, le moteur trouve dans ce fichier 12 courses directes théoriques vers La Clusaz et 13 dans l'autre sens. Ces chiffres ne valent pas preuve de circulation, prix d'achat ou validité pour un autre jour ; la grille ne précise pas de date de fin. Aucun autre arrêt n'est automatiquement rapproché.
+
 ## Anomalies documentaires repérées
 
 Les fiches Y02, Y21, Y22, Y62, Y63, 272 et X33 ont été récupérées et inspectées dans cette passe. La numérisation des matrices de ce module couvre seulement Y62/Y63. La fiche Y22 affiche encore dans son encart Grand Annecy un tarif unitaire à 1,50 €, tandis que les fiches Y21/Y62/Y63 affichent 2 € et 2,50 € à bord. Cet encart n’est pas importé comme tarif actuel ; le rapprochement doit se faire avec la publication Sibra en vigueur. Les couches texte contiennent aussi des fragments d’anciens en-têtes, ce qui impose une lecture visuelle.
