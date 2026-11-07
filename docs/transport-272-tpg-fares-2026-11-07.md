@@ -25,6 +25,9 @@ La référence à une tarification locale Sibra sur une portion française de la
 
 ## Statut
 
+Contrôle GTFS direct le 7 novembre : l'archive officielle Haute-Savoie (SHA-256 `9d3c594378d1618793aa8b8878d3023c1eb7de7e21ddaa9dc2d2e46dc36677cb`, version `20261028`) contient la ligne 272, 61 courses et 63 arrêts associés. Les arrêts Gare Routière Annecy, Pringy Gare dans les deux sens et Aéroport Genève figurent sur certaines courses. Le lecteur préparé rapproche uniquement ces identifiants et leurs coordonnées (tolérance 50 m) des secteurs Annecy, Annecy Pringy et Genève de la matrice. Cette correspondance ne prouve pas qu'une course relie les arrêts pour la date choisie, que le véhicule circule ou que le billet est vendable. Aucun autre arrêt, notamment Douane P+R, n'est assimilé automatiquement à un secteur. Le calendrier global du fichier ne prouve pas le service de chaque course ni la validité des prix au-delà de la grille TPG.
+
 - Découvert et contrôlé : documents officiels TPG, matrice zone 5, divergence entre deux publications locales.
+- Préparé et testé : correspondance bornée à quatre identifiants GTFS, sans validation de course ni de prix final.
 - Non raccordé : grille à l'application, correspondance exhaustive entre arrêts et zones, abonnements locaux et correspondances.
 - Aucun nouveau tarif appliqué à un résultat Android, aucune fusion, aucun déploiement ou achat.
