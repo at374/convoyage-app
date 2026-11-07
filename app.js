@@ -1881,6 +1881,11 @@
               detailSources.push(source);
             }
           }
+          if(journey.directFareReference){
+            const fare=journey.directFareReference,reference=document.createElement('small');reference.style.display='block';reference.setAttribute('data-direct-fare-reference','');
+            reference.textContent='Référence '+fare.line+' adulte : '+fare.amount.toFixed(2).replace('.',',')+' € · prix, date et titre à confirmer ; correspondances non comprises.';summary.appendChild(reference);
+            const source=document.createElement('a');source.href=fare.source;source.target='_blank';source.rel='noopener noreferrer';source.textContent='Voir le barème officiel';detailSources.push(source);
+          }
           if(journey.auraUrbanFareReference&&window.CPAuraUrbanFares){
             const reference=document.createElement('small');reference.style.display='block';reference.setAttribute('data-aura-urban-fare-reference','');
             reference.textContent=window.CPAuraUrbanFares.describe(journey.auraUrbanFareReference);summary.appendChild(reference);
@@ -2284,6 +2289,7 @@
         const normalized=window.CPTransportAdapters?.adaptGTFS(rows,'Réseau local')||[];
         normalized.forEach((journey,index)=>{
           journey.carsRegionReference=window.CPCarsRegionFares?.reference(itineraries[index])||null;
+          journey.directFareReference=window.CPDirectFareReference?.reference(itineraries[index])||null;
           journey.auraUrbanFareReference=window.CPAuraUrbanFares?.reference(itineraries[index])||null;
           journey.lemanSautPuceReference=window.CPLemanSautPuce?.reference(itineraries[index])||null;
         });
