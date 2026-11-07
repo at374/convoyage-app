@@ -2,6 +2,12 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const pass=require('../transport-sibra-pass.js');
 const subscription={active:true,from:'2026-10-01',through:'2026-11-02'};
 const leg={networkId:pass.DATASET,line:'4',departure:'2026-11-02T18:00:00+01:00'};
+test('an old scope check cannot make a later trip free',()=>{
+ const active={active:true,from:'2026-10-01',through:'2027-12-31'};
+ assert.equal(pass.assess({...leg,departure:'2026-11-30T18:00:00+01:00'},active).additionalEUR,0);
+ const later=pass.assess({...leg,departure:'2026-12-01T18:00:00+01:00'},active);
+ assert.equal(later.additionalEUR,null);assert.equal(later.breakdown[0].reason,'policy_unverified');
+});
 test('SIBRA pass requires explicit calendar dates and ownership declaration',()=>{
  for(const value of [null,{}, {...subscription,active:false},{...subscription,from:'2026-02-30'},{...subscription,through:'2026-09-30'},{...subscription,from:1}])assert.equal(pass.normalize(value),null);
  assert.deepEqual(pass.normalize(subscription),subscription);
@@ -33,6 +39,20 @@ test('mixed and overnight journeys keep unknown totals and account for each port
  assert.equal(pass.assess({legs:[leg,leg]},subscription).additionalEUR,0);
  assert.equal(pass.assess(null,subscription).additionalEUR,null);
  assert.equal(pass.describe(pass.assess(leg,null)),'');
+});
+
+test('SIBRA pass never makes cross-border coaches 271, 272 or 274 free in a mixed journey',()=>{
+ // Léman Pass FAQ: these coaches require their own journey ticket and coach
+ // tickets cannot be exchanged for rail tickets: https://www.lemanpass.com/faq/
+ for(const line of ['271','272','274']){
+  for(const networkId of ['oura-haute-savoie','pays-gex-tpg',pass.DATASET]){
+   const result=pass.assess({legs:[leg,{...leg,networkId,line}]},subscription);
+   assert.equal(result.coveredLegs,1);
+   assert.equal(result.breakdown[1].covered,false);
+   assert.equal(result.additionalEUR,null);
+   assert.match(pass.describe(result),/total du trajet inconnu/);
+  }
+ }
 });
 
 const regional=require('./fixtures/y51-sibra-scope-2026-10-31.json');

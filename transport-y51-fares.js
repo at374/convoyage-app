@@ -12,7 +12,8 @@ function travelDay(value){
 }
 function legReference(leg){
  const day=travelDay(leg?.departure),proof=leg?.fareScopePath;
- if(leg?.networkId!=='oura-haute-savoie'||leg.line!=='Y51'||!day||day<DATA.effectiveFrom||Number(day.slice(0,4))!==DATA.referenceYear||
+ // After 30 days from the source review, require a new review before reuse.
+ if(leg?.networkId!=='oura-haute-savoie'||leg.line!=='Y51'||!day||day<DATA.effectiveFrom||day>'2026-11-30'||Number(day.slice(0,4))!==DATA.referenceYear||
   !travelDay(leg.arrival)||Date.parse(leg.arrival)<=Date.parse(leg.departure)||leg.from===leg.to||!proof||
   ['networkId','tripId','from','to','departure','arrival'].some(k=>typeof leg[k]!=='string'||proof[k]!==leg[k])||
   !Array.isArray(proof.stops)||proof.stops.length<2||proof.stops.length>64||proof.stops[0]?.stopId!==leg.from||proof.stops.at(-1)?.stopId!==leg.to)return null;

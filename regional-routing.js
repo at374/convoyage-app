@@ -26,6 +26,9 @@
   function parseLeg(leg) {
     return {
       mode: String(leg.mode || ''),
+      fromPoint:leg.from&&Number.isFinite(leg.from.lat)&&Number.isFinite(leg.from.lon)?{lat:leg.from.lat,lon:leg.from.lon}:undefined,
+      toPoint:leg.to&&Number.isFinite(leg.to.lat)&&Number.isFinite(leg.to.lon)?{lat:leg.to.lat,lon:leg.to.lon}:undefined,
+      encodedGeometry:typeof leg.legGeometry?.points==='string'?leg.legGeometry.points:undefined,
       from: leg.from && leg.from.name || '',
       to: leg.to && leg.to.name || '',
       startTime: epochMilliseconds(leg.startTime),

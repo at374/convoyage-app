@@ -158,10 +158,14 @@
   const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? [x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
   async function chercherPoint(m, cote, fetchFn) {
     const cle = cleAdresse(m, cote); if (!cle) return null;
-    const x = adresseDe(m, cote), txt = [x.a, x.v, x.d].join(' ');
+    const x = adresseDe(m, cote);
     // V243 : pays limitrophes (Suisse, Italie, Espagne, Belgique, Allemagne, Luxembourg, Monaco, Andorre) : le service français ne les connaît pas → recherche de la commune par son nom.
     const PAYS = [['CH', /suisse|switzerland|schweiz|svizzera/i], ['IT', /italie|italy|italia/i], ['ES', /espagne|spain|espa[nñ]a/i], ['BE', /belgique|belgium|belgi[eë]/i], ['DE', /allemagne|germany|deutschland/i], ['LU', /luxembourg/i], ['MC', /monaco/i], ['AD', /andorr/i]];
-    let pays = ''; for (const [c, re] of PAYS) if (re.test(txt)) { pays = c; break; } if (!pays && /^(CH|IT|ES|BE|DE|LU|MC|AD)$/i.test(String(x.d).trim())) pays = String(x.d).trim().toUpperCase();
+    // Un nom de pays dans une rue française (ex. rue de Suisse) ne désigne
+    // pas le pays de destination. Ne lire l'adresse que si son dernier élément
+    // séparé par une virgule est explicitement un nom de pays.
+    const tail = x.a.includes(',') ? x.a.split(',').pop().trim() : '';
+    let pays = ''; for (const [c, re] of PAYS) if (re.test([x.v, x.d].join(' ')) || (tail && new RegExp('^(?:' + re.source + ')$', 'i').test(tail))) { pays = c; break; } if (!pays && /^(CH|IT|ES|BE|DE|LU|MC|AD)$/i.test(String(x.d).trim())) pays = String(x.d).trim().toUpperCase();
     if (!pays) {
       const q = [x.a, x.cp || (x.a ? '' : x.d), x.v].filter(Boolean).join(' ');   // commune seule (sans adresse) → on cherche « Commune 74 » comme commune
       const r = await fetchFn('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(q) + (x.cp ? '&postcode=' + encodeURIComponent(x.cp) : '') + (!x.a && !x.cp ? '&type=municipality' : ''));
