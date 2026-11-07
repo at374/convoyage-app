@@ -49,7 +49,20 @@ function reference({line,fromSector,toSector,travelDate,product,profile}={}){
  if(line!=='274'||profile!=='adult')return null;
  let price,zone,source=SOURCE;
  if(product==='france'){
-  const pairs={'Bonneville|Nangy Findrol':[3.8,'2'],'Bonneville|Sallanches':[11.3,'5'],'Nangy Findrol|Sallanches':[8.6,'4']};
+  const pairs={
+   'Bonneville|Nangy Findrol':[3.8,'2'],'Bonneville|Sallanches':[11.3,'5'],'Nangy Findrol|Sallanches':[8.6,'4'],
+   'Fillinges|Nangy Findrol':[1.6,'1'],'Nangy Findrol|Viuz-en-Sallaz':[1.6,'1'],
+   'Nangy Findrol|Saint-Jeoire':[3.8,'2'],'Nangy Findrol|Ville-en-Sallaz':[3.8,'2'],
+   'Mieussy|Nangy Findrol':[3.8,'2'],'Nangy Findrol|Taninges':[3.8,'2'],
+   'Fillinges|Viuz-en-Sallaz':[1.6,'1'],'Fillinges|Ville-en-Sallaz':[1.6,'1'],
+   'Fillinges|Saint-Jeoire':[3.8,'2'],'Fillinges|Mieussy':[3.8,'2'],'Fillinges|Taninges':[3.8,'2'],
+   'Ville-en-Sallaz|Viuz-en-Sallaz':[1.6,'1'],'Saint-Jeoire|Viuz-en-Sallaz':[1.6,'1'],
+   'Mieussy|Viuz-en-Sallaz':[3.8,'2'],'Taninges|Viuz-en-Sallaz':[3.8,'2'],
+   'Saint-Jeoire|Ville-en-Sallaz':[1.6,'1'],'Mieussy|Ville-en-Sallaz':[1.6,'1'],
+   'Taninges|Ville-en-Sallaz':[3.8,'2'],'Mieussy|Saint-Jeoire':[1.6,'1'],
+   'Saint-Jeoire|Taninges':[3.8,'2'],'Mieussy|Taninges':[1.6,'1'],
+   'Saint-Jeoire|Saint-Jeoire':[1.6,'1'],'Viuz-en-Sallaz|Viuz-en-Sallaz':[1.6,'1']
+  };
   const key=[fromSector,toSector].sort().join('|');
   if(!Object.hasOwn(pairs,key))return null;
   [price,zone]=pairs[key];source=FRANCE_SOURCE;
@@ -70,7 +83,11 @@ function stopReference({networkId,line,fromStop,toStop,travelDate,product,profil
  if(networkId!=='oura-haute-savoie')return null;
  const fromSector=stopSector(fromStop),toSector=stopSector(toStop);
  if(!fromSector||!toSector)return null;
- const result=reference({line,fromSector,toSector,travelDate,product,profile});
+ // The French matrix separates towns that share a cross-border fare sector.
+ const towns={'74197':'Nangy Findrol','74128':'Fillinges','74241':'Saint-Jeoire','74304':'Ville-en-Sallaz','74311':'Viuz-en-Sallaz','74042':'Bonneville','74276':'Taninges','74183':'Mieussy','74256':'Sallanches'};
+ const town=stop=>towns[stop.id.split(':')[1]]||null;
+ if(product==='france'&&fromStop.id===toStop.id)return null;
+ const result=reference({line,fromSector:product==='france'?town(fromStop):fromSector,toSector:product==='france'?town(toStop):toSector,travelDate,product,profile});
  return result?{...result,stopMappingVerified:true,gtfsSource:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',gtfsCheckedOn:'2026-11-07'}:null;
 }
 const api={reference,stopReference,SOURCE,FRANCE_SOURCE};

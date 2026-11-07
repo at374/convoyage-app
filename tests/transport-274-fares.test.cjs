@@ -86,3 +86,29 @@ test('France-only matrix applies only the official identified pairs and correct 
   assert.equal(card.amount,3.8);assert.equal(card.product,'france');assert.equal(card.fareVerified,false);
  }finally{delete global.CP274Fares;}
 });
+test('French local matrix distinguishes villages sharing a Geneva tariff sector',()=>{
+ const stops={
+  'Nangy Findrol':{id:'FR:74197:ZE:58716:HAUTExSAVOIE',lat:46.1423557,lon:6.3179182},
+  Fillinges:{id:'FR:74128:ZE:75337:HAUTExSAVOIE',lat:46.1634053,lon:6.3531174},
+  'Viuz-en-Sallaz':{id:'FR:74311:ZE:58474:HAUTExSAVOIE',lat:46.1423931,lon:6.4033413},
+  'Ville-en-Sallaz':{id:'FR:74304:ZE:57657:HAUTExSAVOIE',lat:46.1428742,lon:6.4185632},
+  'Saint-Jeoire':{id:'FR:74241:ZE:57655:HAUTExSAVOIE',lat:46.138307,lon:6.4579872},
+  Mieussy:{id:'FR:74183:ZE:57651:HAUTExSAVOIE',lat:46.1336799,lon:6.523335},
+  Taninges:{id:'FR:74276:ZE:57620:HAUTExSAVOIE',lat:46.1075737,lon:6.5920651}
+ };
+ const matrix=[
+  ['Nangy Findrol','Fillinges',1.6],['Nangy Findrol','Viuz-en-Sallaz',1.6],['Nangy Findrol','Ville-en-Sallaz',3.8],['Nangy Findrol','Saint-Jeoire',3.8],['Nangy Findrol','Mieussy',3.8],['Nangy Findrol','Taninges',3.8],
+  ['Fillinges','Viuz-en-Sallaz',1.6],['Fillinges','Ville-en-Sallaz',1.6],['Fillinges','Saint-Jeoire',3.8],['Fillinges','Mieussy',3.8],['Fillinges','Taninges',3.8],
+  ['Viuz-en-Sallaz','Ville-en-Sallaz',1.6],['Viuz-en-Sallaz','Saint-Jeoire',1.6],['Viuz-en-Sallaz','Mieussy',3.8],['Viuz-en-Sallaz','Taninges',3.8],
+  ['Ville-en-Sallaz','Saint-Jeoire',1.6],['Ville-en-Sallaz','Mieussy',1.6],['Ville-en-Sallaz','Taninges',3.8],
+  ['Saint-Jeoire','Mieussy',1.6],['Saint-Jeoire','Taninges',3.8],['Mieussy','Taninges',1.6]
+ ];
+ for(const [a,b,amount] of matrix){
+  const q={...request,product:'france',fromStop:stops[a],toStop:stops[b]};
+  assert.equal(fares.stopReference(q)?.amount,amount,a+'–'+b);
+  assert.equal(fares.stopReference({...q,fromStop:stops[b],toStop:stops[a]})?.amount,amount);
+  assert.equal(fares.stopReference({...q,travelDate:'2026-12-13'}),null);
+ }
+ assert.equal(fares.stopReference({...request,product:'france',fromStop:stops.Fillinges,toStop:{...stops.Mieussy,lon:7}}),null);
+ assert.equal(fares.stopReference({...request,product:'france',fromStop:stops.Fillinges,toStop:stops.Fillinges}),null);
+});
