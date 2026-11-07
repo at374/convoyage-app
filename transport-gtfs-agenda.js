@@ -83,6 +83,11 @@ const AURA_RESOURCES_BY_COVERAGE=Object.freeze([Object.freeze({
  // Official OÙRA GTFS: dated calendars decide actual service. This archive has no fare table.
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_EXPRESS&dataFormat=GTFS&dataProfil=OPENDATA',
  bounds:[44.0,2.0,46.9,7.2],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'blablacar-bus',datasetId:'5cdef3698b4c416d21fd76b9',network:'BlaBlaCar Bus',format:'GTFS',federate:true,
+ // Official PAN GTFS updated daily. It contains no fare table: a live quote stays required.
+ url:'https://www.data.gouv.fr/api/1/datasets/r/fd54f81f-4389-4e73-be75-491133d011c3',
+ bounds:[41.0,-5.5,52.0,10.0],timeZone:'Europe/Paris'
 })]);
 // Preserve the established local-network precedence. Departmental resources
 // extend coverage; they must not displace a more specific local feed merely
@@ -93,6 +98,12 @@ const DEFAULT_RESOURCES=Object.freeze([
 ]);
 function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof point.lon==='number'&&
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}
+function airDistanceKm(a,b){
+ if(!validPoint(a)||!validPoint(b))return NaN;
+ const rad=Math.PI/180,lat1=a.lat*rad,lat2=b.lat*rad;
+ const x=Math.sin((b.lat-a.lat)*rad/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin((b.lon-a.lon)*rad/2)**2;
+ return 2*6371*Math.asin(Math.sqrt(x));
+}
 function selected(resource,task){
  const bounds=resource?.bounds;
  return resource?.format==='GTFS'&&/^https:\/\//.test(resource.url||'')&&validPoint(task?.from)&&validPoint(task?.to)&&Array.isArray(bounds)&&bounds.length===4&&
@@ -160,11 +171,16 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  // alongside a complete local pair only consumes a worker slot and duplicates results.
  const localIds=new Set(['80100','83459','81794']);
  const departmental=r=>typeof r?.id==='string'&&/^oura-(allier|ardeche|cantal|drome|isere|loire|haute-loire|puy-de-dome|cars-region-express)$/.test(r.id);
+ const longDistanceProvider=r=>r?.id==='blablacar-bus';
+ const isLongDistance=task=>airDistanceKm(task?.from,task?.to)>=75;
  const hasCompleteLocal=task=>resourceList.some(r=>localIds.has(r.id)&&selected(r,task));
- const partnerCandidates=resourceList.filter(r=>r!==resource&&r.federate&&!taskList.some(task=>departmental(r)&&hasCompleteLocal(task)&&selected(r,task))&&taskList.some(task=>
+ const partnerCandidates=resourceList.filter(r=>r!==resource&&r.federate&&!(longDistanceProvider(r)&&!taskList.some(task=>isLongDistance(task)&&selected(r,task)))&&!taskList.some(task=>departmental(r)&&hasCompleteLocal(task)&&selected(r,task))&&taskList.some(task=>
   crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
   (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to})))));
- partnerCandidates.sort((a,b)=>taskList.filter(t=>selected(b,t)).length-taskList.filter(t=>selected(a,t)).length);
+ partnerCandidates.sort((a,b)=>{
+  const score=r=>taskList.filter(t=>selected(r,t)).length+(longDistanceProvider(r)&&taskList.some(t=>isLongDistance(t)&&selected(r,t))?10:0);
+  return score(b)-score(a);
+ });
  const partners=partnerCandidates.slice(0,3);
  const omittedNetworks=partnerCandidates.slice(3).map(r=>r.network||r.id);
  const eligible=task=>selected(resource,task)||partners.some(r=>crossEnvelopePair(resource,r,task));
@@ -380,7 +396,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  })();
  return {dispose,done,refreshFares};
 }
-const api={DEFAULT_RESOURCES,selected,crossEnvelopePair,searchWindow,serviceDates,mount};
+const api={DEFAULT_RESOURCES,airDistanceKm,selected,crossEnvelopePair,searchWindow,serviceDates,mount};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSAgenda=api;
 })(typeof window!=='undefined'?window:globalThis);

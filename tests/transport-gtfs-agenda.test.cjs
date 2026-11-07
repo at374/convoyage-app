@@ -339,7 +339,7 @@ test('Grenoble to Crolles keeps metropolitan priority while regional GTFS remain
   earliestDeparture:'2026-11-02T09:00:00+01:00',latestArrival:'2026-11-02T12:00:00+01:00'};
  const eligible=agenda.DEFAULT_RESOURCES.filter(resource=>agenda.selected(resource,trip));
  assert.deepEqual(eligible.map(resource=>resource.datasetId),
-  ['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f','61b36a0610344080a78cf407','607860847e79b65f245982db','5bb1caa6634f4136693d9053']);
+  ['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f','61b36a0610344080a78cf407','5cdef3698b4c416d21fd76b9','607860847e79b65f245982db','5bb1caa6634f4136693d9053']);
  const localEligible=eligible.filter(resource=>resource.resolveFromCatalogue);
  const target=panel(),calls=[];
  const session=agenda.mount(target,{tasks:[trip],clientFactory:()=>({
@@ -592,6 +592,18 @@ test('Cars Région Express is a separate dated timetable source, never a static 
  assert.equal(agenda.selected(express,{from:{lat:46.12,lon:5.82},to:{lat:46.19,lon:6.14}}),true);
  assert.equal(agenda.selected(express,{from:{lat:46.12,lon:5.82},to:{lat:48.85,lon:2.35}}),false);
  assert.equal(Object.hasOwn(express,'fareEUR'),false);
+});
+
+test('BlaBlaCar Bus GTFS is a long-distance timetable partner, never a fare claim',async()=>{
+ const bus=agenda.DEFAULT_RESOURCES.find(r=>r.id==='blablacar-bus');
+ assert.ok(bus);assert.equal(bus.datasetId,'5cdef3698b4c416d21fd76b9');assert.equal(bus.federate,true);
+ assert.match(bus.url,/fd54f81f-4389-4e73-be75-491133d011c3/);
+ const trip={label:'Retour',from:{lat:45.188,lon:5.724},to:{lat:45.764,lon:4.835},earliestDeparture:'2026-11-07T10:00:00+01:00'};
+ assert.ok(agenda.airDistanceKm(trip.from,trip.to)>=75);
+ assert.equal(agenda.selected(bus,trip),true);assert.equal(Object.hasOwn(bus,'fareEUR'),false);
+ const local={id:'local',datasetId:'local',network:'Local',format:'GTFS',federate:true,url:'https://example.org/local.zip',bounds:[44.5,4.5,46.2,6.5],timeZone:'Europe/Paris'};
+ let loaded=[];const session=agenda.mount(panel(),{resources:[local,bus],tasks:[trip],clientFactory:()=>({loadNetworks:async resources=>{loaded=resources;return {networks:resources.map(r=>({...summary,source:{...summary.source,network:r.network,url:r.url}}))};},query:async()=>({rows:[],truncated:false}),dispose(){}})});
+ await session.done;assert.deepEqual(loaded.map(r=>r.id),['local','blablacar-bus']);session.dispose();
 });
 
 test('Pays de Gex TPG and TAC Annemasse are bounded official border GTFS resources',async()=>{
