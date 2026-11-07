@@ -29,6 +29,17 @@
 // de prix. Aucun prix supprime, aucun prix invente -- seulement un doublon
 // dangereux retire.
 //
+// Récidive du 7 nov. 2026 (session suivante) : une nouvelle tentative, partie de la
+// même grille ATMB officielle mais sans consulter ce test ni l'historique git, a
+// recréé les 4 barrières ci-dessus sous des IDs légèrement renommés
+// (atmb-bonneville-ouest/-est, atmb-cluses-amont, atmb-scionzier) -- EXACTEMENT les 4
+// mêmes montants classe1/classe2, donc le même doublon dangereux -- plus une 5e,
+// "atmb-cluses-centre" (4,8€/8,6€), également doublon d'une relation point-à-point
+// déjà existante (LE FAYET<->SCIENTRIER). Détecté immédiatement par cette suite de
+// tests (échec) et les 5 barrières + leurs 25 tarifs associés ont été retirés dans la
+// même session (seule l'URL source ajoutée, désormais sans référence, a été laissée
+// dans overlay.u[37] pour ne pas décaler les index déjà utilisés ailleurs).
+//
 // Run: node --test tests/peages-atmb-doublons-barriere-paire.test.cjs
 const assert = require('node:assert/strict');
 const { test } = require('node:test');

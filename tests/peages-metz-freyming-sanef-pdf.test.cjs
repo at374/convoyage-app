@@ -30,7 +30,14 @@
 // EPERNAY et CHARMONT (seul, distinct de CHARMONT-SOUS-BARBUISE déjà résolu) :
 // recherchés dans l'intégralité du texte extrait des 6 pages du PDF SANEF 2026 --
 // absents. Confirme l'hypothèse qu'ils appartiennent à un réseau différent (Cofiroute
-// / A10, cf. src_paires) et restent non résolus par cette source.
+// / A10, cf. src_paires) et restaient non résolus par cette source.
+//
+// EPERNAY résolu le 7 nov. 2026 (session suivante) : alias commercial de "REIMS SUD"
+// (A4 n°23, déjà présent dans aprr.g). Les 31 relations fantômes "EPERNAY" ont été
+// supprimées (nom sans aucun GPS, donc totalement inertes -- cf. mécanisme ix() dans
+// routes-ui.js) et remplacées par une seule relation réelle vers "LA FOLIE-B/PARIS"
+// (REIMS SUD <-> LA FOLIE-B/PARIS, 57,40€/85,50€), ajoutée directement dans
+// peages-aprr.json. CHARMONT (seul) reste non résolu : aucune source trouvée depuis.
 //
 // Run: node --test tests/peages-metz-freyming-sanef-pdf.test.cjs
 const assert = require('node:assert/strict');
@@ -95,13 +102,14 @@ test('the bare "FREYMING-MERLEBACH" spelling was fully renamed to its canonical 
   assert.ok(canonical);
 });
 
-test('EPERNAY and lone CHARMONT remain unresolved (absent from the 2026 Sanef PDF, likely a different network)', () => {
-  // Documentation-only assertion: these names are still dangling under their own
-  // spelling because the Sanef PDF search (full 6-page text extraction) never
-  // matched them. No action taken here, no price altered.
+test('lone CHARMONT remains unresolved (absent from the 2026 Sanef PDF, likely a different network); EPERNAY was resolved separately as a REIMS SUD alias', () => {
+  // Documentation-only assertion. CHARMONT is still dangling under its own spelling
+  // because the Sanef PDF search (full 6-page text extraction) never matched it.
+  // EPERNAY no longer appears at all: its 31 dead relations were removed on 7 nov.
+  // 2026 once it was identified as a REIMS SUD alias (see aprr.g / aprr.p directly).
   const epernay = overlay.paires.some(p => p[0] === 'EPERNAY' || p[1] === 'EPERNAY');
   const charmont = overlay.paires.some(p => p[0] === 'CHARMONT' || p[1] === 'CHARMONT');
-  assert.ok(epernay, 'EPERNAY should still be present, unresolved');
+  assert.equal(epernay, false, 'EPERNAY should no longer appear in overlay.paires (resolved as REIMS SUD alias)');
   assert.ok(charmont, 'lone CHARMONT should still be present, unresolved');
 });
 

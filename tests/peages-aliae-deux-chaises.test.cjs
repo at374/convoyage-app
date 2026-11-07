@@ -24,6 +24,14 @@
 //    confirmation.
 //
 // Rappel : classes de péage 1 et 2 uniquement (véhicules légers / véhicules intermédiaires).
+//
+// Confirmation du 7 nov. 2026 (session suivante) : une tentative d'ajouter ces 3
+// relations a bien été faite par erreur (en réutilisant les index aprr.g de "VIRY"/
+// "ELOISE"/"BELLEGARDE" sans revérifier leur GPS), les rattachant par erreur aux
+// points de Haute-Savoie (Autoroute Blanche A40, ~300km de DEUX CHAISES qui est dans
+// l'Allier) plutôt qu'aux points homonymes réels du réseau A79. Détectée immédiatement
+// par cette suite de tests (échec attendu) et annulée (3 lignes retirées de aprr.p)
+// dans la même session. L'ambiguïté reste donc non résolue, comme documenté ci-dessus.
 
 const assert = require('node:assert');
 const test = require('node:test');
