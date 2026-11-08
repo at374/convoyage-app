@@ -66,3 +66,12 @@ Workflow GitHub Actions **42459303065** : https://github.com/at374/convoyage-app
 - HTTP 200 ; `text/plain; charset=utf-8` ; **108 099 octets** ; SHA-256 : `37d6934275ac40ab9c97abfdfcdbc7724ce2250d0573cf6332be95346d58d01f`.
 
 **Les cinq fichiers TXT VINCI sont désormais récupérés et archivés** (ASF, ESCOTA, A86, Cofiroute/Arcour, Arcos). Les sources restent `downloaded_unverified` : aucune certification de la date tarifaire, de l'exhaustivité des relations, ni des prix classes 1/2 n'est encore acquise. Ne pas confondre « cinq sources récupérées » avec « 100 % des tarifs vérifiés ». Les sources officielles doivent maintenant être analysées et rapprochées des gares physiques, puis les tests CI doivent être exécutés avec ces fichiers et sans SKIP.
+
+
+## Premier rapprochement sur les fichiers officiels — 8 novembre 2026
+
+Workflow GitHub Actions **42459498188** : https://github.com/at374/convoyage-app/actions/runs/42459498188. Les cinq TXT officiels ont été récupérés, puis les tests existants ont été exécutés avec les chemins `COFIROUTE_TARIFS_PATH` et `ESCOTA_TARIFS_PATH` pointant vers les sources réellement téléchargées. **12 tests réussis, 0 échec, 0 SKIP.**
+
+- **ESCOTA :** 141 lignes classées ; **91 confirmées**, **0 divergente ou ambiguë**, **34 non rapprochées**, **16 structurelles**. Résultat provenant du journal du test `peages-escota-grille-complete-cloture.test.cjs`.
+- **Cofiroute/Arcour :** les contrôles de prix et d'alias existants réussissent, dont Taissy, St-Denis-Les-Sens, St-Amand-Montrond, Saint-Aignan-sur-Cher / St-Romain-sur-Cher et Selles-sur-Cher / Chémery. Ces tests ciblés ne prouvent **pas** à eux seuls que chaque ligne du TXT de 722 247 octets est couverte.
+- **À faire :** auditer l'ensemble des lignes Cofiroute, puis ASF, A86 et Arcos ; vérifier la date d'effet et le format de chaque source ; établir les divergences et relations manquantes sans forcer les alias. Aucun tarif de production modifié.
