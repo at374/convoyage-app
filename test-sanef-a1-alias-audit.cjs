@@ -23,7 +23,7 @@ for(let i=0;i<entries.length;i++){
   assert.ok(row[3]);
   assert.equal(row[4],'','coordinates must remain unconfirmed');
   assert.match(row[5],/^https:\/\/www\.autoroutes\.sanef\.com\/sites\/default\/files\/2025-12\//);
-  assert.equal(row[6],'','PDF page not yet independently recorded');
+  assert.equal(row[6],'33','SANEF annexe 2 printed page 33');
   assert.match(row[7],/PR \d+\+\d+/);
  }
 
