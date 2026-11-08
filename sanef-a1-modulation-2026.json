@@ -1,0 +1,1229 @@
+{
+  "version": "SANEF A1 modulation 2026-02-01 — préparation sans déploiement",
+  "application": "2026-02-01",
+  "source": "https://www.autoroutes.sanef.com/sites/default/files/2026-02/grille-modulee-01022026.pdf",
+  "status": "experimental_not_activated",
+  "direction": "vers Paris — validation requise",
+  "records": [
+    {
+      "origine": "SETQUES (CALAIS)",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 1850,
+        "classe1_vert": 1620,
+        "classe1_rouge": 2080,
+        "classe2_normal": 2940
+      }
+    },
+    {
+      "origine": "L AUDOMAROIS",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 1550,
+        "classe1_vert": 1320,
+        "classe1_rouge": 1780,
+        "classe2_normal": 2250
+      }
+    },
+    {
+      "origine": "THEROUANNE",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 1430,
+        "classe1_vert": 1200,
+        "classe1_rouge": 1660,
+        "classe2_normal": 2170
+      }
+    },
+    {
+      "origine": "LILLERS",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 1280,
+        "classe1_vert": 1050,
+        "classe1_rouge": 1510,
+        "classe2_normal": 1920
+      }
+    },
+    {
+      "origine": "LE BETHUNOIS",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 1110,
+        "classe1_vert": 880,
+        "classe1_rouge": 1340,
+        "classe2_normal": 1850
+      }
+    },
+    {
+      "origine": "NOEUX LES MINES",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 1080,
+        "classe1_vert": 850,
+        "classe1_rouge": 1310,
+        "classe2_normal": 1680
+      }
+    },
+    {
+      "origine": "LE LIEVINOIS",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 1060,
+        "classe1_vert": 830,
+        "classe1_rouge": 1290,
+        "classe2_normal": 1580
+      }
+    },
+    {
+      "origine": "THELUS",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 940,
+        "classe1_vert": 710,
+        "classe1_rouge": 1170,
+        "classe2_normal": 1340
+      }
+    },
+    {
+      "origine": "MARQUION",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 840,
+        "classe1_vert": 720,
+        "classe1_rouge": 960,
+        "classe2_normal": 1290
+      }
+    },
+    {
+      "origine": "MASNIERES",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 840,
+        "classe1_vert": 720,
+        "classe1_rouge": 960,
+        "classe2_normal": 1120
+      }
+    },
+    {
+      "origine": "ST QUENTIN LA VALLEE",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 800,
+        "classe1_vert": 680,
+        "classe1_rouge": 920,
+        "classe2_normal": 1150
+      }
+    },
+    {
+      "origine": "GAUCHY",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 750,
+        "classe1_vert": 630,
+        "classe1_rouge": 870,
+        "classe2_normal": 1140
+      }
+    },
+    {
+      "origine": "COURBES",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 860,
+        "classe1_vert": 740,
+        "classe1_rouge": 980,
+        "classe2_normal": 1220
+      }
+    },
+    {
+      "origine": "LAON",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 950,
+        "classe1_vert": 830,
+        "classe1_rouge": 1070,
+        "classe2_normal": 1390
+      }
+    },
+    {
+      "origine": "VALLEE DE L AISNE",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 1210,
+        "classe1_vert": 1090,
+        "classe1_rouge": 1330,
+        "classe2_normal": 1850
+      }
+    },
+    {
+      "origine": "COURCY (REIMS)",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 1440,
+        "classe1_vert": 1320,
+        "classe1_rouge": 1560,
+        "classe2_normal": 2200
+      }
+    },
+    {
+      "origine": "JULES VERNE",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 790,
+        "classe1_vert": 670,
+        "classe1_rouge": 910,
+        "classe2_normal": 1220
+      }
+    },
+    {
+      "origine": "VILLERS BRETONNEUX",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 570,
+        "classe1_vert": 450,
+        "classe1_rouge": 690,
+        "classe2_normal": 900
+      }
+    },
+    {
+      "origine": "SANTERRE",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 430,
+        "classe1_vert": 310,
+        "classe1_rouge": 550,
+        "classe2_normal": 610
+      }
+    },
+    {
+      "origine": "ATHIES",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 500,
+        "classe1_vert": 380,
+        "classe1_rouge": 620,
+        "classe2_normal": 730
+      }
+    },
+    {
+      "origine": "HORDAIN",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 1050,
+        "classe1_vert": 920,
+        "classe1_rouge": 1180,
+        "classe2_normal": 1500
+      }
+    },
+    {
+      "origine": "FONTAINE NOTRE DAME",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 850,
+        "classe1_vert": 720,
+        "classe1_rouge": 980,
+        "classe2_normal": 1230
+      }
+    },
+    {
+      "origine": "FRESNES (DOURGES)",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 1240,
+        "classe1_vert": 930,
+        "classe1_rouge": 1550,
+        "classe2_normal": 1740
+      }
+    },
+    {
+      "origine": "L ARRAGEOIS",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 910,
+        "classe1_vert": 680,
+        "classe1_rouge": 1140,
+        "classe2_normal": 1290
+      }
+    },
+    {
+      "origine": "BAPAUME",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 660,
+        "classe1_vert": 490,
+        "classe1_rouge": 830,
+        "classe2_normal": 990
+      }
+    },
+    {
+      "origine": "MAUREPAS",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 530,
+        "classe1_vert": 400,
+        "classe1_rouge": 660,
+        "classe2_normal": 780
+      }
+    },
+    {
+      "origine": "VALLEE DE LA SOMME",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 460,
+        "classe1_vert": 340,
+        "classe1_rouge": 580,
+        "classe2_normal": 710
+      }
+    },
+    {
+      "origine": "ROYE",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 290,
+        "classe1_vert": 220,
+        "classe1_rouge": 360,
+        "classe2_normal": 460
+      }
+    },
+    {
+      "origine": "RESSONS",
+      "destination": "ARSY",
+      "centimes": {
+        "classe1_normal": 100,
+        "classe1_vert": 70,
+        "classe1_rouge": 130,
+        "classe2_normal": 150
+      }
+    },
+    {
+      "origine": "SETQUES (CALAIS)",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 1900,
+        "classe1_vert": 1670,
+        "classe1_rouge": 2130,
+        "classe2_normal": 3010
+      }
+    },
+    {
+      "origine": "L AUDOMAROIS",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 1640,
+        "classe1_vert": 1410,
+        "classe1_rouge": 1870,
+        "classe2_normal": 2420
+      }
+    },
+    {
+      "origine": "THEROUANNE",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 1530,
+        "classe1_vert": 1300,
+        "classe1_rouge": 1760,
+        "classe2_normal": 2270
+      }
+    },
+    {
+      "origine": "LILLERS",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 1370,
+        "classe1_vert": 1140,
+        "classe1_rouge": 1600,
+        "classe2_normal": 1950
+      }
+    },
+    {
+      "origine": "LE BETHUNOIS",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 1260,
+        "classe1_vert": 1030,
+        "classe1_rouge": 1490,
+        "classe2_normal": 1900
+      }
+    },
+    {
+      "origine": "NOEUX LES MINES",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 1180,
+        "classe1_vert": 950,
+        "classe1_rouge": 1410,
+        "classe2_normal": 1800
+      }
+    },
+    {
+      "origine": "LE LIEVINOIS",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 1100,
+        "classe1_vert": 870,
+        "classe1_rouge": 1330,
+        "classe2_normal": 1680
+      }
+    },
+    {
+      "origine": "THELUS",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 1030,
+        "classe1_vert": 800,
+        "classe1_rouge": 1260,
+        "classe2_normal": 1580
+      }
+    },
+    {
+      "origine": "MARQUION",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 890,
+        "classe1_vert": 760,
+        "classe1_rouge": 1020,
+        "classe2_normal": 1390
+      }
+    },
+    {
+      "origine": "MASNIERES",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 860,
+        "classe1_vert": 730,
+        "classe1_rouge": 990,
+        "classe2_normal": 1230
+      }
+    },
+    {
+      "origine": "ST QUENTIN LA VALLEE",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 870,
+        "classe1_vert": 740,
+        "classe1_rouge": 1000,
+        "classe2_normal": 1310
+      }
+    },
+    {
+      "origine": "GAUCHY",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 860,
+        "classe1_vert": 730,
+        "classe1_rouge": 990,
+        "classe2_normal": 1250
+      }
+    },
+    {
+      "origine": "COURBES",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 890,
+        "classe1_vert": 760,
+        "classe1_rouge": 1020,
+        "classe2_normal": 1260
+      }
+    },
+    {
+      "origine": "LAON",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 990,
+        "classe1_vert": 860,
+        "classe1_rouge": 1120,
+        "classe2_normal": 1560
+      }
+    },
+    {
+      "origine": "VALLEE DE L AISNE",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 1250,
+        "classe1_vert": 1120,
+        "classe1_rouge": 1380,
+        "classe2_normal": 1850
+      }
+    },
+    {
+      "origine": "COURCY (REIMS)",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 1470,
+        "classe1_vert": 1340,
+        "classe1_rouge": 1600,
+        "classe2_normal": 2270
+      }
+    },
+    {
+      "origine": "JULES VERNE",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 850,
+        "classe1_vert": 720,
+        "classe1_rouge": 980,
+        "classe2_normal": 1250
+      }
+    },
+    {
+      "origine": "VILLERS BRETONNEUX",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 630,
+        "classe1_vert": 500,
+        "classe1_rouge": 760,
+        "classe2_normal": 1000
+      }
+    },
+    {
+      "origine": "SANTERRE",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 460,
+        "classe1_vert": 330,
+        "classe1_rouge": 590,
+        "classe2_normal": 670
+      }
+    },
+    {
+      "origine": "ATHIES",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 590,
+        "classe1_vert": 460,
+        "classe1_rouge": 720,
+        "classe2_normal": 820
+      }
+    },
+    {
+      "origine": "HORDAIN",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 1080,
+        "classe1_vert": 930,
+        "classe1_rouge": 1230,
+        "classe2_normal": 1650
+      }
+    },
+    {
+      "origine": "FONTAINE NOTRE DAME",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 900,
+        "classe1_vert": 750,
+        "classe1_rouge": 1050,
+        "classe2_normal": 1410
+      }
+    },
+    {
+      "origine": "FRESNES (DOURGES)",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 1270,
+        "classe1_vert": 950,
+        "classe1_rouge": 1590,
+        "classe2_normal": 1840
+      }
+    },
+    {
+      "origine": "L ARRAGEOIS",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 910,
+        "classe1_vert": 680,
+        "classe1_rouge": 1140,
+        "classe2_normal": 1380
+      }
+    },
+    {
+      "origine": "BAPAUME",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 710,
+        "classe1_vert": 530,
+        "classe1_rouge": 890,
+        "classe2_normal": 1110
+      }
+    },
+    {
+      "origine": "MAUREPAS",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 580,
+        "classe1_vert": 430,
+        "classe1_rouge": 730,
+        "classe2_normal": 920
+      }
+    },
+    {
+      "origine": "VALLEE DE LA SOMME",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 530,
+        "classe1_vert": 400,
+        "classe1_rouge": 660,
+        "classe2_normal": 780
+      }
+    },
+    {
+      "origine": "ROYE",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 390,
+        "classe1_vert": 290,
+        "classe1_rouge": 490,
+        "classe2_normal": 580
+      }
+    },
+    {
+      "origine": "RESSONS",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 170,
+        "classe1_vert": 110,
+        "classe1_rouge": 230,
+        "classe2_normal": 240
+      }
+    },
+    {
+      "origine": "ARSY",
+      "destination": "CHEVRIERES",
+      "centimes": {
+        "classe1_normal": 70,
+        "classe1_vert": 50,
+        "classe1_rouge": 90,
+        "classe2_normal": 120
+      }
+    },
+    {
+      "origine": "SETQUES (CALAIS)",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 2020,
+        "classe1_vert": 1730,
+        "classe1_rouge": 2310,
+        "classe2_normal": 3180
+      }
+    },
+    {
+      "origine": "L AUDOMAROIS",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1820,
+        "classe1_vert": 1530,
+        "classe1_rouge": 2110,
+        "classe2_normal": 2810
+      }
+    },
+    {
+      "origine": "THEROUANNE",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1690,
+        "classe1_vert": 1400,
+        "classe1_rouge": 1980,
+        "classe2_normal": 2620
+      }
+    },
+    {
+      "origine": "LILLERS",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1510,
+        "classe1_vert": 1220,
+        "classe1_rouge": 1800,
+        "classe2_normal": 2270
+      }
+    },
+    {
+      "origine": "LE BETHUNOIS",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1440,
+        "classe1_vert": 1150,
+        "classe1_rouge": 1730,
+        "classe2_normal": 2120
+      }
+    },
+    {
+      "origine": "NOEUX LES MINES",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1320,
+        "classe1_vert": 1030,
+        "classe1_rouge": 1610,
+        "classe2_normal": 2070
+      }
+    },
+    {
+      "origine": "LE LIEVINOIS",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1290,
+        "classe1_vert": 1000,
+        "classe1_rouge": 1580,
+        "classe2_normal": 2030
+      }
+    },
+    {
+      "origine": "THELUS",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1210,
+        "classe1_vert": 920,
+        "classe1_rouge": 1500,
+        "classe2_normal": 1890
+      }
+    },
+    {
+      "origine": "MARQUION",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1030,
+        "classe1_vert": 850,
+        "classe1_rouge": 1210,
+        "classe2_normal": 1620
+      }
+    },
+    {
+      "origine": "MASNIERES",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 980,
+        "classe1_vert": 800,
+        "classe1_rouge": 1160,
+        "classe2_normal": 1420
+      }
+    },
+    {
+      "origine": "ST QUENTIN LA VALLEE",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1010,
+        "classe1_vert": 830,
+        "classe1_rouge": 1190,
+        "classe2_normal": 1380
+      }
+    },
+    {
+      "origine": "GAUCHY",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 940,
+        "classe1_vert": 760,
+        "classe1_rouge": 1120,
+        "classe2_normal": 1380
+      }
+    },
+    {
+      "origine": "COURBES",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1050,
+        "classe1_vert": 870,
+        "classe1_rouge": 1230,
+        "classe2_normal": 1390
+      }
+    },
+    {
+      "origine": "LAON",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1170,
+        "classe1_vert": 990,
+        "classe1_rouge": 1350,
+        "classe2_normal": 1570
+      }
+    },
+    {
+      "origine": "VALLEE DE L AISNE",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1350,
+        "classe1_vert": 1170,
+        "classe1_rouge": 1530,
+        "classe2_normal": 2050
+      }
+    },
+    {
+      "origine": "COURCY (REIMS)",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1510,
+        "classe1_vert": 1330,
+        "classe1_rouge": 1690,
+        "classe2_normal": 2280
+      }
+    },
+    {
+      "origine": "JULES VERNE",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 980,
+        "classe1_vert": 800,
+        "classe1_rouge": 1160,
+        "classe2_normal": 1540
+      }
+    },
+    {
+      "origine": "VILLERS BRETONNEUX",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 820,
+        "classe1_vert": 640,
+        "classe1_rouge": 1000,
+        "classe2_normal": 1200
+      }
+    },
+    {
+      "origine": "SANTERRE",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 590,
+        "classe1_vert": 410,
+        "classe1_rouge": 770,
+        "classe2_normal": 890
+      }
+    },
+    {
+      "origine": "ATHIES",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 690,
+        "classe1_vert": 510,
+        "classe1_rouge": 870,
+        "classe2_normal": 970
+      }
+    },
+    {
+      "origine": "HORDAIN",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1290,
+        "classe1_vert": 1110,
+        "classe1_rouge": 1470,
+        "classe2_normal": 1940
+      }
+    },
+    {
+      "origine": "FONTAINE NOTRE DAME",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1040,
+        "classe1_vert": 860,
+        "classe1_rouge": 1220,
+        "classe2_normal": 1630
+      }
+    },
+    {
+      "origine": "FRESNES (DOURGES)",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1460,
+        "classe1_vert": 1090,
+        "classe1_rouge": 1830,
+        "classe2_normal": 2110
+      }
+    },
+    {
+      "origine": "L ARRAGEOIS",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 1150,
+        "classe1_vert": 860,
+        "classe1_rouge": 1440,
+        "classe2_normal": 1590
+      }
+    },
+    {
+      "origine": "BAPAUME",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 880,
+        "classe1_vert": 660,
+        "classe1_rouge": 1100,
+        "classe2_normal": 1340
+      }
+    },
+    {
+      "origine": "MAUREPAS",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 730,
+        "classe1_vert": 550,
+        "classe1_rouge": 910,
+        "classe2_normal": 1110
+      }
+    },
+    {
+      "origine": "VALLEE DE LA SOMME",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 700,
+        "classe1_vert": 520,
+        "classe1_rouge": 880,
+        "classe2_normal": 1050
+      }
+    },
+    {
+      "origine": "ROYE",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 600,
+        "classe1_vert": 450,
+        "classe1_rouge": 750,
+        "classe2_normal": 890
+      }
+    },
+    {
+      "origine": "RESSONS",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 310,
+        "classe1_vert": 230,
+        "classe1_rouge": 390,
+        "classe2_normal": 470
+      }
+    },
+    {
+      "origine": "ARSY",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 190,
+        "classe1_vert": 120,
+        "classe1_rouge": 260,
+        "classe2_normal": 300
+      }
+    },
+    {
+      "origine": "CHEVRIERES",
+      "destination": "SENLIS",
+      "centimes": {
+        "classe1_normal": 150,
+        "classe1_vert": 100,
+        "classe1_rouge": 200,
+        "classe2_normal": 200
+      }
+    },
+    {
+      "origine": "SETQUES (CALAIS)",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 2520,
+        "classe1_vert": 2130,
+        "classe1_rouge": 2910,
+        "classe2_normal": 3800
+      }
+    },
+    {
+      "origine": "L AUDOMAROIS",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 2250,
+        "classe1_vert": 1860,
+        "classe1_rouge": 2640,
+        "classe2_normal": 3320
+      }
+    },
+    {
+      "origine": "THEROUANNE",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 2070,
+        "classe1_vert": 1680,
+        "classe1_rouge": 2460,
+        "classe2_normal": 3120
+      }
+    },
+    {
+      "origine": "LILLERS",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1950,
+        "classe1_vert": 1560,
+        "classe1_rouge": 2340,
+        "classe2_normal": 2800
+      }
+    },
+    {
+      "origine": "LE BETHUNOIS",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1870,
+        "classe1_vert": 1480,
+        "classe1_rouge": 2260,
+        "classe2_normal": 2770
+      }
+    },
+    {
+      "origine": "NOEUX LES MINES",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1720,
+        "classe1_vert": 1330,
+        "classe1_rouge": 2110,
+        "classe2_normal": 2700
+      }
+    },
+    {
+      "origine": "LE LIEVINOIS",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1660,
+        "classe1_vert": 1270,
+        "classe1_rouge": 2050,
+        "classe2_normal": 2620
+      }
+    },
+    {
+      "origine": "THELUS",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1610,
+        "classe1_vert": 1220,
+        "classe1_rouge": 2000,
+        "classe2_normal": 2420
+      }
+    },
+    {
+      "origine": "MARQUION",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1290,
+        "classe1_vert": 1020,
+        "classe1_rouge": 1560,
+        "classe2_normal": 2120
+      }
+    },
+    {
+      "origine": "MASNIERES",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1270,
+        "classe1_vert": 1000,
+        "classe1_rouge": 1540,
+        "classe2_normal": 2100
+      }
+    },
+    {
+      "origine": "ST QUENTIN LA VALLEE",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1360,
+        "classe1_vert": 1090,
+        "classe1_rouge": 1630,
+        "classe2_normal": 1980
+      }
+    },
+    {
+      "origine": "GAUCHY",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1260,
+        "classe1_vert": 990,
+        "classe1_rouge": 1530,
+        "classe2_normal": 1920
+      }
+    },
+    {
+      "origine": "COURBES",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1280,
+        "classe1_vert": 1010,
+        "classe1_rouge": 1550,
+        "classe2_normal": 1920
+      }
+    },
+    {
+      "origine": "LAON",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1430,
+        "classe1_vert": 1160,
+        "classe1_rouge": 1700,
+        "classe2_normal": 2250
+      }
+    },
+    {
+      "origine": "VALLEE DE L AISNE",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1590,
+        "classe1_vert": 1320,
+        "classe1_rouge": 1860,
+        "classe2_normal": 2320
+      }
+    },
+    {
+      "origine": "COURCY (REIMS)",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1770,
+        "classe1_vert": 1500,
+        "classe1_rouge": 2040,
+        "classe2_normal": 2870
+      }
+    },
+    {
+      "origine": "JULES VERNE",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1190,
+        "classe1_vert": 920,
+        "classe1_rouge": 1460,
+        "classe2_normal": 1900
+      }
+    },
+    {
+      "origine": "VILLERS BRETONNEUX",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1030,
+        "classe1_vert": 760,
+        "classe1_rouge": 1300,
+        "classe2_normal": 1520
+      }
+    },
+    {
+      "origine": "SANTERRE",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 870,
+        "classe1_vert": 600,
+        "classe1_rouge": 1140,
+        "classe2_normal": 1280
+      }
+    },
+    {
+      "origine": "ATHIES",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 940,
+        "classe1_vert": 670,
+        "classe1_rouge": 1210,
+        "classe2_normal": 1450
+      }
+    },
+    {
+      "origine": "HORDAIN",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1630,
+        "classe1_vert": 1350,
+        "classe1_rouge": 1910,
+        "classe2_normal": 2390
+      }
+    },
+    {
+      "origine": "FONTAINE NOTRE DAME",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1490,
+        "classe1_vert": 1210,
+        "classe1_rouge": 1770,
+        "classe2_normal": 2190
+      }
+    },
+    {
+      "origine": "FRESNES (DOURGES)",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1890,
+        "classe1_vert": 1420,
+        "classe1_rouge": 2290,
+        "classe2_normal": 2750
+      }
+    },
+    {
+      "origine": "L ARRAGEOIS",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1560,
+        "classe1_vert": 1170,
+        "classe1_rouge": 1950,
+        "classe2_normal": 2210
+      }
+    },
+    {
+      "origine": "BAPAUME",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1290,
+        "classe1_vert": 970,
+        "classe1_rouge": 1610,
+        "classe2_normal": 1900
+      }
+    },
+    {
+      "origine": "MAUREPAS",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1100,
+        "classe1_vert": 820,
+        "classe1_rouge": 1380,
+        "classe2_normal": 1690
+      }
+    },
+    {
+      "origine": "VALLEE DE LA SOMME",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 1060,
+        "classe1_vert": 790,
+        "classe1_rouge": 1330,
+        "classe2_normal": 1570
+      }
+    },
+    {
+      "origine": "ROYE",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 880,
+        "classe1_vert": 660,
+        "classe1_rouge": 1100,
+        "classe2_normal": 1260
+      }
+    },
+    {
+      "origine": "RESSONS",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 620,
+        "classe1_vert": 460,
+        "classe1_rouge": 780,
+        "classe2_normal": 930
+      }
+    },
+    {
+      "origine": "ARSY",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 490,
+        "classe1_vert": 370,
+        "classe1_rouge": 610,
+        "classe2_normal": 710
+      }
+    },
+    {
+      "origine": "CHEVRIERES",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 380,
+        "classe1_vert": 280,
+        "classe1_rouge": 480,
+        "classe2_normal": 560
+      }
+    },
+    {
+      "origine": "SENLIS",
+      "destination": "CHAMANT",
+      "centimes": {
+        "classe1_normal": 220,
+        "classe1_vert": 150,
+        "classe1_rouge": 290,
+        "classe2_normal": 330
+      }
+    }
+  ]
+}
