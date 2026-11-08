@@ -44,7 +44,7 @@ const verifiedBeuzeville = new Map([
   ['HEUDEBOUVILLE N°18', [6.6, 10.4]],
   ['BOURG-ACHARD N°25', [4.1, 6.5]],
 ]);
-const normalize = value => String(value).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const normalize = value => String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const official = new Map([...verifiedBeuzeville].map(([name, prices]) => [normalize(name), prices]));
 const divergences = Array.isArray(report.divergences) ? report.divergences : [];
 const verified = divergences.map(d => {
