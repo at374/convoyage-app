@@ -1,0 +1,21 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const script=fs.readFileSync(path.join(__dirname,'sanef-a1-browser-preview.js'),'utf8');
+const data=JSON.parse(fs.readFileSync(path.join(__dirname,'sanef-a1-modulation-2026.json'),'utf8'));
+const aliases=JSON.parse(fs.readFileSync(path.join(__dirname,'sanef-a1-gare-alias-2026.json'),'utf8'));
+let calls=0;
+const window={SanefA1OfficialSelector:{selectionner:(d,a,req,normal)=>({status:'MODULATION_PREVIEW',priceCents:normal,modulatedPriceCents:1250,certifiedForBilling:false})}};
+const fetch=async name=>{calls++;return {ok:true,json:async()=>name.includes('modulation')?data:aliases};};
+vm.runInNewContext(script,{window,fetch},{filename:'sanef-a1-browser-preview.js'});
+(async()=>{
+ const preview=window.CPSanefA1Preview2026.preview;let count=0;
+ const normal=await preview({},1000);
+ assert.equal(normal.status,'NORMAL_ONLY');assert.equal(calls,0);count+=2;
+ const r=await preview({previewExplicitlyRequested:true},1000);
+ assert.equal(r.status,'MODULATION_PREVIEW');assert.equal(r.priceCents,1000);assert.equal(calls,2);count+=3;
+ const again=await preview({previewExplicitlyRequested:true},1000);
+ assert.equal(again.status,'MODULATION_PREVIEW');assert.equal(calls,2);count+=2;
+ const invalid=await preview({previewExplicitlyRequested:true},-1);
+ assert.equal(invalid.status,'NORMAL_ONLY');assert.equal(calls,2);count+=2;
+ console.log('PASS '+count+' SANEF A1 browser bridge assertions');
+})().catch(e=>{console.error(e);process.exitCode=1;});
