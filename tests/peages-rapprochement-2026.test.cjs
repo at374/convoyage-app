@@ -23,6 +23,10 @@ test('rapprochement : bilan complet et ecarts Beuzeville visibles', () => {
   for (const [category, count] of Object.entries(r.unmatched_classification)) assert.equal(r.unmatched_details.filter(x => x.classification === category).length, count);
   assert.equal(r.missing_pair_unique_gates, 148);
   assert.equal(r.missing_name_counts.length, 378);
+  assert.ok(Array.isArray(r.missing_name_candidates));
+  assert.ok(r.missing_name_candidates.every(x => x.status === 'A_VERIFIER_MANUELLEMENT' && x.candidates.length >= 1 && x.candidates.length <= 8));
+  assert.ok(r.missing_name_candidates.every(x => r.missing_name_counts.some(y => y.gate === x.gate)));
+  assert.ok(r.missing_name_candidates.every((x, i, arr) => i === 0 || arr[i - 1].occurrences >= x.occurrences));
   assert.equal(r.missing_name_counts[0].gate, 'PARIS (LA FOLIE BESSIN)');
   assert.equal(r.missing_name_counts[0].occurrences, 203);
   assert.ok(r.missing_name_counts.every((x, i, arr) => x.gate && x.occurrences > 0 && (i === 0 || arr[i - 1].occurrences >= x.occurrences)));
