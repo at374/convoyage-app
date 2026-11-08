@@ -1,6 +1,11 @@
 name: Decouvrir sources officielles VINCI
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/decouvrir-sources-vinci.cjs'
+      - '.github/workflows/decouvrir-sources-vinci.yml'
 permissions:
   contents: read
 jobs:
