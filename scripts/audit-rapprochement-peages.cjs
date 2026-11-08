@@ -30,9 +30,13 @@ const report = {
   missing_pair_origins: [],
   missing_pair_examples: [],
   missing_pair_details: [],
+  missing_pair_unique_gates: 0,
+  missing_name_counts: [],
 };
 const unmatchedByOrigin = new Map();
 const missingPairByOrigin = new Map();
+const missingNameCounts = new Map();
+const missingPairGates = new Set();
 for (const p of overlay.paires) {
   const candidates = map.get(key(p[0], p[1]));
   if (!candidates) {
@@ -40,7 +44,14 @@ for (const p of overlay.paires) {
     const missingEndpoints = Number(!knownNames.has(normalize(p[0]))) + Number(!knownNames.has(normalize(p[1])));
     const group = missingEndpoints === 2 ? 'both_endpoints_missing' : missingEndpoints === 1 ? 'one_endpoint_missing' : 'both_endpoints_present_pair_missing';
     report.unmatched_classification[group]++;
+    if (missingEndpoints > 0) {
+      for (const name of [p[0], p[1]]) {
+        if (!knownNames.has(normalize(name))) missingNameCounts.set(name, (missingNameCounts.get(name) || 0) + 1);
+      }
+    }
     if (missingEndpoints === 0) {
+      missingPairGates.add(normalize(p[0]));
+      missingPairGates.add(normalize(p[1]));
       missingPairByOrigin.set(p[0], (missingPairByOrigin.get(p[0]) || 0) + 1);
       const detail = { origin: p[0], destination: p[1], overlay_class1: p[2], overlay_class2: p[3] };
       report.missing_pair_details.push(detail);
@@ -58,9 +69,12 @@ for (const p of overlay.paires) {
     report.divergences.push({ origin: p[0], destination: p[1], base_class1: actual[0], base_class2: actual[1], overlay_class1: p[2], overlay_class2: p[3] });
   }
 }
+report.missing_pair_unique_gates = missingPairGates.size;
+report.missing_name_counts = [...missingNameCounts].map(([gate, occurrences]) => ({ gate, occurrences })).sort((a, b) => b.occurrences - a.occurrences || a.gate.localeCompare(b.gate));
 report.missing_pair_origins = [...missingPairByOrigin].map(([origin, count]) => ({ origin, count })).sort((a, b) => b.count - a.count || a.origin.localeCompare(b.origin));
 report.unmatched_origins = [...unmatchedByOrigin].map(([origin, count]) => ({ origin, count })).sort((a, b) => b.count - a.count || a.origin.localeCompare(b.origin));
 report.unmatched_origin_count = report.unmatched_origins.length;
+if (report.missing_name_counts.some(x => x.occurrences <= 0)) throw Error('Compteur de noms absent invalide');
 if (report.missing_pair_details.length !== report.unmatched_classification.both_endpoints_present_pair_missing) throw Error('Paires absentes : details incomplets');
 if (report.missing_pair_origins.reduce((a, b) => a + b.count, 0) !== report.unmatched_classification.both_endpoints_present_pair_missing) throw Error('Paires absentes : regroupement incoherent');
 if (Object.values(report.unmatched_classification).reduce((a, b) => a + b, 0) !== report.not_matched) throw Error('Classification des relations non rapprochees incoherente');
