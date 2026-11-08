@@ -30,7 +30,13 @@ vm.runInNewContext(script,{window,fetch},{filename:'sanef-a1-browser-preview.js'
   assert.equal(fallback.reason,reason);count++;
   assert.equal(calls,2,'unconfirmed preview must not fetch');count++;
  }
-  const outside=await preview({...valid,passageLocal:'2026-11-08T12:00:00'},1000);
+  for(const flag of ['jourFerie','lundiFerie','mardiFerie']){
+  const rejected=await preview({...valid,[flag]:true},1000);
+  assert.equal(rejected.status,'NORMAL_ONLY');count++;
+  assert.equal(rejected.reason,'calendrier_ferie_a_verifier');count++;
+  assert.equal(calls,2,'holiday exception must not fetch');count++;
+ }
+ const outside=await preview({...valid,passageLocal:'2026-11-08T12:00:00'},1000);
  assert.equal(outside.status,'NORMAL_ONLY');count++;
  assert.equal(outside.reason,'hors_plage_modulee');count++;
  assert.equal(calls,2,'non-modulated hour must not fetch');count++;
