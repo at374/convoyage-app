@@ -12,7 +12,7 @@ test('registre VINCI : cinq reseaux distincts et statuts verifiables', () => {
   const expected = ['ASF', 'ESCOTA', 'COFIROUTE_ARCOUR', 'A86', 'ARCOS'];
   assert.deepEqual(registry.sources.map(s => s.operator).sort(), expected.sort());
   for (const source of registry.sources) {
-    assert.match(source.effective_date, /^2026-\\d{2}-\\d{2}$/);
+    assert.match(source.effective_date, /^2026-\d{2}-\d{2}$/);
     assert.ok(['not_imported', 'imported'].includes(source.status));
     if (source.status === 'not_imported') {
       assert.equal(source.local_path, null, source.operator + ' : fichier absent mais chemin renseigne');
