@@ -29,6 +29,7 @@ const report = {
   unmatched_classification: { both_endpoints_missing: 0, one_endpoint_missing: 0, both_endpoints_present_pair_missing: 0 },
   missing_pair_origins: [],
   missing_pair_examples: [],
+  missing_pair_details: [],
 };
 const unmatchedByOrigin = new Map();
 const missingPairByOrigin = new Map();
@@ -41,7 +42,9 @@ for (const p of overlay.paires) {
     report.unmatched_classification[group]++;
     if (missingEndpoints === 0) {
       missingPairByOrigin.set(p[0], (missingPairByOrigin.get(p[0]) || 0) + 1);
-      if (report.missing_pair_examples.length < 30) report.missing_pair_examples.push({ origin: p[0], destination: p[1], overlay_class1: p[2], overlay_class2: p[3] });
+      const detail = { origin: p[0], destination: p[1], overlay_class1: p[2], overlay_class2: p[3] };
+      report.missing_pair_details.push(detail);
+      if (report.missing_pair_examples.length < 30) report.missing_pair_examples.push(detail);
     }
     unmatchedByOrigin.set(p[0], (unmatchedByOrigin.get(p[0]) || 0) + 1);
     continue;
@@ -58,6 +61,7 @@ for (const p of overlay.paires) {
 report.missing_pair_origins = [...missingPairByOrigin].map(([origin, count]) => ({ origin, count })).sort((a, b) => b.count - a.count || a.origin.localeCompare(b.origin));
 report.unmatched_origins = [...unmatchedByOrigin].map(([origin, count]) => ({ origin, count })).sort((a, b) => b.count - a.count || a.origin.localeCompare(b.origin));
 report.unmatched_origin_count = report.unmatched_origins.length;
+if (report.missing_pair_details.length !== report.unmatched_classification.both_endpoints_present_pair_missing) throw Error('Paires absentes : details incomplets');
 if (report.missing_pair_origins.reduce((a, b) => a + b.count, 0) !== report.unmatched_classification.both_endpoints_present_pair_missing) throw Error('Paires absentes : regroupement incoherent');
 if (Object.values(report.unmatched_classification).reduce((a, b) => a + b, 0) !== report.not_matched) throw Error('Classification des relations non rapprochees incoherente');
 if (report.unmatched_origins.reduce((sum, item) => sum + item.count, 0) !== report.not_matched) throw Error('Decompte des origines non rapprochees incoherent');
