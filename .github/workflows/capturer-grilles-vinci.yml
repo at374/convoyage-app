@@ -6,6 +6,7 @@ on:
     paths:
       - 'scripts/telecharger-tarifs-vinci-navigateur.cjs'
       - '.github/workflows/capturer-grilles-vinci.yml'
+      - 'scripts/analyser-formats-vinci.cjs'
 permissions:
   contents: read
 jobs:
@@ -23,6 +24,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Capturer les cinq grilles sans les importer en production
         run: node scripts/telecharger-tarifs-vinci-navigateur.cjs
+      - name: Analyser formats et dates des cinq sources
+        run: node scripts/analyser-formats-vinci.cjs
       - name: Comparer les grilles officielles a la base existante (diagnostic)
         continue-on-error: true
         env:
