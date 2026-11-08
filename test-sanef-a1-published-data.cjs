@@ -19,6 +19,14 @@ for(const r of dataset.records){
  for(const c of Object.values(r.centimes)){assert.ok(Number.isSafeInteger(c)&&c>=0);count++;}
  const req={origine:inverse[r.origine],destination:inverse[r.destination],classe:1,direction:'VERS_PARIS',passageLocal:'2026-11-08T17:00:00',passageGareConfirme:true};
  assert.ok(req.origine&&req.destination);count++;
+ for(const [hour,period,field] of [['15:00:00','vert','classe1_vert'],['17:00:00','rouge','classe1_rouge'],['21:00:00','vert','classe1_vert']]){
+  const actual=select(dataset,aliases,{...req,passageLocal:'2026-11-08T'+hour},r.centimes.classe1_normal);
+  assert.equal(actual.status,'MODULATION_PREVIEW');count++;
+  assert.equal(actual.period,period);count++;
+  assert.equal(actual.modulatedPriceCents,r.centimes[field]);count++;
+  assert.equal(actual.priceCents,r.centimes.classe1_normal);count++;
+  assert.equal(actual.certifiedForBilling,false);count++;
+ }
  const got=select(dataset,aliases,req,r.centimes.classe1_normal);
  assert.equal(got.status,'MODULATION_PREVIEW');count++;
  assert.equal(got.modulatedPriceCents,r.centimes.classe1_rouge);count++;
