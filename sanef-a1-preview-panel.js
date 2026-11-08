@@ -11,8 +11,8 @@ function render(container,result){
  const heading=doc.createElement('strong');heading.textContent='SANEF A1 · Aperçu indicatif';panel.appendChild(heading);
  const normal=doc.createElement('p');normal.textContent='Tarif normal conservé : '+(Number.isSafeInteger(result.priceCents)?euro(result.priceCents):'non confirmé');panel.appendChild(normal);
  const detail=doc.createElement('p');
- detail.textContent=result.status==='MODULATION_PREVIEW'&&Number.isSafeInteger(result.modulatedPriceCents)
-  ? 'Tarif '+(result.period==='rouge'?'rouge':'vert')+' indicatif : '+euro(result.modulatedPriceCents)
+ detail.textContent=result.status==='MODULATION_PREVIEW'&&result.certifiedForBilling===false&&['rouge','vert'].includes(result.period)&&Number.isSafeInteger(result.modulatedPriceCents)&&result.modulatedPriceCents>=0
+  ? 'Tarif '+result.period+' indicatif : '+euro(result.modulatedPriceCents)
   : 'Modulation non confirmée — tarif normal uniquement';
  panel.appendChild(detail);
  const warning=doc.createElement('small');warning.textContent='Non validé pour la facturation. Vérifier la grille SANEF et l’heure exacte du passage.';panel.appendChild(warning);
