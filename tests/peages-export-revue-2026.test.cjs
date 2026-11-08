@@ -15,7 +15,7 @@ test('exports CSV pour revue sans modifier les prix sources', () => {
     fs.writeFileSync(file, audit.stdout);
     const run = spawnSync(process.execPath, [path.join(root, 'scripts/export-revue-peages-2026.cjs'), file], { encoding: 'utf8' });
     assert.equal(run.status, 0, run.stderr);
-    assert.deepEqual(JSON.parse(run.stdout), { exported_relations: 7251, southeast_candidates: 123, southeast_gates: 8, exported_missing_names: 378, exported_divergences: 5, verified_sapn_divergences: 5 });
+    assert.deepEqual(JSON.parse(run.stdout), { exported_relations: 7251, southeast_candidates: 123, southeast_gates: 8, southeast_double_counted_pairs: 19, exported_missing_names: 378, exported_divergences: 5, verified_sapn_divergences: 5 });
     const relations = fs.readFileSync(path.join(dir, 'peages-relations-a-verifier-2026.csv'), 'utf8').trim().split('\n');
     const names = fs.readFileSync(path.join(dir, 'peages-noms-a-verifier-2026.csv'), 'utf8').trim().split('\n');
     assert.equal(relations.length, 7252);
@@ -30,6 +30,8 @@ test('exports CSV pour revue sans modifier les prix sources', () => {
     assert.equal(southeast.length, 124);
     const southeastGates = fs.readFileSync(path.join(dir, 'peages-priorite-sud-est-par-gare-2026.csv'), 'utf8').trim().split('\n');
     assert.equal(southeastGates.length, 9);
+    const gateTotal = southeastGates.slice(1).reduce((n, line) => n + Number(line.split(',')[1].replace(/"/g, '')), 0);
+    assert.equal(gateTotal, 142); // 123 relations uniques + 19 presentes sous deux gares
     assert.ok(southeastGates[1].includes('Saint-Laurent-du-Var'));
     assert.ok(southeastGates[1].includes('"21"'));
     assert.ok(southeast[1].includes('A_DETERMINER'));
