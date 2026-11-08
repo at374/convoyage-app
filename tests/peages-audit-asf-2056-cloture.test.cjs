@@ -101,3 +101,17 @@ test('A89 et A9 : les installations officielles distinctes restent identifiables
   assert.equal(code('A0009').filter(r => r[0] === 'Le Perthus').length, 2);
   assert.notEqual('66A900915CD', 'A0009');
 });
+
+// Sur l'A63, la gare Saint-Jean-de-Luz Sud et Biarritz sont deux
+// installations officielles différentes. Le nom ASF « Nord » n'est pas
+// automatiquement un alias de l'une ou de l'autre.
+test('A63 : Saint-Jean-de-Luz Sud et Biarritz restent deux installations distinctes', () => {
+  const d = require('../data/gares-peage-officiel.json').d;
+  const sud = d.filter(r => r[1] === '64A906330CD');
+  const biarritz = d.filter(r => r[1] === '64A906320CD');
+  assert.deepEqual(new Set(sud.map(r => r[0])),
+    new Set(['Saint Jean De Luz Sud E', 'Saint Jean De Luz Sud S']));
+  assert.deepEqual(new Set(biarritz.map(r => r[0])),
+    new Set(['Biarritz E', 'Biarritz S']));
+  assert.equal(d.some(r => /Saint Jean De Luz Nord/i.test(r[0])), false);
+});
