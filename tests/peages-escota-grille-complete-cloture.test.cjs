@@ -56,15 +56,15 @@ test('grille ESCOTA complete (141 relations) : 0 divergence de prix sur toutes l
   const lines = fs.readFileSync(ESCOTA_PATH, 'utf8').split('\n').slice(1).filter(Boolean);
   const prix = decoderPrix();
   const idx = idxByNorm();
-  let matched = 0, mismatched = 0;
+  let matched = 0, mismatched = 0, unresolved = 0, structural = 0;
   for (const l of lines) {
     const f = l.split(';');
     if (f.length < 6) continue;
     const origin = f[1], dest = f[3];
-    if (/^ORIGINE/.test(origin)) continue;
+    if (/^ORIGINE/.test(origin)) { structural++; continue; }
     const c1 = parseFloat(f[4].replace(',', '.')), c2 = parseFloat(f[5].replace(',', '.'));
     const oi = idx.get(norm(origin)), di = idx.get(norm(dest));
-    if (!oi || !di) continue;
+    if (!oi || !di) { unresolved++; continue; }
     // Une relation source compte une seule fois, meme en presence d'alias.
     // Plusieurs candidats aux prix differents restent ambigus : ne pas
     // valider arbitrairement le premier index rencontre.
@@ -73,7 +73,7 @@ test('grille ESCOTA complete (141 relations) : 0 divergence de prix sur toutes l
       const v = prix.get(Math.min(o, d) * 1000 + Math.max(o, d));
       if (v) candidats.push(v);
     }
-    if (candidats.length === 0) continue;
+    if (candidats.length === 0) { unresolved++; continue; }
     const signatures = new Set(candidats.map(v => v.join('/')));
     if (signatures.size !== 1) {
       mismatched++;
@@ -83,6 +83,9 @@ test('grille ESCOTA complete (141 relations) : 0 divergence de prix sur toutes l
     if (Math.abs(v[0] - c1) < 0.05 && Math.abs(v[1] - c2) < 0.05) matched++;
     else mismatched++;
   }
+  assert.ok(lines.length >= 141, 'grille ESCOTA attendue : au moins 141 relations, trouve ' + lines.length);
+  assert.equal(matched + mismatched + unresolved + structural, lines.length, 'chaque ligne source doit etre classee exactement une fois');
+  console.log('ESCOTA lignes=' + lines.length + ' confirmees=' + matched + ' divergentes_ou_ambigues=' + mismatched + ' non_rapprochees=' + unresolved + ' structurelles=' + structural);
   assert.equal(mismatched, 0);
   assert.ok(matched >= 85, 'trouve ' + matched);
 });
