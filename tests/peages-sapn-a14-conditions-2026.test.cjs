@@ -1,25 +1,34 @@
 'use strict';
-// Source : arrete du 28 janvier 2026, article 3 et annexe A14
-// https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000053417647
-// Tarifs TTC au 01/02/2026. La reduction Montesson est conditionnelle.
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
+const { priceA14, FARES, EFFECTIVE_DATE } = require('../scripts/peages-sapn-a14-2026.cjs');
 
-const a14 = Object.freeze({
-  effective_date: '2026-02-01',
-  source: 'https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000053417647',
-  montesson: {
-    normal: { class1: 10.8, class2: 20.8 },
-    reduced: { class1: 6.6, class2: 13.6 },
-    conditions: 'Lundi-vendredi 10h-16h et 21h-06h, hors jours feries',
-  },
-  chambourcy: { normal: { class1: 2.6, class2: 5.2 } },
+test('A14 tarifs officiels TTC classes 1/2', () => {
+  assert.equal(EFFECTIVE_DATE, '2026-02-01');
+  assert.deepEqual(FARES.montesson.standard, { 1: 10.8, 2: 20.8 });
+  assert.deepEqual(FARES.montesson.reduced, { 1: 6.6, 2: 13.6 });
+  assert.deepEqual(FARES.chambourcy.standard, { 1: 2.6, 2: 5.2 });
 });
+const fare = (gate, vehicleClass, localDate, localTime, isFrenchPublicHoliday = false) =>
+  priceA14({ gate, vehicleClass, localDate, localTime, isFrenchPublicHoliday });
 
-test('A14 SAPN 2026 : classes 1 et 2, tarif normal et tarif reduit distincts', () => {
-  assert.deepEqual(a14.montesson.normal, { class1: 10.8, class2: 20.8 });
-  assert.deepEqual(a14.montesson.reduced, { class1: 6.6, class2: 13.6 });
-  assert.deepEqual(a14.chambourcy.normal, { class1: 2.6, class2: 5.2 });
-  assert.notDeepEqual(a14.montesson.normal, a14.montesson.reduced);
-  assert.match(a14.montesson.conditions, /hors jours feries/);
+test('Montesson lundi : bornes horaires et deux classes', () => {
+  assert.equal(fare('montesson', 1, '2026-11-09', '09:59').price, 10.8);
+  assert.equal(fare('montesson', 1, '2026-11-09', '10:00').price, 6.6);
+  assert.equal(fare('montesson', 2, '2026-11-09', '15:59').price, 13.6);
+  assert.equal(fare('montesson', 2, '2026-11-09', '16:00').price, 20.8);
+  assert.equal(fare('montesson', 1, '2026-11-09', '20:59').price, 10.8);
+  assert.equal(fare('montesson', 1, '2026-11-09', '21:00').price, 6.6);
+  assert.equal(fare('montesson', 1, '2026-11-09', '05:59').price, 6.6);
+  assert.equal(fare('montesson', 1, '2026-11-09', '06:00').price, 10.8);
+});
+test('Week-end et jour ferie excluent reduction Montesson', () => {
+  assert.equal(fare('montesson', 1, '2026-11-08', '12:00').price, 10.8);
+  assert.equal(fare('montesson', 1, '2026-11-11', '12:00', true).price, 10.8);
+  assert.equal(fare('chambourcy', 2, '2026-11-09', '12:00').price, 5.2);
+});
+test('Date hors validite et parametres invalides', () => {
+  assert.equal(fare('montesson', 1, '2026-01-31', '12:00').price, null);
+  assert.throws(() => fare('montesson', 1, '2026-02-30', '12:00'), RangeError);
+  assert.throws(() => priceA14({ gate: 'montesson', vehicleClass: 1, localDate: '2026-11-09', localTime: '12:00' }), TypeError);
 });
