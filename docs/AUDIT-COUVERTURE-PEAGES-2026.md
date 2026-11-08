@@ -95,3 +95,24 @@ Grille **TTC applicable au 01/02/2026**, classe 1 page 1, tableau « AUTOROUTES 
 **Classe 2 : vérification indépendante de chaque cellule encore nécessaire** (le texte extrait de la page 2 ne reproduit pas toutes les cellules de la matrice). Les montants classe 2 de la base principale sont 18,80 / 13,90 / 6,80 / 10,70 / 6,80 €, ceux de l'overlay 18,50 / 13,60 / 6,50 / 10,40 / 6,50 € dans le même ordre ; ne pas considérer les premiers comme certifiés avant vérification de la page 2.
 
 **Décision :** aucune mutation des tarifs de production ; consigner les cinq écarts comme `CLASSE_1_OVERLAY_DIVERGENT_OFFICIEL_2026`, puis certifier la classe 2 avant correction conjointe. Les valeurs peuvent relever de dates différentes ; préserver l'historique tarifaire si c'est le cas.
+
+
+## RECTIFICATIF PRIORITAIRE — SAPN Beuzeville (8 novembre 2026)
+
+**Ce rectificatif ANNULE explicitement la conclusion de la section précédente intitulée « Contrôle officiel SAPN A13 — Beuzeville » qui attribuait à tort les cinq prix classe 1 de la base principale à Beuzeville.** Cette section avait lu la colonne CHENARD voisine de la colonne BEUZEVILLE dans la matrice triangulaire.
+
+Source officielle primaire : https://www.autoroutes.sanef.com/sites/default/files/2026-01/2026_02-Grille-SAPN.pdf — page PDF 2 (classe 1), page PDF 3 (classe 2), grille A13/A29 SUD, applicable au **01/02/2026**. Vérification visuelle des deux pages de la matrice.
+
+| Départ | Destination | SAPN officiel classe 1 | SAPN officiel classe 2 | Base principale C1/C2 | Overlay C1/C2 |
+|---|---|---:|---:|---|---|
+| BEUZEVILLE N°28 | POISSY / ORGEVAL N°7 à MANTES-SUD N°12 | 11,60 € | 18,50 € | 12,10 / 18,80 € | **11,60 / 18,50 €** |
+| BEUZEVILLE N°28 | CHAUFOUR N°15 à GAILLON N°17 | 8,60 € | 13,60 € | 9,10 / 13,90 € | **8,60 / 13,60 €** |
+| BEUZEVILLE N°28 | BOURNEVILLE N°26 | 4,10 € | 6,50 € | 4,60 / 6,80 € | **4,10 / 6,50 €** |
+| BEUZEVILLE N°28 | HEUDEBOUVILLE N°18 | 6,60 € | 10,40 € | 7,10 / 10,70 € | **6,60 / 10,40 €** |
+| BEUZEVILLE N°28 | BOURG-ACHARD N°25 | 4,10 € | 6,50 € | 4,60 / 6,80 € | **4,10 / 6,50 €** |
+
+**Conclusion rectifiée : overlay = 10/10 prix conformes à la grille officielle SAPN 2026 ; base principale = 10/10 montants différents.** Écart uniforme base moins officiel : +0,50 € classe 1, +0,30 € classe 2.
+
+Attention : ceci démontre une différence de version des prix sur ces cinq relations, pas nécessairement l'absence d'une règle tarifaire supplémentaire dans un autre contexte. Ne modifier aucune donnée de production avant contrôle de l'origine des montants, du sens et de la date.
+
+Pour toute transmission à Claude ou bilan automatisé, **citer uniquement ce rectificatif** comme conclusion sur Beuzeville, et non la section antérieure désormais obsolète.
