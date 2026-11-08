@@ -23,6 +23,7 @@ vm.runInNewContext(script,{window,fetch},{filename:'sanef-a1-browser-preview.js'
   [{...valid,direction:'INCONNU'},'classe_ou_sens_non_eligible'],
   [{...valid,classe:2},'classe_ou_sens_non_eligible'],
   [{...valid,origine:''},'passage_details_missing'],
+  [{...valid,destination:'DEPART'},'same_station'],
   [{...valid,passageLocal:''},'passage_details_missing']
  ]){
   const fallback=await preview(request,1000);
