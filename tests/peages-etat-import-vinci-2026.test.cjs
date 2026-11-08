@@ -7,6 +7,15 @@ const crypto = require('node:crypto');
 const root = path.join(__dirname, '..');
 const registry = require('../data/sources-officielles/etat-import-vinci-2026.json');
 
+test('detecter les extensions TXT et CSV sans confondre les noms voisins', () => {
+  const isGrille = name => /\.(txt|csv)$/i.test(name);
+  assert.equal(isGrille('Tarifs_ESCOTA.txt'), true);
+  assert.equal(isGrille('Tarifs_Cofiroute_Arcour.TXT'), true);
+  assert.equal(isGrille('Tarifs_ASF.csv'), true);
+  assert.equal(isGrille('Tarifs_ASF.csv.backup'), false);
+  assert.equal(isGrille('README.md'), false);
+});
+
 test('sources officielles : aucun fichier de grille present ne doit rester non declare', () => {
   const dir = path.join(root, 'data', 'sources-officielles');
   const declared = new Set(registry.sources.filter(s => s.status === 'imported').map(s => path.basename(s.local_path)));
