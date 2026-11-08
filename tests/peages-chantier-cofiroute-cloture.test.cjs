@@ -90,7 +90,7 @@ const path = require('node:path');
 const aprr = require('../peages-aprr.json');
 const officiel = require('../data/gares-peage-officiel.json');
 
-const COFIROUTE_PATH = '/tmp/claude-0/-home-claude/c7c9ce3a-820f-532b-bac1-cdca9bdf0d53/scratchpad/Tarifs_Cofiroute_Arcour.txt';
+const COFIROUTE_PATH = process.env.COFIROUTE_TARIFS_PATH || path.join(__dirname, '..', 'data', 'sources-officielles', 'Tarifs_Cofiroute_Arcour.txt');
 
 function decoderPrix() {
   const lignes = aprr.p.split(';');
