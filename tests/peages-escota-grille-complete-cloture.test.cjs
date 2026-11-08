@@ -27,10 +27,11 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const fs = require('node:fs');
+const path = require('node:path');
 const aprr = require('../peages-aprr.json');
 const officiel = require('../data/gares-peage-officiel.json');
 
-const ESCOTA_PATH = '/tmp/claude-0/-home-claude/c7c9ce3a-820f-532b-bac1-cdca9bdf0d53/scratchpad/Tarifs_ESCOTA.txt';
+const ESCOTA_PATH = process.env.ESCOTA_TARIFS_PATH || path.join(__dirname, '..', 'data', 'sources-officielles', 'Tarifs_ESCOTA.txt');
 
 function norm(s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\([^)]*\)/g, '').replace(/[^A-Za-z0-9]/g, '').toUpperCase(); }
 
