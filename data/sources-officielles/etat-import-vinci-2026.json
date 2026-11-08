@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "checked_on": "2026-11-08",
+  "official_landing_page": "https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-demploi/tarifs-peage-vinci-autoroutes/",
+  "sources": [
+    {
+      "operator": "ASF",
+      "effective_date": "2026-06-01",
+      "format": "TXT",
+      "local_path": null,
+      "sha256": null,
+      "status": "not_imported"
+    },
+    {
+      "operator": "ESCOTA",
+      "effective_date": "2026-02-01",
+      "format": "TXT",
+      "local_path": null,
+      "sha256": null,
+      "status": "not_imported"
+    },
+    {
+      "operator": "COFIROUTE_ARCOUR",
+      "effective_date": "2026-02-01",
+      "format": "TXT",
+      "local_path": null,
+      "sha256": null,
+      "status": "not_imported"
+    },
+    {
+      "operator": "A86",
+      "effective_date": "2026-01-01",
+      "format": "TXT",
+      "local_path": null,
+      "sha256": null,
+      "status": "not_imported"
+    },
+    {
+      "operator": "ARCOS",
+      "effective_date": "2026-02-01",
+      "format": "TXT",
+      "local_path": null,
+      "sha256": null,
+      "status": "not_imported"
+    }
+  ],
+  "note": "Dates des guides ou grilles officielles indiquées sur la page éditeur. Ne pas présumer que les fichiers TXT ont tous la même date d'application sans vérifier leur contenu."
+}
