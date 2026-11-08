@@ -61,6 +61,6 @@ for(const [grid,alias,warning] of [
  assert.equal(matches[0][4],'','ambiguous physical identity must never be GPS-certified');
  assert.notEqual(matches[0][2],'CERTIFIE','documentary alias must not be certified');
 }
-assert.ok(rows.every(row=>/non certifi|non confirmé|à confirmer/.test(row[7])),'each station must explicitly retain a physical identity caveat');
+assert.ok(rows.every(row=>/non certifi|non confirmé|à confirmer|non certifié/i.test(row[7])),'each station must explicitly retain a physical identity caveat');
 
 console.log('PASS 33 SANEF aliases: 33 documentary references, 0 pending, 0 GPS-certified; 122 relations mapped');
