@@ -19,8 +19,14 @@ for(let i=0;i<dataset.records.length;i++){
  assert.deepEqual(row.slice(0,4),[record.origine,record.destination,inverse[record.origine],inverse[record.destination]]);
  assert.deepEqual(row.slice(4,8),['classe1_normal','classe1_vert','classe1_rouge','classe2_normal'].map(field=>(record.centimes[field]/100).toFixed(2)));
  assert.equal(row[8],dataset.source);
- assert.equal(row[9],'A_VERIFIER');
- assert.equal(row[10],'');
- assert.equal(row[11],'');
+ if(record.destination==='ARSY'){
+  assert.equal(row[9],'CLASSE1_VERIFIEE_PDF_2026');
+  assert.equal(row[10],'1');
+  assert.equal(row[11],String(i+1));
+ }else{
+  assert.equal(row[9],'A_VERIFIER');
+  assert.equal(row[10],'');
+  assert.equal(row[11],'');
+ }
 }
 console.log('PASS '+dataset.records.length+' SANEF A1 certification ledger relations synchronized (all still unverified)');
