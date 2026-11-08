@@ -39,6 +39,11 @@ jobs:
           set -euo pipefail
           node scripts/audit-rapprochement-peages.cjs | tee audit-rapprochement-peages.json
           node -e "const r=require('./audit-rapprochement-peages.json'); require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, '\n## Rapprochement base / overlay\n\n| Mesure | Valeur |\n|---|---:|\n| Prix identiques | '+r.identical+' |\n| Divergences | '+r.divergent+' |\n| Ambigues | '+r.ambiguous+' |\n| Non rapproches | '+r.not_matched+' |\n');"
+      - name: Synthese des priorites de verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e "const r=require('./audit-rapprochement-peages.json'); const x=r.unmatched_classification; if(r.unmatched_details.length!==7251 || r.missing_pair_details.length!==672 || r.missing_name_counts.length!==378) throw Error('Inventaire de rapprochement incomplet'); const lines=['','## Priorites de verification (non certifiees)','','| Indicateur | Nombre |','|---|---:|','| Paires entre gares connues non retrouvees | '+x.both_endpoints_present_pair_missing+' |','| Une gare absente | '+x.one_endpoint_missing+' |','| Deux gares absentes | '+x.both_endpoints_missing+' |','| Noms distincts absents | '+r.missing_name_counts.length+' |','| Gares des paires prioritaires | '+r.missing_pair_unique_gates+' |','','Aucune fusion de noms ni correction de prix automatique.']; require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join(String.fromCharCode(10)) + String.fromCharCode(10));"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
