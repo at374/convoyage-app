@@ -16,6 +16,16 @@ function test(overrides,expected,price=1000,data=dataset){const r=select(data,al
 assert.equal(test({},'MODULATION_PREVIEW').modulatedPriceCents,1250);checks++;
 assert.equal(test({passageLocal:'2026-11-08T15:00:00'},'MODULATION_PREVIEW').modulatedPriceCents,750);checks++;
 for(const [input,reason] of [[{passageGareConfirme:false},'passage_not_confirmed'],[{direction:'AUTRE'},'classe_ou_sens_non_eligible'],[{classe:2},'classe_ou_sens_non_eligible'],[{passageLocal:'2026-11-09T17:00:00'},'hors_dimanche_et_jour_special'],[{passageLocal:'2027-02-07T17:00:00'},'hors_grille_2026']]){assert.equal(test(input,'NORMAL_ONLY').reason,reason);checks++;}
+for(const invalid of [null,-1,1.5,'1000',Number.NaN,Number.POSITIVE_INFINITY]){
+ const bad={...dataset,records:[{...dataset.records[0],centimes:{...dataset.records[0].centimes,classe1_rouge:invalid}}]};
+ const result=test({},'NORMAL_ONLY',1000,bad);
+ assert.equal(result.reason,'modulated_price_invalid');checks++;
+ assert.equal(result.modulatedPriceCents,null);checks++;
+}
+for(const invalid of [null,-1,1.5,'1000',Number.NaN]){
+ const bad={...dataset,records:[{...dataset.records[0],centimes:{...dataset.records[0].centimes,classe1_normal:invalid}}]};
+ assert.equal(test({},'NORMAL_ONLY',1000,bad).reason,'normal_price_mismatch');checks++;
+}
 assert.equal(test({},'NORMAL_ONLY',999).reason,'normal_price_mismatch');checks++;
 assert.equal(test({},'NORMAL_ONLY',1000,{...dataset,status:'active'}).reason,'dataset_not_validated');checks++;
 assert.equal(test({origine:'UNKNOWN'},'NORMAL_ONLY').reason,'alias_missing');checks++;
