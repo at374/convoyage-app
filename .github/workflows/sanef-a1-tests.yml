@@ -9,6 +9,9 @@ on:
       - 'test-sanef-a1-*.cjs'
       - 'run-sanef-a1-tests.cjs'
       - 'peages-overlay.json'
+      - 'routes-ui.js'
+      - 'index.html'
+      - 'sanef-a1-preview-lab.html'
       - '.github/workflows/sanef-a1-tests.yml'
   pull_request:
     paths:
@@ -17,6 +20,9 @@ on:
       - 'test-sanef-a1-*.cjs'
       - 'run-sanef-a1-tests.cjs'
       - 'peages-overlay.json'
+      - 'routes-ui.js'
+      - 'index.html'
+      - 'sanef-a1-preview-lab.html'
       - '.github/workflows/sanef-a1-tests.yml'
 permissions:
   contents: read
