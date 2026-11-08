@@ -49,6 +49,16 @@ Bloquer explicitement la certification des correspondances **Athies n°54 / Amie
 
 **Point d'arrêt** : actuellement 0/33 identités GPS et 0/488 montants sont certifiés. Ne pas annoncer une couverture complète, même si les 12 suites de tests sont vertes.
 
+## Contrôle direct du règlement SANEF — annexe 2 (8 novembre 2026)
+
+Lecture de la [version officielle K-2 de décembre 2025](https://www.autoroutes.sanef.com/sites/default/files/2025-12/reglement-exploitation-Sanef-12-2025-Version-K-2_0.pdf) :
+
+- **A29 Athies n°54** : gare sur diffuseur, PR **245+239**, annexe 2, page imprimée **35** (page PDF 35/35). Ce relevé ne démontre pas que le libellé tarifaire « AMIENS N°54 » désigne la même gare.
+- **A1 Dourges** : barrière pleine voie, PR **172+875**, annexe 2, page imprimée **33** (page PDF 33/35). Ce relevé ne démontre pas l'identité avec l'alias tarifaire interne « FRESNES (DOURGES) ».
+- **A4 Fresnes W** : gare sur diffuseur n°30, dans la **Meuse**, PR **270+375**, annexe 2, page imprimée **33** (page PDF 33/35). Ne pas confondre cette installation A4 avec la barrière A1 de Dourges.
+
+**Conclusion** : les différences de nom, d'autoroute et de type de gare sont documentées. Les deux équivalences d'alias restent **à confirmer**, et aucune coordonnée GPS ne doit être déduite des PR.
+
 ## Travaux encore indispensables
 
 1. **Auditer indépendamment** les 122 prix classe 2 déjà rapprochés de la grille SANEF standard, en conservant les références exactes de page, ligne et colonne pour chaque gare.
