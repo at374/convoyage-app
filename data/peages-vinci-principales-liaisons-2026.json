@@ -6,7 +6,7 @@
   "page_numbering": "printed page 6 (PDF page index 5)",
   "table": "Tarifs des principales liaisons",
   "currency": "EUR",
-  "scope": "Selected principal liaisons only; not a station-to-station ESCOTA matrix",
+  "scope": "All 30 principal liaisons printed on page 6 of ESCOTA 2026 guide; not a detailed toll-station matrix",
   "relations": [
     {
       "route": "A8",
@@ -31,6 +31,162 @@
       "label": "Montpellier / Espagne (Perthus)",
       "class1_eur": 23.1,
       "class2_eur": 35.3
+    },
+    {
+      "route": "A7/A9",
+      "label": "Lyon / Montpellier",
+      "class1_eur": 32.8,
+      "class2_eur": 51.3
+    },
+    {
+      "route": "A7/A9",
+      "label": "Lyon / Espagne (Perthus)",
+      "class1_eur": 55.5,
+      "class2_eur": 86.4
+    },
+    {
+      "route": "A54/A7/A8",
+      "label": "Arles / Marseille - Aix",
+      "class1_eur": 5.2,
+      "class2_eur": 7.7
+    },
+    {
+      "route": "A9/A61",
+      "label": "Montpellier / Toulouse sud-ouest",
+      "class1_eur": 27.6,
+      "class2_eur": 41.9
+    },
+    {
+      "route": "A9",
+      "label": "Montpellier / Narbonne-est",
+      "class1_eur": 9.7,
+      "class2_eur": 14.7
+    },
+    {
+      "route": "A89",
+      "label": "Bordeaux / Clermont-Ferrand",
+      "class1_eur": 42.7,
+      "class2_eur": 64.3
+    },
+    {
+      "route": "A89",
+      "label": "Bordeaux / Lyon (La Tour de Salvagny)",
+      "class1_eur": 59,
+      "class2_eur": 89.4
+    },
+    {
+      "route": "A62/A61/A9/A54/A7",
+      "label": "Bordeaux / Marseille",
+      "class1_eur": 63.5,
+      "class2_eur": 97.7
+    },
+    {
+      "route": "A10",
+      "label": "Paris (La Folie-Bessin) / Orléans-nord",
+      "class1_eur": 12,
+      "class2_eur": 17.1
+    },
+    {
+      "route": "A10",
+      "label": "Paris (La Folie-Bessin) / Tours-centre",
+      "class1_eur": 26,
+      "class2_eur": 40.1
+    },
+    {
+      "route": "A10",
+      "label": "Paris (La Folie-Bessin) / Poitiers-sud",
+      "class1_eur": 40.9,
+      "class2_eur": 62.1
+    },
+    {
+      "route": "A10",
+      "label": "Paris (La Folie-Bessin) / Bordeaux (Virsac)",
+      "class1_eur": 60.9,
+      "class2_eur": 93.6
+    },
+    {
+      "route": "A10",
+      "label": "Tours Centre (Sorigny) / Bordeaux (Virsac)",
+      "class1_eur": 34.9,
+      "class2_eur": 53.5
+    },
+    {
+      "route": "A28",
+      "label": "Tours (Saint-Christophe) / Alençon-sud",
+      "class1_eur": 14.4,
+      "class2_eur": 21.9
+    },
+    {
+      "route": "A10/A71",
+      "label": "Paris (La Folie-Bessin) / Bourges",
+      "class1_eur": 24.6,
+      "class2_eur": 39.6
+    },
+    {
+      "route": "A11",
+      "label": "Paris (La Folie-Bessin) / Le Mans-nord",
+      "class1_eur": 21.6,
+      "class2_eur": 33.2
+    },
+    {
+      "route": "A11/A81",
+      "label": "Paris (La Folie-Bessin) / La Gravelle (Vitré)",
+      "class1_eur": 32.3,
+      "class2_eur": 50.6
+    },
+    {
+      "route": "A11",
+      "label": "Paris (La Folie-Bessin) / Angers (Corzé)",
+      "class1_eur": 32.9,
+      "class2_eur": 50.8
+    },
+    {
+      "route": "A11",
+      "label": "Paris (La Folie-Bessin) / Nantes",
+      "class1_eur": 43.3,
+      "class2_eur": 67
+    },
+    {
+      "route": "A83/A10",
+      "label": "Nantes / Bordeaux",
+      "class1_eur": 33.2,
+      "class2_eur": 50.2
+    },
+    {
+      "route": "A11",
+      "label": "Nantes / Angers",
+      "class1_eur": 10.4,
+      "class2_eur": 16.2
+    },
+    {
+      "route": "A11/A85",
+      "label": "Nantes / Vierzon-nord",
+      "class1_eur": 36.5,
+      "class2_eur": 56.4
+    },
+    {
+      "route": "A62",
+      "label": "Toulouse nord-est / Bordeaux",
+      "class1_eur": 22.9,
+      "class2_eur": 36
+    },
+    {
+      "route": "A62/A61/A9",
+      "label": "Bordeaux / Toulouse / Montpellier",
+      "class1_eur": 51.1,
+      "class2_eur": 78.8
+    },
+    {
+      "route": "A61/A9",
+      "label": "Toulouse sud-est / Espagne (Perthus)",
+      "class1_eur": 27.9,
+      "class2_eur": 42.6
+    },
+    {
+      "route": "A85",
+      "label": "Angers / Tours",
+      "class1_eur": 12.7,
+      "class2_eur": 18.5
     }
   ]
 }
