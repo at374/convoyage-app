@@ -30,6 +30,14 @@ Ces données sont des **preuves documentaires de noms, numéros et points de rep
 
 Les noms entre parenthèses sont des alias documentaires internes, **pas des identités géographiques certifiées**. Ne renseigner numéro, PR, coordonnées ou page de PDF qu'après consultation directe d'une source probante.
 
+## Protocole de certification indépendant (bloquant)
+
+Pour chaque alias de gare, recueillir une preuve **géographique indépendante** (nom officiel, autoroute, sens, numéro de sortie ou type de barrière, coordonnées GPS de l'installation et source datée). Un point de repère kilométrique PR ne remplace pas des coordonnées GPS. En cas de plusieurs barrières ou bretelles proches, identifier le **nœud précis utilisé par l'application** et vérifier que la relation tarifaire concerne ce nœud.
+
+Pour chaque relation tarifaire, contrôler **séparément les quatre montants** : classe 1 normal, vert et rouge dans la grille modulée, puis classe 2 normal dans la grille générale. Conserver pour chacun **URL officielle, date d'effet, numéro de page PDF, ligne et colonne, sens de circulation et résultat de la comparaison**. Les 122 lignes actuelles ne fournissent qu'un rapprochement documentaire groupé : leur statut ne vaut pas certification individuelle des 488 montants.
+
+Bloquer explicitement la certification des correspondances **Athies n°54 / Amiens n°54** et **Dourges / Fresnes** tant que l'équivalence des installations n'est pas établie par une preuve vérifiable. Le statut `experimental_not_activated` et le prix normal de facturation restent inchangés.
+
 ## Travaux encore indispensables
 
 1. **Auditer indépendamment** les 122 prix classe 2 déjà rapprochés de la grille SANEF standard, en conservant les références exactes de page, ligne et colonne pour chaque gare.
