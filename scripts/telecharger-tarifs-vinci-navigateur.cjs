@@ -19,7 +19,30 @@ const report = { page_url: pageUrl, checked_at: new Date().toISOString(), source
     page.on('framenavigated', f => { if (f === page.mainFrame()) events.push({ type: 'navigation', url: f.url() }); });
     page.on('request', req => { if (/\\.txt(?:[?#]|$)|tarif|download/i.test(req.url())) events.push({ type: 'request', url: req.url() }); });
     page.on('response', res => { if (/\\.txt(?:[?#]|$)|tarif|download/i.test(res.url())) events.push({ type: 'response', url: res.url(), status: res.status(), content_type: res.headers()['content-type'] }); });
+    const known = {
+      ESCOTA: 'https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-Escota/Tarifs_ESCOTA.txt',
+      A86: 'https://public-content.vinci-autoroutes.com/PDF/Tarifs-Duplex-A86/Tarifs_A86.txt',
+      COFIROUTE_ARCOUR: 'https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-Cofiroute/Tarifs_Cofiroute_Arcour.txt',
+      ARCOS: 'https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-Arcos/Tarifs_Arcos.txt',
+    };
     for (const [operator, label] of labels) {
+      if (known[operator]) {
+        const entry = { operator, label, download_url: known[operator], status: 'not_downloaded' };
+        report.sources.push(entry);
+        try {
+          const response = await context.request.get(known[operator], { timeout: 25000 });
+          entry.http_status = response.status();
+          entry.content_type = response.headers()['content-type'];
+          const bytes = await response.body();
+          entry.bytes = bytes.length;
+          if (!response.ok() || bytes.length === 0) { entry.error = 'HTTP failure or empty response'; continue; }
+          const destination = path.join(dir, 'Tarifs_' + operator + '.txt');
+          fs.writeFileSync(destination, bytes);
+          entry.sha256 = crypto.createHash('sha256').update(bytes).digest('hex');
+          entry.status = 'downloaded_unverified';
+        } catch (error) { entry.error = String(error.message || error).slice(0, 500); }
+        continue;
+      }
       const eventStart = events.length;
       const entry = { operator, label, status: 'not_downloaded' };
       report.sources.push(entry);
