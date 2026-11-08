@@ -142,9 +142,25 @@ Document officiel : https://www.vinci-autoroutes.com/static/b9b8279934080436ee3b
 | A62 Toulouse nord-est / Bordeaux | 22,90 € | 36,00 € |
 | A62/A61/A9 Bordeaux / Toulouse / Montpellier | 51,10 € | 78,80 € |
 | A61/A9 Toulouse sud-est / Espagne (Perthus) | 27,90 € | 42,60 € |
+| A89 Bordeaux / Clermont-Ferrand | 42,70 € | 64,30 € |
+| A89 Bordeaux / Lyon (La Tour de Salvagny) | 59,00 € | 89,40 € |
+| A62/A61/A9/A54/A7 Bordeaux / Marseille | 63,50 € | 97,70 € |
+| A10 Paris (La Folie-Bessin) / Orléans-nord | 12,00 € | 17,10 € |
+| A10 Paris (La Folie-Bessin) / Tours-centre | 26,00 € | 40,10 € |
+| A10 Paris (La Folie-Bessin) / Poitiers-sud | 40,90 € | 62,10 € |
+| A10 Paris (La Folie-Bessin) / Bordeaux (Virsac) | 60,90 € | 93,60 € |
+| A10 Tours Centre (Sorigny) / Bordeaux (Virsac) | 34,90 € | 53,50 € |
+| A28 Tours (Saint-Christophe) / Alençon-sud | 14,40 € | 21,90 € |
+| A10/A71 Paris (La Folie-Bessin) / Bourges | 24,60 € | 39,60 € |
+| A11 Paris (La Folie-Bessin) / Le Mans-nord | 21,60 € | 33,20 € |
+| A11/A81 Paris (La Folie-Bessin) / La Gravelle (Vitré) | 32,30 € | 50,60 € |
+| A11 Paris (La Folie-Bessin) / Angers (Corzé) | 32,90 € | 50,80 € |
 | A85 Angers / Tours | 12,70 € | 18,50 € |
 
-**Statut : 17 liaisons / 34 montants officiellement publiés, mais NON rapprochés automatiquement des couples de gares de la base.** Ces liaisons peuvent inclure plusieurs réseaux ou gares. Ne pas les injecter telles quelles comme paires d'échangeurs. La date du tableau des principales liaisons ne remplace pas les dates des grilles concessionnaires plus récentes.
+**Statut : 30 liaisons / 60 montants officiellement publiés, mais NON rapprochés automatiquement des couples de gares de la base.** Ces liaisons peuvent inclure plusieurs réseaux ou gares. Ne pas les injecter telles quelles comme paires d'échangeurs. La date du tableau des principales liaisons ne remplace pas les dates des grilles concessionnaires plus récentes.
 
 
 **Correction de contrôle documentaire (08/11/2026) :** la ligne Montpellier / Narbonne-est était précédemment retranscrite à tort 32,90 €/50,80 €. Lecture directe du tableau officiel VINCI, lignes PDF correspondant à A9 Montpellier / Narbonne-est : **9,70 €/14,70 €**. Les deux liaisons Aix / Nice et Aix / Gap (La Saulce) ont également été ajoutées depuis le même PDF. Aucune de ces liaisons complètes n'est automatiquement assimilée à une paire de gares.
+
+
+**Complément de contrôle du 08/11/2026 :** ajout des 13 liaisons manquantes pour couvrir les **30 lignes** du tableau VINCI officiel 2026, classes 1 et 2, source PDF indiquée ci-dessus (page unique). Les 60 montants sont une transcription documentaire et non 60 nouvelles paires certifiées dans la base de calcul. Les dates ultérieures propres à certaines grilles concessionnaires restent prioritaires pour les trajets concernés.
