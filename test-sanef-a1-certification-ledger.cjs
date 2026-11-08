@@ -13,6 +13,7 @@ const names=['origine_canonique','destination_canonique','origine_grille_a_verif
 assert.deepEqual(header,names);
 assert.equal(csv.length-1,dataset.records.length);
 const inverse=Object.fromEntries(Object.entries(aliases).map(([label,canonical])=>[canonical,label]));
+let verifiedClass1=0,awaiting=0;
 for(let i=0;i<dataset.records.length;i++){
  const record=dataset.records[i],row=parse(csv[i+1]);
  assert.equal(row.length,header.length,'CSV columns row '+(i+2));
@@ -23,10 +24,15 @@ for(let i=0;i<dataset.records.length;i++){
   assert.equal(row[9],'CLASSE1_VERIFIEE_PDF_2026');
   assert.equal(row[10],'1');
   assert.equal(row[11],String(i+1));
+  assert.match(row[12],/classe 2 et sens à confirmer/);
+  verifiedClass1++;
  }else{
   assert.equal(row[9],'A_VERIFIER');
   assert.equal(row[10],'');
   assert.equal(row[11],'');
+  awaiting++;
  }
 }
-console.log('PASS '+dataset.records.length+' SANEF A1 certification ledger relations synchronized (all still unverified)');
+assert.equal(verifiedClass1,29);
+assert.equal(awaiting,93);
+console.log('PASS '+dataset.records.length+' SANEF A1 ledger relations: '+verifiedClass1+' class-1 PDF checks, '+awaiting+' awaiting verification; no billing certification');
