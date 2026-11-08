@@ -10,7 +10,7 @@ for(const file of ['sanef-a1-regles-officielles-2026.js','sanef-a1-official-sele
 const first=dataset.records[0];
 const inverse=Object.fromEntries(Object.entries(aliases.aliases).map(([k,v])=>[v,k]));
 assert.ok(inverse[first.origine]&&inverse[first.destination]);
-const input={previewExplicitlyRequested:true,passageGareConfirme:true,origine:inverse[first.origine],destination:inverse[first.destination],classe:1,direction:'VERS_PARIS'};
+const input={previewExplicitlyRequested:true,passageGareConfirme:true,calendrierFeriesVerifie:true,origine:inverse[first.origine],destination:inverse[first.destination],classe:1,direction:'VERS_PARIS'};
 const preview=context.window.CPSanefA1Preview2026.preview;
 (async()=>{
  let count=0;
