@@ -1,0 +1,35 @@
+{
+  "checkedOn": "2026-11-08",
+  "kind": "official_published_references",
+  "journeyFareVerified": false,
+  "references": [
+    {
+      "network": "Cars Région Haute-Loire",
+      "source": "https://www.laregionvoustransporte.fr/transport-scolaire/transport-scolaire-de-la-haute-loire/contact-et-question-du-transport-scolaire-de-la-haute-loire/",
+      "scope": "Commercial titles quoted in official FAQ for students on regular routes; do not automatically generalize eligibility to all journeys",
+      "singleEUR": 3.4,
+      "tenJourneysEUR": 26,
+      "monthlyEUR": 50,
+      "transferMinutes": 120,
+      "returnIncluded": false,
+      "effectiveFrom": null,
+      "validUntil": null,
+      "appConnected": false
+    },
+    {
+      "network": "Cars Région Puy-de-Dôme",
+      "source": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-puy-de-dome/infos-et-services-cars-region-du-puy-de-dome/titres-et-tarifs-de-puy-de-dome/",
+      "scope": "Published all-public network commercial prices; exact route and connection eligibility still required",
+      "singleEUR": 3.4,
+      "tenJourneysEUR": 28,
+      "monthlyEUR": 50,
+      "effectiveFrom": "2026-03-01",
+      "validUntil": null,
+      "appConnected": false
+    }
+  ],
+  "notes": [
+    "Haute-Loire linked 2025 PDF remains outdated; FAQ current values do not establish the exact date of a fare increase.",
+    "No future validity inferred, no verified door-to-door total, no deployment."
+  ]
+}
