@@ -49,3 +49,28 @@ Ces trois valeurs sont volontairement indéterminées. Pour un vrai pourcentage 
 5. Dédupliquer au niveau national avant d'annoncer un pourcentage national.
 
 Références : `docs/TRANSMISSION-CLAUDE-PEAGES-2026.md`, ticket #209, tests historiques du dépôt. Aucun tarif de production modifié.
+
+
+## Rapprochement direct base principale ↔ overlay (8 novembre 2026)
+
+Contrôle réalisé en mémoire sur les deux fichiers réellement récupérés de la branche `feature/transport-ranking-safe`, sans modifier les tarifs. Clé : deux noms de gares triés, accents et ponctuation retirés. Comparaison stricte des deux classes ; **les dates et le sens ne sont pas pris en compte**, ce qui limite la portée.
+
+- `peages-aprr.json` : 540 gares, 16 918 lignes, 16 918 relations uniques, 33 836 montants, 0 ligne malformée, 0 doublon, 0 prix contradictoire interne.
+- `peages-overlay.json` : 20 445 paires, 37 barrières, 119 tarifs de barrière (98 `PROUVE`, 21 `CROISE`, toutes classes confondues).
+- 13 194 paires overlay ont une clé de noms présente dans la base principale.
+- Parmi celles-ci, 13 189 ont des prix classes 1/2 identiques ; **5 divergent**.
+- 7 251 paires overlay n'ont pas de clé de noms exacte correspondante ; cela **ne prouve pas** 7 251 prix manquants.
+
+Les cinq divergences sont toutes depuis `BEUZEVILLE N°28` :
+
+| Destination | Overlay C1/C2 | Base principale C1/C2 |
+| --- | --- | --- |
+| POISSY / ORGEVAL N°7 à MANTES-SUD N°12 | 11,60 / 18,50 € | 12,10 / 18,80 € |
+| CHAUFOUR N°15 à GAILLON N°17 | 8,60 / 13,60 € | 9,10 / 13,90 € |
+| BOURNEVILLE N°26 | 4,10 / 6,50 € | 4,60 / 6,80 € |
+| HEUDEBOUVILLE N°18 | 6,60 / 10,40 € | 7,10 / 10,70 € |
+| BOURG-ACHARD N°25 | 4,10 / 6,50 € | 4,60 / 6,80 € |
+
+**À vérifier :** concessionnaire, dates tarifaires et sens avant toute correction. L'écart uniforme de +0,50 € classe 1 / +0,30 € classe 2 entre base principale et overlay peut signaler des versions de tarif différentes ; aucune conclusion causale à ce stade.
+
+La comparaison de noms simplifiée n'est pas une certification officielle et peut fusionner à tort des homonymes. Aucun tarif de production modifié.
