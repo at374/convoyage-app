@@ -77,7 +77,9 @@ for(const record of dataset.records){
    }
    assert.equal(row[9],'OUI','direction must be confirmed before certification');
    assert.equal(row[10],'OUI','physical GPS station identity must be confirmed before certification');
-   const unresolvedAliases=new Set(['ATHIES','AMIENS','FRESNES (DOURGES)']);
+   const unresolvedAliases=new Set(['ATHIES','FRESNES (DOURGES)']);
+   // The grid labels are ATHIES N°54 and LILLE / DOURGES (péage de Fresnes).
+   // Keep both blocked until independent geographic evidence resolves their aliases.
    for(const alias of [inverse[record.origine],inverse[record.destination]]){
     assert.ok(!unresolvedAliases.has(alias),'unresolved SANEF Athies/Amiens or Dourges/Fresnes alias cannot be certified');
    }
