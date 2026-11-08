@@ -88,3 +88,16 @@ test('THOUARCE A87 : candidats officiels documentés, sans ajout tarifaire prém
   assert.deepEqual(new Set(candidats.map(r => r[0])), new Set(['Thouarce E', 'Thouarce S']));
   assert.ok(candidats.every(r => r[4] === 'Ech'));
 });
+
+// Plusieurs gares physiques proches portent des noms liés, mais ne doivent
+// jamais être fusionnées uniquement par proximité ou par un nom partiel.
+test('A89 et A9 : les installations officielles distinctes restent identifiables', () => {
+  const d = require('../data/gares-peage-officiel.json').d;
+  const code = id => d.filter(r => r[1] === id);
+  assert.deepEqual(new Set(code('24A908935CD').map(r => r[0])),
+    new Set(['Thenon Est E', 'Thenon Est S', 'La Bachellerie Entree', 'La Bachellerie Sortie']));
+  assert.equal(code('A0089').filter(r => r[0] === 'Thenon vers Perigueux').length, 1);
+  assert.equal(code('66A900915CD').filter(r => r[0] === 'Le Boulou').length, 4);
+  assert.equal(code('A0009').filter(r => r[0] === 'Le Perthus').length, 2);
+  assert.notEqual('66A900915CD', 'A0009');
+});
