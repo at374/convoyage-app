@@ -57,11 +57,16 @@ assert.deepEqual(parse(amountCsv[0]),['origine','destination','tarif','montant_e
 assert.equal(amountCsv.length-1,488);
 const certifiedAmounts=amountCsv.slice(1).map(parse).filter(row=>row[5]==='CERTIFIE_INDEPENDAMMENT').length;
 assert.ok(certifiedAmounts>=0&&certifiedAmounts<=488,'certification count must remain within the ledger');
+const seenAmountKeys=new Set();
 let amountIndex=1;
 for(const record of dataset.records){
  for(const field of ['classe1_normal','classe1_vert','classe1_rouge','classe2_normal']){
   const row=parse(amountCsv[amountIndex++]);
   assert.equal(row.length,11);
+  const amountKey=JSON.stringify(row.slice(0,3));
+  assert.ok(!seenAmountKeys.has(amountKey),'duplicate amount certification key '+amountKey);
+  seenAmountKeys.add(amountKey);
+  assert.ok(/^https:\/\//.test(row[4]),'missing official tariff source URL');
   assert.deepEqual(row.slice(0,4),[record.origine,record.destination,field,(record.centimes[field]/100).toFixed(2)]);
   assert.equal(row[4],field==='classe2_normal'?'https://www.autoroutes.sanef.com/sites/default/files/2026-01/2026_02-Grille-Sanef.pdf':dataset.source);
   assert.ok(['A_CERTIFIER_INDEPENDAMMENT','CERTIFIE_INDEPENDAMMENT'].includes(row[5]),'unknown amount certification status');
@@ -84,5 +89,6 @@ for(const record of dataset.records){
   }
  }
 }
+assert.equal(seenAmountKeys.size,488,'each of 488 amounts must have a distinct origin/destination/tariff key');
 
 console.log('PASS '+verifiedClass1+' SANEF A1 PDF comparisons recorded; '+certifiedAmounts+'/488 independently certified with required evidence; billing remains disabled');
