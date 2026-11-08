@@ -23,12 +23,13 @@ for(let i=0;i<dataset.records.length;i++){
  assert.equal(row[8],dataset.source);
  assert.ok(Object.hasOwn(position,record.destination));
  position[record.destination]++;
- assert.equal(row[9],'CLASSE1_VERIFIEE_PDF_2026');
+ assert.equal(row[9],'CLASSES1_2_COMPAREES_PDF_2026');
  assert.equal(row[10],'1');
  assert.equal(row[11],String(position[record.destination]));
- assert.match(row[12],/classe 2 et sens à confirmer/);
+ assert.match(row[12],/classe 2 normal comparées/);
+ assert.match(row[12],/identité des gares, sens et exceptions à confirmer/);
  verifiedClass1++;
 }
 assert.deepEqual(position,{ARSY:29,CHEVRIERES:30,SENLIS:31,CHAMANT:32});
 assert.equal(verifiedClass1,122);
-console.log('PASS '+verifiedClass1+' SANEF A1 class-1 PDF line comparisons recorded; class 2 and station identities not certified');
+console.log('PASS '+verifiedClass1+' SANEF A1 class-1 and class-2 PDF line comparisons recorded; station identities and conditions not certified');
