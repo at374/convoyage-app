@@ -15,8 +15,14 @@ Date de référence des grilles : **1er février 2026**.
 1. **Auditer indépendamment** les 122 prix classe 2 déjà rapprochés de la grille SANEF standard, en conservant les références exactes de page, ligne et colonne pour chaque gare.
 2. Confirmer **chaque alias** avec le nom de gare, son numéro d'échangeur et la localisation exacte ; lever les ambiguïtés avant tout rapprochement automatisé.
 3. Vérifier le **sens d'application** de la modulation pour chaque relation et les conditions officielles de jours fériés / reports.
-4. Obtenir un résultat **vert** des dix suites GitHub Actions sur le dernier commit de la branche.
+4. Maintenir un résultat **vert** des **12 suites SANEF A1** sur le dernier commit de la branche ; ce contrôle logiciel ne remplace pas une certification des sources.
 5. Réaliser un contrôle fonctionnel de bout en bout sur Android **avant tout déploiement**, après validation explicite.
+
+## État des validations techniques (8 novembre 2026)
+
+- Dernière validation complète observée : commit `4f1e61e5`, [GitHub Actions SANEF A1 — succès](https://github.com/at374/convoyage-app/actions/runs/42484356732).
+- Les tests de robustesse protègent la simulation contre les calendriers non attestés, les alias non reconnus, les données de relations malformées et les montants invalides.
+- **Ne pas confondre tests réussis et certification indépendante des 33 gares ou des 488 montants.**
 
 ## Interdictions d'activation
 
