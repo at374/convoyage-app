@@ -39,3 +39,21 @@
 6. Fournir à l'utilisateur un rapport final avec tous les couples de gares confirmés, prix TTC classe 1/2, date, concessionnaire, URL officielle, SHA-256 et résultats CI. **Aucun prix inventé.**
 
 Ticket de suivi : https://github.com/at374/convoyage-app/issues/209
+
+
+## Récupération officielle VINCI du 8 novembre 2026 — nouvelle preuve
+
+Workflow GitHub Actions **42459153168** : https://github.com/at374/convoyage-app/actions/runs/42459153168 (conclusion success). Le navigateur a révélé que les liens TXT ouvrent un nouvel onglet ; les quatre fichiers suivants ont ensuite été téléchargés par HTTP 200, avec `content-type: text/plain; charset=utf-8`, et archivés comme **sources brutes non encore validées sur leur période tarifaire** :
+
+| Réseau | URL officielle | Octets | SHA-256 |
+| --- | --- | ---: | --- |
+| ESCOTA | https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-Escota/Tarifs_ESCOTA.txt | 7 709 | `f2024c36124dd5515aa6ad332b9307935031ffd4d445064f033d351839fa3b33` |
+| A86 | https://public-content.vinci-autoroutes.com/PDF/Tarifs-Duplex-A86/Tarifs_A86.txt | 32 778 | `5fc381b5392c17afc205deb1c49812491113c81a829b90584c66c2cff48c1ab6` |
+| Cofiroute / Arcour | https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-Cofiroute/Tarifs_Cofiroute_Arcour.txt | 722 247 | `4bb7c667e5c99218931cf6b81f3ebc13d9ee477543772cf251229ff32bad646c` |
+| Arcos | https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-Arcos/Tarifs_Arcos.txt | 89 311 | `d9a1ff8bfa2d74790d992e34c10443f663008de0e3ab0d5fb7429eba189515d5` |
+
+**ASF non récupéré** à ce stade : le clic initial a seulement déclenché le chargement de `/page-data/fr/conseils/autoroute-mode-demploi/tarifs-peage-vinci-autoroutes/page-data.json`. Examiner ce JSON Gatsby et retenter le clic après hydratation de la page.
+
+Les quatre fichiers ont été conservés dans l'artefact GitHub `vinci-grilles-originales-non-verifiees` (rétention 14 jours). Ils ne sont **pas** encore importés dans `data/sources-officielles/`. Le code de capture est `scripts/telecharger-tarifs-vinci-navigateur.cjs` et le workflow `.github/workflows/capturer-grilles-vinci.yml`.
+
+**Priorité immédiate :** récupérer ASF, examiner le format et la date des cinq TXT, puis utiliser les sources pour activer les tests Cofiroute/ESCOTA sans SKIP et comparer classes 1 et 2. Aucun tarif de production n'a été modifié à cette étape.
