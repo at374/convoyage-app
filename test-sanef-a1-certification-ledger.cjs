@@ -32,4 +32,21 @@ for(let i=0;i<dataset.records.length;i++){
 }
 assert.deepEqual(position,{ARSY:29,CHEVRIERES:30,SENLIS:31,CHAMANT:32});
 assert.equal(verifiedClass1,122);
+
+// Every amount has its own independent verification record, initially uncertified.
+const amountCsv=fs.readFileSync(path.join(root,'sanef-a1-certification-montants-2026.csv'),'utf8').trimEnd().split(/\r?\n/);
+assert.deepEqual(parse(amountCsv[0]),['origine','destination','tarif','montant_eur','source_tarif','statut_certification','page_pdf_confirmee','ligne_pdf_confirmee','colonne_pdf_confirmee','sens_confirme','identite_gps_confirmee']);
+assert.equal(amountCsv.length-1,488);
+let amountIndex=1;
+for(const record of dataset.records){
+ for(const field of ['classe1_normal','classe1_vert','classe1_rouge','classe2_normal']){
+  const row=parse(amountCsv[amountIndex++]);
+  assert.equal(row.length,11);
+  assert.deepEqual(row.slice(0,4),[record.origine,record.destination,field,(record.centimes[field]/100).toFixed(2)]);
+  assert.equal(row[4],field==='classe2_normal'?'https://www.autoroutes.sanef.com/sites/default/files/2026-01/2026_02-Grille-Sanef.pdf':dataset.source);
+  assert.equal(row[5],'A_CERTIFIER_INDEPENDAMMENT');
+  assert.deepEqual(row.slice(6),['','','','NON','NON']);
+ }
+}
+
 console.log('PASS '+verifiedClass1+' SANEF A1 class-1 and class-2 PDF line comparisons recorded; station identities and conditions not certified');
