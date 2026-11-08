@@ -15,6 +15,14 @@ const url = 'https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-demploi
       const index = decoded.toLowerCase().indexOf(label.toLowerCase());
       return { label, found: index >= 0, html_context: index < 0 ? null : decoded.slice(Math.max(0, index - 350), index + 250).replace(/\\s+/g, ' ').slice(0, 600) };
     });
+    const embedded = [...decoded.matchAll(/[^\\s"'<>]{1,350}\\.(?:txt|csv)(?:\\?[^\\s"'<>]*)?/gi)];
+    out.embedded_tariff_files = [...new Set(embedded.map(m => m[0]))].filter(x => /tarif|asf|escota|cofiroute|arcour|arcos|a86/i.test(x)).slice(0, 100);
+    out.framework_hints = {
+      next_data: decoded.includes('__NEXT_DATA__'),
+      next_flight: decoded.includes('self.__next_f'),
+      script_count: (decoded.match(/<script\\b/gi) || []).length,
+      txt_mentions: (decoded.match(/\\.txt/gi) || []).length,
+    };
     const matches = [...decoded.matchAll(/(?:href|data-url|src)\s*=\s*["']([^"']+)["']/gi), ...decoded.matchAll(/(https?:\/\/[^\s"'<>]+\.(?:txt|csv|pdf)(?:\?[^\s"'<>]*)?)/gi)];
     for (const match of matches) {
       try {
@@ -27,6 +35,6 @@ const url = 'https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-demploi
   } catch (error) { out.errors.push(String(error.message || error)); }
   fs.mkdirSync('artifacts/vinci-sources', { recursive: true });
   fs.writeFileSync('artifacts/vinci-sources/decouverte.json', JSON.stringify(out, null, 2) + '\n');
-  console.log(JSON.stringify({ http_status: out.http_status, candidates: out.candidates.length, urls: out.candidates, tariff_anchors: out.tariff_anchors, txt_contexts: out.txt_contexts, errors: out.errors }));
+  console.log(JSON.stringify({ http_status: out.http_status, candidates: out.candidates.length, urls: out.candidates, tariff_anchors: out.tariff_anchors, txt_contexts: out.txt_contexts, embedded_tariff_files: out.embedded_tariff_files, framework_hints: out.framework_hints, errors: out.errors }));
   if (out.errors.length) process.exitCode = 1;
 })();
