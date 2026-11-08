@@ -1,0 +1,526 @@
+{
+  "checkedOn": "2026-11-08",
+  "status": "extracted_reference_pending_visual_and_stop_validation",
+  "additionalDiscountAllowed": false,
+  "warning": "X37 Saint-Claude–Molinges 6.00 EUR from extraction is higher than Saint-Claude–Dortan 4.00 EUR; retain published extraction but do not activate without visual verification. Reverse applicability not inferred.",
+  "references": [
+    {
+      "line": "X37",
+      "source": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/CAR_RARA_TARIFS-ILLICO-AUTOCARS_X37_Nantua-St-Claude_2026.pdf",
+      "stops": [
+        "SAINT-CLAUDE Gare",
+        "MOLINGES Village",
+        "DORTAN Mairie",
+        "OYONNAX Gare",
+        "BELLIGNAT Lycée",
+        "BELLIGNAT Mairie",
+        "MARTIGNAT Mairie",
+        "MONTREAL-LA-CLUSE Mairie",
+        "BRION Gare",
+        "MONTREAL-LA-CLUSE Ville",
+        "NANTUA Esplanade",
+        "NANTUA Médiathèque"
+      ],
+      "pairs": [
+        {
+          "from": "SAINT-CLAUDE Gare",
+          "to": "MOLINGES Village",
+          "amountEUR": 6
+        },
+        {
+          "from": "SAINT-CLAUDE Gare",
+          "to": "DORTAN Mairie",
+          "amountEUR": 4
+        },
+        {
+          "from": "MOLINGES Village",
+          "to": "DORTAN Mairie",
+          "amountEUR": 2.3
+        },
+        {
+          "from": "SAINT-CLAUDE Gare",
+          "to": "OYONNAX Gare",
+          "amountEUR": 5.2
+        },
+        {
+          "from": "MOLINGES Village",
+          "to": "OYONNAX Gare",
+          "amountEUR": 3.3
+        },
+        {
+          "from": "DORTAN Mairie",
+          "to": "OYONNAX Gare",
+          "amountEUR": 2.1
+        },
+        {
+          "from": "SAINT-CLAUDE Gare",
+          "to": "BELLIGNAT Lycée",
+          "amountEUR": 5.4
+        },
+        {
+          "from": "MOLINGES Village",
+          "to": "BELLIGNAT Lycée",
+          "amountEUR": 3.6
+        },
+        {
+          "from": "DORTAN Mairie",
+          "to": "BELLIGNAT Lycée",
+          "amountEUR": 2.4
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "BELLIGNAT Lycée",
+          "amountEUR": 1.2
+        },
+        {
+          "from": "SAINT-CLAUDE Gare",
+          "to": "BELLIGNAT Mairie",
+          "amountEUR": 5.6
+        },
+        {
+          "from": "MOLINGES Village",
+          "to": "BELLIGNAT Mairie",
+          "amountEUR": 3.8
+        },
+        {
+          "from": "DORTAN Mairie",
+          "to": "BELLIGNAT Mairie",
+          "amountEUR": 2.6
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "BELLIGNAT Mairie",
+          "amountEUR": 1.2
+        },
+        {
+          "from": "BELLIGNAT Lycée",
+          "to": "BELLIGNAT Mairie",
+          "amountEUR": 1.2
+        },
+        {
+          "from": "SAINT-CLAUDE Gare",
+          "to": "MARTIGNAT Mairie",
+          "amountEUR": 6
+        },
+        {
+          "from": "MOLINGES Village",
+          "to": "MARTIGNAT Mairie",
+          "amountEUR": 4.3
+        },
+        {
+          "from": "DORTAN Mairie",
+          "to": "MARTIGNAT Mairie",
+          "amountEUR": 3.3
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "MARTIGNAT Mairie",
+          "amountEUR": 1.9
+        },
+        {
+          "from": "BELLIGNAT Lycée",
+          "to": "MARTIGNAT Mairie",
+          "amountEUR": 1.5
+        },
+        {
+          "from": "BELLIGNAT Mairie",
+          "to": "MARTIGNAT Mairie",
+          "amountEUR": 1.4
+        },
+        {
+          "from": "SAINT-CLAUDE Gare",
+          "to": "MONTREAL-LA-CLUSE Mairie",
+          "amountEUR": 6.4
+        },
+        {
+          "from": "MOLINGES Village",
+          "to": "MONTREAL-LA-CLUSE Mairie",
+          "amountEUR": 4.9
+        },
+        {
+          "from": "DORTAN Mairie",
+          "to": "MONTREAL-LA-CLUSE Mairie",
+          "amountEUR": 3.8
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "MONTREAL-LA-CLUSE Mairie",
+          "amountEUR": 2.6
+        },
+        {
+          "from": "BELLIGNAT Lycée",
+          "to": "MONTREAL-LA-CLUSE Mairie",
+          "amountEUR": 2.2
+        },
+        {
+          "from": "BELLIGNAT Mairie",
+          "to": "MONTREAL-LA-CLUSE Mairie",
+          "amountEUR": 2.1
+        },
+        {
+          "from": "MARTIGNAT Mairie",
+          "to": "MONTREAL-LA-CLUSE Mairie",
+          "amountEUR": 1.4
+        },
+        {
+          "from": "SAINT-CLAUDE Gare",
+          "to": "BRION Gare",
+          "amountEUR": 6.7
+        },
+        {
+          "from": "MOLINGES Village",
+          "to": "BRION Gare",
+          "amountEUR": 5.2
+        },
+        {
+          "from": "DORTAN Mairie",
+          "to": "BRION Gare",
+          "amountEUR": 4.2
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "BRION Gare",
+          "amountEUR": 2.9
+        },
+        {
+          "from": "BELLIGNAT Lycée",
+          "to": "BRION Gare",
+          "amountEUR": 2.6
+        },
+        {
+          "from": "BELLIGNAT Mairie",
+          "to": "BRION Gare",
+          "amountEUR": 2.4
+        },
+        {
+          "from": "MARTIGNAT Mairie",
+          "to": "BRION Gare",
+          "amountEUR": 1.9
+        },
+        {
+          "from": "MONTREAL-LA-CLUSE Mairie",
+          "to": "BRION Gare",
+          "amountEUR": 1.2
+        },
+        {
+          "from": "SAINT-CLAUDE Gare",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 6.6
+        },
+        {
+          "from": "MOLINGES Village",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 5.1
+        },
+        {
+          "from": "DORTAN Mairie",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 4
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 2.7
+        },
+        {
+          "from": "BELLIGNAT Lycée",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 2.4
+        },
+        {
+          "from": "BELLIGNAT Mairie",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 2.2
+        },
+        {
+          "from": "MARTIGNAT Mairie",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 1.5
+        },
+        {
+          "from": "MONTREAL-LA-CLUSE Mairie",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 1.2
+        },
+        {
+          "from": "BRION Gare",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 1.2
+        },
+        {
+          "from": "SAINT-CLAUDE Gare",
+          "to": "NANTUA Esplanade",
+          "amountEUR": 6.9
+        },
+        {
+          "from": "MOLINGES Village",
+          "to": "NANTUA Esplanade",
+          "amountEUR": 5.4
+        },
+        {
+          "from": "DORTAN Mairie",
+          "to": "NANTUA Esplanade",
+          "amountEUR": 4.6
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "NANTUA Esplanade",
+          "amountEUR": 3.3
+        },
+        {
+          "from": "BELLIGNAT Lycée",
+          "to": "NANTUA Esplanade",
+          "amountEUR": 2.9
+        },
+        {
+          "from": "BELLIGNAT Mairie",
+          "to": "NANTUA Esplanade",
+          "amountEUR": 2.7
+        },
+        {
+          "from": "MARTIGNAT Mairie",
+          "to": "NANTUA Esplanade",
+          "amountEUR": 2.1
+        },
+        {
+          "from": "MONTREAL-LA-CLUSE Mairie",
+          "to": "NANTUA Esplanade",
+          "amountEUR": 1.4
+        },
+        {
+          "from": "BRION Gare",
+          "to": "NANTUA Esplanade",
+          "amountEUR": 1.4
+        },
+        {
+          "from": "MONTREAL-LA-CLUSE Ville",
+          "to": "NANTUA Esplanade",
+          "amountEUR": 1.2
+        },
+        {
+          "from": "SAINT-CLAUDE Gare",
+          "to": "NANTUA Médiathèque",
+          "amountEUR": 7
+        },
+        {
+          "from": "MOLINGES Village",
+          "to": "NANTUA Médiathèque",
+          "amountEUR": 5.6
+        },
+        {
+          "from": "DORTAN Mairie",
+          "to": "NANTUA Médiathèque",
+          "amountEUR": 4.7
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "NANTUA Médiathèque",
+          "amountEUR": 3.4
+        },
+        {
+          "from": "BELLIGNAT Lycée",
+          "to": "NANTUA Médiathèque",
+          "amountEUR": 3.1
+        },
+        {
+          "from": "BELLIGNAT Mairie",
+          "to": "NANTUA Médiathèque",
+          "amountEUR": 2.9
+        },
+        {
+          "from": "MARTIGNAT Mairie",
+          "to": "NANTUA Médiathèque",
+          "amountEUR": 2.2
+        },
+        {
+          "from": "MONTREAL-LA-CLUSE Mairie",
+          "to": "NANTUA Médiathèque",
+          "amountEUR": 1.5
+        },
+        {
+          "from": "BRION Gare",
+          "to": "NANTUA Médiathèque",
+          "amountEUR": 1.5
+        },
+        {
+          "from": "MONTREAL-LA-CLUSE Ville",
+          "to": "NANTUA Médiathèque",
+          "amountEUR": 1.4
+        },
+        {
+          "from": "NANTUA Esplanade",
+          "to": "NANTUA Médiathèque",
+          "amountEUR": 1.2
+        }
+      ],
+      "appConnected": false,
+      "stopMappingVerified": false,
+      "journeyFareVerified": false,
+      "effectiveFrom": "2026-03-01",
+      "validUntil": null,
+      "alreadyDiscounted": true
+    },
+    {
+      "line": "X38",
+      "source": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/CAR_RARA_TARIFS-ILLICO-AUTOCARS_X38_Bourg-en-Bresse-Oyonnax_2026.pdf",
+      "stops": [
+        "OYONNAX Gare",
+        "BELLIGNAT Lycée",
+        "BELLIGNAT Mairie",
+        "MARTIGNAT Mairie",
+        "MONTREAL-LA-CLUSE Mairie",
+        "MONTREAL-LA-CLUSE Ville",
+        "BRION Gare",
+        "BOURG-EN-BRESSE Gare"
+      ],
+      "pairs": [
+        {
+          "from": "OYONNAX Gare",
+          "to": "BELLIGNAT Lycée",
+          "amountEUR": 1.2
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "BELLIGNAT Mairie",
+          "amountEUR": 1.2
+        },
+        {
+          "from": "BELLIGNAT Lycée",
+          "to": "BELLIGNAT Mairie",
+          "amountEUR": 1.2
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "MARTIGNAT Mairie",
+          "amountEUR": 1.9
+        },
+        {
+          "from": "BELLIGNAT Lycée",
+          "to": "MARTIGNAT Mairie",
+          "amountEUR": 1.5
+        },
+        {
+          "from": "BELLIGNAT Mairie",
+          "to": "MARTIGNAT Mairie",
+          "amountEUR": 1.4
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "MONTREAL-LA-CLUSE Mairie",
+          "amountEUR": 2.6
+        },
+        {
+          "from": "BELLIGNAT Lycée",
+          "to": "MONTREAL-LA-CLUSE Mairie",
+          "amountEUR": 2.2
+        },
+        {
+          "from": "BELLIGNAT Mairie",
+          "to": "MONTREAL-LA-CLUSE Mairie",
+          "amountEUR": 2.1
+        },
+        {
+          "from": "MARTIGNAT Mairie",
+          "to": "MONTREAL-LA-CLUSE Mairie",
+          "amountEUR": 1.4
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 2.7
+        },
+        {
+          "from": "BELLIGNAT Lycée",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 2.4
+        },
+        {
+          "from": "BELLIGNAT Mairie",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 2.2
+        },
+        {
+          "from": "MARTIGNAT Mairie",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 1.5
+        },
+        {
+          "from": "MONTREAL-LA-CLUSE Mairie",
+          "to": "MONTREAL-LA-CLUSE Ville",
+          "amountEUR": 1.2
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "BRION Gare",
+          "amountEUR": 2.9
+        },
+        {
+          "from": "BELLIGNAT Lycée",
+          "to": "BRION Gare",
+          "amountEUR": 2.6
+        },
+        {
+          "from": "BELLIGNAT Mairie",
+          "to": "BRION Gare",
+          "amountEUR": 2.4
+        },
+        {
+          "from": "MARTIGNAT Mairie",
+          "to": "BRION Gare",
+          "amountEUR": 1.9
+        },
+        {
+          "from": "MONTREAL-LA-CLUSE Mairie",
+          "to": "BRION Gare",
+          "amountEUR": 1.2
+        },
+        {
+          "from": "MONTREAL-LA-CLUSE Ville",
+          "to": "BRION Gare",
+          "amountEUR": 1.2
+        },
+        {
+          "from": "OYONNAX Gare",
+          "to": "BOURG-EN-BRESSE Gare",
+          "amountEUR": 8.6
+        },
+        {
+          "from": "BELLIGNAT Lycée",
+          "to": "BOURG-EN-BRESSE Gare",
+          "amountEUR": 8.3
+        },
+        {
+          "from": "BELLIGNAT Mairie",
+          "to": "BOURG-EN-BRESSE Gare",
+          "amountEUR": 8.2
+        },
+        {
+          "from": "MARTIGNAT Mairie",
+          "to": "BOURG-EN-BRESSE Gare",
+          "amountEUR": 7.6
+        },
+        {
+          "from": "MONTREAL-LA-CLUSE Mairie",
+          "to": "BOURG-EN-BRESSE Gare",
+          "amountEUR": 7
+        },
+        {
+          "from": "MONTREAL-LA-CLUSE Ville",
+          "to": "BOURG-EN-BRESSE Gare",
+          "amountEUR": 6.9
+        },
+        {
+          "from": "BRION Gare",
+          "to": "BOURG-EN-BRESSE Gare",
+          "amountEUR": 6.8
+        }
+      ],
+      "appConnected": false,
+      "stopMappingVerified": false,
+      "journeyFareVerified": false,
+      "effectiveFrom": "2026-03-01",
+      "validUntil": null,
+      "alreadyDiscounted": true
+    }
+  ]
+}
