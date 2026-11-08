@@ -18,6 +18,9 @@ test('rapprochement : bilan complet et ecarts Beuzeville visibles', () => {
   assert.equal(r.unmatched_classification.both_endpoints_present_pair_missing, 672);
   assert.equal(r.missing_pair_origins.reduce((n, x) => n + x.count, 0), 672);
   assert.equal(r.missing_pair_details.length, 672);
+  assert.equal(r.unmatched_details.length, r.not_matched);
+  assert.equal(r.unmatched_details.length, 7251);
+  for (const [category, count] of Object.entries(r.unmatched_classification)) assert.equal(r.unmatched_details.filter(x => x.classification === category).length, count);
   assert.equal(r.missing_pair_unique_gates, 148);
   assert.ok(r.missing_name_counts.length > 0);
   assert.ok(r.missing_name_counts.every((x, i, arr) => x.gate && x.occurrences > 0 && (i === 0 || arr[i - 1].occurrences >= x.occurrences)));
