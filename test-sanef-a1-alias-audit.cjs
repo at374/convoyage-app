@@ -30,7 +30,7 @@ for(let i=0;i<entries.length;i++){
   assert.ok(row[3]);
   assert.equal(row[4],'','coordinates must remain unconfirmed');
   assert.match(row[5],/^https:\/\/www\.autoroutes\.sanef\.com\/sites\/default\/files\/2025-12\//);
-  assert.ok(['33','34'].includes(row[6]),'SANEF annex 2 printed page 33 or 34');
+  assert.ok(['33','34','35'].includes(row[6]),'SANEF annex 2 printed page 33, 34 or 35');
   assert.match(row[7],/PR \d+\+\d+/);
  }
 
@@ -41,11 +41,11 @@ for(const relation of dataset.records){
  assert.ok(canon.has(relation.origine),'missing origin '+relation.origine);
  assert.ok(canon.has(relation.destination),'missing destination '+relation.destination);
 }
-assert.equal(csv.slice(1).map(parse).filter(row=>row[2]==='NOM_NUMERO_PR_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER').length,8);
+assert.equal(csv.slice(1).map(parse).filter(row=>row[2]==='NOM_NUMERO_PR_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER').length,19);
 assert.equal(csv.slice(1).map(parse).filter(row=>row[2]==='NOM_KM_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER').length,1);
 const rows=csv.slice(1).map(parse);
-assert.equal(rows.filter(row=>row[2]==='A_VERIFIER').length,24);
-assert.equal(rows.filter(row=>row[5].startsWith('https://www.autoroutes.sanef.com/')).length,9);
+assert.equal(rows.filter(row=>row[2]==='A_VERIFIER').length,13);
+assert.equal(rows.filter(row=>row[5].startsWith('https://www.autoroutes.sanef.com/')).length,20);
 assert.ok(rows.every(row=>row[4]===''),'no physical alias may be marked GPS-confirmed without independent coordinates');
 assert.ok(rows.every(row=>row[2]!=='CERTIFIE'),'no physical alias is certified');
-console.log('PASS 33 SANEF aliases: 9 documentary references, 24 pending, 0 GPS-certified; 122 relations mapped');
+console.log('PASS 33 SANEF aliases: 20 documentary references, 13 pending, 0 GPS-certified; 122 relations mapped');
