@@ -12,6 +12,9 @@ function determiner(input){
   const dt=new Date(Date.UTC(y,m-1,d));
   if(dt.getUTCFullYear()!==y||dt.getUTCMonth()!==m-1||dt.getUTCDate()!==d||h>23||min>59||sec>59)return {statut:'INCONNU',couleur:null,motif:'date_invalide'};
   if(input.passageLocal<'2026-02-01T00:00:00'||input.passageLocal>='2027-02-01T00:00:00')return {statut:'INCONNU',couleur:null,motif:'hors_grille_2026'};
+  // Holiday exceptions have not been certified for this dataset, even on Sundays.
+  if(input.jourFerie===true || input.lundiFerie===true || input.mardiFerie===true)
+    return {statut:'INCONNU',couleur:null,motif:'calendrier_ferie_a_verifier'};
   const dimanche=dt.getUTCDay()===0;
   if(!dimanche){
     if(input.jourFerie===true || input.lundiFerie===true || input.mardiFerie===true)return {statut:'INCONNU',couleur:null,motif:'calendrier_ferie_a_verifier'};
