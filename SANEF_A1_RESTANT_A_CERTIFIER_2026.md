@@ -7,7 +7,7 @@ Date de référence des grilles : **1er février 2026**.
 - **122 relations** dans `sanef-a1-modulation-2026.json`, réparties en 29 ARSY, 30 CHEVRIÈRES, 31 SENLIS et 32 CHAMANT.
 - **366 montants classe 1** (normal, vert, rouge) rapprochés des lignes de la grille modulée. Le registre CSV documente cette comparaison, **sans certifier la correspondance physique des gares**.
 - **122 montants classe 2 normaux** également rapprochés des lignes de la grille générale SANEF (page 3) : **488 montants comparés, sans écart numérique relevé**. Ce rapprochement ne certifie ni l'identité des gares, ni le sens, ni les exceptions calendaires.
-- **33 alias de gares** documentaires, dont **9 avec référence officielle enregistrée** (4 A1, 4 A26 nord et Setques), **24 sans référence individuelle enregistrée** ; **aucune correspondance GPS certifiée**.
+- **33 alias de gares** documentaires, dont **20 avec référence officielle enregistrée** (4 A1, 15 A26 nord et Setques), **13 sans référence individuelle enregistrée** ; **aucune correspondance GPS certifiée**.
 - La règle horaire et le sens de circulation doivent encore être vérifiés pour chaque usage réel, notamment les exceptions calendaires.
 
 ## Nouvelle preuve officielle — Setques (A26)
@@ -22,6 +22,14 @@ Le [règlement d'exploitation SANEF de décembre 2025](https://www.autoroutes.sa
 
 Ces données sont des **preuves documentaires de noms, numéros et points de repère**, non des coordonnées GPS et non une certification des alias `L AUDOMAROIS`, `THEROUANNE`, `LILLERS` et `LE BETHUNOIS`. Le registre d'alias contient maintenant ces quatre références documentaires, sans certifier les correspondances physiques ; les références de page doivent rester vérifiables.
 
+## Gares restantes sans preuve individuelle enregistrée (13)
+
+- **A29/A26 Somme** : Amiens Est (Jules Verne), Villers-Bretonneux n°52, Gare TGV n°53 (Santerre), Athies n°54.
+- **A2/A1 nord** : Hordain, Cambrai n°14 (Fontaine Notre Dame), Lille/Dourges (Fresnes), Arras Est A1 n°15 (L'Arrageois), Bapaume n°14.
+- **A1 Somme/Oise** : Albert n°13.1 (Maurepas), Péronne/Vallée de la Somme n°13, Roye n°12, Ressons n°11.
+
+Les noms entre parenthèses sont des alias documentaires internes, **pas des identités géographiques certifiées**. Ne renseigner numéro, PR, coordonnées ou page de PDF qu'après consultation directe d'une source probante.
+
 ## Travaux encore indispensables
 
 1. **Auditer indépendamment** les 122 prix classe 2 déjà rapprochés de la grille SANEF standard, en conservant les références exactes de page, ligne et colonne pour chaque gare.
@@ -32,7 +40,7 @@ Ces données sont des **preuves documentaires de noms, numéros et points de rep
 
 ## État des validations techniques (8 novembre 2026)
 
-- Dernière validation complète observée : commit `06f2399e`, [GitHub Actions SANEF A1 — succès](https://github.com/at374/convoyage-app/actions/runs/42484871791).
+- Dernière validation complète observée : commit `5ebba8e1`, [GitHub Actions SANEF A1 — succès](https://github.com/at374/convoyage-app/actions/runs/42485006550).
 - Les tests de robustesse protègent la simulation contre les calendriers non attestés, les alias non reconnus, les données de relations malformées et les montants invalides.
 - **Ne pas confondre tests réussis et certification indépendante des 33 gares ou des 488 montants.**
 
