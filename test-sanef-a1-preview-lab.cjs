@@ -6,6 +6,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'sanef-a1-preview-lab.html'),'utf8');
 const app=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');
+const routes=fs.readFileSync(path.join(__dirname,'routes-ui.js'),'utf8');
 const scripts=['sanef-a1-regles-officielles-2026.js','sanef-a1-official-selector.js','sanef-a1-browser-preview.js','sanef-a1-preview-panel.js'];
 let count=0;
 for(const name of scripts){
@@ -29,4 +30,9 @@ assert.match(html,/select\.selectedIndex=-1/);count++;
 assert.match(html,/Tarif normal classe 1 déjà vérifié/);count++;
 assert.doesNotMatch(html,/(?:fetch|XMLHttpRequest)\s*\(\s*['"`][^'"`]*(?:api\/routes|supabase)/i);count++;
 assert.doesNotMatch(html,/\b(?:submitMission|saveMission|facturer|updatePeage)\s*\(/);count++;
+const labLink='href="sanef-a1-preview-lab.html" target="_blank" rel="noopener noreferrer"';
+assert.equal(routes.split(labLink).length-1,1,'manual preview must be linked once from route results');count++;
+assert.ok(routes.indexOf(labLink)>routes.indexOf('const render = (target, r, mode) =>'));count++;
+assert.ok(routes.indexOf(labLink)<routes.indexOf('const PEAGE_MEMO = new Map()'));count++;
+assert.match(html,/Laboratoire expérimental/);count++;
 console.log('PASS '+count+' SANEF A1 manual lab integration assertions');
