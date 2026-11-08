@@ -25,6 +25,13 @@ const stationByCanonical=new Map(stationRows.map(row=>[row[1],row]));
 assert.equal(stationByCanonical.size,33,'each station must have a unique canonical identity');
 assert.deepEqual(parse(stationCsv[0]),['nom_grille_sanef','nom_canonique_application','statut_identite_gare','numero_echangeur_confirme','coordonnees_confirmees','source_officielle_exacte','page_pdf_verifiee','observation']);
 assert.equal(stationRows.length,33);
+assert.deepEqual(new Set(stationRows.map(row=>row[0])),new Set(aliasPairs.map(([label])=>label)),'station audit labels must match official tariff aliases exactly');
+assert.deepEqual(new Set(stationRows.map(row=>row[1])),new Set(aliasPairs.map(([,canonical])=>canonical)),'station audit canonical names must match alias mapping exactly');
+for(const station of stationRows){
+ assert.equal(station.length,8,'station audit CSV must have eight fields');
+ assert.equal(aliases[station[0]],station[1],'official station label must map to same canonical station in audit');
+ assert.ok(station[5].startsWith('https://'),'every documentary station must retain an official source');
+}
 const isValidGpsCoordinates=value=>{
  const parts=value.split(',').map(x=>x.trim());
  if(parts.length!==2||parts.some(x=>!/^[-+]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(x)))return false;
