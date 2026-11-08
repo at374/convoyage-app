@@ -16,7 +16,8 @@ const suites=[
  'test-sanef-a1-end-to-end.cjs',
  'test-sanef-a1-certification-ledger.cjs',
  'test-sanef-a1-no-activation.cjs',
- 'test-sanef-a1-alias-audit.cjs'
+ 'test-sanef-a1-alias-audit.cjs',
+ 'test-sanef-a1-pdf-evidence.cjs'
 ];
 let passed=0;
 for(const file of suites){
