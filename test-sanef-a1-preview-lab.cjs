@@ -22,6 +22,8 @@ assert.deepEqual([...scriptOrder].sort((a,b)=>a-b),scriptOrder);count++;
 assert.match(html,/addEventListener\('click'/);count++;
 assert.match(html,/passageGareConfirme/);count++;
 assert.match(html,/id="holiday"/);count++;
+assert.match(html,/id="calendarVerified"/);count++;
+assert.match(html,/\!document\.getElementById\('calendarVerified'\)\.checked/);count++;
 assert.match(html,/jourFerie:document\.getElementById\('holiday'\)\.checked/);count++;
 assert.match(html,/Aperçu indisponible — conserver uniquement le tarif normal vérifié/);count++;
 assert.match(html,/<select id="direction">/);count++;
