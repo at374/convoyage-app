@@ -13,6 +13,10 @@ const names=['origine_canonique','destination_canonique','origine_grille_a_verif
 assert.deepEqual(header,names);
 assert.equal(csv.length-1,dataset.records.length);
 const inverse=Object.fromEntries(Object.entries(aliases).map(([label,canonical])=>[canonical,label]));
+const stationCsv=fs.readFileSync(path.join(root,'sanef-a1-audit-alias-gares-2026.csv'),'utf8').trimEnd().split(/\r?\n/);
+const stationRows=stationCsv.slice(1).map(parse);
+const stationByCanonical=new Map(stationRows.map(row=>[row[1],row]));
+assert.equal(stationByCanonical.size,33,'each station must have a unique canonical identity');
 let verifiedClass1=0;
 const position={ARSY:0,CHEVRIERES:0,SENLIS:0,CHAMANT:0};
 for(let i=0;i<dataset.records.length;i++){
@@ -52,6 +56,13 @@ for(const record of dataset.records){
    }
    assert.equal(row[9],'OUI','direction must be confirmed before certification');
    assert.equal(row[10],'OUI','physical GPS station identity must be confirmed before certification');
+   for(const canonical of [record.origine,record.destination]){
+    const station=stationByCanonical.get(canonical);
+    assert.ok(station,'missing physical station audit for '+canonical);
+    assert.equal(station[2],'CERTIFIE','station '+canonical+' must be independently GPS-certified');
+    assert.ok(station[4].trim(),'station '+canonical+' must have independently verified coordinates');
+    assert.ok(station[5].startsWith('https://'),'station '+canonical+' must have a source URL');
+   }
   }else{
    assert.deepEqual(row.slice(6),['','','','NON','NON']);
   }
