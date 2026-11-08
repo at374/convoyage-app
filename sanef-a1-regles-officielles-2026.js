@@ -15,6 +15,7 @@ function determiner(input){
   // Holiday exceptions have not been certified for this dataset, even on Sundays.
   if(input.jourFerie===true || input.lundiFerie===true || input.mardiFerie===true)
     return {statut:'INCONNU',couleur:null,motif:'calendrier_ferie_a_verifier'};
+  if(input.calendrierFeriesVerifie!==true)return {statut:'INCONNU',couleur:null,motif:'calendrier_non_verifie'};
   const dimanche=dt.getUTCDay()===0;
   if(!dimanche){
     if(input.jourFerie===true || input.lundiFerie===true || input.mardiFerie===true)return {statut:'INCONNU',couleur:null,motif:'calendrier_ferie_a_verifier'};
