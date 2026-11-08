@@ -10,7 +10,7 @@ on:
       - scripts/audit-rapprochement-peages.cjs
       - .github/workflows/audit-couverture-peages-2026.yml
       - tests/peages-audit-couverture-2026.test.cjs
-      - tests/peages-sapn-beuzeville-2026.test.cjs tests/peages-sapn-a14-conditions-2026.test.cjs
+      - tests/peages-sapn-beuzeville-2026.test.cjs
       - tests/peages-sapn-a14-conditions-2026.test.cjs
       - peages-aprr.json
       - peages-overlay.json
@@ -25,7 +25,7 @@ jobs:
         with:
           node-version: '22'
       - name: Tester les comptages et le pourcentage historique
-        run: node --test tests/peages-audit-couverture-2026.test.cjs tests/peages-sapn-beuzeville-2026.test.cjs
+        run: node --test tests/peages-audit-couverture-2026.test.cjs tests/peages-sapn-beuzeville-2026.test.cjs tests/peages-sapn-a14-conditions-2026.test.cjs
       - name: Calculer inventaire sans modifier les prix
         shell: bash
         run: |
