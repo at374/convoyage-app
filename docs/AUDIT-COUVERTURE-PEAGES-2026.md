@@ -78,28 +78,7 @@ La comparaison de noms simplifiée n'est pas une certification officielle et peu
 
 ## Contrôle officiel SAPN A13 — Beuzeville (8 novembre 2026)
 
-Source officielle : https://www.autoroutes.sanef.com/sites/default/files/2026-01/2026_02-Grille-SAPN.pdf
-
-Grille **TTC applicable au 01/02/2026**, classe 1 page 1, tableau « AUTOROUTES A13 - A29 SUD ». Arrêté de référence : https://www.legifrance.gouv.fr/loda/id/JORFTEXT000053417647/
-
-| Relation depuis BEUZEVILLE N°28 | SAPN officiel classe 1 | Base principale classe 1 | Overlay classe 1 |
-| --- | ---: | ---: | ---: |
-| POISSY / ORGEVAL N°7 à MANTES-SUD N°12 | 12,10 € | 12,10 € | 11,60 € |
-| CHAUFOUR N°15 à GAILLON N°17 | 9,10 € | 9,10 € | 8,60 € |
-| BOURNEVILLE N°26 | 4,60 € | 4,60 € | 4,10 € |
-| HEUDEBOUVILLE N°18 | 7,10 € | 7,10 € | 6,60 € |
-| BOURG-ACHARD N°25 | 4,60 € | 4,60 € | 4,10 € |
-
-**Résultat : 5/5 valeurs classe 1 de la base principale correspondent à la grille officielle SAPN 2026 ; 5/5 valeurs classe 1 de l'overlay sont inférieures de 0,50 €.**
-
-**Classe 2 : vérification indépendante de chaque cellule encore nécessaire** (le texte extrait de la page 2 ne reproduit pas toutes les cellules de la matrice). Les montants classe 2 de la base principale sont 18,80 / 13,90 / 6,80 / 10,70 / 6,80 €, ceux de l'overlay 18,50 / 13,60 / 6,50 / 10,40 / 6,50 € dans le même ordre ; ne pas considérer les premiers comme certifiés avant vérification de la page 2.
-
-**Décision :** aucune mutation des tarifs de production ; consigner les cinq écarts comme `CLASSE_1_OVERLAY_DIVERGENT_OFFICIEL_2026`, puis certifier la classe 2 avant correction conjointe. Les valeurs peuvent relever de dates différentes ; préserver l'historique tarifaire si c'est le cas.
-
-
-## RECTIFICATIF PRIORITAIRE — SAPN Beuzeville (8 novembre 2026)
-
-**Ce rectificatif ANNULE explicitement la conclusion de la section précédente intitulée « Contrôle officiel SAPN A13 — Beuzeville » qui attribuait à tort les cinq prix classe 1 de la base principale à Beuzeville.** Cette section avait lu la colonne CHENARD voisine de la colonne BEUZEVILLE dans la matrice triangulaire.
+**Version corrigée après relecture des colonnes de la matrice triangulaire SAPN.** Une interprétation antérieure confondait les colonnes CHENARD et BEUZEVILLE ; elle a été retirée de ce document.
 
 Source officielle primaire : https://www.autoroutes.sanef.com/sites/default/files/2026-01/2026_02-Grille-SAPN.pdf — page PDF 2 (classe 1), page PDF 3 (classe 2), grille A13/A29 SUD, applicable au **01/02/2026**. Vérification visuelle des deux pages de la matrice.
 
@@ -111,8 +90,21 @@ Source officielle primaire : https://www.autoroutes.sanef.com/sites/default/file
 | BEUZEVILLE N°28 | HEUDEBOUVILLE N°18 | 6,60 € | 10,40 € | 7,10 / 10,70 € | **6,60 / 10,40 €** |
 | BEUZEVILLE N°28 | BOURG-ACHARD N°25 | 4,10 € | 6,50 € | 4,60 / 6,80 € | **4,10 / 6,50 €** |
 
-**Conclusion rectifiée : overlay = 10/10 prix conformes à la grille officielle SAPN 2026 ; base principale = 10/10 montants différents.** Écart uniforme base moins officiel : +0,50 € classe 1, +0,30 € classe 2.
+**Conclusion vérifiée : overlay = 10/10 prix conformes à la grille officielle SAPN 2026 ; base principale = 10/10 montants différents.** Écart uniforme base moins officiel : +0,50 € classe 1, +0,30 € classe 2.
 
 Attention : ceci démontre une différence de version des prix sur ces cinq relations, pas nécessairement l'absence d'une règle tarifaire supplémentaire dans un autre contexte. Ne modifier aucune donnée de production avant contrôle de l'origine des montants, du sens et de la date.
 
-Pour toute transmission à Claude ou bilan automatisé, **citer uniquement ce rectificatif** comme conclusion sur Beuzeville, et non la section antérieure désormais obsolète.
+
+## Sources officielles VINCI : dates de validité distinctes (8 novembre 2026)
+
+Source primaire : https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-demploi/tarifs-peage-vinci-autoroutes/
+
+| Réseau | Date affichée sur la page officielle | Documents disponibles |
+|---|---|---|
+| ASF | 01/06/2026 | Grilles classes 1 et 2, guide et fichier TXT |
+| COFIROUTE / ARCOUR | 01/02/2026 | Guide et fichier TXT |
+| ESCOTA | 01/02/2026 | Guide et fichier TXT |
+| Duplex A86 | 01/01/2026 | Guide et fichier TXT |
+| ARCOS A355 | 01/02/2026 | Guide et fichier TXT |
+
+**Contrôle d'import obligatoire :** ne pas appliquer la date 01/02/2026 indistinctement aux cinq réseaux ; ne pas interpréter les tarifs A86 conditionnels comme des prix fixes. La présence d'un fichier officiel ne signifie pas que toutes ses lignes sont déjà intégrées ou certifiées dans l'application.
