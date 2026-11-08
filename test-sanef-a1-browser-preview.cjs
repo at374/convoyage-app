@@ -19,6 +19,10 @@ vm.runInNewContext(script,{window,fetch},{filename:'sanef-a1-browser-preview.js'
  const invalid=await preview(valid,-1);
  assert.equal(invalid.status,'NORMAL_ONLY');assert.equal(calls,2);count+=2;
  for(const [request,reason] of [
+  [{...valid,calendrierFeriesVerifie:undefined},'calendrier_non_verifie'],
+  [{...valid,calendrierFeriesVerifie:null},'calendrier_non_verifie'],
+  [{...valid,calendrierFeriesVerifie:false},'calendrier_non_verifie'],
+  [{...valid,calendrierFeriesVerifie:'true'},'calendrier_non_verifie'],
   [{...valid,passageGareConfirme:false},'passage_not_confirmed'],
   [{...valid,direction:'INCONNU'},'classe_ou_sens_non_eligible'],
   [{...valid,classe:2},'classe_ou_sens_non_eligible'],
