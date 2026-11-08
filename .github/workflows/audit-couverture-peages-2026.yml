@@ -32,13 +32,13 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/audit-couverture-peages-2026.cjs | tee audit-couverture-peages-2026.json
-          node -e "const r=require('./audit-couverture-peages-2026.json'); if(r.coverage.remaining_national_percentage!==null) throw Error('Pourcentage national non certifie'); const b=r.base; require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, '# Audit péages 2026\\n\\n| Mesure | Valeur |\\n|---|---:|\\n| Relations uniques non orientées | '+b.relations_uniques_non_orientees+' |\\n| Montants classes 1/2 | '+b.montants_classes_1_2+' |\\n| Lignes malformées | '+b.lignes_malformees+' |\\n| Doublons divergents | '+b.doublons_prix_divergents+' |\\n\\n**Pourcentage national restant : non certifié.**\\n');"
+          node -e "const r=require('./audit-couverture-peages-2026.json'); if(r.coverage.remaining_national_percentage!==null) throw Error('Pourcentage national non certifie'); const b=r.base; require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, '# Audit péages 2026\n\n| Mesure | Valeur |\n|---|---:|\n| Relations uniques non orientées | '+b.relations_uniques_non_orientees+' |\n| Montants classes 1/2 | '+b.montants_classes_1_2+' |\n| Lignes malformées | '+b.lignes_malformees+' |\n| Doublons divergents | '+b.doublons_prix_divergents+' |\n\n**Pourcentage national restant : non certifié.**\n');"
       - name: Comparer base et overlay
         shell: bash
         run: |
           set -euo pipefail
           node scripts/audit-rapprochement-peages.cjs | tee audit-rapprochement-peages.json
-          node -e "const r=require('./audit-rapprochement-peages.json'); require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, '\\n## Rapprochement base / overlay\\n\\n| Mesure | Valeur |\\n|---|---:|\\n| Prix identiques | '+r.identical+' |\\n| Divergences | '+r.divergent+' |\\n| Ambigues | '+r.ambiguous+' |\\n| Non rapproches | '+r.not_matched+' |\\n');"
+          node -e "const r=require('./audit-rapprochement-peages.json'); require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, '\n## Rapprochement base / overlay\n\n| Mesure | Valeur |\n|---|---:|\n| Prix identiques | '+r.identical+' |\n| Divergences | '+r.divergent+' |\n| Ambigues | '+r.ambiguous+' |\n| Non rapproches | '+r.not_matched+' |\n');"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
