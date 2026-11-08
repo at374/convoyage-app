@@ -34,5 +34,28 @@ csv('peages-noms-a-verifier-2026.csv',
   ['gare_overlay', 'occurrences', 'statut'],
   report.missing_name_counts.map(x => [x.gate, x.occurrences, 'A_RAPPROCHER_MANUELLEMENT'])
 );
+// Les cinq divergences SAPN ont ete confrontees aux pages 2 (C1) et 3 (C2).
+// L'export ne modifie aucune valeur dans la base de production.
+const sapnSource = 'https://www.autoroutes.sanef.com/sites/default/files/2026-01/2026_02-Grille-SAPN.pdf';
+const verifiedBeuzeville = new Map([
+  ['POISSY / ORGEVAL N°7 à MANTES-SUD N°12', [11.6, 18.5]],
+  ['CHAUFOUR N°15 à GAILLON N°17', [8.6, 13.6]],
+  ['BOURNEVILLE N°26', [4.1, 6.5]],
+  ['HEUDEBOUVILLE N°18', [6.6, 10.4]],
+  ['BOURG-ACHARD N°25', [4.1, 6.5]],
+]);
+const normalize = value => String(value).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+const official = new Map([...verifiedBeuzeville].map(([name, prices]) => [normalize(name), prices]));
+const divergences = Array.isArray(report.divergences) ? report.divergences : [];
+const verified = divergences.map(d => {
+  const other = normalize(d.origin).includes('BEUZEVILLE') ? d.destination : normalize(d.destination).includes('BEUZEVILLE') ? d.origin : '';
+  const expected = official.get(normalize(other));
+  const matches = expected && Math.abs(d.overlay_class1 - expected[0]) < 0.00001 && Math.abs(d.overlay_class2 - expected[1]) < 0.00001;
+  return [d.origin, d.destination, d.base_class1, d.base_class2, d.overlay_class1, d.overlay_class2,
+    matches ? 'OVERLAY_CONFORME_SAPN_2026' : 'A_VERIFIER', matches ? sapnSource : '',
+    matches ? '2026-02-01' : '', matches ? '2 (classe 1), 3 (classe 2)' : ''];
+});
+csv('peages-divergences-a-verifier-2026.csv',
+  ['origine', 'destination', 'base_classe_1_eur', 'base_classe_2_eur', 'overlay_classe_1_eur', 'overlay_classe_2_eur', 'statut', 'source_officielle_url', 'date_validite', 'pages_pdf'], verified);
 if (sorted.length !== report.not_matched) throw Error('Export des relations incomplet');
-console.log(JSON.stringify({ exported_relations: sorted.length, exported_missing_names: report.missing_name_counts.length }));
+console.log(JSON.stringify({ exported_relations: sorted.length, exported_missing_names: report.missing_name_counts.length, exported_divergences: divergences.length, verified_sapn_divergences: verified.filter(x => x[6] === 'OVERLAY_CONFORME_SAPN_2026').length }));
