@@ -28,6 +28,7 @@ for(const invalid of [null,-1,1.5,'1000',Number.NaN]){
 }
 assert.equal(test({},'NORMAL_ONLY',999).reason,'normal_price_mismatch');checks++;
 assert.equal(test({},'NORMAL_ONLY',1000,{...dataset,status:'active'}).reason,'dataset_not_validated');checks++;
+assert.equal(test({},'NORMAL_ONLY',1000,{...dataset,records:[]}).reason,'relation_missing_or_duplicate');checks++;
 assert.equal(test({origine:'UNKNOWN'},'NORMAL_ONLY').reason,'alias_missing');checks++;
 for(const inherited of ['toString','constructor','__proto__']){
  assert.equal(test({origine:inherited},'NORMAL_ONLY').reason,'alias_missing');checks++;
