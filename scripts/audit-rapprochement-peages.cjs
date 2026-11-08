@@ -27,8 +27,11 @@ const report = {
   divergences: [],
   unmatched_origins: [],
   unmatched_classification: { both_endpoints_missing: 0, one_endpoint_missing: 0, both_endpoints_present_pair_missing: 0 },
+  missing_pair_origins: [],
+  missing_pair_examples: [],
 };
 const unmatchedByOrigin = new Map();
+const missingPairByOrigin = new Map();
 for (const p of overlay.paires) {
   const candidates = map.get(key(p[0], p[1]));
   if (!candidates) {
@@ -36,6 +39,10 @@ for (const p of overlay.paires) {
     const missingEndpoints = Number(!knownNames.has(normalize(p[0]))) + Number(!knownNames.has(normalize(p[1])));
     const group = missingEndpoints === 2 ? 'both_endpoints_missing' : missingEndpoints === 1 ? 'one_endpoint_missing' : 'both_endpoints_present_pair_missing';
     report.unmatched_classification[group]++;
+    if (missingEndpoints === 0) {
+      missingPairByOrigin.set(p[0], (missingPairByOrigin.get(p[0]) || 0) + 1);
+      if (report.missing_pair_examples.length < 30) report.missing_pair_examples.push({ origin: p[0], destination: p[1], overlay_class1: p[2], overlay_class2: p[3] });
+    }
     unmatchedByOrigin.set(p[0], (unmatchedByOrigin.get(p[0]) || 0) + 1);
     continue;
   }
@@ -48,8 +55,10 @@ for (const p of overlay.paires) {
     report.divergences.push({ origin: p[0], destination: p[1], base_class1: actual[0], base_class2: actual[1], overlay_class1: p[2], overlay_class2: p[3] });
   }
 }
+report.missing_pair_origins = [...missingPairByOrigin].map(([origin, count]) => ({ origin, count })).sort((a, b) => b.count - a.count || a.origin.localeCompare(b.origin));
 report.unmatched_origins = [...unmatchedByOrigin].map(([origin, count]) => ({ origin, count })).sort((a, b) => b.count - a.count || a.origin.localeCompare(b.origin));
 report.unmatched_origin_count = report.unmatched_origins.length;
+if (report.missing_pair_origins.reduce((a, b) => a + b.count, 0) !== report.unmatched_classification.both_endpoints_present_pair_missing) throw Error('Paires absentes : regroupement incoherent');
 if (Object.values(report.unmatched_classification).reduce((a, b) => a + b, 0) !== report.not_matched) throw Error('Classification des relations non rapprochees incoherente');
 if (report.unmatched_origins.reduce((sum, item) => sum + item.count, 0) !== report.not_matched) throw Error('Decompte des origines non rapprochees incoherent');
 if (report.identical + report.divergent + report.ambiguous + report.not_matched !== report.compared_overlay_pairs) throw Error('Comptage incoherent');
