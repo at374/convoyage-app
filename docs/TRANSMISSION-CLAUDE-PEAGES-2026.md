@@ -118,3 +118,13 @@ Passage en revue de la liste complète (ADELAC, ALBEA, ALIAE, ALICORNE, ALIENOR,
 - **CCISE** : sigle introuvable dans toute recherche web, y compris le document officiel de référence des concessionnaires (ASFA/ASECAP). N'apparaît dans aucune liste officielle de sociétés concessionnaires d'autoroutes françaises. Probable erreur/confusion du document transmis initial (dont une grande partie s'est révélée fabriquée) — non traité comme un gap réel.
 
 **Conclusion : les 22 concessionnaires de la liste transmise sont désormais tous traités (intégrés, documentés comme incompatibles/non intégrables, ou écartés comme non pertinents).** 688 tests passent, 0 échec, 0 skip, aucune approximation.
+
+## Audit d'intégrité interne de la base — 8 novembre 2026
+
+En l'absence de nouvelle source à traiter, revue systématique de la cohérence interne de `peages-aprr.json`/`peages-overlay.json` (doublons de noms, références orphelines, sanité des prix) :
+
+- **Doublons de noms** entre `aprr.g` et `overlay.gares` : un seul cas, **Auberives** (deux points GPS à 0,109km l'un de l'autre). Vérifié sans impact fonctionnel — le mécanisme de fusion ignore le point overlay dupliqué, aucun conflit de prix. Documenté dans `tests/peages-auberives-doublon-sans-effet.test.cjs`.
+- **Noms "dangling"** dans `overlay.paires` (présents dans une relation tarifaire mais sans GPS propre) : 59 au total. 58 déjà couverts par des tests existants (TOULOUSE EST/OUEST, LE MONTET/MONTBEUGNY/MOLINET bare, LIMITE A*-A*, etc.). Le seul non documenté, **ST GEOURS DE MAREMNE** (lié à BENESSE, déjà résolu), reste volontairement non fusionné par prudence (pas de preuve officielle que c'est le même point physique, malgré une proximité géographique suggestive) — documenté dans `tests/peages-st-geours-de-maremne-benesse-non-fusionnes.test.cjs`.
+- **Sanité des prix** : aucune ligne `classe2 < classe1` dans `aprr.p`, `overlay.paires` ou `overlay.tarifs`. 57 relations à prix 0,0€ trouvées (sections gratuites documentées au sein de corridors à péage, ex. Lyon/Tarbes/Provence) — vérifié que le code de recherche de prix (`paire()` dans `routes-ui.js`) ne traite pas `0` comme "absent" (bug de troncature à zéro écarté).
+
+**État final : 695 tests passent, 0 échec, 0 skip, aucune approximation.**
