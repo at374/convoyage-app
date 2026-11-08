@@ -1,0 +1,541 @@
+{
+  "checkedOn": "2026-11-08",
+  "line": "X36",
+  "source": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/CAR_RARA_TARIFS-ILLICO-AUTOCARS_X36_Bellegarde-Bourg_2026.pdf",
+  "effectiveFrom": "2026-03-01",
+  "validUntil": null,
+  "product": "illico_autocars_adult",
+  "alreadyDiscounted": true,
+  "doNotApplyAdditionalThirtyPercent": true,
+  "appConnected": false,
+  "stopMappingVerified": false,
+  "journeyFareVerified": false,
+  "directionEvidence": "lower triangular published matrix; reverse applicability must be checked before use",
+  "pairs": [
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "BELLEGARDE Lycée",
+      "amountEUR": 1.2
+    },
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "CHATILLON-EN-MICHAILLE Centre",
+      "amountEUR": 1.5
+    },
+    {
+      "from": "BELLEGARDE Lycée",
+      "to": "CHATILLON-EN-MICHAILLE Centre",
+      "amountEUR": 1.2
+    },
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "SAINT-GERMAIN-DE-JOUX Centre",
+      "amountEUR": 2.4
+    },
+    {
+      "from": "BELLEGARDE Lycée",
+      "to": "SAINT-GERMAIN-DE-JOUX Centre",
+      "amountEUR": 2.1
+    },
+    {
+      "from": "CHATILLON-EN-MICHAILLE Centre",
+      "to": "SAINT-GERMAIN-DE-JOUX Centre",
+      "amountEUR": 1.5
+    },
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "LE-POIZAT-LALLEYRIAT RD1084",
+      "amountEUR": 3.3
+    },
+    {
+      "from": "BELLEGARDE Lycée",
+      "to": "LE-POIZAT-LALLEYRIAT RD1084",
+      "amountEUR": 2.9
+    },
+    {
+      "from": "CHATILLON-EN-MICHAILLE Centre",
+      "to": "LE-POIZAT-LALLEYRIAT RD1084",
+      "amountEUR": 2.4
+    },
+    {
+      "from": "SAINT-GERMAIN-DE-JOUX Centre",
+      "to": "LE-POIZAT-LALLEYRIAT RD1084",
+      "amountEUR": 1.5
+    },
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "LES NEYROLLES Centre",
+      "amountEUR": 4.2
+    },
+    {
+      "from": "BELLEGARDE Lycée",
+      "to": "LES NEYROLLES Centre",
+      "amountEUR": 3.8
+    },
+    {
+      "from": "CHATILLON-EN-MICHAILLE Centre",
+      "to": "LES NEYROLLES Centre",
+      "amountEUR": 3.4
+    },
+    {
+      "from": "SAINT-GERMAIN-DE-JOUX Centre",
+      "to": "LES NEYROLLES Centre",
+      "amountEUR": 2.6
+    },
+    {
+      "from": "LE-POIZAT-LALLEYRIAT RD1084",
+      "to": "LES NEYROLLES Centre",
+      "amountEUR": 1.7
+    },
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "NANTUA Médiathèque",
+      "amountEUR": 4.7
+    },
+    {
+      "from": "BELLEGARDE Lycée",
+      "to": "NANTUA Médiathèque",
+      "amountEUR": 4.4
+    },
+    {
+      "from": "CHATILLON-EN-MICHAILLE Centre",
+      "to": "NANTUA Médiathèque",
+      "amountEUR": 3.8
+    },
+    {
+      "from": "SAINT-GERMAIN-DE-JOUX Centre",
+      "to": "NANTUA Médiathèque",
+      "amountEUR": 3.1
+    },
+    {
+      "from": "LE-POIZAT-LALLEYRIAT RD1084",
+      "to": "NANTUA Médiathèque",
+      "amountEUR": 2.2
+    },
+    {
+      "from": "LES NEYROLLES Centre",
+      "to": "NANTUA Médiathèque",
+      "amountEUR": 1.2
+    },
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "NANTUA Esplanade",
+      "amountEUR": 4.9
+    },
+    {
+      "from": "BELLEGARDE Lycée",
+      "to": "NANTUA Esplanade",
+      "amountEUR": 4.6
+    },
+    {
+      "from": "CHATILLON-EN-MICHAILLE Centre",
+      "to": "NANTUA Esplanade",
+      "amountEUR": 4
+    },
+    {
+      "from": "SAINT-GERMAIN-DE-JOUX Centre",
+      "to": "NANTUA Esplanade",
+      "amountEUR": 3.3
+    },
+    {
+      "from": "LE-POIZAT-LALLEYRIAT RD1084",
+      "to": "NANTUA Esplanade",
+      "amountEUR": 2.4
+    },
+    {
+      "from": "LES NEYROLLES Centre",
+      "to": "NANTUA Esplanade",
+      "amountEUR": 1.4
+    },
+    {
+      "from": "NANTUA Médiathèque",
+      "to": "NANTUA Esplanade",
+      "amountEUR": 1.2
+    },
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "MONTREAL-LA-CLUSE Ville",
+      "amountEUR": 5.5
+    },
+    {
+      "from": "BELLEGARDE Lycée",
+      "to": "MONTREAL-LA-CLUSE Ville",
+      "amountEUR": 5.2
+    },
+    {
+      "from": "CHATILLON-EN-MICHAILLE Centre",
+      "to": "MONTREAL-LA-CLUSE Ville",
+      "amountEUR": 4.6
+    },
+    {
+      "from": "SAINT-GERMAIN-DE-JOUX Centre",
+      "to": "MONTREAL-LA-CLUSE Ville",
+      "amountEUR": 3.6
+    },
+    {
+      "from": "LE-POIZAT-LALLEYRIAT RD1084",
+      "to": "MONTREAL-LA-CLUSE Ville",
+      "amountEUR": 2.9
+    },
+    {
+      "from": "LES NEYROLLES Centre",
+      "to": "MONTREAL-LA-CLUSE Ville",
+      "amountEUR": 1.9
+    },
+    {
+      "from": "NANTUA Médiathèque",
+      "to": "MONTREAL-LA-CLUSE Ville",
+      "amountEUR": 1.4
+    },
+    {
+      "from": "NANTUA Esplanade",
+      "to": "MONTREAL-LA-CLUSE Ville",
+      "amountEUR": 1.2
+    },
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "BRION Gare",
+      "amountEUR": 5.7
+    },
+    {
+      "from": "BELLEGARDE Lycée",
+      "to": "BRION Gare",
+      "amountEUR": 5.3
+    },
+    {
+      "from": "CHATILLON-EN-MICHAILLE Centre",
+      "to": "BRION Gare",
+      "amountEUR": 4.7
+    },
+    {
+      "from": "SAINT-GERMAIN-DE-JOUX Centre",
+      "to": "BRION Gare",
+      "amountEUR": 3.8
+    },
+    {
+      "from": "LE-POIZAT-LALLEYRIAT RD1084",
+      "to": "BRION Gare",
+      "amountEUR": 3.1
+    },
+    {
+      "from": "LES NEYROLLES Centre",
+      "to": "BRION Gare",
+      "amountEUR": 2.1
+    },
+    {
+      "from": "NANTUA Médiathèque",
+      "to": "BRION Gare",
+      "amountEUR": 1.5
+    },
+    {
+      "from": "NANTUA Esplanade",
+      "to": "BRION Gare",
+      "amountEUR": 1.4
+    },
+    {
+      "from": "MONTREAL-LA-CLUSE Ville",
+      "to": "BRION Gare",
+      "amountEUR": 1.2
+    },
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "NURIEUX Gare",
+      "amountEUR": 6.3
+    },
+    {
+      "from": "BELLEGARDE Lycée",
+      "to": "NURIEUX Gare",
+      "amountEUR": 5.9
+    },
+    {
+      "from": "CHATILLON-EN-MICHAILLE Centre",
+      "to": "NURIEUX Gare",
+      "amountEUR": 5.3
+    },
+    {
+      "from": "SAINT-GERMAIN-DE-JOUX Centre",
+      "to": "NURIEUX Gare",
+      "amountEUR": 4.4
+    },
+    {
+      "from": "LE-POIZAT-LALLEYRIAT RD1084",
+      "to": "NURIEUX Gare",
+      "amountEUR": 3.4
+    },
+    {
+      "from": "LES NEYROLLES Centre",
+      "to": "NURIEUX Gare",
+      "amountEUR": 2.6
+    },
+    {
+      "from": "NANTUA Médiathèque",
+      "to": "NURIEUX Gare",
+      "amountEUR": 2.1
+    },
+    {
+      "from": "NANTUA Esplanade",
+      "to": "NURIEUX Gare",
+      "amountEUR": 1.9
+    },
+    {
+      "from": "MONTREAL-LA-CLUSE Ville",
+      "to": "NURIEUX Gare",
+      "amountEUR": 1.4
+    },
+    {
+      "from": "BRION Gare",
+      "to": "NURIEUX Gare",
+      "amountEUR": 1.2
+    },
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "HAUTECOURT Ecole",
+      "amountEUR": 7.3
+    },
+    {
+      "from": "BELLEGARDE Lycée",
+      "to": "HAUTECOURT Ecole",
+      "amountEUR": 7
+    },
+    {
+      "from": "CHATILLON-EN-MICHAILLE Centre",
+      "to": "HAUTECOURT Ecole",
+      "amountEUR": 6.6
+    },
+    {
+      "from": "SAINT-GERMAIN-DE-JOUX Centre",
+      "to": "HAUTECOURT Ecole",
+      "amountEUR": 5.9
+    },
+    {
+      "from": "LE-POIZAT-LALLEYRIAT RD1084",
+      "to": "HAUTECOURT Ecole",
+      "amountEUR": 4.9
+    },
+    {
+      "from": "LES NEYROLLES Centre",
+      "to": "HAUTECOURT Ecole",
+      "amountEUR": 3.8
+    },
+    {
+      "from": "NANTUA Médiathèque",
+      "to": "HAUTECOURT Ecole",
+      "amountEUR": 3.4
+    },
+    {
+      "from": "NANTUA Esplanade",
+      "to": "HAUTECOURT Ecole",
+      "amountEUR": 3.3
+    },
+    {
+      "from": "MONTREAL-LA-CLUSE Ville",
+      "to": "HAUTECOURT Ecole",
+      "amountEUR": 2.7
+    },
+    {
+      "from": "BRION Gare",
+      "to": "HAUTECOURT Ecole",
+      "amountEUR": 2.6
+    },
+    {
+      "from": "NURIEUX Gare",
+      "to": "HAUTECOURT Ecole",
+      "amountEUR": 2.1
+    },
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "VILLEREVERSURE Gare",
+      "amountEUR": 8.2
+    },
+    {
+      "from": "BELLEGARDE Lycée",
+      "to": "VILLEREVERSURE Gare",
+      "amountEUR": 7.9
+    },
+    {
+      "from": "CHATILLON-EN-MICHAILLE Centre",
+      "to": "VILLEREVERSURE Gare",
+      "amountEUR": 7.5
+    },
+    {
+      "from": "SAINT-GERMAIN-DE-JOUX Centre",
+      "to": "VILLEREVERSURE Gare",
+      "amountEUR": 6.8
+    },
+    {
+      "from": "LE-POIZAT-LALLEYRIAT RD1084",
+      "to": "VILLEREVERSURE Gare",
+      "amountEUR": 6.1
+    },
+    {
+      "from": "LES NEYROLLES Centre",
+      "to": "VILLEREVERSURE Gare",
+      "amountEUR": 4.9
+    },
+    {
+      "from": "NANTUA Médiathèque",
+      "to": "VILLEREVERSURE Gare",
+      "amountEUR": 4.4
+    },
+    {
+      "from": "NANTUA Esplanade",
+      "to": "VILLEREVERSURE Gare",
+      "amountEUR": 4.2
+    },
+    {
+      "from": "MONTREAL-LA-CLUSE Ville",
+      "to": "VILLEREVERSURE Gare",
+      "amountEUR": 3.6
+    },
+    {
+      "from": "BRION Gare",
+      "to": "VILLEREVERSURE Gare",
+      "amountEUR": 3.4
+    },
+    {
+      "from": "NURIEUX Gare",
+      "to": "VILLEREVERSURE Gare",
+      "amountEUR": 3.1
+    },
+    {
+      "from": "HAUTECOURT Ecole",
+      "to": "VILLEREVERSURE Gare",
+      "amountEUR": 1.7
+    },
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "CEYZERIAT Mairie",
+      "amountEUR": 9.4
+    },
+    {
+      "from": "BELLEGARDE Lycée",
+      "to": "CEYZERIAT Mairie",
+      "amountEUR": 9.1
+    },
+    {
+      "from": "CHATILLON-EN-MICHAILLE Centre",
+      "to": "CEYZERIAT Mairie",
+      "amountEUR": 8.7
+    },
+    {
+      "from": "SAINT-GERMAIN-DE-JOUX Centre",
+      "to": "CEYZERIAT Mairie",
+      "amountEUR": 8
+    },
+    {
+      "from": "LE-POIZAT-LALLEYRIAT RD1084",
+      "to": "CEYZERIAT Mairie",
+      "amountEUR": 7.3
+    },
+    {
+      "from": "LES NEYROLLES Centre",
+      "to": "CEYZERIAT Mairie",
+      "amountEUR": 6.5
+    },
+    {
+      "from": "NANTUA Médiathèque",
+      "to": "CEYZERIAT Mairie",
+      "amountEUR": 6.1
+    },
+    {
+      "from": "NANTUA Esplanade",
+      "to": "CEYZERIAT Mairie",
+      "amountEUR": 5.9
+    },
+    {
+      "from": "MONTREAL-LA-CLUSE Ville",
+      "to": "CEYZERIAT Mairie",
+      "amountEUR": 5.3
+    },
+    {
+      "from": "BRION Gare",
+      "to": "CEYZERIAT Mairie",
+      "amountEUR": 5.2
+    },
+    {
+      "from": "NURIEUX Gare",
+      "to": "CEYZERIAT Mairie",
+      "amountEUR": 4.6
+    },
+    {
+      "from": "HAUTECOURT Ecole",
+      "to": "CEYZERIAT Mairie",
+      "amountEUR": 3.3
+    },
+    {
+      "from": "VILLEREVERSURE Gare",
+      "to": "CEYZERIAT Mairie",
+      "amountEUR": 2.2
+    },
+    {
+      "from": "BELLEGARDE Gare",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 11
+    },
+    {
+      "from": "BELLEGARDE Lycée",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 10.5
+    },
+    {
+      "from": "CHATILLON-EN-MICHAILLE Centre",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 10.1
+    },
+    {
+      "from": "SAINT-GERMAIN-DE-JOUX Centre",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 9.4
+    },
+    {
+      "from": "LE-POIZAT-LALLEYRIAT RD1084",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 8.7
+    },
+    {
+      "from": "LES NEYROLLES Centre",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 7.9
+    },
+    {
+      "from": "NANTUA Médiathèque",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 7.5
+    },
+    {
+      "from": "NANTUA Esplanade",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 7.3
+    },
+    {
+      "from": "MONTREAL-LA-CLUSE Ville",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 6.9
+    },
+    {
+      "from": "BRION Gare",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 6.8
+    },
+    {
+      "from": "NURIEUX Gare",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 6.3
+    },
+    {
+      "from": "HAUTECOURT Ecole",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 4.9
+    },
+    {
+      "from": "VILLEREVERSURE Gare",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 3.8
+    },
+    {
+      "from": "CEYZERIAT Mairie",
+      "to": "BOURG-EN-BRESSE Gare",
+      "amountEUR": 2.4
+    }
+  ]
+}
