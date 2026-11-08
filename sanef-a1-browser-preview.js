@@ -23,6 +23,8 @@ async function preview(request,normalCents){
  if(request.passageGareConfirme!==true)return normalOnly('passage_not_confirmed');
  if(request.direction!=='VERS_PARIS'||request.classe!==1)return normalOnly('classe_ou_sens_non_eligible');
  if(typeof request.origine!=='string'||!request.origine||typeof request.destination!=='string'||!request.destination||typeof request.passageLocal!=='string'||!request.passageLocal)return normalOnly('passage_details_missing');
+ // Independent guard: holiday flags must never be bypassed by a rule adapter.
+ if(request.jourFerie===true||request.lundiFerie===true||request.mardiFerie===true)return normalOnly('calendrier_ferie_a_verifier');
  if(!root.SanefA1ReglesOfficielles2026||typeof root.SanefA1ReglesOfficielles2026.determiner!=='function')return normalOnly('rules_not_loaded');
  const rule=root.SanefA1ReglesOfficielles2026.determiner({classe:request.classe,direction:request.direction,passageLocal:request.passageLocal,jourFerie:request.jourFerie,lundiFerie:request.lundiFerie,mardiFerie:request.mardiFerie,calendrierFeriesVerifie:request.calendrierFeriesVerifie});
  if(rule.statut!=='HORAIRE_OFFICIEL')return normalOnly(rule.motif||'modulation_not_applicable');
