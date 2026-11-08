@@ -11,7 +11,7 @@ vm.runInNewContext(script,{window,fetch},{filename:'sanef-a1-browser-preview.js'
  const preview=window.CPSanefA1Preview2026.preview;let count=0;
  const normal=await preview({},1000);
  assert.equal(normal.status,'NORMAL_ONLY');assert.equal(calls,0);count+=2;
- const valid={previewExplicitlyRequested:true,passageGareConfirme:true,direction:'VERS_PARIS',classe:1,origine:'DEPART',destination:'ARRIVEE',passageLocal:'2026-11-08T17:00:00'};
+ const valid={previewExplicitlyRequested:true,passageGareConfirme:true,calendrierFeriesVerifie:true,direction:'VERS_PARIS',classe:1,origine:'DEPART',destination:'ARRIVEE',passageLocal:'2026-11-08T17:00:00'};
  const r=await preview(valid,1000);
  assert.equal(r.status,'MODULATION_PREVIEW');assert.equal(r.priceCents,1000);assert.equal(calls,2);count+=3;
  const again=await preview(valid,1000);
