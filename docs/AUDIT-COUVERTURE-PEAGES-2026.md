@@ -168,7 +168,7 @@ Document officiel : https://www.vinci-autoroutes.com/static/b9b8279934080436ee3b
 
 ## Périmètre national — contrôle des concessionnaires (8 novembre 2026)
 
-Source officielle : https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france (ministère chargé des transports, mise à jour du 29/07/2026). Le ministère recense **22 sociétés concessionnaires** : ADELAC, ALBEA, ALIAE, ALICORNE, ALIS, AMEDEA, APRR, ARCOS, ARCOUR, AREA, ASF, ATLANDES, ATMB, ATOSCA, CCISE, CEVM, COFIROUTE, ESCOTA, SANEF, SAPN, SFTRF, et l'opérateur supplémentaire éventuel à réconcilier avec la liste ministérielle avant toute déclaration de complétude. **Ne pas déduire la couverture nationale des seuls grands réseaux.**
+Source officielle : https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france (ministère chargé des transports, mise à jour du 29/07/2026). La page ministérielle annonce **22 sociétés concessionnaires**, mais sa liste textuelle actuellement relevée contient **21 intitulés** : ADELAC, ALBEA, ALIAE, ALICORNE, ALIS, AMEDEA, APRR, ARCOS, ARCOUR, AREA, ASF, ATLANDES, ATMB, ATOSCA, CCISE, CEVM, COFIROUTE, ESCOTA, SANEF, SAPN, SFTRF, **Écart de dénombrement 22/21 à résoudre à la source**, sans inventer de concessionnaire manquant. **Ne pas déduire la couverture nationale des seuls grands réseaux.**
 
 Source officielle pour l'identification des gares : https://www.data.gouv.fr/datasets/gares-de-peage-du-reseau-routier-national-concede (édition 2025 citée par le ministère). Les variantes de libellés doivent être rapprochées avec identifiants, réseau, géographie et sens ; la ressemblance textuelle seule n'est pas une preuve.
 
