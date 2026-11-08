@@ -16,7 +16,7 @@ function selectionner(dataset,aliases,request,normalExistantCentimes){
  const origine=aliases.aliases[request.origine],destination=aliases.aliases[request.destination];
  if(typeof origine!=='string'||typeof destination!=='string')return fallback('alias_missing');
  if(origine===destination)return fallback('same_station');
- const records=dataset.records.filter(r=>r.origine===origine&&r.destination===destination);
+ const records=dataset.records.filter(r=>r&&typeof r==='object'&&r.origine===origine&&r.destination===destination);
  if(records.length!==1)return fallback('relation_missing_or_duplicate');
  const c=records[0].centimes;
  if(!c||!Number.isSafeInteger(c.classe1_normal)||c.classe1_normal!==normalExistantCentimes)return fallback('normal_price_mismatch');
