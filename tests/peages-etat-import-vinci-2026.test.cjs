@@ -7,6 +7,15 @@ const crypto = require('node:crypto');
 const root = path.join(__dirname, '..');
 const registry = require('../data/sources-officielles/etat-import-vinci-2026.json');
 
+test('sources officielles : aucun fichier de grille present ne doit rester non declare', () => {
+  const dir = path.join(root, 'data', 'sources-officielles');
+  const declared = new Set(registry.sources.filter(s => s.status === 'imported').map(s => path.basename(s.local_path)));
+  for (const filename of fs.readdirSync(dir)) {
+    if (!/\\.(txt|csv)$/i.test(filename)) continue;
+    assert.ok(declared.has(filename), filename + ' : grille presente sans provenance ni empreinte dans le registre');
+  }
+});
+
 test('registre VINCI : cinq reseaux distincts et statuts verifiables', () => {
   assert.equal(registry.schema_version, 1);
   const expected = ['ASF', 'ESCOTA', 'COFIROUTE_ARCOUR', 'A86', 'ARCOS'];
