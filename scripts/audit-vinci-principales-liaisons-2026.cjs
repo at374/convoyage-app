@@ -22,4 +22,19 @@ for (const [index, line] of lines.entries()) {
   if (url !== 'https://www.vinci-autoroutes.com/static/b9b8279934080436ee3bba255c7835e2/vinci_autoroutes-tarifs-principales-liaisons-2026.pdf') throw Error('Source inattendue');
   if (status !== 'LIAISON_PUBLIEE_NON_RAPPROCHEE_AUX_GARES') throw Error('Statut non securise');
 }
+// Empecher une divergence silencieuse entre le tableau de revue et le CSV.
+const doc = fs.readFileSync(path.join(__dirname, '..', 'docs', 'AUDIT-COUVERTURE-PEAGES-2026.md'), 'utf8');
+const section = doc.split('## Source VINCI — principales liaisons 2026')[1]?.split('**Statut :')[0];
+if (!section) throw Error('Tableau VINCI absent du document de revue');
+const documented = section.split(/\r?\n/).filter(line => /^\| A\d/.test(line)).map(line =>
+  line.split('|').slice(1, 4).map(value => value.trim())
+);
+if (documented.length !== lines.length) throw Error('Nombre de liaisons different entre CSV et audit');
+const csvByName = new Map(lines.map(line => { const [name, c1, c2] = line.split(';'); return [name, [c1, c2]]; }));
+for (const [name, c1, c2] of documented) {
+  const expected = csvByName.get(name);
+  if (!expected || expected[0] !== c1.replace(' €', '') || expected[1] !== c2.replace(' €', '')) {
+    throw Error('Desaccord audit/CSV pour ' + name);
+  }
+}
 console.log(JSON.stringify({liaisons: seen.size, montants: seen.size * 2, status: 'DOCUMENTAIRE_NON_INTEGRE'}));
