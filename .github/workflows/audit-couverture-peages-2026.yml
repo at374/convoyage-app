@@ -8,6 +8,7 @@ on:
       - scripts/audit-couverture-peages-2026.cjs
       - scripts/peages-sapn-a14-2026.cjs
       - scripts/audit-rapprochement-peages.cjs
+      - scripts/export-revue-peages-2026.cjs
       - .github/workflows/audit-couverture-peages-2026.yml
       - tests/peages-audit-couverture-2026.test.cjs
       - tests/peages-sapn-beuzeville-2026.test.cjs
@@ -44,6 +45,8 @@ jobs:
         run: |
           set -euo pipefail
           node -e "const r=require('./audit-rapprochement-peages.json'); const x=r.unmatched_classification; if(r.unmatched_details.length!==7251 || r.missing_pair_details.length!==672 || r.missing_name_counts.length!==378) throw Error('Inventaire de rapprochement incomplet'); const lines=['','## Priorites de verification (non certifiees)','','| Indicateur | Nombre |','|---|---:|','| Paires entre gares connues non retrouvees | '+x.both_endpoints_present_pair_missing+' |','| Une gare absente | '+x.one_endpoint_missing+' |','| Deux gares absentes | '+x.both_endpoints_missing+' |','| Noms distincts absents | '+r.missing_name_counts.length+' |','| Gares des paires prioritaires | '+r.missing_pair_unique_gates+' |','','Aucune fusion de noms ni correction de prix automatique.']; require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join(String.fromCharCode(10)) + String.fromCharCode(10));"
+      - name: Exporter les fichiers de revue manuelle
+        run: node scripts/export-revue-peages-2026.cjs audit-rapprochement-peages.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -51,4 +54,6 @@ jobs:
           path: |
             audit-couverture-peages-2026.json
             audit-rapprochement-peages.json
+            peages-relations-a-verifier-2026.csv
+            peages-noms-a-verifier-2026.csv
           if-no-files-found: error
