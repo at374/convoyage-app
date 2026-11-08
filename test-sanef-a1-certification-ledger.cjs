@@ -44,8 +44,17 @@ for(const record of dataset.records){
   assert.equal(row.length,11);
   assert.deepEqual(row.slice(0,4),[record.origine,record.destination,field,(record.centimes[field]/100).toFixed(2)]);
   assert.equal(row[4],field==='classe2_normal'?'https://www.autoroutes.sanef.com/sites/default/files/2026-01/2026_02-Grille-Sanef.pdf':dataset.source);
-  assert.equal(row[5],'A_CERTIFIER_INDEPENDAMMENT');
-  assert.deepEqual(row.slice(6),['','','','NON','NON']);
+  assert.ok(['A_CERTIFIER_INDEPENDAMMENT','CERTIFIE_INDEPENDAMMENT'].includes(row[5]),'unknown amount certification status');
+  if(row[5]==='CERTIFIE_INDEPENDAMMENT'){
+   assert.match(row[4],/^https:\/\/www\.autoroutes\.sanef\.com\//,'official SANEF source required');
+   for(const [index,label] of [[6,'PDF page'],[7,'PDF row'],[8,'PDF column']]){
+    assert.ok(row[index].trim(),label+' required for certified amount');
+   }
+   assert.equal(row[9],'OUI','direction must be confirmed before certification');
+   assert.equal(row[10],'OUI','physical GPS station identity must be confirmed before certification');
+  }else{
+   assert.deepEqual(row.slice(6),['','','','NON','NON']);
+  }
  }
 }
 
