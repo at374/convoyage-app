@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "checked_on": "2026-11-08",
+  "publisher": "VINCI Autoroutes",
+  "official_page": "https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-demploi/tarifs-peage-vinci-autoroutes/",
+  "networks": [
+    {
+      "operator": "ASF",
+      "effective_date": "2026-06-01",
+      "classes": [
+        1,
+        2
+      ],
+      "formats_listed": [
+        "PDF",
+        "TXT"
+      ],
+      "source_file_committed": false,
+      "comparison_ci_complete": false
+    },
+    {
+      "operator": "ESCOTA",
+      "effective_date": "2026-02-01",
+      "classes": [
+        1,
+        2
+      ],
+      "formats_listed": [
+        "PDF",
+        "TXT"
+      ],
+      "source_file_committed": false,
+      "comparison_ci_complete": false
+    },
+    {
+      "operator": "COFIROUTE",
+      "effective_date": "2026-02-01",
+      "classes": [
+        1,
+        2
+      ],
+      "formats_listed": [
+        "PDF",
+        "TXT"
+      ],
+      "source_file_committed": false,
+      "comparison_ci_complete": false
+    }
+  ],
+  "notes": "Dates issues de la page officielle; aucun prix ni URL directe de fichier ne sont inférés. Les audits locaux ne constituent pas une vérification complète en CI sans leurs sources."
+}
