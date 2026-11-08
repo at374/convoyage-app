@@ -14,7 +14,13 @@ const report = { page_url: pageUrl, checked_at: new Date().toISOString(), source
     const context = await browser.newContext({ acceptDownloads: true });
     const page = await context.newPage();
     await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    const events = [];
+    context.on('page', p => { events.push({ type: 'new_page', url: p.url() }); p.on('framenavigated', f => { if (f === p.mainFrame()) events.push({ type: 'popup_navigation', url: f.url() }); }); });
+    page.on('framenavigated', f => { if (f === page.mainFrame()) events.push({ type: 'navigation', url: f.url() }); });
+    page.on('request', req => { if (/\\.txt(?:[?#]|$)|tarif|download/i.test(req.url())) events.push({ type: 'request', url: req.url() }); });
+    page.on('response', res => { if (/\\.txt(?:[?#]|$)|tarif|download/i.test(res.url())) events.push({ type: 'response', url: res.url(), status: res.status(), content_type: res.headers()['content-type'] }); });
     for (const [operator, label] of labels) {
+      const eventStart = events.length;
       const entry = { operator, label, status: 'not_downloaded' };
       report.sources.push(entry);
       try {
@@ -41,7 +47,7 @@ const report = { page_url: pageUrl, checked_at: new Date().toISOString(), source
         entry.original_filename = download.suggestedFilename();
         entry.status = 'downloaded_unverified';
         if (!bytes.length) { entry.status = 'empty'; fs.unlinkSync(destination); }
-      } catch (error) { entry.error = String(error.message || error).slice(0, 500); }
+      } catch (error) { entry.error = String(error.message || error).slice(0, 500); } finally { entry.browser_events = events.slice(eventStart, eventStart + 30); entry.current_url = page.url(); }
     }
   } finally {
     await browser.close();
