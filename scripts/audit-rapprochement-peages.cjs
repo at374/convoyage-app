@@ -87,6 +87,10 @@ report.missing_name_counts = [...missingNameCounts].map(([gate, occurrences]) =>
 report.missing_pair_origins = [...missingPairByOrigin].map(([origin, count]) => ({ origin, count })).sort((a, b) => b.count - a.count || a.origin.localeCompare(b.origin));
 report.unmatched_origins = [...unmatchedByOrigin].map(([origin, count]) => ({ origin, count })).sort((a, b) => b.count - a.count || a.origin.localeCompare(b.origin));
 report.unmatched_origin_count = report.unmatched_origins.length;
+// Garder les suggestions separees des prix verifies : aucune correspondance automatique.
+const candidateGates = new Set(report.missing_name_candidates.map(x => x.gate));
+if (candidateGates.size !== report.missing_name_candidates.length) throw Error('Doublon dans les suggestions de gares');
+if (report.missing_name_candidates.some(x => x.status !== 'A_VERIFIER_MANUELLEMENT' || x.candidates.length > 8)) throw Error('Suggestion non securisee');
 if (report.unmatched_details.length !== report.not_matched) throw Error('Export incomplet des relations non rapprochees');
 if (report.missing_name_counts.some(x => x.occurrences <= 0)) throw Error('Compteur de noms absent invalide');
 if (report.missing_pair_details.length !== report.unmatched_classification.both_endpoints_present_pair_missing) throw Error('Paires absentes : details incomplets');
