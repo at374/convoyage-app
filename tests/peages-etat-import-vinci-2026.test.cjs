@@ -19,6 +19,13 @@ test('registre VINCI : cinq reseaux distincts et statuts verifiables', () => {
       assert.equal(source.sha256, null, source.operator + ' : fichier absent mais empreinte renseignee');
       continue;
     }
+    const expectedFiles = {
+      ESCOTA: 'data/sources-officielles/Tarifs_ESCOTA.txt',
+      COFIROUTE_ARCOUR: 'data/sources-officielles/Tarifs_Cofiroute_Arcour.txt',
+    };
+    if (expectedFiles[source.operator]) {
+      assert.equal(source.local_path, expectedFiles[source.operator], source.operator + ' : chemin non utilise par les tests de comparaison');
+    }
     assert.equal(typeof source.local_path, 'string');
     assert.ok(source.local_path.startsWith('data/sources-officielles/'));
     const full = path.resolve(root, source.local_path);
