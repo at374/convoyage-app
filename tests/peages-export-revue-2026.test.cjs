@@ -46,6 +46,17 @@ test('exports CSV pour revue sans modifier les prix sources', () => {
     const safeNames = fs.readFileSync(path.join(dir, 'peages-noms-a-verifier-2026.csv'), 'utf8');
     assert.ok(safeRelations.includes('"\'=1+1"'));
     assert.ok(safeNames.includes('"\'  +SUM(1,2)"'));
+    // Une alteration du prix overlay ne doit jamais conserver le statut certifie.
+    const altered = JSON.parse(audit.stdout);
+    altered.divergences[0].overlay_class1 += 0.1;
+    fs.writeFileSync(file, JSON.stringify(altered));
+    const check = spawnSync(process.execPath, [path.join(root, 'scripts/export-revue-peages-2026.cjs'), file], { encoding: 'utf8' });
+    assert.equal(check.status, 0, check.stderr);
+    assert.equal(JSON.parse(check.stdout).verified_sapn_divergences, 4);
+    const rechecked = fs.readFileSync(path.join(dir, 'peages-divergences-a-verifier-2026.csv'), 'utf8').trim().split('\n');
+    assert.equal(rechecked.filter(line => line.includes('OVERLAY_CONFORME_SAPN_2026')).length, 4);
+    assert.equal(rechecked.filter(line => line.includes('"A_VERIFIER"')).length, 1);
+
 
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
