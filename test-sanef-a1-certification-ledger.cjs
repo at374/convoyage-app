@@ -77,6 +77,10 @@ for(const record of dataset.records){
    }
    assert.equal(row[9],'OUI','direction must be confirmed before certification');
    assert.equal(row[10],'OUI','physical GPS station identity must be confirmed before certification');
+   const unresolvedAliases=new Set(['ATHIES','AMIENS','FRESNES (DOURGES)']);
+   for(const alias of [inverse[record.origine],inverse[record.destination]]){
+    assert.ok(!unresolvedAliases.has(alias),'unresolved SANEF Athies/Amiens or Dourges/Fresnes alias cannot be certified');
+   }
    for(const canonical of [record.origine,record.destination]){
     const station=stationByCanonical.get(canonical);
     assert.ok(station,'missing physical station audit for '+canonical);
