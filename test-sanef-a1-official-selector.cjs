@@ -10,7 +10,7 @@ for(const name of ['sanef-a1-regles-officielles-2026.js','sanef-a1-official-sele
 const aliases={aliases:{'DEPART':'ORIGINE','ARRIVEE':'DESTINATION'}};
 const dataset={application:'2026-02-01',status:'experimental_not_activated',source:'SANEF grille modulee 2026',records:[{origine:'ORIGINE',destination:'DESTINATION',centimes:{classe1_normal:1000,classe1_vert:750,classe1_rouge:1250,classe2_normal:1500}}]};
 const select=context.window.SanefA1OfficialSelector.selectionner;
-const base={origine:'DEPART',destination:'ARRIVEE',classe:1,direction:'VERS_PARIS',passageLocal:'2026-11-08T17:00:00',passageGareConfirme:true};
+const base={origine:'DEPART',destination:'ARRIVEE',classe:1,direction:'VERS_PARIS',passageLocal:'2026-11-08T17:00:00',passageGareConfirme:true,calendrierFeriesVerifie:true};
 let checks=0;
 function test(overrides,expected,price=1000,data=dataset){const r=select(data,aliases,{...base,...overrides},price);assert.equal(r.status,expected);assert.equal(r.priceCents,price);assert.equal(r.certifiedForBilling,false);checks+=3;return r;}
 assert.equal(test({},'MODULATION_PREVIEW').modulatedPriceCents,1250);checks++;
