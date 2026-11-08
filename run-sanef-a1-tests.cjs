@@ -11,7 +11,8 @@ const suites=[
  'test-sanef-a1-overlay-consistency.cjs',
  'test-sanef-a1-preview-panel.cjs',
  'test-sanef-a1-browser-preview.cjs',
- 'test-sanef-a1-preview-lab.cjs'
+ 'test-sanef-a1-preview-lab.cjs',
+ 'test-sanef-a1-dataset-audit.cjs'
 ];
 let passed=0;
 for(const file of suites){
