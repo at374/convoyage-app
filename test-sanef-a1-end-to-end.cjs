@@ -26,6 +26,23 @@ const preview=context.window.CPSanefA1Preview2026.preview;
   assert.equal(result.priceCents,first.centimes.classe1_normal);count++;
   assert.equal(result.certifiedForBilling,false);count++;
  }
+ for(const [date,expectedStatus,expectedPeriod] of [
+  ['2026-11-08T14:29:59','NORMAL_ONLY',null],
+  ['2026-11-08T14:30:00','MODULATION_PREVIEW','vert'],
+  ['2026-11-08T16:29:59','MODULATION_PREVIEW','vert'],
+  ['2026-11-08T16:30:00','MODULATION_PREVIEW','rouge'],
+  ['2026-11-08T20:29:59','MODULATION_PREVIEW','rouge'],
+  ['2026-11-08T20:30:00','MODULATION_PREVIEW','vert'],
+  ['2026-11-08T23:29:59','MODULATION_PREVIEW','vert'],
+  ['2026-11-08T23:30:00','NORMAL_ONLY',null]
+ ]){
+  const result=await preview({...input,passageLocal:date},first.centimes.classe1_normal);
+  assert.equal(result.status,expectedStatus,'boundary '+date);count++;
+  assert.equal(result.priceCents,first.centimes.classe1_normal);count++;
+  assert.equal(result.certifiedForBilling,false);count++;
+  if(expectedPeriod){assert.equal(result.period,expectedPeriod);count++;}
+  else {assert.equal(result.modulatedPriceCents,null);count++;}
+ }
  for(const [change,reason] of [
   [{jourFerie:true},'calendrier_ferie_a_verifier'],
   [{passageGareConfirme:false},'passage_not_confirmed'],
