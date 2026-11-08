@@ -23,7 +23,7 @@ for(const [i,line] of lines.slice(1).entries()){
  assert.match(amount,/^\d+\.\d{2}$/);
  const relation=byRelation.get(JSON.stringify([canonicalOrigin,canonicalDestination]));
  assert.ok(relation,'PDF evidence relation absent from dataset '+key);
- assert.equal(Number(amount)*100,relation.centimes['classe1_'+regime],'PDF evidence differs from dataset '+key);
+ assert.equal(Number(amount.replace('.','')),relation.centimes['classe1_'+regime],'PDF evidence differs from dataset '+key);
  assert.match(page,/^[1-9]\d*$/);
  assert.ok(pdfRow.trim()&&pdfCol.trim(),'PDF row and column required');
  assert.equal(url,'https://www.autoroutes.sanef.com/sites/default/files/2026-02/grille-modulee-01022026.pdf');
