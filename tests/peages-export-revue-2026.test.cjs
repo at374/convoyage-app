@@ -28,5 +28,17 @@ test('exports CSV pour revue sans modifier les prix sources', () => {
     assert.equal(names.length, 379);
     assert.ok(relations[1].startsWith('"1","both_endpoints_present_pair_missing"'));
     assert.ok(relations[1].includes('"NON_CERTIFIE_OFFICIELLEMENT"'));
+    // Simulation d'une gare externe malveillante : aucune formule ne doit etre executee.
+    const hostile = JSON.parse(audit.stdout);
+    hostile.unmatched_details[0].origin = '=1+1';
+    hostile.missing_name_counts[0].gate = '  +SUM(1,2)';
+    fs.writeFileSync(file, JSON.stringify(hostile));
+    const guarded = spawnSync(process.execPath, [path.join(root, 'scripts/export-revue-peages-2026.cjs'), file], { encoding: 'utf8' });
+    assert.equal(guarded.status, 0, guarded.stderr);
+    const safeRelations = fs.readFileSync(path.join(dir, 'peages-relations-a-verifier-2026.csv'), 'utf8');
+    const safeNames = fs.readFileSync(path.join(dir, 'peages-noms-a-verifier-2026.csv'), 'utf8');
+    assert.ok(safeRelations.includes('"\'=1+1"'));
+    assert.ok(safeNames.includes('"\'  +SUM(1,2)"'));
+
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
