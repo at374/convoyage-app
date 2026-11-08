@@ -30,6 +30,13 @@ for(const flag of ['jourFerie','lundiFerie','mardiFerie']){
  assert.equal(actual.motif,'calendrier_ferie_a_verifier');count++;
 }
 check('2026-11-08T17:00:00',null,{calendrierFeriesVerifie:false});
+for(const calendar of [undefined,null,false,0,'true']){
+ const actual=determine({classe:1,direction:'VERS_PARIS',passageLocal:'2026-11-08T17:00:00',calendrierFeriesVerifie:calendar});
+ assert.equal(actual.statut,'INCONNU');count++;
+ assert.equal(actual.couleur,null);count++;
+ assert.equal(actual.motif,'calendrier_non_verifie');count++;
+}
+check('2026-11-08T17:00:00','rouge',{calendrierFeriesVerifie:true});
 check('2026-11-08T17:00:00','normal',{classe:2});
 check('2026-11-08T17:00:00','normal',{direction:'AUTRE'});
 console.log(`OK: ${count} SANEF A1 regression checks`);
