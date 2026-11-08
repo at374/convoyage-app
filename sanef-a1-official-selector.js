@@ -9,6 +9,7 @@ function selectionner(dataset,aliases,request,normalExistantCentimes){
  if(!Number.isSafeInteger(normalExistantCentimes)||normalExistantCentimes<0)return fallback('normal_invalid');
  if(!request||!root.SanefA1ReglesOfficielles2026||!dataset||!aliases||!aliases.aliases||!Array.isArray(dataset.records))return fallback('dependencies_missing');
  if(dataset.application!=='2026-02-01'||dataset.status!=='experimental_not_activated')return fallback('dataset_not_validated');
+ if(!Array.isArray(dataset.records)||dataset.records.length===0)return fallback('relation_missing_or_duplicate');
  const regle=root.SanefA1ReglesOfficielles2026.determiner({classe:request.classe,direction:request.direction,passageLocal:request.passageLocal,jourFerie:request.jourFerie,lundiFerie:request.lundiFerie,mardiFerie:request.mardiFerie,calendrierFeriesVerifie:request.calendrierFeriesVerifie});
  if(regle.statut!=='HORAIRE_OFFICIEL')return fallback(regle.motif);
  if(request.passageGareConfirme!==true)return fallback('passage_not_confirmed');
