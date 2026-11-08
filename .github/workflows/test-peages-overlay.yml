@@ -14,6 +14,7 @@ on:
       - 'tests/peages-sources-vinci-2026.test.cjs'
       - 'data/peages-sources-vinci-2026.json'
       - 'data/sources-officielles/**'
+      - 'tests/peages-etat-import-vinci-2026.test.cjs'
       - 'data/peages-vinci-principales-liaisons-2026.json'
       - 'tests/peages-vinci-principales-liaisons-2026.test.cjs'
       - 'peages-aprr.json'
@@ -35,6 +36,7 @@ on:
       - 'tests/peages-sources-vinci-2026.test.cjs'
       - 'data/peages-sources-vinci-2026.json'
       - 'data/sources-officielles/**'
+      - 'tests/peages-etat-import-vinci-2026.test.cjs'
       - 'data/peages-vinci-principales-liaisons-2026.json'
       - 'tests/peages-vinci-principales-liaisons-2026.test.cjs'
       - 'peages-aprr.json'
@@ -55,4 +57,4 @@ jobs:
         with:
           node-version: '22'
       - name: Validate toll overlay regression tests
-        run: node --test tests/peages-overlay-conflicts.test.js tests/sanef-a1-modulation.test.cjs tests/peages-candidats-officiels-thouarce-lievinois.test.cjs tests/peages-audit-sanef-470-stations.test.cjs tests/peages-audit-asf-2056-cloture.test.cjs tests/peages-audit-cofiroute-arcour-11004.test.cjs tests/peages-chantier-cofiroute-cloture.test.cjs tests/peages-escota-grille-complete-cloture.test.cjs tests/peages-sources-vinci-2026.test.cjs tests/peages-vinci-principales-liaisons-2026.test.cjs
+        run: node --test tests/peages-overlay-conflicts.test.js tests/sanef-a1-modulation.test.cjs tests/peages-candidats-officiels-thouarce-lievinois.test.cjs tests/peages-audit-sanef-470-stations.test.cjs tests/peages-audit-asf-2056-cloture.test.cjs tests/peages-audit-cofiroute-arcour-11004.test.cjs tests/peages-chantier-cofiroute-cloture.test.cjs tests/peages-escota-grille-complete-cloture.test.cjs tests/peages-sources-vinci-2026.test.cjs tests/peages-vinci-principales-liaisons-2026.test.cjs tests/peages-etat-import-vinci-2026.test.cjs
