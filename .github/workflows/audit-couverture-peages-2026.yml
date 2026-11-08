@@ -9,6 +9,8 @@ on:
       - scripts/peages-sapn-a14-2026.cjs
       - scripts/audit-rapprochement-peages.cjs
       - scripts/export-revue-peages-2026.cjs
+      - scripts/audit-vinci-principales-liaisons-2026.cjs
+      - docs/vinci-principales-liaisons-2026.csv
       - .github/workflows/audit-couverture-peages-2026.yml
       - tests/peages-audit-couverture-2026.test.cjs
       - tests/peages-sapn-beuzeville-2026.test.cjs
@@ -29,6 +31,8 @@ jobs:
           node-version: '22'
       - name: Tester les comptages et le pourcentage historique
         run: node --test tests/peages-audit-couverture-2026.test.cjs tests/peages-sapn-beuzeville-2026.test.cjs tests/peages-sapn-a14-conditions-2026.test.cjs tests/peages-rapprochement-2026.test.cjs tests/peages-export-revue-2026.test.cjs
+      - name: Verifier les 30 liaisons VINCI sans import en production
+        run: node scripts/audit-vinci-principales-liaisons-2026.cjs
       - name: Calculer inventaire sans modifier les prix
         shell: bash
         run: |
