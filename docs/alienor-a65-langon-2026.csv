@@ -1,10 +1,42 @@
 origine;destination;classe_1_eur;classe_2_eur;date_application;source_officielle;annexe;statut
 Langon (A62);Bazas;2,00;3,50;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
 Langon (A62);Captieux;5,70;10,00;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Bazas;Captieux;3,00;5,10;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
 Langon (A62);Roquefort;11,50;20,00;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Bazas;Roquefort;7,60;13,20;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Captieux;Roquefort;4,60;8,00;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
 Langon (A62);Mont-de-Marsan;13,70;23,90;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Bazas;Mont-de-Marsan;9,50;17,60;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Captieux;Mont-de-Marsan;6,50;11,20;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Roquefort;Mont-de-Marsan;1,80;3,00;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
 Langon (A62);Aire-sur-l'Adour centre;19,10;33,40;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Bazas;Aire-sur-l'Adour centre;13,70;24,00;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Captieux;Aire-sur-l'Adour centre;10,80;18,80;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Roquefort;Aire-sur-l'Adour centre;6,10;10,70;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Mont-de-Marsan;Aire-sur-l'Adour centre;4,40;7,60;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
 Langon (A62);Aire-sur-l'Adour Sud;19,80;34,20;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Bazas;Aire-sur-l'Adour Sud;14,60;24,90;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Captieux;Aire-sur-l'Adour Sud;11,70;19,90;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Roquefort;Aire-sur-l'Adour Sud;7,10;12,20;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Mont-de-Marsan;Aire-sur-l'Adour Sud;5,30;9,30;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
 Langon (A62);Garlin;19,90;34,30;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Bazas;Garlin;16,30;27,70;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Captieux;Garlin;13,40;22,70;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Roquefort;Garlin;8,80;15,30;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Mont-de-Marsan;Garlin;7,00;12,20;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Aire-sur-l'Adour centre;Garlin;2,60;4,60;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
 Langon (A62);Thèze;25,00;43,60;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Bazas;Thèze;18,40;31,20;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Captieux;Thèze;15,50;26,20;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Roquefort;Thèze;10,90;18,90;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Mont-de-Marsan;Thèze;9,10;15,80;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Aire-sur-l'Adour centre;Thèze;4,80;10,20;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Garlin;Thèze;2,10;3,70;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
 Langon (A62);Pau (A64);28,90;50,30;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Bazas;Pau (A64);22,70;38,30;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Captieux;Pau (A64);18,90;33,00;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Roquefort;Pau (A64);15,80;30,30;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Mont-de-Marsan;Pau (A64);15,20;26,40;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Aire-sur-l'Adour centre;Pau (A64);9,70;16,90;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Garlin;Pau (A64);6,40;11,20;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
+Thèze;Pau (A64);3,80;6,70;2026-02-01;https://www.legifrance.gouv.fr/eli/arrete/2026/1/28/TRAT2534086A/jo/article_snum7;VII;TARIF_OFFICIEL_DOCUMENTAIRE_NON_INTEGRE
