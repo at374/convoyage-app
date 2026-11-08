@@ -23,6 +23,14 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Capturer les cinq grilles sans les importer en production
         run: node scripts/telecharger-tarifs-vinci-navigateur.cjs
+      - name: Comparer les grilles officielles a la base existante (diagnostic)
+        continue-on-error: true
+        env:
+          COFIROUTE_TARIFS_PATH: artifacts/vinci-sources/browser/Tarifs_COFIROUTE_ARCOUR.txt
+          ESCOTA_TARIFS_PATH: artifacts/vinci-sources/browser/Tarifs_ESCOTA.txt
+        run: |
+          node --test tests/peages-chantier-cofiroute-cloture.test.cjs tests/peages-escota-grille-complete-cloture.test.cjs 2>&1 | tee artifacts/vinci-sources/browser/rapport-comparaison-tests.log
+          exit ${PIPESTATUS[0]}
       - name: Archiver fichiers originaux et empreintes
         if: always()
         uses: actions/upload-artifact@v4
