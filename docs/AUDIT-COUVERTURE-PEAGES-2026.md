@@ -108,3 +108,13 @@ Source primaire : https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-de
 | ARCOS A355 | 01/02/2026 | Guide et fichier TXT |
 
 **Contrôle d'import obligatoire :** ne pas appliquer la date 01/02/2026 indistinctement aux cinq réseaux ; ne pas interpréter les tarifs A86 conditionnels comme des prix fixes. La présence d'un fichier officiel ne signifie pas que toutes ses lignes sont déjà intégrées ou certifiées dans l'application.
+
+
+## ESCOTA — hiérarchie des sources et vérification (8 novembre 2026)
+
+- Arrêté officiel : https://www.legifrance.gouv.fr/loda/id/JORFTEXT000053417639 — tarifs applicables au **01/02/2026**. Il fixe une règle d'évolution du tarif kilométrique moyen (+0,624 %) mais **ne fournit pas les montants individuels des trajets** ; il ne suffit donc pas pour certifier une paire.
+- Source VINCI actuelle : https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-demploi/tarifs-peage-vinci-autoroutes/ — section **ESCOTA**, guide 2026 et fichier texte officiel « Tarifs Escota » à utiliser pour les montants de classe 1 et 2, sous réserve de vérifier la ligne exacte.
+- Ancienne matrice https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-Escota/Escota-tarifs-provisoire-2026.pdf : la couverture mentionne **« sous réserve de validation définitive par les services de l'État »**. Cette version est un support de repérage, **pas une preuve définitive** pour certifier un prix.
+- Exemple de paire à contrôler : **Pas-de-Trets → La Saulce** (overlay 17,50 € / 24,60 €) ; **NON CERTIFIÉE** tant que les deux valeurs n'ont pas été retrouvées explicitement dans la source définitive et que le trajet et le sens ont été validés.
+
+Pour chaque paire : enregistrer URL, date d'effet, libellés exacts, sens et preuve de chaque classe ; laisser « À vérifier » en cas de divergence ou de source provisoire. Aucun changement des tarifs de production à ce stade.
