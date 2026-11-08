@@ -1,0 +1,4 @@
+origine_grille,destination_grille,classe,regime,montant_eur,page_pdf,ligne_visuelle,colonne_visuelle,source_officielle,statut,limites
+"FRESNES (DOURGES)","ARSY",1,normal,12.40,1,"Normal / ARSY","FRESNES (DOURGES)",https://www.autoroutes.sanef.com/sites/default/files/2026-02/grille-modulee-01022026.pdf,CELLULE_PDF_VERIFIEE_NON_CERTIFIEE,"Alias physique et sens de circulation non certifies"
+"FRESNES (DOURGES)","ARSY",1,vert,9.30,1,"vert / ARSY","FRESNES (DOURGES)",https://www.autoroutes.sanef.com/sites/default/files/2026-02/grille-modulee-01022026.pdf,CELLULE_PDF_VERIFIEE_NON_CERTIFIEE,"Alias physique et sens de circulation non certifies"
+"FRESNES (DOURGES)","ARSY",1,rouge,15.50,1,"rouge / ARSY","FRESNES (DOURGES)",https://www.autoroutes.sanef.com/sites/default/files/2026-02/grille-modulee-01022026.pdf,CELLULE_PDF_VERIFIEE_NON_CERTIFIEE,"Alias physique et sens de circulation non certifies"
