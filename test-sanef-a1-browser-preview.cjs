@@ -4,7 +4,7 @@ const script=fs.readFileSync(path.join(__dirname,'sanef-a1-browser-preview.js'),
 const data=JSON.parse(fs.readFileSync(path.join(__dirname,'sanef-a1-modulation-2026.json'),'utf8'));
 const aliases=JSON.parse(fs.readFileSync(path.join(__dirname,'sanef-a1-gare-alias-2026.json'),'utf8'));
 let calls=0,override=null;
-const window={SanefA1ReglesOfficielles2026:{determiner:req=>req.passageLocal==='2026-11-08T17:00:00'?{statut:'HORAIRE_OFFICIEL',couleur:'rouge'}:{statut:'NORMAL',motif:'hors_plage_modulee'}},SanefA1OfficialSelector:{selectionner:(d,a,req,normal)=>override||({status:'MODULATION_PREVIEW',priceCents:normal,modulatedPriceCents:1250,certifiedForBilling:false})}};
+const window={SanefA1ReglesOfficielles2026:{determiner:req=>req.passageLocal==='2026-11-08T17:00:00'?{statut:'HORAIRE_OFFICIEL',couleur:'rouge'}:{statut:'NORMAL',motif:'hors_plage_modulee'}},SanefA1OfficialSelector:{selectionner:(d,a,req,normal)=>override||({status:'MODULATION_PREVIEW',priceCents:normal,modulatedPriceCents:1250,period:'rouge',certifiedForBilling:false})}};
 const fetch=async name=>{calls++;return {ok:true,json:async()=>name.includes('modulation')?data:aliases};};
 vm.runInNewContext(script,{window,fetch},{filename:'sanef-a1-browser-preview.js'});
 (async()=>{
@@ -40,6 +40,11 @@ vm.runInNewContext(script,{window,fetch},{filename:'sanef-a1-browser-preview.js'
  assert.equal(outside.status,'NORMAL_ONLY');count++;
  assert.equal(outside.reason,'hors_plage_modulee');count++;
  assert.equal(calls,2,'non-modulated hour must not fetch');count++;
+ override={status:'MODULATION_PREVIEW',priceCents:1000,modulatedPriceCents:1250,period:'vert',certifiedForBilling:false};
+ const wrongPeriod=await preview(valid,1000);
+ assert.equal(wrongPeriod.status,'NORMAL_ONLY');count++;
+ assert.equal(wrongPeriod.reason,'selector_period_mismatch');count++;
+ override=null;
  for(const malformed of [
   {status:'MODULATION_PREVIEW',priceCents:1000,modulatedPriceCents:1250,certifiedForBilling:true},
   {status:'MODULATION_PREVIEW',priceCents:999,modulatedPriceCents:1250,certifiedForBilling:false},
