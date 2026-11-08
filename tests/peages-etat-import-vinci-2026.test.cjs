@@ -11,7 +11,7 @@ test('sources officielles : aucun fichier de grille present ne doit rester non d
   const dir = path.join(root, 'data', 'sources-officielles');
   const declared = new Set(registry.sources.filter(s => s.status === 'imported').map(s => path.basename(s.local_path)));
   for (const filename of fs.readdirSync(dir)) {
-    if (!/\\.(txt|csv)$/i.test(filename)) continue;
+    if (!/\.(txt|csv)$/i.test(filename)) continue;
     assert.ok(declared.has(filename), filename + ' : grille presente sans provenance ni empreinte dans le registre');
   }
 });
