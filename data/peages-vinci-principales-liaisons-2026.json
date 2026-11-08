@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "source": "https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-Escota/Escota-Guide-tarifaire-2026.pdf",
+  "effective_date": "2026-02-01",
+  "source_page": 6,
+  "page_numbering": "printed page 6 (PDF page index 5)",
+  "table": "Tarifs des principales liaisons",
+  "currency": "EUR",
+  "scope": "Selected principal liaisons only; not a station-to-station ESCOTA matrix",
+  "relations": [
+    {
+      "route": "A8",
+      "label": "Aix / Nice",
+      "class1_eur": 21.2,
+      "class2_eur": 31.5
+    },
+    {
+      "route": "A51",
+      "label": "Aix / Gap (La Saulce)",
+      "class1_eur": 14.9,
+      "class2_eur": 20.6
+    },
+    {
+      "route": "A7/A8",
+      "label": "Lyon / Marseille - Aix",
+      "class1_eur": 28.1,
+      "class2_eur": 45.7
+    },
+    {
+      "route": "A9",
+      "label": "Montpellier / Espagne (Perthus)",
+      "class1_eur": 23.1,
+      "class2_eur": 35.3
+    }
+  ]
+}
