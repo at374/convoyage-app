@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "checked_on": "2026-11-08",
+  "operator": "ATOSCA",
+  "network": "A69 (Toulouse - Castres)",
+  "official_source": "https://www.atosca.fr/wp-content/uploads/2026/11/grilles_tarifaires_A69.pdf",
+  "effective_date": "2026-11-05",
+  "status": "verified_not_integrated",
+  "reason_not_integrated": "Autoroute ouverte le 4 novembre 2026 (premiere section). Aucune source GPS fiable trouvee pour les points de diffuseur (Verfeil, Villeneuve-les-Lavaur/Maurens-Scopont, Puylaurens, Soual Est, Saint-Palais) : Google Places et OpenStreetMap n'ont pas encore indexe les portiques/diffuseurs exacts. Integrer sans GPS verifie creerait un risque de mauvaise detection de trajet. A reprendre une fois une source GPS officielle ou OSM disponible.",
+  "points_officiels": [
+    { "nom": "Verfeil (demi-diffuseur)", "numero": 3 },
+    { "nom": "Villeneuve-les-Lavaur / Maurens-Scopont", "numero": 4 },
+    { "nom": "Puylaurens", "numero": 5 },
+    { "nom": "Soual Est", "numero": 6 },
+    { "nom": "Saint-Palais", "numero": 7 }
+  ],
+  "relations": [
+    { "a": "Verfeil (demi-diffuseur)", "b": "Villeneuve-les-Lavaur / Maurens-Scopont", "classe1": 2.00, "classe2": 3.20 },
+    { "a": "Verfeil (demi-diffuseur)", "b": "Puylaurens", "classe1": 4.80, "classe2": 7.40 },
+    { "a": "Verfeil (demi-diffuseur)", "b": "Soual Est", "classe1": 6.70, "classe2": 10.30 },
+    { "a": "Verfeil (demi-diffuseur)", "b": "Saint-Palais", "classe1": 8.50, "classe2": 12.90 },
+    { "a": "Villeneuve-les-Lavaur / Maurens-Scopont", "b": "Puylaurens", "classe1": 2.80, "classe2": 4.20 },
+    { "a": "Villeneuve-les-Lavaur / Maurens-Scopont", "b": "Soual Est", "classe1": 4.70, "classe2": 7.10 },
+    { "a": "Villeneuve-les-Lavaur / Maurens-Scopont", "b": "Saint-Palais", "classe1": 6.50, "classe2": 9.70 },
+    { "a": "Puylaurens", "b": "Soual Est", "classe1": 1.90, "classe2": 2.90 },
+    { "a": "Puylaurens", "b": "Saint-Palais", "classe1": 3.70, "classe2": 5.50 },
+    { "a": "Soual Est", "b": "Saint-Palais", "classe1": 1.80, "classe2": 2.60 }
+  ],
+  "note": "Donnees de reference verifiees contre le PDF officiel ATOSCA (grille en vigueur au 5 novembre 2026). Montants classe1/classe2 standard (hors reduction vehicules a tres faibles emissions). Ne pas integrer a peages-aprr.json/peages-overlay.json tant qu'aucune source GPS fiable n'existe pour les 5 points -- cf. data/sources-officielles/README.md pour la regle zero-approximation sur le GPS."
+}
