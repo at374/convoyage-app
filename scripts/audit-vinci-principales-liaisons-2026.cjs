@@ -15,7 +15,7 @@ for (const [index, line] of lines.entries()) {
   if (!name || seen.has(name)) throw Error('Liaison absente ou dupliquee: ' + name);
   seen.add(name);
   for (const price of [c1, c2]) {
-    if (!/^\\d+,\\d{2}$/.test(price) || Number(price.replace(',', '.')) <= 0)
+    if (!/^\d+,\d{2}$/.test(price) || Number(price.replace(',', '.')) <= 0)
       throw Error('Prix invalide: ' + name);
   }
   if (date !== '2026-02-01') throw Error('Date inattendue: ' + name);
