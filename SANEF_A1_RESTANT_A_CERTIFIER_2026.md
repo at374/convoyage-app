@@ -16,6 +16,12 @@ Date de référence des grilles : **1er février 2026**.
 - Ces deux documents établissent la désignation documentaire de la gare et sa localisation kilométrique générale, **pas** des coordonnées GPS exactes ni une identité de nœud géographique certifiée pour l'application. La ligne `SETQUES (CALAIS)` du registre reste donc **A_VERIFIER**.
 - L'appellation des gares dans la grille modulée ne doit pas être assimilée automatiquement aux gares physiques de la grille générale sans contrôle du trajet et du sens.
 
+## Nouvelle source officielle — A26, section nord
+
+Le [règlement d'exploitation SANEF de décembre 2025](https://www.autoroutes.sanef.com/sites/default/files/2025-12/reglement-exploitation-Sanef-12-2025-Version-K-2.pdf) répertorie notamment les installations suivantes sur l'A26 : **Saint-Omer n°3 (PR 32+359)**, **Aire-sur-la-Lys n°4 (PR 40+589)**, **Lillers n°5 (PR 61+674)** et **Béthune n°6 (PR 73+609)**. Il distingue également la **barrière pleine voie Calais (PR 32+715)** de la gare de diffuseur Saint-Omer. Cette distinction interdit d'assimiler automatiquement la barrière de Setques à l'échangeur n°3.
+
+Ces données sont des **preuves documentaires de noms, numéros et points de repère**, non des coordonnées GPS et non une certification des alias `L AUDOMAROIS`, `THEROUANNE`, `LILLERS` et `LE BETHUNOIS`. Le registre d'alias reste inchangé jusqu'à la vérification de chaque correspondance physique et de la page PDF exacte.
+
 ## Travaux encore indispensables
 
 1. **Auditer indépendamment** les 122 prix classe 2 déjà rapprochés de la grille SANEF standard, en conservant les références exactes de page, ligne et colonne pour chaque gare.
