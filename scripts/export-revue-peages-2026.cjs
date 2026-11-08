@@ -42,6 +42,11 @@ for (const x of escotaCandidates) {
     if (escotaGate(gate)) southeastByGate.set(gate, (southeastByGate.get(gate) || 0) + 1);
   }
 }
+const totalGateMentions = [...southeastByGate.values()].reduce((sum, n) => sum + n, 0);
+const doubleCountedPairs = escotaCandidates.filter(x => escotaGate(x.origin) && escotaGate(x.destination)).length;
+if (totalGateMentions !== escotaCandidates.length + doubleCountedPairs) {
+  throw Error('Incoherence des comptages sud-est : une paire peut apparaitre sous deux gares');
+}
 csv('peages-priorite-sud-est-par-gare-2026.csv',
   ['gare', 'relations_a_verifier', 'statut'],
   [...southeastByGate].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
@@ -80,4 +85,4 @@ const verified = divergences.map(d => {
 csv('peages-divergences-a-verifier-2026.csv',
   ['origine', 'destination', 'base_classe_1_eur', 'base_classe_2_eur', 'overlay_classe_1_eur', 'overlay_classe_2_eur', 'statut', 'source_officielle_url', 'date_validite', 'pages_pdf'], verified);
 if (sorted.length !== report.not_matched) throw Error('Export des relations incomplet');
-console.log(JSON.stringify({ exported_relations: sorted.length, southeast_candidates: escotaCandidates.length, southeast_gates: southeastByGate.size, exported_missing_names: report.missing_name_counts.length, exported_divergences: divergences.length, verified_sapn_divergences: verified.filter(x => x[6] === 'OVERLAY_CONFORME_SAPN_2026').length }));
+console.log(JSON.stringify({ exported_relations: sorted.length, southeast_candidates: escotaCandidates.length, southeast_gates: southeastByGate.size, southeast_double_counted_pairs: doubleCountedPairs, exported_missing_names: report.missing_name_counts.length, exported_divergences: divergences.length, verified_sapn_divergences: verified.filter(x => x[6] === 'OVERLAY_CONFORME_SAPN_2026').length }));
