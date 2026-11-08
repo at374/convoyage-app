@@ -43,4 +43,9 @@ for(const relation of dataset.records){
 }
 assert.equal(csv.slice(1).map(parse).filter(row=>row[2]==='NOM_NUMERO_PR_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER').length,4);
 assert.equal(csv.slice(1).map(parse).filter(row=>row[2]==='NOM_KM_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER').length,1);
-console.log('PASS 33 SANEF A1 aliases inventoried, 4 station references documented, all physical aliases unverified, all 122 relations mapped');
+const rows=csv.slice(1).map(parse);
+assert.equal(rows.filter(row=>row[2]==='A_VERIFIER').length,28);
+assert.equal(rows.filter(row=>row[5].startsWith('https://www.autoroutes.sanef.com/')).length,5);
+assert.ok(rows.every(row=>row[4]===''),'no physical alias may be marked GPS-confirmed without independent coordinates');
+assert.ok(rows.every(row=>row[2]!=='CERTIFIE'),'no physical alias is certified');
+console.log('PASS 33 SANEF aliases: 5 documentary references, 28 pending, 0 GPS-certified; 122 relations mapped');
