@@ -105,3 +105,16 @@ Laurent a fourni directement les 5 fichiers TXT officiels (téléchargés depuis
 - **Risque A13 flux libre** (Beuzeville, Bourg-Achard, Bourneville, Heudebouville, Chaufour/Gaillon, Poissy-Orgeval/Mantes-Sud) : SANEF confirme officiellement que le tarif en flux libre est identique à l'ancien tarif à barrières. Aucune modification nécessaire.
 
 **État final : 686 tests passent, 0 échec, 0 skip.** Tous les gaps restants (LIÉVIN, LE BOULOU (F), ST JEAN DE LUZ NORD, THOUARCE, PERIGUEUX/PERIGUEUX EST, LE CASTELLET/PONT DES GAUX, AIX A51, ST LAURENT, Guiche/Urt-Briscous, Druye, A86, Arcos) sont des absences confirmées (recherche GPS infructueuse malgré plusieurs sources, ou incompatibilité structurelle de modèle de tarification), pas des lacunes de recherche. Aucun prix n'a été inventé ou approximé.
+
+## Vérification exhaustive des 22 concessionnaires listés dans le document transmis — 8 novembre 2026
+
+Passage en revue de la liste complète (ADELAC, ALBEA, ALIAE, ALICORNE, ALIENOR, ALIS, AMEDEA, APRR, ARCOS, ARCOUR, AREA, ASF, ATLANDES, ATMB, ATOSCA, CCISE, CEVM, COFIROUTE, ESCOTA, SANEF, SAPN, SFTRF) :
+
+- **ADELAC, ALBEA, ALIAE (A79), ALIENOR (A65), ALIS, APRR, AREA, ASF, ATLANDES, ATMB, CEVM (viaduc de Millau), COFIROUTE/ARCOUR, ESCOTA, SANEF, SAPN, SFTRF** : déjà couverts (PR #9 antérieure + travaux du 8 novembre ci-dessus).
+- **ARCOS, A86** : gares confirmées absentes, incompatibilité structurelle documentée (voir ci-dessus).
+- **ATOSCA (A69)** : grille vérifiée mais non intégrée (GPS indisponible, voir `data/peages-a69-verifie-non-integre-2026.json`).
+- **AMEDEA (A412, Autoroute du Chablais)** : absence confirmée **normale, pas un gap**. Vérifié par recherche web (avis d'enquête publique avril-juin 2026, DUP de 2019, appel à concession 2021) que le projet est encore en phase d'autorisation environnementale au printemps 2026 — aucune section n'est ouverte à la circulation, donc aucun péage n'existe à ce jour. Rien à intégrer.
+- **ALICORNE** : non recherché individuellement ce jour (nom non identifié parmi les concessionnaires officiels rencontrés jusqu'ici ; à vérifier si le sujet revient).
+- **CCISE** : sigle introuvable dans toute recherche web, y compris le document officiel de référence des concessionnaires (ASFA/ASECAP). N'apparaît dans aucune liste officielle de sociétés concessionnaires d'autoroutes françaises. Probable erreur/confusion du document transmis initial (dont une grande partie s'est révélée fabriquée) — non traité comme un gap réel.
+
+**Conclusion : aucune action supplémentaire possible sur cette liste sans nouvelle source.** 688 tests passent, 0 échec, 0 skip, aucune approximation.
