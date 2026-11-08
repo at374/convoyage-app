@@ -22,6 +22,7 @@ async function preview(request,normalCents){
  if(!request||request.previewExplicitlyRequested!==true)return normalOnly('preview_not_requested');
  if(request.passageGareConfirme!==true)return normalOnly('passage_not_confirmed');
  if(request.direction!=='VERS_PARIS'||request.classe!==1)return normalOnly('classe_ou_sens_non_eligible');
+ if(request.calendrierFeriesVerifie!==true)return normalOnly('calendrier_non_verifie');
  if(typeof request.origine!=='string'||!request.origine||typeof request.destination!=='string'||!request.destination||typeof request.passageLocal!=='string'||!request.passageLocal)return normalOnly('passage_details_missing');
  if(request.origine===request.destination)return normalOnly('same_station');
  // Independent guard: holiday flags must never be bypassed by a rule adapter.
