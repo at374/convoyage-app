@@ -7,6 +7,7 @@ on:
     paths:
       - scripts/audit-couverture-peages-2026.cjs
       - .github/workflows/audit-couverture-peages-2026.yml
+      - tests/peages-audit-couverture-2026.test.cjs
       - peages-aprr.json
       - peages-overlay.json
 permissions:
@@ -19,6 +20,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Tester les comptages et le pourcentage historique
+        run: node --test tests/peages-audit-couverture-2026.test.cjs
       - name: Calculer inventaire sans modifier les prix
         shell: bash
         run: |
