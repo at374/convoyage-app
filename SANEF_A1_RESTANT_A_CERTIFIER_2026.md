@@ -7,8 +7,10 @@ Date de référence des grilles : **1er février 2026**.
 - **122 relations** dans `sanef-a1-modulation-2026.json`, réparties en 29 ARSY, 30 CHEVRIÈRES, 31 SENLIS et 32 CHAMANT.
 - **366 montants classe 1** (normal, vert, rouge) rapprochés des lignes de la grille modulée. Le registre CSV documente cette comparaison, **sans certifier la correspondance physique des gares**.
 - **122 montants classe 2 normaux** également rapprochés des lignes de la grille générale SANEF (page 3) : **488 montants comparés, sans écart numérique relevé**. Ce rapprochement ne certifie ni l'identité des gares, ni le sens, ni les exceptions calendaires.
-- **33 alias de gares** documentaires, dont **33 avec référence officielle enregistrée** (A1, A2, A26 et A29), **0 sans référence documentaire** ; **aucune correspondance GPS certifiée**. ; **aucune correspondance GPS certifiée**.
+- **33 alias de gares** documentaires, dont **33 avec référence officielle enregistrée** (A1, A2, A26 et A29), **0 sans référence documentaire** ; **aucune correspondance GPS certifiée**.
 - La règle horaire et le sens de circulation doivent encore être vérifiés pour chaque usage réel, notamment les exceptions calendaires.
+
+- **488 contrôles individuels en attente** dans `sanef-a1-certification-montants-2026.csv` : un enregistrement par relation et par montant (classe 1 normal/vert/rouge, classe 2 normal). Les pages, lignes, colonnes, sens et identités GPS restent non confirmés ; aucun montant n'est certifié par ce nouveau registre.
 
 ## Nouvelle preuve officielle — Setques (A26)
 
@@ -48,7 +50,7 @@ Bloquer explicitement la certification des correspondances **Athies n°54 / Amie
 
 ## État des validations techniques (8 novembre 2026)
 
-- Dernière validation complète observée : commit `1b1ca038`, [GitHub Actions SANEF A1 — succès](https://github.com/at374/convoyage-app/actions/runs/42485135086). Le commit `6f9930cc` a échoué uniquement sur une assertion de formulation du statut GPS de Hordain (11/12 suites réussies) ; correctif publié dans `116b0563`, en attente de validation CI.
+- Dernière validation complète observée : commit `e1b472d`, [GitHub Actions SANEF A1 — succès](https://github.com/at374/convoyage-app/actions/runs/42485743848), avec le registre des 488 montants individuels. Les échecs de tests antérieurs liés aux formulations du statut GPS ont été corrigés.
 - Les tests de robustesse protègent la simulation contre les calendriers non attestés, les alias non reconnus, les données de relations malformées et les montants invalides.
 - **Ne pas confondre tests réussis et certification indépendante des 33 gares ou des 488 montants.**
 
