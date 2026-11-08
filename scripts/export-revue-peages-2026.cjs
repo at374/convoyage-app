@@ -22,8 +22,8 @@ const sorted = [...report.unmatched_details].sort((a, b) =>
   a.origin.localeCompare(b.origin) || a.destination.localeCompare(b.destination)
 );
 csv('peages-relations-a-verifier-2026.csv',
-  ['priorite', 'classification', 'origine', 'destination', 'overlay_classe_1_eur', 'overlay_classe_2_eur', 'statut'],
-  sorted.map(x => [priorities[x.classification], x.classification, x.origin, x.destination, x.overlay_class1, x.overlay_class2, 'NON_CERTIFIE_OFFICIELLEMENT'])
+  ['priorite', 'classification', 'origine', 'destination', 'overlay_classe_1_eur', 'overlay_classe_2_eur', 'statut', 'source_officielle_url', 'date_validite', 'page_source', 'verification_classe_1', 'verification_classe_2'],
+  sorted.map(x => [priorities[x.classification], x.classification, x.origin, x.destination, x.overlay_class1, x.overlay_class2, 'NON_CERTIFIE_OFFICIELLEMENT', '', '', '', 'A_VERIFIER', 'A_VERIFIER'])
 );
 csv('peages-noms-a-verifier-2026.csv',
   ['gare_overlay', 'occurrences', 'statut'],
