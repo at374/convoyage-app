@@ -6,6 +6,8 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const root=__dirname;
 const dataset=JSON.parse(fs.readFileSync(path.join(root,'sanef-a1-modulation-2026.json'),'utf8'));
 const aliases=JSON.parse(fs.readFileSync(path.join(root,'sanef-a1-gare-alias-2026.json'),'utf8')).aliases;
+assert.equal(dataset.status,'experimental_not_activated','SANEF A1 dataset must never be enabled for billing by certification ledger');
+assert.equal(dataset.application,'2026-02-01','tariff grid effective date must remain explicit');
 const csv=fs.readFileSync(path.join(root,'sanef-a1-certification-relations-2026.csv'),'utf8').trimEnd().split(/\r?\n/);
 const parse=line=>{const result=[];let item='',quoted=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(quoted&&line[i+1]==='"'){item+='"';i++;}else quoted=!quoted;}else if(c===','&&!quoted){result.push(item);item='';}else item+=c;}result.push(item);assert.equal(quoted,false);return result;};
 const header=parse(csv[0]);
@@ -53,6 +55,8 @@ assert.equal(verifiedClass1,122);
 const amountCsv=fs.readFileSync(path.join(root,'sanef-a1-certification-montants-2026.csv'),'utf8').trimEnd().split(/\r?\n/);
 assert.deepEqual(parse(amountCsv[0]),['origine','destination','tarif','montant_eur','source_tarif','statut_certification','page_pdf_confirmee','ligne_pdf_confirmee','colonne_pdf_confirmee','sens_confirme','identite_gps_confirmee']);
 assert.equal(amountCsv.length-1,488);
+const certifiedAmounts=amountCsv.slice(1).map(parse).filter(row=>row[5]==='CERTIFIE_INDEPENDAMMENT').length;
+assert.equal(certifiedAmounts,0,'no SANEF A1 amount may be marked independently certified before documentary/GPS verification is completed');
 let amountIndex=1;
 for(const record of dataset.records){
  for(const field of ['classe1_normal','classe1_vert','classe1_rouge','classe2_normal']){
