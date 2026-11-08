@@ -25,3 +25,15 @@
 5. Comparer l'inventaire des relations officiellement possibles à l'inventaire vérifié. **Avant cette étape, le nombre national restant est inconnu.**
 
 Le lot SANEF A1 reste expérimental : 21/488 cellules documentées et 0/488 montants intégralement certifiés, avec 0/33 identités GPS certifiées. Aucune activation de facturation ni déploiement mobile.
+
+## Audit structurel complémentaire des 20 445 paires (8 novembre 2026)
+
+Contrôle sur les éléments `paires` du fichier `peages-overlay.json`, en considérant les deux premiers champs comme un couple ordonné départ–arrivée et les deux suivants comme montants C1/C2 :
+
+- **20 445** entrées et **20 445** couples ordonnés distincts : **0 doublon exact**.
+- **0** montant non numérique ou non fini et **0** montant négatif.
+- **44** relations présentent **au moins un montant nul** : **à examiner** (gratuité réelle, absence de donnée ou convention interne), sans les qualifier automatiquement d'erreurs.
+- **0** couple inverse présent littéralement dans ce fichier : il peut s'agir d'une **convention de stockage à sens unique**, et non de 20 445 trajets retour manquants. Examiner le moteur et le sens de circulation avant toute conclusion.
+- Le contrôle est **structurel**, pas une relecture des 40 890 cellules tarifaires (20 445 × 2) contre les grilles officielles. Il ne démontre ni la complétude nationale, ni la validité 2026 des prix.
+
+**Dénominateur national officiel toujours inconnu** : aucun pourcentage exact de relations manquantes ne peut être dérivé de ces seules données.
