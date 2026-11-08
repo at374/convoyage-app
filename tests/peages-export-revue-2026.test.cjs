@@ -29,6 +29,9 @@ test('exports CSV pour revue sans modifier les prix sources', () => {
     const sapn = fs.readFileSync(path.join(dir, 'peages-divergences-a-verifier-2026.csv'), 'utf8').trim().split('\n');
     assert.equal(sapn.length, 6);
     assert.equal(sapn.filter(line => line.includes('OVERLAY_CONFORME_SAPN_2026')).length, 5);
+    assert.ok(sapn.some(line => line.includes('POISSY / ORGEVAL')));
+    assert.ok(sapn.some(line => line.includes('BOURG-ACHARD')));
+    assert.ok(sapn.every((line, index) => index === 0 || line.includes('2026-02-01')));
     assert.ok(sapn[1].includes('2026_02-Grille-SAPN.pdf'));
     assert.ok(relations[1].startsWith('"1","both_endpoints_present_pair_missing"'));
     assert.ok(relations[1].includes('"NON_CERTIFIE_OFFICIELLEMENT"'));
