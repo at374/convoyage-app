@@ -74,3 +74,24 @@ Les cinq divergences sont toutes depuis `BEUZEVILLE N°28` :
 **À vérifier :** concessionnaire, dates tarifaires et sens avant toute correction. L'écart uniforme de +0,50 € classe 1 / +0,30 € classe 2 entre base principale et overlay peut signaler des versions de tarif différentes ; aucune conclusion causale à ce stade.
 
 La comparaison de noms simplifiée n'est pas une certification officielle et peut fusionner à tort des homonymes. Aucun tarif de production modifié.
+
+
+## Contrôle officiel SAPN A13 — Beuzeville (8 novembre 2026)
+
+Source officielle : https://www.autoroutes.sanef.com/sites/default/files/2026-01/2026_02-Grille-SAPN.pdf
+
+Grille **TTC applicable au 01/02/2026**, classe 1 page 1, tableau « AUTOROUTES A13 - A29 SUD ». Arrêté de référence : https://www.legifrance.gouv.fr/loda/id/JORFTEXT000053417647/
+
+| Relation depuis BEUZEVILLE N°28 | SAPN officiel classe 1 | Base principale classe 1 | Overlay classe 1 |
+| --- | ---: | ---: | ---: |
+| POISSY / ORGEVAL N°7 à MANTES-SUD N°12 | 12,10 € | 12,10 € | 11,60 € |
+| CHAUFOUR N°15 à GAILLON N°17 | 9,10 € | 9,10 € | 8,60 € |
+| BOURNEVILLE N°26 | 4,60 € | 4,60 € | 4,10 € |
+| HEUDEBOUVILLE N°18 | 7,10 € | 7,10 € | 6,60 € |
+| BOURG-ACHARD N°25 | 4,60 € | 4,60 € | 4,10 € |
+
+**Résultat : 5/5 valeurs classe 1 de la base principale correspondent à la grille officielle SAPN 2026 ; 5/5 valeurs classe 1 de l'overlay sont inférieures de 0,50 €.**
+
+**Classe 2 : vérification indépendante de chaque cellule encore nécessaire** (le texte extrait de la page 2 ne reproduit pas toutes les cellules de la matrice). Les montants classe 2 de la base principale sont 18,80 / 13,90 / 6,80 / 10,70 / 6,80 €, ceux de l'overlay 18,50 / 13,60 / 6,50 / 10,40 / 6,50 € dans le même ordre ; ne pas considérer les premiers comme certifiés avant vérification de la page 2.
+
+**Décision :** aucune mutation des tarifs de production ; consigner les cinq écarts comme `CLASSE_1_OVERLAY_DIVERGENT_OFFICIEL_2026`, puis certifier la classe 2 avant correction conjointe. Les valeurs peuvent relever de dates différentes ; préserver l'historique tarifaire si c'est le cas.
