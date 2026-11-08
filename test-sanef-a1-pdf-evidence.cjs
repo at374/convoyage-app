@@ -1,0 +1,34 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=__dirname;
+const dataset=JSON.parse(fs.readFileSync(path.join(root,'sanef-a1-modulation-2026.json'),'utf8'));
+const aliases=JSON.parse(fs.readFileSync(path.join(root,'sanef-a1-gare-alias-2026.json'),'utf8')).aliases;
+const lines=fs.readFileSync(path.join(root,'sanef-a1-cellules-pdf-controlees-2026.csv'),'utf8').trimEnd().split(/\r?\n/);
+const parse=line=>{const result=[];let item='',quoted=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(quoted&&line[i+1]==='"'){item+='"';i++;}else quoted=!quoted;}else if(c===','&&!quoted){result.push(item);item='';}else item+=c;}result.push(item);assert.equal(quoted,false);return result;};
+assert.deepEqual(parse(lines[0]),['origine_grille','destination_grille','classe','regime','montant_eur','page_pdf','ligne_visuelle','colonne_visuelle','source_officielle','statut','limites']);
+assert.equal(dataset.status,'experimental_not_activated');
+const byRelation=new Map(dataset.records.map(r=>[JSON.stringify([r.origine,r.destination]),r]));
+const seen=new Set();
+for(const [i,line] of lines.slice(1).entries()){
+ const row=parse(line);assert.equal(row.length,11,'evidence row '+(i+2));
+ const [origin,destination,classe,regime,amount,page,pdfRow,pdfCol,url,status,limits]=row;
+ const canonicalOrigin=aliases[origin]||origin;
+ const canonicalDestination=aliases[destination]||destination;
+ const key=JSON.stringify([canonicalOrigin,canonicalDestination,classe,regime]);
+ assert.ok(!seen.has(key),'duplicate PDF evidence '+key);seen.add(key);
+ assert.equal(classe,'1','modulated A1 evidence must be class 1');
+ assert.ok(['normal','vert','rouge'].includes(regime));
+ assert.match(amount,/^\d+\.\d{2}$/);
+ const relation=byRelation.get(JSON.stringify([canonicalOrigin,canonicalDestination]));
+ assert.ok(relation,'PDF evidence relation absent from dataset '+key);
+ assert.equal(Number(amount)*100,relation.centimes['classe1_'+regime],'PDF evidence differs from dataset '+key);
+ assert.match(page,/^[1-9]\d*$/);
+ assert.ok(pdfRow.trim()&&pdfCol.trim(),'PDF row and column required');
+ assert.equal(url,'https://www.autoroutes.sanef.com/sites/default/files/2026-02/grille-modulee-01022026.pdf');
+ assert.equal(status,'CELLULE_PDF_VERIFIEE_NON_CERTIFIEE');
+ assert.ok(limits.includes('non certifies'),'uncertainty must remain explicit');
+}
+assert.ok(seen.size>0);
+console.log('PASS '+seen.size+' staged PDF cells agree with experimental A1 amounts; none certified');
