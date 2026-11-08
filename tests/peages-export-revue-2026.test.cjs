@@ -15,7 +15,7 @@ test('exports CSV pour revue sans modifier les prix sources', () => {
     fs.writeFileSync(file, audit.stdout);
     const run = spawnSync(process.execPath, [path.join(root, 'scripts/export-revue-peages-2026.cjs'), file], { encoding: 'utf8' });
     assert.equal(run.status, 0, run.stderr);
-    assert.deepEqual(JSON.parse(run.stdout), { exported_relations: 7251, exported_missing_names: 378 });
+    assert.deepEqual(JSON.parse(run.stdout), { exported_relations: 7251, exported_missing_names: 378, exported_divergences: 5, verified_sapn_divergences: 5 });
     const relations = fs.readFileSync(path.join(dir, 'peages-relations-a-verifier-2026.csv'), 'utf8').trim().split('\n');
     const names = fs.readFileSync(path.join(dir, 'peages-noms-a-verifier-2026.csv'), 'utf8').trim().split('\n');
     assert.equal(relations.length, 7252);
@@ -26,6 +26,10 @@ test('exports CSV pour revue sans modifier les prix sources', () => {
     assert.ok(relations[0].includes('verification_classe_2'));
     assert.ok(relations[1].includes('"A_VERIFIER","A_VERIFIER"'));
     assert.equal(names.length, 379);
+    const sapn = fs.readFileSync(path.join(dir, 'peages-divergences-a-verifier-2026.csv'), 'utf8').trim().split('\n');
+    assert.equal(sapn.length, 6);
+    assert.equal(sapn.filter(line => line.includes('OVERLAY_CONFORME_SAPN_2026')).length, 5);
+    assert.ok(sapn[1].includes('2026_02-Grille-SAPN.pdf'));
     assert.ok(relations[1].startsWith('"1","both_endpoints_present_pair_missing"'));
     assert.ok(relations[1].includes('"NON_CERTIFIE_OFFICIELLEMENT"'));
     // Simulation d'une gare externe malveillante : aucune formule ne doit etre executee.
