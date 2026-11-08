@@ -18,6 +18,13 @@ for(let i=0;i<entries.length;i++){
  if(row[2]==='A_VERIFIER'){
   assert.deepEqual(row.slice(3,7),['','','','']);
   assert.match(row[7],/ne pas activer pour facturation/);
+ }else if(row[2]==='NOM_KM_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER'){
+  assert.equal(row[0],'CALAIS (péage de Setques)');
+  assert.deepEqual(row.slice(3,5),['','']);
+  assert.equal(row[5],'https://www.autoroutes.sanef.com/fr/mon-voyage/peage-de-setques');
+  assert.equal(row[6],'');
+  assert.match(row[7],/km 32/);
+  assert.match(row[7],/non certifiées/);
  }else{
   assert.equal(row[2],'NOM_NUMERO_PR_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER');
   assert.ok(row[3]);
@@ -35,4 +42,5 @@ for(const relation of dataset.records){
  assert.ok(canon.has(relation.destination),'missing destination '+relation.destination);
 }
 assert.equal(csv.slice(1).map(parse).filter(row=>row[2]==='NOM_NUMERO_PR_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER').length,4);
+assert.equal(csv.slice(1).map(parse).filter(row=>row[2]==='NOM_KM_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER').length,1);
 console.log('PASS 33 SANEF A1 aliases inventoried, 4 station references documented, all physical aliases unverified, all 122 relations mapped');
