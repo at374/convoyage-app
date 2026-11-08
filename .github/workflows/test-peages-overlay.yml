@@ -6,6 +6,8 @@ on:
       - 'peages-overlay.json'
       - 'data/gares-peage-officiel.json'
       - 'tests/peages-candidats-officiels-thouarce-lievinois.test.cjs'
+      - 'tests/peages-audit-sanef-470-stations.test.cjs'
+      - 'peages-aprr.json'
       - 'sanef-a1-modulation.js'
       - 'data/sanef-a1-modulation-2026-classe1.json'
       - 'tests/sanef-a1-modulation.test.cjs'
@@ -16,6 +18,8 @@ on:
       - 'peages-overlay.json'
       - 'data/gares-peage-officiel.json'
       - 'tests/peages-candidats-officiels-thouarce-lievinois.test.cjs'
+      - 'tests/peages-audit-sanef-470-stations.test.cjs'
+      - 'peages-aprr.json'
       - 'sanef-a1-modulation.js'
       - 'data/sanef-a1-modulation-2026-classe1.json'
       - 'tests/sanef-a1-modulation.test.cjs'
@@ -33,4 +37,4 @@ jobs:
         with:
           node-version: '22'
       - name: Validate toll overlay regression tests
-        run: node --test tests/peages-overlay-conflicts.test.js tests/sanef-a1-modulation.test.cjs tests/peages-candidats-officiels-thouarce-lievinois.test.cjs
+        run: node --test tests/peages-overlay-conflicts.test.js tests/sanef-a1-modulation.test.cjs tests/peages-candidats-officiels-thouarce-lievinois.test.cjs tests/peages-audit-sanef-470-stations.test.cjs
