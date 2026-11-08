@@ -92,3 +92,16 @@ Exécution réussie : https://github.com/at374/convoyage-app/actions/runs/424596
 ASF/ESCOTA contiennent `autoroute_entree;nom_entree;autoroute_sortie;nom_sortie;classe1;classe2;classe3;classe4;classe5` (prix avec virgule). Cofiroute/Arcour ajoute les numéros d'échangeurs et emploie des prix avec point. A86 a une tarification par jour, badge et plage horaire, avec six colonnes de sens. Arcos a des lignes `Trajet;plage horaire;classe;Tarif_TTC;groupe_euro`. **Ne pas aplatir A86/Arcos en un prix unique** : préserver les conditions de validité. Les caractères de remplacement signalent que A86/Arcos ne sont probablement pas encodés en UTF-8 ; détecter et décoder l'encodage original avant de parser les libellés.
 
 Aucune date de validité n'a été identifiée dans les 50 premières lignes des cinq sources. **La récupération au 8 novembre 2026 ne certifie pas une date d'effet 2026.** Aucune modification de production.
+
+## Clôture — 8 novembre 2026, fichiers reçus directement de Laurent
+
+Laurent a fourni directement les 5 fichiers TXT officiels (téléchargés depuis les liens publics VINCI). Importés dans `data/sources-officielles/` avec empreintes SHA-256 réelles (`etat-import-vinci-2026.json`, statut `imported` pour les 5 réseaux).
+
+- **ASF** (2055 relations, tarifs 1er juin 2026) : vérification exhaustive, **2033 confirmées, 0 divergence**. 19 non rapprochées sur 6 noms seulement, tous déjà documentés (3 faux positifs de normalisation + PERIGUEUX + ST JEAN DE LUZ NORD, gaps physiques connus + 1 auto-paire source anormale).
+- **ESCOTA** (141 relations) : tests existants (`peages-escota-grille-complete-cloture.test.cjs`) tournent sans SKIP, confirment 91/141, 0 divergence. Les 4 noms non rapprochés (AIX sur A51, ST LAURENT, LE CASTELLET, PONT DES GAUX) recoupés une 3e fois contre le registre ministériel `ESCOTA-2.pdf` (ecologie.gouv.fr, màj 01/10/2010) : absents également de ce registre. Confirmation définitive d'absence structurelle, pas une lacune de recherche.
+- **Cofiroute/Arcour** (11004 relations) : tests existants tournent sans SKIP, confirment les alias déjà documentés, 0 divergence.
+- **A86** (Duplex Rueil-Vaucresson-Vélizy) et **Arcos** (Itthenheim, A35) : tarification par jour/tranche horaire/badge, structurellement incompatible avec le moteur actuel (un seul prix classe1/classe2 par relation). Gares absentes de la base, documenté dans `tests/peages-a86-arcos-structurellement-incompatibles.test.cjs`, aucune approximation ajoutée.
+- **A65 Alienor** : vérifié déjà intégré à 100 % (41 relations sous les noms `*A65`), confirmé contre l'arrêté du 28 janvier 2026 (Légifrance) et la presse.
+- **Risque A13 flux libre** (Beuzeville, Bourg-Achard, Bourneville, Heudebouville, Chaufour/Gaillon, Poissy-Orgeval/Mantes-Sud) : SANEF confirme officiellement que le tarif en flux libre est identique à l'ancien tarif à barrières. Aucune modification nécessaire.
+
+**État final : 686 tests passent, 0 échec, 0 skip.** Tous les gaps restants (LIÉVIN, LE BOULOU (F), ST JEAN DE LUZ NORD, THOUARCE, PERIGUEUX/PERIGUEUX EST, LE CASTELLET/PONT DES GAUX, AIX A51, ST LAURENT, Guiche/Urt-Briscous, Druye, A86, Arcos) sont des absences confirmées (recherche GPS infructueuse malgré plusieurs sources, ou incompatibilité structurelle de modèle de tarification), pas des lacunes de recherche. Aucun prix n'a été inventé ou approximé.
