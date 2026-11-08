@@ -14,7 +14,7 @@ const seen=new Set();
 for(const [i,line] of lines.slice(1).entries()){
  const row=parse(line);assert.equal(row.length,11,'evidence row '+(i+2));
  const [origin,destination,classe,regime,amount,page,pdfRow,pdfCol,url,status,limits]=row;
- const canonicalOrigin=aliases[origin]||origin;
+ const canonicalOrigin=aliases[origin]||(origin==="L'AUDOMAROIS"?'L AUDOMAROIS':origin);
  const canonicalDestination=aliases[destination]||destination;
  const key=JSON.stringify([canonicalOrigin,canonicalDestination,classe,regime]);
  assert.ok(!seen.has(key),'duplicate PDF evidence '+key);seen.add(key);
