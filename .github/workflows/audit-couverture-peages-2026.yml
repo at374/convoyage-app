@@ -59,4 +59,5 @@ jobs:
             peages-noms-a-verifier-2026.csv
             peages-divergences-a-verifier-2026.csv
             peages-priorite-sud-est-2026.csv
+            peages-priorite-sud-est-par-gare-2026.csv
           if-no-files-found: error
