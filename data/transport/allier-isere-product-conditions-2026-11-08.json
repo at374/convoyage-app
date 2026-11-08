@@ -1,0 +1,65 @@
+{
+  "checkedOn": "2026-11-08",
+  "appConnected": false,
+  "journeyFareVerified": false,
+  "references": [
+    {
+      "network": "Cars Région Allier",
+      "effectiveFrom": "2026-03-01",
+      "validUntil": null,
+      "source": "https://storage.googleapis.com/is-wp-170-preprod/uploads-preprod/2026/02/cars_region_03_affiche_tarifs_mars-2026.pdf",
+      "adult": {
+        "singleEUR": 2.3,
+        "tenJourneysEUR": 22.5,
+        "sevenDaysEUR": 18.5,
+        "thirtyDaysEUR": 44.5,
+        "thirtyDaysMaelisCombinedEUR": 50
+      },
+      "reduced": {
+        "singleEUR": 1.2,
+        "tenJourneysEUR": 11.5,
+        "sevenDaysEUR": 9.5,
+        "thirtyDaysEUR": 22.5,
+        "thirtyDaysMaelisCombinedEUR": 25
+      },
+      "ouraRequiredProducts": [
+        "ten_journeys",
+        "seven_days",
+        "thirty_days",
+        "thirty_days_maelis_combined"
+      ],
+      "ouraFirstIssueEUR": 5,
+      "ouraPublishedValidityYears": 8,
+      "notes": [
+        "Reduced eligibility requires proof; under26 applies only to Maelis combined product, not all interurban tickets.",
+        "TAD zonal tickets remain separate from interurban tickets."
+      ]
+    },
+    {
+      "network": "Cars Région Isère",
+      "effectiveFrom": "2026-03-01",
+      "validUntil": null,
+      "source": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_isere_tarifs_20260301.pdf",
+      "zoneSource": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_isere_liste_communes_zones_20260301.pdf",
+      "singleAndSixJourneys": {
+        "maximumConnections": 2,
+        "validityMinutesByZoneCount": {
+          "1": 60,
+          "2": 90,
+          "3_or_more": 120
+        },
+        "terIncluded": false,
+        "metroGrenobleMResoIncluded": false
+      },
+      "dayMonthlyAnnualPass": {
+        "terIncluded": false,
+        "urbanIsereNetworksInPurchasedZonesIncluded": true
+      },
+      "notes": [
+        "SMS has its own wording in the guide; do not infer identical exclusions across sales channels.",
+        "Route must prove all traversed zones; number and type of zones matter for subscriptions.",
+        "No fare added from zone map alone."
+      ]
+    }
+  ]
+}
