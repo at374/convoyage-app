@@ -11,11 +11,24 @@ vm.runInNewContext(script,{window,fetch},{filename:'sanef-a1-browser-preview.js'
  const preview=window.CPSanefA1Preview2026.preview;let count=0;
  const normal=await preview({},1000);
  assert.equal(normal.status,'NORMAL_ONLY');assert.equal(calls,0);count+=2;
- const r=await preview({previewExplicitlyRequested:true},1000);
+ const valid={previewExplicitlyRequested:true,passageGareConfirme:true,direction:'VERS_PARIS',classe:1,origine:'DEPART',destination:'ARRIVEE',passageLocal:'2026-11-08T17:00:00'};
+ const r=await preview(valid,1000);
  assert.equal(r.status,'MODULATION_PREVIEW');assert.equal(r.priceCents,1000);assert.equal(calls,2);count+=3;
- const again=await preview({previewExplicitlyRequested:true},1000);
+ const again=await preview(valid,1000);
  assert.equal(again.status,'MODULATION_PREVIEW');assert.equal(calls,2);count+=2;
- const invalid=await preview({previewExplicitlyRequested:true},-1);
+ const invalid=await preview(valid,-1);
  assert.equal(invalid.status,'NORMAL_ONLY');assert.equal(calls,2);count+=2;
- console.log('PASS '+count+' SANEF A1 browser bridge assertions');
+ for(const [request,reason] of [
+  [{...valid,passageGareConfirme:false},'passage_not_confirmed'],
+  [{...valid,direction:'INCONNU'},'classe_ou_sens_non_eligible'],
+  [{...valid,classe:2},'classe_ou_sens_non_eligible'],
+  [{...valid,origine:''},'passage_details_missing'],
+  [{...valid,passageLocal:''},'passage_details_missing']
+ ]){
+  const fallback=await preview(request,1000);
+  assert.equal(fallback.status,'NORMAL_ONLY');count++;
+  assert.equal(fallback.reason,reason);count++;
+  assert.equal(calls,2,'unconfirmed preview must not fetch');count++;
+ }
+  console.log('PASS '+count+' SANEF A1 browser bridge assertions');
 })().catch(e=>{console.error(e);process.exitCode=1;});
