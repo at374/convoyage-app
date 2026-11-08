@@ -24,10 +24,16 @@ const report = {
   compared_overlay_pairs: overlay.paires.length,
   identical: 0, divergent: 0, ambiguous: 0, not_matched: 0,
   divergences: [],
+  unmatched_origins: [],
 };
+const unmatchedByOrigin = new Map();
 for (const p of overlay.paires) {
   const candidates = map.get(key(p[0], p[1]));
-  if (!candidates) { report.not_matched++; continue; }
+  if (!candidates) {
+    report.not_matched++;
+    unmatchedByOrigin.set(p[0], (unmatchedByOrigin.get(p[0]) || 0) + 1);
+    continue;
+  }
   const signatures = new Set(candidates.map(x => x.join('/')));
   if (signatures.size !== 1) { report.ambiguous++; continue; }
   const actual = candidates[0];
@@ -37,5 +43,8 @@ for (const p of overlay.paires) {
     report.divergences.push({ origin: p[0], destination: p[1], base_class1: actual[0], base_class2: actual[1], overlay_class1: p[2], overlay_class2: p[3] });
   }
 }
+report.unmatched_origins = [...unmatchedByOrigin].map(([origin, count]) => ({ origin, count })).sort((a, b) => b.count - a.count || a.origin.localeCompare(b.origin));
+report.unmatched_origin_count = report.unmatched_origins.length;
+if (report.unmatched_origins.reduce((sum, item) => sum + item.count, 0) !== report.not_matched) throw Error('Decompte des origines non rapprochees incoherent');
 if (report.identical + report.divergent + report.ambiguous + report.not_matched !== report.compared_overlay_pairs) throw Error('Comptage incoherent');
 console.log(JSON.stringify(report, null, 2));
