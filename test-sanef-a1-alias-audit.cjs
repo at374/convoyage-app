@@ -48,4 +48,19 @@ assert.equal(rows.filter(row=>row[2]==='A_VERIFIER').length,0);
 assert.equal(rows.filter(row=>row[5].startsWith('https://www.autoroutes.sanef.com/')).length,33);
 assert.ok(rows.every(row=>row[4]===''),'no physical alias may be marked GPS-confirmed without independent coordinates');
 assert.ok(rows.every(row=>row[2]!=='CERTIFIE'),'no physical alias is certified');
+
+// Documentary source presence does not prove that a grid label resolves to the
+// same physical toll plaza as the application alias.
+for(const [grid,alias,warning] of [
+ ['ATHIES N°54','ATHIES',/AMIENS N°54: équivalence à vérifier/],
+ ['LILLE / DOURGES (péage de Fresnes)','FRESNES (DOURGES)',/alias Fresnes non confirmé/]
+]){
+ const matches=rows.filter(row=>row[0]===grid&&row[1]===alias);
+ assert.equal(matches.length,1,'one unresolved identity record required for '+grid);
+ assert.match(matches[0][7],warning,'unresolved identity warning must be retained');
+ assert.equal(matches[0][4],'','ambiguous physical identity must never be GPS-certified');
+ assert.notEqual(matches[0][2],'CERTIFIE','documentary alias must not be certified');
+}
+assert.ok(rows.every(row=>/non certifi|non confirmé|à confirmer/.test(row[7])),'each station must explicitly retain a physical identity caveat');
+
 console.log('PASS 33 SANEF aliases: 33 documentary references, 0 pending, 0 GPS-certified; 122 relations mapped');
