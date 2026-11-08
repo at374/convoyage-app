@@ -108,6 +108,20 @@ Laurent a fourni directement les 5 fichiers TXT officiels (téléchargés depuis
 
 Gaps restants, réellement confirmés absents (recherche GPS infructueuse malgré plusieurs sources officielles, ou incompatibilité structurelle de modèle de tarification) : ST JEAN DE LUZ NORD, LE BOULOU (F), PERIGUEUX/PERIGUEUX EST, LE CASTELLET/PONT DES GAUX, AIX A51 (Provence — à ne pas confondre avec AIX SUD/NORD, Savoie, déjà intégrés), ST LAURENT, Guiche/Urt-Briscous, Druye, A86, Arcos. Aucun prix n'a été inventé ou approximé.
 
+## Référentiel ministériel officiel (gares-peage-2025.csv, data.gouv.fr) — 8 novembre 2026
+
+Technique nouvelle découverte ce jour : `curl` direct depuis le bac à sable est bloqué pour la plupart des domaines (autoroutes.fr, atosca.fr, occitanie.developpement-durable.gouv.fr échouent), **mais `data.gouv.fr`/`static.data.gouv.fr` sont directement accessibles**. Téléchargement du référentiel officiel du Ministère (MTE, « Gares de péage du réseau routier national concédé », 1266 gares, mis à jour le 28/07/2025) et conversion Lambert93 (EPSG:2154) → WGS84 (pyproj) pour recoupement GPS systématique contre toutes les gares dangling encore ouvertes.
+
+- **CORRECTIF MAJEUR : LIÉVIN et THOUARCÉ étaient déjà intégrés** (voir ci-dessus, bug d'accent corrigé dans 2 fichiers de test).
+- **MANSAC/TERRASSON/LA BACHELLERIE EST/SUD : déjà couverts fonctionnellement** par "Mansac Terrasson"/"La Bachellerie" (preuve par prix).
+- **ST GEOURS DE MAREMNE : absence confirmée définitivement** (43km de BENESSE dans la relation existante, donc pas le même point ; absent des 1266 gares officielles).
+- **GUICHE (A64) : GPS officiel trouvé, mais non activable.** Le référentiel contient "Guiche Sortie"/"Guiche Entree" (dept 64), dont les coordonnées converties correspondent exactement (< 1m) au point déjà présent dans le tableau UNK de `routes-ui.js`. Mais l'unique relation connue de GUICHE ("URT-BRISCOUS <-> GUICHE", 1,3/1,3€) a besoin des DEUX extrémités résolues pour activer un prix (mécanisme de fusion dans `routes-ui.js`) — et URT-BRISCOUS reste totalement absent du référentiel officiel. Ajouter GUICHE seul n'activerait donc aucun prix : volontairement laissé tel quel. Documenté dans `tests/peages-guiche-thenon-barrieres-gps-officiel-non-actionnable.test.cjs`.
+- **"Thenon vers Perigueux" / "Thenon vers Brives" (barrières Bpv officielles, A0089, PK157) : confirment** l'analyse déjà documentée (ASF_2014.pdf, "6 gares séparées au même PK157") — co-localisées à <0,06km de "Thenon Est" déjà en base — mais gares-peage-2025.csv ne fournit qu'une LOCALISATION, aucun TARIF propre à ces barrières. PERIGUEUX/PERIGUEUX EST restent donc non résolus, faute de source de prix (pas faute de localisation).
+- **Flux-libre (portiques-free-flow-25-10-2025.csv/GeoJSON, Aliaé/Sanef-Sapn)** : vérifié, ne couvre pas l'A69/Atosca.
+- **A69 (Atosca)** : reconfirmé définitivement sans source GPS officielle disponible, même après ce nouveau référentiel exhaustif.
+
+**État (8 nov. 2026, après ce recoupement) : 702 tests passent, 0 échec, 0 skip.** Aucun prix inventé ou approximé. Les gaps listés ci-dessus restent la liste exhaustive et définitive des lacunes réelles connues à ce jour — chacune vérifiée contre au moins une source officielle distincte (web, PDF tarifaire, ou référentiel GPS ministériel) sans trouver de solution, et non de simples lacunes de recherche.
+
 ## Vérification exhaustive des 22 concessionnaires listés dans le document transmis — 8 novembre 2026
 
 Passage en revue de la liste complète (ADELAC, ALBEA, ALIAE, ALICORNE, ALIENOR, ALIS, AMEDEA, APRR, ARCOS, ARCOUR, AREA, ASF, ATLANDES, ATMB, ATOSCA, CCISE, CEVM, COFIROUTE, ESCOTA, SANEF, SAPN, SFTRF) :
