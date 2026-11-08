@@ -7,42 +7,42 @@
       "operator": "ASF",
       "effective_date": "2026-06-01",
       "format": "TXT",
-      "local_path": null,
-      "sha256": null,
-      "status": "not_imported"
+      "local_path": "data/sources-officielles/Tarifs_ASF.txt",
+      "sha256": "e60432b4536fcfcc13239b538d8438b725f154f5c5100db66923add0e87dd887",
+      "status": "imported"
     },
     {
       "operator": "ESCOTA",
       "effective_date": "2026-02-01",
       "format": "TXT",
-      "local_path": null,
-      "sha256": null,
-      "status": "not_imported"
+      "local_path": "data/sources-officielles/Tarifs_ESCOTA.txt",
+      "sha256": "812e2d99e813658414257ac9fb9e372c917941ca5ea929c50bed107f13d74c58",
+      "status": "imported"
     },
     {
       "operator": "COFIROUTE_ARCOUR",
       "effective_date": "2026-02-01",
       "format": "TXT",
-      "local_path": null,
-      "sha256": null,
-      "status": "not_imported"
+      "local_path": "data/sources-officielles/Tarifs_Cofiroute_Arcour.txt",
+      "sha256": "347ccaa684351808c16b151cd6abb8c1d43535b44e4d7a076cbfae0f124422e0",
+      "status": "imported"
     },
     {
       "operator": "A86",
       "effective_date": "2026-01-01",
       "format": "TXT",
-      "local_path": null,
-      "sha256": null,
-      "status": "not_imported"
+      "local_path": "data/sources-officielles/Tarifs_A86.txt",
+      "sha256": "9c17ad4213ea1ece8863704491de92312adbcaa6dde5e8ea901416974428d375",
+      "status": "imported"
     },
     {
       "operator": "ARCOS",
       "effective_date": "2026-02-01",
       "format": "TXT",
-      "local_path": null,
-      "sha256": null,
-      "status": "not_imported"
+      "local_path": "data/sources-officielles/Tarifs_Arcos.txt",
+      "sha256": "7903b078a8721f0fcc583ef7e8816bbeb0bab86e764ef265ad398653d730fb65",
+      "status": "imported"
     }
   ],
-  "note": "Dates des guides ou grilles officielles indiquées sur la page éditeur. Ne pas présumer que les fichiers TXT ont tous la même date d'application sans vérifier leur contenu."
+  "note": "Dates des guides ou grilles officielles indiquées sur la page éditeur. Ne pas présumer que les fichiers TXT ont tous la même date d'application sans vérifier leur contenu. Fichiers reçus de Laurent le 8 novembre 2026 (téléchargés depuis les liens officiels public-content.vinci-autoroutes.com), empreintes SHA-256 recalculées localement."
 }
