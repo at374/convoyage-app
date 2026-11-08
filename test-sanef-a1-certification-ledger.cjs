@@ -13,26 +13,22 @@ const names=['origine_canonique','destination_canonique','origine_grille_a_verif
 assert.deepEqual(header,names);
 assert.equal(csv.length-1,dataset.records.length);
 const inverse=Object.fromEntries(Object.entries(aliases).map(([label,canonical])=>[canonical,label]));
-let verifiedClass1=0,awaiting=0;
+let verifiedClass1=0;
+const position={ARSY:0,CHEVRIERES:0,SENLIS:0,CHAMANT:0};
 for(let i=0;i<dataset.records.length;i++){
  const record=dataset.records[i],row=parse(csv[i+1]);
  assert.equal(row.length,header.length,'CSV columns row '+(i+2));
  assert.deepEqual(row.slice(0,4),[record.origine,record.destination,inverse[record.origine],inverse[record.destination]]);
  assert.deepEqual(row.slice(4,8),['classe1_normal','classe1_vert','classe1_rouge','classe2_normal'].map(field=>(record.centimes[field]/100).toFixed(2)));
  assert.equal(row[8],dataset.source);
- if(record.destination==='ARSY'){
-  assert.equal(row[9],'CLASSE1_VERIFIEE_PDF_2026');
-  assert.equal(row[10],'1');
-  assert.equal(row[11],String(i+1));
-  assert.match(row[12],/classe 2 et sens à confirmer/);
-  verifiedClass1++;
- }else{
-  assert.equal(row[9],'A_VERIFIER');
-  assert.equal(row[10],'');
-  assert.equal(row[11],'');
-  awaiting++;
- }
+ assert.ok(Object.hasOwn(position,record.destination));
+ position[record.destination]++;
+ assert.equal(row[9],'CLASSE1_VERIFIEE_PDF_2026');
+ assert.equal(row[10],'1');
+ assert.equal(row[11],String(position[record.destination]));
+ assert.match(row[12],/classe 2 et sens à confirmer/);
+ verifiedClass1++;
 }
-assert.equal(verifiedClass1,29);
-assert.equal(awaiting,93);
-console.log('PASS '+dataset.records.length+' SANEF A1 ledger relations: '+verifiedClass1+' class-1 PDF checks, '+awaiting+' awaiting verification; no billing certification');
+assert.deepEqual(position,{ARSY:29,CHEVRIERES:30,SENLIS:31,CHAMANT:32});
+assert.equal(verifiedClass1,122);
+console.log('PASS '+verifiedClass1+' SANEF A1 class-1 PDF line comparisons recorded; class 2 and station identities not certified');
