@@ -57,3 +57,12 @@ Workflow GitHub Actions **42459153168** : https://github.com/at374/convoyage-app
 Les quatre fichiers ont été conservés dans l'artefact GitHub `vinci-grilles-originales-non-verifiees` (rétention 14 jours). Ils ne sont **pas** encore importés dans `data/sources-officielles/`. Le code de capture est `scripts/telecharger-tarifs-vinci-navigateur.cjs` et le workflow `.github/workflows/capturer-grilles-vinci.yml`.
 
 **Priorité immédiate :** récupérer ASF, examiner le format et la date des cinq TXT, puis utiliser les sources pour activer les tests Cofiroute/ESCOTA sans SKIP et comparer classes 1 et 2. Aucun tarif de production n'a été modifié à cette étape.
+
+## ASF récupéré — clôture de la collecte des cinq TXT VINCI
+
+Workflow GitHub Actions **42459303065** : https://github.com/at374/convoyage-app/actions/runs/42459303065 — **succès**. Après hydratation de la page Gatsby, le clic ASF ouvre un nouvel onglet avec l'URL officielle :
+
+- ASF : https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-asf/Tarifs_ASF.txt
+- HTTP 200 ; `text/plain; charset=utf-8` ; **108 099 octets** ; SHA-256 : `37d6934275ac40ab9c97abfdfcdbc7724ce2250d0573cf6332be95346d58d01f`.
+
+**Les cinq fichiers TXT VINCI sont désormais récupérés et archivés** (ASF, ESCOTA, A86, Cofiroute/Arcour, Arcos). Les sources restent `downloaded_unverified` : aucune certification de la date tarifaire, de l'exhaustivité des relations, ni des prix classes 1/2 n'est encore acquise. Ne pas confondre « cinq sources récupérées » avec « 100 % des tarifs vérifiés ». Les sources officielles doivent maintenant être analysées et rapprochées des gares physiques, puis les tests CI doivent être exécutés avec ces fichiers et sans SKIP.
