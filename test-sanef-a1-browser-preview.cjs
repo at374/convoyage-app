@@ -49,7 +49,8 @@ vm.runInNewContext(script,{window,fetch},{filename:'sanef-a1-browser-preview.js'
   {status:'MODULATION_PREVIEW',priceCents:1000,modulatedPriceCents:1250,certifiedForBilling:true},
   {status:'MODULATION_PREVIEW',priceCents:999,modulatedPriceCents:1250,certifiedForBilling:false},
   {status:'MODULATION_PREVIEW',priceCents:1000,modulatedPriceCents:-1,certifiedForBilling:false},
-  {status:'UNKNOWN',priceCents:1000,modulatedPriceCents:null,certifiedForBilling:false}
+  {status:'UNKNOWN',priceCents:1000,modulatedPriceCents:null,certifiedForBilling:false},
+  {status:'NORMAL_ONLY',priceCents:1000,modulatedPriceCents:1250,certifiedForBilling:false}
  ]){
   override=malformed;
   const rejected=await preview(valid,1000);
