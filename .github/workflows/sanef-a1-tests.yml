@@ -1,5 +1,6 @@
 name: SANEF A1 read-only checks
 on:
+  workflow_dispatch:
   push:
     branches:
       - feature/transport-ranking-safe
