@@ -19,5 +19,10 @@ for(const [input,reason] of [[{passageGareConfirme:false},'passage_not_confirmed
 assert.equal(test({},'NORMAL_ONLY',999).reason,'normal_price_mismatch');checks++;
 assert.equal(test({},'NORMAL_ONLY',1000,{...dataset,status:'active'}).reason,'dataset_not_validated');checks++;
 assert.equal(test({origine:'UNKNOWN'},'NORMAL_ONLY').reason,'alias_missing');checks++;
+assert.equal(test({destination:'DEPART'},'NORMAL_ONLY').reason,'same_station');checks++;
+const aliasSame={aliases:{...aliases.aliases,ALTERNATE:'ORIGINE'}};
+const sameCanonical=select(dataset,aliasSame,{...base,destination:'ALTERNATE'},1000);
+assert.equal(sameCanonical.status,'NORMAL_ONLY');checks++;
+assert.equal(sameCanonical.reason,'same_station');checks++;
 assert.equal(test({},'NORMAL_ONLY',1000,{...dataset,records:[...dataset.records,...dataset.records]}).reason,'relation_missing_or_duplicate');checks++;
 console.log('PASS '+checks+' selector safety assertions');
