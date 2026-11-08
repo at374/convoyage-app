@@ -40,6 +40,15 @@ Pour chaque relation tarifaire, contrôler **séparément les quatre montants** 
 
 Bloquer explicitement la certification des correspondances **Athies n°54 / Amiens n°54** et **Dourges / Fresnes** tant que l'équivalence des installations n'est pas établie par une preuve vérifiable. Le statut `experimental_not_activated` et le prix normal de facturation restent inchangés.
 
+## Ordre de certification et pièces attendues
+
+1. **Lever d'abord les ambiguïtés d'identité physique** : `ATHIES N°54` / `AMIENS N°54`, puis `LILLE/DOURGES` / `FRESNES`. Les noms proches ne constituent pas une preuve d'équivalence.
+2. **Documenter les 33 gares** : obtenir une latitude et longitude de l'installation précise, une source indépendante datée et une vérification du nœud routier. Le PR kilométrique seul est insuffisant.
+3. **Vérifier les 488 cellules de prix** dans `sanef-a1-certification-montants-2026.csv` : pour chaque montant, inscrire la page PDF, la ligne, la colonne et la confirmation du sens de circulation. Les 122 prix classe 2 doivent être revus dans la grille générale et non inférés de la grille modulée.
+4. **Ne passer à `CERTIFIE_INDEPENDAMMENT` qu'après vérification complète** des deux gares et de la cellule tarifaire. Les tests bloquent les statuts incohérents, mais une relecture humaine des sources reste indispensable.
+
+**Point d'arrêt** : actuellement 0/33 identités GPS et 0/488 montants sont certifiés. Ne pas annoncer une couverture complète, même si les 12 suites de tests sont vertes.
+
 ## Travaux encore indispensables
 
 1. **Auditer indépendamment** les 122 prix classe 2 déjà rapprochés de la grille SANEF standard, en conservant les références exactes de page, ligne et colonne pour chaque gare.
@@ -50,7 +59,7 @@ Bloquer explicitement la certification des correspondances **Athies n°54 / Amie
 
 ## État des validations techniques (8 novembre 2026)
 
-- Dernière validation complète observée : commit `e1b472d`, [GitHub Actions SANEF A1 — succès](https://github.com/at374/convoyage-app/actions/runs/42485743848), avec le registre des 488 montants individuels. Les échecs de tests antérieurs liés aux formulations du statut GPS ont été corrigés.
+- Dernière validation complète observée : commit `d9c64f14`, [GitHub Actions SANEF A1 — succès](https://github.com/at374/convoyage-app/actions/runs/42486184809), avec 12 suites réussies. Les contrôles vérifient désormais les 488 entrées individuelles, la présence des preuves PDF, la validation du sens et des deux gares GPS avant toute certification, sans activer la facturation.
 - Les tests de robustesse protègent la simulation contre les calendriers non attestés, les alias non reconnus, les données de relations malformées et les montants invalides.
 - **Ne pas confondre tests réussis et certification indépendante des 33 gares ou des 488 montants.**
 
