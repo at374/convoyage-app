@@ -11,6 +11,7 @@ on:
       - scripts/export-revue-peages-2026.cjs
       - scripts/audit-vinci-principales-liaisons-2026.cjs
       - docs/vinci-principales-liaisons-2026.csv
+      - docs/AUDIT-COUVERTURE-PEAGES-2026.md
       - .github/workflows/audit-couverture-peages-2026.yml
       - tests/peages-audit-couverture-2026.test.cjs
       - tests/peages-sapn-beuzeville-2026.test.cjs
