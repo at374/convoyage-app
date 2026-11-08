@@ -17,6 +17,18 @@ const stationCsv=fs.readFileSync(path.join(root,'sanef-a1-audit-alias-gares-2026
 const stationRows=stationCsv.slice(1).map(parse);
 const stationByCanonical=new Map(stationRows.map(row=>[row[1],row]));
 assert.equal(stationByCanonical.size,33,'each station must have a unique canonical identity');
+assert.deepEqual(parse(stationCsv[0]),['nom_grille_sanef','nom_canonique_application','statut_identite_gare','numero_echangeur_confirme','coordonnees_confirmees','source_officielle_exacte','page_pdf_verifiee','observation']);
+assert.equal(stationRows.length,33);
+const isValidGpsCoordinates=value=>{
+ const parts=value.split(',').map(x=>x.trim());
+ if(parts.length!==2||parts.some(x=>!/^[-+]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)$/.test(x)))return false;
+ const [lat,lon]=parts.map(Number);
+ return Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180;
+};
+assert.equal(isValidGpsCoordinates(''),false);
+assert.equal(isValidGpsCoordinates('PR 32+359'),false);
+assert.equal(isValidGpsCoordinates('91,181'),false);
+assert.equal(isValidGpsCoordinates('49.12,2.42'),true);
 let verifiedClass1=0;
 const position={ARSY:0,CHEVRIERES:0,SENLIS:0,CHAMANT:0};
 for(let i=0;i<dataset.records.length;i++){
@@ -60,7 +72,7 @@ for(const record of dataset.records){
     const station=stationByCanonical.get(canonical);
     assert.ok(station,'missing physical station audit for '+canonical);
     assert.equal(station[2],'CERTIFIE','station '+canonical+' must be independently GPS-certified');
-    assert.ok(station[4].trim(),'station '+canonical+' must have independently verified coordinates');
+    assert.ok(isValidGpsCoordinates(station[4]),'station '+canonical+' must have valid latitude,longitude coordinates');
     assert.ok(station[5].startsWith('https://'),'station '+canonical+' must have a source URL');
    }
   }else{
