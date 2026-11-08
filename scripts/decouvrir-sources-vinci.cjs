@@ -9,8 +9,8 @@ const url = 'https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-demploi
     if (!response.ok) throw new Error('HTTP ' + response.status);
     const html = await response.text();
     const decoded = html.replaceAll('&amp;', '&').replaceAll('\/', '/').replaceAll('&#038;', '&');
-    const anchors = [...decoded.matchAll(/<a\\b[^>]*href\\s*=\\s*["']([^"']+)["'][^>]*>([\\s\\S]*?)<\\/a>/gi)];
-    out.tariff_anchors = anchors.map(m => ({ href: m[1], label: m[2].replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').trim().slice(0, 160) })).filter(x => /tarif|grille|asf|escota|cofiroute|arcos|a86|télécharg|telecharg/i.test(x.href + ' ' + x.label)).slice(0, 100);
+    const anchors = [...decoded.matchAll(/<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)];
+    out.tariff_anchors = anchors.map(m => ({ href: m[1], label: m[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160) })).filter(x => /tarif|grille|asf|escota|cofiroute|arcos|a86|télécharg|telecharg/i.test(x.href + ' ' + x.label)).slice(0, 100);
     const matches = [...decoded.matchAll(/(?:href|data-url|src)\s*=\s*["']([^"']+)["']/gi), ...decoded.matchAll(/(https?:\/\/[^\s"'<>]+\.(?:txt|csv|pdf)(?:\?[^\s"'<>]*)?)/gi)];
     for (const match of matches) {
       try {
