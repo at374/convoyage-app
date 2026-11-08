@@ -240,7 +240,7 @@ test('7 noms Cofiroute (echangeurs reels mais sans GPS officiel trouvable) reste
   }
 });
 
-testAvecSource('"Saint Aignan Sur Cher" et "Selles Sur Cher" ne sont plus dans la liste des noms non-resolus (ce sont des alias de ST ROMAIN SUR CHER / CHEMERY, pas des absences)', () => {
+test('"Saint Aignan Sur Cher" et "Selles Sur Cher" ne sont plus dans la liste des noms non-resolus (ce sont des alias de ST ROMAIN SUR CHER / CHEMERY, pas des absences)', () => {
   const RESOLUS = ['AIGNAN', 'SELLES'];
   // Garde de regression : s'assurer qu'on ne les remet pas par erreur dans la liste des absents.
   for (const terme of RESOLUS) {
