@@ -1,0 +1,26 @@
+'use strict';
+// Guard against accidentally promoting document-only SANEF A1 aliases and prices to billing.
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const read=name=>fs.readFileSync(path.join(__dirname,name),'utf8');
+const dataset=JSON.parse(read('sanef-a1-modulation-2026.json'));
+const alias=JSON.parse(read('sanef-a1-gare-alias-2026.json'));
+const selector=read('sanef-a1-official-selector.js');
+const bridge=read('sanef-a1-browser-preview.js');
+const lab=read('sanef-a1-preview-lab.html');
+const ledger=read('sanef-a1-certification-relations-2026.csv');
+assert.equal(dataset.status,'experimental_not_activated');
+assert.equal(alias.statut,'correspondances_documentaires_non_certifiees');
+assert.equal(Object.keys(alias.aliases).length,33);
+assert.match(selector,/certifiedForBilling:false/);
+assert.match(selector,/status:'MODULATION_PREVIEW'/);
+assert.match(selector,/normal_price_mismatch/);
+assert.match(selector,/passage_not_confirmed/);
+assert.match(selector,/classe1_/);
+assert.match(bridge,/certifiedForBilling/);
+assert.match(lab,/Laboratoire expérimental/);
+assert.match(lab,/calendarVerified/);
+assert.match(ledger,/CLASSES1_2_COMPAREES_PDF_2026/);
+assert.doesNotMatch(ledger,/CERTIFIEE_FACTURATION|ACTIVE_PRODUCTION/);
+console.log('PASS SANEF A1 remains experimental: 33 unverified aliases, preview-only and normal-price safeguards');
