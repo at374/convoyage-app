@@ -21,6 +21,6 @@ const url = 'https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-demploi
   } catch (error) { out.errors.push(String(error.message || error)); }
   fs.mkdirSync('artifacts/vinci-sources', { recursive: true });
   fs.writeFileSync('artifacts/vinci-sources/decouverte.json', JSON.stringify(out, null, 2) + '\n');
-  console.log(JSON.stringify({ http_status: out.http_status, candidates: out.candidates.length, errors: out.errors }));
+  console.log(JSON.stringify({ http_status: out.http_status, candidates: out.candidates.length, urls: out.candidates, errors: out.errors }));
   if (out.errors.length) process.exitCode = 1;
 })();
