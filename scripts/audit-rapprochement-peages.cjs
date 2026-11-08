@@ -32,6 +32,7 @@ const report = {
   missing_pair_details: [],
   missing_pair_unique_gates: 0,
   missing_name_counts: [],
+  missing_name_candidates: [],
   unmatched_details: [],
 };
 const unmatchedByOrigin = new Map();
@@ -72,6 +73,16 @@ for (const p of overlay.paires) {
   }
 }
 report.missing_pair_unique_gates = missingPairGates.size;
+// Pistes uniquement : la sous-chaine n'etablit pas une equivalence de gares.
+const gateNames = base.g.map(g => g[0]);
+report.missing_name_candidates = [...missingNameCounts].map(([gate, occurrences]) => {
+  const normalized = normalize(gate);
+  const candidates = normalized.length >= 6 ? gateNames.filter(name => {
+    const candidate = normalize(name);
+    return candidate.length >= 6 && (candidate.includes(normalized) || normalized.includes(candidate));
+  }).slice(0, 8) : [];
+  return { gate, occurrences, candidates, status: 'A_VERIFIER_MANUELLEMENT' };
+}).filter(x => x.candidates.length > 0).sort((a, b) => b.occurrences - a.occurrences || a.gate.localeCompare(b.gate));
 report.missing_name_counts = [...missingNameCounts].map(([gate, occurrences]) => ({ gate, occurrences })).sort((a, b) => b.occurrences - a.occurrences || a.gate.localeCompare(b.gate));
 report.missing_pair_origins = [...missingPairByOrigin].map(([origin, count]) => ({ origin, count })).sort((a, b) => b.count - a.count || a.origin.localeCompare(b.origin));
 report.unmatched_origins = [...unmatchedByOrigin].map(([origin, count]) => ({ origin, count })).sort((a, b) => b.count - a.count || a.origin.localeCompare(b.origin));
