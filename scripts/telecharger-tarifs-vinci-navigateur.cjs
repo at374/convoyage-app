@@ -50,26 +50,30 @@ const report = { page_url: pageUrl, checked_at: new Date().toISOString(), source
         const target = page.getByText(label, { exact: true });
         entry.matches = await target.count();
         if (entry.matches !== 1) { entry.error = 'expected exactly one matching label'; continue; }
-        const [download] = await Promise.all([
-          page.waitForEvent('download', { timeout: 25000 }),
-          target.click({ timeout: 15000 }),
-        ]);
-        const sourceUrl = download.url();
-        const host = new URL(sourceUrl).hostname;
-        entry.download_url = sourceUrl;
-        if (!/(^|\.)(vinci-autoroutes\.com|vinci-autoroutes\.fr)$/.test(host)) {
-          entry.error = 'download host not on official allowlist'; continue;
+        await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+        const popupPromise = page.waitForEvent('popup', { timeout: 12000 }).catch(() => null);
+        await target.click({ timeout: 15000 });
+        const popup = await popupPromise;
+        entry.popup_url = popup?.url() || null;
+        if (popup) {
+          await popup.waitForLoadState('domcontentloaded', { timeout: 12000 }).catch(() => {});
+          entry.popup_url = popup.url();
         }
-        const failure = await download.failure();
-        if (failure) { entry.error = failure; continue; }
-        const destination = path.join(dir, 'Tarifs_' + operator + '.txt');
-        await download.saveAs(destination);
-        const bytes = fs.readFileSync(destination);
+        const url = entry.popup_url;
+        if (!url || !url.startsWith('https://public-content.vinci-autoroutes.com/')) {
+          entry.error = 'No verified official popup URL';
+          continue;
+        }
+        entry.download_url = url;
+        const response = await context.request.get(url, { timeout: 25000 });
+        entry.http_status = response.status();
+        entry.content_type = response.headers()['content-type'];
+        const bytes = await response.body();
         entry.bytes = bytes.length;
+        if (!response.ok() || !bytes.length) { entry.error = 'HTTP failure or empty file'; continue; }
+        fs.writeFileSync(path.join(dir, 'Tarifs_' + operator + '.txt'), bytes);
         entry.sha256 = crypto.createHash('sha256').update(bytes).digest('hex');
-        entry.original_filename = download.suggestedFilename();
         entry.status = 'downloaded_unverified';
-        if (!bytes.length) { entry.status = 'empty'; fs.unlinkSync(destination); }
       } catch (error) { entry.error = String(error.message || error).slice(0, 500); } finally { entry.browser_events = events.slice(eventStart, eventStart + 30); entry.current_url = page.url(); }
     }
   } finally {
