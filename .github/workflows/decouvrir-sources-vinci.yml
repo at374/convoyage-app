@@ -1,0 +1,23 @@
+name: Decouvrir sources officielles VINCI
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Rechercher les liens de grilles sur la page officielle
+        run: node scripts/decouvrir-sources-vinci.cjs
+      - name: Archiver le rapport sans modifier les tarifs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vinci-sources-discovery
+          path: artifacts/vinci-sources/decouverte.json
+          if-no-files-found: warn
