@@ -11,7 +11,8 @@ on:
       - .github/workflows/audit-couverture-peages-2026.yml
       - tests/peages-audit-couverture-2026.test.cjs
       - tests/peages-sapn-beuzeville-2026.test.cjs
-      - tests/peages-sapn-a14-conditions-2026.test.cjs
+      - tests/peages-sapn-a14-conditions-2026.test.cjs tests/peages-rapprochement-2026.test.cjs
+      - tests/peages-rapprochement-2026.test.cjs
       - peages-aprr.json
       - peages-overlay.json
 permissions:
