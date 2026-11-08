@@ -118,3 +118,28 @@ Source primaire : https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-de
 - Exemple de paire à contrôler : **Pas-de-Trets → La Saulce** (overlay 17,50 € / 24,60 €) ; **NON CERTIFIÉE** tant que les deux valeurs n'ont pas été retrouvées explicitement dans la source définitive et que le trajet et le sens ont été validés.
 
 Pour chaque paire : enregistrer URL, date d'effet, libellés exacts, sens et preuve de chaque classe ; laisser « À vérifier » en cas de divergence ou de source provisoire. Aucun changement des tarifs de production à ce stade.
+
+
+## Source VINCI — principales liaisons 2026 (8 novembre 2026)
+
+Document officiel : https://www.vinci-autoroutes.com/static/b9b8279934080436ee3bba255c7835e2/vinci_autoroutes-tarifs-principales-liaisons-2026.pdf — tableau « VINCI AUTOROUTES - TARIFS DES PRINCIPALES LIAISONS », tarifs applicables au **01/02/2026** (attention : certaines grilles ASF détaillées ont une date de mise à jour distincte, 01/06/2026).
+
+| Liaison publiée | Classe 1 TTC | Classe 2 TTC |
+|---|---:|---:|
+| A7/A8 Lyon / Marseille - Aix | 28,10 € | 45,70 € |
+| A7/A9 Lyon / Montpellier | 32,80 € | 51,30 € |
+| A7/A9 Lyon / Espagne (Perthus) | 55,50 € | 86,40 € |
+| A54/A7/A8 Arles / Marseille - Aix | 5,20 € | 7,70 € |
+| A9 Montpellier / Espagne (Perthus) | 23,10 € | 35,30 € |
+| A9/A61 Montpellier / Toulouse sud-ouest | 27,60 € | 41,90 € |
+| A9 Montpellier / Narbonne-est | 32,90 € | 50,80 € |
+| A11 Paris (La Folie-Bessin) / Nantes | 43,30 € | 67,00 € |
+| A83/A10 Nantes / Bordeaux | 33,20 € | 50,20 € |
+| A11 Nantes / Angers | 10,40 € | 16,20 € |
+| A11/A85 Nantes / Vierzon-nord | 36,50 € | 56,40 € |
+| A62 Toulouse nord-est / Bordeaux | 22,90 € | 36,00 € |
+| A62/A61/A9 Bordeaux / Toulouse / Montpellier | 51,10 € | 78,80 € |
+| A61/A9 Toulouse sud-est / Espagne (Perthus) | 27,90 € | 42,60 € |
+| A85 Angers / Tours | 12,70 € | 18,50 € |
+
+**Statut : 15 liaisons / 30 montants officiellement publiés, mais NON rapprochés automatiquement des couples de gares de la base.** Ces liaisons peuvent inclure plusieurs réseaux ou gares. Ne pas les injecter telles quelles comme paires d'échangeurs. La date du tableau des principales liaisons ne remplace pas les dates des grilles concessionnaires plus récentes.
