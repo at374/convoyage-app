@@ -20,6 +20,9 @@ async function preview(request,normalCents){
  if(!Number.isSafeInteger(normalCents)||normalCents<0)return normalOnly('normal_invalid');
  if(!root.SanefA1OfficialSelector)return normalOnly('selector_not_loaded');
  if(!request||request.previewExplicitlyRequested!==true)return normalOnly('preview_not_requested');
+ if(request.passageGareConfirme!==true)return normalOnly('passage_not_confirmed');
+ if(request.direction!=='VERS_PARIS'||request.classe!==1)return normalOnly('classe_ou_sens_non_eligible');
+ if(typeof request.origine!=='string'||!request.origine||typeof request.destination!=='string'||!request.destination||typeof request.passageLocal!=='string'||!request.passageLocal)return normalOnly('passage_details_missing');
  try{
   const {dataset,aliases}=await load();
   return root.SanefA1OfficialSelector.selectionner(dataset,aliases,request,normalCents);
