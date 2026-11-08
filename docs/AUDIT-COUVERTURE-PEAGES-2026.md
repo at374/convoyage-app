@@ -132,7 +132,9 @@ Document officiel : https://www.vinci-autoroutes.com/static/b9b8279934080436ee3b
 | A54/A7/A8 Arles / Marseille - Aix | 5,20 € | 7,70 € |
 | A9 Montpellier / Espagne (Perthus) | 23,10 € | 35,30 € |
 | A9/A61 Montpellier / Toulouse sud-ouest | 27,60 € | 41,90 € |
-| A9 Montpellier / Narbonne-est | 32,90 € | 50,80 € |
+| A9 Montpellier / Narbonne-est | 9,70 € | 14,70 € |
+| A8 Aix / Nice | 21,20 € | 31,50 € |
+| A51 Aix / Gap (La Saulce) | 14,90 € | 20,60 € |
 | A11 Paris (La Folie-Bessin) / Nantes | 43,30 € | 67,00 € |
 | A83/A10 Nantes / Bordeaux | 33,20 € | 50,20 € |
 | A11 Nantes / Angers | 10,40 € | 16,20 € |
@@ -142,4 +144,7 @@ Document officiel : https://www.vinci-autoroutes.com/static/b9b8279934080436ee3b
 | A61/A9 Toulouse sud-est / Espagne (Perthus) | 27,90 € | 42,60 € |
 | A85 Angers / Tours | 12,70 € | 18,50 € |
 
-**Statut : 15 liaisons / 30 montants officiellement publiés, mais NON rapprochés automatiquement des couples de gares de la base.** Ces liaisons peuvent inclure plusieurs réseaux ou gares. Ne pas les injecter telles quelles comme paires d'échangeurs. La date du tableau des principales liaisons ne remplace pas les dates des grilles concessionnaires plus récentes.
+**Statut : 17 liaisons / 34 montants officiellement publiés, mais NON rapprochés automatiquement des couples de gares de la base.** Ces liaisons peuvent inclure plusieurs réseaux ou gares. Ne pas les injecter telles quelles comme paires d'échangeurs. La date du tableau des principales liaisons ne remplace pas les dates des grilles concessionnaires plus récentes.
+
+
+**Correction de contrôle documentaire (08/11/2026) :** la ligne Montpellier / Narbonne-est était précédemment retranscrite à tort 32,90 €/50,80 €. Lecture directe du tableau officiel VINCI, lignes PDF correspondant à A9 Montpellier / Narbonne-est : **9,70 €/14,70 €**. Les deux liaisons Aix / Nice et Aix / Gap (La Saulce) ont également été ajoutées depuis le même PDF. Aucune de ces liaisons complètes n'est automatiquement assimilée à une paire de gares.
