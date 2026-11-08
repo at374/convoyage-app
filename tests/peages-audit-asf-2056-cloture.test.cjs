@@ -47,7 +47,14 @@
 //     probablement = l'entrée déjà présente mais sans GPS "BAYONNE-S JEAN LUZ
 //     N"). Aucune source (Google Places, Overpass -- indisponible/saturé ce
 //     jour) ne permet de trancher avec certitude.
-//   - THOUARCE (A87) : aucune coordonnée GPS trouvée.
+//   - THOUARCE (A87) : CORRECTIF du 8 nov. 2026 -- "Thouarcé" (avec accent)
+//     existe déjà dans overlay.gares (23 relations), à <0.02km des points
+//     officiels "Thouarce E/S" (gares-peage-2025.csv, data.gouv.fr). L'ancien
+//     test cherchait "THOUARCE" SANS accent, qui ne matche jamais
+//     "THOUARCÉ" AVEC accent une fois mis en majuscules -- faux négatif,
+//     pas une absence réelle. Déjà intégré, retiré de la liste des 5 noms
+//     non résolus (il n'en reste donc que 4 : PERIGUEUX, PERIGUEUX EST,
+//     ST JEAN DE LUZ NORD, LE BOULOU (F)).
 //   - LE BOULOU (F) (A9) : confirmé comme un TROISIÈME point physique distinct
 //     de "Le Boulou (O)" et "Le Perthus" (déjà en base) -- preuve par
 //     désaccord de prix sur les mêmes destinations (ex. vers BRAM : 17,7€ vs
@@ -57,7 +64,7 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 
-test('les 5 noms physiques non résolus de Tarifs_ASF.txt restent bien absents de la base (documentation, pas une fabrication)', () => {
+test('les 4 noms physiques non résolus de Tarifs_ASF.txt restent bien absents de la base (documentation, pas une fabrication)', () => {
   const aprr = require('../peages-aprr.json');
   const overlay = require('../peages-overlay.json');
   const names = new Set([
@@ -65,7 +72,9 @@ test('les 5 noms physiques non résolus de Tarifs_ASF.txt restent bien absents d
     ...overlay.gares.map(g => g.nom.toUpperCase()),
     ...overlay.barrieres.map(b => b.id.toUpperCase()),
   ]);
-  for (const n of ['PERIGUEUX', 'PERIGUEUX EST', 'THOUARCE', 'ST JEAN DE LUZ NORD', 'LE BOULOU (F)']) {
+  // THOUARCE retiré de cette liste (8 nov. 2026) : "Thouarcé" avec accent
+  // existe déjà, voir le test dédié ci-dessous.
+  for (const n of ['PERIGUEUX', 'PERIGUEUX EST', 'ST JEAN DE LUZ NORD', 'LE BOULOU (F)']) {
     assert.equal(names.has(n), false, n + ' ne doit pas avoir été ajouté sans source GPS fiable');
   }
 });
@@ -81,12 +90,25 @@ test('GIGNAC (alias Martel) et BIARRITZ ECHANGEUR (= Biarritz (échangeur)) rest
   assert.ok(rel, 'la relation Biarritz (échangeur) <-> BAYONNE-S JEAN LUZ N doit exister');
 });
 
-// L'identification géographique ne vaut pas preuve de correspondance tarifaire.
-test('THOUARCE A87 : candidats officiels documentés, sans ajout tarifaire prématuré', () => {
+test('THOUARCÉ A87 : déjà intégré (correctif du 8 nov. 2026, ex-faux-négatif accent)', () => {
   const officiel = require('../data/gares-peage-officiel.json');
+  const overlay = require('../peages-overlay.json');
   const candidats = officiel.d.filter(r => r[1] === '49A908715CD');
   assert.deepEqual(new Set(candidats.map(r => r[0])), new Set(['Thouarce E', 'Thouarce S']));
   assert.ok(candidats.every(r => r[4] === 'Ech'));
+  const g = overlay.gares.find(x => x.nom === 'Thouarcé');
+  assert.ok(g, 'Thouarcé (avec accent) doit exister dans overlay.gares');
+  function dist(a, b) {
+    const R = 6371;
+    const dLat = (b[0] - a[0]) * Math.PI / 180, dLon = (b[1] - a[1]) * Math.PI / 180;
+    const lat1 = a[0] * Math.PI / 180, lat2 = b[0] * Math.PI / 180;
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+  const d = dist(g.points[0], [47.32952, -0.59645]);
+  assert.ok(d < 0.02, 'Thouarcé devrait être a moins de 0.02km du point officiel "Thouarce S", trouve ' + d.toFixed(4) + 'km');
+  const hasPrix = overlay.paires.some(p => p[0] === 'Thouarcé' || p[1] === 'Thouarcé');
+  assert.ok(hasPrix, 'Thouarcé doit avoir au moins un prix en base');
 });
 
 // Plusieurs gares physiques proches portent des noms liés, mais ne doivent

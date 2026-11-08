@@ -15,9 +15,18 @@
 //     (METZ (A31) fusionné vers BEAUMONT ; COUTEVROULT renommé en
 //     "PARIS / NOISY-LE-GRAND" -- cf. fix_metz_freyming.js,
 //     fix_meaux_coutevroult.js dans le scratchpad).
-//   - LIÉVIN (A26, Pas-de-Calais, N°6.2) : seul nom réellement non résolu
-//     identifié par cet audit. Aucune coordonnée GPS trouvée (recherche
-//     Google Places infructueuse). Reste un chantier ouvert.
+//   - LIÉVIN (A26, Pas-de-Calais, N°6.2) : CORRECTIF du 8 nov. 2026 -- cet
+//     audit (et sa documentation dans TRANSMISSION-CLAUDE-PEAGES-2026.md)
+//     affirmait par erreur que LIÉVIN était non résolu ("recherche Google
+//     Places infructueuse"). En réalité, "LIÉVIN" (avec accent) existe déjà
+//     dans aprr.g depuis l'import d'origine (idx 453, GPS [50.4378,2.70708],
+//     30 relations aprr.p + 82 via overlay.paires) -- coordonnées identiques
+//     (<0.02km) à "Le Lievinois Sortie/Entree" du référentiel officiel du
+//     ministère (gares-peage-2025.csv). Le test ci-dessous cherchait
+//     "LIEVIN" SANS accent, qui ne matche jamais "LIÉVIN" AVEC accent (la
+//     casse est insensible en JS mais pas les accents) -- un faux négatif
+//     de la recherche, pas une absence réelle. LIÉVIN n'est PAS un chantier
+//     ouvert : il est déjà entièrement intégré.
 //
 // Run: node --test tests/peages-audit-sanef-470-stations.test.cjs
 const assert = require('node:assert/strict');
@@ -40,17 +49,31 @@ test('les noms SANEF signalés "manquants" par erreur de normalisation existent 
   assert.equal(strayMetz, false);
 });
 
-test('LIEVIN (A26) reste non résolu -- documentation, pas une fabrication', () => {
-  const allNames = new Set([
-    ...aprr.g.map(g => g[0].toUpperCase()),
-    ...overlay.gares.map(g => g.nom.toUpperCase()),
-  ]);
-  assert.equal(allNames.has('LIEVIN'), false);
+test('LIÉVIN (A26) est déjà intégré (correctif du 8 nov. 2026, ex-faux-négatif accent)', () => {
+  const g = aprr.g.find(x => x[0] === 'LIÉVIN');
+  assert.ok(g, 'LIÉVIN (avec accent) doit exister dans aprr.g');
+  const [lat, lon] = g[1][0];
+  // GPS officiel "Le Lievinois Sortie" (gares-peage-2025.csv, data.gouv.fr) : 50.4378,2.70708
+  function dist(a, b) {
+    const R = 6371;
+    const dLat = (b[0] - a[0]) * Math.PI / 180, dLon = (b[1] - a[1]) * Math.PI / 180;
+    const lat1 = a[0] * Math.PI / 180, lat2 = b[0] * Math.PI / 180;
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+    return 2 * R * Math.asin(Math.sqrt(x));
+  }
+  const d = dist([lat, lon], [50.4378, 2.70708]);
+  assert.ok(d < 0.02, 'LIÉVIN devrait être à moins de 0.02km du point officiel "Le Lievinois Sortie", trouvé ' + d.toFixed(4) + 'km');
+  const lines = aprr.p.split(';');
+  const idx36 = aprr.g.findIndex(x => x[0] === 'LIÉVIN').toString(36);
+  const hasPrix = lines.some(l => { const [a, b] = l.split(','); return a === idx36 || b === idx36; });
+  assert.ok(hasPrix, 'LIÉVIN doit avoir au moins un prix en base');
 });
 
-test('LIÉVIN A26 : les candidats GPS officiels existent sans prouver un alias tarifaire', () => {
+test('LIÉVIN A26 : les candidats GPS officiels correspondent au point deja integre', () => {
   const candidats = officiel.d.filter(r => r[1] === '62A902635CD');
   assert.deepEqual(new Set(candidats.map(r => r[0])), new Set(['Le Lievinois Entree', 'Le Lievinois Sortie']));
   assert.ok(candidats.every(r => r[4] === 'Ech'));
-  assert.equal(overlay.gares.some(g => g.nom === 'LIEVIN'), false);
+  // LIÉVIN (avec accent) existe bel et bien -- contrairement a l'ancienne assertion
+  // qui cherchait "LIEVIN" sans accent et concluait, par erreur, a une absence.
+  assert.ok(overlay && aprr.g.some(g => g[0] === 'LIÉVIN'));
 });
