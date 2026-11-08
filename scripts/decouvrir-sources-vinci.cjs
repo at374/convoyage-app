@@ -13,15 +13,15 @@ const url = 'https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-demploi
     out.tariff_anchors = anchors.map(m => ({ href: m[1], label: m[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 160) })).filter(x => /tarif|grille|asf|escota|cofiroute|arcos|a86|télécharg|telecharg/i.test(x.href + ' ' + x.label)).slice(0, 100);
     out.txt_contexts = ['Tarifs ASF', 'Tarifs Escota', 'Tarifs A86', 'Tarifs Cofiroute', 'Tarifs Arcos'].map(label => {
       const index = decoded.toLowerCase().indexOf(label.toLowerCase());
-      return { label, found: index >= 0, html_context: index < 0 ? null : decoded.slice(Math.max(0, index - 350), index + 250).replace(/\\s+/g, ' ').slice(0, 600) };
+      return { label, found: index >= 0, html_context: index < 0 ? null : decoded.slice(Math.max(0, index - 350), index + 250).replace(/\s+/g, ' ').slice(0, 600) };
     });
-    const embedded = [...decoded.matchAll(/[^\\s"'<>]{1,350}\\.(?:txt|csv)(?:\\?[^\\s"'<>]*)?/gi)];
+    const embedded = [...decoded.matchAll(/[^\s"'<>]{1,350}\.(?:txt|csv)(?:\?[^\s"'<>]*)?/gi)];
     out.embedded_tariff_files = [...new Set(embedded.map(m => m[0]))].filter(x => /tarif|asf|escota|cofiroute|arcour|arcos|a86/i.test(x)).slice(0, 100);
     out.framework_hints = {
       next_data: decoded.includes('__NEXT_DATA__'),
       next_flight: decoded.includes('self.__next_f'),
-      script_count: (decoded.match(/<script\\b/gi) || []).length,
-      txt_mentions: (decoded.match(/\\.txt/gi) || []).length,
+      script_count: (decoded.match(/<script\b/gi) || []).length,
+      txt_mentions: (decoded.match(/\.txt/gi) || []).length,
     };
     const matches = [...decoded.matchAll(/(?:href|data-url|src)\s*=\s*["']([^"']+)["']/gi), ...decoded.matchAll(/(https?:\/\/[^\s"'<>]+\.(?:txt|csv|pdf)(?:\?[^\s"'<>]*)?)/gi)];
     for (const match of matches) {
