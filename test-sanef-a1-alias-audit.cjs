@@ -15,9 +15,18 @@ for(let i=0;i<entries.length;i++){
  const row=parse(csv[i+1]);
  assert.equal(row.length,8);
  assert.deepEqual(row.slice(0,2),entries[i]);
- assert.equal(row[2],'A_VERIFIER');
- assert.deepEqual(row.slice(3,7),['','','','']);
- assert.match(row[7],/ne pas activer pour facturation/);
+ if(row[2]==='A_VERIFIER'){
+  assert.deepEqual(row.slice(3,7),['','','','']);
+  assert.match(row[7],/ne pas activer pour facturation/);
+ }else{
+  assert.equal(row[2],'NOM_NUMERO_PR_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER');
+  assert.ok(row[3]);
+  assert.equal(row[4],'','coordinates must remain unconfirmed');
+  assert.match(row[5],/^https:\/\/www\.autoroutes\.sanef\.com\/sites\/default\/files\/2025-12\//);
+  assert.equal(row[6],'','PDF page not yet independently recorded');
+  assert.match(row[7],/PR \d+\+\d+/);
+ }
+
  assert.ok(!canon.has(row[1]),'duplicate canonical alias '+row[1]);
  canon.add(row[1]);
 }
@@ -25,4 +34,5 @@ for(const relation of dataset.records){
  assert.ok(canon.has(relation.origine),'missing origin '+relation.origine);
  assert.ok(canon.has(relation.destination),'missing destination '+relation.destination);
 }
-console.log('PASS 33 SANEF A1 aliases inventoried, all unverified, all 122 relations mapped');
+assert.equal(csv.slice(1).map(parse).filter(row=>row[2]==='NOM_NUMERO_PR_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER').length,4);
+console.log('PASS 33 SANEF A1 aliases inventoried, 4 station references documented, all physical aliases unverified, all 122 relations mapped');
