@@ -4,7 +4,7 @@ const script=fs.readFileSync(path.join(__dirname,'sanef-a1-browser-preview.js'),
 const data=JSON.parse(fs.readFileSync(path.join(__dirname,'sanef-a1-modulation-2026.json'),'utf8'));
 const aliases=JSON.parse(fs.readFileSync(path.join(__dirname,'sanef-a1-gare-alias-2026.json'),'utf8'));
 let calls=0;
-const window={SanefA1OfficialSelector:{selectionner:(d,a,req,normal)=>({status:'MODULATION_PREVIEW',priceCents:normal,modulatedPriceCents:1250,certifiedForBilling:false})}};
+const window={SanefA1ReglesOfficielles2026:{determiner:req=>req.passageLocal==='2026-11-08T17:00:00'?{statut:'HORAIRE_OFFICIEL',couleur:'rouge'}:{statut:'NORMAL',motif:'hors_plage_modulee'}},SanefA1OfficialSelector:{selectionner:(d,a,req,normal)=>({status:'MODULATION_PREVIEW',priceCents:normal,modulatedPriceCents:1250,certifiedForBilling:false})}};
 const fetch=async name=>{calls++;return {ok:true,json:async()=>name.includes('modulation')?data:aliases};};
 vm.runInNewContext(script,{window,fetch},{filename:'sanef-a1-browser-preview.js'});
 (async()=>{
@@ -30,5 +30,9 @@ vm.runInNewContext(script,{window,fetch},{filename:'sanef-a1-browser-preview.js'
   assert.equal(fallback.reason,reason);count++;
   assert.equal(calls,2,'unconfirmed preview must not fetch');count++;
  }
+  const outside=await preview({...valid,passageLocal:'2026-11-08T12:00:00'},1000);
+ assert.equal(outside.status,'NORMAL_ONLY');count++;
+ assert.equal(outside.reason,'hors_plage_modulee');count++;
+ assert.equal(calls,2,'non-modulated hour must not fetch');count++;
   console.log('PASS '+count+' SANEF A1 browser bridge assertions');
 })().catch(e=>{console.error(e);process.exitCode=1;});
