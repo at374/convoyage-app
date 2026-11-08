@@ -18,6 +18,9 @@ test('rapprochement : bilan complet et ecarts Beuzeville visibles', () => {
   assert.equal(r.unmatched_classification.both_endpoints_present_pair_missing, 672);
   assert.equal(r.missing_pair_origins.reduce((n, x) => n + x.count, 0), 672);
   assert.equal(r.missing_pair_details.length, 672);
+  assert.equal(r.missing_pair_unique_gates, 148);
+  assert.ok(r.missing_name_counts.length > 0);
+  assert.ok(r.missing_name_counts.every((x, i, arr) => x.gate && x.occurrences > 0 && (i === 0 || arr[i - 1].occurrences >= x.occurrences)));
   assert.ok(r.missing_pair_details.every(x => x.origin && x.destination && Number.isFinite(x.overlay_class1) && Number.isFinite(x.overlay_class2)));
   assert.ok(r.missing_pair_examples.length > 0 && r.missing_pair_examples.length <= 30);
   assert.ok(r.missing_pair_origins.every((x, i, arr) => i === 0 || arr[i - 1].count >= x.count));
