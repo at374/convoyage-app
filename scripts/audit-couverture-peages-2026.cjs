@@ -17,7 +17,7 @@ for (const row of rows) {
   const parts = row.split(',');
   if (parts.length < 4) { malformed++; continue; }
   const validCode = x => /^[0-9a-z]+$/i.test(x);
-  if (!validCode(parts[0]) || !validCode(parts[1]) || !/^\\d+$/.test(parts[2]) || !/^\\d+$/.test(parts[3])) { malformed++; continue; }
+  if (!validCode(parts[0]) || !validCode(parts[1]) || !/^[0-9]+$/.test(parts[2]) || !/^[0-9]+$/.test(parts[3])) { malformed++; continue; }
   const a = parseInt(parts[0], 36), b = parseInt(parts[1], 36);
   if (a >= aprr.g.length || b >= aprr.g.length || a === b) { malformed++; continue; }
   const key = Math.min(a,b) + ':' + Math.max(a,b);
