@@ -24,6 +24,12 @@ for(const inherited of ['toString','constructor','__proto__']){
  assert.equal(test({destination:inherited},'NORMAL_ONLY').reason,'alias_missing');checks++;
 }
 assert.equal(test({destination:'DEPART'},'NORMAL_ONLY').reason,'same_station');checks++;
+for(const blank of ['', ' ', '\t']){
+ const invalidAliases={aliases:{...aliases.aliases,DEPART:blank}};
+ const result=select(dataset,invalidAliases,base,1000);
+ assert.equal(result.status,'NORMAL_ONLY');checks++;
+ assert.equal(result.reason,'alias_missing');checks++;
+}
 const aliasSame={aliases:{...aliases.aliases,ALTERNATE:'ORIGINE'}};
 const sameCanonical=select(dataset,aliasSame,{...base,destination:'ALTERNATE'},1000);
 assert.equal(sameCanonical.status,'NORMAL_ONLY');checks++;
