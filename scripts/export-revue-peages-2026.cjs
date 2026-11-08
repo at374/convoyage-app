@@ -12,7 +12,7 @@ const out = path.dirname(path.resolve(input));
 const quote = value => {
   const text = String(value ?? '');
   // Les noms proviennent de fichiers externes : neutraliser les formules Excel/LibreOffice.
-  const safe = /^[\\s]*[=+@-]/.test(text) ? "'" + text : text;
+  const safe = /^[\s]*[=+@-]/.test(text) ? "'" + text : text;
   return '"' + safe.replace(/"/g, '""') + '"';
 };
 const csv = (filename, headers, rows) => {
