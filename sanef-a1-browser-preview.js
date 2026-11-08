@@ -30,7 +30,12 @@ async function preview(request,normalCents){
  if(rule.statut!=='HORAIRE_OFFICIEL')return normalOnly(rule.motif||'modulation_not_applicable');
  try{
   const {dataset,aliases}=await load();
-  return root.SanefA1OfficialSelector.selectionner(dataset,aliases,request,normalCents);
+  const result=root.SanefA1OfficialSelector.selectionner(dataset,aliases,request,normalCents);
+  // Do not propagate a malformed or billing-certified result from any adapter.
+  if(!result||result.certifiedForBilling!==false||result.priceCents!==normalCents)return normalOnly('selector_contract_invalid');
+  if(result.status==='MODULATION_PREVIEW'&&(!Number.isSafeInteger(result.modulatedPriceCents)||result.modulatedPriceCents<0))return normalOnly('selector_contract_invalid');
+  if(result.status!=='MODULATION_PREVIEW'&&result.status!=='NORMAL_ONLY')return normalOnly('selector_contract_invalid');
+  return result;
  }catch(e){return normalOnly('dataset_unavailable');}
 }
 Object.defineProperty(root,'CPSanefA1Preview2026',{value:Object.freeze({preview}),configurable:false,writable:false});
