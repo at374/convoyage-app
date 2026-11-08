@@ -29,4 +29,7 @@ const sameCanonical=select(dataset,aliasSame,{...base,destination:'ALTERNATE'},1
 assert.equal(sameCanonical.status,'NORMAL_ONLY');checks++;
 assert.equal(sameCanonical.reason,'same_station');checks++;
 assert.equal(test({},'NORMAL_ONLY',1000,{...dataset,records:[...dataset.records,...dataset.records]}).reason,'relation_missing_or_duplicate');checks++;
+const withMalformed={...dataset,records:[null,undefined,42,'bad',...dataset.records]};
+assert.equal(test({},'MODULATION_PREVIEW',1000,withMalformed).modulatedPriceCents,1250);checks++;
+assert.equal(test({},'NORMAL_ONLY',1000,{...dataset,records:[null,undefined,42,'bad']}).reason,'relation_missing_or_duplicate');checks++;
 console.log('PASS '+checks+' selector safety assertions');
