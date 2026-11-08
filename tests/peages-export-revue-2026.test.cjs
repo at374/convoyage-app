@@ -28,6 +28,10 @@ test('exports CSV pour revue sans modifier les prix sources', () => {
     assert.equal(names.length, 379);
     const southeast = fs.readFileSync(path.join(dir, 'peages-priorite-sud-est-2026.csv'), 'utf8').trim().split('\n');
     assert.equal(southeast.length, 124);
+    for (const field of ['source_officielle_url', 'date_validite', 'page_source', 'verification_classe_1', 'verification_classe_2']) {
+      assert.ok(southeast[0].includes(field), 'Colonne sud-est manquante : ' + field);
+    }
+    assert.ok(southeast[1].includes('"A_VERIFIER","A_VERIFIER"'));
     const southeastGates = fs.readFileSync(path.join(dir, 'peages-priorite-sud-est-par-gare-2026.csv'), 'utf8').trim().split('\n');
     assert.equal(southeastGates.length, 9);
     const gateTotal = southeastGates.slice(1).reduce((n, line) => n + Number(line.split(',')[1].replace(/"/g, '')), 0);
