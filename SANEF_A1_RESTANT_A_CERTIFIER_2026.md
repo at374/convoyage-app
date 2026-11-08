@@ -10,6 +10,12 @@ Date de référence des grilles : **1er février 2026**.
 - **33 alias de gares** documentaires, non certifiés individuellement.
 - La règle horaire et le sens de circulation doivent encore être vérifiés pour chaque usage réel, notamment les exceptions calendaires.
 
+## Nouvelle preuve officielle — Setques (A26)
+
+- SANEF décrit directement [la gare de péage de Setques](https://www.autoroutes.sanef.com/fr/mon-voyage/peage-de-setques), implantée au **kilomètre 32 de l'A26**. La [grille générale SANEF 2026](https://www.autoroutes.sanef.com/sites/default/files/2026-01/2026_02-Grille-Sanef.pdf) désigne une entrée « CALAIS (péage de Setques) ».
+- Ces deux documents établissent la désignation documentaire de la gare et sa localisation kilométrique générale, **pas** des coordonnées GPS exactes ni une identité de nœud géographique certifiée pour l'application. La ligne `SETQUES (CALAIS)` du registre reste donc **A_VERIFIER**.
+- L'appellation des gares dans la grille modulée ne doit pas être assimilée automatiquement aux gares physiques de la grille générale sans contrôle du trajet et du sens.
+
 ## Travaux encore indispensables
 
 1. **Auditer indépendamment** les 122 prix classe 2 déjà rapprochés de la grille SANEF standard, en conservant les références exactes de page, ligne et colonne pour chaque gare.
