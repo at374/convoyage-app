@@ -122,6 +122,19 @@ Technique nouvelle découverte ce jour : `curl` direct depuis le bac à sable es
 
 **État (8 nov. 2026, après ce recoupement) : 702 tests passent, 0 échec, 0 skip.** Aucun prix inventé ou approximé. Les gaps listés ci-dessus restent la liste exhaustive et définitive des lacunes réelles connues à ce jour — chacune vérifiée contre au moins une source officielle distincte (web, PDF tarifaire, ou référentiel GPS ministériel) sans trouver de solution, et non de simples lacunes de recherche.
 
+## Intégration réelle : SAINT ROMAIN SYSTEME FERME / FECAMP YVETOT OUEST — 8 novembre 2026
+
+Une session précédente avait déjà examiné cette piste (`tests/peages-sapn-a29-havre-saint-romain-double-nommage.test.cjs`) et jugé la preuve par prix seule "trop proche pour trancher" (2 destinations exactes sur 4 partagées). Le référentiel officiel du ministère (gares-peage-2025.csv) apporte la preuve indépendante manquante :
+
+- **"SAINT ROMAIN SYSTEME FERME" → fusionné vers "ST-ROMAIN-DE-COLBOSC"** (déjà résolu) : GPS officiel "Saint Romain de Colbosc (ferme)" à <0,02km, et le libellé "(ferme)" correspond explicitement au suffixe "SYSTEME FERME" (système de péage fermé, par opposition à "(ouvert)", présent au même échangeur dans le référentiel).
+- **"FECAMP YVETOT OUEST" → fusionné vers "FECAMP"** (déjà résolu) : GPS officiel "Fecamp Sortie/Entree" à <0,01km, et 3 destinations partagées (BOLBEC, YERVILLE, ST-SAENS) toutes à prix EXACTEMENT identiques (0 divergence).
+- **5 relations devenues des doublons exacts ont été dédoublonnées** (SAINT ROMAIN SYSTEME FERME<->BOLBEC/YERVILLE, FECAMP YVETOT OUEST<->BOLBEC/YERVILLE/ST-SAENS).
+- **2 relations renommées (ST-ROMAIN-DE-COLBOSC<->FECAMP et <->ST-SAENS) présentaient un écart de 10 centimes avec une relation directe déjà en base** (probable révision mineure entre deux grilles sources) : conformément à la règle "zéro approximation" et pour respecter `peages-overlay-conflicts.test.js` (zéro doublon contradictoire toléré), ces 2 relations renommées ont été **retirées sans arbitrage** — le prix déjà en base reste inchangé, aucun prix choisi ou inventé.
+- **"LE HAVRE" (seul), "TOTES" et "YVETOT EST" restent volontairement non résolus** : aucune source GPS officielle trouvée pour les deux premiers ; "YVETOT EST" prouvé distinct de "YVETOT" par désaccord de prix (BOLBEC<->YVETOT = 3,5/4,6 contre BOLBEC<->YVETOT EST = 3,5/4,8).
+- Documenté dans `tests/peages-sapn-a29-havre-saint-romain-double-nommage.test.cjs` (réécrit) et `tests/peages-guiche-thenon-barrieres-gps-officiel-non-actionnable.test.cjs`.
+
+**État final (8 nov. 2026) : 705 tests passent, 0 échec, 0 skip.** Aucun prix inventé, altéré ou approximé — seules deux relations déjà fonctionnellement couvertes ailleurs ont été retirées en doublon.
+
 ## Vérification exhaustive des 22 concessionnaires listés dans le document transmis — 8 novembre 2026
 
 Passage en revue de la liste complète (ADELAC, ALBEA, ALIAE, ALICORNE, ALIENOR, ALIS, AMEDEA, APRR, ARCOS, ARCOUR, AREA, ASF, ATLANDES, ATMB, ATOSCA, CCISE, CEVM, COFIROUTE, ESCOTA, SANEF, SAPN, SFTRF) :

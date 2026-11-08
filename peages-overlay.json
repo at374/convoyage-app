@@ -147673,7 +147673,7 @@
     ],
     [
       "TOTES",
-      "SAINT ROMAIN SYSTEME FERME",
+      "ST-ROMAIN-DE-COLBOSC",
       4.9,
       7.6,
       52
@@ -147687,7 +147687,7 @@
     ],
     [
       "TOTES",
-      "FECAMP YVETOT OUEST",
+      "FECAMP",
       2.9,
       3.9,
       31
@@ -147715,7 +147715,7 @@
     ],
     [
       "LE HAVRE",
-      "FECAMP YVETOT OUEST",
+      "FECAMP",
       4.2,
       5.5,
       44
@@ -147742,46 +147742,11 @@
       100
     ],
     [
-      "SAINT ROMAIN SYSTEME FERME",
-      "BOLBEC",
-      1,
-      1.7,
-      11
-    ],
-    [
-      "SAINT ROMAIN SYSTEME FERME",
-      "FECAMP YVETOT OUEST",
-      2.4,
-      4,
-      25
-    ],
-    [
-      "SAINT ROMAIN SYSTEME FERME",
+      "ST-ROMAIN-DE-COLBOSC",
       "YVETOT EST",
       3.7,
       5.8,
       39
-    ],
-    [
-      "SAINT ROMAIN SYSTEME FERME",
-      "YERVILLE",
-      3.7,
-      5.5,
-      39
-    ],
-    [
-      "SAINT ROMAIN SYSTEME FERME",
-      "ST-SAENS",
-      6,
-      9.6,
-      63
-    ],
-    [
-      "BOLBEC",
-      "FECAMP YVETOT OUEST",
-      1.6,
-      2.7,
-      17
     ],
     [
       "BOLBEC",
@@ -147805,25 +147770,11 @@
       62
     ],
     [
-      "FECAMP YVETOT OUEST",
+      "FECAMP",
       "YVETOT EST",
       1.9,
       2.9,
       20
-    ],
-    [
-      "FECAMP YVETOT OUEST",
-      "YERVILLE",
-      1.9,
-      2.8,
-      20
-    ],
-    [
-      "FECAMP YVETOT OUEST",
-      "ST-SAENS",
-      4.6,
-      6.2,
-      48
     ],
     [
       "YERVILLE",
