@@ -1,0 +1,33 @@
+name: Capturer grilles VINCI par navigateur
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/telecharger-tarifs-vinci-navigateur.cjs'
+      - '.github/workflows/capturer-grilles-vinci.yml'
+permissions:
+  contents: read
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Installer navigateur automatisé
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Capturer les cinq grilles sans les importer en production
+        run: node scripts/telecharger-tarifs-vinci-navigateur.cjs
+      - name: Archiver fichiers originaux et empreintes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vinci-grilles-originales-non-verifiees
+          path: artifacts/vinci-sources/browser/
+          if-no-files-found: warn
+          retention-days: 14
