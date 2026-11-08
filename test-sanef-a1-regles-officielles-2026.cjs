@@ -29,6 +29,14 @@ for(const flag of ['jourFerie','lundiFerie','mardiFerie']){
  assert.equal(actual.couleur,null);count++;
  assert.equal(actual.motif,'calendrier_ferie_a_verifier');count++;
 }
+for(const flag of ['jourFerie','lundiFerie','mardiFerie']){
+ for(const time of ['2026-11-08T15:00:00','2026-11-08T17:00:00','2026-11-08T21:00:00','2026-11-09T17:00:00']){
+  const actual=determine({classe:1,direction:'VERS_PARIS',passageLocal:time,calendrierFeriesVerifie:true,[flag]:true});
+  assert.equal(actual.statut,'INCONNU');count++;
+  assert.equal(actual.couleur,null);count++;
+  assert.equal(actual.motif,'calendrier_ferie_a_verifier');count++;
+ }
+}
 check('2026-11-08T17:00:00',null,{calendrierFeriesVerifie:false});
 for(const calendar of [undefined,null,false,0,'true']){
  const actual=determine({classe:1,direction:'VERS_PARIS',passageLocal:'2026-11-08T17:00:00',calendrierFeriesVerifie:calendar});
