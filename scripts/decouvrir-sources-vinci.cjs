@@ -9,11 +9,11 @@ const url = 'https://www.vinci-autoroutes.com/fr/conseils/autoroute-mode-demploi
     if (!response.ok) throw new Error('HTTP ' + response.status);
     const html = await response.text();
     const decoded = html.replaceAll('&amp;', '&').replaceAll('\/', '/').replaceAll('&#038;', '&');
-    const matches = [...decoded.matchAll(/(?:https?:\/\/|\/)[^\s"'<>]{3,400}\.(?:txt|csv|pdf)(?:\?[^\s"'<>]*)?/gi)];
+    const matches = [...decoded.matchAll(/(?:href|data-url|src)\s*=\s*["']([^"']+)["']/gi), ...decoded.matchAll(/(https?:\/\/[^\s"'<>]+\.(?:txt|csv|pdf)(?:\?[^\s"'<>]*)?)/gi)];
     for (const match of matches) {
       try {
-        const candidate = new URL(match[0], url);
-        if (candidate.protocol === 'https:' && /(^|\.)vinci-autoroutes\.(?:com|fr)$/i.test(candidate.hostname) && /tarif|peage|escota|cofiroute|arcour|arcos|asf|a86/i.test(candidate.href)) out.candidates.push(candidate.href);
+        const candidate = new URL(match[1], url);
+        if (candidate.protocol === 'https:' && /(^|\.)(?:vinci-autoroutes\.com|vinci-autoroutes\.fr)$/i.test(candidate.hostname) && /\.(?:txt|csv|pdf)(?:$|\?)/i.test(candidate.href)) out.candidates.push(candidate.href);
       } catch { /* ignore malformed URLs */ }
     }
     out.candidates = [...new Set(out.candidates)].sort();
