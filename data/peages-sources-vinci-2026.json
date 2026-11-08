@@ -32,7 +32,10 @@
       "source_file_committed": false,
       "comparison_ci_complete": false,
       "official_guide_pdf": "https://public-content.vinci-autoroutes.com/PDF/Tarifs-peage-Escota/Escota-Guide-tarifaire-2026.pdf",
-      "official_guide_pdf_verified_in_repository": false
+      "official_guide_pdf_verified_in_repository": false,
+      "official_guide_pdf_accessible_online": true,
+      "official_guide_pdf_pages": 12,
+      "official_guide_pdf_effective_date_confirmed": "2026-02-01"
     },
     {
       "operator": "COFIROUTE",
