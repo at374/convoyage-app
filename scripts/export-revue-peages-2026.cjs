@@ -9,7 +9,12 @@ if (!Array.isArray(report.unmatched_details) || !Array.isArray(report.missing_na
   throw Error('Rapport de rapprochement incomplet');
 }
 const out = path.dirname(path.resolve(input));
-const quote = value => '"' + String(value ?? '').replace(/"/g, '""') + '"';
+const quote = value => {
+  const text = String(value ?? '');
+  // Les noms proviennent de fichiers externes : neutraliser les formules Excel/LibreOffice.
+  const safe = /^[\\s]*[=+@-]/.test(text) ? "'" + text : text;
+  return '"' + safe.replace(/"/g, '""') + '"';
+};
 const csv = (filename, headers, rows) => {
   const lines = [headers.map(quote).join(',')];
   for (const row of rows) lines.push(row.map(quote).join(','));
