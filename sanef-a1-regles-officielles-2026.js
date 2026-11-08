@@ -18,8 +18,6 @@ function determiner(input){
   if(input.calendrierFeriesVerifie!==true)return {statut:'INCONNU',couleur:null,motif:'calendrier_non_verifie'};
   const dimanche=dt.getUTCDay()===0;
   if(!dimanche){
-    if(input.jourFerie===true || input.lundiFerie===true || input.mardiFerie===true)return {statut:'INCONNU',couleur:null,motif:'calendrier_ferie_a_verifier'};
-    if(input.calendrierFeriesVerifie!==true)return {statut:'INCONNU',couleur:null,motif:'jour_special_non_exclu'};
     return {statut:'NORMAL',couleur:'normal',motif:'hors_dimanche_et_jour_special'};
   }
   const t=h*3600+min*60+sec;
