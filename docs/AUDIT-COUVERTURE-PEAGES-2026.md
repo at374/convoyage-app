@@ -164,3 +164,12 @@ Document officiel : https://www.vinci-autoroutes.com/static/b9b8279934080436ee3b
 
 
 **Complément de contrôle du 08/11/2026 :** ajout des 13 liaisons manquantes pour couvrir les **30 lignes** du tableau VINCI officiel 2026, classes 1 et 2, source PDF indiquée ci-dessus (page unique). Les 60 montants sont une transcription documentaire et non 60 nouvelles paires certifiées dans la base de calcul. Les dates ultérieures propres à certaines grilles concessionnaires restent prioritaires pour les trajets concernés.
+
+
+## Périmètre national — contrôle des concessionnaires (8 novembre 2026)
+
+Source officielle : https://www.ecologie.gouv.fr/politiques-publiques/peages-autoroutes-france (ministère chargé des transports, mise à jour du 29/07/2026). Le ministère recense **22 sociétés concessionnaires** : ADELAC, ALBEA, ALIAE, ALICORNE, ALIS, AMEDEA, APRR, ARCOS, ARCOUR, AREA, ASF, ATLANDES, ATMB, ATOSCA, CCISE, CEVM, COFIROUTE, ESCOTA, SANEF, SAPN, SFTRF, et l'opérateur supplémentaire éventuel à réconcilier avec la liste ministérielle avant toute déclaration de complétude. **Ne pas déduire la couverture nationale des seuls grands réseaux.**
+
+Source officielle pour l'identification des gares : https://www.data.gouv.fr/datasets/gares-de-peage-du-reseau-routier-national-concede (édition 2025 citée par le ministère). Les variantes de libellés doivent être rapprochées avec identifiants, réseau, géographie et sens ; la ressemblance textuelle seule n'est pas une preuve.
+
+**Contrôle indispensable :** compléter l'inventaire exhaustif des concessionnaires depuis la source primaire, puis relever pour chacun les grilles classes 1/2 et leurs dates d'effet. Les 7 251 relations non rapprochées entre base et overlay ne constituent pas un dénominateur fiable de la couverture nationale.
