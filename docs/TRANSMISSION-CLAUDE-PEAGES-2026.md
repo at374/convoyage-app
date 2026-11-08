@@ -75,3 +75,20 @@ Workflow GitHub Actions **42459498188** : https://github.com/at374/convoyage-app
 - **ESCOTA :** 141 lignes classées ; **91 confirmées**, **0 divergente ou ambiguë**, **34 non rapprochées**, **16 structurelles**. Résultat provenant du journal du test `peages-escota-grille-complete-cloture.test.cjs`.
 - **Cofiroute/Arcour :** les contrôles de prix et d'alias existants réussissent, dont Taissy, St-Denis-Les-Sens, St-Amand-Montrond, Saint-Aignan-sur-Cher / St-Romain-sur-Cher et Selles-sur-Cher / Chémery. Ces tests ciblés ne prouvent **pas** à eux seuls que chaque ligne du TXT de 722 247 octets est couverte.
 - **À faire :** auditer l'ensemble des lignes Cofiroute, puis ASF, A86 et Arcos ; vérifier la date d'effet et le format de chaque source ; établir les divergences et relations manquantes sans forcer les alias. Aucun tarif de production modifié.
+
+
+## Profilage des cinq fichiers — workflow 42459616007
+
+Exécution réussie : https://github.com/at374/convoyage-app/actions/runs/42459616007. Le programme `scripts/analyser-formats-vinci.cjs` a généré `analyse-formats.json` dans l'artefact GitHub Actions ; les 12 tests tarifaires existants passent sans SKIP.
+
+| Source | Lignes de données | Colonnes | Caractères de remplacement UTF-8 |
+| --- | ---: | ---: | ---: |
+| ASF | 2055 | 9 | 0 |
+| ESCOTA | 141 | 9 | 0 |
+| COFIROUTE_ARCOUR | 11004 | 11 | 0 |
+| A86 | 644 | 10 | 205 |
+| ARCOS | 1092 | 5 | 3066 |
+
+ASF/ESCOTA contiennent `autoroute_entree;nom_entree;autoroute_sortie;nom_sortie;classe1;classe2;classe3;classe4;classe5` (prix avec virgule). Cofiroute/Arcour ajoute les numéros d'échangeurs et emploie des prix avec point. A86 a une tarification par jour, badge et plage horaire, avec six colonnes de sens. Arcos a des lignes `Trajet;plage horaire;classe;Tarif_TTC;groupe_euro`. **Ne pas aplatir A86/Arcos en un prix unique** : préserver les conditions de validité. Les caractères de remplacement signalent que A86/Arcos ne sont probablement pas encodés en UTF-8 ; détecter et décoder l'encodage original avant de parser les libellés.
+
+Aucune date de validité n'a été identifiée dans les 50 premières lignes des cinq sources. **La récupération au 8 novembre 2026 ne certifie pas une date d'effet 2026.** Aucune modification de production.
