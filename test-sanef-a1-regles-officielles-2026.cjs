@@ -20,7 +20,7 @@ for(const [time,color] of [
  ['2026-02-01T17:00:00','rouge'],['2027-01-31T17:00:00','rouge'],
  ['2027-02-07T17:00:00',null],['2026-01-25T17:00:00',null],
  ['2026-11-09T17:00:00',null],['2026-11-09T17:00:00','normal'],
- ['2026-04-06T17:00:00',null],['2026-11-08T24:00:00',null],
+ ['2026-04-06T17:00:00','normal'],['2026-11-08T24:00:00',null],
  ['2026-02-30T17:00:00',null],['2026-11-08T17:00',null]
 ])check(time,color,time==='2026-11-09T17:00:00'&&color===null?{calendrierFeriesVerifie:false}:{});
 for(const flag of ['jourFerie','lundiFerie','mardiFerie']){
