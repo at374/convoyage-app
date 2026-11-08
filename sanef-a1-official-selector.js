@@ -14,7 +14,7 @@ function selectionner(dataset,aliases,request,normalExistantCentimes){
  if(request.passageGareConfirme!==true)return fallback('passage_not_confirmed');
  if(typeof request.origine!=='string'||typeof request.destination!=='string'||!Object.prototype.hasOwnProperty.call(aliases.aliases,request.origine)||!Object.prototype.hasOwnProperty.call(aliases.aliases,request.destination))return fallback('alias_missing');
  const origine=aliases.aliases[request.origine],destination=aliases.aliases[request.destination];
- if(typeof origine!=='string'||typeof destination!=='string')return fallback('alias_missing');
+ if(typeof origine!=='string'||typeof destination!=='string'||!origine.trim()||!destination.trim())return fallback('alias_missing');
  if(origine===destination)return fallback('same_station');
  const records=dataset.records.filter(r=>r&&typeof r==='object'&&r.origine===origine&&r.destination===destination);
  if(records.length!==1)return fallback('relation_missing_or_duplicate');
