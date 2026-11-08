@@ -24,6 +24,7 @@ const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const aprr = require('../peages-aprr.json');
 const overlay = require('../peages-overlay.json');
+const officiel = require('../data/gares-peage-officiel.json');
 
 test('les noms SANEF signalés "manquants" par erreur de normalisation existent bien déjà', () => {
   const allNames = new Set([
@@ -45,4 +46,11 @@ test('LIEVIN (A26) reste non résolu -- documentation, pas une fabrication', () 
     ...overlay.gares.map(g => g.nom.toUpperCase()),
   ]);
   assert.equal(allNames.has('LIEVIN'), false);
+});
+
+test('LIÉVIN A26 : les candidats GPS officiels existent sans prouver un alias tarifaire', () => {
+  const candidats = officiel.d.filter(r => r[1] === '62A902635CD');
+  assert.deepEqual(new Set(candidats.map(r => r[0])), new Set(['Le Lievinois Entree', 'Le Lievinois Sortie']));
+  assert.ok(candidats.every(r => r[4] === 'Ech'));
+  assert.equal(overlay.gares.some(g => g.nom === 'LIEVIN'), false);
 });
