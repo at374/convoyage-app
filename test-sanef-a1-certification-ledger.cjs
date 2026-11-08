@@ -21,7 +21,7 @@ assert.deepEqual(parse(stationCsv[0]),['nom_grille_sanef','nom_canonique_applica
 assert.equal(stationRows.length,33);
 const isValidGpsCoordinates=value=>{
  const parts=value.split(',').map(x=>x.trim());
- if(parts.length!==2||parts.some(x=>!/^[-+]?(?:\\d+(?:\\.\\d+)?|\\.\\d+)$/.test(x)))return false;
+ if(parts.length!==2||parts.some(x=>!/^[-+]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(x)))return false;
  const [lat,lon]=parts.map(Number);
  return Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180;
 };
