@@ -1,0 +1,25 @@
+name: Audit couverture peages 2026
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/transport-ranking-safe
+    paths:
+      - scripts/audit-couverture-peages-2026.cjs
+      - .github/workflows/audit-couverture-peages-2026.yml
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Calculer inventaire sans modifier les prix
+        run: node scripts/audit-couverture-peages-2026.cjs | tee audit-couverture-peages-2026.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audit-couverture-peages-2026
+          path: audit-couverture-peages-2026.json
