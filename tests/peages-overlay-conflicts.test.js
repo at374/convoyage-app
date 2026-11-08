@@ -42,7 +42,9 @@ test('Meaux/Crecy aliases match the detailed 2026 SANEF tariffs in both classes'
     .filter(row => row[0].startsWith('MEAUX (A140)'))
     .map(row => [normalize(row[1]), row]));
   const simplified = overlay.paires.filter(row => row[0] === 'MEAUX / CRECY');
-  assert.equal(simplified.length, 34);
+  // La base peut conserver plusieurs lignes identiques par destination (variantes de distance).
+  // Vérifier les 34 destinations distinctes plutôt que le nombre brut de lignes.
+  assert.equal(new Set(simplified.map(row => normalize(row[1]))).size, 34);
   assert.equal(detailed.size, 34);
   for (const row of simplified) {
     const official = detailed.get(normalize(row[1]));
