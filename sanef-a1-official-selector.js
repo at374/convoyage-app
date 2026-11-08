@@ -19,7 +19,7 @@ function selectionner(dataset,aliases,request,normalExistantCentimes){
  const records=dataset.records.filter(r=>r&&typeof r==='object'&&r.origine===origine&&r.destination===destination);
  if(records.length!==1)return fallback('relation_missing_or_duplicate');
  const c=records[0].centimes;
- if(!c||!Number.isSafeInteger(c.classe1_normal)||c.classe1_normal!==normalExistantCentimes)return fallback('normal_price_mismatch');
+ if(!c||!Number.isSafeInteger(c.classe1_normal)||c.classe1_normal<0||c.classe1_normal!==normalExistantCentimes)return fallback('normal_price_mismatch');
  const amount=c['classe1_'+regle.couleur];
  if(!Number.isSafeInteger(amount)||amount<0)return fallback('modulated_price_invalid');
  return Object.freeze({status:'MODULATION_PREVIEW',reason:'official_sunday_band',priceCents:normalExistantCentimes,modulatedPriceCents:amount,period:regle.couleur,certifiedForBilling:false,source:dataset.source});
