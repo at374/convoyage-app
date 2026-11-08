@@ -19,11 +19,11 @@ for(let i=0;i<entries.length;i++){
   assert.deepEqual(row.slice(3,7),['','','','']);
   assert.match(row[7],/ne pas activer pour facturation/);
  }else if(row[2]==='NOM_KM_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER'){
-  assert.equal(row[0],'CALAIS (péage de Setques)');
+  assert.ok(['CALAIS (péage de Setques)',"HORDAIN (péage d'Hordain)"].includes(row[0]));
   assert.deepEqual(row.slice(3,5),['','']);
-  assert.equal(row[5],'https://www.autoroutes.sanef.com/fr/mon-voyage/peage-de-setques');
+  assert.equal(row[5],row[0]==='CALAIS (péage de Setques)'?'https://www.autoroutes.sanef.com/fr/mon-voyage/peage-de-setques':'https://www.autoroutes.sanef.com/fr/mon-voyage/peage-de-hordain');
   assert.equal(row[6],'');
-  assert.match(row[7],/km 32/);
+  assert.match(row[7],row[0]==='CALAIS (péage de Setques)'?/km 32/:/km 37/);
   assert.match(row[7],/non certifiées/);
  }else{
   assert.equal(row[2],'NOM_NUMERO_PR_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER');
@@ -42,10 +42,10 @@ for(const relation of dataset.records){
  assert.ok(canon.has(relation.destination),'missing destination '+relation.destination);
 }
 assert.equal(csv.slice(1).map(parse).filter(row=>row[2]==='NOM_NUMERO_PR_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER').length,31);
-assert.equal(csv.slice(1).map(parse).filter(row=>row[2]==='NOM_KM_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER').length,1);
+assert.equal(csv.slice(1).map(parse).filter(row=>row[2]==='NOM_KM_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER').length,2);
 const rows=csv.slice(1).map(parse);
-assert.equal(rows.filter(row=>row[2]==='A_VERIFIER').length,1);
-assert.equal(rows.filter(row=>row[5].startsWith('https://www.autoroutes.sanef.com/')).length,32);
+assert.equal(rows.filter(row=>row[2]==='A_VERIFIER').length,0);
+assert.equal(rows.filter(row=>row[5].startsWith('https://www.autoroutes.sanef.com/')).length,33);
 assert.ok(rows.every(row=>row[4]===''),'no physical alias may be marked GPS-confirmed without independent coordinates');
 assert.ok(rows.every(row=>row[2]!=='CERTIFIE'),'no physical alias is certified');
-console.log('PASS 33 SANEF aliases: 32 documentary references, 1 pending, 0 GPS-certified; 122 relations mapped');
+console.log('PASS 33 SANEF aliases: 33 documentary references, 0 pending, 0 GPS-certified; 122 relations mapped');
