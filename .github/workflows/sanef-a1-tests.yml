@@ -10,6 +10,8 @@ on:
       - 'test-sanef-a1-*.cjs'
       - 'run-sanef-a1-tests.cjs'
       - 'peages-overlay.json'
+      - 'peages-france-relations-zero-a-auditer-2026.csv'
+      - 'test-peages-france-inventaire-2026.cjs'
       - 'sanef-a1-certification-relations-2026.csv'
       - 'sanef-a1-audit-alias-gares-2026.csv'
       - 'routes-ui.js'
@@ -41,4 +43,6 @@ jobs:
         with:
           node-version: '22'
       - name: Verify SANEF A1 regression suites
-        run: node run-sanef-a1-tests.cjs
+        run: |
+          node run-sanef-a1-tests.cjs
+          node test-peages-france-inventaire-2026.cjs
