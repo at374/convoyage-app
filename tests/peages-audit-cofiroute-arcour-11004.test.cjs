@@ -56,6 +56,10 @@
 //   FONTENAY LE COMTE               = Fontenay Centre                   (5/5)
 //   SAINT MAIXENT / LUSIGNAN        = Soudan                             (5/5)
 //
+// ATTENTION : un audit plus ancien rejette Romorantin = BLOIS ; cela ne
+// tranche pas l'alias distinct Romorantin = VILLEFRANCHE S/ CHER.
+// La preuve tarifaire exhaustive requiert le fichier source Cofiroute.
+//
 // Restent non concernés (structurellement différents, pas des gares point-à-
 // point classiques -- déjà documenté) : TOURS CENTRE (bare, 10 occurrences,
 // relation à 0,9€ de CHAMBRAY -- probablement lié aux barrières "système
@@ -126,4 +130,11 @@ test('les barrières système ouvert cofiroute restent correctement distinctes (
     'cofiroute-ouvert-monts-sorigny', 'cofiroute-ouvert-neuille-pont-pierre', 'cofiroute-ouvert-tours-nord']) {
     assert.ok(overlay.barrieres.some(b => b.id === id), id + ' doit toujours exister');
   }
+});
+
+test('Romorantin A85 : Villefranche-sur-Cher et Blois sont deux gares distinctes', () => {
+  const noms = aprr.g.map(g => g[0]);
+  assert.ok(noms.includes('VILLEFRANCHE S/ CHER'));
+  assert.ok(noms.includes('BLOIS'));
+  assert.notEqual(noms.indexOf('VILLEFRANCHE S/ CHER'), noms.indexOf('BLOIS'));
 });
