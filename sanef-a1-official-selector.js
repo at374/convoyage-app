@@ -12,6 +12,7 @@ function selectionner(dataset,aliases,request,normalExistantCentimes){
  const regle=root.SanefA1ReglesOfficielles2026.determiner({classe:request.classe,direction:request.direction,passageLocal:request.passageLocal,jourFerie:request.jourFerie,lundiFerie:request.lundiFerie,mardiFerie:request.mardiFerie,calendrierFeriesVerifie:request.calendrierFeriesVerifie});
  if(regle.statut!=='HORAIRE_OFFICIEL')return fallback(regle.motif);
  if(request.passageGareConfirme!==true)return fallback('passage_not_confirmed');
+ if(typeof request.origine!=='string'||typeof request.destination!=='string'||!Object.prototype.hasOwnProperty.call(aliases.aliases,request.origine)||!Object.prototype.hasOwnProperty.call(aliases.aliases,request.destination))return fallback('alias_missing');
  const origine=aliases.aliases[request.origine],destination=aliases.aliases[request.destination];
  if(typeof origine!=='string'||typeof destination!=='string')return fallback('alias_missing');
  if(origine===destination)return fallback('same_station');
