@@ -1,0 +1,71 @@
+{
+  "checkedOn": "2026-11-08",
+  "kind": "official_fare_reference",
+  "appConnected": false,
+  "journeyFareVerified": false,
+  "references": [
+    {
+      "network": "Cars Région Ardèche",
+      "scope": "lignes E uniquement; lignes X exclues, tarifs TER commerciaux distincts",
+      "effectiveFrom": "2026-03-01",
+      "validUntil": null,
+      "source": "https://www.ginhoux-autocars.com/assets/filemanager/TARIFS-LIGNES-E-REGIONAURA.pdf",
+      "authoritySource": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lardeche/titres-et-tarifs-de-lardeche/",
+      "adult": {
+        "singleEUR": 3.4,
+        "tenJourneysEUR": 20.5,
+        "sevenDaysEUR": 22.5,
+        "thirtyDaysEUR": 51,
+        "annualEUR": 397
+      },
+      "returnIncluded": false,
+      "transferAllowed": true,
+      "transferMinutes": null
+    },
+    {
+      "network": "Cars Région Drôme",
+      "scope": "nombre de zones à établir sur tracé officiel de la ligne",
+      "effectiveFrom": "2026-03-01",
+      "validUntil": null,
+      "source": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-drome/infos-et-services-cars-region-de-la-drome/titres-et-tarifs-de-drome/",
+      "adultByZoneCount": [
+        {
+          "zones": 1,
+          "singleEUR": 2.3,
+          "monthlyEUR": 44.5
+        },
+        {
+          "zones": 2,
+          "singleEUR": 4.5,
+          "monthlyEUR": 58
+        },
+        {
+          "zones": 3,
+          "singleEUR": 6.1,
+          "monthlyEUR": 83
+        },
+        {
+          "zones": 4,
+          "singleEUR": 7.8,
+          "monthlyEUR": 83
+        }
+      ]
+    },
+    {
+      "network": "Cars Région Loire",
+      "scope": "barème publié par exploitant 2TMC; exceptions urbaines et titres combinés à contrôler; ne pas généraliser à toute portion",
+      "effectiveFrom": "2026-03-01",
+      "validUntil": null,
+      "source": "https://www.2tmc.fr/tarifs/",
+      "adult": {
+        "singleEUR": 2.3,
+        "tenJourneysEUR": 20.5,
+        "monthlyEUR": 44.5,
+        "annualEUR": 441
+      },
+      "transferMinutes": 90,
+      "returnSameLineIncluded": false,
+      "warning": "Le tableau indique Pas de limite mais le texte précise 1h30 pour unité et dix trajets. Ne pas confondre conservation du titre et validité après validation."
+    }
+  ]
+}
