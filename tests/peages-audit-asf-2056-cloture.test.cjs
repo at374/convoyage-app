@@ -80,3 +80,11 @@ test('GIGNAC (alias Martel) et BIARRITZ ECHANGEUR (= Biarritz (échangeur)) rest
     (p[1] === 'Biarritz (échangeur)' && p[0] === 'BAYONNE-S JEAN LUZ N'));
   assert.ok(rel, 'la relation Biarritz (échangeur) <-> BAYONNE-S JEAN LUZ N doit exister');
 });
+
+// L'identification géographique ne vaut pas preuve de correspondance tarifaire.
+test('THOUARCE A87 : candidats officiels documentés, sans ajout tarifaire prématuré', () => {
+  const officiel = require('../data/gares-peage-officiel.json');
+  const candidats = officiel.d.filter(r => r[1] === '49A908715CD');
+  assert.deepEqual(new Set(candidats.map(r => r[0])), new Set(['Thouarce E', 'Thouarce S']));
+  assert.ok(candidats.every(r => r[4] === 'Ech'));
+});
