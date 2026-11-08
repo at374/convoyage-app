@@ -30,6 +30,17 @@ csv('peages-relations-a-verifier-2026.csv',
   ['priorite', 'classification', 'origine', 'destination', 'overlay_classe_1_eur', 'overlay_classe_2_eur', 'statut', 'source_officielle_url', 'date_validite', 'page_source', 'verification_classe_1', 'verification_classe_2'],
   sorted.map(x => [priorities[x.classification], x.classification, x.origin, x.destination, x.overlay_class1, x.overlay_class2, 'NON_CERTIFIE_OFFICIELLEMENT', '', '', '', 'A_VERIFIER', 'A_VERIFIER'])
 );
+// Preselection geographique, non attribution certaine a un concessionnaire.
+const escotaGate = name => /PASDETRETS|LASAULCE|NICE|MENTON|MONACO|TURBIE|MANDELIEU|SAINTLAURENTDUVAR/.test(
+  String(name).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+);
+const escotaCandidates = sorted.filter(x => x.classification === 'both_endpoints_present_pair_missing' &&
+  (escotaGate(x.origin) || escotaGate(x.destination)));
+csv('peages-priorite-sud-est-2026.csv',
+  ['origine', 'destination', 'overlay_classe_1_eur', 'overlay_classe_2_eur', 'statut', 'concessionnaire', 'source_officielle_url'],
+  escotaCandidates.map(x => [x.origin, x.destination, x.overlay_class1, x.overlay_class2,
+    'A_VERIFIER_MANUELLEMENT', 'A_DETERMINER', ''])
+);
 csv('peages-noms-a-verifier-2026.csv',
   ['gare_overlay', 'occurrences', 'statut'],
   report.missing_name_counts.map(x => [x.gate, x.occurrences, 'A_RAPPROCHER_MANUELLEMENT'])
@@ -58,4 +69,4 @@ const verified = divergences.map(d => {
 csv('peages-divergences-a-verifier-2026.csv',
   ['origine', 'destination', 'base_classe_1_eur', 'base_classe_2_eur', 'overlay_classe_1_eur', 'overlay_classe_2_eur', 'statut', 'source_officielle_url', 'date_validite', 'pages_pdf'], verified);
 if (sorted.length !== report.not_matched) throw Error('Export des relations incomplet');
-console.log(JSON.stringify({ exported_relations: sorted.length, exported_missing_names: report.missing_name_counts.length, exported_divergences: divergences.length, verified_sapn_divergences: verified.filter(x => x[6] === 'OVERLAY_CONFORME_SAPN_2026').length }));
+console.log(JSON.stringify({ exported_relations: sorted.length, southeast_candidates: escotaCandidates.length, exported_missing_names: report.missing_name_counts.length, exported_divergences: divergences.length, verified_sapn_divergences: verified.filter(x => x[6] === 'OVERLAY_CONFORME_SAPN_2026').length }));
