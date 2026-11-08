@@ -17,7 +17,7 @@ for(const r of dataset.records){
  const key=r.origine+'|'+r.destination;
  assert.equal(seen.has(key),false);seen.add(key);count++;
  for(const c of Object.values(r.centimes)){assert.ok(Number.isSafeInteger(c)&&c>=0);count++;}
- const req={origine:inverse[r.origine],destination:inverse[r.destination],classe:1,direction:'VERS_PARIS',passageLocal:'2026-11-08T17:00:00',passageGareConfirme:true};
+ const req={origine:inverse[r.origine],destination:inverse[r.destination],classe:1,direction:'VERS_PARIS',passageLocal:'2026-11-08T17:00:00',passageGareConfirme:true,calendrierFeriesVerifie:true};
  assert.ok(req.origine&&req.destination);count++;
  for(const [hour,period,field] of [['15:00:00','vert','classe1_vert'],['17:00:00','rouge','classe1_rouge'],['21:00:00','vert','classe1_vert']]){
   const actual=select(dataset,aliases,{...req,passageLocal:'2026-11-08T'+hour},r.centimes.classe1_normal);
