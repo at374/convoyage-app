@@ -14,6 +14,10 @@ test('rapprochement : bilan complet et ecarts Beuzeville visibles', () => {
   assert.ok(r.not_matched > 0);
   assert.equal(r.unmatched_origins.reduce((n, x) => n + x.count, 0), r.not_matched);
   assert.equal(r.unmatched_origin_count, r.unmatched_origins.length);
+  assert.equal(Object.values(r.unmatched_classification).reduce((a, b) => a + b, 0), r.not_matched);
+  assert.equal(r.unmatched_classification.both_endpoints_present_pair_missing, 672);
+  assert.equal(r.unmatched_classification.one_endpoint_missing, 4397);
+  assert.equal(r.unmatched_classification.both_endpoints_missing, 2182);
   assert.ok(r.unmatched_origins.every((x, i, arr) => i === 0 || arr[i - 1].count >= x.count));
   assert.ok(r.divergences.every(d => Number.isFinite(d.base_class1) && Number.isFinite(d.overlay_class2)));
   assert.equal(r.audit, 'rapprochement des noms normalises, pas certification officielle');
