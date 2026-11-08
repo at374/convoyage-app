@@ -7,7 +7,7 @@ Date de référence des grilles : **1er février 2026**.
 - **122 relations** dans `sanef-a1-modulation-2026.json`, réparties en 29 ARSY, 30 CHEVRIÈRES, 31 SENLIS et 32 CHAMANT.
 - **366 montants classe 1** (normal, vert, rouge) rapprochés des lignes de la grille modulée. Le registre CSV documente cette comparaison, **sans certifier la correspondance physique des gares**.
 - **122 montants classe 2 normaux** également rapprochés des lignes de la grille générale SANEF (page 3) : **488 montants comparés, sans écart numérique relevé**. Ce rapprochement ne certifie ni l'identité des gares, ni le sens, ni les exceptions calendaires.
-- **33 alias de gares** documentaires, dont **32 avec référence officielle enregistrée** (A1, A2, A26 et A29), **1 sans référence individuelle enregistrée** (Hordain) ; **aucune correspondance GPS certifiée**.
+- **33 alias de gares** documentaires, dont **33 avec référence officielle enregistrée** (A1, A2, A26 et A29), **0 sans référence documentaire** ; **aucune correspondance GPS certifiée**. ; **aucune correspondance GPS certifiée**.
 - La règle horaire et le sens de circulation doivent encore être vérifiés pour chaque usage réel, notamment les exceptions calendaires.
 
 ## Nouvelle preuve officielle — Setques (A26)
@@ -22,7 +22,7 @@ Le [règlement d'exploitation SANEF de décembre 2025](https://www.autoroutes.sa
 
 Ces données sont des **preuves documentaires de noms, numéros et points de repère**, non des coordonnées GPS et non une certification des alias `L AUDOMAROIS`, `THEROUANNE`, `LILLERS` et `LE BETHUNOIS`. Le registre d'alias contient maintenant ces quatre références documentaires, sans certifier les correspondances physiques ; les références de page doivent rester vérifiables.
 
-## Gare restante sans preuve individuelle enregistrée (1)
+## Couverture documentaire complète — certification physique encore ouverte
 
 - **A29/A26 Somme** : Amiens Est (Jules Verne), Villers-Bretonneux n°52, Gare TGV n°53 (Santerre), Athies n°54.
 - **A2/A1 nord** : Hordain, Cambrai n°14 (Fontaine Notre Dame), Lille/Dourges (Fresnes), Arras Est A1 n°15 (L'Arrageois), Bapaume n°14.
@@ -40,7 +40,7 @@ Les noms entre parenthèses sont des alias documentaires internes, **pas des ide
 
 ## État des validations techniques (8 novembre 2026)
 
-- Dernière validation complète observée : commit `5ebba8e1`, [GitHub Actions SANEF A1 — succès](https://github.com/at374/convoyage-app/actions/runs/42485006550). Les commits ultérieurs doivent encore passer la CI.
+- Dernière validation complète observée : commit `1b1ca038`, [GitHub Actions SANEF A1 — succès](https://github.com/at374/convoyage-app/actions/runs/42485135086). Le commit `6f9930cc` a échoué uniquement sur une assertion de formulation du statut GPS de Hordain (11/12 suites réussies) ; correctif publié dans `116b0563`, en attente de validation CI.
 - Les tests de robustesse protègent la simulation contre les calendriers non attestés, les alias non reconnus, les données de relations malformées et les montants invalides.
 - **Ne pas confondre tests réussis et certification indépendante des 33 gares ou des 488 montants.**
 
