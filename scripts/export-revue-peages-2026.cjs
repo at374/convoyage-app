@@ -53,9 +53,9 @@ csv('peages-priorite-sud-est-par-gare-2026.csv',
     .map(([gate, count]) => [gate, count, 'NON_CERTIFIE_OFFICIELLEMENT'])
 );
 csv('peages-priorite-sud-est-2026.csv',
-  ['origine', 'destination', 'overlay_classe_1_eur', 'overlay_classe_2_eur', 'statut', 'concessionnaire', 'source_officielle_url'],
+  ['origine', 'destination', 'overlay_classe_1_eur', 'overlay_classe_2_eur', 'statut', 'concessionnaire', 'source_officielle_url', 'date_validite', 'page_source', 'verification_classe_1', 'verification_classe_2'],
   escotaCandidates.map(x => [x.origin, x.destination, x.overlay_class1, x.overlay_class2,
-    'A_VERIFIER_MANUELLEMENT', 'A_DETERMINER', ''])
+    'A_VERIFIER_MANUELLEMENT', 'A_DETERMINER', '', '', '', 'A_VERIFIER', 'A_VERIFIER'])
 );
 csv('peages-noms-a-verifier-2026.csv',
   ['gare_overlay', 'occurrences', 'statut'],
