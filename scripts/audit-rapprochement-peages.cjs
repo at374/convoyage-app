@@ -9,6 +9,7 @@ const overlay = JSON.parse(fs.readFileSync(path.join(root, 'peages-overlay.json'
 const normalize = name => String(name).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
 const key = (a, b) => [normalize(a), normalize(b)].sort().join('|');
 const map = new Map();
+const knownNames = new Set(base.g.map(g => normalize(g[0])));
 for (const line of base.p.split(';').filter(Boolean)) {
   const [a, b, c1, c2] = line.split(',');
   const left = base.g[parseInt(a, 36)];
@@ -25,12 +26,16 @@ const report = {
   identical: 0, divergent: 0, ambiguous: 0, not_matched: 0,
   divergences: [],
   unmatched_origins: [],
+  unmatched_classification: { both_endpoints_missing: 0, one_endpoint_missing: 0, both_endpoints_present_pair_missing: 0 },
 };
 const unmatchedByOrigin = new Map();
 for (const p of overlay.paires) {
   const candidates = map.get(key(p[0], p[1]));
   if (!candidates) {
     report.not_matched++;
+    const missingEndpoints = Number(!knownNames.has(normalize(p[0]))) + Number(!knownNames.has(normalize(p[1])));
+    const group = missingEndpoints === 2 ? 'both_endpoints_missing' : missingEndpoints === 1 ? 'one_endpoint_missing' : 'both_endpoints_present_pair_missing';
+    report.unmatched_classification[group]++;
     unmatchedByOrigin.set(p[0], (unmatchedByOrigin.get(p[0]) || 0) + 1);
     continue;
   }
@@ -45,6 +50,7 @@ for (const p of overlay.paires) {
 }
 report.unmatched_origins = [...unmatchedByOrigin].map(([origin, count]) => ({ origin, count })).sort((a, b) => b.count - a.count || a.origin.localeCompare(b.origin));
 report.unmatched_origin_count = report.unmatched_origins.length;
+if (Object.values(report.unmatched_classification).reduce((a, b) => a + b, 0) !== report.not_matched) throw Error('Classification des relations non rapprochees incoherente');
 if (report.unmatched_origins.reduce((sum, item) => sum + item.count, 0) !== report.not_matched) throw Error('Decompte des origines non rapprochees incoherent');
 if (report.identical + report.divergent + report.ambiguous + report.not_matched !== report.compared_overlay_pairs) throw Error('Comptage incoherent');
 console.log(JSON.stringify(report, null, 2));
