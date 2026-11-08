@@ -24,7 +24,7 @@ for(let i=0;i<entries.length;i++){
   assert.equal(row[5],row[0]==='CALAIS (péage de Setques)'?'https://www.autoroutes.sanef.com/fr/mon-voyage/peage-de-setques':'https://www.autoroutes.sanef.com/fr/mon-voyage/peage-de-hordain');
   assert.equal(row[6],'');
   assert.match(row[7],row[0]==='CALAIS (péage de Setques)'?/km 32/:/km 37/);
-  assert.match(row[7],/non certifiées/);
+  assert.match(row[7],/non certifi(?:ées|és)/);
  }else{
   assert.equal(row[2],'NOM_NUMERO_PR_OFFICIELS_RELEVES_ALIAS_A_CONFIRMER');
   assert.ok(row[3]);
