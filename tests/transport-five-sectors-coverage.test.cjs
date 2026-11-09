@@ -16,9 +16,8 @@ test('five priority towns have candidate GTFS source envelopes, not verified ser
   assert.ok(candidates.every(r=>r.url.startsWith('https://')),name+' sources use HTTPS');
  }
 });
-test('Ondea and TAM official archives are registered; Synchro still pending',()=>{
- for(const name of ['Ondéa','TAM'])assert.equal(DEFAULT_RESOURCES.some(r=>r.network.includes(name)),true);
- assert.equal(DEFAULT_RESOURCES.some(r=>r.network.includes('Synchro')),false);
+test('Ondea, TAM and Synchro official GTFS archives are registered',()=>{
+ for(const name of ['Ondéa','TAM','Synchro'])assert.equal(DEFAULT_RESOURCES.some(r=>r.network.includes(name)),true);
 });
 test('invalid GPS cannot produce GTFS coverage',()=>{
  for(const r of DEFAULT_RESOURCES)assert.equal(selected(r,at(91,6)),false);
