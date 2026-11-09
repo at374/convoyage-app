@@ -65,3 +65,13 @@ Les informations d'opérateur, horaires, prix et réservation restent à confirm
 
 ### Règle d'exhaustivité
 Confronter systématiquement **trois ensembles** : 1) agrégat Oùra (44 réseaux annoncés), 2) répertoire des partenaires et de la billettique Oùra, 3) jeux individuels du Point d'accès national. Les écarts sont une **liste de réseaux à rechercher**, pas une preuve d'absence de service. Ne pas confondre nombre de réseaux, lignes, exploitants et trajets réellement validés.
+
+## Vérification croisée du 9 novembre 2026 — écart entre partenaires et agrégat
+
+L'agrégat officiel https://transport.data.gouv.fr/datasets/agregat-oura annonce **44 réseaux** ; la page officielle https://www.oura.com/la-demarche-oura/ annonce **54 réseaux dans la communauté Oùra**. Une autre FAQ Oùra mentionne **55 réseaux partenaires** (https://www.oura.com/ufaq/quels-sont-les-partenaires-du-projet-oura/). Ces chiffres correspondent à des périmètres et pages différents : **ne pas les additionner, ni déduire un nombre exact de réseaux manquants** sans rapprochement des identifiants et dates.
+
+### Correction de calendrier
+La ressource GTFS agrégée actuellement affichée à https://transport.data.gouv.fr/resources/78904 couvre **Cars Région Ain du 27 octobre 2026 au 31 août 2027**. La date « 15 novembre 2026 » inscrite dans l'audit précédent est **obsolète pour cet agrégat** et ne doit pas servir à bloquer les itinéraires. Les périodes restent à valider au niveau des calendriers des courses et de la version téléchargée.
+
+### Priorité d'inventaire
+Comparer les réseaux par identité réelle, en distinguant marques, AOM, exploitants, offres scolaires, transport à la demande et lignes touristiques. Réconcilier chaque écart avec le catalogue PAN. Aucun nombre de lignes/arrêts de l'agrégat ne doit être compté comme intégré avant validation dans l'application.
