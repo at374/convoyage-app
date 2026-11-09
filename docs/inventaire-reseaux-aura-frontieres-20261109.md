@@ -129,3 +129,30 @@ Les jeux de données distincts à vérifier sont **ARAVIS Bus** (Vallées de Th�
 **ARVI — Cluses / CC Cluses-Arve et Montagnes** — source officielle https://transport.data.gouv.fr/datasets/gtfs-rentree : export « GTFS_ARV'i-2CCAM rentrée » mis à jour **12/10/2026**, période **01/09/2026–31/08/2027** (à vérifier au téléchargement). Un autre export historique du 10/09/2026 s'arrêtait au 16/10/2026 et ne doit pas être utilisé pour novembre. Flux temps réel SIRI signalé indisponible ; ne pas présenter d'horaires temps réel confirmés. Aucun prix vérifié dans cet audit : **tarifs inconnus**, ne pas substituer le prix d'un autre réseau.
 
 **Règle impérative** : une source GTFS candidate n'est pas une course valide. La date de service doit être validée à partir de calendar.txt/calendar_dates.txt, les exceptions saisonnières respectées, et les prix calculés séparément depuis les sources officielles.
+
+## Comptage reproductible du module Agenda — 10 novembre 2026
+
+Inspection de `DEFAULT_RESOURCES` dans `transport-gtfs-agenda.js` sur la branche de travail : **16 entrées GTFS configurées**, pas 14. La liste exacte est :
+
+1. ÉVA’D (`pan-evad`)
+2. STAR’T (`pan-start-thonon`)
+3. J’ybus (`pan-jybus`)
+4. Synchro (`pan-synchro`)
+5. Ondéa (`pan-ondea`)
+6. TAM (`pan-tam`)
+7. Cars Région Haute-Savoie (`oura-haute-savoie`)
+8. Cars Région Ain (`oura-ain`)
+9. Sibra (`80100`)
+10. M Réso Grenoble (`83459`)
+11. M Réso Grésivaudan (`81794`)
+12. TAC Annemasse (`pan-tac`)
+13. Mobi’Vals (`oura-mobivals`)
+14. Duobus (`oura-duobus`)
+15. Rubis (`oura-rubis`)
+16. Cars Région Express (`oura-express`)
+
+**Aucune de ces 16 entrées ne prouve à elle seule qu'un réseau est entièrement raccordé** : l'URL peut être indisponible, les dates de service peuvent être expirées, et les prix et la marche doivent être validés séparément. Le moteur Agenda charge au plus deux réseaux par panneau ; il ne peut donc pas encore garantir toutes les combinaisons multi-réseaux.
+
+**Comparaison prudente au catalogue de 44 réseaux Oùra** : le catalogue n'est pas exhaustif, et les 16 sources configurées comprennent des réseaux hors agrégat (Sibra, M Réso Grenoble/Grésivaudan). Il est **incorrect de calculer 44 − 16 = 28 réseaux restants**. Il faut un tableau de correspondance identifiant chaque réseau et son statut réel (GTFS, validité, prix, marche, Android), puis compléter avec TCL, TPG, TER et les autres réseaux hors agrégat.
+
+Le nombre de réseaux entièrement raccordés et le pourcentage de couverture ne sont **pas encore vérifiés**.
