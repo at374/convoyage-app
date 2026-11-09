@@ -69,3 +69,21 @@ test('seasonal GTFS candidate is excluded outside its publication window',()=>{
  assert.equal(selected(seasonal,{...trip,earliestDeparture:'2026-11-09T09:00:00+01:00'}),false);
  assert.equal(selected(seasonal,{...trip,latestArrival:'2026-06-19T09:00:00+02:00'}),false);
 });
+
+test('documented network GTFS validity excludes expired archive dates',()=>{
+ const cases=[
+  ['pan-start-thonon','2026-12-21T10:00:00+01:00'],
+  ['pan-evad','2026-12-21T10:00:00+01:00'],
+  ['pan-synchro','2026-12-21T10:00:00+01:00'],
+  ['pan-tam','2027-01-01T10:00:00+01:00'],
+  ['pan-ondea','2027-04-01T10:00:00+02:00']
+ ];
+ for(const [id,departure] of cases){
+  const resource=DEFAULT_RESOURCES.find(r=>r.id===id);
+  assert.ok(resource,id);
+  const lat=(resource.bounds[0]+resource.bounds[2])/2;
+  const lon=(resource.bounds[1]+resource.bounds[3])/2;
+  assert.equal(selected(resource,{...at(lat,lon),earliestDeparture:departure}),false,id+' expired');
+  assert.ok(resource.validFrom&&resource.validUntil,id+' dates declared');
+ }
+});
