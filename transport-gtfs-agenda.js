@@ -2,6 +2,12 @@
 (function(root){
 'use strict';
 const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
+ id:'pan-start-thonon',datasetId:'reseaux-urbains-start',network:'STAR’T — Thonon Agglomération',format:'GTFS',federate:true,urban:true,
+ // PAN official GTFS validated 1 Sep 2026, valid to 20 Dec 2026. No GTFS fare products.
+ // Geographic envelope is a candidate filter, not proof of a served stop or route.
+ url:'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/84108/84108.20260901.002618.536834.zip',
+ updatedAt:'2026-09-01',bounds:[46.18,6.30,46.48,6.78],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'pan-jybus',datasetId:'jybus-rumilly',network:'J’ybus — Rumilly Terre de Savoie',format:'GTFS',federate:true,urban:true,
  // Official PAN GTFS archive 7 Aug 2026; 5 lines including reservation-only TAD.
  // Service validity must be checked per trip; no fares are encoded in this GTFS.
