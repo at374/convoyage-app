@@ -67,3 +67,18 @@ test('Synchro Bus ticket reference is not an automatically verified trip price',
  const result=fare([{provider:'Synchro',mode:'bus',departure:'2026-11-12T09:00:00+01:00'}]);
  assert.equal(result.totalEUR,null);
 });
+
+test('Ondea plus Synchro is not double-counted as a confirmed combined ticket',()=>{
+ const date='2026-11-12T10:00:00+01:00';
+ const result=fare([
+  {provider:'Ondéa',mode:'bus',departure:date},
+  {provider:'Synchro',mode:'bus',departure:'2026-11-12T10:30:00+01:00'}
+ ]);
+ assert.equal(result.totalEUR,null);
+ assert.equal(result.unknownLegCount,2);
+ assert.match(describe(result),/Total inconnu/);
+});
+test('Synchro card medium cost cannot be mistaken for a verified ride',()=>{
+ const result=fare([{provider:'Synchro',mode:'bus',verifiedPriceEUR:0.40,departure:'2026-11-12T10:00:00+01:00'}]);
+ assert.equal(result.totalEUR,null);
+});
