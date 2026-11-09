@@ -137,3 +137,12 @@ test('urban networks in Haute-Savoie remain selectable beside departmental GTFS'
  const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
  assert.match(source,/const resource=preferredAin\|\|urbanResources\[0\]\|\|/);
 });
+
+test('Thonon ranks the narrower STAR’T urban envelope before ÉVA’D',()=>{
+ const task={...at(46.37,6.48),earliestDeparture:'2026-11-09T09:00:00+01:00'};
+ const urban=DEFAULT_RESOURCES.filter(r=>r.urban&&selected(r,task))
+  .sort((a,b)=>(a.bounds[2]-a.bounds[0])*(a.bounds[3]-a.bounds[1])-
+    (b.bounds[2]-b.bounds[0])*(b.bounds[3]-b.bounds[1]));
+ assert.equal(urban[0].id,'pan-start-thonon');
+ assert.ok(urban.some(r=>r.id==='pan-evad'));
+});
