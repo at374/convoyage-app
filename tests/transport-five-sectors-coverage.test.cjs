@@ -87,3 +87,17 @@ test('documented network GTFS validity excludes expired archive dates',()=>{
   assert.ok(resource.validFrom&&resource.validUntil,id+' dates declared');
  }
 });
+
+test('GTFS validity keeps searches overlapping the first or last service day',()=>{
+ const feed={format:'GTFS',url:'https://example.org/season.zip',
+  bounds:[45.5,5.5,46.5,6.5],validFrom:'2026-07-04',validUntil:'2026-08-31'};
+ const trip=at(45.9,6.0);
+ assert.equal(selected(feed,{...trip,earliestDeparture:'2026-07-03T22:00:00+02:00',
+  latestArrival:'2026-07-04T08:00:00+02:00'}),true);
+ assert.equal(selected(feed,{...trip,earliestDeparture:'2026-08-31T20:00:00+02:00',
+  latestArrival:'2026-09-01T08:00:00+02:00'}),true);
+ assert.equal(selected(feed,{...trip,earliestDeparture:'2026-09-01T08:00:00+02:00',
+  latestArrival:'2026-09-01T10:00:00+02:00'}),false);
+ assert.equal(selected(feed,{...trip,earliestDeparture:'2026-07-02T08:00:00+02:00',
+  latestArrival:'2026-07-03T10:00:00+02:00'}),false);
+});
