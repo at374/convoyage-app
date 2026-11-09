@@ -75,3 +75,16 @@ La ressource GTFS agrégée actuellement affichée à https://transport.data.gou
 
 ### Priorité d'inventaire
 Comparer les réseaux par identité réelle, en distinguant marques, AOM, exploitants, offres scolaires, transport à la demande et lignes touristiques. Réconcilier chaque écart avec le catalogue PAN. Aucun nombre de lignes/arrêts de l'agrégat ne doit être compté comme intégré avant validation dans l'application.
+
+## Contrôle tarifaire ciblé — Ondéa / J’ybus (9 novembre 2026)
+
+**Ondéa Aix-les-Bains :** le guide tarifaire officiel publié pour juillet 2024 indiquait 1,60 € à bord et 1,50 € dématérialisé, mais une information de presse datée du 27 mai 2026 annonce une hausse au 1er juillet 2026, notamment 1,70 € pour le ticket unitaire. **Ne pas coder les anciens 1,60 € comme tarif courant.** Rechercher la grille officielle entrée en vigueur en juillet 2026, son canal de vente et les éventuels titres OndéSynchro.
+- Ancien guide officiel : https://files.ondeagrandlac.fr/s3fs-public/documents/Ondea-GuideTarifs%20%C3%A0%20partir%20du%201er%20Juillet%202024.pdf
+- Signalement de hausse 2026 (source secondaire, à corroborer officiellement) : https://www.odsradio.com/news/locales/109241/aix-les-bains-les-tarifs-des-bus-ondea-revus-a-la-hausse-des-juillet
+
+**J’ybus Rumilly :** le document officiel de conditions tarifaires 2024 indique 1,00 € le ticket unitaire, mais la brochure officielle plus récente de novembre 2025 détaille surtout les abonnements et renvoie à la gamme complète. **Ne pas déclarer 1,00 € comme tarif 2026 sans grille actuelle confirmée**. Vérifier séparément les lignes interurbaines J4/J5 et le transport sur réservation.
+- Anciennes conditions : https://www.jybus.fr/sites/jybus/files/cgv_2024_tarifs_combines_.pdf
+- Brochure novembre 2025 : https://www.jybus.fr/sites/jybus/files/jybus_brochure_billettiqueoura_nov2025_web_compressed.pdf
+- Ligne J4 officielle : https://www.jybus.fr/ligne-j4
+
+La présence de tarifs historiques ne satisfait pas l'exigence « tous les prix vérifiés pour la date de la mission ». Afficher « tarif à confirmer » plutôt qu'un montant obsolète.
