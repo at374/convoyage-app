@@ -113,3 +113,15 @@ test('dated seasonal GTFS candidates reject malformed and reversed mission windo
  assert.equal(selected(feed,{...trip,earliestDeparture:'2026-08-20T12:00:00+02:00',
   latestArrival:'2026-08-20T09:00:00+02:00'}),false);
 });
+
+test('seasonal selection compares real instants across offset changes',()=>{
+ const feed={format:'GTFS',url:'https://example.org/season.zip',
+  bounds:[45.5,5.5,46.5,6.5],validFrom:'2026-01-01',validUntil:'2026-12-31'};
+ const trip=at(45.9,6.0);
+ assert.equal(selected(feed,{...trip,earliestDeparture:'2026-11-09T10:00:00+01:00',
+  latestArrival:'2026-11-09T09:30:00+00:00'}),true);
+ assert.equal(selected(feed,{...trip,earliestDeparture:'2026-11-09T10:00:00+01:00',
+  latestArrival:'2026-11-09T08:30:00+00:00'}),false);
+ assert.equal(selected(feed,{...trip,earliestDeparture:'2026-11-09T25:00:00+01:00'}),false);
+ assert.equal(selected(feed,{...trip,earliestDeparture:'2026-11-09T10:00:00'}),false);
+});
