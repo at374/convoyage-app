@@ -179,3 +179,11 @@ test('empty GTFS feeds are not marked loaded by Agenda',()=>{
  assert.match(source,/Number\.isInteger\(n\.counts\.stops\)&&n\.counts\.stops>0/);
  assert.doesNotMatch(source,/Number\.isInteger\(n\.counts\.stops\)&&n\.counts\.stops>=0/);
 });
+
+test('GTFS producer validity dates must be real and ordered',()=>{
+ const task={...at(46,6),earliestDeparture:'2026-11-09T09:00:00+01:00'};
+ const feed={format:'GTFS',url:'https://example.org/feed.zip',bounds:[45,5,47,7]};
+ assert.equal(selected({...feed,validFrom:'2026-02-30',validUntil:'2026-12-31'},task),false);
+ assert.equal(selected({...feed,validFrom:'2026-12-31',validUntil:'2026-01-01'},task),false);
+ assert.equal(selected({...feed,validFrom:'2026-01-01',validUntil:'2026-12-31'},task),true);
+});
