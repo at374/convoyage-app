@@ -224,7 +224,9 @@ test('GTFS panel must disclose partners omitted by the two-feed limit',()=>{
  const fs=require('node:fs');
  const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
  assert.ok(source.includes('const partnerCandidates='));
- assert.ok(source.includes('const partners=partnerCandidates.slice(0,1);'));
+ assert.ok(source.includes('const partners=partnerCandidates.filter(r=>r.federate).slice(0,1);'));
+ assert.ok(source.includes('const nonFederatedPartners=partnerCandidates.filter(r=>!r.federate).length;'));
+ assert.ok(source.includes('sans fédération GTFS activée'));
  assert.ok(source.includes('const omittedPartners=partnerCandidates.length-partners.length;'));
  assert.ok(source.includes('if(omittedPartners>0)warning.textContent+='));
  assert.ok(source.includes('réseau(x) candidat(s) supplémentaire(s) non interrogé(s)'));
