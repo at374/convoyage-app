@@ -16,3 +16,31 @@ TER Auvergne-Rhône-Alpes; Cars Région Loire (non énuméré dans la liste des 
 
 ## Suivi à implémenter
 Pour chaque réseau : identifiant, département(s), communes, URL source officielle, URL GTFS/NeTEx, date de fraîcheur, statut de téléchargement, nombre de lignes et arrêts vérifiés, tarif officiel et période, TAD/réservation, temps réel, intégration application, tests Android. Ne pas afficher « couvert » sur la seule base de la présence d'une URL.
+
+## Contrôle croisé avec le répertoire officiel des lignes Oùra (9 novembre 2026)
+
+Source primaire : https://sim.oura.com/fr/schedules . Cette page officielle recense des réseaux **au-delà des 44** du GTFS agrégé, notamment :
+- **ARVi Mobilité — Cluses** (Haute-Savoie)
+- **TPG — Saint-Julien-en-Genevois** (liaisons transfrontalières)
+- **Cars Région Loire** (à distinguer de la liste historique des 44, mais présent dans la ressource GTFS agrégée récente)
+- **Cars Région Savoie lignes touristiques**
+- **Cars Région Transaltitude**
+- **La Navette — Vic-le-Comte**
+- **Pays Voironnais Mobilité**
+- **M Réso Grésivaudan**, **M Réso Grenoble**
+- **Sibra Annecy**, **TCL Lyon**, **T2C Clermont-Ferrand**, **STAS Saint-Étienne**, **Citéa Valence-Romans**
+- **TER Auvergne-Rhône-Alpes**
+
+**Correction de périmètre :** la liste des 44 réseaux sur la page descriptive n'est pas une liste exhaustive des réseaux réellement référencés par Oùra. Le calendrier de la ressource agrégée du 9 novembre mentionne aussi Cars Région Loire. Ne pas déduire l'absence de données à partir de la seule description du jeu de données.
+
+Le PAN annonce pour la ressource GTFS agrégée environ **1 910 lignes** et **30 609 arrêts** : ce sont des totaux de la ressource, non des lignes et arrêts vérifiés dans Convoyage Ultra.
+Source : https://transport.data.gouv.fr/resources/78904 .
+
+### Priorités d'intégration complémentaires
+1. Cluses / vallée de l'Arve : ARVi Mobilité, Proxim iTi, TER et Cars Région.
+2. Saint-Julien-en-Genevois / Archamps : TPG et Cars Région Haute-Savoie ; vérifier réellement les arrêts, zones tarifaires et correspondances transfrontalières.
+3. Isère : Pays Voironnais Mobilité, M Réso Grenoble/Grésivaudan et lignes Transaltitude.
+4. Savoie : Synchro, Ondéa, Cars Région Savoie et lignes touristiques.
+5. Clermont-Ferrand / Puy-de-Dôme : T2C, La Navette et Cars Région.
+
+Les informations d'opérateur, horaires, prix et réservation restent à confirmer réseau par réseau avant d'afficher une mission comme réalisable.
