@@ -172,8 +172,29 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  // When urban envelopes overlap, prioritize the more local official feed.
  // This is only source ordering; stops and services still need GTFS validation.
  const envelopeArea=r=>(r.bounds[2]-r.bounds[0])*(r.bounds[3]-r.bounds[1]);
+ // Distinguish the two overlapping Chablais urban feeds by their actual hubs.
+ // Hubs only rank candidates; the GTFS stop/trip check remains authoritative.
+ const urbanHubs={'pan-start-thonon':[46.37,6.48],'pan-evad':[46.40,6.59]};
+ const hubDistance=(r,task)=>{
+  const hub=urbanHubs[r.id];
+  if(!hub)return Infinity;
+  const points=[task?.from,task?.to].filter(validPoint);
+  return points.length?Math.min(...points.map(p=>(p.lat-hub[0])**2+
+   ((p.lon-hub[1])*Math.cos(hub[0]*Math.PI/180))**2)):Infinity;
+ };
  const urbanResources=resourceList.filter(r=>r.urban&&taskList.some(t=>selected(r,t)))
-  .sort((a,b)=>envelopeArea(a)-envelopeArea(b));
+  .sort((a,b)=>{
+   if(urbanHubs[a.id]&&urbanHubs[b.id]){
+    const distances=taskList.map(t=>[hubDistance(a,t),hubDistance(b,t)])
+     .filter(pair=>pair.every(Number.isFinite));
+    if(distances.length){
+     const delta=Math.min(...distances.map(pair=>pair[0]))-
+      Math.min(...distances.map(pair=>pair[1]));
+     if(delta!==0)return delta;
+    }
+   }
+   return envelopeArea(a)-envelopeArea(b);
+  });
  const localResources=resourceList.filter(r=>r!==express&&!r.urban);
  // Prefer a matching urban GTFS over a broad departmental envelope. Otherwise
  // Haute-Savoie can shadow STAR’T/ÉVA’D and other local networks entirely.
