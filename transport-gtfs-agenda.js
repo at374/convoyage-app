@@ -90,6 +90,14 @@ function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof p
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}
 function selected(resource,task){
  const bounds=resource?.bounds;
+ // Validate mission time windows for every feed, including undated GTFS.
+ // A malformed or inverted interval must never produce a candidate.
+ const early=task?.earliestDeparture,late=task?.latestArrival;
+ const firstMs=early===undefined?NaN:timestamp(early);
+ const lastMs=late===undefined?NaN:timestamp(late);
+ if((early!==undefined&&!Number.isFinite(firstMs))||
+    (late!==undefined&&!Number.isFinite(lastMs)))return false;
+ if(Number.isFinite(firstMs)&&Number.isFinite(lastMs)&&firstMs>lastMs)return false;
  // Optional GTFS publication window: exclude expired seasonal feeds before fetching.
  // This is only a coarse filter; actual trip service dates remain GTFS-controlled.
  if(resource?.validFrom||resource?.validUntil){
@@ -98,14 +106,6 @@ function selected(resource,task){
   // Reject only when the whole requested interval lies outside the feed.
   // A window spanning its first/last service day remains a candidate; GTFS
   // calendar/calendar_dates must then validate each individual departure.
-  const early=task?.earliestDeparture,late=task?.latestArrival;
-  // timestamp() validates ISO date, clock and explicit UTC offset.
-  // Compare instants, not date strings: differing offsets can invert UTC order.
-  const firstMs=early===undefined?NaN:timestamp(early);
-  const lastMs=late===undefined?NaN:timestamp(late);
-  if((early!==undefined&&!Number.isFinite(firstMs))||
-     (late!==undefined&&!Number.isFinite(lastMs)))return false;
-  if(Number.isFinite(firstMs)&&Number.isFinite(lastMs)&&firstMs>lastMs)return false;
   const first=typeof early==='string'?early.slice(0,10):null;
   const last=typeof late==='string'?late.slice(0,10):null;
   if((from&&last&&last<from)||(to&&first&&first>to))return false;
