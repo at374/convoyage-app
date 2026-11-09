@@ -161,3 +161,14 @@ test('Thonon and Evian have distinct nearest urban hubs',()=>{
   assert.equal(candidates.length,2);
  }
 });
+
+test('undated GTFS feeds also reject invalid or inverted mission windows',()=>{
+ const feed={format:'GTFS',url:'https://example.org/no-validity.zip',bounds:[45,5,47,7]};
+ const task=at(46,6);
+ assert.equal(selected(feed,{...task,earliestDeparture:'2026-11-09T09:00:00+01:00',
+  latestArrival:'2026-11-09T08:59:00+01:00'}),false);
+ assert.equal(selected(feed,{...task,earliestDeparture:'2026-11-09T25:00:00+01:00'}),false);
+ assert.equal(selected(feed,{...task,earliestDeparture:'2026-11-09T09:00:00'}),false);
+ assert.equal(selected(feed,{...task,earliestDeparture:'2026-11-09T09:00:00+01:00',
+  latestArrival:'2026-11-09T09:30:00+01:00'}),true);
+});
