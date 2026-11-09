@@ -177,3 +177,18 @@ En l'absence de nouvelle source à traiter, revue systématique de la cohérence
 - **Sanité des prix** : aucune ligne `classe2 < classe1` dans `aprr.p`, `overlay.paires` ou `overlay.tarifs`. 57 relations à prix 0,0€ trouvées (sections gratuites documentées au sein de corridors à péage, ex. Lyon/Tarbes/Provence) — vérifié que le code de recherche de prix (`paire()` dans `routes-ui.js`) ne traite pas `0` comme "absent" (bug de troncature à zéro écarté).
 
 **État final : 695 tests passent, 0 échec, 0 skip, aucune approximation.**
+
+---
+
+## 9 nov. 2026 (suite) — nouveau jeu de données découvert : "flux libre" (A69 GPS)
+
+Reprise de la recherche ("on doit arriver à 100% et les mises à jour futures aussi") : nouvelle interrogation de l'API data.gouv.fr avec des mots-clés élargis (tarifs sanef/asf/escota/cofiroute, atosca, A69, péage vinci...). Toutes ces recherches restent à 0 résultat, **sauf une** :
+
+- **Nouveau dataset "Autoroutes et péages en flux libre"** (id `68f7f6e2cb331a47613d7778`), publié/mis à jour le **07-11-2026** (il y a 2 jours), ressource "portiques free flow 07-11-2026.csv". Comparaison directe avec l'édition précédente (25-10-2025, téléchargée aussi) : 38 lignes → 43 lignes.
+  - **Validation** : les points officiels "Le Montet Ouest/Est" et "Montbeugny Ouest/Est" (A79, Aliaé) correspondent à <0,01km aux gares déjà résolues en base — confirme leur exactitude. Aucun des 6 points de ce dataset ne correspond aux noms dangling SANS suffixe (LE MONTET, MONTBEUGNY, MOLINET) : ils restent non résolus, aucune preuve nouvelle.
+  - **Découverte** : l'édition du 07-11-2026 ajoute, pour la toute première fois, 4 points GPS officiels pour l'**A69/Atosca** (Verfeil, Villeneuve-lès-Lavaur/Maurens-Scopont, Puylaurens, Soual Est-Saint Palais) — absents de l'édition du 25-10-2025. C'est la première source GPS officielle jamais trouvée pour l'A69.
+  - **Mais aucune intégration possible** : l'A69 n'a aucune relation même dangling dans la base (réseau totalement absent, pas juste un nom orphelin) et surtout **aucune grille tarifaire officielle structurée n'existe** (recherche data.gouv.fr "A69"/"atosca"/"tarifs atosca" : 0 résultat). Une recherche web confirme que le tarif de l'A69 est très récent (ouverture le 4 nov. 2026), contesté, et a déjà varié (presse : baisse de 33% rapportée) — aucune base fiable pour un prix sans approximation. L'A69 reste donc hors base.
+  - Documenté dans `tests/peages-flux-libre-a79-validation-a69-gps-decouverte.test.cjs` (3 tests, tous passants).
+- **Baseline mise à jour** (`docs/sources-officielles-baseline.json`) : le dataset "flux libre" a maintenant son propre `dataset_id` suivi précisément (au lieu d'une note vague), avec consigne explicite de vérifier en priorité toute nouvelle édition pour de futurs points A69, et l'entrée A69/Atosca précise qu'un GPS existe désormais mais pas de prix.
+
+**État final : 718 tests passent, 0 échec, 0 skip, aucune approximation.**

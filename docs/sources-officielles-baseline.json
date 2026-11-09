@@ -20,18 +20,22 @@
       "usage": "Grille tarifaire officielle exacte (pas seulement GPS). 13347 relations verifiees le 9 nov. 2026, 0 divergence. A surveiller : une edition plus recente que 2026-02, ou l'ajout d'autres concessionnaires (SANEF/ASF/ESCOTA/Cofiroute n'ont, a cette date, AUCUN dataset tarifaire equivalent sur data.gouv.fr -- recherche vide le 9 nov. 2026)."
     },
     {
-      "nom": "Portiques flux libre (Aliae/Sanef-Sapn)",
-      "note": "Dataset ponctuel verifie le 8 nov. 2026 (portiques-free-flow-25-10-2025), ne couvre pas l'A69. Pas de dataset_id fixe retrouve a surveiller specifiquement -- rechercher 'flux libre' ou 'portique' sur data.gouv.fr si besoin."
+      "nom": "Autoroutes et peages en flux libre (portiques GPS, bornes)",
+      "dataset_id": "68f7f6e2cb331a47613d7778",
+      "dataset_api": "https://www.data.gouv.fr/api/1/datasets/68f7f6e2cb331a47613d7778/",
+      "ressource_actuelle": "portiques free flow 07-11-2026 (csv)",
+      "last_modified_connu": "2026-11-07T15:14:16.195000+00:00",
+      "usage": "GPS des portiques flux libre (A79/Aliae, A13-A14-A29-A131-A154/SAPN, A4/SANEF, A10-A86/Cofiroute, A387/ASF, A69/Atosca). Verifie le 9 nov. 2026 : confirme <0.01km les points deja resolus LE MONTET OUEST/EST et MONTBEUGNY OUEST/EST (A79) ; ne couvre PAS les noms dangling sans suffixe LE MONTET/MONTBEUGNY/MOLINET. DECOUVERTE : l'edition 07-11-2026 a ajoute 4 points GPS A69/Atosca (Verfeil, Villeneuve-les-Lavaur/Maurens-Scopont, Puylaurens, Soual Est-Saint Palais), absents de l'edition precedente du 25-10-2025 -- premiere source GPS officielle pour l'A69. A surveiller en priorite : toute nouvelle edition pourrait ajouter d'autres points A69, et c'est le signal qu'une grille tarifaire A69 structuree pourrait suivre."
     },
     {
-      "nom": "A69 / Atosca",
+      "nom": "A69 / Atosca (grille tarifaire)",
       "dataset_id": null,
-      "usage": "Autoroute ouverte le 4 nov. 2026. AUCUN dataset data.gouv.fr ne la mentionne a ce jour (recherches 'A69' et 'atosca' : 0 resultat le 9 nov. 2026). Point le plus important a surveiller : verifier atosca.fr directement (non accessible en curl depuis le bac a sable -- blocage reseau, pas robots.txt) et re-chercher sur data.gouv.fr a chaque execution."
+      "usage": "Autoroute ouverte le 4 nov. 2026, tarif conteste et deja modifie selon la presse (ex: baisse de 33% rapportee). GPS officiel desormais disponible (voir source 'flux libre' ci-dessus), mais AUCUNE grille tarifaire officielle structuree (csv/xlsx) n'existe a ce jour (recherches 'A69', 'atosca', 'tarifs atosca' sur data.gouv.fr : 0 resultat le 9 nov. 2026). Point le plus important a surveiller : verifier data.gouv.fr a chaque execution (le dataset flux-libre pourrait etre complete par Atosca) ; atosca.fr reste non accessible en curl depuis le bac a sable (blocage reseau, pas robots.txt)."
     }
   ],
   "methode_de_verification": [
     "1. Pour chaque source avec un dataset_id, appeler https://www.data.gouv.fr/api/1/datasets/<id>/ et comparer le last_modified le plus recent de resources[] a last_modified_connu.",
-    "2. Rechercher sur https://www.data.gouv.fr/api/1/datasets/?q=<mot-cle> pour A69, atosca, tarifs sanef, tarifs asf, tarifs escota, tarifs cofiroute -- signaler tout nouveau resultat (0 attendu a ce jour).",
+    "2. Rechercher sur https://www.data.gouv.fr/api/1/datasets/?q=<mot-cle> pour A69, atosca, tarifs sanef, tarifs asf, tarifs escota, tarifs cofiroute -- signaler tout nouveau resultat (0 attendu a ce jour, hors GPS flux-libre deja suivi).",
     "3. Si une ressource a change : la televerser via curl (data.gouv.fr et static.data.gouv.fr sont directement accessibles en curl depuis le bac a sable), puis appliquer la meme discipline 'zero approximation' : fusion uniquement sur preuve GPS <0.06km OU preuve par prix (>= 2 destinations partagees a prix identique), jamais sur simple similitude de nom.",
     "4. Mettre a jour ce fichier (last_modified_connu) et documenter tout changement dans docs/TRANSMISSION-CLAUDE-PEAGES-2026.md, avec tests node --test dedies.",
     "5. Toujours committer+pousser avec les lignes Co-Authored-By/Claude-Session requises, et faire un rapport a Laurent (meme si rien de nouveau n'est trouve)."
