@@ -194,3 +194,14 @@ test('federated partner cannot be silently skipped without loadNetworks',()=>{
  assert.match(source,/if\(partners\.length&&typeof client\.loadNetworks!=='function'\)/);
  assert.doesNotMatch(source,/if\(needsFederation&&typeof client\.loadNetworks!=='function'\)/);
 });
+
+test('urban Ain GTFS must take precedence over broad Cars Région Ain',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.ok(source.includes('const resource=urbanResources[0]||preferredAin||'));
+ assert.equal(source.includes('const resource=preferredAin||urbanResources[0]||'),false);
+ for(const [lat,lon,id] of [[45.959,5.36,'pan-tam'],[46.205,5.225,'oura-rubis']]){
+  const task={...at(lat,lon),earliestDeparture:'2026-11-10T09:00:00+01:00'};
+  assert.ok(DEFAULT_RESOURCES.some(r=>r.id===id&&selected(r,task)),id);
+ }
+});
