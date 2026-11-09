@@ -88,3 +88,15 @@ Comparer les réseaux par identité réelle, en distinguant marques, AOM, exploi
 - Ligne J4 officielle : https://www.jybus.fr/ligne-j4
 
 La présence de tarifs historiques ne satisfait pas l'exigence « tous les prix vérifiés pour la date de la mission ». Afficher « tarif à confirmer » plutôt qu'un montant obsolète.
+
+## Sources officielles supplémentaires retrouvées — 9 novembre 2026
+
+**Ondéa (Grand Lac)** : une délibération de Grand Lac du **19 mai 2026** fixe les tarifs applicables **à compter du 1er juillet 2026**. Cette source primaire doit primer sur le guide 2024 et les annonces de presse. PDF à extraire et contrôler avant toute activation d'un montant : https://grand-lac.fr/mon-agglo/gouvernance/actes-administratifs/actes-administratifs-grand-lac/conseil-communautaire/conseils-communautaires-2024/conseil-communautaire-du-30-janvier-2024/deliberations-2-2-1-1-1/deliberation-n43-tarifs-du-reseau-de-transports-urbains-ondea-a-compter-du-1er-juillet-2026-55584 . Le guide 2024 est **historique**, non probant pour novembre 2026.
+
+**J’ybus Rumilly** : la brochure officielle de **novembre 2025**, tarifs en vigueur au **1er septembre 2025**, confirme des abonnements mensuels **14 € adulte**, **9 € jeune/senior**, annuels **135 € adulte** et **90 € jeune/senior**. Elle indique l'intégration des titres J’ybus (1 voyage, 10 voyages et abonnements) à la carte Oùra, mais ne donne pas dans l'extrait vérifié le montant courant du ticket unitaire. Source : https://www.jybus.fr/sites/jybus/files/jybus_brochure_billettiqueoura_nov2025_web_compressed.pdf . Ne pas extrapoler le tarif 2024 à novembre 2026.
+
+**J’ybus ligne 3** : le site officiel indique une **réservation jusqu'à 2 heures avant le départ**. L'itinéraire doit être identifié comme **transport à la demande non confirmé sans réservation** ; une ligne GTFS ne constitue pas une place réservée. Source : https://www.jybus.fr/ .
+
+**Cars Région Savoie** : le portail officiel sépare **S01–S07 périurbaines** et **S10–S83 touristiques**, avec des pages tarifaires distinctes et des titres M-Ticket via Oùra. Ne jamais appliquer un tarif unique à l'ensemble de ces lignes. Source : https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/infos-et-services-cars-region-de-la-savoie/titres-et-tarifs-de-savoie/ .
+
+**Règle de publication** : un montant de billet n'entre dans les prix vérifiés de l'application que lorsque son produit, sa date d'effet, sa zone et ses lignes éligibles sont documentés ; les abonnements ne doivent pas être transformés en trajet gratuit sans validation de leur éligibilité.
