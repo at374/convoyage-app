@@ -379,11 +379,12 @@ async function run(){
   await steps.locator('summary').click();
   assert.equal(await steps.evaluate(node=>node.open),true,'TripGo card opens');
   assert.ok(await steps.locator('li').count()>=3,'Walking and transit legs have separate dated steps');
-  const maps=await steps.locator('a').evaluateAll(nodes=>nodes.map(x=>({href:x.href,target:x.target,rel:x.rel})));
+  const maps=await steps.locator('a:not([data-coach-fare-search])').evaluateAll(nodes=>nodes.map(x=>({href:x.href,target:x.target,rel:x.rel})));
   assert.ok(maps.some(x=>new URL(x.href).searchParams.get('travelmode')==='walking'));
   assert.ok(maps.every(x=>new URL(x.href).hostname==='www.google.com'&&x.target==='_blank'&&x.rel.includes('noopener')));
   assert.ok(maps.every(x=>!x.href.includes('TripGo-Key')&&!x.href.includes('aaaaaaaa')));
   assert.match(await steps.innerText(),/nouveau calcul/);
+  assert.equal(await steps.locator('[data-coach-fare-search]').getAttribute('href'),'https://www.blablacar.fr/bus');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.getByText(/Prévisions BlaBlaCar Bus indisponibles sur cet appareil/).waitFor();
   assert.match(tripText,/Preuves manquantes/);assert.match(tripText,/prix du transport/);assert.doesNotMatch(tripText,/Réalisable/);
@@ -398,6 +399,7 @@ async function run(){
   await flixCard.locator('summary').click();
   assert.equal(await flixCard.evaluate(node=>node.open),true,'FlixBus card opens');
   assert.ok(await flixCard.locator('ol li').count()>0,'FlixBus card has dated steps');
+  assert.equal(await flixCard.locator('[data-coach-fare-search]').getAttribute('href'),'https://shop.flixbus.fr/');
   assert.match(await flixCard.innerText(),/Transport non confirmé/);
   assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'FlixBus card fits mobile width');
   await flixCard.locator('summary').click();

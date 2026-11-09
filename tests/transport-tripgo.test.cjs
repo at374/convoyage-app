@@ -218,3 +218,13 @@ test('TripGo ignores a journey with a non-string mode without hiding other avail
   assert.equal(results[0].legs[1].line,'FlixBus 1789');
  }
 });
+
+test('BlaBlaCar Bus and FlixBus use fixed official price-search links without assigning a fare',()=>{
+ const {itineraries}=api.parse(clone(),options);
+ const [blabla,flix]=itineraries.map(journey=>journey.legs.find(leg=>api.coachFareSearch(leg)));
+ assert.deepEqual(api.coachFareSearch(blabla),{label:'BlaBlaCar Bus',url:'https://www.blablacar.fr/bus'});
+ assert.deepEqual(api.coachFareSearch({...flix,ticketWebsiteURL:'https://untrusted.invalid/'}),{label:'FlixBus',url:'https://shop.flixbus.fr/'});
+ assert.equal(api.coachFareSearch({...blabla,provider:'BlaBlaCar'}),null);
+ assert.equal(api.coachFareSearch({...flix,mode:'wa_wal'}),null);
+ assert.ok(itineraries.every(journey=>journey.priceEUR===null));
+});

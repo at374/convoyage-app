@@ -12,6 +12,17 @@
     if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat)>90 || Math.abs(lon)>180 || (lat===0 && lon===0)) return null;
     return lat+','+lon;
   }
+  function supports(from,to) {
+    const inside=(value,minLat,minLon,maxLat,maxLon)=>{
+      if(!value||!point(value)||typeof value==='string')return false;
+      const lat=Number(value.lat),lon=Number(value.lon??value.lng);
+      return lat>=minLat&&lat<=maxLat&&lon>=minLon&&lon<=maxLon;
+    };
+    // Search envelope only, including nearby French approaches to Geneva.
+    const region=value=>inside(value,45.8,5.65,46.65,6.85);
+    const corridor=value=>inside(value,46.12,5.95,46.62,6.78);
+    return region(from)&&region(to)&&(corridor(from)||corridor(to));
+  }
   function buildUrl(options) {
     const from=point(options.from), to=point(options.to);
     if (!from || !to) throw new Error('Coordonnées ou arrêts manquants');
@@ -34,9 +45,13 @@
       throw new Error('Réseau indisponible');
     }
     const controller = new AbortController();
+    const cancel=()=>controller.abort(options.signal.reason);
+    options.signal?.addEventListener('abort',cancel,{once:true});
+    if(options.signal?.aborted)cancel();
     const timeout = setTimeout(() => controller.abort(), 12000);
     let data;
     try {
+      if(controller.signal.aborted)throw controller.signal.reason;
       const response = await fetcher(url, {signal:controller.signal, cache:'no-store'});
       if (!response.ok) throw new Error('API suisse indisponible ('+response.status+')');
       data = await response.json();
@@ -45,6 +60,7 @@
       throw error;
     } finally {
       clearTimeout(timeout);
+      options.signal?.removeEventListener('abort',cancel);
     }
     if(!data || !Array.isArray(data.connections)) {
       diagnostic.status = 'invalid_response';
@@ -73,6 +89,6 @@
     results.diagnostic = {...diagnostic};
     return results;
   }
-  root.CPSwissTransport={point,buildUrl,plan};
+  root.CPSwissTransport={point,supports,buildUrl,plan};
   if(typeof module!=='undefined' && module.exports) module.exports=root.CPSwissTransport;
 })(typeof window!=='undefined'?window:globalThis);

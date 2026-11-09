@@ -107,7 +107,7 @@ test('geocoding endpoints run independently and identical pending addresses shar
 });
 test('actual Agenda call passes mission windows and triggers regional refresh when coordinates arrive',()=>{
  const source=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
- const code=source.slice(source.indexOf('      // GTFS candidate search:'),source.indexOf('      // Swiss public transport connections for an accepted mission junction.'));
+ const code=source.slice(source.indexOf('      // GTFS candidate search:'),source.indexOf('      // Regional refresh slots:'));
  const calls=[],callbacks=[];let stopped=0,removed=0,regionalRefreshes=0;
  const button={cpRefreshRegional(){regionalRefreshes++;}},sheet={hidden:false},panel={isConnected:true,hidden:false,querySelector:()=>({remove(){removed++;}})};
  const current={o:{lat:45.9,lng:6.1,precision:'adresse'},d:{lat:45.67,lng:6.39,precision:'gps'}};
@@ -818,7 +818,7 @@ test('Mobile regional transport cards cover Aller Jonction Retour and safe stop 
  for(const section of ['Aller · comparer','Jonction mission · comparer','Retour · comparer']){
   assert.ok(app.includes(section),'Missing mobile transport comparison: '+section);
  }
- assert.match(app,/const showRegionalChoices = \(host, ranked, heading\) =>/);
+ assert.match(app,/const showRegionalChoices = \(host, ranked, heading, references\) =>/);
  assert.match(app,/ranked\.slice\(0, 3\)/);
  assert.match(app,/document\.createElement\('details'\)/);
  assert.match(app,/document\.createElement\('ol'\)/);
@@ -941,4 +941,41 @@ test('Express results with an unknown fare link to SNCF and the exact regional l
  assert.match(target.textContent,/Rechercher le tarif sur SNCF Connect.*Fiche officielle X71/);
  assert.doesNotMatch(target.textContent,/Référence X71/);
  session.dispose();
+});
+
+test('Swiss results use the visible directions and enforce the mission margin',async()=>{
+ const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+ const begin=app.indexOf('      // Swiss routes run');
+ const end=app.indexOf("      regionalSlot('Jonction',",begin);
+ assert.ok(begin>=0&&end>begin);
+ const from={lat:46.20,lon:6.14};
+ const to={lat:46.51,lon:6.63};
+ const hosts={},calls=[];
+ const mission={origin:to,destination:to};
+ const arrival='2026-11-10T10:00:00+01:00';
+ const departure='2026-11-10T11:00:00+01:00';
+ const next={origin:from,pickup_start:'2026-11-10T13:00:00+01:00'};
+ const expectedLeg={mode:'IC',line:'1',from:'Genève',to:'Lausanne'};
+ vm.runInNewContext(app.slice(begin,end),{
+  window:{CPSwissTransport:{supports:()=>true,plan:async options=>{
+   calls.push(options);
+   return [
+    {departure:'2026-11-10T08:30:00+01:00',arrival:'2026-11-10T09:30:00+01:00',sections:[expectedLeg]},
+    {departure:'2026-11-10T11:00:00+01:00',arrival:'2026-11-10T12:00:00+01:00',sections:[expectedLeg]},
+    {departure:'2026-11-10T11:00:00+01:00',arrival:'2026-11-10T12:50:00+01:00',sections:[expectedLeg]}
+   ];
+  }}},
+  G:{coordonnees:(m,key)=>m[key]},m:mission,next,pickupDate:arrival,deliveryDate:departure,securityMarginMin:15,
+  regionalHome:()=>from,regionalPoint:p=>p,regionalActive:()=>true,regionalFetch:()=>{},
+  regionalSlot:(name,_inputs,render)=>{hosts[name]=panel();render(hosts[name],new AbortController().signal);},
+  formatParis:value=>value.slice(11,16),document:panel().ownerDocument
+ });
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(calls.length,3);
+ assert.equal(calls[0].arriveBy,true);
+ assert.equal(calls[0].when,'2026-11-10T08:45:00.000Z');
+ assert.match(hosts.Aller.textContent,/08:30 → 09:30.*Genève → Lausanne/);
+ assert.doesNotMatch(hosts.Retour.textContent,/08:30/);
+ assert.match(hosts.Jonction.textContent,/11:00 → 12:00/);
+ assert.doesNotMatch(hosts.Jonction.textContent,/12:50/);
 });

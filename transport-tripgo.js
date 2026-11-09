@@ -99,5 +99,12 @@ async function plan(options){
   const value=parse(data,options);if(cache.size>=32)cache.delete(cache.keys().next().value);cache.set(key,{until:Date.now()+60000,value});return JSON.parse(JSON.stringify(value));
  }finally{clearTimeout(timer);options.signal?.removeEventListener('abort',cancel);}
 }
-const api={parse,plan,getKey,setKey};root.CPTripGo=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
+function coachFareSearch(leg){
+ if(!String(leg?.mode||'').startsWith('pt_pub'))return null;
+ const operator=String(leg.provider||'').trim().toLowerCase();
+ if(operator==='flixbus'||operator==='flixbus-eu')return {label:'FlixBus',url:'https://shop.flixbus.fr/'};
+ if(operator==='blablacar bus')return {label:'BlaBlaCar Bus',url:'https://www.blablacar.fr/bus'};
+ return null;
+}
+const api={parse,plan,getKey,setKey,coachFareSearch};root.CPTripGo=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

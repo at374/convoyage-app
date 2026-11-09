@@ -1830,7 +1830,7 @@
       panel.setAttribute('aria-label', 'Détails des transports de la mission');
       panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div><p class="doux" role="status">Chargement des informations de transport…</p>';
       // Compact comparison cards for regional options; keep existing detailed legs below.
-      const showRegionalChoices = (host, ranked, heading) => {
+      const showRegionalChoices = (host, ranked, heading, references) => {
         if (!ranked.length) return;
         host.setAttribute('data-transport-cards','true');
         const evidence=document.createElement('details');evidence.className='cp-transport-evidence';
@@ -1853,6 +1853,8 @@
           const facts = document.createElement('span');
           facts.textContent = (Number.isFinite(journey.durationMinutes) ? journey.durationMinutes + ' min' : 'Durée inconnue') + ' · ' +
             (Number.isFinite(journey.priceEUR) ? journey.priceEUR.toFixed(2).replace('.', ',') + ' €' : 'Tarif non vérifié');
+          const reference=references?.get(journey.id);
+          if(reference) facts.textContent += window.CPTransportExpressFares.describe(reference);
           const times = document.createElement('span');
           times.style.display = 'block';
           const clock = value => {
@@ -2248,7 +2250,10 @@
         const rows=itineraries.map(row=>({...row,legs:Array.isArray(row.legs)&&row.legs.length?row.legs:[{line:row.line,from:row.originStop?.name||row.from,to:row.destinationStop?.name||row.to,departure:row.departure,arrival:row.arrival}]}));
         const normalized=window.CPTransportAdapters?.adaptGTFS(rows,'Réseau local')||[];
         const ranked=window.CPTransportRanking?.rank(normalized,{direction:task.label==='Retour'?'return':'outbound',deadline:task.latestArrival,earliestDeparture:task.earliestDeparture,marginMinutes:15})||[];
-        showRegionalChoices(host,ranked,task.label+' · horaires locaux');
+        const references=new Map(normalized.map((journey,index)=>[
+          journey.id,window.CPTransportExpressFares?.reference(itineraries[index])
+        ]));
+        showRegionalChoices(host,ranked,task.label+' · horaires locaux',references);
       };
       // GTFS candidate search: one worker for the open panel, no mission writes.
       if (window.CPGTFSAgenda && window.CPGTFSWorker) {
@@ -2287,54 +2292,6 @@
         bt.cpRefreshGTFS?.();
         bt.cpRefreshRegional?.();
       });
-      // Swiss public transport connections for an accepted mission junction.
-      // Results are advisory until realtime validity and exact walking approaches are checked.
-      if (window.CPSwissTransport && next && deliveryDate && next.pickup_start) {
-        const swissFrom = G.coordonnees(m, 'destination');
-        const swissTo = G.coordonnees(next, 'origin');
-        const nextPickupMs = Date.parse(next.pickup_start);
-        if (transportAddressPoint(swissFrom) && transportAddressPoint(swissTo) &&
-            Number.isFinite(nextPickupMs) && nextPickupMs > Date.parse(deliveryDate)) {
-          const swissStatus = document.createElement('div');
-          swissStatus.className = 'doux';
-          swissStatus.setAttribute('role', 'status');
-          swissStatus.textContent = 'Jonction suisse : recherche des bus, trams et trains…';
-          sourcePanel.appendChild(swissStatus);
-          window.CPSwissTransport.plan({
-            from: {lat:swissFrom.lat, lon:swissFrom.lng},
-            to: {lat:swissTo.lat, lon:swissTo.lng},
-            when: deliveryDate,
-            limit: 6
-          }).then(options => {
-            if (!swissStatus.isConnected) return;
-            const departureMs = Date.parse(deliveryDate);
-            const compatible = options.filter(option => {
-              const start = Date.parse(option.departure);
-              const end = Date.parse(option.arrival);
-              return Number.isFinite(start) && Number.isFinite(end) &&
-                start >= departureMs && end <= nextPickupMs - securityMarginMin * 60000;
-            }).slice(0, 5);
-            const diagnostic = options.diagnostic;
-            const diagnosticLabel = diagnostic && diagnostic.status === 'success' ? ' (API : ' + diagnostic.valid + '/' + diagnostic.received + ' horaires valides)' : '';
-            swissStatus.textContent = compatible.length ?
-              'Jonction suisse : ' + compatible.length +
-              ' proposition(s) indicatives' + diagnosticLabel + '. Prix et circulation non confirmés :' :
-              'Jonction suisse : aucune proposition compatible' + diagnosticLabel + '. Transport non confirmé — vérifiez vous-même.';
-            compatible.forEach(option => {
-              const line = document.createElement('p');
-              const legs = option.sections.map(s => [s.mode === 'WALK' ? '🚶 Marche' : s.mode,s.line,s.from && s.to ? s.from+' → '+s.to : '',s.mode === 'WALK' && Number.isFinite(s.walkSeconds) ? Math.ceil(s.walkSeconds/60)+' min à pied' : ''].filter(Boolean).join(' ')).join(' · ');
-              line.textContent = formatParis(option.departure) + ' → ' +
-                formatParis(option.arrival) + ' · ' + legs +
-                ' · avance avant prochaine mission : ' + Math.max(0,Math.floor((nextPickupMs-Date.parse(option.arrival))/60000)) + ' min (marge de sécurité requise : ' + securityMarginMin + ' min, approche exacte non vérifiée)' +
-                ' · tarif non communiqué · Transport non confirmé — vérifiez vous-même.';
-              swissStatus.appendChild(line);
-            });
-          }).catch(() => {
-            if (swissStatus.isConnected) swissStatus.textContent =
-              'Jonction suisse : service indisponible. Transport non confirmé — vérifiez vous-même.';
-          });
-        }
-      }
       // Regional refresh slots: rerun only the tasks whose precise inputs change.
       const regionalRefreshers = [];
       const regionalActive = () => panel.isConnected && !panel.hidden &&
@@ -2373,6 +2330,57 @@
         refresh();
       };
       bt.cpRefreshRegional = () => regionalRefreshers.forEach(refresh => refresh());
+      // Swiss routes run in the same visible slots and refresh when exact GPS arrives.
+      if (window.CPSwissTransport) {
+        const swiss = window.CPSwissTransport;
+        const origin = () => regionalPoint(G.coordonnees(m,'origin'));
+        const destination = () => regionalPoint(G.coordonnees(m,'destination'));
+        const swissSearch = (label, from, to, earliest, deadline) => {
+          const inputs = () => [from(),to(),earliest,deadline,securityMarginMin];
+          regionalSlot(label,inputs,(target,signal) => {
+            const [start,end,earliestAt,deadlineAt,margin] = inputs();
+            if (!swiss.supports(start,end)) return;
+            const first = earliestAt ? Date.parse(earliestAt) : -Infinity;
+            const last = deadlineAt ? Date.parse(deadlineAt)-margin*60000 : Infinity;
+            const arriveBy = !earliestAt;
+            const when = arriveBy ? last : first;
+            if (!Number.isFinite(when) || first > last || (deadlineAt && !Number.isFinite(last))) return;
+            const status=document.createElement('div');
+            status.setAttribute('role','status');
+            status.setAttribute('data-swiss-results','');
+            status.textContent=label+' Suisse : recherche des bus, trams et trains…';
+            target.appendChild(status);
+            swiss.plan({from:start,to:end,when:new Date(when).toISOString(),arriveBy,limit:6,signal,fetcher:regionalFetch}).then(options => {
+              if (!regionalActive() || signal.aborted || !status.isConnected) return;
+              const compatible=options.filter(option => {
+                const depart=Date.parse(option.departure),arrive=Date.parse(option.arrival);
+                return Number.isFinite(depart)&&Number.isFinite(arrive)&&depart>=first&&arrive<=last&&arrive>=depart;
+              }).slice(0,5);
+              status.textContent=label+' Suisse : '+(compatible.length ?
+                compatible.length+' proposition(s) · horaires aux arrêts, prix et circulation à vérifier.' :
+                'aucun trajet compatible retourné par cette source.');
+              for(const option of compatible){
+                const line=document.createElement('p');
+                const legs=option.sections.map(section=>[
+                  section.mode==='WALK'?'Marche':section.mode,section.line,
+                  section.from&&section.to?section.from+' → '+section.to:'',
+                  section.mode==='WALK'&&Number.isFinite(section.walkSeconds)?Math.ceil(section.walkSeconds/60)+' min à pied':''
+                ].filter(Boolean).join(' ')).join(' · ');
+                line.textContent=formatParis(option.departure)+' → '+formatParis(option.arrival)+' · '+legs+
+                  (deadlineAt?' · avance à l’arrêt : '+Math.floor((Date.parse(deadlineAt)-Date.parse(option.arrival))/60000)+' min':'');
+                status.appendChild(line);
+              }
+            }).catch(() => {
+              if (regionalActive() && !signal.aborted && status.isConnected)
+                status.textContent=label+' Suisse : moteur indisponible. Transport non confirmé.';
+            });
+          });
+        };
+        if (pickupDate) swissSearch('Aller',regionalHome,origin,null,pickupDate);
+        if (deliveryDate) swissSearch('Retour',destination,regionalHome,deliveryDate,null);
+        if (next && deliveryDate && next.pickup_start)
+          swissSearch('Jonction',destination,()=>regionalPoint(G.coordonnees(next,'origin')),deliveryDate,next.pickup_start);
+      }
       regionalSlot('Jonction', () => [regionalPoint(G.coordonnees(m,'destination')),regionalPoint(next && G.coordonnees(next,'origin')),deliveryDate,next?.pickup_start,securityMarginMin], (panel,signal) => {
       // Regional journeys use a configured endpoint or the public M provider,
       // only when both mission endpoints have exact GPS.
@@ -2694,12 +2702,21 @@
         const keyInput=document.createElement('input');keyInput.type='password';keyInput.autocomplete='off';
         keyInput.setAttribute('aria-label','Clé TripGo privée sur cet appareil');keyInput.placeholder='Clé TripGo privée';
         const keyStatus=document.createElement('p');
-        const keyState=()=>{keyStatus.textContent=tripgo.getKey()?'TripGo actif sur cet appareil. La clé reste privée ; les coordonnées des recherches sont envoyées à TripGo.':'TripGo peut compléter les trajets interurbains. Sa clé privée doit être enregistrée sur cet appareil.';};
+        const coachStatus=document.createElement('p');coachStatus.className='doux';coachStatus.setAttribute('role','status');
+        hero.appendChild(coachStatus);
+        const keyState=()=>{
+          const active=!!tripgo.getKey();
+          keyStatus.textContent=active?'TripGo actif sur cet appareil. La clé reste privée ; les coordonnées des recherches sont envoyées à TripGo.':'TripGo peut compléter les trajets interurbains. Sa clé privée doit être enregistrée sur cet appareil.';
+          coachStatus.hidden=active;
+          coachStatus.textContent=active?'':'Recherche automatique BlaBlaCar Bus et FlixBus indisponible sans clé TripGo sur cet appareil.';
+        };
+        const carpool=document.createElement('a');carpool.href='https://www.blablacar.fr/carpool';carpool.target='_blank';carpool.rel='noopener noreferrer';
+        carpool.textContent='Rechercher le covoiturage BlaBlaCar';
         const saveKey=document.createElement('button');saveKey.className='second';saveKey.type='button';saveKey.textContent='Activer TripGo sur cet appareil';
         saveKey.onclick=()=>{try{tripgo.setKey(keyInput.value);keyInput.value='';keyState();bt.cpRefreshRegional?.();}catch(_){keyStatus.textContent='Clé invalide ou stockage de cet appareil indisponible.';}};
         const clearKey=document.createElement('button');clearKey.className='second';clearKey.type='button';clearKey.textContent='Retirer la clé TripGo de cet appareil';
         clearKey.onclick=()=>{try{tripgo.setKey('');keyInput.value='';keyState();bt.cpRefreshRegional?.();}catch(_){keyStatus.textContent='Retrait de la clé impossible sur cet appareil.';}};
-        keyState();for(const item of [keyStatus,keyInput,saveKey,clearKey])config.appendChild(item);sourcePanel.appendChild(config);
+        keyState();for(const item of [keyStatus,keyInput,saveKey,clearKey,carpool])config.appendChild(item);sourcePanel.appendChild(config);
         const tripSearch=(label,inputs)=>regionalSlot(label,()=>[tripgo.getKey(),inputs()],(target,signal)=>{
           const task=inputs();if(!tripgo.getKey()||!task?.from||!task?.to||!task.when)return;
           const status=document.createElement('div');status.className='doux';status.setAttribute('role','status');
@@ -2757,6 +2774,13 @@
                   const fareDetail=document.createElement('span');fareDetail.setAttribute('data-tripgo-leg-fare','');
                   fareDetail.textContent=' · '+(window.CPTransportFares.describeLeg?.(legFare)||'Tarif inconnu');
                   step.appendChild(fareDetail);
+                }
+                const coach=tripgo.coachFareSearch?.(leg);
+                if(coach){
+                  const link=document.createElement('a');link.href=coach.url;link.target='_blank';link.rel='noopener noreferrer';
+                  link.setAttribute('data-coach-fare-search','');
+                  link.textContent=' · Chercher le prix du départ sur '+coach.label;
+                  step.appendChild(link);
                 }
                 const validMapPoint=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180;
                 for(const [label,point] of [['Départ',leg.fromPoint],['Arrivée',leg.toPoint]]){
