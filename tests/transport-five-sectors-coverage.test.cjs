@@ -125,3 +125,15 @@ test('seasonal selection compares real instants across offset changes',()=>{
  assert.equal(selected(feed,{...trip,earliestDeparture:'2026-11-09T25:00:00+01:00'}),false);
  assert.equal(selected(feed,{...trip,earliestDeparture:'2026-11-09T10:00:00'}),false);
 });
+
+test('urban networks in Haute-Savoie remain selectable beside departmental GTFS',()=>{
+ const thonon=at(46.37,6.48);
+ const candidates=DEFAULT_RESOURCES.filter(r=>selected(r,{...thonon,earliestDeparture:'2026-11-09T09:00:00+01:00'}));
+ assert.ok(candidates.some(r=>r.id==='pan-start-thonon'));
+ assert.ok(candidates.some(r=>r.id==='pan-evad'));
+ assert.ok(candidates.some(r=>r.id==='oura-haute-savoie'));
+ // In mount(), urbanResources[0] must be preferred to localResources.find().
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.match(source,/const resource=preferredAin\|\|urbanResources\[0\]\|\|/);
+});
