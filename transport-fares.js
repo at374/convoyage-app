@@ -95,6 +95,12 @@
   const urbanDate=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'});
   function urbanReference(row){
     if(!row||row.interNetwork||row.legs!==undefined||!Object.hasOwn(URBAN,row.networkId))return null;
+    // A known non-210 or cross-border TAC journey must not inherit the zone-210 reference.
+    // Missing zone information remains a labelled reference, never a verified fare.
+    if(row.networkId==='tac-annemasse'){
+      const zones=[row.zone,row.fareZone,row.fromZone,row.toZone].filter(v=>v!==undefined&&v!==null);
+      if(zones.some(v=>String(v)!=='210')||row.crossBorder===true||row.transfrontalier===true)return null;
+    }
     const offer=URBAN[row.networkId];
     if(!offer.lines.includes(row.line)||!Number.isFinite(Date.parse(row.departure)))return null;
     const day=urbanDate.format(new Date(row.departure));
