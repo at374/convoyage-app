@@ -95,3 +95,12 @@ test('TCL reference requires explicit zone category and never verifies an itiner
  assert.equal(fares.urbanReference({...row,fareZoneGroup:'all_zones',departure:'2027-01-02T10:00:00+01:00'}),null);
  assert.equal(fares.fare([{provider:'TCL',verifiedPriceEUR:2.10}]).totalEUR,null);
 });
+
+test('TCL references reject ambiguous and impossible departure timestamps',()=>{
+ const row={networkId:'tcl-lyon',fareZoneGroup:'zones_1_2'};
+ assert.match(urbanReference({...row,departure:'2026-11-10T10:00:00+01:00'}).label,/2,10 €/);
+ for(const departure of ['2026-11-10T10:00:00','2026-02-30T10:00:00+01:00',
+  '2026-11-10T25:00:00+01:00','2026-11-10T10:00:00+25:00']){
+  assert.equal(urbanReference({...row,departure}),null,departure);
+ }
+});
