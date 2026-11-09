@@ -187,3 +187,10 @@ test('GTFS producer validity dates must be real and ordered',()=>{
  assert.equal(selected({...feed,validFrom:'2026-12-31',validUntil:'2026-01-01'},task),false);
  assert.equal(selected({...feed,validFrom:'2026-01-01',validUntil:'2026-12-31'},task),true);
 });
+
+test('federated partner cannot be silently skipped without loadNetworks',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.match(source,/if\(partners\.length&&typeof client\.loadNetworks!=='function'\)/);
+ assert.doesNotMatch(source,/if\(needsFederation&&typeof client\.loadNetworks!=='function'\)/);
+});
