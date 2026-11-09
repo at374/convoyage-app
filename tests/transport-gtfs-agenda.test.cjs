@@ -847,3 +847,40 @@ test('Cars Région Express joins the Ain search and works without a local feed',
   session.dispose();
  }
 });
+
+test('Express references show the published adult fare without marking the journey or price confirmed',async()=>{
+ const fares=require('../transport-express-fares.js');
+ const resource=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-express');
+ const bourg={stopId:'FR:01053:ZE:29763:CARSxREGIONxEXPRESS',lat:46.199498,lon:5.215381,name:'Bourg-en-Bresse Gare Routière'};
+ const oyonnax={stopId:'FR:01283:ZE:29810:CARSxREGIONxEXPRESS',lat:46.259671,lon:5.653281,name:'Oyonnax Gare'};
+ const expressRow=row({networkId:resource.datasetId,line:'X38',from:oyonnax.stopId,to:bourg.stopId,
+  originStop:oyonnax,destinationStop:bourg});
+ const ref=fares.reference(expressRow);
+ assert.equal(ref.amountEUR,8.6);
+ assert.equal(ref.confirmedCurrentFare,false);
+ assert.match(ref.source,/X38_Bourg-en-Bresse-Oyonnax_2026\.pdf$/);
+ for(const unsupported of [
+  {...expressRow,networkId:'another-network'},
+  {...expressRow,line:'X37'},
+  {...expressRow,from:bourg.stopId,to:oyonnax.stopId,originStop:bourg,destinationStop:oyonnax},
+  {...expressRow,originStop:{...oyonnax,lat:46.26+0.01}},
+  {...expressRow,legs:[{},{}]},
+  {...expressRow,departure:'2026-12-31T23:30:00Z',arrival:'2027-01-01T00:20:00Z'},
+  {...expressRow,departure:'2026-02-27T09:00:00Z',arrival:'2026-02-27T10:00:00Z'},
+ ])assert.equal(fares.reference(unsupported),null);
+ const saintClaude={stopId:'FR:39478:ZE:29812:CARSxREGIONxEXPRESS',lat:46.389964,lon:5.860345};
+ const molinges={stopId:'FR:39339:ZE:29811:CARSxREGIONxEXPRESS',lat:46.356939,lon:5.76531};
+ assert.equal(fares.reference({...expressRow,line:'X37',from:saintClaude.stopId,to:molinges.stopId,
+  originStop:saintClaude,destinationStop:molinges}),null);
+ const target=panel(),results=[];
+ const session=agenda.mount(target,{resources:[resource],tasks:[{...task,from:oyonnax,to:bourg}],
+  onResults:result=>results.push(result),clientFactory:()=>({
+   load:async()=>summary,query:async()=>({rows:[expressRow]}),dispose(){}
+  })});
+ await session.done;
+ assert.match(target.textContent,/Référence X38 : 8,60 € adulte illico AUTOCARS/);
+ assert.match(target.textContent,/Transport non confirmé/);
+ assert.equal(results[0].itineraries[0].priceEUR,undefined);
+ assert.equal(results[0].itineraries[0].fareVerified,undefined);
+ session.dispose();
+});

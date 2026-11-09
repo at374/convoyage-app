@@ -219,8 +219,14 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
      if(truncated||distinct.length>shown.length){const note=doc.createElement('p');note.textContent='Affichage limité : d’autres horaires peuvent exister.';status.appendChild(note);}
      for(const row of shown){
-      let tariff=null,tariffDescription='';
-      try{tariff=root.CPTY51Fares;tariffDescription=tariff?.describe(tariff?.reference(row))||'';}catch(_){}
+      let tariffSource=null,tariffDescription='';
+      try{
+       const expressTariff=root.CPTransportExpressFares;
+       const expressReference=expressTariff?.reference(row);
+       const y51Tariff=root.CPTY51Fares;
+       tariffDescription=expressReference?expressTariff.describe(expressReference):y51Tariff?.describe(y51Tariff.reference(row))||'';
+       tariffSource=expressReference?.source||y51Tariff?.SOURCE;
+      }catch(_){}
       const line=doc.createElement('p');
       const safeZone=(()=>{try{new Intl.DateTimeFormat('fr-FR',{timeZone:row.timeZone||resource.timeZone});return row.timeZone||resource.timeZone;}catch(_){return resource.timeZone;}})();
       const format=iso=>new Intl.DateTimeFormat('fr-FR',{timeZone:safeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(iso));
@@ -236,8 +242,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       const passCost=doc.createElement('span');passCost.setAttribute('data-sibra-pass-cost','');line.appendChild(passCost);
       fareChecks.push({row,element:passCost});refreshFares();
       if(tariffDescription){
-        const quote=doc.createElement('span');quote.setAttribute('data-y51-fare-reference','');quote.textContent=tariffDescription;line.appendChild(quote);
-        const proof=doc.createElement('a');proof.href=tariff.SOURCE;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir le barème officiel';line.appendChild(proof);
+        const quote=doc.createElement('span');quote.setAttribute(row.networkId==='reseau-interurbain-cars-region-express'?'data-express-fare-reference':'data-y51-fare-reference','');quote.textContent=tariffDescription;line.appendChild(quote);
+        const proof=doc.createElement('a');proof.href=tariffSource;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir le barème officiel';line.appendChild(proof);
       }
       for(const [label,stop] of [['Départ',row.originStop],['Correspondance',row.transferStop],['Montée après changement',row.transferDestinationStop],['Arrivée',row.destinationStop]]){
        if(!validPoint(stop))continue;
