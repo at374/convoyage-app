@@ -1,7 +1,7 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const {fare,describe,urbanReference}=require('../transport-fares.js');
-const networks=['pan-synchro','pan-jybus','oura-haute-savoie','oura-ain','oura-express'];
+const networks=['pan-jybus','oura-haute-savoie','oura-ain','oura-express'];
 test('no GTFS network is silently priced from its identity alone',()=>{
  for(const networkId of networks){
   assert.equal(urbanReference({networkId,line:'1',departure:'2026-11-12T09:00:00+01:00'}),null,networkId);
@@ -56,5 +56,14 @@ test('Ondea July 2026 ticket reference is visible without inventing a journey to
  assert.match(reference.source,/ondeagrandlac\.fr/);
  const result=fare([{provider:'Ondéa',mode:'bus',departure:row.departure}]);
  assert.equal(result.known,false);
+ assert.equal(result.totalEUR,null);
+});
+
+test('Synchro Bus ticket reference is not an automatically verified trip price',()=>{
+ const reference=urbanReference({networkId:'pan-synchro',line:'1',departure:'2026-11-12T09:00:00+01:00'});
+ assert.ok(reference);
+ assert.match(reference.label,/1,40 €/);
+ assert.match(reference.label,/1,70 €/);
+ const result=fare([{provider:'Synchro',mode:'bus',departure:'2026-11-12T09:00:00+01:00'}]);
  assert.equal(result.totalEUR,null);
 });
