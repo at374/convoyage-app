@@ -205,3 +205,17 @@ test('urban Ain GTFS must take precedence over broad Cars Région Ain',()=>{
   assert.ok(DEFAULT_RESOURCES.some(r=>r.id===id&&selected(r,task)),id);
  }
 });
+
+test('Agenda GTFS inventory has 16 distinct configured source identities',()=>{
+ const ids=DEFAULT_RESOURCES.map(resource=>resource.id);
+ assert.equal(ids.length,16);
+ assert.equal(new Set(ids).size,ids.length,'Duplicate GTFS source id');
+ for(const resource of DEFAULT_RESOURCES){
+  assert.equal(resource.format,'GTFS',resource.id);
+  assert.ok(resource.url.startsWith('https://'),resource.id);
+  assert.equal(resource.bounds.length,4,resource.id);
+  assert.ok(resource.bounds.every(Number.isFinite),resource.id);
+  assert.ok(resource.bounds[0]<resource.bounds[2]&&resource.bounds[1]<resource.bounds[3],resource.id);
+ }
+ assert.equal(ids.includes('tcl-lyon'),false,'TCL must not be counted as connected until its GTFS is usable');
+});
