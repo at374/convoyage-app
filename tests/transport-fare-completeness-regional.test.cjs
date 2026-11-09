@@ -33,3 +33,17 @@ test('TAM 2026 ticket reference is sourced but not a verified journey total',()=
  assert.equal(result.totalEUR,null);
  assert.equal(result.known,false);
 });
+
+test('Jybus subscriptions and Oura support do not silently make journeys free',()=>{
+ const base={provider:'J’ybus',mode:'bus',departure:'2026-11-12T08:00:00+01:00'};
+ for(const passProduct of ['JYBUS','OURA','SIBRA']){
+  const result=fare([{...base,passProduct,passAccepted:true}],{sibraPassActive:true});
+  assert.equal(result.known,false);
+  assert.equal(result.totalEUR,null);
+ }
+});
+test('Jybus ticket media cost is not a per-leg fare',()=>{
+ const result=fare([{provider:'J’ybus',mode:'bus',verifiedPriceEUR:0.20,departure:'2026-11-12T08:00:00+01:00'}]);
+ assert.equal(result.known,false);
+ assert.equal(result.totalEUR,null);
+});
