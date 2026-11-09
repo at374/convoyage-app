@@ -44,3 +44,24 @@ Source : https://transport.data.gouv.fr/resources/78904 .
 5. Clermont-Ferrand / Puy-de-Dôme : T2C, La Navette et Cars Région.
 
 Les informations d'opérateur, horaires, prix et réservation restent à confirmer réseau par réseau avant d'afficher une mission comme réalisable.
+
+## Sources complémentaires officielles vérifiées le 9 novembre 2026
+
+- Répertoire régional GTFS/NeTEx/GTFS-RT : https://transport.data.gouv.fr/datasets/region/84?format=GTFS&modes%5B%5D=bus&type=public-transit
+- Partenaires Oùra : https://www.oura.com/la-demarche-oura/
+- Réseaux vendant des titres sur Oùra (la présence d'une boutique ne constitue pas une API tarifaire) : https://www.oura.com/foire-aux-questions/faq-boutique-en-ligne/
+- Détail et calendrier de l'agrégat : https://transport.data.gouv.fr/resources/78904
+
+### Nouveaux points de contrôle
+- **Cars Région Loire** : jeu de données interurbain individuel GTFS et NeTEx au PAN. À recenser distinctement des Cars Région Express et des cars de l'Isère.
+- **TCL Lyon** : jeu de données indépendant GTFS et NeTEx, également SIRI Lite ; l'agrégat Oùra ne suffit pas à garantir son intégration.
+- **STAS Saint-Étienne** : GTFS, NeTEx, GTFS-RT ; contrôler les horaires et le temps réel indépendamment.
+- **T2C Clermont-Ferrand** : GTFS et GTFS-RT, jeu urbain individuel créé en octobre 2026.
+- **Citéa Valence-Romans** : GTFS et GTFS-RT, distinct du réseau interurbain Drôme.
+- **Sibra Grand Annecy** : jeu GTFS individuel.
+- **Synchro Chambéry** : jeu GTFS et GTFS-RT individuel ; source candidate déclarée dans le code, non validée en production.
+- **Rubis Bourg-en-Bresse** : deux jeux référencés au PAN, dont un avec GTFS-RT ; éviter doublons.
+- **TPG Genevois** : officiellement partenaire Oùra et vendeur de titres Oùra, mais le tarif transfrontalier doit être calculé selon le produit et les zones réelles.
+
+### Règle d'exhaustivité
+Confronter systématiquement **trois ensembles** : 1) agrégat Oùra (44 réseaux annoncés), 2) répertoire des partenaires et de la billettique Oùra, 3) jeux individuels du Point d'accès national. Les écarts sont une **liste de réseaux à rechercher**, pas une preuve d'absence de service. Ne pas confondre nombre de réseaux, lignes, exploitants et trajets réellement validés.
