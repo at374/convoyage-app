@@ -37,3 +37,6 @@ La ressource officielle https://transport.data.gouv.fr/resources/78904 publie un
 | TAC Annemasse | 31 décembre 2027 |
 
 Ces dates proviennent d'un instantané publié, et doivent être revérifiées à chaque mise à jour. **Un itinéraire postérieur à la fin du calendrier de son réseau ne doit jamais être considéré comme confirmé par ce GTFS**, même si l'agrégat global annonce une couverture jusqu'en 2028. Les horaires ne constituent pas une preuve de tarif.
+
+## Rectificatif — 9 novembre 2026
+La date « 15 novembre 2026 » donnée plus haut pour **Cars Région Ain** ne correspond plus à la version de l'agrégat Oùra consultée le 9 novembre. La ressource officielle https://transport.data.gouv.fr/resources/78904 indique désormais **27 octobre 2026 – 31 août 2027** pour Cars Région Ain. Toujours vérifier le calendrier des courses réellement chargé et ne pas extrapoler la validité d'un flux à un autre.
