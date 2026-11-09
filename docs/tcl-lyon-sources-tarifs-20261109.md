@@ -53,3 +53,17 @@ Prochaines étapes : obtenir un flux TCL autorisé et à jour ; vérifier la val
 ### Décision de sécurité
 
 **TCL = source identifiée, raccordement non confirmé.** Ne pas activer l'ancien GTFS ni afficher ses horaires comme actuels. Un accès officiel autorisé et un calendrier validé sont indispensables. La veille quotidienne doit rechercher le remplacement de l'URL producteur, les évolutions de zones et les grilles tarifaires, et consigner séparément la date de publication, la date de vérification et les dates de service.
+
+## Découverte complémentaire : SIRI Lite et archive GTFS plus récente (9 novembre 2026)
+
+1. **SIRI Lite / Estimated Timetables** : le PAN suit la ressource `84026` et affiche **100 % de disponibilité le 09/11/2026**. Cette métrique vérifie une réponse technique (dont HTTP 401 ou 405 accepté), **pas** une interrogation authentifiée réussie ni des trajets exploitables. Source : https://transport.data.gouv.fr/resources/84026
+2. **Transitland** référence une version TCL récupérée le **26/10/2026**, service déclaré **26/10/2026 au 23/02/2027**. Le portail précise **Basic Auth** pour la source producteur et mentionne une archive de versions successives. Cette version est une piste de contrôle des horaires, **pas une preuve que l'application peut télécharger le flux sans autorisation**. Source : https://www.transit.land/data/feeds/f-u05-tcl~systral
+3. **Contrôle de cohérence** : les archives historiques du PAN et le SIRI Lite n'ont pas la même fraîcheur ni les mêmes modalités d'accès. Ne pas déduire la couverture TCL à partir du seul taux de disponibilité SIRI. Source : https://transport.data.gouv.fr/datasets/horaires-theoriques-du-reseau-transports-en-commun-lyonnais
+
+### Critères d'activation TCL
+
+- Accès légal et authentifié au GTFS actuel, sans secret embarqué dans le client Android ou déposé dans GitHub.
+- Vérification du calendrier réel des courses et de la date de mise à jour, y compris jours fériés et modifications de service.
+- Accès aux horaires SIRI Lite avec tests de requêtes valides, identifiants d'arrêts/lignes compatibles GTFS, gestion des erreurs et cache horodaté.
+- Calcul des zones TCL et correspondances à partir de la grille officielle ; **aucun prix supposé à partir du seul numéro de ligne**.
+- Itinéraires piétons, marge avant mission, comparaison des réseaux et tests Android avant toute annonce de raccordement.
