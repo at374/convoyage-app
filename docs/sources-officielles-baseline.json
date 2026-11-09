@@ -1,0 +1,39 @@
+{
+  "description": "Baseline des sources officielles data.gouv.fr suivies pour Convoyage Ultra. Un job planifie compare les dates last_modified actuelles a celles-ci ; toute difference signale une mise a jour a analyser.",
+  "derniere_verification": "2026-11-09",
+  "sources": [
+    {
+      "nom": "Gares de peage du reseau routier national concede (MTE)",
+      "dataset_id": "59a0416ec751df23aa4d2736",
+      "dataset_api": "https://www.data.gouv.fr/api/1/datasets/59a0416ec751df23aa4d2736/",
+      "ressource_actuelle": "Gares-Peage_2025 (csv)",
+      "last_modified_connu": "2025-07-28T14:08:59.840000+00:00",
+      "url_actuelle": "https://static.data.gouv.fr/resources/gares-de-peage-du-reseau-routier-national-concede/20250728-140859/gares-peage-2025.csv",
+      "usage": "Referentiel GPS officiel (1266 gares). Verifie exhaustivement le 9 nov. 2026 : chaque point est a <0.5km d'un point connu ou de UNK. Aucune gare A69/Atosca presente. A surveiller : une edition 2026 qui ajouterait l'A69."
+    },
+    {
+      "nom": "Tarifs autoroutes APRR (MTE/APRR)",
+      "dataset_id": "6a6f41cdc81693872f209760",
+      "dataset_api": "https://www.data.gouv.fr/api/1/datasets/6a6f41cdc81693872f209760/",
+      "ressource_actuelle": "APRR - tarifs au 2026-02 / AREA - tarifs au 2026-02",
+      "last_modified_connu": "2026-08-02T13:19:33.000000+00:00",
+      "usage": "Grille tarifaire officielle exacte (pas seulement GPS). 13347 relations verifiees le 9 nov. 2026, 0 divergence. A surveiller : une edition plus recente que 2026-02, ou l'ajout d'autres concessionnaires (SANEF/ASF/ESCOTA/Cofiroute n'ont, a cette date, AUCUN dataset tarifaire equivalent sur data.gouv.fr -- recherche vide le 9 nov. 2026)."
+    },
+    {
+      "nom": "Portiques flux libre (Aliae/Sanef-Sapn)",
+      "note": "Dataset ponctuel verifie le 8 nov. 2026 (portiques-free-flow-25-10-2025), ne couvre pas l'A69. Pas de dataset_id fixe retrouve a surveiller specifiquement -- rechercher 'flux libre' ou 'portique' sur data.gouv.fr si besoin."
+    },
+    {
+      "nom": "A69 / Atosca",
+      "dataset_id": null,
+      "usage": "Autoroute ouverte le 4 nov. 2026. AUCUN dataset data.gouv.fr ne la mentionne a ce jour (recherches 'A69' et 'atosca' : 0 resultat le 9 nov. 2026). Point le plus important a surveiller : verifier atosca.fr directement (non accessible en curl depuis le bac a sable -- blocage reseau, pas robots.txt) et re-chercher sur data.gouv.fr a chaque execution."
+    }
+  ],
+  "methode_de_verification": [
+    "1. Pour chaque source avec un dataset_id, appeler https://www.data.gouv.fr/api/1/datasets/<id>/ et comparer le last_modified le plus recent de resources[] a last_modified_connu.",
+    "2. Rechercher sur https://www.data.gouv.fr/api/1/datasets/?q=<mot-cle> pour A69, atosca, tarifs sanef, tarifs asf, tarifs escota, tarifs cofiroute -- signaler tout nouveau resultat (0 attendu a ce jour).",
+    "3. Si une ressource a change : la televerser via curl (data.gouv.fr et static.data.gouv.fr sont directement accessibles en curl depuis le bac a sable), puis appliquer la meme discipline 'zero approximation' : fusion uniquement sur preuve GPS <0.06km OU preuve par prix (>= 2 destinations partagees a prix identique), jamais sur simple similitude de nom.",
+    "4. Mettre a jour ce fichier (last_modified_connu) et documenter tout changement dans docs/TRANSMISSION-CLAUDE-PEAGES-2026.md, avec tests node --test dedies.",
+    "5. Toujours committer+pousser avec les lignes Co-Authored-By/Claude-Session requises, et faire un rapport a Laurent (meme si rien de nouveau n'est trouve)."
+  ]
+}
