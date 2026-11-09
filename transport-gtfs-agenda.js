@@ -95,11 +95,15 @@ function selected(resource,task){
  if(resource?.validFrom||resource?.validUntil){
   const from=resource.validFrom,to=resource.validUntil;
   if((from&&!/^\d{4}-\d{2}-\d{2}$/.test(from))||(to&&!/^\d{4}-\d{2}-\d{2}$/.test(to)))return false;
-  const at=task?.earliestDeparture||task?.latestArrival;
-  if(typeof at==='string'&&/^\d{4}-\d{2}-\d{2}T/.test(at)){
-   const day=at.slice(0,10);
-   if((from&&day<from)||(to&&day>to))return false;
-  }
+  // Reject only when the whole requested interval lies outside the feed.
+  // A window spanning its first/last service day remains a candidate; GTFS
+  // calendar/calendar_dates must then validate each individual departure.
+  const early=task?.earliestDeparture,late=task?.latestArrival;
+  const day=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T/.test(value)?value.slice(0,10):null;
+  const first=day(early),last=day(late);
+  if((from&&last&&last<from)||(to&&first&&first>to))return false;
+  if(!last&&from&&first&&first<from)return false;
+  if(!first&&to&&last&&last>to)return false;
  }
  return resource?.format==='GTFS'&&/^https:\/\//.test(resource.url||'')&&validPoint(task?.from)&&validPoint(task?.to)&&Array.isArray(bounds)&&bounds.length===4&&
  bounds.every(Number.isFinite)&&[task.from,task.to].every(p=>p.lat>=bounds[0]&&p.lat<=bounds[2]&&p.lon>=bounds[1]&&p.lon<=bounds[3]);
