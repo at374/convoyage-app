@@ -146,3 +146,18 @@ test('Thonon ranks the narrower STAR’T urban envelope before ÉVA’D',()=>{
  assert.equal(urban[0].id,'pan-start-thonon');
  assert.ok(urban.some(r=>r.id==='pan-evad'));
 });
+
+test('Thonon and Evian have distinct nearest urban hubs',()=>{
+ const hubs={'pan-start-thonon':[46.37,6.48],'pan-evad':[46.40,6.59]};
+ const distance=(r,lat,lon)=>{
+  const [a,b]=hubs[r.id];
+  return (lat-a)**2+((lon-b)*Math.cos(a*Math.PI/180))**2;
+ };
+ for(const [lat,lon,expected] of [[46.37,6.48,'pan-start-thonon'],[46.40,6.59,'pan-evad']]){
+  const candidates=DEFAULT_RESOURCES.filter(r=>hubs[r.id]&&selected(r,{
+   ...at(lat,lon),earliestDeparture:'2026-11-09T09:00:00+01:00'
+  })).sort((a,b)=>distance(a,lat,lon)-distance(b,lat,lon));
+  assert.equal(candidates[0]?.id,expected);
+  assert.equal(candidates.length,2);
+ }
+});
