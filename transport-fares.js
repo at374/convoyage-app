@@ -78,6 +78,26 @@
     if(leg.passApplied)return 'Couvert par abonnement vérifié';
     return leg.verified&&money(leg.amountEUR)!==null?'Tarif vérifié : '+leg.amountEUR.toFixed(2).replace('.',',')+' €':'Tarif inconnu';
   }
-  const api={fare,describe,describeLeg};if(typeof module==='object'&&module.exports)module.exports=api;
+  const URBAN={
+    'mobivals-valserhone':{lines:['A','B'],label:'1,10 € à bord · ticket Mobi’Vals',
+      source:'https://www.mobivals.fr/se-deplacer/les-titres-de-transport/'},
+    'duobus-oyonnax':{lines:['L1','L2','L2B','L3','L3A','L3B','L4','ZIO'],
+      label:'1,20 € à bord ou 1,10 € TixiPass · ticket Duobus 30 min',
+      source:'https://www.duobus.fr/tous-les-titres'},
+    'rubis-bourg-en-bresse':{lines:['1','2','3','4','5','6','7','10','11','12'],
+      label:'1,40 € forfait Rubis 1 h ou 1,60 € auprès du conducteur',
+      source:'https://www.rubis.grandbourg.fr/titres-abonnements/'}
+  };
+  const urbanDate=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'});
+  function urbanReference(row){
+    if(!row||row.interNetwork||row.legs!==undefined||!Object.hasOwn(URBAN,row.networkId))return null;
+    const offer=URBAN[row.networkId];
+    if(!offer.lines.includes(row.line)||!Number.isFinite(Date.parse(row.departure)))return null;
+    const day=urbanDate.format(new Date(row.departure));
+    // Current operator pages were checked on 9 November. Recheck later service dates.
+    if(day<'2026-11-09'||day>'2026-12-31')return null;
+    return {label:'Référence tarifaire · '+offer.label,source:offer.source};
+  }
+  const api={fare,describe,describeLeg,urbanReference};if(typeof module==='object'&&module.exports)module.exports=api;
   root.CPTransportFares=api;
 })(typeof window!=='undefined'?window:globalThis);

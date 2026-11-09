@@ -207,3 +207,13 @@ test('mixed SIBRA, TER and TPG itinerary never presents a partial fare as a comp
   assert.match(describe(result),/Sous-total vérifié : 12,40 €/);
   assert.match(describe(result),/TPG : prix inconnu/);
 });
+
+test('urban adult fare references stay scoped to the matched direct route and date',()=>{
+ const {urbanReference}=require('../transport-fares.js');
+ const sample={networkId:'mobivals-valserhone',line:'A',departure:'2026-11-09T07:00:00+01:00'};
+ assert.match(urbanReference(sample).label,/1,10 € à bord/);
+ assert.match(urbanReference({...sample,networkId:'duobus-oyonnax',line:'L1'}).label,/1,20 € à bord ou 1,10 € TixiPass/);
+ assert.match(urbanReference({...sample,networkId:'rubis-bourg-en-bresse',line:'2'}).label,/1,40 €.*1,60 €/);
+ for(const change of [{line:'TAD A'},{networkId:'oura-ain'},{legs:[]},{departure:'2027-01-01T08:00:00+01:00'}])
+  assert.equal(urbanReference({...sample,...change}),null);
+});

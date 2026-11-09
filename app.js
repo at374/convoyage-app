@@ -2286,7 +2286,8 @@
         normalized.forEach((journey,index)=>{
           const row=itineraries[index],express=window.CPTransportExpressFares;
           const fare=express?.reference(row);
-          const reference=fare?express.describe(fare):window.CPTY51Fares?.describe(window.CPTY51Fares.reference(row));
+          const urban=window.CPTransportFares?.urbanReference?.(row);
+          const reference=fare?express.describe(fare):urban?.label||window.CPTY51Fares?.describe(window.CPTY51Fares.reference(row));
           if(reference)references.set(journey.id,reference.replace(/^ · /,''));
           const walk=document.createElement('div');
           walk.textContent=index<5?'Marche : calcul en cours…':'Marche : non calculée pour ce trajet.';

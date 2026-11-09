@@ -26,6 +26,19 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  url:'https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2',resolveFromCatalogue:true,
  bounds:[45.1,5.7,45.39,6.2],timeZone:'Europe/Paris'
 }),Object.freeze({
+ id:'oura-mobivals',datasetId:'mobivals-valserhone',network:'Mobi’Vals',format:'GTFS',federate:true,urban:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=MOBIVALS&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[46.08,5.76,46.16,5.87],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-duobus',datasetId:'duobus-oyonnax',network:'Duobus',format:'GTFS',federate:true,urban:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OYONNAX&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[46.20,5.59,46.34,5.70],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-rubis',datasetId:'rubis-bourg-en-bresse',network:'Rubis',format:'GTFS',federate:true,urban:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=RUBIS&dataFormat=GTFS&dataProfil=OPENDATA',
+ // This intentionally targets Bourg-en-Bresse and nearby urban communes.
+ bounds:[46.16,5.17,46.25,5.30],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'oura-express',datasetId:'reseau-interurbain-cars-region-express',network:'Cars Région Express',format:'GTFS',federate:true,
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_EXPRESS&dataFormat=GTFS&dataProfil=OPENDATA',
  // Envelope of the published stops, rounded outwards for the access radius.
@@ -92,12 +105,13 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const ain=resourceList.find(r=>r.id==='oura-ain');
  const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
  const express=resourceList.find(r=>r.id==='oura-express');
- const localResources=resourceList.filter(r=>r!==express);
+ const urbanResources=resourceList.filter(r=>r.urban&&taskList.some(t=>selected(r,t)));
+ const localResources=resourceList.filter(r=>r!==express&&!r.urban);
  const resource=preferredAin||localResources.find(r=>taskList.some(t=>selected(r,t)||localResources.some(other=>crossEnvelopePair(r,other,t))))||
-  (express&&taskList.some(t=>selected(express,t))?express:null);
+  urbanResources[0]||(express&&taskList.some(t=>selected(express,t))?express:null);
  if(!resource)return {dispose,done:Promise.resolve()};
- const partners=[...localResources,...(express?[express]:[])].filter(r=>r!==resource&&r.federate&&taskList.some(task=>
-  (r===express&&selected(r,task))||crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
+ const partners=[...urbanResources,...localResources,...(express?[express]:[])].filter(r=>r!==resource&&r.federate&&taskList.some(task=>
+  ((r===express||r.urban)&&selected(r,task))||crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
   (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to}))))).slice(0,1);
  const eligible=task=>selected(resource,task)||partners.some(r=>selected(r,task)||crossEnvelopePair(resource,r,task));
  const section=doc.createElement('div');section.className='bk';section.setAttribute('data-gtfs-agenda','');
@@ -223,9 +237,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       try{
        const expressTariff=root.CPTransportExpressFares;
        const expressReference=expressTariff?.reference(row);
+       const urbanReference=root.CPTransportFares?.urbanReference?.(row);
        const y51Tariff=root.CPTY51Fares;
-       tariffDescription=expressReference?expressTariff.describe(expressReference):y51Tariff?.describe(y51Tariff.reference(row))||'';
-       tariffSource=expressReference?.source||y51Tariff?.SOURCE;
+       tariffDescription=expressReference?expressTariff.describe(expressReference):urbanReference?' · '+urbanReference.label:
+        y51Tariff?.describe(y51Tariff.reference(row))||'';
+       tariffSource=expressReference?.source||urbanReference?.source||y51Tariff?.SOURCE;
       }catch(_){}
       const line=doc.createElement('p');
       const safeZone=(()=>{try{new Intl.DateTimeFormat('fr-FR',{timeZone:row.timeZone||resource.timeZone});return row.timeZone||resource.timeZone;}catch(_){return resource.timeZone;}})();
@@ -242,7 +258,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       const passCost=doc.createElement('span');passCost.setAttribute('data-sibra-pass-cost','');line.appendChild(passCost);
       fareChecks.push({row,element:passCost});refreshFares();
       if(tariffDescription){
-        const quote=doc.createElement('span');quote.setAttribute(row.networkId==='reseau-interurbain-cars-region-express'?'data-express-fare-reference':'data-y51-fare-reference','');quote.textContent=tariffDescription;line.appendChild(quote);
+        const quote=doc.createElement('span');quote.setAttribute(row.line==='Y51'?'data-y51-fare-reference':'data-published-fare-reference','');quote.textContent=tariffDescription;line.appendChild(quote);
         const proof=doc.createElement('a');proof.href=tariffSource;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir le barème officiel';line.appendChild(proof);
       }
       for(const [label,stop] of [['Départ',row.originStop],['Correspondance',row.transferStop],['Montée après changement',row.transferDestinationStop],['Arrivée',row.destinationStop]]){

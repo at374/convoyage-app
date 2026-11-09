@@ -1038,3 +1038,24 @@ test('mobile map draws supplied walking and transit paths and skips missing geom
  assert.equal(svg.children[1].attrs['stroke'],'#0b64cf');
  assert.ok(svg.children.every(line=>!line.attrs.points.includes('NaN')));
 });
+
+test('local Ain journeys add the matching urban feed in the existing two-feed budget',async()=>{
+ for(const [id,from,to] of [
+  ['oura-mobivals',{lat:46.1109,lon:5.8254},{lat:46.127,lon:5.81}],
+  ['oura-duobus',{lat:46.2594,lon:5.6537},{lat:46.21,lon:5.611}],
+  ['oura-rubis',{lat:46.1994,lon:5.2155},{lat:46.2226,lon:5.2105}]
+ ]){
+  const loaded=[];
+  const target=panel();
+  const session=agenda.mount(target,{tasks:[{...task,from,to}],clientFactory:()=>({
+   loadNetworks:async resources=>{
+    loaded.push(...resources.map(resource=>resource.id));
+    return {networks:resources.map(resource=>({...summary,source:{...summary.source,network:resource.network}}))};
+   },query:async()=>({rows:[]}),dispose(){}
+  })});
+  await session.done;
+  assert.equal(loaded.length,2);
+  assert.equal(loaded[1],id);
+  session.dispose();
+ }
+});
