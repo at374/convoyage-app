@@ -99,11 +99,15 @@ function selected(resource,task){
   // A window spanning its first/last service day remains a candidate; GTFS
   // calendar/calendar_dates must then validate each individual departure.
   const early=task?.earliestDeparture,late=task?.latestArrival;
-  const day=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T/.test(value)?value.slice(0,10):null;
-  const first=day(early),last=day(late);
-  // Malformed or reversed mission windows must never be treated as valid GTFS coverage.
-  if((early!==undefined&&!first)||(late!==undefined&&!last))return false;
-  if(first&&last&&(first>last||(first===last&&Date.parse(early)>Date.parse(late))))return false;
+  // timestamp() validates ISO date, clock and explicit UTC offset.
+  // Compare instants, not date strings: differing offsets can invert UTC order.
+  const firstMs=early===undefined?NaN:timestamp(early);
+  const lastMs=late===undefined?NaN:timestamp(late);
+  if((early!==undefined&&!Number.isFinite(firstMs))||
+     (late!==undefined&&!Number.isFinite(lastMs)))return false;
+  if(Number.isFinite(firstMs)&&Number.isFinite(lastMs)&&firstMs>lastMs)return false;
+  const first=typeof early==='string'?early.slice(0,10):null;
+  const last=typeof late==='string'?late.slice(0,10):null;
   if((from&&last&&last<from)||(to&&first&&first>to))return false;
   if(!last&&from&&first&&first<from)return false;
   if(!first&&to&&last&&last>to)return false;
