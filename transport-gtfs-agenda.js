@@ -169,7 +169,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const ain=resourceList.find(r=>r.id==='oura-ain');
  const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
  const express=resourceList.find(r=>r.id==='oura-express');
- const urbanResources=resourceList.filter(r=>r.urban&&taskList.some(t=>selected(r,t)));
+ // When urban envelopes overlap, prioritize the more local official feed.
+ // This is only source ordering; stops and services still need GTFS validation.
+ const envelopeArea=r=>(r.bounds[2]-r.bounds[0])*(r.bounds[3]-r.bounds[1]);
+ const urbanResources=resourceList.filter(r=>r.urban&&taskList.some(t=>selected(r,t)))
+  .sort((a,b)=>envelopeArea(a)-envelopeArea(b));
  const localResources=resourceList.filter(r=>r!==express&&!r.urban);
  // Prefer a matching urban GTFS over a broad departmental envelope. Otherwise
  // Haute-Savoie can shadow STAR’T/ÉVA’D and other local networks entirely.
