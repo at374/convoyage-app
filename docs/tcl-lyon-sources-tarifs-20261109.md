@@ -40,3 +40,16 @@ Prochaines étapes : obtenir un flux TCL autorisé et à jour ; vérifier la val
 - Le producteur précise que la fusion TCL/Libellule/Cars du Rhône a modifié les identifiants de lignes, l'organisation GTFS et les zones tarifaires des arrêts : https://data.grandlyon.com/portail/fr/actualites/reseau-tcl-unifie
 
 **Conclusion opérationnelle :** une archive 2026 existe, mais le flux officiel actuel et son accès ne sont pas encore validés dans l'application. Ne pas attribuer un tarif TCL au seul identifiant de ligne : déterminer les zones réelles du trajet et appliquer les conditions du billet.
+
+## Contrôle du 9 novembre 2026 — accès et fraîcheur des flux
+
+- Le PAN confirme un **jeu de données TCL théorique de 60 jours** sous licence Mobilité, dont le téléchargement nécessite un compte sur data.grandlyon.com : https://transport.data.gouv.fr/datasets/horaires-theoriques-du-reseau-transports-en-commun-lyonnais
+- La ressource GTFS historique du PAN est explicitement valable **du 14/04/2022 au 12/07/2022**, avec **0 % de disponibilité** dans le suivi récent. Son affichage d'une validation en 2026 ne rend **pas** son calendrier valable pour 2026 : https://transport.data.gouv.fr/resources/65812
+- La ressource NeTEx historique est également signalée indisponible : https://transport.data.gouv.fr/resources/65813
+- La documentation technique du producteur confirme l'utilisation de **HTTP Basic Auth sur HTTPS**, avec identifiants API distincts de la connexion GrandLyon Connect. **Ne pas stocker d'identifiants dans le dépôt, ni dans le JavaScript client** : https://rdata-grandlyon.readthedocs.io/fr/latest/authentification.html
+- Mobility Database référence l'ancien flux `GTFS_TCL.ZIP` mais indique qu'il a été **remplacé par une autre URL producteur**. Rechercher cette nouvelle URL et valider son accès avant toute intégration : https://mobilitydatabase.org/feeds/gtfs/mdb-1020
+- Une archive Transitland du **08/07/2026** indique **978 lignes et 14 274 arrêts**, mais son calendrier de service exploitable s'arrête au **05/11/2026**. Elle ne doit pas être utilisée pour des missions ultérieures : https://www.transit.land/data/feeds/f-u05-tcl~systral/versions/7ba48359965b5a65b4808379a11f7381c851f1cd
+
+### Décision de sécurité
+
+**TCL = source identifiée, raccordement non confirmé.** Ne pas activer l'ancien GTFS ni afficher ses horaires comme actuels. Un accès officiel autorisé et un calendrier validé sont indispensables. La veille quotidienne doit rechercher le remplacement de l'URL producteur, les évolutions de zones et les grilles tarifaires, et consigner séparément la date de publication, la date de vérification et les dates de service.
