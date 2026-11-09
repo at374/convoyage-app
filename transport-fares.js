@@ -111,7 +111,16 @@
     if(!row||row.interNetwork||row.crossBorder===true||row.legs!==undefined||
        row.networkId!=='tcl-lyon'||typeof row.departure!=='string')return null;
     const offer=Object.hasOwn(TCL_REFERENCE,row.fareZoneGroup)?TCL_REFERENCE[row.fareZoneGroup]:null;
-    if(!offer||!Number.isFinite(Date.parse(row.departure)))return null;
+    // Require a real, timezone-qualified departure; Date.parse alone normalizes
+    // impossible calendar days and accepts timezone-less local strings.
+    const datePattern=/^(\\d{4}-\\d{2}-\\d{2})T(\\d{2}):(\\d{2})(?::(\\d{2})(?:\\.\\d{1,3})?)?(Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)$/;
+    const match=datePattern.exec(row.departure);
+    if(!offer||!match)return null;
+    const [,date,hour,minute,second]=match;
+    const calendar=Date.parse(date+'T12:00:00Z');
+    if(!Number.isFinite(calendar)||new Date(calendar).toISOString().slice(0,10)!==date||
+       Number(hour)>23||Number(minute)>59||Number(second||0)>59||
+       !Number.isFinite(Date.parse(row.departure)))return null;
     const day=urbanDate.format(new Date(row.departure));
     if(day<'2026-11-09'||day>'2026-12-31')return null;
     return {label:'Référence tarifaire TCL · 1 voyage '+offer.label+' · '+
