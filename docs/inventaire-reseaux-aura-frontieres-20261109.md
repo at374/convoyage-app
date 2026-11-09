@@ -100,3 +100,13 @@ La présence de tarifs historiques ne satisfait pas l'exigence « tous les prix 
 **Cars Région Savoie** : le portail officiel sépare **S01–S07 périurbaines** et **S10–S83 touristiques**, avec des pages tarifaires distinctes et des titres M-Ticket via Oùra. Ne jamais appliquer un tarif unique à l'ensemble de ces lignes. Source : https://www.laregionvoustransporte.fr/cars-region/cars-region-de-la-savoie/infos-et-services-cars-region-de-la-savoie/titres-et-tarifs-de-savoie/ .
 
 **Règle de publication** : un montant de billet n'entre dans les prix vérifiés de l'application que lorsque son produit, sa date d'effet, sa zone et ses lignes éligibles sont documentés ; les abonnements ne doivent pas être transformés en trajet gratuit sans validation de leur éligibilité.
+
+## Vérification billettique J’ybus — 9 novembre 2026
+
+Source officielle : https://www.jybus.fr/jybus-passe-en-billettique . Depuis le 3 novembre 2025, J’ybus utilise des **billets et cartes Oùra rechargeables**, à valider **à chaque montée, même en correspondance**. La brochure officielle https://www.jybus.fr/sites/jybus/files/jybus_brochure_billettiqueoura_nov2025_web_compressed.pdf mentionne les titres 1 voyage, 10 voyages et abonnements.
+
+Le procès-verbal communautaire du 3 novembre 2025 (approuvé le 26 janvier 2026), consultable à https://politique.pappers.fr/commune/document/0c8c5385b357301a9a83a3ee8b8a5205, précise que la migration billettique n'a **pas modifié les tarifs des titres de transport**, mais a introduit un **support vierge à 0,20 €** pour le billet sans contact et une **carte à 5 €** (offerte jusqu'au 1er mai 2026). Il faut distinguer le coût d'achat initial du support et le coût de chaque trajet : ne pas ajouter systématiquement 0,20 € ou 5 € aux correspondances ni à un voyageur déjà équipé.
+
+La source officielle des horaires et temps réel https://transport.data.gouv.fr/datasets/offre-de-transports-jybus-a-rumilly distingue 2 lignes urbaines, 1 TAD et 2 interurbaines, avec GTFS-RT alertes, positions et mises à jour de courses. Ces flux doivent être exploités et vérifiés séparément des grilles tarifaires.
+
+**Statut : règles billettiques documentées ; calcul de coût initial du support, validité des correspondances et tarif unitaire actuel non encore intégrés.**
