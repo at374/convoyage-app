@@ -2,6 +2,12 @@
 (function(root){
 'use strict';
 const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
+ id:'pan-jybus',datasetId:'jybus-rumilly',network:'J’ybus — Rumilly Terre de Savoie',format:'GTFS',federate:true,urban:true,
+ // Official PAN GTFS archive 7 Aug 2026; 5 lines including reservation-only TAD.
+ // Service validity must be checked per trip; no fares are encoded in this GTFS.
+ url:'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/80092/80092.20260807.141107.062760.zip',
+ updatedAt:'2026-08-07',bounds:[45.75,5.82,46.02,6.18],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'pan-synchro',datasetId:'synchro-chambery',network:'Synchro Bus — Grand Chambéry',format:'GTFS',federate:true,urban:true,
  // Official PAN archived GTFS; timetable coverage through 20 Dec 2026. Do not infer fares.
  url:'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/82272/82272.20261006.181637.894741.zip',
