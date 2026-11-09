@@ -884,3 +884,20 @@ test('Express references show the published adult fare without marking the journ
  assert.equal(results[0].itineraries[0].fareVerified,undefined);
  session.dispose();
 });
+
+test('Express keeps Brion Gare and Montréal-la-Cluse Mairie and Ville separate',()=>{
+ const fares=require('../transport-express-fares.js');
+ const stop=(municipality,id,lat,lon)=>({stopId:'FR:'+municipality+':ZE:'+id+':CARSxREGIONxEXPRESS',lat,lon});
+ const brion=stop('01063','29691',46.175774,5.558513);
+ const villereversure=stop('01447','29804',46.194192,5.397474);
+ const mairie=stop('01265','29808',46.184733,5.576972);
+ const ville=stop('01265','29754',46.171287,5.573158);
+ const martignat=stop('01237','29809',46.209166,5.610731);
+ const reference=(line,from,to)=>fares.reference(row({line,networkId:'reseau-interurbain-cars-region-express',
+  from:from.stopId,to:to.stopId,originStop:from,destinationStop:to}));
+ assert.equal(reference('X36',brion,villereversure).amountEUR,3.4);
+ assert.equal(reference('X37',martignat,mairie).amountEUR,1.4);
+ assert.equal(reference('X38',mairie,brion).amountEUR,1.2);
+ assert.equal(reference('X38',ville,brion).from,'MONTREAL-LA-CLUSE Ville');
+ assert.equal(reference('X38',{...mairie,lat:ville.lat,lon:ville.lon},brion),null);
+});
