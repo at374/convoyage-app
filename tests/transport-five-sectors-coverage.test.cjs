@@ -172,3 +172,10 @@ test('undated GTFS feeds also reject invalid or inverted mission windows',()=>{
  assert.equal(selected(feed,{...task,earliestDeparture:'2026-11-09T09:00:00+01:00',
   latestArrival:'2026-11-09T09:30:00+01:00'}),true);
 });
+
+test('empty GTFS feeds are not marked loaded by Agenda',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.match(source,/Number\.isInteger\(n\.counts\.stops\)&&n\.counts\.stops>0/);
+ assert.doesNotMatch(source,/Number\.isInteger\(n\.counts\.stops\)&&n\.counts\.stops>=0/);
+});
