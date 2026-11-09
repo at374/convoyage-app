@@ -30,3 +30,12 @@ test('Rumilly J’ybus official source is a candidate for local trips',()=>{
  assert.equal(selected(source,at(46.20,6.40)),false);
  assert.match(source.url,/80092\.20260807\.141107\.062760\.zip$/);
 });
+
+test('Thonon STAR’T source is selected locally, never assumed to contain fares',()=>{
+ const source=DEFAULT_RESOURCES.find(r=>r.id==='pan-start-thonon');
+ assert.ok(source);
+ assert.equal(selected(source,at(46.37,6.48)),true);
+ assert.equal(selected(source,at(45.96,5.36)),false);
+ assert.match(source.url,/84108\.20260901\.002618\.536834\.zip$/);
+ assert.notEqual(source.fareVerified,true,'GTFS does not supply a verified ticket price');
+});
