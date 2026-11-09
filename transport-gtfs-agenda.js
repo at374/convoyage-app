@@ -101,6 +101,9 @@ function selected(resource,task){
   const early=task?.earliestDeparture,late=task?.latestArrival;
   const day=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T/.test(value)?value.slice(0,10):null;
   const first=day(early),last=day(late);
+  // Malformed or reversed mission windows must never be treated as valid GTFS coverage.
+  if((early!==undefined&&!first)||(late!==undefined&&!last))return false;
+  if(first&&last&&(first>last||(first===last&&Date.parse(early)>Date.parse(late))))return false;
   if((from&&last&&last<from)||(to&&first&&first>to))return false;
   if(!last&&from&&first&&first<from)return false;
   if(!first&&to&&last&&last>to)return false;
