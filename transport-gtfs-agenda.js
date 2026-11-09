@@ -25,6 +25,11 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  id:'81794',datasetId:'5eb3510a4efd8f649ffe1b9f',network:'M Réso — Grésivaudan',format:'GTFS',federate:true,
  url:'https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2',resolveFromCatalogue:true,
  bounds:[45.1,5.7,45.39,6.2],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-express',datasetId:'reseau-interurbain-cars-region-express',network:'Cars Région Express',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_EXPRESS&dataFormat=GTFS&dataProfil=OPENDATA',
+ // Envelope of the published stops, rounded outwards for the access radius.
+ bounds:[44.35,2.79,46.78,6.15],timeZone:'Europe/Paris'
 })]);
 function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof point.lon==='number'&&
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}
@@ -86,12 +91,15 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const ainCore=task=>[task?.from,task?.to].every(p=>validPoint(p)&&p.lat>=45.9&&p.lat<=46.5&&p.lon>=4.7&&p.lon<=5.85);
  const ain=resourceList.find(r=>r.id==='oura-ain');
  const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
- const resource=preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
+ const express=resourceList.find(r=>r.id==='oura-express');
+ const localResources=resourceList.filter(r=>r!==express);
+ const resource=preferredAin||localResources.find(r=>taskList.some(t=>selected(r,t)||localResources.some(other=>crossEnvelopePair(r,other,t))))||
+  (express&&taskList.some(t=>selected(express,t))?express:null);
  if(!resource)return {dispose,done:Promise.resolve()};
- const partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
-  crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
+ const partners=[...localResources,...(express?[express]:[])].filter(r=>r!==resource&&r.federate&&taskList.some(task=>
+  (r===express&&selected(r,task))||crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
   (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to}))))).slice(0,1);
- const eligible=task=>selected(resource,task)||partners.some(r=>crossEnvelopePair(resource,r,task));
+ const eligible=task=>selected(resource,task)||partners.some(r=>selected(r,task)||crossEnvelopePair(resource,r,task));
  const section=doc.createElement('div');section.className='bk';section.setAttribute('data-gtfs-agenda','');
  const heading=doc.createElement('h3');heading.textContent=resource.network+' — horaires aux arrêts';section.appendChild(heading);
  const sourceStatus=doc.createElement('p');sourceStatus.className='doux';sourceStatus.setAttribute('role','status');
@@ -130,7 +138,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
    }
    if(!dates.size)throw new Error('No valid mission window');
    const loadOptions={indexServiceDates:[...dates].sort()};
-   const needsFederation=taskList.some(task=>!selected(resource,task)&&partners.some(partner=>crossEnvelopePair(resource,partner,task)));
+   const needsFederation=taskList.some(task=>!selected(resource,task)&&partners.some(partner=>selected(partner,task)||crossEnvelopePair(resource,partner,task)));
    if(needsFederation&&typeof client.loadNetworks!=='function')throw new Error('Federated GTFS loading unavailable');
    const summary=partners.length&&typeof client.loadNetworks==='function'?
     await client.loadNetworks([resource,...partners],loadOptions):await client.load(resource,loadOptions);

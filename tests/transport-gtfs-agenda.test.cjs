@@ -290,7 +290,7 @@ test('Grenoble local tasks select only the two official Grenoble resources',asyn
  assert.doesNotMatch(target.textContent,/Cars Région Haute-Savoie|Sibra/);
  session.dispose();
  const outside={...local,from:point};
- assert.equal(agenda.DEFAULT_RESOURCES.some(r=>agenda.selected(r,outside)),false);
+ assert.equal(agenda.DEFAULT_RESOURCES.some(r=>r.id!=='oura-express'&&agenda.selected(r,outside)),false);
 });
 
 test('Agenda collapses equivalent departures from different GTFS trip IDs',async()=>{
@@ -325,7 +325,7 @@ test('Grenoble to Crolles remains within both metropolitan and Grésivaudan GTFS
  const grenoble={lat:45.1885,lon:5.7245},crolles={lat:45.276,lon:5.883};
  const trip={label:'Jonction mission',from:grenoble,to:crolles,
   earliestDeparture:'2026-11-02T09:00:00+01:00',latestArrival:'2026-11-02T12:00:00+01:00'};
- const eligible=agenda.DEFAULT_RESOURCES.filter(resource=>agenda.selected(resource,trip));
+ const eligible=agenda.DEFAULT_RESOURCES.filter(resource=>resource.id!=='oura-express'&&agenda.selected(resource,trip));
  assert.deepEqual(eligible.map(resource=>resource.datasetId),
   ['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f']);
  const target=panel(),calls=[];
@@ -825,4 +825,25 @@ test('Mobile regional transport cards cover Aller Jonction Retour and safe stop 
  assert.match(app,/encodeURIComponent\(stop\)/);
  assert.match(app,/position exacte non vérifiée/);
  assert.match(app,/Transport non confirmé/);
+});
+
+
+test('Cars Région Express joins the Ain search and works without a local feed',async()=>{
+ const bourg={lat:46.199498,lon:5.215381};
+ const oyonnax={lat:46.259,lon:5.653};
+ const clermont={lat:45.783,lon:3.1};
+ const saintEtienne={lat:45.444,lon:4.399};
+ for(const [from,to,expected] of [[bourg,oyonnax,['oura-ain','oura-express']],
+  [clermont,saintEtienne,['oura-express']]]){
+  const calls=[];
+  const loaded=resource=>({...summary,source:{...summary.source,network:resource.network,url:resource.url}});
+  const session=agenda.mount(panel(),{tasks:[{...task,from,to}],clientFactory:()=>({
+   load:async resource=>{calls.push(resource.id);return loaded(resource);},
+   loadNetworks:async resources=>{calls.push(...resources.map(resource=>resource.id));return {networks:resources.map(loaded)};},
+   query:async()=>({rows:[]}),dispose(){}
+  })});
+  await session.done;
+  assert.deepEqual(calls,expected);
+  session.dispose();
+ }
 });
