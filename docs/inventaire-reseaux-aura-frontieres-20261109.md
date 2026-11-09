@@ -110,3 +110,14 @@ Le procès-verbal communautaire du 3 novembre 2025 (approuvé le 26 janvier 2026
 La source officielle des horaires et temps réel https://transport.data.gouv.fr/datasets/offre-de-transports-jybus-a-rumilly distingue 2 lignes urbaines, 1 TAD et 2 interurbaines, avec GTFS-RT alertes, positions et mises à jour de courses. Ces flux doivent être exploités et vérifiés séparément des grilles tarifaires.
 
 **Statut : règles billettiques documentées ; calcul de coût initial du support, validité des correspondances et tarif unitaire actuel non encore intégrés.**
+
+## Audit des petits réseaux Haute-Savoie — 9 novembre 2026
+
+Catalogue public GTFS départemental : https://transport.data.gouv.fr/datasets/departement/74?format=GTFS&locale=fr
+Les jeux de données distincts à vérifier sont **ARAVIS Bus** (Vallées de Thônes), **ARVI** (Cluses-Arve et Montagnes) et **Navettes du Giffre** (Samoëns, Morillon, Sixt-Fer-à-Cheval, Verchaix, etc.). La présence au catalogue ne prouve ni l'intégration dans l'application, ni la validité des courses à une date donnée.
+
+**Navettes du Giffre, tarifs officiels été 2026** : https://www.montagnesdugiffre.fr/actualites/infos-sur-les-navettes-du-giffre-lignes-horaires-tarifs/ . Service estival du **4 juillet au 31 août 2026**. Aller simple **1,60 €** (sans correspondance, exception ligne 7 « Télécabine de Morillon ») ; pass **1 journée 2 €** (trajets illimités dans la journée) ; pass **10 journées 10 €** (non nominatif, journées illimitées). **Ces prix ne doivent jamais être extrapolés à novembre 2026 ou à la saison hivernale.** La grille tarifaire hivernale doit être trouvée et vérifiée séparément. Ligne 9 estivale en partenariat avec Arv'i Mobilité : vérifier doublons éventuels avant fusion des sources.
+
+**Priorités techniques :** identifier l'URL du GTFS officiel de chaque réseau et sa période de validité, vérifier la présence des trajets à la date de mission, traiter les services saisonniers, et relier les tarifs officiels avec restrictions de lignes et de correspondances. Aucun de ces trois réseaux n'est déclaré raccordé par ce seul audit.
+
+**Cars Région Haute-Savoie** : la source régionale https://www.data.gouv.fr/datasets/reseau-interurbain-cars-region-haute-savoie-74 indique une actualisation GTFS début novembre 2026 ; préférer un flux récent et vérifier la date des courses plutôt qu'un export archivé.
