@@ -140,6 +140,21 @@ const DATA={
  }
 };
 const NETWORK='reseau-interurbain-cars-region-express';
+const LINE_PAGES={
+ X13:'cars-region-de-la-loire/ligne/x13-roanne-le-creusot-tgv/',
+ X18:'cars-region-de-la-loire/ligne/x18-saint-etienne-clermont-ferrand/',
+ X25:'cars-region-de-lain/ligne/x25-villefranche-sur-saone-macon-loche-tgv/',
+ X33:'cars-region-de-lain/ligne/x33-valserhone-divonne-les-bains/',
+ X36:'cars-region-de-lain/ligne/x36-bellegarde-bourg-en-bresse/',
+ X37:'cars-region-de-lain/ligne/x37-nantua-saint-claude/',
+ X38:'cars-region-de-lain/ligne/x38-oyonnax-bourg-en-bresse/',
+ X51:'cars-region-du-puy-de-dome/ligne/x51-saint-gervais-les-ancizes-pontgibaud-volvic/',
+ X71:'cars-region-de-la-drome/ligne/d36-x71-montelimar-grignan-nyons/',
+ X73:'cars-region-de-la-drome/ligne/x73-valence-tgv-valence-ville-privas-aubenas/',
+ X74:'cars-region-de-la-drome/ligne/x74-valence-tgv-montelimar-aubenas-les-vans-2/',
+ X75:'cars-region-de-lardeche/ligne/x75-annonay-le-peage-de-roussillon-lyon/',
+ X76:'cars-region-de-la-drome/ligne/x76-valence-tgv-montelimar-vallon-pont-darc-2/',
+};
 const boardingDate=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'});
 function matchingStop(stops,id,stop){
  if(stop?.stopId!==id||!Number.isFinite(stop.lat)||!Number.isFinite(stop.lon))return -1;
@@ -164,7 +179,14 @@ function describe(ref){
  return ref?' · Référence '+ref.line+' : '+ref.amountEUR.toFixed(2).replace('.',',')+
   ' € '+ref.product+' (barème du 01/03/2026, à vérifier avant achat).':'';
 }
-const api={reference,describe};
+function lookup(row){
+ const legs=Array.isArray(row?.legs)?row.legs:[row];
+ const lines=[...new Set(legs.filter(leg=>leg?.networkId===NETWORK&&Object.hasOwn(LINE_PAGES,leg.line)).map(leg=>leg.line))];
+ if(!lines.length)return null;
+ return {searchURL:'https://www.sncf-connect.com/billet-train',
+  lines:lines.map(line=>({line,url:'https://www.laregionvoustransporte.fr/cars-region/'+LINE_PAGES[line]}))};
+}
+const api={reference,describe,lookup};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportExpressFares=api;
 })(typeof window!=='undefined'?window:globalThis);

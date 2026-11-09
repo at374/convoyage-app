@@ -922,3 +922,23 @@ test('X25 and X33 retain the published product and leave blank cells unknown',()
  assert.match(fares.describe(x33),/8,60 € adulte illico AUTOCARS/);
  assert.equal(reference('X33',divonne,ferneyMairie),null);
 });
+
+test('Express results with an unknown fare link to SNCF and the exact regional line',async()=>{
+ const fares=require('../transport-express-fares.js');
+ const resource=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-express');
+ const expressRow=row({networkId:resource.datasetId,line:'X71'});
+ const lookup=fares.lookup(expressRow);
+ assert.match(lookup.lines[0].url,/\/d36-x71-montelimar-grignan-nyons\/$/);
+ assert.equal(fares.lookup({...expressRow,line:'D36'}),null);
+ assert.equal(fares.lookup({...expressRow,networkId:'other'}),null);
+ assert.equal(fares.lookup({legs:[expressRow,expressRow]}).lines.length,1);
+ const from={lat:44.56,lon:4.75},to={lat:44.36,lon:5.14};
+ const target=panel();
+ const session=agenda.mount(target,{resources:[resource],tasks:[{...task,from,to}],
+  clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[expressRow]}),dispose(){}})});
+ await session.done;
+ assert.match(target.textContent,/tarif inconnu/);
+ assert.match(target.textContent,/Rechercher le tarif sur SNCF Connect.*Fiche officielle X71/);
+ assert.doesNotMatch(target.textContent,/Référence X71/);
+ session.dispose();
+});

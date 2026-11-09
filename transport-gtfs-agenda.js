@@ -219,9 +219,10 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
      if(truncated||distinct.length>shown.length){const note=doc.createElement('p');note.textContent='Affichage limité : d’autres horaires peuvent exister.';status.appendChild(note);}
      for(const row of shown){
-      let tariffSource=null,tariffDescription='';
+      let tariffSource=null,tariffDescription='',expressLookup=null;
       try{
        const expressTariff=root.CPTransportExpressFares;
+       expressLookup=expressTariff?.lookup?.(row);
        const expressReference=expressTariff?.reference(row);
        const y51Tariff=root.CPTY51Fares;
        tariffDescription=expressReference?expressTariff.describe(expressReference):y51Tariff?.describe(y51Tariff.reference(row))||'';
@@ -244,6 +245,14 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(tariffDescription){
         const quote=doc.createElement('span');quote.setAttribute(row.networkId==='reseau-interurbain-cars-region-express'?'data-express-fare-reference':'data-y51-fare-reference','');quote.textContent=tariffDescription;line.appendChild(quote);
         const proof=doc.createElement('a');proof.href=tariffSource;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir le barème officiel';line.appendChild(proof);
+      }
+      if(expressLookup){
+       const links=[['Rechercher le tarif sur SNCF Connect',expressLookup.searchURL],
+        ...expressLookup.lines.map(({line,url})=>['Fiche officielle '+line,url])];
+       for(const [label,url] of links){
+        const link=doc.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';
+        link.textContent=' · '+label;line.appendChild(link);
+       }
       }
       for(const [label,stop] of [['Départ',row.originStop],['Correspondance',row.transferStop],['Montée après changement',row.transferDestinationStop],['Arrivée',row.destinationStop]]){
        if(!validPoint(stop))continue;
