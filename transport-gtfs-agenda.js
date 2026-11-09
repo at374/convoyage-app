@@ -2,6 +2,12 @@
 (function(root){
 'use strict';
 const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
+ id:'pan-evad',datasetId:'donnees-du-reseau-evad-1',network:'ÉVA’D — Évian et vallée d’Abondance',format:'GTFS',federate:true,urban:true,
+ // Official producer GTFS; validity 04 Sep–20 Dec 2026. No fare tables or transfer rules in feed.
+ // TAD and seasonal services require independent reservation/operating-day checks.
+ url:'https://www.data.gouv.fr/api/1/datasets/r/429c8587-676a-4ed3-8279-e67403bc36f4',
+ updatedAt:'2026-09-08',bounds:[46.18,6.30,46.49,6.91],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'pan-start-thonon',datasetId:'reseaux-urbains-start',network:'STAR’T — Thonon Agglomération',format:'GTFS',federate:true,urban:true,
  // PAN official GTFS validated 1 Sep 2026, valid to 20 Dec 2026. No GTFS fare products.
  // Geographic envelope is a candidate filter, not proof of a served stop or route.
