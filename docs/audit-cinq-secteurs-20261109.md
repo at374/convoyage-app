@@ -21,3 +21,19 @@ Dans `transport-gtfs-agenda.js`, les sources explicitement déclarées incluent 
 7. Aucun changement de synchronisation des missions, authentification ou Supabase.
 
 **Statut : sources repérées, raccordement et couverture complète non validés.**
+
+## Fenêtres calendaires relevées dans la ressource officielle Oùra (consultation du 9 novembre 2026)
+La ressource officielle https://transport.data.gouv.fr/resources/78904 publie une validité **par réseau**, distincte de la validité générale de l'agrégat :
+
+| Réseau | Fin de couverture GTFS annoncée dans la ressource consultée |
+|---|---|
+| Cars Région Ain (Ambérieu) | 15 novembre 2026 |
+| Synchro Chambéry | 20 décembre 2026 |
+| TAM Ambérieu-en-Bugey | 31 décembre 2026 |
+| Cars Région Express | 31 janvier 2027 |
+| Ondéa Aix-les-Bains | 31 mars 2027 |
+| Cars Région Savoie | 31 août 2027 |
+| Cars Région Haute-Savoie (Archamps / Saint-Julien, selon arrêts réels) | 31 août 2027 |
+| TAC Annemasse | 31 décembre 2027 |
+
+Ces dates proviennent d'un instantané publié, et doivent être revérifiées à chaque mise à jour. **Un itinéraire postérieur à la fin du calendrier de son réseau ne doit jamais être considéré comme confirmé par ce GTFS**, même si l'agrégat global annonce une couverture jusqu'en 2028. Les horaires ne constituent pas une preuve de tarif.
