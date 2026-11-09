@@ -99,7 +99,27 @@
       source:'https://www.rubis.grandbourg.fr/titres-abonnements/'}
   };
   const urbanDate=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'});
+  // TCL is priced by the complete zone group, not by route number or stop name.
+  // These are reference prices only; never mark an itinerary fare as verified.
+  const TCL_REFERENCE=Object.freeze({
+    zones_1_2:{price:2.10,label:'zones 1 et 2'},
+    adjacent_excluding_1:{price:1.60,label:'2 zones voisines hors zone 1'},
+    all_excluding_1:{price:2.50,label:'toutes zones hors zone 1'},
+    all_zones:{price:3.70,label:'toutes zones'}
+  });
+  function tclReference(row){
+    if(!row||row.interNetwork||row.crossBorder===true||row.legs!==undefined||
+       row.networkId!=='tcl-lyon'||typeof row.departure!=='string')return null;
+    const offer=Object.hasOwn(TCL_REFERENCE,row.fareZoneGroup)?TCL_REFERENCE[row.fareZoneGroup]:null;
+    if(!offer||!Number.isFinite(Date.parse(row.departure)))return null;
+    const day=urbanDate.format(new Date(row.departure));
+    if(day<'2026-11-09'||day>'2026-12-31')return null;
+    return {label:'Référence tarifaire TCL · 1 voyage '+offer.label+' · '+
+      offer.price.toFixed(2).replace('.',',')+' € (hors support de ticket)',
+      source:'https://www.tcl.fr/sites/default/files/2026-05/TCL_Campagne_Unification_Guide_Tarifaire_Mai2026_W.pdf'};
+  }
   function urbanReference(row){
+    if(row?.networkId==='tcl-lyon')return tclReference(row);
     if(!row||row.interNetwork||row.legs!==undefined||!Object.hasOwn(URBAN,row.networkId))return null;
     // A known non-210 or cross-border TAC journey must not inherit the zone-210 reference.
     // Missing zone information remains a labelled reference, never a verified fare.
