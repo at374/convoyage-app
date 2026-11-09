@@ -7,7 +7,7 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  // Official producer GTFS; validity 04 Sep–20 Dec 2026. No fare tables or transfer rules in feed.
  // TAD and seasonal services require independent reservation/operating-day checks.
  url:'https://www.data.gouv.fr/api/1/datasets/r/429c8587-676a-4ed3-8279-e67403bc36f4',
- updatedAt:'2026-09-08',bounds:[46.18,6.30,46.49,6.91],timeZone:'Europe/Paris'
+ updatedAt:'2026-09-08',validFrom:'2026-09-04',validUntil:'2026-12-20',bounds:[46.18,6.30,46.49,6.91],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'pan-start-thonon',datasetId:'reseaux-urbains-start',network:'STAR’T — Thonon Agglomération',format:'GTFS',federate:true,urban:true,
  // Distinct urban STAR’T feed (PAN resource 84108). A different *school* GTFS
@@ -16,7 +16,7 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  // PAN official GTFS validated 1 Sep 2026, valid to 20 Dec 2026. No GTFS fare products.
  // Geographic envelope is a candidate filter, not proof of a served stop or route.
  url:'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/84108/84108.20260901.002618.536834.zip',
- updatedAt:'2026-09-01',bounds:[46.18,6.30,46.48,6.78],timeZone:'Europe/Paris'
+ updatedAt:'2026-09-01',validFrom:'2026-09-01',validUntil:'2026-12-20',bounds:[46.18,6.30,46.48,6.78],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'pan-jybus',datasetId:'jybus-rumilly',network:'J’ybus — Rumilly Terre de Savoie',format:'GTFS',federate:true,urban:true,
  // Official PAN GTFS archive 7 Aug 2026; 5 lines including reservation-only TAD.
@@ -27,17 +27,17 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  id:'pan-synchro',datasetId:'synchro-chambery',network:'Synchro Bus — Grand Chambéry',format:'GTFS',federate:true,urban:true,
  // Official PAN archived GTFS; timetable coverage through 20 Dec 2026. Do not infer fares.
  url:'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/82272/82272.20261006.181637.894741.zip',
- updatedAt:'2026-10-06',bounds:[45.48,5.78,45.72,6.10],timeZone:'Europe/Paris'
+ updatedAt:'2026-10-06',validFrom:'2026-10-06',validUntil:'2026-12-20',bounds:[45.48,5.78,45.72,6.10],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'pan-ondea',datasetId:'ondea-aix-les-bains',network:'Ondéa — Aix-les-Bains',format:'GTFS',federate:true,urban:true,
  // Official PAN archive, validity 17 Oct 2026–31 Mar 2027; timetable dates are checked in GTFS.
  url:'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/71223/71223.20261016.181718.064517.zip',
- updatedAt:'2026-10-16',bounds:[45.61,5.82,45.79,6.03],timeZone:'Europe/Paris'
+ updatedAt:'2026-10-16',validFrom:'2026-10-17',validUntil:'2027-03-31',bounds:[45.61,5.82,45.79,6.03],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'pan-tam',datasetId:'tam-amberieu',network:'TAM — Ambérieu-en-Bugey',format:'GTFS',federate:true,urban:true,
  // Official PAN archive, validity 1 Dec 2025–31 Dec 2026.
  url:'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/79865/79865.20251209.121558.543746.zip',
- updatedAt:'2025-12-09',bounds:[45.90,5.28,46.03,5.46],timeZone:'Europe/Paris'
+ updatedAt:'2025-12-09',validFrom:'2025-12-01',validUntil:'2026-12-31',bounds:[45.90,5.28,46.03,5.46],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'oura-haute-savoie',datasetId:'oura-haute-savoie',network:'Cars Région Haute-Savoie',format:'GTFS',
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',
