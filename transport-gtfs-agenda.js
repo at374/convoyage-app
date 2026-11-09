@@ -211,13 +211,13 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       seenChoices.add(key);distinct.push(candidate);
      }
      const shown=distinct.slice(0,5);
-     if(active())onResults({task,itineraries:shown});
      const marginNote=Number.isFinite(Date.parse(task.latestArrival))?' Marge avant mission : '+window.marginMinutes+' min minimum (marche et circulation à vérifier).':'';
      const incomplete=truncated||partialNetworks||invalidJourneys>0;
+     if(active())onResults({task,itineraries:distinct,partial:incomplete});
      const coverageNote=incomplete?' Recherche partielle : certains horaires ou réseaux n’ont pas pu être vérifiés.':'';
      status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':incomplete?'aucun trajet dans les résultats partiels ; recherche incomplète (réseau ou horaires manquants), d’autres horaires peuvent exister.':'aucun trajet direct ou avec une correspondance dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.' )+marginNote+coverageNote+(invalidJourneys?' '+invalidJourneys+' horaire(s) incohérent(s) écarté(s) ; recherche partielle.':'');
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
-     if(truncated||distinct.length>shown.length){const note=doc.createElement('p');note.textContent='Affichage limité : d’autres horaires peuvent exister.';status.appendChild(note);}
+     if(truncated||distinct.length>shown.length){const note=doc.createElement('p');note.textContent=truncated?'Recherche limitée : d’autres horaires peuvent exister.':'Les autres horaires figurent dans les cartes de résultats.';status.appendChild(note);}
      for(const row of shown){
       let tariffSource=null,tariffDescription='',expressLookup=null;
       try{

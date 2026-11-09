@@ -63,7 +63,7 @@ test('mount shares one load across tasks, deduplicates rows, uses text nodes and
  assert.match(target.textContent,/Marge avant mission : 15 min minimum/);
  assert.match(target.textContent,/École <script>/);assert.match(target.textContent,/vol d’oiseau/);
  assert.match(target.textContent,/date de mise à jour du producteur non fournie/);
- assert.match(target.textContent,/Affichage limité/);assert.match(target.textContent,/Transport non confirmé/);
+ assert.match(target.textContent,/Recherche limitée/);assert.match(target.textContent,/Transport non confirmé/);
  session.dispose();session.dispose();assert.equal(disposed,1);
 });
 test('disposing during load or query prevents stale results and terminates retained client',async()=>{
@@ -272,7 +272,7 @@ test('Agenda retains the latest outbound trips across service dates after worker
  assert.ok(calls.every(q=>q.order==='latestDeparture'));
  const text=target.textContent;
  assert.ok(text.indexOf('02/11/2026 11:00 →')<text.indexOf('01/11/2026 11:00 →'));
- assert.match(text,/Affichage limité/);assert.match(text,/Transport non confirmé/);session.dispose();
+ assert.match(text,/Recherche limitée/);assert.match(text,/Transport non confirmé/);session.dispose();
 });
 
 test('Grenoble local tasks select only the two official Grenoble resources',async()=>{
@@ -571,7 +571,7 @@ test('truncated empty GTFS results never imply a complete absence of transport',
  await session.done;
  assert.match(target.textContent,/aucun trajet dans les résultats partiels/);
  assert.match(target.textContent,/recherche incomplète/);
- assert.match(target.textContent,/Affichage limité/);
+ assert.match(target.textContent,/Recherche limitée/);
  session.dispose();
 });
 
@@ -726,7 +726,7 @@ test('Agenda discloses truncated coverage even when valid GTFS journeys are show
  await session.done;
  assert.match(target.textContent,/Retour : 1 horaire/);
  assert.match(target.textContent,/Recherche partielle/);
- assert.match(target.textContent,/Affichage limité/);
+ assert.match(target.textContent,/Recherche limitée/);
  session.dispose();
 });
 
@@ -819,7 +819,7 @@ test('Mobile regional transport cards cover Aller Jonction Retour and safe stop 
   assert.ok(app.includes(section),'Missing mobile transport comparison: '+section);
  }
  assert.match(app,/const showRegionalChoices = \(host, ranked, heading, references\) =>/);
- assert.match(app,/ranked\.slice\(0, 3\)/);
+ assert.match(app,/ranked\.slice\(0,3\)/);
  assert.match(app,/document\.createElement\('details'\)/);
  assert.match(app,/document\.createElement\('ol'\)/);
  assert.match(app,/encodeURIComponent\(stop\)/);
@@ -978,4 +978,42 @@ test('Swiss results use the visible directions and enforce the mission margin',a
  assert.doesNotMatch(hosts.Retour.textContent,/08:30/);
  assert.match(hosts.Jonction.textContent,/11:00 → 12:00/);
  assert.doesNotMatch(hosts.Jonction.textContent,/12:50/);
+});
+
+test('Phone results keep every compatible candidate accessible in batches',()=>{
+ const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+ const begin=app.indexOf('      const moreTransportResults =');
+ const end=app.indexOf('      // Compact comparison cards',begin);
+ const target=panel(),shown=[],candidates=Array.from({length:15},(_,i)=>i);
+ const more=vm.runInNewContext(app.slice(begin,end)+'moreTransportResults',{document:target.ownerDocument});
+ more(target,candidates,3,item=>shown.push(item));
+ const button=target.children[0];
+ button.remove=()=>{target.children=[];};
+ assert.match(button.textContent,/12 restants/);
+ button.onclick();
+ assert.deepEqual(shown,candidates.slice(3,13));
+ assert.match(button.textContent,/2 restants/);
+ button.onclick();
+ assert.deepEqual(shown,candidates.slice(3));
+ assert.equal(target.children.length,0);
+ const rank=require('../transport-ranking.js').rank;
+ const routes=candidates.map(i=>({id:i,departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T12:00:00Z'}));
+ assert.equal(rank(routes,{direction:'return'}).length,1);
+ const choices=rank(routes,{direction:'return',includeAlternatives:true});
+ assert.equal(choices.length,15);
+ assert.equal(choices.at(-1).journey.id,14);
+ assert.equal(choices.at(-1).journey.priceEUR,null);
+});
+
+test('GTFS delivers alternatives beyond the five detailed source rows',async()=>{
+ const delivered=[];
+ const departures=Array.from({length:7},(_,i)=>row({tripId:String(i),
+  departure:'2026-11-02T11:0'+i+':00Z',arrival:'2026-11-02T12:0'+i+':00Z'}));
+ const session=agenda.mount(panel(),{tasks:[task],onResults:result=>delivered.push(result),
+  clientFactory:()=>({load:async()=>summary,query:async()=>({rows:departures,truncated:true}),dispose(){}})});
+ await session.done;
+ assert.equal(delivered.length,1);
+ assert.equal(delivered[0].itineraries.length,7);
+ assert.equal(delivered[0].partial,true);
+ session.dispose();
 });

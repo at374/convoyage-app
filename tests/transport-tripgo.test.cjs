@@ -228,3 +228,22 @@ test('BlaBlaCar Bus and FlixBus use fixed official price-search links without as
  assert.equal(api.coachFareSearch({...flix,mode:'wa_wal'}),null);
  assert.ok(itineraries.every(journey=>journey.priceEUR===null));
 });
+
+test('TripGo keeps an operator even when its itinerary falls after the first ten',()=>{
+ const data=clone();
+ const trips=data.groups.flatMap(group=>group.trips);
+ const template=trip=>trip.segments.some(segment=>segment.externalData?.operatorName==='BlaBlaCar Bus');
+ const blabla=trips.find(trip=>template(trip)&&trip.depart>=Date.parse(options.when)/1000);
+ const flix=trips.find(trip=>trip.segments.some(segment=>segment.externalData?.operatorName==='FlixBus-eu')&&trip.depart>=Date.parse(options.when)/1000);
+ assert.ok(blabla&&flix);
+ data.groups[0].trips=Array.from({length:12},(_,i)=>{
+  const trip=structuredClone(blabla);
+  trip.depart+=i;trip.arrive+=i;
+  for(const segment of trip.segments){segment.startTime+=i;segment.endTime+=i;}
+  return trip;
+ }).concat(flix);
+ data.groups=data.groups.slice(0,1);
+ const found=api.parse(data,options).itineraries;
+ assert.equal(found.length,13);
+ assert.equal(api.coachFareSearch(found.at(-1).legs.find(leg=>leg.provider==='FlixBus-eu')).label,'FlixBus');
+});

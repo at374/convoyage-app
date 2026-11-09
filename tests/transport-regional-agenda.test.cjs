@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const api=require('../regional-routing.js');
 const fixture=require('./fixtures/mobilites-m-grenoble-crolles-2026-10-30.json');
 const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
-const code=app.slice(app.indexOf('      // Regional refresh slots:'),app.indexOf('      // Swiss API: outbound'))+
+const code=app.slice(app.indexOf('      // Regional refresh slots:'),app.indexOf('      // SNCF station-only fallback'))+
  app.slice(app.indexOf('      // Regional return from the exact delivery point'),app.indexOf('      // Statut réel du fichier GTFS quotidien'));
 class Element{
  constructor(){this.children=[];this.value='';this.parent=null;this.root=false;}

@@ -46,3 +46,9 @@ Le moteur suisse lance les recherches Aller, Jonction et Retour dans le panneau 
 Les cartes principales peuvent afficher une référence Cars Région Express quand elle correspond à la course, sans l’utiliser comme prix confirmé ni pour le tri. Les cartes TripGo affichent des trajets BlaBlaCar Bus et FlixBus si la clé est présente sur l’appareil et si le moteur les renvoie. Chaque portion de car identifiée propose un lien de recherche du prix sur le site officiel. La réponse horaire testée ne livre aucun devis de vente. Le covoiturage BlaBlaCar a une recherche distincte dans les réglages.
 
 Les tests locaux couvrent les trois sens suisses et le filtrage horaire, les deux opérateurs de car sur réponse enregistrée, et l’absence de prix inventé. La version installée sur téléphone reste à valider.
+
+## Accès aux propositions après les premières cartes
+
+Le classement garde ses recommandations en tête, puis « Afficher plus de trajets » donne accès aux autres résultats compatibles par lots. Le panneau récupère les alternatives GTFS au-delà des cinq lignes de détail et signale une recherche locale partielle. Les listes SNCF, régionales et suisses conservent les propositions compatibles rendues par leurs moteurs. Le moteur suisse n’effectue plus une seconde recherche Aller et Retour dans les réglages.
+
+TripGo conserve tous les trajets valides de la réponse dans ses limites de lecture. Le scénario de régression place un FlixBus après douze propositions BlaBlaCar Bus et vérifie qu’il reste disponible. Le tri et la pagination conservent le statut de prix inconnu lorsque la source ne fournit aucun devis vérifié. Les moteurs gardent leurs limites de couverture, de dates, de volume ou de disponibilité.

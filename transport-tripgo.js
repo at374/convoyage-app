@@ -65,7 +65,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
      missing:['circulation à la date du trajet','perturbations éventuelles','accès physique au point GPS exact','prix du transport']}});
   }
  }
- return {source:'TripGo',receivedAt,itineraries:found.sort((a,b)=>arriveBy?Date.parse(b.departure)-Date.parse(a.departure):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,10)};
+ return {source:'TripGo',receivedAt,itineraries:found.sort((a,b)=>arriveBy?Date.parse(b.departure)-Date.parse(a.departure):Date.parse(a.departure)-Date.parse(b.departure))};
 }
 async function readJSON(response,signal){
  const declared=Number(response.headers?.get?.('content-length'));if(declared>2000000)throw Error('Réponse TripGo trop grande');

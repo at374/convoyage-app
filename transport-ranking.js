@@ -140,6 +140,12 @@
     const unique=[];for(const [label,journey] of [['Moins cher',cheapest],['Compromis',compromise],['Plus rapide',fastest]]){
       if(journey&&!unique.some(x=>x.journey===journey))unique.push({label,journey});
     }
+    if(opts.includeAlternatives===true){
+      const recommended=new Set(unique.map(choice=>choice.journey));
+      for(const journey of valid){
+        if(!recommended.has(journey))unique.push({label:'Autre trajet',journey});
+      }
+    }
     return unique;
   }
   const api={evaluate,rank};
