@@ -79,6 +79,8 @@
     return leg.verified&&money(leg.amountEUR)!==null?'Tarif vérifié : '+leg.amountEUR.toFixed(2).replace('.',',')+' €':'Tarif inconnu';
   }
   const URBAN={
+    'pan-synchro':{lines:['*'],label:'1,40 € · ticket 1 voyage Synchro Bus, valable 1 h (1,70 € par CB à bord)',
+      source:'https://synchro.grandchambery.fr/tarifs-et-abonnements-bus/les-tickets/'},
     'pan-ondea':{lines:['*'],label:'1,70 € · ticket 1 voyage Ondéa, 1 h, correspondances autorisées (pas d’aller-retour même ligne)',
       source:'https://www.ondeagrandlac.fr/titres/titres-pour-tous-tarifs-applicables-du-1er-juillet-2026'},
     'pan-tam':{lines:['*'],label:'1,10 € · ticket unitaire TAM plein tarif (tarifs au 1er janvier 2026)',
