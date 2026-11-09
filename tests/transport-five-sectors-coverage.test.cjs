@@ -39,3 +39,13 @@ test('Thonon STAR’T source is selected locally, never assumed to contain fares
  assert.match(source.url,/84108\.20260901\.002618\.536834\.zip$/);
  assert.notEqual(source.fareVerified,true,'GTFS does not supply a verified ticket price');
 });
+
+test('ÉVA’D official GTFS is a local candidate without a fare guarantee',()=>{
+ const source=DEFAULT_RESOURCES.find(r=>r.id==='pan-evad');
+ assert.ok(source);
+ assert.equal(selected(source,at(46.40,6.59)),true,'Évian');
+ assert.equal(selected(source,at(46.27,6.84)),true,'Abondance');
+ assert.equal(selected(source,at(45.96,5.36)),false,'Ambérieu');
+ assert.match(source.url,/429c8587-676a-4ed3-8279-e67403bc36f4$/);
+ assert.notEqual(source.fareVerified,true);
+});
