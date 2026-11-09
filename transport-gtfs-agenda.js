@@ -2,6 +2,16 @@
 (function(root){
 'use strict';
 const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
+ id:'pan-ondea',datasetId:'ondea-aix-les-bains',network:'Ondéa — Aix-les-Bains',format:'GTFS',federate:true,urban:true,
+ // Official PAN archive, validity 17 Oct 2026–31 Mar 2027; timetable dates are checked in GTFS.
+ url:'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/71223/71223.20261016.181718.064517.zip',
+ updatedAt:'2026-10-16',bounds:[45.61,5.82,45.79,6.03],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'pan-tam',datasetId:'tam-amberieu',network:'TAM — Ambérieu-en-Bugey',format:'GTFS',federate:true,urban:true,
+ // Official PAN archive, validity 1 Dec 2025–31 Dec 2026.
+ url:'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/79865/79865.20251209.121558.543746.zip',
+ updatedAt:'2025-12-09',bounds:[45.90,5.28,46.03,5.46],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'oura-haute-savoie',datasetId:'oura-haute-savoie',network:'Cars Région Haute-Savoie',format:'GTFS',
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',
  // Selection envelope only: does not assert coverage or actual walking access.
