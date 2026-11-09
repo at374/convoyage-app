@@ -201,7 +201,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const localResources=resourceList.filter(r=>r!==express&&!r.urban);
  // Prefer a matching urban GTFS over a broad departmental envelope. Otherwise
  // Haute-Savoie can shadow STAR’T/ÉVA’D and other local networks entirely.
- const resource=preferredAin||urbanResources[0]||
+ // A verified local envelope takes precedence over broad departmental feeds.
+ // Otherwise urban TAM/Rubis missions are hidden by Cars Région Ain.
+ const resource=urbanResources[0]||preferredAin||
   localResources.find(r=>taskList.some(t=>selected(r,t)||localResources.some(other=>crossEnvelopePair(r,other,t))))||
   (express&&taskList.some(t=>selected(express,t))?express:null);
  if(!resource)return {dispose,done:Promise.resolve()};
