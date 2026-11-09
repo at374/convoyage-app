@@ -67,3 +67,10 @@ Prochaines étapes : obtenir un flux TCL autorisé et à jour ; vérifier la val
 - Accès aux horaires SIRI Lite avec tests de requêtes valides, identifiants d'arrêts/lignes compatibles GTFS, gestion des erreurs et cache horodaté.
 - Calcul des zones TCL et correspondances à partir de la grille officielle ; **aucun prix supposé à partir du seul numéro de ligne**.
 - Itinéraires piétons, marge avant mission, comparaison des réseaux et tests Android avant toute annonce de raccordement.
+
+## Vérification indépendante du 9 novembre : sémantique du taux SIRI et correspondances
+
+- La ressource officielle SIRI Lite Estimated Timetables est documentée à https://transport.data.gouv.fr/resources/84026. Le PAN affiche 100 % de disponibilité du 10 octobre au 9 novembre, mais sa méthodologie **compte HTTP 401 (authentification requise) et HTTP 405 comme « disponible »**. Ce taux **ne démontre pas un accès aux horaires**.
+- Une fiche tierce indique comme endpoint SIRI Lite `https://data.grandlyon.com/siri-lite/2.0/estimated-timetables.json` (https://scframework.org/source/SRC-ecaaceea-0a84-4e1c-9236-51d389f2a6cc). **Piste à vérifier avec le producteur, pas une URL GTFS et pas un flux déjà intégré.**
+- Le producteur précise que, depuis l'unification TCL, l'identifiant `coursethéorique` des prochains passages correspond exactement au `trip_id` GTFS et que la zone tarifaire est ajoutée à la description des arrêts (https://data.grandlyon.com/portail/fr/actualites/reseau-tcl-unifie). **La jonction temps réel ↔ horaire théorique dépend donc d'un GTFS de la même version du réseau.**
+- Ne jamais traiter une réponse SIRI `401`/`405` comme des données exploitables ; ne jamais injecter des identifiants de connexion dans les sources client ; ne jamais annoncer « transport confirmé » sur la seule base d'un statut HTTP.
