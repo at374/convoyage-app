@@ -60,3 +60,12 @@ test('STAR’T urban and ÉVA’D urban GTFS are distinct selectable sources',()
  assert.equal(start.overlapsWith,undefined);
  assert.equal(evad.overlapsWith,undefined);
 });
+
+test('seasonal GTFS candidate is excluded outside its publication window',()=>{
+ const seasonal={id:'seasonal-test',format:'GTFS',url:'https://example.org/feed.zip',
+  bounds:[45.5,5.5,46.5,6.5],validFrom:'2026-06-20',validUntil:'2026-09-05'};
+ const trip=at(45.9,6.0);
+ assert.equal(selected(seasonal,{...trip,earliestDeparture:'2026-08-15T09:00:00+02:00'}),true);
+ assert.equal(selected(seasonal,{...trip,earliestDeparture:'2026-11-09T09:00:00+01:00'}),false);
+ assert.equal(selected(seasonal,{...trip,latestArrival:'2026-06-19T09:00:00+02:00'}),false);
+});
