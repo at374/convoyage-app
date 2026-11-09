@@ -144,6 +144,17 @@ Une session précédente avait déjà examiné cette piste (`tests/peages-sapn-a
 
 **État (9 nov. 2026) : 708 tests passent, 0 échec, 0 skip.**
 
+## Validation croisée contre la grille tarifaire officielle APRR/AREA (2026-02) — 9 novembre 2026
+
+Nouvelle source officielle découverte : data.gouv.fr publie aussi "Tarifs autoroutes APRR" (extraction directe des PDF tarifaires APRR/AREA, "sans aucune modification du contenu"), avec une édition **2026-02** -- la plus récente disponible. Téléchargée via curl (même technique data.gouv.fr).
+
+- **13 347 relations vérifiées contre cette grille officielle (12 397 APRR + 950 AREA) : 0 divergence, 100% de correspondance exacte.** Confirme l'intégrité de la base pour ces deux concessionnaires avec la source la plus à jour possible.
+- **AREA (52 gares)** ne contient aucune des gares dangling (MODANE confirmé hors-réseau AREA — c'est SFTRF qui gère l'accès au tunnel du Fréjus — ni GAILLARD/SCIENTRIER, qui restent ATMB).
+- **CHARMONT (dangling, Cofiroute/Loire)** apparaît verbatim dans la grille APRR, avec 5 autres noms IDENTIQUES à ses propres relations (ESCRENNES, FONTENAY /LOING, GONDREVILLE A77/N, GONDREVILLE A77/S, SAVIGNY /CLAIRIS) -- indice textuel très fort suggérant le même point de limite de concession A77 (frontière APRR/Cofiroute, Nièvre). Mais la grille APRR ne fournit AUCUNE coordonnée GPS, et aucune relation directe CHARMONT<->CHARMONT n'existe pour une preuve par prix. Sans GPS, aucune intégration n'est possible malgré la force de l'indice. Laissé non résolu.
+- Documenté dans `tests/peages-validation-grille-officielle-aprr-area-2026-02.test.cjs`.
+
+**État (9 nov. 2026, après validation) : 712 tests passent, 0 échec, 0 skip.**
+
 ## Vérification exhaustive des 22 concessionnaires listés dans le document transmis — 8 novembre 2026
 
 Passage en revue de la liste complète (ADELAC, ALBEA, ALIAE, ALICORNE, ALIENOR, ALIS, AMEDEA, APRR, ARCOS, ARCOUR, AREA, ASF, ATLANDES, ATMB, ATOSCA, CCISE, CEVM, COFIROUTE, ESCOTA, SANEF, SAPN, SFTRF) :
