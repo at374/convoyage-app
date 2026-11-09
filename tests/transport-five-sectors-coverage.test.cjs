@@ -49,3 +49,13 @@ test('ÉVA’D official GTFS is a local candidate without a fare guarantee',()=>
  assert.match(source.url,/429c8587-676a-4ed3-8279-e67403bc36f4$/);
  assert.notEqual(source.fareVerified,true);
 });
+
+test('STAR’T combined feed and ÉVA’D standalone feed declare reciprocal overlap',()=>{
+ const start=DEFAULT_RESOURCES.find(r=>r.id==='pan-start-thonon');
+ const evad=DEFAULT_RESOURCES.find(r=>r.id==='pan-evad');
+ assert.deepEqual(start.overlapsWith,['pan-evad']);
+ assert.deepEqual(evad.overlapsWith,['pan-start-thonon']);
+ assert.ok(start.sharedOperators.includes('ÉVA’D'));
+ assert.equal(selected(start,at(46.37,6.48)),true);
+ assert.equal(selected(evad,at(46.37,6.48)),true);
+});
