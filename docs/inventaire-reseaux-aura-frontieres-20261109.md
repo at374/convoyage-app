@@ -121,3 +121,11 @@ Les jeux de données distincts à vérifier sont **ARAVIS Bus** (Vallées de Th�
 **Priorités techniques :** identifier l'URL du GTFS officiel de chaque réseau et sa période de validité, vérifier la présence des trajets à la date de mission, traiter les services saisonniers, et relier les tarifs officiels avec restrictions de lignes et de correspondances. Aucun de ces trois réseaux n'est déclaré raccordé par ce seul audit.
 
 **Cars Région Haute-Savoie** : la source régionale https://www.data.gouv.fr/datasets/reseau-interurbain-cars-region-haute-savoie-74 indique une actualisation GTFS début novembre 2026 ; préférer un flux récent et vérifier la date des courses plutôt qu'un export archivé.
+
+## Contrôle de validité des flux ARAVIS / ARVI — 9 novembre 2026
+
+**ARAVIS Bus** — source officielle https://transport.data.gouv.fr/datasets/aravis-bus-hiver-2025-2026 : GTFS été 2026 valable **20/06/2026–05/09/2026** (13 lignes, 302 arrêts dans la ressource https://transport.data.gouv.fr/resources/84055) ; GTFS hiver précédent valable **02/12/2025–26/04/2026**. **Aucun de ces deux exports ne valide des départs au 09/11/2026**. Interdire leur emploi comme horaires confirmés à cette date, attendre le GTFS hiver 2026/2027 ou une autre source datée. Aucune donnée tarifaire GTFS (fare_attributes, fare_rules, fare_products, fare_media absents).
+
+**ARVI — Cluses / CC Cluses-Arve et Montagnes** — source officielle https://transport.data.gouv.fr/datasets/gtfs-rentree : export « GTFS_ARV'i-2CCAM rentrée » mis à jour **12/10/2026**, période **01/09/2026–31/08/2027** (à vérifier au téléchargement). Un autre export historique du 10/09/2026 s'arrêtait au 16/10/2026 et ne doit pas être utilisé pour novembre. Flux temps réel SIRI signalé indisponible ; ne pas présenter d'horaires temps réel confirmés. Aucun prix vérifié dans cet audit : **tarifs inconnus**, ne pas substituer le prix d'un autre réseau.
+
+**Règle impérative** : une source GTFS candidate n'est pas une course valide. La date de service doit être validée à partir de calendar.txt/calendar_dates.txt, les exceptions saisonnières respectées, et les prix calculés séparément depuis les sources officielles.
