@@ -102,7 +102,10 @@ function selected(resource,task){
  // This is only a coarse filter; actual trip service dates remain GTFS-controlled.
  if(resource?.validFrom||resource?.validUntil){
   const from=resource.validFrom,to=resource.validUntil;
-  if((from&&!/^\d{4}-\d{2}-\d{2}$/.test(from))||(to&&!/^\d{4}-\d{2}-\d{2}$/.test(to)))return false;
+  const validDay=value=>typeof value==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(value)&&
+   Number.isFinite(Date.parse(value+'T12:00:00Z'))&&
+   new Date(Date.parse(value+'T12:00:00Z')).toISOString().slice(0,10)===value;
+  if((from&&!validDay(from))||(to&&!validDay(to))||(from&&to&&from>to))return false;
   // Reject only when the whole requested interval lies outside the feed.
   // A window spanning its first/last service day remains a candidate; GTFS
   // calendar/calendar_dates must then validate each individual departure.
