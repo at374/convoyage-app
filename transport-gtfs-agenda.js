@@ -171,8 +171,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const express=resourceList.find(r=>r.id==='oura-express');
  const urbanResources=resourceList.filter(r=>r.urban&&taskList.some(t=>selected(r,t)));
  const localResources=resourceList.filter(r=>r!==express&&!r.urban);
- const resource=preferredAin||localResources.find(r=>taskList.some(t=>selected(r,t)||localResources.some(other=>crossEnvelopePair(r,other,t))))||
-  urbanResources[0]||(express&&taskList.some(t=>selected(express,t))?express:null);
+ // Prefer a matching urban GTFS over a broad departmental envelope. Otherwise
+ // Haute-Savoie can shadow STAR’T/ÉVA’D and other local networks entirely.
+ const resource=preferredAin||urbanResources[0]||
+  localResources.find(r=>taskList.some(t=>selected(r,t)||localResources.some(other=>crossEnvelopePair(r,other,t))))||
+  (express&&taskList.some(t=>selected(express,t))?express:null);
  if(!resource)return {dispose,done:Promise.resolve()};
  const partners=[...urbanResources,...localResources,...(express?[express]:[])].filter(r=>r!==resource&&r.federate&&taskList.some(task=>
   ((r===express||r.urban)&&selected(r,task))||crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
