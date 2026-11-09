@@ -207,11 +207,12 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
   localResources.find(r=>taskList.some(t=>selected(r,t)||localResources.some(other=>crossEnvelopePair(r,other,t))))||
   (express&&taskList.some(t=>selected(express,t))?express:null);
  if(!resource)return {dispose,done:Promise.resolve()};
- const partnerCandidates=[...urbanResources,...localResources,...(express?[express]:[])].filter(r=>r!==resource&&r.federate&&taskList.some(task=>
+ const partnerCandidates=[...urbanResources,...localResources,...(express?[express]:[])].filter(r=>r!==resource&&taskList.some(task=>
   ((r===express||r.urban)&&selected(r,task))||crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
   (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to})))));
- const partners=partnerCandidates.slice(0,1);
+ const partners=partnerCandidates.filter(r=>r.federate).slice(0,1);
  const omittedPartners=partnerCandidates.length-partners.length;
+ const nonFederatedPartners=partnerCandidates.filter(r=>!r.federate).length;
  const eligible=task=>selected(resource,task)||partners.some(r=>selected(r,task)||crossEnvelopePair(resource,r,task));
  const section=doc.createElement('div');section.className='bk';section.setAttribute('data-gtfs-agenda','');
  const heading=doc.createElement('h3');heading.textContent=resource.network+' — horaires aux arrêts';section.appendChild(heading);
@@ -221,7 +222,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  source.textContent='Source GTFS officielle';section.appendChild(source);
  const warning=doc.createElement('p');warning.className='doux';
  warning.textContent='Trajets directs ou avec une correspondance au même arrêt (intervalle de 5 à 120 min, non vérifié). Recherche limitée à 48 h au maximum et au jour de service précédent. Distances à vol d’oiseau ; marche et prix non vérifiés. Transport non confirmé — vérifiez vous-même.';
- if(omittedPartners>0)warning.textContent+=' Recherche incomplète : '+omittedPartners+' réseau(x) candidat(s) supplémentaire(s) non interrogé(s) (limite actuelle de deux flux).';
+ if(omittedPartners>0)warning.textContent+=' Recherche incomplète : '+omittedPartners+' réseau(x) candidat(s) supplémentaire(s) non interrogé(s) (limite actuelle de deux flux ou fédération non disponible).';
+ if(nonFederatedPartners>0)warning.textContent+=' Dont '+nonFederatedPartners+' réseau(x) sans fédération GTFS activée.';
  section.appendChild(warning);panel.appendChild(section);
  const active=()=>!disposed&&panel.isConnected;
  const refreshFares=()=>{
