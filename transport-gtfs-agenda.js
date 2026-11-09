@@ -3,17 +3,16 @@
 'use strict';
 const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  id:'pan-evad',datasetId:'donnees-du-reseau-evad-1',network:'ÉVA’D — Évian et vallée d’Abondance',format:'GTFS',federate:true,urban:true,
- // Also included in producer STAR’T combined GTFS: avoid redundant second feed in one search.
- overlapsWith:['pan-start-thonon'],
+ // Keep separate from STAR’T urban resource 84108; shared school feed is another dataset.
  // Official producer GTFS; validity 04 Sep–20 Dec 2026. No fare tables or transfer rules in feed.
  // TAD and seasonal services require independent reservation/operating-day checks.
  url:'https://www.data.gouv.fr/api/1/datasets/r/429c8587-676a-4ed3-8279-e67403bc36f4',
  updatedAt:'2026-09-08',bounds:[46.18,6.30,46.49,6.91],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'pan-start-thonon',datasetId:'reseaux-urbains-start',network:'STAR’T — Thonon Agglomération',format:'GTFS',federate:true,urban:true,
- // Producer explicitly states this combined feed also contains ÉVA’D trips.
- // Never count the network twice solely because it appears in both GTFS archives.
- sharedOperators:['STAR’T','ÉVA’D'],overlapsWith:['pan-evad'],
+ // Distinct urban STAR’T feed (PAN resource 84108). A different *school* GTFS
+ // dataset from Thonon Agglomération is described as including ÉVA’D.
+ // Do not suppress the separate ÉVA’D urban feed on that basis.
  // PAN official GTFS validated 1 Sep 2026, valid to 20 Dec 2026. No GTFS fare products.
  // Geographic envelope is a candidate filter, not proof of a served stop or route.
  url:'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/84108/84108.20260901.002618.536834.zip',
@@ -153,7 +152,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const resource=preferredAin||localResources.find(r=>taskList.some(t=>selected(r,t)||localResources.some(other=>crossEnvelopePair(r,other,t))))||
   urbanResources[0]||(express&&taskList.some(t=>selected(express,t))?express:null);
  if(!resource)return {dispose,done:Promise.resolve()};
- const partners=[...urbanResources,...localResources,...(express?[express]:[])].filter(r=>r!==resource&&!(resource.overlapsWith||[]).includes(r.id)&&!(r.overlapsWith||[]).includes(resource.id)&&r.federate&&taskList.some(task=>
+ const partners=[...urbanResources,...localResources,...(express?[express]:[])].filter(r=>r!==resource&&r.federate&&taskList.some(task=>
   ((r===express||r.urban)&&selected(r,task))||crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
   (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to}))))).slice(0,1);
  const eligible=task=>selected(resource,task)||partners.some(r=>selected(r,task)||crossEnvelopePair(resource,r,task));
