@@ -79,6 +79,8 @@
     return leg.verified&&money(leg.amountEUR)!==null?'Tarif vérifié : '+leg.amountEUR.toFixed(2).replace('.',',')+' €':'Tarif inconnu';
   }
   const URBAN={
+    'pan-tam':{lines:['*'],label:'1,10 € · ticket unitaire TAM plein tarif (tarifs au 1er janvier 2026)',
+      source:'https://philibert-transport.fr/wp-content/uploads/2017/08/TAM-TARIFS-2026.pdf'},
     'tac-annemasse':{lines:['T1','T2'],
       label:'1,70 € · ticket TAC zone 210, 60 min',
       labelsByLine:{T1:'1,70 € sans contact ou 2,00 € auprès du conducteur · TAC zone 210, 60 min'},
@@ -102,7 +104,7 @@
       if(zones.some(v=>String(v)!=='210')||row.crossBorder===true||row.transfrontalier===true)return null;
     }
     const offer=URBAN[row.networkId];
-    if(!offer.lines.includes(row.line)||!Number.isFinite(Date.parse(row.departure)))return null;
+    if(!(offer.lines.includes(row.line)||(offer.lines.includes('*')&&typeof row.line==='string'&&row.line.trim()))||!Number.isFinite(Date.parse(row.departure)))return null;
     const day=urbanDate.format(new Date(row.departure));
     // Current operator pages were checked on 9 November. Recheck later service dates.
     if(day<'2026-11-09'||day>'2026-12-31')return null;
