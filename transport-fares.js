@@ -79,6 +79,8 @@
     return leg.verified&&money(leg.amountEUR)!==null?'Tarif vérifié : '+leg.amountEUR.toFixed(2).replace('.',',')+' €':'Tarif inconnu';
   }
   const URBAN={
+    'pan-ondea':{lines:['*'],label:'1,70 € · ticket 1 voyage Ondéa, 1 h, correspondances autorisées (pas d’aller-retour même ligne)',
+      source:'https://www.ondeagrandlac.fr/titres/titres-pour-tous-tarifs-applicables-du-1er-juillet-2026'},
     'pan-tam':{lines:['*'],label:'1,10 € · ticket unitaire TAM plein tarif (tarifs au 1er janvier 2026)',
       source:'https://philibert-transport.fr/wp-content/uploads/2017/08/TAM-TARIFS-2026.pdf'},
     'tac-annemasse':{lines:['T1','T2'],
