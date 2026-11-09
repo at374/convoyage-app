@@ -40,3 +40,16 @@ Les [fiches horaires régionales X36](https://www.laregionvoustransporte.fr/cars
 Les références sont affichées avec leur PDF et une mention de vérification avant achat. La cellule X37 Saint-Claude → Molinges reste exclue et demande un devis. Aucun tarif n’est déduit pour le sens opposé ou une correspondance. Aucune remise supplémentaire n’est appliquée sur ces montants illico AUTOCARS. L’affichage n’alimente pas le total ni le tri par prix confirmé. Les offres à prix variable exigent un devis frais pour le trajet, la date et le profil.
 
 La publication Android et la vérification exhaustive des autres réseaux AURA, de Genève et de Lausanne restent ouvertes.
+
+## Extension aux lignes X25 et X33
+
+La [page tarifaire officielle de l’Ain](https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/infos-et-services-cars-region-de-lain/titres-et-tarifs-de-lain/) publie deux autres grilles. Le périmètre compte désormais 491 références affichables sur cinq lignes. Chaque montant reste distinct du devis.
+
+| Ligne | Produit | Arrêts | Montants | Cases vides dans le triangle |
+| --- | --- | ---: | ---: | ---: |
+| [X25](https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/Tarifs-a-bord-mars-2026-x25.pdf) | Adulte à bord | 9 | 33 | 3 |
+| [X33](https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/X33_Grilles-tarifaires-01032026.pdf) | Adulte illico AUTOCARS | 27 | 260 | 91 |
+
+La X25 a été transcrite depuis le PDF rendu, car les chiffres ne figurent pas dans sa couche texte. La X33 a été lue par position des nombres dans les colonnes du PDF, en conservant les trous entre les branches. Les arrêts proviennent du GTFS officiel et les fiches [X25](https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/ligne/x25-villefranche-sur-saone-macon-loche-tgv/) et [X33](https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/ligne/x33-valserhone-divonne-les-bains/) distinguent les arrêts de même commune et les variantes, notamment Allondon Nord et Sud. Une case vide ne produit aucun montant. Le moteur exige une course directe effectivement planifiée dans le sens recherché avant d’afficher la référence.
+
+Essai du 9 novembre avec l’archive GTFS officielle. Six courses X25 Villefranche Gare routière → Mâcon Loché TGV affichaient la référence de 9,60 €. Dix-huit courses X33 Divonne Ancienne Gare → Valserhône Gare affichaient la référence de 8,60 €. Le cas Villefranche Gare routière → Arnas Avé Maria et la case Divonne Ancienne Gare → Ferney Mairie restent sans prix. Les PDF vérifiés ont pour SHA-256 `252c93fdc72d36cc7f1f8264d88f68307933d34791979188ad862682a5d326d9` (X25) et `553b06a4e267c648b231536b9b72a704019b28435e13c79ac22e0df81c6b381c` (X33).

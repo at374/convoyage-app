@@ -901,3 +901,24 @@ test('Express keeps Brion Gare and Montréal-la-Cluse Mairie and Ville separate'
  assert.equal(reference('X38',ville,brion).from,'MONTREAL-LA-CLUSE Ville');
  assert.equal(reference('X38',{...mairie,lat:ville.lat,lon:ville.lon},brion),null);
 });
+
+test('X25 and X33 retain the published product and leave blank cells unknown',()=>{
+ const fares=require('../transport-express-fares.js');
+ const stop=(municipality,id,lat,lon)=>({stopId:'FR:'+municipality+':ZE:'+id+':CARSxREGIONxEXPRESS',lat,lon});
+ const villefranche=stop('69264','92713',45.983777,4.720479);
+ const arnas=stop('69013','92722',46.021111,4.720277);
+ const macon=stop('71270','92717',46.282912,4.778924);
+ const divonne=stop('01143','29820',46.353462,6.137003);
+ const valserhone=stop('01033','29769',46.110645,5.824986);
+ const ferneyMairie=stop('01160','29692',46.256019,6.10822);
+ const reference=(line,from,to)=>fares.reference(row({line,networkId:'reseau-interurbain-cars-region-express',
+  from:from.stopId,to:to.stopId,originStop:from,destinationStop:to}));
+ const x25=reference('X25',villefranche,macon);
+ assert.equal(x25.amountEUR,9.6);
+ assert.match(fares.describe(x25),/9,60 € adulte à bord/);
+ assert.equal(reference('X25',villefranche,arnas),null);
+ const x33=reference('X33',divonne,valserhone);
+ assert.equal(x33.amountEUR,8.6);
+ assert.match(fares.describe(x33),/8,60 € adulte illico AUTOCARS/);
+ assert.equal(reference('X33',divonne,ferneyMairie),null);
+});
