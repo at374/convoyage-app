@@ -135,6 +135,15 @@ Une session précédente avait déjà examiné cette piste (`tests/peages-sapn-a
 
 **État final (8 nov. 2026) : 705 tests passent, 0 échec, 0 skip.** Aucun prix inventé, altéré ou approximé — seules deux relations déjà fonctionnellement couvertes ailleurs ont été retirées en doublon.
 
+## Rappel important découvert le 9 novembre 2026 : l'audit GPS officiel est déjà exhaustif
+
+`tests/peages-audit-officiel-data-gouv-gaps.test.cjs` (5-6 nov. 2026) a déjà vérifié que **chaque point GPS des 1266 gares du référentiel ministériel est à moins de 0,5km d'un point déjà connu** (aprr/overlay.gares/overlay.barrieres) **ou déjà dans UNK** (angle mort explicitement bloqué). Il n'existe donc plus aucun "trou GPS" au sens strict — toute nouvelle recherche doit porter sur la résolution de NOMS dangling (prix existants sans gare GPS correspondante), pas sur la découverte de nouveaux points GPS.
+
+- **Près passé d'une fusion erronée** : j'ai d'abord cru pouvoir fusionner "NŒUX-LES-MINES N°6.1" vers "NOEUX LES MINES", avant de découvrir que ce dernier n'a lui-même AUCUN GPS (un test SANEF antérieur l'avait classé par erreur comme "déjà existant" en cherchant dans overlay.paires plutôt que dans les gares GPS réelles). Une session précédente avait déjà identifié ce cas comme **ambigu** (2 points réels distincts, "NŒUX-LES-MINES"/"Nœux-les-Mines", à 2,5km l'un de l'autre). Changement annulé avant tout commit.
+- **MURET exploré, non résolu** : "Muret vers Toulouse"/"Muret depuis Toulouse" (barrières Bpv officielles) tombent à <0,03km de "TOULOUSE-SUD/OUEST" déjà résolu, mais aucune preuve par prix n'est possible (relation isolée, pas de 3e destination partagée) — laissé non fusionné, conformément à la leçon du cas NŒUX-LES-MINES. Documenté dans `tests/peages-muret-toulouse-sud-ouest-indice-insuffisant.test.cjs`.
+
+**État (9 nov. 2026) : 708 tests passent, 0 échec, 0 skip.**
+
 ## Vérification exhaustive des 22 concessionnaires listés dans le document transmis — 8 novembre 2026
 
 Passage en revue de la liste complète (ADELAC, ALBEA, ALIAE, ALICORNE, ALIENOR, ALIS, AMEDEA, APRR, ARCOS, ARCOUR, AREA, ASF, ATLANDES, ATMB, ATOSCA, CCISE, CEVM, COFIROUTE, ESCOTA, SANEF, SAPN, SFTRF) :
