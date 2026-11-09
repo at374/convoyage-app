@@ -82,3 +82,16 @@ test('Synchro card medium cost cannot be mistaken for a verified ride',()=>{
  const result=fare([{provider:'Synchro',mode:'bus',verifiedPriceEUR:0.40,departure:'2026-11-12T10:00:00+01:00'}]);
  assert.equal(result.totalEUR,null);
 });
+
+test('TCL reference requires explicit zone category and never verifies an itinerary total',()=>{
+ const fares=require('../transport-fares.js');
+ const row={networkId:'tcl-lyon',line:'C3',departure:'2026-11-10T10:00:00+01:00'};
+ assert.match(fares.urbanReference({...row,fareZoneGroup:'zones_1_2'}).label,/2,10 €/);
+ assert.match(fares.urbanReference({...row,fareZoneGroup:'adjacent_excluding_1'}).label,/1,60 €/);
+ assert.match(fares.urbanReference({...row,fareZoneGroup:'all_excluding_1'}).label,/2,50 €/);
+ assert.match(fares.urbanReference({...row,fareZoneGroup:'all_zones'}).label,/3,70 €/);
+ assert.equal(fares.urbanReference(row),null);
+ assert.equal(fares.urbanReference({...row,fareZoneGroup:'all_zones',crossBorder:true}),null);
+ assert.equal(fares.urbanReference({...row,fareZoneGroup:'all_zones',departure:'2027-01-02T10:00:00+01:00'}),null);
+ assert.equal(fares.fare([{provider:'TCL',verifiedPriceEUR:2.10}]).totalEUR,null);
+});
