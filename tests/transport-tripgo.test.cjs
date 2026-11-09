@@ -222,8 +222,17 @@ test('TripGo ignores a journey with a non-string mode without hiding other avail
 test('BlaBlaCar Bus and FlixBus use fixed official price-search links without assigning a fare',()=>{
  const {itineraries}=api.parse(clone(),options);
  const [blabla,flix]=itineraries.map(journey=>journey.legs.find(leg=>api.coachFareSearch(leg)));
- assert.deepEqual(api.coachFareSearch(blabla),{label:'BlaBlaCar Bus',url:'https://www.blablacar.fr/bus'});
- assert.deepEqual(api.coachFareSearch({...flix,ticketWebsiteURL:'https://untrusted.invalid/'}),{label:'FlixBus',url:'https://shop.flixbus.fr/'});
+ assert.deepEqual(api.coachFareSearch(blabla),{label:'BlaBlaCar Bus',url:'https://www.blablacar.fr/bus/routes/annecy-2/grenoble-2'});
+ const link=api.coachFareSearch({...flix,ticketWebsiteURL:'https://untrusted.invalid/'});
+ assert.equal(link.label,'FlixBus');
+ const search=new URL(link.url);
+ assert.equal(search.origin,'https://shop.flixbus.fr');
+ assert.equal(search.pathname,'/search');
+ assert.equal(search.searchParams.get('rideDate'),'02.11.2026');
+ assert.equal(search.searchParams.get('adult'),'1');
+ assert.equal(new URL(api.coachFareSearch({...flix,departure:'2026-11-02T23:30:00Z'}).url).searchParams.get('rideDate'),'03.11.2026');
+ assert.equal(api.coachFareSearch({...flix,from:'Lyon Saint-Exupéry Aéroport'}).url,'https://shop.flixbus.fr/');
+ assert.equal(api.coachFareSearch({...blabla,from:'Gare routière'}).url,'https://www.blablacar.fr/bus');
  assert.equal(api.coachFareSearch({...blabla,provider:'BlaBlaCar'}),null);
  assert.equal(api.coachFareSearch({...flix,mode:'wa_wal'}),null);
  assert.ok(itineraries.every(journey=>journey.priceEUR===null));
@@ -246,4 +255,17 @@ test('TripGo keeps an operator even when its itinerary falls after the first ten
  const found=api.parse(data,options).itineraries;
  assert.equal(found.length,13);
  assert.equal(api.coachFareSearch(found.at(-1).legs.find(leg=>leg.provider==='FlixBus-eu')).label,'FlixBus');
+});
+
+test('identical stop times and route labels from distinct carriers stay separate',()=>{
+ const data=clone();
+ const original=data.groups.flatMap(group=>group.trips).find(trip=>
+  trip.segments.some(segment=>segment.externalData?.operatorName==='BlaBlaCar Bus'));
+ const another=structuredClone(original);
+ another.segments.find(segment=>segment.externalData?.operatorName==='BlaBlaCar Bus').externalData.operatorName='FlixBus-eu';
+ data.groups=[{trips:[original,structuredClone(original),another]}];
+ const found=api.parse(data,options).itineraries;
+ assert.equal(found.length,2);
+ assert.deepEqual(found.map(journey=>journey.legs.find(leg=>api.coachFareSearch(leg)).provider),
+  ['BlaBlaCar Bus','FlixBus-eu']);
 });

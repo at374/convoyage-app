@@ -53,7 +53,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
      alerts:Array.isArray(s.alerts)?s.alerts.map(a=>String(a?.title||a?.text||'Alerte fournisseur')).slice(0,10):[],serviceConfirmed:false});
    }
    if(!valid||!legs.length||Date.parse(legs[0].departure)!==departure||Date.parse(legs.at(-1).arrival)!==arrival||!legs.some(l=>l.mode.startsWith('pt_pub')))continue;
-   const signature=JSON.stringify(legs.map(l=>[l.mode,l.line,l.departure,l.arrival,l.fromPoint,l.toPoint]));if(seen.has(signature))continue;seen.add(signature);
+   const signature=JSON.stringify(legs.map(l=>[l.mode,l.provider,l.serviceTripId,l.line,l.departure,l.arrival,l.fromPoint,l.toPoint]));if(seen.has(signature))continue;seen.add(signature);
    const startGapMeters=gap(coord(from),legs[0].fromPoint),endGapMeters=gap(coord(to),legs.at(-1).toPoint);
    if(startGapMeters>50||endGapMeters>50)continue;
    const realtimeReported=legs.filter(l=>l.mode.startsWith('pt_pub')).every(l=>l.realtimeReported);
@@ -99,11 +99,52 @@ async function plan(options){
   const value=parse(data,options);if(cache.size>=32)cache.delete(cache.keys().next().value);cache.set(key,{until:Date.now()+60000,value});return JSON.parse(JSON.stringify(value));
  }finally{clearTimeout(timer);options.signal?.removeEventListener('abort',cancel);}
 }
+// Identifiers from the operators’ public city and route pages.
+const FLIX_CITIES={
+ annecy:'40dfe930-8646-11e6-9066-549f350fcb0c',
+ annemasse:'614968b8-2605-416b-969a-a13fe44d8f3d',
+ chambery:'40df5fc1-8646-11e6-9066-549f350fcb0c',
+ geneve:'40df585b-8646-11e6-9066-549f350fcb0c',
+ grenoble:'40dfef30-8646-11e6-9066-549f350fcb0c',
+ lyon:'40df89c1-8646-11e6-9066-549f350fcb0c'
+};
+const BLABLA_CITIES={annecy:'annecy-2',annemasse:'annemasse-2',chambery:'chambery-2',
+ geneve:'geneve-1',grenoble:'grenoble-2',lausanne:'lausanne-2',lyon:'lyon-3'};
+const BLABLA_ROUTES={
+ annecy:['annemasse','chambery','geneve','grenoble','lausanne','lyon'],
+ annemasse:['grenoble','lyon'],
+ chambery:['grenoble','lyon'],
+ geneve:['grenoble','lyon'],
+ grenoble:['annecy','annemasse','chambery','geneve','lausanne','lyon'],
+ lausanne:['grenoble','lyon'],
+ lyon:['annecy','annemasse','chambery','geneve','grenoble','lausanne']
+};
+const COACH_DATE=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'});
+function coachCity(stop){
+ const name=typeof stop==='string'?stop.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase():'';
+ if(/airport|aeroport|saint[- ]exupery/.test(name))return null;
+ const city=name.split(/\s|\(/,1)[0];
+ return Object.hasOwn(BLABLA_CITIES,city)?city:null;
+}
 function coachFareSearch(leg){
  if(!String(leg?.mode||'').startsWith('pt_pub'))return null;
  const operator=String(leg.provider||'').trim().toLowerCase();
- if(operator==='flixbus'||operator==='flixbus-eu')return {label:'FlixBus',url:'https://shop.flixbus.fr/'};
- if(operator==='blablacar bus')return {label:'BlaBlaCar Bus',url:'https://www.blablacar.fr/bus'};
+ const from=coachCity(leg.from),to=coachCity(leg.to);
+ if(operator==='flixbus'||operator==='flixbus-eu'){
+  const departure=time(leg.departure);
+  let url='https://shop.flixbus.fr/';
+  if(from&&to&&from!==to&&FLIX_CITIES[from]&&FLIX_CITIES[to]&&Number.isFinite(departure)){
+   const rideDate=COACH_DATE.format(departure).replaceAll('/','.');
+   url+='search?'+new URLSearchParams({departureCity:FLIX_CITIES[from],arrivalCity:FLIX_CITIES[to],rideDate,adult:'1'});
+  }
+  return {label:'FlixBus',url};
+ }
+ if(operator==='blablacar bus'){
+  const base='https://www.blablacar.fr/bus';
+  const url=from&&to&&BLABLA_ROUTES[from]?.includes(to)?
+   base+'/routes/'+BLABLA_CITIES[from]+'/'+BLABLA_CITIES[to]:base;
+  return {label:'BlaBlaCar Bus',url};
+ }
  return null;
 }
 const api={parse,plan,getKey,setKey,coachFareSearch};root.CPTripGo=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
