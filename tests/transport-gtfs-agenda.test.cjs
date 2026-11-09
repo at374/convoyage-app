@@ -1039,8 +1039,9 @@ test('mobile map draws supplied walking and transit paths and skips missing geom
  assert.ok(svg.children.every(line=>!line.attrs.points.includes('NaN')));
 });
 
-test('local Ain journeys add the matching urban feed in the existing two-feed budget',async()=>{
+test('local Ain and Annemasse journeys add the matching urban feed in the existing two-feed budget',async()=>{
  for(const [id,from,to] of [
+  ['pan-tac',{lat:46.194,lon:6.237},{lat:46.184,lon:6.203}],
   ['oura-mobivals',{lat:46.1109,lon:5.8254},{lat:46.127,lon:5.81}],
   ['oura-duobus',{lat:46.2594,lon:5.6537},{lat:46.21,lon:5.611}],
   ['oura-rubis',{lat:46.1994,lon:5.2155},{lat:46.2226,lon:5.2105}]

@@ -26,6 +26,11 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  url:'https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2',resolveFromCatalogue:true,
  bounds:[45.1,5.7,45.39,6.2],timeZone:'Europe/Paris'
 }),Object.freeze({
+ id:'pan-tac',datasetId:'tac-annemasse',network:'TAC Mobilités',format:'GTFS',federate:true,urban:true,
+ // Official PAN copy with browser CORS, byte-identical to the producer export at verification.
+ url:'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/76779/76779.20261103.121956.913263.zip',
+ updatedAt:'2026-11-03',bounds:[46.105,6.055,46.265,6.345],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'oura-mobivals',datasetId:'mobivals-valserhone',network:'Mobi’Vals',format:'GTFS',federate:true,urban:true,
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=MOBIVALS&dataFormat=GTFS&dataProfil=OPENDATA',
  bounds:[46.08,5.76,46.16,5.87],timeZone:'Europe/Paris'

@@ -217,3 +217,13 @@ test('urban adult fare references stay scoped to the matched direct route and da
  for(const change of [{line:'TAD A'},{networkId:'oura-ain'},{legs:[]},{departure:'2027-01-01T08:00:00+01:00'}])
   assert.equal(urbanReference({...sample,...change}),null);
 });
+
+test('TAC zone 210 fare covers T1 and T2 without pricing the cross-zone line 4',()=>{
+ const {urbanReference}=require('../transport-fares.js');
+ const row={networkId:'tac-annemasse',line:'T1',departure:'2026-11-09T08:00:00+01:00'};
+ assert.match(urbanReference(row).label,/1,70 € sans contact ou 2,00 € auprès du conducteur/);
+ assert.match(urbanReference({...row,line:'T2'}).label,/1,70 €.*60 min/);
+ assert.equal(urbanReference({...row,line:'4'}),null);
+ assert.equal(urbanReference({...row,legs:[{},{}]}),null);
+ assert.equal(urbanReference({...row,networkId:'tpg'}),null);
+});

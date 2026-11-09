@@ -79,6 +79,10 @@
     return leg.verified&&money(leg.amountEUR)!==null?'Tarif vérifié : '+leg.amountEUR.toFixed(2).replace('.',',')+' €':'Tarif inconnu';
   }
   const URBAN={
+    'tac-annemasse':{lines:['T1','T2'],
+      label:'1,70 € · ticket TAC zone 210, 60 min',
+      labelsByLine:{T1:'1,70 € sans contact ou 2,00 € auprès du conducteur · TAC zone 210, 60 min'},
+      source:'https://www.tac-mobilites.fr/nos-tarifs/guide-des-tarifs'},
     'mobivals-valserhone':{lines:['A','B'],label:'1,10 € à bord · ticket Mobi’Vals',
       source:'https://www.mobivals.fr/se-deplacer/les-titres-de-transport/'},
     'duobus-oyonnax':{lines:['L1','L2','L2B','L3','L3A','L3B','L4','ZIO'],
@@ -96,7 +100,7 @@
     const day=urbanDate.format(new Date(row.departure));
     // Current operator pages were checked on 9 November. Recheck later service dates.
     if(day<'2026-11-09'||day>'2026-12-31')return null;
-    return {label:'Référence tarifaire · '+offer.label,source:offer.source};
+    return {label:'Référence tarifaire · '+(offer.labelsByLine?.[row.line]||offer.label),source:offer.source};
   }
   const api={fare,describe,describeLeg,urbanReference};if(typeof module==='object'&&module.exports)module.exports=api;
   root.CPTransportFares=api;
