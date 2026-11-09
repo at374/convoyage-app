@@ -22,3 +22,11 @@ test('Ondea, TAM and Synchro official GTFS archives are registered',()=>{
 test('invalid GPS cannot produce GTFS coverage',()=>{
  for(const r of DEFAULT_RESOURCES)assert.equal(selected(r,at(91,6)),false);
 });
+
+test('Rumilly J’ybus official source is a candidate for local trips',()=>{
+ const source=DEFAULT_RESOURCES.find(r=>r.id==='pan-jybus');
+ assert.ok(source);
+ assert.equal(selected(source,at(45.862,5.945)),true);
+ assert.equal(selected(source,at(46.20,6.40)),false);
+ assert.match(source.url,/80092\.20260807\.141107\.062760\.zip$/);
+});
