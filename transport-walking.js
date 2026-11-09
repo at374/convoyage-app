@@ -7,7 +7,9 @@ function point(p){return !!p&&typeof p.lat==='number'&&typeof p.lon==='number'&&
 function distance(a,b){const rad=Math.PI/180,dLat=(b.lat-a.lat)*rad,dLon=(b.lon-a.lon)*rad;
  const h=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLon/2)**2;
  return 12742000*Math.asin(Math.min(1,Math.sqrt(h)));}
-function decodePolyline(text){
+function decodePolyline(text,precision=6){
+ if(precision!==5&&precision!==6)throw new Error('Invalid shape precision');
+ const scale=10**precision;
  if(typeof text!=='string'||!text.length||text.length>100000)throw new Error('Invalid pedestrian shape');
  let offset=0,lat=0,lon=0;const points=[];
  function component(){let value=0,factor=1,count=0;
@@ -20,7 +22,7 @@ function decodePolyline(text){
   }
  }
  while(offset<text.length){
-  lat+=component();lon+=component();const p={lat:lat/1e6,lon:lon/1e6};
+  lat+=component();lon+=component();const p={lat:lat/scale,lon:lon/scale};
   if(!point(p)||points.length>=20000)throw new Error('Invalid pedestrian coordinates');points.push(p);
  }
  if(points.length<2)throw new Error('Pedestrian geometry missing');return points;

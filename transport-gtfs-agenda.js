@@ -79,7 +79,7 @@ function serviceDates(window,timeZone){
  if(dates.length>5)throw new Error('GTFS service horizon exceeded');
  return dates;
 }
-function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>root.CPGTFSWorker.createClient(),walkingRouterFactory=()=>root.CPTransportWalking?.createRouter(),getSibraPass=()=>null,onResults=()=>{}}={}){
+function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>root.CPGTFSWorker.createClient(),walkingRouterFactory=()=>root.CPTransportWalking?.createRouter(),getSibraPass=()=>null,onResults=()=>{},onWalking=()=>{}}={}){
  const doc=panel.ownerDocument||root.document;
  let client=null,walker=null,disposed=false,observer=null;const walkChecks=[],fareChecks=[];
  const dispose=()=>{if(disposed)return;disposed=true;observer?.disconnect();client?.dispose();walker?.dispose();client=null;walker=null;};
@@ -219,10 +219,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
      if(truncated||distinct.length>shown.length){const note=doc.createElement('p');note.textContent=truncated?'Recherche limitée : d’autres horaires peuvent exister.':'Les autres horaires figurent dans les cartes de résultats.';status.appendChild(note);}
      for(const row of shown){
-      let tariffSource=null,tariffDescription='',expressLookup=null;
+      let tariffSource=null,tariffDescription='';
       try{
        const expressTariff=root.CPTransportExpressFares;
-       expressLookup=expressTariff?.lookup?.(row);
        const expressReference=expressTariff?.reference(row);
        const y51Tariff=root.CPTY51Fares;
        tariffDescription=expressReference?expressTariff.describe(expressReference):y51Tariff?.describe(y51Tariff.reference(row))||'';
@@ -245,14 +244,6 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(tariffDescription){
         const quote=doc.createElement('span');quote.setAttribute(row.networkId==='reseau-interurbain-cars-region-express'?'data-express-fare-reference':'data-y51-fare-reference','');quote.textContent=tariffDescription;line.appendChild(quote);
         const proof=doc.createElement('a');proof.href=tariffSource;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir le barème officiel';line.appendChild(proof);
-      }
-      if(expressLookup){
-       const links=[['Rechercher le tarif sur SNCF Connect',expressLookup.searchURL],
-        ...expressLookup.lines.map(({line,url})=>['Fiche officielle '+line,url])];
-       for(const [label,url] of links){
-        const link=doc.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';
-        link.textContent=' · '+label;line.appendChild(link);
-       }
       }
       for(const [label,stop] of [['Départ',row.originStop],['Correspondance',row.transferStop],['Montée après changement',row.transferDestinationStop],['Arrivée',row.destinationStop]]){
        if(!validPoint(stop))continue;
@@ -290,11 +281,15 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
    }
    for(const check of walkChecks){
     if(!active())return;
-    if(!walker||!root.CPTransportWalking?.checkJourney){check.element.textContent=' · Marche non calculée';continue;}
+    if(!walker||!root.CPTransportWalking?.checkJourney){
+     check.element.textContent=' · Marche non calculée';
+     onWalking({row:check.row,task:check.task,result:null});continue;
+    }
     try{
      check.element.textContent=' · Marche : calcul des parcours piétons…';
      const result=await root.CPTransportWalking.checkJourney(walker,check.row,check.task);
      if(!active())return;
+     onWalking({row:check.row,task:check.task,result});
      const descriptions=[];
      const addressTime=(value,round)=>new Intl.DateTimeFormat('fr-FR',{timeZone:check.row.timeZone,dateStyle:'short',timeStyle:'short'})
       .format(new Date(round(Date.parse(value)/60000)*60000));
@@ -314,7 +309,10 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       fits_calculated_walks:'Horaires compatibles avec les parcours calculés ; adresses, accès réels et circulation restent à vérifier.',
       partial:'Calcul piéton partiel ; trajet complet non confirmé.',unknown:'Horaires ou données piétonnes insuffisants.'};
      check.element.textContent=' · '+descriptions.join(' · ')+' · '+(labels[result.status]||labels.unknown)+' Transport non confirmé — vérifiez vous-même.';
-    }catch(_){if(active())check.element.textContent=' · Marche non calculée ; transport non confirmé.';}
+    }catch(_){if(active()){
+     check.element.textContent=' · Marche non calculée ; transport non confirmé.';
+     onWalking({row:check.row,task:check.task,result:null});
+    }}
    }
   }catch(error){
    if(active()){

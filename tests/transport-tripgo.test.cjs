@@ -269,3 +269,19 @@ test('identical stop times and route labels from distinct carriers stay separate
  assert.deepEqual(found.map(journey=>journey.legs.find(leg=>api.coachFareSearch(leg)).provider),
   ['BlaBlaCar Bus','FlixBus-eu']);
 });
+
+test('recorded coach journeys supply separate pedestrian and vehicle geometries',()=>{
+ const {itineraries}=api.parse(clone(),options);
+ for(const journey of itineraries){
+  assert.ok(journey.legs[0].geometry.length>2);
+  assert.ok(journey.legs.at(-1).geometry.length>2);
+  assert.ok(journey.legs.find(leg=>api.coachFareSearch(leg)).geometry.length>=2);
+ }
+ const corrupt=clone();
+ for(const template of corrupt.segmentTemplates){
+  if(template.modeIdentifier==='wa_wal')template.streets=[{encodedWaypoints:'????'}];
+ }
+ const malformed=api.parse(corrupt,options).itineraries;
+ assert.equal(malformed.length,itineraries.length);
+ assert.equal(malformed[0].legs[0].geometry,null);
+});

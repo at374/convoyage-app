@@ -1843,8 +1843,42 @@
         update();
         host.appendChild(button);
       };
+      const showTransportMap = (host, paths) => {
+        const valid = paths.filter(path=>Array.isArray(path.geometry)&&path.geometry.length>=2&&
+          path.geometry.every(point=>Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180));
+        if(!valid.length)return;
+        const points=valid.flatMap(path=>path.geometry);
+        let minLat=90,maxLat=-90,minLon=180,maxLon=-180;
+        for(const point of points){
+          minLat=Math.min(minLat,point.lat);maxLat=Math.max(maxLat,point.lat);
+          minLon=Math.min(minLon,point.lon);maxLon=Math.max(maxLon,point.lon);
+        }
+        const longitudeScale=Math.max(.01,Math.cos((minLat+maxLat)*Math.PI/360));
+        const width=(maxLon-minLon)*longitudeScale,height=maxLat-minLat;
+        const scale=Math.min(288/Math.max(width,1e-6),144/Math.max(height,1e-6));
+        const figure=document.createElement('figure');figure.style.margin='10px 0';
+        const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.setAttribute('viewBox','0 0 320 176');svg.setAttribute('width','100%');
+        svg.setAttribute('role','img');svg.setAttribute('aria-label','Tracé des portions disponibles');
+        svg.setAttribute('data-transport-route-map','');
+        svg.style.background='var(--accentDoux)';svg.style.borderRadius='12px';
+        for(const path of valid){
+          const line=document.createElementNS(svg.namespaceURI,'polyline');
+          line.setAttribute('points',path.geometry.map(point=>[
+            (160+(point.lon-(minLon+maxLon)/2)*longitudeScale*scale).toFixed(1),
+            (88+((minLat+maxLat)/2-point.lat)*scale).toFixed(1)
+          ].join(',')).join(' '));
+          line.setAttribute('fill','none');line.setAttribute('stroke',path.walk?'#a21caf':'#0b64cf');
+          line.setAttribute('stroke-width',path.walk?'4':'3');line.setAttribute('stroke-linecap','round');
+          if(path.walk)line.setAttribute('stroke-dasharray','5 3');
+          svg.appendChild(line);
+        }
+        const caption=document.createElement('figcaption');
+        caption.textContent=valid.every(path=>path.walk)?'Tracé piéton disponible.':'Tracés disponibles · marche en violet pointillé, transport en bleu.';
+        figure.append(svg,caption);host.appendChild(figure);
+      };
       // Compact comparison cards for regional options; keep existing detailed legs below.
-      const showRegionalChoices = (host, ranked, heading, references) => {
+      const showRegionalChoices = (host, ranked, heading, references, walkSlots) => {
         if (!ranked.length) return;
         host.setAttribute('data-transport-cards','true');
         const evidence=document.createElement('details');evidence.className='cp-transport-evidence';
@@ -1868,7 +1902,9 @@
           facts.textContent = (Number.isFinite(journey.durationMinutes) ? journey.durationMinutes + ' min' : 'Durée inconnue') + ' · ' +
             (Number.isFinite(journey.priceEUR) ? journey.priceEUR.toFixed(2).replace('.', ',') + ' €' : 'Tarif non vérifié');
           const reference=references?.get(journey.id);
-          if(reference) facts.textContent += window.CPTransportExpressFares.describe(reference);
+          if(reference&&!Number.isFinite(journey.priceEUR))facts.textContent=
+            (journey.durationMinutes??'—')+' min · '+reference;
+          facts.style.fontWeight='700';
           const times = document.createElement('span');
           times.style.display = 'block';
           const clock = value => {
@@ -1926,6 +1962,7 @@
           const caution = document.createElement('small');
           caution.textContent = 'Les liens cartographiques recherchent le nom de l’arrêt : position exacte non vérifiée.';
           detail.appendChild(caution);
+          if(walkSlots?.has(journey.id))detail.appendChild(walkSlots.get(journey.id));
           card.appendChild(detail);
           grid.appendChild(card);
         };
@@ -1956,25 +1993,6 @@
       };
       const from = locationText(m.origin_address || m.from_address, m.from_city, m.from_department);
       const to = locationText(m.destination_address || m.to_address, m.to_city, m.to_department);
-      const directions = (a, b, when) => {
-        if (!a || !b) return '<span class="doux">Adresse manquante — trajet non calculable.</span>';
-        const base = 'https://www.google.com/maps/dir/?api=1&origin=' +
-          encodeURIComponent(a) + '&destination=' + encodeURIComponent(b);
-        const link = (mode, label) => '<a href="' + esc(base + '&travelmode=' + mode) +
-          '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
-        const transitExtra = '<a href="' + esc('https://www.sncf-connect.com/app/home/search' ) +
-          '" target="_blank" rel="noopener noreferrer">🚆 SNCF Connect</a>' +
-          '<a href="https://www.flixbus.fr/" target="_blank" rel="noopener noreferrer">🚌 FlixBus</a>' +
-          '<a href="https://www.blablacar.fr/bus" target="_blank" rel="noopener noreferrer">🚌 BlaBlaCar Bus</a>';
-        return '<div class="liensTr">' +
-          link('transit', '🚌 Bus / train') +
-          transitExtra +
-          link('walking', '🚶 Marche') +
-          link('bicycling', '🚲 Vélo (repère trottinette, à vérifier)') +
-          '</div>' +
-          (when ? '<div class="doux">Heure de référence : ' + esc(formatParis(when)) +
-          ' · sélectionner la date et l’heure exactes dans le calculateur externe.</div>' : '');
-      };
       // Moteur régional : coordonnées et fournisseur existant, ou endpoint explicitement configuré.
       // Ne jamais transformer une recherche externe en trajet prétendument confirmé.
       const regionalEngineReady = !!(window.CPRegionalRouting &&
@@ -2078,7 +2096,7 @@
         esc(home || 'Domicile non renseigné') + ' → ' + esc(from || 'Départ non renseigné') +
         '</div><div class="doux">Prise en charge : ' + esc(formatParis(pickupDate)) +
         ' · minimum : 15 min avant prise en charge, marche finale comprise ; 5 min seulement avec GPS exact fiable ; préférence : 30 à 45 min.</div>' +
-        directions(home, from, transportPickup) + '</div>' +
+        '</div>' +
         '<div style="margin-top:12px"><strong>2. Jonction vers la prochaine mission</strong><div>' +
         (next ? esc((to || 'Livraison non renseignée') + ' → ' +
           (nextOrigin || 'Départ suivant non renseigné')) +
@@ -2087,15 +2105,13 @@
           ' · prochaine prise en charge : ' + esc(formatParis(next.pickup_start)) +
           ' · intervalle brut : ' + esc(String(nextGapMin)) +
           ' min (avant marge et trajet d’approche).</div>' +
-          '<div class="doux">' + esc(connectionStatus) + '</div>' +
-          directions(to, nextOrigin, next.pickup_start) :
+          '<div class="doux">' + esc(connectionStatus) + '</div>' :
           '</div><span class="doux">Aucune prochaine mission prévue.</span>') + '</div>' +
         '<div style="margin-top:12px"><strong>3. Retour au domicile</strong><div>' +
         esc(to || 'Livraison non renseignée') + ' → ' +
         esc(home || 'Domicile non renseigné') + '</div>' +
         '<div class="doux">' + (transportPlannedReturn ? 'Livraison prévue pour ce calcul : ' : 'Livraison estimée pour ce calcul (à confirmer) : ') + esc(formatParis(deliveryDate)) +
         ' · prévoir la marche jusqu’à l’arrêt.</div>' +
-        directions(to, home, transportDelivery || m.delivery_start) +
         (/albertville/i.test(String(to || '')) ?
           '<div class="doux" style="margin-top:8px">🚌 Retour Y51 Albertville → Annecy : ' +
           '<a href="https://annecy.transdev.com/line/ligne-y51/" target="_blank" rel="noopener noreferrer">horaires officiels 2026–2027</a> · ' +
@@ -2121,7 +2137,7 @@
           regionalEngineReady ? 'aucun fournisseur régional disponible.' :
           'adaptateur non chargé.') +
         ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
-        '<p class="doux">Prévoir au minimum 15 min avant la prise en charge, après la marche finale. La marge de 5 min n’est autorisée que si le GPS exact est fiable et vérifié. Une arrivée à la gare ou à l’arrêt ne suffit pas. Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
+        '<p class="doux">Prévoir au minimum 15 min avant la prise en charge, après la marche finale. La marge de 5 min n’est autorisée que si le GPS exact est fiable et vérifié. Une arrivée à la gare ou à l’arrêt ne suffit pas. Horaires, tarifs et marche sont indiqués selon les données disponibles.</p>';
       let sibraPassControls = null;
       if (window.CPSibraPass?.mountControls) {
         let passStorage = null;
@@ -2237,7 +2253,7 @@
       // The mobile workspace shows journeys first; setup and source documents stay secondary.
       const sourcePanel=document.createElement('details');sourcePanel.className='cp-transport-settings';
       sourcePanel.id='cpTransportSettings';
-      const sourceTitle=document.createElement('summary');sourceTitle.textContent='Réglages, abonnements et autres recherches';
+      const sourceTitle=document.createElement('summary');sourceTitle.textContent='Réglages et abonnements';
       sourcePanel.appendChild(sourceTitle);
       for(const child of Array.from(panel.childNodes))sourcePanel.appendChild(child);
       const hero=document.createElement('header');hero.className='cp-transport-hero';
@@ -2256,7 +2272,7 @@
       panel.appendChild(sourcePanel);
       // Keep manual controls available without placing them ahead of automatic results.
       sourcePanel.appendChild(refreshTransport);
-      const localCards={};
+      const localCards={},localWalks=new Map();
       const renderLocalCards=({task,itineraries,partial})=>{
         if(!panel.isConnected||panel.hidden||$('feuille').hidden||!transportDestinations[task.label])return;
         localCards[task.label]?.remove();
@@ -2266,10 +2282,17 @@
         const rows=itineraries.map(row=>({...row,legs:Array.isArray(row.legs)&&row.legs.length?row.legs:[{line:row.line,from:row.originStop?.name||row.from,to:row.destinationStop?.name||row.to,departure:row.departure,arrival:row.arrival}]}));
         const normalized=window.CPTransportAdapters?.adaptGTFS(rows,'Réseau local')||[];
         const ranked=window.CPTransportRanking?.rank(normalized,{direction:task.label==='Retour'?'return':'outbound',deadline:task.latestArrival,earliestDeparture:task.earliestDeparture,marginMinutes:task.marginMinutes||15,includeAlternatives:true})||[];
-        const references=new Map(normalized.map((journey,index)=>[
-          journey.id,window.CPTransportExpressFares?.reference(itineraries[index])
-        ]));
-        showRegionalChoices(host,ranked,task.label+' · horaires locaux',references);
+        const references=new Map(),walkSlots=new Map();
+        normalized.forEach((journey,index)=>{
+          const row=itineraries[index],express=window.CPTransportExpressFares;
+          const fare=express?.reference(row);
+          const reference=fare?express.describe(fare):window.CPTY51Fares?.describe(window.CPTY51Fares.reference(row));
+          if(reference)references.set(journey.id,reference.replace(/^ · /,''));
+          const walk=document.createElement('div');
+          walk.textContent=index<5?'Marche : calcul en cours…':'Marche : non calculée pour ce trajet.';
+          walkSlots.set(journey.id,walk);localWalks.set(row,walk);
+        });
+        showRegionalChoices(host,ranked,task.label+' · horaires locaux',references,walkSlots);
         if(partial){
           const warning=document.createElement('p');
           warning.textContent='Horaires locaux : recherche partielle, d’autres trajets peuvent exister.';
@@ -2298,9 +2321,19 @@
         const signature = JSON.stringify(gtfsTasks);
         if (signature === gtfsTaskSignature) return;
         stopGTFSTransports();
+        localWalks.clear();
         for(const host of Object.values(localCards))host.remove();
         panel.querySelector('[data-gtfs-agenda]')?.remove();
         gtfsAgendaSession = window.CPGTFSAgenda.mount(sourcePanel,{tasks:gtfsTasks,onResults:renderLocalCards,
+          onWalking:({row,result})=>{
+            const host=localWalks.get(row);if(!host)return;
+            const legs=Object.entries(result?.walks||{}).filter(([,walk])=>walk?.status==='calculated');
+            host.textContent=legs.length?legs.map(([key,walk])=>
+              ({access:'Approche',transfer:'Correspondance',egress:'Marche finale'}[key])+
+              ' : '+Math.ceil(walk.durationSeconds/60)+' min · '+Math.round(walk.distanceMeters)+' m').join(' · '):
+              'Marche : parcours indisponible.';
+            showTransportMap(host,legs.map(([,walk])=>({walk:true,geometry:walk.geometry})));
+          },
           getSibraPass:()=>sibraPassControls?.getPass()||null,
           ...(Array.isArray(window.CP_GTFS_AGENDA_RESOURCES) ? {resources:window.CP_GTFS_AGENDA_RESOURCES} : {})});
         gtfsTaskSignature = signature;
@@ -2672,13 +2705,11 @@
           coachStatus.hidden=active;
           coachStatus.textContent=active?'':'Recherche automatique BlaBlaCar Bus et FlixBus indisponible sans clé TripGo sur cet appareil.';
         };
-        const carpool=document.createElement('a');carpool.href='https://www.blablacar.fr/carpool';carpool.target='_blank';carpool.rel='noopener noreferrer';
-        carpool.textContent='Rechercher le covoiturage BlaBlaCar';
         const saveKey=document.createElement('button');saveKey.className='second';saveKey.type='button';saveKey.textContent='Activer TripGo sur cet appareil';
         saveKey.onclick=()=>{try{tripgo.setKey(keyInput.value);keyInput.value='';keyState();bt.cpRefreshRegional?.();}catch(_){keyStatus.textContent='Clé invalide ou stockage de cet appareil indisponible.';}};
         const clearKey=document.createElement('button');clearKey.className='second';clearKey.type='button';clearKey.textContent='Retirer la clé TripGo de cet appareil';
         clearKey.onclick=()=>{try{tripgo.setKey('');keyInput.value='';keyState();bt.cpRefreshRegional?.();}catch(_){keyStatus.textContent='Retrait de la clé impossible sur cet appareil.';}};
-        keyState();for(const item of [keyStatus,keyInput,saveKey,clearKey,carpool])config.appendChild(item);sourcePanel.appendChild(config);
+        keyState();for(const item of [keyStatus,keyInput,saveKey,clearKey])config.appendChild(item);sourcePanel.appendChild(config);
         const tripSearch=(label,inputs)=>regionalSlot(label,()=>[tripgo.getKey(),inputs()],(target,signal)=>{
           const task=inputs();if(!tripgo.getKey()||!task?.from||!task?.to||!task.when)return;
           const status=document.createElement('div');status.className='doux';status.setAttribute('role','status');
@@ -2719,9 +2750,10 @@
                 fareSummary=window.CPTransportFares.fare(result.legs,{travelDate:result.departure});
                 const fareLine=document.createElement('span');fareLine.setAttribute('data-tripgo-fare','');
                 fareLine.textContent=' · Tarifs : '+window.CPTransportFares.describe(fareSummary);
-                fareLine.style.display='block';summary.appendChild(fareLine);
+                fareLine.style.display='block';fareLine.style.fontWeight='700';summary.insertBefore(fareLine,proof);
               }
               details.appendChild(line);
+              showTransportMap(details,result.legs.map(leg=>({walk:leg.mode==='wa_wal',geometry:leg.geometry})));
               const mapNote=document.createElement('p');mapNote.className='doux';
               mapNote.textContent='Les cartes localisent les coordonnées fournies. Le parcours piéton ouvert dans Maps fait l’objet d’un nouveau calcul ; il peut différer de la proposition. Accès réels à vérifier.';details.appendChild(mapNote);
               const steps=document.createElement('ol');
@@ -2733,19 +2765,13 @@
                   const walkingDistance=document.createElement('span');walkingDistance.setAttribute('data-tripgo-walk-distance','');
                   walkingDistance.textContent=' · Marche : '+Math.ceil(leg.distanceMeters)+' m (distance fournisseur, cheminement à vérifier)';
                   step.appendChild(walkingDistance);
+                  showTransportMap(step,[{walk:true,geometry:leg.geometry}]);
                 }
                 const legFare=fareSummary?.breakdown?.[legIndex];
                 if(legFare){
                   const fareDetail=document.createElement('span');fareDetail.setAttribute('data-tripgo-leg-fare','');
                   fareDetail.textContent=' · '+(window.CPTransportFares.describeLeg?.(legFare)||'Tarif inconnu');
                   step.appendChild(fareDetail);
-                }
-                const coach=tripgo.coachFareSearch?.(leg);
-                if(coach){
-                  const link=document.createElement('a');link.href=coach.url;link.target='_blank';link.rel='noopener noreferrer';
-                  link.setAttribute('data-coach-fare-search','');
-                  link.textContent=' · Chercher le prix du départ sur '+coach.label;
-                  step.appendChild(link);
                 }
                 const validMapPoint=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180;
                 for(const [label,point] of [['Départ',leg.fromPoint],['Arrivée',leg.toPoint]]){

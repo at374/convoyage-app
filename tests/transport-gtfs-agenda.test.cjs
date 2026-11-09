@@ -113,7 +113,7 @@ test('actual Agenda call passes mission windows and triggers regional refresh wh
  const current={o:{lat:45.9,lng:6.1,precision:'adresse'},d:{lat:45.67,lng:6.39,precision:'gps'}};
  const next={o:{lat:45.8,lng:6.2,precision:'ville'},pickup_start:'2026-11-02T15:00:00+01:00'};
  const context={window:{CPGTFSAgenda:{mount:(panel,options)=>{calls.push(options);return {dispose(){}};}},CPGTFSWorker:{}},
-  panel,sourcePanel:panel,localCards:{},renderLocalCards:()=>{},bt:button,m:current,next,etat:{reglages:{domicile_lat:45.9,domicile_lng:6.1}},
+  panel,sourcePanel:panel,localCards:{},localWalks:new Map(),renderLocalCards:()=>{},bt:button,m:current,next,etat:{reglages:{domicile_lat:45.9,domicile_lng:6.1}},
   G:{coordonnees:(m,side)=>m[side==='origin'?'o':'d']},
   transportAddressPoint:p=>p&&['adresse','gps'].includes(p.precision),
   pickupDate:'2026-11-02T10:00:00+01:00',deliveryDate:'2026-11-02T13:00:00+01:00',securityMarginMin:30,
@@ -782,7 +782,7 @@ test('Android PWA offline cache retains the transport worker and app shell',()=>
  assert.match(html,/rel="manifest" href="manifest.webmanifest"/);
  for(const asset of ['transport-gtfs-worker.js','transport-gtfs-loader.js',
   'transport-gtfs-federation.js','transport-gtfs-index.js','transport-gtfs-time.js',
-  'transport-gtfs-worker-client.js','transport-walking.js','manifest.webmanifest']){
+  'transport-gtfs-worker-client.js','transport-walking.js?v=polyline-precision-20261109','manifest.webmanifest']){
   assert.ok(worker.includes("'"+asset+"'"),'Missing offline transport asset: '+asset);
  }
  assert.match(worker,/e\.request\.method !== 'GET'/);
@@ -818,7 +818,7 @@ test('Mobile regional transport cards cover Aller Jonction Retour and safe stop 
  for(const section of ['Aller · comparer','Jonction mission · comparer','Retour · comparer']){
   assert.ok(app.includes(section),'Missing mobile transport comparison: '+section);
  }
- assert.match(app,/const showRegionalChoices = \(host, ranked, heading, references\) =>/);
+ assert.match(app,/const showRegionalChoices = \(host, ranked, heading, references, walkSlots\) =>/);
  assert.match(app,/ranked\.slice\(0,3\)/);
  assert.match(app,/document\.createElement\('details'\)/);
  assert.match(app,/document\.createElement\('ol'\)/);
@@ -923,7 +923,7 @@ test('X25 and X33 retain the published product and leave blank cells unknown',()
  assert.equal(reference('X33',divonne,ferneyMairie),null);
 });
 
-test('Express results with an unknown fare link to SNCF and the exact regional line',async()=>{
+test('Express results without a quote keep the price unknown and omit search prompts',async()=>{
  const fares=require('../transport-express-fares.js');
  const resource=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-express');
  const expressRow=row({networkId:resource.datasetId,line:'X71'});
@@ -938,7 +938,7 @@ test('Express results with an unknown fare link to SNCF and the exact regional l
   clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[expressRow]}),dispose(){}})});
  await session.done;
  assert.match(target.textContent,/tarif inconnu/);
- assert.match(target.textContent,/Rechercher le tarif sur SNCF Connect.*Fiche officielle X71/);
+ assert.doesNotMatch(target.textContent,/Rechercher le tarif sur SNCF Connect/);
  assert.doesNotMatch(target.textContent,/Référence X71/);
  session.dispose();
 });
@@ -1016,4 +1016,25 @@ test('GTFS delivers alternatives beyond the five detailed source rows',async()=>
  assert.equal(delivered[0].itineraries.length,7);
  assert.equal(delivered[0].partial,true);
  session.dispose();
+});
+
+test('mobile map draws supplied walking and transit paths and skips missing geometry',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+ const from=source.indexOf('      const showTransportMap =');
+ const to=source.indexOf('      // Compact comparison cards',from);
+ const node=name=>({name,children:[],attrs:{},style:{},
+  setAttribute(key,value){this.attrs[key]=value;},appendChild(child){this.children.push(child);},append(...children){this.children.push(...children);}});
+ const host=node('host');
+ const render=vm.runInNewContext(source.slice(from,to)+'showTransportMap',{
+  document:{createElement:node,createElementNS:(_ns,name)=>node(name)}
+ });
+ render(host,[{walk:true,geometry:null}]);
+ assert.equal(host.children.length,0);
+ const a={lat:45.9,lon:6.12},b={lat:45.91,lon:6.13},c={lat:46.2,lon:6.14};
+ render(host,[{walk:true,geometry:[a,b]},{walk:false,geometry:[b,c]},{walk:true,geometry:[a]}]);
+ const svg=host.children[0].children[0];
+ assert.equal(svg.children.length,2);
+ assert.equal(svg.children[0].attrs['stroke-dasharray'],'5 3');
+ assert.equal(svg.children[1].attrs['stroke'],'#0b64cf');
+ assert.ok(svg.children.every(line=>!line.attrs.points.includes('NaN')));
 });

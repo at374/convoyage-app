@@ -18,6 +18,25 @@ function getKey(){try{return root.localStorage?.getItem(KEY)||'';}catch(_){retur
 function setKey(value){const key=String(value||'').trim();if(key&&!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw Error('Clé TripGo invalide');
  if(!root.localStorage)throw Error('Stockage de cet appareil indisponible');
  if(key)root.localStorage.setItem(KEY,key);else root.localStorage.removeItem(KEY);cache.clear();}
+function legGeometry(segment,mode){
+ const decode=root.CPTransportWalking?.decodePolyline||
+  (typeof module==='object'&&module.exports?require('./transport-walking.js').decodePolyline:null);
+ const shapes=mode==='wa_wal'?segment.streets:
+  Array.isArray(segment.shapes)?segment.shapes.filter(shape=>shape?.travelled===true):null;
+ if(!decode||!Array.isArray(shapes)||!shapes.length||shapes.length>100)return null;
+ const geometry=[];
+ try{
+  for(const shape of shapes){
+   const text=shape?.encodedWaypoints;
+   if(typeof text!=='string'||text.length>15000)return null;
+   const points=decode(text,5);
+   if(geometry.length&&gap(geometry.at(-1),points[0])>50)return null;
+   geometry.push(...points);
+   if(geometry.length>5000)return null;
+  }
+  return gap(coord(segment.from),geometry[0])<=50&&gap(geometry.at(-1),coord(segment.to))<=50?geometry:null;
+ }catch(_){return null;}
+}
 function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Date().toISOString()}={}){
  if(!point(from)||!point(to)||!Number.isFinite(time(when))||latestArrival!==undefined&&(!Number.isFinite(time(latestArrival))||(!arriveBy&&time(latestArrival)<time(when))||(arriveBy&&time(latestArrival)>time(when))))throw Error('Fenêtre TripGo invalide');
  if(!data||!Array.isArray(data.groups)||data.groups.length>100||!Array.isArray(data.segmentTemplates)||data.segmentTemplates.length>2000)throw Error('Réponse TripGo invalide');
@@ -49,7 +68,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
     previous=end;
     legs.push({mode,provider:s.externalData?.operatorName||null,serviceTripId:s.serviceTripID||null,serviceShortName:s.serviceShortName||null,routeId:s.routeId||s.routeID||null,fromStopCode:s.from.stopCode||null,toStopCode:s.to.stopCode||null,ticketWebsiteURL:typeof s.ticketWebsiteURL==='string'?s.ticketWebsiteURL:null,line:s.serviceNumber||s.serviceName||null,from:s.from.name||s.from.address||'',to:s.to.name||s.to.address||'',
      fromPoint:coord(s.from),toPoint:coord(s.to),departure:new Date(start).toISOString(),arrival:new Date(end).toISOString(),
-     distanceMeters:Number.isFinite(s.metres)&&s.metres>=0?s.metres:null,realtimeReported:s.realTime===true,
+     geometry:legGeometry(s,mode),distanceMeters:Number.isFinite(s.metres)&&s.metres>=0?s.metres:null,realtimeReported:s.realTime===true,
      alerts:Array.isArray(s.alerts)?s.alerts.map(a=>String(a?.title||a?.text||'Alerte fournisseur')).slice(0,10):[],serviceConfirmed:false});
    }
    if(!valid||!legs.length||Date.parse(legs[0].departure)!==departure||Date.parse(legs.at(-1).arrival)!==arrival||!legs.some(l=>l.mode.startsWith('pt_pub')))continue;
