@@ -30,3 +30,13 @@
 Le PAN indique explicitement que le producteur exige une authentification sur data.grandlyon.com pour accéder aux données horaires. Le GTFS historique public n'est pas une source valable pour les voyages de novembre 2026. Ne pas coder d'URL de ZIP fictive, ni réutiliser un GTFS 2022.
 
 Prochaines étapes : obtenir un flux TCL autorisé et à jour ; vérifier la validité du calendrier (60 jours annoncés), les arrêts, les trajets et la disponibilité des données temps réel ; calculer les zones réellement traversées avant d'afficher un prix ; tester les correspondances TER/Cars Région et les accès piétons ; ne pas fusionner ni déployer sans validation. Surveillance des modifications par la veille quotidienne existante.
+
+## Vérification complémentaire des flux (9 novembre 2026)
+- Le PAN confirme que le jeu TCL nécessite une authentification sur **data.grandlyon.com** et que les indicateurs de disponibilité/validation de certaines ressources sont indisponibles : https://transport.data.gouv.fr/datasets/horaires-theoriques-du-reseau-transports-en-commun-lyonnais
+- La ressource GTFS historique du PAN couvre **14 avril au 12 juillet 2022** et affiche 0 % de disponibilité sur les dates vérifiées d'octobre–novembre 2026 : https://transport.data.gouv.fr/resources/65812 . **Ne jamais la considérer comme horaires actuels.**
+- Le portail producteur confirme que les données sous licence Mobilité nécessitent une connexion pour accéder au jeu complet : https://support.grandlyon.com/data-grand-lyon/
+- Une archive TCL importée par Transitland présente une plage de service **9 septembre 2026 – 7 janvier 2027**, avec **800 routes et 13 982 arrêts** ; il s'agit d'une **archive datée de septembre**, pas d'une preuve de disponibilité des trajets le 9 novembre : https://www.transit.land/feeds/f-u05-tcl~systral/versions/b2b95539fb8d78394378d970800fb94fde01613d
+- Source d'origine historique indiquée par l'archive : `https://download.data.grandlyon.com/files/rdata/tcl_sytral.tcltheorique/GTFS_TCL.ZIP` ; **ne pas l'activer sans vérifier l'accès, les droits et le calendrier courant**.
+- Le producteur précise que la fusion TCL/Libellule/Cars du Rhône a modifié les identifiants de lignes, l'organisation GTFS et les zones tarifaires des arrêts : https://data.grandlyon.com/portail/fr/actualites/reseau-tcl-unifie
+
+**Conclusion opérationnelle :** une archive 2026 existe, mais le flux officiel actuel et son accès ne sont pas encore validés dans l'application. Ne pas attribuer un tarif TCL au seul identifiant de ligne : déterminer les zones réelles du trajet et appliquer les conditions du billet.
