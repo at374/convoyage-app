@@ -1,8 +1,8 @@
 {
   "checkedOn": "2026-11-08",
-  "status": "extracted_reference_pending_visual_and_stop_validation",
+  "status": "published_pdf_cells_verified_stop_mapping_pending",
   "additionalDiscountAllowed": false,
-  "warning": "X37 Saint-Claude–Molinges 6.00 EUR from extraction is higher than Saint-Claude–Dortan 4.00 EUR; retain published extraction but do not activate without visual verification. Reverse applicability not inferred.",
+  "warning": "X37 Saint-Claude Gare to Molinges Village is printed as 6.00 EUR, while Saint-Claude Gare to Dortan Mairie is 4.00 EUR. Require a provider quote for the anomalous pair before automated use. Do not infer stop identifiers, reverse applicability, or additional discounts.",
   "references": [
     {
       "line": "X37",
@@ -522,5 +522,18 @@
       "validUntil": null,
       "alreadyDiscounted": true
     }
-  ]
+  ],
+  "verification": {
+    "checkedOn": "2026-11-09",
+    "method": "All published matrix amounts and stop labels matched the corresponding PDF text. The anomalous X37 cell was visually confirmed.",
+    "printedEffectiveFrom": "2026-03-01",
+    "verifiedPairs": {
+      "X37": 66,
+      "X38": 28
+    },
+    "pdfSha256": {
+      "X37": "f033fcadb3088ac5cf9539ee534a13e78756d6f897e3af0a97723c1411bdb47d",
+      "X38": "0198bec3a449c3e5a5d3945876ebeac8a28a41ad0a944ec81730b6619cb25772"
+    }
+  }
 }
