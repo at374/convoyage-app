@@ -2,6 +2,11 @@
 (function(root){
 'use strict';
 const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
+ id:'pan-synchro',datasetId:'synchro-chambery',network:'Synchro Bus — Grand Chambéry',format:'GTFS',federate:true,urban:true,
+ // Official PAN archived GTFS; timetable coverage through 20 Dec 2026. Do not infer fares.
+ url:'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/82272/82272.20261006.181637.894741.zip',
+ updatedAt:'2026-10-06',bounds:[45.48,5.78,45.72,6.10],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'pan-ondea',datasetId:'ondea-aix-les-bains',network:'Ondéa — Aix-les-Bains',format:'GTFS',federate:true,urban:true,
  // Official PAN archive, validity 17 Oct 2026–31 Mar 2027; timetable dates are checked in GTFS.
  url:'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/71223/71223.20261016.181718.064517.zip',
