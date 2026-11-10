@@ -30,7 +30,7 @@ function legGeometry(segment,mode){
    const text=shape?.encodedWaypoints;
    if(typeof text!=='string'||text.length>15000)return null;
    const points=decode(text,5);
-   if(geometry.length&&gap(geometry.at(-1),points[0])>50)return null;
+   if(geometry.length&&gap(geometry.at(-1),points[0])>(mode==='wa_wal'?10:50))return null;
    geometry.push(...points);
    if(geometry.length>5000)return null;
   }
