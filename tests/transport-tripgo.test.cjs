@@ -5,7 +5,11 @@ const clone=()=>JSON.parse(JSON.stringify(f.response));
 test('recorded TripGo response finds BlaBlaCar Bus and FlixBus, excludes past departures and preserves missing evidence',()=>{
  const r=api.parse(clone(),options);assert.equal(r.itineraries.length,2);
  assert.equal(r.itineraries[0].legs[1].line,'BlaBlaCar Bus');assert.equal(r.itineraries[1].legs[1].line,'FlixBus 1789');
- assert.equal(r.itineraries[0].legs[1].serviceTripId,'1298787731');assert.equal(r.itineraries[0].legs[1].provider,'BlaBlaCar Bus');
+ assert.equal(r.itineraries[0].legs[1].serviceTripId,'1298787731');
+ assert.equal(r.coverage.blablacarBusFound,true);
+ assert.equal(r.coverage.blablacarRideshareVerified,false);
+ assert.equal(r.coverage.publicTransportOnly,true);
+ assert.equal(r.coverage.providers.includes('BlaBlaCar Bus'),true);assert.equal(r.itineraries[0].legs[1].provider,'BlaBlaCar Bus');
  for(const t of r.itineraries){assert.equal(t.priceEUR,null);assert.equal(t.transportConfirmed,false);assert.equal(t.accessVerified,false);assert.equal(t.evidence.realtimeReported,false);assert.equal(t.evidence.walkingProvided,true);assert.equal(t.evidence.endpointCoordinatesMatched,true);assert.equal(t.evidence.missing.length,4);}
 });
 test('TripGo rejects a mismatched query, missing template, unavailable trip and overlapping segments',()=>{
