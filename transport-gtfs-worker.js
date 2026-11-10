@@ -154,6 +154,14 @@ self.onmessage=async({data})=>{
       }
      }
     }
+    // Reject malformed journey timestamps before ordering and the result cap:
+    // otherwise an invalid operator row can displace a usable itinerary.
+    if(query.method==='missionJourneys'){
+     const before=rows.length;
+     rows=rows.filter(row=>row&&Number.isFinite(Date.parse(row.departure))&&
+      Number.isFinite(Date.parse(row.arrival))&&Date.parse(row.arrival)>=Date.parse(row.departure));
+     if(rows.length!==before)searchTruncated=true;
+    }
     // Apply mission ordering before the result cap, including across networks.
     if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));
    }else if(query.method==='nearbyStops')rows=CPGTFSIndex.nearbyStops(feed.index,query.lat,query.lon,query.radiusMeters??700);
