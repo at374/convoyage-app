@@ -35,6 +35,8 @@ class OuraInventoryTests(unittest.TestCase):
             self.assertEqual(result["routesWithoutTrips"], 1)
             self.assertEqual(result["tripsWithoutStopTimes"], 0)
             self.assertEqual(result["stopsWithoutGps"], 1)
+            self.assertEqual(result["tripsUsingStopsWithoutGps"], 1)
+            self.assertEqual(result["stopTimesWithoutArrivalOrDeparture"], 1)
             self.assertEqual(result["stopTimesWithoutSequence"], 0)
             self.assertEqual([a["tripCount"] for a in result["agencies"]], [1, 0])
             self.assertEqual([r["id"] for r in result["routes"]], ["r1", "r2"])
@@ -103,6 +105,8 @@ class OuraInventoryTests(unittest.TestCase):
                 archive.writestr("stop_times.txt", "trip_id,stop_id,stop_sequence\nt1,s1,invalid\n")
             result = module.inventory(path, "https://example.org/oura.zip")
             self.assertEqual(result["stopsWithoutGps"], 0)
+            self.assertEqual(result["tripsUsingStopsWithoutGps"], 0)
+            self.assertEqual(result["stopTimesWithoutArrivalOrDeparture"], 1)
             self.assertEqual(result["stopTimesWithoutSequence"], 1)
             self.assertFalse(result["serviceConfirmed"])
 
