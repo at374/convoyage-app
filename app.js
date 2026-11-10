@@ -2741,7 +2741,10 @@
               details.style.cssText='padding:12px;border:1px solid #94a3b8;border-radius:12px;line-height:1.5;min-width:0;margin:10px 0';
               const summary=document.createElement('summary');summary.style.cursor='pointer';
               const name=document.createElement('strong');name.style.display='block';
-              name.textContent='Proposition '+(resultIndex+1)+' · '+[...new Set(result.legs.filter(leg=>String(leg.mode||'').startsWith('pt_pub')).map(leg=>leg.line||leg.provider||'Transport'))].join(' · ');
+              name.textContent='Proposition '+(resultIndex+1)+' · '+[...new Set(result.legs.filter(leg=>String(leg.mode||'').startsWith('pt_pub')).map(leg=>{
+                const kind={train:'Train',bus:'Bus / car',tram:'Tramway',metro:'Métro',transport_public_non_classe:'Transport public'}[leg.transportType]||'Transport public';
+                return kind+' · '+(leg.line||leg.provider||'ligne non identifiée');
+              }))].join(' · ');
               const times=document.createElement('span');times.style.display='block';
               times.textContent=formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString());
               const duration=document.createElement('span');duration.style.display='block';
