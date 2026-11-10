@@ -90,6 +90,10 @@ function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof p
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}
 function selected(resource,task){
  const bounds=resource?.bounds;
+ // Even undated GTFS feeds need a valid timezone for service-day expansion.
+ // Reject malformed source configuration before it can interrupt the panel.
+ try{new Intl.DateTimeFormat('en-GB',{timeZone:resource?.timeZone||'Europe/Paris'});}
+ catch(_){return false;}
  // Validate mission time windows for every feed, including undated GTFS.
  // A malformed or inverted interval must never produce a candidate.
  const early=task?.earliestDeparture,late=task?.latestArrival;
