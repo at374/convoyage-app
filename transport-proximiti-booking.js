@@ -17,6 +17,7 @@ function assess(input={}){
  const publishedDeadlineMinutes=line==='460'?120:5;
  const registrationDeadlineMinutes=null;
  const registrationConfirmed=input.registrationConfirmed===true;
+ const registrationForJourneyVerified=input.registrationForJourneyVerified===true;
  const bookingAvailabilityVerified=input.bookingAvailabilityVerified===true;
  const serviceConfirmed=input.serviceConfirmed===true;
  const stopsConfirmed=input.stopsConfirmed===true;
@@ -27,6 +28,7 @@ function assess(input={}){
  if(!connectionKnown)missingEvidence.push('connection_type');
  if(needsRegistration===true){
   if(!registrationConfirmed)missingEvidence.push('registration_confirmation');
+  if(!registrationForJourneyVerified)missingEvidence.push('registration_journey_match');
   if(!bookingAvailabilityVerified)missingEvidence.push('booking_availability');
  }
  if(!serviceConfirmed)missingEvidence.push('service');
@@ -35,7 +37,7 @@ function assess(input={}){
  if(!marginConfirmed)missingEvidence.push('arrival_margin');
  const ready=missingEvidence.length===0;
  return {line,needsRegistration,registrationDeadlineMinutes,registrationConfirmed,
-  ready,missingEvidence,serviceConfirmed,bookingAvailabilityVerified,publishedDeadlineMinutes,source:SOURCE,
+  ready,missingEvidence,serviceConfirmed,registrationForJourneyVerified,bookingAvailabilityVerified,publishedDeadlineMinutes,source:SOURCE,
   // No live availability is inferred. Only caller-supplied, independently verified evidence is accepted.
   status:ready?'confirmed_evidence_supplied':'Transport non confirmé — vérifiez vous-même'};
 }
