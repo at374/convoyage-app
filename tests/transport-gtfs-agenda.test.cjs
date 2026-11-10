@@ -888,3 +888,21 @@ test('Aravis matrix is initialized only once for multiple GTFS results in a pane
   assert.match(target.textContent,/8,90 €/);
  }finally{session?.dispose();global.CPAravisFares=previous;global.CPAravisFareData=previousData;}
 });
+
+test('Aravis RD16 disruption warning follows Paris calendar boundaries',async()=>{
+ const annecy={stopId:'FR:74010:ZE:57539:HAUTExSAVOIE',name:'Annecy',lat:45.9016985,lon:6.1201612};
+ const clusaz={stopId:'FR:74080:ZE:57774:HAUTExSAVOIE',name:'La Clusaz',lat:45.9067032,lon:6.4191339};
+ for(const [departure,expected] of [
+  ['2026-09-13T20:00:00Z',false],
+  ['2026-09-13T22:30:00Z',true],
+  ['2026-12-06T20:00:00Z',true],
+  ['2026-12-06T23:30:00Z',false]
+ ]){
+  const target=panel();const result=row({networkId:'oura-haute-savoie',line:'Y62',originStop:annecy,destinationStop:clusaz,
+   departure,arrival:new Date(Date.parse(departure)+3600000).toISOString()});
+  const session=agenda.mount(target,{tasks:[{...task,earliestDeparture:departure}],
+   clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[result],truncated:false}),dispose(){}})});
+  try{await session.done;assert.equal(target.textContent.includes('horaires adaptés aux travaux RD16'),expected,departure);}
+  finally{session.dispose();}
+ }
+});
