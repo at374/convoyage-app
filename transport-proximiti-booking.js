@@ -12,7 +12,10 @@ function assess(input={}){
  const connectionKnown=typeof guaranteedConnection==='boolean';
  const needsRegistration=stopTypesKnown&&connectionKnown?
   boarding==='on_demand'||alighting==='on_demand'||guaranteedConnection:null;
- const registrationDeadlineMinutes=line==='460'?120:5;
+ // The 461 five-minute PDF rule conflicts with the operator's general booking guidance.
+ // Do not present a single cutoff as operationally verified.
+ const publishedDeadlineMinutes=line==='460'?120:5;
+ const registrationDeadlineMinutes=null;
  const registrationConfirmed=input.registrationConfirmed===true;
  const bookingAvailabilityVerified=input.bookingAvailabilityVerified===true;
  const serviceConfirmed=input.serviceConfirmed===true;
@@ -22,7 +25,7 @@ function assess(input={}){
  const ready=needsRegistration!==null&&(!needsRegistration||(registrationConfirmed&&bookingAvailabilityVerified))&&
   serviceConfirmed&&stopsConfirmed&&walkingConfirmed&&marginConfirmed;
  return {line,needsRegistration,registrationDeadlineMinutes,registrationConfirmed,
-  ready,serviceConfirmed,bookingAvailabilityVerified,source:SOURCE,
+  ready,serviceConfirmed,bookingAvailabilityVerified,publishedDeadlineMinutes,source:SOURCE,
   // No live availability is inferred. Only caller-supplied, independently verified evidence is accepted.
   status:ready?'confirmed_evidence_supplied':'Transport non confirmé — vérifiez vous-même'};
 }
