@@ -2749,7 +2749,15 @@
               times.textContent=formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString());
               const duration=document.createElement('span');duration.style.display='block';
               duration.textContent=Math.ceil((Date.parse(result.arrival)-Date.parse(result.departure))/60000)+' min · marches comprises';
-              summary.append(name,times,duration);details.appendChild(summary);
+              summary.append(name,times,duration);
+              if(result.legs.some(leg=>leg.pedestrianScheduleFits===false)){
+                const conflict=document.createElement('strong');
+                conflict.setAttribute('data-tripgo-walk-conflict','');
+                conflict.style.display='block';
+                conflict.textContent='⛔ Correspondance impossible aux horaires calculés : marche plus longue que le temps prévu.';
+                summary.appendChild(conflict);
+              }
+              details.appendChild(summary);
 
               const line=document.createElement('p');line.textContent=formatParis(result.departure)+' → '+formatParis(new Date(Math.ceil(Date.parse(result.arrival)/60000)*60000).toISOString())+' · '+
                 result.legs.map(l=>(l.mode==='wa_wal'?'Marche':l.line||l.mode)+' '+l.from+' → '+l.to).join(' · ')+
