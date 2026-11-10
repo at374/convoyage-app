@@ -39,11 +39,12 @@ function legGeometry(segment,mode){
 }
 function transportType(mode,identifier){
  if(typeof mode!=='string'||!mode.startsWith('pt_pub'))return null;
- const id=typeof identifier==='string'?identifier.toLowerCase():'';
- if(/^pt_pub_(?:train|rail|regionaltrain|intercitytrain|highspeedtrain)(?:_|$)/.test(id))return 'train';
- if(/^pt_pub_(?:bus|coach)(?:_|$)/.test(id))return 'bus';
- if(/^pt_pub_(?:tram|light_rail)(?:_|$)/.test(id))return 'tram';
- if(/^pt_pub_(?:subway|metro)(?:_|$)/.test(id))return 'metro';
+ // Prefer the explicit segment mode when a generic or unrelated modeInfo identifier is supplied.
+ const id=[mode,identifier].filter(value=>typeof value==='string').map(value=>value.toLowerCase());
+ if(id.some(value=>/^pt_pub_(?:train|rail|regionaltrain|intercitytrain|highspeedtrain)(?:_|$)/.test(value)))return 'train';
+ if(id.some(value=>/^pt_pub_(?:bus|coach)(?:_|$)/.test(value)))return 'bus';
+ if(id.some(value=>/^pt_pub_(?:tram|light_rail)(?:_|$)/.test(value)))return 'tram';
+ if(id.some(value=>/^pt_pub_(?:subway|metro)(?:_|$)/.test(value)))return 'metro';
  return 'transport_public_non_classe';
 }
 function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Date().toISOString()}={}){
