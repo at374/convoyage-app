@@ -145,20 +145,29 @@ async function enrichPedestrianMaps(result,router,{maxRoutes=8}={}){
  const copy={...result,itineraries:result.itineraries.map(itinerary=>({...itinerary,
   legs:itinerary.legs.map(leg=>({...leg}))}))};
  let attempted=0,calculated=0;
+ const routes=new Map(),jobs=[];
  for(const itinerary of copy.itineraries){
   for(const leg of itinerary.legs){
    if(leg.mode!=='wa_wal'||Array.isArray(leg.geometry)&&leg.geometry.length>=2)continue;
-   if(attempted>=maxRoutes){leg.pedestrianMapStatus='not_requested_budget';continue;}
-   attempted++;
-   try{
-    const route=await router.route(leg.fromPoint,leg.toPoint);
-    if(route?.status==='calculated'&&route.endpointsMatched===true&&
-     Array.isArray(route.geometry)&&route.geometry.length>=2){
-     leg.geometry=route.geometry;leg.pedestrianMapStatus='calculated_valhalla';calculated++;
-    }else leg.pedestrianMapStatus='not_verified';
-   }catch(_){leg.pedestrianMapStatus='unavailable';}
+   const a=leg.fromPoint,b=leg.toPoint;
+   if(!point(a)||!point(b)){leg.pedestrianMapStatus='invalid_endpoints';continue;}
+   const key=JSON.stringify([coord(a),coord(b)]);
+   if(!routes.has(key)){
+    if(attempted>=maxRoutes){leg.pedestrianMapStatus='not_requested_budget';continue;}
+    attempted++;
+    routes.set(key,Promise.resolve().then(()=>router.route(a,b)).catch(()=>null));
+   }
+   jobs.push({leg,promise:routes.get(key)});
   }
  }
+ // Queue distinct requests together: the router itself applies rate limits.
+ await Promise.all(jobs.map(async({leg,promise})=>{
+  const route=await promise;
+  if(route?.status==='calculated'&&route.endpointsMatched===true&&
+   Array.isArray(route.geometry)&&route.geometry.length>=2){
+   leg.geometry=route.geometry;leg.pedestrianMapStatus='calculated_valhalla';calculated++;
+  }else leg.pedestrianMapStatus=route?'not_verified':'unavailable';
+ }));
  copy.coverage={...copy.coverage,pedestrianGeometryAvailable:copy.itineraries.flatMap(t=>t.legs)
   .filter(leg=>leg.mode==='wa_wal'&&Array.isArray(leg.geometry)&&leg.geometry.length>=2).length,
   pedestrianGeometryMissing:copy.itineraries.flatMap(t=>t.legs)
