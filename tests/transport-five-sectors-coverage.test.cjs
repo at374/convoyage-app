@@ -521,3 +521,13 @@ test('three-network Agenda eligibility includes partner-to-partner transfers',()
  const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
  assert.ok(source.includes('partners.some((first,i)=>partners.slice(i+1).some(second=>crossEnvelopePair(first,second,task)))'));
 });
+
+test('GTFS partner selection scores two-network mission coverage together',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.ok(source.includes('const federatedCandidates=uniqueCandidates.filter(r=>r.federate)'));
+ assert.ok(source.includes('combinations.push([federatedCandidates[i],federatedCandidates[j]])'));
+ assert.ok(source.includes('pair.length===2&&crossEnvelopePair(pair[0],pair[1],task)'));
+ assert.ok(source.includes('combinations.sort((a,b)=>coveredTasks(b)-coveredTasks(a)'));
+ assert.ok(source.includes('const partners=combinations[0]||[]'));
+});
