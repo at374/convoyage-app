@@ -282,3 +282,11 @@ test('GTFS summaries must belong to the requested feed identifiers',()=>{
  assert.ok(source.includes('const expectedIds=new Set([resource,...partners].map(r=>r.datasetId||r.id));'));
  assert.ok(source.includes('expectedIds.has(n.source.datasetId||n.source.resourceId)'));
 });
+
+test('missing expected GTFS feed marks results partial even if loader says success',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.ok(source.includes('const missingSelected=[resource,...partners].filter('));
+ assert.ok(source.includes('missingSelected.length>0;'));
+ assert.ok(source.indexOf('const missingSelected=')<source.indexOf('const partialNetworks='));
+});
