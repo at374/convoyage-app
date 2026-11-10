@@ -710,3 +710,28 @@ test('GTFS worker isolates direct and federation failures across three operators
  assert.equal(posted[1].result.failedFederations[0].reason,'bad federation');
  assert.equal(posted[1].result.truncated,true);
 });
+
+test('GTFS worker rejects impossible transfers before consuming journey limit',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm'),posted=[];
+ const valid={departure:'2026-11-10T09:00:00Z',arrival:'2026-11-10T10:00:00Z'};
+ const invalid={...valid,legs:[
+  {departure:'2026-11-10T09:00:00Z',arrival:'2026-11-10T09:30:00Z'},
+  {departure:'2026-11-10T09:31:00Z',arrival:'2026-11-10T10:00:00Z'}]};
+ const sandbox={importScripts(){},self:{postMessage(message){posted.push(message);}},
+  CPGTFSLoader:{async loadResource(item){return {source:{datasetId:item.id},
+   index:{counts:{stops:1}},files:{},indexServiceDates:['2026-11-10']};}},
+  CPGTFSIndex:{nearbyDirectTrips(){return [invalid,valid];},
+   nearbyTransferTrips(){return {journeys:[],searchTruncated:false};}},
+  CPGTFSTime:{datedTrips(_f,_i,found){return found;},datedTransferTrips(){return [];},serviceWindow(){return {};}},
+  CPGTFSFederation:{connectionServiceDates(date){return [date];}}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8'),sandbox);
+ await sandbox.self.onmessage({data:{id:1501,type:'loadNetworks',options:{indexServiceDates:['2026-11-10']},
+  resources:[{id:'one',url:'https://example.org/one'}]}});
+ await sandbox.self.onmessage({data:{id:1502,type:'query',query:{method:'missionJourneys',
+  date:'2026-11-10',origin:{lat:46,lon:6},destination:{lat:46.1,lon:6.1},window:{},limit:1}}});
+ assert.equal(posted[1].error,undefined);
+ assert.equal(posted[1].result.rows.length,1);
+ assert.equal(posted[1].result.rows[0].legs,undefined);
+ assert.equal(posted[1].result.invalidJourneyCount,1);
+ assert.equal(posted[1].result.truncated,true);
+});
