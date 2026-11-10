@@ -480,3 +480,26 @@ test('TripGo rejects a walking polyline starting 20 meters from its exact endpoi
  assert.equal(result.coverage.pedestrianGeometryAvailable,0);
  assert.equal(result.coverage.pedestrianGeometryMissing,4);
 });
+
+test('TripGo rejects discontinuous pedestrian shape parts more than 10 meters apart',()=>{
+ const encode=points=>{
+  let lat=0,lon=0,out='';
+  const add=n=>{let v=n<0?~(n<<1):n<<1;while(v>=32){out+=String.fromCharCode((32|(v&31))+63);v>>=5;}out+=String.fromCharCode(v+63);};
+  for(const p of points){const a=Math.round(p.lat*1e5),b=Math.round((p.lon??p.lng)*1e5);add(a-lat);add(b-lon);lat=a;lon=b;}
+  return out;
+ };
+ const payload=clone();
+ for(const walk of payload.segmentTemplates.filter(t=>t.modeIdentifier==='wa_wal')){
+  const from={lat:walk.from.lat,lon:walk.from.lon??walk.from.lng};
+  const to={lat:walk.to.lat,lon:walk.to.lon??walk.to.lng};
+  const midpoint={lat:(from.lat+to.lat)/2,lon:(from.lon+to.lon)/2};
+  const displaced={lat:midpoint.lat+0.00018,lon:midpoint.lon};
+  walk.streets=[{encodedWaypoints:encode([from,midpoint])},
+   {encodedWaypoints:encode([displaced,to])}];
+ }
+ const result=api.parse(payload,options);
+ assert.equal(result.itineraries.length,2);
+ for(const itinerary of result.itineraries)
+  for(const leg of itinerary.legs)if(leg.mode==='wa_wal')assert.equal(leg.geometry,null);
+ assert.equal(result.coverage.pedestrianGeometryMissing,4);
+});
