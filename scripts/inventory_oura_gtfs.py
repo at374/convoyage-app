@@ -59,6 +59,10 @@ def inventory(path, source_url):
         agency_trip_counts = Counter()
         for route in routes:
             agency_trip_counts[route_agency(route)] += route_trip_counts[route["route_id"]]
+        stop_times_per_trip = Counter(row.get("trip_id", "") for row in read_rows(archive, "stop_times.txt"))
+        if any(tid not in set(trip_ids) for tid in stop_times_per_trip):
+            raise ValueError("Stop times reference unknown trip_id")
+        trips_without_stop_times = sum(tid not in stop_times_per_trip for tid in trip_ids)
         stop_count = sum(1 for _ in read_rows(archive, "stops.txt"))
         trip_count = sum(route_trip_counts.values())
         if not stop_count or not trip_count:
@@ -69,6 +73,7 @@ def inventory(path, source_url):
             "archiveOnly": True, "serviceConfirmed": False, "fareVerified": False,
             "routeCount": len(routes), "stopCount": stop_count, "tripCount": trip_count,
             "routesWithoutTrips": sum(route_trip_counts[r["route_id"]] == 0 for r in routes),
+            "tripsWithoutStopTimes": trips_without_stop_times,
             "hasCalendar": "calendar.txt" in files,
             "hasCalendarExceptions": "calendar_dates.txt" in files,
             "hasTransfers": "transfers.txt" in files,
