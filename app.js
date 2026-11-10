@@ -2782,6 +2782,15 @@
                   step.appendChild(walkingDistance);
                   showTransportMap(step,[{walk:true,geometry:leg.geometry}]);
                 }
+                if(leg.mode==='wa_wal'){
+                  const mapState=document.createElement('span');
+                  mapState.setAttribute('data-tripgo-walk-map-status','');
+                  mapState.style.display='block';
+                  mapState.textContent=Array.isArray(leg.geometry)&&leg.geometry.length>=2?
+                    (leg.pedestrianMapStatus==='calculated_valhalla'?'Tracé piéton calculé avec Valhalla / OpenStreetMap ; accès réel à vérifier.':'Tracé piéton fourni par TripGo ; accès réel à vérifier.'):
+                    'Tracé piéton non disponible : vérifier le cheminement exact avant de retenir ce trajet.';
+                  step.appendChild(mapState);
+                }
                 const legFare=fareSummary?.breakdown?.[legIndex];
                 if(legFare){
                   const fareDetail=document.createElement('span');fareDetail.setAttribute('data-tripgo-leg-fare','');
