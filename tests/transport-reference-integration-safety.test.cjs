@@ -111,3 +111,24 @@ test('GTFS adapter strips a self-declared verified amount before fare calculatio
  assert.equal(journey.legs[0].fareVerified,false);
  assert.equal(adapters.withVerifiedFares([journey])[0].priceEUR,null);
 });
+
+test('mixed walking, verified and unknown rides show only a verified subtotal',()=>{
+ const walking={provider:'Marche',mode:'wa_wal',
+  departure:'2026-11-10T08:40:00+01:00'};
+ const verified={provider:'Bus A',mode:'bus',
+  departure:'2026-11-10T09:00:00+01:00',
+  verifiedPriceEUR:2.50,fareVerified:true,
+  fareSource:'https://example.org/test-only-evidence',
+  fareValidFrom:'2026-11-01',fareValidUntil:'2026-11-30'};
+ const unknown={provider:'Bus B',mode:'bus',
+  departure:'2026-11-10T10:00:00+01:00',
+  verifiedPriceEUR:3.00,fareVerified:false};
+ const quote=fares.fare([walking,verified,unknown],{travelDate:'2026-11-10'});
+ assert.equal(quote.known,false);
+ assert.equal(quote.totalEUR,null);
+ assert.equal(quote.knownSubtotalEUR,2.50);
+ assert.equal(quote.unknownLegCount,1);
+ assert.equal(quote.breakdown[0].amountEUR,0);
+ assert.match(fares.describe(quote),/Sous-total vérifié : 2,50 €/);
+ assert.match(fares.describe(quote),/Bus B : prix inconnu/);
+});
