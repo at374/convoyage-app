@@ -383,3 +383,23 @@ test('GTFS worker caps federation at three feeds and enumerates all three pairs'
  assert.ok(source.includes('for(let i=0;i<feeds.length;i++)for(let j=i+1;j<feeds.length;j++)'));
  assert.ok(source.includes('crossNetworkTrips([feeds[i],feeds[j]]'));
 });
+
+test('worker loads three distinct GTFS feeds and reports all three',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm');
+ const posted=[],loaded=[];
+ const sandbox={importScripts(){},self:{postMessage(message){posted.push(message);}},
+  CPGTFSLoader:{async loadResource(item){
+   loaded.push(item.id);
+   return {source:{datasetId:item.id,network:item.network,loadedAt:'2026-11-10T08:00:00Z'},
+    index:{counts:{stops:10}},archiveBytes:1,expandedBytes:2,indexedStopTimes:3,
+    skippedStopTimes:0,rejectedStopTimes:0,indexServiceDates:['2026-11-10']};
+  }}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8'),sandbox);
+ await sandbox.self.onmessage({data:{id:501,type:'loadNetworks',options:{indexServiceDates:['2026-11-10']},
+  resources:[1,2,3].map(i=>({id:'feed'+i,network:'Network '+i,url:'https://example.org/'+i+'.zip'}))}});
+ assert.deepEqual(loaded,['feed1','feed2','feed3']);
+ assert.equal(posted.length,1);
+ assert.equal(posted[0].result?.partial,false);
+ assert.equal(posted[0].result?.networks?.length,3);
+ assert.ok(posted[0].result.networks.every(n=>n.counts.stops===10));
+});
