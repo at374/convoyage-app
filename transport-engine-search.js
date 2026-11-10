@@ -34,7 +34,10 @@ function tripGoEngine(client){
      exactOrigin:j.evidence?.endpointCoordinatesMatched===true,
      exactDestination:j.evidence?.endpointCoordinatesMatched===true,
      fareVerified:false,
-     priceEUR:null
+     priceEUR:null,
+     // Keep provider-supplied trip details for the existing Mission Transport display.
+     engineEvidence:j.evidence||null,
+     receivedAt:j.receivedAt||result.receivedAt||null
    }));
  }};
 }
