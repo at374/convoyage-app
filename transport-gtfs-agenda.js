@@ -255,7 +255,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
        for(const leg of row.legs){const detail=doc.createElement('span');detail.textContent=' · '+(leg.network?leg.network+' ':'')+leg.line+' : '+format(leg.departure)+' → '+format(leg.arrival);line.appendChild(detail);}
       }
       if(['Y62','Y63'].includes(row.line)&&row.networkId==='oura-haute-savoie'){
-       const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(row.departure));
+       const dateParts=new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure));
+       const datePart=type=>dateParts.find(part=>part.type===type)?.value;
+       const day=[datePart('year'),datePart('month'),datePart('day')].join('-');
        if(day>='2026-09-14'&&day<='2026-12-06'){
         const warning=doc.createElement('span');warning.setAttribute('data-aravis-disruption','');
         warning.textContent=' · Y62/Y63 : horaires adaptés aux travaux RD16 ; arrêt Bergeronette non desservi. Vérifier la grille officielle avant départ.';
