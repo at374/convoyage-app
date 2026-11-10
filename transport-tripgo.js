@@ -139,7 +139,7 @@ async function plan(options){
  }finally{clearTimeout(timer);options.signal?.removeEventListener('abort',cancel);}
 }
 // Optional bounded enrichment of missing pedestrian polylines; does not certify access.
-async function enrichPedestrianMaps(result,router,{maxRoutes=8}={}){
+async function enrichPedestrianMaps(result,router,{maxRoutes=8,signal}={}){
  if(!result||!Array.isArray(result.itineraries)||!router||typeof router.route!=='function'||
   !Number.isSafeInteger(maxRoutes)||maxRoutes<1||maxRoutes>8)throw Error('Enrichissement piéton invalide');
  const copy={...result,itineraries:result.itineraries.map(itinerary=>({...itinerary,
@@ -149,13 +149,14 @@ async function enrichPedestrianMaps(result,router,{maxRoutes=8}={}){
  for(const itinerary of copy.itineraries){
   for(const leg of itinerary.legs){
    if(leg.mode!=='wa_wal'||Array.isArray(leg.geometry)&&leg.geometry.length>=2)continue;
+   if(signal?.aborted){leg.pedestrianMapStatus='cancelled';continue;}
    const a=leg.fromPoint,b=leg.toPoint;
    if(!point(a)||!point(b)){leg.pedestrianMapStatus='invalid_endpoints';continue;}
    const key=JSON.stringify([coord(a),coord(b)]);
    if(!routes.has(key)){
     if(attempted>=maxRoutes){leg.pedestrianMapStatus='not_requested_budget';continue;}
     attempted++;
-    routes.set(key,Promise.resolve().then(()=>router.route(a,b)).catch(()=>null));
+    routes.set(key,Promise.resolve().then(()=>signal?.aborted?null:router.route(a,b)).catch(()=>null));
    }
    jobs.push({leg,promise:routes.get(key)});
   }
@@ -163,6 +164,7 @@ async function enrichPedestrianMaps(result,router,{maxRoutes=8}={}){
  // Queue distinct requests together: the router itself applies rate limits.
  await Promise.all(jobs.map(async({leg,promise})=>{
   const route=await promise;
+  if(signal?.aborted){leg.pedestrianMapStatus='cancelled';return;}
   if(route?.status==='calculated'&&route.endpointsMatched===true&&
    Array.isArray(route.geometry)&&route.geometry.length>=2&&route.geometry.length<=5000&&
    route.geometry.every(point)&&gap(coord(leg.fromPoint),coord(route.geometry[0]))<=10&&
