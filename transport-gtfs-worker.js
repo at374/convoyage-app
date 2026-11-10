@@ -84,14 +84,19 @@ self.onmessage=async({data})=>{
    if(query.connectionDates!==undefined){
     if(query.method!=='missionJourneys')throw new Error('Service dates require a mission journey query');
     connectionDates=CPGTFSFederation.connectionServiceDates(query.date,query.connectionDates);
-    for(const current of feeds)for(const day of connectionDates)scope(current,day);
+    // An operator with a shorter indexed calendar must not invalidate
+    // journeys from another operator. Exclude it and report partial coverage.
    }
+   const scopedFeeds=query.method==='missionJourneys'?feeds.filter(current=>
+    (!current.indexServiceDates||[query.date,...(connectionDates||[])].every(day=>current.indexServiceDates.includes(day)))):feeds;
+   const missingDateFeeds=query.method==='missionJourneys'?feeds.filter(current=>!scopedFeeds.includes(current)):[];
+   if(missingDateFeeds.length)searchTruncated=true;
    if(query.method==='directTrips')rows=CPGTFSIndex.directTrips(feed.files,feed.index,query.date,query.from,query.to);
    else if(['nearbyDirectTrips','missionDirectTrips','missionJourneys'].includes(query.method)){
     const radius=query.radiusMeters??700;
     if(!Number.isFinite(radius)||radius<=0||radius>5000)throw new Error('Invalid GTFS search radius');
     rows=[];
-    for(const current of (query.method==='missionJourneys'?feeds:[feed])){
+    for(const current of (query.method==='missionJourneys'?scopedFeeds:[feed])){
      scope(current,query.date);
      let found=CPGTFSIndex.nearbyDirectTrips(current.files,current.index,query.date,query.origin,query.destination,radius);
      if(query.method!=='nearbyDirectTrips')found=CPGTFSTime.datedTrips(current.files,current.index,found,query.window);
@@ -104,12 +109,12 @@ self.onmessage=async({data})=>{
      rows.push(...found.map(row=>({...row,networkId:current.source.datasetId||current.source.resourceId,
       network:current.source.network,legs:row.legs?.map(leg=>({...leg,network:current.source.network,networkId:current.source.datasetId||current.source.resourceId}))})));
     }
-    if(query.method==='missionJourneys'&&feeds.length>1){
+    if(query.method==='missionJourneys'&&scopedFeeds.length>1){
      // Federation accepts two feeds at a time. Enumerate bounded pairs so a
      // third local operator contributes transfers without changing its API.
-     for(let i=0;i<feeds.length;i++)for(let j=i+1;j<feeds.length;j++){
+     for(let i=0;i<scopedFeeds.length;i++)for(let j=i+1;j<scopedFeeds.length;j++){
       try{
-       const cross=CPGTFSFederation.crossNetworkTrips([feeds[i],feeds[j]],query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
+       const cross=CPGTFSFederation.crossNetworkTrips([scopedFeeds[i],scopedFeeds[j]],query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
         ...(connectionDates===undefined?{}:{connectionDates})});
        if(!cross||!Array.isArray(cross.journeys))throw new Error('Invalid federation result');
        rows.push(...cross.journeys);searchTruncated=searchTruncated||cross.searchTruncated;
@@ -117,8 +122,8 @@ self.onmessage=async({data})=>{
        // Preserve valid results from other operators while never implying the
        // inter-network search was exhaustive after a failed pair.
        searchTruncated=true;
-       failedFederations.push({networks:[feeds[i].source.network||feeds[i].source.datasetId||feeds[i].source.resourceId,
-        feeds[j].source.network||feeds[j].source.datasetId||feeds[j].source.resourceId],
+       failedFederations.push({networks:[scopedFeeds[i].source.network||scopedFeeds[i].source.datasetId||scopedFeeds[i].source.resourceId,
+        scopedFeeds[j].source.network||scopedFeeds[j].source.datasetId||scopedFeeds[j].source.resourceId],
         reason:String(error?.message||'Correspondance indisponible').slice(0,160)});
       }
      }
@@ -127,7 +132,7 @@ self.onmessage=async({data})=>{
     if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));
    }else if(query.method==='nearbyStops')rows=CPGTFSIndex.nearbyStops(feed.index,query.lat,query.lon,query.radiusMeters??700);
    else throw new Error('Unsupported GTFS worker query');
-   result={rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,failedFederations,
+   result={rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,failedFederations,missingDateNetworks:missingDateFeeds.map(f=>f.source.network||f.source.datasetId||f.source.resourceId),
     serviceConfirmed:false,faresVerified:false,accessVerified:false};
   }else throw new Error('Unsupported GTFS worker operation');
   self.postMessage({id,result});
