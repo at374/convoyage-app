@@ -266,3 +266,12 @@ test('GTFS candidate list removes duplicate network identities and URLs',()=>{
  assert.ok(source.includes('candidateIds.has(identity)||candidateUrls.has(candidate.url)'));
  assert.ok(source.includes('const omittedPartners=uniqueCandidates.length-partners.length;'));
 });
+
+test('partially loaded GTFS feeds name the selected networks that failed',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.ok(source.includes('const loadedIds=new Set(loaded.map(n=>n.source.datasetId||n.source.resourceId));'));
+ assert.ok(source.includes('const missingSelected=[resource,...partners].filter('));
+ assert.ok(source.includes('Flux sélectionnés indisponibles : '));
+ assert.ok(source.includes('Résultats incomplets, même si un autre réseau répond.'));
+});
