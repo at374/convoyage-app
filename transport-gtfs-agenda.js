@@ -17,8 +17,8 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  network:'Cars Région Express',format:'GTFS',federate:true,
  // Official OÙRA producer feed; theoretical schedules only, never confirmed fare or live operation.
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_EXPRESS&dataFormat=GTFS&dataProfil=OPENDATA',
- // Broad regional selection envelope; the GTFS must still prove each route and stop.
- bounds:[44.0,3.9,46.9,6.9],timeZone:'Europe/Paris'
+ // X36 Bellegarde–Bourg selection envelope only; do not hijack Grenoble local searches.
+ bounds:[46.05,5.15,46.30,5.90],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'80100',datasetId:'5bd9843e634f413220f7f04a',network:'Sibra',format:'GTFS',federate:true,
  url:'https://www.data.gouv.fr/api/1/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0',resolveFromCatalogue:true,
