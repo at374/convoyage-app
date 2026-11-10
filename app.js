@@ -2750,6 +2750,15 @@
               const duration=document.createElement('span');duration.style.display='block';
               duration.textContent=Math.ceil((Date.parse(result.arrival)-Date.parse(result.departure))/60000)+' min · marches comprises';
               summary.append(name,times,duration);
+              const walkLegs=result.legs.filter(leg=>leg.mode==='wa_wal');
+              const walkUnknown=walkLegs.filter(leg=>leg.pedestrianScheduleFits!==true&&leg.pedestrianScheduleFits!==false);
+              if(walkUnknown.length){
+                const unknown=document.createElement('span');
+                unknown.setAttribute('data-tripgo-walk-time-unknown','');
+                unknown.style.display='block';
+                unknown.textContent='Temps de marche non confirmé pour '+walkUnknown.length+' étape(s) : vérifiez les correspondances.';
+                summary.appendChild(unknown);
+              }
               if(result.legs.some(leg=>leg.pedestrianScheduleFits===false)){
                 const conflict=document.createElement('strong');
                 conflict.setAttribute('data-tripgo-walk-conflict','');
