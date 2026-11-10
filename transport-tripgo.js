@@ -43,7 +43,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
  if(!point(data.query?.from)||!point(data.query?.to)||gap(coord(data.query.from),coord(from))>1||gap(coord(data.query.to),coord(to))>1||
    time(data.query[arriveBy?'arrive':'depart'])!==time(when))throw Error('Réponse TripGo liée à une autre recherche');
  const templates=new Map();for(const t of data.segmentTemplates){if(!t||typeof t!=='object'||!Number.isInteger(t.hashCode)||templates.has(t.hashCode))throw Error('Modèle TripGo invalide');templates.set(t.hashCode,t);}
- const found=[],seen=new Set();let inspected=0;
+ const found=[],seen=new Set();let inspected=0,unsupportedModeTrips=0;
  for(const group of data.groups){
   if(!group||typeof group!=='object'||!Array.isArray(group.trips)||group.trips.length>100)throw Error('Groupe TripGo invalide');
   for(const trip of group.trips){
@@ -64,7 +64,9 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
      (legs.length&&gap(legs.at(-1).toPoint,coord(s.from))>50)||
      (mode==='wa_wal'&&Math.max(Number.isFinite(s.metres)&&s.metres>=0?s.metres:0,gap(coord(s.from),coord(s.to)))>10&&
       (end===start||Math.max(Number.isFinite(s.metres)&&s.metres>=0?s.metres:0,gap(coord(s.from),coord(s.to)))/((end-start)/1000)>4))||
-     !/^(wa_wal|pt_pub(?:_[a-z0-9-]+)*|stationary_(?:transfer|wait))$/.test(mode||'')||/ferry|boat|air/i.test(s.modeInfo?.identifier||'')) {valid=false;break;}
+     !/^(wa_wal|pt_pub(?:_[a-z0-9-]+)*|stationary_(?:transfer|wait))$/.test(mode||'')||/ferry|boat|air/i.test(s.modeInfo?.identifier||'')) {
+     if(typeof mode==='string'&&!/^(wa_wal|pt_pub(?:_[a-z0-9-]+)*|stationary_(?:transfer|wait))$/.test(mode))unsupportedModeTrips++;
+     valid=false;break;}
     previous=end;
     legs.push({mode,provider:s.externalData?.operatorName||null,serviceTripId:s.serviceTripID||null,serviceShortName:s.serviceShortName||null,routeId:s.routeId||s.routeID||null,fromStopCode:s.from.stopCode||null,toStopCode:s.to.stopCode||null,ticketWebsiteURL:typeof s.ticketWebsiteURL==='string'?s.ticketWebsiteURL:null,line:s.serviceNumber||s.serviceName||null,from:s.from.name||s.from.address||'',to:s.to.name||s.to.address||'',
      fromPoint:coord(s.from),toPoint:coord(s.to),departure:new Date(start).toISOString(),arrival:new Date(end).toISOString(),
@@ -84,7 +86,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
      missing:['circulation à la date du trajet','perturbations éventuelles','accès physique au point GPS exact','prix du transport']}});
   }
  }
- return {source:'TripGo',receivedAt,itineraries:found.sort((a,b)=>arriveBy?Date.parse(b.departure)-Date.parse(a.departure):Date.parse(a.departure)-Date.parse(b.departure))};
+ return {source:'TripGo',receivedAt,coverage:{publicTransportOnly:true,blablacarVerified:false,unsupportedModeTrips},itineraries:found.sort((a,b)=>arriveBy?Date.parse(b.departure)-Date.parse(a.departure):Date.parse(a.departure)-Date.parse(b.departure))};
 }
 async function readJSON(response,signal){
  const declared=Number(response.headers?.get?.('content-length'));if(declared>2000000)throw Error('Réponse TripGo trop grande');
