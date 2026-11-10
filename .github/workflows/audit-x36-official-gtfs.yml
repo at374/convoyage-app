@@ -1,0 +1,49 @@
+name: Audit X36 official GTFS (manual)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit-x36:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download published Cars Region Express GTFS
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audit-output
+          # Prefer the dated public archive; fall back to the producer's official feed.
+          sources=(
+            'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/83112/83112.20261109.061932.141517.zip'
+            'https://api.oura3.cityway.fr/dataflow/offre-tc/download?dataFormat=GTFS&dataProfil=OPENDATA&provider=CARS_REGION_EXPRESS'
+          )
+          for url in "${sources[@]}"; do
+            if curl --fail --location --silent --show-error --connect-timeout 12 --max-time 75 --max-filesize 104857600 "$url" -o audit-output/official.zip; then
+              if python -m zipfile -t audit-output/official.zip >/dev/null 2>&1; then
+                printf '%s\n' "$url" > audit-output/source-url.txt
+                break
+              fi
+            fi
+            rm -f audit-output/official.zip
+          done
+          test -s audit-output/official.zip || { echo 'Official GTFS unavailable; no audit generated'; exit 1; }
+      - name: Extract candidate stops and ordered patterns without fare verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/extract_x36_gtfs_stops.py audit-output/official.zip \
+            --source-url "$(cat audit-output/source-url.txt)" \
+            --checked-on "$(date -u +%F)" > audit-output/x36-candidates.json
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: x36-official-gtfs-candidates
+          path: |
+            audit-output/x36-candidates.json
+            audit-output/source-url.txt
+          retention-days: 7
