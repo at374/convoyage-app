@@ -290,7 +290,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
     for(const {task,status} of entries)if(eligible(task))status.textContent=task.label+' : horaires indisponibles (aucun réseau chargé).';
     return;
    }
-   source.href=loaded[0].source.url||resource.url;
+   const selectedSourceFor=n=>[resource,...partners].find(r=>(r.datasetId||r.id)===(n.source.datasetId||n.source.resourceId));
+   source.href=selectedSourceFor(loaded[0])?.url||resource.url;
    source.textContent='Source '+(loaded[0].source.network||resource.network);
    heading.textContent=loaded.map(n=>n.source.network||resource.network).join(' + ')+' — horaires aux arrêts';
    sourceStatus.textContent=networks.map(n=>!validNetwork(n)?((n?.error?.network||n?.source?.network||'Réseau GTFS')+' : flux indisponible'):
@@ -307,7 +308,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
    }
    if(loaded.length>1){
     warning.textContent+=' Changements entre réseaux : arrêts rapprochés à 150 m à vol d’oiseau au maximum ; aucun chemin ni temps de marche vérifié.';
-    for(const other of loaded.slice(1)){const link=doc.createElement('a');link.href=other.source.url||partners[0].url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=' · Source '+other.source.network;section.appendChild(link);}
+    for(const other of loaded.slice(1)){const link=doc.createElement('a');link.href=selectedSourceFor(other)?.url||resource.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=' · Source '+other.source.network;section.appendChild(link);}
    }
    for(const {task,status} of entries){
     if(!active())return;
