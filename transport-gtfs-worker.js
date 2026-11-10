@@ -79,7 +79,7 @@ self.onmessage=async({data})=>{
       (query.order!==undefined&&!['missionDirectTrips','missionJourneys'].includes(query.method)))throw new Error('Invalid GTFS result order');
    let rows,searchTruncated=false;
    const failedFederations=[];
-   scope(feed,query.date);
+   if(query.method!=='missionJourneys')scope(feed,query.date);
    let connectionDates;
    if(query.connectionDates!==undefined){
     if(query.method!=='missionJourneys')throw new Error('Service dates require a mission journey query');
