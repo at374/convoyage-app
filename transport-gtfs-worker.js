@@ -78,6 +78,7 @@ self.onmessage=async({data})=>{
    if(!['earliestDeparture','latestDeparture'].includes(order)||
       (query.order!==undefined&&!['missionDirectTrips','missionJourneys'].includes(query.method)))throw new Error('Invalid GTFS result order');
    let rows,searchTruncated=false;
+   const failedFederations=[];
    scope(feed,query.date);
    let connectionDates;
    if(query.connectionDates!==undefined){
@@ -115,6 +116,9 @@ self.onmessage=async({data})=>{
        // Preserve valid results from other operators while never implying the
        // inter-network search was exhaustive after a failed pair.
        searchTruncated=true;
+       failedFederations.push({networks:[feeds[i].source.network||feeds[i].source.datasetId||feeds[i].source.resourceId,
+        feeds[j].source.network||feeds[j].source.datasetId||feeds[j].source.resourceId],
+        reason:String(error?.message||'Correspondance indisponible').slice(0,160)});
       }
      }
     }
@@ -122,7 +126,7 @@ self.onmessage=async({data})=>{
     if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));
    }else if(query.method==='nearbyStops')rows=CPGTFSIndex.nearbyStops(feed.index,query.lat,query.lon,query.radiusMeters??700);
    else throw new Error('Unsupported GTFS worker query');
-   result={rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,
+   result={rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,failedFederations,
     serviceConfirmed:false,faresVerified:false,accessVerified:false};
   }else throw new Error('Unsupported GTFS worker operation');
   self.postMessage({id,result});
