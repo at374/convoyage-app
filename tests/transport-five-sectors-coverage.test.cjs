@@ -303,3 +303,26 @@ test('worker rejects duplicate URLs and insecure URLs before fetching archives',
  assert.equal(posted.length,2);
  for(const reply of posted)assert.match(reply.error?.message||'',/Duplicate, unidentified or invalid GTFS network/);
 });
+
+test('worker returns a partial result when one of two GTFS archives fails',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm');
+ const posted=[],loaded=[];
+ const sandbox={importScripts(){},self:{postMessage(message){posted.push(message);}},
+  CPGTFSLoader:{async loadResource(item){
+   loaded.push(item.id);
+   if(item.id==='failed')throw new Error('Archive unavailable');
+   return {source:{datasetId:item.id,network:item.network,loadedAt:'2026-11-10T08:00:00Z'},
+    index:{counts:{stops:12}},archiveBytes:1,expandedBytes:2,indexedStopTimes:3,
+    skippedStopTimes:0,rejectedStopTimes:0,indexServiceDates:['2026-11-10']};
+  }}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8'),sandbox);
+ await sandbox.self.onmessage({data:{id:201,type:'loadNetworks',options:{indexServiceDates:['2026-11-10']},
+  resources:[{id:'working',network:'Working',url:'https://example.org/a.zip'},
+   {id:'failed',network:'Failed',url:'https://example.org/b.zip'}]}});
+ assert.deepEqual(loaded,['working','failed']);
+ assert.equal(posted.length,1);
+ assert.equal(posted[0].result?.partial,true);
+ assert.equal(posted[0].result?.networks?.length,2);
+ assert.equal(posted[0].result.networks[0].counts.stops,12);
+ assert.equal(posted[0].result.networks[1].error.network,'Failed');
+});
