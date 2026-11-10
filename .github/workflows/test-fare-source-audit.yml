@@ -8,6 +8,9 @@ on:
       - 'transport-aravis-fares.js'
       - 'transport-proximiti-booking.js'
       - 'tests/transport-proximiti-booking.test.cjs'
+      - 'transport-x36-fares.js'
+      - 'tests/transport-x36-fares.test.cjs'
+      - 'data/transport/x36-illico-autocars-reference-2026-11-08.json'
       - 'transport-272-fares.js'
       - 'tests/transport-272-fares.test.cjs'
       - 'tests/transport-reference-integration-safety.test.cjs'
@@ -37,6 +40,7 @@ jobs:
       - run: python -m py_compile scripts/discover_aura_fare_documents.py
       - run: node --test tests/transport-aravis-fares.test.cjs
       - run: node --test tests/transport-272-fares.test.cjs
+      - run: node --test tests/transport-x36-fares.test.cjs
       - run: node --test tests/transport-proximiti-booking.test.cjs
       - run: node --test tests/transport-reference-integration-safety.test.cjs
       - run: python -m py_compile scripts/extract_aravis_fare_matrix.py
