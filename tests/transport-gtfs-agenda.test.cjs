@@ -849,5 +849,14 @@ test('exact-stop 272 and Y62 published prices display as unconfirmed references 
   const target=panel();const session=agenda.mount(target,{tasks:[{...task,earliestDeparture:'2026-11-10T08:00:00Z'}],
    clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[make('Y62',{...clusaz,stopId:'unverified'})],truncated:false}),dispose(){}})});
   await session.done;assert.doesNotMatch(target.textContent,/8,90 €/);session.dispose();
+  for(const altered of [
+   make('272',{...geneva,stopId:'unverified'}),
+   {...make('272',geneva),interNetwork:true},
+   {...make('272',geneva),departure:'2026-12-13T08:00:00Z',arrival:'2026-12-13T09:00:00Z'}
+  ]){
+   const target=panel();const session=agenda.mount(target,{tasks:[{...task,earliestDeparture:altered.departure}],
+    clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[altered],truncated:false}),dispose(){}})});
+   await session.done;assert.doesNotMatch(target.textContent,/11,30 €/);session.dispose();
+  }
  }finally{global.CP272Fares=previous272;global.CPAravisFares=previousAravis;global.CPAravisFareData=previousData;}
 });
