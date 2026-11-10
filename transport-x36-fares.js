@@ -22,7 +22,29 @@ function reference({line,fromStopName,toStopName,travelDate,profile='adult',sour
   fareVerified:false,stopMappingVerified:false,serviceConfirmed:false,
   note:'Tarif publié indicatif : arrêts GTFS, sens et trajet réel non vérifiés'};
 }
-const api={reference};
+function pinnedStopName(stop,pins){
+ if(!stop||typeof stop.id!=='string'||!stop.id.trim()||
+    typeof stop.lat!=='number'||typeof stop.lon!=='number'||
+    !Number.isFinite(stop.lat)||!Number.isFinite(stop.lon)||
+    !Array.isArray(pins))return null;
+ const matches=pins.filter(pin=>pin&&pin.id===stop.id&&
+  typeof pin.name==='string'&&pin.name.trim()&&
+  Number.isFinite(pin.lat)&&Number.isFinite(pin.lon)&&
+  Math.abs(pin.lat-stop.lat)<=0.0001&&Math.abs(pin.lon-stop.lon)<=0.0001);
+ return matches.length===1?matches[0].name:null;
+}
+function stopReference({networkId,line,fromStop,toStop,travelDate,profile='adult',
+ auditedPins=[],sourceData=data}={}){
+ if(networkId!=='oura-ain')return null;
+ const fromStopName=pinnedStopName(fromStop,auditedPins);
+ const toStopName=pinnedStopName(toStop,auditedPins);
+ if(!fromStopName||!toStopName)return null;
+ const result=reference({line,fromStopName,toStopName,travelDate,profile,sourceData});
+ return result?{...result,stopMappingVerified:true,
+  // A pinned stop and published matrix still do not verify the live journey fare.
+  fareVerified:false,serviceConfirmed:false}:null;
+}
+const api={reference,stopReference,pinnedStopName};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 if(root)root.CPX36FareReference=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
