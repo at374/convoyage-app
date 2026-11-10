@@ -57,7 +57,7 @@ def extract(path, source_url, checked_on):
         if not stops:
             raise ValueError("No valid X36 stop coordinates in supplied GTFS")
         stops.sort(key=lambda item: (item["gtfsName"], item["id"]))
-        return {"line": "X36", "networkId": "oura-ain",
+        return {"line": "X36", "networkId": "cars-region-express",
                 "sourceType": "official_gtfs", "sourceUrl": source_url,
                 "checkedOn": checked_on, "routeCount": len(route_ids),
                 "tripCount": len(trip_ids), "stopCount": len(stops),
