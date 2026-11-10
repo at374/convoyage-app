@@ -29,3 +29,20 @@ test('Léman Pass direct reference cannot silently become a confirmed fare',()=>
  assert.equal(quote.totalEUR,null);
  assert.equal(quote.known,false);
 });
+
+test('adapter rejects unverified reference evidence even with matching trip identity',()=>{
+ const adapters=require('../transport-adapters.js');
+ const leg={provider:'Cars Région',line:'272',from:'Annecy',to:'Genève',
+  departure:'2026-11-10T09:00:00+01:00',arrival:'2026-11-10T10:00:00+01:00',
+  fareVerified:false,verifiedPriceEUR:null};
+ const journey={id:'trip-272',departure:leg.departure,arrival:leg.arrival,legs:[leg]};
+ const reference=line272.reference({line:'272',fromSector:'Annecy',
+  toSector:'Genève ou Saint-Julien Douane',travelDate:'2026-11-10',
+  product:'parcours',profile:'adult'});
+ const evidence={journeyId:journey.id,legIndex:0,...leg,
+  fareVerified:reference.fareVerified,verifiedPriceEUR:reference.amount,
+  fareSource:reference.source,fareValidFrom:'2026-11-07',fareValidUntil:'2026-12-12'};
+ const result=adapters.applyFareEvidence([journey],[evidence]);
+ assert.equal(result[0].legs[0].fareVerified,false);
+ assert.equal(result[0].legs[0].verifiedPriceEUR,null);
+});
