@@ -850,6 +850,16 @@ test('exact-stop 272 and Y62 published prices display as unconfirmed references 
    clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[make('Y62',{...clusaz,stopId:'unverified'})],truncated:false}),dispose(){}})});
   await session.done;assert.doesNotMatch(target.textContent,/8,90 €/);session.dispose();
   for(const altered of [
+   make('Y62',{...clusaz,lat:46.5}),
+   {...make('Y62',clusaz),interNetwork:true},
+   {...make('Y62',clusaz),line:'Y63'},
+   {...make('Y62',clusaz),departure:'2026-11-06T08:00:00Z',arrival:'2026-11-06T09:00:00Z'}
+  ]){
+   const target=panel();const session=agenda.mount(target,{tasks:[{...task,earliestDeparture:altered.departure}],
+    clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[altered],truncated:false}),dispose(){}})});
+   await session.done;assert.doesNotMatch(target.textContent,/8,90 €/);session.dispose();
+  }
+  for(const altered of [
    make('272',{...geneva,stopId:'unverified'}),
    {...make('272',geneva),interNetwork:true},
    {...make('272',geneva),departure:'2026-12-13T08:00:00Z',arrival:'2026-12-13T09:00:00Z'}
