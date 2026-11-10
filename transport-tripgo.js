@@ -164,7 +164,9 @@ async function enrichPedestrianMaps(result,router,{maxRoutes=8}={}){
  await Promise.all(jobs.map(async({leg,promise})=>{
   const route=await promise;
   if(route?.status==='calculated'&&route.endpointsMatched===true&&
-   Array.isArray(route.geometry)&&route.geometry.length>=2){
+   Array.isArray(route.geometry)&&route.geometry.length>=2&&route.geometry.length<=5000&&
+   route.geometry.every(point)&&gap(coord(leg.fromPoint),coord(route.geometry[0]))<=10&&
+   gap(coord(leg.toPoint),coord(route.geometry.at(-1)))<=10){
    leg.geometry=route.geometry;leg.pedestrianMapStatus='calculated_valhalla';calculated++;
   }else leg.pedestrianMapStatus=route?'not_verified':'unavailable';
  }));
