@@ -385,3 +385,23 @@ test('TripGo flags walking transfer when Valhalla needs more time than scheduled
  assert.equal(result.itineraries[0].legs[0].pedestrianRouteSeconds,420);
  assert.equal(original.itineraries[0].legs[0].pedestrianScheduleFits,undefined);
 });
+
+test('TripGo keeps a feasible walking connection distinct from confirmed physical access',async()=>{
+ const leg={mode:'wa_wal',fromPoint:{lat:46,lon:6},toPoint:{lat:46.001,lon:6.001},
+  departure:'2026-11-10T09:00:00Z',arrival:'2026-11-10T09:10:00Z',geometry:null};
+ const result=await api.enrichPedestrianMaps({itineraries:[{legs:[leg]}]},{
+  route:async(a,b)=>({status:'calculated',endpointsMatched:true,geometry:[a,b],durationSeconds:420})
+ });
+ assert.equal(result.itineraries[0].legs[0].pedestrianScheduleFits,true);
+ assert.equal(result.coverage.pedestrianScheduleConflicts,0);
+ assert.notEqual(result.itineraries[0].accessVerified,true);
+});
+test('TripGo never assumes walking-time compatibility when Valhalla omits duration',async()=>{
+ const leg={mode:'wa_wal',fromPoint:{lat:46,lon:6},toPoint:{lat:46.001,lon:6.001},
+  departure:'2026-11-10T09:00:00Z',arrival:'2026-11-10T09:10:00Z',geometry:null};
+ const result=await api.enrichPedestrianMaps({itineraries:[{legs:[leg]}]},{
+  route:async(a,b)=>({status:'calculated',endpointsMatched:true,geometry:[a,b]})
+ });
+ assert.equal(result.itineraries[0].legs[0].pedestrianScheduleFits,undefined);
+ assert.equal(result.coverage.pedestrianScheduleConflicts,0);
+});
