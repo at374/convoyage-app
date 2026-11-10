@@ -615,3 +615,24 @@ test('federated GTFS query retains service day and reports missing adjacent day'
  assert.deepEqual(Array.from(posted[1].result.missingConnectionDates[0].dates),['2026-11-11']);
  assert.deepEqual(Array.from(posted[1].result.missingConnectionDates[0].networks),['a','b']);
 });
+
+test('GTFS worker preserves direct trips when internal transfer index fails',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm'),posted=[];
+ const sandbox={importScripts(){},self:{postMessage(message){posted.push(message);}},
+  CPGTFSLoader:{async loadResource(item){return {source:{datasetId:item.id,network:item.id},
+   index:{counts:{stops:1}},files:{},indexServiceDates:['2026-11-10']};}},
+  CPGTFSIndex:{nearbyDirectTrips(){return [{departure:'2026-11-10T09:00:00Z',
+   arrival:'2026-11-10T10:00:00Z'}];},
+   nearbyTransferTrips(){throw new Error('transfer index unavailable');}},
+  CPGTFSTime:{datedTrips(_f,_i,found){return found;},datedTransferTrips(){return [];},serviceWindow(){return {};}},
+  CPGTFSFederation:{connectionServiceDates(date){return [date];}}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8'),sandbox);
+ await sandbox.self.onmessage({data:{id:1101,type:'loadNetworks',options:{indexServiceDates:['2026-11-10']},
+  resources:[{id:'one',url:'https://example.org/one'}]}});
+ await sandbox.self.onmessage({data:{id:1102,type:'query',query:{method:'missionJourneys',
+  date:'2026-11-10',origin:{lat:46,lon:6},destination:{lat:46.1,lon:6.1},window:{}}}});
+ assert.equal(posted[1].error,undefined);
+ assert.equal(posted[1].result.rows.length,1);
+ assert.equal(posted[1].result.truncated,true);
+ assert.match(posted[1].result.failedDirectNetworks[0].reason,/Correspondances internes/);
+});
