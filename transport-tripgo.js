@@ -138,6 +138,34 @@ async function plan(options){
   const value=parse(data,options);if(cache.size>=32)cache.delete(cache.keys().next().value);cache.set(key,{until:Date.now()+60000,value});return JSON.parse(JSON.stringify(value));
  }finally{clearTimeout(timer);options.signal?.removeEventListener('abort',cancel);}
 }
+// Optional bounded enrichment of missing pedestrian polylines; does not certify access.
+async function enrichPedestrianMaps(result,router,{maxRoutes=8}={}){
+ if(!result||!Array.isArray(result.itineraries)||!router||typeof router.route!=='function'||
+  !Number.isSafeInteger(maxRoutes)||maxRoutes<1||maxRoutes>8)throw Error('Enrichissement piéton invalide');
+ const copy={...result,itineraries:result.itineraries.map(itinerary=>({...itinerary,
+  legs:itinerary.legs.map(leg=>({...leg}))}))};
+ let attempted=0,calculated=0;
+ for(const itinerary of copy.itineraries){
+  for(const leg of itinerary.legs){
+   if(leg.mode!=='wa_wal'||Array.isArray(leg.geometry)&&leg.geometry.length>=2)continue;
+   if(attempted>=maxRoutes){leg.pedestrianMapStatus='not_requested_budget';continue;}
+   attempted++;
+   try{
+    const route=await router.route(leg.fromPoint,leg.toPoint);
+    if(route?.status==='calculated'&&route.endpointsMatched===true&&
+     Array.isArray(route.geometry)&&route.geometry.length>=2){
+     leg.geometry=route.geometry;leg.pedestrianMapStatus='calculated_valhalla';calculated++;
+    }else leg.pedestrianMapStatus='not_verified';
+   }catch(_){leg.pedestrianMapStatus='unavailable';}
+  }
+ }
+ copy.coverage={...copy.coverage,pedestrianGeometryAvailable:copy.itineraries.flatMap(t=>t.legs)
+  .filter(leg=>leg.mode==='wa_wal'&&Array.isArray(leg.geometry)&&leg.geometry.length>=2).length,
+  pedestrianGeometryMissing:copy.itineraries.flatMap(t=>t.legs)
+  .filter(leg=>leg.mode==='wa_wal'&&(!Array.isArray(leg.geometry)||leg.geometry.length<2)).length,
+  pedestrianValhallaAttempted:attempted,pedestrianValhallaCalculated:calculated};
+ return copy;
+}
 // Identifiers from the operators’ public city and route pages.
 const FLIX_CITIES={
  annecy:'40dfe930-8646-11e6-9066-549f350fcb0c',
@@ -186,5 +214,5 @@ function coachFareSearch(leg){
  }
  return null;
 }
-const api={parse,plan,getKey,setKey,coachFareSearch};root.CPTripGo=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
+const api={parse,plan,enrichPedestrianMaps,getKey,setKey,coachFareSearch};root.CPTripGo=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);
