@@ -8,6 +8,7 @@ on:
       - 'transport-aravis-fares.js'
       - 'transport-272-fares.js'
       - 'tests/transport-272-fares.test.cjs'
+      - 'tests/transport-reference-integration-safety.test.cjs'
       - 'tests/transport-aravis-fares.test.cjs'
       - 'data/transport/aravis-fare-*.json'
       - 'scripts/extract_aravis_fare_matrix.py'
@@ -34,4 +35,5 @@ jobs:
       - run: python -m py_compile scripts/discover_aura_fare_documents.py
       - run: node --test tests/transport-aravis-fares.test.cjs
       - run: node --test tests/transport-272-fares.test.cjs
+      - run: node --test tests/transport-reference-integration-safety.test.cjs
       - run: python -m py_compile scripts/extract_aravis_fare_matrix.py
