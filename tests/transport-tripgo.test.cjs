@@ -308,3 +308,18 @@ test('TripGo reports train only when its actual mode identifier is rail',()=>{
  const other=api.parse(unknown,options);
  assert.deepEqual(other.coverage.transportTypes,['transport_public_non_classe']);
 });
+
+test('TripGo fills missing walking maps with bounded Valhalla results without certifying transport',async()=>{
+ const original={source:'TripGo',itineraries:[{transportConfirmed:false,legs:[
+  {mode:'wa_wal',fromPoint:{lat:46,lon:6},toPoint:{lat:46.001,lon:6.001},geometry:null}]}]};
+ const route={status:'calculated',endpointsMatched:true,geometry:[{lat:46,lon:6},{lat:46.001,lon:6.001}]};
+ const result=await api.enrichPedestrianMaps(original,{route:async()=>route});
+ assert.equal(result.itineraries[0].legs[0].pedestrianMapStatus,'calculated_valhalla');
+ assert.equal(result.coverage.pedestrianGeometryAvailable,1);
+ assert.equal(result.coverage.pedestrianGeometryMissing,0);
+ assert.equal(result.itineraries[0].transportConfirmed,false);
+ assert.equal(original.itineraries[0].legs[0].geometry,null);
+ const unverified=await api.enrichPedestrianMaps(original,{route:async()=>({...route,endpointsMatched:false})});
+ assert.equal(unverified.coverage.pedestrianGeometryMissing,1);
+ assert.equal(unverified.itineraries[0].legs[0].pedestrianMapStatus,'not_verified');
+});
