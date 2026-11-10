@@ -37,6 +37,15 @@ function legGeometry(segment,mode){
   return gap(coord(segment.from),geometry[0])<=50&&gap(geometry.at(-1),coord(segment.to))<=50?geometry:null;
  }catch(_){return null;}
 }
+function transportType(mode,identifier){
+ if(typeof mode!=='string'||!mode.startsWith('pt_pub'))return null;
+ const id=typeof identifier==='string'?identifier.toLowerCase():'';
+ if(/^pt_pub_(?:train|rail|regionaltrain|intercitytrain|highspeedtrain)(?:_|$)/.test(id))return 'train';
+ if(/^pt_pub_(?:bus|coach)(?:_|$)/.test(id))return 'bus';
+ if(/^pt_pub_(?:tram|light_rail)(?:_|$)/.test(id))return 'tram';
+ if(/^pt_pub_(?:subway|metro)(?:_|$)/.test(id))return 'metro';
+ return 'transport_public_non_classe';
+}
 function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Date().toISOString()}={}){
  if(!point(from)||!point(to)||!Number.isFinite(time(when))||latestArrival!==undefined&&(!Number.isFinite(time(latestArrival))||(!arriveBy&&time(latestArrival)<time(when))||(arriveBy&&time(latestArrival)>time(when))))throw Error('Fenêtre TripGo invalide');
  if(!data||!Array.isArray(data.groups)||data.groups.length>100||!Array.isArray(data.segmentTemplates)||data.segmentTemplates.length>2000)throw Error('Réponse TripGo invalide');
@@ -68,7 +77,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
      if(typeof mode==='string'&&!/^(wa_wal|pt_pub(?:_[a-z0-9-]+)*|stationary_(?:transfer|wait))$/.test(mode))unsupportedModeTrips++;
      valid=false;break;}
     previous=end;
-    legs.push({mode,provider:s.externalData?.operatorName||null,serviceTripId:s.serviceTripID||null,serviceShortName:s.serviceShortName||null,routeId:s.routeId||s.routeID||null,fromStopCode:s.from.stopCode||null,toStopCode:s.to.stopCode||null,ticketWebsiteURL:typeof s.ticketWebsiteURL==='string'?s.ticketWebsiteURL:null,line:s.serviceNumber||s.serviceName||null,from:s.from.name||s.from.address||'',to:s.to.name||s.to.address||'',
+    legs.push({mode,transportType:transportType(mode,s.modeInfo?.identifier),provider:s.externalData?.operatorName||null,serviceTripId:s.serviceTripID||null,serviceShortName:s.serviceShortName||null,routeId:s.routeId||s.routeID||null,fromStopCode:s.from.stopCode||null,toStopCode:s.to.stopCode||null,ticketWebsiteURL:typeof s.ticketWebsiteURL==='string'?s.ticketWebsiteURL:null,line:s.serviceNumber||s.serviceName||null,from:s.from.name||s.from.address||'',to:s.to.name||s.to.address||'',
      fromPoint:coord(s.from),toPoint:coord(s.to),departure:new Date(start).toISOString(),arrival:new Date(end).toISOString(),
      geometry:legGeometry(s,mode),distanceMeters:Number.isFinite(s.metres)&&s.metres>=0?s.metres:null,realtimeReported:s.realTime===true,
      alerts:Array.isArray(s.alerts)?s.alerts.map(a=>String(a?.title||a?.text||'Alerte fournisseur')).slice(0,10):[],serviceConfirmed:false});
@@ -89,8 +98,9 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
  const providers=[...new Set(found.flatMap(itinerary=>itinerary.legs.filter(leg=>leg.mode.startsWith('pt_pub'))
   .map(leg=>leg.provider).filter(Boolean)))].sort();
  const blablacarBusFound=providers.some(provider=>/^blablacar bus$/i.test(provider));
+ const transportTypes=[...new Set(found.flatMap(itinerary=>itinerary.legs.map(leg=>leg.transportType).filter(Boolean)))].sort();
  return {source:'TripGo',receivedAt,coverage:{publicTransportOnly:true,
-  blablacarBusFound,blablacarRideshareVerified:false,unsupportedModeTrips,providers},
+  blablacarBusFound,blablacarRideshareVerified:false,unsupportedModeTrips,providers,transportTypes},
   itineraries:found.sort((a,b)=>arriveBy?Date.parse(b.departure)-Date.parse(a.departure):Date.parse(a.departure)-Date.parse(b.departure))};
 }
 async function readJSON(response,signal){
