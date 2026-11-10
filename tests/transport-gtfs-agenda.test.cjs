@@ -870,3 +870,21 @@ test('exact-stop 272 and Y62 published prices display as unconfirmed references 
   }
  }finally{global.CP272Fares=previous272;global.CPAravisFares=previousAravis;global.CPAravisFareData=previousData;}
 });
+
+test('Aravis matrix is initialized only once for multiple GTFS results in a panel',async()=>{
+ const previous=global.CPAravisFares,previousData=global.CPAravisFareData;
+ const original=require('../transport-aravis-fares.js');let builds=0;
+ global.CPAravisFares={createCalculator(data){builds++;return original.createCalculator(data);}};
+ global.CPAravisFareData=require('../data/transport/aravis-fare-reference-2026.json');
+ const annecy={stopId:'FR:74010:ZE:57539:HAUTExSAVOIE',name:'Annecy',lat:45.9016985,lon:6.1201612};
+ const clusaz={stopId:'FR:74080:ZE:57774:HAUTExSAVOIE',name:'La Clusaz',lat:45.9067032,lon:6.4191339};
+ const base=row({networkId:'oura-haute-savoie',line:'Y62',originStop:annecy,destinationStop:clusaz,
+  departure:'2026-11-10T08:00:00Z',arrival:'2026-11-10T09:00:00Z'});
+ const target=panel();let session;
+ try{
+  session=agenda.mount(target,{tasks:[{...task,earliestDeparture:'2026-11-10T08:00:00Z'}],
+   clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[base,{...base,tripId:'second',departure:'2026-11-10T09:00:00Z',arrival:'2026-11-10T10:00:00Z'}],truncated:false}),dispose(){}})});
+  await session.done;assert.equal(builds,1);
+  assert.match(target.textContent,/8,90 €/);
+ }finally{session?.dispose();global.CPAravisFares=previous;global.CPAravisFareData=previousData;}
+});
