@@ -84,3 +84,18 @@ Deux publications **du même exploitant** ne donnent pas une règle universelle 
 **Décision prudente :** ne pas transformer automatiquement le délai de 5 min de la fiche 461 en garantie opérationnelle de réservation pour une mission. Il faut vérifier dans Bus CheckIn la course, l'arrêt et l'heure limite effectivement proposée. À défaut de confirmation, le transport reste non confirmé. Les délais sont des informations documentaires, non des réservations.
 
 La [CCVT](https://www.ccvt.fr/vie-pratique/mobilites-transport/lignes-regulieres) décrit la 461 comme sans réservation pour ses trajets habituels, mais la fiche opérateur exige un enregistrement pour les arrêts sur demande ou les connexions garanties sur demande. Le type d'arrêt prime sur une simplification à l'échelle de la ligne.
+
+## Axes de raccordement identifiés — vérification du 10 novembre 2026
+
+Sources :
+- https://www.ccvt.fr/vie-pratique/mobilites-transport/lignes-regulieres
+- https://www.legrandbornand.com/sejourner/commerces-et-services/lignes-de-bus-460-461-st-pierre-en-faucigny-le-grand-bornand-le-grand-bornand-fr-6159340/
+- https://www.proximiti.fr/vos-deplacements/horaires-a-telecharger/
+
+**Corridor de recherche :** gare de Saint-Pierre-en-Faucigny (connexion Léman Express) ↔ Glières-Val-de-Borne ↔ Saint-Jean-de-Sixt ↔ Le Grand-Bornand. La ligne 460 dessert aussi des arrêts supplémentaires (notamment Forgeassous dessus et Nant Robert) ; la ligne 461 dessert notamment le chef-lieu de Saint-Jean-de-Sixt et la gare routière du Grand-Bornand. Ce sont des **points de desserte documentés**, pas des identifiants GTFS ni des transferts piétons validés.
+
+**Attention aux calendriers :** la page du Grand-Bornand affiche des plages de circulation saisonnières distinctes (dont 22 décembre 2026 au 18 avril 2027). Ne pas supposer qu'une mention « tous les jours » s'applique à toutes les dates : sélectionner la grille opérateur correspondant au jour et à la course.
+
+**Politique de réservation :** la CCVT décrit la 460 comme sur réservation et la 461 comme sans réservation, tandis que l'exploitant distingue arrêts systématiques / sur demande et connexions garanties. Ne pas réduire ces informations à un simple booléen par ligne : conserver le type d'arrêt, le type de connexion, la date de circulation et la confirmation Bus CheckIn lorsque nécessaire.
+
+**Règle de preuve :** aucune arrivée « réalisable » sans preuve de la course, de la montée/descente aux arrêts exacts, du chemin piéton réel, de la marge avant mission et, le cas échéant, de l'enregistrement. Aucun horaire, tarif interréseaux ou correspondance garantie n'est inféré.
