@@ -334,7 +334,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
     if(!eligible(task))continue;
     try{
      const window=searchWindow(task),dates=serviceDates(window,resource.timeZone),rows=[];let truncated=false,invalidJourneys=0;
-     const federationFailures=new Map();
+     const federationFailures=new Map(),missingDateNetworks=new Set();
      for(const date of dates){
       if(!active())return;
       const result=await client.query({method:'missionJourneys',date,origin:task.from,destination:task.to,
@@ -342,6 +342,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(!active())return;
       if(!result||!Array.isArray(result.rows))throw new Error('Invalid GTFS journey response');
       truncated=truncated||result.truncated===true;
+      for(const name of (Array.isArray(result.missingDateNetworks)?result.missingDateNetworks:[]))
+       missingDateNetworks.add(String(name||'Réseau inconnu').slice(0,80));
       for(const failure of (Array.isArray(result.failedFederations)?result.failedFederations:[])){
        if(!Array.isArray(failure?.networks)||failure.networks.length!==2)continue;
        const names=failure.networks.map(name=>String(name||'Réseau inconnu').slice(0,80));
@@ -395,6 +397,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      if(federationFailures.size&&active()){
       const detail=doc.createElement('p');
       detail.textContent='Correspondances non vérifiées : '+[...federationFailures.entries()].map(([pair,reason])=>pair+' ('+reason+')').join(' ; ').slice(0,600);
+      status.appendChild(detail);
+     }
+     if(missingDateNetworks.size&&active()){
+      const detail=doc.createElement('p');
+      detail.textContent='Dates GTFS non couvertes : '+[...missingDateNetworks].join(' ; ').slice(0,400)+'. Résultats partiels.';
       status.appendChild(detail);
      }
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
