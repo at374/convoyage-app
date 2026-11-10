@@ -2716,7 +2716,7 @@
           (window.CPTransportEngineSearch?.searchEngines&&window.CPTransportEngineSearch?.tripGoEngine
             ? window.CPTransportEngineSearch.searchEngines([
                 window.CPTransportEngineSearch.tripGoEngine({plan:options=>tripgo.plan({
-                  ...options,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt
+                  ...options,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt
                 })})
               ],task,{timeoutMs:18000}).then(result=>({
                 itineraries:result.journeys.map(j=>({
