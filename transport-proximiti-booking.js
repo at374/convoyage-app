@@ -26,7 +26,8 @@ function assess(input={}){
  const publishedDeadlineMinutes=line==='460'?120:5;
  const registrationDeadlineMinutes=null;
  const registrationConfirmed=input.registrationConfirmed===true;
- const registrationForJourneyVerified=sameJourney(input.bookingEvidence,input.journeyEvidence);
+ const registrationForJourneyVerified=input.journeyEvidence?.line===line&&
+  sameJourney(input.bookingEvidence,input.journeyEvidence);
  const bookingAvailabilityVerified=input.bookingAvailabilityVerified===true;
  const serviceConfirmed=input.serviceConfirmed===true;
  const stopsConfirmed=input.stopsConfirmed===true;
