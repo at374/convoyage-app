@@ -104,10 +104,19 @@ self.onmessage=async({data})=>{
      let found=CPGTFSIndex.nearbyDirectTrips(current.files,current.index,query.date,query.origin,query.destination,radius);
      if(query.method!=='nearbyDirectTrips')found=CPGTFSTime.datedTrips(current.files,current.index,found,query.window);
      if(query.method==='missionJourneys'){
-      const bounds=CPGTFSTime.serviceWindow(current.files,query.date,query.window);
-      const transfers=CPGTFSIndex.nearbyTransferTrips(current.files,current.index,query.date,query.origin,query.destination,radius,bounds);
-      searchTruncated=searchTruncated||transfers.searchTruncated;
-      found.push(...CPGTFSTime.datedTransferTrips(current.files,current.index,transfers.journeys,query.window));
+      try{
+       const bounds=CPGTFSTime.serviceWindow(current.files,query.date,query.window);
+       const transfers=CPGTFSIndex.nearbyTransferTrips(current.files,current.index,query.date,query.origin,query.destination,radius,bounds);
+       if(!transfers||!Array.isArray(transfers.journeys))throw new Error('Invalid GTFS transfer result');
+       searchTruncated=searchTruncated||transfers.searchTruncated;
+       found.push(...CPGTFSTime.datedTransferTrips(current.files,current.index,transfers.journeys,query.window));
+      }catch(error){
+       // A failed transfer search must not discard already validated direct
+       // journeys from the same network.
+       searchTruncated=true;
+       failedDirectNetworks.push({network:current.source.network||current.source.datasetId||current.source.resourceId,
+        reason:'Correspondances internes : '+String(error?.message||'recherche indisponible').slice(0,130)});
+      }
      }
      rows.push(...found.map(row=>({...row,networkId:current.source.datasetId||current.source.resourceId,
       network:current.source.network,legs:row.legs?.map(leg=>({...leg,network:current.source.network,networkId:current.source.datasetId||current.source.resourceId}))})));
