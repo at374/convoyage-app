@@ -99,8 +99,11 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
   .map(leg=>leg.provider).filter(Boolean)))].sort();
  const blablacarBusFound=providers.some(provider=>/^blablacar bus$/i.test(provider));
  const transportTypes=[...new Set(found.flatMap(itinerary=>itinerary.legs.map(leg=>leg.transportType).filter(Boolean)))].sort();
+ const pedestrianLegs=found.flatMap(itinerary=>itinerary.legs.filter(leg=>leg.mode==='wa_wal'));
+ const pedestrianGeometryAvailable=pedestrianLegs.filter(leg=>Array.isArray(leg.geometry)&&leg.geometry.length>=2).length;
+ const pedestrianGeometryMissing=pedestrianLegs.length-pedestrianGeometryAvailable;
  return {source:'TripGo',receivedAt,coverage:{publicTransportOnly:true,
-  blablacarBusFound,blablacarRideshareVerified:false,unsupportedModeTrips,providers,transportTypes},
+  blablacarBusFound,blablacarRideshareVerified:false,unsupportedModeTrips,providers,transportTypes,pedestrianGeometryAvailable,pedestrianGeometryMissing},
   itineraries:found.sort((a,b)=>arriveBy?Date.parse(b.departure)-Date.parse(a.departure):Date.parse(a.departure)-Date.parse(b.departure))};
 }
 async function readJSON(response,signal){
