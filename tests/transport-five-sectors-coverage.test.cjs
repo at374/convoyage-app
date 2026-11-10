@@ -231,3 +231,11 @@ test('GTFS panel must disclose partners omitted by the two-feed limit',()=>{
  assert.ok(source.includes('if(omittedPartners>0)warning.textContent+='));
  assert.ok(source.includes('réseau(x) candidat(s) supplémentaire(s) non interrogé(s)'));
 });
+
+test('omitted GTFS networks are named rather than only counted',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.ok(source.includes('partnerCandidates.filter(r=>!partners.includes(r))'));
+ assert.ok(source.includes("omitted.map(r=>r.network).join(' ; ')"));
+ assert.ok(source.includes('Réseaux non interrogés : '));
+});
