@@ -338,3 +338,15 @@ test('TripGo deduplicates walking lookups shared by journeys and respects unique
  assert.equal(result.itineraries[1].legs[1].pedestrianMapStatus,'not_requested_budget');
  assert.equal(original.itineraries[0].legs[0].geometry,null);
 });
+
+test('TripGo detects rail from segment mode when optional modeInfo is absent',()=>{
+ const response=clone();
+ for(const segment of response.segmentTemplates)if(segment.modeIdentifier==='pt_pub'){
+  segment.modeIdentifier='pt_pub_train';
+  delete segment.modeInfo;
+ }
+ const result=api.parse(response,options);
+ assert.equal(result.itineraries.length,2);
+ assert.deepEqual(result.coverage.transportTypes,['train']);
+ assert.equal(result.itineraries[0].legs[1].transportType,'train');
+});
