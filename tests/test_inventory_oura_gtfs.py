@@ -33,6 +33,7 @@ class OuraInventoryTests(unittest.TestCase):
             self.assertEqual(result["stopCount"], 1)
             self.assertEqual(result["tripCount"], 1)
             self.assertEqual(result["routesWithoutTrips"], 1)
+            self.assertEqual(result["tripsWithoutStopTimes"], 0)
             self.assertEqual([a["tripCount"] for a in result["agencies"]], [1, 0])
             self.assertEqual([r["id"] for r in result["routes"]], ["r1", "r2"])
             self.assertEqual([r["tripCount"] for r in result["routes"]], [1, 0])
@@ -59,6 +60,7 @@ class OuraInventoryTests(unittest.TestCase):
                 archive.writestr("routes.txt", "route_id\nr1\n")
                 archive.writestr("trips.txt", "route_id,trip_id\nr1,t1\n")
                 archive.writestr("stops.txt", "stop_id,stop_name\ns1,Stop One\n")
+                archive.writestr("stop_times.txt", "trip_id,stop_id,stop_sequence\nt1,s1,1\n")
             result = module.inventory(path, "https://example.org/oura.zip")
             self.assertEqual(result["agencies"][0]["routeCount"], 1)
 
@@ -66,6 +68,14 @@ class OuraInventoryTests(unittest.TestCase):
         with TemporaryDirectory() as folder:
             path = self.make_zip(folder, "route_id\nr1\n")
             with self.assertRaisesRegex(ValueError, "missing agency_id"):
+                module.inventory(path, "https://example.org/oura.zip")
+
+    def test_orphan_stop_time_rejected(self):
+        with TemporaryDirectory() as folder:
+            path = self.make_zip(folder)
+            with zipfile.ZipFile(path, "a") as archive:
+                archive.writestr("stop_times.txt", "trip_id,stop_id,stop_sequence\nmissing,s1,1\n")
+            with self.assertRaisesRegex(ValueError, "exactly one stop_times.txt"):
                 module.inventory(path, "https://example.org/oura.zip")
 
     def test_non_https_source_rejected(self):
