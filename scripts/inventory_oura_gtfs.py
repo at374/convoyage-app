@@ -73,6 +73,8 @@ def inventory(path, source_url):
             "archiveOnly": True, "serviceConfirmed": False, "fareVerified": False,
             "routeCount": len(routes), "stopCount": stop_count, "tripCount": trip_count,
             "routesWithoutTrips": sum(route_trip_counts[r["route_id"]] == 0 for r in routes),
+            "stopsWithoutGps": stops_without_gps,
+            "stopTimesWithoutSequence": stop_times_without_sequence,
             "tripsWithoutStopTimes": trips_without_stop_times,
             "hasCalendar": "calendar.txt" in files,
             "hasCalendarExceptions": "calendar_dates.txt" in files,
