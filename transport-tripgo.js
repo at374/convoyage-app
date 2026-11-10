@@ -39,13 +39,18 @@ function legGeometry(segment,mode){
 }
 function transportType(mode,identifier){
  if(typeof mode!=='string'||!mode.startsWith('pt_pub'))return null;
- // Prefer the explicit segment mode when a generic or unrelated modeInfo identifier is supplied.
- const id=[mode,identifier].filter(value=>typeof value==='string').map(value=>value.toLowerCase());
- if(id.some(value=>/^pt_pub_(?:train|rail|regionaltrain|intercitytrain|highspeedtrain)(?:_|$)/.test(value)))return 'train';
- if(id.some(value=>/^pt_pub_(?:bus|coach)(?:_|$)/.test(value)))return 'bus';
- if(id.some(value=>/^pt_pub_(?:tram|light_rail)(?:_|$)/.test(value)))return 'tram';
- if(id.some(value=>/^pt_pub_(?:subway|metro)(?:_|$)/.test(value)))return 'metro';
- return 'transport_public_non_classe';
+ // The segment mode is authoritative when specific. A conflicting modeInfo
+ // identifier must not silently turn a bus into a train (or the reverse).
+ const classify=value=>{
+  if(typeof value!=='string')return null;
+  const id=value.toLowerCase();
+  if(/^pt_pub_(?:train|rail|regionaltrain|intercitytrain|highspeedtrain)(?:_|$)/.test(id))return 'train';
+  if(/^pt_pub_(?:bus|coach)(?:_|$)/.test(id))return 'bus';
+  if(/^pt_pub_(?:tram|light_rail)(?:_|$)/.test(id))return 'tram';
+  if(/^pt_pub_(?:subway|metro)(?:_|$)/.test(id))return 'metro';
+  return null;
+ };
+ return classify(mode)||classify(identifier)||'transport_public_non_classe';
 }
 function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Date().toISOString()}={}){
  if(!point(from)||!point(to)||!Number.isFinite(time(when))||latestArrival!==undefined&&(!Number.isFinite(time(latestArrival))||(!arriveBy&&time(latestArrival)<time(when))||(arriveBy&&time(latestArrival)>time(when))))throw Error('Fenêtre TripGo invalide');
