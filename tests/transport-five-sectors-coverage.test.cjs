@@ -360,3 +360,11 @@ test('worker names both networks when both GTFS loads fail',async()=>{
  assert.match(posted[0].error?.message||'',/Premier réseau: Archive unavailable one/);
  assert.match(posted[0].error?.message||'',/Second réseau: Archive unavailable two/);
 });
+
+test('Agenda surfaces bounded GTFS load errors as plain text',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.ok(source.includes("typeof error?.message==='string'?error.message.trim().slice(0,300):''"));
+ assert.ok(source.includes("(detail?' Détail : '+detail:'')"));
+ assert.ok(source.includes("sourceStatus.textContent='Flux officiel indisponible"));
+});
