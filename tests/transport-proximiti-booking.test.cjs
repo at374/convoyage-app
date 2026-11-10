@@ -45,7 +45,8 @@ test('booking matrix: all 460/461 stop and connection combinations fail closed',
      if(required){
       assert.equal(assess({...input,registrationConfirmed:true}).ready,false);
       assert.equal(assess({...input,bookingAvailabilityVerified:true}).ready,false);
-      assert.equal(assess({...input,registrationConfirmed:true,...matchingEvidence,bookingAvailabilityVerified:true}).ready,true);
+      const lineJourney={...journeyEvidence,line};
+      assert.equal(assess({...input,registrationConfirmed:true,bookingEvidence:lineJourney,journeyEvidence:lineJourney,bookingAvailabilityVerified:true}).ready,true);
      }
     }
    }
