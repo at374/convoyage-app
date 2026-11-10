@@ -14,17 +14,18 @@ function assess(input={}){
   boarding==='on_demand'||alighting==='on_demand'||guaranteedConnection:null;
  const registrationDeadlineMinutes=line==='460'?120:5;
  const registrationConfirmed=input.registrationConfirmed===true;
+ const bookingAvailabilityVerified=input.bookingAvailabilityVerified===true;
  const serviceConfirmed=input.serviceConfirmed===true;
  const stopsConfirmed=input.stopsConfirmed===true;
  const walkingConfirmed=input.walkingConfirmed===true;
  const marginConfirmed=input.marginConfirmed===true;
- const ready=needsRegistration!==null&&(!needsRegistration||registrationConfirmed)&&
+ const ready=needsRegistration!==null&&(!needsRegistration||(registrationConfirmed&&bookingAvailabilityVerified))&&
   serviceConfirmed&&stopsConfirmed&&walkingConfirmed&&marginConfirmed;
  return {line,needsRegistration,registrationDeadlineMinutes,registrationConfirmed,
-  ready,serviceConfirmed,source:SOURCE,
+  ready,serviceConfirmed,bookingAvailabilityVerified,source:SOURCE,
   status:ready?'confirmed_evidence_supplied':'Transport non confirmé — vérifiez vous-même',
-  // The operator can override PDF deadlines per journey; never claim registration is available.
-  bookingAvailabilityVerified:false};
+  // No live availability is inferred. Only caller-supplied, independently verified evidence is accepted.
+  };
 }
 const api={assess,SOURCE};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
