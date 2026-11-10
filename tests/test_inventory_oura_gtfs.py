@@ -78,6 +78,18 @@ class OuraInventoryTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "exactly one stop_times.txt"):
                 module.inventory(path, "https://example.org/oura.zip")
 
+    def test_unknown_stop_reference_rejected(self):
+        with TemporaryDirectory() as folder:
+            path = self.make_zip(folder)
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr("agency.txt", "agency_id,agency_name\na1,Network A\n")
+                archive.writestr("routes.txt", "route_id,agency_id\nr1,a1\n")
+                archive.writestr("trips.txt", "route_id,trip_id\nr1,t1\n")
+                archive.writestr("stops.txt", "stop_id,stop_name\ns1,Stop One\n")
+                archive.writestr("stop_times.txt", "trip_id,stop_id,stop_sequence\nt1,missing,1\n")
+            with self.assertRaisesRegex(ValueError, "unknown stop_id"):
+                module.inventory(path, "https://example.org/oura.zip")
+
     def test_non_https_source_rejected(self):
         with self.assertRaises(ValueError):
             module.inventory("unused.zip", "http://example.org/oura.zip")
