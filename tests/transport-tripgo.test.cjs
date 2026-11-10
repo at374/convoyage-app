@@ -428,3 +428,20 @@ test('TripGo rejects ferry and air modes despite a generic modeInfo identifier',
   assert.equal(api.parse(payload,options).itineraries.length,0,forbidden);
  }
 });
+
+test('TripGo explicit public transport mode takes precedence over conflicting metadata',()=>{
+ for(const [mode,secondary,expected] of [
+  ['pt_pub_bus','pt_pub_train','bus'],
+  ['pt_pub_train','pt_pub_bus','train'],
+  ['pt_pub_tram','pt_pub_train','tram'],
+  ['pt_pub','pt_pub_train','train']
+ ]){
+  const payload=clone();
+  for(const segment of payload.segmentTemplates)if(segment.modeIdentifier==='pt_pub'){
+   segment.modeIdentifier=mode;segment.modeInfo.identifier=secondary;
+  }
+  const result=api.parse(payload,options);
+  assert.equal(result.itineraries.length,2,mode);
+  assert.deepEqual(result.coverage.transportTypes,[expected],mode);
+ }
+});
