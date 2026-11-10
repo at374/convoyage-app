@@ -297,10 +297,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
     (n.source.network||resource.network)+' · téléchargé le '+new Intl.DateTimeFormat('fr-FR',{timeZone:resource.timeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(n.source.loadedAt))+
     ' · '+(n.source.updatedAt?'mise à jour producteur : '+n.source.updatedAt:'date de mise à jour du producteur non fournie')+
     ' · '+n.counts.stops+' arrêts').join(' ; ')+'. Circulation non confirmée.';
-   const partialNetworks=summary?.partial===true||networks.some(n=>!validNetwork(n));
-   if(partialNetworks)sourceStatus.textContent+=' Recherche partielle : un réseau est indisponible.';
    const loadedIds=new Set(loaded.map(n=>n.source.datasetId||n.source.resourceId));
    const missingSelected=[resource,...partners].filter(r=>!loadedIds.has(r.datasetId||r.id));
+   const partialNetworks=summary?.partial===true||networks.some(n=>!validNetwork(n))||
+    missingSelected.length>0;
+   if(partialNetworks)sourceStatus.textContent+=' Recherche partielle : un réseau est indisponible.';
    if(missingSelected.length){
     warning.textContent+=' Flux sélectionnés indisponibles : '+missingSelected.map(r=>r.network).join(' ; ')+'. Résultats incomplets, même si un autre réseau répond.';
    }
