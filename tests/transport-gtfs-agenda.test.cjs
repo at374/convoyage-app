@@ -842,7 +842,7 @@ test('exact-stop 272 and Y62 published prices display as unconfirmed references 
    const target=panel();const session=agenda.mount(target,{tasks:[{...task,earliestDeparture:'2026-11-10T08:00:00Z'}],
     clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[make(line,to)],truncated:false}),dispose(){}})});
    await session.done;
-   assert.match(target.textContent,new RegExp(expected.replace('€','\\\\€')));
+   assert.ok(target.textContent.includes(expected),'Missing published reference: '+expected);
    assert.match(target.textContent,/non confirmée|non confirmé/);
    session.dispose();
   }
