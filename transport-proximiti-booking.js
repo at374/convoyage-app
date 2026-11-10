@@ -2,6 +2,15 @@
 (function(root){
 'use strict';
 const SOURCE='https://www.proximiti.fr/wp-content/uploads/2025/12/horaire-46x-web.pdf';
+function sameJourney(booking,journey){
+ if(!booking||!journey)return false;
+ for(const key of ['line','serviceDate','boardingStopId','alightingStopId','departure']){
+  if(typeof booking[key]!=='string'||!booking[key].trim()||
+     typeof journey[key]!=='string'||!journey[key].trim()||
+     booking[key]!==journey[key])return false;
+ }
+ return true;
+}
 function assess(input={}){
  const line=String(input.line||'').trim();
  if(!['460','461'].includes(line))return null;
@@ -17,7 +26,7 @@ function assess(input={}){
  const publishedDeadlineMinutes=line==='460'?120:5;
  const registrationDeadlineMinutes=null;
  const registrationConfirmed=input.registrationConfirmed===true;
- const registrationForJourneyVerified=input.registrationForJourneyVerified===true;
+ const registrationForJourneyVerified=sameJourney(input.bookingEvidence,input.journeyEvidence);
  const bookingAvailabilityVerified=input.bookingAvailabilityVerified===true;
  const serviceConfirmed=input.serviceConfirmed===true;
  const stopsConfirmed=input.stopsConfirmed===true;
@@ -41,7 +50,7 @@ function assess(input={}){
   // No live availability is inferred. Only caller-supplied, independently verified evidence is accepted.
   status:ready?'confirmed_evidence_supplied':'Transport non confirmé — vérifiez vous-même'};
 }
-const api={assess,SOURCE};
+const api={assess,sameJourney,SOURCE};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 if(root)root.CPProximitiBooking=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
