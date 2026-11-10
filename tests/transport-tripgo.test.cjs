@@ -11,6 +11,8 @@ test('recorded TripGo response finds BlaBlaCar Bus and FlixBus, excludes past de
  assert.equal(r.coverage.publicTransportOnly,true);
  assert.equal(r.coverage.providers.includes('BlaBlaCar Bus'),true);
  assert.deepEqual(r.coverage.transportTypes,['bus']);
+ assert.equal(r.coverage.pedestrianGeometryAvailable+r.coverage.pedestrianGeometryMissing,
+  r.itineraries.flatMap(t=>t.legs).filter(leg=>leg.mode==='wa_wal').length);
  assert.equal(r.itineraries[0].legs[1].transportType,'bus');assert.equal(r.itineraries[0].legs[1].provider,'BlaBlaCar Bus');
  for(const t of r.itineraries){assert.equal(t.priceEUR,null);assert.equal(t.transportConfirmed,false);assert.equal(t.accessVerified,false);assert.equal(t.evidence.realtimeReported,false);assert.equal(t.evidence.walkingProvided,true);assert.equal(t.evidence.endpointCoordinatesMatched,true);assert.equal(t.evidence.missing.length,4);}
 });
