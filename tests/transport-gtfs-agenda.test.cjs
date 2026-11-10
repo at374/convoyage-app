@@ -1088,3 +1088,16 @@ test('GTFS one-sided mission window retains feeds overlapping the next or previo
  assert.equal(agenda.selected(feed,{...trip,latestArrival:'2026-11-13T08:00:00+01:00'}),true);
  assert.equal(agenda.selected(feed,{...trip,earliestDeparture:'2026-11-08T09:00:00+01:00'}),false);
 });
+
+test('GTFS service date expansion rejects missing, invalid and inverted windows',()=>{
+ const zone='Europe/Paris';
+ assert.deepEqual(agenda.serviceDates({
+  earliestDeparture:'2026-11-10T23:30:00Z',
+  latestArrival:'2026-11-11T03:00:00Z'},zone),
+  ['2026-11-10','2026-11-11']);
+ for(const window of [
+  {earliestDeparture:'2026-11-12T10:00:00Z',latestArrival:'2026-11-11T10:00:00Z'},
+  {earliestDeparture:'2026-11-99T10:00:00Z',latestArrival:'2026-11-11T10:00:00Z'},
+  {earliestDeparture:'2026-11-11T10:00:00Z'}
+ ])assert.throws(()=>agenda.serviceDates(window,zone),/Invalid GTFS service window/);
+});
