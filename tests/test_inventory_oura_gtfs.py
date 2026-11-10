@@ -49,7 +49,7 @@ class OuraInventoryTests(unittest.TestCase):
             self.assertFalse(result["fareVerified"])
             self.assertFalse(result["serviceConfirmed"])
             self.assertTrue(result["hasCalendarExceptions"])
-            self.assertEqual(result["calendarServiceSpans"], [{"start": "2026-11-10", "end": "2026-12-20"}])
+            self.assertEqual(result["calendarServiceSpans"], [{"service_id": "s1", "start": "2026-11-10", "end": "2026-12-20"}])
             self.assertEqual(result["calendarDateExceptions"], {"added": 1, "removed": 0})
             self.assertEqual(result["invalidCalendarRows"], 0)
             self.assertEqual(result["invalidCalendarExceptionRows"], 0)
