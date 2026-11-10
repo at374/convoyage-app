@@ -527,3 +527,19 @@ test('TripGo accepts contiguous pedestrian shape fragments without certifying ac
  }
  assert.equal(result.coverage.pedestrianGeometryMissing,0);
 });
+
+test('TripGo keeps airport buses while excluding air, boat and ferry modes',()=>{
+ const airport=clone();
+ for(const segment of airport.segmentTemplates)if(segment.modeIdentifier==='pt_pub'){
+  segment.modeIdentifier='pt_pub_airport_bus';
+  segment.modeInfo.identifier='pt_pub_airport_bus';
+ }
+ const accepted=api.parse(airport,options);
+ assert.equal(accepted.itineraries.length,2,'airport bus is still road transport');
+ for(const forbidden of ['pt_pub_air','pt_pub_ferry','pt_pub_boat','pt_pub_helicopter']){
+  const data=clone();
+  for(const segment of data.segmentTemplates)if(segment.modeIdentifier==='pt_pub')
+   segment.modeIdentifier=forbidden;
+  assert.equal(api.parse(data,options).itineraries.length,0,forbidden);
+ }
+});
