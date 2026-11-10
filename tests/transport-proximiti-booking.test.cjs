@@ -57,3 +57,12 @@ test('every operational proof is mandatory even when booking is confirmed',()=>{
   assert.equal(x.ready,false,key);
  }
 });
+
+test('missing evidence explains why a 460/461 journey is unconfirmed',()=>{
+ const missing=assess({line:'460'});
+ assert.deepEqual(missing.missingEvidence,['stop_types','connection_type','service','stop_coordinates','walking_access','arrival_margin']);
+ const onDemand=assess({...base,boardingStopType:'on_demand'});
+ assert.deepEqual(onDemand.missingEvidence,['registration_confirmation','booking_availability']);
+ assert.deepEqual(assess({...base,boardingStopType:'on_demand',registrationConfirmed:true,bookingAvailabilityVerified:true}).missingEvidence,[]);
+ assert.deepEqual(assess(base).missingEvidence,[]);
+});
