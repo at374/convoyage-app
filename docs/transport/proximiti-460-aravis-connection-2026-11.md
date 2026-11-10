@@ -17,3 +17,19 @@ Réseau Proxim iTi : https://www.proximiti.fr/
 5. Ne jamais déclarer la correspondance **réalisable** sans réservation/transport confirmé ; afficher **Transport non confirmé — vérifiez vous-même** tant que les preuves manquent.
 
 Cette note est un élément de recensement et **n'ajoute aucun horaire, prix, trajet confirmé ou bouton** à l'application. Aucun changement de synchronisation des missions, d'authentification ou de Supabase.
+
+## Contrôle complémentaire — 10 novembre 2026
+
+Sources opérateur :
+- https://www.proximiti.fr/vos-deplacements/horaires-a-telecharger/
+- https://www.proximiti.fr/nos-solutions/bus/
+- https://www.proximiti.fr/lignes-de-bus-changements-importants-au-24-aout/
+- https://www.ccvt.fr/vie-pratique/mobilites-transport/lignes-regulieres
+
+**Ligne 460 :** réservation au moins **2 heures avant** le départ, via Bus CheckIn ou au 04 50 62 29 39. Vérifier la confirmation et les arrêts réellement desservis. Le réseau annonce des modifications au 24 août 2026 : ne pas reprendre automatiquement une ancienne grille.
+
+**Ligne 461 :** ligne distincte **sans réservation** selon la CCVT. Les horaires et jours de circulation doivent néanmoins être vérifiés pour la date choisie.
+
+**Tarif de référence :** Saint-Jean-de-Sixt Tourisme publie un ticket 1 h à 1,70 € pour la 460 (https://www.saintjeandesixt.com/infos-pratiques/mobilite/circuler-dans-les-aravis/). Cette information ne confirme pas un prix pour un trajet précis ; vérifier le barème opérateur en vigueur.
+
+Aucun identifiant d'arrêt GTFS, temps de marche, horaire, prix de trajet ou réservation n'est confirmé par cette note.
