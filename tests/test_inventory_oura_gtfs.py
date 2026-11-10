@@ -32,6 +32,8 @@ class OuraInventoryTests(unittest.TestCase):
             self.assertEqual(result["routeCount"], 2)
             self.assertEqual(result["stopCount"], 1)
             self.assertEqual(result["tripCount"], 1)
+            self.assertEqual([r["id"] for r in result["routes"]], ["r1", "r2"])
+            self.assertEqual([r["tripCount"] for r in result["routes"]], [1, 0])
             self.assertEqual([a["routeCount"] for a in result["agencies"]], [1, 1])
             self.assertTrue(result["archiveOnly"])
             self.assertFalse(result["fareVerified"])
