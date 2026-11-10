@@ -1060,3 +1060,13 @@ test('local Ain and Annemasse journeys add the matching urban feed in the existi
   session.dispose();
  }
 });
+
+test('GTFS seasonal feed selection uses the operator local calendar day near midnight',()=>{
+ const feed={format:'GTFS',url:'https://example.org/feed.zip',bounds:[45,5,47,7],
+  timeZone:'Europe/Paris',validFrom:'2026-11-11',validUntil:'2026-11-12'};
+ const trip={from:{lat:45.9,lon:6.1},to:{lat:45.8,lon:6.2}};
+ assert.equal(agenda.selected(feed,{...trip,earliestDeparture:'2026-11-10T23:30:00Z'}),true,
+  '23:30 UTC is 00:30 the next day in France');
+ assert.equal(agenda.selected(feed,{...trip,earliestDeparture:'2026-11-10T22:30:00Z'}),false);
+ assert.equal(agenda.selected(feed,{...trip,earliestDeparture:'2026-11-13T00:30:00+01:00'}),false);
+});
