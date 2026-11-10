@@ -107,9 +107,15 @@ self.onmessage=async({data})=>{
      // Federation accepts two feeds at a time. Enumerate bounded pairs so a
      // third local operator contributes transfers without changing its API.
      for(let i=0;i<feeds.length;i++)for(let j=i+1;j<feeds.length;j++){
-      const cross=CPGTFSFederation.crossNetworkTrips([feeds[i],feeds[j]],query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
-       ...(connectionDates===undefined?{}:{connectionDates})});
-      rows.push(...cross.journeys);searchTruncated=searchTruncated||cross.searchTruncated;
+      try{
+       const cross=CPGTFSFederation.crossNetworkTrips([feeds[i],feeds[j]],query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
+        ...(connectionDates===undefined?{}:{connectionDates})});
+       rows.push(...cross.journeys);searchTruncated=searchTruncated||cross.searchTruncated;
+      }catch(error){
+       // Preserve valid results from other operators while never implying the
+       // inter-network search was exhaustive after a failed pair.
+       searchTruncated=true;
+      }
      }
     }
     // Apply mission ordering before the result cap, including across networks.
