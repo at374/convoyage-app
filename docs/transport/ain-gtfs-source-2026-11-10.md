@@ -22,3 +22,7 @@ python scripts/extract_x36_gtfs_stops.py ain-officiel.zip --source-url 'URL_HTTP
 Le résultat est une **liste de candidats** : il ne faut pas convertir les noms des arrêts en correspondances tarifaires sans audit individuel. La matrice X36 reste `data/transport/x36-illico-autocars-reference-2026-11-08.json` et ne confirme pas les prix d'une course.
 
 Autre source officielle, à traiter indépendamment : https://transport.data.gouv.fr/datasets/agregat-oura ; son périmètre inclut notamment Cars Région Ain, Proxim iTi, J'ybus et TAC. Un agrégat ne prouve ni la présence de chaque ligne à une date donnée, ni les réservations ou prix.
+
+## Correction de source (10/11/2026)
+
+La X36 est une **ligne Cars Région Express**, pas une ligne du seul GTFS départemental Ain. La source prioritaire à analyser est https://transport.data.gouv.fr/datasets/reseau-interurbain-cars-region-express?locale=fr (GTFS du 09/11/2026 au 07/02/2027). Correspondance officielle de la ligne 36 → X36 : https://www.montpezat-sous-bauzon.fr/IMG/pdf/Correspondances_re_seau_Cars_Re_gion_Express.pdf . Le GTFS Ain reste pertinent pour les autres lignes et les correspondances. Aucun arrêt X36 réel n'a encore été extrait.
