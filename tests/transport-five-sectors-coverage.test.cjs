@@ -657,6 +657,7 @@ test('GTFS worker rejects invalid journey times before applying result limit',as
  assert.equal(posted[1].result.rows.length,1);
  assert.equal(posted[1].result.rows[0].departure,'2026-11-10T09:00:00Z');
  assert.equal(posted[1].result.truncated,true);
+ assert.equal(posted[1].result.invalidJourneyCount,1);
 });
 
 test('GTFS worker retains Y51 itinerary when optional fare tables are missing',async()=>{
