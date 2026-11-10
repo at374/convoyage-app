@@ -77,7 +77,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
      if(typeof mode==='string'&&!/^(wa_wal|pt_pub(?:_[a-z0-9-]+)*|stationary_(?:transfer|wait))$/.test(mode))unsupportedModeTrips++;
      valid=false;break;}
     previous=end;
-    legs.push({mode,transportType:transportType(mode,s.modeInfo?.identifier),provider:s.externalData?.operatorName||null,serviceTripId:s.serviceTripID||null,serviceShortName:s.serviceShortName||null,routeId:s.routeId||s.routeID||null,fromStopCode:s.from.stopCode||null,toStopCode:s.to.stopCode||null,ticketWebsiteURL:typeof s.ticketWebsiteURL==='string'?s.ticketWebsiteURL:null,line:s.serviceNumber||s.serviceName||null,from:s.from.name||s.from.address||'',to:s.to.name||s.to.address||'',
+    legs.push({mode,transportType:transportType(mode,s.modeInfo?.identifier||mode),provider:s.externalData?.operatorName||null,serviceTripId:s.serviceTripID||null,serviceShortName:s.serviceShortName||null,routeId:s.routeId||s.routeID||null,fromStopCode:s.from.stopCode||null,toStopCode:s.to.stopCode||null,ticketWebsiteURL:typeof s.ticketWebsiteURL==='string'?s.ticketWebsiteURL:null,line:s.serviceNumber||s.serviceName||null,from:s.from.name||s.from.address||'',to:s.to.name||s.to.address||'',
      fromPoint:coord(s.from),toPoint:coord(s.to),departure:new Date(start).toISOString(),arrival:new Date(end).toISOString(),
      geometry:legGeometry(s,mode),distanceMeters:Number.isFinite(s.metres)&&s.metres>=0?s.metres:null,realtimeReported:s.realTime===true,
      alerts:Array.isArray(s.alerts)?s.alerts.map(a=>String(a?.title||a?.text||'Alerte fournisseur')).slice(0,10):[],serviceConfirmed:false});
