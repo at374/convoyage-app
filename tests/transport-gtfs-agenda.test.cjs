@@ -826,3 +826,28 @@ test('Mobile regional transport cards cover Aller Jonction Retour and safe stop 
  assert.match(app,/position exacte non vérifiée/);
  assert.match(app,/Transport non confirmé/);
 });
+
+test('exact-stop 272 and Y62 published prices display as unconfirmed references only',async()=>{
+ const previous272=global.CP272Fares,previousAravis=global.CPAravisFares,previousData=global.CPAravisFareData;
+ global.CP272Fares=require('../transport-272-fares.js');
+ global.CPAravisFares=require('../transport-aravis-fares.js');
+ global.CPAravisFareData=require('../data/transport/aravis-fare-reference-2026.json');
+ const annecy={stopId:'FR:74010:ZE:57539:HAUTExSAVOIE',name:'Annecy',lat:45.9016985,lon:6.1201612};
+ const geneva={stopId:'FR:6623:ZE:57862:HAUTExSAVOIE',name:'Genève ou Saint-Julien Douane',lat:46.230964,lon:6.1096781};
+ const clusaz={stopId:'FR:74080:ZE:57774:HAUTExSAVOIE',name:'La Clusaz',lat:45.9067032,lon:6.4191339};
+ const make=(line,to)=>row({networkId:'oura-haute-savoie',line,originStop:annecy,destinationStop:to,
+  departure:'2026-11-10T08:00:00Z',arrival:'2026-11-10T09:00:00Z'});
+ try{
+  for(const [line,to,expected] of [['272',geneva,'11,30 €'],['Y62',clusaz,'8,90 €']]){
+   const target=panel();const session=agenda.mount(target,{tasks:[{...task,earliestDeparture:'2026-11-10T08:00:00Z'}],
+    clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[make(line,to)],truncated:false}),dispose(){}})});
+   await session.done;
+   assert.match(target.textContent,new RegExp(expected.replace('€','\\\\€')));
+   assert.match(target.textContent,/non confirmée|non confirmé/);
+   session.dispose();
+  }
+  const target=panel();const session=agenda.mount(target,{tasks:[{...task,earliestDeparture:'2026-11-10T08:00:00Z'}],
+   clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[make('Y62',{...clusaz,stopId:'unverified'})],truncated:false}),dispose(){}})});
+  await session.done;assert.doesNotMatch(target.textContent,/8,90 €/);session.dispose();
+ }finally{global.CP272Fares=previous272;global.CPAravisFares=previousAravis;global.CPAravisFareData=previousData;}
+});
