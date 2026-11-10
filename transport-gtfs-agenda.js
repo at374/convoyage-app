@@ -294,6 +294,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
     ' · '+n.counts.stops+' arrêts').join(' ; ')+'. Circulation non confirmée.';
    const partialNetworks=summary?.partial===true||networks.some(n=>!validNetwork(n));
    if(partialNetworks)sourceStatus.textContent+=' Recherche partielle : un réseau est indisponible.';
+   const loadedIds=new Set(loaded.map(n=>n.source.datasetId||n.source.resourceId));
+   const missingSelected=[resource,...partners].filter(r=>!loadedIds.has(r.datasetId||r.id));
+   if(missingSelected.length){
+    warning.textContent+=' Flux sélectionnés indisponibles : '+missingSelected.map(r=>r.network).join(' ; ')+'. Résultats incomplets, même si un autre réseau répond.';
+   }
    if(loaded.length>1){
     warning.textContent+=' Changements entre réseaux : arrêts rapprochés à 150 m à vol d’oiseau au maximum ; aucun chemin ni temps de marche vérifié.';
     for(const other of loaded.slice(1)){const link=doc.createElement('a');link.href=other.source.url||partners[0].url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=' · Source '+other.source.network;section.appendChild(link);}
