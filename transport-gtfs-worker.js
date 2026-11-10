@@ -62,7 +62,11 @@ self.onmessage=async({data})=>{
     return entries;
    })();
    const entries=await feedsPromise,valid=entries.filter(e=>e.feed);
-   if(!valid.length)throw new Error(entries[0].error.message);
+   if(!valid.length){
+    // No indexes were retained: allow a later explicit retry in this worker.
+    feedsPromise=null;
+    throw new Error(entries[0].error.message);
+   }
    result=type==='load'?summary(valid[0].feed):{networks:entries.map(e=>e.feed?summary(e.feed):e),partial:valid.length!==entries.length};
   }else if(type==='query'){
    if(!feedsPromise)throw new Error('Load a network before querying');
