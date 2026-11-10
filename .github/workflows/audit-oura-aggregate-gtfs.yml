@@ -1,0 +1,43 @@
+name: Audit official OURA GTFS aggregate (manual)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit-oura:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download pinned official OURA archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 --connect-timeout 15 --max-time 240 \
+            --max-filesize 200000000 \
+            'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/78904/78904.20261110.122116.139923.zip' \
+            --output /tmp/oura-official.zip
+          python - <<'PY'
+          import zipfile
+          path = '/tmp/oura-official.zip'
+          with zipfile.ZipFile(path) as z:
+              if z.testzip() is not None:
+                  raise SystemExit('Corrupted OURA GTFS ZIP')
+          PY
+      - name: Inventory only (no mission integration or fare confirmation)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/inventory_oura_gtfs.py /tmp/oura-official.zip \
+            --source-url 'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/78904/78904.20261110.122116.139923.zip' \
+            > /tmp/oura-inventory.json
+          python -m json.tool /tmp/oura-inventory.json > /dev/null
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: oura-aggregate-inventory-20261110
+          path: /tmp/oura-inventory.json
+          retention-days: 7
