@@ -957,3 +957,17 @@ test('Cars Région Express official GTFS is a candidate for X36 corridor, not a 
  assert.equal(agenda.selected(express,corridor),true);
  assert.equal(agenda.selected(express,{...corridor,to:{lat:48.8,lon:2.3}}),false);
 });
+
+test('X36 corridor selects Express feed ahead of overlapping Ain resources',async()=>{
+ const corridor={label:'X36',from:{lat:46.107,lon:5.825},to:{lat:46.205,lon:5.228},
+ earliestDeparture:'2026-11-10T10:00:00+01:00',latestArrival:'2026-11-10T15:00:00+01:00'};
+ const calls=[];
+ const session=agenda.mount(panel(),{tasks:[corridor],clientFactory:()=>({
+ loadNetworks:async(resources)=>{calls.push(resources);return {networks:resources.map(r=>({...summary,source:{...summary.source,network:r.network,url:r.url}})),partial:false};},
+ query:async()=>({rows:[],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.equal(calls.length,1);
+ assert.equal(calls[0][0].id,'cars-region-express');
+ session.dispose();
+});
