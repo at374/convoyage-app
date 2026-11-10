@@ -100,3 +100,16 @@ test('460 booking cannot confirm a 461 trip even when both evidence objects agre
   registrationConfirmed:true,bookingAvailabilityVerified:true,
   bookingEvidence:matched,journeyEvidence:matched}).ready,true);
 });
+
+test('booking service date must agree with Europe/Paris departure calendar',()=>{
+ const {sameJourney}=require('../transport-proximiti-booking.js');
+ const night={...journeyEvidence,serviceDate:'2026-11-11',
+  departure:'2026-11-10T23:30:00Z'};
+ assert.equal(sameJourney(night,night),true);
+ const wrong={...night,serviceDate:'2026-11-10'};
+ assert.equal(sameJourney(wrong,wrong),false);
+ assert.equal(sameJourney({...journeyEvidence,departure:'not-a-date'},
+  {...journeyEvidence,departure:'not-a-date'}),false);
+ assert.equal(sameJourney({...journeyEvidence,departure:'2026-11-10T09:00:00'},
+  {...journeyEvidence,departure:'2026-11-10T09:00:00'}),false);
+});
