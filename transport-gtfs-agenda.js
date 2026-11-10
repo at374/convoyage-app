@@ -369,14 +369,14 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      // Skipped candidate networks make every itinerary list incomplete, even
      // when both loaded feeds respond and no individual query was truncated.
      const incomplete=truncated||partialNetworks||omittedPartners>0||invalidJourneys>0||federationFailures.size>0;
+     if(active())onResults({task,itineraries:distinct,partial:incomplete});
+     const coverageNote=incomplete?' Recherche partielle : certains horaires ou réseaux n’ont pas pu être vérifiés.':'';
+     status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':incomplete?'aucun trajet dans les résultats partiels ; recherche incomplète (réseau ou horaires manquants), d’autres horaires peuvent exister.':'aucun trajet direct ou avec une correspondance dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.' )+marginNote+coverageNote+(invalidJourneys?' '+invalidJourneys+' horaire(s) incohérent(s) écarté(s) ; recherche partielle.':'');
      if(federationFailures.size&&active()){
       const detail=doc.createElement('p');
       detail.textContent='Correspondances non vérifiées : '+[...federationFailures.entries()].map(([pair,reason])=>pair+' ('+reason+')').join(' ; ').slice(0,600);
       status.appendChild(detail);
      }
-     if(active())onResults({task,itineraries:distinct,partial:incomplete});
-     const coverageNote=incomplete?' Recherche partielle : certains horaires ou réseaux n’ont pas pu être vérifiés.':'';
-     status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':incomplete?'aucun trajet dans les résultats partiels ; recherche incomplète (réseau ou horaires manquants), d’autres horaires peuvent exister.':'aucun trajet direct ou avec une correspondance dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.' )+marginNote+coverageNote+(invalidJourneys?' '+invalidJourneys+' horaire(s) incohérent(s) écarté(s) ; recherche partielle.':'');
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
      if(truncated||distinct.length>shown.length){const note=doc.createElement('p');note.textContent=truncated?'Recherche limitée : d’autres horaires peuvent exister.':'Les autres horaires figurent dans les cartes de résultats.';status.appendChild(note);}
      for(const row of shown){
