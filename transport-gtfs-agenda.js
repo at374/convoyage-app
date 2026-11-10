@@ -347,7 +347,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       for(const item of (Array.isArray(result.missingConnectionDates)?result.missingConnectionDates:[])){
        if(!Array.isArray(item?.networks)||item.networks.length!==2||!Array.isArray(item.dates))continue;
        const pair=item.networks.map(n=>String(n||'Réseau inconnu').slice(0,80)).join(' / ');
-       const dates=item.dates.filter(d=>typeof d==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(d));
+       const dates=item.dates.filter(d=>typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d));
        if(dates.length){
         if(!missingConnectionDates.has(pair))missingConnectionDates.set(pair,new Set());
         dates.forEach(d=>missingConnectionDates.get(pair).add(d));
