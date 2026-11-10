@@ -181,6 +181,12 @@ test('Aravis coverage distinguishes priced matrix cells from verified GTFS stop 
   assert.equal(result.sibra,cells.filter(x=>x==='SIBRA').length);
   assert.equal(result.unspecified,cells.filter(x=>x==='UNSPECIFIED').length);
   assert.equal(result.priced+result.sibra+result.unspecified,225);
+  assert.equal(result.byOriginArea.length,15);
+  for(const [index,area] of result.byOriginArea.entries()){
+   assert.equal(area.area,data.areas[index]);
+   assert.equal(area.priced+area.sibra+area.unspecified,15);
+  }
+  assert.equal(result.byOriginArea.reduce((sum,area)=>sum+area.priced,0),result.priced);
  }
  assert.equal(report.lines.Y62.gtfsStopPairsVerified,2);
  assert.equal(report.lines.Y63.gtfsStopPairsVerified,0);
