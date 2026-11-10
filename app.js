@@ -2713,7 +2713,21 @@
           const task=inputs();if(!tripgo.getKey()||!task?.from||!task?.to||!task.when)return;
           const status=document.createElement('div');status.className='doux';status.setAttribute('role','status');
           status.textContent=label+' TripGo : recherche des transports et des marches…';target.appendChild(status);
-          tripgo.plan({...task,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt}).then(answer=>{
+          (window.CPTransportEngineSearch?.searchEngines&&window.CPTransportEngineSearch?.tripGoEngine
+            ? window.CPTransportEngineSearch.searchEngines([
+                window.CPTransportEngineSearch.tripGoEngine({plan:options=>tripgo.plan({
+                  ...options,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt
+                })})
+              ],task,{timeoutMs:18000}).then(result=>({
+                itineraries:result.journeys.map(j=>({
+                  ...j,evidence:j.evidence,alerts:j.legs.flatMap(l=>l.alerts||[]),
+                  // The existing renderer expects an itinerary, never a synthetic fare.
+                  priceEUR:null
+                })),
+                receivedAt:result.journeys[0]?.receivedAt||new Date().toISOString(),
+                engineStatuses:result.statuses
+              }))
+            : tripgo.plan({...task,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt})).then(answer=>{
             if(!regionalActive()||signal.aborted||!status.isConnected)return;
             const shown=(Array.isArray(answer?.itineraries)?answer.itineraries:[]).filter(result=>Array.isArray(result?.legs)&&result.legs.length>0&&result.legs.every(leg=>leg&&typeof leg==='object'&&Number.isFinite(Date.parse(leg.departure))&&Number.isFinite(Date.parse(leg.arrival))&&Date.parse(leg.arrival)>=Date.parse(leg.departure))&&result.legs.every((leg,index)=>index===0||Date.parse(leg.departure)>=Date.parse(result.legs[index-1].arrival))&&Number.isFinite(Date.parse(result.departure))&&Number.isFinite(Date.parse(result.arrival))&&Date.parse(result.arrival)>=Date.parse(result.departure)&&Date.parse(result.legs[0].departure)===Date.parse(result.departure)&&Date.parse(result.legs[result.legs.length-1].arrival)===Date.parse(result.arrival)&&(!task.latestArrival||Date.parse(result.arrival)<=Date.parse(task.latestArrival))&&result.evidence&&Array.isArray(result.evidence.missing)&&Number.isFinite(result.evidence.startGapMeters)&&result.evidence.startGapMeters>=0&&Number.isFinite(result.evidence.endGapMeters)&&result.evidence.endGapMeters>=0&&Array.isArray(result.alerts)).slice(0,3);
             status.textContent=label+' TripGo : '+(shown.length?shown.length+' proposition(s) datées, marches comprises.':'aucune proposition compatible retournée ; cela ne prouve pas l’absence de transport.');
