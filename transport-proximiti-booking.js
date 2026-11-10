@@ -23,9 +23,8 @@ function assess(input={}){
   serviceConfirmed&&stopsConfirmed&&walkingConfirmed&&marginConfirmed;
  return {line,needsRegistration,registrationDeadlineMinutes,registrationConfirmed,
   ready,serviceConfirmed,bookingAvailabilityVerified,source:SOURCE,
-  status:ready?'confirmed_evidence_supplied':'Transport non confirmé — vérifiez vous-même',
   // No live availability is inferred. Only caller-supplied, independently verified evidence is accepted.
-  };
+  status:ready?'confirmed_evidence_supplied':'Transport non confirmé — vérifiez vous-même'};
 }
 const api={assess,SOURCE};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
