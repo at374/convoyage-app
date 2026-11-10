@@ -1121,3 +1121,12 @@ test('GTFS undated feed with invalid timezone is rejected before service indexin
  assert.equal(agenda.selected({...feed,timeZone:'Europe/Paris'},trip),true);
  assert.equal(agenda.selected(feed,trip),true);
 });
+
+test('GTFS selection requires at least one dated mission bound',()=>{
+ const feed={format:'GTFS',url:'https://example.org/feed.zip',bounds:[45,5,47,7],
+  timeZone:'Europe/Paris'};
+ const trip={from:{lat:45.9,lon:6.1},to:{lat:45.8,lon:6.2}};
+ assert.equal(agenda.selected(feed,trip),false);
+ assert.equal(agenda.selected(feed,{...trip,earliestDeparture:'2026-11-11T09:00:00+01:00'}),true);
+ assert.equal(agenda.selected(feed,{...trip,latestArrival:'2026-11-11T09:00:00+01:00'}),true);
+});
