@@ -248,3 +248,11 @@ test('GTFS partner selection prioritizes mission coverage without claiming servi
  assert.ok(source.includes('selected(r,task)||crossEnvelopePair(resource,r,task)'));
  assert.ok(source.includes('partnerCoverage(b)-partnerCoverage(a)'));
 });
+
+test('GTFS worker rejects duplicate network identities before downloading',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8');
+ assert.ok(source.includes("const identities=list.map(item=>item?.datasetId||item?.id||item?.url);"));
+ assert.ok(source.includes('new Set(identities).size!==identities.length'));
+ assert.ok(source.includes('Duplicate or unidentified GTFS network'));
+});
