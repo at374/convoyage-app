@@ -3,6 +3,12 @@ name: Agenda JavaScript validation
 on:
   pull_request:
     branches: [main]
+    paths:
+      - 'transport-gtfs-agenda.js'
+      - 'tests/transport-gtfs-agenda.test.cjs'
+      - 'tests/agenda-transports.test.cjs'
+      - 'tests/swiss-transport-api.test.cjs'
+      - '.github/workflows/agenda-validation.yml'
   push:
     branches: [main, "feature/agenda-transports-summary"]
 
@@ -26,5 +32,7 @@ jobs:
           done < <(git ls-files '*.js')
       - name: Run Agenda regression tests
         run: node tests/agenda-transports.test.cjs
+      - name: Run GTFS Agenda theoretical journey tests
+        run: node --test tests/transport-gtfs-agenda.test.cjs
       - name: Run Swiss transport adapter regression tests
         run: node tests/swiss-transport-api.test.cjs
