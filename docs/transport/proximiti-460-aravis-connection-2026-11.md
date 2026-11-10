@@ -33,3 +33,16 @@ Sources opérateur :
 **Tarif de référence :** Saint-Jean-de-Sixt Tourisme publie un ticket 1 h à 1,70 € pour la 460 (https://www.saintjeandesixt.com/infos-pratiques/mobilite/circuler-dans-les-aravis/). Cette information ne confirme pas un prix pour un trajet précis ; vérifier le barème opérateur en vigueur.
 
 Aucun identifiant d'arrêt GTFS, temps de marche, horaire, prix de trajet ou réservation n'est confirmé par cette note.
+
+## Barème officiel Proxim iTi — contrôle 2026-11-10
+
+Source exploitant : https://www.proximiti.fr/tarifs-abonnements/lignes-regulieres-de-bus/
+
+- Ticket unitaire : **1,70 €**, correspondances incluses pendant **1 h 30** sur les lignes régulières du réseau (tarif annoncé depuis le 1er septembre 2024, page opérateur mise à jour en septembre 2026).
+- Pass 10 déplacements : **14 €** ; ce tarif ne doit pas être assimilé automatiquement à un prix unitaire payé pour une mission.
+- Moins de 6 ans : gratuit, sous conditions d'âge et d'accompagnement ; ne pas appliquer au profil adulte.
+- Les lignes 460/461 sont présentées comme lignes régulières par les sources officielles. Le barème est une référence réseau, pas une preuve d'achat, d'éligibilité à un titre ni de circulation du service demandé.
+
+Source des horaires en vigueur : https://www.proximiti.fr/vos-deplacements/horaires-a-telecharger/ (modifications annoncées au 24 août 2026).
+
+**Règle de raccordement :** n'afficher le ticket à 1,70 € comme tarif de référence que pour un trajet intégralement couvert par les conditions officielles du ticket. Si le trajet traverse plusieurs réseaux, ne jamais présumer une interopérabilité tarifaire. Ne jamais confondre ce barème avec une réservation confirmée sur la ligne 460.
