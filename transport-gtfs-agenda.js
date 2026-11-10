@@ -222,7 +222,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
         line272Reference=root.CP272Fares?.stopReference?.({networkId:row.networkId,line:row.line,
          fromStop:{id:from?.stopId,lat:from?.lat,lon:from?.lon},
          toStop:{id:to?.stopId,lat:to?.lat,lon:to?.lon},
-         travelDate:new Intl.DateTimeFormat('en-CA',{timeZone:row.timeZone||resource.timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(row.departure)),product:'parcours',profile:'adult'})||null;
+         travelDate:(()=>{const parts=new Intl.DateTimeFormat('en-US',{timeZone:row.timeZone||resource.timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure));const part=type=>parts.find(p=>p.type===type)?.value;return [part('year'),part('month'),part('day')].join('-');})(),product:'parcours',profile:'adult'})||null;
        }catch(_){}
       }
       const line=doc.createElement('p');
