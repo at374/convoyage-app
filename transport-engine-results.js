@@ -1,7 +1,7 @@
 /* Engine-only journey results: never synthesize fares or itineraries from static tables. */
 (function(root){
 'use strict';
-function validDate(value){return typeof value==='string'&&/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d{1,3})?)?(?:Z|[+-]\\d{2}:\\d{2})$/.test(value)&&Number.isFinite(Date.parse(value));}
+function validDate(value){return typeof value==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})$/.test(value)&&Number.isFinite(Date.parse(value));}
 function normalize(provider,raw,index){
  if(!raw||typeof raw!=='object'||Array.isArray(raw))return null;
  const departure=raw.departure||raw.startTime,arrival=raw.arrival||raw.endTime;
