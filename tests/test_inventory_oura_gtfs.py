@@ -17,7 +17,7 @@ class OuraInventoryTests(unittest.TestCase):
         files = {
             "agency.txt": "agency_id,agency_name\na1,Network A\na2,Network B\n",
             "routes.txt": routes,
-            "trips.txt": "route_id,trip_id\nr1,t1\n",
+            "trips.txt": "route_id,service_id,trip_id\nr1,s1,t1\n",
             "stops.txt": "stop_id,stop_name\ns1,Stop One\n",
             "stop_times.txt": "trip_id,stop_id,stop_sequence\nt1,s1,1\n",
             "stop_times.txt": "trip_id,stop_id,stop_sequence\nt1,s1,1\n",
@@ -53,6 +53,7 @@ class OuraInventoryTests(unittest.TestCase):
             self.assertEqual(result["calendarDateExceptions"], {"added": 1, "removed": 0})
             self.assertEqual(result["invalidCalendarRows"], 0)
             self.assertEqual(result["invalidCalendarExceptionRows"], 0)
+            self.assertEqual(result["tripsWithUnknownServiceId"], 0)
             self.assertFalse(result["hasFareFiles"])
             self.assertEqual(len(result["sourceSha256"]), 64)
 
