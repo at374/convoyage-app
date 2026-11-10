@@ -97,7 +97,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const ainCore=task=>[task?.from,task?.to].every(p=>validPoint(p)&&p.lat>=45.9&&p.lat<=46.5&&p.lon>=4.7&&p.lon<=5.85);
  const ain=resourceList.find(r=>r.id==='oura-ain');
  const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
- const resource=preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
+ const express=resourceList.find(r=>r.id==='cars-region-express');
+ const preferredExpress=express&&taskList.some(t=>selected(express,t))?express:null;
+ const resource=preferredExpress||preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
  if(!resource)return {dispose,done:Promise.resolve()};
  const partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
   crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
