@@ -906,3 +906,18 @@ test('Aravis RD16 disruption warning follows Paris calendar boundaries',async()=
   finally{session.dispose();}
  }
 });
+
+test('Proxim iTi 460/461 theoretical results warn of unverified Bus CheckIn bookings only for identified operator',async()=>{
+ for(const [line,network,expected] of [
+  ['460','Proxim iTi',true],['461','Proxim iTi',true],
+  ['460','Other network',false],['462','Proxim iTi',false]
+ ]){
+  const target=panel();
+  const session=agenda.mount(target,{tasks:[task],
+   clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[row({line,network})],truncated:false}),dispose(){}})});
+  try{
+   await session.done;
+   assert.equal(target.textContent.includes('réservation et disponibilité non confirmées'),expected,line+' '+network);
+  }finally{session.dispose();}
+ }
+});
