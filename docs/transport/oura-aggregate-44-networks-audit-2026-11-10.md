@@ -18,10 +18,16 @@
 
 ## Dates de service par réseau — vérification indispensable
 - **Proxim iTi Bonneville : du 29/03/2027 au 12/12/2027 dans la ressource GTFS consultée.** Pour une mission en novembre 2026, la présence du réseau dans l'agrégat ne prouve **aucune course utilisable** ; rechercher un flux local couvrant la date, sans fabriquer de trajet.
-- **Cars Région Express : 10/11/2026–07/02/2027** ; **Synchro Chambéry : 10/11/2026–20/12/2026** ; **STAR’T Thonon : 10/11/2026–20/12/2026** ; **TAM Ambérieu : 10/11/2026–31/12/2026**.
-- **J’ybus Rumilly : 10/11/2026–03/07/2027** ; **TAC Annemasse : 10/11/2026–31/12/2027** ; **Rubis Bourg : 10/11/2026–31/12/2027**.
+- **Cars Région Express : 09/11/2026–07/02/2027** ; **Synchro Chambéry : 09/11/2026–20/12/2026** ; **STAR’T Thonon : 09/11/2026–20/12/2026** ; **TAM Ambérieu : 09/11/2026–31/12/2026**.
+- **J’ybus Rumilly : 09/11/2026–03/07/2027** ; **TAC Annemasse : 09/11/2026–31/12/2027** ; **Rubis Bourg : 09/11/2026–31/12/2027**.
 - Ces périodes décrivent les dates couvertes par le GTFS, non la preuve d'un service à chaque jour/heure. Contrôler `calendar` et `calendar_dates`.
 - Source détaillée par réseau : https://transport.data.gouv.fr/resources/78904?issue_type=Slow&locale=fr
+
+## Contrôle du contenu tarifaire et des correspondances
+- La fiche technique de la ressource 78904 indique **aucune donnée tarifaire GTFS** : `fare_attributes.txt`, `fare_rules.txt`, `fare_products.txt` et `fare_media.txt` sont absents. L'agrégat ne peut donc pas fournir, à lui seul, les prix demandés.
+- `transfers.txt` est présent (35 709 enregistrements dans la version décrite), mais ces correspondances ne prouvent ni leur faisabilité à une heure donnée ni la marche depuis une adresse exacte.
+- Inventaire publié sur la fiche technique : 1 910 lignes et 30 609 arrêts dans la version décrite. Ces valeurs ne représentent **pas** la couverture fonctionnelle de l'application.
+- Source : https://transport.data.gouv.fr/resources/78904?locale=fr&page=2 ; dates de service : https://transport.data.gouv.fr/resources/78904?issue_type=Slow&locale=fr
 
 ## Limites et stratégie d'intégration
 1. Télécharger l'archive officielle, conserver URL, date et empreinte SHA-256 ; ne jamais confondre sa période de validité avec celle d'un trajet.
