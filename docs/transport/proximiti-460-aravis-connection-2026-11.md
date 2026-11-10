@@ -73,3 +73,14 @@ Le PDF précise explicitement :
 La mention antérieure « 461 sans réservation » doit donc être comprise uniquement pour les arrêts systématiques hors connexion garantie sur demande. Ne pas afficher la 461 comme systématiquement dispensée d'enregistrement.
 
 **Priorité d'implémentation :** associer à chaque arrêt le caractère systématique / sur demande et, séparément, aux correspondances le caractère « garantie sur demande ». Si l'une de ces informations manque, conserver « Transport non confirmé — vérifiez vous-même ». Ne pas transformer ces délais en preuve de service disponible.
+
+## Audit de cohérence des délais — 10 novembre 2026
+
+Deux publications **du même exploitant** ne donnent pas une règle universelle identique :
+
+- La [fiche horaire spécifique 460/461](https://www.proximiti.fr/wp-content/uploads/2025/12/horaire-46x-web.pdf) mentionne 2 h pour la 460 et 5 min pour la 461.
+- La [page générale des horaires, actualisée le 29 septembre 2026](https://www.proximiti.fr/vos-deplacements/horaires-a-telecharger/) annonce 30 min pour les lignes ordinaires et 2 h pour 450/460/470. La [page générale Bus](https://www.proximiti.fr/nos-solutions/bus/) parle aussi d'une exception générale pour les lignes 4XX.
+
+**Décision prudente :** ne pas transformer automatiquement le délai de 5 min de la fiche 461 en garantie opérationnelle de réservation pour une mission. Il faut vérifier dans Bus CheckIn la course, l'arrêt et l'heure limite effectivement proposée. À défaut de confirmation, le transport reste non confirmé. Les délais sont des informations documentaires, non des réservations.
+
+La [CCVT](https://www.ccvt.fr/vie-pratique/mobilites-transport/lignes-regulieres) décrit la 461 comme sans réservation pour ses trajets habituels, mais la fiche opérateur exige un enregistrement pour les arrêts sur demande ou les connexions garanties sur demande. Le type d'arrêt prime sur une simplification à l'échelle de la ligne.
