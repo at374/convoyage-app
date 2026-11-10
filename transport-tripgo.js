@@ -170,13 +170,20 @@ async function enrichPedestrianMaps(result,router,{maxRoutes=8,signal}={}){
    route.geometry.every(point)&&gap(coord(leg.fromPoint),coord(route.geometry[0]))<=10&&
    gap(coord(leg.toPoint),coord(route.geometry.at(-1)))<=10){
    leg.geometry=route.geometry;leg.pedestrianMapStatus='calculated_valhalla';calculated++;
+   // A valid path is not necessarily walkable within TripGo's allotted time.
+   const allotted=(Date.parse(leg.arrival)-Date.parse(leg.departure))/1000;
+   if(Number.isFinite(allotted)&&allotted>=0&&Number.isFinite(route.durationSeconds)&&route.durationSeconds>=0){
+    leg.pedestrianRouteSeconds=route.durationSeconds;
+    leg.pedestrianScheduleFits=route.durationSeconds<=allotted;
+   }
   }else leg.pedestrianMapStatus=route?'not_verified':'unavailable';
  }));
  copy.coverage={...copy.coverage,pedestrianGeometryAvailable:copy.itineraries.flatMap(t=>t.legs)
   .filter(leg=>leg.mode==='wa_wal'&&Array.isArray(leg.geometry)&&leg.geometry.length>=2).length,
   pedestrianGeometryMissing:copy.itineraries.flatMap(t=>t.legs)
   .filter(leg=>leg.mode==='wa_wal'&&(!Array.isArray(leg.geometry)||leg.geometry.length<2)).length,
-  pedestrianValhallaAttempted:attempted,pedestrianValhallaCalculated:calculated};
+  pedestrianValhallaAttempted:attempted,pedestrianValhallaCalculated:calculated,
+  pedestrianScheduleConflicts:copy.itineraries.flatMap(t=>t.legs).filter(leg=>leg.pedestrianScheduleFits===false).length};
  return copy;
 }
 // Identifiers from the operators’ public city and route pages.
