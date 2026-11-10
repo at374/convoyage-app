@@ -99,7 +99,7 @@ class OuraInventoryTests(unittest.TestCase):
                 archive.writestr("agency.txt", "agency_id,agency_name\na1,Network A\n")
                 archive.writestr("routes.txt", "route_id,agency_id\nr1,a1\n")
                 archive.writestr("trips.txt", "route_id,trip_id\nr1,t1\n")
-                archive.writestr("stops.txt", "stop_id,stop_name,stop_lat,stop_lon\ns1,Annecy,45.899,-6.129\n")
+                archive.writestr("stops.txt", "stop_id,stop_name,stop_lat,stop_lon\ns1,Annecy,45.899,6.129\n")
                 archive.writestr("stop_times.txt", "trip_id,stop_id,stop_sequence\nt1,s1,invalid\n")
             result = module.inventory(path, "https://example.org/oura.zip")
             self.assertEqual(result["stopsWithoutGps"], 0)
