@@ -65,3 +65,18 @@ test('adapter rejects a fare belonging to another departure or an expired tariff
   assert.equal(adapted[0].legs[0].verifiedPriceEUR,null);
  }
 });
+
+test('local GTFS candidates keep unknown fares after the common fare pipeline',()=>{
+ const adapters=require('../transport-adapters.js');
+ const journey={departure:'2026-11-10T09:00:00+01:00',
+  arrival:'2026-11-10T10:00:00+01:00',legs:[{route:'Y62',
+   fromStop:'Annecy',toStop:'La Clusaz',
+   departure:'2026-11-10T09:00:00+01:00',
+   arrival:'2026-11-10T10:00:00+01:00',
+   verifiedPriceEUR:4.50,fareVerified:true}]};
+ const result=adapters.withVerifiedFares(adapters.adaptGTFS([journey],'Réseau local'));
+ assert.equal(result.length,1);
+ assert.equal(result[0].priceEUR,null);
+ assert.equal(result[0].fareStatus,'Tarif non vérifié');
+ assert.equal(result[0].fareBreakdown[0].verified,false);
+});
