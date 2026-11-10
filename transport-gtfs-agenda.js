@@ -76,6 +76,10 @@ function serviceDates(window,timeZone){
 }
 function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>root.CPGTFSWorker.createClient(),walkingRouterFactory=()=>root.CPTransportWalking?.createRouter(),getSibraPass=()=>null,onResults=()=>{}}={}){
  const doc=panel.ownerDocument||root.document;
+ // Build the audited Aravis lookup once per opened panel, not once per displayed journey.
+ let aravisCalculator=null;
+ try{if(root.CPAravisFareData&&root.CPAravisFares?.createCalculator)
+  aravisCalculator=root.CPAravisFares.createCalculator(root.CPAravisFareData);}catch(_){}
  let client=null,walker=null,disposed=false,observer=null;const walkChecks=[],fareChecks=[];
  const dispose=()=>{if(disposed)return;disposed=true;observer?.disconnect();client?.dispose();walker?.dispose();client=null;walker=null;};
  const taskList=Array.isArray(tasks)?tasks:[];
@@ -228,13 +232,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       let aravisReference=null;
       if(!row.interNetwork&&!row.legs?.length&&row.line==='Y62'&&row.networkId==='oura-haute-savoie'){
        try{
-        const source=root.CPAravisFareData;
-        const calculator=source&&root.CPAravisFares?.createCalculator?.(source);
         const from=row.originStop,to=row.destinationStop;
         const parts=new Intl.DateTimeFormat('en-US',{timeZone:row.timeZone||resource.timeZone,
          year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure));
         const part=type=>parts.find(p=>p.type===type)?.value;
-        aravisReference=calculator?.stopReference?.({networkId:row.networkId,line:row.line,
+        aravisReference=aravisCalculator?.stopReference?.({networkId:row.networkId,line:row.line,
          fromStop:{id:from?.stopId,lat:from?.lat,lon:from?.lon},
          toStop:{id:to?.stopId,lat:to?.lat,lon:to?.lon},
          travelDate:[part('year'),part('month'),part('day')].join('-'),profile:'adult'})||null;
