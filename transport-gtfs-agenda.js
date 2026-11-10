@@ -173,8 +173,10 @@ function serviceDates(window,timeZone){
  };
  const first=day(window.earliestDeparture)-86400000,last=day(window.latestArrival),dates=[];
  if(!Number.isFinite(first)||!Number.isFinite(last)||last<first)throw new Error('Invalid GTFS service window');
+ // Bound work before iterating: an accidental multi-year interval must not
+ // allocate thousands of dates or stall the mission transport panel.
+ if((last-first)/86400000>=5)throw new Error('GTFS service horizon exceeded');
  for(let at=first;at<=last;at+=86400000)dates.push(new Date(at).toISOString().slice(0,10));
- if(dates.length>5)throw new Error('GTFS service horizon exceeded');
  return dates;
 }
 function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>root.CPGTFSWorker.createClient(),walkingRouterFactory=()=>root.CPTransportWalking?.createRouter(),getSibraPass=()=>null,onResults=()=>{},onWalking=()=>{}}={}){
