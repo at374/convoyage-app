@@ -78,7 +78,7 @@ self.onmessage=async({data})=>{
    if(!['earliestDeparture','latestDeparture'].includes(order)||
       (query.order!==undefined&&!['missionDirectTrips','missionJourneys'].includes(query.method)))throw new Error('Invalid GTFS result order');
    let rows,searchTruncated=false;
-   const failedFederations=[];
+   const failedFederations=[],missingConnectionDates=[];
    if(query.method!=='missionJourneys')scope(feed,query.date);
    let connectionDates;
    if(query.connectionDates!==undefined){
@@ -119,7 +119,11 @@ self.onmessage=async({data})=>{
        const pair=[scopedFeeds[i],scopedFeeds[j]];
        const pairDates=(connectionDates||[query.date]).filter(day=>pair.every(current=>
         !current.indexServiceDates||current.indexServiceDates.includes(day)));
-       if(connectionDates&&pairDates.length<connectionDates.length)searchTruncated=true;
+       if(connectionDates&&pairDates.length<connectionDates.length){
+        searchTruncated=true;
+        missingConnectionDates.push({networks:pair.map(current=>current.source.network||current.source.datasetId||current.source.resourceId),
+         dates:connectionDates.filter(day=>!pairDates.includes(day))});
+       }
        const cross=CPGTFSFederation.crossNetworkTrips(pair,query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
         connectionDates:pairDates});
        if(!cross||!Array.isArray(cross.journeys))throw new Error('Invalid federation result');
@@ -138,7 +142,7 @@ self.onmessage=async({data})=>{
     if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));
    }else if(query.method==='nearbyStops')rows=CPGTFSIndex.nearbyStops(feed.index,query.lat,query.lon,query.radiusMeters??700);
    else throw new Error('Unsupported GTFS worker query');
-   result={rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,failedFederations,missingDateNetworks:missingDateFeeds.map(f=>f.source.network||f.source.datasetId||f.source.resourceId),
+   result={rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,failedFederations,missingConnectionDates,missingDateNetworks:missingDateFeeds.map(f=>f.source.network||f.source.datasetId||f.source.resourceId),
     serviceConfirmed:false,faresVerified:false,accessVerified:false};
   }else throw new Error('Unsupported GTFS worker operation');
   self.postMessage({id,result});
