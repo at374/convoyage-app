@@ -334,7 +334,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
     if(!eligible(task))continue;
     try{
      const window=searchWindow(task),dates=serviceDates(window,resource.timeZone),rows=[];let truncated=false,invalidJourneys=0;
-     const federationFailures=new Map(),missingDateNetworks=new Set(),missingConnectionDates=new Map();
+     const federationFailures=new Map(),directFailures=new Map(),missingDateNetworks=new Set(),missingConnectionDates=new Map();
      for(const date of dates){
       if(!active())return;
       const result=await client.query({method:'missionJourneys',date,origin:task.from,destination:task.to,
@@ -344,6 +344,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       truncated=truncated||result.truncated===true;
       for(const name of (Array.isArray(result.missingDateNetworks)?result.missingDateNetworks:[]))
        missingDateNetworks.add(String(name||'Réseau inconnu').slice(0,80));
+      for(const item of (Array.isArray(result.failedDirectNetworks)?result.failedDirectNetworks:[])){
+       const name=String(item?.network||'Réseau inconnu').slice(0,80);
+       const reason=String(item?.reason||'Recherche indisponible').slice(0,160);
+       directFailures.set(name,reason);
+      }
       for(const item of (Array.isArray(result.missingConnectionDates)?result.missingConnectionDates:[])){
        if(!Array.isArray(item?.networks)||item.networks.length!==2||!Array.isArray(item.dates))continue;
        const pair=item.networks.map(n=>String(n||'Réseau inconnu').slice(0,80)).join(' / ');
@@ -417,6 +422,12 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       const detail=doc.createElement('p');
       detail.textContent='Correspondances non recherchées aux dates : '+
        [...missingConnectionDates].map(([pair,dates])=>pair+' : '+[...dates].join(', ')).join(' ; ').slice(0,500)+'. Recherche partielle.';
+      status.appendChild(detail);
+     }
+     if(directFailures.size&&active()){
+      const detail=doc.createElement('p');
+      detail.textContent='Recherches GTFS indisponibles : '+
+       [...directFailures].map(([name,reason])=>name+' : '+reason).join(' ; ').slice(0,500)+'. Résultats partiels.';
       status.appendChild(detail);
      }
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
