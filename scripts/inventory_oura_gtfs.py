@@ -52,19 +52,57 @@ def inventory(path, source_url):
         route_ids = [r.get("route_id", "") for r in routes]
         if any(not rid for rid in route_ids) or len(set(route_ids)) != len(route_ids):
             raise ValueError("Missing or duplicate GTFS route_id")
-        route_trip_counts = Counter(t.get("route_id", "") for t in read_rows(archive, "trips.txt"))
+        trip_rows = list(read_rows(archive, "trips.txt"))
+        trip_ids = [t.get("trip_id", "") for t in trip_rows]
+        if any(not tid for tid in trip_ids) or len(set(trip_ids)) != len(trip_ids):
+            raise ValueError("Missing or duplicate GTFS trip_id")
+        route_trip_counts = Counter(t.get("route_id", "") for t in trip_rows)
         known_route_ids = set(route_ids)
         if any(rid not in known_route_ids for rid in route_trip_counts):
             raise ValueError("Trips reference unknown route_id")
         agency_trip_counts = Counter()
         for route in routes:
             agency_trip_counts[route_agency(route)] += route_trip_counts[route["route_id"]]
-        stop_times_per_trip = Counter(row.get("trip_id", "") for row in read_rows(archive, "stop_times.txt"))
-        if any(tid not in set(trip_ids) for tid in stop_times_per_trip):
-            raise ValueError("Stop times reference unknown trip_id")
+
+        stop_rows = list(read_rows(archive, "stops.txt"))
+        stop_ids = [row.get("stop_id", "") for row in stop_rows]
+        if any(not sid for sid in stop_ids) or len(set(stop_ids)) != len(stop_ids):
+            raise ValueError("Missing or duplicate GTFS stop_id")
+        known_stop_ids = set(stop_ids)
+
+        def valid_coordinates(row):
+            try:
+                lat, lon = float(row.get("stop_lat", "")), float(row.get("stop_lon", ""))
+                return -90 <= lat <= 90 and -180 <= lon <= 180
+            except (ValueError, TypeError):
+                return False
+
+        gps_ok = {row["stop_id"] for row in stop_rows if valid_coordinates(row)}
+        stops_without_gps = len(stop_ids) - len(gps_ok)
+        known_trip_ids = set(trip_ids)
+        stop_times_per_trip = Counter()
+        stop_times_without_sequence = 0
+        stop_times_without_time = 0
+        trips_with_invalid_stop_gps = set()
+        for row in read_rows(archive, "stop_times.txt"):
+            tid, sid = row.get("trip_id", ""), row.get("stop_id", "")
+            if tid not in known_trip_ids:
+                raise ValueError("Stop times reference unknown trip_id")
+            if sid not in known_stop_ids:
+                raise ValueError("Stop times reference unknown stop_id")
+            stop_times_per_trip[tid] += 1
+            if sid not in gps_ok:
+                trips_with_invalid_stop_gps.add(tid)
+            if not row.get("arrival_time") or not row.get("departure_time"):
+                stop_times_without_time += 1
+            try:
+                if int(row.get("stop_sequence", "")) < 0:
+                    stop_times_without_sequence += 1
+            except (ValueError, TypeError):
+                stop_times_without_sequence += 1
         trips_without_stop_times = sum(tid not in stop_times_per_trip for tid in trip_ids)
-        stop_count = sum(1 for _ in read_rows(archive, "stops.txt"))
-        trip_count = sum(route_trip_counts.values())
+        stop_count = len(stop_ids)
+        trip_count = len(trip_ids)
         if not stop_count or not trip_count:
             raise ValueError("Missing stops or trips")
         files = {name.rsplit("/", 1)[-1] for name in archive.namelist()}
