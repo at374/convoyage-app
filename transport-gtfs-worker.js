@@ -84,7 +84,7 @@ self.onmessage=async({data})=>{
    const order=query.order??'earliestDeparture';
    if(!['earliestDeparture','latestDeparture'].includes(order)||
       (query.order!==undefined&&!['missionDirectTrips','missionJourneys'].includes(query.method)))throw new Error('Invalid GTFS result order');
-   let rows,searchTruncated=false,invalidJourneyCount=0;
+   let rows,searchTruncated=false,invalidJourneyCount=0,excludedWindowCount=0;
    const failedFederations=[],failedDirectNetworks=[],missingConnectionDates=[];
    if(query.method!=='missionJourneys')scope(feed,query.date);
    let connectionDates;
@@ -173,8 +173,11 @@ self.onmessage=async({data})=>{
       const earliest=Date.parse(query.window?.earliestDeparture);
       const latest=Date.parse(query.window?.latestArrival);
       const margin=Number.isFinite(query.window?.marginMinutes)?query.window.marginMinutes:0;
-      if(Number.isFinite(earliest)&&Date.parse(row.departure)<earliest)return false;
-      if(Number.isFinite(latest)&&Date.parse(row.arrival)>latest-margin*60000)return false;
+      if((Number.isFinite(earliest)&&Date.parse(row.departure)<earliest)||
+         (Number.isFinite(latest)&&Date.parse(row.arrival)>latest-margin*60000)){
+       excludedWindowCount++;
+       return false;
+      }
       if(row.legs===undefined)return true;
       if(!Array.isArray(row.legs)||row.legs.length!==2)return false;
       const [first,second]=row.legs;
@@ -185,14 +188,14 @@ self.onmessage=async({data})=>{
        Date.parse(second.departure)-Date.parse(first.arrival)>=5*60000&&
        Date.parse(second.departure)-Date.parse(first.arrival)<=120*60000;
      });
-     invalidJourneyCount=before-rows.length;
+     invalidJourneyCount=before-rows.length-excludedWindowCount;
      if(invalidJourneyCount)searchTruncated=true;
     }
     // Apply mission ordering before the result cap, including across networks.
     if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));
    }else if(query.method==='nearbyStops')rows=CPGTFSIndex.nearbyStops(feed.index,query.lat,query.lon,query.radiusMeters??700);
    else throw new Error('Unsupported GTFS worker query');
-   result={invalidJourneyCount,rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,failedFederations,failedDirectNetworks,missingConnectionDates,missingDateNetworks:missingDateFeeds.map(f=>f.source.network||f.source.datasetId||f.source.resourceId),
+   result={invalidJourneyCount,excludedWindowCount,rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,failedFederations,failedDirectNetworks,missingConnectionDates,missingDateNetworks:missingDateFeeds.map(f=>f.source.network||f.source.datasetId||f.source.resourceId),
     serviceConfirmed:false,faresVerified:false,accessVerified:false};
   }else throw new Error('Unsupported GTFS worker operation');
   self.postMessage({id,result});
