@@ -346,3 +346,17 @@ test('worker can retry loading after all GTFS feeds failed',async()=>{
  assert.match(posted[0].error?.message||'',/Temporary archive failure/);
  assert.equal(posted[1].result?.counts?.stops,12);
 });
+
+test('worker names both networks when both GTFS loads fail',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm');
+ const posted=[];
+ const sandbox={importScripts(){},self:{postMessage(message){posted.push(message);}},
+  CPGTFSLoader:{async loadResource(item){throw new Error('Archive unavailable '+item.id);}}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8'),sandbox);
+ await sandbox.self.onmessage({data:{id:401,type:'loadNetworks',options:{indexServiceDates:['2026-11-10']},
+  resources:[{id:'one',network:'Premier réseau',url:'https://example.org/a.zip'},
+   {id:'two',network:'Second réseau',url:'https://example.org/b.zip'}]}});
+ assert.equal(posted.length,1);
+ assert.match(posted[0].error?.message||'',/Premier réseau: Archive unavailable one/);
+ assert.match(posted[0].error?.message||'',/Second réseau: Archive unavailable two/);
+});
