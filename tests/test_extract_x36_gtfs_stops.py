@@ -37,10 +37,10 @@ class ExtractX36Tests(unittest.TestCase):
         with TemporaryDirectory() as folder:
             path = Path(folder) / "feed.zip"
             files = {
-                "routes.txt": "route_id,route_short_name\\nr2,X37\\n",
-                "trips.txt": "route_id,trip_id\\nr2,t2\\n",
-                "stop_times.txt": "trip_id,stop_id,stop_sequence\\nt2,c,1\\n",
-                "stops.txt": "stop_id,stop_name,stop_lat,stop_lon\\nc,Other,46.3,6.0\\n",
+                "routes.txt": "route_id,route_short_name\nr2,X37\n",
+                "trips.txt": "route_id,trip_id\nr2,t2\n",
+                "stop_times.txt": "trip_id,stop_id,stop_sequence\nt2,c,1\n",
+                "stops.txt": "stop_id,stop_name,stop_lat,stop_lon\nc,Other,46.3,6.0\n",
             }
             with zipfile.ZipFile(path, "w") as archive:
                 for name, data in files.items():
