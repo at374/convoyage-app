@@ -2246,7 +2246,7 @@
         transportDestinations[task.label].appendChild(host);
         if(!itineraries.length){host.textContent='Pas d’horaire local compatible dans les données consultées.';return;}
         const rows=itineraries.map(row=>({...row,legs:Array.isArray(row.legs)&&row.legs.length?row.legs:[{line:row.line,from:row.originStop?.name||row.from,to:row.destinationStop?.name||row.to,departure:row.departure,arrival:row.arrival}]}));
-        const normalized=window.CPTransportAdapters?.adaptGTFS(rows,'Réseau local')||[];
+        const normalized=window.CPTransportAdapters?.withVerifiedFares(window.CPTransportAdapters.adaptGTFS(rows,'Réseau local'))||[];
         const ranked=window.CPTransportRanking?.rank(normalized,{direction:task.label==='Retour'?'return':'outbound',deadline:task.latestArrival,earliestDeparture:task.earliestDeparture,marginMinutes:15})||[];
         showRegionalChoices(host,ranked,task.label+' · horaires locaux');
       };
