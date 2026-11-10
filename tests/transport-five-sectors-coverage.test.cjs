@@ -290,3 +290,16 @@ test('missing expected GTFS feed marks results partial even if loader says succe
  assert.ok(source.includes('missingSelected.length>0;'));
  assert.ok(source.indexOf('const missingSelected=')<source.indexOf('const partialNetworks='));
 });
+
+test('worker rejects duplicate URLs and insecure URLs before fetching archives',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm');
+ const posted=[],sandbox={importScripts(){},self:{postMessage(message){posted.push(message);}}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8'),sandbox);
+ const serviceDates=['2026-11-10'];
+ await sandbox.self.onmessage({data:{id:101,type:'loadNetworks',options:{indexServiceDates:serviceDates},
+  resources:[{id:'one',url:'https://example.org/feed.zip'},{id:'two',url:'https://example.org/feed.zip'}]}});
+ await sandbox.self.onmessage({data:{id:102,type:'loadNetworks',options:{indexServiceDates:serviceDates},
+  resources:[{id:'insecure',url:'http://example.org/feed.zip'}]}});
+ assert.equal(posted.length,2);
+ for(const reply of posted)assert.match(reply.error?.message||'',/Duplicate, unidentified or invalid GTFS network/);
+});
