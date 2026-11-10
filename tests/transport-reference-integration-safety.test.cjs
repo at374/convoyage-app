@@ -80,3 +80,21 @@ test('local GTFS candidates keep unknown fares after the common fare pipeline',(
  assert.equal(result[0].fareStatus,'Tarif non vérifié');
  assert.equal(result[0].fareBreakdown[0].verified,false);
 });
+
+test('adapter accepts independently verified exact-trip fare evidence',()=>{
+ const adapters=require('../transport-adapters.js');
+ const leg={provider:'Operator',line:'L1',from:'Stop A',to:'Stop B',
+  departure:'2026-11-10T09:00:00+01:00',arrival:'2026-11-10T09:30:00+01:00',
+  fareVerified:false,verifiedPriceEUR:null};
+ const journey={id:'exact-journey',departure:leg.departure,arrival:leg.arrival,legs:[leg]};
+ const evidence={journeyId:journey.id,legIndex:0,provider:leg.provider,line:leg.line,
+  from:leg.from,to:leg.to,departure:leg.departure,arrival:leg.arrival,
+  fareVerified:true,verifiedPriceEUR:2.50,
+  fareSource:'https://example.org/test-only-evidence',
+  fareValidFrom:'2026-11-01',fareValidUntil:'2026-11-30'};
+ const result=adapters.withVerifiedFares(adapters.applyFareEvidence([journey],[evidence]),
+  {travelDate:'2026-11-10'});
+ assert.equal(result[0].legs[0].fareVerified,true);
+ assert.equal(result[0].priceEUR,2.50);
+ assert.equal(result[0].fareBreakdown[0].verified,true);
+});
