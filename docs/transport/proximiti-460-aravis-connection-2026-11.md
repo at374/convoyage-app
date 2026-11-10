@@ -60,3 +60,16 @@ Règles d'intégration à retenir :
 - Ne jamais générer une correspondance « réalisable » sur la seule base du barème à 1,70 € ou d'une fiche horaire théorique.
 
 Cette rectification prévaut sur les mentions simplifiées précédentes du présent dossier.
+
+## Correction sur pièce : PDF horaire 460/461
+
+Source primaire : https://www.proximiti.fr/wp-content/uploads/2025/12/horaire-46x-web.pdf (lien depuis la page horaires officielle, consultée le 10 novembre 2026).
+
+Le PDF précise explicitement :
+- **460** : enregistrement des arrêts sur demande jusqu'à **2 heures avant** le départ.
+- **461** : enregistrement des arrêts sur demande jusqu'à **5 minutes avant** le départ.
+- L'enregistrement est **obligatoire** pour les départs d'arrêts sur demande **ou** pour les connexions garanties sur demande ; il est seulement **recommandé** pour les autres trajets.
+
+La mention antérieure « 461 sans réservation » doit donc être comprise uniquement pour les arrêts systématiques hors connexion garantie sur demande. Ne pas afficher la 461 comme systématiquement dispensée d'enregistrement.
+
+**Priorité d'implémentation :** associer à chaque arrêt le caractère systématique / sur demande et, séparément, aux correspondances le caractère « garantie sur demande ». Si l'une de ces informations manque, conserver « Transport non confirmé — vérifiez vous-même ». Ne pas transformer ces délais en preuve de service disponible.
