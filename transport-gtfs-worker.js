@@ -44,6 +44,12 @@ self.onmessage=async({data})=>{
    if(type==='loadNetworks'&&(!Array.isArray(options.indexServiceDates)||!options.indexServiceDates.length))throw new Error('Service dates required for multiple GTFS networks');
    const list=type==='load'?[resource]:resources;
    if(!Array.isArray(list)||!list.length||list.length>2)throw new Error('One or two GTFS networks required');
+   // Duplicate resources waste the two-feed budget and can produce duplicated
+   // journeys masquerading as independent transport alternatives.
+   const identities=list.map(item=>item?.datasetId||item?.id||item?.url);
+   if(identities.some(id=>typeof id!=='string'||!id.trim())||
+      new Set(identities).size!==identities.length)
+    throw new Error('Duplicate or unidentified GTFS network');
    feedsPromise=(async()=>{
     const entries=[];
     for(const item of list){
