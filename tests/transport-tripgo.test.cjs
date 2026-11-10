@@ -9,7 +9,9 @@ test('recorded TripGo response finds BlaBlaCar Bus and FlixBus, excludes past de
  assert.equal(r.coverage.blablacarBusFound,true);
  assert.equal(r.coverage.blablacarRideshareVerified,false);
  assert.equal(r.coverage.publicTransportOnly,true);
- assert.equal(r.coverage.providers.includes('BlaBlaCar Bus'),true);assert.equal(r.itineraries[0].legs[1].provider,'BlaBlaCar Bus');
+ assert.equal(r.coverage.providers.includes('BlaBlaCar Bus'),true);
+ assert.deepEqual(r.coverage.transportTypes,['bus']);
+ assert.equal(r.itineraries[0].legs[1].transportType,'bus');assert.equal(r.itineraries[0].legs[1].provider,'BlaBlaCar Bus');
  for(const t of r.itineraries){assert.equal(t.priceEUR,null);assert.equal(t.transportConfirmed,false);assert.equal(t.accessVerified,false);assert.equal(t.evidence.realtimeReported,false);assert.equal(t.evidence.walkingProvided,true);assert.equal(t.evidence.endpointCoordinatesMatched,true);assert.equal(t.evidence.missing.length,4);}
 });
 test('TripGo rejects a mismatched query, missing template, unavailable trip and overlapping segments',()=>{
@@ -288,4 +290,19 @@ test('recorded coach journeys supply separate pedestrian and vehicle geometries'
  const malformed=api.parse(corrupt,options).itineraries;
  assert.equal(malformed.length,itineraries.length);
  assert.equal(malformed[0].legs[0].geometry,null);
+});
+
+test('TripGo reports train only when its actual mode identifier is rail',()=>{
+ const rail=clone();
+ for(const segment of rail.segmentTemplates)if(segment.modeIdentifier==='pt_pub')
+  segment.modeInfo.identifier='pt_pub_train';
+ const result=api.parse(rail,options);
+ assert.equal(result.itineraries.length,2);
+ assert.deepEqual(result.coverage.transportTypes,['train']);
+ assert.equal(result.itineraries[0].legs[1].transportType,'train');
+ const unknown=clone();
+ for(const segment of unknown.segmentTemplates)if(segment.modeIdentifier==='pt_pub')
+  segment.modeInfo.identifier='pt_pub_unknown';
+ const other=api.parse(unknown,options);
+ assert.deepEqual(other.coverage.transportTypes,['transport_public_non_classe']);
 });
