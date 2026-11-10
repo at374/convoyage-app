@@ -108,6 +108,7 @@ def inventory(path, source_url):
             raise ValueError("Missing stops or trips")
         files = {name.rsplit("/", 1)[-1] for name in archive.namelist()}
         service_spans = []
+        calendar_service_ids = set()
         invalid_calendar_rows = 0
         if "calendar.txt" in files:
             for row in read_rows(archive, "calendar.txt"):
@@ -116,21 +117,35 @@ def inventory(path, source_url):
                     end = datetime.strptime(row["end_date"], "%Y%m%d").date()
                     if end < start:
                         raise ValueError("end before start")
-                    service_spans.append({"start": start.isoformat(), "end": end.isoformat()})
+                    if any(row.get(day) not in ("0", "1") for day in
+                           ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")):
+                        raise ValueError("invalid weekday flag")
+                    sid = row.get("service_id", "")
+                    if not sid or sid in calendar_service_ids:
+                        raise ValueError("missing or duplicate service_id")
+                    calendar_service_ids.add(sid)
+                    service_spans.append({"service_id": sid, "start": start.isoformat(), "end": end.isoformat()})
                 except (KeyError, ValueError):
                     invalid_calendar_rows += 1
         exception_counts = Counter()
+        exception_service_ids = set()
         invalid_exception_rows = 0
         if "calendar_dates.txt" in files:
             for row in read_rows(archive, "calendar_dates.txt"):
                 try:
                     datetime.strptime(row["date"], "%Y%m%d")
                     kind = row["exception_type"]
-                    if kind not in ("1", "2"):
-                        raise ValueError("invalid exception type")
+                    sid = row.get("service_id", "")
+                    if kind not in ("1", "2") or not sid:
+                        raise ValueError("invalid exception type or missing service_id")
+                    exception_service_ids.add(sid)
                     exception_counts[kind] += 1
                 except (KeyError, ValueError):
                     invalid_exception_rows += 1
+        known_service_ids = calendar_service_ids | exception_service_ids
+        trips_with_unknown_service = sum(
+            not t.get("service_id") or t.get("service_id") not in known_service_ids for t in trip_rows
+        ) if known_service_ids else len(trip_rows)
         return {
             "sourceUrl": source_url, "sourceSha256": sha,
             "archiveOnly": True, "serviceConfirmed": False, "fareVerified": False,
@@ -145,6 +160,7 @@ def inventory(path, source_url):
             "invalidCalendarRows": invalid_calendar_rows,
             "calendarDateExceptions": {"added": exception_counts["1"], "removed": exception_counts["2"]},
             "invalidCalendarExceptionRows": invalid_exception_rows,
+            "tripsWithUnknownServiceId": trips_with_unknown_service,
             "hasCalendar": "calendar.txt" in files,
             "hasCalendarExceptions": "calendar_dates.txt" in files,
             "hasTransfers": "transfers.txt" in files,
