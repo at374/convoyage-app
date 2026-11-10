@@ -46,7 +46,7 @@ function transportType(mode,identifier){
   if(typeof value!=='string')return null;
   const id=value.toLowerCase();
   if(/^pt_pub_(?:train|rail|regionaltrain|intercitytrain|highspeedtrain)(?:_|$)/.test(id))return 'train';
-  if(/^pt_pub_(?:bus|coach)(?:_|$)/.test(id))return 'bus';
+  if(/^pt_pub_(?:bus|coach|airport[_-]?(?:bus|coach))(?:[_-]|$)/.test(id))return 'bus';
   if(/^pt_pub_(?:tram|light_rail)(?:_|$)/.test(id))return 'tram';
   if(/^pt_pub_(?:subway|metro)(?:_|$)/.test(id))return 'metro';
   return null;
