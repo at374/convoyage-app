@@ -945,3 +945,15 @@ test('Proxim iTi booking warning also covers 460/461 inside theoretical transfer
   }finally{session.dispose();}
  }
 });
+
+test('Cars Région Express official GTFS is a candidate for X36 corridor, not a fare confirmation',()=>{
+ const express=agenda.DEFAULT_RESOURCES.find(r=>r.id==='cars-region-express');
+ assert.ok(express);
+ assert.equal(express.network,'Cars Région Express');
+ assert.equal(express.format,'GTFS');
+ assert.equal(express.timeZone,'Europe/Paris');
+ assert.match(express.url,/provider=CARS_REGION_EXPRESS/);
+ const corridor={from:{lat:46.107,lon:5.825},to:{lat:46.205,lon:5.228}};
+ assert.equal(agenda.selected(express,corridor),true);
+ assert.equal(agenda.selected(express,{...corridor,to:{lat:48.8,lon:2.3}}),false);
+});
