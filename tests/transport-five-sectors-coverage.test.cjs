@@ -444,3 +444,27 @@ test('three GTFS networks federate all three distinct pairs during mission query
  assert.equal(posted[1].result?.rows?.length,0);
  assert.equal(posted[1].result?.serviceConfirmed,false);
 });
+
+test('failed GTFS federation pair preserves other pairs and marks search truncated',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm');
+ const posted=[],pairs=[];
+ const sandbox={importScripts(){},self:{postMessage(message){posted.push(message);}},
+  CPGTFSLoader:{async loadResource(item){return {source:{datasetId:item.id,network:item.network},
+   index:{counts:{stops:10}},files:{},indexServiceDates:['2026-11-10']};}},
+  CPGTFSIndex:{nearbyDirectTrips(){return [];},nearbyTransferTrips(){return {journeys:[],searchTruncated:false};}},
+  CPGTFSTime:{datedTrips(_f,_i,found){return found;},datedTransferTrips(){return [];},serviceWindow(){return {};}},
+  CPGTFSFederation:{crossNetworkTrips(feeds){
+   const pair=feeds.map(f=>f.source.datasetId).join('+');pairs.push(pair);
+   if(pair==='feed1+feed2')throw new Error('Federation failed');
+   return {journeys:[],searchTruncated:false};
+  }}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8'),sandbox);
+ await sandbox.self.onmessage({data:{id:701,type:'loadNetworks',options:{indexServiceDates:['2026-11-10']},
+  resources:[1,2,3].map(i=>({id:'feed'+i,url:'https://example.org/'+i+'.zip'}))}});
+ await sandbox.self.onmessage({data:{id:702,type:'query',query:{method:'missionJourneys',date:'2026-11-10',
+  origin:{lat:46,lon:6},destination:{lat:46.1,lon:6.1},window:{}}}});
+ assert.deepEqual(pairs,['feed1+feed2','feed1+feed3','feed2+feed3']);
+ assert.equal(posted[1].result?.truncated,true);
+ assert.equal(posted[1].result?.searchTruncated,true);
+ assert.equal(posted[1].error,undefined);
+});
