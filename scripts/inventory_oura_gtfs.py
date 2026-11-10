@@ -6,6 +6,7 @@ Usage: python scripts/inventory_oura_gtfs.py official-oura.zip --source-url http
 """
 import argparse
 import csv
+from datetime import datetime
 import hashlib
 import io
 import json
@@ -106,6 +107,30 @@ def inventory(path, source_url):
         if not stop_count or not trip_count:
             raise ValueError("Missing stops or trips")
         files = {name.rsplit("/", 1)[-1] for name in archive.namelist()}
+        service_spans = []
+        invalid_calendar_rows = 0
+        if "calendar.txt" in files:
+            for row in read_rows(archive, "calendar.txt"):
+                try:
+                    start = datetime.strptime(row["start_date"], "%Y%m%d").date()
+                    end = datetime.strptime(row["end_date"], "%Y%m%d").date()
+                    if end < start:
+                        raise ValueError("end before start")
+                    service_spans.append((start.isoformat(), end.isoformat()))
+                except (KeyError, ValueError):
+                    invalid_calendar_rows += 1
+        exception_counts = Counter()
+        invalid_exception_rows = 0
+        if "calendar_dates.txt" in files:
+            for row in read_rows(archive, "calendar_dates.txt"):
+                try:
+                    datetime.strptime(row["date"], "%Y%m%d")
+                    kind = row["exception_type"]
+                    if kind not in ("1", "2"):
+                        raise ValueError("invalid exception type")
+                    exception_counts[kind] += 1
+                except (KeyError, ValueError):
+                    invalid_exception_rows += 1
         return {
             "sourceUrl": source_url, "sourceSha256": sha,
             "archiveOnly": True, "serviceConfirmed": False, "fareVerified": False,
@@ -116,6 +141,10 @@ def inventory(path, source_url):
             "stopTimesWithoutArrivalOrDeparture": stop_times_without_time,
             "tripsUsingStopsWithoutGps": len(trips_with_invalid_stop_gps),
             "tripsWithoutStopTimes": trips_without_stop_times,
+            "calendarServiceSpans": service_spans,
+            "invalidCalendarRows": invalid_calendar_rows,
+            "calendarDateExceptions": {"added": exception_counts["1"], "removed": exception_counts["2"]},
+            "invalidCalendarExceptionRows": invalid_exception_rows,
             "hasCalendar": "calendar.txt" in files,
             "hasCalendarExceptions": "calendar_dates.txt" in files,
             "hasTransfers": "transfers.txt" in files,
