@@ -2774,7 +2774,7 @@
               const steps=document.createElement('ol');
               const stepTime=value=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',dateStyle:'short',timeStyle:'medium'}).format(new Date(value));
               for(const [legIndex,leg] of result.legs.entries()){
-                const step=document.createElement('li');step.textContent=(leg.mode==='wa_wal'?'Marche':leg.mode==='stationary_wait'?'Attente':leg.mode==='stationary_transfer'?'Correspondance à pied':leg.line||leg.provider||'Transport (ligne non identifiée)')+' · '+
+                const step=document.createElement('li');step.textContent=(leg.mode==='wa_wal'?'Marche':leg.mode==='stationary_wait'?'Attente':leg.mode==='stationary_transfer'?'Correspondance à pied':(({train:'Train',bus:'Bus / car',tram:'Tramway',metro:'Métro',transport_public_non_classe:'Transport public'}[leg.transportType]||'Transport public')+' · '+(leg.line||leg.provider||'ligne non identifiée')))+' · '+
                   stepTime(leg.departure)+' → '+stepTime(leg.arrival)+' · '+leg.from+' → '+leg.to;
                 if(leg.mode==='wa_wal'&&Number.isFinite(leg.distanceMeters)&&leg.distanceMeters>=0){
                   const walkingDistance=document.createElement('span');walkingDistance.setAttribute('data-tripgo-walk-distance','');
