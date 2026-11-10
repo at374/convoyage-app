@@ -119,6 +119,7 @@ self.onmessage=async({data})=>{
        const pair=[scopedFeeds[i],scopedFeeds[j]];
        const pairDates=(connectionDates||[query.date]).filter(day=>pair.every(current=>
         !current.indexServiceDates||current.indexServiceDates.includes(day)));
+       if(connectionDates&&pairDates.length<connectionDates.length)searchTruncated=true;
        const cross=CPGTFSFederation.crossNetworkTrips(pair,query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
         connectionDates:pairDates});
        if(!cross||!Array.isArray(cross.journeys))throw new Error('Invalid federation result');
