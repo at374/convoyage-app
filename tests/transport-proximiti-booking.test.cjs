@@ -1,6 +1,8 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const {assess}=require('../transport-proximiti-booking.js');
+const journeyEvidence={line:'460',serviceDate:'2026-11-10',boardingStopId:'stop-A',alightingStopId:'stop-B',departure:'2026-11-10T09:00:00+01:00'};
+const matchingEvidence={bookingEvidence:journeyEvidence,journeyEvidence};
 const base={line:'460',boardingStopType:'systematic',alightingStopType:'systematic',
  guaranteedConnection:false,serviceConfirmed:true,stopsConfirmed:true,walkingConfirmed:true,marginConfirmed:true};
 test('unknown stop types cannot be treated as confirmed',()=>{
@@ -15,7 +17,7 @@ test('460 on-demand stop requires explicit booking confirmation',()=>{
  assert.equal(x.needsRegistration,true);assert.equal(x.ready,false);assert.equal(x.publishedDeadlineMinutes,120);assert.equal(x.registrationDeadlineMinutes,null);
  assert.equal(assess({...base,boardingStopType:'on_demand',registrationConfirmed:true}).ready,false);
  assert.equal(assess({...base,boardingStopType:'on_demand',bookingAvailabilityVerified:true}).ready,false);
- assert.equal(assess({...base,boardingStopType:'on_demand',registrationConfirmed:true,registrationForJourneyVerified:true,bookingAvailabilityVerified:true}).ready,true);
+ assert.equal(assess({...base,boardingStopType:'on_demand',registrationConfirmed:true,...matchingEvidence,bookingAvailabilityVerified:true}).ready,true);
 });
 test('461 guaranteed connection requires confirmation even at systematic stops',()=>{
  const x=assess({...base,line:'461',guaranteedConnection:true});
@@ -43,7 +45,7 @@ test('booking matrix: all 460/461 stop and connection combinations fail closed',
      if(required){
       assert.equal(assess({...input,registrationConfirmed:true}).ready,false);
       assert.equal(assess({...input,bookingAvailabilityVerified:true}).ready,false);
-      assert.equal(assess({...input,registrationConfirmed:true,registrationForJourneyVerified:true,bookingAvailabilityVerified:true}).ready,true);
+      assert.equal(assess({...input,registrationConfirmed:true,...matchingEvidence,bookingAvailabilityVerified:true}).ready,true);
      }
     }
    }
@@ -52,7 +54,7 @@ test('booking matrix: all 460/461 stop and connection combinations fail closed',
 });
 test('every operational proof is mandatory even when booking is confirmed',()=>{
  for(const key of ['serviceConfirmed','stopsConfirmed','walkingConfirmed','marginConfirmed']){
-  const x=assess({...base,boardingStopType:'on_demand',registrationConfirmed:true,registrationForJourneyVerified:true,
+  const x=assess({...base,boardingStopType:'on_demand',registrationConfirmed:true,...matchingEvidence,
    bookingAvailabilityVerified:true,[key]:false});
   assert.equal(x.ready,false,key);
  }
@@ -63,14 +65,26 @@ test('missing evidence explains why a 460/461 journey is unconfirmed',()=>{
  assert.deepEqual(missing.missingEvidence,['stop_types','connection_type','service','stop_coordinates','walking_access','arrival_margin']);
  const onDemand=assess({...base,boardingStopType:'on_demand'});
  assert.deepEqual(onDemand.missingEvidence,['registration_confirmation','registration_journey_match','booking_availability']);
- assert.deepEqual(assess({...base,boardingStopType:'on_demand',registrationConfirmed:true,registrationForJourneyVerified:true,bookingAvailabilityVerified:true}).missingEvidence,[]);
+ assert.deepEqual(assess({...base,boardingStopType:'on_demand',registrationConfirmed:true,...matchingEvidence,bookingAvailabilityVerified:true}).missingEvidence,[]);
  assert.deepEqual(assess(base).missingEvidence,[]);
 });
 
 test('booking for a different journey never confirms this journey',()=>{
  const x=assess({...base,boardingStopType:'on_demand',
   registrationConfirmed:true,bookingAvailabilityVerified:true,
-  registrationForJourneyVerified:false});
+  bookingEvidence:{...journeyEvidence,boardingStopId:'other-stop'},journeyEvidence});
  assert.equal(x.ready,false);
  assert.deepEqual(x.missingEvidence,['registration_journey_match']);
+});
+
+test('booking evidence must match all exact trip identifiers',()=>{
+ const {sameJourney}=require('../transport-proximiti-booking.js');
+ assert.equal(sameJourney(journeyEvidence,journeyEvidence),true);
+ for(const key of ['line','serviceDate','boardingStopId','alightingStopId','departure']){
+  assert.equal(sameJourney({...journeyEvidence,[key]:'different'},journeyEvidence),false,key);
+  assert.equal(sameJourney({...journeyEvidence,[key]:''},journeyEvidence),false,key);
+ }
+ assert.equal(sameJourney(null,journeyEvidence),false);
+ assert.equal(assess({...base,boardingStopType:'on_demand',registrationConfirmed:true,
+  bookingAvailabilityVerified:true,registrationForJourneyVerified:true}).ready,false);
 });
