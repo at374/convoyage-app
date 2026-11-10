@@ -323,3 +323,18 @@ test('TripGo fills missing walking maps with bounded Valhalla results without ce
  assert.equal(unverified.coverage.pedestrianGeometryMissing,1);
  assert.equal(unverified.itineraries[0].legs[0].pedestrianMapStatus,'not_verified');
 });
+
+test('TripGo deduplicates walking lookups shared by journeys and respects unique request budget',async()=>{
+ const makeLeg=(lat)=>({mode:'wa_wal',fromPoint:{lat,lon:6},toPoint:{lat:lat+0.001,lon:6.001},geometry:null});
+ const original={itineraries:[{legs:[makeLeg(46),makeLeg(46.1)]},{legs:[makeLeg(46),makeLeg(46.2)]}]};
+ const calls=[];
+ const router={route:async(a,b)=>{calls.push(a.lat);return {status:'calculated',endpointsMatched:true,geometry:[a,b]};}};
+ const result=await api.enrichPedestrianMaps(original,router,{maxRoutes:2});
+ assert.deepEqual(calls.sort(),[46,46.1]);
+ assert.equal(result.coverage.pedestrianValhallaAttempted,2);
+ assert.equal(result.coverage.pedestrianValhallaCalculated,3);
+ assert.equal(result.coverage.pedestrianGeometryMissing,1);
+ assert.equal(result.itineraries[1].legs[0].pedestrianMapStatus,'calculated_valhalla');
+ assert.equal(result.itineraries[1].legs[1].pedestrianMapStatus,'not_requested_budget');
+ assert.equal(original.itineraries[0].legs[0].geometry,null);
+});
