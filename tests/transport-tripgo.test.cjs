@@ -417,3 +417,14 @@ test('TripGo keeps explicit train mode when modeInfo identifier is generic',()=>
  assert.deepEqual(result.coverage.transportTypes,['train']);
  assert.equal(result.itineraries[0].legs[1].transportType,'train');
 });
+
+test('TripGo rejects ferry and air modes despite a generic modeInfo identifier',()=>{
+ for(const forbidden of ['pt_pub_ferry','pt_pub_boat','pt_pub_air']){
+  const payload=clone();
+  for(const segment of payload.segmentTemplates)if(segment.modeIdentifier==='pt_pub'){
+   segment.modeIdentifier=forbidden;
+   segment.modeInfo.identifier='pt_pub';
+  }
+  assert.equal(api.parse(payload,options).itineraries.length,0,forbidden);
+ }
+});
