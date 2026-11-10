@@ -466,10 +466,12 @@ test('TripGo rejects a walking polyline starting 20 meters from its exact endpoi
   return out;
  };
  const payload=clone();
- const walk=payload.segmentTemplates.find(segment=>segment.modeIdentifier==='wa_wal');
- assert.ok(walk);
- const shifted={lat:walk.from.lat+0.00018,lon:walk.from.lon??walk.from.lng};
- walk.streets=[{encodedWaypoints:encode([shifted,{lat:walk.to.lat,lon:walk.to.lon??walk.to.lng}])}];
+ const walks=payload.segmentTemplates.filter(segment=>segment.modeIdentifier==='wa_wal');
+ assert.ok(walks.length>0);
+ for(const walk of walks){
+  const shifted={lat:walk.from.lat+0.00018,lon:walk.from.lon??walk.from.lng};
+  walk.streets=[{encodedWaypoints:encode([shifted,{lat:walk.to.lat,lon:walk.to.lon??walk.to.lng}])}];
+ }
  const result=api.parse(payload,options);
  assert.equal(result.itineraries.length,2);
  assert.equal(result.itineraries[0].legs[0].geometry,null);
