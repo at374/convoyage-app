@@ -590,3 +590,28 @@ test('mission search continues on partner when primary GTFS service date is miss
  assert.deepEqual(Array.from(posted[1].result.missingDateNetworks),['primary']);
  assert.deepEqual(calls,['2026-11-10']);
 });
+
+test('federated GTFS query retains service day and reports missing adjacent day',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm');
+ const posted=[],pairDates=[];
+ const sandbox={importScripts(){},self:{postMessage(message){posted.push(message);}},
+  CPGTFSLoader:{async loadResource(item){return {source:{datasetId:item.id,network:item.id},
+   index:{counts:{stops:1}},files:{},
+   indexServiceDates:item.id==='a'?['2026-11-10']:['2026-11-10','2026-11-11']};}},
+  CPGTFSIndex:{nearbyDirectTrips(){return [];},nearbyTransferTrips(){return {journeys:[],searchTruncated:false};}},
+  CPGTFSTime:{datedTrips(_f,_i,found){return found;},datedTransferTrips(){return [];},serviceWindow(){return {};}},
+  CPGTFSFederation:{connectionServiceDates(_date,dates){return dates;},
+   crossNetworkTrips(_feeds,_date,_from,_to,_window,options){
+    pairDates.push(options.connectionDates);return {journeys:[],searchTruncated:false};
+   }}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8'),sandbox);
+ await sandbox.self.onmessage({data:{id:1001,type:'loadNetworks',options:{indexServiceDates:['2026-11-10','2026-11-11']},
+  resources:['a','b'].map(id=>({id,url:'https://example.org/'+id}))}});
+ await sandbox.self.onmessage({data:{id:1002,type:'query',query:{method:'missionJourneys',date:'2026-11-10',
+  connectionDates:['2026-11-10','2026-11-11'],origin:{lat:46,lon:6},destination:{lat:46.1,lon:6.1},window:{}}}});
+ assert.equal(posted[1].error,undefined);
+ assert.deepEqual(Array.from(pairDates[0]),['2026-11-10']);
+ assert.equal(posted[1].result?.truncated,true);
+ assert.deepEqual(Array.from(posted[1].result.missingConnectionDates[0].dates),['2026-11-11']);
+ assert.deepEqual(Array.from(posted[1].result.missingConnectionDates[0].networks),['a','b']);
+});
