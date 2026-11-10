@@ -46,3 +46,17 @@ Source exploitant : https://www.proximiti.fr/tarifs-abonnements/lignes-reguliere
 Source des horaires en vigueur : https://www.proximiti.fr/vos-deplacements/horaires-a-telecharger/ (modifications annoncées au 24 août 2026).
 
 **Règle de raccordement :** n'afficher le ticket à 1,70 € comme tarif de référence que pour un trajet intégralement couvert par les conditions officielles du ticket. Si le trajet traverse plusieurs réseaux, ne jamais présumer une interopérabilité tarifaire. Ne jamais confondre ce barème avec une réservation confirmée sur la ligne 460.
+
+## Rectification importante : arrêts systématiques et sur demande (10 novembre 2026)
+
+La page officielle https://www.proximiti.fr/vos-deplacements/horaires-a-telecharger/ distingue les **arrêts systématiques** et les **arrêts sur demande** pour les lignes 460/461. Le délai de **2 heures** concerne l'enregistrement d'une demande d'arrêt sur la ligne 460, et ne prouve pas que chaque montée à un arrêt systématique exige une réservation. La formulation antérieure « ligne 460 sur réservation » est donc trop générale.
+
+Règles d'intégration à retenir :
+
+- Si arrêt de montée ou descente **sur demande** pour la ligne 460 : vérifier enregistrement au moins 2 h avant, et sa confirmation ; sans cela, trajet non confirmé.
+- Si les deux arrêts sont **systématiques** : ne pas imposer automatiquement une réservation, mais vérifier la course, les jours de circulation et la desserte à l'heure demandée.
+- Pour la ligne 461, ne pas déduire de « sans réservation » que **tous les arrêts** sont systématiques ; vérifier le type d'arrêt sur la fiche horaire.
+- La grille officielle est https://www.proximiti.fr/wp-content/uploads/2025/12/horaire-46x-web.pdf, liée depuis la page horaires de l'opérateur. Les périodes vertes/oranges et les colonnes de course nécessitent une lecture structurée avant tout horaire en production.
+- Ne jamais générer une correspondance « réalisable » sur la seule base du barème à 1,70 € ou d'une fiche horaire théorique.
+
+Cette rectification prévaut sur les mentions simplifiées précédentes du présent dossier.
