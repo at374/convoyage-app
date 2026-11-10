@@ -2767,7 +2767,7 @@
               details.appendChild(line);
               showTransportMap(details,result.legs.map(leg=>({walk:leg.mode==='wa_wal',geometry:leg.geometry})));
               const mapNote=document.createElement('p');mapNote.className='doux';
-              mapNote.textContent='Les cartes localisent les coordonnées fournies. Le parcours piéton ouvert dans Maps fait l’objet d’un nouveau calcul ; il peut différer de la proposition. Accès réels à vérifier.';details.appendChild(mapNote);
+              mapNote.textContent='Les cartes localisent les coordonnées fournies. '+(result.legs.some(leg=>leg.mode==='wa_wal'&&(!Array.isArray(leg.geometry)||leg.geometry.length<2))?'Certains tracés piétons restent indisponibles : vérifiez le parcours exact. ':'')+'Le parcours piéton ouvert dans Maps fait l’objet d’un nouveau calcul ; il peut différer de la proposition. Accès réels à vérifier.';details.appendChild(mapNote);
               const steps=document.createElement('ol');
               const stepTime=value=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',dateStyle:'short',timeStyle:'medium'}).format(new Date(value));
               for(const [legIndex,leg] of result.legs.entries()){
