@@ -2853,8 +2853,12 @@
                 }).catch(()=>{if(regionalActive()&&!signal.aborted&&live.isConnected)live.textContent=' · Prévisions BlaBlaCar Bus indisponibles sur cet appareil. La circulation reste à vérifier.';});
               }
             };
-            shown.slice(0,3).forEach(renderTripGo);
-            moreTransportResults(status,shown,3,renderTripGo);
+            // Keep all provider options, but show impossible walking transfers last.
+            const rankedShown=shown.slice().sort((a,b)=>
+              Number(a.legs.some(leg=>leg.pedestrianScheduleFits===false))-
+              Number(b.legs.some(leg=>leg.pedestrianScheduleFits===false)));
+            rankedShown.slice(0,3).forEach(renderTripGo);
+            moreTransportResults(status,rankedShown,3,renderTripGo);
             const credit=document.createElement('p');credit.textContent='Source : TripGo / opérateurs indiqués ; marches : © contributeurs OpenStreetMap. La disponibilité annoncée ne constitue pas une réservation.';const attribution=document.createElement('a');attribution.href='https://www.openstreetmap.org/copyright';attribution.target='_blank';attribution.rel='noopener noreferrer';attribution.textContent=' Attribution OpenStreetMap';credit.appendChild(attribution);status.appendChild(credit);
           }).catch(()=>{if(regionalActive()&&!signal.aborted&&status.isConnected)status.textContent=label+' TripGo indisponible. Horaires, circulation, accès et prix restent à vérifier.';});
         });
