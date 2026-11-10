@@ -372,3 +372,16 @@ test('TripGo does not publish a pedestrian route after mission search cancellati
  assert.equal(result.coverage.pedestrianGeometryMissing,1);
  assert.equal(result.coverage.pedestrianValhallaCalculated,0);
 });
+
+test('TripGo flags walking transfer when Valhalla needs more time than scheduled',async()=>{
+ const leg={mode:'wa_wal',fromPoint:{lat:46,lon:6},toPoint:{lat:46.001,lon:6.001},
+  departure:'2026-11-10T09:00:00Z',arrival:'2026-11-10T09:03:00Z',geometry:null};
+ const original={itineraries:[{legs:[leg]}]};
+ const result=await api.enrichPedestrianMaps(original,{route:async(a,b)=>({
+  status:'calculated',endpointsMatched:true,geometry:[a,b],durationSeconds:420
+ })});
+ assert.equal(result.coverage.pedestrianScheduleConflicts,1);
+ assert.equal(result.itineraries[0].legs[0].pedestrianScheduleFits,false);
+ assert.equal(result.itineraries[0].legs[0].pedestrianRouteSeconds,420);
+ assert.equal(original.itineraries[0].legs[0].pedestrianScheduleFits,undefined);
+});
