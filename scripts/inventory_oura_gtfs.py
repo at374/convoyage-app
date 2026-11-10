@@ -116,7 +116,7 @@ def inventory(path, source_url):
                     end = datetime.strptime(row["end_date"], "%Y%m%d").date()
                     if end < start:
                         raise ValueError("end before start")
-                    service_spans.append((start.isoformat(), end.isoformat()))
+                    service_spans.append({"start": start.isoformat(), "end": end.isoformat()})
                 except (KeyError, ValueError):
                     invalid_calendar_rows += 1
         exception_counts = Counter()
