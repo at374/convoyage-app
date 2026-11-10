@@ -350,3 +350,13 @@ test('TripGo detects rail from segment mode when optional modeInfo is absent',()
  assert.deepEqual(result.coverage.transportTypes,['train']);
  assert.equal(result.itineraries[0].legs[1].transportType,'train');
 });
+
+test('TripGo rejects Valhalla pedestrian geometry that misses the exact stops',async()=>{
+ const leg={mode:'wa_wal',fromPoint:{lat:46,lon:6},toPoint:{lat:46.001,lon:6.001},geometry:null};
+ const original={itineraries:[{legs:[leg]}]};
+ const far={status:'calculated',endpointsMatched:true,geometry:[{lat:45,lon:5},{lat:45.001,lon:5.001}]};
+ const result=await api.enrichPedestrianMaps(original,{route:async()=>far});
+ assert.equal(result.coverage.pedestrianGeometryMissing,1);
+ assert.equal(result.itineraries[0].legs[0].pedestrianMapStatus,'not_verified');
+ assert.equal(result.itineraries[0].legs[0].geometry,null);
+});
