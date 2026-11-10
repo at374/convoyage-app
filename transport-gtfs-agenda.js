@@ -465,7 +465,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
    }
   }catch(error){
    if(active()){
-    sourceStatus.textContent='Flux officiel indisponible (réseau, navigateur ou archive). Aucun horaire récent confirmé.';
+    const detail=typeof error?.message==='string'?error.message.trim().slice(0,300):'';
+    sourceStatus.textContent='Flux officiel indisponible (réseau, navigateur ou archive). Aucun horaire récent confirmé.'+
+     (detail?' Détail : '+detail:'');
     for(const {task,status} of entries)if(eligible(task))status.textContent=task.label+' : recherche GTFS indisponible. Les autres calculateurs restent consultables.';
    }
    client?.dispose();client=null;
