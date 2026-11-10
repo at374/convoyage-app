@@ -168,3 +168,20 @@ test('Android shell loads official reference data before GTFS card renderer and 
   previous=position;
  }
 });
+
+test('Aravis coverage distinguishes priced matrix cells from verified GTFS stop pairs',()=>{
+ const data=require('../data/transport/aravis-fare-reference-2026.json');
+ const report=require('../transport-aravis-fares.js').createCalculator(data).coverage();
+ assert.equal(report.areas,15);
+ assert.equal(report.kind,'tariff_matrix_coverage_not_gtfs_network_coverage');
+ for(const line of ['Y62','Y63']){
+  const cells=data.lines[line].matrix.flat();const result=report.lines[line];
+  assert.equal(result.total,225);
+  assert.equal(result.priced,cells.filter(x=>['1','2','3','4'].includes(x)).length);
+  assert.equal(result.sibra,cells.filter(x=>x==='SIBRA').length);
+  assert.equal(result.unspecified,cells.filter(x=>x==='UNSPECIFIED').length);
+  assert.equal(result.priced+result.sibra+result.unspecified,225);
+ }
+ assert.equal(report.lines.Y62.gtfsStopPairsVerified,2);
+ assert.equal(report.lines.Y63.gtfsStopPairsVerified,0);
+});
