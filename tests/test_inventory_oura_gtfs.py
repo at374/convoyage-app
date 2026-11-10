@@ -19,6 +19,7 @@ class OuraInventoryTests(unittest.TestCase):
             "routes.txt": routes,
             "trips.txt": "route_id,trip_id\nr1,t1\n",
             "stops.txt": "stop_id,stop_name\ns1,Stop One\n",
+            "stop_times.txt": "trip_id,stop_id,stop_sequence\\nt1,s1,1\\n",
             "stop_times.txt": "trip_id,stop_id,stop_sequence\nt1,s1,1\n",
             "calendar_dates.txt": "service_id,date,exception_type\nx,20261110,1\n",
         }
@@ -80,7 +81,7 @@ class OuraInventoryTests(unittest.TestCase):
             path = self.make_zip(folder)
             with zipfile.ZipFile(path, "a") as archive:
                 archive.writestr("stop_times.txt", "trip_id,stop_id,stop_sequence\nmissing,s1,1\n")
-            with self.assertRaisesRegex(ValueError, "exactly one stop_times.txt"):
+            with self.assertRaisesRegex(ValueError, "unknown trip_id"):
                 module.inventory(path, "https://example.org/oura.zip")
 
     def test_unknown_stop_reference_rejected(self):
