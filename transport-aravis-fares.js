@@ -64,7 +64,7 @@ function createCalculator(data){
      sibra:row.filter(cell=>cell==='SIBRA').length,
      unspecified:row.filter(cell=>cell==='UNSPECIFIED').length};
    });
-   lines[line]={...counts,total:cells.length,byOriginArea,gtfsStopPairsVerified:line==='Y62'?2:0};
+   lines[line]={...counts,total:cells.length,byOriginArea,gtfsStopIdsAudited:line==='Y62'?y62Stops.size:0};
   }
   return {areas:source.areas.length,lines,kind:'tariff_matrix_coverage_not_gtfs_network_coverage'};
  }
