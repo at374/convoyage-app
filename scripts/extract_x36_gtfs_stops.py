@@ -71,6 +71,9 @@ def extract(path, source_url, checked_on):
             raise ValueError("No valid X36 stop coordinates in supplied GTFS")
         stops.sort(key=lambda item: (item["gtfsName"], item["id"]))
         valid_ids = {stop["id"] for stop in stops}
+        missing_ids = set(stop_trip_count) - valid_ids
+        if missing_ids:
+            raise ValueError(f"X36 stops missing valid GPS coordinates: {len(missing_ids)}")
         patterns = defaultdict(int)
         for sequence in trip_stop_sequences.values():
             ordered = tuple(stop_id for _, stop_id in sorted(sequence) if stop_id in valid_ids)
