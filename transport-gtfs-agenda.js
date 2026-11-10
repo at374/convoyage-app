@@ -13,6 +13,13 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  // Selection envelope only, not a guarantee of lines or cross-border service.
  bounds:[45.65,4.7,46.55,6.3],timeZone:'Europe/Paris'
 }),Object.freeze({
+ id:'cars-region-express',datasetId:'reseau-interurbain-cars-region-express',
+ network:'Cars Région Express',format:'GTFS',federate:true,
+ // Official OÙRA producer feed; theoretical schedules only, never confirmed fare or live operation.
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_EXPRESS&dataFormat=GTFS&dataProfil=OPENDATA',
+ // Broad regional selection envelope; the GTFS must still prove each route and stop.
+ bounds:[44.0,3.9,46.9,6.9],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'80100',datasetId:'5bd9843e634f413220f7f04a',network:'Sibra',format:'GTFS',federate:true,
  url:'https://www.data.gouv.fr/api/1/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0',resolveFromCatalogue:true,
  bounds:[45.7,5.9,46.1,6.5],timeZone:'Europe/Paris'
