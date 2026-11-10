@@ -1079,3 +1079,12 @@ test('GTFS invalid operator timezone is rejected without interrupting search',()
  assert.doesNotThrow(()=>agenda.selected(feed,trip));
  assert.equal(agenda.selected(feed,trip),false);
 });
+
+test('GTFS one-sided mission window retains feeds overlapping the next or previous day',()=>{
+ const feed={format:'GTFS',url:'https://example.org/feed.zip',bounds:[45,5,47,7],
+  timeZone:'Europe/Paris',validFrom:'2026-11-11',validUntil:'2026-11-12'};
+ const trip={from:{lat:45.9,lon:6.1},to:{lat:45.8,lon:6.2}};
+ assert.equal(agenda.selected(feed,{...trip,earliestDeparture:'2026-11-10T20:00:00+01:00'}),true);
+ assert.equal(agenda.selected(feed,{...trip,latestArrival:'2026-11-13T08:00:00+01:00'}),true);
+ assert.equal(agenda.selected(feed,{...trip,earliestDeparture:'2026-11-08T09:00:00+01:00'}),false);
+});
