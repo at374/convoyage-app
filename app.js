@@ -2718,7 +2718,7 @@
           tripgo.plan({...task,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt}).then(async answer=>{
             // Do not hold all TripGo results hostage to a slow public pedestrian router.
             // The two-second budget is only for optional map enrichment, never a proof of access.
-            if(!signal.aborted&&regionalActive()&&window.CPTransportWalking?.createRouter&&tripgo.enrichPedestrianMaps){
+            if(!signal.aborted&&regionalActive()&&window.CPTransportWalking?.createRouter&&tripgo.enrichPedestrianMaps&&Array.isArray(answer?.itineraries)&&answer.itineraries.some(journey=>Array.isArray(journey?.legs)&&journey.legs.some(leg=>leg.mode==='wa_wal'&&(!Array.isArray(leg.geometry)||leg.geometry.length<2)))){
               let walker=null,timeout=null;
               const onAbort=()=>walker?.dispose();
               try{
