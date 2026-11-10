@@ -457,3 +457,20 @@ test('TripGo provider itinerary never invents a verified ticket price',()=>{
   assert.ok(total.unknownLegCount>=1);
  }
 });
+
+test('TripGo rejects a walking polyline starting 20 meters from its exact endpoint',()=>{
+ const encode=points=>{
+  let lastLat=0,lastLon=0,out='';
+  const number=n=>{let v=n<0?~(n<<1):n<<1;while(v>=0x20){out+=String.fromCharCode((0x20|(v&0x1f))+63);v>>=5;}out+=String.fromCharCode(v+63);};
+  for(const p of points){const lat=Math.round(p.lat*1e5),lon=Math.round((p.lon??p.lng)*1e5);number(lat-lastLat);number(lon-lastLon);lastLat=lat;lastLon=lon;}
+  return out;
+ };
+ const payload=clone();
+ const walk=payload.segmentTemplates.find(segment=>segment.modeIdentifier==='wa_wal');
+ assert.ok(walk);
+ const shifted={lat:walk.from.lat+0.00018,lon:walk.from.lon??walk.from.lng};
+ walk.streets=[{encodedWaypoints:encode([shifted,{lat:walk.to.lat,lon:walk.to.lon??walk.to.lng}])}];
+ const result=api.parse(payload,options);
+ assert.equal(result.itineraries.length,2);
+ assert.equal(result.itineraries[0].legs[0].geometry,null);
+});
