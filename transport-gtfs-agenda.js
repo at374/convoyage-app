@@ -222,7 +222,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
         line272Reference=root.CP272Fares?.stopReference?.({networkId:row.networkId,line:row.line,
          fromStop:{id:from?.stopId,lat:from?.lat,lon:from?.lon},
          toStop:{id:to?.stopId,lat:to?.lat,lon:to?.lon},
-         travelDate:row.departure.slice(0,10),product:'parcours',profile:'adult'})||null;
+         travelDate:new Intl.DateTimeFormat('en-CA',{timeZone:row.timeZone||resource.timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(row.departure)),product:'parcours',profile:'adult'})||null;
        }catch(_){}
       }
       const line=doc.createElement('p');
