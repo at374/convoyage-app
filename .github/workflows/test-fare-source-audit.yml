@@ -2,6 +2,8 @@ name: Test fare source audit
 on:
   pull_request:
     paths:
+      - 'scripts/extract_x36_gtfs_stops.py'
+      - 'tests/test_extract_x36_gtfs_stops.py'
       - 'scripts/audit_gtfs_fare_sources.py'
       - 'scripts/discover_aura_fare_documents.py'
       - 'transport-lemanpass-fares.js'
@@ -32,6 +34,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m unittest discover -s tests -p test_gtfs_fare_source_audit.py -v
+      - run: python -m unittest discover -s tests -p test_extract_x36_gtfs_stops.py -v
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
