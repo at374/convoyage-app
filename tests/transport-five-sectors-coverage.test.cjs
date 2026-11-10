@@ -275,3 +275,10 @@ test('partially loaded GTFS feeds name the selected networks that failed',()=>{
  assert.ok(source.includes('Flux sélectionnés indisponibles : '));
  assert.ok(source.includes('Résultats incomplets, même si un autre réseau répond.'));
 });
+
+test('GTFS summaries must belong to the requested feed identifiers',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.ok(source.includes('const expectedIds=new Set([resource,...partners].map(r=>r.datasetId||r.id));'));
+ assert.ok(source.includes('expectedIds.has(n.source.datasetId||n.source.resourceId)'));
+});
