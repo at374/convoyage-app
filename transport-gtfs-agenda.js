@@ -213,6 +213,18 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      for(const row of shown){
       let tariff=null,tariffDescription='';
       try{tariff=root.CPTY51Fares;tariffDescription=tariff?.describe(tariff?.reference(row))||'';}catch(_){}
+      // Published 272 fare: show only when both GTFS stop IDs and GPS pins
+      // match the audited official feed. Never treat it as a verified quote.
+      let line272Reference=null;
+      if(!row.interNetwork&&!row.legs?.length&&row.line==='272'&&row.networkId==='oura-haute-savoie'){
+       try{
+        const from=row.originStop,to=row.destinationStop;
+        line272Reference=root.CP272Fares?.stopReference?.({networkId:row.networkId,line:row.line,
+         fromStop:{id:from?.stopId,lat:from?.lat,lon:from?.lon},
+         toStop:{id:to?.stopId,lat:to?.lat,lon:to?.lon},
+         travelDate:row.departure.slice(0,10),product:'parcours',profile:'adult'})||null;
+       }catch(_){}
+      }
       const line=doc.createElement('p');
       const safeZone=(()=>{try{new Intl.DateTimeFormat('fr-FR',{timeZone:row.timeZone||resource.timeZone});return row.timeZone||resource.timeZone;}catch(_){return resource.timeZone;}})();
       const format=iso=>new Intl.DateTimeFormat('fr-FR',{timeZone:safeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(iso));
@@ -230,6 +242,14 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(tariffDescription){
         const quote=doc.createElement('span');quote.setAttribute('data-y51-fare-reference','');quote.textContent=tariffDescription;line.appendChild(quote);
         const proof=doc.createElement('a');proof.href=tariff.SOURCE;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir le barème officiel';line.appendChild(proof);
+      }
+      if(line272Reference){
+       const quote=doc.createElement('span');quote.setAttribute('data-272-fare-reference','');
+       quote.textContent=' · Ligne 272 : tarif publié '+line272Reference.amount.toFixed(2).replace('.',',')+
+        ' € (adulte, parcours seul, hors zone 10) — prix du trajet non confirmé, à revérifier avant achat';
+       line.appendChild(quote);
+       const proof=doc.createElement('a');proof.href=line272Reference.source;proof.target='_blank';proof.rel='noopener noreferrer';
+       proof.textContent=' · Grille tarifaire officielle 272';line.appendChild(proof);
       }
       for(const [label,stop] of [['Départ',row.originStop],['Correspondance',row.transferStop],['Montée après changement',row.transferDestinationStop],['Arrivée',row.destinationStop]]){
        if(!validPoint(stop))continue;
