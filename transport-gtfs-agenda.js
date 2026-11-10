@@ -342,6 +342,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(!active())return;
       if(!result||!Array.isArray(result.rows))throw new Error('Invalid GTFS journey response');
       truncated=truncated||result.truncated===true;
+      if(Number.isSafeInteger(result.invalidJourneyCount)&&result.invalidJourneyCount>0)
+       invalidJourneys+=Math.min(result.invalidJourneyCount,100000);
       for(const name of (Array.isArray(result.missingDateNetworks)?result.missingDateNetworks:[]))
        missingDateNetworks.add(String(name||'Réseau inconnu').slice(0,80));
       for(const item of (Array.isArray(result.failedDirectNetworks)?result.failedDirectNetworks:[])){
