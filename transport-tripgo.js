@@ -74,7 +74,7 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
      (legs.length&&gap(legs.at(-1).toPoint,coord(s.from))>50)||
      (mode==='wa_wal'&&Math.max(Number.isFinite(s.metres)&&s.metres>=0?s.metres:0,gap(coord(s.from),coord(s.to)))>10&&
       (end===start||Math.max(Number.isFinite(s.metres)&&s.metres>=0?s.metres:0,gap(coord(s.from),coord(s.to)))/((end-start)/1000)>4))||
-     !/^(wa_wal|pt_pub(?:_[a-z0-9-]+)*|stationary_(?:transfer|wait))$/.test(mode||'')||/ferry|boat|air/i.test(s.modeInfo?.identifier||'')) {
+     !/^(wa_wal|pt_pub(?:_[a-z0-9-]+)*|stationary_(?:transfer|wait))$/.test(mode||'')||/ferry|boat|air/i.test([mode,s.modeInfo?.identifier].filter(Boolean).join(' '))) {
      if(typeof mode==='string'&&!/^(wa_wal|pt_pub(?:_[a-z0-9-]+)*|stationary_(?:transfer|wait))$/.test(mode))unsupportedModeTrips++;
      valid=false;break;}
     previous=end;
