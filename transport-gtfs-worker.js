@@ -65,7 +65,7 @@ self.onmessage=async({data})=>{
    if(!valid.length){
     // No indexes were retained: allow a later explicit retry in this worker.
     feedsPromise=null;
-    throw new Error(entries[0].error.message);
+    throw new Error(entries.map((entry,i)=>(list[i]?.network||list[i]?.id||'Réseau '+(i+1))+': '+(entry.error?.message||'chargement impossible')).join(' ; '));
    }
    result=type==='load'?summary(valid[0].feed):{networks:entries.map(e=>e.feed?summary(e.feed):e),partial:valid.length!==entries.length};
   }else if(type==='query'){
