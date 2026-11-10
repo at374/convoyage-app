@@ -168,6 +168,13 @@ self.onmessage=async({data})=>{
      rows=rows.filter(row=>{
       if(!row||!Number.isFinite(Date.parse(row.departure))||
          !Number.isFinite(Date.parse(row.arrival))||Date.parse(row.arrival)<Date.parse(row.departure))return false;
+      // Mission window filtering must happen before limit: otherwise an
+      // out-of-window itinerary can crowd out a usable later result.
+      const earliest=Date.parse(query.window?.earliestDeparture);
+      const latest=Date.parse(query.window?.latestArrival);
+      const margin=Number.isFinite(query.window?.marginMinutes)?query.window.marginMinutes:0;
+      if(Number.isFinite(earliest)&&Date.parse(row.departure)<earliest)return false;
+      if(Number.isFinite(latest)&&Date.parse(row.arrival)>latest-margin*60000)return false;
       if(row.legs===undefined)return true;
       if(!Array.isArray(row.legs)||row.legs.length!==2)return false;
       const [first,second]=row.legs;
