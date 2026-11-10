@@ -43,8 +43,8 @@ self.onmessage=async({data})=>{
    if(feedsPromise)throw new Error('A network is already loading; replace the worker to reload');
    if(type==='loadNetworks'&&(!Array.isArray(options.indexServiceDates)||!options.indexServiceDates.length))throw new Error('Service dates required for multiple GTFS networks');
    const list=type==='load'?[resource]:resources;
-   if(!Array.isArray(list)||!list.length||list.length>2)throw new Error('One or two GTFS networks required');
-   // Duplicate resources waste the two-feed budget and can produce duplicated
+   if(!Array.isArray(list)||!list.length||list.length>3)throw new Error('One to three GTFS networks required');
+   // Duplicate resources waste the bounded feed budget and can produce duplicated
    // journeys masquerading as independent transport alternatives.
    const identities=list.map(item=>item?.datasetId||item?.id||item?.url);
    const urls=list.map(item=>item?.url);
@@ -103,10 +103,14 @@ self.onmessage=async({data})=>{
      rows.push(...found.map(row=>({...row,networkId:current.source.datasetId||current.source.resourceId,
       network:current.source.network,legs:row.legs?.map(leg=>({...leg,network:current.source.network,networkId:current.source.datasetId||current.source.resourceId}))})));
     }
-    if(query.method==='missionJourneys'&&feeds.length===2){
-     const cross=CPGTFSFederation.crossNetworkTrips(feeds,query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
-      ...(connectionDates===undefined?{}:{connectionDates})});
-     rows.push(...cross.journeys);searchTruncated=searchTruncated||cross.searchTruncated;
+    if(query.method==='missionJourneys'&&feeds.length>1){
+     // Federation accepts two feeds at a time. Enumerate bounded pairs so a
+     // third local operator contributes transfers without changing its API.
+     for(let i=0;i<feeds.length;i++)for(let j=i+1;j<feeds.length;j++){
+      const cross=CPGTFSFederation.crossNetworkTrips([feeds[i],feeds[j]],query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
+       ...(connectionDates===undefined?{}:{connectionDates})});
+      rows.push(...cross.journeys);searchTruncated=searchTruncated||cross.searchTruncated;
+     }
     }
     // Apply mission ordering before the result cap, including across networks.
     if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));
