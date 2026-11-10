@@ -34,6 +34,8 @@ class OuraInventoryTests(unittest.TestCase):
             self.assertEqual(result["tripCount"], 1)
             self.assertEqual(result["routesWithoutTrips"], 1)
             self.assertEqual(result["tripsWithoutStopTimes"], 0)
+            self.assertEqual(result["stopsWithoutGps"], 1)
+            self.assertEqual(result["stopTimesWithoutSequence"], 0)
             self.assertEqual([a["tripCount"] for a in result["agencies"]], [1, 0])
             self.assertEqual([r["id"] for r in result["routes"]], ["r1", "r2"])
             self.assertEqual([r["tripCount"] for r in result["routes"]], [1, 0])
@@ -89,6 +91,20 @@ class OuraInventoryTests(unittest.TestCase):
                 archive.writestr("stop_times.txt", "trip_id,stop_id,stop_sequence\nt1,missing,1\n")
             with self.assertRaisesRegex(ValueError, "unknown stop_id"):
                 module.inventory(path, "https://example.org/oura.zip")
+
+    def test_valid_gps_and_invalid_stop_sequence_are_reported(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "geo.zip"
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr("agency.txt", "agency_id,agency_name\na1,Network A\n")
+                archive.writestr("routes.txt", "route_id,agency_id\nr1,a1\n")
+                archive.writestr("trips.txt", "route_id,trip_id\nr1,t1\n")
+                archive.writestr("stops.txt", "stop_id,stop_name,stop_lat,stop_lon\ns1,Annecy,45.899,-6.129\n")
+                archive.writestr("stop_times.txt", "trip_id,stop_id,stop_sequence\nt1,s1,invalid\n")
+            result = module.inventory(path, "https://example.org/oura.zip")
+            self.assertEqual(result["stopsWithoutGps"], 0)
+            self.assertEqual(result["stopTimesWithoutSequence"], 1)
+            self.assertFalse(result["serviceConfirmed"])
 
     def test_non_https_source_rejected(self):
         with self.assertRaises(ValueError):
