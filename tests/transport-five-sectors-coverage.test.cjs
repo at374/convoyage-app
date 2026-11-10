@@ -224,9 +224,9 @@ test('GTFS panel must disclose partners omitted by the two-feed limit',()=>{
  const fs=require('node:fs');
  const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
  assert.ok(source.includes('const partnerCandidates='));
- assert.ok(source.includes('const partners=partnerCandidates.filter(r=>r.federate)'));
+ assert.ok(source.includes('const partners=uniqueCandidates.filter(r=>r.federate)'));
  assert.ok(source.includes('.sort((a,b)=>partnerCoverage(b)-partnerCoverage(a)).slice(0,1);'));
- assert.ok(source.includes('const nonFederatedPartners=partnerCandidates.filter(r=>!r.federate).length;'));
+ assert.ok(source.includes('const nonFederatedPartners=uniqueCandidates.filter(r=>!r.federate).length;'));
  assert.ok(source.includes('sans fédération GTFS activée'));
  assert.ok(source.includes('const omittedPartners=partnerCandidates.length-partners.length;'));
  assert.ok(source.includes('if(omittedPartners>0)warning.textContent+='));
@@ -236,7 +236,7 @@ test('GTFS panel must disclose partners omitted by the two-feed limit',()=>{
 test('omitted GTFS networks are named rather than only counted',()=>{
  const fs=require('node:fs');
  const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
- assert.ok(source.includes('partnerCandidates.filter(r=>!partners.includes(r))'));
+ assert.ok(source.includes('uniqueCandidates.filter(r=>!partners.includes(r))'));
  assert.ok(source.includes("omitted.map(r=>r.network).join(' ; ')"));
  assert.ok(source.includes('Réseaux non interrogés : '));
 });
@@ -256,4 +256,13 @@ test('GTFS worker rejects duplicate network identities before downloading',()=>{
  assert.ok(source.includes('new Set(identities).size!==identities.length'));
  assert.ok(source.includes('Duplicate, unidentified or invalid GTFS network'));
  assert.ok(source.includes('new Set(urls).size!==urls.length'));
+});
+
+test('GTFS candidate list removes duplicate network identities and URLs',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.ok(source.includes('const candidateIds=new Set([resource.datasetId||resource.id]);'));
+ assert.ok(source.includes('const candidateUrls=new Set([resource.url]);'));
+ assert.ok(source.includes('candidateIds.has(identity)||candidateUrls.has(candidate.url)'));
+ assert.ok(source.includes('const omittedPartners=uniqueCandidates.length-partners.length;'));
 });
