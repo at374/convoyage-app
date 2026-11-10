@@ -36,8 +36,15 @@ def inventory(path, source_url):
             raise ValueError("Duplicate GTFS agency_id")
         routes = list(read_rows(archive, "routes.txt"))
         # GTFS permits omitting agency_id on routes only when exactly one agency exists.
-        counts = Counter(r.get("agency_id") or next(iter(agencies)) if len(agencies) == 1
-                         else r.get("agency_id", "") for r in routes)
+        def route_agency(route):
+            agency_id = route.get("agency_id")
+            if agency_id:
+                return agency_id
+            if len(agencies) == 1:
+                return next(iter(agencies))
+            raise ValueError("Routes missing agency_id in multi-agency feed")
+
+        counts = Counter(route_agency(r) for r in routes)
         if not routes or not agencies:
             raise ValueError("Missing GTFS agencies or routes")
         if any(agency_id not in agencies for agency_id in counts):
@@ -46,7 +53,8 @@ def inventory(path, source_url):
         if any(not rid for rid in route_ids) or len(set(route_ids)) != len(route_ids):
             raise ValueError("Missing or duplicate GTFS route_id")
         route_trip_counts = Counter(t.get("route_id", "") for t in read_rows(archive, "trips.txt"))
-        if any(rid not in set(route_ids) for rid in route_trip_counts):
+        known_route_ids = set(route_ids)
+        if any(rid not in known_route_ids for rid in route_trip_counts):
             raise ValueError("Trips reference unknown route_id")
         stop_count = sum(1 for _ in read_rows(archive, "stops.txt"))
         trip_count = sum(route_trip_counts.values())
@@ -62,7 +70,7 @@ def inventory(path, source_url):
             "hasTransfers": "transfers.txt" in files,
             "hasFareFiles": any(n in files for n in
                 ("fare_attributes.txt", "fare_rules.txt", "fare_products.txt", "fare_media.txt")),
-            "routes": [{"id": r["route_id"], "agencyId": (r.get("agency_id") or next(iter(agencies))),
+            "routes": [{"id": r["route_id"], "agencyId": route_agency(r),
                         "shortName": r.get("route_short_name", ""), "longName": r.get("route_long_name", ""),
                         "tripCount": route_trip_counts[r["route_id"]]}
                        for r in sorted(routes, key=lambda r: r["route_id"])],
