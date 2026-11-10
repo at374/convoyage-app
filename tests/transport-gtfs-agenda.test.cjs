@@ -1101,3 +1101,14 @@ test('GTFS service date expansion rejects missing, invalid and inverted windows'
   {earliestDeparture:'2026-11-11T10:00:00Z'}
  ])assert.throws(()=>agenda.serviceDates(window,zone),/Invalid GTFS service window/);
 });
+
+test('GTFS service date expansion rejects excessive horizons before allocating dates',()=>{
+ const zone='Europe/Paris';
+ assert.throws(()=>agenda.serviceDates({
+  earliestDeparture:'2026-01-01T00:00:00Z',
+  latestArrival:'2036-01-01T00:00:00Z'},zone),/GTFS service horizon exceeded/);
+ assert.deepEqual(agenda.serviceDates({
+  earliestDeparture:'2026-11-10T23:30:00Z',
+  latestArrival:'2026-11-11T03:00:00Z'},zone),
+  ['2026-11-10','2026-11-11']);
+});
