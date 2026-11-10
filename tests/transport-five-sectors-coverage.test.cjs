@@ -515,3 +515,9 @@ test('malformed federation response is isolated and marked partial',async()=>{
  assert.equal(posted[1].result?.failedFederations?.length,1);
  assert.equal(posted[1].result.failedFederations[0].reason,'Invalid federation result');
 });
+
+test('three-network Agenda eligibility includes partner-to-partner transfers',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.ok(source.includes('partners.some((first,i)=>partners.slice(i+1).some(second=>crossEnvelopePair(first,second,task)))'));
+});
