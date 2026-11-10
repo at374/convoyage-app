@@ -326,3 +326,23 @@ test('worker returns a partial result when one of two GTFS archives fails',async
  assert.equal(posted[0].result.networks[0].counts.stops,12);
  assert.equal(posted[0].result.networks[1].error.network,'Failed');
 });
+
+test('worker can retry loading after all GTFS feeds failed',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm');
+ const posted=[];let attempts=0;
+ const sandbox={importScripts(){},self:{postMessage(message){posted.push(message);}},
+  CPGTFSLoader:{async loadResource(item){
+   attempts++;
+   if(attempts===1)throw new Error('Temporary archive failure');
+   return {source:{datasetId:item.id,network:item.network,loadedAt:'2026-11-10T08:00:00Z'},
+    index:{counts:{stops:12}},archiveBytes:1,expandedBytes:2,indexedStopTimes:3,
+    skippedStopTimes:0,rejectedStopTimes:0,indexServiceDates:['2026-11-10']};
+  }}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8'),sandbox);
+ const request=id=>({data:{id,type:'load',resource:{id:'retry',network:'Retry',url:'https://example.org/feed.zip'}}});
+ await sandbox.self.onmessage(request(301));
+ await sandbox.self.onmessage(request(302));
+ assert.equal(attempts,2);
+ assert.match(posted[0].error?.message||'',/Temporary archive failure/);
+ assert.equal(posted[1].result?.counts?.stops,12);
+});
