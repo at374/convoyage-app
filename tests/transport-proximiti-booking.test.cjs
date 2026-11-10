@@ -89,3 +89,14 @@ test('booking evidence must match all exact trip identifiers',()=>{
  assert.equal(assess({...base,boardingStopType:'on_demand',registrationConfirmed:true,
   bookingAvailabilityVerified:true,registrationForJourneyVerified:true}).ready,false);
 });
+
+test('460 booking cannot confirm a 461 trip even when both evidence objects agree',()=>{
+ const result=assess({...base,line:'461',boardingStopType:'on_demand',
+  registrationConfirmed:true,bookingAvailabilityVerified:true,...matchingEvidence});
+ assert.equal(result.ready,false);
+ assert.deepEqual(result.missingEvidence,['registration_journey_match']);
+ const matched={...journeyEvidence,line:'461'};
+ assert.equal(assess({...base,line:'461',boardingStopType:'on_demand',
+  registrationConfirmed:true,bookingAvailabilityVerified:true,
+  bookingEvidence:matched,journeyEvidence:matched}).ready,true);
+});
