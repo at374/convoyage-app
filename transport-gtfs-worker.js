@@ -165,8 +165,19 @@ self.onmessage=async({data})=>{
     // otherwise an invalid operator row can displace a usable itinerary.
     if(query.method==='missionJourneys'){
      const before=rows.length;
-     rows=rows.filter(row=>row&&Number.isFinite(Date.parse(row.departure))&&
-      Number.isFinite(Date.parse(row.arrival))&&Date.parse(row.arrival)>=Date.parse(row.departure));
+     rows=rows.filter(row=>{
+      if(!row||!Number.isFinite(Date.parse(row.departure))||
+         !Number.isFinite(Date.parse(row.arrival))||Date.parse(row.arrival)<Date.parse(row.departure))return false;
+      if(row.legs===undefined)return true;
+      if(!Array.isArray(row.legs)||row.legs.length!==2)return false;
+      const [first,second]=row.legs;
+      return row.legs.every(leg=>leg&&Number.isFinite(Date.parse(leg.departure))&&
+       Number.isFinite(Date.parse(leg.arrival))&&Date.parse(leg.arrival)>=Date.parse(leg.departure))&&
+       Date.parse(first.departure)===Date.parse(row.departure)&&
+       Date.parse(second.arrival)===Date.parse(row.arrival)&&
+       Date.parse(second.departure)-Date.parse(first.arrival)>=5*60000&&
+       Date.parse(second.departure)-Date.parse(first.arrival)<=120*60000;
+     });
      invalidJourneyCount=before-rows.length;
      if(invalidJourneyCount)searchTruncated=true;
     }
