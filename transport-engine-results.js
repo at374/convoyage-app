@@ -46,11 +46,11 @@ function aggregateEngineResponses(responses){
      const key=fingerprint(j);
      if(key!==null&&keys.has(key)){
        const old=journeys[keys.get(key)];
-       old.provenance.push(...j.provenance);
-       // Keep independently quoted prices as separate offers when they differ.
+       // Distinct offers must retain their own provider provenance.
        if(old.priceEUR!==j.priceEUR||old.priceStatus!==j.priceStatus){
          journeys.push(j);
        }else{
+         old.provenance.push(...j.provenance);
          old.serviceConfirmed=old.serviceConfirmed||j.serviceConfirmed;
          old.accessVerified=old.accessVerified||j.accessVerified;
        }
