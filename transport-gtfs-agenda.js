@@ -162,12 +162,17 @@ function searchWindow(task){
   marginMinutes:Number.isFinite(late)?Math.max(15,Number.isFinite(task.marginMinutes)?task.marginMinutes:15):0};
 }
 function serviceDates(window,timeZone){
+ if(!window||!Number.isFinite(timestamp(window.earliestDeparture))||
+    !Number.isFinite(timestamp(window.latestArrival))||
+    timestamp(window.earliestDeparture)>timestamp(window.latestArrival))
+  throw new Error('Invalid GTFS service window');
  const formatter=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'});
  const day=iso=>{
   const parts=Object.fromEntries(formatter.formatToParts(new Date(iso)).map(p=>[p.type,p.value]));
   return Date.parse(`${parts.year}-${parts.month}-${parts.day}T12:00:00Z`);
  };
  const first=day(window.earliestDeparture)-86400000,last=day(window.latestArrival),dates=[];
+ if(!Number.isFinite(first)||!Number.isFinite(last)||last<first)throw new Error('Invalid GTFS service window');
  for(let at=first;at<=last;at+=86400000)dates.push(new Date(at).toISOString().slice(0,10));
  if(dates.length>5)throw new Error('GTFS service horizon exceeded');
  return dates;
