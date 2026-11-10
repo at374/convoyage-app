@@ -921,3 +921,22 @@ test('Proxim iTi 460/461 theoretical results warn of unverified Bus CheckIn book
   }finally{session.dispose();}
  }
 });
+
+test('Proxim iTi booking warning also covers 460/461 inside theoretical transfer legs',async()=>{
+ const cases=[
+  [{line:'Y62',network:'Cars Région'},{line:'460',network:'Proxim iTi'}],
+  [{line:'461',network:'Proxim iTi'},{line:'Y62',network:'Cars Région'}],
+  [{line:'460',network:'Unrelated carrier'},{line:'Y62',network:'Cars Région'}]
+ ];
+ for(const [legsIndex,legs] of cases.entries()){
+  const target=panel();
+  const transfer=row({line:'Y62',network:'Cars Région',legs,
+   transferStop:{name:'A'},transferMinutes:20,minimumTransferMinutes:10});
+  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+   load:async()=>summary,query:async()=>({rows:[transfer],truncated:false}),dispose(){}})});
+  try{
+   await session.done;
+   assert.equal(target.textContent.includes('réservation et disponibilité non confirmées'),legsIndex!==2);
+  }finally{session.dispose();}
+ }
+});
