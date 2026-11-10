@@ -8,6 +8,7 @@ import argparse
 import csv
 import io
 import json
+import hashlib
 import re
 import sys
 import zipfile
@@ -28,6 +29,8 @@ def extract(path, source_url, checked_on):
         raise ValueError("Official feed source URL must use HTTPS")
     if date.fromisoformat(checked_on).isoformat() != checked_on:
         raise ValueError("Invalid audit date")
+    with open(path, 'rb') as stream:
+        checksum = hashlib.file_digest(stream, 'sha256').hexdigest()
     with zipfile.ZipFile(path) as archive:
         route_ids = {r["route_id"] for r in rows(archive, "routes.txt")
                      if r.get("route_short_name", "").strip().upper() == "X36"}
@@ -59,6 +62,7 @@ def extract(path, source_url, checked_on):
         stops.sort(key=lambda item: (item["gtfsName"], item["id"]))
         return {"line": "X36", "networkId": "cars-region-express",
                 "sourceType": "official_gtfs", "sourceUrl": source_url,
+                "sourceSha256": checksum,
                 "checkedOn": checked_on, "routeCount": len(route_ids),
                 "tripCount": len(trip_ids), "stopCount": len(stops),
                 "candidatesOnly": True, "stopMappingVerified": False,
