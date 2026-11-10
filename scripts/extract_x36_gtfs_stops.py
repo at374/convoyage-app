@@ -41,9 +41,11 @@ def extract(path, source_url, checked_on):
         if not trip_ids:
             raise ValueError("No X36 trips in supplied GTFS")
         stop_trip_count = defaultdict(set)
+        trip_stop_sequences = defaultdict(list)
         for item in rows(archive, "stop_times.txt"):
             if item.get("trip_id") in trip_ids:
                 stop_trip_count[item["stop_id"]].add(item["trip_id"])
+                trip_stop_sequences[item["trip_id"]].append((int(item["stop_sequence"]), item["stop_id"]))
         stops = []
         for item in rows(archive, "stops.txt"):
             if item.get("stop_id") not in stop_trip_count:
@@ -60,13 +62,21 @@ def extract(path, source_url, checked_on):
         if not stops:
             raise ValueError("No valid X36 stop coordinates in supplied GTFS")
         stops.sort(key=lambda item: (item["gtfsName"], item["id"]))
+        valid_ids = {stop["id"] for stop in stops}
+        patterns = defaultdict(int)
+        for sequence in trip_stop_sequences.values():
+            ordered = tuple(stop_id for _, stop_id in sorted(sequence) if stop_id in valid_ids)
+            if len(ordered) >= 2:
+                patterns[ordered] += 1
+        stop_patterns = [{"stopIds": list(ids), "tripCount": count}
+                         for ids, count in sorted(patterns.items(), key=lambda item: (-item[1], item[0]))]
         return {"line": "X36", "networkId": "cars-region-express",
                 "sourceType": "official_gtfs", "sourceUrl": source_url,
                 "sourceSha256": checksum,
                 "checkedOn": checked_on, "routeCount": len(route_ids),
                 "tripCount": len(trip_ids), "stopCount": len(stops),
                 "candidatesOnly": True, "stopMappingVerified": False,
-                "journeyFareVerified": False, "stops": stops}
+                "journeyFareVerified": False, "stopPatterns": stop_patterns, "stops": stops}
 
 
 def main():
