@@ -256,7 +256,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       }
       // Proxim iTi booking evidence is not present in theoretical GTFS schedules.
       // Restrict the advisory to an explicitly identified operator, never a bare route number.
-      if(['460','461'].includes(String(row.line))&&/proxim\\s*i\\s*ti/i.test(String(row.network||''))){
+      if(['460','461'].includes(String(row.line))&&/proxim\s*i\s*ti/i.test(String(row.network||''))){
        const advisory=doc.createElement('span');
        advisory.setAttribute('data-proximiti-booking-unverified','');
        advisory.textContent=' · Proxim iTi '+row.line+' : vérifier si les arrêts et correspondances nécessitent une réservation Bus CheckIn ; réservation et disponibilité non confirmées.';
