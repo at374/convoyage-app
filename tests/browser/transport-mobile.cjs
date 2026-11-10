@@ -350,6 +350,8 @@ async function run(){
   assert.equal(await railCard.evaluate(node=>node.open),true,'SNCF card opens');
   assert.match(await railCard.innerText(),/Annecy/);assert.match(await railCard.innerText(),/Grenoble/);
   assert.match(await railCard.innerText(),/Tarif non vérifié/);
+  assert.match(await railCard.innerText(),/Total inconnu/,'Expanded card explains that the fare total is unknown');
+  assert.match(await railCard.innerText(),/prix inconnu/,'Expanded card identifies unpriced transport legs');
   assert.ok(await railCard.locator('ol li').count()>0,'SNCF card shows recorded train legs');
   assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'SNCF card fits mobile width');
   await railCard.screenshot({path:path.join(output,'mobile-annecy-grenoble.png')});
