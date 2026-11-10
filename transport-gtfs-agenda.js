@@ -334,7 +334,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
     if(!eligible(task))continue;
     try{
      const window=searchWindow(task),dates=serviceDates(window,resource.timeZone),rows=[];let truncated=false,invalidJourneys=0;
-     const federationFailures=new Map(),missingDateNetworks=new Set();
+     const federationFailures=new Map(),missingDateNetworks=new Set(),missingConnectionDates=new Map();
      for(const date of dates){
       if(!active())return;
       const result=await client.query({method:'missionJourneys',date,origin:task.from,destination:task.to,
@@ -344,6 +344,15 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       truncated=truncated||result.truncated===true;
       for(const name of (Array.isArray(result.missingDateNetworks)?result.missingDateNetworks:[]))
        missingDateNetworks.add(String(name||'Réseau inconnu').slice(0,80));
+      for(const item of (Array.isArray(result.missingConnectionDates)?result.missingConnectionDates:[])){
+       if(!Array.isArray(item?.networks)||item.networks.length!==2||!Array.isArray(item.dates))continue;
+       const pair=item.networks.map(n=>String(n||'Réseau inconnu').slice(0,80)).join(' / ');
+       const dates=item.dates.filter(d=>typeof d==='string'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(d));
+       if(dates.length){
+        if(!missingConnectionDates.has(pair))missingConnectionDates.set(pair,new Set());
+        dates.forEach(d=>missingConnectionDates.get(pair).add(d));
+       }
+      }
       for(const failure of (Array.isArray(result.failedFederations)?result.failedFederations:[])){
        if(!Array.isArray(failure?.networks)||failure.networks.length!==2)continue;
        const names=failure.networks.map(name=>String(name||'Réseau inconnu').slice(0,80));
@@ -402,6 +411,12 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      if(missingDateNetworks.size&&active()){
       const detail=doc.createElement('p');
       detail.textContent='Dates GTFS non couvertes : '+[...missingDateNetworks].join(' ; ').slice(0,400)+'. Résultats partiels.';
+      status.appendChild(detail);
+     }
+     if(missingConnectionDates.size&&active()){
+      const detail=doc.createElement('p');
+      detail.textContent='Correspondances non recherchées aux dates : '+
+       [...missingConnectionDates].map(([pair,dates])=>pair+' : '+[...dates].join(', ')).join(' ; ').slice(0,500)+'. Recherche partielle.';
       status.appendChild(detail);
      }
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
