@@ -227,7 +227,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
   .sort((a,b)=>partnerCoverage(b)-partnerCoverage(a)).slice(0,2);
  const omittedPartners=uniqueCandidates.length-partners.length;
  const nonFederatedPartners=uniqueCandidates.filter(r=>!r.federate).length;
- const eligible=task=>selected(resource,task)||partners.some(r=>selected(r,task)||crossEnvelopePair(resource,r,task));
+ const eligible=task=>selected(resource,task)||partners.some(r=>selected(r,task)||crossEnvelopePair(resource,r,task))||
+  partners.some((first,i)=>partners.slice(i+1).some(second=>crossEnvelopePair(first,second,task)));
  const section=doc.createElement('div');section.className='bk';section.setAttribute('data-gtfs-agenda','');
  const heading=doc.createElement('h3');heading.textContent=resource.network+' — horaires aux arrêts';section.appendChild(heading);
  const sourceStatus=doc.createElement('p');sourceStatus.className='doux';sourceStatus.setAttribute('role','status');
