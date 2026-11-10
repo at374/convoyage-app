@@ -930,8 +930,13 @@ test('Proxim iTi booking warning also covers 460/461 inside theoretical transfer
  ];
  for(const [legsIndex,legs] of cases.entries()){
   const target=panel();
-  const transfer=row({line:'Y62',network:'Cars Région',legs,
-   transferStop:{name:'A'},transferMinutes:20,minimumTransferMinutes:10});
+  const completeLegs=legs.map((leg,i)=>({...leg,tripId:'T'+i,
+   from:i===0?'A':'X',to:i===0?'X':'B',
+   departure:i===0?'2026-11-02T11:00:00Z':'2026-11-02T11:28:00Z',
+   arrival:i===0?'2026-11-02T11:20:00Z':'2026-11-02T12:00:00Z'}));
+  const transfer=row({line:'Y62',network:'Cars Région',legs:completeLegs,
+   transferStopId:'X',transferStop:{name:'A',lat:45.8,lon:6.2},
+   transferMinutes:8,minimumTransferMinutes:5});
   const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
    load:async()=>summary,query:async()=>({rows:[transfer],truncated:false}),dispose(){}})});
   try{
