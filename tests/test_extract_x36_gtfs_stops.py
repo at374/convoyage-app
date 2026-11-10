@@ -33,6 +33,21 @@ class ExtractX36Tests(unittest.TestCase):
             self.assertFalse(result["journeyFareVerified"])
             self.assertTrue(result["candidatesOnly"])
 
+    def test_feed_without_x36_is_rejected(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "feed.zip"
+            files = {
+                "routes.txt": "route_id,route_short_name\\nr2,X37\\n",
+                "trips.txt": "route_id,trip_id\\nr2,t2\\n",
+                "stop_times.txt": "trip_id,stop_id,stop_sequence\\nt2,c,1\\n",
+                "stops.txt": "stop_id,stop_name,stop_lat,stop_lon\\nc,Other,46.3,6.0\\n",
+            }
+            with zipfile.ZipFile(path, "w") as archive:
+                for name, data in files.items():
+                    archive.writestr(name, data)
+            with self.assertRaisesRegex(ValueError, "X36 route not found"):
+                module.extract(path, "https://example.org/official-gtfs-fixture.zip", "2026-11-10")
+
     def test_invalid_source_rejected(self):
         with self.assertRaises(ValueError):
             module.extract("unused.zip", "http://example.org/feed.zip", "2026-11-10")
