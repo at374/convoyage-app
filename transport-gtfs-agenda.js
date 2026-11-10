@@ -208,8 +208,8 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
   (express&&taskList.some(t=>selected(express,t))?express:null);
  if(!resource)return {dispose,done:Promise.resolve()};
  const partnerCandidates=[...urbanResources,...localResources,...(express?[express]:[])].filter(r=>r!==resource&&taskList.some(task=>
-  ((r===express||r.urban)&&selected(r,task))||crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
-  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to})))));
+  ((r===express||r.urban)&&selected(r,task))||crossEnvelopePair(resource,r,task)||
+  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to}))));
  // Pick the partner that makes the largest number of mission windows eligible.
  // Stable source order resolves ties; this does not assert a served stop or trip.
  const partnerCoverage=r=>taskList.reduce((count,task)=>count+
@@ -223,8 +223,22 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
   candidateIds.add(identity);candidateUrls.add(candidate.url);
   uniqueCandidates.push(candidate);
  }
- const partners=uniqueCandidates.filter(r=>r.federate)
-  .sort((a,b)=>partnerCoverage(b)-partnerCoverage(a)).slice(0,2);
+ // Score partner combinations together: two endpoint-only networks can serve
+ // a mission that neither partner covers alone nor via the primary feed.
+ const federatedCandidates=uniqueCandidates.filter(r=>r.federate);
+ const combinations=[];
+ for(let i=0;i<federatedCandidates.length;i++){
+  combinations.push([federatedCandidates[i]]);
+  for(let j=i+1;j<federatedCandidates.length;j++)
+   combinations.push([federatedCandidates[i],federatedCandidates[j]]);
+ }
+ const coveredTasks=pair=>taskList.reduce((count,task)=>count+
+  (selected(resource,task)||pair.some(r=>selected(r,task)||crossEnvelopePair(resource,r,task))||
+   (pair.length===2&&crossEnvelopePair(pair[0],pair[1],task))?1:0),0);
+ combinations.sort((a,b)=>coveredTasks(b)-coveredTasks(a)||
+  b.reduce((n,r)=>n+partnerCoverage(r),0)-a.reduce((n,r)=>n+partnerCoverage(r),0)||
+  a.length-b.length);
+ const partners=combinations[0]||[];
  const omittedPartners=uniqueCandidates.length-partners.length;
  const nonFederatedPartners=uniqueCandidates.filter(r=>!r.federate).length;
  const eligible=task=>selected(resource,task)||partners.some(r=>selected(r,task)||crossEnvelopePair(resource,r,task))||
