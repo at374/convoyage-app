@@ -2716,16 +2716,26 @@
           const status=document.createElement('div');status.className='doux';status.setAttribute('role','status');
           status.textContent=label+' TripGo : recherche des transports et des marches…';target.appendChild(status);
           tripgo.plan({...task,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt}).then(async answer=>{
-            // Resolve missing pedestrian map lines before displaying TripGo cards.
-            // Keep a strict request budget; failed walking lookup never erases transit.
+            // Do not hold all TripGo results hostage to a slow public pedestrian router.
+            // The two-second budget is only for optional map enrichment, never a proof of access.
             if(!signal.aborted&&regionalActive()&&window.CPTransportWalking?.createRouter&&tripgo.enrichPedestrianMaps){
-              let walker=null;
+              let walker=null,timeout=null;
+              const onAbort=()=>walker?.dispose();
               try{
                 walker=window.CPTransportWalking.createRouter({fetcher:regionalFetch,maxRequests:8});
-                signal.addEventListener('abort',()=>walker.dispose(),{once:true});
-                answer=await tripgo.enrichPedestrianMaps(answer,walker,{maxRoutes:8,signal});
+                signal.addEventListener('abort',onAbort,{once:true});
+                const enriched=tripgo.enrichPedestrianMaps(answer,walker,{maxRoutes:8,signal});
+                const outcome=await Promise.race([
+                  enriched.then(value=>({value})).catch(()=>({failed:true})),
+                  new Promise(resolve=>{timeout=setTimeout(()=>resolve({timedOut:true}),2000);})
+                ]);
+                if(outcome.value)answer=outcome.value;
               }catch(_){/* Preserve provider routes and their original evidence. */}
-              finally{walker?.dispose();}
+              finally{
+                if(timeout!==null)clearTimeout(timeout);
+                signal.removeEventListener('abort',onAbort);
+                walker?.dispose();
+              }
             }
             if(!regionalActive()||signal.aborted||!status.isConnected)return;
             const shown=(Array.isArray(answer?.itineraries)?answer.itineraries:[]).filter(result=>Array.isArray(result?.legs)&&result.legs.length>0&&result.legs.every(leg=>leg&&typeof leg==='object'&&Number.isFinite(Date.parse(leg.departure))&&Number.isFinite(Date.parse(leg.arrival))&&Date.parse(leg.arrival)>=Date.parse(leg.departure))&&result.legs.every((leg,index)=>index===0||Date.parse(leg.departure)>=Date.parse(result.legs[index-1].arrival))&&Number.isFinite(Date.parse(result.departure))&&Number.isFinite(Date.parse(result.arrival))&&Date.parse(result.arrival)>=Date.parse(result.departure)&&Date.parse(result.legs[0].departure)===Date.parse(result.departure)&&Date.parse(result.legs[result.legs.length-1].arrival)===Date.parse(result.arrival)&&(!task.latestArrival||Date.parse(result.arrival)<=Date.parse(task.latestArrival))&&result.evidence&&Array.isArray(result.evidence.missing)&&Number.isFinite(result.evidence.startGapMeters)&&result.evidence.startGapMeters>=0&&Number.isFinite(result.evidence.endGapMeters)&&result.evidence.endGapMeters>=0&&Array.isArray(result.alerts));
