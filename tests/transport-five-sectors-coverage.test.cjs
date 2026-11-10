@@ -466,5 +466,8 @@ test('failed GTFS federation pair preserves other pairs and marks search truncat
  assert.deepEqual(pairs,['feed1+feed2','feed1+feed3','feed2+feed3']);
  assert.equal(posted[1].result?.truncated,true);
  assert.equal(posted[1].result?.searchTruncated,true);
+ assert.equal(posted[1].result?.failedFederations?.length,1);
+ assert.equal(posted[1].result.failedFederations[0].reason,'Federation failed');
+ assert.deepEqual(Array.from(posted[1].result.failedFederations[0].networks),['feed1','feed2']);
  assert.equal(posted[1].error,undefined);
 });
