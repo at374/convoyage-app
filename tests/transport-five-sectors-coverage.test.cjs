@@ -567,3 +567,26 @@ test('GTFS Agenda starts with an endpoint network when no full-trip feed exists'
    resourceList,taskList,selected,crossEnvelopePair});
  assert.equal(resource.id,'from');
 });
+
+test('mission search continues on partner when primary GTFS service date is missing',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm');
+ const posted=[],calls=[];
+ const sandbox={importScripts(){},self:{postMessage(message){posted.push(message);}},
+  CPGTFSLoader:{async loadResource(item){return {source:{datasetId:item.id},
+   index:{counts:{stops:1}},files:{},
+   indexServiceDates:item.id==='primary'?['2026-11-09']:['2026-11-10']};}},
+  CPGTFSIndex:{nearbyDirectTrips(_f,_i,date){calls.push(date);return [];},
+   nearbyTransferTrips(){return {journeys:[],searchTruncated:false};}},
+  CPGTFSTime:{datedTrips(_f,_i,found){return found;},datedTransferTrips(){return [];},serviceWindow(){return {};}},
+  CPGTFSFederation:{connectionServiceDates(date){return [date];},
+   crossNetworkTrips(){throw new Error('Only one feed should be searched');}}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8'),sandbox);
+ await sandbox.self.onmessage({data:{id:901,type:'loadNetworks',options:{indexServiceDates:['2026-11-10']},
+  resources:['primary','partner'].map(id=>({id,url:'https://example.org/'+id}))}});
+ await sandbox.self.onmessage({data:{id:902,type:'query',query:{method:'missionJourneys',date:'2026-11-10',
+  connectionDates:['2026-11-10'],origin:{lat:46,lon:6},destination:{lat:46.1,lon:6.1},window:{}}}});
+ assert.equal(posted[1].error,undefined);
+ assert.equal(posted[1].result?.truncated,true);
+ assert.deepEqual(Array.from(posted[1].result.missingDateNetworks),['primary']);
+ assert.deepEqual(calls,['2026-11-10']);
+});
