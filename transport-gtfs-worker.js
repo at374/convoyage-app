@@ -12,6 +12,10 @@ function scope(feed,date){if(date&&feed.indexServiceDates&&!feed.indexServiceDat
 function fareScopePath(feeds,leg){
  const feed=feeds.find(f=>(f.source.datasetId||f.source.resourceId)===leg.networkId);
  if(leg.networkId!=='oura-haute-savoie'||leg.line!=='Y51'||!feed)return null;
+ // Fare enrichment is optional. Incomplete indexes must never hide an
+ // otherwise valid journey or turn an unverified fare into a verified one.
+ if(!feed.index?.tripById?.get||!feed.index?.routeById?.get||
+    !feed.index?.timesByTrip?.get||!feed.index?.stopById?.get)return null;
  const trip=feed.index.tripById.get(leg.tripId),route=feed.index.routeById.get(trip?.route_id);
  if(route?.route_short_name!=='Y51'||!leg.departureTime||!leg.arrivalTime)return null;
  const times=feed.index.timesByTrip.get(leg.tripId)||[];
@@ -32,8 +36,11 @@ function fareScopePath(feeds,leg){
   departure:leg.departure,arrival:leg.arrival,stops};
 }
 function withFareScope(feeds,row){
- if(Array.isArray(row.legs))return {...row,legs:row.legs.map(leg=>({...leg,fareScopePath:fareScopePath(feeds,leg)}))};
- return {...row,fareScopePath:fareScopePath(feeds,row)};
+ const safeScope=leg=>{
+  try{return fareScopePath(feeds,leg);}catch(_error){return null;}
+ };
+ if(Array.isArray(row.legs))return {...row,legs:row.legs.map(leg=>({...leg,fareScopePath:safeScope(leg)}))};
+ return {...row,fareScopePath:safeScope(row)};
 }
 self.onmessage=async({data})=>{
  const {id,type,resource,resources,options={},query={}}=data||{};
