@@ -42,8 +42,14 @@ def inventory(path, source_url):
             raise ValueError("Missing GTFS agencies or routes")
         if any(agency_id not in agencies for agency_id in counts):
             raise ValueError("Routes reference unknown agency_id")
+        route_ids = [r.get("route_id", "") for r in routes]
+        if any(not rid for rid in route_ids) or len(set(route_ids)) != len(route_ids):
+            raise ValueError("Missing or duplicate GTFS route_id")
+        route_trip_counts = Counter(t.get("route_id", "") for t in read_rows(archive, "trips.txt"))
+        if any(rid not in set(route_ids) for rid in route_trip_counts):
+            raise ValueError("Trips reference unknown route_id")
         stop_count = sum(1 for _ in read_rows(archive, "stops.txt"))
-        trip_count = sum(1 for _ in read_rows(archive, "trips.txt"))
+        trip_count = sum(route_trip_counts.values())
         if not stop_count or not trip_count:
             raise ValueError("Missing stops or trips")
         files = {name.rsplit("/", 1)[-1] for name in archive.namelist()}
@@ -56,6 +62,10 @@ def inventory(path, source_url):
             "hasTransfers": "transfers.txt" in files,
             "hasFareFiles": any(n in files for n in
                 ("fare_attributes.txt", "fare_rules.txt", "fare_products.txt", "fare_media.txt")),
+            "routes": [{"id": r["route_id"], "agencyId": (r.get("agency_id") or next(iter(agencies))),
+                        "shortName": r.get("route_short_name", ""), "longName": r.get("route_long_name", ""),
+                        "tripCount": route_trip_counts[r["route_id"]]}
+                       for r in sorted(routes, key=lambda r: r["route_id"])],
             "agencies": [{"id": aid, "name": name, "routeCount": counts[aid]}
                          for aid, name in sorted(agencies.items(), key=lambda p: (p[1], p[0]))],
         }
