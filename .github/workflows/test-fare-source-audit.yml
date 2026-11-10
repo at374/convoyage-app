@@ -2,6 +2,8 @@ name: Test fare source audit
 on:
   pull_request:
     paths:
+      - 'transport-engine-search.js'
+      - 'tests/transport-engine-search.test.cjs'
       - 'transport-line-coverage.js'
       - 'tests/transport-line-coverage.test.cjs'
       - 'transport-engine-results.js'
@@ -55,4 +57,5 @@ jobs:
       - run: node --test tests/transport-reference-integration-safety.test.cjs
       - run: node --test tests/transport-engine-results.test.cjs
       - run: node --test tests/transport-line-coverage.test.cjs
+      - run: node --test tests/transport-engine-search.test.cjs
       - run: python -m py_compile scripts/extract_aravis_fare_matrix.py
