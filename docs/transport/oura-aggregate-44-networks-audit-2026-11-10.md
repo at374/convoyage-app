@@ -11,10 +11,15 @@
 - CHAMBERY – Synchro ; BOURG-EN-BRESSE – Rubis ; THONON LES BAINS – STAR'T ; EVIAN – EVA'D.
 - Cars Région Ain, Haute Savoie, Isère, Savoie et Express ; AIX-LES-BAINS – Ondéa ; ALBERTVILLE – TRA Mobilité ; CHAMONIX – Chamonix Bus.
 
+## Taille et limites de la ressource
+- La fiche officielle de la ressource 78904 indique une archive **GTFS de 106,07 Mo**. Prévoir un traitement en flux ou en fichiers temporaires, sans charger toute l'archive en mémoire du navigateur Android.
+- Le catalogue affiche **44 réseaux partenaires** ; la liste de couverture par réseau de la ressource est à contrôler séparément, car présence dans le catalogue et présence de courses à une date donnée sont deux critères différents.
+- Le nombre d'avertissements de validation peut changer d'une publication à l'autre ; conserver l'identifiant et la date de l'archive analysée.
+
 ## Dates de service par réseau — vérification indispensable
 - **Proxim iTi Bonneville : du 29/03/2027 au 12/12/2027 dans la ressource GTFS consultée.** Pour une mission en novembre 2026, la présence du réseau dans l'agrégat ne prouve **aucune course utilisable** ; rechercher un flux local couvrant la date, sans fabriquer de trajet.
-- **Cars Région Express : 09/11/2026–07/02/2027** ; **Synchro Chambéry : 09/11/2026–20/12/2026** ; **STAR’T Thonon : 09/11/2026–20/12/2026** ; **TAM Ambérieu : 09/11/2026–31/12/2026**.
-- **J’ybus Rumilly : 09/11/2026–03/07/2027** ; **TAC Annemasse : 09/11/2026–31/12/2027** ; **Rubis Bourg : 09/11/2026–31/12/2027**.
+- **Cars Région Express : 10/11/2026–07/02/2027** ; **Synchro Chambéry : 10/11/2026–20/12/2026** ; **STAR’T Thonon : 10/11/2026–20/12/2026** ; **TAM Ambérieu : 10/11/2026–31/12/2026**.
+- **J’ybus Rumilly : 10/11/2026–03/07/2027** ; **TAC Annemasse : 10/11/2026–31/12/2027** ; **Rubis Bourg : 10/11/2026–31/12/2027**.
 - Ces périodes décrivent les dates couvertes par le GTFS, non la preuve d'un service à chaque jour/heure. Contrôler `calendar` et `calendar_dates`.
 - Source détaillée par réseau : https://transport.data.gouv.fr/resources/78904?issue_type=Slow&locale=fr
 
