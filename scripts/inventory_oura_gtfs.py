@@ -56,6 +56,9 @@ def inventory(path, source_url):
         known_route_ids = set(route_ids)
         if any(rid not in known_route_ids for rid in route_trip_counts):
             raise ValueError("Trips reference unknown route_id")
+        agency_trip_counts = Counter()
+        for route in routes:
+            agency_trip_counts[route_agency(route)] += route_trip_counts[route["route_id"]]
         stop_count = sum(1 for _ in read_rows(archive, "stops.txt"))
         trip_count = sum(route_trip_counts.values())
         if not stop_count or not trip_count:
@@ -65,6 +68,7 @@ def inventory(path, source_url):
             "sourceUrl": source_url, "sourceSha256": sha,
             "archiveOnly": True, "serviceConfirmed": False, "fareVerified": False,
             "routeCount": len(routes), "stopCount": stop_count, "tripCount": trip_count,
+            "routesWithoutTrips": sum(route_trip_counts[r["route_id"]] == 0 for r in routes),
             "hasCalendar": "calendar.txt" in files,
             "hasCalendarExceptions": "calendar_dates.txt" in files,
             "hasTransfers": "transfers.txt" in files,
@@ -74,7 +78,8 @@ def inventory(path, source_url):
                         "shortName": r.get("route_short_name", ""), "longName": r.get("route_long_name", ""),
                         "tripCount": route_trip_counts[r["route_id"]]}
                        for r in sorted(routes, key=lambda r: r["route_id"])],
-            "agencies": [{"id": aid, "name": name, "routeCount": counts[aid]}
+            "agencies": [{"id": aid, "name": name, "routeCount": counts[aid],
+                          "tripCount": agency_trip_counts[aid]}
                          for aid, name in sorted(agencies.items(), key=lambda p: (p[1], p[0]))],
         }
 
