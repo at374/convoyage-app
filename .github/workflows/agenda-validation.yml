@@ -3,12 +3,6 @@ name: Agenda JavaScript validation
 on:
   pull_request:
     branches: [main]
-    paths:
-      - 'transport-gtfs-agenda.js'
-      - 'tests/transport-gtfs-agenda.test.cjs'
-      - 'tests/agenda-transports.test.cjs'
-      - 'tests/swiss-transport-api.test.cjs'
-      - '.github/workflows/agenda-validation.yml'
   push:
     branches: [main, "feature/agenda-transports-summary"]
 
