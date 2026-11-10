@@ -224,7 +224,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
   uniqueCandidates.push(candidate);
  }
  const partners=uniqueCandidates.filter(r=>r.federate)
-  .sort((a,b)=>partnerCoverage(b)-partnerCoverage(a)).slice(0,1);
+  .sort((a,b)=>partnerCoverage(b)-partnerCoverage(a)).slice(0,2);
  const omittedPartners=uniqueCandidates.length-partners.length;
  const nonFederatedPartners=uniqueCandidates.filter(r=>!r.federate).length;
  const eligible=task=>selected(resource,task)||partners.some(r=>selected(r,task)||crossEnvelopePair(resource,r,task));
