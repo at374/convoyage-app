@@ -680,3 +680,33 @@ test('GTFS worker retains Y51 itinerary when optional fare tables are missing',a
  assert.equal(posted[1].result.rows[0].fareScopePath,null);
  assert.equal(posted[1].result.faresVerified,false);
 });
+
+test('GTFS worker isolates direct and federation failures across three operators',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm'),posted=[],pairs=[];
+ const sandbox={importScripts(){},self:{postMessage(message){posted.push(message);}},
+  CPGTFSLoader:{async loadResource(item){return {source:{datasetId:item.id,network:item.id},
+   index:{counts:{stops:1},id:item.id},files:{},indexServiceDates:['2026-11-10']};}},
+  CPGTFSIndex:{nearbyDirectTrips(_f,index){
+   if(index.id==='b')throw new Error('bad index');
+   return [{departure:'2026-11-10T09:00:00Z',arrival:'2026-11-10T10:00:00Z'}];},
+   nearbyTransferTrips(){return {journeys:[],searchTruncated:false};}},
+  CPGTFSTime:{datedTrips(_f,_i,found){return found;},datedTransferTrips(){return [];},serviceWindow(){return {};}},
+  CPGTFSFederation:{connectionServiceDates(date){return [date];},
+   crossNetworkTrips(feeds){
+    const pair=feeds.map(feed=>feed.source.datasetId).join('+');
+    pairs.push(pair);
+    if(pair==='a+b')throw new Error('bad federation');
+    return {journeys:[],searchTruncated:false};
+   }}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8'),sandbox);
+ await sandbox.self.onmessage({data:{id:1401,type:'loadNetworks',options:{indexServiceDates:['2026-11-10']},
+  resources:['a','b','c'].map(id=>({id,url:'https://example.org/'+id}))}});
+ await sandbox.self.onmessage({data:{id:1402,type:'query',query:{method:'missionJourneys',
+  date:'2026-11-10',origin:{lat:46,lon:6},destination:{lat:46.1,lon:6.1},window:{}}}});
+ assert.equal(posted[1].error,undefined);
+ assert.equal(posted[1].result.rows.length,2);
+ assert.deepEqual(pairs,['a+b','a+c','b+c']);
+ assert.equal(posted[1].result.failedDirectNetworks[0].network,'b');
+ assert.equal(posted[1].result.failedFederations[0].reason,'bad federation');
+ assert.equal(posted[1].result.truncated,true);
+});
