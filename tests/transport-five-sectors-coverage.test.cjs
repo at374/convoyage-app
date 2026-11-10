@@ -368,3 +368,10 @@ test('Agenda surfaces bounded GTFS load errors as plain text',()=>{
  assert.ok(source.includes("(detail?' Détail : '+detail:'')"));
  assert.ok(source.includes("sourceStatus.textContent='Flux officiel indisponible"));
 });
+
+test('skipped GTFS candidate networks force partial mission results',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.ok(source.includes('const incomplete=truncated||partialNetworks||omittedPartners>0||invalidJourneys>0;'));
+ assert.ok(source.includes('onResults({task,itineraries:distinct,partial:incomplete})'));
+});
