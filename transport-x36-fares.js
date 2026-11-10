@@ -30,12 +30,17 @@ function pinnedStopName(stop,pins){
  const matches=pins.filter(pin=>pin&&pin.id===stop.id&&
   typeof pin.name==='string'&&pin.name.trim()&&
   Number.isFinite(pin.lat)&&Number.isFinite(pin.lon)&&
+  pin.lat>=-90&&pin.lat<=90&&pin.lon>=-180&&pin.lon<=180&&
   Math.abs(pin.lat-stop.lat)<=0.0001&&Math.abs(pin.lon-stop.lon)<=0.0001);
  return matches.length===1?matches[0].name:null;
 }
 function stopReference({networkId,line,fromStop,toStop,travelDate,profile='adult',
- auditedPins=[],sourceData=data}={}){
- if(networkId!=='oura-ain')return null;
+ auditedPins=[],auditEvidence,sourceData=data}={}){
+ // Stop pins must be tied to a documented official GTFS extraction, not arbitrary names.
+ if(networkId!=='oura-ain'||auditEvidence?.networkId!=='oura-ain'||
+    auditEvidence?.line!=='X36'||auditEvidence?.sourceType!=='official_gtfs'||
+    typeof auditEvidence?.sourceUrl!=='string'||!/^https:\/\//.test(auditEvidence.sourceUrl)||
+    typeof auditEvidence?.checkedOn!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(auditEvidence.checkedOn))return null;
  const fromStopName=pinnedStopName(fromStop,auditedPins);
  const toStopName=pinnedStopName(toStop,auditedPins);
  if(!fromStopName||!toStopName)return null;
