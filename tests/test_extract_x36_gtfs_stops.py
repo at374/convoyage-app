@@ -28,6 +28,7 @@ class ExtractX36Tests(unittest.TestCase):
                     archive.writestr(name, data)
             result = module.extract(path, "https://example.org/official-gtfs-fixture.zip", "2026-11-10")
             self.assertEqual(result["sourceSha256"], hashlib.sha256(path.read_bytes()).hexdigest())
+            self.assertEqual(result["stopPatterns"], [{"stopIds": ["a", "b"], "tripCount": 1}])
             self.assertEqual(result["routeCount"], 1)
             self.assertEqual(result["tripCount"], 1)
             self.assertEqual({s["id"] for s in result["stops"]}, {"a", "b"})
