@@ -78,7 +78,7 @@ self.onmessage=async({data})=>{
    if(!['earliestDeparture','latestDeparture'].includes(order)||
       (query.order!==undefined&&!['missionDirectTrips','missionJourneys'].includes(query.method)))throw new Error('Invalid GTFS result order');
    let rows,searchTruncated=false;
-   const failedFederations=[],missingConnectionDates=[];
+   const failedFederations=[],failedDirectNetworks=[],missingConnectionDates=[];
    if(query.method!=='missionJourneys')scope(feed,query.date);
    let connectionDates;
    if(query.connectionDates!==undefined){
@@ -99,6 +99,7 @@ self.onmessage=async({data})=>{
     if(!Number.isFinite(radius)||radius<=0||radius>5000)throw new Error('Invalid GTFS search radius');
     rows=[];
     for(const current of (query.method==='missionJourneys'?scopedFeeds:[feed])){
+     try{
      scope(current,query.date);
      let found=CPGTFSIndex.nearbyDirectTrips(current.files,current.index,query.date,query.origin,query.destination,radius);
      if(query.method!=='nearbyDirectTrips')found=CPGTFSTime.datedTrips(current.files,current.index,found,query.window);
@@ -110,6 +111,12 @@ self.onmessage=async({data})=>{
      }
      rows.push(...found.map(row=>({...row,networkId:current.source.datasetId||current.source.resourceId,
       network:current.source.network,legs:row.legs?.map(leg=>({...leg,network:current.source.network,networkId:current.source.datasetId||current.source.resourceId}))})));
+     }catch(error){
+      if(query.method!=='missionJourneys')throw error;
+      searchTruncated=true;
+      failedDirectNetworks.push({network:current.source.network||current.source.datasetId||current.source.resourceId,
+       reason:String(error?.message||'Recherche GTFS indisponible').slice(0,160)});
+     }
     }
     if(query.method==='missionJourneys'&&scopedFeeds.length>1){
      // Federation accepts two feeds at a time. Enumerate bounded pairs so a
@@ -142,7 +149,7 @@ self.onmessage=async({data})=>{
     if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));
    }else if(query.method==='nearbyStops')rows=CPGTFSIndex.nearbyStops(feed.index,query.lat,query.lon,query.radiusMeters??700);
    else throw new Error('Unsupported GTFS worker query');
-   result={rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,failedFederations,missingConnectionDates,missingDateNetworks:missingDateFeeds.map(f=>f.source.network||f.source.datasetId||f.source.resourceId),
+   result={rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,failedFederations,failedDirectNetworks,missingConnectionDates,missingDateNetworks:missingDateFeeds.map(f=>f.source.network||f.source.datasetId||f.source.resourceId),
     serviceConfirmed:false,faresVerified:false,accessVerified:false};
   }else throw new Error('Unsupported GTFS worker operation');
   self.postMessage({id,result});
