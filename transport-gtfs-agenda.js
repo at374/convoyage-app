@@ -102,6 +102,8 @@ function selected(resource,task){
  if((early!==undefined&&!Number.isFinite(firstMs))||
     (late!==undefined&&!Number.isFinite(lastMs)))return false;
  if(Number.isFinite(firstMs)&&Number.isFinite(lastMs)&&firstMs>lastMs)return false;
+ // A feed cannot produce a dated itinerary without either mission time bound.
+ if(!Number.isFinite(firstMs)&&!Number.isFinite(lastMs))return false;
  // Optional GTFS publication window: exclude expired seasonal feeds before fetching.
  // This is only a coarse filter; actual trip service dates remain GTFS-controlled.
  if(resource?.validFrom||resource?.validUntil){
