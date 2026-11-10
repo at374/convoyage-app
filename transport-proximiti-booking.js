@@ -4,8 +4,8 @@
 const SOURCE='https://www.proximiti.fr/wp-content/uploads/2025/12/horaire-46x-web.pdf';
 function validDepartureDate(record){
  if(typeof record?.departure!=='string'||typeof record.serviceDate!=='string')return false;
- if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(record.serviceDate)||
-    !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:Z|[+-]\\d{2}:\\d{2})$/.test(record.departure))return false;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(record.serviceDate)||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})$/.test(record.departure))return false;
  const timestamp=Date.parse(record.departure);
  if(!Number.isFinite(timestamp))return false;
  // The operator uses French local service dates, not UTC calendar dates.
