@@ -225,6 +225,21 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
          travelDate:(()=>{const parts=new Intl.DateTimeFormat('en-US',{timeZone:row.timeZone||resource.timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure));const part=type=>parts.find(p=>p.type===type)?.value;return [part('year'),part('month'),part('day')].join('-');})(),product:'parcours',profile:'adult'})||null;
        }catch(_){}
       }
+      let aravisReference=null;
+      if(!row.interNetwork&&!row.legs?.length&&row.line==='Y62'&&row.networkId==='oura-haute-savoie'){
+       try{
+        const source=root.CPAravisFareData;
+        const calculator=source&&root.CPAravisFares?.createCalculator?.(source);
+        const from=row.originStop,to=row.destinationStop;
+        const parts=new Intl.DateTimeFormat('en-US',{timeZone:row.timeZone||resource.timeZone,
+         year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure));
+        const part=type=>parts.find(p=>p.type===type)?.value;
+        aravisReference=calculator?.stopReference?.({networkId:row.networkId,line:row.line,
+         fromStop:{id:from?.stopId,lat:from?.lat,lon:from?.lon},
+         toStop:{id:to?.stopId,lat:to?.lat,lon:to?.lon},
+         travelDate:[part('year'),part('month'),part('day')].join('-'),profile:'adult'})||null;
+       }catch(_){}
+      }
       const line=doc.createElement('p');
       const safeZone=(()=>{try{new Intl.DateTimeFormat('fr-FR',{timeZone:row.timeZone||resource.timeZone});return row.timeZone||resource.timeZone;}catch(_){return resource.timeZone;}})();
       const format=iso=>new Intl.DateTimeFormat('fr-FR',{timeZone:safeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(iso));
@@ -250,6 +265,14 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
        line.appendChild(quote);
        const proof=doc.createElement('a');proof.href=line272Reference.source;proof.target='_blank';proof.rel='noopener noreferrer';
        proof.textContent=' · Grille tarifaire officielle 272';line.appendChild(proof);
+      }
+      if(aravisReference){
+       const quote=doc.createElement('span');quote.setAttribute('data-aravis-fare-reference','');
+       quote.textContent=' · Y62 : tarif publié '+aravisReference.amount.toFixed(2).replace('.',',')+
+        ' € (adulte, billet simple) — validité du prix du trajet non confirmée, à revérifier';
+       line.appendChild(quote);
+       const proof=doc.createElement('a');proof.href=aravisReference.source;proof.target='_blank';proof.rel='noopener noreferrer';
+       proof.textContent=' · Barème officiel Aravis';line.appendChild(proof);
       }
       for(const [label,stop] of [['Départ',row.originStop],['Correspondance',row.transferStop],['Montée après changement',row.transferDestinationStop],['Arrivée',row.destinationStop]]){
        if(!validPoint(stop))continue;
