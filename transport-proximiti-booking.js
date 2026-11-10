@@ -2,8 +2,20 @@
 (function(root){
 'use strict';
 const SOURCE='https://www.proximiti.fr/wp-content/uploads/2025/12/horaire-46x-web.pdf';
+function validDepartureDate(record){
+ if(typeof record?.departure!=='string'||typeof record.serviceDate!=='string')return false;
+ if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(record.serviceDate)||
+    !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:Z|[+-]\\d{2}:\\d{2})$/.test(record.departure))return false;
+ const timestamp=Date.parse(record.departure);
+ if(!Number.isFinite(timestamp))return false;
+ // The operator uses French local service dates, not UTC calendar dates.
+ const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Paris',
+  year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(timestamp));
+ const part=type=>parts.find(p=>p.type===type)?.value;
+ return record.serviceDate===[part('year'),part('month'),part('day')].join('-');
+}
 function sameJourney(booking,journey){
- if(!booking||!journey)return false;
+ if(!booking||!journey||!validDepartureDate(booking)||!validDepartureDate(journey))return false;
  for(const key of ['line','serviceDate','boardingStopId','alightingStopId','departure']){
   if(typeof booking[key]!=='string'||!booking[key].trim()||
      typeof journey[key]!=='string'||!journey[key].trim()||
