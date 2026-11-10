@@ -21,6 +21,7 @@ class OuraInventoryTests(unittest.TestCase):
             "stops.txt": "stop_id,stop_name\ns1,Stop One\n",
             "stop_times.txt": "trip_id,stop_id,stop_sequence\\nt1,s1,1\\n",
             "stop_times.txt": "trip_id,stop_id,stop_sequence\nt1,s1,1\n",
+            "calendar.txt": "service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\\ns1,1,1,1,1,1,0,0,20261110,20261220\\n",
             "calendar_dates.txt": "service_id,date,exception_type\nx,20261110,1\n",
         }
         with zipfile.ZipFile(path, "w") as archive:
@@ -48,6 +49,10 @@ class OuraInventoryTests(unittest.TestCase):
             self.assertFalse(result["fareVerified"])
             self.assertFalse(result["serviceConfirmed"])
             self.assertTrue(result["hasCalendarExceptions"])
+            self.assertEqual(result["calendarServiceSpans"], [{"start": "2026-11-10", "end": "2026-12-20"}])
+            self.assertEqual(result["calendarDateExceptions"], {"added": 1, "removed": 0})
+            self.assertEqual(result["invalidCalendarRows"], 0)
+            self.assertEqual(result["invalidCalendarExceptionRows"], 0)
             self.assertFalse(result["hasFareFiles"])
             self.assertEqual(len(result["sourceSha256"]), 64)
 
