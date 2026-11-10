@@ -256,10 +256,14 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       }
       // Proxim iTi booking evidence is not present in theoretical GTFS schedules.
       // Restrict the advisory to an explicitly identified operator, never a bare route number.
-      if(['460','461'].includes(String(row.line))&&/proxim\s*i\s*ti/i.test(String(row.network||''))){
+      const proximitiSegments=row.legs?.length?row.legs:[row];
+      const proximitiLines=[...new Set(proximitiSegments.filter(leg=>
+       ['460','461'].includes(String(leg.line))&&/proxim\\s*i\\s*ti/i.test(String(leg.network||'')))
+       .map(leg=>String(leg.line)))];
+      if(proximitiLines.length){
        const advisory=doc.createElement('span');
        advisory.setAttribute('data-proximiti-booking-unverified','');
-       advisory.textContent=' · Proxim iTi '+row.line+' : vérifier si les arrêts et correspondances nécessitent une réservation Bus CheckIn ; réservation et disponibilité non confirmées.';
+       advisory.textContent=' · Proxim iTi '+proximitiLines.join('/')+' : vérifier si les arrêts et correspondances nécessitent une réservation Bus CheckIn ; réservation et disponibilité non confirmées.';
        line.appendChild(advisory);
       }
       if(['Y62','Y63'].includes(row.line)&&row.networkId==='oura-haute-savoie'){
