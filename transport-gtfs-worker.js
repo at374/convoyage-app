@@ -84,7 +84,7 @@ self.onmessage=async({data})=>{
    const order=query.order??'earliestDeparture';
    if(!['earliestDeparture','latestDeparture'].includes(order)||
       (query.order!==undefined&&!['missionDirectTrips','missionJourneys'].includes(query.method)))throw new Error('Invalid GTFS result order');
-   let rows,searchTruncated=false;
+   let rows,searchTruncated=false,invalidJourneyCount=0;
    const failedFederations=[],failedDirectNetworks=[],missingConnectionDates=[];
    if(query.method!=='missionJourneys')scope(feed,query.date);
    let connectionDates;
@@ -167,13 +167,14 @@ self.onmessage=async({data})=>{
      const before=rows.length;
      rows=rows.filter(row=>row&&Number.isFinite(Date.parse(row.departure))&&
       Number.isFinite(Date.parse(row.arrival))&&Date.parse(row.arrival)>=Date.parse(row.departure));
-     if(rows.length!==before)searchTruncated=true;
+     invalidJourneyCount=before-rows.length;
+     if(invalidJourneyCount)searchTruncated=true;
     }
     // Apply mission ordering before the result cap, including across networks.
     if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));
    }else if(query.method==='nearbyStops')rows=CPGTFSIndex.nearbyStops(feed.index,query.lat,query.lon,query.radiusMeters??700);
    else throw new Error('Unsupported GTFS worker query');
-   result={rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,failedFederations,failedDirectNetworks,missingConnectionDates,missingDateNetworks:missingDateFeeds.map(f=>f.source.network||f.source.datasetId||f.source.resourceId),
+   result={invalidJourneyCount,rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,failedFederations,failedDirectNetworks,missingConnectionDates,missingDateNetworks:missingDateFeeds.map(f=>f.source.network||f.source.datasetId||f.source.resourceId),
     serviceConfirmed:false,faresVerified:false,accessVerified:false};
   }else throw new Error('Unsupported GTFS worker operation');
   self.postMessage({id,result});
