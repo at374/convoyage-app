@@ -18,12 +18,14 @@ jobs:
         with:
           python-version: '3.12'
       - name: Download published Cars Region Express GTFS
+        env:
+          OFFICIAL_GTFS_URL: ${{ inputs.official_gtfs_url }}
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p audit-output
           # Prefer the dated public archive; fall back to the producer's official feed.
-          override="${{ inputs.official_gtfs_url }}"
+          override="$OFFICIAL_GTFS_URL"
           if [[ -n "$override" ]]; then
             case "$override" in
               https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/*|https://api.oura3.cityway.fr/dataflow/offre-tc/download*) ;;
