@@ -11,6 +11,12 @@
 - CHAMBERY – Synchro ; BOURG-EN-BRESSE – Rubis ; THONON LES BAINS – STAR'T ; EVIAN – EVA'D.
 - Cars Région Ain, Haute Savoie, Isère, Savoie et Express ; AIX-LES-BAINS – Ondéa ; ALBERTVILLE – TRA Mobilité ; CHAMONIX – Chamonix Bus.
 
+## Divergence de métadonnées constatée le 10/11/2026
+- Une nouvelle consultation de la fiche officielle https://transport.data.gouv.fr/datasets/agregat-oura?locale=fr affiche **29/10/2026–30/06/2028**, une dernière modification au **30/10/2026** et **550 avertissements**, alors que l'audit précédent consignait **09/11/2026** et **543 avertissements**.
+- Ces chiffres ne doivent pas être fusionnés ni considérés comme décrivant la même version : la ressource et sa fiche peuvent évoluer ou être servies avec des états différents. La fiche observée le 10/11 ne démontre pas que l'archive précédemment décrite est erronée.
+- Pour l'exploitation, relever l'URL téléchargée, l'empreinte SHA-256, la date d'observation et les dates de service **à partir du ZIP effectivement traité**, avant d'annoncer une couverture à une date de mission.
+- Les périodes par réseau mentionnées plus bas restent des **observations documentaires non vérifiées dans l'archive**.
+
 ## Taille et limites de la ressource
 - La fiche officielle de la ressource 78904 indique une archive **GTFS de 106,07 Mo**. Prévoir un traitement en flux ou en fichiers temporaires, sans charger toute l'archive en mémoire du navigateur Android.
 - Le catalogue affiche **44 réseaux partenaires** ; la liste de couverture par réseau de la ressource est à contrôler séparément, car présence dans le catalogue et présence de courses à une date donnée sont deux critères différents.
