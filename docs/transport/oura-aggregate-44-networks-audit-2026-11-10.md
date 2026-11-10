@@ -17,6 +17,13 @@
 - Pour l'exploitation, relever l'URL téléchargée, l'empreinte SHA-256, la date d'observation et les dates de service **à partir du ZIP effectivement traité**, avant d'annoncer une couverture à une date de mission.
 - Les périodes par réseau mentionnées plus bas restent des **observations documentaires non vérifiées dans l'archive**.
 
+## Archive historique identifiée précisément (10 novembre 2026)
+- Le catalogue officiel expose une archive horodatée : https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/78904/78904.20261110.122116.139923.zip
+- Publication affichée : **10/11/2026** ; période de validité annoncée : **10/11/2026–30/06/2028**.
+- Ce lien est un **candidat à télécharger**, pas une archive analysée. Une tentative de récupération a échoué dans l'environnement de travail (résolution réseau) ; **aucune empreinte SHA-256, aucun arrêt ni horaire réel n'a été vérifié**.
+- Dès que le ZIP est accessible : `python scripts/inventory_oura_gtfs.py archive.zip --source-url https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/78904/78904.20261110.122116.139923.zip`.
+- La ressource est versionnée : préférer la version historisée pour rendre l'audit reproductible, puis comparer avec la publication courante.
+
 ## Taille et limites de la ressource
 - La fiche officielle de la ressource 78904 indique une archive **GTFS de 106,07 Mo**. Prévoir un traitement en flux ou en fichiers temporaires, sans charger toute l'archive en mémoire du navigateur Android.
 - Le catalogue affiche **44 réseaux partenaires** ; la liste de couverture par réseau de la ressource est à contrôler séparément, car présence dans le catalogue et présence de courses à une date donnée sont deux critères différents.
