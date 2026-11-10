@@ -58,7 +58,13 @@ function createCalculator(data){
    for(const cell of cells){if(cell==='SIBRA')counts.sibra++;
     else if(cell==='UNSPECIFIED')counts.unspecified++;
     else counts.priced++;}
-   lines[line]={...counts,total:cells.length,gtfsStopPairsVerified:line==='Y62'?2:0};
+   const byOriginArea=source.areas.map((area,index)=>{
+    const row=source.lines[line].matrix[index];
+    return {area,priced:row.filter(cell=>['1','2','3','4'].includes(cell)).length,
+     sibra:row.filter(cell=>cell==='SIBRA').length,
+     unspecified:row.filter(cell=>cell==='UNSPECIFIED').length};
+   });
+   lines[line]={...counts,total:cells.length,byOriginArea,gtfsStopPairsVerified:line==='Y62'?2:0};
   }
   return {areas:source.areas.length,lines,kind:'tariff_matrix_coverage_not_gtfs_network_coverage'};
  }
