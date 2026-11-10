@@ -11,6 +11,13 @@
 - CHAMBERY – Synchro ; BOURG-EN-BRESSE – Rubis ; THONON LES BAINS – STAR'T ; EVIAN – EVA'D.
 - Cars Région Ain, Haute Savoie, Isère, Savoie et Express ; AIX-LES-BAINS – Ondéa ; ALBERTVILLE – TRA Mobilité ; CHAMONIX – Chamonix Bus.
 
+## Dates de service par réseau — vérification indispensable
+- **Proxim iTi Bonneville : du 29/03/2027 au 12/12/2027 dans la ressource GTFS consultée.** Pour une mission en novembre 2026, la présence du réseau dans l'agrégat ne prouve **aucune course utilisable** ; rechercher un flux local couvrant la date, sans fabriquer de trajet.
+- **Cars Région Express : 09/11/2026–07/02/2027** ; **Synchro Chambéry : 09/11/2026–20/12/2026** ; **STAR’T Thonon : 09/11/2026–20/12/2026** ; **TAM Ambérieu : 09/11/2026–31/12/2026**.
+- **J’ybus Rumilly : 09/11/2026–03/07/2027** ; **TAC Annemasse : 09/11/2026–31/12/2027** ; **Rubis Bourg : 09/11/2026–31/12/2027**.
+- Ces périodes décrivent les dates couvertes par le GTFS, non la preuve d'un service à chaque jour/heure. Contrôler `calendar` et `calendar_dates`.
+- Source détaillée par réseau : https://transport.data.gouv.fr/resources/78904?issue_type=Slow&locale=fr
+
 ## Limites et stratégie d'intégration
 1. Télécharger l'archive officielle, conserver URL, date et empreinte SHA-256 ; ne jamais confondre sa période de validité avec celle d'un trajet.
 2. Inventorier `agency.txt`, `routes.txt`, `trips.txt`, `stop_times.txt`, `stops.txt`, `calendar.txt` et `calendar_dates.txt` ; identifier les doublons avec les flux GTFS par réseau déjà branchés.
