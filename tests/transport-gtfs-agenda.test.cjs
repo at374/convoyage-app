@@ -1070,3 +1070,12 @@ test('GTFS seasonal feed selection uses the operator local calendar day near mid
  assert.equal(agenda.selected(feed,{...trip,earliestDeparture:'2026-11-10T22:30:00Z'}),false);
  assert.equal(agenda.selected(feed,{...trip,earliestDeparture:'2026-11-13T00:30:00+01:00'}),false);
 });
+
+test('GTFS invalid operator timezone is rejected without interrupting search',()=>{
+ const feed={format:'GTFS',url:'https://example.org/feed.zip',bounds:[45,5,47,7],
+  timeZone:'Invalid/Unknown',validFrom:'2026-11-11',validUntil:'2026-11-12'};
+ const trip={from:{lat:45.9,lon:6.1},to:{lat:45.8,lon:6.2},
+  earliestDeparture:'2026-11-11T09:00:00+01:00'};
+ assert.doesNotThrow(()=>agenda.selected(feed,trip));
+ assert.equal(agenda.selected(feed,trip),false);
+});
