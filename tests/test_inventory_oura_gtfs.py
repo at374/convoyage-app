@@ -51,8 +51,6 @@ class OuraInventoryTests(unittest.TestCase):
     def test_single_agency_without_route_agency_id_is_valid(self):
         with TemporaryDirectory() as folder:
             path = self.make_zip(folder, "route_id\nr1\n")
-            with zipfile.ZipFile(path, "a") as archive:
-                pass
             # Create a fresh one-agency feed, as GTFS allows agency_id omission.
             with zipfile.ZipFile(path, "w") as archive:
                 archive.writestr("agency.txt", "agency_name\nNetwork A\n")
@@ -61,6 +59,12 @@ class OuraInventoryTests(unittest.TestCase):
                 archive.writestr("stops.txt", "stop_id,stop_name\ns1,Stop One\n")
             result = module.inventory(path, "https://example.org/oura.zip")
             self.assertEqual(result["agencies"][0]["routeCount"], 1)
+
+    def test_multi_agency_without_route_owner_rejected(self):
+        with TemporaryDirectory() as folder:
+            path = self.make_zip(folder, "route_id\nr1\n")
+            with self.assertRaisesRegex(ValueError, "missing agency_id"):
+                module.inventory(path, "https://example.org/oura.zip")
 
     def test_non_https_source_rejected(self):
         with self.assertRaises(ValueError):
