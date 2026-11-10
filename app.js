@@ -2754,14 +2754,11 @@
               const proof=document.createElement('span');
               const renderProof=confirmed=>{proof.textContent=' · Preuves manquantes : '+result.evidence.missing.filter(item=>!confirmed||result.legs.filter(leg=>String(leg.mode||'').startsWith('pt_pub')).length!==1||result.legs.some(leg=>String(leg.mode||'').startsWith('pt_pub')&&!window.CPBlaBlaRealtime.eligible(leg))||!item.startsWith('circulation')).join(', ')+'. Transport non confirmé — vérifiez vous-même.';};
               renderProof(false);proof.style.display='block';summary.appendChild(proof);
-              // Do not treat TripGo's unverified price estimates as official fares.
-              let fareSummary=null;
-              if(window.CPTransportFares?.fare&&window.CPTransportFares?.describe){
-                fareSummary=window.CPTransportFares.fare(result.legs,{travelDate:result.departure});
-                const fareLine=document.createElement('span');fareLine.setAttribute('data-tripgo-fare','');
-                fareLine.textContent=' · Tarifs : '+window.CPTransportFares.describe(fareSummary);
-                fareLine.style.display='block';summary.appendChild(fareLine);
-              }
+              // Search-engine itineraries must not inherit static tariff matrices.
+              // A manual tariff is only allowed for a separately audited missing line.
+              const fareLine=document.createElement('span');fareLine.setAttribute('data-tripgo-fare','');
+              fareLine.textContent=' · Prix indisponible (aucun tarif vérifié retourné par le moteur)';
+              fareLine.style.display='block';summary.appendChild(fareLine);
               details.appendChild(line);
               const mapNote=document.createElement('p');mapNote.className='doux';
               mapNote.textContent='Les cartes localisent les coordonnées fournies. Le parcours piéton ouvert dans Maps fait l’objet d’un nouveau calcul ; il peut différer de la proposition. Accès réels à vérifier.';details.appendChild(mapNote);
@@ -2774,12 +2771,6 @@
                   const walkingDistance=document.createElement('span');walkingDistance.setAttribute('data-tripgo-walk-distance','');
                   walkingDistance.textContent=' · Marche : '+Math.ceil(leg.distanceMeters)+' m (distance fournisseur, cheminement à vérifier)';
                   step.appendChild(walkingDistance);
-                }
-                const legFare=fareSummary?.breakdown?.[legIndex];
-                if(legFare){
-                  const fareDetail=document.createElement('span');fareDetail.setAttribute('data-tripgo-leg-fare','');
-                  fareDetail.textContent=' · '+(window.CPTransportFares.describeLeg?.(legFare)||'Tarif inconnu');
-                  step.appendChild(fareDetail);
                 }
                 const validMapPoint=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180;
                 for(const [label,point] of [['Départ',leg.fromPoint],['Arrivée',leg.toPoint]]){
