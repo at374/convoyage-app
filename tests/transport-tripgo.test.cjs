@@ -474,5 +474,9 @@ test('TripGo rejects a walking polyline starting 20 meters from its exact endpoi
  }
  const result=api.parse(payload,options);
  assert.equal(result.itineraries.length,2);
- assert.equal(result.itineraries[0].legs[0].geometry,null);
+ for(const itinerary of result.itineraries){
+  for(const leg of itinerary.legs)if(leg.mode==='wa_wal')assert.equal(leg.geometry,null);
+ }
+ assert.equal(result.coverage.pedestrianGeometryAvailable,0);
+ assert.equal(result.coverage.pedestrianGeometryMissing,4);
 });
