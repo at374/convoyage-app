@@ -93,6 +93,22 @@ class ExtractX36Tests(unittest.TestCase):
             self.assertFalse(result["journeyFareVerified"])
 
 
+    def test_invalid_stop_sequence_has_clear_error(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "feed.zip"
+            files = {
+                "routes.txt": "route_id,route_short_name\nr1,X36\n",
+                "trips.txt": "route_id,trip_id\nr1,t1\n",
+                "stop_times.txt": "trip_id,stop_id,stop_sequence\nt1,a,invalid\n",
+                "stops.txt": "stop_id,stop_name,stop_lat,stop_lon\na,First,46.1,5.8\n",
+            }
+            with zipfile.ZipFile(path, "w") as archive:
+                for name, data in files.items():
+                    archive.writestr(name, data)
+            with self.assertRaisesRegex(ValueError, "Invalid X36 stop_sequence"):
+                module.extract(path, "https://example.org/feed.zip", "2026-11-10")
+
+
     def test_invalid_source_rejected(self):
         with self.assertRaises(ValueError):
             module.extract("unused.zip", "http://example.org/feed.zip", "2026-11-10")
