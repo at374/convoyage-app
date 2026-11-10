@@ -28,13 +28,14 @@ jobs:
           override="$OFFICIAL_GTFS_URL"
           if [[ -n "$override" ]]; then
             case "$override" in
-              https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/*|https://api.oura3.cityway.fr/dataflow/offre-tc/download*) ;;
+              https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/*|https://api.oura3.cityway.fr/dataflow/offre-tc/download*|https://www.data.gouv.fr/fr/datasets/r/e3e4b601-ab0e-4351-bcad-52810565e31e) ;;
               *) echo 'Unsupported GTFS source host'; exit 1 ;;
             esac
           fi
           sources=(
             'https://transport-data-gouv-fr-resource-history-prod.cellar-c2.services.clever-cloud.com/83112/83112.20261109.061932.141517.zip'
             'https://api.oura3.cityway.fr/dataflow/offre-tc/download?dataFormat=GTFS&dataProfil=OPENDATA&provider=CARS_REGION_EXPRESS'
+            'https://www.data.gouv.fr/fr/datasets/r/e3e4b601-ab0e-4351-bcad-52810565e31e'
           )
           if [[ -n "$override" ]]; then sources=("$override"); fi
           for url in "${sources[@]}"; do
