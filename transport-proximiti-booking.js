@@ -22,10 +22,20 @@ function assess(input={}){
  const stopsConfirmed=input.stopsConfirmed===true;
  const walkingConfirmed=input.walkingConfirmed===true;
  const marginConfirmed=input.marginConfirmed===true;
- const ready=needsRegistration!==null&&(!needsRegistration||(registrationConfirmed&&bookingAvailabilityVerified))&&
-  serviceConfirmed&&stopsConfirmed&&walkingConfirmed&&marginConfirmed;
+ const missingEvidence=[];
+ if(!stopTypesKnown)missingEvidence.push('stop_types');
+ if(!connectionKnown)missingEvidence.push('connection_type');
+ if(needsRegistration===true){
+  if(!registrationConfirmed)missingEvidence.push('registration_confirmation');
+  if(!bookingAvailabilityVerified)missingEvidence.push('booking_availability');
+ }
+ if(!serviceConfirmed)missingEvidence.push('service');
+ if(!stopsConfirmed)missingEvidence.push('stop_coordinates');
+ if(!walkingConfirmed)missingEvidence.push('walking_access');
+ if(!marginConfirmed)missingEvidence.push('arrival_margin');
+ const ready=missingEvidence.length===0;
  return {line,needsRegistration,registrationDeadlineMinutes,registrationConfirmed,
-  ready,serviceConfirmed,bookingAvailabilityVerified,publishedDeadlineMinutes,source:SOURCE,
+  ready,missingEvidence,serviceConfirmed,bookingAvailabilityVerified,publishedDeadlineMinutes,source:SOURCE,
   // No live availability is inferred. Only caller-supplied, independently verified evidence is accepted.
   status:ready?'confirmed_evidence_supplied':'Transport non confirmé — vérifiez vous-même'};
 }
