@@ -22,7 +22,23 @@ async function searchEngines(engines,query,options={}){
  }));
  return aggregate(settled);
 }
-const api={searchEngines};
+function tripGoEngine(client){
+ if(!client||typeof client.plan!=='function')throw new Error('TripGo client unavailable');
+ return {name:'TripGo',async search(query,{signal}={}){
+   if(!query||!query.from||!query.to||!query.when)throw new Error('TripGo query incomplete');
+   const result=await client.plan({...query,signal});
+   if(!result||!Array.isArray(result.itineraries))throw new Error('TripGo invalid itinerary response');
+   return result.itineraries.map((j,i)=>({
+     ...j,id:j.id||'tripgo-'+i,
+     // Provider already checks GPS endpoints and trip chronology; do not upgrade service certainty.
+     exactOrigin:j.evidence?.endpointCoordinatesMatched===true,
+     exactDestination:j.evidence?.endpointCoordinatesMatched===true,
+     fareVerified:false,
+     priceEUR:null
+   }));
+ }};
+}
+const api={searchEngines,tripGoEngine};
 if(typeof module==='object'&&module.exports)module.exports=api;
 else root.CPTransportEngineSearch=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
