@@ -132,3 +132,23 @@ test('mixed walking, verified and unknown rides show only a verified subtotal',(
  assert.match(fares.describe(quote),/Sous-total vérifié : 2,50 €/);
  assert.match(fares.describe(quote),/Bus B : prix inconnu/);
 });
+
+test('browser Aravis snapshot matches the audited JSON and never confirms a journey price',()=>{
+ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+ const audited=require('../data/transport/aravis-fare-reference-2026.json');
+ const context={};vm.createContext(context);
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'..','transport-aravis-reference-data.js'),'utf8'),context);
+ vm.runInContext(fs.readFileSync(path.join(__dirname,'..','transport-aravis-fares.js'),'utf8'),context);
+ assert.equal(JSON.stringify(context.CPAravisFareData),JSON.stringify(audited));
+ const calc=context.CPAravisFares.createCalculator(context.CPAravisFareData);
+ const fromStop={id:'FR:74010:ZE:57539:HAUTExSAVOIE',lat:45.9016985,lon:6.1201612};
+ const toStop={id:'FR:74080:ZE:57774:HAUTExSAVOIE',lat:45.9067032,lon:6.4191339};
+ const query={networkId:'oura-haute-savoie',line:'Y62',fromStop,toStop,travelDate:'2026-11-10',profile:'adult'};
+ const ref=calc.stopReference(query);
+ assert.equal(ref.amount,8.9);
+ assert.equal(ref.stopMappingVerified,true);
+ assert.equal(ref.fareVerified,false);
+ assert.equal(ref.travelDateValidityKnown,false);
+ assert.equal(calc.stopReference({...query,toStop:{...toStop,id:'unverified'}}),null);
+ assert.equal(calc.stopReference({...query,line:'Y63'}),null);
+});
