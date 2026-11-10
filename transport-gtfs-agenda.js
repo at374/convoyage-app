@@ -224,6 +224,10 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  warning.textContent='Trajets directs ou avec une correspondance au même arrêt (intervalle de 5 à 120 min, non vérifié). Recherche limitée à 48 h au maximum et au jour de service précédent. Distances à vol d’oiseau ; marche et prix non vérifiés. Transport non confirmé — vérifiez vous-même.';
  if(omittedPartners>0)warning.textContent+=' Recherche incomplète : '+omittedPartners+' réseau(x) candidat(s) supplémentaire(s) non interrogé(s) (limite actuelle de deux flux ou fédération non disponible).';
  if(nonFederatedPartners>0)warning.textContent+=' Dont '+nonFederatedPartners+' réseau(x) sans fédération GTFS activée.';
+ if(omittedPartners>0){
+  const omitted=partnerCandidates.filter(r=>!partners.includes(r));
+  warning.textContent+=' Réseaux non interrogés : '+omitted.map(r=>r.network).join(' ; ')+'.';
+ }
  section.appendChild(warning);panel.appendChild(section);
  const active=()=>!disposed&&panel.isConnected;
  const refreshFares=()=>{
