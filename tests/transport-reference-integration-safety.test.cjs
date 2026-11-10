@@ -98,3 +98,16 @@ test('adapter accepts independently verified exact-trip fare evidence',()=>{
  assert.equal(result[0].priceEUR,2.50);
  assert.equal(result[0].fareBreakdown[0].verified,true);
 });
+
+test('GTFS adapter strips a self-declared verified amount before fare calculation',()=>{
+ const adapters=require('../transport-adapters.js');
+ const leg={line:'Y62',from:'Annecy',to:'La Clusaz',
+  departure:'2026-11-10T09:00:00+01:00',arrival:'2026-11-10T10:00:00+01:00',
+  verifiedPriceEUR:4.50,fareVerified:true,
+  fareSource:'https://example.org/untrusted-feed',
+  fareValidFrom:'2026-11-01',fareValidUntil:'2026-11-30'};
+ const [journey]=adapters.adaptGTFS([{departure:leg.departure,arrival:leg.arrival,legs:[leg]}],'Réseau local');
+ assert.equal(journey.legs[0].verifiedPriceEUR,null);
+ assert.equal(journey.legs[0].fareVerified,false);
+ assert.equal(adapters.withVerifiedFares([journey])[0].priceEUR,null);
+});
