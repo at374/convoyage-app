@@ -119,8 +119,10 @@ function selected(resource,task){
     return field('year')+'-'+field('month')+'-'+field('day');
    }catch(_){return null;}
   };
-  const first=localDay(early);
-  const last=localDay(late);
+  // A one-sided mission window still covers up to 24 hours of departures.
+  // Compare the full effective interval to seasonal feed validity.
+  const first=localDay(early===undefined&&Number.isFinite(lastMs)?new Date(lastMs-24*3600000).toISOString():early);
+  const last=localDay(late===undefined&&Number.isFinite(firstMs)?new Date(firstMs+24*3600000).toISOString():late);
   if((early!==undefined&&!first)||(late!==undefined&&!last))return false;
   if((from&&last&&last<from)||(to&&first&&first>to))return false;
   if(!last&&from&&first&&first<from)return false;
