@@ -109,8 +109,16 @@ function selected(resource,task){
   // Reject only when the whole requested interval lies outside the feed.
   // A window spanning its first/last service day remains a candidate; GTFS
   // calendar/calendar_dates must then validate each individual departure.
-  const first=typeof early==='string'?early.slice(0,10):null;
-  const last=typeof late==='string'?late.slice(0,10):null;
+  // Compare service dates in the network's local timezone, not the caller's
+  // ISO offset (a midnight departure can fall on a different calendar day).
+  const localDay=value=>{
+   if(typeof value!=='string')return null;
+   const parts=new Intl.DateTimeFormat('en-GB',{timeZone:resource.timeZone||'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(timestamp(value)));
+   const field=type=>parts.find(part=>part.type===type)?.value;
+   return field('year')+'-'+field('month')+'-'+field('day');
+  };
+  const first=localDay(early);
+  const last=localDay(late);
   if((from&&last&&last<from)||(to&&first&&first>to))return false;
   if(!last&&from&&first&&first<from)return false;
   if(!first&&to&&last&&last>to)return false;
