@@ -2723,7 +2723,7 @@
               try{
                 walker=window.CPTransportWalking.createRouter({fetcher:regionalFetch,maxRequests:8});
                 signal.addEventListener('abort',()=>walker.dispose(),{once:true});
-                answer=await tripgo.enrichPedestrianMaps(answer,walker,{maxRoutes:8});
+                answer=await tripgo.enrichPedestrianMaps(answer,walker,{maxRoutes:8,signal});
               }catch(_){/* Preserve provider routes and their original evidence. */}
               finally{walker?.dispose();}
             }
