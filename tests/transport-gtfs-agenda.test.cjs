@@ -971,3 +971,16 @@ test('X36 corridor selects Express feed ahead of overlapping Ain resources',asyn
  assert.equal(calls[0][0].id,'cars-region-express');
  session.dispose();
 });
+
+test('local Ain journey inside Express bounds retains Ain feed',async()=>{
+ const local={label:'Ain local',from:{lat:46.20,lon:5.6},to:{lat:46.25,lon:5.7},
+ earliestDeparture:'2026-11-10T10:00:00+01:00'};
+ let loaded=null;
+ const session=agenda.mount(panel(),{tasks:[local],clientFactory:()=>({
+ load:async resource=>{loaded=resource;return {source:{network:resource.network},counts:{stops:0}};},
+ search:async()=>({rows:[]}),dispose(){}
+ })});
+ await session.done;
+ assert.equal(loaded?.id,'oura-ain');
+ session.dispose();
+});
