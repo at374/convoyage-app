@@ -254,6 +254,16 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(row.legs?.length===2){
        for(const leg of row.legs){const detail=doc.createElement('span');detail.textContent=' · '+(leg.network?leg.network+' ':'')+leg.line+' : '+format(leg.departure)+' → '+format(leg.arrival);line.appendChild(detail);}
       }
+      if(['Y62','Y63'].includes(row.line)&&row.networkId==='oura-haute-savoie'){
+       const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(row.departure));
+       if(day>='2026-09-14'&&day<='2026-12-06'){
+        const warning=doc.createElement('span');warning.setAttribute('data-aravis-disruption','');
+        warning.textContent=' · Y62/Y63 : horaires adaptés aux travaux RD16 ; arrêt Bergeronette non desservi. Vérifier la grille officielle avant départ.';
+        line.appendChild(warning);
+        const source=doc.createElement('a');source.href='https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/ligne/y62-y63-annecy-la-clusaz-le-grand-bornand/';
+        source.target='_blank';source.rel='noopener noreferrer';source.textContent=' · Horaires officiels Y62/Y63';line.appendChild(source);
+       }
+      }
       const passCost=doc.createElement('span');passCost.setAttribute('data-sibra-pass-cost','');line.appendChild(passCost);
       fareChecks.push({row,element:passCost});refreshFares();
       if(tariffDescription){
