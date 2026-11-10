@@ -492,3 +492,26 @@ test('GTFS source links follow the actual loaded network after partial failures'
  assert.ok(source.includes('link.href=selectedSourceFor(other)?.url||resource.url;'));
  assert.ok(!source.includes('link.href=other.source.url||partners[0].url;'));
 });
+
+test('malformed federation response is isolated and marked partial',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm');
+ const posted=[],pairs=[];
+ const sandbox={importScripts(){},self:{postMessage(message){posted.push(message);}},
+  CPGTFSLoader:{async loadResource(item){return {source:{datasetId:item.id},
+   index:{counts:{stops:1}},files:{},indexServiceDates:['2026-11-10']};}},
+  CPGTFSIndex:{nearbyDirectTrips(){return [];},nearbyTransferTrips(){return {journeys:[],searchTruncated:false};}},
+  CPGTFSTime:{datedTrips(_f,_i,found){return found;},datedTransferTrips(){return [];},serviceWindow(){return {};}},
+  CPGTFSFederation:{crossNetworkTrips(feeds){
+   const pair=feeds.map(f=>f.source.datasetId).join('+');pairs.push(pair);
+   return pair==='a+b'?{journeys:null}:{journeys:[],searchTruncated:false};
+  }}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8'),sandbox);
+ await sandbox.self.onmessage({data:{id:801,type:'loadNetworks',options:{indexServiceDates:['2026-11-10']},
+  resources:['a','b','c'].map(id=>({id,url:'https://example.org/'+id}))}});
+ await sandbox.self.onmessage({data:{id:802,type:'query',query:{method:'missionJourneys',date:'2026-11-10',
+  origin:{lat:46,lon:6},destination:{lat:46.1,lon:6.1},window:{}}}});
+ assert.deepEqual(pairs,['a+b','a+c','b+c']);
+ assert.equal(posted[1].result?.truncated,true);
+ assert.equal(posted[1].result?.failedFederations?.length,1);
+ assert.equal(posted[1].result.failedFederations[0].reason,'Invalid federation result');
+});
