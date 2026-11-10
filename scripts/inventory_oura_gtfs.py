@@ -28,9 +28,16 @@ def inventory(path, source_url):
     with open(path, "rb") as stream:
         sha = hashlib.file_digest(stream, "sha256").hexdigest()
     with zipfile.ZipFile(path) as archive:
-        agencies = {a["agency_id"]: a.get("agency_name", "") for a in read_rows(archive, "agency.txt")}
+        agency_rows = list(read_rows(archive, "agency.txt"))
+        if not agency_rows:
+            raise ValueError("Missing GTFS agencies")
+        agencies = {a.get("agency_id", ""): a.get("agency_name", "") for a in agency_rows}
+        if len(agencies) != len(agency_rows):
+            raise ValueError("Duplicate GTFS agency_id")
         routes = list(read_rows(archive, "routes.txt"))
-        counts = Counter(r.get("agency_id", "") for r in routes)
+        # GTFS permits omitting agency_id on routes only when exactly one agency exists.
+        counts = Counter(r.get("agency_id") or next(iter(agencies)) if len(agencies) == 1
+                         else r.get("agency_id", "") for r in routes)
         if not routes or not agencies:
             raise ValueError("Missing GTFS agencies or routes")
         if any(agency_id not in agencies for agency_id in counts):
