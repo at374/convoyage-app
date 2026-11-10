@@ -44,8 +44,14 @@ def extract(path, source_url, checked_on):
         trip_stop_sequences = defaultdict(list)
         for item in rows(archive, "stop_times.txt"):
             if item.get("trip_id") in trip_ids:
+                try:
+                    sequence = int(item["stop_sequence"])
+                except (ValueError, TypeError, KeyError):
+                    raise ValueError("Invalid X36 stop_sequence in supplied GTFS") from None
+                if sequence < 0:
+                    raise ValueError("Invalid X36 stop_sequence in supplied GTFS")
                 stop_trip_count[item["stop_id"]].add(item["trip_id"])
-                trip_stop_sequences[item["trip_id"]].append((int(item["stop_sequence"]), item["stop_id"]))
+                trip_stop_sequences[item["trip_id"]].append((sequence, item["stop_id"]))
         if not stop_trip_count:
             raise ValueError("No X36 stop_times in supplied GTFS")
         stops = []
