@@ -50,7 +50,19 @@ function createCalculator(data){
   const value=reference({line,fromArea,toArea,travelDate,profile,age});
   return value?{...value,stopMappingVerified:true,gtfsCheckedOn:'2026-11-07',gtfsSource:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA'}:null;
  }
- return {reference,stopReference};
+ function coverage(){
+  const lines={};
+  for(const line of ['Y62','Y63']){
+   const cells=source.lines[line].matrix.flat();
+   const counts={priced:0,sibra:0,unspecified:0};
+   for(const cell of cells){if(cell==='SIBRA')counts.sibra++;
+    else if(cell==='UNSPECIFIED')counts.unspecified++;
+    else counts.priced++;}
+   lines[line]={...counts,total:cells.length,gtfsStopPairsVerified:line==='Y62'?2:0};
+  }
+  return {areas:source.areas.length,lines,kind:'tariff_matrix_coverage_not_gtfs_network_coverage'};
+ }
+ return {reference,stopReference,coverage};
 }
 const api={createCalculator};
 if(typeof module==='object'&&module.exports)module.exports=api;
