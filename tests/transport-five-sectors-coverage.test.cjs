@@ -483,3 +483,12 @@ test('Agenda displays federation failures after resetting mission status text',(
  assert.ok(statusAt>=0&&detailsAt>statusAt,'diagnostics must be appended after status text reset');
  assert.ok(source.includes('status.appendChild(detail)'));
 });
+
+test('GTFS source links follow the actual loaded network after partial failures',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.ok(source.includes('const selectedSourceFor=n=>[resource,...partners].find('));
+ assert.ok(source.includes('source.href=selectedSourceFor(loaded[0])?.url||resource.url;'));
+ assert.ok(source.includes('link.href=selectedSourceFor(other)?.url||resource.url;'));
+ assert.ok(!source.includes('link.href=other.source.url||partners[0].url;'));
+});
