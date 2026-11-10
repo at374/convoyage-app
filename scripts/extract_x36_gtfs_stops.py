@@ -46,6 +46,8 @@ def extract(path, source_url, checked_on):
             if item.get("trip_id") in trip_ids:
                 stop_trip_count[item["stop_id"]].add(item["trip_id"])
                 trip_stop_sequences[item["trip_id"]].append((int(item["stop_sequence"]), item["stop_id"]))
+        if not stop_trip_count:
+            raise ValueError("No X36 stop_times in supplied GTFS")
         stops = []
         for item in rows(archive, "stops.txt"):
             if item.get("stop_id") not in stop_trip_count:
@@ -68,6 +70,8 @@ def extract(path, source_url, checked_on):
             ordered = tuple(stop_id for _, stop_id in sorted(sequence) if stop_id in valid_ids)
             if len(ordered) >= 2:
                 patterns[ordered] += 1
+        if not patterns:
+            raise ValueError("No valid ordered X36 stop patterns in supplied GTFS")
         stop_patterns = [{"stopIds": list(ids), "tripCount": count}
                          for ids, count in sorted(patterns.items(), key=lambda item: (-item[1], item[0]))]
         return {"line": "X36", "networkId": "cars-region-express",
