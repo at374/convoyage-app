@@ -152,3 +152,19 @@ test('browser Aravis snapshot matches the audited JSON and never confirms a jour
  assert.equal(calc.stopReference({...query,toStop:{...toStop,id:'unverified'}}),null);
  assert.equal(calc.stopReference({...query,line:'Y63'}),null);
 });
+
+test('Android shell loads official reference data before GTFS card renderer and precaches both',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const index=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+ const worker=fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8');
+ const scripts=['transport-aravis-fares.js?v=reference-20261110',
+  'transport-aravis-reference-data.js?v=reference-20261110',
+  'transport-gtfs-agenda.js?v=aravis-reference-20261110'];
+ let previous=-1;
+ for(const script of scripts){
+  const position=index.indexOf('src="'+script+'"');
+  assert.ok(position>previous,'Script missing or wrong order: '+script);
+  assert.ok(worker.includes("'"+script+"'"),'Missing offline reference: '+script);
+  previous=position;
+ }
+});
