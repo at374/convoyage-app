@@ -536,6 +536,8 @@ test('TripGo keeps airport buses while excluding air, boat and ferry modes',()=>
  }
  const accepted=api.parse(airport,options);
  assert.equal(accepted.itineraries.length,2,'airport bus is still road transport');
+ assert.deepEqual(accepted.coverage.transportTypes,['bus']);
+ assert.equal(accepted.itineraries[0].legs.find(leg=>leg.mode.startsWith('pt_pub')).transportType,'bus');
  for(const forbidden of ['pt_pub_air','pt_pub_ferry','pt_pub_boat','pt_pub_helicopter']){
   const data=clone();
   for(const segment of data.segmentTemplates)if(segment.modeIdentifier==='pt_pub')
