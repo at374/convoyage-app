@@ -531,3 +531,22 @@ test('GTFS partner selection scores two-network mission coverage together',()=>{
  assert.ok(source.includes('combinations.sort((a,b)=>coveredTasks(b)-coveredTasks(a)'));
  assert.ok(source.includes('const partners=combinations[0]||[]'));
 });
+
+test('GTFS partner ranking chooses two endpoint networks over an irrelevant single feed',()=>{
+ const fs=require('node:fs'),vm=require('node:vm');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ const start=source.indexOf(' const federatedCandidates=uniqueCandidates.filter(r=>r.federate);');
+ const end=source.indexOf(' const omittedPartners=',start);
+ assert.ok(start>0&&end>start);
+ const snippet=source.slice(start,end);
+ const taskList=[{from:'A',to:'B'}];
+ const resource={id:'primary'};
+ const uniqueCandidates=[{id:'from',federate:true},{id:'to',federate:true},{id:'other',federate:true}];
+ const selected=(r,task)=>r.id==='from'&&task.from==='A'&&task.to==='A'||
+  r.id==='to'&&task.from==='B'&&task.to==='B';
+ const crossEnvelopePair=(a,b,task)=>a.id==='from'&&b.id==='to'&&task.from==='A'&&task.to==='B';
+ const partnerCoverage=()=>0;
+ const partners=vm.runInNewContext(snippet+';partners',
+  {uniqueCandidates,taskList,resource,selected,crossEnvelopePair,partnerCoverage});
+ assert.deepEqual(Array.from(partners,p=>p.id),['from','to']);
+});
