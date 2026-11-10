@@ -111,6 +111,7 @@ self.onmessage=async({data})=>{
       try{
        const cross=CPGTFSFederation.crossNetworkTrips([feeds[i],feeds[j]],query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
         ...(connectionDates===undefined?{}:{connectionDates})});
+       if(!cross||!Array.isArray(cross.journeys))throw new Error('Invalid federation result');
        rows.push(...cross.journeys);searchTruncated=searchTruncated||cross.searchTruncated;
       }catch(error){
        // Preserve valid results from other operators while never implying the
