@@ -31,9 +31,9 @@ def extract(path, source_url, checked_on):
     with zipfile.ZipFile(path) as archive:
         route_ids = {r["route_id"] for r in rows(archive, "routes.txt")
                      if r.get("route_short_name", "").strip().upper() == "X36"}
-        trip_ids = {r["trip_id"] for r in rows(archive, "trips.txt")
+        if not route_ids:\n            raise ValueError("X36 route not found in supplied GTFS")\n        trip_ids = {r["trip_id"] for r in rows(archive, "trips.txt")
                     if r.get("route_id") in route_ids}
-        stop_trip_count = defaultdict(set)
+        if not trip_ids:\n            raise ValueError("No X36 trips in supplied GTFS")\n        stop_trip_count = defaultdict(set)
         for item in rows(archive, "stop_times.txt"):
             if item.get("trip_id") in trip_ids:
                 stop_trip_count[item["stop_id"]].add(item["trip_id"])
@@ -50,7 +50,7 @@ def extract(path, source_url, checked_on):
             stops.append({"id": item["stop_id"], "gtfsName": item.get("stop_name", ""),
                           "lat": lat, "lon": lon,
                           "tripCount": len(stop_trip_count[item["stop_id"]])})
-        stops.sort(key=lambda item: (item["gtfsName"], item["id"]))
+        if not stops:\n            raise ValueError("No valid X36 stop coordinates in supplied GTFS")\n        stops.sort(key=lambda item: (item["gtfsName"], item["id"]))
         return {"line": "X36", "networkId": "oura-ain",
                 "sourceType": "official_gtfs", "sourceUrl": source_url,
                 "checkedOn": checked_on, "routeCount": len(route_ids),
