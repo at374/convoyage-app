@@ -403,3 +403,22 @@ test('worker loads three distinct GTFS feeds and reports all three',async()=>{
  assert.equal(posted[0].result?.networks?.length,3);
  assert.ok(posted[0].result.networks.every(n=>n.counts.stops===10));
 });
+
+test('three-feed worker marks one unavailable network as partial',async()=>{
+ const fs=require('node:fs'),vm=require('node:vm');
+ const posted=[];
+ const sandbox={importScripts(){},self:{postMessage(message){posted.push(message);}},
+  CPGTFSLoader:{async loadResource(item){
+   if(item.id==='feed2')throw new Error('Feed temporarily unavailable');
+   return {source:{datasetId:item.id,network:item.network,loadedAt:'2026-11-10T08:00:00Z'},
+    index:{counts:{stops:10}},archiveBytes:1,expandedBytes:2,indexedStopTimes:3,
+    skippedStopTimes:0,rejectedStopTimes:0,indexServiceDates:['2026-11-10']};
+  }}};
+ vm.runInNewContext(fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8'),sandbox);
+ await sandbox.self.onmessage({data:{id:502,type:'loadNetworks',options:{indexServiceDates:['2026-11-10']},
+  resources:[1,2,3].map(i=>({id:'feed'+i,network:'Network '+i,url:'https://example.org/'+i+'.zip'}))}});
+ assert.equal(posted[0].result?.partial,true);
+ assert.equal(posted[0].result?.networks?.length,3);
+ assert.equal(posted[0].result.networks[1].error.network,'Network 2');
+ assert.equal(posted[0].result.networks[2].counts.stops,10);
+});
