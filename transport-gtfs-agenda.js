@@ -314,6 +314,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
     if(!eligible(task))continue;
     try{
      const window=searchWindow(task),dates=serviceDates(window,resource.timeZone),rows=[];let truncated=false,invalidJourneys=0;
+     const federationFailures=new Map();
      for(const date of dates){
       if(!active())return;
       const result=await client.query({method:'missionJourneys',date,origin:task.from,destination:task.to,
@@ -321,6 +322,12 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(!active())return;
       if(!result||!Array.isArray(result.rows))throw new Error('Invalid GTFS journey response');
       truncated=truncated||result.truncated===true;
+      for(const failure of (Array.isArray(result.failedFederations)?result.failedFederations:[])){
+       if(!Array.isArray(failure?.networks)||failure.networks.length!==2)continue;
+       const names=failure.networks.map(name=>String(name||'Réseau inconnu').slice(0,80));
+       const key=names.join(' / ');
+       federationFailures.set(key,(typeof failure.reason==='string'?failure.reason:'Correspondance indisponible').slice(0,160));
+      }
       for(const journey of result.rows){
        if(!journey||!Number.isFinite(timestamp(journey.departure))||!Number.isFinite(timestamp(journey.arrival))||
           Date.parse(journey.arrival)<Date.parse(journey.departure)||
@@ -361,7 +368,12 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      const marginNote=Number.isFinite(Date.parse(task.latestArrival))?' Marge avant mission : '+window.marginMinutes+' min minimum (marche et circulation à vérifier).':'';
      // Skipped candidate networks make every itinerary list incomplete, even
      // when both loaded feeds respond and no individual query was truncated.
-     const incomplete=truncated||partialNetworks||omittedPartners>0||invalidJourneys>0;
+     const incomplete=truncated||partialNetworks||omittedPartners>0||invalidJourneys>0||federationFailures.size>0;
+     if(federationFailures.size&&active()){
+      const detail=doc.createElement('p');
+      detail.textContent='Correspondances non vérifiées : '+[...federationFailures.entries()].map(([pair,reason])=>pair+' ('+reason+')').join(' ; ').slice(0,600);
+      status.appendChild(detail);
+     }
      if(active())onResults({task,itineraries:distinct,partial:incomplete});
      const coverageNote=incomplete?' Recherche partielle : certains horaires ou réseaux n’ont pas pu être vérifiés.':'';
      status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':incomplete?'aucun trajet dans les résultats partiels ; recherche incomplète (réseau ou horaires manquants), d’autres horaires peuvent exister.':'aucun trajet direct ou avec une correspondance dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.' )+marginNote+coverageNote+(invalidJourneys?' '+invalidJourneys+' horaire(s) incohérent(s) écarté(s) ; recherche partielle.':'');
