@@ -1112,3 +1112,12 @@ test('GTFS service date expansion rejects excessive horizons before allocating d
   latestArrival:'2026-11-11T03:00:00Z'},zone),
   ['2026-11-10','2026-11-11']);
 });
+
+test('GTFS undated feed with invalid timezone is rejected before service indexing',()=>{
+ const feed={format:'GTFS',url:'https://example.org/feed.zip',bounds:[45,5,47,7]};
+ const trip={from:{lat:45.9,lon:6.1},to:{lat:45.8,lon:6.2},
+  earliestDeparture:'2026-11-11T09:00:00+01:00'};
+ assert.equal(agenda.selected({...feed,timeZone:'Invalid/Unknown'},trip),false);
+ assert.equal(agenda.selected({...feed,timeZone:'Europe/Paris'},trip),true);
+ assert.equal(agenda.selected(feed,trip),true);
+});
