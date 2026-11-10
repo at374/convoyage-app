@@ -13,7 +13,9 @@ test('systematic 460 stops do not automatically require booking',()=>{
 test('460 on-demand stop requires explicit booking confirmation',()=>{
  const x=assess({...base,boardingStopType:'on_demand'});
  assert.equal(x.needsRegistration,true);assert.equal(x.ready,false);assert.equal(x.registrationDeadlineMinutes,120);
- assert.equal(assess({...base,boardingStopType:'on_demand',registrationConfirmed:true}).ready,true);
+ assert.equal(assess({...base,boardingStopType:'on_demand',registrationConfirmed:true}).ready,false);
+ assert.equal(assess({...base,boardingStopType:'on_demand',bookingAvailabilityVerified:true}).ready,false);
+ assert.equal(assess({...base,boardingStopType:'on_demand',registrationConfirmed:true,bookingAvailabilityVerified:true}).ready,true);
 });
 test('461 guaranteed connection requires confirmation even at systematic stops',()=>{
  const x=assess({...base,line:'461',guaranteedConnection:true});
