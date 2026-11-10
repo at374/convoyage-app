@@ -205,7 +205,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  // Otherwise urban TAM/Rubis missions are hidden by Cars Région Ain.
  const resource=urbanResources[0]||preferredAin||
   localResources.find(r=>taskList.some(t=>selected(r,t)||localResources.some(other=>crossEnvelopePair(r,other,t))))||
-  (express&&taskList.some(t=>selected(express,t))?express:null);
+  (express&&taskList.some(t=>selected(express,t))?express:null)||
+  // A mission can begin in one operator's area and end in another without
+  // either network covering both endpoints. Keep such missions searchable.
+  resourceList.find(r=>r.federate&&taskList.some(t=>
+   selected(r,{...t,to:t.from})&&resourceList.some(other=>crossEnvelopePair(r,other,t))));
  if(!resource)return {dispose,done:Promise.resolve()};
  const partnerCandidates=[...urbanResources,...localResources,...(express?[express]:[])].filter(r=>r!==resource&&taskList.some(task=>
   ((r===express||r.urban)&&selected(r,task))||crossEnvelopePair(resource,r,task)||
