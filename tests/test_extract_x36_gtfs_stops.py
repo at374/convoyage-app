@@ -66,6 +66,33 @@ class ExtractX36Tests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "No X36 stop_times"):
                 module.extract(path, "https://example.org/feed.zip", "2026-11-10")
 
+    def test_opposite_directions_remain_separate_patterns(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "feed.zip"
+            files = {
+                "routes.txt": "route_id,route_short_name\nr1,X36\n",
+                "trips.txt": "route_id,trip_id\nr1,out\nr1,back\n",
+                "stop_times.txt": (
+                    "trip_id,stop_id,stop_sequence\n"
+                    "out,a,1\nout,b,2\nback,b,1\nback,a,2\n"
+                ),
+                "stops.txt": (
+                    "stop_id,stop_name,stop_lat,stop_lon\n"
+                    "a,First,46.1,5.8\nb,Second,46.2,5.9\n"
+                ),
+            }
+            with zipfile.ZipFile(path, "w") as archive:
+                for name, data in files.items():
+                    archive.writestr(name, data)
+            result = module.extract(path, "https://example.org/feed.zip", "2026-11-10")
+            self.assertEqual(result["tripCount"], 2)
+            self.assertEqual(
+                {tuple(p["stopIds"]): p["tripCount"] for p in result["stopPatterns"]},
+                {("a", "b"): 1, ("b", "a"): 1},
+            )
+            self.assertFalse(result["journeyFareVerified"])
+
+
     def test_invalid_source_rejected(self):
         with self.assertRaises(ValueError):
             module.extract("unused.zip", "http://example.org/feed.zip", "2026-11-10")
