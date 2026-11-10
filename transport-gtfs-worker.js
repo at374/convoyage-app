@@ -191,6 +191,19 @@ self.onmessage=async({data})=>{
      invalidJourneyCount=before-rows.length-excludedWindowCount;
      if(invalidJourneyCount)searchTruncated=true;
     }
+    // Deduplicate identical GTFS services before limiting results. Multiple
+    // network queries can surface the same trip; duplicates must not displace
+    // distinct departure choices in a mission panel.
+    if(query.method==='missionJourneys'){
+     const seen=new Set();
+     rows=rows.filter(row=>{
+      const key=JSON.stringify([row.networkId||'',row.tripId||'',row.from||'',row.to||'',
+       row.departure,row.arrival,row.transferStopId||'',
+       row.legs?.map(leg=>[leg.networkId||'',leg.tripId||'',leg.from||'',leg.to||'',leg.departure,leg.arrival])||null]);
+      if(seen.has(key))return false;
+      seen.add(key);return true;
+     });
+    }
     // Apply mission ordering before the result cap, including across networks.
     if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));
    }else if(query.method==='nearbyStops')rows=CPGTFSIndex.nearbyStops(feed.index,query.lat,query.lon,query.radiusMeters??700);
