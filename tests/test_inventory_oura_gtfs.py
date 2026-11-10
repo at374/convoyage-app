@@ -78,8 +78,12 @@ class OuraInventoryTests(unittest.TestCase):
 
     def test_orphan_stop_time_rejected(self):
         with TemporaryDirectory() as folder:
-            path = self.make_zip(folder)
-            with zipfile.ZipFile(path, "a") as archive:
+            path = Path(folder) / "orphan.zip"
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr("agency.txt", "agency_id,agency_name\na1,Network A\n")
+                archive.writestr("routes.txt", "route_id,agency_id\nr1,a1\n")
+                archive.writestr("trips.txt", "route_id,trip_id\nr1,t1\n")
+                archive.writestr("stops.txt", "stop_id,stop_name\ns1,Stop One\n")
                 archive.writestr("stop_times.txt", "trip_id,stop_id,stop_sequence\nmissing,s1,1\n")
             with self.assertRaisesRegex(ValueError, "unknown trip_id"):
                 module.inventory(path, "https://example.org/oura.zip")
