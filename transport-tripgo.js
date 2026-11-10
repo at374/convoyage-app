@@ -34,7 +34,8 @@ function legGeometry(segment,mode){
    geometry.push(...points);
    if(geometry.length>5000)return null;
   }
-  return gap(coord(segment.from),geometry[0])<=50&&gap(geometry.at(-1),coord(segment.to))<=50?geometry:null;
+  const endpointTolerance=mode==='wa_wal'?10:50;
+  return gap(coord(segment.from),geometry[0])<=endpointTolerance&&gap(geometry.at(-1),coord(segment.to))<=endpointTolerance?geometry:null;
  }catch(_){return null;}
 }
 function transportType(mode,identifier){
