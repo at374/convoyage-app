@@ -86,7 +86,12 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
      missing:['circulation à la date du trajet','perturbations éventuelles','accès physique au point GPS exact','prix du transport']}});
   }
  }
- return {source:'TripGo',receivedAt,coverage:{publicTransportOnly:true,blablacarVerified:false,unsupportedModeTrips},itineraries:found.sort((a,b)=>arriveBy?Date.parse(b.departure)-Date.parse(a.departure):Date.parse(a.departure)-Date.parse(b.departure))};
+ const providers=[...new Set(found.flatMap(itinerary=>itinerary.legs.filter(leg=>leg.mode.startsWith('pt_pub'))
+  .map(leg=>leg.provider).filter(Boolean)))].sort();
+ const blablacarBusFound=providers.some(provider=>/^blablacar bus$/i.test(provider));
+ return {source:'TripGo',receivedAt,coverage:{publicTransportOnly:true,
+  blablacarBusFound,blablacarRideshareVerified:false,unsupportedModeTrips,providers},
+  itineraries:found.sort((a,b)=>arriveBy?Date.parse(b.departure)-Date.parse(a.departure):Date.parse(a.departure)-Date.parse(b.departure))};
 }
 async function readJSON(response,signal){
  const declared=Number(response.headers?.get?.('content-length'));if(declared>2000000)throw Error('Réponse TripGo trop grande');
