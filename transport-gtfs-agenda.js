@@ -98,7 +98,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const ain=resourceList.find(r=>r.id==='oura-ain');
  const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
  const express=resourceList.find(r=>r.id==='cars-region-express');
- const preferredExpress=express&&taskList.some(t=>selected(express,t))?express:null;
+ // Only prioritize Express for end-to-end Bellegarde–Bourg candidates, not local Ain journeys inside the same bounding box.
+ const expressEndToEnd=t=>selected(express,t)&&[t.from,t.to].some(p=>p.lon<=5.35)&&[t.from,t.to].some(p=>p.lon>=5.75);
+ const preferredExpress=express&&taskList.some(expressEndToEnd)?express:null;
  const resource=preferredExpress||preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
  if(!resource)return {dispose,done:Promise.resolve()};
  const partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
