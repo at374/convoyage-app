@@ -550,3 +550,20 @@ test('GTFS partner ranking chooses two endpoint networks over an irrelevant sing
   {uniqueCandidates,taskList,resource,selected,crossEnvelopePair,partnerCoverage});
  assert.deepEqual(Array.from(partners,p=>p.id),['from','to']);
 });
+
+test('GTFS Agenda starts with an endpoint network when no full-trip feed exists',()=>{
+ const fs=require('node:fs'),vm=require('node:vm');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ const start=source.indexOf(' const resource=urbanResources[0]||preferredAin||');
+ const end=source.indexOf(' if(!resource)return',start);
+ assert.ok(start>=0&&end>start);
+ const taskList=[{from:'A',to:'B'}];
+ const resourceList=[{id:'from',federate:true},{id:'to',federate:true}];
+ const selected=(r,t)=>r.id==='from'&&t.from==='A'&&t.to==='A'||
+  r.id==='to'&&t.from==='B'&&t.to==='B';
+ const crossEnvelopePair=(a,b,t)=>a.id==='from'&&b.id==='to'&&t.from==='A'&&t.to==='B';
+ const resource=vm.runInNewContext(source.slice(start,end)+';resource',
+  {urbanResources:[],preferredAin:null,localResources:[],express:null,
+   resourceList,taskList,selected,crossEnvelopePair});
+ assert.equal(resource.id,'from');
+});
