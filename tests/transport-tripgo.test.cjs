@@ -405,3 +405,15 @@ test('TripGo never assumes walking-time compatibility when Valhalla omits durati
  assert.equal(result.itineraries[0].legs[0].pedestrianScheduleFits,undefined);
  assert.equal(result.coverage.pedestrianScheduleConflicts,0);
 });
+
+test('TripGo keeps explicit train mode when modeInfo identifier is generic',()=>{
+ const rail=clone();
+ for(const segment of rail.segmentTemplates)if(segment.modeIdentifier==='pt_pub'){
+  segment.modeIdentifier='pt_pub_train';
+  segment.modeInfo.identifier='pt_pub';
+ }
+ const result=api.parse(rail,options);
+ assert.equal(result.itineraries.length,2);
+ assert.deepEqual(result.coverage.transportTypes,['train']);
+ assert.equal(result.itineraries[0].legs[1].transportType,'train');
+});
