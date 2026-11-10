@@ -445,3 +445,15 @@ test('TripGo explicit public transport mode takes precedence over conflicting me
   assert.deepEqual(result.coverage.transportTypes,[expected],mode);
  }
 });
+
+test('TripGo provider itinerary never invents a verified ticket price',()=>{
+ const fares=require('../transport-fares.js');
+ const response=api.parse(clone(),options);
+ for(const itinerary of response.itineraries){
+  const total=fares.fare(itinerary.legs,{travelDate:itinerary.departure});
+  assert.equal(itinerary.priceEUR,null);
+  assert.equal(total.totalEUR,null);
+  assert.equal(total.known,false);
+  assert.ok(total.unknownLegCount>=1);
+ }
+});
