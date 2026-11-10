@@ -210,7 +210,12 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const partnerCandidates=[...urbanResources,...localResources,...(express?[express]:[])].filter(r=>r!==resource&&taskList.some(task=>
   ((r===express||r.urban)&&selected(r,task))||crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
   (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to})))));
- const partners=partnerCandidates.filter(r=>r.federate).slice(0,1);
+ // Pick the partner that makes the largest number of mission windows eligible.
+ // Stable source order resolves ties; this does not assert a served stop or trip.
+ const partnerCoverage=r=>taskList.reduce((count,task)=>count+
+  (selected(r,task)||crossEnvelopePair(resource,r,task)?1:0),0);
+ const partners=partnerCandidates.filter(r=>r.federate)
+  .sort((a,b)=>partnerCoverage(b)-partnerCoverage(a)).slice(0,1);
  const omittedPartners=partnerCandidates.length-partners.length;
  const nonFederatedPartners=partnerCandidates.filter(r=>!r.federate).length;
  const eligible=task=>selected(resource,task)||partners.some(r=>selected(r,task)||crossEnvelopePair(resource,r,task));
