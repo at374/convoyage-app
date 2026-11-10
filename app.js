@@ -2790,6 +2790,13 @@
                     (leg.pedestrianMapStatus==='calculated_valhalla'?'Tracé piéton calculé avec Valhalla / OpenStreetMap ; accès réel à vérifier.':'Tracé piéton fourni par TripGo ; accès réel à vérifier.'):
                     'Tracé piéton non disponible : vérifier le cheminement exact avant de retenir ce trajet.';
                   step.appendChild(mapState);
+                  if(leg.pedestrianScheduleFits===false){
+                    const timing=document.createElement('strong');
+                    timing.setAttribute('data-tripgo-walk-time-warning','');
+                    timing.style.display='block';
+                    timing.textContent='⛔ Temps de marche incompatible : '+Math.ceil(leg.pedestrianRouteSeconds/60)+' min calculées pour '+Math.max(0,Math.ceil((Date.parse(leg.arrival)-Date.parse(leg.departure))/60000))+' min prévues. Correspondance non confirmée.';
+                    step.appendChild(timing);
+                  }
                 }
                 const legFare=fareSummary?.breakdown?.[legIndex];
                 if(legFare){
