@@ -471,3 +471,15 @@ test('failed GTFS federation pair preserves other pairs and marks search truncat
  assert.deepEqual(Array.from(posted[1].result.failedFederations[0].networks),['feed1','feed2']);
  assert.equal(posted[1].error,undefined);
 });
+
+test('Agenda displays federation failures after resetting mission status text',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
+ assert.ok(source.includes('const federationFailures=new Map()'));
+ assert.ok(source.includes('Array.isArray(result.failedFederations)'));
+ assert.ok(source.includes('federationFailures.size>0'));
+ const statusAt=source.indexOf("status.textContent=task.label+' : '");
+ const detailsAt=source.indexOf("detail.textContent='Correspondances non vérifiées : '");
+ assert.ok(statusAt>=0&&detailsAt>statusAt,'diagnostics must be appended after status text reset');
+ assert.ok(source.includes('status.appendChild(detail)'));
+});
