@@ -87,8 +87,10 @@ self.onmessage=async({data})=>{
     // An operator with a shorter indexed calendar must not invalidate
     // journeys from another operator. Exclude it and report partial coverage.
    }
+   // A feed indexed for the requested date can still supply direct journeys,
+   // even if it lacks one of the optional adjoining connection dates.
    const scopedFeeds=query.method==='missionJourneys'?feeds.filter(current=>
-    (!current.indexServiceDates||[query.date,...(connectionDates||[])].every(day=>current.indexServiceDates.includes(day)))):feeds;
+    (!current.indexServiceDates||current.indexServiceDates.includes(query.date))):feeds;
    const missingDateFeeds=query.method==='missionJourneys'?feeds.filter(current=>!scopedFeeds.includes(current)):[];
    if(missingDateFeeds.length)searchTruncated=true;
    if(query.method==='directTrips')rows=CPGTFSIndex.directTrips(feed.files,feed.index,query.date,query.from,query.to);
@@ -114,8 +116,11 @@ self.onmessage=async({data})=>{
      // third local operator contributes transfers without changing its API.
      for(let i=0;i<scopedFeeds.length;i++)for(let j=i+1;j<scopedFeeds.length;j++){
       try{
-       const cross=CPGTFSFederation.crossNetworkTrips([scopedFeeds[i],scopedFeeds[j]],query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
-        ...(connectionDates===undefined?{}:{connectionDates})});
+       const pair=[scopedFeeds[i],scopedFeeds[j]];
+       const pairDates=(connectionDates||[query.date]).filter(day=>pair.every(current=>
+        !current.indexServiceDates||current.indexServiceDates.includes(day)));
+       const cross=CPGTFSFederation.crossNetworkTrips(pair,query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
+        connectionDates:pairDates});
        if(!cross||!Array.isArray(cross.journeys))throw new Error('Invalid federation result');
        rows.push(...cross.journeys);searchTruncated=searchTruncated||cross.searchTruncated;
       }catch(error){
