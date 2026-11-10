@@ -254,6 +254,14 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(row.legs?.length===2){
        for(const leg of row.legs){const detail=doc.createElement('span');detail.textContent=' · '+(leg.network?leg.network+' ':'')+leg.line+' : '+format(leg.departure)+' → '+format(leg.arrival);line.appendChild(detail);}
       }
+      // Proxim iTi booking evidence is not present in theoretical GTFS schedules.
+      // Restrict the advisory to an explicitly identified operator, never a bare route number.
+      if(['460','461'].includes(String(row.line))&&/proxim\\s*i\\s*ti/i.test(String(row.network||''))){
+       const advisory=doc.createElement('span');
+       advisory.setAttribute('data-proximiti-booking-unverified','');
+       advisory.textContent=' · Proxim iTi '+row.line+' : vérifier si les arrêts et correspondances nécessitent une réservation Bus CheckIn ; réservation et disponibilité non confirmées.';
+       line.appendChild(advisory);
+      }
       if(['Y62','Y63'].includes(row.line)&&row.networkId==='oura-haute-savoie'){
        const dateParts=new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure));
        const datePart=type=>dateParts.find(part=>part.type===type)?.value;
