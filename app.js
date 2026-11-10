@@ -1875,6 +1875,15 @@
           const intro = document.createElement('p');
           intro.textContent = 'Étapes théoriques · horaires et circulation à vérifier avant de partir.';
           detail.appendChild(intro);
+          if (Array.isArray(journey.fareBreakdown) && window.CPTransportFares?.describe) {
+            const fareDetail = document.createElement('p');
+            fareDetail.textContent = window.CPTransportFares.describe({
+              breakdown: journey.fareBreakdown,
+              known: Number.isFinite(journey.priceEUR),
+              totalEUR: Number.isFinite(journey.priceEUR) ? journey.priceEUR : null
+            });
+            detail.appendChild(fareDetail);
+          }
           const steps = Array.isArray(journey.legs) ? journey.legs : [];
           if (steps.length) {
             const list = document.createElement('ol');
