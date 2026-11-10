@@ -225,7 +225,7 @@ test('GTFS panel must disclose partners omitted by the two-feed limit',()=>{
  const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
  assert.ok(source.includes('const partnerCandidates='));
  assert.ok(source.includes('const partners=uniqueCandidates.filter(r=>r.federate)'));
- assert.ok(source.includes('.sort((a,b)=>partnerCoverage(b)-partnerCoverage(a)).slice(0,1);'));
+ assert.ok(source.includes('.sort((a,b)=>partnerCoverage(b)-partnerCoverage(a)).slice(0,2);'));
  assert.ok(source.includes('const nonFederatedPartners=uniqueCandidates.filter(r=>!r.federate).length;'));
  assert.ok(source.includes('sans fédération GTFS activée'));
  assert.ok(source.includes('const omittedPartners=partnerCandidates.length-partners.length;'));
@@ -374,4 +374,12 @@ test('skipped GTFS candidate networks force partial mission results',()=>{
  const source=fs.readFileSync(require.resolve('../transport-gtfs-agenda.js'),'utf8');
  assert.ok(source.includes('const incomplete=truncated||partialNetworks||omittedPartners>0||invalidJourneys>0;'));
  assert.ok(source.includes('onResults({task,itineraries:distinct,partial:incomplete})'));
+});
+
+test('GTFS worker caps federation at three feeds and enumerates all three pairs',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8');
+ assert.ok(source.includes("list.length>3)throw new Error('One to three GTFS networks required')"));
+ assert.ok(source.includes('for(let i=0;i<feeds.length;i++)for(let j=i+1;j<feeds.length;j++)'));
+ assert.ok(source.includes('crossNetworkTrips([feeds[i],feeds[j]]'));
 });
