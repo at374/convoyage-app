@@ -360,3 +360,15 @@ test('TripGo rejects Valhalla pedestrian geometry that misses the exact stops',a
  assert.equal(result.itineraries[0].legs[0].pedestrianMapStatus,'not_verified');
  assert.equal(result.itineraries[0].legs[0].geometry,null);
 });
+
+test('TripGo does not publish a pedestrian route after mission search cancellation',async()=>{
+ const controller=new AbortController();
+ const original={itineraries:[{legs:[{mode:'wa_wal',fromPoint:{lat:46,lon:6},toPoint:{lat:46.001,lon:6.001},geometry:null}]}]};
+ const result=await api.enrichPedestrianMaps(original,{route:async(a,b)=>{
+  controller.abort();
+  return {status:'calculated',endpointsMatched:true,geometry:[a,b]};
+ }},{signal:controller.signal});
+ assert.equal(result.itineraries[0].legs[0].pedestrianMapStatus,'cancelled');
+ assert.equal(result.coverage.pedestrianGeometryMissing,1);
+ assert.equal(result.coverage.pedestrianValhallaCalculated,0);
+});
