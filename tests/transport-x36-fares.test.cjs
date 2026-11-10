@@ -34,7 +34,9 @@ test('X36 stop reference requires explicit audited GTFS stop pins and exact netw
   {...toStop,name:base.toStopName}
  ];
  const input={networkId:'oura-ain',line:'X36',fromStop,toStop,
-  travelDate:base.travelDate,auditedPins};
+  travelDate:base.travelDate,auditedPins,
+  auditEvidence:{networkId:'oura-ain',line:'X36',sourceType:'official_gtfs',
+   sourceUrl:'https://example.org/official-gtfs-fixture',checkedOn:'2026-11-10'}};
  const result=stopReference(input);
  assert.equal(result.amount,1.2);
  assert.equal(result.stopMappingVerified,true);
@@ -42,6 +44,9 @@ test('X36 stop reference requires explicit audited GTFS stop pins and exact netw
  assert.equal(result.serviceConfirmed,false);
  for(const update of [
   {auditedPins:[]},{networkId:'oura-haute-savoie'},
+  {auditEvidence:null},
+  {auditEvidence:{...input.auditEvidence,sourceType:'manual_guess'}},
+  {auditEvidence:{...input.auditEvidence,line:'X37'}},
   {fromStop:{...fromStop,id:'unknown'}},
   {toStop:{...toStop,lat:46.2}},
   {auditedPins:[...auditedPins,auditedPins[0]]},
