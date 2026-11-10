@@ -254,5 +254,6 @@ test('GTFS worker rejects duplicate network identities before downloading',()=>{
  const source=fs.readFileSync(require.resolve('../transport-gtfs-worker.js'),'utf8');
  assert.ok(source.includes("const identities=list.map(item=>item?.datasetId||item?.id||item?.url);"));
  assert.ok(source.includes('new Set(identities).size!==identities.length'));
- assert.ok(source.includes('Duplicate or unidentified GTFS network'));
+ assert.ok(source.includes('Duplicate, unidentified or invalid GTFS network'));
+ assert.ok(source.includes('new Set(urls).size!==urls.length'));
 });
