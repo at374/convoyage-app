@@ -214,10 +214,19 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  // Stable source order resolves ties; this does not assert a served stop or trip.
  const partnerCoverage=r=>taskList.reduce((count,task)=>count+
   (selected(r,task)||crossEnvelopePair(resource,r,task)?1:0),0);
- const partners=partnerCandidates.filter(r=>r.federate)
+ const uniqueCandidates=[];
+ const candidateIds=new Set([resource.datasetId||resource.id]);
+ const candidateUrls=new Set([resource.url]);
+ for(const candidate of partnerCandidates){
+  const identity=candidate.datasetId||candidate.id;
+  if(!identity||candidateIds.has(identity)||candidateUrls.has(candidate.url))continue;
+  candidateIds.add(identity);candidateUrls.add(candidate.url);
+  uniqueCandidates.push(candidate);
+ }
+ const partners=uniqueCandidates.filter(r=>r.federate)
   .sort((a,b)=>partnerCoverage(b)-partnerCoverage(a)).slice(0,1);
- const omittedPartners=partnerCandidates.length-partners.length;
- const nonFederatedPartners=partnerCandidates.filter(r=>!r.federate).length;
+ const omittedPartners=uniqueCandidates.length-partners.length;
+ const nonFederatedPartners=uniqueCandidates.filter(r=>!r.federate).length;
  const eligible=task=>selected(resource,task)||partners.some(r=>selected(r,task)||crossEnvelopePair(resource,r,task));
  const section=doc.createElement('div');section.className='bk';section.setAttribute('data-gtfs-agenda','');
  const heading=doc.createElement('h3');heading.textContent=resource.network+' — horaires aux arrêts';section.appendChild(heading);
@@ -230,7 +239,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  if(omittedPartners>0)warning.textContent+=' Recherche incomplète : '+omittedPartners+' réseau(x) candidat(s) supplémentaire(s) non interrogé(s) (limite actuelle de deux flux ou fédération non disponible).';
  if(nonFederatedPartners>0)warning.textContent+=' Dont '+nonFederatedPartners+' réseau(x) sans fédération GTFS activée.';
  if(omittedPartners>0){
-  const omitted=partnerCandidates.filter(r=>!partners.includes(r));
+  const omitted=uniqueCandidates.filter(r=>!partners.includes(r));
   warning.textContent+=' Réseaux non interrogés : '+omitted.map(r=>r.network).join(' ; ')+'.';
  }
  section.appendChild(warning);panel.appendChild(section);
