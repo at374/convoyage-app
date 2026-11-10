@@ -109,6 +109,28 @@ class ExtractX36Tests(unittest.TestCase):
                 module.extract(path, "https://example.org/feed.zip", "2026-11-10")
 
 
+    def test_missing_intermediate_stop_gps_rejects_shortened_route(self):
+        with TemporaryDirectory() as folder:
+            path = Path(folder) / "feed.zip"
+            files = {
+                "routes.txt": "route_id,route_short_name\nr1,X36\n",
+                "trips.txt": "route_id,trip_id\nr1,t1\n",
+                "stop_times.txt": (
+                    "trip_id,stop_id,stop_sequence\n"
+                    "t1,a,1\nt1,b,2\nt1,c,3\n"
+                ),
+                "stops.txt": (
+                    "stop_id,stop_name,stop_lat,stop_lon\n"
+                    "a,First,46.1,5.8\nb,Middle,INVALID,5.85\nc,Last,46.2,5.9\n"
+                ),
+            }
+            with zipfile.ZipFile(path, "w") as archive:
+                for name, data in files.items():
+                    archive.writestr(name, data)
+            with self.assertRaisesRegex(ValueError, "X36 stops missing valid GPS"):
+                module.extract(path, "https://example.org/feed.zip", "2026-11-10")
+
+
     def test_invalid_source_rejected(self):
         with self.assertRaises(ValueError):
             module.extract("unused.zip", "http://example.org/feed.zip", "2026-11-10")
