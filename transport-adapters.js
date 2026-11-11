@@ -61,7 +61,7 @@
         departure:leg.departure,
         arrival:leg.arrival,
         serviceConfirmed:false,
-        verifiedPriceEUR:leg.verifiedPriceEUR,
+        verifiedPriceEUR:null,
         fareVerified:false,
         fareSource:null,
         fareValidFrom:null,

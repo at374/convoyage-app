@@ -1,0 +1,44 @@
+{
+  "checkedOn": "2026-11-08",
+  "appConnected": false,
+  "journeyFareVerified": false,
+  "references": [
+    {
+      "network": "Cars Région Cantal",
+      "source": "https://www.laregionvoustransporte.fr/cars-region/cars-region-du-cantal/infos-et-services-cars-region-du-cantal/titres-et-tarifs-du-cantal/",
+      "effectiveFrom": "2026-03-01",
+      "validUntil": null,
+      "adult": {
+        "singleEUR": 1.8,
+        "tenJourneysEUR": 17,
+        "monthlyEUR": 28
+      },
+      "monthlyValidity": "calendar_month",
+      "monthlyScope": "regular_lines",
+      "ouraFirstIssueEUR": 5,
+      "cardRemoteLoadDelayUpToHours": 24,
+      "transferMinutes": null,
+      "under25AnnualEUR": 166,
+      "under25AnnualValidity": "school_year_September_August",
+      "notes": [
+        "Oura is a support, not a ticket granting travel across all partner networks.",
+        "Seasonal Volcan lines excluded from senior first-Sunday 1 EUR scheme."
+      ]
+    },
+    {
+      "network": "Cars Région Allier",
+      "source": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lallier/infos-et-services-cars-region-de-lallier/titres-et-tarifs-de-lallier/",
+      "effectiveFrom": "2026-03-01",
+      "validUntil": null,
+      "adult": null,
+      "zonalDemandResponsiveTicketCoversInterurbanTransfer": false,
+      "interurbanTransferRequiresNewTicket": true,
+      "combinedMaelisTitleRequiresOura": true,
+      "studentDiscountAvailableOnOuraWebsite": false,
+      "notes": [
+        "Numeric fare table not verified in this control; no amount inferred.",
+        "Reservation requirement and eligibility must be checked for demand-responsive services."
+      ]
+    }
+  ]
+}

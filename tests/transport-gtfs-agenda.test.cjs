@@ -770,7 +770,7 @@ test('Android PWA offline cache includes every versioned entrypoint script',()=>
  for(const script of scripts){
   assert.ok(worker.includes("'"+script+"'"),'Missing Android offline script: '+script);
  }
- assert.match(worker,/const CACHE = 'cp-app-transport-results-cards-20261105-v\d+'/);
+ assert.match(worker,/const CACHE = 'cp-app-transport-[a-z0-9-]+-20\d{6}-v\d+'/);
 });
 
 test('Android PWA offline cache retains the transport worker and app shell',()=>{
@@ -825,4 +825,162 @@ test('Mobile regional transport cards cover Aller Jonction Retour and safe stop 
  assert.match(app,/encodeURIComponent\(stop\)/);
  assert.match(app,/position exacte non vérifiée/);
  assert.match(app,/Transport non confirmé/);
+});
+
+test('exact-stop 272 and Y62 published prices display as unconfirmed references only',async()=>{
+ const previous272=global.CP272Fares,previousAravis=global.CPAravisFares,previousData=global.CPAravisFareData;
+ global.CP272Fares=require('../transport-272-fares.js');
+ global.CPAravisFares=require('../transport-aravis-fares.js');
+ global.CPAravisFareData=require('../data/transport/aravis-fare-reference-2026.json');
+ const annecy={stopId:'FR:74010:ZE:57539:HAUTExSAVOIE',name:'Annecy',lat:45.9016985,lon:6.1201612};
+ const geneva={stopId:'FR:6623:ZE:57862:HAUTExSAVOIE',name:'Genève ou Saint-Julien Douane',lat:46.230964,lon:6.1096781};
+ const clusaz={stopId:'FR:74080:ZE:57774:HAUTExSAVOIE',name:'La Clusaz',lat:45.9067032,lon:6.4191339};
+ const make=(line,to)=>row({networkId:'oura-haute-savoie',line,originStop:annecy,destinationStop:to,
+  departure:'2026-11-10T08:00:00Z',arrival:'2026-11-10T09:00:00Z'});
+ try{
+  for(const [line,to,expected] of [['272',geneva,'11,30 €'],['Y62',clusaz,'8,90 €']]){
+   const target=panel();const session=agenda.mount(target,{tasks:[{...task,earliestDeparture:'2026-11-10T08:00:00Z'}],
+    clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[make(line,to)],truncated:false}),dispose(){}})});
+   await session.done;
+   assert.ok(target.textContent.includes(expected),'Missing published reference: '+expected);
+   assert.match(target.textContent,/non confirmée|non confirmé/);
+   session.dispose();
+  }
+  const target=panel();const session=agenda.mount(target,{tasks:[{...task,earliestDeparture:'2026-11-10T08:00:00Z'}],
+   clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[make('Y62',{...clusaz,stopId:'unverified'})],truncated:false}),dispose(){}})});
+  await session.done;assert.doesNotMatch(target.textContent,/8,90 €/);session.dispose();
+  for(const altered of [
+   make('Y62',{...clusaz,lat:46.5}),
+   {...make('Y62',clusaz),interNetwork:true},
+   {...make('Y62',clusaz),line:'Y63'},
+   {...make('Y62',clusaz),departure:'2026-11-06T08:00:00Z',arrival:'2026-11-06T09:00:00Z'}
+  ]){
+   const target=panel();const session=agenda.mount(target,{tasks:[{...task,earliestDeparture:altered.departure}],
+    clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[altered],truncated:false}),dispose(){}})});
+   await session.done;assert.doesNotMatch(target.textContent,/8,90 €/);session.dispose();
+  }
+  for(const altered of [
+   make('272',{...geneva,stopId:'unverified'}),
+   {...make('272',geneva),interNetwork:true},
+   {...make('272',geneva),departure:'2026-12-13T08:00:00Z',arrival:'2026-12-13T09:00:00Z'}
+  ]){
+   const target=panel();const session=agenda.mount(target,{tasks:[{...task,earliestDeparture:altered.departure}],
+    clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[altered],truncated:false}),dispose(){}})});
+   await session.done;assert.doesNotMatch(target.textContent,/11,30 €/);session.dispose();
+  }
+ }finally{global.CP272Fares=previous272;global.CPAravisFares=previousAravis;global.CPAravisFareData=previousData;}
+});
+
+test('Aravis matrix is initialized only once for multiple GTFS results in a panel',async()=>{
+ const previous=global.CPAravisFares,previousData=global.CPAravisFareData;
+ const original=require('../transport-aravis-fares.js');let builds=0;
+ global.CPAravisFares={createCalculator(data){builds++;return original.createCalculator(data);}};
+ global.CPAravisFareData=require('../data/transport/aravis-fare-reference-2026.json');
+ const annecy={stopId:'FR:74010:ZE:57539:HAUTExSAVOIE',name:'Annecy',lat:45.9016985,lon:6.1201612};
+ const clusaz={stopId:'FR:74080:ZE:57774:HAUTExSAVOIE',name:'La Clusaz',lat:45.9067032,lon:6.4191339};
+ const base=row({networkId:'oura-haute-savoie',line:'Y62',originStop:annecy,destinationStop:clusaz,
+  departure:'2026-11-10T08:00:00Z',arrival:'2026-11-10T09:00:00Z'});
+ const target=panel();let session;
+ try{
+  session=agenda.mount(target,{tasks:[{...task,earliestDeparture:'2026-11-10T08:00:00Z'}],
+   clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[base,{...base,tripId:'second',departure:'2026-11-10T09:00:00Z',arrival:'2026-11-10T10:00:00Z'}],truncated:false}),dispose(){}})});
+  await session.done;assert.equal(builds,1);
+  assert.match(target.textContent,/8,90 €/);
+ }finally{session?.dispose();global.CPAravisFares=previous;global.CPAravisFareData=previousData;}
+});
+
+test('Aravis RD16 disruption warning follows Paris calendar boundaries',async()=>{
+ const annecy={stopId:'FR:74010:ZE:57539:HAUTExSAVOIE',name:'Annecy',lat:45.9016985,lon:6.1201612};
+ const clusaz={stopId:'FR:74080:ZE:57774:HAUTExSAVOIE',name:'La Clusaz',lat:45.9067032,lon:6.4191339};
+ for(const [departure,expected] of [
+  ['2026-09-13T20:00:00Z',false],
+  ['2026-09-13T22:30:00Z',true],
+  ['2026-12-06T20:00:00Z',true],
+  ['2026-12-06T23:30:00Z',false]
+ ]){
+  const target=panel();const result=row({networkId:'oura-haute-savoie',line:'Y62',originStop:annecy,destinationStop:clusaz,
+   departure,arrival:new Date(Date.parse(departure)+3600000).toISOString()});
+  const session=agenda.mount(target,{tasks:[{...task,earliestDeparture:departure}],
+   clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[result],truncated:false}),dispose(){}})});
+  try{await session.done;assert.equal(target.textContent.includes('horaires adaptés aux travaux RD16'),expected,departure);}
+  finally{session.dispose();}
+ }
+});
+
+test('Proxim iTi 460/461 theoretical results warn of unverified Bus CheckIn bookings only for identified operator',async()=>{
+ for(const [line,network,expected] of [
+  ['460','Proxim iTi',true],['461','Proxim iTi',true],
+  ['460','Other network',false],['462','Proxim iTi',false]
+ ]){
+  const target=panel();
+  const session=agenda.mount(target,{tasks:[task],
+   clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[row({line,network})],truncated:false}),dispose(){}})});
+  try{
+   await session.done;
+   assert.equal(target.textContent.includes('réservation et disponibilité non confirmées'),expected,line+' '+network);
+  }finally{session.dispose();}
+ }
+});
+
+test('Proxim iTi booking warning also covers 460/461 inside theoretical transfer legs',async()=>{
+ const cases=[
+  [{line:'Y62',network:'Cars Région'},{line:'460',network:'Proxim iTi'}],
+  [{line:'461',network:'Proxim iTi'},{line:'Y62',network:'Cars Région'}],
+  [{line:'460',network:'Unrelated carrier'},{line:'Y62',network:'Cars Région'}]
+ ];
+ for(const [legsIndex,legs] of cases.entries()){
+  const target=panel();
+  const completeLegs=legs.map((leg,i)=>({...leg,tripId:'T'+i,
+   from:i===0?'A':'X',to:i===0?'X':'B',
+   departure:i===0?'2026-11-02T11:00:00Z':'2026-11-02T11:28:00Z',
+   arrival:i===0?'2026-11-02T11:20:00Z':'2026-11-02T12:00:00Z'}));
+  const transfer=row({line:'Y62',network:'Cars Région',legs:completeLegs,
+   transferStopId:'X',transferStop:{name:'A',lat:45.8,lon:6.2},
+   transferMinutes:8,minimumTransferMinutes:5});
+  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
+   load:async()=>summary,query:async()=>({rows:[transfer],truncated:false}),dispose(){}})});
+  try{
+   await session.done;
+   assert.equal(target.textContent.includes('réservation et disponibilité non confirmées'),legsIndex!==2);
+  }finally{session.dispose();}
+ }
+});
+
+test('Cars Région Express official GTFS is a candidate for X36 corridor, not a fare confirmation',()=>{
+ const express=agenda.DEFAULT_RESOURCES.find(r=>r.id==='cars-region-express');
+ assert.ok(express);
+ assert.equal(express.network,'Cars Région Express');
+ assert.equal(express.format,'GTFS');
+ assert.equal(express.timeZone,'Europe/Paris');
+ assert.match(express.url,/provider=CARS_REGION_EXPRESS/);
+ const corridor={from:{lat:46.107,lon:5.825},to:{lat:46.205,lon:5.228}};
+ assert.equal(agenda.selected(express,corridor),true);
+ assert.equal(agenda.selected(express,{...corridor,to:{lat:48.8,lon:2.3}}),false);
+});
+
+test('X36 corridor selects Express feed ahead of overlapping Ain resources',async()=>{
+ const corridor={label:'X36',from:{lat:46.107,lon:5.825},to:{lat:46.205,lon:5.228},
+ earliestDeparture:'2026-11-10T10:00:00+01:00',latestArrival:'2026-11-10T15:00:00+01:00'};
+ const calls=[];
+ const session=agenda.mount(panel(),{tasks:[corridor],clientFactory:()=>({
+ loadNetworks:async(resources)=>{calls.push(resources);return {networks:resources.map(r=>({...summary,source:{...summary.source,network:r.network,url:r.url}})),partial:false};},
+ query:async()=>({rows:[],truncated:false}),dispose(){}
+ })});
+ await session.done;
+ assert.equal(calls.length,1);
+ assert.equal(calls[0][0].id,'cars-region-express');
+ session.dispose();
+});
+
+test('local Ain journey inside Express bounds retains Ain feed',async()=>{
+ const local={label:'Ain local',from:{lat:46.20,lon:5.6},to:{lat:46.25,lon:5.7},
+ earliestDeparture:'2026-11-10T10:00:00+01:00'};
+ let loaded=null;
+ const session=agenda.mount(panel(),{tasks:[local],clientFactory:()=>({
+ load:async resource=>{loaded=resource;return {source:{network:resource.network},counts:{stops:0}};},
+ search:async()=>({rows:[]}),dispose(){}
+ })});
+ await session.done;
+ assert.equal(loaded?.id,'oura-ain');
+ session.dispose();
 });

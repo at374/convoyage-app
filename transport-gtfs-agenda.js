@@ -13,6 +13,13 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  // Selection envelope only, not a guarantee of lines or cross-border service.
  bounds:[45.65,4.7,46.55,6.3],timeZone:'Europe/Paris'
 }),Object.freeze({
+ id:'cars-region-express',datasetId:'reseau-interurbain-cars-region-express',
+ network:'Cars Région Express',format:'GTFS',federate:true,
+ // Official OÙRA producer feed; theoretical schedules only, never confirmed fare or live operation.
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_EXPRESS&dataFormat=GTFS&dataProfil=OPENDATA',
+ // X36 Bellegarde–Bourg selection envelope only; do not hijack Grenoble local searches.
+ bounds:[46.05,5.15,46.30,5.90],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'80100',datasetId:'5bd9843e634f413220f7f04a',network:'Sibra',format:'GTFS',federate:true,
  url:'https://www.data.gouv.fr/api/1/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0',resolveFromCatalogue:true,
  bounds:[45.7,5.9,46.1,6.5],timeZone:'Europe/Paris'
@@ -76,6 +83,10 @@ function serviceDates(window,timeZone){
 }
 function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>root.CPGTFSWorker.createClient(),walkingRouterFactory=()=>root.CPTransportWalking?.createRouter(),getSibraPass=()=>null,onResults=()=>{}}={}){
  const doc=panel.ownerDocument||root.document;
+ // Build the audited Aravis lookup once per opened panel, not once per displayed journey.
+ let aravisCalculator=null;
+ try{if(root.CPAravisFareData&&root.CPAravisFares?.createCalculator)
+  aravisCalculator=root.CPAravisFares.createCalculator(root.CPAravisFareData);}catch(_){}
  let client=null,walker=null,disposed=false,observer=null;const walkChecks=[],fareChecks=[];
  const dispose=()=>{if(disposed)return;disposed=true;observer?.disconnect();client?.dispose();walker?.dispose();client=null;walker=null;};
  const taskList=Array.isArray(tasks)?tasks:[];
@@ -86,7 +97,11 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const ainCore=task=>[task?.from,task?.to].every(p=>validPoint(p)&&p.lat>=45.9&&p.lat<=46.5&&p.lon>=4.7&&p.lon<=5.85);
  const ain=resourceList.find(r=>r.id==='oura-ain');
  const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
- const resource=preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
+ const express=resourceList.find(r=>r.id==='cars-region-express');
+ // Only prioritize Express for end-to-end Bellegarde–Bourg candidates, not local Ain journeys inside the same bounding box.
+ const expressEndToEnd=t=>selected(express,t)&&[t.from,t.to].some(p=>p.lon<=5.35)&&[t.from,t.to].some(p=>p.lon>=5.75);
+ const preferredExpress=express&&taskList.some(expressEndToEnd)?express:null;
+ const resource=preferredExpress||preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
  if(!resource)return {dispose,done:Promise.resolve()};
  const partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
   crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
@@ -213,6 +228,31 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      for(const row of shown){
       let tariff=null,tariffDescription='';
       try{tariff=root.CPTY51Fares;tariffDescription=tariff?.describe(tariff?.reference(row))||'';}catch(_){}
+      // Published 272 fare: show only when both GTFS stop IDs and GPS pins
+      // match the audited official feed. Never treat it as a verified quote.
+      let line272Reference=null;
+      if(!row.interNetwork&&!row.legs?.length&&row.line==='272'&&row.networkId==='oura-haute-savoie'){
+       try{
+        const from=row.originStop,to=row.destinationStop;
+        line272Reference=root.CP272Fares?.stopReference?.({networkId:row.networkId,line:row.line,
+         fromStop:{id:from?.stopId,lat:from?.lat,lon:from?.lon},
+         toStop:{id:to?.stopId,lat:to?.lat,lon:to?.lon},
+         travelDate:(()=>{const parts=new Intl.DateTimeFormat('en-US',{timeZone:row.timeZone||resource.timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure));const part=type=>parts.find(p=>p.type===type)?.value;return [part('year'),part('month'),part('day')].join('-');})(),product:'parcours',profile:'adult'})||null;
+       }catch(_){}
+      }
+      let aravisReference=null;
+      if(!row.interNetwork&&!row.legs?.length&&row.line==='Y62'&&row.networkId==='oura-haute-savoie'){
+       try{
+        const from=row.originStop,to=row.destinationStop;
+        const parts=new Intl.DateTimeFormat('en-US',{timeZone:row.timeZone||resource.timeZone,
+         year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure));
+        const part=type=>parts.find(p=>p.type===type)?.value;
+        aravisReference=aravisCalculator?.stopReference?.({networkId:row.networkId,line:row.line,
+         fromStop:{id:from?.stopId,lat:from?.lat,lon:from?.lon},
+         toStop:{id:to?.stopId,lat:to?.lat,lon:to?.lon},
+         travelDate:[part('year'),part('month'),part('day')].join('-'),profile:'adult'})||null;
+       }catch(_){}
+      }
       const line=doc.createElement('p');
       const safeZone=(()=>{try{new Intl.DateTimeFormat('fr-FR',{timeZone:row.timeZone||resource.timeZone});return row.timeZone||resource.timeZone;}catch(_){return resource.timeZone;}})();
       const format=iso=>new Intl.DateTimeFormat('fr-FR',{timeZone:safeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(iso));
@@ -225,11 +265,51 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(row.legs?.length===2){
        for(const leg of row.legs){const detail=doc.createElement('span');detail.textContent=' · '+(leg.network?leg.network+' ':'')+leg.line+' : '+format(leg.departure)+' → '+format(leg.arrival);line.appendChild(detail);}
       }
+      // Proxim iTi booking evidence is not present in theoretical GTFS schedules.
+      // Restrict the advisory to an explicitly identified operator, never a bare route number.
+      const proximitiSegments=row.legs?.length?row.legs:[row];
+      const proximitiLines=[...new Set(proximitiSegments.filter(leg=>
+       ['460','461'].includes(String(leg.line))&&/proxim\s*i\s*ti/i.test(String(leg.network||'')))
+       .map(leg=>String(leg.line)))];
+      if(proximitiLines.length){
+       const advisory=doc.createElement('span');
+       advisory.setAttribute('data-proximiti-booking-unverified','');
+       advisory.textContent=' · Proxim iTi '+proximitiLines.join('/')+' : vérifier si les arrêts et correspondances nécessitent une réservation Bus CheckIn ; réservation et disponibilité non confirmées.';
+       line.appendChild(advisory);
+      }
+      if(['Y62','Y63'].includes(row.line)&&row.networkId==='oura-haute-savoie'){
+       const dateParts=new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure));
+       const datePart=type=>dateParts.find(part=>part.type===type)?.value;
+       const day=[datePart('year'),datePart('month'),datePart('day')].join('-');
+       if(day>='2026-09-14'&&day<='2026-12-06'){
+        const warning=doc.createElement('span');warning.setAttribute('data-aravis-disruption','');
+        warning.textContent=' · Y62/Y63 : horaires adaptés aux travaux RD16 ; arrêt Bergeronette non desservi. Vérifier la grille officielle avant départ.';
+        line.appendChild(warning);
+        const source=doc.createElement('a');source.href='https://www.laregionvoustransporte.fr/cars-region/cars-region-de-haute-savoie/ligne/y62-y63-annecy-la-clusaz-le-grand-bornand/';
+        source.target='_blank';source.rel='noopener noreferrer';source.textContent=' · Horaires officiels Y62/Y63';line.appendChild(source);
+       }
+      }
       const passCost=doc.createElement('span');passCost.setAttribute('data-sibra-pass-cost','');line.appendChild(passCost);
       fareChecks.push({row,element:passCost});refreshFares();
       if(tariffDescription){
         const quote=doc.createElement('span');quote.setAttribute('data-y51-fare-reference','');quote.textContent=tariffDescription;line.appendChild(quote);
         const proof=doc.createElement('a');proof.href=tariff.SOURCE;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir le barème officiel';line.appendChild(proof);
+      }
+      if(line272Reference){
+       const quote=doc.createElement('span');quote.setAttribute('data-272-fare-reference','');
+       quote.textContent=' · Ligne 272 : tarif publié '+line272Reference.amount.toFixed(2).replace('.',',')+
+        ' € (adulte, parcours seul, hors zone 10) — prix du trajet non confirmé, à revérifier avant achat';
+       line.appendChild(quote);
+       const proof=doc.createElement('a');proof.href=line272Reference.source;proof.target='_blank';proof.rel='noopener noreferrer';
+       proof.textContent=' · Grille tarifaire officielle 272';line.appendChild(proof);
+      }
+      if(aravisReference){
+       const quote=doc.createElement('span');quote.setAttribute('data-aravis-fare-reference','');
+       quote.textContent=' · Y62 : tarif publié '+aravisReference.amount.toFixed(2).replace('.',',')+
+        ' € (adulte, billet simple) — validité du prix du trajet non confirmée, à revérifier';
+       line.appendChild(quote);
+       const proof=doc.createElement('a');proof.href=aravisReference.source;proof.target='_blank';proof.rel='noopener noreferrer';
+       proof.textContent=' · Barème officiel Aravis';line.appendChild(proof);
       }
       for(const [label,stop] of [['Départ',row.originStop],['Correspondance',row.transferStop],['Montée après changement',row.transferDestinationStop],['Arrivée',row.destinationStop]]){
        if(!validPoint(stop))continue;

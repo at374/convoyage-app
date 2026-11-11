@@ -48,6 +48,28 @@ test('extracts stored/deflated feeds, folder prefixes and streaming ZIP descript
   assert.equal(result.expandedBytes,Object.values(files).reduce((n,s)=>n+Buffer.byteLength(s),0));
  }
 });
+test('published v2 fare products and zone rules survive loading without becoming verified prices',async()=>{
+ const fares={
+  'fare_products.txt':'fare_product_id,amount,currency\nP,2.50,CHF\n',
+  'fare_leg_rules.txt':'from_area_id,to_area_id,fare_product_id\nZA,ZB,P\n',
+  'fare_transfer_rules.txt':'from_leg_group_id,to_leg_group_id,transfer_count,fare_transfer_type\nL1,L2,1,0\n',
+  'fare_media.txt':'fare_media_id,fare_media_type\nM,2\n',
+  'rider_categories.txt':'rider_category_id,rider_category_name\nAD,Adult\n',
+  'areas.txt':'area_id,area_name\nZA,Annecy\nZB,Albertville\n',
+  'stop_areas.txt':'area_id,stop_id\nZA,A\nZB,B\n',
+  'networks.txt':'network_id,network_name\nN,Example\n',
+  'route_networks.txt':'network_id,route_id\nN,R\n',
+  'timeframes.txt':'timeframe_group_id,service_id\nPEAK,WK\n'
+ };
+ const feed=await loader.loadResource(resource,{fetcher:fetcher(zip({...files,...fares},{prefix:'feed/'}))});
+ for(const [name,text] of Object.entries(fares))assert.equal(feed.files[name],text,name);
+ assert.equal(feed.faresVerified,false);
+ assert.equal(gtfs.directTrips(feed.files,feed.index,'2026-11-02','A','B')[0].priceEUR,null);
+});
+test('v2 fare tables obey the same expansion limits as timetable tables',async()=>{
+ const bytes=zip({...files,'fare_products.txt':'fare_product_id,amount,currency\n'+('P,2.50,EUR\n'.repeat(200))});
+ await assert.rejects(loader.extractGTFS(bytes,{maxFileBytes:1024}),/Expanded GTFS/);
+});
 test('native Node fallback works when browser raw DEFLATE streams are unavailable',async()=>{
  const native=globalThis.DecompressionStream;
  try{globalThis.DecompressionStream=undefined;assert.equal((await loader.extractGTFS(zip())).files['trips.txt'],files['trips.txt']);}

@@ -26,5 +26,7 @@ jobs:
           done < <(git ls-files '*.js')
       - name: Run Agenda regression tests
         run: node tests/agenda-transports.test.cjs
+      - name: Run GTFS Agenda theoretical journey tests
+        run: node --test tests/transport-gtfs-agenda.test.cjs
       - name: Run Swiss transport adapter regression tests
         run: node tests/swiss-transport-api.test.cjs

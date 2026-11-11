@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-11-06T05:22:33.146477+00:00",
+  "purpose": "Source discovery only; no fares certified or connected to the application.",
+  "matchingResourceCount": 1,
+  "skippedByResourceLimit": 0,
+  "results": [
+    {
+      "network": "Agrégat des réseaux urbains et interurbains d'Auvergne-Rhône-Alpes",
+      "sourcePage": "https://transport.data.gouv.fr/datasets/agregat-oura",
+      "resourceId": 78904,
+      "url": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA",
+      "archiveBytes": 111191931,
+      "sha256": "bdb2dee9ef9425c53e410fed509097cf8dd63b80e9deb2a3665fe8b579f4cea7",
+      "fareVerified": false,
+      "tables": [],
+      "warnings": [
+        "No recognised fare tables in this archive; official tariffs may exist elsewhere.",
+        "Table presence is not validation of amounts, rules, dates, subscriptions or full journey cost."
+      ],
+      "fareFormat": "no_price_table",
+      "status": "archive_inspected"
+    }
+  ]
+}

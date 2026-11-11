@@ -1,0 +1,71 @@
+{
+  "checkedAt": "2026-11-06T05:18:39.458306+00:00",
+  "purpose": "Source discovery only; no fares certified or connected to the application.",
+  "matchingResourceCount": 4,
+  "skippedByResourceLimit": 0,
+  "results": [
+    {
+      "network": "Réseau européen BlaBlaCar Bus",
+      "sourcePage": "https://transport.data.gouv.fr/datasets/blablacar-bus-horaires-theoriques-et-temps-reel-du-reseau-europeen",
+      "resourceId": 52605,
+      "url": "https://drive.google.com/uc?export=download&id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o",
+      "archiveBytes": 213600,
+      "sha256": "f5fb19dfb7d620880ddea1b7eb88f5ad6dc813d64a35252a2a361f9c86347dc4",
+      "fareVerified": false,
+      "tables": [],
+      "warnings": [
+        "No recognised fare tables in this archive; official tariffs may exist elsewhere.",
+        "Table presence is not validation of amounts, rules, dates, subscriptions or full journey cost."
+      ],
+      "fareFormat": "no_price_table",
+      "status": "archive_inspected"
+    },
+    {
+      "network": "Réseau européen FlixBus et FlixTrain",
+      "sourcePage": "https://transport.data.gouv.fr/datasets/flixbus-horaires-theoriques-du-reseau-europeen-1",
+      "resourceId": 11681,
+      "url": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
+      "archiveBytes": 30929609,
+      "sha256": "97fd4ae937d395746553e8cba6e2aab022c391f8f64f55d958e56163b06778b8",
+      "fareVerified": false,
+      "tables": [],
+      "warnings": [
+        "No recognised fare tables in this archive; official tariffs may exist elsewhere.",
+        "Table presence is not validation of amounts, rules, dates, subscriptions or full journey cost."
+      ],
+      "fareFormat": "no_price_table",
+      "status": "archive_inspected"
+    },
+    {
+      "network": "Réseau urbain Sibra",
+      "sourcePage": "https://transport.data.gouv.fr/datasets/offre-de-transports-sibra-a-annecy-gtfs",
+      "resourceId": 80100,
+      "url": "https://static.data.gouv.fr/resources/offre-de-transports-sibra-a-annecy-gtfs/20261104-135120/gtfs-sibra.zip",
+      "archiveBytes": 2485042,
+      "sha256": "22acc967fcbd4b0266319212da153e0abb010ce47a43869bff348126f1e37d21",
+      "fareVerified": false,
+      "tables": [],
+      "warnings": [
+        "No recognised fare tables in this archive; official tariffs may exist elsewhere.",
+        "Table presence is not validation of amounts, rules, dates, subscriptions or full journey cost."
+      ],
+      "fareFormat": "no_price_table",
+      "status": "archive_inspected"
+    },
+    {
+      "network": "Agrégat des réseaux urbains et interurbains d'Auvergne-Rhône-Alpes",
+      "sourcePage": "https://transport.data.gouv.fr/datasets/agregat-oura",
+      "resourceId": 78904,
+      "url": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA",
+      "status": "inspection_failed",
+      "error": "archive exceeds download limit",
+      "fareVerified": false
+    }
+  ],
+  "limits": {
+    "initialDownloadMiB": 20,
+    "secondPassDownloadMiB": 100,
+    "maxFareTableMiB": 8
+  },
+  "secondPassCheckedAt": "2026-11-06T05:19:56.749442+00:00"
+}

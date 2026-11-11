@@ -1875,6 +1875,15 @@
           const intro = document.createElement('p');
           intro.textContent = 'Étapes théoriques · horaires et circulation à vérifier avant de partir.';
           detail.appendChild(intro);
+          if (Array.isArray(journey.fareBreakdown) && window.CPTransportFares?.describe) {
+            const fareDetail = document.createElement('p');
+            fareDetail.textContent = window.CPTransportFares.describe({
+              breakdown: journey.fareBreakdown,
+              known: Number.isFinite(journey.priceEUR),
+              totalEUR: Number.isFinite(journey.priceEUR) ? journey.priceEUR : null
+            });
+            detail.appendChild(fareDetail);
+          }
           const steps = Array.isArray(journey.legs) ? journey.legs : [];
           if (steps.length) {
             const list = document.createElement('ol');
@@ -2246,7 +2255,7 @@
         transportDestinations[task.label].appendChild(host);
         if(!itineraries.length){host.textContent='Pas d’horaire local compatible dans les données consultées.';return;}
         const rows=itineraries.map(row=>({...row,legs:Array.isArray(row.legs)&&row.legs.length?row.legs:[{line:row.line,from:row.originStop?.name||row.from,to:row.destinationStop?.name||row.to,departure:row.departure,arrival:row.arrival}]}));
-        const normalized=window.CPTransportAdapters?.adaptGTFS(rows,'Réseau local')||[];
+        const normalized=window.CPTransportAdapters?.withVerifiedFares(window.CPTransportAdapters.adaptGTFS(rows,'Réseau local'))||[];
         const ranked=window.CPTransportRanking?.rank(normalized,{direction:task.label==='Retour'?'return':'outbound',deadline:task.latestArrival,earliestDeparture:task.earliestDeparture,marginMinutes:15})||[];
         showRegionalChoices(host,ranked,task.label+' · horaires locaux');
       };
@@ -2704,9 +2713,23 @@
           const task=inputs();if(!tripgo.getKey()||!task?.from||!task?.to||!task.when)return;
           const status=document.createElement('div');status.className='doux';status.setAttribute('role','status');
           status.textContent=label+' TripGo : recherche des transports et des marches…';target.appendChild(status);
-          tripgo.plan({...task,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt}).then(answer=>{
+          (window.CPTransportEngineSearch?.searchEngines&&window.CPTransportEngineSearch?.tripGoEngine
+            ? window.CPTransportEngineSearch.searchEngines([
+                window.CPTransportEngineSearch.tripGoEngine({plan:options=>tripgo.plan({
+                  ...options,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt
+                })})
+              ],task,{timeoutMs:18000}).then(result=>({
+                itineraries:result.journeys.map(j=>({
+                  ...j,evidence:j.evidence,alerts:j.legs.flatMap(l=>l.alerts||[]),
+                  // Preserve only the EUR fare returned by the engine; never synthesize one.
+                   priceEUR:j.priceEUR
+                })),
+                receivedAt:result.journeys[0]?.receivedAt||new Date().toISOString(),
+                engineStatuses:result.statuses
+              }))
+            : tripgo.plan({...task,signal,fetcher:regionalFetch,refresh:!!bt.dataset.transportRefreshAt})).then(answer=>{
             if(!regionalActive()||signal.aborted||!status.isConnected)return;
-            const shown=(Array.isArray(answer?.itineraries)?answer.itineraries:[]).filter(result=>Array.isArray(result?.legs)&&result.legs.length>0&&result.legs.every(leg=>leg&&typeof leg==='object'&&Number.isFinite(Date.parse(leg.departure))&&Number.isFinite(Date.parse(leg.arrival))&&Date.parse(leg.arrival)>=Date.parse(leg.departure))&&result.legs.every((leg,index)=>index===0||Date.parse(leg.departure)>=Date.parse(result.legs[index-1].arrival))&&Number.isFinite(Date.parse(result.departure))&&Number.isFinite(Date.parse(result.arrival))&&Date.parse(result.arrival)>=Date.parse(result.departure)&&Date.parse(result.legs[0].departure)===Date.parse(result.departure)&&Date.parse(result.legs[result.legs.length-1].arrival)===Date.parse(result.arrival)&&(!task.latestArrival||Date.parse(result.arrival)<=Date.parse(task.latestArrival))&&result.evidence&&Array.isArray(result.evidence.missing)&&Number.isFinite(result.evidence.startGapMeters)&&result.evidence.startGapMeters>=0&&Number.isFinite(result.evidence.endGapMeters)&&result.evidence.endGapMeters>=0&&Array.isArray(result.alerts)).slice(0,3);
+            const shown=(Array.isArray(answer?.itineraries)?answer.itineraries:[]).filter(result=>Array.isArray(result?.legs)&&result.legs.length>0&&result.legs.every(leg=>leg&&typeof leg==='object'&&Number.isFinite(Date.parse(leg.departure))&&Number.isFinite(Date.parse(leg.arrival))&&Date.parse(leg.arrival)>=Date.parse(leg.departure))&&result.legs.every((leg,index)=>index===0||Date.parse(leg.departure)>=Date.parse(result.legs[index-1].arrival))&&Number.isFinite(Date.parse(result.departure))&&Number.isFinite(Date.parse(result.arrival))&&Date.parse(result.arrival)>=Date.parse(result.departure)&&Date.parse(result.legs[0].departure)===Date.parse(result.departure)&&Date.parse(result.legs[result.legs.length-1].arrival)===Date.parse(result.arrival)&&(!task.latestArrival||Date.parse(result.arrival)<=Date.parse(task.latestArrival))&&result.evidence&&Array.isArray(result.evidence.missing)&&Number.isFinite(result.evidence.startGapMeters)&&result.evidence.startGapMeters>=0&&Number.isFinite(result.evidence.endGapMeters)&&result.evidence.endGapMeters>=0&&Array.isArray(result.alerts));
             status.textContent=label+' TripGo : '+(shown.length?shown.length+' proposition(s) datées, marches comprises.':'aucune proposition compatible retournée ; cela ne prouve pas l’absence de transport.');
             if(shown.length){
               const heading=document.createElement('h4');heading.textContent=label+' TripGo · comparer';status.appendChild(heading);
@@ -2731,14 +2754,13 @@
               const proof=document.createElement('span');
               const renderProof=confirmed=>{proof.textContent=' · Preuves manquantes : '+result.evidence.missing.filter(item=>!confirmed||result.legs.filter(leg=>String(leg.mode||'').startsWith('pt_pub')).length!==1||result.legs.some(leg=>String(leg.mode||'').startsWith('pt_pub')&&!window.CPBlaBlaRealtime.eligible(leg))||!item.startsWith('circulation')).join(', ')+'. Transport non confirmé — vérifiez vous-même.';};
               renderProof(false);proof.style.display='block';summary.appendChild(proof);
-              // Do not treat TripGo's unverified price estimates as official fares.
-              let fareSummary=null;
-              if(window.CPTransportFares?.fare&&window.CPTransportFares?.describe){
-                fareSummary=window.CPTransportFares.fare(result.legs,{travelDate:result.departure});
-                const fareLine=document.createElement('span');fareLine.setAttribute('data-tripgo-fare','');
-                fareLine.textContent=' · Tarifs : '+window.CPTransportFares.describe(fareSummary);
-                fareLine.style.display='block';summary.appendChild(fareLine);
-              }
+              // Search-engine itineraries must not inherit static tariff matrices.
+              // A manual tariff is only allowed for a separately audited missing line.
+              const fareLine=document.createElement('span');fareLine.setAttribute('data-tripgo-fare','');
+              fareLine.textContent=Number.isFinite(result.priceEUR)&&result.priceEUR>=0
+                 ? ' · Prix indicatif moteur : '+result.priceEUR.toLocaleString('fr-FR',{style:'currency',currency:'EUR'})+' (non vérifié)'
+                 : ' · Prix indisponible (aucun tarif EUR retourné par le moteur)';
+              fareLine.style.display='block';summary.appendChild(fareLine);
               details.appendChild(line);
               const mapNote=document.createElement('p');mapNote.className='doux';
               mapNote.textContent='Les cartes localisent les coordonnées fournies. Le parcours piéton ouvert dans Maps fait l’objet d’un nouveau calcul ; il peut différer de la proposition. Accès réels à vérifier.';details.appendChild(mapNote);
@@ -2751,12 +2773,6 @@
                   const walkingDistance=document.createElement('span');walkingDistance.setAttribute('data-tripgo-walk-distance','');
                   walkingDistance.textContent=' · Marche : '+Math.ceil(leg.distanceMeters)+' m (distance fournisseur, cheminement à vérifier)';
                   step.appendChild(walkingDistance);
-                }
-                const legFare=fareSummary?.breakdown?.[legIndex];
-                if(legFare){
-                  const fareDetail=document.createElement('span');fareDetail.setAttribute('data-tripgo-leg-fare','');
-                  fareDetail.textContent=' · '+(window.CPTransportFares.describeLeg?.(legFare)||'Tarif inconnu');
-                  step.appendChild(fareDetail);
                 }
                 const validMapPoint=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180;
                 for(const [label,point] of [['Départ',leg.fromPoint],['Arrivée',leg.toPoint]]){

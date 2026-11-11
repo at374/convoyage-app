@@ -202,6 +202,12 @@ async function run(){
   assert.equal(await page.locator('#btnVol').count(),1,'Car and public-transport buttons remain separate');
   const buttonColour=await page.locator('#btnTransportsMission').evaluate(e=>getComputedStyle(e).backgroundColor);
   assert.equal(buttonColour,'rgb(205, 234, 255)','The existing light-blue transport button is preserved');
+  assert.deepEqual(await page.evaluate(()=>({
+   line272:typeof window.CP272Fares?.stopReference,
+   aravis:typeof window.CPAravisFares?.createCalculator,
+   lemanPass:typeof window.CPLemanPassFares?.parse
+  })),{line272:'function',aravis:'function',lemanPass:'function'},
+  'Official reference readers are available without claiming verified trip fares');
   assert.equal(await page.locator('#cpTransportMissionDetails').count(),0,'Mission does not open transport results before the button is pressed');
   await page.locator('#btnTransportsMission').click();
   await page.locator('#cpTransportMissionDetails').waitFor();
@@ -350,6 +356,8 @@ async function run(){
   assert.equal(await railCard.evaluate(node=>node.open),true,'SNCF card opens');
   assert.match(await railCard.innerText(),/Annecy/);assert.match(await railCard.innerText(),/Grenoble/);
   assert.match(await railCard.innerText(),/Tarif non vérifié/);
+  assert.match(await railCard.innerText(),/Total inconnu/,'Expanded card explains that the fare total is unknown');
+  assert.match(await railCard.innerText(),/prix inconnu/,'Expanded card identifies unpriced transport legs');
   assert.ok(await railCard.locator('ol li').count()>0,'SNCF card shows recorded train legs');
   assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'SNCF card fits mobile width');
   await railCard.screenshot({path:path.join(output,'mobile-annecy-grenoble.png')});
