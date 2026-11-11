@@ -5,6 +5,12 @@
 (function(root) {
   'use strict';
   const ENDPOINT = 'https://transport.opendata.ch/v1/connections';
+  function stationPoint(station) {
+    const coordinate=station?.coordinate;
+    if(!coordinate||coordinate.type!=='WGS84'||coordinate.x==null||coordinate.y==null||coordinate.x===''||coordinate.y==='')return undefined;
+    const lat=Number(coordinate.x),lon=Number(coordinate.y);
+    return Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=85&&Math.abs(lon)<=180&&!(lat===0&&lon===0)?{lat,lon}:undefined;
+  }
   function point(value) {
     if (typeof value === 'string' && value.trim()) return value.trim();
     if (!value || value.lat == null || (value.lon == null && value.lng == null)) return null;
@@ -24,6 +30,27 @@
     ['train','tram','bus'].forEach(mode=>p.append('transportations[]',mode));
     return ENDPOINT+'?'+p.toString();
   }
+  // A coordinate can fail outside Switzerland although a named nearby stop works.
+  // This fallback proposes station-to-station journeys; walking is never certified.
+  async function nearestStop(value,fetcher,signal){
+    if(!value||typeof value!=='object'||!point(value))return null;
+    const lat=Number(value.lat),lon=Number(value.lon??value.lng);
+    const url='https://transport.opendata.ch/v1/locations?'+new URLSearchParams({x:String(lat),y:String(lon)});
+    const response=await fetcher(url,{signal,cache:'no-store'});
+    if(!response.ok)return null;
+    const data=await response.json();
+    if(!Array.isArray(data?.stations))return null;
+    let best=null;
+    for(const station of data.stations.slice(0,100)){
+      const coords=stationPoint(station),id=station?.id;
+      if(!coords||typeof id!=='string'||!/^\d{1,12}$/.test(id))continue;
+      const rad=Math.PI/180,dy=(coords.lat-lat)*rad,dx=(coords.lon-lon)*rad;
+      const a=Math.sin(dy/2)**2+Math.cos(lat*rad)*Math.cos(coords.lat*rad)*Math.sin(dx/2)**2;
+      const distance=2*6371000*Math.asin(Math.sqrt(Math.min(1,a)));
+      if(distance<=500&&(!best||distance<best.distance))best={id,distance};
+    }
+    return best;
+  }
   async function plan(options) {
     const url=buildUrl(options);
     const diagnostic = {checkedAt:new Date().toISOString(),received:0,valid:0,status:'pending'};
@@ -34,17 +61,37 @@
       throw new Error('Réseau indisponible');
     }
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
+    const cancel=()=>controller.abort();
+    if(options.signal?.aborted)throw new DOMException('Recherche suisse annulée','AbortError');
+    options.signal?.addEventListener('abort',cancel,{once:true});
+    const timeout = setTimeout(() => controller.abort(), 25000);
     let data;
     try {
       const response = await fetcher(url, {signal:controller.signal, cache:'no-store'});
+      if(controller.signal.aborted)throw new DOMException('Recherche suisse annulée','AbortError');
       if (!response.ok) throw new Error('API suisse indisponible ('+response.status+')');
       data = await response.json();
+      if(controller.signal.aborted)throw new DOMException('Recherche suisse annulée','AbortError');
+      if(Array.isArray(data?.connections)&&data.connections.length===0&&typeof options.from==='object'&&typeof options.to==='object'){
+        try{
+          const [from,to]=await Promise.all([nearestStop(options.from,fetcher,controller.signal),nearestStop(options.to,fetcher,controller.signal)]);
+          if(controller.signal.aborted)throw new DOMException('Recherche suisse annulée','AbortError');
+          if(from&&to&&from.id!==to.id){
+            const fallback=await fetcher(buildUrl({...options,from:from.id,to:to.id}),{signal:controller.signal,cache:'no-store'});
+            if(fallback.ok){
+              const alternate=await fallback.json();
+              if(Array.isArray(alternate?.connections)){data=alternate;diagnostic.nearestStopFallback=true;}
+            }
+          }
+        }catch(error){if(controller.signal.aborted)throw error;}
+      }
+      if(controller.signal.aborted)throw new DOMException('Recherche suisse annulée','AbortError');
     } catch (error) {
       diagnostic.status = 'error';
       throw error;
     } finally {
       clearTimeout(timeout);
+      options.signal?.removeEventListener('abort',cancel);
     }
     if(!data || !Array.isArray(data.connections)) {
       diagnostic.status = 'invalid_response';
@@ -59,15 +106,19 @@
     const results = validConnections.map(c=>({
       departure:c.from && c.from.departure || null,
       arrival:c.to && c.to.arrival || null,
-      sections:Array.isArray(c.sections)?c.sections.map(s=>({
+      sections:Array.isArray(c.sections)?c.sections.slice(0,100).filter(s=>s&&typeof s==='object'&&!Array.isArray(s)).map(s=>({
         mode:s.walk?'WALK':s.journey && s.journey.category || 'UNKNOWN',
         line:s.journey && s.journey.number || null,
+        fromId:s.departure?.station?.id || null,toId:s.arrival?.station?.id || null,
         from:s.departure && s.departure.station && s.departure.station.name || null,
         to:s.arrival && s.arrival.station && s.arrival.station.name || null,
+        fromPoint:stationPoint(s.departure?.station),toPoint:stationPoint(s.arrival?.station),
         departure:s.departure && s.departure.departure || null,
         arrival:s.arrival && s.arrival.arrival || null,
         walkSeconds:s.walk && Number.isFinite(Number(s.walk.duration)) ? Number(s.walk.duration) : null
       })):[],
+      nearestStopFallback:diagnostic.nearestStopFallback===true,
+      detailsIncomplete:!Array.isArray(c.sections)||c.sections.length>100||c.sections.some(s=>!s||typeof s!=='object'||Array.isArray(s)),
       price:null, fareStatus:'non_communique', source:'transport.opendata.ch', confirmed:false
     }));
     results.diagnostic = {...diagnostic};

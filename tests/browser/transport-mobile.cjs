@@ -33,7 +33,14 @@ function archive(line='TEST',regional=false){
   'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nAller,08:00:00,08:00:00,H,1\nAller,08:20:00,08:20:00,G,2\nRetour,10:10:00,10:10:00,G,1\nRetour,10:20:00,10:20:00,H,2\nJonction,10:25:00,10:25:00,G,1\nJonction,11:06:00,11:06:00,C,2',
   'calendar_dates.txt':'service_id,date,exception_type\nS,20261102,1'
  };
- if(regional){
+ if(regional==='giffre'){
+  const stops=[{stopId:'FR:74012:ZE:57669:HAUTExSAVOIE',name:'Annemasse Gare Routiere',lat:46.1996235,lon:6.2381237},
+   {stopId:'FR:74258:ZE:57644:HAUTExSAVOIE',name:'Samoëns Gare Routiere',lat:46.0829415,lon:6.7231899},
+   {stopId:'unused-stop',name:'Autre arrêt fictif',lat:46.1,lon:6.6}];
+  files['stops.txt']='stop_id,stop_name,stop_lat,stop_lon\n'+stops.map(s=>[s.stopId,s.name,s.lat,s.lon].join(',')).join('\n');
+  for(const [i,id] of ['H','G','C'].entries())files['stop_times.txt']=files['stop_times.txt'].replaceAll(','+id+',',','+stops[i].stopId+',');
+  files['calendar_dates.txt']='service_id,date,exception_type\nS,20261109,1';
+ }else if(regional){
   const scope=require('../fixtures/y51-sibra-scope-2026-10-31.json');
   const fares=require('../fixtures/y51-tariff-reference-2026-10-31.json');
   const recorded=fares.stops.find(s=>s[0].includes(':58900:'));
@@ -57,9 +64,9 @@ function archive(line='TEST',regional=false){
 }
 async function run(){
  await fs.mkdir(output,{recursive:true});
- const zip=archive(),sibraZip=archive('4'),regionalZip=archive('Y51',true),regionalFareZip=archive('Y51','full'),errors=[],requests=[],gates=new Map(),workers=[],blockedWrites=[],regionalGates=[],activeWorkers=new Set(),abortedRequests=[];
+ const zip=archive(),sibraZip=archive('4'),regionalZip=archive('Y51',true),regionalFareZip=archive('Y51','full'),giffreZip=archive('Y02','giffre'),errors=[],requests=[],gates=new Map(),workers=[],blockedWrites=[],regionalGates=[],activeWorkers=new Set(),abortedRequests=[];
  const sibraGates=[];let holdSibra=false;
- let holdRegional=false,railScenario=false,tripgoScenario=false,busLiveScenario=false,regionalPassScenario=false,regionalFareScenario=false;
+ let holdRegional=false,railScenario=false,tripgoScenario=false,busLiveScenario=false,regionalPassScenario=false,regionalFareScenario=false,swissScenario=false,giffreScenario=false;
  const until=async(predicate,message)=>{const end=Date.now()+10000;while(!predicate()){if(Date.now()>end)throw Error(message);await new Promise(resolve=>setTimeout(resolve,20));}};
  const server=http.createServer(async(req,res)=>{
   try{
@@ -87,6 +94,10 @@ async function run(){
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--no-sandbox']});
   context=await browser.newContext({...devices['Pixel 7'],locale:'fr-FR',timezoneId:'Europe/Paris',serviceWorkers:'block'});
   await context.addInitScript(({missions,settings,origin,relayURL})=>{
+   if(new URL(location.href).searchParams.has('swiss')){
+    localStorage.removeItem('cp_gps');
+    missions=[{...missions[0],id:'browser-swiss',external_id:'BROWSER-SWISS',destination_address:'94 rue Test Suisse 38000 Grenoble'}];
+   }
    if(new URL(location.href).searchParams.has('buslive'))window.CP_BLABLACAR_REALTIME_URL=relayURL;
    // An invalid optional relay must never block SNCF or the other engines.
    if(new URL(location.href).searchParams.has('rail'))window.CP_BLABLACAR_REALTIME_URL='http://external.invalid/transport-realtime/blablacar';
@@ -115,6 +126,12 @@ async function run(){
     localStorage.setItem('cp_cache',JSON.stringify({missions,alertes:[],reglages:settings,chargeLe:new Date().toISOString()}));
     localStorage.removeItem('cp_gps');localStorage.removeItem('cp_tripgo_key');
    }
+   if(new URL(location.href).searchParams.has('giffre')){
+    missions=[{...missions[0],id:'browser-giffre',external_id:'BROWSER-GIFFRE',from_city:'Samoëns',to_city:'Samoëns',origin_address:'12 rue Test 74340 Samoëns',destination_address:'14 rue Test 74340 Samoëns',pickup_start:'2026-11-09T09:00:00+01:00',pickup_end:'2026-11-09T09:00:00+01:00',delivery_end:'2026-11-09T10:00:00+01:00'}];
+    settings.domicile_ville='Annemasse';settings.domicile_lat=46.1996235;settings.domicile_lng=6.2381237;
+    window.CP_GTFS_AGENDA_RESOURCES[0].datasetId='oura-haute-savoie';window.CP_GTFS_AGENDA_RESOURCES[0].url+='?giffre=1';window.CP_GTFS_AGENDA_RESOURCES[0].bounds=[45,5,47,8];
+    localStorage.setItem('cp_cache',JSON.stringify({missions,alertes:[],reglages:settings,chargeLe:new Date().toISOString()}));localStorage.removeItem('cp_gps');
+   }
    if(new URL(location.href).searchParams.has('sibrapass')){
     window.CP_GTFS_AGENDA_RESOURCES[0].datasetId='5bd9843e634f413220f7f04a';
     window.CP_GTFS_AGENDA_RESOURCES[0].url+='?sibra=1';
@@ -138,16 +155,16 @@ async function run(){
     const readPost=request.method()==='POST'&&['/rest/v1/rpc/mon_statut','/storage/v1/object/sign/apk/version.json'].includes(url.pathname);
     if(request.method()!=='GET'&&!readPost)blockedWrites.push({method:request.method(),path:url.pathname});
     const tripDay=busLiveScenario?'2026-10-31':'2026-11-02';
-    const backendMissions=regionalPassScenario?[{...missions[0],from_city:'Annecy',to_city:regionalFareScenario?'Albertville':'Duingt',origin_address:'12 rue Exemple 74000 Annecy',destination_address:regionalFareScenario?'14 rue Exemple 73200 Albertville':'14 rue Exemple 74410 Duingt'}]:tripgoScenario?[{...missions[0],pickup_start:tripDay+'T08:00:00+01:00',pickup_end:tripDay+'T08:00:00+01:00',delivery_end:tripDay+'T10:00:00+01:00',to_city:'Annecy',destination_address:'14 rue Exemple 74000 Annecy'}]:railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
-    const backendSettings=regionalPassScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.9016985,domicile_lng:6.1201612}:tripgoScenario?{...settings,domicile_lat:45.1914,domicile_lng:5.7143}:railScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}:settings;
+    const backendMissions=giffreScenario?[{...missions[0],id:'browser-giffre',external_id:'BROWSER-GIFFRE',from_city:'Samoëns',to_city:'Samoëns',origin_address:'12 rue Test 74340 Samoëns',destination_address:'14 rue Test 74340 Samoëns',pickup_start:'2026-11-09T09:00:00+01:00',pickup_end:'2026-11-09T09:00:00+01:00',delivery_end:'2026-11-09T10:00:00+01:00'}]:swissScenario?[{...missions[0],id:'browser-swiss',external_id:'BROWSER-SWISS',destination_address:'94 rue Test Suisse 38000 Grenoble'}]:regionalPassScenario?[{...missions[0],from_city:'Annecy',to_city:regionalFareScenario?'Albertville':'Duingt',origin_address:'12 rue Exemple 74000 Annecy',destination_address:regionalFareScenario?'14 rue Exemple 73200 Albertville':'14 rue Exemple 74410 Duingt'}]:tripgoScenario?[{...missions[0],pickup_start:tripDay+'T08:00:00+01:00',pickup_end:tripDay+'T08:00:00+01:00',delivery_end:tripDay+'T10:00:00+01:00',to_city:'Annecy',destination_address:'14 rue Exemple 74000 Annecy'}]:railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
+    const backendSettings=giffreScenario?{...settings,domicile_ville:'Annemasse',domicile_lat:46.1996235,domicile_lng:6.2381237}:regionalPassScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.9016985,domicile_lng:6.1201612}:tripgoScenario?{...settings,domicile_lat:45.1914,domicile_lng:5.7143}:railScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}:settings;
     return json(route,url.pathname.endsWith('/missions')?backendMissions:url.pathname.endsWith('/reglages')?[backendSettings]:[]);
    }
-   if(url.hostname==='gtfs-fixture.invalid')return route.fulfill({status:200,contentType:'application/zip',headers:{'access-control-allow-origin':'*'},body:url.searchParams.has('regionalfare')?regionalFareZip:url.searchParams.has('regional')?regionalZip:url.searchParams.has('sibra')?sibraZip:zip});
+   if(url.hostname==='gtfs-fixture.invalid')return route.fulfill({status:200,contentType:'application/zip',headers:{'access-control-allow-origin':'*'},body:url.searchParams.has('giffre')?giffreZip:url.searchParams.has('regionalfare')?regionalFareZip:url.searchParams.has('regional')?regionalZip:url.searchParams.has('sibra')?sibraZip:zip});
    if(url.hostname==='api-adresse.data.gouv.fr'&&url.pathname.includes('/search')){
-    const q=url.searchParams.get('q')||'',match=q.match(/\b(12|14|16|18)\b/),number=match?.[1];
+    const q=url.searchParams.get('q')||'',match=q.match(/\b(12|14|16|18|94)\b/),number=match?.[1];
     if(number){
      await new Promise(resolve=>{const list=gates.get(number)||[];list.push(resolve);gates.set(number,list);});
-     const point=regionalFareScenario&&number==='14'?[6.3897282,45.6693897]:regionalPassScenario&&number==='14'?[6.2018053,45.827708]:tripgoScenario&&number==='14'?[6.1218,45.9019]:['16','18'].includes(number)?[5.88224,45.28364]:[5.7143,45.1914];
+     const point=giffreScenario?[6.7231899,46.0829415]:regionalFareScenario&&number==='14'?[6.3897282,45.6693897]:regionalPassScenario&&number==='14'?[6.2018053,45.827708]:tripgoScenario&&number==='14'?[6.1218,45.9019]:['16','18'].includes(number)?[5.88224,45.28364]:[5.7143,45.1914];
      return json(route,{features:[{geometry:{coordinates:point},properties:{score:1,type:'housenumber',city:number==='16'?'Crolles':tripgoScenario&&number==='14'?'Annecy':'Grenoble'}}]}).catch(()=>{});
     }
     return json(route,{features:[]});
@@ -169,10 +186,24 @@ async function run(){
    if(url.hostname==='api.tripgo.com'){
     assert.equal(request.headers()['x-tripgo-key'],'a'.repeat(32),'Only a dummy browser-fixture key is used');
     if(busLiveScenario&&url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793437200')return json(route,tripgoToday.response);
-    if(url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793610000')return json(route,tripgoFixture.response);
+    if(url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793610000'){
+     // Explicit synthetic fare overlay exercises display; these are not recorded market prices.
+     const response=structuredClone(tripgoFixture.response);
+     for(const group of response.groups)for(const trip of group.trips){trip.moneyCost=12.5;trip.currency='EUR';}
+     return json(route,response);
+    }
     return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Outside recorded test query'});
    }
-   if(url.hostname==='transport.opendata.ch')return json(route,{connections:[]});
+   if(url.hostname==='tile.openstreetmap.org')return route.fulfill({status:503,body:'Map tiles unavailable in isolated browser test'});
+   if(url.hostname==='transport.opendata.ch'){
+    if(!swissScenario)return json(route,{connections:[]});
+    // Synthetic coordinates and timetable exercise only rendering and safety labels.
+    return json(route,{connections:[{from:{departure:'2026-11-02T10:10:00+01:00'},to:{arrival:'2026-11-02T10:35:00+01:00'},sections:[{
+     journey:{category:'BUS',number:'64'},
+     departure:{departure:'2026-11-02T10:10:00+01:00',station:{name:'Arrêt suisse fictif A',coordinate:{type:'WGS84',x:46.2,y:6.14}}},
+     arrival:{arrival:'2026-11-02T10:35:00+01:00',station:{name:'Arrêt suisse fictif B',coordinate:{type:'WGS84',x:46.23,y:6.06}}}
+    }]}]});
+   }
    if(/valhalla/.test(url.hostname))return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Unavailable in deterministic browser test'});
    return json(route,{features:[],results:[]});
   });
@@ -285,6 +316,7 @@ async function run(){
     assert.equal(await card.evaluate(node=>node.open),false,heading+' initially collapsed');
     await summary.click();
     assert.equal(await card.evaluate(node=>node.open),true,heading+' tap expands itinerary');
+    await card.getByRole('tab',{name:'Étapes',exact:true}).click();
     assert.match(await card.innerText(),/Transport non confirmé/);
     assert.match(await card.innerText(),/Étapes théoriques/);
     assert.doesNotMatch(await card.innerText(),/\bRéalisable\b/);
@@ -329,6 +361,28 @@ async function run(){
   await (await lateSibra).finished();
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   assert.equal(await page.locator('#cpTransportMissionDetails').textContent(),pendingText,'Late responses cannot rewrite a closed panel');
+  // A synthetic Swiss response exercises the actual Pixel-sized comparison map.
+  holdRegional=false;swissScenario=true;
+  await page.goto(origin+'?swiss=1',{waitUntil:'domcontentloaded'});
+  await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();
+  await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
+  await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
+  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();
+  await release('94');
+  const swissSection=page.getByRole('heading',{name:'Retour suisse · comparer',exact:true}).locator('..');
+  await swissSection.waitFor();
+  const swissCard=swissSection.locator('details:has(> .cp-transport-viewer)').first();
+  await swissCard.locator('summary').click();
+  await swissCard.locator('.cp-transport-map-marker').first().waitFor();
+  assert.ok(await swissCard.locator('.cp-transport-map-marker').count()>=2,'Swiss stop coordinates reach the map');
+  assert.match(await swissCard.innerText(),/Prix incomplet/);assert.match(await swissCard.innerText(),/Transport non confirmé/);
+  assert.doesNotMatch(await swissCard.innerText(),/Réalisable/);
+  await swissCard.getByRole('tab',{name:'Étapes',exact:true}).click();
+  assert.match(await swissCard.innerText(),/Arrêt suisse fictif A/);assert.match(await swissCard.innerText(),/Arrêt suisse fictif B/);
+  assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'Swiss card fits mobile width');
+  await swissCard.screenshot({path:path.join(output,'mobile-swiss-map.png')});
+  await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'Swiss scenario worker must stop on close');
+  swissScenario=false;
   // Second mission scenario replays a recorded subset of the published SNCF files.
   // No external routing response substitutes for its station search.
   holdRegional=false;railScenario=true;
@@ -343,11 +397,27 @@ async function run(){
   assert.match(railText,/Annecy/);assert.match(railText,/Grenoble/);
   assert.match(railText,/Transport non confirmé/);assert.doesNotMatch(railText,/Réalisable/);
   await rail.getByRole('heading',{name:'Aller SNCF · comparer (gare à gare)',exact:true}).waitFor();
-  const railCards=rail.locator('details');
-  assert.ok(await railCards.count()>0&&await railCards.count()<=3,'SNCF ranking renders comparison cards');
+  const railCards=rail.locator('details:has(> .cp-transport-viewer)');
+  const expectedRailCount=Number(railText.match(/(\d+) proposition\(s\) de gare à gare/)?.[1]);
+  assert.ok(expectedRailCount>0,'SNCF source returned compatible services');
+  assert.equal(await railCards.count(),expectedRailCount,'every compatible SNCF result has a comparison card');
+  assert.match(await railCards.first().textContent(),/Prix incomplet/);
+  if(expectedRailCount>3){
+    const more=rail.locator('.cp-transport-more-results');
+    assert.equal(await more.evaluate(node=>node.open),false,'additional trains start collapsed');
+    await more.locator('summary').first().click();
+    assert.equal(await railCards.last().isVisible(),true,'last train remains accessible');
+    await more.locator('summary').first().click();
+  }
   const railCard=railCards.first();
   await railCard.locator('summary').click();
   assert.equal(await railCard.evaluate(node=>node.open),true,'SNCF card opens');
+  await railCard.locator('.cp-transport-map-marker').first().waitFor();
+  assert.ok(await railCard.locator('.cp-transport-map-marker').count()>=2,'SNCF station coordinates appear inside the app');
+  await railCard.getByRole('button',{name:'Agrandir',exact:true}).click();
+  await railCard.getByRole('button',{name:'Recentrer',exact:true}).click();
+  await railCard.screenshot({path:path.join(output,'mobile-sncf-map.png')});
+  await railCard.getByRole('tab',{name:'Étapes',exact:true}).click();
   assert.match(await railCard.innerText(),/Annecy/);assert.match(await railCard.innerText(),/Grenoble/);
   assert.match(await railCard.innerText(),/Tarif non vérifié/);
   assert.ok(await railCard.locator('ol li').count()>0,'SNCF card shows recorded train legs');
@@ -367,6 +437,7 @@ async function run(){
   await page.getByRole('button',{name:'Activer TripGo sur cet appareil',exact:true}).click();
   await release('14');
   const tripStatus=page.getByText(/^Retour TripGo : 2 proposition/);await tripStatus.waitFor();
+  assert.match(await tripStatus.locator('[data-tripgo-price]').first().innerText(),/Prix estimé.*12,50/);
   const tripText=await tripStatus.innerText();assert.match(tripText,/FlixBus 1789/);assert.match(tripText,/BlaBlaCar Bus/);
   await tripStatus.getByRole('heading',{name:'Retour TripGo · comparer',exact:true}).waitFor();
   const tripCards=tripStatus.locator('[data-tripgo-details]');
@@ -378,8 +449,14 @@ async function run(){
   assert.match(await steps.locator('summary').innerText(),/Tarifs/);
   await steps.locator('summary').click();
   assert.equal(await steps.evaluate(node=>node.open),true,'TripGo card opens');
+  await steps.locator('.cp-transport-map-marker').first().waitFor();
+  assert.ok(await steps.locator('.cp-transport-map-marker').count()>=2,'TripGo stop coordinates appear inside the app');
+  await steps.locator('.cp-transport-map-marker').first().click();
+  assert.match(await steps.locator('.cp-transport-map-stop').innerText(),/1\./);
+  await steps.screenshot({path:path.join(output,'mobile-tripgo-map.png')});
+  await steps.getByRole('tab',{name:'Étapes',exact:true}).click();
   assert.ok(await steps.locator('li').count()>=3,'Walking and transit legs have separate dated steps');
-  const maps=await steps.locator('a').evaluateAll(nodes=>nodes.map(x=>({href:x.href,target:x.target,rel:x.rel})));
+  const maps=await steps.locator('[id$="-steps"] a').evaluateAll(nodes=>nodes.map(x=>({href:x.href,target:x.target,rel:x.rel})));
   assert.ok(maps.some(x=>new URL(x.href).searchParams.get('travelmode')==='walking'));
   assert.ok(maps.every(x=>new URL(x.href).hostname==='www.google.com'&&x.target==='_blank'&&x.rel.includes('noopener')));
   assert.ok(maps.every(x=>!x.href.includes('TripGo-Key')&&!x.href.includes('aaaaaaaa')));
@@ -443,6 +520,10 @@ async function run(){
   await page.locator('#cpSibraPassFrom').fill('2026-01-01');await page.locator('#cpSibraPassThrough').fill('2026-12-31');
   await page.getByRole('button',{name:'Utiliser mon abonnement SIBRA',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('[data-sibra-pass-cost]')?.innerText.includes('0,00 €'));
+  const cardPass=page.locator('.cp-transport-local [data-card-sibra-pass]').first();
+  await cardPass.waitFor();assert.match(await cardPass.innerText(),/0,00 € sous réserve d’abonnement valide/);
+  const coveredCard=cardPass.locator('xpath=ancestor::details[1]');
+  assert.match(await coveredCard.innerText(),/Prix incomplet/);assert.match(await coveredCard.innerText(),/Transport non confirmé/);
   assert.match(await page.locator('[data-gtfs-agenda]').innerText(),/sous réserve d’abonnement valide/);
   assert.doesNotMatch(await page.locator('[data-gtfs-agenda]').innerText(),/Réalisable/);
   assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('cp_sibra_pass_v1'))),{active:true,from:'2026-01-01',through:'2026-12-31'});
@@ -451,6 +532,7 @@ async function run(){
   await page.screenshot({path:path.join(output,'mobile-sibra-pass-applied.png')});
   await page.getByRole('button',{name:'Retirer mon abonnement SIBRA',exact:true}).click();
   assert.equal(await page.evaluate(()=>localStorage.getItem('cp_sibra_pass_v1')),null);
+  await page.waitForFunction(()=>document.querySelectorAll('.cp-transport-local [data-card-sibra-pass]').length===0);
   // Without a pass, the UI intentionally displays an explicit unverified-coverage notice, not an empty field.
   await page.waitForFunction(()=>Array.from(document.querySelectorAll('[data-sibra-pass-cost]')).every(x=>!x.textContent.includes('0,00 € sous réserve d’abonnement valide') && x.textContent.includes('Couverture SIBRA')),null,{timeout:10000});
   await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'SIBRA pass worker must stop on close');
@@ -467,6 +549,8 @@ async function run(){
   await page.locator('#cpSibraPassFrom').fill('2026-01-01');await page.locator('#cpSibraPassThrough').fill('2026-12-31');
   await page.getByRole('button',{name:'Utiliser mon abonnement SIBRA',exact:true}).click();
   await page.waitForFunction(()=>document.querySelector('[data-sibra-pass-cost]')?.innerText.includes('Y51'));
+  const regionalCardPass=page.locator('.cp-transport-local [data-card-sibra-pass]').filter({hasText:'Y51'}).first();
+  await regionalCardPass.waitFor();assert.match(await regionalCardPass.innerText(),/sous réserve d’abonnement valide/);
   assert.match(await page.locator('[data-gtfs-agenda]').innerText(),/Coût supplémentaire transport : 0,00 €/);
   assert.match(await page.locator('[data-gtfs-agenda]').innerText(),/sous réserve d’abonnement valide/);
   await page.locator('[data-sibra-pass-cost]').first().scrollIntoViewIfNeeded();
@@ -486,6 +570,8 @@ async function run(){
   const fareRef=page.locator('[data-y51-fare-reference]').first();
   assert.match(await fareRef.innerText(),/Albertville → Annecy.*zone 4.*hors abonnement/);
   assert.match(await fareRef.innerText(),/à revérifier avant achat/);
+  const y51CardFare=page.locator('.cp-transport-local [data-direct-fare-reference]').filter({hasText:'Y51 adulte : 8,90 €'}).first();
+  await y51CardFare.waitFor();assert.match(await y51CardFare.innerText(),/prix, date et titre à confirmer/);
   assert.equal(await page.locator('[data-sibra-pass-cost]').evaluateAll(nodes=>nodes.some(x=>x.textContent.includes('0,00 €'))),false,'Active SIBRA pass must not make Albertville–Annecy free');
   assert.doesNotMatch(await page.locator('[data-gtfs-agenda]').innerText(),/Réalisable/);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
@@ -499,6 +585,28 @@ async function run(){
   assert.match(await legacyResult.innerText(),/Source vérifiée le/);
   assert.doesNotMatch(await legacyResult.innerText(),/Réalisable/);
 
+  // Synthetic journey and timetable; pinned official stop identities exercise
+  // the actual mobile comparison card without asserting a real departure.
+  await page.close();regionalPassScenario=false;regionalFareScenario=false;giffreScenario=true;
+  page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
+  page.on('worker',worker=>{workers.push(worker.url());activeWorkers.add(worker);worker.on('close',()=>activeWorkers.delete(worker));});
+  await page.clock.setFixedTime(new Date('2026-11-07T08:00:00+01:00'));
+  await page.goto(origin+'?giffre=1',{waitUntil:'domcontentloaded'});
+  await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();
+  await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
+  await page.locator('#cpTransportPlannedReturn').fill('2026-11-09T10:00');
+  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();
+  await release('14');
+  const comparisonFare=page.locator('.cp-transport-local [data-direct-fare-reference]').first();
+  await comparisonFare.waitFor();assert.match(await comparisonFare.innerText(),/Y02 adulte : 4,00 €.*à confirmer/);
+  const comparisonCard=comparisonFare.locator('xpath=ancestor::details[1]');
+  assert.match(await comparisonCard.innerText(),/Prix incomplet.*Tarif non vérifié/);
+  assert.match(await comparisonCard.innerText(),/Transport non confirmé/);
+  assert.doesNotMatch(await comparisonCard.innerText(),/Réalisable/);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Fare card fits Pixel width');
+  await comparisonCard.screenshot({path:path.join(output,'mobile-y02-comparison-fare.png')});
+  await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'Y02 fare worker must stop on close');
+
 
   assert.equal(relayUpstreamRequests,1,'Operator feed is read through the real relay once');
   assert.deepEqual(errors,[],'No uncaught browser script errors');
@@ -506,7 +614,7 @@ async function run(){
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    comparisonChecks,missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','install launcher stays behind mission sheet and becomes accessible after closing','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '15-minute pickup margin by default; five minutes only with reliable exact GPS and final walk','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset and expandable station-to-station ranking cards','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display','Y51 Albertville–Annecy shows dated full-fare reference; SIBRA pass does not make the journey free','legacy Agenda Y51 button identifies Annecy station and shows recorded 11:48 service without inventing an unmatched fare'],
+    '15-minute pickup margin by default; five minutes only with reliable exact GPS and final walk','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset and expandable station-to-station ranking cards','private TripGo key entry/removal','synthetic provider price quote displayed with currency and estimate label','embedded map stops, zoom and Carte / Étapes tabs with offline-tile fallback','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display','Y51 Albertville–Annecy shows dated full-fare reference; SIBRA pass does not make the journey free','legacy Agenda Y51 button identifies Annecy station and shows recorded 11:48 service without inventing an unmatched fare'],
    relay:{crossOriginHttp:true,upstreamFixture:true,upstreamRequests:relayUpstreamRequests},regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){

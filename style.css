@@ -608,3 +608,15 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 #cpTransportMissionDetails .cp-transport-settings .bkt{font-size:13px}
 #cpTransportMissionDetails input{max-width:100%;font-size:16px}
 @media(max-width:480px){#cpTransportMissionDetails{padding:10px;margin-left:-8px;margin-right:-8px}#cpTransportMissionDetails .cp-transport-direction{padding:13px}#cpTransportMissionDetails .cp-transport-hero{padding:20px 15px}}
+
+#cpTransportMissionDetails .cp-transport-map-tabs{display:flex;gap:8px;margin:12px 0}
+#cpTransportMissionDetails .cp-transport-map-tabs button{flex:1;background:var(--carte);color:var(--accent);border:1px solid var(--accent);font-weight:850}
+#cpTransportMissionDetails .cp-transport-map-tabs button[aria-selected=true]{background:var(--accent);color:var(--bt,#fff)}
+#cpTransportMissionDetails .cp-transport-map{height:300px;width:100%;position:relative;overflow:hidden;background:var(--accentDoux);border:1px solid var(--ligne);border-radius:12px;touch-action:pan-y}
+#cpTransportMissionDetails .cp-transport-map-tiles,#cpTransportMissionDetails .cp-transport-map-markers,#cpTransportMissionDetails .cp-transport-map>svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#cpTransportMissionDetails .cp-transport-map-tiles img{position:absolute;width:256px;height:256px;max-width:none}
+#cpTransportMissionDetails .cp-transport-map-markers .cp-transport-map-marker{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;border-radius:50%;width:40px;height:40px;min-height:40px;padding:0;background:var(--accent);color:var(--bt,#fff);border:2px solid var(--carte);font-size:13px;font-weight:900;box-shadow:var(--ombre)}
+#cpTransportMissionDetails .cp-transport-map-credit{position:absolute;bottom:0;right:0;background:var(--carte);color:var(--texte);font-size:11px;padding:2px 5px}
+#cpTransportMissionDetails .cp-transport-map-controls{display:flex;gap:5px;margin:10px 0;flex-wrap:wrap}
+#cpTransportMissionDetails .cp-transport-map-controls button{font-size:12px;padding:8px}
+#cpTransportMissionDetails .cp-transport-map-legend,#cpTransportMissionDetails .cp-transport-map-stop{font-size:12px;line-height:1.5;color:var(--texte)}

@@ -15,6 +15,7 @@
       accessVerified:false,
       legs:(Array.isArray(it.legs)?it.legs:[]).filter(leg=>leg&&typeof leg==='object'&&!Array.isArray(leg)).map(leg=>({
         provider:'SNCF',
+        mode:'RAIL',fromPoint:leg.fromPoint,toPoint:leg.toPoint,
         line:leg.line||null,
         from:leg.from||null,
         to:leg.to||null,
@@ -55,6 +56,7 @@
       accessVerified:false,
       legs:(Array.isArray(it.legs)?it.legs:[]).filter(leg=>leg&&typeof leg==='object'&&!Array.isArray(leg)).map(leg=>({
         provider:name,
+        mode:leg.mode,fromPoint:leg.fromPoint,toPoint:leg.toPoint,geometry:leg.geometry,encodedGeometry:leg.encodedGeometry,
         line:leg.line||leg.route||null,
         from:leg.from||leg.fromStop||null,
         to:leg.to||leg.toStop||null,
@@ -95,6 +97,19 @@
         arrival:toISO(leg.arrival??leg.endTime)
       }))
     })),provider||'Régional');
+  }
+  function adaptSwiss(itineraries){
+    return (Array.isArray(itineraries)?itineraries:[]).filter(it=>it&&typeof it==='object'&&!Array.isArray(it)).map((it,index)=>({
+      id:'swiss-theoretical-'+index,provider:'Transport suisse',departure:toISO(it.departure),arrival:toISO(it.arrival),
+      priceEUR:null,fareVerified:false,priceVerified:false,exactOrigin:false,exactDestination:false,accessVerified:false,
+      detailsIncomplete:it.detailsIncomplete===true,
+      legs:(Array.isArray(it.sections)?it.sections:[]).filter(leg=>leg&&typeof leg==='object'&&!Array.isArray(leg)).map(leg=>({
+        provider:'Transport suisse',mode:leg.mode||'UNKNOWN',line:leg.line||null,from:leg.from||null,to:leg.to||null,
+        fromPoint:leg.fromPoint,toPoint:leg.toPoint,departure:toISO(leg.departure),arrival:toISO(leg.arrival),
+        serviceConfirmed:false,fareVerified:false,verifiedPriceEUR:null
+      })),
+      source:'transport.opendata.ch',fareStatus:'Prix non vérifié'
+    }));
   }
   // Reject impossible calendar dates that Date.parse may normalize silently.
   function validFareBoundary(value){
@@ -156,7 +171,7 @@
         fareStatus:result.status,fareBreakdown:result.breakdown};
     });
   }
-  const api={adaptSNCF,adaptGTFS,adaptRegional,applyFareEvidence,withVerifiedFares};
+  const api={adaptSNCF,adaptGTFS,adaptRegional,adaptSwiss,applyFareEvidence,withVerifiedFares};
   if(typeof module==='object'&&module.exports)module.exports=api;
   root.CPTransportAdapters=Object.assign(root.CPTransportAdapters||{},api);
 })(typeof window!=='undefined'?window:globalThis);

@@ -47,9 +47,12 @@ function assess(row,value){
   const regional=regionalScope(leg,date);
   // Regional scope requires a coordinate-bound proof for the whole GTFS portion.
   const scope=leg?.networkId===DATASET&&LINES.has(line)||regional;
-  const covered=!!(pass&&scope&&date&&date>='2026-07-01'&&date>=pass.from&&date<=pass.through);
+  // The source was checked on 31 October; this limit is a review policy,
+  // not an official expiration date or a judgment about the user's pass.
+  const reviewed=!!(date&&date>='2026-07-01'&&date<='2026-11-30');
+  const covered=!!(pass&&scope&&reviewed&&date>=pass.from&&date<=pass.through);
   return {line,covered,additionalEUR:covered?0:null,source:covered?SOURCE:null,scopeSource:covered&&regional?Y51_SOURCE:null,
-   reason:!pass?'pass_missing':!scope?'scope_unverified':!date?'date_invalid':date<'2026-07-01'?'policy_unverified':date<pass.from||date>pass.through?'pass_outside_validity':'included_conditionally'};
+   reason:!pass?'pass_missing':!scope?'scope_unverified':!date?'date_invalid':!reviewed?'policy_unverified':date<pass.from||date>pass.through?'pass_outside_validity':'included_conditionally'};
  });
  return {breakdown,coveredLegs:breakdown.filter(x=>x.covered).length,
   additionalEUR:breakdown.length&&breakdown.every(x=>x.covered)?0:null,

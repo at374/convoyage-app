@@ -218,3 +218,57 @@ test('TripGo ignores a journey with a non-string mode without hiding other avail
   assert.equal(results[0].legs[1].line,'FlixBus 1789');
  }
 });
+
+test('provider totals and segment quotations are retained with currency and provenance without certifying fares',()=>{
+ const data=clone();for(const group of data.groups)for(const trip of group.trips){trip.moneyCost=12.5;trip.currency='EUR';}
+ for(const segment of data.segmentTemplates)if(segment.type==='scheduled')segment.localCost={cost:8.4,currency:'EUR',accuracy:'external_estimate'};
+ const result=api.parse(data,options);
+ for(const itinerary of result.itineraries){assert.equal(itinerary.priceEUR,null);assert.equal(itinerary.priceQuote.amount,12.5);assert.equal(itinerary.priceQuote.currency,'EUR');assert.equal(itinerary.priceQuote.kind,'estimate');assert.equal(itinerary.priceQuote.source,'TripGo');assert.ok(itinerary.legs.some(leg=>leg.priceQuote?.amount===8.4));assert.equal(itinerary.evidence.fareVerified,false);}
+});
+test('missing and invalid provider prices stay unknown instead of becoming zero or a fabricated total',()=>{
+ for(const amount of [undefined,null,-1,NaN,Infinity,12.345,'12.50']){
+  const data=clone();for(const group of data.groups)for(const trip of group.trips){trip.moneyCost=amount;trip.currency='EUR';}
+  assert.ok(api.parse(data,options).itineraries.every(itinerary=>itinerary.priceQuote===null));
+ }
+});
+test('all valid distinct results in a bounded provider response survive parsing beyond the old ten-trip cap',()=>{
+ const data=clone(),departure=api.parse(data,options).itineraries[0].departure;
+ const group=data.groups.find(g=>g.trips.some(t=>new Date(t.depart*1000).toISOString()===departure));
+ const sample=group.trips.find(t=>new Date(t.depart*1000).toISOString()===departure);
+ data.groups=[{...group,trips:Array.from({length:12},(_,i)=>({...sample,depart:sample.depart+i*60,arrive:sample.arrive+i*60,segments:sample.segments.map(leg=>({...leg,startTime:leg.startTime+i*60,endTime:leg.endTime+i*60}))}))}];
+ assert.equal(api.parse(data,options).itineraries.length,12);
+});
+test('complete segment quotations give an estimated total while missing quotations do not invent one',()=>{
+ const data=clone();for(const segment of data.segmentTemplates)if(segment.type==='scheduled')segment.localCost={cost:8.4,currency:'EUR',accuracy:'external_estimate'};
+ const result=api.parse(data,options);assert.ok(result.itineraries.every(t=>t.priceQuote?.amount===8.4&&t.priceQuote.kind==='estimate'&&t.priceEUR===null));
+ const absent=clone();assert.ok(api.parse(absent,options).itineraries.every(t=>t.priceQuote===null));
+});
+
+test('partial provider prices keep per-currency subtotals without inventing a journey total',()=>{
+ // Synthetic extra transit portion tests coverage, not a real transport offer.
+ const data=clone();const walk=data.segmentTemplates.find(s=>s.hashCode===252397852);
+ walk.modeIdentifier='pt_pub';walk.localCost={cost:2.5,currency:'EUR',accuracy:'external_estimate'};
+ const result=api.parse(data,options).itineraries.find(t=>t.legs[0].mode==='pt_pub');
+ assert.ok(result);assert.equal(result.priceQuote,null);
+ assert.equal(result.priceCoverage.status,'partial_quote');
+ assert.equal(result.priceCoverage.unquotedLegCount,1);
+ assert.deepEqual(result.priceCoverage.knownSubtotals,[{currency:'EUR',amount:2.5}]);
+ assert.equal(result.priceEUR,null);
+});
+test('mixed-currency portions are never added as if they were the same money',()=>{
+ const data=clone();const walk=data.segmentTemplates.find(s=>s.hashCode===252397852);
+ walk.modeIdentifier='pt_pub';walk.localCost={cost:2.5,currency:'CHF',accuracy:'confirmed'};
+ for(const s of data.segmentTemplates)if(s.type==='scheduled')s.localCost={cost:8.4,currency:'EUR',accuracy:'external_estimate'};
+ const result=api.parse(data,options).itineraries.find(t=>t.legs[0].mode==='pt_pub');
+ assert.equal(result.priceQuote,null);assert.equal(result.priceCoverage.reason,'mixed_currencies');
+ assert.equal(result.priceCoverage.unquotedLegCount,0);
+ assert.deepEqual(result.priceCoverage.knownSubtotals,[{currency:'CHF',amount:2.5},{currency:'EUR',amount:8.4}]);
+});
+test('a supplied itinerary estimate remains distinct from missing individual leg prices',()=>{
+ const data=clone();for(const g of data.groups)for(const t of g.trips){t.moneyCost=12.5;t.currency='EUR';}
+ for(const t of api.parse(data,options).itineraries){
+  assert.equal(t.priceCoverage.status,'complete_quote');assert.equal(t.priceQuote.amount,12.5);
+  assert.equal(t.priceCoverage.quotedLegCount,0);assert.equal(t.priceEUR,null);
+ }
+ for(const t of api.parse(clone(),options).itineraries)assert.equal(t.priceCoverage.status,'missing_quote');
+});

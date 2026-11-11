@@ -1,7 +1,7 @@
-/* One retained network per worker. Cancellation terminates synchronous indexing too. */
+/* Up to four retained networks per worker. Cancellation terminates synchronous indexing too. */
 (function(root){
 'use strict';
-function createClient({workerURL='transport-gtfs-worker.js',workerFactory=url=>new root.Worker(url),
+function createClient({workerURL='transport-gtfs-worker.js?v=four-networks-safe-20261106',workerFactory=url=>new root.Worker(url),
  timeoutMs=45000,maxPending=16}={}){
  if(!Number.isSafeInteger(timeoutMs)||timeoutMs<=0||!Number.isSafeInteger(maxPending)||maxPending<=0)
   throw new Error('Invalid GTFS worker limits');

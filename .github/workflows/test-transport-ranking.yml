@@ -3,11 +3,33 @@ on:
   push:
     branches: [main, feature/transport-ranking-safe, fix/transport-ranking-post-170]
     paths:
+      - 'geo.js'
+      - 'tests/geo-country-detection.test.cjs'
+      - 'transport-271-fares.js'
+      - 'tests/transport-271-fares.test.cjs'
+      - 'transport-274-fares.js'
+      - 'tests/transport-274-fares.test.cjs'
+      - 'transport-272-fares.js'
+      - 'tests/transport-272-fares.test.cjs'
+      - 'transport-aravis-fares.js'
+      - 'transport-aravis-fare-data.js'
+      - 'data/transport/aravis-fare-reference-2026.json'
+      - 'tests/transport-aravis-fares.test.cjs'
+      - 'transport-y21-fares.js'
+      - 'tests/transport-y21-fares.test.cjs'
+      - 'transport-y22-fares.js'
+      - 'tests/transport-y22-fares.test.cjs'
+      - 'transport-y02-fares.js'
+      - 'tests/transport-y02-fares.test.cjs'
+      - 'transport-direct-fare-reference.js'
+      - 'tests/transport-direct-fare-reference.test.cjs'
       - 'transport-ranking.js'
       - 'transport-adapters.js'
       - 'transport-fares.js'
       - 'transport-sibra-pass.js'
       - 'transport-y51-fares.js'
+      - 'transport-cars-region-fares.js'
+      - 'tests/transport-cars-region-fares.test.cjs'
       - 'transport-catalogue.js'
       - 'transport-swiss-ain.js'
       - 'transport-gtfs-index.js'
@@ -45,11 +67,33 @@ on:
       - '.github/workflows/test-transport-ranking.yml'
   pull_request:
     paths:
+      - 'geo.js'
+      - 'tests/geo-country-detection.test.cjs'
+      - 'transport-271-fares.js'
+      - 'tests/transport-271-fares.test.cjs'
+      - 'transport-274-fares.js'
+      - 'tests/transport-274-fares.test.cjs'
+      - 'transport-272-fares.js'
+      - 'tests/transport-272-fares.test.cjs'
+      - 'transport-aravis-fares.js'
+      - 'transport-aravis-fare-data.js'
+      - 'data/transport/aravis-fare-reference-2026.json'
+      - 'tests/transport-aravis-fares.test.cjs'
+      - 'transport-y21-fares.js'
+      - 'tests/transport-y21-fares.test.cjs'
+      - 'transport-y22-fares.js'
+      - 'tests/transport-y22-fares.test.cjs'
+      - 'transport-y02-fares.js'
+      - 'tests/transport-y02-fares.test.cjs'
+      - 'transport-direct-fare-reference.js'
+      - 'tests/transport-direct-fare-reference.test.cjs'
       - 'transport-ranking.js'
       - 'transport-adapters.js'
       - 'transport-fares.js'
       - 'transport-sibra-pass.js'
       - 'transport-y51-fares.js'
+      - 'transport-cars-region-fares.js'
+      - 'tests/transport-cars-region-fares.test.cjs'
       - 'transport-catalogue.js'
       - 'transport-swiss-ain.js'
       - 'transport-gtfs-index.js'
@@ -99,10 +143,21 @@ jobs:
       - run: node --check app.js
       - run: node --check transport-blablacar-realtime.js
       - run: node --test tests/transport-realtime-relay.test.cjs
+      - run: node --test tests/geo-country-detection.test.cjs
+      - run: node --test tests/transport-271-fares.test.cjs
+      - run: node --test tests/transport-274-fares.test.cjs
+      - run: node --test tests/transport-272-fares.test.cjs
+      - run: node --test tests/transport-aravis-fares.test.cjs
+      - run: node --test tests/transport-y21-fares.test.cjs
+      - run: node --test tests/transport-y22-fares.test.cjs
+      - run: node --test tests/transport-y02-fares.test.cjs
+      - run: node --test tests/transport-direct-fare-reference.test.cjs
       - run: node --check transport-ranking.js
       - run: node --check transport-adapters.js
       - run: node --check transport-fares.js
       - run: node --check transport-sibra-pass.js
+      - run: node --check transport-cars-region-fares.js
+      - run: node --test tests/transport-cars-region-fares.test.cjs
       - run: node --check transport-y51-fares.js
       - run: node --check transport-catalogue.js
       - run: node --check transport-swiss-ain.js
@@ -115,6 +170,7 @@ jobs:
       - run: node --check transport-gtfs-time.js
       - run: node --check transport-gtfs-worker-client.js
       - run: node tests/transport-ranking.test.cjs
+      - run: node --test tests/transport-map.test.cjs
       - run: node --test tests/transport-ranking-main-port.test.js
       - run: node tests/transport-adapters.test.cjs
       - run: node tests/transport-fares.test.cjs

@@ -43,11 +43,17 @@ self.onmessage=async({data})=>{
    if(feedsPromise)throw new Error('A network is already loading; replace the worker to reload');
    if(type==='loadNetworks'&&(!Array.isArray(options.indexServiceDates)||!options.indexServiceDates.length))throw new Error('Service dates required for multiple GTFS networks');
    const list=type==='load'?[resource]:resources;
-   if(!Array.isArray(list)||!list.length||list.length>2)throw new Error('One or two GTFS networks required');
+   if(!Array.isArray(list)||!list.length||list.length>4)throw new Error('One to four GTFS networks required');
    feedsPromise=(async()=>{
-    const entries=[];
+    const entries=[];let retainedBytes=0;
+    const retainedLimit=options.maxRetainedExpandedBytes??256*1024*1024;
+    if(!Number.isSafeInteger(retainedLimit)||retainedLimit<=0||retainedLimit>256*1024*1024)throw new Error('Invalid retained GTFS budget');
     for(const item of list){
-     try{entries.push({feed:await CPGTFSLoader.loadResource(item,{...options,retainSourceTables:false})});}
+     try{
+      const remaining=retainedLimit-retainedBytes;if(remaining<=0)throw new Error('Combined GTFS memory budget exhausted');
+      const feed=await CPGTFSLoader.loadResource(item,{...options,maxExpandedBytes:Math.min(options.maxExpandedBytes??128*1024*1024,remaining),retainSourceTables:false});
+      retainedBytes+=feed.expandedBytes;entries.push({feed});
+     }
      catch(error){entries.push({error:{network:item?.network||'',message:error.message}});}
     }
     return entries;
@@ -64,7 +70,7 @@ self.onmessage=async({data})=>{
    const order=query.order??'earliestDeparture';
    if(!['earliestDeparture','latestDeparture'].includes(order)||
       (query.order!==undefined&&!['missionDirectTrips','missionJourneys'].includes(query.method)))throw new Error('Invalid GTFS result order');
-   let rows,searchTruncated=false;
+   let rows,searchTruncated=false;const networkErrors=[];
    scope(feed,query.date);
    let connectionDates;
    if(query.connectionDates!==undefined){
@@ -90,16 +96,20 @@ self.onmessage=async({data})=>{
      rows.push(...found.map(row=>({...row,networkId:current.source.datasetId||current.source.resourceId,
       network:current.source.network,legs:row.legs?.map(leg=>({...leg,network:current.source.network,networkId:current.source.datasetId||current.source.resourceId}))})));
     }
-    if(query.method==='missionJourneys'&&feeds.length===2){
-     const cross=CPGTFSFederation.crossNetworkTrips(feeds,query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
+    if(query.method==='missionJourneys'&&feeds.length>1){
+     for(let i=0;i<feeds.length;i++)for(let j=i+1;j<feeds.length;j++){
+     try{
+     const cross=CPGTFSFederation.crossNetworkTrips([feeds[i],feeds[j]],query.date,query.origin,query.destination,query.window,{radiusMeters:radius,
       ...(connectionDates===undefined?{}:{connectionDates})});
      rows.push(...cross.journeys);searchTruncated=searchTruncated||cross.searchTruncated;
+     }catch(error){searchTruncated=true;networkErrors.push({networks:[feeds[i].source.network||feeds[i].source.datasetId,feeds[j].source.network||feeds[j].source.datasetId],message:error.message});}
+     }
     }
     // Apply mission ordering before the result cap, including across networks.
     if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));
    }else if(query.method==='nearbyStops')rows=CPGTFSIndex.nearbyStops(feed.index,query.lat,query.lon,query.radiusMeters??700);
    else throw new Error('Unsupported GTFS worker query');
-   result={rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,
+   result={rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,networkErrors,
     serviceConfirmed:false,faresVerified:false,accessVerified:false};
   }else throw new Error('Unsupported GTFS worker operation');
   self.postMessage({id,result});

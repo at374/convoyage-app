@@ -15,6 +15,71 @@ class Element{
 function panel(){const doc={createElement(){return new Element(doc);}};doc.documentElement=new Element(doc);return new Element(doc);}
 function deferred(){let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};}
 const summary={source:{loadedAt:'2026-10-30T16:00:00Z'},counts:{stops:1641}};
+test('Y02 matched stops show a sourced reference without confirming service',async()=>{
+ global.CPY02Fares=require('../transport-y02-fares.js');
+ try{
+  const target=panel(),mission={label:'Retour',from:{lat:46.1996,lon:6.2381},to:{lat:46.0538,lon:6.7738},earliestDeparture:'2026-11-09T10:00:00+01:00'};
+  const direct=row({networkId:'oura-haute-savoie',line:'Y02',departure:'2026-11-09T11:00:00+01:00',arrival:'2026-11-09T12:20:00+01:00',
+   originStop:{stopId:'FR:74012:ZE:57669:HAUTExSAVOIE',name:'Annemasse',lat:46.1996235,lon:6.2381237},
+   destinationStop:{stopId:'FR:74273:ZE:57641:HAUTExSAVOIE',name:'Sixt-Fer-à-Cheval',lat:46.053759,lon:6.773773}});
+  await agenda.mount(target,{tasks:[mission],resources:[agenda.DEFAULT_RESOURCES[0]],clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[direct]}),dispose(){}})}).done;
+  assert.match(target.textContent,/Référence car Y02 adulte : 4,00 €/);assert.match(target.textContent,/Voir la grille Y02/);
+  assert.match(target.textContent,/Transport non confirmé/);assert.doesNotMatch(target.textContent,/Réalisable/);
+ }finally{delete global.CPY02Fares;}
+});
+test('Y22 matched stops show zone 3 as a reference, not a confirmed fare',async()=>{
+ global.CPY22Fares=require('../transport-y22-fares.js');
+ try{
+  const target=panel(),mission={label:'Retour',from:{lat:45.9017,lon:6.1201},to:{lat:46.1097,lon:5.8242},earliestDeparture:'2026-11-09T05:00:00+01:00'};
+  const direct=row({networkId:'oura-haute-savoie',line:'Y22',departure:'2026-11-09T05:50:00+01:00',arrival:'2026-11-09T07:00:00+01:00',
+   originStop:{stopId:'FR:74010:ZE:57539:HAUTExSAVOIE',name:'Annecy',lat:45.9016985,lon:6.1201612},
+   destinationStop:{stopId:'FR:01033:ZE:57833:HAUTExSAVOIE',name:'Valserhône',lat:46.109695,lon:5.824159}});
+  await agenda.mount(target,{tasks:[mission],resources:[agenda.DEFAULT_RESOURCES[0]],clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[direct]}),dispose(){}})}).done;
+  assert.match(target.textContent,/Référence car Y22 adulte : 6,60 €/);assert.match(target.textContent,/Voir la grille Y22/);
+  assert.match(target.textContent,/Transport non confirmé/);assert.doesNotMatch(target.textContent,/Réalisable/);
+ }finally{delete global.CPY22Fares;}
+});
+test('Y21 matched stops show the official reference without certifying service',async()=>{
+ global.CPY21Fares=require('../transport-y21-fares.js');
+ try{
+  const target=panel(),mission={label:'Retour',from:{lat:45.9017,lon:6.1201},to:{lat:45.9578,lon:5.8369},earliestDeparture:'2026-11-09T17:00:00+01:00'};
+  const direct=row({networkId:'oura-haute-savoie',line:'Y21',departure:'2026-11-09T18:25:00+01:00',arrival:'2026-11-09T19:40:00+01:00',
+   originStop:{stopId:'FR:74010:ZE:57539:HAUTExSAVOIE',name:'Annecy',lat:45.9016985,lon:6.1201612},
+   destinationStop:{stopId:'FR:74269:ZE:57777:HAUTExSAVOIE',name:'Seyssel Petit Nice',lat:45.9578116,lon:5.8369357}});
+  await agenda.mount(target,{tasks:[mission],resources:[agenda.DEFAULT_RESOURCES[0]],clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[direct]}),dispose(){}})}).done;
+  assert.match(target.textContent,/Référence car Y21 adulte : 4,00 €/);assert.match(target.textContent,/Prix, date et titre à confirmer/);
+  assert.match(target.textContent,/Transport non confirmé/);assert.doesNotMatch(target.textContent,/Réalisable/);
+ }finally{delete global.CPY21Fares;}
+});
+test('Y62 terminal fare reference is visible but does not confirm the journey or total',async()=>{
+ global.CPAravisFares=require('../transport-aravis-fares.js');
+ global.CPAravisFareData=require('../data/transport/aravis-fare-reference-2026.json');
+ try{
+  const target=panel(),mission={label:'Retour',from:{lat:45.9017,lon:6.1201},to:{lat:45.9067,lon:6.4191},earliestDeparture:'2026-11-09T07:00:00+01:00'};
+  const direct=row({networkId:'oura-haute-savoie',line:'Y62',departure:'2026-11-09T08:25:00+01:00',arrival:'2026-11-09T09:25:00+01:00',
+   originStop:{stopId:'FR:74010:ZE:57539:HAUTExSAVOIE',name:'Annecy',lat:45.9016985,lon:6.1201612},
+   destinationStop:{stopId:'FR:74080:ZE:57774:HAUTExSAVOIE',name:'La Clusaz',lat:45.9067032,lon:6.4191339}});
+  await agenda.mount(target,{tasks:[mission],resources:[agenda.DEFAULT_RESOURCES[0]],clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[direct]}),dispose(){}})}).done;
+  assert.match(target.textContent,/Référence car Y62 adulte : 8,90 €/);assert.match(target.textContent,/Prix, date et titre à confirmer/);
+  assert.match(target.textContent,/Transport non confirmé/);assert.doesNotMatch(target.textContent,/Réalisable/);
+  const other=panel();
+  await agenda.mount(other,{tasks:[mission],resources:[agenda.DEFAULT_RESOURCES[0]],clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[{...direct,line:'Y63'}]}),dispose(){}})}).done;
+  assert.match(other.textContent,/Référence car Y63 adulte : 8,90 €/);assert.match(other.textContent,/Voir la grille Y63/);
+ }finally{delete global.CPAravisFares;delete global.CPAravisFareData;}
+});
+test('272 official reference reaches direct GTFS results without becoming a confirmed fare',async()=>{
+ global.CP272Fares=require('../transport-272-fares.js');
+ try{
+  const target=panel(),mission={label:'Retour',from:{lat:45.9017,lon:6.1201},to:{lat:46.231,lon:6.1097},earliestDeparture:'2026-11-09T09:00:00+01:00'};
+  const direct=row({networkId:'oura-haute-savoie',line:'272',departure:'2026-11-09T10:00:00+01:00',arrival:'2026-11-09T11:30:00+01:00',
+   originStop:{stopId:'FR:74010:ZE:57539:HAUTExSAVOIE',name:'Gare Routière',lat:45.9016985,lon:6.1201612},
+   destinationStop:{stopId:'FR:6623:ZE:57862:HAUTExSAVOIE',name:'Aéroport',lat:46.230964,lon:6.1096781}});
+  await agenda.mount(target,{tasks:[mission],resources:[agenda.DEFAULT_RESOURCES[0]],clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[direct]}),dispose(){}})}).done;
+  assert.match(target.textContent,/Référence car 272 adulte : 11,30 €/);
+  assert.match(target.textContent,/Prix et titre à confirmer/);assert.match(target.textContent,/Transport non confirmé/);
+  assert.doesNotMatch(target.textContent,/Réalisable/);
+ }finally{delete global.CP272Fares;}
+});
 function row(extra={}){return {tripId:'T',from:'A',to:'B',line:'Y51',timeZone:'Europe/Paris',
  departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T12:00:00Z',
  originStop:{name:'École <script>',lat:45.67,lon:6.39},destinationStop:{name:'Annecy',lat:45.9,lon:6.1},accessDistanceMeters:10,egressDistanceMeters:20,...extra};}
@@ -49,6 +114,18 @@ test('time windows include previous service days, explicit horizon, margin and m
  assert.equal(agenda.searchWindow({earliestDeparture:'2026-11-02T12:00:00+01:00'}).earliestDeparture,'2026-11-02T11:00:00.000Z');
  assert.throws(()=>agenda.searchWindow({...task,latestArrival:'2026-11-01T12:00:00Z'}),/Inverted/);
 });
+test('all distinct GTFS lines reach comparison even beyond five with identical departure times',async()=>{
+ const target=panel(),received=[];
+ const rows=Array.from({length:12},(_,i)=>row({tripId:'T'+i,line:'Y'+i}));
+ const session=agenda.mount(target,{tasks:[task],resources:[agenda.DEFAULT_RESOURCES[0]],
+  clientFactory:()=>({load:async()=>summary,query:async()=>({rows:[...rows,rows[0]],truncated:false}),dispose(){}}),
+  onResults:result=>received.push(result)});
+ await session.done;
+ assert.equal(received.length,1);
+ assert.equal(received[0].itineraries.length,12);
+ assert.equal(new Set(received[0].itineraries.map(r=>r.tripId)).size,12);
+ assert.match(target.textContent,/Retour : 12 horaire/);
+});
 test('mount shares one load across tasks, deduplicates rows, uses text nodes and reports limits',async()=>{
  const target=panel(),calls=[];let loads=0,disposed=0;
  const client={async load(){loads++;return summary;},async query(query){calls.push(query);return {rows:[row(),row()],truncated:true};},dispose(){disposed++;}};
@@ -78,7 +155,7 @@ test('disposing during load or query prevents stale results and terminates retai
 });
 test('source and per-task errors are visible and do not abort other task searches',async()=>{
  const target=panel();let queries=0;
- const session=agenda.mount(target,{tasks:[task,{...task,label:'Aller'}],clientFactory:()=>({
+ const session=agenda.mount(target,{resources:[agenda.DEFAULT_RESOURCES[0]],tasks:[task,{...task,label:'Aller'}],clientFactory:()=>({
   load:async()=>summary,query:async()=>{if(!queries++)throw new Error('fail');return {rows:[],truncated:false};},dispose(){}})});
  await session.done;assert.match(target.textContent,/Retour : recherche indisponible/);
  assert.match(target.textContent,/Aller : aucun trajet direct/);session.dispose();
@@ -113,7 +190,7 @@ test('actual Agenda call passes mission windows and triggers regional refresh wh
  const current={o:{lat:45.9,lng:6.1,precision:'adresse'},d:{lat:45.67,lng:6.39,precision:'gps'}};
  const next={o:{lat:45.8,lng:6.2,precision:'ville'},pickup_start:'2026-11-02T15:00:00+01:00'};
  const context={window:{CPGTFSAgenda:{mount:(panel,options)=>{calls.push(options);return {dispose(){}};}},CPGTFSWorker:{}},
-  panel,sourcePanel:panel,localCards:{},renderLocalCards:()=>{},bt:button,m:current,next,etat:{reglages:{domicile_lat:45.9,domicile_lng:6.1}},
+  panel,sourcePanel:panel,localCards:{},localCardResults:{},renderLocalCards:()=>{},bt:button,m:current,next,etat:{reglages:{domicile_lat:45.9,domicile_lng:6.1}},
   G:{coordonnees:(m,side)=>m[side==='origin'?'o':'d']},
   transportAddressPoint:p=>p&&['adresse','gps'].includes(p.precision),
   pickupDate:'2026-11-02T10:00:00+01:00',deliveryDate:'2026-11-02T13:00:00+01:00',securityMarginMin:30,
@@ -176,7 +253,7 @@ test('Agenda loads scoped partners and renders a cross-network change without in
  const session=agenda.mount(target,{tasks:[task],clientFactory:()=>({
   loadNetworks:async(resources,options)=>{calls.push({resources,options});return {networks:[summary,{...summary,source:{...summary.source,network:'Sibra',updatedAt:'2026-10-01'}}],partial:false};},
   query:async()=>({rows:[crossed],truncated:false}),dispose(){}})});
- await session.done;assert.equal(calls[0].resources.length,2);
+ await session.done;assert.equal(calls[0].resources.length,4);
  assert.ok(calls[0].options.indexServiceDates.includes('2026-11-01'));
  assert.match(target.textContent,/changement de réseau : Descente → Montée/);
  assert.match(target.textContent,/séparation à vol d’oiseau 56 m, marche non vérifiée/);
@@ -191,6 +268,16 @@ test('partial multi-network load remains visible while the surviving source is q
   query:async()=>{queries++;return {rows:[],truncated:false};},dispose(){}})});
  await session.done;assert.match(target.textContent,/Recherche partielle/);assert.match(target.textContent,/Sibra : flux indisponible/);
  assert.ok(queries>0);session.dispose();
+});
+test('loaded Annemasse network displays a current traffic verification link',async()=>{
+ const target=panel(),tac=agenda.DEFAULT_RESOURCES.find(r=>r.id==='tac-annemasse');
+ const trip={label:'Retour',from:{lat:46.20,lon:6.14},to:{lat:46.19,lon:6.24},earliestDeparture:'2026-11-07T10:00:00+01:00'};
+ const session=agenda.mount(target,{resources:[tac],tasks:[trip],clientFactory:()=>({
+  load:async()=>({...summary,source:{...summary.source,datasetId:tac.datasetId,network:tac.network}}),
+  query:async()=>({rows:[],truncated:false}),dispose(){}})});
+ await session.done;assert.match(target.textContent,/arrêts déplacés, déviations et temps réel sont à vérifier/i);
+ const section=target.children[0],traffic=section.children.find(x=>x.textContent.includes('Consulter les infos trafic TAC'));
+ assert.ok(traffic);assert.equal(traffic.children[0].href,'https://www.tac-mobilites.fr/');session.dispose();
 });
 test('walking refinement displays calculated paths and unmatched endpoints while retaining transit warnings',async()=>{
  const previous=global.CPTransportWalking;let disposed=0;
@@ -275,7 +362,7 @@ test('Agenda retains the latest outbound trips across service dates after worker
  assert.match(text,/Affichage limité/);assert.match(text,/Transport non confirmé/);session.dispose();
 });
 
-test('Grenoble local tasks select only the two official Grenoble resources',async()=>{
+test('Grenoble local tasks retain both Grenoble feeds and nearby regional candidates',async()=>{
  const local={label:'Jonction',from:{lat:45.1905,lon:5.7145},to:{lat:45.28,lon:5.88},
   earliestDeparture:'2026-11-02T10:00:00+01:00',latestArrival:'2026-11-02T13:00:00+01:00'},calls=[];
  const target=panel(),session=agenda.mount(target,{tasks:[local],clientFactory:()=>({
@@ -283,14 +370,14 @@ test('Grenoble local tasks select only the two official Grenoble resources',asyn
    calls.push({resources,options});return {networks:resources.map(r=>({...summary,source:{...summary.source,network:r.network,url:r.url}})),partial:false};
   },query:async()=>({rows:[],truncated:false}),dispose(){}})});
  await session.done;
- assert.equal(calls.length,1);assert.equal(calls[0].resources.length,2);
- assert.deepEqual(calls[0].resources.map(r=>r.datasetId),['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f']);
- assert.ok(calls[0].resources.every(r=>r.resolveFromCatalogue));
+ assert.equal(calls.length,1);assert.equal(calls[0].resources.length,3);
+ assert.deepEqual(calls[0].resources.map(r=>r.datasetId),['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f','oura-savoie-tourism']);
+ assert.ok(calls[0].resources.slice(0,2).every(r=>r.resolveFromCatalogue));
  assert.match(target.textContent,/Métropole grenobloise/);assert.match(target.textContent,/Grésivaudan/);
  assert.doesNotMatch(target.textContent,/Cars Région Haute-Savoie|Sibra/);
  session.dispose();
  const outside={...local,from:point};
- assert.equal(agenda.DEFAULT_RESOURCES.some(r=>agenda.selected(r,outside)),false);
+ assert.equal(agenda.DEFAULT_RESOURCES.filter(r=>r.network.startsWith('M Réso')).some(r=>agenda.selected(r,outside)),false);
 });
 
 test('Agenda collapses equivalent departures from different GTFS trip IDs',async()=>{
@@ -321,13 +408,14 @@ test('Agenda retains identical schedules from different networks',async()=>{
  session.dispose();
 });
 
-test('Grenoble to Crolles remains within both metropolitan and Grésivaudan GTFS envelopes',async()=>{
+test('Grenoble to Crolles keeps metropolitan priority while regional GTFS remains a bounded candidate',async()=>{
  const grenoble={lat:45.1885,lon:5.7245},crolles={lat:45.276,lon:5.883};
  const trip={label:'Jonction mission',from:grenoble,to:crolles,
   earliestDeparture:'2026-11-02T09:00:00+01:00',latestArrival:'2026-11-02T12:00:00+01:00'};
  const eligible=agenda.DEFAULT_RESOURCES.filter(resource=>agenda.selected(resource,trip));
  assert.deepEqual(eligible.map(resource=>resource.datasetId),
-  ['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f']);
+  ['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f','61b36a0610344080a78cf407','5cdef3698b4c416d21fd76b9','607860847e79b65f245982db','5bb1caa6634f4136693d9053']);
+ const localEligible=eligible.filter(resource=>resource.resolveFromCatalogue);
  const target=panel(),calls=[];
  const session=agenda.mount(target,{tasks:[trip],clientFactory:()=>({
   loadNetworks:async(resources,options)=>{
@@ -340,7 +428,7 @@ test('Grenoble to Crolles remains within both metropolitan and Grésivaudan GTFS
  })});
  await session.done;
  assert.equal(calls.length,1);
- assert.deepEqual(calls[0].resources.map(resource=>resource.datasetId),eligible.map(resource=>resource.datasetId));
+ assert.deepEqual(calls[0].resources.map(resource=>resource.datasetId),[...localEligible.map(resource=>resource.datasetId),'oura-savoie-tourism']);
  assert.match(target.textContent,/Grésivaudan/);
  assert.match(target.textContent,/Transport non confirmé|ne prouve pas l’absence de transport/);
  session.dispose();
@@ -548,6 +636,95 @@ test('official Cars Région Ain GTFS is available as an Agenda resource',()=>{
  assert.match(ain.url,/^https:\/\/api\.oura3\.cityway\.fr\/dataflow\/offre-tc\/download\?/);
  assert.equal(agenda.selected(ain,{from:{lat:46.25,lon:5.6},to:{lat:46.30,lon:5.8}}),true);
  assert.equal(agenda.selected(ain,{from:{lat:46.25,lon:5.6},to:{lat:47.1,lon:6.5}}),false);
+});
+
+test('remaining AURA departmental GTFS resources are official, bounded candidates',()=>{
+ const departments=[
+  ['oura-allier',{lat:46.18,lon:3.32},'ALLIER'],
+  ['oura-ardeche',{lat:44.74,lon:4.6},'ARDECHE'],
+  ['oura-cantal',{lat:45.05,lon:2.75},'CAR_REGION_CANTAL'],
+  ['oura-drome',{lat:44.72,lon:5.12},'DROME'],
+  ['oura-isere',{lat:45.2,lon:5.72},'ISERE'],
+  ['oura-loire',{lat:45.55,lon:4.38},'CARS_REGION_LOIRE'],
+  ['oura-haute-loire',{lat:45.05,lon:3.88},'HAUTE_LOIRE'],
+  ['oura-puy-de-dome',{lat:45.78,lon:3.12},'PUY_DE_DOME']
+ ];
+ for(const [id,point,provider] of departments){
+  const resource=agenda.DEFAULT_RESOURCES.find(r=>r.id===id);
+  assert.ok(resource,id);
+  assert.equal(resource.format,'GTFS');assert.equal(resource.federate,true);assert.equal(resource.timeZone,'Europe/Paris');
+  assert.match(resource.url,new RegExp('provider='+provider+'(?:&|$)'));
+  assert.equal(agenda.selected(resource,{from:point,to:{...point}}),true,id+' should be considered only inside its envelope');
+  assert.equal(agenda.selected(resource,{from:point,to:{lat:48.85,lon:2.35}}),false,id+' must not claim national coverage');
+ }
+});
+
+test('Cars Région Express is a separate dated timetable source, never a static fare source',()=>{
+ const express=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-cars-region-express');
+ assert.ok(express);assert.equal(express.datasetId,'61b36a0610344080a78cf407');
+ assert.equal(express.format,'GTFS');assert.equal(express.federate,true);
+ assert.match(express.url,/provider=CARS_REGION_EXPRESS&/);
+ assert.equal(agenda.selected(express,{from:{lat:46.12,lon:5.82},to:{lat:46.19,lon:6.14}}),true);
+ assert.equal(agenda.selected(express,{from:{lat:46.12,lon:5.82},to:{lat:48.85,lon:2.35}}),false);
+ assert.equal(Object.hasOwn(express,'fareEUR'),false);
+});
+
+test('BlaBlaCar Bus GTFS is a long-distance timetable partner, never a fare claim',async()=>{
+ const bus=agenda.DEFAULT_RESOURCES.find(r=>r.id==='blablacar-bus');
+ assert.ok(bus);assert.equal(bus.datasetId,'5cdef3698b4c416d21fd76b9');assert.equal(bus.federate,true);
+ assert.match(bus.url,/fd54f81f-4389-4e73-be75-491133d011c3/);
+ const trip={label:'Retour',from:{lat:45.188,lon:5.724},to:{lat:45.764,lon:4.835},earliestDeparture:'2026-11-07T10:00:00+01:00'};
+ assert.ok(agenda.airDistanceKm(trip.from,trip.to)>=75);
+ assert.equal(agenda.selected(bus,trip),true);assert.equal(Object.hasOwn(bus,'fareEUR'),false);
+ const local={id:'local',datasetId:'local',network:'Local',format:'GTFS',federate:true,url:'https://example.org/local.zip',bounds:[44.5,4.5,46.2,6.5],timeZone:'Europe/Paris'};
+ let loaded=[];const session=agenda.mount(panel(),{resources:[local,bus],tasks:[trip],clientFactory:()=>({loadNetworks:async resources=>{loaded=resources;return {networks:resources.map(r=>({...summary,source:{...summary.source,network:r.network,url:r.url}}))};},query:async()=>({rows:[],truncated:false}),dispose(){}})});
+ await session.done;assert.deepEqual(loaded.map(r=>r.id),['local','blablacar-bus']);session.dispose();
+});
+
+test('SNCF Transilien is a bounded Île-de-France source and wins over the national coach feed for a short journey',async()=>{
+ const transilien=agenda.DEFAULT_RESOURCES.find(r=>r.id==='sncf-transilien');
+ const bus=agenda.DEFAULT_RESOURCES.find(r=>r.id==='blablacar-bus');
+ assert.ok(transilien);assert.equal(transilien.datasetId,'horaires-des-lignes-transilien-1');
+ assert.match(transilien.url,/sncf\/gtfs\/transilien-gtfs\.zip$/);assert.equal(Object.hasOwn(transilien,'fareEUR'),false);
+ const trip={label:'Retour',from:{lat:48.8566,lon:2.3522},to:{lat:48.807,lon:2.437},earliestDeparture:'2026-11-07T10:00:00+01:00'};
+ assert.equal(agenda.selected(transilien,trip),true);assert.ok(agenda.airDistanceKm(trip.from,trip.to)<75);
+ let loaded=null;const session=agenda.mount(panel(),{resources:[bus,transilien],tasks:[trip],clientFactory:()=>({
+  load:async resource=>{loaded=resource;return {...summary,source:{...summary.source,network:resource.network,url:resource.url}};},
+  query:async()=>({rows:[],truncated:false}),dispose(){}}
+ )});
+ await session.done;assert.equal(loaded?.id,'sncf-transilien');session.dispose();
+});
+
+test('Synchro, STAS and T2C use current PAN-resolved official GTFS without embedding provider tokens',()=>{
+ const localNetworks=[
+  ['82272',{lat:45.57,lon:5.92}],
+  ['81023',{lat:45.44,lon:4.39}],
+  ['83465',{lat:45.78,lon:3.09}]
+ ];
+ for(const [id,point] of localNetworks){
+  const resource=agenda.DEFAULT_RESOURCES.find(r=>r.id===id);
+  assert.ok(resource,id);assert.equal(resource.format,'GTFS');assert.equal(resource.federate,true);assert.equal(resource.resolveFromCatalogue,true);
+  assert.match(resource.url,/^https:\/\/transport\.data\.gouv\.fr\/datasets\//);
+  assert.equal(agenda.selected(resource,{from:point,to:{...point}}),true);
+  assert.equal(Object.hasOwn(resource,'fareEUR'),false);
+ }
+});
+
+test('Pays de Gex TPG and TAC Annemasse are bounded official border GTFS resources',async()=>{
+ const gex=agenda.DEFAULT_RESOURCES.find(r=>r.id==='pays-gex-tpg');
+ const tac=agenda.DEFAULT_RESOURCES.find(r=>r.id==='tac-annemasse');
+ assert.ok(gex);assert.ok(tac);
+ assert.equal(gex.datasetId,'65a901970267d05025a905ec');assert.equal(tac.datasetId,'5ca4c3d2d7857ab0c49dde9b');
+ assert.match(gex.url,/95c73b12-d117-4faf-bb6f-abfe3c95eee1/);
+ assert.match(tac.url,/373e19e2-af0a-4939-9f33-3f1268d1e0bb/);
+ const gexTrip={label:'Retour',from:{lat:46.30,lon:6.12},to:{lat:46.35,lon:6.04},earliestDeparture:'2026-11-07T10:00:00+01:00'};
+ const tacTrip={label:'Retour',from:{lat:46.20,lon:6.14},to:{lat:46.19,lon:6.24},earliestDeparture:'2026-11-07T10:00:00+01:00'};
+ assert.equal(agenda.selected(gex,gexTrip),true);assert.equal(agenda.selected(tac,tacTrip),true);
+ assert.equal(agenda.selected(gex,{...gexTrip,to:{lat:48.85,lon:2.35}}),false);
+ for(const [trip,id] of [[gexTrip,'pays-gex-tpg'],[tacTrip,'tac-annemasse']]){
+  let loaded=null;const session=agenda.mount(panel(),{tasks:[trip],clientFactory:()=>({load:async r=>{loaded=r;return {...summary,source:{...summary.source,network:r.network,url:r.url}};},query:async()=>({rows:[],truncated:false}),dispose(){}})});
+  await session.done;assert.equal(loaded?.id,id);session.dispose();
+ }
 });
 
 
@@ -770,7 +947,7 @@ test('Android PWA offline cache includes every versioned entrypoint script',()=>
  for(const script of scripts){
   assert.ok(worker.includes("'"+script+"'"),'Missing Android offline script: '+script);
  }
- assert.match(worker,/const CACHE = 'cp-app-transport-results-cards-20261105-v\d+'/);
+ assert.match(worker,/const CACHE = 'cp-app-transport-results-cards-\d{8}-v\d+'/);
 });
 
 test('Android PWA offline cache retains the transport worker and app shell',()=>{
@@ -825,4 +1002,72 @@ test('Mobile regional transport cards cover Aller Jonction Retour and safe stop 
  assert.match(app,/encodeURIComponent\(stop\)/);
  assert.match(app,/position exacte non vérifiée/);
  assert.match(app,/Transport non confirmé/);
+});
+
+
+test('omitted relevant networks are disclosed even when loaded feeds succeed',async()=>{
+ const target=panel(),received=[];
+ const base=agenda.DEFAULT_RESOURCES[0];
+ const resources=[base,{...base,id:'partner1',datasetId:'partner1',network:'Partner One',federate:true},{...base,id:'partner2',datasetId:'partner2',network:'Partner Two',federate:true},{...base,id:'partner3',datasetId:'partner3',network:'Partner Three',federate:true},{...base,id:'partner4',datasetId:'partner4',network:'Partner Four',federate:true}];
+ const session=agenda.mount(target,{tasks:[task],resources,
+  clientFactory:()=>({loadNetworks:async()=>({networks:[summary,summary],partial:false}),query:async()=>({rows:[],truncated:false}),dispose(){}}),
+  onResults:r=>received.push(r)});
+ await session.done;
+ assert.match(target.textContent,/Réseaux non interrogés : Partner Four/);
+ assert.equal(received[0].coverage.partial,true);
+ assert.deepEqual(received[0].coverage.omittedNetworks,['Partner Four']);
+ session.dispose();
+});
+
+
+test('regular Savoie source is distinct from tourist data and scoped to candidate endpoints',()=>{
+ const source=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-savoie');
+ assert.ok(source);assert.match(source.url,/provider=SAVOIE&/);
+ assert.equal(source.resolveFromCatalogue,undefined);
+ assert.equal(agenda.selected(source,{from:{lat:45.57,lon:5.92},to:{lat:45.67,lon:6.39}}),true);
+ assert.equal(agenda.selected(source,{from:{lat:45.19,lon:5.72},to:{lat:45.28,lon:5.88}}),false);
+});
+
+
+test('Savoie tourism source has a separate identity and can cover southern valley candidates',()=>{
+ const source=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-savoie-tourism');
+ const regular=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-savoie');
+ assert.ok(source);assert.notEqual(source.datasetId,regular.datasetId);
+ assert.match(source.url,/provider=CARS_REGION_73_TOURISME&/);
+ assert.equal(agenda.selected(source,{from:{lat:45.20,lon:6.67},to:{lat:45.17,lon:6.65}}),true);
+ assert.equal(agenda.selected(source,{from:{lat:48.85,lon:2.35},to:{lat:45.17,lon:6.65}}),false);
+});
+
+test('a full-envelope partner remains searched ahead of earlier endpoint-only candidates',async()=>{
+ const target=panel(),base={...agenda.DEFAULT_RESOURCES[0],id:'base',datasetId:'base',network:'Base',federate:true,bounds:[44,4,47,7]};
+ const partial=Array.from({length:4},(_,i)=>({...base,id:'partial'+i,datasetId:'partial'+i,network:'Partial '+i,bounds:[44,4,45.5,5.5]}));
+ const full={...base,id:'full',datasetId:'full',network:'Full'};let chosen;
+ const session=agenda.mount(target,{resources:[base,...partial,full],tasks:[{label:'Retour',from:{lat:45,lon:5},to:{lat:46,lon:6},earliestDeparture:'2026-11-06T10:00:00Z'}],
+ clientFactory:()=>({loadNetworks:async list=>{chosen=list.map(r=>r.id);return {networks:list.map(r=>({...summary,source:{...summary.source,network:r.network}}))};},query:async()=>({rows:[],truncated:false}),dispose(){}})});
+ await session.done;assert.deepEqual(chosen,['base','full','partial0','partial1']);
+ assert.match(target.textContent,/Réseaux non interrogés : Partial 2, Partial 3/);session.dispose();
+});
+
+test('Haute-Savoie can participate in a cross-region search outside its own envelope',async()=>{
+ const target=panel(),hs=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-haute-savoie');
+ const tourist=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-savoie-tourism');
+ const journey={label:'Retour',from:{lat:45.9,lon:6.12},to:{lat:45.2,lon:6.67},earliestDeparture:'2026-11-06T10:00:00Z'};
+ assert.equal(agenda.selected(hs,journey),false);
+ assert.equal(agenda.crossEnvelopePair(hs,tourist,journey),true);
+ let selected;
+ const session=agenda.mount(target,{resources:[hs,tourist],tasks:[journey],
+ clientFactory:()=>({loadNetworks:async list=>{selected=list.map(r=>r.id);return {networks:list.map(r=>({...summary,source:{...summary.source,network:r.network}}))};},query:async()=>({rows:[],truncated:false}),dispose(){}})});
+ await session.done;assert.deepEqual(selected,['oura-haute-savoie','oura-savoie-tourism']);session.dispose();
+});
+
+test('Thonon STAR’T is selected for local journeys without claiming the 271 or any fare',async()=>{
+ const thonon=agenda.DEFAULT_RESOURCES.find(r=>r.id==='start-thonon');
+ assert.ok(thonon);assert.equal(thonon.datasetId,'6a32489a813e6bb04d3f5c27');
+ assert.match(thonon.url,/provider=THONON&dataFormat=GTFS/);
+ const trip={label:'Retour',from:{lat:46.37,lon:6.48},to:{lat:46.33,lon:6.40},earliestDeparture:'2026-11-09T10:00:00+01:00'};
+ assert.equal(agenda.selected(thonon,trip),true);
+ assert.equal(agenda.selected(thonon,{...trip,to:{lat:48.85,lon:2.35}}),false);
+ let loaded=null;
+ const session=agenda.mount(panel(),{tasks:[trip],clientFactory:()=>({load:async r=>{loaded=r;return {...summary,source:{...summary.source,network:r.network,url:r.url}};},query:async()=>({rows:[],truncated:false}),dispose(){}})});
+ await session.done;assert.equal(loaded?.id,'start-thonon');session.dispose();
 });

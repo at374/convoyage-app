@@ -1,8 +1,41 @@
-/* Read-only Agenda integration. At most two official networks in one worker per open panel. */
+/* Read-only Agenda integration. At most four official networks in one worker per open panel. */
 (function(root){
 'use strict';
-const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
- id:'oura-haute-savoie',datasetId:'oura-haute-savoie',network:'Cars Région Haute-Savoie',format:'GTFS',
+const AURA_RESOURCES_BY_COVERAGE=Object.freeze([Object.freeze({
+ id:'oura-allier',datasetId:'6082da3e17667def63f6d47f',network:'Cars Région Allier',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=ALLIER&dataFormat=GTFS&dataProfil=OPENDATA',
+ // Department envelope only: the GTFS calendar and stop times decide service.
+ bounds:[45.65,2.7,46.85,4.6],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-ardeche',datasetId:'60785d62ee7e37e2041a9c6a',network:'Cars Région Ardèche',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=ARDECHE&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[44.2,3.5,45.5,5.05],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-cantal',datasetId:'6082bcd3f3187a37252532bd',network:'Cars Région Cantal',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CAR_REGION_CANTAL&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[44.55,2.0,45.65,3.5],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-drome',datasetId:'607860847e79b65f245982db',network:'Cars Région Drôme',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=DROME&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[44.0,4.35,45.4,5.95],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-isere',datasetId:'5bb1caa6634f4136693d9053',network:'Cars Région Isère',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=ISERE&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[44.55,4.65,46.0,6.7],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-loire',datasetId:'607862167487e5d490677f13',network:'Cars Région Loire',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_LOIRE&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[45.1,3.55,46.5,4.95],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-haute-loire',datasetId:'6082db303e52f13729b5e124',network:'Cars Région Haute-Loire',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_LOIRE&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[44.6,3.0,45.55,4.65],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-puy-de-dome',datasetId:'6082dacfd1d05e89970795f5',network:'Cars Région Puy-de-Dôme',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=PUY_DE_DOME&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[45.2,2.3,46.4,4.05],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-haute-savoie',datasetId:'oura-haute-savoie',network:'Cars Région Haute-Savoie',format:'GTFS',federate:true,
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',
  // Selection envelope only: does not assert coverage or actual walking access.
  bounds:[45.4,5.7,46.5,7.1],timeZone:'Europe/Paris'
@@ -12,6 +45,21 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_AIN&dataFormat=GTFS&dataProfil=OPENDATA',
  // Selection envelope only, not a guarantee of lines or cross-border service.
  bounds:[45.65,4.7,46.55,6.3],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'pays-gex-tpg',datasetId:'65a901970267d05025a905ec',network:'Pays de Gex — lignes TPG',format:'GTFS',federate:true,
+ // Official PAN resource. The dated GTFS calendar, not this envelope, decides service.
+ url:'https://www.data.gouv.fr/api/1/datasets/r/95c73b12-d117-4faf-bb6f-abfe3c95eee1',
+ bounds:[46.05,5.7,46.6,6.22],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'tac-annemasse',datasetId:'5ca4c3d2d7857ab0c49dde9b',network:'TAC Mobilité — Annemasse',format:'GTFS',federate:true,
+ // Official Annemasse Agglo GTFS; realtime remains a separate, optional source.
+ url:'https://www.data.gouv.fr/api/1/datasets/r/373e19e2-af0a-4939-9f33-3f1268d1e0bb',
+ bounds:[45.9,5.9,46.35,6.45],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'start-thonon',datasetId:'6a32489a813e6bb04d3f5c27',network:"STAR'T — Thonon Agglomération",format:'GTFS',federate:true,
+ // Official local timetable, not a fare source and not a claim about line 271.
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=THONON&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[46.2,6.18,46.55,6.62],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'80100',datasetId:'5bd9843e634f413220f7f04a',network:'Sibra',format:'GTFS',federate:true,
  url:'https://www.data.gouv.fr/api/1/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0',resolveFromCatalogue:true,
@@ -25,9 +73,62 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  id:'81794',datasetId:'5eb3510a4efd8f649ffe1b9f',network:'M Réso — Grésivaudan',format:'GTFS',federate:true,
  url:'https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2',resolveFromCatalogue:true,
  bounds:[45.1,5.7,45.39,6.2],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-savoie',datasetId:'oura-savoie-regular',network:'Cars Région Savoie',format:'GTFS',federate:true,
+ // Separate from the tourist resource in the same national catalogue dataset.
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[45.30,5.78,45.95,7.2],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-savoie-tourism',datasetId:'oura-savoie-tourism',network:'Cars Région Savoie — lignes touristiques',format:'GTFS',federate:true,
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_73_TOURISME&dataFormat=GTFS&dataProfil=OPENDATA',
+ // Candidate envelope only; dated GTFS calendars determine actual availability.
+ bounds:[45.05,5.78,45.95,7.2],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'oura-cars-region-express',datasetId:'61b36a0610344080a78cf407',network:'Cars Région Express',format:'GTFS',federate:true,
+ // Official OÙRA GTFS: dated calendars decide actual service. This archive has no fare table.
+ url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=CARS_REGION_EXPRESS&dataFormat=GTFS&dataProfil=OPENDATA',
+ bounds:[44.0,2.0,46.9,7.2],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'blablacar-bus',datasetId:'5cdef3698b4c416d21fd76b9',network:'BlaBlaCar Bus',format:'GTFS',federate:true,
+ // Official PAN GTFS updated daily. It contains no fare table: a live quote stays required.
+ url:'https://www.data.gouv.fr/api/1/datasets/r/fd54f81f-4389-4e73-be75-491133d011c3',
+ bounds:[41.0,-5.5,52.0,10.0],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'sncf-transilien',datasetId:'horaires-des-lignes-transilien-1',network:'SNCF Transilien',format:'GTFS',federate:true,
+ // Separate official Île-de-France timetable. The feed calendar determines
+ // service; the envelope only prevents a national-coverage claim.
+ url:'https://eu.ftp.opendatasoft.com/sncf/gtfs/transilien-gtfs.zip',
+ bounds:[48.0,1.25,49.25,3.65],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'82272',datasetId:'5bae8c2806e3e75b699dc606',network:'Synchro Bus — Grand Chambéry',format:'GTFS',federate:true,resolveFromCatalogue:true,
+ // The PAN resolves the current public GTFS URL. Do not embed its public
+ // provider token in the application source.
+ url:'https://transport.data.gouv.fr/datasets/arrets-et-horaires-theoriques-bus-temps-reel',
+ bounds:[45.35,5.55,45.85,6.15],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'81023',datasetId:'5c34c93f8b4c4104b817fb3a',network:'STAS — Saint-Étienne',format:'GTFS',federate:true,resolveFromCatalogue:true,
+ url:'https://transport.data.gouv.fr/datasets/horaires-du-reseau-stas',
+ bounds:[45.15,4.15,45.75,4.95],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'83465',datasetId:'6397c0fb7612df845fc8cd1f',network:'T2C — Clermont Auvergne Métropole',format:'GTFS',federate:true,resolveFromCatalogue:true,
+ url:'https://transport.data.gouv.fr/datasets/syndicat-mixte-des-transports-en-commun-de-lagglomeration-clermontoise-smtc-ac-reseau-t2c-gtfs-gtfs-rt',
+ bounds:[45.55,2.85,46.10,3.55],timeZone:'Europe/Paris'
 })]);
+// Preserve the established local-network precedence. Departmental resources
+// extend coverage; they must not displace a more specific local feed merely
+// because their source was registered later.
+const DEFAULT_RESOURCES=Object.freeze([
+ ...AURA_RESOURCES_BY_COVERAGE.slice(8),
+ ...AURA_RESOURCES_BY_COVERAGE.slice(0,8)
+]);
 function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof point.lon==='number'&&
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}
+function airDistanceKm(a,b){
+ if(!validPoint(a)||!validPoint(b))return NaN;
+ const rad=Math.PI/180,lat1=a.lat*rad,lat2=b.lat*rad;
+ const x=Math.sin((b.lat-a.lat)*rad/2)**2+Math.cos(lat1)*Math.cos(lat2)*Math.sin((b.lon-a.lon)*rad/2)**2;
+ return 2*6371*Math.asin(Math.sqrt(x));
+}
 function selected(resource,task){
  const bounds=resource?.bounds;
  return resource?.format==='GTFS'&&/^https:\/\//.test(resource.url||'')&&validPoint(task?.from)&&validPoint(task?.to)&&Array.isArray(bounds)&&bounds.length===4&&
@@ -86,11 +187,30 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const ainCore=task=>[task?.from,task?.to].every(p=>validPoint(p)&&p.lat>=45.9&&p.lat<=46.5&&p.lon>=4.7&&p.lon<=5.85);
  const ain=resourceList.find(r=>r.id==='oura-ain');
  const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
- const resource=preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
+ // Cross-border local networks must be selected before the broad Haute-Savoie
+ // envelope; otherwise their feeds can be omitted by the four-network budget.
+ const borderLocal=resourceList.find(r=>['pays-gex-tpg','tac-annemasse','start-thonon'].includes(r.id)&&taskList.some(t=>selected(r,t)));
+ // A national coach feed must not become the primary local-network source
+ // for a short urban journey merely because its selection envelope is broad.
+ const longDistanceProvider=r=>r?.id==='blablacar-bus';
+ const isLongDistance=task=>airDistanceKm(task?.from,task?.to)>=75;
+ const primaryResources=resourceList.filter(r=>!longDistanceProvider(r)||taskList.some(t=>isLongDistance(t)&&selected(r,t)));
+ const resource=preferredAin||borderLocal||primaryResources.find(r=>taskList.some(t=>selected(r,t)||primaryResources.some(other=>crossEnvelopePair(r,other,t))));
  if(!resource)return {dispose,done:Promise.resolve()};
- const partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
+ // A department-wide feed is useful outside a local network, but loading it
+ // alongside a complete local pair only consumes a worker slot and duplicates results.
+ const localIds=new Set(['80100','83459','81794']);
+ const departmental=r=>typeof r?.id==='string'&&/^oura-(allier|ardeche|cantal|drome|isere|loire|haute-loire|puy-de-dome|cars-region-express)$/.test(r.id);
+ const hasCompleteLocal=task=>resourceList.some(r=>localIds.has(r.id)&&selected(r,task));
+ const partnerCandidates=resourceList.filter(r=>r!==resource&&r.federate&&!(longDistanceProvider(r)&&!taskList.some(task=>isLongDistance(task)&&selected(r,task)))&&!taskList.some(task=>departmental(r)&&hasCompleteLocal(task)&&selected(r,task))&&taskList.some(task=>
   crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
-  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to}))))).slice(0,1);
+  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to})))));
+ partnerCandidates.sort((a,b)=>{
+  const score=r=>taskList.filter(t=>selected(r,t)).length+(longDistanceProvider(r)&&taskList.some(t=>isLongDistance(t)&&selected(r,t))?10:0);
+  return score(b)-score(a);
+ });
+ const partners=partnerCandidates.slice(0,3);
+ const omittedNetworks=partnerCandidates.slice(3).map(r=>r.network||r.id);
  const eligible=task=>selected(resource,task)||partners.some(r=>crossEnvelopePair(resource,r,task));
  const section=doc.createElement('div');section.className='bk';section.setAttribute('data-gtfs-agenda','');
  const heading=doc.createElement('h3');heading.textContent=resource.network+' — horaires aux arrêts';section.appendChild(heading);
@@ -150,6 +270,13 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
     ' · '+n.counts.stops+' arrêts').join(' ; ')+'. Circulation non confirmée.';
    const partialNetworks=summary?.partial===true||networks.some(n=>!validNetwork(n));
    if(partialNetworks)sourceStatus.textContent+=' Recherche partielle : un réseau est indisponible.';
+   if(omittedNetworks.length)sourceStatus.textContent+=' Recherche partielle. Réseaux non interrogés : '+omittedNetworks.join(', ')+'.';
+   if(loaded.some(n=>n.source.datasetId==='5ca4c3d2d7857ab0c49dde9b')){
+    const traffic=doc.createElement('p');traffic.className='doux';
+    traffic.textContent='TAC : les horaires affichés sont théoriques. Arrêts déplacés, déviations et temps réel sont à vérifier avant le départ. ';
+    const trafficLink=doc.createElement('a');trafficLink.href='https://www.tac-mobilites.fr/';trafficLink.target='_blank';trafficLink.rel='noopener noreferrer';
+    trafficLink.textContent='Consulter les infos trafic TAC';traffic.appendChild(trafficLink);section.appendChild(traffic);
+   }
    if(loaded.length>1){
     warning.textContent+=' Changements entre réseaux : arrêts rapprochés à 150 m à vol d’oiseau au maximum ; aucun chemin ni temps de marche vérifié.';
     for(const other of loaded.slice(1)){const link=doc.createElement('a');link.href=other.source.url||partners[0].url;link.target='_blank';link.rel='noopener noreferrer';link.textContent=' · Source '+other.source.network;section.appendChild(link);}
@@ -202,17 +329,43 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       if(seenChoices.has(key))continue;
       seenChoices.add(key);distinct.push(candidate);
      }
-     const shown=distinct.slice(0,5);
-     if(active())onResults({task,itineraries:shown});
+     const shown=distinct;
+     if(active())onResults({task,itineraries:shown,coverage:{omittedNetworks:[...omittedNetworks],partial:partialNetworks||omittedNetworks.length>0||truncated}});
      const marginNote=Number.isFinite(Date.parse(task.latestArrival))?' Marge avant mission : '+window.marginMinutes+' min minimum (marche et circulation à vérifier).':'';
-     const incomplete=truncated||partialNetworks||invalidJourneys>0;
+     const incomplete=truncated||partialNetworks||omittedNetworks.length>0||invalidJourneys>0;
      const coverageNote=incomplete?' Recherche partielle : certains horaires ou réseaux n’ont pas pu être vérifiés.':'';
      status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':incomplete?'aucun trajet dans les résultats partiels ; recherche incomplète (réseau ou horaires manquants), d’autres horaires peuvent exister.':'aucun trajet direct ou avec une correspondance dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.' )+marginNote+coverageNote+(invalidJourneys?' '+invalidJourneys+' horaire(s) incohérent(s) écarté(s) ; recherche partielle.':'');
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
      if(truncated||distinct.length>shown.length){const note=doc.createElement('p');note.textContent='Affichage limité : d’autres horaires peuvent exister.';status.appendChild(note);}
      for(const row of shown){
-      let tariff=null,tariffDescription='';
+      let tariff=null,tariffDescription='',urbanTariff=null,urbanTariffDescription='';
       try{tariff=root.CPTY51Fares;tariffDescription=tariff?.describe(tariff?.reference(row))||'';}catch(_){}
+      try{urbanTariff=root.CPAuraUrbanFares;urbanTariffDescription=urbanTariff?.describe(urbanTariff?.reference(row))||'';}catch(_){}
+      let coachFare=null,aravisFare=null,y21Fare=null;
+      try{
+       const coachApi=row.line==='274'?root.CP274Fares:root.CP272Fares;
+       if(!row.legs?.length&&coachApi?.stopReference){
+        const date=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure)).map(p=>[p.type,p.value]));
+        const stop=s=>({id:s?.stopId,lat:s?.lat,lon:s?.lon});
+        const input={networkId:row.networkId,line:row.line,fromStop:stop(row.originStop),toStop:stop(row.destinationStop),travelDate:date.year+'-'+date.month+'-'+date.day,profile:'adult'};
+        coachFare=coachApi.stopReference({...input,product:'parcours'})||(row.line==='274'?(coachApi.stopReference({...input,product:'multizones_10_210'})||coachApi.stopReference({...input,product:'france'})):null);
+       }
+      }catch(_){}
+      try{
+       const westFares=row.line==='Y21'?root.CPY21Fares:row.line==='Y22'?root.CPY22Fares:row.line==='Y02'?root.CPY02Fares:null;
+       if(!row.legs?.length&&westFares?.stopReference){
+        const date=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure)).map(p=>[p.type,p.value]));
+        const stop=s=>({id:s?.stopId,lat:s?.lat,lon:s?.lon});
+        y21Fare=westFares.stopReference({networkId:row.networkId,line:row.line,fromStop:stop(row.originStop),toStop:stop(row.destinationStop),travelDate:date.year+'-'+date.month+'-'+date.day,profile:'adult'});
+       }
+      }catch(_){}
+      try{
+       if(!row.legs?.length&&root.CPAravisFares?.createCalculator&&root.CPAravisFareData){
+        const date=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(row.departure)).map(p=>[p.type,p.value]));
+        const stop=s=>({id:s?.stopId,lat:s?.lat,lon:s?.lon});
+        aravisFare=root.CPAravisFares.createCalculator(root.CPAravisFareData).stopReference({networkId:row.networkId,line:row.line,fromStop:stop(row.originStop),toStop:stop(row.destinationStop),travelDate:date.year+'-'+date.month+'-'+date.day,profile:'adult'});
+       }
+      }catch(_){}
       const line=doc.createElement('p');
       const safeZone=(()=>{try{new Intl.DateTimeFormat('fr-FR',{timeZone:row.timeZone||resource.timeZone});return row.timeZone||resource.timeZone;}catch(_){return resource.timeZone;}})();
       const format=iso=>new Intl.DateTimeFormat('fr-FR',{timeZone:safeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(iso));
@@ -221,15 +374,36 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
        ' · distances à vol d’oiseau : '+row.accessDistanceMeters+' m / '+row.egressDistanceMeters+' m'+
        (row.interNetwork?' · changement de réseau : '+row.transferStop.name+' → '+row.transferDestinationStop.name+' · séparation à vol d’oiseau '+row.transferDistanceMeters+' m, marche non vérifiée · intervalle théorique '+row.transferMinutes+' min':
         row.legs?.length===2?' · correspondance à '+(row.transferStop?.name||row.transferStopId)+' · intervalle théorique '+row.transferMinutes+' min (minimum estimé '+row.minimumTransferMinutes+' min, marche non vérifiée)':' · direct')+
-       ' · '+(tariffDescription?'prix actuel à revérifier (barème ci-dessous)':'tarif inconnu')+' · Transport non confirmé — vérifiez vous-même.';
+       ' · '+(tariffDescription||urbanTariffDescription||coachFare||aravisFare||y21Fare?'prix actuel à revérifier (barème ci-dessous)':'tarif inconnu')+' · Transport non confirmé — vérifiez vous-même.';
       if(row.legs?.length===2){
        for(const leg of row.legs){const detail=doc.createElement('span');detail.textContent=' · '+(leg.network?leg.network+' ':'')+leg.line+' : '+format(leg.departure)+' → '+format(leg.arrival);line.appendChild(detail);}
       }
       const passCost=doc.createElement('span');passCost.setAttribute('data-sibra-pass-cost','');line.appendChild(passCost);
       fareChecks.push({row,element:passCost});refreshFares();
+      if(coachFare){
+       const quote=doc.createElement('span');quote.setAttribute('data-'+coachFare.line+'-fare-reference','');
+       quote.textContent=' · Référence car '+coachFare.line+' adulte : '+coachFare.amount.toFixed(2).replace('.',',')+' €'+(coachFare.product==='multizones_10_210'?' · billet multizones 10 et 210, conditions de correspondance à vérifier':coachFare.product==='france'?' · billet intérieur France':' pour ce parcours, sans circulation supplémentaire zone 10')+'. Prix et titre à confirmer ; ne couvre pas forcément les correspondances.';line.appendChild(quote);
+       const proof=doc.createElement('a');proof.href=coachFare.source;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir la grille '+coachFare.line;line.appendChild(proof);
+      }
+      if(y21Fare){
+       const quote=doc.createElement('span');quote.setAttribute('data-'+y21Fare.line.toLowerCase()+'-fare-reference','');
+       quote.textContent=' · Référence car '+y21Fare.line+' adulte : '+y21Fare.amount.toFixed(2).replace('.',',')+' € pour ce parcours. Prix, date et titre à confirmer ; ne couvre pas forcément les correspondances.';line.appendChild(quote);
+       const proof=doc.createElement('a');proof.href=y21Fare.source;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir la grille '+y21Fare.line;line.appendChild(proof);
+      }
+      if(aravisFare){
+       const quote=doc.createElement('span');quote.setAttribute('data-y62-fare-reference','');
+       quote.textContent=' · Référence car '+aravisFare.line+' adulte : '+aravisFare.amount.toFixed(2).replace('.',',')+' € pour ce parcours. Prix, date et titre à confirmer ; ne couvre pas forcément les correspondances.';line.appendChild(quote);
+       const proof=doc.createElement('a');proof.href=aravisFare.source;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir la grille '+aravisFare.line;line.appendChild(proof);
+      }
       if(tariffDescription){
         const quote=doc.createElement('span');quote.setAttribute('data-y51-fare-reference','');quote.textContent=tariffDescription;line.appendChild(quote);
         const proof=doc.createElement('a');proof.href=tariff.SOURCE;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir le barème officiel';line.appendChild(proof);
+      }
+      if(urbanTariffDescription){
+        const quote=doc.createElement('span');quote.setAttribute('data-aura-urban-fare-reference','');quote.textContent=' · '+urbanTariffDescription;line.appendChild(quote);
+        for(const url of new Set(urbanTariff.reference(row).portions.filter(Boolean).map(p=>p.source))){
+          const proof=doc.createElement('a');proof.href=url;proof.target='_blank';proof.rel='noopener noreferrer';proof.textContent=' · Voir le barème officiel';line.appendChild(proof);
+        }
       }
       for(const [label,stop] of [['Départ',row.originStop],['Correspondance',row.transferStop],['Montée après changement',row.transferDestinationStop],['Arrivée',row.destinationStop]]){
        if(!validPoint(stop))continue;
@@ -303,7 +477,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  })();
  return {dispose,done,refreshFares};
 }
-const api={DEFAULT_RESOURCES,selected,crossEnvelopePair,searchWindow,serviceDates,mount};
+const api={DEFAULT_RESOURCES,airDistanceKm,selected,crossEnvelopePair,searchWindow,serviceDates,mount};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSAgenda=api;
 })(typeof window!=='undefined'?window:globalThis);
