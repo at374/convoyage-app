@@ -8,19 +8,11 @@
     "20261109",
     "20270430"
   ],
-  "generatedAt": "2026-11-10T11:12:49.576907+00:00",
+  "generatedAt": "2026-11-11T10:58:17.701153+00:00",
   "license": "ODbL — SNCF conditions apply",
   "licenseUrl": "https://data.sncf.com/explore/dataset/horaires-sncf/",
   "scope": "scheduled railway station-to-station only; no realtime, fares or walking",
   "dates": {
-    "2026-11-09": {
-      "file": "sncf-2026-11-09.json",
-      "sha256": "0179647575882e657801bfc5b6200699fb43ab1e1e7a001290ec42f6cef7970a",
-      "bytes": 3274870,
-      "trips": 9761,
-      "stations": 2784,
-      "excludedTrips": 0
-    },
     "2026-11-10": {
       "file": "sncf-2026-11-10.json",
       "sha256": "e7c430b8b1d6fcb735e00c71d9a8692c3a02762ddf3d6516e90e914fe148951d",
@@ -74,6 +66,14 @@
       "sha256": "f8326c89a3cfc9fb80e543eedb72c3dea61fe3d7aeb764bc9e8326d0694bd1ea",
       "bytes": 3337920,
       "trips": 9903,
+      "stations": 2784,
+      "excludedTrips": 0
+    },
+    "2026-11-17": {
+      "file": "sncf-2026-11-17.json",
+      "sha256": "540e57fe03c89b6cf4e8c8290160318c2332a6594ae4c7c736a2c90dafe0e8b6",
+      "bytes": 3326757,
+      "trips": 9880,
       "stations": 2784,
       "excludedTrips": 0
     }
