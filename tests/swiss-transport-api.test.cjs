@@ -3,6 +3,10 @@ const assert = require('node:assert/strict');
 const swiss = require('../swiss-transport-api.js');
 assert.equal(swiss.point({lat:46.2044,lon:6.1432}),'46.2044,6.1432');
 assert.equal(swiss.point({lat:0,lon:0}),null);
+// Official /connections API accepts WGS84 latitude,longitude and can include walking sections.
+const gps=new URL(swiss.buildUrl({from:{lat:46.2044,lon:6.1432},to:{lat:46.5168,lng:6.6291},when:'2026-12-01T10:00:00+01:00'}));
+assert.equal(gps.searchParams.get('from'),'46.2044,6.1432');
+assert.equal(gps.searchParams.get('to'),'46.5168,6.6291');
 const winter=swiss.buildUrl({from:'Genève',to:'Lausanne',when:'2026-12-01T10:00:00+01:00',arriveBy:true});
 const w=new URL(winter);
 assert.equal(w.searchParams.get('date'),'2026-12-01');
