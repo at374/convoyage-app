@@ -2721,8 +2721,8 @@
               ],task,{timeoutMs:18000}).then(result=>({
                 itineraries:result.journeys.map(j=>({
                   ...j,evidence:j.evidence,alerts:j.legs.flatMap(l=>l.alerts||[]),
-                  // The existing renderer expects an itinerary, never a synthetic fare.
-                  priceEUR:null
+                  // Preserve only the EUR fare returned by the engine; never synthesize one.
+                   priceEUR:j.priceEUR
                 })),
                 receivedAt:result.journeys[0]?.receivedAt||new Date().toISOString(),
                 engineStatuses:result.statuses
@@ -2757,7 +2757,9 @@
               // Search-engine itineraries must not inherit static tariff matrices.
               // A manual tariff is only allowed for a separately audited missing line.
               const fareLine=document.createElement('span');fareLine.setAttribute('data-tripgo-fare','');
-              fareLine.textContent=' · Prix indisponible (aucun tarif vérifié retourné par le moteur)';
+              fareLine.textContent=Number.isFinite(result.priceEUR)&&result.priceEUR>=0
+                 ? ' · Prix indicatif moteur : '+result.priceEUR.toLocaleString('fr-FR',{style:'currency',currency:'EUR'})+' (non vérifié)'
+                 : ' · Prix indisponible (aucun tarif EUR retourné par le moteur)';
               fareLine.style.display='block';summary.appendChild(fareLine);
               details.appendChild(line);
               const mapNote=document.createElement('p');mapNote.className='doux';
