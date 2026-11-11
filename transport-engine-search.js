@@ -33,8 +33,9 @@ function tripGoEngine(client){
      // Provider already checks GPS endpoints and trip chronology; do not upgrade service certainty.
      exactOrigin:j.evidence?.endpointCoordinatesMatched===true,
      exactDestination:j.evidence?.endpointCoordinatesMatched===true,
+     // Retain only an explicit EUR amount returned by the engine; never certify it here.
      fareVerified:false,
-     priceEUR:null,
+     priceEUR:(j.currency==='EUR'&&typeof j.priceEUR==='number'&&Number.isFinite(j.priceEUR)&&j.priceEUR>=0)?j.priceEUR:null,
      // Keep provider-supplied trip details for the existing Mission Transport display.
      engineEvidence:j.evidence||null,
      receivedAt:j.receivedAt||result.receivedAt||null
