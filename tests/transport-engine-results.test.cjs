@@ -44,3 +44,24 @@ test('cheapest and fastest sorts',()=>{
  assert.equal(sortJourneys(out,'cheapest')[0].priceEUR,10);
  assert.equal(sortJourneys(out,'fastest')[0].priceEUR,20);
 });
+
+test('compromise balances price and duration instead of repeating cheapest',()=>{
+ const out=aggregateEngineResponses([{provider:'TripGo',journeys:[
+  journey({id:'slow-cheap',priceEUR:5,arrival:'2026-11-12T12:00:00+01:00'}),
+  journey({id:'balanced',priceEUR:12,arrival:'2026-11-12T10:00:00+01:00'}),
+  journey({id:'fast-expensive',priceEUR:30,arrival:'2026-11-12T09:30:00+01:00'})
+ ]}]).journeys;
+ assert.equal(sortJourneys(out,'cheapest')[0].priceEUR,5);
+ assert.equal(sortJourneys(out,'compromise')[0].priceEUR,12);
+ assert.equal(sortJourneys(out,'fastest')[0].priceEUR,30);
+});
+test('unknown fares remain visible after priced journeys in compromise',()=>{
+ const out=aggregateEngineResponses([{provider:'TripGo',journeys:[
+  journey({id:'unknown',arrival:'2026-11-12T09:15:00+01:00'}),
+  journey({id:'priced',priceEUR:15,arrival:'2026-11-12T10:00:00+01:00'})
+ ]}]).journeys;
+ const sorted=sortJourneys(out,'compromise');
+ assert.equal(sorted.length,2);
+ assert.equal(sorted[0].priceEUR,15);
+ assert.equal(sorted[1].priceStatus,'unavailable');
+});
