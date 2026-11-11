@@ -48,3 +48,22 @@ test('existing TripGo planner feeds engine results without inventing fare or ser
  assert.equal(result.journeys[0].exactOrigin,true);
  assert.equal(result.journeys[0].provider,'TripGo');
 });
+
+test('TripGo EUR price is retained as indicative, never automatically verified',async()=>{
+ const query={from:{lat:45.9,lon:6.1},to:{lat:46.2,lon:6.1},when:'2026-11-12T09:00:00+01:00'};
+ const engine=tripGoEngine({plan:async()=>({itineraries:[{...journey,priceEUR:12.5,currency:'EUR',fareVerified:true}]})});
+ const result=await searchEngines([engine],query);
+ assert.equal(result.journeys[0].priceEUR,12.5);
+ assert.equal(result.journeys[0].fareVerified,false);
+ assert.equal(result.journeys[0].priceStatus,'indicative');
+});
+test('TripGo foreign or malformed price is not interpreted as EUR',async()=>{
+ const query={from:{lat:45.9,lon:6.1},to:{lat:46.2,lon:6.1},when:'2026-11-12T09:00:00+01:00'};
+ const engine=tripGoEngine({plan:async()=>({itineraries:[
+  {...journey,priceEUR:10,currency:'CHF'},
+  {...journey,priceEUR:-1,currency:'EUR'}
+ ]})});
+ const result=await searchEngines([engine],query);
+ assert.equal(result.journeys.length,2);
+ assert.ok(result.journeys.every(j=>j.priceEUR===null));
+});
