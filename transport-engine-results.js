@@ -69,7 +69,22 @@ function sortJourneys(journeys,mode='cheapest'){
  const result=[...(Array.isArray(journeys)?journeys:[])];
  const duration=j=>Date.parse(j.arrival)-Date.parse(j.departure);
  if(mode==='fastest')result.sort((a,b)=>duration(a)-duration(b));
- else if(mode==='compromise')result.sort((a,b)=>(a.priceEUR??Infinity)-(b.priceEUR??Infinity)||duration(a)-duration(b));
+ else if(mode==='compromise'){
+   // Balance relative price and journey duration among priced offers only.
+   // Unknown fares stay visible after comparable offers, never treated as free.
+   const priced=result.filter(j=>typeof j.priceEUR==='number'&&Number.isFinite(j.priceEUR)&&j.priceEUR>=0);
+   const minPrice=Math.min(...priced.map(j=>j.priceEUR));
+   const maxPrice=Math.max(...priced.map(j=>j.priceEUR));
+   const minDuration=Math.min(...priced.map(duration));
+   const maxDuration=Math.max(...priced.map(duration));
+   const score=j=>{
+     if(!Number.isFinite(j.priceEUR)||j.priceEUR<0)return Infinity;
+     const pricePart=maxPrice>minPrice?(j.priceEUR-minPrice)/(maxPrice-minPrice):0;
+     const timePart=maxDuration>minDuration?(duration(j)-minDuration)/(maxDuration-minDuration):0;
+     return pricePart+timePart;
+   };
+   result.sort((a,b)=>score(a)-score(b)||duration(a)-duration(b)||(a.priceEUR??Infinity)-(b.priceEUR??Infinity));
+ }
  else result.sort((a,b)=>(a.priceEUR??Infinity)-(b.priceEUR??Infinity)||duration(a)-duration(b));
  return result;
 }
