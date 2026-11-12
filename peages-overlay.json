@@ -526,7 +526,11 @@
           6
         ]
       ]
-    }
+    },
+    {"id": "aprr-area-ouvert-scionzier", "points": [[46.0683799, 6.5537908]]},
+    {"id": "aprr-area-ouvert-bonneville-ouest", "points": [[46.0730418, 6.3821568]]},
+    {"id": "aprr-area-ouvert-bonneville-est", "points": [[46.070189, 6.4245371]]},
+    {"id": "aprr-area-ouvert-cluses-centre", "points": [[46.0469292, 6.5965979]]}
   ],
   "tarifs": [
     {
@@ -4300,7 +4304,15 @@
       "s": "PROUVE",
       "f": "2026-02-01",
       "u": 16
-    }
+    },
+    {"id": "o2126", "b": "aprr-area-ouvert-scionzier", "c": 1, "a": 2.3, "s": "PROUVE", "f": "2026-02-01", "u": 0},
+    {"id": "o2127", "b": "aprr-area-ouvert-scionzier", "c": 2, "a": 4.3, "s": "PROUVE", "f": "2026-02-01", "u": 0},
+    {"id": "o2128", "b": "aprr-area-ouvert-bonneville-ouest", "c": 1, "a": 1.3, "s": "PROUVE", "f": "2026-02-01", "u": 0},
+    {"id": "o2129", "b": "aprr-area-ouvert-bonneville-ouest", "c": 2, "a": 2.3, "s": "PROUVE", "f": "2026-02-01", "u": 0},
+    {"id": "o2130", "b": "aprr-area-ouvert-bonneville-est", "c": 1, "a": 1.7, "s": "PROUVE", "f": "2026-02-01", "u": 0},
+    {"id": "o2131", "b": "aprr-area-ouvert-bonneville-est", "c": 2, "a": 3.1, "s": "PROUVE", "f": "2026-02-01", "u": 0},
+    {"id": "o2132", "b": "aprr-area-ouvert-cluses-centre", "c": 1, "a": 2.5, "s": "PROUVE", "f": "2026-02-01", "u": 0},
+    {"id": "o2133", "b": "aprr-area-ouvert-cluses-centre", "c": 2, "a": 4.3, "s": "PROUVE", "f": "2026-02-01", "u": 0}
   ],
   "gares": [
     {
