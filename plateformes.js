@@ -11,7 +11,7 @@
   ED.toutes = (ED.toutes || ED.plateformes || CODES).slice();
 
   const lireLoc = () => { try { const v = JSON.parse(localStorage.getItem(CLE) || 'null'); if (!Array.isArray(v)) return null; const f = v.filter(x => CODES.indexOf(x) >= 0); return f.length ? f : null; } catch (_) { return null; } };
-  const ecrireLoc = v => { try { localStorage.setItem(CLE, JSON.stringify(v)); } catch (_) {} };
+  const ecrireLoc = v => { try { localStorage.setItem(CLE, JSON.stringify(v)); if (localStorage.getItem(CLE) !== JSON.stringify(v)) DG.err = 'stockage : relecture différente'; } catch (e) { try { DG.err = 'stockage : ' + (e && e.name); } catch (_) {} } };
   const memes = (a, b) => JSON.stringify((a || []).slice().sort()) === JSON.stringify((b || []).slice().sort());
   const natif = v => { try { if (window.CPNatif && typeof window.CPNatif.reglerPlateformes === 'function') window.CPNatif.reglerPlateformes(JSON.stringify(v || ED.toutes)); } catch (_) {} };
   // Met la liste à jour SUR PLACE : l'application garde la même référence.
@@ -44,7 +44,7 @@
   // V300 : l'identifiant vient aussi du jeton de connexion (la session du téléphone n'a pas toujours user_id) ; sans identifiant on signale l'échec au lieu de croire que c'est enregistré
 const idUtilisateur = () => { const s = session(); if (s && s.user_id) return s.user_id; try { return JSON.parse(atob(String(s.access_token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub || null; } catch (_) { return null; } };
 const DG = { serv: '?', err: '' };
-const majDiag = () => { try { const d = document.getElementById('cpPlatDiag'); const s = session(); if (d) d.textContent = 'Diagnostic — téléphone : ' + (lireLoc() || []).join(',') + ' · en ligne : ' + DG.serv + (DG.err ? ' · erreur : ' + DG.err : '') + ' · connecté : ' + (s && s.access_token ? 'oui' : 'non'); } catch (_) {} };
+const majDiag = () => { try { const d = document.getElementById('cpPlatDiag'); const s = session(); if (d) d.textContent = 'Diagnostic — téléphone : ' + (lireLoc() || []).join(',') + ' · en ligne : ' + DG.serv + (DG.err ? ' · erreur : ' + DG.err : '') + ' · connecté : ' + (s && s.access_token ? 'oui' : 'non') + ' · mémoire : ' + (() => { try { let n = 0; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); n += k.length + (localStorage.getItem(k) || '').length; } return Math.round(n / 1024) + ' Ko'; } catch (e) { return 'illisible'; } })(); } catch (_) {} };
 const NS = 'cp_plats_nonsync';
 const marquerNonSync = on => { try { if (on) localStorage.setItem(NS, '1'); else localStorage.removeItem(NS); } catch (_) {} };
 const nonSync = () => { try { return localStorage.getItem(NS) === '1'; } catch (_) { return false; } };
