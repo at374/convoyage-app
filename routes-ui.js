@@ -197,6 +197,11 @@
   // V283 (12 nov. 2026, demande de Laurent) : quand le tarif officiel exact manque, estimation « ≈ » = km à péage × tarif moyen local (médiane des tarifs officiels par case de 1° ; Classe 2 = 1,85 × Classe 1), arrondie à 0,10 €. Jamais ajoutée aux prix exacts.
   const TAUX_KM = {"47,3":0.126,"48,2":0.195,"47,2":0.146,"47,4":0.099,"48,3":0.112,"46,3":0.122,"46,5":0.098,"46,4":0.115,"47,5":0.097,"45,4":0.115,"45,3":0.116,"46,2":0.121,"48,1":0.183,"47,1":0.156,"46,1":0.146,"47,6":0.096,"48,4":0.099,"45,5":0.111,"48,5":0.099,"46,6":0.103,"48,6":0.099,"45,2":0.105,"43,3":0.104,"44,4":0.104,"43,4":0.101,"46,-2":0.103,"46,-1":0.108,"44,0":0.1,"43,0":0.098,"43,-1":0.095,"43,2":0.105,"44,3":0.132,"42,2":0.185,"45,-1":0.105,"48,0":0.182,"47,0":0.149,"47,-1":0.14,"48,-1":0.193,"46,0":0.111,"50,1":0.103,"49,1":0.1,"49,2":0.093,"50,2":0.095,"49,3":0.099,"49,5":0.099,"49,6":0.097,"49,0":0.101};
   const approx = (sh, tms, km) => { try { let s = 0, n = 0; for (const m of tms) { const a = m.begin_shape_index, b = m.end_shape_index, pas = Math.max(1, Math.floor((b - a) / 25)); for (let k = a; k <= b; k += pas) { const w = sh[k]; if (!w) continue; const r = TAUX_KM[Math.floor(w[0]) + ',' + Math.floor(w[1])]; s += r !== undefined ? r : 0.105; n++; } } if (!n || !(km >= 1)) return ''; const c1 = Math.round(km * (s / n) * 10) / 10, c2 = Math.round(c1 * 1.85 * 10) / 10; return '<div class="rd gros c1"><span>Classe 1 (estimation)</span><b>≈ ' + euro(c1) + '</b></div><div class="rd gros c2"><span>Classe 2 (estimation)</span><b>≈ ' + euro(c2) + '</b></div><div class="rd sub"><span>≈ Estimation : ' + Math.round(km) + ' km à péage × tarif moyen local, à 10-15 % près. Le tarif officiel exact de ce trajet manque.</span></div>'; } catch (_) { return ''; } };
+  // V286 (12 nov. 2026, demande de Laurent) : péages ITALIENS estimés (aucune grille italienne en base) : km à péage situés en Italie × 0,08 €/km (moyenne nationale : Milan-Rome 563 km = 44,40 €, soit 0,079 €/km), Classe 2 = 1,15 × Classe 1. Toujours affiché « ≈ », jamais comme prix exact.
+  const IT_POLY = [[7.53,43.78],[7.02,44.25],[6.63,44.9],[6.7,45.15],[6.9,45.85],[7.17,45.87],[7.45,45.92],[7.87,45.94],[8.45,46.25],[8.8,46.0],[9.05,45.83],[9.1,46.18],[9.3,46.5],[10.45,46.52],[10.45,46.87],[11.2,46.97],[12.2,47.08],[13.7,46.52],[13.6,45.65],[14.5,45.0],[19.0,40.5],[16.5,37.9],[15.6,37.9],[12.0,40.0],[9.5,43.5]];
+  const dansIT = (lat, lon) => { let in_ = false; for (let i = 0, j = IT_POLY.length - 1; i < IT_POLY.length; j = i++) { const [xi, yi] = IT_POLY[i], [xj, yj] = IT_POLY[j]; if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) in_ = !in_; } return in_; };
+  const italie = (sh, tms) => { try { let km = 0; for (const m of tms) { const a = m.begin_shape_index, b = m.end_shape_index; if (!(b > a)) continue; const pas = Math.max(1, Math.floor((b - a) / 40)); let n = 0, d = 0; for (let k = a; k <= b; k += pas) { const w = sh[k]; if (!w) continue; n++; if (dansIT(w[0], w[1])) d++; } if (n) km += (Number(m.length) || 0) * d / n; } if (km < 1) return null; const c1 = Math.round(km * 0.08 * 10) / 10; return { km, c1, c2: Math.round(c1 * 1.15 * 10) / 10 }; } catch (_) { return null; } };
+  const itNote = IT => IT ? '<div class="rd sub"><span>≈ dont ' + euro(IT.c1) + ' de péages italiens estimés (' + Math.round(IT.km) + ' km × 0,08 €/km, Classe 1) : le reste est exact. L’estimation italienne est à ± 20 % près.</span></div>' : '';
   const BK = (cls, titre, h) => '<div class="bk bkC ' + cls + '"><div class="bkt">' + titre + '</div>' + h + '</div>';
   const valRoute = async (body) => { let err = null; for (let n = 0; n < 4; n++) { try { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000); const rr = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal }); clearTimeout(to); if (rr.ok) return await rr.json(); err = new Error('http ' + rr.status); } catch (e) { err = e; } await new Promise(s => setTimeout(s, 1500 * (n + 1))); } throw err; };
   // V250 : tout le calcul du péage se fait dans un « worker » (second fil du téléphone) : l'écran ne peut plus se figer, même sur un téléphone lent.
@@ -320,6 +325,7 @@
       try {
         const tC = performance.now();
         const R = await calculPeage(sh, tms, km), x = R.x;
+        const IT = viaGoogle ? null : italie(sh, tms);
         window.CPT('calcul péage' + (viaGoogle ? ' (Google)' : ''), tC);
         const O = await chargerOverlay();
         const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
@@ -332,16 +338,16 @@
           const legOk = !!(x && x.reste < 3);
           if (t1.complet && t2.complet && (legOk || R.n === 0)) {
             const r2 = n => Math.round(n * 100) / 100;
-            const c1 = r2((legOk ? x.c1 : 0) + t1.total), c2 = r2((legOk ? x.c2 : 0) + t2.total);
+            const c1 = r2((legOk ? x.c1 : 0) + t1.total + (IT ? IT.c1 : 0)), c2 = r2((legOk ? x.c2 : 0) + t2.total + (IT ? IT.c2 : 0));
             const croise = t1.status !== 'PROUVE' || t2.status !== 'PROUVE';
-            put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(c2) + '</b></div><div class="rd sub"><span>' + (legOk ? x.det + ' + ' : '') + 'barrière(s) : ' + noms + '</span></div><div class="rd sub"><span>Source : tarifs officiels 2026' + (croise ? ' (relecture en cours, à vérifier)' : '') + '</span></div>', true);
+            put('<div class="rd gros c1"><span>Classe 1</span><b>' + (IT ? '≈ ' : '') + euro(c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + (IT ? '≈ ' : '') + euro(c2) + '</b></div>' + itNote(IT) + '<div class="rd sub"><span>' + (legOk ? x.det + ' + ' : '') + 'barrière(s) : ' + noms + '</span></div><div class="rd sub"><span>Source : tarifs officiels 2026' + (croise ? ' (relecture en cours, à vérifier)' : '') + '</span></div>', !IT);
             return;
           }
           { const ap = viaGoogle ? '' : approx(sh, tms, km); if (ap) { put(ap, false); return; } } put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Barrière(s) détectée(s) : ' + noms + '. Un tarif officiel manque : aucun total n’est affiché.</span></div>', false);
           return;
         }
         if (x && x.reste < 3) {
-          put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(x.c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(x.c2) + '</b></div><div class="rd sub"><span>' + x.det + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + R.v + '</span></div>', true);
+          put('<div class="rd gros c1"><span>Classe 1</span><b>' + (IT ? '≈ ' + euro(Math.round((x.c1 + IT.c1) * 10) / 10) : euro(x.c1)) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + (IT ? '≈ ' + euro(Math.round((x.c2 + IT.c2) * 10) / 10) : euro(x.c2)) + '</b></div>' + itNote(IT) + '<div class="rd sub"><span>' + x.det + '</span></div><div class="rd sub"><span>Source (tarifs officiels, dates de mise à jour) : ' + R.v + '</span></div>', !IT);
           return;
         }
       } catch (_) { /* pas de prix officiel exact trouvé : KO plus bas, jamais d'estimation */ }
