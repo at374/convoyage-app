@@ -283,7 +283,7 @@
       ]
     },
     {
-      "id": "aprr-area-ouvert-boisse-systeme-ouvert",
+      "id": "aprr-area-ouvert-boisse-syst-me-ouvert",
       "points": [
         [
           45.827,
@@ -1183,7 +1183,7 @@
     },
     {
       "id": "o1010",
-      "b": "aprr-area-ouvert-boisse-systeme-ouvert",
+      "b": "aprr-area-ouvert-boisse-syst-me-ouvert",
       "c": 1,
       "a": 2.4,
       "s": "PROUVE",
@@ -1192,7 +1192,7 @@
     },
     {
       "id": "o1011",
-      "b": "aprr-area-ouvert-boisse-systeme-ouvert",
+      "b": "aprr-area-ouvert-boisse-syst-me-ouvert",
       "c": 2,
       "a": 3.9,
       "s": "PROUVE",
