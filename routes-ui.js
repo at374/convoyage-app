@@ -66,7 +66,50 @@
     const traces = lanes.map((ln, i) => { const o = (i - (lanes.length - 1) / 2) * pas; return '<polyline points="' + decal(pxL(ln[3]), o).map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + '" fill="none" stroke="' + ln[0] + '" stroke-width="' + ln[1] + '"' + (ln[2] ? ' stroke-dasharray="' + ln[2] + '"' : '') + ' stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'; }).join('');
     const a = pos(A[0]), b = pos(A[A.length - 1]);
     const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="position:absolute;left:0;top:0;width:100%;height:100%">' + traces + '<circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="7" fill="#1a9850" stroke="#fff" stroke-width="2"/><circle cx="' + b[0].toFixed(1) + '" cy="' + b[1].toFixed(1) + '" r="7" fill="#d93025" stroke="#fff" stroke-width="2"/></svg>';
-    return '<div style="position:relative;width:100%;aspect-ratio:480/540;overflow:hidden;border-radius:8px;margin-top:8px;background:#ddd">' + tuiles + svg + '<span style="position:absolute;right:2px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div><p class="doux">Bleu : avec péages · Vert pointillé : sans péage' + (C ? ' · Violet : trajet mixte' : '') + '. Si les tracés sont les mêmes, ils sont dessinés côte à côte.</p>';
+    return '<div class="cpCarte" data-z="' + z + '" data-ox="' + ox + '" data-oy="' + oy + '" data-w="' + W + '" data-h="' + H + '" style="position:relative;width:100%;aspect-ratio:480/540;overflow:hidden;border-radius:8px;margin-top:8px;background:#ddd;touch-action:pan-y"><div class="cpIn" style="position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0">' + tuiles + '<div class="cpFin" style="position:absolute;left:0;top:0;width:100%;height:100%"></div>' + svg + '</div>' + '<span style="position:absolute;right:2px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div><p class="doux">Bleu : avec péages · Vert pointillé : sans péage' + (C ? ' · Violet : trajet mixte' : '') + '. Si les tracés sont les mêmes, ils sont dessinés côte à côte.</p>';
+  };
+  const zoomer = box => {
+    box.dataset.zoom = '1';
+    const inn = box.querySelector('.cpIn'), fin = box.querySelector('.cpFin');
+    const Z0 = +box.dataset.z, OX = +box.dataset.ox, OY = +box.dataset.oy, W = +box.dataset.w, H = +box.dataset.h, N0 = 2 ** Z0;
+    let s = 1, tx = 0, ty = 0, tm = 0;
+    const lim = () => { const w = box.clientWidth, h = box.clientHeight; s = Math.max(1, Math.min(16, s)); tx = Math.min(0, Math.max(w * (1 - s), tx)); ty = Math.min(0, Math.max(h * (1 - s), ty)); };
+    const fine = () => {
+      const k = Math.min(Math.floor(Math.log2(s)), 18 - Z0);
+      if (k < 1) { fin.innerHTML = ''; return; }
+      const w = box.clientWidth, h = box.clientHeight, f = 2 ** k, t = 256 / f;
+      const x0 = (-tx / s) / w * W, y0 = (-ty / s) / h * H, x1 = x0 + W / s, y1 = y0 + H / s;
+      const ax = Math.floor((x0 + OX) / t), bx = Math.floor((x1 + OX) / t), ay = Math.floor((y0 + OY) / t), by = Math.floor((y1 + OY) / t);
+      if ((bx - ax + 1) * (by - ay + 1) > 36) return;
+      const N = N0 * f; let h2 = '';
+      for (let a = ax; a <= bx; a++) for (let b = ay; b <= by; b++) if (b >= 0 && b < N) h2 += '<img alt="" referrerpolicy="no-referrer" src="https://tile.openstreetmap.org/' + (Z0 + k) + '/' + (((a % N) + N) % N) + '/' + b + '.png" style="position:absolute;left:' + ((a * t - OX) / W * 100) + '%;top:' + ((b * t - OY) / H * 100) + '%;width:' + (t / W * 100) + '%;height:' + (t / H * 100) + '%">';
+      fin.innerHTML = h2;
+    };
+    const draw = () => { lim(); inn.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')'; box.style.touchAction = s > 1 ? 'none' : 'pan-y'; clearTimeout(tm); tm = setTimeout(fine, 180); };
+    const zoomAt = (cx, cy, ns) => { const o = s; s = Math.max(1, Math.min(16, ns)); tx = cx - (cx - tx) * (s / o); ty = cy - (cy - ty) * (s / o); draw(); };
+    const bt = (txt, top, fn) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.style.cssText = 'position:absolute;left:6px;top:' + top + 'px;width:36px;height:36px;border-radius:8px;border:0;background:rgba(255,255,255,.92);color:#222;font:700 20px/1 system-ui;z-index:3;padding:0'; b.onclick = e => { e.stopPropagation(); fn(); }; box.appendChild(b); };
+    bt('+', 6, () => zoomAt(box.clientWidth / 2, box.clientHeight / 2, s * 2));
+    bt('\u2212', 48, () => zoomAt(box.clientWidth / 2, box.clientHeight / 2, s / 2));
+    bt('\u27f2', 90, () => { s = 1; tx = 0; ty = 0; draw(); });
+    const P = new Map(); let d0 = 0, last = 0;
+    box.addEventListener('pointerdown', e => {
+      if (e.target.tagName === 'BUTTON') return;
+      P.set(e.pointerId, [e.clientX, e.clientY]);
+      try { box.setPointerCapture(e.pointerId); } catch (_) { }
+      if (P.size === 2) { const q = [...P.values()]; d0 = Math.hypot(q[0][0] - q[1][0], q[0][1] - q[1][1]); }
+      const n = Date.now();
+      if (P.size === 1 && n - last < 300) { const r = box.getBoundingClientRect(); zoomAt(e.clientX - r.left, e.clientY - r.top, s > 1.5 ? 1 : s * 3); }
+      if (P.size === 1) last = n;
+    });
+    box.addEventListener('pointermove', e => {
+      if (!P.has(e.pointerId)) return;
+      const old = P.get(e.pointerId); P.set(e.pointerId, [e.clientX, e.clientY]);
+      const r = box.getBoundingClientRect();
+      if (P.size === 2) { const q = [...P.values()], d = Math.hypot(q[0][0] - q[1][0], q[0][1] - q[1][1]); if (d0 > 0) zoomAt((q[0][0] + q[1][0]) / 2 - r.left, (q[0][1] + q[1][1]) / 2 - r.top, s * d / d0); d0 = d; }
+      else if (P.size === 1 && s > 1) { tx += e.clientX - old[0]; ty += e.clientY - old[1]; draw(); }
+    });
+    const fini = e => { P.delete(e.pointerId); d0 = 0; };
+    box.addEventListener('pointerup', fini); box.addEventListener('pointercancel', fini);
   };
   const dec6 = s => { const o = []; let i = 0, la = 0, lo = 0; while (i < s.length) { let b, sh = 0, rs = 0; do { b = s.charCodeAt(i++) - 63; rs |= (b & 31) << sh; sh += 5; } while (b >= 32); la += (rs & 1) ? ~(rs >> 1) : (rs >> 1); sh = 0; rs = 0; do { b = s.charCodeAt(i++) - 63; rs |= (b & 31) << sh; sh += 5; } while (b >= 32); lo += (rs & 1) ? ~(rs >> 1) : (rs >> 1); o.push([la / 1e6, lo / 1e6]); } return o; };
   const dist = (a, b, c, d) => { const R = 6371, t = Math.PI / 180, x = (c - a) * t, y = (d - b) * t, h = Math.sin(x / 2) ** 2 + Math.cos(a * t) * Math.cos(c * t) * Math.sin(y / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
@@ -566,7 +609,7 @@ if (best && Math.abs(best.km - fast.km) <= Math.max(1, fast.km * 0.01) && Math.a
     contenu.classList.add('soloGoogle');
   };
   let rafale = false;
-  const refresh = () => { if (rafale) return; rafale = true; setTimeout(() => { rafale = false; try { addMissionPanel(); addEstimatePanel(); } catch (_) { } }, 150); };
+  const refresh = () => { if (rafale) return; rafale = true; setTimeout(() => { rafale = false; try { addMissionPanel(); addEstimatePanel(); } catch (_) { } try { document.querySelectorAll('.cpCarte:not([data-zoom])').forEach(zoomer); } catch (_) { } }, 150); };
   new MutationObserver(refresh).observe(document.documentElement, { childList: true, subtree: true });
   refresh();
 })();
