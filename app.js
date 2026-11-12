@@ -1814,7 +1814,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     $('feuille').hidden = false; $('feuille').querySelector('.feuilleBoite').scrollTop = 0;
     const suivants = detail.retours || [], dest = G.coordonnees(m, 'destination');
     for (const b of document.querySelectorAll('[data-retour]')) b.onclick = () => detail(suivants[Number(b.dataset.retour)].mission, dest);
-    { const bv = $('btnVol'); if (bv) bv.onclick = () => { try { const g = document.querySelector('[data-rmode="voiture"]'); if (g) { g.scrollIntoView({ block: 'center' }); g.click(); return; } } catch (_) {} popupVol(m); }; // V302 : le bouton ouvre le grand écran « Trajet réel Google » (carte, rapide, avec péage, sans péage, mixte) ; l'ancienne petite fenêtre reste en secours }
+    { const bv = $('btnVol'); if (bv) bv.onclick = () => { try { const g = document.querySelector('[data-rmode="voiture"]'); if (g) { g.scrollIntoView({ block: 'center' }); g.click(); return; } } catch (_) {} popupVol(m); }; }
     { const bt = $('btnTransportsMission'); if (bt) bt.onclick = () => {
       const existing = $('cpTransportMissionDetails');
       if (existing) {
