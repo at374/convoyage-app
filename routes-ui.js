@@ -126,6 +126,8 @@
     const ENT = 'ST MARTIN BELLEVUE A410';
     const eN = hits.findIndex(q => P.g[q.g][0] === ENT);
     if (eN > 0 && hits.slice(0, eN).every(q => P.g[q.g][0] === 'CRUSEILLES A')) hits.splice(0, eN);
+    // V283 : « CRUSEILLES A » sur l'A41 est la jonction de la barrière Adelac (tarifée par le moteur de barrières) : sans passage par l'A410 (St Martin Bellevue), on l'ignore.
+    if (eN < 0) for (let q = hits.length - 1; q >= 0; q--) if (P.g[hits[q].g][0] === 'CRUSEILLES A') hits.splice(q, 1);
     // V278 : « VOREPPE BARRIERE » (A48/A49, AREA) facture depuis le début du tronçon à péage (Grenoble → Voreppe compris) : tarif 35 km pour Voreppe → Rives alors que 18 km séparent la barrière de Rives. On accepte la distance mesurée sur le tracé OU depuis le début/jusqu'à la fin du tronçon.
     hits.forEach(q => { if (P.g[q.g][0] === ENT) q.ent = true; if (P.g[q.g][0] === 'VOREPPE BARRIERE') q.vo = true; });
     // V246 : gares « jumelles » (mêmes coordonnées, ex. Dourdan / La Folie-B) : on essaie la plus proche d'abord, puis ses jumelles.
@@ -141,6 +143,8 @@
       if (!ok) {
         // gare isolée sans tarif : tolérée uniquement après le dernier tronçon tarifé, jamais au milieu du trajet
         if (!segs.length) return null;
+        // V283 : « ALLONZIER » reliée à l'A41 nord est la même jonction qu'Adelac Cruseilles : sortie là = Adelac seul (barrières), aucun tarif AREA.
+        if (hits.slice(i).every(q => P.g[q.g][0] === 'ALLONZIER')) break;
         for (let a = i; a < hits.length; a++) for (let c = a + 1; c < hits.length; c++) if (paire(hits[a], hits[c])) return null;
         { const fin = segs[segs.length - 1].h; if (hits.slice(i).some(q => lon(hits[fin].k, q.k) > 1.5)) return null; }   // V265 : une gare sans tarif après le dernier tronçon = prix partiel : refusé
         break;
