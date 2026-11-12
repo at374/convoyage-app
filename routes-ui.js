@@ -105,8 +105,9 @@
     const hits = [];
     let der = -2;
     for (let k = i0; k <= i1; k++) { const g = gareProche(P, sh[k][0], sh[k][1], 0.4); if (g >= 0 && g !== der) { hits.push({ g, k }); der = g; } }
+    let unkHit = false;
     // V265 : si le tracé passe près d'une gare officielle dont nous n'avons aucun tarif, le prix exact est refusé (jamais de prix partiel).
-    if (typeof UNK !== 'undefined') for (let k = i0; k <= i1; k++) { const w = sh[k]; if (!w) continue; for (let u = 0; u < UNK.length; u++) { const z = UNK[u]; if (Math.abs(w[0] - z[0]) < 0.006 && Math.abs(w[1] - z[1]) < 0.009 && dist(w[0], w[1], z[0], z[1]) < 0.5) return null; } }
+    if (typeof UNK !== 'undefined') for (let k = i0; k <= i1; k++) { const w = sh[k]; if (!w) continue; for (let u = 0; u < UNK.length; u++) { const z = UNK[u]; if (Math.abs(w[0] - z[0]) < 0.006 && Math.abs(w[1] - z[1]) < 0.009 && dist(w[0], w[1], z[0], z[1]) < 0.5) unkHit = true; } }   // V289 : point sans tarif : on continue le calcul pour garder la partie vérifiée (le prix exact reste refusé)
     // V259 : barrières « système ouvert » à tarif fixe : leur tarif est ajouté par le moteur de barrières (overlay) ; ici elles sont seulement retirées de la recherche des couples de gares.
     // V280 (6 nov. 2026) : « CHIGNIN BRETELLE » et « TOURNEAU Système Ouvert » ajoutés après verification exhaustive
     // de la grille AREA/APRR complete (tests/peages-area-grille-complete-chignin-bretelle.test.cjs et
@@ -137,6 +138,7 @@
     const paire = (x, y) => { const ds = x.ent ? [lon(i0, y.k)] : y.ent ? [lon(x.k, i1)] : [lon(x.k, y.k)]; if (x.vo) ds.push(lon(i0, y.k)); if (y.vo) ds.push(lon(x.k, i1)); for (const a of jum(x.g)) for (const b of jum(y.g)) { if (a === b) continue; const v = P.prix.get(Math.min(a, b) * 1000 + Math.max(a, b)); if (!v) continue; if (ds.some(d => { const q = v[2] / Math.max(1, d); return q >= 0.7 && q <= 1.9; })) return { v, a, b }; } return null; };
     const segs = [];
     P.partiel = null;
+    let kmV = 0;
     let i = 0;
     while (i < hits.length) {
       let ok = null;
@@ -150,8 +152,8 @@
         { const fin = segs[segs.length - 1].h; if (hits.slice(i).some(q => lon(hits[fin].k, q.k) > 1.5)) return null; }   // V265 : une gare sans tarif après le dernier tronçon = prix partiel : refusé
         break;
       }
-      segs.push(ok); i = ok.h + 1;
-      P.partiel = { c1: Math.round(segs.reduce((n, q) => n + q.p.v[0], 0) * 100) / 100, c2: Math.round(segs.reduce((n, q) => n + q.p.v[1], 0) * 100) / 100, km: segs.reduce((n, q) => n + q.p.v[2], 0), det: segs.map(q => joli(P.g[q.p.a][0]) + ' → ' + joli(P.g[q.p.b][0])).join(' + ') };
+      segs.push(ok); kmV += lon(hits[i].k, hits[ok.h].k); i = ok.h + 1;
+      P.partiel = { c1: Math.round(segs.reduce((n, q) => n + q.p.v[0], 0) * 100) / 100, c2: Math.round(segs.reduce((n, q) => n + q.p.v[1], 0) * 100) / 100, km: kmV, det: segs.map(q => joli(P.g[q.p.a][0]) + ' → ' + joli(P.g[q.p.b][0])).join(' + ') };
     }
     if (!segs.length && !ouv.length) return null;
     const r2 = n => Math.round(n * 100) / 100;
@@ -161,6 +163,7 @@
     const dout = segs.some(q => SUSPECTES.includes(P.g[q.p.a][0]) || SUSPECTES.includes(P.g[q.p.b][0]));
     const nO = ouv.map(o => P.g[o.g][0]);
     const detS = segs.map(q => joli(P.g[q.p.a][0]) + ' → ' + joli(P.g[q.p.b][0]));
+    if (unkHit) return null;
     return { e: segs.length ? joli(P.g[segs[0].p.a][0]) : joli(nO[0]), s: segs.length ? joli(P.g[segs[segs.length - 1].p.b][0]) : joli(nO[nO.length - 1]), c1: r2(segs.reduce((n, q) => n + q.p.v[0], 0)), c2: r2(segs.reduce((n, q) => n + q.p.v[1], 0)), det: detS.length ? detS.join(' + ') : 'Péages à tarif fixe', reste: dout ? 99 : 0, ouv: nO.map(n => n.toLowerCase().replace(/[^a-z0-9]+/g, '-')) };
   };
   // V233 : péages « barrière » (sans gare d'entrée/sortie : ponts, tunnels, barrières pleine voie) — tarifs officiels versionnés, jamais d'estimation.
@@ -202,8 +205,8 @@
   // V286 (12 nov. 2026, demande de Laurent) : péages ITALIENS estimés (aucune grille italienne en base) : km à péage situés en Italie × 0,08 €/km (moyenne nationale : Milan-Rome 563 km = 44,40 €, soit 0,079 €/km), Classe 2 = 1,15 × Classe 1. Toujours affiché « ≈ », jamais comme prix exact.
   const IT_POLY = [[7.53,43.78],[7.02,44.25],[6.63,44.9],[6.7,45.15],[6.9,45.85],[7.17,45.87],[7.45,45.92],[7.87,45.94],[8.45,46.25],[8.8,46.0],[9.05,45.83],[9.1,46.18],[9.3,46.5],[10.45,46.52],[10.45,46.87],[11.2,46.97],[12.2,47.08],[13.7,46.52],[13.6,45.65],[14.5,45.0],[19.0,40.5],[16.5,37.9],[15.6,37.9],[12.0,40.0],[9.5,43.5]];
   const dansIT = (lat, lon) => { let in_ = false; for (let i = 0, j = IT_POLY.length - 1; i < IT_POLY.length; j = i++) { const [xi, yi] = IT_POLY[i], [xj, yj] = IT_POLY[j]; if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) in_ = !in_; } return in_; };
-  const italie = (sh, tms) => { try { let km = 0; for (const m of tms) { const a = m.begin_shape_index, b = m.end_shape_index; if (!(b > a)) continue; const pas = Math.max(1, Math.floor((b - a) / 40)); let n = 0, d = 0; for (let k = a; k <= b; k += pas) { const w = sh[k]; if (!w) continue; n++; if (dansIT(w[0], w[1])) d++; } if (n) km += (Number(m.length) || 0) * d / n; } if (km < 1) return null; const c1 = Math.round(km * 0.08 * 10) / 10; return { km, c1, c2: Math.round(c1 * 1.15 * 10) / 10 }; } catch (_) { return null; } };
-  const itNote = (IT, v1, v2) => IT ? '<div class="rd sub"><span>✅ Partie française vérifiée (tarif officiel) : ' + euro(v1) + ' (Classe 1) · ' + euro(v2) + ' (Classe 2)</span></div><div class="rd sub"><span>⚠️ Partie italienne manquante (estimée) : ' + Math.round(IT.km) + ' km × 0,08 €/km = ≈ ' + euro(IT.c1) + ' (Classe 1) · ≈ ' + euro(IT.c2) + ' (Classe 2), à ± 20 % près.</span></div>' : '';
+  const italie = (sh, tms) => { try { let km = 0, eur = 0; const taux = (la, lo) => (la > 45.45 && la < 45.95 && lo > 6.9 && lo < 8.0) ? 0.145 : (la > 44.95 && la < 45.25 && lo > 6.65 && lo < 7.45) ? 0.23 : 0.08; for (const m of tms) { const a = m.begin_shape_index, b = m.end_shape_index; if (!(b > a)) continue; const pas = Math.max(1, Math.floor((b - a) / 40)); let n = 0, d = 0, s = 0; for (let k = a; k <= b; k += pas) { const w = sh[k]; if (!w) continue; n++; if (dansIT(w[0], w[1])) { d++; s += taux(w[0], w[1]); } } if (n) { const L = Number(m.length) || 0; km += L * d / n; eur += L * s / n; } } if (km < 1) return null; const c1 = Math.round(eur * 10) / 10; return { km, c1, c2: Math.round(c1 * 1.15 * 10) / 10 }; } catch (_) { return null; } };
+  const itNote = (IT, v1, v2) => IT ? '<div class="rd sub"><span>✅ Partie française vérifiée (tarif officiel) : ' + euro(v1) + ' (Classe 1) · ' + euro(v2) + ' (Classe 2)</span></div><div class="rd sub"><span>⚠️ Partie italienne manquante (estimée) : ' + Math.round(IT.km) + ' km × ' + (IT.c1 / IT.km).toFixed(3).replace('.', ',') + ' €/km (plaine 0,08 ; Val d’Aoste 0,145 ; Val de Suse 0,23) = ≈ ' + euro(IT.c1) + ' (Classe 1) · ≈ ' + euro(IT.c2) + ' (Classe 2), à ± 20 % près.</span></div>' : '';
   const BK = (cls, titre, h) => '<div class="bk bkC ' + cls + '"><div class="bkt">' + titre + '</div>' + h + '</div>';
   const valRoute = async (body) => { let err = null; for (let n = 0; n < 4; n++) { try { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000); const rr = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal }); clearTimeout(to); if (rr.ok) return await rr.json(); err = new Error('http ' + rr.status); } catch (e) { err = e; } await new Promise(s => setTimeout(s, 1500 * (n + 1))); } throw err; };
   // V250 : tout le calcul du péage se fait dans un « worker » (second fil du téléphone) : l'écran ne peut plus se figer, même sur un téléphone lent.
@@ -294,7 +297,7 @@
     window.CPPh('péage');
     const zone = out.querySelector('[data-peage]');
     let suisse = false;
-    const put = (h, ok) => { if (!zone) return; let hh = h; if (suisse) { const h2 = h.replace(/(<div class="rd gros c2">[\s\S]*?<\/div>)/, '$1' + NOTE_CH); hh = h2 !== h ? h2 : h + NOTE_CH; } zone.innerHTML = hh; LAY('péage'); const b = zone.closest('.bk'); if (b) b.classList.add(ok ? 'bkRenOk' : 'bkRenKo'); };
+    const put = (h, ok) => { if (!zone) return; let hh = h; if (suisse) { const h2 = h.replace(/(<div class="rd gros c2">[\s\S]*?<\/div>)/, '$1' + NOTE_CH); hh = h2 !== h ? h2 : h + NOTE_CH; } zone.innerHTML = hh; LAY('péage'); };   // V290 : liseret vert/rouge à gauche de « Avec péage » supprimé
     const KO = '💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Aucune estimation affichée : seuls les tarifs officiels exacts sont montrés.</span></div>';
     try {
       const A = r.pts || decode(r.polyline);
