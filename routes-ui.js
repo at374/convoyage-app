@@ -59,13 +59,13 @@
     const pos = q => { const p = px(q, z); return [p[0] - ox, p[1] - oy]; };
     // V281 : les trois tracés (sans péage, avec péage, mixte) restent TOUS visibles : décalés côte à côte (voies parallèles) quand ils se superposent.
     // Le tracé « sans péage » est toujours dessiné (identique ou non au tracé avec péage) ; le mixte seulement s'il existe.
-    const lanes = [['#1a9850', 2, '6 4', B || A], ['#1e63d8', 2, '', A]].concat(C ? [['#8e24aa', 2, '', C]] : []);
+    const lanes = [['#1a9850', 1.2, '4 3', B || A], ['#1e63d8', 1.2, '', A]].concat(C ? [['#8e24aa', 1.2, '', C]] : []);
     const pxL = L => L.map(pos);
     const decal = (P, o) => { if (!o || P.length < 2) return P; return P.map((p, i) => { const q = P[Math.max(0, i - 2)], r2 = P[Math.min(P.length - 1, i + 2)]; let tx = r2[0] - q[0], ty = r2[1] - q[1]; const n = Math.hypot(tx, ty) || 1; return [p[0] - ty / n * o, p[1] + tx / n * o]; }); };
-    const pas = lanes.length === 3 ? 4 : 3;
+    const pas = lanes.length === 3 ? 2.6 : 2;
     const traces = lanes.map((ln, i) => { const o = (i - (lanes.length - 1) / 2) * pas; const bs = pxL(ln[3]); (window.__cpLn = window.__cpLn || []).push(bs); return '<polyline data-i="' + (window.__cpLn.length - 1) + '" data-o="' + o + '" points="' + decal(bs, o).map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + '" fill="none" stroke="' + ln[0] + '" stroke-width="' + ln[1] + '"' + (ln[2] ? ' stroke-dasharray="' + ln[2] + '"' : '') + ' stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'; }).join('');
     const a = pos(A[0]), b = pos(A[A.length - 1]);
-    const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="position:absolute;left:0;top:0;width:100%;height:100%">' + traces + '<circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="5" fill="#1a9850" stroke="#fff" stroke-width="1.5"/><circle cx="' + b[0].toFixed(1) + '" cy="' + b[1].toFixed(1) + '" r="5" fill="#d93025" stroke="#fff" stroke-width="1.5"/></svg>';
+    const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="position:absolute;left:0;top:0;width:100%;height:100%">' + traces + '<circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="3.5" fill="#1a9850" stroke="#fff" stroke-width="1"/><circle cx="' + b[0].toFixed(1) + '" cy="' + b[1].toFixed(1) + '" r="3.5" fill="#d93025" stroke="#fff" stroke-width="1"/></svg>';
     return '<div class="cpCarte" data-z="' + z + '" data-ox="' + ox + '" data-oy="' + oy + '" data-w="' + W + '" data-h="' + H + '" style="position:relative;width:100%;aspect-ratio:480/540;overflow:hidden;border-radius:8px;margin-top:8px;background:#ddd;touch-action:pan-y"><div class="cpIn" style="position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0">' + tuiles + '<div class="cpFin" style="position:absolute;left:0;top:0;width:100%;height:100%"></div>' + svg + '</div>' + '<span style="position:absolute;right:2px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div><p class="doux">Bleu : avec péages · Vert pointillé : sans péage' + (C ? ' · Violet : trajet mixte' : '') + '. Si les tracés sont les mêmes, ils sont dessinés côte à côte.</p>';
   };
   const zoomer = box => {
@@ -74,7 +74,7 @@
     const Z0 = +box.dataset.z, OX = +box.dataset.ox, OY = +box.dataset.oy, W = +box.dataset.w, H = +box.dataset.h, N0 = 2 ** Z0;
     let s = 1, tx = 0, ty = 0, tm = 0;
     const decal2 = (P, o) => { if (!o || P.length < 2) return P; return P.map((p, i) => { const q = P[Math.max(0, i - 2)], r2 = P[Math.min(P.length - 1, i + 2)]; let dx = r2[0] - q[0], dy = r2[1] - q[1]; const n = Math.hypot(dx, dy) || 1; return [p[0] - dy / n * o, p[1] + dx / n * o]; }); };
-    const marques = () => { inn.querySelectorAll('circle').forEach(c => { c.setAttribute('r', (5 / s).toFixed(2)); c.setAttribute('stroke-width', (1.5 / s).toFixed(2)); }); };
+    const marques = () => { inn.querySelectorAll('circle').forEach(c => { c.setAttribute('r', (3.5 / s).toFixed(2)); c.setAttribute('stroke-width', (1 / s).toFixed(2)); }); };
     const reoff = () => { inn.querySelectorAll('polyline[data-i]').forEach(pl => { const P = (window.__cpLn || [])[+pl.dataset.i], o = +pl.dataset.o; if (!P) return; pl.setAttribute('points', decal2(P, o / s).map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')); }); };
     const lim = () => { const w = box.clientWidth, h = box.clientHeight; s = Math.max(1, Math.min(16, s)); tx = Math.min(0, Math.max(w * (1 - s), tx)); ty = Math.min(0, Math.max(h * (1 - s), ty)); };
     const fine = () => {
