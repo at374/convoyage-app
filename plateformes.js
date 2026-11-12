@@ -41,10 +41,15 @@
     try { return await r.json(); } catch (_) { return null; }
   }
   const lireServeur = async () => { const rows = await http('/rest/v1/reglages?select=plateformes_choisies'); const v = rows && rows[0] ? rows[0].plateformes_choisies : null; return Array.isArray(v) && v.length ? v.filter(x => CODES.indexOf(x) >= 0) : null; };
-  const ecrireServeur = async v => { const s = session(); if (!s || !s.user_id) return; await http('/rest/v1/reglages?on_conflict=user_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify([{ user_id: s.user_id, plateformes_choisies: v }]) }); };
+  // V300 : l'identifiant vient aussi du jeton de connexion (la session du téléphone n'a pas toujours user_id) ; sans identifiant on signale l'échec au lieu de croire que c'est enregistré
+const idUtilisateur = () => { const s = session(); if (s && s.user_id) return s.user_id; try { return JSON.parse(atob(String(s.access_token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub || null; } catch (_) { return null; } };
+const NS = 'cp_plats_nonsync';
+const marquerNonSync = on => { try { if (on) localStorage.setItem(NS, '1'); else localStorage.removeItem(NS); } catch (_) {} };
+const nonSync = () => { try { return localStorage.getItem(NS) === '1'; } catch (_) { return false; } };
+const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw new Error('Pas d\'identifiant'); await http('/rest/v1/reglages?on_conflict=user_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify([{ user_id: uid, plateformes_choisies: v }]) }); marquerNonSync(false); };
 
   async function enregistrer(v, msgEl) {
-    ecrireLoc(v); appliquer(v); natif(v);
+    ecrireLoc(v); marquerNonSync(true); appliquer(v); natif(v);
     let avert = '';
     try { await ecrireServeur(v); } catch (_) { avert = 'Choix gardé sur ce téléphone (pas encore enregistré en ligne).'; }
     if (msgEl && avert) { msgEl.textContent = avert; setTimeout(() => location.reload(), 1600); } else location.reload();
@@ -113,7 +118,7 @@
     try {
       const serv = await lireServeur(), loc = lireLoc();
       cle = k;
-      if (serv) {
+      if (serv && nonSync() && loc) { try { await ecrireServeur(loc); } catch (_) {} } else if (serv) {
         if (!memes(serv, loc)) { ecrireLoc(serv); appliquer(serv); natif(serv); try { if (!sessionStorage.getItem('cp_plat_rl')) { sessionStorage.setItem('cp_plat_rl', '1'); location.reload(); return; } } catch (_) {} }
       } else if (loc) { try { await ecrireServeur(loc); } catch (_) {} }
       else modalChoix();
