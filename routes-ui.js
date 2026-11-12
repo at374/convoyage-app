@@ -107,7 +107,7 @@
     for (let k = i0; k <= i1; k++) { const g = gareProche(P, sh[k][0], sh[k][1], 0.4); if (g >= 0 && g !== der) { hits.push({ g, k }); der = g; } }
     let unkHit = false;
     // V265 : si le tracé passe près d'une gare officielle dont nous n'avons aucun tarif, le prix exact est refusé (jamais de prix partiel).
-    if (typeof UNK !== 'undefined') for (let k = i0; k <= i1; k++) { const w = sh[k]; if (!w) continue; for (let u = 0; u < UNK.length; u++) { const z = UNK[u]; if (Math.abs(w[0] - z[0]) < 0.006 && Math.abs(w[1] - z[1]) < 0.009 && dist(w[0], w[1], z[0], z[1]) < 0.5) unkHit = true; } }   // V289 : point sans tarif : on continue le calcul pour garder la partie vérifiée (le prix exact reste refusé)
+    if (typeof UNK !== 'undefined') for (let k = i0; k <= i1; k++) { const w = sh[k]; if (!w) continue; for (let u = 0; u < UNK.length; u++) { const z = UNK[u]; if (Math.abs(w[0] - z[0]) < 0.006 && Math.abs(w[1] - z[1]) < 0.009 && dist(w[0], w[1], z[0], z[1]) < 0.5 && !hits.some(h => P.g[h.g][1].some(p => dist(z[0], z[1], p[0], p[1]) < 1.0))) unkHit = true; } }   // V294 : un point sans tarif situé à moins de 1 km d'une gare déjà reconnue sur le tracé (et tarifée) n'est plus bloquant : c'est la même barrière   // V289 : point sans tarif : on continue le calcul pour garder la partie vérifiée (le prix exact reste refusé)
     // V259 : barrières « système ouvert » à tarif fixe : leur tarif est ajouté par le moteur de barrières (overlay) ; ici elles sont seulement retirées de la recherche des couples de gares.
     // V280 (6 nov. 2026) : « CHIGNIN BRETELLE » et « TOURNEAU Système Ouvert » ajoutés après verification exhaustive
     // de la grille AREA/APRR complete (tests/peages-area-grille-complete-chignin-bretelle.test.cjs et
