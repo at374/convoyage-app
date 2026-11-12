@@ -43,6 +43,8 @@
   const lireServeur = async () => { const rows = await http('/rest/v1/reglages?select=plateformes_choisies'); const v = rows && rows[0] ? rows[0].plateformes_choisies : null; return Array.isArray(v) && v.length ? v.filter(x => CODES.indexOf(x) >= 0) : null; };
   // V300 : l'identifiant vient aussi du jeton de connexion (la session du téléphone n'a pas toujours user_id) ; sans identifiant on signale l'échec au lieu de croire que c'est enregistré
 const idUtilisateur = () => { const s = session(); if (s && s.user_id) return s.user_id; try { return JSON.parse(atob(String(s.access_token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub || null; } catch (_) { return null; } };
+const DG = { serv: '?', err: '' };
+const majDiag = () => { try { const d = document.getElementById('cpPlatDiag'); const s = session(); if (d) d.textContent = 'Diagnostic — téléphone : ' + (lireLoc() || []).join(',') + ' · en ligne : ' + DG.serv + (DG.err ? ' · erreur : ' + DG.err : '') + ' · connecté : ' + (s && s.access_token ? 'oui' : 'non'); } catch (_) {} };
 const NS = 'cp_plats_nonsync';
 const marquerNonSync = on => { try { if (on) localStorage.setItem(NS, '1'); else localStorage.removeItem(NS); } catch (_) {} };
 const nonSync = () => { try { return localStorage.getItem(NS) === '1'; } catch (_) { return false; } };
@@ -51,8 +53,8 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
   async function enregistrer(v, msgEl) {
     ecrireLoc(v); marquerNonSync(true); appliquer(v); natif(v);
     let avert = '';
-    try { await ecrireServeur(v); } catch (_) { avert = 'Choix gardé sur ce téléphone (pas encore enregistré en ligne).'; }
-    if (msgEl && avert) { msgEl.textContent = avert; setTimeout(() => location.reload(), 1600); } else location.reload();
+    try { await ecrireServeur(v); DG.serv = v.join(','); DG.err = ''; } catch (e) { DG.err = 'écriture : ' + (e && e.message); avert = 'Choix gardé sur ce téléphone (pas encore enregistré en ligne : ' + (e && e.message) + ').'; majDiag(); }
+    if (msgEl && avert) { msgEl.textContent = avert; setTimeout(() => location.reload(), 6000); } else location.reload();
   }
 
   function css() {
@@ -101,8 +103,8 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
     css();
     const cur = lireLoc() || ED.toutes;
     const c = document.createElement('div'); c.id = 'cpPlatCard'; c.className = 'carte cpPlatCard';
-    c.innerHTML = '<h2>Mes plateformes</h2><p class="doux">Coche celles que tu utilises : l\'appli ne lit et n\'affiche que celles-là.</p>' + lignes(cur) + '<button class="cpPlatBtn" id="cpPlatSave">Enregistrer mes plateformes</button><div class="cpPlatMsg" id="cpPlatMsg2"></div>' + connexions(cur);
-    ec.insertBefore(c, ec.firstChild);
+    c.innerHTML = '<h2>Mes plateformes</h2><p class="doux">Coche celles que tu utilises : l\'appli ne lit et n\'affiche que celles-là.</p>' + lignes(cur) + '<button class="cpPlatBtn" id="cpPlatSave">Enregistrer mes plateformes</button><div class="cpPlatMsg" id="cpPlatMsg2"></div><div class="cpPlatMsg" id="cpPlatDiag"></div>' + connexions(cur);
+    ec.insertBefore(c, ec.firstChild); majDiag();
     c.addEventListener('click', e => { const b = e.target && e.target.closest && e.target.closest('[data-conn]'); if (b) ouvrirConnexion(b.getAttribute('data-conn')); });
     const b = c.querySelector('#cpPlatSave'), m = c.querySelector('#cpPlatMsg2');
     c.addEventListener('change', () => { b.disabled = cochees(c).length === 0; m.textContent = b.disabled ? 'Coche au moins une plateforme.' : ''; });
@@ -116,13 +118,13 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
     if (k === cle || enCours) return;
     enCours = true;
     try {
-      const serv = await lireServeur(), loc = lireLoc();
+      const serv = await lireServeur(), loc = lireLoc(); DG.serv = serv ? serv.join(',') : 'vide'; majDiag();
       cle = k;
       if (serv && nonSync() && loc) { try { await ecrireServeur(loc); } catch (_) {} } else if (serv) {
         if (!memes(serv, loc)) { ecrireLoc(serv); appliquer(serv); natif(serv); try { if (!sessionStorage.getItem('cp_plat_rl')) { sessionStorage.setItem('cp_plat_rl', '1'); location.reload(); return; } } catch (_) {} }
       } else if (loc) { try { await ecrireServeur(loc); } catch (_) {} }
       else modalChoix();
-    } catch (_) { /* hors ligne ou colonne absente : le choix local reste utilisé ; sans choix local on demande */ if (!lireLoc() && s && s.access_token) { cle = k; modalChoix(); } }
+    } catch (e0) { DG.err = 'lecture : ' + (e0 && e0.message); majDiag(); /* hors ligne ou colonne absente : le choix local reste utilisé ; sans choix local on demande */ if (!lireLoc() && s && s.access_token) { cle = k; modalChoix(); } }
     finally { enCours = false; }
   }
 
@@ -133,6 +135,6 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', surveiller); else surveiller();
   setTimeout(suivreCompte, 1200);
-  setInterval(suivreCompte, 5000);
+  setInterval(() => { suivreCompte(); majDiag(); }, 2000);
   window.CPPlateformes = { choisies: () => (lireLoc() || ED.toutes).slice(), ouvrir: modalChoix };
 })();
