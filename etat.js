@@ -26,7 +26,7 @@
     const details = lignes.map(l => ligne(l, now));
     // V146 : Pop Valet et Otoqi sont toujours listés, même avant la première lecture (gris, sans effet sur la couleur globale)
     // V300 : seulement les plateformes cochées par le convoyeur (chacune indépendante), Delivery Car comprise
-let choisies = null; try { const c = JSON.parse(localStorage.getItem('cp_plats_choisies')); if (Array.isArray(c)) choisies = c; } catch (_) { }
+let choisies = null; try { const mk = document.cookie.match(/(?:^|; )cp_plats=([^;]*)/); const c = mk ? decodeURIComponent(mk[1]).split('.').filter(Boolean) : JSON.parse(localStorage.getItem('cp_plats_choisies')); if (Array.isArray(c)) choisies = c; } catch (_) { }
 for (const p of ['PopValet', 'Otoqi', 'DeliveryCar']) if ((!choisies || choisies.includes(p)) && !details.some(d => d.platform === p)) details.push({ platform: p, ageMin: null, couleur: 'gris', texte: 'pas encore lue — ouvre ' + (p === 'PopValet' ? '« En attente » dans Pop Valet' : p === 'Otoqi' ? '« Disponibles » dans Otoqi' : '« Missions disponibles » (loupe) dans Delivery Car') + ' sur le téléphone (application Convoyage Tel 2.27)' });
     details.sort((a, b) => a.platform.localeCompare(b.platform, 'fr'));
     const maj = Math.max(...lignes.map(l => Date.parse(l.maj_le || '') || 0));
