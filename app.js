@@ -31,7 +31,7 @@
   const $ = id => document.getElementById(id);
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const euros = v => Number(v).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
-  const PLATS = { Hiflow: 'Hiflow', DriiveMe: 'DriiveMe', Otoqi: 'Otoqi', PopValet: 'Pop Valet' };
+  const PLATS = { Hiflow: 'Hiflow', DriiveMe: 'DriiveMe', Otoqi: 'Otoqi', PopValet: 'Pop Valet', DeliveryCar: 'Delivery Car' };
   const clsPlat = p => ' plat-' + String(p || '').replace(/[^A-Za-z]/g, '');   // V122 : couleur de fond et de police propres à chaque plateforme
   // V83 : édition (une par plateforme, ou personnelle) : seules ses plateformes sont affichées.
   const EDITION = window.CP_EDITION || { code: 'personnelle', nom: 'Convoyage Ultra', plateformes: Object.keys(PLATS) };
