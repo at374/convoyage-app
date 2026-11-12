@@ -116,7 +116,7 @@
     // isolee rencontree au milieu d'un trajet avec d'autres gares deja tarifees de part et d'autre aurait pu faire
     // refuser (ou dans certains cas silencieusement omettre) le prix du reste du trajet -- cf. le garde-fou ligne
     // ~284 qui verifie que chaque nom ici a bien une barriere correspondante.
-    const OUV = { 'CROTTET': [0.8, 1.2], 'FONTAINE-LARIVIERE': [3.1, 4.9], 'GENAY': [1.7, 2.5], 'LUSSE': [6.8, 10.7], 'MIONNAY': [1, 1.5], 'MYENNES': [4.2, 6], 'QUINCIEUX': [3.6, 5.6], 'VICHY': [1.2, 1.9], 'CHIGNIN BRETELLE': [1.0, 1.6], 'TOURNEAU Système Ouvert': [3.8, 5.8], 'BOISSE Système Ouvert': [2.4, 3.9], 'CHESNES': [2.3, 3.6], 'LE CROZET': [4.5, 7.1], 'SAINT EXUPERY': [2.3, 3.6] };
+    const OUV = { 'CROTTET': [0.8, 1.2], 'FONTAINE-LARIVIERE': [3.1, 4.9], 'GENAY': [1.7, 2.5], 'LUSSE': [6.8, 10.7], 'MIONNAY': [1, 1.5], 'MYENNES': [4.2, 6], 'QUINCIEUX': [3.6, 5.6], 'VICHY': [1.2, 1.9], 'CHIGNIN BRETELLE': [1.0, 1.6], 'TOURNEAU Système Ouvert': [3.8, 5.8], 'BOISSE Système Ouvert': [2.4, 3.9], 'CHESNES': [2.3, 3.6], 'LE CROZET': [4.5, 7.1], 'SAINT EXUPERY': [2.3, 3.6], 'SCIONZIER': [2.3, 4.3], 'BONNEVILLE OUEST': [1.3, 2.3], 'BONNEVILLE EST': [1.7, 3.1], 'CLUSES CENTRE': [2.5, 4.3] }; // V282 : barrières ATMB A40 (grille officielle 2026)
     const ouv = [];
     for (let q = hits.length - 1; q >= 0; q--) { if (OUV[P.g[hits[q].g][0]]) { if (!ouv.some(o => o.g === hits[q].g)) ouv.unshift(hits[q]); hits.splice(q, 1); } }
     if (!hits.length && !ouv.length) return null;
