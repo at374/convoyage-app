@@ -9,6 +9,8 @@
   // V99 : libellés bruts de la plateforme → français (missions déjà enregistrées comprises).
   const LIBELLES = { energy: { plugin_hybrid: 'Hybride rechargeable', plug_in_hybrid: 'Hybride rechargeable', hybrid_plugin: 'Hybride rechargeable' }, category: { particular: 'Particulière' } };
   function francais(missions) {
+    // V285 : missions que Laurent a annulées lui-même (liste locale « cp_annul ») : statut « annulée », hors revenus ; pénalité possible de la plateforme, montant à confirmer par lui.
+    try { const ov = JSON.parse((root.localStorage && root.localStorage.getItem('cp_annul')) || '{}') || {}; for (const m of missions || []) { const o = m && m.kind === 'acceptee' && ov[m.platform + '|' + m.external_id]; if (o) { if (m.status !== 'annulee') m._statutOrig = m.status || 'acceptee'; m.status = 'annulee'; m.annulee_par_moi = true; m.penalite_plateforme = (o.pen === null || o.pen === undefined) ? null : Number(o.pen); } } } catch (_) {}
     for (const m of missions || []) { const v = m && m.vehicle; if (!v || typeof v !== 'object') continue;
       for (const k of ['energy', 'category']) { const t = LIBELLES[k][String(v[k] || '').trim().toLowerCase()]; if (t) v[k] = t; } }
     return missions || [];
@@ -80,7 +82,7 @@
       const pr = n(m.fee) ?? 0, fr = Object.entries(m.fees || {}).filter(([c]) => !/^(devis|facture)_/.test(c)).map(([, v]) => n(v) ?? 0).reduce((s, x) => s + x, 0);
       const etat = n(m.fees && m.fees.facture_attente) || 0, confirme = etat > 0;   // V98 : montant réel lu dans « Mes factures » (1 = à valider par toi, 2 = en cours de préparation)
       g.lignes.push({ mission: m, annulee, prestation: pr, frais: arr(fr), date: ref, etat, confirme });
-      if (annulee && !confirme) { g.annulees++; g.prestationAnnulees = arr(g.prestationAnnulees + pr); } else { g.prestation = arr(g.prestation + pr); g.frais = arr(g.frais + fr); }
+      if (annulee && !confirme) { g.annulees++; g.prestationAnnulees = arr(g.prestationAnnulees + (m.annulee_par_moi ? 0 : pr)); } else { g.prestation = arr(g.prestation + pr); g.frais = arr(g.frais + fr); }
       mois.set(k, g);
     }
     const l = [...mois.values()].sort((a, b) => b.mois.localeCompare(a.mois));
