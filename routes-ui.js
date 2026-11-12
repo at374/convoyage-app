@@ -194,6 +194,9 @@
   const dansCH = (lat, lon) => { let in_ = false; for (let i = 0, j = CH.length - 1; i < CH.length; j = i++) { const [xi, yi] = CH[i], [xj, yj] = CH[j]; if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) in_ = !in_; } return in_; };
   const passeEnSuisse = sh => { let n = 0; for (let k = 0; k < sh.length; k += 4) { if (dansCH(sh[k][0], sh[k][1])) { if (++n >= 3) return true; } else n = 0; } return false; };
   const NOTE_CH = '<div style="display:block;margin:6px 0;padding:5px 9px;border-radius:8px;background:#fff;color:#b00020;border:2px solid #d52b1e;font-weight:800;font-size:.95em;line-height:1.25">🇨🇭 Vignette suisse : 40 CHF <span style="font-weight:600;font-size:.85em">(à acheter avant la frontière, 1 an · hors total péages)</span></div>';
+  // V283 (12 nov. 2026, demande de Laurent) : quand le tarif officiel exact manque, estimation « ≈ » = km à péage × tarif moyen local (médiane des tarifs officiels par case de 1° ; Classe 2 = 1,85 × Classe 1), arrondie à 0,10 €. Jamais ajoutée aux prix exacts.
+  const TAUX_KM = {"47,3":0.126,"48,2":0.195,"47,2":0.146,"47,4":0.099,"48,3":0.112,"46,3":0.122,"46,5":0.098,"46,4":0.115,"47,5":0.097,"45,4":0.115,"45,3":0.116,"46,2":0.121,"48,1":0.183,"47,1":0.156,"46,1":0.146,"47,6":0.096,"48,4":0.099,"45,5":0.111,"48,5":0.099,"46,6":0.103,"48,6":0.099,"45,2":0.105,"43,3":0.104,"44,4":0.104,"43,4":0.101,"46,-2":0.103,"46,-1":0.108,"44,0":0.1,"43,0":0.098,"43,-1":0.095,"43,2":0.105,"44,3":0.132,"42,2":0.185,"45,-1":0.105,"48,0":0.182,"47,0":0.149,"47,-1":0.14,"48,-1":0.193,"46,0":0.111,"50,1":0.103,"49,1":0.1,"49,2":0.093,"50,2":0.095,"49,3":0.099,"49,5":0.099,"49,6":0.097,"49,0":0.101};
+  const approx = (sh, tms, km) => { try { let s = 0, n = 0; for (const m of tms) { const a = m.begin_shape_index, b = m.end_shape_index, pas = Math.max(1, Math.floor((b - a) / 25)); for (let k = a; k <= b; k += pas) { const w = sh[k]; if (!w) continue; const r = TAUX_KM[Math.floor(w[0]) + ',' + Math.floor(w[1])]; s += r !== undefined ? r : 0.105; n++; } } if (!n || !(km >= 1)) return ''; const c1 = Math.round(km * (s / n) * 10) / 10, c2 = Math.round(c1 * 1.85 * 10) / 10; return '<div class="rd gros c1"><span>Classe 1 (estimation)</span><b>≈ ' + euro(c1) + '</b></div><div class="rd gros c2"><span>Classe 2 (estimation)</span><b>≈ ' + euro(c2) + '</b></div><div class="rd sub"><span>≈ Estimation : ' + Math.round(km) + ' km à péage × tarif moyen local, à 10-15 % près. Le tarif officiel exact de ce trajet manque.</span></div>'; } catch (_) { return ''; } };
   const BK = (cls, titre, h) => '<div class="bk bkC ' + cls + '"><div class="bkt">' + titre + '</div>' + h + '</div>';
   const valRoute = async (body) => { let err = null; for (let n = 0; n < 4; n++) { try { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000); const rr = await fetch('https://valhalla1.openstreetmap.de/route', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: ctl.signal }); clearTimeout(to); if (rr.ok) return await rr.json(); err = new Error('http ' + rr.status); } catch (e) { err = e; } await new Promise(s => setTimeout(s, 1500 * (n + 1))); } throw err; };
   // V250 : tout le calcul du péage se fait dans un « worker » (second fil du téléphone) : l'écran ne peut plus se figer, même sur un téléphone lent.
@@ -321,7 +324,7 @@
         const O = await chargerOverlay();
         const i0 = tms[0].begin_shape_index, i1 = tms[tms.length - 1].end_shape_index;
         const bar = O ? barrieresTraversees(O, sh, i0, i1) : [];
-        if (x && x.ouv && x.ouv.length && !x.ouv.every(n => bar.some(v => v.id === 'aprr-area-ouvert-' + n))) { put(KO, false); return; }   // V265 : barrière à tarif fixe vue par les gares mais pas par le moteur de barrières : on ne devine pas
+        if (x && x.ouv && x.ouv.length && !x.ouv.every(n => bar.some(v => v.id === 'aprr-area-ouvert-' + n))) { const ap = viaGoogle ? '' : approx(sh, tms, km); put(ap || KO, false); return; }   // V265 : barrière à tarif fixe vue par les gares mais pas par le moteur de barrières : on ne devine pas
         if (bar.length) {
           const auj = new Date().toISOString().slice(0, 10), pas = bar.map((v, n) => ({ type: 'barriere', station: v.id, group: v.id, passage: n }));
           const t1 = O.m.trajet(pas, 1, auj), t2 = O.m.trajet(pas, 2, auj);
@@ -334,7 +337,7 @@
             put('<div class="rd gros c1"><span>Classe 1</span><b>' + euro(c1) + '</b></div><div class="rd gros c2"><span>Classe 2</span><b>' + euro(c2) + '</b></div><div class="rd sub"><span>' + (legOk ? x.det + ' + ' : '') + 'barrière(s) : ' + noms + '</span></div><div class="rd sub"><span>Source : tarifs officiels 2026' + (croise ? ' (relecture en cours, à vérifier)' : '') + '</span></div>', true);
             return;
           }
-          put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Barrière(s) détectée(s) : ' + noms + '. Un tarif officiel manque : aucun total n’est affiché.</span></div>', false);
+          { const ap = viaGoogle ? '' : approx(sh, tms, km); if (ap) { put(ap, false); return; } } put('💶 <b>Prix exact non disponible</b> pour ce trajet.<div class="rd sub"><span>Barrière(s) détectée(s) : ' + noms + '. Un tarif officiel manque : aucun total n’est affiché.</span></div>', false);
           return;
         }
         if (x && x.reste < 3) {
@@ -343,7 +346,7 @@
         }
       } catch (_) { /* pas de prix officiel exact trouvé : KO plus bas, jamais d'estimation */ }
       if (viaGoogle && r.toll && r.toll.status === 'aucun_peage') { put('💶 <b>Aucun péage</b> sur ce trajet : le trajet le plus rapide est déjà sans péage.', true); const sp = out.querySelector('.bkSans'); if (sp) sp.remove(); return; }
-      put(KO, false);
+      put(viaGoogle ? KO : (approx(sh, tms, km) || KO), false);
     } catch (_) { put('⚠️ <b>Calcul du péage impossible pour l’instant</b> : le serveur de tracé ne répond pas.<div class="rd sub"><span>Ce n’est pas un prix inconnu. Vérifie ta connexion (wifi/4G) puis appuie de nouveau sur « Voiture et péages ».</span></div>', false); }
   };
   // V263 : trajet mixte (une partie sans péage, une partie avec péage) : on coupe le trajet à une gare, on demande à Google les deux moitiés (rapide / sans péage) et on garde la combinaison la moins chère (prix exact officiel) avec peu de temps en plus.
