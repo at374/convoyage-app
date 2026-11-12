@@ -366,7 +366,7 @@
   };
   // V263 : trajet mixte (une partie sans péage, une partie avec péage) : on coupe le trajet à une gare, on demande à Google les deux moitiés (rapide / sans péage) et on garde la combinaison la moins chère (prix exact officiel) avec peu de temps en plus.
   const dens = A => { const sh = [[A[0][1], A[0][0]]]; for (let q = 1; q < A.length; q++) { const p0 = sh[sh.length - 1], p1 = [A[q][1], A[q][0]], n = Math.ceil(dist(p0[0], p0[1], p1[0], p1[1]) / 0.15); for (let u = 1; u < n; u++) sh.push([p0[0] + (p1[0] - p0[0]) * u / n, p0[1] + (p1[1] - p0[1]) * u / n]); sh.push(p1); } return sh; };
-  const prixTroncon = async poly => { try { if (!poly) return null; const sh = dens(decode(poly)); const R = await calculPeage(sh, [{ begin_shape_index: 0, end_shape_index: sh.length - 1 }], 100, true); const O = await chargerOverlay(); if (O && barrieresTraversees(O, sh, 0, sh.length - 1).length) return { x: null, h: R.h || [] }; return { x: R.x && R.x.reste < 3 ? R.x : null, h: R.h || [] }; } catch (_) { return null; } };
+  const prixTroncon = async poly => { try { if (!poly) return null; const sh = dens(decode(poly)); const R = await calculPeage(sh, [{ begin_shape_index: 0, end_shape_index: sh.length - 1 }], 100, true); const O = await chargerOverlay(); if (O && barrieresTraversees(O, sh, 0, sh.length - 1).length) return { x: null, h: R.h || [] }; if (R.x && R.x.reste < 3) return { x: R.x, h: R.h || [] }; const V = R.part; let kk = 0, s = 0, n = 0; for (let k = 1; k < sh.length; k++) kk += dist(sh[k - 1][0], sh[k - 1][1], sh[k][0], sh[k][1]); const pas = Math.max(1, Math.floor(sh.length / 25)); for (let k = 0; k < sh.length; k += pas) { const r = TAUX_KM[Math.floor(sh[k][0]) + ',' + Math.floor(sh[k][1])]; s += r !== undefined ? r : 0.105; n++; } if (!n || kk < 1) return { x: null, h: R.h || [] }; const vk = V && V.km > 0 ? Math.min(V.km, kk) : 0, m1 = (kk - vk) * s / n; return { x: { c1: Math.round(((V ? V.c1 : 0) + m1) * 10) / 10, c2: Math.round(((V ? V.c2 : 0) + m1 * 1.85) * 10) / 10, approx: true }, h: R.h || [] }; } catch (_) { return null; } };   // V297 : le trajet mixte accepte une estimation ≈ quand le prix exact manque
   const nomLieu = async (la, lo) => { try { const j = await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=fr&lat=' + la + '&lon=' + lo).then(x => x.json()); const a = j.address || {}; return a.city || a.town || a.village || a.municipality || a.county || null; } catch (_) { return null; } };
   const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
   const chercherMixte = async (r, target) => {
@@ -395,7 +395,7 @@
       }
       for (const c of cands) { const q = await prixTroncon(c.pay.poly); c.x = q && q.x; }
       const fast = { km: r.distanceKm, min: r.durationMinutes, c1: pf.x.c1, c2: pf.x.c2 };
-      const ok = cands.filter(c => c.x && c.lib.min != null && c.pay.min != null).map(c => Object.assign(c, { km: c.lib.km + c.pay.km, min: c.lib.min + c.pay.min, c1: c.x.c1, c2: c.x.c2 })).filter(c => fast.c1 - c.c1 >= 1);
+      const ok = cands.filter(c => c.x && c.lib.min != null && c.pay.min != null).map(c => Object.assign(c, { km: c.lib.km + c.pay.km, min: c.lib.min + c.pay.min, c1: c.x.c1, c2: c.x.c2 })).filter(c => fast.c1 - c.c1 >= ((pf.x.approx || c.x.approx) ? 6 : 1));   // V297 : estimation = marge plus grande
       ok.forEach(c => { c.score = (fast.c1 - c.c1) - 0.2 * Math.max(0, c.min - fast.min); });
       ok.sort((a, b) => b.score - a.score);
       const best = ok[0];
@@ -408,7 +408,8 @@
       const m0 = target.children[0], m1 = target.children[1];
       if (m0 && m1 && m0.querySelector('svg') && tmp.children.length >= 2) { target.replaceChild(tmp.children[0], m0); target.replaceChild(tmp.children[0], m1); }
       const k1 = n => Math.round(n * 10) / 10;
-      const P12 = (x1, x2) => '<span class="pc1">Cl. 1 : ' + euro(x1) + '</span> · <span class="pc2">Cl. 2 : ' + euro(x2) + '</span>';
+      const AP = (pf.x.approx || best.x.approx) ? '≈ ' : '';
+      const P12 = (x1, x2) => '<span class="pc1">Cl. 1 : ' + AP + euro(x1) + '</span> · <span class="pc2">Cl. 2 : ' + AP + euro(x2) + '</span>';
       const ligL = (de, a) => '🟢 <b>SANS PÉAGE</b> ' + esc(de) + ' → ' + esc(a) + '<br>' + k1(best.lib.km) + ' km · ' + hm(best.lib.min);
       const ligP = (de, a) => '🔵 <b>AVEC PÉAGE</b> ' + esc(de) + ' → ' + esc(a) + '<br>' + k1(best.pay.km) + ' km · ' + hm(best.pay.min) + '<br>' + P12(best.c1, best.c2);
       const dmin = best.min - fast.min, eco1 = Math.round((fast.c1 - best.c1) * 100) / 100, eco2 = Math.round((fast.c2 - best.c2) * 100) / 100;
