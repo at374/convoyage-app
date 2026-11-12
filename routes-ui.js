@@ -41,7 +41,7 @@
   const liens = (o, d) => '<div class="bk bkC bkTr bkIt"><div class="bkt">OUVRIR CE TRAJET DANS</div><div class="liensTr"><a href="https://www.google.com/maps/dir/?api=1&origin=' + lieu(o) + '&destination=' + lieu(d) + '&travelmode=driving&dir_action=navigate" target="_blank" rel="noopener">🗺️ Google Maps</a><a href="https://waze.com/ul?' + (typeof d === 'string' ? 'q=' + encodeURIComponent(d) : 'll=' + d.lat + ',' + d.lng) + '&navigate=yes" target="_blank" rel="noopener">🚙 Waze</a><a href="https://www.viamichelin.fr/web/Itineraires?departure=' + lieu(o) + '&arrival=' + lieu(d) + '" target="_blank" rel="noopener">🧭 ViaMichelin</a><a href="https://fr.mappy.com/itineraire" target="_blank" rel="noopener">📍 Mappy</a><a class="rm" href="https://www.roole.fr/application-roole-map" target="_blank" rel="noopener">🛣️ Roole Map</a></div></div>';
   const decode = s => { const out = []; let i = 0, lat = 0, lng = 0; while (i < s.length) { let b, sh = 0, res = 0; do { b = s.charCodeAt(i++) - 63; res |= (b & 31) << sh; sh += 5; } while (b >= 32); lat += (res & 1) ? ~(res >> 1) : (res >> 1); sh = 0; res = 0; do { b = s.charCodeAt(i++) - 63; res |= (b & 31) << sh; sh += 5; } while (b >= 32); lng += (res & 1) ? ~(res >> 1) : (res >> 1); out.push([lng / 1e5, lat / 1e5]); } return out; };
   // V253 : le tracé est réduit à ≈500 points avant tout calcul de carte (un téléphone lent se figeait sur des dizaines de milliers de points).
-  const mg = L => { const p = Math.ceil(L.length / 500); return p > 1 ? L.filter((_, i) => i % p === 0 || i === L.length - 1) : L; };
+  const mg = L => { const p = Math.ceil(L.length / 6000); return p > 1 ? L.filter((_, i) => i % p === 0 || i === L.length - 1) : L; };
   const carte = r => {
     window.CPPh('carte');
     const W = 480, H = 540, A = mg(decode(r.polyline));
@@ -59,13 +59,13 @@
     const pos = q => { const p = px(q, z); return [p[0] - ox, p[1] - oy]; };
     // V281 : les trois tracés (sans péage, avec péage, mixte) restent TOUS visibles : décalés côte à côte (voies parallèles) quand ils se superposent.
     // Le tracé « sans péage » est toujours dessiné (identique ou non au tracé avec péage) ; le mixte seulement s'il existe.
-    const lanes = [['#1a9850', 3, '8 5', B || A], ['#1e63d8', 3, '', A]].concat(C ? [['#8e24aa', 3, '', C]] : []);
+    const lanes = [['#1a9850', 2, '6 4', B || A], ['#1e63d8', 2, '', A]].concat(C ? [['#8e24aa', 2, '', C]] : []);
     const pxL = L => L.map(pos);
     const decal = (P, o) => { if (!o || P.length < 2) return P; return P.map((p, i) => { const q = P[Math.max(0, i - 2)], r2 = P[Math.min(P.length - 1, i + 2)]; let tx = r2[0] - q[0], ty = r2[1] - q[1]; const n = Math.hypot(tx, ty) || 1; return [p[0] - ty / n * o, p[1] + tx / n * o]; }); };
-    const pas = lanes.length === 3 ? 7 : 4.6;
-    const traces = lanes.map((ln, i) => { const o = (i - (lanes.length - 1) / 2) * pas; return '<polyline points="' + decal(pxL(ln[3]), o).map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + '" fill="none" stroke="' + ln[0] + '" stroke-width="' + ln[1] + '"' + (ln[2] ? ' stroke-dasharray="' + ln[2] + '"' : '') + ' stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'; }).join('');
+    const pas = lanes.length === 3 ? 4 : 3;
+    const traces = lanes.map((ln, i) => { const o = (i - (lanes.length - 1) / 2) * pas; const bs = pxL(ln[3]); (window.__cpLn = window.__cpLn || []).push(bs); return '<polyline data-i="' + (window.__cpLn.length - 1) + '" data-o="' + o + '" points="' + decal(bs, o).map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ') + '" fill="none" stroke="' + ln[0] + '" stroke-width="' + ln[1] + '"' + (ln[2] ? ' stroke-dasharray="' + ln[2] + '"' : '') + ' stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'; }).join('');
     const a = pos(A[0]), b = pos(A[A.length - 1]);
-    const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="position:absolute;left:0;top:0;width:100%;height:100%">' + traces + '<circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="7" fill="#1a9850" stroke="#fff" stroke-width="2"/><circle cx="' + b[0].toFixed(1) + '" cy="' + b[1].toFixed(1) + '" r="7" fill="#d93025" stroke="#fff" stroke-width="2"/></svg>';
+    const svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="position:absolute;left:0;top:0;width:100%;height:100%">' + traces + '<circle cx="' + a[0].toFixed(1) + '" cy="' + a[1].toFixed(1) + '" r="5" fill="#1a9850" stroke="#fff" stroke-width="1.5"/><circle cx="' + b[0].toFixed(1) + '" cy="' + b[1].toFixed(1) + '" r="5" fill="#d93025" stroke="#fff" stroke-width="1.5"/></svg>';
     return '<div class="cpCarte" data-z="' + z + '" data-ox="' + ox + '" data-oy="' + oy + '" data-w="' + W + '" data-h="' + H + '" style="position:relative;width:100%;aspect-ratio:480/540;overflow:hidden;border-radius:8px;margin-top:8px;background:#ddd;touch-action:pan-y"><div class="cpIn" style="position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:0 0">' + tuiles + '<div class="cpFin" style="position:absolute;left:0;top:0;width:100%;height:100%"></div>' + svg + '</div>' + '<span style="position:absolute;right:2px;bottom:2px;font-size:10px;background:rgba(255,255,255,.8);color:#333;padding:0 4px;border-radius:3px">© OpenStreetMap</span></div><p class="doux">Bleu : avec péages · Vert pointillé : sans péage' + (C ? ' · Violet : trajet mixte' : '') + '. Si les tracés sont les mêmes, ils sont dessinés côte à côte.</p>';
   };
   const zoomer = box => {
@@ -73,6 +73,9 @@
     const inn = box.querySelector('.cpIn'), fin = box.querySelector('.cpFin');
     const Z0 = +box.dataset.z, OX = +box.dataset.ox, OY = +box.dataset.oy, W = +box.dataset.w, H = +box.dataset.h, N0 = 2 ** Z0;
     let s = 1, tx = 0, ty = 0, tm = 0;
+    const decal2 = (P, o) => { if (!o || P.length < 2) return P; return P.map((p, i) => { const q = P[Math.max(0, i - 2)], r2 = P[Math.min(P.length - 1, i + 2)]; let dx = r2[0] - q[0], dy = r2[1] - q[1]; const n = Math.hypot(dx, dy) || 1; return [p[0] - dy / n * o, p[1] + dx / n * o]; }); };
+    const marques = () => { inn.querySelectorAll('circle').forEach(c => { c.setAttribute('r', (5 / s).toFixed(2)); c.setAttribute('stroke-width', (1.5 / s).toFixed(2)); }); };
+    const reoff = () => { inn.querySelectorAll('polyline[data-i]').forEach(pl => { const P = (window.__cpLn || [])[+pl.dataset.i], o = +pl.dataset.o; if (!P) return; pl.setAttribute('points', decal2(P, o / s).map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')); }); };
     const lim = () => { const w = box.clientWidth, h = box.clientHeight; s = Math.max(1, Math.min(16, s)); tx = Math.min(0, Math.max(w * (1 - s), tx)); ty = Math.min(0, Math.max(h * (1 - s), ty)); };
     const fine = () => {
       const k = Math.min(Math.floor(Math.log2(s)), 18 - Z0);
@@ -85,7 +88,7 @@
       for (let a = ax; a <= bx; a++) for (let b = ay; b <= by; b++) if (b >= 0 && b < N) h2 += '<img alt="" referrerpolicy="no-referrer" src="https://tile.openstreetmap.org/' + (Z0 + k) + '/' + (((a % N) + N) % N) + '/' + b + '.png" style="position:absolute;left:' + ((a * t - OX) / W * 100) + '%;top:' + ((b * t - OY) / H * 100) + '%;width:' + (t / W * 100) + '%;height:' + (t / H * 100) + '%">';
       fin.innerHTML = h2;
     };
-    const draw = () => { lim(); inn.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')'; box.style.touchAction = s > 1 ? 'none' : 'pan-y'; clearTimeout(tm); tm = setTimeout(fine, 180); };
+    const draw = () => { lim(); inn.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + s + ')'; box.style.touchAction = s > 1 ? 'none' : 'pan-y'; marques(); clearTimeout(tm); tm = setTimeout(() => { fine(); reoff(); }, 180); };
     const zoomAt = (cx, cy, ns) => { const o = s; s = Math.max(1, Math.min(16, ns)); tx = cx - (cx - tx) * (s / o); ty = cy - (cy - ty) * (s / o); draw(); };
     const bt = (txt, top, fn) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = txt; b.style.cssText = 'position:absolute;left:6px;top:' + top + 'px;width:36px;height:36px;border-radius:8px;border:0;background:rgba(255,255,255,.92);color:#222;font:700 20px/1 system-ui;z-index:3;padding:0'; b.onclick = e => { e.stopPropagation(); fn(); }; box.appendChild(b); };
     bt('+', 6, () => zoomAt(box.clientWidth / 2, box.clientHeight / 2, s * 2));
