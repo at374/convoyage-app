@@ -138,18 +138,18 @@
     const paire = (x, y) => { const ds = x.ent ? [lon(i0, y.k)] : y.ent ? [lon(x.k, i1)] : [lon(x.k, y.k)]; if (x.vo) ds.push(lon(i0, y.k)); if (y.vo) ds.push(lon(x.k, i1)); for (const a of jum(x.g)) for (const b of jum(y.g)) { if (a === b) continue; const v = P.prix.get(Math.min(a, b) * 1000 + Math.max(a, b)); if (!v) continue; if (ds.some(d => { const q = v[2] / Math.max(1, d); return q >= 0.7 && q <= 1.9; })) return { v, a, b }; } return null; };
     const segs = [];
     P.partiel = null;
-    let kmV = 0;
+    let kmV = 0, gap = false;
     let i = 0;
     while (i < hits.length) {
       let ok = null;
       for (let h = hits.length - 1; h > i && !ok; h--) { const p = paire(hits[i], hits[h]); if (p) ok = { h, p }; }
       if (!ok) {
         // gare isolée sans tarif : tolérée uniquement après le dernier tronçon tarifé, jamais au milieu du trajet
-        if (!segs.length) return null;
+        if (!segs.length) { gap = true; i++; continue; }   // V296 : gare isolée : on la saute et on continue pour garder tous les tronçons vérifiés (le prix exact reste refusé)
         // V283 : « ALLONZIER » reliée à l'A41 nord est la même jonction qu'Adelac Cruseilles : sortie là = Adelac seul (barrières), aucun tarif AREA.
         if (hits.slice(i).every(q => P.g[q.g][0] === 'ALLONZIER')) break;
-        for (let a = i; a < hits.length; a++) for (let c = a + 1; c < hits.length; c++) if (paire(hits[a], hits[c])) return null;
-        { const fin = segs[segs.length - 1].h; if (hits.slice(i).some(q => lon(hits[fin].k, q.k) > 1.5)) return null; }   // V265 : une gare sans tarif après le dernier tronçon = prix partiel : refusé
+        let lat = false; for (let a = i; a < hits.length; a++) for (let c = a + 1; c < hits.length; c++) if (paire(hits[a], hits[c])) lat = true; if (lat) { gap = true; i++; continue; }
+        { const fin = segs[segs.length - 1].h; if (hits.slice(i).some(q => lon(hits[fin].k, q.k) > 1.5)) { gap = true; break; } }   // V265 : une gare sans tarif après le dernier tronçon = prix partiel : refusé
         break;
       }
       segs.push(ok); kmV += lon(hits[i].k, hits[ok.h].k); i = ok.h + 1;
@@ -163,7 +163,7 @@
     const dout = segs.some(q => SUSPECTES.includes(P.g[q.p.a][0]) || SUSPECTES.includes(P.g[q.p.b][0]));
     const nO = ouv.map(o => P.g[o.g][0]);
     const detS = segs.map(q => joli(P.g[q.p.a][0]) + ' → ' + joli(P.g[q.p.b][0]));
-    if (unkHit) return null;
+    if (unkHit || gap) return null;
     return { e: segs.length ? joli(P.g[segs[0].p.a][0]) : joli(nO[0]), s: segs.length ? joli(P.g[segs[segs.length - 1].p.b][0]) : joli(nO[nO.length - 1]), c1: r2(segs.reduce((n, q) => n + q.p.v[0], 0)), c2: r2(segs.reduce((n, q) => n + q.p.v[1], 0)), det: detS.length ? detS.join(' + ') : 'Péages à tarif fixe', reste: dout ? 99 : 0, ouv: nO.map(n => n.toLowerCase().replace(/[^a-z0-9]+/g, '-')) };
   };
   // V233 : péages « barrière » (sans gare d'entrée/sortie : ponts, tunnels, barrières pleine voie) — tarifs officiels versionnés, jamais d'estimation.
