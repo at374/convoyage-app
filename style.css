@@ -610,11 +610,14 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 @media(max-width:480px){#cpTransportMissionDetails{padding:10px;margin-left:-8px;margin-right:-8px}#cpTransportMissionDetails .cp-transport-direction{padding:13px}#cpTransportMissionDetails .cp-transport-hero{padding:20px 15px}}
 
 /* V299 : plateforme Delivery Car */
-:root{--pf-DeliveryCar-bg:#d9f5f1;--pf-DeliveryCar-tx:#0b4a44;--pf-DeliveryCar-bd:#0f766e}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pf-DeliveryCar-bg:#0f766e;--pf-DeliveryCar-tx:#ffffff;--pf-DeliveryCar-bd:#99f6e4}}
-:root[data-theme="dark"]{--pf-DeliveryCar-bg:#0f766e;--pf-DeliveryCar-tx:#ffffff;--pf-DeliveryCar-bd:#99f6e4}
+:root{--pf-DeliveryCar-bg:#ffe0ec;--pf-DeliveryCar-tx:#7a0f3a;--pf-DeliveryCar-bd:#db2777}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pf-DeliveryCar-bg:#be185d;--pf-DeliveryCar-tx:#ffffff;--pf-DeliveryCar-bd:#fbcfe8}}
+:root[data-theme="dark"]{--pf-DeliveryCar-bg:#be185d;--pf-DeliveryCar-tx:#ffffff;--pf-DeliveryCar-bd:#fbcfe8}
 .mission.plat-DeliveryCar,.retour.plat-DeliveryCar{background:var(--pf-DeliveryCar-bg);color:var(--pf-DeliveryCar-tx);border-left:5px solid var(--pf-DeliveryCar-bd)}
 .mission.plat-DeliveryCar .doux,.retour.plat-DeliveryCar .doux,.mission.plat-DeliveryCar .trajet{color:var(--pf-DeliveryCar-tx)}
 .mission.plat-DeliveryCar .doux,.retour.plat-DeliveryCar .doux{opacity:.8}
 .lignePlan.plat-DeliveryCar{background:var(--pf-DeliveryCar-bg);color:var(--pf-DeliveryCar-tx);padding-left:8px;border-left:4px solid var(--pf-DeliveryCar-bd)}
 .carte.alerte.plat-DeliveryCar{background:var(--pf-DeliveryCar-bg);color:var(--pf-DeliveryCar-tx);border-left:5px solid var(--pf-DeliveryCar-bd)}
+/* V300 : puce de filtre et étiquette Delivery Car (rose : distincte de DriiveMe) */
+.puce[data-filtre="DeliveryCar"] { background: var(--pf-DeliveryCar-bg); color: var(--pf-DeliveryCar-tx); border: 2px solid var(--pf-DeliveryCar-bd); }
+.plat-DeliveryCar .etiq:not(.ok):not(.ko):not(.nv) { background: var(--pf-DeliveryCar-bd); color: #fff; }
