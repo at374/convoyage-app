@@ -400,6 +400,7 @@
       ok.forEach(c => { c.score = (fast.c1 - c.c1) - 0.2 * Math.max(0, c.min - fast.min); });
       ok.sort((a, b) => b.score - a.score);
       const best = ok[0];
+if (best && Math.abs(best.km - fast.km) <= Math.max(1, fast.km * 0.01) && Math.abs(best.min - fast.min) <= 2) { ko('Pas de trajet mixte distinct : le trajet rapide de Google passe déjà par la route gratuite sur ce tronçon (même distance, même durée, mêmes tracés). Le prix « avec péage » vient du calcul des gares : il peut être plus élevé que ce que ce trajet coûte vraiment.'); return; } // V300 : un trajet mixte identique au trajet rapide n’est pas un vrai trajet mixte
       if (!best || best.score < 0.5) { ko('Aucun trajet mixte intéressant : le trajet rapide reste le meilleur compromis (ou le prix exact d’une partie n’est pas disponible).'); return; }
       const dep = typeof B.origin === 'string' ? B.origin : 'départ', arr = typeof B.destination === 'string' ? B.destination : 'arrivée';
       const piv = (await nomLieu(best.p.lat, best.p.lng)) || 'point intermédiaire';
