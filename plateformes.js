@@ -5,7 +5,7 @@
   'use strict';
   const ED = globalThis.CP_EDITION;
   if (!ED || ED.verrouillee) return;
-  const TOUTES = [['Hiflow', 'Hiflow'], ['DriiveMe', 'DriiveMe'], ['Otoqi', 'Otoqi'], ['PopValet', 'Pop Valet']];
+  const TOUTES = [['Hiflow', 'Hiflow'], ['DriiveMe', 'DriiveMe'], ['Otoqi', 'Otoqi'], ['PopValet', 'Pop Valet'], ['DeliveryCar', 'Delivery Car']];
   const CLE = 'cp_plats_choisies';
   const CODES = TOUTES.map(t => t[0]);
   ED.toutes = (ED.toutes || ED.plateformes || CODES).slice();
