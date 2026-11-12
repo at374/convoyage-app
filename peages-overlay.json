@@ -4316,6 +4316,15 @@
   ],
   "gares": [
     {
+      "nom": "Aubagne Est",
+      "points": [
+        [43.32435, 5.59803]
+      ],
+      "ajout": [
+        [43.32435, 5.59803]
+      ]
+    },
+    {
       "nom": "Carnoules",
       "points": [
         [
