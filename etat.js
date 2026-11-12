@@ -3,7 +3,7 @@
 // Sortie : une couleur globale (vert / orange / rouge / gris) + le détail par plateforme, en français, sans jargon.
 (function (root) {
   'use strict';
-  const SEUILS = { Hiflow: [45, 120], DriiveMe: [20, 60], PopValet: [45, 120], Otoqi: [45, 120] };   // PopValet : lu seulement quand tu ouvres l'application Pop Valet (V146)   // [vert jusqu'à, orange jusqu'à] en minutes (Hiflow : lu toutes les 30 min par le téléphone, V1.11) ; au-delà : rouge
+  const SEUILS = { Hiflow: [45, 120], DriiveMe: [20, 60], PopValet: [45, 120], Otoqi: [45, 120], DeliveryCar: [45, 120] };   // PopValet : lu seulement quand tu ouvres l'application Pop Valet (V146)   // [vert jusqu'à, orange jusqu'à] en minutes (Hiflow : lu toutes les 30 min par le téléphone, V1.11) ; au-delà : rouge
   const DEFAUT = [15, 45], EXTENSION_MORTE_MIN = 10, ORDRE = { vert: 0, orange: 1, rouge: 2 };
   const heure = t => new Date(t).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
   function duree(min) { min = Math.max(0, Math.round(min)); if (min < 1) return 'moins d’une minute'; if (min < 60) return min + ' min'; const h = Math.floor(min / 60), m = min % 60; return h + ' h' + (m ? ' ' + String(m).padStart(2, '0') : ''); }
@@ -25,7 +25,9 @@
     if (!lignes.length) return { couleur: 'gris', resume: 'Aucune plateforme lue pour l’instant : ouvre l’extension sur ton ordinateur ou ton VPS', details: [] };
     const details = lignes.map(l => ligne(l, now));
     // V146 : Pop Valet et Otoqi sont toujours listés, même avant la première lecture (gris, sans effet sur la couleur globale)
-    for (const p of ['PopValet', 'Otoqi']) if (!details.some(d => d.platform === p)) details.push({ platform: p, ageMin: null, couleur: 'gris', texte: 'pas encore lue — ouvre ' + (p === 'PopValet' ? '« En attente » dans Pop Valet' : '« Disponibles » dans Otoqi') + ' sur le téléphone (application Convoyage Tel 1.22)' });
+    // V300 : seulement les plateformes cochées par le convoyeur (chacune indépendante), Delivery Car comprise
+let choisies = null; try { const c = JSON.parse(localStorage.getItem('cp_plats_choisies')); if (Array.isArray(c)) choisies = c; } catch (_) { }
+for (const p of ['PopValet', 'Otoqi', 'DeliveryCar']) if ((!choisies || choisies.includes(p)) && !details.some(d => d.platform === p)) details.push({ platform: p, ageMin: null, couleur: 'gris', texte: 'pas encore lue — ouvre ' + (p === 'PopValet' ? '« En attente » dans Pop Valet' : p === 'Otoqi' ? '« Disponibles » dans Otoqi' : '« Missions disponibles » (loupe) dans Delivery Car') + ' sur le téléphone (application Convoyage Tel 2.27)' });
     details.sort((a, b) => a.platform.localeCompare(b.platform, 'fr'));
     const maj = Math.max(...lignes.map(l => Date.parse(l.maj_le || '') || 0));
     if (maj && (now - maj) / 60000 > EXTENSION_MORTE_MIN) return { couleur: 'rouge', resume: 'L’extension n’a rien envoyé depuis ' + duree((now - maj) / 60000) + ' : ordinateur éteint, Chrome fermé ou connexion coupée ?', details, extensionMuette: true };
