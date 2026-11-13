@@ -49,6 +49,11 @@ jobs:
           assert.equal(fareFor({...urban,line:'L'}),null,'STAR’T ligne L : zone non prouvée');
           assert.equal(fareFor({...urban,provider:"J'y bus Rumilly",line:'J4'}),null,'J’ybus : prix 2026 non confirmé');
           assert.equal(fareFor({...urban,provider:'Cars Région Haute-Savoie'}),null,'Ne pas attribuer STAR’T aux Cars Région');
+          // Ondéa 419 : ligne de proximité scolaire, ne jamais y appliquer le M-Ticket urbain.
+          const ondea={kind:'transit',mode:'Bus',provider:'Ondéa Aix-les-Bains',line:'419',departure:'2026-11-16T08:00:00+01:00'};
+          assert.equal(fareFor(ondea),null,'Ondéa 419 : tarif unitaire non prouvé');
+          assert.equal(fareFor({...ondea,line:'400'}),null,'Ondéa 400 : exclusion scolaire');
+          assert.equal(fareFor({...ondea,line:'1'})?.amount,1.70,'Ondéa 1 : tarif urbain');
           // Régressions : zones, dates et opérateurs doivent rester strictement contrôlés.
           assert.equal(fareFor({...leg,line:'TAM 1',departure:'2026-12-31T23:00:00+01:00'})?.amount,1.10);
           assert.equal(fareFor({...leg,departure:'2025-12-31T23:00:00+01:00'}),null);
