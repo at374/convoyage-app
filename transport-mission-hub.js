@@ -396,7 +396,11 @@ function makeProviders(r,opts={}){
      const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
      const date=p.year+'-'+p.month+'-'+p.day;
      const clock=p.hour+':'+p.minute+':00';
-     const base={operator,resource:{...resource,format:'GTFS'},fetcher,signal,from:pt(task.from),to:pt(task.to),maxResults:20,includeTransfers:true};
+     // Match the 3 km walking-search envelope used in the AURA coverage audit.
+     // These are straight-line candidate stops, not verified pedestrian routes:
+     // completeWalks must still calculate exact walking distances and times.
+     const base={operator,resource:{...resource,format:'GTFS'},fetcher,signal,
+      from:pt(task.from),to:pt(task.to),radiusMeters:3000,maxResults:20,includeTransfers:true};
      const result=await r.CPNationalGTFSJourneys.loadAndSearch({
       ...base,date,...(window.arriveBy?{latestArrival:clock}:{earliestDeparture:clock})});
      let rows=result.journeys||[];
