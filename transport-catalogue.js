@@ -118,8 +118,8 @@ async function fetchSwissGTFSResources(fetcher,{signal}={}){
 // Source discovery only: timetable coverage does not imply live ticket prices or seat inventory.
 const NATIONAL_OPERATORS=Object.freeze({
  sncf:/\b(?:sncf|tgv|intercit[eé]s|ter)\b/i,
- blablacarBus:/blablacar\s*bus/i,
- flixbus:/flixbus|flixtrain/i
+ blablacarBus:/blablacar[\s-]*bus/i,
+ flixbus:/\bflix(?:bus|train)\b/i
 });
 function nationalOperatorGTFS(datasets){
  const rows=Array.isArray(datasets)?datasets:[];
