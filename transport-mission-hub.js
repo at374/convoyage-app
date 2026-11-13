@@ -386,10 +386,21 @@ function makeProviders(r,opts={}){
      const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
      const date=p.year+'-'+p.month+'-'+p.day;
      const clock=p.hour+':'+p.minute+':00';
+     const base={operator,resource,fetcher,signal,from:pt(task.from),to:pt(task.to),maxResults:20};
      const result=await r.CPNationalGTFSJourneys.loadAndSearch({
-      operator,resource,fetcher,signal,date,from:pt(task.from),to:pt(task.to),
-      maxResults:20,...(window.arriveBy?{latestArrival:clock}:{earliestDeparture:clock})});
-     return fromNationalGTFS(result.journeys,operator);
+      ...base,date,...(window.arriveBy?{latestArrival:clock}:{earliestDeparture:clock})});
+     let rows=result.journeys||[];
+     // After midnight, a service with GTFS time 24:30 belongs to yesterday's service date.
+     // Query the previous service day as well, without inventing a new train or bus.
+     if(Number(p.hour)<6){
+      const previous=new Date(Date.parse(date+'T00:00:00Z')-86400000).toISOString().slice(0,10);
+      const afterMidnight=(Number(p.hour)+24)+':'+p.minute+':00';
+      const overnight=await r.CPNationalGTFSJourneys.loadAndSearch({
+       ...base,date:previous,...(window.arriveBy?{earliestDeparture:'24:00:00',latestArrival:afterMidnight}
+        :{earliestDeparture:afterMidnight})});
+      rows=rows.concat(overnight.journeys||[]);
+     }
+     return fromNationalGTFS(rows,operator);
     }};
   }
  }
