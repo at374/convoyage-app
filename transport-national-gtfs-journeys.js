@@ -4,7 +4,7 @@
 const indexer=typeof module==='object'&&module.exports?require('./transport-gtfs-index.js'):root.CPGTFSIndex;
 const loader=typeof module==='object'&&module.exports?require('./transport-gtfs-loader.js'):root.CPGTFSLoader;
 const OPERATORS=new Set(['sncf','blablacarBus','flixbus']);
-function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=30,earliestDeparture=null,latestArrival=null}={}){
+function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=30,earliestDeparture=null,latestArrival=null,includeTransfers=false}={}){
  if(!OPERATORS.has(operator))throw new Error('Unsupported national operator');
  if(!files||!index)throw new Error('Prebuilt GTFS files and index required');
  if(!/^\d{4}-\d{2}-\d{2}$/.test(date||'')||
@@ -26,15 +26,20 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
  if(Number.isNaN(min))throw new Error('Invalid departure threshold');
  const max=latestArrival===null?Infinity:seconds(latestArrival);
  if(Number.isNaN(max))throw new Error('Invalid arrival threshold');
- return indexer.nearbyDirectTrips(files,index,date,from,to,radiusMeters)
-  .filter(x=>seconds(x.departure)>=min&&seconds(x.arrival)<=max)
+ const direct=indexer.nearbyDirectTrips(files,index,date,from,to,radiusMeters);
+ const transfer=includeTransfers?indexer.nearbyTransferTrips(files,index,date,from,to,radiusMeters,
+  {maxLegs:15000,maxCandidates:200,maxExaminedPairs:30000,minTransferMinutes:5,maxWaitMinutes:120}):null;
+ const candidates=direct.concat(transfer?.journeys||[]);
+ return candidates.filter(x=>seconds(x.departure)>=min&&seconds(x.arrival)<=max)
   .sort((a,b)=>seconds(a.departure)-seconds(b.departure)||seconds(a.arrival)-seconds(b.arrival))
   .slice(0,maxResults).map(x=>({
    operator,tripId:x.tripId,line:x.line,date:x.date,departure:x.departure,arrival:x.arrival,
    fromStopId:x.from,toStopId:x.to,originStop:x.originStop,destinationStop:x.destinationStop,
    accessDistanceMeters:x.accessDistanceMeters,egressDistanceMeters:x.egressDistanceMeters,
    serviceScheduled:true,serviceConfirmed:false,priceEUR:null,priceStatus:'unavailable',
-   seatAvailability:'unknown',walkingRouteConfirmed:false,source:'official-gtfs'
+   seatAvailability:'unknown',walkingRouteConfirmed:false,source:'official-gtfs',
+   ...(x.legs?{legs:x.legs,transferStop:x.transferStop,transferMinutes:x.transferMinutes}:{}),
+   ...(transfer?.searchTruncated?{searchTruncated:true}:{})
   }));
 }
 async function loadAndSearch({operator,resource,fetcher,signal,loadOptions={},...searchOptions}={}){
