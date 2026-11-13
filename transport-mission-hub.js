@@ -403,6 +403,66 @@ function queryWindow(task){
 function makeProviders(r,opts={}){
  const fetcher=opts.fetcher||((...a)=>r.fetch(...a));
  const P={};
+ // Regional GTFS archives already hosted by the project. These are scheduled
+ // candidates only; the pedestrian router and confirmation checks still apply.
+ if(r.CPGTFSLoader?.loadResource&&r.CPGTFSIndex?.nearbyDirectTrips){
+  const localNetworks=[
+   ['tac','TAC Annemasse','tac-annemasse.zip',[46.1,5.98,46.27,6.42]],
+   ['synchro','Synchro Chambéry','synchro-chambery.zip',[45.48,5.75,45.72,6.04]],
+   ['tcl','TCL Lyon','tcl-lyon.zip',[45.55,4.6,46.02,5.1]],
+   ['cars_isere','Cars Région Isère','cars-region-isere.zip',[44.69,4.74,45.89,6.36]],
+   ['cars_savoie','Cars Région Savoie','cars-region-savoie.zip',[45.05,5.62,45.80,7.19]],
+   ['jybus','J’y bus Rumilly','jybus-rumilly.zip',[45.80,5.85,45.93,6.05]],
+   ['tam','TAM Ambérieu','tam-amberieu.zip',[45.90,5.28,46.04,5.43]]
+  ];
+  const origin=String(r.location?.origin||'');
+  const base=origin.startsWith('https://')?origin.replace(/\\/$/,'')+'/data/gtfs/':
+   'https://at374.github.io/convoyage-app/data/gtfs/';
+  const cache=new Map();
+  const inBounds=(p,b)=>p&&p.lat>=b[0]&&p.lon>=b[1]&&p.lat<=b[2]&&p.lon<=b[3];
+  const dateParts=when=>{
+   const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(when));
+   const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+   return {date:p.year+'-'+p.month+'-'+p.day,clock:p.hour+':'+p.minute+':00'};
+  };
+  const toISO=(date,clock)=>{
+   if(!/^\\d{1,3}:[0-5]\\d:[0-5]\\d$/.test(clock||''))return null;
+   const [h,m,s]=clock.split(':').map(Number);
+   const wall=Date.parse(date+'T00:00:00Z')+(h*3600+m*60+s)*1000;
+   const tz=new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Paris',timeZoneName:'shortOffset'})
+    .formatToParts(new Date(wall)).find(x=>x.type==='timeZoneName')?.value||'';
+   const match=/^GMT([+-])(\\d{1,2})(?::(\\d{2}))?$/.exec(tz);
+   if(!match)return null;
+   const offset=(match[1]==='+'?1:-1)*(Number(match[2])*60+Number(match[3]||0));
+   return new Date(wall-offset*60000).toISOString();
+  };
+  for(const [id,name,file,bounds] of localNetworks){
+   P['local_'+id]={name:name+' GTFS',
+    enabled:task=>!!queryWindow(task)&&inBounds(pt(task.from),bounds)&&inBounds(pt(task.to),bounds),
+    disabledReason:'trajet hors zone du réseau local ou horaires manquants',
+    run:async(task,signal)=>{
+     const w=queryWindow(task),when=ms(w.when);
+     if(!Number.isFinite(when))return [];
+     const {date,clock}=dateParts(when),resource={format:'GTFS',url:base+file};
+     let promise=cache.get(id+'|'+date);
+     if(!promise){
+      promise=r.CPGTFSLoader.loadResource(resource,{fetcher,indexServiceDates:[date],retainSourceTables:false});
+      cache.set(id+'|'+date,promise);
+      promise.catch(()=>cache.delete(id+'|'+date));
+     }
+     const feed=await promise;
+     if(signal?.aborted)return [];
+     const rows=r.CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,pt(task.from),pt(task.to),3000);
+     const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
+     const filtered=rows.filter(x=>w.arriveBy?sec(x.arrival)<=sec(clock):sec(x.departure)>=sec(clock))
+      .slice(0,500).map(x=>({...x,network:name,
+       departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)}))
+      .filter(x=>x.departure&&x.arrival);
+     return fromGTFS(filtered,name).slice(0,30);
+    }};
+  }
+ }
  // National GTFS regional slices must be explicitly supplied by the application/server.
  // No direct download of full national feeds into Android and no invented ticket prices.
  if(r.CPNationalGTFSJourneys&&typeof r.CPNationalGTFSJourneys.loadAndSearch==='function'){
