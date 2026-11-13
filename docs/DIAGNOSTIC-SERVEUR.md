@@ -1,24 +1,30 @@
 # Diagnostic réel des transports — serveur GitHub Actions
 
-Exécuté le 2026-11-13T15:48:37.425Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : oui.
+Exécuté le 2026-11-13T15:52:41.311Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : oui.
+
+**Bilan : 479 trajets sur 15 axes, 95 avec prix vérifié (19.8 %), 227 avec marches calculées (47.4 %), 184 réalisables.**
+
+**TripGo : 54 trajets, 0 avec prix vérifié, 0 portions avec billet chiffré.**
+
+Portions TripGo sans prix par opérateur : BlaBlaCar Bus (1), FlixBus-eu (3), SNCF (Société Nationale des Chemins de fer Français) (4), SNCF (18), SNCF VOYAGEURS (24), THONON-LES-BAINS - STAR'T (3), Star't Thonon (1).
 
 | Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | 1er résultat | Total | Sources | Erreurs | Attendus non vus |
 |---|---|---|---|---|---|---|---|---|---|
-| Annecy → Genève | 34 | 0 | 26 | 26 | 0.3 s | 12.0 s | TripGo, Suisse (transport.opendata.ch), SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | — | — |
-| Annemasse → Saint-Julien-en-Genevois | 56 | 41 | 24 | 16 | 0.2 s | 13.5 s | Suisse (transport.opendata.ch), TripGo, SNCF (GTFS officiel), TAC Annemasse (GTFS) | — | — |
-| Ambérieu-en-Bugey → Lyon Part-Dieu | 13 | 0 | 11 | 6 | 0.2 s | 3.5 s | SNCF (GTFS officiel), TripGo | — | cars-01, tcl |
-| Chambéry → Aix-les-Bains | 53 | 6 | 17 | 16 | 0.1 s | 8.6 s | Synchro Bus Chambéry (GTFS), SNCF (GTFS officiel), TripGo, Ondéa Aix-les-Bains (GTFS) | — | — |
-| Grenoble → Crolles | 12 | 5 | 12 | 12 | 0.1 s | 6.4 s | Mobilités M, SNCF (GTFS officiel) | — | — |
-| Rumilly → Annecy | 9 | 1 | 9 | 8 | 0.1 s | 4.1 s | Sibra (GTFS), SNCF (GTFS officiel), TripGo | — | jybus, cars-74 |
-| Thonon-les-Bains → Genève | 17 | 0 | 15 | 8 | 0.1 s | 8.6 s | SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | — |
+| Annecy → Genève | 34 | 0 | 26 | 26 | 0.3 s | 8.7 s | TripGo, Suisse (transport.opendata.ch), SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | — | — |
+| Annemasse → Saint-Julien-en-Genevois | 56 | 41 | 24 | 16 | 0.3 s | 13.5 s | Suisse (transport.opendata.ch), TripGo, SNCF (GTFS officiel), TAC Annemasse (GTFS) | — | — |
+| Ambérieu-en-Bugey → Lyon Part-Dieu | 13 | 0 | 11 | 6 | 0.1 s | 3.5 s | SNCF (GTFS officiel), TripGo | — | cars-01, tcl |
+| Chambéry → Aix-les-Bains | 53 | 6 | 17 | 16 | 0.2 s | 8.9 s | Synchro Bus Chambéry (GTFS), SNCF (GTFS officiel), TripGo, Ondéa Aix-les-Bains (GTFS) | — | — |
+| Grenoble → Crolles | 12 | 5 | 12 | 12 | 0.1 s | 5.2 s | Mobilités M, SNCF (GTFS officiel) | — | — |
+| Rumilly → Annecy | 9 | 1 | 9 | 8 | 0.2 s | 4.0 s | Sibra (GTFS), SNCF (GTFS officiel), TripGo | — | jybus, cars-74 |
+| Thonon-les-Bains → Genève | 17 | 0 | 15 | 8 | 0.1 s | 8.7 s | SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | — |
 | Voiron → Grenoble | 20 | 0 | 20 | 20 | 0.2 s | 5.3 s | SNCF (GTFS officiel), TripGo, Mobilités M, Cars Région Isère (GTFS) | — | mreso-voironnais |
 | Aix-les-Bains gare → Technolac (Ondéa 01) | 53 | 40 | 19 | 8 | 0.4 s | 9.2 s | Ondéa Aix-les-Bains (GTFS), SNCF (GTFS officiel), TripGo | — | — |
-| Thonon → Bons-en-Chablais (Star’t 142) | 58 | 0 | 24 | 17 | 0.2 s | 11.0 s | SNCF (GTFS officiel), TripGo, Suisse (transport.opendata.ch), Star't Thonon (GTFS) | — | — |
-| Rumilly Hôpital → Base de loisirs (J’y bus 1) | 31 | 0 | 7 | 7 | 0.4 s | 1.8 s | J'y bus Rumilly (GTFS) | — | — |
-| Ambérieu gare → Cabrol (TAM 2) | 67 | 0 | 16 | 15 | 0.0 s | 10.1 s | TAM Ambérieu-en-Bugey (GTFS), SNCF (GTFS officiel), Cars Région Ain (GTFS) | — | — |
+| Thonon → Bons-en-Chablais (Star’t 142) | 64 | 0 | 30 | 23 | 0.3 s | 11.0 s | TripGo, Suisse (transport.opendata.ch), Star't Thonon (GTFS), SNCF (GTFS officiel) | — | — |
+| Rumilly Hôpital → Base de loisirs (J’y bus 1) | 31 | 0 | 7 | 7 | 0.5 s | 1.8 s | J'y bus Rumilly (GTFS) | — | — |
+| Ambérieu gare → Cabrol (TAM 2) | 67 | 0 | 16 | 15 | 0.1 s | 10.1 s | TAM Ambérieu-en-Bugey (GTFS), SNCF (GTFS officiel), Cars Région Ain (GTFS) | — | — |
 | Chambéry → Chamoux-sur-Gelon (Cars Savoie S05) | 15 | 0 | 13 | 11 | 0.1 s | 4.6 s | Cars Région Savoie (GTFS), SNCF (GTFS officiel), TripGo | — | — |
 | Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 16 | 0 | 4 | 4 | 0.0 s | 2.3 s | TripGo, SNCF (GTFS officiel), Cars Région Ain (GTFS) | — | — |
-| Voiron → Voreppe (M réso Voironnais) | 19 | 2 | 4 | 4 | 0.1 s | 1.1 s | Mobilités M, TripGo, SNCF (GTFS officiel), Cars Région Isère (GTFS) | — | — |
+| Voiron → Voreppe (M réso Voironnais) | 19 | 2 | 4 | 4 | 0.1 s | 1.2 s | Mobilités M, TripGo, SNCF (GTFS officiel), Cars Région Isère (GTFS) | — | — |
 
 Exemples (3 meilleures propositions par axe) :
 
@@ -54,7 +60,7 @@ Exemples (3 meilleures propositions par axe) :
 - Meilleur compromis · Plus rapide : 2026-11-16T07:13:00.000Z → 2026-11-16T07:56:56.409Z · SNCF P3 › marche 3361 m · Prix à confirmer · Réalisable
 
 **Thonon → Bons-en-Chablais (Star’t 142)**
-- Meilleur compromis · Plus rapide : 2026-11-16T07:28:02.877Z → 2026-11-16T07:54:10.713Z · marche 154 m › SNCF C33 › marche 804 m · Prix à confirmer · Réalisable
+- Meilleur compromis · Plus rapide : 2026-11-16T09:00:00.000Z → 2026-11-16T09:21:00.000Z · THONON-LES-BAINS - STAR'T L · Prix à confirmer · Réalisable
 
 **Rumilly Hôpital → Base de loisirs (J’y bus 1)**
 - Meilleur compromis · Plus rapide : 2026-11-16T07:18:00.000Z → 2026-11-16T07:43:00.000Z · J'y bus Rumilly 1 · Prix à confirmer · Réalisable
