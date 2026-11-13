@@ -368,6 +368,31 @@ function queryWindow(task){
 function makeProviders(r,opts={}){
  const fetcher=opts.fetcher||((...a)=>r.fetch(...a));
  const P={};
+ // National GTFS regional slices must be explicitly supplied by the application/server.
+ // No direct download of full national feeds into Android and no invented ticket prices.
+ if(r.CPNationalGTFSJourneys&&typeof r.CPNationalGTFSJourneys.loadAndSearch==='function'){
+  const resources=opts.nationalGTFSResources||{};
+  for(const operator of ['sncf','blablacarBus','flixbus']){
+   const resource=resources[operator];
+   if(!resource||!/^https:\/\//i.test(resource.url||''))continue;
+   const name={sncf:'SNCF GTFS',blablacarBus:'BlaBlaCar Bus GTFS',flixbus:'FlixBus GTFS'}[operator];
+   P['national_'+operator]={name,enabled:task=>!!pt(task.from)&&!!pt(task.to)&&!!queryWindow(task),
+    disabledReason:'adresse GPS ou horaire de mission manquant',
+    run:async(task,signal)=>{
+     const window=queryWindow(task),when=ms(window.when);
+     if(!Number.isFinite(when))return [];
+     const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(when));
+     const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+     const date=p.year+'-'+p.month+'-'+p.day;
+     const clock=p.hour+':'+p.minute+':00';
+     const result=await r.CPNationalGTFSJourneys.loadAndSearch({
+      operator,resource,fetcher,signal,date,from:pt(task.from),to:pt(task.to),
+      maxResults:20,...(window.arriveBy?{latestArrival:clock}:{earliestDeparture:clock})});
+     return fromNationalGTFS(result.journeys,operator);
+    }};
+  }
+ }
  if(r.CPTripGo&&typeof r.CPTripGo.plan==='function')P.tripgo={name:'TripGo',enabled:()=>{try{return opts.allowTripGo===true&&!!r.CPTripGo.getKey();}catch(_){return false;}},
   disabledReason:'TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)',
   run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
