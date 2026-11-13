@@ -81,6 +81,16 @@ const DETAILS={
  'mobea':{horaires:'indisponibles',tarif:'partiels',checked:'2026-11-13',blocage:'Transport à la demande : réservation obligatoire',action:'Information + lien affichés dans la fiche (13/11)'},
  'tpgflex':{horaires:'indisponibles',tarif:'manquants',checked:'2026-11-13',blocage:'Transport à la demande : réservation obligatoire',action:'Afficher le lien de réservation'}
 };
+// Axes de couverture (diagnostic serveur) : tracés sur de vraies lignes des réseaux non vus par les 8 axes principaux.
+const AXES_COUVERTURE=[
+ {id:'aix-technolac',name:'Aix-les-Bains gare → Technolac (Ondéa 01)',from:{lat:45.6884,lon:5.9094,name:'Aix-les-Bains gare'},to:{lat:45.6437,lon:5.8700,name:'Technolac'},expect:['ondea']},
+ {id:'thonon-bons',name:'Thonon → Bons-en-Chablais (Star’t 142)',from:{lat:46.3696,lon:6.4804,name:'Thonon Les Arts'},to:{lat:46.2651,lon:6.3713,name:'Bons-en-Chablais'},expect:['start','ter']},
+ {id:'rumilly-intra',name:'Rumilly Hôpital → Base de loisirs (J’y bus 1)',from:{lat:45.8652,lon:5.9361,name:'Rumilly Hôpital'},to:{lat:45.8472,lon:5.9665,name:'Rumilly Base de loisirs'},expect:['jybus']},
+ {id:'amberieu-intra',name:'Ambérieu gare → Cabrol (TAM 2)',from:{lat:45.9542,lon:5.3419,name:'Ambérieu gare'},to:{lat:45.9813,lon:5.3527,name:'Ambérieu Cabrol'},expect:['tam']},
+ {id:'chambery-chamoux',name:'Chambéry → Chamoux-sur-Gelon (Cars Savoie S05)',from:{lat:45.5699,lon:5.9169,name:'Chambéry gare routière'},to:{lat:45.5362,lon:6.2153,name:'Chamoux-sur-Gelon'},expect:['cars-73']},
+ {id:'bourg-amberieu',name:'Bourg-en-Bresse → Ambérieu (Cars Ain / TER)',from:{lat:46.1993,lon:5.2148,name:'Bourg-en-Bresse gare'},to:{lat:45.9542,lon:5.3419,name:'Ambérieu gare'},expect:['cars-01','ter']},
+ {id:'voiron-voreppe',name:'Voiron → Voreppe (M réso Voironnais)',from:{lat:45.3643,lon:5.5916,name:'Voiron gare'},to:{lat:45.2950,lon:5.6380,name:'Voreppe'},expect:['mreso-voironnais']}
+];
 function load(storage){try{return JSON.parse(storage?.getItem(STORE)||'{}')||{};}catch(_){return {};}}
 function save(storage,data){try{storage?.setItem(STORE,JSON.stringify(data));}catch(_){}}
 function stateOf(n,diag,now=Date.now()){
@@ -201,7 +211,7 @@ function renderInventory(host,inv){
   ul.appendChild(li);}
  host.appendChild(ul);
 }
-const api={NETWORKS,DETAILS,AXES,STORE,stateOf,inventory,attribute,runDiagnostic,reportText,renderInventory,nextMonday8};
+const api={NETWORKS,DETAILS,AXES,AXES_COUVERTURE,STORE,stateOf,inventory,attribute,runDiagnostic,reportText,renderInventory,nextMonday8};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportCoverage=api;
 })(typeof window!=='undefined'?window:globalThis);

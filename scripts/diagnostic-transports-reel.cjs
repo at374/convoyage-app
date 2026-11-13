@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// v3 (13/11/2026) : SNCF en 3 recherches décalées, API suisse avec repli gare la plus proche et 2e tentative.
+// v4 (13/11/2026) : + 7 axes de couverture ; v3 : SNCF en 3 recherches décalées, API suisse avec repli gare la plus proche et 2e tentative.
 /* Convoyage Ultra — diagnostic RÉEL des transports sur les 8 axes, exécuté sur un serveur GitHub Actions (accès Internet).
  * Moteurs réellement interrogés : API suisse (transport.opendata.ch), Mobilités M, SNCF (fichiers officiels du dépôt),
  * GTFS officiels (data/gtfs + sources officielles), marche Valhalla (≈ 1 requête/s). TripGo seulement si CP_TRIPGO_KEY est fourni.
@@ -53,7 +53,7 @@ async function gtfsRows(axis,when){
  const router=H.cachedRouter(g.CPTransportWalking.createRouter({fetcher,maxRequests:400,intervalMs:1100,timeoutMs:15000}));
  const providers=H.makeProviders(g,{fetcher});
  const report={at:new Date().toISOString(),when,source:'diagnostic serveur (GitHub Actions)',tripgo:!!process.env.CP_TRIPGO_KEY,axes:[],networks:{}};
- for(const axis of C.AXES){
+ for(const axis of [...C.AXES,...C.AXES_COUVERTURE.map(a=>({...a,coverage:true}))]){
   const started=Date.now();let firstAt=null;
   const task={label:'Diag',from:axis.from,to:axis.to,fromName:axis.from.name,toName:axis.to.name,
    fromCity:axis.from.name.split(' ')[0],toCity:axis.to.name.split(' ')[0],earliestDeparture:when};
@@ -68,7 +68,9 @@ async function gtfsRows(axis,when){
   for(const [id,o] of Object.entries(nets)){const r=report.networks[id]||(report.networks[id]={trips:0,priced:0,walked:0,at:report.at,axes:[],source:'serveur'});
    r.trips+=o.trips;r.priced+=o.priced;r.walked+=o.walked;r.axes.push(axis.id);}
   const walkedOk=j=>!(j.reasons||[]).some(r=>/marche|non calculée|quota|en cours/.test(r));
-  const a={id:axis.id,name:axis.name,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,walked:all.filter(walkedOk).length,
+  // Réseaux que l'APPLICATION choisirait (premier flux GTFS correspondant), pour détecter un mauvais choix de flux.
+  const appFirst=A.DEFAULT_RESOURCES.find(r=>A.selected(r,{from:axis.from,to:axis.to}))?.network||null;
+  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,walked:all.filter(walkedOk).length,
    feasible:all.filter(j=>j.feasible).length,firstResultMs:firstAt,totalMs:Date.now()-started,
    received:v.received,
    reasons:all.flatMap(j=>j.reasons||[]).reduce((m,r)=>{const k=r.replace(/\d+/g,'n').slice(0,70);m[k]=(m[k]||0)+1;return m;},{}),
