@@ -22,6 +22,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Vérifier la présence de TripGo
+        env:
+          CP_TRIPGO_KEY: ${{ secrets.CP_TRIPGO_KEY }}
+        run: |
+          if [ -n "$CP_TRIPGO_KEY" ]; then
+            echo 'TripGo : secret configuré (valeur masquée)'
+          else
+            echo '::warning::TripGo : CP_TRIPGO_KEY absent ou vide ; diagnostic sans TripGo'
+          fi
       - name: Diagnostic réel
         env:
           CP_TRIPGO_KEY: ${{ secrets.CP_TRIPGO_KEY }}
@@ -37,4 +46,20 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'Diagnostic réel des transports (serveur)'
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          # Un diagnostic concurrent peut avoir modifié la branche pendant le calcul.
+          # Rebaser le commit de rapport plutôt que forcer ou écraser les changements.
+          for attempt in 1 2 3; do
+            git fetch origin "${GITHUB_REF_NAME}"
+            if ! git rebase "origin/${GITHUB_REF_NAME}"; then
+              git rebase --abort || true
+              echo '::error::Conflit sur les rapports : publication annulée sans forcer'
+              exit 1
+            fi
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then
+              echo 'Rapport publié'
+              exit 0
+            fi
+            echo "Nouvelle modification distante ; tentative ${attempt}/3"
+          done
+          echo '::error::Branche modifiée durant les tentatives ; publication annulée'
+          exit 1
