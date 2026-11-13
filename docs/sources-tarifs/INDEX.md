@@ -1,5 +1,5 @@
 # Sources tarifaires officielles (texte brut extrait par le serveur)
-Extraction : 2026-11-13 14:10 UTC
+Extraction : 2026-11-13 14:27 UTC
 
 | Source | URL | Statut | SHA-256 | Taille texte |
 |---|---|---|---|---|
@@ -9,9 +9,9 @@ Extraction : 2026-11-13 14:10 UTC
 | tcl-1-voyage | https://www.tcl.fr/titres-tarifs/tarifs/1-voyage | erreur <HTTPError 403: 'Forbidden'> | | |
 | ter-leman-pass | https://www.ter.sncf.com/auvergne-rhone-alpes/tarifs-cartes/tarifs-leman-express | erreur <HTTPError 403: 'Forbidden'> | | |
 | tpg-occasionnels | https://www.tpg.ch/fr/acheter/nos-titres/voyageurs-occasionnels | erreur <HTTPError 404: 'Not Found'> | | |
-| tpg-occasional-en | https://www.tpg.ch/en/purchase/our-tickets/occasional-travelers | 200 | 4e5610fb652b8f9b | 8556 |
+| tpg-occasional-en | https://www.tpg.ch/en/purchase/our-tickets/occasional-travelers | 200 | d82a565c13a95957 | 8556 |
 | synchro-gamme-xlsx | https://www.data.gouv.fr/api/1/datasets/r/ad492f65-7f55-4f16-8288-1c1f7ad25183 | 200 | e74dfe20e761cf77 | 11659 |
-| tac-titres | https://tac-mobilites.fr/taxonomy/term/75 | 200 | 3839c2a4ed077b08 | 9126 |
+| tac-titres | https://tac-mobilites.fr/taxonomy/term/75 | 200 | 0d278080d67023aa | 9126 |
 | tpg-prix-en | https://www.tpg.ch/en/purchase/our-tickets/ticket-prices | erreur <HTTPError 404: 'Not Found'> | | |
 | tpg-prix-fr | https://www.tpg.ch/fr/acheter/nos-titres/prix-des-titres | erreur <HTTPError 404: 'Not Found'> | | |
 | tac-tarifs | https://tac-mobilites.fr/tarifs | erreur <HTTPError 404: 'Not Found'> | | |
@@ -27,5 +27,9 @@ Extraction : 2026-11-13 14:10 UTC
 | jacquet-fr-fr | https://jacquet-autocars.com/wp-content/uploads/2025/11/Grille-tarifaire-FR-FR-2025-2026.pdf | 200 | 60584cdfb8ed0d91 | 10995 |
 | jybus-accueil | https://www.jybus.fr/ | 200 | 36af59e10fefa8b9 | 2439 |
 | jybus-tarifs | https://www.jybus.fr/tarifs/ | erreur <HTTPError 404: 'Not Found'> | | |
-| tam-ville | https://www.ville-amberieuenbugey.fr/-Reseau-TAM | 200 | 223125eac1d3053a | 3818 |
+| tam-ville | https://www.ville-amberieuenbugey.fr/-Reseau-TAM | 200 | d74580e335a36768 | 3818 |
 | cars-isere-tarifs | https://carsisere.auvergnerhonealpes.fr/en/fares-amp-payments/75/the-rates/14 | 200 | ecb59d13d9a86d9d | 1980 |
+| cars-isere-depliant-2025 | https://carsisere.auvergnerhonealpes.fr/ftp/document/de-pliant-tarifaire-2025.pdf | 200 | ecb59d13d9a86d9d | 1980 |
+| cars-isere-carte-zonale-2025 | https://carsisere.auvergnerhonealpes.fr/ftp/document/carte-zonale-2025.pdf | 200 | ecb59d13d9a86d9d | 1980 |
+| plaine-ain-livret-mobilite | https://www.cc-plainedelain.fr/UserFiles/File/mobilite/livret-mobilite.pdf | erreur <HTTPError 404: 'Not Found'> | | |
+| tam-boamp-2026 | https://www.boamp.fr/telechargements/FILES/PDF/2025/01/25-9840.pdf | 200 | 29c98bcef275ae41 | 9252 |
