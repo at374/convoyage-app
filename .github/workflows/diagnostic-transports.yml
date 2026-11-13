@@ -101,6 +101,21 @@ jobs:
           node --check transport-isere-zonal-fares.js
           node --check transport-tripgo.js
           node --check transport-mission-hub.js
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const hub=require('./transport-mission-hub.js');
+          const stop={lat:45.901,lon:6.121};
+          const arrival={lat:45.761,lon:4.861};
+          const journey={source:'national-gtfs',missing:['horaire GTFS non confirmé en temps réel'],
+            legs:[{kind:'transit',mode:'Train',line:'TER',fromPoint:stop,toPoint:arrival,
+              departure:'2026-11-16T08:00:00Z',arrival:'2026-11-16T10:00:00Z'}]};
+          hub.completeWalks(journey,{from:stop,to:arrival},null).then(result=>{
+            assert.deepEqual(result.missing,journey.missing);
+            const assessed=hub.assess(result,{from:stop,to:arrival},null);
+            assert.equal(assessed.feasible,false);
+            assert.equal(assessed.status,'Transport non confirmé');
+          }).catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
           node --check scripts/test-pedestrian-hub.cjs
           node scripts/test-pedestrian-hub.cjs
           node --check scripts/diagnostic-transports-reel.cjs
