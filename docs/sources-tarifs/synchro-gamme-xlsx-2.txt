@@ -1,0 +1,88 @@
+Source : https://www.data.gouv.fr/fr/datasets/r/ad492f65-7f55-4f16-8288-1c1f7ad25183
+
+## feuille Feuil1
+Produit | Type | Prix (en euro) | Support | Condition d’accès | Lieu d'achat
+Carte Oùra Déclarative | Support | 5 | Carte Oùra déclarative | Client détenteur d'une CMI | Agence
+Carte Oùra Nominative | Support | 5 | Carte Oùra nominative | Tout public | Agence ; Site web Synchro
+Billet sans contact | Support | 0.2 | BSC | Tout public | Agence ; Distributeur automatique de titres (DAT) ; Point Bus ; Dépôt-ventes
+Ticket Liberté | Post-paiement | 1.2 | Carte Oùra Nominative | Tout public | Agence
+Ticket Liberté scol | Post-paiement | 1.2 | Carte Oùra Nominative | Enfant empruntant une ligne scolaire de 100 à 1300 | Agence
+Qualité de l'air | Occasionnel illimité | 1 | Carte Oùra / BSC / Ticket papier | Tout public | Agence ; A bord ; Distributeur automatique de titres (DAT) ; Point Bus ; Téléphone
+Ticket Tribu | Occasionnel illimité | 5 | BSC - Ticket papier | Tout public jusqu'à 5 personnes | Agence ; A bord ; Distributeur automatique de titres (DAT) ; Point Bus
+10T MULTI | Occasionnel à décompte | 12 | BSC - Carte Oùra Pro | Tout public | Agence ; Distributeur automatique de titres (DAT) ; Point Bus ; Dépôt-ventes
+2 voyages | Occasionnel à décompte | 2.6 | Carte Oùra nominative / BSC / Ticket papier | Tout public | Agence ; A bord ; Site web Synchro ; Distributeur automatique de titres (DAT) ; Point Bus
+2 VOYAGES MULTI | Occasionnel à décompte | 2.6 | BSC / Ticket papier | Tout public | Agence ; Distributeur automatique de titres (DAT) ; Point Bus
+20T | Occasionnel à décompte | 24 | Carte Oùra nominative / BSC | Tout public | Agence ; Site web Synchro ; Distributeur automatique de titres (DAT) ; Point Bus
+20T MULTI | Occasionnel à décompte | 24 | BSC | Tout public | Agence ; Distributeur automatique de titres (DAT) ; Point Bus
+Bill Groupe Multi100 | Occasionnel à décompte | 50 | Carte Oùra | Groupe de 10 à 35 personnes / voyage entre 8h et 17h30 | Agence
+Bill Groupe Multi200 | Occasionnel à décompte | 100 | Carte Oùra | Groupe de 10 à 35 personnes / voyage entre 8h et 17h30 | Agence
+AAH-ANN +65 A | Abonnement | 94.5 | Carte Oùra Nominative | Bénéficiaire de l'AAH travaillant en ESAT/APEI/APAJH et ne résidant pas en foyer, QF > 760, -50% | Agence
+AAH-ANN 26-64 B | Abonnement | 92 | Carte Oùra Nominative | Bénéficiaire de l'AAH travaillant en ESAT/APEI/APAJH et ne résidant pas en foyer, QF entre 591 et 760, -50% | Agence
+ANN < 4 | Abonnement | 0 | Carte Oùra Nominative | Enfants de moins de 4 ans, gratuit | Agence
+ANN 12-25 C | Abonnement | 57.5 | Carte Oùra Nominative | Client âgé de 12 à 25 ans, QF entre 491 et 590, résident de Grand Chambéry | Agence
+ANN 26-64 A | Abonnement | 362 | Carte Oùra Nominative | Clients âgé de 26 à 64 ans, QF > 690 | Agence ; Site web Synchro ; Distributeur automatique de titres (DAT)
+OND-A 04-25 | Abonnement | 212 | Carte Oùra Nominative | Client agé de 4 à 25 ans | Agence
+OND-A +65 | Abonnement | 212 | Carte Oùra Nominative | Client agé de +65 ans | Agence
+MENS 4-11 | Abonnement | 22 | Carte Oùra Nominative | Client âgé de 4 à 11 ans | Agence ; Site web Synchro ; Distributeur automatique de titres (DAT) ; Point Bus
+OND-M - 26 | Abonnement | 30 | Carte Oùra Nominative | Client âgé de -26 ans | Agence ; Site web Synchro
+Combiné TER+SYNCHRO Mensuel TP | Abonnement | 28.6 | Carte Oùra Nominative | Client âgé de +26 ans = abonnement TER | Agence ; Distributeur automatique de titres (DAT)Site web Oùra
+Carte Oùra Pro | Support | 0 | Carte Oùra Pro | Entreprises/ Associations | Agence
+1 Voyage | Occasionnel à décompte | 1.4 | Carte Oùra nominative / BSC | Tout public | Agence ; Site web Synchro ; Distributeur automatique de titres (DAT) ; Point Bus
+10T-ECO | Occasionnel à décompte | 7.5 | Carte Oùra nominative | Résident de Grand Chambéry, demandeur d'emploi ou QF < 690 | Agence ; Site web Synchro ; Distributeur automatique de titres (DAT) ; Point Bus
+Bill Groupe Multi 10 | Occasionnel à décompte | 5 | Carte Oùra | Groupe de 10 à 35 personnes / voyage entre 8h et 17h30 | Agence
+Bill Groupe Multi 50 | Occasionnel à décompte | 25 | Carte Oùra | Groupe de 10 à 35 personnes / voyage entre 8h et 17h30 | Agence
+Bill Groupe Multi100 | Occasionnel à décompte | 50 | Carte Oùra | Groupe de 10 à 35 personnes / voyage entre 8h et 17h30 | Agence
+SECOURS - SOLO | Occasionnel à décompte | 1.7 | Ticket papier | Tout public | 
+AAH-ANN +65 B | Abonnement | 48.25 | Carte Oùra Nominative | Bénéficiaire de l'AAH travaillant en ESAT/APEI/APAJH et ne résidant pas en foyer, QF entre 591 et 760, -50% | Agence
+AAH-ANN +65 D | Abonnement | 11.25 | Carte Oùra Nominative | Bénéficiaire de l'AAH travaillant en ESAT/APEI/APAJH et ne résidant pas en foyer, QF entre 1 et  491, -50% | Agence
+AAH-ANN 12-25 A | Abonnement | 94.5 | Carte Oùra Nominative | Bénéficiaire de l'AAH travaillant en ESAT/APEI/APAJH et ne résidant pas en foyer, QF > 760, -50% | Agence
+AAH-ANN 26-64 C | Abonnement | 56 | Carte Oùra Nominative | Bénéficiaire de l'AAH travaillant en ESAT/APEI/APAJH et ne résidant pas en foyer, QF entre 491 et 590, -50% | Agence
+AAH-ANN 26-64 D | Abonnement | 20 | Carte Oùra Nominative | Bénéficiaire de l'AAH travaillant en ESAT/APEI/APAJH et ne résidant pas en foyer, QF entre 1 et  491, -50% | Agence
+ANN +65 B | Abonnement | 94.5 | Carte Oùra Nominative | Client âgé de 65 ans et +, QF entre 591 et 690, résident de Grand Chambéry | Agence
+ANN 04-11 A | Abonnement | 92 | Carte Oùra Nominative | Client âgé de 4 à 11 ans, QF > 690 | Agence ; Site web Synchro ; Distributeur automatique de titres (DAT)
+ANN 04-11 A TR | Abonnement | 9.2 | Carte Oùra Nominative | Client âgé de 4 à 11 ans, QF > 690 | Agence
+ANN 04-11 B | Abonnement | 47 | Carte Oùra Nominative | Clients agés de 4 à 11 ans, QF entre 591 et 690, résident de Grand Chambéry | Agence
+ANN 04-11 D | Abonnement | 11 | Carte Oùra Nominative | Client âgé de 4 à 11 ans, QF entre 1 et 490, résident de Grand Chambéry | Agence
+ANN 12-25 A | Abonnement | 187 | Carte Oùra Nominative | Client âgé de 12 à 25 ans, QF > 690 | Agence ; Site web Synchro ; Distributeur automatique de titres (DAT)
+ANN 12-25 A TR | Abonnement | 18.7 | Carte Oùra Nominative | Client âgé de 12 à 25 ans, QF > 690 | Agence
+ANN 26-64  A TR | Abonnement | 36.2 | Carte Oùra Nominative | Client âgé de 26 à 64 ans, QF > 690 | Agence
+ANN 26-64 C | Abonnement | 110 | Carte Oùra Nominative | Client âgé de 26 à 64 ans, QF entre 491 et 590, résident de Grand Chambéry | Agence
+ANN 26-64 D | Abonnement | 38 | Carte Oùra Nominative | Client âgé de 26 à 64 ans, QF entre 1 et 490, résident de Grand Chambéry | Agence
+Accompagnant PMR | Abonnement | 0 | Carte Oùra Nominative | Client détenteur d'une CMI, gratuit | Agence
+ANNUEL Ligne S01 + Synchro Bus | Abonnement | 540 | Carte Oùra Nominative | Tout public | Site web Oùra
+ANNUEL Ligne S07 + Synchro Bus | Abonnement | 540 | Carte Oùra Nominative | Tout public | Site web Oùra
+ANNUEL S3 S4 S6 + Synchro Bus | Abonnement | 100 | Carte Oùra Nominative | Tout public | Site web Oùra
+OND-M + 26 | Abonnement | 40 | Carte Oùra Nominative | Client âgé de +26 ans | Agence ; Site web Synchro
+Combiné TER+SYNCHRO Réduit | Abonnement | 17.6 | Carte Oùra Nominative | Client âgé de -26 ans + abonnement TER | Agence ; Distributeur automatique de titres (DAT)Site web Oùra
+SUPPLEMENT SIBRA | Abonnement | 1 | Carte Oùra Nominative | Scolaire de 12 à 25 ans domicilié sur une des communes du Grand Annecy | Agence
+MENSUEL Ligne S01 + Synchro Bus | Abonnement | 54 | Carte Oùra Nominative | Tout public | Site web Oùra
+MENSUEL Ligne S02 + Synchro Bus | Abonnement | 54 | Carte Oùra Nominative | Tout public | Site web Oùra
+MENSUEL Ligne S07+ Synchro Bus | Abonnement | 54 | Carte Oùra Nominative | Tout public | Site web Oùra
+Mensuel S3 S4 S6 + Synchro Bus | Abonnement | 10 | Carte Oùra Nominative | Tout public + abonnement Car Région | Site web Oùra
+Duplicata | Support | 8 | Carte Oùra déclarative, nominative | Carte perdue, volée ou détériorée | Agence
+Ticket Liberté Pro | Post-paiement | 0 | Carte Oùra Pro | Entreprises / associations | Agence
+1€ la journée | Occasionnel illimité | 1 | Carte Oùra / BSC / Ticket papier | Tout public | Agence ; A bord ; Distributeur automatique de titres (DAT) ; Point Bus ; Téléphone
+10T | Occasionnel à décompte | 12 | Carte Oùra Nominative | Tout public | Agence ; Site web Synchro ; Distributeur automatique de titres (DAT) ; Point Bus
+Bill Groupe Multi 50 | Occasionnel à décompte | 25 | Carte Oùra | Groupe de 10 à 35 personnes / voyage entre 8h et 17h30 | Agence
+Bill Groupe Multi200 | Occasionnel à décompte | 100 | Carte Oùra | Groupe de 10 à 35 personnes / voyage entre 8h et 17h30 | Agence
+M-ticket 1h | Occasionnel à décompte | 1.4 | Téléphone (appli Synchro Chambéry) | Tout public | Site web Synchro ; Téléphone
+Frais dossier | Frais | 2 |  | Frais de création de carte Oùra en agence | Agence
+AAH-ANN +65 C | Abonnement | 29.75 | Carte Oùra Nominative | Bénéficiaire de l'AAH travaillant en ESAT/APEI/APAJH et ne résidant pas en foyer, QF entre 491 et 590, -50% | Agence
+AAH-ANN 12-25 B | Abonnement | 48.25 | Carte Oùra Nominative | Bénéficiaire de l'AAH travaillant en ESAT/APEI/APAJH et ne résidant pas en foyer, QF entre 591 et 760, -50% | Agence
+AAH-ANN 12-25 C | Abonnement | 29.75 | Carte Oùra Nominative | Bénéficiaire de l'AAH travaillant en ESAT/APEI/APAJH et ne résidant pas en foyer, QF entre 491 et 590, -50% | Agence
+AAH-ANN 12-25 D | Abonnement | 11.25 | Carte Oùra Nominative | Bénéficiaire de l'AAH travaillant en ESAT/APEI/APAJH et ne résidant pas en foyer, QF entre 1 et  491, -50% | Agence
+AAH-ANN 26-64 A | Abonnement | 182 | Carte Oùra Nominative | Bénéficiaire de l'AAH travaillant en ESAT/APEI/APAJH et ne résidant pas en foyer, QF > 760, -50% | Agence
+ANN +65  A TR | Abonnement | 18.7 | Carte Oùra Nominative | Client âgé de 65 ans et +, QF > 690 | Agence
+ANN +65 A | Abonnement | 187 | Carte Oùra Nominative | Client âgé de 65 ans et +, QF > 690 | Agence ; Site web Synchro ; Distributeur automatique de titres (DAT)
+ANN +65 C | Abonnement | 57.5 | Carte Oùra Nominative | Client âgé de 65 ans et +, QF entre 491 et 590, résident de Grand Chambéry | Agence
+ANN +65 D | Abonnement | 20.5 | Carte Oùra Nominative | Client âgé de 65 ans et +, QF entre 1 et 490, résident de Grand Chambéry | Agence
+ANN 04-11 C | Abonnement | 29 | Carte Oùra Nominative | Client âgé de 4 à 11 ans, QF entre 491 et 590, résident de Grand Chambéry | Agence
+ANN 12-25 B | Abonnement | 94.5 | Carte Oùra Nominative | Client âgé de 12 à 25 ans, QF entre 591 et 690, résident de Grand Chambéry | Agence
+ANN 12-25 D | Abonnement | 20.5 | Carte Oùra Nominative | Client âgé de 12 à 25 ans, QF entre 1 et 490, résident de Grand Chambéry | Agence
+ANN 26-64 B | Abonnement | 182 | Carte Oùra Nominative | Client âgé de 26 à 64 ans, QF entre 591 et 690, résident de Grand Chambéry | Agence
+OND-A 26-64 | Abonnement | 372 | Carte Oùra Nominative | Client agé de 26 à 64 ans | Agence
+Abo Scolaire | Abonnement | 0 | Carte Oùra Nominative | Tout scolaire empruntant les lignes de 100 à 1300, nécessite en complément un abonnement annuel | Agence
+ANNUEL Ligne S02 + Synchro Bus | Abonnement | 540 | Carte Oùra Nominative | Tout public | Site web Oùra
+MENS +65 | Abonnement | 22 | Carte Oùra Nominative | Client âgé de 65 ans et + | Agence ; Site web Synchro ; Distributeur automatique de titres (DAT) ; Point Bus
+MENS 12-25 | Abonnement | 22 | Carte Oùra Nominative | Clients âges de 12 à 25 ans | Agence ; Site web Synchro ; Distributeur automatique de titres (DAT) ; Point Bus
+MENS 26-64 | Abonnement | 36 | Carte Oùra Nominative | Clients âges de 26 à 64 ans | Agence ; Site web Synchro ; Distributeur automatique de titres (DAT) ; Point Bus
