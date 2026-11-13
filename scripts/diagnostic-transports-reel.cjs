@@ -122,6 +122,7 @@ async function gtfsRows(axis,when){
   // Distinguer portions tarifées et itinéraires entièrement tarifés.
   // Un bus à 1,20 € suivi d'un train sans prix reste « Prix à confirmer ».
   const partialMissingByOperator={};
+  const partialMissingLineSamples={};
   const fareLegsByOperator={};
   let partialPricedJourneys=0;
   for(const j of all){
@@ -144,10 +145,13 @@ async function gtfsRows(axis,when){
      if(fare&&Number.isFinite(fare.amount)&&fare.amount>=0&&/^(EUR|CHF)$/.test(fare.currency)&&fare.source)continue;
      const operator=String(l.provider||'opérateur inconnu').slice(0,80);
      partialMissingByOperator[operator]=(partialMissingByOperator[operator]||0)+1;
+     const samples=partialMissingLineSamples[operator]||(partialMissingLineSamples[operator]=[]);
+     const line=String(l.line||'').trim().slice(0,40);
+     if(line&&!samples.includes(line)&&samples.length<5)samples.push(line);
     }
    }
   }
-  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoPricedFromGrids,tripgoTicketLegs,tripgoMissingFareByOperator,tripgoFareLegsFromGridsByOperator,missingFareByOperator,missingFareSamples,fareLegsByOperator,partialMissingByOperator,partialPricedJourneys,walked:all.filter(walkedOk).length,
+  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoPricedFromGrids,tripgoTicketLegs,tripgoMissingFareByOperator,tripgoFareLegsFromGridsByOperator,missingFareByOperator,missingFareSamples,fareLegsByOperator,partialMissingByOperator,partialMissingLineSamples,partialPricedJourneys,walked:all.filter(walkedOk).length,
    feasible:all.filter(j=>j.feasible).length,firstResultMs:firstAt,totalMs:Date.now()-started,
    received:v.received,
    reasons:all.flatMap(j=>j.reasons||[]).reduce((m,r)=>{const k=r.replace(/\d+/g,'n').slice(0,70);m[k]=(m[k]||0)+1;return m;},{}),
@@ -186,6 +190,9 @@ async function gtfsRows(axis,when){
   'Exemples de lignes sans tarif (3 par opérateur et par axe) :','',
   ...report.axes.flatMap(a=>Object.entries(a.missingFareSamples).map(([operator,samples])=>
    '- '+a.id+' / '+operator+' : '+samples.map(s=>s.mode+' '+s.line+' ('+s.from+' → '+s.to+')').join(' ; '))),'',
+  'Lignes bloquant les itinéraires partiellement tarifés :','',
+  ...report.axes.flatMap(a=>Object.entries(a.partialMissingLineSamples).map(([operator,lines])=>
+   '- '+a.id+' / '+operator+' : '+(lines.join(', ')||'ligne non précisée'))),'',
   'Correspondances bloquant les itinéraires partiellement tarifés : '+(Object.entries(report.totals.partialMissingByOperator).sort((a,b)=>b[1]-a[1]).map(([name,count])=>name+' ('+count+')').join(', ')||'aucune')+'.','',
   'Portions sans prix par opérateur (toutes sources) : '+(Object.entries(report.totals.missingFareByOperator).sort((a,b)=>b[1]-a[1]).map(([name,count])=>name+' ('+count+')').join(', ')||'aucune')+'.','',
   '| Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | 1er résultat | Total | Sources | Erreurs | Attendus non vus |','|---|---|---|---|---|---|---|---|---|---|'];
