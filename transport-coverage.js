@@ -96,12 +96,15 @@ const DETAILS={
  'mreso-metro':{horaires:'enregistrés',tarif:'vérifiés',checked:'2026-11-13 · reso-m.fr (01/09/2026)',blocage:'Aucun bloquant connu',action:'Diagnostic téléphone (Grenoble → Crolles)'},
  'mreso-gresivaudan':{horaires:'enregistrés',tarif:'partiels',checked:'2026-11-13 · reso-m.fr (01/09/2026)',blocage:'Tarif intra-Grésivaudan 1,00 € non appliqué (périmètre des arrêts inconnu) : 2,00 € affiché',action:'Ajouter la liste des communes du Grésivaudan'},
  'mreso-voironnais':{horaires:'source branchée',tarif:'partiels',checked:'2026-11-13 · reso-m.fr (01/10/2026)',blocage:'Tarif intra-Voironnais 1,30 € non appliqué : 2,00 € affiché ; attente Voiron → Grenoble retirée le 13/11/2026 (ligne réellement exploitée par Cars Région Isère T40/T41, pas le réseau urbain Voironnais)',action:'Liste des communes du Voironnais pour le tarif intra'},
- // Relais serveur ajouté le 13/11/2026 (soir) : scripts/build_regional_gtfs.py réduit le flux officiel
- // (~654 lignes, ~14 Mo) à une zone géographique via un filtre par coordonnées (filter_by_bounds).
- // Premier essai réel en CI (bbox large Part-Dieu/Perrache/Bellecour/Villeurbanne/Saint-Exupéry) :
- // ÉCHEC, 19,96 Mo produits (> 12 Mo). Bbox resserrée au triangle Part-Dieu/Bellecour/Perrache seul ;
- // second passage CI en cours au moment de cette note — statut à reconfirmer dans data/gtfs/manifest.json.
- 'tcl':{horaires:'en attente de confirmation CI (2e essai, bbox resserrée)',tarif:'manquants',checked:'2026-11-13 · 1er essai réel échoué (19,96 Mo), bbox resserrée, 2e essai en cours',blocage:'Taille du flux filtré encore à confirmer sous le plafond de 12 Mo avec la bbox resserrée',action:'Vérifier data/gtfs/manifest.json après le 2e passage de build-regional-gtfs.yml ; resserrer encore si besoin avant d’augmenter le plafond'},
+ // Relais serveur ajouté et confirmé en réel le 13/11/2026 (soir) : scripts/build_regional_gtfs.py
+ // réduit le flux officiel (~654 lignes, ~14 Mo brut) via un filtre géographique (filter_by_bounds).
+ // Premier essai (bbox large) : ÉCHEC, 19,96 Mo (> 12 Mo). Bbox resserrée au triangle Part-Dieu/
+ // Bellecour/Perrache : second essai réussi, data/gtfs/tcl-lyon.zip publié (4,58 Mo, 76 lignes,
+ // 475 arrêts, tarifs fare_attributes/fare_rules inclus). Flux chargeable par l'application (même
+ // origine, pas de blocage CORS). Horaires maintenant disponibles ; reste à vérifier que la bbox
+ // couvre un trajet réellement utile (ex. correspondance Ambérieu → Lyon Part-Dieu) au prochain
+ // diagnostic réel.
+ 'tcl':{horaires:'enregistrés (confirmé en réel, relais serveur)',tarif:'manquants',checked:'2026-11-13 · build-regional-gtfs.yml réussi (4,58 Mo, 76 lignes, 475 arrêts)',blocage:'Zone couverte volontairement réduite (Part-Dieu/Bellecour/Perrache) ; tarifs TCL pas encore recherchés',action:'Diagnostic téléphone (Ambérieu → Lyon Part-Dieu) pour confirmer l’usage réel ; chercher la grille tarifaire officielle TCL'},
  'jybus':{horaires:'enregistrés',tarif:'manquants',checked:'2026-11-13 · extraction agrégat Oùra (script testé hors ligne)',blocage:'Aucun tarif publié dans l’agrégat Oùra ; pas de grille officielle trouvée',action:'Lancer la tâche « Build regional GTFS », puis diagnostic Rumilly'},
  'tam':{horaires:'enregistrés',tarif:'manquants',checked:'2026-11-13 · extraction agrégat Oùra (script testé hors ligne)',blocage:'Aucun tarif publié dans l’agrégat Oùra ; pas de grille officielle trouvée',action:'Lancer la tâche « Build regional GTFS », puis diagnostic Ambérieu → Lyon'},
  'cars-74':{horaires:'enregistrés',tarif:'partiels',checked:'2026-10-31 · fiche tarifaire Y51 AURA 2026',blocage:'Seule la Y51 a une grille par zones ; autres lignes sans prix',action:'Grilles zonales des autres lignes Cars Région 74'},
