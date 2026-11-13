@@ -16,11 +16,12 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
 }),Object.freeze({
  // TCL (SYTRAL, Lyon) : flux officiel réduit côté serveur à une zone géographique (scripts/build_regional_gtfs.py,
  // filter_by_bounds) car le flux complet (~654 lignes) est trop lourd pour le téléphone. Non fédéré, comme J'y bus
- // et TAM : usage interne à la zone couverte uniquement (Part-Dieu, Perrache, Bellecour, Villeurbanne, corridor
- // Saint-Exupéry), jamais comme correspondance longue distance. Bornes alignées sur la bbox du script serveur :
- // toute extension de zone doit changer les deux en même temps.
+ // et TAM : usage interne à la zone couverte uniquement, jamais comme correspondance longue distance. Bbox
+ // resserrée le 13/11/2026 (soir) au triangle Part-Dieu/Bellecour/Perrache après un premier essai réel trop
+ // volumineux (19,96 Mo) avec une zone plus large. Bornes alignées sur celles du script serveur : toute
+ // extension de zone doit changer les deux en même temps.
  id:'tcl-lyon',datasetId:'tcl-lyon',network:'TCL',format:'GTFS',url:LOCAL_GTFS('tcl-lyon.zip'),
- bounds:[45.65,4.75,45.85,5.10],timeZone:'Europe/Paris'
+ bounds:[45.74,4.81,45.77,4.87],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'oura-haute-savoie',datasetId:'oura-haute-savoie',network:'Cars Région Haute-Savoie',format:'GTFS',
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',

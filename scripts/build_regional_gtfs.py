@@ -27,14 +27,16 @@ EXTRACT = [
 # avant d'être servis. Contrairement à EXTRACT, le filtre porte ici sur les coordonnées des arrêts, pas
 # sur le nom de l'agence (utile pour un flux mono-opérateur déjà trop volumineux en lui-même).
 # TCL (SYTRAL, réseau unifié depuis 09/2025, ~654 lignes, ~14 Mo brut) : trop lourd pour le téléphone
-# (cf. transport-coverage.js, bloquant historique). Bbox choisie pour couvrir le cœur de l'agglomération
-# lyonnaise utile aux missions AURA-Suisse (Part-Dieu, Perrache, Bellecour, Villeurbanne) ainsi que le
-# corridor vers Saint-Exupéry (Rhônexpress) — pas l'intégralité des 262 communes du réseau unifié.
-# Non testé contre le vrai flux depuis ce poste (accès réseau direct à data.gouv.fr/apigee bloqué par le
-# bac à sable de développement) : à valider au premier passage réel de build-regional-gtfs.yml.
+# (cf. transport-coverage.js, bloquant historique). Bbox resserrée le 13/11/2026 (soir) après un premier
+# essai réel en CI : [45.65,4.75,45.85,5.10] (Part-Dieu/Perrache/Bellecour/Villeurbanne + corridor
+# Saint-Exupéry) produisait 19,96 Mo, au-dessus du plafond — réduite au seul triangle Part-Dieu/Bellecour/
+# Perrache, le cœur utile pour une arrivée depuis l'axe Ambérieu → Lyon. Si le nouveau test réel échoue
+# encore, resserrer davantage avant d'augmenter MAX_OUT (un flux plus gros reste plus lourd à charger sur
+# le téléphone même sous la limite). Non testable contre le vrai flux depuis ce poste (accès réseau direct
+# à data.gouv.fr/apigee bloqué par le bac à sable de développement) : seul le passage CI réel fait foi.
 FILTERED_MIRROR = [
     {'id': 'tcl-lyon', 'network': 'TCL', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8',
-     'bounds': [45.65, 4.75, 45.85, 5.10], 'download_limit': 60 * 1024 * 1024},
+     'bounds': [45.74, 4.81, 45.77, 4.87], 'download_limit': 60 * 1024 * 1024},
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
