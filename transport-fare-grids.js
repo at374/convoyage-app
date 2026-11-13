@@ -29,6 +29,15 @@ const GRIDS=[
   product:'1 voyage M-Ticket (application Ondéa Grand Lac), 1 h',validityMinutes:60,
   validFrom:'2026-07-01',validUntil:'2027-06-30',source:'https://www.ondeagrandlac.fr/tarifs/choisir-son-titre',
   checkedAt:'2026-11-13',flat:true},
+ // TAC Mobilités (Annemasse Agglo, zone 210) : « Guide des tarifs », TARIFS EN VIGUEUR AU 14/12/2025 (PDF de mars 2026,
+ // files.tac-mobilites.fr, texte relu le 13/11/2026) : ticket unité valable 60 minutes 1,70 € (carte bancaire sans contact,
+ // application, ou conducteur toutes lignes) ; 2,00 € auprès du conducteur à bord de la T1 ; tous transports de la zone 210
+ // (bus, tram, TAD). Fin de validité prudente : 12/12/2026 (changement de service annuel).
+ {network:'TAC',operatorPattern:'^tac\\b',modes:['Bus','Tram'],amount:1.70,currency:'EUR',
+  product:'ticket unité 60 min, zone 210 (2,00 € auprès du conducteur de la T1)',validityMinutes:60,
+  validFrom:'2025-12-14',validUntil:'2026-12-12',
+  source:'https://files.tac-mobilites.fr/s3fs-public/documents/Guide%20des%20tarifs%20MARS%202026%20VF%20%28DIGITAL%29.pdf',
+  checkedAt:'2026-11-13',flat:true},
  // Exemple de format (NE PAS activer sans preuve) :
  // {network:'Exemple',operatorPattern:'^exemple$',modes:['Bus'],amount:0,currency:'EUR',product:'1 voyage',
  //  validFrom:'2026-01-01',validUntil:'2026-12-31',source:'https://www.sibra.fr/…',checkedAt:'2026-11-13',flat:true}
@@ -65,7 +74,12 @@ function stationKey(name){
  return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
   .replace(/^gare (de |d')?/,'').replace(/,? ?gare$/,'').replace(/\s*\(.*\)$/,'').replace(/\s+/g,' ').trim();
 }
+// 13/11/2026 : DÉSACTIVÉ. Le guide des tarifs TAC (en vigueur au 14/12/2025) indique 4,90 € pour le ticket unité
+// Léman Pass zones 210+10 (16 ans et +, 90 min), alors que la grille Jacquet indique 4,80 €. Deux sources officielles
+// contradictoires = pas de prix. Réactiver seulement avec la grille lemanpass.com en vigueur.
+const LEMAN_PASS_ACTIVE=false;
 function lemanPassFare(leg){
+ if(!LEMAN_PASS_ACTIVE)return null;
  if(!leg||leg.mode!=='Train'||typeof leg.departure!=='string')return null;
  const day=leg.departure.slice(0,10);if(day<LEMAN_PASS.validFrom||day>LEMAN_PASS.validUntil)return null;
  const a=stationKey(leg.from),b=stationKey(leg.to);
