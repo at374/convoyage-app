@@ -29,8 +29,10 @@ def trusted_download_url(url, redirect=False):
         return False
     if host in ALLOWED_SOURCE_HOSTS:
         return True
-    # Google Drive uses temporary download endpoints under googleusercontent.com.
-    return redirect and (host == 'googleusercontent.com' or
+    # Google Drive may redirect through docs.google.com before a temporary
+    # googleusercontent.com download URL. Restrict this exception to redirects.
+    return redirect and (host in ('docs.google.com', 'drive.usercontent.google.com',
+                                  'googleusercontent.com') or
                          host.endswith('.googleusercontent.com'))
 
 
