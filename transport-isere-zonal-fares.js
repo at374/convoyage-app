@@ -16,6 +16,9 @@ function evidenceFromStops({stopIds,stopZones,source,complete=false}={}){
  if(complete!==true||!Array.isArray(stopIds)||stopIds.length<2||
   !stopZones||typeof stopZones!=='object'||Array.isArray(stopZones)||
   typeof source!=='string'||!/^https:\/\//.test(source))return null;
+ // Ne pas confondre une URL quelconque avec une attestation de zones.
+ // Les zones doivent être certifiées par le référentiel officiel et sa version.
+ if(!/^https:\/\/(?:www\.)?(?:laregionvoustransporte\.fr|carsisere\.auvergnerhonealpes\.fr|data\.auvergnerhonealpes\.fr)(?:\/|$)/i.test(source))return null;
  const traversedZones=[];
  for(const id of stopIds){
   if(typeof id!=='string'||!id.trim()||!Object.prototype.hasOwnProperty.call(stopZones,id))return null;
