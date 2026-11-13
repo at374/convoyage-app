@@ -13,6 +13,7 @@ on:
       - 'transport-fare-grids.js'
       - 'transport-coverage.js'
       - 'transport-gtfs-agenda.js'
+      - 'transport-catalogue.js'
 permissions:
   contents: write
 concurrency:
