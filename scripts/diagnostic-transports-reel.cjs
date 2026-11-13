@@ -121,6 +121,7 @@ async function gtfsRows(axis,when){
   }
   // Distinguer portions tarifées et itinéraires entièrement tarifés.
   // Un bus à 1,20 € suivi d'un train sans prix reste « Prix à confirmer ».
+  const partialMissingByOperator={};
   const fareLegsByOperator={};
   let partialPricedJourneys=0;
   for(const j of all){
@@ -135,9 +136,18 @@ async function gtfsRows(axis,when){
      fareLegsByOperator[name]=(fareLegsByOperator[name]||0)+1;
     }else unknown++;
    }
-   if(known>0&&unknown>0)partialPricedJourneys++;
+   if(known>0&&unknown>0){
+    partialPricedJourneys++;
+    for(const l of j.legs){
+     if(l.kind==='walk')continue;
+     const fare=l.fare||g.CPTransportFareGrids.fareFor(l);
+     if(fare&&Number.isFinite(fare.amount)&&fare.amount>=0&&/^(EUR|CHF)$/.test(fare.currency)&&fare.source)continue;
+     const operator=String(l.provider||'opérateur inconnu').slice(0,80);
+     partialMissingByOperator[operator]=(partialMissingByOperator[operator]||0)+1;
+    }
+   }
   }
-  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoPricedFromGrids,tripgoTicketLegs,tripgoMissingFareByOperator,tripgoFareLegsFromGridsByOperator,missingFareByOperator,missingFareSamples,fareLegsByOperator,partialPricedJourneys,walked:all.filter(walkedOk).length,
+  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoPricedFromGrids,tripgoTicketLegs,tripgoMissingFareByOperator,tripgoFareLegsFromGridsByOperator,missingFareByOperator,missingFareSamples,fareLegsByOperator,partialMissingByOperator,partialPricedJourneys,walked:all.filter(walkedOk).length,
    feasible:all.filter(j=>j.feasible).length,firstResultMs:firstAt,totalMs:Date.now()-started,
    received:v.received,
    reasons:all.flatMap(j=>j.reasons||[]).reduce((m,r)=>{const k=r.replace(/\d+/g,'n').slice(0,70);m[k]=(m[k]||0)+1;return m;},{}),
@@ -149,6 +159,8 @@ async function gtfsRows(axis,when){
  // Synthèse calculée sur les axes réellement testés, sans confondre itinéraires et réseaux.
  report.totals=report.axes.reduce((s,a)=>{s.axes++;s.trips+=a.trips;s.priced+=a.priced;s.walked+=a.walked;s.feasible+=a.feasible;return s;},{axes:0,trips:0,priced:0,walked:0,feasible:0});
  report.totals.partialPricedJourneys=report.axes.reduce((n,a)=>n+a.partialPricedJourneys,0);
+ report.totals.partialMissingByOperator={};
+ for(const a of report.axes)for(const [name,count] of Object.entries(a.partialMissingByOperator))report.totals.partialMissingByOperator[name]=(report.totals.partialMissingByOperator[name]||0)+count;
  report.totals.fareLegsByOperator={};
  for(const a of report.axes)for(const [name,count] of Object.entries(a.fareLegsByOperator))report.totals.fareLegsByOperator[name]=(report.totals.fareLegsByOperator[name]||0)+count;
  report.totals.tripgoJourneys=report.axes.reduce((n,a)=>n+a.tripgoJourneys,0);
@@ -174,6 +186,7 @@ async function gtfsRows(axis,when){
   'Exemples de lignes sans tarif (3 par opérateur et par axe) :','',
   ...report.axes.flatMap(a=>Object.entries(a.missingFareSamples).map(([operator,samples])=>
    '- '+a.id+' / '+operator+' : '+samples.map(s=>s.mode+' '+s.line+' ('+s.from+' → '+s.to+')').join(' ; '))),'',
+  'Correspondances bloquant les itinéraires partiellement tarifés : '+(Object.entries(report.totals.partialMissingByOperator).sort((a,b)=>b[1]-a[1]).map(([name,count])=>name+' ('+count+')').join(', ')||'aucune')+'.','',
   'Portions sans prix par opérateur (toutes sources) : '+(Object.entries(report.totals.missingFareByOperator).sort((a,b)=>b[1]-a[1]).map(([name,count])=>name+' ('+count+')').join(', ')||'aucune')+'.','',
   '| Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | 1er résultat | Total | Sources | Erreurs | Attendus non vus |','|---|---|---|---|---|---|---|---|---|---|'];
  for(const a of report.axes)md.push('| '+[a.name,a.trips,a.priced,a.walked,a.feasible,a.firstResultMs==null?'—':(a.firstResultMs/1000).toFixed(1)+' s',(a.totalMs/1000).toFixed(1)+' s',
