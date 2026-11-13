@@ -378,6 +378,11 @@ jobs:
           ];
           const journeys=hub.fromGTFS(rows,'TAC');
           assert.equal(journeys.length,2,'Two distinct vehicle trips must remain');
+          assert(journeys.every(j=>j.missing.some(x=>x.includes('non confirmé en temps réel'))),
+            'Static GTFS must never be mistaken for a confirmed live bus');
+          const task={from:{lat:46.14,lon:6.08},to:{lat:46.13,lon:6.13}};
+          assert.equal(hub.assess(journeys[0],task,null).feasible,false,
+            'Unconfirmed local GTFS cannot be labelled Réalisable');
           assert(journeys.some(j=>j.legs[0].from==='Near'),'Closest combined access/egress must win');
           assert(journeys.some(j=>j.legs[0].from==='Other'),'Different vehicle trip must remain');
           console.log('Local GTFS stop-pair deduplication OK');
