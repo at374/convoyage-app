@@ -37,6 +37,17 @@ jobs:
         run: node scripts/diagnostic-transports-reel.cjs
       - name: Bilan de couverture
         run: node scripts/bilan-couverture-transports.cjs
+      - name: Sauvegarder les rapports comme artefact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-transports-${{ github.run_id }}
+          path: |
+            docs/diagnostic-serveur.json
+            docs/DIAGNOSTIC-SERVEUR.md
+            docs/BILAN-COUVERTURE-TRANSPORTS.md
+          if-no-files-found: warn
+          retention-days: 14
       - name: Publier le rapport
         shell: bash
         run: |
