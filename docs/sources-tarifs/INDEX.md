@@ -1,5 +1,5 @@
 # Sources tarifaires officielles (texte brut extrait par le serveur)
-Extraction : 2026-11-13 10:35 UTC
+Extraction : 2026-11-13 10:49 UTC
 
 | Source | URL | Statut | SHA-256 | Taille texte |
 |---|---|---|---|---|
@@ -9,7 +9,7 @@ Extraction : 2026-11-13 10:35 UTC
 | tcl-1-voyage | https://www.tcl.fr/titres-tarifs/tarifs/1-voyage | erreur <HTTPError 403: 'Forbidden'> | | |
 | ter-leman-pass | https://www.ter.sncf.com/auvergne-rhone-alpes/tarifs-cartes/tarifs-leman-express | erreur <HTTPError 403: 'Forbidden'> | | |
 | tpg-occasionnels | https://www.tpg.ch/fr/acheter/nos-titres/voyageurs-occasionnels | erreur <HTTPError 404: 'Not Found'> | | |
-| tpg-occasional-en | https://www.tpg.ch/en/purchase/our-tickets/occasional-travelers | 200 | c6cecf85596e1b09 | 8556 |
+| tpg-occasional-en | https://www.tpg.ch/en/purchase/our-tickets/occasional-travelers | 200 | 87a8912784b1c071 | 8556 |
 | synchro-gamme-xlsx | https://www.data.gouv.fr/api/1/datasets/r/ad492f65-7f55-4f16-8288-1c1f7ad25183 | 200 | e74dfe20e761cf77 | 11659 |
 | tac-titres | https://tac-mobilites.fr/taxonomy/term/75 | erreur <HTTPError 503: 'Service Unavailable'> | | |
 | tpg-prix-en | https://www.tpg.ch/en/purchase/our-tickets/ticket-prices | erreur <HTTPError 404: 'Not Found'> | | |
@@ -17,7 +17,9 @@ Extraction : 2026-11-13 10:35 UTC
 | tac-tarifs | https://tac-mobilites.fr/tarifs | erreur <HTTPError 503: 'Service Unavailable'> | | |
 | tac-accueil | https://tac-mobilites.fr/ | erreur <HTTPError 503: 'Service Unavailable'> | | |
 | synchro-gamme-xlsx-2 | https://www.data.gouv.fr/fr/datasets/r/ad492f65-7f55-4f16-8288-1c1f7ad25183 | 200 | e74dfe20e761cf77 | 11659 |
-| start-accueil | https://www.star-t.fr/ | 200 | ad8e8b6fcc61222c | 5716 |
+| start-accueil | https://www.star-t.fr/ | 200 | 1c560768faa5f964 | 5716 |
 | start-tarifs | https://www.star-t.fr/tarifs/ | erreur <HTTPError 404: 'Not Found'> | | |
 | unireso-tarifs | https://www.unireso.com/tarifs/ | 200 | afa9214cadbf5de9 | 590449 |
+| tac-guide-mars-2026 | https://files.tac-mobilites.fr/s3fs-public/documents/Guide%20des%20tarifs%20MARS%202026%20VF%20%28DIGITAL%29.pdf?VersionId=McKSvZWPOy..TYAJBCybXvxs5qGmyzqj | 200 | 3b5af51089361a7d | 56626 |
+| tac-guide-page | https://www.tac-mobilites.fr/nos-tarifs/guide-des-tarifs | erreur <HTTPError 503: 'Service Unavailable'> | | |
 | cars-isere-tarifs | https://carsisere.auvergnerhonealpes.fr/en/fares-amp-payments/75/the-rates/14 | 200 | d74d85727f01fbb5 | 1980 |
