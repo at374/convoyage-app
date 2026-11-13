@@ -49,7 +49,7 @@ const AXES=[
  {id:'chambery-aix',name:'Chambéry → Aix-les-Bains',from:{lat:45.5711,lon:5.9196,name:'Chambéry gare'},to:{lat:45.6880,lon:5.9093,name:'Aix-les-Bains gare'},expect:['ter','synchro','ondea']},
  {id:'grenoble-crolles',name:'Grenoble → Crolles',from:{lat:45.1914,lon:5.7143,name:'Grenoble gare'},to:{lat:45.28364,lon:5.88224,name:'Crolles'},expect:['mreso-metro','mreso-gresivaudan']},
  {id:'rumilly-annecy',name:'Rumilly → Annecy',from:{lat:45.8650,lon:5.9437,name:'Rumilly gare'},to:{lat:45.9017,lon:6.1219,name:'Annecy gare'},expect:['ter','jybus','cars-74']},
- {id:'thonon-geneve',name:'Thonon-les-Bains → Genève',from:{lat:46.3704,lon:6.4818,name:'Thonon gare'},to:{lat:46.2102,lon:6.1424,name:'Genève Cornavin'},expect:['lex','start','tpg-fr']},
+ {id:'thonon-geneve',name:'Thonon-les-Bains → Genève',from:{lat:46.3704,lon:6.4818,name:'Thonon gare'},to:{lat:46.2102,lon:6.1424,name:'Genève Cornavin'},expect:['lex','tpg-fr']},
  {id:'voiron-grenoble',name:'Voiron → Grenoble',from:{lat:45.3643,lon:5.5916,name:'Voiron gare'},to:{lat:45.1914,lon:5.7143,name:'Grenoble gare'},expect:['mreso-voironnais','ter']}
 ];
 // Indicateurs par réseau (livraison 9) : horaires, niveau de tarif, dernier contrôle documentaire, blocage et prochaine action.
