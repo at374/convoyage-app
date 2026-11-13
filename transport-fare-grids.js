@@ -15,6 +15,13 @@ const GRIDS=[
   product:'1 voyage (achat digital ou rechargement ; 2,50 € à bord), 1 h correspondances comprises',validityMinutes:60,
   validFrom:'2026-07-01',validUntil:'2027-06-30',source:'https://www.sibra.fr/app/uploads/2026/07/Reglement_BUS_CARS_CGV_01072026_3.pdf',
   checkedAt:'2026-11-13',flat:true},
+ // M réso (Métropole grenobloise, Grésivaudan, Voironnais) : tarifs au 01/09/2026 (reso-m.fr) :
+ // 1 voyage 2,00 € valable 1 h sur tout M réso, correspondances et retours compris ; 2,60 € à bord.
+ // 2,00 € est toujours un prix valable ; un trajet entièrement intra-Grésivaudan peut coûter 1,00 €.
+ {network:'M réso',operatorPattern:'^m\\s?r[ée]so\\b',modes:['Bus','Tram'],amount:2.00,currency:'EUR',
+  product:'1 voyage 1 h, tout M réso (2,60 € à bord ; 1,00 € si trajet intra-Grésivaudan)',validityMinutes:60,
+  validFrom:'2026-09-01',validUntil:'2027-08-31',source:'https://www.reso-m.fr/67-un-tarif-pour-chacun.htm',
+  checkedAt:'2026-11-13',flat:true},
  // Exemple de format (NE PAS activer sans preuve) :
  // {network:'Exemple',operatorPattern:'^exemple$',modes:['Bus'],amount:0,currency:'EUR',product:'1 voyage',
  //  validFrom:'2026-01-01',validUntil:'2026-12-31',source:'https://www.sibra.fr/…',checkedAt:'2026-11-13',flat:true}

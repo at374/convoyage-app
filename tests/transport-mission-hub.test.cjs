@@ -208,3 +208,17 @@ test('chaîne Suisse complète : plan() au format documenté (x = lat, y = lon, 
  assert.equal(x.legs[0].kind,'walk');assert.equal(x.legs.at(-1).kind,'walk');
  assert.equal(x.feasible,true,x.statusDetail);assert.equal(x.price.status,'unknown');assert.match(x.price.missingSources[0],/SNCF/);
 });
+
+test('M réso : 2,00 € officiel au 01/09/2026, une seule fois dans l’heure, sur les vrais noms Mobilités M et GTFS',()=>{
+ const Grids=require('../transport-fare-grids.js');
+ const its=mFixture.response.plan.itineraries.map(it=>R.parseItinerary({...it,numberOfTransfers:it.transfers,legs:it.legs.map(l=>({...l,route:{shortName:l.routeShortName||''}}))}));
+ // La réponse réelle date du 30/10/2026 : après le 01/09/2026, donc prix applicable.
+ const js=H.fromRegional(its);
+ const p=H.priceOf(js[0],Grids.fareFor);
+ assert.equal(js[0].legs.filter(l=>l.kind!=='walk').length,2,'C1 puis 80');
+ assert.equal(p.status,'verified');assert.equal(p.label,'2,00 €','correspondance C1 → 80 dans l’heure : un seul titre');
+ for(const name of ['M Réso — Métropole grenobloise','M Réso — Grésivaudan','M réso'])
+  assert.equal(Grids.fareFor({kind:'transit',mode:'Bus',provider:name,departure:'2026-11-16T08:00:00.000Z'}).amount,2);
+ assert.equal(Grids.fareFor({kind:'transit',mode:'Bus',provider:'M Réso — Métropole grenobloise',departure:'2026-08-15T08:00:00.000Z'}),null,'avant la grille');
+ assert.equal(Grids.fareFor({kind:'transit',mode:'Train',provider:'M réso',departure:'2026-11-16T08:00:00.000Z'}),null,'TER exclu');
+});
