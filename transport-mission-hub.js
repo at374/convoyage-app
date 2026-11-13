@@ -415,9 +415,10 @@ function makeProviders(r,opts={}){
    ['jybus','J’y bus Rumilly','jybus-rumilly.zip',[45.80,5.85,45.93,6.05]],
    ['tam','TAM Ambérieu','tam-amberieu.zip',[45.90,5.28,46.04,5.43]]
   ];
-  const origin=String(r.location?.origin||'');
-  const base=origin.startsWith('https://')?origin.replace(/\/$/,'')+'/data/gtfs/':
-   'https://at374.github.io/convoyage-app/data/gtfs/';
+  // Archives are published on the transport feature branch, not necessarily on
+  // the deployed GitHub Pages site. Explicit HTTPS URLs avoid a silent 404
+  // when the Android app is served from another origin or an older deployment.
+  const base='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
   const cache=new Map();
   const inBounds=(p,b)=>p&&p.lat>=b[0]&&p.lon>=b[1]&&p.lat<=b[2]&&p.lon<=b[3];
   const dateParts=when=>{
