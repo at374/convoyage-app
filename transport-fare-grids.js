@@ -48,15 +48,24 @@ const GRIDS=[
   validFrom:'2025-07-07',validUntil:'2026-12-31',
   source:'https://www.grandchambery.fr/fileadmin/mediatheque/Oxyad/DelmDec/indexdelm_20250410/Acte16655.pdf',
   checkedAt:'2026-11-13',flat:true},
- // TAM Ambérieu : ticket unitaire urbain 2026, sans extrapolation Cars Région.
- {network:'TAM',operatorPattern:'^tam\\s+amb[ée]rieu(?:-en-bugey)?$',modes:['Bus'],amount:1.10,currency:'EUR',
-  product:'1 voyage, 1 h avec correspondance',validityMinutes:60,validFrom:'2026-01-01',validUntil:'2026-12-31',
-  source:'https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/Livret_TAM_2026.pdf',checkedAt:'2026-11-13',flat:true},
- // STAR'T : seules les lignes urbaines identifiées en zone A.
+ // TAM (Ambérieu-en-Bugey) : aucune grille tarifaire officielle complète trouvée au 13/11/2026, malgré une
+ // nouvelle recherche après la tentative concurrente de restauration d'une entrée à 1,10 € (source citée :
+ // storage.googleapis.com/is-wp-170-prod/.../Livret_TAM_2026.pdf). Cette URL n'apparaît dans aucun résultat de
+ // recherche indépendant et reste donc invérifiable ; les seules traces trouvées sont un exemple isolé et non
+ // daté « Gare ↔ clinique : 15 mn et 1 € » (livret mobilité CC Plaine de l'Ain) et un « 2 € » relevé sur un
+ // comparateur tiers non autorisé comme source. Conformément à la règle « ne jamais inventer un prix », pas de
+ // tarif tant qu'une grille officielle complète, datée et vérifiable indépendamment n'est pas trouvée.
+ //
+ // STAR'T (Thonon-les-Bains) : star-t.fr, « Titres et abonnements », tarifs « Depuis le 19/12/2022 » (vérifié
+ // le 13/11/2026 par accès direct au site officiel) : ticket 1 heure tout public, zone A, 1,20 €. Réservé aux
+ // lignes urbaines explicitement identifiées (A, B, C, D, M, N, NL) ; les lignes interurbaines et les trajets
+ // A+B restent à confirmer tant que les zones des arrêts ne sont pas établies.
  {network:"STAR'T zone A",operatorPattern:"^(?:star['’]?t(?:\\s+thonon)?|thonon-les-bains\\s*-\\s*star['’]?t)$",
   modes:['Bus'],includeLines:'^(?:A|B|C|D|M|N|NL)$',amount:1.20,currency:'EUR',
-  product:'ticket 1 heure tout public, zone A',validityMinutes:60,validFrom:'2022-12-19',validUntil:'2026-12-31',
-  source:'https://www.star-t.fr/titres-abonnements/titres-abonnements',checkedAt:'2026-11-13',flat:true},
+  product:'ticket 1 heure tout public, zone A',validityMinutes:60,
+  validFrom:'2022-12-19',validUntil:'2026-12-31',
+  source:'https://www.star-t.fr/titres-abonnements/titres-abonnements',
+  checkedAt:'2026-11-13',flat:true}
  // Exemple de format (NE PAS activer sans preuve) :
  // {network:'Exemple',operatorPattern:'^exemple$',modes:['Bus'],amount:0,currency:'EUR',product:'1 voyage',
  //  validFrom:'2026-01-01',validUntil:'2026-12-31',source:'https://www.sibra.fr/…',checkedAt:'2026-11-13',flat:true}
