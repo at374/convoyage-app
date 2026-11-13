@@ -1,5 +1,5 @@
 {
- "at": "2026-11-13T10:24:17.242Z",
+ "at": "2026-11-13T10:39:53.871Z",
  "when": "2026-11-16T08:00:00+01:00",
  "source": "diagnostic serveur (GitHub Actions)",
  "tripgo": false,
@@ -9,22 +9,23 @@
    "name": "Annecy → Genève",
    "coverage": false,
    "appGtfsChoice": "Cars Région Haute-Savoie + Cars Région Ain",
-   "trips": 30,
+   "trips": 22,
    "priced": 0,
-   "walked": 22,
-   "feasible": 22,
-   "firstResultMs": 339,
-   "totalMs": 8033,
+   "walked": 14,
+   "feasible": 14,
+   "firstResultMs": 440,
+   "totalMs": 5756,
    "received": {
     "SNCF": 6,
-    "Suisse": 8,
     "GTFS local": 16
    },
    "reasons": {
     "marches non calculées (quota de la fiche)": 8
    },
    "engines": {
-    "errors": {},
+    "errors": {
+     "Suisse": "fetch failed"
+    },
     "skipped": {
      "TripGo": "clé TripGo absente (Réglages → Transports)",
      "Mobilités M": "hors agglomération grenobloise"
@@ -35,14 +36,12 @@
     }
    },
    "sources": [
-    "Suisse (transport.opendata.ch)",
     "SNCF (GTFS officiel)",
     "Cars Région Haute-Savoie (GTFS)"
    ],
    "networksSeen": [
-    "ter",
     "lex",
-    "cff",
+    "ter",
     "cars-74"
    ],
    "expected": [
@@ -52,6 +51,7 @@
     "longue"
    ],
    "missingExpected": [
+    "cff",
     "longue"
    ],
    "examples": [
@@ -60,11 +60,12 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:42:52.518Z",
-     "arr": "2026-11-16T09:13:00.000Z",
+     "dep": "2026-11-16T07:42:57.390Z",
+     "arr": "2026-11-16T09:27:19.389Z",
      "legs": [
-      "marche 93 m",
-      "SNCF TER L2"
+      "marche 86 m",
+      "SNCF L2",
+      "marche 2419 m"
      ],
      "price": "Prix à confirmer",
      "status": "Réalisable",
@@ -77,23 +78,24 @@
    "name": "Annemasse → Saint-Julien-en-Genevois",
    "coverage": false,
    "appGtfsChoice": "TAC Annemasse + Cars Région Haute-Savoie",
-   "trips": 52,
-   "priced": 0,
-   "walked": 20,
-   "feasible": 12,
-   "firstResultMs": 178,
-   "totalMs": 11322,
+   "trips": 44,
+   "priced": 1,
+   "walked": 12,
+   "feasible": 4,
+   "firstResultMs": 263,
+   "totalMs": 5501,
    "received": {
     "SNCF": 4,
-    "GTFS local": 40,
-    "Suisse": 8
+    "GTFS local": 40
    },
    "reasons": {
     "départ avant la fin de la mission précédente": 8,
     "marches non calculées (quota de la fiche)": 32
    },
    "engines": {
-    "errors": {},
+    "errors": {
+     "Suisse": "fetch failed"
+    },
     "skipped": {
      "TripGo": "clé TripGo absente (Réglages → Transports)",
      "Mobilités M": "hors agglomération grenobloise"
@@ -105,16 +107,12 @@
     }
    },
    "sources": [
-    "Suisse (transport.opendata.ch)",
     "SNCF (GTFS officiel)",
     "TAC Annemasse (GTFS)"
    ],
    "networksSeen": [
-    "ter",
-    "tpg",
-    "tpg-fr",
     "lex",
-    "cff",
+    "ter",
     "tac"
    ],
    "expected": [
@@ -122,20 +120,35 @@
     "lex",
     "tpg-fr"
    ],
-   "missingExpected": [],
+   "missingExpected": [
+    "tpg-fr"
+   ],
    "examples": [
     {
      "labels": [
-      "Meilleur compromis",
+      "Moins cher",
+      "Meilleur compromis"
+     ],
+     "dep": "2026-11-16T07:20:00.000Z",
+     "arr": "2026-11-16T08:41:53.607Z",
+     "legs": [
+      "SNCF L4",
+      "marche 5341 m"
+     ],
+     "price": "4,80 €",
+     "status": "Réalisable",
+     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+    },
+    {
+     "labels": [
       "Plus rapide"
      ],
-     "dep": "2026-11-16T08:06:00.000Z",
-     "arr": "2026-11-16T08:31:41.584Z",
+     "dep": "2026-11-16T07:30:00.000Z",
+     "arr": "2026-11-16T08:26:26.357Z",
      "legs": [
-      "SNCF TER C33",
-      "marche 415 m",
-      "TPG B 80",
-      "marche 230 m"
+      "SNCF C33",
+      "SNCF C33",
+      "marche 631 m"
      ],
      "price": "Prix à confirmer",
      "status": "Réalisable",
@@ -152,8 +165,8 @@
    "priced": 0,
    "walked": 8,
    "feasible": 3,
-   "firstResultMs": 172,
-   "totalMs": 3562,
+   "firstResultMs": 149,
+   "totalMs": 3580,
    "received": {
     "GTFS local": 0,
     "SNCF": 10
@@ -215,8 +228,8 @@
    "priced": 0,
    "walked": 14,
    "feasible": 13,
-   "firstResultMs": 117,
-   "totalMs": 6644,
+   "firstResultMs": 103,
+   "totalMs": 6923,
    "received": {
     "SNCF": 10,
     "GTFS local": 6
@@ -281,8 +294,8 @@
    "priced": 5,
    "walked": 12,
    "feasible": 12,
-   "firstResultMs": 64,
-   "totalMs": 5193,
+   "firstResultMs": 80,
+   "totalMs": 5784,
    "received": {
     "SNCF": 7,
     "Mobilités M": 5,
@@ -344,8 +357,8 @@
    "priced": 1,
    "walked": 8,
    "feasible": 7,
-   "firstResultMs": 93,
-   "totalMs": 4651,
+   "firstResultMs": 128,
+   "totalMs": 4480,
    "received": {
     "SNCF": 7,
     "GTFS local": 1
@@ -422,24 +435,24 @@
    "name": "Thonon-les-Bains → Genève",
    "coverage": false,
    "appGtfsChoice": "Cars Région Haute-Savoie + Cars Région Ain",
-   "trips": 17,
+   "trips": 9,
    "priced": 0,
-   "walked": 15,
-   "feasible": 8,
-   "firstResultMs": 108,
-   "totalMs": 9052,
+   "walked": 8,
+   "feasible": 1,
+   "firstResultMs": 144,
+   "totalMs": 3553,
    "received": {
     "GTFS local": 0,
-    "SNCF": 9,
-    "Suisse": 8
+    "SNCF": 9
    },
    "reasons": {
     "départ avant la fin de la mission précédente": 7,
-    "marches non calculées (quota de la fiche)": 1,
-    "correspondance trop courte à Genève, Place des Eaux-Vives (n min de ma": 1
+    "marches non calculées (quota de la fiche)": 1
    },
    "engines": {
-    "errors": {},
+    "errors": {
+     "Suisse": "fetch failed"
+    },
     "skipped": {
      "TripGo": "clé TripGo absente (Réglages → Transports)",
      "Mobilités M": "hors agglomération grenobloise"
@@ -449,15 +462,11 @@
     }
    },
    "sources": [
-    "SNCF (GTFS officiel)",
-    "Suisse (transport.opendata.ch)"
+    "SNCF (GTFS officiel)"
    ],
    "networksSeen": [
     "lex",
-    "ter",
-    "cff",
-    "tpg",
-    "tpg-fr"
+    "ter"
    ],
    "expected": [
     "lex",
@@ -465,7 +474,8 @@
     "tpg-fr"
    ],
    "missingExpected": [
-    "start"
+    "start",
+    "tpg-fr"
    ],
    "examples": [
     {
@@ -495,8 +505,8 @@
    "priced": 0,
    "walked": 18,
    "feasible": 18,
-   "firstResultMs": 262,
-   "totalMs": 5260,
+   "firstResultMs": 274,
+   "totalMs": 5261,
    "received": {
     "GTFS local": 8,
     "SNCF": 7,
@@ -557,8 +567,8 @@
    "priced": 40,
    "walked": 16,
    "feasible": 5,
-   "firstResultMs": 111,
-   "totalMs": 8794,
+   "firstResultMs": 150,
+   "totalMs": 8797,
    "received": {
     "SNCF": 10,
     "GTFS local": 40
@@ -631,23 +641,24 @@
    "name": "Thonon → Bons-en-Chablais (Star’t 142)",
    "coverage": true,
    "appGtfsChoice": "Star't Thonon + Cars Région Haute-Savoie",
-   "trips": 58,
+   "trips": 50,
    "priced": 0,
-   "walked": 24,
-   "feasible": 17,
-   "firstResultMs": 81,
-   "totalMs": 11234,
+   "walked": 16,
+   "feasible": 9,
+   "firstResultMs": 106,
+   "totalMs": 9557,
    "received": {
     "SNCF": 10,
-    "GTFS local": 40,
-    "Suisse": 8
+    "GTFS local": 40
    },
    "reasons": {
     "départ avant la fin de la mission précédente": 7,
     "marches non calculées (quota de la fiche)": 34
    },
    "engines": {
-    "errors": {},
+    "errors": {
+     "Suisse": "fetch failed"
+    },
     "skipped": {
      "TripGo": "clé TripGo absente (Réglages → Transports)",
      "Mobilités M": "hors agglomération grenobloise"
@@ -659,7 +670,6 @@
    },
    "sources": [
     "SNCF (GTFS officiel)",
-    "Suisse (transport.opendata.ch)",
     "Star't Thonon (GTFS)"
    ],
    "networksSeen": [
@@ -700,8 +710,8 @@
    "priced": 0,
    "walked": 7,
    "feasible": 7,
-   "firstResultMs": 597,
-   "totalMs": 1995,
+   "firstResultMs": 660,
+   "totalMs": 1866,
    "received": {
     "SNCF": 0,
     "GTFS local": 40
@@ -760,8 +770,8 @@
    "priced": 0,
    "walked": 16,
    "feasible": 15,
-   "firstResultMs": 86,
-   "totalMs": 10110,
+   "firstResultMs": 69,
+   "totalMs": 10115,
    "received": {
     "SNCF": 10,
     "GTFS local": 57
@@ -822,8 +832,8 @@
    "priced": 0,
    "walked": 10,
    "feasible": 8,
-   "firstResultMs": 76,
-   "totalMs": 4636,
+   "firstResultMs": 77,
+   "totalMs": 4652,
    "received": {
     "GTFS local": 2,
     "SNCF": 10
@@ -883,8 +893,8 @@
    "priced": 0,
    "walked": 0,
    "feasible": 0,
-   "firstResultMs": 31,
-   "totalMs": 2254,
+   "firstResultMs": 53,
+   "totalMs": 2233,
    "received": {
     "GTFS local": 3,
     "SNCF": 9
@@ -946,8 +956,8 @@
    "priced": 2,
    "walked": 3,
    "feasible": 3,
-   "firstResultMs": 120,
-   "totalMs": 1172,
+   "firstResultMs": 147,
+   "totalMs": 1214,
    "received": {
     "GTFS local": 6,
     "SNCF": 9,
@@ -1021,11 +1031,24 @@
   }
  ],
  "networks": {
+  "lex": {
+   "trips": 22,
+   "priced": 1,
+   "walked": 20,
+   "at": "2026-11-13T10:39:53.871Z",
+   "axes": [
+    "annecy-geneve",
+    "annemasse-stjulien",
+    "thonon-geneve",
+    "thonon-bons"
+   ],
+   "source": "serveur"
+  },
   "ter": {
-   "trips": 116,
+   "trips": 101,
    "priced": 0,
-   "walked": 85,
-   "at": "2026-11-13T10:24:17.242Z",
+   "walked": 70,
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -1044,68 +1067,21 @@
    ],
    "source": "serveur"
   },
-  "lex": {
-   "trips": 22,
-   "priced": 0,
-   "walked": 20,
-   "at": "2026-11-13T10:24:17.242Z",
-   "axes": [
-    "annecy-geneve",
-    "annemasse-stjulien",
-    "thonon-geneve",
-    "thonon-bons"
-   ],
-   "source": "serveur"
-  },
-  "cff": {
-   "trips": 11,
-   "priced": 0,
-   "walked": 11,
-   "at": "2026-11-13T10:24:17.242Z",
-   "axes": [
-    "annecy-geneve",
-    "annemasse-stjulien",
-    "thonon-geneve"
-   ],
-   "source": "serveur"
-  },
   "cars-74": {
    "trips": 16,
    "priced": 0,
    "walked": 8,
-   "at": "2026-11-13T10:24:17.242Z",
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "annecy-geneve"
    ],
    "source": "serveur"
   },
-  "tpg": {
-   "trips": 8,
-   "priced": 0,
-   "walked": 7,
-   "at": "2026-11-13T10:24:17.242Z",
-   "axes": [
-    "annemasse-stjulien",
-    "thonon-geneve"
-   ],
-   "source": "serveur"
-  },
-  "tpg-fr": {
-   "trips": 8,
-   "priced": 0,
-   "walked": 7,
-   "at": "2026-11-13T10:24:17.242Z",
-   "axes": [
-    "annemasse-stjulien",
-    "thonon-geneve"
-   ],
-   "source": "serveur"
-  },
   "tac": {
-   "trips": 41,
+   "trips": 40,
    "priced": 0,
-   "walked": 9,
-   "at": "2026-11-13T10:24:17.242Z",
+   "walked": 8,
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "annemasse-stjulien"
    ],
@@ -1115,7 +1091,7 @@
    "trips": 6,
    "priced": 0,
    "walked": 6,
-   "at": "2026-11-13T10:24:17.242Z",
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "chambery-aix"
    ],
@@ -1125,7 +1101,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-13T10:24:17.242Z",
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -1135,7 +1111,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-13T10:24:17.242Z",
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -1145,7 +1121,7 @@
    "trips": 1,
    "priced": 1,
    "walked": 1,
-   "at": "2026-11-13T10:24:17.242Z",
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "rumilly-annecy"
    ],
@@ -1155,7 +1131,7 @@
    "trips": 14,
    "priced": 0,
    "walked": 8,
-   "at": "2026-11-13T10:24:17.242Z",
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "voiron-grenoble",
     "voiron-voreppe"
@@ -1166,7 +1142,7 @@
    "trips": 40,
    "priced": 40,
    "walked": 8,
-   "at": "2026-11-13T10:24:17.242Z",
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "aix-technolac"
    ],
@@ -1176,7 +1152,7 @@
    "trips": 40,
    "priced": 0,
    "walked": 8,
-   "at": "2026-11-13T10:24:17.242Z",
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "thonon-bons"
    ],
@@ -1186,7 +1162,7 @@
    "trips": 31,
    "priced": 0,
    "walked": 7,
-   "at": "2026-11-13T10:24:17.242Z",
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "rumilly-intra"
    ],
@@ -1196,7 +1172,7 @@
    "trips": 40,
    "priced": 0,
    "walked": 8,
-   "at": "2026-11-13T10:24:17.242Z",
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "amberieu-intra"
    ],
@@ -1206,7 +1182,7 @@
    "trips": 20,
    "priced": 0,
    "walked": 0,
-   "at": "2026-11-13T10:24:17.242Z",
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "amberieu-intra",
     "bourg-amberieu"
@@ -1217,7 +1193,7 @@
    "trips": 2,
    "priced": 0,
    "walked": 2,
-   "at": "2026-11-13T10:24:17.242Z",
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "chambery-chamoux"
    ],
@@ -1227,7 +1203,7 @@
    "trips": 3,
    "priced": 2,
    "walked": 3,
-   "at": "2026-11-13T10:24:17.242Z",
+   "at": "2026-11-13T10:39:53.871Z",
    "axes": [
     "voiron-voreppe"
    ],
@@ -1235,10 +1211,10 @@
   }
  },
  "router": {
-  "hits": 239,
-  "misses": 88,
-  "stored": 76,
-  "requests": 78,
+  "hits": 201,
+  "misses": 75,
+  "stored": 63,
+  "requests": 65,
   "failures": 2,
   "queued": 0,
   "disposed": false
