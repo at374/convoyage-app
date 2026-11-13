@@ -1,0 +1,148 @@
+{
+ "schemaVersion": 1,
+ "generatedAt": "2026-11-13T09:42:18.814286+00:00",
+ "scope": "GTFS officiels réduits ou recopiés ; aucun horaire ni tarif créé",
+ "networks": {
+  "jybus-rumilly": {
+   "network": "J'y bus Rumilly",
+   "file": "jybus-rumilly.zip",
+   "sha256": "ebf31b5ca97e367e053be249d2406a243ea3fbeba8220c2cd0cfcd39c03b33fa",
+   "bytes": 62793,
+   "bounds": [
+    45.8,
+    5.85,
+    45.93,
+    6.05
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "RUMILLY - J'ybus"
+   ],
+   "routes": 5,
+   "trips": 402,
+   "stops": 121,
+   "fares": false
+  },
+  "tam-amberieu": {
+   "network": "TAM Ambérieu-en-Bugey",
+   "file": "tam-amberieu.zip",
+   "sha256": "338c4b1ec763d390f4e21b859763ef11885dc8432a631825c5c893c7c8bd81a3",
+   "bytes": 14003,
+   "bounds": [
+    45.9,
+    5.28,
+    46.02,
+    5.45
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "AMBERIEU-EN-BUGEY - Tam"
+   ],
+   "routes": 4,
+   "trips": 93,
+   "stops": 51,
+   "fares": false
+  },
+  "cars-region-isere": {
+   "network": "Cars Région Isère",
+   "file": "cars-region-isere.zip",
+   "sha256": "103f72c0b2cf4b3da7ea99c3ba8642d69bb28adbb5301299e0abd6d8cb073f51",
+   "bytes": 694604,
+   "bounds": [
+    44.69,
+    4.74,
+    45.89,
+    6.36
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "REGION - cars Région Isère"
+   ],
+   "routes": 502,
+   "trips": 3891,
+   "stops": 6464,
+   "fares": false
+  },
+  "cars-region-savoie": {
+   "network": "Cars Région Savoie",
+   "file": "cars-region-savoie.zip",
+   "sha256": "409dfd1e5b8f1576cdf946e3bed2623f17fc4b4d3154716447686dce8dc2a3d4",
+   "bytes": 21005,
+   "bounds": [
+    45.05,
+    5.62,
+    45.8,
+    7.19
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "REGION - cars Région Savoie"
+   ],
+   "routes": 8,
+   "trips": 111,
+   "stops": 179,
+   "fares": false
+  },
+  "tac-annemasse": {
+   "network": "TAC Annemasse",
+   "file": "tac-annemasse.zip",
+   "sha256": "fbc644c04aac5460cd96a6c7fd667fc6b588bbb2455bbed0d73cebb4bfaffaa7",
+   "bytes": 712456,
+   "bounds": [
+    46.1,
+    5.98,
+    46.27,
+    6.42
+   ],
+   "origin": "https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip",
+   "trips": 1357
+  },
+  "synchro-chambery": {
+   "network": "Synchro Bus Chambéry",
+   "file": "synchro-chambery.zip",
+   "sha256": "ce8df68d6b397ed59eec86ec00004337ac3b639fe0f74c39f46c13e06c70d27d",
+   "bytes": 2070566,
+   "bounds": [
+    45.45,
+    5.75,
+    45.75,
+    6.15
+   ],
+   "origin": "https://www.data.gouv.fr/api/1/datasets/r/a81cdf4b-5a70-43c9-8803-cef0430ed170",
+   "trips": 10670
+  },
+  "ondea-grand-lac": {
+   "network": "Ondéa Aix-les-Bains",
+   "file": "ondea-grand-lac.zip",
+   "sha256": "a4e636cd3ce782e89280ccb4c4fdc12871d625dc28e26410a39269de6295f341",
+   "bytes": 1084758,
+   "bounds": [
+    45.6,
+    5.75,
+    45.85,
+    6.05
+   ],
+   "origin": "https://www.data.gouv.fr/api/1/datasets/r/b4e8d98c-e17a-4fb0-857f-8cb618039b2a",
+   "trips": 2290
+  },
+  "start-thonon": {
+   "network": "Star't Thonon",
+   "file": "start-thonon.zip",
+   "sha256": "0a03088709f15c4dc2d67178eeb225ac3410ee58c15acfbb09f8f6636a79d85f",
+   "bytes": 2463700,
+   "bounds": [
+    46.25,
+    6.3,
+    46.45,
+    6.65
+   ],
+   "origin": "https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e",
+   "trips": 18231
+  }
+ },
+ "errors": {},
+ "oura": {
+  "source": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA",
+  "version": "2026-11-12T18:44:01+00:00"
+ }
+}
