@@ -46,6 +46,15 @@ jobs:
           const leg = {kind:'transit',mode:'Bus',provider:'TAM Ambérieu-en-Bugey',line:'TAM 2',departure:'2026-11-16T08:00:00+01:00'};
           assert.equal(fareFor(leg)?.amount,1.10,'TAM : livret 2026');
           assert.equal(fareFor({...leg,provider:'Cars Région Ain'}),null,'Ne pas appliquer TAM aux cars Ain');
+          const ain={...leg,provider:'Cars Région Ain',line:'A20',from:'Belleville',to:'Bourg-en-Bresse'};
+          assert.equal(fareFor(ain)?.amount,2.30,'Cars Région Ain : tarif officiel depuis mars 2026');
+          assert.equal(fareFor({...ain,departure:'2026-02-28T08:00:00+01:00'}),null,'Ancienne période non couverte');
+          assert.equal(fareFor({...ain,line:'A32'}),null,'RUBIS : dérogation non tarifée à 2,30 €');
+          assert.equal(fareFor({...ain,from:'Neyron'}),null,'Colibri / billet spécial Neyron');
+          assert.equal(fareFor({...ain,to:'Lyon'}),null,'Dérogation TCL');
+          assert.equal(fareFor({...ain,to:'Beynost'}),null,'Dérogation Colibri');
+          assert.equal(fareFor({...ain,provider:'Cars Région Savoie'}),null,'Pas de tarif Ain appliqué en Savoie');
+
           const urban = {kind:'transit',mode:'Bus',provider:"Star't Thonon",line:'A',departure:'2026-11-16T08:00:00+01:00'};
           assert.equal(fareFor(urban)?.amount,1.20,'STAR’T ligne urbaine A : zone A');
           assert.equal(fareFor({...urban,line:'142'}),null,'STAR’T ligne 142 : zone non prouvée');
