@@ -134,7 +134,7 @@ const ZONE10_STATIONS=['geneve','geneve cornavin','geneve-secheron','geneve-aero
  'versoix','pont-ceard','vernier','meyrin','zimeysa','satigny','russin','la plaine'];
 const ZONE210_STATIONS=['annemasse'];
 function stationKey(name){
- return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+ return String(typeof name==='string'?name:(name&&typeof name==='object'?(name.name||name.stopName||name.label||''):'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
   .replace(/^gare (de |d')?/,'').replace(/,? ?gare$/,'').replace(/\s*\(.*\)$/,'').replace(/\s+/g,' ').trim();
 }
 // 13/11/2026 : DÉSACTIVÉ. Le guide des tarifs TAC (en vigueur au 14/12/2025) indique 4,90 € pour le ticket unité
