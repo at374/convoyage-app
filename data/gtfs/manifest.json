@@ -1,13 +1,13 @@
 {
  "schemaVersion": 1,
- "generatedAt": "2026-11-13T09:42:18.814286+00:00",
+ "generatedAt": "2026-11-13T17:43:23.549824+00:00",
  "scope": "GTFS officiels réduits ou recopiés ; aucun horaire ni tarif créé",
  "networks": {
   "jybus-rumilly": {
    "network": "J'y bus Rumilly",
    "file": "jybus-rumilly.zip",
-   "sha256": "ebf31b5ca97e367e053be249d2406a243ea3fbeba8220c2cd0cfcd39c03b33fa",
-   "bytes": 62793,
+   "sha256": "35ec7d2066e8eae22d8ac7d80510d4a47ed1be8f58cfc52d54c514efac1aec80",
+   "bytes": 62799,
    "bounds": [
     45.8,
     5.85,
@@ -26,8 +26,8 @@
   "tam-amberieu": {
    "network": "TAM Ambérieu-en-Bugey",
    "file": "tam-amberieu.zip",
-   "sha256": "338c4b1ec763d390f4e21b859763ef11885dc8432a631825c5c893c7c8bd81a3",
-   "bytes": 14003,
+   "sha256": "2d40729c46e862ef3254a6153902eb77351598e599d0561f171e3687edfb0a22",
+   "bytes": 14015,
    "bounds": [
     45.9,
     5.28,
@@ -46,8 +46,8 @@
   "cars-region-isere": {
    "network": "Cars Région Isère",
    "file": "cars-region-isere.zip",
-   "sha256": "103f72c0b2cf4b3da7ea99c3ba8642d69bb28adbb5301299e0abd6d8cb073f51",
-   "bytes": 694604,
+   "sha256": "f344c30e347f18e8351c0d30e64b7253f87cb8860a768a2c0fa1c762254b36ed",
+   "bytes": 694881,
    "bounds": [
     44.69,
     4.74,
@@ -66,8 +66,8 @@
   "cars-region-savoie": {
    "network": "Cars Région Savoie",
    "file": "cars-region-savoie.zip",
-   "sha256": "409dfd1e5b8f1576cdf946e3bed2623f17fc4b4d3154716447686dce8dc2a3d4",
-   "bytes": 21005,
+   "sha256": "d17c1edf897a80cdb1ba726bff5fe0c7410e7b011f5b71658b218a07a6122096",
+   "bytes": 20957,
    "bounds": [
     45.05,
     5.62,
@@ -138,6 +138,23 @@
    ],
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e",
    "trips": 18231
+  },
+  "tcl-lyon": {
+   "network": "TCL",
+   "file": "tcl-lyon.zip",
+   "sha256": "fc175552d384057d08343f131c97ed3706c2682ae8cbd1bbc5d7c991dcb1cc81",
+   "bytes": 4583670,
+   "origin": "https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8",
+   "routes": 76,
+   "trips": 94709,
+   "stops": 475,
+   "fares": true,
+   "bounds": [
+    45.74,
+    4.81,
+    45.77,
+    4.87
+   ]
   }
  },
  "errors": {},
