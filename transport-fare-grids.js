@@ -48,6 +48,15 @@ const GRIDS=[
   validFrom:'2025-07-07',validUntil:'2026-12-31',
   source:'https://www.grandchambery.fr/fileadmin/mediatheque/Oxyad/DelmDec/indexdelm_20250410/Acte16655.pdf',
   checkedAt:'2026-11-13',flat:true},
+ // TAM Ambérieu : ticket unitaire urbain 2026, sans extrapolation Cars Région.
+ {network:'TAM',operatorPattern:'^tam\\s+amb[ée]rieu(?:-en-bugey)?$',modes:['Bus'],amount:1.10,currency:'EUR',
+  product:'1 voyage, 1 h avec correspondance',validityMinutes:60,validFrom:'2026-01-01',validUntil:'2026-12-31',
+  source:'https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/Livret_TAM_2026.pdf',checkedAt:'2026-11-13',flat:true},
+ // STAR'T : seules les lignes urbaines identifiées en zone A.
+ {network:"STAR'T zone A",operatorPattern:"^(?:star['’]?t(?:\\s+thonon)?|thonon-les-bains\\s*-\\s*star['’]?t)$",
+  modes:['Bus'],includeLines:'^(?:A|B|C|D|M|N|NL)$',amount:1.20,currency:'EUR',
+  product:'ticket 1 heure tout public, zone A',validityMinutes:60,validFrom:'2022-12-19',validUntil:'2026-12-31',
+  source:'https://www.star-t.fr/titres-abonnements/titres-abonnements',checkedAt:'2026-11-13',flat:true},
  // Exemple de format (NE PAS activer sans preuve) :
  // {network:'Exemple',operatorPattern:'^exemple$',modes:['Bus'],amount:0,currency:'EUR',product:'1 voyage',
  //  validFrom:'2026-01-01',validUntil:'2026-12-31',source:'https://www.sibra.fr/…',checkedAt:'2026-11-13',flat:true}
@@ -106,7 +115,8 @@ function fareFor(leg,grids){
  const day=typeof leg.departure==='string'?leg.departure.slice(0,10):null;if(!day)return null;
  const matches=grids.filter(e=>valid(e)&&e.modes.includes(leg.mode)&&new RegExp(e.operatorPattern,'i').test(leg.provider.trim())&&
   day>=e.validFrom&&day<=e.validUntil&&
-  !(typeof e.excludeLines==='string'&&new RegExp(e.excludeLines,'i').test(String(leg.line||'').trim())));
+  !(typeof e.excludeLines==='string'&&new RegExp(e.excludeLines,'i').test(String(leg.line||'').trim()))&&
+  !(typeof e.includeLines==='string'&&!new RegExp(e.includeLines,'i').test(String(leg.line||'').trim())));
  if(matches.length!==1)return null; // ambiguïté = pas de prix
  const e=matches[0];
  return {amount:e.amount,currency:e.currency,network:e.network,validityMinutes:Number.isFinite(e.validityMinutes)?e.validityMinutes:null,
