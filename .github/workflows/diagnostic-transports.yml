@@ -245,6 +245,10 @@ jobs:
           assert.equal(journeys[0].legs.length,2);
           assert.ok(journeys[0].missing.includes('correspondance GTFS non confirmée'));
           assert.equal(rows[0].priceEUR,null);
+          assert.equal(hub.fromNationalGTFS([{...rows[0],transferStop:null}],'sncf').length,0,
+            'Missing transfer stop must not be presented as a direct train');
+          assert.equal(hub.fromNationalGTFS([{...rows[0],legs:[rows[0].legs[0]]}],'sncf').length,0,
+            'Incomplete transfer legs must not become a direct train');
           const after=national.search({operator:'sncf',files,index,date,
             from:{lat:45.5658,lon:5.9204},to:{lat:46.1447,lon:6.0826},
             includeTransfers:true,radiusMeters:1000,earliestDeparture:'09:01:00'});
