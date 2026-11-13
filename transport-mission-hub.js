@@ -190,10 +190,14 @@ async function walkOnly(task,router,maxKm){
 function priceOf(j,fareFor){
  if(j.walkOnly)return {status:'free',amounts:{EUR:0},label:'Gratuit (à pied)',missingSources:[]};
  const amounts={},missingSources=[],sources=[];
+ let ticket=null; // titre en cours : {network,validUntilMs} — une correspondance dans la validité ne se repaie pas
  for(const l of j.legs){
   if(l.kind==='walk')continue;
-  const f=l.fare||(typeof fareFor==='function'?fareFor(l,j):null);
+  const f=l.fare||(typeof fareFor==='function'?fareFor(l):null);
   if(f&&finite(f.amount)&&f.amount>=0&&/^(EUR|CHF)$/.test(f.currency)&&f.source){
+   const boarding=ms(l.departure);
+   if(ticket&&f.network&&ticket.network===f.network&&Number.isFinite(boarding)&&boarding<=ticket.validUntilMs){sources.push(f.network+' : correspondance couverte par le même titre');continue;}
+   ticket=f.network&&finite(f.validityMinutes)&&Number.isFinite(boarding)?{network:f.network,validUntilMs:boarding+f.validityMinutes*60000}:null;
    amounts[f.currency]=Math.round(((amounts[f.currency]||0)+f.amount)*100)/100;sources.push(f.source);
   }else missingSources.push((l.provider||'opérateur inconnu')+(l.line&&l.line!==l.provider?' '+l.line:''));
  }

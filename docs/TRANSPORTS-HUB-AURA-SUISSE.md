@@ -55,7 +55,9 @@ Aucune modification de la synchronisation Hiflow, DriiveMe, Pop Valet ou Otoqi, 
 | GTFS locaux (worker existant) | Sibra, Cars Région Haute-Savoie (Y51…), Cars Région Ain, M réso Grenoble et Grésivaudan, GTFS national suisse | Automatique, transmis au hub | Format testé ; pas de flux réel chargé dans ce test |
 | Valhalla (marche) | OpenStreetMap | Automatique | Réponse réelle du 30/10 acceptée ; simulée dans le test navigateur |
 
-**Réseaux de la liste encore non raccordés au hub par une source propre :** TCL Lyon, TAG/M réso (hors Mobilités M), TAC Annemasse, Synchro Chambéry, Ondéa Aix-les-Bains, Voiron, J'y bus Rumilly, Thonon (Star't), Ambérieu, Saint-Julien et Archamps, ainsi que les transports à la demande. Ils ne sont couverts que si TripGo, l'API suisse ou un GTFS configuré les fournit. **Ce point reste à vérifier, réseau par réseau, avec la clé TripGo.**
+**Ajouts du 13/11 (flux GTFS officiels, à valider sur téléphone)** : TAC Annemasse (offre du 31/08/2026 au 31/08/2027), Synchro Bus Chambéry (ODbL : citer Grand Chambéry), Ondéa Aix-les-Bains (jusqu'au 31/12/2026), Star't Thonon (jusqu'au 20/12/2026). TCL n'est pas ajouté : 654 lignes, trop lourd pour le moteur GTFS du téléphone ; TripGo reste sa source.
+
+**Réseaux de la liste encore non raccordés au hub par une source propre :** TCL Lyon, Voiron, J'y bus Rumilly, Ambérieu (Tam), Saint-Julien et Archamps (couverts par le flux TAC « Genevois français » ? à vérifier), ainsi que les transports à la demande. Ils ne sont couverts que si TripGo, l'API suisse ou un GTFS configuré les fournit. **Ce point reste à vérifier, réseau par réseau, avec la clé TripGo.**
 
 ## 5. Tarifs
 
@@ -63,11 +65,11 @@ Aucune modification de la synchronisation Hiflow, DriiveMe, Pop Valet ou Otoqi, 
 |---|---|---|
 | Y51 Annecy–Albertville (zones par arrêt) | Grille officielle AURA en vigueur au 01/03/2026, vérifiée le 31/10/2026 | **Appliqué** (prix exact par zone) |
 | Sibra (abonnement) | Couverture conditionnelle par l'abonnement déclaré | Existant, non modifié |
-| Sibra 1 voyage | Sources contradictoires : 1,50 € (catalogue SNCF Connect), 2,00 € / 2,50 € à bord (kit Mobil'Hiver au 01/01/2026) | **Manquant** : à confirmer sur sibra.fr |
+| Sibra 1 voyage | 2,00 € en achat digital ou rechargement (2,50 € à bord), valable 1 h correspondances comprises ; CGV 2026/2027, gamme applicable depuis le 01/07/2026 sur tout le réseau | **Appliqué** (13/11). Une correspondance Sibra dans l'heure n'est pas repayée ; le nom de réseau doit être exactement « Sibra » |
 | TCL Lyon | Tarif selon les zones : 1,60 à 3,70 € depuis septembre 2025 ; hausse annoncée au 01/01/2026 | **Manquant** : il faut connaître la zone des arrêts |
 | M réso Grenoble | Nouvelle grille depuis septembre 2026, non consultée | **Manquant** |
 | TAC Annemasse | 1,60 € ou 1,70 € selon les sources | **Manquant** |
-| TPG / unireso, zone 10 | CHF 3.– (source de 2019) | **Manquant** : à revérifier ; les trajets transfrontaliers relèvent du Léman Pass |
+| TPG / unireso, zone 10 | CHF 3.– sur les dépliants officiels unireso 2019 à 2024, aucune version 2026 trouvée | **Manquant** : les trajets France–Genève relèvent du Léman Pass (1 trajet = 1 titre), pas de la zone 10 |
 | Cars Région Isère | Tarif par zones : 4,10 € à 12,10 € | **Manquant** : il faut connaître la zone des arrêts |
 | SNCF / TER, FlixBus, BlaBlaCar Bus | Prix dynamiques | **Manquant** : aucune API de prix publique gratuite |
 
@@ -79,12 +81,13 @@ Le registre `transport-fare-grids.js` accepte une grille seulement avec : résea
 2. **Aucun accès réseau aux fournisseurs depuis l'environnement de Claude** : TripGo, transport.opendata.ch, SNCF et data.gouv sont refusés par le proxy. Les tests utilisent des réponses réelles déjà enregistrées dans le dépôt. Les appels en direct doivent être validés sur le téléphone.
 3. **Valhalla public** (valhalla1.openstreetmap.de) : environ 1 requête par seconde ; le hub limite à 60 marches par fiche. Sur une fiche chargée, certaines marches peuvent rester « non calculées », d'où « Transport non confirmé ».
 4. **Tarifs** : aucun fournisseur ne transmet de prix. Il faut des grilles officielles datées, réseau par réseau, et les zones des arrêts pour les réseaux à zones.
-5. **Moteur suisse** : `app.js` l'appelle encore pour l'Aller et le Retour, même hors zone (ancien code), ce qui fait des requêtes inutiles. À nettoyer une fois le hub validé.
+5. ~~Moteur suisse appelé hors zone par l'ancien code~~ : **corrigé le 13/11**. L'API suisse n'est plus interrogée que si un point est en Suisse ou à ≤ 30 km de Genève (test navigateur : 0 requête suisse pour Grenoble–Annecy).
+7. **Flux GTFS ajoutés** : la taille des fichiers et l'autorisation de téléchargement depuis le navigateur (CORS) n'ont pas pu être vérifiées d'ici. En cas d'échec, le réseau apparaît « indisponible » sans bloquer les autres.
 6. **Tests déjà en échec sur `main`, avant ces changements** : 7 tests péages, `transport-y51-fares` (tests 5 et 7) et `tests/browser/transport-mobile.cjs` (Y51 hérité : « 0 courses » avec les données du 12/11).
 
 ## 7. Tests exécutés (13/11/2026)
 
-- `node --test tests/transport-mission-hub.test.cjs` : **15/15**.
+- `node --test tests/transport-mission-hub.test.cjs` : **17/17**, dont la chaîne suisse complète au format documenté et le tarif Sibra.
 - Tous les tests `tests/transport-*`, `swiss-transport-api` et `agenda-transports` : tous réussis sauf `transport-y51-fares`, en échec identique sur `main`.
 - `tests/browser/transport-hub-mobile.cjs`, Chromium au format Pixel 7 : **OK**. TripGo appelé 6 fois, SNCF 5 fois, Valhalla 2 fois ; Retour Annecy → Grenoble avec BlaBlaCar Bus et FlixBus 1789 ; Aller à pied gratuit ; pas de débordement horizontal ; aucune écriture serveur ; aucune erreur JavaScript.
 - `tests/browser/transport-mobile.cjs` : échoue à la même assertion Y51 que sur `main`, sans régression avant ce point.

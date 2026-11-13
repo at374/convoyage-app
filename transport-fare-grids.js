@@ -8,8 +8,15 @@
 'use strict';
 // Entrées vérifiées uniquement. Laisser vide plutôt qu'approximatif.
 const GRIDS=[
+ // Sibra (Grand Annecy) : CGV « Règlement bus et cars 2026/2027 », gamme applicable à partir du 01/07/2026
+ // sur l'ensemble du réseau : 1 voyage vendu sans support (rechargement / achat digital) 2,00 € ; à bord 2,50 € ;
+ // valable 1 h, correspondances comprises. Vérifié le 13/11/2026.
+ {network:'Sibra',operatorPattern:'^sibra$',modes:['Bus'],amount:2.00,currency:'EUR',
+  product:'1 voyage (achat digital ou rechargement ; 2,50 € à bord), 1 h correspondances comprises',validityMinutes:60,
+  validFrom:'2026-07-01',validUntil:'2027-06-30',source:'https://www.sibra.fr/app/uploads/2026/07/Reglement_BUS_CARS_CGV_01072026_3.pdf',
+  checkedAt:'2026-11-13',flat:true},
  // Exemple de format (NE PAS activer sans preuve) :
- // {network:'Sibra',operatorPattern:'^sibra$',modes:['Bus'],amount:0,currency:'EUR',product:'1 voyage',
+ // {network:'Exemple',operatorPattern:'^exemple$',modes:['Bus'],amount:0,currency:'EUR',product:'1 voyage',
  //  validFrom:'2026-01-01',validUntil:'2026-12-31',source:'https://www.sibra.fr/…',checkedAt:'2026-11-13',flat:true}
 ];
 function valid(e){
@@ -36,7 +43,8 @@ function fareFor(leg,grids){
   day>=e.validFrom&&day<=e.validUntil);
  if(matches.length!==1)return null; // ambiguïté = pas de prix
  const e=matches[0];
- return {amount:e.amount,currency:e.currency,source:e.network+' · '+e.product+' · '+e.source+' (vérifié le '+e.checkedAt+')'};
+ return {amount:e.amount,currency:e.currency,network:e.network,validityMinutes:Number.isFinite(e.validityMinutes)?e.validityMinutes:null,
+  source:e.network+' · '+e.product+' · '+e.source+' (vérifié le '+e.checkedAt+')'};
 }
 const api={GRIDS,fareFor,valid,officialZoneFare};
 if(typeof module==='object'&&module.exports)module.exports=api;

@@ -25,6 +25,27 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  id:'81794',datasetId:'5eb3510a4efd8f649ffe1b9f',network:'M Réso — Grésivaudan',format:'GTFS',federate:true,
  url:'https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2',resolveFromCatalogue:true,
  bounds:[45.1,5.7,45.39,6.2],timeZone:'Europe/Paris'
+}),Object.freeze({
+ // Ajouts 13/11/2026 (flux officiels du Point d'accès national ; à valider en conditions réelles sur téléphone).
+ // TAC Annemasse : jeu 5ca4bcec634f4125a78fad26, Licence Ouverte 2.0, offre 31/08/2026 → 31/08/2027.
+ id:'76779',datasetId:'5ca4bcec634f4125a78fad26',network:'TAC Annemasse',format:'GTFS',federate:true,
+ url:'https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip',resolveFromCatalogue:true,
+ bounds:[46.1,6.13,46.27,6.42],timeZone:'Europe/Paris'
+}),Object.freeze({
+ // Synchro Bus Grand Chambéry (ODbL, attribution Grand Chambéry).
+ id:'82272',datasetId:'synchro-chambery',network:'Synchro Bus Chambéry',format:'GTFS',federate:true,
+ url:'https://www.data.gouv.fr/api/1/datasets/r/a81cdf4b-5a70-43c9-8803-cef0430ed170',
+ bounds:[45.45,5.75,45.75,6.15],timeZone:'Europe/Paris'
+}),Object.freeze({
+ // Ondéa Grand Lac, Aix-les-Bains (etalab-2.0).
+ id:'71223',datasetId:'ondea-grand-lac',network:'Ondéa Aix-les-Bains',format:'GTFS',federate:true,
+ url:'https://www.data.gouv.fr/api/1/datasets/r/b4e8d98c-e17a-4fb0-857f-8cb618039b2a',
+ bounds:[45.6,5.75,45.85,6.05],timeZone:'Europe/Paris'
+}),Object.freeze({
+ // Star't Thonon Agglomération (etalab-2.0).
+ id:'82178',datasetId:'thonon-agglomeration-donnees-gtfs',network:"Star't Thonon",format:'GTFS',federate:true,
+ url:'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e',
+ bounds:[46.25,6.3,46.45,6.65],timeZone:'Europe/Paris'
 })]);
 function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof point.lon==='number'&&
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}

@@ -2348,7 +2348,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const swissFrom = G.coordonnees(m, 'destination');
         const swissTo = G.coordonnees(next, 'origin');
         const nextPickupMs = Date.parse(next.pickup_start);
-        if (transportAddressPoint(swissFrom) && transportAddressPoint(swissTo) &&
+        const swissZone = p => !window.CPTransportHub?.inSwissArea || (p && window.CPTransportHub.inSwissArea({lat:Number(p.lat),lon:Number(p.lng)}));
+        if (transportAddressPoint(swissFrom) && transportAddressPoint(swissTo) && (swissZone(swissFrom) || swissZone(swissTo)) &&
             Number.isFinite(nextPickupMs) && nextPickupMs > Date.parse(deliveryDate)) {
           const swissStatus = document.createElement('div');
           swissStatus.className = 'doux';
@@ -2490,7 +2491,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const homeReady = etat.reglages?.domicile_lat != null &&
           etat.reglages?.domicile_lng != null &&
           window.CPSwissTransport.point({lat:homeLat,lon:homeLon});
+        // Ne pas interroger l'API suisse pour un trajet entièrement hors Suisse / Grand Genève.
+        const swissRelevant = (a, b) => !window.CPTransportHub?.inSwissArea ||
+          window.CPTransportHub.inSwissArea({lat:Number(a.lat),lon:Number(a.lon)}) ||
+          window.CPTransportHub.inSwissArea({lat:Number(b.lat),lon:Number(b.lon)});
         const swissSuggestions = (label, from, to, when, arriveBy, accept) => {
+          if (!swissRelevant(from, to)) return;
           const status = document.createElement('div');
           status.className = 'doux';
           status.setAttribute('role', 'status');

@@ -92,6 +92,7 @@ async function run(){
   assert.match(text,/🚶/,'marches affichées');
   assert.ok(hits.tripgo>=1,'TripGo appelé automatiquement');assert.ok(hits.sncf>=1,'SNCF consulté automatiquement');
   assert.ok(hits.valhalla>=1,'marches réelles demandées');
+  assert.equal(hits.swiss,0,'aucune requête suisse pour Grenoble–Annecy (hors zone)');
   // Ouvrir la carte « Plus rapide » ou la première : étapes, tracé, sources.
   const first=retour.locator('.cp-hub-card').first();await first.locator('summary').click();
   assert.ok(await first.locator('svg.cp-hub-map').count()>=1,'tracé sur carte');

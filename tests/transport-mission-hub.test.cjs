@@ -178,3 +178,33 @@ test('tarif Y51 officiel appliqué via la grille du dépôt (zones prouvées) ; 
  assert.equal(H.priceOf(k,Grids.fareFor).status,'unknown');
  delete globalThis.CPTY51Fares;
 });
+
+test('Sibra : 2,00 € officiel (CGV 01/07/2026), correspondance dans l’heure non repayée, hors période => à confirmer',()=>{
+ const Grids=require('../transport-fare-grids.js');
+ const sib=(dep,arr,line)=>({kind:'transit',mode:'Bus',provider:'Sibra',line,departure:dep,arrival:arr});
+ const one=H.priceOf({legs:[sib(at(8,0),at(8,20),'1'),sib(at(8,30),at(8,50),'6')]},Grids.fareFor);
+ assert.equal(one.status,'verified');assert.equal(one.label,'2,00 €');
+ const two=H.priceOf({legs:[sib(at(8,0),at(8,50),'1'),sib(at(9,5),at(9,20),'6')]},Grids.fareFor);
+ assert.equal(two.label,'4,00 €','nouvelle montée après 1 h');
+ const old=H.priceOf({legs:[sib('2026-06-15T08:00:00.000Z','2026-06-15T08:20:00.000Z','1')]},Grids.fareFor);
+ assert.equal(old.status,'unknown','avant le 01/07/2026 : pas de prix');
+ assert.equal(H.priceOf({legs:[{...sib(at(8,0),at(8,20),'1'),provider:'Sibra Express Lyon'}]},Grids.fareFor).status,'unknown','nom exact requis');
+ assert.equal(H.priceOf({legs:[{...sib(at(8,0),at(8,20),'1'),mode:'Train'}]},Grids.fareFor).status,'unknown','mode incompatible');
+});
+
+test('chaîne Suisse complète : plan() au format documenté (x = lat, y = lon, +0100) → hub → marches → Réalisable',async()=>{
+ const S=require('../swiss-transport-api.js');
+ const st=(name,lat,lon)=>({name,coordinate:{type:'WGS84',x:lat,y:lon}});
+ const body={connections:[{from:{departure:'2026-11-16T07:40:00+0100',station:st('Annemasse',46.1993,6.2366)},to:{arrival:'2026-11-16T07:55:00+0100',station:st('Genève-Eaux-Vives',46.2003,6.1662)},
+  sections:[{walk:{duration:null},departure:{station:null,location:{coordinate:{x:46.1980,y:6.2390}}},arrival:{station:st('Annemasse',46.1993,6.2366)}},
+   {journey:{category:'SL',number:'2',operator:'SNCF'},departure:{station:st('Annemasse',46.1993,6.2366),departure:'2026-11-16T07:40:00+0100',delay:2},arrival:{station:st('Genève-Eaux-Vives',46.2003,6.1662),arrival:'2026-11-16T07:55:00+0100'}}]}]};
+ let url='';const res=await S.plan({from:{lat:46.1980,lon:6.2390},to:{lat:46.2010,lon:6.1640},when:'2026-11-16T07:30:00+01:00',fetcher:async u=>{url=u;return {ok:true,json:async()=>body};}});
+ assert.match(url,/from=46\.198%2C6\.239/);
+ const [j]=H.fromSwiss(res);
+ assert.equal(j.legs.length,1);assert.deepEqual(j.legs[0].fromPoint,{lat:46.1993,lon:6.2366});assert.equal(j.legs[0].delayMinutes,2);
+ assert.equal(j.legs[0].line,'SL 2');
+ const task={label:'Aller',from:{lat:46.1980,lon:6.2390},to:{lat:46.2010,lon:6.1640},latestArrival:at(8,30)};
+ const x=H.assess(await H.completeWalks(j,task,fakeRouter()),task);
+ assert.equal(x.legs[0].kind,'walk');assert.equal(x.legs.at(-1).kind,'walk');
+ assert.equal(x.feasible,true,x.statusDetail);assert.equal(x.price.status,'unknown');assert.match(x.price.missingSources[0],/SNCF/);
+});
