@@ -34,8 +34,13 @@ async function gtfsRows(axis,when){
  const day=when.slice(0,10),prev=new Date(Date.parse(day+'T12:00:00Z')-86400000).toISOString().slice(0,10);
  const window={earliestDeparture:when,latestArrival:new Date(Date.parse(when)+14*3600000).toISOString(),marginMinutes:0};
  const out={rows:[],networks:{},errors:{}};
- for(const r of A.DEFAULT_RESOURCES){
-  if(!A.selected(r,{from:axis.from,to:axis.to}))continue;
+ // Flux dont l'enveloppe couvre le trajet entier à lui seul, PLUS le flux principal + les partenaires
+ // fédérés que l'application choisirait réellement (chooseResources) — un réseau local peut ne couvrir
+ // qu'une extrémité (ex. Ondéa sur Chambéry → Aix) sans jamais satisfaire `selected()` seul.
+ const picked=A.chooseResources(A.DEFAULT_RESOURCES,[{from:axis.from,to:axis.to}]);
+ const chosen=picked.resource?[picked.resource,...picked.partners]:[];
+ const candidates=[...new Set([...A.DEFAULT_RESOURCES.filter(r=>A.selected(r,{from:axis.from,to:axis.to})),...chosen])];
+ for(const r of candidates){
   const f=await feed(r,[prev,day]);
   if(f.error){out.errors[r.network]=f.error;continue;}
   try{
