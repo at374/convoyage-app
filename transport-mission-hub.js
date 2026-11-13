@@ -144,17 +144,25 @@ async function completeWalks(j,task,router){
  const from=pt(task.from),to=pt(task.to);
  const transit=legs.filter(l=>l.kind!=='walk');
  if(!transit.length)return {...j,legs,missing:['aucun transport public dans la proposition']};
- const call=async(a,b)=>{if(!router||!a||!b)return null;try{const r=await router.route(a,b);return r&&r.status==='calculated'?r:null;}catch(_){return null;}};
- // Approche : adresse -> premier arrêt.
+ const call=async(a,b)=>{
+  if(!router||!a||!b)return null;
+  try{const r=await router.route(a,b);return r&&r.status==='calculated'&&
+   finite(r.durationSeconds)&&r.durationSeconds>=0&&finite(r.distanceMeters)&&r.distanceMeters>=0?r:null;}catch(_){return null;}
+ };
+ // Ne jamais qualifier de « réalisable » une marche moteur sans durée, distance ou horaires cohérents.
+ for(const l of legs)if(l.kind==='walk'&&(!finite(l.durationSeconds)||!finite(l.distanceMeters)||
+  !Number.isFinite(ms(l.departure))||!Number.isFinite(ms(l.arrival))))
+  missing.push('marche fournisseur sans durée, distance ou horaires vérifiables');
+ // Approche : l'adresse GPS doit être reliée au début exact de la première portion.
  const first=legs[0];
- if(first.kind==='walk'){
-  if(!(first.fromPoint&&from&&meters(first.fromPoint,from)<=PROVIDER_JOIN_M)&&!(first.walkSource==='provider'&&!first.fromPoint))missing.push('marche d’approche partielle');
- }else if(!from)missing.push('point GPS de départ inconnu');
- else if(!first.fromPoint)missing.push('position de l’arrêt de départ inconnue');
+ if(!from)missing.push('point GPS de départ inconnu');
+ else if(!first.fromPoint)missing.push('position du début de la marche ou de l’arrêt inconnue');
  else if(meters(from,first.fromPoint)>SAME_POINT_M){
   const r=await call(from,first.fromPoint);
-  if(r)legs.unshift(walkLeg(r,from,first.fromPoint,task.fromName||'Adresse de départ',first.from,ms(first.departure)-r.durationSeconds*1000));
-  else missing.push('marche jusqu’à '+(first.from||'l’arrêt de départ')+' non calculée');
+  const dep=ms(first.departure);
+  if(r&&Number.isFinite(dep))
+   legs.unshift(walkLeg(r,from,first.fromPoint,task.fromName||'Adresse de départ',first.from,dep-r.durationSeconds*1000));
+  else missing.push('marche depuis l’adresse exacte de départ non calculée');
  }
  // Correspondances entre deux véhicules sans marche fournie.
  for(let i=1;i<legs.length;i++){
@@ -162,23 +170,26 @@ async function completeWalks(j,task,router){
   if(a.kind==='walk'||b.kind==='walk')continue;
   const gap=(ms(b.departure)-ms(a.arrival))/1000;
   if(a.toPoint&&b.fromPoint){
-   if(meters(a.toPoint,b.fromPoint)<=SAME_POINT_M)continue;
+   if(meters(a.toPoint,b.fromPoint)<=SAME_POINT_M){
+    if(gap<TRANSFER_BUFFER_S)missing.push('correspondance trop courte à '+(a.to||'l’arrêt')+' (2 min minimum)');
+    continue;
+   }
    const r=await call(a.toPoint,b.fromPoint);
    if(!r){missing.push('marche de correspondance à '+(a.to||'l’arrêt')+' non calculée');continue;}
    if(r.durationSeconds+TRANSFER_BUFFER_S>gap)missing.push('correspondance trop courte à '+(a.to||'l’arrêt')+' ('+Math.ceil(r.durationSeconds/60)+' min de marche)');
    legs.splice(i,0,walkLeg(r,a.toPoint,b.fromPoint,a.to,b.from,ms(a.arrival)));i++;
-  }else if(!(a.to&&b.from&&a.to.trim().toLowerCase()===b.from.trim().toLowerCase()))missing.push('correspondance '+(a.to||'?')+' → '+(b.from||'?')+' non vérifiée');
+  }else missing.push('positions GPS de correspondance non vérifiées : '+(a.to||'?')+' → '+(b.from||'?'));
  }
- // Dernière marche : dernier arrêt -> adresse.
+ // Dernière marche : dernier point de la proposition vers l'adresse exacte d'arrivée.
  const last=legs[legs.length-1];
- if(last.kind==='walk'){
-  if(!(last.toPoint&&to&&meters(last.toPoint,to)<=PROVIDER_JOIN_M)&&!(last.walkSource==='provider'&&!last.toPoint))missing.push('marche finale partielle');
- }else if(!to)missing.push('point GPS d’arrivée inconnu');
- else if(!last.toPoint)missing.push('position de l’arrêt d’arrivée inconnue');
+ if(!to)missing.push('point GPS d’arrivée inconnu');
+ else if(!last.toPoint)missing.push('position de la fin de la marche ou de l’arrêt inconnue');
  else if(meters(last.toPoint,to)>SAME_POINT_M){
   const r=await call(last.toPoint,to);
-  if(r)legs.push(walkLeg(r,last.toPoint,to,last.to,task.toName||'Adresse d’arrivée',ms(last.arrival)));
-  else missing.push('marche depuis '+(last.to||'l’arrêt d’arrivée')+' non calculée');
+  const arr=ms(last.arrival);
+  if(r&&Number.isFinite(arr))
+   legs.push(walkLeg(r,last.toPoint,to,last.to,task.toName||'Adresse d’arrivée',arr));
+  else missing.push('marche jusqu’à l’adresse exacte d’arrivée non calculée');
  }
  return {...j,legs,missing};
 }
@@ -200,7 +211,7 @@ function cachedRouter(router,{storage=null,key='cp_marches_v1',ttlDays=30,maxEnt
   if(memory.has(k)){hits++;return memory.get(k);}
   const s=saved[k];
   if(s){hits++;const r=Promise.resolve({status:'calculated',provider:'Valhalla pedestrian / OpenStreetMap (cache)',durationSeconds:s.d,distanceMeters:s.m,
-   geometry:s.g||[round(a),round(b)],from:{...a},to:{...b},endpointsMatched:true,cached:true});memory.set(k,r);return r;}
+   geometry:s.g||null,from:{...a},to:{...b},endpointsMatched:true,cached:true});memory.set(k,r);return r;}
   misses++;
   const r=Promise.resolve(router.route(round(a),round(b))).then(x=>{
    if(x&&x.status==='calculated'){
@@ -219,7 +230,7 @@ async function walkOnly(task,router,maxKm){
  if(!from||!to||!router)return null;
  if(meters(from,to)>limit)return null; // la marche réelle est toujours au moins aussi longue
  let r=null;try{r=await router.route(from,to);}catch(_){}
- if(!r||r.status!=='calculated'||r.distanceMeters>limit)return null;
+ if(!r||r.status!=='calculated'||!finite(r.distanceMeters)||!finite(r.durationSeconds)||r.distanceMeters<0||r.durationSeconds<0||r.distanceMeters>limit)return null;
  const margin=marginFor(task);
  const deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
  let dep=Number.isFinite(earliest)?earliest:Number.isFinite(deadline)?deadline-margin*60000-r.durationSeconds*1000:NaN;
@@ -456,9 +467,9 @@ function mapSvg(doc,j){
  const W=320,H=180,k=Math.cos((a+b)/2*Math.PI/180),sx=(d-c)*k||1e-4,sy=(b-a)||1e-4,s=Math.min((W-20)/sx,(H-20)/sy);
  const X=p=>10+((p.lon-c)*k)*s+((W-20)-sx*s)/2,Y=p=>H-10-(p.lat-a)*s-((H-20)-sy*s)/2;
  const NS='http://www.w3.org/2000/svg',svg=doc.createElementNS(NS,'svg');
- svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.setAttribute('class','cp-hub-map');svg.setAttribute('role','img');svg.setAttribute('aria-label','Tracé du trajet');
+ svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.setAttribute('class','cp-hub-map');svg.setAttribute('role','img');svg.setAttribute('aria-label','Schéma des transports et tracés piétons disponibles, sans marche en ligne droite');
  for(const l of j.legs){
-  const line=l.geometry&&l.geometry.length?l.geometry:[l.fromPoint,l.toPoint].filter(Boolean);if(line.length<2)continue;
+  const line=l.geometry&&l.geometry.length?l.geometry:(l.kind==='walk'?[]:[l.fromPoint,l.toPoint].filter(Boolean));if(line.length<2)continue;
   const pl=doc.createElementNS(NS,'polyline');pl.setAttribute('points',line.map(p=>X(p).toFixed(1)+','+Y(p).toFixed(1)).join(' '));
   pl.setAttribute('fill','none');pl.setAttribute('stroke',l.kind==='walk'?'#16a34a':'#1d4ed8');pl.setAttribute('stroke-width',l.kind==='walk'?'3':'4');
   if(l.kind==='walk')pl.setAttribute('stroke-dasharray','5 4');svg.appendChild(pl);
