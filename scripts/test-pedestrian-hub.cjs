@@ -44,7 +44,7 @@ const checked=async(j,t=task,r=mock)=>assess(await completeWalks(j,t,r),t,()=>nu
  const noTransferGPS=await checked({legs:[{...bus,toPoint:null},{...bus2,fromPoint:null,departure:when(45)}]});
  assert.equal(noTransferGPS.feasible,false,'Deux arrêts portant le même nom ne prouvent pas leur proximité GPS');
  assert.match(noTransferGPS.statusDetail,/positions GPS de correspondance non vérifiées/);
- const failedWalk=await checked({legs:[bus],to:{...task,from:{lat:45.003,lon:5.003}},r:mock}.to,{
+ const failedWalk=await checked({legs:[bus]},{...task,from:{lat:45.003,lon:5.003}}, {
   route:async()=>({status:'calculated',durationSeconds:null,distanceMeters:250})});
  assert.equal(failedWalk.feasible,false,'Durée de marche absente : itinéraire non confirmé');
  assert.equal(await walkOnly({from:a,to:c,earliestDeparture:when(0)},{
