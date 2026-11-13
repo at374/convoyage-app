@@ -49,6 +49,11 @@ jobs:
           assert.equal(fareFor({...urban,line:'L'}),null,'STAR’T ligne L : zone non prouvée');
           assert.equal(fareFor({...urban,provider:"J'y bus Rumilly",line:'J4'}),null,'J’ybus : prix 2026 non confirmé');
           assert.equal(fareFor({...urban,provider:'Cars Région Haute-Savoie'}),null,'Ne pas attribuer STAR’T aux Cars Région');
+          // L'option carnet Pass Ondéa doit être visible sur les lignes 400–419.
+          const hubSource=fs.readFileSync('transport-mission-hub.js','utf8');
+          assert.match(hubSource,/Option officielle : carnet 10 voyages à 14,50 €/);
+          assert.match(hubSource,/\^ond\[ée\]a\\b\/i/,'Motif Ondéa correctement échappé');
+          assert.match(hubSource,/\(\?:40\\d\|41\\d\)/,'Motif lignes 400–419 correctement échappé');
           // Ondéa 419 : ligne de proximité scolaire, ne jamais y appliquer le M-Ticket urbain.
           const ondea={kind:'transit',mode:'Bus',provider:'Ondéa Aix-les-Bains',line:'419',departure:'2026-11-16T08:00:00+01:00'};
           assert.equal(fareFor(ondea),null,'Ondéa 419 : tarif unitaire non prouvé');
