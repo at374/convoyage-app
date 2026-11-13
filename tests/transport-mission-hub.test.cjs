@@ -294,3 +294,9 @@ test('TripGo : billet par portion repris comme prix fournisseur ; moneyCost glob
  const plain=H.priceOf(H.fromTripGo(T.parse(tripgoFixture.response,{from:{lat:45.9019,lon:6.1218},to:{lat:45.1914,lon:5.7143},when}))[0]);
  assert.equal(plain.status,'unknown','sans billet : Prix à confirmer');
 });
+
+test('transport à la demande : information affichée seulement dans le secteur concerné',()=>{
+ assert.deepEqual(H.tadFor({from:{lat:45.5711,lon:5.9196},to:{lat:45.60,lon:5.95}}).map(t=>t.name),['Flexi (Synchro mobilités, Grand Chambéry)']);
+ assert.deepEqual(H.tadFor({from:{lat:45.688,lon:5.909},to:{lat:45.70,lon:5.92}}).map(t=>t.name),['Mobéa (Ondéa Grand Lac)']);
+ assert.equal(H.tadFor({from:HOME,to:MISSION}).length,0,'Annecy : aucun');
+});

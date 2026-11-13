@@ -29,7 +29,7 @@ Généré le 2026-11-13 par `scripts/bilan-couverture-transports.cjs` à partir 
 | TAC / Genevois français Mobilités (Annemasse, Saint-Julien, Archamps) | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · GTFS TAC (transport.data.gouv) | Aucune grille tarifaire officielle 2026 trouvée en ligne ; copie servie par le site prévue (tâche serveur), source d’origine en secours | Diagnostic téléphone (Annemasse → Saint-Julien) ; photo de la grille TAC 2026 |
 | Synchro Bus (Chambéry) | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · page tickets + CGV 02/07/2026 | Grille 2026 ambiguë (1,40 € sur la page tickets, 1,70 € dans les CGV) | Photo de la grille Synchro en vigueur ; diagnostic Chambéry → Aix |
 | Ondéa Grand Lac (Aix-les-Bains) | AURA | Partiellement raccordé | source branchée | vérifiés | non vérifiée | 2026-11-13 · ondeagrandlac.fr (01/07/2026) | GTFS jamais chargé en réel | Diagnostic téléphone (Chambéry → Aix) |
-| Star't (Thonon) | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · star-t.fr (2025) | Tarif par zones A/B sans carte des zones par arrêt ; page officielle de 2025 | Obtenir la liste des communes par zone ; diagnostic Thonon → Genève |
+| Star't (Thonon) | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · star-t.fr (2025) | Zones connues (liste officielle des communes A/B, star-t.fr) mais prix 2026 non confirmé (1,20 € / 2,20 € sur des pages de 2022–2025) ; arrêts GTFS sans commune | Confirmer la grille 2026 ; associer chaque arrêt à sa commune ; diagnostic Thonon → Genève |
 | M réso — Métropole grenobloise | AURA | Testé sur données enregistrées | enregistrés | vérifiés | calculée (données enregistrées) | 2026-11-13 · reso-m.fr (01/09/2026) | Aucun bloquant connu | Diagnostic téléphone (Grenoble → Crolles) |
 | M réso — Grésivaudan | AURA | Testé sur données enregistrées | enregistrés | partiels | calculée (données enregistrées) | 2026-11-13 · reso-m.fr (01/09/2026) | Tarif intra-Grésivaudan 1,00 € non appliqué (périmètre des arrêts inconnu) : 2,00 € affiché | Ajouter la liste des communes du Grésivaudan |
 | M réso — Voironnais | AURA | Partiellement raccordé | source branchée | partiels | non vérifiée | 2026-11-13 · reso-m.fr (01/10/2026) | Tarif intra-Voironnais 1,30 € non appliqué : 2,00 € affiché | Diagnostic Voiron → Grenoble ; liste des communes du Voironnais |
@@ -46,16 +46,16 @@ Généré le 2026-11-13 par `scripts/bilan-couverture-transports.cjs` à partir 
 | TPG (Genève, zone 10) | Suisse | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · dépliants unireso 2019–2024 | CHF 3.– non confirmé pour 2026 | Grille unireso 2026 |
 | Léman Express | Transfrontalier | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 | Tarif Léman Pass non intégré | Grille Léman Pass 2026 (zones 10/210/230/300…) |
 | TPG lignes transfrontalières | Transfrontalier | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 | Tarif Léman Pass non intégré | Grille Léman Pass 2026 |
-| Léman Pass (tarif) | Transfrontalier | Non raccordé | indisponibles | manquants | non vérifiée | 2026-11-13 · tpg.ch (suppléments seulement) | Seuls des suppléments par zone sont publiés sur la page consultée | Grille Léman Pass officielle complète |
-| Flexi (Synchro, Chambéry) | TAD | Non raccordé | indisponibles | partiels | non vérifiée | 2026-11-13 · communiqué Grand Chambéry 15/05/2025 | Transport à la demande : réservation obligatoire, pas d’horaires publiés | Afficher le lien de réservation quand le trajet est dans la zone |
-| Mobéa (Ondéa, Grand Lac) | TAD | Non raccordé | indisponibles | partiels | non vérifiée | 2026-11-13 | Transport à la demande : réservation obligatoire | Afficher le lien de réservation |
+| Léman Pass (tarif) | Transfrontalier | Non raccordé | indisponibles | manquants | non vérifiée | 2026-11-13 · TAC guide des tarifs, lemanpass.com (pages 2025) | Prix trouvés seulement sur des pages 2025 (ex. billet 210+10 à 4,90 €, 90 min) ; tarif calculé par origine-destination ; aucune grille 2026 | Grille Léman Pass 2026 (PDF officiel lemanpass.com) |
+| Flexi (Synchro, Chambéry) | TAD | Non raccordé | indisponibles | partiels | non vérifiée | 2026-11-13 · communiqué Grand Chambéry 15/05/2025 | Transport à la demande : réservation obligatoire, pas d’horaires publiés | Information + lien de réservation affichés dans la fiche (13/11) ; rien d’autre possible sans réservation |
+| Mobéa (Ondéa, Grand Lac) | TAD | Non raccordé | indisponibles | partiels | non vérifiée | 2026-11-13 | Transport à la demande : réservation obligatoire | Information + lien affichés dans la fiche (13/11) |
 | TPG Flex | TAD | Non raccordé | indisponibles | manquants | non vérifiée | 2026-11-13 | Transport à la demande : réservation obligatoire | Afficher le lien de réservation |
 
 ## Tarifs manquants ou partiels, réseau par réseau
 
 - **TAC / Genevois français Mobilités (Annemasse, Saint-Julien, Archamps)** (manquants) : Prix à confirmer (aucune grille officielle trouvée) ; GTFS Fares si publiés — Aucune grille tarifaire officielle 2026 trouvée en ligne ; copie servie par le site prévue (tâche serveur), source d’origine en secours
 - **Synchro Bus (Chambéry)** (manquants) : Prix à confirmer (grille 2026 ambiguë) ; GTFS Fares si publiés — Grille 2026 ambiguë (1,40 € sur la page tickets, 1,70 € dans les CGV)
-- **Star't (Thonon)** (manquants) : Prix à confirmer (tarif par zones A/B) ; GTFS Fares si publiés — Tarif par zones A/B sans carte des zones par arrêt ; page officielle de 2025
+- **Star't (Thonon)** (manquants) : Prix à confirmer (tarif par zones A/B) ; GTFS Fares si publiés — Zones connues (liste officielle des communes A/B, star-t.fr) mais prix 2026 non confirmé (1,20 € / 2,20 € sur des pages de 2022–2025) ; arrêts GTFS sans commune
 - **M réso — Grésivaudan** (partiels) : Grille officielle 2,00 € (1,00 € intra-Grésivaudan non appliqué) — Tarif intra-Grésivaudan 1,00 € non appliqué (périmètre des arrêts inconnu) : 2,00 € affiché
 - **M réso — Voironnais** (partiels) : Grille officielle 2,00 € (1,30 € intra-Voironnais non appliqué) — Tarif intra-Voironnais 1,30 € non appliqué : 2,00 € affiché
 - **TCL (Lyon)** (manquants) : Prix à confirmer (zones TCL ; GTFS TCL trop lourd pour le téléphone) — GTFS TCL (654 lignes) trop lourd pour le téléphone ; tarifs par zones
@@ -71,7 +71,7 @@ Généré le 2026-11-13 par `scripts/bilan-couverture-transports.cjs` à partir 
 - **TPG (Genève, zone 10)** (manquants) : Prix à confirmer (CHF 3.– non confirmé pour 2026) — CHF 3.– non confirmé pour 2026
 - **Léman Express** (manquants) : Léman Pass : prix à confirmer — Tarif Léman Pass non intégré
 - **TPG lignes transfrontalières** (manquants) : Léman Pass : prix à confirmer — Tarif Léman Pass non intégré
-- **Léman Pass (tarif)** (manquants) : Aucune grille officielle 2026 intégrée — Seuls des suppléments par zone sont publiés sur la page consultée
+- **Léman Pass (tarif)** (manquants) : Aucune grille officielle 2026 intégrée — Prix trouvés seulement sur des pages 2025 (ex. billet 210+10 à 4,90 €, 90 min) ; tarif calculé par origine-destination ; aucune grille 2026
 - **Flexi (Synchro, Chambéry)** (partiels) : Même tarif que le bus Synchro — Transport à la demande : réservation obligatoire, pas d’horaires publiés
 - **Mobéa (Ondéa, Grand Lac)** (partiels) : Tarif Ondéa — Transport à la demande : réservation obligatoire
 - **TPG Flex** (manquants) : Prix à confirmer — Transport à la demande : réservation obligatoire
