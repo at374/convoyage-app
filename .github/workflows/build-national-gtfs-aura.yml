@@ -19,7 +19,7 @@ on:
           - flixbus
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -46,6 +46,21 @@ jobs:
             python3 scripts/build_national_from_catalogue.py --audit docs/audit-national-operators.json --out data/gtfs | tee national-build-report.json
           else
             python3 scripts/build_national_from_catalogue.py --audit docs/audit-national-operators.json --out data/gtfs --operator "${{ inputs.operator || 'all' }}" | tee national-build-report.json
+          fi
+      - name: Publier les extraits officiels sur la branche transports (sans déploiement Android)
+        if: steps.build.outcome == 'success' && github.ref == 'refs/heads/feature/transports-aura-suisse'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s data/gtfs/national-sncf-aura.zip
+          test -s data/gtfs/national-blablacarBus-aura.zip
+          test -s data/gtfs/national-flixbus-aura.zip
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/gtfs/national-*-aura.zip data/gtfs/national-*-aura.zip.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Update official national AURA GTFS slices (no commercial fares)"
+            git push origin HEAD:feature/transports-aura-suisse
           fi
       - name: Conserver le rapport et les extraits sans déploiement
         if: always()
