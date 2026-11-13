@@ -48,14 +48,13 @@ const GRIDS=[
   validFrom:'2025-07-07',validUntil:'2026-12-31',
   source:'https://www.grandchambery.fr/fileadmin/mediatheque/Oxyad/DelmDec/indexdelm_20250410/Acte16655.pdf',
   checkedAt:'2026-11-13',flat:true},
- // TAM (Ambérieu-en-Bugey) : aucune grille tarifaire officielle complète trouvée au 13/11/2026, malgré une
- // nouvelle recherche après la tentative concurrente de restauration d'une entrée à 1,10 € (source citée :
- // storage.googleapis.com/is-wp-170-prod/.../Livret_TAM_2026.pdf). Cette URL n'apparaît dans aucun résultat de
- // recherche indépendant et reste donc invérifiable ; les seules traces trouvées sont un exemple isolé et non
- // daté « Gare ↔ clinique : 15 mn et 1 € » (livret mobilité CC Plaine de l'Ain) et un « 2 € » relevé sur un
- // comparateur tiers non autorisé comme source. Conformément à la règle « ne jamais inventer un prix », pas de
- // tarif tant qu'une grille officielle complète, datée et vérifiable indépendamment n'est pas trouvée.
- //
+ // TAM (Ambérieu-en-Bugey) : livret officiel TAM 2026, publié en février 2026 :
+ // titre 1 voyage tout public 1,10 €, valable 1 h avec correspondance.
+ // Document hébergé dans l'espace de publication des transports de l'Ain ; lignes urbaines TAM uniquement.
+ {network:'TAM',operatorPattern:'^TAM(?:\\s+Amb[ée]rieu(?:-en-Bugey)?)?$',modes:['Bus'],amount:1.10,currency:'EUR',
+  product:'1 voyage tout public, 1 h avec correspondance',validityMinutes:60,
+  validFrom:'2026-02-01',validUntil:'2026-12-31',source:'https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/Livret_TAM_2026.pdf',
+  checkedAt:'2026-11-13',flat:true},
  // STAR'T (Thonon-les-Bains) : star-t.fr, « Titres et abonnements », tarifs « Depuis le 19/12/2022 » (vérifié
  // le 13/11/2026 par accès direct au site officiel) : ticket 1 heure tout public, zone A, 1,20 €. Réservé aux
  // lignes urbaines explicitement identifiées (A, B, C, D, M, N, NL) ; les lignes interurbaines et les trajets
