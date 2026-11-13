@@ -6,6 +6,25 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs/promises'),path=require('node:path'),http=require('node:http');
 const {chromium,devices}=require('playwright');
+const zlib=require('node:zlib');const {crc32}=require('../../transport-gtfs-loader');
+// Flux GTFS de test (Annecy → Grenoble) avec un tarif publié (fare_attributes) : vérifie la chaîne worker → hub → carte.
+function gtfsZip(){
+ const files={'agency.txt':'agency_name,agency_timezone\nRéseau tarif test,Europe/Paris',
+  'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nA,Annecy test,45.9019,6.1218\nG,Grenoble test,45.1914,5.7143',
+  'routes.txt':'route_id,route_short_name,route_type\nR,T42,3','trips.txt':'route_id,service_id,trip_id\nR,S,Ret',
+  'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nRet,10:30:00,10:30:00,A,1\nRet,12:00:00,12:00:00,G,2',
+  'calendar_dates.txt':'service_id,date,exception_type\nS,20261102,1',
+  'fare_attributes.txt':'fare_id,price,currency_type,payment_method,transfers,transfer_duration\nU,1.60,EUR,0,,3600'};
+ const locals=[],central=[];let offset=0;
+ for(const [name,text] of Object.entries(files)){
+  const fn=Buffer.from(name),plain=Buffer.from(text),bytes=zlib.deflateRawSync(plain),head=Buffer.alloc(30),entry=Buffer.alloc(46);
+  head.writeUInt32LE(0x04034b50);head.writeUInt16LE(8,8);head.writeUInt32LE(crc32(plain),14);head.writeUInt32LE(bytes.length,18);head.writeUInt32LE(plain.length,22);head.writeUInt16LE(fn.length,26);
+  entry.writeUInt32LE(0x02014b50);entry.writeUInt16LE(8,10);entry.writeUInt32LE(crc32(plain),16);entry.writeUInt32LE(bytes.length,20);entry.writeUInt32LE(plain.length,24);entry.writeUInt16LE(fn.length,28);entry.writeUInt32LE(offset,42);
+  locals.push(head,fn,bytes);central.push(entry,fn);offset+=head.length+fn.length+bytes.length;
+ }
+ const dir=Buffer.concat(central),end=Buffer.alloc(22);end.writeUInt32LE(0x06054b50);end.writeUInt16LE(central.length/2,8);end.writeUInt16LE(central.length/2,10);end.writeUInt32LE(dir.length,12);end.writeUInt32LE(offset,16);
+ return Buffer.concat([...locals,dir,end]);
+}
 const root=path.resolve(__dirname,'../..');
 const output=path.resolve(process.env.TRANSPORT_BROWSER_OUTPUT||path.join(root,'tmp/transport-hub-browser'));
 const tripgoFixture=require('../fixtures/tripgo-annecy-grenoble-2026-10-31.json');
@@ -38,7 +57,7 @@ async function run(){
     cp_cache:{missions,alertes:[],reglages:settings,chargeLe:new Date().toISOString()},cp_preferences:{onglet:'agenda'},cp_plats_choisies:['DriiveMe'],
     cp_pause:{choix:'non'},cp_notif:{on:false,son:false},cp_marche_max_km:3}))localStorage.setItem(k,JSON.stringify(v));
    localStorage.setItem('cp_tripgo_key','a'.repeat(32));localStorage.removeItem('cp_gps');
-   window.CP_GTFS_AGENDA_RESOURCES=[];
+   window.CP_GTFS_AGENDA_RESOURCES=[{id:'tarif-test',network:'Réseau tarif test',format:'GTFS',url:'https://gtfs-fixture.invalid/feed.zip',bounds:[45,5.5,46.2,6.5],timeZone:'Europe/Paris'}];
   },{missions,settings});
   await context.route('**/*',async route=>{
    const req=route.request(),url=new URL(req.url());
@@ -65,6 +84,7 @@ async function run(){
     if(url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793610000')return json(route,tripgoFixture.response);
     return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'hors requête enregistrée'});
    }
+   if(url.hostname==='gtfs-fixture.invalid'){hits.gtfs=(hits.gtfs||0)+1;return route.fulfill({status:200,contentType:'application/zip',headers:{'access-control-allow-origin':'*'},body:gtfsZip()});}
    if(url.hostname==='transport.opendata.ch'){hits.swiss++;return json(route,{connections:[]});}
    if(url.hostname==='data.mobilites-m.fr'){hits.mobilites++;return json(route,{plan:{itineraries:[]}});}
    if(/valhalla/.test(url.hostname)){hits.valhalla++;return json(route,valhalla(JSON.parse(url.searchParams.get('json'))));}
@@ -92,6 +112,11 @@ async function run(){
   assert.match(text,/FlixBus 1789/,'TripGo réel intégré');
   assert.match(text,/Moins cher|Meilleur compromis|Plus rapide/);
   assert.match(text,/Prix à confirmer/,'aucun tarif inventé pour FlixBus/BlaBlaCar/SNCF');
+  // Tarif publié dans le GTFS : la course T42 doit afficher 1,60 € et sa source.
+  await page.waitForFunction(()=>/T42/.test(document.querySelector('[data-transport-direction="Retour"] [data-transport-hub]')?.textContent||''),null,{timeout:60000});
+  const withFare=await retour.evaluate(n=>n.textContent);
+  assert.match(withFare,/1,60 €/,'prix GTFS affiché');assert.match(withFare,/tarif publié dans le GTFS officiel/);
+  assert.match(await retour.innerText(),/Moins cher/,'le trajet au prix connu est classé « Moins cher »');
   assert.match(text,/🚶/,'marches affichées');
   assert.ok(hits.tripgo>=1,'TripGo appelé automatiquement');assert.ok(hits.sncf>=1,'SNCF consulté automatiquement');
   assert.ok(hits.valhalla>=1,'marches réelles demandées');

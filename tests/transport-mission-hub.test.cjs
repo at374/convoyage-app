@@ -255,3 +255,42 @@ test('performance : doublons entre moteurs et trajets hors délai sans calcul de
  assert.ok(updates.length>=4,'mises à jour progressives : '+updates.length);
  s.dispose();
 });
+
+test('recherche complémentaire : si les 8 premiers ne sont pas réalisables, 8 de plus sont complétés ; aucune carte ne reste « en cours »',async()=>{
+ // Les 8 premiers ont une marche impossible (arrêt inaccessible) ; les suivants sont réalisables.
+ const BAD={lat:45.9500,lon:6.1300};
+ const router={calls:0,route:async(a,b)=>{router.calls++;if(Math.abs(a.lat-BAD.lat)<1e-6||Math.abs(b.lat-BAD.lat)<1e-6)return {status:'unavailable'};
+  const d=H.meters(a,b)*1.3;return {status:'calculated',distanceMeters:d,durationSeconds:Math.round(d/1.2),geometry:[a,b]};}};
+ const js=[];for(let i=0;i<8;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,i),at(7,i+20),BAD,STOP2,{line:'K'+i})]});
+ for(let i=0;i<6;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,30+i),at(7,50+i),STOP1,STOP2,{line:'G'+i})]});
+ const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers:{a:{name:'A',enabled:()=>true,run:async()=>js}},router});
+ await new Promise(r=>setTimeout(r,100));
+ const v=s.view('Aller'),all=[...v.picks.map(p=>p.journey),...v.others];
+ assert.ok(all.some(j=>j.feasible),'une solution réalisable trouvée par la recherche complémentaire');
+ assert.ok(!all.some(j=>j.computing&&/en cours/.test(j.statusDetail)),'aucune carte bloquée « en cours »');
+ s.dispose();
+});
+
+test('cache des marches : partagé et persistant (stockage du téléphone), clés arrondies à ~10 m',async()=>{
+ const store=new Map(),storage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)};
+ const base=fakeRouter();const r1=H.cachedRouter(base,{storage});
+ await r1.route(STOP1,STOP2);await r1.route({lat:STOP1.lat+0.00002,lon:STOP1.lon},STOP2);// même point à 2 m près
+ assert.equal(base.calls.length,1,'un seul appel Valhalla');
+ const base2=fakeRouter();const r2=H.cachedRouter(base2,{storage});// nouvelle fiche
+ const x=await r2.route(STOP1,STOP2);
+ assert.equal(base2.calls.length,0,'réutilisé depuis le stockage');assert.equal(x.status,'calculated');assert.equal(x.cached,true);
+ const failing={route:async()=>({status:'unavailable'})};const r3=H.cachedRouter(failing,{storage:null});
+ await r3.route(HOME,MISSION);assert.equal((await r3.route(HOME,MISSION)).status,'unavailable','un échec n’est pas mis en cache définitif');
+});
+
+test('TripGo : billet par portion repris comme prix fournisseur ; moneyCost global ignoré',()=>{
+ const when=new Date(1793610000*1000).toISOString();
+ const resp=JSON.parse(JSON.stringify(tripgoFixture.response));
+ for(const g of resp.groups)for(const t of g.trips){t.moneyCost=99;for(const sg of t.segments)if(sg.ticketWebsiteURL)sg.ticket={name:'Billet simple',cost:12.99,currency:'EUR'};}
+ const parsed=T.parse(resp,{from:{lat:45.9019,lon:6.1218},to:{lat:45.1914,lon:5.7143},when});
+ const [j]=H.fromTripGo(parsed);
+ const p=H.priceOf(j);
+ assert.equal(p.status,'verified');assert.equal(p.label,'12,99 €');assert.match(p.sources[0],/transmis par TripGo/);
+ const plain=H.priceOf(H.fromTripGo(T.parse(tripgoFixture.response,{from:{lat:45.9019,lon:6.1218},to:{lat:45.1914,lon:5.7143},when}))[0]);
+ assert.equal(plain.status,'unknown','sans billet : Prix à confirmer');
+});

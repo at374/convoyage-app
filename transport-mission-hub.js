@@ -88,7 +88,9 @@ function fromTripGo(answer){
     departure:l.departure,arrival:l.arrival,distanceMeters:l.distanceMeters,
     durationSeconds:(ms(l.arrival)-ms(l.departure))/1000,walkSource:'provider'}));
    else legs.push(leg({mode,line:l.line||l.serviceShortName,provider:l.provider||'TripGo',from:l.from,to:l.to,
-    fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.departure,arrival:l.arrival,realtime:l.realtimeReported,ticketUrl:l.ticketWebsiteURL}));
+    fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.departure,arrival:l.arrival,realtime:l.realtimeReported,ticketUrl:l.ticketWebsiteURL,
+    // Billet transmis par TripGo pour cette portion (jamais le coût global estimé « moneyCost »).
+    fare:l.ticket?{amount:l.ticket.amount,currency:l.ticket.currency,source:'Prix transmis par TripGo'+(l.ticket.name?' ('+l.ticket.name+')':'')+' pour '+(l.provider||'l’opérateur')}:null}));
   }
   return journey('TripGo',legs,{alerts:it.alerts,realtime:it.evidence?.realtimeReported===true});
  });
@@ -117,6 +119,14 @@ function fromGTFS(rows,network='Réseau local'){
     fromPoint:start,toPoint:end,departure:l.departure,arrival:l.arrival});
    // Ligne GTFS brute conservée pour les grilles tarifaires officielles (ex. Y51 : zones par arrêt).
    out.gtfsRaw=Array.isArray(r.legs)&&r.legs.length?l:r;
+   // Tarif publié par l'autorité dans le flux GTFS lui-même (fare_attributes / fare_rules).
+   const g=out.gtfsRaw&&out.gtfsRaw.gtfsFare;
+   if(g&&finite(g.amount)&&g.amount>=0&&/^(EUR|CHF)$/.test(g.currency)){
+    const net=out.provider||network;
+    out.fare={amount:g.amount,currency:g.currency,network:'gtfs:'+net,
+     validityMinutes:g.transfers===0?null:(finite(g.transferMinutes)?g.transferMinutes:null),
+     source:net+' · tarif publié dans le GTFS officiel (fare_id '+g.fareId+(g.originZone||g.destinationZone?', zones '+(g.originZone||'?')+' → '+(g.destinationZone||'?'):'')+')'};
+   }
    return out;
   });
   return journey((r.network||network)+' (GTFS)',legs);
@@ -171,6 +181,38 @@ async function completeWalks(j,task,router){
   else missing.push('marche depuis '+(last.to||'l’arrêt d’arrivée')+' non calculée');
  }
  return {...j,legs,missing};
+}
+// Cache des marches : partagé entre moteurs, directions et fiches (stockage local du téléphone, 30 jours).
+// Clés arrondies au 1/10 000 de degré (≈ 10 m) : deux arrêts « identiques » vus par deux moteurs partagent la marche.
+function cachedRouter(router,{storage=null,key='cp_marches_v1',ttlDays=30,maxEntries=400}={}){
+ if(!router||typeof router.route!=='function')return router;
+ const round=p=>({lat:Math.round(p.lat*1e4)/1e4,lon:Math.round(p.lon*1e4)/1e4});
+ const id=(a,b)=>[round(a).lat,round(a).lon,round(b).lat,round(b).lon].join(',');
+ let saved={};try{saved=JSON.parse(storage?.getItem(key)||'{}')||{};}catch(_){saved={};}
+ const now=Date.now(),ttl=ttlDays*86400000;
+ for(const k of Object.keys(saved))if(!(saved[k]&&now-saved[k].t<ttl))delete saved[k];
+ const memory=new Map();let hits=0,misses=0;
+ const persist=()=>{try{const keys=Object.keys(saved);if(keys.length>maxEntries){keys.sort((x,y)=>saved[x].t-saved[y].t).slice(0,keys.length-maxEntries).forEach(k=>delete saved[k]);}
+  storage?.setItem(key,JSON.stringify(saved));}catch(_){}};
+ function route(a,b){
+  if(!pt(a)||!pt(b))return router.route(a,b);
+  const k=id(a,b);
+  if(memory.has(k)){hits++;return memory.get(k);}
+  const s=saved[k];
+  if(s){hits++;const r=Promise.resolve({status:'calculated',provider:'Valhalla pedestrian / OpenStreetMap (cache)',durationSeconds:s.d,distanceMeters:s.m,
+   geometry:s.g||[round(a),round(b)],from:{...a},to:{...b},endpointsMatched:true,cached:true});memory.set(k,r);return r;}
+  misses++;
+  const r=Promise.resolve(router.route(round(a),round(b))).then(x=>{
+   if(x&&x.status==='calculated'){
+    // géométrie allégée (≤ 40 points) pour le stockage
+    const g=Array.isArray(x.geometry)?x.geometry.filter((_,i,arr)=>i%Math.max(1,Math.ceil(arr.length/40))===0||i===arr.length-1).map(round):null;
+    saved[k]={t:Date.now(),d:x.durationSeconds,m:x.distanceMeters,g};persist();
+   }else memory.delete(k); // échec : on pourra réessayer plus tard
+   return x;
+  });
+  memory.set(k,r);return r;
+ }
+ return {route,stats:()=>({hits,misses,stored:Object.keys(saved).length,...(router.stats?router.stats():{})}),dispose:()=>router.dispose?.()};
 }
 async function walkOnly(task,router,maxKm){
  const from=pt(task.from),to=pt(task.to),limit=(finite(maxKm)&&maxKm>0?maxKm:3)*1000;
@@ -329,20 +371,31 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
    }
    toWalk.push({j,key,quick});
   }
-  emit(label);
   const isReturn=Number.isFinite(ms(s.task.earliestDeparture))&&!Number.isFinite(ms(s.task.latestArrival));
-  toWalk.sort((a,b)=>isReturn?ms(a.quick.departure)-ms(b.quick.departure)||a.quick.durationMinutes-b.quick.durationMinutes:
-   (a.quick.slackMinutes??0)-(b.quick.slackMinutes??0)||a.quick.durationMinutes-b.quick.durationMinutes);
-  for(const {j,key} of toWalk.slice(8)){ // au-delà : visibles, marches non calculées pour préserver le quota
-   const x=assess({...j,missing:['marches non calculées (quota de la fiche)']},s.task,fareFor);if(key)s.bySignature.set(key,x);s.items.push(x);
+  // Priorité : prix connu d'abord (moins cher en tête), puis le plus utile (retour : départ le plus tôt ; aller : avance la plus juste).
+  const pk=q=>q.price.status==='verified'||q.price.status==='free'?priceSortKey(q.price):Infinity;
+  toWalk.sort((a,b)=>(pk(a.quick)===pk(b.quick)?0:pk(a.quick)-pk(b.quick))||
+   (isReturn?ms(a.quick.departure)-ms(b.quick.departure):(a.quick.slackMinutes??0)-(b.quick.slackMinutes??0))||a.quick.durationMinutes-b.quick.durationMinutes);
+  // Affichage immédiat : chaque trajet apparaît tout de suite, « marches en cours de calcul », puis est remplacé.
+  const pendingCard=new Map();
+  for(const t of toWalk){
+   const p=assess({...t.j,missing:['marches en cours de calcul']},s.task,fareFor);p.computing=true;
+   pendingCard.set(t,p);s.items.push(p);if(t.key)s.bySignature.set(t.key,p);
   }
-  await Promise.all(toWalk.slice(0,8).map(({j,key})=>{
-   const placeholder={...j};if(key)s.bySignature.set(key,placeholder);
-   return completeWalks(j,s.task,router).then(x=>{
-    if(disposed)return;const a=assess(x,s.task,fareFor);a.sources=[...new Set([...a.sources,...(placeholder.sources||[])])];
-    if(key)s.bySignature.set(key,a);s.items.push(a);emit(label);
-   }).catch(()=>{});
-  }));
+  emit(label);
+  const replace=(t,a)=>{const old=pendingCard.get(t);const i=s.items.indexOf(old);
+   if(old)a.sources=[...new Set([...a.sources,...(old.sources||[])])];
+   if(i>=0)s.items[i]=a;else s.items.push(a);if(t.key)s.bySignature.set(t.key,a);};
+  const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,router).then(x=>{
+   if(disposed)return;replace(t,assess(x,s.task,fareFor));emit(label);
+  }).catch(()=>{})));
+  await walkBatch(toWalk.slice(0,8));
+  // Recherche complémentaire : si rien n'est encore réalisable dans cette direction, on complète 8 trajets de plus.
+  let walked=8;
+  if(!disposed&&!s.items.some(x=>x.feasible)){await walkBatch(toWalk.slice(8,16));walked=16;}
+  for(const t of toWalk.slice(walked)){ // au-delà : visibles, marches non calculées pour préserver le quota Valhalla
+   replace(t,assess({...t.j,missing:['marches non calculées (quota de la fiche)']},s.task,fareFor));
+  }
   if(!disposed)emit(label);
  }
  for(const task of tasks){
@@ -437,7 +490,7 @@ function render(host,v){
  if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
