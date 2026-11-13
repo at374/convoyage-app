@@ -123,6 +123,22 @@ jobs:
             .then(items=>{assert.equal(items.length,1);
               assert.ok(items[0].missing.some(x=>x.includes('non confirmé')));})
             .catch(e=>{console.error(e);process.exitCode=1;});
+          const overnightCalls=[];
+          const overnightProviders=hub.makeProviders({CPNationalGTFSJourneys:{
+            loadAndSearch:async args=>{
+              overnightCalls.push(args);
+              return {journeys:args.date==='2026-11-16'?[nationalRow]:[]};
+            }}},{nationalGTFSResources:{sncf:{url:'https://example.org/aura-slice.zip'}}});
+          overnightProviders.national_sncf.run({
+            from:{lat:45.901,lon:6.121},to:{lat:45.761,lon:4.861},
+            earliestDeparture:'2026-11-17T00:00:00Z'
+          }).then(items=>{
+            assert.equal(overnightCalls.length,2);
+            assert.equal(overnightCalls[0].date,'2026-11-17');
+            assert.equal(overnightCalls[1].date,'2026-11-16');
+            assert.equal(overnightCalls[1].earliestDeparture,'25:00:00');
+            assert.equal(items.length,1);
+          }).catch(e=>{console.error(e);process.exitCode=1;});
           const converted=hub.fromNationalGTFS([nationalRow],'sncf');
           assert.equal(converted.length,1);
           assert.equal(converted[0].legs[0].departure,'2026-11-16T23:30:00.000Z');
