@@ -286,6 +286,37 @@ jobs:
             console.log('Real SNCF mission-card transfers validated:',converted.length,'date:',date);
           })().catch(e=>{console.error(e);process.exitCode=1;});
           NODE
+      - name: Auditer les arrêts des réseaux locaux autour de Saint-Julien et Archamps
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const loader=require('./transport-gtfs-loader.js');
+          const indexer=require('./transport-gtfs-index.js');
+          const networks=['tac-annemasse','cars-region-savoie','synchro-chambery',
+            'tcl-lyon','cars-region-isere'];
+          const points={saintJulien:{lat:46.1447,lon:6.0826},archamps:{lat:46.1362,lon:6.1328}};
+          (async()=>{
+            const report={scope:'regional GTFS stop proximity only; no proof of service, price or availability',radiusMeters:5000,networks:{}};
+            for(const network of networks){
+              const bytes=fs.readFileSync('data/gtfs/'+network+'.zip');
+              const feed=await loader.loadResource({format:'GTFS',url:'https://example.org/'+network+'.zip'},{
+                fetcher:async()=>new Response(bytes,{headers:{'content-type':'application/zip','content-length':String(bytes.length)}}),
+                retainSourceTables:false
+              });
+              report.networks[network]={};
+              for(const [name,p] of Object.entries(points)){
+                const stops=indexer.nearbyStops(feed.index,p.lat,p.lon,5000);
+                report.networks[network][name]={
+                  count:stops.length,nearest:stops.slice(0,5).map(s=>({
+                    name:s.name,lat:s.lat,lon:s.lon,distanceMeters:s.distanceMeters
+                  }))
+                };
+              }
+            }
+            fs.writeFileSync('docs/audit-grand-geneve-local-stops.json',JSON.stringify(report,null,2)+'\n');
+            console.log(JSON.stringify(report,null,2));
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
@@ -620,6 +651,7 @@ jobs:
             docs/BILAN-COUVERTURE-TRANSPORTS.md
             docs/audit-national-aura-axes.json
             docs/audit-national-aura-transfers.json
+            docs/audit-grand-geneve-local-stops.json
           if-no-files-found: warn
           retention-days: 14
       - name: Publier le rapport
