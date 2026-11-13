@@ -14,6 +14,7 @@ on:
       - 'transport-coverage.js'
       - 'transport-gtfs-agenda.js'
       - 'transport-catalogue.js'
+      - 'scripts/audit-national-operators.cjs'
 permissions:
   contents: write
 concurrency:
@@ -28,6 +29,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Auditer les flux nationaux SNCF BlaBlaCar FlixBus
+        continue-on-error: true
+        run: node scripts/audit-national-operators.cjs
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
