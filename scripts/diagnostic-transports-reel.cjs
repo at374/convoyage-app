@@ -107,7 +107,25 @@ async function gtfsRows(axis,when){
     missingFareByOperator[name]=(missingFareByOperator[name]||0)+1;
    }
   }
-  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoPricedFromGrids,tripgoTicketLegs,tripgoMissingFareByOperator,missingFareByOperator,walked:all.filter(walkedOk).length,
+  // Distinguer portions tarifées et itinéraires entièrement tarifés.
+  // Un bus à 1,20 € suivi d'un train sans prix reste « Prix à confirmer ».
+  const fareLegsByOperator={};
+  let partialPricedJourneys=0;
+  for(const j of all){
+   let known=0,unknown=0;
+   for(const l of j.legs){
+    if(l.kind==='walk')continue;
+    const fare=l.fare||g.CPTransportFareGrids.fareFor(l);
+    const hasFare=!!(fare&&Number.isFinite(fare.amount)&&fare.amount>=0&&/^(EUR|CHF)$/.test(fare.currency)&&fare.source);
+    if(hasFare){
+     known++;
+     const name=String(l.provider||'opérateur inconnu').slice(0,80);
+     fareLegsByOperator[name]=(fareLegsByOperator[name]||0)+1;
+    }else unknown++;
+   }
+   if(known>0&&unknown>0)partialPricedJourneys++;
+  }
+  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoPricedFromGrids,tripgoTicketLegs,tripgoMissingFareByOperator,missingFareByOperator,fareLegsByOperator,partialPricedJourneys,walked:all.filter(walkedOk).length,
    feasible:all.filter(j=>j.feasible).length,firstResultMs:firstAt,totalMs:Date.now()-started,
    received:v.received,
    reasons:all.flatMap(j=>j.reasons||[]).reduce((m,r)=>{const k=r.replace(/\d+/g,'n').slice(0,70);m[k]=(m[k]||0)+1;return m;},{}),
@@ -118,6 +136,9 @@ async function gtfsRows(axis,when){
  }
  // Synthèse calculée sur les axes réellement testés, sans confondre itinéraires et réseaux.
  report.totals=report.axes.reduce((s,a)=>{s.axes++;s.trips+=a.trips;s.priced+=a.priced;s.walked+=a.walked;s.feasible+=a.feasible;return s;},{axes:0,trips:0,priced:0,walked:0,feasible:0});
+ report.totals.partialPricedJourneys=report.axes.reduce((n,a)=>n+a.partialPricedJourneys,0);
+ report.totals.fareLegsByOperator={};
+ for(const a of report.axes)for(const [name,count] of Object.entries(a.fareLegsByOperator))report.totals.fareLegsByOperator[name]=(report.totals.fareLegsByOperator[name]||0)+count;
  report.totals.tripgoJourneys=report.axes.reduce((n,a)=>n+a.tripgoJourneys,0);
  report.totals.tripgoPriced=report.axes.reduce((n,a)=>n+a.tripgoPriced,0);
  report.totals.tripgoTicketLegs=report.axes.reduce((n,a)=>n+a.tripgoTicketLegs,0);
