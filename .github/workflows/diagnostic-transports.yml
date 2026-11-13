@@ -43,6 +43,13 @@ jobs:
           assert.equal(registry.split('function fareFor(').length-1,1,'Une seule fonction fareFor');
           assert.equal((registry.match(/CPTransportFareGrids=api/g)||[]).length,1,'Un seul module de tarifs');
           const {fareFor} = require('./transport-fare-grids.js');
+          const {makeProviders}=require('./transport-mission-hub.js');
+          const tripgoStub={CPTripGo:{plan:async()=>[],getKey:()=> 'test-key'},CPSwissTransport:{plan:async()=>[]}};
+          const providerDefault=makeProviders(tripgoStub,{fetcher:async()=>({})});
+          assert.equal(providerDefault.tripgo.enabled(),false,'TripGo désactivé sans accord explicite');
+          assert.equal(providerDefault.swiss.enabled({from:{lat:46.2,lon:6.1},to:{lat:46.3,lon:6.2}}),true,'Suisse disponible indépendamment de TripGo');
+          assert.equal(makeProviders(tripgoStub,{allowTripGo:true,fetcher:async()=>({})}).tripgo.enabled(),true,'TripGo uniquement sur activation explicite');
+
           const hs={provider:'Cars Région Haute-Savoie',mode:'Bus',kind:'transit',line:'Y81',departure:'2026-11-16T08:00:00+01:00'};
           assert.equal(fareFor(hs)?.amount,1.70,'Haute-Savoie Y81 : 1,70 €');
           for(const line of ['Y03','Y04','Y13','Y82','Y86','Y91','Y94'])
