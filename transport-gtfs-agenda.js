@@ -14,6 +14,14 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  id:'tam-amberieu',datasetId:'tam-amberieu',network:'TAM Ambérieu-en-Bugey',format:'GTFS',url:LOCAL_GTFS('tam-amberieu.zip'),
  bounds:[45.90,5.28,46.02,5.45],timeZone:'Europe/Paris'
 }),Object.freeze({
+ // TCL (SYTRAL, Lyon) : flux officiel réduit côté serveur à une zone géographique (scripts/build_regional_gtfs.py,
+ // filter_by_bounds) car le flux complet (~654 lignes) est trop lourd pour le téléphone. Non fédéré, comme J'y bus
+ // et TAM : usage interne à la zone couverte uniquement (Part-Dieu, Perrache, Bellecour, Villeurbanne, corridor
+ // Saint-Exupéry), jamais comme correspondance longue distance. Bornes alignées sur la bbox du script serveur :
+ // toute extension de zone doit changer les deux en même temps.
+ id:'tcl-lyon',datasetId:'tcl-lyon',network:'TCL',format:'GTFS',url:LOCAL_GTFS('tcl-lyon.zip'),
+ bounds:[45.65,4.75,45.85,5.10],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'oura-haute-savoie',datasetId:'oura-haute-savoie',network:'Cars Région Haute-Savoie',format:'GTFS',
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',
  // Selection envelope only: does not assert coverage or actual walking access.

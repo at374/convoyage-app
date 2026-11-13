@@ -96,7 +96,14 @@ const DETAILS={
  'mreso-metro':{horaires:'enregistrés',tarif:'vérifiés',checked:'2026-11-13 · reso-m.fr (01/09/2026)',blocage:'Aucun bloquant connu',action:'Diagnostic téléphone (Grenoble → Crolles)'},
  'mreso-gresivaudan':{horaires:'enregistrés',tarif:'partiels',checked:'2026-11-13 · reso-m.fr (01/09/2026)',blocage:'Tarif intra-Grésivaudan 1,00 € non appliqué (périmètre des arrêts inconnu) : 2,00 € affiché',action:'Ajouter la liste des communes du Grésivaudan'},
  'mreso-voironnais':{horaires:'source branchée',tarif:'partiels',checked:'2026-11-13 · reso-m.fr (01/10/2026)',blocage:'Tarif intra-Voironnais 1,30 € non appliqué : 2,00 € affiché ; attente Voiron → Grenoble retirée le 13/11/2026 (ligne réellement exploitée par Cars Région Isère T40/T41, pas le réseau urbain Voironnais)',action:'Liste des communes du Voironnais pour le tarif intra'},
- 'tcl':{horaires:'indisponibles',tarif:'manquants',checked:'2026-11-13 · MobilityDatabase / guide TCL mai 2026',blocage:'GTFS TCL (654 lignes) trop lourd pour le téléphone ; tarifs par zones',action:'Relais serveur GTFS TCL ou clé TripGo ; carte des zones TCL par arrêt'},
+ // Relais serveur ajouté le 13/11/2026 (soir) : scripts/build_regional_gtfs.py réduit désormais le flux
+ // officiel (~654 lignes, ~14 Mo) à une zone géographique (Part-Dieu, Perrache, Bellecour, Villeurbanne,
+ // corridor Saint-Exupéry) via un nouveau filtre par coordonnées (filter_by_bounds), testé hors ligne
+ // (tests/python/test_build_regional_gtfs.py) mais PAS ENCORE VALIDÉ contre le vrai flux : le bac à sable
+ // de développement bloque l'accès réseau direct à data.gouv.fr/apigee. À confirmer au premier passage
+ // réel de build-regional-gtfs.yml (prochain lundi ou workflow_dispatch manuel) : taille du fichier produit,
+ // et si la bbox couvre bien un trajet utile (ex. Ambérieu → Lyon Part-Dieu).
+ 'tcl':{horaires:'en attente de confirmation CI',tarif:'manquants',checked:'2026-11-13 · relais serveur ajouté, non encore confirmé en réel',blocage:'Filtre géographique écrit et testé hors ligne ; taille réelle du flux filtré pas encore mesurée en conditions réelles',action:'Vérifier data/gtfs/manifest.json après le prochain passage de build-regional-gtfs.yml ; élargir ou réduire la bbox si besoin'},
  'jybus':{horaires:'enregistrés',tarif:'manquants',checked:'2026-11-13 · extraction agrégat Oùra (script testé hors ligne)',blocage:'Aucun tarif publié dans l’agrégat Oùra ; pas de grille officielle trouvée',action:'Lancer la tâche « Build regional GTFS », puis diagnostic Rumilly'},
  'tam':{horaires:'enregistrés',tarif:'manquants',checked:'2026-11-13 · extraction agrégat Oùra (script testé hors ligne)',blocage:'Aucun tarif publié dans l’agrégat Oùra ; pas de grille officielle trouvée',action:'Lancer la tâche « Build regional GTFS », puis diagnostic Ambérieu → Lyon'},
  'cars-74':{horaires:'enregistrés',tarif:'partiels',checked:'2026-10-31 · fiche tarifaire Y51 AURA 2026',blocage:'Seule la Y51 a une grille par zones ; autres lignes sans prix',action:'Grilles zonales des autres lignes Cars Région 74'},
