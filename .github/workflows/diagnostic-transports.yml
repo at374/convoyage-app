@@ -245,7 +245,15 @@ jobs:
           assert.equal(journeys[0].legs.length,2);
           assert.ok(journeys[0].missing.includes('correspondance GTFS non confirmée'));
           assert.equal(rows[0].priceEUR,null);
-          console.log('Two-leg national GTFS mission-card transfer OK');
+          const after=national.search({operator:'sncf',files,index,date,
+            from:{lat:45.5658,lon:5.9204},to:{lat:46.1447,lon:6.0826},
+            includeTransfers:true,radiusMeters:1000,earliestDeparture:'09:01:00'});
+          assert.equal(after.length,0,'Earlier transfer must not pass departure window');
+          const before=national.search({operator:'sncf',files,index,date,
+            from:{lat:45.5658,lon:5.9204},to:{lat:46.1447,lon:6.0826},
+            includeTransfers:true,radiusMeters:1000,latestArrival:'10:59:00'});
+          assert.equal(before.length,0,'Late transfer must not pass arrival deadline');
+          console.log('Two-leg national GTFS mission-card transfer and time-window filters OK');
           NODE
       - name: Vérifier les correspondances SNCF réelles dans les fiches mission
         run: |
