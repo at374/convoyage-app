@@ -65,6 +65,10 @@ jobs:
           assert.equal(rows[0].walkingRouteConfirmed,false);
           assert.equal(national.search({...args,earliestDeparture:'09:00'}).length,0);
           assert.throws(()=>national.search({...args,operator:'unknown'}));
+          national.loadAndSearch({...args,resource:{url:'http://invalid.example/feed.zip'}})
+            .then(()=>{throw Error('HTTP must be rejected')},e=>assert.match(e.message,/HTTPS/));
+          national.loadAndSearch({...args,resource:{url:'https://example.org/feed.zip'},loadOptions:{maxArchiveBytes:30*1024*1024}})
+            .then(()=>{throw Error('Oversized archive must be rejected')},e=>assert.match(e.message,/safe mobile cap/));
           console.log('Trajet national GTFS, fenêtre horaire, prix inconnus et validations OK');
           NODE
       - name: Vérifier la syntaxe et les tarifs locaux
