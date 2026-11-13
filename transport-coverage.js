@@ -55,7 +55,13 @@ const AXES=[
  // (ligne 42, tarif officiel 2,00 €) et apparaît dans les résultats réels.
  {id:'rumilly-annecy',name:'Rumilly → Annecy',from:{lat:45.8650,lon:5.9437,name:'Rumilly gare'},to:{lat:45.9017,lon:6.1219,name:'Annecy gare'},expect:['ter','sibra']},
  {id:'thonon-geneve',name:'Thonon-les-Bains → Genève',from:{lat:46.3704,lon:6.4818,name:'Thonon gare'},to:{lat:46.2102,lon:6.1424,name:'Genève Cornavin'},expect:['lex','tpg-fr']},
- {id:'voiron-grenoble',name:'Voiron → Grenoble',from:{lat:45.3643,lon:5.5916,name:'Voiron gare'},to:{lat:45.1914,lon:5.7143,name:'Grenoble gare'},expect:['mreso-voironnais','ter']}
+ // Vérifié en réel le 13/11/2026 (trace des legs bruts) : les trajets trouvés sur ce corridor utilisent les
+ // lignes T40/T41/T50/T51/T55 (Cars Région Isère) avec correspondance à St-Laurent-du-Pont ou Moirans — ce
+ // sont des lignes « Cars Région », confirmées par les avis de perturbation officiels itinisere.fr (« Coach
+ // T41 VOIRON-CHAMBERY Cars Région », « Coach T40 ST PIERRE DE CHARTREUSE-GRENOBLE Cars Région »), pas le
+ // réseau urbain M réso Voironnais. Ce dernier dessert réellement le Voironnais local (cf. l'axe
+ // voiron-voreppe, où il est bien détecté) mais n'exploite pas de ligne directe Voiron → Grenoble.
+ {id:'voiron-grenoble',name:'Voiron → Grenoble',from:{lat:45.3643,lon:5.5916,name:'Voiron gare'},to:{lat:45.1914,lon:5.7143,name:'Grenoble gare'},expect:['cars-38','ter']}
 ];
 // Indicateurs par réseau (livraison 9) : horaires, niveau de tarif, dernier contrôle documentaire, blocage et prochaine action.
 // horaires : 'enregistrés' (réponse réelle testée) | 'source branchée' | 'indisponibles' ; tarif : 'vérifiés' | 'partiels' | 'manquants'.
@@ -67,7 +73,7 @@ const DETAILS={
  'start':{horaires:'enregistrés',tarif:'manquants',checked:'2026-11-13 · star-t.fr (2025)',blocage:'Zones connues (liste officielle des communes A/B, star-t.fr) mais prix 2026 non confirmé (1,20 € / 2,20 € sur des pages de 2022–2025) ; arrêts GTFS sans commune ; était évincé sur Thonon → Genève par Cars Région Ain puis par TAC Annemasse (enveloppes larges) — corrigé le 13/11/2026 (le moteur préfère désormais le réseau qui couvre le départ)',action:'Confirmer la grille 2026 ; associer chaque arrêt à sa commune ; diagnostic Thonon → Genève'},
  'mreso-metro':{horaires:'enregistrés',tarif:'vérifiés',checked:'2026-11-13 · reso-m.fr (01/09/2026)',blocage:'Aucun bloquant connu',action:'Diagnostic téléphone (Grenoble → Crolles)'},
  'mreso-gresivaudan':{horaires:'enregistrés',tarif:'partiels',checked:'2026-11-13 · reso-m.fr (01/09/2026)',blocage:'Tarif intra-Grésivaudan 1,00 € non appliqué (périmètre des arrêts inconnu) : 2,00 € affiché',action:'Ajouter la liste des communes du Grésivaudan'},
- 'mreso-voironnais':{horaires:'source branchée',tarif:'partiels',checked:'2026-11-13 · reso-m.fr (01/10/2026)',blocage:'Tarif intra-Voironnais 1,30 € non appliqué : 2,00 € affiché',action:'Diagnostic Voiron → Grenoble ; liste des communes du Voironnais'},
+ 'mreso-voironnais':{horaires:'source branchée',tarif:'partiels',checked:'2026-11-13 · reso-m.fr (01/10/2026)',blocage:'Tarif intra-Voironnais 1,30 € non appliqué : 2,00 € affiché ; attente Voiron → Grenoble retirée le 13/11/2026 (ligne réellement exploitée par Cars Région Isère T40/T41, pas le réseau urbain Voironnais)',action:'Liste des communes du Voironnais pour le tarif intra'},
  'tcl':{horaires:'indisponibles',tarif:'manquants',checked:'2026-11-13 · MobilityDatabase / guide TCL mai 2026',blocage:'GTFS TCL (654 lignes) trop lourd pour le téléphone ; tarifs par zones',action:'Relais serveur GTFS TCL ou clé TripGo ; carte des zones TCL par arrêt'},
  'jybus':{horaires:'enregistrés',tarif:'manquants',checked:'2026-11-13 · extraction agrégat Oùra (script testé hors ligne)',blocage:'Aucun tarif publié dans l’agrégat Oùra ; pas de grille officielle trouvée',action:'Lancer la tâche « Build regional GTFS », puis diagnostic Rumilly'},
  'tam':{horaires:'enregistrés',tarif:'manquants',checked:'2026-11-13 · extraction agrégat Oùra (script testé hors ligne)',blocage:'Aucun tarif publié dans l’agrégat Oùra ; pas de grille officielle trouvée',action:'Lancer la tâche « Build regional GTFS », puis diagnostic Ambérieu → Lyon'},
