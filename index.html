@@ -71,6 +71,13 @@
 <script src="transport-gtfs-index.js"></script>
 <script src="transport-gtfs-loader.js"></script>
 <script src="transport-national-gtfs-journeys.js"></script>
+<script>
+window.CP_NATIONAL_GTFS_RESOURCES = Object.freeze({
+  sncf: Object.freeze({url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-sncf-aura.zip',format:'GTFS'}),
+  blablacarBus: Object.freeze({url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-blablacarBus-aura.zip',format:'GTFS'}),
+  flixbus: Object.freeze({url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-flixbus-aura.zip',format:'GTFS'})
+});
+</script>
 <script src="transport-gtfs-agenda.js?v=hub-20261113f"></script>
 <script src="transport-fare-grids.js?v=hub-20261113d"></script>
 <script src="transport-mission-hub.js?v=hub-20261113b"></script>
