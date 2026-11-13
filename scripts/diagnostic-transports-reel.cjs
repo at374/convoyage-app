@@ -57,7 +57,7 @@ async function gtfsRows(axis,when){
  const when=C.nextMonday8();
  const router=H.cachedRouter(g.CPTransportWalking.createRouter({fetcher,maxRequests:400,intervalMs:1100,timeoutMs:15000}));
  const providers=H.makeProviders(g,{fetcher});
- const report={at:new Date().toISOString(),when,source:'diagnostic serveur (GitHub Actions)',tripgo:!!process.env.CP_TRIPGO_KEY,axes:[],networks:{}};
+ const report={at:new Date().toISOString(),when,source:'diagnostic serveur (GitHub Actions)',tripgo:providers.tripgo?.enabled?.()===true,axes:[],networks:{}};
  for(const axis of [...C.AXES,...C.AXES_COUVERTURE.map(a=>({...a,coverage:true}))]){
   const started=Date.now();let firstAt=null;
   const task={label:'Diag',from:axis.from,to:axis.to,fromName:axis.from.name,toName:axis.to.name,
