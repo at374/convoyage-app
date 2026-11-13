@@ -247,6 +247,37 @@ jobs:
           assert.equal(rows[0].priceEUR,null);
           console.log('Two-leg national GTFS mission-card transfer OK');
           NODE
+      - name: Vérifier les correspondances SNCF réelles dans les fiches mission
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const loader=require('./transport-gtfs-loader.js');
+          const national=require('./transport-national-gtfs-journeys.js');
+          const hub=require('./transport-mission-hub.js');
+          const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
+          (async()=>{
+            const bytes=fs.readFileSync('data/gtfs/national-sncf-aura.zip');
+            const feed=await loader.loadResource({format:'GTFS',url:'https://example.org/sncf.zip'},{
+              fetcher:async()=>new Response(bytes,{headers:{'content-type':'application/zip','content-length':String(bytes.length)}}),
+              indexServiceDates:[date],retainSourceTables:false
+            });
+            const rows=national.search({operator:'sncf',files:feed.files,index:feed.index,date,
+              from:{lat:45.5658,lon:5.9204},to:{lat:46.1447,lon:6.0826},
+              radiusMeters:3000,maxResults:100,includeTransfers:true});
+            const transfers=rows.filter(r=>Array.isArray(r.legs)&&r.legs.length===2);
+            assert.ok(transfers.length>0,'No actual SNCF transfers found');
+            const converted=hub.fromNationalGTFS(transfers,'sncf');
+            assert.equal(converted.length,transfers.length);
+            for(const j of converted){
+              assert.equal(j.legs.length,2);
+              assert.ok(j.legs.every(l=>Number.isFinite(Date.parse(l.departure))&&Number.isFinite(Date.parse(l.arrival))));
+              assert.ok(Date.parse(j.legs[0].arrival)<=Date.parse(j.legs[1].departure));
+              assert.ok(j.missing.includes('correspondance GTFS non confirmée'));
+            }
+            console.log('Real SNCF mission-card transfers validated:',converted.length,'date:',date);
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
