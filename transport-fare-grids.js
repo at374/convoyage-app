@@ -121,11 +121,11 @@ function lemanPassFare(leg){
 // Ne pas généraliser à d'autres arrêts sans leur commune/zone vérifiée.
 function startInterzoneFare(leg){
  if(!leg||leg.kind==='walk'||leg.mode!=='Bus'||typeof leg.provider!=='string')return null;
- if(!/^(?:star['’]?t(?:\\s+thonon)?|thonon-les-bains\\s*-\\s*star['’]?t)$/i.test(leg.provider.trim()))return null;
+ if(!/^(?:star['’]?t(?:\s+thonon)?|thonon-les-bains\s*-\s*star['’]?t)$/i.test(leg.provider.trim()))return null;
  if(!/^(?:L|142)$/i.test(String(leg.line||'').trim()))return null;
  const day=typeof leg.departure==='string'?leg.departure.slice(0,10):'';
  if(day<'2022-12-19'||day>'2026-12-31')return null;
- const norm=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+ const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
  const a=norm(leg.from),b=norm(leg.to);
  const thonon=s=>s==='les arts'||s==='thonon les bains les arts'||s==='sacre coeur'||s==='thonon les bains sacre coeur';
  const bons=s=>s==='mairie'||s==='bons en chablais mairie';
