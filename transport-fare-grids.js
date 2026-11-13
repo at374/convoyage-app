@@ -87,7 +87,7 @@ const GRIDS=[
  // correspondances permises dans les 2 heures. Exceptions territoriales : Neyron–Béligneux
  // La Valbonne (1 €), tarification TCL Crépieux–Lyon, RUBIS ligne A32 Dompierre–Bourg,
  // COLIBRI Neyron–Beynost. Exclure les parcours exceptionnels non résolus plutôt que 2,30 € faux.
- {network:'Cars Région Ain',operatorPattern:'^cars\\\\s*r[ée]gion\\\\s*ain$',modes:['Bus'],amount:2.30,currency:'EUR',
+ {network:'Cars Région Ain',operatorPattern:'^cars\\s*r[ée]gion\\s*ain$',modes:['Bus'],amount:2.30,currency:'EUR',
   product:'1 voyage réseau hors tarifications locales dérogatoires, correspondance 2 h',validityMinutes:120,
   validFrom:'2026-03-01',validUntil:'2027-02-28',
   source:'https://transportsdelain.fr/wp-content/uploads/Nouvelle-tarification-au-01032026-2.pdf',
@@ -166,13 +166,11 @@ function fareFor(leg,grids){
  const startAB=startInterzoneFare(leg);if(startAB)return startAB;
  if(!leg||leg.kind==='walk'||typeof leg.provider!=='string'||!leg.provider.trim())return null;
  const day=typeof leg.departure==='string'?leg.departure.slice(0,10):null;if(!day)return null;
- // Certaines liaisons Cars Région Ain appliquent un tarif local TCL/RUBIS/Colibri ou 1 €.
- // Les arrêts/segments exceptionnels ne sont pas tarifés par défaut tant que la zone
- // et le parcours exact ne sont pas identifiés.
- if(/^cars\\s*r[ée]gion\\s*ain$/i.test(leg.provider.trim())){
+ // Certaines liaisons Cars Région Ain ont des tarifs locaux dérogatoires.
+ if(/^cars\s*r[ée]gion\s*ain$/i.test(leg.provider.trim())){
   const line=String(leg.line||'').trim();
-  const stops=[leg.from,leg.to].map(s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase());
-  if(/^A32$/i.test(line)||stops.some(s=>/\\b(neyron|beligneux|crepieux|beynost|d om pierre|dompierre|lyon)\\b/.test(s)))return null;
+  const stops=[leg.from,leg.to].map(s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase());
+  if(/^A32$/i.test(line)||stops.some(s=>/\b(neyron|beligneux|crepieux|beynost|dompierre|lyon)\b/.test(s)))return null;
  }
  const matches=grids.filter(e=>valid(e)&&e.modes.includes(leg.mode)&&new RegExp(e.operatorPattern,'i').test(leg.provider.trim())&&
   day>=e.validFrom&&day<=e.validUntil&&
