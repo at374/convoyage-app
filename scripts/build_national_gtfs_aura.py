@@ -29,6 +29,7 @@ def main():
         p.error('Official HTTPS provenance URL required')
     if not zipfile.is_zipfile(args.input):
         p.error('Invalid source ZIP')
+    excluded_detour_count = 0
     with zipfile.ZipFile(args.input) as source:
         validate(source)
         # Reject an archive with stops outside AURA between two retained stops:
@@ -54,6 +55,7 @@ def main():
             if len(positions) >= 2 and any(ordered[i]['stop_id'] not in inside
                     for i in range(positions[0], positions[-1] + 1)):
                 detours.add(trip_id)
+        excluded_detour_count = len(detours)
         if detours:
             from build_regional_gtfs import write_table
             filtered = io.BytesIO()
@@ -86,6 +88,7 @@ def main():
     result = {'operator': args.operator, 'file': name, 'sha256': hashlib.sha256(data).hexdigest(),
               'bytes': len(data), 'bounds': BOUNDS, 'source': args.source_url,
               'scope': 'AURA-only static GTFS; no live ticket prices or seat availability',
+              'excludedOutOfRegionDetourTrips': excluded_detour_count,
               'details': info}
     with open(target + '.json', 'w', encoding='utf-8') as output:
         json.dump(result, output, ensure_ascii=False, indent=2)
