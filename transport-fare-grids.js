@@ -116,10 +116,28 @@ function lemanPassFare(leg){
  return {amount:LEMAN_PASS.amount,currency:LEMAN_PASS.currency,network:LEMAN_PASS.network,validityMinutes:LEMAN_PASS.validityMinutes,
   source:LEMAN_PASS.network+' · billet unité plein tarif, 90 min · '+LEMAN_PASS.source+' (valable jusqu’au 12/12/2026, vérifié le '+LEMAN_PASS.checkedAt+')'};
 }
+// STAR'T : trajets interzones A+B prouvés sur les lignes L et 142.
+// Les Arts (Thonon, zone A) ↔ Mairie (Bons-en-Chablais, zone B).
+// Ne pas généraliser à d'autres arrêts sans leur commune/zone vérifiée.
+function startInterzoneFare(leg){
+ if(!leg||leg.kind==='walk'||leg.mode!=='Bus'||typeof leg.provider!=='string')return null;
+ if(!/^(?:star['’]?t(?:\\s+thonon)?|thonon-les-bains\\s*-\\s*star['’]?t)$/i.test(leg.provider.trim()))return null;
+ if(!/^(?:L|142)$/i.test(String(leg.line||'').trim()))return null;
+ const day=typeof leg.departure==='string'?leg.departure.slice(0,10):'';
+ if(day<'2022-12-19'||day>'2026-12-31')return null;
+ const norm=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+ const a=norm(leg.from),b=norm(leg.to);
+ const thonon=s=>s==='les arts'||s==='thonon les bains les arts'||s==='sacre coeur'||s==='thonon les bains sacre coeur';
+ const bons=s=>s==='mairie'||s==='bons en chablais mairie';
+ if(!((thonon(a)&&bons(b))||(thonon(b)&&bons(a))))return null;
+ return {amount:2.20,currency:'EUR',network:"STAR'T zones A+B",validityMinutes:60,
+  source:"STAR'T · ticket 1 heure tout public A+B · https://www.star-t.fr/titres-abonnements/titres-abonnements (vérifié le 13/11/2026)"};
+}
 function fareFor(leg,grids){
  if(!Array.isArray(grids))grids=GRIDS;
  const zoned=officialZoneFare(leg);if(zoned)return zoned;
  const leman=lemanPassFare(leg);if(leman)return leman;
+ const startAB=startInterzoneFare(leg);if(startAB)return startAB;
  if(!leg||leg.kind==='walk'||typeof leg.provider!=='string'||!leg.provider.trim())return null;
  const day=typeof leg.departure==='string'?leg.departure.slice(0,10):null;if(!day)return null;
  const matches=grids.filter(e=>valid(e)&&e.modes.includes(leg.mode)&&new RegExp(e.operatorPattern,'i').test(leg.provider.trim())&&
@@ -131,7 +149,7 @@ function fareFor(leg,grids){
  return {amount:e.amount,currency:e.currency,network:e.network,validityMinutes:Number.isFinite(e.validityMinutes)?e.validityMinutes:null,
   source:e.network+' · '+e.product+' · '+e.source+' (vérifié le '+e.checkedAt+')'};
 }
-const api={GRIDS,fareFor,valid,officialZoneFare,lemanPassFare,stationKey};
+const api={GRIDS,fareFor,valid,officialZoneFare,lemanPassFare,startInterzoneFare,stationKey};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportFareGrids=api;
 })(typeof window!=='undefined'?window:globalThis);
