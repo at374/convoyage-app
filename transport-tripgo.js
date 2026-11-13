@@ -20,7 +20,11 @@ function setKey(value){const key=String(value||'').trim();if(key&&!/^[A-Za-z0-9_
  if(key)root.localStorage.setItem(KEY,key);else root.localStorage.removeItem(KEY);cache.clear();}
 function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Date().toISOString()}={}){
  if(!point(from)||!point(to)||!Number.isFinite(time(when))||latestArrival!==undefined&&(!Number.isFinite(time(latestArrival))||(!arriveBy&&time(latestArrival)<time(when))||(arriveBy&&time(latestArrival)>time(when))))throw Error('Fenêtre TripGo invalide');
- if(!data||!Array.isArray(data.groups)||data.groups.length>100||!Array.isArray(data.segmentTemplates)||data.segmentTemplates.length>2000)throw Error('Réponse TripGo invalide');
+ if(!data||typeof data!=='object')throw Error('Réponse TripGo invalide (vide)');
+ if(!Array.isArray(data.groups))throw Error('Réponse TripGo invalide (groups manquant'+(data.error?' ; erreur fournisseur : '+String(data.error).slice(0,160):'')+')');
+ if(data.groups.length>100)throw Error('Réponse TripGo invalide (groups trop nombreux : '+data.groups.length+')');
+ if(!Array.isArray(data.segmentTemplates))throw Error('Réponse TripGo invalide (segmentTemplates manquant)');
+ if(data.segmentTemplates.length>2000)throw Error('Réponse TripGo invalide (segmentTemplates trop nombreux : '+data.segmentTemplates.length+')');
  if(!point(data.query?.from)||!point(data.query?.to)||gap(coord(data.query.from),coord(from))>1||gap(coord(data.query.to),coord(to))>1||
    time(data.query[arriveBy?'arrive':'depart'])!==time(when))throw Error('Réponse TripGo liée à une autre recherche');
  const templates=new Map();for(const t of data.segmentTemplates){if(!t||typeof t!=='object'||!Number.isInteger(t.hashCode)||templates.has(t.hashCode))throw Error('Modèle TripGo invalide');templates.set(t.hashCode,t);}
