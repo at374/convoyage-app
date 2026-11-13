@@ -1,8 +1,8 @@
 # Diagnostic réel des transports — serveur GitHub Actions
 
-Exécuté le 2026-11-13T20:57:30.887Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : non (pas de clé).
+Exécuté le 2026-11-13T21:02:21.485Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : non (pas de clé).
 
-**Bilan : 436 trajets sur 15 axes, 184 avec prix vérifié (42.2 %), 194 avec marches calculées (44.5 %), 151 réalisables.**
+**Bilan : 436 trajets sur 15 axes, 184 avec prix vérifié (42.2 %), 216 avec marches calculées (49.5 %), 103 réalisables.**
 
 **TripGo : 0 trajets, 0 avec prix vérifié, 0 portions avec billet chiffré.**
 
@@ -32,11 +32,11 @@ Exemples de lignes sans tarif (3 par opérateur et par axe) :
 - aix-technolac / SNCF : Train P3 (Aix-les-Bains le Revard → Viviers-du-Lac) ; Train C21 (Aix-les-Bains le Revard → Chambéry - Challes-les-Eaux) ; Train K11 (Aix-les-Bains le Revard → Chambéry - Challes-les-Eaux)
 - thonon-bons / SNCF : Train C33 (Thonon-les-Bains → Bons-en-Chablais) ; Train L1 (Thonon-les-Bains → Évian-les-Bains) ; Train L1 (Évian-les-Bains → Bons-en-Chablais)
 - thonon-bons / But : Bus B 142 (Thonon-les-Bains, Les Arts → Bons-en-Chablais, Mairie) ; Bus B 142 (Bons-en-Chablais, Gare Didier → Bons-en-Chablais, Mairie)
-- thonon-bons / Star't Thonon : Bus 142 (Les Arts → Sacré Coeur) ; Bus L (Mairie → Presbytère) ; Bus L (Sacré Coeur → Presbytère)
 - thonon-bons / Evian : Bus B 01 (Thonon-les-Bains, Les Arts → Évian-les-Bains, Anna Noailles)
+- thonon-bons / Star't Thonon : Bus L (Mairie → Presbytère) ; Bus L (Sacré Coeur → Presbytère) ; Bus L (Sacré Coeur → Gare Saint-Didier)
 - amberieu-intra / SNCF : Train P13 (Ambérieu-en-Bugey → Ambronay - Priay) ; Train P13 (Ambérieu-en-Bugey → Ambronay-Priay RD 1075) ; Train P13 (Ambronay-Priay RD 1075 → Ambérieu-en-Bugey)
+- chambery-chamoux / SNCF : Train P31 (Chambéry - Challes-les-Eaux → Chamousset) ; Train P41 (Chambéry - Challes-les-Eaux → Saint-Pierre-d'Albigny) ; Train P41 (Chambéry - Challes-les-Eaux → Aix-les-Bains le Revard)
 - chambery-chamoux / Cars Région Savoie : Bus S05 (Gare Routiere → Ecoles)
-- chambery-chamoux / SNCF : Train P41 (Chambéry - Challes-les-Eaux → Saint-Pierre-d'Albigny) ; Train P41 (Chambéry - Challes-les-Eaux → Aix-les-Bains le Revard) ; Train P41 (Aix-les-Bains le Revard → Saint-Pierre-d'Albigny)
 - bourg-amberieu / SNCF : Train K13 (Bourg-en-Bresse → Ambérieu-en-Bugey) ; Train 622E (Bourg-en-Bresse → Genève Cornavin) ; Train K1+ (Genève Cornavin → Ambérieu-en-Bugey)
 - bourg-amberieu / Cars Région Ain : Bus A32 (Berthelot → Carré Amiot (Quai E)) ; Bus A32 (SNCF → Carré Amiot (Quai E))
 - voiron-voreppe / Mobilités M - SNCF : Train C6 (Voiron, Voiron → Voreppe, Voreppe)
@@ -46,7 +46,7 @@ Exemples de lignes sans tarif (3 par opérateur et par axe) :
 Lignes bloquant les itinéraires partiellement tarifés :
 
 - chambery-aix / Ondéa Aix-les-Bains : 419
-- thonon-bons / Star't Thonon : 142, L
+- thonon-bons / Star't Thonon : L, 142
 - bourg-amberieu / Cars Région Ain : A32
 - voiron-voreppe / Mobilités M - SNCF : C6
 
@@ -56,20 +56,20 @@ Portions sans prix par opérateur (toutes sources) : SNCF (195), Ondéa Aix-les-
 
 | Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | 1er résultat | Total | Sources | Erreurs | Attendus non vus |
 |---|---|---|---|---|---|---|---|---|---|
-| Annecy → Genève | 30 | 0 | 22 | 22 | 0.4 s | 11.7 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | — | longue |
-| Annemasse → Saint-Julien-en-Genevois | 52 | 41 | 20 | 12 | 0.3 s | 13.5 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), TAC Annemasse (GTFS) | — | — |
-| Ambérieu-en-Bugey → Lyon Part-Dieu | 10 | 0 | 8 | 3 | 0.1 s | 3.6 s | SNCF (GTFS officiel) | — | — |
-| Chambéry → Aix-les-Bains | 49 | 4 | 16 | 15 | 0.2 s | 9.4 s | Synchro Bus Chambéry (GTFS), SNCF (GTFS officiel), Ondéa Aix-les-Bains (GTFS) | — | — |
-| Grenoble → Crolles | 12 | 5 | 12 | 12 | 0.1 s | 7.2 s | Mobilités M, SNCF (GTFS officiel) | — | — |
-| Rumilly → Annecy | 8 | 1 | 8 | 7 | 0.2 s | 4.0 s | Sibra (GTFS), SNCF (GTFS officiel) | — | — |
-| Thonon-les-Bains → Genève | 17 | 0 | 15 | 8 | 0.1 s | 8.9 s | SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | — |
-| Voiron → Grenoble | 18 | 0 | 18 | 18 | 0.3 s | 5.4 s | SNCF (GTFS officiel), Mobilités M, Cars Région Isère (GTFS) | — | — |
-| Aix-les-Bains gare → Technolac (Ondéa 01) | 50 | 40 | 16 | 5 | 0.6 s | 9.2 s | Ondéa Aix-les-Bains (GTFS), SNCF (GTFS officiel) | — | — |
-| Thonon → Bons-en-Chablais (Star’t 142) | 55 | 7 | 24 | 17 | 0.3 s | 13.2 s | Star't Thonon (GTFS), SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | — |
-| Rumilly Hôpital → Base de loisirs (J’y bus 1) | 29 | 29 | 6 | 6 | 0.6 s | 1.9 s | J'y bus Rumilly (GTFS) | — | — |
-| Ambérieu gare → Cabrol (TAM 2) | 64 | 54 | 16 | 15 | 0.1 s | 10.1 s | TAM Ambérieu-en-Bugey (GTFS), SNCF (GTFS officiel), Cars Région Ain (GTFS) | — | — |
-| Chambéry → Chamoux-sur-Gelon (Cars Savoie S05) | 12 | 0 | 10 | 8 | 0.1 s | 4.7 s | Cars Région Savoie (GTFS), SNCF (GTFS officiel) | — | — |
-| Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 12 | 1 | 0 | 0 | 0.0 s | 2.2 s | Cars Région Ain (GTFS), SNCF (GTFS officiel) | — | — |
+| Annecy → Genève | 30 | 0 | 22 | 14 | 0.3 s | 11.0 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | — | longue |
+| Annemasse → Saint-Julien-en-Genevois | 52 | 41 | 20 | 12 | 0.2 s | 13.5 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), TAC Annemasse (GTFS) | — | — |
+| Ambérieu-en-Bugey → Lyon Part-Dieu | 10 | 0 | 8 | 3 | 0.1 s | 3.5 s | SNCF (GTFS officiel) | — | — |
+| Chambéry → Aix-les-Bains | 49 | 4 | 16 | 7 | 0.1 s | 8.9 s | Synchro Bus Chambéry (GTFS), SNCF (GTFS officiel), Ondéa Aix-les-Bains (GTFS) | — | — |
+| Grenoble → Crolles | 12 | 5 | 12 | 12 | 0.1 s | 6.8 s | Mobilités M, SNCF (GTFS officiel) | — | — |
+| Rumilly → Annecy | 8 | 1 | 8 | 6 | 0.1 s | 4.0 s | Sibra (GTFS), SNCF (GTFS officiel) | — | — |
+| Thonon-les-Bains → Genève | 17 | 0 | 15 | 8 | 0.1 s | 8.7 s | SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | — |
+| Voiron → Grenoble | 18 | 0 | 18 | 10 | 0.2 s | 5.4 s | SNCF (GTFS officiel), Mobilités M, Cars Région Isère (GTFS) | — | — |
+| Aix-les-Bains gare → Technolac (Ondéa 01) | 50 | 40 | 16 | 5 | 0.4 s | 9.2 s | Ondéa Aix-les-Bains (GTFS), SNCF (GTFS officiel) | — | — |
+| Thonon → Bons-en-Chablais (Star’t 142) | 55 | 7 | 32 | 10 | 0.2 s | 16.4 s | Star't Thonon (GTFS), SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | — |
+| Rumilly Hôpital → Base de loisirs (J’y bus 1) | 29 | 29 | 12 | 0 | 0.5 s | 1.9 s | J'y bus Rumilly (GTFS) | — | — |
+| Ambérieu gare → Cabrol (TAM 2) | 64 | 54 | 24 | 7 | 0.1 s | 10.1 s | TAM Ambérieu-en-Bugey (GTFS), SNCF (GTFS officiel), Cars Région Ain (GTFS) | — | — |
+| Chambéry → Chamoux-sur-Gelon (Cars Savoie S05) | 12 | 0 | 10 | 6 | 0.1 s | 4.6 s | SNCF (GTFS officiel), Cars Région Savoie (GTFS) | — | — |
+| Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 12 | 1 | 0 | 0 | 0.0 s | 2.3 s | Cars Région Ain (GTFS), SNCF (GTFS officiel) | — | — |
 | Voiron → Voreppe (M réso Voironnais) | 18 | 2 | 3 | 3 | 0.1 s | 1.2 s | Mobilités M, SNCF (GTFS officiel), Cars Région Isère (GTFS) | — | — |
 
 Exemples (3 meilleures propositions par axe) :
@@ -85,15 +85,15 @@ Exemples (3 meilleures propositions par axe) :
 - Meilleur compromis · Plus rapide : 2026-11-16T07:12:26.785Z → 2026-11-16T07:52:00.000Z · marche 1346 m › SNCF K23 · Prix à confirmer · Réalisable
 
 **Chambéry → Aix-les-Bains**
-- Moins cher · Meilleur compromis : 2026-11-16T11:06:14.962Z → 2026-11-16T11:41:36.577Z · marche 286 m › Synchro Bus Chambéry 30 › marche 129 m · 1,40 € · Réalisable
-- Plus rapide : 2026-11-16T07:00:00.000Z → 2026-11-16T07:11:00.000Z · SNCF C21 · Prix à confirmer · Réalisable
+- Moins cher : 2026-11-16T11:06:14.962Z → 2026-11-16T11:41:36.577Z · marche 286 m › Synchro Bus Chambéry 30 › marche 129 m · 1,40 € · Transport non confirmé (horaire GTFS local non confirmé en temps réel)
+- Meilleur compromis · Plus rapide : 2026-11-16T07:00:00.000Z → 2026-11-16T07:11:00.000Z · SNCF C21 · Prix à confirmer · Réalisable
 
 **Grenoble → Crolles**
 - Moins cher · Meilleur compromis · Plus rapide : 2026-11-16T07:02:04.000Z → 2026-11-16T07:42:59.000Z · marche 69 m › M Réso - Métropole Grenobloise C11 · 2,00 € · Réalisable
 
 **Rumilly → Annecy**
-- Moins cher · Meilleur compromis : 2026-11-16T12:03:51.578Z → 2026-11-16T13:00:49.298Z · marche 625 m › Sibra 42 › marche 160 m · 2,00 € · Réalisable
-- Plus rapide : 2026-11-16T07:47:33.324Z → 2026-11-16T08:15:59.306Z · marche 925 m › SNCF K21 › marche 86 m · Prix à confirmer · Réalisable
+- Moins cher : 2026-11-16T12:03:51.578Z → 2026-11-16T13:00:49.298Z · marche 625 m › Sibra 42 › marche 160 m · 2,00 € · Transport non confirmé (horaire GTFS local non confirmé en temps réel)
+- Meilleur compromis · Plus rapide : 2026-11-16T07:47:33.324Z → 2026-11-16T08:15:59.306Z · marche 925 m › SNCF K21 › marche 86 m · Prix à confirmer · Réalisable
 
 **Thonon-les-Bains → Genève**
 - Meilleur compromis · Plus rapide : 2026-11-16T08:27:38.441Z → 2026-11-16T09:41:19.389Z · marche 197 m › SNCF L1 › marche 2419 m · Prix à confirmer · Réalisable
@@ -106,20 +106,21 @@ Exemples (3 meilleures propositions par axe) :
 - Meilleur compromis · Plus rapide : 2026-11-16T07:13:00.000Z → 2026-11-16T07:56:56.409Z · SNCF P3 › marche 3361 m · Prix à confirmer · Réalisable
 
 **Thonon → Bons-en-Chablais (Star’t 142)**
-- Moins cher · Meilleur compromis : 2026-11-16T07:01:00.000Z → 2026-11-16T07:50:00.000Z · Star't Thonon 142 · 2,20 € · Réalisable
-- Plus rapide : 2026-11-16T07:28:02.877Z → 2026-11-16T07:54:10.713Z · marche 154 m › SNCF C33 › marche 804 m · Prix à confirmer · Réalisable
+- Moins cher : 2026-11-16T07:01:00.000Z → 2026-11-16T07:50:00.000Z · Star't Thonon 142 · 2,20 € · Transport non confirmé (horaire GTFS local non confirmé en temps réel)
+- Meilleur compromis · Plus rapide : 2026-11-16T07:28:02.877Z → 2026-11-16T07:54:10.713Z · marche 154 m › SNCF C33 › marche 804 m · Prix à confirmer · Réalisable
 
 **Rumilly Hôpital → Base de loisirs (J’y bus 1)**
-- Moins cher · Meilleur compromis · Plus rapide : 2026-11-16T07:18:00.000Z → 2026-11-16T07:43:00.000Z · J'y bus Rumilly 1 · 1,00 € · Réalisable
+- Moins cher · Meilleur compromis · Plus rapide : 2026-11-16T07:18:00.000Z → 2026-11-16T07:43:00.000Z · J'y bus Rumilly 1 · 1,00 € · Transport non confirmé (horaire GTFS local non confirmé en temps réel)
 
 **Ambérieu gare → Cabrol (TAM 2)**
-- Moins cher · Meilleur compromis · Plus rapide : 2026-11-16T07:00:00.000Z → 2026-11-16T07:17:00.000Z · TAM Ambérieu-en-Bugey TAM 2 · 1,10 € · Réalisable
+- Moins cher : 2026-11-16T07:00:00.000Z → 2026-11-16T07:17:00.000Z · TAM Ambérieu-en-Bugey TAM 2 · 1,10 € · Transport non confirmé (horaire GTFS local non confirmé en temps réel)
+- Meilleur compromis · Plus rapide : 2026-11-16T07:03:28.321Z → 2026-11-16T07:59:31.677Z · marche 46 m › SNCF P13 › marche 4056 m · Prix à confirmer · Réalisable
 
 **Chambéry → Chamoux-sur-Gelon (Cars Savoie S05)**
-- Meilleur compromis · Plus rapide : 2026-11-16T11:30:00.000Z → 2026-11-16T12:38:00.000Z · Cars Région Savoie S05 · Prix à confirmer · Réalisable
+- Meilleur compromis · Plus rapide : 2026-11-16T07:28:26.574Z → 2026-11-16T08:49:14.460Z · marche 346 m › SNCF P31 › marche 2867 m · Prix à confirmer · Réalisable
 
 **Bourg-en-Bresse → Ambérieu (Cars Ain / TER)**
-- Moins cher : 2026-11-16T14:33:00.000Z → 2026-11-16T17:57:00.000Z · Cars Région Ain A19 › Cars Région Ain A27 · 2,30 € · Transport non confirmé (marche depuis l’adresse exacte de départ non calculée · marche jusqu’à l’adresse exacte d’arrivée non calculée)
+- Moins cher : 2026-11-16T14:33:00.000Z → 2026-11-16T17:57:00.000Z · Cars Région Ain A19 › Cars Région Ain A27 · 2,30 € · Transport non confirmé (horaire GTFS local non confirmé en temps réel · marche depuis l’adresse exacte de départ non calculée · marche jusqu’à l’adresse exacte d’arrivée non calculée)
 - Meilleur compromis · Plus rapide : 2026-11-16T09:45:00.000Z → 2026-11-16T10:01:00.000Z · SNCF K13 · Prix à confirmer · Transport non confirmé (marche depuis l’adresse exacte de départ non calculée · marche jusqu’à l’adresse exacte d’arrivée non calculée)
 
 **Voiron → Voreppe (M réso Voironnais)**
