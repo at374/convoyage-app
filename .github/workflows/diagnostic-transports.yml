@@ -101,6 +101,25 @@ jobs:
           node --check transport-isere-zonal-fares.js
           node --check transport-tripgo.js
           node --check transport-mission-hub.js
+          node --check transport-national-gtfs-journeys.js
+          node --check transport-gtfs-loader.js
+          node --check transport-gtfs-index.js
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const html=fs.readFileSync('index.html','utf8');
+          const scripts=[...html.matchAll(/<script\\s+src="([^"]+)"/g)].map(x=>x[1].split('?')[0]);
+          const deps=['transport-catalogue.js','transport-gtfs-index.js',
+            'transport-gtfs-loader.js','transport-national-gtfs-journeys.js',
+            'transport-mission-hub.js','app.js'];
+          for(const file of deps){
+            assert.ok(scripts.includes(file),'Missing national GTFS browser script: '+file);
+            assert.equal(scripts.indexOf(file),scripts.lastIndexOf(file),'Duplicate script: '+file);
+          }
+          for(let i=1;i<deps.length;i++)assert.ok(scripts.indexOf(deps[i-1])<scripts.indexOf(deps[i]),
+            'National GTFS browser dependency order incorrect: '+deps[i]);
+          console.log('National GTFS browser scripts and dependency order OK');
+          NODE
           node <<'NODE'
           const assert=require('node:assert/strict');
           const hub=require('./transport-mission-hub.js');
