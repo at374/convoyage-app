@@ -48,12 +48,29 @@ const GRIDS=[
   validFrom:'2025-07-07',validUntil:'2026-12-31',
   source:'https://www.grandchambery.fr/fileadmin/mediatheque/Oxyad/DelmDec/indexdelm_20250410/Acte16655.pdf',
   checkedAt:'2026-11-13',flat:true},
- // TAM (Ambérieu-en-Bugey) : livret officiel TAM, valable à partir du 1er janvier 2026 (document hébergé dans un dossier /2026/02/) :
- // titre 1 voyage tout public 1,10 €, valable 1 h avec correspondance.
- // Document hébergé dans l'espace de publication des transports de l'Ain ; lignes urbaines TAM uniquement.
+ // TAM (Ambérieu-en-Bugey) : fiche tarifaire « À COMPTER DU 1ER JANVIER 2026 » hébergée sur philibert-transport.fr,
+ // le site de Cars Philibert — l'exploitant du réseau TAM confirmé par transbus.org/reseaux/01500.html — donc une
+ // source directement attribuable à l'opérateur (contrairement au premier lien storage.googleapis.com, un simple
+ // bucket WordPress sans attribution claire, conservé ci-dessous comme corroboration). Titre 1 voyage tout public
+ // 1,10 € ; enfant -4 ans gratuit ; 4-12 ans 0,60 € ; carte 10 trajets (Oùra) 9,50 € ; abonnement mensuel adulte
+ // 27,00 €. Les deux sources, indépendantes, donnent le même montant : tarif confirmé. Vérifié le 13/11/2026.
  {network:'TAM',operatorPattern:'^TAM(?:\\s+Amb[ée]rieu(?:-en-Bugey)?)?$',modes:['Bus'],amount:1.10,currency:'EUR',
   product:'1 voyage tout public, 1 h avec correspondance',validityMinutes:60,
-  validFrom:'2026-01-01',validUntil:'2026-12-31',source:'https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/Livret_TAM_2026.pdf',
+  validFrom:'2026-01-01',validUntil:'2026-12-31',
+  source:'https://philibert-transport.fr/wp-content/uploads/2017/08/TAM-TARIFS-2026.pdf',
+  checkedAt:'2026-11-13',flat:true},
+ // J'ybus (Rumilly, réseau urbain CCRTS) : ticket unité confirmé à 1,00 € sur l'ensemble du réseau par trois
+ // sources concordantes vérifiées le 13/11/2026 : (1) le règlement/CGV officiel du réseau, hébergé sur jybus.fr
+ // lui-même, « Ticket unité ... Dans le bus : auprès du conducteur 1,00 € Plein tarif », valable 1 h ; (2)
+ // fr.wikipedia.org/wiki/Transport_en_commun_de_Rumilly, qui précise que lors de la hausse tarifaire liée à
+ // l'extension du réseau (janvier 2023) « le ticket 1 heure... est maintenu à 1 € sur l'ensemble du réseau
+ // J'ybus » — donc un tarif réseau explicitement désigné comme tel, pas une extrapolation ; (3) la délibération
+ // Rumilly Terre de Savoie du 03/11/2025 sur le contrat dépositaire de billetterie Oùra pour J'ybus, qui atteste
+ // d'un dispositif de vente de titres toujours actif à cette date récente.
+ {network:"J'ybus",operatorPattern:"^j['’]?y\\s*bus(?:\\s+rumilly)?$",modes:['Bus'],amount:1.00,currency:'EUR',
+  product:'ticket unité, 1 h, tout le réseau',validityMinutes:60,
+  validFrom:'2023-01-01',validUntil:'2026-12-31',
+  source:'https://www.jybus.fr/sites/jybus/files/page/reglement_bus_-_rumilly_vf_1.pdf',
   checkedAt:'2026-11-13',flat:true},
  // STAR'T (Thonon-les-Bains) : star-t.fr, « Titres et abonnements », tarifs « Depuis le 19/12/2022 » (vérifié
  // le 13/11/2026 par accès direct au site officiel) : ticket 1 heure tout public, zone A, 1,20 €. Réservé aux

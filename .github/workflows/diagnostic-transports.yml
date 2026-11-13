@@ -47,7 +47,7 @@ jobs:
           assert.equal(fareFor(urban)?.amount,1.20,'STAR’T ligne urbaine A : zone A');
           assert.equal(fareFor({...urban,line:'142'}),null,'STAR’T ligne 142 : zone non prouvée');
           assert.equal(fareFor({...urban,line:'L'}),null,'STAR’T ligne L : zone non prouvée');
-          assert.equal(fareFor({...urban,provider:"J'y bus Rumilly",line:'J4'}),null,'J’ybus : prix 2026 non confirmé');
+          assert.equal(fareFor({...urban,provider:"J'y bus Rumilly",line:'J4'})?.amount,1.00,'J’ybus : ticket unité confirmé (jybus.fr)');
           assert.equal(fareFor({...urban,provider:'Cars Région Haute-Savoie'}),null,'Ne pas attribuer STAR’T aux Cars Région');
           // L'option carnet Pass Ondéa doit être visible sur les lignes 400–419.
           const hubSource=fs.readFileSync('transport-mission-hub.js','utf8');
