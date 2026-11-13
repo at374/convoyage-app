@@ -63,13 +63,15 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
    const signature=JSON.stringify(legs.map(l=>[l.mode,l.line,l.departure,l.arrival,l.fromPoint,l.toPoint]));if(seen.has(signature))continue;seen.add(signature);
    const startGapMeters=gap(coord(from),legs[0].fromPoint),endGapMeters=gap(coord(to),legs.at(-1).toPoint);
    if(startGapMeters>50||endGapMeters>50)continue;
-   const realtimeReported=legs.filter(l=>l.mode.startsWith('pt_pub')).every(l=>l.realtimeReported);
+   const transitLegs=legs.filter(l=>l.mode.startsWith('pt_pub'));
+   const fareVerified=transitLegs.every(l=>l.ticket&&Number.isFinite(l.ticket.amount)&&l.ticket.amount>=0); 
+   const realtimeReported=transitLegs.every(l=>l.realtimeReported);
    found.push({departure:new Date(departure).toISOString(),arrival:new Date(arrival).toISOString(),legs,priceEUR:null,
     source:'TripGo',receivedAt,transportConfirmed:false,serviceConfirmed:false,accessVerified:false,
     alerts:[...new Set([...legs.flatMap(l=>l.alerts),...(Array.isArray(trip.alerts)?trip.alerts:[]),...(Array.isArray(data.alerts)?data.alerts:[])].map(a=>typeof a==='string'?a:String(a?.title||a?.text||'Alerte fournisseur')))].slice(0,20),
     evidence:{scheduleProvided:true,endpointCoordinatesMatched:startGapMeters<=10&&endGapMeters<=10,startGapMeters,endGapMeters,
-     walkingProvided:legs.some(l=>l.mode==='wa_wal'),realtimeReported,fareVerified:false,
-     missing:['circulation à la date du trajet','perturbations éventuelles','accès physique au point GPS exact','prix du transport']}});
+     walkingProvided:legs.some(l=>l.mode==='wa_wal'),realtimeReported,fareVerified,
+     missing:['circulation à la date du trajet','perturbations éventuelles','accès physique au point GPS exact',...(!fareVerified?['prix du transport']:[])]}});
   }
  }
  return {source:'TripGo',receivedAt,itineraries:found.sort((a,b)=>arriveBy?Date.parse(b.departure)-Date.parse(a.departure):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,10)};
