@@ -354,7 +354,15 @@ function chooseResources(resourceList,taskList){
   const covering=resourceList.map((r,i)=>({r,i})).filter(({r})=>r!==ain&&taskList.some(t=>selected(r,t)))
    .sort((a,b)=>area(a.r)-area(b.r)||a.i-b.i).map(x=>x.r);
   if(covering[0]&&covering[0]!==first){
-   const next=covering.find(r=>r!==covering[0]);
+   // Chambéry → Aix-les-Bains : Grand Chambéry (Synchro, ligne A) et Grand Lac (Ondéa) ont une convention
+   // officielle d'extension de ligne A jusqu'aux arrêts « Technolac » et « Plage » depuis le 07/07/2025
+   // (délibération Grand Chambéry, Acte17091 du 10/07/2025) ; les deux réseaux sont donc pertinents sur ce
+   // corridor. Cas explicite (pas une règle géométrique générale, pour ne pas réintroduire les faux positifs
+   // déjà corrigés ailleurs — cf. historique du 16/11/2026) : si le flux retenu est Synchro et qu'Ondéa
+   // touche une des deux extrémités, on le préfère au repli générique.
+   const ondea=covering[0].id==='82272'&&resourceList.find(r=>r.id==='71223');
+   const ondeaRelevant=ondea&&taskList.some(t=>selected(ondea,{...t,to:t.from})||selected(ondea,{...t,from:t.to}));
+   const next=(ondeaRelevant&&ondea)||covering.find(r=>r!==covering[0]);
    return {resource:covering[0],partners:next?[next]:[]};
   }
  }

@@ -838,3 +838,11 @@ test('le flux GTFS local le plus précis est retenu à la place du flux départe
  assert.deepEqual(pick({lat:45.9530,lon:5.3570},{lat:45.9650,lon:5.3800}),['oura-ain','tam-amberieu']); // Ambérieu urbain : TAM
  assert.equal(pick({lat:45.8992,lon:6.1215},{lat:46.2102,lon:6.1424})[0],'oura-haute-savoie');          // Annecy → Genève : Y51 conservée
 });
+
+test("Chambéry → Aix-les-Bains retient Synchro ET Ondéa (convention d'extension de la ligne A, 07/07/2025)",()=>{
+ const pick=(from,to)=>{const p=agenda.chooseResources(agenda.DEFAULT_RESOURCES,[{from,to}]);return [p.resource,...p.partners].map(r=>r.id);};
+ // Grand Chambéry (Acte17091, 10/07/2025) prolonge sa ligne A jusqu'aux arrêts Technolac et Plage, dans le
+ // ressort de Grand Lac (Ondéa) : les deux réseaux officiels sont pertinents sur ce corridor, pas seulement
+ // le flux départemental Cars Région Savoie retenu auparavant.
+ assert.deepEqual(pick({lat:45.5711,lon:5.9196},{lat:45.6880,lon:5.9093}),['82272','71223']);
+});
