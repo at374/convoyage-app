@@ -416,7 +416,7 @@ function makeProviders(r,opts={}){
    ['tam','TAM Ambérieu','tam-amberieu.zip',[45.90,5.28,46.04,5.43]]
   ];
   const origin=String(r.location?.origin||'');
-  const base=origin.startsWith('https://')?origin.replace(/\\/$/,'')+'/data/gtfs/':
+  const base=origin.startsWith('https://')?origin.replace(/\/$/,'')+'/data/gtfs/':
    'https://at374.github.io/convoyage-app/data/gtfs/';
   const cache=new Map();
   const inBounds=(p,b)=>p&&p.lat>=b[0]&&p.lon>=b[1]&&p.lat<=b[2]&&p.lon<=b[3];
@@ -427,12 +427,12 @@ function makeProviders(r,opts={}){
    return {date:p.year+'-'+p.month+'-'+p.day,clock:p.hour+':'+p.minute+':00'};
   };
   const toISO=(date,clock)=>{
-   if(!/^\\d{1,3}:[0-5]\\d:[0-5]\\d$/.test(clock||''))return null;
+   if(!/^\d{1,3}:[0-5]\d:[0-5]\d$/.test(clock||''))return null;
    const [h,m,s]=clock.split(':').map(Number);
    const wall=Date.parse(date+'T00:00:00Z')+(h*3600+m*60+s)*1000;
    const tz=new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Paris',timeZoneName:'shortOffset'})
     .formatToParts(new Date(wall)).find(x=>x.type==='timeZoneName')?.value||'';
-   const match=/^GMT([+-])(\\d{1,2})(?::(\\d{2}))?$/.exec(tz);
+   const match=/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/.exec(tz);
    if(!match)return null;
    const offset=(match[1]==='+'?1:-1)*(Number(match[2])*60+Number(match[3]||0));
    return new Date(wall-offset*60000).toISOString();
