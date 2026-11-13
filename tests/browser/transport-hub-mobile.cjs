@@ -132,6 +132,17 @@ async function run(){
   assert.deepEqual(errors,[],'aucune erreur JavaScript');
   await retour.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'hub-retour-pixel7.png'),fullPage:false});
   await page.locator('[data-transport-direction="Aller"]').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'hub-aller-pixel7.png')});
+  // Réglages : inventaire de couverture visible, sans débordement, et aucun « Validé en réel » sans diagnostic.
+  await page.locator('#fermer').click().catch(()=>{});
+  await page.locator('button[data-onglet="reglages"]').click();
+  await page.locator('#rCouverture > summary').click();
+  const cov=await page.locator('#rCouvInv').innerText();
+  assert.match(cov,/AURA/);assert.match(cov,/Suisse/);assert.match(cov,/Transfrontalier/);assert.doesNotMatch(cov,/Validé en réel —/);
+  assert.match(cov,/TCL \(Lyon\) — Non raccordé/);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Réglages sans débordement');
+  assert.equal(await page.locator('table.cp-cov').evaluate(t=>t.getBoundingClientRect().right<=t.parentElement.getBoundingClientRect().right+1),true,'tableau de couverture entièrement visible');
+  await page.locator('#rCouverture').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'couverture-pixel7.png')});
+  assert.deepEqual(errors,[],'aucune erreur JavaScript (Réglages)');
   console.log('OK hub mobile',JSON.stringify(hits),'retour complet en',elapsed,'ms');
  }finally{await browser.close();server.close();}
 }

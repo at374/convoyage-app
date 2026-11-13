@@ -114,3 +114,15 @@ Le registre `transport-fare-grids.js` accepte une grille seulement avec : résea
 7. Refaire le test avec une mission à Grenoble : la carte doit citer « Mobilités M ».
 8. Couper le réseau, puis rouvrir la fiche : l'application doit s'ouvrir (cache v34). Les moteurs passent en « ❌ », sans plantage.
 9. Noter tout horaire, toute marche ou tout prix faux, avec une capture d'écran.
+
+## 9. Livraisons 7 à 9 (13/11/2026)
+
+- **Prix fournis par les sources elles-mêmes**, en priorité sur les grilles :
+  - tarifs publiés dans les flux GTFS officiels (`transport-gtfs-fares.js`, GTFS Fares V1 : prix par zone et par ligne, durée de correspondance) ;
+  - billet par portion transmis par TripGo (`ticket`), sans jamais reprendre son coût global estimé (`moneyCost`).
+- **Performances :**
+  - cache des marches partagé entre moteurs, directions et fiches (stockage du téléphone, 30 jours, points arrondis à environ 10 m) ;
+  - cartes affichées immédiatement avec « marches en cours de calcul » ;
+  - priorité aux trajets dont le prix est connu ;
+  - recherche complémentaire (8 trajets de plus) si rien n'est réalisable.
+- **Couverture** (`transport-coverage.js`) : inventaire de 25 réseaux en 4 états, avec indicateurs, blocages et prochaine action. Un diagnostic réel sur 8 axes se lance depuis Réglages → « Couverture et diagnostic ». Le bilan chiffré est généré par `node scripts/bilan-couverture-transports.cjs` → `docs/BILAN-COUVERTURE-TRANSPORTS.md`.

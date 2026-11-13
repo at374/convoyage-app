@@ -1565,6 +1565,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       <label><input id="rBus" type="checkbox" style="width:auto;min-height:0"> Compter les bus dans les liaisons (les bus de villes et villages changent souvent d’horaires et de jours : à cocher seulement si tu as vérifié la ligne)</label>
       <label for="rMarcheMax">Trajets entièrement à pied proposés jusqu’à (km de marche réelle)</label><input id="rMarcheMax" type="number" step="0.5" min="0" max="10" inputmode="decimal">
       <label><input id="rMargeCourte" type="checkbox" style="width:auto;min-height:0"> Accepter 5 min de marge (au lieu de 15) quand le point GPS exact de la mission est confirmé</label>
+      <details id="rCouverture" class="cp-cov-box"><summary>🧪 Couverture et diagnostic des transports (AURA–Suisse)</summary><div id="rCouvInv"></div>
+      <p class="doux">Le diagnostic interroge les vrais moteurs sur 8 axes (départs lundi prochain à 8 h). Il peut durer plusieurs minutes et n’envoie aucune adresse personnelle (points de gare).</p>
+      <button id="rDiagLancer" type="button" class="second">Lancer le diagnostic réel</button> <button id="rDiagCopier" type="button" class="second">Copier le rapport</button><pre id="rDiagOut" style="white-space:pre-wrap;font-size:.85em"></pre></details>
       <label><input id="rTrot" type="checkbox" style="width:auto;min-height:0"> J’ai une trottinette (gratuite, utilisée pour les courts trajets jusqu’à ≈ 8 km)</label>
       <p class="doux">Les retours choisissent le moyen le moins cher qui arrive à temps ; prix et horaires estimés (réduction SNCF ≈ −30 % sur le train), pas des tarifs réels.</p>
       <p class="doux">Valeurs de travail : distances à vol d’oiseau × 1,25 et durées estimées, à ajuster à ton expérience.</p>
@@ -1577,6 +1580,26 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       <div class="boutons"><button id="dOk" class="second">Se déconnecter</button><button id="eOk" class="danger">Effacer mes données</button></div></div>
       <p class="doux" style="text-align:center">Convoyage Ultra · outil d’aide à la décision : aucune mission n’est acceptée à ta place.</p>`;
     $('rStatut').value = r.statut; $('rTaux').value = r.taux_cotisations; $('rKm').value = r.cout_km; $('rMin').value = r.prix_minimum; $('rNv').checked = !!r.alertes_nouvelles;
+    { const C = window.CPTransportCoverage, H = window.CPTransportHub, inv = $('rCouvInv');
+      if (C && inv) { C.renderInventory(inv, C.inventory(window.localStorage));
+        try { const last = JSON.parse(localStorage.getItem(C.STORE) || '{}').lastReport; if (last) $('rDiagOut').textContent = C.reportText(last, C.inventory(window.localStorage)); } catch (_) {}
+        $('rDiagCopier').onclick = () => { try { navigator.clipboard.writeText($('rDiagOut').textContent || ''); toast('Rapport copié'); } catch (_) { toast('Copie impossible'); } };
+        $('rDiagLancer').onclick = async () => {
+          if (!H) return toast('Hub transports indisponible');
+          const b = $('rDiagLancer'); b.disabled = true; const out = $('rDiagOut'); out.textContent = 'Diagnostic en cours…';
+          try {
+            const fetcher = (...a) => window.fetch(...a);
+            const router = H.cachedRouter(window.CPTransportWalking?.createRouter({ fetcher, maxRequests: 200, intervalMs: 1100 }), { storage: window.localStorage });
+            const report = await C.runDiagnostic({ hub: H, router, storage: window.localStorage, host: $('rCouverture'),
+              providers: H.makeProviders(window, { fetcher, regionalEndpoint: window.CP_REGIONAL_ROUTING_ENDPOINT }),
+              fareFor: leg => { try { return window.CPTransportFareGrids?.fareFor(leg) || null; } catch (_) { return null; } },
+              gtfsAgenda: window.CPGTFSAgenda && window.CPGTFSWorker ? window.CPGTFSAgenda : null,
+              onProgress: (axis, v) => { out.textContent = 'Diagnostic : ' + axis.name + ' — ' + v.total + ' trajet(s)…'; } });
+            const invNow = C.inventory(window.localStorage); C.renderInventory(inv, invNow); out.textContent = C.reportText(report, invNow);
+          } catch (e) { out.textContent = 'Diagnostic interrompu : ' + (e && e.message || e); }
+          b.disabled = false;
+        };
+      } }
     $('rBus').checked = window.CP_BUS_ACTIF === true; $('rMarcheMax').value = lireLocal('cp_marche_max_km', 3); $('rMargeCourte').checked = lireLocal('cp_marge_courte_gps', false) === true; $('rTransport').value = window.CP_TRANSPORT_CHOISI || 'general';
     $('rDom').value = r.domicile_ville || ''; $('rTr').value = r.cout_transport_km; $('rVit').value = r.vitesse_liaison; $('rMarge').value = r.marge_minutes; $('rRayon').value = r.rayon_retour_km; $('rAtt').value = r.attente_max_h; $('rSncf').value = r.carte_sncf || 'aucune'; $('rTrot').checked = r.trottinette === true;
     let domChoisi = r.domicile_ville ? { nom: r.domicile_ville, lat: r.domicile_lat, lng: r.domicile_lng, libelle: r.domicile_ville } : null;

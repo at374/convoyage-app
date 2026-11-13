@@ -643,3 +643,5 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .cp-hub-note{margin:4px 0;font-size:.9em}
 .cp-hub-more>summary,.cp-hub-diag>summary{cursor:pointer;font-weight:600;padding:6px 0}
 .cp-hub-none{color:var(--alerte);font-weight:600;margin:0}
+
+.cp-cov{width:100%;border-collapse:collapse;font-size:.78em;margin:8px 0;table-layout:fixed}.cp-cov th,.cp-cov td{border:1px solid var(--ligne);padding:3px;text-align:left;overflow-wrap:anywhere;hyphens:auto}.cp-cov th:first-child,.cp-cov td:first-child{width:24%}.cp-cov-list{font-size:.82em;padding-left:18px}.cp-cov-list li{margin:4px 0}
