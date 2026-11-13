@@ -51,6 +51,9 @@ jobs:
             assert.equal(fareFor({...hs,line}),null,'Ligne à grille distincte non tarifée arbitrairement '+line);
           assert.equal(fareFor({...hs,provider:'Cars Région Savoie'}),null,'Pas de prix Haute-Savoie en Savoie');
           assert.equal(fareFor({...hs,departure:'2026-02-28T08:00:00+01:00'}),null,'Grille 2026 hors période');
+          const startLeg={provider:"Star't Thonon",mode:'Bus',line:'142',departure:'2026-11-16T08:00:00+01:00',from:{name:'Les Arts'},to:{name:'Bons-en-Chablais Mairie'}};
+          assert.equal(fareFor(startLeg)?.amount,2.20,'STAR\u2019T A+B avec arrêts GTFS structurés');
+          assert.equal(fareFor({...startLeg,to:{name:'Arrêt inconnu'}}),null,'STAR\u2019T : aucune zone supposée');
           const ain={provider:'Cars Région Ain',mode:'Bus',line:'A01',departure:'2026-11-16T08:00:00+01:00'};
           assert.equal(fareFor({...ain,from:{name:'Beynost'},to:{name:'Meximieux'}}),null,'Ain : exception tarifaire détectée sur arrêt structuré');
           assert.equal(fareFor({...ain,from:'Meximieux',toPoint:{name:'Lyon'}}),null,'Ain : exception tarifaire détectée sur point GPS nommé');
