@@ -488,7 +488,8 @@ function card(doc,j,labels){
    // Le carnet rechargeable Ondéa est utilisable sur les lignes 400–419, contrairement au M-ticket.
    // Ne pas présenter son prix d'achat comme le coût d'un trajet unique.
    if(!f&&/^ond[ée]a\b/i.test(String(l.provider||''))&&/^(?:40\d|41\d)$/.test(String(l.line||'').trim()))
-    li.appendChild(el(doc,'small','cp-hub-fare-option','Option officielle : carnet 10 voyages à 14,50 € sur carte Pass Ondéa (achat du carnet, pas prix du trajet). Source : ondeagrandlac.fr/titres/titres-pour-tous-tarifs-applicables-du-1er-juillet-2026/titre-10-voyages'));
+    {const note=el(doc,'small','cp-hub-fare-option','Option : carnet de 10 voyages à 14,50 € sur carte Pass Ondéa. QR/M-ticket non acceptés sur ces lignes. Prix du trajet à confirmer. ');
+     const link=el(doc,'a',null,'Conditions officielles Ondéa');link.href='https://www.ondeagrandlac.fr/titres/titres-pour-tous-tarifs-applicables-du-1er-juillet-2026/titre-10-voyages';link.target='_blank';link.rel='noopener noreferrer';note.appendChild(link);li.appendChild(note);}
   }
   ol.appendChild(li);
  }
