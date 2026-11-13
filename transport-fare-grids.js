@@ -160,7 +160,7 @@ function startInterzoneFare(leg){
  if(!/^(?:L|142)$/i.test(String(leg.line||'').trim()))return null;
  const day=typeof leg.departure==='string'?leg.departure.slice(0,10):'';
  if(day<'2022-12-19'||day>'2026-12-31')return null;
- const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+ const norm=s=>String(typeof s==='string'?s:(s&&typeof s==='object'?(s.name||s.stopName||s.label||''):'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
  const a=norm(leg.from),b=norm(leg.to);
  const thonon=s=>s==='les arts'||s==='thonon les bains les arts'||s==='sacre coeur'||s==='thonon les bains sacre coeur';
  const bons=s=>s==='mairie'||s==='bons en chablais mairie';
