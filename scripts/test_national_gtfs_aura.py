@@ -63,6 +63,10 @@ def main():
         with zipfile.ZipFile(os.path.join(temp,result['file'])) as z:
             trips=list(csv.DictReader(io.StringIO(z.read('trips.txt').decode())))
             assert [t['trip_id'] for t in trips]==['t'],trips
+        with zipfile.ZipFile(source,'a',zipfile.ZIP_DEFLATED) as z:
+            z.writestr('../unsafe.txt','should not be processed')
+        rejected=subprocess.run(cmd,capture_output=True,text=True)
+        assert rejected.returncode!=0 and 'Unsafe GTFS archive' in rejected.stderr,rejected.stderr
         print('Découpage national AURA vérifié : arrêt hors zone et faux trajet direct exclus')
 
 if __name__=='__main__':
