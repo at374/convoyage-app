@@ -63,6 +63,15 @@ jobs:
             {id:'flix',name:'Réseau européen FlixBus et FlixTrain',resources:[{id:'f',format:'GTFS',url:'https://transport.data.gouv.fr/flix.zip'}]}
           ];
           const national=nationalOperatorGTFS(feedRows);
+          const normalizedCatalogue=require('./transport-catalogue.js').normalize({datasets:[{
+            id:'national',title:'Horaires nationaux',resources:[
+              {id:'flix-real',title:'FlixBus Europe',format:'GTFS',original_url:'https://example.org/flix.zip'},
+              {id:'not-gtfs',title:'FlixBus prix',format:'CSV',original_url:'https://example.org/prix.csv'}
+            ]}]});
+          const normalizedNational=nationalOperatorGTFS(normalizedCatalogue);
+          assert.equal(normalizedNational.flixbus.length,1,'Nom de ressource conservé après normalisation');
+          assert.equal(normalizedNational.flixbus[0].id,'flix-real','Ne pas accepter les CSV comme horaires GTFS');
+
           const {fetchNationalOperatorGTFS}=require('./transport-catalogue.js');
           const fakeFetch=async()=>({ok:true,json:async()=>({datasets:feedRows})});
           fetchNationalOperatorGTFS(fakeFetch).then(live=>{
