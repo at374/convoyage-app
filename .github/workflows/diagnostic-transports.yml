@@ -36,7 +36,7 @@ jobs:
           const assert = require('node:assert/strict');
           const fs = require('node:fs');
           const registry = fs.readFileSync('transport-fare-grids.js','utf8');
-          assert.equal((registry.match(/function fareFor\\(/g)||[]).length,1,'Une seule fonction fareFor');
+          assert.equal(registry.split('function fareFor(').length-1,1,'Une seule fonction fareFor');
           assert.equal((registry.match(/CPTransportFareGrids=api/g)||[]).length,1,'Un seul module de tarifs');
           const {fareFor} = require('./transport-fare-grids.js');
           const leg = {kind:'transit',mode:'Bus',provider:'TAM Ambérieu-en-Bugey',line:'TAM 2',departure:'2026-11-16T08:00:00+01:00'};
