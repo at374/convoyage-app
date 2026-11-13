@@ -79,13 +79,17 @@ async function gtfsRows(axis,when){
   const tripgoJourneys=all.filter(j=>(j.sources||[]).some(s=>/tripgo/i.test(s)));
   const tripgoPriced=tripgoJourneys.filter(j=>j.price?.status==='verified').length;
   const tripgoTicketLegs=tripgoJourneys.reduce((n,j)=>n+j.legs.filter(l=>l.kind!=='walk'&&l.fare&&Number.isFinite(l.fare.amount)).length,0);
+  // Un tarif de réseau connu peut être appliqué par la grille après TripGo.
+  // Ne pas confondre « prix vérifié au total » avec « billet fourni par TripGo ».
+  const tripgoPricedFromGrids=tripgoJourneys.filter(j=>j.price?.status==='verified'&&
+   !j.legs.some(l=>l.kind!=='walk'&&l.fare&&/TripGo/i.test(String(l.fare.source||'')))).length;
   const tripgoMissingFareByOperator={};
   for(const j of tripgoJourneys)for(const l of j.legs){
    if(l.kind==='walk'||l.fare&&Number.isFinite(l.fare.amount))continue;
    const operator=String(l.provider||'opérateur inconnu').slice(0,80);
    tripgoMissingFareByOperator[operator]=(tripgoMissingFareByOperator[operator]||0)+1;
   }
-  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoTicketLegs,tripgoMissingFareByOperator,walked:all.filter(walkedOk).length,
+  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoPricedFromGrids,tripgoTicketLegs,tripgoMissingFareByOperator,walked:all.filter(walkedOk).length,
    feasible:all.filter(j=>j.feasible).length,firstResultMs:firstAt,totalMs:Date.now()-started,
    received:v.received,
    reasons:all.flatMap(j=>j.reasons||[]).reduce((m,r)=>{const k=r.replace(/\d+/g,'n').slice(0,70);m[k]=(m[k]||0)+1;return m;},{}),
@@ -99,6 +103,7 @@ async function gtfsRows(axis,when){
  report.totals.tripgoJourneys=report.axes.reduce((n,a)=>n+a.tripgoJourneys,0);
  report.totals.tripgoPriced=report.axes.reduce((n,a)=>n+a.tripgoPriced,0);
  report.totals.tripgoTicketLegs=report.axes.reduce((n,a)=>n+a.tripgoTicketLegs,0);
+ report.totals.tripgoPricedFromGrids=report.axes.reduce((n,a)=>n+a.tripgoPricedFromGrids,0);
  report.totals.tripgoMissingFareByOperator={};
  for(const a of report.axes)for(const [name,count] of Object.entries(a.tripgoMissingFareByOperator))report.totals.tripgoMissingFareByOperator[name]=(report.totals.tripgoMissingFareByOperator[name]||0)+count;
  report.totals.pricedPct=report.totals.trips?Math.round(report.totals.priced*1000/report.totals.trips)/10:0;
