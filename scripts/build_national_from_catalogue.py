@@ -9,14 +9,21 @@ import subprocess
 import sys
 import tempfile
 import urllib.request
+import urllib.parse
 
 OPERATORS = ('sncf', 'blablacarBus', 'flixbus')
 MAX_DOWNLOAD = 250 * 1024 * 1024
 
 
 def fetch(url, destination):
-    if not isinstance(url, str) or not url.startswith('https://'):
+    if not isinstance(url, str):
         raise ValueError('HTTPS source required')
+    parsed = urllib.parse.urlsplit(url)
+    allowed_hosts = {
+        'eu.ftp.opendatasoft.com', 'drive.google.com', 'gtfs.gis.flix.tech'
+    }
+    if parsed.scheme != 'https' or parsed.hostname not in allowed_hosts or parsed.username or parsed.password:
+        raise ValueError('Untrusted national GTFS download host')
     request = urllib.request.Request(url, headers={'User-Agent': 'ConvoyageUltra-GTFS/1.0'})
     with urllib.request.urlopen(request, timeout=60) as response:
         if response.url.split(':', 1)[0] != 'https':
