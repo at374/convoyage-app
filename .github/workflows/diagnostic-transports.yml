@@ -359,6 +359,29 @@ jobs:
             console.log(JSON.stringify(report,null,2));
           })().catch(e=>{console.error(e);process.exitCode=1;});
           NODE
+      - name: Tester la déduplication des courses GTFS locales
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const hub=require('./transport-mission-hub.js');
+          const p=(name,lat,lon,distanceMeters)=>({name,lat,lon,distanceMeters});
+          const common={tripId:'tac-course-1',date:'2026-11-14',line:'M',
+            departure:'2026-11-14T09:00:00+01:00',arrival:'2026-11-14T09:20:00+01:00'};
+          const rows=[
+            {...common,originStop:p('Far',46.14,6.08,900),destinationStop:p('Far end',46.13,6.13,800),
+              accessDistanceMeters:900,egressDistanceMeters:800},
+            {...common,originStop:p('Near',46.14,6.08,150),destinationStop:p('Near end',46.13,6.13,180),
+              accessDistanceMeters:150,egressDistanceMeters:180},
+            {...common,tripId:'tac-course-2',departure:'2026-11-14T10:00:00+01:00',
+              arrival:'2026-11-14T10:20:00+01:00',originStop:p('Other',46.14,6.08,250),
+              destinationStop:p('Other end',46.13,6.13,260),accessDistanceMeters:250,egressDistanceMeters:260}
+          ];
+          const journeys=hub.fromGTFS(rows,'TAC');
+          assert.equal(journeys.length,2,'Two distinct vehicle trips must remain');
+          assert(journeys.some(j=>j.legs[0].from==='Near'),'Closest combined access/egress must win');
+          assert(journeys.some(j=>j.legs[0].from==='Other'),'Different vehicle trip must remain');
+          console.log('Local GTFS stop-pair deduplication OK');
+          NODE
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
