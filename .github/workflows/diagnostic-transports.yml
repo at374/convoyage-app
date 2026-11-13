@@ -131,6 +131,10 @@ jobs:
           assert.ok(converted[0].missing.some(x=>x.includes('non confirmé')));
           const summer=hub.fromNationalGTFS([{...nationalRow,date:'2026-07-16',departure:'08:00',arrival:'10:00'}],'sncf');
           assert.equal(summer[0].legs[0].departure,'2026-07-16T06:00:00.000Z');
+          const summerSeconds=hub.fromNationalGTFS([{...nationalRow,date:'2026-07-16',
+            departure:'08:00:00',arrival:'10:00:00'}],'sncf');
+          assert.equal(summerSeconds[0].legs[0].departure,summer[0].legs[0].departure,
+            'HH:MM and HH:MM:SS must resolve to the same instant');
           assert.equal(hub.fromNationalGTFS([nationalRow],'flixbus').length,0);
           const stop={lat:45.901,lon:6.121};
           const arrival={lat:45.761,lon:4.861};
