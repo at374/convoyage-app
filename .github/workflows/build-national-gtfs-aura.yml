@@ -60,6 +60,10 @@ jobs:
           git add data/gtfs/national-*-aura.zip data/gtfs/national-*-aura.zip.json
           if ! git diff --cached --quiet; then
             git commit -m "Update official national AURA GTFS slices (no commercial fares)"
+            # Other transport diagnostics may commit while the feed is downloading.
+            # Replay this data-only commit on the latest remote tip; never force-push.
+            git fetch origin feature/transports-aura-suisse
+            git rebase origin/feature/transports-aura-suisse
             git push origin HEAD:feature/transports-aura-suisse
           fi
       - name: Conserver le rapport et les extraits sans déploiement
