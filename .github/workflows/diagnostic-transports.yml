@@ -39,12 +39,9 @@ jobs:
           assert.equal(registry.split('function fareFor(').length-1,1,'Une seule fonction fareFor');
           assert.equal((registry.match(/CPTransportFareGrids=api/g)||[]).length,1,'Un seul module de tarifs');
           const {fareFor} = require('./transport-fare-grids.js');
-          // TAM (Ambérieu-en-Bugey) : aucune grille officielle complète et vérifiable indépendamment n'a été
-          // trouvée au 13/11/2026 (voir le commentaire dans transport-fare-grids.js). Tant que ce n'est pas le
-          // cas, ce test vérifie l'ABSENCE de prix plutôt qu'un montant non prouvé — ne pas réintroduire
-          // 1,10 € ici sans une source officielle datée et vérifiée indépendamment.
+          // TAM : livret officiel 2026, 1 voyage à 1,10 €, correspondances pendant 1 h.
           const leg = {kind:'transit',mode:'Bus',provider:'TAM Ambérieu-en-Bugey',line:'TAM 2',departure:'2026-11-16T08:00:00+01:00'};
-          assert.equal(fareFor(leg),null,'TAM : pas de prix tant que la grille officielle n’est pas vérifiée');
+          assert.equal(fareFor(leg)?.amount,1.10,'TAM : livret 2026');
           assert.equal(fareFor({...leg,provider:'Cars Région Ain'}),null,'Ne pas appliquer TAM aux cars Ain');
           const urban = {kind:'transit',mode:'Bus',provider:"Star't Thonon",line:'A',departure:'2026-11-16T08:00:00+01:00'};
           assert.equal(fareFor(urban)?.amount,1.20,'STAR’T ligne urbaine A : zone A');
@@ -53,7 +50,7 @@ jobs:
           assert.equal(fareFor({...urban,provider:"J'y bus Rumilly",line:'J4'}),null,'J’ybus : prix 2026 non confirmé');
           assert.equal(fareFor({...urban,provider:'Cars Région Haute-Savoie'}),null,'Ne pas attribuer STAR’T aux Cars Région');
           // Régressions : zones, dates et opérateurs doivent rester strictement contrôlés.
-          assert.equal(fareFor({...leg,line:'TAM 1',departure:'2026-12-31T23:00:00+01:00'}),null);
+          assert.equal(fareFor({...leg,line:'TAM 1',departure:'2026-12-31T23:00:00+01:00'})?.amount,1.10);
           assert.equal(fareFor({...leg,departure:'2025-12-31T23:00:00+01:00'}),null);
           assert.equal(fareFor({...urban,line:'NL'})?.amount,1.20);
           assert.equal(fareFor({...urban,line:'142',provider:"THONON-LES-BAINS - STAR'T"}),null);
