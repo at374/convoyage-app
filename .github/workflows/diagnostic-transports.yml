@@ -108,6 +108,21 @@ jobs:
             departure:'24:30:00',arrival:'25:10:00',
             originStop:{name:'Annecy',lat:45.901,lon:6.121},
             destinationStop:{name:'Lyon',lat:45.761,lon:4.861}};
+          const providerRoot={CPNationalGTFSJourneys:{loadAndSearch:async args=>{
+            assert.equal(args.operator,'flixbus');
+            assert.equal(args.date,'2026-11-16');
+            assert.equal(args.earliestDeparture,'09:00:00');
+            return {journeys:[{...nationalRow,operator:'flixbus'}]};
+          }}};
+          const providers=hub.makeProviders(providerRoot,{nationalGTFSResources:{
+            flixbus:{url:'https://example.org/aura-slice.zip'}}});
+          assert.ok(providers.national_flixbus);
+          assert.equal(providers.national_sncf,undefined);
+          providers.national_flixbus.run({from:{lat:45.901,lon:6.121},
+            to:{lat:45.761,lon:4.861},earliestDeparture:'2026-11-16T08:00:00Z'})
+            .then(items=>{assert.equal(items.length,1);
+              assert.ok(items[0].missing.some(x=>x.includes('non confirmé')));})
+            .catch(e=>{console.error(e);process.exitCode=1;});
           const converted=hub.fromNationalGTFS([nationalRow],'sncf');
           assert.equal(converted.length,1);
           assert.equal(converted[0].legs[0].departure,'2026-11-16T23:30:00.000Z');
