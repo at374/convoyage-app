@@ -218,6 +218,35 @@ jobs:
             fs.writeFileSync('docs/audit-national-aura-transfers.json',JSON.stringify(report,null,2)+'\n');
           })().catch(e=>{console.error(e);process.exitCode=1;});
           NODE
+      - name: Tester les correspondances nationales dans les fiches mission
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const indexer=require('./transport-gtfs-index.js');
+          const national=require('./transport-national-gtfs-journeys.js');
+          const hub=require('./transport-mission-hub.js');
+          const files={
+            'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nA,Chambery,45.5658,5.9204\nB,Correspondance,45.8,6.0\nC,Saint Julien,46.1447,6.0826\n',
+            'routes.txt':'route_id,route_short_name\nR1,TER1\nR2,TER2\n',
+            'trips.txt':'route_id,service_id,trip_id\nR1,S,T1\nR2,S,T2\n',
+            'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT1,09:00:00,09:00:00,A,1\nT1,10:00:00,10:00:00,B,2\nT2,10:15:00,10:15:00,B,1\nT2,11:00:00,11:00:00,C,2\n',
+            'calendar.txt':'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\nS,1,1,1,1,1,1,1,20260101,20271231\n'
+          };
+          const index=indexer.buildIndex(files);
+          const date='2026-11-14';
+          const rows=national.search({operator:'sncf',files,index,date,
+            from:{lat:45.5658,lon:5.9204},to:{lat:46.1447,lon:6.0826},
+            includeTransfers:true,radiusMeters:1000});
+          assert.equal(rows.length,1);
+          assert.equal(rows[0].legs.length,2);
+          const journeys=hub.fromNationalGTFS(rows,'sncf');
+          assert.equal(journeys.length,1);
+          assert.equal(journeys[0].legs.length,2);
+          assert.ok(journeys[0].missing.includes('correspondance GTFS non confirmée'));
+          assert.equal(rows[0].priceEUR,null);
+          console.log('Two-leg national GTFS mission-card transfer OK');
+          NODE
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
