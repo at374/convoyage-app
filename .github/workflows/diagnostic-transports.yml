@@ -50,6 +50,14 @@ jobs:
           assert.deepEqual(isere.FULL.slice(1),[4.30,6.00,7.70,9.40,11.10,12.80]);
           assert.deepEqual(isere.ECO.slice(1),[3.20,4.40,5.60,6.80,8.00,9.20]);
           assert.equal(q(3)?.amount,7.70);
+          const zoneMap={stopA:'C',stopB:'B',stopC:'B',stopD:'A'};
+          const stopProof=isere.evidenceFromStops({stopIds:['stopA','stopB','stopC','stopD'],stopZones:zoneMap,source:'https://www.laregionvoustransporte.fr/',complete:true});
+          assert.deepEqual(stopProof?.traversedZones,['C','B','A'],'Comptage des zones uniques traversées');
+          assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00',zoneEvidence:stopProof})?.amount,7.70);
+          assert.equal(isere.evidenceFromStops({stopIds:['stopA','stopB','stopD'],stopZones:zoneMap,source:'https://www.laregionvoustransporte.fr/'}),null,'Trajet incomplet non certifié');
+          assert.equal(isere.evidenceFromStops({stopIds:['stopA','stopUnknown','stopD'],stopZones:zoneMap,source:'https://www.laregionvoustransporte.fr/',complete:true}),null,'Arrêt sans zone : pas de tarif');
+          assert.equal(isere.evidenceFromStops({stopIds:['stopA','stopB'],stopZones:zoneMap,source:'non vérifié',complete:true}),null,'Source officielle obligatoire');
+
           assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00',profile:'eco',zoneEvidence}),null,'Éco interdit sans justificatif');
           assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00',profile:'eco',ecoEligible:true,zoneEvidence})?.amount,5.60,'Éco moins de 26 ans confirmé');
           assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00',line:'Transaltitude',zoneEvidence}),null,'Transaltitude exclu');
