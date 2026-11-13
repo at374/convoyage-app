@@ -16,13 +16,19 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
   throw new Error('Valid exact origin/destination coordinates required');
  if(!Number.isFinite(radiusMeters)||radiusMeters<100||radiusMeters>5000)throw new Error('Invalid walking search radius');
  if(!Number.isSafeInteger(maxResults)||maxResults<1||maxResults>100)throw new Error('Invalid result limit');
- const min=earliestDeparture===null?-Infinity:(typeof earliestDeparture==='string'&&/^\d{1,3}:[0-5]\d(:[0-5]\d)?$/.test(earliestDeparture)?Number(earliestDeparture.split(':')[0])*60+Number(earliestDeparture.split(':')[1]):NaN);
+ // GTFS service times can exceed 24:00 after midnight. Compare seconds, not only HH:MM.
+ const seconds=value=>{
+  if(typeof value!=='string'||!/^\d{1,3}:[0-5]\d(?::[0-5]\d)?$/.test(value))return NaN;
+  const [h,m,s='0']=value.split(':').map(Number);
+  return h*3600+m*60+Number(s);
+ };
+ const min=earliestDeparture===null?-Infinity:seconds(earliestDeparture);
  if(Number.isNaN(min))throw new Error('Invalid departure threshold');
- const max=latestArrival===null?Infinity:(typeof latestArrival==='string'&&/^\d{1,3}:[0-5]\d(:[0-5]\d)?$/.test(latestArrival)?Number(latestArrival.split(':')[0])*60+Number(latestArrival.split(':')[1]):NaN);
+ const max=latestArrival===null?Infinity:seconds(latestArrival);
  if(Number.isNaN(max))throw new Error('Invalid arrival threshold');
  return indexer.nearbyDirectTrips(files,index,date,from,to,radiusMeters)
-  .filter(x=>Number(x.departure.split(':')[0])*60+Number(x.departure.split(':')[1])>=min&&
-    Number(x.arrival.split(':')[0])*60+Number(x.arrival.split(':')[1])<=max)
+  .filter(x=>seconds(x.departure)>=min&&seconds(x.arrival)<=max)
+  .sort((a,b)=>seconds(a.departure)-seconds(b.departure)||seconds(a.arrival)-seconds(b.arrival))
   .slice(0,maxResults).map(x=>({
    operator,tripId:x.tripId,line:x.line,date:x.date,departure:x.departure,arrival:x.arrival,
    fromStopId:x.from,toStopId:x.to,originStop:x.originStop,destinationStop:x.destinationStop,
