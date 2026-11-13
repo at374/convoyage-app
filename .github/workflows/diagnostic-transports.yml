@@ -31,6 +31,9 @@ jobs:
         run: |
           node --check transport-fare-grids.js
           node --check transport-tripgo.js
+          node --check transport-mission-hub.js
+          node --check scripts/test-pedestrian-hub.cjs
+          node scripts/test-pedestrian-hub.cjs
           node --check scripts/diagnostic-transports-reel.cjs
           node - <<'NODE'
           const assert = require('node:assert/strict');
