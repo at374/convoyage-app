@@ -69,6 +69,7 @@ async function gtfsRows(axis,when){
   for(let i=0;i<600&&!session.view('Diag').done;i++)await new Promise(r=>setTimeout(r,500));
   const v=session.view('Diag');session.dispose();
   const all=[...v.picks.map(p=>p.journey),...v.others];
+  if(axis.id==='voiron-grenoble')console.log('DEBUG-MRESO',JSON.stringify(all.flatMap(j=>(j.legs||[]).filter(l=>l.kind!=='walk').map(l=>({source:j.source,provider:l.provider,line:l.line,from:l.fromPoint,to:l.toPoint})))));
   const nets=C.attribute(all);
   for(const [id,o] of Object.entries(nets)){const r=report.networks[id]||(report.networks[id]={trips:0,priced:0,walked:0,at:report.at,axes:[],source:'serveur'});
    r.trips+=o.trips;r.priced+=o.priced;r.walked+=o.walked;r.axes.push(axis.id);}
