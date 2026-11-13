@@ -23,11 +23,13 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
  if(!data||typeof data!=='object')throw Error('Réponse TripGo invalide (vide)');
  if(!Array.isArray(data.groups))throw Error('Réponse TripGo invalide (groups manquant'+(data.error?' ; erreur fournisseur : '+String(data.error).slice(0,160):'')+')');
  if(data.groups.length>100)throw Error('Réponse TripGo invalide (groups trop nombreux : '+data.groups.length+')');
- if(!Array.isArray(data.segmentTemplates))throw Error('Réponse TripGo invalide (segmentTemplates manquant)');
- if(data.segmentTemplates.length>2000)throw Error('Réponse TripGo invalide (segmentTemplates trop nombreux : '+data.segmentTemplates.length+')');
+ // TripGo omet parfois entièrement segmentTemplates quand groups est vide (aucun trajet en transport public
+ // trouvé, ex. liaisons très locales) : ce n'est pas une réponse malformée, juste l'absence de résultat.
+ if(data.groups.length&&!Array.isArray(data.segmentTemplates))throw Error('Réponse TripGo invalide (segmentTemplates manquant)');
+ if(Array.isArray(data.segmentTemplates)&&data.segmentTemplates.length>2000)throw Error('Réponse TripGo invalide (segmentTemplates trop nombreux : '+data.segmentTemplates.length+')');
  if(!point(data.query?.from)||!point(data.query?.to)||gap(coord(data.query.from),coord(from))>1||gap(coord(data.query.to),coord(to))>1||
    time(data.query[arriveBy?'arrive':'depart'])!==time(when))throw Error('Réponse TripGo liée à une autre recherche');
- const templates=new Map();for(const t of data.segmentTemplates){if(!t||typeof t!=='object'||!Number.isInteger(t.hashCode)||templates.has(t.hashCode))throw Error('Modèle TripGo invalide');templates.set(t.hashCode,t);}
+ const templates=new Map();for(const t of (data.segmentTemplates||[])){if(!t||typeof t!=='object'||!Number.isInteger(t.hashCode)||templates.has(t.hashCode))throw Error('Modèle TripGo invalide');templates.set(t.hashCode,t);}
  const found=[],seen=new Set();let inspected=0;
  for(const group of data.groups){
   if(!group||typeof group!=='object'||!Array.isArray(group.trips)||group.trips.length>100)throw Error('Groupe TripGo invalide');
