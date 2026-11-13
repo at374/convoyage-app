@@ -7,8 +7,13 @@ const OPERATORS=new Set(['sncf','blablacarBus','flixbus']);
 function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=30,earliestDeparture=null}={}){
  if(!OPERATORS.has(operator))throw new Error('Unsupported national operator');
  if(!files||!index)throw new Error('Prebuilt GTFS files and index required');
- if(!/^\d{4}-\d{2}-\d{2}$/.test(date||''))throw new Error('Invalid GTFS date');
- if(![from?.lat,from?.lon,to?.lat,to?.lon].every(Number.isFinite))throw new Error('Exact origin/destination coordinates required');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date||'')||
+  !Number.isFinite(Date.parse(date+'T00:00:00Z'))||
+  new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date)
+  throw new Error('Invalid GTFS date');
+ if(![from?.lat,from?.lon,to?.lat,to?.lon].every(Number.isFinite)||
+  Math.abs(from.lat)>90||Math.abs(to.lat)>90||Math.abs(from.lon)>180||Math.abs(to.lon)>180)
+  throw new Error('Valid exact origin/destination coordinates required');
  if(!Number.isFinite(radiusMeters)||radiusMeters<100||radiusMeters>5000)throw new Error('Invalid walking search radius');
  if(!Number.isSafeInteger(maxResults)||maxResults<1||maxResults>100)throw new Error('Invalid result limit');
  const min=earliestDeparture===null?-Infinity:(typeof earliestDeparture==='string'&&/^\d{1,3}:[0-5]\d(:[0-5]\d)?$/.test(earliestDeparture)?Number(earliestDeparture.split(':')[0])*60+Number(earliestDeparture.split(':')[1]):NaN);
