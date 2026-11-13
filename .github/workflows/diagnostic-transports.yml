@@ -523,6 +523,7 @@ jobs:
             docs/diagnostic-serveur.json
             docs/DIAGNOSTIC-SERVEUR.md
             docs/BILAN-COUVERTURE-TRANSPORTS.md
+            docs/audit-national-aura-axes.json
           if-no-files-found: warn
           retention-days: 14
       - name: Publier le rapport
