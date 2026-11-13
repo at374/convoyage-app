@@ -129,7 +129,7 @@ function nationalOperatorGTFS(datasets){
    .filter(r=>pattern.test(String(d.name||''))||pattern.test(String(r?.name||''))) })))
    .filter(r=>/^https:\/\//i.test(r.url))
    .map(r=>({...r,operator,providesLiveFares:false,providesSeatAvailability:false,
-     timetableOnly:true,requiresServerSideIndex:operator==='flixbus'||operator==='sncf'}));
+     timetableOnly:true,requiresServerSideIndex:true}));
  }
  return result;
 }
