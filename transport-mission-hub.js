@@ -140,7 +140,7 @@ function fromNationalGTFS(rows,operator){
  if(!Object.prototype.hasOwnProperty.call(names,operator))return [];
  const localTime=(date,time)=>{
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date||'')||!/^\d{1,3}:[0-5]\d(?::[0-5]\d)?$/.test(time||''))return null;
-  const [h,m,s='0']=time.split(':').map(Number),day=Date.parse(date+'T00:00:00Z');
+  const [h,m,s=0]=time.split(':').map(Number),day=Date.parse(date+'T00:00:00Z');
   if(!Number.isFinite(day))return null;
   const wall=day+(h*3600+m*60+s)*1000;
   // Resolve the UTC offset from the intended service day. Do not iterate over
