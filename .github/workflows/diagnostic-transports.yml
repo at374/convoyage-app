@@ -45,7 +45,7 @@ jobs:
           // TAM : livret officiel 2026, 1 voyage à 1,10 €, correspondances pendant 1 h.
           const leg = {kind:'transit',mode:'Bus',provider:'TAM Ambérieu-en-Bugey',line:'TAM 2',departure:'2026-11-16T08:00:00+01:00'};
           assert.equal(fareFor(leg)?.amount,1.10,'TAM : livret 2026');
-          assert.equal(fareFor({...leg,provider:'Cars Région Ain'}),null,'Ne pas appliquer TAM aux cars Ain');
+          assert.equal(fareFor({...leg,provider:'Cars Région Ain'})?.amount,2.30,'Cars Ain : tarif propre, pas TAM');
           const ain={...leg,provider:'Cars Région Ain',line:'A20',from:'Belleville',to:'Bourg-en-Bresse'};
           assert.equal(fareFor(ain)?.amount,2.30,'Cars Région Ain : tarif officiel depuis mars 2026');
           assert.equal(fareFor({...ain,departure:'2026-02-28T08:00:00+01:00'}),null,'Ancienne période non couverte');
