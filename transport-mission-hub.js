@@ -168,7 +168,11 @@ function fromNationalGTFS(rows,operator){
    missing:['horaire GTFS non confirmé en temps réel','prix commercial et disponibilité non vérifiés',
     ...(transit.length>1?['correspondance GTFS non confirmée']:[]),
     ...(r.searchTruncated?['recherche des correspondances incomplète']:[])]};
- }).filter(j=>j.legs[0].departure&&j.legs[0].arrival);
+ }).filter(j=>j.legs.length>0&&j.legs.every((l,i)=>{
+  const departure=ms(l.departure),arrival=ms(l.arrival);
+  return Number.isFinite(departure)&&Number.isFinite(arrival)&&arrival>=departure&&
+   (i===0||departure>=ms(j.legs[i-1].arrival));
+ }));
 }
 
 /* ---------- Marches ---------- */
