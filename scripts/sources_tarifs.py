@@ -30,6 +30,10 @@ SOURCES=[
  ('jybus-tarifs','https://www.jybus.fr/tarifs/'),
  ('tam-ville','https://www.ville-amberieuenbugey.fr/-Reseau-TAM'),
  ('cars-isere-tarifs','https://carsisere.auvergnerhonealpes.fr/en/fares-amp-payments/75/the-rates/14'),
+ ('cars-isere-depliant-2025','https://carsisere.auvergnerhonealpes.fr/ftp/document/de-pliant-tarifaire-2025.pdf'),
+ ('cars-isere-carte-zonale-2025','https://carsisere.auvergnerhonealpes.fr/ftp/document/carte-zonale-2025.pdf'),
+ ('plaine-ain-livret-mobilite','https://www.cc-plainedelain.fr/UserFiles/File/mobilite/livret-mobilite.pdf'),
+ ('tam-boamp-2026','https://www.boamp.fr/telechargements/FILES/PDF/2025/01/25-9840.pdf'),
 ]
 OUT='docs/sources-tarifs'; os.makedirs(OUT,exist_ok=True)
 def fetch(url,tries=3):
