@@ -41,7 +41,11 @@ jobs:
           assert.equal(fare?.currency,'EUR');
           assert.equal(fareFor({...leg,provider:'Cars Région Ain'}),null,'Ne pas appliquer TAM aux cars Ain');
           assert.equal(fareFor({...leg,departure:'2027-01-01T08:00:00+01:00'}),null,'Ne pas appliquer un tarif expiré');
-          console.log('Tarif TAM vérifié, exclusions et validité OK');
+          const urban = {kind:'transit',mode:'Bus',provider:"Star't Thonon",line:'A',departure:'2026-11-16T08:00:00+01:00'};
+          assert.equal(fareFor(urban)?.amount,1.20,'STAR’T ligne urbaine A : zone A');
+          assert.equal(fareFor({...urban,line:'142'}),null,'STAR’T ligne 142 : zone non prouvée');
+          assert.equal(fareFor({...urban,provider:'Cars Région Haute-Savoie'}),null,'Ne pas attribuer STAR’T aux Cars Région');
+          console.log('Tarifs TAM et STAR’T urbain vérifiés, exclusions et validité OK');
           NODE
       - name: Vérifier la présence de TripGo
         env:
