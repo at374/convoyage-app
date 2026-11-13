@@ -53,6 +53,8 @@ jobs:
           for(const operator of ['sncf','blablacarBus','flixbus']){
             assert.equal(national[operator].length,1,'Flux officiel découvert : '+operator);
             assert.equal(national[operator][0].providesLiveFares,false,'Aucun prix commercial supposé : '+operator);
+            assert.equal(national[operator][0].timetableOnly,true,'GTFS horaire uniquement : '+operator);
+            assert.equal(national[operator][0].requiresServerSideIndex,operator!=='blablacarBus','Indexation serveur pour gros flux : '+operator);
           }
 
           const {makeProviders}=require('./transport-mission-hub.js');
