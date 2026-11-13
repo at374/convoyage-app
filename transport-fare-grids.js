@@ -89,7 +89,7 @@ const GRIDS=[
  // COLIBRI Neyron–Beynost. Exclure les parcours exceptionnels non résolus plutôt que 2,30 € faux.
  {network:'Cars Région Ain',operatorPattern:'^cars\\s*r[ée]gion\\s*ain$',modes:['Bus'],amount:2.30,currency:'EUR',
   product:'1 voyage réseau hors tarifications locales dérogatoires, correspondance 2 h',validityMinutes:120,
-  validFrom:'2026-03-01',validUntil:'2027-02-28',
+  validFrom:'2026-03-01',validUntil:'2026-12-31',
   source:'https://transportsdelain.fr/wp-content/uploads/Nouvelle-tarification-au-01032026-2.pdf',
   checkedAt:'2026-11-13',flat:true},
  // Exemple de format (NE PAS activer sans preuve) :
