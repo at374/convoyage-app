@@ -15,19 +15,40 @@ OPERATORS = ('sncf', 'blablacarBus', 'flixbus')
 MAX_DOWNLOAD = 250 * 1024 * 1024
 
 
-def fetch(url, destination):
+ALLOWED_SOURCE_HOSTS = {
+    'eu.ftp.opendatasoft.com', 'drive.google.com', 'gtfs.gis.flix.tech'
+}
+
+
+def trusted_download_url(url, redirect=False):
     if not isinstance(url, str):
-        raise ValueError('HTTPS source required')
+        return False
     parsed = urllib.parse.urlsplit(url)
-    allowed_hosts = {
-        'eu.ftp.opendatasoft.com', 'drive.google.com', 'gtfs.gis.flix.tech'
-    }
-    if parsed.scheme != 'https' or parsed.hostname not in allowed_hosts or parsed.username or parsed.password:
+    host = (parsed.hostname or '').lower()
+    if parsed.scheme != 'https' or parsed.username or parsed.password:
+        return False
+    if host in ALLOWED_SOURCE_HOSTS:
+        return True
+    # Google Drive uses temporary download endpoints under googleusercontent.com.
+    return redirect and (host == 'googleusercontent.com' or
+                         host.endswith('.googleusercontent.com'))
+
+
+class SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if not trusted_download_url(newurl, redirect=True):
+            raise ValueError('Untrusted national GTFS redirect host')
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def fetch(url, destination):
+    if not trusted_download_url(url):
         raise ValueError('Untrusted national GTFS download host')
     request = urllib.request.Request(url, headers={'User-Agent': 'ConvoyageUltra-GTFS/1.0'})
-    with urllib.request.urlopen(request, timeout=60) as response:
-        if response.url.split(':', 1)[0] != 'https':
-            raise ValueError('Insecure redirect')
+    opener = urllib.request.build_opener(SafeRedirectHandler())
+    with opener.open(request, timeout=60) as response:
+        if not trusted_download_url(response.url, redirect=True):
+            raise ValueError('Untrusted national GTFS final download URL')
         size = 0
         with open(destination, 'wb') as output:
             while True:
