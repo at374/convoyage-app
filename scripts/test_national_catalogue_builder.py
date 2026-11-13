@@ -18,7 +18,20 @@ def run(audit):
                                capture_output=True,text=True,timeout=15)
         return process
 
+def test_redirect_policy():
+    import importlib.util
+    spec=importlib.util.spec_from_file_location('national_builder',BUILDER)
+    module=importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.trusted_download_url('https://drive.google.com/uc?id=123')
+    assert module.trusted_download_url('https://doc-1.googleusercontent.com/download?id=123',redirect=True)
+    assert not module.trusted_download_url('https://doc-1.googleusercontent.com/download?id=123')
+    assert not module.trusted_download_url('https://drive.google.com.evil.test/file',redirect=True)
+    assert not module.trusted_download_url('https://127.0.0.1/private',redirect=True)
+    assert not module.trusted_download_url('http://gtfs.gis.flix.tech/gtfs.zip',redirect=True)
+
 def main():
+    test_redirect_policy()
     empty=run({'source':SOURCE,'operators':{}})
     assert empty.returncode==2,empty.stderr
     result=json.loads(empty.stdout)
