@@ -8,6 +8,15 @@
 'use strict';
 // Entrées vérifiées uniquement. Laisser vide plutôt qu'approximatif.
 const GRIDS=[
+ // Haute-Savoie : tarif PLAT OFFICIEL sur les seules lignes listées dans la grille
+ // régionale « Tarifs au 1er mars 2026 », mise à jour septembre 2026.
+ // ATTENTION : Y02/Y21/Y22/Y51/Y62/Y63/272/274 disposent de grilles séparées et sont exclus.
+ {network:'Cars Région Haute-Savoie (lignes à tarif plat)',operatorPattern:'^cars\\s*r[ée]gion\\s*haute[- ]savoie$',modes:['Bus'],
+  includeLines:'^Y(?:13|0[34]|8[1-6]|9[1-4])$',amount:1.70,currency:'EUR',
+  product:'1 voyage plein tarif, lignes Y13/Y03/Y04/Y81–Y86/Y91–Y94 exclusivement',
+  validFrom:'2026-03-01',validUntil:'2026-12-31',
+  source:'https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/08/cars_region_haute_savoie_tarifs_MAJ-septembre_2026_Y13-03-04-81-82-83-84-85-86-91-92-93-94.pdf',
+  checkedAt:'2026-11-13',flat:true},
  // Sibra (Grand Annecy) : CGV « Règlement bus et cars 2026/2027 », gamme applicable à partir du 01/07/2026
  // sur l'ensemble du réseau : 1 voyage vendu sans support (rechargement / achat digital) 2,00 € ; à bord 2,50 € ;
  // valable 1 h, correspondances comprises. Vérifié le 13/11/2026.
