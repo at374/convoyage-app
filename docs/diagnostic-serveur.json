@@ -1,5 +1,5 @@
 {
- "at": "2026-11-13T19:58:38.186Z",
+ "at": "2026-11-13T20:03:44.310Z",
  "when": "2026-11-16T08:00:00+01:00",
  "source": "diagnostic serveur (GitHub Actions)",
  "tripgo": false,
@@ -78,8 +78,8 @@
    "partialPricedJourneys": 0,
    "walked": 22,
    "feasible": 22,
-   "firstResultMs": 443,
-   "totalMs": 12283,
+   "firstResultMs": 474,
+   "totalMs": 9257,
    "received": {
     "SNCF": 6,
     "Suisse": 8,
@@ -221,8 +221,8 @@
    "partialPricedJourneys": 0,
    "walked": 20,
    "feasible": 12,
-   "firstResultMs": 275,
-   "totalMs": 13503,
+   "firstResultMs": 408,
+   "totalMs": 13519,
    "received": {
     "SNCF": 4,
     "GTFS local": 40,
@@ -342,8 +342,8 @@
    "partialPricedJourneys": 0,
    "walked": 8,
    "feasible": 3,
-   "firstResultMs": 257,
-   "totalMs": 3584,
+   "firstResultMs": 142,
+   "totalMs": 3565,
    "received": {
     "GTFS local": 0,
     "SNCF": 10
@@ -465,8 +465,8 @@
    "partialPricedJourneys": 34,
    "walked": 16,
    "feasible": 15,
-   "firstResultMs": 163,
-   "totalMs": 9245,
+   "firstResultMs": 196,
+   "totalMs": 9409,
    "received": {
     "SNCF": 10,
     "GTFS local": 46
@@ -584,8 +584,8 @@
    "partialPricedJourneys": 0,
    "walked": 12,
    "feasible": 12,
-   "firstResultMs": 80,
-   "totalMs": 7445,
+   "firstResultMs": 86,
+   "totalMs": 5755,
    "received": {
     "SNCF": 7,
     "Mobilités M": 5,
@@ -684,8 +684,8 @@
    "partialPricedJourneys": 0,
    "walked": 8,
    "feasible": 7,
-   "firstResultMs": 199,
-   "totalMs": 4141,
+   "firstResultMs": 213,
+   "totalMs": 4024,
    "received": {
     "GTFS local": 1,
     "SNCF": 7
@@ -851,8 +851,8 @@
    "partialPricedJourneys": 0,
    "walked": 15,
    "feasible": 8,
-   "firstResultMs": 134,
-   "totalMs": 8967,
+   "firstResultMs": 135,
+   "totalMs": 8968,
    "received": {
     "SNCF": 9,
     "GTFS local": 0,
@@ -989,8 +989,8 @@
    "partialPricedJourneys": 0,
    "walked": 18,
    "feasible": 18,
-   "firstResultMs": 293,
-   "totalMs": 5366,
+   "firstResultMs": 309,
+   "totalMs": 5309,
    "received": {
     "GTFS local": 8,
     "SNCF": 7,
@@ -1087,8 +1087,8 @@
    "partialPricedJourneys": 0,
    "walked": 16,
    "feasible": 5,
-   "firstResultMs": 616,
-   "totalMs": 9203,
+   "firstResultMs": 619,
+   "totalMs": 9215,
    "received": {
     "GTFS local": 40,
     "SNCF": 10
@@ -1254,7 +1254,7 @@
    "partialPricedJourneys": 26,
    "walked": 24,
    "feasible": 16,
-   "firstResultMs": 339,
+   "firstResultMs": 353,
    "totalMs": 14321,
    "received": {
     "GTFS local": 40,
@@ -1346,8 +1346,8 @@
    "partialPricedJourneys": 0,
    "walked": 7,
    "feasible": 7,
-   "firstResultMs": 700,
-   "totalMs": 1971,
+   "firstResultMs": 705,
+   "totalMs": 1922,
    "received": {
     "SNCF": 0,
     "GTFS local": 40
@@ -1445,8 +1445,8 @@
    "partialPricedJourneys": 0,
    "walked": 16,
    "feasible": 15,
-   "firstResultMs": 74,
-   "totalMs": 10114,
+   "firstResultMs": 72,
+   "totalMs": 10124,
    "received": {
     "SNCF": 10,
     "GTFS local": 57
@@ -1552,8 +1552,8 @@
    "partialPricedJourneys": 0,
    "walked": 10,
    "feasible": 8,
-   "firstResultMs": 79,
-   "totalMs": 4657,
+   "firstResultMs": 105,
+   "totalMs": 4185,
    "received": {
     "GTFS local": 2,
     "SNCF": 10
@@ -1671,8 +1671,8 @@
    "partialPricedJourneys": 2,
    "walked": 0,
    "feasible": 0,
-   "firstResultMs": 37,
-   "totalMs": 2219,
+   "firstResultMs": 45,
+   "totalMs": 2685,
    "received": {
     "GTFS local": 3,
     "SNCF": 9
@@ -1818,8 +1818,8 @@
    "partialPricedJourneys": 1,
    "walked": 3,
    "feasible": 3,
-   "firstResultMs": 154,
-   "totalMs": 1224,
+   "firstResultMs": 170,
+   "totalMs": 741,
    "received": {
     "GTFS local": 6,
     "SNCF": 9,
@@ -1895,7 +1895,7 @@
    "trips": 116,
    "priced": 0,
    "walked": 85,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -1918,7 +1918,7 @@
    "trips": 22,
    "priced": 0,
    "walked": 20,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -1931,7 +1931,7 @@
    "trips": 11,
    "priced": 0,
    "walked": 11,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -1943,7 +1943,7 @@
    "trips": 16,
    "priced": 0,
    "walked": 8,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "annecy-geneve"
    ],
@@ -1953,7 +1953,7 @@
    "trips": 41,
    "priced": 41,
    "walked": 9,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "annemasse-stjulien"
    ],
@@ -1963,7 +1963,7 @@
    "trips": 8,
    "priced": 0,
    "walked": 7,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "annemasse-stjulien",
     "thonon-geneve"
@@ -1974,7 +1974,7 @@
    "trips": 8,
    "priced": 0,
    "walked": 7,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "annemasse-stjulien",
     "thonon-geneve"
@@ -1985,7 +1985,7 @@
    "trips": 6,
    "priced": 6,
    "walked": 6,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "chambery-aix"
    ],
@@ -1995,7 +1995,7 @@
    "trips": 76,
    "priced": 40,
    "walked": 10,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "chambery-aix",
     "aix-technolac"
@@ -2006,7 +2006,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -2016,7 +2016,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -2026,7 +2026,7 @@
    "trips": 1,
    "priced": 1,
    "walked": 1,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "rumilly-annecy"
    ],
@@ -2036,7 +2036,7 @@
    "trips": 14,
    "priced": 0,
    "walked": 8,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "voiron-grenoble",
     "voiron-voreppe"
@@ -2047,7 +2047,7 @@
    "trips": 40,
    "priced": 8,
    "walked": 8,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "thonon-bons"
    ],
@@ -2057,7 +2057,7 @@
    "trips": 31,
    "priced": 31,
    "walked": 7,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "rumilly-intra"
    ],
@@ -2067,7 +2067,7 @@
    "trips": 40,
    "priced": 40,
    "walked": 8,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "amberieu-intra"
    ],
@@ -2077,7 +2077,7 @@
    "trips": 20,
    "priced": 18,
    "walked": 0,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "amberieu-intra",
     "bourg-amberieu"
@@ -2088,7 +2088,7 @@
    "trips": 2,
    "priced": 0,
    "walked": 2,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "chambery-chamoux"
    ],
@@ -2098,7 +2098,7 @@
    "trips": 3,
    "priced": 2,
    "walked": 3,
-   "at": "2026-11-13T19:58:38.186Z",
+   "at": "2026-11-13T20:03:44.310Z",
    "axes": [
     "voiron-voreppe"
    ],
