@@ -30,7 +30,8 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  // TAC Annemasse : jeu 5ca4bcec634f4125a78fad26, Licence Ouverte 2.0, offre 31/08/2026 → 31/08/2027.
  id:'76779',datasetId:'5ca4bcec634f4125a78fad26',network:'TAC Annemasse',format:'GTFS',federate:true,
  url:'https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip',resolveFromCatalogue:true,
- bounds:[46.1,6.13,46.27,6.42],timeZone:'Europe/Paris'
+ // Réseau Genevois français Mobilités (Annemasse Agglo + CC du Genevois depuis 07/2025) : inclut Saint-Julien et Archamps.
+ bounds:[46.1,5.98,46.27,6.42],timeZone:'Europe/Paris'
 }),Object.freeze({
  // Synchro Bus Grand Chambéry (ODbL, attribution Grand Chambéry).
  id:'82272',datasetId:'synchro-chambery',network:'Synchro Bus Chambéry',format:'GTFS',federate:true,

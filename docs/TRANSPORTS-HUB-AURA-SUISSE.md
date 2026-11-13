@@ -57,7 +57,7 @@ Aucune modification de la synchronisation Hiflow, DriiveMe, Pop Valet ou Otoqi, 
 
 **Ajouts du 13/11 (flux GTFS officiels, à valider sur téléphone)** : TAC Annemasse (offre du 31/08/2026 au 31/08/2027), Synchro Bus Chambéry (ODbL : citer Grand Chambéry), Ondéa Aix-les-Bains (jusqu'au 31/12/2026), Star't Thonon (jusqu'au 20/12/2026). TCL n'est pas ajouté : 654 lignes, trop lourd pour le moteur GTFS du téléphone ; TripGo reste sa source.
 
-**Réseaux de la liste encore non raccordés au hub par une source propre :** TCL Lyon, Voiron, J'y bus Rumilly, Ambérieu (Tam), Saint-Julien et Archamps (couverts par le flux TAC « Genevois français » ? à vérifier), ainsi que les transports à la demande. Ils ne sont couverts que si TripGo, l'API suisse ou un GTFS configuré les fournit. **Ce point reste à vérifier, réseau par réseau, avec la clé TripGo.**
+**Réseaux de la liste encore non raccordés au hub par une source propre :** TCL Lyon, J'y bus Rumilly, Ambérieu (Tam). Voiron (Pays Voironnais) fait partie de M réso et est couvert par Mobilités M. Saint-Julien et Archamps sont dans le périmètre du flux TAC (réseau Genevois français Mobilités depuis juillet 2025) : présence effective des lignes à vérifier sur téléphone. ainsi que les transports à la demande. Ils ne sont couverts que si TripGo, l'API suisse ou un GTFS configuré les fournit. **Ce point reste à vérifier, réseau par réseau, avec la clé TripGo.**
 
 ## 5. Tarifs
 
@@ -68,6 +68,8 @@ Aucune modification de la synchronisation Hiflow, DriiveMe, Pop Valet ou Otoqi, 
 | Sibra 1 voyage | 2,00 € en achat digital ou rechargement (2,50 € à bord), valable 1 h correspondances comprises ; CGV 2026/2027, gamme applicable depuis le 01/07/2026 sur tout le réseau | **Appliqué** (13/11). Une correspondance Sibra dans l'heure n'est pas repayée ; le nom de réseau doit être exactement « Sibra » |
 | TCL Lyon | Tarif selon les zones : 1,60 à 3,70 € depuis septembre 2025 ; hausse annoncée au 01/01/2026 | **Manquant** : il faut connaître la zone des arrêts |
 | M réso Grenoble | Nouvelle grille depuis septembre 2026, non consultée | **Manquant** |
+| Synchro Chambéry | 1,40 € (1,70 € à bord) selon la grille du 07/07/2025 ; gamme révisée chaque année en juillet, grille de juillet 2026 non trouvée | **Manquant** pour la période actuelle |
+| Ondéa, Star't | Aucune grille officielle 2026 trouvée | **Manquant** |
 | TAC Annemasse | 1,60 € ou 1,70 € selon les sources | **Manquant** |
 | TPG / unireso, zone 10 | CHF 3.– sur les dépliants officiels unireso 2019 à 2024, aucune version 2026 trouvée | **Manquant** : les trajets France–Genève relèvent du Léman Pass (1 trajet = 1 titre), pas de la zone 10 |
 | Cars Région Isère | Tarif par zones : 4,10 € à 12,10 € | **Manquant** : il faut connaître la zone des arrêts |
