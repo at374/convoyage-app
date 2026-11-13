@@ -153,7 +153,9 @@ function fromNationalGTFS(rows,operator){
   const offset=(match[1]==='+'?1:-1)*(Number(match[2])*60+Number(match[3]||0));
   return new Date(wall-offset*60000).toISOString();
  };
- return (Array.isArray(rows)?rows:[]).filter(r=>r&&r.operator===operator).map(r=>{
+ return (Array.isArray(rows)?rows:[]).filter(r=>r&&r.operator===operator&&
+  (!Array.isArray(r.legs)||(r.legs.length===2&&r.transferStop&&
+   r.legs.every(l=>l&&l.departure&&l.arrival)))).map(r=>{
   const a=r.originStop,b=r.destinationStop;
   const point=s=>({lat:s?.lat??s?.stop_lat,lon:s?.lon??s?.stop_lon});
   const makeLeg=(from,to,line,departure,arrival)=>leg({mode:operator==='sncf'?'Train':'Car',
