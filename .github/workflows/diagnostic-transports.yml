@@ -86,6 +86,12 @@ jobs:
           const priced=priceOf({walkOnly:false,legs:[bus]},gridFare);
           assert.equal(priced.status,'verified');
           assert.equal(priced.amounts.EUR,1.20);
+          assert.equal(priced.legFares.length,1,'Un tarif résolu par portion');
+          assert.equal(priced.legFares[0].amount,1.20,'La carte affiche le tarif officiel résolu');
+          const withWalk=priceOf({walkOnly:false,legs:[{kind:'walk'},bus]},gridFare);
+          assert.equal(withWalk.legFares.length,2,'Marche et bus alignés dans les détails');
+          assert.equal(withWalk.legFares[0],null,'Marche sans billet');
+          assert.equal(withWalk.legFares[1].amount,1.20,'Billet du bus à la bonne position');
           assert.equal(priceOf({walkOnly:false,legs:[{...bus,provider:'Opérateur inconnu'}]},gridFare).status,'unknown');
           // Une correspondance sur le même réseau pendant la validité ne se repaie pas.
           const first={...urban,kind:'transit',line:'A',departure:'2026-11-16T08:00:00+01:00'};
