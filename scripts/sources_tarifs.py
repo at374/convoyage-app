@@ -2,7 +2,7 @@
 """Télécharge les documents tarifaires OFFICIELS listés ci-dessous et en extrait le texte brut dans
 docs/sources-tarifs/ (un fichier .txt par source + INDEX.md avec statut HTTP, date et empreinte SHA-256).
 Aucun prix n'est intégré à l'application ici : les grilles sont relues puis codées à la main avec leur source."""
-import hashlib, html, io, json, os, re, subprocess, sys, tempfile, urllib.request, datetime
+import urllib.error, hashlib, html, io, json, os, re, subprocess, sys, tempfile, urllib.request, datetime
 SOURCES=[
  ('tpg-272-alpbus','https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf'),
  ('jacquet-transfrontaliers','https://jacquet-autocars.com/wp-content/uploads/2025/11/Grille-tarifaire-TRANSFRONTALIERS-2025-2026.pdf'),
@@ -13,10 +13,27 @@ SOURCES=[
  ('tpg-occasional-en','https://www.tpg.ch/en/purchase/our-tickets/occasional-travelers'),
  ('synchro-gamme-xlsx','https://www.data.gouv.fr/api/1/datasets/r/ad492f65-7f55-4f16-8288-1c1f7ad25183'),
  ('tac-titres','https://tac-mobilites.fr/taxonomy/term/75'),
+ ('tpg-prix-en','https://www.tpg.ch/en/purchase/our-tickets/ticket-prices'),
+ ('tpg-prix-fr','https://www.tpg.ch/fr/acheter/nos-titres/prix-des-titres'),
+ ('tac-tarifs','https://tac-mobilites.fr/tarifs'),
+ ('tac-accueil','https://tac-mobilites.fr/'),
+ ('synchro-gamme-xlsx-2','https://www.data.gouv.fr/fr/datasets/r/ad492f65-7f55-4f16-8288-1c1f7ad25183'),
+ ('start-accueil','https://www.star-t.fr/'),
+ ('start-tarifs','https://www.star-t.fr/tarifs/'),
+ ('unireso-tarifs','https://www.unireso.com/tarifs/'),
  ('cars-isere-tarifs','https://carsisere.auvergnerhonealpes.fr/en/fares-amp-payments/75/the-rates/14'),
 ]
 OUT='docs/sources-tarifs'; os.makedirs(OUT,exist_ok=True)
-def fetch(url):
+def fetch(url,tries=3):
+    import time
+    for i in range(tries):
+        try: return _fetch(url)
+        except urllib.error.HTTPError as e:
+            if e.code<500 or i==tries-1: raise
+        except Exception:
+            if i==tries-1: raise
+        time.sleep(5)
+def _fetch(url):
     req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 (convoyage-app; verification tarifs)','Accept-Language':'fr'})
     with urllib.request.urlopen(req,timeout=90) as r: return r.status,r.headers.get('Content-Type',''),r.read()
 def to_text(ctype,data):
