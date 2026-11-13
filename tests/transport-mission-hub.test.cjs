@@ -232,3 +232,26 @@ test('Ondéa : 1,70 € au 01/07/2026 sur les lignes régulières, lignes de car
  assert.equal(Grids.fareFor(leg('205')),null);
  assert.equal(Grids.fareFor(leg('2','2026-06-15')),null,'avant la grille 2026');
 });
+
+test('performance : doublons entre moteurs et trajets hors délai sans calcul de marche ; 8 trajets marchés au plus ; affichage progressif',async()=>{
+ const router=fakeRouter();const updates=[];
+ const mk=(h,m,line='X')=>({source:'A',sources:['A'],legs:[bus(at(h,m),at(h,m+20),STOP1,STOP2,{line})]});
+ const many=[];for(let i=0;i<12;i++)many.push(mk(7,i*2,'L'+i));// 12 trajets distincts, tous à l'heure
+ const late=mk(9,10,'TARD');// arrive 9:30 > 9:30-15
+ const providers={
+  a:{name:'A',enabled:()=>true,run:async()=>[...many,late]},
+  b:{name:'B',enabled:()=>true,run:async()=>new Promise(r=>setTimeout(()=>r([{...mk(7,0,'L0'),source:'B',sources:['B']}]),30))}
+ };
+ const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers,router,onUpdate:(l,v)=>updates.push(v.total)});
+ await new Promise(r=>setTimeout(r,150));
+ const v=s.view('Aller');
+ assert.equal(v.done,true);assert.equal(v.total,13,'12 + tardif (doublon B fusionné ; trop loin pour la marche seule)');
+ // 8 trajets × 2 marches (approche + finale) + 1 marche seule ; points d'arrêt identiques => cache du routeur réel ; ici on compte les appels
+ assert.ok(router.calls.length<=8*2,'appels marche : '+router.calls.length);
+ const all=[...v.picks.map(p=>p.journey),...v.others];
+ assert.ok(all.some(j=>j.sources.includes('A')&&j.sources.includes('B')),'doublon fusionné avec les deux sources');
+ assert.ok(all.some(j=>/quota/.test(j.statusDetail)),'au-delà de 8 : signalé, pas inventé');
+ assert.ok(all.some(j=>j.legs[0].line==='TARD'&&/marge insuffisante|arrivée après/.test(j.statusDetail)));
+ assert.ok(updates.length>=4,'mises à jour progressives : '+updates.length);
+ s.dispose();
+});

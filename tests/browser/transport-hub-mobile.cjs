@@ -82,10 +82,13 @@ async function run(){
   await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();
   await page.locator('#cpTransportMissionDetails').waitFor();
   // Aucun bouton de recherche manuelle à presser : les résultats arrivent seuls.
+  const t0=Date.now();
   const retour=page.locator('[data-transport-direction="Retour"] [data-transport-hub]');
   await retour.waitFor({timeout:20000});
   await page.waitForFunction(()=>{const h=document.querySelector('[data-transport-direction="Retour"] [data-transport-hub]');return h&&/propositions? comparée/.test(h.textContent);},null,{timeout:60000});
+  var elapsed=Date.now()-t0;
   const text=await retour.evaluate(n=>n.textContent);
+  assert.ok(elapsed<30000,'résultats du retour en moins de 30 s : '+elapsed+' ms');
   assert.match(text,/FlixBus 1789/,'TripGo réel intégré');
   assert.match(text,/Moins cher|Meilleur compromis|Plus rapide/);
   assert.match(text,/Prix à confirmer/,'aucun tarif inventé pour FlixBus/BlaBlaCar/SNCF');
@@ -104,7 +107,7 @@ async function run(){
   assert.deepEqual(errors,[],'aucune erreur JavaScript');
   await retour.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'hub-retour-pixel7.png'),fullPage:false});
   await page.locator('[data-transport-direction="Aller"]').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'hub-aller-pixel7.png')});
-  console.log('OK hub mobile',JSON.stringify(hits));
+  console.log('OK hub mobile',JSON.stringify(hits),'retour complet en',elapsed,'ms');
  }finally{await browser.close();server.close();}
 }
 run().catch(e=>{console.error(e);process.exit(1);});

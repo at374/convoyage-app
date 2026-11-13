@@ -316,12 +316,37 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   const cancelled=x=>x&&(x.cancelled===true||x.canceled===true||/^(cancelled|canceled|annul)/i.test(String(x.status||'')));
   const clean=(Array.isArray(journeys)?journeys:[]).filter(j=>j&&!cancelled(j)&&Array.isArray(j.legs)&&j.legs.length&&
    !j.legs.some(l=>cancelled(l)||BOATS.test(l.mode+' '+(l.line||''))));
-  const done=await Promise.all(clean.slice(0,12).map(j=>completeWalks(j,s.task,router).then(x=>assess(x,s.task,fareFor)).catch(()=>null)));
-  if(disposed)return;
-  s.items.push(...done.filter(Boolean));emit(label);
+  // 1) Doublon d'un trajet déjà traité (autre moteur) : on ajoute la source, sans recalculer les marches.
+  // 2) Trajet déjà hors délai sur ses seuls horaires : affiché « non confirmé » sans dépenser de marche.
+  // 3) Les autres (8 au plus, les plus utiles d'abord) reçoivent leurs marches et s'affichent dès qu'ils sont prêts.
+  const toWalk=[];
+  for(const j of clean){
+   const key=signature(j),known=key&&s.bySignature.get(key);
+   if(known){known.sources=[...new Set([...known.sources,...(j.sources||[j.source])])];continue;}
+   const quick=assess({...j,missing:[]},s.task,fareFor);
+   if(quick.reasons.some(r=>/arrivée après|marge insuffisante|départ avant|horaires incohérents|annulée/.test(r))){
+    if(key)s.bySignature.set(key,quick);s.items.push(quick);continue;
+   }
+   toWalk.push({j,key,quick});
+  }
+  emit(label);
+  const isReturn=Number.isFinite(ms(s.task.earliestDeparture))&&!Number.isFinite(ms(s.task.latestArrival));
+  toWalk.sort((a,b)=>isReturn?ms(a.quick.departure)-ms(b.quick.departure)||a.quick.durationMinutes-b.quick.durationMinutes:
+   (a.quick.slackMinutes??0)-(b.quick.slackMinutes??0)||a.quick.durationMinutes-b.quick.durationMinutes);
+  for(const {j,key} of toWalk.slice(8)){ // au-delà : visibles, marches non calculées pour préserver le quota
+   const x=assess({...j,missing:['marches non calculées (quota de la fiche)']},s.task,fareFor);if(key)s.bySignature.set(key,x);s.items.push(x);
+  }
+  await Promise.all(toWalk.slice(0,8).map(({j,key})=>{
+   const placeholder={...j};if(key)s.bySignature.set(key,placeholder);
+   return completeWalks(j,s.task,router).then(x=>{
+    if(disposed)return;const a=assess(x,s.task,fareFor);a.sources=[...new Set([...a.sources,...(placeholder.sources||[])])];
+    if(key)s.bySignature.set(key,a);s.items.push(a);emit(label);
+   }).catch(()=>{});
+  }));
+  if(!disposed)emit(label);
  }
  for(const task of tasks){
-  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{}};
+  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},bySignature:new Map()};
   if(!pt(task.from)||!pt(task.to)){state[label].errors.adresses='adresse GPS manquante';emit(label);continue;}
   for(const [key,p] of Object.entries(providers)){
    let ok=false;try{ok=p.enabled(task);}catch(_){}

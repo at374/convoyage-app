@@ -82,7 +82,13 @@ Le registre `transport-fare-grids.js` accepte une grille seulement avec : résea
 
 1. **Clé TripGo** : sans clé enregistrée dans l'application, TripGo n'est pas interrogé. Son offre gratuite est limitée en nombre de requêtes.
 2. **Aucun accès réseau aux fournisseurs depuis l'environnement de Claude** : TripGo, transport.opendata.ch, SNCF et data.gouv sont refusés par le proxy. Les tests utilisent des réponses réelles déjà enregistrées dans le dépôt. Les appels en direct doivent être validés sur le téléphone.
-3. **Valhalla public** (valhalla1.openstreetmap.de) : environ 1 requête par seconde ; le hub limite à 60 marches par fiche. Sur une fiche chargée, certaines marches peuvent rester « non calculées », d'où « Transport non confirmé ».
+3. **Valhalla public** (valhalla1.openstreetmap.de) : environ 1 requête par seconde, d'où au plus 60 marches par fiche. Optimisé le 13/11 :
+   - les doublons entre moteurs ne recalculent pas leurs marches ;
+   - un trajet déjà hors délai sur ses seuls horaires n'en consomme aucune ;
+   - au plus 8 trajets par moteur et par direction sont complétés, les plus utiles d'abord ;
+   - chaque carte s'affiche dès que ses marches sont prêtes.
+
+   Sur téléphone, compter quelques secondes pour les premières cartes et jusqu'à environ 30 à 50 s pour une fiche complète à 3 directions. Les trajets au-delà du quota portent la mention « marches non calculées (quota de la fiche) ».
 4. **Tarifs** : aucun fournisseur ne transmet de prix. Il faut des grilles officielles datées, réseau par réseau, et les zones des arrêts pour les réseaux à zones.
 5. ~~Moteur suisse appelé hors zone par l'ancien code~~ : **corrigé le 13/11**. L'API suisse n'est plus interrogée que si un point est en Suisse ou à ≤ 30 km de Genève (test navigateur : 0 requête suisse pour Grenoble–Annecy).
 7. **Flux GTFS ajoutés** : la taille des fichiers et l'autorisation de téléchargement depuis le navigateur (CORS) n'ont pas pu être vérifiées d'ici. En cas d'échec, le réseau apparaît « indisponible » sans bloquer les autres.
@@ -90,7 +96,7 @@ Le registre `transport-fare-grids.js` accepte une grille seulement avec : résea
 
 ## 7. Tests exécutés (13/11/2026)
 
-- `node --test tests/transport-mission-hub.test.cjs` : **19/19**, dont la chaîne suisse complète au format documenté et les tarifs Sibra, M réso et Ondéa (réponse Mobilités M réelle : C1 + 80 = 2,00 €, un seul titre).
+- `node --test tests/transport-mission-hub.test.cjs` : **20/20**, dont la chaîne suisse complète au format documenté et les tarifs Sibra, M réso et Ondéa (réponse Mobilités M réelle : C1 + 80 = 2,00 €, un seul titre).
 - Tous les tests `tests/transport-*`, `swiss-transport-api` et `agenda-transports` : tous réussis sauf `transport-y51-fares`, en échec identique sur `main`.
 - `tests/browser/transport-hub-mobile.cjs`, Chromium au format Pixel 7 : **OK**. TripGo appelé 6 fois, SNCF 5 fois, Valhalla 2 fois ; Retour Annecy → Grenoble avec BlaBlaCar Bus et FlixBus 1789 ; Aller à pied gratuit ; pas de débordement horizontal ; aucune écriture serveur ; aucune erreur JavaScript.
 - `tests/browser/transport-mobile.cjs` : échoue à la même assertion Y51 que sur `main`, sans régression avant ce point.
