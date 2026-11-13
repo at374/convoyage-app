@@ -32,6 +32,14 @@ jobs:
       - name: Auditer les flux nationaux SNCF BlaBlaCar FlixBus
         continue-on-error: true
         run: node scripts/audit-national-operators.cjs
+      - name: Conserver le rapport des flux nationaux
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-operateurs-nationaux
+          path: docs/audit-national-operators.json
+          if-no-files-found: warn
+          retention-days: 14
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
