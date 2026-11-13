@@ -349,9 +349,22 @@ jobs:
                 nearestAccessMeters:rows.length?Math.min(...rows.map(j=>j.accessDistanceMeters)):null,
                 nearestEgressMeters:rows.length?Math.min(...rows.map(j=>j.egressDistanceMeters)):null};
             });
+            const hub=require('./transport-mission-hub.js');
+            const missionCards=hub.fromGTFS(direct.map(j=>({
+              ...j,network:'TAC Annemasse',
+              // The hub expects ISO timestamps; preserve GTFS local clock as
+              // diagnostic metadata without asserting a confirmed service.
+              departure:date+'T'+j.departure+'+01:00',
+              arrival:date+'T'+j.arrival+'+01:00'
+            })),'TAC Annemasse');
+            const uniqueDirectTrips=new Set(direct.map(j=>j.tripId)).size;
+            if(missionCards.length!==uniqueDirectTrips)
+              throw new Error('Mission card GTFS dedup mismatch: '+missionCards.length+' vs '+uniqueDirectTrips);
+            if(missionCards.some(j=>!j.missing?.some(x=>x.includes('non confirmé en temps réel'))))
+              throw new Error('Static TAC trip displayed without unconfirmed warning');
             const report={date,network:'TAC Annemasse',from:'Saint-Julien-en-Genevois',
               to:'Archamps',radiusMeters:3000,direct:direct.length,
-              uniqueDirectTrips:new Set(direct.map(j=>j.tripId)).size,
+              uniqueDirectTrips,missionCardsAfterDedup:missionCards.length,
               byRadius,oneTransfer:transfer.journeys.length,
               searchTruncated:transfer.searchTruncated,
               note:'Counts are static GTFS stop-pair candidates, not unique bookable itineraries. Straight-line stop radius is not walking distance. No verified fare, live service or pedestrian route.'};
