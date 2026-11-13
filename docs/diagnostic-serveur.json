@@ -1,5 +1,5 @@
 {
- "at": "2026-11-13T10:00:02.938Z",
+ "at": "2026-11-13T10:04:56.623Z",
  "when": "2026-11-16T08:00:00+01:00",
  "source": "diagnostic serveur (GitHub Actions)",
  "tripgo": false,
@@ -7,12 +7,14 @@
   {
    "id": "annecy-geneve",
    "name": "Annecy → Genève",
+   "coverage": false,
+   "appGtfsChoice": "Cars Région Haute-Savoie",
    "trips": 30,
    "priced": 0,
    "walked": 22,
    "feasible": 22,
-   "firstResultMs": 330,
-   "totalMs": 5947,
+   "firstResultMs": 438,
+   "totalMs": 6166,
    "received": {
     "SNCF": 6,
     "Suisse": 8,
@@ -73,11 +75,13 @@
   {
    "id": "annemasse-stjulien",
    "name": "Annemasse → Saint-Julien-en-Genevois",
+   "coverage": false,
+   "appGtfsChoice": "Cars Région Haute-Savoie",
    "trips": 52,
    "priced": 0,
    "walked": 20,
    "feasible": 12,
-   "firstResultMs": 180,
+   "firstResultMs": 285,
    "totalMs": 11303,
    "received": {
     "SNCF": 4,
@@ -142,12 +146,14 @@
   {
    "id": "amberieu-lyon",
    "name": "Ambérieu-en-Bugey → Lyon Part-Dieu",
+   "coverage": false,
+   "appGtfsChoice": "Cars Région Ain",
    "trips": 10,
    "priced": 0,
    "walked": 8,
    "feasible": 3,
-   "firstResultMs": 176,
-   "totalMs": 3559,
+   "firstResultMs": 254,
+   "totalMs": 3573,
    "received": {
     "GTFS local": 0,
     "SNCF": 10
@@ -203,12 +209,14 @@
   {
    "id": "chambery-aix",
    "name": "Chambéry → Aix-les-Bains",
+   "coverage": false,
+   "appGtfsChoice": "Cars Région Haute-Savoie",
    "trips": 16,
    "priced": 0,
    "walked": 14,
    "feasible": 13,
-   "firstResultMs": 90,
-   "totalMs": 6564,
+   "firstResultMs": 158,
+   "totalMs": 6891,
    "received": {
     "SNCF": 10,
     "GTFS local": 6
@@ -267,12 +275,14 @@
   {
    "id": "grenoble-crolles",
    "name": "Grenoble → Crolles",
+   "coverage": false,
+   "appGtfsChoice": "M Réso — Métropole grenobloise",
    "trips": 12,
    "priced": 5,
    "walked": 12,
    "feasible": 12,
-   "firstResultMs": 58,
-   "totalMs": 5600,
+   "firstResultMs": 71,
+   "totalMs": 6012,
    "received": {
     "SNCF": 7,
     "Mobilités M": 5,
@@ -328,12 +338,14 @@
   {
    "id": "rumilly-annecy",
    "name": "Rumilly → Annecy",
+   "coverage": false,
+   "appGtfsChoice": "Cars Région Haute-Savoie",
    "trips": 8,
    "priced": 1,
    "walked": 8,
    "feasible": 7,
-   "firstResultMs": 92,
-   "totalMs": 4588,
+   "firstResultMs": 119,
+   "totalMs": 4584,
    "received": {
     "SNCF": 7,
     "GTFS local": 1
@@ -408,12 +420,14 @@
   {
    "id": "thonon-geneve",
    "name": "Thonon-les-Bains → Genève",
+   "coverage": false,
+   "appGtfsChoice": "Cars Région Haute-Savoie",
    "trips": 17,
    "priced": 0,
    "walked": 15,
    "feasible": 8,
-   "firstResultMs": 109,
-   "totalMs": 9048,
+   "firstResultMs": 135,
+   "totalMs": 9062,
    "received": {
     "GTFS local": 0,
     "SNCF": 9,
@@ -475,12 +489,14 @@
   {
    "id": "voiron-grenoble",
    "name": "Voiron → Grenoble",
+   "coverage": false,
+   "appGtfsChoice": "M Réso — Métropole grenobloise",
    "trips": 18,
    "priced": 0,
    "walked": 18,
    "feasible": 18,
-   "firstResultMs": 239,
-   "totalMs": 5264,
+   "firstResultMs": 245,
+   "totalMs": 5251,
    "received": {
     "GTFS local": 8,
     "SNCF": 7,
@@ -531,14 +547,485 @@
      "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
     }
    ]
+  },
+  {
+   "id": "aix-technolac",
+   "name": "Aix-les-Bains gare → Technolac (Ondéa 01)",
+   "coverage": true,
+   "appGtfsChoice": "Cars Région Haute-Savoie",
+   "trips": 50,
+   "priced": 40,
+   "walked": 16,
+   "feasible": 5,
+   "firstResultMs": 132,
+   "totalMs": 8788,
+   "received": {
+    "SNCF": 10,
+    "GTFS local": 40
+   },
+   "reasons": {
+    "marches non calculées (quota de la fiche)": 34,
+    "départ avant la fin de la mission précédente": 11
+   },
+   "engines": {
+    "errors": {},
+    "skipped": {
+     "TripGo": "clé TripGo absente (Réglages → Transports)",
+     "Suisse": "trajet hors zone suisse et Grand Genève",
+     "Mobilités M": "hors agglomération grenobloise"
+    },
+    "gtfs": {
+     "Cars Région Haute-Savoie": 0,
+     "Synchro Bus Chambéry": 0,
+     "Ondéa Aix-les-Bains": 40,
+     "Cars Région Isère": 0,
+     "Cars Région Savoie": 0
+    }
+   },
+   "sources": [
+    "Ondéa Aix-les-Bains (GTFS)",
+    "SNCF (GTFS officiel)"
+   ],
+   "networksSeen": [
+    "ondea",
+    "ter"
+   ],
+   "expected": [
+    "ondea"
+   ],
+   "missingExpected": [],
+   "examples": [
+    {
+     "labels": [
+      "Moins cher"
+     ],
+     "dep": "2026-11-16T07:06:00.000Z",
+     "arr": "2026-11-16T07:36:00.000Z",
+     "legs": [
+      "Ondéa Aix-les-Bains 03",
+      "Ondéa Aix-les-Bains 01"
+     ],
+     "price": "1,70 €",
+     "status": "Transport non confirmé",
+     "detail": "marches non calculées (quota de la fiche)"
+    },
+    {
+     "labels": [
+      "Meilleur compromis",
+      "Plus rapide"
+     ],
+     "dep": "2026-11-16T07:13:00.000Z",
+     "arr": "2026-11-16T07:56:56.409Z",
+     "legs": [
+      "SNCF P3",
+      "marche 3361 m"
+     ],
+     "price": "Prix à confirmer",
+     "status": "Réalisable",
+     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+    }
+   ]
+  },
+  {
+   "id": "thonon-bons",
+   "name": "Thonon → Bons-en-Chablais (Star’t 142)",
+   "coverage": true,
+   "appGtfsChoice": "Cars Région Haute-Savoie",
+   "trips": 58,
+   "priced": 0,
+   "walked": 24,
+   "feasible": 17,
+   "firstResultMs": 102,
+   "totalMs": 11432,
+   "received": {
+    "SNCF": 10,
+    "GTFS local": 40,
+    "Suisse": 8
+   },
+   "reasons": {
+    "départ avant la fin de la mission précédente": 7,
+    "marches non calculées (quota de la fiche)": 34
+   },
+   "engines": {
+    "errors": {},
+    "skipped": {
+     "TripGo": "clé TripGo absente (Réglages → Transports)",
+     "Mobilités M": "hors agglomération grenobloise"
+    },
+    "gtfs": {
+     "Cars Région Haute-Savoie": 0,
+     "Star't Thonon": 40
+    }
+   },
+   "sources": [
+    "SNCF (GTFS officiel)",
+    "Suisse (transport.opendata.ch)",
+    "Star't Thonon (GTFS)"
+   ],
+   "networksSeen": [
+    "ter",
+    "start",
+    "lex"
+   ],
+   "expected": [
+    "start",
+    "ter"
+   ],
+   "missingExpected": [],
+   "examples": [
+    {
+     "labels": [
+      "Meilleur compromis",
+      "Plus rapide"
+     ],
+     "dep": "2026-11-16T07:28:02.877Z",
+     "arr": "2026-11-16T07:54:10.713Z",
+     "legs": [
+      "marche 154 m",
+      "SNCF C33",
+      "marche 804 m"
+     ],
+     "price": "Prix à confirmer",
+     "status": "Réalisable",
+     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+    }
+   ]
+  },
+  {
+   "id": "rumilly-intra",
+   "name": "Rumilly Hôpital → Base de loisirs (J’y bus 1)",
+   "coverage": true,
+   "appGtfsChoice": "J'y bus Rumilly",
+   "trips": 31,
+   "priced": 0,
+   "walked": 7,
+   "feasible": 7,
+   "firstResultMs": 623,
+   "totalMs": 1994,
+   "received": {
+    "SNCF": 0,
+    "GTFS local": 40
+   },
+   "reasons": {
+    "marches non calculées (quota de la fiche)": 24
+   },
+   "engines": {
+    "errors": {},
+    "skipped": {
+     "TripGo": "clé TripGo absente (Réglages → Transports)",
+     "Suisse": "trajet hors zone suisse et Grand Genève",
+     "Mobilités M": "hors agglomération grenobloise"
+    },
+    "gtfs": {
+     "J'y bus Rumilly": 40,
+     "Cars Région Haute-Savoie": 0,
+     "Cars Région Ain": 0,
+     "Sibra": 0,
+     "Cars Région Isère": 0
+    }
+   },
+   "sources": [
+    "J'y bus Rumilly (GTFS)"
+   ],
+   "networksSeen": [
+    "jybus"
+   ],
+   "expected": [
+    "jybus"
+   ],
+   "missingExpected": [],
+   "examples": [
+    {
+     "labels": [
+      "Meilleur compromis",
+      "Plus rapide"
+     ],
+     "dep": "2026-11-16T07:18:00.000Z",
+     "arr": "2026-11-16T07:43:00.000Z",
+     "legs": [
+      "J'y bus Rumilly 1"
+     ],
+     "price": "Prix à confirmer",
+     "status": "Réalisable",
+     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+    }
+   ]
+  },
+  {
+   "id": "amberieu-intra",
+   "name": "Ambérieu gare → Cabrol (TAM 2)",
+   "coverage": true,
+   "appGtfsChoice": "TAM Ambérieu-en-Bugey",
+   "trips": 67,
+   "priced": 0,
+   "walked": 16,
+   "feasible": 15,
+   "firstResultMs": 67,
+   "totalMs": 10107,
+   "received": {
+    "SNCF": 10,
+    "GTFS local": 57
+   },
+   "reasons": {
+    "départ avant la fin de la mission précédente": 1,
+    "marches non calculées (quota de la fiche)": 51
+   },
+   "engines": {
+    "errors": {},
+    "skipped": {
+     "TripGo": "clé TripGo absente (Réglages → Transports)",
+     "Suisse": "trajet hors zone suisse et Grand Genève",
+     "Mobilités M": "hors agglomération grenobloise"
+    },
+    "gtfs": {
+     "TAM Ambérieu-en-Bugey": 40,
+     "Cars Région Ain": 17
+    }
+   },
+   "sources": [
+    "TAM Ambérieu-en-Bugey (GTFS)",
+    "SNCF (GTFS officiel)",
+    "Cars Région Ain (GTFS)"
+   ],
+   "networksSeen": [
+    "tam",
+    "ter",
+    "cars-01"
+   ],
+   "expected": [
+    "tam"
+   ],
+   "missingExpected": [],
+   "examples": [
+    {
+     "labels": [
+      "Meilleur compromis",
+      "Plus rapide"
+     ],
+     "dep": "2026-11-16T07:00:00.000Z",
+     "arr": "2026-11-16T07:17:00.000Z",
+     "legs": [
+      "TAM Ambérieu-en-Bugey TAM 2"
+     ],
+     "price": "Prix à confirmer",
+     "status": "Réalisable",
+     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+    }
+   ]
+  },
+  {
+   "id": "chambery-chamoux",
+   "name": "Chambéry → Chamoux-sur-Gelon (Cars Savoie S05)",
+   "coverage": true,
+   "appGtfsChoice": "Cars Région Haute-Savoie",
+   "trips": 12,
+   "priced": 0,
+   "walked": 10,
+   "feasible": 8,
+   "firstResultMs": 74,
+   "totalMs": 4645,
+   "received": {
+    "GTFS local": 2,
+    "SNCF": 10
+   },
+   "reasons": {
+    "départ avant la fin de la mission précédente": 2,
+    "marches non calculées (quota de la fiche)": 2
+   },
+   "engines": {
+    "errors": {},
+    "skipped": {
+     "TripGo": "clé TripGo absente (Réglages → Transports)",
+     "Suisse": "trajet hors zone suisse et Grand Genève",
+     "Mobilités M": "hors agglomération grenobloise"
+    },
+    "gtfs": {
+     "Cars Région Haute-Savoie": 0,
+     "Cars Région Isère": 0,
+     "Cars Région Savoie": 2
+    }
+   },
+   "sources": [
+    "Cars Région Savoie (GTFS)",
+    "SNCF (GTFS officiel)"
+   ],
+   "networksSeen": [
+    "cars-73",
+    "ter"
+   ],
+   "expected": [
+    "cars-73"
+   ],
+   "missingExpected": [],
+   "examples": [
+    {
+     "labels": [
+      "Meilleur compromis",
+      "Plus rapide"
+     ],
+     "dep": "2026-11-16T11:30:00.000Z",
+     "arr": "2026-11-16T12:38:00.000Z",
+     "legs": [
+      "Cars Région Savoie S05"
+     ],
+     "price": "Prix à confirmer",
+     "status": "Réalisable",
+     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+    }
+   ]
+  },
+  {
+   "id": "bourg-amberieu",
+   "name": "Bourg-en-Bresse → Ambérieu (Cars Ain / TER)",
+   "coverage": true,
+   "appGtfsChoice": "Cars Région Ain",
+   "trips": 12,
+   "priced": 0,
+   "walked": 0,
+   "feasible": 0,
+   "firstResultMs": 33,
+   "totalMs": 2249,
+   "received": {
+    "GTFS local": 3,
+    "SNCF": 9
+   },
+   "reasons": {
+    "marche jusqu’à Bourg-en-Bresse non calculée": 9,
+    "marche depuis Ambérieu-en-Bugey non calculée": 9,
+    "marche jusqu’à SNCF non calculée": 2,
+    "marche depuis SNCF non calculée": 3,
+    "marche jusqu’à Berthelot non calculée": 1
+   },
+   "engines": {
+    "errors": {},
+    "skipped": {
+     "TripGo": "clé TripGo absente (Réglages → Transports)",
+     "Suisse": "trajet hors zone suisse et Grand Genève",
+     "Mobilités M": "hors agglomération grenobloise"
+    },
+    "gtfs": {
+     "Cars Région Ain": 3
+    }
+   },
+   "sources": [
+    "SNCF (GTFS officiel)",
+    "Cars Région Ain (GTFS)"
+   ],
+   "networksSeen": [
+    "ter",
+    "cars-01"
+   ],
+   "expected": [
+    "cars-01",
+    "ter"
+   ],
+   "missingExpected": [],
+   "examples": [
+    {
+     "labels": [
+      "Meilleur compromis",
+      "Plus rapide"
+     ],
+     "dep": "2026-11-16T09:45:00.000Z",
+     "arr": "2026-11-16T10:01:00.000Z",
+     "legs": [
+      "SNCF K13"
+     ],
+     "price": "Prix à confirmer",
+     "status": "Transport non confirmé",
+     "detail": "marche jusqu’à Bourg-en-Bresse non calculée · marche depuis Ambérieu-en-Bugey non calculée"
+    }
+   ]
+  },
+  {
+   "id": "voiron-voreppe",
+   "name": "Voiron → Voreppe (M réso Voironnais)",
+   "coverage": true,
+   "appGtfsChoice": "M Réso — Métropole grenobloise",
+   "trips": 18,
+   "priced": 2,
+   "walked": 3,
+   "feasible": 3,
+   "firstResultMs": 138,
+   "totalMs": 1200,
+   "received": {
+    "GTFS local": 6,
+    "SNCF": 9,
+    "Mobilités M": 5
+   },
+   "reasons": {
+    "marche depuis Voreppe non calculée": 9,
+    "marche depuis Place Docteur Thévenet non calculée": 3,
+    "marche depuis La Verronière non calculée": 3
+   },
+   "engines": {
+    "errors": {},
+    "skipped": {
+     "TripGo": "clé TripGo absente (Réglages → Transports)",
+     "Suisse": "trajet hors zone suisse et Grand Genève"
+    },
+    "gtfs": {
+     "M Réso — Métropole grenobloise": 0,
+     "Cars Région Isère": 6
+    }
+   },
+   "sources": [
+    "Mobilités M",
+    "SNCF (GTFS officiel)",
+    "Cars Région Isère (GTFS)"
+   ],
+   "networksSeen": [
+    "mreso-voironnais",
+    "ter",
+    "cars-38"
+   ],
+   "expected": [
+    "mreso-voironnais"
+   ],
+   "missingExpected": [],
+   "examples": [
+    {
+     "labels": [
+      "Moins cher",
+      "Meilleur compromis"
+     ],
+     "dep": "2026-11-16T07:07:40.000Z",
+     "arr": "2026-11-16T07:34:07.000Z",
+     "legs": [
+      "marche 389 m",
+      "M Réso - Métropole Grenobloise C13",
+      "marche 61 m"
+     ],
+     "price": "2,00 €",
+     "status": "Réalisable",
+     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+    },
+    {
+     "labels": [
+      "Plus rapide"
+     ],
+     "dep": "2026-11-16T07:10:26.000Z",
+     "arr": "2026-11-16T07:35:43.000Z",
+     "legs": [
+      "marche 358 m",
+      "Mobilités M - SNCF C6",
+      "marche 89 m",
+      "M Réso - Métropole Grenobloise C13",
+      "marche 40 m"
+     ],
+     "price": "Prix à confirmer",
+     "status": "Réalisable",
+     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+    }
+   ]
   }
  ],
  "networks": {
   "ter": {
-   "trips": 60,
+   "trips": 116,
    "priced": 0,
-   "walked": 55,
-   "at": "2026-11-13T10:00:02.938Z",
+   "walked": 85,
+   "at": "2026-11-13T10:04:56.623Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -547,19 +1034,26 @@
     "grenoble-crolles",
     "rumilly-annecy",
     "thonon-geneve",
-    "voiron-grenoble"
+    "voiron-grenoble",
+    "aix-technolac",
+    "thonon-bons",
+    "amberieu-intra",
+    "chambery-chamoux",
+    "bourg-amberieu",
+    "voiron-voreppe"
    ],
    "source": "serveur"
   },
   "lex": {
-   "trips": 16,
+   "trips": 22,
    "priced": 0,
-   "walked": 15,
-   "at": "2026-11-13T10:00:02.938Z",
+   "walked": 20,
+   "at": "2026-11-13T10:04:56.623Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
-    "thonon-geneve"
+    "thonon-geneve",
+    "thonon-bons"
    ],
    "source": "serveur"
   },
@@ -567,7 +1061,7 @@
    "trips": 11,
    "priced": 0,
    "walked": 11,
-   "at": "2026-11-13T10:00:02.938Z",
+   "at": "2026-11-13T10:04:56.623Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -579,7 +1073,7 @@
    "trips": 16,
    "priced": 0,
    "walked": 8,
-   "at": "2026-11-13T10:00:02.938Z",
+   "at": "2026-11-13T10:04:56.623Z",
    "axes": [
     "annecy-geneve"
    ],
@@ -589,7 +1083,7 @@
    "trips": 8,
    "priced": 0,
    "walked": 7,
-   "at": "2026-11-13T10:00:02.938Z",
+   "at": "2026-11-13T10:04:56.623Z",
    "axes": [
     "annemasse-stjulien",
     "thonon-geneve"
@@ -600,7 +1094,7 @@
    "trips": 8,
    "priced": 0,
    "walked": 7,
-   "at": "2026-11-13T10:00:02.938Z",
+   "at": "2026-11-13T10:04:56.623Z",
    "axes": [
     "annemasse-stjulien",
     "thonon-geneve"
@@ -611,7 +1105,7 @@
    "trips": 41,
    "priced": 0,
    "walked": 9,
-   "at": "2026-11-13T10:00:02.938Z",
+   "at": "2026-11-13T10:04:56.623Z",
    "axes": [
     "annemasse-stjulien"
    ],
@@ -621,7 +1115,7 @@
    "trips": 6,
    "priced": 0,
    "walked": 6,
-   "at": "2026-11-13T10:00:02.938Z",
+   "at": "2026-11-13T10:04:56.623Z",
    "axes": [
     "chambery-aix"
    ],
@@ -631,7 +1125,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-13T10:00:02.938Z",
+   "at": "2026-11-13T10:04:56.623Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -641,7 +1135,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-13T10:00:02.938Z",
+   "at": "2026-11-13T10:04:56.623Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -651,29 +1145,101 @@
    "trips": 1,
    "priced": 1,
    "walked": 1,
-   "at": "2026-11-13T10:00:02.938Z",
+   "at": "2026-11-13T10:04:56.623Z",
    "axes": [
     "rumilly-annecy"
    ],
    "source": "serveur"
   },
   "cars-38": {
-   "trips": 8,
+   "trips": 14,
    "priced": 0,
    "walked": 8,
-   "at": "2026-11-13T10:00:02.938Z",
+   "at": "2026-11-13T10:04:56.623Z",
    "axes": [
-    "voiron-grenoble"
+    "voiron-grenoble",
+    "voiron-voreppe"
+   ],
+   "source": "serveur"
+  },
+  "ondea": {
+   "trips": 40,
+   "priced": 40,
+   "walked": 8,
+   "at": "2026-11-13T10:04:56.623Z",
+   "axes": [
+    "aix-technolac"
+   ],
+   "source": "serveur"
+  },
+  "start": {
+   "trips": 40,
+   "priced": 0,
+   "walked": 8,
+   "at": "2026-11-13T10:04:56.623Z",
+   "axes": [
+    "thonon-bons"
+   ],
+   "source": "serveur"
+  },
+  "jybus": {
+   "trips": 31,
+   "priced": 0,
+   "walked": 7,
+   "at": "2026-11-13T10:04:56.623Z",
+   "axes": [
+    "rumilly-intra"
+   ],
+   "source": "serveur"
+  },
+  "tam": {
+   "trips": 40,
+   "priced": 0,
+   "walked": 8,
+   "at": "2026-11-13T10:04:56.623Z",
+   "axes": [
+    "amberieu-intra"
+   ],
+   "source": "serveur"
+  },
+  "cars-01": {
+   "trips": 20,
+   "priced": 0,
+   "walked": 0,
+   "at": "2026-11-13T10:04:56.623Z",
+   "axes": [
+    "amberieu-intra",
+    "bourg-amberieu"
+   ],
+   "source": "serveur"
+  },
+  "cars-73": {
+   "trips": 2,
+   "priced": 0,
+   "walked": 2,
+   "at": "2026-11-13T10:04:56.623Z",
+   "axes": [
+    "chambery-chamoux"
+   ],
+   "source": "serveur"
+  },
+  "mreso-voironnais": {
+   "trips": 3,
+   "priced": 2,
+   "walked": 3,
+   "at": "2026-11-13T10:04:56.623Z",
+   "axes": [
+    "voiron-voreppe"
    ],
    "source": "serveur"
   }
  },
  "router": {
-  "hits": 127,
-  "misses": 43,
-  "stored": 43,
-  "requests": 43,
-  "failures": 0,
+  "hits": 239,
+  "misses": 88,
+  "stored": 76,
+  "requests": 78,
+  "failures": 2,
   "queued": 0,
   "disposed": false
  }
