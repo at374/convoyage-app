@@ -1,7 +1,7 @@
 # Bilan chiffré de couverture — transports AURA–Suisse
 
 Généré le 2026-11-13 par `scripts/bilan-couverture-transports.cjs` à partir de `transport-coverage.js`.
-**Aucun diagnostic réel n’a encore été lancé sur téléphone** : aucun réseau n’est donc « Validé en réel ».
+**Aucun diagnostic réel n’a encore été lancé** : aucun réseau n’est donc « Validé en réel ».
 
 ## Synthèse par zone (dénominateur = réseaux identifiés dans la zone)
 

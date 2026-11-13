@@ -1,0 +1,86 @@
+#!/usr/bin/env node
+/* Convoyage Ultra — diagnostic RÉEL des transports sur les 8 axes, exécuté sur un serveur GitHub Actions (accès Internet).
+ * Moteurs réellement interrogés : API suisse (transport.opendata.ch), Mobilités M, SNCF (fichiers officiels du dépôt),
+ * GTFS officiels (data/gtfs + sources officielles), marche Valhalla (≈ 1 requête/s). TripGo seulement si CP_TRIPGO_KEY est fourni.
+ * Aucune donnée inventée : un moteur indisponible est consigné comme erreur.
+ * Sortie : docs/diagnostic-serveur.json et docs/DIAGNOSTIC-SERVEUR.md
+ */
+'use strict';
+const fs=require('fs'),path=require('path');
+const ROOT=path.join(__dirname,'..');
+const g=globalThis;g.window=g;
+for(const f of ['transport-adapters.js','transport-fares.js','transport-y51-fares.js','transport-fare-grids.js','swiss-transport-api.js','regional-routing.js',
+ 'sncf-fallback.js','transport-tripgo.js','transport-walking.js','transport-gtfs-index.js','transport-gtfs-time.js','transport-catalogue.js',
+ 'transport-gtfs-loader.js','transport-gtfs-fares.js','transport-mission-hub.js','transport-coverage.js','transport-gtfs-agenda.js'])require(path.join(ROOT,f));
+const H=g.CPTransportHub,C=g.CPTransportCoverage,A=g.CPGTFSAgenda,L=g.CPGTFSLoader,I=g.CPGTFSIndex,T=g.CPGTFSTime;
+// Les fichiers « data/… » de l'application sont lus dans le dépôt ; le reste part sur Internet.
+const fetcher=async(url,init)=>{
+ const u=String(url);
+ const local=u.startsWith('data/')?u:(u.match(/\/convoyage-app\/(data\/.*)$/)||[])[1];
+ if(local){const file=path.join(ROOT,local.split('?')[0]);
+  if(!fs.existsSync(file))return new Response('absent',{status:404});
+  return new Response(fs.readFileSync(file),{status:200,headers:{'content-type':file.endsWith('.json')?'application/json':'application/zip'}});}
+ return fetch(u,{...init,headers:{...(init&&init.headers||{}),'User-Agent':'ConvoyageUltra-Diagnostic/1.0'}});
+};
+if(process.env.CP_TRIPGO_KEY)g.localStorage={getItem:k=>k==='cp_tripgo_key'?process.env.CP_TRIPGO_KEY:null,setItem(){},removeItem(){}};
+const feeds=new Map();
+async function feed(resource,dates){
+ const key=resource.id;if(feeds.has(key))return feeds.get(key);
+ const p=L.loadResource(resource,{fetcher,timeoutMs:120000,indexServiceDates:dates,retainSourceTables:true}).catch(e=>({error:e.message}));
+ feeds.set(key,p);return p;
+}
+async function gtfsRows(axis,when){
+ const day=when.slice(0,10),prev=new Date(Date.parse(day+'T12:00:00Z')-86400000).toISOString().slice(0,10);
+ const window={earliestDeparture:when,latestArrival:new Date(Date.parse(when)+14*3600000).toISOString(),marginMinutes:0};
+ const out={rows:[],networks:{},errors:{}};
+ for(const r of A.DEFAULT_RESOURCES){
+  if(!A.selected(r,{from:axis.from,to:axis.to}))continue;
+  const f=await feed(r,[prev,day]);
+  if(f.error){out.errors[r.network]=f.error;continue;}
+  try{
+   const direct=T.datedTrips(f.files,f.index,I.nearbyDirectTrips(f.files,f.index,day,axis.from,axis.to,700),window);
+   const tr=I.nearbyTransferTrips(f.files,f.index,day,axis.from,axis.to,700,T.serviceWindow(f.files,day,window));
+   const rows=[...direct,...T.datedTransferTrips(f.files,f.index,tr.journeys,window)]
+    .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)).slice(0,40).map(x=>({...x,network:r.network}));
+   out.networks[r.network]=rows.length;out.rows.push(...rows);
+  }catch(e){out.errors[r.network]=e.message;}
+ }
+ return out;
+}
+(async()=>{
+ const when=C.nextMonday8();
+ const router=H.cachedRouter(g.CPTransportWalking.createRouter({fetcher,maxRequests:400,intervalMs:1100,timeoutMs:15000}));
+ const providers=H.makeProviders(g,{fetcher});
+ const report={at:new Date().toISOString(),when,source:'diagnostic serveur (GitHub Actions)',tripgo:!!process.env.CP_TRIPGO_KEY,axes:[],networks:{}};
+ for(const axis of C.AXES){
+  const started=Date.now();let firstAt=null;
+  const task={label:'Diag',from:axis.from,to:axis.to,fromName:axis.from.name,toName:axis.to.name,
+   fromCity:axis.from.name.split(' ')[0],toCity:axis.to.name.split(' ')[0],earliestDeparture:when};
+  const session=H.createSession({tasks:[task],providers,router,fareFor:l=>g.CPTransportFareGrids.fareFor(l),timeoutMs:90000,
+   onUpdate:(l,v)=>{if(v.total&&firstAt===null)firstAt=Date.now()-started;}});
+  const gt=await gtfsRows(axis,when);
+  await session.ingest('Diag','GTFS local',H.fromGTFS(gt.rows));
+  for(let i=0;i<600&&!session.view('Diag').done;i++)await new Promise(r=>setTimeout(r,500));
+  const v=session.view('Diag');session.dispose();
+  const all=[...v.picks.map(p=>p.journey),...v.others];
+  const nets=C.attribute(all);
+  for(const [id,o] of Object.entries(nets)){const r=report.networks[id]||(report.networks[id]={trips:0,priced:0,walked:0,at:report.at,axes:[],source:'serveur'});
+   r.trips+=o.trips;r.priced+=o.priced;r.walked+=o.walked;r.axes.push(axis.id);}
+  const walkedOk=j=>!(j.reasons||[]).some(r=>/marche|non calculée|quota|en cours/.test(r));
+  const a={id:axis.id,name:axis.name,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,walked:all.filter(walkedOk).length,
+   feasible:all.filter(j=>j.feasible).length,firstResultMs:firstAt,totalMs:Date.now()-started,
+   engines:{errors:{...v.errors,...Object.fromEntries(Object.entries(gt.errors).map(([k,e])=>['GTFS '+k,e]))},skipped:v.skipped,gtfs:gt.networks},
+   sources:[...new Set(all.flatMap(j=>j.sources))],networksSeen:Object.keys(nets),expected:axis.expect,missingExpected:axis.expect.filter(id=>!nets[id]),
+   examples:v.picks.slice(0,3).map(p=>({labels:p.labels,dep:p.journey.departure,arr:p.journey.arrival,legs:p.journey.legs.map(l=>(l.kind==='walk'?'marche '+Math.round(l.distanceMeters||0)+' m':(l.provider||'')+' '+(l.line||''))),price:p.journey.price.label,status:p.journey.status,detail:p.journey.statusDetail}))};
+  report.axes.push(a);console.log(JSON.stringify({axe:a.name,trajets:a.trips,prix:a.priced,marches:a.walked,realisables:a.feasible,sources:a.sources,erreurs:a.engines.errors}));
+ }
+ report.router=router.stats?router.stats():null;
+ fs.writeFileSync(path.join(ROOT,'docs','diagnostic-serveur.json'),JSON.stringify(report,null,1));
+ const md=['# Diagnostic réel des transports — serveur GitHub Actions','',`Exécuté le ${report.at} ; départs à partir de ${report.when} ; TripGo : ${report.tripgo?'oui':'non (pas de clé)'}.`,'',
+  '| Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | 1er résultat | Total | Sources | Erreurs | Attendus non vus |','|---|---|---|---|---|---|---|---|---|---|'];
+ for(const a of report.axes)md.push('| '+[a.name,a.trips,a.priced,a.walked,a.feasible,a.firstResultMs==null?'—':(a.firstResultMs/1000).toFixed(1)+' s',(a.totalMs/1000).toFixed(1)+' s',
+  a.sources.join(', ')||'—',Object.entries(a.engines.errors).map(([k,e])=>k+' : '+e).join(' ; ').replace(/\|/g,'/')||'—',a.missingExpected.join(', ')||'—'].join(' | ')+' |');
+ md.push('','Exemples (3 meilleures propositions par axe) :','');
+ for(const a of report.axes){md.push('**'+a.name+'**');for(const e of a.examples)md.push('- '+e.labels.join(' · ')+' : '+e.dep+' → '+e.arr+' · '+e.legs.join(' › ')+' · '+e.price+' · '+e.status+(e.status==='Réalisable'?'':' ('+e.detail+')'));md.push('');}
+ fs.writeFileSync(path.join(ROOT,'docs','DIAGNOSTIC-SERVEUR.md'),md.join('\n')+'\n');
+})().catch(e=>{console.error(e);process.exit(1);});

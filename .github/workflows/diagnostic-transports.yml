@@ -1,0 +1,40 @@
+name: Diagnostic réel des transports (8 axes AURA–Suisse)
+# Interroge les vrais moteurs depuis un serveur GitHub (accès Internet) : API suisse, Mobilités M, SNCF, GTFS officiels, Valhalla.
+# TripGo seulement si le secret CP_TRIPGO_KEY est défini. Publie docs/diagnostic-serveur.json sur la branche source.
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/transports-aura-suisse]
+    paths:
+      - '.github/workflows/diagnostic-transports.yml'
+      - 'scripts/diagnostic-transports-reel.cjs'
+permissions:
+  contents: write
+concurrency:
+  group: diagnostic-transports
+  cancel-in-progress: false
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Diagnostic réel
+        env:
+          CP_TRIPGO_KEY: ${{ secrets.CP_TRIPGO_KEY }}
+        run: node scripts/diagnostic-transports-reel.cjs
+      - name: Bilan de couverture
+        run: node scripts/bilan-couverture-transports.cjs
+      - name: Publier le rapport
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- docs/diagnostic-serveur.json docs/DIAGNOSTIC-SERVEUR.md docs/BILAN-COUVERTURE-TRANSPORTS.md
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Diagnostic réel des transports (serveur)'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
