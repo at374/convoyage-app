@@ -30,6 +30,7 @@ jobs:
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
+          node --check transport-isere-zonal-fares.js
           node --check transport-tripgo.js
           node --check transport-mission-hub.js
           node --check scripts/test-pedestrian-hub.cjs
@@ -42,6 +43,18 @@ jobs:
           assert.equal(registry.split('function fareFor(').length-1,1,'Une seule fonction fareFor');
           assert.equal((registry.match(/CPTransportFareGrids=api/g)||[]).length,1,'Un seul module de tarifs');
           const {fareFor} = require('./transport-fare-grids.js');
+          // Isère : tableau officiel 01/03/2026, aucune zone inventée.
+          const isere=require('./transport-isere-zonal-fares.js');
+          const zoneEvidence={verified:true,traversedZones:['A','B','C'],source:'https://www.laregionvoustransporte.fr/'};
+          const q=zones=>isere.quote({zones,departure:'2026-11-16T08:00:00+01:00',zoneEvidence:{...zoneEvidence,traversedZones:zoneEvidence.traversedZones.slice(0,zones)}});
+          assert.deepEqual(isere.FULL.slice(1),[4.30,6.00,7.70,9.40,11.10,12.80]);
+          assert.deepEqual(isere.ECO.slice(1),[3.20,4.40,5.60,6.80,8.00,9.20]);
+          assert.equal(q(3)?.amount,7.70);
+          assert.equal(q(3)?.validityMinutes,120);
+          assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00'}),null,'Zones sans preuve : aucun prix');
+          assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00',zoneEvidence:{...zoneEvidence,traversedZones:['A','B']}}),null,'Zone intermédiaire manquante');
+          assert.equal(isere.quote({zones:3,departure:'2026-02-16T08:00:00+01:00',zoneEvidence}),null,'Date antérieure à la grille');
+
           // TAM : livret officiel 2026, 1 voyage à 1,10 €, correspondances pendant 1 h.
           const leg = {kind:'transit',mode:'Bus',provider:'TAM Ambérieu-en-Bugey',line:'TAM 2',departure:'2026-11-16T08:00:00+01:00'};
           assert.equal(fareFor(leg)?.amount,1.10,'TAM : livret 2026');
