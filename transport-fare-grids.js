@@ -55,9 +55,7 @@ const GRIDS=[
   validFrom:'2026-01-01',validUntil:'2026-12-31',
   source:'https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/Livret_TAM_2026.pdf',
   checkedAt:'2026-11-13',flat:true},
- // STAR'T : seules les lignes urbaines A/B/C/D/M/N/NL sont tarifées ici.
- // Elles circulent en zone A ; les lignes interurbaines et les trajets A+B
- // restent à confirmer tant que les zones des arrêts ne sont pas établies.
+ // STAR'T : uniquement lignes urbaines avec zone A identifiée.
  {network:"STAR'T zone A",operatorPattern:"^(?:star['’]?t(?:\\s+thonon)?|thonon-les-bains\\s*-\\s*star['’]?t)$",
   modes:['Bus'],includeLines:'^(?:A|B|C|D|M|N|NL)
  // {network:'Exemple',operatorPattern:'^exemple$',modes:['Bus'],amount:0,currency:'EUR',product:'1 voyage',
