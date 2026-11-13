@@ -17,6 +17,7 @@ function normalize(payload){
     name:String(dataset.title??dataset.name??''),
     resources:resources(dataset).filter(r=>r&&typeof r==='object').map(r=>({
       id:String(r.id??''),
+      name:String(r.title??r.name??''),
       format:String(r.format??r.type??'').toUpperCase(),
       url:typeof r.original_url==='string'?r.original_url:(typeof r.url==='string'?r.url:null),
       updatedAt:r.updated_at??r.last_updated_at??r.updated??null,
@@ -124,7 +125,8 @@ function nationalOperatorGTFS(datasets){
  const rows=Array.isArray(datasets)?datasets:[];
  const result={};
  for(const [operator,pattern] of Object.entries(NATIONAL_OPERATORS)){
-  result[operator]=gtfsResources(rows.filter(d=>pattern.test(String(d.name||''))))
+  result[operator]=gtfsResources(rows.filter(d=>pattern.test(String(d.name||''))||
+   (Array.isArray(d.resources)&&d.resources.some(r=>r?.format==='GTFS'&&pattern.test(String(r.name||''))))))
    .filter(r=>/^https:\/\//i.test(r.url))
    .map(r=>({...r,operator,providesLiveFares:false,providesSeatAvailability:false,
      timetableOnly:true,requiresServerSideIndex:operator==='flixbus'||operator==='sncf'}));
