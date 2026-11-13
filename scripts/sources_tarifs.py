@@ -21,6 +21,8 @@ SOURCES=[
  ('start-accueil','https://www.star-t.fr/'),
  ('start-tarifs','https://www.star-t.fr/tarifs/'),
  ('unireso-tarifs','https://www.unireso.com/tarifs/'),
+ ('tac-guide-mars-2026','https://files.tac-mobilites.fr/s3fs-public/documents/Guide%20des%20tarifs%20MARS%202026%20VF%20%28DIGITAL%29.pdf?VersionId=McKSvZWPOy..TYAJBCybXvxs5qGmyzqj'),
+ ('tac-guide-page','https://www.tac-mobilites.fr/nos-tarifs/guide-des-tarifs'),
  ('cars-isere-tarifs','https://carsisere.auvergnerhonealpes.fr/en/fares-amp-payments/75/the-rates/14'),
 ]
 OUT='docs/sources-tarifs'; os.makedirs(OUT,exist_ok=True)
