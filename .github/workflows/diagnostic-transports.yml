@@ -48,6 +48,10 @@ jobs:
           const providerDefault=makeProviders(tripgoStub,{fetcher:async()=>({})});
           assert.equal(providerDefault.tripgo.enabled(),false,'TripGo désactivé sans accord explicite');
           assert.equal(providerDefault.swiss.enabled({from:{lat:46.2,lon:6.1},to:{lat:46.3,lon:6.2}}),true,'Suisse disponible indépendamment de TripGo');
+          const independent=makeProviders({CPTripGo:{plan:async()=>[],getKey:()=>''},CPRegionalRouting:{plan:async()=>({itineraries:[]}),supportsPublic:()=>true},CPSncfFallback:{plan:async()=>({itineraries:[]})}},{fetcher:async()=>({})});
+          assert.equal(independent.tripgo.enabled(),false,'TripGo non requis');
+          assert.equal(independent.regional.enabled({from:{lat:45.2,lon:5.7},to:{lat:45.1,lon:5.8}}),true,'Mobilites M sans TripGo');
+          assert.equal(independent.sncf.enabled({fromName:'Lyon',toName:'Chambery'}),true,'SNCF sans TripGo');
           assert.equal(makeProviders(tripgoStub,{allowTripGo:true,fetcher:async()=>({})}).tripgo.enabled(),true,'TripGo uniquement sur activation explicite');
 
           const hs={provider:'Cars Région Haute-Savoie',mode:'Bus',kind:'transit',line:'Y81',departure:'2026-11-16T08:00:00+01:00'};
