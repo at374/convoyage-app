@@ -1,17 +1,17 @@
 # Diagnostic réel des transports — serveur GitHub Actions
 
-Exécuté le 2026-11-13T09:52:43.584Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : non (pas de clé).
+Exécuté le 2026-11-13T09:55:34.460Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : non (pas de clé).
 
 | Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | 1er résultat | Total | Sources | Erreurs | Attendus non vus |
 |---|---|---|---|---|---|---|---|---|---|
-| Annecy → Genève | 24 | 0 | 16 | 16 | 0.2 s | 5.8 s | SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | — | lex, cff, longue |
-| Annemasse → Saint-Julien-en-Genevois | 48 | 0 | 16 | 8 | 0.2 s | 6.6 s | SNCF (GTFS officiel), TAC Annemasse (GTFS) | Suisse : fetch failed | lex, tpg-fr |
-| Ambérieu-en-Bugey → Lyon Part-Dieu | 8 | 0 | 8 | 2 | 0.1 s | 2.6 s | SNCF (GTFS officiel) | — | cars-01, tcl |
-| Chambéry → Aix-les-Bains | 14 | 0 | 14 | 12 | 0.1 s | 7.7 s | SNCF (GTFS officiel), Synchro Bus Chambéry (GTFS) | — | ondea |
-| Grenoble → Crolles | 13 | 5 | 13 | 13 | 0.1 s | 5.2 s | Mobilités M, SNCF (GTFS officiel) | — | — |
-| Rumilly → Annecy | 9 | 1 | 9 | 1 | 0.1 s | 4.9 s | Sibra (GTFS), SNCF (GTFS officiel) | — | jybus, cars-74 |
-| Thonon-les-Bains → Genève | 8 | 0 | 8 | 0 | 0.1 s | 2.5 s | SNCF (GTFS officiel) | — | lex, start, tpg-fr |
-| Voiron → Grenoble | 21 | 0 | 21 | 21 | 0.2 s | 5.2 s | Mobilités M, SNCF (GTFS officiel), Cars Région Isère (GTFS) | — | mreso-voironnais |
+| Annecy → Genève | 24 | 0 | 16 | 16 | 0.3 s | 6.2 s | SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | — | cff, longue |
+| Annemasse → Saint-Julien-en-Genevois | 48 | 0 | 16 | 8 | 0.2 s | 6.6 s | SNCF (GTFS officiel), TAC Annemasse (GTFS) | Suisse : fetch failed | tpg-fr |
+| Ambérieu-en-Bugey → Lyon Part-Dieu | 8 | 0 | 8 | 2 | 0.2 s | 2.6 s | SNCF (GTFS officiel) | — | cars-01, tcl |
+| Chambéry → Aix-les-Bains | 14 | 0 | 14 | 12 | 0.1 s | 8.2 s | SNCF (GTFS officiel), Synchro Bus Chambéry (GTFS) | — | ondea |
+| Grenoble → Crolles | 13 | 5 | 13 | 13 | 0.1 s | 7.6 s | Mobilités M, SNCF (GTFS officiel) | — | — |
+| Rumilly → Annecy | 9 | 1 | 9 | 1 | 0.1 s | 5.7 s | Sibra (GTFS), SNCF (GTFS officiel) | — | jybus, cars-74 |
+| Thonon-les-Bains → Genève | 8 | 0 | 8 | 0 | 0.1 s | 2.6 s | SNCF (GTFS officiel) | — | start, tpg-fr |
+| Voiron → Grenoble | 21 | 0 | 21 | 21 | 0.3 s | 5.2 s | Mobilités M, SNCF (GTFS officiel), Cars Région Isère (GTFS) | — | mreso-voironnais |
 
 Exemples (3 meilleures propositions par axe) :
 
