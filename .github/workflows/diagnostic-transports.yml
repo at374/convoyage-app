@@ -1,4 +1,4 @@
-name: Diagnostic réel des transports (8 axes AURA–Suisse)
+name: Diagnostic réel des transports (15 axes AURA–Suisse)
 # Interroge les vrais moteurs depuis un serveur GitHub (accès Internet) : API suisse, Mobilités M, SNCF, GTFS officiels, Valhalla.
 # TripGo seulement si le secret CP_TRIPGO_KEY est défini. Publie docs/diagnostic-serveur.json sur la branche source.
 on:
@@ -27,7 +27,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Vérifier la syntaxe et le tarif TAM
+      - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
           node --check transport-tripgo.js
@@ -44,6 +44,8 @@ jobs:
           const urban = {kind:'transit',mode:'Bus',provider:"Star't Thonon",line:'A',departure:'2026-11-16T08:00:00+01:00'};
           assert.equal(fareFor(urban)?.amount,1.20,'STAR’T ligne urbaine A : zone A');
           assert.equal(fareFor({...urban,line:'142'}),null,'STAR’T ligne 142 : zone non prouvée');
+          assert.equal(fareFor({...urban,line:'L'}),null,'STAR’T ligne L : zone non prouvée');
+          assert.equal(fareFor({...urban,provider:"J'y bus Rumilly",line:'J4'}),null,'J’ybus : prix 2026 non confirmé');
           assert.equal(fareFor({...urban,provider:'Cars Région Haute-Savoie'}),null,'Ne pas attribuer STAR’T aux Cars Région');
           console.log('Tarifs TAM et STAR’T urbain vérifiés, exclusions et validité OK');
           NODE
