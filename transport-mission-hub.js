@@ -110,7 +110,26 @@ function fromSNCF(answer){
   from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.departure,arrival:l.arrival})),{dataDate:answer.sourceVersion||null}));
 }
 function fromGTFS(rows,network='Réseau local'){
- return (Array.isArray(rows)?rows:[]).map(r=>{
+ // A single GTFS vehicle trip may appear through dozens of nearby boarding/alighting
+ // stop pairs. Keep the shortest straight-line access + egress candidate per trip
+ // before requesting expensive pedestrian routing. Transfer itineraries are left
+ // untouched: their distinct interchange choices must be evaluated separately.
+ const selected=[],bestDirect=new Map();
+ for(const r of Array.isArray(rows)?rows:[]){
+  if(!r)continue;
+  const isDirect=!Array.isArray(r.legs)||r.legs.length===0;
+  const tripId=r.tripId||r.trip_id;
+  const access=Number(r.accessDistanceMeters??r.originStop?.distanceMeters);
+  const egress=Number(r.egressDistanceMeters??r.destinationStop?.distanceMeters);
+  if(!isDirect||!tripId||!Number.isFinite(access)||!Number.isFinite(egress)||
+   access<0||egress<0){selected.push(r);continue;}
+  const key=String(r.network||network)+'|'+String(tripId)+'|'+String(r.date||'');
+  const score=access+egress;
+  const previous=bestDirect.get(key);
+  if(!previous||score<previous.score)bestDirect.set(key,{r,score});
+ }
+ selected.push(...[...bestDirect.values()].map(x=>x.r));
+ return selected.map(r=>{
   const raw=Array.isArray(r.legs)&&r.legs.length?r.legs:[{line:r.line,network:r.network,from:r.originStop?.name||r.from,to:r.destinationStop?.name||r.to,departure:r.departure,arrival:r.arrival}];
   const legs=raw.map((l,i)=>{
    const start=i===0?r.originStop:(r.legs?.length===2?(r.interNetwork?r.transferDestinationStop:r.transferStop):null);
