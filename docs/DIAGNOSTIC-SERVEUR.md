@@ -1,6 +1,6 @@
 # Diagnostic réel des transports — serveur GitHub Actions
 
-Exécuté le 2026-11-13T16:11:09.368Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : oui.
+Exécuté le 2026-11-13T16:15:21.680Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : oui.
 
 **Bilan : 479 trajets sur 15 axes, 135 avec prix vérifié (28.2 %), 227 avec marches calculées (47.4 %), 184 réalisables.**
 
@@ -8,24 +8,75 @@ Exécuté le 2026-11-13T16:11:09.368Z ; départs à partir de 2026-11-16T08:00:0
 
 Portions TripGo sans prix par opérateur : BlaBlaCar Bus (1), FlixBus-eu (3), SNCF (Société Nationale des Chemins de fer Français) (4), SNCF (18), SNCF VOYAGEURS (24), THONON-LES-BAINS - STAR'T (3), Star't Thonon (1).
 
+Exemples de lignes sans tarif (3 par opérateur et par axe) :
+
+- annecy-geneve / BlaBlaCar Bus : Car BlaBlaCar Bus (Annecy - Bus Station → Geneva - Bus Station)
+- annecy-geneve / FlixBus-eu : Car FlixBus 1726 (Annecy (Central Bus Station) → Geneva (central bus station)) ; Car FlixBus 1749 (Annecy (Central Bus Station) → Geneva (central bus station)) ; Car FlixBus N706 (Annecy (Central Bus Station) → Geneva (central bus station))
+- annecy-geneve / SNCF : Train TER L2 (Annecy → Genève) ; Train L2 (Annecy → Genève-Eaux-Vives) ; Train K21 (Annecy → Aix-les-Bains le Revard)
+- annecy-geneve / SBB : Train R L4 (Annemasse → Genève)
+- annecy-geneve / Cars Région Haute-Savoie : Bus 272 (Gare Routiere → Aéroport) ; Bus 274 (Aéroport → Poste) ; Bus 274 (Aéroport → Mont-Blanc)
+- annemasse-stjulien / SNCF (Société Nationale des Chemins de fer Français) : Train TER (Annemasse → Saint-Julien-en-Genevois)
+- annemasse-stjulien / SNCF : Train L1 (Annemasse → Machilly) ; Train L1 (Machilly → Lancy-Bachet) ; Train L4 (Annemasse → Lancy-Bachet)
+- annemasse-stjulien / SBB : Train RE 33 (Annemasse → Lancy-Bachet) ; Train R L4 (Annemasse → Lancy-Bachet) ; Train R L1 (Annemasse → Lancy-Bachet)
+- annemasse-stjulien / TPG : Bus B 80 (Lancy-Bachet, gare → Saint-Julien, centre) ; Bus B 80 (Saint-Julien, gare → Saint-Julien, centre)
+- amberieu-lyon / SNCF : Train K23 (Ambérieu-en-Bugey → Lyon Part Dieu) ; Train C18 (Ambérieu-en-Bugey → Lyon Part Dieu) ; Train K1+ (Ambérieu-en-Bugey → Lyon Part Dieu)
+- amberieu-lyon / SNCF VOYAGEURS : Train C18 (Ambérieu-en-Bugey → Lyon Part Dieu) ; Train K23 (Ambérieu-en-Bugey → Lyon Part Dieu) ; Train K13 (Ambérieu-en-Bugey → Lyon Part Dieu)
+- chambery-aix / SNCF : Train C21 (Chambéry - Challes-les-Eaux → Aix-les-Bains le Revard) ; Train P41 (Chambéry - Challes-les-Eaux → Moûtiers-Salins-Brides-les-B.) ; Train P41 (Moûtiers-Salins-Brides-les-B. → Aix-les-Bains le Revard)
+- chambery-aix / SNCF VOYAGEURS : Train K11 (Chambéry - Challes-les-Eaux → Aix-les-Bains le Revard)
+- chambery-aix / Ondéa Aix-les-Bains : Bus 419 (Jeu de Paume → Gare 3 Wilson) ; Bus 419 (Jeu de Paume → Boulevard Wilson) ; Bus 419 (Jeu de Paume → Alliu)
+- grenoble-crolles / SNCF : Train C6 (Grenoble → Échirolles) ; Train C1 (Échirolles → Lancey) ; Train C31 (Grenoble → Lancey)
+- rumilly-annecy / SNCF : Train K21 (Rumilly → Annecy) ; Train C21 (Rumilly → Annecy) ; Train C21 (Rumilly → Albens)
+- rumilly-annecy / SNCF VOYAGEURS : Train K23 (Rumilly → Annecy)
+- thonon-geneve / SNCF : Train L1 (Thonon-les-Bains → Genève-Eaux-Vives) ; Train TER C33 (Thonon-les-Bains → Annemasse) ; Train TER L1 (Thonon-les-Bains → Genève)
+- thonon-geneve / But : Bus B 002278 (Thonon-les-Bains, Georges And. → Thonon-les-Bains, Les Arts) ; Bus B 002279 (Thonon-les-Bains, Georges And. → Thonon-les-Bains, Les Arts) ; Bus B 002283 (Thonon-les-Bains, Georges And. → Thonon-les-Bains, Les Arts)
+- thonon-geneve / AFO : Bus B 271 (Thonon-les-Bains, Les Arts → Genève, Place des Eaux-Vives)
+- thonon-geneve / SBB : Train R L3 (Annemasse → Genève)
+- thonon-geneve / TPG : Tram T 17 (Genève, Rive → Genève, Bel-Air) ; Bus B 3 (Genève, Bel-Air → Genève, gare Cornavin)
+- voiron-grenoble / SNCF : Train K6 (Voiron → Grenoble) ; Train K6 (Voiron → La Tour-du-Pin) ; Train K6 (La Tour-du-Pin → Grenoble)
+- voiron-grenoble / SNCF VOYAGEURS : Train C6 (Voiron → Grenoble) ; Train K6 (Voiron → Grenoble)
+- voiron-grenoble / Cars Région Isère : Bus T41 (Gare Routière Nord → Gare Routière) ; Bus T40 (Gare Routière → Gare Routière) ; Bus T55 (Gare Routière Sud → Gare Routière)
+- aix-technolac / SNCF : Train P3 (Aix-les-Bains le Revard → Viviers-du-Lac) ; Train C21 (Aix-les-Bains le Revard → Chambéry - Challes-les-Eaux) ; Train K11 (Aix-les-Bains le Revard → Chambéry - Challes-les-Eaux)
+- aix-technolac / SNCF VOYAGEURS : Train P3 (Aix-les-Bains le Revard → Viviers-du-Lac)
+- thonon-bons / THONON-LES-BAINS - STAR'T : Bus L (Les Arts → Mairie)
+- thonon-bons / But : Bus B 142 (Thonon-les-Bains, Les Arts → Bons-en-Chablais, Mairie) ; Bus B 142 (Bons-en-Chablais, Gare Didier → Bons-en-Chablais, Mairie)
+- thonon-bons / Star't Thonon : Bus 142 (Les Arts → Mairie) ; Bus 142 (Les Arts → Collège F.Mugnier) ; Bus 142 (Les Arts → Sacré Coeur)
+- thonon-bons / SNCF : Train C33 (Thonon-les-Bains → Bons-en-Chablais) ; Train L1 (Thonon-les-Bains → Évian-les-Bains) ; Train L1 (Évian-les-Bains → Bons-en-Chablais)
+- thonon-bons / SNCF VOYAGEURS : Train L1 (Thonon-les-Bains → Bons-en-Chablais) ; Train C33 (Thonon-les-Bains → Bons-en-Chablais)
+- thonon-bons / Evian : Bus B 01 (Thonon-les-Bains, Les Arts → Évian-les-Bains, Anna Noailles)
+- rumilly-intra / J'y bus Rumilly : Bus 1 (Hopital → Base De Loisirs) ; Bus 1 (Hopital → Dadon) ; Bus 1 (Hopital → Madrid)
+- amberieu-intra / SNCF : Train P13 (Ambérieu-en-Bugey → Ambronay - Priay) ; Train P13 (Ambérieu-en-Bugey → Ambronay-Priay RD 1075) ; Train P13 (Ambronay-Priay RD 1075 → Ambérieu-en-Bugey)
+- amberieu-intra / Cars Région Ain : Bus A49 (SNCF → Centre Hospitalier) ; Bus A49 (SNCF → Les Arcades) ; Bus A49 (Les Arcades → Centre Hospitalier)
+- chambery-chamoux / Cars Région Savoie : Bus S05 (Gare Routiere → Ecoles)
+- chambery-chamoux / SNCF : Train P41 (Chambéry - Challes-les-Eaux → Saint-Pierre-d'Albigny) ; Train P41 (Chambéry - Challes-les-Eaux → Aix-les-Bains le Revard) ; Train P41 (Aix-les-Bains le Revard → Saint-Pierre-d'Albigny)
+- chambery-chamoux / SNCF VOYAGEURS : Train P31 (Chambéry - Challes-les-Eaux → Chamousset)
+- bourg-amberieu / SNCF VOYAGEURS : Train P13 (Bourg-en-Bresse Gare Routière → Ambérieu-en-Bugey)
+- bourg-amberieu / SNCF : Train 622E (Bourg-en-Bresse → Genève Cornavin) ; Train K1+ (Genève Cornavin → Ambérieu-en-Bugey) ; Train C23 (Bourg-en-Bresse → Lyon Part Dieu)
+- bourg-amberieu / Cars Région Ain : Bus A19 (SNCF → Carré Amiot (Quai E)) ; Bus A27 (Carré Amiot (Quai E) → SNCF) ; Bus A32 (Berthelot → Carré Amiot (Quai E))
+- voiron-voreppe / Mobilités M - SNCF : Train C6 (Voiron, Voiron → Voreppe, Voreppe)
+- voiron-voreppe / SNCF VOYAGEURS : Train C6 (Voiron → Voreppe)
+- voiron-voreppe / SNCF : Train C31 (Voiron → Réaumont - Saint-Cassien) ; Train C6 (Réaumont - Saint-Cassien → Voreppe) ; Train C6 (Voiron → Voreppe)
+- voiron-voreppe / Cars Région Isère : Bus T41 (Gare Routière Nord → Gare Routière) ; Bus T40 (Gare Routière → Place Docteur Thévenet) ; Bus T40 (Gare Routière → La Verronière)
+
+Correspondances bloquant les itinéraires partiellement tarifés : Ondéa Aix-les-Bains (34), Star't Thonon (27), Mobilités M - SNCF (1).
+
 Portions sans prix par opérateur (toutes sources) : SNCF (195), J'y bus Rumilly (59), Star't Thonon (49), Ondéa Aix-les-Bains (36), Cars Région Ain (34), Cars Région Haute-Savoie (32), Cars Région Isère (28), SNCF VOYAGEURS (24), But (16), SBB (11), TPG (9), SNCF (Société Nationale des Chemins de fer Français) (4), AFO (4), FlixBus-eu (3), THONON-LES-BAINS - STAR'T (3), Evian (2), Cars Région Savoie (2), BlaBlaCar Bus (1), Mobilités M - SNCF (1).
 
 | Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | 1er résultat | Total | Sources | Erreurs | Attendus non vus |
 |---|---|---|---|---|---|---|---|---|---|
-| Annecy → Genève | 34 | 0 | 26 | 26 | 0.4 s | 14.6 s | TripGo, Suisse (transport.opendata.ch), SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | — | — |
+| Annecy → Genève | 34 | 0 | 26 | 26 | 0.3 s | 19.8 s | TripGo, Suisse (transport.opendata.ch), SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | — | — |
 | Annemasse → Saint-Julien-en-Genevois | 56 | 41 | 24 | 16 | 0.3 s | 13.5 s | Suisse (transport.opendata.ch), TripGo, SNCF (GTFS officiel), TAC Annemasse (GTFS) | — | — |
 | Ambérieu-en-Bugey → Lyon Part-Dieu | 13 | 0 | 11 | 6 | 0.2 s | 3.6 s | SNCF (GTFS officiel), TripGo | — | cars-01, tcl |
-| Chambéry → Aix-les-Bains | 53 | 6 | 17 | 16 | 0.1 s | 9.0 s | Synchro Bus Chambéry (GTFS), SNCF (GTFS officiel), TripGo, Ondéa Aix-les-Bains (GTFS) | — | — |
-| Grenoble → Crolles | 12 | 5 | 12 | 12 | 0.1 s | 6.4 s | Mobilités M, SNCF (GTFS officiel) | — | — |
-| Rumilly → Annecy | 9 | 1 | 9 | 8 | 0.2 s | 4.0 s | Sibra (GTFS), SNCF (GTFS officiel), TripGo | — | — |
+| Chambéry → Aix-les-Bains | 53 | 6 | 17 | 16 | 0.1 s | 8.8 s | Synchro Bus Chambéry (GTFS), SNCF (GTFS officiel), TripGo, Ondéa Aix-les-Bains (GTFS) | — | — |
+| Grenoble → Crolles | 12 | 5 | 12 | 12 | 0.1 s | 7.1 s | Mobilités M, SNCF (GTFS officiel) | — | — |
+| Rumilly → Annecy | 9 | 1 | 9 | 8 | 0.1 s | 4.0 s | Sibra (GTFS), SNCF (GTFS officiel), TripGo | — | — |
 | Thonon-les-Bains → Genève | 17 | 0 | 15 | 8 | 0.1 s | 8.7 s | SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | — |
 | Voiron → Grenoble | 20 | 0 | 20 | 20 | 0.2 s | 5.4 s | SNCF (GTFS officiel), TripGo, Mobilités M, Cars Région Isère (GTFS) | — | mreso-voironnais |
-| Aix-les-Bains gare → Technolac (Ondéa 01) | 53 | 40 | 19 | 8 | 0.5 s | 9.2 s | Ondéa Aix-les-Bains (GTFS), SNCF (GTFS officiel), TripGo | — | — |
+| Aix-les-Bains gare → Technolac (Ondéa 01) | 53 | 40 | 19 | 8 | 0.4 s | 9.2 s | Ondéa Aix-les-Bains (GTFS), SNCF (GTFS officiel), TripGo | — | — |
 | Thonon → Bons-en-Chablais (Star’t 142) | 64 | 0 | 30 | 23 | 0.3 s | 11.0 s | TripGo, Suisse (transport.opendata.ch), Star't Thonon (GTFS), SNCF (GTFS officiel) | — | — |
-| Rumilly Hôpital → Base de loisirs (J’y bus 1) | 31 | 0 | 7 | 7 | 0.6 s | 1.9 s | J'y bus Rumilly (GTFS) | — | — |
+| Rumilly Hôpital → Base de loisirs (J’y bus 1) | 31 | 0 | 7 | 7 | 0.5 s | 1.8 s | J'y bus Rumilly (GTFS) | — | — |
 | Ambérieu gare → Cabrol (TAM 2) | 67 | 40 | 16 | 15 | 0.1 s | 10.1 s | TAM Ambérieu-en-Bugey (GTFS), SNCF (GTFS officiel), Cars Région Ain (GTFS) | — | — |
 | Chambéry → Chamoux-sur-Gelon (Cars Savoie S05) | 15 | 0 | 13 | 11 | 0.1 s | 4.6 s | Cars Région Savoie (GTFS), SNCF (GTFS officiel), TripGo | — | — |
-| Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 16 | 0 | 4 | 4 | 0.0 s | 2.2 s | TripGo, SNCF (GTFS officiel), Cars Région Ain (GTFS) | — | — |
+| Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 16 | 0 | 4 | 4 | 0.0 s | 2.3 s | TripGo, SNCF (GTFS officiel), Cars Région Ain (GTFS) | — | — |
 | Voiron → Voreppe (M réso Voironnais) | 19 | 2 | 4 | 4 | 0.1 s | 1.2 s | Mobilités M, TripGo, SNCF (GTFS officiel), Cars Région Isère (GTFS) | — | — |
 
 Exemples (3 meilleures propositions par axe) :
