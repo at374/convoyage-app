@@ -29,6 +29,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Découvrir les flux nationaux officiels
+        continue-on-error: true
         run: node scripts/audit-national-operators.cjs
       - name: Préparer les extraits AURA depuis les flux disponibles
         id: build
