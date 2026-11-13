@@ -39,12 +39,13 @@ jobs:
           assert.equal(registry.split('function fareFor(').length-1,1,'Une seule fonction fareFor');
           assert.equal((registry.match(/CPTransportFareGrids=api/g)||[]).length,1,'Un seul module de tarifs');
           const {fareFor} = require('./transport-fare-grids.js');
+          // TAM (Ambérieu-en-Bugey) : aucune grille officielle complète et vérifiable indépendamment n'a été
+          // trouvée au 13/11/2026 (voir le commentaire dans transport-fare-grids.js). Tant que ce n'est pas le
+          // cas, ce test vérifie l'ABSENCE de prix plutôt qu'un montant non prouvé — ne pas réintroduire
+          // 1,10 € ici sans une source officielle datée et vérifiée indépendamment.
           const leg = {kind:'transit',mode:'Bus',provider:'TAM Ambérieu-en-Bugey',line:'TAM 2',departure:'2026-11-16T08:00:00+01:00'};
-          const fare = fareFor(leg);
-          assert.equal(fare?.amount,1.10,'TAM 2026 doit être tarifé à 1,10 €');
-          assert.equal(fare?.currency,'EUR');
+          assert.equal(fareFor(leg),null,'TAM : pas de prix tant que la grille officielle n’est pas vérifiée');
           assert.equal(fareFor({...leg,provider:'Cars Région Ain'}),null,'Ne pas appliquer TAM aux cars Ain');
-          assert.equal(fareFor({...leg,departure:'2027-01-01T08:00:00+01:00'}),null,'Ne pas appliquer un tarif expiré');
           const urban = {kind:'transit',mode:'Bus',provider:"Star't Thonon",line:'A',departure:'2026-11-16T08:00:00+01:00'};
           assert.equal(fareFor(urban)?.amount,1.20,'STAR’T ligne urbaine A : zone A');
           assert.equal(fareFor({...urban,line:'142'}),null,'STAR’T ligne 142 : zone non prouvée');
