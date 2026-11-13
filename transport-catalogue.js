@@ -114,7 +114,23 @@ async function fetchSwissGTFSResources(fetcher,{signal}={}){
   if(!response?.ok)throw new Error('Swiss GTFS catalogue unavailable');
   return swissGTFSResources(await response.json());
 }
-const api={ENDPOINT,normalize,gtfsResources,downloadGTFS,byNetwork,fetchCatalogue,SWISS_DATASET,swissGTFSResources,fetchSwissGTFSResources,latestSwissGTFSResource};
+// Source discovery only: timetable coverage does not imply live ticket prices or seat inventory.
+const NATIONAL_OPERATORS=Object.freeze({
+ sncf:/\\b(?:sncf|tgv|intercit[eé]s|ter)\\b/i,
+ blablacarBus:/blablacar\\s*bus/i,
+ flixbus:/flixbus|flixtrain/i
+});
+function nationalOperatorGTFS(datasets){
+ const rows=Array.isArray(datasets)?datasets:[];
+ const result={};
+ for(const [operator,pattern] of Object.entries(NATIONAL_OPERATORS)){
+  result[operator]=gtfsResources(rows.filter(d=>pattern.test(String(d.name||''))))
+   .filter(r=>/^https:\/\//i.test(r.url))
+   .map(r=>({...r,operator,providesLiveFares:false,providesSeatAvailability:false}));
+ }
+ return result;
+}
+const api={ENDPOINT,normalize,gtfsResources,nationalOperatorGTFS,downloadGTFS,byNetwork,fetchCatalogue,SWISS_DATASET,swissGTFSResources,fetchSwissGTFSResources,latestSwissGTFSResource};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportCatalogue=api;
 })(typeof window!=='undefined'?window:globalThis);
