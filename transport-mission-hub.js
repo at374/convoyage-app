@@ -331,11 +331,13 @@ function makeProviders(r,opts={}){
  if(r.CPSwissTransport&&typeof r.CPSwissTransport.plan==='function')P.swiss={name:'Suisse',
   enabled:task=>inSwissArea(pt(task.from))||inSwissArea(pt(task.to)),disabledReason:'trajet hors zone suisse et Grand Genève',
   run:async task=>{const w=queryWindow(task);if(!w)return [];const f=pt(task.from),t=pt(task.to);
-   let res=await r.CPSwissTransport.plan({from:f,to:t,when:w.when,arriveBy:w.arriveBy,limit:8,fetcher});
+   // Une seconde tentative après une coupure réseau (« fetch failed » observé en réel sur un axe).
+   const once=o=>r.CPSwissTransport.plan(o).catch(e=>new Promise(res=>setTimeout(res,1500)).then(()=>r.CPSwissTransport.plan(o)));
+   let res=await once({from:f,to:t,when:w.when,arriveBy:w.arriveBy,limit:8,fetcher});
    // Coordonnée non reconnue (fréquent côté France) : nouvelle recherche de gare à gare, gares choisies par l'API elle-même.
    if((!res||!res.length)&&typeof r.CPSwissTransport.nearestStation==='function'){
     const [a,b]=await Promise.all([r.CPSwissTransport.nearestStation(f,fetcher),r.CPSwissTransport.nearestStation(t,fetcher)]);
-    if(a&&b&&a.id!==b.id)res=await r.CPSwissTransport.plan({from:a.id,to:b.id,when:w.when,arriveBy:w.arriveBy,limit:8,fetcher});
+    if(a&&b&&a.id!==b.id)res=await once({from:a.id,to:b.id,when:w.when,arriveBy:w.arriveBy,limit:8,fetcher});
    }
    return fromSwiss(res);}};
  if(r.CPRegionalRouting&&typeof r.CPRegionalRouting.plan==='function')P.regional={name:'Mobilités M',
