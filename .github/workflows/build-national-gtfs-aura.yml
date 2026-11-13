@@ -1,5 +1,9 @@
 name: Construire GTFS nationaux AURA (manuel)
 on:
+  push:
+    branches: [feature/transports-aura-suisse]
+    paths:
+      - '.github/workflows/build-national-gtfs-aura.yml'
   workflow_dispatch:
     inputs:
       operator:
@@ -37,10 +41,10 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          if [ "${{ inputs.operator }}" = all ]; then
+          if [ "${{ inputs.operator || 'all' }}" = all ]; then
             python3 scripts/build_national_from_catalogue.py --audit docs/audit-national-operators.json --out data/gtfs | tee national-build-report.json
           else
-            python3 scripts/build_national_from_catalogue.py --audit docs/audit-national-operators.json --out data/gtfs --operator "${{ inputs.operator }}" | tee national-build-report.json
+            python3 scripts/build_national_from_catalogue.py --audit docs/audit-national-operators.json --out data/gtfs --operator "${{ inputs.operator || 'all' }}" | tee national-build-report.json
           fi
       - name: Conserver le rapport et les extraits sans déploiement
         if: always()
