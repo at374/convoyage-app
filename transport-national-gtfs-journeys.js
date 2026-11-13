@@ -2,6 +2,7 @@
 (function(root){
 'use strict';
 const indexer=typeof module==='object'&&module.exports?require('./transport-gtfs-index.js'):root.CPGTFSIndex;
+const loader=typeof module==='object'&&module.exports?require('./transport-gtfs-loader.js'):root.CPGTFSLoader;
 const OPERATORS=new Set(['sncf','blablacarBus','flixbus']);
 function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=30,earliestDeparture=null}={}){
  if(!OPERATORS.has(operator))throw new Error('Unsupported national operator');
@@ -22,7 +23,20 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
    seatAvailability:'unknown',walkingRouteConfirmed:false,source:'official-gtfs'
   }));
 }
-const api={search};
+async function loadAndSearch({operator,resource,fetcher,signal,loadOptions={},...searchOptions}={}){
+ if(!OPERATORS.has(operator))throw new Error('Unsupported national operator');
+ if(!resource||!/^https:\/\//i.test(resource.url||''))throw new Error('HTTPS GTFS resource required');
+ // Never download unbounded national GTFS archives into a phone; use a server-prepared regional slice.
+ const {maxArchiveBytes=20*1024*1024,...rest}=loadOptions;
+ if(!Number.isSafeInteger(maxArchiveBytes)||maxArchiveBytes<=0||maxArchiveBytes>20*1024*1024)
+  throw new Error('National GTFS archive exceeds safe mobile cap; prepare a server-side slice');
+ const feed=await loader.loadResource(resource,{...rest,maxArchiveBytes,fetcher,signal,
+  indexServiceDates:[searchOptions.date],retainSourceTables:false});
+ return {source:feed.source,counts:feed.index.counts,journeys:search({
+  operator,files:feed.files,index:feed.index,...searchOptions
+ })};
+}
+const api={search,loadAndSearch};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPNationalGTFSJourneys=api;
 })(typeof window!=='undefined'?window:globalThis);
