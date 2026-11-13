@@ -150,6 +150,47 @@ jobs:
             }
           })().catch(error=>{console.error(error);process.exitCode=1;});
           NODE
+      - name: Mesurer les trajets réellement trouvés sur les axes AURA
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const loader=require('./transport-gtfs-loader.js');
+          const search=require('./transport-national-gtfs-journeys.js').search;
+          const points={
+            annecy:{lat:45.9012,lon:6.1219},
+            lyon:{lat:45.7601,lon:4.8599},
+            chambery:{lat:45.5658,lon:5.9204},
+            amberieu:{lat:45.9585,lon:5.3577},
+            annemasse:{lat:46.1944,lon:6.2378},
+            saintJulien:{lat:46.1447,lon:6.0826},
+            archamps:{lat:46.1362,lon:6.1328}
+          };
+          const axes=[['annecy','lyon'],['chambery','lyon'],['amberieu','lyon'],
+            ['chambery','saintJulien'],['annecy','annemasse'],['saintJulien','archamps']];
+          const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
+          (async()=>{
+            const report={date,scope:'static national GTFS direct journeys only; no ticket price or live availability',axes:{}};
+            for(const operator of ['sncf','blablacarBus','flixbus']){
+              const filename='data/gtfs/national-'+operator+'-aura.zip';
+              const bytes=fs.readFileSync(filename);
+              const fakeFetch=async()=>new Response(bytes,{headers:{'content-type':'application/zip','content-length':String(bytes.length)}});
+              const feed=await loader.loadResource({format:'GTFS',url:'https://example.org/'+operator+'.zip'},
+                {fetcher:fakeFetch,indexServiceDates:[date],retainSourceTables:false});
+              for(const [a,b] of axes){
+                const key=a+'-'+b;
+                report.axes[key]??={};
+                const journeys=search({operator,files:feed.files,index:feed.index,date,
+                  from:points[a],to:points[b],radiusMeters:3000,maxResults:100});
+                report.axes[key][operator]=journeys.length;
+                assert.ok(journeys.every(j=>j.priceEUR===null&&!j.serviceConfirmed));
+              }
+            }
+            fs.mkdirSync('docs',{recursive:true});
+            fs.writeFileSync('docs/audit-national-aura-axes.json',JSON.stringify(report,null,2)+'\n');
+            console.log(JSON.stringify(report,null,2));
+          })().catch(error=>{console.error(error);process.exitCode=1;});
+          NODE
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
