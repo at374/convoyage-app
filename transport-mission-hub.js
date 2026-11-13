@@ -235,7 +235,9 @@ function priceOf(j,fareFor){
  let ticket=null; // titre en cours : {network,validUntilMs} — une correspondance dans la validité ne se repaie pas
  for(const l of j.legs){
   if(l.kind==='walk')continue;
-  const f=l.fare||(typeof fareFor==='function'?fareFor(l):null);
+  const isVerifiedFare=f=>!!(f&&finite(f.amount)&&f.amount>=0&&/^(EUR|CHF)$/.test(f.currency)&&f.source);
+  const direct=isVerifiedFare(l.fare)?l.fare:null;
+  const f=direct||(typeof fareFor==='function'?fareFor(l):null);
   if(f&&finite(f.amount)&&f.amount>=0&&/^(EUR|CHF)$/.test(f.currency)&&f.source){
    const boarding=ms(l.departure);
    if(ticket&&f.network&&ticket.network===f.network&&Number.isFinite(boarding)&&boarding<=ticket.validUntilMs){sources.push(f.network+' : correspondance couverte par le même titre');continue;}
