@@ -36,6 +36,11 @@ def main():
     assert regional_only.returncode==2,regional_only.stderr
     national=json.loads(regional_only.stdout)['results']['sncf']
     assert national['status']=='unavailable' and national['attempts']==0,national
+    untrusted=run({'source':SOURCE,'operators':{'flixbus':{'feeds':[{
+        'id':'forged','url':'https://example.org/flixbus.zip'}]}}})
+    assert untrusted.returncode==2,untrusted.stderr
+    errors=json.loads(untrusted.stdout)['results']['flixbus']['errors']
+    assert errors and 'Untrusted national GTFS download host' in errors[0]['error'],errors
     wrong=run({'source':'https://example.org/forged','operators':{}})
     assert wrong.returncode!=0
     assert 'provenance' in wrong.stderr.lower(),wrong.stderr
