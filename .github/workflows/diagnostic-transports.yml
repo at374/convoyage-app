@@ -339,10 +339,22 @@ jobs:
             const transfer=indexer.nearbyTransferTrips(feed.files,feed.index,date,from,to,3000,{
               maxLegs:15000,maxCandidates:200,maxExaminedPairs:30000,minTransferMinutes:5,maxWaitMinutes:120
             });
+            const radii=[500,700,1200,3000];
+            const byRadius=radii.map(radiusMeters=>{
+              const rows=indexer.nearbyDirectTrips(feed.files,feed.index,date,from,to,radiusMeters);
+              const uniqueTrips=new Set(rows.map(j=>j.tripId));
+              const distinctStopPairs=new Set(rows.map(j=>j.from+'|'+j.to));
+              return {radiusMeters,candidates:rows.length,uniqueTrips:uniqueTrips.size,
+                distinctStopPairs:distinctStopPairs.size,
+                nearestAccessMeters:rows.length?Math.min(...rows.map(j=>j.accessDistanceMeters)):null,
+                nearestEgressMeters:rows.length?Math.min(...rows.map(j=>j.egressDistanceMeters)):null};
+            });
             const report={date,network:'TAC Annemasse',from:'Saint-Julien-en-Genevois',
               to:'Archamps',radiusMeters:3000,direct:direct.length,
-              oneTransfer:transfer.journeys.length,searchTruncated:transfer.searchTruncated,
-              note:'Static GTFS candidates only; no confirmed commercial fare, real-time service or pedestrian route'};
+              uniqueDirectTrips:new Set(direct.map(j=>j.tripId)).size,
+              byRadius,oneTransfer:transfer.journeys.length,
+              searchTruncated:transfer.searchTruncated,
+              note:'Counts are static GTFS stop-pair candidates, not unique bookable itineraries. Straight-line stop radius is not walking distance. No verified fare, live service or pedestrian route.'};
             fs.writeFileSync('docs/audit-tac-saint-julien-archamps.json',JSON.stringify(report,null,2)+'\n');
             console.log(JSON.stringify(report,null,2));
           })().catch(e=>{console.error(e);process.exitCode=1;});
