@@ -423,6 +423,31 @@ jobs:
           }),false,'TAC must not be offered in Lyon');
           console.log('Seven regional GTFS mission-card providers registered and geographically scoped');
           NODE
+      - name: Tester la recherche TAC réelle via le fournisseur fiche mission
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs'),assert=require('node:assert/strict');
+          const hub=require('./transport-mission-hub.js');
+          const loader=require('./transport-gtfs-loader.js');
+          const index=require('./transport-gtfs-index.js');
+          const bytes=fs.readFileSync('data/gtfs/tac-annemasse.zip');
+          const fetcher=async()=>new Response(bytes,{headers:{'content-type':'application/zip','content-length':String(bytes.length)}});
+          const providers=hub.makeProviders({CPGTFSLoader:loader,CPGTFSIndex:index,
+            fetch:fetcher},{fetcher});
+          const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
+          const task={from:{lat:46.1447,lon:6.0826},to:{lat:46.1362,lon:6.1328},
+            earliestDeparture:date+'T00:00:00+01:00'};
+          (async()=>{
+            const rows=await providers.local_tac.run(task);
+            assert(rows.length>0,'Actual TAC mission provider must return scheduled journeys');
+            assert(rows.length<=30,'Mobile mission card limit');
+            assert(rows.every(x=>x.missing?.some(s=>s.includes('non confirmé en temps réel'))),
+              'Static TAC must be marked unconfirmed');
+            assert(rows.every(x=>x.legs?.length===1),'Only verified direct TAC trips are selected');
+            console.log(JSON.stringify({date,provider:'local_tac',missionJourneys:rows.length,
+              confirmedLive:false,commercialFareVerified:false}));
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
