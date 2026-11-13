@@ -1,0 +1,27 @@
+{
+  "operator": "blablacarBus",
+  "file": "national-blablacarBus-aura.zip",
+  "sha256": "87afe129bc8b058f92ccf7abffe0ffbaa044f55c086816f226e4ace5c12b860a",
+  "bytes": 38300,
+  "bounds": [
+    44.0,
+    3.6,
+    46.7,
+    7.4
+  ],
+  "source": "https://drive.google.com/uc?export=download&id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o",
+  "scope": "AURA-only static GTFS; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "details": {
+    "routes": 391,
+    "trips": 391,
+    "stops": 29,
+    "fares": false,
+    "bounds": [
+      44.0,
+      3.6,
+      46.7,
+      7.4
+    ]
+  }
+}
