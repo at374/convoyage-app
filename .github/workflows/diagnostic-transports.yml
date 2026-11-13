@@ -51,6 +51,14 @@ jobs:
             {id:'flix',name:'Réseau européen FlixBus et FlixTrain',resources:[{id:'f',format:'GTFS',url:'https://transport.data.gouv.fr/flix.zip'}]}
           ];
           const national=nationalOperatorGTFS(feedRows);
+          const {fetchNationalOperatorGTFS}=require('./transport-catalogue.js');
+          const fakeFetch=async()=>({ok:true,json:async()=>({datasets:feedRows})});
+          fetchNationalOperatorGTFS(fakeFetch).then(live=>{
+            assert.equal(live.sncf.length,1,'Catalogue SNCF consulté');
+            assert.equal(live.blablacarBus.length,1,'Catalogue BlaBlaCar consulté');
+            assert.equal(live.flixbus.length,1,'Catalogue FlixBus consulté');
+          }).catch(e=>{console.error(e);process.exitCode=1;});
+
           const mixedNational=nationalOperatorGTFS([{id:'mixed',name:'Horaires nationaux',resources:[
             {id:'bb',name:'BlaBlaCar Bus Europe',format:'GTFS',url:'https://transport.data.gouv.fr/bb.zip'},
             {id:'other',name:'Autre transporteur',format:'GTFS',url:'https://transport.data.gouv.fr/other.zip'}]}]);
