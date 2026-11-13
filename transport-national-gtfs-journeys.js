@@ -27,8 +27,11 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
  const max=latestArrival===null?Infinity:seconds(latestArrival);
  if(Number.isNaN(max))throw new Error('Invalid arrival threshold');
  const direct=indexer.nearbyDirectTrips(files,index,date,from,to,radiusMeters);
+ // Apply the mission time window inside the transfer search, not only afterwards.
+ // This avoids scanning irrelevant departures across a full national timetable.
  const transfer=includeTransfers?indexer.nearbyTransferTrips(files,index,date,from,to,radiusMeters,
-  {maxLegs:15000,maxCandidates:200,maxExaminedPairs:30000,minTransferMinutes:5,maxWaitMinutes:120}):null;
+  {maxLegs:15000,maxCandidates:200,maxExaminedPairs:30000,minTransferMinutes:5,maxWaitMinutes:120,
+   minDepartureSeconds:min,maxArrivalSeconds:max}):null;
  const candidates=direct.concat(transfer?.journeys||[]);
  return candidates.filter(x=>seconds(x.departure)>=min&&seconds(x.arrival)<=max)
   .sort((a,b)=>seconds(a.departure)-seconds(b.departure)||seconds(a.arrival)-seconds(b.arrival))
