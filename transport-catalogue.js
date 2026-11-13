@@ -126,7 +126,8 @@ function nationalOperatorGTFS(datasets){
  for(const [operator,pattern] of Object.entries(NATIONAL_OPERATORS)){
   result[operator]=gtfsResources(rows.filter(d=>pattern.test(String(d.name||''))))
    .filter(r=>/^https:\/\//i.test(r.url))
-   .map(r=>({...r,operator,providesLiveFares:false,providesSeatAvailability:false}));
+   .map(r=>({...r,operator,providesLiveFares:false,providesSeatAvailability:false,
+     timetableOnly:true,requiresServerSideIndex:operator==='flixbus'||operator==='sncf'}));
  }
  return result;
 }
