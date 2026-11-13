@@ -72,6 +72,16 @@ jobs:
           const star = require('./transport-fare-grids.js').GRIDS.find(g=>g.network==="STAR'T zone A");
           assert.ok(star,'Grille STAR’T présente');
           assert.equal(fareFor(urban,[star,{...star}]),null);
+          // Si un moteur renvoie un prix incomplet, le registre officiel reste consulté.
+          const {priceOf}=require('./transport-mission-hub.js');
+          const gridFare=require('./transport-fare-grids.js').fareFor;
+          const bus={...urban,kind:'transit',fare:{amount:0,currency:'EUR'}};
+          const priced=priceOf({walkOnly:false,legs:[bus]},gridFare);
+          assert.equal(priced.status,'verified');
+          assert.equal(priced.amounts.EUR,1.20);
+          assert.equal(priceOf({walkOnly:false,legs:[{...bus,provider:'Opérateur inconnu'}]},gridFare).status,'unknown');
+          const official={...bus,fare:{amount:1.50,currency:'EUR',source:'billet fournisseur'}};
+          assert.equal(priceOf({walkOnly:false,legs:[official]},gridFare).amounts.EUR,1.50);
           console.log('Exclusions, validité et ambiguïtés tarifaires OK');
           NODE
       - name: Vérifier la présence de TripGo
