@@ -1,7 +1,19 @@
 /* Read-only Agenda integration. At most two official networks in one worker per open panel. */
 (function(root){
 'use strict';
+// Flux préparés côté serveur (scripts/build_regional_gtfs.py, GitHub Actions) et servis par le site de l'application :
+// même origine, donc pas de blocage CORS sur le téléphone. Hors HTTPS (tests locaux), adresse publique du site.
+const LOCAL_GTFS=name=>{try{if(root.location&&root.location.protocol==='https:')return new URL('data/gtfs/'+name,root.location.href).href;}catch(_){}
+ return 'https://at374.github.io/convoyage-app/data/gtfs/'+name;};
 const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
+ // Réseaux extraits de l'agrégat officiel Oùra : utilisés seulement pour les trajets internes à leur ville
+ // (pas de « federate ») afin de ne pas évincer les cars régionaux sur les liaisons interurbaines.
+ id:'jybus-rumilly',datasetId:'jybus-rumilly',network:"J'y bus Rumilly",format:'GTFS',url:LOCAL_GTFS('jybus-rumilly.zip'),
+ bounds:[45.80,5.85,45.93,6.05],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'tam-amberieu',datasetId:'tam-amberieu',network:'TAM Ambérieu-en-Bugey',format:'GTFS',url:LOCAL_GTFS('tam-amberieu.zip'),
+ bounds:[45.90,5.28,46.02,5.45],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'oura-haute-savoie',datasetId:'oura-haute-savoie',network:'Cars Région Haute-Savoie',format:'GTFS',
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',
  // Selection envelope only: does not assert coverage or actual walking access.
@@ -29,24 +41,32 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  // Ajouts 13/11/2026 (flux officiels du Point d'accès national ; à valider en conditions réelles sur téléphone).
  // TAC Annemasse : jeu 5ca4bcec634f4125a78fad26, Licence Ouverte 2.0, offre 31/08/2026 → 31/08/2027.
  id:'76779',datasetId:'5ca4bcec634f4125a78fad26',network:'TAC Annemasse',format:'GTFS',federate:true,
- url:'https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip',resolveFromCatalogue:true,
+ url:LOCAL_GTFS('tac-annemasse.zip'),fallbackUrls:['https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip'],
  // Réseau Genevois français Mobilités (Annemasse Agglo + CC du Genevois depuis 07/2025) : inclut Saint-Julien et Archamps.
  bounds:[46.1,5.98,46.27,6.42],timeZone:'Europe/Paris'
 }),Object.freeze({
  // Synchro Bus Grand Chambéry (ODbL, attribution Grand Chambéry).
  id:'82272',datasetId:'synchro-chambery',network:'Synchro Bus Chambéry',format:'GTFS',federate:true,
- url:'https://www.data.gouv.fr/api/1/datasets/r/a81cdf4b-5a70-43c9-8803-cef0430ed170',
+ url:LOCAL_GTFS('synchro-chambery.zip'),fallbackUrls:['https://www.data.gouv.fr/api/1/datasets/r/a81cdf4b-5a70-43c9-8803-cef0430ed170'],
  bounds:[45.45,5.75,45.75,6.15],timeZone:'Europe/Paris'
 }),Object.freeze({
  // Ondéa Grand Lac, Aix-les-Bains (etalab-2.0).
  id:'71223',datasetId:'ondea-grand-lac',network:'Ondéa Aix-les-Bains',format:'GTFS',federate:true,
- url:'https://www.data.gouv.fr/api/1/datasets/r/b4e8d98c-e17a-4fb0-857f-8cb618039b2a',
+ url:LOCAL_GTFS('ondea-grand-lac.zip'),fallbackUrls:['https://www.data.gouv.fr/api/1/datasets/r/b4e8d98c-e17a-4fb0-857f-8cb618039b2a'],
  bounds:[45.6,5.75,45.85,6.05],timeZone:'Europe/Paris'
 }),Object.freeze({
  // Star't Thonon Agglomération (etalab-2.0).
  id:'82178',datasetId:'thonon-agglomeration-donnees-gtfs',network:"Star't Thonon",format:'GTFS',federate:true,
- url:'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e',
+ url:LOCAL_GTFS('start-thonon.zip'),fallbackUrls:['https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e'],
  bounds:[46.25,6.3,46.45,6.65],timeZone:'Europe/Paris'
+}),Object.freeze({
+ // Cars Région Isère et Savoie (extraits de l'agrégat Oùra) : en dernier, seulement si aucun réseau plus précis ne couvre le trajet.
+ id:'cars-region-isere',datasetId:'cars-region-isere',network:'Cars Région Isère',format:'GTFS',url:LOCAL_GTFS('cars-region-isere.zip'),broad:true,
+ bounds:[44.69,4.74,45.89,6.36],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'cars-region-savoie',datasetId:'cars-region-savoie',network:'Cars Région Savoie',format:'GTFS',url:LOCAL_GTFS('cars-region-savoie.zip'),broad:true,
+ // Savoie seulement (Annecy et la Haute-Savoie exclues).
+ bounds:[45.05,5.62,45.80,7.19],timeZone:'Europe/Paris'
 })]);
 function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof point.lon==='number'&&
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}

@@ -19,7 +19,7 @@ function row(extra={}){return {tripId:'T',from:'A',to:'B',line:'Y51',timeZone:'E
  departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T12:00:00Z',
  originStop:{name:'École <script>',lat:45.67,lon:6.39},destinationStop:{name:'Annecy',lat:45.9,lon:6.1},accessDistanceMeters:10,egressDistanceMeters:20,...extra};}
 test('geographic selection is a bounded heuristic and requires two valid points and HTTPS GTFS',()=>{
- const resource=agenda.DEFAULT_RESOURCES[0];
+ const resource=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-haute-savoie');
  assert.equal(agenda.selected(resource,task),true);
  assert.equal(agenda.selected(resource,{...task,to:null}),false);
  assert.equal(agenda.selected(resource,{...task,to:{lat:48.8,lon:2.3}}),false);
@@ -290,7 +290,7 @@ test('Grenoble local tasks select only the two official Grenoble resources',asyn
  assert.doesNotMatch(target.textContent,/Cars Région Haute-Savoie|Sibra/);
  session.dispose();
  const outside={...local,from:point};
- assert.equal(agenda.DEFAULT_RESOURCES.some(r=>agenda.selected(r,outside)),false);
+ assert.equal(agenda.DEFAULT_RESOURCES.some(r=>agenda.selected(r,outside)&&!r.broad),false);
 });
 
 test('Agenda collapses equivalent departures from different GTFS trip IDs',async()=>{
@@ -325,9 +325,12 @@ test('Grenoble to Crolles remains within both metropolitan and Grésivaudan GTFS
  const grenoble={lat:45.1885,lon:5.7245},crolles={lat:45.276,lon:5.883};
  const trip={label:'Jonction mission',from:grenoble,to:crolles,
   earliestDeparture:'2026-11-02T09:00:00+01:00',latestArrival:'2026-11-02T12:00:00+01:00'};
- const eligible=agenda.DEFAULT_RESOURCES.filter(resource=>agenda.selected(resource,trip));
+ // Les cars régionaux « de dernier recours » (broad) peuvent aussi couvrir l'enveloppe, mais restent après les réseaux urbains.
+ const eligible=agenda.DEFAULT_RESOURCES.filter(resource=>agenda.selected(resource,trip)&&!resource.broad);
  assert.deepEqual(eligible.map(resource=>resource.datasetId),
   ['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f']);
+ const all=agenda.DEFAULT_RESOURCES.filter(resource=>agenda.selected(resource,trip));
+ assert.ok(all.findIndex(r=>r.broad)<0||all.findIndex(r=>r.broad)>=2,'cars régionaux classés après les réseaux urbains');
  const target=panel(),calls=[];
  const session=agenda.mount(target,{tasks:[trip],clientFactory:()=>({
   loadNetworks:async(resources,options)=>{

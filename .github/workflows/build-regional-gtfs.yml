@@ -1,0 +1,44 @@
+name: Build regional GTFS (Oùra extracts + official mirrors)
+# Prépare data/gtfs : J'y bus, TAM, Cars Région Isère/Savoie (extraits de l'agrégat officiel Oùra)
+# et copies validées des flux TAC, Synchro, Ondéa, Star't, servies par le site (pas de blocage CORS).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-regional-gtfs.yml'
+      - 'scripts/build_regional_gtfs.py'
+  schedule:
+    - cron: '41 2 * * 1'   # chaque lundi (consommation GitHub Actions : quelques minutes par semaine)
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: regional-gtfs
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Tests hors ligne du script
+        run: python3 -I tests/python/test_build_regional_gtfs.py
+      - name: Télécharger, extraire et valider
+        run: python3 -I scripts/build_regional_gtfs.py --out data/gtfs
+      - name: Publier les flux validés
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- data/gtfs
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Refresh regional GTFS extracts and mirrors'
+          git push origin HEAD:main
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/pages/builds" || true

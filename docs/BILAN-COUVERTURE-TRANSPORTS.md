@@ -7,26 +7,26 @@ Généré le 2026-11-13 par `scripts/bilan-couverture-transports.cjs` à partir 
 
 | Zone | Périmètre de l’inventaire | Identifiés | Raccordés | Validés en réel | Prix vérifiés | Prix partiels | Restant à terminer |
 |---|---|---|---|---|---|---|---|
-| AURA | réseaux des zones de mission (Savoies, Isère, Ain, Lyon) | 17 | 12 (71 %) | 0 (0 %) | 3 (18 %) | 3 | 17 |
+| AURA | réseaux des zones de mission (Savoies, Isère, Ain, Lyon) | 17 | 16 (94 %) | 0 (0 %) | 3 (18 %) | 3 | 17 |
 | Suisse | Genève et frontière seulement | 2 | 2 (100 %) | 0 (0 %) | 0 (0 %) | 0 | 2 |
 | Transfrontalier | Grand Genève | 3 | 2 (67 %) | 0 (0 %) | 0 (0 %) | 0 | 3 |
 | TAD | services repérés seulement | 3 | 0 (0 %) | 0 (0 %) | 0 (0 %) | 2 | 3 |
-| **Total** | — | 25 | 16 (64 %) | 0 (0 %) | 3 (12 %) | — | **25** |
+| **Total** | — | 25 | 20 (80 %) | 0 (0 %) | 3 (12 %) | — | **25** |
 
 « Raccordé » = une source officielle est branchée (pas une validation). La présence possible d’un opérateur dans TripGo n’est **jamais** comptée comme raccordement.
 
 ## États
 
 - Testé sur données enregistrées : 6 réseau(x)
-- Partiellement raccordé : 10 réseau(x)
-- Non raccordé : 9 réseau(x)
+- Partiellement raccordé : 14 réseau(x)
+- Non raccordé : 5 réseau(x)
 
 ## Détail réseau par réseau
 
 | Réseau | Zone | Couverture | Horaires | Tarifs | Marche | Dernier contrôle | Blocage | Prochaine action |
 |---|---|---|---|---|---|---|---|---|
 | Sibra (Grand Annecy) | AURA | Testé sur données enregistrées | enregistrés | vérifiés | calculée (données enregistrées) | 2026-11-13 · CGV Sibra 01/07/2026 | Aucun bloquant connu | Lancer le diagnostic téléphone (axe Rumilly → Annecy) |
-| TAC / Genevois français Mobilités (Annemasse, Saint-Julien, Archamps) | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · GTFS TAC (transport.data.gouv) | Aucune grille tarifaire officielle 2026 trouvée en ligne ; téléchargement du GTFS (CORS) non vérifié | Diagnostic téléphone (Annemasse → Saint-Julien) ; photo de la grille TAC 2026 |
+| TAC / Genevois français Mobilités (Annemasse, Saint-Julien, Archamps) | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · GTFS TAC (transport.data.gouv) | Aucune grille tarifaire officielle 2026 trouvée en ligne ; copie servie par le site prévue (tâche serveur), source d’origine en secours | Diagnostic téléphone (Annemasse → Saint-Julien) ; photo de la grille TAC 2026 |
 | Synchro Bus (Chambéry) | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · page tickets + CGV 02/07/2026 | Grille 2026 ambiguë (1,40 € sur la page tickets, 1,70 € dans les CGV) | Photo de la grille Synchro en vigueur ; diagnostic Chambéry → Aix |
 | Ondéa Grand Lac (Aix-les-Bains) | AURA | Partiellement raccordé | source branchée | vérifiés | non vérifiée | 2026-11-13 · ondeagrandlac.fr (01/07/2026) | GTFS jamais chargé en réel | Diagnostic téléphone (Chambéry → Aix) |
 | Star't (Thonon) | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · star-t.fr (2025) | Tarif par zones A/B sans carte des zones par arrêt ; page officielle de 2025 | Obtenir la liste des communes par zone ; diagnostic Thonon → Genève |
@@ -34,12 +34,12 @@ Généré le 2026-11-13 par `scripts/bilan-couverture-transports.cjs` à partir 
 | M réso — Grésivaudan | AURA | Testé sur données enregistrées | enregistrés | partiels | calculée (données enregistrées) | 2026-11-13 · reso-m.fr (01/09/2026) | Tarif intra-Grésivaudan 1,00 € non appliqué (périmètre des arrêts inconnu) : 2,00 € affiché | Ajouter la liste des communes du Grésivaudan |
 | M réso — Voironnais | AURA | Partiellement raccordé | source branchée | partiels | non vérifiée | 2026-11-13 · reso-m.fr (01/10/2026) | Tarif intra-Voironnais 1,30 € non appliqué : 2,00 € affiché | Diagnostic Voiron → Grenoble ; liste des communes du Voironnais |
 | TCL (Lyon) | AURA | Non raccordé | indisponibles | manquants | non vérifiée | 2026-11-13 · MobilityDatabase / guide TCL mai 2026 | GTFS TCL (654 lignes) trop lourd pour le téléphone ; tarifs par zones | Relais serveur GTFS TCL ou clé TripGo ; carte des zones TCL par arrêt |
-| J'y bus (Rumilly) | AURA | Non raccordé | indisponibles | manquants | non vérifiée | 2026-11-13 · agrégat Oùra (data.gouv) | Pas de flux propre : uniquement dans l’agrégat régional Oùra (trop lourd) | Extraire J’y bus de l’agrégat côté serveur (GitHub Actions) ou TripGo |
-| TAM (Ambérieu-en-Bugey) | AURA | Non raccordé | indisponibles | manquants | non vérifiée | 2026-11-13 · agrégat Oùra (data.gouv) | Pas de flux propre : uniquement dans l’agrégat régional Oùra | Extraire TAM de l’agrégat côté serveur ou TripGo |
+| J'y bus (Rumilly) | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · extraction agrégat Oùra (script testé hors ligne) | Extraction jamais exécutée sur l’agrégat réel (tâche serveur lancée après le push) ; tarif seulement si le producteur publie fare_attributes | Lancer la tâche « Build regional GTFS », puis diagnostic Rumilly |
+| TAM (Ambérieu-en-Bugey) | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · extraction agrégat Oùra (script testé hors ligne) | Extraction jamais exécutée sur l’agrégat réel ; nom d’agence TAM dans l’agrégat à confirmer (fichier oura-agencies.json) | Lancer la tâche « Build regional GTFS », puis diagnostic Ambérieu → Lyon |
 | Cars Région Haute-Savoie (dont Y51) | AURA | Testé sur données enregistrées | enregistrés | partiels | calculée (données enregistrées) | 2026-10-31 · fiche tarifaire Y51 AURA 2026 | Seule la Y51 a une grille par zones ; autres lignes sans prix | Grilles zonales des autres lignes Cars Région 74 |
 | Cars Région Ain | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · GTFS Oùra Ain | Tarif par zones non intégré | Grille zonale Cars Région Ain |
-| Cars Région Isère | AURA | Non raccordé | indisponibles | manquants | non vérifiée | 2026-11-13 · carsisere.auvergnerhonealpes.fr | Pas de flux branché ; tarif par zones (4,10 € à 12,10 €) | Brancher le GTFS Cars Région Isère ; zones par arrêt |
-| Cars Région Savoie | AURA | Non raccordé | indisponibles | manquants | non vérifiée | 2026-11-13 | Pas de flux branché | Brancher le GTFS Cars Région Savoie |
+| Cars Région Isère | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · extraction agrégat Oùra (script testé hors ligne) | Extraction jamais exécutée en réel ; tarif par zones (4,10 € à 12,10 €) sans zones des arrêts | Lancer la tâche serveur ; zones par arrêt si fare_rules absent |
+| Cars Région Savoie | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · extraction agrégat Oùra (script testé hors ligne) | Extraction jamais exécutée en réel | Lancer la tâche serveur, puis diagnostic Chambéry → Aix |
 | TER Auvergne-Rhône-Alpes / SNCF | AURA | Testé sur données enregistrées | enregistrés | manquants | calculée (données enregistrées) | 2026-11-13 · fichiers SNCF quotidiens du dépôt | Prix TER dynamiques : aucune source gratuite autorisée | Aucune solution gratuite identifiée ; garder « Prix à confirmer » |
 | FlixBus / BlaBlaCar Bus | AURA | Testé sur données enregistrées | enregistrés | manquants | calculée (données enregistrées) | 2026-10-31 · réponse TripGo enregistrée | Prix dynamiques ; TripGo n’a transmis aucun billet dans les réponses enregistrées | Clé TripGo puis diagnostic (Annecy → Genève) |
 | CFF / trains suisses | Suisse | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · documentation transport.opendata.ch | API sans prix ; jamais appelée en réel depuis l’environnement de développement | Diagnostic téléphone (Annecy → Genève) |
@@ -53,18 +53,18 @@ Généré le 2026-11-13 par `scripts/bilan-couverture-transports.cjs` à partir 
 
 ## Tarifs manquants ou partiels, réseau par réseau
 
-- **TAC / Genevois français Mobilités (Annemasse, Saint-Julien, Archamps)** (manquants) : Prix à confirmer (aucune grille officielle trouvée) ; GTFS Fares si publiés — Aucune grille tarifaire officielle 2026 trouvée en ligne ; téléchargement du GTFS (CORS) non vérifié
+- **TAC / Genevois français Mobilités (Annemasse, Saint-Julien, Archamps)** (manquants) : Prix à confirmer (aucune grille officielle trouvée) ; GTFS Fares si publiés — Aucune grille tarifaire officielle 2026 trouvée en ligne ; copie servie par le site prévue (tâche serveur), source d’origine en secours
 - **Synchro Bus (Chambéry)** (manquants) : Prix à confirmer (grille 2026 ambiguë) ; GTFS Fares si publiés — Grille 2026 ambiguë (1,40 € sur la page tickets, 1,70 € dans les CGV)
 - **Star't (Thonon)** (manquants) : Prix à confirmer (tarif par zones A/B) ; GTFS Fares si publiés — Tarif par zones A/B sans carte des zones par arrêt ; page officielle de 2025
 - **M réso — Grésivaudan** (partiels) : Grille officielle 2,00 € (1,00 € intra-Grésivaudan non appliqué) — Tarif intra-Grésivaudan 1,00 € non appliqué (périmètre des arrêts inconnu) : 2,00 € affiché
 - **M réso — Voironnais** (partiels) : Grille officielle 2,00 € (1,30 € intra-Voironnais non appliqué) — Tarif intra-Voironnais 1,30 € non appliqué : 2,00 € affiché
 - **TCL (Lyon)** (manquants) : Prix à confirmer (zones TCL ; GTFS TCL trop lourd pour le téléphone) — GTFS TCL (654 lignes) trop lourd pour le téléphone ; tarifs par zones
-- **J'y bus (Rumilly)** (manquants) : Prix à confirmer — Pas de flux propre : uniquement dans l’agrégat régional Oùra (trop lourd)
-- **TAM (Ambérieu-en-Bugey)** (manquants) : Prix à confirmer — Pas de flux propre : uniquement dans l’agrégat régional Oùra
+- **J'y bus (Rumilly)** (manquants) : Prix à confirmer — Extraction jamais exécutée sur l’agrégat réel (tâche serveur lancée après le push) ; tarif seulement si le producteur publie fare_attributes
+- **TAM (Ambérieu-en-Bugey)** (manquants) : Prix à confirmer — Extraction jamais exécutée sur l’agrégat réel ; nom d’agence TAM dans l’agrégat à confirmer (fichier oura-agencies.json)
 - **Cars Région Haute-Savoie (dont Y51)** (partiels) : Y51 : grille officielle par zones ; autres lignes à confirmer — Seule la Y51 a une grille par zones ; autres lignes sans prix
 - **Cars Région Ain** (manquants) : Prix à confirmer (zones) — Tarif par zones non intégré
-- **Cars Région Isère** (manquants) : Prix à confirmer (zones 4,10 € à 12,10 €, zones des arrêts inconnues) — Pas de flux branché ; tarif par zones (4,10 € à 12,10 €)
-- **Cars Région Savoie** (manquants) : Prix à confirmer — Pas de flux branché
+- **Cars Région Isère** (manquants) : Prix à confirmer (zones 4,10 € à 12,10 €, zones des arrêts inconnues) — Extraction jamais exécutée en réel ; tarif par zones (4,10 € à 12,10 €) sans zones des arrêts
+- **Cars Région Savoie** (manquants) : Prix à confirmer — Extraction jamais exécutée en réel
 - **TER Auvergne-Rhône-Alpes / SNCF** (manquants) : Prix dynamique : pas de source autorisée gratuite — Prix TER dynamiques : aucune source gratuite autorisée
 - **FlixBus / BlaBlaCar Bus** (manquants) : Prix dynamique : à confirmer (billet TripGo repris s’il est transmis) — Prix dynamiques ; TripGo n’a transmis aucun billet dans les réponses enregistrées
 - **CFF / trains suisses** (manquants) : Prix à confirmer (pas de prix dans l’API) — API sans prix ; jamais appelée en réel depuis l’environnement de développement

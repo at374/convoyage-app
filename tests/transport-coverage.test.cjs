@@ -11,8 +11,9 @@ test('inventaire : 4 états, aucun « Validé en réel » sans diagnostic télé
  for(const s of states)assert.ok(['Testé sur données enregistrées','Partiellement raccordé','Non raccordé'].includes(s));
  for(const z of inv.zones){assert.ok(z.total>0);assert.equal(z.real,0);assert.ok(z.connected<=z.total);}
  for(const r of inv.rows){assert.ok(r.blocage&&r.action,'blocage et action renseignés : '+r.id);assert.ok(['vérifiés','partiels','manquants'].includes(r.tarif));}
- // TCL, J'y bus, TAM : jamais comptés comme raccordés (TripGo seul ne compte pas)
- for(const id of ['tcl','jybus','tam'])assert.equal(inv.rows.find(r=>r.id===id).state,'Non raccordé');
+ // TCL : jamais compté comme raccordé (TripGo seul ne compte pas) ; J'y bus / TAM : extraction serveur prévue, donc partiels seulement.
+ assert.equal(inv.rows.find(r=>r.id==='tcl').state,'Non raccordé');
+ for(const id of ['jybus','tam'])assert.equal(inv.rows.find(r=>r.id===id).state,'Partiellement raccordé');
 });
 
 test('« Validé en réel » seulement avec des trajets réels de moins de 30 jours',()=>{

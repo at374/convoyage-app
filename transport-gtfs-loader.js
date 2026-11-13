@@ -162,7 +162,13 @@ async function loadResource(resource,{fetcher=root.fetch,signal,timeoutMs=30000,
    resolved=[...candidates].sort((a,b)=>(Date.parse(b.updatedAt)||0)-(Date.parse(a.updatedAt)||0)||
     (a.id===resource.id?-1:b.id===resource.id?1:0))[0];
   }
-  const bytes=await catalogue.downloadGTFS(resolved,fetcher,cap.maxArchiveBytes,{signal:controller.signal});
+  // Copie servie par le site de l'application d'abord, puis la source officielle d'origine en secours.
+  let bytes,lastError=null;
+  for(const url of [resolved.url,...(Array.isArray(resource?.fallbackUrls)?resource.fallbackUrls:[])].filter(u=>typeof u==='string'&&/^https:\/\//.test(u))){
+   try{bytes=await catalogue.downloadGTFS({...resolved,url},fetcher,cap.maxArchiveBytes,{signal:controller.signal});resolved={...resolved,url};break;}
+   catch(error){if(controller.signal.aborted)throw error;lastError=error;}
+  }
+  if(!bytes)throw lastError||new Error('GTFS download failed');
   const extracted=await extractGTFS(bytes,{...cap,signal:controller.signal});
   validateTables(extracted.files);aborted(controller.signal);
   let serviceIds=null,dates=null;
