@@ -16,6 +16,7 @@ on:
       - 'transport-catalogue.js'
       - 'transport-national-gtfs-journeys.js'
       - 'scripts/build_national_gtfs_aura.py'
+      - 'scripts/test_national_gtfs_aura.py'
       - 'scripts/audit-national-operators.cjs'
 permissions:
   contents: write
@@ -46,6 +47,7 @@ jobs:
         run: |
           python3 -m py_compile scripts/build_national_gtfs_aura.py
           python3 scripts/build_national_gtfs_aura.py --help >/dev/null
+          python3 scripts/test_national_gtfs_aura.py
       - name: Tester les trajets nationaux GTFS sans prix inventés
         run: |
           node --check transport-national-gtfs-journeys.js
