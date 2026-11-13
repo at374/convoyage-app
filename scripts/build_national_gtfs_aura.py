@@ -31,6 +31,32 @@ def main():
         p.error('Invalid source ZIP')
     with zipfile.ZipFile(args.input) as source:
         validate(source)
+        # Reject an archive with stops outside AURA between two retained stops:
+        # removing intermediate stops would falsely present an out-of-area detour as local.
+        from build_regional_gtfs import read_table
+        _, stops = read_table(source, 'stops.txt')
+        inside = set()
+        for stop in stops:
+            try:
+                lat, lon = float(stop.get('stop_lat') or 'nan'), float(stop.get('stop_lon') or 'nan')
+                if BOUNDS[0] <= lat <= BOUNDS[2] and BOUNDS[1] <= lon <= BOUNDS[3]:
+                    inside.add(stop['stop_id'])
+            except (TypeError, ValueError, KeyError):
+                pass
+        _, times = read_table(source, 'stop_times.txt')
+        by_trip = {}
+        for row in times:
+            by_trip.setdefault(row['trip_id'], []).append(row)
+        detours = set()
+        for trip_id, rows in by_trip.items():
+            ordered = sorted(rows, key=lambda row: int(row['stop_sequence']))
+            positions = [i for i, row in enumerate(ordered) if row['stop_id'] in inside]
+            if len(positions) >= 2 and any(ordered[i]['stop_id'] not in inside
+                    for i in range(positions[0], positions[-1] + 1)):
+                detours.add(trip_id)
+        if detours:
+            raise ValueError('National GTFS contains ' + str(len(detours)) +
+                             ' trips leaving AURA between retained stops; split corridors without inventing direct journeys')
         data, info = filter_by_bounds(source, {'bounds': BOUNDS})
     if data is None:
         raise SystemExit('No AURA trips: ' + str(info))
