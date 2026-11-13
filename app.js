@@ -2302,7 +2302,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           return null;
         };
         const session=Hub.createSession({tasks,router,fareFor,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),
-          providers:Hub.makeProviders(window,{fetcher:regionalFetch,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT}),
+          providers:Hub.makeProviders(window,{fetcher:regionalFetch,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
+            nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{}}),
           onUpdate:(label,view)=>{
             if(!panel.isConnected||!transportDestinations[label])return;
             let host=hubHosts[label];
