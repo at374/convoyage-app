@@ -41,12 +41,17 @@ def main():
     args = parser.parse_args()
     with open(args.audit, encoding='utf-8') as source:
         audit = json.load(source)
+    if not isinstance(audit, dict):
+        parser.error('Audit must be a JSON object')
     if audit.get('source') != 'https://transport.data.gouv.fr/api/datasets':
         parser.error('Audit provenance does not match the public catalogue')
     operators = (args.operator,) if args.operator else OPERATORS
     report = {'sourceAudit': args.audit, 'results': {}}
     for operator in operators:
         feeds = audit.get('operators', {}).get(operator, {}).get('feeds', [])
+        if not isinstance(feeds, list):
+            report['results'][operator] = {'status': 'invalid-audit', 'attempts': 0, 'errors': ['Feeds must be an array']}
+            continue
         errors = []
         for feed in feeds:
             url = feed.get('url')
