@@ -44,7 +44,24 @@ def main():
             assert {s['stop_id'] for s in stops}=={'a','b'},stops
             assert {t['stop_id'] for t in times}=={'a','b'},times
             assert len(times)==2
-        print('Découpage GTFS national AURA vérifié : horaires conservés, arrêt hors zone exclu')
+        # A second trip leaves AURA between Annecy and Lyon. It must not be
+        # shortened to a fake direct Annecy–Lyon service.
+        data['trips.txt'] = table(['route_id','service_id','trip_id'],[
+            ['r','s','t'],['r','s','detour']])
+        data['stop_times.txt'] = table(['trip_id','arrival_time','departure_time','stop_id','stop_sequence'],[
+            ['t','08:00:00','08:00:00','a','1'],['t','10:00:00','10:00:00','b','2'],
+            ['t','13:00:00','13:00:00','c','3'],
+            ['detour','08:00:00','08:00:00','a','1'],
+            ['detour','09:00:00','09:00:00','c','2'],
+            ['detour','11:00:00','11:00:00','b','3']])
+        with zipfile.ZipFile(source,'w',zipfile.ZIP_DEFLATED) as z:
+            for name, text in data.items():
+                z.writestr(name,text)
+        result=json.loads(subprocess.check_output(cmd,text=True))
+        with zipfile.ZipFile(os.path.join(temp,result['file'])) as z:
+            trips=list(csv.DictReader(io.StringIO(z.read('trips.txt').decode())))
+            assert [t['trip_id'] for t in trips]==['t'],trips
+        print('Découpage national AURA vérifié : arrêt hors zone et faux trajet direct exclus')
 
 if __name__=='__main__':
     main()
