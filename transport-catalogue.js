@@ -133,7 +133,20 @@ function nationalOperatorGTFS(datasets){
  }
  return result;
 }
-const api={ENDPOINT,normalize,gtfsResources,nationalOperatorGTFS,downloadGTFS,byNetwork,fetchCatalogue,SWISS_DATASET,swissGTFSResources,fetchSwissGTFSResources,latestSwissGTFSResource};
+async function fetchNationalOperatorGTFS(fetcher,{signal}={}){
+ const datasets=await fetchCatalogue(fetcher,{signal});
+ const found=nationalOperatorGTFS(datasets);
+ for(const operator of Object.keys(found)){
+  const seen=new Set();
+  found[operator]=found[operator].filter(resource=>{
+   const key=resource.datasetId+'|'+resource.id+'|'+resource.url;
+   if(seen.has(key))return false;
+   seen.add(key);return true;
+  });
+ }
+ return found;
+}
+const api={ENDPOINT,normalize,gtfsResources,nationalOperatorGTFS,fetchNationalOperatorGTFS,downloadGTFS,byNetwork,fetchCatalogue,SWISS_DATASET,swissGTFSResources,fetchSwissGTFSResources,latestSwissGTFSResource};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportCatalogue=api;
 })(typeof window!=='undefined'?window:globalThis);
