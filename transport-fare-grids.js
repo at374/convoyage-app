@@ -82,18 +82,16 @@ const GRIDS=[
   validFrom:'2022-12-19',validUntil:'2026-12-31',
   source:'https://www.star-t.fr/titres-abonnements/titres-abonnements',
   checkedAt:'2026-11-13',flat:true},
- // Cars Région Ain : contrairement à Cars Région Isère (zonal) et Cars Région Savoie (par ligne, cf. lignes
- // touristiques S30-S83 à 3-12,50 €), le réseau de l'Ain applique un tarif « 1 voyage » UNIQUE réseau entier,
- // confirmé par comparaison de plusieurs fiches horaires officielles datées : 2 € (fiche L153, période
- // 2022), 2,20 € (fiche A20, période du 25/08/2025 au 23/08/2026, vérifiée le 13/11/2026) — même montant
- // retrouvé sur plusieurs lignes différentes à la même date, donc bien un tarif réseau et non un tarif de
- // ligne. Carnet 10 voyages 16,50 €, abonnement mensuel 43 € (non repris ici, GRIDS ne couvre que le tarif
- // « 1 voyage »). Validité volontairement bornée à la période couverte par la fiche source (jusqu'au
- // 23/08/2026) : aucune fiche 2026/2027 trouvée au 13/11/2026, donc pas d'extrapolation au-delà.
- {network:'Cars Région Ain',operatorPattern:'^cars\\s*r[ée]gion\\s*ain$',modes:['Bus'],amount:2.20,currency:'EUR',
-  product:'1 voyage',validFrom:'2025-08-25',validUntil:'2026-08-23',
-  source:'https://www.maisonneuve.net/wp-content/uploads/2025/07/RARA_FH-2025-2026_AIN_A20-v1.pdf',
-  checkedAt:'2026-11-13',flat:true}
+ // Cars Région Ain : NOUVELLE GRILLE OFFICIELLE AU 01/03/2026.
+ // Régie des Transports de l'Ain + Cars Philibert : 1 voyage 2,30 €, 10 voyages 17 €,
+ // correspondances permises dans les 2 heures. Exceptions territoriales : Neyron–Béligneux
+ // La Valbonne (1 €), tarification TCL Crépieux–Lyon, RUBIS ligne A32 Dompierre–Bourg,
+ // COLIBRI Neyron–Beynost. Exclure les parcours exceptionnels non résolus plutôt que 2,30 € faux.
+ {network:'Cars Région Ain',operatorPattern:'^cars\\\\s*r[ée]gion\\\\s*ain$',modes:['Bus'],amount:2.30,currency:'EUR',
+  product:'1 voyage réseau hors tarifications locales dérogatoires, correspondance 2 h',validityMinutes:120,
+  validFrom:'2026-03-01',validUntil:'2027-02-28',
+  source:'https://transportsdelain.fr/wp-content/uploads/Nouvelle-tarification-au-01032026-2.pdf',
+  checkedAt:'2026-11-13',flat:true},
  // Exemple de format (NE PAS activer sans preuve) :
  // {network:'Exemple',operatorPattern:'^exemple$',modes:['Bus'],amount:0,currency:'EUR',product:'1 voyage',
  //  validFrom:'2026-01-01',validUntil:'2026-12-31',source:'https://www.sibra.fr/…',checkedAt:'2026-11-13',flat:true}
@@ -168,6 +166,14 @@ function fareFor(leg,grids){
  const startAB=startInterzoneFare(leg);if(startAB)return startAB;
  if(!leg||leg.kind==='walk'||typeof leg.provider!=='string'||!leg.provider.trim())return null;
  const day=typeof leg.departure==='string'?leg.departure.slice(0,10):null;if(!day)return null;
+ // Certaines liaisons Cars Région Ain appliquent un tarif local TCL/RUBIS/Colibri ou 1 €.
+ // Les arrêts/segments exceptionnels ne sont pas tarifés par défaut tant que la zone
+ // et le parcours exact ne sont pas identifiés.
+ if(/^cars\\s*r[ée]gion\\s*ain$/i.test(leg.provider.trim())){
+  const line=String(leg.line||'').trim();
+  const stops=[leg.from,leg.to].map(s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase());
+  if(/^A32$/i.test(line)||stops.some(s=>/\\b(neyron|beligneux|crepieux|beynost|d om pierre|dompierre|lyon)\\b/.test(s)))return null;
+ }
  const matches=grids.filter(e=>valid(e)&&e.modes.includes(leg.mode)&&new RegExp(e.operatorPattern,'i').test(leg.provider.trim())&&
   day>=e.validFrom&&day<=e.validUntil&&
   !(typeof e.excludeLines==='string'&&new RegExp(e.excludeLines,'i').test(String(leg.line||'').trim()))&&
