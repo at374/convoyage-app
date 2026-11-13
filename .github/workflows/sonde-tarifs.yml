@@ -1,0 +1,26 @@
+name: Sonde des tarifs officiels (SNCF)
+# Lit les métadonnées des jeux « Tarifs TER » sur ressources.data.sncf.com (gratuit, sans clé) et publie
+# docs/SONDE-TARIFS-TER.md sur la branche. Aucun prix n'est intégré à l'application par ce workflow.
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/transports-aura-suisse]
+    paths: ['scripts/sonde_tarifs_ter.py','.github/workflows/sonde-tarifs.yml']
+permissions:
+  contents: write
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/sonde_tarifs_ter.py
+      - shell: bash
+        run: |
+          set -euo pipefail
+          git add docs/SONDE-TARIFS-TER.md
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Sonde des tarifs SNCF (serveur)'
+          for i in 1 2 3; do git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 10; done
