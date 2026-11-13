@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// v2 (13/11/2026) : SNCF en 3 recherches décalées, API suisse avec repli gare la plus proche.
 /* Convoyage Ultra — diagnostic RÉEL des transports sur les 8 axes, exécuté sur un serveur GitHub Actions (accès Internet).
  * Moteurs réellement interrogés : API suisse (transport.opendata.ch), Mobilités M, SNCF (fichiers officiels du dépôt),
  * GTFS officiels (data/gtfs + sources officielles), marche Valhalla (≈ 1 requête/s). TripGo seulement si CP_TRIPGO_KEY est fourni.

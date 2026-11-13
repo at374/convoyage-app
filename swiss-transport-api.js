@@ -97,6 +97,21 @@
     results.diagnostic = {...diagnostic};
     return results;
   }
-  root.CPSwissTransport={point,buildUrl,plan};
+  // Gare la plus proche d'une coordonnée, selon l'API elle-même (utile côté France : Annemasse, Thonon, Saint-Julien…).
+  async function nearestStation(p, fetcher) {
+    const lat = Number(p && p.lat), lon = Number(p && (p.lon == null ? p.lng : p.lon));
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+    const f = fetcher || root.fetch;
+    const url = 'https://transport.opendata.ch/v1/locations?' + new URLSearchParams({x: String(lat), y: String(lon), type: 'station'}).toString();
+    const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 10000);
+    try {
+      const r = await f(url, {signal: controller.signal, cache: 'no-store'});
+      if (!r.ok) return null;
+      const d = await r.json();
+      const st = (d && Array.isArray(d.stations) ? d.stations : []).find(x => x && x.id && x.name);
+      return st ? {id: String(st.id), name: st.name, point: coordinate(st)} : null;
+    } catch (_) { return null; } finally { clearTimeout(timer); }
+  }
+  root.CPSwissTransport={point,buildUrl,plan,nearestStation};
   if(typeof module!=='undefined' && module.exports) module.exports=root.CPSwissTransport;
 })(typeof window!=='undefined'?window:globalThis);

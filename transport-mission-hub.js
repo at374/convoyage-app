@@ -331,7 +331,12 @@ function makeProviders(r,opts={}){
  if(r.CPSwissTransport&&typeof r.CPSwissTransport.plan==='function')P.swiss={name:'Suisse',
   enabled:task=>inSwissArea(pt(task.from))||inSwissArea(pt(task.to)),disabledReason:'trajet hors zone suisse et Grand Genève',
   run:async task=>{const w=queryWindow(task);if(!w)return [];const f=pt(task.from),t=pt(task.to);
-   const res=await r.CPSwissTransport.plan({from:f,to:t,when:w.when,arriveBy:w.arriveBy,limit:8,fetcher});
+   let res=await r.CPSwissTransport.plan({from:f,to:t,when:w.when,arriveBy:w.arriveBy,limit:8,fetcher});
+   // Coordonnée non reconnue (fréquent côté France) : nouvelle recherche de gare à gare, gares choisies par l'API elle-même.
+   if((!res||!res.length)&&typeof r.CPSwissTransport.nearestStation==='function'){
+    const [a,b]=await Promise.all([r.CPSwissTransport.nearestStation(f,fetcher),r.CPSwissTransport.nearestStation(t,fetcher)]);
+    if(a&&b&&a.id!==b.id)res=await r.CPSwissTransport.plan({from:a.id,to:b.id,when:w.when,arriveBy:w.arriveBy,limit:8,fetcher});
+   }
    return fromSwiss(res);}};
  if(r.CPRegionalRouting&&typeof r.CPRegionalRouting.plan==='function')P.regional={name:'Mobilités M',
   enabled:task=>!!opts.regionalEndpoint||r.CPRegionalRouting.supportsPublic?.(pt(task.from),pt(task.to)),disabledReason:'hors agglomération grenobloise',
@@ -342,9 +347,18 @@ function makeProviders(r,opts={}){
  if(r.CPSncfFallback&&typeof r.CPSncfFallback.plan==='function')P.sncf={name:'SNCF',
   enabled:task=>!!(task.fromName||pt(task.from))&&!!(task.toName||pt(task.to)),disabledReason:'communes inconnues',
   run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
-   const answer=await r.CPSncfFallback.plan({from:{name:task.fromCity||'',point:pt(task.from)},to:{name:task.toCity||'',point:pt(task.to)},
-    when:w.when,arriveBy:w.arriveBy,limit:8,signal,fetcher});
-   return fromSNCF(answer);}};
+   // Trois recherches décalées (+0, +20, +60 min) puis un seul trajet par train de départ (le plus rapide) :
+   // évite 8 variantes du même premier train, souvent manqué à cause de la marche jusqu'à la gare.
+   const base=ms(w.when),offsets=w.arriveBy?[0,-20,-60]:[0,20,60];
+   const answers=await Promise.all(offsets.map(m=>r.CPSncfFallback.plan({from:{name:task.fromCity||'',point:pt(task.from)},to:{name:task.toCity||'',point:pt(task.to)},
+    when:new Date(base+m*60000).toISOString(),arriveBy:w.arriveBy,limit:10,signal,fetcher}).catch(()=>null)));
+   const best=new Map();
+   for(const a of answers.filter(Boolean))for(const it of a.itineraries||[]){
+    const k=(it.legs?.[0]?.tripId||'')+'|'+it.departure,old=best.get(k);
+    if(!old||Date.parse(it.arrival)<Date.parse(old.arrival))best.set(k,it);
+   }
+   const list=[...best.values()].sort((x,y)=>Date.parse(x.departure)-Date.parse(y.departure)).slice(0,10);
+   return fromSNCF({itineraries:list,sourceVersion:answers.find(Boolean)?.sourceVersion});}};
  return P;
 }
 
