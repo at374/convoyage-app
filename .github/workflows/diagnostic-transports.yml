@@ -400,6 +400,29 @@ jobs:
           assert(journeys.some(j=>j.legs[0].from==='Other'),'Different vehicle trip must remain');
           console.log('Local GTFS stop-pair deduplication OK');
           NODE
+      - name: Vérifier les fournisseurs GTFS régionaux dans les fiches mission
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const hub=require('./transport-mission-hub.js');
+          const loader=require('./transport-gtfs-loader.js');
+          const index=require('./transport-gtfs-index.js');
+          const providers=hub.makeProviders({
+            CPGTFSLoader:loader,CPGTFSIndex:index,location:{origin:'https://example.org'},
+            fetch:async()=>{throw new Error('No network needed for provider registration');}
+          });
+          for(const id of ['tac','synchro','tcl','cars_isere','cars_savoie','jybus','tam'])
+            assert(providers['local_'+id],'Missing mission-card regional GTFS provider '+id);
+          assert.equal(providers.local_tac.enabled({
+            from:{lat:46.1447,lon:6.0826},to:{lat:46.1362,lon:6.1328},
+            earliestDeparture:'2026-11-14T09:00:00+01:00'
+          }),true,'TAC should be enabled for Saint-Julien to Archamps');
+          assert.equal(providers.local_tac.enabled({
+            from:{lat:45.75,lon:4.85},to:{lat:45.76,lon:4.86},
+            earliestDeparture:'2026-11-14T09:00:00+01:00'
+          }),false,'TAC must not be offered in Lyon');
+          console.log('Seven regional GTFS mission-card providers registered and geographically scoped');
+          NODE
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
