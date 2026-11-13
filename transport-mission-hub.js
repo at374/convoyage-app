@@ -456,11 +456,23 @@ function makeProviders(r,opts={}){
      if(signal?.aborted)return [];
      const rows=r.CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,pt(task.from),pt(task.to),3000);
      const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
-     const filtered=rows.filter(x=>w.arriveBy?sec(x.arrival)<=sec(clock):sec(x.departure)>=sec(clock))
-      .slice(0,500).map(x=>({...x,network:name,
+     // Select the best boarding/alighting stop pair for each actual vehicle
+     // BEFORE imposing the mobile card limit. Otherwise 500 stop-pair variants
+     // from a few vehicles can hide later distinct departures.
+     const best=new Map();
+     for(const x of rows){
+      if(!(w.arriveBy?sec(x.arrival)<=sec(clock):sec(x.departure)>=sec(clock)))continue;
+      const key=String(x.tripId||'')+'|'+date;
+      const access=Number(x.accessDistanceMeters),egress=Number(x.egressDistanceMeters);
+      if(!key||!Number.isFinite(access)||!Number.isFinite(egress))continue;
+      const score=access+egress,previous=best.get(key);
+      if(!previous||score<previous.score)best.set(key,{x,score});
+     }
+     const filtered=[...best.values()].map(({x})=>({...x,network:name,
        departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)}))
-      .filter(x=>x.departure&&x.arrival);
-     return fromGTFS(filtered,name).slice(0,30);
+      .filter(x=>x.departure&&x.arrival)
+      .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)).slice(0,30);
+     return fromGTFS(filtered,name);
     }};
   }
  }
