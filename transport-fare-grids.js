@@ -38,6 +38,16 @@ const GRIDS=[
   validFrom:'2025-12-14',validUntil:'2026-12-12',
   source:'https://files.tac-mobilites.fr/s3fs-public/documents/Guide%20des%20tarifs%20MARS%202026%20VF%20%28DIGITAL%29.pdf',
   checkedAt:'2026-11-13',flat:true},
+ // Synchro Bus (Grand Chambéry) : délibération n° 080-25 C du 10/04/2025, « tarifs applicables à compter du
+ // 7 juillet 2025 » : ticket 1 voyage 1,40 €, valable 1 h correspondance comprise (1,70 € vendu à bord en espèces
+ // ou CB). Recherché le 13/11/2026 : aucune délibération de 2026 modifiant ce tarif n'a été trouvée (les actes de
+ // 2026 trouvés — lignes Montagne 20/12/2025, achat de bus 26/02/2026 — ne touchent pas le ticket 1 voyage de base).
+ // À revérifier si une révision « juillet 2026 » est publiée.
+ {network:'Synchro',operatorPattern:'^synchro\\b',modes:['Bus'],amount:1.40,currency:'EUR',
+  product:'1 voyage, 1 h correspondance comprise (1,70 € vendu à bord)',validityMinutes:60,
+  validFrom:'2025-07-07',validUntil:'2026-12-31',
+  source:'https://www.grandchambery.fr/fileadmin/mediatheque/Oxyad/DelmDec/indexdelm_20250410/Acte16655.pdf',
+  checkedAt:'2026-11-13',flat:true},
  // Exemple de format (NE PAS activer sans preuve) :
  // {network:'Exemple',operatorPattern:'^exemple$',modes:['Bus'],amount:0,currency:'EUR',product:'1 voyage',
  //  validFrom:'2026-01-01',validUntil:'2026-12-31',source:'https://www.sibra.fr/…',checkedAt:'2026-11-13',flat:true}
