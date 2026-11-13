@@ -335,8 +335,8 @@ function queryWindow(task){
 function makeProviders(r,opts={}){
  const fetcher=opts.fetcher||((...a)=>r.fetch(...a));
  const P={};
- if(r.CPTripGo&&typeof r.CPTripGo.plan==='function')P.tripgo={name:'TripGo',enabled:()=>{try{return !!r.CPTripGo.getKey();}catch(_){return false;}},
-  disabledReason:'clé TripGo absente (Réglages → Transports)',
+ if(r.CPTripGo&&typeof r.CPTripGo.plan==='function')P.tripgo={name:'TripGo',enabled:()=>{try{return opts.allowTripGo===true&&!!r.CPTripGo.getKey();}catch(_){return false;}},
+  disabledReason:'TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)',
   run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
    const deadline=ms(task.latestArrival);
    const answer=await r.CPTripGo.plan({from:pt(task.from),to:pt(task.to),when:w.when,arriveBy:w.arriveBy,signal,fetcher,
