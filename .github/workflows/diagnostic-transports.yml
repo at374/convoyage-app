@@ -104,6 +104,19 @@ jobs:
           node <<'NODE'
           const assert=require('node:assert/strict');
           const hub=require('./transport-mission-hub.js');
+          const nationalRow={operator:'sncf',date:'2026-11-16',line:'TER',
+            departure:'24:30:00',arrival:'25:10:00',
+            originStop:{name:'Annecy',lat:45.901,lon:6.121},
+            destinationStop:{name:'Lyon',lat:45.761,lon:4.861}};
+          const converted=hub.fromNationalGTFS([nationalRow],'sncf');
+          assert.equal(converted.length,1);
+          assert.equal(converted[0].legs[0].departure,'2026-11-16T23:30:00.000Z');
+          assert.equal(converted[0].legs[0].arrival,'2026-11-17T00:10:00.000Z');
+          assert.equal(converted[0].legs[0].fromPoint.lat,45.901);
+          assert.ok(converted[0].missing.some(x=>x.includes('non confirmé')));
+          const summer=hub.fromNationalGTFS([{...nationalRow,date:'2026-07-16',departure:'08:00',arrival:'10:00'}],'sncf');
+          assert.equal(summer[0].legs[0].departure,'2026-07-16T06:00:00.000Z');
+          assert.equal(hub.fromNationalGTFS([nationalRow],'flixbus').length,0);
           const stop={lat:45.901,lon:6.121};
           const arrival={lat:45.761,lon:4.861};
           const journey={source:'national-gtfs',missing:['horaire GTFS non confirmé en temps réel'],
