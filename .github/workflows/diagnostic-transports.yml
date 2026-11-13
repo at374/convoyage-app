@@ -15,6 +15,7 @@ on:
       - 'transport-gtfs-agenda.js'
       - 'transport-catalogue.js'
       - 'transport-national-gtfs-journeys.js'
+      - 'scripts/build_national_gtfs_aura.py'
       - 'scripts/audit-national-operators.cjs'
 permissions:
   contents: write
@@ -41,6 +42,10 @@ jobs:
           path: docs/audit-national-operators.json
           if-no-files-found: warn
           retention-days: 14
+      - name: Vérifier le découpage national GTFS côté serveur
+        run: |
+          python3 -m py_compile scripts/build_national_gtfs_aura.py
+          python3 scripts/build_national_gtfs_aura.py --help >/dev/null
       - name: Tester les trajets nationaux GTFS sans prix inventés
         run: |
           node --check transport-national-gtfs-journeys.js
