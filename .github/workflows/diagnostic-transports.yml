@@ -57,6 +57,7 @@ jobs:
           assert.equal(isere.evidenceFromStops({stopIds:['stopA','stopB','stopD'],stopZones:zoneMap,source:'https://www.laregionvoustransporte.fr/'}),null,'Trajet incomplet non certifié');
           assert.equal(isere.evidenceFromStops({stopIds:['stopA','stopUnknown','stopD'],stopZones:zoneMap,source:'https://www.laregionvoustransporte.fr/',complete:true}),null,'Arrêt sans zone : pas de tarif');
           assert.equal(isere.evidenceFromStops({stopIds:['stopA','stopB'],stopZones:zoneMap,source:'non vérifié',complete:true}),null,'Source officielle obligatoire');
+          assert.equal(isere.evidenceFromStops({stopIds:['stopA','stopB'],stopZones:zoneMap,source:'https://example.org/pretendue-grille',complete:true}),null,'Une URL arbitraire ne prouve pas les zones');
 
           assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00',profile:'eco',zoneEvidence}),null,'Éco interdit sans justificatif');
           assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00',profile:'eco',ecoEligible:true,zoneEvidence})?.amount,5.60,'Éco moins de 26 ans confirmé');
