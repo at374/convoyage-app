@@ -119,6 +119,12 @@ jobs:
           for(let i=1;i<deps.length;i++)assert.ok(scripts.indexOf(deps[i-1])<scripts.indexOf(deps[i]),
             'National GTFS browser dependency order incorrect: '+deps[i]);
           console.log('National GTFS browser scripts and dependency order OK');
+          for(const [operator,file] of [['sncf','national-sncf-aura.zip'],
+            ['blablacarBus','national-blablacarBus-aura.zip'],['flixbus','national-flixbus-aura.zip']]){
+            assert.ok(fs.statSync('data/gtfs/'+file).size>0,'Missing published national feed '+operator);
+            assert.ok(html.includes('data/gtfs/'+file),'Missing configured national feed '+operator);
+          }
+          console.log('All three published national AURA archives configured in browser');
           const app=fs.readFileSync('app.js','utf8');
           assert.match(app,/nationalGTFSResources:\s*window\.CP_NATIONAL_GTFS_RESOURCES\s*\|\|\s*\{\}/,
             'Mission cards must pass national GTFS resources to the hub');
