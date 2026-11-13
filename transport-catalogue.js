@@ -125,8 +125,8 @@ function nationalOperatorGTFS(datasets){
  const rows=Array.isArray(datasets)?datasets:[];
  const result={};
  for(const [operator,pattern] of Object.entries(NATIONAL_OPERATORS)){
-  result[operator]=gtfsResources(rows.filter(d=>pattern.test(String(d.name||''))||
-   (Array.isArray(d.resources)&&d.resources.some(r=>r?.format==='GTFS'&&pattern.test(String(r.name||''))))))
+  result[operator]=gtfsResources(rows.map(d=>({ ...d,resources:(Array.isArray(d.resources)?d.resources:[])
+   .filter(r=>pattern.test(String(d.name||''))||pattern.test(String(r?.name||''))) })))
    .filter(r=>/^https:\/\//i.test(r.url))
    .map(r=>({...r,operator,providesLiveFares:false,providesSeatAvailability:false,
      timetableOnly:true,requiresServerSideIndex:operator==='flixbus'||operator==='sncf'}));
