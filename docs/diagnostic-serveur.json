@@ -1,5 +1,5 @@
 {
- "at": "2026-11-13T09:58:08.770Z",
+ "at": "2026-11-13T10:00:02.938Z",
  "when": "2026-11-16T08:00:00+01:00",
  "source": "diagnostic serveur (GitHub Actions)",
  "tripgo": false,
@@ -11,8 +11,8 @@
    "priced": 0,
    "walked": 22,
    "feasible": 22,
-   "firstResultMs": 370,
-   "totalMs": 6784,
+   "firstResultMs": 330,
+   "totalMs": 5947,
    "received": {
     "SNCF": 6,
     "Suisse": 8,
@@ -73,24 +73,23 @@
   {
    "id": "annemasse-stjulien",
    "name": "Annemasse → Saint-Julien-en-Genevois",
-   "trips": 44,
+   "trips": 52,
    "priced": 0,
-   "walked": 12,
-   "feasible": 4,
-   "firstResultMs": 199,
-   "totalMs": 5498,
+   "walked": 20,
+   "feasible": 12,
+   "firstResultMs": 180,
+   "totalMs": 11303,
    "received": {
     "SNCF": 4,
-    "GTFS local": 40
+    "GTFS local": 40,
+    "Suisse": 8
    },
    "reasons": {
     "départ avant la fin de la mission précédente": 8,
     "marches non calculées (quota de la fiche)": 32
    },
    "engines": {
-    "errors": {
-     "Suisse": "fetch failed"
-    },
+    "errors": {},
     "skipped": {
      "TripGo": "clé TripGo absente (Réglages → Transports)",
      "Mobilités M": "hors agglomération grenobloise"
@@ -102,12 +101,16 @@
     }
    },
    "sources": [
+    "Suisse (transport.opendata.ch)",
     "SNCF (GTFS officiel)",
     "TAC Annemasse (GTFS)"
    ],
    "networksSeen": [
     "ter",
+    "tpg",
+    "tpg-fr",
     "lex",
+    "cff",
     "tac"
    ],
    "expected": [
@@ -115,21 +118,20 @@
     "lex",
     "tpg-fr"
    ],
-   "missingExpected": [
-    "tpg-fr"
-   ],
+   "missingExpected": [],
    "examples": [
     {
      "labels": [
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:30:00.000Z",
-     "arr": "2026-11-16T08:26:26.357Z",
+     "dep": "2026-11-16T08:06:00.000Z",
+     "arr": "2026-11-16T08:31:41.584Z",
      "legs": [
-      "SNCF C33",
-      "SNCF C33",
-      "marche 631 m"
+      "SNCF TER C33",
+      "marche 415 m",
+      "TPG B 80",
+      "marche 230 m"
      ],
      "price": "Prix à confirmer",
      "status": "Réalisable",
@@ -144,8 +146,8 @@
    "priced": 0,
    "walked": 8,
    "feasible": 3,
-   "firstResultMs": 112,
-   "totalMs": 3557,
+   "firstResultMs": 176,
+   "totalMs": 3559,
    "received": {
     "GTFS local": 0,
     "SNCF": 10
@@ -205,8 +207,8 @@
    "priced": 0,
    "walked": 14,
    "feasible": 13,
-   "firstResultMs": 80,
-   "totalMs": 6680,
+   "firstResultMs": 90,
+   "totalMs": 6564,
    "received": {
     "SNCF": 10,
     "GTFS local": 6
@@ -269,8 +271,8 @@
    "priced": 5,
    "walked": 12,
    "feasible": 12,
-   "firstResultMs": 64,
-   "totalMs": 8693,
+   "firstResultMs": 58,
+   "totalMs": 5600,
    "received": {
     "SNCF": 7,
     "Mobilités M": 5,
@@ -331,7 +333,7 @@
    "walked": 8,
    "feasible": 7,
    "firstResultMs": 92,
-   "totalMs": 6755,
+   "totalMs": 4588,
    "received": {
     "SNCF": 7,
     "GTFS local": 1
@@ -411,7 +413,7 @@
    "walked": 15,
    "feasible": 8,
    "firstResultMs": 109,
-   "totalMs": 9043,
+   "totalMs": 9048,
    "received": {
     "GTFS local": 0,
     "SNCF": 9,
@@ -477,8 +479,8 @@
    "priced": 0,
    "walked": 18,
    "feasible": 18,
-   "firstResultMs": 247,
-   "totalMs": 5274,
+   "firstResultMs": 239,
+   "totalMs": 5264,
    "received": {
     "GTFS local": 8,
     "SNCF": 7,
@@ -533,10 +535,10 @@
  ],
  "networks": {
   "ter": {
-   "trips": 59,
+   "trips": 60,
    "priced": 0,
-   "walked": 54,
-   "at": "2026-11-13T09:58:08.770Z",
+   "walked": 55,
+   "at": "2026-11-13T10:00:02.938Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -553,7 +555,7 @@
    "trips": 16,
    "priced": 0,
    "walked": 15,
-   "at": "2026-11-13T09:58:08.770Z",
+   "at": "2026-11-13T10:00:02.938Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -562,12 +564,13 @@
    "source": "serveur"
   },
   "cff": {
-   "trips": 5,
+   "trips": 11,
    "priced": 0,
-   "walked": 5,
-   "at": "2026-11-13T09:58:08.770Z",
+   "walked": 11,
+   "at": "2026-11-13T10:00:02.938Z",
    "axes": [
     "annecy-geneve",
+    "annemasse-stjulien",
     "thonon-geneve"
    ],
    "source": "serveur"
@@ -576,17 +579,39 @@
    "trips": 16,
    "priced": 0,
    "walked": 8,
-   "at": "2026-11-13T09:58:08.770Z",
+   "at": "2026-11-13T10:00:02.938Z",
    "axes": [
     "annecy-geneve"
    ],
    "source": "serveur"
   },
-  "tac": {
-   "trips": 40,
+  "tpg": {
+   "trips": 8,
    "priced": 0,
-   "walked": 8,
-   "at": "2026-11-13T09:58:08.770Z",
+   "walked": 7,
+   "at": "2026-11-13T10:00:02.938Z",
+   "axes": [
+    "annemasse-stjulien",
+    "thonon-geneve"
+   ],
+   "source": "serveur"
+  },
+  "tpg-fr": {
+   "trips": 8,
+   "priced": 0,
+   "walked": 7,
+   "at": "2026-11-13T10:00:02.938Z",
+   "axes": [
+    "annemasse-stjulien",
+    "thonon-geneve"
+   ],
+   "source": "serveur"
+  },
+  "tac": {
+   "trips": 41,
+   "priced": 0,
+   "walked": 9,
+   "at": "2026-11-13T10:00:02.938Z",
    "axes": [
     "annemasse-stjulien"
    ],
@@ -596,7 +621,7 @@
    "trips": 6,
    "priced": 0,
    "walked": 6,
-   "at": "2026-11-13T09:58:08.770Z",
+   "at": "2026-11-13T10:00:02.938Z",
    "axes": [
     "chambery-aix"
    ],
@@ -606,7 +631,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-13T09:58:08.770Z",
+   "at": "2026-11-13T10:00:02.938Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -616,7 +641,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-13T09:58:08.770Z",
+   "at": "2026-11-13T10:00:02.938Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -626,29 +651,9 @@
    "trips": 1,
    "priced": 1,
    "walked": 1,
-   "at": "2026-11-13T09:58:08.770Z",
+   "at": "2026-11-13T10:00:02.938Z",
    "axes": [
     "rumilly-annecy"
-   ],
-   "source": "serveur"
-  },
-  "tpg": {
-   "trips": 1,
-   "priced": 0,
-   "walked": 0,
-   "at": "2026-11-13T09:58:08.770Z",
-   "axes": [
-    "thonon-geneve"
-   ],
-   "source": "serveur"
-  },
-  "tpg-fr": {
-   "trips": 1,
-   "priced": 0,
-   "walked": 0,
-   "at": "2026-11-13T09:58:08.770Z",
-   "axes": [
-    "thonon-geneve"
    ],
    "source": "serveur"
   },
@@ -656,7 +661,7 @@
    "trips": 8,
    "priced": 0,
    "walked": 8,
-   "at": "2026-11-13T09:58:08.770Z",
+   "at": "2026-11-13T10:00:02.938Z",
    "axes": [
     "voiron-grenoble"
    ],
@@ -664,10 +669,10 @@
   }
  },
  "router": {
-  "hits": 116,
-  "misses": 38,
-  "stored": 38,
-  "requests": 38,
+  "hits": 127,
+  "misses": 43,
+  "stored": 43,
+  "requests": 43,
   "failures": 0,
   "queued": 0,
   "disposed": false

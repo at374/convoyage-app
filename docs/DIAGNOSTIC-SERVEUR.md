@@ -1,15 +1,15 @@
 # Diagnostic réel des transports — serveur GitHub Actions
 
-Exécuté le 2026-11-13T09:58:08.770Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : non (pas de clé).
+Exécuté le 2026-11-13T10:00:02.938Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : non (pas de clé).
 
 | Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | 1er résultat | Total | Sources | Erreurs | Attendus non vus |
 |---|---|---|---|---|---|---|---|---|---|
-| Annecy → Genève | 30 | 0 | 22 | 22 | 0.4 s | 6.8 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | — | longue |
-| Annemasse → Saint-Julien-en-Genevois | 44 | 0 | 12 | 4 | 0.2 s | 5.5 s | SNCF (GTFS officiel), TAC Annemasse (GTFS) | Suisse : fetch failed | tpg-fr |
-| Ambérieu-en-Bugey → Lyon Part-Dieu | 10 | 0 | 8 | 3 | 0.1 s | 3.6 s | SNCF (GTFS officiel) | — | cars-01, tcl |
-| Chambéry → Aix-les-Bains | 16 | 0 | 14 | 13 | 0.1 s | 6.7 s | SNCF (GTFS officiel), Synchro Bus Chambéry (GTFS) | — | ondea |
-| Grenoble → Crolles | 12 | 5 | 12 | 12 | 0.1 s | 8.7 s | Mobilités M, SNCF (GTFS officiel) | — | — |
-| Rumilly → Annecy | 8 | 1 | 8 | 7 | 0.1 s | 6.8 s | Sibra (GTFS), SNCF (GTFS officiel) | — | jybus, cars-74 |
+| Annecy → Genève | 30 | 0 | 22 | 22 | 0.3 s | 5.9 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | — | longue |
+| Annemasse → Saint-Julien-en-Genevois | 52 | 0 | 20 | 12 | 0.2 s | 11.3 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), TAC Annemasse (GTFS) | — | — |
+| Ambérieu-en-Bugey → Lyon Part-Dieu | 10 | 0 | 8 | 3 | 0.2 s | 3.6 s | SNCF (GTFS officiel) | — | cars-01, tcl |
+| Chambéry → Aix-les-Bains | 16 | 0 | 14 | 13 | 0.1 s | 6.6 s | SNCF (GTFS officiel), Synchro Bus Chambéry (GTFS) | — | ondea |
+| Grenoble → Crolles | 12 | 5 | 12 | 12 | 0.1 s | 5.6 s | Mobilités M, SNCF (GTFS officiel) | — | — |
+| Rumilly → Annecy | 8 | 1 | 8 | 7 | 0.1 s | 4.6 s | Sibra (GTFS), SNCF (GTFS officiel) | — | jybus, cars-74 |
 | Thonon-les-Bains → Genève | 17 | 0 | 15 | 8 | 0.1 s | 9.0 s | SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | start |
 | Voiron → Grenoble | 18 | 0 | 18 | 18 | 0.2 s | 5.3 s | SNCF (GTFS officiel), Mobilités M, Cars Région Isère (GTFS) | — | mreso-voironnais |
 
@@ -19,7 +19,7 @@ Exemples (3 meilleures propositions par axe) :
 - Meilleur compromis · Plus rapide : 2026-11-16T07:42:52.518Z → 2026-11-16T09:13:00.000Z · marche 93 m › SNCF TER L2 · Prix à confirmer · Réalisable
 
 **Annemasse → Saint-Julien-en-Genevois**
-- Meilleur compromis · Plus rapide : 2026-11-16T07:30:00.000Z → 2026-11-16T08:26:26.357Z · SNCF C33 › SNCF C33 › marche 631 m · Prix à confirmer · Réalisable
+- Meilleur compromis · Plus rapide : 2026-11-16T08:06:00.000Z → 2026-11-16T08:31:41.584Z · SNCF TER C33 › marche 415 m › TPG B 80 › marche 230 m · Prix à confirmer · Réalisable
 
 **Ambérieu-en-Bugey → Lyon Part-Dieu**
 - Meilleur compromis · Plus rapide : 2026-11-16T07:12:26.785Z → 2026-11-16T07:52:00.000Z · marche 1346 m › SNCF K23 · Prix à confirmer · Réalisable
