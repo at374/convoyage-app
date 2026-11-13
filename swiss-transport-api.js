@@ -59,6 +59,18 @@
     // Diagnostic is local to the browser and never includes user GPS or addresses.
     diagnostic.received = data.connections.length;
     // Bound client-side processing even if the upstream API ignores the requested limit.
+    // Départ depuis une coordonnée : l'API commence par une section à pied et laisse parfois from.departure / to.arrival vides.
+    // On reprend alors l'heure de la première (ou dernière) section réellement datée, sans rien inventer.
+    const sectionTime = (c, first) => {
+      const list = Array.isArray(c && c.sections) ? (first ? c.sections : [...c.sections].reverse()) : [];
+      for (const s of list) { const v = first ? s && s.departure && s.departure.departure : s && s.arrival && s.arrival.arrival; if (v && Number.isFinite(Date.parse(v))) return v; }
+      return null;
+    };
+    for (const c of data.connections.slice(0, 100)) {
+      if (!c || !c.from || !c.to) continue;
+      if (!Number.isFinite(Date.parse(c.from.departure))) c.from.departure = sectionTime(c, true);
+      if (!Number.isFinite(Date.parse(c.to.arrival))) c.to.arrival = sectionTime(c, false);
+    }
     const validConnections = data.connections.slice(0, 100).filter(c => c && c.from && c.to && Number.isFinite(Date.parse(c.from.departure)) && Number.isFinite(Date.parse(c.to.arrival)) && Date.parse(c.to.arrival) >= Date.parse(c.from.departure));
     diagnostic.valid = validConnections.length;
     diagnostic.status = 'success';

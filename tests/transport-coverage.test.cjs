@@ -52,3 +52,10 @@ test('diagnostic : moteurs réels simulés ici → rapport chiffré par axe, ré
  assert.equal(C.inventory(storage).rows.find(r=>r.id==='mreso-metro').state,'Validé en réel');
  assert.match(C.reportText(report,C.inventory(storage)),/Grenoble → Crolles : 1 trajet\(s\), 1 avec prix vérifié/);
 });
+
+test('attribution resserrée : cars régionaux par département, Léman Express dans les horaires SNCF',()=>{
+ const j=(provider,line)=>({legs:[{kind:'transit',provider,line}],price:{status:'unknown'},reasons:[]});
+ const a=C.attribute([j('Cars Région Haute-Savoie','Y51'),j('Cars Région Isère','T50'),j('SNCF','L2 12345'),j('SNCF','K23 17501')]);
+ assert.ok(a['cars-74']);assert.ok(a['cars-38']);assert.equal(a['cars-01'],undefined,'ni Haute-Savoie ni Isère ne valident l’Ain');
+ assert.equal(a.lex.trips,1,'L2 = Léman Express');assert.equal(a.ter.trips,1,'K23 = TER');
+});

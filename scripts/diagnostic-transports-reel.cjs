@@ -69,10 +69,12 @@ async function gtfsRows(axis,when){
   const walkedOk=j=>!(j.reasons||[]).some(r=>/marche|non calculée|quota|en cours/.test(r));
   const a={id:axis.id,name:axis.name,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,walked:all.filter(walkedOk).length,
    feasible:all.filter(j=>j.feasible).length,firstResultMs:firstAt,totalMs:Date.now()-started,
+   received:v.received,
+   reasons:all.flatMap(j=>j.reasons||[]).reduce((m,r)=>{const k=r.replace(/\d+/g,'n').slice(0,70);m[k]=(m[k]||0)+1;return m;},{}),
    engines:{errors:{...v.errors,...Object.fromEntries(Object.entries(gt.errors).map(([k,e])=>['GTFS '+k,e]))},skipped:v.skipped,gtfs:gt.networks},
    sources:[...new Set(all.flatMap(j=>j.sources))],networksSeen:Object.keys(nets),expected:axis.expect,missingExpected:axis.expect.filter(id=>!nets[id]),
    examples:v.picks.slice(0,3).map(p=>({labels:p.labels,dep:p.journey.departure,arr:p.journey.arrival,legs:p.journey.legs.map(l=>(l.kind==='walk'?'marche '+Math.round(l.distanceMeters||0)+' m':(l.provider||'')+' '+(l.line||''))),price:p.journey.price.label,status:p.journey.status,detail:p.journey.statusDetail}))};
-  report.axes.push(a);console.log(JSON.stringify({axe:a.name,trajets:a.trips,prix:a.priced,marches:a.walked,realisables:a.feasible,sources:a.sources,erreurs:a.engines.errors}));
+  report.axes.push(a);console.log(JSON.stringify({axe:a.name,trajets:a.trips,prix:a.priced,marches:a.walked,realisables:a.feasible,recus:a.received,raisons:a.reasons,sources:a.sources,erreurs:a.engines.errors}));
  }
  report.router=router.stats?router.stats():null;
  fs.writeFileSync(path.join(ROOT,'docs','diagnostic-serveur.json'),JSON.stringify(report,null,1));

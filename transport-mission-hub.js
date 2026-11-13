@@ -352,9 +352,10 @@ function makeProviders(r,opts={}){
 function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm=3,timeoutMs=25000,onUpdate=()=>{}}={}){
  const state={},controller=new AbortController();let disposed=false;
  const emit=label=>{if(!disposed)try{onUpdate(label,view(label));}catch(_){}};
- function view(label){const s=state[label];return {task:s.task,...rank(s.items),pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},done:s.pending===0};}
+ function view(label){const s=state[label];return {task:s.task,...rank(s.items),pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},done:s.pending===0};}
  async function add(label,source,journeys){
   const s=state[label];if(!s||disposed)return;
+  s.received[source]=(s.received[source]||0)+(Array.isArray(journeys)?journeys.length:0);
   const cancelled=x=>x&&(x.cancelled===true||x.canceled===true||/^(cancelled|canceled|annul)/i.test(String(x.status||'')));
   const clean=(Array.isArray(journeys)?journeys:[]).filter(j=>j&&!cancelled(j)&&Array.isArray(j.legs)&&j.legs.length&&
    !j.legs.some(l=>cancelled(l)||BOATS.test(l.mode+' '+(l.line||''))));
@@ -399,7 +400,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   if(!disposed)emit(label);
  }
  for(const task of tasks){
-  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},bySignature:new Map()};
+  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},bySignature:new Map()};
   if(!pt(task.from)||!pt(task.to)){state[label].errors.adresses='adresse GPS manquante';emit(label);continue;}
   for(const [key,p] of Object.entries(providers)){
    let ok=false;try{ok=p.enabled(task);}catch(_){}
