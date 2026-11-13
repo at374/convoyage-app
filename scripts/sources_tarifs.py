@@ -23,6 +23,12 @@ SOURCES=[
  ('unireso-tarifs','https://www.unireso.com/tarifs/'),
  ('tac-guide-mars-2026','https://files.tac-mobilites.fr/s3fs-public/documents/Guide%20des%20tarifs%20MARS%202026%20VF%20%28DIGITAL%29.pdf?VersionId=McKSvZWPOy..TYAJBCybXvxs5qGmyzqj'),
  ('tac-guide-page','https://www.tac-mobilites.fr/nos-tarifs/guide-des-tarifs'),
+ ('synchro-tarifs','https://synchro.grandchambery.fr/tarifs-et-abonnements-bus/'),
+ ('synchro-delib-2025','https://www.grandchambery.fr/fileadmin/mediatheque/Oxyad/DelmDec/indexdelm_20250410/Acte16655.pdf'),
+ ('jacquet-fr-fr','https://jacquet-autocars.com/wp-content/uploads/2025/11/Grille-tarifaire-FR-FR-2025-2026.pdf'),
+ ('jybus-accueil','https://www.jybus.fr/'),
+ ('jybus-tarifs','https://www.jybus.fr/tarifs/'),
+ ('tam-ville','https://www.ville-amberieuenbugey.fr/-Reseau-TAM'),
  ('cars-isere-tarifs','https://carsisere.auvergnerhonealpes.fr/en/fares-amp-payments/75/the-rates/14'),
 ]
 OUT='docs/sources-tarifs'; os.makedirs(OUT,exist_ok=True)
