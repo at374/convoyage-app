@@ -155,13 +155,19 @@ function fromNationalGTFS(rows,operator){
  };
  return (Array.isArray(rows)?rows:[]).filter(r=>r&&r.operator===operator).map(r=>{
   const a=r.originStop,b=r.destinationStop;
-  const transit=leg({mode:operator==='sncf'?'Train':'Car',provider:names[operator],line:r.line,
-   from:a?.name||a?.stop_name||'',to:b?.name||b?.stop_name||'',
-   fromPoint:{lat:a?.lat??a?.stop_lat,lon:a?.lon??a?.stop_lon},
-   toPoint:{lat:b?.lat??b?.stop_lat,lon:b?.lon??b?.stop_lon},
-   departure:localTime(r.date,r.departure),arrival:localTime(r.date,r.arrival)});
-  return {...journey(names[operator]+' (GTFS)',[transit]),
-   missing:['horaire GTFS non confirmé en temps réel','prix commercial et disponibilité non vérifiés']};
+  const point=s=>({lat:s?.lat??s?.stop_lat,lon:s?.lon??s?.stop_lon});
+  const makeLeg=(from,to,line,departure,arrival)=>leg({mode:operator==='sncf'?'Train':'Car',
+   provider:names[operator],line,from:from?.name||from?.stop_name||'',
+   to:to?.name||to?.stop_name||'',fromPoint:point(from),toPoint:point(to),
+   departure:localTime(r.date,departure),arrival:localTime(r.date,arrival)});
+  const transit=Array.isArray(r.legs)&&r.legs.length===2&&r.transferStop?
+   [makeLeg(a,r.transferStop,r.legs[0].line,r.legs[0].departure,r.legs[0].arrival),
+    makeLeg(r.transferStop,b,r.legs[1].line,r.legs[1].departure,r.legs[1].arrival)]:
+   [makeLeg(a,b,r.line,r.departure,r.arrival)];
+  return {...journey(names[operator]+' (GTFS)',transit),
+   missing:['horaire GTFS non confirmé en temps réel','prix commercial et disponibilité non vérifiés',
+    ...(transit.length>1?['correspondance GTFS non confirmée']:[]),
+    ...(r.searchTruncated?['recherche des correspondances incomplète']:[])]};
  }).filter(j=>j.legs[0].departure&&j.legs[0].arrival);
 }
 
@@ -386,7 +392,7 @@ function makeProviders(r,opts={}){
      const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
      const date=p.year+'-'+p.month+'-'+p.day;
      const clock=p.hour+':'+p.minute+':00';
-     const base={operator,resource:{...resource,format:'GTFS'},fetcher,signal,from:pt(task.from),to:pt(task.to),maxResults:20};
+     const base={operator,resource:{...resource,format:'GTFS'},fetcher,signal,from:pt(task.from),to:pt(task.to),maxResults:20,includeTransfers:true};
      const result=await r.CPNationalGTFSJourneys.loadAndSearch({
       ...base,date,...(window.arriveBy?{latestArrival:clock}:{earliestDeparture:clock})});
      let rows=result.journeys||[];
