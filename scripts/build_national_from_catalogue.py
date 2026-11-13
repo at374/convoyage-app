@@ -52,6 +52,13 @@ def main():
         if not isinstance(feeds, list):
             report['results'][operator] = {'status': 'invalid-audit', 'attempts': 0, 'errors': ['Feeds must be an array']}
             continue
+        # Prefer the national SNCF feed over Transilien, Bretagne or local shuttles.
+        # Catalogue ordering is not a reliable indication of geographic scope.
+        if operator == 'sncf':
+            feeds = sorted(feeds, key=lambda feed: (
+                0 if isinstance(feed, dict) and
+                'Export_OpenData_SNCF_GTFS_NewTripId.zip' in str(feed.get('url', ''))
+                else 1))
         errors = []
         for feed in feeds:
             if not isinstance(feed, dict):
