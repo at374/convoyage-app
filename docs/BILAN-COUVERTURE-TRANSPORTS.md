@@ -1,46 +1,47 @@
 # Bilan chiffré de couverture — transports AURA–Suisse
 
 Généré le 2026-11-13 par `scripts/bilan-couverture-transports.cjs` à partir de `transport-coverage.js`.
-**Aucun diagnostic réel n’a encore été lancé** : aucun réseau n’est donc « Validé en réel ».
+Diagnostic réel serveur du 2026-11-13T09:52:43.584Z (départs 2026-11-16T08:00:00+01:00, TripGo : non) intégré : « Validé en réel » = trajets réels obtenus par le serveur ; la validation sur téléphone reste à faire.
 
 ## Synthèse par zone (dénominateur = réseaux identifiés dans la zone)
 
 | Zone | Périmètre de l’inventaire | Identifiés | Raccordés | Validés en réel | Prix vérifiés | Prix partiels | Restant à terminer |
 |---|---|---|---|---|---|---|---|
-| AURA | réseaux des zones de mission (Savoies, Isère, Ain, Lyon) | 17 | 16 (94 %) | 0 (0 %) | 3 (18 %) | 3 | 17 |
+| AURA | réseaux des zones de mission (Savoies, Isère, Ain, Lyon) | 17 | 16 (94 %) | 9 (53 %) | 3 (18 %) | 3 | 15 |
 | Suisse | Genève et frontière seulement | 2 | 2 (100 %) | 0 (0 %) | 0 (0 %) | 0 | 2 |
 | Transfrontalier | Grand Genève | 3 | 2 (67 %) | 0 (0 %) | 0 (0 %) | 0 | 3 |
 | TAD | services repérés seulement | 3 | 0 (0 %) | 0 (0 %) | 0 (0 %) | 2 | 3 |
-| **Total** | — | 25 | 20 (80 %) | 0 (0 %) | 3 (12 %) | — | **25** |
+| **Total** | — | 25 | 20 (80 %) | 9 (36 %) | 3 (12 %) | — | **23** |
 
 « Raccordé » = une source officielle est branchée (pas une validation). La présence possible d’un opérateur dans TripGo n’est **jamais** comptée comme raccordement.
 
 ## États
 
-- Testé sur données enregistrées : 14 réseau(x)
-- Partiellement raccordé : 6 réseau(x)
+- Validé en réel : 9 réseau(x)
+- Testé sur données enregistrées : 6 réseau(x)
+- Partiellement raccordé : 5 réseau(x)
 - Non raccordé : 5 réseau(x)
 
 ## Détail réseau par réseau
 
 | Réseau | Zone | Couverture | Horaires | Tarifs | Marche | Dernier contrôle | Blocage | Prochaine action |
 |---|---|---|---|---|---|---|---|---|
-| Sibra (Grand Annecy) | AURA | Testé sur données enregistrées | enregistrés | vérifiés | calculée (données enregistrées) | 2026-11-13 · CGV Sibra 01/07/2026 | Aucun bloquant connu | Lancer le diagnostic téléphone (axe Rumilly → Annecy) |
-| TAC / Genevois français Mobilités (Annemasse, Saint-Julien, Archamps) | AURA | Testé sur données enregistrées | enregistrés | manquants | calculée (données enregistrées) | 2026-11-13 · GTFS TAC (transport.data.gouv) | Aucune grille tarifaire officielle 2026 trouvée en ligne ; copie servie par le site prévue (tâche serveur), source d’origine en secours | Diagnostic téléphone (Annemasse → Saint-Julien) ; photo de la grille TAC 2026 |
-| Synchro Bus (Chambéry) | AURA | Testé sur données enregistrées | enregistrés | manquants | calculée (données enregistrées) | 2026-11-13 · page tickets + CGV 02/07/2026 | Grille 2026 ambiguë (1,40 € sur la page tickets, 1,70 € dans les CGV) | Photo de la grille Synchro en vigueur ; diagnostic Chambéry → Aix |
+| Sibra (Grand Annecy) | AURA | Validé en réel | réels | vérifiés | calculée (réel) | 2026-11-13T09:52:43.584Z · diagnostic téléphone | Aucun bloquant connu | Lancer le diagnostic téléphone (axe Rumilly → Annecy) |
+| TAC / Genevois français Mobilités (Annemasse, Saint-Julien, Archamps) | AURA | Validé en réel | réels | manquants | calculée (réel) | 2026-11-13T09:52:43.584Z · diagnostic téléphone | Aucune grille tarifaire officielle 2026 trouvée en ligne ; copie servie par le site prévue (tâche serveur), source d’origine en secours | Diagnostic téléphone (Annemasse → Saint-Julien) ; photo de la grille TAC 2026 |
+| Synchro Bus (Chambéry) | AURA | Validé en réel | réels | manquants | calculée (réel) | 2026-11-13T09:52:43.584Z · diagnostic téléphone | Grille 2026 ambiguë (1,40 € sur la page tickets, 1,70 € dans les CGV) | Photo de la grille Synchro en vigueur ; diagnostic Chambéry → Aix |
 | Ondéa Grand Lac (Aix-les-Bains) | AURA | Testé sur données enregistrées | enregistrés | vérifiés | calculée (données enregistrées) | 2026-11-13 · ondeagrandlac.fr (01/07/2026) | GTFS jamais chargé en réel | Diagnostic téléphone (Chambéry → Aix) |
 | Star't (Thonon) | AURA | Testé sur données enregistrées | enregistrés | manquants | calculée (données enregistrées) | 2026-11-13 · star-t.fr (2025) | Zones connues (liste officielle des communes A/B, star-t.fr) mais prix 2026 non confirmé (1,20 € / 2,20 € sur des pages de 2022–2025) ; arrêts GTFS sans commune | Confirmer la grille 2026 ; associer chaque arrêt à sa commune ; diagnostic Thonon → Genève |
-| M réso — Métropole grenobloise | AURA | Testé sur données enregistrées | enregistrés | vérifiés | calculée (données enregistrées) | 2026-11-13 · reso-m.fr (01/09/2026) | Aucun bloquant connu | Diagnostic téléphone (Grenoble → Crolles) |
-| M réso — Grésivaudan | AURA | Testé sur données enregistrées | enregistrés | partiels | calculée (données enregistrées) | 2026-11-13 · reso-m.fr (01/09/2026) | Tarif intra-Grésivaudan 1,00 € non appliqué (périmètre des arrêts inconnu) : 2,00 € affiché | Ajouter la liste des communes du Grésivaudan |
+| M réso — Métropole grenobloise | AURA | Validé en réel | réels | vérifiés | calculée (réel) | 2026-11-13T09:52:43.584Z · diagnostic téléphone | Aucun bloquant connu | Diagnostic téléphone (Grenoble → Crolles) |
+| M réso — Grésivaudan | AURA | Validé en réel | réels | partiels | calculée (réel) | 2026-11-13T09:52:43.584Z · diagnostic téléphone | Tarif intra-Grésivaudan 1,00 € non appliqué (périmètre des arrêts inconnu) : 2,00 € affiché | Ajouter la liste des communes du Grésivaudan |
 | M réso — Voironnais | AURA | Partiellement raccordé | source branchée | partiels | non vérifiée | 2026-11-13 · reso-m.fr (01/10/2026) | Tarif intra-Voironnais 1,30 € non appliqué : 2,00 € affiché | Diagnostic Voiron → Grenoble ; liste des communes du Voironnais |
 | TCL (Lyon) | AURA | Non raccordé | indisponibles | manquants | non vérifiée | 2026-11-13 · MobilityDatabase / guide TCL mai 2026 | GTFS TCL (654 lignes) trop lourd pour le téléphone ; tarifs par zones | Relais serveur GTFS TCL ou clé TripGo ; carte des zones TCL par arrêt |
 | J'y bus (Rumilly) | AURA | Testé sur données enregistrées | enregistrés | manquants | calculée (données enregistrées) | 2026-11-13 · extraction agrégat Oùra (script testé hors ligne) | Aucun tarif publié dans l’agrégat Oùra ; pas de grille officielle trouvée | Lancer la tâche « Build regional GTFS », puis diagnostic Rumilly |
 | TAM (Ambérieu-en-Bugey) | AURA | Testé sur données enregistrées | enregistrés | manquants | calculée (données enregistrées) | 2026-11-13 · extraction agrégat Oùra (script testé hors ligne) | Aucun tarif publié dans l’agrégat Oùra ; pas de grille officielle trouvée | Lancer la tâche « Build regional GTFS », puis diagnostic Ambérieu → Lyon |
-| Cars Région Haute-Savoie (dont Y51) | AURA | Testé sur données enregistrées | enregistrés | partiels | calculée (données enregistrées) | 2026-10-31 · fiche tarifaire Y51 AURA 2026 | Seule la Y51 a une grille par zones ; autres lignes sans prix | Grilles zonales des autres lignes Cars Région 74 |
-| Cars Région Ain | AURA | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · GTFS Oùra Ain | Tarif par zones non intégré | Grille zonale Cars Région Ain |
-| Cars Région Isère | AURA | Testé sur données enregistrées | enregistrés | manquants | calculée (données enregistrées) | 2026-11-13 · extraction agrégat Oùra (script testé hors ligne) | Aucun tarif publié dans l’agrégat ; tarif par zones (4,10 € à 12,10 €) sans zones des arrêts | Lancer la tâche serveur ; zones par arrêt si fare_rules absent |
+| Cars Région Haute-Savoie (dont Y51) | AURA | Validé en réel | réels | partiels | calculée (réel) | 2026-11-13T09:52:43.584Z · diagnostic téléphone | Seule la Y51 a une grille par zones ; autres lignes sans prix | Grilles zonales des autres lignes Cars Région 74 |
+| Cars Région Ain | AURA | Validé en réel | réels | manquants | calculée (réel) | 2026-11-13T09:52:43.584Z · diagnostic téléphone | Tarif par zones non intégré | Grille zonale Cars Région Ain |
+| Cars Région Isère | AURA | Validé en réel | réels | manquants | calculée (réel) | 2026-11-13T09:52:43.584Z · diagnostic téléphone | Aucun tarif publié dans l’agrégat ; tarif par zones (4,10 € à 12,10 €) sans zones des arrêts | Lancer la tâche serveur ; zones par arrêt si fare_rules absent |
 | Cars Région Savoie | AURA | Testé sur données enregistrées | enregistrés | manquants | calculée (données enregistrées) | 2026-11-13 · extraction agrégat Oùra (script testé hors ligne) | Seulement 8 lignes dans l’agrégat ; aucun tarif publié | Vérifier si d’autres lignes Savoie sont publiées sous un autre nom d’agence (oura-agencies.json) |
-| TER Auvergne-Rhône-Alpes / SNCF | AURA | Testé sur données enregistrées | enregistrés | manquants | calculée (données enregistrées) | 2026-11-13 · fichiers SNCF quotidiens du dépôt | Prix TER dynamiques : aucune source gratuite autorisée | Aucune solution gratuite identifiée ; garder « Prix à confirmer » |
+| TER Auvergne-Rhône-Alpes / SNCF | AURA | Validé en réel | réels | manquants | calculée (réel) | 2026-11-13T09:52:43.584Z · diagnostic téléphone | Prix TER dynamiques : aucune source gratuite autorisée | Aucune solution gratuite identifiée ; garder « Prix à confirmer » |
 | FlixBus / BlaBlaCar Bus | AURA | Testé sur données enregistrées | enregistrés | manquants | calculée (données enregistrées) | 2026-10-31 · réponse TripGo enregistrée | Prix dynamiques ; TripGo n’a transmis aucun billet dans les réponses enregistrées | Clé TripGo puis diagnostic (Annecy → Genève) |
 | CFF / trains suisses | Suisse | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · documentation transport.opendata.ch | API sans prix ; jamais appelée en réel depuis l’environnement de développement | Diagnostic téléphone (Annecy → Genève) |
 | TPG (Genève, zone 10) | Suisse | Partiellement raccordé | source branchée | manquants | non vérifiée | 2026-11-13 · dépliants unireso 2019–2024 | CHF 3.– non confirmé pour 2026 | Grille unireso 2026 |
@@ -75,6 +76,19 @@ Généré le 2026-11-13 par `scripts/bilan-couverture-transports.cjs` à partir 
 - **Flexi (Synchro, Chambéry)** (partiels) : Même tarif que le bus Synchro — Transport à la demande : réservation obligatoire, pas d’horaires publiés
 - **Mobéa (Ondéa, Grand Lac)** (partiels) : Tarif Ondéa — Transport à la demande : réservation obligatoire
 - **TPG Flex** (manquants) : Prix à confirmer — Transport à la demande : réservation obligatoire
+
+## Diagnostic réel serveur, par axe
+
+| Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | Sources | Erreurs |
+|---|---|---|---|---|---|---|
+| Annecy → Genève | 24 | 0 | 16 | 16 | SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | — |
+| Annemasse → Saint-Julien-en-Genevois | 48 | 0 | 16 | 8 | SNCF (GTFS officiel), TAC Annemasse (GTFS) | Suisse : fetch failed |
+| Ambérieu-en-Bugey → Lyon Part-Dieu | 8 | 0 | 8 | 2 | SNCF (GTFS officiel) | — |
+| Chambéry → Aix-les-Bains | 14 | 0 | 14 | 12 | SNCF (GTFS officiel), Synchro Bus Chambéry (GTFS) | — |
+| Grenoble → Crolles | 13 | 5 | 13 | 13 | Mobilités M, SNCF (GTFS officiel) | — |
+| Rumilly → Annecy | 9 | 1 | 9 | 1 | Sibra (GTFS), SNCF (GTFS officiel) | — |
+| Thonon-les-Bains → Genève | 8 | 0 | 8 | 0 | SNCF (GTFS officiel) | — |
+| Voiron → Grenoble | 21 | 0 | 21 | 21 | Mobilités M, SNCF (GTFS officiel), Cars Région Isère (GTFS) | — |
 
 ## Axes du diagnostic téléphone
 
