@@ -80,6 +80,17 @@ jobs:
           assert.equal(priced.status,'verified');
           assert.equal(priced.amounts.EUR,1.20);
           assert.equal(priceOf({walkOnly:false,legs:[{...bus,provider:'Opérateur inconnu'}]},gridFare).status,'unknown');
+          // Une correspondance sur le même réseau pendant la validité ne se repaie pas.
+          const first={...urban,kind:'transit',line:'A',departure:'2026-11-16T08:00:00+01:00'};
+          const second={...urban,kind:'transit',line:'B',departure:'2026-11-16T08:35:00+01:00'};
+          const sameTicket=priceOf({walkOnly:false,legs:[first,second]},gridFare);
+          assert.equal(sameTicket.status,'verified');
+          assert.equal(sameTicket.amounts.EUR,1.20);
+          const later=priceOf({walkOnly:false,legs:[first,{...second,departure:'2026-11-16T09:05:00+01:00'}]},gridFare);
+          assert.equal(later.amounts.EUR,2.40,'Nouveau ticket après expiration');
+          const mixed=priceOf({walkOnly:false,legs:[first,{...second,provider:'Opérateur inconnu'}]},gridFare);
+          assert.equal(mixed.status,'unknown','Un segment inconnu bloque le prix complet');
+          assert.equal(mixed.partial,'1,20 €','Montant partiel visible');
           const official={...bus,fare:{amount:1.50,currency:'EUR',source:'billet fournisseur'}};
           assert.equal(priceOf({walkOnly:false,legs:[official]},gridFare).amounts.EUR,1.50);
           console.log('Exclusions, validité et ambiguïtés tarifaires OK');
