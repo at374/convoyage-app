@@ -82,6 +82,36 @@ jobs:
         env:
           CP_TRIPGO_KEY: ${{ secrets.CP_TRIPGO_KEY }}
         run: node scripts/diagnostic-transports-reel.cjs
+      - name: Contrôler la cohérence des résultats tarifaires
+        run: |
+          node - <<'NODE'
+          const assert = require('node:assert/strict');
+          const report = require('./docs/diagnostic-serveur.json');
+          const axes = report.axes;
+          const sum = key => axes.reduce((n,a)=>n+a[key],0);
+          assert.equal(report.totals.axes,axes.length);
+          assert.equal(report.totals.trips,sum('trips'));
+          assert.equal(report.totals.priced,sum('priced'));
+          assert.equal(report.totals.partialPricedJourneys,sum('partialPricedJourneys'));
+          assert.ok(report.totals.priced<=report.totals.trips);
+          assert.ok(report.totals.partialPricedJourneys+report.totals.priced<=report.totals.trips);
+          for(const axis of axes){
+           assert.ok(axis.priced+axis.partialPricedJourneys<=axis.trips,axis.id);
+           assert.ok(axis.missingFareSamples&&axis.partialMissingLineSamples,axis.id);
+           for(const lines of Object.values(axis.partialMissingLineSamples)){
+            assert.ok(lines.length<=5,axis.id);
+           }
+           for(const samples of Object.values(axis.missingFareSamples)){
+            assert.ok(samples.length<=3,axis.id);
+           }
+          }
+          const combined = {};
+          for(const a of axes)for(const [operator,n] of Object.entries(a.partialMissingByOperator)){
+           combined[operator]=(combined[operator]||0)+n;
+          }
+          assert.deepEqual(report.totals.partialMissingByOperator,combined);
+          console.log('Rapport cohérent : '+report.totals.priced+' trajets tarifés, '+report.totals.partialPricedJourneys+' partiels');
+          NODE
       - name: Bilan de couverture
         run: node scripts/bilan-couverture-transports.cjs
       - name: Sauvegarder les rapports comme artefact
