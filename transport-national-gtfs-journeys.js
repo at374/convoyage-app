@@ -18,7 +18,7 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
  if(!Number.isSafeInteger(maxResults)||maxResults<1||maxResults>100)throw new Error('Invalid result limit');
  const min=earliestDeparture===null?-Infinity:(typeof earliestDeparture==='string'&&/^\d{1,3}:[0-5]\d(:[0-5]\d)?$/.test(earliestDeparture)?Number(earliestDeparture.split(':')[0])*60+Number(earliestDeparture.split(':')[1]):NaN);
  if(Number.isNaN(min))throw new Error('Invalid departure threshold');
- const max=latestArrival===null?Infinity:(typeof latestArrival==='string'&&/^\\d{1,3}:[0-5]\\d(:[0-5]\\d)?$/.test(latestArrival)?Number(latestArrival.split(':')[0])*60+Number(latestArrival.split(':')[1]):NaN);
+ const max=latestArrival===null?Infinity:(typeof latestArrival==='string'&&/^\d{1,3}:[0-5]\d(:[0-5]\d)?$/.test(latestArrival)?Number(latestArrival.split(':')[0])*60+Number(latestArrival.split(':')[1]):NaN);
  if(Number.isNaN(max))throw new Error('Invalid arrival threshold');
  return indexer.nearbyDirectTrips(files,index,date,from,to,radiusMeters)
   .filter(x=>Number(x.departure.split(':')[0])*60+Number(x.departure.split(':')[1])>=min&&
