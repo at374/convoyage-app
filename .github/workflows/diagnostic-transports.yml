@@ -95,6 +95,32 @@ jobs:
             .then(()=>{throw Error('Oversized archive must be rejected')},e=>assert.match(e.message,/safe mobile cap/));
           console.log('Trajet national GTFS, fenêtre horaire, prix inconnus et validations OK');
           NODE
+      - name: Vérifier les archives nationales publiées et leur accès HTTPS
+        run: |
+          python3 - <<'PY'
+          import io
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+          from hashlib import sha256
+          base = 'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/'
+          for operator in ('sncf', 'blablacarBus', 'flixbus'):
+              name = f'national-{operator}-aura.zip'
+              local = Path('data/gtfs') / name
+              assert local.is_file(), f'Missing published archive {name}'
+              with zipfile.ZipFile(local) as z:
+                  assert {'stops.txt','routes.txt','trips.txt','stop_times.txt'} <= set(z.namelist()), name
+                  assert z.testzip() is None, f'Corrupted local GTFS: {name}'
+              with urllib.request.urlopen(urllib.request.Request(base+name, headers={'User-Agent':'ConvoyageUltra-GTFS-CI'}), timeout=30) as response:
+                  assert response.status == 200, f'HTTPS status {response.status}: {name}'
+                  assert response.headers.get('Access-Control-Allow-Origin') in ('*','https://at374.github.io'), f'No browser CORS: {name}'
+                  remote = response.read(20*1024*1024+1)
+              assert len(remote) <= 20*1024*1024, f'Mobile archive too large: {name}'
+              assert sha256(remote).digest() == sha256(local.read_bytes()).digest(), f'HTTPS archive differs: {name}'
+              with zipfile.ZipFile(io.BytesIO(remote)) as z:
+                  assert z.testzip() is None, f'Invalid remote GTFS: {name}'
+              print(f'OK {operator}: HTTPS 200, CORS, SHA256, ZIP integrity ({len(remote)} bytes)')
+          PY
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
