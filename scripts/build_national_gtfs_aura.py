@@ -31,6 +31,15 @@ def main():
         p.error('Invalid source ZIP')
     excluded_detour_count = 0
     with zipfile.ZipFile(args.input) as source:
+        entries = source.infolist()
+        names = [item.filename for item in entries]
+        if len(entries) > 2000 or len(names) != len(set(names)):
+            raise SystemExit('Unsafe GTFS archive: too many or duplicate entries')
+        if any(item.flag_bits & 1 or item.filename.startswith('/') or
+               '..' in item.filename.split('/') for item in entries):
+            raise SystemExit('Unsafe GTFS archive: encrypted or traversing entry')
+        if sum(item.file_size for item in entries) > 1024 * 1024 * 1024:
+            raise SystemExit('GTFS archive expands beyond 1 GiB safety limit')
         validate(source)
         # Reject an archive with stops outside AURA between two retained stops:
         # removing intermediate stops would falsely present an out-of-area detour as local.
