@@ -50,7 +50,12 @@ const GRIDS=[
   checkedAt:'2026-11-13',flat:true},
  // TAM Ambérieu-en-Bugey : livret officiel TAM 2026, titre 1 voyage 1,10 €, valable 1 h avec correspondance.
  // Le tarif est réservé aux bus identifiés TAM, sans extrapolation aux Cars Région Ain.
- {network:'TAM',operatorPattern:'^tam\\\\s+amb[ée]rieu(?:-en-bugey)?
+ {network:'TAM',operatorPattern:'^tam\\s+amb[ée]rieu(?:-en-bugey)?$',modes:['Bus'],amount:1.10,currency:'EUR',
+  product:'1 voyage, 1 h avec correspondance',validityMinutes:60,
+  validFrom:'2026-01-01',validUntil:'2026-12-31',
+  source:'https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/02/Livret_TAM_2026.pdf',
+  checkedAt:'2026-11-13',flat:true},
+ // Exemple de format (NE PAS activer sans preuve) :
  // {network:'Exemple',operatorPattern:'^exemple$',modes:['Bus'],amount:0,currency:'EUR',product:'1 voyage',
  //  validFrom:'2026-01-01',validUntil:'2026-12-31',source:'https://www.sibra.fr/…',checkedAt:'2026-11-13',flat:true}
 ];
