@@ -51,6 +51,21 @@ jobs:
           assert.equal(fareFor({...urban,line:'L'}),null,'STAR’T ligne L : zone non prouvée');
           assert.equal(fareFor({...urban,provider:"J'y bus Rumilly",line:'J4'}),null,'J’ybus : prix 2026 non confirmé');
           assert.equal(fareFor({...urban,provider:'Cars Région Haute-Savoie'}),null,'Ne pas attribuer STAR’T aux Cars Région');
+          // Ne jamais afficher un prix urbain pour une ligne ou un opérateur ambigu.
+          assert.equal(fareFor({...leg,line:'TAM 1',departure:'2026-12-31T23:00:00+01:00'})?.amount,1.10);
+          assert.equal(fareFor({...leg,departure:'2025-12-31T23:00:00+01:00'}),null);
+          assert.equal(fareFor({...urban,line:'NL'})?.amount,1.20);
+          assert.equal(fareFor({...urban,line:'142',provider:"THONON-LES-BAINS - STAR'T"}),null);
+          assert.equal(fareFor({...urban,line:'A',provider:'Cars Région Haute-Savoie'}),null);
+          assert.equal(fareFor({...urban,line:'A',departure:'2027-01-01T08:00:00+01:00'}),null);
+          assert.equal(fareFor({...urban,line:'A',mode:'Train'}),null);
+          assert.equal(fareFor({...urban,line:'A',provider:''}),null);
+          assert.equal(fareFor({...urban,line:'A',kind:'walk'}),null);
+          // Une grille non vérifiée ou deux grilles concurrentes ne produisent aucun tarif.
+          const tam = require('./transport-fare-grids.js').GRIDS.find(g=>g.network==='TAM');
+          assert.ok(tam,'Grille TAM présente');
+          assert.equal(fareFor(leg,[{...tam,source:'http://non-officiel.invalid'}]),null);
+          assert.equal(fareFor(leg,[tam,{...tam}]),null);
           console.log('Tarifs TAM et STAR’T urbain vérifiés, exclusions et validité OK');
           NODE
       - name: Vérifier la présence de TripGo
