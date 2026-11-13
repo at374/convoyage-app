@@ -85,9 +85,15 @@ async function gtfsRows(axis,when){
    examples:v.picks.slice(0,3).map(p=>({labels:p.labels,dep:p.journey.departure,arr:p.journey.arrival,legs:p.journey.legs.map(l=>(l.kind==='walk'?'marche '+Math.round(l.distanceMeters||0)+' m':(l.provider||'')+' '+(l.line||''))),price:p.journey.price.label,status:p.journey.status,detail:p.journey.statusDetail}))};
   report.axes.push(a);console.log(JSON.stringify({axe:a.name,trajets:a.trips,prix:a.priced,marches:a.walked,realisables:a.feasible,recus:a.received,raisons:a.reasons,sources:a.sources,erreurs:a.engines.errors}));
  }
+ // Synthèse calculée sur les axes réellement testés, sans confondre itinéraires et réseaux.
+ report.totals=report.axes.reduce((s,a)=>{s.axes++;s.trips+=a.trips;s.priced+=a.priced;s.walked+=a.walked;s.feasible+=a.feasible;return s;},{axes:0,trips:0,priced:0,walked:0,feasible:0});
+ report.totals.pricedPct=report.totals.trips?Math.round(report.totals.priced*1000/report.totals.trips)/10:0;
+ report.totals.walkedPct=report.totals.trips?Math.round(report.totals.walked*1000/report.totals.trips)/10:0;
+ console.log('BILAN_GLOBAL '+JSON.stringify(report.totals));
  report.router=router.stats?router.stats():null;
  fs.writeFileSync(path.join(ROOT,'docs','diagnostic-serveur.json'),JSON.stringify(report,null,1));
  const md=['# Diagnostic réel des transports — serveur GitHub Actions','',`Exécuté le ${report.at} ; départs à partir de ${report.when} ; TripGo : ${report.tripgo?'oui':'non (pas de clé)'}.`,'',
+  `**Bilan : ${report.totals.trips} trajets sur ${report.totals.axes} axes, ${report.totals.priced} avec prix vérifié (${report.totals.pricedPct} %), ${report.totals.walked} avec marches calculées (${report.totals.walkedPct} %), ${report.totals.feasible} réalisables.**`,'',
   '| Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | 1er résultat | Total | Sources | Erreurs | Attendus non vus |','|---|---|---|---|---|---|---|---|---|---|'];
  for(const a of report.axes)md.push('| '+[a.name,a.trips,a.priced,a.walked,a.feasible,a.firstResultMs==null?'—':(a.firstResultMs/1000).toFixed(1)+' s',(a.totalMs/1000).toFixed(1)+' s',
   a.sources.join(', ')||'—',Object.entries(a.engines.errors).map(([k,e])=>k+' : '+e).join(' ; ').replace(/\|/g,'/')||'—',a.missingExpected.join(', ')||'—'].join(' | ')+' |');
