@@ -78,7 +78,14 @@ async function gtfsRows(axis,when){
   const appFirst=pick.resource?[pick.resource,...pick.partners].map(r=>r.network).join(' + '):null;
   const tripgoJourneys=all.filter(j=>(j.sources||[]).some(s=>/tripgo/i.test(s)));
   const tripgoPriced=tripgoJourneys.filter(j=>j.price?.status==='verified').length;
-  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,walked:all.filter(walkedOk).length,
+  const tripgoTicketLegs=tripgoJourneys.reduce((n,j)=>n+j.legs.filter(l=>l.kind!=='walk'&&l.fare&&Number.isFinite(l.fare.amount)).length,0);
+  const tripgoMissingFareByOperator={};
+  for(const j of tripgoJourneys)for(const l of j.legs){
+   if(l.kind==='walk'||l.fare&&Number.isFinite(l.fare.amount))continue;
+   const operator=String(l.provider||'opérateur inconnu').slice(0,80);
+   tripgoMissingFareByOperator[operator]=(tripgoMissingFareByOperator[operator]||0)+1;
+  }
+  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoTicketLegs,tripgoMissingFareByOperator,walked:all.filter(walkedOk).length,
    feasible:all.filter(j=>j.feasible).length,firstResultMs:firstAt,totalMs:Date.now()-started,
    received:v.received,
    reasons:all.flatMap(j=>j.reasons||[]).reduce((m,r)=>{const k=r.replace(/\d+/g,'n').slice(0,70);m[k]=(m[k]||0)+1;return m;},{}),
@@ -91,6 +98,9 @@ async function gtfsRows(axis,when){
  report.totals=report.axes.reduce((s,a)=>{s.axes++;s.trips+=a.trips;s.priced+=a.priced;s.walked+=a.walked;s.feasible+=a.feasible;return s;},{axes:0,trips:0,priced:0,walked:0,feasible:0});
  report.totals.tripgoJourneys=report.axes.reduce((n,a)=>n+a.tripgoJourneys,0);
  report.totals.tripgoPriced=report.axes.reduce((n,a)=>n+a.tripgoPriced,0);
+ report.totals.tripgoTicketLegs=report.axes.reduce((n,a)=>n+a.tripgoTicketLegs,0);
+ report.totals.tripgoMissingFareByOperator={};
+ for(const a of report.axes)for(const [name,count] of Object.entries(a.tripgoMissingFareByOperator))report.totals.tripgoMissingFareByOperator[name]=(report.totals.tripgoMissingFareByOperator[name]||0)+count;
  report.totals.pricedPct=report.totals.trips?Math.round(report.totals.priced*1000/report.totals.trips)/10:0;
  report.totals.walkedPct=report.totals.trips?Math.round(report.totals.walked*1000/report.totals.trips)/10:0;
  console.log('BILAN_GLOBAL '+JSON.stringify(report.totals));
@@ -99,7 +109,8 @@ async function gtfsRows(axis,when){
  fs.writeFileSync(path.join(ROOT,'docs','diagnostic-serveur.json'),JSON.stringify(report,null,1));
  const md=['# Diagnostic réel des transports — serveur GitHub Actions','',`Exécuté le ${report.at} ; départs à partir de ${report.when} ; TripGo : ${report.tripgo?'oui':'non (pas de clé)'}.`,'',
   `**Bilan : ${report.totals.trips} trajets sur ${report.totals.axes} axes, ${report.totals.priced} avec prix vérifié (${report.totals.pricedPct} %), ${report.totals.walked} avec marches calculées (${report.totals.walkedPct} %), ${report.totals.feasible} réalisables.**`,'',
-  `**TripGo : ${report.totals.tripgoJourneys} trajets, ${report.totals.tripgoPriced} avec prix vérifié.**`,'',
+  `**TripGo : ${report.totals.tripgoJourneys} trajets, ${report.totals.tripgoPriced} avec prix vérifié, ${report.totals.tripgoTicketLegs} portions avec billet chiffré.**`,'',
+  'Portions TripGo sans prix par opérateur : '+(Object.entries(report.totals.tripgoMissingFareByOperator).map(([name,count])=>name+' ('+count+')').join(', ')||'aucune')+'.','',
   '| Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | 1er résultat | Total | Sources | Erreurs | Attendus non vus |','|---|---|---|---|---|---|---|---|---|---|'];
  for(const a of report.axes)md.push('| '+[a.name,a.trips,a.priced,a.walked,a.feasible,a.firstResultMs==null?'—':(a.firstResultMs/1000).toFixed(1)+' s',(a.totalMs/1000).toFixed(1)+' s',
   a.sources.join(', ')||'—',Object.entries(a.engines.errors).map(([k,e])=>k+' : '+e).join(' ; ').replace(/\|/g,'/')||'—',a.missingExpected.join(', ')||'—'].join(' | ')+' |');
