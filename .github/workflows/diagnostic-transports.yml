@@ -317,6 +317,32 @@ jobs:
             console.log(JSON.stringify(report,null,2));
           })().catch(e=>{console.error(e);process.exitCode=1;});
           NODE
+      - name: Auditer les trajets TAC réels Saint-Julien vers Archamps
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const loader=require('./transport-gtfs-loader.js');
+          const indexer=require('./transport-gtfs-index.js');
+          const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
+          (async()=>{
+            const bytes=fs.readFileSync('data/gtfs/tac-annemasse.zip');
+            const feed=await loader.loadResource({format:'GTFS',url:'https://example.org/tac-annemasse.zip'},{
+              fetcher:async()=>new Response(bytes,{headers:{'content-type':'application/zip','content-length':String(bytes.length)}}),
+              indexServiceDates:[date],retainSourceTables:false
+            });
+            const from={lat:46.1447,lon:6.0826},to={lat:46.1362,lon:6.1328};
+            const direct=indexer.nearbyDirectTrips(feed.files,feed.index,date,from,to,3000);
+            const transfer=indexer.nearbyTransferTrips(feed.files,feed.index,date,from,to,3000,{
+              maxLegs:15000,maxCandidates:200,maxExaminedPairs:30000,minTransferMinutes:5,maxWaitMinutes:120
+            });
+            const report={date,network:'TAC Annemasse',from:'Saint-Julien-en-Genevois',
+              to:'Archamps',radiusMeters:3000,direct:direct.length,
+              oneTransfer:transfer.journeys.length,searchTruncated:transfer.searchTruncated,
+              note:'Static GTFS candidates only; no confirmed commercial fare, real-time service or pedestrian route'};
+            fs.writeFileSync('docs/audit-tac-saint-julien-archamps.json',JSON.stringify(report,null,2)+'\n');
+            console.log(JSON.stringify(report,null,2));
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
@@ -652,6 +678,7 @@ jobs:
             docs/audit-national-aura-axes.json
             docs/audit-national-aura-transfers.json
             docs/audit-grand-geneve-local-stops.json
+            docs/audit-tac-saint-julien-archamps.json
           if-no-files-found: warn
           retention-days: 14
       - name: Publier le rapport
