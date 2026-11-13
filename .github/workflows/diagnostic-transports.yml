@@ -108,7 +108,7 @@ jobs:
           const assert=require('node:assert/strict');
           const fs=require('node:fs');
           const html=fs.readFileSync('index.html','utf8');
-          const scripts=[...html.matchAll(/<script\\s+src="([^"]+)"/g)].map(x=>x[1].split('?')[0]);
+          const scripts=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(x=>x[1].split('?')[0]);
           const deps=['transport-catalogue.js','transport-gtfs-index.js',
             'transport-gtfs-loader.js','transport-national-gtfs-journeys.js',
             'transport-mission-hub.js','app.js'];
