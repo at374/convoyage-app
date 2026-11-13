@@ -43,6 +43,15 @@ jobs:
           assert.equal(registry.split('function fareFor(').length-1,1,'Une seule fonction fareFor');
           assert.equal((registry.match(/CPTransportFareGrids=api/g)||[]).length,1,'Un seul module de tarifs');
           const {fareFor} = require('./transport-fare-grids.js');
+          const hs={provider:'Cars Région Haute-Savoie',mode:'Bus',kind:'transit',line:'Y81',departure:'2026-11-16T08:00:00+01:00'};
+          assert.equal(fareFor(hs)?.amount,1.70,'Haute-Savoie Y81 : 1,70 €');
+          for(const line of ['Y03','Y04','Y13','Y82','Y86','Y91','Y94'])
+            assert.equal(fareFor({...hs,line})?.amount,1.70,'Haute-Savoie tarif plat '+line);
+          for(const line of ['Y02','Y21','Y22','Y51','Y62','Y63','272','274','Y99'])
+            assert.equal(fareFor({...hs,line}),null,'Ligne à grille distincte non tarifée arbitrairement '+line);
+          assert.equal(fareFor({...hs,provider:'Cars Région Savoie'}),null,'Pas de prix Haute-Savoie en Savoie');
+          assert.equal(fareFor({...hs,departure:'2026-02-28T08:00:00+01:00'}),null,'Grille 2026 hors période');
+
           // Isère : tableau officiel 01/03/2026, aucune zone inventée.
           const isere=require('./transport-isere-zonal-fares.js');
           const zoneEvidence={verified:true,traversedZones:['A','B','C'],source:'https://www.laregionvoustransporte.fr/'};
