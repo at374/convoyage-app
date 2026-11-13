@@ -121,6 +121,35 @@ jobs:
                   assert z.testzip() is None, f'Invalid remote GTFS: {name}'
               print(f'OK {operator}: HTTPS 200, CORS, SHA256, ZIP integrity ({len(remote)} bytes)')
           PY
+      - name: Tester les trois moteurs GTFS officiels avec chargement et recherche réels
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const national=require('./transport-national-gtfs-journeys.js');
+          const base='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
+          const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
+          (async()=>{
+            for(const operator of ['sncf','blablacarBus','flixbus']){
+              const resource={format:'GTFS',url:base+'national-'+operator+'-aura.zip'};
+              const result=await national.loadAndSearch({
+                operator,resource,fetcher:fetch,date,
+                from:{lat:45.7601,lon:4.8599},to:{lat:45.9012,lon:6.1219},
+                radiusMeters:3000,maxResults:30
+              });
+              assert.ok(result.counts.stops>0,'Empty official stop index '+operator);
+              assert.ok(result.counts.routes>0,'Empty official route index '+operator);
+              assert.ok(Array.isArray(result.journeys),'No itinerary result list '+operator);
+              for(const journey of result.journeys){
+                assert.equal(journey.operator,operator);
+                assert.equal(journey.priceEUR,null,'Invented commercial ticket price');
+                assert.equal(journey.serviceConfirmed,false,'Unconfirmed schedule marked live');
+                assert.equal(journey.walkingRouteConfirmed,false,'Unverified walking route');
+              }
+              console.log('Official national GTFS end-to-end',operator,
+                'stops='+result.counts.stops,'journeys='+result.journeys.length);
+            }
+          })().catch(error=>{console.error(error);process.exitCode=1;});
+          NODE
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
