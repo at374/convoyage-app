@@ -55,9 +55,23 @@ def main():
                     for i in range(positions[0], positions[-1] + 1)):
                 detours.add(trip_id)
         if detours:
-            raise ValueError('National GTFS contains ' + str(len(detours)) +
-                             ' trips leaving AURA between retained stops; split corridors without inventing direct journeys')
-        data, info = filter_by_bounds(source, {'bounds': BOUNDS})
+            from build_regional_gtfs import write_table
+            filtered = io.BytesIO()
+            with zipfile.ZipFile(filtered, 'w', zipfile.ZIP_DEFLATED) as safe:
+                for name in source.namelist():
+                    if name == 'stop_times.txt':
+                        fields, rows = read_table(source, name)
+                        write_table(safe, name, fields, [row for row in rows if row['trip_id'] not in detours])
+                    elif name == 'trips.txt':
+                        fields, rows = read_table(source, name)
+                        write_table(safe, name, fields, [row for row in rows if row['trip_id'] not in detours])
+                    elif not name.endswith('/'):
+                        safe.writestr(name, source.read(name))
+            filtered.seek(0)
+            with zipfile.ZipFile(filtered) as safe:
+                data, info = filter_by_bounds(safe, {'bounds': BOUNDS})
+        else:
+            data, info = filter_by_bounds(source, {'bounds': BOUNDS})
     if data is None:
         raise SystemExit('No AURA trips: ' + str(info))
     if len(data) > MAX_OUTPUT:
