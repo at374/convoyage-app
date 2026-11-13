@@ -54,9 +54,9 @@ jobs:
           const startLeg={provider:"Star't Thonon",mode:'Bus',line:'142',departure:'2026-11-16T08:00:00+01:00',from:{name:'Les Arts'},to:{name:'Bons-en-Chablais Mairie'}};
           assert.equal(fareFor(startLeg)?.amount,2.20,'STAR\u2019T A+B avec arrêts GTFS structurés');
           assert.equal(fareFor({...startLeg,to:{name:'Arrêt inconnu'}}),null,'STAR\u2019T : aucune zone supposée');
-          const ain={provider:'Cars Région Ain',mode:'Bus',line:'A01',departure:'2026-11-16T08:00:00+01:00'};
-          assert.equal(fareFor({...ain,from:{name:'Beynost'},to:{name:'Meximieux'}}),null,'Ain : exception tarifaire détectée sur arrêt structuré');
-          assert.equal(fareFor({...ain,from:'Meximieux',toPoint:{name:'Lyon'}}),null,'Ain : exception tarifaire détectée sur point GPS nommé');
+          const ainStructured={provider:'Cars Région Ain',mode:'Bus',line:'A01',departure:'2026-11-16T08:00:00+01:00'};
+          assert.equal(fareFor({...ainStructured,from:{name:'Beynost'},to:{name:'Meximieux'}}),null,'Ain : exception tarifaire détectée sur arrêt structuré');
+          assert.equal(fareFor({...ainStructured,from:'Meximieux',toPoint:{name:'Lyon'}}),null,'Ain : exception tarifaire détectée sur point GPS nommé');
 
 
           // Isère : tableau officiel 01/03/2026, aucune zone inventée.
