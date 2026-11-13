@@ -45,7 +45,16 @@ const NETWORKS=[
 const AXES=[
  {id:'annecy-geneve',name:'Annecy → Genève',from:{lat:45.9017,lon:6.1219,name:'Annecy gare'},to:{lat:46.2102,lon:6.1424,name:'Genève Cornavin'},expect:['ter','lex','cff','longue']},
  {id:'annemasse-stjulien',name:'Annemasse → Saint-Julien-en-Genevois',from:{lat:46.1993,lon:6.2366,name:'Annemasse gare'},to:{lat:46.1446,lon:6.0812,name:'Saint-Julien gare'},expect:['tac','lex','tpg-fr']},
- {id:'amberieu-lyon',name:'Ambérieu-en-Bugey → Lyon Part-Dieu',from:{lat:45.9583,lon:5.3577,name:'Ambérieu gare'},to:{lat:45.7606,lon:4.8593,name:'Lyon Part-Dieu'},expect:['ter','cars-01','tcl']},
+ // Vérifié le 13/11/2026 (horaires officiels « ligne 103 », fichiers OùRA/Transports de l'Ain, et page
+ // intermodalité SNCF de la gare d'Ambérieu) : la seule desserte directe Ambérieu → Lyon est le TER
+ // (Lyon–Genève). La « ligne 103 » affichée en gare comme « Cars interurbains » n'est PAS un car direct
+ // jusqu'à Lyon : c'est la navette OùRA Lagnieu ↔ Ambérieu-en-Bugey, combinée commercialement avec le TER
+ // pour le trajet restant (« Lagnieu → Ambérieu → Lyon : car + train ») — les lignes Cars Région Ain (A0x)
+ // desservent toutes le seul département de l'Ain et s'arrêtent à Ambérieu/Lagnieu/Bourg-en-Bresse, sans
+ // continuer jusqu'à Lyon. TCL (réseau urbain lyonnais) ne dessert pas non plus Ambérieu : sa propre ligne
+ // 103 est une ligne de banlieue ouest de Lyon (Gorge de Loup ↔ Dardilly ↔ Limonest), sans lien avec l'Ain.
+ // Confirmé par le diagnostic réel serveur (appGtfsChoice « Cars Région Ain » mais 0 course réelle trouvée).
+ {id:'amberieu-lyon',name:'Ambérieu-en-Bugey → Lyon Part-Dieu',from:{lat:45.9583,lon:5.3577,name:'Ambérieu gare'},to:{lat:45.7606,lon:4.8593,name:'Lyon Part-Dieu'},expect:['ter']},
  {id:'chambery-aix',name:'Chambéry → Aix-les-Bains',from:{lat:45.5711,lon:5.9196,name:'Chambéry gare'},to:{lat:45.6880,lon:5.9093,name:'Aix-les-Bains gare'},expect:['ter','synchro','ondea']},
  {id:'grenoble-crolles',name:'Grenoble → Crolles',from:{lat:45.1914,lon:5.7143,name:'Grenoble gare'},to:{lat:45.28364,lon:5.88224,name:'Crolles'},expect:['mreso-metro','mreso-gresivaudan']},
  // Vérifié sur le GTFS réel (data/gtfs/jybus-rumilly.zip) le 13/11/2026 : les deux lignes interurbaines J'y bus
