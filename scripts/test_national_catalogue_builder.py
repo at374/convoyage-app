@@ -27,10 +27,15 @@ def main():
     malformed=run({'source':SOURCE,'operators':{'sncf':{'feeds':'not-a-list'}}})
     assert malformed.returncode==2,malformed.stderr
     assert json.loads(malformed.stdout)['results']['sncf']['status']=='invalid-audit'
-    invalid_feed=run({'source':SOURCE,'operators':{'sncf':{'feeds':[None,{'id':'bad','url':'http://invalid.example/gtfs.zip'}]}}})
+    invalid_feed=run({'source':SOURCE,'operators':{'flixbus':{'feeds':[None,{'id':'bad','url':'http://invalid.example/gtfs.zip'}]}}})
     assert invalid_feed.returncode==2,invalid_feed.stderr
-    errors=json.loads(invalid_feed.stdout)['results']['sncf']['errors']
+    errors=json.loads(invalid_feed.stdout)['results']['flixbus']['errors']
     assert len(errors)==2 and all('error' in e for e in errors),errors
+    regional_only=run({'source':SOURCE,'operators':{'sncf':{'feeds':[{
+        'id':'regional','url':'https://example.org/transilien-gtfs.zip'}]}}})
+    assert regional_only.returncode==2,regional_only.stderr
+    national=json.loads(regional_only.stdout)['results']['sncf']
+    assert national['status']=='unavailable' and national['attempts']==0,national
     wrong=run({'source':'https://example.org/forged','operators':{}})
     assert wrong.returncode!=0
     assert 'provenance' in wrong.stderr.lower(),wrong.stderr
