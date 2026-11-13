@@ -140,7 +140,8 @@ function walkLeg(route,from,to,fromName,toName,depMs){
   distanceMeters:route.distanceMeters,durationSeconds:route.durationSeconds,walkSource:'valhalla',geometry:route.geometry});
 }
 async function completeWalks(j,task,router){
- const legs=j.legs.slice(),missing=[];
+ // Keep provider warnings (e.g. GTFS schedules without live confirmation) through walking enrichment.
+ const legs=j.legs.slice(),missing=Array.isArray(j.missing)?j.missing.slice():[];
  const from=pt(task.from),to=pt(task.to);
  const transit=legs.filter(l=>l.kind!=='walk');
  if(!transit.length)return {...j,legs,missing:['aucun transport public dans la proposition']};
