@@ -12,6 +12,12 @@
     if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat)>90 || Math.abs(lon)>180 || (lat===0 && lon===0)) return null;
     return lat+','+lon;
   }
+  function coordinate(place) {
+    const c = place && place.coordinate;
+    if (!c || c.x == null || c.y == null) return null;
+    const lat = Number(c.x), lon = Number(c.y);
+    return Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0) ? {lat, lon} : null;
+  }
   function buildUrl(options) {
     const from=point(options.from), to=point(options.to);
     if (!from || !to) throw new Error('Coordonnées ou arrêts manquants');
@@ -66,7 +72,13 @@
         to:s.arrival && s.arrival.station && s.arrival.station.name || null,
         departure:s.departure && s.departure.departure || null,
         arrival:s.arrival && s.arrival.arrival || null,
-        walkSeconds:s.walk && Number.isFinite(Number(s.walk.duration)) ? Number(s.walk.duration) : null
+        walkSeconds:s.walk && Number.isFinite(Number(s.walk.duration)) ? Number(s.walk.duration) : null,
+        // transport.opendata.ch : coordinate.x = latitude, coordinate.y = longitude (WGS84).
+        fromPoint:coordinate(s.departure && (s.departure.station || s.departure.location)),
+        toPoint:coordinate(s.arrival && (s.arrival.station || s.arrival.location)),
+        category:s.journey && s.journey.category || null,
+        operator:s.journey && s.journey.operator || null,
+        delay:s.departure && Number.isFinite(Number(s.departure.delay)) && s.departure.delay !== null ? Number(s.departure.delay) : null
       })):[],
       price:null, fareStatus:'non_communique', source:'transport.opendata.ch', confirmed:false
     }));

@@ -23,6 +23,11 @@
     if (!Number.isFinite(n) || n <= 0) return NaN;
     return n < 100000000000 ? n * 1000 : n;
   }
+  function place(p) {
+    if (!p || p.lat == null || p.lon == null) return null;
+    const lat = Number(p.lat), lon = Number(p.lon);
+    return Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0) ? {lat, lon} : null;
+  }
   function parseLeg(leg) {
     return {
       mode: String(leg.mode || ''),
@@ -31,7 +36,9 @@
       startTime: epochMilliseconds(leg.startTime),
       endTime: epochMilliseconds(leg.endTime),
       distanceMeters: leg.distance === null || leg.distance === undefined || leg.distance === '' ? NaN : Number(leg.distance),
-      route: leg.route && (leg.route.shortName || leg.route.longName) || ''
+      route: leg.route && (leg.route.shortName || leg.route.longName) || '',
+      fromPoint: place(leg.from), toPoint: place(leg.to),
+      agency: leg.agencyName || null
     };
   }
   function parseItinerary(itinerary) {

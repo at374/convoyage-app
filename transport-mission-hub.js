@@ -1,0 +1,415 @@
+/* Convoyage Ultra — Hub transports de mission.
+ * Interroge automatiquement TripGo, la Suisse (transport.opendata.ch), Mobilités M et le
+ * secours SNCF, reçoit les horaires GTFS locaux, complète les marches réelles (Valhalla/OSM)
+ * et produit UN classement par direction : moins cher, compromis, plus rapide.
+ * Règles : aucun prix ni horaire inventé ; pas de vol d'oiseau présenté comme une marche ;
+ * « Réalisable » seulement si horaires, marches et correspondances tiennent avec la marge.
+ * Lecture seule : aucune écriture de mission, de réglage, d'authentification ou de synchro.
+ */
+(function(root){
+'use strict';
+const VERSION='hub-20261113';
+const SWISS_BOX={minLat:45.80,maxLat:47.90,minLon:5.90,maxLon:10.60};
+const GENEVA={lat:46.2044,lon:6.1432};
+const SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=120;
+
+const finite=v=>typeof v==='number'&&Number.isFinite(v);
+function pt(p){
+ if(!p||typeof p!=='object')return null;
+ const lat=Number(p.lat),lon=Number(p.lon??p.lng);
+ if(p.lat===null||p.lat===''||(p.lon??p.lng)===null||(p.lon??p.lng)==='')return null;
+ if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180||(lat===0&&lon===0))return null;
+ return {lat,lon};
+}
+function meters(a,b){
+ const rad=Math.PI/180,dLat=(b.lat-a.lat)*rad,dLon=(b.lon-a.lon)*rad;
+ const h=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLon/2)**2;
+ return 12742000*Math.asin(Math.min(1,Math.sqrt(h)));
+}
+function ms(v){
+ if(typeof v==='number')return Number.isFinite(v)&&v>0?(v<1e11?v*1000:v):NaN;
+ if(typeof v!=='string'||!v.trim())return NaN;
+ // transport.opendata.ch : 2026-11-13T07:12:00+0100 (sans deux-points dans le décalage)
+ const fixed=v.replace(/([+-]\d{2})(\d{2})$/,'$1:$2');
+ return /[zZ]|[+-]\d{2}:\d{2}$/.test(fixed)?Date.parse(fixed):NaN;
+}
+const iso=v=>{const t=ms(v);return Number.isFinite(t)?new Date(t).toISOString():null;};
+const BOATS=/ferry|bateau|boat|ship|cgn|navette lacustre|^bat$|^ms$/i;
+
+/* ---------- Normalisation par fournisseur ---------- */
+function leg(o){
+ return {kind:o.kind||'transit',mode:o.mode||'',line:o.line||null,provider:o.provider||null,
+  from:o.from||'',to:o.to||'',fromPoint:pt(o.fromPoint),toPoint:pt(o.toPoint),
+  departure:iso(o.departure),arrival:iso(o.arrival),
+  distanceMeters:finite(o.distanceMeters)&&o.distanceMeters>=0?o.distanceMeters:null,
+  durationSeconds:finite(o.durationSeconds)&&o.durationSeconds>=0?o.durationSeconds:null,
+  walkSource:o.walkSource||null,geometry:Array.isArray(o.geometry)?o.geometry:null,
+  realtime:o.realtime===true,delayMinutes:finite(o.delayMinutes)?o.delayMinutes:null,
+  cancelled:o.cancelled===true,fare:o.fare||null,ticketUrl:o.ticketUrl||null};
+}
+function journey(source,legs,extra={}){
+ const L=legs.filter(Boolean);
+ return {source,sources:[source],legs:L,alerts:Array.isArray(extra.alerts)?extra.alerts.slice(0,10):[],
+  realtime:extra.realtime===true,dataDate:extra.dataDate||null,raw:undefined};
+}
+function swissMode(category){
+ const c=String(category||'').toUpperCase();
+ if(!c||c==='WALK')return 'walk';
+ if(/^(B|BUS|NFB|NFO|KB|EXB)$/.test(c))return 'Bus';
+ if(/^(T|TRAM|NFT)$/.test(c))return 'Tram';
+ if(/^(BAT|BAV|FAE|SCH)$/.test(c))return 'boat';
+ if(/^(FUN|PB|GB|LB|SL)$/.test(c))return 'Funiculaire';
+ return 'Train';
+}
+function fromSwiss(results){
+ return (Array.isArray(results)?results:[]).map(r=>{
+  const legs=(r.sections||[]).map(s=>{
+   const mode=swissMode(s.mode);
+   if(mode==='boat')return {boat:true};
+   // Les sections « walk » de transport.opendata.ch n'ont souvent ni durée ni horaires fiables (marche initiale
+   // ignorée dans l'heure de départ) : on les retire et la marche réelle est recalculée par Valhalla.
+   if(mode==='walk')return null;
+   return leg({mode,line:[s.category||s.mode,s.line].filter(Boolean).join(' ')||null,provider:s.operator||'Transports suisses',
+    from:s.from,to:s.to,fromPoint:s.fromPoint,toPoint:s.toPoint,departure:s.departure,arrival:s.arrival,
+    realtime:s.delay!=null,delayMinutes:finite(s.delay)?s.delay:null});
+  });
+  if(legs.some(l=>l&&l.boat))return null;
+  return journey('Suisse (transport.opendata.ch)',legs,{realtime:legs.some(l=>l&&l.realtime)});
+ }).filter(Boolean);
+}
+function tripgoMode(m){return m==='wa_wal'?'walk':/train|rail/.test(m)?'Train':/tram|lrt/.test(m)?'Tram':/metro|subway/.test(m)?'Métro':/coach/.test(m)?'Car':/bus/.test(m)?'Bus':'Transport';}
+function fromTripGo(answer){
+ return (answer&&Array.isArray(answer.itineraries)?answer.itineraries:[]).map(it=>{
+  const legs=[];
+  for(const l of it.legs||[]){
+   if(/^stationary_/.test(l.mode))continue;
+   const mode=/flixbus|blablacar|eurolines|ouibus/i.test((l.line||'')+' '+(l.provider||''))?'Car':tripgoMode(l.modeInfo||l.mode);
+   if(mode==='walk')legs.push(leg({kind:'walk',mode:'Marche',from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,
+    departure:l.departure,arrival:l.arrival,distanceMeters:l.distanceMeters,
+    durationSeconds:(ms(l.arrival)-ms(l.departure))/1000,walkSource:'provider'}));
+   else legs.push(leg({mode,line:l.line||l.serviceShortName,provider:l.provider||'TripGo',from:l.from,to:l.to,
+    fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.departure,arrival:l.arrival,realtime:l.realtimeReported,ticketUrl:l.ticketWebsiteURL}));
+  }
+  return journey('TripGo',legs,{alerts:it.alerts,realtime:it.evidence?.realtimeReported===true});
+ });
+}
+function fromRegional(itineraries,source='Mobilités M'){
+ const map={WALK:'walk',BUS:'Bus',TRAM:'Tram',SUBWAY:'Métro',RAIL:'Train'};
+ return (Array.isArray(itineraries)?itineraries:[]).map(it=>journey(source,(it.legs||[]).map(l=>{
+  const mode=map[l.mode]||'Transport';
+  return mode==='walk'?leg({kind:'walk',mode:'Marche',from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,
+    departure:l.startTime,arrival:l.endTime,distanceMeters:l.distanceMeters,durationSeconds:(l.endTime-l.startTime)/1000,walkSource:'provider',geometry:l.geometry}):
+   leg({mode,line:l.route||null,provider:l.agency||source,from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.startTime,arrival:l.endTime});
+ })));
+}
+function fromSNCF(answer){
+ return (answer&&Array.isArray(answer.itineraries)?answer.itineraries:[]).map(it=>journey('SNCF (GTFS officiel)',(it.legs||[]).map(l=>leg({
+  mode:/car|bus/i.test(l.line||'')?'Car':'Train',line:[l.line,l.trainNumber].filter(Boolean).join(' '),provider:'SNCF',
+  from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.departure,arrival:l.arrival})),{dataDate:answer.sourceVersion||null}));
+}
+function fromGTFS(rows,network='Réseau local'){
+ return (Array.isArray(rows)?rows:[]).map(r=>{
+  const raw=Array.isArray(r.legs)&&r.legs.length?r.legs:[{line:r.line,network:r.network,from:r.originStop?.name||r.from,to:r.destinationStop?.name||r.to,departure:r.departure,arrival:r.arrival}];
+  const legs=raw.map((l,i)=>{
+   const start=i===0?r.originStop:(r.legs?.length===2?(r.interNetwork?r.transferDestinationStop:r.transferStop):null);
+   const end=i===raw.length-1?r.destinationStop:(r.transferStop||null);
+   const out=leg({mode:'Bus',line:l.line||r.line,provider:l.network||r.network||network,from:start?.name||l.from,to:end?.name||l.to,
+    fromPoint:start,toPoint:end,departure:l.departure,arrival:l.arrival});
+   // Ligne GTFS brute conservée pour les grilles tarifaires officielles (ex. Y51 : zones par arrêt).
+   out.gtfsRaw=Array.isArray(r.legs)&&r.legs.length?l:r;
+   return out;
+  });
+  return journey((r.network||network)+' (GTFS)',legs);
+ });
+}
+
+/* ---------- Marches ---------- */
+function walkLeg(route,from,to,fromName,toName,depMs){
+ return leg({kind:'walk',mode:'Marche',from:fromName,to:toName,fromPoint:from,toPoint:to,
+  departure:new Date(depMs).toISOString(),arrival:new Date(depMs+route.durationSeconds*1000).toISOString(),
+  distanceMeters:route.distanceMeters,durationSeconds:route.durationSeconds,walkSource:'valhalla',geometry:route.geometry});
+}
+async function completeWalks(j,task,router){
+ const legs=j.legs.slice(),missing=[];
+ const from=pt(task.from),to=pt(task.to);
+ const transit=legs.filter(l=>l.kind!=='walk');
+ if(!transit.length)return {...j,legs,missing:['aucun transport public dans la proposition']};
+ const call=async(a,b)=>{if(!router||!a||!b)return null;try{const r=await router.route(a,b);return r&&r.status==='calculated'?r:null;}catch(_){return null;}};
+ // Approche : adresse -> premier arrêt.
+ const first=legs[0];
+ if(first.kind==='walk'){
+  if(!(first.fromPoint&&from&&meters(first.fromPoint,from)<=PROVIDER_JOIN_M)&&!(first.walkSource==='provider'&&!first.fromPoint))missing.push('marche d’approche partielle');
+ }else if(!from)missing.push('point GPS de départ inconnu');
+ else if(!first.fromPoint)missing.push('position de l’arrêt de départ inconnue');
+ else if(meters(from,first.fromPoint)>SAME_POINT_M){
+  const r=await call(from,first.fromPoint);
+  if(r)legs.unshift(walkLeg(r,from,first.fromPoint,task.fromName||'Adresse de départ',first.from,ms(first.departure)-r.durationSeconds*1000));
+  else missing.push('marche jusqu’à '+(first.from||'l’arrêt de départ')+' non calculée');
+ }
+ // Correspondances entre deux véhicules sans marche fournie.
+ for(let i=1;i<legs.length;i++){
+  const a=legs[i-1],b=legs[i];
+  if(a.kind==='walk'||b.kind==='walk')continue;
+  const gap=(ms(b.departure)-ms(a.arrival))/1000;
+  if(a.toPoint&&b.fromPoint){
+   if(meters(a.toPoint,b.fromPoint)<=SAME_POINT_M)continue;
+   const r=await call(a.toPoint,b.fromPoint);
+   if(!r){missing.push('marche de correspondance à '+(a.to||'l’arrêt')+' non calculée');continue;}
+   if(r.durationSeconds+TRANSFER_BUFFER_S>gap)missing.push('correspondance trop courte à '+(a.to||'l’arrêt')+' ('+Math.ceil(r.durationSeconds/60)+' min de marche)');
+   legs.splice(i,0,walkLeg(r,a.toPoint,b.fromPoint,a.to,b.from,ms(a.arrival)));i++;
+  }else if(!(a.to&&b.from&&a.to.trim().toLowerCase()===b.from.trim().toLowerCase()))missing.push('correspondance '+(a.to||'?')+' → '+(b.from||'?')+' non vérifiée');
+ }
+ // Dernière marche : dernier arrêt -> adresse.
+ const last=legs[legs.length-1];
+ if(last.kind==='walk'){
+  if(!(last.toPoint&&to&&meters(last.toPoint,to)<=PROVIDER_JOIN_M)&&!(last.walkSource==='provider'&&!last.toPoint))missing.push('marche finale partielle');
+ }else if(!to)missing.push('point GPS d’arrivée inconnu');
+ else if(!last.toPoint)missing.push('position de l’arrêt d’arrivée inconnue');
+ else if(meters(last.toPoint,to)>SAME_POINT_M){
+  const r=await call(last.toPoint,to);
+  if(r)legs.push(walkLeg(r,last.toPoint,to,last.to,task.toName||'Adresse d’arrivée',ms(last.arrival)));
+  else missing.push('marche depuis '+(last.to||'l’arrêt d’arrivée')+' non calculée');
+ }
+ return {...j,legs,missing};
+}
+async function walkOnly(task,router,maxKm){
+ const from=pt(task.from),to=pt(task.to),limit=(finite(maxKm)&&maxKm>0?maxKm:3)*1000;
+ if(!from||!to||!router)return null;
+ if(meters(from,to)>limit)return null; // la marche réelle est toujours au moins aussi longue
+ let r=null;try{r=await router.route(from,to);}catch(_){}
+ if(!r||r.status!=='calculated'||r.distanceMeters>limit)return null;
+ const margin=marginFor(task);
+ const deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
+ let dep=Number.isFinite(earliest)?earliest:Number.isFinite(deadline)?deadline-margin*60000-r.durationSeconds*1000:NaN;
+ if(!Number.isFinite(dep))return null;
+ const j=journey('Marche (Valhalla / OpenStreetMap)',[walkLeg(r,from,to,task.fromName||'Départ',task.toName||'Arrivée',dep)]);
+ return {...j,walkOnly:true,missing:[]};
+}
+
+/* ---------- Tarifs ---------- */
+function priceOf(j,fareFor){
+ if(j.walkOnly)return {status:'free',amounts:{EUR:0},label:'Gratuit (à pied)',missingSources:[]};
+ const amounts={},missingSources=[],sources=[];
+ for(const l of j.legs){
+  if(l.kind==='walk')continue;
+  const f=l.fare||(typeof fareFor==='function'?fareFor(l,j):null);
+  if(f&&finite(f.amount)&&f.amount>=0&&/^(EUR|CHF)$/.test(f.currency)&&f.source){
+   amounts[f.currency]=Math.round(((amounts[f.currency]||0)+f.amount)*100)/100;sources.push(f.source);
+  }else missingSources.push((l.provider||'opérateur inconnu')+(l.line&&l.line!==l.provider?' '+l.line:''));
+ }
+ const fmt=(v,c)=>v.toFixed(2).replace('.',',')+(c==='EUR'?' €':' CHF');
+ const order=o=>Object.entries(o).sort((a,b)=>a[0]===b[0]?0:a[0]==='EUR'?-1:1);
+ if(missingSources.length)return {status:'unknown',amounts,label:'Prix à confirmer',missingSources:[...new Set(missingSources)],
+  partial:Object.keys(amounts).length?order(amounts).map(([c,v])=>fmt(v,c)).join(' + '):null,sources};
+ return {status:'verified',amounts,label:order(amounts).map(([c,v])=>fmt(v,c)).join(' + ')||'0,00 €',missingSources:[],sources:[...new Set(sources)]};
+}
+// Valeur de tri en euros : on ne convertit pas les CHF (pas de taux inventé) ; CHF trié après EUR.
+function priceSortKey(p){if(p.status==='free')return 0;if(p.status!=='verified')return Infinity;
+ return (p.amounts.EUR||0)+(p.amounts.CHF?1e4+p.amounts.CHF:0);}
+
+/* ---------- Évaluation ---------- */
+function marginFor(task){
+ const base=finite(task.marginMinutes)?Math.max(5,task.marginMinutes):15;
+ return task.exactTarget===true&&task.allowShortMargin===true?Math.min(base,5):Math.max(15,base);
+}
+function assess(j,task,fareFor){
+ const reasons=[...(j.missing||[])];
+ const legs=j.legs;
+ const dep=ms(legs[0]?.departure),arr=ms(legs[legs.length-1]?.arrival);
+ let chrono=Number.isFinite(dep)&&Number.isFinite(arr)&&arr>=dep,prev=dep;
+ for(const l of legs){const a=ms(l.departure),b=ms(l.arrival);
+  if(!Number.isFinite(a)||!Number.isFinite(b)||b<a||a<prev-60000){chrono=false;break;}prev=b;}
+ if(!chrono)reasons.push('horaires incohérents');
+ if(legs.some(l=>l.cancelled))reasons.push('course annulée signalée');
+ const margin=marginFor(task),deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
+ const slack=Number.isFinite(deadline)&&Number.isFinite(arr)?Math.floor((deadline-arr)/60000):null;
+ if(Number.isFinite(earliest)&&Number.isFinite(dep)&&dep<earliest-60000)reasons.push('départ avant la fin de la mission précédente');
+ if(slack!==null&&slack<margin)reasons.push(slack<0?'arrivée après l’heure de mission':'marge insuffisante ('+slack+' min, '+margin+' min requises)');
+ const price=priceOf(j,fareFor);
+ const delays=legs.filter(l=>finite(l.delayMinutes)&&l.delayMinutes>0).map(l=>(l.line||l.mode)+' +'+l.delayMinutes+' min');
+ const feasible=reasons.length===0;
+ return {...j,departure:Number.isFinite(dep)?new Date(dep).toISOString():null,arrival:Number.isFinite(arr)?new Date(arr).toISOString():null,
+  durationMinutes:chrono?Math.ceil((arr-dep)/60000):null,slackMinutes:slack,marginMinutes:margin,price,reasons,delays,
+  transfers:Math.max(0,legs.filter(l=>l.kind!=='walk').length-1),
+  walkMeters:legs.filter(l=>l.kind==='walk').reduce((s,l)=>s+(l.distanceMeters||0),0),
+  feasible,status:feasible?'Réalisable':'Transport non confirmé',
+  statusDetail:feasible?(j.realtime?'Horaires temps réel du fournisseur':'Horaires théoriques : retards et annulations à surveiller le jour J'):reasons.join(' · ')};
+}
+function signature(j){
+ return j.legs.filter(l=>l.kind!=='walk').map(l=>[String(l.line||'').replace(/\s+/g,'').toLowerCase(),Math.round(ms(l.departure)/60000),Math.round(ms(l.arrival)/60000)].join('|')).join(';');
+}
+function rank(items){
+ const seen=new Map();
+ for(const j of items){if(!j||j.durationMinutes===null)continue;const k=j.walkOnly?'walk':signature(j);
+  const old=seen.get(k);
+  if(!old){seen.set(k,j);continue;}
+  // Fusion : garder la version la plus complète (marches, prix, temps réel) et cumuler les sources.
+  const better=(j.feasible&&!old.feasible)||(j.reasons.length<old.reasons.length)||(j.price.status==='verified'&&old.price.status!=='verified')?j:old;
+  seen.set(k,{...better,sources:[...new Set([...old.sources,...j.sources])]});
+ }
+ const all=[...seen.values()];
+ const byFeasible=(a,b)=>Number(b.feasible)-Number(a.feasible);
+ const fastest=[...all].sort((a,b)=>byFeasible(a,b)||a.durationMinutes-b.durationMinutes||priceSortKey(a.price)-priceSortKey(b.price))[0];
+ const priced=all.filter(j=>j.price.status==='verified'||j.price.status==='free');
+ const cheapest=[...priced].sort((a,b)=>byFeasible(a,b)||priceSortKey(a.price)-priceSortKey(b.price)||a.durationMinutes-b.durationMinutes)[0];
+ const score=j=>(Number.isFinite(priceSortKey(j.price))?Math.min(priceSortKey(j.price),200):60)+j.durationMinutes/3+j.transfers*8+j.walkMeters/250+
+  (j.slackMinutes===null?0:Math.max(0,30-j.slackMinutes));
+ const compromise=[...all].sort((a,b)=>byFeasible(a,b)||score(a)-score(b))[0];
+ const picks=[];
+ for(const [label,j] of [['Moins cher',cheapest],['Meilleur compromis',compromise],['Plus rapide',fastest]])
+  if(j){const found=picks.find(p=>p.journey===j);if(found)found.labels.push(label);else picks.push({labels:[label],journey:j});}
+ const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||ms(a.departure)-ms(b.departure));
+ return {picks,others,total:all.length};
+}
+
+/* ---------- Requêtes par direction ---------- */
+function inSwissArea(p){return !!p&&((p.lat>=SWISS_BOX.minLat&&p.lat<=SWISS_BOX.maxLat&&p.lon>=SWISS_BOX.minLon&&p.lon<=SWISS_BOX.maxLon&&
+ // exclure la France au sud-ouest de Genève (hors frontière immédiate)
+ !(p.lat<46.15&&meters(p,GENEVA)>30000))||meters(p,GENEVA)<=30000);}
+function queryWindow(task){
+ const margin=marginFor(task),deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
+ if(Number.isFinite(earliest))return {when:new Date(earliest).toISOString(),arriveBy:false};
+ if(Number.isFinite(deadline))return {when:new Date(deadline-margin*60000).toISOString(),arriveBy:true};
+ return null;
+}
+function makeProviders(r,opts={}){
+ const fetcher=opts.fetcher||((...a)=>r.fetch(...a));
+ const P={};
+ if(r.CPTripGo&&typeof r.CPTripGo.plan==='function')P.tripgo={name:'TripGo',enabled:()=>{try{return !!r.CPTripGo.getKey();}catch(_){return false;}},
+  disabledReason:'clé TripGo absente (Réglages → Transports)',
+  run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
+   const deadline=ms(task.latestArrival);
+   const answer=await r.CPTripGo.plan({from:pt(task.from),to:pt(task.to),when:w.when,arriveBy:w.arriveBy,signal,fetcher,
+    ...(!w.arriveBy&&Number.isFinite(deadline)&&deadline>ms(w.when)?{latestArrival:new Date(deadline).toISOString()}:{})});
+   return fromTripGo(answer);}};
+ if(r.CPSwissTransport&&typeof r.CPSwissTransport.plan==='function')P.swiss={name:'Suisse',
+  enabled:task=>inSwissArea(pt(task.from))||inSwissArea(pt(task.to)),disabledReason:'trajet hors zone suisse et Grand Genève',
+  run:async task=>{const w=queryWindow(task);if(!w)return [];const f=pt(task.from),t=pt(task.to);
+   const res=await r.CPSwissTransport.plan({from:f,to:t,when:w.when,arriveBy:w.arriveBy,limit:8,fetcher});
+   return fromSwiss(res);}};
+ if(r.CPRegionalRouting&&typeof r.CPRegionalRouting.plan==='function')P.regional={name:'Mobilités M',
+  enabled:task=>!!opts.regionalEndpoint||r.CPRegionalRouting.supportsPublic?.(pt(task.from),pt(task.to)),disabledReason:'hors agglomération grenobloise',
+  run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
+   const answer=await r.CPRegionalRouting.plan({signal,endpoint:opts.regionalEndpoint,from:pt(task.from),to:pt(task.to),
+    departure:w.arriveBy?undefined:w.when,arrivalDeadline:w.arriveBy?w.when:undefined,fetcher});
+   return fromRegional(answer.itineraries,answer.source||'Mobilités M');}};
+ if(r.CPSncfFallback&&typeof r.CPSncfFallback.plan==='function')P.sncf={name:'SNCF',
+  enabled:task=>!!(task.fromName||pt(task.from))&&!!(task.toName||pt(task.to)),disabledReason:'communes inconnues',
+  run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
+   const answer=await r.CPSncfFallback.plan({from:{name:task.fromCity||'',point:pt(task.from)},to:{name:task.toCity||'',point:pt(task.to)},
+    when:w.when,arriveBy:w.arriveBy,limit:8,signal,fetcher});
+   return fromSNCF(answer);}};
+ return P;
+}
+
+/* ---------- Session ---------- */
+function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm=3,timeoutMs=25000,onUpdate=()=>{}}={}){
+ const state={},controller=new AbortController();let disposed=false;
+ const emit=label=>{if(!disposed)try{onUpdate(label,view(label));}catch(_){}};
+ function view(label){const s=state[label];return {task:s.task,...rank(s.items),pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},done:s.pending===0};}
+ async function add(label,source,journeys){
+  const s=state[label];if(!s||disposed)return;
+  const cancelled=x=>x&&(x.cancelled===true||x.canceled===true||/^(cancelled|canceled|annul)/i.test(String(x.status||'')));
+  const clean=(Array.isArray(journeys)?journeys:[]).filter(j=>j&&!cancelled(j)&&Array.isArray(j.legs)&&j.legs.length&&
+   !j.legs.some(l=>cancelled(l)||BOATS.test(l.mode+' '+(l.line||''))));
+  const done=await Promise.all(clean.slice(0,12).map(j=>completeWalks(j,s.task,router).then(x=>assess(x,s.task,fareFor)).catch(()=>null)));
+  if(disposed)return;
+  s.items.push(...done.filter(Boolean));emit(label);
+ }
+ for(const task of tasks){
+  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{}};
+  if(!pt(task.from)||!pt(task.to)){state[label].errors.adresses='adresse GPS manquante';emit(label);continue;}
+  for(const [key,p] of Object.entries(providers)){
+   let ok=false;try{ok=p.enabled(task);}catch(_){}
+   if(!ok){state[label].skipped[p.name]=p.disabledReason||'non applicable';continue;}
+   state[label].pending++;
+   // Délai borné par moteur (idée reprise du module ChatGPT transport_mission_search.js).
+   const bounded=new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(new Error('délai fournisseur dépassé ('+Math.round(timeoutMs/1000)+' s)')),timeoutMs);
+    Promise.resolve().then(()=>p.run(task,controller.signal)).then(v=>{clearTimeout(t);resolve(v);},e=>{clearTimeout(t);reject(e);});});
+   bounded.then(js=>add(label,p.name,js)).catch(e=>{
+    if(!disposed)state[label].errors[p.name]=String(e&&e.message||e).slice(0,140);
+   }).finally(()=>{if(disposed)return;state[label].pending--;emit(label);});
+  }
+  state[label].pending++;
+  walkOnly(task,router,walkMaxKm).then(w=>w&&state[label].items.push(assess(w,task,fareFor))).catch(()=>{})
+   .finally(()=>{if(disposed)return;state[label].pending--;emit(label);});
+  emit(label);
+ }
+ return {ingest:(label,source,journeys)=>add(label,source,journeys),view,
+  dispose:()=>{disposed=true;controller.abort();},signal:controller.signal};
+}
+
+/* ---------- Affichage (cartes Android) ---------- */
+function clock(v){const t=ms(v);return Number.isFinite(t)?new Intl.DateTimeFormat('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Paris'}).format(new Date(t)):'?';}
+function durationText(min){return min>=60?Math.floor(min/60)+' h '+String(min%60).padStart(2,'0'):min+' min';}
+const ICON={Marche:'🚶',Train:'🚆',Bus:'🚌',Car:'🚍',Tram:'🚊',Métro:'🚇',Funiculaire:'🚡',Transport:'🚏'};
+function el(doc,tag,cls,text){const e=doc.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+function mapSvg(doc,j){
+ const pts=[];for(const l of j.legs){if(l.geometry&&l.geometry.length)pts.push(...l.geometry.map(p=>({...p,w:true})));else{if(l.fromPoint)pts.push(l.fromPoint);if(l.toPoint)pts.push(l.toPoint);}}
+ if(pts.length<2)return null;
+ let a=Infinity,b=-Infinity,c=Infinity,d=-Infinity;for(const p of pts){a=Math.min(a,p.lat);b=Math.max(b,p.lat);c=Math.min(c,p.lon);d=Math.max(d,p.lon);}
+ const W=320,H=180,k=Math.cos((a+b)/2*Math.PI/180),sx=(d-c)*k||1e-4,sy=(b-a)||1e-4,s=Math.min((W-20)/sx,(H-20)/sy);
+ const X=p=>10+((p.lon-c)*k)*s+((W-20)-sx*s)/2,Y=p=>H-10-(p.lat-a)*s-((H-20)-sy*s)/2;
+ const NS='http://www.w3.org/2000/svg',svg=doc.createElementNS(NS,'svg');
+ svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.setAttribute('class','cp-hub-map');svg.setAttribute('role','img');svg.setAttribute('aria-label','Tracé du trajet');
+ for(const l of j.legs){
+  const line=l.geometry&&l.geometry.length?l.geometry:[l.fromPoint,l.toPoint].filter(Boolean);if(line.length<2)continue;
+  const pl=doc.createElementNS(NS,'polyline');pl.setAttribute('points',line.map(p=>X(p).toFixed(1)+','+Y(p).toFixed(1)).join(' '));
+  pl.setAttribute('fill','none');pl.setAttribute('stroke',l.kind==='walk'?'#16a34a':'#1d4ed8');pl.setAttribute('stroke-width',l.kind==='walk'?'3':'4');
+  if(l.kind==='walk')pl.setAttribute('stroke-dasharray','5 4');svg.appendChild(pl);
+ }
+ for(const [p,color] of [[pts[0],'#16a34a'],[pts[pts.length-1],'#dc2626']]){const ci=doc.createElementNS(NS,'circle');ci.setAttribute('cx',X(p));ci.setAttribute('cy',Y(p));ci.setAttribute('r','6');ci.setAttribute('fill',color);svg.appendChild(ci);}
+ return svg;
+}
+function card(doc,j,labels){
+ const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':' warn'));
+ const s=el(doc,'summary');
+ if(labels&&labels.length)s.appendChild(el(doc,'span','cp-hub-chip',labels.join(' · ')));
+ s.appendChild(el(doc,'strong','cp-hub-times',clock(j.departure)+' → '+clock(j.arrival)+' · '+durationText(j.durationMinutes)));
+ const price=el(doc,'span','cp-hub-price'+(j.price.status==='unknown'?' unknown':''),j.price.status==='unknown'?
+  'Prix à confirmer'+(j.price.partial?' (connu : '+j.price.partial+')':''):j.price.label);s.appendChild(price);
+ s.appendChild(el(doc,'span','cp-hub-modes',j.legs.map(l=>(ICON[l.mode]||'🚏')+(l.kind==='walk'?' '+Math.max(1,Math.round((l.durationSeconds||0)/60))+' min':(l.line?' '+l.line:''))).join(' › ')));
+ s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · avance '+j.slackMinutes+' min (marge '+j.marginMinutes+' min)':'')));
+ if(!j.feasible)s.appendChild(el(doc,'small','cp-hub-reason',j.statusDetail));
+ c.appendChild(s);
+ const body=el(doc,'div','cp-hub-body');
+ const ol=el(doc,'ol','cp-hub-legs');
+ for(const l of j.legs){
+  const li=el(doc,'li',l.kind==='walk'?'walk':'ride');
+  li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+Math.max(1,Math.round(l.durationSeconds/60))+' min':''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':''].filter(Boolean).join(' '))));
+  li.appendChild(el(doc,'div',null,clock(l.departure)+' '+(l.from||'?')+' → '+clock(l.arrival)+' '+(l.to||'?')+(l.delayMinutes?' · retard annoncé +'+l.delayMinutes+' min':'')));
+  if(l.kind==='walk')li.appendChild(el(doc,'small',null,l.walkSource==='valhalla'?'Itinéraire piéton calculé (OpenStreetMap)':'Marche calculée par '+j.source));
+  else{const f=l.fare;li.appendChild(el(doc,'small',null,f?'Tarif : '+f.amount.toFixed(2).replace('.',',')+(f.currency==='EUR'?' €':' CHF')+' · '+f.source:'Tarif : à confirmer'));}
+  ol.appendChild(li);
+ }
+ body.appendChild(ol);
+ const svg=mapSvg(doc,j);if(svg)body.appendChild(svg);
+ if(j.price.status==='unknown')body.appendChild(el(doc,'p','cp-hub-note','Source tarifaire manquante : '+j.price.missingSources.join(', ')+'.'));
+ if(j.delays.length)body.appendChild(el(doc,'p','cp-hub-note','Retards signalés : '+j.delays.join(', ')));
+ if(j.alerts.length)body.appendChild(el(doc,'p','cp-hub-note','Alertes : '+j.alerts.join(' · ')));
+ if(j.feasible)body.appendChild(el(doc,'p','cp-hub-note',j.statusDetail));
+ body.appendChild(el(doc,'small','cp-hub-src','Sources : '+j.sources.join(', ')+(j.dataDate?' · données '+j.dataDate:'')));
+ c.appendChild(body);return c;
+}
+function render(host,v){
+ const doc=host.ownerDocument;host.textContent='';host.setAttribute('data-transport-hub',VERSION);
+ const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):'Aucun trajet trouvé'):'Recherche en cours… ('+v.total+' trouvée'+(v.total>1?'s':'')+')');
+ host.appendChild(head);
+ for(const p of v.picks)host.appendChild(card(doc,p.journey,p.labels));
+ if(v.others.length){const more=el(doc,'details','cp-hub-more');more.appendChild(el(doc,'summary',null,'Autres propositions ('+v.others.length+')'));
+  for(const j of v.others.slice(0,8))more.appendChild(card(doc,j,null));host.appendChild(more);}
+ const errs=Object.entries(v.errors),skip=Object.entries(v.skipped);
+ if(v.done&&(errs.length||skip.length)){
+  const d=el(doc,'details','cp-hub-diag');d.appendChild(el(doc,'summary',null,'Moteurs consultés'));
+  for(const [n,e] of errs)d.appendChild(el(doc,'div',null,'❌ '+n+' : '+e));
+  for(const [n,e] of skip)d.appendChild(el(doc,'div',null,'⏭️ '+n+' : '+e));
+  host.appendChild(d);
+ }
+ if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
+}
+
+const api={VERSION,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+ marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
+if(typeof module==='object'&&module.exports)module.exports=api;
+root.CPTransportHub=api;
+})(typeof window!=='undefined'?window:globalThis);
