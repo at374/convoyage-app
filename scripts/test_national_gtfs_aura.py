@@ -38,6 +38,7 @@ def main():
              '--input',source,'--operator','sncf','--out',temp,'--source-url','https://example.org/operator.zip']
         result=json.loads(subprocess.check_output(cmd,text=True))
         assert result['operator']=='sncf'
+        assert result['excludedOutOfRegionDetourTrips']==0
         with zipfile.ZipFile(os.path.join(temp,result['file'])) as z:
             stops=list(csv.DictReader(io.StringIO(z.read('stops.txt').decode())))
             times=list(csv.DictReader(io.StringIO(z.read('stop_times.txt').decode())))
@@ -58,6 +59,7 @@ def main():
             for name, text in data.items():
                 z.writestr(name,text)
         result=json.loads(subprocess.check_output(cmd,text=True))
+        assert result['excludedOutOfRegionDetourTrips']==1,result
         with zipfile.ZipFile(os.path.join(temp,result['file'])) as z:
             trips=list(csv.DictReader(io.StringIO(z.read('trips.txt').decode())))
             assert [t['trip_id'] for t in trips]==['t'],trips
