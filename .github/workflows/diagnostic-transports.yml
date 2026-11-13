@@ -49,11 +49,11 @@ jobs:
           const national=require('./transport-national-gtfs-journeys.js');
           const indexer=require('./transport-gtfs-index.js');
           const files={
-            'calendar.txt':'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\\ns1,1,1,1,1,1,1,1,20260101,20261231\\n',
-            'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\\na,Annecy,45.901,6.121\\nb,Lyon,45.761,4.861\\n',
-            'routes.txt':'route_id,route_short_name,route_type\\nr1,TER,2\\n',
-            'trips.txt':'route_id,service_id,trip_id\\nr1,s1,t1\\n',
-            'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\\nt1,08:00:00,08:00:00,a,1\\nt1,10:00:00,10:00:00,b,2\\n'
+            'calendar.txt':'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\ns1,1,1,1,1,1,1,1,20260101,20261231\n',
+            'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\na,Annecy,45.901,6.121\nb,Lyon,45.761,4.861\n',
+            'routes.txt':'route_id,route_short_name,route_type\nr1,TER,2\n',
+            'trips.txt':'route_id,service_id,trip_id\nr1,s1,t1\n',
+            'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nt1,08:00:00,08:00:00,a,1\nt1,10:00:00,10:00:00,b,2\n'
           };
           const index=indexer.buildIndex(files);
           const args={operator:'sncf',files,index,date:'2026-11-16',from:{lat:45.901,lon:6.121},to:{lat:45.761,lon:4.861}};
