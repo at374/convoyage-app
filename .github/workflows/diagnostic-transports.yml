@@ -110,6 +110,7 @@ jobs:
             destinationStop:{name:'Lyon',lat:45.761,lon:4.861}};
           const providerRoot={CPNationalGTFSJourneys:{loadAndSearch:async args=>{
             assert.equal(args.operator,'flixbus');
+            assert.equal(args.resource.format,'GTFS','real GTFS loader requires explicit format');
             assert.equal(args.date,'2026-11-16');
             assert.equal(args.earliestDeparture,'09:00:00');
             return {journeys:[{...nationalRow,operator:'flixbus'}]};
