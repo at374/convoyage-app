@@ -27,6 +27,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Vérifier la syntaxe et le tarif TAM
+        run: |
+          node --check transport-fare-grids.js
+          node --check transport-tripgo.js
+          node --check scripts/diagnostic-transports-reel.cjs
+          node - <<'NODE'
+          const assert = require('node:assert/strict');
+          const {fareFor} = require('./transport-fare-grids.js');
+          const leg = {kind:'transit',mode:'Bus',provider:'TAM Ambérieu-en-Bugey',line:'TAM 2',departure:'2026-11-16T08:00:00+01:00'};
+          const fare = fareFor(leg);
+          assert.equal(fare?.amount,1.10,'TAM 2026 doit être tarifé à 1,10 €');
+          assert.equal(fare?.currency,'EUR');
+          assert.equal(fareFor({...leg,provider:'Cars Région Ain'}),null,'Ne pas appliquer TAM aux cars Ain');
+          assert.equal(fareFor({...leg,departure:'2027-01-01T08:00:00+01:00'}),null,'Ne pas appliquer un tarif expiré');
+          console.log('Tarif TAM vérifié, exclusions et validité OK');
+          NODE
       - name: Vérifier la présence de TripGo
         env:
           CP_TRIPGO_KEY: ${{ secrets.CP_TRIPGO_KEY }}
