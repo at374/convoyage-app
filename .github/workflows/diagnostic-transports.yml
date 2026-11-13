@@ -8,6 +8,11 @@ on:
     paths:
       - '.github/workflows/diagnostic-transports.yml'
       - 'scripts/diagnostic-transports-reel.cjs'
+      - 'transport-tripgo.js'
+      - 'transport-mission-hub.js'
+      - 'transport-fare-grids.js'
+      - 'transport-coverage.js'
+      - 'transport-gtfs-agenda.js'
 permissions:
   contents: write
 concurrency:
