@@ -48,7 +48,12 @@ const AXES=[
  {id:'amberieu-lyon',name:'Ambérieu-en-Bugey → Lyon Part-Dieu',from:{lat:45.9583,lon:5.3577,name:'Ambérieu gare'},to:{lat:45.7606,lon:4.8593,name:'Lyon Part-Dieu'},expect:['ter','cars-01','tcl']},
  {id:'chambery-aix',name:'Chambéry → Aix-les-Bains',from:{lat:45.5711,lon:5.9196,name:'Chambéry gare'},to:{lat:45.6880,lon:5.9093,name:'Aix-les-Bains gare'},expect:['ter','synchro','ondea']},
  {id:'grenoble-crolles',name:'Grenoble → Crolles',from:{lat:45.1914,lon:5.7143,name:'Grenoble gare'},to:{lat:45.28364,lon:5.88224,name:'Crolles'},expect:['mreso-metro','mreso-gresivaudan']},
- {id:'rumilly-annecy',name:'Rumilly → Annecy',from:{lat:45.8650,lon:5.9437,name:'Rumilly gare'},to:{lat:45.9017,lon:6.1219,name:'Annecy gare'},expect:['ter','jybus','cars-74']},
+ // Vérifié sur le GTFS réel (data/gtfs/jybus-rumilly.zip) le 13/11/2026 : les deux lignes interurbaines J'y bus
+ // (J4 Gare Rumilly ↔ Chavanod Stade, J5 Gare Rumilly ↔ Lycée de Poisy) s'arrêtent à 6,095° de longitude au
+ // plus loin, avant Annecy (6,122°) — J'y bus n'exploite pas cette liaison. Cars Région Haute-Savoie est bien
+ // interrogé (appGtfsChoice réel) mais n'y a aucune course réelle ; Sibra dessert déjà cet axe en direct
+ // (ligne 42, tarif officiel 2,00 €) et apparaît dans les résultats réels.
+ {id:'rumilly-annecy',name:'Rumilly → Annecy',from:{lat:45.8650,lon:5.9437,name:'Rumilly gare'},to:{lat:45.9017,lon:6.1219,name:'Annecy gare'},expect:['ter','sibra']},
  {id:'thonon-geneve',name:'Thonon-les-Bains → Genève',from:{lat:46.3704,lon:6.4818,name:'Thonon gare'},to:{lat:46.2102,lon:6.1424,name:'Genève Cornavin'},expect:['lex','tpg-fr']},
  {id:'voiron-grenoble',name:'Voiron → Grenoble',from:{lat:45.3643,lon:5.5916,name:'Voiron gare'},to:{lat:45.1914,lon:5.7143,name:'Grenoble gare'},expect:['mreso-voironnais','ter']}
 ];
