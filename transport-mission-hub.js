@@ -133,6 +133,38 @@ function fromGTFS(rows,network='Réseau local'){
  });
 }
 
+/* National GTFS provides scheduled candidates, not live service or ticket inventory.
+ * GTFS service day is Europe/Paris, including 24+:xx overnight times. */
+function fromNationalGTFS(rows,operator){
+ const names={sncf:'SNCF',blablacarBus:'BlaBlaCar Bus',flixbus:'FlixBus'};
+ if(!Object.prototype.hasOwnProperty.call(names,operator))return [];
+ const localTime=(date,time)=>{
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date||'')||!/^\d{1,3}:[0-5]\d(?::[0-5]\d)?$/.test(time||''))return null;
+  const [h,m,s='0']=time.split(':').map(Number),day=Date.parse(date+'T00:00:00Z');
+  if(!Number.isFinite(day))return null;
+  const wall=day+(h*3600+m*60+s)*1000;
+  let utc=wall-3600000;
+  for(let n=0;n<3;n++){
+   const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(utc));
+   const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+   const shown=Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute,+p.second);
+   utc+=wall-shown;
+  }
+  return new Date(utc).toISOString();
+ };
+ return (Array.isArray(rows)?rows:[]).filter(r=>r&&r.operator===operator).map(r=>{
+  const a=r.originStop,b=r.destinationStop;
+  const transit=leg({mode:operator==='sncf'?'Train':'Car',provider:names[operator],line:r.line,
+   from:a?.name||a?.stop_name||'',to:b?.name||b?.stop_name||'',
+   fromPoint:{lat:a?.lat??a?.stop_lat,lon:a?.lon??a?.stop_lon},
+   toPoint:{lat:b?.lat??b?.stop_lat,lon:b?.lon??b?.stop_lon},
+   departure:localTime(r.date,r.departure),arrival:localTime(r.date,r.arrival)});
+  return {...journey(names[operator]+' (GTFS)',[transit]),
+   missing:['horaire GTFS non confirmé en temps réel','prix commercial et disponibilité non vérifiés']};
+ }).filter(j=>j.legs[0].departure&&j.legs[0].arrival);
+}
+
 /* ---------- Marches ---------- */
 function walkLeg(route,from,to,fromName,toName,depMs){
  return leg({kind:'walk',mode:'Marche',from:fromName,to:toName,fromPoint:from,toPoint:to,
@@ -542,7 +574,7 @@ function render(host,v){
  if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
