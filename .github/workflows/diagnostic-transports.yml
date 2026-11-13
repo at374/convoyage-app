@@ -119,6 +119,10 @@ jobs:
           for(let i=1;i<deps.length;i++)assert.ok(scripts.indexOf(deps[i-1])<scripts.indexOf(deps[i]),
             'National GTFS browser dependency order incorrect: '+deps[i]);
           console.log('National GTFS browser scripts and dependency order OK');
+          const app=fs.readFileSync('app.js','utf8');
+          assert.match(app,/nationalGTFSResources:\s*window\.CP_NATIONAL_GTFS_RESOURCES\s*\|\|\s*\{\}/,
+            'Mission cards must pass national GTFS resources to the hub');
+          console.log('Mission cards national GTFS resource injection OK');
           NODE
           node <<'NODE'
           const assert=require('node:assert/strict');
