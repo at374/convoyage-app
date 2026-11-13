@@ -62,6 +62,12 @@ jobs:
           assert.equal(fareFor({...urban,line:'A',mode:'Train'}),null);
           assert.equal(fareFor({...urban,line:'A',provider:''}),null);
           assert.equal(fareFor({...urban,line:'A',kind:'walk'}),null);
+          const interzone={...urban,line:'142',from:'Les Arts',to:'Mairie'};
+          assert.equal(fareFor(interzone)?.amount,2.20,'STAR’T 142 Les Arts → Mairie');
+          assert.equal(fareFor({...interzone,line:'L'})?.amount,2.20,'STAR’T L Les Arts → Mairie');
+          assert.equal(fareFor({...interzone,to:'Collège F.Mugnier'}),null,'Zone du terminus non confirmée');
+          assert.equal(fareFor({...interzone,provider:'But'}),null,'Autre opérateur non assimilé');
+          assert.equal(fareFor({...interzone,departure:'2027-01-01T08:00:00+01:00'}),null,'Tarif expiré');
           // Deux grilles concurrentes pour une même portion ne donnent aucun prix.
           const star = require('./transport-fare-grids.js').GRIDS.find(g=>g.network==="STAR'T zone A");
           assert.ok(star,'Grille STAR’T présente');
