@@ -829,3 +829,12 @@ test('Mobile regional transport cards cover Aller Jonction Retour and safe stop 
  assert.match(app,/position exacte non vérifiée/);
  assert.match(app,/Transport non confirmé/);
 });
+
+test('le flux GTFS local le plus précis est retenu à la place du flux départemental large (diagnostic du 13/11/2026)',()=>{
+ const pick=(from,to)=>{const p=agenda.chooseResources(agenda.DEFAULT_RESOURCES,[{from,to}]);return [p.resource,...p.partners].map(r=>r.id);};
+ assert.deepEqual(pick({lat:45.6886,lon:5.9153},{lat:45.6427,lon:5.8726}),['71223','82272']);           // Aix → Technolac : Ondéa
+ assert.deepEqual(pick({lat:46.3705,lon:6.4797},{lat:46.2650,lon:6.3990}),['82178','oura-haute-savoie']); // Thonon → Bons : Star't
+ assert.equal(pick({lat:45.5711,lon:5.9195},{lat:45.5420,lon:6.2210})[0],'cars-region-savoie');          // Chambéry → Chamoux
+ assert.deepEqual(pick({lat:45.9530,lon:5.3570},{lat:45.9650,lon:5.3800}),['oura-ain','tam-amberieu']); // Ambérieu urbain : TAM
+ assert.equal(pick({lat:45.8992,lon:6.1215},{lat:46.2102,lon:6.1424})[0],'oura-haute-savoie');          // Annecy → Genève : Y51 conservée
+});

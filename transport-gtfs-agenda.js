@@ -125,15 +125,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  // The Haute-Savoie envelope overlaps much of Ain. Prefer the Ain feed only
  // for a journey fully inside its conservative western core, without changing
  // Grenoble/Grésivaudan or Annecy network precedence.
- const ainCore=task=>[task?.from,task?.to].every(p=>validPoint(p)&&p.lat>=45.9&&p.lat<=46.5&&p.lon>=4.7&&p.lon<=5.85);
- const ain=resourceList.find(r=>r.id==='oura-ain');
- const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
- const resource=preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
+ const {resource,partners}=chooseResources(resourceList,taskList);
  if(!resource)return {dispose,done:Promise.resolve()};
- const partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
-  crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
-  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to}))))).slice(0,1);
- const eligible=task=>selected(resource,task)||partners.some(r=>crossEnvelopePair(resource,r,task));
+ const eligible=task=>selected(resource,task)||partners.some(r=>crossEnvelopePair(resource,r,task)||selected(r,task));
  const section=doc.createElement('div');section.className='bk';section.setAttribute('data-gtfs-agenda','');
  const heading=doc.createElement('h3');heading.textContent=resource.network+' — horaires aux arrêts';section.appendChild(heading);
  const sourceStatus=doc.createElement('p');sourceStatus.className='doux';sourceStatus.setAttribute('role','status');
@@ -345,7 +339,38 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  })();
  return {dispose,done,refreshFares};
 }
-const api={DEFAULT_RESOURCES,selected,crossEnvelopePair,searchWindow,serviceDates,mount};
+function chooseResources(resourceList,taskList){
+ const ainCore=task=>[task?.from,task?.to].every(p=>validPoint(p)&&p.lat>=45.9&&p.lat<=46.5&&p.lon>=4.7&&p.lon<=5.85);
+ const ain=resourceList.find(r=>r.id==='oura-ain');
+ const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
+ const first=preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
+ if(!first)return {resource:null,partners:[]};
+ // Diagnostic réel du 13/11/2026 : le premier flux correspondant était parfois un flux départemental très large
+ // (Cars Haute-Savoie) pour Aix → Technolac, Thonon → Bons ou Chambéry → Chamoux, sans le réseau local.
+ // Si le flux retenu est large, on prend le flux le plus précis qui couvre entièrement le trajet, et on garde
+ // le flux couvrant suivant comme second réseau (deux réseaux au plus sur téléphone).
+ const area=r=>Array.isArray(r?.bounds)&&r.bounds.length===4?Math.abs((r.bounds[2]-r.bounds[0])*(r.bounds[3]-r.bounds[1])):Infinity;
+ if(!preferredAin&&area(first)>LARGE_AREA){
+  const covering=resourceList.map((r,i)=>({r,i})).filter(({r})=>r!==ain&&taskList.some(t=>selected(r,t)))
+   .sort((a,b)=>area(a.r)-area(b.r)||a.i-b.i).map(x=>x.r);
+  if(covering[0]&&covering[0]!==first){
+   const next=covering.find(r=>r!==covering[0]);
+   return {resource:covering[0],partners:next?[next]:[]};
+  }
+ }
+ const resource=first;
+ let partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
+  crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
+  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to}))))).slice(0,1);
+ // Trajet urbain dans l'Ain (ex. TAM à Ambérieu) : on ajoute le réseau local qui couvre tout le trajet.
+ if(preferredAin&&!partners.length){
+  const local=resourceList.filter(r=>r!==ain&&area(r)<area(ain)&&taskList.some(t=>selected(r,t))).sort((a,b)=>area(a)-area(b))[0];
+  if(local)partners=[local];
+ }
+ return {resource,partners};
+}
+const LARGE_AREA=0.5; // degrés² : au-delà, flux départemental ou régional
+const api={DEFAULT_RESOURCES,selected,chooseResources,crossEnvelopePair,searchWindow,serviceDates,mount};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSAgenda=api;
 })(typeof window!=='undefined'?window:globalThis);

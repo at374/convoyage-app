@@ -68,8 +68,9 @@ async function gtfsRows(axis,when){
   for(const [id,o] of Object.entries(nets)){const r=report.networks[id]||(report.networks[id]={trips:0,priced:0,walked:0,at:report.at,axes:[],source:'serveur'});
    r.trips+=o.trips;r.priced+=o.priced;r.walked+=o.walked;r.axes.push(axis.id);}
   const walkedOk=j=>!(j.reasons||[]).some(r=>/marche|non calculée|quota|en cours/.test(r));
-  // Réseaux que l'APPLICATION choisirait (premier flux GTFS correspondant), pour détecter un mauvais choix de flux.
-  const appFirst=A.DEFAULT_RESOURCES.find(r=>A.selected(r,{from:axis.from,to:axis.to}))?.network||null;
+  // Réseaux que l'APPLICATION choisirait (flux principal + réseau partenaire, même logique que mount), pour détecter un mauvais choix de flux.
+  const pick=A.chooseResources(A.DEFAULT_RESOURCES,[{from:axis.from,to:axis.to}]);
+  const appFirst=pick.resource?[pick.resource,...pick.partners].map(r=>r.network).join(' + '):null;
   const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,walked:all.filter(walkedOk).length,
    feasible:all.filter(j=>j.feasible).length,firstResultMs:firstAt,totalMs:Date.now()-started,
    received:v.received,
