@@ -1,0 +1,60 @@
+name: Construire GTFS nationaux AURA (manuel)
+on:
+  workflow_dispatch:
+    inputs:
+      operator:
+        description: 'Opérateur à vérifier (all = les trois)'
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - sncf
+          - blablacarBus
+          - flixbus
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Découvrir les flux nationaux officiels
+        run: node scripts/audit-national-operators.cjs
+      - name: Préparer les extraits AURA depuis les flux disponibles
+        id: build
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          if [ "${{ inputs.operator }}" = all ]; then
+            python3 scripts/build_national_from_catalogue.py --audit docs/audit-national-operators.json --out data/gtfs | tee national-build-report.json
+          else
+            python3 scripts/build_national_from_catalogue.py --audit docs/audit-national-operators.json --out data/gtfs --operator "${{ inputs.operator }}" | tee national-build-report.json
+          fi
+      - name: Conserver le rapport et les extraits sans déploiement
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: national-aura-gtfs-${{ github.run_id }}
+          path: |
+            docs/audit-national-operators.json
+            national-build-report.json
+            data/gtfs/national-*.zip
+            data/gtfs/national-*.zip.json
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Signaler les opérateurs indisponibles
+        if: steps.build.outcome != 'success'
+        run: |
+          echo 'Certains flux nationaux sont absents ou non exploitables : consulter le rapport, aucun tarif inventé.' >> "$GITHUB_STEP_SUMMARY"
+          exit 1
