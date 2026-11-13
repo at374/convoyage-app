@@ -86,6 +86,9 @@ async function run(){
  try{
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--no-sandbox']});
   context=await browser.newContext({...devices['Pixel 7'],locale:'fr-FR',timezoneId:'Europe/Paris',serviceWorkers:'block'});
+  // Les anciens blocs par moteur sont désormais repliés sous « Détail par moteur » : ce test vérifie leur contenu, il les ouvre.
+  await context.addInitScript(()=>{new MutationObserver(()=>document.querySelectorAll('details.cp-transport-sources:not([open])').forEach(d=>{d.open=true;}))
+   .observe(document,{childList:true,subtree:true});});
   await context.addInitScript(({missions,settings,origin,relayURL})=>{
    if(new URL(location.href).searchParams.has('buslive'))window.CP_BLABLACAR_REALTIME_URL=relayURL;
    // An invalid optional relay must never block SNCF or the other engines.

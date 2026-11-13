@@ -2257,12 +2257,16 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       const lead=document.createElement('p');lead.textContent='Recherche automatique à partir des adresses de ta mission.';
       const margin=document.createElement('small');margin.textContent='Arrivée : 15 min minimum avant la prise en charge. Horaires et prix à vérifier avant de partir.';
       hero.append(eyebrow,title,lead,margin);panel.appendChild(hero);
-      const transportDestinations={};
+      const transportDestinations={},legacySources={};
       for(const [key,label,route] of [['Aller','01 · Aller',home+' → '+from],['Jonction','02 · Mission suivante',next?to+' → '+nextOrigin:'Aucune prochaine mission prévue'],['Retour','03 · Retour',to+' → '+home]]){
         const section=document.createElement('section');section.className='cp-transport-direction';section.dataset.transportDirection=key;
         const heading=document.createElement('h3');heading.textContent=label;
         const path=document.createElement('p');path.className='cp-transport-route';path.textContent=route;
         section.append(heading,path);transportDestinations[key]=section;panel.appendChild(section);
+        // Un seul affichage des trajets : les cartes classées du hub. Les anciens blocs par moteur restent consultables, repliés.
+        const legacy=document.createElement('details');legacy.className='cp-transport-sources';legacy.dataset.transportSources=key;
+        const legacyTitle=document.createElement('summary');legacyTitle.textContent='Détail par moteur (justificatifs)';legacy.appendChild(legacyTitle);
+        section.appendChild(legacy);legacySources[key]=legacy;
       }
       panel.appendChild(sourcePanel);
       // Keep manual controls available without placing them ahead of automatic results.
@@ -2320,7 +2324,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         if(!panel.isConnected||panel.hidden||$('feuille').hidden||!transportDestinations[task.label])return;
         localCards[task.label]?.remove();
         const host=document.createElement('div');host.className='cp-transport-local';localCards[task.label]=host;
-        transportDestinations[task.label].appendChild(host);
+        (legacySources[task.label]||transportDestinations[task.label]).appendChild(host);
         if(!itineraries.length){host.textContent='Pas d’horaire local compatible dans les données consultées.';return;}
         const rows=itineraries.map(row=>({...row,legs:Array.isArray(row.legs)&&row.legs.length?row.legs:[{line:row.line,from:row.originStop?.name||row.from,to:row.destinationStop?.name||row.to,departure:row.departure,arrival:row.arrival}]}));
         const normalized=window.CPTransportAdapters?.adaptGTFS(rows,'Réseau local')||[];
@@ -2445,7 +2449,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           previous?.remove();
           previous = document.createElement('div');
           previous.setAttribute('data-regional-slot', '');
-          (transportDestinations[direction]||sourcePanel).appendChild(previous);
+          (legacySources[direction]||transportDestinations[direction]||sourcePanel).appendChild(previous);
           render(previous,controller.signal);
         };
         regionalRefreshers.push(refresh);

@@ -110,6 +110,10 @@ async function run(){
   const text=await retour.evaluate(n=>n.textContent);
   assert.ok(elapsed<30000,'résultats du retour en moins de 30 s : '+elapsed+' ms');
   assert.match(text,/FlixBus 1789/,'TripGo réel intégré');
+  // Un seul affichage : cartes du hub d'abord, anciens blocs par moteur repliés en dessous.
+  const order=await page.locator('[data-transport-direction="Retour"]').evaluate(sec=>{const hub=sec.querySelector('[data-transport-hub]'),src=sec.querySelector('details.cp-transport-sources');
+   return {hubFirst:!!hub&&!!src&&!!(hub.compareDocumentPosition(src)&Node.DOCUMENT_POSITION_FOLLOWING),closed:!!src&&!src.open};});
+  assert.deepEqual(order,{hubFirst:true,closed:true});
   assert.match(text,/Moins cher|Meilleur compromis|Plus rapide/);
   assert.match(text,/Prix à confirmer/,'aucun tarif inventé pour FlixBus/BlaBlaCar/SNCF');
   // Tarif publié dans le GTFS : la course T42 doit afficher 1,60 € et sa source.
