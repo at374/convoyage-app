@@ -176,7 +176,6 @@
     // V283 : « CRUSEILLES A » sur l'A41 est la jonction de la barrière Adelac (tarifée par le moteur de barrières) : sans passage par l'A410 (St Martin Bellevue), on l'ignore.
     if (eN < 0) for (let q = hits.length - 1; q >= 0; q--) if (P.g[hits[q].g][0] === 'CRUSEILLES A') hits.splice(q, 1);
     // V278 : « VOREPPE BARRIERE » (A48/A49, AREA) facture depuis le début du tronçon à péage (Grenoble → Voreppe compris) : tarif 35 km pour Voreppe → Rives alors que 18 km séparent la barrière de Rives. On accepte la distance mesurée sur le tracé OU depuis le début/jusqu'à la fin du tronçon.
-    while (hits.length > 1 && P.g[hits[0].g][0] === 'ST MARTIN BELLEVUE A41 N' && sh.slice(i0, hits[0].k + 1).every(w => w[0] > 46.08)) hits.shift();
     hits.forEach(q => { if (P.g[q.g][0] === ENT) q.ent = true; if (P.g[q.g][0] === 'VOREPPE BARRIERE') q.vo = true; });
     // V246 : gares « jumelles » (mêmes coordonnées, ex. Dourdan / La Folie-B) : on essaie la plus proche d'abord, puis ses jumelles.
     const jc = new Map();
@@ -192,7 +191,7 @@
       for (let h = hits.length - 1; h > i && !ok; h--) { const p = paire(hits[i], hits[h]); if (p) ok = { h, p }; }
       if (!ok) {
         // gare isolée sans tarif : tolérée uniquement après le dernier tronçon tarifé, jamais au milieu du trajet
-        if (!segs.length) { gap = true; i++; continue; }   // V296 : gare isolée : on la saute et on continue pour garder tous les tronçons vérifiés (le prix exact reste refusé)
+        if (!segs.length) { if (i === 0 && P.g[hits[0].g][0] === 'ST MARTIN BELLEVUE A41 N' && sh.slice(i0, hits[0].k + 1).every(w => w[0] > 46.08)) { i++; continue; } gap = true; i++; continue; }   // V296 : gare isolée : on la saute et on continue pour garder tous les tronçons vérifiés (le prix exact reste refusé)
         // V283 : « ALLONZIER » reliée à l'A41 nord est la même jonction qu'Adelac Cruseilles : sortie là = Adelac seul (barrières), aucun tarif AREA.
         if (hits.slice(i).every(q => P.g[q.g][0] === 'ALLONZIER' || (P.g[q.g][0] === 'ST MARTIN BELLEVUE A41 N' && sh.slice(q.k).every(w => w[0] > 46.08)))) break;
         let lat = false; for (let a = i; a < hits.length; a++) for (let c = a + 1; c < hits.length; c++) if (paire(hits[a], hits[c])) lat = true; if (lat) { gap = true; i++; continue; }
