@@ -96,7 +96,11 @@ async function gtfsRows(axis,when){
    if(j.price?.status!=='unknown')continue;
    for(const l of j.legs){
     if(l.kind==='walk')continue;
-    const hasFare=l.fare&&Number.isFinite(l.fare.amount)&&l.fare.amount>=0;
+    // Même règle que priceOf : un tarif officiel issu de la grille compte
+    // aussi, pas seulement un billet embarqué dans la réponse du moteur.
+    const fare=l.fare||g.CPTransportFareGrids.fareFor(l);
+    const hasFare=fare&&Number.isFinite(fare.amount)&&fare.amount>=0&&
+     /^(EUR|CHF)$/.test(fare.currency)&&fare.source;
     if(hasFare)continue;
     const name=String(l.provider||'opérateur inconnu').slice(0,80);
     missingFareByOperator[name]=(missingFareByOperator[name]||0)+1;
