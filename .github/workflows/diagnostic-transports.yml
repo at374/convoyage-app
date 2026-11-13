@@ -51,6 +51,13 @@ jobs:
             {id:'flix',name:'Réseau européen FlixBus et FlixTrain',resources:[{id:'f',format:'GTFS',url:'https://transport.data.gouv.fr/flix.zip'}]}
           ];
           const national=nationalOperatorGTFS(feedRows);
+          const mixedNational=nationalOperatorGTFS([{id:'mixed',name:'Horaires nationaux',resources:[
+            {id:'bb',name:'BlaBlaCar Bus Europe',format:'GTFS',url:'https://transport.data.gouv.fr/bb.zip'},
+            {id:'other',name:'Autre transporteur',format:'GTFS',url:'https://transport.data.gouv.fr/other.zip'}]}]);
+          assert.equal(mixedNational.blablacarBus.length,1,'Découverte par titre de ressource');
+          assert.equal(mixedNational.blablacarBus[0].id,'bb','Pas de contamination par les autres ressources');
+          assert.equal(mixedNational.flixbus.length,0,'Aucun FlixBus inventé');
+
           for(const operator of ['sncf','blablacarBus','flixbus']){
             assert.equal(national[operator].length,1,'Flux officiel découvert : '+operator);
             assert.equal(national[operator][0].providesLiveFares,false,'Aucun prix commercial supposé : '+operator);
