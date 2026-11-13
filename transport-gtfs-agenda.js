@@ -367,9 +367,23 @@ function chooseResources(resourceList,taskList){
   }
  }
  const resource=first;
- let partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
+ // oura-ain n'est repêché ici que via preferredAin : son enveloppe très large chevauche une partie de la
+ // Haute-Savoie/du Genevois et serait sinon ajouté à tort dès qu'il touche une seule extrémité d'un
+ // trajet qu'il ne dessert pas réellement (ex. Genève sur Thonon → Genève), masquant un réseau local
+ // pertinent (Star't) qui, lui, dessert vraiment l'autre extrémité.
+ let partners=resourceList.filter(r=>r!==resource&&r!==ain&&r.federate&&taskList.some(task=>
   crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
-  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to}))))).slice(0,1);
+  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to})))));
+ // Quand plusieurs réseaux ne touchent le trajet que par un chevauchement d'enveloppe (flux large type
+ // Cars Région Haute-Savoie), on privilégie celui qui couvre le point de départ : c'est en général lui qui
+ // exploite la ligne interurbaine/transfrontalière réelle (ex. Star't sur Thonon → Genève, qui dessert
+ // effectivement la ligne 271/T71 jusqu'à Genève), plutôt qu'un réseau qui ne touche que l'arrivée par simple
+ // recouvrement géométrique (ex. TAC Annemasse, dont l'enveloppe frôle Genève sans desservir ce trajet).
+ partners=partners.sort((a,b)=>{
+  const score=r=>taskList.some(task=>crossEnvelopePair(resource,r,task))?0:
+   taskList.some(task=>selected(r,{...task,to:task.from}))?1:2;
+  return score(a)-score(b);
+ }).slice(0,1);
  // Trajet urbain dans l'Ain (ex. TAM à Ambérieu) : on ajoute le réseau local qui couvre tout le trajet.
  if(preferredAin&&!partners.length){
   const local=resourceList.filter(r=>r!==ain&&area(r)<area(ain)&&taskList.some(t=>selected(r,t))).sort((a,b)=>area(a)-area(b))[0];

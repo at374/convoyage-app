@@ -846,3 +846,12 @@ test("Chambéry → Aix-les-Bains retient Synchro ET Ondéa (convention d'extens
  // le flux départemental Cars Région Savoie retenu auparavant.
  assert.deepEqual(pick({lat:45.5711,lon:5.9196},{lat:45.6880,lon:5.9093}),['82272','71223']);
 });
+test("Thonon-les-Bains → Genève retient Cars Région Haute-Savoie ET Star't (pas TAC Annemasse ni Cars Région Ain)",()=>{
+ const pick=(from,to)=>{const p=agenda.chooseResources(agenda.DEFAULT_RESOURCES,[{from,to}]);return [p.resource,...p.partners].map(r=>r.id);};
+ // Diagnostic réel du 13/11/2026 : le flux large Cars Région Haute-Savoie était retenu seul, ou associé à
+ // Cars Région Ain (faux positif, enveloppe très large) ou à TAC Annemasse (enveloppe qui frôle Genève sans
+ // desservir ce trajet). La ligne interurbaine/transfrontalière réelle (271/T71 Thonon ↔ Genève, cf. réglement
+ // public GLCT du 10/10/2025) est exploitée côté français par Star't, qui couvre le départ (Thonon) : c'est
+ // donc lui qu'il faut préférer à un réseau qui ne touche que l'arrivée par simple recouvrement d'enveloppe.
+ assert.deepEqual(pick({lat:46.3704,lon:6.4818},{lat:46.2102,lon:6.1424}),['oura-haute-savoie','82178']);
+});
