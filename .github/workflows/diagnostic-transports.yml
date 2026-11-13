@@ -287,8 +287,8 @@ jobs:
             git fetch origin "${GITHUB_REF_NAME}"
             if ! git rebase "origin/${GITHUB_REF_NAME}"; then
               git rebase --abort || true
-              echo '::error::Conflit sur les rapports : publication annulée sans forcer'
-              exit 1
+              echo '::warning::Conflit sur les rapports : artefact conservé, publication Git annulée sans forcer'
+              exit 0
             fi
             if git push origin "HEAD:${GITHUB_REF_NAME}"; then
               echo 'Rapport publié'
