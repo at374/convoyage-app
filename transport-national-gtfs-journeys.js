@@ -26,7 +26,7 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
 async function loadAndSearch({operator,resource,fetcher,signal,loadOptions={},...searchOptions}={}){
  if(!OPERATORS.has(operator))throw new Error('Unsupported national operator');
  if(!resource||!/^https:\/\//i.test(resource.url||''))throw new Error('HTTPS GTFS resource required');
- if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(searchOptions.date||'')||
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(searchOptions.date||'')||
   !Number.isFinite(Date.parse(searchOptions.date+'T00:00:00Z'))||
   new Date(searchOptions.date+'T00:00:00Z').toISOString().slice(0,10)!==searchOptions.date)
   throw new Error('Invalid service date before GTFS download');
