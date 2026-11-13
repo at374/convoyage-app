@@ -143,15 +143,15 @@ function fromNationalGTFS(rows,operator){
   const [h,m,s='0']=time.split(':').map(Number),day=Date.parse(date+'T00:00:00Z');
   if(!Number.isFinite(day))return null;
   const wall=day+(h*3600+m*60+s)*1000;
-  let utc=wall-3600000;
-  for(let n=0;n<3;n++){
-   const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
-    hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(utc));
-   const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
-   const shown=Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute,+p.second);
-   utc+=wall-shown;
-  }
-  return new Date(utc).toISOString();
+  // Resolve the UTC offset from the intended service day. Do not iterate over
+  // formatted wall-clock dates: a midnight representation can drift by days.
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Paris',
+   timeZoneName:'shortOffset'}).formatToParts(new Date(wall));
+  const zone=parts.find(p=>p.type==='timeZoneName')?.value||'';
+  const match=/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/.exec(zone);
+  if(!match)return null;
+  const offset=(match[1]==='+'?1:-1)*(Number(match[2])*60+Number(match[3]||0));
+  return new Date(wall-offset*60000).toISOString();
  };
  return (Array.isArray(rows)?rows:[]).filter(r=>r&&r.operator===operator).map(r=>{
   const a=r.originStop,b=r.destinationStop;
