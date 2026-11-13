@@ -43,6 +43,18 @@ jobs:
           assert.equal(registry.split('function fareFor(').length-1,1,'Une seule fonction fareFor');
           assert.equal((registry.match(/CPTransportFareGrids=api/g)||[]).length,1,'Un seul module de tarifs');
           const {fareFor} = require('./transport-fare-grids.js');
+          const {nationalOperatorGTFS}=require('./transport-catalogue.js');
+          const feedRows=[
+            {id:'sncf',name:'Réseau SNCF TGV, Intercités et TER',resources:[{id:'s',format:'GTFS',url:'https://transport.data.gouv.fr/sncf.zip'}]},
+            {id:'blabla',name:'Réseau européen BlaBlaCar Bus',resources:[{id:'b',format:'GTFS',url:'https://transport.data.gouv.fr/blabla.zip'}]},
+            {id:'flix',name:'Réseau européen FlixBus et FlixTrain',resources:[{id:'f',format:'GTFS',url:'https://transport.data.gouv.fr/flix.zip'}]}
+          ];
+          const national=nationalOperatorGTFS(feedRows);
+          for(const operator of ['sncf','blablacarBus','flixbus']){
+            assert.equal(national[operator].length,1,'Flux officiel découvert : '+operator);
+            assert.equal(national[operator][0].providesLiveFares,false,'Aucun prix commercial supposé : '+operator);
+          }
+
           const {makeProviders}=require('./transport-mission-hub.js');
           const tripgoStub={CPTripGo:{plan:async()=>[],getKey:()=> 'test-key'},CPSwissTransport:{plan:async()=>[]}};
           const providerDefault=makeProviders(tripgoStub,{fetcher:async()=>({})});
