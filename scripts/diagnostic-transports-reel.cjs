@@ -85,10 +85,18 @@ async function gtfsRows(axis,when){
   const tripgoPricedFromGrids=tripgoJourneys.filter(j=>j.price?.status==='verified'&&
    !j.legs.some(l=>l.kind!=='walk'&&l.fare&&/TripGo/i.test(String(l.fare.source||'')))).length;
   const tripgoMissingFareByOperator={};
+  const tripgoFareLegsFromGridsByOperator={};
   for(const j of tripgoJourneys)for(const l of j.legs){
-   if(l.kind==='walk'||l.fare&&Number.isFinite(l.fare.amount))continue;
+   if(l.kind==='walk')continue;
+   const ticket=l.fare&&Number.isFinite(l.fare.amount)&&l.fare.amount>=0&&
+    /^(EUR|CHF)$/.test(l.fare.currency)&&l.fare.source;
+   if(ticket)continue;
    const operator=String(l.provider||'opérateur inconnu').slice(0,80);
-   tripgoMissingFareByOperator[operator]=(tripgoMissingFareByOperator[operator]||0)+1;
+   const gridFare=g.CPTransportFareGrids.fareFor(l);
+   if(gridFare&&Number.isFinite(gridFare.amount)&&gridFare.amount>=0&&
+    /^(EUR|CHF)$/.test(gridFare.currency)&&gridFare.source){
+    tripgoFareLegsFromGridsByOperator[operator]=(tripgoFareLegsFromGridsByOperator[operator]||0)+1;
+   }else tripgoMissingFareByOperator[operator]=(tripgoMissingFareByOperator[operator]||0)+1;
   }
   // Les portions sans prix, toutes sources confondues, sont regroupées pour
   // cibler les prochains raccordements tarifaires sans inventer de montant.
@@ -129,7 +137,7 @@ async function gtfsRows(axis,when){
    }
    if(known>0&&unknown>0)partialPricedJourneys++;
   }
-  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoPricedFromGrids,tripgoTicketLegs,tripgoMissingFareByOperator,missingFareByOperator,missingFareSamples,fareLegsByOperator,partialPricedJourneys,walked:all.filter(walkedOk).length,
+  const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoPricedFromGrids,tripgoTicketLegs,tripgoMissingFareByOperator,tripgoFareLegsFromGridsByOperator,missingFareByOperator,missingFareSamples,fareLegsByOperator,partialPricedJourneys,walked:all.filter(walkedOk).length,
    feasible:all.filter(j=>j.feasible).length,firstResultMs:firstAt,totalMs:Date.now()-started,
    received:v.received,
    reasons:all.flatMap(j=>j.reasons||[]).reduce((m,r)=>{const k=r.replace(/\d+/g,'n').slice(0,70);m[k]=(m[k]||0)+1;return m;},{}),
@@ -149,6 +157,8 @@ async function gtfsRows(axis,when){
  report.totals.tripgoPricedFromGrids=report.axes.reduce((n,a)=>n+a.tripgoPricedFromGrids,0);
  report.totals.missingFareByOperator={};
  for(const a of report.axes)for(const [name,count] of Object.entries(a.missingFareByOperator))report.totals.missingFareByOperator[name]=(report.totals.missingFareByOperator[name]||0)+count;
+ report.totals.tripgoFareLegsFromGridsByOperator={};
+ for(const a of report.axes)for(const [name,count] of Object.entries(a.tripgoFareLegsFromGridsByOperator))report.totals.tripgoFareLegsFromGridsByOperator[name]=(report.totals.tripgoFareLegsFromGridsByOperator[name]||0)+count;
  report.totals.tripgoMissingFareByOperator={};
  for(const a of report.axes)for(const [name,count] of Object.entries(a.tripgoMissingFareByOperator))report.totals.tripgoMissingFareByOperator[name]=(report.totals.tripgoMissingFareByOperator[name]||0)+count;
  report.totals.pricedPct=report.totals.trips?Math.round(report.totals.priced*1000/report.totals.trips)/10:0;
