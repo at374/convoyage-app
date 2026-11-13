@@ -54,8 +54,12 @@ def main():
             continue
         errors = []
         for feed in feeds:
+            if not isinstance(feed, dict):
+                errors.append({'resourceId': None, 'error': 'Malformed feed record'})
+                continue
             url = feed.get('url')
             if not isinstance(url, str) or not url.startswith('https://'):
+                errors.append({'resourceId': feed.get('id'), 'error': 'Missing HTTPS resource URL'})
                 continue
             try:
                 with tempfile.TemporaryDirectory() as directory:
