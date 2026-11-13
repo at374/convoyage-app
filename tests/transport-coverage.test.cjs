@@ -13,15 +13,16 @@ test('inventaire : 4 états, aucun « Validé en réel » sans diagnostic télé
  for(const r of inv.rows){assert.ok(r.blocage&&r.action,'blocage et action renseignés : '+r.id);assert.ok(['vérifiés','partiels','manquants'].includes(r.tarif));}
  // TCL : jamais compté comme raccordé (TripGo seul ne compte pas) ; J'y bus / TAM : extraction serveur prévue, donc partiels seulement.
  assert.equal(inv.rows.find(r=>r.id==='tcl').state,'Non raccordé');
- for(const id of ['jybus','tam'])assert.equal(inv.rows.find(r=>r.id===id).state,'Partiellement raccordé');
+ // J'y bus / TAM : flux officiels réels extraits par la tâche serveur et testés (13/11) — pas « validés en réel » pour autant.
+ for(const id of ['jybus','tam'])assert.equal(inv.rows.find(r=>r.id===id).state,'Testé sur données enregistrées');
 });
 
 test('« Validé en réel » seulement avec des trajets réels de moins de 30 jours',()=>{
- const n=C.NETWORKS.find(x=>x.id==='synchro');
+ const n=C.NETWORKS.find(x=>x.id==='tpg');
  const now=Date.parse('2026-11-20T00:00:00Z');
- assert.equal(C.stateOf(n,{networks:{synchro:{trips:3,at:'2026-11-13T09:00:00Z'}}},now),'Validé en réel');
- assert.equal(C.stateOf(n,{networks:{synchro:{trips:0,at:'2026-11-13T09:00:00Z'}}},now),'Partiellement raccordé','0 trajet');
- assert.equal(C.stateOf(n,{networks:{synchro:{trips:3,at:'2026-09-01T09:00:00Z'}}},now),'Partiellement raccordé','trop ancien');
+ assert.equal(C.stateOf(n,{networks:{tpg:{trips:3,at:'2026-11-13T09:00:00Z'}}},now),'Validé en réel');
+ assert.equal(C.stateOf(n,{networks:{tpg:{trips:0,at:'2026-11-13T09:00:00Z'}}},now),'Partiellement raccordé','0 trajet');
+ assert.equal(C.stateOf(n,{networks:{tpg:{trips:3,at:'2026-09-01T09:00:00Z'}}},now),'Partiellement raccordé','trop ancien');
 });
 
 test('attribution des trajets aux réseaux par les noms réellement renvoyés',()=>{
