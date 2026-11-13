@@ -31,7 +31,13 @@ const NETWORKS=[
  {id:'longue',name:'FlixBus / BlaBlaCar Bus',zone:'AURA',match:/flixbus|blablacar/i,sources:['TripGo (si clé)','BlaBlaCar temps réel (relais)'],fare:'Prix dynamique : à confirmer (billet TripGo repris s’il est transmis)',fareOk:false,recorded:['TripGo Annecy–Grenoble 31/10/2026']},
  // ---- Suisse
  {id:'cff',name:'CFF / trains suisses',zone:'Suisse',match:/sbb|cff|^ir\b|^re\b|^s\d/i,sources:['transport.opendata.ch'],fare:'Prix à confirmer (pas de prix dans l’API)',fareOk:false,recorded:[],note:'Format vérifié sur la documentation officielle uniquement'},
- {id:'tpg',name:'TPG (Genève, zone 10)',zone:'Suisse',match:/tpg|transports publics genevois/i,sources:['transport.opendata.ch'],fare:'Prix à confirmer (CHF 3.– non confirmé pour 2026)',fareOk:false,recorded:[]},
+ // Confirmé le 13/11/2026 : page officielle en vigueur tpg.ch/en/ticket-fares, grille datée unireso (dès le
+ // 15/12/2024) et document officiel ge.ch concordent toutes sur Billet Zone 10, 60 min, plein tarif 2e classe :
+ // 3.00 CHF. Toujours NON intégré à fareFor() : transport.opendata.ch ne transmet aucune zone tarifaire par
+ // arrêt, donc impossible de distinguer un trajet intra-zone 10 (3.00 CHF) d'un trajet transfrontalier vers la
+ // zone 210/230 (tarif Léman Pass, plus élevé, actuellement désactivé — cf. LEMAN_PASS_ACTIVE dans
+ // transport-fare-grids.js) sans risquer d'afficher un prix trop bas sur ces derniers.
+ {id:'tpg',name:'TPG (Genève, zone 10)',zone:'Suisse',match:/tpg|transports publics genevois/i,sources:['transport.opendata.ch'],fare:'3,00 CHF confirmé (zone 10 uniquement) ; non appliqué, zone par arrêt indisponible',fareOk:false,recorded:[]},
  // ---- Transfrontalier
  {id:'lex',name:'Léman Express',zone:'Transfrontalier',match:/^sl\s?\d|l[ée]man express|^sncf\s+l[1-6]\b/i,sources:['transport.opendata.ch','SNCF GTFS'],fare:'Léman Pass : prix à confirmer',fareOk:false,recorded:[]},
  {id:'tpg-fr',name:'TPG lignes transfrontalières',zone:'Transfrontalier',match:/tpg/i,sources:['transport.opendata.ch'],fare:'Léman Pass : prix à confirmer',fareOk:false,recorded:[]},
