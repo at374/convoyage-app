@@ -64,6 +64,18 @@ const GRIDS=[
   product:'ticket 1 heure tout public, zone A',validityMinutes:60,
   validFrom:'2022-12-19',validUntil:'2026-12-31',
   source:'https://www.star-t.fr/titres-abonnements/titres-abonnements',
+  checkedAt:'2026-11-13',flat:true},
+ // Cars Région Ain : contrairement à Cars Région Isère (zonal) et Cars Région Savoie (par ligne, cf. lignes
+ // touristiques S30-S83 à 3-12,50 €), le réseau de l'Ain applique un tarif « 1 voyage » UNIQUE réseau entier,
+ // confirmé par comparaison de plusieurs fiches horaires officielles datées : 2 € (fiche L153, période
+ // 2022), 2,20 € (fiche A20, période du 25/08/2025 au 23/08/2026, vérifiée le 13/11/2026) — même montant
+ // retrouvé sur plusieurs lignes différentes à la même date, donc bien un tarif réseau et non un tarif de
+ // ligne. Carnet 10 voyages 16,50 €, abonnement mensuel 43 € (non repris ici, GRIDS ne couvre que le tarif
+ // « 1 voyage »). Validité volontairement bornée à la période couverte par la fiche source (jusqu'au
+ // 23/08/2026) : aucune fiche 2026/2027 trouvée au 13/11/2026, donc pas d'extrapolation au-delà.
+ {network:'Cars Région Ain',operatorPattern:'^cars\\s*r[ée]gion\\s*ain$',modes:['Bus'],amount:2.20,currency:'EUR',
+  product:'1 voyage',validFrom:'2025-08-25',validUntil:'2026-08-23',
+  source:'https://www.maisonneuve.net/wp-content/uploads/2025/07/RARA_FH-2025-2026_AIN_A20-v1.pdf',
   checkedAt:'2026-11-13',flat:true}
  // Exemple de format (NE PAS activer sans preuve) :
  // {network:'Exemple',operatorPattern:'^exemple$',modes:['Bus'],amount:0,currency:'EUR',product:'1 voyage',
