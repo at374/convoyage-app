@@ -51,6 +51,10 @@ jobs:
             assert.equal(fareFor({...hs,line}),null,'Ligne à grille distincte non tarifée arbitrairement '+line);
           assert.equal(fareFor({...hs,provider:'Cars Région Savoie'}),null,'Pas de prix Haute-Savoie en Savoie');
           assert.equal(fareFor({...hs,departure:'2026-02-28T08:00:00+01:00'}),null,'Grille 2026 hors période');
+          const ain={provider:'Cars Région Ain',mode:'Bus',line:'A01',departure:'2026-11-16T08:00:00+01:00'};
+          assert.equal(fareFor({...ain,from:{name:'Beynost'},to:{name:'Meximieux'}}),null,'Ain : exception tarifaire détectée sur arrêt structuré');
+          assert.equal(fareFor({...ain,from:'Meximieux',toPoint:{name:'Lyon'}}),null,'Ain : exception tarifaire détectée sur point GPS nommé');
+
 
           // Isère : tableau officiel 01/03/2026, aucune zone inventée.
           const isere=require('./transport-isere-zonal-fares.js');
