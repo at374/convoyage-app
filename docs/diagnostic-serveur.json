@@ -1,5 +1,5 @@
 {
- "at": "2026-11-13T16:21:35.595Z",
+ "at": "2026-11-13T16:25:50.499Z",
  "when": "2026-11-16T08:00:00+01:00",
  "source": "diagnostic serveur (GitHub Actions)",
  "tripgo": true,
@@ -111,8 +111,8 @@
    "partialPricedJourneys": 0,
    "walked": 26,
    "feasible": 26,
-   "firstResultMs": 441,
-   "totalMs": 11872,
+   "firstResultMs": 478,
+   "totalMs": 11792,
    "received": {
     "SNCF": 6,
     "Suisse": 8,
@@ -266,8 +266,8 @@
    "partialPricedJourneys": 0,
    "walked": 24,
    "feasible": 16,
-   "firstResultMs": 337,
-   "totalMs": 13518,
+   "firstResultMs": 370,
+   "totalMs": 13509,
    "received": {
     "SNCF": 4,
     "GTFS local": 40,
@@ -411,8 +411,8 @@
    "partialPricedJourneys": 0,
    "walked": 11,
    "feasible": 6,
-   "firstResultMs": 125,
-   "totalMs": 3549,
+   "firstResultMs": 145,
+   "totalMs": 3565,
    "received": {
     "GTFS local": 0,
     "SNCF": 10,
@@ -547,8 +547,8 @@
    "partialPricedJourneys": 34,
    "walked": 17,
    "feasible": 16,
-   "firstResultMs": 231,
-   "totalMs": 9466,
+   "firstResultMs": 234,
+   "totalMs": 9411,
    "received": {
     "SNCF": 10,
     "TripGo": 4,
@@ -667,8 +667,8 @@
    "partialPricedJourneys": 0,
    "walked": 12,
    "feasible": 12,
-   "firstResultMs": 85,
-   "totalMs": 7414,
+   "firstResultMs": 87,
+   "totalMs": 6015,
    "received": {
     "SNCF": 7,
     "TripGo": 0,
@@ -779,8 +779,8 @@
    "partialPricedJourneys": 0,
    "walked": 9,
    "feasible": 8,
-   "firstResultMs": 203,
-   "totalMs": 4051,
+   "firstResultMs": 212,
+   "totalMs": 4028,
    "received": {
     "GTFS local": 1,
     "SNCF": 7,
@@ -947,8 +947,8 @@
    "partialPricedJourneys": 0,
    "walked": 15,
    "feasible": 8,
-   "firstResultMs": 134,
-   "totalMs": 9003,
+   "firstResultMs": 139,
+   "totalMs": 9073,
    "received": {
     "SNCF": 9,
     "GTFS local": 0,
@@ -1088,8 +1088,8 @@
    "partialPricedJourneys": 0,
    "walked": 20,
    "feasible": 20,
-   "firstResultMs": 288,
-   "totalMs": 5365,
+   "firstResultMs": 304,
+   "totalMs": 5307,
    "received": {
     "GTFS local": 8,
     "SNCF": 7,
@@ -1199,8 +1199,8 @@
    "partialPricedJourneys": 0,
    "walked": 19,
    "feasible": 8,
-   "firstResultMs": 596,
-   "totalMs": 9193,
+   "firstResultMs": 649,
+   "totalMs": 9214,
    "received": {
     "GTFS local": 40,
     "SNCF": 10,
@@ -1274,23 +1274,42 @@
    "name": "Thonon → Bons-en-Chablais (Star’t 142)",
    "coverage": true,
    "appGtfsChoice": "Star't Thonon + Cars Région Haute-Savoie",
-   "trips": 58,
-   "priced": 8,
-   "tripgoJourneys": 1,
-   "tripgoPriced": 0,
-   "tripgoPricedFromGrids": 0,
+   "trips": 64,
+   "priced": 11,
+   "tripgoJourneys": 8,
+   "tripgoPriced": 4,
+   "tripgoPricedFromGrids": 4,
    "tripgoTicketLegs": 0,
    "tripgoMissingFareByOperator": {
-    "SNCF": 1
+    "SNCF": 1,
+    "SNCF VOYAGEURS": 3
    },
-   "tripgoFareLegsFromGridsByOperator": {},
+   "tripgoFareLegsFromGridsByOperator": {
+    "THONON-LES-BAINS - STAR'T": 3,
+    "Star't Thonon": 1
+   },
    "missingFareByOperator": {
-    "SNCF": 17,
     "But": 8,
+    "SNCF": 17,
+    "SNCF VOYAGEURS": 3,
     "Evian": 2,
     "Star't Thonon": 36
    },
    "missingFareSamples": {
+    "But": [
+     {
+      "mode": "Bus",
+      "line": "B 142",
+      "from": "Thonon-les-Bains, Les Arts",
+      "to": "Bons-en-Chablais, Mairie"
+     },
+     {
+      "mode": "Bus",
+      "line": "B 142",
+      "from": "Bons-en-Chablais, Gare Didier",
+      "to": "Bons-en-Chablais, Mairie"
+     }
+    ],
     "SNCF": [
      {
       "mode": "Train",
@@ -1311,18 +1330,18 @@
       "to": "Bons-en-Chablais"
      }
     ],
-    "But": [
+    "SNCF VOYAGEURS": [
      {
-      "mode": "Bus",
-      "line": "B 142",
-      "from": "Thonon-les-Bains, Les Arts",
-      "to": "Bons-en-Chablais, Mairie"
+      "mode": "Train",
+      "line": "L1",
+      "from": "Thonon-les-Bains",
+      "to": "Bons-en-Chablais"
      },
      {
-      "mode": "Bus",
-      "line": "B 142",
-      "from": "Bons-en-Chablais, Gare Didier",
-      "to": "Bons-en-Chablais, Mairie"
+      "mode": "Train",
+      "line": "C33",
+      "from": "Thonon-les-Bains",
+      "to": "Bons-en-Chablais"
      }
     ],
     "Evian": [
@@ -1355,6 +1374,7 @@
     ]
    },
    "fareLegsByOperator": {
+    "THONON-LES-BAINS - STAR'T": 3,
     "Star't Thonon": 40
    },
    "partialMissingByOperator": {
@@ -1367,14 +1387,14 @@
     ]
    },
    "partialPricedJourneys": 26,
-   "walked": 24,
-   "feasible": 16,
-   "firstResultMs": 394,
-   "totalMs": 14325,
+   "walked": 30,
+   "feasible": 22,
+   "firstResultMs": 334,
+   "totalMs": 14311,
    "received": {
     "GTFS local": 40,
     "SNCF": 10,
-    "TripGo": 1,
+    "TripGo": 8,
     "Suisse": 8
    },
    "reasons": {
@@ -1392,10 +1412,10 @@
     }
    },
    "sources": [
-    "Star't Thonon (GTFS)",
-    "SNCF (GTFS officiel)",
     "TripGo",
-    "Suisse (transport.opendata.ch)"
+    "Suisse (transport.opendata.ch)",
+    "Star't Thonon (GTFS)",
+    "SNCF (GTFS officiel)"
    ],
    "networksSeen": [
     "start",
@@ -1411,29 +1431,15 @@
     {
      "labels": [
       "Moins cher",
-      "Meilleur compromis"
-     ],
-     "dep": "2026-11-16T07:01:00.000Z",
-     "arr": "2026-11-16T07:50:00.000Z",
-     "legs": [
-      "Star't Thonon 142"
-     ],
-     "price": "2,20 €",
-     "status": "Réalisable",
-     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
-    },
-    {
-     "labels": [
+      "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:28:02.877Z",
-     "arr": "2026-11-16T07:54:10.713Z",
+     "dep": "2026-11-16T09:00:00.000Z",
+     "arr": "2026-11-16T09:21:00.000Z",
      "legs": [
-      "marche 154 m",
-      "SNCF C33",
-      "marche 804 m"
+      "THONON-LES-BAINS - STAR'T L"
      ],
-     "price": "Prix à confirmer",
+     "price": "2,20 €",
      "status": "Réalisable",
      "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
     }
@@ -1483,8 +1489,8 @@
    "partialPricedJourneys": 0,
    "walked": 7,
    "feasible": 7,
-   "firstResultMs": 713,
-   "totalMs": 1971,
+   "firstResultMs": 682,
+   "totalMs": 1903,
    "received": {
     "SNCF": 0,
     "GTFS local": 40,
@@ -1738,8 +1744,8 @@
    "partialPricedJourneys": 0,
    "walked": 13,
    "feasible": 11,
-   "firstResultMs": 84,
-   "totalMs": 4661,
+   "firstResultMs": 83,
+   "totalMs": 4662,
    "received": {
     "GTFS local": 2,
     "SNCF": 10,
@@ -1867,8 +1873,8 @@
    "partialPricedJourneys": 0,
    "walked": 4,
    "feasible": 4,
-   "firstResultMs": 42,
-   "totalMs": 2209,
+   "firstResultMs": 39,
+   "totalMs": 2208,
    "received": {
     "GTFS local": 3,
     "SNCF": 9,
@@ -2019,8 +2025,8 @@
    "partialPricedJourneys": 1,
    "walked": 4,
    "feasible": 4,
-   "firstResultMs": 155,
-   "totalMs": 1226,
+   "firstResultMs": 163,
+   "totalMs": 731,
    "received": {
     "GTFS local": 6,
     "SNCF": 9,
@@ -2099,17 +2105,17 @@
    "trips": 4,
    "priced": 0,
    "walked": 4,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "annecy-geneve"
    ],
    "source": "serveur"
   },
   "ter": {
-   "trips": 141,
+   "trips": 144,
    "priced": 0,
-   "walked": 110,
-   "at": "2026-11-13T16:21:35.595Z",
+   "walked": 113,
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -2132,7 +2138,7 @@
    "trips": 22,
    "priced": 0,
    "walked": 20,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -2145,7 +2151,7 @@
    "trips": 11,
    "priced": 0,
    "walked": 11,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -2157,7 +2163,7 @@
    "trips": 16,
    "priced": 0,
    "walked": 8,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "annecy-geneve"
    ],
@@ -2167,7 +2173,7 @@
    "trips": 41,
    "priced": 41,
    "walked": 9,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "annemasse-stjulien"
    ],
@@ -2177,7 +2183,7 @@
    "trips": 8,
    "priced": 0,
    "walked": 7,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "annemasse-stjulien",
     "thonon-geneve"
@@ -2188,7 +2194,7 @@
    "trips": 8,
    "priced": 0,
    "walked": 7,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "annemasse-stjulien",
     "thonon-geneve"
@@ -2199,7 +2205,7 @@
    "trips": 6,
    "priced": 6,
    "walked": 6,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "chambery-aix"
    ],
@@ -2209,7 +2215,7 @@
    "trips": 76,
    "priced": 40,
    "walked": 10,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "chambery-aix",
     "aix-technolac"
@@ -2220,7 +2226,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -2230,7 +2236,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -2240,7 +2246,7 @@
    "trips": 1,
    "priced": 1,
    "walked": 1,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "rumilly-annecy"
    ],
@@ -2250,7 +2256,7 @@
    "trips": 14,
    "priced": 0,
    "walked": 8,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "voiron-grenoble",
     "voiron-voreppe"
@@ -2258,10 +2264,10 @@
    "source": "serveur"
   },
   "start": {
-   "trips": 40,
-   "priced": 8,
-   "walked": 8,
-   "at": "2026-11-13T16:21:35.595Z",
+   "trips": 43,
+   "priced": 11,
+   "walked": 11,
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "thonon-bons"
    ],
@@ -2271,7 +2277,7 @@
    "trips": 31,
    "priced": 0,
    "walked": 7,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "rumilly-intra"
    ],
@@ -2281,7 +2287,7 @@
    "trips": 40,
    "priced": 0,
    "walked": 8,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "amberieu-intra"
    ],
@@ -2291,7 +2297,7 @@
    "trips": 20,
    "priced": 0,
    "walked": 0,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "amberieu-intra",
     "bourg-amberieu"
@@ -2302,7 +2308,7 @@
    "trips": 2,
    "priced": 0,
    "walked": 2,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "chambery-chamoux"
    ],
@@ -2312,7 +2318,7 @@
    "trips": 3,
    "priced": 2,
    "walked": 3,
-   "at": "2026-11-13T16:21:35.595Z",
+   "at": "2026-11-13T16:25:50.499Z",
    "axes": [
     "voiron-voreppe"
    ],
@@ -2321,10 +2327,10 @@
  },
  "totals": {
   "axes": 15,
-  "trips": 473,
-  "priced": 103,
-  "walked": 221,
-  "feasible": 177,
+  "trips": 479,
+  "priced": 106,
+  "walked": 227,
+  "feasible": 183,
   "partialPricedJourneys": 61,
   "partialMissingByOperator": {
    "Ondéa Aix-les-Bains": 34,
@@ -2338,12 +2344,13 @@
    "Ondéa Aix-les-Bains": 114,
    "M Réso - Métropole Grenobloise": 8,
    "Sibra": 1,
+   "THONON-LES-BAINS - STAR'T": 3,
    "Star't Thonon": 40
   },
-  "tripgoJourneys": 47,
-  "tripgoPriced": 0,
+  "tripgoJourneys": 54,
+  "tripgoPriced": 4,
   "tripgoTicketLegs": 0,
-  "tripgoPricedFromGrids": 0,
+  "tripgoPricedFromGrids": 4,
   "missingFareByOperator": {
    "BlaBlaCar Bus": 1,
    "FlixBus-eu": 3,
@@ -2352,7 +2359,7 @@
    "Cars Région Haute-Savoie": 32,
    "SNCF (Société Nationale des Chemins de fer Français)": 4,
    "TPG": 9,
-   "SNCF VOYAGEURS": 21,
+   "SNCF VOYAGEURS": 24,
    "Ondéa Aix-les-Bains": 36,
    "But": 16,
    "AFO": 4,
@@ -2365,16 +2372,19 @@
    "Cars Région Savoie": 2,
    "Mobilités M - SNCF": 1
   },
-  "tripgoFareLegsFromGridsByOperator": {},
+  "tripgoFareLegsFromGridsByOperator": {
+   "THONON-LES-BAINS - STAR'T": 3,
+   "Star't Thonon": 1
+  },
   "tripgoMissingFareByOperator": {
    "BlaBlaCar Bus": 1,
    "FlixBus-eu": 3,
    "SNCF (Société Nationale des Chemins de fer Français)": 4,
    "SNCF": 18,
-   "SNCF VOYAGEURS": 21
+   "SNCF VOYAGEURS": 24
   },
-  "pricedPct": 21.8,
-  "walkedPct": 46.7
+  "pricedPct": 22.1,
+  "walkedPct": 47.4
  },
  "router": {
   "hits": 237,
