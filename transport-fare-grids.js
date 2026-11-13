@@ -178,7 +178,7 @@ function fareFor(leg,grids){
  // Certaines liaisons Cars Région Ain ont des tarifs locaux dérogatoires.
  if(/^cars\s*r[ée]gion\s*ain$/i.test(leg.provider.trim())){
   const line=String(leg.line||'').trim();
-  const stops=[leg.from,leg.to].map(s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase());
+  const stops=[leg.from,leg.to,leg.fromPoint,leg.toPoint].map(s=>String(typeof s==='string'?s:(s&&typeof s==='object'?(s.name||s.stopName||s.label||s.address||''):'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase());
   if(/^A32$/i.test(line)||stops.some(s=>/\b(neyron|beligneux|crepieux|beynost|dompierre|lyon)\b/.test(s)))return null;
  }
  const matches=grids.filter(e=>valid(e)&&e.modes.includes(leg.mode)&&new RegExp(e.operatorPattern,'i').test(leg.provider.trim())&&
