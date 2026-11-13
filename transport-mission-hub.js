@@ -148,7 +148,11 @@ function fromGTFS(rows,network='Réseau local'){
    }
    return out;
   });
-  return journey((r.network||network)+' (GTFS)',legs);
+  return {...journey((r.network||network)+' (GTFS)',legs),
+   // Static GTFS proves a scheduled service, not its live operation.
+   // Never label the itinerary as confirmed until a live source validates it.
+   missing:['horaire GTFS local non confirmé en temps réel',
+    ...(r.searchTruncated?['recherche des correspondances incomplète']:[])]};
  });
 }
 
