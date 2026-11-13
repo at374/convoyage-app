@@ -4,6 +4,7 @@ on:
     branches: [feature/transports-aura-suisse]
     paths:
       - '.github/workflows/build-national-gtfs-aura.yml'
+      - 'scripts/build_national_from_catalogue.py'
   workflow_dispatch:
     inputs:
       operator:
