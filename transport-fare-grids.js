@@ -22,6 +22,13 @@ const GRIDS=[
   product:'1 voyage 1 h, tout M réso (2,60 € à bord ; 1,00 € si trajet intra-Grésivaudan)',validityMinutes:60,
   validFrom:'2026-09-01',validUntil:'2027-08-31',source:'https://www.reso-m.fr/67-un-tarif-pour-chacun.htm',
   checkedAt:'2026-11-13',flat:true},
+ // Ondéa Grand Lac (Aix-les-Bains) : « Titres pour tous - tarifs applicables du 1er juillet 2026 » (ondeagrandlac.fr) :
+ // titre 1 voyage (M-Ticket, appli) 1,70 €, 1 h, correspondances autorisées. Non utilisable sur les lignes de
+ // proximité/scolaires en car (100 à 105, 200 à 208, 301, 303, 304, 400…) : lignes numérotées ≥ 100 exclues.
+ {network:'Ondéa',operatorPattern:'^ond[ée]a\\b',modes:['Bus'],amount:1.70,currency:'EUR',excludeLines:'^\\d{3,}$',
+  product:'1 voyage M-Ticket (application Ondéa Grand Lac), 1 h',validityMinutes:60,
+  validFrom:'2026-07-01',validUntil:'2027-06-30',source:'https://www.ondeagrandlac.fr/tarifs/choisir-son-titre',
+  checkedAt:'2026-11-13',flat:true},
  // Exemple de format (NE PAS activer sans preuve) :
  // {network:'Exemple',operatorPattern:'^exemple$',modes:['Bus'],amount:0,currency:'EUR',product:'1 voyage',
  //  validFrom:'2026-01-01',validUntil:'2026-12-31',source:'https://www.sibra.fr/…',checkedAt:'2026-11-13',flat:true}
@@ -47,7 +54,8 @@ function fareFor(leg,grids){
  if(!leg||leg.kind==='walk'||typeof leg.provider!=='string'||!leg.provider.trim())return null;
  const day=typeof leg.departure==='string'?leg.departure.slice(0,10):null;if(!day)return null;
  const matches=grids.filter(e=>valid(e)&&e.modes.includes(leg.mode)&&new RegExp(e.operatorPattern,'i').test(leg.provider.trim())&&
-  day>=e.validFrom&&day<=e.validUntil);
+  day>=e.validFrom&&day<=e.validUntil&&
+  !(typeof e.excludeLines==='string'&&new RegExp(e.excludeLines,'i').test(String(leg.line||'').trim())));
  if(matches.length!==1)return null; // ambiguïté = pas de prix
  const e=matches[0];
  return {amount:e.amount,currency:e.currency,network:e.network,validityMinutes:Number.isFinite(e.validityMinutes)?e.validityMinutes:null,

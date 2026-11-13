@@ -222,3 +222,13 @@ test('M réso : 2,00 € officiel au 01/09/2026, une seule fois dans l’heure, 
  assert.equal(Grids.fareFor({kind:'transit',mode:'Bus',provider:'M Réso — Métropole grenobloise',departure:'2026-08-15T08:00:00.000Z'}),null,'avant la grille');
  assert.equal(Grids.fareFor({kind:'transit',mode:'Train',provider:'M réso',departure:'2026-11-16T08:00:00.000Z'}),null,'TER exclu');
 });
+
+test('Ondéa : 1,70 € au 01/07/2026 sur les lignes régulières, lignes de car ≥ 100 exclues',()=>{
+ const Grids=require('../transport-fare-grids.js');
+ const leg=(line,day='2026-11-16')=>({kind:'transit',mode:'Bus',provider:'Ondéa Aix-les-Bains',line,departure:day+'T08:00:00.000Z'});
+ assert.equal(Grids.fareFor(leg('2')).amount,1.7);
+ assert.equal(Grids.fareFor(leg('DIM')).amount,1.7);
+ assert.equal(Grids.fareFor(leg('104')),null,'ligne de proximité exclue');
+ assert.equal(Grids.fareFor(leg('205')),null);
+ assert.equal(Grids.fareFor(leg('2','2026-06-15')),null,'avant la grille 2026');
+});

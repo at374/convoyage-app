@@ -68,8 +68,9 @@ Aucune modification de la synchronisation Hiflow, DriiveMe, Pop Valet ou Otoqi, 
 | Sibra 1 voyage | 2,00 € en achat digital ou rechargement (2,50 € à bord), valable 1 h correspondances comprises ; CGV 2026/2027, gamme applicable depuis le 01/07/2026 sur tout le réseau | **Appliqué** (13/11). Une correspondance Sibra dans l'heure n'est pas repayée ; le nom de réseau doit être exactement « Sibra » |
 | TCL Lyon | Tarif selon les zones : 1,60 à 3,70 € depuis septembre 2025 ; hausse annoncée au 01/01/2026 | **Manquant** : il faut connaître la zone des arrêts |
 | M réso (Métropole, Grésivaudan, Voironnais) | 1 voyage 2,00 €, 1 h sur tout M réso, correspondances et retours compris (2,60 € à bord) ; tarifs au 01/09/2026 (reso-m.fr) | **Appliqué** (13/11). 2,00 € reste valable partout ; un trajet entièrement intra-Grésivaudan peut coûter 1,00 € |
-| Synchro Chambéry | 1,40 € (1,70 € à bord) selon la grille du 07/07/2025 ; gamme révisée chaque année en juillet, grille de juillet 2026 non trouvée | **Manquant** pour la période actuelle |
-| Ondéa, Star't | Aucune grille officielle 2026 trouvée | **Manquant** |
+| Synchro Chambéry | 1,40 € (1,70 € à bord) sur la page tickets (antérieure à juillet 2026) ; les CGV au 02/07/2026 citent 1,70 € par voyage pour la formule sur compte | **Manquant** : grille 2026 ambiguë |
+| Ondéa Grand Lac | 1 voyage M-Ticket 1,70 €, 1 h, correspondances autorisées ; tarifs applicables du 1er juillet 2026 (ondeagrandlac.fr) | **Appliqué** (13/11), sauf sur les lignes de car numérotées ≥ 100 (proximité/scolaire, titre non valable) |
+| Star't Thonon | Tarif par zone : 1,20 € (1 zone) ou 2,20 € (zones A + B) ; page officielle datée de 2025 | **Manquant** : zone des arrêts et confirmation 2026 nécessaires |
 | TAC Annemasse | 1,60 € ou 1,70 € selon les sources | **Manquant** |
 | TPG / unireso, zone 10 | CHF 3.– sur les dépliants officiels unireso 2019 à 2024, aucune version 2026 trouvée | **Manquant** : les trajets France–Genève relèvent du Léman Pass (1 trajet = 1 titre), pas de la zone 10 |
 | Cars Région Isère | Tarif par zones : 4,10 € à 12,10 € | **Manquant** : il faut connaître la zone des arrêts |
@@ -89,7 +90,7 @@ Le registre `transport-fare-grids.js` accepte une grille seulement avec : résea
 
 ## 7. Tests exécutés (13/11/2026)
 
-- `node --test tests/transport-mission-hub.test.cjs` : **18/18**, dont la chaîne suisse complète au format documenté et les tarifs Sibra et M réso (réponse Mobilités M réelle : C1 + 80 = 2,00 €, un seul titre).
+- `node --test tests/transport-mission-hub.test.cjs` : **19/19**, dont la chaîne suisse complète au format documenté et les tarifs Sibra, M réso et Ondéa (réponse Mobilités M réelle : C1 + 80 = 2,00 €, un seul titre).
 - Tous les tests `tests/transport-*`, `swiss-transport-api` et `agenda-transports` : tous réussis sauf `transport-y51-fares`, en échec identique sur `main`.
 - `tests/browser/transport-hub-mobile.cjs`, Chromium au format Pixel 7 : **OK**. TripGo appelé 6 fois, SNCF 5 fois, Valhalla 2 fois ; Retour Annecy → Grenoble avec BlaBlaCar Bus et FlixBus 1789 ; Aller à pied gratuit ; pas de débordement horizontal ; aucune écriture serveur ; aucune erreur JavaScript.
 - `tests/browser/transport-mobile.cjs` : échoue à la même assertion Y51 que sur `main`, sans régression avant ce point.
