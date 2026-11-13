@@ -191,6 +191,33 @@ jobs:
             console.log(JSON.stringify(report,null,2));
           })().catch(error=>{console.error(error);process.exitCode=1;});
           NODE
+      - name: Auditer les correspondances SNCF des axes sans trajet direct
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const loader=require('./transport-gtfs-loader.js');
+          const indexer=require('./transport-gtfs-index.js');
+          const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
+          const axes=[
+            {name:'chambery-saintJulien',from:{lat:45.5658,lon:5.9204},to:{lat:46.1447,lon:6.0826}},
+            {name:'saintJulien-archamps',from:{lat:46.1447,lon:6.0826},to:{lat:46.1362,lon:6.1328}}
+          ];
+          (async()=>{
+            const bytes=fs.readFileSync('data/gtfs/national-sncf-aura.zip');
+            const feed=await loader.loadResource({format:'GTFS',url:'https://example.org/sncf.zip'},{
+              fetcher:async()=>new Response(bytes,{headers:{'content-type':'application/zip','content-length':String(bytes.length)}}),
+              indexServiceDates:[date],retainSourceTables:false
+            });
+            const report={date,operator:'sncf',scope:'one-transfer GTFS candidates only; no verified fares or real-time service',axes:{}};
+            for(const axis of axes){
+              const result=indexer.nearbyTransferTrips(feed.files,feed.index,date,axis.from,axis.to,3000,
+                {maxLegs:15000,maxCandidates:200,maxExaminedPairs:30000,minTransferMinutes:5,maxWaitMinutes:120});
+              report.axes[axis.name]={candidates:result.journeys.length,searchTruncated:result.searchTruncated};
+              console.log(axis.name,JSON.stringify(report.axes[axis.name]));
+            }
+            fs.writeFileSync('docs/audit-national-aura-transfers.json',JSON.stringify(report,null,2)+'\n');
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
       - name: Vérifier la syntaxe et les tarifs locaux
         run: |
           node --check transport-fare-grids.js
@@ -524,6 +551,7 @@ jobs:
             docs/DIAGNOSTIC-SERVEUR.md
             docs/BILAN-COUVERTURE-TRANSPORTS.md
             docs/audit-national-aura-axes.json
+            docs/audit-national-aura-transfers.json
           if-no-files-found: warn
           retention-days: 14
       - name: Publier le rapport
