@@ -78,10 +78,21 @@ window.CP_NATIONAL_GTFS_RESOURCES = Object.freeze({
   blablacarBus: Object.freeze({url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-blablacarBus-aura.zip',format:'GTFS',fallbackUrls:Object.freeze(['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/national-blablacarBus-aura.zip','https://at374.github.io/convoyage-app/data/gtfs/national-blablacarBus-aura.zip'])}),
   flixbus: Object.freeze({url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-flixbus-aura.zip',format:'GTFS',fallbackUrls:Object.freeze(['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/national-flixbus-aura.zip','https://at374.github.io/convoyage-app/data/gtfs/national-flixbus-aura.zip'])})
 });
+// Publication sans retouche : sur le site déployé (GitHub Pages), la copie du site lui-même passe en premier —
+// c'est celle que les tâches hebdomadaires de la branche publiée rafraîchissent. Les adresses ci-dessus restent en secours.
+(function(){try{
+  if(location.protocol!=='https:'||!/(^|\.)github\.io$/.test(location.hostname))return;
+  const base=new URL('data/gtfs/',location.href).href,out={};
+  for(const [key,r] of Object.entries(window.CP_NATIONAL_GTFS_RESOURCES)){
+    const own=base+r.url.split('/').pop();
+    out[key]=Object.freeze({...r,url:own,fallbackUrls:Object.freeze([r.url,...r.fallbackUrls.filter(u=>u!==own)])});
+  }
+  window.CP_NATIONAL_GTFS_RESOURCES=Object.freeze(out);
+}catch(_){}})();
 </script>
 <script src="transport-gtfs-agenda.js?v=hub-20261114b"></script>
 <script src="transport-fare-grids.js?v=hub-20261114a"></script>
-<script src="transport-mission-hub.js?v=hub-20261114g"></script>
+<script src="transport-mission-hub.js?v=hub-20261114h"></script>
 <script src="transport-coverage.js?v=hub-20261113e"></script>
 <script src="app.js?v=hub-20261113"></script>
 <script src="sanef-gps-protection.js"></script>

@@ -481,6 +481,8 @@ function makeProviders(r,opts={}){
   // the deployed GitHub Pages site. Explicit HTTPS URLs avoid a silent 404
   // when the Android app is served from another origin or an older deployment.
   const base='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
+  let deployedBase=null;
+  try{const l=r.location;if(l&&l.protocol==='https:'&&/(^|\.)github\.io$/.test(l.hostname))deployedBase=new URL('data/gtfs/',l.href).href;}catch(_){}
   const cache=new Map();
   const inBounds=(p,b)=>p&&p.lat>=b[0]&&p.lon>=b[1]&&p.lat<=b[2]&&p.lon<=b[3];
   const dateParts=when=>{
@@ -507,9 +509,12 @@ function makeProviders(r,opts={}){
     run:async(task,signal)=>{
      const w=queryWindow(task),when=ms(w.when);
      if(!Number.isFinite(when))return [];
-     const {date,clock}=dateParts(when),resource={format:'GTFS',url:base+file,
-      // Secours si la branche Transports est supprimée après publication : branche principale, puis site déployé.
-      fallbackUrls:['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file]};
+     // Publication sans retouche : sur le site déployé (GitHub Pages), la copie du site passe en premier (c'est elle
+     // que les tâches hebdomadaires de la branche publiée rafraîchissent) ; sinon la branche Transports, puis la
+     // branche principale et le site déployé en secours.
+     const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
+      'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
+     const {date,clock}=dateParts(when),resource={format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1)};
      let promise=cache.get(id+'|'+date);
      if(!promise){
       promise=r.CPGTFSLoader.loadResource(resource,{fetcher,indexServiceDates:[date],retainSourceTables:false});

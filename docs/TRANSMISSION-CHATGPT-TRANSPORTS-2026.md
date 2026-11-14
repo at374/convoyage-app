@@ -33,7 +33,7 @@ Répartition demandée par Laurent : ChatGPT = sources tarifaires, limites d'acc
 ### Suite (16 h, commits `931e6fd` et suivant) — chemin « horaires aux arrêts » testé en navigateur
 
 - **`transport-gtfs-agenda.js` → `onResults`** reçoit un champ supplémentaire `candidates` (jusqu'à 20 trajets : 10 premiers + 10 répartis) ; `itineraries` (5 affichés) est inchangé. `app.js → renderLocalCards` envoie `candidates` au hub. Raison : pour un « Aller », les 5 affichés sont les plus tardifs et échouaient sur la marge après ajout de la marche finale.
-- **Secours d'adresses pour toutes les archives relayées** : `DEFAULT_RESOURCES` est maintenant dérivé de `BASE_RESOURCES` et ajoute à chaque ressource `data/gtfs/*.zip` les copies `raw.githubusercontent.com/…/main/…` puis `…/feature/transports-aura-suisse/…`. Dans `transport-mission-hub.js` (fournisseurs `local_*`) et `index.html` (`CP_NATIONAL_GTFS_RESOURCES`) : secours `main` puis site déployé. **À la publication sur `main`, penser à mettre `main` en premier dans `base` (hub) et dans `index.html`**, sinon l'application lira des archives qui ne seront plus rafraîchies.
+- **Secours d'adresses pour toutes les archives relayées** : `DEFAULT_RESOURCES` est maintenant dérivé de `BASE_RESOURCES` et ajoute à chaque ressource `data/gtfs/*.zip` les copies `raw.githubusercontent.com/…/main/…` puis `…/feature/transports-aura-suisse/…`. Dans `transport-mission-hub.js` (fournisseurs `local_*`) et `index.html` (`CP_NATIONAL_GTFS_RESOURCES`) : secours `main` puis site déployé. (Mise à jour 21 h : plus aucune retouche à faire à la publication — voir « Publication sans retouche » ci-dessous.)
 - **M réso relayé** : `data/gtfs/mreso-grenoble.zip` (6,4 Mo, 20 373 courses) et `mreso-gresivaudan.zip` (0,35 Mo) publiés par `build-regional-gtfs.yml` ; le panneau lit la copie relayée d'abord, data.gouv.fr en secours (comme SIBRA).
 - Constaté : `main` ne contient ni `data/gtfs/` ni `transport-mission-hub.js` — tout le module vit sur la branche ; aucun test sur le site déployé n'est possible avant publication.
 
@@ -60,6 +60,10 @@ Deux retouches dans la boucle de sélection des fournisseurs `local_*` (`transpo
 - **`view`** : les trajets dont la seule issue est « départ avant la fin de la mission précédente » ne sont plus affichés (impossibles, pas « non confirmés ») ; `view().hidden.tooEarly` en donne le nombre, repris dans une note de la fiche et dans `hiddenTooEarly` du diagnostic.
 
 Diagnostic réel après ces deux changements (14/11, 19:37 UTC, `04d2081`) : 881 trajets affichés, dont **837 exploitables (95 %)** — 164 réalisables + 673 en horaire programmé ; 132 trajets impossibles masqués ; 840 avec marches calculées ; 254 avec prix vérifié ; 178 requêtes piétonnes, 0 échec ; aucun moteur en erreur ; 9 s en moyenne par axe, 26 s au pire. Lyon Part-Dieu → Bellecour : « Plus rapide » = TCL C13 à 2,10 € (horaire programmé), « Moins cher » = marche.
+
+### Publication sans retouche (21 h)
+
+Quand l'application est servie par le site déployé (`https://…github.io/…`), les fournisseurs `local_*` du hub et `CP_NATIONAL_GTFS_RESOURCES` (`index.html`) lisent d'abord `data/gtfs/` **du site lui-même** — la copie que les tâches hebdomadaires de la branche publiée rafraîchissent —, puis la branche Transports, puis `main` en secours. Hors site déployé (tests, diagnostic serveur), l'ordre est inchangé. Le panneau « horaires aux arrêts » faisait déjà ainsi. À faire à la publication, par Laurent uniquement : fusionner la branche dans `main` ; les tâches `build-sibra-data`, `build-regional-gtfs` et `build-national-gtfs-aura` tourneront alors sur `main` et alimenteront le site.
 
 ### Test navigateur (Chrome, émulation Pixel 7, vraies archives GTFS, marches simulées car Internet fermé dans le bac à sable)
 
