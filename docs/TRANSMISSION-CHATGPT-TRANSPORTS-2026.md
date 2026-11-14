@@ -1,6 +1,57 @@
 # Transmission à ChatGPT — module Transports AURA + Suisse de Convoyage Ultra
 
-**Date du relevé : 13 novembre 2026 (mise à jour en soirée) ; complété le 14/11/2026 (TCL).** Dépôt : `at374/convoyage-app`, branche `feature/transports-aura-suisse`. Ce document décrit l'état après la session Claude du 13/11/2026, pour éviter de refaire le même travail.
+**Date du relevé : 14 novembre 2026, 12 h (section du 14/11 en tête) ; sections suivantes : 13 novembre 2026.** Dépôt : `at374/convoyage-app`, branche `feature/transports-aura-suisse`. Ce document décrit l'état après la session Claude du 13/11/2026, pour éviter de refaire le même travail.
+
+## SESSION CLAUDE DU 14/11/2026 (matin) — détail complet pour ChatGPT
+
+Tout est sur `feature/transports-aura-suisse`, rien sur `main`. Chaque point ci-dessous a été vérifié par un passage réel de `diagnostic-transports.yml` (GitHub Actions, Internet réel), pas seulement hors ligne. Dernier diagnostic réel pris en compte : `docs/diagnostic-serveur.json` du 14/11/2026 10:57 UTC (run `43587627272`).
+
+### Chiffres réels avant / après (diagnostic serveur)
+
+| | 13/11 soir | 14/11 10:57 UTC |
+|---|---|---|
+| Axes mesurés | 15 | 23 |
+| Trajets trouvés | 506 | 1 079 |
+| Trajets avec marches calculées | 247 (48,8 %) | 579 (53,7 %) |
+| Trajets « réalisables » | 103 | 160 |
+| Échecs du routeur piéton | 2 (bloquants) | 0 |
+
+Le pourcentage de trajets tarifés affiché baisse (50,2 % → 28,5 %) uniquement parce que les moteurs nationaux SNCF / FlixBus / BlaBlaCar Bus sont maintenant mesurés (ils ne l'étaient pas) et n'ont pas de prix accessible : 808 portions SNCF, 122 FlixBus, 121 BlaBlaCar Bus sans prix. Ce n'est pas une régression des tarifs locaux.
+
+### 1. Corrections de code (à ne pas refaire)
+
+1. **Tarif GTFS officiel dans les fiches mission** — `transport-mission-hub.js`, nouvelle fonction exportée `attachGTFSFares(feed,rows)`, appelée dans les fournisseurs `local_*` de `makeProviders` et dans `scripts/diagnostic-transports-reel.cjs`. Avant : seul `transport-gtfs-worker.js` attachait `gtfsFare` ; les fiches mission perdaient le prix publié dans le GTFS (TCL : 70 trajets, 0 tarifé). `transport-gtfs-fares.js` est maintenant chargé dans `index.html` (hors worker). Commit `71136c9`.
+2. **Filtre des détours inutiles** — `walkDetour(j,task)` dans `transport-mission-hub.js`, appliqué dans `createSession → add()` : un trajet dont (marche d'accès + marche de sortie à vol d'oiseau) ≥ distance directe est écarté avant le quota de marches ; le nombre écarté par moteur est exposé dans `view().discarded`. Rien n'est écarté si les GPS d'arrêt manquent. Commit `70265b1`. **Ne touche pas** au rayon de 3 000 m de tes fournisseurs `local_*` ni à leur limite de 30.
+3. **Routeur piéton** — `transport-walking.js`, deux défauts prouvés en réel : (a) le compteur d'échecs était cumulatif sur toute la vie du routeur (2 incidents = plus aucune marche) → désormais échecs consécutifs, remis à zéro à chaque succès ; (b) une réponse HTTP 200 refusée par nos contrôles (ex. point « Bourg-en-Bresse gare » non raccordable à moins de 50 m) comptait comme panne du service → désormais `pairUnavailable` (statut `route_unavailable` pour ce seul couple de points). Pannes réseau, délais et 5xx restent des pannes. Commits `da3a595`, `9c53289`. Effet : 0 marche sur 6 axes → marches calculées partout sauf Bourg-en-Bresse (point de départ à corriger, voir § 4).
+4. **SIBRA était en panne depuis le 11/11** — l'archive épinglée `…/20261001-085638/gtfs-sibra.zip` renvoie 404 (SIBRA a publié une nouvelle version le 12/11, validité 12/11 → 27/12/2026). `build-sibra-data.yml` résout maintenant l'archive courante via l'API data.gouv.fr et lit la validité dans le flux ; `data/sibra/sibra-2026-11-14 … 11-20.json` régénérés sur la branche. SIBRA ajouté au relais serveur (`scripts/build_regional_gtfs.py`, entrée `sibra-annecy` avec clé `dataset`) → `data/gtfs/sibra-annecy.zip` ; `transport-gtfs-agenda.js` lit cette copie d'abord, data.gouv.fr en secours. Commits `9351106`, `9c53289`, `a41acc7`. **Non fait (interdit sans accord de Laurent)** : la tâche planifiée tourne sur `main`, où le workflow est toujours cassé ; `sibra-prepare-official.yml` (SHA256 épinglé de l'ancienne archive) et `data/sibra/gtfs-sibra-manifest.json` (validité « jusqu'au 20/12 ») ne sont pas mis à jour.
+
+### 2. Tarifs ajoutés ou confirmés
+
+- **TCL (Lyon)** : 2,10 € (zones 1+2, correspondance 60 min) via les Fares V1 du GTFS officiel relayé ; conforme au guide tarifaire tcl.fr de mai 2026. 73 lignes sur 76 ; F1, F2, 7601 ont deux tarifs officiels dans le flux → volontairement sans prix. Aucune entrée dans `transport-fare-grids.js` (le tarif GTFS passe avant les grilles dans `priceOf`). Réel : 42 trajets tarifés sur 55 sur l'axe `lyon-intra`.
+- **unireso Tout Genève (zone 10)** : 3,00 CHF, 60 min, 2e classe prix entier — `zone10Fare(leg)` dans `transport-fare-grids.js` (commit `58624c7`). Sources : unireso.com/titres-de-transport et dépliant unireso « dès le 14 décembre 2025 ». Appliqué seulement si les deux arrêts sont prouvés dans le canton : trains dont les deux gares sont dans `ZONE10_STATIONS` (opérateur SBB/CFF/SNCF) ; bus/tram d'opérateur `TPG` dont les deux noms d'arrêt officiels commencent par une localité de `ZONE10_LOCALITIES`. Tout arrêt français ou inconnu → pas de prix. Validité bornée au 12/12/2026. Réel : Archamps → Genève 14 trajets tarifés sur 18, Saint-Julien → Genève 10 sur 70 (le reste est transfrontalier = Léman Pass, toujours désactivé).
+- **J'y bus / TAM** : statuts de `transport-coverage.js` resynchronisés (ils disaient encore « manquants »).
+
+### 3. Diagnostic réel étendu
+
+- `scripts/diagnostic-transports-reel.cjs` injecte maintenant `nationalGTFSResources` (les trois tranches `data/gtfs/national-*-aura.zip`) : tes moteurs nationaux SNCF / BlaBlaCar Bus / FlixBus sont mesurés en réel et fonctionnent (ex. Annecy → Genève : 20 SNCF GTFS, 11 BlaBlaCar Bus, 20 FlixBus).
+- 8 axes ajoutés dans `AXES_COUVERTURE` : `lyon-intra`, `geneve-lausanne`, `annemasse-geneve`, `stjulien-geneve`, `archamps-geneve`, `chambery-stjulien`, `annecy-chambery`, `lyon-grenoble`.
+- Quota de marches du diagnostic porté à 800 ; `discarded` ajouté par axe.
+- Nouveaux tests CI dans `diagnostic-transports.yml` : étape « Vérifier le tarif GTFS officiel embarqué TCL » (archive réelle → `local_tcl.run` → `priceOf`, plus `walkDetour`), et assertions zone 10 dans l'étape des tarifs locaux.
+
+### 4. Constaté en réel, NON corrigé (à trancher / à prendre)
+
+- **Bus locaux jamais « réalisables »** : `fromGTFS` ajoute toujours « horaire GTFS local non confirmé en temps réel » (ton assertion CI « Unconfirmed local GTFS cannot be labelled Réalisable »). Conséquence réelle : Rumilly intra 51 trajets tarifés, 28 marches, 0 réalisable ; Ambérieu intra 76 / 32 / 0. Ces petits réseaux n'ont pas de GTFS-RT : ils ne seront donc jamais réalisables. Décision produit à prendre avec Laurent — je n'y ai pas touché.
+- **Bourg-en-Bresse → Ambérieu** : 0 marche, le point de départ `{46.1993, 5.2148}` est refusé par le routeur piéton (itinéraire à plus de 50 m). Coordonnée d'axe à corriger dans `transport-coverage.js`.
+- **Lyon → Grenoble** : 0 FlixBus / BlaBlaCar Bus, leurs arrêts lyonnais (Gerland, Perrache) sont à plus de 3 km de Part-Dieu (rayon de `national_*`).
+- **Détours longue distance** : BlaBlaCar Bus Annecy → Saint-Étienne → Genève, FlixBus Annecy → Lyon → Genève ressortent comme candidats ; non filtrés (`walkDetour` ne juge que les marches).
+
+### 5. Blocages externes établis (ne pas chercher de nouveau)
+
+- **TER Auvergne-Rhône-Alpes** : le jeu officiel SNCF « Tarifs TER Auvergne-Rhône-Alpes » (prix par origine-destination) a été retiré : `tarifs-ter-aura` et `tarifs-ter-par-od` renvoient 404 sur ressources.data.sncf.com, ainsi que les 4 ressources de la fiche data.gouv.fr `6778b24e2e9a63f76e133b55` (sonde réelle `docs/SONDE-TARIFS-TER.md`, script `scripts/sonde_tarifs_ter.py`). Restent seulement des fourchettes Intercités et TGV INOUI/OUIGO (min/max, jamais un prix exact). Prix exact SNCF = accès distribution commercial.
+- **FlixBus** : horaires GTFS officiels en place ; aucun prix dans le flux, pas d'API tarifaire publique.
+- **BlaBlaCar Bus** : l'API officielle `bus-api.blablacar.com` (v3) annonce un accès gratuit sur inscription (clé API) et un service de tarifs. **Accès à créer par Laurent** ; rien de codé tant que la clé n'existe pas.
+- **Suisse (CFF hors zone 10)** : opentransportdata.swiss publie un service de prix « OJP Fare » (bêta) avec clé gratuite sur inscription. **Accès à créer par Laurent**.
+- **TripGo** : inchangé (désactivé par défaut, billets = contrat entreprise).
 
 ## Conflit TAM — résolu dans les deux sens, plus de désaccord
 
