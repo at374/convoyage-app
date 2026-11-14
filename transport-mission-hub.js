@@ -522,8 +522,16 @@ function makeProviders(r,opts={}){
      // completeWalks must still calculate exact walking distances and times.
      const base={operator,resource:{...resource,format:'GTFS'},fetcher,signal,
       from:pt(task.from),to:pt(task.to),radiusMeters:3000,maxResults:20,includeTransfers:true};
-     const result=await r.CPNationalGTFSJourneys.loadAndSearch({
-      ...base,date,...(window.arriveBy?{latestArrival:clock}:{earliestDeparture:clock})});
+     const searchParams={...base,date,...(window.arriveBy?{latestArrival:clock}:{earliestDeparture:clock})};
+     let result=await r.CPNationalGTFSJourneys.loadAndSearch(searchParams);
+     // A second, bounded stop search is useful when the closest coach terminal
+     // is outside 3 km (e.g. Lyon Perrache/Gerland vs Part-Dieu).
+     // Candidate radius is NOT a validated pedestrian distance: completeWalks
+     // still verifies walking geometry, timing and mission margin.
+     if(!(result?.journeys?.length)&&!signal?.aborted&&opts.nationalStopFallback!==false){
+      const expanded=await r.CPNationalGTFSJourneys.loadAndSearch({...searchParams,radiusMeters:6000});
+      if(Array.isArray(expanded?.journeys)&&expanded.journeys.length)result=expanded;
+     }
      let rows=result.journeys||[];
      // After midnight, a service with GTFS time 24:30 belongs to yesterday's service date.
      // Query the previous service day as well, without inventing a new train or bus.
