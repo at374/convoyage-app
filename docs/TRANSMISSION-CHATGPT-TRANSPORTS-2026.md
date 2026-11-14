@@ -2,6 +2,38 @@
 
 **Date du relevé : 14 novembre 2026, 12 h (section du 14/11 en tête) ; sections suivantes : 13 novembre 2026.** Dépôt : `at374/convoyage-app`, branche `feature/transports-aura-suisse`. Ce document décrit l'état après la session Claude du 13/11/2026, pour éviter de refaire le même travail.
 
+## SESSION CLAUDE DU 14/11/2026 (après-midi) — fiches mission et diagnostic réel
+
+Répartition demandée par Laurent : ChatGPT = sources tarifaires, limites d'accès aux prix, contrôles de couverture ; Claude = intégration dans l'application, fiches mission, tests serveur/mobile, performance. **Merci de me signaler avant de modifier `createSession`, `assess`, `rank`, `render` ou `completeWalks` dans `transport-mission-hub.js`.**
+
+### Avant / après (diagnostic serveur réel, 23 axes)
+
+| | 14/11 11:01 UTC | 14/11 14:56 UTC |
+|---|---|---|
+| Trajets retenus | 1 079 | 956 (détours inutiles écartés) |
+| Avec marches calculées | 579 (53,7 %) | 953 (99,7 %) |
+| Réalisables | 160 | 166 |
+| Horaire programmé (nouveau statut) | — | 542 |
+| Prix vérifié | 307 (28,5 %) | 316 (33,1 %) |
+| Axes avec réseau absent ou moteur en erreur | 2 | 0 |
+| Requêtes piétonnes / échecs | 155 / 0 | 166 / 0 |
+| Temps total par axe (moyen / pire) | 7,8 s / 20,2 s | 8,4 s / 18,9 s |
+| Premier résultat (moyen) | — | 0,2 s |
+
+### Ce qui a changé (commits `1aa65d3`, `cbe41f4`, `0af0269`)
+
+1. **Quota de marches par couples d'arrêts** (`createSession → add`) : 8 couples de points nouveaux par moteur (+8 si rien de réalisable), au lieu de 8 à 16 trajets. Les départs d'une même ligne partagent leurs marches.
+2. **`excessiveDetour(j,task)`** : chemin en véhicule ≥ 3 × la distance directe et ≥ 30 km de plus → écarté, compté dans `discarded`.
+3. **Statut à trois niveaux** (`assess`) : `feasible` (« Réalisable ») inchangé ; nouveau `scheduled` (« Horaire programmé — à confirmer le jour J ») quand les seules réserves sont celles de la liste `ADVISORY` (horaire GTFS non confirmé en temps réel, prix commercial et disponibilité non vérifiés, recherche des correspondances incomplète, correspondance programmée non confirmée en temps réel) ; sinon « Transport non confirmé ». Un horaire GTFS n'est toujours **jamais** « Réalisable ». `rank` classe réalisable > programmé > non confirmé.
+4. **Correspondances GTFS** (`fromNationalGTFS`) : battement programmé ≥ 10 min (`SAFE_TRANSFER_MIN`) → réserve « correspondance programmée non confirmée en temps réel » ; plus court → « correspondance GTFS non confirmée », bloquant.
+5. **Repli national à 6 km réparé** : `transport-national-gtfs-journeys.js` refusait tout rayon > 5 000 m (« Invalid walking search radius ») → FlixBus et BlaBlaCar Bus tombaient en erreur dans le navigateur dès que le repli se déclenchait. Plafond 6 000 m, et un échec du repli ne fait plus perdre les résultats à 3 km.
+6. **CI débloquée** : depuis `65b617c`, l'assertion `overnightCalls.length===2` échouait (3 appels avec le repli) et **aucun diagnostic réel ne tournait plus**. Assertions mises à jour (3 appels ; statut programmé ; libellé de correspondance).
+7. Budget piéton d'une fiche 60 → 150 requêtes ; axe Bourg-en-Bresse déplacé sur la gare routière officielle.
+
+### Test navigateur (Chrome, émulation Pixel 7, vraies archives GTFS, marches simulées car Internet fermé dans le bac à sable)
+
+Fiches rendues sans erreur JavaScript ; J+31 (15/12/2026) : SNCF 20, FlixBus 20, BlaBlaCar Bus 8 trajets sur Lyon → Grenoble ; SNCF 20, FlixBus 10, BlaBlaCar Bus 3 sur Annecy → Genève. Pas de test sur téléphone Android réel (impossible d'ici).
+
 ## SESSION CLAUDE DU 14/11/2026 (matin) — détail complet pour ChatGPT
 
 Tout est sur `feature/transports-aura-suisse`, rien sur `main`. Chaque point ci-dessous a été vérifié par un passage réel de `diagnostic-transports.yml` (GitHub Actions, Internet réel), pas seulement hors ligne. Dernier diagnostic réel pris en compte : `docs/diagnostic-serveur.json` du 14/11/2026 10:57 UTC (run `43587627272`).
