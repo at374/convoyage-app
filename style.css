@@ -265,8 +265,9 @@ html[data-style]:not([data-style="classique"]):not([data-style="jour"]){--rNeg:#
 .pvar.down { color: #b91c1c; }
 
 /* V154 : boutons de plateformes (3 par ligne, couleur de leur étiquette), « Plus de filtres » en évidence, bandeau d'autorisations */
-.puces { display: grid !important; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.puce { width: 100%; text-align: center; padding: 7px 4px !important; font-size: .85rem; }
+.puces { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; max-width: 100%; }   /* V279 : minmax(0,…) : les boutons ne font plus déborder la page à droite */
+.puce { width: 100%; min-width: 0; text-align: center; padding: 7px 4px !important; font-size: .85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.puce[data-filtre="devis"] { grid-column: 1 / -1; }
 .puce[data-filtre="Hiflow"] { background: var(--pf-Hiflow-bg); color: var(--pf-Hiflow-tx); border: 2px solid var(--pf-Hiflow-bd); }
 .puce[data-filtre="DriiveMe"] { background: var(--pf-DriiveMe-bg); color: var(--pf-DriiveMe-tx); border: 2px solid var(--pf-DriiveMe-bd); }
 .puce[data-filtre="Otoqi"] { background: var(--pf-Otoqi-bg); color: var(--pf-Otoqi-tx); border: 2px solid var(--pf-Otoqi-bd); }

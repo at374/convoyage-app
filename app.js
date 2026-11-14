@@ -38,7 +38,7 @@
   // V139 : missions que TOI as retirées de l'Agenda (« pas acceptée ») : mémorisées sur ce téléphone, jamais effacées du serveur.
   const masquees = () => new Set(lireLocal('cp_masquees', []) || []);
   // V276 : une mission DriiveMe « disponible » qui n'a plus été vue depuis plus de 90 min alors que l'APK a lu DriiveMe depuis (autres missions plus récentes) n'est plus sur le site : on la retire.
-  const deLEdition = l => { const mq = masquees(); return (l || []).filter(m => EDITION.plateformes.includes(m.platform) && !(m.kind === 'acceptee' && mq.has(m.platform + '|' + m.external_id))); };
+  const deLEdition = l => { const mq = masquees(); return (l || []).filter(m => EDITION.plateformes.includes(m.platform) && !(m.kind === 'acceptee' && mq.has(m.platform + '|' + m.external_id)) && !(m.kind === 'acceptee' && m.platform === 'Hiflow' && m.status === 'annulee')); };   // V278 : une mission Hiflow annulée quitte l'Agenda et redevient disponible
   // V90 : lien direct vers la page de devis Hiflow d'une mission disponible (le devis se fait et s'envoie sur Hiflow, par toi).
   const lienDevis = m => m && m.platform === 'Hiflow' && m.kind !== 'acceptee' && /^\d{6,9}$/.test(String(m.external_id || '')) ? (/^https:\/\/partenaire\.expedicar\.com\/transfer\/\d+\/quotation/.test(m.detail_url || '') ? m.detail_url : 'https://partenaire.expedicar.com/transfer/' + m.external_id + '/quotation') : null;
   // V93 : sur le téléphone, les devis Hiflow se font dans l'APPLICATION « Hiflow Partner » (pas sur le site) :
@@ -110,9 +110,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   const cache = lireLocal('cp_cache', null); if (cache) { etat.factures = cache.factures || []; etat.missions = window.CPFiltres.francais(deLEdition(cache.missions)); etat.alertes = seulesNouvelles(cache.alertes); etat.reglages = cache.reglages || null; etat.chargeLe = cache.chargeLe; }
 
   function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { t.hidden = true; }, 3500); }
-  const fmtDate = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); };
+  const fmtDate = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); };
   const heure = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); };
-  const jourCourt = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }); };
+  const jourCourt = s => { const d = new Date(s); return isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Paris' }); };
   // V122 : période de plusieurs jours (DriiveMe) → « du ven. 09/10 au lun. 12/10 » ; même jour → heures comme avant.
   // V139 : dates et heures de mission en GROS et en couleur : rouge < 24 h, orange < 3 jours, vert au-delà, gris si dépassée.
   // V139 : villes de départ (vert) et d'arrivée (rouge) en gros ; adresses, km, durée et loueur lisibles.
@@ -534,11 +534,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   }
   // V154 : « Disponible (vérifié le JJ/MM à HH:MM) » = dernière lecture de la plateforme ; véhicule et énergie avec symboles.
   const cleP = x => String(x || '').toLowerCase().replace(/[^a-z]/g, '');
-  const verifLe = m => { if (m.platform === 'DriiveMe') { const t0 = Date.parse(m.last_seen_at || ''); if (Number.isFinite(t0)) return 'Disponible (vérifié le ' + new Date(t0).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t0) + ')'; } const s = (etat.sources || []).find(x => cleP(x.platform) === cleP(m.platform)); const t = s ? Date.parse(s.lu_le || '') : NaN; if (!Number.isFinite(t)) return 'Disponible'; const d = new Date(t); return 'Disponible (vérifié le ' + d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t) + ')'; };
+  const verifLe = m => { if (m.platform === 'DriiveMe') { const t0 = Date.parse(m.last_seen_at || ''); if (Number.isFinite(t0)) return 'Disponible (vérifié le ' + new Date(t0).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t0) + ')'; } const s = (etat.sources || []).find(x => cleP(x.platform) === cleP(m.platform)); const t = s ? Date.parse(s.lu_le || '') : NaN; if (!Number.isFinite(t)) return 'Disponible'; const d = new Date(t); return 'Disponible (vérifié le ' + d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t) + ')'; };
   // V273 : pastille « Disponible (vérifié le … à …) » sur TOUTES les fiches et cartes ; mission acceptée (agenda) : « Mission acceptée vérifiée le … à … » (une annulation reste possible)
   const verifPast = m => { const s = verifLe(m); const dev = typeof devisAccepte === 'function' && devisAccepte(m); if (m.kind !== 'acceptee' && !dev) return s; const r = /\(vérifié le (.*)\)$/.exec(s); return dev ? (r ? 'Devis accepté vérifié le ' + r[1] : 'Devis accepté') : (r ? 'Mission acceptée vérifiée le ' + r[1] : 'Mission acceptée'); };
   // V272 : date et heure de la dernière vérification de CETTE mission (DriiveMe : dernière fois vue dans la liste) dans la fiche
-  const verifFiche = m => { let t = m.platform === 'DriiveMe' ? Date.parse(m.last_seen_at || '') : NaN; if (!Number.isFinite(t)) { const s = (etat.sources || []).find(x => cleP(x.platform) === cleP(m.platform)); t = s ? Date.parse(s.lu_le || '') : NaN; } if (!Number.isFinite(t)) t = Date.parse(m.last_seen_at || ''); if (!Number.isFinite(t)) return ''; const age = Math.max(0, Math.round((Date.now() - t) / 60000)); const ago = age < 60 ? 'il y a ' + age + ' min' : 'il y a ' + Math.floor(age / 60) + ' h' + (age % 60 ? ' ' + String(age % 60).padStart(2, '0') : ''); return 'dernière vérification le ' + new Date(t).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t) + ' (' + ago + ')' + (m.platform === 'DriiveMe' && age > 90 ? ' ⚠️ ancienne : vérifie sur le site' : ''); };
+  const verifFiche = m => { let t = m.platform === 'DriiveMe' ? Date.parse(m.last_seen_at || '') : NaN; if (!Number.isFinite(t)) { const s = (etat.sources || []).find(x => cleP(x.platform) === cleP(m.platform)); t = s ? Date.parse(s.lu_le || '') : NaN; } if (!Number.isFinite(t)) t = Date.parse(m.last_seen_at || ''); if (!Number.isFinite(t)) return ''; const age = Math.max(0, Math.round((Date.now() - t) / 60000)); const ago = age < 60 ? 'il y a ' + age + ' min' : 'il y a ' + Math.floor(age / 60) + ' h' + (age % 60 ? ' ' + String(age % 60).padStart(2, '0') : ''); return 'dernière vérification le ' + new Date(t).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Paris' }) + ' à ' + heureP(t) + ' (' + ago + ')' + (m.platform === 'DriiveMe' && age > 90 ? ' ⚠️ ancienne : vérifie sur le site' : ''); };
   const vehObj = m => { let v = m.vehicle; if (typeof v === 'string' && v.trim().charAt(0) === '{') { try { v = JSON.parse(v); } catch (_) {} } return v; };
   const vehInfo = m => { const v = vehObj(m); if (v && typeof v === 'object') return { type: [v.category || v.type, v.model, v.gearbox].filter(Boolean).map(x => String(x).trim()).join(' · '), en: String(v.energy || '').trim() }; return { type: typeof v === 'string' ? v.trim() : '', en: '' }; };
   // V206 : suites possibles lues sur la fiche DriiveMe, affichées juste sous l'étiquette de la mission (stockées dans vehicle.suites)
@@ -664,18 +664,20 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   const estPassee = m => { const t = Date.parse((m.platform === 'DriiveMe' ? (m.delivery_end || m.pickup_end || m.pickup_start) : m.pickup_start) || ''); return Number.isFinite(t) && t < Date.now() - (m.platform === 'DriiveMe' ? 0 : 86400000); };
   // V240 : un devis Hiflow accepté devient une mission de l'Agenda : il ne reste plus dans la liste des missions disponibles.
   let _accRef = null, _accSet = new Set(), _devRef = null, _devSet = new Set();
-  const clesAcceptees = () => { if (_accRef !== etat.missions) { _accRef = etat.missions; _accSet = new Set(etat.missions.filter(x => x && x.kind === 'acceptee').map(x => x.platform + '|' + x.external_id)); } return _accSet; };
+  const clesAcceptees = () => { if (_accRef !== etat.missions) { _accRef = etat.missions; _accSet = new Set(etat.missions.filter(x => x && x.kind === 'acceptee' && !(x.platform === 'Hiflow' && x.status === 'annulee')).map(x => x.platform + '|' + x.external_id)); } return _accSet; };
   const clesDevis = () => { if (_devRef !== etat.missions) { _devRef = etat.missions; _devSet = new Set(etat.missions.filter(x => x && x.kind === 'disponible' && x.fees && x.fees.devis_numero).map(x => x.platform + '|' + x.external_id)); } return _devSet; };
   const devisAccepte = m => !!m && m.platform === 'Hiflow' && (m.kind === 'acceptee' || !!(m.fees && m.fees.devis_accepte === 1));   // V241 : toute mission Hiflow de l'Agenda vient d'un devis accepté
   const estDisponible = m => { if (!m || m.kind !== 'disponible' || (m.status !== 'disponible' && !(m.status === 'plus_vue' && m.platform === 'Hiflow' && m.fees && m.fees.devis_numero))) return false;
     if (clesAcceptees().has(m.platform + '|' + m.external_id) || (m.fees && m.fees.devis_accepte === 1)) return false;
     if (PLAQUE_VILLE.test(String(m.from_city || '')) || PLAQUE_VILLE.test(String(m.to_city || ''))) return false;
     const d = Date.parse(m.delivery_end || m.delivery_start || m.pickup_start || ''); return !(Number.isFinite(d) && d < Date.now()); };   // V123 : plus aucune marge — une mission dont l'heure est dépassée disparaît toute seule   // V122 : une mission DriiveMe dont la période est finie (ex. « ven. 09/10 00:00-23:59 » vue le 10/10) n'est plus disponible
+  // V278 : filtre « Devis / acceptées » : missions disponibles avec devis envoyé + missions acceptées à venir
+  const listeDevis = () => deLEdition(etat.missions).filter(m => { if (!m) return false; if (m.kind === 'disponible') return estDisponible(m) && !!(m.fees && m.fees.devis_numero); if (m.kind === 'acceptee') { if (m.status === 'annulee' || m.status === 'terminee') return false; const d = Date.parse(m.delivery_end || m.delivery_start || m.pickup_start || ''); return !(Number.isFinite(d) && d < Date.now()); } return false; });
   function vueMissions() {
     const dispo = etat.missions.filter(estDisponible);
     const puces = (EDITION.plateformes.length > 1 ? ['toutes'].concat(EDITION.plateformes) : []).map(p => `<button class="puce${etat.filtre === p ? ' actif' : ''}" data-filtre="${p}">${p === 'toutes' ? 'Toutes' : esc(PLATS[p])} ${p === 'toutes' ? dispo.length : dispo.filter(m => m.platform === p).length}</button>`).join('');
     const aVille = etat.zones.some(z => z.type === 'ville');
-    $('ecran').innerHTML = `<div class="puces" role="group" aria-label="Plateformes">${puces}</div>
+    $('ecran').innerHTML = `<div class="puces" role="group" aria-label="Plateformes">${puces}<button class="puce${etat.filtre === 'devis' ? ' actif' : ''}" data-filtre="devis">📝 Devis / acceptées ${listeDevis().length}</button></div>
       <div class="filtres"><div class="recherche"><input id="recherche" type="search" placeholder="Ville, département ou région (3 lettres)" value="${esc(etat.recherche)}" aria-label="Rechercher un lieu" autocomplete="off" aria-autocomplete="list" aria-controls="sugg">
       <div id="sugg" class="sugg" role="listbox" hidden></div></div>
       <select id="tri" aria-label="Trier"><option value="recent">Plus récentes</option><option value="date">Date de départ</option><option value="prix">Prix</option><option value="heure">€/heure</option><option value="proche">Les plus proches de moi</option></select></div>
@@ -740,7 +742,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   function puces(q) {
     const P = [], plus = etat.plus || {};
     const add = (cle, txt) => P.push('<button type="button" class="puceFiltre" data-rm="' + esc(cle) + '" aria-label="Retirer ce filtre" style="font-size:.85rem;padding:3px 10px;border-radius:14px;border:1px solid #c9a227;background:#2a2108;color:#f5d26b;cursor:pointer">' + esc(txt) + ' <b>✕</b></button>');
-    if (etat.filtre !== 'toutes') add('plateforme', 'Plateforme : ' + etat.filtre);
+    if (etat.filtre !== 'toutes') add('plateforme', etat.filtre === 'devis' ? 'Filtre : devis envoyé / mission acceptée' : 'Plateforme : ' + etat.filtre);
     etat.zones.forEach((z, i) => add('zone:' + i, (COTES[z.cote || 'tous'] || 'Lieu') + ' : ' + G.libelleZone(z)));
     if (etat.zones.length && etat.rayon > 0) add('rayon', 'Autour : ville + ' + etat.rayon + ' km');
     if (etat.posMax > 0) add('posMax', 'Max ' + etat.posMax + ' km à vol d’oiseau depuis ' + (sourceRecherche() === 'domicile' ? 'mon domicile' : 'ma position'));
@@ -757,7 +759,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     const q = norm(etat.recherche);
     let l = etat.missions.filter(estDisponible);
     const total = l.length;
-    if (etat.filtre !== 'toutes') l = l.filter(m => m.platform === etat.filtre);
+    if (etat.filtre === 'devis') l = listeDevis(); else if (etat.filtre !== 'toutes') l = l.filter(m => m.platform === etat.filtre);
     l = G.filtrer(l, etat.zones, etat.rayon);
     l = FI.appliquer(l, etat.plus, m => CALC.dureeEstimee(m).heures);   // V96 : client, véhicule, distance, durée
     // V137/V138 : distance maximale DEPUIS MA POSITION, comptée À VOL D'OISEAU ; départ de position inconnue → gardé.
@@ -774,7 +776,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     listeAffichee = l;
     const lesPuces = puces(q);
     zoneListe.innerHTML = `${lesPuces.n ? `<div id="puces" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0">${lesPuces.h}</div><p class="doux" id="compte">${l.length} mission(s) sur ${total} correspondent à tes filtres <button id="toutVoir" class="lienBouton">Tout afficher</button></p>` : ''}` +
-      (l.length ? (() => { let jr = ''; return l.map((m, i) => { let h = ''; { const d = Date.parse(m.pickup_start || ''); const j = Number.isFinite(d) ? new Date(d).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long' }) : 'Date à préciser'; if (j !== jr) { h = '<div class="jour">' + esc(j) + '</div>'; jr = j; } } return h + carteMission(m, i); }).join(''); })() : `<div class="vide">${total ? 'Aucune mission ne correspond à tes filtres.' : 'Aucune mission reçue pour l’instant. Vérifie que l’extension de ton ordinateur est connectée à ton compte (Sources → Application téléphone).'}</div>`);
+      (l.length ? (() => { let jr = ''; return l.map((m, i) => { let h = ''; { const d = Date.parse(m.pickup_start || ''); const j = Number.isFinite(d) ? new Date(d).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Date à préciser'; if (j !== jr) { h = '<div class="jour">' + esc(j) + '</div>'; jr = j; } } return h + carteMission(m, i); }).join(''); })() : `<div class="vide">${total ? 'Aucune mission ne correspond à tes filtres.' : 'Aucune mission reçue pour l’instant. Vérifie que l’extension de ton ordinateur est connectée à ton compte (Sources → Application téléphone).'}</div>`);
     for (const b of zoneListe.querySelectorAll('.mission')) b.onclick = () => detail(listeAffichee[Number(b.dataset.i)]);
     for (const b of zoneListe.querySelectorAll('[data-rm]')) b.onclick = ev => { ev.stopPropagation(); retirerPuce(b.dataset.rm); };
     const tv = $('toutVoir'); if (tv) tv.onclick = () => { etat.zones = []; etat.recherche = ''; etat.plus = {}; etat.filtre = 'toutes'; memoriser(); afficher(); };   // V99 : retirer tous les filtres d'un coup
@@ -810,7 +812,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     let jour = '';
     items.forEach((x, i) => {
       const m = x.mission, te = debutAff(x), d = te != null ? new Date(te) : null;
-      const j = d ? d.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long' }) : 'Date à préciser';
+      const j = d ? d.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Date à préciser';
       if (j !== jour) { html += `<div class="jour">${esc(j)}</div>`; jour = j; }
       const nb = (x.etat === 'a_venir' || x.etat === 'en_cours') ? resume[x.cle] : 0;
       const e = ETATS[x.etat];
@@ -1439,7 +1441,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           return lienPlan + `<button class="mission${clsPlat(m.platform)}" data-plan="${ip}" data-etape="${ie}"><div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${et.acceptee ? ' <span class="etiq ok">déjà acceptée</span>' : ''}</span><span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div><div class="net">net ≈ ${esc(euros(et.net))}</div></span></div><div class="trajet">${trajetHtml(m)}</div><div class="meta">${agendaDateBlocks(m,{t:et.fin,estimee:et.finEstimee},et.debut)}</div></button>`;
         }).join('');
         const dort = ij < tous.length - 1 && nuit < pl.nuits ? `${(pl.nuitsLiaison || [])[nuit] && pl.nuitsLiaison[nuit].km >= 2 ? bk('bkTr', '🚆 EN SOIRÉE', '<b>' + esc(pl.nuitsLiaison[nuit].depuis) + ' → ' + esc(pl.nuitsLiaison[nuit].soir ? 'Domicile' : pl.lieuxNuits[nuit]) + '</b><br>≈ ' + esc(Math.round((pl.nuitsLiaison[nuit].soir || pl.nuitsLiaison[nuit]).km)) + ' km · ' + esc(duree((pl.nuitsLiaison[nuit].soir || pl.nuitsLiaison[nuit]).heures)) + ' · ' + esc(euros((pl.nuitsLiaison[nuit].soir || pl.nuitsLiaison[nuit]).cout))) : ''}<div class="bk bkC bkSuite nuit"><div class="bkt">🌙 NUIT</div>${(() => { const nd = (pl.nuitsDom || [])[nuit]; const vl = pl.lieuxNuits[nuit++]; return nd && nd.domicile ? 'Nuit à ton domicile' + (nd.km != null && nd.km >= nd.seuil * 0.6 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km par la route)</span>' : '') : 'Nuit à ' + esc(vl) + (nd && nd.km != null && nd.km < nd.seuil * 1.4 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km du domicile)</span>' : ''); })()}${pl.coutHotel > 0 ? ' (hôtel ≈ ' + esc(euros(pl.coutHotel / pl.nuits)) + ')' : ''}</div>` : '';
-        return `<div class="jour">${esc(new Date(j.t).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Paris' }))}</div>${lignes}${dort}`;
+        return `<div class="jour">${esc(new Date(j.t).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris' }))}</div>${lignes}${dort}`;
       }).join('');
       return `<div class="carte plan propC" id="plan${ip}"><div class="propBandeau">Proposition ${ip + 1}</div>
         <div class="resume">≈ ${esc(euros(pl.net))} net${pl.parHeure != null ? ' · ' + esc(euros(pl.parHeure)) + '/h' : ''} · ${pl.etapes.length} mission${pl.etapes.length > 1 ? 's' : ''} · ${pl.nuits ? pl.nuits + ' nuit' + (pl.nuits > 1 ? 's' : '') : 'sans nuit'}</div>
