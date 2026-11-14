@@ -151,6 +151,36 @@ function lemanPassFare(leg){
  return {amount:LEMAN_PASS.amount,currency:LEMAN_PASS.currency,network:LEMAN_PASS.network,validityMinutes:LEMAN_PASS.validityMinutes,
   source:LEMAN_PASS.network+' · billet unité plein tarif, 90 min · '+LEMAN_PASS.source+' (valable jusqu’au 12/12/2026, vérifié le '+LEMAN_PASS.checkedAt+')'};
 }
+// unireso « Tout Genève », zone 10 = tout le canton de Genève, valable sur tpg, CFF et Mouettes : billet 60 min,
+// 2e classe, prix entier 3,00 CHF. Sources officielles lues le 14/11/2026 : unireso.com/titres-de-transport
+// (« Billet zone 10 | 60 min. | 3,00 CHF ») et dépliant tarifaire unireso « Dès le 14 décembre 2025 ». Fin de validité
+// prudente : 12/12/2026 (changement d'horaire annuel). Appliqué seulement si les DEUX arrêts sont prouvés dans le
+// canton : gare de la liste ZONE10_STATIONS pour un train ; pour un bus/tram, opérateur tpg ET localité genevoise
+// en tête du nom d'arrêt officiel (« Genève, Bel-Air »). Un arrêt français (Saint-Julien, Collonges, Annemasse…)
+// ou inconnu = pas de prix : le trajet relève alors du Léman Pass, non intégré.
+const ZONE10={amount:3.00,currency:'CHF',network:'unireso Tout Genève (zone 10)',validityMinutes:60,
+ validFrom:'2025-12-14',validUntil:'2026-12-12',checkedAt:'2026-11-14',source:'https://www.unireso.com/titres-de-transport/'};
+const ZONE10_LOCALITIES=['geneve','geneve-eaux-vives','geneve-champel','geneve-secheron','geneve-aeroport','carouge ge','lancy',
+ 'lancy-bachet','lancy-pont-rouge','petit-lancy','grand-lancy','chene-bourg','chene-bougeries','thonex','vernier','meyrin','onex',
+ 'plan-les-ouates','grand-saconnex','le grand-saconnex','cologny','confignon','perly','troinex','bardonnex','croix-de-rozon',
+ 'versoix','satigny','pregny-chambesy','chambesy'];
+function zone10Locality(name){
+ const raw=String(typeof name==='string'?name:(name&&typeof name==='object'?(name.name||name.stopName||name.label||''):''));
+ if(!raw.includes(','))return false; // forme officielle « Localité, arrêt » exigée
+ const head=raw.split(',')[0].normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+ return ZONE10_LOCALITIES.includes(head);
+}
+function zone10Fare(leg){
+ if(!leg||leg.kind==='walk'||typeof leg.departure!=='string'||typeof leg.provider!=='string')return null;
+ const day=leg.departure.slice(0,10);if(day<ZONE10.validFrom||day>ZONE10.validUntil)return null;
+ const provider=leg.provider.trim();
+ let inside=false;
+ if(leg.mode==='Train')inside=/^(sbb|cff|sncf)\b/i.test(provider)&&ZONE10_STATIONS.includes(stationKey(leg.from))&&ZONE10_STATIONS.includes(stationKey(leg.to));
+ else if(leg.mode==='Bus'||leg.mode==='Tram')inside=/^tpg$/i.test(provider)&&zone10Locality(leg.from)&&zone10Locality(leg.to);
+ if(!inside)return null;
+ return {amount:ZONE10.amount,currency:ZONE10.currency,network:ZONE10.network,validityMinutes:ZONE10.validityMinutes,
+  source:ZONE10.network+' · billet 60 min, 2e classe, prix entier · '+ZONE10.source+' (valable jusqu’au 12/12/2026, vérifié le '+ZONE10.checkedAt+')'};
+}
 // STAR'T : trajets interzones A+B prouvés sur les lignes L et 142.
 // Les Arts (Thonon, zone A) ↔ Mairie (Bons-en-Chablais, zone B).
 // Ne pas généraliser à d'autres arrêts sans leur commune/zone vérifiée.
@@ -173,6 +203,7 @@ function fareFor(leg,grids){
  const zoned=officialZoneFare(leg);if(zoned)return zoned;
  const leman=lemanPassFare(leg);if(leman)return leman;
  const startAB=startInterzoneFare(leg);if(startAB)return startAB;
+ const z10=zone10Fare(leg);if(z10)return z10;
  if(!leg||leg.kind==='walk'||typeof leg.provider!=='string'||!leg.provider.trim())return null;
  const day=typeof leg.departure==='string'?leg.departure.slice(0,10):null;if(!day)return null;
  // Certaines liaisons Cars Région Ain ont des tarifs locaux dérogatoires.
@@ -190,7 +221,7 @@ function fareFor(leg,grids){
  return {amount:e.amount,currency:e.currency,network:e.network,validityMinutes:Number.isFinite(e.validityMinutes)?e.validityMinutes:null,
   source:e.network+' · '+e.product+' · '+e.source+' (vérifié le '+e.checkedAt+')'};
 }
-const api={GRIDS,fareFor,valid,officialZoneFare,lemanPassFare,startInterzoneFare,stationKey};
+const api={GRIDS,fareFor,valid,officialZoneFare,lemanPassFare,startInterzoneFare,zone10Fare,stationKey};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportFareGrids=api;
 })(typeof window!=='undefined'?window:globalThis);

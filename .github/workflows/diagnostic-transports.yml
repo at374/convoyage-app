@@ -724,6 +724,16 @@ jobs:
           assert.equal(mixed.partial,'1,20 €','Montant partiel visible');
           const official={...bus,fare:{amount:1.50,currency:'EUR',source:'billet fournisseur'}};
           assert.equal(priceOf({walkOnly:false,legs:[official]},gridFare).amounts.EUR,1.50);
+          // unireso Tout Genève (zone 10) : 3,00 CHF seulement si les deux arrêts sont prouvés dans le canton.
+          const z=(provider,mode,from,to,departure='2026-11-16T08:00:00+01:00')=>fareFor({provider,mode,from,to,departure});
+          assert.equal(z('TPG','Tram','Genève-Eaux-Vives, gare','Genève, Bel-Air')?.amount,3.00);
+          assert.equal(z('TPG','Tram','Genève-Eaux-Vives, gare','Genève, Bel-Air')?.currency,'CHF');
+          assert.equal(z('SBB','Train','Lancy-Bachet','Genève')?.amount,3.00,'Train CFF interne à la zone 10');
+          assert.equal(z('TPG','Bus','Lancy-Bachet, gare','Saint-Julien, centre'),null,'Transfrontalier : pas de billet zone 10');
+          assert.equal(z('TPG','Bus','Collonges, marché','Lancy-Bachet, gare'),null,'Arrêt français : pas de billet zone 10');
+          assert.equal(z('SBB','Train','Annemasse','Genève'),null,'Annemasse hors zone 10');
+          assert.equal(z('SBB','Train','Genève','Lausanne'),null,'Tarif national suisse non couvert');
+          assert.equal(z('TPG','Tram','Genève, a','Genève, b','2026-12-20T08:00:00+01:00'),null,'Hors période vérifiée');
           console.log('Exclusions, validité et ambiguïtés tarifaires OK');
           NODE
       - name: Vérifier le tarif GTFS officiel embarqué TCL (Fares V1)
