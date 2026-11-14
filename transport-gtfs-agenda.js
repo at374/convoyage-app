@@ -5,7 +5,7 @@
 // même origine, donc pas de blocage CORS sur le téléphone. Hors HTTPS (tests locaux), adresse publique du site.
 const LOCAL_GTFS=name=>{try{if(root.location&&root.location.protocol==='https:')return new URL('data/gtfs/'+name,root.location.href).href;}catch(_){}
  return 'https://at374.github.io/convoyage-app/data/gtfs/'+name;};
-const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
+const BASE_RESOURCES=Object.freeze([Object.freeze({
  // Réseaux extraits de l'agrégat officiel Oùra : utilisés seulement pour les trajets internes à leur ville
  // (pas de « federate ») afin de ne pas évincer les cars régionaux sur les liaisons interurbaines.
  id:'jybus-rumilly',datasetId:'jybus-rumilly',network:"J'y bus Rumilly",format:'GTFS',url:LOCAL_GTFS('jybus-rumilly.zip'),
@@ -79,6 +79,15 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  // Savoie seulement (Annecy et la Haute-Savoie exclues).
  bounds:[45.05,5.62,45.80,7.19],timeZone:'Europe/Paris'
 })]);
+// Les archives relayées (data/gtfs/) n'existent sur le site de l'application qu'une fois la branche Transports publiée.
+// Secours explicites pour que chaque réseau relayé reste chargeable avant comme après publication : copie de la
+// branche principale, puis de la branche Transports. Aucun réseau ne dépend ainsi d'une seule adresse (TCL, J'y bus,
+// TAM et les Cars Région n'avaient aucun secours : 404 certain tant que le site déployé n'a pas ces fichiers).
+const RELAY_FALLBACKS=name=>['main','feature/transports-aura-suisse'].map(branch=>'https://raw.githubusercontent.com/at374/convoyage-app/'+branch+'/data/gtfs/'+name);
+const DEFAULT_RESOURCES=Object.freeze(BASE_RESOURCES.map(r=>{
+ const m=/\/data\/gtfs\/([A-Za-z0-9._-]+\.zip)$/.exec(String(r.url||''));
+ return m?Object.freeze({...r,fallbackUrls:[...(Array.isArray(r.fallbackUrls)?r.fallbackUrls:[]),...RELAY_FALLBACKS(m[1])]}):r;
+}));
 function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof point.lon==='number'&&
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}
 function selected(resource,task){
@@ -250,7 +259,13 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       seenChoices.add(key);distinct.push(candidate);
      }
      const shown=distinct.slice(0,5);
-     if(active())onResults({task,itineraries:shown});
+     // Le panneau n'affiche que 5 horaires, mais les fiches mission en reçoivent jusqu'à 20 (candidates) : pour un
+     // « Aller », les 5 plus tardifs échouaient presque toujours sur la marge une fois la marche finale ajoutée,
+     // alors que des départs plus tôt existaient (navigateur réel, 14/11/2026 : Sibra ligne 5, marges de 6 et 8 min).
+     // Sur un réseau fréquent, les 20 premiers tiennent dans quelques minutes : 10 premiers + 10 répartis sur le reste.
+     const rest=distinct.slice(10),step=Math.max(1,Math.ceil(rest.length/10));
+     const candidates=[...distinct.slice(0,10),...rest.filter((_,i)=>i%step===0).slice(0,10)];
+     if(active())onResults({task,itineraries:shown,candidates});
      const marginNote=Number.isFinite(Date.parse(task.latestArrival))?' Marge avant mission : '+window.marginMinutes+' min minimum (marche et circulation à vérifier).':'';
      const incomplete=truncated||partialNetworks||invalidJourneys>0;
      const coverageNote=incomplete?' Recherche partielle : certains horaires ou réseaux n’ont pas pu être vérifiés.':'';

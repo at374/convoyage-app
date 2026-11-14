@@ -2320,8 +2320,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       hubObserver?.observe($('feuille'),{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
       bt.cpRefreshHub=startTransportHub;
       startTransportHub();
-      const renderLocalCards=({task,itineraries})=>{
-        try{if(transportHub&&window.CPTransportHub)transportHub.ingest(task.label,'GTFS local',window.CPTransportHub.fromGTFS(itineraries));}catch(_){}
+      const renderLocalCards=({task,itineraries,candidates})=>{
+        try{if(transportHub&&window.CPTransportHub)transportHub.ingest(task.label,'GTFS local',window.CPTransportHub.fromGTFS(Array.isArray(candidates)&&candidates.length?candidates:itineraries));}catch(_){}
         if(!panel.isConnected||panel.hidden||$('feuille').hidden||!transportDestinations[task.label])return;
         localCards[task.label]?.remove();
         const host=document.createElement('div');host.className='cp-transport-local';localCards[task.label]=host;

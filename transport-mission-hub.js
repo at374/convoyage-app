@@ -502,7 +502,9 @@ function makeProviders(r,opts={}){
     run:async(task,signal)=>{
      const w=queryWindow(task),when=ms(w.when);
      if(!Number.isFinite(when))return [];
-     const {date,clock}=dateParts(when),resource={format:'GTFS',url:base+file};
+     const {date,clock}=dateParts(when),resource={format:'GTFS',url:base+file,
+      // Secours si la branche Transports est supprimée après publication : branche principale, puis site déployé.
+      fallbackUrls:['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file]};
      let promise=cache.get(id+'|'+date);
      if(!promise){
       promise=r.CPGTFSLoader.loadResource(resource,{fetcher,indexServiceDates:[date],retainSourceTables:false});
