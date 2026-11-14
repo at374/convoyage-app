@@ -528,11 +528,24 @@ function makeProviders(r,opts={}){
      // is outside 3 km (e.g. Lyon Perrache/Gerland vs Part-Dieu).
      // Candidate radius is NOT a validated pedestrian distance: completeWalks
      // still verifies walking geometry, timing and mission margin.
-     if(!(result?.journeys?.length)&&!signal?.aborted&&opts.nationalStopFallback!==false){
+     const initialRows=Array.isArray(result?.journeys)?result.journeys:[];
+     // Coaches can have a distant terminal even when nearby indirect services
+     // exist. Search farther for a DIRECT coach, not just when results are empty.
+     // SNCF keeps the cheaper empty-only fallback to limit GTFS query load.
+     const hasDirect=initialRows.some(j=>j&&(!Array.isArray(j.legs)||j.legs.length<=1));
+     const needExpanded=!initialRows.length||
+      (operator!=='sncf'&&!hasDirect);
+     let rows=initialRows;
+     if(needExpanded&&!signal?.aborted&&opts.nationalStopFallback!==false){
       const expanded=await r.CPNationalGTFSJourneys.loadAndSearch({...searchParams,radiusMeters:6000});
-      if(Array.isArray(expanded?.journeys)&&expanded.journeys.length)result=expanded;
+      if(Array.isArray(expanded?.journeys)&&expanded.journeys.length){
+       const seen=new Set(rows.map(j=>JSON.stringify([j.tripId,j.line,j.departure,j.arrival,j.originStop?.stop_id||j.originStop?.name,j.destinationStop?.stop_id||j.destinationStop?.name])));
+       for(const j of expanded.journeys){
+        const key=JSON.stringify([j.tripId,j.line,j.departure,j.arrival,j.originStop?.stop_id||j.originStop?.name,j.destinationStop?.stop_id||j.destinationStop?.name]);
+        if(!seen.has(key)){seen.add(key);rows.push(j);}
+       }
+      }
      }
-     let rows=result.journeys||[];
      // After midnight, a service with GTFS time 24:30 belongs to yesterday's service date.
      // Query the previous service day as well, without inventing a new train or bus.
      if(Number(p.hour)<6){
