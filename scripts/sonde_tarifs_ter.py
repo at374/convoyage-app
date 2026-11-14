@@ -48,6 +48,38 @@ try:
     for r in dg.get('resources',[]): out.append(f"- ressource {r.get('format')} — {r.get('title')} — {r.get('url')} — modifiée {r.get('last_modified')}\n")
 except Exception as e:
     out.append(f'\n## data.gouv.fr — erreur : {e!r}\n')
+# 14/11/2026 (soir) : recherche de TOUTE donnée tarifaire officielle publiée (obligation réglementaire NeTEx Tarifs /
+# GTFS-Fares sur le point d'accès national) pour SNCF, FlixBus, BlaBlaCar Bus et les réseaux AURA.
+try:
+    import io, zipfile, re as _re
+    out.append('\n## Point d\'accès national : jeux ou ressources mentionnant des tarifs\n')
+    pan=json.loads(get_slow('https://transport.data.gouv.fr/api/datasets'))
+    hits=0
+    for d in pan:
+        blob=(str(d.get('title'))+' '+str(d.get('slug'))+' '+' '.join(str(r.get('title'))+' '+str(r.get('format'))+' '+str(r.get('url')) for r in d.get('resources',[]))).lower()
+        if _re.search(r'tarif|fare|prix|netex.*tarif',blob):
+            hits+=1
+            out.append(f"- **{d.get('title')}** — https://transport.data.gouv.fr/datasets/{d.get('slug')}\n")
+            for r in d.get('resources',[]):
+                rb=(str(r.get('title'))+' '+str(r.get('url'))).lower()
+                if _re.search(r'tarif|fare|prix',rb): out.append(f"  - {r.get('format')} — {r.get('title')} — {r.get('url')}\n")
+    out.append(f'- total : {hits} jeux sur {len(pan)}\n')
+except Exception as e:
+    out.append(f'\n## Point d\'accès national — erreur : {e!r}\n')
+for label,url in [('SNCF NeTEx','https://eu.ftp.opendatasoft.com/sncf/plandata/export-opendata-sncf-netex.zip'),
+                  ('SNCF GTFS','https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip')]:
+    try:
+        body=get_slow(url)
+        z=zipfile.ZipFile(io.BytesIO(body))
+        names=z.namelist()
+        out.append(f"\n## {label} — {len(body)} octets, {len(names)} fichiers\n- fichiers : {', '.join(names[:25])}\n")
+        for n in names:
+            if n.lower().endswith(('.xml','.txt')) and z.getinfo(n).file_size<400*1024*1024:
+                data=z.read(n)
+                counts={k:data.count(k.encode()) for k in ['FareFrame','FareTable','FareProduct','PriceGroup','fare_attributes','<Amount>','Tarif']}
+                if any(counts.values()) or 'fare' in n.lower(): out.append(f"- `{n}` ({len(data)} octets) : {counts}\n")
+    except Exception as e:
+        out.append(f"\n## {label} — erreur : {e!r}\n")
 for ds in IDS:
     out.append(f'\n## {ds}\n')
     try:
