@@ -96,4 +96,34 @@ for sid,url in SOURCES:
         index.append(f'| {sid} | {url} | {st} | {hashlib.sha256(data).hexdigest()[:16]} | {len(text)} |\n')
     except Exception as e:
         index.append(f'| {sid} | {url} | erreur {e!r} | | |\n')
+# Arrêts réels des cars transfrontaliers 271/272/274 (flux officiel Oùra Haute-Savoie) avec leur commune officielle
+# (géocodage inverse de la Base Adresse Nationale) : nécessaire pour appliquer la grille 272, qui est par commune.
+try:
+    import csv, zipfile
+    _,_,data=fetch('https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA')
+    z=zipfile.ZipFile(io.BytesIO(data))
+    rd=lambda n:list(csv.DictReader(io.TextIOWrapper(z.open(n),encoding='utf-8-sig'))) if n in z.namelist() else []
+    routes={r['route_id']:r for r in rd('routes.txt') if (r.get('route_short_name') or '').strip() in ('271','272','274')}
+    trips={t['trip_id']:t['route_id'] for t in rd('trips.txt') if t['route_id'] in routes}
+    stops={x['stop_id']:x for x in rd('stops.txt')}
+    used={}
+    for st in rd('stop_times.txt'):
+        rid=trips.get(st['trip_id'])
+        if rid: used.setdefault((routes[rid]['route_short_name'].strip(),st['stop_id']),0); used[(routes[rid]['route_short_name'].strip(),st['stop_id'])]+=1
+    lines=['Fichiers du flux : '+', '.join(z.namelist()),'ligne | stop_id | nom | lat | lon | zone_id | commune BAN | code INSEE | passages']
+    cache={}
+    for (line,sid),n in sorted(used.items()):
+        x=stops.get(sid,{}); lat,lon=x.get('stop_lat',''),x.get('stop_lon','')
+        key=(lat,lon)
+        if key not in cache:
+            try:
+                _,_,g=fetch(f'https://api-adresse.data.gouv.fr/reverse/?lon={lon}&lat={lat}&limit=1')
+                f=(json.loads(g).get('features') or [{}])[0].get('properties',{})
+                cache[key]=(f.get('city','')+((' ('+f.get('oldcity')+')') if f.get('oldcity') else ''),f.get('citycode',''))
+            except Exception as e: cache[key]=('erreur '+repr(e)[:60],'')
+        lines.append(' | '.join([line,sid,x.get('stop_name',''),lat,lon,x.get('zone_id',''),cache[key][0],cache[key][1],str(n)]))
+    open(f'{OUT}/cars74-271-272-274-arrets.txt','w').write('\n'.join(lines))
+    index.append(f'| cars74-271-272-274-arrets | flux Oùra Haute-Savoie + BAN | 200 | | {len(lines)} lignes |\n')
+except Exception as e:
+    index.append(f'| cars74-271-272-274-arrets | flux Oùra Haute-Savoie + BAN | erreur {e!r} | | |\n')
 open(f'{OUT}/INDEX.md','w').write(''.join(index)); print(''.join(index))
