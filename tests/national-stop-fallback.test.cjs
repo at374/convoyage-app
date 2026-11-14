@@ -54,3 +54,20 @@ test('expanded search candidates are returned to the mission hub',async()=>{
  assert.equal(journeys[0].legs[0].line,'F99');
  assert.ok(journeys[0].missing.includes('prix commercial et disponibilité non vérifiés'));
 });
+
+test('indirect nearby coach results trigger search for direct distant coach',async()=>{
+ const origin={name:'Lyon Perrache',lat:45.748,lon:4.826};
+ const destination={name:'Grenoble Gare',lat:45.191,lon:5.714};
+ const indirect={operator:'flixbus',date:'2026-11-16',line:'via transfer',
+  departure:'08:00:00',arrival:'10:00:00',originStop:origin,destinationStop:destination,
+  transferStop:{name:'Chambery',lat:45.57,lon:5.92},
+  legs:[{line:'A',departure:'08:00:00',arrival:'09:00:00'},
+        {line:'B',departure:'09:10:00',arrival:'10:00:00'}]};
+ const direct={operator:'flixbus',date:'2026-11-16',line:'Direct',
+  departure:'08:30:00',arrival:'09:40:00',originStop:origin,destinationStop:destination};
+ const h=harness([{journeys:[indirect]},{journeys:[indirect,direct]}]);
+ const journeys=await h.provider.run(task);
+ assert.deepEqual(h.calls.map(c=>c.radiusMeters),[3000,6000]);
+ assert.equal(journeys.length,2);
+ assert.equal(journeys.filter(j=>j.legs.length===1).length,1);
+});
