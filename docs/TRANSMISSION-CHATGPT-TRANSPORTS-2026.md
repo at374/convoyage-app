@@ -59,6 +59,8 @@ Deux retouches dans la boucle de sélection des fournisseurs `local_*` (`transpo
 - **`rank`** : les trajets exploitables (réalisables **ou** en horaire programmé) passent avant les incomplets, puis le critère (prix, compromis, durée) ; le réalisable ne passe devant le programmé qu'à égalité. Avant, « Plus rapide » pouvait désigner 30 min de marche alors qu'un bus programmé de 12 min existait (Lyon Part-Dieu → Bellecour). Le statut affiché sur la carte ne change pas.
 - **`view`** : les trajets dont la seule issue est « départ avant la fin de la mission précédente » ne sont plus affichés (impossibles, pas « non confirmés ») ; `view().hidden.tooEarly` en donne le nombre, repris dans une note de la fiche et dans `hiddenTooEarly` du diagnostic.
 
+Diagnostic réel après ces deux changements (14/11, 19:37 UTC, `04d2081`) : 881 trajets affichés, dont **837 exploitables (95 %)** — 164 réalisables + 673 en horaire programmé ; 132 trajets impossibles masqués ; 840 avec marches calculées ; 254 avec prix vérifié ; 178 requêtes piétonnes, 0 échec ; aucun moteur en erreur ; 9 s en moyenne par axe, 26 s au pire. Lyon Part-Dieu → Bellecour : « Plus rapide » = TCL C13 à 2,10 € (horaire programmé), « Moins cher » = marche.
+
 ### Test navigateur (Chrome, émulation Pixel 7, vraies archives GTFS, marches simulées car Internet fermé dans le bac à sable)
 
 Fiches rendues sans erreur JavaScript ; J+31 (15/12/2026) : SNCF 20, FlixBus 20, BlaBlaCar Bus 8 trajets sur Lyon → Grenoble ; SNCF 20, FlixBus 10, BlaBlaCar Bus 3 sur Annecy → Genève. Pas de test sur téléphone Android réel (impossible d'ici).
