@@ -69,6 +69,19 @@ Quand l'application est servie par le site déployé (`https://…github.io/…`
 
 `main` avait 15 commits d'avance (V278, V279, V299, horaires SNCF/Y51). Ils sont maintenant dans `feature/transports-aura-suisse` ; seul conflit : `sw.js` (liste de fichiers de la branche conservée, cache `v46`). **ChatGPT : fais `git pull` avant ton prochain commit.** La branche contient donc tout `main` : la publication sera une simple avance rapide de `main`, à déclencher par Laurent. Diagnostic réel relancé sur l'état fusionné : vert.
 
+### « Tous les prix sont obligatoires » — recherche des voies légitimes (14/11, 22 h 30)
+
+Laurent exige tous les prix. Vérifié en réel par `sonde-tarifs.yml` (résultat dans `docs/SONDE-TARIFS-TER.md`) :
+- **Point d'accès national (transport.data.gouv.fr)** : sur 819 jeux, 6 mentionnent des tarifs (carburants, Rémi, Cap Cotentin, vélos) — **aucun** pour SNCF, FlixBus, BlaBlaCar Bus ni un réseau AURA, malgré l'obligation réglementaire de publication.
+- **Export NeTEx SNCF** (31,7 Mo) : aucun cadre tarifaire. **GTFS SNCF** : pas de `fare_attributes.txt`. Tranches FlixBus et BlaBlaCar Bus : idem.
+- Conclusion : **aucune donnée ouverte ne donne ces prix** ; ChatGPT, inutile de rechercher à nouveau de ce côté.
+
+Voies restantes, toutes soumises à une demande d'accès par Laurent (aucune n'est activable par code seul) :
+1. **BlaBlaCar Bus** : API officielle, clé gratuite sur inscription (bus-api.blablacar.com).
+2. **CFF** : service de prix OJP Fare (bêta) d'opentransportdata.swiss, clé gratuite.
+3. **FlixBus** : « intégration dynamique » (API officielle) sur demande par courriel à l'équipe distribution, ou programme d'affiliation Awin.
+4. **SNCF (TER compris), FlixBus et BlaBlaCar Bus en une seule fois** : API d'un distributeur agréé (ex. Tictactrip, accès sur demande auprès de leur service commercial ; coût inconnu — Laurent décide, aucune dépense sans son accord).
+
 ### Décisions de Laurent sur les prix manquants (14/11, 22 h)
 
 Demande : « tous les moteurs donnent des trajets et tous les tarifs apparaissent ». Les moteurs répondent tous (0 erreur au diagnostic réel). Pour les prix, Laurent a tranché :
