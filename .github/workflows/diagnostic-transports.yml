@@ -53,6 +53,8 @@ jobs:
           python3 scripts/test_national_catalogue_builder.py
           python3 scripts/build_national_gtfs_aura.py --help >/dev/null
           python3 scripts/test_national_gtfs_aura.py
+      - name: Tester le secours de recherche des gares routières nationales
+        run: node --test tests/national-stop-fallback.test.cjs
       - name: Tester les trajets nationaux GTFS sans prix inventés
         run: |
           node --check transport-national-gtfs-journeys.js
