@@ -69,6 +69,10 @@ Quand l'application est servie par le site déployé (`https://…github.io/…`
 
 `main` avait 15 commits d'avance (V278, V279, V299, horaires SNCF/Y51). Ils sont maintenant dans `feature/transports-aura-suisse` ; seul conflit : `sw.js` (liste de fichiers de la branche conservée, cache `v46`). **ChatGPT : fais `git pull` avant ton prochain commit.** La branche contient donc tout `main` : la publication sera une simple avance rapide de `main`, à déclencher par Laurent. Diagnostic réel relancé sur l'état fusionné : vert.
 
+### Tests : rectification (21 h 30, commit `87a63fc`)
+
+J'avais écrit que les 16 tests en échec étaient tous ceux du module péages : c'était faux pour 4 d'entre eux. Détail exact : 12 péages (grilles APRR/AREA/SANEF, fichiers de travail absents de mon environnement) ; 2 `transport-y51-fares` (données Y51 rafraîchies automatiquement, attentes du test périmées — non corrigé) ; 1 cache hors ligne Android (`transport-national-gtfs-journeys.js` absent de `sw.js` — corrigé) ; 1 inventaire de couverture (champ `tarif` de J'y bus/TAM/TCL en texte libre, **erreur de ma part** — corrigé : seules valeurs admises `vérifiés`, `partiels`, `manquants`). Reste 14 échecs : 12 péages + 2 Y51.
+
 ### Test navigateur (Chrome, émulation Pixel 7, vraies archives GTFS, marches simulées car Internet fermé dans le bac à sable)
 
 Fiches rendues sans erreur JavaScript ; J+31 (15/12/2026) : SNCF 20, FlixBus 20, BlaBlaCar Bus 8 trajets sur Lyon → Grenoble ; SNCF 20, FlixBus 10, BlaBlaCar Bus 3 sur Annecy → Genève. Pas de test sur téléphone Android réel (impossible d'ici).
