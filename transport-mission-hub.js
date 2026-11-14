@@ -11,7 +11,7 @@
 const VERSION='hub-20261113';
 const SWISS_BOX={minLat:45.80,maxLat:47.90,minLon:5.90,maxLon:10.60};
 const GENEVA={lat:46.2044,lon:6.1432};
-const SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=120;
+const SAFE_TRANSFER_MIN=10,SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=120;
 
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 function pt(p){
@@ -202,7 +202,10 @@ function fromNationalGTFS(rows,operator){
    [makeLeg(a,b,r.line,r.departure,r.arrival)];
   return {...journey(names[operator]+' (GTFS)',transit),
    missing:['horaire GTFS non confirmé en temps réel','prix commercial et disponibilité non vérifiés',
-    ...(transit.length>1?['correspondance GTFS non confirmée']:[]),
+    // Correspondance au même arrêt d'après l'horaire officiel : avec au moins 10 min de battement programmé, c'est
+    // une réserve « à confirmer le jour J » (comme l'horaire lui-même) ; en dessous, elle reste bloquante.
+    ...(transit.length>1?[(ms(transit[1].departure)-ms(transit[0].arrival))/60000>=SAFE_TRANSFER_MIN?
+     'correspondance programmée non confirmée en temps réel':'correspondance GTFS non confirmée']:[]),
     ...(r.searchTruncated?['recherche des correspondances incomplète']:[])]};
  }).filter(j=>j.legs.length>0&&j.legs.every((l,i)=>{
   const departure=ms(l.departure),arrival=ms(l.arrival);
@@ -351,7 +354,7 @@ function marginFor(task){
  const base=finite(task.marginMinutes)?Math.max(5,task.marginMinutes):15;
  return task.exactTarget===true&&task.allowShortMargin===true?Math.min(base,5):Math.max(15,base);
 }
-const ADVISORY=/^(?:horaire GTFS(?: local)? non confirmé en temps réel|prix commercial et disponibilité non vérifiés|recherche des correspondances incomplète)$/;
+const ADVISORY=/^(?:horaire GTFS(?: local)? non confirmé en temps réel|correspondance programmée non confirmée en temps réel|prix commercial et disponibilité non vérifiés|recherche des correspondances incomplète)$/;
 function assess(j,task,fareFor){
  const reasons=[...(j.missing||[])];
  const legs=j.legs;

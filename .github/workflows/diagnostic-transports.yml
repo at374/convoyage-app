@@ -245,7 +245,7 @@ jobs:
           const journeys=hub.fromNationalGTFS(rows,'sncf');
           assert.equal(journeys.length,1);
           assert.equal(journeys[0].legs.length,2);
-          assert.ok(journeys[0].missing.includes('correspondance GTFS non confirmée'));
+          assert.ok(journeys[0].missing.some(x=>/^correspondance (GTFS|programmée) non confirmée/.test(x)),'correspondance toujours signalée');
           assert.equal(rows[0].priceEUR,null);
           assert.equal(hub.fromNationalGTFS([{...rows[0],transferStop:null}],'sncf').length,0,
             'Missing transfer stop must not be presented as a direct train');
@@ -287,7 +287,7 @@ jobs:
               assert.equal(j.legs.length,2);
               assert.ok(j.legs.every(l=>Number.isFinite(Date.parse(l.departure))&&Number.isFinite(Date.parse(l.arrival))));
               assert.ok(Date.parse(j.legs[0].arrival)<=Date.parse(j.legs[1].departure));
-              assert.ok(j.missing.includes('correspondance GTFS non confirmée'));
+              assert.ok(j.missing.some(x=>/^correspondance (GTFS|programmée) non confirmée/.test(x)),'correspondance toujours signalée');
             }
             console.log('Real SNCF mission-card transfers validated:',converted.length,'date:',date);
           })().catch(e=>{console.error(e);process.exitCode=1;});

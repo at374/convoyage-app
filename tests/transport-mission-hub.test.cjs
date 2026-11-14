@@ -283,6 +283,17 @@ test('trois niveaux : horaire GTFS complet = « Horaire programmé », jamais «
  const r2=H.rank([broken,sched]);assert.equal(r2.picks.find(p=>p.labels.includes('Plus rapide')).journey.scheduled,true,'programmé classé avant non confirmé');
 });
 
+test('correspondance GTFS : ≥ 10 min programmées = réserve à confirmer ; plus courte = bloquante',()=>{
+ const A={stop_name:'A',lat:45.90,lon:6.12},T={stop_name:'T',lat:45.80,lon:6.00},B={stop_name:'B',lat:45.76,lon:4.86};
+ const row=(arr1,dep2)=>({operator:'sncf',date:'2026-11-16',originStop:A,destinationStop:B,transferStop:T,departure:'08:00',arrival:'10:00',
+  legs:[{line:'K1',departure:'08:00',arrival:arr1},{line:'K2',departure:dep2,arrival:'10:00'}]});
+ const long=H.fromNationalGTFS([row('08:40','08:55')],'sncf')[0],short=H.fromNationalGTFS([row('08:40','08:44')],'sncf')[0];
+ assert.ok(long.missing.includes('correspondance programmée non confirmée en temps réel'));
+ assert.ok(short.missing.includes('correspondance GTFS non confirmée'));
+ const task={from:{lat:A.lat,lon:A.lon},to:{lat:B.lat,lon:B.lon},earliestDeparture:'2026-11-16T06:00:00Z'};
+ assert.equal(H.assess(long,task,null).scheduled,true);assert.equal(H.assess(short,task,null).scheduled,false);
+});
+
 test('quota de marches : au-delà de 16 couples d’arrêts distincts, le trajet est signalé, jamais inventé',async()=>{
  const router={calls:0,route:async()=>{router.calls++;return {status:'unavailable'};}}; // rien de réalisable → recherche complémentaire incluse
  const js=[];for(let i=0;i<12;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,i*2),at(7,i*2+20),{lat:STOP1.lat+i*0.001,lon:STOP1.lon},{lat:STOP2.lat+i*0.001,lon:STOP2.lon},{line:'D'+i})]});
