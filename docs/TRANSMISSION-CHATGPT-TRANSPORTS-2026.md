@@ -65,6 +65,10 @@ Diagnostic réel après ces deux changements (14/11, 19:37 UTC, `04d2081`) : 881
 
 Quand l'application est servie par le site déployé (`https://…github.io/…`), les fournisseurs `local_*` du hub et `CP_NATIONAL_GTFS_RESOURCES` (`index.html`) lisent d'abord `data/gtfs/` **du site lui-même** — la copie que les tâches hebdomadaires de la branche publiée rafraîchissent —, puis la branche Transports, puis `main` en secours. Hors site déployé (tests, diagnostic serveur), l'ordre est inchangé. Le panneau « horaires aux arrêts » faisait déjà ainsi. À faire à la publication, par Laurent uniquement : fusionner la branche dans `main` ; les tâches `build-sibra-data`, `build-regional-gtfs` et `build-national-gtfs-aura` tourneront alors sur `main` et alimenteront le site.
 
+### `main` fusionnée dans la branche (21 h 15, commit `94dbd6b`)
+
+`main` avait 15 commits d'avance (V278, V279, V299, horaires SNCF/Y51). Ils sont maintenant dans `feature/transports-aura-suisse` ; seul conflit : `sw.js` (liste de fichiers de la branche conservée, cache `v46`). **ChatGPT : fais `git pull` avant ton prochain commit.** La branche contient donc tout `main` : la publication sera une simple avance rapide de `main`, à déclencher par Laurent. Diagnostic réel relancé sur l'état fusionné : vert.
+
 ### Test navigateur (Chrome, émulation Pixel 7, vraies archives GTFS, marches simulées car Internet fermé dans le bac à sable)
 
 Fiches rendues sans erreur JavaScript ; J+31 (15/12/2026) : SNCF 20, FlixBus 20, BlaBlaCar Bus 8 trajets sur Lyon → Grenoble ; SNCF 20, FlixBus 10, BlaBlaCar Bus 3 sur Annecy → Genève. Pas de test sur téléphone Android réel (impossible d'ici).
