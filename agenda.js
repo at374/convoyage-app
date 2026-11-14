@@ -59,7 +59,7 @@
   const CHAMPS = { prise_en_charge: 'Prise en charge', livraison: 'Livraison', depart: 'Départ', arrivee: 'Arrivée', adresse_depart: 'Adresse de départ', adresse_arrivee: 'Adresse d’arrivée', prix: 'Prix', statut: 'Statut' };
   const STATUTS = { acceptee: 'acceptée', annulee: 'annulée', terminee: 'terminée' };
   function valeur(champ, v) {
-    if (champ === 'prise_en_charge' || champ === 'livraison') { const d = new Date(v); return isNaN(d) ? String(v) : d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Paris' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }); }
+    if (champ === 'prise_en_charge' || champ === 'livraison') { const d = new Date(v); return isNaN(d) ? String(v) : d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Europe/Paris' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' }); }
     if (champ === 'prix') return Number(v).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
     if (champ === 'statut') return STATUTS[v] || String(v);
     return String(v);
