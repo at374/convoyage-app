@@ -47,7 +47,10 @@ async function gtfsRows(axis,when){
    const direct=T.datedTrips(f.files,f.index,I.nearbyDirectTrips(f.files,f.index,day,axis.from,axis.to,700),window);
    const tr=I.nearbyTransferTrips(f.files,f.index,day,axis.from,axis.to,700,T.serviceWindow(f.files,day,window));
    const rows=[...direct,...T.datedTransferTrips(f.files,f.index,tr.journeys,window)]
-    .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)).slice(0,40).map(x=>({...x,network:r.network}));
+    .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure))
+    // Comme l'application (candidates du panneau) : les premiers départs + un échantillon réparti sur la suite, sinon
+    // un réseau dense ne fournit que des bus partant dans la minute, tous injoignables une fois la marche d'accès comptée.
+    .filter((_,i,all)=>i<20||(i-20)%Math.max(1,Math.ceil((all.length-20)/20))===0).slice(0,40).map(x=>({...x,network:r.network}));
    // Même tarif GTFS officiel que celui attaché par le worker de l'application (transport-gtfs-worker.js).
    const priced=H.attachGTFSFares(f,rows);
    out.networks[r.network]=rows.length;out.rows.push(...priced);
