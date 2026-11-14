@@ -38,7 +38,7 @@
   // V139 : missions que TOI as retirées de l'Agenda (« pas acceptée ») : mémorisées sur ce téléphone, jamais effacées du serveur.
   const masquees = () => new Set(lireLocal('cp_masquees', []) || []);
   // V276 : une mission DriiveMe « disponible » qui n'a plus été vue depuis plus de 90 min alors que l'APK a lu DriiveMe depuis (autres missions plus récentes) n'est plus sur le site : on la retire.
-  const deLEdition = l => { const mq = masquees(); return (l || []).filter(m => EDITION.plateformes.includes(m.platform) && !(m.kind === 'acceptee' && mq.has(m.platform + '|' + m.external_id))); };
+  const deLEdition = l => { const mq = masquees(); return (l || []).filter(m => EDITION.plateformes.includes(m.platform) && !(m.kind === 'acceptee' && mq.has(m.platform + '|' + m.external_id)) && !(m.kind === 'acceptee' && m.platform === 'Hiflow' && m.status === 'annulee')); };   // V278 : une mission Hiflow annulée quitte l'Agenda et redevient disponible
   // V90 : lien direct vers la page de devis Hiflow d'une mission disponible (le devis se fait et s'envoie sur Hiflow, par toi).
   const lienDevis = m => m && m.platform === 'Hiflow' && m.kind !== 'acceptee' && /^\d{6,9}$/.test(String(m.external_id || '')) ? (/^https:\/\/partenaire\.expedicar\.com\/transfer\/\d+\/quotation/.test(m.detail_url || '') ? m.detail_url : 'https://partenaire.expedicar.com/transfer/' + m.external_id + '/quotation') : null;
   // V93 : sur le téléphone, les devis Hiflow se font dans l'APPLICATION « Hiflow Partner » (pas sur le site) :
@@ -664,18 +664,20 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   const estPassee = m => { const t = Date.parse((m.platform === 'DriiveMe' ? (m.delivery_end || m.pickup_end || m.pickup_start) : m.pickup_start) || ''); return Number.isFinite(t) && t < Date.now() - (m.platform === 'DriiveMe' ? 0 : 86400000); };
   // V240 : un devis Hiflow accepté devient une mission de l'Agenda : il ne reste plus dans la liste des missions disponibles.
   let _accRef = null, _accSet = new Set(), _devRef = null, _devSet = new Set();
-  const clesAcceptees = () => { if (_accRef !== etat.missions) { _accRef = etat.missions; _accSet = new Set(etat.missions.filter(x => x && x.kind === 'acceptee').map(x => x.platform + '|' + x.external_id)); } return _accSet; };
+  const clesAcceptees = () => { if (_accRef !== etat.missions) { _accRef = etat.missions; _accSet = new Set(etat.missions.filter(x => x && x.kind === 'acceptee' && !(x.platform === 'Hiflow' && x.status === 'annulee')).map(x => x.platform + '|' + x.external_id)); } return _accSet; };
   const clesDevis = () => { if (_devRef !== etat.missions) { _devRef = etat.missions; _devSet = new Set(etat.missions.filter(x => x && x.kind === 'disponible' && x.fees && x.fees.devis_numero).map(x => x.platform + '|' + x.external_id)); } return _devSet; };
   const devisAccepte = m => !!m && m.platform === 'Hiflow' && (m.kind === 'acceptee' || !!(m.fees && m.fees.devis_accepte === 1));   // V241 : toute mission Hiflow de l'Agenda vient d'un devis accepté
   const estDisponible = m => { if (!m || m.kind !== 'disponible' || (m.status !== 'disponible' && !(m.status === 'plus_vue' && m.platform === 'Hiflow' && m.fees && m.fees.devis_numero))) return false;
     if (clesAcceptees().has(m.platform + '|' + m.external_id) || (m.fees && m.fees.devis_accepte === 1)) return false;
     if (PLAQUE_VILLE.test(String(m.from_city || '')) || PLAQUE_VILLE.test(String(m.to_city || ''))) return false;
     const d = Date.parse(m.delivery_end || m.delivery_start || m.pickup_start || ''); return !(Number.isFinite(d) && d < Date.now()); };   // V123 : plus aucune marge — une mission dont l'heure est dépassée disparaît toute seule   // V122 : une mission DriiveMe dont la période est finie (ex. « ven. 09/10 00:00-23:59 » vue le 10/10) n'est plus disponible
+  // V278 : filtre « Devis / acceptées » : missions disponibles avec devis envoyé + missions acceptées à venir
+  const listeDevis = () => deLEdition(etat.missions).filter(m => { if (!m) return false; if (m.kind === 'disponible') return estDisponible(m) && !!(m.fees && m.fees.devis_numero); if (m.kind === 'acceptee') { if (m.status === 'annulee' || m.status === 'terminee') return false; const d = Date.parse(m.delivery_end || m.delivery_start || m.pickup_start || ''); return !(Number.isFinite(d) && d < Date.now()); } return false; });
   function vueMissions() {
     const dispo = etat.missions.filter(estDisponible);
     const puces = (EDITION.plateformes.length > 1 ? ['toutes'].concat(EDITION.plateformes) : []).map(p => `<button class="puce${etat.filtre === p ? ' actif' : ''}" data-filtre="${p}">${p === 'toutes' ? 'Toutes' : esc(PLATS[p])} ${p === 'toutes' ? dispo.length : dispo.filter(m => m.platform === p).length}</button>`).join('');
     const aVille = etat.zones.some(z => z.type === 'ville');
-    $('ecran').innerHTML = `<div class="puces" role="group" aria-label="Plateformes">${puces}</div>
+    $('ecran').innerHTML = `<div class="puces" role="group" aria-label="Plateformes">${puces}<button class="puce${etat.filtre === 'devis' ? ' actif' : ''}" data-filtre="devis">📝 Devis / acceptées ${listeDevis().length}</button></div>
       <div class="filtres"><div class="recherche"><input id="recherche" type="search" placeholder="Ville, département ou région (3 lettres)" value="${esc(etat.recherche)}" aria-label="Rechercher un lieu" autocomplete="off" aria-autocomplete="list" aria-controls="sugg">
       <div id="sugg" class="sugg" role="listbox" hidden></div></div>
       <select id="tri" aria-label="Trier"><option value="recent">Plus récentes</option><option value="date">Date de départ</option><option value="prix">Prix</option><option value="heure">€/heure</option><option value="proche">Les plus proches de moi</option></select></div>
@@ -740,7 +742,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   function puces(q) {
     const P = [], plus = etat.plus || {};
     const add = (cle, txt) => P.push('<button type="button" class="puceFiltre" data-rm="' + esc(cle) + '" aria-label="Retirer ce filtre" style="font-size:.85rem;padding:3px 10px;border-radius:14px;border:1px solid #c9a227;background:#2a2108;color:#f5d26b;cursor:pointer">' + esc(txt) + ' <b>✕</b></button>');
-    if (etat.filtre !== 'toutes') add('plateforme', 'Plateforme : ' + etat.filtre);
+    if (etat.filtre !== 'toutes') add('plateforme', etat.filtre === 'devis' ? 'Filtre : devis envoyé / mission acceptée' : 'Plateforme : ' + etat.filtre);
     etat.zones.forEach((z, i) => add('zone:' + i, (COTES[z.cote || 'tous'] || 'Lieu') + ' : ' + G.libelleZone(z)));
     if (etat.zones.length && etat.rayon > 0) add('rayon', 'Autour : ville + ' + etat.rayon + ' km');
     if (etat.posMax > 0) add('posMax', 'Max ' + etat.posMax + ' km à vol d’oiseau depuis ' + (sourceRecherche() === 'domicile' ? 'mon domicile' : 'ma position'));
@@ -757,7 +759,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     const q = norm(etat.recherche);
     let l = etat.missions.filter(estDisponible);
     const total = l.length;
-    if (etat.filtre !== 'toutes') l = l.filter(m => m.platform === etat.filtre);
+    if (etat.filtre === 'devis') l = listeDevis(); else if (etat.filtre !== 'toutes') l = l.filter(m => m.platform === etat.filtre);
     l = G.filtrer(l, etat.zones, etat.rayon);
     l = FI.appliquer(l, etat.plus, m => CALC.dureeEstimee(m).heures);   // V96 : client, véhicule, distance, durée
     // V137/V138 : distance maximale DEPUIS MA POSITION, comptée À VOL D'OISEAU ; départ de position inconnue → gardé.
