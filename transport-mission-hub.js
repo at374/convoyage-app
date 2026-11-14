@@ -109,6 +109,17 @@ function fromSNCF(answer){
   mode:/car|bus/i.test(l.line||'')?'Car':'Train',line:[l.line,l.trainNumber].filter(Boolean).join(' '),provider:'SNCF',
   from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.departure,arrival:l.arrival})),{dataDate:answer.sourceVersion||null}));
 }
+// Tarif publié dans le flux GTFS lui-même (fare_attributes / fare_rules), attaché à chaque portion comme le fait
+// transport-gtfs-worker.js. Sans cela, les fournisseurs GTFS des fiches mission (hors worker) perdaient ce prix
+// officiel : constaté en réel le 14/11/2026 sur Lyon Part-Dieu → Bellecour (70 trajets TCL, 0 tarifé).
+function attachGTFSFares(feed,rows,F=root.CPGTFSFares){
+ if(!Array.isArray(rows)||!feed||!feed.index||!F||typeof F.prepare!=='function'||typeof F.legFare!=='function')return rows;
+ if(feed.preparedFares===undefined){try{feed.preparedFares=F.prepare(feed.files);}catch(_){feed.preparedFares=null;}}
+ if(!feed.preparedFares)return rows;
+ const one=l=>{try{return F.legFare(feed.preparedFares,feed.index,l);}catch(_){return null;}};
+ return rows.map(row=>!row?row:Array.isArray(row.legs)&&row.legs.length?{...row,legs:row.legs.map(l=>({...l,gtfsFare:l.gtfsFare||one(l)}))}:
+  {...row,gtfsFare:row.gtfsFare||one(row)});
+}
 function fromGTFS(rows,network='Réseau local'){
  // A single GTFS vehicle trip may appear through dozens of nearby boarding/alighting
  // stop pairs. Keep the shortest straight-line access + egress candidate per trip
@@ -454,7 +465,7 @@ function makeProviders(r,opts={}){
      }
      const feed=await promise;
      if(signal?.aborted)return [];
-     const rows=r.CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,pt(task.from),pt(task.to),3000);
+     const rows=attachGTFSFares(feed,r.CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,pt(task.from),pt(task.to),3000),r.CPGTFSFares);
      const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
      // Select the best boarding/alighting stop pair for each actual vehicle
      // BEFORE imposing the mobile card limit. Otherwise 500 stop-pair variants
@@ -722,7 +733,7 @@ function render(host,v){
  if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,attachGTFSFares,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;

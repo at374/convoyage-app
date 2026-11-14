@@ -48,7 +48,9 @@ async function gtfsRows(axis,when){
    const tr=I.nearbyTransferTrips(f.files,f.index,day,axis.from,axis.to,700,T.serviceWindow(f.files,day,window));
    const rows=[...direct,...T.datedTransferTrips(f.files,f.index,tr.journeys,window)]
     .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)).slice(0,40).map(x=>({...x,network:r.network}));
-   out.networks[r.network]=rows.length;out.rows.push(...rows);
+   // Même tarif GTFS officiel que celui attaché par le worker de l'application (transport-gtfs-worker.js).
+   const priced=H.attachGTFSFares(f,rows);
+   out.networks[r.network]=rows.length;out.rows.push(...priced);
   }catch(e){out.errors[r.network]=e.message;}
  }
  return out;

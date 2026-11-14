@@ -772,6 +772,19 @@ jobs:
             for(const routeId of ['F1','F2','7601']){
               assert.equal(fareOf(routeId),null,'Ligne '+routeId+' : deux tarifs officiels distincts, aucun prix ne doit être inventé');
             }
+            // Chemin réel des fiches mission : le fournisseur local_tcl doit transmettre ce tarif jusqu'au prix affiché.
+            globalThis.window=globalThis;
+            for(const f of ['transport-fare-grids.js','transport-gtfs-time.js','transport-catalogue.js'])require('./'+f);
+            const hub=require('./transport-mission-hub.js');
+            const providers=hub.makeProviders({CPGTFSLoader:loader,CPGTFSIndex:gtfsIndex,CPGTFSFares},
+              {fetcher:async()=>new Response(buf,{status:200,headers:{'content-type':'application/zip'}})});
+            const journeys=await providers.local_tcl.run({from:{lat:45.7606,lon:4.8594},to:{lat:45.7578,lon:4.8322},
+              earliestDeparture:'2026-11-16T08:00:00+01:00'});
+            assert.ok(journeys.length>0,'Aucun trajet TCL Part-Dieu → Bellecour');
+            const prices=journeys.map(j=>hub.priceOf(j,null));
+            const verified=prices.filter(p=>p.status==='verified');
+            assert.ok(verified.length>0,'Le tarif GTFS TCL doit atteindre les fiches mission');
+            assert.ok(verified.every(p=>p.amounts.EUR===2.10),'Seul 2,10 € est attendu sur les lignes sans ambiguïté');
             console.log('Tarif GTFS officiel embarqué TCL (Fares V1) vérifié sur l’archive publiée : 2,10 € confirmé, ambiguïtés F1/F2/7601 correctement sans prix');
           })().catch(e=>{console.error(e);process.exitCode=1;});
           NODE
