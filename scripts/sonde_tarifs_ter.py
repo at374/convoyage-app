@@ -14,6 +14,16 @@ for d in cat.get('results',[]):
     m=d.get('metas',{}).get('default',{})
     out.append(f"- `{d.get('dataset_id')}` — {m.get('title')} — modifié {m.get('modified')} — {m.get('records_count')} lignes\n")
     if 'ter' in d.get('dataset_id','') or 'TER' in (m.get('title') or ''): IDS.append(d.get('dataset_id'))
+# 14/11/2026 : le jeu officiel « Tarifs TER Auvergne-Rhône-Alpes » (prix par origine-destination, tarif normal 2nde)
+# n'apparaît pas dans la recherche plein texte : on l'interroge directement, ainsi que sa fiche data.gouv.fr.
+for direct in ['tarifs-ter-aura','tarifs-ter-par-od']:
+    if direct not in IDS: IDS.append(direct)
+try:
+    dg=json.loads(get('https://www.data.gouv.fr/api/1/datasets/6778b24e2e9a63f76e133b55/'))
+    out.append('\n## data.gouv.fr — '+str(dg.get('title'))+'\n- modifié : '+str(dg.get('last_modified'))+'\n- source : '+str((dg.get('harvest') or {}).get('remote_url'))+'\n')
+    for r in dg.get('resources',[]): out.append(f"- ressource {r.get('format')} — {r.get('title')} — {r.get('url')} — modifiée {r.get('last_modified')}\n")
+except Exception as e:
+    out.append(f'\n## data.gouv.fr — erreur : {e!r}\n')
 for ds in IDS:
     out.append(f'\n## {ds}\n')
     try:
@@ -24,6 +34,8 @@ for ds in IDS:
         out.append(f'- description : {desc}\n')
         out.append('- champs : '+', '.join(f"{f['name']} ({f.get('label')})" for f in meta.get('fields',[]))+'\n')
         recs=json.loads(get(BASE+ds+'/records?limit=5&where='+urllib.parse.quote('search("Annecy") or search("ANNECY")')))
+        att=meta.get('attachments') or []
+        out.append('- pièces jointes : '+json.dumps(att,ensure_ascii=False)[:800]+'\n')
         out.append('```json\n'+json.dumps(recs.get('results',[])[:5],ensure_ascii=False,indent=1)[:4000]+'\n```\n')
     except Exception as e:
         out.append(f'- erreur : {e!r}\n')
