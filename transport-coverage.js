@@ -109,7 +109,9 @@ const DETAILS={
  // Bellecour/Perrache : second essai réussi, data/gtfs/tcl-lyon.zip publié (4,58 Mo, 76 lignes,
  // 475 arrêts, tarifs fare_attributes/fare_rules inclus). Flux chargeable par l'application (même
  // origine, pas de blocage CORS). Horaires maintenant disponibles.
- // 14/11/2026 : tarifs également confirmés, SANS code nouveau — transport-gtfs-fares.js (mécanisme
+ // 14/11/2026 (11 h) : le tarif GTFS n'atteignait PAS les fiches mission (axe lyon-intra : 70 trajets, 0 tarifé) ;
+ // corrigé par attachGTFSFares dans transport-mission-hub.js → 65/70 tarifés 2,10 € au diagnostic réel suivant.
+ // 14/11/2026 : tarifs confirmés au niveau du module — transport-gtfs-fares.js (mécanisme
  // GTFS Fares V1 déjà existant pour tout réseau publiant fare_attributes.txt/fare_rules.txt) lit déjà
  // ce flux. Test direct (extractGTFS + buildIndex + CPGTFSFares.legFare sur data/gtfs/tcl-lyon.zip) :
  // routes 31/125/108 → 2,10 € EUR, correspondance 60 min (fare_id 1_1895382540), conforme au guide
