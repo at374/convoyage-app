@@ -41,13 +41,22 @@ test('outside detours cannot use a cheaper endpoint cell and transfers are not t
 const imported=require('../data/interurban/y51-gtfs-source.json');
 const planner=require('../sibra-planner.js');
 require('../transport-gtfs-time.js');
-function recordedRide(){
- return planner.datedInterurbanRides(imported,'2026-11-02',imported.routes[0].route_id,
-  'FR:73011:ZE:58901:HAUTExSAVOIE','FR:74010:ZE:57539:HAUTExSAVOIE',11*3600+10*60)[0];
-}
+// L'export Y51 est rafraîchi automatiquement et sa période de validité avance : une date fixe (2026-11-02) est sortie
+// du calendrier le 12/11/2026 et faisait échouer ces tests sans que l'application soit en cause. On prend le premier
+// lundi couvert par l'export où la course de 11 h 48 circule.
+const ridesOn=day=>planner.datedInterurbanRides(imported,day,imported.routes[0].route_id,
+ 'FR:73011:ZE:58901:HAUTExSAVOIE','FR:74010:ZE:57539:HAUTExSAVOIE',11*3600+10*60);
+const DAY=(()=>{
+ const starts=(imported.calendar||[]).map(c=>c.start_date).filter(Boolean).sort();
+ const first=starts[0]?Date.UTC(+starts[0].slice(0,4),+starts[0].slice(4,6)-1,+starts[0].slice(6,8)):Date.UTC(2026,10,2);
+ for(let i=0;i<28;i++){const d=new Date(first+i*86400000);if(d.getUTCDay()!==1)continue;
+  const day=d.toISOString().slice(0,10);if(ridesOn(day)[0]?.departure_time==='11:48:00')return day;}
+ return '2026-11-02';
+})();
+function recordedRide(){return ridesOn(DAY)[0];}
 test('imported official Y51 course reuses the tariff proof after calendar and sequence verification',()=>{
  const ride=recordedRide();assert.ok(ride);assert.equal(ride.departure_time,'11:48:00');
- const result=fares.fromImportedTables(imported,'2026-11-02',ride);
+ const result=fares.fromImportedTables(imported,DAY,ride);
  assert.equal(result.portions[0].amountEUR,8.9);assert.equal(result.confirmedCurrentFare,false);
 });
 test('imported station matching uses known identity and coordinates rather than a city word in stop name',()=>{
@@ -61,12 +70,12 @@ test('imported station matching uses known identity and coordinates rather than 
 test('foreign exports and altered or inactive imported rides keep fare unknown',()=>{
  const ride=recordedRide();
  for(const changed of [{...ride,trip_id:'unknown'},{...ride,departureSeconds:ride.departureSeconds+1},{...ride,toStopSequence:ride.toStopSequence+1}])
-  assert.equal(fares.fromImportedTables(imported,'2026-11-02',changed).portions.length,0);
- assert.equal(fares.fromImportedTables({...imported,source:'https://other.invalid'},'2026-11-02',ride).portions.length,0);
- assert.equal(fares.fromImportedTables({...imported,checked_at_utc:'2099-01-01T00:00:00Z'},'2026-11-02',ride).portions.length,0);
+  assert.equal(fares.fromImportedTables(imported,DAY,changed).portions.length,0);
+ assert.equal(fares.fromImportedTables({...imported,source:'https://other.invalid'},DAY,ride).portions.length,0);
+ assert.equal(fares.fromImportedTables({...imported,checked_at_utc:'2099-01-01T00:00:00Z'},DAY,ride).portions.length,0);
  assert.equal(fares.fromImportedTables(imported,'2026-02-30',ride).portions.length,0);
  const inactive={...imported,calendar:[],calendar_dates:[]};
- assert.equal(fares.fromImportedTables(inactive,'2026-11-02',ride).portions.length,0);
+ assert.equal(fares.fromImportedTables(inactive,DAY,ride).portions.length,0);
  const saved=global.CPGTFSTime;global.CPGTFSTime=null;
- try{assert.equal(fares.fromImportedTables(imported,'2026-11-02',ride).portions.length,0);}finally{global.CPGTFSTime=saved;}
+ try{assert.equal(fares.fromImportedTables(imported,DAY,ride).portions.length,0);}finally{global.CPGTFSTime=saved;}
 });
