@@ -69,6 +69,10 @@ Quand l'application est servie par le site déployé (`https://…github.io/…`
 
 `main` avait 15 commits d'avance (V278, V279, V299, horaires SNCF/Y51). Ils sont maintenant dans `feature/transports-aura-suisse` ; seul conflit : `sw.js` (liste de fichiers de la branche conservée, cache `v46`). **ChatGPT : fais `git pull` avant ton prochain commit.** La branche contient donc tout `main` : la publication sera une simple avance rapide de `main`, à déclencher par Laurent. Diagnostic réel relancé sur l'état fusionné : vert.
 
+### Rapport de tests réels et couverture par opérateur (21 h 50)
+
+`docs/RAPPORT-MOTEURS-TRANSPORTS-2026-11-14.md` : statut de chaque moteur, couverture tarifaire par opérateur (portions avec/sans prix officiel au diagnostic réel), résultats par parcours, liste des blocages externes. **ChatGPT : le tableau « Couverture tarifaire par opérateur » te donne l'ordre de priorité des tarifs manquants** (SNCF 435 portions, Cars Région Haute-Savoie 96, FlixBus 57, BlaBlaCar Bus 48, Ondéa 38, Star't 32, Cars Région Isère 24, CFF 24, TPG 20). Tests Y51 réparés (date fixe sortie de la validité de l'export) : il reste 12 échecs, tous péages.
+
 ### Note de validation tarifaire de ChatGPT du 14/11 — contrôle côté code (21 h 40)
 
 Les trois règles de la note sont respectées par `fareFor` sur la branche : 271/272/274 (Cars Région Haute-Savoie) → aucun prix ; Ondéa 419 → aucun prix ; Star't 142 et L → prix seulement pour les couples d'arrêts prouvés (`startInterzoneFare`). **Un écart trouvé et corrigé, de mon fait** : le billet unireso zone 10 (3,00 CHF) que j'ai ajouté ce matin se serait appliqué à un car 271/272/274 entre deux arrêts genevois si l'opérateur renvoyé était « TPG ». Ces trois lignes en sont maintenant exclues (`zone10Fare`), avec assertions CI. Le fichier `transport-fare-applicability-guard.cjs` cité dans la note n'existe pas sur la branche.
