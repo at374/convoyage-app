@@ -50,6 +50,10 @@ Deux retouches dans la boucle de sélection des fournisseurs `local_*` (`transpo
 - un couple d'arrêts dont (accès + sortie à vol d'oiseau) ≥ distance directe est ignoré **avant** la limite (même règle que `walkDetour`) — sur TCL, les 30 premiers départs tenaient dans la même minute et 24 étaient hors sujet ;
 - pour un « Aller » (`w.arriveBy`), on garde les 30 arrivées les plus proches de l'échéance au lieu des 30 premiers départs de la journée.
 
+### Dernier diagnostic réel de la journée (14/11, 15:45 UTC, run sur `68aae0e`)
+
+1 013 trajets sur 23 axes ; **837 exploitables** (164 réalisables + 673 en horaire programmé) ; 972 avec marches calculées (96 %) ; 355 avec prix vérifié (35 %) ; 178 requêtes piétonnes, 0 échec ; aucun moteur en erreur ni réseau attendu absent ; 9 s en moyenne par axe, 24 s au pire. Le diagnostic (`scripts/diagnostic-transports-reel.cjs`) échantillonne maintenant les horaires locaux comme l'application (20 premiers + 20 répartis) au lieu des 40 premiers départs.
+
 ### Test navigateur (Chrome, émulation Pixel 7, vraies archives GTFS, marches simulées car Internet fermé dans le bac à sable)
 
 Fiches rendues sans erreur JavaScript ; J+31 (15/12/2026) : SNCF 20, FlixBus 20, BlaBlaCar Bus 8 trajets sur Lyon → Grenoble ; SNCF 20, FlixBus 10, BlaBlaCar Bus 3 sur Annecy → Genève. Pas de test sur téléphone Android réel (impossible d'ici).
