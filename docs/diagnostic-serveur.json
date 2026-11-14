@@ -1,5 +1,5 @@
 {
- "at": "2026-11-14T10:52:32.522Z",
+ "at": "2026-11-14T10:57:14.497Z",
  "when": "2026-11-16T08:00:00+01:00",
  "source": "diagnostic serveur (GitHub Actions)",
  "tripgo": false,
@@ -9,7 +9,7 @@
    "name": "Annecy → Genève",
    "coverage": false,
    "appGtfsChoice": "Cars Région Haute-Savoie + Sibra",
-   "trips": 72,
+   "trips": 80,
    "priced": 0,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -18,13 +18,20 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 42,
+    "SNCF": 51,
+    "SBB": 2,
     "FlixBus": 38,
     "BlaBlaCar Bus": 19,
     "Cars Région Haute-Savoie": 32
    },
    "missingFareSamples": {
     "SNCF": [
+     {
+      "mode": "Train",
+      "line": "TER L2",
+      "from": "Annecy",
+      "to": "Genève"
+     },
      {
       "mode": "Train",
       "line": "L2",
@@ -36,12 +43,14 @@
       "line": "K21",
       "from": "Annecy",
       "to": "Aix-les-Bains le Revard"
-     },
+     }
+    ],
+    "SBB": [
      {
       "mode": "Train",
-      "line": "K11",
-      "from": "Aix-les-Bains le Revard",
-      "to": "Genève Cornavin"
+      "line": "R L4",
+      "from": "Annemasse",
+      "to": "Genève"
      }
     ],
     "FlixBus": [
@@ -109,16 +118,16 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 38,
-   "feasible": 6,
+   "walked": 46,
+   "feasible": 14,
    "firstResultMs": 447,
-   "totalMs": 13162,
+   "totalMs": 15426,
    "received": {
     "SNCF": 6,
-    "BlaBlaCar Bus GTFS": 11,
     "FlixBus GTFS": 20,
+    "BlaBlaCar Bus GTFS": 11,
     "SNCF GTFS": 20,
-    "Suisse": 0,
+    "Suisse": 8,
     "GTFS local": 16
    },
    "discarded": {},
@@ -131,9 +140,7 @@
     "horaire GTFS local non confirmé en temps réel": 8
    },
    "engines": {
-    "errors": {
-     "GTFS Sibra": "fetch failed"
-    },
+    "errors": {},
     "skipped": {
      "TAC Annemasse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Synchro Chambéry GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -147,10 +154,12 @@
     },
     "gtfs": {
      "Cars Région Haute-Savoie": 16,
-     "Cars Région Ain": 0
+     "Cars Région Ain": 0,
+     "Sibra": 0
     }
    },
    "sources": [
+    "Suisse (transport.opendata.ch)",
     "SNCF (GTFS officiel)",
     "SNCF (GTFS)",
     "FlixBus (GTFS)",
@@ -158,8 +167,9 @@
     "Cars Région Haute-Savoie (GTFS)"
    ],
    "networksSeen": [
-    "lex",
     "ter",
+    "lex",
+    "cff",
     "longue",
     "cars-74"
    ],
@@ -169,21 +179,18 @@
     "cff",
     "longue"
    ],
-   "missingExpected": [
-    "cff"
-   ],
+   "missingExpected": [],
    "examples": [
     {
      "labels": [
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:42:57.390Z",
-     "arr": "2026-11-16T09:27:19.389Z",
+     "dep": "2026-11-16T07:42:52.518Z",
+     "arr": "2026-11-16T09:13:00.000Z",
      "legs": [
-      "marche 86 m",
-      "SNCF L2",
-      "marche 2419 m"
+      "marche 93 m",
+      "SNCF TER L2"
      ],
      "price": "Prix à confirmer",
      "status": "Réalisable",
@@ -274,12 +281,12 @@
    "partialPricedJourneys": 0,
    "walked": 36,
    "feasible": 12,
-   "firstResultMs": 356,
-   "totalMs": 16773,
+   "firstResultMs": 329,
+   "totalMs": 16808,
    "received": {
     "SNCF": 4,
-    "BlaBlaCar Bus GTFS": 0,
     "GTFS local": 40,
+    "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
     "TAC Annemasse GTFS": 13,
     "SNCF GTFS": 20,
@@ -411,8 +418,8 @@
    "partialPricedJourneys": 0,
    "walked": 16,
    "feasible": 3,
-   "firstResultMs": 115,
-   "totalMs": 6228,
+   "firstResultMs": 130,
+   "totalMs": 6314,
    "received": {
     "GTFS local": 0,
     "SNCF": 10,
@@ -536,8 +543,7 @@
     ]
    },
    "fareLegsByOperator": {
-    "Synchro Chambéry": 2,
-    "Synchro Bus Chambéry": 4,
+    "Synchro Bus Chambéry": 6,
     "Ondéa Aix-les-Bains": 34
    },
    "partialMissingByOperator": {
@@ -549,29 +555,29 @@
     ]
    },
    "partialPricedJourneys": 34,
-   "walked": 26,
+   "walked": 24,
    "feasible": 7,
-   "firstResultMs": 122,
-   "totalMs": 10456,
+   "firstResultMs": 155,
+   "totalMs": 10258,
    "received": {
     "SNCF": 10,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
     "Cars Région Savoie GTFS": 0,
-    "Cars Région Isère GTFS": 0,
     "SNCF GTFS": 20,
-    "Synchro Chambéry GTFS": 2,
-    "GTFS local": 43
+    "Cars Région Isère GTFS": 0,
+    "GTFS local": 43,
+    "Synchro Chambéry GTFS": 2
    },
    "discarded": {},
    "reasons": {
-    "horaire GTFS local non confirmé en temps réel": 10,
+    "horaire GTFS local non confirmé en temps réel": 8,
     "départ avant la fin de la mission précédente": 1,
     "horaire GTFS non confirmé en temps réel": 8,
     "prix commercial et disponibilité non vérifiés": 8,
     "recherche des correspondances incomplète": 8,
     "correspondance GTFS non confirmée": 6,
-    "marches non calculées (quota de la fiche)": 37
+    "marches non calculées (quota de la fiche)": 39
    },
    "engines": {
     "errors": {},
@@ -593,8 +599,8 @@
     }
    },
    "sources": [
-    "Synchro Chambéry (GTFS)",
     "Synchro Bus Chambéry (GTFS)",
+    "Synchro Chambéry (GTFS)",
     "SNCF (GTFS officiel)",
     "SNCF (GTFS)",
     "Ondéa Aix-les-Bains (GTFS)"
@@ -619,7 +625,7 @@
      "arr": "2026-11-16T11:41:36.577Z",
      "legs": [
       "marche 286 m",
-      "Synchro Chambéry 30",
+      "Synchro Bus Chambéry 30",
       "marche 129 m"
      ],
      "price": "1,40 €",
@@ -709,8 +715,8 @@
    "partialPricedJourneys": 0,
    "walked": 28,
    "feasible": 12,
-   "firstResultMs": 101,
-   "totalMs": 5877,
+   "firstResultMs": 102,
+   "totalMs": 7773,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Savoie GTFS": 0,
@@ -788,8 +794,8 @@
    "name": "Rumilly → Annecy",
    "coverage": false,
    "appGtfsChoice": "Sibra + Cars Région Haute-Savoie",
-   "trips": 23,
-   "priced": 0,
+   "trips": 24,
+   "priced": 1,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
    "tripgoPricedFromGrids": 0,
@@ -821,16 +827,18 @@
      }
     ]
    },
-   "fareLegsByOperator": {},
+   "fareLegsByOperator": {
+    "Sibra": 1
+   },
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 15,
+   "walked": 16,
    "feasible": 6,
-   "firstResultMs": 127,
-   "totalMs": 2734,
+   "firstResultMs": 204,
+   "totalMs": 4170,
    "received": {
-    "GTFS local": 0,
+    "GTFS local": 1,
     "SNCF": 7,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
@@ -838,6 +846,7 @@
    },
    "discarded": {},
    "reasons": {
+    "horaire GTFS local non confirmé en temps réel": 1,
     "départ avant la fin de la mission précédente": 4,
     "horaire GTFS non confirmé en temps réel": 8,
     "prix commercial et disponibilité non vérifiés": 8,
@@ -846,9 +855,7 @@
     "marches non calculées (quota de la fiche)": 8
    },
    "engines": {
-    "errors": {
-     "GTFS Sibra": "fetch failed"
-    },
+    "errors": {},
     "skipped": {
      "TAC Annemasse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Synchro Chambéry GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -863,24 +870,40 @@
     },
     "gtfs": {
      "Cars Région Haute-Savoie": 0,
-     "Cars Région Ain": 0
+     "Cars Région Ain": 0,
+     "Sibra": 1
     }
    },
    "sources": [
+    "Sibra (GTFS)",
     "SNCF (GTFS officiel)",
     "SNCF (GTFS)"
    ],
    "networksSeen": [
+    "sibra",
     "ter"
    ],
    "expected": [
     "ter",
     "sibra"
    ],
-   "missingExpected": [
-    "sibra"
-   ],
+   "missingExpected": [],
    "examples": [
+    {
+     "labels": [
+      "Moins cher"
+     ],
+     "dep": "2026-11-16T12:03:51.578Z",
+     "arr": "2026-11-16T13:00:49.298Z",
+     "legs": [
+      "marche 625 m",
+      "Sibra 42",
+      "marche 160 m"
+     ],
+     "price": "2,00 €",
+     "status": "Transport non confirmé",
+     "detail": "horaire GTFS local non confirmé en temps réel"
+    },
     {
      "labels": [
       "Meilleur compromis",
@@ -964,8 +987,8 @@
    "partialPricedJourneys": 0,
    "walked": 20,
    "feasible": 1,
-   "firstResultMs": 133,
-   "totalMs": 4940,
+   "firstResultMs": 136,
+   "totalMs": 5061,
    "received": {
     "SNCF": 9,
     "BlaBlaCar Bus GTFS": 0,
@@ -1147,8 +1170,8 @@
    "partialPricedJourneys": 0,
    "walked": 34,
    "feasible": 9,
-   "firstResultMs": 303,
-   "totalMs": 9906,
+   "firstResultMs": 314,
+   "totalMs": 9869,
    "received": {
     "Cars Région Isère GTFS": 0,
     "GTFS local": 8,
@@ -1267,8 +1290,8 @@
    "partialPricedJourneys": 0,
    "walked": 17,
    "feasible": 1,
-   "firstResultMs": 598,
-   "totalMs": 5239,
+   "firstResultMs": 604,
+   "totalMs": 5226,
    "received": {
     "Synchro Chambéry GTFS": 0,
     "Cars Région Isère GTFS": 0,
@@ -1452,8 +1475,8 @@
    "partialPricedJourneys": 26,
    "walked": 40,
    "feasible": 10,
-   "firstResultMs": 336,
-   "totalMs": 17302,
+   "firstResultMs": 334,
+   "totalMs": 17348,
    "received": {
     "GTFS local": 37,
     "SNCF": 10,
@@ -1562,14 +1585,14 @@
    "partialPricedJourneys": 0,
    "walked": 28,
    "feasible": 0,
-   "firstResultMs": 573,
-   "totalMs": 8997,
+   "firstResultMs": 721,
+   "totalMs": 9112,
    "received": {
     "Cars Région Isère GTFS": 0,
     "SNCF": 0,
     "GTFS local": 38,
-    "BlaBlaCar Bus GTFS": 0,
     "J’y bus Rumilly GTFS": 30,
+    "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
     "SNCF GTFS": 0
    },
@@ -1582,9 +1605,7 @@
     "départ avant la fin de la mission précédente": 2
    },
    "engines": {
-    "errors": {
-     "GTFS Sibra": "fetch failed"
-    },
+    "errors": {},
     "skipped": {
      "TAC Annemasse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Synchro Chambéry GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -1599,6 +1620,7 @@
      "J'y bus Rumilly": 40,
      "Cars Région Haute-Savoie": 0,
      "Cars Région Ain": 0,
+     "Sibra": 0,
      "Cars Région Isère": 0
     }
    },
@@ -1656,14 +1678,14 @@
    "partialPricedJourneys": 0,
    "walked": 32,
    "feasible": 0,
-   "firstResultMs": 464,
-   "totalMs": 8416,
+   "firstResultMs": 485,
+   "totalMs": 8448,
    "received": {
     "SNCF": 10,
     "GTFS local": 54,
-    "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
     "TAM Ambérieu GTFS": 30,
+    "BlaBlaCar Bus GTFS": 0,
     "SNCF GTFS": 0
    },
    "discarded": {
@@ -1777,15 +1799,15 @@
    "partialPricedJourneys": 0,
    "walked": 18,
    "feasible": 6,
-   "firstResultMs": 50,
-   "totalMs": 4745,
+   "firstResultMs": 58,
+   "totalMs": 4728,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Savoie GTFS": 2,
     "GTFS local": 2,
     "SNCF": 10,
-    "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
+    "BlaBlaCar Bus GTFS": 0,
     "SNCF GTFS": 20
    },
    "discarded": {},
@@ -1914,8 +1936,8 @@
    "partialPricedJourneys": 2,
    "walked": 0,
    "feasible": 0,
-   "firstResultMs": 59,
-   "totalMs": 2896,
+   "firstResultMs": 49,
+   "totalMs": 9374,
    "received": {
     "GTFS local": 3,
     "SNCF": 9,
@@ -1927,7 +1949,6 @@
    "reasons": {
     "horaire GTFS local non confirmé en temps réel": 3,
     "marche depuis l’adresse exacte de départ non calculée": 28,
-    "marche jusqu’à l’adresse exacte d’arrivée non calculée": 28,
     "horaire GTFS non confirmé en temps réel": 16,
     "prix commercial et disponibilité non vérifiés": 16,
     "correspondance GTFS non confirmée": 14,
@@ -1971,14 +1992,15 @@
       "Moins cher"
      ],
      "dep": "2026-11-16T14:33:00.000Z",
-     "arr": "2026-11-16T17:57:00.000Z",
+     "arr": "2026-11-16T17:57:27.767Z",
      "legs": [
       "Cars Région Ain A19",
-      "Cars Région Ain A27"
+      "Cars Région Ain A27",
+      "marche 38 m"
      ],
      "price": "2,30 €",
      "status": "Transport non confirmé",
-     "detail": "horaire GTFS local non confirmé en temps réel · marche depuis l’adresse exacte de départ non calculée · marche jusqu’à l’adresse exacte d’arrivée non calculée"
+     "detail": "horaire GTFS local non confirmé en temps réel · marche depuis l’adresse exacte de départ non calculée"
     },
     {
      "labels": [
@@ -1986,13 +2008,14 @@
       "Plus rapide"
      ],
      "dep": "2026-11-16T09:45:00.000Z",
-     "arr": "2026-11-16T10:01:00.000Z",
+     "arr": "2026-11-16T10:01:33.893Z",
      "legs": [
-      "SNCF K13"
+      "SNCF K13",
+      "marche 46 m"
      ],
      "price": "Prix à confirmer",
      "status": "Transport non confirmé",
-     "detail": "marche depuis l’adresse exacte de départ non calculée · marche jusqu’à l’adresse exacte d’arrivée non calculée"
+     "detail": "marche depuis l’adresse exacte de départ non calculée"
     }
    ]
   },
@@ -2095,24 +2118,22 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 10,
+   "walked": 20,
    "feasible": 10,
-   "firstResultMs": 108,
-   "totalMs": 1666,
+   "firstResultMs": 77,
+   "totalMs": 4653,
    "received": {
     "GTFS local": 0,
     "SNCF": 2,
     "BlaBlaCar Bus GTFS": 2,
     "FlixBus GTFS": 20,
-    "SNCF GTFS": 0,
-    "Suisse": 8
+    "Suisse": 8,
+    "SNCF GTFS": 0
    },
    "discarded": {},
    "reasons": {
     "horaire GTFS non confirmé en temps réel": 10,
     "prix commercial et disponibilité non vérifiés": 10,
-    "marche depuis l’adresse exacte de départ non calculée": 10,
-    "marche jusqu’à l’adresse exacte d’arrivée non calculée": 10,
     "correspondance GTFS non confirmée": 6,
     "marches non calculées (quota de la fiche)": 12
    },
@@ -2270,10 +2291,10 @@
     ]
    },
    "partialPricedJourneys": 2,
-   "walked": 19,
+   "walked": 24,
    "feasible": 11,
-   "firstResultMs": 285,
-   "totalMs": 1398,
+   "firstResultMs": 267,
+   "totalMs": 5364,
    "received": {
     "TAC Annemasse GTFS": 0,
     "GTFS local": 0,
@@ -2289,10 +2310,8 @@
     "prix commercial et disponibilité non vérifiés": 13,
     "recherche des correspondances incomplète": 8,
     "marches non calculées (quota de la fiche)": 11,
-    "marche de correspondance à Genève-Eaux-Vives non calculée": 2,
-    "marche jusqu’à l’adresse exacte d’arrivée non calculée": 2,
-    "correspondance GTFS non confirmée": 5,
-    "marche depuis l’adresse exacte de départ non calculée": 5
+    "correspondance trop courte à Genève-Eaux-Vives (n min de marche)": 2,
+    "correspondance GTFS non confirmée": 5
    },
    "engines": {
     "errors": {},
@@ -2435,24 +2454,22 @@
     ]
    },
    "partialPricedJourneys": 3,
-   "walked": 0,
-   "feasible": 0,
-   "firstResultMs": 103,
-   "totalMs": 1425,
+   "walked": 50,
+   "feasible": 8,
+   "firstResultMs": 117,
+   "totalMs": 8708,
    "received": {
     "TAC Annemasse GTFS": 0,
     "GTFS local": 32,
     "SNCF": 10,
-    "Suisse": 8,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
-    "SNCF GTFS": 20
+    "SNCF GTFS": 20,
+    "Suisse": 8
    },
    "discarded": {},
    "reasons": {
-    "marche depuis l’adresse exacte de départ non calculée": 50,
-    "marche jusqu’à l’adresse exacte d’arrivée non calculée": 5,
-    "marche de correspondance à Lancy-Bachet, gare non calculée": 3,
+    "départ avant la fin de la mission précédente": 10,
     "horaire GTFS non confirmé en temps réel": 16,
     "prix commercial et disponibilité non vérifiés": 16,
     "correspondance GTFS non confirmée": 16,
@@ -2499,30 +2516,48 @@
    "examples": [
     {
      "labels": [
-      "Moins cher",
-      "Plus rapide"
+      "Moins cher"
      ],
-     "dep": "2026-11-16T07:07:00.000Z",
+     "dep": "2026-11-16T06:00:48.640Z",
      "arr": "2026-11-16T07:13:00.000Z",
      "legs": [
+      "marche 5341 m",
       "SNCF L2"
      ],
      "price": "3,00 CHF",
      "status": "Transport non confirmé",
-     "detail": "marche depuis l’adresse exacte de départ non calculée"
+     "detail": "départ avant la fin de la mission précédente"
     },
     {
      "labels": [
       "Meilleur compromis"
      ],
-     "dep": "2026-11-16T07:42:00.000Z",
-     "arr": "2026-11-16T08:19:00.000Z",
+     "dep": "2026-11-16T07:39:00.960Z",
+     "arr": "2026-11-16T08:29:38.794Z",
      "legs": [
-      "TPG B 80"
+      "marche 230 m",
+      "TPG B 80",
+      "marche 848 m"
      ],
      "price": "Prix à confirmer",
-     "status": "Transport non confirmé",
-     "detail": "marche depuis l’adresse exacte de départ non calculée · marche jusqu’à l’adresse exacte d’arrivée non calculée"
+     "status": "Réalisable",
+     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+    },
+    {
+     "labels": [
+      "Plus rapide"
+     ],
+     "dep": "2026-11-16T07:17:00.960Z",
+     "arr": "2026-11-16T07:58:00.000Z",
+     "legs": [
+      "marche 230 m",
+      "TPG B 80",
+      "marche 115 m",
+      "SBB R L1"
+     ],
+     "price": "Prix à confirmer",
+     "status": "Réalisable",
+     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
     }
    ]
   },
@@ -2553,9 +2588,9 @@
     ]
    },
    "fareLegsByOperator": {
-    "SNCF": 10,
+    "TPG": 9,
     "SBB": 5,
-    "TPG": 9
+    "SNCF": 10
    },
    "partialMissingByOperator": {
     "TPG": 4
@@ -2566,24 +2601,22 @@
     ]
    },
    "partialPricedJourneys": 4,
-   "walked": 0,
-   "feasible": 0,
-   "firstResultMs": 312,
-   "totalMs": 1333,
+   "walked": 18,
+   "feasible": 8,
+   "firstResultMs": 247,
+   "totalMs": 4802,
    "received": {
     "TAC Annemasse GTFS": 0,
     "GTFS local": 0,
     "SNCF": 10,
-    "Suisse": 8,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
-    "SNCF GTFS": 0
+    "SNCF GTFS": 0,
+    "Suisse": 8
    },
    "discarded": {},
    "reasons": {
-    "marche depuis l’adresse exacte de départ non calculée": 18,
-    "marche de correspondance à Lancy-Bachet, gare non calculée": 5,
-    "marche jusqu’à l’adresse exacte d’arrivée non calculée": 3
+    "départ avant la fin de la mission précédente": 10
    },
    "engines": {
     "errors": {},
@@ -2604,45 +2637,51 @@
     }
    },
    "sources": [
-    "SNCF (GTFS officiel)",
-    "Suisse (transport.opendata.ch)"
+    "Suisse (transport.opendata.ch)",
+    "SNCF (GTFS officiel)"
    ],
    "networksSeen": [
-    "lex",
     "tpg",
     "tpg-fr",
-    "cff"
+    "cff",
+    "lex"
    ],
    "expected": [],
    "missingExpected": [],
    "examples": [
     {
      "labels": [
-      "Moins cher",
-      "Plus rapide"
+      "Moins cher"
      ],
-     "dep": "2026-11-16T07:07:00.000Z",
-     "arr": "2026-11-16T07:13:00.000Z",
+     "dep": "2026-11-16T07:51:15.473Z",
+     "arr": "2026-11-16T08:43:00.000Z",
      "legs": [
-      "SNCF L2"
+      "marche 1713 m",
+      "TPG B 44",
+      "TPG T 18",
+      "marche 115 m",
+      "SBB R L4"
      ],
      "price": "3,00 CHF",
-     "status": "Transport non confirmé",
-     "detail": "marche depuis l’adresse exacte de départ non calculée"
+     "status": "Réalisable",
+     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
     },
     {
      "labels": [
-      "Meilleur compromis"
+      "Meilleur compromis",
+      "Plus rapide"
      ],
-     "dep": "2026-11-16T08:00:00.000Z",
+     "dep": "2026-11-16T07:47:51.967Z",
      "arr": "2026-11-16T08:28:00.000Z",
      "legs": [
+      "marche 1054 m",
       "TPG B 82",
+      "marche 115 m",
       "SBB R L3"
      ],
      "price": "Prix à confirmer",
-     "status": "Transport non confirmé",
-     "detail": "marche depuis l’adresse exacte de départ non calculée · marche de correspondance à Lancy-Bachet, gare non calculée"
+     "status": "Réalisable",
+     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
     }
    ]
   },
@@ -2668,7 +2707,13 @@
     "SNCF": [
      {
       "mode": "Train",
-      "line": "K21",
+      "line": "TER C21",
+      "from": "Chambéry-Challes-les-Eaux",
+      "to": "Annecy"
+     },
+     {
+      "mode": "Train",
+      "line": "C21",
       "from": "Chambéry - Challes-les-Eaux",
       "to": "Annecy"
      },
@@ -2677,12 +2722,6 @@
       "line": "L2",
       "from": "Annecy",
       "to": "Lancy-Bachet"
-     },
-     {
-      "mode": "Train",
-      "line": "C21",
-      "from": "Chambéry - Challes-les-Eaux",
-      "to": "Annecy"
      }
     ],
     "AFO": [
@@ -2703,8 +2742,8 @@
     ]
    },
    "fareLegsByOperator": {
-    "SNCF": 2,
-    "SBB": 1
+    "SBB": 1,
+    "SNCF": 2
    },
    "partialMissingByOperator": {
     "SNCF": 3,
@@ -2712,18 +2751,18 @@
    },
    "partialMissingLineSamples": {
     "SNCF": [
-     "K11",
-     "TER K11"
+     "TER K11",
+     "K11"
     ],
     "TPG": [
      "B 80"
     ]
    },
    "partialPricedJourneys": 3,
-   "walked": 7,
-   "feasible": 3,
-   "firstResultMs": 256,
-   "totalMs": 1776,
+   "walked": 16,
+   "feasible": 12,
+   "firstResultMs": 274,
+   "totalMs": 4909,
    "received": {
     "GTFS local": 0,
     "SNCF": 5,
@@ -2734,9 +2773,6 @@
    },
    "discarded": {},
    "reasons": {
-    "marche depuis l’adresse exacte de départ non calculée": 7,
-    "marche de correspondance à Annecy non calculée": 3,
-    "marche jusqu’à l’adresse exacte d’arrivée non calculée": 5,
     "horaire GTFS non confirmé en temps réel": 4,
     "prix commercial et disponibilité non vérifiés": 4,
     "correspondance GTFS non confirmée": 4
@@ -2760,8 +2796,8 @@
     }
    },
    "sources": [
-    "SNCF (GTFS officiel)",
     "Suisse (transport.opendata.ch)",
+    "SNCF (GTFS officiel)",
     "SNCF (GTFS)"
    ],
    "networksSeen": [
@@ -2781,12 +2817,14 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:22:00.000Z",
-     "arr": "2026-11-16T11:11:53.607Z",
+     "dep": "2026-11-16T06:59:35.471Z",
+     "arr": "2026-11-16T09:04:41.584Z",
      "legs": [
-      "SNCF K21",
-      "SNCF L2",
-      "marche 5341 m"
+      "marche 31 m",
+      "SNCF TER C21",
+      "marche 717 m",
+      "AFO B 272",
+      "marche 230 m"
      ],
      "price": "Prix à confirmer",
      "status": "Réalisable",
@@ -2878,10 +2916,10 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 15,
+   "walked": 31,
    "feasible": 7,
-   "firstResultMs": 113,
-   "totalMs": 1163,
+   "firstResultMs": 274,
+   "totalMs": 2879,
    "received": {
     "GTFS local": 0,
     "SNCF": 7,
@@ -2894,14 +2932,11 @@
     "horaire GTFS non confirmé en temps réel": 24,
     "prix commercial et disponibilité non vérifiés": 24,
     "correspondance GTFS non confirmée": 18,
-    "marche jusqu’à l’adresse exacte d’arrivée non calculée": 16,
     "recherche des correspondances incomplète": 8,
     "marches non calculées (quota de la fiche)": 33
    },
    "engines": {
-    "errors": {
-     "GTFS Sibra": "fetch failed"
-    },
+    "errors": {},
     "skipped": {
      "TAC Annemasse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Synchro Chambéry GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -2915,7 +2950,8 @@
      "Mobilités M": "hors agglomération grenobloise"
     },
     "gtfs": {
-     "Cars Région Haute-Savoie": 0
+     "Cars Région Haute-Savoie": 0,
+     "Sibra": 0
     }
    },
    "sources": [
@@ -2994,10 +3030,10 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 10,
-   "feasible": 6,
+   "walked": 16,
+   "feasible": 7,
    "firstResultMs": 139,
-   "totalMs": 1202,
+   "totalMs": 2728,
    "received": {
     "GTFS local": 0,
     "Cars Région Isère GTFS": 0,
@@ -3008,11 +3044,11 @@
    },
    "discarded": {},
    "reasons": {
-    "marche depuis l’adresse exacte de départ non calculée": 6,
     "horaire GTFS non confirmé en temps réel": 8,
     "prix commercial et disponibilité non vérifiés": 8,
     "correspondance GTFS non confirmée": 7,
     "recherche des correspondances incomplète": 8,
+    "départ avant la fin de la mission précédente": 5,
     "marches non calculées (quota de la fiche)": 11
    },
    "engines": {
@@ -3068,7 +3104,7 @@
    "name": "Lyon Part-Dieu → Bellecour (TCL)",
    "coverage": true,
    "appGtfsChoice": "TCL",
-   "trips": 54,
+   "trips": 55,
    "priced": 42,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -3108,10 +3144,10 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 0,
-   "feasible": 0,
-   "firstResultMs": 89,
-   "totalMs": 13329,
+   "walked": 24,
+   "feasible": 5,
+   "firstResultMs": 92,
+   "totalMs": 24770,
    "received": {
     "Cars Région Isère GTFS": 0,
     "SNCF": 4,
@@ -3126,10 +3162,9 @@
     "TCL Lyon GTFS": 27
    },
    "reasons": {
-    "horaire GTFS local non confirmé en temps réel": 19,
-    "marche depuis l’adresse exacte de départ non calculée": 19,
-    "marche jusqu’à l’adresse exacte d’arrivée non calculée": 31,
-    "marches non calculées (quota de la fiche)": 23,
+    "horaire GTFS local non confirmé en temps réel": 11,
+    "départ avant la fin de la mission précédente": 11,
+    "marches non calculées (quota de la fiche)": 31,
     "horaire GTFS non confirmé en temps réel": 8,
     "prix commercial et disponibilité non vérifiés": 8,
     "recherche des correspondances incomplète": 8,
@@ -3154,14 +3189,15 @@
     }
    },
    "sources": [
+    "Marche (Valhalla / OpenStreetMap)",
+    "SNCF (GTFS officiel)",
     "TCL Lyon (GTFS)",
     "TCL (GTFS)",
-    "SNCF (GTFS officiel)",
     "SNCF (GTFS)"
    ],
    "networksSeen": [
-    "tcl",
-    "ter"
+    "ter",
+    "tcl"
    ],
    "expected": [
     "tcl"
@@ -3175,13 +3211,13 @@
       "Plus rapide"
      ],
      "dep": "2026-11-16T07:00:00.000Z",
-     "arr": "2026-11-16T07:04:00.000Z",
+     "arr": "2026-11-16T07:30:30.725Z",
      "legs": [
-      "TCL Lyon 38"
+      "marche 2507 m"
      ],
-     "price": "2,10 €",
-     "status": "Transport non confirmé",
-     "detail": "horaire GTFS local non confirmé en temps réel · marche depuis l’adresse exacte de départ non calculée · marche jusqu’à l’adresse exacte d’arrivée non calculée"
+     "price": "Gratuit (à pied)",
+     "status": "Réalisable",
+     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
     }
    ]
   },
@@ -3199,20 +3235,18 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "Mobilités M - SNCF": 1,
     "SNCF": 42,
+    "Mobilités M - SNCF": 1,
     "Cars Région Isère": 12
    },
    "missingFareSamples": {
-    "Mobilités M - SNCF": [
+    "SNCF": [
      {
       "mode": "Train",
       "line": "C6",
-      "from": "Voiron, Voiron",
-      "to": "Voreppe, Voreppe"
-     }
-    ],
-    "SNCF": [
+      "from": "Voiron",
+      "to": "Voreppe"
+     },
      {
       "mode": "Train",
       "line": "C31",
@@ -3224,12 +3258,14 @@
       "line": "C6",
       "from": "Réaumont - Saint-Cassien",
       "to": "Voreppe"
-     },
+     }
+    ],
+    "Mobilités M - SNCF": [
      {
       "mode": "Train",
       "line": "C6",
-      "from": "Voiron",
-      "to": "Voreppe"
+      "from": "Voiron, Voiron",
+      "to": "Voreppe, Voreppe"
      }
     ],
     "Cars Région Isère": [
@@ -3265,26 +3301,26 @@
     ]
    },
    "partialPricedJourneys": 1,
-   "walked": 3,
-   "feasible": 3,
-   "firstResultMs": 196,
-   "totalMs": 1849,
+   "walked": 25,
+   "feasible": 11,
+   "firstResultMs": 185,
+   "totalMs": 4232,
    "received": {
     "Cars Région Isère GTFS": 0,
     "GTFS local": 6,
     "SNCF": 9,
-    "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
+    "BlaBlaCar Bus GTFS": 0,
     "SNCF GTFS": 20,
     "Mobilités M": 5
    },
    "discarded": {},
    "reasons": {
-    "marche jusqu’à l’adresse exacte d’arrivée non calculée": 29,
-    "horaire GTFS non confirmé en temps réel": 14,
-    "prix commercial et disponibilité non vérifiés": 14,
-    "correspondance GTFS non confirmée": 13,
-    "recherche des correspondances incomplète": 14,
+    "horaire GTFS non confirmé en temps réel": 8,
+    "prix commercial et disponibilité non vérifiés": 8,
+    "correspondance GTFS non confirmée": 7,
+    "recherche des correspondances incomplète": 8,
+    "marches non calculées (quota de la fiche)": 7,
     "horaire GTFS local non confirmé en temps réel": 6
    },
    "engines": {
@@ -3340,14 +3376,12 @@
      "labels": [
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:10:26.000Z",
-     "arr": "2026-11-16T07:35:43.000Z",
+     "dep": "2026-11-16T07:27:38.452Z",
+     "arr": "2026-11-16T07:52:47.030Z",
      "legs": [
-      "marche 358 m",
-      "Mobilités M - SNCF C6",
-      "marche 89 m",
-      "M Réso - Métropole Grenobloise C13",
-      "marche 40 m"
+      "marche 361 m",
+      "SNCF C6",
+      "marche 825 m"
      ],
      "price": "Prix à confirmer",
      "status": "Réalisable",
@@ -3357,29 +3391,11 @@
   }
  ],
  "networks": {
-  "lex": {
-   "trips": 152,
-   "priced": 20,
-   "walked": 67,
-   "at": "2026-11-14T10:52:32.522Z",
-   "axes": [
-    "annecy-geneve",
-    "annemasse-stjulien",
-    "thonon-geneve",
-    "thonon-bons",
-    "annemasse-geneve",
-    "stjulien-geneve",
-    "archamps-geneve",
-    "chambery-stjulien",
-    "annecy-chambery"
-   ],
-   "source": "serveur"
-  },
   "ter": {
-   "trips": 364,
+   "trips": 372,
    "priced": 0,
-   "walked": 162,
-   "at": "2026-11-14T10:52:32.522Z",
+   "walked": 229,
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -3404,11 +3420,45 @@
    ],
    "source": "serveur"
   },
+  "lex": {
+   "trips": 152,
+   "priced": 20,
+   "walked": 105,
+   "at": "2026-11-14T10:57:14.497Z",
+   "axes": [
+    "annecy-geneve",
+    "annemasse-stjulien",
+    "thonon-geneve",
+    "thonon-bons",
+    "annemasse-geneve",
+    "stjulien-geneve",
+    "archamps-geneve",
+    "chambery-stjulien",
+    "annecy-chambery"
+   ],
+   "source": "serveur"
+  },
+  "cff": {
+   "trips": 33,
+   "priced": 1,
+   "walked": 31,
+   "at": "2026-11-14T10:57:14.497Z",
+   "axes": [
+    "annecy-geneve",
+    "annemasse-stjulien",
+    "geneve-lausanne",
+    "annemasse-geneve",
+    "stjulien-geneve",
+    "archamps-geneve",
+    "chambery-stjulien"
+   ],
+   "source": "serveur"
+  },
   "longue": {
    "trips": 138,
    "priced": 0,
-   "walked": 37,
-   "at": "2026-11-14T10:52:32.522Z",
+   "walked": 68,
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "annecy-geneve",
     "grenoble-crolles",
@@ -3423,8 +3473,8 @@
   "cars-74": {
    "trips": 48,
    "priced": 0,
-   "walked": 8,
-   "at": "2026-11-14T10:52:32.522Z",
+   "walked": 24,
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "annecy-geneve",
     "stjulien-geneve"
@@ -3435,7 +3485,7 @@
    "trips": 54,
    "priced": 54,
    "walked": 17,
-   "at": "2026-11-14T10:52:32.522Z",
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "annemasse-stjulien"
    ],
@@ -3444,8 +3494,8 @@
   "tpg": {
    "trips": 26,
    "priced": 4,
-   "walked": 7,
-   "at": "2026-11-14T10:52:32.522Z",
+   "walked": 24,
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "annemasse-stjulien",
     "annemasse-geneve",
@@ -3458,25 +3508,10 @@
   "tpg-fr": {
    "trips": 26,
    "priced": 4,
-   "walked": 7,
-   "at": "2026-11-14T10:52:32.522Z",
+   "walked": 24,
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "annemasse-stjulien",
-    "annemasse-geneve",
-    "stjulien-geneve",
-    "archamps-geneve",
-    "chambery-stjulien"
-   ],
-   "source": "serveur"
-  },
-  "cff": {
-   "trips": 31,
-   "priced": 1,
-   "walked": 20,
-   "at": "2026-11-14T10:52:32.522Z",
-   "axes": [
-    "annemasse-stjulien",
-    "geneve-lausanne",
     "annemasse-geneve",
     "stjulien-geneve",
     "archamps-geneve",
@@ -3488,7 +3523,7 @@
    "trips": 4,
    "priced": 4,
    "walked": 4,
-   "at": "2026-11-14T10:52:32.522Z",
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "chambery-aix"
    ],
@@ -3497,8 +3532,8 @@
   "ondea": {
    "trips": 75,
    "priced": 40,
-   "walked": 14,
-   "at": "2026-11-14T10:52:32.522Z",
+   "walked": 12,
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "chambery-aix",
     "aix-technolac"
@@ -3509,7 +3544,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-14T10:52:32.522Z",
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -3519,17 +3554,27 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-14T10:52:32.522Z",
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "grenoble-crolles"
+   ],
+   "source": "serveur"
+  },
+  "sibra": {
+   "trips": 1,
+   "priced": 1,
+   "walked": 1,
+   "at": "2026-11-14T10:57:14.497Z",
+   "axes": [
+    "rumilly-annecy"
    ],
    "source": "serveur"
   },
   "cars-38": {
    "trips": 14,
    "priced": 0,
-   "walked": 8,
-   "at": "2026-11-14T10:52:32.522Z",
+   "walked": 14,
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "voiron-grenoble",
     "voiron-voreppe"
@@ -3540,7 +3585,7 @@
    "trips": 37,
    "priced": 7,
    "walked": 16,
-   "at": "2026-11-14T10:52:32.522Z",
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "thonon-bons"
    ],
@@ -3550,7 +3595,7 @@
    "trips": 51,
    "priced": 51,
    "walked": 28,
-   "at": "2026-11-14T10:52:32.522Z",
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "rumilly-intra"
    ],
@@ -3560,7 +3605,7 @@
    "trips": 59,
    "priced": 59,
    "walked": 32,
-   "at": "2026-11-14T10:52:32.522Z",
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "amberieu-intra"
    ],
@@ -3570,7 +3615,7 @@
    "trips": 20,
    "priced": 18,
    "walked": 0,
-   "at": "2026-11-14T10:52:32.522Z",
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "amberieu-intra",
     "bourg-amberieu"
@@ -3581,7 +3626,7 @@
    "trips": 2,
    "priced": 0,
    "walked": 2,
-   "at": "2026-11-14T10:52:32.522Z",
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "chambery-chamoux"
    ],
@@ -3590,8 +3635,8 @@
   "tcl": {
    "trips": 42,
    "priced": 42,
-   "walked": 0,
-   "at": "2026-11-14T10:52:32.522Z",
+   "walked": 11,
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "lyon-intra"
    ],
@@ -3601,7 +3646,7 @@
    "trips": 3,
    "priced": 2,
    "walked": 3,
-   "at": "2026-11-14T10:52:32.522Z",
+   "at": "2026-11-14T10:57:14.497Z",
    "axes": [
     "voiron-voreppe"
    ],
@@ -3610,10 +3655,10 @@
  },
  "totals": {
   "axes": 23,
-  "trips": 1069,
-  "priced": 306,
-  "walked": 412,
-  "feasible": 113,
+  "trips": 1079,
+  "priced": 307,
+  "walked": 579,
+  "feasible": 160,
   "partialPricedJourneys": 75,
   "partialMissingByOperator": {
    "Ondéa Aix-les-Bains": 34,
@@ -3627,10 +3672,10 @@
   "fareLegsByOperator": {
    "TAC": 1,
    "TAC Annemasse": 93,
-   "Synchro Chambéry": 2,
-   "Synchro Bus Chambéry": 4,
+   "Synchro Bus Chambéry": 6,
    "Ondéa Aix-les-Bains": 114,
    "M Réso - Métropole Grenobloise": 8,
+   "Sibra": 1,
    "Star't Thonon": 39,
    "J’y bus Rumilly": 22,
    "J'y bus Rumilly": 57,
@@ -3648,12 +3693,12 @@
   "tripgoTicketLegs": 0,
   "tripgoPricedFromGrids": 0,
   "missingFareByOperator": {
-   "SNCF": 799,
+   "SNCF": 808,
+   "SBB": 24,
    "FlixBus": 122,
    "BlaBlaCar Bus": 121,
    "Cars Région Haute-Savoie": 96,
    "TPG": 20,
-   "SBB": 22,
    "Ondéa Aix-les-Bains": 35,
    "Mobilités M - SNCF": 3,
    "Cars Région Isère": 28,
@@ -3666,15 +3711,15 @@
   },
   "tripgoFareLegsFromGridsByOperator": {},
   "tripgoMissingFareByOperator": {},
-  "pricedPct": 28.6,
-  "walkedPct": 38.5
+  "pricedPct": 28.5,
+  "walkedPct": 53.7
  },
  "router": {
-  "hits": 746,
-  "misses": 169,
-  "stored": 99,
-  "requests": 101,
-  "failures": 2,
+  "hits": 734,
+  "misses": 157,
+  "stored": 149,
+  "requests": 155,
+  "failures": 0,
   "queued": 0,
   "disposed": false
  }
