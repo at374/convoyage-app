@@ -386,6 +386,27 @@ function walkDetour(j,task){
  const direct=meters(from,to);
  return direct>0&&meters(from,first)+meters(last,to)>=direct;
 }
+// Détour manifestement excessif : le chemin parcouru en véhicule (somme des distances à vol d'oiseau des portions)
+// fait au moins 3 fois la distance directe ET au moins 30 km de plus (ex. réel du 14/11/2026 : Annecy → Saint-Étienne
+// → Genève en car pour 35 km directs). Les deux conditions ensemble épargnent les détours ferroviaires normaux
+// (Annecy → Genève par La Roche-sur-Foron ≈ 1,6 fois) et les petits trajets urbains. GPS absent : trajet conservé.
+function excessiveDetour(j,task){
+ const from=pt(task&&task.from),to=pt(task&&task.to);if(!from||!to||!j||!Array.isArray(j.legs))return false;
+ const rides=j.legs.filter(l=>l&&l.kind!=='walk');if(!rides.length)return false;
+ let path=0;for(const l of rides){const a=pt(l.fromPoint),b=pt(l.toPoint);if(!a||!b)return false;path+=meters(a,b);}
+ const direct=meters(from,to);
+ return direct>0&&path>=3*direct&&path-direct>=30000;
+}
+// Couples de points dont la marche doit être calculée pour un trajet (accès et sortie) : sert à compter le coût réel
+// en requêtes piétonnes, les trajets d'une même ligne partageant presque toujours les mêmes arrêts.
+function walkPairs(j,task){
+ const from=pt(task&&task.from),to=pt(task&&task.to),legs=j.legs||[],out=[];
+ const k=(a,b)=>[a.lat,a.lon,b.lat,b.lon].map(v=>Math.round(v*1e4)).join(',');
+ const first=legs[0],last=legs[legs.length-1];
+ if(from&&first&&pt(first.fromPoint)&&meters(from,first.fromPoint)>SAME_POINT_M)out.push(k(from,first.fromPoint));
+ if(to&&last&&pt(last.toPoint)&&meters(last.toPoint,to)>SAME_POINT_M)out.push(k(last.toPoint,to));
+ return out;
+}
 function signature(j){
  return j.legs.filter(l=>l.kind!=='walk').map(l=>[String(l.line||'').replace(/\s+/g,'').toLowerCase(),Math.round(ms(l.departure)/60000),Math.round(ms(l.arrival)/60000)].join('|')).join(';');
 }
@@ -617,7 +638,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   const cancelled=x=>x&&(x.cancelled===true||x.canceled===true||/^(cancelled|canceled|annul)/i.test(String(x.status||'')));
   const usable=(Array.isArray(journeys)?journeys:[]).filter(j=>j&&!cancelled(j)&&Array.isArray(j.legs)&&j.legs.length&&
    !j.legs.some(l=>cancelled(l)||BOATS.test(l.mode+' '+(l.line||''))));
-  const clean=usable.filter(j=>!walkDetour(j,s.task));
+  const clean=usable.filter(j=>!walkDetour(j,s.task)&&!excessiveDetour(j,s.task));
   if(clean.length!==usable.length)s.discarded[source]=(s.discarded[source]||0)+usable.length-clean.length;
   // 1) Doublon d'un trajet déjà traité (autre moteur) : on ajoute la source, sans recalculer les marches.
   // 2) Trajet déjà hors délai sur ses seuls horaires : affiché « non confirmé » sans dépenser de marche.
@@ -650,17 +671,25 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,router).then(x=>{
    if(disposed)return;replace(t,assess(x,s.task,fareFor));emit(label);
   }).catch(()=>{})));
-  await walkBatch(toWalk.slice(0,8));
-  // Recherche complémentaire : si rien n'est encore réalisable dans cette direction, on complète 8 trajets de plus.
-  let walked=8;
-  if(!disposed&&!s.items.some(x=>x.feasible)){await walkBatch(toWalk.slice(8,16));walked=16;}
-  for(const t of toWalk.slice(walked)){ // au-delà : visibles, marches non calculées pour préserver le quota Valhalla
+  // Quota compté en couples de points réellement à calculer, pas en trajets : les départs successifs d'une même
+  // ligne partagent leurs arrêts, donc leurs marches (cache). Avant le 14/11/2026 seuls 8 à 16 trajets par moteur
+  // recevaient leurs marches, même quand tous utilisaient les deux mêmes arrêts (diagnostic réel : 53,7 % des
+  // trajets évalués, pour seulement 155 requêtes piétonnes sur 23 axes).
+  const seen=s.walkPairs,select=(list,budget)=>{const take=[],rest=[];
+   for(const t of list){const fresh=walkPairs(t.j,s.task).filter(k=>!seen.has(k));
+    if(fresh.length<=budget){budget-=fresh.length;fresh.forEach(k=>seen.add(k));take.push(t);}else rest.push(t);}
+   return [take,rest];};
+  let [batch,rest]=select(toWalk,8);
+  await walkBatch(batch);
+  // Recherche complémentaire : si rien n'est encore réalisable dans cette direction, 8 couples de plus.
+  if(!disposed&&rest.length&&!s.items.some(x=>x.feasible)){[batch,rest]=select(rest,8);await walkBatch(batch);}
+  for(const t of rest){ // au-delà : visibles, marches non calculées pour préserver le quota Valhalla
    replace(t,assess({...t.j,missing:['marches non calculées (quota de la fiche)']},s.task,fareFor));
   }
   if(!disposed)emit(label);
  }
  for(const task of tasks){
-  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},discarded:{},bySignature:new Map()};
+  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},discarded:{},bySignature:new Map(),walkPairs:new Set()};
   if(!pt(task.from)||!pt(task.to)){state[label].errors.adresses='adresse GPS manquante';emit(label);continue;}
   for(const [key,p] of Object.entries(providers)){
    let ok=false;try{ok=p.enabled(task);}catch(_){}
@@ -768,7 +797,7 @@ function render(host,v){
  if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,attachGTFSFares,walkDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;

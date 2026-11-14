@@ -2295,7 +2295,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         if(transportHub&&transportHub.signatureKey===signature)return;
         transportHub?.dispose();
         let router=null;
-        try{router=Hub.cachedRouter(window.CPTransportWalking?.createRouter({fetcher:regionalFetch,maxRequests:60,intervalMs:1100}),{storage:window.localStorage});}catch(_){}
+        try{router=Hub.cachedRouter(window.CPTransportWalking?.createRouter({fetcher:regionalFetch,maxRequests:150,intervalMs:1100}),{storage:window.localStorage});}catch(_){}
         const fareFor=leg=>{
           // Tarifs prouvés uniquement (grilles officielles datées), jamais estimés.
           try{const f=window.CPTransportFareGrids?.fareFor(leg);if(f)return f;}catch(_){}

@@ -150,7 +150,7 @@ const AXES_COUVERTURE=[
  {id:'rumilly-intra',name:'Rumilly Hôpital → Base de loisirs (J’y bus 1)',from:{lat:45.8652,lon:5.9361,name:'Rumilly Hôpital'},to:{lat:45.8472,lon:5.9665,name:'Rumilly Base de loisirs'},expect:['jybus']},
  {id:'amberieu-intra',name:'Ambérieu gare → Cabrol (TAM 2)',from:{lat:45.9542,lon:5.3419,name:'Ambérieu gare'},to:{lat:45.9813,lon:5.3527,name:'Ambérieu Cabrol'},expect:['tam']},
  {id:'chambery-chamoux',name:'Chambéry → Chamoux-sur-Gelon (Cars Savoie S05)',from:{lat:45.5699,lon:5.9169,name:'Chambéry gare routière'},to:{lat:45.5362,lon:6.2153,name:'Chamoux-sur-Gelon'},expect:['cars-73']},
- {id:'bourg-amberieu',name:'Bourg-en-Bresse → Ambérieu (Cars Ain / TER)',from:{lat:46.1993,lon:5.2148,name:'Bourg-en-Bresse gare'},to:{lat:45.9542,lon:5.3419,name:'Ambérieu gare'},expect:['cars-01','ter']},
+ {id:'bourg-amberieu',name:'Bourg-en-Bresse → Ambérieu (Cars Ain / TER)',from:{lat:46.199498,lon:5.215381,name:'Bourg-en-Bresse gare routière'},to:{lat:45.9542,lon:5.3419,name:'Ambérieu gare'},expect:['cars-01','ter']},
  // 14/11/2026 : parcours prioritaires de la mission « finalisation des moteurs » absents des 8 axes principaux.
  {id:'geneve-lausanne',name:'Genève → Lausanne',from:{lat:46.2102,lon:6.1424,name:'Genève Cornavin'},to:{lat:46.5167,lon:6.6291,name:'Lausanne gare'},expect:['cff']},
  {id:'annemasse-geneve',name:'Annemasse → Genève',from:{lat:46.1993,lon:6.2366,name:'Annemasse gare'},to:{lat:46.2102,lon:6.1424,name:'Genève Cornavin'},expect:['lex']},

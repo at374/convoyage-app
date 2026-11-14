@@ -233,7 +233,7 @@ test('Ondéa : 1,70 € au 01/07/2026 sur les lignes régulières, lignes de car
  assert.equal(Grids.fareFor(leg('2','2026-06-15')),null,'avant la grille 2026');
 });
 
-test('performance : doublons entre moteurs et trajets hors délai sans calcul de marche ; 8 trajets marchés au plus ; affichage progressif',async()=>{
+test('performance : doublons entre moteurs et trajets hors délai sans calcul de marche ; quota compté en couples d’arrêts ; affichage progressif',async()=>{
  const router=fakeRouter();const updates=[];
  const mk=(h,m,line='X')=>({source:'A',sources:['A'],legs:[bus(at(h,m),at(h,m+20),STOP1,STOP2,{line})]});
  const many=[];for(let i=0;i<12;i++)many.push(mk(7,i*2,'L'+i));// 12 trajets distincts, tous à l'heure
@@ -242,17 +242,39 @@ test('performance : doublons entre moteurs et trajets hors délai sans calcul de
   a:{name:'A',enabled:()=>true,run:async()=>[...many,late]},
   b:{name:'B',enabled:()=>true,run:async()=>new Promise(r=>setTimeout(()=>r([{...mk(7,0,'L0'),source:'B',sources:['B']}]),30))}
  };
- const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers,router,onUpdate:(l,v)=>updates.push(v.total)});
+ const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers,router:H.cachedRouter(router),onUpdate:(l,v)=>updates.push(v.total)});
  await new Promise(r=>setTimeout(r,150));
  const v=s.view('Aller');
  assert.equal(v.done,true);assert.equal(v.total,13,'12 + tardif (doublon B fusionné ; trop loin pour la marche seule)');
- // 8 trajets × 2 marches (approche + finale) + 1 marche seule ; points d'arrêt identiques => cache du routeur réel ; ici on compte les appels
- assert.ok(router.calls.length<=8*2,'appels marche : '+router.calls.length);
+ // Arrêts identiques : avec le cache de marches (comme dans l'application), 12 trajets ne coûtent que 2 requêtes réelles.
+ assert.ok(router.calls.length<=3,'appels marche réels : '+router.calls.length);
  const all=[...v.picks.map(p=>p.journey),...v.others];
  assert.ok(all.some(j=>j.sources.includes('A')&&j.sources.includes('B')),'doublon fusionné avec les deux sources');
- assert.ok(all.some(j=>/quota/.test(j.statusDetail)),'au-delà de 8 : signalé, pas inventé');
+ // 14/11/2026 : les 12 trajets partagent les deux mêmes arrêts → tous reçoivent leurs marches (2 couples de points).
+ assert.ok(!all.some(j=>/quota/.test(j.statusDetail)),'mêmes arrêts : aucun trajet laissé sans marche');
  assert.ok(all.some(j=>j.legs[0].line==='TARD'&&/marge insuffisante|arrivée après/.test(j.statusDetail)));
  assert.ok(updates.length>=4,'mises à jour progressives : '+updates.length);
+ s.dispose();
+});
+
+test('détour manifestement excessif écarté ; détour ferroviaire normal et GPS absent conservés',()=>{
+ const task={from:{lat:45.9017,lon:6.1219},to:{lat:46.2102,lon:6.1424}}; // Annecy → Genève, 35 km directs
+ const leg=(a,b)=>({mode:'Car',fromPoint:a,toPoint:b});
+ const ANNECY={lat:45.9017,lon:6.1219},GENEVE={lat:46.2102,lon:6.1424},STE={lat:45.4434,lon:4.3997},ROCHE={lat:46.0667,lon:6.3117};
+ assert.equal(H.excessiveDetour({legs:[leg(ANNECY,STE),leg(STE,GENEVE)]},task),true,'Annecy → Saint-Étienne → Genève');
+ assert.equal(H.excessiveDetour({legs:[leg(ANNECY,ROCHE),leg(ROCHE,GENEVE)]},task),false,'par La Roche-sur-Foron');
+ assert.equal(H.excessiveDetour({legs:[leg(ANNECY,GENEVE)]},task),false);
+ assert.equal(H.excessiveDetour({legs:[{mode:'Car'}]},task),false,'sans GPS : conservé');
+});
+
+test('quota de marches : au-delà de 16 couples d’arrêts distincts, le trajet est signalé, jamais inventé',async()=>{
+ const router={calls:0,route:async()=>{router.calls++;return {status:'unavailable'};}}; // rien de réalisable → recherche complémentaire incluse
+ const js=[];for(let i=0;i<12;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,i*2),at(7,i*2+20),{lat:STOP1.lat+i*0.001,lon:STOP1.lon},{lat:STOP2.lat+i*0.001,lon:STOP2.lon},{line:'D'+i})]});
+ const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers:{a:{name:'A',enabled:()=>true,run:async()=>js}},router});
+ await new Promise(r=>setTimeout(r,100));
+ const v=s.view('Aller'),all=[...v.picks.map(p=>p.journey),...v.others];
+ assert.equal(all.filter(j=>/quota/.test(j.statusDetail)).length,4,'8 trajets (16 couples) évalués, 4 signalés');
+ assert.ok(router.calls<=17,'appels marche : '+router.calls);
  s.dispose();
 });
 
