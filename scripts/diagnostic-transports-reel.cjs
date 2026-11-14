@@ -156,7 +156,7 @@ async function gtfsRows(axis,when){
    }
   }
   const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoPricedFromGrids,tripgoTicketLegs,tripgoMissingFareByOperator,tripgoFareLegsFromGridsByOperator,missingFareByOperator,missingFareSamples,fareLegsByOperator,partialMissingByOperator,partialMissingLineSamples,partialPricedJourneys,walked:all.filter(walkedOk).length,
-   feasible:all.filter(j=>j.feasible).length,firstResultMs:firstAt,totalMs:Date.now()-started,
+   feasible:all.filter(j=>j.feasible).length,scheduled:all.filter(j=>j.scheduled).length,firstResultMs:firstAt,totalMs:Date.now()-started,
    received:v.received,discarded:v.discarded||{},
    reasons:all.flatMap(j=>j.reasons||[]).reduce((m,r)=>{const k=r.replace(/\d+/g,'n').slice(0,70);m[k]=(m[k]||0)+1;return m;},{}),
    engines:{errors:{...v.errors,...Object.fromEntries(Object.entries(gt.errors).map(([k,e])=>['GTFS '+k,e]))},skipped:v.skipped,gtfs:gt.networks},
@@ -165,7 +165,7 @@ async function gtfsRows(axis,when){
   report.axes.push(a);console.log(JSON.stringify({axe:a.name,trajets:a.trips,prix:a.priced,marches:a.walked,realisables:a.feasible,recus:a.received,raisons:a.reasons,sources:a.sources,erreurs:a.engines.errors}));
  }
  // Synthèse calculée sur les axes réellement testés, sans confondre itinéraires et réseaux.
- report.totals=report.axes.reduce((s,a)=>{s.axes++;s.trips+=a.trips;s.priced+=a.priced;s.walked+=a.walked;s.feasible+=a.feasible;return s;},{axes:0,trips:0,priced:0,walked:0,feasible:0});
+ report.totals=report.axes.reduce((s,a)=>{s.axes++;s.trips+=a.trips;s.priced+=a.priced;s.walked+=a.walked;s.feasible+=a.feasible;s.scheduled+=a.scheduled||0;return s;},{axes:0,trips:0,priced:0,walked:0,feasible:0,scheduled:0});
  report.totals.partialPricedJourneys=report.axes.reduce((n,a)=>n+a.partialPricedJourneys,0);
  report.totals.partialMissingByOperator={};
  for(const a of report.axes)for(const [name,count] of Object.entries(a.partialMissingByOperator))report.totals.partialMissingByOperator[name]=(report.totals.partialMissingByOperator[name]||0)+count;
@@ -188,7 +188,7 @@ async function gtfsRows(axis,when){
  report.router=router.stats?router.stats():null;
  fs.writeFileSync(path.join(ROOT,'docs','diagnostic-serveur.json'),JSON.stringify(report,null,1));
  const md=['# Diagnostic réel des transports — serveur GitHub Actions','',`Exécuté le ${report.at} ; départs à partir de ${report.when} ; TripGo : ${report.tripgo?'oui':'non (pas de clé)'}.`,'',
-  `**Bilan : ${report.totals.trips} trajets sur ${report.totals.axes} axes, ${report.totals.priced} avec prix vérifié (${report.totals.pricedPct} %), ${report.totals.walked} avec marches calculées (${report.totals.walkedPct} %), ${report.totals.feasible} réalisables.**`,'',
+  `**Bilan : ${report.totals.trips} trajets sur ${report.totals.axes} axes, ${report.totals.priced} avec prix vérifié (${report.totals.pricedPct} %), ${report.totals.walked} avec marches calculées (${report.totals.walkedPct} %), ${report.totals.feasible} réalisables, ${report.totals.scheduled} en horaire programmé (officiel, marches et marge vérifiées, sans temps réel).**`,'',
   `**TripGo : ${report.totals.tripgoJourneys} trajets, ${report.totals.tripgoPriced} avec prix vérifié, ${report.totals.tripgoTicketLegs} portions avec billet chiffré.**`,'',
   'Portions TripGo sans prix par opérateur : '+(Object.entries(report.totals.tripgoMissingFareByOperator).map(([name,count])=>name+' ('+count+')').join(', ')||'aucune')+'.','',
   'Exemples de lignes sans tarif (3 par opérateur et par axe) :','',
@@ -199,8 +199,8 @@ async function gtfsRows(axis,when){
    '- '+a.id+' / '+operator+' : '+(lines.join(', ')||'ligne non précisée'))),'',
   'Correspondances bloquant les itinéraires partiellement tarifés : '+(Object.entries(report.totals.partialMissingByOperator).sort((a,b)=>b[1]-a[1]).map(([name,count])=>name+' ('+count+')').join(', ')||'aucune')+'.','',
   'Portions sans prix par opérateur (toutes sources) : '+(Object.entries(report.totals.missingFareByOperator).sort((a,b)=>b[1]-a[1]).map(([name,count])=>name+' ('+count+')').join(', ')||'aucune')+'.','',
-  '| Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | 1er résultat | Total | Sources | Erreurs | Attendus non vus |','|---|---|---|---|---|---|---|---|---|---|'];
- for(const a of report.axes)md.push('| '+[a.name,a.trips,a.priced,a.walked,a.feasible,a.firstResultMs==null?'—':(a.firstResultMs/1000).toFixed(1)+' s',(a.totalMs/1000).toFixed(1)+' s',
+  '| Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | Horaire programmé | 1er résultat | Total | Sources | Erreurs | Attendus non vus |','|---|---|---|---|---|---|---|---|---|---|---|'];
+ for(const a of report.axes)md.push('| '+[a.name,a.trips,a.priced,a.walked,a.feasible,a.scheduled,a.firstResultMs==null?'—':(a.firstResultMs/1000).toFixed(1)+' s',(a.totalMs/1000).toFixed(1)+' s',
   a.sources.join(', ')||'—',Object.entries(a.engines.errors).map(([k,e])=>k+' : '+e).join(' ; ').replace(/\|/g,'/')||'—',a.missingExpected.join(', ')||'—'].join(' | ')+' |');
  md.push('','Exemples (3 meilleures propositions par axe) :','');
  for(const a of report.axes){md.push('**'+a.name+'**');for(const e of a.examples)md.push('- '+e.labels.join(' · ')+' : '+e.dep+' → '+e.arr+' · '+e.legs.join(' › ')+' · '+e.price+' · '+e.status+(e.status==='Réalisable'?'':' ('+e.detail+')'));md.push('');}

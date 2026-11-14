@@ -267,6 +267,22 @@ test('détour manifestement excessif écarté ; détour ferroviaire normal et GP
  assert.equal(H.excessiveDetour({legs:[{mode:'Car'}]},task),false,'sans GPS : conservé');
 });
 
+test('trois niveaux : horaire GTFS complet = « Horaire programmé », jamais « Réalisable » ni confondu avec un trajet incomplet',()=>{
+ const task={from:STOP1,to:STOP2,latestArrival:at(9,30)};
+ const ok={source:'A',sources:['A'],legs:[bus(at(7,0),at(7,20),STOP1,STOP2,{line:'L'})]};
+ const sched=H.assess({...ok,missing:['horaire GTFS local non confirmé en temps réel']},task,null);
+ assert.equal(sched.feasible,false);assert.equal(sched.scheduled,true);assert.match(sched.status,/Horaire programmé/);assert.doesNotMatch(sched.status,/Réalisable/);
+ const national=H.assess({...ok,missing:['horaire GTFS non confirmé en temps réel','prix commercial et disponibilité non vérifiés']},task,null);
+ assert.equal(national.scheduled,true);
+ const broken=H.assess({...ok,missing:['horaire GTFS local non confirmé en temps réel','marche jusqu’à l’adresse exacte d’arrivée non calculée']},task,null);
+ assert.equal(broken.scheduled,false);assert.equal(broken.status,'Transport non confirmé');
+ const late=H.assess({...ok,legs:[bus(at(9,10),at(9,25),STOP1,STOP2,{line:'L'})],missing:['horaire GTFS local non confirmé en temps réel']},task,null);
+ assert.equal(late.scheduled,false,'marge insuffisante : non confirmé');
+ const full=H.assess({...ok,missing:[]},task,null);assert.equal(full.feasible,true);assert.equal(full.scheduled,false);
+ const r=H.rank([broken,sched,full]);assert.equal(r.picks[0].journey.feasible,true);
+ const r2=H.rank([broken,sched]);assert.equal(r2.picks.find(p=>p.labels.includes('Plus rapide')).journey.scheduled,true,'programmé classé avant non confirmé');
+});
+
 test('quota de marches : au-delà de 16 couples d’arrêts distincts, le trajet est signalé, jamais inventé',async()=>{
  const router={calls:0,route:async()=>{router.calls++;return {status:'unavailable'};}}; // rien de réalisable → recherche complémentaire incluse
  const js=[];for(let i=0;i<12;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,i*2),at(7,i*2+20),{lat:STOP1.lat+i*0.001,lon:STOP1.lon},{lat:STOP2.lat+i*0.001,lon:STOP2.lon},{line:'D'+i})]});

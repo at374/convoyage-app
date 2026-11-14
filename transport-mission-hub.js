@@ -351,6 +351,7 @@ function marginFor(task){
  const base=finite(task.marginMinutes)?Math.max(5,task.marginMinutes):15;
  return task.exactTarget===true&&task.allowShortMargin===true?Math.min(base,5):Math.max(15,base);
 }
+const ADVISORY=/^(?:horaire GTFS(?: local)? non confirmé en temps réel|prix commercial et disponibilité non vérifiés|recherche des correspondances incomplète)$/;
 function assess(j,task,fareFor){
  const reasons=[...(j.missing||[])];
  const legs=j.legs;
@@ -367,12 +368,20 @@ function assess(j,task,fareFor){
  const price=priceOf(j,fareFor);
  const delays=legs.filter(l=>finite(l.delayMinutes)&&l.delayMinutes>0).map(l=>(l.line||l.mode)+' +'+l.delayMinutes+' min');
  const feasible=reasons.length===0;
- return {...j,departure:Number.isFinite(dep)?new Date(dep).toISOString():null,arrival:Number.isFinite(arr)?new Date(arr).toISOString():null,
+ // Trois niveaux, jamais confondus (demande du 14/11/2026 : distinguer horaire programmé, disponibilité et prix) :
+ //  - « Réalisable » : tout est vérifié, rien ne manque ;
+ //  - « Horaire programmé » : horaire officiel publié, marches calculées, correspondances et marge respectées, mais
+ //    pas de confirmation en temps réel (ou prix/disponibilité commerciale non vérifiés) — à confirmer le jour J ;
+ //  - « Transport non confirmé » : une vérification manque ou échoue (marche, correspondance, marge, horaires).
+ // Sans ce niveau intermédiaire, tout trajet issu d'un horaire GTFS (TER, cars, bus locaux) apparaissait comme
+ // « non confirmé » avec le même avertissement qu'un trajet impossible (constaté en navigateur le 14/11/2026).
+ const scheduled=!feasible&&reasons.every(r=>ADVISORY.test(r));
+ return {...j,scheduled,departure:Number.isFinite(dep)?new Date(dep).toISOString():null,arrival:Number.isFinite(arr)?new Date(arr).toISOString():null,
   durationMinutes:chrono?Math.ceil((arr-dep)/60000):null,slackMinutes:slack,marginMinutes:margin,price,reasons,delays,
   transfers:Math.max(0,legs.filter(l=>l.kind!=='walk').length-1),
   walkMeters:legs.filter(l=>l.kind==='walk').reduce((s,l)=>s+(l.distanceMeters||0),0),
-  feasible,status:feasible?'Réalisable':'Transport non confirmé',
-  statusDetail:feasible?(j.realtime?'Horaires temps réel du fournisseur':'Horaires théoriques : retards et annulations à surveiller le jour J'):reasons.join(' · ')};
+  feasible,status:feasible?'Réalisable':scheduled?'Horaire programmé — à confirmer le jour J':'Transport non confirmé',
+  statusDetail:scheduled?'Horaire officiel publié ; marches, correspondances et marge vérifiées. Reste à confirmer : '+reasons.join(' · '):feasible?(j.realtime?'Horaires temps réel du fournisseur':'Horaires théoriques : retards et annulations à surveiller le jour J'):reasons.join(' · ')};
 }
 // Un transport n'a d'intérêt que s'il rapproche du but : si la marche à vol d'oiseau jusqu'au premier arrêt plus celle
 // depuis le dernier arrêt atteint déjà la distance directe départ → arrivée, marcher directement est au moins aussi
@@ -416,11 +425,12 @@ function rank(items){
   const old=seen.get(k);
   if(!old){seen.set(k,j);continue;}
   // Fusion : garder la version la plus complète (marches, prix, temps réel) et cumuler les sources.
-  const better=(j.feasible&&!old.feasible)||(j.reasons.length<old.reasons.length)||(j.price.status==='verified'&&old.price.status!=='verified')?j:old;
+  const better=(j.feasible&&!old.feasible)||(j.scheduled&&!old.feasible&&!old.scheduled)||(j.reasons.length<old.reasons.length)||(j.price.status==='verified'&&old.price.status!=='verified')?j:old;
   seen.set(k,{...better,sources:[...new Set([...old.sources,...j.sources])]});
  }
  const all=[...seen.values()];
- const byFeasible=(a,b)=>Number(b.feasible)-Number(a.feasible);
+ const tier=j=>j.feasible?2:j.scheduled?1:0; // réalisable > horaire programmé > non confirmé
+ const byFeasible=(a,b)=>tier(b)-tier(a);
  const fastest=[...all].sort((a,b)=>byFeasible(a,b)||a.durationMinutes-b.durationMinutes||priceSortKey(a.price)-priceSortKey(b.price))[0];
  const priced=all.filter(j=>j.price.status==='verified'||j.price.status==='free');
  const cheapest=[...priced].sort((a,b)=>byFeasible(a,b)||priceSortKey(a.price)-priceSortKey(b.price)||a.durationMinutes-b.durationMinutes)[0];
@@ -558,7 +568,9 @@ function makeProviders(r,opts={}){
       (operator!=='sncf'&&!hasDirect);
      let rows=initialRows;
      if(needExpanded&&!signal?.aborted&&opts.nationalStopFallback!==false){
-      const expanded=await r.CPNationalGTFSJourneys.loadAndSearch({...searchParams,radiusMeters:6000});
+      // Un échec du repli ne doit jamais faire perdre les résultats à 3 km (constaté en navigateur réel le 14/11/2026 :
+      // le rayon de 6 km était refusé par le moteur, limité à 5 km → « Invalid walking search radius » pour tout le fournisseur).
+      const expanded=await r.CPNationalGTFSJourneys.loadAndSearch({...searchParams,radiusMeters:6000}).catch(e=>{if(signal?.aborted)throw e;return null;});
       if(Array.isArray(expanded?.journeys)&&expanded.journeys.length){
        const seen=new Set(rows.map(j=>JSON.stringify([j.tripId,j.line,j.departure,j.arrival,j.originStop?.stop_id||j.originStop?.name,j.destinationStop?.stop_id||j.destinationStop?.name])));
        for(const j of expanded.journeys){
@@ -734,14 +746,14 @@ function mapSvg(doc,j){
  return svg;
 }
 function card(doc,j,labels){
- const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':' warn'));
+ const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
  const s=el(doc,'summary');
  if(labels&&labels.length)s.appendChild(el(doc,'span','cp-hub-chip',labels.join(' · ')));
  s.appendChild(el(doc,'strong','cp-hub-times',clock(j.departure)+' → '+clock(j.arrival)+' · '+durationText(j.durationMinutes)));
  const price=el(doc,'span','cp-hub-price'+(j.price.status==='unknown'?' unknown':''),j.price.status==='unknown'?
   'Prix à confirmer'+(j.price.partial?' (connu : '+j.price.partial+')':''):j.price.label);s.appendChild(price);
  s.appendChild(el(doc,'span','cp-hub-modes',j.legs.map(l=>(ICON[l.mode]||'🚏')+(l.kind==='walk'?' '+Math.max(1,Math.round((l.durationSeconds||0)/60))+' min':(l.line?' '+l.line:''))).join(' › ')));
- s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · avance '+j.slackMinutes+' min (marge '+j.marginMinutes+' min)':'')));
+ s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':j.scheduled?'🕒 ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · avance '+j.slackMinutes+' min (marge '+j.marginMinutes+' min)':'')));
  if(!j.feasible)s.appendChild(el(doc,'small','cp-hub-reason',j.statusDetail));
  c.appendChild(s);
  const body=el(doc,'div','cp-hub-body');
@@ -794,7 +806,8 @@ function render(host,v){
  if(v.done&&tads.length){const p=el(doc,'p','cp-hub-note','Transport à la demande possible dans ce secteur (non intégré au classement) : ');
   tads.forEach((t,i)=>{const a=el(doc,'a',null,t.name);a.href=t.url;a.target='_blank';a.rel='noopener noreferrer';p.appendChild(a);p.appendChild(doc.createTextNode(' — '+t.note+(i<tads.length-1?' · ':'.')));});
   host.appendChild(p);}
- if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
+ if(v.done&&!v.picks.some(p=>p.journey.feasible)&&v.picks.some(p=>p.journey.scheduled))host.appendChild(el(doc,'p','cp-hub-note','Aucun trajet confirmé en temps réel pour l’instant. Les propositions « Horaire programmé » suivent les horaires officiels publiés, avec marches et marge vérifiées : à confirmer le jour J.'));
+ else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
 const api={VERSION,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,

@@ -518,10 +518,13 @@ jobs:
             from:{lat:45.901,lon:6.121},to:{lat:45.761,lon:4.861},
             earliestDeparture:'2026-11-17T00:00:00Z'
           }).then(items=>{
-            assert.equal(overnightCalls.length,2);
-            assert.equal(overnightCalls[0].date,'2026-11-17');
-            assert.equal(overnightCalls[1].date,'2026-11-16');
-            assert.equal(overnightCalls[1].earliestDeparture,'25:00:00');
+            // 14/11/2026 : depuis le repli borné à 6 km (recherche vide à 3 km), trois appels : 3 km, 6 km, puis veille.
+            // Cette assertion attendait encore 2 appels et faisait échouer tout le diagnostic réel depuis 65b617c.
+            assert.equal(overnightCalls.length,3);
+            assert.equal(overnightCalls[0].date,'2026-11-17');assert.equal(overnightCalls[0].radiusMeters,3000);
+            assert.equal(overnightCalls[1].date,'2026-11-17');assert.equal(overnightCalls[1].radiusMeters,6000);
+            assert.equal(overnightCalls[2].date,'2026-11-16');
+            assert.equal(overnightCalls[2].earliestDeparture,'25:00:00');
             assert.equal(items.length,1);
           }).catch(e=>{console.error(e);process.exitCode=1;});
           const converted=hub.fromNationalGTFS([nationalRow],'sncf');
@@ -546,7 +549,11 @@ jobs:
             assert.deepEqual(result.missing,journey.missing);
             const assessed=hub.assess(result,{from:stop,to:arrival},null);
             assert.equal(assessed.feasible,false);
-            assert.equal(assessed.status,'Transport non confirmé');
+            // Horaire officiel complet sans temps réel : jamais « Réalisable », mais distingué d'un trajet incomplet.
+            assert.equal(assessed.scheduled,true);
+            assert.match(assessed.status,/^Horaire programmé/);assert.doesNotMatch(assessed.status,/Réalisable/);
+            const incomplete=hub.assess({...result,missing:[...result.missing,'marche jusqu’à l’adresse exacte d’arrivée non calculée']},{from:stop,to:arrival},null);
+            assert.equal(incomplete.status,'Transport non confirmé');
           }).catch(e=>{console.error(e);process.exitCode=1;});
           NODE
           node --check scripts/test-pedestrian-hub.cjs

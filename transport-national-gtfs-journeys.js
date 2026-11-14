@@ -14,7 +14,7 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
  if(![from?.lat,from?.lon,to?.lat,to?.lon].every(Number.isFinite)||
   Math.abs(from.lat)>90||Math.abs(to.lat)>90||Math.abs(from.lon)>180||Math.abs(to.lon)>180)
   throw new Error('Valid exact origin/destination coordinates required');
- if(!Number.isFinite(radiusMeters)||radiusMeters<100||radiusMeters>5000)throw new Error('Invalid walking search radius');
+ if(!Number.isFinite(radiusMeters)||radiusMeters<100||radiusMeters>6000)throw new Error('Invalid walking search radius'); // 6 km : repli borné des fiches mission (gares routières excentrées)
  if(!Number.isSafeInteger(maxResults)||maxResults<1||maxResults>100)throw new Error('Invalid result limit');
  // GTFS service times can exceed 24:00 after midnight. Compare seconds, not only HH:MM.
  const seconds=value=>{
