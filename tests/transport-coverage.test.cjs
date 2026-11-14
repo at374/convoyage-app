@@ -11,8 +11,10 @@ test('inventaire : 4 états, aucun « Validé en réel » sans diagnostic télé
  for(const s of states)assert.ok(['Testé sur données enregistrées','Partiellement raccordé','Non raccordé'].includes(s));
  for(const z of inv.zones){assert.ok(z.total>0);assert.equal(z.real,0);assert.ok(z.connected<=z.total);}
  for(const r of inv.rows){assert.ok(r.blocage&&r.action,'blocage et action renseignés : '+r.id);assert.ok(['vérifiés','partiels','manquants'].includes(r.tarif));}
- // TCL : jamais compté comme raccordé (TripGo seul ne compte pas) ; J'y bus / TAM : extraction serveur prévue, donc partiels seulement.
- assert.equal(inv.rows.find(r=>r.id==='tcl').state,'Non raccordé');
+ // TCL : raccordé depuis le 13/11/2026 par le flux officiel relayé (zone Part-Dieu/Bellecour/Perrache) et ses tarifs
+ // GTFS — testé sur données enregistrées, tarifs partiels (3 lignes ambiguës sans prix), pas « validé en réel ».
+ assert.equal(inv.rows.find(r=>r.id==='tcl').state,'Testé sur données enregistrées');
+ assert.equal(inv.rows.find(r=>r.id==='tcl').tarif,'partiels');
  // J'y bus / TAM : flux officiels réels extraits par la tâche serveur et testés (13/11) — pas « validés en réel » pour autant.
  for(const id of ['jybus','tam'])assert.equal(inv.rows.find(r=>r.id===id).state,'Testé sur données enregistrées');
 });
