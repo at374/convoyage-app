@@ -19,7 +19,31 @@ for d in cat.get('results',[]):
 for direct in ['tarifs-ter-aura','tarifs-ter-par-od']:
     if direct not in IDS: IDS.append(direct)
 try:
-    dg=json.loads(get('https://www.data.gouv.fr/api/1/datasets/6778b24e2e9a63f76e133b55/'))
+    cat2=json.loads(get(BASE.rstrip('/')+'?limit=100&where='+urllib.parse.quote('search("TER")')))
+    out.append('\n## Catalogue : jeux contenant « TER »\n')
+    for d in cat2.get('results',[]):
+        m=d.get('metas',{}).get('default',{})
+        out.append(f"- `{d.get('dataset_id')}` — {m.get('title')} — modifié {m.get('modified')} — {m.get('records_count')} lignes\n")
+except Exception as e:
+    out.append(f'\n## Catalogue TER — erreur : {e!r}\n')
+def get_slow(url):
+    last=None
+    for _ in range(3):
+        try:
+            req=urllib.request.Request(url,headers={'User-Agent':'Mozilla/5.0 (convoyage-app diagnostic)'})
+            with urllib.request.urlopen(req,timeout=120) as r: return r.read()
+        except Exception as e: last=e
+    raise last
+try:
+    dg=json.loads(get_slow('https://www.data.gouv.fr/api/1/datasets/6778b24e2e9a63f76e133b55/'))
+    for r in dg.get('resources',[]):
+        try:
+            body=get_slow(r.get('url'))
+            out.append(f"- contenu {r.get('title')} : {len(body)} octets\n```\n"+body[:1500].decode('utf-8','replace')+"\n```\n")
+            lines=[l for l in body.decode('utf-8','replace').splitlines() if 'Annecy' in l and ('Chamb' in l or 'Rumilly' in l or 'Lyon Part' in l)]
+            out.append('```\n'+'\n'.join(lines[:12])+'\n```\n')
+        except Exception as e:
+            out.append(f"- contenu {r.get('title')} : erreur {e!r}\n")
     out.append('\n## data.gouv.fr — '+str(dg.get('title'))+'\n- modifié : '+str(dg.get('last_modified'))+'\n- source : '+str((dg.get('harvest') or {}).get('remote_url'))+'\n')
     for r in dg.get('resources',[]): out.append(f"- ressource {r.get('format')} — {r.get('title')} — {r.get('url')} — modifiée {r.get('last_modified')}\n")
 except Exception as e:
