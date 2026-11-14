@@ -35,7 +35,9 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  bounds:[45.65,4.7,46.55,6.3],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'80100',datasetId:'5bd9843e634f413220f7f04a',network:'Sibra',format:'GTFS',federate:true,
- url:'https://www.data.gouv.fr/api/1/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0',resolveFromCatalogue:true,
+ // 14/11/2026 : copie relayée par le serveur d'abord (data/gtfs/sibra-annecy.zip, archive officielle courante
+ // résolue chaque semaine), source officielle en secours — data.gouv.fr échouait par intermittence (« fetch failed »).
+ url:LOCAL_GTFS('sibra-annecy.zip'),fallbackUrls:['https://www.data.gouv.fr/api/1/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0'],
  bounds:[45.7,5.9,46.1,6.5],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'83459',datasetId:'5af03701b595081c1880a8a4',network:'M Réso — Métropole grenobloise',format:'GTFS',federate:true,
