@@ -785,6 +785,11 @@ jobs:
             const verified=prices.filter(p=>p.status==='verified');
             assert.ok(verified.length>0,'Le tarif GTFS TCL doit atteindre les fiches mission');
             assert.ok(verified.every(p=>p.amounts.EUR===2.10),'Seul 2,10 € est attendu sur les lignes sans ambiguïté');
+            // Candidats sans intérêt (marche d'accès + de sortie ≥ trajet direct) écartés avant le quota de marches.
+            const lyon={from:{lat:45.7606,lon:4.8594},to:{lat:45.7578,lon:4.8322}};
+            assert.equal(hub.walkDetour({legs:[{mode:'Bus',fromPoint:{lat:45.7672,lon:4.8128},toPoint:{lat:45.7700,lon:4.8160}}]},lyon),true,'Détour inutile non détecté');
+            assert.equal(hub.walkDetour({legs:[{mode:'Bus',fromPoint:{lat:45.7610,lon:4.8580},toPoint:{lat:45.7575,lon:4.8330}}]},lyon),false,'Trajet utile écarté à tort');
+            assert.equal(hub.walkDetour({legs:[{mode:'Bus'}]},lyon),false,'Sans GPS d’arrêt : aucune élimination');
             console.log('Tarif GTFS officiel embarqué TCL (Fares V1) vérifié sur l’archive publiée : 2,10 € confirmé, ambiguïtés F1/F2/7601 correctement sans prix');
           })().catch(e=>{console.error(e);process.exitCode=1;});
           NODE

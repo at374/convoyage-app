@@ -374,6 +374,18 @@ function assess(j,task,fareFor){
   feasible,status:feasible?'Réalisable':'Transport non confirmé',
   statusDetail:feasible?(j.realtime?'Horaires temps réel du fournisseur':'Horaires théoriques : retards et annulations à surveiller le jour J'):reasons.join(' · ')};
 }
+// Un transport n'a d'intérêt que s'il rapproche du but : si la marche à vol d'oiseau jusqu'au premier arrêt plus celle
+// depuis le dernier arrêt atteint déjà la distance directe départ → arrivée, marcher directement est au moins aussi
+// court. Ces candidats (rayon de recherche de 3 km autour de chaque adresse) épuisaient le quota de marches calculées
+// avant les trajets utiles : constaté en réel le 14/11/2026 sur Lyon Part-Dieu → Bellecour (0 marche calculée).
+// Points GPS absents : le trajet est conservé (aucune élimination sans preuve).
+function walkDetour(j,task){
+ const from=pt(task&&task.from),to=pt(task&&task.to);if(!from||!to||!j||!Array.isArray(j.legs))return false;
+ const rides=j.legs.filter(l=>l&&l.kind!=='walk');if(!rides.length)return false;
+ const first=pt(rides[0].fromPoint),last=pt(rides[rides.length-1].toPoint);if(!first||!last)return false;
+ const direct=meters(from,to);
+ return direct>0&&meters(from,first)+meters(last,to)>=direct;
+}
 function signature(j){
  return j.legs.filter(l=>l.kind!=='walk').map(l=>[String(l.line||'').replace(/\s+/g,'').toLowerCase(),Math.round(ms(l.departure)/60000),Math.round(ms(l.arrival)/60000)].join('|')).join(';');
 }
@@ -577,13 +589,15 @@ function makeProviders(r,opts={}){
 function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm=3,timeoutMs=25000,onUpdate=()=>{}}={}){
  const state={},controller=new AbortController();let disposed=false;
  const emit=label=>{if(!disposed)try{onUpdate(label,view(label));}catch(_){}};
- function view(label){const s=state[label];return {task:s.task,...rank(s.items),pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},done:s.pending===0};}
+ function view(label){const s=state[label];return {task:s.task,...rank(s.items),pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0};}
  async function add(label,source,journeys){
   const s=state[label];if(!s||disposed)return;
   s.received[source]=(s.received[source]||0)+(Array.isArray(journeys)?journeys.length:0);
   const cancelled=x=>x&&(x.cancelled===true||x.canceled===true||/^(cancelled|canceled|annul)/i.test(String(x.status||'')));
-  const clean=(Array.isArray(journeys)?journeys:[]).filter(j=>j&&!cancelled(j)&&Array.isArray(j.legs)&&j.legs.length&&
+  const usable=(Array.isArray(journeys)?journeys:[]).filter(j=>j&&!cancelled(j)&&Array.isArray(j.legs)&&j.legs.length&&
    !j.legs.some(l=>cancelled(l)||BOATS.test(l.mode+' '+(l.line||''))));
+  const clean=usable.filter(j=>!walkDetour(j,s.task));
+  if(clean.length!==usable.length)s.discarded[source]=(s.discarded[source]||0)+usable.length-clean.length;
   // 1) Doublon d'un trajet déjà traité (autre moteur) : on ajoute la source, sans recalculer les marches.
   // 2) Trajet déjà hors délai sur ses seuls horaires : affiché « non confirmé » sans dépenser de marche.
   // 3) Les autres (8 au plus, les plus utiles d'abord) reçoivent leurs marches et s'affichent dès qu'ils sont prêts.
@@ -625,7 +639,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   if(!disposed)emit(label);
  }
  for(const task of tasks){
-  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},bySignature:new Map()};
+  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},discarded:{},bySignature:new Map()};
   if(!pt(task.from)||!pt(task.to)){state[label].errors.adresses='adresse GPS manquante';emit(label);continue;}
   for(const [key,p] of Object.entries(providers)){
    let ok=false;try{ok=p.enabled(task);}catch(_){}
@@ -733,7 +747,7 @@ function render(host,v){
  if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,attachGTFSFares,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,attachGTFSFares,walkDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;

@@ -57,7 +57,7 @@ async function gtfsRows(axis,when){
 }
 (async()=>{
  const when=C.nextMonday8();
- const router=H.cachedRouter(g.CPTransportWalking.createRouter({fetcher,maxRequests:400,intervalMs:1100,timeoutMs:15000}));
+ const router=H.cachedRouter(g.CPTransportWalking.createRouter({fetcher,maxRequests:800,intervalMs:1100,timeoutMs:15000}));
  // Mêmes tranches nationales AURA (SNCF, BlaBlaCar Bus, FlixBus) que celles déclarées par index.html pour les fiches mission.
  const NATIONAL='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
  const nationalGTFSResources=Object.fromEntries(['sncf','blablacarBus','flixbus'].map(o=>[o,{url:NATIONAL+'national-'+o+'-aura.zip',format:'GTFS'}]));
@@ -157,7 +157,7 @@ async function gtfsRows(axis,when){
   }
   const a={id:axis.id,name:axis.name,coverage:!!axis.coverage,appGtfsChoice:appFirst,trips:all.length,priced:all.filter(j=>j.price.status==='verified').length,tripgoJourneys:tripgoJourneys.length,tripgoPriced,tripgoPricedFromGrids,tripgoTicketLegs,tripgoMissingFareByOperator,tripgoFareLegsFromGridsByOperator,missingFareByOperator,missingFareSamples,fareLegsByOperator,partialMissingByOperator,partialMissingLineSamples,partialPricedJourneys,walked:all.filter(walkedOk).length,
    feasible:all.filter(j=>j.feasible).length,firstResultMs:firstAt,totalMs:Date.now()-started,
-   received:v.received,
+   received:v.received,discarded:v.discarded||{},
    reasons:all.flatMap(j=>j.reasons||[]).reduce((m,r)=>{const k=r.replace(/\d+/g,'n').slice(0,70);m[k]=(m[k]||0)+1;return m;},{}),
    engines:{errors:{...v.errors,...Object.fromEntries(Object.entries(gt.errors).map(([k,e])=>['GTFS '+k,e]))},skipped:v.skipped,gtfs:gt.networks},
    sources:[...new Set(all.flatMap(j=>j.sources))],networksSeen:Object.keys(nets),expected:axis.expect,missingExpected:axis.expect.filter(id=>!nets[id]),
