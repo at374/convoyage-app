@@ -190,6 +190,7 @@
       let ok = null;
       for (let h = hits.length - 1; h > i && !ok; h--) { const p = paire(hits[i], hits[h]); if (p) ok = { h, p }; }
       if (!ok) {
+        if (P.g[hits[i].g][0] === 'LA NEUVILLETTE') { i++; continue; }   // V299 : « La Neuvillette » (A4 Reims) est une barrière tarifée par le moteur de barrières : ce n'est pas un trou, on la saute (avant : fausse estimation ≈ sur Ambérieu → Lille)
         // gare isolée sans tarif : tolérée uniquement après le dernier tronçon tarifé, jamais au milieu du trajet
         if (!segs.length) { if (i === 0 && P.g[hits[0].g][0] === 'ST MARTIN BELLEVUE A41 N' && sh.slice(i0, hits[0].k + 1).every(w => w[0] > 46.08)) { i++; continue; } gap = true; i++; continue; }   // V296 : gare isolée : on la saute et on continue pour garder tous les tronçons vérifiés (le prix exact reste refusé)
         // V283 : « ALLONZIER » reliée à l'A41 nord est la même jonction qu'Adelac Cruseilles : sortie là = Adelac seul (barrières), aucun tarif AREA.
