@@ -1,12 +1,12 @@
 {
  "schemaVersion": 1,
- "generatedAt": "2026-11-14T10:56:34.700455+00:00",
+ "generatedAt": "2026-11-14T15:09:43.205667+00:00",
  "scope": "GTFS officiels réduits ou recopiés ; aucun horaire ni tarif créé",
  "networks": {
   "jybus-rumilly": {
    "network": "J'y bus Rumilly",
    "file": "jybus-rumilly.zip",
-   "sha256": "86ba6b3ec32a1fc0ff133b1ab204e3f1453d9ec86ee1593d697c85d8b5471e68",
+   "sha256": "970cf33cb88dda3d1dcfea33a02f28596ae54deb523b7becfb37a82ea3ed9084",
    "bytes": 62782,
    "bounds": [
     45.8,
@@ -26,7 +26,7 @@
   "tam-amberieu": {
    "network": "TAM Ambérieu-en-Bugey",
    "file": "tam-amberieu.zip",
-   "sha256": "aba0ac3945f12f187afb8dc6afb6cf9be60ed716c00c59aa2977e8d72efa8aee",
+   "sha256": "5757afe0c63a72a6fb10eed155b4b6b9e2a842ea529257b43676bb4bcf2d89bd",
    "bytes": 14002,
    "bounds": [
     45.9,
@@ -46,7 +46,7 @@
   "cars-region-isere": {
    "network": "Cars Région Isère",
    "file": "cars-region-isere.zip",
-   "sha256": "8bc5c5b32105e317f61c27948f06ea9d9b6503bf29b10e2268061c84d3b1cfbf",
+   "sha256": "15054670cafaa296b8776997fb8c6bf0c375a6697e9598209c2100d4433746a6",
    "bytes": 691748,
    "bounds": [
     44.69,
@@ -66,7 +66,7 @@
   "cars-region-savoie": {
    "network": "Cars Région Savoie",
    "file": "cars-region-savoie.zip",
-   "sha256": "24c2e647f5bb07daf827b6b4fca3a0195c7094f876df4f1323e92009bcdc9583",
+   "sha256": "6136b5d8d0955e156f706ac1b2f8fb48f58e2229d07ec80aeafa24ebad9b2a6f",
    "bytes": 20951,
    "bounds": [
     45.05,
@@ -139,6 +139,34 @@
    "origin": "https://static.data.gouv.fr/resources/offre-de-transports-sibra-a-annecy-gtfs/20261112-080150/gtfs-sibra.zip",
    "trips": 9204
   },
+  "mreso-grenoble": {
+   "network": "M Réso — Métropole grenobloise",
+   "file": "mreso-grenoble.zip",
+   "sha256": "8cb38338afcaf6869421d4188a11dd59a5b781676ab958f8bcf31e4c06eae6b8",
+   "bytes": 6383277,
+   "bounds": [
+    45.0,
+    5.5,
+    45.45,
+    6.0
+   ],
+   "origin": "https://www.data.gouv.fr/api/1/datasets/r/b6ec7ba4-09bc-46df-b9a1-79a2c2668cf2",
+   "trips": 20373
+  },
+  "mreso-gresivaudan": {
+   "network": "M Réso — Grésivaudan",
+   "file": "mreso-gresivaudan.zip",
+   "sha256": "98a5c632cae725026a7b3a982501e1cb857eb9d491a3bbbae2536145f0c38d1e",
+   "bytes": 345973,
+   "bounds": [
+    45.15,
+    5.7,
+    45.5,
+    6.15
+   ],
+   "origin": "https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2",
+   "trips": 1630
+  },
   "start-thonon": {
    "network": "Star't Thonon",
    "file": "start-thonon.zip",
@@ -156,7 +184,7 @@
   "tcl-lyon": {
    "network": "TCL",
    "file": "tcl-lyon.zip",
-   "sha256": "02fb3addcdc040c79236881ff154e353bac581b5bca2d8be108a9a6c11003e58",
+   "sha256": "24caeaf4c7c6cd7d2ed285276be8523d6a7129e92114a5f91a09451cb8bd6bdc",
    "bytes": 4701254,
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8",
    "routes": 76,
