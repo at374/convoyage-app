@@ -43,6 +43,10 @@ MIRROR = [
     {'id': 'tac-annemasse', 'network': 'TAC Annemasse', 'url': 'https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip', 'bounds': [46.1, 5.98, 46.27, 6.42]},
     {'id': 'synchro-chambery', 'network': 'Synchro Bus Chambéry', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/a81cdf4b-5a70-43c9-8803-cef0430ed170', 'bounds': [45.45, 5.75, 45.75, 6.15]},
     {'id': 'ondea-grand-lac', 'network': 'Ondéa Aix-les-Bains', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b4e8d98c-e17a-4fb0-857f-8cb618039b2a', 'bounds': [45.6, 5.75, 45.85, 6.05]},
+    # SIBRA (Grand Annecy) : la ressource change d'adresse à chaque publication (l'archive épinglée du 01/10/2026 a
+    # disparu le 11/11/2026) ; 'dataset' fait résoudre l'archive GTFS courante du jeu officiel via l'API data.gouv.fr.
+    {'id': 'sibra-annecy', 'network': 'Sibra', 'dataset': 'offre-de-transports-sibra-a-annecy-gtfs',
+     'url': 'https://transport.data.gouv.fr/resources/80100/download', 'bounds': [45.7, 5.9, 46.1, 6.5]},
     {'id': 'start-thonon', 'network': "Star't Thonon", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e', 'bounds': [46.25, 6.3, 46.45, 6.65]},
 ]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
@@ -63,6 +67,22 @@ def download(url, limit=400 * 1024 * 1024):
             if tmp.tell() > limit:
                 raise SystemExit('Archive trop volumineuse : ' + url)
         return tmp.name
+
+
+def current_dataset_zip(slug, fallback):
+    """Adresse de l'archive GTFS la plus récente d'un jeu data.gouv.fr ; repli sur l'adresse stable fournie."""
+    try:
+        api = 'https://www.data.gouv.fr/api/1/datasets/%s/' % slug
+        with urllib.request.urlopen(urllib.request.Request(api, headers=UA), timeout=90) as r:
+            meta = json.load(r)
+        res = [x for x in meta.get('resources', []) if str(x.get('url', '')).lower().endswith('.zip')
+               or str(x.get('format', '')).lower() in ('gtfs', 'zip')]
+        res.sort(key=lambda x: str(x.get('last_modified') or ''), reverse=True)
+        if res and res[0].get('url'):
+            return res[0]['url']
+    except Exception:
+        pass
+    return fallback
 
 
 def find_oura_aggregate():
@@ -288,7 +308,8 @@ def main():
     if not args.offline:
         for spec in MIRROR:
             try:
-                p = download(spec['url'], MAX_OUT)
+                origin = current_dataset_zip(spec['dataset'], spec['url']) if spec.get('dataset') else spec['url']
+                p = download(origin, MAX_OUT)
                 with zipfile.ZipFile(p) as z:
                     trips, times = validate(z)
                 data = open(p, 'rb').read()
@@ -296,7 +317,7 @@ def main():
                 with open(os.path.join(args.out, name), 'wb') as f:
                     f.write(data)
                 manifest['networks'][spec['id']] = {'network': spec['network'], 'file': name, 'sha256': hashlib.sha256(data).hexdigest(),
-                                                    'bytes': len(data), 'bounds': spec['bounds'], 'origin': spec['url'], 'trips': trips}
+                                                    'bytes': len(data), 'bounds': spec['bounds'], 'origin': origin, 'trips': trips}
             except BaseException as e:
                 manifest['errors'][spec['id']] = 'erreur : %s' % e
         for spec in FILTERED_MIRROR:

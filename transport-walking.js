@@ -85,8 +85,14 @@ function createRouter({fetcher=root.fetch,endpoint=DEFAULT_ENDPOINT,maxRequests=
    const url=new URL(base.href);url.searchParams.set('json',JSON.stringify({locations:[from,to],costing:'pedestrian',
     directions_options:{units:'kilometers',language:'fr-FR'}}));
    const response=await fetcher(url.href,{credentials:'omit',cache:'no-cache',referrerPolicy:'no-referrer',signal:current.signal});
-   const data=await readJSON(response,current.signal);if(current.signal.aborted)throw new Error('Pedestrian request cancelled');
-   return validateValhalla(data,from,to,{endpoint:base.href});
+   // Le serveur a répondu (HTTP 200) : une réponse refusée par nos contrôles (itinéraire qui n'aboutit pas à
+   // moins de 50 m du point, réponse trop volumineuse…) concerne CE couple de points, pas la disponibilité du
+   // service. Constaté en réel le 14/11/2026 : deux refus sur « Bourg-en-Bresse gare » coupaient toutes les
+   // marches des axes suivants. Pannes réseau, délais dépassés et erreurs 5xx restent comptés comme pannes.
+   try{
+    const data=await readJSON(response,current.signal);if(current.signal.aborted)throw new Error('Pedestrian request cancelled');
+    return validateValhalla(data,from,to,{endpoint:base.href});
+   }catch(error){if(response?.ok&&!current.signal.aborted)error.pairUnavailable=true;throw error;}
   })();
   timer=setTimeout(()=>current.abort(),timeoutMs);
   try{return await Promise.race([job,cancellation]);}
