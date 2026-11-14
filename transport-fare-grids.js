@@ -174,6 +174,10 @@ function zone10Fare(leg){
  if(!leg||leg.kind==='walk'||typeof leg.departure!=='string'||typeof leg.provider!=='string')return null;
  const day=leg.departure.slice(0,10);if(day<ZONE10.validFrom||day>ZONE10.validUntil)return null;
  const provider=leg.provider.trim();
+ // Cars transfrontaliers 271/272/274 : titre de parcours Léman Pass propre à ces lignes, non interchangeable
+ // (note de validation tarifaire du 14/11/2026, lemanpass.com/faq) — jamais le billet zone 10, même entre deux
+ // arrêts genevois.
+ if(/^\s*(?:27[124])\s*$/.test(String(leg.line||'').replace(/^[A-Za-z]+\s+/,'')))return null;
  let inside=false;
  if(leg.mode==='Train')inside=/^(sbb|cff|sncf)\b/i.test(provider)&&ZONE10_STATIONS.includes(stationKey(leg.from))&&ZONE10_STATIONS.includes(stationKey(leg.to));
  else if(leg.mode==='Bus'||leg.mode==='Tram')inside=/^tpg$/i.test(provider)&&zone10Locality(leg.from)&&zone10Locality(leg.to);

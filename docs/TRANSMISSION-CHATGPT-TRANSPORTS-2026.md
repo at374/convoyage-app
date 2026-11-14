@@ -69,6 +69,10 @@ Quand l'application est servie par le site déployé (`https://…github.io/…`
 
 `main` avait 15 commits d'avance (V278, V279, V299, horaires SNCF/Y51). Ils sont maintenant dans `feature/transports-aura-suisse` ; seul conflit : `sw.js` (liste de fichiers de la branche conservée, cache `v46`). **ChatGPT : fais `git pull` avant ton prochain commit.** La branche contient donc tout `main` : la publication sera une simple avance rapide de `main`, à déclencher par Laurent. Diagnostic réel relancé sur l'état fusionné : vert.
 
+### Note de validation tarifaire de ChatGPT du 14/11 — contrôle côté code (21 h 40)
+
+Les trois règles de la note sont respectées par `fareFor` sur la branche : 271/272/274 (Cars Région Haute-Savoie) → aucun prix ; Ondéa 419 → aucun prix ; Star't 142 et L → prix seulement pour les couples d'arrêts prouvés (`startInterzoneFare`). **Un écart trouvé et corrigé, de mon fait** : le billet unireso zone 10 (3,00 CHF) que j'ai ajouté ce matin se serait appliqué à un car 271/272/274 entre deux arrêts genevois si l'opérateur renvoyé était « TPG ». Ces trois lignes en sont maintenant exclues (`zone10Fare`), avec assertions CI. Le fichier `transport-fare-applicability-guard.cjs` cité dans la note n'existe pas sur la branche.
+
 ### Tests : rectification (21 h 30, commit `87a63fc`)
 
 J'avais écrit que les 16 tests en échec étaient tous ceux du module péages : c'était faux pour 4 d'entre eux. Détail exact : 12 péages (grilles APRR/AREA/SANEF, fichiers de travail absents de mon environnement) ; 2 `transport-y51-fares` (données Y51 rafraîchies automatiquement, attentes du test périmées — non corrigé) ; 1 cache hors ligne Android (`transport-national-gtfs-journeys.js` absent de `sw.js` — corrigé) ; 1 inventaire de couverture (champ `tarif` de J'y bus/TAM/TCL en texte libre, **erreur de ma part** — corrigé : seules valeurs admises `vérifiés`, `partiels`, `manquants`). Reste 14 échecs : 12 péages + 2 Y51.

@@ -743,6 +743,8 @@ jobs:
           assert.equal(z('SBB','Train','Annemasse','Genève'),null,'Annemasse hors zone 10');
           assert.equal(z('SBB','Train','Genève','Lausanne'),null,'Tarif national suisse non couvert');
           assert.equal(z('TPG','Tram','Genève, a','Genève, b','2026-12-20T08:00:00+01:00'),null,'Hors période vérifiée');
+          for(const line of ['271','272','274','B 272'])assert.equal(fareFor({provider:'TPG',mode:'Bus',line,from:'Genève, gare routière',to:'Genève, Bel-Air',departure:'2026-11-16T08:00:00+01:00'}),null,'Car transfrontalier '+line+' : titre de parcours propre, jamais le billet zone 10');
+          assert.equal(fareFor({provider:'TPG',mode:'Bus',line:'B 44',from:'Croix-de-Rozon, douane',to:'Carouge GE, Rondeau',departure:'2026-11-16T08:00:00+01:00'})?.amount,3.00);
           console.log('Exclusions, validité et ambiguïtés tarifaires OK');
           NODE
       - name: Vérifier le tarif GTFS officiel embarqué TCL (Fares V1)
