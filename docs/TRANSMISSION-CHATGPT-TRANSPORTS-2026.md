@@ -44,6 +44,12 @@ Répartition demandée par Laurent : ChatGPT = sources tarifaires, limites d'acc
 - une correspondance est retirée si un direct part au même moment ou plus tard et arrive au plus tard en même temps.
 Résultat hors ligne sur la tranche publiée : Thonon → Genève 6 heures de départ distinctes dans les 9 premiers résultats ; Lyon → Grenoble : directs 7 h 16, 7 h 45, 8 h 16, 8 h 45… Nouveau test `tests/national-journeys-real-slice.test.cjs` (ajouté à la CI). Le format des lignes renvoyées est inchangé.
 
+### Suite (17 h) — fournisseurs `local_*` : tri avant la limite de 30
+
+Deux retouches dans la boucle de sélection des fournisseurs `local_*` (`transport-mission-hub.js`, juste avant `slice(0,30)`) :
+- un couple d'arrêts dont (accès + sortie à vol d'oiseau) ≥ distance directe est ignoré **avant** la limite (même règle que `walkDetour`) — sur TCL, les 30 premiers départs tenaient dans la même minute et 24 étaient hors sujet ;
+- pour un « Aller » (`w.arriveBy`), on garde les 30 arrivées les plus proches de l'échéance au lieu des 30 premiers départs de la journée.
+
 ### Test navigateur (Chrome, émulation Pixel 7, vraies archives GTFS, marches simulées car Internet fermé dans le bac à sable)
 
 Fiches rendues sans erreur JavaScript ; J+31 (15/12/2026) : SNCF 20, FlixBus 20, BlaBlaCar Bus 8 trajets sur Lyon → Grenoble ; SNCF 20, FlixBus 10, BlaBlaCar Bus 3 sur Annecy → Genève. Pas de test sur téléphone Android réel (impossible d'ici).

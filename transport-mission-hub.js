@@ -518,19 +518,25 @@ function makeProviders(r,opts={}){
      // Select the best boarding/alighting stop pair for each actual vehicle
      // BEFORE imposing the mobile card limit. Otherwise 500 stop-pair variants
      // from a few vehicles can hide later distinct departures.
-     const best=new Map();
+     const best=new Map(),directMeters=meters(pt(task.from),pt(task.to));
      for(const x of rows){
       if(!(w.arriveBy?sec(x.arrival)<=sec(clock):sec(x.departure)>=sec(clock)))continue;
       const key=String(x.tripId||'')+'|'+date;
       const access=Number(x.accessDistanceMeters),egress=Number(x.egressDistanceMeters);
       if(!key||!Number.isFinite(access)||!Number.isFinite(egress))continue;
       const score=access+egress,previous=best.get(key);
+      // Même règle que walkDetour, appliquée AVANT la limite de 30 : sur un réseau dense (TCL), les 30 premiers
+      // départs tenaient dans la même minute et 24 étaient des lignes sans rapport avec le trajet.
+      if(directMeters>0&&score>=directMeters)continue;
       if(!previous||score<previous.score)best.set(key,{x,score});
      }
      const filtered=[...best.values()].map(({x})=>({...x,network:name,
        departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)}))
       .filter(x=>x.departure&&x.arrival)
-      .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)).slice(0,30);
+      // « Arriver avant » (Aller) : garder les 30 arrivées les plus proches de l'échéance, pas les 30 premiers
+      // départs de la journée (bus de l'aube inutiles pour une mission à 10 h).
+      .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,30)
+      .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
      return fromGTFS(filtered,name);
     }};
   }
