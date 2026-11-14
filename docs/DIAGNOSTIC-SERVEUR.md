@@ -1,8 +1,8 @@
 # Diagnostic réel des transports — serveur GitHub Actions
 
-Exécuté le 2026-11-13T21:11:34.500Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : non (pas de clé).
+Exécuté le 2026-11-14T09:47:47.512Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : non (pas de clé).
 
-**Bilan : 460 trajets sur 15 axes, 208 avec prix vérifié (45.2 %), 242 avec marches calculées (52.6 %), 103 réalisables.**
+**Bilan : 506 trajets sur 15 axes, 254 avec prix vérifié (50.2 %), 247 avec marches calculées (48.8 %), 103 réalisables.**
 
 **TripGo : 0 trajets, 0 avec prix vérifié, 0 portions avec billet chiffré.**
 
@@ -56,21 +56,21 @@ Portions sans prix par opérateur (toutes sources) : SNCF (195), Ondéa Aix-les-
 
 | Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | 1er résultat | Total | Sources | Erreurs | Attendus non vus |
 |---|---|---|---|---|---|---|---|---|---|
-| Annecy → Genève | 30 | 0 | 22 | 14 | 0.3 s | 12.3 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | — | longue |
-| Annemasse → Saint-Julien-en-Genevois | 59 | 48 | 27 | 12 | 0.2 s | 16.7 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), TAC Annemasse (GTFS) | — | — |
+| Annecy → Genève | 30 | 0 | 22 | 14 | 0.3 s | 125.2 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | GTFS Sibra : GTFS loading timed out | longue |
+| Annemasse → Saint-Julien-en-Genevois | 65 | 54 | 28 | 12 | 0.3 s | 16.7 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), TAC Annemasse (GTFS) | — | — |
 | Ambérieu-en-Bugey → Lyon Part-Dieu | 10 | 0 | 8 | 3 | 0.2 s | 3.5 s | SNCF (GTFS officiel) | — | — |
-| Chambéry → Aix-les-Bains | 49 | 4 | 18 | 7 | 0.1 s | 8.7 s | Synchro Chambéry (GTFS), Synchro Bus Chambéry (GTFS), SNCF (GTFS officiel), Ondéa Aix-les-Bains (GTFS) | — | — |
-| Grenoble → Crolles | 12 | 5 | 12 | 12 | 0.1 s | 7.5 s | Mobilités M, SNCF (GTFS officiel) | — | — |
-| Rumilly → Annecy | 8 | 1 | 8 | 6 | 0.1 s | 4.0 s | Sibra (GTFS), SNCF (GTFS officiel) | — | — |
+| Chambéry → Aix-les-Bains | 49 | 4 | 16 | 7 | 0.1 s | 9.4 s | Synchro Bus Chambéry (GTFS), Synchro Chambéry (GTFS), SNCF (GTFS officiel), Ondéa Aix-les-Bains (GTFS) | — | — |
+| Grenoble → Crolles | 12 | 5 | 12 | 12 | 0.1 s | 5.2 s | Mobilités M, SNCF (GTFS officiel) | — | — |
+| Rumilly → Annecy | 7 | 0 | 7 | 6 | 0.1 s | 1.6 s | SNCF (GTFS officiel) | GTFS Sibra : GTFS loading timed out | sibra |
 | Thonon-les-Bains → Genève | 17 | 0 | 15 | 8 | 0.1 s | 8.7 s | SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | — |
-| Voiron → Grenoble | 18 | 0 | 18 | 10 | 0.2 s | 5.4 s | SNCF (GTFS officiel), Mobilités M, Cars Région Isère (GTFS) | — | — |
-| Aix-les-Bains gare → Technolac (Ondéa 01) | 50 | 40 | 16 | 5 | 0.4 s | 9.2 s | Ondéa Aix-les-Bains (GTFS), SNCF (GTFS officiel) | — | — |
-| Thonon → Bons-en-Chablais (Star’t 142) | 55 | 7 | 32 | 10 | 0.2 s | 16.4 s | Star't Thonon (GTFS), SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | — |
-| Rumilly Hôpital → Base de loisirs (J’y bus 1) | 38 | 38 | 21 | 0 | 0.5 s | 13.0 s | J'y bus Rumilly (GTFS), J’y bus Rumilly (GTFS) | — | — |
-| Ambérieu gare → Cabrol (TAM 2) | 72 | 62 | 32 | 7 | 0.1 s | 19.1 s | TAM Ambérieu (GTFS), SNCF (GTFS officiel), TAM Ambérieu-en-Bugey (GTFS), Cars Région Ain (GTFS) | — | — |
-| Chambéry → Chamoux-sur-Gelon (Cars Savoie S05) | 12 | 0 | 10 | 6 | 0.0 s | 4.1 s | SNCF (GTFS officiel), Cars Région Savoie (GTFS) | — | — |
-| Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 12 | 1 | 0 | 0 | 0.0 s | 2.6 s | Cars Région Ain (GTFS), SNCF (GTFS officiel) | — | — |
-| Voiron → Voreppe (M réso Voironnais) | 18 | 2 | 3 | 3 | 0.1 s | 1.2 s | Mobilités M, SNCF (GTFS officiel), Cars Région Isère (GTFS) | — | — |
+| Voiron → Grenoble | 18 | 0 | 18 | 10 | 0.2 s | 5.3 s | SNCF (GTFS officiel), Mobilités M, Cars Région Isère (GTFS) | — | — |
+| Aix-les-Bains gare → Technolac (Ondéa 01) | 50 | 40 | 16 | 5 | 0.5 s | 9.2 s | Ondéa Aix-les-Bains (GTFS), SNCF (GTFS officiel) | — | — |
+| Thonon → Bons-en-Chablais (Star’t 142) | 55 | 7 | 32 | 10 | 0.3 s | 16.4 s | Star't Thonon (GTFS), SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | — |
+| Rumilly Hôpital → Base de loisirs (J’y bus 1) | 58 | 58 | 28 | 0 | 0.5 s | 12.9 s | J’y bus Rumilly (GTFS), J'y bus Rumilly (GTFS) | GTFS Sibra : GTFS loading timed out | — |
+| Ambérieu gare → Cabrol (TAM 2) | 93 | 83 | 32 | 7 | 0.1 s | 17.6 s | TAM Ambérieu (GTFS), SNCF (GTFS officiel), TAM Ambérieu-en-Bugey (GTFS), Cars Région Ain (GTFS) | — | — |
+| Chambéry → Chamoux-sur-Gelon (Cars Savoie S05) | 12 | 0 | 10 | 6 | 0.1 s | 4.6 s | SNCF (GTFS officiel), Cars Région Savoie (GTFS) | — | — |
+| Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 12 | 1 | 0 | 0 | 0.0 s | 2.4 s | Cars Région Ain (GTFS), SNCF (GTFS officiel) | — | — |
+| Voiron → Voreppe (M réso Voironnais) | 18 | 2 | 3 | 3 | 0.1 s | 0.7 s | Mobilités M, SNCF (GTFS officiel), Cars Région Isère (GTFS) | — | — |
 
 Exemples (3 meilleures propositions par axe) :
 
@@ -85,14 +85,13 @@ Exemples (3 meilleures propositions par axe) :
 - Meilleur compromis · Plus rapide : 2026-11-16T07:12:26.785Z → 2026-11-16T07:52:00.000Z · marche 1346 m › SNCF K23 · Prix à confirmer · Réalisable
 
 **Chambéry → Aix-les-Bains**
-- Moins cher : 2026-11-16T11:06:14.962Z → 2026-11-16T11:41:36.577Z · marche 286 m › Synchro Chambéry 30 › marche 129 m · 1,40 € · Transport non confirmé (horaire GTFS local non confirmé en temps réel)
+- Moins cher : 2026-11-16T11:06:14.962Z → 2026-11-16T11:41:36.577Z · marche 286 m › Synchro Bus Chambéry 30 › marche 129 m · 1,40 € · Transport non confirmé (horaire GTFS local non confirmé en temps réel)
 - Meilleur compromis · Plus rapide : 2026-11-16T07:00:00.000Z → 2026-11-16T07:11:00.000Z · SNCF C21 · Prix à confirmer · Réalisable
 
 **Grenoble → Crolles**
 - Moins cher · Meilleur compromis · Plus rapide : 2026-11-16T07:02:04.000Z → 2026-11-16T07:42:59.000Z · marche 69 m › M Réso - Métropole Grenobloise C11 · 2,00 € · Réalisable
 
 **Rumilly → Annecy**
-- Moins cher : 2026-11-16T12:03:51.578Z → 2026-11-16T13:00:49.298Z · marche 625 m › Sibra 42 › marche 160 m · 2,00 € · Transport non confirmé (horaire GTFS local non confirmé en temps réel)
 - Meilleur compromis · Plus rapide : 2026-11-16T07:47:33.324Z → 2026-11-16T08:15:59.306Z · marche 925 m › SNCF K21 › marche 86 m · Prix à confirmer · Réalisable
 
 **Thonon-les-Bains → Genève**
@@ -110,10 +109,10 @@ Exemples (3 meilleures propositions par axe) :
 - Meilleur compromis · Plus rapide : 2026-11-16T07:28:02.877Z → 2026-11-16T07:54:10.713Z · marche 154 m › SNCF C33 › marche 804 m · Prix à confirmer · Réalisable
 
 **Rumilly Hôpital → Base de loisirs (J’y bus 1)**
-- Moins cher · Meilleur compromis · Plus rapide : 2026-11-16T07:18:00.000Z → 2026-11-16T07:43:00.000Z · J'y bus Rumilly 1 · 1,00 € · Transport non confirmé (horaire GTFS local non confirmé en temps réel)
+- Moins cher · Meilleur compromis · Plus rapide : 2026-11-16T09:04:00.000Z → 2026-11-16T09:04:00.000Z · J’y bus Rumilly 1 · 1,00 € · Transport non confirmé (marches non calculées (quota de la fiche))
 
 **Ambérieu gare → Cabrol (TAM 2)**
-- Moins cher : 2026-11-16T07:40:00.000Z → 2026-11-16T07:56:00.000Z · TAM Ambérieu TAM 2 · 1,10 € · Transport non confirmé (horaire GTFS local non confirmé en temps réel)
+- Moins cher : 2026-11-16T08:09:00.000Z → 2026-11-16T08:10:00.000Z · TAM Ambérieu TAM 2 · 1,10 € · Transport non confirmé (marches non calculées (quota de la fiche))
 - Meilleur compromis · Plus rapide : 2026-11-16T07:03:28.321Z → 2026-11-16T07:59:31.677Z · marche 46 m › SNCF P13 › marche 4056 m · Prix à confirmer · Réalisable
 
 **Chambéry → Chamoux-sur-Gelon (Cars Savoie S05)**
