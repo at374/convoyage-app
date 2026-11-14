@@ -103,7 +103,10 @@ function createRouter({fetcher=root.fetch,endpoint=DEFAULT_ENDPOINT,maxRequests=
     if(wait)await new Promise(resolve=>{const timer=setTimeout(()=>{wake=null;resolve();},wait);wake=()=>{clearTimeout(timer);wake=null;resolve();};});
     if(disposed){item.resolve(unavailable('cancelled'));break;}
     lastStarted=Date.now();requests++;
-    try{item.resolve(await request(item.from,item.to));}
+    // Échecs CONSÉCUTIFS : un succès remet le compteur à zéro. Avant le 14/11/2026 le compteur était cumulatif :
+    // deux incidents passagers du serveur public coupaient toutes les marches suivantes (diagnostic réel :
+    // 104 requêtes, 2 échecs, puis 0 marche calculée sur les axes restants).
+    try{const routed=await request(item.from,item.to);failures=0;item.resolve(routed);}
     catch(error){if(!disposed&&!error.pairUnavailable)failures++;if(error.rateLimited)cooldowns.set(base.href,Date.now()+error.retryAfterMs);
      item.resolve(unavailable(disposed?'cancelled':error.rateLimited?'rate_limited':error.pairUnavailable?'route_unavailable':'unavailable'));}
    }
