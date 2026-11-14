@@ -30,6 +30,13 @@ Répartition demandée par Laurent : ChatGPT = sources tarifaires, limites d'acc
 6. **CI débloquée** : depuis `65b617c`, l'assertion `overnightCalls.length===2` échouait (3 appels avec le repli) et **aucun diagnostic réel ne tournait plus**. Assertions mises à jour (3 appels ; statut programmé ; libellé de correspondance).
 7. Budget piéton d'une fiche 60 → 150 requêtes ; axe Bourg-en-Bresse déplacé sur la gare routière officielle.
 
+### Suite (16 h, commits `931e6fd` et suivant) — chemin « horaires aux arrêts » testé en navigateur
+
+- **`transport-gtfs-agenda.js` → `onResults`** reçoit un champ supplémentaire `candidates` (jusqu'à 20 trajets : 10 premiers + 10 répartis) ; `itineraries` (5 affichés) est inchangé. `app.js → renderLocalCards` envoie `candidates` au hub. Raison : pour un « Aller », les 5 affichés sont les plus tardifs et échouaient sur la marge après ajout de la marche finale.
+- **Secours d'adresses pour toutes les archives relayées** : `DEFAULT_RESOURCES` est maintenant dérivé de `BASE_RESOURCES` et ajoute à chaque ressource `data/gtfs/*.zip` les copies `raw.githubusercontent.com/…/main/…` puis `…/feature/transports-aura-suisse/…`. Dans `transport-mission-hub.js` (fournisseurs `local_*`) et `index.html` (`CP_NATIONAL_GTFS_RESOURCES`) : secours `main` puis site déployé. **À la publication sur `main`, penser à mettre `main` en premier dans `base` (hub) et dans `index.html`**, sinon l'application lira des archives qui ne seront plus rafraîchies.
+- **M réso relayé** : `data/gtfs/mreso-grenoble.zip` (6,4 Mo, 20 373 courses) et `mreso-gresivaudan.zip` (0,35 Mo) publiés par `build-regional-gtfs.yml` ; le panneau lit la copie relayée d'abord, data.gouv.fr en secours (comme SIBRA).
+- Constaté : `main` ne contient ni `data/gtfs/` ni `transport-mission-hub.js` — tout le module vit sur la branche ; aucun test sur le site déployé n'est possible avant publication.
+
 ### Test navigateur (Chrome, émulation Pixel 7, vraies archives GTFS, marches simulées car Internet fermé dans le bac à sable)
 
 Fiches rendues sans erreur JavaScript ; J+31 (15/12/2026) : SNCF 20, FlixBus 20, BlaBlaCar Bus 8 trajets sur Lyon → Grenoble ; SNCF 20, FlixBus 10, BlaBlaCar Bus 3 sur Annecy → Genève. Pas de test sur téléphone Android réel (impossible d'ici).

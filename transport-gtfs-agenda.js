@@ -41,12 +41,14 @@ const BASE_RESOURCES=Object.freeze([Object.freeze({
  bounds:[45.7,5.9,46.1,6.5],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'83459',datasetId:'5af03701b595081c1880a8a4',network:'M Réso — Métropole grenobloise',format:'GTFS',federate:true,
- url:'https://www.data.gouv.fr/api/1/datasets/r/b6ec7ba4-09bc-46df-b9a1-79a2c2668cf2',resolveFromCatalogue:true,
+ // 14/11/2026 : copie relayée par le serveur d'abord, source officielle data.gouv.fr en secours.
+ url:LOCAL_GTFS('mreso-grenoble.zip'),fallbackUrls:['https://www.data.gouv.fr/api/1/datasets/r/b6ec7ba4-09bc-46df-b9a1-79a2c2668cf2'],
  // Local Grenoble/Crolles selection only, distinct from the Haute-Savoie envelope.
  bounds:[44.9,5.3,45.39,6.1],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'81794',datasetId:'5eb3510a4efd8f649ffe1b9f',network:'M Réso — Grésivaudan',format:'GTFS',federate:true,
- url:'https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2',resolveFromCatalogue:true,
+ // 14/11/2026 : copie relayée par le serveur d'abord, source officielle data.gouv.fr en secours.
+ url:LOCAL_GTFS('mreso-gresivaudan.zip'),fallbackUrls:['https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2'],
  bounds:[45.1,5.7,45.39,6.2],timeZone:'Europe/Paris'
 }),Object.freeze({
  // Ajouts 13/11/2026 (flux officiels du Point d'accès national ; à valider en conditions réelles sur téléphone).

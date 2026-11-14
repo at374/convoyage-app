@@ -285,7 +285,8 @@ test('Grenoble local tasks select only the two official Grenoble resources',asyn
  await session.done;
  assert.equal(calls.length,1);assert.equal(calls[0].resources.length,2);
  assert.deepEqual(calls[0].resources.map(r=>r.datasetId),['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f']);
- assert.ok(calls[0].resources.every(r=>r.resolveFromCatalogue));
+ // 14/11/2026 : copie relayée par le serveur d'abord, source officielle data.gouv.fr toujours présente en secours.
+ assert.ok(calls[0].resources.every(r=>/\/data\/gtfs\/mreso-[a-z]+\.zip$/.test(r.url)&&r.fallbackUrls.some(u=>u.startsWith('https://www.data.gouv.fr/api/1/datasets/r/'))));
  assert.match(target.textContent,/Métropole grenobloise/);assert.match(target.textContent,/Grésivaudan/);
  assert.doesNotMatch(target.textContent,/Cars Région Haute-Savoie|Sibra/);
  session.dispose();
