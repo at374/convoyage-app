@@ -1,8 +1,8 @@
 # Diagnostic réel des transports — serveur GitHub Actions
 
-Exécuté le 2026-11-14T10:10:19.456Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : non (pas de clé).
+Exécuté le 2026-11-14T10:19:27.198Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : non (pas de clé).
 
-**Bilan : 576 trajets sur 16 axes, 254 avec prix vérifié (44.1 %), 247 avec marches calculées (42.9 %), 103 réalisables.**
+**Bilan : 576 trajets sur 16 axes, 319 avec prix vérifié (55.4 %), 247 avec marches calculées (42.9 %), 103 réalisables.**
 
 **TripGo : 0 trajets, 0 avec prix vérifié, 0 portions avec billet chiffré.**
 
@@ -39,8 +39,7 @@ Exemples de lignes sans tarif (3 par opérateur et par axe) :
 - chambery-chamoux / Cars Région Savoie : Bus S05 (Gare Routiere → Ecoles)
 - bourg-amberieu / SNCF : Train K13 (Bourg-en-Bresse → Ambérieu-en-Bugey) ; Train 622E (Bourg-en-Bresse → Genève Cornavin) ; Train K1+ (Genève Cornavin → Ambérieu-en-Bugey)
 - bourg-amberieu / Cars Région Ain : Bus A32 (Berthelot → Carré Amiot (Quai E)) ; Bus A32 (SNCF → Carré Amiot (Quai E))
-- lyon-intra / TCL Lyon : Bus C14 (Pierre Scize → Homme de la Roche RD) ; Bus 125 (Part-Dieu Renaudel → Gare Part-Dieu V.Merle) ; Bus 35 (Jean Macé - Chevreul → Lamothe - Madeleine)
-- lyon-intra / TCL : Bus C9 (Gare Part-Dieu V.Merle → Bellecour A. Poncet) ; Bus 127 (Collège Bellecombe → Saxe - Lafayette) ; Bus TB11 (Saxe - Lafayette → Terrasses Presqu'île)
+- lyon-intra / TCL Lyon : Bus 1 (Terrasses Presqu'Île → Saint-Vincent)
 - lyon-intra / SNCF : Train C12 (Lyon Part Dieu → L'Arbresle) ; Train C19 (L'Arbresle → Lyon Saint-Paul)
 - voiron-voreppe / Mobilités M - SNCF : Train C6 (Voiron, Voiron → Voreppe, Voreppe)
 - voiron-voreppe / SNCF : Train C31 (Voiron → Réaumont - Saint-Cassien) ; Train C6 (Réaumont - Saint-Cassien → Voreppe) ; Train C6 (Voiron → Voreppe)
@@ -55,26 +54,26 @@ Lignes bloquant les itinéraires partiellement tarifés :
 
 Correspondances bloquant les itinéraires partiellement tarifés : Ondéa Aix-les-Bains (34), Star't Thonon (26), Cars Région Ain (2), Mobilités M - SNCF (1).
 
-Portions sans prix par opérateur (toutes sources) : SNCF (203), TCL (77), Ondéa Aix-les-Bains (35), Star't Thonon (34), Cars Région Haute-Savoie (32), Cars Région Isère (28), TCL Lyon (27), But (16), SBB (11), TPG (9), AFO (4), Mobilités M - SNCF (4), Evian (2), Cars Région Savoie (2), Cars Région Ain (2).
+Portions sans prix par opérateur (toutes sources) : SNCF (203), Ondéa Aix-les-Bains (35), Star't Thonon (34), Cars Région Haute-Savoie (32), Cars Région Isère (28), But (16), SBB (11), TPG (9), AFO (4), Mobilités M - SNCF (4), Evian (2), Cars Région Savoie (2), Cars Région Ain (2), TCL Lyon (1).
 
 | Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | 1er résultat | Total | Sources | Erreurs | Attendus non vus |
 |---|---|---|---|---|---|---|---|---|---|
-| Annecy → Genève | 30 | 0 | 22 | 14 | 0.3 s | 79.9 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | GTFS Sibra : terminated | longue |
+| Annecy → Genève | 30 | 0 | 22 | 14 | 0.4 s | 18.5 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), Cars Région Haute-Savoie (GTFS) | GTFS Sibra : fetch failed | longue |
 | Annemasse → Saint-Julien-en-Genevois | 65 | 54 | 28 | 12 | 0.3 s | 16.7 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), TAC Annemasse (GTFS) | — | — |
 | Ambérieu-en-Bugey → Lyon Part-Dieu | 10 | 0 | 8 | 3 | 0.2 s | 3.5 s | SNCF (GTFS officiel) | — | — |
-| Chambéry → Aix-les-Bains | 49 | 4 | 16 | 7 | 0.1 s | 9.2 s | Synchro Bus Chambéry (GTFS), Synchro Chambéry (GTFS), SNCF (GTFS officiel), Ondéa Aix-les-Bains (GTFS) | — | — |
-| Grenoble → Crolles | 12 | 5 | 12 | 12 | 0.1 s | 4.9 s | Mobilités M, SNCF (GTFS officiel) | — | — |
-| Rumilly → Annecy | 7 | 0 | 7 | 6 | 0.1 s | 1.6 s | SNCF (GTFS officiel) | GTFS Sibra : terminated | sibra |
-| Thonon-les-Bains → Genève | 17 | 0 | 15 | 8 | 0.1 s | 8.7 s | SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | — |
-| Voiron → Grenoble | 18 | 0 | 18 | 10 | 0.2 s | 5.3 s | SNCF (GTFS officiel), Mobilités M, Cars Région Isère (GTFS) | — | — |
+| Chambéry → Aix-les-Bains | 49 | 4 | 16 | 7 | 0.1 s | 9.0 s | Synchro Bus Chambéry (GTFS), Synchro Chambéry (GTFS), SNCF (GTFS officiel), Ondéa Aix-les-Bains (GTFS) | — | — |
+| Grenoble → Crolles | 12 | 5 | 12 | 12 | 0.1 s | 5.8 s | Mobilités M, SNCF (GTFS officiel) | — | — |
+| Rumilly → Annecy | 7 | 0 | 7 | 6 | 0.1 s | 1.6 s | SNCF (GTFS officiel) | GTFS Sibra : fetch failed | sibra |
+| Thonon-les-Bains → Genève | 17 | 0 | 15 | 8 | 0.1 s | 8.6 s | SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | — |
+| Voiron → Grenoble | 18 | 0 | 18 | 10 | 0.2 s | 5.5 s | SNCF (GTFS officiel), Mobilités M, Cars Région Isère (GTFS) | — | — |
 | Aix-les-Bains gare → Technolac (Ondéa 01) | 50 | 40 | 16 | 5 | 0.4 s | 9.2 s | Ondéa Aix-les-Bains (GTFS), SNCF (GTFS officiel) | — | — |
 | Thonon → Bons-en-Chablais (Star’t 142) | 55 | 7 | 32 | 10 | 0.2 s | 16.4 s | Star't Thonon (GTFS), SNCF (GTFS officiel), Suisse (transport.opendata.ch) | — | — |
-| Rumilly Hôpital → Base de loisirs (J’y bus 1) | 58 | 58 | 28 | 0 | 0.5 s | 12.9 s | J’y bus Rumilly (GTFS), J'y bus Rumilly (GTFS) | GTFS Sibra : terminated | — |
+| Rumilly Hôpital → Base de loisirs (J’y bus 1) | 58 | 58 | 28 | 0 | 0.5 s | 13.0 s | J’y bus Rumilly (GTFS), J'y bus Rumilly (GTFS) | GTFS Sibra : fetch failed | — |
 | Ambérieu gare → Cabrol (TAM 2) | 93 | 83 | 32 | 7 | 0.1 s | 17.6 s | TAM Ambérieu (GTFS), SNCF (GTFS officiel), TAM Ambérieu-en-Bugey (GTFS), Cars Région Ain (GTFS) | — | — |
 | Chambéry → Chamoux-sur-Gelon (Cars Savoie S05) | 12 | 0 | 10 | 6 | 0.0 s | 4.6 s | SNCF (GTFS officiel), Cars Région Savoie (GTFS) | — | — |
 | Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 12 | 1 | 0 | 0 | 0.0 s | 2.4 s | Cars Région Ain (GTFS), SNCF (GTFS officiel) | — | — |
-| Lyon Part-Dieu → Bellecour (TCL) | 70 | 0 | 0 | 0 | 0.1 s | 7.7 s | TCL Lyon (GTFS), TCL (GTFS), SNCF (GTFS officiel) | — | — |
-| Voiron → Voreppe (M réso Voironnais) | 18 | 2 | 3 | 3 | 0.1 s | 0.7 s | Mobilités M, SNCF (GTFS officiel), Cars Région Isère (GTFS) | — | — |
+| Lyon Part-Dieu → Bellecour (TCL) | 70 | 65 | 0 | 0 | 0.1 s | 7.6 s | TCL Lyon (GTFS), TCL (GTFS), SNCF (GTFS officiel) | — | — |
+| Voiron → Voreppe (M réso Voironnais) | 18 | 2 | 3 | 3 | 0.1 s | 1.2 s | Mobilités M, SNCF (GTFS officiel), Cars Région Isère (GTFS) | — | — |
 
 Exemples (3 meilleures propositions par axe) :
 
@@ -127,7 +126,7 @@ Exemples (3 meilleures propositions par axe) :
 - Meilleur compromis · Plus rapide : 2026-11-16T09:45:00.000Z → 2026-11-16T10:01:00.000Z · SNCF K13 · Prix à confirmer · Transport non confirmé (marche depuis l’adresse exacte de départ non calculée · marche jusqu’à l’adresse exacte d’arrivée non calculée)
 
 **Lyon Part-Dieu → Bellecour (TCL)**
-- Meilleur compromis · Plus rapide : 2026-11-16T07:00:00.000Z → 2026-11-16T07:00:00.000Z · TCL Lyon C14 · Prix à confirmer · Transport non confirmé (horaire GTFS local non confirmé en temps réel · marche depuis l’adresse exacte de départ non calculée · marche jusqu’à l’adresse exacte d’arrivée non calculée)
+- Moins cher · Meilleur compromis · Plus rapide : 2026-11-16T07:00:00.000Z → 2026-11-16T07:00:00.000Z · TCL Lyon C14 · 2,10 € · Transport non confirmé (horaire GTFS local non confirmé en temps réel · marche depuis l’adresse exacte de départ non calculée · marche jusqu’à l’adresse exacte d’arrivée non calculée)
 
 **Voiron → Voreppe (M réso Voironnais)**
 - Moins cher · Meilleur compromis : 2026-11-16T07:07:40.000Z → 2026-11-16T07:34:07.000Z · marche 389 m › M Réso - Métropole Grenobloise C13 › marche 61 m · 2,00 € · Réalisable
