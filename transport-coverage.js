@@ -151,6 +151,14 @@ const AXES_COUVERTURE=[
  {id:'amberieu-intra',name:'Ambérieu gare → Cabrol (TAM 2)',from:{lat:45.9542,lon:5.3419,name:'Ambérieu gare'},to:{lat:45.9813,lon:5.3527,name:'Ambérieu Cabrol'},expect:['tam']},
  {id:'chambery-chamoux',name:'Chambéry → Chamoux-sur-Gelon (Cars Savoie S05)',from:{lat:45.5699,lon:5.9169,name:'Chambéry gare routière'},to:{lat:45.5362,lon:6.2153,name:'Chamoux-sur-Gelon'},expect:['cars-73']},
  {id:'bourg-amberieu',name:'Bourg-en-Bresse → Ambérieu (Cars Ain / TER)',from:{lat:46.1993,lon:5.2148,name:'Bourg-en-Bresse gare'},to:{lat:45.9542,lon:5.3419,name:'Ambérieu gare'},expect:['cars-01','ter']},
+ // 14/11/2026 : parcours prioritaires de la mission « finalisation des moteurs » absents des 8 axes principaux.
+ {id:'geneve-lausanne',name:'Genève → Lausanne',from:{lat:46.2102,lon:6.1424,name:'Genève Cornavin'},to:{lat:46.5167,lon:6.6291,name:'Lausanne gare'},expect:['cff']},
+ {id:'annemasse-geneve',name:'Annemasse → Genève',from:{lat:46.1993,lon:6.2366,name:'Annemasse gare'},to:{lat:46.2102,lon:6.1424,name:'Genève Cornavin'},expect:['lex']},
+ {id:'stjulien-geneve',name:'Saint-Julien-en-Genevois → Genève',from:{lat:46.1446,lon:6.0812,name:'Saint-Julien gare'},to:{lat:46.2102,lon:6.1424,name:'Genève Cornavin'},expect:['tpg-fr']},
+ {id:'archamps-geneve',name:'Archamps → Genève',from:{lat:46.1362,lon:6.1328,name:'Archamps Technopole'},to:{lat:46.2102,lon:6.1424,name:'Genève Cornavin'},expect:[]},
+ {id:'chambery-stjulien',name:'Chambéry → Saint-Julien-en-Genevois',from:{lat:45.5711,lon:5.9196,name:'Chambéry gare'},to:{lat:46.1446,lon:6.0812,name:'Saint-Julien gare'},expect:['ter']},
+ {id:'annecy-chambery',name:'Annecy → Chambéry',from:{lat:45.9017,lon:6.1219,name:'Annecy gare'},to:{lat:45.5711,lon:5.9196,name:'Chambéry gare'},expect:['ter','longue']},
+ {id:'lyon-grenoble',name:'Lyon → Grenoble',from:{lat:45.7606,lon:4.8593,name:'Lyon Part-Dieu'},to:{lat:45.1914,lon:5.7143,name:'Grenoble gare'},expect:['ter','longue']},
  // 14/11/2026 : axe intra-Lyon, car TCL est non fédéré (usage local uniquement) : aucun autre axe n'a ses deux
  // extrémités dans la zone couverte (Part-Dieu/Bellecour/Perrache), donc TCL n'était jamais exercé en réel.
  {id:'lyon-intra',name:'Lyon Part-Dieu → Bellecour (TCL)',from:{lat:45.7606,lon:4.8594,name:'Lyon Part-Dieu'},to:{lat:45.7578,lon:4.8322,name:'Lyon Bellecour'},expect:['tcl']},

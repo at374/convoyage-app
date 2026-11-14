@@ -12,7 +12,7 @@ const ROOT=path.join(__dirname,'..');
 const g=globalThis;g.window=g;
 for(const f of ['transport-adapters.js','transport-fares.js','transport-y51-fares.js','transport-fare-grids.js','swiss-transport-api.js','regional-routing.js',
  'sncf-fallback.js','transport-tripgo.js','transport-walking.js','transport-gtfs-index.js','transport-gtfs-time.js','transport-catalogue.js',
- 'transport-gtfs-loader.js','transport-gtfs-fares.js','transport-mission-hub.js','transport-coverage.js','transport-gtfs-agenda.js'])require(path.join(ROOT,f));
+ 'transport-gtfs-loader.js','transport-gtfs-fares.js','transport-national-gtfs-journeys.js','transport-mission-hub.js','transport-coverage.js','transport-gtfs-agenda.js'])require(path.join(ROOT,f));
 const H=g.CPTransportHub,C=g.CPTransportCoverage,A=g.CPGTFSAgenda,L=g.CPGTFSLoader,I=g.CPGTFSIndex,T=g.CPGTFSTime;
 // Les fichiers « data/… » de l'application sont lus dans le dépôt ; le reste part sur Internet.
 const fetcher=async(url,init)=>{
@@ -58,7 +58,10 @@ async function gtfsRows(axis,when){
 (async()=>{
  const when=C.nextMonday8();
  const router=H.cachedRouter(g.CPTransportWalking.createRouter({fetcher,maxRequests:400,intervalMs:1100,timeoutMs:15000}));
- const providers=H.makeProviders(g,{fetcher});
+ // Mêmes tranches nationales AURA (SNCF, BlaBlaCar Bus, FlixBus) que celles déclarées par index.html pour les fiches mission.
+ const NATIONAL='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
+ const nationalGTFSResources=Object.fromEntries(['sncf','blablacarBus','flixbus'].map(o=>[o,{url:NATIONAL+'national-'+o+'-aura.zip',format:'GTFS'}]));
+ const providers=H.makeProviders(g,{fetcher,nationalGTFSResources});
  const report={at:new Date().toISOString(),when,source:'diagnostic serveur (GitHub Actions)',tripgo:providers.tripgo?.enabled?.()===true,axes:[],networks:{}};
  for(const axis of [...C.AXES,...C.AXES_COUVERTURE.map(a=>({...a,coverage:true}))]){
   const started=Date.now();let firstAt=null;
