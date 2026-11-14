@@ -37,6 +37,13 @@ Répartition demandée par Laurent : ChatGPT = sources tarifaires, limites d'acc
 - **M réso relayé** : `data/gtfs/mreso-grenoble.zip` (6,4 Mo, 20 373 courses) et `mreso-gresivaudan.zip` (0,35 Mo) publiés par `build-regional-gtfs.yml` ; le panneau lit la copie relayée d'abord, data.gouv.fr en secours (comme SIBRA).
 - Constaté : `main` ne contient ni `data/gtfs/` ni `transport-mission-hub.js` — tout le module vit sur la branche ; aucun test sur le site déployé n'est possible avant publication.
 
+### Suite (16 h 45) — un même train occupait les 20 résultats nationaux
+
+**ChatGPT, j'ai modifié ton moteur `transport-national-gtfs-journeys.js` (fonction `search`) — dis-moi si cela gêne un de tes travaux en cours.** Constat sur la tranche SNCF réelle : Thonon → Genève à 8 h renvoyait 20 lignes pour le seul train de 8 h 00 (une par gare de descente : Eaux-Vives, Champel, Pont-Rouge, Cornavin, Sécheron, puis des correspondances inutiles) ; les trains suivants n'apparaissaient jamais, et la fiche n'avait que 4 trajets utilisables sur 29. Désormais, avant `slice(0,maxResults)` :
+- par véhicule de départ (`legs[0].tripId || tripId`, heure, arrêt de montée) : un seul direct, celui dont `egressDistanceMeters` est le plus petit ; une correspondance n'est gardée que si elle rapproche d'au moins 1 km de plus, ou s'il n'y a aucun direct ;
+- une correspondance est retirée si un direct part au même moment ou plus tard et arrive au plus tard en même temps.
+Résultat hors ligne sur la tranche publiée : Thonon → Genève 6 heures de départ distinctes dans les 9 premiers résultats ; Lyon → Grenoble : directs 7 h 16, 7 h 45, 8 h 16, 8 h 45… Nouveau test `tests/national-journeys-real-slice.test.cjs` (ajouté à la CI). Le format des lignes renvoyées est inchangé.
+
 ### Test navigateur (Chrome, émulation Pixel 7, vraies archives GTFS, marches simulées car Internet fermé dans le bac à sable)
 
 Fiches rendues sans erreur JavaScript ; J+31 (15/12/2026) : SNCF 20, FlixBus 20, BlaBlaCar Bus 8 trajets sur Lyon → Grenoble ; SNCF 20, FlixBus 10, BlaBlaCar Bus 3 sur Annecy → Genève. Pas de test sur téléphone Android réel (impossible d'ici).

@@ -33,7 +33,31 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
   {maxLegs:15000,maxCandidates:200,maxExaminedPairs:30000,minTransferMinutes:5,maxWaitMinutes:120,
    minDepartureSeconds:min,maxArrivalSeconds:max}):null;
  const candidates=direct.concat(transfer?.journeys||[]);
- return candidates.filter(x=>seconds(x.departure)>=min&&seconds(x.arrival)<=max)
+ // Un même véhicule au départ donnait autant de résultats que d'arrêts de descente et de correspondances possibles :
+ // le train de 8 h 00 Thonon → Genève occupait à lui seul les 20 places (Eaux-Vives, Champel, Pont-Rouge, Cornavin,
+ // Sécheron, puis des correspondances inutiles) et les départs suivants n'apparaissaient jamais (réel, 14/11/2026).
+ // Par véhicule de départ on garde : le direct dont la descente est la plus proche de la destination, et une
+ // correspondance seulement si elle rapproche d'au moins 1 km de plus (ou s'il n'existe aucun direct).
+ const egress=x=>Number.isFinite(x.egressDistanceMeters)?x.egressDistanceMeters:Infinity;
+ const better=(a,b)=>egress(a)-egress(b)||seconds(a.arrival)-seconds(b.arrival);
+ const groups=new Map();
+ for(const x of candidates.filter(x=>seconds(x.departure)>=min&&seconds(x.arrival)<=max)){
+  const key=[x.legs?.[0]?.tripId||x.tripId||'',x.departure,x.from||''].join('|');
+  const g=groups.get(key)||{direct:null,transfer:null};
+  const slot=x.legs?'transfer':'direct';
+  if(!g[slot]||better(x,g[slot])<0)g[slot]=x;
+  groups.set(key,g);
+ }
+ const kept=[];
+ for(const g of groups.values()){
+  if(g.direct)kept.push(g.direct);
+  if(g.transfer&&(!g.direct||egress(g.transfer)<egress(g.direct)-1000))kept.push(g.transfer);
+ }
+ // Une correspondance est sans intérêt si un direct part au même moment ou plus tard et arrive au plus tard en même
+ // temps (ex. Lyon Perrache → Part-Dieu puis Part-Dieu → Grenoble, alors que ce second train est déjà proposé seul).
+ const directs=kept.filter(x=>!x.legs);
+ const useful=kept.filter(x=>!x.legs||!directs.some(d=>seconds(d.departure)>=seconds(x.departure)&&seconds(d.arrival)<=seconds(x.arrival)));
+ return useful
   .sort((a,b)=>seconds(a.departure)-seconds(b.departure)||seconds(a.arrival)-seconds(b.arrival))
   .slice(0,maxResults).map(x=>({
    operator,tripId:x.tripId,line:x.line,date:x.date,departure:x.departure,arrival:x.arrival,
