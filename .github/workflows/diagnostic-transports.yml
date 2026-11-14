@@ -726,6 +726,55 @@ jobs:
           assert.equal(priceOf({walkOnly:false,legs:[official]},gridFare).amounts.EUR,1.50);
           console.log('Exclusions, validité et ambiguïtés tarifaires OK');
           NODE
+      - name: Vérifier le tarif GTFS officiel embarqué TCL (Fares V1)
+        run: |
+          node --check transport-gtfs-fares.js
+          node <<'NODE'
+          // TCL ne figure pas dans transport-fare-grids.js : son flux officiel relayé
+          // (data/gtfs/tcl-lyon.zip, zone Part-Dieu/Bellecour/Perrache) publie lui-même
+          // fare_attributes.txt/fare_rules.txt (Fares V1 SYTRAL), déjà lus par le mécanisme
+          // générique transport-gtfs-fares.js — ajouter une grille statique serait redondant
+          // (le tarif GTFS gagne déjà, cf. isVerifiedFare dans transport-mission-hub.js) et
+          // faux pour les lignes ambiguës (F1/F2/7601, deux tarifs officiels distincts chacune).
+          // Ce test prouve en CI, sur l'archive réellement publiée, que : (1) les lignes
+          // normales renvoient bien 2,10 € (conforme au guide tarifaire officiel tcl.fr, zones
+          // 1+2, mai 2026) ; (2) les lignes ambiguës ne renvoient AUCUN prix plutôt qu'un prix
+          // fabriqué.
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const loader=require('./transport-gtfs-loader.js');
+          const gtfsIndex=require('./transport-gtfs-index.js');
+          const CPGTFSFares=require('./transport-gtfs-fares.js');
+          (async()=>{
+            const buf=fs.readFileSync('data/gtfs/tcl-lyon.zip');
+            const extracted=await loader.extractGTFS(buf,loader.DEFAULT_LIMITS);
+            const index=gtfsIndex.buildIndex(extracted.files,{});
+            assert.ok(index.counts.routes>0,'Flux TCL filtré vide ou absent');
+            const prepared=CPGTFSFares.prepare(extracted.files);
+            assert.ok(prepared.fares.size>0,'Aucun tarif Fares V1 dans le flux TCL — régression du filtrage serveur');
+            const tripsByRoute=new Map();
+            for(const t of index.tripById.values()){
+              if(!tripsByRoute.has(t.route_id))tripsByRoute.set(t.route_id,t);
+            }
+            const fareOf=routeId=>{
+              const t=tripsByRoute.get(routeId);assert.ok(t,'Ligne '+routeId+' absente du flux filtré');
+              const times=index.timesByTrip.get(t.trip_id)||[];
+              assert.ok(times.length>=2,'Horaires manquants pour la ligne '+routeId);
+              return CPGTFSFares.legFare(prepared,index,{tripId:t.trip_id,from:times[0].stop_id,to:times[times.length-1].stop_id});
+            };
+            for(const routeId of ['31','125','108']){
+              const fare=fareOf(routeId);
+              assert.ok(fare,'Tarif attendu manquant pour la ligne '+routeId);
+              assert.equal(fare.amount,2.10,'Ligne '+routeId+' : 2,10 € attendu (zones 1+2, tcl.fr mai 2026)');
+              assert.equal(fare.currency,'EUR');
+              assert.equal(fare.transferMinutes,60,'Correspondance 1 h attendue');
+            }
+            for(const routeId of ['F1','F2','7601']){
+              assert.equal(fareOf(routeId),null,'Ligne '+routeId+' : deux tarifs officiels distincts, aucun prix ne doit être inventé');
+            }
+            console.log('Tarif GTFS officiel embarqué TCL (Fares V1) vérifié sur l’archive publiée : 2,10 € confirmé, ambiguïtés F1/F2/7601 correctement sans prix');
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
       - name: Vérifier la présence de TripGo
         env:
           CP_TRIPGO_KEY: ${{ secrets.CP_TRIPGO_KEY }}

@@ -20,7 +20,14 @@ const NETWORKS=[
  {id:'mreso-metro',name:'M réso — Métropole grenobloise',zone:'AURA',match:/m\s?r[ée]so/i,area:[45.0,5.6,45.26,5.8],sources:['Mobilités M (OTP)','GTFS officiel'],fare:'Grille officielle 2,00 € (01/09/2026)',fareOk:true,recorded:['Réponse Mobilités M 30/10/2026 (Grenoble–Crolles)']},
  {id:'mreso-gresivaudan',name:'M réso — Grésivaudan',zone:'AURA',match:/m\s?r[ée]so/i,area:[45.2,5.8,45.5,6.15],sources:['Mobilités M (OTP)','GTFS officiel'],fare:'Grille officielle 2,00 € (1,00 € intra-Grésivaudan non appliqué)',fareOk:true,recorded:['Réponse Mobilités M 30/10/2026 (ligne 80)']},
  {id:'mreso-voironnais',name:'M réso — Voironnais',zone:'AURA',match:/m\s?r[ée]so|voironnais/i,area:[45.24,5.4,45.5,5.68],sources:['Mobilités M (OTP)'],fare:'Grille officielle 2,00 € (1,30 € intra-Voironnais non appliqué)',fareOk:true,recorded:[]},
- {id:'tcl',name:'TCL (Lyon)',zone:'AURA',match:/^tcl\b|sytral/i,sources:[],fare:'Prix à confirmer (zones TCL ; GTFS TCL trop lourd pour le téléphone)',fareOk:false,recorded:[],note:'Seulement via TripGo (non vérifié)'},
+ // Confirmé le 14/11/2026 : flux GTFS officiel relayé (zone Part-Dieu/Bellecour/Perrache, scripts/build_regional_gtfs.py
+ // filter_by_bounds) publie lui-même fare_attributes.txt/fare_rules.txt (Fares V1 SYTRAL). Testé en réel avec
+ // transport-gtfs-fares.js sur les 76 lignes du flux filtré : 73/76 renvoient sans ambiguïté 2,10 € (fare_id
+ // 1_1895382540, correspondance 60 min), cohérent avec le guide tarifaire officiel tcl.fr « 1 voyage, zones 1+2 »
+ // (mai 2026). Les 3 lignes restantes (F1, F2, 7601) ont chacune deux tarifs officiels distincts dans le flux
+ // (ambigu sans information supplémentaire) et renvoient donc intentionnellement « pas de prix » plutôt qu'un prix
+ // fabriqué — aucune grille statique ajoutée pour ne pas écraser cette distinction déjà correcte.
+ {id:'tcl',name:'TCL (Lyon)',zone:'AURA',match:/^tcl\b|sytral/i,sources:['GTFS officiel TCL filtré (relais serveur, build-regional-gtfs.yml)','Fares V1 embarqués dans ce GTFS (fare_attributes.txt/fare_rules.txt)'],fare:'Grille officielle 2,10 € confirmée (73/76 lignes ; 3 lignes ambiguës — F1/F2/7601 — sans prix par prudence)',fareOk:true,recorded:['build-regional-gtfs.yml du 13/11/2026 : 76 lignes, 475 arrêts, 4,58 Mo ; test direct transport-gtfs-fares.js du 14/11/2026 sur routes 31/125/108 → 2,10 € EUR']},
  {id:'jybus',name:"J'y bus (Rumilly)",zone:'AURA',match:/j.?y\s?bus/i,sources:['Extrait GTFS de l’agrégat Oùra (tâche serveur hebdomadaire)'],fare:'Prix à confirmer',fareOk:false,recorded:['Extrait officiel Oùra du 13/11/2026 : 5 lignes, 144 courses lun. 16/11 ; recherche intra-Rumilly OK'],note:'Données uniquement dans l’agrégat régional Oùra (trop lourd) ; via TripGo (non vérifié)'},
  {id:'tam',name:'TAM (Ambérieu-en-Bugey)',zone:'AURA',match:/\btam\b|amb[ée]rieu/i,sources:['Extrait GTFS de l’agrégat Oùra (tâche serveur hebdomadaire)'],fare:'Prix à confirmer',fareOk:false,recorded:['Extrait officiel Oùra du 13/11/2026 : 4 lignes, 91 courses lun. 16/11 ; recherche intra-Ambérieu OK'],note:'Données uniquement dans l’agrégat régional Oùra ; via TripGo (non vérifié)'},
  {id:'cars-74',name:'Cars Région Haute-Savoie (dont Y51)',zone:'AURA',match:/haute-savoie|^[^ ]*\s?y\d{2}\b/i,sources:['GTFS officiel Oùra Haute-Savoie'],fare:'Y51 : grille officielle par zones ; autres lignes à confirmer',fareOk:true,recorded:['Grille Y51 et périmètre du 31/10/2026']},
@@ -101,10 +108,18 @@ const DETAILS={
  // Premier essai (bbox large) : ÉCHEC, 19,96 Mo (> 12 Mo). Bbox resserrée au triangle Part-Dieu/
  // Bellecour/Perrache : second essai réussi, data/gtfs/tcl-lyon.zip publié (4,58 Mo, 76 lignes,
  // 475 arrêts, tarifs fare_attributes/fare_rules inclus). Flux chargeable par l'application (même
- // origine, pas de blocage CORS). Horaires maintenant disponibles ; reste à vérifier que la bbox
- // couvre un trajet réellement utile (ex. correspondance Ambérieu → Lyon Part-Dieu) au prochain
- // diagnostic réel.
- 'tcl':{horaires:'enregistrés (confirmé en réel, relais serveur)',tarif:'manquants',checked:'2026-11-13 · build-regional-gtfs.yml réussi (4,58 Mo, 76 lignes, 475 arrêts)',blocage:'Zone couverte volontairement réduite (Part-Dieu/Bellecour/Perrache) ; tarifs TCL pas encore recherchés',action:'Diagnostic téléphone (Ambérieu → Lyon Part-Dieu) pour confirmer l’usage réel ; chercher la grille tarifaire officielle TCL'},
+ // origine, pas de blocage CORS). Horaires maintenant disponibles.
+ // 14/11/2026 : tarifs également confirmés, SANS code nouveau — transport-gtfs-fares.js (mécanisme
+ // GTFS Fares V1 déjà existant pour tout réseau publiant fare_attributes.txt/fare_rules.txt) lit déjà
+ // ce flux. Test direct (extractGTFS + buildIndex + CPGTFSFares.legFare sur data/gtfs/tcl-lyon.zip) :
+ // routes 31/125/108 → 2,10 € EUR, correspondance 60 min (fare_id 1_1895382540), conforme au guide
+ // tarifaire officiel tcl.fr « 1 voyage, zones 1+2 » (TCL_Campagne_Unification_Guide_Tarifaire_Mai2026).
+ // 73/76 lignes du flux filtré renvoient ce prix sans ambiguïté. Les 3 restantes (F1, F2, 7601) ont
+ // chacune 2 fare_id officiels différents dans le flux → pas de prix renvoyé, par prudence (comportement
+ // correct, pas un bug). Aucune entrée statique ajoutée à transport-fare-grids.js : le ferait serait soit
+ // redondant (le tarif GTFS gagne déjà, cf. l.317-319 transport-mission-hub.js) soit faux pour F1/F2/7601.
+ // Reste à vérifier : qu'une mission réelle (ex. Ambérieu → Lyon Part-Dieu) exerce effectivement la bbox.
+ 'tcl':{horaires:'enregistrés (confirmé en réel, relais serveur)',tarif:'confirmés (GTFS Fares V1 officiel, 2,10 € zones 1+2)',checked:'2026-11-14 · test direct transport-gtfs-fares.js sur data/gtfs/tcl-lyon.zip (routes 31/125/108)',blocage:'Zone couverte volontairement réduite (Part-Dieu/Bellecour/Perrache) ; F1/F2/7601 ambigus sans prix (comportement voulu)',action:'Diagnostic téléphone (Ambérieu → Lyon Part-Dieu) pour confirmer que la bbox est exercée par une mission réelle'},
  'jybus':{horaires:'enregistrés',tarif:'manquants',checked:'2026-11-13 · extraction agrégat Oùra (script testé hors ligne)',blocage:'Aucun tarif publié dans l’agrégat Oùra ; pas de grille officielle trouvée',action:'Lancer la tâche « Build regional GTFS », puis diagnostic Rumilly'},
  'tam':{horaires:'enregistrés',tarif:'manquants',checked:'2026-11-13 · extraction agrégat Oùra (script testé hors ligne)',blocage:'Aucun tarif publié dans l’agrégat Oùra ; pas de grille officielle trouvée',action:'Lancer la tâche « Build regional GTFS », puis diagnostic Ambérieu → Lyon'},
  'cars-74':{horaires:'enregistrés',tarif:'partiels',checked:'2026-10-31 · fiche tarifaire Y51 AURA 2026',blocage:'Seule la Y51 a une grille par zones ; autres lignes sans prix',action:'Grilles zonales des autres lignes Cars Région 74'},
