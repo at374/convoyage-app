@@ -294,6 +294,19 @@ test('correspondance GTFS : ≥ 10 min programmées = réserve à confirmer ; pl
  assert.equal(H.assess(long,task,null).scheduled,true);assert.equal(H.assess(short,task,null).scheduled,false);
 });
 
+test('classement : un horaire programmé plus rapide passe devant un réalisable plus lent ; à égalité le réalisable gagne',()=>{
+ const task={from:STOP1,to:STOP2,latestArrival:at(9,30)};
+ const slow=H.assess({source:'A',sources:['A'],legs:[bus(at(7,0),at(7,40),STOP1,STOP2,{line:'LENT'})],missing:[]},task,null);
+ const fast=H.assess({source:'B',sources:['B'],legs:[bus(at(7,5),at(7,17),STOP1,STOP2,{line:'RAPIDE'})],missing:['horaire GTFS local non confirmé en temps réel']},task,null);
+ const same=H.assess({source:'C',sources:['C'],legs:[bus(at(7,10),at(7,50),STOP1,STOP2,{line:'EGAL'})],missing:['horaire GTFS local non confirmé en temps réel']},task,null);
+ const broken=H.assess({source:'D',sources:['D'],legs:[bus(at(7,0),at(7,5),STOP1,STOP2,{line:'KO'})],missing:['marche jusqu’à l’adresse exacte d’arrivée non calculée']},task,null);
+ assert.equal(slow.feasible,true);assert.equal(fast.scheduled,true);
+ const pick=(list,label)=>H.rank(list).picks.find(p=>p.labels.includes(label)).journey.legs[0].line;
+ assert.equal(pick([slow,fast,broken],'Plus rapide'),'RAPIDE');
+ assert.equal(pick([slow,same,broken],'Plus rapide'),'LENT','durée égale : le réalisable passe devant');
+ assert.equal(pick([broken,same],'Plus rapide'),'EGAL','un trajet incomplet ne passe jamais devant');
+});
+
 test('quota de marches : au-delà de 16 couples d’arrêts distincts, le trajet est signalé, jamais inventé',async()=>{
  const router={calls:0,route:async()=>{router.calls++;return {status:'unavailable'};}}; // rien de réalisable → recherche complémentaire incluse
  const js=[];for(let i=0;i<12;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,i*2),at(7,i*2+20),{lat:STOP1.lat+i*0.001,lon:STOP1.lon},{lat:STOP2.lat+i*0.001,lon:STOP2.lon},{line:'D'+i})]});

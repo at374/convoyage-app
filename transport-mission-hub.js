@@ -432,18 +432,23 @@ function rank(items){
   seen.set(k,{...better,sources:[...new Set([...old.sources,...j.sources])]});
  }
  const all=[...seen.values()];
- const tier=j=>j.feasible?2:j.scheduled?1:0; // réalisable > horaire programmé > non confirmé
+ // Classement : les trajets exploitables (réalisables OU en horaire officiel programmé) passent avant les incomplets,
+ // puis le critère (prix, compromis, durée) ; à égalité seulement, le réalisable passe devant le programmé.
+ // Avant : tout réalisable passait devant tout programmé, si bien que « Plus rapide » pouvait désigner 30 min de
+ // marche alors qu'un bus de 12 min existait (Lyon Part-Dieu → Bellecour, diagnostic réel du 14/11/2026). Le statut
+ // affiché sur chaque carte reste celui du trajet : un horaire programmé n'est jamais présenté comme confirmé.
+ const tier=j=>j.feasible||j.scheduled?1:0,confirmedFirst=(a,b)=>Number(b.feasible)-Number(a.feasible);
  const byFeasible=(a,b)=>tier(b)-tier(a);
- const fastest=[...all].sort((a,b)=>byFeasible(a,b)||a.durationMinutes-b.durationMinutes||priceSortKey(a.price)-priceSortKey(b.price))[0];
+ const fastest=[...all].sort((a,b)=>byFeasible(a,b)||a.durationMinutes-b.durationMinutes||confirmedFirst(a,b)||priceSortKey(a.price)-priceSortKey(b.price))[0];
  const priced=all.filter(j=>j.price.status==='verified'||j.price.status==='free');
- const cheapest=[...priced].sort((a,b)=>byFeasible(a,b)||priceSortKey(a.price)-priceSortKey(b.price)||a.durationMinutes-b.durationMinutes)[0];
+ const cheapest=[...priced].sort((a,b)=>byFeasible(a,b)||priceSortKey(a.price)-priceSortKey(b.price)||confirmedFirst(a,b)||a.durationMinutes-b.durationMinutes)[0];
  const score=j=>(Number.isFinite(priceSortKey(j.price))?Math.min(priceSortKey(j.price),200):60)+j.durationMinutes/3+j.transfers*8+j.walkMeters/250+
   (j.slackMinutes===null?0:Math.max(0,30-j.slackMinutes));
- const compromise=[...all].sort((a,b)=>byFeasible(a,b)||score(a)-score(b))[0];
+ const compromise=[...all].sort((a,b)=>byFeasible(a,b)||score(a)-score(b)||confirmedFirst(a,b))[0];
  const picks=[];
  for(const [label,j] of [['Moins cher',cheapest],['Meilleur compromis',compromise],['Plus rapide',fastest]])
   if(j){const found=picks.find(p=>p.journey===j);if(found)found.labels.push(label);else picks.push({labels:[label],journey:j});}
- const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||ms(a.departure)-ms(b.departure));
+ const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||ms(a.departure)-ms(b.departure)||confirmedFirst(a,b));
  return {picks,others,total:all.length};
 }
 
@@ -654,7 +659,12 @@ function makeProviders(r,opts={}){
 function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm=3,timeoutMs=25000,onUpdate=()=>{}}={}){
  const state={},controller=new AbortController();let disposed=false;
  const emit=label=>{if(!disposed)try{onUpdate(label,view(label));}catch(_){}};
- function view(label){const s=state[label];return {task:s.task,...rank(s.items),pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0};}
+ // Un trajet qui part avant la fin de la mission précédente (souvent à cause de la marche d'accès) est impossible,
+ // pas « non confirmé » : il n'est plus affiché, seul son nombre est indiqué (178 cartes inutiles sur 1 013 au
+ // diagnostic réel du 14/11/2026).
+ function view(label){const s=state[label];
+  const tooEarly=s.items.filter(j=>!j.computing&&j.reasons.includes('départ avant la fin de la mission précédente'));
+  return {task:s.task,...rank(tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items),hidden:{tooEarly:tooEarly.length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0};}
  async function add(label,source,journeys){
   const s=state[label];if(!s||disposed)return;
   s.received[source]=(s.received[source]||0)+(Array.isArray(journeys)?journeys.length:0);
@@ -814,6 +824,7 @@ function render(host,v){
   host.appendChild(d);
  }
  const tads=tadFor(v.task);
+ if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' non affiché'+(v.hidden.tooEarly>1?'s':'')+' : départ avant la fin de la mission précédente (marche jusqu’à l’arrêt comprise).'));
  if(v.done&&tads.length){const p=el(doc,'p','cp-hub-note','Transport à la demande possible dans ce secteur (non intégré au classement) : ');
   tads.forEach((t,i)=>{const a=el(doc,'a',null,t.name);a.href=t.url;a.target='_blank';a.rel='noopener noreferrer';p.appendChild(a);p.appendChild(doc.createTextNode(' — '+t.note+(i<tads.length-1?' · ':'.')));});
   host.appendChild(p);}
