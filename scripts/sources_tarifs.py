@@ -34,7 +34,24 @@ SOURCES=[
  ('cars-isere-carte-zonale-2025','https://carsisere.auvergnerhonealpes.fr/ftp/document/carte-zonale-2025.pdf'),
  ('plaine-ain-livret-mobilite','https://www.cc-plainedelain.fr/UserFiles/File/mobilite/livret-mobilite.pdf'),
  ('tam-boamp-2026','https://www.boamp.fr/telechargements/FILES/PDF/2025/01/25-9840.pdf'),
+ # 14/11/2026 (soir) — recherche de tous les prix : barème officiel TER, ancien fichier de prix TER archivé,
+ # Léman Pass, Star't, Ondéa.
+ ('ter-aura-cgv-2026','https://mmt.vsct.fr/sites/default/files/swt/CARA/2026-09/V202603_CGV_Transporteur_TER_AURA.pdf'),
+ ('ter-aura-od-archive-csv','https://web.archive.org/web/2025id_/https://ressources.data.sncf.com/api/explore/v2.1/catalog/datasets/tarifs-ter-aura/exports/csv'),
+ ('ter-aura-od-archive-csv2','https://web.archive.org/web/2025id_/https://ressources.data.sncf.com/explore/dataset/tarifs-ter-aura/download/?format=csv'),
+ ('ter-aura-od-archive-cdx','https://web.archive.org/cdx/search/cdx?url=ressources.data.sncf.com/*tarifs-ter-aura*&output=txt&limit=60&filter=statuscode:200'),
+ ('ter-aura-od-datagouv-cdx','https://web.archive.org/cdx/search/cdx?url=data.gouv.fr/*6778b24e2e9a63f76e133b55*&output=txt&limit=40&filter=statuscode:200'),
+ ('lemanpass-faq','https://www.lemanpass.com/faq/'),
+ ('lemanpass-tarifs','https://www.lemanpass.com/tarifs/'),
+ ('lemanpass-accueil','https://www.lemanpass.com/'),
+ ('start-titres','https://www.star-t.fr/titres-abonnements/titres-abonnements'),
+ ('start-ligne-142','https://www.star-t.fr/se-deplacer/lignes-et-horaires/ligne-bus-142'),
+ ('start-ligne-l','https://www.star-t.fr/se-deplacer/lignes-et-horaires/ligne-bus-l'),
+ ('ondea-titres-2026','https://www.ondeagrandlac.fr/titres/titres-pour-tous-tarifs-applicables-du-1er-juillet-2026/titre-10-voyages'),
+ ('ondea-titres-index','https://www.ondeagrandlac.fr/titres/titres-pour-tous-tarifs-applicables-du-1er-juillet-2026'),
 ]
+# Grilles en matrice (prix dans un tableau graphique que pdftotext ne restitue pas) : pages rendues en image pour relecture.
+IMAGES={'tpg-272-alpbus','jacquet-transfrontaliers','jacquet-fr-fr','cars-isere-carte-zonale-2025','cars-isere-depliant-2025'}
 OUT='docs/sources-tarifs'; os.makedirs(OUT,exist_ok=True)
 def fetch(url,tries=3):
     import time
@@ -71,6 +88,11 @@ for sid,url in SOURCES:
     try:
         st,ct,data=fetch(url); text=to_text(ct,data)
         open(f'{OUT}/{sid}.txt','w').write(f'Source : {url}\n\n'+text)
+        if sid in IMAGES and data[:4]==b'%PDF':
+            os.makedirs(f'{OUT}/img',exist_ok=True)
+            with tempfile.NamedTemporaryFile(suffix='.pdf') as f:
+                f.write(data); f.flush()
+                subprocess.run(['pdftoppm','-r','130','-png','-l','4',f.name,f'{OUT}/img/{sid}'],check=False)
         index.append(f'| {sid} | {url} | {st} | {hashlib.sha256(data).hexdigest()[:16]} | {len(text)} |\n')
     except Exception as e:
         index.append(f'| {sid} | {url} | erreur {e!r} | | |\n')
