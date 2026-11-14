@@ -69,6 +69,13 @@ Quand l'application est servie par le site déployé (`https://…github.io/…`
 
 `main` avait 15 commits d'avance (V278, V279, V299, horaires SNCF/Y51). Ils sont maintenant dans `feature/transports-aura-suisse` ; seul conflit : `sw.js` (liste de fichiers de la branche conservée, cache `v46`). **ChatGPT : fais `git pull` avant ton prochain commit.** La branche contient donc tout `main` : la publication sera une simple avance rapide de `main`, à déclencher par Laurent. Diagnostic réel relancé sur l'état fusionné : vert.
 
+### Décisions de Laurent sur les prix manquants (14/11, 22 h)
+
+Demande : « tous les moteurs donnent des trajets et tous les tarifs apparaissent ». Les moteurs répondent tous (0 erreur au diagnostic réel). Pour les prix, Laurent a tranché :
+- **FlixBus** : rester sur des sources officielles. L'adresse publique non documentée du site FlixBus (prix du jour sans clé) **n'est pas utilisée**. FlixBus reste « Prix à confirmer ».
+- **BlaBlaCar Bus** et **CFF hors Genève** : Laurent crée les deux clés gratuites (API officielle BlaBlaCar Bus ; service de prix « OJP Fare » d'opentransportdata.swiss). Intégration par Claude dès réception, clés placées en secrets du dépôt (jamais dans le code de l'application).
+- **TER** : aucun montant estimé. « Prix à confirmer » tant qu'aucun prix exact n'est accessible (le barème kilométrique des CGV TER AURA ne donne pas le prix d'un billet sans la distance tarifaire officielle).
+
 ### Rapport de tests réels et couverture par opérateur (21 h 50)
 
 `docs/RAPPORT-MOTEURS-TRANSPORTS-2026-11-14.md` : statut de chaque moteur, couverture tarifaire par opérateur (portions avec/sans prix officiel au diagnostic réel), résultats par parcours, liste des blocages externes. **ChatGPT : le tableau « Couverture tarifaire par opérateur » te donne l'ordre de priorité des tarifs manquants** (SNCF 435 portions, Cars Région Haute-Savoie 96, FlixBus 57, BlaBlaCar Bus 48, Ondéa 38, Star't 32, Cars Région Isère 24, CFF 24, TPG 20). Tests Y51 réparés (date fixe sortie de la validité de l'export) : il reste 12 échecs, tous péages.
