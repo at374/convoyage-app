@@ -181,6 +181,9 @@ const AXES_COUVERTURE=[
  {id:'chambery-stjulien',name:'Chambéry → Saint-Julien-en-Genevois',from:{lat:45.5711,lon:5.9196,name:'Chambéry gare'},to:{lat:46.1446,lon:6.0812,name:'Saint-Julien gare'},expect:['ter']},
  {id:'annecy-chambery',name:'Annecy → Chambéry',from:{lat:45.9017,lon:6.1219,name:'Annecy gare'},to:{lat:45.5711,lon:5.9196,name:'Chambéry gare'},expect:['ter','longue']},
  {id:'lyon-grenoble',name:'Lyon → Grenoble',from:{lat:45.7606,lon:4.8593,name:'Lyon Part-Dieu'},to:{lat:45.1914,lon:5.7143,name:'Grenoble gare'},expect:['ter','longue']},
+ // Ajouté le 15/11/2026 (mission « terminer Transports ») : un des 8 axes de validation demandés par Laurent,
+ // absent des axes existants (Chambéry n'était testé que vers Aix, Chamoux et Saint-Julien).
+ {id:'chambery-grenoble',name:'Chambéry → Grenoble',from:{lat:45.5711,lon:5.9196,name:'Chambéry gare'},to:{lat:45.1914,lon:5.7143,name:'Grenoble gare'},expect:['ter','longue']},
  // 14/11/2026 : axe intra-Lyon, car TCL est non fédéré (usage local uniquement) : aucun autre axe n'a ses deux
  // extrémités dans la zone couverte (Part-Dieu/Bellecour/Perrache), donc TCL n'était jamais exercé en réel.
  {id:'lyon-intra',name:'Lyon Part-Dieu → Bellecour (TCL)',from:{lat:45.7606,lon:4.8594,name:'Lyon Part-Dieu'},to:{lat:45.7578,lon:4.8322,name:'Lyon Bellecour'},expect:['tcl']},
