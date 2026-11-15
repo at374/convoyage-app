@@ -172,6 +172,17 @@ try:
     for r in rd('routes.txt'): n[r.get('agency_id','')]=n.get(r.get('agency_id',''),0)+1
     lines=[f'Agrégat Oùra : {len(data)} octets ; fichiers : '+', '.join(z.namelist()),'agency_id | nom | url | lignes']
     lines+=sorted(' | '.join([a.get('agency_id',''),a.get('agency_name',''),a.get('agency_url',''),str(n.get(a.get('agency_id',''),0))]) for a in rd('agency.txt'))
+    # Flux individuel de chaque réseau (même API officielle, provider = préfixe de l'agency_id) : statut, taille, emprise.
+    lines+=['','provider | HTTP | octets | lignes | courses | arrêts | emprise lat/lon min-max | fichiers fares']
+    for prov in sorted({a.get('agency_id','').split(':')[0].replace('x','_') for a in rd('agency.txt')}):
+        try:
+            st,_,d=fetch(f'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider={prov}&dataFormat=GTFS&dataProfil=OPENDATA')
+            zz=zipfile.ZipFile(io.BytesIO(d))
+            r2=lambda n:list(csv.DictReader(io.TextIOWrapper(zz.open(n),encoding='utf-8-sig'))) if n in zz.namelist() else []
+            ss=[(float(x['stop_lat']),float(x['stop_lon'])) for x in r2('stops.txt') if x.get('stop_lat') and x.get('stop_lon')]
+            box=f"{min(a for a,_ in ss):.3f},{min(b for _,b in ss):.3f},{max(a for a,_ in ss):.3f},{max(b for _,b in ss):.3f}" if ss else ''
+            lines.append(' | '.join([prov,str(st),str(len(d)),str(len(r2('routes.txt'))),str(len(r2('trips.txt'))),str(len(ss)),box,' '.join(n for n in zz.namelist() if 'fare' in n)]))
+        except Exception as e: lines.append(f'{prov} | erreur {repr(e)[:80]}')
     open(f'{OUT}/oura-agregat-reseaux.txt','w').write('\n'.join(lines))
     index.append(f'| oura-agregat-reseaux | agrégat Oùra (PAN) | 200 | | {len(lines)} lignes |\n')
 except Exception as e:
