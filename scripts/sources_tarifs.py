@@ -181,10 +181,28 @@ try:
             r2=lambda n:list(csv.DictReader(io.TextIOWrapper(zz.open(n),encoding='utf-8-sig'))) if n in zz.namelist() else []
             ss=[(float(x['stop_lat']),float(x['stop_lon'])) for x in r2('stops.txt') if x.get('stop_lat') and x.get('stop_lon')]
             box=f"{min(a for a,_ in ss):.3f},{min(b for _,b in ss):.3f},{max(a for a,_ in ss):.3f},{max(b for _,b in ss):.3f}" if ss else ''
-            lines.append(' | '.join([prov,str(st),str(len(d)),str(len(r2('routes.txt'))),str(len(r2('trips.txt'))),str(len(ss)),box,' '.join(n for n in zz.namelist() if 'fare' in n)]))
+            days=sorted([x['date'] for x in r2('calendar_dates.txt') if x.get('exception_type')=='1']+[x[k] for x in r2('calendar.txt') for k in ('start_date','end_date')])
+            lines.append(' | '.join([prov,str(st),str(len(d)),str(len(r2('routes.txt'))),str(len(r2('trips.txt'))),str(len(ss)),box,' '.join(n for n in zz.namelist() if 'fare' in n),'calendrier '+(days[0]+'→'+days[-1]+f' ({len(days)})' if days else 'vide')]))
         except Exception as e: lines.append(f'{prov} | erreur {repr(e)[:80]}')
     open(f'{OUT}/oura-agregat-reseaux.txt','w').write('\n'.join(lines))
     index.append(f'| oura-agregat-reseaux | agrégat Oùra (PAN) | 200 | | {len(lines)} lignes |\n')
 except Exception as e:
     index.append(f'| oura-agregat-reseaux | agrégat Oùra (PAN) | erreur {e!r} | | |\n')
+# Inventaire exhaustif des jeux de transport public du Point d'accès national couvrant Auvergne-Rhône-Alpes
+# (pour repérer les réseaux absents de l'agrégat Oùra : T2C, STAS, Citéa, Libellule, etc.).
+try:
+    _,_,raw=fetch('https://transport.data.gouv.fr/api/datasets')
+    ds=json.loads(raw)
+    pat=re.compile(r'Auvergne|Rh[oô]ne|\bAin\b|Allier|Ard[eè]che|Cantal|Dr[oô]me|Is[eè]re|Loire|Puy-de-D|Savoie|Lyon|Grenoble|Clermont|[EÉ]tienne|Valence|Annecy|Chamb[eé]ry|"(?:01|03|07|15|26|38|42|43|63|69|73|74)\d{3}"',re.I)
+    lines=[f'{len(ds)} jeux au total ; clés : '+', '.join(sorted(ds[0].keys()))]
+    for d in ds:
+        if d.get('type')!='public-transit': continue
+        area=json.dumps(d.get('covered_area'),ensure_ascii=False)
+        if not pat.search(area+' '+str(d.get('title',''))): continue
+        res=[r for r in d.get('resources',[]) if str(r.get('format','')).upper()=='GTFS']
+        lines.append(' | '.join([str(d.get('title','')),str(d.get('slug','')),area[:160],str(d.get('licence','')),' ; '.join(str(r.get('original_url') or r.get('url'))+' (fin '+str((r.get('metadata') or {}).get('end_date'))+')' for r in res[:3])]))
+    open(f'{OUT}/pan-aura-jeux.txt','w').write('\n'.join(lines))
+    index.append(f'| pan-aura-jeux | transport.data.gouv.fr/api/datasets | 200 | | {len(lines)} lignes |\n')
+except Exception as e:
+    index.append(f'| pan-aura-jeux | transport.data.gouv.fr/api/datasets | erreur {e!r} | | |\n')
 open(f'{OUT}/INDEX.md','w').write(''.join(index)); print(''.join(index))

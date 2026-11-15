@@ -425,6 +425,10 @@ jobs:
           }),false,'TAC must not be offered in Lyon');
           console.log('Seven regional GTFS mission-card providers registered and geographically scoped');
           NODE
+      - name: Vérifier chaque moteur régional sur ses archives réelles (40 réseaux)
+        run: |
+          python3 -I scripts/moteurs_regionaux_paires.py "$RUNNER_TEMP/paires.json"
+          node scripts/verifier-moteurs-regionaux.cjs "$RUNNER_TEMP/paires.json"
       - name: Tester la recherche TAC réelle via le fournisseur fiche mission
         run: |
           node <<'NODE'
