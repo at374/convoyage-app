@@ -16,6 +16,20 @@
 
 **Pour ChatGPT** : (1) la 274 dans Genève accepte-t-elle le trafic local au tarif unireso ? (la grille dit seulement « consulter unireso ») ; (2) zone Léman Pass d'Archamps/Collonges (B 82) ; (3) matrice Star't A/AB/B, Ondéa 400–419, zones Cars Isère par arrêt — inchangé.
 
+### Suite du 15/11 (11 h – 13 h) — « tous les moteurs, tous les tarifs »
+
+**Tarifs ajoutés (sources officielles relues, `docs/sources-tarifs/`)**
+- **Léman Pass 10+210** réactivé à **4,90 €** (trains Léman Express / RE Annemasse ↔ Genève). La contradiction 4,80/4,90 est levée : `lemanpass.com/points-de-vente` publie 10+210 = 4,90 € et 10+200/230/240/250 = 4,80 € ; TAC et tpg concordent. Les 4,80 € de la grille Jacquet ne concernent que Nangy.
+- **Léman Pass 10+230** étendu à **Collonges et Valleiry** (définition officielle de la zone 230 sur `lemanpass.com/tarifs`) : tpg 82 Collonges ↔ Genève = 4,80 €. Archamps : toujours aucun prix.
+- **Star't** : tarif par zone de l'arrêt sur tout le réseau (`startZoneFare`). 517 arrêts dont la commune BAN et le `zone_id` du flux officiel concordent avec les listes de communes A/B de star-t.fr (`start-arrets.txt`). 1,20 € dans une zone, 2,20 € A+B. Ligne 271 et lignes scolaires exclues.
+- `priceOf` : un titre combiné peut couvrir plusieurs réseaux (Léman Pass 10+210 couvre zone 10 et TAC).
+
+**Diagnostic réel 15/11 10:13 UTC** : trajets avec prix complet 262 → 323 sur 873 (30 % → 37 %). Portions sans prix : SNCF 404, FlixBus 57, BlaBlaCar Bus 48, Cars 74 (274 interne Genève) 48, Ondéa 38, Cars Isère 24, SBB 8, But 8, TPG 5, Star't 1.
+
+**Moteurs ajoutés** : l'agrégat régional Oùra contient 44 réseaux ; l'application n'en lisait que 11. Les 33 autres sont ajoutés (`EXTRACT` de `scripts/build_regional_gtfs.py` + `localNetworks` de `transport-mission-hub.js`) : Rubis Bourg, ÉVA'D Évian, Chamonix Bus, Proxim iTi, Mobi'Vals, TRA Albertville, Duobus, Ruban, L'va, Colibri, TICO, Saônibus, Cars Région Express / Loire / Drôme / Ardèche / Allier / Cantal / Haute-Loire, et les réseaux urbains d'Annonay, Aubenas, Aurillac, Montélimar, Montluçon, Moulins, Privas, Le Puy, Riom, Roanne, Tain-Tournon, Thiers, Vichy, Péage-de-Roussillon. Horaires seulement : **aucun tarif** pour ces réseaux (à chercher — travail ChatGPT). Chemin « fiches mission » uniquement ; le panneau Agenda (`transport-gtfs-agenda.js`, deux réseaux au plus) n'est pas modifié. Trois axes de diagnostic ajoutés : `bourg-intra`, `bonneville-laroche`, `evian-thonon`.
+
+**Vérifié, sans issue** : aucun jeu « Tarifs TER Auvergne-Rhône-Alpes » sur data.gouv (seul « tarifs-intercites » répond pour SNCF) ; Ondéa 400–419 : le titre à bord 1,70 € existe mais sa validité sur les cars de proximité n'est pas écrite.
+
 ## SESSION CLAUDE DU 14/11/2026 (après-midi) — fiches mission et diagnostic réel
 
 Répartition demandée par Laurent : ChatGPT = sources tarifaires, limites d'accès aux prix, contrôles de couverture ; Claude = intégration dans l'application, fiches mission, tests serveur/mobile, performance. **Merci de me signaler avant de modifier `createSession`, `assess`, `rank`, `render` ou `completeWalks` dans `transport-mission-hub.js`.**

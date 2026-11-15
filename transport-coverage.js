@@ -151,6 +151,10 @@ const AXES_COUVERTURE=[
  {id:'amberieu-intra',name:'Ambérieu gare → Cabrol (TAM 2)',from:{lat:45.9542,lon:5.3419,name:'Ambérieu gare'},to:{lat:45.9813,lon:5.3527,name:'Ambérieu Cabrol'},expect:['tam']},
  {id:'chambery-chamoux',name:'Chambéry → Chamoux-sur-Gelon (Cars Savoie S05)',from:{lat:45.5699,lon:5.9169,name:'Chambéry gare routière'},to:{lat:45.5362,lon:6.2153,name:'Chamoux-sur-Gelon'},expect:['cars-73']},
  {id:'bourg-amberieu',name:'Bourg-en-Bresse → Ambérieu (Cars Ain / TER)',from:{lat:46.199498,lon:5.215381,name:'Bourg-en-Bresse gare routière'},to:{lat:45.9542,lon:5.3419,name:'Ambérieu gare'},expect:['cars-01','ter']},
+ // 15/11/2026 : réseaux ajoutés depuis l'agrégat Oùra (horaires seulement ; tarifs non intégrés).
+ {id:'bourg-intra',name:'Bourg-en-Bresse gare routière → centre (Rubis)',from:{lat:46.199498,lon:5.215381,name:'Bourg-en-Bresse gare routière'},to:{lat:46.2052,lon:5.2255,name:'Bourg-en-Bresse centre'},expect:[]},
+ {id:'bonneville-laroche',name:'Bonneville → La Roche-sur-Foron (Proxim iTi / TER)',from:{lat:46.0795,lon:6.4086,name:'Bonneville gare'},to:{lat:46.0669,lon:6.3103,name:'La Roche-sur-Foron gare'},expect:['ter']},
+ {id:'evian-thonon',name:'Évian → Thonon (ÉVA’D / TER)',from:{lat:46.3990,lon:6.5830,name:'Évian-les-Bains gare'},to:{lat:46.3696,lon:6.4804,name:'Thonon Les Arts'},expect:['ter']},
  // 14/11/2026 : parcours prioritaires de la mission « finalisation des moteurs » absents des 8 axes principaux.
  {id:'geneve-lausanne',name:'Genève → Lausanne',from:{lat:46.2102,lon:6.1424,name:'Genève Cornavin'},to:{lat:46.5167,lon:6.6291,name:'Lausanne gare'},expect:['cff']},
  {id:'annemasse-geneve',name:'Annemasse → Genève',from:{lat:46.1993,lon:6.2366,name:'Annemasse gare'},to:{lat:46.2102,lon:6.1424,name:'Genève Cornavin'},expect:['lex']},
