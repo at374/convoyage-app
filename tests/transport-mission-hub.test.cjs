@@ -382,6 +382,9 @@ test('prix inconnu : lien officiel d’achat par opérateur, jamais pour une por
  assert.equal(hub.ticketLink('Cars Région Haute-Savoie').url,'https://www.laregionvoustransporte.fr/');
  assert.equal(hub.ticketLink('Star Roanne').label,'Star Roanne');
  assert.equal(hub.ticketLink("Star't Thonon").label,"Star't");
+ assert.equal(hub.ticketLink('Citéa (Valence Romans Mobilités)').url,'https://www.citea.fr/');
+ assert.equal(hub.ticketLink('STAS (Saint-Étienne Métropole)').url,'https://www.reseau-stas.fr/');
+ assert.equal(hub.ticketLink('T2C (Clermont Auvergne Métropole)').url,'https://www.t2c.fr/');
  assert.equal(hub.ticketLink('Réseau inconnu').url,'https://www.oura.com/');
  assert.equal(hub.ticketLink(''),null);
  const j={legs:[{kind:'transit',provider:'TCL'},{kind:'walk'},{kind:'transit',provider:'SNCF'},{kind:'transit',provider:'SNCF'}],

@@ -105,5 +105,33 @@ class TFilterByBounds(unittest.TestCase):
         finally:
             m.MAX_OUT = old_max
 
+class TMirrorConfig(unittest.TestCase):
+    """Vérifie la forme des entrées MIRROR/FILTERED_MIRROR (pas de téléchargement réel) : URL https,
+    bbox cohérente (min < max), identifiant unique — pour détecter une erreur de configuration avant le
+    passage CI réel qui, lui, télécharge et valide les flux (seul juge de leur contenu)."""
+    def _check(self, entries):
+        seen = set()
+        for spec in entries:
+            self.assertNotIn(spec['id'], seen, 'identifiant dupliqué : ' + spec['id'])
+            seen.add(spec['id'])
+            self.assertTrue(spec.get('url', '').startswith('https://'), spec['id'] + ' : URL non https')
+            bounds = spec.get('bounds')
+            self.assertEqual(len(bounds), 4, spec['id'] + ' : bbox incomplète')
+            lat_min, lon_min, lat_max, lon_max = bounds
+            self.assertLess(lat_min, lat_max, spec['id'] + ' : latitudes inversées')
+            self.assertLess(lon_min, lon_max, spec['id'] + ' : longitudes inversées')
+
+    def test_mirror_entries_well_formed(self):
+        m = load_module()
+        self._check(m.MIRROR)
+
+    def test_filtered_mirror_entries_well_formed(self):
+        m = load_module()
+        self._check(m.FILTERED_MIRROR)
+        ids = {s['id'] for s in m.FILTERED_MIRROR}
+        self.assertIn('citea-valence', ids)
+        self.assertIn('stas-saint-etienne', ids)
+        self.assertIn('t2c-clermont', ids)
+
 if __name__ == '__main__':
     unittest.main()

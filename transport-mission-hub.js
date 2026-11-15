@@ -519,7 +519,14 @@ function makeProviders(r,opts={}){
    ['lebus', "Le Bus Tain-Tournon", 'lebus-tain-tournon.zip', [44.99,4.52,45.16,5.07]],
    ['smtut', "SMTUT Thiers", 'smtut-thiers.zip', [45.69,3.36,46.03,3.74]],
    ['mobivie', "MobiVie Vichy", 'mobivie-vichy.zip', [46.06,3.37,46.17,3.49]],
-   ['le37', "Le 37 Péage-de-Roussillon", 'le37-roussillon.zip', [45.3,4.75,45.47,5.07]]
+   ['le37', "Le 37 Péage-de-Roussillon", 'le37-roussillon.zip', [45.3,4.75,45.47,5.07]],
+   // 15/11/2026 (soir) : trois réseaux confirmés par le sondage PAN mais absents de l'agrégat Oùra
+   // (chacun un GTFS officiel à part). citea : bbox testée contre le flux réel. stas/t2c : bbox
+   // provisoire (cœur urbain estimé, flux non téléchargeable depuis ce poste) — à resserrer/élargir
+   // après le premier passage CI réel sur scripts/build_regional_gtfs.py (cf. commentaire FILTERED_MIRROR).
+   ['citea', "Citéa (Valence Romans Mobilités)", 'citea-valence.zip', [44.85,4.80,45.10,5.15]],
+   ['stas', "STAS (Saint-Étienne Métropole)", 'stas-saint-etienne.zip', [45.38,4.32,45.50,4.45]],
+   ['t2c', "T2C (Clermont Auvergne Métropole)", 't2c-clermont.zip', [45.72,3.00,45.85,3.20]]
   ];
   // Archives are published on the transport feature branch, not necessarily on
   // the deployed GitHub Pages site. Explicit HTTPS URLs avoid a silent 404
@@ -854,6 +861,9 @@ const TICKET_LINKS=[
  [/star roanne/i,'Star Roanne','https://www.bus-star.com/'],
  [/tain-tournon/i,'Le Bus','https://www.archeagglo.fr/'],
  [/smtut|thiers/i,'SMTUT','http://www.bus-tut.com'],
+ [/cit[ée]a|valence romans/i,'Citéa','https://www.citea.fr/'],
+ [/\bstas\b|saint-[ée]tienne m[ée]tropole/i,'STAS','https://www.reseau-stas.fr/'],
+ [/\bt2c\b|clermont auvergne m[ée]tropole/i,'T2C','https://www.t2c.fr/'],
  [/cars? r[ée]gion|\btam\b/i,'Cars Région','https://www.laregionvoustransporte.fr/']
 ];
 function ticketLink(provider){

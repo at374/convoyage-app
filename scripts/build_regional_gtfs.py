@@ -68,9 +68,27 @@ EXTRACT = [
 # encore, resserrer davantage avant d'augmenter MAX_OUT (un flux plus gros reste plus lourd à charger sur
 # le téléphone même sous la limite). Non testable contre le vrai flux depuis ce poste (accès réseau direct
 # à data.gouv.fr/apigee bloqué par le bac à sable de développement) : seul le passage CI réel fait foi.
+# Citéa (Valence Romans Mobilités) : bbox testée réellement contre l'archive officielle le 15/11/2026
+# (brut 12,2 Mo, hors MAX_OUT) — [44.85,4.80,45.10,5.15] couvre Valence/Romans-sur-Isère/Bourg-lès-Valence
+# et produit 4,56 Mo (286 lignes, 17 672 courses, validé localement avant publication).
+# STAS (Saint-Étienne Métropole) et T2C (Clermont Auvergne Métropole, SMTC) : URL officielles trouvées via
+# le sondage PAN du 15/11/2026 (docs/sources-tarifs/pan-aura-jeux.txt), mais ces deux domaines ne sont pas
+# joignables depuis ce poste de développement (bloqués par le bac à sable) — bbox ci-dessous sont des
+# estimations géographiques du cœur urbain (ville + communes limitrophes immédiates), PAS mesurées sur le
+# flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
+# anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
     {'id': 'tcl-lyon', 'network': 'TCL', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8',
      'bounds': [45.74, 4.81, 45.77, 4.87], 'download_limit': 60 * 1024 * 1024},
+    {'id': 'citea-valence', 'network': 'Citéa (Valence Romans Mobilités)',
+     'url': 'https://static.data.gouv.fr/resources/ce-jeu-de-donnees-contient-la-liste-des-arrets-des-horaires-et-des-parcours-theoriques-du-reseau-de-transport-urbain-et-interurbain-de-vrm/20261022-080050/gtfs-nov2026-juin2027-citea.zip',
+     'bounds': [44.85, 4.80, 45.10, 5.15], 'download_limit': 60 * 1024 * 1024},
+    {'id': 'stas-saint-etienne', 'network': 'STAS (Saint-Étienne Métropole)',
+     'url': 'https://bus-prod.saint-etienne-metropole.fr/Public/stas/api/gtfs.aspx',
+     'bounds': [45.38, 4.32, 45.50, 4.45], 'download_limit': 60 * 1024 * 1024},
+    {'id': 't2c-clermont', 'network': 'T2C (Clermont Auvergne Métropole, SMTC)',
+     'url': 'https://opendata.clermontmetropole.eu/api/v2/catalog/datasets/gtfs-smtc/alternative_exports/gtfs',
+     'bounds': [45.72, 3.00, 45.85, 3.20], 'download_limit': 60 * 1024 * 1024},
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
