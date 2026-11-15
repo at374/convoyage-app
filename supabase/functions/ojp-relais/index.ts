@@ -3,7 +3,7 @@
 // Rôle : garder le jeton opentransportdata.swiss côté serveur. L'application envoie une requête OJP (XML) ;
 // la fonction la transmet telle quelle à l'adresse officielle OJP Fare et renvoie la réponse XML.
 // - Ne lit et n'écrit AUCUNE table ; ne touche ni à l'authentification ni à la synchronisation des missions.
-// - Réservée aux utilisateurs connectés (vérification du jeton de session par Supabase, réglage par défaut).
+// - Réservée aux utilisateurs connectés (session vérifiée dans le code, en lecture seule).
 // - Une seule destination possible, trois types de requêtes acceptés, taille limitée, rien n'est journalisé.
 // Secret à définir sur le projet : OJP_FARE_API_KEY (jamais dans le code de l'application).
 const CIBLE = "https://api.opentransportdata.swiss/ojpfare";
@@ -20,6 +20,18 @@ const texte = (message: string, status: number) =>
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
   if (req.method !== "POST") return texte("Méthode non autorisée", 405);
+  // Utilisateur connecté obligatoire : la session reçue est vérifiée auprès du service d'authentification du
+  // projet (lecture seule), que l'option « Verify JWT » de la plateforme soit active ou non.
+  const session = req.headers.get("authorization") ?? "";
+  const cle = req.headers.get("apikey") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+  const base = Deno.env.get("SUPABASE_URL") ?? "";
+  if (!/^Bearer\s+\S+/.test(session) || !cle || !base) return texte("Connexion requise", 401);
+  try {
+    const qui = await fetch(base + "/auth/v1/user", { headers: { authorization: session, apikey: cle }, signal: AbortSignal.timeout(8_000) });
+    if (!qui.ok) return texte("Connexion requise", 401);
+  } catch (_) {
+    return texte("Vérification de la connexion impossible", 502);
+  }
   const jeton = Deno.env.get("OJP_FARE_API_KEY");
   if (!jeton) return texte("Relais OJP non configuré (secret OJP_FARE_API_KEY absent)", 503);
   const corps = await req.text();
