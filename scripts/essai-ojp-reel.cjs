@@ -11,9 +11,16 @@ const lines=['# Essai réel OJP 1.0 / OJP Fare — Genève → Lausanne','','Ex�
 const scrub=s=>[tokOJP,tokFare].filter(Boolean).reduce((t,k)=>t.split(k).join('***'),String(s));
 const save=()=>{fs.writeFileSync(out,scrub(lines.join('\n'))+'\n');console.log(scrub(lines.join('\n')));};
 (async()=>{
- if(!tokOJP){lines.push('Essai impossible : le secret `OJP_API_KEY` n’existe pas dans le dépôt. Aucune validation réelle des API suisses.');return save();}
+ if(!tokOJP&&!tokFare){lines.push('Essai impossible : aucun secret OJP dans le dépôt. Aucune validation réelle des API suisses.');return save();}
+ // Sans jeton OJP 1.0 : la documentation indique que le service OJP Fare accepte aussi les OJPTripRequest.
+ // On essaie donc, dans l'ordre, chaque couple (adresse, jeton) disponible et on note celui qui répond.
+ const routes=[tokOJP&&['OJP 1.0 + jeton OJP 1.0',O.ENDPOINT,tokOJP],tokFare&&['OJP 1.0 + jeton OJP Fare',O.ENDPOINT,tokFare],tokFare&&['OJP Fare + jeton OJP Fare',O.FARE_ENDPOINT,tokFare]].filter(Boolean);
+ const ask=async(what,body)=>{let last;
+  for(const [label,url,tok] of routes){try{const xml=await O.post(url,body,tok);lines.push('- '+what+' : réponse par « '+label+' »');return xml;}
+   catch(e){last=e;lines.push('- '+what+' : échec par « '+label+' » — '+e.message);}}
+  throw last;};
  const pick=async name=>{
-  const xml=await O.post(O.ENDPOINT,O.locationRequest(name),tokOJP);
+  const xml=await ask('Lieux « '+name+' »',O.locationRequest(name));
   const locs=O.parseLocations(xml);
   lines.push('## Lieux pour « '+name+' »','','| Nom | Type de référence (réponse) | Référence | Utilisable |','|---|---|---|---|',
    ...locs.map(l=>'| '+l.name+' | '+(l.refType||'—')+' | '+(l.ref||'—')+' | '+(O.placeRefXml(l)?'oui':'non ('+l.reason+')')+' |'),'');
@@ -22,7 +29,7 @@ const save=()=>{fs.writeFileSync(out,scrub(lines.join('\n'))+'\n');console.log(s
  const from=await pick('Genève'),to=await pick('Lausanne');
  if(!from||!to){lines.push('**'+O.UNCONFIRMED+'** : référence de départ ou d’arrivée absente ou ambiguë.');return save();}
  const when=new Date(Date.now()+86400000);when.setUTCHours(7,0,0,0);
- const trips=O.parseTrips(await O.post(O.ENDPOINT,O.tripRequest(from,to,when),tokOJP));
+ const trips=O.parseTrips(await ask('Trajets',O.tripRequest(from,to,when)));
  lines.push('## Trajets ('+from.refType+' '+from.ref+' → '+to.refType+' '+to.ref+', départ après '+when.toISOString()+')','','Trajets reçus : '+trips.length,'');
  for(const t of trips){
   lines.push('- '+t.startTime+' → '+t.endTime+' ('+t.duration+', '+t.transfers+' correspondance(s)) : '+
