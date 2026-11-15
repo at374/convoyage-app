@@ -15,7 +15,7 @@ test('référence simple : le type lu dans la réponse est conservé, avec son e
  // « siri » est l'espace de noms par défaut du document de requête : <StopPointRef> = siri:StopPointRef.
  assert.match(O.placeRefXml(p),/<StopPointRef>8501008<\/StopPointRef>/);
  assert.doesNotMatch(O.placeRefXml(p),/ojp:StopPointRef|StopPlaceRef/);
- assert.match(O.tripRequest(g,p,'2026-11-16T08:00:00Z'),/^<\?xml[^>]*>\n<OJP xmlns="http:\/\/www\.siri\.org\.uk\/siri" xmlns:ojp="http:\/\/www\.vdv\.de\/ojp" version="1\.0">/);
+ assert.match(O.tripRequest(g,p,'2026-11-16T08:00:00Z'),/^<\?xml[^>]*>\n<OJP xmlns="http:\/\/www\.siri\.org\.uk\/siri" xmlns:siri="http:\/\/www\.siri\.org\.uk\/siri" xmlns:ojp="http:\/\/www\.vdv\.de\/ojp" version="1\.0">/);
 });
 test('référence étendue (SLOID) : jamais de type déduit du nombre de segments',()=>{
  // Même identifiant à 4 ou 6 segments : seul l'élément de la réponse décide.

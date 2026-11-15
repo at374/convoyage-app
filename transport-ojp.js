@@ -24,7 +24,7 @@ const first=(xml,name)=>{const m=tagRe(name).exec(String(xml||''));return m?m[1]
 const text=(xml,name)=>{const v=first(xml,name);if(v==null)return null;const inner=first(v,'Text');return unesc((inner==null?v:inner).replace(/<[^>]*>/g,'').trim());};
 // Une référence est une chaîne non vide, sans blanc ni caractère XML : on ne l'interprète pas davantage.
 function validRef(ref){return typeof ref==='string'&&ref.length>0&&ref.length<=120&&!/[\s<>&"']/.test(ref);}
-function header(now){return '<?xml version="1.0" encoding="UTF-8"?>\n<OJP xmlns="http://www.siri.org.uk/siri" xmlns:ojp="http://www.vdv.de/ojp" version="1.0"><OJPRequest><ServiceRequest>'+
+function header(now){return '<?xml version="1.0" encoding="UTF-8"?>\n<OJP xmlns="http://www.siri.org.uk/siri" xmlns:siri="http://www.siri.org.uk/siri" xmlns:ojp="http://www.vdv.de/ojp" version="1.0"><OJPRequest><ServiceRequest>'+
  '<RequestTimestamp>'+now+'</RequestTimestamp><RequestorRef>ConvoyageUltra</RequestorRef>';}
 const FOOTER='</ServiceRequest></OJPRequest></OJP>';
 const stamp=d=>new Date(d==null?Date.now():d).toISOString();
@@ -62,6 +62,7 @@ function placeRefXml(loc){
  if(!loc||!REF_TYPES.includes(loc.refType)||!validRef(loc.ref)||loc.reason)return null;
  const ref=loc.refType==='StopPointRef'?'<StopPointRef>'+esc(loc.ref)+'</StopPointRef>':'<ojp:StopPlaceRef>'+esc(loc.ref)+'</ojp:StopPlaceRef>';
  // « siri » est l'espace de noms par défaut du document : <StopPointRef> y est donc siri:StopPointRef.
+ // (le préfixe siri: est aussi déclaré, pour les blocs recopiés d'une réponse)
  return '<ojp:PlaceRef>'+ref+'<ojp:LocationName><ojp:Text>'+esc(loc.name||loc.ref)+'</ojp:Text></ojp:LocationName></ojp:PlaceRef>';
 }
 function tripRequest(from,to,when,opts={}){
@@ -73,7 +74,7 @@ function tripRequest(from,to,when,opts={}){
  return header(now)+'<ojp:OJPTripRequest><RequestTimestamp>'+now+'</RequestTimestamp>'+
   '<ojp:Origin>'+a+'<ojp:DepArrTime>'+at+'</ojp:DepArrTime></ojp:Origin><ojp:Destination>'+b+'</ojp:Destination>'+
   '<ojp:Params><ojp:NumberOfResults>'+(Number.isInteger(opts.limit)?opts.limit:3)+'</ojp:NumberOfResults>'+
-  '<ojp:IncludeTrackSections>false</ojp:IncludeTrackSections><ojp:IncludeIntermediateStops>false</ojp:IncludeIntermediateStops></ojp:Params>'+
+  '<ojp:IncludeTrackSections>false</ojp:IncludeTrackSections><ojp:IncludeIntermediateStops>true</ojp:IncludeIntermediateStops></ojp:Params>'+
   '</ojp:OJPTripRequest>'+FOOTER;
 }
 function parseTrips(xml){
@@ -102,7 +103,7 @@ function fareRequest(trip,opts={}){
  return header(now)+'<ojp:OJPFareRequest><RequestTimestamp>'+now+'</RequestTimestamp>'+
   '<ojp:TripFareRequest><ojp:Trip>'+trip.xml+'</ojp:Trip></ojp:TripFareRequest>'+
   '<ojp:Params><ojp:FareAuthorityFilter>ch:1:NOVA</ojp:FareAuthorityFilter><ojp:PassengerCategory>Adult</ojp:PassengerCategory>'+
-  '<ojp:TravelClass>second</ojp:TravelClass></ojp:Params></ojp:OJPFareRequest>'+FOOTER;
+  '<ojp:TravelClass>second</ojp:TravelClass><ojp:Traveller><ojp:Age>40</ojp:Age><ojp:PassengerCategory>Adult</ojp:PassengerCategory></ojp:Traveller></ojp:Params></ojp:OJPFareRequest>'+FOOTER;
 }
 // Prix plein tarif 2e classe couvrant TOUT le trajet, sinon null avec la raison (jamais de prix partiel affiché).
 function parseFare(xml,trip){

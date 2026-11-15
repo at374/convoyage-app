@@ -37,6 +37,7 @@ const save=()=>{fs.writeFileSync(out,scrub(lines.join('\n'))+'\n');console.log(s
   if(!tokFare){lines.push('  - Prix : non demandé (secret `OJP_FARE_API_KEY` absent).');continue;}
   try{
    const f=O.parseFare(await O.post(O.FARE_ENDPOINT,O.fareRequest(t),tokFare),t);
+   lines.push('  - Offres reçues : '+((f.offers||[]).map(o=>o.amount+' '+o.currency+' « '+o.name+' » ['+o.fromId+'–'+o.toId+', '+o.travelClass+(o.requiredCard?', carte '+o.requiredCard:'')+']').join(' ; ')||'aucune'));
    lines.push('  - Prix : '+(f.price?f.price.amount.toFixed(2)+' '+f.price.currency+' ('+f.price.name+', '+f.price.authority+', portions '+f.price.fromId+' à '+f.price.toId+' = trajet complet)':
     'non affiché — '+f.reason+' ; offres reçues : '+((f.offers||[]).map(o=>o.amount+' '+o.currency+' ['+o.fromId+'–'+o.toId+(o.requiredCard?', carte '+o.requiredCard:'')+', '+o.travelClass+']').join(', ')||'aucune')));
   }catch(e){lines.push('  - Prix : erreur API — '+e.message);}
