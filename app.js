@@ -2303,9 +2303,13 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           try{const f=window.CPTransportFareGrids?.fareFor(leg);if(f)return f;}catch(_){}
           return null;
         };
+        // OJP Suisse : relais serveur uniquement, jamais de jeton côté app (api.session reste privé à l'utilisateur
+        // connecté). Session absente ou expirée : le fournisseur OJP se désactive silencieusement (comme les autres
+        // moteurs sans accès), sans message d'erreur ni blocage du reste des fiches.
+        const ojpSession=api?.connecte?{url:api.url,cle:api.cle,accessToken:api.session.access_token}:null;
         const session=Hub.createSession({tasks,router,fareFor,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),
           providers:Hub.makeProviders(window,{fetcher:regionalFetch,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
-            nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{}}),
+            nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{},ojpSession}),
           onUpdate:(label,view)=>{
             if(!panel.isConnected||!transportDestinations[label])return;
             let host=hubHosts[label];

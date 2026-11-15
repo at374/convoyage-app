@@ -77,6 +77,54 @@ function fromSwiss(results){
   return journey('Suisse (transport.opendata.ch)',legs,{realtime:legs.some(l=>l&&l.realtime)});
  }).filter(Boolean);
 }
+// Vocabulaire PtMode d'OJP (opentransportdata.swiss) : bateau écarté comme les sections « walk » de fromSwiss
+// (le trajet entier est retiré s'il comporte une portion bateau, jamais affiché partiellement).
+function ojpMode(m){
+ const c=String(m||'').toLowerCase();
+ if(/water|ferry|boat|ship/.test(c))return 'boat';
+ if(/rail|train/.test(c))return 'Train';
+ if(/tram/.test(c))return 'Tram';
+ if(/metro|underground|subway/.test(c))return 'Métro';
+ if(/coach/.test(c))return 'Car';
+ if(/bus/.test(c))return 'Bus';
+ if(/funicular|cableway|gondola|telecabin/.test(c))return 'Funiculaire';
+ return 'Transport';
+}
+// entries = [{trip, price}] (trip : transport-ojp.js::parseTrips ; price : transport-ojp.js::parseFare().price ou null).
+// Seules les portions « timed » (en véhicule) sont conservées — les « transfer »/« continuous » (correspondances à
+// pied) sont retirées, comme fromSwiss retire ses sections « walk » : la marche réelle est recalculée par
+// completeWalks(), qui dégrade déjà sûrement (aucune marche à vol d'oiseau) quand les positions GPS intermédiaires
+// manquent — or OJP ne fournit aucune coordonnée pour ses arrêts de correspondance (constaté sur une réponse réelle).
+// Seules les positions d'origine/destination de la mission (connues, vérifiées) sont donc posées, sur la première et
+// la dernière portion ; les correspondances intermédiaires restent sans position, et basculent honnêtement
+// en « Transport non confirmé » via le pipeline existant plutôt que d'être fabriquées.
+// Tarif : OJP Fare donne un prix unique pour tout le trajet (jamais par portion). Pour l'intégrer sans contourner
+// priceOf() (son mécanisme de « titre combiné » suppose des tarifs par réseau déjà vérifiés séparément, absents
+// ici), on pose 0 sur chaque portion sauf la dernière, qui porte le prix total — la somme reste exacte et chaque
+// portion est « vérifiée » au sens de priceOf(), sans sur-compter ni inventer de répartition par portion.
+function fromOJP(entries,{origin,destination}={}){
+ return (Array.isArray(entries)?entries:[]).map(({trip,price}={})=>{
+  if(!trip)return null;
+  const timed=(trip.legs||[]).filter(l=>l&&l.kind==='timed');
+  if(!timed.length)return null;
+  if(timed.some(l=>ojpMode(l.mode)==='boat'))return null;
+  const network='ojp:'+(trip.id||Math.random().toString(36).slice(2));
+  const verified=price&&finite(price.amount)&&price.amount>=0&&/^(EUR|CHF)$/.test(price.currency||'');
+  const legs=timed.map((l,i)=>{
+   const isLast=i===timed.length-1;
+   const fare=!verified?null:isLast?
+    {amount:price.amount,currency:price.currency,network,
+     source:'OJP Fare ('+(price.name||price.authority||'tarif officiel')+')'+(price.passenger?' — '+price.passenger:'')}:
+    {amount:0,currency:price.currency,network,source:'Couvert par le billet OJP du trajet'};
+   // Opérateur manquant côté OJP (fréquent pour les trajets purement suisses) : CFF par défaut, pour que
+   // ticketLink() propose le bon lien d'achat plutôt que le repli Oùra (portail régional français).
+   return leg({mode:ojpMode(l.mode),line:l.line||null,provider:l.operator||'CFF',from:l.from,to:l.to,
+    fromPoint:i===0?origin:null,toPoint:isLast?destination:null,
+    departure:l.departure,arrival:l.arrival,fare});
+  });
+  return journey('OJP Suisse (opentransportdata.swiss)',legs,{});
+ }).filter(Boolean);
+}
 function tripgoMode(m){return m==='wa_wal'?'walk':/train|rail/.test(m)?'Train':/tram|lrt/.test(m)?'Tram':/metro|subway/.test(m)?'Métro':/coach/.test(m)?'Car':/bus/.test(m)?'Bus':'Transport';}
 function fromTripGo(answer){
  return (answer&&Array.isArray(answer.itineraries)?answer.itineraries:[]).map(it=>{
@@ -688,6 +736,40 @@ function makeProviders(r,opts={}){
     if(a&&b&&a.id!==b.id)res=await once({from:a.id,to:b.id,when:w.when,arriveBy:w.arriveBy,limit:8,fetcher});
    }
    return fromSwiss(res);}};
+ // OJP (opentransportdata.swiss) : relais serveur uniquement (ojp-relais), jeton jamais côté app. Désactivé sans
+ // session connectée ou hors zone suisse/Grand Genève. Noms de lieu (task.fromCity/toCity) requis : OJP résout
+ // lui-même la référence exacte (StopPlaceRef/StopPointRef) ; aucune référence n'est fabriquée ici.
+ if(r.CPTransportOJP&&typeof r.CPTransportOJP.tripRequest==='function')P.ojp={name:'OJP Suisse',
+  enabled:task=>!!opts.ojpSession&&!!task.fromCity&&!!task.toCity&&(inSwissArea(pt(task.from))||inSwissArea(pt(task.to))),
+  disabledReason:'relais OJP non connecté, communes inconnues, ou trajet hors zone suisse',
+  run:async(task,signal)=>{
+   const w=queryWindow(task);if(!w)return [];
+   const O=r.CPTransportOJP,session=opts.ojpSession;
+   const resolve=async name=>{
+    if(!name)return null;
+    let xml;try{xml=await O.relayPost(session,O.locationRequest(name),fetcher);}catch(_){return null;}
+    const locs=O.parseLocations(xml).filter(l=>l.refType&&!l.reason);
+    return locs[0]||null;
+   };
+   const [from,to]=await Promise.all([resolve(task.fromCity),resolve(task.toCity)]);
+   if(signal?.aborted||!from||!to)return [];
+   const body=O.tripRequest(from,to,w.when,{});
+   if(!body)return [];
+   let tripXml;try{tripXml=await O.relayPost(session,body,fetcher);}catch(_){return [];}
+   if(signal?.aborted)return [];
+   const trips=O.parseTrips(tripXml);
+   if(!trips.length)return [];
+   const entries=await Promise.all(trips.map(async trip=>{
+    let price=null;
+    const fareBody=O.fareRequest(trip,{});
+    if(fareBody){
+     try{const fareXml=await O.relayPost(session,fareBody,fetcher);price=O.parseFare(fareXml,trip,{}).price;}catch(_){/* prix indisponible : la portion restera « Prix à confirmer » */}
+    }
+    return {trip,price};
+   }));
+   if(signal?.aborted)return [];
+   return fromOJP(entries,{origin:pt(task.from),destination:pt(task.to)});
+  }};
  if(r.CPRegionalRouting&&typeof r.CPRegionalRouting.plan==='function')P.regional={name:'Mobilités M',
   enabled:task=>!!opts.regionalEndpoint||r.CPRegionalRouting.supportsPublic?.(pt(task.from),pt(task.to)),disabledReason:'hors agglomération grenobloise',
   run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
@@ -949,7 +1031,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
