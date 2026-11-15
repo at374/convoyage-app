@@ -231,6 +231,29 @@ function line272Fare(leg){
   ...(p[1]!==null&&(a==='GE'||b==='GE')?{combined:{amount:p[1],covers:ZONE10.network,label:cell==='L'?label:'billet unité Parcours + zone 10'}}:{}),
   source:'Ligne 272 · '+label+' · grille officielle du 14/12/2025 au 12/12/2026 · '+L272.source+' (vérifiée le '+L272.checkedAt+')'};
 }
+// Ligne 274 Sallanches – Genève Aéroport (Jacquet / Cars Région Haute-Savoie) : grille officielle « Déplacements
+// transfrontaliers » valable à partir du 14/12/2025. Billet unité Parcours par commune française <> Genève ;
+// « Parcours + zone 10 » retenu seulement si le trajet continue dans Genève (priceOf). Commune = code INSEE de
+// l'identifiant officiel d'arrêt, recoupé avec la Base Adresse Nationale. Nangy (multizones 10,210) non recoupé,
+// trajets internes France (matrice couleur) et internes Genève : aucun prix.
+const L274={validFrom:'2025-12-14',validUntil:'2026-12-12',checkedAt:'2026-11-15',
+ source:'https://jacquet-autocars.com/wp-content/uploads/2025/11/Grille-tarifaire-TRANSFRONTALIERS-2025-2026.pdf',
+ geneva:['6621','6623','6634'],
+ zone:{'74128':1,'74241':2,'74304':2,'74311':2,'74042':3,'74276':4,'74183':4,'74256':5},
+ price:{1:[4.60,4.90],2:[6.00,6.40],3:[6.40,8.10],4:[7.50,8.20],5:[11.40,14.60]}};
+function line274Fare(leg){
+ if(!leg||leg.kind==='walk'||leg.mode!=='Bus'||typeof leg.provider!=='string'||typeof leg.departure!=='string')return null;
+ if(!/^cars\s*r[ée]gion\s*haute[- ]savoie$/i.test(leg.provider.trim())||String(leg.line||'').trim()!=='274')return null;
+ const day=leg.departure.slice(0,10);if(day<L274.validFrom||day>L274.validUntil)return null;
+ const raw=leg.gtfsRaw||{},pick=(v,p)=>typeof v==='string'&&v?v:(p&&(p.stopId||p.stop_id||p.id))||null;
+ const code=id=>{const m=/^FR:(\d{4,5}):ZE:\d+:HAUTExSAVOIE$/.exec(String(id||''));return m?m[1]:null;};
+ const a=code(pick(raw.from,leg.fromPoint)),b=code(pick(raw.to,leg.toPoint));if(!a||!b)return null;
+ const ga=L274.geneva.includes(a),gb=L274.geneva.includes(b);if(ga===gb)return null;
+ const z=L274.zone[ga?b:a],p=L274.price[z];if(!p)return null;
+ return {amount:p[0],currency:'EUR',network:'Ligne 274 · zone '+z+' (billet unité Parcours)',validityMinutes:null,
+  combined:{amount:p[1],covers:ZONE10.network,label:'billet unité Parcours + zone 10'},
+  source:'Ligne 274 · zone '+z+' <> Genève · grille officielle valable à partir du 14/12/2025 · '+L274.source+' (vérifiée le '+L274.checkedAt+')'};
+}
 // tpg, lignes urbaines transfrontalières entre Saint-Julien-en-Genevois (zone 230) et le canton de Genève (zone 10) :
 // billet Léman Pass multizones 10+230, 4,80 €, 90 min, tous modes dans les deux zones — même grille officielle 272
 // (« Titre Multizones 10,230 ») et lemanpass.com/tarifs. Seule la localité « Saint-Julien » (nom officiel d'arrêt
@@ -271,6 +294,7 @@ function fareFor(leg,grids){
  const leman=lemanPassFare(leg);if(leman)return leman;
  const startAB=startInterzoneFare(leg);if(startAB)return startAB;
  const l272=line272Fare(leg);if(l272)return l272;
+ const l274=line274Fare(leg);if(l274)return l274;
  const lm230=lemanMultizone230Fare(leg);if(lm230)return lm230;
  const z10=zone10Fare(leg);if(z10)return z10;
  if(!leg||leg.kind==='walk'||typeof leg.provider!=='string'||!leg.provider.trim())return null;
@@ -290,7 +314,7 @@ function fareFor(leg,grids){
  return {amount:e.amount,currency:e.currency,network:e.network,validityMinutes:Number.isFinite(e.validityMinutes)?e.validityMinutes:null,
   source:e.network+' · '+e.product+' · '+e.source+' (vérifié le '+e.checkedAt+')'};
 }
-const api={GRIDS,fareFor,valid,officialZoneFare,lemanPassFare,startInterzoneFare,zone10Fare,line272Fare,line272Locality,lemanMultizone230Fare,stationKey};
+const api={GRIDS,fareFor,valid,officialZoneFare,lemanPassFare,startInterzoneFare,zone10Fare,line272Fare,line272Locality,line274Fare,lemanMultizone230Fare,stationKey};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportFareGrids=api;
 })(typeof window!=='undefined'?window:globalThis);

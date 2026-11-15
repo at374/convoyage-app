@@ -760,6 +760,12 @@ jobs:
           assert.equal(fareFor({provider:'Cars Région Haute-Savoie',mode:'Bus',line:'274',departure:'2026-11-16T08:00:00+01:00',gtfsRaw:{from:sid('6623','57862'),to:sid('6608','58821')}}),null,'274 : grille non intégrée');
           assert.equal(fareFor({provider:'TPG',mode:'Bus',line:'B 80',from:'Saint-Julien, centre',to:'Lancy-Bachet, gare',departure:'2026-11-16T08:00:00+01:00'})?.amount,4.80);
           assert.equal(fareFor({provider:'TPG',mode:'Bus',line:'B 82',from:'Collonges, marché',to:'Lancy-Bachet, gare',departure:'2026-11-16T08:00:00+01:00'}),null,'Collonges : zone non prouvée');
+          {const l=(f,t,line='274')=>fareFor({kind:'transit',mode:'Bus',provider:'Cars Région Haute-Savoie',line,departure:'2026-11-16T07:00:00.000Z',gtfsRaw:{from:f,to:t}});
+           const S='FR:74256:ZE:58792:HAUTExSAVOIE',B='FR:74042:ZE:58718:HAUTExSAVOIE',F='FR:74128:ZE:75337:HAUTExSAVOIE',N='FR:74197:ZE:58716:HAUTExSAVOIE',G='FR:6621:ZE:58825:HAUTExSAVOIE',A='FR:6623:ZE:57862:HAUTExSAVOIE';
+           assert.equal(l(S,G).amount,11.40,'274 Sallanches → Genève');assert.equal(l(S,G).combined.amount,14.60);
+           assert.equal(l(A,B).amount,6.40,'274 Aéroport → Bonneville');assert.equal(l(F,G).amount,4.60,'274 Fillinges → Genève');
+           assert.equal(l(N,G),null,'274 Nangy : commune non recoupée, pas de prix');
+           assert.equal(l(A,G),null,'274 interne Genève : pas de prix');assert.equal(l(S,B),null,'274 interne France : pas de prix');}
           console.log('Exclusions, validité et ambiguïtés tarifaires OK');
           NODE
       - name: Vérifier le tarif GTFS officiel embarqué TCL (Fares V1)

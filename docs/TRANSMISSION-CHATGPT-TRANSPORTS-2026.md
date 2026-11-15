@@ -2,6 +2,20 @@
 
 **Date du relevé : 14 novembre 2026, 12 h (section du 14/11 en tête) ; sections suivantes : 13 novembre 2026.** Dépôt : `at374/convoyage-app`, branche `feature/transports-aura-suisse`. Ce document décrit l'état après la session Claude du 13/11/2026, pour éviter de refaire le même travail.
 
+## SESSION CLAUDE DU 15/11/2026 — lignes 272 et 274 tarifées, réseau Cars Région Haute-Savoie
+
+**Demande de Laurent** : la page Région « Cars Région de Haute-Savoie » doit donner des trajets. Constat : la page n'a pas de moteur propre (liste d'horaires PDF + renvoi Oùra) ; l'application lit déjà le flux officiel Oùra de ce réseau (`oura-haute-savoie`). Inventaire du flux (`docs/sources-tarifs/cars74-lignes.txt`) : 272, 274, Y02, Y03, Y04, Y13, Y21, Y22, Y51, Y62, Y63, Y81 à Y86, Y91 à Y94 + navettes Aravis/Balad'Aulps/Éconavette. La 271 n'est pas dans ce flux.
+
+**Tarifs intégrés (`transport-fare-grids.js`)**
+- **272** (commit `853ddcd`) : grille officielle tpg 14/12/2025 → 12/12/2026, matrice par couple de communes, vérifiée symétrique. Commune = code INSEE de l'identifiant d'arrêt Oùra, recoupé BAN. Ex. Annecy → Genève 11,30 € (14,50 € avec zone 10), Saint-Julien → Genève 4,80 €. Zone Sibra, même commune, arrêt non recoupé : aucun prix.
+- **tpg Saint-Julien ↔ canton de Genève** : Léman Pass multizones 10+230, 4,80 €, 90 min. Collonges/Archamps (B 82) : zone non prouvée, aucun prix.
+- **274** (ce commit) : grille Jacquet « Déplacements transfrontaliers » à partir du 14/12/2025. Billet unité Parcours commune française ↔ Genève : Fillinges 4,60 ; Saint-Jeoire/Ville-en-Sallaz/Viuz-en-Sallaz 6,00 ; Bonneville 6,40 ; Taninges/Mieussy 7,50 ; Sallanches 11,40 (avec zone 10 : 4,90 / 6,40 / 8,10 / 8,20 / 14,60). **Non intégré** : Nangy (multizones 10,210 — arrêt Findrol non recoupé BAN), trajets internes France (matrice en couleurs illisible de façon sûre dans `img/jacquet-fr-fr-1.png`), trajets internes Genève.
+- **`priceOf`** : un titre combiné officiel (Parcours + zone 10, multizones) est compté une seule fois quand le trajet continue en zone 10 ; la portion genevoise affiche « couvert par le titre combiné ». Conforme à la note de validation (pas d'addition 10 + zone française).
+
+**Diagnostic réel du 15/11 08:27 UTC (run sur `853ddcd`)** : 23 axes, 873 trajets, 0 erreur moteur. Cars Région Haute-Savoie : 48 portions tarifées (272), 48 sans prix = ligne 274 interne Genève (Aéroport → Poste / Mont-Blanc). Portions sans prix restantes : SNCF 429, FlixBus 57, BlaBlaCar Bus 48, Ondéa 38, Star't 32, CFF 24, Cars Isère 24, TPG 5 (B 82).
+
+**Pour ChatGPT** : (1) la 274 dans Genève accepte-t-elle le trafic local au tarif unireso ? (la grille dit seulement « consulter unireso ») ; (2) zone Léman Pass d'Archamps/Collonges (B 82) ; (3) matrice Star't A/AB/B, Ondéa 400–419, zones Cars Isère par arrêt — inchangé.
+
 ## SESSION CLAUDE DU 14/11/2026 (après-midi) — fiches mission et diagnostic réel
 
 Répartition demandée par Laurent : ChatGPT = sources tarifaires, limites d'accès aux prix, contrôles de couverture ; Claude = intégration dans l'application, fiches mission, tests serveur/mobile, performance. **Merci de me signaler avant de modifier `createSession`, `assess`, `rank`, `render` ou `completeWalks` dans `transport-mission-hub.js`.**
