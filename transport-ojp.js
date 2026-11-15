@@ -89,7 +89,7 @@ function parseTrips(xml){
    legs.push({id,kind:'timed',from:text(board,'StopPointName'),to:text(alight,'StopPointName'),
     fromRef:text(board,'StopPointRef'),toRef:text(alight,'StopPointRef'),
     departure:text(first(board,'ServiceDeparture')||'','TimetabledTime'),arrival:text(first(alight,'ServiceArrival')||'','TimetabledTime'),
-    line:text(service,'PublishedLineName'),operatorRef:text(service,'OperatorRef'),mode:text(first(service,'Mode')||'','PtMode')});
+    line:text(service,'PublishedLineName'),operatorRef:text(service,'OperatorRef'),operator:text(service,'OperatorName'),mode:text(first(service,'Mode')||'','PtMode')});
   }
   trips.push({id:text(result,'ResultId'),duration:text(trip,'Duration'),startTime:text(trip,'StartTime'),endTime:text(trip,'EndTime'),
    transfers:Number(text(trip,'Transfers')),legs,xml:trip});
@@ -103,13 +103,16 @@ function fareRequest(trip,opts={}){
  return header(now)+'<ojp:OJPFareRequest><RequestTimestamp>'+now+'</RequestTimestamp>'+
   '<ojp:TripFareRequest><ojp:Trip>'+trip.xml+'</ojp:Trip></ojp:TripFareRequest>'+
   '<ojp:Params><ojp:FareAuthorityFilter>ch:1:NOVA</ojp:FareAuthorityFilter><ojp:PassengerCategory>Adult</ojp:PassengerCategory>'+
-  '<ojp:TravelClass>second</ojp:TravelClass><ojp:Traveller><ojp:Age>40</ojp:Age><ojp:PassengerCategory>Adult</ojp:PassengerCategory></ojp:Traveller></ojp:Params></ojp:OJPFareRequest>'+FOOTER;
+  '<ojp:TravelClass>second</ojp:TravelClass><ojp:Traveller><ojp:Age>40</ojp:Age><ojp:PassengerCategory>Adult</ojp:PassengerCategory>'+
+  (opts.halfFare?'<ojp:EntitlementProduct>HTA</ojp:EntitlementProduct>':'')+'</ojp:Traveller></ojp:Params></ojp:OJPFareRequest>'+FOOTER;
 }
 // Billets dégriffés (contingentés, liés à un train : essai réel du 15/11/2026, « Sparbillett ») et cartes journalières
 // (à filtrer selon la documentation officielle) : jamais retenus comme prix du trajet.
 const SPECIAL_PRODUCT=/spar|supersaver|d[ée]griff|tageskarte|carte journali|day ?pass/i;
 // Prix plein tarif 2e classe couvrant TOUT le trajet, sinon null avec la raison (jamais de prix partiel affiché).
-function parseFare(xml,trip){
+// opts.halfFare : la réponse provient d'une demande demi-tarif (abonnement demi-tarif) ; le prix est alors
+// étiqueté « demi-tarif » et n'est jamais présenté comme le plein tarif.
+function parseFare(xml,trip,opts={}){
  const timed=(trip&&Array.isArray(trip.legs)?trip.legs:[]).filter(l=>l.kind==='timed'&&l.id);
  if(!timed.length)return {price:null,reason:'trajet sans portion en véhicule identifiée'};
  const ids=(trip.legs||[]).map(l=>l.id),firstId=timed[0].id,lastId=timed[timed.length-1].id;
@@ -127,7 +130,8 @@ function parseFare(xml,trip){
   !o.requiredCard&&(!o.travelClass||/second|2/i.test(o.travelClass))&&!SPECIAL_PRODUCT.test(o.name||''));
  if(!full.length)return {price:null,reason:'aucun billet ordinaire plein tarif 2e classe ne couvre le trajet complet',offers};
  const best=full.reduce((a,b)=>b.amount<a.amount?b:a);
- return {price:{amount:best.amount,currency:best.currency,name:best.name,authority:best.authority,fromId:best.fromId,toId:best.toId},reason:null,offers};
+ return {price:{amount:best.amount,currency:best.currency,name:best.name,authority:best.authority,fromId:best.fromId,toId:best.toId,
+  travelClass:'second',passenger:opts.halfFare?'adulte demi-tarif':'adulte plein tarif',indicative:true},reason:null,offers};
 }
 // Appel HTTP. Le jeton n'apparaît dans aucun message d'erreur.
 async function post(url,body,token,fetcher){

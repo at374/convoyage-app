@@ -72,7 +72,7 @@ test('trajet : portions, lignes et horaires lus ; bloc Trip recopié tel quel da
 });
 test('prix OJP Fare : affiché seulement s’il couvre le trajet complet',()=>{
  const [t]=O.parseTrips(tripXml);
- assert.deepEqual(O.parseFare(fare(1,3,'23.40'),t).price,{amount:23.4,currency:'CHF',name:'Billet',authority:'ch:1:NOVA',fromId:'1',toId:'3'});
+ assert.deepEqual(O.parseFare(fare(1,3,'23.40'),t).price,{amount:23.4,currency:'CHF',name:'Billet',authority:'ch:1:NOVA',fromId:'1',toId:'3',travelClass:'second',passenger:'adulte plein tarif',indicative:true});
  assert.equal(O.parseFare(fare(1,1,'12.00'),t).price,null,'première portion seule');
  assert.equal(O.parseFare(fare(3,3,'6.00'),t).price,null,'dernière portion seule');
  assert.equal(O.parseFare(fare(1,1,'12.00')+fare(3,3,'6.00'),t).price,null,'jamais d’addition de prix partiels');
@@ -93,4 +93,26 @@ test('appel HTTP : jeton obligatoire, jamais repris dans les erreurs',async()=>{
  const fail=async(u,o)=>{seen=o;return {ok:false,status:403,text:async()=>'<e>Forbidden</e>'};};
  await assert.rejects(O.post(O.ENDPOINT,'<x/>',secret,fail),e=>/HTTP 403/.test(e.message)&&!e.message.includes(secret));
  assert.equal(seen.headers.Authorization,'Bearer '+secret);assert.equal(seen.method,'POST');
+});
+
+test('demi-tarif : demandé par EntitlementProduct HTA, étiqueté, jamais confondu avec le plein tarif',()=>{
+ const [t]=O.parseTrips(tripXml);
+ assert.doesNotMatch(O.fareRequest(t),/EntitlementProduct/);
+ assert.match(O.fareRequest(t,{halfFare:true}),/<ojp:Traveller><ojp:Age>40<\/ojp:Age><ojp:PassengerCategory>Adult<\/ojp:PassengerCategory><ojp:EntitlementProduct>HTA<\/ojp:EntitlementProduct><\/ojp:Traveller>/);
+ assert.equal(O.parseFare(fare(1,3,'11.70'),t,{halfFare:true}).price.passenger,'adulte demi-tarif');
+ assert.equal(O.parseFare(fare(1,3,'23.40'),t).price.passenger,'adulte plein tarif');
+});
+test('XML invalide ou tronqué : aucun lieu, aucun trajet, aucun prix, sans exception',()=>{
+ for(const xml of ['',null,undefined,'pas du xml','<ojp:Location><ojp:StopPlace><ojp:StopPlaceRef>8501008','<html><body>502 Bad Gateway</body></html>',tripXml.slice(0,400)]){
+  assert.deepEqual(O.parseLocations(xml),[]);
+  assert.ok(O.parseTrips(xml).every(t=>!t.legs.some(l=>l.kind==='timed'&&l.arrival)));
+  assert.equal(O.parseFare(xml,O.parseTrips(tripXml)[0]).price,null);
+ }
+});
+test('correspondance : prix refusé si l’offre ne couvre qu’un des deux trains, accepté si elle couvre tout',()=>{
+ const [t]=O.parseTrips(tripXml);
+ assert.equal(t.transfers,1);assert.equal(t.legs.filter(l=>l.kind==='timed').length,2);
+ assert.equal(O.parseFare(fare(1,2,'12.00'),t).price,null,'s’arrête à la correspondance');
+ assert.equal(O.parseFare(fare(2,3,'12.00'),t).price,null,'commence à la correspondance');
+ assert.equal(O.parseFare(fare(1,3,'23.40'),t).price.amount,23.4);
 });
