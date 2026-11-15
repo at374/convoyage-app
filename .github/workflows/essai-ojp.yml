@@ -1,0 +1,40 @@
+name: Essai réel OJP Suisse (Genève – Lausanne)
+# Validation réelle des API suisses OJP 1.0 et OJP Fare. Les jetons sont des secrets du dépôt, jamais affichés ;
+# seul un résumé sans donnée sensible est écrit dans docs/essai-ojp-reel.md.
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/transports-aura-suisse]
+    paths:
+      - 'transport-ojp.js'
+      - 'scripts/essai-ojp-reel.cjs'
+      - '.github/workflows/essai-ojp.yml'
+permissions:
+  contents: write
+concurrency:
+  group: essai-ojp
+  cancel-in-progress: false
+jobs:
+  essai:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Tests de régression des références OJP
+        run: node --test tests/transport-ojp.test.cjs
+      - name: Essai réel Genève → Lausanne
+        env:
+          OJP_API_KEY: ${{ secrets.OJP_API_KEY }}
+          OJP_FARE_API_KEY: ${{ secrets.OJP_FARE_API_KEY }}
+        run: node scripts/essai-ojp-reel.cjs
+      - name: Enregistrer le résumé
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/essai-ojp-reel.md || true
+          git diff --cached --quiet || git commit -m "Essai réel OJP Suisse (serveur)"
+          git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"
