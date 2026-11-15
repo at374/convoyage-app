@@ -701,6 +701,13 @@ jobs:
           assert.equal(fareFor({...interzone,line:'L'})?.amount,2.20,'STAR’T L Les Arts → Mairie');
           assert.equal(fareFor({...interzone,to:'Collège F.Mugnier'}),null,'Zone du terminus non confirmée');
           assert.equal(fareFor({...interzone,provider:'But'}),null,'Autre opérateur non assimilé');
+          {const sz=(f,t,line='142')=>fareFor({...urban,line,gtfsRaw:{from:f,to:t}});
+           assert.equal(sz('AL_MACH1','BC_CFMU2')?.amount,2.20,'STAR’T Allinges (A) → Bons (B)');
+           assert.equal(sz('AL_MACH1','AL_NOYE1')?.amount,1.20,'STAR’T interne zone A');
+           assert.equal(sz('BC_CFMU2','BC_CFMU2')?.network,"STAR'T zone B",'STAR’T interne zone B');
+           assert.equal(sz('NER_CHL1','AL_MACH1'),null,'Commune et zone_id discordants : pas de prix');
+           assert.equal(sz('AL_MACH1','INCONNU'),null,'Arrêt inconnu : pas de prix');
+           assert.equal(sz('AL_MACH1','BC_CFMU2','271'),null,'271 exclue');assert.equal(sz('AL_MACH1','BC_CFMU2','SBON'),null,'Scolaire exclue');}
           assert.equal(fareFor({...interzone,departure:'2027-01-01T08:00:00+01:00'}),null,'Tarif expiré');
           // Deux grilles concurrentes pour une même portion ne donnent aucun prix.
           const star = require('./transport-fare-grids.js').GRIDS.find(g=>g.network==="STAR'T zone A");
