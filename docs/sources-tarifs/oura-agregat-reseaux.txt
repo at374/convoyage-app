@@ -1,0 +1,46 @@
+Agrégat Oùra : 111472268 octets ; fichiers : agency.txt, calendar_dates.txt, feed_info.txt, routes.txt, shapes.txt, stops.txt, stop_times.txt, transfers.txt, trips.txt
+agency_id | nom | url | lignes
+AIXxLESxBAINS:Network:1:LOC | AIX-LES-BAINS - Ondéa | https://www.ondea-bus.fr | 63
+ALLIER:Network:1:LOC | REGION - cars Région Allier | https://www.laregionvoustransporte.fr/ | 132
+ANNEMASSE:Network:1:LOC | ANNEMASSE - TAC | https://tac-mobilites.fr/ | 8
+ANNONAY:Network:1:LOC | ANNONAY - CoqueliGO | https://www.coqueligo.fr/ | 4
+ARDECHE:Network:1:LOC | REGION - cars Région Ardèche | https://www.laregionvoustransporte.fr/ | 113
+ARLYSERE:Network:1:LOC | ALBERTVILLE - TRA Mobilité | https://savoie.transdev.com/ | 11
+AUBENAS:Network:1:LOC | AUBENAS - Tout'enbus | https://www.toutenbus.fr | 19
+AURILLAC:Network:1:LOC | AURILLAC - Trans'Cab | https://www.stabus.fr/fr/ | 25
+BONNEVILLE:Network:1:LOC | BONNEVILLE-LA ROCHE-REIGNIER-VIUZ - Proxim iTi | https://www.proximiti.fr | 18
+BOURGOINxJALLIEU:Network:1:LOC | BOURGOIN-JALLIEU - Ruban | https://www.rubantransport.com/ | 35
+CARSxREGIONxAIN:Network:1:LOC | REGION - cars Région Ain | https://www.laregionvoustransporte.fr/ | 31
+CARSxREGIONxEXPRESS:Network:68C98CEBxE665x4AEExB3BCx075984C5278E:LOC | REGION - cars Région Express | https://www.laregionvoustransporte.fr/ | 13
+CARSxREGIONxLOIRE:Network:1:LOC | REGION - cars Région Loire | https://www.laregionvoustransporte.fr/ | 357
+CARxREGIONxCANTAL:Network:1:LOC | REGION - cars Région Cantal | https://www.laregionvoustransporte.fr/ | 19
+CHAMONIX:Network:1:LOC | CHAMONIX - Chamonix Bus | https://www.montblancbus.transdev.com/reseau/chamonix-bus/ | 23
+COLIBRI:Network:1:LOC | MIRIBEL - Colibri | https://www.cotiere-mobilite.com/colibri/le-reseau/ | 1
+DROME:Network:1:LOC | REGION - cars Région Drôme | https://www.laregionvoustransporte.fr/ | 134
+EVIAN:Network:1:LOC | EVIAN - ÉVA'D | https://www.evad.fr/ | 10
+GRANDxCHAMBERY:Network:1:LOC | CHAMBERY - Synchro Mobilités | https://synchro.grandchambery.fr | 24
+HAUTExLOIRE:Network:1:LOC | REGION - cars Région Haute-Loire | https://www.laregionvoustransporte.fr/ | 20
+HAUTExSAVOIE:Network:1:LOC | REGION - cars Région Haute-Savoie | https://www.laregionvoustransporte.fr/ | 24
+ISERE:Network:1:LOC | REGION - cars Région Isère | https://www.laregionvoustransporte.fr/ | 502
+MOBIVALS:Network:1:LOC | VALSERHÔNE - Mobi'Vals | https://www.mobivals.fr/ | 12
+MONTELIMAR:Network:1:LOC | MONTELIMAR - Montélibus | http://www.montelibus.fr | 35
+MONTLUCON:Network:1:LOC | MONTLUCON - Maelis | https://www.maelis.eu | 20
+MONTLUEL:Network:1:LOC | MONTLUEL - TICO 3CM | https://philibert-transport.fr/ | 1
+MOULINS:Network:1:LOC | MOULINS - Aléo | http://www.keolis.com | 11
+OYONNAX:Network:1:LOC | OYONNAX - DUOBUS | https://www.duobus.fr/ | 8
+PANODESDOMES:Network:1:LOC | PUY-DE-DOME - Navette Panoramique des Dômes | https://www.oura.com | 1
+PEAGExROUSSILLON:Network:1:LOC | LE-PEAGE-DE-ROUSSILLON - Le 37 | https://www.oura.com | 4
+PRIVAS:Network:1:LOC | PRIVAS - T'CAP | https://www.t-cap.mobi/ | 11
+PUYxENxVELAY:Network:1:LOC | LE-PUY-EN-VELAY – Mobilité en Velay | https://www.mobilite.lepuyenvelay.fr | 20
+RIOM:Network:1:LOC | RIOM - RLV Mobilités | https://rlv-mobilites.fr/ | 9
+RUBIS:Network:1:LOC | BOURG-EN-BRESSE - Rubis | https://www.rubis.grandbourg.fr/ | 10
+RUMILLY:Network:1:LOC | RUMILLY - J'ybus | https://www.jybus.fr/ | 5
+SAONIBUS:Network:1:LOC | TREVOUX - Saônibus | http://www.giro.ca | 2
+SAVOIE:Network:1:LOC | REGION - cars Région Savoie | https://www.laregionvoustransporte.fr/ | 8
+STAR:Network:1:LOC | ROANNE - Star | https://www.bus-star.com/ | 20
+TAINxTOURNON:Network:1:LOC | TAIN-TOURNON - ARCHE AGGLO LE BUS | https://www.archeagglo.fr/ | 7
+TAM:Network:1:LOC | AMBERIEU-EN-BUGEY - Tam | https://www.laregionvoustransporte.fr | 4
+THIERS:Network:1:LOC | THIERS - SMTUT | http://www.bus-tut.com | 57
+THONON:Network:1:LOC | THONON-LES-BAINS - STAR'T | https://www.star-t.fr | 25
+VICHY:Network:1:LOC | VICHY - MobiVie | http://www.hanoverdisplays.com | 9
+VIENNE:Network:1:LOC | VIENNE - L’va | http://www.lva-mobilite.fr | 49

@@ -1,0 +1,532 @@
+Fichiers : agency.txt, stops.txt, routes.txt, trips.txt, stop_times.txt, calendar.txt, calendar_dates.txt, shapes.txt, feed_info.txt
+stop_id | nom | lat | lon | zone_id | commune BAN | code INSEE | lignes
+AL_BOTA1 | Botaillon | 46.3259183 | 6.4744073 | 1 | Allinges | 74005 | sTh_8
+AL_BOTA2 | Botaillon | 46.325916 | 6.474359 | 1 | Allinges | 74005 | sTh_8
+AL_BOUG1 | Allinges Bougeries haut | 46.350475 | 6.4831567 | 1 | Allinges | 74005 | M N sTh_8
+AL_BOUG2 | Allinges Bougeries haut | 46.3510745 | 6.483017 | 1 | Allinges | 74005 | M N sTh_8
+AL_CENT1 | Centenaire | 46.3424717 | 6.4837115 | 1 | Allinges | 74005 | M N sTh_8
+AL_CENT2 | Centenaire | 46.3423158 | 6.483462 | 1 | Allinges | 74005 | M N sTh_8
+AL_CERB1 | Cercle Bétemps | 46.32821085213606 | 6.443077612268455 | 1 | Allinges | 74005 | sTh_8
+AL_CERB2 | Cercle Bétemps | 46.32821363034003 | 6.443111139881141 | 1 | Allinges | 74005 | sTh_8
+AL_CHA1 | Les Châteaux | 46.3283117 | 6.462496 | 1 | Allinges | 74005 | sTh_8
+AL_CHA2 | Les Châteaux | 46.32830974762429 | 6.462454486508196 | 1 | Allinges | 74005 | sTh_8
+AL_CHVI1 | Châteauvieux | 46.3287526 | 6.4699767 | 1 | Allinges | 74005 | sTh_8
+AL_CHVI2 | Châteauvieux | 46.3288662 | 6.4698161 | 1 | Allinges | 74005 | N sTh_8
+AL_COML1 | Commelinges | 46.3324705 | 6.4552698 | 1 | Allinges | 74005 | M sTh_8
+AL_COML2 | Commelinges | 46.3324096 | 6.4548553 | 1 | Allinges | 74005 | M
+AL_CRES1 | Crestes | 46.344982 | 6.4866514 | 1 | Allinges | 74005 | M N sTh_8
+AL_CRES2 | Crestes | 46.3448146 | 6.4864664 | 1 | Allinges | 74005 | M N sTh_8
+AL_CTON1 | Crêt Tonniaz | 46.3341878 | 6.4610704 | 1 | Allinges | 74005 | M sTh_8
+AL_CTON2 | Crêt Tonniaz | 46.333869 | 6.460346 | 1 | Allinges | 74005 | M
+AL_EGL1 | Allinges Église | 46.33571661547445 | 6.464913043585958 | 1 | Allinges | 74005 | M sTh_8
+AL_EGL2 | Allinges Église | 46.33572230752717 | 6.464754249702835 | 1 | Allinges | 74005 | M sTh_8
+AL_GOUI1 | Les Gouilles | 46.3245414 | 6.4727295 | 1 | Allinges | 74005 | N sTh_8
+AL_GOUI2 | Les Gouilles | 46.324822 | 6.472857 | 1 | Allinges | 74005 | N sTh_8
+AL_GRAA1 | Grange Allard | 46.3428223 | 6.461063 | 1 | Allinges | 74005 | sTh_8
+AL_HUTI2 | Les Hutins | 46.3380514 | 6.4635773 | 1 | Allinges | 74005 | sTh_8
+AL_LASS1 | Lassy | 46.3237191 | 6.4740712 | 1 | Allinges | 74005 | N sTh_8
+AL_LASS2 | Lassy | 46.3237568 | 6.4738548 | 1 | Allinges | 74005 | N sTh_8
+AL_LAUR1 | Chez Laurent | 46.3481478 | 6.4660356 | 1 | Thonon-les-Bains | 74281 | sTh_8
+AL_LAUR2 | Chez Laurent | 46.3476308 | 6.4655246 | 1 | Thonon-les-Bains | 74281 | sTh_8
+AL_LEYR1 | Leyriat | 46.337131 | 6.478543 | 1 | Allinges | 74005 | M N sTh_8
+AL_LEYR2 | Leyriat | 46.337009 | 6.478302 | 1 | Allinges | 74005 | M N sTh_8
+AL_MACH1 | Macheron | 46.3287738 | 6.4739849 | 1 | Allinges | 74005 | 142 SBON sTh_8
+AL_MACH2 | Macheron | 46.3281719 | 6.4741069 | 1 | Allinges | 74005 | 142 sTh_7 sTh_8
+AL_MESD1 | Mésinges | 46.32665751400375 | 6.44521640435729 | 1 | Allinges | 74005 | M
+AL_MESD2 | Mésinges | 46.3267945757899 | 6.445302235045767 | 1 | Allinges | 74005 | L
+AL_MESI1 | Mésinges Village | 46.3291672 | 6.4437284 | 1 | Allinges | 74005 | sTh_8
+AL_MESI2 | Mésinges Village | 46.3291829 | 6.4437432 | 1 | Allinges | 74005 | sTh_8
+AL_MONT1 | Montagnys | 46.349209 | 6.4851791 | 1 | Allinges | 74005 | M N sTh_8
+AL_MONT2 | Montagnys | 46.349623 | 6.4848572 | 1 | Allinges | 74005 | M N sTh_8
+AL_NOYE1 | Noyer | 46.3344309 | 6.4791277 | 1 | Allinges | 74005 | 142 N SBON sTh_8
+AL_NOYE2 | Noyer | 46.33553 | 6.47888 | 1 | Allinges | 74005 | 142 M N sTh_8
+AL_NOYE5 | Noyer | 46.335069 | 6.4785512 | 1 | Allinges | 74005 | M
+AL_ORAT1 | Oratoire | 46.347316 | 6.4852971 | 1 | Allinges | 74005 | M N sTh_8
+AL_ORAT2 | Oratoire | 46.3465339 | 6.4854632 | 1 | Allinges | 74005 | M N sTh_8
+AL_SOUR1 | Sources | 46.3532684 | 6.4800402 | 1 | Allinges | 74005 | M N sTh_8
+AL_SOUR2 | Sources | 46.353348 | 6.47994 | 1 | Allinges | 74005 | M N sTh_8
+AL_VALE1 | Valère | 46.3309303 | 6.4492999 | 1 | Allinges | 74005 | M sTh_8
+AL_VALE2 | Valère | 46.3307517 | 6.4489117 | 1 | Allinges | 74005 | M
+AL_VSF1 | Val Saint-François | 46.3361443 | 6.4699944 | 1 | Allinges | 74005 | M sTh_8
+AL_VSF2 | Val Saint-François | 46.3362189 | 6.4706611 | 1 | Allinges | 74005 | M
+AN_LGLI1 | Lycée des Glieres | 46.19039904513513 | 6.242747875463124 | 2 | Annemasse | 74012 | sAn
+AN_LGLI2 | Lycée des Glieres | 46.19009748930872 | 6.24276333988115 | 2 | Annemasse | 74012 | sAn
+AN_LJMO1 | Lycée Jean Monnet | 46.1832664 | 6.2465881 | 2 | Annemasse | 74012 | sAn
+AR_CHL1 | Armoy centre | 46.348178938833726 | 6.520103570569629 | 1 | Armoy | 74020 | T sTh_9
+AR_CHL2 | Armoy centre | 46.347779216187426 | 6.520176011674104 | 1 | Armoy | 74020 | T sTh_9
+AR_DEUD1 | Les Deudes | 46.35000450948591 | 6.510997200594342 | 1 | Armoy | 74020 | sTh_9
+AR_DEUD2 | Les Deudes | 46.34983436832835 | 6.510717146557621 | 1 | Armoy | 74020 | sTh_9
+AR_ERMI1 | Ermitage | 46.353650876911715 | 6.4969520877315645 | 1 | Armoy | 74020 | sTh_9
+AR_ERMI2 | Ermitage | 46.35362064872459 | 6.496937872387303 | 1 | Armoy | 74020 | sTh_9
+AR_LONN1 | Plateau de Lonnaz | 46.347921 | 6.5017515 | 1 | Armoy | 74020 | sTh_9
+AR_LONN2 | Plateau de Lonnaz | 46.3478434 | 6.5017755 | 1 | Armoy | 74020 | sTh_9
+AR_PRCA1 | Prés Carrés | 46.35349128226408 | 6.515015762565608 | 1 | Armoy | 74020 | T sTh_9
+AR_PRCA2 | Prés Carrés | 46.352357502497945 | 6.5152455852848234 | 1 | Armoy | 74020 | T sTh_9
+At_Boug1 | Anthy Bougeries | 46.3543784 | 6.4136278 | 1 | Anthy-sur-Léman | 74013 | C
+At_Boug2 | Anthy Bougeries | 46.3543317 | 6.413484 | 1 | Anthy-sur-Léman | 74013 | C
+AT_CEAU1 | Champ de l'Eau | 46.3619547 | 6.4415544 | 1 | Anthy-sur-Léman | 74013 | C
+AT_CEAU2 | Champ de l'Eau | 46.3619556 | 6.4414927 | 1 | Anthy-sur-Léman | 74013 | C
+At_Char1 | Charmottes | 46.349273 | 6.407759 | 1 | Margencel | 74163 | C
+At_Char2 | Charmottes | 46.3495082 | 6.4074128 | 1 | Margencel | 74163 | C
+AT_CHEn1 | Anthy Chênes | 46.35786 | 6.440189 | 1 | Anthy-sur-Léman | 74013 | C
+AT_CHEn2 | Anthy Chênes | 46.3576906 | 6.4397421 | 1 | Anthy-sur-Léman | 74013 | C
+AT_CIM1 | Anthy cimetière | 46.355818 | 6.4245051 | 1 | Anthy-sur-Léman | 74013 | C
+AT_CIM2 | Anthy cimetière | 46.3558668 | 6.4242491 | 1 | Anthy-sur-Léman | 74013 | C
+AT_CON1 | Contamines | 46.355604 | 6.421158 | 1 | Anthy-sur-Léman | 74013 | C
+AT_CON2 | Contamines | 46.3556362 | 6.4210595 | 1 | Anthy-sur-Léman | 74013 | C
+At_Ecol1 | Anthy Ecole | 46.3557689 | 6.4260654 | 1 | Anthy-sur-Léman | 74013 | C
+At_Ecol2 | Anthy Ecole | 46.3556441 | 6.4269334 | 1 | Anthy-sur-Léman | 74013 | C
+AT_FOIs1 | Foiset | 46.359217 | 6.441046 | 1 | Anthy-sur-Léman | 74013 | C
+AT_FOIs2 | Foiset | 46.3591529 | 6.4410348 | 1 | Anthy-sur-Léman | 74013 | C
+AT_FOSx1 | Les Fosseaux | 46.356222 | 6.433137 | 1 | Anthy-sur-Léman | 74013 | C
+AT_FOSx2 | Les Fosseaux | 46.35616 | 6.432679 | 1 | Anthy-sur-Léman | 74013 | C
+At_Lavo1 | Lavoret | 46.3554261 | 6.4177033 | 1 | Anthy-sur-Léman | 74013 | C
+At_Lavo2 | Lavoret | 46.3554966 | 6.4179463 | 1 | Anthy-sur-Léman | 74013 | C
+At_Long1 | Longettes | 46.356048 | 6.428909 | 1 | Anthy-sur-Léman | 74013 | C
+At_Long2 | Longettes | 46.3560872 | 6.4288898 | 1 | Anthy-sur-Léman | 74013 | C
+AT_PEYL1 | Peylevet | 46.3443073 | 6.4142863 | 1 | Anthy-sur-Léman | 74013 | C
+AT_PEYL2 | Peylevet | 46.344301 | 6.4143813 | 1 | Anthy-sur-Léman | 74013 | C
+AT_PICA1 | Pré Robert Est | 46.352077 | 6.4389649 | 1 | Anthy-sur-Léman | 74013 | D
+AT_PICA2 | Pré Robert Est | 46.35206813815289 | 6.439355658860779 | 1 | Anthy-sur-Léman | 74013 | D
+AT_PSEC1 | Port Sechex | 46.350548 | 6.406747 | 1 | Anthy-sur-Léman | 74013 | C
+AT_PSEC2 | Port Sechex | 46.35036 | 6.406469 | 1 | Anthy-sur-Léman | 74013 | C
+At_Saug1 | Saugey | 46.3519063 | 6.4097732 | 1 | Anthy-sur-Léman | 74013 | C
+At_Saug2 | Saugey | 46.3518809 | 6.4096676 | 1 | Anthy-sur-Léman | 74013 | C
+AT_SAVo1 | Savoyances | 46.357082 | 6.437019 | 1 | Anthy-sur-Léman | 74013 | C
+AT_SAVo2 | Savoyances | 46.3571409 | 6.4371397 | 1 | Anthy-sur-Léman | 74013 | C
+AT_SECH1 | Séchex cornasse | 46.3471302 | 6.4098008 | 1 | Margencel | 74163 | C
+AT_SECH2 | Séchex cornasse | 46.3471293 | 6.4097445 | 1 | Margencel | 74163 | C
+At_Vign1 | Vignes blanches | 46.3454249 | 6.4117821 | 1 | Anthy-sur-Léman | 74013 | C
+At_Vign2 | Vignes blanches | 46.345413 | 6.4117003 | 1 | Margencel | 74163 | C
+BA_ABOI1 | Chez Abois | 46.2993602 | 6.3741749 | 2 | Ballaison | 74025 | SDOU sTh_6
+BA_ABOI2 | Chez Abois | 46.299309 | 6.3741872 | 2 | Ballaison | 74025 | SDOU sTh_6
+BA_CEPI1 | Chemin de l'Epine | 46.283943134591034 | 6.321234944180314 | 2 | Ballaison | 74025 | SDOU sTh_6
+BA_CEPI2 | Chemin de l'Epine | 46.284007707264585 | 6.32125471534422 | 2 | Ballaison | 74025 | SDOU
+BA_CHEC1 | Ballaison / École | 46.29852174973443 | 6.328737059121146 | 2 | Ballaison | 74025 | P SDOU
+BA_CHEC2 | Ballaison / École | 46.29849403847466 | 6.328868429690728 | 2 | Ballaison | 74025 | P
+Ba_ChL1 | Chef-Lieu de Ballaison | 46.29829960146395 | 6.327534945697382 | 2 | Ballaison | 74025 | sTh_6
+BA_CHL2 | Ballaison | 46.2984549 | 6.3275482 | 2 | Ballaison | 74025 | sTh_6
+BA_CRAM1 | Les Crapons Milieu | 46.296355 | 6.3551941 | 2 | Ballaison | 74025 | SDOU sTh_6
+BA_CRAM2 | Les Crapons Milieu | 46.296275 | 6.355206 | 2 | Ballaison | 74025 | SDOU sTh_6
+BA_CRAS1 | Les Crapons Sud | 46.2956573 | 6.3509807 | 2 | Ballaison | 74025 | SDOU sTh_6
+BA_CRAS2 | Les Crapons Sud | 46.2956222 | 6.3509873 | 2 | Ballaison | 74025 | SDOU sTh_6
+BA_CTIR1 | Chemin de la Tire | 46.2942739 | 6.3411208 | 2 | Ballaison | 74025 | SDOU sTh_6
+BA_CTIR2 | Chemin de la Tire | 46.2942815 | 6.3411636 | 2 | Ballaison | 74025 | SDOU sTh_6
+BA_GDP1 | Grand Pré | 46.29538499947179 | 6.347253112978071 | 2 | Ballaison | 74025 | SDOU
+BA_GDP2 | Grand Pré | 46.29542947738697 | 6.34726920623216 | 2 | Ballaison | 74025 | SDOU
+BA_PEUP1 | Les Peupliers | 46.2950529 | 6.3313878 | 2 | Ballaison | 74025 | P SDOU sTh_6
+BA_PEUP2 | Les Peupliers | 46.2950902 | 6.3314351 | 2 | Ballaison | 74025 | P SDOU sTh_6
+BA_TUIL1 | La Tuilière | 46.284839667123165 | 6.353278211639419 | 2 | Ballaison | 74025 | P SDOU sTh_7
+BA_TUIL2 | La Tuilière | 46.28487854959853 | 6.353321101149763 | 2 | Ballaison | 74025 | P sTh_7
+BC_CFMU2 | Collège F.Mugnier | 46.26524473556866 | 6.3622909650817805 | 2 | Bons-en-Chablais | 74043 | 142 SBON
+BC_Foug1 | Fougères | 46.2743171014876 | 6.3504201712785635 | 2 | Bons-en-Chablais | 74043 | P
+BC_Foug2 | Fougères | 46.2742401777411 | 6.350558341719212 | 2 | Bons-en-Chablais | 74043 | P
+BC_GARE1 | Gare Saint-Didier | 46.269916 | 6.3661173 | 2 | Bons-en-Chablais | 74043 | 142 L P SBON SDOU SMAR sAn sTh_7
+BC_GARE2 | Gare Saint-Didier | 46.269916 | 6.3661173 | 2 | Bons-en-Chablais | 74043 | sTh_7
+BC_LANG1 | Langin | 46.2609035 | 6.351995 | 2 | Bons-en-Chablais | 74043 | SBON sAn sTh_7
+BC_LANG2 | Langin | 46.2607366 | 6.3503561 | 2 | Bons-en-Chablais | 74043 | SBON sAn sTh_7
+BC_MAI1 | Mairie | 46.26507 | 6.3714406 | 2 | Bons-en-Chablais | 74043 | 142 L
+BC_MAI2 | Mairie | 46.2650673 | 6.3713336 | 2 | Bons-en-Chablais | 74043 | 142 L sTh_7
+BC_MTB1 | Mont Boisy | 46.276313626527546 | 6.360762020832054 | 2 | Bons-en-Chablais | 74043 | P SDOU sTh_7
+BC_MTB2 | Mont Boisy | 46.27638592828837 | 6.360747268682472 | 2 | Bons-en-Chablais | 74043 | P sTh_7
+BC_PRES1 | Presbytère | 46.26554482910497 | 6.369562888850768 | 2 | Bons-en-Chablais | 74043 | L SDOU SMAR
+BC_PRES2 | Presbytère | 46.2654109 | 6.3703301 | 2 | Bons-en-Chablais | 74043 | L SDOU sAn sTh_7
+BC_Tann1 | Tanières | 46.27646859556548 | 6.344196141935887 | 2 | Bons-en-Chablais | 74043 | P
+BC_ZBrac | Zone des Bracots | 46.27802765863861 | 6.347498772204951 | 2 | Bons-en-Chablais | 74043 | P
+BR_CHL1 | Brenthonne Eglise | 46.273563 | 6.3948942 | 2 | Brenthonne | 74048 | L SDOU sTh_7
+BR_CHL2 | Brenthonne Eglise | 46.2735584 | 6.3947428 | 2 | Brenthonne | 74048 | L SBON SDOU sTh_7
+BR_MORZ1 | Morzier | 46.2681215 | 6.3966063 | 2 | Brenthonne | 74048 | 142 SBON sTh_7
+BR_MORZ2 | Morzier | 46.2681291 | 6.3963424 | 2 | Brenthonne | 74048 | 142 SBON sTh_7
+CE_EC1 | École | 46.2845281 | 6.4388269 | 1 | Cervens | 74053 | 142 SBON sTh_7
+CE_PESS1 | Pessinges | 46.2899029 | 6.4489146 | 1 | Cervens | 74053 | 142 SBON sTh_7
+CE_PESS2 | Pessinges | 46.28999 | 6.44899 | 1 | Cervens | 74053 | 142 SBON sTh_7
+CE_REYR1 | Le Reyret | 46.2827835 | 6.4335911 | 1 | Cervens | 74053 | 142 SBON
+CE_REYR2 | Le Reyret | 46.2827925 | 6.4334827 | 1 | Cervens | 74053 | 142 SBON sTh_7
+CL_CHL1 | Chens-sur-Léman Mairie | 46.32623 | 6.26772 | 2 | Chens-sur-Léman | 74070 | J SDOU SMAR sTh_6
+CL_CHL2 | Chens-sur-Léman Mairie | 46.32558 | 6.26776 | 2 | Chens-sur-Léman | 74070 | J SDOU sTh_6
+CL_FICH1 | Fichards | 46.32947 | 6.27008 | 2 | Chens-sur-Léman | 74070 | J SDOU sTh_6
+CL_FICH2 | Fichards | 46.3293635 | 6.2699152 | 2 | Chens-sur-Léman | 74070 | J SDOU SMAR sTh_6
+CL_VERE1 | Véreitre | 46.3173979 | 6.2671327 | 2 | Chens-sur-Léman | 74070 | J SDOU sTh_6
+CL_VERE2 | Véreitre | 46.3173307 | 6.2669543 | 2 | Chens-sur-Léman | 74070 | J SDOU sTh_6
+CS_P_R1 | Parc-relais Altéa | 46.206313819418696 | 6.287611421775869 | 2 | Cranves-Sales | 74094 | H sAn
+D_AUBO2 | Aubonne | 46.30059922483252 | 6.284189028207008 | 2 | Douvaine | 74105 | SMAR
+D_AvLac1 | Avenue du Lac | 46.307049016432096 | 6.2945364657458525 | 2 | Douvaine | 74105 | J sTh_6
+D_AvLac2 | Avenue du Lac | 46.30685631943848 | 6.293517226320193 | 2 | Douvaine | 74105 | J sTh_6
+D_Cas2 | Caserne | 46.31165125930267 | 6.300885707358401 | 2 | Douvaine | 74105 | SDOU
+D_Casi1 | Caserne | 46.31202550274874 | 6.300490081528705 | 2 | Douvaine | 74105 | SDOU
+D_coBCh0 | Collège du Bas Chablais - Acacias | 46.30453931562469 | 6.307324167852313 | 2 | Douvaine | 74105 | J P
+D_COBCH1 | Collège du Bas Chablais | 46.3036008 | 6.3079058 | 2 | Douvaine | 74105 | SDOU
+D_COBCH2 | Collège du Bas Chablais | 46.304308 | 6.310172 | 2 | Douvaine | 74105 | J SDOU
+D_COSTF1 | Collège St Francois | 46.3007927 | 6.2852389 | 2 | Douvaine | 74105 | SDOU sTh_6
+D_CPLA1 | Champ de Place | 46.3082231 | 6.3100948 | 2 | Douvaine | 74105 | H SDOU sTh_6
+D_CPLA2 | Champ de Place | 46.3082351 | 6.3098679 | 2 | Douvaine | 74105 | H SDOU SMAR sTh_6
+D_EG1 | Église | 46.3047956 | 6.2991178 | 2 | Douvaine | 74105 | J SDOU
+D_EG2 | Église | 46.3050521 | 6.2995061 | 2 | Douvaine | 74105 | SDOU
+D_MAI1 | Mairie | 46.3060423 | 6.3025247 | 2 | Douvaine | 74105 | H sTh_6
+D_MAI2 | Mairie | 46.3061303 | 6.302573 | 2 | Douvaine | 74105 | H SMAR sTh_6
+D_PTCO1 | Petites Conches | 46.320588044123966 | 6.295474492659756 | 2 | Douvaine | 74105 | SDOU
+D_PTCO2 | Petites Conches | 46.32101110255648 | 6.295404677909855 | 2 | Douvaine | 74105 | SDOU
+D_VOIR1 | Rue des Voirons | 46.3047068 | 6.3020458 | 2 | Douvaine | 74105 | J sTh_6
+DR_CHEV1 | La Cheville | 46.29709375318942 | 6.4534830687519085 | 1 | Draillant | 74106 | 142 SBON
+DR_CHEV2 | La Cheville | 46.29711572992385 | 6.453439168717181 | 1 | Draillant | 74106 | 142 sTh_7
+DR_CHL1 | Draillant Ecole | 46.30492 | 6.45871 | 1 | Draillant | 74106 | 142 SBON sTh_7
+DR_CHL2 | Draillant Ecole | 46.305017 | 6.4587795 | 1 | Draillant | 74106 | 142 sTh_7
+DR_MAUG1 | Maugny | 46.310641 | 6.4799323 | 1 | Draillant | 74106 | 142 SBON sTh_7
+DR_MAUG2 | Maugny | 46.3107181 | 6.479863 | 1 | Draillant | 74106 | 142 sTh_7
+DR_XLIE1 | Croix du Liege | 46.3067001 | 6.4694721 | 1 | Draillant | 74106 | 142 SBON sTh_7
+DR_XLIE2 | Croix du Liege | 46.3065755 | 6.4686479 | 1 | Draillant | 74106 | 142 sTh_7
+E_LYANO1 | LycÉe Anna de Noailles | 46.39927045515659 | 6.579500815447528 | 3 | Évian-les-Bains | 74119 | sEvi
+EX_CHEV1 | Chevilly | 46.3496005 | 6.3311023 | 2 | Excenevex | 74121 | SDOU SMAR sTh_6
+EX_CHEV2 | Chevilly | 46.3495184 | 6.3304479 | 2 | Excenevex | 74121 | SDOU SMAR sTh_6
+EX_CHL1 | Excenevex Centre | 46.3550664 | 6.3540055 | 2 | Excenevex | 74121 | J SDOU SMAR Y sTh_6
+EX_CHL2 | Excenevex Centre | 46.35537748644236 | 6.353793756448742 | 2 | Excenevex | 74121 | J SDOU SMAR Y sTh_6
+EX_FATT1 | La Fattaz | 46.3420292 | 6.3567138 | 2 | Excenevex | 74121 | J SDOU SMAR Y sTh_6
+EX_FATT2 | La Fattaz | 46.3415196 | 6.3567347 | 2 | Excenevex | 74121 | J SDOU SMAR Y sTh_6
+EX_PINE1 | La Pinède | 46.345957 | 6.3574509 | 2 | Excenevex | 74121 | J SDOU SMAR Y sTh_6
+EX_PINE2 | La Pinède | 46.3453456 | 6.3578794 | 2 | Excenevex | 74121 | J SDOU SMAR Y sTh_6
+F_PICU1 | Chez Picut | 46.2801462 | 6.4057582 | 2 | Fessy | 74126 | L SBON sTh_7
+F_PICU2 | Chez Picut | 46.2802476 | 6.4056398 | 2 | Fessy | 74126 | L SBON sTh_7
+F_REZI1 | Rézier | 46.2801368 | 6.4280601 | 2 | Fessy | 74126 | 142 SBON sTh_7
+F_REZI2 | Rézier | 46.2803359 | 6.4281974 | 2 | Fessy | 74126 | 142 SBON sTh_7
+F_SSEC1 | Fessy Mairie | 46.2762533 | 6.4134698 | 2 | Fessy | 74126 | 142 SBON sTh_7
+F_SSEC2 | Fessy Mairie | 46.2766131 | 6.4138497 | 2 | Fessy | 74126 | 142 SBON sTh_7
+LO_BIOL1 | Le Biolet | 46.27810057018861 | 6.317337350926211 | 2 | Ballaison | 74025 | SDOU sTh_6
+LO_BIOL2 | Le Biolet | 46.27811733065406 | 6.317206203041059 | 2 | Loisin | 74150 | SDOU sTh_6
+LO_CHL1 | Loisin Mairie | 46.2890836 | 6.3096702 | 2 | Loisin | 74150 | H P SDOU SMAR sTh_6
+LO_CHL2 | Loisin Mairie | 46.2900539 | 6.3093633 | 2 | Loisin | 74150 | H P SDOU sTh_6
+LO_NVEC1 | Les Mogets Nouvelle École | 46.281004914935735 | 6.313253157672136 | 2 | Loisin | 74150 | SDOU sTh_6
+LO_NVEC2 | Les Mogets Nouvelle École | 46.28112907279891 | 6.313632477270228 | 2 | Loisin | 74150 | SDOU
+LO_THCO2 | Tholomaz (Cortelan) | 46.27527173093238 | 6.313251687776251 | 2 | Loisin | 74150 | SDOU
+LO_THG1 | Tholomaz (Gifi) | 46.2752562 | 6.3126816 | 2 | Loisin | 74150 | SDOU sTh_6
+LO_THG2 | Tholomaz (Gifi) | 46.2751442 | 6.3129964 | 2 | Loisin | 74150 | sTh_6
+LO_THOL1 | Tholomaz | 46.2711619 | 6.3131467 | 2 | Loisin | 74150 | H
+LO_THOL2 | Tholomaz | 46.2719876 | 6.3131053 | 2 | Loisin | 74150 | H sTh_6
+LU_CHL1 | Lully Centre | 46.2854365 | 6.4162029 | 2 | Lully | 74156 | L SBON sTh_7
+LU_CHL2 | Lully Centre | 46.2853963 | 6.415679 | 2 | Lully | 74156 | L SBON sTh_7
+LY_CAPI1 | La Capite | 46.3399061826219 | 6.532228381336989 | 1 | Lyaud | 74157 | sTh_9
+LY_CAPI2 | La Capite | 46.33995706108408 | 6.532304089935299 | 1 | Lyaud | 74157 | sTh_9
+LY_CIM1 | Cimetière | 46.34176617063261 | 6.520267771181296 | 1 | Lyaud | 74157 | sTh_9
+LY_CIM2 | Cimetière | 46.34173680688737 | 6.520231807357617 | 1 | Lyaud | 74157 | sTh_9
+LY_CRUT1 | Les Cruets | 46.34495047926292 | 6.517773531911852 | 1 | Lyaud | 74157 | sTh_9
+LY_CRUT2 | Les Cruets | 46.34491787735544 | 6.517738898147596 | 1 | Lyaud | 74157 | sTh_9
+Ly_Ctre1 | Lyaud Centre | 46.33674787206266 | 6.522261809893566 | 1 | Lyaud | 74157 | T sTh_7 sTh_9
+LY_HERM1 | Les Hermones | 46.3416322 | 6.5307197 | 1 | Lyaud | 74157 | sTh_9
+LY_HERM2 | Les Hermones | 46.3415977 | 6.5306596 | 1 | Lyaud | 74157 | sTh_9
+LY_MOUA1 | Moulins d'Amphion | 46.33380024674018 | 6.502000563823698 | 1 | Lyaud | 74157 | sTh_9
+LY_MOUA2 | Moulins d'Amphion | 46.33377724160218 | 6.501902384655782 | 1 | Lyaud | 74157 | sTh_9
+LY_TROS1 | Trossy | 46.32917294839917 | 6.504517767389686 | 1 | Lyaud | 74157 | sTh_9
+LY_TROS2 | Trossy | 46.32927390068805 | 6.504469067984018 | 1 | Lyaud | 74157 | sTh_9
+MA_5CHE1 | Cinq Chemins | 46.3439158 | 6.4154615 | 1 | Anthy-sur-Léman | 74013 | H J SDOU sTh_6
+MA_5CHE2 | Cinq Chemins | 46.3440441 | 6.4151573 | 1 | Anthy-sur-Léman | 74013 | H J SDOU sTh_6
+MA_AGRS1 | Pré Biollat Est | 46.3495674 | 6.4403342 | 1 | Anthy-sur-Léman | 74013 | D
+MA_AGRS2 | Pré Biollat Est | 46.3494792 | 6.440277 | 1 | Anthy-sur-Léman | 74013 | D
+MA_BRI1 | Pré Biollat centre | 46.348711 | 6.435743 | 1 | Anthy-sur-Léman | 74013 | D
+MA_BRI2 | Pré Biollat centre | 46.3483886 | 6.4376532 | 1 | Anthy-sur-Léman | 74013 | D
+MA_CCOM1 | Centre Com Margencel | 46.34532681682019 | 6.433091540861509 | 1 | Margencel | 74163 | D
+MA_CMON1 | Collège Monod | 46.341758 | 6.414922 | 1 | Margencel | 74163 | C D SMAR
+MA_CMON2 | Collège Monod | 46.341769 | 6.41496 | 1 | Margencel | 74163 | C D
+MA_COLL1 | Colletaz | 46.340483 | 6.4153683 | 1 | Margencel | 74163 | D
+MA_COLL2 | Colletaz | 46.340363 | 6.4155909 | 1 | Margencel | 74163 | D
+MA_DRTY1 | Pré Robert Centre | 46.3506153 | 6.4348306 | 1 | Anthy-sur-Léman | 74013 | D
+MA_DRTY2 | Pré Robert Centre | 46.3506704 | 6.4348638 | 1 | Anthy-sur-Léman | 74013 | D
+MA_DURS1 | Dursilly | 46.3423874 | 6.4357716 | 1 | Margencel | 74163 | D
+MA_DURS2 | Dursilly | 46.342357 | 6.4356951 | 1 | Margencel | 74163 | C D
+MA_ECOL1 | École de Margencel | 46.3365588 | 6.4327497 | 1 | Margencel | 74163 | D
+MA_ECOL2 | École de Margencel | 46.3366897 | 6.4327091 | 1 | Margencel | 74163 | D
+MA_JOUV1 | Jouvernex | 46.329956 | 6.421916 | 1 | Margencel | 74163 | D
+MA_JOUV2 | Jouvernex | 46.3300501 | 6.4217563 | 1 | Margencel | 74163 | D
+MA_LACR1 | La Croix | 46.3345213 | 6.4320665 | 1 | Margencel | 74163 | D
+MA_LACR2 | La Croix | 46.3343722 | 6.4319726 | 1 | Margencel | 74163 | D
+MA_MCDO1 | Pré Robert Ouest | 46.3492213 | 6.431875 | 1 | Anthy-sur-Léman | 74013 | D
+MA_MCDO2 | Pré Robert Ouest | 46.3494358 | 6.4318379 | 1 | Anthy-sur-Léman | 74013 | D
+MA_RFOR1 | Route Forestière | 46.329673 | 6.42342 | 1 | Margencel | 74163 | D
+MA_RFOR2 | Route Forestière | 46.329681 | 6.423292 | 1 | Margencel | 74163 | D
+MA_RONS1 | Ronsuaz | 46.3378922 | 6.4187234 | 1 | Margencel | 74163 | D
+MA_RONS2 | Ronsuaz | 46.337635 | 6.419007 | 1 | Margencel | 74163 | D
+MA_SALL1 | Salles | 46.3325382 | 6.4175739 | 1 | Margencel | 74163 | D
+MA_SALL2 | Salles | 46.3321673 | 6.4178757 | 1 | Margencel | 74163 | D
+MA_SPO1 | Pré Biollat Ouest | 46.3481704 | 6.4341995 | 1 | Anthy-sur-Léman | 74013 | D
+MA_SPO2 | Pré Biollat Ouest | 46.3481048 | 6.4341328 | 1 | Anthy-sur-Léman | 74013 | D
+MA_VIL1 | Margencel Mairie | 46.338702 | 6.432947 | 1 | Margencel | 74163 | D
+MA_VIL2 | Margencel Mairie | 46.338376 | 6.4327 | 1 | Margencel | 74163 | D
+MA_ZUSI1 | Zusinges | 46.3316194 | 6.4294849 | 1 | Margencel | 74163 | D
+MA_ZUSI2 | Zusinges | 46.331561 | 6.429397 | 1 | Margencel | 74163 | D
+MAS_CHL1 | Massongy Centre | 46.3181304 | 6.3301769 | 2 | Massongy | 74171 | H SDOU SMAR sTh_6
+MAS_CHL2 | Massongy Centre | 46.318758 | 6.3310235 | 2 | Massongy | 74171 | H SDOU SMAR sTh_6
+MC_GAR1 | Gare | 46.2513822 | 6.3286761 | 2 | Machilly | 74158 | H SBON sAn
+MC_GAR2 | Gare | 46.2513191 | 6.3286895 | 2 | Machilly | 74158 | H sAn
+ME_BROL1 | Brolliets | 46.3489806 | 6.289958 | 2 | Messery | 74180 | J SDOU SMAR sTh_6
+ME_BROL2 | Brolliets | 46.3487494 | 6.2896172 | 2 | Messery | 74180 | J SDOU SMAR sTh_6
+ME_CHL1 | Messery Mairie | 46.3510546 | 6.2935984 | 2 | Messery | 74180 | J SDOU SMAR sTh_6
+ME_CHL2 | Messery Mairie | 46.3509659 | 6.2928091 | 2 | Messery | 74180 | J SDOU SMAR sTh_6
+ME_ESRT1 | Place Essert | 46.3535745 | 6.3169701 | 2 | Messery | 74180 | SDOU sTh_6
+ME_ESRT2 | Place Essert | 46.3535525 | 6.316653 | 2 | Messery | 74180 | SDOU sTh_6
+ME_FRIZ1 | Frize | 46.3527362 | 6.3071757 | 2 | Messery | 74180 | SDOU sTh_6
+ME_FRIZ2 | Frize | 46.3527774 | 6.3069542 | 2 | Messery | 74180 | SDOU sTh_6
+ME_REPI1 | Repingeons | 46.3459622 | 6.2852655 | 2 | Messery | 74180 | J SDOU sTh_6
+ME_REPI2 | Repingeons | 46.3456136 | 6.2849533 | 2 | Messery | 74180 | J SDOU sTh_6
+ME_VERE1 | Veret | 46.3515164 | 6.2967896 | 2 | Messery | 74180 | J SDOU sTh_6
+ME_VERE2 | Veret | 46.3514676 | 6.2965029 | 2 | Messery | 74180 | J SDOU sTh_6
+NER_CHL1 | Nernier Centre | 46.3630241 | 6.304875 | 1 | Nernier | 74199 | J SDOU sTh_6
+O_CHAR1 | Charmoisy | 46.3189179 | 6.4985723 | 1 | Orcier | 74206 | sTh_7
+O_CHAR2 | Charmoisy | 46.318942 | 6.4985132 | 1 | Orcier | 74206 | sTh_7
+O_Char4 | Charmoisy (Rte du Lyaud) | 46.31907495670476 | 6.498796501701718 | 1 | Orcier | 74206 | sTh_7
+O_CHL1 | Orcier (Église) | 46.3125775 | 6.490445 | 1 | Orcier | 74206 | sTh_7
+O_CHL2 | Église | 46.3126034 | 6.4904044 | 1 | Orcier | 74206 | sTh_7
+O_COLO1 | Colomby | 46.32231794725096 | 6.4990522087287905 | 1 | Orcier | 74206 | sTh_7
+O_COLO2 | Colomby | 46.32229338258714 | 6.499002579360895 | 1 | Orcier | 74206 | sTh_7
+O_FAVR1 | Les Favrats | 46.302171728906046 | 6.500575132015989 | 1 | Orcier | 74206 | sTh_7
+O_FAVR2 | Les Favrats | 46.302170696665335 | 6.500615257776263 | 1 | Orcier | 74206 | sTh_7
+O_FILL1 | Fillient | 46.30955711209669 | 6.501535216394027 | 1 | Orcier | 74206 | sTh_7
+O_FILL2 | Fillient | 46.309505017638514 | 6.501453201644116 | 1 | Orcier | 74206 | sTh_7
+O_GDCH1 | Les Grands Champs | 46.3204286 | 6.4937899 | 1 | Orcier | 74206 | sTh_7
+O_GDCH2 | Les Grands Champs | 46.3203487 | 6.4938131 | 1 | Orcier | 74206 | sTh_7
+O_Han1 | Chemin de la Hanche | 46.31098570728017 | 6.503607759922785 | 1 | Orcier | 74206 | sTh_7
+O_Han2 | Chemin de la Hanche | 46.311035730675485 | 6.503584961146158 | 1 | Orcier | 74206 | sTh_7
+O_JOUV1 | Jouvernaisinaz | 46.31577247813242 | 6.5104760619712865 | 1 | Orcier | 74206 | sTh_7
+O_JOUV2 | Jouvernaisinaz | 46.31577809417897 | 6.5104275828033265 | 1 | Orcier | 74206 | sTh_7
+O_PAMP1 | Pamphiot  | 46.3156716404182 | 6.506889489221295 | 1 | Orcier | 74206 | sTh_7
+O_PAMP2 | Pamphiot  | 46.31565888500695 | 6.506998807510835 | 1 | Orcier | 74206 | sTh_7
+O_PROP1 | Propillet | 46.30552589463963 | 6.499865975883852 | 1 | Orcier | 74206 | sTh_7
+O_PROP2 | Propillet | 46.30550129974106 | 6.499947768508925 | 1 | Orcier | 74206 | sTh_7
+O_SORC1 | Sorcy | 46.326917995241885 | 6.495996450463046 | 1 | Orcier | 74206 | sTh_7
+O_SORC2 | Sorcy | 46.32689803062252 | 6.496099926389314 | 1 | Orcier | 74206 | sTh_7
+O_STD1 | Stade | 46.3125024 | 6.4863532 | 1 | Orcier | 74206 | 142 N SBON sTh_7
+O_STD2 | Stade | 46.3126264 | 6.4861851 | 1 | Orcier | 74206 | 142 sTh_7
+O_STD3 | Stade | 46.31249744028172 | 6.4867447949719415 | 1 | Orcier | 74206 | N
+PE_BREC1 | Brécorens | 46.2961838 | 6.4298255 | 1 | Perrignier | 74210 | L SBON sTh_7
+PE_BREC2 | Brécorens | 46.2958708 | 6.4291861 | 1 | Perrignier | 74210 | L SBON sTh_7
+PE_DAUD1 | Perrignier Mairie | 46.306065 | 6.4389106 | 1 | Perrignier | 74210 | L SBON sTh_7
+PE_DAUD2 | Perrignier Mairie | 46.3059938 | 6.438747 | 1 | Perrignier | 74210 | L SBON
+PE_EPRI1 | École primaire | 46.3043638 | 6.4403448 | 1 | Perrignier | 74210 | SBON sTh_7
+PE_GAR1 | Gare | 46.303233 | 6.425117 | 1 | Perrignier | 74210 | Y
+S_BONN1 | Bonnatrait | 46.3327021 | 6.384373 | 1 | Sciez | 74263 | H J SDOU SMAR Y sTh_6
+S_BONN2 | Bonnatrait | 46.33302430268241 | 6.385408926983658 | 1 | Sciez | 74263 | H J SDOU SMAR Y sTh_6
+S_BONPO1 | Bonnatrait Route de Port | 46.3347563 | 6.3943969 | 1 | Sciez | 74263 | H J SDOU SMAR sTh_6
+S_BONPO2 | Bonnatrait Route de Port | 46.3346795 | 6.3935252 | 1 | Sciez | 74263 | H J SDOU SMAR sTh_6
+S_CHAV1 | Chavannex Place | 46.3147338 | 6.3810694 | 1 | Sciez | 74263 | SDOU SMAR sTh_6
+S_CHAV2 | Chavannex Place | 46.31470931705163 | 6.3810069441803074 | 1 | Sciez | 74263 | SDOU SMAR sTh_6
+S_CHL1 | Sciez Mairie | 46.331453 | 6.3732987 | 1 | Sciez | 74263 | H J SDOU SMAR Y sTh_6
+S_CHL2 | Sciez Mairie | 46.3317017 | 6.3737905 | 1 | Sciez | 74263 | H J SDOU SMAR Y sTh_6
+S_CHV1 | Chavanne | 46.3295665 | 6.4004593 | 1 | Sciez | 74263 | SMAR
+S_CHV2 | Chavanne | 46.3295972 | 6.4005888 | 1 | Sciez | 74263 | SMAR
+S_CONT1 | Le Content | 46.3356767 | 6.398774 | 1 | Sciez | 74263 | H J SDOU SMAR sTh_6
+S_CONT2 | Le Content | 46.3355469 | 6.3977846 | 1 | Sciez | 74263 | H J SDOU SMAR sTh_6
+S_ECBU1 | École des Buclines | 46.33205190648514 | 6.389018639216819 | 1 | Sciez | 74263 | Y
+S_ECBU2 | École des Buclines | 46.33198341015448 | 6.388927411045082 | 1 | Sciez | 74263 | Y
+S_EG1 | Église | 46.3291654 | 6.3779383 | 1 | Sciez | 74263 | SMAR sTh_6
+S_EG2 | Église | 46.328778 | 6.3778413 | 1 | Sciez | 74263 | SMAR sTh_6
+S_FILEC1 | Filly École | 46.333463 | 6.3578052 | 1 | Sciez | 74263 | SDOU SMAR
+S_FILEC2 | Filly École | 46.3340383 | 6.3570323 | 1 | Sciez | 74263 | SDOU SMAR
+S_FILFR1 | Filly Fruitière | 46.3301764 | 6.3580262 | 1 | Sciez | 74263 | SDOU SMAR
+S_FILFR2 | Filly Fruitière | 46.3303472 | 6.3580159 | 1 | Sciez | 74263 | SDOU SMAR
+S_FILL1 | Filly | 46.3267358 | 6.3576773 | 1 | Sciez | 74263 | H SDOU SMAR sTh_6
+S_FILL2 | Filly | 46.3267662 | 6.3573886 | 1 | Sciez | 74263 | H SDOU SMAR sTh_6
+S_JUSS1 | Jussy | 46.33818 | 6.4038062 | 1 | Sciez | 74263 | H J SDOU SMAR sTh_6
+S_JUSS2 | Jussy | 46.3380447 | 6.402858 | 1 | Sciez | 74263 | H J SDOU SMAR sTh_6
+S_VOIE1 | Chemin des Voies | 46.3252336 | 6.3937984 | 1 | Sciez | 74263 | SMAR
+S_VOIE2 | Chemin des Voies | 46.3251344 | 6.3938362 | 1 | Sciez | 74263 | SMAR
+T_ADEP1 | Champ Dunand | 46.3866718 | 6.5019873 | 1 | Thonon-les-Bains | 74281 | B
+T_ADEP2 | Champ Dunand | 46.3870817 | 6.5019666 | 1 | Thonon-les-Bains | 74281 | B
+T_AUMO1 | Aumônerie | 46.3653653 | 6.4696395 | 1 | Thonon-les-Bains | 74281 | A C D E1
+T_AUMO2 | Aumônerie | 46.365554 | 6.469507 | 1 | Thonon-les-Bains | 74281 | A C D
+T_BDC1 | Les Arts | 46.36996 | 6.480873 | 1 | Thonon-les-Bains | 74281 | B C D
+T_BDC2 | Les Arts | 46.370025 | 6.480892 | 1 | Thonon-les-Bains | 74281 | C E1 T sTh_N
+T_Bdc2d | Les Arts | 46.36971684018878 | 6.480867223231832 |  | Thonon-les-Bains | 74281 | E1
+T_BDC3 | Les Arts | 46.369597 | 6.480436 | 1 | Thonon-les-Bains | 74281 | 142 A B sTh_N
+T_BDC4 | Les Arts | 46.369426 | 6.48041 | 1 | Thonon-les-Bains | 74281 | 142 B
+T_BDC5 | Les Arts | 46.369376 | 6.480368 | 1 | Thonon-les-Bains | 74281 | H J L sTh_N
+T_BDC5B | Les Arts | 46.36938879846883 | 6.4803608586520856 | 1 | Thonon-les-Bains | 74281 | H J L
+T_BDC6 | Les Arts | 46.369167 | 6.480338 | 1 | Thonon-les-Bains | 74281 | M N
+T_BLC1 | Blanchisseries | 46.395372 | 6.507331 | 1 | Thonon-les-Bains | 74281 | B
+T_BLC2 | Blanchisseries | 46.395463 | 6.507685 | 1 | Thonon-les-Bains | 74281 | B
+T_CAEP1 | Froid lieu | 46.3646861 | 6.4651765 | 1 | Thonon-les-Bains | 74281 | A C D H J
+T_CAEP2 | Froid lieu | 46.3647119 | 6.4649817 | 1 | Thonon-les-Bains | 74281 | A C D H J
+T_ChamB1 | Champ Bochard | 46.38691846563478 | 6.501140607462617 | 1 | Thonon-les-Bains | 74281 | C
+T_ChamB2 | Champ Bochard | 46.386855560594235 | 6.501159382925721 | 1 | Thonon-les-Bains | 74281 | C
+T_CHAR1 | Oncion | 46.363413 | 6.478307 | 1 | Thonon-les-Bains | 74281 | A B M N
+T_CHAR2 | Oncion | 46.363125 | 6.478227 | 1 | Thonon-les-Bains | 74281 | A B M N
+T_CHATH1 | Thuyset est | 46.3812417 | 6.4983758 | 1 | Thonon-les-Bains | 74281 | B
+T_CHATH2 | Thuyset est | 46.381182 | 6.4983164 | 1 | Thonon-les-Bains | 74281 | B E1
+T_Chatl1 | Chatelard | 46.373759828505456 | 6.491501844322656 | 1 | Thonon-les-Bains | 74281 | B
+T_Chatl2 | Chatelard | 46.37373392019549 | 6.491544759666894 | 1 | Thonon-les-Bains | 74281 | B
+T_CIM1 | Thonon cimetière | 46.3765577 | 6.4918067 | 1 | Thonon-les-Bains | 74281 | B
+T_CIM2 | Thonon cimetière | 46.376533 | 6.4919735 | 1 | Thonon-les-Bains | 74281 | B
+T_CINL1 | Ciné Léman | 46.3531406 | 6.4687473 | 1 | Thonon-les-Bains | 74281 | A L
+T_CINL2 | Ciné Léman | 46.3520119 | 6.4679186 | 1 | Thonon-les-Bains | 74281 | A L
+T_CITA1 | La Citadelle | 46.358372 | 6.482787 | 1 | Thonon-les-Bains | 74281 | A
+T_CITA2 | La Citadelle | 46.358185 | 6.48303 | 1 | Thonon-les-Bains | 74281 | A
+T_CLAR1 | Murs Blancs | 46.37957058279333 | 6.490864148090356 | 1 | Thonon-les-Bains | 74281 | C
+T_CLAR2 | Murs Blancs | 46.37961129149489 | 6.491067995975488 | 1 | Thonon-les-Bains | 74281 | C E1
+T_CLCHA1 | Clos de Champagne | 46.3749393 | 6.4962579 | 1 | Thonon-les-Bains | 74281 | B
+T_CLCHA2 | Clos de Champagne | 46.3751373 | 6.4960796 | 1 | Thonon-les-Bains | 74281 | B
+T_CLE1 | Les Clerges | 46.37215 | 6.47232 |  | Thonon-les-Bains | 74281 | E1
+T_CLRIA1 | Clos Riant | 46.3612822 | 6.458078 | 1 | Thonon-les-Bains | 74281 | D
+T_CLRIA2 | Clos Riant | 46.3614915 | 6.4582917 | 1 | Thonon-les-Bains | 74281 | D
+T_CMED1 | Centre Médical du Chablais | 46.357708 | 6.452382 | 1 | Thonon-les-Bains | 74281 | A
+T_CMed2 | Centre Médical du Chablais | 46.357699311755376 | 6.451631606489525 | 1 | Thonon-les-Bains | 74281 | A
+T_COCHA1 | Collège de Champagne | 46.3793199 | 6.4946299 | 1 | Thonon-les-Bains | 74281 | B C sTh_9 sTh_N
+T_COCHA2 | Collège de Champagne | 46.3790485 | 6.4950311 | 1 | Thonon-les-Bains | 74281 | B C sTh_9
+T_COLL1 | Collonges | 46.3581662 | 6.4736324 | 1 | Thonon-les-Bains | 74281 | A L
+T_COLL2 | Collonges | 46.3579288 | 6.472972 | 1 | Thonon-les-Bains | 74281 | A L
+T_ComRg1 | Comte rouge | 46.382870357750896 | 6.488587735838496 | 1 | Thonon-les-Bains | 74281 | C
+T_ComRg2 | Comte rouge | 46.38278802003367 | 6.488602487988078 | 1 | Thonon-les-Bains | 74281 | C
+T_CoPar1 | Corzent Parc | 46.36361 | 6.447952 | 1 | Thonon-les-Bains | 74281 | C
+T_CoPar2 | Corzent Parc | 46.36368 | 6.44802 | 1 | Thonon-les-Bains | 74281 | C
+T_CoPlg1 | Corzent Plage | 46.36365 | 6.4461908 | 1 | Thonon-les-Bains | 74281 | C
+T_CoPlg2 | Corzent Plage | 46.363815 | 6.4465778 | 1 | Thonon-les-Bains | 74281 | C
+T_CRANT1 | Croisee d'Anthy | 46.3526039 | 6.4403618 | 1 | Thonon-les-Bains | 74281 | H J
+T_CRANT2 | Croisee d'Anthy | 46.3525646 | 6.4398352 | 1 | Anthy-sur-Léman | 74013 | D H J
+T_CRET1 | Crête | 46.3675289 | 6.4830191 | 1 | Thonon-les-Bains | 74281 | A
+T_CRET2 | Crête | 46.3676266 | 6.4829717 | 1 | Thonon-les-Bains | 74281 | A
+T_DOIE1 | Clos rouge | 46.3699497 | 6.4964984 | 1 | Thonon-les-Bains | 74281 | B
+T_DOIE2 | Clos rouge | 46.3698357 | 6.4965042 | 1 | Thonon-les-Bains | 74281 | B
+T_DOUA1 | Vongy douanes | 46.3937746 | 6.5059613 | 1 | Thonon-les-Bains | 74281 | B
+T_DOUA2 | Vongy douanes | 46.3936747 | 6.5060007 | 1 | Thonon-les-Bains | 74281 | B
+T_DucSa1 | Ducs de Savoie | 46.38088573498107 | 6.487579225248896 | 1 | Thonon-les-Bains | 74281 | C
+T_DucSa2 | Ducs de Savoie | 46.38097270143914 | 6.487175552792155 | 1 | Thonon-les-Bains | 74281 | C
+T_ECLET1 | Létroz école | 46.3595537 | 6.4517529 | 1 | Thonon-les-Bains | 74281 | C
+T_ECLET2 | Létroz école | 46.35983 | 6.4510412 | 1 | Thonon-les-Bains | 74281 | C
+T_ECMOR1 | École Morillon | 46.3555246 | 6.4816198 | 1 | Allinges | 74005 | A
+T_ECMOR2 | École Morillon | 46.3556513 | 6.4815599 | 1 | Allinges | 74005 | A
+T_EGVAL1 | Église des Vallées | 46.3716995 | 6.4947991 | 1 | Thonon-les-Bains | 74281 | B
+T_EGVAL2 | Église des Vallées | 46.3715766 | 6.4948356 | 1 | Thonon-les-Bains | 74281 | B
+T_EPIN1 | Epinanches | 46.38608494367612 | 6.492768225333712 | 1 | Thonon-les-Bains | 74281 | C E1
+T_EPIN2 | Epinanches | 46.38601602459763 | 6.492876184246561 | 1 | Thonon-les-Bains | 74281 | C
+T_ETUL1 | Espace Tully | 46.36976316157532 | 6.501222767459103 | 1 | Thonon-les-Bains | 74281 | B
+T_ETUL2 | Espace Tully | 46.36986587849787 | 6.501494111045063 | 1 | Thonon-les-Bains | 74281 | B
+T_EUR1 | Europe | 46.3505153 | 6.4422752 | 1 | Anthy-sur-Léman | 74013 | D
+T_FLEY1 | Fleysets | 46.3536578 | 6.4775748 | 1 | Thonon-les-Bains | 74281 | A M N sTh_8
+T_FLEY2 | Fleysets | 46.3536878 | 6.4774952 | 1 | Thonon-les-Bains | 74281 | A M N sTh_8
+T_FON1 | Vongy fonderies | 46.389311 | 6.5036993 | 1 | Thonon-les-Bains | 74281 | B
+T_FON2 | Vongy fonderies | 46.389364 | 6.5038953 | 1 | Thonon-les-Bains | 74281 | B
+T_ForRi1 | Forêt de Ripaille | 46.38605732273096 | 6.490570504393918 | 1 | Thonon-les-Bains | 74281 | C
+T_ForRi2 | Forêt de Ripaille | 46.38600736794603 | 6.4905852565435 | 1 | Thonon-les-Bains | 74281 | C
+T_FoyCl1 | Murs blancs | 46.37671867985175 | 6.489347226086948 | 1 | Thonon-les-Bains | 74281 | C
+T_FoyCl2 | Murs blancs | 46.37674088576158 | 6.489462561074588 | 1 | Thonon-les-Bains | 74281 | C E1
+T_FUNAM1 | Funiculaire Amont | 46.373725 | 6.478934 | 1 | Thonon-les-Bains | 74281 | F
+T_FUNAV2 | Funiculaire Aval | 46.375751 | 6.479044 | 1 | Thonon-les-Bains | 74281 | F
+T_gAndr1 | Georges Andrier | 46.37074079000453 | 6.483902393246113 | 1 | Thonon-les-Bains | 74281 | B T
+T_gAndr2 | Georges Andrier | 46.37066306074116 | 6.4840981945042 | 1 | Thonon-les-Bains | 74281 | B T
+T_GEN1 | Vongy genévriers | 46.3918175 | 6.5053185 | 1 | Thonon-les-Bains | 74281 | B
+T_GEN2 | Vongy genévriers | 46.3920152 | 6.5054745 | 1 | Thonon-les-Bains | 74281 | B
+T_GNV1 | Genevray | 46.3554987 | 6.4703324 | 1 | Thonon-les-Bains | 74281 | A
+T_GNV2 | Genevray | 46.3554338 | 6.4701866 | 1 | Thonon-les-Bains | 74281 | A
+T_GRAEG1 | Grangette Église | 46.3624089 | 6.4604321 | 1 | Thonon-les-Bains | 74281 | D H J sTh_6
+T_GRAEG2 | Grangette Église | 46.362404 | 6.460239 | 1 | Thonon-les-Bains | 74281 | D H J sTh_6
+T_GREC1 | Grangette École | 46.362478 | 6.464275 | 1 | Thonon-les-Bains | 74281 | A
+T_GREC2 | Grangette École | 46.3621811 | 6.4639304 | 1 | Thonon-les-Bains | 74281 | A
+T_HARP1 | Les Harpes | 46.3601565 | 6.4845118 | 1 | Thonon-les-Bains | 74281 | A
+T_HARP2 | Les Harpes | 46.3599427 | 6.4841946 | 1 | Thonon-les-Bains | 74281 | A
+T_HOPI1 | Hôpital | 46.35914 | 6.4781748 | 1 | Thonon-les-Bains | 74281 | A M N
+T_HOPI2 | Hôpital | 46.3594509 | 6.4782714 | 1 | Thonon-les-Bains | 74281 | A M N
+T_JARC1 | Jeanne d'Arc | 46.3730415 | 6.4841236 | 1 | Thonon-les-Bains | 74281 | C
+T_JARC2 | Jeanne d'Arc | 46.37296140496348 | 6.484180042327878 | 1 | Thonon-les-Bains | 74281 | C E1
+T_JFer1 | Jules Ferry Ecole | 46.37463498513452 | 6.486439711514804 | 1 | Thonon-les-Bains | 74281 | C
+T_JFer2 | Jules Ferry Ecole | 46.374510997241075 | 6.486351198617313 | 1 | Thonon-les-Bains | 74281 | C
+T_JJROU1 | Stade Moynat | 46.3662823 | 6.468485 | 1 | Thonon-les-Bains | 74281 | A C D
+T_JJROU2 | Stade Moynat | 46.3663051 | 6.4682852 | 1 | Thonon-les-Bains | 74281 | A C D H J
+T_JMO2 | Lycée hôtelier | 46.3721506 | 6.4738659 |  | Thonon-les-Bains | 74281 | E1
+T_LETR1 | Létroz | 46.3587945 | 6.4529596 | 1 | Thonon-les-Bains | 74281 | D
+T_LETR2 | Létroz | 46.3585971 | 6.4523181 | 1 | Thonon-les-Bains | 74281 | D
+T_LIBE1 | Libération | 46.366666 | 6.47756 | 1 | Thonon-les-Bains | 74281 | A B M N sTh_N
+T_LIBE2 | Libération | 46.366667 | 6.4777852 | 1 | Thonon-les-Bains | 74281 | A B M N sTh_9
+T_LIBE3 | Libération | 46.3672537 | 6.47953 | 1 | Thonon-les-Bains | 74281 | A
+T_LYVER3 | La Versoie | 46.36351573283245 | 6.4719189124390075 | 1 | Thonon-les-Bains | 74281 | sTh_8 sTh_N
+T_LYVERG | La Versoie | 46.363555065298215 | 6.472083868293423 |  | Thonon-les-Bains | 74281 | sTh_9 sTh_N
+T_MAR1 | Marmottes | 46.365139 | 6.484055 | 1 | Thonon-les-Bains | 74281 | A
+T_MAR2 | Marmottes | 46.36539 | 6.483606 | 1 | Thonon-les-Bains | 74281 | A
+T_MARA1 | Marais | 46.3584097 | 6.4583832 | 1 | Thonon-les-Bains | 74281 | A
+T_MARA2 | Marais | 46.36253633777752 | 6.464529555603029 | 1 | Thonon-les-Bains | 74281 | A
+T_MARC1 | Marclaz | 46.354317 | 6.4452225 | 1 | Thonon-les-Bains | 74281 | D
+T_MARC2 | Marclaz | 46.354301 | 6.444792 | 1 | Thonon-les-Bains | 74281 | D
+T_MARCD1 | Marclaz Dessus | 46.3527779 | 6.4450731 | 1 | Thonon-les-Bains | 74281 | D
+T_MASC1 | Mascottes | 46.3653 | 6.474115 | 1 | Thonon-les-Bains | 74281 | A C D E1
+T_MASC2 | Mascottes | 46.365302 | 6.474048 | 1 | Thonon-les-Bains | 74281 | A C D
+T_MES1 | Mésanges | 46.3617183 | 6.4555834 | 1 | Thonon-les-Bains | 74281 | C
+T_MES2 | Mésanges | 46.361797 | 6.4557411 | 1 | Thonon-les-Bains | 74281 | C
+T_MORC1 | Morcy | 46.355867 | 6.454833 |  | Thonon-les-Bains | 74281 | A
+T_MORC2 | Morcy | 46.355507 | 6.454784 | 1 | Thonon-les-Bains | 74281 | A
+T_MOU1 | La Mouche | 46.370665 | 6.490468 | 1 | Thonon-les-Bains | 74281 | T
+T_MOU2 | La Mouche | 46.3705979 | 6.4905284 | 1 | Thonon-les-Bains | 74281 | T
+T_NAR1 | Narcisses | 46.364074 | 6.485604 | 1 | Thonon-les-Bains | 74281 | A
+T_NAR2 | Narcisses | 46.36417 | 6.485549 | 1 | Thonon-les-Bains | 74281 | A
+T_PAT1 | La Patinerie | 46.362141 | 6.482635 | 1 | Thonon-les-Bains | 74281 | A
+T_PAT2 | La Patinerie | 46.362492 | 6.482545 | 1 | Thonon-les-Bains | 74281 | A
+T_PELE1 | Pélerins | 46.360114 | 6.460024 | 1 | Thonon-les-Bains | 74281 | A
+T_PELE2 | Pélerins | 46.3600098 | 6.4598486 | 1 | Thonon-les-Bains | 74281 | A
+T_Perro1 | Perrosay | 46.38445327212471 | 6.489333944848039 | 1 | Thonon-les-Bains | 74281 | C
+T_Perro2 | Perrosay | 46.384267323618914 | 6.489341991475084 | 1 | Thonon-les-Bains | 74281 | C
+T_PHIL2 | Philosophes | 46.3678655 | 6.4715384 |  | Thonon-les-Bains | 74281 | E1
+T_PILL1 | Pillon | 46.363754 | 6.4603156 | 1 | Thonon-les-Bains | 74281 | C
+T_PILL2 | Pillon | 46.3639873 | 6.4605544 | 1 | Thonon-les-Bains | 74281 | C
+T_Pinso1 | Pinsons | 46.361271 | 6.449962 | 1 | Thonon-les-Bains | 74281 | C
+T_Pinso2 | Pinsons | 46.3611783 | 6.4500748 | 1 | Thonon-les-Bains | 74281 | C
+T_Piott1 | Piottons | 46.3911384 | 6.5031257 | 1 | Thonon-les-Bains | 74281 | C
+T_Piott2 | Piottons | 46.3910172 | 6.5031928 | 1 | Thonon-les-Bains | 74281 | C
+T_Plant1 | Plantées | 46.380881109101736 | 6.489439567808657 | 1 | Thonon-les-Bains | 74281 | C
+T_Plant2 | Plantées | 46.380918161326875 | 6.489664386445404 | 1 | Thonon-les-Bains | 74281 | C
+T_PORI1 | Port de Rives | 46.374774 | 6.477449 | 1 | Thonon-les-Bains | 74281 | NL
+T_PORI2 | Port de Rives | 46.3747731382792 | 6.477638125165934 | 1 | Thonon-les-Bains | 74281 | E1 NL
+T_PR1 | P+R Ermitage | 46.3626832752544 | 6.49146781121584 | 1 | Thonon-les-Bains | 74281 | NL T
+T_PREC1 | Pré Cergues | 46.3673452 | 6.4770305 | 1 | Thonon-les-Bains | 74281 | A B C D E1 H J M N
+T_PREC2 | Pré Cergues | 46.3673981 | 6.4769262 | 1 | Thonon-les-Bains | 74281 | A B C D H J M N
+T_PVER1 | Prés Verts | 46.379697 | 6.492929 | 1 | Thonon-les-Bains | 74281 | B
+T_PVER2 | Prés Verts | 46.3796683 | 6.4930087 | 1 | Thonon-les-Bains | 74281 | B sEvi
+T_QDR1 | Quais de Rives | 46.37888722192571 | 6.481041450144409 |  | Thonon-les-Bains | 74281 | E1
+T_RiCom1 | Ripaille Combe | 46.38538319879124 | 6.497104922142531 | 1 | Thonon-les-Bains | 74281 | C E1
+T_RiCom2 | Ripaille Combe | 46.38529438915642 | 6.4972041638760825 | 1 | Thonon-les-Bains | 74281 | C
+T_RIP1 | Ripaille | 46.387025 | 6.485826 |  | Thonon-les-Bains | 74281 | E1
+T_ROSE1 | Roseaux | 46.35727 | 6.456114 | 1 | Thonon-les-Bains | 74281 | A
+T_ROSE2 | Roseaux | 46.357202 | 6.456048 | 1 | Thonon-les-Bains | 74281 | A
+T_SCOE1 | Sacré Coeur | 46.3646733 | 6.4783478 | 1 | Thonon-les-Bains | 74281 | 142 A B L M N sTh_7 sTh_8
+T_SCOE2 | Sacré Coeur | 46.3645331 | 6.4782674 | 1 | Thonon-les-Bains | 74281 | 142 A B L M N sTh_7 sTh_8 sTh_9
+T_sDcam1 | Saint Disdille campings | 46.398987 | 6.503744 | 1 | Thonon-les-Bains | 74281 | C
+T_sDSta1 | Saint-Disdille stades | 46.3969443 | 6.5033715 | 1 | Thonon-les-Bains | 74281 | C
+T_sDSta2 | Saint-Disdille stades | 46.3970534 | 6.5034345 | 1 | Thonon-les-Bains | 74281 | C
+T_SEN1 | Senevullaz | 46.3596456 | 6.47618 | 1 | Thonon-les-Bains | 74281 | A
+T_SEN2 | Senevullaz | 46.3598 | 6.476262 | 1 | Thonon-les-Bains | 74281 | A
+T_SerrM1 | Thonon Serres Municipales | 46.3946528 | 6.502945 | 1 | Thonon-les-Bains | 74281 | C
+T_SerrM2 | Thonon Serres municipales | 46.3946297 | 6.5029888 | 1 | Thonon-les-Bains | 74281 | C
+T_SHOL1 | Shopping Leman | 46.3798932 | 6.496355 | 1 | Thonon-les-Bains | 74281 | B C
+T_SHOL2 | Shopping Leman | 46.38013029246759 | 6.496501890807345 | 1 | Thonon-les-Bains | 74281 | B C
+T_STJOS1 | Saint-Joseph | 46.3751791 | 6.4839331 | 1 | Thonon-les-Bains | 74281 | sTh_6 sTh_N
+T_STJOS2 | Saint-Joseph | 46.37510124771232 | 6.483637692590318 | 1 | Thonon-les-Bains | 74281 | sTh_6 sTh_9 sTh_N
+T_STMA1 | Crêt Sainte Marie | 46.35928367568168 | 6.495876293254104 | 1 | Thonon-les-Bains | 74281 | T sTh_9
+T_STMA2 | Crêt Sainte Marie | 46.35911280915134 | 6.4962074713976525 | 1 | Thonon-les-Bains | 74281 | T
+T_TASS1 | Tassigny | 46.3616096 | 6.4781964 | 1 | Thonon-les-Bains | 74281 | B M N
+T_TASS2 | Tassigny | 46.361827 | 6.478152 | 1 | Thonon-les-Bains | 74281 | A B M N
+T_THAL1 | Thales | 46.384576 | 6.506861 | 1 | Thonon-les-Bains | 74281 | B
+T_THAL2 | Thales | 46.384474 | 6.506323 | 1 | Thonon-les-Bains | 74281 | B
+T_Thys1 | Thuyset ouest | 46.3808828654419 | 6.493252515792847 | 1 | Thonon-les-Bains | 74281 | C
+T_Thys2 | Thuyset ouest | 46.38097601020353 | 6.494879574466639 | 1 | Thonon-les-Bains | 74281 | C E1
+T_TOL1 | Tolettes | 46.384943 | 6.50363 | 1 | Thonon-les-Bains | 74281 | B
+T_TOL2 | Tolettes | 46.385285 | 6.503312 | 1 | Thonon-les-Bains | 74281 | B
+T_TPLA1 | Thonon Plage | 46.385339 | 6.483157 |  | Thonon-les-Bains | 74281 | E1
+T_TROL2 | Trolliettes | 46.3661407 | 6.4741952 | 1 | Thonon-les-Bains | 74281 | H J
+T_TUL1 | Tully lavoir | 46.3737067 | 6.4978464 | 1 | Thonon-les-Bains | 74281 | B
+T_TUL2 | Tully lavoir | 46.3738141 | 6.4978068 | 1 | Thonon-les-Bains | 74281 | B
+T_VAL1 | Vallées | 46.3705779 | 6.4882259 | 1 | Thonon-les-Bains | 74281 | T
+T_VAL2 | Vallées | 46.3705139 | 6.4880377 | 1 | Thonon-les-Bains | 74281 | T
+T_VerGR1 | La Versoie | 46.363563417215175 | 6.472107745316422 | 1 | Thonon-les-Bains | 74281 | A C D E1 H J SBON sEvi sTh_6 sTh_7 sTh_8 sTh_9 sTh_N
+T_VerGR2 | La Versoie | 46.36358747941188 | 6.471811361220277 | 1 | Thonon-les-Bains | 74281 | A C D H J sTh_6
+T_VERN1 | Vernay | 46.363205 | 6.4621017 | 1 | Thonon-les-Bains | 74281 | D
+T_VERN2 | Vernay | 46.363289 | 6.461974 | 1 | Thonon-les-Bains | 74281 | D
+T_VGEG1 | Vongy Église | 46.3829186 | 6.5052674 | 1 | Thonon-les-Bains | 74281 | B
+T_VGEG2 | Vongy Église | 46.3828414 | 6.5054333 | 1 | Thonon-les-Bains | 74281 | B
+T_VGVIL1 | Vongy pérouse | 46.382568 | 6.503554 | 1 | Thonon-les-Bains | 74281 | B
+T_VGVIL2 | Vongy pérouse | 46.3825073 | 6.5035643 | 1 | Thonon-les-Bains | 74281 | B
+T_VIO1 | Vionnaz | 46.3612205 | 6.484097 | 1 | Thonon-les-Bains | 74281 | A
+T_VIO2 | Vionnaz | 46.361062 | 6.48422 | 1 | Thonon-les-Bains | 74281 | A
+T_VXCAM1 | Sécurité Sociale | 46.3601526 | 6.455777 | 1 | Thonon-les-Bains | 74281 | D
+T_VXCAM2 | Sécurité Sociale | 46.3602618 | 6.4557692 | 1 | Thonon-les-Bains | 74281 | D
+T_ZIVG1 | Vongy ZI | 46.3963004 | 6.5102983 | 1 | Thonon-les-Bains | 74281 | B
+TA_AMD1 | Amandiers | 46.38406218829159 | 6.500183930608601 |  | Thonon-les-Bains | 74281 | E1
+VF_EC2 | École | 46.27076652750608 | 6.257632198223755 | 2 | Veigy-Foncenex | 74293 | SMAR
+VF_LPSU2 | Lot Plein Sud | 46.267611 | 6.2641275 | 2 | Veigy-Foncenex | 74293 | SMAR
+VF_STHU | Place Saint-Hubert | 46.268883 | 6.267212 | 2 | Veigy-Foncenex | 74293 | SMAR
+VG_2M1 | Les deux montagnes (ADPT) | 46.207501 | 6.280987 | 2 | Ville-la-Grand | 74305 | sAn
+Y_MOTT1 | Les Mottes | 46.3677908 | 6.3372075 | 2 | Yvoire | 74315 | J SDOU SMAR Y sTh_6
+Y_MOTT2 | Les Mottes | 46.3678347 | 6.3372954 | 2 | Yvoire | 74315 | J SDOU SMAR Y sTh_6
+Y_PREP1 | Pré Ponce | 46.3681941 | 6.3262487 | 2 | Yvoire | 74315 | J SDOU SMAR Y sTh_6
+Y_PREP2 | Pré Ponce | 46.368247 | 6.32584 | 2 | Yvoire | 74315 | J SDOU SMAR Y sTh_6
