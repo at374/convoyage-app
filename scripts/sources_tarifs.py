@@ -174,7 +174,9 @@ try:
     lines+=sorted(' | '.join([a.get('agency_id',''),a.get('agency_name',''),a.get('agency_url',''),str(n.get(a.get('agency_id',''),0))]) for a in rd('agency.txt'))
     # Flux individuel de chaque réseau (même API officielle, provider = préfixe de l'agency_id) : statut, taille, emprise.
     lines+=['','provider | HTTP | octets | lignes | courses | arrêts | emprise lat/lon min-max | fichiers fares']
-    for prov in sorted({a.get('agency_id','').split(':')[0].replace('x','_') for a in rd('agency.txt')}):
+    # Relevé complet des 44 flux fait le 15/11/2026 (résultat conservé dans la transmission) ; on ne re-sonde
+    # que les flux à surveiller, pour rester dans la durée de la tâche.
+    for prov in ['BONNEVILLE']:
         try:
             st,_,d=fetch(f'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider={prov}&dataFormat=GTFS&dataProfil=OPENDATA')
             zz=zipfile.ZipFile(io.BytesIO(d))

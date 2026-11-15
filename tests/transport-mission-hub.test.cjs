@@ -373,3 +373,18 @@ test('transport à la demande : information affichée seulement dans le secteur 
  assert.deepEqual(H.tadFor({from:{lat:45.688,lon:5.909},to:{lat:45.70,lon:5.92}}).map(t=>t.name),['Mobéa (Ondéa Grand Lac)']);
  assert.equal(H.tadFor({from:HOME,to:MISSION}).length,0,'Annecy : aucun');
 });
+
+test('prix inconnu : lien officiel d’achat par opérateur, jamais pour une portion déjà tarifée',()=>{
+ const hub=require('../transport-mission-hub.js');
+ assert.equal(hub.ticketLink('SNCF').url,'https://www.sncf-connect.com/');
+ assert.equal(hub.ticketLink('FlixBus').label,'FlixBus');
+ assert.equal(hub.ticketLink('BlaBlaCar Bus').url,'https://www.blablacar.fr/bus');
+ assert.equal(hub.ticketLink('Cars Région Haute-Savoie').url,'https://www.laregionvoustransporte.fr/');
+ assert.equal(hub.ticketLink('Star Roanne').label,'Star Roanne');
+ assert.equal(hub.ticketLink("Star't Thonon").label,"Star't");
+ assert.equal(hub.ticketLink('Réseau inconnu').url,'https://www.oura.com/');
+ assert.equal(hub.ticketLink(''),null);
+ const j={legs:[{kind:'transit',provider:'TCL'},{kind:'walk'},{kind:'transit',provider:'SNCF'},{kind:'transit',provider:'SNCF'}],
+  price:{status:'unknown',legFares:[{amount:2.1},null,null,null]}};
+ assert.deepEqual(hub.ticketLinks(j).map(t=>t.label),['SNCF Connect']);
+});

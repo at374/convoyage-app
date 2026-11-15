@@ -635,6 +635,7 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .cp-hub-times{font-size:1.15em}
 .cp-hub-price{font-weight:700;color:var(--ok)}
 .cp-hub-price.unknown{color:var(--alerte)}
+.cp-hub-ticket{display:inline-block;margin-left:6px;padding:2px 8px;border:1px solid var(--alerte);border-radius:999px;font-size:.85em;font-weight:600;text-decoration:none;color:inherit;white-space:nowrap}
 .cp-hub-modes{font-size:.95em;word-break:break-word}
 .cp-hub-status{font-size:.9em}
 .cp-hub-reason{color:var(--alerte)}

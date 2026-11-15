@@ -815,6 +815,59 @@ function mapSvg(doc,j){
  for(const [p,color] of [[pts[0],'#16a34a'],[pts[pts.length-1],'#dc2626']]){const ci=doc.createElementNS(NS,'circle');ci.setAttribute('cx',X(p));ci.setAttribute('cy',Y(p));ci.setAttribute('r','6');ci.setAttribute('fill',color);svg.appendChild(ci);}
  return svg;
 }
+// Prix non connu : lien vers le site ou l'application officielle où acheter le billet (jamais un prix estimé).
+// Adresses : sites des opérateurs nationaux et agency_url publiés dans les flux officiels (agrégat Oùra) ;
+// les réseaux dont le flux ne donne pas de site voyageur renvoient vers le portail régional Oùra.
+const TICKET_LINKS=[
+ [/sncf|\bter\b|tgv|intercit|ouigo|l[ée]man express/i,'SNCF Connect','https://www.sncf-connect.com/'],
+ [/flixbus/i,'FlixBus','https://www.flixbus.fr/'],
+ [/blablacar/i,'BlaBlaCar Bus','https://www.blablacar.fr/bus'],
+ [/^(sbb|cff|ffs)\b|postauto|car postal|\bbls\b|\bmbc\b|\btl\b|travys|\btpn\b|\bcgn\b/i,'CFF','https://www.sbb.ch/fr'],
+ [/\btpg\b|unireso|^but$|^afo$/i,'tpg','https://www.tpg.ch/fr/acheter'],
+ [/l[ée]man pass/i,'Léman Pass','https://www.lemanpass.com/points-de-vente/'],
+ [/\btcl\b/i,'TCL','https://www.tcl.fr/'],
+ [/sibra/i,'Sibra','https://www.sibra.fr/'],
+ [/m r[ée]so|mobilit[ée]s m|\btag\b|tougo/i,'M réso','https://www.reso-m.fr/'],
+ [/\btac\b/i,'TAC','https://tac-mobilites.fr/'],
+ [/synchro/i,'Synchro','https://synchro.grandchambery.fr'],
+ [/ond[ée]a/i,'Ondéa','https://www.ondea-bus.fr'],
+ [/star['’]?t|thonon/i,"Star't",'https://www.star-t.fr'],
+ [/j.?y ?bus/i,"J'ybus",'https://www.jybus.fr/'],
+ [/rubis/i,'Rubis','https://www.rubis.grandbourg.fr/'],
+ [/[ée]va['’]?d|^evian$/i,"ÉVA'D",'https://www.evad.fr/'],
+ [/chamonix/i,'Chamonix Bus','https://www.montblancbus.transdev.com/reseau/chamonix-bus/'],
+ [/proxim ?iti/i,'Proxim iTi','https://www.proximiti.fr'],
+ [/mobi['’]?vals/i,"Mobi'Vals",'https://www.mobivals.fr/'],
+ [/\btra\b|albertville/i,'TRA Mobilité','https://savoie.transdev.com/'],
+ [/duobus/i,'Duobus','https://www.duobus.fr/'],
+ [/ruban/i,'Ruban','https://www.rubantransport.com/'],
+ [/l['’]?va\b/i,"L'va",'http://www.lva-mobilite.fr'],
+ [/colibri/i,'Colibri','https://www.cotiere-mobilite.com/colibri/le-reseau/'],
+ [/coqueligo/i,'CoqueliGO','https://www.coqueligo.fr/'],
+ [/tout['’]?enbus/i,"Tout'enbus",'https://www.toutenbus.fr'],
+ [/trans['’]?cab/i,"Trans'Cab",'https://www.stabus.fr/fr/'],
+ [/mont[ée]libus/i,'Montélibus','http://www.montelibus.fr'],
+ [/maelis/i,'Maelis','https://www.maelis.eu'],
+ [/t['’]?cap/i,"T'CAP",'https://www.t-cap.mobi/'],
+ [/velay/i,'Mobilité en Velay','https://www.mobilite.lepuyenvelay.fr'],
+ [/\brlv\b/i,'RLV Mobilités','https://rlv-mobilites.fr/'],
+ [/star roanne/i,'Star Roanne','https://www.bus-star.com/'],
+ [/tain-tournon/i,'Le Bus','https://www.archeagglo.fr/'],
+ [/smtut|thiers/i,'SMTUT','http://www.bus-tut.com'],
+ [/cars? r[ée]gion|\btam\b/i,'Cars Région','https://www.laregionvoustransporte.fr/']
+];
+function ticketLink(provider){
+ const name=String(provider||'').trim();if(!name)return null;
+ // « Star Roanne » avant « Star't » : même racine.
+ const hit=(/star roanne/i.test(name)?TICKET_LINKS.find(x=>x[1]==='Star Roanne'):null)||TICKET_LINKS.find(x=>x[0].test(name));
+ return hit?{label:hit[1],url:hit[2]}:{label:'Oùra',url:'https://www.oura.com/'};
+}
+function ticketLinks(j){
+ const seen=new Map();
+ (j.legs||[]).forEach((l,i)=>{if(l.kind==='walk'||(j.price&&j.price.legFares&&j.price.legFares[i]))return;
+  const t=ticketLink(l.provider);if(t&&!seen.has(t.url))seen.set(t.url,t);});
+ return [...seen.values()];
+}
 function card(doc,j,labels){
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
  const s=el(doc,'summary');
@@ -822,6 +875,10 @@ function card(doc,j,labels){
  s.appendChild(el(doc,'strong','cp-hub-times',clock(j.departure)+' → '+clock(j.arrival)+' · '+durationText(j.durationMinutes)));
  const price=el(doc,'span','cp-hub-price'+(j.price.status==='unknown'?' unknown':''),j.price.status==='unknown'?
   'Prix à confirmer'+(j.price.partial?' (connu : '+j.price.partial+')':''):j.price.label);s.appendChild(price);
+ if(j.price.status==='unknown')for(const t of ticketLinks(j)){
+  const link=el(doc,'a','cp-hub-ticket','🎟️ '+t.label);link.href=t.url;link.target='_blank';link.rel='noopener noreferrer';
+  link.title='Acheter le billet ou consulter le prix : '+t.label;link.setAttribute('aria-label','Acheter le billet sur '+t.label);
+  if(link.addEventListener)link.addEventListener('click',e=>e.stopPropagation());s.appendChild(link);}
  s.appendChild(el(doc,'span','cp-hub-modes',j.legs.map(l=>(ICON[l.mode]||'🚏')+(l.kind==='walk'?' '+Math.max(1,Math.round((l.durationSeconds||0)/60))+' min':(l.line?' '+l.line:''))).join(' › ')));
  s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':j.scheduled?'🕒 ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · avance '+j.slackMinutes+' min (marge '+j.marginMinutes+' min)':'')));
  if(!j.feasible)s.appendChild(el(doc,'small','cp-hub-reason',j.statusDetail));
@@ -881,7 +938,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
