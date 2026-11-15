@@ -126,9 +126,13 @@ function officialZoneFare(leg){
 // grille tpg/Alpbus 14/12/2025 → 12/12/2026 (même prix 4,80 € pour 10 + 230). Fin de validité prudente : 12/12/2026.
 // Appliqué seulement à un TRAIN dont un arrêt est la gare d'Annemasse (zone 210) et l'autre une gare Léman
 // Express du canton de Genève (zone 10). Tout autre cas : pas de prix.
-const LEMAN_PASS={amount:4.80,currency:'EUR',network:'Léman Pass multizones 10+210',validityMinutes:90,
- validFrom:'2025-12-14',validUntil:'2026-12-12',checkedAt:'2026-11-13',
- source:'https://jacquet-autocars.com/wp-content/uploads/2025/11/Grille-tarifaire-TRANSFRONTALIERS-2025-2026.pdf'};
+// Léman Pass multizones 10+210 (Annemasse Agglo <> canton de Genève), billet unité 16 ans et +, 90 min, tous modes
+// (bus, trams, trains Léman Express, Mouettes) : 4,90 €. Sources concordantes : guide des tarifs TAC « en vigueur au
+// 14/12/2025 » et page TAC « Titres et cartes journalières Léman Pass » (4,90 €) ; tpg.ch (zone 10 : 3,20 € + zone 210 :
+// 1,70 €). Les 4,80 € de la grille Jacquet 274 concernent l'arrêt de Nangy sur cette ligne et ne sont pas utilisés.
+const LEMAN_PASS={amount:4.90,currency:'EUR',network:'Léman Pass multizones 10+210',validityMinutes:90,
+ validFrom:'2025-12-14',validUntil:'2026-12-12',checkedAt:'2026-11-15',
+ source:'https://www.tac-mobilites.fr/titres/titres-et-cartes-journalieres-leman-pass'};
 const ZONE10_STATIONS=['geneve','geneve cornavin','geneve-secheron','geneve-aeroport','lancy-pont-rouge','lancy-bachet',
  'geneve-champel','geneve-eaux-vives','chene-bourg','chambesy','les tuileries','genthod-bellevue','creux-de-genthod',
  'versoix','pont-ceard','vernier','meyrin','zimeysa','satigny','russin','la plaine'];
@@ -137,10 +141,7 @@ function stationKey(name){
  return String(typeof name==='string'?name:(name&&typeof name==='object'?(name.name||name.stopName||name.label||''):'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
   .replace(/^gare (de |d')?/,'').replace(/,? ?gare$/,'').replace(/\s*\(.*\)$/,'').replace(/\s+/g,' ').trim();
 }
-// 13/11/2026 : DÉSACTIVÉ. Le guide des tarifs TAC (en vigueur au 14/12/2025) indique 4,90 € pour le ticket unité
-// Léman Pass zones 210+10 (16 ans et +, 90 min), alors que la grille Jacquet indique 4,80 €. Deux sources officielles
-// contradictoires = pas de prix. Réactiver seulement avec la grille lemanpass.com en vigueur.
-const LEMAN_PASS_ACTIVE=false;
+const LEMAN_PASS_ACTIVE=true;
 function lemanPassFare(leg){
  if(!LEMAN_PASS_ACTIVE)return null;
  if(!leg||leg.mode!=='Train'||typeof leg.departure!=='string')return null;
@@ -149,6 +150,7 @@ function lemanPassFare(leg){
  const pair=(ZONE210_STATIONS.includes(a)&&ZONE10_STATIONS.includes(b))||(ZONE210_STATIONS.includes(b)&&ZONE10_STATIONS.includes(a));
  if(!pair)return null;
  return {amount:LEMAN_PASS.amount,currency:LEMAN_PASS.currency,network:LEMAN_PASS.network,validityMinutes:LEMAN_PASS.validityMinutes,
+  combined:{amount:LEMAN_PASS.amount,covers:[ZONE10.network,'TAC'],label:'billet Léman Pass multizones 10+210 (tous modes dans les deux zones)'},
   source:LEMAN_PASS.network+' · billet unité plein tarif, 90 min · '+LEMAN_PASS.source+' (valable jusqu’au 12/12/2026, vérifié le '+LEMAN_PASS.checkedAt+')'};
 }
 // unireso « Tout Genève », zone 10 = tout le canton de Genève, valable sur tpg, CFF et Mouettes : billet 60 min,

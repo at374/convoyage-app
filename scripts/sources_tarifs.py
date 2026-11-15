@@ -49,6 +49,11 @@ SOURCES=[
  ('start-ligne-l','https://www.star-t.fr/se-deplacer/lignes-et-horaires/ligne-bus-l'),
  ('ondea-titres-2026','https://www.ondeagrandlac.fr/titres/titres-pour-tous-tarifs-applicables-du-1er-juillet-2026/titre-10-voyages'),
  ('ondea-titres-index','https://www.ondeagrandlac.fr/titres/titres-pour-tous-tarifs-applicables-du-1er-juillet-2026'),
+ ('lemanpass-points-de-vente','https://www.lemanpass.com/points-de-vente/'),
+ ('tac-leman-pass','https://www.tac-mobilites.fr/titres/titres-et-cartes-journalieres-leman-pass'),
+ ('tpg-billets','https://www.tpg.ch/fr/acheter/nos-titres-de-transport/les-billets-et-cartes-journalieres'),
+ ('sncf-opendata-tarifs','https://ressources.data.sncf.com/api/explore/v2.1/catalog/datasets?where=search(%22tarifs%22)&limit=100&select=dataset_id,metas'),
+ ('datagouv-tarifs-ter','https://www.data.gouv.fr/api/1/datasets/?q=tarifs%20TER&organization=534fffb0a3a7292c64a78115&page_size=50'),
 ]
 # Grilles en matrice (prix dans un tableau graphique que pdftotext ne restitue pas) : pages rendues en image pour relecture.
 IMAGES={'tpg-272-alpbus','jacquet-transfrontaliers','jacquet-fr-fr','cars-isere-carte-zonale-2025','cars-isere-depliant-2025'}
@@ -130,4 +135,45 @@ try:
     index.append(f'| cars74-271-272-274-arrets | flux Oùra Haute-Savoie + BAN | 200 | | {len(lines)} lignes |\n')
 except Exception as e:
     index.append(f'| cars74-271-272-274-arrets | flux Oùra Haute-Savoie + BAN | erreur {e!r} | | |\n')
+# Arrêts du réseau Star't (Thonon Agglomération) avec leur commune officielle (BAN) : la tarification Star't est par
+# commune (zone A / zone B, star-t.fr). Inventaire des réseaux de l'agrégat régional Oùra (comparaison de couverture).
+def commune(lat,lon,cache={}):
+    key=(lat,lon)
+    if key not in cache:
+        try:
+            _,_,g=fetch(f'https://api-adresse.data.gouv.fr/reverse/?lon={lon}&lat={lat}&limit=1')
+            f=(json.loads(g).get('features') or [{}])[0].get('properties',{})
+            cache[key]=(f.get('city',''),f.get('citycode',''))
+        except Exception as e: cache[key]=('erreur '+repr(e)[:60],'')
+    return cache[key]
+try:
+    import csv, zipfile
+    _,_,data=fetch('https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e')
+    z=zipfile.ZipFile(io.BytesIO(data))
+    rd=lambda n:list(csv.DictReader(io.TextIOWrapper(z.open(n),encoding='utf-8-sig'))) if n in z.namelist() else []
+    routes={r['route_id']:(r.get('route_short_name') or '').strip() for r in rd('routes.txt')}
+    trips={t['trip_id']:routes.get(t['route_id'],'') for t in rd('trips.txt')}
+    used={}
+    for st in rd('stop_times.txt'): used.setdefault(st['stop_id'],set()).add(trips.get(st['trip_id'],''))
+    lines=['Fichiers : '+', '.join(z.namelist()),'stop_id | nom | lat | lon | zone_id | commune BAN | code INSEE | lignes']
+    for x in rd('stops.txt'):
+        if x['stop_id'] not in used: continue
+        c=commune(x.get('stop_lat',''),x.get('stop_lon',''))
+        lines.append(' | '.join([x['stop_id'],x.get('stop_name',''),x.get('stop_lat',''),x.get('stop_lon',''),x.get('zone_id',''),c[0],c[1],' '.join(sorted(used[x['stop_id']]))]))
+    open(f'{OUT}/start-arrets.txt','w').write('\n'.join(lines))
+    index.append(f'| start-arrets | flux Star\'t + BAN | 200 | | {len(lines)} lignes |\n')
+except Exception as e:
+    index.append(f'| start-arrets | flux Star\'t + BAN | erreur {e!r} | | |\n')
+try:
+    _,_,data=fetch('https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA')
+    z=zipfile.ZipFile(io.BytesIO(data))
+    rd=lambda n:list(csv.DictReader(io.TextIOWrapper(z.open(n),encoding='utf-8-sig'))) if n in z.namelist() else []
+    n={}
+    for r in rd('routes.txt'): n[r.get('agency_id','')]=n.get(r.get('agency_id',''),0)+1
+    lines=[f'Agrégat Oùra : {len(data)} octets ; fichiers : '+', '.join(z.namelist()),'agency_id | nom | url | lignes']
+    lines+=sorted(' | '.join([a.get('agency_id',''),a.get('agency_name',''),a.get('agency_url',''),str(n.get(a.get('agency_id',''),0))]) for a in rd('agency.txt'))
+    open(f'{OUT}/oura-agregat-reseaux.txt','w').write('\n'.join(lines))
+    index.append(f'| oura-agregat-reseaux | agrégat Oùra (PAN) | 200 | | {len(lines)} lignes |\n')
+except Exception as e:
+    index.append(f'| oura-agregat-reseaux | agrégat Oùra (PAN) | erreur {e!r} | | |\n')
 open(f'{OUT}/INDEX.md','w').write(''.join(index)); print(''.join(index))

@@ -335,7 +335,7 @@ function priceOf(j,fareFor){
  const combo=found.findIndex(f=>isVerifiedFare(f)&&f.combined&&finite(f.combined.amount)&&f.combined.covers);
  const covered=new Set();
  if(combo>=0){const c=found[combo].combined;
-  found.forEach((f,i)=>{if(i!==combo&&isVerifiedFare(f)&&f.network===c.covers)covered.add(i);});
+  found.forEach((f,i)=>{if(i!==combo&&isVerifiedFare(f)&&(Array.isArray(c.covers)?c.covers.includes(f.network):f.network===c.covers))covered.add(i);});
   if(covered.size)found[combo]={...found[combo],amount:c.amount,validityMinutes:null,source:found[combo].source+' — titre retenu : '+c.label};}
  for(let i=0;i<j.legs.length;i++){const l=j.legs[i];
   if(l.kind==='walk'){legFares.push(null);continue;}
