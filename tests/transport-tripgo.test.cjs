@@ -14,6 +14,10 @@ test('TripGo rejects a mismatched query, missing template, unavailable trip and 
   const data=clone();change(data);assert.equal(api.parse(data,options).itineraries.length,0);
  }
 });
+test('TripGo accepts an empty-groups response with no segmentTemplates at all (pas de trajet en transport public, ex. liaison très locale)',()=>{
+ const data=clone();data.groups=[];delete data.segmentTemplates;
+ assert.equal(api.parse(data,options).itineraries.length,0);
+});
 test('TripGo keeps mission deadline, endpoint gaps and transport mode restrictions conservative',()=>{
  assert.equal(api.parse(clone(),{...options,latestArrival:'2026-11-02T11:42:33+01:00'}).itineraries.length,0);
  assert.equal(api.parse(clone(),{...options,latestArrival:'2026-11-02T11:42:34+01:00'}).itineraries.length,1);

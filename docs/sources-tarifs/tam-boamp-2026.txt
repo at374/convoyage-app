@@ -1,0 +1,271 @@
+Source : https://www.boamp.fr/telechargements/FILES/PDF/2025/01/25-9840.pdf
+
+                                             Avis de marché
+Attention : les informations contenues dans l'extrait PDF peuvent dans certains cas ne pas présenter le texte
+intégral de l'annonce. Les extraits PDF des annonces du BOAMP ne constituent pas le format officiel, pour
+consulter le texte intégral au format officiel du présent avis, cliquez sur https://www.boamp.fr/pages/avis/?
+q=idweb:25-9840
+
+Département(s) de publication : 01
+Annonce n° 25-9840
+
+
+Section 1 - Acheteur
+     1.1 Acheteur
+           Nom officiel : Conseil Régional Auvergne-Rhône-Alpes
+
+           Forme juridique de l’acheteur : Autorité régionale
+
+           Activité du pouvoir adjudicateur : Services d’administration générale
+
+Section 2 - Procédure
+     2.1 Procédure
+           Titre : AT01 - Réseau TAM - 1 lot - 2025
+
+           Description : AT01 - Réseau TAM - 1 lot - 2025
+
+           Identifiant de la procédure : 00374b67-af90-4b59-a99f-ca9fc29539bc
+
+           Identifiant interne : DAF_2024_000260
+
+           Type de procédure : Ouverte
+
+           2.1.1 Objet
+                  Nature du marché : Services
+
+                  Nomenclature principale ( cpv ): 60130000 Services spécialisés de transport routier de
+                  passagers
+
+           2.1.2 Lieu d’exécution
+                  Ville : commune d'Ambérieu-en-Bugey
+
+                  Code postal : 01500
+
+                  Subdivision pays (NUTS) : Ain ( FRK21 )
+
+                  Pays : France
+
+           2.1.4 Informations générales
+                  Base juridique :
+
+
+                                                      1/5
+               Directive 2014/24/UE
+
+         2.1.6 Motifs d’exclusion
+               Motifs d’exclusion purement nationaux :
+
+
+Section 5 - Lot
+    5.1 Identifiant technique du lot : LOT-0001
+         Titre : AT01 - Réseau TAM - 1 lot - 2025
+
+         Description : Exécution de services de transports publics - Réseau TAM
+
+         Identifiant interne : 24A0260001
+
+         5.1.1 Objet
+               Nature du marché : Services
+
+               Nomenclature principale ( cpv ): 60130000 Services spécialisés de transport routier de
+               passagers
+
+         5.1.2 Lieu d’exécution
+               Ville : Commune d'Ambérieu-en-Bugey
+
+               Code postal : 01500
+
+               Subdivision pays (NUTS) : Ain ( FRK21 )
+
+               Pays : France
+
+               Informations complémentaires :
+
+         5.1.3 Durée estimée
+               Date de début : 01/01/2026
+
+               Durée : 48 Mois
+
+         5.1.5 Valeur
+               Valeur maximale de l’accord-cadre : 5,100,000 Euro
+
+         5.1.6 Informations générales
+               Participation réservée : La participation n’est pas réservée.
+
+               Projet de passation de marché non financé par des fonds de l’UE
+
+               Le marché relève de l’accord sur les marchés publics (AMP) : oui
+
+         5.1.9 Critères de sélection
+               Critère :
+                       Type : Aptitude à exercer l’activité professionnelle
+
+                       Nom : Autorisation à exercer la profession/ l'activité
+
+                       Description : Copie de la licence de transport intérieur (LTI) pour les lots faisant
+                       intervenir uniquement des véhicules de moins de 9 PAP ou de la licence
+                       communautaire (LC) du certificat d'inscription au registre national des transports
+                       (art L.1421-1 et articles R.3113-1 et suivants du code des transports)
+
+                                                      2/5
+      Critère :
+            Type : Capacité économique et financière
+
+            Nom : Preuve d'assurance couvrant la flotte véhicules
+
+            Description : Attestation d'assurance en cours de validité
+
+
+5.1.10 Critères d’attribution
+      Critère :
+            Type : Prix
+
+            Description : Les notes des différents candidats seront attribuées en fonction de
+            l'offre du moins disant. Celui-ci obtiendra la note maximale sur le critère prix. La
+            note des autres candidats sera déterminée par application de la formule suivante :
+            Offre la moins disante x 10 Offre du candidat Offre du candidat = Devis estimatif
+            sur la durée du marché en Euros TTC (cf. fichier « Cadre Financier »)
+
+            Pondération (pourcentage, valeur exacte) : 60
+
+      Critère :
+            Type : Qualité
+
+            Description : Critère 1 : Le niveau de motorisation du parc de véhicules Critère 2 :
+            Autres formations des conducteurs Critère 3 : La formation des conducteurs à
+            l'écoconduite Critère 4 : Vérification du dernier passager : procédures, moyens, …
+            mis en place
+
+            Pondération (pourcentage, valeur exacte) : 40
+
+
+5.1.11 Documents de marché
+      Adresse des documents de marché : https://www.achatpublic.com/sdm/ent2/gen/index.
+      jsp
+
+5.1.12 Conditions du marché public
+      Conditions de présentation :
+            Présentation par voie électronique : Requise
+
+            Adresse de présentation : https://marchespublics.auvergnerhonealpes.eu
+
+            Langues dans lesquelles les offres ou demandes de participation peuvent être
+            présentées : français
+
+            Catalogue électronique : Non autorisée
+
+            Variantes : Autorisée
+
+            Date limite de réception des offres : 07/03/2025 à 12:00
+
+            Date limite de validité de l’offre : 9 Mois
+
+      Conditions du marché :
+            Le marché doit être exécuté dans le cadre de programmes d’emplois protégés :
+            Non
+
+
+
+                                            3/5
+                        Facturation en ligne : Requise
+
+                        La commande en ligne sera utilisée : oui
+
+                        Le paiement en ligne sera utilisé : oui
+
+               Informations relatives aux délais de recours : La juridiction compétente est le Tribunal
+               Administratif de LYON - 184, rue Duguesclin - 69003 LYON. Référé précontractuel : avant
+               la signature du marché (article L.551-1 du code de justice administrative). Référé
+               suspension : avant la signature du marché (article L.521-1 du code de justice
+               administrative). Référé contractuel : après la signature du marché (article L.551-13 du
+               code de justice administrative). Recours en contestation de la validité du contrat dans
+               un délai de deux mois à compter de la publication de l'avis de publicité de la conclusion
+               du marché. Cet avis prendra la forme d'un avis d'attribution et sera publié sur le site
+               Internet de la Région et le cas échéant sur les mêmes supports que l'avis d'appel public à
+               la concurrence. Recours pour excès de pouvoir contre la déclaration de sans suite dans
+               un délai de deux mois à compter de la notification de cette décision au candidat. Pour
+               plus d'informations, s'adresser au greffe du Tribunal Administratif de LYON.
+
+         5.1.15 Techniques
+               Accord-cadre :
+                        Accord-cadre, sans remise en concurrence
+
+               Informations sur le système d’acquisition dynamique :
+                        Pas de système d’acquisition dynamique
+
+               Enchère électronique : non
+
+         5.1.16 Informations complémentaires, médiation et réexamen
+               Organisation chargée des procédures de recours : Tribunal administratif de Lyon
+
+
+Section 8 - Organisations
+    8.1 ORG-0001
+         Nom officiel : Conseil Régional Auvergne-Rhône-Alpes
+
+         Numéro d’enregistrement : 20005376700014
+
+         Adresse postale : 101 Cours Charlemagne CS20033
+
+         Ville : Lyon
+
+         Code postal : 69269
+
+         Subdivision pays (NUTS) : Rhône ( FRK26 )
+
+         Pays : France
+
+         Adresse électronique : mobilites.achats@auvergnerhonealpes.fr
+
+         Téléphone : 0426733700
+
+         Profil de l’acheteur : https://www.achatpublic.com/sdm/ent2/gen/index.jsp
+
+         Rôles de cette organisation :
+               Acheteur
+
+
+                                                         4/5
+     8.1 ORG-0002
+           Nom officiel : Tribunal administratif de Lyon
+
+           Numéro d’enregistrement : 52139750500012
+
+           Ville : Lyon
+
+           Code postal : 69003
+
+           Subdivision pays (NUTS) : Rhône ( FRK26 )
+
+           Pays : France
+
+           Adresse électronique : greffe.ta-lyon@juradm.fr
+
+           Téléphone : 0487635000
+
+           Rôles de cette organisation :
+                 Organisation chargée des procédures de recours
+
+
+Section 11 - Informations relatives à l’avis
+     11.1 Informations relatives à l’avis
+           Identifiant/version de l’avis : a2b002f3-7473-4f88-9f6e-d2c70acf7ff8 - 01
+
+           Type de formulaire : Mise en concurrence
+
+           Type d’avis : Avis de marché ou de concession – régime ordinaire
+
+           Date d’envoi de l’avis : 27/01/2025 à 16:56
+
+           Langues dans lesquelles l’avis en question est officiellement disponible : français
+
+     11.2 Informations relatives à la publication
+
+
+Date d'envoi du présent avis à la publication : 27/01/2025
+
+
+
+
+                                                      5/5
+

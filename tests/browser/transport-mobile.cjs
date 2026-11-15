@@ -86,6 +86,9 @@ async function run(){
  try{
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{}),args:['--no-sandbox']});
   context=await browser.newContext({...devices['Pixel 7'],locale:'fr-FR',timezoneId:'Europe/Paris',serviceWorkers:'block'});
+  // Les anciens blocs par moteur sont désormais repliés sous « Détail par moteur » : ce test vérifie leur contenu, il les ouvre.
+  await context.addInitScript(()=>{new MutationObserver(()=>document.querySelectorAll('details.cp-transport-sources:not([open])').forEach(d=>{d.open=true;}))
+   .observe(document,{childList:true,subtree:true});});
   await context.addInitScript(({missions,settings,origin,relayURL})=>{
    if(new URL(location.href).searchParams.has('buslive'))window.CP_BLABLACAR_REALTIME_URL=relayURL;
    // An invalid optional relay must never block SNCF or the other engines.
@@ -236,7 +239,12 @@ async function run(){
   await page.getByText('Réseau de test — horaires aux arrêts',{exact:true}).waitFor();
   await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('TEST'));
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
-  const text=await page.locator('#cpTransportMissionDetails').innerText();
+  // Le hub unifié peut déclarer « Réalisable » quand horaires, marches et marge sont prouvés ;
+  // les blocs historiques par moteur restent soumis à l'ancienne règle (jamais « Réalisable »).
+  const text=await page.locator('#cpTransportMissionDetails').evaluate(node=>{const c=node.cloneNode(true);c.querySelectorAll('[data-transport-hub]').forEach(h=>h.remove());document.body.appendChild(c);const t=c.innerText;c.remove();return t;});
+  const hubText=await page.locator('#cpTransportMissionDetails [data-transport-hub]').allInnerTexts();
+  assert.ok(hubText.length>=2,'hub affiché dans les directions');
+  for(const block of hubText)for(const m of block.matchAll(/Réalisable · avance (\d+) min \(marge (\d+) min\)/g))assert.ok(Number(m[1])>=Number(m[2]),'Réalisable avec marge respectée');
   assert.match(text,/C11/);assert.match(text,/Crolles Mairie/);assert.match(text,/minimum : 15 min/);assert.doesNotMatch(text,/\bRéalisable\b/);
   assert.ok(requests.some(r=>r.arriveBy==='true'&&r.time==='08:45'),'Outbound applies mission margin');
   assert.ok(requests.some(r=>r.fromPlace===official.request.fromPlace&&r.toPlace===official.request.toPlace),'Official regional response is rendered after late geocoding');

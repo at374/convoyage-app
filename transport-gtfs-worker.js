@@ -1,6 +1,6 @@
 /* Classic browser worker: bounded GTFS indexes stay off the UI thread. */
 'use strict';
-importScripts('transport-catalogue.js','transport-gtfs-index.js','transport-gtfs-loader.js','transport-gtfs-time.js','transport-gtfs-federation.js');
+importScripts('transport-catalogue.js','transport-gtfs-index.js','transport-gtfs-loader.js','transport-gtfs-time.js','transport-gtfs-federation.js','transport-gtfs-fares.js');
 let feedsPromise=null;
 const summary=feed=>({source:feed.source,counts:feed.index.counts,archiveBytes:feed.archiveBytes,
  expandedBytes:feed.expandedBytes,indexedStopTimes:feed.indexedStopTimes,skippedStopTimes:feed.skippedStopTimes,
@@ -31,9 +31,17 @@ function fareScopePath(feeds,leg){
  return {networkId:leg.networkId,tripId:leg.tripId,from:leg.from,to:leg.to,
   departure:leg.departure,arrival:leg.arrival,stops};
 }
+// Tarif publié dans le flux GTFS lui-même (fare_attributes/fare_rules), calculé une fois par flux.
+function gtfsFare(feeds,leg,fallbackNetworkId){
+ const id=leg.networkId||fallbackNetworkId;
+ const feed=feeds.find(f=>(f.source.datasetId||f.source.resourceId)===id)||(feeds.length===1?feeds[0]:null);
+ if(!feed||typeof CPGTFSFares==='undefined')return null;
+ if(feed.preparedFares===undefined){try{feed.preparedFares=CPGTFSFares.prepare(feed.files);}catch(_){feed.preparedFares=null;}}
+ try{return CPGTFSFares.legFare(feed.preparedFares,feed.index,leg);}catch(_){return null;}
+}
 function withFareScope(feeds,row){
- if(Array.isArray(row.legs))return {...row,legs:row.legs.map(leg=>({...leg,fareScopePath:fareScopePath(feeds,leg)}))};
- return {...row,fareScopePath:fareScopePath(feeds,row)};
+ if(Array.isArray(row.legs))return {...row,legs:row.legs.map(leg=>({...leg,fareScopePath:fareScopePath(feeds,leg),gtfsFare:gtfsFare(feeds,leg,row.networkId)}))};
+ return {...row,fareScopePath:fareScopePath(feeds,row),gtfsFare:gtfsFare(feeds,row,row.networkId)};
 }
 self.onmessage=async({data})=>{
  const {id,type,resource,resources,options={},query={}}=data||{};
@@ -99,7 +107,7 @@ self.onmessage=async({data})=>{
     if(query.method!=='nearbyDirectTrips')rows.sort((a,b)=>(order==='latestDeparture'?-1:1)*(Date.parse(a.departure)-Date.parse(b.departure)));
    }else if(query.method==='nearbyStops')rows=CPGTFSIndex.nearbyStops(feed.index,query.lat,query.lon,query.radiusMeters??700);
    else throw new Error('Unsupported GTFS worker query');
-   result={rows:rows.slice(0,limit).map(row=>query.method==='missionJourneys'?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,
+   result={rows:rows.slice(0,limit).map(row=>['missionJourneys','missionDirectTrips'].includes(query.method)?withFareScope(feeds,row):row),truncated:searchTruncated||rows.length>limit,searchTruncated,
     serviceConfirmed:false,faresVerified:false,accessVerified:false};
   }else throw new Error('Unsupported GTFS worker operation');
   self.postMessage({id,result});

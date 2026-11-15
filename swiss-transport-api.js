@@ -12,6 +12,12 @@
     if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat)>90 || Math.abs(lon)>180 || (lat===0 && lon===0)) return null;
     return lat+','+lon;
   }
+  function coordinate(place) {
+    const c = place && place.coordinate;
+    if (!c || c.x == null || c.y == null) return null;
+    const lat = Number(c.x), lon = Number(c.y);
+    return Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0) ? {lat, lon} : null;
+  }
   function buildUrl(options) {
     const from=point(options.from), to=point(options.to);
     if (!from || !to) throw new Error('Coordonnées ou arrêts manquants');
@@ -53,6 +59,18 @@
     // Diagnostic is local to the browser and never includes user GPS or addresses.
     diagnostic.received = data.connections.length;
     // Bound client-side processing even if the upstream API ignores the requested limit.
+    // Départ depuis une coordonnée : l'API commence par une section à pied et laisse parfois from.departure / to.arrival vides.
+    // On reprend alors l'heure de la première (ou dernière) section réellement datée, sans rien inventer.
+    const sectionTime = (c, first) => {
+      const list = Array.isArray(c && c.sections) ? (first ? c.sections : [...c.sections].reverse()) : [];
+      for (const s of list) { const v = first ? s && s.departure && s.departure.departure : s && s.arrival && s.arrival.arrival; if (v && Number.isFinite(Date.parse(v))) return v; }
+      return null;
+    };
+    for (const c of data.connections.slice(0, 100)) {
+      if (!c || !c.from || !c.to) continue;
+      if (!Number.isFinite(Date.parse(c.from.departure))) c.from.departure = sectionTime(c, true);
+      if (!Number.isFinite(Date.parse(c.to.arrival))) c.to.arrival = sectionTime(c, false);
+    }
     const validConnections = data.connections.slice(0, 100).filter(c => c && c.from && c.to && Number.isFinite(Date.parse(c.from.departure)) && Number.isFinite(Date.parse(c.to.arrival)) && Date.parse(c.to.arrival) >= Date.parse(c.from.departure));
     diagnostic.valid = validConnections.length;
     diagnostic.status = 'success';
@@ -66,13 +84,34 @@
         to:s.arrival && s.arrival.station && s.arrival.station.name || null,
         departure:s.departure && s.departure.departure || null,
         arrival:s.arrival && s.arrival.arrival || null,
-        walkSeconds:s.walk && Number.isFinite(Number(s.walk.duration)) ? Number(s.walk.duration) : null
+        walkSeconds:s.walk && Number.isFinite(Number(s.walk.duration)) ? Number(s.walk.duration) : null,
+        // transport.opendata.ch : coordinate.x = latitude, coordinate.y = longitude (WGS84).
+        fromPoint:coordinate(s.departure && (s.departure.station || s.departure.location)),
+        toPoint:coordinate(s.arrival && (s.arrival.station || s.arrival.location)),
+        category:s.journey && s.journey.category || null,
+        operator:s.journey && s.journey.operator || null,
+        delay:s.departure && Number.isFinite(Number(s.departure.delay)) && s.departure.delay !== null ? Number(s.departure.delay) : null
       })):[],
       price:null, fareStatus:'non_communique', source:'transport.opendata.ch', confirmed:false
     }));
     results.diagnostic = {...diagnostic};
     return results;
   }
-  root.CPSwissTransport={point,buildUrl,plan};
+  // Gare la plus proche d'une coordonnée, selon l'API elle-même (utile côté France : Annemasse, Thonon, Saint-Julien…).
+  async function nearestStation(p, fetcher) {
+    const lat = Number(p && p.lat), lon = Number(p && (p.lon == null ? p.lng : p.lon));
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+    const f = fetcher || root.fetch;
+    const url = 'https://transport.opendata.ch/v1/locations?' + new URLSearchParams({x: String(lat), y: String(lon), type: 'station'}).toString();
+    const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 10000);
+    try {
+      const r = await f(url, {signal: controller.signal, cache: 'no-store'});
+      if (!r.ok) return null;
+      const d = await r.json();
+      const st = (d && Array.isArray(d.stations) ? d.stations : []).find(x => x && x.id && x.name);
+      return st ? {id: String(st.id), name: st.name, point: coordinate(st)} : null;
+    } catch (_) { return null; } finally { clearTimeout(timer); }
+  }
+  root.CPSwissTransport={point,buildUrl,plan,nearestStation};
   if(typeof module!=='undefined' && module.exports) module.exports=root.CPSwissTransport;
 })(typeof window!=='undefined'?window:globalThis);

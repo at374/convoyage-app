@@ -55,10 +55,10 @@
 <script src="sibra-feed.js?v=325-json-timeout"></script>
 <script src="sibra-planner.js"></script>
 <script src="transport-blablacar-realtime.js?v=bus-relay-20261031"></script>
-<script src="transport-tripgo.js?v=bus-relay-20261031"></script>
-<script src="regional-routing.js?v=bus-relay-20261031"></script>
-<script src="swiss-transport-api.js?v=350-response-cap"></script>
-<script src="sncf-fallback.js?v=sncf-refresh-20261031"></script>
+<script src="transport-tripgo.js?v=hub-20261113c"></script>
+<script src="regional-routing.js?v=hub-20261113"></script>
+<script src="swiss-transport-api.js?v=hub-20261113"></script>
+<script src="sncf-fallback.js?v=hub-20261113"></script>
 <script src="transport-fares.js?v=fares-leg-labels-20261102"></script>
 <script src="transport-sibra-pass.js?v=sibra-pass-y51-20261031"></script>
 <script src="transport-y51-fares.js?v=y51-fares-20261031"></script>
@@ -67,8 +67,35 @@
 <script src="transport-adapters.js?v=adapters-20261030"></script>
 <script src="transport-gtfs-worker-client.js"></script>
 <script src="transport-walking.js"></script>
-<script src="transport-gtfs-agenda.js?v=mobile-workspace-20261105"></script>
-<script src="app.js?v=transport-themed-workspace-20261105"></script>
+<script src="transport-catalogue.js"></script>
+<script src="transport-gtfs-index.js"></script>
+<script src="transport-gtfs-fares.js"></script>
+<script src="transport-gtfs-loader.js"></script>
+<script src="transport-national-gtfs-journeys.js"></script>
+<script>
+window.CP_NATIONAL_GTFS_RESOURCES = Object.freeze({
+  sncf: Object.freeze({url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-sncf-aura.zip',format:'GTFS',fallbackUrls:Object.freeze(['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/national-sncf-aura.zip','https://at374.github.io/convoyage-app/data/gtfs/national-sncf-aura.zip'])}),
+  blablacarBus: Object.freeze({url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-blablacarBus-aura.zip',format:'GTFS',fallbackUrls:Object.freeze(['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/national-blablacarBus-aura.zip','https://at374.github.io/convoyage-app/data/gtfs/national-blablacarBus-aura.zip'])}),
+  flixbus: Object.freeze({url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-flixbus-aura.zip',format:'GTFS',fallbackUrls:Object.freeze(['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/national-flixbus-aura.zip','https://at374.github.io/convoyage-app/data/gtfs/national-flixbus-aura.zip'])})
+});
+// Publication sans retouche : sur le site déployé (GitHub Pages), la copie du site lui-même passe en premier —
+// c'est celle que les tâches hebdomadaires de la branche publiée rafraîchissent. Les adresses ci-dessus restent en secours.
+(function(){try{
+  if(location.protocol!=='https:'||!/(^|\.)github\.io$/.test(location.hostname))return;
+  const base=new URL('data/gtfs/',location.href).href,out={};
+  for(const [key,r] of Object.entries(window.CP_NATIONAL_GTFS_RESOURCES)){
+    const own=base+r.url.split('/').pop();
+    out[key]=Object.freeze({...r,url:own,fallbackUrls:Object.freeze([r.url,...r.fallbackUrls.filter(u=>u!==own)])});
+  }
+  window.CP_NATIONAL_GTFS_RESOURCES=Object.freeze(out);
+}catch(_){}})();
+</script>
+<script src="transport-gtfs-agenda.js?v=hub-20261114b"></script>
+<script src="transport-fare-grids.js?v=hub-20261115e"></script>
+<script src="transport-ojp.js?v=ojp-20261115a"></script>
+<script src="transport-mission-hub.js?v=hub-20261115g"></script>
+<script src="transport-coverage.js?v=hub-20261115a"></script>
+<script src="app.js?v=hub-20261115f"></script>
 <script src="sanef-gps-protection.js"></script>
 <script src="routes-ui.js"></script>
 <script src="admin.js?v=modal-layer-20261105"></script>

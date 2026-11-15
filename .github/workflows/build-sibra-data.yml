@@ -17,22 +17,72 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Download official SIBRA feed published 2026-10-01
+      # 14/11/2026 : l'archive épinglée (…/20261001-085638/gtfs-sibra.zip) renvoie 404 depuis le 11/11 — SIBRA a publié
+      # une nouvelle version et data.gouv.fr a retiré l'ancienne ; plus aucun fichier quotidien n'était produit.
+      # On résout désormais la ressource GTFS courante du jeu officiel via l'API data.gouv.fr (repli : téléchargement
+      # stable transport.data.gouv.fr), et la période de validité est lue dans le flux lui-même.
+      - name: Download current official SIBRA feed (data.gouv.fr)
         run: |
-          curl --fail --location --retry 3 --output /tmp/gtfs-sibra.zip \
-            'https://static.data.gouv.fr/resources/offre-de-transports-sibra-a-annecy-gtfs/20261001-085638/gtfs-sibra.zip'
-          python -m zipfile -t /tmp/gtfs-sibra.zip
+          python - <<'PY'
+          import json, time, urllib.request, zipfile
+          UA={'User-Agent':'ConvoyageUltra-GTFS/1.0'}
+          def get(url,timeout=90):
+              last=None
+              for attempt in range(4):
+                  try:
+                      with urllib.request.urlopen(urllib.request.Request(url,headers=UA),timeout=timeout) as r: return r.read()
+                  except Exception as e:
+                      last=e; time.sleep(5*(attempt+1))
+              raise last
+          candidates=[]
+          try:
+              meta=json.loads(get('https://www.data.gouv.fr/api/1/datasets/offre-de-transports-sibra-a-annecy-gtfs/'))
+              res=[r for r in meta.get('resources',[]) if str(r.get('url','')).lower().endswith('.zip') or str(r.get('format','')).lower() in ('gtfs','zip')]
+              res.sort(key=lambda r:str(r.get('last_modified') or ''),reverse=True)
+              candidates+= [r['url'] for r in res if r.get('url')]
+          except Exception as e:
+              print('data.gouv.fr API indisponible :',repr(e))
+          candidates.append('https://transport.data.gouv.fr/resources/80100/download')
+          ok=False
+          for url in candidates:
+              try:
+                  data=get(url,timeout=180)
+                  open('/tmp/gtfs-sibra.zip','wb').write(data)
+                  with zipfile.ZipFile('/tmp/gtfs-sibra.zip') as z:
+                      assert z.testzip() is None
+                      names=set(z.namelist())
+                      assert {'stops.txt','routes.txt','trips.txt','stop_times.txt'}<=names, names
+                      agency=z.read('agency.txt').decode('utf-8-sig','replace') if 'agency.txt' in names else ''
+                  assert 'sibra' in agency.lower() or 'annecy' in agency.lower(), 'Flux inattendu : '+agency[:200]
+                  print('Flux SIBRA officiel :',url,len(data),'octets'); ok=True; break
+              except Exception as e:
+                  print('Échec',url,repr(e))
+          if not ok: raise SystemExit('Aucune archive SIBRA officielle valide')
+          PY
       - name: Generate today and next six days (Europe/Paris)
         run: |
           python - <<'PY'
           from datetime import datetime, timedelta
           from zoneinfo import ZoneInfo
-          import subprocess
+          import csv, io, subprocess, zipfile
+          dates=[]
+          with zipfile.ZipFile('/tmp/gtfs-sibra.zip') as z:
+              names=set(z.namelist())
+              if 'calendar.txt' in names:
+                  for r in csv.DictReader(io.TextIOWrapper(z.open('calendar.txt'),encoding='utf-8-sig')): dates+=[r['start_date'],r['end_date']]
+              if 'calendar_dates.txt' in names:
+                  for r in csv.DictReader(io.TextIOWrapper(z.open('calendar_dates.txt'),encoding='utf-8-sig')): dates.append(r['date'])
+          dates=[d for d in dates if d and d.isdigit() and len(d)==8]
+          if not dates: raise SystemExit('Flux SIBRA sans calendrier')
+          first,last=min(dates),max(dates)
+          print('Validité du flux :',first,'→',last)
           today = datetime.now(ZoneInfo('Europe/Paris')).date()
+          built=0
           for offset in range(7):
-              day = (today + timedelta(days=offset)).isoformat()
-              if '2026-10-01' <= day <= '2026-12-20':
-                  subprocess.run(['python', 'tools/build-sibra-day.py', '/tmp/gtfs-sibra.zip', day], check=True)
+              day = today + timedelta(days=offset)
+              if first <= day.strftime('%Y%m%d') <= last:
+                  subprocess.run(['python', 'tools/build-sibra-day.py', '/tmp/gtfs-sibra.zip', day.isoformat()], check=True); built+=1
+          if not built: raise SystemExit('Aucun jour à venir couvert par le flux SIBRA publié')
           PY
       - name: Commit generated timetable data
         run: |
@@ -41,5 +91,5 @@ jobs:
           git add data/sibra/sibra-????-??-??.json
           if ! git diff --cached --quiet; then
             git commit -m 'Publish verified-date SIBRA GTFS daily timetable files'
-            git push
+            for i in 1 2 3; do git pull --rebase -q origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 10; done
           fi

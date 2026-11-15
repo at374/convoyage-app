@@ -19,7 +19,7 @@ function setup(plan,fetcher){
  const panel=new Element();panel.root=true;
  const button={},sheet={hidden:false},current={from_city:'Grenoble',to_city:'Grenoble',o:null,d:null};
  const next={from_city:'Annecy',o:null,pickup_start:'2026-11-02T20:00:00+01:00'};
- const context={AbortController,window:{CPSncfFallback:plan?{plan}:api},document:{createElement:()=>new Element()},panel,sourcePanel:panel,transportDestinations:{Aller:panel,Retour:panel,Jonction:panel},bt:button,
+ const context={AbortController,window:{CPSncfFallback:plan?{plan}:api},document:{createElement:()=>new Element()},panel,sourcePanel:panel,transportDestinations:{Aller:panel,Retour:panel,Jonction:panel},legacySources:{},bt:button,
   $:id=>id==='feuille'?sheet:button,m:current,next,etat:{reglages:{domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}},
   G:{coordonnees:(m,side)=>m?.[side==='origin'?'o':'d'],trouverVille:()=>null},transportAddressPoint:()=>false,
   pickupDate:'2026-11-02T16:00:00+01:00',deliveryDate:'2026-11-02T17:00:00+01:00',securityMarginMin:5,

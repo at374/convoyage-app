@@ -1,7 +1,28 @@
 /* Read-only Agenda integration. At most two official networks in one worker per open panel. */
 (function(root){
 'use strict';
-const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
+// Flux préparés côté serveur (scripts/build_regional_gtfs.py, GitHub Actions) et servis par le site de l'application :
+// même origine, donc pas de blocage CORS sur le téléphone. Hors HTTPS (tests locaux), adresse publique du site.
+const LOCAL_GTFS=name=>{try{if(root.location&&root.location.protocol==='https:')return new URL('data/gtfs/'+name,root.location.href).href;}catch(_){}
+ return 'https://at374.github.io/convoyage-app/data/gtfs/'+name;};
+const BASE_RESOURCES=Object.freeze([Object.freeze({
+ // Réseaux extraits de l'agrégat officiel Oùra : utilisés seulement pour les trajets internes à leur ville
+ // (pas de « federate ») afin de ne pas évincer les cars régionaux sur les liaisons interurbaines.
+ id:'jybus-rumilly',datasetId:'jybus-rumilly',network:"J'y bus Rumilly",format:'GTFS',url:LOCAL_GTFS('jybus-rumilly.zip'),
+ bounds:[45.80,5.85,45.93,6.05],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'tam-amberieu',datasetId:'tam-amberieu',network:'TAM Ambérieu-en-Bugey',format:'GTFS',url:LOCAL_GTFS('tam-amberieu.zip'),
+ bounds:[45.90,5.28,46.02,5.45],timeZone:'Europe/Paris'
+}),Object.freeze({
+ // TCL (SYTRAL, Lyon) : flux officiel réduit côté serveur à une zone géographique (scripts/build_regional_gtfs.py,
+ // filter_by_bounds) car le flux complet (~654 lignes) est trop lourd pour le téléphone. Non fédéré, comme J'y bus
+ // et TAM : usage interne à la zone couverte uniquement, jamais comme correspondance longue distance. Bbox
+ // resserrée le 13/11/2026 (soir) au triangle Part-Dieu/Bellecour/Perrache après un premier essai réel trop
+ // volumineux (19,96 Mo) avec une zone plus large. Bornes alignées sur celles du script serveur : toute
+ // extension de zone doit changer les deux en même temps.
+ id:'tcl-lyon',datasetId:'tcl-lyon',network:'TCL',format:'GTFS',url:LOCAL_GTFS('tcl-lyon.zip'),
+ bounds:[45.74,4.81,45.77,4.87],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'oura-haute-savoie',datasetId:'oura-haute-savoie',network:'Cars Région Haute-Savoie',format:'GTFS',
  url:'https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=HAUTE_SAVOIE&dataFormat=GTFS&dataProfil=OPENDATA',
  // Selection envelope only: does not assert coverage or actual walking access.
@@ -14,18 +35,61 @@ const DEFAULT_RESOURCES=Object.freeze([Object.freeze({
  bounds:[45.65,4.7,46.55,6.3],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'80100',datasetId:'5bd9843e634f413220f7f04a',network:'Sibra',format:'GTFS',federate:true,
- url:'https://www.data.gouv.fr/api/1/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0',resolveFromCatalogue:true,
+ // 14/11/2026 : copie relayée par le serveur d'abord (data/gtfs/sibra-annecy.zip, archive officielle courante
+ // résolue chaque semaine), source officielle en secours — data.gouv.fr échouait par intermittence (« fetch failed »).
+ url:LOCAL_GTFS('sibra-annecy.zip'),fallbackUrls:['https://www.data.gouv.fr/api/1/datasets/r/8b12f6db-9aa7-43dc-a179-013998a1c4c0'],
  bounds:[45.7,5.9,46.1,6.5],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'83459',datasetId:'5af03701b595081c1880a8a4',network:'M Réso — Métropole grenobloise',format:'GTFS',federate:true,
- url:'https://www.data.gouv.fr/api/1/datasets/r/b6ec7ba4-09bc-46df-b9a1-79a2c2668cf2',resolveFromCatalogue:true,
+ // 14/11/2026 : copie relayée par le serveur d'abord, source officielle data.gouv.fr en secours.
+ url:LOCAL_GTFS('mreso-grenoble.zip'),fallbackUrls:['https://www.data.gouv.fr/api/1/datasets/r/b6ec7ba4-09bc-46df-b9a1-79a2c2668cf2'],
  // Local Grenoble/Crolles selection only, distinct from the Haute-Savoie envelope.
  bounds:[44.9,5.3,45.39,6.1],timeZone:'Europe/Paris'
 }),Object.freeze({
  id:'81794',datasetId:'5eb3510a4efd8f649ffe1b9f',network:'M Réso — Grésivaudan',format:'GTFS',federate:true,
- url:'https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2',resolveFromCatalogue:true,
+ // 14/11/2026 : copie relayée par le serveur d'abord, source officielle data.gouv.fr en secours.
+ url:LOCAL_GTFS('mreso-gresivaudan.zip'),fallbackUrls:['https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2'],
  bounds:[45.1,5.7,45.39,6.2],timeZone:'Europe/Paris'
+}),Object.freeze({
+ // Ajouts 13/11/2026 (flux officiels du Point d'accès national ; à valider en conditions réelles sur téléphone).
+ // TAC Annemasse : jeu 5ca4bcec634f4125a78fad26, Licence Ouverte 2.0, offre 31/08/2026 → 31/08/2027.
+ id:'76779',datasetId:'5ca4bcec634f4125a78fad26',network:'TAC Annemasse',format:'GTFS',federate:true,
+ url:LOCAL_GTFS('tac-annemasse.zip'),fallbackUrls:['https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip'],
+ // Réseau Genevois français Mobilités (Annemasse Agglo + CC du Genevois depuis 07/2025) : inclut Saint-Julien et Archamps.
+ bounds:[46.1,5.98,46.27,6.42],timeZone:'Europe/Paris'
+}),Object.freeze({
+ // Synchro Bus Grand Chambéry (ODbL, attribution Grand Chambéry).
+ id:'82272',datasetId:'synchro-chambery',network:'Synchro Bus Chambéry',format:'GTFS',federate:true,
+ url:LOCAL_GTFS('synchro-chambery.zip'),fallbackUrls:['https://www.data.gouv.fr/api/1/datasets/r/a81cdf4b-5a70-43c9-8803-cef0430ed170'],
+ bounds:[45.45,5.75,45.75,6.15],timeZone:'Europe/Paris'
+}),Object.freeze({
+ // Ondéa Grand Lac, Aix-les-Bains (etalab-2.0).
+ id:'71223',datasetId:'ondea-grand-lac',network:'Ondéa Aix-les-Bains',format:'GTFS',federate:true,
+ url:LOCAL_GTFS('ondea-grand-lac.zip'),fallbackUrls:['https://www.data.gouv.fr/api/1/datasets/r/b4e8d98c-e17a-4fb0-857f-8cb618039b2a'],
+ bounds:[45.6,5.75,45.85,6.05],timeZone:'Europe/Paris'
+}),Object.freeze({
+ // Star't Thonon Agglomération (etalab-2.0).
+ id:'82178',datasetId:'thonon-agglomeration-donnees-gtfs',network:"Star't Thonon",format:'GTFS',federate:true,
+ url:LOCAL_GTFS('start-thonon.zip'),fallbackUrls:['https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e'],
+ bounds:[46.25,6.3,46.45,6.65],timeZone:'Europe/Paris'
+}),Object.freeze({
+ // Cars Région Isère et Savoie (extraits de l'agrégat Oùra) : en dernier, seulement si aucun réseau plus précis ne couvre le trajet.
+ id:'cars-region-isere',datasetId:'cars-region-isere',network:'Cars Région Isère',format:'GTFS',url:LOCAL_GTFS('cars-region-isere.zip'),broad:true,
+ bounds:[44.69,4.74,45.89,6.36],timeZone:'Europe/Paris'
+}),Object.freeze({
+ id:'cars-region-savoie',datasetId:'cars-region-savoie',network:'Cars Région Savoie',format:'GTFS',url:LOCAL_GTFS('cars-region-savoie.zip'),broad:true,
+ // Savoie seulement (Annecy et la Haute-Savoie exclues).
+ bounds:[45.05,5.62,45.80,7.19],timeZone:'Europe/Paris'
 })]);
+// Les archives relayées (data/gtfs/) n'existent sur le site de l'application qu'une fois la branche Transports publiée.
+// Secours explicites pour que chaque réseau relayé reste chargeable avant comme après publication : copie de la
+// branche principale, puis de la branche Transports. Aucun réseau ne dépend ainsi d'une seule adresse (TCL, J'y bus,
+// TAM et les Cars Région n'avaient aucun secours : 404 certain tant que le site déployé n'a pas ces fichiers).
+const RELAY_FALLBACKS=name=>['main','feature/transports-aura-suisse'].map(branch=>'https://raw.githubusercontent.com/at374/convoyage-app/'+branch+'/data/gtfs/'+name);
+const DEFAULT_RESOURCES=Object.freeze(BASE_RESOURCES.map(r=>{
+ const m=/\/data\/gtfs\/([A-Za-z0-9._-]+\.zip)$/.exec(String(r.url||''));
+ return m?Object.freeze({...r,fallbackUrls:[...(Array.isArray(r.fallbackUrls)?r.fallbackUrls:[]),...RELAY_FALLBACKS(m[1])]}):r;
+}));
 function validPoint(point){return !!point&&typeof point.lat==='number'&&typeof point.lon==='number'&&
  Number.isFinite(point.lat)&&Number.isFinite(point.lon)&&Math.abs(point.lat)<=90&&Math.abs(point.lon)<=180;}
 function selected(resource,task){
@@ -83,15 +147,9 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  // The Haute-Savoie envelope overlaps much of Ain. Prefer the Ain feed only
  // for a journey fully inside its conservative western core, without changing
  // Grenoble/Grésivaudan or Annecy network precedence.
- const ainCore=task=>[task?.from,task?.to].every(p=>validPoint(p)&&p.lat>=45.9&&p.lat<=46.5&&p.lon>=4.7&&p.lon<=5.85);
- const ain=resourceList.find(r=>r.id==='oura-ain');
- const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
- const resource=preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
+ const {resource,partners}=chooseResources(resourceList,taskList);
  if(!resource)return {dispose,done:Promise.resolve()};
- const partners=resourceList.filter(r=>r!==resource&&r.federate&&taskList.some(task=>
-  crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
-  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to}))))).slice(0,1);
- const eligible=task=>selected(resource,task)||partners.some(r=>crossEnvelopePair(resource,r,task));
+ const eligible=task=>selected(resource,task)||partners.some(r=>crossEnvelopePair(resource,r,task)||selected(r,task));
  const section=doc.createElement('div');section.className='bk';section.setAttribute('data-gtfs-agenda','');
  const heading=doc.createElement('h3');heading.textContent=resource.network+' — horaires aux arrêts';section.appendChild(heading);
  const sourceStatus=doc.createElement('p');sourceStatus.className='doux';sourceStatus.setAttribute('role','status');
@@ -203,7 +261,13 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
       seenChoices.add(key);distinct.push(candidate);
      }
      const shown=distinct.slice(0,5);
-     if(active())onResults({task,itineraries:shown});
+     // Le panneau n'affiche que 5 horaires, mais les fiches mission en reçoivent jusqu'à 20 (candidates) : pour un
+     // « Aller », les 5 plus tardifs échouaient presque toujours sur la marge une fois la marche finale ajoutée,
+     // alors que des départs plus tôt existaient (navigateur réel, 14/11/2026 : Sibra ligne 5, marges de 6 et 8 min).
+     // Sur un réseau fréquent, les 20 premiers tiennent dans quelques minutes : 10 premiers + 10 répartis sur le reste.
+     const rest=distinct.slice(10),step=Math.max(1,Math.ceil(rest.length/10));
+     const candidates=[...distinct.slice(0,10),...rest.filter((_,i)=>i%step===0).slice(0,10)];
+     if(active())onResults({task,itineraries:shown,candidates});
      const marginNote=Number.isFinite(Date.parse(task.latestArrival))?' Marge avant mission : '+window.marginMinutes+' min minimum (marche et circulation à vérifier).':'';
      const incomplete=truncated||partialNetworks||invalidJourneys>0;
      const coverageNote=incomplete?' Recherche partielle : certains horaires ou réseaux n’ont pas pu être vérifiés.':'';
@@ -303,7 +367,60 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  })();
  return {dispose,done,refreshFares};
 }
-const api={DEFAULT_RESOURCES,selected,crossEnvelopePair,searchWindow,serviceDates,mount};
+function chooseResources(resourceList,taskList){
+ const ainCore=task=>[task?.from,task?.to].every(p=>validPoint(p)&&p.lat>=45.9&&p.lat<=46.5&&p.lon>=4.7&&p.lon<=5.85);
+ const ain=resourceList.find(r=>r.id==='oura-ain');
+ const preferredAin=ain&&taskList.some(t=>ainCore(t)&&selected(ain,t))?ain:null;
+ const first=preferredAin||resourceList.find(r=>taskList.some(t=>selected(r,t)||resourceList.some(other=>crossEnvelopePair(r,other,t))));
+ if(!first)return {resource:null,partners:[]};
+ // Diagnostic réel du 13/11/2026 : le premier flux correspondant était parfois un flux départemental très large
+ // (Cars Haute-Savoie) pour Aix → Technolac, Thonon → Bons ou Chambéry → Chamoux, sans le réseau local.
+ // Si le flux retenu est large, on prend le flux le plus précis qui couvre entièrement le trajet, et on garde
+ // le flux couvrant suivant comme second réseau (deux réseaux au plus sur téléphone).
+ const area=r=>Array.isArray(r?.bounds)&&r.bounds.length===4?Math.abs((r.bounds[2]-r.bounds[0])*(r.bounds[3]-r.bounds[1])):Infinity;
+ if(!preferredAin&&area(first)>LARGE_AREA){
+  const covering=resourceList.map((r,i)=>({r,i})).filter(({r})=>r!==ain&&taskList.some(t=>selected(r,t)))
+   .sort((a,b)=>area(a.r)-area(b.r)||a.i-b.i).map(x=>x.r);
+  if(covering[0]&&covering[0]!==first){
+   // Chambéry → Aix-les-Bains : Grand Chambéry (Synchro, ligne A) et Grand Lac (Ondéa) ont une convention
+   // officielle d'extension de ligne A jusqu'aux arrêts « Technolac » et « Plage » depuis le 07/07/2025
+   // (délibération Grand Chambéry, Acte17091 du 10/07/2025) ; les deux réseaux sont donc pertinents sur ce
+   // corridor. Cas explicite (pas une règle géométrique générale, pour ne pas réintroduire les faux positifs
+   // déjà corrigés ailleurs — cf. historique du 16/11/2026) : si le flux retenu est Synchro et qu'Ondéa
+   // touche une des deux extrémités, on le préfère au repli générique.
+   const ondea=covering[0].id==='82272'&&resourceList.find(r=>r.id==='71223');
+   const ondeaRelevant=ondea&&taskList.some(t=>selected(ondea,{...t,to:t.from})||selected(ondea,{...t,from:t.to}));
+   const next=(ondeaRelevant&&ondea)||covering.find(r=>r!==covering[0]);
+   return {resource:covering[0],partners:next?[next]:[]};
+  }
+ }
+ const resource=first;
+ // oura-ain n'est repêché ici que via preferredAin : son enveloppe très large chevauche une partie de la
+ // Haute-Savoie/du Genevois et serait sinon ajouté à tort dès qu'il touche une seule extrémité d'un
+ // trajet qu'il ne dessert pas réellement (ex. Genève sur Thonon → Genève), masquant un réseau local
+ // pertinent (Star't) qui, lui, dessert vraiment l'autre extrémité.
+ let partners=resourceList.filter(r=>r!==resource&&r!==ain&&r.federate&&taskList.some(task=>
+  crossEnvelopePair(resource,r,task)||(selected(resource,task)&&
+  (selected(r,{...task,to:task.from})||selected(r,{...task,from:task.to})))));
+ // Quand plusieurs réseaux ne touchent le trajet que par un chevauchement d'enveloppe (flux large type
+ // Cars Région Haute-Savoie), on privilégie celui qui couvre le point de départ : c'est en général lui qui
+ // exploite la ligne interurbaine/transfrontalière réelle (ex. Star't sur Thonon → Genève, qui dessert
+ // effectivement la ligne 271/T71 jusqu'à Genève), plutôt qu'un réseau qui ne touche que l'arrivée par simple
+ // recouvrement géométrique (ex. TAC Annemasse, dont l'enveloppe frôle Genève sans desservir ce trajet).
+ partners=partners.sort((a,b)=>{
+  const score=r=>taskList.some(task=>crossEnvelopePair(resource,r,task))?0:
+   taskList.some(task=>selected(r,{...task,to:task.from}))?1:2;
+  return score(a)-score(b);
+ }).slice(0,1);
+ // Trajet urbain dans l'Ain (ex. TAM à Ambérieu) : on ajoute le réseau local qui couvre tout le trajet.
+ if(preferredAin&&!partners.length){
+  const local=resourceList.filter(r=>r!==ain&&area(r)<area(ain)&&taskList.some(t=>selected(r,t))).sort((a,b)=>area(a)-area(b))[0];
+  if(local)partners=[local];
+ }
+ return {resource,partners};
+}
+const LARGE_AREA=0.5; // degrés² : au-delà, flux départemental ou régional
+const api={DEFAULT_RESOURCES,selected,chooseResources,crossEnvelopePair,searchWindow,serviceDates,mount};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSAgenda=api;
 })(typeof window!=='undefined'?window:globalThis);

@@ -162,7 +162,13 @@ async function loadResource(resource,{fetcher=root.fetch,signal,timeoutMs=30000,
    resolved=[...candidates].sort((a,b)=>(Date.parse(b.updatedAt)||0)-(Date.parse(a.updatedAt)||0)||
     (a.id===resource.id?-1:b.id===resource.id?1:0))[0];
   }
-  const bytes=await catalogue.downloadGTFS(resolved,fetcher,cap.maxArchiveBytes,{signal:controller.signal});
+  // Copie servie par le site de l'application d'abord, puis la source officielle d'origine en secours.
+  let bytes,lastError=null;
+  for(const url of [resolved.url,...(Array.isArray(resource?.fallbackUrls)?resource.fallbackUrls:[])].filter(u=>typeof u==='string'&&/^https:\/\//.test(u))){
+   try{bytes=await catalogue.downloadGTFS({...resolved,url},fetcher,cap.maxArchiveBytes,{signal:controller.signal});resolved={...resolved,url};break;}
+   catch(error){if(controller.signal.aborted)throw error;lastError=error;}
+  }
+  if(!bytes)throw lastError||new Error('GTFS download failed');
   const extracted=await extractGTFS(bytes,{...cap,signal:controller.signal});
   validateTables(extracted.files);aborted(controller.signal);
   let serviceIds=null,dates=null;
@@ -174,7 +180,7 @@ async function loadResource(resource,{fetcher=root.fetch,signal,timeoutMs=30000,
   const index=gtfs.buildIndex(extracted.files,{serviceIds});
   const indexedStopTimes=[...index.timesByTrip.values()].reduce((total,rows)=>total+rows.length,0);
   if(!index.counts.stops||!index.counts.routes||!index.sourceTrips||!index.counts.stopTimes||(!indexedStopTimes&&!index.skippedStopTimes))throw new Error('Empty or disconnected GTFS index');
-  const files=retainSourceTables?extracted.files:Object.fromEntries(Object.entries(extracted.files).filter(([name])=>['agency.txt','calendar.txt','calendar_dates.txt','transfers.txt','feed_info.txt'].includes(name)));
+  const files=retainSourceTables?extracted.files:Object.fromEntries(Object.entries(extracted.files).filter(([name])=>['agency.txt','calendar.txt','calendar_dates.txt','transfers.txt','feed_info.txt','fare_attributes.txt','fare_rules.txt'].includes(name)));
   return {...extracted,files,index,indexServiceDates:dates,source:{datasetId:resolved.datasetId||null,resourceId:resolved.id||null,
    network:resolved.network||resource.network||null,url:resolved.url,updatedAt:resolved.updatedAt||null,loadedAt:new Date().toISOString()},
    indexedStopTimes,skippedStopTimes:index.skippedStopTimes,rejectedStopTimes:index.counts.stopTimes-indexedStopTimes-index.skippedStopTimes,

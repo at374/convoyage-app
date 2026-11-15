@@ -20,10 +20,16 @@ function setKey(value){const key=String(value||'').trim();if(key&&!/^[A-Za-z0-9_
  if(key)root.localStorage.setItem(KEY,key);else root.localStorage.removeItem(KEY);cache.clear();}
 function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Date().toISOString()}={}){
  if(!point(from)||!point(to)||!Number.isFinite(time(when))||latestArrival!==undefined&&(!Number.isFinite(time(latestArrival))||(!arriveBy&&time(latestArrival)<time(when))||(arriveBy&&time(latestArrival)>time(when))))throw Error('Fenêtre TripGo invalide');
- if(!data||!Array.isArray(data.groups)||data.groups.length>100||!Array.isArray(data.segmentTemplates)||data.segmentTemplates.length>2000)throw Error('Réponse TripGo invalide');
+ if(!data||typeof data!=='object')throw Error('Réponse TripGo invalide (vide)');
+ if(!Array.isArray(data.groups))throw Error('Réponse TripGo invalide (groups manquant'+(data.error?' ; erreur fournisseur : '+String(data.error).slice(0,160):'')+')');
+ if(data.groups.length>100)throw Error('Réponse TripGo invalide (groups trop nombreux : '+data.groups.length+')');
+ // TripGo omet parfois entièrement segmentTemplates quand groups est vide (aucun trajet en transport public
+ // trouvé, ex. liaisons très locales) : ce n'est pas une réponse malformée, juste l'absence de résultat.
+ if(data.groups.length&&!Array.isArray(data.segmentTemplates))throw Error('Réponse TripGo invalide (segmentTemplates manquant)');
+ if(Array.isArray(data.segmentTemplates)&&data.segmentTemplates.length>2000)throw Error('Réponse TripGo invalide (segmentTemplates trop nombreux : '+data.segmentTemplates.length+')');
  if(!point(data.query?.from)||!point(data.query?.to)||gap(coord(data.query.from),coord(from))>1||gap(coord(data.query.to),coord(to))>1||
    time(data.query[arriveBy?'arrive':'depart'])!==time(when))throw Error('Réponse TripGo liée à une autre recherche');
- const templates=new Map();for(const t of data.segmentTemplates){if(!t||typeof t!=='object'||!Number.isInteger(t.hashCode)||templates.has(t.hashCode))throw Error('Modèle TripGo invalide');templates.set(t.hashCode,t);}
+ const templates=new Map();for(const t of (data.segmentTemplates||[])){if(!t||typeof t!=='object'||!Number.isInteger(t.hashCode)||templates.has(t.hashCode))throw Error('Modèle TripGo invalide');templates.set(t.hashCode,t);}
  const found=[],seen=new Set();let inspected=0;
  for(const group of data.groups){
   if(!group||typeof group!=='object'||!Array.isArray(group.trips)||group.trips.length>100)throw Error('Groupe TripGo invalide');
@@ -47,7 +53,8 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
       (end===start||Math.max(Number.isFinite(s.metres)&&s.metres>=0?s.metres:0,gap(coord(s.from),coord(s.to)))/((end-start)/1000)>4))||
      !/^(wa_wal|pt_pub(?:_[a-z0-9-]+)*|stationary_(?:transfer|wait))$/.test(mode||'')||/ferry|boat|air/i.test(s.modeInfo?.identifier||'')) {valid=false;break;}
     previous=end;
-    legs.push({mode,provider:s.externalData?.operatorName||null,serviceTripId:s.serviceTripID||null,serviceShortName:s.serviceShortName||null,routeId:s.routeId||s.routeID||null,fromStopCode:s.from.stopCode||null,toStopCode:s.to.stopCode||null,ticketWebsiteURL:typeof s.ticketWebsiteURL==='string'?s.ticketWebsiteURL:null,line:s.serviceNumber||s.serviceName||null,from:s.from.name||s.from.address||'',to:s.to.name||s.to.address||'',
+    const tk=s.ticket&&typeof s.ticket==='object'?s.ticket:null,tkCost=Number(tk?.cost),tkCur=String(tk?.currency||'').toUpperCase();
+    legs.push({ticket:tk&&Number.isFinite(tkCost)&&tkCost>=0&&/^(EUR|CHF)$/.test(tkCur)?{amount:Math.round(tkCost*100)/100,currency:tkCur,name:String(tk.name||'').slice(0,80)}:null,mode,modeInfo:typeof s.modeInfo?.identifier==='string'?s.modeInfo.identifier:null,provider:s.externalData?.operatorName||null,serviceTripId:s.serviceTripID||null,serviceShortName:s.serviceShortName||null,routeId:s.routeId||s.routeID||null,fromStopCode:s.from.stopCode||null,toStopCode:s.to.stopCode||null,ticketWebsiteURL:typeof s.ticketWebsiteURL==='string'?s.ticketWebsiteURL:null,line:s.serviceNumber||s.serviceName||null,from:s.from.name||s.from.address||'',to:s.to.name||s.to.address||'',
      fromPoint:coord(s.from),toPoint:coord(s.to),departure:new Date(start).toISOString(),arrival:new Date(end).toISOString(),
      distanceMeters:Number.isFinite(s.metres)&&s.metres>=0?s.metres:null,realtimeReported:s.realTime===true,
      alerts:Array.isArray(s.alerts)?s.alerts.map(a=>String(a?.title||a?.text||'Alerte fournisseur')).slice(0,10):[],serviceConfirmed:false});
@@ -56,13 +63,15 @@ function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Da
    const signature=JSON.stringify(legs.map(l=>[l.mode,l.line,l.departure,l.arrival,l.fromPoint,l.toPoint]));if(seen.has(signature))continue;seen.add(signature);
    const startGapMeters=gap(coord(from),legs[0].fromPoint),endGapMeters=gap(coord(to),legs.at(-1).toPoint);
    if(startGapMeters>50||endGapMeters>50)continue;
-   const realtimeReported=legs.filter(l=>l.mode.startsWith('pt_pub')).every(l=>l.realtimeReported);
+   const transitLegs=legs.filter(l=>l.mode.startsWith('pt_pub'));
+   const fareVerified=transitLegs.every(l=>l.ticket&&Number.isFinite(l.ticket.amount)&&l.ticket.amount>=0); 
+   const realtimeReported=transitLegs.every(l=>l.realtimeReported);
    found.push({departure:new Date(departure).toISOString(),arrival:new Date(arrival).toISOString(),legs,priceEUR:null,
     source:'TripGo',receivedAt,transportConfirmed:false,serviceConfirmed:false,accessVerified:false,
     alerts:[...new Set([...legs.flatMap(l=>l.alerts),...(Array.isArray(trip.alerts)?trip.alerts:[]),...(Array.isArray(data.alerts)?data.alerts:[])].map(a=>typeof a==='string'?a:String(a?.title||a?.text||'Alerte fournisseur')))].slice(0,20),
     evidence:{scheduleProvided:true,endpointCoordinatesMatched:startGapMeters<=10&&endGapMeters<=10,startGapMeters,endGapMeters,
-     walkingProvided:legs.some(l=>l.mode==='wa_wal'),realtimeReported,fareVerified:false,
-     missing:['circulation à la date du trajet','perturbations éventuelles','accès physique au point GPS exact','prix du transport']}});
+     walkingProvided:legs.some(l=>l.mode==='wa_wal'),realtimeReported,fareVerified,
+     missing:['circulation à la date du trajet','perturbations éventuelles','accès physique au point GPS exact',...(!fareVerified?['prix du transport']:[])]}});
   }
  }
  return {source:'TripGo',receivedAt,itineraries:found.sort((a,b)=>arriveBy?Date.parse(b.departure)-Date.parse(a.departure):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,10)};

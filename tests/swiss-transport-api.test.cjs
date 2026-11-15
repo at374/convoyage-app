@@ -61,3 +61,13 @@ assert.equal(summer.searchParams.get('time'),'10:00');
  assert.equal(oversized.diagnostic.valid,100);
  console.log('Swiss transport adapter: URL, timezones, walking and response assertions passed');
 })().catch(e=>{console.error(e);process.exitCode=1;});
+
+// Départ depuis une coordonnée : from.departure vide repris de la première section datée.
+(async()=>{
+ const body={connections:[{from:{departure:null,station:{name:'x'}},to:{arrival:null,station:{name:'Genève'}},sections:[
+  {walk:{duration:null},departure:{departure:null,location:{coordinate:{x:46.2,y:6.23}}},arrival:{arrival:null,station:{name:'Annemasse'}}},
+  {journey:{category:'SL',number:'2'},departure:{station:{name:'Annemasse',coordinate:{x:46.1993,y:6.2366}},departure:'2026-11-16T07:40:00+0100'},arrival:{station:{name:'Genève',coordinate:{x:46.21,y:6.14}},arrival:'2026-11-16T07:55:00+0100'}}]}]};
+ const r=await swiss.plan({from:{lat:46.2,lon:6.23},to:{lat:46.21,lon:6.14},when:'2026-11-16T07:30:00+01:00',fetcher:async()=>({ok:true,json:async()=>body})});
+ assert.equal(r.length,1);assert.equal(r[0].departure,'2026-11-16T07:40:00+0100');assert.equal(r[0].arrival,'2026-11-16T07:55:00+0100');
+ assert.deepEqual(r[0].sections[1].fromPoint,{lat:46.1993,lon:6.2366});
+})().catch(e=>{console.error(e);process.exit(1);});

@@ -1,0 +1,118 @@
+{
+  "scope": "regional GTFS stop proximity only; no proof of service, price or availability",
+  "radiusMeters": 5000,
+  "networks": {
+    "tac-annemasse": {
+      "saintJulien": {
+        "count": 31,
+        "nearest": [
+          {
+            "name": "Saint Julien Centre",
+            "lat": 46.144933,
+            "lon": 6.082437,
+            "distanceMeters": 29
+          },
+          {
+            "name": "Saint julien Centre",
+            "lat": 46.144874,
+            "lon": 6.082176,
+            "distanceMeters": 38
+          },
+          {
+            "name": "Saint-Julien Hôpital",
+            "lat": 46.145958,
+            "lon": 6.080188,
+            "distanceMeters": 233
+          },
+          {
+            "name": "Saint-Julien Hôpital",
+            "lat": 46.146123,
+            "lon": 6.080019,
+            "distanceMeters": 254
+          },
+          {
+            "name": "Saint-Julien Gare",
+            "lat": 46.142377,
+            "lon": 6.08659,
+            "distanceMeters": 402
+          }
+        ]
+      },
+      "archamps": {
+        "count": 33,
+        "nearest": [
+          {
+            "name": "Pont de Combe",
+            "lat": 46.137795,
+            "lon": 6.12803,
+            "distanceMeters": 408
+          },
+          {
+            "name": "Pont de Combe",
+            "lat": 46.137746,
+            "lon": 6.127797,
+            "distanceMeters": 422
+          },
+          {
+            "name": "Centre de Convention",
+            "lat": 46.13617,
+            "lon": 6.123065,
+            "distanceMeters": 750
+          },
+          {
+            "name": "Collonges Marché",
+            "lat": 46.14196,
+            "lon": 6.138312,
+            "distanceMeters": 768
+          },
+          {
+            "name": "Collonges Marché",
+            "lat": 46.141965,
+            "lon": 6.13916,
+            "distanceMeters": 807
+          }
+        ]
+      }
+    },
+    "cars-region-savoie": {
+      "saintJulien": {
+        "count": 0,
+        "nearest": []
+      },
+      "archamps": {
+        "count": 0,
+        "nearest": []
+      }
+    },
+    "synchro-chambery": {
+      "saintJulien": {
+        "count": 0,
+        "nearest": []
+      },
+      "archamps": {
+        "count": 0,
+        "nearest": []
+      }
+    },
+    "tcl-lyon": {
+      "saintJulien": {
+        "count": 0,
+        "nearest": []
+      },
+      "archamps": {
+        "count": 0,
+        "nearest": []
+      }
+    },
+    "cars-region-isere": {
+      "saintJulien": {
+        "count": 0,
+        "nearest": []
+      },
+      "archamps": {
+        "count": 0,
+        "nearest": []
+      }
+    }
+  }
+}

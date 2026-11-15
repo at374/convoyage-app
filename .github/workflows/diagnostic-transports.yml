@@ -1,0 +1,935 @@
+name: Diagnostic réel des transports (15 axes AURA–Suisse)
+# Interroge les vrais moteurs depuis un serveur GitHub (accès Internet) : API suisse, Mobilités M, SNCF, GTFS officiels, Valhalla.
+# TripGo seulement si le secret CP_TRIPGO_KEY est défini. Publie docs/diagnostic-serveur.json sur la branche source.
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/transports-aura-suisse]
+    paths:
+      - '.github/workflows/diagnostic-transports.yml'
+      - 'scripts/diagnostic-transports-reel.cjs'
+      - 'transport-tripgo.js'
+      - 'transport-mission-hub.js'
+      - 'transport-fare-grids.js'
+      - 'transport-coverage.js'
+      - 'transport-gtfs-agenda.js'
+      - 'transport-catalogue.js'
+      - 'transport-national-gtfs-journeys.js'
+      - 'scripts/build_national_gtfs_aura.py'
+      - 'scripts/build_national_from_catalogue.py'
+      - 'scripts/test_national_catalogue_builder.py'
+      - 'scripts/test_national_gtfs_aura.py'
+      - 'scripts/audit-national-operators.cjs'
+permissions:
+  contents: write
+concurrency:
+  group: diagnostic-transports
+  cancel-in-progress: false
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Auditer les flux nationaux SNCF BlaBlaCar FlixBus
+        continue-on-error: true
+        run: node scripts/audit-national-operators.cjs
+      - name: Conserver le rapport des flux nationaux
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-operateurs-nationaux
+          path: docs/audit-national-operators.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Vérifier le découpage national GTFS côté serveur
+        run: |
+          python3 -m py_compile scripts/build_national_gtfs_aura.py
+          python3 -m py_compile scripts/build_national_from_catalogue.py
+          python3 scripts/build_national_from_catalogue.py --help >/dev/null
+          python3 scripts/test_national_catalogue_builder.py
+          python3 scripts/build_national_gtfs_aura.py --help >/dev/null
+          python3 scripts/test_national_gtfs_aura.py
+      - name: Tester le secours de recherche des gares routières nationales
+        run: node --test tests/national-stop-fallback.test.cjs tests/transport-mission-hub.test.cjs tests/transport-walking.test.cjs tests/national-journeys-real-slice.test.cjs
+      - name: Tester les trajets nationaux GTFS sans prix inventés
+        run: |
+          node --check transport-national-gtfs-journeys.js
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const national=require('./transport-national-gtfs-journeys.js');
+          const indexer=require('./transport-gtfs-index.js');
+          const files={
+            'calendar.txt':'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\ns1,1,1,1,1,1,1,1,20260101,20261231\n',
+            'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\na,Annecy,45.901,6.121\nb,Lyon,45.761,4.861\n',
+            'routes.txt':'route_id,route_short_name,route_type\nr1,TER,2\n',
+            'trips.txt':'route_id,service_id,trip_id\nr1,s1,t1\n',
+            'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nt1,08:00:00,08:00:00,a,1\nt1,10:00:00,10:00:00,b,2\n'
+          };
+          const index=indexer.buildIndex(files);
+          const args={operator:'sncf',files,index,date:'2026-11-16',from:{lat:45.901,lon:6.121},to:{lat:45.761,lon:4.861}};
+          const rows=national.search(args);
+          assert.equal(rows.length,1);
+          assert.equal(rows[0].tripId,'t1');
+          assert.equal(rows[0].priceEUR,null);
+          assert.equal(rows[0].serviceConfirmed,false);
+          assert.equal(rows[0].walkingRouteConfirmed,false);
+          assert.equal(national.search({...args,earliestDeparture:'09:00'}).length,0);
+          assert.equal(national.search({...args,latestArrival:'09:59'}).length,0);
+          assert.equal(national.search({...args,latestArrival:'10:00'}).length,1);
+          assert.equal(national.search({...args,latestArrival:'09:59:59'}).length,0);
+          assert.equal(national.search({...args,earliestDeparture:'08:00:01'}).length,0);
+          const overnight={...files,'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nt1,24:30:00,24:30:00,a,1\nt1,25:10:00,25:10:00,b,2\n'};
+          const overnightIndex=indexer.buildIndex(overnight);
+          assert.equal(national.search({...args,files:overnight,index:overnightIndex,earliestDeparture:'24:00',latestArrival:'25:10'}).length,1);
+          assert.equal(national.search({...args,files:overnight,index:overnightIndex,latestArrival:'25:09:59'}).length,0);
+          assert.throws(()=>national.search({...args,latestArrival:'25:xx'}),/arrival threshold/);
+          assert.throws(()=>national.search({...args,operator:'unknown'}));
+          assert.throws(()=>national.search({...args,date:'2026-02-30'}),/Invalid GTFS date/);
+          assert.throws(()=>national.search({...args,from:{lat:91,lon:6.121}}),/coordinates/);
+
+          national.loadAndSearch({...args,resource:{url:'http://invalid.example/feed.zip'}})
+            .then(()=>{throw Error('HTTP must be rejected')},e=>assert.match(e.message,/HTTPS/));
+          national.loadAndSearch({...args,resource:{url:'https://example.org/feed.zip'},loadOptions:{maxArchiveBytes:30*1024*1024}})
+            .then(()=>{throw Error('Oversized archive must be rejected')},e=>assert.match(e.message,/safe mobile cap/));
+          console.log('Trajet national GTFS, fenêtre horaire, prix inconnus et validations OK');
+          NODE
+      - name: Vérifier les archives nationales publiées et leur accès HTTPS
+        run: |
+          python3 - <<'PY'
+          import io
+          import urllib.request
+          import zipfile
+          from pathlib import Path
+          from hashlib import sha256
+          base = 'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/'
+          for operator in ('sncf', 'blablacarBus', 'flixbus'):
+              name = f'national-{operator}-aura.zip'
+              local = Path('data/gtfs') / name
+              assert local.is_file(), f'Missing published archive {name}'
+              with zipfile.ZipFile(local) as z:
+                  assert {'stops.txt','routes.txt','trips.txt','stop_times.txt'} <= set(z.namelist()), name
+                  assert z.testzip() is None, f'Corrupted local GTFS: {name}'
+              with urllib.request.urlopen(urllib.request.Request(base+name, headers={'User-Agent':'ConvoyageUltra-GTFS-CI'}), timeout=30) as response:
+                  assert response.status == 200, f'HTTPS status {response.status}: {name}'
+                  assert response.headers.get('Access-Control-Allow-Origin') in ('*','https://at374.github.io'), f'No browser CORS: {name}'
+                  remote = response.read(20*1024*1024+1)
+              assert len(remote) <= 20*1024*1024, f'Mobile archive too large: {name}'
+              assert sha256(remote).digest() == sha256(local.read_bytes()).digest(), f'HTTPS archive differs: {name}'
+              with zipfile.ZipFile(io.BytesIO(remote)) as z:
+                  assert z.testzip() is None, f'Invalid remote GTFS: {name}'
+              print(f'OK {operator}: HTTPS 200, CORS, SHA256, ZIP integrity ({len(remote)} bytes)')
+          PY
+      - name: Tester les trois moteurs GTFS officiels avec chargement et recherche réels
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const national=require('./transport-national-gtfs-journeys.js');
+          const base='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
+          const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
+          (async()=>{
+            for(const operator of ['sncf','blablacarBus','flixbus']){
+              const resource={format:'GTFS',url:base+'national-'+operator+'-aura.zip'};
+              const result=await national.loadAndSearch({
+                operator,resource,fetcher:fetch,date,
+                from:{lat:45.7601,lon:4.8599},to:{lat:45.9012,lon:6.1219},
+                radiusMeters:3000,maxResults:30
+              });
+              assert.ok(result.counts.stops>0,'Empty official stop index '+operator);
+              assert.ok(result.counts.routes>0,'Empty official route index '+operator);
+              assert.ok(Array.isArray(result.journeys),'No itinerary result list '+operator);
+              for(const journey of result.journeys){
+                assert.equal(journey.operator,operator);
+                assert.equal(journey.priceEUR,null,'Invented commercial ticket price');
+                assert.equal(journey.serviceConfirmed,false,'Unconfirmed schedule marked live');
+                assert.equal(journey.walkingRouteConfirmed,false,'Unverified walking route');
+              }
+              console.log('Official national GTFS end-to-end',operator,
+                'stops='+result.counts.stops,'journeys='+result.journeys.length);
+            }
+          })().catch(error=>{console.error(error);process.exitCode=1;});
+          NODE
+      - name: Mesurer les trajets réellement trouvés sur les axes AURA
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const loader=require('./transport-gtfs-loader.js');
+          const search=require('./transport-national-gtfs-journeys.js').search;
+          const points={
+            annecy:{lat:45.9012,lon:6.1219},
+            lyon:{lat:45.7601,lon:4.8599},
+            chambery:{lat:45.5658,lon:5.9204},
+            amberieu:{lat:45.9585,lon:5.3577},
+            annemasse:{lat:46.1944,lon:6.2378},
+            saintJulien:{lat:46.1447,lon:6.0826},
+            archamps:{lat:46.1362,lon:6.1328}
+          };
+          const axes=[['annecy','lyon'],['chambery','lyon'],['amberieu','lyon'],
+            ['chambery','saintJulien'],['annecy','annemasse'],['saintJulien','archamps']];
+          const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
+          (async()=>{
+            const report={date,scope:'static national GTFS direct journeys only; no ticket price or live availability',axes:{}};
+            for(const operator of ['sncf','blablacarBus','flixbus']){
+              const filename='data/gtfs/national-'+operator+'-aura.zip';
+              const bytes=fs.readFileSync(filename);
+              const fakeFetch=async()=>new Response(bytes,{headers:{'content-type':'application/zip','content-length':String(bytes.length)}});
+              const feed=await loader.loadResource({format:'GTFS',url:'https://example.org/'+operator+'.zip'},
+                {fetcher:fakeFetch,indexServiceDates:[date],retainSourceTables:false});
+              for(const [a,b] of axes){
+                const key=a+'-'+b;
+                report.axes[key]??={};
+                const journeys=search({operator,files:feed.files,index:feed.index,date,
+                  from:points[a],to:points[b],radiusMeters:3000,maxResults:100});
+                report.axes[key][operator]=journeys.length;
+                assert.ok(journeys.every(j=>j.priceEUR===null&&!j.serviceConfirmed));
+              }
+            }
+            fs.mkdirSync('docs',{recursive:true});
+            fs.writeFileSync('docs/audit-national-aura-axes.json',JSON.stringify(report,null,2)+'\n');
+            console.log(JSON.stringify(report,null,2));
+          })().catch(error=>{console.error(error);process.exitCode=1;});
+          NODE
+      - name: Auditer les correspondances SNCF des axes sans trajet direct
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const loader=require('./transport-gtfs-loader.js');
+          const indexer=require('./transport-gtfs-index.js');
+          const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
+          const axes=[
+            {name:'chambery-saintJulien',from:{lat:45.5658,lon:5.9204},to:{lat:46.1447,lon:6.0826}},
+            {name:'saintJulien-archamps',from:{lat:46.1447,lon:6.0826},to:{lat:46.1362,lon:6.1328}}
+          ];
+          (async()=>{
+            const bytes=fs.readFileSync('data/gtfs/national-sncf-aura.zip');
+            const feed=await loader.loadResource({format:'GTFS',url:'https://example.org/sncf.zip'},{
+              fetcher:async()=>new Response(bytes,{headers:{'content-type':'application/zip','content-length':String(bytes.length)}}),
+              indexServiceDates:[date],retainSourceTables:false
+            });
+            const report={date,operator:'sncf',scope:'one-transfer GTFS candidates only; no verified fares or real-time service',axes:{}};
+            for(const axis of axes){
+              const result=indexer.nearbyTransferTrips(feed.files,feed.index,date,axis.from,axis.to,3000,
+                {maxLegs:15000,maxCandidates:200,maxExaminedPairs:30000,minTransferMinutes:5,maxWaitMinutes:120});
+              report.axes[axis.name]={candidates:result.journeys.length,searchTruncated:result.searchTruncated};
+              console.log(axis.name,JSON.stringify(report.axes[axis.name]));
+            }
+            fs.writeFileSync('docs/audit-national-aura-transfers.json',JSON.stringify(report,null,2)+'\n');
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
+      - name: Tester les correspondances nationales dans les fiches mission
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const indexer=require('./transport-gtfs-index.js');
+          const national=require('./transport-national-gtfs-journeys.js');
+          const hub=require('./transport-mission-hub.js');
+          const files={
+            'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nA,Chambery,45.5658,5.9204\nB,Correspondance,45.8,6.0\nC,Saint Julien,46.1447,6.0826\n',
+            'routes.txt':'route_id,route_short_name\nR1,TER1\nR2,TER2\n',
+            'trips.txt':'route_id,service_id,trip_id\nR1,S,T1\nR2,S,T2\n',
+            'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT1,09:00:00,09:00:00,A,1\nT1,10:00:00,10:00:00,B,2\nT2,10:15:00,10:15:00,B,1\nT2,11:00:00,11:00:00,C,2\n',
+            'calendar.txt':'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\nS,1,1,1,1,1,1,1,20260101,20271231\n'
+          };
+          const index=indexer.buildIndex(files);
+          const date='2026-11-14';
+          const rows=national.search({operator:'sncf',files,index,date,
+            from:{lat:45.5658,lon:5.9204},to:{lat:46.1447,lon:6.0826},
+            includeTransfers:true,radiusMeters:1000});
+          assert.equal(rows.length,1);
+          assert.equal(rows[0].legs.length,2);
+          const journeys=hub.fromNationalGTFS(rows,'sncf');
+          assert.equal(journeys.length,1);
+          assert.equal(journeys[0].legs.length,2);
+          assert.ok(journeys[0].missing.some(x=>/^correspondance (GTFS|programmée) non confirmée/.test(x)),'correspondance toujours signalée');
+          assert.equal(rows[0].priceEUR,null);
+          assert.equal(hub.fromNationalGTFS([{...rows[0],transferStop:null}],'sncf').length,0,
+            'Missing transfer stop must not be presented as a direct train');
+          assert.equal(hub.fromNationalGTFS([{...rows[0],legs:[rows[0].legs[0]]}],'sncf').length,0,
+            'Incomplete transfer legs must not become a direct train');
+          const after=national.search({operator:'sncf',files,index,date,
+            from:{lat:45.5658,lon:5.9204},to:{lat:46.1447,lon:6.0826},
+            includeTransfers:true,radiusMeters:1000,earliestDeparture:'09:01:00'});
+          assert.equal(after.length,0,'Earlier transfer must not pass departure window');
+          const before=national.search({operator:'sncf',files,index,date,
+            from:{lat:45.5658,lon:5.9204},to:{lat:46.1447,lon:6.0826},
+            includeTransfers:true,radiusMeters:1000,latestArrival:'10:59:00'});
+          assert.equal(before.length,0,'Late transfer must not pass arrival deadline');
+          console.log('Two-leg national GTFS mission-card transfer and time-window filters OK');
+          NODE
+      - name: Vérifier les correspondances SNCF réelles dans les fiches mission
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const loader=require('./transport-gtfs-loader.js');
+          const national=require('./transport-national-gtfs-journeys.js');
+          const hub=require('./transport-mission-hub.js');
+          const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
+          (async()=>{
+            const bytes=fs.readFileSync('data/gtfs/national-sncf-aura.zip');
+            const feed=await loader.loadResource({format:'GTFS',url:'https://example.org/sncf.zip'},{
+              fetcher:async()=>new Response(bytes,{headers:{'content-type':'application/zip','content-length':String(bytes.length)}}),
+              indexServiceDates:[date],retainSourceTables:false
+            });
+            const rows=national.search({operator:'sncf',files:feed.files,index:feed.index,date,
+              from:{lat:45.5658,lon:5.9204},to:{lat:46.1447,lon:6.0826},
+              radiusMeters:3000,maxResults:100,includeTransfers:true});
+            const transfers=rows.filter(r=>Array.isArray(r.legs)&&r.legs.length===2);
+            assert.ok(transfers.length>0,'No actual SNCF transfers found');
+            const converted=hub.fromNationalGTFS(transfers,'sncf');
+            assert.equal(converted.length,transfers.length);
+            for(const j of converted){
+              assert.equal(j.legs.length,2);
+              assert.ok(j.legs.every(l=>Number.isFinite(Date.parse(l.departure))&&Number.isFinite(Date.parse(l.arrival))));
+              assert.ok(Date.parse(j.legs[0].arrival)<=Date.parse(j.legs[1].departure));
+              assert.ok(j.missing.some(x=>/^correspondance (GTFS|programmée) non confirmée/.test(x)),'correspondance toujours signalée');
+            }
+            console.log('Real SNCF mission-card transfers validated:',converted.length,'date:',date);
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
+      - name: Auditer les arrêts des réseaux locaux autour de Saint-Julien et Archamps
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const loader=require('./transport-gtfs-loader.js');
+          const indexer=require('./transport-gtfs-index.js');
+          const networks=['tac-annemasse','cars-region-savoie','synchro-chambery',
+            'tcl-lyon','cars-region-isere'];
+          const points={saintJulien:{lat:46.1447,lon:6.0826},archamps:{lat:46.1362,lon:6.1328}};
+          (async()=>{
+            const report={scope:'regional GTFS stop proximity only; no proof of service, price or availability',radiusMeters:5000,networks:{}};
+            for(const network of networks){
+              const bytes=fs.readFileSync('data/gtfs/'+network+'.zip');
+              const feed=await loader.loadResource({format:'GTFS',url:'https://example.org/'+network+'.zip'},{
+                fetcher:async()=>new Response(bytes,{headers:{'content-type':'application/zip','content-length':String(bytes.length)}}),
+                retainSourceTables:false
+              });
+              report.networks[network]={};
+              for(const [name,p] of Object.entries(points)){
+                const stops=indexer.nearbyStops(feed.index,p.lat,p.lon,5000);
+                report.networks[network][name]={
+                  count:stops.length,nearest:stops.slice(0,5).map(s=>({
+                    name:s.name,lat:s.lat,lon:s.lon,distanceMeters:s.distanceMeters
+                  }))
+                };
+              }
+            }
+            fs.writeFileSync('docs/audit-grand-geneve-local-stops.json',JSON.stringify(report,null,2)+'\n');
+            console.log(JSON.stringify(report,null,2));
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
+      - name: Auditer les trajets TAC réels Saint-Julien vers Archamps
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs');
+          const loader=require('./transport-gtfs-loader.js');
+          const indexer=require('./transport-gtfs-index.js');
+          const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
+          (async()=>{
+            const bytes=fs.readFileSync('data/gtfs/tac-annemasse.zip');
+            const feed=await loader.loadResource({format:'GTFS',url:'https://example.org/tac-annemasse.zip'},{
+              fetcher:async()=>new Response(bytes,{headers:{'content-type':'application/zip','content-length':String(bytes.length)}}),
+              indexServiceDates:[date],retainSourceTables:false
+            });
+            const from={lat:46.1447,lon:6.0826},to={lat:46.1362,lon:6.1328};
+            const direct=indexer.nearbyDirectTrips(feed.files,feed.index,date,from,to,3000);
+            const transfer=indexer.nearbyTransferTrips(feed.files,feed.index,date,from,to,3000,{
+              maxLegs:15000,maxCandidates:200,maxExaminedPairs:30000,minTransferMinutes:5,maxWaitMinutes:120
+            });
+            const radii=[500,700,1200,3000];
+            const byRadius=radii.map(radiusMeters=>{
+              const rows=indexer.nearbyDirectTrips(feed.files,feed.index,date,from,to,radiusMeters);
+              const uniqueTrips=new Set(rows.map(j=>j.tripId));
+              const distinctStopPairs=new Set(rows.map(j=>j.from+'|'+j.to));
+              return {radiusMeters,candidates:rows.length,uniqueTrips:uniqueTrips.size,
+                distinctStopPairs:distinctStopPairs.size,
+                nearestAccessMeters:rows.length?Math.min(...rows.map(j=>j.accessDistanceMeters)):null,
+                nearestEgressMeters:rows.length?Math.min(...rows.map(j=>j.egressDistanceMeters)):null};
+            });
+            const hub=require('./transport-mission-hub.js');
+            const missionCards=hub.fromGTFS(direct.map(j=>({
+              ...j,network:'TAC Annemasse',
+              // The hub expects ISO timestamps; preserve GTFS local clock as
+              // diagnostic metadata without asserting a confirmed service.
+              departure:date+'T'+j.departure+'+01:00',
+              arrival:date+'T'+j.arrival+'+01:00'
+            })),'TAC Annemasse');
+            const uniqueDirectTrips=new Set(direct.map(j=>j.tripId)).size;
+            if(missionCards.length!==uniqueDirectTrips)
+              throw new Error('Mission card GTFS dedup mismatch: '+missionCards.length+' vs '+uniqueDirectTrips);
+            if(missionCards.some(j=>!j.missing?.some(x=>x.includes('non confirmé en temps réel'))))
+              throw new Error('Static TAC trip displayed without unconfirmed warning');
+            const report={date,network:'TAC Annemasse',from:'Saint-Julien-en-Genevois',
+              to:'Archamps',radiusMeters:3000,direct:direct.length,
+              uniqueDirectTrips,missionCardsAfterDedup:missionCards.length,
+              byRadius,oneTransfer:transfer.journeys.length,
+              searchTruncated:transfer.searchTruncated,
+              note:'Counts are static GTFS stop-pair candidates, not unique bookable itineraries. Straight-line stop radius is not walking distance. No verified fare, live service or pedestrian route.'};
+            fs.writeFileSync('docs/audit-tac-saint-julien-archamps.json',JSON.stringify(report,null,2)+'\n');
+            console.log(JSON.stringify(report,null,2));
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
+      - name: Tester la déduplication des courses GTFS locales
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const hub=require('./transport-mission-hub.js');
+          const p=(name,lat,lon,distanceMeters)=>({name,lat,lon,distanceMeters});
+          const common={tripId:'tac-course-1',date:'2026-11-14',line:'M',
+            departure:'2026-11-14T09:00:00+01:00',arrival:'2026-11-14T09:20:00+01:00'};
+          const rows=[
+            {...common,originStop:p('Far',46.14,6.08,900),destinationStop:p('Far end',46.13,6.13,800),
+              accessDistanceMeters:900,egressDistanceMeters:800},
+            {...common,originStop:p('Near',46.14,6.08,150),destinationStop:p('Near end',46.13,6.13,180),
+              accessDistanceMeters:150,egressDistanceMeters:180},
+            {...common,tripId:'tac-course-2',departure:'2026-11-14T10:00:00+01:00',
+              arrival:'2026-11-14T10:20:00+01:00',originStop:p('Other',46.14,6.08,250),
+              destinationStop:p('Other end',46.13,6.13,260),accessDistanceMeters:250,egressDistanceMeters:260}
+          ];
+          const journeys=hub.fromGTFS(rows,'TAC');
+          assert.equal(journeys.length,2,'Two distinct vehicle trips must remain');
+          assert(journeys.every(j=>j.missing.some(x=>x.includes('non confirmé en temps réel'))),
+            'Static GTFS must never be mistaken for a confirmed live bus');
+          const task={from:{lat:46.14,lon:6.08},to:{lat:46.13,lon:6.13}};
+          assert.equal(hub.assess(journeys[0],task,null).feasible,false,
+            'Unconfirmed local GTFS cannot be labelled Réalisable');
+          assert(journeys.some(j=>j.legs[0].from==='Near'),'Closest combined access/egress must win');
+          assert(journeys.some(j=>j.legs[0].from==='Other'),'Different vehicle trip must remain');
+          console.log('Local GTFS stop-pair deduplication OK');
+          NODE
+      - name: Vérifier les fournisseurs GTFS régionaux dans les fiches mission
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const hub=require('./transport-mission-hub.js');
+          const loader=require('./transport-gtfs-loader.js');
+          const index=require('./transport-gtfs-index.js');
+          const providers=hub.makeProviders({
+            CPGTFSLoader:loader,CPGTFSIndex:index,location:{origin:'https://example.org'},
+            fetch:async()=>{throw new Error('No network needed for provider registration');}
+          });
+          for(const id of ['tac','synchro','tcl','cars_isere','cars_savoie','jybus','tam'])
+            assert(providers['local_'+id],'Missing mission-card regional GTFS provider '+id);
+          assert.equal(providers.local_tac.enabled({
+            from:{lat:46.1447,lon:6.0826},to:{lat:46.1362,lon:6.1328},
+            earliestDeparture:'2026-11-14T09:00:00+01:00'
+          }),true,'TAC should be enabled for Saint-Julien to Archamps');
+          assert.equal(providers.local_tac.enabled({
+            from:{lat:45.75,lon:4.85},to:{lat:45.76,lon:4.86},
+            earliestDeparture:'2026-11-14T09:00:00+01:00'
+          }),false,'TAC must not be offered in Lyon');
+          console.log('Seven regional GTFS mission-card providers registered and geographically scoped');
+          NODE
+      - name: Vérifier chaque moteur régional sur ses archives réelles (40 réseaux)
+        run: |
+          python3 -I scripts/moteurs_regionaux_paires.py "$RUNNER_TEMP/paires.json"
+          node scripts/verifier-moteurs-regionaux.cjs "$RUNNER_TEMP/paires.json"
+      - name: Tester la recherche TAC réelle via le fournisseur fiche mission
+        run: |
+          node <<'NODE'
+          const fs=require('node:fs'),assert=require('node:assert/strict');
+          const hub=require('./transport-mission-hub.js');
+          const loader=require('./transport-gtfs-loader.js');
+          const index=require('./transport-gtfs-index.js');
+          const bytes=fs.readFileSync('data/gtfs/tac-annemasse.zip');
+          const fetcher=async()=>new Response(bytes,{headers:{'content-type':'application/zip','content-length':String(bytes.length)}});
+          const providers=hub.makeProviders({CPGTFSLoader:loader,CPGTFSIndex:index,
+            fetch:fetcher},{fetcher});
+          const date=new Date(Date.now()+86400000).toISOString().slice(0,10);
+          const task={from:{lat:46.1447,lon:6.0826},to:{lat:46.1362,lon:6.1328},
+            earliestDeparture:date+'T00:00:00+01:00'};
+          (async()=>{
+            const rows=await providers.local_tac.run(task);
+            assert(rows.length>0,'Actual TAC mission provider must return scheduled journeys');
+            assert(rows.length<=30,'Mobile mission card limit');
+            assert(rows.every(x=>x.missing?.some(s=>s.includes('non confirmé en temps réel'))),
+              'Static TAC must be marked unconfirmed');
+            assert(rows.every(x=>x.legs?.length===1),'Only verified direct TAC trips are selected');
+            console.log(JSON.stringify({date,provider:'local_tac',missionJourneys:rows.length,
+              confirmedLive:false,commercialFareVerified:false}));
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
+      - name: Vérifier la syntaxe et les tarifs locaux
+        run: |
+          node --check transport-fare-grids.js
+          node --check transport-isere-zonal-fares.js
+          node --check transport-tripgo.js
+          node --check transport-mission-hub.js
+          node --check transport-national-gtfs-journeys.js
+          node --check transport-gtfs-loader.js
+          node --check transport-gtfs-index.js
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const html=fs.readFileSync('index.html','utf8');
+          const scripts=[...html.matchAll(/<script\s+src="([^"]+)"/g)].map(x=>x[1].split('?')[0]);
+          const deps=['transport-catalogue.js','transport-gtfs-index.js',
+            'transport-gtfs-loader.js','transport-national-gtfs-journeys.js',
+            'transport-mission-hub.js','app.js'];
+          for(const file of deps){
+            assert.ok(scripts.includes(file),'Missing national GTFS browser script: '+file);
+            assert.equal(scripts.indexOf(file),scripts.lastIndexOf(file),'Duplicate script: '+file);
+          }
+          for(let i=1;i<deps.length;i++)assert.ok(scripts.indexOf(deps[i-1])<scripts.indexOf(deps[i]),
+            'National GTFS browser dependency order incorrect: '+deps[i]);
+          console.log('National GTFS browser scripts and dependency order OK');
+          for(const [operator,file] of [['sncf','national-sncf-aura.zip'],
+            ['blablacarBus','national-blablacarBus-aura.zip'],['flixbus','national-flixbus-aura.zip']]){
+            assert.ok(fs.statSync('data/gtfs/'+file).size>0,'Missing published national feed '+operator);
+            assert.ok(html.includes('data/gtfs/'+file),'Missing configured national feed '+operator);
+          }
+          console.log('All three published national AURA archives configured in browser');
+          const app=fs.readFileSync('app.js','utf8');
+          assert.match(app,/nationalGTFSResources:\s*window\.CP_NATIONAL_GTFS_RESOURCES\s*\|\|\s*\{\}/,
+            'Mission cards must pass national GTFS resources to the hub');
+          console.log('Mission cards national GTFS resource injection OK');
+          NODE
+          node <<'NODE'
+          const assert=require('node:assert/strict');
+          const hub=require('./transport-mission-hub.js');
+          const nationalRow={operator:'sncf',date:'2026-11-16',line:'TER',
+            departure:'24:30:00',arrival:'25:10:00',
+            originStop:{name:'Annecy',lat:45.901,lon:6.121},
+            destinationStop:{name:'Lyon',lat:45.761,lon:4.861}};
+          const providerRoot={CPNationalGTFSJourneys:{loadAndSearch:async args=>{
+            assert.equal(args.operator,'flixbus');
+            assert.equal(args.resource.format,'GTFS','real GTFS loader requires explicit format');
+            assert.equal(args.date,'2026-11-16');
+            assert.equal(args.earliestDeparture,'09:00:00');
+            return {journeys:[{...nationalRow,operator:'flixbus'}]};
+          }}};
+          const providers=hub.makeProviders(providerRoot,{nationalGTFSResources:{
+            flixbus:{url:'https://example.org/aura-slice.zip'}}});
+          assert.ok(providers.national_flixbus);
+          assert.equal(providers.national_sncf,undefined);
+          providers.national_flixbus.run({from:{lat:45.901,lon:6.121},
+            to:{lat:45.761,lon:4.861},earliestDeparture:'2026-11-16T08:00:00Z'})
+            .then(items=>{assert.equal(items.length,1);
+              assert.ok(items[0].missing.some(x=>x.includes('non confirmé')));})
+            .catch(e=>{console.error(e);process.exitCode=1;});
+          const overnightCalls=[];
+          const overnightProviders=hub.makeProviders({CPNationalGTFSJourneys:{
+            loadAndSearch:async args=>{
+              overnightCalls.push(args);
+              return {journeys:args.date==='2026-11-16'?[nationalRow]:[]};
+            }}},{nationalGTFSResources:{sncf:{url:'https://example.org/aura-slice.zip'}}});
+          overnightProviders.national_sncf.run({
+            from:{lat:45.901,lon:6.121},to:{lat:45.761,lon:4.861},
+            earliestDeparture:'2026-11-17T00:00:00Z'
+          }).then(items=>{
+            // 14/11/2026 : depuis le repli borné à 6 km (recherche vide à 3 km), trois appels : 3 km, 6 km, puis veille.
+            // Cette assertion attendait encore 2 appels et faisait échouer tout le diagnostic réel depuis 65b617c.
+            assert.equal(overnightCalls.length,3);
+            assert.equal(overnightCalls[0].date,'2026-11-17');assert.equal(overnightCalls[0].radiusMeters,3000);
+            assert.equal(overnightCalls[1].date,'2026-11-17');assert.equal(overnightCalls[1].radiusMeters,6000);
+            assert.equal(overnightCalls[2].date,'2026-11-16');
+            assert.equal(overnightCalls[2].earliestDeparture,'25:00:00');
+            assert.equal(items.length,1);
+          }).catch(e=>{console.error(e);process.exitCode=1;});
+          const converted=hub.fromNationalGTFS([nationalRow],'sncf');
+          assert.equal(converted.length,1);
+          assert.equal(converted[0].legs[0].departure,'2026-11-16T23:30:00.000Z');
+          assert.equal(converted[0].legs[0].arrival,'2026-11-17T00:10:00.000Z');
+          assert.equal(converted[0].legs[0].fromPoint.lat,45.901);
+          assert.ok(converted[0].missing.some(x=>x.includes('non confirmé')));
+          const summer=hub.fromNationalGTFS([{...nationalRow,date:'2026-07-16',departure:'08:00',arrival:'10:00'}],'sncf');
+          assert.equal(summer[0].legs[0].departure,'2026-07-16T06:00:00.000Z');
+          const summerSeconds=hub.fromNationalGTFS([{...nationalRow,date:'2026-07-16',
+            departure:'08:00:00',arrival:'10:00:00'}],'sncf');
+          assert.equal(summerSeconds[0].legs[0].departure,summer[0].legs[0].departure,
+            'HH:MM and HH:MM:SS must resolve to the same instant');
+          assert.equal(hub.fromNationalGTFS([nationalRow],'flixbus').length,0);
+          const stop={lat:45.901,lon:6.121};
+          const arrival={lat:45.761,lon:4.861};
+          const journey={source:'national-gtfs',missing:['horaire GTFS non confirmé en temps réel'],
+            legs:[{kind:'transit',mode:'Train',line:'TER',fromPoint:stop,toPoint:arrival,
+              departure:'2026-11-16T08:00:00Z',arrival:'2026-11-16T10:00:00Z'}]};
+          hub.completeWalks(journey,{from:stop,to:arrival},null).then(result=>{
+            assert.deepEqual(result.missing,journey.missing);
+            const assessed=hub.assess(result,{from:stop,to:arrival},null);
+            assert.equal(assessed.feasible,false);
+            // Horaire officiel complet sans temps réel : jamais « Réalisable », mais distingué d'un trajet incomplet.
+            assert.equal(assessed.scheduled,true);
+            assert.match(assessed.status,/^Horaire programmé/);assert.doesNotMatch(assessed.status,/Réalisable/);
+            const incomplete=hub.assess({...result,missing:[...result.missing,'marche jusqu’à l’adresse exacte d’arrivée non calculée']},{from:stop,to:arrival},null);
+            assert.equal(incomplete.status,'Transport non confirmé');
+          }).catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
+          node --check scripts/test-pedestrian-hub.cjs
+          node scripts/test-pedestrian-hub.cjs
+          node --check scripts/diagnostic-transports-reel.cjs
+          node - <<'NODE'
+          const assert = require('node:assert/strict');
+          const fs = require('node:fs');
+          const registry = fs.readFileSync('transport-fare-grids.js','utf8');
+          assert.equal(registry.split('function fareFor(').length-1,1,'Une seule fonction fareFor');
+          assert.equal((registry.match(/CPTransportFareGrids=api/g)||[]).length,1,'Un seul module de tarifs');
+          const {fareFor} = require('./transport-fare-grids.js');
+          const {nationalOperatorGTFS}=require('./transport-catalogue.js');
+          const feedRows=[
+            {id:'sncf',name:'Réseau SNCF TGV, Intercités et TER',resources:[{id:'s',format:'GTFS',url:'https://transport.data.gouv.fr/sncf.zip'}]},
+            {id:'blabla',name:'Réseau européen BlaBlaCar Bus',resources:[{id:'b',format:'GTFS',url:'https://transport.data.gouv.fr/blabla.zip'}]},
+            {id:'flix',name:'Réseau européen FlixBus et FlixTrain',resources:[{id:'f',format:'GTFS',url:'https://transport.data.gouv.fr/flix.zip'}]}
+          ];
+          const national=nationalOperatorGTFS(feedRows);
+          const normalizedCatalogue=require('./transport-catalogue.js').normalize({datasets:[{
+            id:'national',title:'Horaires nationaux',resources:[
+              {id:'flix-real',title:'FlixBus Europe',format:'GTFS',original_url:'https://example.org/flix.zip'},
+              {id:'not-gtfs',title:'FlixBus prix',format:'CSV',original_url:'https://example.org/prix.csv'}
+            ]}]});
+          const normalizedNational=nationalOperatorGTFS(normalizedCatalogue);
+          assert.equal(normalizedNational.flixbus.length,1,'Nom de ressource conservé après normalisation');
+          assert.equal(normalizedNational.flixbus[0].id,'flix-real','Ne pas accepter les CSV comme horaires GTFS');
+
+          const {fetchNationalOperatorGTFS}=require('./transport-catalogue.js');
+          const fakeFetch=async()=>({ok:true,json:async()=>({datasets:feedRows})});
+          fetchNationalOperatorGTFS(fakeFetch).then(live=>{
+            assert.equal(live.sncf.length,1,'Catalogue SNCF consulté');
+            assert.equal(live.blablacarBus.length,1,'Catalogue BlaBlaCar consulté');
+            assert.equal(live.flixbus.length,1,'Catalogue FlixBus consulté');
+          }).catch(e=>{console.error(e);process.exitCode=1;});
+
+          const mixedNational=nationalOperatorGTFS([{id:'mixed',name:'Horaires nationaux',resources:[
+            {id:'bb',name:'BlaBlaCar Bus Europe',format:'GTFS',url:'https://transport.data.gouv.fr/bb.zip'},
+            {id:'other',name:'Autre transporteur',format:'GTFS',url:'https://transport.data.gouv.fr/other.zip'}]}]);
+          assert.equal(mixedNational.blablacarBus.length,1,'Découverte par titre de ressource');
+          assert.equal(mixedNational.blablacarBus[0].id,'bb','Pas de contamination par les autres ressources');
+          assert.equal(mixedNational.flixbus.length,0,'Aucun FlixBus inventé');
+
+          for(const operator of ['sncf','blablacarBus','flixbus']){
+            assert.equal(national[operator].length,1,'Flux officiel découvert : '+operator);
+            assert.equal(national[operator][0].providesLiveFares,false,'Aucun prix commercial supposé : '+operator);
+            assert.equal(national[operator][0].timetableOnly,true,'GTFS horaire uniquement : '+operator);
+            assert.equal(national[operator][0].requiresServerSideIndex,true,'Indexation serveur pour gros flux : '+operator);
+          }
+
+          const {makeProviders}=require('./transport-mission-hub.js');
+          const tripgoStub={CPTripGo:{plan:async()=>[],getKey:()=> 'test-key'},CPSwissTransport:{plan:async()=>[]}};
+          const providerDefault=makeProviders(tripgoStub,{fetcher:async()=>({})});
+          assert.equal(providerDefault.tripgo.enabled(),false,'TripGo désactivé sans accord explicite');
+          assert.equal(providerDefault.swiss.enabled({from:{lat:46.2,lon:6.1},to:{lat:46.3,lon:6.2}}),true,'Suisse disponible indépendamment de TripGo');
+          const independent=makeProviders({CPTripGo:{plan:async()=>[],getKey:()=>''},CPRegionalRouting:{plan:async()=>({itineraries:[]}),supportsPublic:()=>true},CPSncfFallback:{plan:async()=>({itineraries:[]})}},{fetcher:async()=>({})});
+          assert.equal(independent.tripgo.enabled(),false,'TripGo non requis');
+          assert.equal(independent.regional.enabled({from:{lat:45.2,lon:5.7},to:{lat:45.1,lon:5.8}}),true,'Mobilites M sans TripGo');
+          assert.equal(independent.sncf.enabled({fromName:'Lyon',toName:'Chambery'}),true,'SNCF sans TripGo');
+          assert.equal(makeProviders(tripgoStub,{allowTripGo:true,fetcher:async()=>({})}).tripgo.enabled(),true,'TripGo uniquement sur activation explicite');
+
+          const hs={provider:'Cars Région Haute-Savoie',mode:'Bus',kind:'transit',line:'Y81',departure:'2026-11-16T08:00:00+01:00'};
+          assert.equal(fareFor(hs)?.amount,1.70,'Haute-Savoie Y81 : 1,70 €');
+          for(const line of ['Y03','Y04','Y13','Y82','Y86','Y91','Y94'])
+            assert.equal(fareFor({...hs,line})?.amount,1.70,'Haute-Savoie tarif plat '+line);
+          for(const line of ['Y02','Y21','Y22','Y51','Y62','Y63','272','274','Y99'])
+            assert.equal(fareFor({...hs,line}),null,'Ligne à grille distincte non tarifée arbitrairement '+line);
+          assert.equal(fareFor({...hs,provider:'Cars Région Savoie'}),null,'Pas de prix Haute-Savoie en Savoie');
+          assert.equal(fareFor({...hs,departure:'2026-02-28T08:00:00+01:00'}),null,'Grille 2026 hors période');
+          const startLeg={provider:"Star't Thonon",mode:'Bus',line:'142',departure:'2026-11-16T08:00:00+01:00',from:{name:'Les Arts'},to:{name:'Bons-en-Chablais Mairie'}};
+          assert.equal(fareFor(startLeg)?.amount,2.20,'STAR\u2019T A+B avec arrêts GTFS structurés');
+          assert.equal(fareFor({...startLeg,to:{name:'Arrêt inconnu'}}),null,'STAR\u2019T : aucune zone supposée');
+          const ainStructured={provider:'Cars Région Ain',mode:'Bus',line:'A01',departure:'2026-11-16T08:00:00+01:00'};
+          assert.equal(fareFor({...ainStructured,from:{name:'Beynost'},to:{name:'Meximieux'}}),null,'Ain : exception tarifaire détectée sur arrêt structuré');
+          assert.equal(fareFor({...ainStructured,from:'Meximieux',toPoint:{name:'Lyon'}}),null,'Ain : exception tarifaire détectée sur point GPS nommé');
+
+
+          // Isère : tableau officiel 01/03/2026, aucune zone inventée.
+          const isere=require('./transport-isere-zonal-fares.js');
+          const zoneEvidence={verified:true,traversedZones:['A','B','C'],source:'https://www.laregionvoustransporte.fr/'};
+          const q=zones=>isere.quote({zones,departure:'2026-11-16T08:00:00+01:00',zoneEvidence:{...zoneEvidence,traversedZones:zoneEvidence.traversedZones.slice(0,zones)}});
+          assert.deepEqual(isere.FULL.slice(1),[4.30,6.00,7.70,9.40,11.10,12.80]);
+          assert.deepEqual(isere.ECO.slice(1),[3.20,4.40,5.60,6.80,8.00,9.20]);
+          assert.equal(q(3)?.amount,7.70);
+          const zoneMap={stopA:'C',stopB:'B',stopC:'B',stopD:'A'};
+          const stopProof=isere.evidenceFromStops({stopIds:['stopA','stopB','stopC','stopD'],stopZones:zoneMap,source:'https://www.laregionvoustransporte.fr/',complete:true});
+          assert.deepEqual(stopProof?.traversedZones,['C','B','A'],'Comptage des zones uniques traversées');
+          assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00',zoneEvidence:stopProof})?.amount,7.70);
+          assert.equal(isere.evidenceFromStops({stopIds:['stopA','stopB','stopD'],stopZones:zoneMap,source:'https://www.laregionvoustransporte.fr/'}),null,'Trajet incomplet non certifié');
+          assert.equal(isere.evidenceFromStops({stopIds:['stopA','stopUnknown','stopD'],stopZones:zoneMap,source:'https://www.laregionvoustransporte.fr/',complete:true}),null,'Arrêt sans zone : pas de tarif');
+          assert.equal(isere.evidenceFromStops({stopIds:['stopA','stopB'],stopZones:zoneMap,source:'non vérifié',complete:true}),null,'Source officielle obligatoire');
+          assert.equal(isere.evidenceFromStops({stopIds:['stopA','stopB'],stopZones:zoneMap,source:'https://example.org/pretendue-grille',complete:true}),null,'Une URL arbitraire ne prouve pas les zones');
+
+          assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00',profile:'eco',zoneEvidence}),null,'Éco interdit sans justificatif');
+          assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00',profile:'eco',ecoEligible:true,zoneEvidence})?.amount,5.60,'Éco moins de 26 ans confirmé');
+          assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00',line:'Transaltitude',zoneEvidence}),null,'Transaltitude exclu');
+          assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00',network:'TER',zoneEvidence}),null,'Ne pas appliquer la grille Cars Isère au TER');
+
+          assert.equal(q(3)?.validityMinutes,120);
+          assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00'}),null,'Zones sans preuve : aucun prix');
+          assert.equal(isere.quote({zones:3,departure:'2026-11-16T08:00:00+01:00',zoneEvidence:{...zoneEvidence,traversedZones:['A','B']}}),null,'Zone intermédiaire manquante');
+          assert.equal(isere.quote({zones:3,departure:'2026-02-16T08:00:00+01:00',zoneEvidence}),null,'Date antérieure à la grille');
+
+          // TAM : livret officiel 2026, 1 voyage à 1,10 €, correspondances pendant 1 h.
+          const leg = {kind:'transit',mode:'Bus',provider:'TAM Ambérieu-en-Bugey',line:'TAM 2',departure:'2026-11-16T08:00:00+01:00'};
+          assert.equal(fareFor(leg)?.amount,1.10,'TAM : livret 2026');
+          assert.equal(fareFor({...leg,provider:'Cars Région Ain'})?.amount,2.30,'Cars Ain : tarif propre, pas TAM');
+          const ain={...leg,provider:'Cars Région Ain',line:'A20',from:'Belleville',to:'Bourg-en-Bresse'};
+          assert.equal(fareFor(ain)?.amount,2.30,'Cars Région Ain : tarif officiel depuis mars 2026');
+          assert.equal(fareFor({...ain,departure:'2026-02-28T08:00:00+01:00'}),null,'Ancienne période non couverte');
+          assert.equal(fareFor({...ain,line:'A32'}),null,'RUBIS : dérogation non tarifée à 2,30 €');
+          assert.equal(fareFor({...ain,from:'Neyron'}),null,'Colibri / billet spécial Neyron');
+          assert.equal(fareFor({...ain,to:'Lyon'}),null,'Dérogation TCL');
+          assert.equal(fareFor({...ain,to:'Beynost'}),null,'Dérogation Colibri');
+          assert.equal(fareFor({...ain,provider:'Cars Région Savoie'}),null,'Pas de tarif Ain appliqué en Savoie');
+
+          const urban = {kind:'transit',mode:'Bus',provider:"Star't Thonon",line:'A',departure:'2026-11-16T08:00:00+01:00'};
+          assert.equal(fareFor(urban)?.amount,1.20,'STAR’T ligne urbaine A : zone A');
+          assert.equal(fareFor({...urban,line:'142'}),null,'STAR’T ligne 142 : zone non prouvée');
+          assert.equal(fareFor({...urban,line:'L'}),null,'STAR’T ligne L : zone non prouvée');
+          assert.equal(fareFor({...urban,provider:"J'y bus Rumilly",line:'J4'})?.amount,1.00,'J’ybus : ticket unité confirmé (jybus.fr)');
+          assert.equal(fareFor({...urban,provider:'Cars Région Haute-Savoie'}),null,'Ne pas attribuer STAR’T aux Cars Région');
+          // L'option carnet Pass Ondéa doit être visible sur les lignes 400–419.
+          const hubSource=fs.readFileSync('transport-mission-hub.js','utf8');
+          assert.match(hubSource,/Option : carnet de 10 voyages à 14,50 €/);
+          assert.match(hubSource,/\^ond\[ée\]a\\b\/i/,'Motif Ondéa correctement échappé');
+          assert.match(hubSource,/\(\?:40\\d\|41\\d\)/,'Motif lignes 400–419 correctement échappé');
+          // Ondéa 419 : ligne de proximité scolaire, ne jamais y appliquer le M-Ticket urbain.
+          const ondea={kind:'transit',mode:'Bus',provider:'Ondéa Aix-les-Bains',line:'419',departure:'2026-11-16T08:00:00+01:00'};
+          assert.equal(fareFor(ondea),null,'Ondéa 419 : tarif unitaire non prouvé');
+          assert.equal(fareFor({...ondea,line:'400'}),null,'Ondéa 400 : exclusion scolaire');
+          assert.equal(fareFor({...ondea,line:'1'})?.amount,1.70,'Ondéa 1 : tarif urbain');
+          // Régressions : zones, dates et opérateurs doivent rester strictement contrôlés.
+          assert.equal(fareFor({...leg,line:'TAM 1',departure:'2026-12-31T23:00:00+01:00'})?.amount,1.10);
+          assert.equal(fareFor({...leg,departure:'2025-12-31T23:00:00+01:00'}),null);
+          assert.equal(fareFor({...urban,line:'NL'})?.amount,1.20);
+          assert.equal(fareFor({...urban,line:'142',provider:"THONON-LES-BAINS - STAR'T"}),null);
+          assert.equal(fareFor({...urban,line:'A',provider:'Cars Région Haute-Savoie'}),null);
+          assert.equal(fareFor({...urban,line:'A',departure:'2027-01-01T08:00:00+01:00'}),null);
+          assert.equal(fareFor({...urban,line:'A',mode:'Train'}),null);
+          assert.equal(fareFor({...urban,line:'A',provider:''}),null);
+          assert.equal(fareFor({...urban,line:'A',kind:'walk'}),null);
+          const interzone={...urban,line:'142',from:'Les Arts',to:'Mairie'};
+          assert.equal(fareFor(interzone)?.amount,2.20,'STAR’T 142 Les Arts → Mairie');
+          assert.equal(fareFor({...interzone,line:'L'})?.amount,2.20,'STAR’T L Les Arts → Mairie');
+          assert.equal(fareFor({...interzone,to:'Collège F.Mugnier'}),null,'Zone du terminus non confirmée');
+          assert.equal(fareFor({...interzone,provider:'But'}),null,'Autre opérateur non assimilé');
+          {const sz=(f,t,line='142')=>fareFor({...urban,line,gtfsRaw:{from:f,to:t}});
+           assert.equal(sz('AL_MACH1','BC_CFMU2')?.amount,2.20,'STAR’T Allinges (A) → Bons (B)');
+           assert.equal(sz('AL_MACH1','AL_NOYE1')?.amount,1.20,'STAR’T interne zone A');
+           assert.equal(sz('BC_CFMU2','BC_CFMU2')?.network,"STAR'T zone B",'STAR’T interne zone B');
+           assert.equal(sz('NER_CHL1','AL_MACH1'),null,'Commune et zone_id discordants : pas de prix');
+           assert.equal(sz('AL_MACH1','INCONNU'),null,'Arrêt inconnu : pas de prix');
+           assert.equal(sz('AL_MACH1','BC_CFMU2','271'),null,'271 exclue');assert.equal(sz('AL_MACH1','BC_CFMU2','SBON'),null,'Scolaire exclue');}
+          assert.equal(fareFor({...interzone,departure:'2027-01-01T08:00:00+01:00'}),null,'Tarif expiré');
+          // Deux grilles concurrentes pour une même portion ne donnent aucun prix.
+          const star = require('./transport-fare-grids.js').GRIDS.find(g=>g.network==="STAR'T zone A");
+          assert.ok(star,'Grille STAR’T présente');
+          assert.equal(fareFor(urban,[star,{...star}]),null);
+          // Si un moteur renvoie un prix incomplet, le registre officiel reste consulté.
+          const {priceOf}=require('./transport-mission-hub.js');
+          const gridFare=require('./transport-fare-grids.js').fareFor;
+          const bus={...urban,kind:'transit',fare:{amount:0,currency:'EUR'}};
+          const priced=priceOf({walkOnly:false,legs:[bus]},gridFare);
+          assert.equal(priced.status,'verified');
+          assert.equal(priced.amounts.EUR,1.20);
+          assert.equal(priced.legFares.length,1,'Un tarif résolu par portion');
+          assert.equal(priced.legFares[0].amount,1.20,'La carte affiche le tarif officiel résolu');
+          const withWalk=priceOf({walkOnly:false,legs:[{kind:'walk'},bus]},gridFare);
+          assert.equal(withWalk.legFares.length,2,'Marche et bus alignés dans les détails');
+          assert.equal(withWalk.legFares[0],null,'Marche sans billet');
+          assert.equal(withWalk.legFares[1].amount,1.20,'Billet du bus à la bonne position');
+          assert.equal(priceOf({walkOnly:false,legs:[{...bus,provider:'Opérateur inconnu'}]},gridFare).status,'unknown');
+          // Une correspondance sur le même réseau pendant la validité ne se repaie pas.
+          const first={...urban,kind:'transit',line:'A',departure:'2026-11-16T08:00:00+01:00'};
+          const second={...urban,kind:'transit',line:'B',departure:'2026-11-16T08:35:00+01:00'};
+          const sameTicket=priceOf({walkOnly:false,legs:[first,second]},gridFare);
+          assert.equal(sameTicket.status,'verified');
+          assert.equal(sameTicket.amounts.EUR,1.20);
+          const later=priceOf({walkOnly:false,legs:[first,{...second,departure:'2026-11-16T09:05:00+01:00'}]},gridFare);
+          assert.equal(later.amounts.EUR,2.40,'Nouveau ticket après expiration');
+          const mixed=priceOf({walkOnly:false,legs:[first,{...second,provider:'Opérateur inconnu'}]},gridFare);
+          assert.equal(mixed.status,'unknown','Un segment inconnu bloque le prix complet');
+          assert.equal(mixed.partial,'1,20 €','Montant partiel visible');
+          const official={...bus,fare:{amount:1.50,currency:'EUR',source:'billet fournisseur'}};
+          assert.equal(priceOf({walkOnly:false,legs:[official]},gridFare).amounts.EUR,1.50);
+          // unireso Tout Genève (zone 10) : 3,00 CHF seulement si les deux arrêts sont prouvés dans le canton.
+          const z=(provider,mode,from,to,departure='2026-11-16T08:00:00+01:00')=>fareFor({provider,mode,from,to,departure});
+          assert.equal(z('TPG','Tram','Genève-Eaux-Vives, gare','Genève, Bel-Air')?.amount,3.00);
+          assert.equal(z('TPG','Tram','Genève-Eaux-Vives, gare','Genève, Bel-Air')?.currency,'CHF');
+          assert.equal(z('SBB','Train','Lancy-Bachet','Genève')?.amount,3.00,'Train CFF interne à la zone 10');
+          assert.equal(z('TPG','Bus','Lancy-Bachet, gare','Saint-Julien, centre')?.network,'Léman Pass multizones 10+230','Transfrontalier : jamais le billet zone 10, mais le multizones officiel');
+          assert.equal(z('TPG','Bus','Collonges, marché','Lancy-Bachet, gare')?.currency,'EUR','Arrêt français : jamais le billet zone 10 en CHF');
+          assert.equal(z('SBB','Train','Annemasse','Genève')?.amount,4.90,'Annemasse hors zone 10 : Léman Pass 10+210, jamais le billet zone 10');
+          assert.equal(z('SBB','Train','Genève','Lausanne'),null,'Tarif national suisse non couvert');
+          assert.equal(z('TPG','Tram','Genève, a','Genève, b','2026-12-20T08:00:00+01:00'),null,'Hors période vérifiée');
+          for(const line of ['271','272','274','B 272'])assert.equal(fareFor({provider:'TPG',mode:'Bus',line,from:'Genève, gare routière',to:'Genève, Bel-Air',departure:'2026-11-16T08:00:00+01:00'}),null,'Car transfrontalier '+line+' : titre de parcours propre, jamais le billet zone 10');
+          assert.equal(fareFor({provider:'TPG',mode:'Bus',line:'B 44',from:'Croix-de-Rozon, douane',to:'Carouge GE, Rondeau',departure:'2026-11-16T08:00:00+01:00'})?.amount,3.00);
+          // Ligne 272 : grille officielle par couple de communes (tpg, 14/12/2025 → 12/12/2026) ; arrêt non recoupé = pas de prix.
+          const sid=(c,n)=>'FR:'+c+':ZE:'+n+':HAUTExSAVOIE';
+          const l272=(a,b,departure='2026-11-16T08:00:00+01:00')=>fareFor({provider:'Cars Région Haute-Savoie',mode:'Bus',line:'272',departure,gtfsRaw:{from:a,to:b}});
+          assert.equal(l272(sid('74010','57539'),sid('6623','57862'))?.amount,11.30,'Annecy → Genève : zone 5');
+          assert.equal(l272(sid('74010','57539'),sid('6623','57862'))?.combined?.amount,14.50,'Parcours + zone 10');
+          assert.equal(l272(sid('74243','57962'),sid('6623','57862'))?.amount,4.80,'Saint-Julien → Genève : multizones 10+230');
+          assert.equal(l272(sid('74010','57539'),sid('74096','58577'))?.amount,3.80,'Annecy → Cruseilles : zone 2');
+          assert.equal(l272(sid('74096','58577'),sid('74010','57539'))?.amount,3.80,'grille symétrique');
+          assert.equal(l272(sid('74010','57539'),sid('74010','57875')),null,'Annecy ↔ Pringy : zone Sibra, pas de prix ici');
+          assert.equal(l272(sid('74282','58653'),sid('74010','57539')),null,'arrêt non recoupé');
+          assert.equal(l272(sid('74010','99999'),sid('6623','57862')),null,'arrêt inconnu');
+          assert.equal(l272(sid('74010','57539'),sid('6623','57862'),'2026-12-20T08:00:00+01:00'),null,'hors validité de la grille');
+          assert.equal(fareFor({provider:'Cars Région Haute-Savoie',mode:'Bus',line:'274',departure:'2026-11-16T08:00:00+01:00',gtfsRaw:{from:sid('6623','57862'),to:sid('6608','58821')}}),null,'274 : grille non intégrée');
+          assert.equal(fareFor({provider:'TPG',mode:'Bus',line:'B 80',from:'Saint-Julien, centre',to:'Lancy-Bachet, gare',departure:'2026-11-16T08:00:00+01:00'})?.amount,4.80);
+          assert.equal(fareFor({provider:'TPG',mode:'Bus',line:'B 82',from:'Collonges, marché',to:'Lancy-Bachet, gare',departure:'2026-11-16T08:00:00+01:00'})?.amount,4.80,'Collonges : zone 230 officielle (lemanpass.com)');
+          assert.equal(fareFor({provider:'TPG',mode:'Bus',line:'B 82',from:'Archamps, technopole',to:'Lancy-Bachet, gare',departure:'2026-11-16T08:00:00+01:00'}),null,'Archamps : zone non prouvée');
+          {const l=(f,t,line='274')=>fareFor({kind:'transit',mode:'Bus',provider:'Cars Région Haute-Savoie',line,departure:'2026-11-16T07:00:00.000Z',gtfsRaw:{from:f,to:t}});
+           const S='FR:74256:ZE:58792:HAUTExSAVOIE',B='FR:74042:ZE:58718:HAUTExSAVOIE',F='FR:74128:ZE:75337:HAUTExSAVOIE',N='FR:74197:ZE:58716:HAUTExSAVOIE',G='FR:6621:ZE:58825:HAUTExSAVOIE',A='FR:6623:ZE:57862:HAUTExSAVOIE';
+           assert.equal(l(S,G).amount,11.40,'274 Sallanches → Genève');assert.equal(l(S,G).combined.amount,14.60);
+           assert.equal(l(A,B).amount,6.40,'274 Aéroport → Bonneville');assert.equal(l(F,G).amount,4.60,'274 Fillinges → Genève');
+           assert.equal(l(N,G),null,'274 Nangy : commune non recoupée, pas de prix');
+           assert.equal(l(A,G),null,'274 interne Genève : pas de prix');assert.equal(l(S,B),null,'274 interne France : pas de prix');}
+          console.log('Exclusions, validité et ambiguïtés tarifaires OK');
+          NODE
+      - name: Vérifier le tarif GTFS officiel embarqué TCL (Fares V1)
+        run: |
+          node --check transport-gtfs-fares.js
+          node <<'NODE'
+          // TCL ne figure pas dans transport-fare-grids.js : son flux officiel relayé
+          // (data/gtfs/tcl-lyon.zip, zone Part-Dieu/Bellecour/Perrache) publie lui-même
+          // fare_attributes.txt/fare_rules.txt (Fares V1 SYTRAL), déjà lus par le mécanisme
+          // générique transport-gtfs-fares.js — ajouter une grille statique serait redondant
+          // (le tarif GTFS gagne déjà, cf. isVerifiedFare dans transport-mission-hub.js) et
+          // faux pour les lignes ambiguës (F1/F2/7601, deux tarifs officiels distincts chacune).
+          // Ce test prouve en CI, sur l'archive réellement publiée, que : (1) les lignes
+          // normales renvoient bien 2,10 € (conforme au guide tarifaire officiel tcl.fr, zones
+          // 1+2, mai 2026) ; (2) les lignes ambiguës ne renvoient AUCUN prix plutôt qu'un prix
+          // fabriqué.
+          const assert=require('node:assert/strict');
+          const fs=require('node:fs');
+          const loader=require('./transport-gtfs-loader.js');
+          const gtfsIndex=require('./transport-gtfs-index.js');
+          const CPGTFSFares=require('./transport-gtfs-fares.js');
+          (async()=>{
+            const buf=fs.readFileSync('data/gtfs/tcl-lyon.zip');
+            const extracted=await loader.extractGTFS(buf,loader.DEFAULT_LIMITS);
+            const index=gtfsIndex.buildIndex(extracted.files,{});
+            assert.ok(index.counts.routes>0,'Flux TCL filtré vide ou absent');
+            const prepared=CPGTFSFares.prepare(extracted.files);
+            assert.ok(prepared.fares.size>0,'Aucun tarif Fares V1 dans le flux TCL — régression du filtrage serveur');
+            const tripsByRoute=new Map();
+            for(const t of index.tripById.values()){
+              if(!tripsByRoute.has(t.route_id))tripsByRoute.set(t.route_id,t);
+            }
+            const fareOf=routeId=>{
+              const t=tripsByRoute.get(routeId);assert.ok(t,'Ligne '+routeId+' absente du flux filtré');
+              const times=index.timesByTrip.get(t.trip_id)||[];
+              assert.ok(times.length>=2,'Horaires manquants pour la ligne '+routeId);
+              return CPGTFSFares.legFare(prepared,index,{tripId:t.trip_id,from:times[0].stop_id,to:times[times.length-1].stop_id});
+            };
+            for(const routeId of ['31','125','108']){
+              const fare=fareOf(routeId);
+              assert.ok(fare,'Tarif attendu manquant pour la ligne '+routeId);
+              assert.equal(fare.amount,2.10,'Ligne '+routeId+' : 2,10 € attendu (zones 1+2, tcl.fr mai 2026)');
+              assert.equal(fare.currency,'EUR');
+              assert.equal(fare.transferMinutes,60,'Correspondance 1 h attendue');
+            }
+            for(const routeId of ['F1','F2','7601']){
+              assert.equal(fareOf(routeId),null,'Ligne '+routeId+' : deux tarifs officiels distincts, aucun prix ne doit être inventé');
+            }
+            // Chemin réel des fiches mission : le fournisseur local_tcl doit transmettre ce tarif jusqu'au prix affiché.
+            globalThis.window=globalThis;
+            for(const f of ['transport-fare-grids.js','transport-gtfs-time.js','transport-catalogue.js'])require('./'+f);
+            const hub=require('./transport-mission-hub.js');
+            const providers=hub.makeProviders({CPGTFSLoader:loader,CPGTFSIndex:gtfsIndex,CPGTFSFares},
+              {fetcher:async()=>new Response(buf,{status:200,headers:{'content-type':'application/zip'}})});
+            const journeys=await providers.local_tcl.run({from:{lat:45.7606,lon:4.8594},to:{lat:45.7578,lon:4.8322},
+              earliestDeparture:'2026-11-16T08:00:00+01:00'});
+            assert.ok(journeys.length>0,'Aucun trajet TCL Part-Dieu → Bellecour');
+            const prices=journeys.map(j=>hub.priceOf(j,null));
+            const verified=prices.filter(p=>p.status==='verified');
+            assert.ok(verified.length>0,'Le tarif GTFS TCL doit atteindre les fiches mission');
+            assert.ok(verified.every(p=>p.amounts.EUR===2.10),'Seul 2,10 € est attendu sur les lignes sans ambiguïté');
+            // Candidats sans intérêt (marche d'accès + de sortie ≥ trajet direct) écartés avant le quota de marches.
+            const lyon={from:{lat:45.7606,lon:4.8594},to:{lat:45.7578,lon:4.8322}};
+            assert.equal(hub.walkDetour({legs:[{mode:'Bus',fromPoint:{lat:45.7672,lon:4.8128},toPoint:{lat:45.7700,lon:4.8160}}]},lyon),true,'Détour inutile non détecté');
+            assert.equal(hub.walkDetour({legs:[{mode:'Bus',fromPoint:{lat:45.7610,lon:4.8580},toPoint:{lat:45.7575,lon:4.8330}}]},lyon),false,'Trajet utile écarté à tort');
+            assert.equal(hub.walkDetour({legs:[{mode:'Bus'}]},lyon),false,'Sans GPS d’arrêt : aucune élimination');
+            console.log('Tarif GTFS officiel embarqué TCL (Fares V1) vérifié sur l’archive publiée : 2,10 € confirmé, ambiguïtés F1/F2/7601 correctement sans prix');
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          NODE
+      - name: Vérifier la présence de TripGo
+        env:
+          CP_TRIPGO_KEY: ${{ secrets.CP_TRIPGO_KEY }}
+        run: |
+          if [ -n "$CP_TRIPGO_KEY" ]; then
+            echo 'TripGo : secret configuré (valeur masquée)'
+          else
+            echo '::warning::TripGo : CP_TRIPGO_KEY absent ou vide ; diagnostic sans TripGo'
+          fi
+      - name: Diagnostic réel
+        env:
+          CP_TRIPGO_KEY: ${{ secrets.CP_TRIPGO_KEY }}
+        run: node scripts/diagnostic-transports-reel.cjs
+      - name: Contrôler la cohérence des résultats tarifaires
+        run: |
+          node - <<'NODE'
+          const assert = require('node:assert/strict');
+          const report = require('./docs/diagnostic-serveur.json');
+          const axes = report.axes;
+          const sum = key => axes.reduce((n,a)=>n+a[key],0);
+          assert.equal(report.totals.axes,axes.length);
+          assert.equal(report.totals.trips,sum('trips'));
+          assert.equal(report.totals.priced,sum('priced'));
+          assert.equal(report.totals.partialPricedJourneys,sum('partialPricedJourneys'));
+          assert.ok(report.totals.priced<=report.totals.trips);
+          assert.ok(report.totals.partialPricedJourneys+report.totals.priced<=report.totals.trips);
+          for(const axis of axes){
+           assert.ok(axis.priced+axis.partialPricedJourneys<=axis.trips,axis.id);
+           assert.ok(axis.missingFareSamples&&axis.partialMissingLineSamples,axis.id);
+           for(const lines of Object.values(axis.partialMissingLineSamples)){
+            assert.ok(lines.length<=5,axis.id);
+           }
+           for(const samples of Object.values(axis.missingFareSamples)){
+            assert.ok(samples.length<=3,axis.id);
+           }
+          }
+          const combined = {};
+          for(const a of axes)for(const [operator,n] of Object.entries(a.partialMissingByOperator)){
+           combined[operator]=(combined[operator]||0)+n;
+          }
+          assert.deepEqual(report.totals.partialMissingByOperator,combined);
+          console.log('Rapport cohérent : '+report.totals.priced+' trajets tarifés, '+report.totals.partialPricedJourneys+' partiels');
+          NODE
+      - name: Bilan de couverture
+        run: node scripts/bilan-couverture-transports.cjs
+      - name: Sauvegarder les rapports comme artefact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostic-transports-${{ github.run_id }}
+          path: |
+            docs/diagnostic-serveur.json
+            docs/DIAGNOSTIC-SERVEUR.md
+            docs/BILAN-COUVERTURE-TRANSPORTS.md
+            docs/audit-national-aura-axes.json
+            docs/audit-national-aura-transfers.json
+            docs/audit-grand-geneve-local-stops.json
+            docs/audit-tac-saint-julien-archamps.json
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Publier le rapport
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -- docs/diagnostic-serveur.json docs/DIAGNOSTIC-SERVEUR.md docs/BILAN-COUVERTURE-TRANSPORTS.md
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Diagnostic réel des transports (serveur)'
+          # Un diagnostic concurrent peut avoir modifié la branche pendant le calcul.
+          # Rebaser le commit de rapport plutôt que forcer ou écraser les changements.
+          for attempt in 1 2 3; do
+            git fetch origin "${GITHUB_REF_NAME}"
+            if ! git rebase "origin/${GITHUB_REF_NAME}"; then
+              git rebase --abort || true
+              echo '::warning::Conflit sur les rapports : artefact conservé, publication Git annulée sans forcer'
+              exit 0
+            fi
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then
+              echo 'Rapport publié'
+              exit 0
+            fi
+            echo "Nouvelle modification distante ; tentative ${attempt}/3"
+          done
+          echo '::error::Branche modifiée durant les tentatives ; publication annulée'
+          exit 1

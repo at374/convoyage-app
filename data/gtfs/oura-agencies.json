@@ -1,0 +1,222 @@
+[
+ {
+  "agency_id": "AIXxLESxBAINS:Network:1:LOC",
+  "agency_name": "AIX-LES-BAINS - Ondéa",
+  "routes": 63
+ },
+ {
+  "agency_id": "ALLIER:Network:1:LOC",
+  "agency_name": "REGION - cars Région Allier",
+  "routes": 132
+ },
+ {
+  "agency_id": "ANNEMASSE:Network:1:LOC",
+  "agency_name": "ANNEMASSE - TAC",
+  "routes": 8
+ },
+ {
+  "agency_id": "ANNONAY:Network:1:LOC",
+  "agency_name": "ANNONAY - CoqueliGO",
+  "routes": 4
+ },
+ {
+  "agency_id": "ARDECHE:Network:1:LOC",
+  "agency_name": "REGION - cars Région Ardèche",
+  "routes": 113
+ },
+ {
+  "agency_id": "ARLYSERE:Network:1:LOC",
+  "agency_name": "ALBERTVILLE - TRA Mobilité",
+  "routes": 11
+ },
+ {
+  "agency_id": "AUBENAS:Network:1:LOC",
+  "agency_name": "AUBENAS - Tout'enbus",
+  "routes": 19
+ },
+ {
+  "agency_id": "AURILLAC:Network:1:LOC",
+  "agency_name": "AURILLAC - Trans'Cab",
+  "routes": 25
+ },
+ {
+  "agency_id": "BONNEVILLE:Network:1:LOC",
+  "agency_name": "BONNEVILLE-LA ROCHE-REIGNIER-VIUZ - Proxim iTi",
+  "routes": 18
+ },
+ {
+  "agency_id": "BOURGOINxJALLIEU:Network:1:LOC",
+  "agency_name": "BOURGOIN-JALLIEU - Ruban",
+  "routes": 35
+ },
+ {
+  "agency_id": "CARxREGIONxCANTAL:Network:1:LOC",
+  "agency_name": "REGION - cars Région Cantal",
+  "routes": 19
+ },
+ {
+  "agency_id": "CARSxREGIONxAIN:Network:1:LOC",
+  "agency_name": "REGION - cars Région Ain",
+  "routes": 31
+ },
+ {
+  "agency_id": "CARSxREGIONxEXPRESS:Network:68C98CEBxE665x4AEExB3BCx075984C5278E:LOC",
+  "agency_name": "REGION - cars Région Express",
+  "routes": 13
+ },
+ {
+  "agency_id": "CARSxREGIONxLOIRE:Network:1:LOC",
+  "agency_name": "REGION - cars Région Loire",
+  "routes": 357
+ },
+ {
+  "agency_id": "CHAMONIX:Network:1:LOC",
+  "agency_name": "CHAMONIX - Chamonix Bus",
+  "routes": 23
+ },
+ {
+  "agency_id": "COLIBRI:Network:1:LOC",
+  "agency_name": "MIRIBEL - Colibri",
+  "routes": 1
+ },
+ {
+  "agency_id": "DROME:Network:1:LOC",
+  "agency_name": "REGION - cars Région Drôme",
+  "routes": 134
+ },
+ {
+  "agency_id": "EVIAN:Network:1:LOC",
+  "agency_name": "EVIAN - ÉVA'D",
+  "routes": 10
+ },
+ {
+  "agency_id": "GRANDxCHAMBERY:Network:1:LOC",
+  "agency_name": "CHAMBERY - Synchro Mobilités",
+  "routes": 24
+ },
+ {
+  "agency_id": "HAUTExLOIRE:Network:1:LOC",
+  "agency_name": "REGION - cars Région Haute-Loire",
+  "routes": 20
+ },
+ {
+  "agency_id": "HAUTExSAVOIE:Network:1:LOC",
+  "agency_name": "REGION - cars Région Haute-Savoie",
+  "routes": 24
+ },
+ {
+  "agency_id": "ISERE:Network:1:LOC",
+  "agency_name": "REGION - cars Région Isère",
+  "routes": 502
+ },
+ {
+  "agency_id": "MOBIVALS:Network:1:LOC",
+  "agency_name": "VALSERHÔNE - Mobi'Vals",
+  "routes": 12
+ },
+ {
+  "agency_id": "MONTELIMAR:Network:1:LOC",
+  "agency_name": "MONTELIMAR - Montélibus",
+  "routes": 35
+ },
+ {
+  "agency_id": "MONTLUCON:Network:1:LOC",
+  "agency_name": "MONTLUCON - Maelis",
+  "routes": 20
+ },
+ {
+  "agency_id": "MONTLUEL:Network:1:LOC",
+  "agency_name": "MONTLUEL - TICO 3CM",
+  "routes": 1
+ },
+ {
+  "agency_id": "MOULINS:Network:1:LOC",
+  "agency_name": "MOULINS - Aléo",
+  "routes": 11
+ },
+ {
+  "agency_id": "OYONNAX:Network:1:LOC",
+  "agency_name": "OYONNAX - DUOBUS",
+  "routes": 8
+ },
+ {
+  "agency_id": "PEAGExROUSSILLON:Network:1:LOC",
+  "agency_name": "LE-PEAGE-DE-ROUSSILLON - Le 37",
+  "routes": 4
+ },
+ {
+  "agency_id": "PRIVAS:Network:1:LOC",
+  "agency_name": "PRIVAS - T'CAP",
+  "routes": 11
+ },
+ {
+  "agency_id": "PUYxENxVELAY:Network:1:LOC",
+  "agency_name": "LE-PUY-EN-VELAY – Mobilité en Velay",
+  "routes": 20
+ },
+ {
+  "agency_id": "RIOM:Network:1:LOC",
+  "agency_name": "RIOM - RLV Mobilités",
+  "routes": 9
+ },
+ {
+  "agency_id": "RUBIS:Network:1:LOC",
+  "agency_name": "BOURG-EN-BRESSE - Rubis",
+  "routes": 10
+ },
+ {
+  "agency_id": "RUMILLY:Network:1:LOC",
+  "agency_name": "RUMILLY - J'ybus",
+  "routes": 5
+ },
+ {
+  "agency_id": "SAONIBUS:Network:1:LOC",
+  "agency_name": "TREVOUX - Saônibus",
+  "routes": 2
+ },
+ {
+  "agency_id": "SAVOIE:Network:1:LOC",
+  "agency_name": "REGION - cars Région Savoie",
+  "routes": 8
+ },
+ {
+  "agency_id": "STAR:Network:1:LOC",
+  "agency_name": "ROANNE - Star",
+  "routes": 20
+ },
+ {
+  "agency_id": "TAINxTOURNON:Network:1:LOC",
+  "agency_name": "TAIN-TOURNON - ARCHE AGGLO LE BUS",
+  "routes": 7
+ },
+ {
+  "agency_id": "TAM:Network:1:LOC",
+  "agency_name": "AMBERIEU-EN-BUGEY - Tam",
+  "routes": 4
+ },
+ {
+  "agency_id": "THIERS:Network:1:LOC",
+  "agency_name": "THIERS - SMTUT",
+  "routes": 57
+ },
+ {
+  "agency_id": "THONON:Network:1:LOC",
+  "agency_name": "THONON-LES-BAINS - STAR'T",
+  "routes": 25
+ },
+ {
+  "agency_id": "VICHY:Network:1:LOC",
+  "agency_name": "VICHY - MobiVie",
+  "routes": 9
+ },
+ {
+  "agency_id": "VIENNE:Network:1:LOC",
+  "agency_name": "VIENNE - L’va",
+  "routes": 49
+ },
+ {
+  "agency_id": "PANODESDOMES:Network:1:LOC",
+  "agency_name": "PUY-DE-DOME - Navette Panoramique des Dômes",
+  "routes": 1
+ }
+]

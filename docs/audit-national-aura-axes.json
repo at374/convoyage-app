@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-16",
+  "scope": "static national GTFS direct journeys only; no ticket price or live availability",
+  "axes": {
+    "annecy-lyon": {
+      "sncf": 9,
+      "blablacarBus": 0,
+      "flixbus": 0
+    },
+    "chambery-lyon": {
+      "sncf": 15,
+      "blablacarBus": 0,
+      "flixbus": 0
+    },
+    "amberieu-lyon": {
+      "sncf": 42,
+      "blablacarBus": 0,
+      "flixbus": 0
+    },
+    "chambery-saintJulien": {
+      "sncf": 0,
+      "blablacarBus": 0,
+      "flixbus": 0
+    },
+    "annecy-annemasse": {
+      "sncf": 19,
+      "blablacarBus": 2,
+      "flixbus": 2
+    },
+    "saintJulien-archamps": {
+      "sncf": 0,
+      "blablacarBus": 0,
+      "flixbus": 0
+    }
+  }
+}

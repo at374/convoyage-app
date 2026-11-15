@@ -1,0 +1,15 @@
+{
+  "date": "2026-11-16",
+  "operator": "sncf",
+  "scope": "one-transfer GTFS candidates only; no verified fares or real-time service",
+  "axes": {
+    "chambery-saintJulien": {
+      "candidates": 7,
+      "searchTruncated": false
+    },
+    "saintJulien-archamps": {
+      "candidates": 0,
+      "searchTruncated": false
+    }
+  }
+}

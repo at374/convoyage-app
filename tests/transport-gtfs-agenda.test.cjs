@@ -19,7 +19,7 @@ function row(extra={}){return {tripId:'T',from:'A',to:'B',line:'Y51',timeZone:'E
  departure:'2026-11-02T11:00:00Z',arrival:'2026-11-02T12:00:00Z',
  originStop:{name:'École <script>',lat:45.67,lon:6.39},destinationStop:{name:'Annecy',lat:45.9,lon:6.1},accessDistanceMeters:10,egressDistanceMeters:20,...extra};}
 test('geographic selection is a bounded heuristic and requires two valid points and HTTPS GTFS',()=>{
- const resource=agenda.DEFAULT_RESOURCES[0];
+ const resource=agenda.DEFAULT_RESOURCES.find(r=>r.id==='oura-haute-savoie');
  assert.equal(agenda.selected(resource,task),true);
  assert.equal(agenda.selected(resource,{...task,to:null}),false);
  assert.equal(agenda.selected(resource,{...task,to:{lat:48.8,lon:2.3}}),false);
@@ -285,12 +285,13 @@ test('Grenoble local tasks select only the two official Grenoble resources',asyn
  await session.done;
  assert.equal(calls.length,1);assert.equal(calls[0].resources.length,2);
  assert.deepEqual(calls[0].resources.map(r=>r.datasetId),['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f']);
- assert.ok(calls[0].resources.every(r=>r.resolveFromCatalogue));
+ // 14/11/2026 : copie relayée par le serveur d'abord, source officielle data.gouv.fr toujours présente en secours.
+ assert.ok(calls[0].resources.every(r=>/\/data\/gtfs\/mreso-[a-z]+\.zip$/.test(r.url)&&r.fallbackUrls.some(u=>u.startsWith('https://www.data.gouv.fr/api/1/datasets/r/'))));
  assert.match(target.textContent,/Métropole grenobloise/);assert.match(target.textContent,/Grésivaudan/);
  assert.doesNotMatch(target.textContent,/Cars Région Haute-Savoie|Sibra/);
  session.dispose();
  const outside={...local,from:point};
- assert.equal(agenda.DEFAULT_RESOURCES.some(r=>agenda.selected(r,outside)),false);
+ assert.equal(agenda.DEFAULT_RESOURCES.some(r=>agenda.selected(r,outside)&&!r.broad),false);
 });
 
 test('Agenda collapses equivalent departures from different GTFS trip IDs',async()=>{
@@ -325,9 +326,12 @@ test('Grenoble to Crolles remains within both metropolitan and Grésivaudan GTFS
  const grenoble={lat:45.1885,lon:5.7245},crolles={lat:45.276,lon:5.883};
  const trip={label:'Jonction mission',from:grenoble,to:crolles,
   earliestDeparture:'2026-11-02T09:00:00+01:00',latestArrival:'2026-11-02T12:00:00+01:00'};
- const eligible=agenda.DEFAULT_RESOURCES.filter(resource=>agenda.selected(resource,trip));
+ // Les cars régionaux « de dernier recours » (broad) peuvent aussi couvrir l'enveloppe, mais restent après les réseaux urbains.
+ const eligible=agenda.DEFAULT_RESOURCES.filter(resource=>agenda.selected(resource,trip)&&!resource.broad);
  assert.deepEqual(eligible.map(resource=>resource.datasetId),
   ['5af03701b595081c1880a8a4','5eb3510a4efd8f649ffe1b9f']);
+ const all=agenda.DEFAULT_RESOURCES.filter(resource=>agenda.selected(resource,trip));
+ assert.ok(all.findIndex(r=>r.broad)<0||all.findIndex(r=>r.broad)>=2,'cars régionaux classés après les réseaux urbains');
  const target=panel(),calls=[];
  const session=agenda.mount(target,{tasks:[trip],clientFactory:()=>({
   loadNetworks:async(resources,options)=>{
@@ -770,7 +774,7 @@ test('Android PWA offline cache includes every versioned entrypoint script',()=>
  for(const script of scripts){
   assert.ok(worker.includes("'"+script+"'"),'Missing Android offline script: '+script);
  }
- assert.match(worker,/const CACHE = 'cp-app-transport-results-cards-20261105-v\d+'/);
+ assert.match(worker,/const CACHE = 'cp-app-transport-results-cards-\d{8}-v\d+'/);
 });
 
 test('Android PWA offline cache retains the transport worker and app shell',()=>{
@@ -825,4 +829,30 @@ test('Mobile regional transport cards cover Aller Jonction Retour and safe stop 
  assert.match(app,/encodeURIComponent\(stop\)/);
  assert.match(app,/position exacte non vérifiée/);
  assert.match(app,/Transport non confirmé/);
+});
+
+test('le flux GTFS local le plus précis est retenu à la place du flux départemental large (diagnostic du 13/11/2026)',()=>{
+ const pick=(from,to)=>{const p=agenda.chooseResources(agenda.DEFAULT_RESOURCES,[{from,to}]);return [p.resource,...p.partners].map(r=>r.id);};
+ assert.deepEqual(pick({lat:45.6886,lon:5.9153},{lat:45.6427,lon:5.8726}),['71223','82272']);           // Aix → Technolac : Ondéa
+ assert.deepEqual(pick({lat:46.3705,lon:6.4797},{lat:46.2650,lon:6.3990}),['82178','oura-haute-savoie']); // Thonon → Bons : Star't
+ assert.equal(pick({lat:45.5711,lon:5.9195},{lat:45.5420,lon:6.2210})[0],'cars-region-savoie');          // Chambéry → Chamoux
+ assert.deepEqual(pick({lat:45.9530,lon:5.3570},{lat:45.9650,lon:5.3800}),['oura-ain','tam-amberieu']); // Ambérieu urbain : TAM
+ assert.equal(pick({lat:45.8992,lon:6.1215},{lat:46.2102,lon:6.1424})[0],'oura-haute-savoie');          // Annecy → Genève : Y51 conservée
+});
+
+test("Chambéry → Aix-les-Bains retient Synchro ET Ondéa (convention d'extension de la ligne A, 07/07/2025)",()=>{
+ const pick=(from,to)=>{const p=agenda.chooseResources(agenda.DEFAULT_RESOURCES,[{from,to}]);return [p.resource,...p.partners].map(r=>r.id);};
+ // Grand Chambéry (Acte17091, 10/07/2025) prolonge sa ligne A jusqu'aux arrêts Technolac et Plage, dans le
+ // ressort de Grand Lac (Ondéa) : les deux réseaux officiels sont pertinents sur ce corridor, pas seulement
+ // le flux départemental Cars Région Savoie retenu auparavant.
+ assert.deepEqual(pick({lat:45.5711,lon:5.9196},{lat:45.6880,lon:5.9093}),['82272','71223']);
+});
+test("Thonon-les-Bains → Genève retient Cars Région Haute-Savoie ET Star't (pas TAC Annemasse ni Cars Région Ain)",()=>{
+ const pick=(from,to)=>{const p=agenda.chooseResources(agenda.DEFAULT_RESOURCES,[{from,to}]);return [p.resource,...p.partners].map(r=>r.id);};
+ // Diagnostic réel du 13/11/2026 : le flux large Cars Région Haute-Savoie était retenu seul, ou associé à
+ // Cars Région Ain (faux positif, enveloppe très large) ou à TAC Annemasse (enveloppe qui frôle Genève sans
+ // desservir ce trajet). La ligne interurbaine/transfrontalière réelle (271/T71 Thonon ↔ Genève, cf. réglement
+ // public GLCT du 10/10/2025) est exploitée côté français par Star't, qui couvre le départ (Thonon) : c'est
+ // donc lui qu'il faut préférer à un réseau qui ne touche que l'arrivée par simple recouvrement d'enveloppe.
+ assert.deepEqual(pick({lat:46.3704,lon:6.4818},{lat:46.2102,lon:6.1424}),['oura-haute-savoie','82178']);
 });

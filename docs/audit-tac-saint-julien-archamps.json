@@ -1,0 +1,47 @@
+{
+  "date": "2026-11-16",
+  "network": "TAC Annemasse",
+  "from": "Saint-Julien-en-Genevois",
+  "to": "Archamps",
+  "radiusMeters": 3000,
+  "direct": 857,
+  "uniqueDirectTrips": 29,
+  "missionCardsAfterDedup": 29,
+  "byRadius": [
+    {
+      "radiusMeters": 500,
+      "candidates": 30,
+      "uniqueTrips": 15,
+      "distinctStopPairs": 4,
+      "nearestAccessMeters": 38,
+      "nearestEgressMeters": 408
+    },
+    {
+      "radiusMeters": 700,
+      "candidates": 45,
+      "uniqueTrips": 15,
+      "distinctStopPairs": 5,
+      "nearestAccessMeters": 38,
+      "nearestEgressMeters": 408
+    },
+    {
+      "radiusMeters": 1200,
+      "candidates": 254,
+      "uniqueTrips": 15,
+      "distinctStopPairs": 28,
+      "nearestAccessMeters": 38,
+      "nearestEgressMeters": 408
+    },
+    {
+      "radiusMeters": 3000,
+      "candidates": 857,
+      "uniqueTrips": 29,
+      "distinctStopPairs": 86,
+      "nearestAccessMeters": 38,
+      "nearestEgressMeters": 408
+    }
+  ],
+  "oneTransfer": 200,
+  "searchTruncated": true,
+  "note": "Counts are static GTFS stop-pair candidates, not unique bookable itineraries. Straight-line stop radius is not walking distance. No verified fare, live service or pedestrian route."
+}

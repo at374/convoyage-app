@@ -17,6 +17,7 @@ function normalize(payload){
     name:String(dataset.title??dataset.name??''),
     resources:resources(dataset).filter(r=>r&&typeof r==='object').map(r=>({
       id:String(r.id??''),
+      name:String(r.title??r.name??''),
       format:String(r.format??r.type??'').toUpperCase(),
       url:typeof r.original_url==='string'?r.original_url:(typeof r.url==='string'?r.url:null),
       updatedAt:r.updated_at??r.last_updated_at??r.updated??null,
@@ -114,7 +115,38 @@ async function fetchSwissGTFSResources(fetcher,{signal}={}){
   if(!response?.ok)throw new Error('Swiss GTFS catalogue unavailable');
   return swissGTFSResources(await response.json());
 }
-const api={ENDPOINT,normalize,gtfsResources,downloadGTFS,byNetwork,fetchCatalogue,SWISS_DATASET,swissGTFSResources,fetchSwissGTFSResources,latestSwissGTFSResource};
+// Source discovery only: timetable coverage does not imply live ticket prices or seat inventory.
+const NATIONAL_OPERATORS=Object.freeze({
+ sncf:/\b(?:sncf|tgv|intercit[eé]s|ter)\b/i,
+ blablacarBus:/blablacar[\s-]*bus/i,
+ flixbus:/\bflix(?:bus|train)\b/i
+});
+function nationalOperatorGTFS(datasets){
+ const rows=Array.isArray(datasets)?datasets:[];
+ const result={};
+ for(const [operator,pattern] of Object.entries(NATIONAL_OPERATORS)){
+  result[operator]=gtfsResources(rows.map(d=>({ ...d,resources:(Array.isArray(d.resources)?d.resources:[])
+   .filter(r=>pattern.test(String(d.name||''))||pattern.test(String(r?.name||''))) })))
+   .filter(r=>/^https:\/\//i.test(r.url))
+   .map(r=>({...r,operator,providesLiveFares:false,providesSeatAvailability:false,
+     timetableOnly:true,requiresServerSideIndex:true}));
+ }
+ return result;
+}
+async function fetchNationalOperatorGTFS(fetcher,{signal}={}){
+ const datasets=await fetchCatalogue(fetcher,{signal});
+ const found=nationalOperatorGTFS(datasets);
+ for(const operator of Object.keys(found)){
+  const seen=new Set();
+  found[operator]=found[operator].filter(resource=>{
+   const key=resource.datasetId+'|'+resource.id+'|'+resource.url;
+   if(seen.has(key))return false;
+   seen.add(key);return true;
+  });
+ }
+ return found;
+}
+const api={ENDPOINT,normalize,gtfsResources,nationalOperatorGTFS,fetchNationalOperatorGTFS,downloadGTFS,byNetwork,fetchCatalogue,SWISS_DATASET,swissGTFSResources,fetchSwissGTFSResources,latestSwissGTFSResource};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportCatalogue=api;
 })(typeof window!=='undefined'?window:globalThis);

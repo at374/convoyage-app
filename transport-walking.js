@@ -85,8 +85,14 @@ function createRouter({fetcher=root.fetch,endpoint=DEFAULT_ENDPOINT,maxRequests=
    const url=new URL(base.href);url.searchParams.set('json',JSON.stringify({locations:[from,to],costing:'pedestrian',
     directions_options:{units:'kilometers',language:'fr-FR'}}));
    const response=await fetcher(url.href,{credentials:'omit',cache:'no-cache',referrerPolicy:'no-referrer',signal:current.signal});
-   const data=await readJSON(response,current.signal);if(current.signal.aborted)throw new Error('Pedestrian request cancelled');
-   return validateValhalla(data,from,to,{endpoint:base.href});
+   // Le serveur a répondu (HTTP 200) : une réponse refusée par nos contrôles (itinéraire qui n'aboutit pas à
+   // moins de 50 m du point, réponse trop volumineuse…) concerne CE couple de points, pas la disponibilité du
+   // service. Constaté en réel le 14/11/2026 : deux refus sur « Bourg-en-Bresse gare » coupaient toutes les
+   // marches des axes suivants. Pannes réseau, délais dépassés et erreurs 5xx restent comptés comme pannes.
+   try{
+    const data=await readJSON(response,current.signal);if(current.signal.aborted)throw new Error('Pedestrian request cancelled');
+    return validateValhalla(data,from,to,{endpoint:base.href});
+   }catch(error){if(response?.ok&&!current.signal.aborted)error.pairUnavailable=true;throw error;}
   })();
   timer=setTimeout(()=>current.abort(),timeoutMs);
   try{return await Promise.race([job,cancellation]);}
@@ -103,7 +109,10 @@ function createRouter({fetcher=root.fetch,endpoint=DEFAULT_ENDPOINT,maxRequests=
     if(wait)await new Promise(resolve=>{const timer=setTimeout(()=>{wake=null;resolve();},wait);wake=()=>{clearTimeout(timer);wake=null;resolve();};});
     if(disposed){item.resolve(unavailable('cancelled'));break;}
     lastStarted=Date.now();requests++;
-    try{item.resolve(await request(item.from,item.to));}
+    // Échecs CONSÉCUTIFS : un succès remet le compteur à zéro. Avant le 14/11/2026 le compteur était cumulatif :
+    // deux incidents passagers du serveur public coupaient toutes les marches suivantes (diagnostic réel :
+    // 104 requêtes, 2 échecs, puis 0 marche calculée sur les axes restants).
+    try{const routed=await request(item.from,item.to);failures=0;item.resolve(routed);}
     catch(error){if(!disposed&&!error.pairUnavailable)failures++;if(error.rateLimited)cooldowns.set(base.href,Date.now()+error.retryAfterMs);
      item.resolve(unavailable(disposed?'cancelled':error.rateLimited?'rate_limited':error.pairUnavailable?'route_unavailable':'unavailable'));}
    }
