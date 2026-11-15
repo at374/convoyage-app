@@ -1,8 +1,8 @@
 # Diagnostic réel des transports — serveur GitHub Actions
 
-Exécuté le 2026-11-15T13:40:45.543Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : non (pas de clé).
+Exécuté le 2026-11-15T20:27:26.017Z ; départs à partir de 2026-11-16T08:00:00+01:00 ; TripGo : non (pas de clé).
 
-**Bilan : 1015 trajets sur 26 axes, 334 avec prix vérifié (32.9 %), 974 avec marches calculées (96 %), 184 réalisables, 787 en horaire programmé (officiel, marches et marge vérifiées, sans temps réel).**
+**Bilan : 1023 trajets sur 26 axes, 334 avec prix vérifié (32.6 %), 981 avec marches calculées (95.9 %), 191 réalisables, 787 en horaire programmé (officiel, marches et marge vérifiées, sans temps réel).**
 
 **TripGo : 0 trajets, 0 avec prix vérifié, 0 portions avec billet chiffré.**
 
@@ -23,7 +23,9 @@ Exemples de lignes sans tarif (3 par opérateur et par axe) :
 - grenoble-crolles / SNCF : Train C6 (Grenoble → Échirolles) ; Train C1 (Échirolles → Lancey) ; Train C31 (Grenoble → Lancey)
 - grenoble-crolles / BlaBlaCar Bus : Car BlaBlaCar Bus (Grenoble - Bus Station → Crolles - Le Rafour)
 - rumilly-annecy / SNCF : Train K21 (Rumilly → Annecy) ; Train C21 (Rumilly → Annecy) ; Train C21 (Rumilly → Albens)
-- thonon-geneve / SNCF : Train L1 (Thonon-les-Bains → Genève Cornavin) ; Train C33 (Évian-les-Bains → Annemasse) ; Train L1 (Thonon-les-Bains → Genève-Eaux-Vives)
+- thonon-geneve / SNCF : Train L1 (Thonon-les-Bains → Genève Cornavin) ; Train TER C33 (Thonon-les-Bains → Annemasse) ; Train C33 (Évian-les-Bains → Annemasse)
+- thonon-geneve / But : Bus B 002278 (Thonon-les-Bains, Georges And. → Thonon-les-Bains, Les Arts) ; Bus B 002279 (Thonon-les-Bains, Georges And. → Thonon-les-Bains, Les Arts) ; Bus B 002283 (Thonon-les-Bains, Georges And. → Thonon-les-Bains, Les Arts)
+- thonon-geneve / AFO : Bus B 271 (Thonon-les-Bains, Les Arts → Genève, Place des Eaux-Vives)
 - thonon-geneve / FlixBus : Car FlixBus S1736 (Thonon-les-Bains → Annecy (Central Bus Station)) ; Car FlixBus 1726 (Annecy (Central Bus Station) → Geneva (central bus station))
 - voiron-grenoble / SNCF : Train K6 (Voiron → Grenoble) ; Train C6 (Voiron → Grenoble) ; Train C6 (Voiron → Réaumont - Saint-Cassien)
 - voiron-grenoble / Cars Région Isère : Bus T41 (Gare Routière Nord → Gare Routière) ; Bus T40 (Gare Routière → Gare Routière) ; Bus T55 (Gare Routière Sud → Gare Routière)
@@ -72,7 +74,9 @@ Lignes bloquant les itinéraires partiellement tarifés :
 - annecy-geneve / SNCF : B L2
 - annecy-geneve / Cars Région Haute-Savoie : 274
 - chambery-aix / Ondéa Aix-les-Bains : 419
-- thonon-geneve / SNCF : C33
+- thonon-geneve / But : B 002278, B 002283, B 002289
+- thonon-geneve / SNCF : TER C33, C33
+- thonon-geneve / AFO : B 271
 - aix-technolac / Ondéa Aix-les-Bains : 102
 - thonon-bons / Star't Thonon : SMAR
 - bourg-amberieu / Cars Région Ain : A32
@@ -81,38 +85,38 @@ Lignes bloquant les itinéraires partiellement tarifés :
 - chambery-stjulien / SNCF : TER K11, K11
 - voiron-voreppe / Mobilités M - SNCF : C6
 
-Correspondances bloquant les itinéraires partiellement tarifés : Cars Région Haute-Savoie (48), Ondéa Aix-les-Bains (37), SNCF (11), Cars Région Ain (2), Star't Thonon (1), Mobilités M - SNCF (1).
+Correspondances bloquant les itinéraires partiellement tarifés : Cars Région Haute-Savoie (48), Ondéa Aix-les-Bains (37), SNCF (14), But (4), Cars Région Ain (2), AFO (1), Star't Thonon (1), Mobilités M - SNCF (1).
 
-Portions sans prix par opérateur (toutes sources) : SNCF (455), FlixBus (57), BlaBlaCar Bus (48), Cars Région Haute-Savoie (48), Ondéa Aix-les-Bains (38), Cars Région Ain (29), Rubis Bourg-en-Bresse (29), ÉVA'D Évian (29), Cars Région Isère (24), Evian (14), But (12), SBB (8), Cars Région Express (5), AFO (3), Cars Région Savoie (2), TPG (1), Star't Thonon (1), Mobilités M - SNCF (1).
+Portions sans prix par opérateur (toutes sources) : SNCF (459), FlixBus (57), BlaBlaCar Bus (48), Cars Région Haute-Savoie (48), Ondéa Aix-les-Bains (38), Cars Région Ain (29), Rubis Bourg-en-Bresse (29), ÉVA'D Évian (29), Cars Région Isère (24), But (20), Evian (14), SBB (8), AFO (7), Cars Région Express (5), Cars Région Savoie (2), TPG (1), Star't Thonon (1), Mobilités M - SNCF (1).
 
 | Axe | Trajets | Prix vérifié | Marches calculées | Réalisables | Horaire programmé | 1er résultat | Total | Sources | Erreurs | Attendus non vus |
 |---|---|---|---|---|---|---|---|---|---|---|
-| Annecy → Genève | 59 | 0 | 59 | 14 | 45 | 0.5 s | 11.2 s | BlaBlaCar Bus (GTFS), FlixBus (GTFS), Suisse (transport.opendata.ch), SNCF (GTFS officiel), SNCF (GTFS), Cars Région Haute-Savoie (GTFS) | — | — |
-| Annemasse → Saint-Julien-en-Genevois | 56 | 39 | 42 | 12 | 30 | 0.4 s | 20.2 s | Suisse (transport.opendata.ch), TAC Annemasse (GTFS), SNCF (GTFS), SNCF (GTFS officiel) | — | — |
-| Ambérieu-en-Bugey → Lyon Part-Dieu | 19 | 0 | 19 | 5 | 14 | 0.1 s | 4.3 s | SNCF (GTFS officiel), SNCF (GTFS) | — | — |
-| Chambéry → Aix-les-Bains | 64 | 4 | 64 | 5 | 59 | 0.1 s | 12.0 s | Synchro Chambéry (GTFS), Synchro Bus Chambéry (GTFS), SNCF (GTFS officiel), SNCF (GTFS), FlixBus (GTFS), Ondéa Aix-les-Bains (GTFS) | — | — |
-| Grenoble → Crolles | 30 | 5 | 30 | 12 | 18 | 0.1 s | 5.6 s | Mobilités M, SNCF (GTFS officiel), SNCF (GTFS), BlaBlaCar Bus (GTFS) | — | — |
-| Rumilly → Annecy | 24 | 1 | 24 | 6 | 18 | 0.2 s | 5.3 s | Sibra (GTFS), SNCF (GTFS), SNCF (GTFS officiel) | — | — |
-| Thonon-les-Bains → Genève | 10 | 0 | 10 | 2 | 8 | 0.1 s | 5.0 s | SNCF (GTFS), SNCF (GTFS officiel), FlixBus (GTFS) | — | tpg-fr |
-| Voiron → Grenoble | 39 | 0 | 39 | 4 | 35 | 0.3 s | 10.0 s | SNCF (GTFS), Mobilités M, SNCF (GTFS officiel), Cars Région Isère (GTFS), BlaBlaCar Bus (GTFS), FlixBus (GTFS) | — | — |
-| Aix-les-Bains gare → Technolac (Ondéa 01) | 31 | 18 | 30 | 1 | 29 | 0.6 s | 9.7 s | Ondéa Aix-les-Bains (GTFS), SNCF (GTFS officiel), SNCF (GTFS) | — | — |
-| Thonon → Bons-en-Chablais (Star’t 142) | 59 | 31 | 59 | 11 | 48 | 0.3 s | 19.7 s | Star't Thonon (GTFS), SNCF (GTFS), Suisse (transport.opendata.ch), SNCF (GTFS officiel) | — | — |
-| Rumilly Hôpital → Base de loisirs (J’y bus 1) | 56 | 56 | 56 | 0 | 56 | 0.7 s | 11.4 s | J’y bus Rumilly (GTFS), J'y bus Rumilly (GTFS) | — | — |
-| Ambérieu gare → Cabrol (TAM 2) | 82 | 82 | 82 | 0 | 82 | 0.5 s | 16.3 s | TAM Ambérieu (GTFS), TAM Ambérieu-en-Bugey (GTFS), Cars Région Ain (GTFS) | — | — |
-| Chambéry → Chamoux-sur-Gelon (Cars Savoie S05) | 19 | 0 | 19 | 8 | 11 | 0.0 s | 4.8 s | Cars Région Savoie (GTFS), SNCF (GTFS), SNCF (GTFS officiel) | — | — |
-| Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 18 | 1 | 18 | 3 | 15 | 0.0 s | 6.0 s | Cars Région Ain (GTFS), SNCF (GTFS officiel), SNCF (GTFS) | — | — |
-| Bourg-en-Bresse gare routière → centre (Rubis) | 57 | 7 | 57 | 1 | 56 | 0.1 s | 13.2 s | Marche (Valhalla / OpenStreetMap), Cars Région Ain (GTFS), Rubis Bourg-en-Bresse (GTFS), SNCF (GTFS) | — | — |
-| Bonneville → La Roche-sur-Foron (Proxim iTi / TER) | 27 | 0 | 27 | 12 | 15 | 0.1 s | 5.4 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), SNCF (GTFS) | — | — |
-| Évian → Thonon (ÉVA’D / TER) | 53 | 0 | 52 | 14 | 38 | 0.2 s | 12.1 s | SNCF (GTFS), Suisse (transport.opendata.ch), SNCF (GTFS officiel), ÉVA'D Évian (GTFS) | — | — |
-| Genève → Lausanne | 26 | 0 | 26 | 8 | 18 | 0.1 s | 6.1 s | Suisse (transport.opendata.ch), BlaBlaCar Bus (GTFS), FlixBus (GTFS) | — | — |
-| Annemasse → Genève | 33 | 29 | 31 | 11 | 20 | 0.3 s | 4.4 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), SNCF (GTFS) | — | — |
-| Saint-Julien-en-Genevois → Genève | 45 | 8 | 45 | 8 | 37 | 0.1 s | 8.9 s | Suisse (transport.opendata.ch), SNCF (GTFS), Cars Région Haute-Savoie (GTFS) | — | — |
-| Archamps → Genève | 9 | 9 | 9 | 8 | 1 | 0.3 s | 6.4 s | Suisse (transport.opendata.ch), SNCF (GTFS) | — | — |
-| Chambéry → Saint-Julien-en-Genevois | 15 | 0 | 15 | 12 | 3 | 0.3 s | 4.9 s | SNCF (GTFS), Suisse (transport.opendata.ch), SNCF (GTFS officiel) | — | — |
-| Annecy → Chambéry | 39 | 0 | 39 | 7 | 30 | 0.3 s | 2.8 s | SNCF (GTFS), BlaBlaCar Bus (GTFS), SNCF (GTFS officiel), FlixBus (GTFS) | — | — |
-| Lyon → Grenoble | 55 | 0 | 55 | 7 | 47 | 0.1 s | 4.3 s | SNCF (GTFS officiel), SNCF (GTFS), FlixBus (GTFS), BlaBlaCar Bus (GTFS) | — | — |
-| Lyon Part-Dieu → Bellecour (TCL) | 55 | 42 | 32 | 1 | 31 | 0.0 s | 30.1 s | Marche (Valhalla / OpenStreetMap), TCL (GTFS), TCL Lyon (GTFS), SNCF (GTFS), Cars Région Express (GTFS) | — | — |
-| Voiron → Voreppe (M réso Voironnais) | 35 | 2 | 35 | 12 | 23 | 0.2 s | 4.2 s | Mobilités M, SNCF (GTFS officiel), SNCF (GTFS), Cars Région Isère (GTFS) | — | — |
+| Annecy → Genève | 59 | 0 | 59 | 14 | 45 | 0.3 s | 10.5 s | BlaBlaCar Bus (GTFS), FlixBus (GTFS), Suisse (transport.opendata.ch), SNCF (GTFS officiel), SNCF (GTFS), Cars Région Haute-Savoie (GTFS) | — | — |
+| Annemasse → Saint-Julien-en-Genevois | 56 | 39 | 42 | 12 | 30 | 0.2 s | 20.3 s | Suisse (transport.opendata.ch), TAC Annemasse (GTFS), SNCF (GTFS), SNCF (GTFS officiel) | — | — |
+| Ambérieu-en-Bugey → Lyon Part-Dieu | 19 | 0 | 19 | 5 | 14 | 0.1 s | 3.3 s | SNCF (GTFS officiel), SNCF (GTFS) | — | — |
+| Chambéry → Aix-les-Bains | 64 | 4 | 64 | 5 | 59 | 0.1 s | 12.2 s | Synchro Bus Chambéry (GTFS), Synchro Chambéry (GTFS), SNCF (GTFS officiel), SNCF (GTFS), FlixBus (GTFS), Ondéa Aix-les-Bains (GTFS) | — | — |
+| Grenoble → Crolles | 30 | 5 | 30 | 12 | 18 | 0.1 s | 4.4 s | Mobilités M, SNCF (GTFS officiel), SNCF (GTFS), BlaBlaCar Bus (GTFS) | — | — |
+| Rumilly → Annecy | 24 | 1 | 24 | 6 | 18 | 0.1 s | 4.9 s | Sibra (GTFS), SNCF (GTFS), SNCF (GTFS officiel) | — | — |
+| Thonon-les-Bains → Genève | 18 | 0 | 17 | 9 | 8 | 0.1 s | 9.8 s | SNCF (GTFS), Suisse (transport.opendata.ch), SNCF (GTFS officiel), FlixBus (GTFS) | — | — |
+| Voiron → Grenoble | 39 | 0 | 39 | 4 | 35 | 0.3 s | 10.3 s | SNCF (GTFS), Mobilités M, SNCF (GTFS officiel), Cars Région Isère (GTFS), BlaBlaCar Bus (GTFS), FlixBus (GTFS) | — | — |
+| Aix-les-Bains gare → Technolac (Ondéa 01) | 31 | 18 | 30 | 1 | 29 | 0.4 s | 10.0 s | Ondéa Aix-les-Bains (GTFS), SNCF (GTFS officiel), SNCF (GTFS) | — | — |
+| Thonon → Bons-en-Chablais (Star’t 142) | 59 | 31 | 59 | 11 | 48 | 0.2 s | 19.2 s | Star't Thonon (GTFS), SNCF (GTFS), Suisse (transport.opendata.ch), SNCF (GTFS officiel) | — | — |
+| Rumilly Hôpital → Base de loisirs (J’y bus 1) | 56 | 56 | 56 | 0 | 56 | 0.4 s | 11.2 s | J’y bus Rumilly (GTFS), J'y bus Rumilly (GTFS) | — | — |
+| Ambérieu gare → Cabrol (TAM 2) | 82 | 82 | 82 | 0 | 82 | 0.3 s | 16.2 s | TAM Ambérieu (GTFS), TAM Ambérieu-en-Bugey (GTFS), Cars Région Ain (GTFS) | — | — |
+| Chambéry → Chamoux-sur-Gelon (Cars Savoie S05) | 19 | 0 | 19 | 8 | 11 | 0.0 s | 4.9 s | Cars Région Savoie (GTFS), SNCF (GTFS), SNCF (GTFS officiel) | — | — |
+| Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 18 | 1 | 18 | 3 | 15 | 0.0 s | 5.6 s | Cars Région Ain (GTFS), SNCF (GTFS officiel), SNCF (GTFS) | — | — |
+| Bourg-en-Bresse gare routière → centre (Rubis) | 57 | 7 | 57 | 1 | 56 | 0.0 s | 11.6 s | Marche (Valhalla / OpenStreetMap), Cars Région Ain (GTFS), Rubis Bourg-en-Bresse (GTFS), SNCF (GTFS) | — | — |
+| Bonneville → La Roche-sur-Foron (Proxim iTi / TER) | 27 | 0 | 27 | 12 | 15 | 0.1 s | 6.0 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), SNCF (GTFS) | — | — |
+| Évian → Thonon (ÉVA’D / TER) | 53 | 0 | 52 | 14 | 38 | 0.1 s | 12.3 s | SNCF (GTFS), Suisse (transport.opendata.ch), SNCF (GTFS officiel), ÉVA'D Évian (GTFS) | — | — |
+| Genève → Lausanne | 26 | 0 | 26 | 8 | 18 | 0.1 s | 6.0 s | Suisse (transport.opendata.ch), BlaBlaCar Bus (GTFS), FlixBus (GTFS) | — | — |
+| Annemasse → Genève | 33 | 29 | 31 | 11 | 20 | 0.2 s | 2.4 s | Suisse (transport.opendata.ch), SNCF (GTFS officiel), SNCF (GTFS) | — | — |
+| Saint-Julien-en-Genevois → Genève | 45 | 8 | 45 | 8 | 37 | 0.1 s | 9.3 s | Suisse (transport.opendata.ch), SNCF (GTFS), Cars Région Haute-Savoie (GTFS) | — | — |
+| Archamps → Genève | 9 | 9 | 9 | 8 | 1 | 0.2 s | 6.1 s | Suisse (transport.opendata.ch), SNCF (GTFS) | — | — |
+| Chambéry → Saint-Julien-en-Genevois | 15 | 0 | 15 | 12 | 3 | 0.2 s | 3.9 s | SNCF (GTFS), Suisse (transport.opendata.ch), SNCF (GTFS officiel) | — | — |
+| Annecy → Chambéry | 39 | 0 | 39 | 7 | 30 | 0.2 s | 2.3 s | SNCF (GTFS), BlaBlaCar Bus (GTFS), SNCF (GTFS officiel), FlixBus (GTFS) | — | — |
+| Lyon → Grenoble | 55 | 0 | 55 | 7 | 47 | 0.1 s | 3.8 s | SNCF (GTFS officiel), SNCF (GTFS), FlixBus (GTFS), BlaBlaCar Bus (GTFS) | — | — |
+| Lyon Part-Dieu → Bellecour (TCL) | 55 | 42 | 32 | 1 | 31 | 0.0 s | 25.9 s | Marche (Valhalla / OpenStreetMap), TCL (GTFS), TCL Lyon (GTFS), SNCF (GTFS), Cars Région Express (GTFS) | — | — |
+| Voiron → Voreppe (M réso Voironnais) | 35 | 2 | 35 | 12 | 23 | 0.1 s | 3.7 s | Mobilités M, SNCF (GTFS officiel), SNCF (GTFS), Cars Région Isère (GTFS) | — | — |
 
 Exemples (3 meilleures propositions par axe) :
 
@@ -128,7 +132,7 @@ Exemples (3 meilleures propositions par axe) :
 - Meilleur compromis · Plus rapide : 2026-11-16T07:12:26.785Z → 2026-11-16T07:52:00.000Z · marche 1346 m › SNCF K23 · Prix à confirmer · Réalisable
 
 **Chambéry → Aix-les-Bains**
-- Moins cher · Meilleur compromis : 2026-11-16T11:06:14.962Z → 2026-11-16T11:41:36.577Z · marche 286 m › Synchro Chambéry 30 › marche 129 m · 1,40 € · Horaire programmé — à confirmer le jour J (Horaire officiel publié ; marches, correspondances et marge vérifiées. Reste à confirmer : horaire GTFS local non confirmé en temps réel)
+- Moins cher · Meilleur compromis : 2026-11-16T11:06:14.962Z → 2026-11-16T11:41:36.577Z · marche 286 m › Synchro Bus Chambéry 30 › marche 129 m · 1,40 € · Horaire programmé — à confirmer le jour J (Horaire officiel publié ; marches, correspondances et marge vérifiées. Reste à confirmer : horaire GTFS local non confirmé en temps réel)
 - Plus rapide : 2026-11-16T08:49:00.000Z → 2026-11-16T08:58:00.000Z · SNCF 621B · Prix à confirmer · Réalisable
 
 **Grenoble → Crolles**
