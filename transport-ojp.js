@@ -141,7 +141,19 @@ async function post(url,body,token,fetcher){
  if(!res.ok)throw new Error('OJP HTTP '+res.status+' : '+xml.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,200));
  return xml;
 }
-const api={ENDPOINT,FARE_ENDPOINT,REF_TYPES,UNCONFIRMED,validRef,locationRequest,parseLocations,placeRefXml,tripRequest,parseTrips,fareRequest,parseFare,post};
+// Appel par le relais du serveur de l'application (fonction « ojp-relais ») : le jeton OJP reste côté serveur.
+// session = {url, cle, accessToken} de l'utilisateur connecté. Relais absent (404) ou non configuré (503) :
+// erreur « indisponible » que l'appelant traite comme « pas de moteur OJP », sans message d'alerte.
+const RELAY_PATH='/functions/v1/ojp-relais';
+async function relayPost(session,body,fetcher){
+ if(!session||!/^https:\/\/[a-z0-9-]{3,63}\.supabase\.co$/i.test(session.url||'')||!session.cle||!session.accessToken)throw Object.assign(new Error('Relais OJP indisponible (non connecté)'),{unavailable:true});
+ const res=await (fetcher||root.fetch)(session.url+RELAY_PATH,{method:'POST',headers:{'content-type':'application/xml',apikey:session.cle,authorization:'Bearer '+session.accessToken},body});
+ if(res.status===404||res.status===503||res.status===401)throw Object.assign(new Error('Relais OJP indisponible ('+res.status+')'),{unavailable:true});
+ const xml=await res.text();
+ if(!res.ok)throw new Error('OJP HTTP '+res.status+' : '+xml.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,200));
+ return xml;
+}
+const api={ENDPOINT,FARE_ENDPOINT,REF_TYPES,UNCONFIRMED,validRef,locationRequest,parseLocations,placeRefXml,tripRequest,parseTrips,fareRequest,parseFare,post,relayPost,RELAY_PATH};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportOJP=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

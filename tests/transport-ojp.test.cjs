@@ -116,3 +116,14 @@ test('correspondance : prix refusé si l’offre ne couvre qu’un des deux trai
  assert.equal(O.parseFare(fare(2,3,'12.00'),t).price,null,'commence à la correspondance');
  assert.equal(O.parseFare(fare(1,3,'23.40'),t).price.amount,23.4);
 });
+
+test('relais serveur : jeton de session seulement, relais absent traité comme indisponible',async()=>{
+ const session={url:'https://abcdefgh.supabase.co',cle:'sb_publishable_x',accessToken:'jwt-utilisateur'};let seen;
+ const ok=async(u,o)=>{seen=[u,o];return {ok:true,status:200,text:async()=>'<OJP/>'};};
+ assert.equal(await O.relayPost(session,'<x/>',ok),'<OJP/>');
+ assert.equal(seen[0],'https://abcdefgh.supabase.co/functions/v1/ojp-relais');
+ assert.deepEqual(seen[1].headers,{'content-type':'application/xml',apikey:'sb_publishable_x',authorization:'Bearer jwt-utilisateur'});
+ for(const status of [404,503,401])await assert.rejects(O.relayPost(session,'<x/>',async()=>({ok:false,status,text:async()=>''})),e=>e.unavailable===true);
+ await assert.rejects(O.relayPost(session,'<x/>',async()=>({ok:false,status:500,text:async()=>'<e>boum</e>'})),e=>!e.unavailable&&/HTTP 500/.test(e.message));
+ for(const bad of [null,{},{...session,url:'https://exemple.test'},{...session,accessToken:''}])await assert.rejects(O.relayPost(bad,'<x/>',ok),e=>e.unavailable===true);
+});
