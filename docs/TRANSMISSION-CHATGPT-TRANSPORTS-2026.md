@@ -107,6 +107,21 @@ Laurent a confirmé avoir ajouté le secret côté Supabase (Edge Functions → 
 
 **Reste ouvert côté OJP** : le moteur n'a pas encore été observé sur un vrai trajet mission dans l'application (seul l'appel direct au relais a été vérifié en réel) — à surveiller au prochain diagnostic serveur réel. Le lien `ticketLink()` par défaut CFF n'a pas non plus été revérifié contre une vraie page CFF (juste contre le motif existant dans `TICKET_LINKS`).
 
+### 15/11 22 h 30 — bug critique trouvé et corrigé : `transport-ojp.js` n'était chargé par aucune page
+
+Laurent a transmis une note (relayée depuis un autre agent) signalant exactement le bon doute : « vérifier le chargement dans `index.html` et l'appel réel depuis le hub de mission, ne pas déclarer le raccordement terminé sur la seule présence de `relayPost` ». Vérification faite : **c'était bien le cas**. `transport-mission-hub.js` lisait correctement `r.CPTransportOJP`, mais aucune balise `<script>` ne chargeait `transport-ojp.js` — ni dans `index.html`, ni dans la liste précachée de `sw.js`. Résultat concret : `window.CPTransportOJP` restait `undefined` dans le navigateur, donc `P.ojp` n'était **jamais créé**, quelle que soit la session ou le relais. Corrigé (commit `6fb257b`) :
+- `index.html` : ajout de `<script src="transport-ojp.js?v=ojp-20261115a"></script>` avant `transport-mission-hub.js` ; versions de cache de `transport-mission-hub.js` (`…g`) et `app.js` (`…f`) relevées pour refléter le commit précédent.
+- `sw.js` : fichier ajouté à la liste précachée, versions alignées, `CACHE` passé en v54 pour forcer le renouvellement chez les utilisateurs déjà installés (PWA).
+
+**Validation réelle de bout en bout faite ensuite**, directement dans un onglet Chrome authentifié (session déjà connectée de Laurent), en chargeant les fichiers réels de la branche (`transport-ojp.js` + `transport-mission-hub.js` tout juste poussés) par-dessus l'application déployée, puis en appelant `providers.ojp.run(task)` sur un trajet réel Genève → Lausanne, suivi de `completeWalks()` + `assess()` + `priceOf()` — exactement le chemin d'une vraie fiche mission :
+- **3 trajets réels reçus** via le relais (HTTP 200, vraies données opentransportdata.swiss), tarif **23,80 CHF** (Streckenbillett, 2e classe) confirmé sur chacun.
+- **2 des 3 corrects pour la fenêtre demandée → « Réalisable »**, prix vérifié affiché, rien de fabriqué.
+- **Le 3e, qui part avant l'heure demandée, correctement rejeté → « Transport non confirmé »** (raison : « départ avant la fin de la mission précédente ») plutôt que faussement accepté.
+- Un trajet avec correspondance (3 portions, 2 trains + 1 car) a aussi été vu réellement : prix total correctement posé sur la dernière portion, et la correspondance sans position GPS intermédiaire (Nyon, Gland) a été rejetée avec la raison exacte plutôt que fabriquée — comportement attendu, confirmé en conditions réelles et non plus seulement sur fixtures.
+- **Limite confirmée en réel, pas seulement en théorie** : `tripRequest` n'ayant pas de paramètre « arriver après »/« arriver avant » distinct, OJP peut renvoyer un trajet légèrement avant l'instant demandé — sans danger (le trajet est alors rejeté par `assess()`, jamais affiché comme réalisable à tort), mais un peu de bruit en plus sur la fiche mission (un trajet « Transport non confirmé » de plus qu'utile). Piste d'amélioration non faite ici (hors urgence) : filtrer dans `P.ojp.run()` les trajets dont le départ est antérieur à `task.earliestDeparture` avant de les retourner, comme le font déjà les fournisseurs GTFS locaux/nationaux.
+
+**L'onglet de test a été rechargé proprement après la vérification** (retour à la version déployée normale, rien laissé modifié dans le navigateur de Laurent).
+
 ## SESSION CLAUDE DU 14/11/2026 (après-midi) — fiches mission et diagnostic réel
 
 Répartition demandée par Laurent : ChatGPT = sources tarifaires, limites d'accès aux prix, contrôles de couverture ; Claude = intégration dans l'application, fiches mission, tests serveur/mobile, performance. **Merci de me signaler avant de modifier `createSession`, `assess`, `rank`, `render` ou `completeWalks` dans `transport-mission-hub.js`.**

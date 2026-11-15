@@ -148,6 +148,21 @@ test('P.ojp : résolution des lieux puis trajet direct via le relais, prix compl
  assert.equal(H.priceOf(journeys[0]).amounts.CHF,24);
 });
 
+test('P.ojp : trajet renvoyé par OJP avant la fenêtre demandée => écarté (bruit en moins, assess() n’a plus à trancher)',async()=>{
+ const tripXml='<OJP><OJPTripDelivery><TripResult><ResultId>T1</ResultId><Trip>'+
+  '<TripLeg><LegId>L1</LegId><TimedLeg><LegBoard><siri:StopPointRef>8587057</siri:StopPointRef><StopPointName><Text>Genève</Text></StopPointName>'+
+  '<ServiceDeparture><TimetabledTime>2026-11-16T06:00:00Z</TimetabledTime></ServiceDeparture></LegBoard>'+ // avant earliestDeparture (07:30 Paris = 06:30 UTC)
+  '<LegAlight><siri:StopPointRef>8501120</siri:StopPointRef><StopPointName><Text>Lausanne</Text></StopPointName>'+
+  '<ServiceArrival><TimetabledTime>2026-11-16T06:45:00Z</TimetabledTime></ServiceArrival></LegAlight>'+
+  '<Service><PublishedLineName><Text>IR15</Text></PublishedLineName><OperatorName><Text>CFF</Text></OperatorName><Mode><PtMode>rail</PtMode></Mode></Service>'+
+  '</TimedLeg></TripLeg></Trip><Duration>PT45M</Duration><Transfers>0</Transfers></TripResult></OJPTripDelivery></OJP>';
+ const root=fakeRoot({locationsXml:loc('Genève','8587057'),tripXml,fareXml:'<OJP></OJP>'});
+ const providers=H.makeProviders(root,{fetcher:root.fetch,ojpSession:SESSION});
+ const task={from:GENEVE,to:LAUSANNE,fromCity:'Genève',toCity:'Lausanne',earliestDeparture:'2026-11-16T07:30:00+01:00'};
+ const journeys=await providers.ojp.run(task);
+ assert.deepEqual(journeys,[]);
+});
+
 test('P.ojp : relais indisponible (404) => aucun trajet, dégradation silencieuse',async()=>{
  const root=fakeRoot({locationsXml:'',tripXml:'',fareXml:'',relayStatus:404});
  const providers=H.makeProviders(root,{fetcher:root.fetch,ojpSession:SESSION});

@@ -759,7 +759,22 @@ function makeProviders(r,opts={}){
    if(signal?.aborted)return [];
    const trips=O.parseTrips(tripXml);
    if(!trips.length)return [];
-   const entries=await Promise.all(trips.map(async trip=>{
+   // OJP n'a pas de paramètre « arriver après »/« arriver avant » distinct (tripRequest ne prend qu'un seul
+   // DepArrTime) : l'API peut renvoyer un trajet légèrement avant l'instant demandé (constaté en réel le 15/11/2026).
+   // Sans danger (un tel trajet est de toute façon rejeté par assess()), mais filtré ici pour ne pas encombrer la
+   // fiche mission d'un « Transport non confirmé » de plus que nécessaire — même logique que les fournisseurs GTFS
+   // locaux/nationaux, qui filtrent déjà leurs candidats par la fenêtre demandée.
+   const target=ms(w.when);
+   const fitsWindow=trip=>{
+    const timed=(trip.legs||[]).filter(l=>l&&l.kind==='timed');
+    if(!timed.length)return false;
+    const dep=ms(timed[0].departure),arr=ms(timed[timed.length-1].arrival);
+    if(!Number.isFinite(dep)||!Number.isFinite(arr)||!Number.isFinite(target))return true; // doute : on garde, assess() tranchera
+    return w.arriveBy?arr<=target+60000:dep>=target-60000;
+   };
+   const windowed=trips.filter(fitsWindow);
+   if(!windowed.length)return [];
+   const entries=await Promise.all(windowed.map(async trip=>{
     let price=null;
     const fareBody=O.fareRequest(trip,{});
     if(fareBody){
