@@ -132,7 +132,7 @@ function officialZoneFare(leg){
 // 1,70 €). Les 4,80 € de la grille Jacquet 274 concernent l'arrêt de Nangy sur cette ligne et ne sont pas utilisés.
 const LEMAN_PASS={amount:4.90,currency:'EUR',network:'Léman Pass multizones 10+210',validityMinutes:90,
  validFrom:'2025-12-14',validUntil:'2026-12-12',checkedAt:'2026-11-15',
- source:'https://www.tac-mobilites.fr/titres/titres-et-cartes-journalieres-leman-pass'};
+ source:'https://www.lemanpass.com/points-de-vente/ (code 10210) et https://www.tac-mobilites.fr/titres/titres-et-cartes-journalieres-leman-pass'};
 const ZONE10_STATIONS=['geneve','geneve cornavin','geneve-secheron','geneve-aeroport','lancy-pont-rouge','lancy-bachet',
  'geneve-champel','geneve-eaux-vives','chene-bourg','chambesy','les tuileries','genthod-bellevue','creux-de-genthod',
  'versoix','pont-ceard','vernier','meyrin','zimeysa','satigny','russin','la plaine'];
@@ -267,11 +267,13 @@ function lemanMultizone230Fare(leg){
  const day=leg.departure.slice(0,10);if(day<L272.validFrom||day>L272.validUntil)return null;
  const head=n=>{const raw=String(typeof n==='string'?n:(n&&typeof n==='object'?(n.name||n.stopName||n.label||''):''));
   return raw.includes(',')?raw.split(',')[0].normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim():'';};
- const sj=n=>head(n)==='saint-julien'&&!/douane/i.test(String(n));
+ // Zone 230 officielle = « St-Julien y compris Collonges et Valleiry » (lemanpass.com/tarifs) ; billet 10+230 : 4,80 €
+ // (lemanpass.com/points-de-vente, code 10230). Archamps et autres communes : non prouvé, aucun prix.
+ const sj=n=>['saint-julien','collonges','valleiry'].includes(head(n))&&!/douane/i.test(String(n));
  if(!((sj(leg.from)&&zone10Locality(leg.to))||(sj(leg.to)&&zone10Locality(leg.from))))return null;
  return {amount:4.80,currency:'EUR',network:'Léman Pass multizones 10+230',validityMinutes:90,
   combined:{amount:4.80,covers:ZONE10.network,label:'Léman Pass multizones 10+230'},
-  source:'Léman Pass · billet multizones 10+230, 90 min · '+L272.source+' (vérifié le '+L272.checkedAt+')'};
+  source:'Léman Pass · billet multizones 10+230, 90 min · https://www.lemanpass.com/points-de-vente/ et '+L272.source+' (vérifié le 2026-11-15)'};
 }
 // STAR'T (Thonon Agglomération) : tarif par zone de l'arrêt. Zone A / zone B = listes officielles de communes
 // (star-t.fr, « Titres & abonnements ») ; chaque arrêt ci-dessous a sa commune (Base Adresse Nationale) ET le

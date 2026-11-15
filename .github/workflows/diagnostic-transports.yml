@@ -746,7 +746,7 @@ jobs:
           assert.equal(z('TPG','Tram','Genève-Eaux-Vives, gare','Genève, Bel-Air')?.currency,'CHF');
           assert.equal(z('SBB','Train','Lancy-Bachet','Genève')?.amount,3.00,'Train CFF interne à la zone 10');
           assert.equal(z('TPG','Bus','Lancy-Bachet, gare','Saint-Julien, centre')?.network,'Léman Pass multizones 10+230','Transfrontalier : jamais le billet zone 10, mais le multizones officiel');
-          assert.equal(z('TPG','Bus','Collonges, marché','Lancy-Bachet, gare'),null,'Arrêt français : pas de billet zone 10');
+          assert.equal(z('TPG','Bus','Collonges, marché','Lancy-Bachet, gare')?.currency,'EUR','Arrêt français : jamais le billet zone 10 en CHF');
           assert.equal(z('SBB','Train','Annemasse','Genève')?.amount,4.90,'Annemasse hors zone 10 : Léman Pass 10+210, jamais le billet zone 10');
           assert.equal(z('SBB','Train','Genève','Lausanne'),null,'Tarif national suisse non couvert');
           assert.equal(z('TPG','Tram','Genève, a','Genève, b','2026-12-20T08:00:00+01:00'),null,'Hors période vérifiée');
@@ -766,7 +766,8 @@ jobs:
           assert.equal(l272(sid('74010','57539'),sid('6623','57862'),'2026-12-20T08:00:00+01:00'),null,'hors validité de la grille');
           assert.equal(fareFor({provider:'Cars Région Haute-Savoie',mode:'Bus',line:'274',departure:'2026-11-16T08:00:00+01:00',gtfsRaw:{from:sid('6623','57862'),to:sid('6608','58821')}}),null,'274 : grille non intégrée');
           assert.equal(fareFor({provider:'TPG',mode:'Bus',line:'B 80',from:'Saint-Julien, centre',to:'Lancy-Bachet, gare',departure:'2026-11-16T08:00:00+01:00'})?.amount,4.80);
-          assert.equal(fareFor({provider:'TPG',mode:'Bus',line:'B 82',from:'Collonges, marché',to:'Lancy-Bachet, gare',departure:'2026-11-16T08:00:00+01:00'}),null,'Collonges : zone non prouvée');
+          assert.equal(fareFor({provider:'TPG',mode:'Bus',line:'B 82',from:'Collonges, marché',to:'Lancy-Bachet, gare',departure:'2026-11-16T08:00:00+01:00'})?.amount,4.80,'Collonges : zone 230 officielle (lemanpass.com)');
+          assert.equal(fareFor({provider:'TPG',mode:'Bus',line:'B 82',from:'Archamps, technopole',to:'Lancy-Bachet, gare',departure:'2026-11-16T08:00:00+01:00'}),null,'Archamps : zone non prouvée');
           {const l=(f,t,line='274')=>fareFor({kind:'transit',mode:'Bus',provider:'Cars Région Haute-Savoie',line,departure:'2026-11-16T07:00:00.000Z',gtfsRaw:{from:f,to:t}});
            const S='FR:74256:ZE:58792:HAUTExSAVOIE',B='FR:74042:ZE:58718:HAUTExSAVOIE',F='FR:74128:ZE:75337:HAUTExSAVOIE',N='FR:74197:ZE:58716:HAUTExSAVOIE',G='FR:6621:ZE:58825:HAUTExSAVOIE',A='FR:6623:ZE:57862:HAUTExSAVOIE';
            assert.equal(l(S,G).amount,11.40,'274 Sallanches → Genève');assert.equal(l(S,G).combined.amount,14.60);
