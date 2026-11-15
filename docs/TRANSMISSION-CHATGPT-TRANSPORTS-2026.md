@@ -1,5 +1,78 @@
 # Transmission à ChatGPT — module Transports AURA + Suisse de Convoyage Ultra
 
+## BILAN CLAUDE DU 15/11/2026 (22 h) — mission « terminer Transports », réponse à la section 5 de Laurent
+
+Suite à la mission prioritaire de Laurent (« terminer le travail, ça doit marcher les trajets automatiques »), voici le bilan chiffré demandé, structuré exactement selon les 6 points de sa section 5.
+
+### 1. Moteurs réellement fonctionnels
+
+- **51 fournisseurs** au total dans `makeProviders()` : 43 réseaux régionaux `local_*` (GTFS Oùra), 3 nationaux (SNCF, FlixBus, BlaBlaCar Bus), `tripgo` (désactivé, pas de clé), `swiss` (transport.opendata.ch), `ojp` (OJP Suisse), `regional` et `sncf` (fallback).
+- **43/43 réseaux régionaux vérifiés en réel** via `scripts/verifier-moteurs-regionaux.cjs` sur des paires d'arrêts et des dates tirées des vrais calendriers GTFS officiels — tous renvoient de vrais trajets, sauf `proximiti` (fenêtre de calendrier vide, anomalie déjà documentée, non bloquante).
+- **OJP Suisse** : était du code mort dans le navigateur — `transport-ojp.js` n'était chargé par aucune page (`index.html`, `sw.js`). **Corrigé** (commits `5155602`, `8912482`) et **validé en réel** dans un navigateur authentifié réel (pas une simulation) : 3 trajets Genève ↔ Lausanne obtenus via le relais Supabase et l'API officielle opentransportdata.swiss, tarif réel 23,80 CHF, 2/3 réalisables, 1 correctement écarté pour départ avant la fenêtre demandée. Un filtre de fenêtre temporelle a été ajouté (`fitsWindow`) pour écarter ce cas en amont plutôt que de laisser `assess()` le faire trajet par trajet. **Important** : OJP ne peut pas être exercé par le diagnostic CI automatique (le relais exige une session utilisateur Supabase authentifiée, qu'un job serveur n'a pas) — sa seule validation possible est manuelle, en navigateur réel, comme fait ici.
+- **SNCF / FlixBus / BlaBlaCar Bus** : horaires GTFS officiels valides sur plus d'un mois (confirmé par lecture directe de `calendar.txt`/`calendar_dates.txt`), aucun fichier de tarif dans aucune des trois archives — horaires oui, prix commercial confirmé non, pour les trois.
+
+### 2. Pourcentage de trajets avec prix complet
+
+Diagnostic réel serveur du 15/11 21:42 UTC (run CI `43765137918`, départs 2026-11-16T08:00+01:00), **27 axes dont les 8 demandés par Laurent** (Chambéry → Grenoble, absent jusqu'ici, a été ajouté à `transport-coverage.js` et intégré à ce run) :
+
+**1091 trajets, 334 avec prix vérifié (30,6 %), 1050 avec marches calculées (96,2 %), 192 réalisables, 855 en horaire programmé (officiel, marches/correspondances/marge vérifiées, sans confirmation temps réel).**
+
+Détail des 8 axes demandés :
+
+| Axe | Trajets | Prix vérifié | Réalisables | Horaire programmé |
+|---|---|---|---|---|
+| Annecy → Genève | 59 | 0 | 14 | 45 |
+| Genève → Lausanne | 26 | 0 | 8 | 18 |
+| Annemasse → Genève | 33 | 29 | 11 | 20 |
+| Saint-Julien-en-Genevois → Genève | 45 | 8 | 8 | 37 |
+| Archamps → Genève | 9 | 9 | 8 | 1 |
+| Ambérieu-en-Bugey → Lyon Part-Dieu | 19 | 0 | 5 | 14 |
+| Chambéry → Grenoble | 76 | 0 | 8 | 68 |
+| Lyon Part-Dieu → Bellecour | 55 | 42 | 1 | 31 |
+
+Détail complet des 27 axes, exemples d'itinéraires et lignes sans tarif : `docs/DIAGNOSTIC-SERVEUR.md` (généré automatiquement, ne pas modifier à la main).
+
+### 3. Réseaux / tarifs restant à intégrer (travail ChatGPT, périmètre inchangé)
+
+- **Cars Région Isère** : grille zonale officielle confirmée (4,10 € à 12,10 €), mais aucune donnée de zone par arrêt dans le pipeline — impossible d'appliquer un chiffre sans inventer un prix.
+- **Cars Région Savoie** : pas de tarif réseau unique, prix par ligne à vérifier au cas par cas (plusieurs lignes touristiques/TAD à tarifs différents).
+- **Léman Pass** : grille 10+210/10+230 déjà intégrée (contradiction 4,80/4,90 levée le 15/11, voir section du 15/11 11h ci-dessous) ; reste Archamps (B 82, zone non prouvée) et les trajets internes Genève.
+- **TPG transfrontalier** : zone 10 (3,00 CHF) appliquée, mais pas de zone par arrêt pour distinguer un trajet intra-Genève d'un trajet frontalier hors Léman Pass.
+- **Star't Thonon** : grille par zone déjà intégrée le 15/11 (1,20 €/2,20 €), à revalider si une grille 2026/2027 plus récente apparaît.
+- **SNCF TER** : aucune source de prix exacte en open data (jeu « Tarifs TER AURA » archivé) ; FlixBus/BlaBlaCar Bus : prix dynamiques, pas d'API tarifaire câblée.
+- **BlaBlaCar Bus (`bus-api.blablacar.com` v3) et OJP Fare (opentransportdata.swiss)** : accès gratuits sur inscription existent mais nécessitent que **Laurent** crée la clé — aucun service payant ni contrat entreprise, donc rien d'autre à faire côté code tant que la clé n'existe pas.
+
+### 4. Anomalies bloquantes
+
+**Aucune anomalie bloquante ou de sécurité détectée** sur les 8 axes ni plus largement sur les 27. Un point de qualité non bloquant, constaté mais pas corrigé (pour éviter un conflit de fichier avec ChatGPT, signalé plutôt que traité) :
+
+- **`lyon-intra` (TCL)** : sur cet axe, le rayon de recherche de `nearbyDirectTrips` (3 000 m) remonte des lignes sans rapport avec le trajet avant la bonne ligne, épuisant le quota de marches — 0 trajet "réalisable" sur cet axe malgré un tarif GTFS correct. Déjà noté le 14/11, toujours vrai le 15/11.
+
+### 5. Commits et tests exécutés (session du 15/11, soir)
+
+**Commits sur `feature/transports-aura-suisse`** :
+- `0e675b5` — câble le moteur OJP Suisse dans les fiches mission (`P.ojp`, `fromOJP`, `ojpMode`)
+- `5155602` — charge `transport-ojp.js` dans l'application (`index.html`, `sw.js`) — corrige le bug de code mort
+- `8912482` — valide en réel le moteur OJP sur un vrai trajet, filtre les trajets hors fenêtre (`fitsWindow`)
+- `b38f9d8` — ajoute l'axe de validation Chambéry → Grenoble manquant
+- `13ea18b`, `8bbc092` — diagnostics réels automatiques (bots CI, déclenchés par les commits ci-dessus)
+
+**Tests** :
+- `node --test tests/*.test.cjs` : **811/823 passent** ; les 12 échecs sont préexistants et hors périmètre (grilles péage APRR/AREA/SANEF — confirmés identiques avant et après ce travail).
+- `tests/transport-ojp-provider.test.cjs` : 14/14 (dont le nouveau test de filtre de fenêtre).
+- `tests/transport-coverage.test.cjs` : 5/5.
+- `scripts/verifier-moteurs-regionaux.cjs` : 43/43 réseaux régionaux (1 anomalie non bloquante déjà connue : `proximiti`).
+
+### 6. Tâches sans conflit pour ChatGPT
+
+1. Zones par arrêt pour Cars Région Isère (seule donnée manquante pour activer la grille déjà confirmée).
+2. Tarifs par ligne pour Cars Région Savoie.
+3. Zone Léman Pass d'Archamps (B 82).
+4. Création des clés `bus-api.blablacar.com` et OJP Fare (opentransportdata.swiss) — **nécessite l'autorisation explicite de Laurent**, pas une décision ChatGPT ou Claude.
+5. Avant toute modification de `transport-fare-grids.js` ou `transport-coverage.js` : `git fetch` + lire les derniers commits (ce soir j'ai ajouté un axe dans `transport-coverage.js`, commit `b38f9d8`).
+
+---
+
 **Date du relevé : 14 novembre 2026, 12 h (section du 14/11 en tête) ; sections suivantes : 13 novembre 2026.** Dépôt : `at374/convoyage-app`, branche `feature/transports-aura-suisse`. Ce document décrit l'état après la session Claude du 13/11/2026, pour éviter de refaire le même travail.
 
 ## SESSION CLAUDE DU 15/11/2026 — lignes 272 et 274 tarifées, réseau Cars Région Haute-Savoie
