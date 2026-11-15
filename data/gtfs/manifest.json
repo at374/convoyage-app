@@ -1,13 +1,13 @@
 {
  "schemaVersion": 1,
- "generatedAt": "2026-11-14T15:09:43.205667+00:00",
+ "generatedAt": "2026-11-15T10:28:14.557317+00:00",
  "scope": "GTFS officiels réduits ou recopiés ; aucun horaire ni tarif créé",
  "networks": {
   "jybus-rumilly": {
    "network": "J'y bus Rumilly",
    "file": "jybus-rumilly.zip",
-   "sha256": "970cf33cb88dda3d1dcfea33a02f28596ae54deb523b7becfb37a82ea3ed9084",
-   "bytes": 62782,
+   "sha256": "b86b9db5d39c3f5a165d549471cca9de52401721d07805d5fc136ae37189f117",
+   "bytes": 62774,
    "bounds": [
     45.8,
     5.85,
@@ -26,8 +26,8 @@
   "tam-amberieu": {
    "network": "TAM Ambérieu-en-Bugey",
    "file": "tam-amberieu.zip",
-   "sha256": "5757afe0c63a72a6fb10eed155b4b6b9e2a842ea529257b43676bb4bcf2d89bd",
-   "bytes": 14002,
+   "sha256": "1ab7051fb9de7bd7c105d81bdac67521507de17007e58c8d42461d60f32d2b91",
+   "bytes": 13991,
    "bounds": [
     45.9,
     5.28,
@@ -46,8 +46,8 @@
   "cars-region-isere": {
    "network": "Cars Région Isère",
    "file": "cars-region-isere.zip",
-   "sha256": "15054670cafaa296b8776997fb8c6bf0c375a6697e9598209c2100d4433746a6",
-   "bytes": 691748,
+   "sha256": "106d5933de03434f7774f1f2ad1096e731adf95e6132a428bdd4c2314a886381",
+   "bytes": 691867,
    "bounds": [
     44.69,
     4.74,
@@ -66,8 +66,8 @@
   "cars-region-savoie": {
    "network": "Cars Région Savoie",
    "file": "cars-region-savoie.zip",
-   "sha256": "6136b5d8d0955e156f706ac1b2f8fb48f58e2229d07ec80aeafa24ebad9b2a6f",
-   "bytes": 20951,
+   "sha256": "cdebb25da621270411499baa3b7f040d547edc7cc1627afee6dcc9c8ac14be40",
+   "bytes": 20944,
    "bounds": [
     45.05,
     5.62,
@@ -81,6 +81,666 @@
    "routes": 8,
    "trips": 111,
    "stops": 179,
+   "fares": false
+  },
+  "rubis-bourg": {
+   "network": "Rubis Bourg-en-Bresse",
+   "file": "rubis-bourg.zip",
+   "sha256": "3b2ffaa677917b2dab66dae2b2cdf52883f9aeb8ea74b083aafbbf5dd6b5f8ee",
+   "bytes": 232221,
+   "bounds": [
+    46.15,
+    5.05,
+    46.52,
+    5.41
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "BOURG-EN-BRESSE - Rubis"
+   ],
+   "routes": 10,
+   "trips": 1121,
+   "stops": 435,
+   "fares": false
+  },
+  "evad-evian": {
+   "network": "ÉVA'D Évian",
+   "file": "evad-evian.zip",
+   "sha256": "ef40091052513f935dc575da4f2fb53bd1603f9e03c2c56eccc62b200515617e",
+   "bytes": 191021,
+   "bounds": [
+    46.24,
+    6.45,
+    46.42,
+    6.86
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "EVIAN - ÉVA'D"
+   ],
+   "routes": 10,
+   "trips": 991,
+   "stops": 368,
+   "fares": false
+  },
+  "chamonix-bus": {
+   "network": "Chamonix Bus",
+   "file": "chamonix-bus.zip",
+   "sha256": "96a97aca3430c7483f1372917bfdf803f718cc945172d962124239a5746d64db",
+   "bytes": 178424,
+   "bounds": [
+    45.87,
+    6.74,
+    46.06,
+    6.96
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "CHAMONIX - Chamonix Bus"
+   ],
+   "routes": 23,
+   "trips": 1492,
+   "stops": 257,
+   "fares": false
+  },
+  "proximiti-bonneville": {
+   "network": "Proxim iTi Bonneville – La Roche",
+   "file": "proximiti-bonneville.zip",
+   "sha256": "87b9a151be954e3640cd1acd25d02996a44dc002446bd17396fc3307b16781f8",
+   "bytes": 115157,
+   "bounds": [
+    45.91,
+    6.17,
+    46.23,
+    6.53
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "BONNEVILLE-LA ROCHE-REIGNIER-VIUZ - Proxim iTi"
+   ],
+   "routes": 18,
+   "trips": 317,
+   "stops": 444,
+   "fares": false
+  },
+  "mobivals-valserhone": {
+   "network": "Mobi'Vals Valserhône",
+   "file": "mobivals-valserhone.zip",
+   "sha256": "b1b83ca606340a126d8b478d98b112a5923d55c1600410a1067818a5af3829e2",
+   "bytes": 162431,
+   "bounds": [
+    46.08,
+    5.76,
+    46.16,
+    5.87
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "VALSERHÔNE - Mobi'Vals"
+   ],
+   "routes": 12,
+   "trips": 1200,
+   "stops": 103,
+   "fares": false
+  },
+  "tra-albertville": {
+   "network": "TRA Mobilité Albertville",
+   "file": "tra-albertville.zip",
+   "sha256": "38f1b5b204cd98f051ec331225e7d612dade1b2dbf3fa97de0fbf2901f9f8873",
+   "bytes": 62816,
+   "bounds": [
+    45.55,
+    6.22,
+    45.77,
+    6.59
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "ALBERTVILLE - TRA Mobilité"
+   ],
+   "routes": 11,
+   "trips": 372,
+   "stops": 309,
+   "fares": false
+  },
+  "duobus-oyonnax": {
+   "network": "Duobus Oyonnax",
+   "file": "duobus-oyonnax.zip",
+   "sha256": "544a739cf7edc5d70b6d9db520c8e81ab786c54e1dc82af03f20f820076912f1",
+   "bytes": 35736,
+   "bounds": [
+    46.19,
+    5.59,
+    46.34,
+    5.7
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "OYONNAX - DUOBUS"
+   ],
+   "routes": 8,
+   "trips": 225,
+   "stops": 145,
+   "fares": false
+  },
+  "ruban-bourgoin": {
+   "network": "Ruban Bourgoin-Jallieu",
+   "file": "ruban-bourgoin.zip",
+   "sha256": "8a5df800aefa808d8da670373e083c05ae0ec52dad09b07a6a61d090c0edec79",
+   "bytes": 464372,
+   "bounds": [
+    45.48,
+    5.08,
+    45.71,
+    5.4
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "BOURGOIN-JALLIEU - Ruban"
+   ],
+   "routes": 35,
+   "trips": 1898,
+   "stops": 667,
+   "fares": false
+  },
+  "lva-vienne": {
+   "network": "L'va Vienne",
+   "file": "lva-vienne.zip",
+   "sha256": "803cc79dfb7d73ea9c92f302f0b3995bfdd3db71a66c76c59c53e0350d44b0d0",
+   "bytes": 2099906,
+   "bounds": [
+    45.39,
+    4.59,
+    45.69,
+    5.49
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "VIENNE - L’va"
+   ],
+   "routes": 49,
+   "trips": 11125,
+   "stops": 1037,
+   "fares": false
+  },
+  "colibri-miribel": {
+   "network": "Colibri Miribel",
+   "file": "colibri-miribel.zip",
+   "sha256": "eac1f771c072b59293409c34dff5769e6bf8f773bb340fc82c774dbc39bacf93",
+   "bytes": 17080,
+   "bounds": [
+    45.8,
+    4.89,
+    45.85,
+    5.04
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "MIRIBEL - Colibri"
+   ],
+   "routes": 1,
+   "trips": 64,
+   "stops": 67,
+   "fares": false
+  },
+  "tico-montluel": {
+   "network": "TICO Montluel",
+   "file": "tico-montluel.zip",
+   "sha256": "9754c87111f96eb4979bf30f40e8a4b1c05ce68dda5563a99249e77888923449",
+   "bytes": 6981,
+   "bounds": [
+    45.81,
+    5.03,
+    45.88,
+    5.15
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "MONTLUEL - TICO 3CM"
+   ],
+   "routes": 1,
+   "trips": 22,
+   "stops": 44,
+   "fares": false
+  },
+  "saonibus-trevoux": {
+   "network": "Saônibus Trévoux",
+   "file": "saonibus-trevoux.zip",
+   "sha256": "17087e8546bb737996f2ec7a4735b67b1eee2407e19398dac5a73b2b03e4092e",
+   "bytes": 8996,
+   "bounds": [
+    45.86,
+    4.7,
+    45.97,
+    4.85
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "TREVOUX - Saônibus"
+   ],
+   "routes": 2,
+   "trips": 55,
+   "stops": 50,
+   "fares": false
+  },
+  "cars-region-express": {
+   "network": "Cars Région Express",
+   "file": "cars-region-express.zip",
+   "sha256": "fe8ce783373911c8d73bf4facb5ef267480d5e447160e9fe9d30dd0251138b92",
+   "bytes": 57808,
+   "bounds": [
+    44.35,
+    2.8,
+    46.78,
+    6.15
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "REGION - cars Région Express"
+   ],
+   "routes": 13,
+   "trips": 450,
+   "stops": 159,
+   "fares": false
+  },
+  "cars-region-loire": {
+   "network": "Cars Région Loire",
+   "file": "cars-region-loire.zip",
+   "sha256": "dc5f369d02e4e584947c1a288697fd472dfa2f815f10438f452a5e4211eaf9b6",
+   "bytes": 378250,
+   "bounds": [
+    45.23,
+    3.68,
+    46.22,
+    4.88
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "REGION - cars Région Loire"
+   ],
+   "routes": 357,
+   "trips": 2169,
+   "stops": 3120,
+   "fares": false
+  },
+  "cars-region-drome": {
+   "network": "Cars Région Drôme",
+   "file": "cars-region-drome.zip",
+   "sha256": "1b209a0bce12e6e54f063a82bc176442c6833ef375c8620e92b0e2ceccb4b067",
+   "bytes": 237938,
+   "bounds": [
+    44.04,
+    4.63,
+    45.38,
+    6.1
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "REGION - cars Région Drôme"
+   ],
+   "routes": 134,
+   "trips": 1414,
+   "stops": 1850,
+   "fares": false
+  },
+  "cars-region-ardeche": {
+   "network": "Cars Région Ardèche",
+   "file": "cars-region-ardeche.zip",
+   "sha256": "2b1ffbec9a14f2aeb7901b17346ef26a925a7cb0fe025dc6d3ebaa721ab709f6",
+   "bytes": 336610,
+   "bounds": [
+    44.25,
+    3.85,
+    45.4,
+    4.95
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "REGION - cars Région Ardèche"
+   ],
+   "routes": 113,
+   "trips": 1764,
+   "stops": 3269,
+   "fares": false
+  },
+  "cars-region-allier": {
+   "network": "Cars Région Allier",
+   "file": "cars-region-allier.zip",
+   "sha256": "6c5848f64a8663cb48a0b5d7f892f4f49a1a845383074e6203aee95e5078c259",
+   "bytes": 152026,
+   "bounds": [
+    46.02,
+    2.18,
+    46.85,
+    4.07
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "REGION - cars Région Allier"
+   ],
+   "routes": 132,
+   "trips": 928,
+   "stops": 1386,
+   "fares": false
+  },
+  "cars-region-cantal": {
+   "network": "Cars Région Cantal",
+   "file": "cars-region-cantal.zip",
+   "sha256": "17a2e27c94b8f42cbc27c7b0f263fab785f942605c77f6bcb3469b946d615f03",
+   "bytes": 50706,
+   "bounds": [
+    44.67,
+    2.18,
+    45.79,
+    3.32
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "REGION - cars Région Cantal"
+   ],
+   "routes": 19,
+   "trips": 239,
+   "stops": 274,
+   "fares": false
+  },
+  "cars-region-haute-loire": {
+   "network": "Cars Région Haute-Loire",
+   "file": "cars-region-haute-loire.zip",
+   "sha256": "ce111bcb7450c1534d1d3f9a48389109d90672abad1077278abd50c14761fcc7",
+   "bytes": 57501,
+   "bounds": [
+    44.71,
+    3.23,
+    45.56,
+    4.41
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "REGION - cars Région Haute-Loire"
+   ],
+   "routes": 20,
+   "trips": 247,
+   "stops": 461,
+   "fares": false
+  },
+  "coqueligo-annonay": {
+   "network": "CoqueliGO Annonay",
+   "file": "coqueligo-annonay.zip",
+   "sha256": "6a9efba64b7e4d4fd2a4d39f8d76f87d97792542cfd10ab934d250c4cc03f89a",
+   "bytes": 67724,
+   "bounds": [
+    45.21,
+    4.62,
+    45.29,
+    4.72
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "ANNONAY - CoqueliGO"
+   ],
+   "routes": 4,
+   "trips": 368,
+   "stops": 137,
+   "fares": false
+  },
+  "toutenbus-aubenas": {
+   "network": "Tout'enbus Aubenas",
+   "file": "toutenbus-aubenas.zip",
+   "sha256": "ff7d088213651aedd62c8889b2a3e66ffd7bfa6a33428e98041c3aab89ce5633",
+   "bytes": 38679,
+   "bounds": [
+    44.54,
+    4.3,
+    44.69,
+    4.47
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "AUBENAS - Tout'enbus"
+   ],
+   "routes": 19,
+   "trips": 209,
+   "stops": 242,
+   "fares": false
+  },
+  "transcab-aurillac": {
+   "network": "Trans'Cab Aurillac",
+   "file": "transcab-aurillac.zip",
+   "sha256": "e9f7375ebf3d3948fc21362d950c6c76afc9be910c33323fed5dd4f6a0ddc8a6",
+   "bytes": 205226,
+   "bounds": [
+    44.8,
+    2.22,
+    45.09,
+    2.68
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "AURILLAC - Trans'Cab"
+   ],
+   "routes": 25,
+   "trips": 1627,
+   "stops": 668,
+   "fares": false
+  },
+  "montelibus-montelimar": {
+   "network": "Montélibus Montélimar",
+   "file": "montelibus-montelimar.zip",
+   "sha256": "e74aa030f5690f31c7dc01aabe0869b503ea97f9db820c4451a48cb2cdb3b360",
+   "bytes": 210731,
+   "bounds": [
+    44.44,
+    4.69,
+    44.73,
+    5.02
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "MONTELIMAR - Montélibus"
+   ],
+   "routes": 35,
+   "trips": 1250,
+   "stops": 456,
+   "fares": false
+  },
+  "maelis-montlucon": {
+   "network": "Maelis Montluçon",
+   "file": "maelis-montlucon.zip",
+   "sha256": "2f0afffa121b3309fa505781e2de500d5f2b1b1a25f672c9a278910bf7607a8c",
+   "bytes": 169749,
+   "bounds": [
+    46.15,
+    2.49,
+    46.42,
+    2.74
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "MONTLUCON - Maelis"
+   ],
+   "routes": 20,
+   "trips": 661,
+   "stops": 456,
+   "fares": false
+  },
+  "aleo-moulins": {
+   "network": "Aléo Moulins",
+   "file": "aleo-moulins.zip",
+   "sha256": "c74203f3cc1a40f30f21d8a97a2ac158d15070636dc1ceab60af5f6649a1ca39",
+   "bytes": 177111,
+   "bounds": [
+    46.49,
+    3.27,
+    46.65,
+    3.46
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "MOULINS - Aléo"
+   ],
+   "routes": 11,
+   "trips": 767,
+   "stops": 305,
+   "fares": false
+  },
+  "tcap-privas": {
+   "network": "T'CAP Privas",
+   "file": "tcap-privas.zip",
+   "sha256": "99624b8561d7da393ce769712e5b271d3a4567cd82aa811d7f828d03f28db4a9",
+   "bytes": 66206,
+   "bounds": [
+    44.68,
+    4.52,
+    44.84,
+    4.82
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "PRIVAS - T'CAP"
+   ],
+   "routes": 11,
+   "trips": 272,
+   "stops": 129,
+   "fares": false
+  },
+  "velay-le-puy": {
+   "network": "Mobilité en Velay (Le Puy)",
+   "file": "velay-le-puy.zip",
+   "sha256": "4c512d118b3adab6db559b97865813d449e082a2f42a3daa08f2877c5216f97e",
+   "bytes": 142117,
+   "bounds": [
+    44.97,
+    3.83,
+    45.09,
+    4.01
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "LE-PUY-EN-VELAY – Mobilité en Velay"
+   ],
+   "routes": 20,
+   "trips": 1196,
+   "stops": 402,
+   "fares": false
+  },
+  "rlv-riom": {
+   "network": "RLV Mobilités Riom",
+   "file": "rlv-riom.zip",
+   "sha256": "aefa8b5898c4d67be0b52fb1733da3ac680bdbeba472b30f56eb6a3f96ce29b1",
+   "bytes": 89578,
+   "bounds": [
+    45.83,
+    3.02,
+    45.98,
+    3.24
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "RIOM - RLV Mobilités"
+   ],
+   "routes": 9,
+   "trips": 473,
+   "stops": 245,
+   "fares": false
+  },
+  "star-roanne": {
+   "network": "Star Roanne",
+   "file": "star-roanne.zip",
+   "sha256": "5219058e8fa7548ec21840fa6806779c8f0aca0c12ba7e747da5f06ce0df3bee",
+   "bytes": 701352,
+   "bounds": [
+    45.96,
+    3.78,
+    46.22,
+    4.26
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "ROANNE - Star"
+   ],
+   "routes": 20,
+   "trips": 4153,
+   "stops": 649,
+   "fares": false
+  },
+  "lebus-tain-tournon": {
+   "network": "Le Bus Tain-Tournon",
+   "file": "lebus-tain-tournon.zip",
+   "sha256": "c1c63d6e872d4a5d28957ef720256d4965c29ec4f96dfa39faa1e8886ef7ef0c",
+   "bytes": 27302,
+   "bounds": [
+    44.99,
+    4.52,
+    45.16,
+    5.07
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "TAIN-TOURNON - ARCHE AGGLO LE BUS"
+   ],
+   "routes": 7,
+   "trips": 99,
+   "stops": 99,
+   "fares": false
+  },
+  "smtut-thiers": {
+   "network": "SMTUT Thiers",
+   "file": "smtut-thiers.zip",
+   "sha256": "d4523860c31a26a36277421f9b6563d0cd41298864dfcc0697a2067f867e4a32",
+   "bytes": 96548,
+   "bounds": [
+    45.69,
+    3.36,
+    46.03,
+    3.74
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "THIERS - SMTUT"
+   ],
+   "routes": 57,
+   "trips": 355,
+   "stops": 746,
+   "fares": false
+  },
+  "mobivie-vichy": {
+   "network": "MobiVie Vichy",
+   "file": "mobivie-vichy.zip",
+   "sha256": "3642015a7290344c791cbad6977514a82ab010dd746d6614f7c448578bdd8c7c",
+   "bytes": 159611,
+   "bounds": [
+    46.06,
+    3.37,
+    46.17,
+    3.49
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "VICHY - MobiVie"
+   ],
+   "routes": 9,
+   "trips": 753,
+   "stops": 255,
+   "fares": false
+  },
+  "le37-roussillon": {
+   "network": "Le 37 Péage-de-Roussillon",
+   "file": "le37-roussillon.zip",
+   "sha256": "f1fd0f824a186bc87303765970662cac07227b54bed829cd92399ecb4de6a1b5",
+   "bytes": 26504,
+   "bounds": [
+    45.3,
+    4.75,
+    45.47,
+    5.07
+   ],
+   "origin": "agrégat Oùra",
+   "agencies": [
+    "LE-PEAGE-DE-ROUSSILLON - Le 37"
+   ],
+   "routes": 4,
+   "trips": 108,
+   "stops": 48,
    "fares": false
   },
   "tac-annemasse": {
@@ -142,7 +802,7 @@
   "mreso-grenoble": {
    "network": "M Réso — Métropole grenobloise",
    "file": "mreso-grenoble.zip",
-   "sha256": "8cb38338afcaf6869421d4188a11dd59a5b781676ab958f8bcf31e4c06eae6b8",
+   "sha256": "f658be4074511aab76778ee1e58f1aa4b602c597ca3a5bb93fbcf9bc4770c24f",
    "bytes": 6383277,
    "bounds": [
     45.0,
@@ -184,11 +844,11 @@
   "tcl-lyon": {
    "network": "TCL",
    "file": "tcl-lyon.zip",
-   "sha256": "24caeaf4c7c6cd7d2ed285276be8523d6a7129e92114a5f91a09451cb8bd6bdc",
-   "bytes": 4701254,
+   "sha256": "1b69964ea8bec0c567a9d5a4b956023e1c314ca0f5356ddb76337b46b4157581",
+   "bytes": 4656836,
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8",
    "routes": 76,
-   "trips": 96548,
+   "trips": 95559,
    "stops": 476,
    "fares": true,
    "bounds": [
@@ -202,6 +862,6 @@
  "errors": {},
  "oura": {
   "source": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA",
-  "version": "2026-11-14T05:52:27+00:00"
+  "version": "2026-11-15T05:36:28+00:00"
  }
 }
