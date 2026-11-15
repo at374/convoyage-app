@@ -683,7 +683,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       <select id="tri" aria-label="Trier"><option value="recent">Plus récentes</option><option value="date">Date de départ</option><option value="prix">Prix</option><option value="heure">€/heure</option><option value="proche">Les plus proches de moi</option></select></div>
       <div class="ligneFiltres"><label>Date début<input id="fDateDeb" type="date" value="${esc((etat.plus || {}).dateDeb || '')}"></label><label>Date fin<input id="fDateFin" type="date" value="${esc((etat.plus || {}).dateFin || '')}"></label></div>
       <div class="ligneFiltres"><select id="cote" aria-label="Lieu cherché">${Object.entries(COTES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
-      <select id="rayon" aria-label="Autour de la ville"${aVille ? '' : ' disabled'}><option value="0">Ville exacte</option><option value="20">Ville + 20 km</option><option value="50">Ville + 50 km</option><option value="100">Ville + 100 km</option></select></div>
+      <select id="rayon" aria-label="Autour de la ville"${aVille ? '' : ' disabled'}><option value="0">Ville exacte</option><option value="20">Max 20 km de la ville</option><option value="50">Max 50 km de la ville</option><option value="100">Max 100 km de la ville</option></select></div>
       <div class="lignePos"><select id="posSource" aria-label="Chercher depuis"><option value="position">Depuis ma position GPS</option><option value="domicile">Depuis mon domicile</option></select><button id="btnPos" class="second" type="button">📍 Ma position</button><select id="posMax" aria-label="Distance maximale depuis ma position"><option value="0">Distance max à vol d’oiseau : sans limite</option>${[20, 50, 100, 150, 200, 300].map(k => `<option value="${k}">Max ${k} km à vol d’oiseau</option>`).join('')}</select><span class="doux" id="posInfo"></span></div>
       ${blocPlusFiltres(dispo)}
       <div class="zones" id="zones"></div>
@@ -744,7 +744,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     const add = (cle, txt) => P.push('<button type="button" class="puceFiltre" data-rm="' + esc(cle) + '" aria-label="Retirer ce filtre" style="font-size:.85rem;padding:3px 10px;border-radius:14px;border:1px solid #c9a227;background:#2a2108;color:#f5d26b;cursor:pointer">' + esc(txt) + ' <b>✕</b></button>');
     if (etat.filtre !== 'toutes') add('plateforme', etat.filtre === 'devis' ? 'Filtre : devis envoyés (en attente d’acceptation)' : etat.filtre === 'acceptees' ? 'Filtre : missions acceptées' : 'Plateforme : ' + etat.filtre);
     etat.zones.forEach((z, i) => add('zone:' + i, (COTES[z.cote || 'tous'] || 'Lieu') + ' : ' + G.libelleZone(z)));
-    if (etat.zones.length && etat.rayon > 0) add('rayon', 'Autour : ville + ' + etat.rayon + ' km');
+    if (etat.zones.length && etat.rayon > 0) add('rayon', 'Max ' + etat.rayon + ' km de la ville');
     if (etat.posMax > 0) add('posMax', 'Max ' + etat.posMax + ' km à vol d’oiseau depuis ' + (sourceRecherche() === 'domicile' ? 'mon domicile' : 'ma position'));
     if (q) add('recherche', 'Recherche : ' + etat.recherche);
     const dj = s => { const m = /^(\d{4})-(\d\d)-(\d\d)/.exec(String(s || '')); return m ? m[3] + '/' + m[2] : String(s); };
@@ -786,7 +786,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   function vueAgenda() {
     const agendaMissions = planningMissions();
     const A = window.CPAgenda.analyser(agendaMissions, etat.reglages);
-    const items = A.items.filter(x => etat.agendaTout || !((x.etat === 'passee' || x.etat === 'terminee') && x.fin && Date.now() - x.fin.t > 7 * 86400000));
+    const items = A.items.filter(x => etat.agendaTout || !((x.etat === 'passee' || x.etat === 'terminee') && (x.fin ? x.fin.t : x.debut) != null && Date.now() - (x.fin ? x.fin.t : x.debut) > 7 * 86400000));
     // Calcule les enchaînements une seule fois par rendu. Les transports ne sont pas vérifiés par ce résumé.
     const nowChain = Date.now();
     const futureChainItems = A.items.filter(x => x.etat === 'a_venir' || x.etat === 'en_cours').sort((a, b) => (a.debut ?? Infinity) - (b.debut ?? Infinity));
