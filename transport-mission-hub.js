@@ -326,12 +326,22 @@ function priceOf(j,fareFor){
  if(j.walkOnly)return {status:'free',amounts:{EUR:0},label:'Gratuit (à pied)',missingSources:[]};
  const amounts={},missingSources=[],sources=[],legFares=[];
  let ticket=null; // titre en cours : {network,validUntilMs} — une correspondance dans la validité ne se repaie pas
- for(const l of j.legs){
+ const isVerifiedFare=f=>!!(f&&finite(f.amount)&&f.amount>=0&&/^(EUR|CHF)$/.test(f.currency)&&f.source);
+ const found=j.legs.map(l=>{if(l.kind==='walk')return null;
+  const direct=isVerifiedFare(l.fare)?l.fare:null;return direct||(typeof fareFor==='function'?fareFor(l):null);});
+ // Titre combiné officiel (ex. ligne 272 « Parcours + zone 10 », Léman Pass multizones) : quand le même trajet
+ // emprunte aussi le réseau que ce titre couvre, on compte le titre combiné une fois et les portions couvertes
+ // ne se repaient pas — on n'additionne jamais deux titres là où la grille officielle en prévoit un seul.
+ const combo=found.findIndex(f=>isVerifiedFare(f)&&f.combined&&finite(f.combined.amount)&&f.combined.covers);
+ const covered=new Set();
+ if(combo>=0){const c=found[combo].combined;
+  found.forEach((f,i)=>{if(i!==combo&&isVerifiedFare(f)&&f.network===c.covers)covered.add(i);});
+  if(covered.size)found[combo]={...found[combo],amount:c.amount,validityMinutes:null,source:found[combo].source+' — titre retenu : '+c.label};}
+ for(let i=0;i<j.legs.length;i++){const l=j.legs[i];
   if(l.kind==='walk'){legFares.push(null);continue;}
-  const isVerifiedFare=f=>!!(f&&finite(f.amount)&&f.amount>=0&&/^(EUR|CHF)$/.test(f.currency)&&f.source);
-  const direct=isVerifiedFare(l.fare)?l.fare:null;
-  const f=direct||(typeof fareFor==='function'?fareFor(l):null);
+  const f=found[i];
   legFares.push(isVerifiedFare(f)?f:null);
+  if(covered.has(i)){sources.push(f.network+' : couvert par le titre combiné');continue;}
   if(f&&finite(f.amount)&&f.amount>=0&&/^(EUR|CHF)$/.test(f.currency)&&f.source){
    const boarding=ms(l.departure);
    if(ticket&&f.network&&ticket.network===f.network&&Number.isFinite(boarding)&&boarding<=ticket.validUntilMs){sources.push(f.network+' : correspondance couverte par le même titre');continue;}

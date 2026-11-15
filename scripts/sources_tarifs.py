@@ -110,6 +110,10 @@ try:
     for st in rd('stop_times.txt'):
         rid=trips.get(st['trip_id'])
         if rid: used.setdefault((routes[rid]['route_short_name'].strip(),st['stop_id']),0); used[(routes[rid]['route_short_name'].strip(),st['stop_id'])]+=1
+    # Inventaire de toutes les lignes du flux officiel Cars Région Haute-Savoie (comparaison avec le site de la Région).
+    allroutes=rd('routes.txt'); bytrip={}
+    for t in rd('trips.txt'): bytrip[t['route_id']]=bytrip.get(t['route_id'],0)+1
+    open(f'{OUT}/cars74-lignes.txt','w').write('\n'.join(['ligne | nom | courses']+sorted(f"{(r.get('route_short_name') or '').strip()} | {r.get('route_long_name','')} | {bytrip.get(r['route_id'],0)}" for r in allroutes)))
     lines=['Fichiers du flux : '+', '.join(z.namelist()),'ligne | stop_id | nom | lat | lon | zone_id | commune BAN | code INSEE | passages']
     cache={}
     for (line,sid),n in sorted(used.items()):

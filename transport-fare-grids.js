@@ -185,6 +185,69 @@ function zone10Fare(leg){
  return {amount:ZONE10.amount,currency:ZONE10.currency,network:ZONE10.network,validityMinutes:ZONE10.validityMinutes,
   source:ZONE10.network+' · billet 60 min, 2e classe, prix entier · '+ZONE10.source+' (valable jusqu’au 12/12/2026, vérifié le '+ZONE10.checkedAt+')'};
 }
+// LIGNE 272 Annecy – Genève (ALPBUS / Cars Région Haute-Savoie) : grille officielle « Tarification du 14/12/2025 au
+// 12/12/2026 » publiée par les tpg (LIT_272_Grille_tarifaire_20251214_20261212.pdf), relue le 14/11/2026. Le prix
+// dépend du couple de communes (matrice départ/arrivée du document, extraite case par case et vérifiée symétrique).
+// La commune de chaque arrêt vient de son identifiant officiel dans le flux Oùra (FR:<code INSEE>:ZE:<n°>), recoupé
+// avec la Base Adresse Nationale (docs/sources-tarifs/cars74-271-272-274-arrets.txt). Arrêt inconnu, non recoupé,
+// même commune ou zone Sibra : aucun prix. « combined » = titre couvrant aussi la zone 10 de Genève (voir priceOf).
+const L272={validFrom:'2025-12-14',validUntil:'2026-12-12',checkedAt:'2026-11-14',
+ source:'https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf',
+ order:['GE','SJ','NEY','BEA','PRE','SBL','AND','COP','CRU','ALL','FIL','PRI','ANN'],
+ // Lignes = départ, colonnes = arrivée dans l'ordre ANN PRI FIL ALL CRU COP AND SBL PRE BEA NEY SJ GE.
+ rows:{GE:'5 4 4 4 3 3 3 3 L L L L -',SJ:'4 3 3 3 2 2 2 2 P P P P L',NEY:'4 3 3 2 2 1 1 1 P P P P L',BEA:'3 3 3 2 1 1 1 1 P P P P L',
+  PRE:'3 3 2 2 1 1 1 1 - P P P L',SBL:'3 2 2 2 1 1 1 - 1 1 1 2 3',AND:'3 2 2 2 1 1 - 1 1 1 1 2 3',COP:'3 2 2 1 1 - 1 1 1 1 1 2 3',
+  CRU:'2 2 1 1 - 1 1 1 1 1 2 2 3',ALL:'2 1 1 - 1 1 2 2 2 2 2 3 4',FIL:'S S - 1 1 2 2 2 2 3 3 3 4',PRI:'S - S 1 2 2 2 2 3 3 3 3 4',
+  ANN:'- S S 2 2 3 3 3 3 3 4 4 5'},
+ cols:['ANN','PRI','FIL','ALL','CRU','COP','AND','SBL','PRE','BEA','NEY','SJ','GE'],
+ // [billet unité Parcours, billet unité Parcours + zone 10] ; P = zone locale 230 ; L = Léman Pass multizones 10+230.
+ price:{'1':[1.60,null],'2':[3.80,null],'3':[6.40,9.60],'4':[8.60,11.80],'5':[11.30,14.50],P:[1.60,null],L:[4.80,4.80]},
+ insee:{'74006':'ALL','74009':'AND','74031':'BEA','74088':'COP','74096':'CRU','74201':'NEY','74216':'PRE','74228':'SBL','74282':'FIL'},
+ geneva:['6608','6623','6628','6633','6643'],
+ annecy:['57539','57834','57835','57866','57867','58714','58715'],pringy:['57836','57837','57875','57876'],
+ stJulien:['57858','57859','57922','57960','57961','57962','57963','58810','92693'],douane:['57860','57861'],
+ excluded:['58653'] // Burgaz : identifiant « Fillière », BAN « Allonzier-la-Caille » — non recoupé, pas de prix
+};
+function line272Locality(id){
+ const m=/^FR:(\d{4,5}):ZE:(\d+):HAUTExSAVOIE$/.exec(String(id||''));if(!m)return null;
+ const [,code,ze]=m;if(L272.excluded.includes(ze))return null;
+ if(L272.geneva.includes(code))return 'GE';
+ if(code==='74010')return L272.annecy.includes(ze)?'ANN':L272.pringy.includes(ze)?'PRI':null;
+ if(code==='74243')return L272.douane.includes(ze)?'GE':L272.stJulien.includes(ze)?'SJ':null;
+ return L272.insee[code]||null;
+}
+function line272Fare(leg){
+ if(!leg||leg.kind==='walk'||leg.mode!=='Bus'||typeof leg.provider!=='string'||typeof leg.departure!=='string')return null;
+ if(!/^cars\s*r[ée]gion\s*haute[- ]savoie$/i.test(leg.provider.trim())||String(leg.line||'').trim()!=='272')return null;
+ const day=leg.departure.slice(0,10);if(day<L272.validFrom||day>L272.validUntil)return null;
+ const raw=leg.gtfsRaw||{},pick=(v,p)=>typeof v==='string'&&v?v:(p&&(p.stopId||p.stop_id||p.id))||null;
+ const a=line272Locality(pick(raw.from,leg.fromPoint)),b=line272Locality(pick(raw.to,leg.toPoint));
+ if(!a||!b)return null;
+ const cell=L272.rows[a].split(' ')[L272.cols.indexOf(b)],back=L272.rows[b].split(' ')[L272.cols.indexOf(a)];
+ if(cell!==back)return null; // la matrice officielle est symétrique : toute incohérence = pas de prix
+ const p=L272.price[cell];if(!p)return null;
+ const label=cell==='L'?'Léman Pass multizones 10+230':cell==='P'?'zone locale 230':'zone '+cell+(a==='GE'||b==='GE'?' (billet unité Parcours)':'');
+ return {amount:p[0],currency:'EUR',network:'Ligne 272 ALPBUS · '+label,validityMinutes:cell==='L'?90:null,
+  ...(p[1]!==null&&(a==='GE'||b==='GE')?{combined:{amount:p[1],covers:ZONE10.network,label:cell==='L'?label:'billet unité Parcours + zone 10'}}:{}),
+  source:'Ligne 272 · '+label+' · grille officielle du 14/12/2025 au 12/12/2026 · '+L272.source+' (vérifiée le '+L272.checkedAt+')'};
+}
+// tpg, lignes urbaines transfrontalières entre Saint-Julien-en-Genevois (zone 230) et le canton de Genève (zone 10) :
+// billet Léman Pass multizones 10+230, 4,80 €, 90 min, tous modes dans les deux zones — même grille officielle 272
+// (« Titre Multizones 10,230 ») et lemanpass.com/tarifs. Seule la localité « Saint-Julien » (nom officiel d'arrêt
+// « Saint-Julien, … ») est prouvée en zone 230 ; Collonges, Archamps, etc. : aucun prix.
+function lemanMultizone230Fare(leg){
+ if(!leg||leg.kind==='walk'||leg.mode!=='Bus'||typeof leg.provider!=='string'||typeof leg.departure!=='string')return null;
+ if(!/^tpg$/i.test(leg.provider.trim()))return null;
+ if(/^\s*(?:27[124])\s*$/.test(String(leg.line||'').replace(/^[A-Za-z]+\s+/,'')))return null;
+ const day=leg.departure.slice(0,10);if(day<L272.validFrom||day>L272.validUntil)return null;
+ const head=n=>{const raw=String(typeof n==='string'?n:(n&&typeof n==='object'?(n.name||n.stopName||n.label||''):''));
+  return raw.includes(',')?raw.split(',')[0].normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim():'';};
+ const sj=n=>head(n)==='saint-julien'&&!/douane/i.test(String(n));
+ if(!((sj(leg.from)&&zone10Locality(leg.to))||(sj(leg.to)&&zone10Locality(leg.from))))return null;
+ return {amount:4.80,currency:'EUR',network:'Léman Pass multizones 10+230',validityMinutes:90,
+  combined:{amount:4.80,covers:ZONE10.network,label:'Léman Pass multizones 10+230'},
+  source:'Léman Pass · billet multizones 10+230, 90 min · '+L272.source+' (vérifié le '+L272.checkedAt+')'};
+}
 // STAR'T : trajets interzones A+B prouvés sur les lignes L et 142.
 // Les Arts (Thonon, zone A) ↔ Mairie (Bons-en-Chablais, zone B).
 // Ne pas généraliser à d'autres arrêts sans leur commune/zone vérifiée.
@@ -207,6 +270,8 @@ function fareFor(leg,grids){
  const zoned=officialZoneFare(leg);if(zoned)return zoned;
  const leman=lemanPassFare(leg);if(leman)return leman;
  const startAB=startInterzoneFare(leg);if(startAB)return startAB;
+ const l272=line272Fare(leg);if(l272)return l272;
+ const lm230=lemanMultizone230Fare(leg);if(lm230)return lm230;
  const z10=zone10Fare(leg);if(z10)return z10;
  if(!leg||leg.kind==='walk'||typeof leg.provider!=='string'||!leg.provider.trim())return null;
  const day=typeof leg.departure==='string'?leg.departure.slice(0,10):null;if(!day)return null;
@@ -225,7 +290,7 @@ function fareFor(leg,grids){
  return {amount:e.amount,currency:e.currency,network:e.network,validityMinutes:Number.isFinite(e.validityMinutes)?e.validityMinutes:null,
   source:e.network+' · '+e.product+' · '+e.source+' (vérifié le '+e.checkedAt+')'};
 }
-const api={GRIDS,fareFor,valid,officialZoneFare,lemanPassFare,startInterzoneFare,zone10Fare,stationKey};
+const api={GRIDS,fareFor,valid,officialZoneFare,lemanPassFare,startInterzoneFare,zone10Fare,line272Fare,line272Locality,lemanMultizone230Fare,stationKey};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportFareGrids=api;
 })(typeof window!=='undefined'?window:globalThis);

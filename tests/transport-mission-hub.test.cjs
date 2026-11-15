@@ -307,6 +307,17 @@ test('classement : un horaire programmé plus rapide passe devant un réalisable
  assert.equal(pick([broken,same],'Plus rapide'),'EGAL','un trajet incomplet ne passe jamais devant');
 });
 
+test('titre combiné officiel : 272 Parcours + zone 10 compté une fois, tram genevois non repayé',()=>{
+ const G=require('../transport-fare-grids.js'),id=(c,z)=>'FR:'+c+':ZE:'+z+':HAUTExSAVOIE';
+ const car={kind:'ride',mode:'Bus',provider:'Cars Région Haute-Savoie',line:'272',departure:'2026-11-16T08:00:00+01:00',arrival:'2026-11-16T09:00:00+01:00',gtfsRaw:{from:id('74010','57539'),to:id('6628','58921')}};
+ const tram={kind:'ride',mode:'Tram',provider:'TPG',line:'T 12',from:'Lancy-Bachet, gare',to:'Genève, Bel-Air',departure:'2026-11-16T09:05:00+01:00',arrival:'2026-11-16T09:20:00+01:00'};
+ const alone=H.priceOf({legs:[car]},G.fareFor);assert.deepEqual(alone.amounts,{EUR:11.30});
+ const both=H.priceOf({legs:[car,tram]},G.fareFor);assert.equal(both.status,'verified');assert.deepEqual(both.amounts,{EUR:14.50});
+ const b80={kind:'ride',mode:'Bus',provider:'TPG',line:'B 80',from:'Saint-Julien, centre',to:'Lancy-Bachet, gare',departure:'2026-11-16T08:30:00+01:00',arrival:'2026-11-16T08:50:00+01:00'};
+ assert.deepEqual(H.priceOf({legs:[b80,tram]},G.fareFor).amounts,{EUR:4.80});
+ assert.deepEqual(H.priceOf({legs:[tram]},G.fareFor).amounts,{CHF:3});
+});
+
 test('quota de marches : au-delà de 16 couples d’arrêts distincts, le trajet est signalé, jamais inventé',async()=>{
  const router={calls:0,route:async()=>{router.calls++;return {status:'unavailable'};}}; // rien de réalisable → recherche complémentaire incluse
  const js=[];for(let i=0;i<12;i++)js.push({source:'A',sources:['A'],legs:[bus(at(7,i*2),at(7,i*2+20),{lat:STOP1.lat+i*0.001,lon:STOP1.lon},{lat:STOP2.lat+i*0.001,lon:STOP2.lon},{line:'D'+i})]});
