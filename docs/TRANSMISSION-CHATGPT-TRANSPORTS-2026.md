@@ -79,6 +79,16 @@ Laurent a demandé de terminer le raccordement de tous les moteurs. Le sondage P
 - Tests : 794/806 passent après ces changements (les 12 échecs restent les échecs péages préexistants, sans rapport).
 - **Toujours pas câblé dans les fiches mission** : l'enrichissement tarifaire OJP Suisse (`transport-ojp.js::relayPost`) — voir section précédente, bloqué par le secret Supabase manquant.
 
+### 15/11 21 h 20 — confirmation réelle : les trois archives sont bonnes
+
+`build-regional-gtfs.yml` s'est déclenché automatiquement (run `43757097623`, succès) et a téléchargé, validé et commité (`eb23735`) les trois archives réelles :
+- **Citéa** : 4 576 816 octets, 286 lignes, 17 672 courses, 2 208 arrêts.
+- **STAS** : 2 977 417 octets, 53 lignes, 23 461 courses, 1 067 arrêts — la bbox provisoire du cœur urbain (`[45.38,4.32,45.50,4.45]`) **couvrait bien le réseau réel**, pas besoin de l'ajuster.
+- **T2C** : 1 404 983 octets, 46 lignes, 5 589 courses, 1 694 arrêts — bbox provisoire (`[45.72,3.00,45.85,3.20]`) **confirmée bonne** également.
+- `node scripts/verifier-moteurs-regionaux.cjs` (sur les archives réelles tout juste commitées) : **43 moteurs régionaux, 0 en défaut** (le seul cas connu, Proxim iTi, reste signalé « aucune course » — calendrier vide préexistant, pas un régression). Les trois nouveaux réseaux renvoient chacun 30 trajets réels dans les 7 prochains jours.
+- Suite complète (`node --test tests/*.test.cjs`) : 797/809 passent après rebase sur ce commit, les 12 échecs restants sont toujours les péages préexistants.
+- Les trois réseaux sont maintenant pleinement opérationnels dans les fiches mission (aucun tarif publié dans ces trois flux → « Prix à confirmer » + lien billetterie officiel).
+
 ## SESSION CLAUDE DU 14/11/2026 (après-midi) — fiches mission et diagnostic réel
 
 Répartition demandée par Laurent : ChatGPT = sources tarifaires, limites d'accès aux prix, contrôles de couverture ; Claude = intégration dans l'application, fiches mission, tests serveur/mobile, performance. **Merci de me signaler avant de modifier `createSession`, `assess`, `rank`, `render` ou `completeWalks` dans `transport-mission-hub.js`.**

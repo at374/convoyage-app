@@ -45,13 +45,15 @@ const NETWORKS=[
  {id:'longue',name:'FlixBus / BlaBlaCar Bus',zone:'AURA',match:/flixbus|blablacar/i,sources:['TripGo (si clé)','BlaBlaCar temps réel (relais)'],fare:'Prix dynamique : à confirmer (billet TripGo repris s’il est transmis)',fareOk:false,recorded:['TripGo Annecy–Grenoble 31/10/2026']},
  // Ajoutés le 15/11/2026 (soir) : confirmés par le sondage PAN (docs/sources-tarifs/pan-aura-jeux.txt), absents de
  // l'agrégat Oùra, câblés dans transport-mission-hub.js (localNetworks) et scripts/build_regional_gtfs.py
- // (FILTERED_MIRROR). Archives pas encore présentes dans data/gtfs : en attente du premier passage réel de
- // build-regional-gtfs.yml (déclenché par la modification du script). Citéa testé réellement contre le flux officiel
- // avant d'être câblé ; STAS et T2C non joignables depuis ce poste de développement, bbox provisoire (cœur urbain
- // estimé) à confirmer/resserrer après ce premier passage CI.
- {id:'citea',name:'Citéa (Valence Romans Mobilités)',zone:'AURA',match:/cit[ée]a|valence romans/i,sources:['GTFS officiel Citéa, bbox filtrée (build-regional-gtfs.yml)'],fare:'Prix à confirmer (fare_attributes absent du flux)',fareOk:false,recorded:['Flux officiel testé localement le 15/11/2026 : 286 lignes, 17 672 courses avant filtrage par bbox']},
- {id:'stas',name:'STAS (Saint-Étienne Métropole)',zone:'AURA',match:/\bstas\b|saint-[ée]tienne m[ée]tropole/i,sources:['GTFS officiel STAS, bbox provisoire (build-regional-gtfs.yml)'],fare:'Prix à confirmer',fareOk:false,recorded:[],note:'Flux non testé depuis ce poste (domaine bloqué) ; attendre le premier passage CI réel'},
- {id:'t2c',name:'T2C (Clermont Auvergne Métropole)',zone:'AURA',match:/\bt2c\b|clermont auvergne m[ée]tropole/i,sources:['GTFS officiel T2C/SMTC, bbox provisoire (build-regional-gtfs.yml)'],fare:'Prix à confirmer',fareOk:false,recorded:[],note:'Flux non testé depuis ce poste (domaine bloqué) ; attendre le premier passage CI réel'},
+ // (FILTERED_MIRROR). Citéa testé réellement contre le flux officiel avant d'être câblé ; STAS et T2C non
+ // joignables depuis ce poste de développement, bbox provisoire (cœur urbain estimé) câblée à l'aveugle.
+ // Confirmé le 15/11/2026 (21 h 20) par le premier passage réel de build-regional-gtfs.yml (run 43757097623,
+ // commit eb23735) : les trois archives se téléchargent, se valident et couvrent bien des courses réelles
+ // (scripts/verifier-moteurs-regionaux.cjs : 30 trajets chacun) — les bbox provisoires STAS/T2C n'ont pas eu
+ // besoin d'être resserrées.
+ {id:'citea',name:'Citéa (Valence Romans Mobilités)',zone:'AURA',match:/cit[ée]a|valence romans/i,sources:['GTFS officiel Citéa, bbox filtrée (build-regional-gtfs.yml)'],fare:'Prix à confirmer (fare_attributes absent du flux)',fareOk:false,recorded:['build-regional-gtfs.yml du 15/11/2026 (run 43757097623) : 286 lignes, 17 672 courses, 2 208 arrêts, 4,58 Mo ; vérifié réel (scripts/verifier-moteurs-regionaux.cjs) : 30 trajets']},
+ {id:'stas',name:'STAS (Saint-Étienne Métropole)',zone:'AURA',match:/\bstas\b|saint-[ée]tienne m[ée]tropole/i,sources:['GTFS officiel STAS (build-regional-gtfs.yml)'],fare:'Prix à confirmer',fareOk:false,recorded:['build-regional-gtfs.yml du 15/11/2026 (run 43757097623) : 53 lignes, 23 461 courses, 1 067 arrêts, 2,98 Mo ; bbox provisoire confirmée correcte ; vérifié réel : 30 trajets']},
+ {id:'t2c',name:'T2C (Clermont Auvergne Métropole)',zone:'AURA',match:/\bt2c\b|clermont auvergne m[ée]tropole/i,sources:['GTFS officiel T2C/SMTC (build-regional-gtfs.yml)'],fare:'Prix à confirmer',fareOk:false,recorded:['build-regional-gtfs.yml du 15/11/2026 (run 43757097623) : 46 lignes, 5 589 courses, 1 694 arrêts, 1,40 Mo ; bbox provisoire confirmée correcte ; vérifié réel : 30 trajets']},
  // ---- Suisse
  {id:'cff',name:'CFF / trains suisses',zone:'Suisse',match:/sbb|cff|^ir\b|^re\b|^s\d/i,sources:['transport.opendata.ch'],fare:'Prix à confirmer (pas de prix dans l’API)',fareOk:false,recorded:[],note:'Format vérifié sur la documentation officielle uniquement'},
  // Confirmé le 13/11/2026 : page officielle en vigueur tpg.ch/en/ticket-fares, grille datée unireso (dès le
@@ -140,9 +142,12 @@ const DETAILS={
  'ter':{horaires:'enregistrés',tarif:'manquants',checked:'2026-11-13 · catalogue ressources.data.sncf.com (serveur)',blocage:'SNCF ne publie plus de grille TER en open data : jeu « Tarifs TER AURA » archivé (prix au 01/03/2025), absent du catalogue actuel (seuls Intercités 2026 et TGV/OUIGO en fourchettes)',action:'Décision : afficher le prix 2025 comme simple indication, ou clé TripGo, ou garder « Prix à confirmer »'},
  'longue':{horaires:'enregistrés',tarif:'manquants',checked:'2026-10-31 · réponse TripGo enregistrée',blocage:'Prix dynamiques ; TripGo n’a transmis aucun billet dans les réponses enregistrées',action:'Clé TripGo puis diagnostic (Annecy → Genève)'},
  // Ajoutés le 15/11/2026 (soir) : voir le commentaire dans NETWORKS ci-dessus pour le contexte.
- 'citea':{horaires:'source branchée',tarif:'manquants',checked:'2026-11-15 · flux officiel testé localement (bbox non encore passée en CI)',blocage:'fare_attributes absent du flux ; archive filtrée pas encore publiée dans data/gtfs (attend build-regional-gtfs.yml)',action:'Lancer/attendre la tâche « Build regional GTFS », puis diagnostic Valence ↔ Romans-sur-Isère'},
- 'stas':{horaires:'source branchée',tarif:'manquants',checked:'2026-11-15 · URL officielle trouvée (sondage PAN), flux non testé depuis ce poste',blocage:'Domaine bloqué par le bac à sable de développement ; bbox provisoire (cœur urbain estimé) à confirmer après le premier passage CI',action:'Lancer/attendre la tâche « Build regional GTFS », puis diagnostic intra-Saint-Étienne'},
- 't2c':{horaires:'source branchée',tarif:'manquants',checked:'2026-11-15 · URL officielle trouvée (sondage PAN), flux non testé depuis ce poste',blocage:'Domaine bloqué par le bac à sable de développement ; bbox provisoire (cœur urbain estimé) à confirmer après le premier passage CI',action:'Lancer/attendre la tâche « Build regional GTFS », puis diagnostic intra-Clermont-Ferrand'},
+ // Archives réelles confirmées le 15/11/2026 (21 h 20) par build-regional-gtfs.yml (run 43757097623, commit eb23735) :
+ // les trois bbox (dont les deux provisoires STAS/T2C, non mesurées depuis ce poste) couvraient bien le réseau réel.
+ // node scripts/verifier-moteurs-regionaux.cjs sur les archives commitées : 30 trajets réels chacun, 0 en défaut.
+ 'citea':{horaires:'enregistrés (confirmé en réel)',tarif:'manquants',checked:'2026-11-15 · archive officielle réelle (build-regional-gtfs.yml, 286 lignes, 17 672 courses, 2 208 arrêts)',blocage:'fare_attributes absent du flux',action:'Diagnostic téléphone (Valence ↔ Romans-sur-Isère) pour confirmer en réel'},
+ 'stas':{horaires:'enregistrés (confirmé en réel)',tarif:'manquants',checked:'2026-11-15 · archive officielle réelle (build-regional-gtfs.yml, 53 lignes, 23 461 courses, 1 067 arrêts) ; bbox provisoire confirmée bonne',blocage:'fare_attributes absent du flux',action:'Diagnostic téléphone (intra-Saint-Étienne) pour confirmer en réel'},
+ 't2c':{horaires:'enregistrés (confirmé en réel)',tarif:'manquants',checked:'2026-11-15 · archive officielle réelle (build-regional-gtfs.yml, 46 lignes, 5 589 courses, 1 694 arrêts) ; bbox provisoire confirmée bonne',blocage:'fare_attributes absent du flux',action:'Diagnostic téléphone (intra-Clermont-Ferrand) pour confirmer en réel'},
  // Note du 13/11/2026 (soir) : la mention « jamais appelée en réel » était obsolète — le diagnostic serveur
  // (GitHub Actions, docs/diagnostic-serveur.json du 13/11 17:19 UTC) confirme des trajets SBB réels sur
  // Annecy → Genève (2), Annemasse → Saint-Julien (6) et Thonon → Genève (3) : le moteur fonctionne en

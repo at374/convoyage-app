@@ -521,9 +521,10 @@ function makeProviders(r,opts={}){
    ['mobivie', "MobiVie Vichy", 'mobivie-vichy.zip', [46.06,3.37,46.17,3.49]],
    ['le37', "Le 37 Péage-de-Roussillon", 'le37-roussillon.zip', [45.3,4.75,45.47,5.07]],
    // 15/11/2026 (soir) : trois réseaux confirmés par le sondage PAN mais absents de l'agrégat Oùra
-   // (chacun un GTFS officiel à part). citea : bbox testée contre le flux réel. stas/t2c : bbox
-   // provisoire (cœur urbain estimé, flux non téléchargeable depuis ce poste) — à resserrer/élargir
-   // après le premier passage CI réel sur scripts/build_regional_gtfs.py (cf. commentaire FILTERED_MIRROR).
+   // (chacun un GTFS officiel à part). citea : bbox testée contre le flux réel avant câblage. stas/t2c :
+   // bbox provisoire (cœur urbain estimé, flux non téléchargeable depuis le poste de développement) —
+   // confirmée correcte par le premier passage réel de build-regional-gtfs.yml (21 h 20, run 43757097623 :
+   // 30 trajets réels chacun via scripts/verifier-moteurs-regionaux.cjs), pas de resserrement nécessaire.
    ['citea', "Citéa (Valence Romans Mobilités)", 'citea-valence.zip', [44.85,4.80,45.10,5.15]],
    ['stas', "STAS (Saint-Étienne Métropole)", 'stas-saint-etienne.zip', [45.38,4.32,45.50,4.45]],
    ['t2c', "T2C (Clermont Auvergne Métropole)", 't2c-clermont.zip', [45.72,3.00,45.85,3.20]]
