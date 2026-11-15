@@ -30,6 +30,17 @@
 
 **Vérifié, sans issue** : aucun jeu « Tarifs TER Auvergne-Rhône-Alpes » sur data.gouv (seul « tarifs-intercites » répond pour SNCF) ; Ondéa 400–419 : le titre à bord 1,70 € existe mais sa validité sur les cars de proximité n'est pas écrite.
 
+### Suite du 15/11 (13 h – 15 h) — moteurs, liens d'achat, OJP Suisse
+
+- **Moteurs** : 51 branchés. Contrôle `scripts/verifier-moteurs-regionaux.cjs` (CI + local) : 39 des 40 moteurs régionaux des fiches mission rendent des trajets sur leurs archives réelles ; Proxim iTi est publié avec un calendrier vide (2 dates en 2027).
+- **Prix non connu** : pastille 🎟️ par opérateur non tarifé, lien vers le site officiel d'achat (`ticketLink` dans `transport-mission-hub.js`). Aucun prix estimé.
+- **OJP Suisse** : il n'existait **aucun moteur OJP** dans la branche (le moteur suisse est transport.opendata.ch). Nouveau module `transport-ojp.js` + `tests/transport-ojp.test.cjs` + essai réel `scripts/essai-ojp-reel.cjs` (workflow `essai-ojp.yml`, résumé `docs/essai-ojp-reel.md`).
+  - Type de référence = élément lu dans `OJPLocationInformationResponse` (`StopPlaceRef` / `StopPointRef`), jamais déduit du SLOID ; `siri:StopPointRef`, `ojp:StopPlaceRef` ; absent/ambigu/invalide → aucune requête (« Transport non confirmé »).
+  - **Essai réel 15/11 13:50 UTC** : seul le secret `OJP_FARE_API_KEY` existe (`OJP_API_KEY` absent → `/ojp2020` répond 403). L'adresse `/ojpfare` accepte lieux, trajets et prix avec ce jeton. Genève = `StopPlaceRef ch:1:sloid:1008`, Lausanne = `StopPlaceRef ch:1:sloid:1120` ; 3 trajets directs ; prix reçus : Streckenbillett 2e classe **23,80 CHF**, 1re 40,60 CHF, et un Sparbillett 20,20 CHF (dégriffé : exclu).
+  - Limites officielles d'OJP Fare : système d'intégration (données hors production), prix non contractuels, Suisse seulement, trajets futurs, pas de prix pour les arrêts étrangers (Léman Express) hors communauté tarifaire.
+  - **Non branché dans l'application** : le jeton ne peut pas être embarqué dans le code du téléphone ; il faut décider où il vit (aucun service serveur hors Supabase, interdit de modification).
+- **BlaBlaCar Bus** : Laurent signale `bus-api.blablacar.com` inaccessible → pas de clé pour l'instant.
+
 ## SESSION CLAUDE DU 14/11/2026 (après-midi) — fiches mission et diagnostic réel
 
 Répartition demandée par Laurent : ChatGPT = sources tarifaires, limites d'accès aux prix, contrôles de couverture ; Claude = intégration dans l'application, fiches mission, tests serveur/mobile, performance. **Merci de me signaler avant de modifier `createSession`, `assess`, `rank`, `render` ou `completeWalks` dans `transport-mission-hub.js`.**

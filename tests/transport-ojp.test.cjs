@@ -80,6 +80,10 @@ test('prix OJP Fare : affiché seulement s’il couvre le trajet complet',()=>{
  assert.equal(O.parseFare(fare(1,3,'0'),t).price,null);assert.equal(O.parseFare(fare(1,3,'abc'),t).price,null);
  assert.equal(O.parseFare(fare(9,3,'23.40'),t).price,null,'portion inconnue');
  assert.equal(O.parseFare('<x/>',t).price,null);assert.equal(O.parseFare(fare(1,3,'23.40'),{legs:[]}).price,null);
+ // Essai réel du 15/11/2026 : un « Sparbillett » (dégriffé, contingenté) n'est jamais le prix du trajet.
+ assert.equal(O.parseFare(fare(1,3,'20.20').replace('Billet','Sparbillett'),t).price,null);
+ assert.equal(O.parseFare(fare(1,3,'20.20').replace('Billet','Sparbillett')+fare(1,3,'23.80').replace('Billet','Streckenbillett'),t).price.amount,23.8);
+ assert.equal(O.parseFare(fare(1,3,'52.00').replace('Billet','Tageskarte'),t).price,null);
  // Entre deux offres complètes, la moins chère en plein tarif 2e classe.
  assert.equal(O.parseFare(fare(1,3,'25.00')+fare(1,3,'23.40'),t).price.amount,23.4);
 });

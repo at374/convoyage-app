@@ -105,6 +105,9 @@ function fareRequest(trip,opts={}){
   '<ojp:Params><ojp:FareAuthorityFilter>ch:1:NOVA</ojp:FareAuthorityFilter><ojp:PassengerCategory>Adult</ojp:PassengerCategory>'+
   '<ojp:TravelClass>second</ojp:TravelClass><ojp:Traveller><ojp:Age>40</ojp:Age><ojp:PassengerCategory>Adult</ojp:PassengerCategory></ojp:Traveller></ojp:Params></ojp:OJPFareRequest>'+FOOTER;
 }
+// Billets dégriffés (contingentés, liés à un train : essai réel du 15/11/2026, « Sparbillett ») et cartes journalières
+// (à filtrer selon la documentation officielle) : jamais retenus comme prix du trajet.
+const SPECIAL_PRODUCT=/spar|supersaver|d[ée]griff|tageskarte|carte journali|day ?pass/i;
 // Prix plein tarif 2e classe couvrant TOUT le trajet, sinon null avec la raison (jamais de prix partiel affiché).
 function parseFare(xml,trip){
  const timed=(trip&&Array.isArray(trip.legs)?trip.legs:[]).filter(l=>l.kind==='timed'&&l.id);
@@ -121,8 +124,8 @@ function parseFare(xml,trip){
  if(!offers.length)return {price:null,reason:'aucun produit tarifaire dans la réponse',offers};
  const full=offers.filter(o=>Number.isFinite(o.amount)&&o.amount>0&&/^(CHF|EUR)$/.test(o.currency||'')&&
   o.fromId!=null&&o.toId!=null&&ids.indexOf(o.fromId)>=0&&ids.indexOf(o.fromId)<=ids.indexOf(firstId)&&ids.indexOf(o.toId)>=ids.indexOf(lastId)&&
-  !o.requiredCard&&(!o.travelClass||/second|2/i.test(o.travelClass)));
- if(!full.length)return {price:null,reason:'aucun prix plein tarif 2e classe ne couvre le trajet complet',offers};
+  !o.requiredCard&&(!o.travelClass||/second|2/i.test(o.travelClass))&&!SPECIAL_PRODUCT.test(o.name||''));
+ if(!full.length)return {price:null,reason:'aucun billet ordinaire plein tarif 2e classe ne couvre le trajet complet',offers};
  const best=full.reduce((a,b)=>b.amount<a.amount?b:a);
  return {price:{amount:best.amount,currency:best.currency,name:best.name,authority:best.authority,fromId:best.fromId,toId:best.toId},reason:null,offers};
 }
