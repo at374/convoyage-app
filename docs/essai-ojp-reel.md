@@ -1,6 +1,6 @@
 # Essai réel OJP 1.0 / OJP Fare — Genève → Lausanne
 
-Exécuté le 2026-11-15T13:50:41.749Z (GitHub Actions).
+Exécuté le 2026-11-15T13:52:41.454Z (GitHub Actions).
 
 - Jeton OJP 1.0 (`OJP_API_KEY`) : **absent**
 - Jeton OJP Fare (`OJP_FARE_API_KEY`) : présent
@@ -44,10 +44,10 @@ Trajets reçus : 3
 
 - 2026-11-16T06:54:00Z → 2026-11-16T07:37:00Z (PT43M, 0 correspondance(s)) : IR15 Genève 2026-11-16T06:54:00Z → Lausanne 2026-11-16T07:37:00Z
   - Offres reçues : 40.6 CHF « Streckenbillett » [1–1, first] ; 20.2 CHF « Sparbillett » [1–1, second]
-  - Prix : 20.20 CHF (Sparbillett, ch:1:sboid:101704, portions 1 à 1 = trajet complet)
+  - Prix : non affiché — aucun billet ordinaire plein tarif 2e classe ne couvre le trajet complet ; offres reçues : 40.6 CHF [1–1, first], 20.2 CHF [1–1, second]
 - 2026-11-16T07:05:00Z → 2026-11-16T07:44:00Z (PT39M, 0 correspondance(s)) : IR90 Genève 2026-11-16T07:05:00Z → Lausanne 2026-11-16T07:44:00Z
-  - Offres reçues : 40.6 CHF « Streckenbillett » [1–1, first] ; 23.8 CHF « Streckenbillett » [1–1, second]
+  - Offres reçues : 23.8 CHF « Streckenbillett » [1–1, second] ; 40.6 CHF « Streckenbillett » [1–1, first]
   - Prix : 23.80 CHF (Streckenbillett, ch:1:sboid:101704, portions 1 à 1 = trajet complet)
 - 2026-11-16T07:08:00Z → 2026-11-16T07:59:00Z (PT51M, 0 correspondance(s)) : RE33 Genève 2026-11-16T07:08:00Z → Lausanne 2026-11-16T07:59:00Z
-  - Offres reçues : 23.8 CHF « Streckenbillett » [1–1, second] ; 40.6 CHF « Streckenbillett » [1–1, first]
+  - Offres reçues : 40.6 CHF « Streckenbillett » [1–1, first] ; 23.8 CHF « Streckenbillett » [1–1, second]
   - Prix : 23.80 CHF (Streckenbillett, ch:1:sboid:101704, portions 1 à 1 = trajet complet)
