@@ -41,6 +41,18 @@
   - **Non branché dans l'application** : le jeton ne peut pas être embarqué dans le code du téléphone ; il faut décider où il vit (aucun service serveur hors Supabase, interdit de modification).
 - **BlaBlaCar Bus** : Laurent signale `bus-api.blablacar.com` inaccessible → pas de clé pour l'instant.
 
+### 15/11 15 h — mission « Intégration OJP Suisse » : test réel sur quatre trajets
+
+Résumé complet : `docs/essai-ojp-reel.md` (test réel, API suisses, 15/11 13:55 UTC). Tests simulés à part : `tests/transport-ojp.test.cjs` (10 tests).
+- **Secrets** : `OJP_FARE_API_KEY` présent ; `OJP_1_API_KEY` **absent** (et `OJP_API_KEY` aussi). Tout a répondu par l'adresse `/ojpfare` avec le jeton Fare (lieux, trajets, prix).
+- **Aucun module OJP de ChatGPT n'est sur GitHub** : seul `transport-ojp.js` (Claude) existe dans la branche.
+- **Genève → Lausanne** : directs IR15/IR90/RE33 ; billet ordinaire 2e classe 23,80 CHF ; sur l'IR15 seule une offre dégriffée 2e classe est renvoyée → « Prix à consulter ».
+- **Genève → Nyon** : directs ; billet ordinaire 9,40 CHF (RE33) ; IR15 et IR95 : seulement du dégriffé en 2e → « Prix à consulter ».
+- **Genève → Annemasse** (réf. `StopPlaceRef 8774549`, numéro étranger) : RE33 / RL4 directs ; « Léman Pass Einzelbillett Multizonen » 4,60 CHF.
+- **Genève → Saint-Julien-en-Genevois** (réf. `StopPlaceRef 8774543`) : train jusqu'à Lancy-Bachet puis bus 80 (opérateurs `ojp:11` → `ojp:881`) ; Léman Pass 4,60 CHF couvrant les portions 1 à 3 (trajet complet).
+- **Demi-tarif** : la demande avec `EntitlementProduct HTA` (forme de la documentation) renvoie **HTTP 500** sur les 12 trajets → non validé.
+- **Intégration dans les fiches mission : bloquée** par l'emplacement du jeton (ne peut pas être dans le code du téléphone ; pas de serveur hors Supabase). Décision attendue de Laurent.
+
 ## SESSION CLAUDE DU 14/11/2026 (après-midi) — fiches mission et diagnostic réel
 
 Répartition demandée par Laurent : ChatGPT = sources tarifaires, limites d'accès aux prix, contrôles de couverture ; Claude = intégration dans l'application, fiches mission, tests serveur/mobile, performance. **Merci de me signaler avant de modifier `createSession`, `assess`, `rank`, `render` ou `completeWalks` dans `transport-mission-hub.js`.**
