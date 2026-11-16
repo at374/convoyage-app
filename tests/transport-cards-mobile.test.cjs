@@ -25,5 +25,5 @@ test('cartes : prix inconnu et achat officiel sans prix inventé',()=>{
  assert.match(hub,/Prix à confirmer/);
  assert.match(hub,/ticketLinks\(j\)/);
  assert.match(hub,/noopener noreferrer/);
- assert.match(hub,/j\.feasible\?'Réalisable'/);
+ assert.match(hub,/const feasible=reasons\.length===0/);
 });
