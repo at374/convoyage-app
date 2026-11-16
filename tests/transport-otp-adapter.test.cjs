@@ -65,3 +65,13 @@ test('OTP2 : refuse les coordonnées manquantes ou vides',()=>{
  ];
  for(const item of cases)assert.deepEqual(parse({plan:{itineraries:[{legs:[item]}]}}),[]);
 });
+
+test('OTP2 : refuse les marches sans distance ou durée exploitable',()=>{
+ const cases=[
+  {...leg('WALK'),distance:null},
+  {...leg('WALK'),duration:null},
+  {...leg('WALK'),distance:-2},
+  {...leg('WALK'),duration:-1}
+ ];
+ for(const item of cases)assert.deepEqual(parse({plan:{itineraries:[{legs:[item]}]}}),[]);
+});
