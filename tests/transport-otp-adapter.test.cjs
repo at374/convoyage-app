@@ -92,3 +92,10 @@ test('OTP2 : le contrôle hors réseau produit un rapport et conserve le statut 
   assert.match(report.journeys[0].status,/Transport non confirmé/);
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('OTP2 : une réponse partiellement corrompue ne fait pas planter les autres trajets',()=>{
+ const response={plan:{itineraries:[null,{legs:[null]},{legs:[leg()]}, {legs:[false]}]}};
+ const out=parse(response);
+ assert.equal(out.length,1);
+ assert.equal(out[0].legs[0].mode,'Train');
+});
