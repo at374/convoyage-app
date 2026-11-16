@@ -51,7 +51,7 @@ jobs:
       - name: Reprendre l'extrait OpenStreetMap en cache
         if: steps.osm.outputs.cache-hit == 'true'
         run: cp osm-cache/couloir.osm.pbf osm-cache/osm.json otp-data/
-      - name: Télécharger et découper OpenStreetMap (Geofabrik)
+      - name: Télécharger et découper OpenStreetMap
         if: steps.osm.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
@@ -59,11 +59,20 @@ jobs:
           mkdir -p osm
           echo '[' > osm/files.json
           sep=''
-          for url in https://download.geofabrik.de/europe/france/rhone-alpes-latest.osm.pbf https://download.geofabrik.de/europe/switzerland-latest.osm.pbf; do
-            name="$(basename "$url")"
-            curl -fsSL --retry 6 --retry-all-errors --retry-delay 30 --connect-timeout 30 -D "osm/$name.headers" -o "osm/$name" "$url"
-            modified="$(grep -i '^last-modified:' "osm/$name.headers" | tail -1 | cut -d' ' -f2- | tr -d '\r')"
-            printf '%s{"url":"%s","bytes":%s,"sha256":"%s","lastModified":"%s"}\n' "$sep" "$url" "$(stat -c %s "osm/$name")" "$(sha256sum "osm/$name" | cut -d' ' -f1)" "$modified" >> osm/files.json
+          # Geofabrik refuse parfois les serveurs GitHub (connexion impossible) : repli sur les extraits d'OpenStreetMap France.
+          for group in \
+            "rhone-alpes https://download.geofabrik.de/europe/france/rhone-alpes-latest.osm.pbf https://download.openstreetmap.fr/extracts/europe/france/rhone_alpes-latest.osm.pbf" \
+            "suisse https://download.geofabrik.de/europe/switzerland-latest.osm.pbf https://download.openstreetmap.fr/extracts/europe/switzerland-latest.osm.pbf"; do
+            set -- $group
+            name="$1.osm.pbf"; shift
+            got=''
+            for url in "$@"; do
+              if curl -fsSL --retry 2 --retry-all-errors --retry-delay 10 --connect-timeout 20 -D "osm/$name.headers" -o "osm/$name" "$url"; then got="$url"; break; fi
+              echo "Indisponible : $url"
+            done
+            [ -n "$got" ] || { echo "Aucune source OSM joignable pour $name" >&2; exit 1; }
+            modified="$(grep -i '^last-modified:' "osm/$name.headers" | tail -1 | cut -d' ' -f2- | tr -d '\r' || true)"
+            printf '%s{"url":"%s","bytes":%s,"sha256":"%s","lastModified":"%s"}\n' "$sep" "$got" "$(stat -c %s "osm/$name")" "$(sha256sum "osm/$name" | cut -d' ' -f1)" "$modified" >> osm/files.json
             sep=','
             osmium extract --overwrite -b "$BBOX" -o "osm/part-$name" "osm/$name"
             rm "osm/$name"
