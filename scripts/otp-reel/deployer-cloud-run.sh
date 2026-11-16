@@ -55,7 +55,12 @@ gcloud artifacts repositories describe "$REPO" --location "$REGION" >/dev/null 2
 gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
 mkdir -p "$work/image" && mv "$work/graph.obj" "$work/Dockerfile" "$work/image/"
 docker build -t "$IMAGE" "$work/image"
-docker push "$IMAGE"
+pushed=''
+for attempt in 1 2 3 4; do
+  if docker push "$IMAGE"; then pushed=1; break; fi
+  echo "Envoi de l'image interrompu (essai $attempt), nouvelle tentative dans 15 s…"; sleep 15
+done
+[[ -n "$pushed" ]] || { echo "Envoi de l'image impossible : relancer la commande plus tard." >&2; exit 1; }
 gcloud run deploy "$SERVICE" --image "$IMAGE" --region "$REGION" \
   --cpu 2 --memory 8Gi --min-instances 0 --max-instances 1 --concurrency 20 --timeout 60 \
   --cpu-boost --execution-environment gen2 --port 8080 --allow-unauthenticated \
