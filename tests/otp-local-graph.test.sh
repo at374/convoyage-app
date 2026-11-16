@@ -34,4 +34,14 @@ printf 'bad' > "$TMP/feeds/not-gtfs.zip"
 if bash "$SCRIPT" "$TMP/feeds" build >/dev/null 2>&1; then
   echo 'Archive non GTFS acceptée' >&2; exit 1
 fi
-echo 'OK : ZIP GTFS validé, rejet archive invalide, build/serve, port local, mode invalide'
+rm "$TMP/feeds/not-gtfs.zip"
+printf 'corrompu' > "$TMP/feeds/corrupt.zip"
+if bash "$SCRIPT" "$TMP/feeds" build >/dev/null 2>&1; then
+  echo 'ZIP corrompu accepté' >&2; exit 1
+fi
+rm "$TMP/feeds/corrupt.zip"
+: > "$TMP/feeds/aura.osm.pbf"
+if bash "$SCRIPT" "$TMP/feeds" build >/dev/null 2>&1; then
+  echo 'OSM vide accepté' >&2; exit 1
+fi
+echo 'OK : ZIP GTFS, rejet archive non GTFS, ZIP corrompu, OSM vide, build/serve, port local'
