@@ -55,3 +55,17 @@ Rapport publié automatiquement : `docs/otp2-reel/RAPPORT-OTP2-REEL.md` (+ `rapp
 3. CFF Genève–Lausanne (IR90, IR95, IC1, IR15) et RE33.
 4. Ligne 272 côté « Alpbus Fournier » (même grille tpg que Cars Région Haute-Savoie ?) et lignes Cars Région Haute-Savoie hors 272/274.
 5. FlixBus et BlaBlaCar Bus : toujours aucun prix public exploitable ; lien billet seulement.
+
+## Mise à jour 16/11/2026, 21 h — serveur OTP2 en ligne (accord explicite de Laurent : « on va essayer à la demande »)
+- Service Cloud Run **`convoyage-otp2`** créé par Laurent lui-même dans Cloud Shell avec `scripts/otp-reel/deployer-cloud-run.sh`
+  (2 vCPU, 8 Gio, min 0, max 1, facturation à la demande, tas `-Xmx6g`, image `otp2/convoyage-otp2:20261116-1942`
+  dans Artifact Registry `europe-west9`). `convoyage-transports-pilote` non modifié. Suppression : même script avec `supprimer`.
+- Adresse : `https://convoyage-otp2-glqa2uqrtq-od.a.run.app/otp/gtfs/v1` (publique, sans authentification).
+- Le graphe validé est publié par le workflow dans la release GitHub `otp2-graphe` (graph.obj + SHA-256) ; le script le télécharge.
+- Essai réel en ligne (workflow `otp2-serveur-en-ligne.yml`, rapport `docs/otp2-reel/en-ligne/`) : CORS accepté pour
+  `https://at374.github.io`, 12 axes sur 12, 0,9 à 3 s par recherche serveur chaud, client de l'application utilisé tel quel.
+- Fiche mission : `window.CP_OTP_ENDPOINT` défini dans `index.html` **sur la branche seulement** (pas sur `main`), délai OTP2 15 s.
+- Non mesuré : délai de réveil à froid (le serveur était chaud). Si > 15 s, la première fiche après une pause n'aura pas
+  les résultats OTP2 (les autres moteurs restent affichés).
+- À faire : fusion sur `main` uniquement avec l'accord de Laurent ; reconstruction + redéploiement du graphe avant le 26/12/2026
+  (fenêtre d'horaires J+40) ; essai dans le navigateur ; doublon ligne 272.
