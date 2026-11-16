@@ -43,6 +43,17 @@ def main():
         assert 'stop_times.txt' in z.namelist()
         assert b's3' not in z.read('stop_times.txt')
         assert b't2' not in z.read('trips.txt')
+    # Retrait d'une agence en doublon : seules les courses de l'autre agence restent.
+    r3 = p.filter_feed(src, dst, p.BBOX, datetime.date(2026, 11, 24), r'reseau a')
+    assert r3['excludedAgencies'] == ['Réseau A'] and r3['excludedTrips'] == 1, r3
+    assert r3['after']['trips'] == 1 and [a['agency_name'] for a in r3['agencies']] == ['Réseau B'], r3
+    import re
+    names = ['annemasse - tac', 'aix-les-bains - ondea', 'chambery - synchro mobilites', "thonon-les-bains - star't", 'region - cars region ain', 'vienne - l’va']
+    pat = re.compile('|'.join(p.DUPLICATES['oura-agregat'].values()))
+    assert [n for n in names if pat.search(n)] == names[:4], [n for n in names if pat.search(n)]
+    swiss = re.compile('|'.join(p.DUPLICATES['suisse-ski'].values()))
+    assert swiss.search(p.norm('Société Nationale des Chemins de fer Français')) and swiss.search('sibra') and swiss.search('rdtain')
+    assert not swiss.search(p.norm('Transports Publics Genevois')) and not swiss.search(p.norm('Schweizerische Bundesbahnen SBB'))
     outside = dict(FILES, **{'stops.txt': 'stop_id,stop_name,stop_lat,stop_lon\ns1,X,48.0,2.0\ns2,Y,48.1,2.1\ns3,Z,48.2,2.2\n'})
     build(src, outside)
     try:

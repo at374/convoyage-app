@@ -135,3 +135,16 @@ test('OTP2 : tracé piéton décodé seulement s’il est valide et collé aux e
  const bad=parse(walk('_p~iF~ps|U_ulLnnqC'))[0].legs[0]; // se termine loin du point d'arrivée
  assert.equal(bad.geometry,null);assert.equal(bad.walkSource,null);
 });
+
+test('OTP2 : exploitants ramenés aux noms connus des grilles tarifaires, sans toucher aux autres',()=>{
+ const {providerName}=require('../transport-otp-adapter.js');
+ assert.equal(providerName('REGION - cars Région Haute-Savoie'),'Cars Région Haute-Savoie');
+ assert.equal(providerName('REGION - cars Région Ain'),'Cars Région Ain');
+ assert.equal(providerName('Transports Publics Genevois'),'tpg');
+ assert.equal(providerName('Schweizerische Bundesbahnen SBB'),'CFF');
+ assert.equal(providerName("Réseau STAR'T"),"Star't");
+ assert.equal(providerName('BONNEVILLE-LA ROCHE-REIGNIER-VIUZ - Proxim iTi'),'Proxim iTi');
+ assert.equal(providerName('SNCF VOYAGEURS'),'SNCF VOYAGEURS');
+ assert.equal(providerName('FlixBus-eu'),'FlixBus-eu');
+ assert.equal(providerName(''),'OpenTripPlanner (GTFS)');
+});

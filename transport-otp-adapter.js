@@ -45,6 +45,23 @@ function decodePolyline(text){
  }
  return out.length>=2?out:null;
 }
+// Nom d'exploitant ramené à la forme déjà connue de l'application (grilles tarifaires officielles, liens billets).
+// Ne touche qu'au libellé : l'agrégat régional Oùra préfixe « VILLE - », le GTFS suisse emploie les raisons sociales.
+function providerName(name){
+ let s=String(name||'').trim();
+ const prefixed=/^[A-ZÀ-ÖØ-Þ][A-ZÀ-ÖØ-Þ' .-]* - (\S.*)$/.exec(s);
+ if(prefixed)s=prefixed[1].trim();
+ if(/^transports publics genevois$/i.test(s))return 'tpg';
+ if(/^schweizerische bundesbahnen sbb$/i.test(s))return 'CFF';
+ if(/^r[ée]seau star['’]?t$/i.test(s))return "Star't";
+ if(/^cars r[ée]gion\b/i.test(s))return 'Cars'+s.slice(4);
+ return s||'OpenTripPlanner (GTFS)';
+}
+// OTP2 nomme « Origin » / « Destination » les points GPS de la recherche.
+function placeName(name){
+ const s=String(name||'');
+ return s==='Origin'?'Point de départ':s==='Destination'?'Point d’arrivée':s;
+}
 function parse(response){
  const rootPlan=response?.data??response;
  const plan=rootPlan?.plan;
@@ -87,8 +104,8 @@ function parse(response){
    legs.push({
     kind:walk?'walk':'transit',mode:MODE[mode],
     line:walk?null:String(raw.route?.shortName||raw.route?.longName||raw.routeShortName||'').trim()||null,
-    provider:walk?null:String(raw.agency?.name||raw.route?.agency?.name||'OpenTripPlanner (GTFS)'),
-    from:String(raw.from?.name||''),to:String(raw.to?.name||''),
+    provider:walk?null:providerName(raw.agency?.name||raw.route?.agency?.name),
+    from:placeName(raw.from?.name),to:placeName(raw.to?.name),
     fromPoint,toPoint,departure,arrival,
     distanceMeters:Number.isFinite(raw.distance)&&raw.distance>=0?raw.distance:null,
     durationSeconds:Number.isFinite(raw.duration)&&raw.duration>=0?raw.duration:null,
@@ -101,7 +118,7 @@ function parse(response){
    alerts:[],realtime:false,dataDate:null};
  }).filter(Boolean);
 }
-const api={parse,decodePolyline};
+const api={parse,decodePolyline,providerName};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPOTPAdapter=api;
 })(typeof window!=='undefined'?window:globalThis);

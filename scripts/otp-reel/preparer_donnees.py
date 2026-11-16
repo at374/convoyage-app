@@ -8,7 +8,7 @@ Exécuté sur un serveur GitHub Actions (accès Internet) : aucun service payant
 - Un flux en échec est consigné comme erreur, jamais remplacé par des données inventées.
 Usage : python3 scripts/otp-reel/preparer_donnees.py --out otp-data --date 2026-11-24
 """
-import argparse, csv, datetime, hashlib, io, json, os, sys, tempfile, unicodedata, urllib.request, zipfile
+import argparse, csv, datetime, hashlib, io, json, os, re, sys, tempfile, unicodedata, urllib.request, zipfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 csv.field_size_limit(1 << 30)
@@ -19,6 +19,20 @@ SNCF_URL = 'https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_G
 SWISS_API = 'https://data.opentransportdata.swiss/api/3/action/package_show?id=timetable-2026-gtfs2020'
 SWISS_PERMALINK = 'https://data.opentransportdata.swiss/dataset/timetable-2026-gtfs2020/permalink'
 INDIVIDUAL_IDS = ('sibra-annecy', 'tac-annemasse', 'tcl-lyon', 'synchro-chambery', 'ondea-grand-lac', 'start-thonon')
+# Doublons constatés lors de la première exécution réelle (16/11/2026) : l'agrégat Oùra contient déjà TAC, Ondéa,
+# Synchro et Star't ; le GTFS suisse contient déjà les trains SNCF et des lignes Sibra, TAC, Thonon, Évian, Ain.
+# Le flux propre de chaque réseau est gardé ; ses lignes sont retirées des flux plus larges (motifs sur le nom
+# d'agence normalisé, sans accents). Un retrait n'est appliqué que si le flux propre a bien été importé.
+DUPLICATES = {
+    'oura-agregat': {'tac-annemasse': r'\btac\b', 'ondea-grand-lac': r'ondea', 'synchro-chambery': r'synchro',
+                     'start-thonon': r"star.?t\b", 'sibra-annecy': r'sibra', 'tcl-lyon': r'\btcl\b'},
+    'suisse-ski': {'sncf': r'chemins de fer francais', 'sibra-annecy': r'sibra', 'tac-annemasse': r'annemasse',
+                   'start-thonon': r'thonon', 'oura-agregat': r'^evian$|rdtain'},
+    # Le flux SNCF porte une ligne « CFF » : les trains CFF viennent du GTFS suisse.
+    'sncf': {'suisse-ski': r'^cff$'},
+}
+ORDER = ('sibra-annecy', 'tac-annemasse', 'tcl-lyon', 'synchro-chambery', 'ondea-grand-lac', 'start-thonon',
+         'flixbus', 'blablacar-bus', 'sncf', 'oura-agregat', 'suisse-ski')
 COPY_AS_IS = ('feed_info.txt', 'fare_attributes.txt')
 
 
@@ -92,7 +106,7 @@ def service_active(day, calendar, exceptions):
     return active
 
 
-def filter_feed(src, dst, bbox, day):
+def filter_feed(src, dst, bbox, day, exclude_agencies=None):
     """Réduit un GTFS aux arrêts de la zone. Retourne un rapport ; lève ValueError si rien d'exploitable."""
     with zipfile.ZipFile(src) as z:
         m = members(z)
@@ -115,6 +129,31 @@ def filter_feed(src, dst, bbox, day):
         report['before']['stops'] = len(stops)
         if not inside:
             raise ValueError('aucun arrêt dans la zone')
+        # Lignes des agences écartées (doublons d'un flux propre déjà importé).
+        excluded_trips, excluded_names = set(), []
+        if exclude_agencies:
+            pattern = re.compile(exclude_agencies)
+            it = rows(z, m['agency.txt'])
+            h = next(it)
+            ai = h.index('agency_id') if 'agency_id' in h else None
+            an = h.index('agency_name')
+            bad = set()
+            for r in it:
+                if pattern.search(norm(r[an])):
+                    bad.add(r[ai] if ai is not None else '')
+                    excluded_names.append(r[an])
+            if bad and ai is not None:
+                it = rows(z, m['routes.txt'])
+                h = next(it)
+                if 'agency_id' in h:
+                    ri, ra = h.index('route_id'), h.index('agency_id')
+                    bad_routes = {r[ri] for r in it if r[ra] in bad}
+                    it = rows(z, m['trips.txt'])
+                    h = next(it)
+                    xt, xr = h.index('trip_id'), h.index('route_id')
+                    excluded_trips = {r[xt] for r in it if r[xr] in bad_routes}
+        report['excludedAgencies'] = excluded_names
+        report['excludedTrips'] = len(excluded_trips)
         # Passe 1 : nombre d'arrêts de la zone desservis par course.
         it = rows(z, m['stop_times.txt'])
         th = next(it)
@@ -122,7 +161,7 @@ def filter_feed(src, dst, bbox, day):
         count, total = {}, 0
         for r in it:
             total += 1
-            if r[tsi] in inside:
+            if r[tsi] in inside and r[ti] not in excluded_trips:
                 count[r[ti]] = count.get(r[ti], 0) + 1
         report['before']['stop_times'] = total
         keep_trips = {t for t, n in count.items() if n >= 2}
@@ -358,7 +397,9 @@ def main():
     report = {'generatedAt': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'),
               'testDate': args.date, 'bbox': {'latMin': BBOX[0], 'lonMin': BBOX[1], 'latMax': BBOX[2], 'lonMax': BBOX[3]},
               'feeds': []}
-    aggregate_agencies = set()
+    rank = {ident: i for i, ident in enumerate(ORDER)}
+    sources.sort(key=lambda s: rank.get(s['id'], len(ORDER)))
+    imported_ids = set()
     for s in sources:
         entry = {'id': s['id'], 'url': s.get('url'), 'origin': s.get('origin')}
         report['feeds'].append(entry)
@@ -371,19 +412,11 @@ def main():
             tmp, final, size, sha = download(s['url'])
             entry.update({'finalUrl': final, 'bytes': size, 'sha256': sha})
             dst = os.path.join(args.out, s['id'] + '.gtfs.zip')
-            entry.update(filter_feed(tmp, dst, BBOX, day))
-            names = {norm(a['agency_name']) for a in entry['agencies'] if a['routes']}
-            if s['id'] == 'oura-agregat':
-                aggregate_agencies = names
-            elif s.get('individual'):
-                # Doublon : mêmes courses déjà fournies par l'agrégat régional.
-                dup = sorted(n for n in names if any(n == a or (len(n) > 3 and (n in a or a in n)) for a in aggregate_agencies))
-                if dup:
-                    os.remove(dst)
-                    entry['status'] = 'écarté (déjà dans l’agrégat Oùra : %s)' % ', '.join(dup)
-                    continue
+            patterns = [pat for owner, pat in DUPLICATES.get(s['id'], {}).items() if owner in imported_ids]
+            entry.update(filter_feed(tmp, dst, BBOX, day, '|'.join(patterns) if patterns else None))
             entry['status'] = 'importé'
             entry['file'] = os.path.basename(dst)
+            imported_ids.add(s['id'])
         except BaseException as e:
             if isinstance(e, KeyboardInterrupt):
                 raise
@@ -392,7 +425,20 @@ def main():
         finally:
             if tmp and os.path.exists(tmp):
                 os.remove(tmp)
-        print(json.dumps({k: entry.get(k) for k in ('id', 'status', 'error', 'bytes', 'after', 'validity', 'tripsActiveOnTestDate')}, ensure_ascii=False), flush=True)
+        print(json.dumps({k: entry.get(k) for k in ('id', 'status', 'error', 'bytes', 'after', 'validity', 'tripsActiveOnTestDate', 'excludedAgencies', 'excludedTrips')}, ensure_ascii=False), flush=True)
+    # La ligne « CFF » du flux SNCF n'est retirée qu'une fois le GTFS suisse réellement importé (traité après lui).
+    if {'sncf', 'suisse-ski'} <= imported_ids:
+        entry = next(e for e in report['feeds'] if e['id'] == 'sncf')
+        path = os.path.join(args.out, 'sncf.gtfs.zip')
+        try:
+            again = filter_feed(path, path + '.tmp', BBOX, day, DUPLICATES['sncf']['suisse-ski'])
+            os.replace(path + '.tmp', path)
+            for key in ('after', 'agencies', 'tripsActiveOnTestDate', 'excludedAgencies', 'excludedTrips'):
+                entry[key] = again[key]
+        except ValueError as e:
+            entry['duplicateFilterError'] = str(e)
+            if os.path.exists(path + '.tmp'):
+                os.remove(path + '.tmp')
     with open(os.path.join(args.out, 'sources.json'), 'w', encoding='utf-8') as f:
         json.dump(report, f, ensure_ascii=False, indent=1)
     imported = [e for e in report['feeds'] if e.get('status') == 'importé']

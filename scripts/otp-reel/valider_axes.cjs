@@ -81,6 +81,15 @@ async function main(){
      priceStatus:!transit.length?'marche seule':priced===transit.length?'tous les segments ont un tarif vérifié':priced?'tarif partiel':'Prix non confirmé',
      legs});
    }
+   // Même segment (mode, horaires, extrémités) fourni par deux exploitants différents = doublon de flux GTFS probable.
+   const seen=new Map();row.duplicateSegments=[];
+   for(const it of row.itineraries)for(const l of it.legs){
+    if(l.kind!=='transit')continue;
+    const key=[l.mode,l.departure,l.arrival].join('|');
+    const prev=seen.get(key);
+    if(prev&&prev!==l.provider&&!row.duplicateSegments.includes(key+' : '+prev+' / '+l.provider))row.duplicateSegments.push(key+' : '+prev+' / '+l.provider);
+    else seen.set(key,l.provider);
+   }
   }catch(e){row.error=e.name+' : '+e.message;}
   console.log(axis.id,'brut',row.raw,'retenus',row.accepted,row.error||'');
  }
@@ -94,7 +103,8 @@ async function main(){
   'Jour testé : **'+DAY+'**, départ à partir de 08:00 (heure de Paris). Horaires GTFS planifiés, pas de temps réel.','');
  if(report.build){const b=report.build;md.push('## Construction du graphe','',
   '- Image OTP2 : `'+b.image+'`','- Durée de construction : '+b.buildSeconds+' s','- Mémoire maximale observée : '+(b.buildMaxMemory||'non mesurée'),
-  '- Taille du graphe : '+(b.graphBytes?(b.graphBytes/1048576).toFixed(0)+' Mo':'inconnue'),'- Mémoire du serveur après chargement : '+(b.serveMemory||'non mesurée'),'');}
+  '- Taille du graphe : '+(b.graphBytes?(b.graphBytes/1048576).toFixed(0)+' Mo':'inconnue'),'- Plus petit tas Java testé qui charge le graphe et répond : '+(b.serveHeap?'-Xmx'+b.serveHeap:'non mesuré')+' (essais 3g, 4g, 6g, 8g)',
+  '- Mémoire du serveur après chargement : '+(b.serveMemory||'non mesurée')+' ; après les recherches : '+(b.serveMemoryAfterQueries||'non mesurée'),'');}
  if(report.osm)md.push('## OpenStreetMap','',...report.osm.files.map(f=>'- '+f.url+' — '+(f.bytes/1048576).toFixed(0)+' Mo, SHA-256 `'+f.sha256+'`, modifié '+(f.lastModified||'?')),
   '- Extrait utilisé : '+(report.osm.extractBytes/1048576).toFixed(0)+' Mo (rectangle '+report.osm.bbox+', voies et quais seulement). Licence ODbL, © contributeurs OpenStreetMap.','');
  if(report.sources){md.push('## Flux GTFS','','| Flux | État | Validité | Courses le jour testé | Tarifs dans le flux | SHA-256 de l’archive officielle |','|---|---|---|---|---|---|');
@@ -104,6 +114,10 @@ async function main(){
  md.push('## Axes testés','','| Axe | Itinéraires OTP2 | Retenus par l’application | Meilleure durée | Erreur |','|---|---|---|---|---|');
  for(const a of report.axes)md.push('| '+a.name+' | '+a.raw+' | '+a.accepted+' | '+(a.itineraries.length?Math.min(...a.itineraries.map(i=>i.durationMinutes))+' min':'—')+' | '+(a.error||(a.routingErrors?JSON.stringify(a.routingErrors).slice(0,160):''))+' |');
  md.push('');
+ const dups=report.axes.flatMap(a=>(a.duplicateSegments||[]).map(d=>a.name+' — '+d));
+ md.push('Segments identiques fournis par deux exploitants (doublons de flux probables) : '+(dups.length?dups.length:'aucun détecté sur ces recherches')+'.','',...dups.slice(0,20).map(d=>'- '+d),'');
+ const all=report.axes.flatMap(a=>a.itineraries),count=s=>all.filter(i=>i.priceStatus===s).length;
+ md.push('Prix sur '+all.length+' itinéraires : '+count('tous les segments ont un tarif vérifié')+' entièrement tarifés (grilles officielles), '+count('tarif partiel')+' partiellement, '+count('Prix non confirmé')+' sans prix confirmé. Aucun prix estimé.','');
  for(const a of report.axes){if(!a.itineraries.length)continue;md.push('### '+a.name,'');
   a.itineraries.forEach((it,i)=>{md.push((i+1)+'. **'+hm(it.departure)+' → '+hm(it.arrival)+'** ('+it.durationMinutes+' min, '+it.transfers+' correspondance(s), '+it.walkMeters+' m à pied) — '+it.priceStatus);
    for(const l of it.legs)md.push('   - '+(l.kind==='walk'?'Marche '+(l.distanceMeters??'?')+' m'+(l.walkGeometryPoints?' (tracé OpenStreetMap, '+l.walkGeometryPoints+' points)':' (sans tracé)'):
