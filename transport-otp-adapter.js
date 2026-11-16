@@ -22,16 +22,23 @@ function time(v){
  return null;
 }
 function parse(response){
- const plan=response?.data?.plan??response?.plan;
- if(!plan||!Array.isArray(plan.itineraries))return [];
- return plan.itineraries.map(it=>{
+ const rootPlan=response?.data??response;
+ const plan=rootPlan?.plan;
+ const connection=rootPlan?.planConnection;
+ const itineraries=Array.isArray(plan?.itineraries)?plan.itineraries:
+  Array.isArray(connection?.edges)?connection.edges.map(edge=>edge?.node):null;
+ if(!itineraries)return [];
+ return itineraries.map(it=>{
   if(!it||!Array.isArray(it.legs)||!it.legs.length)return null;
   const legs=[];
   for(const raw of it.legs){
    if(!raw||typeof raw!=='object')return null;
    const mode=String(raw.mode||'').toUpperCase();
    if(FORBIDDEN.test(mode)||!MODE[mode])return null;
-   const departure=time(raw.startTime),arrival=time(raw.endTime);
+   // Compatible avec les deux formes de réponse uniquement si les champs sont présents.
+   // Ne pas confondre heure planifiée et preuve de temps réel.
+   const departure=time(raw.startTime??raw.start?.scheduledTime??raw.departure?.scheduledTime),
+    arrival=time(raw.endTime??raw.end?.scheduledTime??raw.arrival?.scheduledTime);
    if(!departure||!arrival||Date.parse(arrival)<Date.parse(departure))return null;
    if(legs.length&&Date.parse(departure)<Date.parse(legs[legs.length-1].arrival))return null;
    const fromPoint=point(raw.from),toPoint=point(raw.to);
