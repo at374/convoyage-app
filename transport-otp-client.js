@@ -15,6 +15,9 @@ async function search(config){
  if(typeof c.fetch!=='function')throw Error('Fonction fetch explicitement fournie requise');
  const timeout=Number.isFinite(c.timeoutMs)?Math.min(15000,Math.max(1000,c.timeoutMs)):8000;
  const controller=new AbortController();
+ const abort=()=>controller.abort();
+ if(c.signal?.aborted)controller.abort();
+ else c.signal?.addEventListener?.('abort',abort,{once:true});
  const timer=setTimeout(()=>controller.abort(),timeout);
  try{
   const response=await c.fetch(url.toString(),{
@@ -27,7 +30,7 @@ async function search(config){
   if(json?.errors?.length)throw Error('OTP2 GraphQL : réponse en erreur');
   const journeys=adapter.parse(json);
   return {journeys,source:'OpenTripPlanner (GTFS)',realtime:false,pricesVerified:false};
- }finally{clearTimeout(timer);}
+ }finally{clearTimeout(timer);c.signal?.removeEventListener?.('abort',abort);}
 }
 const api={search};
 if(typeof module==='object'&&module.exports)module.exports=api;
