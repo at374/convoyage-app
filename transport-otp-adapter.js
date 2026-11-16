@@ -7,7 +7,7 @@
 const MODE={WALK:'Marche',BUS:'Bus',COACH:'Car',RAIL:'Train',TRAIN:'Train',TRAM:'Tram',SUBWAY:'Métro',METRO:'Métro',FUNICULAR:'Funiculaire'};
 const FORBIDDEN=/^(FERRY|GONDOLA)$/;
 function point(p){
- if(!p)return null;
+ if(!p||p.lat==null||p.lat===''||(p.lon??p.lng)==null||(p.lon??p.lng)==='')return null;
  const lat=Number(p.lat),lon=Number(p.lon??p.lng);
  return Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180&&!(lat===0&&lon===0)?{lat,lon}:null;
 }
