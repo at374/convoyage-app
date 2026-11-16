@@ -926,7 +926,8 @@ function mapSvg(doc,j){
 const TICKET_LINKS=[
  [/sncf|\bter\b|tgv|intercit|ouigo|l[ée]man express/i,'SNCF Connect','https://www.sncf-connect.com/'],
  [/flixbus/i,'FlixBus','https://www.flixbus.fr/'],
- [/blablacar/i,'BlaBlaCar Bus','https://www.blablacar.fr/bus'],
+ [/blablacar(?:\s+bus|bus)|ouibus/i,'BlaBlaCar Bus','https://www.blablacar.fr/bus'],
+ [/blablacar|covoiturage|carpool/i,'BlaBlaCar covoiturage','https://www.blablacar.fr/'],
  [/^(sbb|cff|ffs)\b|postauto|car postal|\bbls\b|\bmbc\b|\btl\b|travys|\btpn\b|\bcgn\b/i,'CFF','https://www.sbb.ch/fr'],
  [/\btpg\b|unireso|^but$|^afo$/i,'tpg','https://www.tpg.ch/fr/acheter'],
  [/l[ée]man pass/i,'Léman Pass','https://www.lemanpass.com/points-de-vente/'],
