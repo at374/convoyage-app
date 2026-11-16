@@ -99,3 +99,22 @@ test('OTP2 : une réponse partiellement corrompue ne fait pas planter les autres
  assert.equal(out.length,1);
  assert.equal(out[0].legs[0].mode,'Train');
 });
+
+test('OTP2 : accepte planConnection edges node et horaires imbriqués programmés',()=>{
+ const modern={...leg()};
+ delete modern.startTime;delete modern.endTime;
+ modern.departure={scheduledTime:'2026-11-16T12:00:00+01:00'};
+ modern.arrival={scheduledTime:'2026-11-16T13:00:00+01:00'};
+ const out=parse({data:{planConnection:{edges:[{node:{legs:[modern]}},null,{node:null}]}}});
+ assert.equal(out.length,1);
+ assert.equal(out[0].legs[0].departure,'2026-11-16T11:00:00.000Z');
+ assert.equal(out[0].legs[0].fare,null);
+ assert.equal(out[0].legs[0].realtime,false);
+});
+test('OTP2 : accepte start/end scheduledTime et rejette un horaire manquant',()=>{
+ const nested={...leg(),startTime:null,endTime:null,
+  start:{scheduledTime:'2026-11-16T12:00:00+01:00'},
+  end:{scheduledTime:'2026-11-16T13:00:00+01:00'}};
+ assert.equal(parse({planConnection:{edges:[{node:{legs:[nested]}}]}}).length,1);
+ assert.deepEqual(parse({planConnection:{edges:[{node:{legs:[{...nested,end:null}]}}]}}),[]);
+});
