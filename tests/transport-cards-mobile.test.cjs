@@ -32,3 +32,10 @@ test('diagnostic intégré : mêmes ressources nationales que les fiches mission
  const matches=[...app.matchAll(/nationalGTFSResources:\s*window\.CP_NATIONAL_GTFS_RESOURCES\s*\|\|\s*\{\}/g)];
  assert.ok(matches.length>=2,'ressources SNCF, BlaBlaCar Bus et FlixBus pour diagnostic et fiches');
 });
+
+test('BlaBlaCar : lien Bus distinct du covoiturage',()=>{
+ const H=require('../transport-mission-hub.js');
+ assert.equal(H.ticketLink('BlaBlaCar Bus').url,'https://www.blablacar.fr/bus');
+ assert.equal(H.ticketLink('BlaBlaCar covoiturage').url,'https://www.blablacar.fr/');
+ assert.equal(H.ticketLink('FlixBus').url,'https://www.flixbus.fr/');
+});
