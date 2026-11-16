@@ -1,16 +1,16 @@
 # OTP2 réel — graphe AURA–Suisse construit et interrogé
 
-Généré automatiquement le 2026-11-16T19:08:26.596Z sur un serveur GitHub Actions (gratuit, aucun déploiement).
+Généré automatiquement le 2026-11-16T19:26:53.621Z sur un serveur GitHub Actions (gratuit, aucun déploiement).
 Jour testé : **2026-11-24**, départ à partir de 08:00 (heure de Paris). Horaires GTFS planifiés, pas de temps réel.
 
 ## Construction du graphe
 
 - Image OTP2 : `docker.io/opentripplanner/opentripplanner:2.10.0`
 - Durée de construction : 216 s
-- Mémoire maximale observée : 12.2GiB
+- Mémoire maximale observée : 12.21GiB
 - Taille du graphe : 541 Mo
 - Plus petit tas Java testé qui charge le graphe et répond : -Xmx6g (essais 3g, 4g, 6g, 8g)
-- Mémoire du serveur après chargement : 6.297GiB ; après les recherches : 6.339GiB
+- Mémoire du serveur après chargement : 6.302GiB ; après les recherches : 6.361GiB
 
 ## OpenStreetMap
 

@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-16T19:08:26.596Z",
+ "generatedAt": "2026-11-16T19:26:53.621Z",
  "testDate": "2026-11-24",
  "departure": "08:00 Europe/Paris",
  "server": {
@@ -3407,7 +3407,7 @@
   }
  ],
  "sources": {
-  "generatedAt": "2026-11-16T18:55:17+00:00",
+  "generatedAt": "2026-11-16T19:17:52+00:00",
   "testDate": "2026-11-24",
   "bbox": {
    "latMin": 45.4,
@@ -3433,7 +3433,7 @@
      "stops": 1482,
      "trips": 9204,
      "routes": 32,
-     "bytes": 3183331
+     "bytes": 3183301
     },
     "excludedAgencies": [],
     "excludedTrips": 0,
@@ -3469,7 +3469,7 @@
      "stops": 280,
      "trips": 1357,
      "routes": 8,
-     "bytes": 709486
+     "bytes": 709514
     },
     "excludedAgencies": [],
     "excludedTrips": 0,
@@ -3505,7 +3505,7 @@
      "stops": 6581,
      "trips": 143781,
      "routes": 519,
-     "bytes": 38716530
+     "bytes": 38716644
     },
     "excludedAgencies": [],
     "excludedTrips": 0,
@@ -3549,7 +3549,7 @@
      "stops": 1240,
      "trips": 6722,
      "routes": 24,
-     "bytes": 1507426
+     "bytes": 1507258
     },
     "excludedAgencies": [],
     "excludedTrips": 0,
@@ -3585,7 +3585,7 @@
      "stops": 814,
      "trips": 2290,
      "routes": 64,
-     "bytes": 1084015
+     "bytes": 1084088
     },
     "excludedAgencies": [],
     "excludedTrips": 0,
@@ -3621,7 +3621,7 @@
      "stops": 530,
      "trips": 18231,
      "routes": 26,
-     "bytes": 2455436
+     "bytes": 2455435
     },
     "excludedAgencies": [],
     "excludedTrips": 0,
@@ -3657,7 +3657,7 @@
      "stops": 23,
      "trips": 1446,
      "routes": 81,
-     "bytes": 1536128
+     "bytes": 1536129
     },
     "excludedAgencies": [],
     "excludedTrips": 0,
@@ -3729,7 +3729,7 @@
      "stops": 648,
      "trips": 6988,
      "routes": 101,
-     "bytes": 549318
+     "bytes": 549262
     },
     "excludedAgencies": [
      "CFF"
@@ -3775,7 +3775,7 @@
      "stops": 9416,
      "trips": 22376,
      "routes": 541,
-     "bytes": 32563881
+     "bytes": 32563462
     },
     "excludedAgencies": [
      "AIX-LES-BAINS - Ondéa",
@@ -3879,7 +3879,7 @@
     "id": "suisse-ski",
     "url": "https://data.opentransportdata.swiss/dataset/timetable-2026-gtfs2020/permalink",
     "origin": "permalien (API CKAN en échec : HTTP Error 403: Forbidden)",
-    "finalUrl": "https://83025b28472d6aa2bf5ae59f3724aa78.eu.r2.cloudflarestorage.com/dx-omd-prod/resources/c19fcd23-d911-4a7d-8f61-2d7d4dff23d1/gtfs_fp2026_20261114.zip?response-content-disposition=attachment%3B%20filename%3Dgtfs_fp2026_20261114.zip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=9bd93e9511bb186699e38b472e825929%2F20261116%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20261116T185740Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&X-Amz-Signature=e81e139087dab4a197502d534df10586a17d91048490b6cd81f1ff6a23590c0b",
+    "finalUrl": "https://83025b28472d6aa2bf5ae59f3724aa78.eu.r2.cloudflarestorage.com/dx-omd-prod/resources/c19fcd23-d911-4a7d-8f61-2d7d4dff23d1/gtfs_fp2026_20261114.zip?response-content-disposition=attachment%3B%20filename%3Dgtfs_fp2026_20261114.zip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=9bd93e9511bb186699e38b472e825929%2F20261116%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20261116T191859Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&X-Amz-Signature=a3e7d7ec4c2b29d10f21ef6f5e961db93fa6b1862c332acbf8617d0d32b31991",
     "bytes": 292103653,
     "sha256": "c221979f0dc36df7c92d3fcd9af799c46140aa2865b271b284030183f0e2ae85",
     "before": {
@@ -3892,7 +3892,7 @@
      "stops": 7364,
      "trips": 379864,
      "routes": 301,
-     "bytes": 47133658
+     "bytes": 47134325
     },
     "excludedAgencies": [
      "Société Nationale des Chemins de fer Français",
@@ -4021,10 +4021,10 @@
  "build": {
   "image": "docker.io/opentripplanner/opentripplanner:2.10.0",
   "buildSeconds": 216,
-  "buildMaxMemory": "12.2GiB",
-  "graphBytes": 567397228,
-  "serveMemory": "6.297GiB",
+  "buildMaxMemory": "12.21GiB",
+  "graphBytes": 567406199,
+  "serveMemory": "6.302GiB",
   "serveHeap": "6g",
-  "serveMemoryAfterQueries": "6.339GiB"
+  "serveMemoryAfterQueries": "6.361GiB"
  }
 }
