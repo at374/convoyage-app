@@ -22,3 +22,12 @@ test('OTP2 : refuse les itinéraires sans segments ou sans plan',()=>{
  assert.deepEqual(parse({}),[]);
  assert.deepEqual(parse({plan:{itineraries:[{legs:[]}]}}),[]);
 });
+
+test('OTP2 : ignore les dates numériques hors plage sans faire planter la recherche',()=>{
+ const broken={...leg(),startTime:9e18};
+ assert.deepEqual(parse({plan:{itineraries:[{legs:[broken]}]}}),[]);
+});
+test('OTP2 : refuse une arrivée avant le départ',()=>{
+ const broken={...leg(),endTime:1794820000000};
+ assert.deepEqual(parse({plan:{itineraries:[{legs:[broken]}]}}),[]);
+});
