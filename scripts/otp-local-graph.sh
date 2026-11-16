@@ -4,6 +4,7 @@
 set -euo pipefail
 if [[ $# -lt 1 || $# -gt 2 ]]; then echo "Usage: $0 <dossier> [build|serve]" >&2; exit 2; fi
 command -v docker >/dev/null || { echo "Docker est requis" >&2; exit 2; }
+[[ -d "$1" ]] || { echo "Dossier introuvable : $1" >&2; exit 2; }
 DIR="$(cd "$1" && pwd)"
 MODE="${2:-build}"
 IMAGE="docker.io/opentripplanner/opentripplanner:2.10.0"
