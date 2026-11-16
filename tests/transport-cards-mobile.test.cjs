@@ -39,3 +39,16 @@ test('BlaBlaCar : lien Bus distinct du covoiturage',()=>{
  assert.equal(H.ticketLink('BlaBlaCar covoiturage').url,'https://www.blablacar.fr/');
  assert.equal(H.ticketLink('FlixBus').url,'https://www.flixbus.fr/');
 });
+
+test('inventaire : ne plus annoncer Léman Pass entièrement absent',()=>{
+ const coverage=require('../transport-coverage.js');
+ const leman=coverage.NETWORKS.find(x=>x.id==='lemanpass');
+ const lex=coverage.NETWORKS.find(x=>x.id==='lex');
+ const tpg=coverage.NETWORKS.find(x=>x.id==='tpg');
+ assert.equal(leman.fareOk,true);
+ assert.equal(lex.fareOk,true);
+ assert.equal(tpg.fareOk,true);
+ assert.match(leman.fare,/partielles/);
+ assert.match(coverage.DETAILS.lemanpass.blocage,/autres zones/);
+ assert.equal(coverage.DETAILS.lemanpass.tarif,'partiels');
+});
