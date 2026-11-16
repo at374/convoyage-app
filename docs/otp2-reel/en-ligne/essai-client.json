@@ -1,0 +1,54 @@
+{
+ "generatedAt": "2026-11-16T19:49:46.025Z",
+ "endpoint": "https://convoyage-otp2-glqa2uqrtq-od.a.run.app/otp/gtfs/v1",
+ "origin": "https://at374.github.io",
+ "testDate": "2026-11-24",
+ "axes": [
+  {
+   "id": "amberieu-lyon",
+   "ms": 2925,
+   "journeys": 6,
+   "walkLegsWithPath": 12,
+   "walkLegs": 12
+  },
+  {
+   "id": "chambery-stjulien",
+   "ms": 2992,
+   "journeys": 5,
+   "walkLegsWithPath": 14,
+   "walkLegs": 14
+  },
+  {
+   "id": "annecy-geneve",
+   "ms": 2113,
+   "journeys": 4,
+   "walkLegsWithPath": 11,
+   "walkLegs": 11
+  },
+  {
+   "id": "annecy-annemasse",
+   "ms": 890,
+   "journeys": 2,
+   "walkLegsWithPath": 4,
+   "walkLegs": 4
+  },
+  {
+   "id": "archamps-geneve",
+   "ms": 1085,
+   "journeys": 4,
+   "walkLegsWithPath": 12,
+   "walkLegs": 12
+  }
+ ],
+ "firstCall": {
+  "status": 200,
+  "ms": 306,
+  "allowOrigin": "https://at374.github.io"
+ },
+ "preflight": {
+  "status": 200,
+  "allowOrigin": "https://at374.github.io",
+  "allowMethods": null,
+  "allowHeaders": "content-type"
+ }
+}
