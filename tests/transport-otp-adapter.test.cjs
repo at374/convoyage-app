@@ -31,3 +31,15 @@ test('OTP2 : refuse une arrivée avant le départ',()=>{
  const broken={...leg(),endTime:1794820000000};
  assert.deepEqual(parse({plan:{itineraries:[{legs:[broken]}]}}),[]);
 });
+
+test('OTP2 : rejette les segments qui se chevauchent',()=>{
+ const first=leg('WALK');
+ const second={...leg('RAIL'),startTime:1794832000000,endTime:1794835000000};
+ assert.deepEqual(parse({plan:{itineraries:[{legs:[first,second]}]}}),[]);
+});
+test('OTP2 : accepte une correspondance chronologiquement possible',()=>{
+ const first={...leg('WALK'),endTime:1794831000000};
+ const second={...leg('RAIL'),startTime:1794831600000,endTime:1794835000000};
+ const out=parse({plan:{itineraries:[{legs:[first,second]}]}});
+ assert.equal(out.length,1);assert.equal(out[0].legs.length,2);
+});
