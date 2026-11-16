@@ -36,6 +36,9 @@ read -r -p "Continuer ? Tapez OUI : " answer
 [[ "$answer" == "OUI" ]] || { echo "Annulé, rien n'a été créé."; exit 0; }
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
+# Le disque personnel de Cloud Shell (5 Go) peut être plein : Docker écrit sa configuration dans le dossier temporaire.
+export DOCKER_CONFIG="$work/docker-config" BUILDX_CONFIG="$work/buildx"
+mkdir -p "$DOCKER_CONFIG" "$BUILDX_CONFIG"
 echo "Téléchargement du graphe construit et validé par GitHub Actions…"
 curl -fL --retry 3 -o "$work/graph.obj" "$GRAPH_URL"
 [[ "$(stat -c %s "$work/graph.obj")" -gt 100000000 ]] || { echo "Graphe anormalement petit" >&2; exit 1; }
@@ -50,7 +53,8 @@ gcloud services enable artifactregistry.googleapis.com run.googleapis.com --quie
 gcloud artifacts repositories describe "$REPO" --location "$REGION" >/dev/null 2>&1 || \
   gcloud artifacts repositories create "$REPO" --repository-format docker --location "$REGION" --description "Serveur OTP2 Convoyage Ultra"
 gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
-docker build -t "$IMAGE" "$work"
+mkdir -p "$work/image" && mv "$work/graph.obj" "$work/Dockerfile" "$work/image/"
+docker build -t "$IMAGE" "$work/image"
 docker push "$IMAGE"
 gcloud run deploy "$SERVICE" --image "$IMAGE" --region "$REGION" \
   --cpu 2 --memory 8Gi --min-instances 0 --max-instances 1 --concurrency 20 --timeout 60 \
