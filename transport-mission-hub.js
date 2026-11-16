@@ -715,7 +715,7 @@ function makeProviders(r,opts={}){
   }
  }
  if(r.CPTripGo&&typeof r.CPTripGo.plan==='function')P.tripgo={name:'TripGo',enabled:()=>{try{return opts.allowTripGo===true&&!!r.CPTripGo.getKey();}catch(_){return false;}},
-  disabledReason:'TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)',
+  disabledReason:'TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle',
   run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
    const deadline=ms(task.latestArrival);
    const answer=await r.CPTripGo.plan({from:pt(task.from),to:pt(task.to),when:w.when,arriveBy:w.arriveBy,signal,fetcher,
