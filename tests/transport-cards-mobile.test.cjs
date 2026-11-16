@@ -27,3 +27,8 @@ test('cartes : prix inconnu et achat officiel sans prix inventé',()=>{
  assert.match(hub,/noopener noreferrer/);
  assert.match(hub,/const feasible=reasons\.length===0/);
 });
+
+test('diagnostic intégré : mêmes ressources nationales que les fiches missions',()=>{
+ const matches=[...app.matchAll(/nationalGTFSResources:\s*window\.CP_NATIONAL_GTFS_RESOURCES\s*\|\|\s*\{\}/g)];
+ assert.ok(matches.length>=2,'ressources SNCF, BlaBlaCar Bus et FlixBus pour diagnostic et fiches');
+});
