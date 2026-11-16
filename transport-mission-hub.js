@@ -1,5 +1,5 @@
 /* Convoyage Ultra — Hub transports de mission.
- * Interroge automatiquement TripGo, la Suisse (transport.opendata.ch), Mobilités M et le
+ * Interroge automatiquement les sources GTFS, la Suisse (transport.opendata.ch), Mobilités M et le
  * secours SNCF, reçoit les horaires GTFS locaux, complète les marches réelles (Valhalla/OSM)
  * et produit UN classement par direction : moins cher, compromis, plus rapide.
  * Règles : aucun prix ni horaire inventé ; pas de vol d'oiseau présenté comme une marche ;
