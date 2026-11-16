@@ -714,6 +714,25 @@ function makeProviders(r,opts={}){
     }};
   }
  }
+ // OTP2 : uniquement si le propriétaire a configuré et activé son serveur HTTPS.
+ // La requête GraphQL dépend du schéma exact de l'instance ; elle est fournie explicitement.
+ if(r.CPOTPClient&&typeof r.CPOTPClient.search==='function')P.otp={
+  name:'OpenTripPlanner (GTFS)',
+  enabled:task=>opts.allowOTP===true&&typeof opts.otpEndpoint==='string'&&
+   typeof opts.otpQuery==='function'&&!!queryWindow(task),
+  disabledReason:'OTP2 non configuré : serveur HTTPS et requête GraphQL nécessaires',
+  run:async(task,signal)=>{
+   const w=queryWindow(task),request=opts.otpQuery(task,w);
+   if(!request||typeof request.query!=='string'||!request.query.trim())return [];
+   if(signal?.aborted)return [];
+   const response=await r.CPOTPClient.search({
+    enabled:true,endpoint:opts.otpEndpoint,query:request.query,
+    variables:request.variables||{},fetch:fetcher,timeoutMs:opts.otpTimeoutMs
+   });
+   if(signal?.aborted)return [];
+   return response.journeys;
+  }
+ };
  if(r.CPTripGo&&typeof r.CPTripGo.plan==='function')P.tripgo={name:'TripGo',enabled:()=>{try{return opts.allowTripGo===true&&!!r.CPTripGo.getKey();}catch(_){return false;}},
   disabledReason:'TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle',
   run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
