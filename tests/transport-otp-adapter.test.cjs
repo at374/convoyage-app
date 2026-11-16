@@ -55,3 +55,13 @@ test('OTP2 : accepte deux segments avec un arrêt commun',()=>{
  const out=parse({plan:{itineraries:[{legs:[first,second]}]}});
  assert.equal(out.length,1);
 });
+
+test('OTP2 : refuse les coordonnées manquantes ou vides',()=>{
+ const cases=[
+  {...leg(),from:{name:'Sans latitude',lon:6.14}},
+  {...leg(),to:{name:'Latitude vide',lat:'',lon:6.14}},
+  {...leg(),from:{name:'Longitude nulle',lat:45.9,lon:null}},
+  {...leg(),to:{name:'Longitude vide',lat:46.2,lon:''}}
+ ];
+ for(const item of cases)assert.deepEqual(parse({plan:{itineraries:[{legs:[item]}]}}),[]);
+});
