@@ -1,5 +1,5 @@
 /* Convoyage Ultra — Hub transports de mission.
- * Interroge automatiquement TripGo, la Suisse (transport.opendata.ch), Mobilités M et le
+ * Interroge automatiquement les sources GTFS, la Suisse (transport.opendata.ch), Mobilités M et le
  * secours SNCF, reçoit les horaires GTFS locaux, complète les marches réelles (Valhalla/OSM)
  * et produit UN classement par direction : moins cher, compromis, plus rapide.
  * Règles : aucun prix ni horaire inventé ; pas de vol d'oiseau présenté comme une marche ;
@@ -714,8 +714,27 @@ function makeProviders(r,opts={}){
     }};
   }
  }
+ // OTP2 : uniquement si le propriétaire a configuré et activé son serveur HTTPS.
+ // La requête GraphQL dépend du schéma exact de l'instance ; elle est fournie explicitement.
+ if(r.CPOTPClient&&typeof r.CPOTPClient.search==='function')P.otp={
+  name:'OpenTripPlanner (GTFS)',
+  enabled:task=>opts.allowOTP===true&&typeof opts.otpEndpoint==='string'&&
+   typeof opts.otpQuery==='function'&&!!queryWindow(task),
+  disabledReason:'OTP2 non configuré : serveur HTTPS et requête GraphQL nécessaires',
+  run:async(task,signal)=>{
+   const w=queryWindow(task),request=opts.otpQuery(task,w);
+   if(!request||typeof request.query!=='string'||!request.query.trim())return [];
+   if(signal?.aborted)return [];
+   const response=await r.CPOTPClient.search({
+    enabled:true,endpoint:opts.otpEndpoint,query:request.query,
+    variables:request.variables||{},fetch:fetcher,timeoutMs:opts.otpTimeoutMs,signal
+   });
+   if(signal?.aborted)return [];
+   return response.journeys;
+  }
+ };
  if(r.CPTripGo&&typeof r.CPTripGo.plan==='function')P.tripgo={name:'TripGo',enabled:()=>{try{return opts.allowTripGo===true&&!!r.CPTripGo.getKey();}catch(_){return false;}},
-  disabledReason:'TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)',
+  disabledReason:'TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle',
   run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
    const deadline=ms(task.latestArrival);
    const answer=await r.CPTripGo.plan({from:pt(task.from),to:pt(task.to),when:w.when,arriveBy:w.arriveBy,signal,fetcher,
@@ -926,7 +945,8 @@ function mapSvg(doc,j){
 const TICKET_LINKS=[
  [/sncf|\bter\b|tgv|intercit|ouigo|l[ée]man express/i,'SNCF Connect','https://www.sncf-connect.com/'],
  [/flixbus/i,'FlixBus','https://www.flixbus.fr/'],
- [/blablacar/i,'BlaBlaCar Bus','https://www.blablacar.fr/bus'],
+ [/blablacar(?:\s+bus|bus)|ouibus/i,'BlaBlaCar Bus','https://www.blablacar.fr/bus'],
+ [/blablacar|covoiturage|carpool/i,'BlaBlaCar covoiturage','https://www.blablacar.fr/'],
  [/^(sbb|cff|ffs)\b|postauto|car postal|\bbls\b|\bmbc\b|\btl\b|travys|\btpn\b|\bcgn\b/i,'CFF','https://www.sbb.ch/fr'],
  [/\btpg\b|unireso|^but$|^afo$/i,'tpg','https://www.tpg.ch/fr/acheter'],
  [/l[ée]man pass/i,'Léman Pass','https://www.lemanpass.com/points-de-vente/'],

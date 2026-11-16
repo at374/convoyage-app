@@ -11,7 +11,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icones/icone-192.png">
 <link rel="apple-touch-icon" href="icones/icone-180.png">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=transport-cards-20261116">
 <title>Convoyage Ultra</title>
 </head>
 <body>
@@ -73,6 +73,8 @@
 <script src="transport-gtfs-loader.js"></script>
 <script src="transport-national-gtfs-journeys.js"></script>
 <script>
+// Serveur OpenTripPlanner 2 AURA–Suisse (Cloud Run à la demande, service convoyage-otp2). Retirer cette ligne désactive le moteur.
+window.CP_OTP_ENDPOINT='https://convoyage-otp2-glqa2uqrtq-od.a.run.app/otp/gtfs/v1';
 window.CP_NATIONAL_GTFS_RESOURCES = Object.freeze({
   sncf: Object.freeze({url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-sncf-aura.zip',format:'GTFS',fallbackUrls:Object.freeze(['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/national-sncf-aura.zip','https://at374.github.io/convoyage-app/data/gtfs/national-sncf-aura.zip'])}),
   blablacarBus: Object.freeze({url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-blablacarBus-aura.zip',format:'GTFS',fallbackUrls:Object.freeze(['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/national-blablacarBus-aura.zip','https://at374.github.io/convoyage-app/data/gtfs/national-blablacarBus-aura.zip'])}),
@@ -93,9 +95,11 @@ window.CP_NATIONAL_GTFS_RESOURCES = Object.freeze({
 <script src="transport-gtfs-agenda.js?v=hub-20261114b"></script>
 <script src="transport-fare-grids.js?v=hub-20261115e"></script>
 <script src="transport-ojp.js?v=ojp-20261115a"></script>
+<script src="transport-otp-adapter.js?v=otp-20261116a"></script>
+<script src="transport-otp-client.js?v=otp-20261116a"></script>
 <script src="transport-mission-hub.js?v=hub-20261115g"></script>
 <script src="transport-coverage.js?v=hub-20261115a"></script>
-<script src="app.js?v=hub-20261115f"></script>
+<script src="app.js?v=hub-20261116b"></script>
 <script src="sanef-gps-protection.js"></script>
 <script src="routes-ui.js"></script>
 <script src="admin.js?v=modal-layer-20261105"></script>

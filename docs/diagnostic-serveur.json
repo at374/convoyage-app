@@ -1,6 +1,6 @@
 {
- "at": "2026-11-15T21:42:57.398Z",
- "when": "2026-11-16T08:00:00+01:00",
+ "at": "2026-11-16T13:08:50.820Z",
+ "when": "2026-11-23T08:00:00+01:00",
  "source": "diagnostic serveur (GitHub Actions)",
  "tripgo": false,
  "axes": [
@@ -9,7 +9,7 @@
    "name": "Annecy → Genève",
    "coverage": false,
    "appGtfsChoice": "Cars Région Haute-Savoie + Sibra",
-   "trips": 59,
+   "trips": 53,
    "priced": 0,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -20,7 +20,7 @@
    "missingFareByOperator": {
     "BlaBlaCar Bus": 5,
     "FlixBus": 12,
-    "SNCF": 34,
+    "SNCF": 26,
     "Cars Région Haute-Savoie": 16
    },
    "missingFareSamples": {
@@ -75,13 +75,13 @@
       "mode": "Train",
       "line": "L2",
       "from": "Annecy",
-      "to": "Genève-Eaux-Vives"
+      "to": "Genève Cornavin"
      },
      {
-      "mode": "Train",
-      "line": "L2",
+      "mode": "Bus",
+      "line": "B L2",
       "from": "Annecy",
-      "to": "Genève Cornavin"
+      "to": "Annemasse"
      }
     ],
     "Cars Région Haute-Savoie": [
@@ -116,22 +116,23 @@
     ]
    },
    "partialPricedJourneys": 18,
-   "walked": 59,
-   "feasible": 14,
+   "walked": 53,
+   "feasible": 8,
    "scheduled": 45,
-   "firstResultMs": 295,
-   "totalMs": 10693,
+   "firstResultMs": 236,
+   "totalMs": 9339,
    "received": {
-    "SNCF": 6,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 4,
     "FlixBus GTFS": 12,
     "Cars Région Express GTFS": 0,
-    "SNCF GTFS": 14,
+    "SNCF GTFS": 15,
     "Suisse": 8,
     "GTFS local": 16
    },
    "discarded": {
-    "FlixBus GTFS": 1
+    "FlixBus GTFS": 1,
+    "SNCF GTFS": 1
    },
    "hiddenTooEarly": 0,
    "reasons": {
@@ -186,7 +187,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Mobilités M": "hors agglomération grenobloise"
     },
     "gtfs": {
@@ -199,7 +200,6 @@
     "BlaBlaCar Bus (GTFS)",
     "FlixBus (GTFS)",
     "Suisse (transport.opendata.ch)",
-    "SNCF (GTFS officiel)",
     "SNCF (GTFS)",
     "Cars Région Haute-Savoie (GTFS)"
    ],
@@ -223,8 +223,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-17T10:24:20.048Z",
-     "arr": "2026-11-17T11:21:02.017Z",
+     "dep": "2026-11-24T10:24:20.048Z",
+     "arr": "2026-11-24T11:21:02.017Z",
      "legs": [
       "marche 54 m",
       "BlaBlaCar Bus BlaBlaCar Bus",
@@ -241,8 +241,8 @@
    "name": "Annemasse → Saint-Julien-en-Genevois",
    "coverage": false,
    "appGtfsChoice": "TAC Annemasse + Cars Région Haute-Savoie",
-   "trips": 56,
-   "priced": 39,
+   "trips": 52,
+   "priced": 38,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
    "tripgoPricedFromGrids": 0,
@@ -250,7 +250,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 20,
+    "SNCF": 14,
     "TPG": 1
    },
    "missingFareSamples": {
@@ -263,15 +263,15 @@
      },
      {
       "mode": "Train",
-      "line": "L1",
+      "line": "C43",
       "from": "Annemasse",
-      "to": "Machilly"
+      "to": "Saint-Julien-en-Genevois"
      },
      {
       "mode": "Train",
-      "line": "L1",
-      "from": "Machilly",
-      "to": "Lancy-Bachet"
+      "line": "TER C33",
+      "from": "Annemasse",
+      "to": "Saint-Julien-en-Genevois"
      }
     ],
     "TPG": [
@@ -287,33 +287,31 @@
     "TAC": 1,
     "TAC Annemasse": 50,
     "SBB": 6,
-    "TPG": 6,
-    "SNCF": 1
+    "TPG": 6
    },
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 42,
-   "feasible": 12,
-   "scheduled": 30,
-   "firstResultMs": 207,
-   "totalMs": 20246,
+   "walked": 52,
+   "feasible": 8,
+   "scheduled": 44,
+   "firstResultMs": 778,
+   "totalMs": 23170,
    "received": {
-    "SNCF": 4,
-    "GTFS local": 40,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
-    "TAC Annemasse GTFS": 13,
+    "GTFS local": 40,
     "FlixBus GTFS": 0,
-    "SNCF GTFS": 13,
-    "Suisse": 8
+    "TAC Annemasse GTFS": 13,
+    "Suisse": 8,
+    "SNCF GTFS": 13
    },
    "discarded": {},
    "hiddenTooEarly": 22,
    "reasons": {
-    "horaire GTFS local non confirmé en temps réel": 17,
+    "horaire GTFS local non confirmé en temps réel": 31,
     "horaire GTFS non confirmé en temps réel": 13,
-    "prix commercial et disponibilité non vérifiés": 13,
-    "marches non calculées (quota de la fiche)": 14
+    "prix commercial et disponibilité non vérifiés": 13
    },
    "engines": {
     "errors": {},
@@ -360,7 +358,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Mobilités M": "hors agglomération grenobloise"
     },
     "gtfs": {
@@ -372,13 +370,11 @@
    "sources": [
     "Suisse (transport.opendata.ch)",
     "TAC Annemasse (GTFS)",
-    "SNCF (GTFS)",
-    "SNCF (GTFS officiel)"
+    "SNCF (GTFS)"
    ],
    "networksSeen": [
     "tac",
     "ter",
-    "lex",
     "cff",
     "tpg",
     "tpg-fr"
@@ -388,14 +384,16 @@
     "lex",
     "tpg-fr"
    ],
-   "missingExpected": [],
+   "missingExpected": [
+    "lex"
+   ],
    "examples": [
     {
      "labels": [
       "Moins cher"
      ],
-     "dep": "2026-11-16T07:48:47.707Z",
-     "arr": "2026-11-16T08:51:41.077Z",
+     "dep": "2026-11-23T07:48:47.707Z",
+     "arr": "2026-11-23T08:51:41.077Z",
      "legs": [
       "marche 102 m",
       "TAC B 4",
@@ -409,8 +407,8 @@
      "labels": [
       "Meilleur compromis"
      ],
-     "dep": "2026-11-16T10:28:47.707Z",
-     "arr": "2026-11-16T11:25:59.054Z",
+     "dep": "2026-11-23T10:28:47.707Z",
+     "arr": "2026-11-23T11:25:59.054Z",
      "legs": [
       "marche 102 m",
       "TAC Annemasse 4",
@@ -424,8 +422,8 @@
      "labels": [
       "Plus rapide"
      ],
-     "dep": "2026-11-16T10:12:00.000Z",
-     "arr": "2026-11-16T10:31:26.357Z",
+     "dep": "2026-11-23T10:12:00.000Z",
+     "arr": "2026-11-23T10:31:26.357Z",
      "legs": [
       "SNCF C33",
       "marche 631 m"
@@ -441,7 +439,7 @@
    "name": "Ambérieu-en-Bugey → Lyon Part-Dieu",
    "coverage": false,
    "appGtfsChoice": "Cars Région Ain",
-   "trips": 19,
+   "trips": 18,
    "priced": 0,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -450,7 +448,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 20
+    "SNCF": 18
    },
    "missingFareSamples": {
     "SNCF": [
@@ -478,25 +476,25 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 19,
-   "feasible": 5,
-   "scheduled": 14,
-   "firstResultMs": 123,
-   "totalMs": 3292,
+   "walked": 18,
+   "feasible": 0,
+   "scheduled": 18,
+   "firstResultMs": 1249,
+   "totalMs": 1751,
    "received": {
     "GTFS local": 0,
     "Cars Région Express GTFS": 0,
-    "SNCF": 10,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
     "SNCF GTFS": 20
    },
    "discarded": {},
-   "hiddenTooEarly": 5,
+   "hiddenTooEarly": 2,
    "reasons": {
-    "horaire GTFS non confirmé en temps réel": 14,
-    "prix commercial et disponibilité non vérifiés": 14,
-    "recherche des correspondances incomplète": 14
+    "horaire GTFS non confirmé en temps réel": 18,
+    "prix commercial et disponibilité non vérifiés": 18,
+    "recherche des correspondances incomplète": 18
    },
    "engines": {
     "errors": {},
@@ -543,7 +541,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève",
      "Mobilités M": "hors agglomération grenobloise"
     },
@@ -552,7 +550,6 @@
     }
    },
    "sources": [
-    "SNCF (GTFS officiel)",
     "SNCF (GTFS)"
    ],
    "networksSeen": [
@@ -568,15 +565,15 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:12:26.785Z",
-     "arr": "2026-11-16T07:52:00.000Z",
+     "dep": "2026-11-23T07:12:26.785Z",
+     "arr": "2026-11-23T07:52:00.000Z",
      "legs": [
       "marche 1346 m",
       "SNCF K23"
      ],
      "price": "Prix à confirmer",
-     "status": "Réalisable",
-     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+     "status": "Horaire programmé — à confirmer le jour J",
+     "detail": "Horaire officiel publié ; marches, correspondances et marge vérifiées. Reste à confirmer : horaire GTFS non confirmé en temps réel · prix commercial et disponibilité non vérifiés · recherche des correspondances incomplète"
     }
    ]
   },
@@ -585,7 +582,7 @@
    "name": "Chambéry → Aix-les-Bains",
    "coverage": false,
    "appGtfsChoice": "Synchro Bus Chambéry + Ondéa Aix-les-Bains",
-   "trips": 64,
+   "trips": 63,
    "priced": 4,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -594,7 +591,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 22,
+    "SNCF": 20,
     "FlixBus": 2,
     "Ondéa Aix-les-Bains": 37
    },
@@ -668,16 +665,16 @@
     ]
    },
    "partialPricedJourneys": 36,
-   "walked": 64,
-   "feasible": 5,
-   "scheduled": 59,
-   "firstResultMs": 85,
-   "totalMs": 12119,
+   "walked": 63,
+   "feasible": 0,
+   "scheduled": 63,
+   "firstResultMs": 316,
+   "totalMs": 11185,
    "received": {
     "Cars Région Express GTFS": 0,
-    "SNCF": 10,
-    "Cars Région Savoie GTFS": 0,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
+    "Cars Région Savoie GTFS": 0,
     "FlixBus GTFS": 4,
     "Cars Région Isère GTFS": 0,
     "Synchro Chambéry GTFS": 2,
@@ -685,15 +682,14 @@
     "GTFS local": 43
    },
    "discarded": {
-    "SNCF": 4,
     "FlixBus GTFS": 2
    },
-   "hiddenTooEarly": 1,
+   "hiddenTooEarly": 0,
    "reasons": {
     "horaire GTFS local non confirmé en temps réel": 41,
-    "horaire GTFS non confirmé en temps réel": 18,
-    "prix commercial et disponibilité non vérifiés": 18,
-    "recherche des correspondances incomplète": 16
+    "horaire GTFS non confirmé en temps réel": 22,
+    "prix commercial et disponibilité non vérifiés": 22,
+    "recherche des correspondances incomplète": 20
    },
    "engines": {
     "errors": {},
@@ -737,7 +733,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève",
      "Mobilités M": "hors agglomération grenobloise"
     },
@@ -752,7 +748,6 @@
    "sources": [
     "Synchro Chambéry (GTFS)",
     "Synchro Bus Chambéry (GTFS)",
-    "SNCF (GTFS officiel)",
     "SNCF (GTFS)",
     "FlixBus (GTFS)",
     "Ondéa Aix-les-Bains (GTFS)"
@@ -775,8 +770,8 @@
       "Moins cher",
       "Meilleur compromis"
      ],
-     "dep": "2026-11-16T11:06:14.962Z",
-     "arr": "2026-11-16T11:41:36.577Z",
+     "dep": "2026-11-23T11:06:14.962Z",
+     "arr": "2026-11-23T11:41:36.577Z",
      "legs": [
       "marche 286 m",
       "Synchro Chambéry 30",
@@ -790,14 +785,14 @@
      "labels": [
       "Plus rapide"
      ],
-     "dep": "2026-11-16T08:49:00.000Z",
-     "arr": "2026-11-16T08:58:00.000Z",
+     "dep": "2026-11-23T08:49:00.000Z",
+     "arr": "2026-11-23T08:58:00.000Z",
      "legs": [
       "SNCF 621B"
      ],
      "price": "Prix à confirmer",
-     "status": "Réalisable",
-     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+     "status": "Horaire programmé — à confirmer le jour J",
+     "detail": "Horaire officiel publié ; marches, correspondances et marge vérifiées. Reste à confirmer : horaire GTFS non confirmé en temps réel · prix commercial et disponibilité non vérifiés · recherche des correspondances incomplète"
     }
    ]
   },
@@ -806,7 +801,7 @@
    "name": "Grenoble → Crolles",
    "coverage": false,
    "appGtfsChoice": "M Réso — Métropole grenobloise + M Réso — Grésivaudan",
-   "trips": 30,
+   "trips": 23,
    "priced": 5,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -815,28 +810,22 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 27,
+    "SNCF": 15,
     "BlaBlaCar Bus": 3
    },
    "missingFareSamples": {
     "SNCF": [
      {
       "mode": "Train",
-      "line": "C6",
+      "line": "C31",
       "from": "Grenoble",
-      "to": "Échirolles"
+      "to": "Brignoud"
      },
      {
       "mode": "Train",
       "line": "C1",
-      "from": "Échirolles",
-      "to": "Lancey"
-     },
-     {
-      "mode": "Train",
-      "line": "C31",
       "from": "Grenoble",
-      "to": "Lancey"
+      "to": "Brignoud"
      }
     ],
     "BlaBlaCar Bus": [
@@ -854,22 +843,22 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 30,
-   "feasible": 12,
+   "walked": 23,
+   "feasible": 5,
    "scheduled": 18,
-   "firstResultMs": 64,
-   "totalMs": 5234,
+   "firstResultMs": 82,
+   "totalMs": 4259,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Savoie GTFS": 0,
     "Cars Région Express GTFS": 0,
-    "SNCF": 7,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 4,
     "FlixBus GTFS": 0,
     "Cars Région Drôme GTFS": 0,
     "SNCF GTFS": 16,
-    "GTFS local": 0,
-    "Mobilités M": 5
+    "Mobilités M": 5,
+    "GTFS local": 0
    },
    "discarded": {
     "BlaBlaCar Bus GTFS": 1,
@@ -923,7 +912,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève"
     },
     "gtfs": {
@@ -935,7 +924,6 @@
    },
    "sources": [
     "Mobilités M",
-    "SNCF (GTFS officiel)",
     "SNCF (GTFS)",
     "BlaBlaCar Bus (GTFS)"
    ],
@@ -957,8 +945,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:02:04.000Z",
-     "arr": "2026-11-16T07:42:59.000Z",
+     "dep": "2026-11-23T07:02:04.000Z",
+     "arr": "2026-11-23T07:42:59.000Z",
      "legs": [
       "marche 69 m",
       "M Réso - Métropole Grenobloise C11"
@@ -974,7 +962,7 @@
    "name": "Rumilly → Annecy",
    "coverage": false,
    "appGtfsChoice": "Sibra + Cars Région Haute-Savoie",
-   "trips": 24,
+   "trips": 21,
    "priced": 1,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -983,7 +971,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 26
+    "SNCF": 20
    },
    "missingFareSamples": {
     "SNCF": [
@@ -1001,9 +989,9 @@
      },
      {
       "mode": "Train",
-      "line": "C21",
+      "line": "K23",
       "from": "Rumilly",
-      "to": "Albens"
+      "to": "Annecy"
      }
     ]
    },
@@ -1013,26 +1001,26 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 24,
-   "feasible": 6,
-   "scheduled": 18,
-   "firstResultMs": 113,
-   "totalMs": 4661,
+   "walked": 21,
+   "feasible": 0,
+   "scheduled": 21,
+   "firstResultMs": 197,
+   "totalMs": 5147,
    "received": {
     "Cars Région Express GTFS": 0,
     "GTFS local": 1,
-    "SNCF": 7,
-    "FlixBus GTFS": 0,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
+    "FlixBus GTFS": 0,
     "SNCF GTFS": 20
    },
    "discarded": {},
-   "hiddenTooEarly": 1,
+   "hiddenTooEarly": 0,
    "reasons": {
     "horaire GTFS local non confirmé en temps réel": 1,
-    "horaire GTFS non confirmé en temps réel": 17,
-    "prix commercial et disponibilité non vérifiés": 17,
-    "recherche des correspondances incomplète": 17
+    "horaire GTFS non confirmé en temps réel": 20,
+    "prix commercial et disponibilité non vérifiés": 20,
+    "recherche des correspondances incomplète": 20
    },
    "engines": {
     "errors": {},
@@ -1079,7 +1067,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève",
      "Mobilités M": "hors agglomération grenobloise"
     },
@@ -1091,8 +1079,7 @@
    },
    "sources": [
     "Sibra (GTFS)",
-    "SNCF (GTFS)",
-    "SNCF (GTFS officiel)"
+    "SNCF (GTFS)"
    ],
    "networksSeen": [
     "sibra",
@@ -1109,8 +1096,8 @@
       "Moins cher",
       "Meilleur compromis"
      ],
-     "dep": "2026-11-16T12:03:51.578Z",
-     "arr": "2026-11-16T13:00:49.298Z",
+     "dep": "2026-11-23T12:03:51.578Z",
+     "arr": "2026-11-23T13:00:49.298Z",
      "legs": [
       "marche 625 m",
       "Sibra 42",
@@ -1124,8 +1111,8 @@
      "labels": [
       "Plus rapide"
      ],
-     "dep": "2026-11-16T18:48:33.324Z",
-     "arr": "2026-11-16T19:15:59.306Z",
+     "dep": "2026-11-23T18:48:33.324Z",
+     "arr": "2026-11-23T19:15:59.306Z",
      "legs": [
       "marche 925 m",
       "SNCF K21",
@@ -1142,7 +1129,7 @@
    "name": "Thonon-les-Bains → Genève",
    "coverage": false,
    "appGtfsChoice": "Cars Région Haute-Savoie + Star't Thonon",
-   "trips": 10,
+   "trips": 8,
    "priced": 0,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -1151,7 +1138,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 9,
+    "SNCF": 7,
     "FlixBus": 2
    },
    "missingFareSamples": {
@@ -1161,18 +1148,6 @@
       "line": "L1",
       "from": "Thonon-les-Bains",
       "to": "Genève Cornavin"
-     },
-     {
-      "mode": "Train",
-      "line": "C33",
-      "from": "Évian-les-Bains",
-      "to": "Annemasse"
-     },
-     {
-      "mode": "Train",
-      "line": "L1",
-      "from": "Thonon-les-Bains",
-      "to": "Genève-Eaux-Vives"
      }
     ],
     "FlixBus": [
@@ -1190,33 +1165,25 @@
      }
     ]
    },
-   "fareLegsByOperator": {
-    "SNCF": 1
-   },
-   "partialMissingByOperator": {
-    "SNCF": 1
-   },
-   "partialMissingLineSamples": {
-    "SNCF": [
-     "C33"
-    ]
-   },
-   "partialPricedJourneys": 1,
-   "walked": 10,
-   "feasible": 2,
+   "fareLegsByOperator": {},
+   "partialMissingByOperator": {},
+   "partialMissingLineSamples": {},
+   "partialPricedJourneys": 0,
+   "walked": 8,
+   "feasible": 0,
    "scheduled": 8,
-   "firstResultMs": 80,
-   "totalMs": 4204,
+   "firstResultMs": 281,
+   "totalMs": 2513,
    "received": {
-    "SNCF": 9,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 1,
     "GTFS local": 0,
-    "SNCF GTFS": 8,
-    "Suisse": 0
+    "Suisse": 0,
+    "SNCF GTFS": 8
    },
    "discarded": {},
-   "hiddenTooEarly": 8,
+   "hiddenTooEarly": 1,
    "reasons": {
     "horaire GTFS non confirmé en temps réel": 8,
     "prix commercial et disponibilité non vérifiés": 8,
@@ -1269,7 +1236,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Mobilités M": "hors agglomération grenobloise"
     },
     "gtfs": {
@@ -1279,12 +1246,10 @@
    },
    "sources": [
     "SNCF (GTFS)",
-    "SNCF (GTFS officiel)",
     "FlixBus (GTFS)"
    ],
    "networksSeen": [
     "lex",
-    "ter",
     "longue"
    ],
    "expected": [
@@ -1300,8 +1265,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T08:27:38.441Z",
-     "arr": "2026-11-16T09:28:00.000Z",
+     "dep": "2026-11-23T08:27:38.441Z",
+     "arr": "2026-11-23T09:28:00.000Z",
      "legs": [
       "marche 197 m",
       "SNCF L1"
@@ -1317,7 +1282,7 @@
    "name": "Voiron → Grenoble",
    "coverage": false,
    "appGtfsChoice": "M Réso — Métropole grenobloise + M Réso — Grésivaudan",
-   "trips": 39,
+   "trips": 37,
    "priced": 0,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -1326,7 +1291,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 24,
+    "SNCF": 20,
     "Cars Région Isère": 12,
     "BlaBlaCar Bus": 10,
     "FlixBus": 1
@@ -1344,12 +1309,6 @@
       "line": "C6",
       "from": "Voiron",
       "to": "Grenoble"
-     },
-     {
-      "mode": "Train",
-      "line": "C6",
-      "from": "Voiron",
-      "to": "Réaumont - Saint-Cassien"
      }
     ],
     "Cars Région Isère": [
@@ -1393,31 +1352,30 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 39,
-   "feasible": 4,
-   "scheduled": 35,
-   "firstResultMs": 171,
-   "totalMs": 10127,
+   "walked": 37,
+   "feasible": 0,
+   "scheduled": 37,
+   "firstResultMs": 375,
+   "totalMs": 10625,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Express GTFS": 0,
     "Cars Région Drôme GTFS": 0,
     "GTFS local": 8,
-    "SNCF": 7,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 10,
     "FlixBus GTFS": 1,
     "SNCF GTFS": 20,
     "Mobilités M": 5
    },
    "discarded": {
-    "GTFS local": 2,
-    "SNCF": 3
+    "GTFS local": 2
    },
    "hiddenTooEarly": 0,
    "reasons": {
-    "horaire GTFS non confirmé en temps réel": 29,
-    "prix commercial et disponibilité non vérifiés": 29,
-    "recherche des correspondances incomplète": 18,
+    "horaire GTFS non confirmé en temps réel": 31,
+    "prix commercial et disponibilité non vérifiés": 31,
+    "recherche des correspondances incomplète": 20,
     "horaire GTFS local non confirmé en temps réel": 6
    },
    "engines": {
@@ -1463,7 +1421,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève"
     },
     "gtfs": {
@@ -1475,7 +1433,6 @@
    "sources": [
     "SNCF (GTFS)",
     "Mobilités M",
-    "SNCF (GTFS officiel)",
     "Cars Région Isère (GTFS)",
     "BlaBlaCar Bus (GTFS)",
     "FlixBus (GTFS)"
@@ -1496,8 +1453,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:50:38.452Z",
-     "arr": "2026-11-16T08:09:00.000Z",
+     "dep": "2026-11-23T07:50:38.452Z",
+     "arr": "2026-11-23T08:09:00.000Z",
      "legs": [
       "marche 361 m",
       "SNCF K6"
@@ -1513,7 +1470,7 @@
    "name": "Aix-les-Bains gare → Technolac (Ondéa 01)",
    "coverage": true,
    "appGtfsChoice": "Ondéa Aix-les-Bains + Synchro Bus Chambéry",
-   "trips": 31,
+   "trips": 33,
    "priced": 18,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -1522,7 +1479,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 18,
+    "SNCF": 22,
     "Ondéa Aix-les-Bains": 1
    },
    "missingFareSamples": {
@@ -1535,7 +1492,7 @@
      },
      {
       "mode": "Train",
-      "line": "K3",
+      "line": "K11",
       "from": "Aix-les-Bains le Revard",
       "to": "Chambéry - Challes-les-Eaux"
      },
@@ -1567,32 +1524,29 @@
     ]
    },
    "partialPricedJourneys": 1,
-   "walked": 30,
-   "feasible": 1,
-   "scheduled": 29,
-   "firstResultMs": 369,
-   "totalMs": 9958,
+   "walked": 33,
+   "feasible": 0,
+   "scheduled": 33,
+   "firstResultMs": 527,
+   "totalMs": 10694,
    "received": {
     "Synchro Chambéry GTFS": 0,
     "Cars Région Isère GTFS": 0,
     "Cars Région Savoie GTFS": 0,
     "Cars Région Express GTFS": 0,
+    "SNCF": 0,
     "GTFS local": 40,
-    "SNCF": 10,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
-    "SNCF GTFS": 12
+    "SNCF GTFS": 14
    },
-   "discarded": {
-    "SNCF": 9
-   },
+   "discarded": {},
    "hiddenTooEarly": 21,
    "reasons": {
-    "horaire GTFS local non confirmé en temps réel": 18,
-    "horaire GTFS non confirmé en temps réel": 11,
-    "prix commercial et disponibilité non vérifiés": 11,
-    "correspondance programmée non confirmée en temps réel": 6,
-    "marches non calculées (quota de la fiche)": 1
+    "horaire GTFS local non confirmé en temps réel": 19,
+    "horaire GTFS non confirmé en temps réel": 14,
+    "prix commercial et disponibilité non vérifiés": 14,
+    "correspondance programmée non confirmée en temps réel": 8
    },
    "engines": {
     "errors": {},
@@ -1636,7 +1590,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève",
      "Mobilités M": "hors agglomération grenobloise"
     },
@@ -1650,7 +1604,6 @@
    },
    "sources": [
     "Ondéa Aix-les-Bains (GTFS)",
-    "SNCF (GTFS officiel)",
     "SNCF (GTFS)"
    ],
    "networksSeen": [
@@ -1668,8 +1621,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T16:15:00.000Z",
-     "arr": "2026-11-16T16:38:00.000Z",
+     "dep": "2026-11-23T16:15:00.000Z",
+     "arr": "2026-11-23T16:38:00.000Z",
      "legs": [
       "Ondéa Aix-les-Bains 01"
      ],
@@ -1684,7 +1637,7 @@
    "name": "Thonon → Bons-en-Chablais (Star’t 142)",
    "coverage": true,
    "appGtfsChoice": "Star't Thonon + Cars Région Haute-Savoie",
-   "trips": 59,
+   "trips": 50,
    "priced": 31,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -1693,19 +1646,11 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 23,
-    "But": 8,
-    "Star't Thonon": 1,
-    "Evian": 2
+    "SNCF": 18,
+    "Star't Thonon": 1
    },
    "missingFareSamples": {
     "SNCF": [
-     {
-      "mode": "Train",
-      "line": "L1",
-      "from": "Thonon-les-Bains",
-      "to": "Bons-en-Chablais"
-     },
      {
       "mode": "Train",
       "line": "C33",
@@ -1716,21 +1661,7 @@
       "mode": "Train",
       "line": "L1",
       "from": "Thonon-les-Bains",
-      "to": "Évian-les-Bains"
-     }
-    ],
-    "But": [
-     {
-      "mode": "Bus",
-      "line": "B 142",
-      "from": "Thonon-les-Bains, Les Arts",
-      "to": "Bons-en-Chablais, Mairie"
-     },
-     {
-      "mode": "Bus",
-      "line": "B 142",
-      "from": "Bons-en-Chablais, Gare Didier",
-      "to": "Bons-en-Chablais, Mairie"
+      "to": "Bons-en-Chablais"
      }
     ],
     "Star't Thonon": [
@@ -1739,14 +1670,6 @@
       "line": "SMAR",
       "from": "Les Mottes",
       "to": "Presbytère"
-     }
-    ],
-    "Evian": [
-     {
-      "mode": "Bus",
-      "line": "B 01",
-      "from": "Thonon-les-Bains, Les Arts",
-      "to": "Évian-les-Bains, Anna Noailles"
      }
     ]
    },
@@ -1762,26 +1685,26 @@
     ]
    },
    "partialPricedJourneys": 1,
-   "walked": 59,
-   "feasible": 11,
-   "scheduled": 48,
-   "firstResultMs": 173,
-   "totalMs": 19009,
+   "walked": 50,
+   "feasible": 0,
+   "scheduled": 50,
+   "firstResultMs": 338,
+   "totalMs": 15262,
    "received": {
     "GTFS local": 37,
-    "SNCF": 10,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
-    "SNCF GTFS": 18,
-    "Suisse": 8
+    "SNCF GTFS": 19,
+    "Suisse": 0
    },
    "discarded": {},
-   "hiddenTooEarly": 12,
+   "hiddenTooEarly": 6,
    "reasons": {
     "horaire GTFS local non confirmé en temps réel": 32,
-    "horaire GTFS non confirmé en temps réel": 16,
-    "prix commercial et disponibilité non vérifiés": 16,
-    "recherche des correspondances incomplète": 16
+    "horaire GTFS non confirmé en temps réel": 18,
+    "prix commercial et disponibilité non vérifiés": 18,
+    "recherche des correspondances incomplète": 18
    },
    "engines": {
     "errors": {},
@@ -1829,7 +1752,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Mobilités M": "hors agglomération grenobloise"
     },
     "gtfs": {
@@ -1839,14 +1762,12 @@
    },
    "sources": [
     "Star't Thonon (GTFS)",
-    "SNCF (GTFS)",
-    "Suisse (transport.opendata.ch)",
-    "SNCF (GTFS officiel)"
+    "SNCF (GTFS)"
    ],
    "networksSeen": [
     "start",
-    "lex",
-    "ter"
+    "ter",
+    "lex"
    ],
    "expected": [
     "start",
@@ -1859,8 +1780,8 @@
       "Moins cher",
       "Meilleur compromis"
      ],
-     "dep": "2026-11-16T07:01:00.000Z",
-     "arr": "2026-11-16T07:50:00.000Z",
+     "dep": "2026-11-23T07:01:00.000Z",
+     "arr": "2026-11-23T07:50:00.000Z",
      "legs": [
       "Star't Thonon 142"
      ],
@@ -1872,11 +1793,11 @@
      "labels": [
       "Plus rapide"
      ],
-     "dep": "2026-11-16T10:39:02.877Z",
-     "arr": "2026-11-16T11:04:10.713Z",
+     "dep": "2026-11-23T13:28:02.877Z",
+     "arr": "2026-11-23T13:53:10.713Z",
      "legs": [
       "marche 154 m",
-      "SNCF L1",
+      "SNCF C33",
       "marche 804 m"
      ],
      "price": "Prix à confirmer",
@@ -1910,15 +1831,15 @@
    "walked": 56,
    "feasible": 0,
    "scheduled": 56,
-   "firstResultMs": 414,
-   "totalMs": 11131,
+   "firstResultMs": 606,
+   "totalMs": 11243,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Express GTFS": 0,
     "SNCF": 0,
     "GTFS local": 38,
-    "BlaBlaCar Bus GTFS": 0,
     "J’y bus Rumilly GTFS": 30,
+    "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
     "SNCF GTFS": 0
    },
@@ -1970,7 +1891,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève",
      "Mobilités M": "hors agglomération grenobloise"
     },
@@ -2000,8 +1921,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T11:38:00.000Z",
-     "arr": "2026-11-16T12:01:00.000Z",
+     "dep": "2026-11-23T11:38:00.000Z",
+     "arr": "2026-11-23T12:01:00.000Z",
      "legs": [
       "J’y bus Rumilly 1"
      ],
@@ -2037,11 +1958,11 @@
    "walked": 82,
    "feasible": 0,
    "scheduled": 82,
-   "firstResultMs": 294,
-   "totalMs": 16104,
+   "firstResultMs": 393,
+   "totalMs": 16279,
    "received": {
     "Cars Région Express GTFS": 0,
-    "SNCF": 10,
+    "SNCF": 0,
     "GTFS local": 54,
     "BlaBlaCar Bus GTFS": 0,
     "TAM Ambérieu GTFS": 30,
@@ -2049,7 +1970,6 @@
     "SNCF GTFS": 9
    },
    "discarded": {
-    "SNCF": 10,
     "SNCF GTFS": 9
    },
    "hiddenTooEarly": 1,
@@ -2100,7 +2020,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève",
      "Mobilités M": "hors agglomération grenobloise"
     },
@@ -2129,8 +2049,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:40:00.000Z",
-     "arr": "2026-11-16T07:56:00.000Z",
+     "dep": "2026-11-23T07:40:00.000Z",
+     "arr": "2026-11-23T07:56:00.000Z",
      "legs": [
       "TAM Ambérieu TAM 2"
      ],
@@ -2145,7 +2065,7 @@
    "name": "Chambéry → Chamoux-sur-Gelon (Cars Savoie S05)",
    "coverage": true,
    "appGtfsChoice": "Cars Région Savoie + Cars Région Haute-Savoie",
-   "trips": 19,
+   "trips": 12,
    "priced": 0,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -2155,7 +2075,7 @@
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
     "Cars Région Savoie": 2,
-    "SNCF": 23
+    "SNCF": 10
    },
    "missingFareSamples": {
     "Cars Région Savoie": [
@@ -2172,18 +2092,6 @@
       "line": "P31",
       "from": "Chambéry - Challes-les-Eaux",
       "to": "Chamousset"
-     },
-     {
-      "mode": "Train",
-      "line": "P41",
-      "from": "Chambéry - Challes-les-Eaux",
-      "to": "Saint-Pierre-d'Albigny"
-     },
-     {
-      "mode": "Train",
-      "line": "P41",
-      "from": "Chambéry - Challes-les-Eaux",
-      "to": "Aix-les-Bains le Revard"
      }
     ]
    },
@@ -2191,26 +2099,26 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 19,
-   "feasible": 8,
-   "scheduled": 11,
-   "firstResultMs": 42,
-   "totalMs": 4828,
+   "walked": 12,
+   "feasible": 0,
+   "scheduled": 12,
+   "firstResultMs": 48,
+   "totalMs": 2722,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Savoie GTFS": 2,
     "GTFS local": 2,
-    "SNCF": 10,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
     "SNCF GTFS": 10
    },
    "discarded": {},
-   "hiddenTooEarly": 2,
+   "hiddenTooEarly": 0,
    "reasons": {
     "horaire GTFS local non confirmé en temps réel": 2,
-    "horaire GTFS non confirmé en temps réel": 9,
-    "prix commercial et disponibilité non vérifiés": 9
+    "horaire GTFS non confirmé en temps réel": 10,
+    "prix commercial et disponibilité non vérifiés": 10
    },
    "engines": {
     "errors": {},
@@ -2256,7 +2164,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève",
      "Mobilités M": "hors agglomération grenobloise"
     },
@@ -2268,8 +2176,7 @@
    },
    "sources": [
     "Cars Région Savoie (GTFS)",
-    "SNCF (GTFS)",
-    "SNCF (GTFS officiel)"
+    "SNCF (GTFS)"
    ],
    "networksSeen": [
     "cars-73",
@@ -2284,8 +2191,8 @@
      "labels": [
       "Meilleur compromis"
      ],
-     "dep": "2026-11-16T11:30:00.000Z",
-     "arr": "2026-11-16T12:38:00.000Z",
+     "dep": "2026-11-23T11:30:00.000Z",
+     "arr": "2026-11-23T12:38:00.000Z",
      "legs": [
       "Cars Région Savoie S05"
      ],
@@ -2297,8 +2204,8 @@
      "labels": [
       "Plus rapide"
      ],
-     "dep": "2026-11-16T17:24:26.574Z",
-     "arr": "2026-11-16T18:26:14.460Z",
+     "dep": "2026-11-23T17:24:26.574Z",
+     "arr": "2026-11-23T18:26:14.460Z",
      "legs": [
       "marche 346 m",
       "SNCF P31",
@@ -2315,7 +2222,7 @@
    "name": "Bourg-en-Bresse → Ambérieu (Cars Ain / TER)",
    "coverage": true,
    "appGtfsChoice": "Cars Région Ain",
-   "trips": 18,
+   "trips": 17,
    "priced": 1,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -2324,7 +2231,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 16,
+    "SNCF": 14,
     "Cars Région Ain": 2
    },
    "missingFareSamples": {
@@ -2375,28 +2282,27 @@
     ]
    },
    "partialPricedJourneys": 2,
-   "walked": 18,
-   "feasible": 3,
-   "scheduled": 15,
-   "firstResultMs": 23,
-   "totalMs": 5469,
+   "walked": 17,
+   "feasible": 0,
+   "scheduled": 17,
+   "firstResultMs": 41,
+   "totalMs": 5953,
    "received": {
     "GTFS local": 3,
     "Cars Région Express GTFS": 0,
-    "SNCF": 9,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
     "SNCF GTFS": 18
    },
    "discarded": {
-    "SNCF": 6,
     "SNCF GTFS": 4
    },
    "hiddenTooEarly": 0,
    "reasons": {
     "horaire GTFS local non confirmé en temps réel": 3,
-    "horaire GTFS non confirmé en temps réel": 12,
-    "prix commercial et disponibilité non vérifiés": 12
+    "horaire GTFS non confirmé en temps réel": 14,
+    "prix commercial et disponibilité non vérifiés": 14
    },
    "engines": {
     "errors": {},
@@ -2443,7 +2349,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève",
      "Mobilités M": "hors agglomération grenobloise"
     },
@@ -2453,7 +2359,6 @@
    },
    "sources": [
     "Cars Région Ain (GTFS)",
-    "SNCF (GTFS officiel)",
     "SNCF (GTFS)"
    ],
    "networksSeen": [
@@ -2470,8 +2375,8 @@
      "labels": [
       "Moins cher"
      ],
-     "dep": "2026-11-16T14:33:00.000Z",
-     "arr": "2026-11-16T17:57:27.767Z",
+     "dep": "2026-11-23T14:33:00.000Z",
+     "arr": "2026-11-23T17:57:27.767Z",
      "legs": [
       "Cars Région Ain A19",
       "Cars Région Ain A27",
@@ -2486,16 +2391,16 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T09:43:55.631Z",
-     "arr": "2026-11-16T10:01:33.893Z",
+     "dep": "2026-11-23T09:43:55.631Z",
+     "arr": "2026-11-23T10:01:33.893Z",
      "legs": [
       "marche 93 m",
       "SNCF K13",
       "marche 46 m"
      ],
      "price": "Prix à confirmer",
-     "status": "Réalisable",
-     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+     "status": "Horaire programmé — à confirmer le jour J",
+     "detail": "Horaire officiel publié ; marches, correspondances et marge vérifiées. Reste à confirmer : horaire GTFS non confirmé en temps réel · prix commercial et disponibilité non vérifiés"
     }
    ]
   },
@@ -2576,8 +2481,8 @@
    "walked": 57,
    "feasible": 1,
    "scheduled": 56,
-   "firstResultMs": 30,
-   "totalMs": 11882,
+   "firstResultMs": 58,
+   "totalMs": 13108,
    "received": {
     "GTFS local": 38,
     "Cars Région Express GTFS": 0,
@@ -2641,7 +2546,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève",
      "Mobilités M": "hors agglomération grenobloise"
     },
@@ -2666,8 +2571,8 @@
      "labels": [
       "Moins cher"
      ],
-     "dep": "2026-11-16T07:00:00.000Z",
-     "arr": "2026-11-16T07:12:35.943Z",
+     "dep": "2026-11-23T07:00:00.000Z",
+     "arr": "2026-11-23T07:12:35.943Z",
      "legs": [
       "marche 1092 m"
      ],
@@ -2679,8 +2584,8 @@
      "labels": [
       "Meilleur compromis"
      ],
-     "dep": "2026-11-16T18:15:00.000Z",
-     "arr": "2026-11-16T18:27:47.670Z",
+     "dep": "2026-11-23T18:15:00.000Z",
+     "arr": "2026-11-23T18:27:47.670Z",
      "legs": [
       "Cars Région Ain A19",
       "marche 454 m"
@@ -2693,8 +2598,8 @@
      "labels": [
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:00:00.000Z",
-     "arr": "2026-11-16T07:07:27.570Z",
+     "dep": "2026-11-23T07:00:00.000Z",
+     "arr": "2026-11-23T07:07:27.570Z",
      "legs": [
       "Rubis Bourg-en-Bresse 3",
       "marche 126 m"
@@ -2710,7 +2615,7 @@
    "name": "Bonneville → La Roche-sur-Foron (Proxim iTi / TER)",
    "coverage": true,
    "appGtfsChoice": "Sibra + Cars Région Haute-Savoie",
-   "trips": 27,
+   "trips": 23,
    "priced": 0,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -2719,7 +2624,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 29
+    "SNCF": 23
    },
    "missingFareSamples": {
     "SNCF": [
@@ -2739,7 +2644,7 @@
       "mode": "Train",
       "line": "L3",
       "from": "Bonneville",
-      "to": "Saint-Pierre-en-Faucigny"
+      "to": "La Roche-sur-Foron"
      }
     ]
    },
@@ -2747,14 +2652,14 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 27,
-   "feasible": 12,
-   "scheduled": 15,
-   "firstResultMs": 66,
-   "totalMs": 5784,
+   "walked": 23,
+   "feasible": 7,
+   "scheduled": 16,
+   "firstResultMs": 1261,
+   "totalMs": 4765,
    "received": {
     "GTFS local": 0,
-    "SNCF": 6,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
     "Proxim iTi Bonneville – La Roche GTFS": 0,
@@ -2762,11 +2667,11 @@
     "Suisse": 8
    },
    "discarded": {},
-   "hiddenTooEarly": 3,
+   "hiddenTooEarly": 2,
    "reasons": {
-    "horaire GTFS non confirmé en temps réel": 15,
-    "prix commercial et disponibilité non vérifiés": 15,
-    "recherche des correspondances incomplète": 15
+    "horaire GTFS non confirmé en temps réel": 16,
+    "prix commercial et disponibilité non vérifiés": 16,
+    "recherche des correspondances incomplète": 16
    },
    "engines": {
     "errors": {},
@@ -2813,7 +2718,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Mobilités M": "hors agglomération grenobloise"
     },
     "gtfs": {
@@ -2823,7 +2728,6 @@
    },
    "sources": [
     "Suisse (transport.opendata.ch)",
-    "SNCF (GTFS officiel)",
     "SNCF (GTFS)"
    ],
    "networksSeen": [
@@ -2840,8 +2744,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:27:54.400Z",
-     "arr": "2026-11-16T07:56:49.339Z",
+     "dep": "2026-11-23T07:27:54.400Z",
+     "arr": "2026-11-23T07:56:49.339Z",
      "legs": [
       "marche 835 m",
       "SNCF TER C13",
@@ -2858,7 +2762,7 @@
    "name": "Évian → Thonon (ÉVA’D / TER)",
    "coverage": true,
    "appGtfsChoice": "Star't Thonon + Cars Région Haute-Savoie",
-   "trips": 53,
+   "trips": 55,
    "priced": 0,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -2867,7 +2771,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 18,
+    "SNCF": 20,
     "Evian": 12,
     "But": 4,
     "ÉVA'D Évian": 29
@@ -2952,26 +2856,26 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 52,
-   "feasible": 14,
-   "scheduled": 38,
-   "firstResultMs": 89,
-   "totalMs": 13263,
+   "walked": 54,
+   "feasible": 7,
+   "scheduled": 47,
+   "firstResultMs": 651,
+   "totalMs": 13066,
    "received": {
     "GTFS local": 0,
-    "SNCF": 7,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
-    "SNCF GTFS": 16,
     "ÉVA'D Évian GTFS": 30,
-    "Suisse": 8
+    "Suisse": 8,
+    "SNCF GTFS": 18
    },
    "discarded": {},
    "hiddenTooEarly": 1,
    "reasons": {
-    "horaire GTFS non confirmé en temps réel": 9,
-    "prix commercial et disponibilité non vérifiés": 9,
-    "recherche des correspondances incomplète": 9,
+    "horaire GTFS non confirmé en temps réel": 18,
+    "prix commercial et disponibilité non vérifiés": 18,
+    "recherche des correspondances incomplète": 18,
     "horaire GTFS local non confirmé en temps réel": 29,
     "correspondance trop courte à Evian-les-Bains, gare SNCF (n min de marc": 1
    },
@@ -3020,7 +2924,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Mobilités M": "hors agglomération grenobloise"
     },
     "gtfs": {
@@ -3031,7 +2935,6 @@
    "sources": [
     "SNCF (GTFS)",
     "Suisse (transport.opendata.ch)",
-    "SNCF (GTFS officiel)",
     "ÉVA'D Évian (GTFS)"
    ],
    "networksSeen": [
@@ -3048,8 +2951,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T14:12:50.839Z",
-     "arr": "2026-11-16T14:29:54.070Z",
+     "dep": "2026-11-23T14:12:50.839Z",
+     "arr": "2026-11-23T14:29:54.070Z",
      "legs": [
       "marche 568 m",
       "SNCF L1",
@@ -3148,19 +3051,17 @@
    "walked": 26,
    "feasible": 8,
    "scheduled": 18,
-   "firstResultMs": 127,
-   "totalMs": 5749,
+   "firstResultMs": 78,
+   "totalMs": 6155,
    "received": {
     "GTFS local": 0,
-    "SNCF": 2,
-    "FlixBus GTFS": 14,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 4,
-    "SNCF GTFS": 0,
-    "Suisse": 8
+    "FlixBus GTFS": 14,
+    "Suisse": 8,
+    "SNCF GTFS": 0
    },
-   "discarded": {
-    "SNCF": 2
-   },
+   "discarded": {},
    "hiddenTooEarly": 0,
    "reasons": {
     "horaire GTFS non confirmé en temps réel": 18,
@@ -3213,7 +3114,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Mobilités M": "hors agglomération grenobloise"
     },
     "gtfs": {}
@@ -3237,8 +3138,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:05:00.000Z",
-     "arr": "2026-11-16T07:44:00.000Z",
+     "dep": "2026-11-23T07:05:00.000Z",
+     "arr": "2026-11-23T07:44:00.000Z",
      "legs": [
       "SBB IR 90"
      ],
@@ -3253,56 +3154,33 @@
    "name": "Annemasse → Genève",
    "coverage": true,
    "appGtfsChoice": "TAC Annemasse + Cars Région Haute-Savoie",
-   "trips": 33,
-   "priced": 29,
+   "trips": 28,
+   "priced": 28,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
    "tripgoPricedFromGrids": 0,
    "tripgoTicketLegs": 0,
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
-   "missingFareByOperator": {
-    "SNCF": 8
-   },
-   "missingFareSamples": {
-    "SNCF": [
-     {
-      "mode": "Train",
-      "line": "L1",
-      "from": "Annemasse",
-      "to": "Machilly"
-     },
-     {
-      "mode": "Train",
-      "line": "L1",
-      "from": "Machilly",
-      "to": "Genève-Eaux-Vives"
-     },
-     {
-      "mode": "Train",
-      "line": "C33",
-      "from": "Annemasse",
-      "to": "Machilly"
-     }
-    ]
-   },
+   "missingFareByOperator": {},
+   "missingFareSamples": {},
    "fareLegsByOperator": {
     "SBB": 8,
-    "SNCF": 21,
+    "SNCF": 20,
     "TPG": 3
    },
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 31,
-   "feasible": 11,
+   "walked": 26,
+   "feasible": 6,
    "scheduled": 20,
-   "firstResultMs": 184,
-   "totalMs": 3798,
+   "firstResultMs": 1319,
+   "totalMs": 4826,
    "received": {
     "TAC Annemasse GTFS": 0,
     "GTFS local": 0,
-    "SNCF": 5,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 2,
     "FlixBus GTFS": 1,
     "SNCF GTFS": 20,
@@ -3364,7 +3242,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Mobilités M": "hors agglomération grenobloise"
     },
     "gtfs": {
@@ -3375,7 +3253,6 @@
    },
    "sources": [
     "Suisse (transport.opendata.ch)",
-    "SNCF (GTFS officiel)",
     "SNCF (GTFS)"
    ],
    "networksSeen": [
@@ -3396,8 +3273,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:20:00.000Z",
-     "arr": "2026-11-16T07:43:00.000Z",
+     "dep": "2026-11-23T07:20:00.000Z",
+     "arr": "2026-11-23T07:43:00.000Z",
      "legs": [
       "SBB R L4"
      ],
@@ -3470,20 +3347,20 @@
    "walked": 45,
    "feasible": 8,
    "scheduled": 37,
-   "firstResultMs": 56,
-   "totalMs": 9063,
+   "firstResultMs": 110,
+   "totalMs": 7014,
    "received": {
     "TAC Annemasse GTFS": 0,
     "Cars Région Express GTFS": 0,
     "GTFS local": 32,
-    "SNCF": 10,
-    "Suisse": 8,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
+    "Suisse": 8,
     "FlixBus GTFS": 0,
     "SNCF GTFS": 5
    },
    "discarded": {},
-   "hiddenTooEarly": 10,
+   "hiddenTooEarly": 0,
    "reasons": {
     "horaire GTFS non confirmé en temps réel": 5,
     "prix commercial et disponibilité non vérifiés": 5,
@@ -3535,7 +3412,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Mobilités M": "hors agglomération grenobloise"
     },
     "gtfs": {
@@ -3567,8 +3444,8 @@
       "Moins cher",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:17:00.960Z",
-     "arr": "2026-11-16T07:58:00.000Z",
+     "dep": "2026-11-23T07:17:00.960Z",
+     "arr": "2026-11-23T07:58:00.000Z",
      "legs": [
       "marche 230 m",
       "TPG B 80",
@@ -3583,8 +3460,8 @@
      "labels": [
       "Meilleur compromis"
      ],
-     "dep": "2026-11-16T07:39:00.960Z",
-     "arr": "2026-11-16T08:29:38.794Z",
+     "dep": "2026-11-23T07:39:00.960Z",
+     "arr": "2026-11-23T08:29:38.794Z",
      "legs": [
       "marche 230 m",
       "TPG B 80",
@@ -3622,17 +3499,17 @@
    "walked": 9,
    "feasible": 8,
    "scheduled": 1,
-   "firstResultMs": 181,
-   "totalMs": 5778,
+   "firstResultMs": 1222,
+   "totalMs": 6212,
    "received": {
     "TAC Annemasse GTFS": 0,
     "Cars Région Express GTFS": 0,
     "GTFS local": 0,
-    "SNCF": 10,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
-    "SNCF GTFS": 20,
-    "Suisse": 8
+    "Suisse": 8,
+    "SNCF GTFS": 20
    },
    "discarded": {
     "SNCF GTFS": 1
@@ -3687,7 +3564,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Mobilités M": "hors agglomération grenobloise"
     },
     "gtfs": {
@@ -3715,8 +3592,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:47:51.967Z",
-     "arr": "2026-11-16T08:28:00.000Z",
+     "dep": "2026-11-23T07:47:51.967Z",
+     "arr": "2026-11-23T08:28:00.000Z",
      "legs": [
       "marche 1054 m",
       "TPG B 82",
@@ -3734,7 +3611,7 @@
    "name": "Chambéry → Saint-Julien-en-Genevois",
    "coverage": true,
    "appGtfsChoice": "Cars Région Haute-Savoie + Synchro Bus Chambéry",
-   "trips": 15,
+   "trips": 11,
    "priced": 0,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -3743,7 +3620,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 27,
+    "SNCF": 19,
     "AFO": 3
    },
    "missingFareSamples": {
@@ -3778,39 +3655,37 @@
    },
    "fareLegsByOperator": {
     "SBB": 1,
-    "TPG": 1,
-    "SNCF": 2
+    "TPG": 1
    },
    "partialMissingByOperator": {
-    "SNCF": 3
+    "SNCF": 1
    },
    "partialMissingLineSamples": {
     "SNCF": [
-     "TER K11",
-     "K11"
+     "TER K11"
     ]
    },
-   "partialPricedJourneys": 3,
-   "walked": 15,
-   "feasible": 12,
-   "scheduled": 3,
-   "firstResultMs": 160,
-   "totalMs": 4248,
+   "partialPricedJourneys": 1,
+   "walked": 11,
+   "feasible": 7,
+   "scheduled": 4,
+   "firstResultMs": 1357,
+   "totalMs": 4359,
    "received": {
     "Cars Région Express GTFS": 0,
     "GTFS local": 0,
-    "SNCF": 5,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
-    "SNCF GTFS": 3,
+    "SNCF GTFS": 4,
     "Suisse": 8
    },
    "discarded": {},
    "hiddenTooEarly": 0,
    "reasons": {
-    "horaire GTFS non confirmé en temps réel": 3,
-    "prix commercial et disponibilité non vérifiés": 3,
-    "correspondance programmée non confirmée en temps réel": 3
+    "horaire GTFS non confirmé en temps réel": 4,
+    "prix commercial et disponibilité non vérifiés": 4,
+    "correspondance programmée non confirmée en temps réel": 4
    },
    "engines": {
     "errors": {},
@@ -3857,7 +3732,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Mobilités M": "hors agglomération grenobloise"
     },
     "gtfs": {
@@ -3867,12 +3742,10 @@
    },
    "sources": [
     "SNCF (GTFS)",
-    "Suisse (transport.opendata.ch)",
-    "SNCF (GTFS officiel)"
+    "Suisse (transport.opendata.ch)"
    ],
    "networksSeen": [
     "ter",
-    "lex",
     "cff",
     "tpg",
     "tpg-fr"
@@ -3887,8 +3760,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T17:46:00.000Z",
-     "arr": "2026-11-16T19:47:26.357Z",
+     "dep": "2026-11-23T17:46:00.000Z",
+     "arr": "2026-11-23T19:47:26.357Z",
      "legs": [
       "SNCF K11",
       "SNCF C33",
@@ -3905,7 +3778,7 @@
    "name": "Annecy → Chambéry",
    "coverage": true,
    "appGtfsChoice": "Cars Région Haute-Savoie + Sibra",
-   "trips": 39,
+   "trips": 35,
    "priced": 0,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -3914,7 +3787,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 30,
+    "SNCF": 23,
     "BlaBlaCar Bus": 8,
     "FlixBus": 7
    },
@@ -3972,15 +3845,15 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 39,
-   "feasible": 7,
-   "scheduled": 30,
-   "firstResultMs": 155,
-   "totalMs": 2269,
+   "walked": 35,
+   "feasible": 0,
+   "scheduled": 33,
+   "firstResultMs": 240,
+   "totalMs": 2751,
    "received": {
     "Cars Région Express GTFS": 0,
     "GTFS local": 0,
-    "SNCF": 7,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 8,
     "FlixBus GTFS": 7,
     "SNCF GTFS": 20
@@ -3988,9 +3861,10 @@
    "discarded": {},
    "hiddenTooEarly": 0,
    "reasons": {
-    "horaire GTFS non confirmé en temps réel": 32,
-    "prix commercial et disponibilité non vérifiés": 32,
-    "recherche des correspondances incomplète": 17,
+    "horaire GTFS non confirmé en temps réel": 35,
+    "prix commercial et disponibilité non vérifiés": 35,
+    "recherche des correspondances incomplète": 20,
+    "correspondance programmée non confirmée en temps réel": 1,
     "correspondance GTFS non confirmée": 2
    },
    "engines": {
@@ -4038,7 +3912,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève",
      "Mobilités M": "hors agglomération grenobloise"
     },
@@ -4050,13 +3924,11 @@
    "sources": [
     "SNCF (GTFS)",
     "BlaBlaCar Bus (GTFS)",
-    "SNCF (GTFS officiel)",
     "FlixBus (GTFS)"
    ],
    "networksSeen": [
     "ter",
-    "longue",
-    "lex"
+    "longue"
    ],
    "expected": [
     "ter",
@@ -4068,8 +3940,8 @@
      "labels": [
       "Meilleur compromis"
      ],
-     "dep": "2026-11-16T14:27:57.390Z",
-     "arr": "2026-11-16T15:10:00.000Z",
+     "dep": "2026-11-23T08:22:57.390Z",
+     "arr": "2026-11-23T09:04:00.000Z",
      "legs": [
       "marche 86 m",
       "SNCF 621B"
@@ -4082,8 +3954,8 @@
      "labels": [
       "Plus rapide"
      ],
-     "dep": "2026-11-16T10:24:20.048Z",
-     "arr": "2026-11-16T11:03:47.341Z",
+     "dep": "2026-11-23T10:24:20.048Z",
+     "arr": "2026-11-23T11:03:47.341Z",
      "legs": [
       "marche 54 m",
       "BlaBlaCar Bus BlaBlaCar Bus",
@@ -4100,7 +3972,7 @@
    "name": "Lyon → Grenoble",
    "coverage": true,
    "appGtfsChoice": "Cars Région Isère",
-   "trips": 55,
+   "trips": 50,
    "priced": 0,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -4109,7 +3981,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 30,
+    "SNCF": 20,
     "FlixBus": 19,
     "BlaBlaCar Bus": 16
    },
@@ -4119,18 +3991,6 @@
       "mode": "Train",
       "line": "K6",
       "from": "Lyon Part Dieu",
-      "to": "Grenoble"
-     },
-     {
-      "mode": "Train",
-      "line": "K54",
-      "from": "Lyon Part Dieu",
-      "to": "Valence Ville"
-     },
-     {
-      "mode": "Train",
-      "line": "K21",
-      "from": "Valence Ville",
       "to": "Grenoble"
      }
     ],
@@ -4179,28 +4039,26 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 55,
-   "feasible": 7,
-   "scheduled": 47,
-   "firstResultMs": 80,
-   "totalMs": 3669,
+   "walked": 50,
+   "feasible": 0,
+   "scheduled": 49,
+   "firstResultMs": 200,
+   "totalMs": 2719,
    "received": {
     "GTFS local": 0,
     "Cars Région Isère GTFS": 0,
     "Cars Région Express GTFS": 0,
-    "SNCF": 9,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 15,
     "FlixBus GTFS": 17,
     "SNCF GTFS": 20
    },
-   "discarded": {
-    "SNCF": 1
-   },
-   "hiddenTooEarly": 3,
+   "discarded": {},
+   "hiddenTooEarly": 2,
    "reasons": {
-    "horaire GTFS non confirmé en temps réel": 48,
-    "prix commercial et disponibilité non vérifiés": 48,
-    "recherche des correspondances incomplète": 18,
+    "horaire GTFS non confirmé en temps réel": 50,
+    "prix commercial et disponibilité non vérifiés": 50,
+    "recherche des correspondances incomplète": 20,
     "correspondance programmée non confirmée en temps réel": 4,
     "correspondance GTFS non confirmée": 1
    },
@@ -4248,7 +4106,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève",
      "Mobilités M": "hors agglomération grenobloise"
     },
@@ -4257,7 +4115,6 @@
     }
    },
    "sources": [
-    "SNCF (GTFS officiel)",
     "SNCF (GTFS)",
     "FlixBus (GTFS)",
     "BlaBlaCar Bus (GTFS)"
@@ -4277,14 +4134,14 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T08:16:00.000Z",
-     "arr": "2026-11-16T09:39:00.000Z",
+     "dep": "2026-11-23T07:16:00.000Z",
+     "arr": "2026-11-23T08:39:00.000Z",
      "legs": [
       "SNCF K6"
      ],
      "price": "Prix à confirmer",
-     "status": "Réalisable",
-     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+     "status": "Horaire programmé — à confirmer le jour J",
+     "detail": "Horaire officiel publié ; marches, correspondances et marge vérifiées. Reste à confirmer : horaire GTFS non confirmé en temps réel · prix commercial et disponibilité non vérifiés · recherche des correspondances incomplète"
     }
    ]
   },
@@ -4293,7 +4150,7 @@
    "name": "Chambéry → Grenoble",
    "coverage": true,
    "appGtfsChoice": "M Réso — Métropole grenobloise + Synchro Bus Chambéry",
-   "trips": 76,
+   "trips": 72,
    "priced": 0,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -4302,7 +4159,7 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 28,
+    "SNCF": 20,
     "Cars Région Isère": 75,
     "BlaBlaCar Bus": 6,
     "FlixBus": 6
@@ -4317,14 +4174,14 @@
      },
      {
       "mode": "Train",
-      "line": "C21",
+      "line": "C1",
       "from": "Chambéry - Challes-les-Eaux",
-      "to": "Aix-les-Bains le Revard"
+      "to": "Grenoble"
      },
      {
       "mode": "Train",
       "line": "K21",
-      "from": "Aix-les-Bains le Revard",
+      "from": "Chambéry - Challes-les-Eaux",
       "to": "Grenoble"
      }
     ],
@@ -4381,31 +4238,30 @@
    "partialMissingByOperator": {},
    "partialMissingLineSamples": {},
    "partialPricedJourneys": 0,
-   "walked": 76,
-   "feasible": 8,
-   "scheduled": 68,
-   "firstResultMs": 47,
-   "totalMs": 10491,
+   "walked": 72,
+   "feasible": 0,
+   "scheduled": 72,
+   "firstResultMs": 84,
+   "totalMs": 11133,
    "received": {
     "Cars Région Isère GTFS": 4,
     "Cars Région Savoie GTFS": 0,
     "Cars Région Express GTFS": 0,
     "GTFS local": 37,
-    "SNCF": 10,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 6,
     "FlixBus GTFS": 8,
     "SNCF GTFS": 20
    },
    "discarded": {
-    "SNCF": 1,
     "FlixBus GTFS": 2
    },
-   "hiddenTooEarly": 1,
+   "hiddenTooEarly": 0,
    "reasons": {
-    "horaire GTFS local non confirmé en temps réel": 40,
-    "horaire GTFS non confirmé en temps réel": 28,
-    "prix commercial et disponibilité non vérifiés": 28,
-    "recherche des correspondances incomplète": 16
+    "horaire GTFS non confirmé en temps réel": 32,
+    "prix commercial et disponibilité non vérifiés": 32,
+    "recherche des correspondances incomplète": 20,
+    "horaire GTFS local non confirmé en temps réel": 40
    },
    "engines": {
     "errors": {},
@@ -4450,7 +4306,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève",
      "Mobilités M": "hors agglomération grenobloise"
     },
@@ -4462,7 +4318,6 @@
     }
    },
    "sources": [
-    "SNCF (GTFS officiel)",
     "SNCF (GTFS)",
     "Cars Région Isère (GTFS)",
     "BlaBlaCar Bus (GTFS)",
@@ -4484,14 +4339,14 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:21:00.000Z",
-     "arr": "2026-11-16T08:02:00.000Z",
+     "dep": "2026-11-23T07:21:00.000Z",
+     "arr": "2026-11-23T08:02:00.000Z",
      "legs": [
       "SNCF K11"
      ],
      "price": "Prix à confirmer",
-     "status": "Réalisable",
-     "detail": "Horaires théoriques : retards et annulations à surveiller le jour J"
+     "status": "Horaire programmé — à confirmer le jour J",
+     "detail": "Horaire officiel publié ; marches, correspondances et marge vérifiées. Reste à confirmer : horaire GTFS non confirmé en temps réel · prix commercial et disponibilité non vérifiés · recherche des correspondances incomplète"
     }
    ]
   },
@@ -4552,12 +4407,12 @@
    "walked": 32,
    "feasible": 1,
    "scheduled": 31,
-   "firstResultMs": 13,
-   "totalMs": 25619,
+   "firstResultMs": 24,
+   "totalMs": 29905,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Express GTFS": 5,
-    "SNCF": 5,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 1,
     "Cars Région Loire GTFS": 0,
@@ -4566,7 +4421,6 @@
     "TCL Lyon GTFS": 30
    },
    "discarded": {
-    "SNCF": 5,
     "FlixBus GTFS": 1,
     "SNCF GTFS": 13
    },
@@ -4620,7 +4474,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève",
      "Mobilités M": "hors agglomération grenobloise"
     },
@@ -4650,8 +4504,8 @@
      "labels": [
       "Moins cher"
      ],
-     "dep": "2026-11-16T07:00:00.000Z",
-     "arr": "2026-11-16T07:30:30.725Z",
+     "dep": "2026-11-23T07:00:00.000Z",
+     "arr": "2026-11-23T07:30:30.725Z",
      "legs": [
       "marche 2507 m"
      ],
@@ -4664,8 +4518,8 @@
       "Meilleur compromis",
       "Plus rapide"
      ],
-     "dep": "2026-11-16T12:59:04.315Z",
-     "arr": "2026-11-16T13:21:38.709Z",
+     "dep": "2026-11-23T12:59:04.315Z",
+     "arr": "2026-11-23T13:21:38.709Z",
      "legs": [
       "marche 168 m",
       "TCL C13",
@@ -4682,7 +4536,7 @@
    "name": "Voiron → Voreppe (M réso Voironnais)",
    "coverage": true,
    "appGtfsChoice": "M Réso — Métropole grenobloise",
-   "trips": 35,
+   "trips": 29,
    "priced": 2,
    "tripgoJourneys": 0,
    "tripgoPriced": 0,
@@ -4691,11 +4545,19 @@
    "tripgoMissingFareByOperator": {},
    "tripgoFareLegsFromGridsByOperator": {},
    "missingFareByOperator": {
-    "SNCF": 35,
     "Mobilités M - SNCF": 1,
+    "SNCF": 23,
     "Cars Région Isère": 12
    },
    "missingFareSamples": {
+    "Mobilités M - SNCF": [
+     {
+      "mode": "Train",
+      "line": "C6",
+      "from": "Voiron, Voiron",
+      "to": "Voreppe, Voreppe"
+     }
+    ],
     "SNCF": [
      {
       "mode": "Train",
@@ -4705,23 +4567,15 @@
      },
      {
       "mode": "Train",
-      "line": "C31",
+      "line": "K6",
       "from": "Voiron",
-      "to": "Réaumont - Saint-Cassien"
+      "to": "Grenoble"
      },
      {
       "mode": "Train",
-      "line": "C6",
-      "from": "Réaumont - Saint-Cassien",
+      "line": "C31",
+      "from": "Grenoble",
       "to": "Voreppe"
-     }
-    ],
-    "Mobilités M - SNCF": [
-     {
-      "mode": "Train",
-      "line": "C6",
-      "from": "Voiron, Voiron",
-      "to": "Voreppe, Voreppe"
      }
     ],
     "Cars Région Isère": [
@@ -4757,17 +4611,17 @@
     ]
    },
    "partialPricedJourneys": 1,
-   "walked": 35,
-   "feasible": 12,
-   "scheduled": 23,
-   "firstResultMs": 99,
-   "totalMs": 3572,
+   "walked": 29,
+   "feasible": 3,
+   "scheduled": 26,
+   "firstResultMs": 208,
+   "totalMs": 4265,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Express GTFS": 0,
     "Cars Région Drôme GTFS": 0,
     "GTFS local": 6,
-    "SNCF": 9,
+    "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
     "SNCF GTFS": 20,
@@ -4776,9 +4630,9 @@
    "discarded": {},
    "hiddenTooEarly": 0,
    "reasons": {
-    "horaire GTFS non confirmé en temps réel": 17,
-    "prix commercial et disponibilité non vérifiés": 17,
-    "recherche des correspondances incomplète": 17,
+    "horaire GTFS non confirmé en temps réel": 20,
+    "prix commercial et disponibilité non vérifiés": 20,
+    "recherche des correspondances incomplète": 20,
     "horaire GTFS local non confirmé en temps réel": 6,
     "correspondance programmée non confirmée en temps réel": 3
    },
@@ -4825,7 +4679,7 @@
      "Citéa (Valence Romans Mobilités) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "STAS (Saint-Étienne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "T2C (Clermont Auvergne Métropole) GTFS": "trajet hors zone du réseau local ou horaires manquants",
-     "TripGo": "TripGo désactivé par défaut : accès contractuel à vérifier (activation explicite uniquement)",
+     "TripGo": "TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle",
      "Suisse": "trajet hors zone suisse et Grand Genève"
     },
     "gtfs": {
@@ -4835,7 +4689,6 @@
    },
    "sources": [
     "Mobilités M",
-    "SNCF (GTFS officiel)",
     "SNCF (GTFS)",
     "Cars Région Isère (GTFS)"
    ],
@@ -4854,8 +4707,8 @@
       "Moins cher",
       "Meilleur compromis"
      ],
-     "dep": "2026-11-16T07:07:40.000Z",
-     "arr": "2026-11-16T07:34:07.000Z",
+     "dep": "2026-11-23T07:07:40.000Z",
+     "arr": "2026-11-23T07:34:07.000Z",
      "legs": [
       "marche 389 m",
       "M Réso - Métropole Grenobloise C13",
@@ -4869,12 +4722,14 @@
      "labels": [
       "Plus rapide"
      ],
-     "dep": "2026-11-16T07:27:38.452Z",
-     "arr": "2026-11-16T07:52:47.030Z",
+     "dep": "2026-11-23T07:10:26.000Z",
+     "arr": "2026-11-23T07:35:43.000Z",
      "legs": [
-      "marche 361 m",
-      "SNCF C6",
-      "marche 825 m"
+      "marche 358 m",
+      "Mobilités M - SNCF C6",
+      "marche 89 m",
+      "M Réso - Métropole Grenobloise C13",
+      "marche 40 m"
      ],
      "price": "Prix à confirmer",
      "status": "Réalisable",
@@ -4888,7 +4743,7 @@
    "trips": 107,
    "priced": 0,
    "walked": 107,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "annecy-geneve",
     "chambery-aix",
@@ -4903,10 +4758,10 @@
    "source": "serveur"
   },
   "ter": {
-   "trips": 356,
+   "trips": 305,
    "priced": 1,
-   "walked": 356,
-   "at": "2026-11-15T21:42:57.398Z",
+   "walked": 305,
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -4914,7 +4769,6 @@
     "chambery-aix",
     "grenoble-crolles",
     "rumilly-annecy",
-    "thonon-geneve",
     "voiron-grenoble",
     "aix-technolac",
     "thonon-bons",
@@ -4935,22 +4789,19 @@
    "source": "serveur"
   },
   "lex": {
-   "trips": 90,
-   "priced": 22,
-   "walked": 90,
-   "at": "2026-11-15T21:42:57.398Z",
+   "trips": 63,
+   "priced": 20,
+   "walked": 63,
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "annecy-geneve",
-    "annemasse-stjulien",
     "thonon-geneve",
     "thonon-bons",
     "bonneville-laroche",
     "evian-thonon",
     "annemasse-geneve",
     "stjulien-geneve",
-    "archamps-geneve",
-    "chambery-stjulien",
-    "annecy-chambery"
+    "archamps-geneve"
    ],
    "source": "serveur"
   },
@@ -4958,7 +4809,7 @@
    "trips": 33,
    "priced": 22,
    "walked": 31,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -4974,7 +4825,7 @@
    "trips": 48,
    "priced": 0,
    "walked": 48,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "annecy-geneve",
     "stjulien-geneve"
@@ -4984,8 +4835,8 @@
   "tac": {
    "trips": 32,
    "priced": 32,
-   "walked": 18,
-   "at": "2026-11-15T21:42:57.398Z",
+   "walked": 32,
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "annemasse-stjulien"
    ],
@@ -4995,7 +4846,7 @@
    "trips": 26,
    "priced": 24,
    "walked": 24,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "annemasse-stjulien",
     "annemasse-geneve",
@@ -5009,7 +4860,7 @@
    "trips": 26,
    "priced": 24,
    "walked": 24,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "annemasse-stjulien",
     "annemasse-geneve",
@@ -5023,7 +4874,7 @@
    "trips": 4,
    "priced": 4,
    "walked": 4,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "chambery-aix"
    ],
@@ -5032,8 +4883,8 @@
   "ondea": {
    "trips": 56,
    "priced": 18,
-   "walked": 55,
-   "at": "2026-11-15T21:42:57.398Z",
+   "walked": 56,
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "chambery-aix",
     "aix-technolac"
@@ -5044,7 +4895,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -5054,7 +4905,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -5064,7 +4915,7 @@
    "trips": 1,
    "priced": 1,
    "walked": 1,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "rumilly-annecy"
    ],
@@ -5074,7 +4925,7 @@
    "trips": 52,
    "priced": 0,
    "walked": 52,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "voiron-grenoble",
     "chambery-grenoble",
@@ -5086,7 +4937,7 @@
    "trips": 32,
    "priced": 31,
    "walked": 32,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "thonon-bons"
    ],
@@ -5096,7 +4947,7 @@
    "trips": 56,
    "priced": 56,
    "walked": 56,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "rumilly-intra"
    ],
@@ -5106,7 +4957,7 @@
    "trips": 65,
    "priced": 65,
    "walked": 65,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "amberieu-intra"
    ],
@@ -5116,7 +4967,7 @@
    "trips": 43,
    "priced": 25,
    "walked": 43,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "amberieu-intra",
     "bourg-amberieu",
@@ -5128,7 +4979,7 @@
    "trips": 2,
    "priced": 0,
    "walked": 2,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "chambery-chamoux"
    ],
@@ -5138,7 +4989,7 @@
    "trips": 42,
    "priced": 42,
    "walked": 19,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "lyon-intra"
    ],
@@ -5148,7 +4999,7 @@
    "trips": 3,
    "priced": 2,
    "walked": 3,
-   "at": "2026-11-15T21:42:57.398Z",
+   "at": "2026-11-16T13:08:50.820Z",
    "axes": [
     "voiron-voreppe"
    ],
@@ -5157,14 +5008,14 @@
  },
  "totals": {
   "axes": 27,
-  "trips": 1091,
-  "priced": 334,
-  "walked": 1050,
-  "feasible": 192,
-  "scheduled": 855,
-  "partialPricedJourneys": 100,
+  "trips": 1020,
+  "priced": 332,
+  "walked": 994,
+  "feasible": 77,
+  "scheduled": 914,
+  "partialPricedJourneys": 97,
   "partialMissingByOperator": {
-   "SNCF": 11,
+   "SNCF": 8,
    "Cars Région Haute-Savoie": 48,
    "Ondéa Aix-les-Bains": 37,
    "Star't Thonon": 1,
@@ -5177,7 +5028,6 @@
    "TAC": 1,
    "TAC Annemasse": 50,
    "TPG": 31,
-   "SNCF": 31,
    "Synchro Chambéry": 2,
    "Synchro Bus Chambéry": 4,
    "Ondéa Aix-les-Bains": 70,
@@ -5189,6 +5039,7 @@
    "TAM Ambérieu": 28,
    "TAM Ambérieu-en-Bugey": 73,
    "Cars Région Ain": 39,
+   "SNCF": 26,
    "TCL": 34,
    "TCL Lyon": 23
   },
@@ -5199,17 +5050,17 @@
   "missingFareByOperator": {
    "BlaBlaCar Bus": 54,
    "FlixBus": 63,
-   "SNCF": 483,
+   "SNCF": 368,
    "Cars Région Haute-Savoie": 48,
    "TPG": 1,
    "Ondéa Aix-les-Bains": 38,
    "Cars Région Isère": 99,
-   "But": 12,
    "Star't Thonon": 1,
-   "Evian": 14,
    "Cars Région Savoie": 2,
    "Cars Région Ain": 29,
    "Rubis Bourg-en-Bresse": 29,
+   "Evian": 12,
+   "But": 4,
    "ÉVA'D Évian": 29,
    "SBB": 8,
    "AFO": 3,
@@ -5218,14 +5069,14 @@
   },
   "tripgoFareLegsFromGridsByOperator": {},
   "tripgoMissingFareByOperator": {},
-  "pricedPct": 30.6,
-  "walkedPct": 96.2
+  "pricedPct": 32.5,
+  "walkedPct": 97.5
  },
  "router": {
-  "hits": 1557,
-  "misses": 212,
-  "stored": 212,
-  "requests": 212,
+  "hits": 1455,
+  "misses": 199,
+  "stored": 199,
+  "requests": 199,
   "failures": 0,
   "queued": 0,
   "disposed": false

@@ -647,4 +647,25 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .cp-hub-more>summary,.cp-hub-diag>summary{cursor:pointer;font-weight:600;padding:6px 0}
 .cp-hub-none{color:var(--alerte);font-weight:600;margin:0}
 
+/* Fiche mission — cartes transports Android : prix immédiatement lisible,
+   catégories visuelles et itinéraire piéton sans moteur de recherche manuel. */
+.cp-hub-card{margin:10px 0;box-shadow:0 2px 10px rgba(0,0,0,.07)}
+.cp-hub-card summary{min-height:96px;align-content:center;gap:6px}
+.cp-hub-card .cp-hub-price{display:inline-flex;align-items:center;justify-self:start;font-size:1.28em;line-height:1.25;padding:3px 10px;border-radius:9px;background:color-mix(in srgb,var(--ok) 11%,var(--carte));font-variant-numeric:tabular-nums}
+.cp-hub-card .cp-hub-price.unknown{font-size:1em;background:color-mix(in srgb,var(--alerte) 10%,var(--carte))}
+.cp-hub-card .cp-hub-chip{font-size:.88em;padding:4px 11px}
+.cp-hub-card .cp-hub-times{font-size:1.16em;font-weight:800;font-variant-numeric:tabular-nums}
+.cp-hub-card .cp-hub-status{font-weight:700}
+.cp-hub-card .cp-hub-ticket{margin:2px 0;padding:5px 9px;max-width:100%;white-space:normal}
+.cp-hub-card .cp-hub-body{padding-top:8px}
+.cp-hub-card .cp-hub-map{max-width:100%;display:block}
+@media(max-width:600px){
+ .cp-hub-card{padding:12px;border-radius:14px}
+ .cp-hub-card summary{gap:7px}
+ .cp-hub-card .cp-hub-times{font-size:1.1em}
+ .cp-hub-card .cp-hub-legs{padding-left:19px}
+ .cp-hub-card .cp-hub-ticket{font-size:.92em}
+}
+
+
 .cp-cov{width:100%;border-collapse:collapse;font-size:.78em;margin:8px 0;table-layout:fixed}.cp-cov th,.cp-cov td{border:1px solid var(--ligne);padding:3px;text-align:left;overflow-wrap:anywhere;hyphens:auto}.cp-cov th:first-child,.cp-cov td:first-child{width:24%}.cp-cov-list{font-size:.82em;padding-left:18px}.cp-cov-list li{margin:4px 0}

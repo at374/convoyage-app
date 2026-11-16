@@ -1,0 +1,193 @@
+name: OTP2 réel — graphe AURA–Suisse et validation des axes
+# Exécution réelle sur un serveur GitHub (gratuit pour ce dépôt public) : téléchargement des GTFS officiels et d'OpenStreetMap,
+# construction du graphe OpenTripPlanner 2, recherches réelles sur les axes prioritaires, rapport publié dans docs/otp2-reel/.
+# Aucun déploiement, aucune ressource Cloud, aucun secret.
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/transports-aura-suisse]
+    paths:
+      - '.github/workflows/otp2-graphe-reel.yml'
+      - 'scripts/otp-reel/**'
+permissions:
+  contents: write
+concurrency:
+  group: otp2-graphe-reel
+  cancel-in-progress: true
+env:
+  TEST_DATE: '2026-11-24'
+  BBOX: '4.65,45.40,6.75,46.60'
+jobs:
+  graphe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Tests hors réseau (OTP2, filtre GTFS, lanceur)
+        run: |
+          node --test tests/otp-*.test.cjs tests/transport-otp-*.test.cjs
+          python3 scripts/otp-reel/test_preparer_donnees.py
+          bash tests/otp-local-graph.test.sh
+      - name: Ressources de la machine
+        run: |
+          nproc; free -g; df -h .
+      - name: Relever les flux nationaux dans le catalogue PAN (FlixBus, BlaBlaCar Bus)
+        continue-on-error: true
+        run: node scripts/audit-national-operators.cjs
+      - name: Télécharger, auditer et réduire les GTFS officiels
+        run: python3 scripts/otp-reel/preparer_donnees.py --out otp-data --date "$TEST_DATE"
+      # L'extrait OSM change peu : gardé une semaine pour ne pas retélécharger 1 Go chez Geofabrik à chaque exécution.
+      - name: Semaine courante
+        run: echo "OSM_WEEK=$(date -u +%G-%V)" >> "$GITHUB_ENV"
+      - name: Extrait OpenStreetMap déjà préparé
+        id: osm
+        uses: actions/cache@v4
+        with:
+          path: osm-cache
+          key: osm-couloir-lyon-lausanne-v1-${{ env.OSM_WEEK }}
+      - name: Reprendre l'extrait OpenStreetMap en cache
+        if: steps.osm.outputs.cache-hit == 'true'
+        run: cp osm-cache/couloir.osm.pbf osm-cache/osm.json otp-data/
+      - name: Télécharger et découper OpenStreetMap
+        if: steps.osm.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq && sudo apt-get install -y -qq osmium-tool >/dev/null
+          mkdir -p osm
+          echo '[' > osm/files.json
+          sep=''
+          # Geofabrik refuse parfois les serveurs GitHub (connexion impossible) : repli sur les extraits d'OpenStreetMap France.
+          for group in \
+            "rhone-alpes https://download.geofabrik.de/europe/france/rhone-alpes-latest.osm.pbf https://download.openstreetmap.fr/extracts/europe/france/rhone_alpes-latest.osm.pbf" \
+            "suisse https://download.geofabrik.de/europe/switzerland-latest.osm.pbf https://download.openstreetmap.fr/extracts/europe/switzerland-latest.osm.pbf"; do
+            set -- $group
+            name="$1.osm.pbf"; shift
+            got=''
+            for url in "$@"; do
+              if curl -fsSL --retry 2 --retry-all-errors --retry-delay 10 --connect-timeout 20 -D "osm/$name.headers" -o "osm/$name" "$url"; then got="$url"; break; fi
+              echo "Indisponible : $url"
+            done
+            [ -n "$got" ] || { echo "Aucune source OSM joignable pour $name" >&2; exit 1; }
+            modified="$(grep -i '^last-modified:' "osm/$name.headers" | tail -1 | cut -d' ' -f2- | tr -d '\r' || true)"
+            printf '%s{"url":"%s","bytes":%s,"sha256":"%s","lastModified":"%s"}\n' "$sep" "$got" "$(stat -c %s "osm/$name")" "$(sha256sum "osm/$name" | cut -d' ' -f1)" "$modified" >> osm/files.json
+            sep=','
+            osmium extract --overwrite -b "$BBOX" -o "osm/part-$name" "osm/$name"
+            rm "osm/$name"
+          done
+          echo ']' >> osm/files.json
+          osmium merge --overwrite -o osm/fusion.osm.pbf osm/part-*.osm.pbf
+          # Voies (marche, routes), quais et restrictions seulement : graphe plus léger, mêmes cheminements piétons.
+          osmium tags-filter --overwrite -o otp-data/couloir.osm.pbf osm/fusion.osm.pbf w/highway wa/public_transport=platform wa/railway=platform r/type=restriction
+          printf '{"files":%s,"bbox":"%s","extractBytes":%s}\n' "$(cat osm/files.json | tr -d '\n')" "$BBOX" "$(stat -c %s otp-data/couloir.osm.pbf)" > otp-data/osm.json
+          rm -rf osm
+          mkdir -p osm-cache && cp otp-data/couloir.osm.pbf otp-data/osm.json osm-cache/
+          ls -la otp-data
+      - name: Construire le graphe OTP2
+        run: |
+          set -euo pipefail
+          cat > otp-data/build-config.json <<'JSON'
+          {"transitModelTimeZone":"Europe/Paris","transitServiceStart":"-P2D","transitServiceEnd":"P40D","osmDefaults":{"timeZone":"Europe/Paris"}}
+          JSON
+          chmod -R a+rwX otp-data
+          image=''
+          for tag in 2.10.0 2.9.0 2.8.1 2.8.0 2.7.0; do
+            if docker pull -q "docker.io/opentripplanner/opentripplanner:$tag"; then image="docker.io/opentripplanner/opentripplanner:$tag"; break; fi
+          done
+          [ -n "$image" ] || { echo "Aucune image OTP2 disponible" >&2; exit 1; }
+          echo "OTP_IMAGE=$image" >> "$GITHUB_ENV"
+          ( while true; do docker stats --no-stream --format '{{.MemUsage}}' otp-build 2>/dev/null | cut -d/ -f1 >> mem-build.txt || true; sleep 5; done ) &
+          sampler=$!
+          start=$(date +%s)
+          docker run --name otp-build -e JAVA_TOOL_OPTIONS="-Xmx12g" -v "$PWD/otp-data:/var/opentripplanner" "$image" --build --save 2>&1 | tee build.log | grep -vE 'DEBUG' | tail -n 400
+          end=$(date +%s)
+          kill $sampler || true
+          docker rm otp-build >/dev/null || true
+          test -s otp-data/graph.obj
+          max="$(python3 - <<'PY'
+          import re
+          best=(0,'')
+          for line in open('mem-build.txt'):
+              m=re.match(r'\s*([\d.]+)\s*(GiB|MiB|KiB|B)',line)
+              if m:
+                  v=float(m.group(1))*{'GiB':1024,'MiB':1,'KiB':1/1024,'B':1/1048576}[m.group(2)]
+                  if v>best[0]: best=(v,line.strip())
+          print(best[1])
+          PY
+          )"
+          printf '{"image":"%s","buildSeconds":%s,"buildMaxMemory":"%s","graphBytes":%s}\n' "$image" "$((end-start))" "$max" "$(stat -c %s otp-data/graph.obj)" > otp-data/build.json
+          cat otp-data/build.json
+      - name: Démarrer le serveur OTP2 local et valider les axes
+        run: |
+          set -euo pipefail
+          # Plus petit tas Java capable de charger le graphe et de répondre (utile pour dimensionner un hébergement).
+          ok=''
+          for heap in 3g 4g 6g 8g; do
+            docker rm -f otp-serve >/dev/null 2>&1 || true
+            docker run -d --name otp-serve -e JAVA_TOOL_OPTIONS="-Xmx$heap" -p 127.0.0.1:8080:8080 -v "$PWD/otp-data:/var/opentripplanner" "$OTP_IMAGE" --load --serve
+            for i in $(seq 1 60); do
+              if curl -fsS -m 5 -o /dev/null -X POST -H 'content-type: application/json' -d '{"query":"{__typename}"}' http://127.0.0.1:8080/otp/gtfs/v1; then ok="$heap"; break; fi
+              [ "$(docker inspect -f '{{.State.Running}}' otp-serve 2>/dev/null)" = "true" ] || break
+              sleep 5
+            done
+            [ -n "$ok" ] && break
+            echo "Tas $heap insuffisant :"; docker logs --tail 5 otp-serve || true
+          done
+          [ -n "$ok" ] || { docker logs --tail 100 otp-serve; exit 1; }
+          echo "Tas Java retenu : $ok"
+          serve="$(docker stats --no-stream --format '{{.MemUsage}}' otp-serve | cut -d/ -f1 | xargs)"
+          OTP_URL=http://127.0.0.1:8080 node scripts/otp-reel/valider_axes.cjs otp-data docs/otp2-reel
+          after="$(docker stats --no-stream --format '{{.MemUsage}}' otp-serve | cut -d/ -f1 | xargs)"
+          python3 - "$serve" "$ok" "$after" <<'PY'
+          import json,sys
+          p='otp-data/build.json'; b=json.load(open(p))
+          b['serveMemory']=sys.argv[1]; b['serveHeap']=sys.argv[2]; b['serveMemoryAfterQueries']=sys.argv[3]
+          json.dump(b,open(p,'w'))
+          PY
+          OTP_URL=http://127.0.0.1:8080 node scripts/otp-reel/valider_axes.cjs otp-data docs/otp2-reel
+          docker logs --tail 60 otp-serve > serve.log 2>&1 || true
+          docker rm -f otp-serve >/dev/null
+      - name: Résumé
+        if: always()
+        run: |
+          [ -f docs/otp2-reel/RAPPORT-OTP2-REEL.md ] && cat docs/otp2-reel/RAPPORT-OTP2-REEL.md >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Publier le rapport sur la branche
+        if: always()
+        run: |
+          mkdir -p docs/otp2-reel
+          [ -f otp-data/sources.json ] && cp otp-data/sources.json docs/otp2-reel/sources-gtfs.json || true
+          [ -f build.log ] && grep -E 'ERROR|WARN|Graph|issue' build.log | tail -n 150 > docs/otp2-reel/journal-construction.txt || true
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/otp2-reel
+          git diff --cached --quiet && exit 0
+          git commit -q -m "Rapport OTP2 réel : graphe AURA–Suisse et axes (exécution ${GITHUB_RUN_ID})"
+          for i in 1 2 3; do git pull -q --rebase origin "${GITHUB_REF_NAME}" && git push -q origin "HEAD:${GITHUB_REF_NAME}" && exit 0; sleep 5; done
+          exit 1
+      # Graphe validé mis à disposition du script de déploiement (scripts/otp-reel/deployer-cloud-run.sh).
+      - name: Publier le graphe validé (release otp2-graphe)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test -s otp-data/graph.obj && test -s docs/otp2-reel/rapport-otp2-reel.json
+          (cd otp-data && sha256sum graph.obj > graph.obj.sha256)
+          notes="Graphe OpenTripPlanner ${OTP_IMAGE##*:} AURA–Suisse construit le $(date -u +%Y-%m-%d) (exécution ${GITHUB_RUN_ID}). Données : GTFS officiels (voir docs/otp2-reel/) et © contributeurs OpenStreetMap (ODbL)."
+          gh release view otp2-graphe >/dev/null 2>&1 || gh release create otp2-graphe --prerelease --target "$GITHUB_SHA" --title "Graphe OTP2 AURA–Suisse" --notes "$notes"
+          gh release edit otp2-graphe --notes "$notes"
+          gh release upload otp2-graphe otp-data/graph.obj otp-data/graph.obj.sha256 --clobber
+      - name: Conserver le graphe et les journaux
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: otp2-graphe-aura-suisse
+          path: |
+            otp-data/graph.obj
+            otp-data/*.json
+            build.log
+            serve.log
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 1

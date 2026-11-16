@@ -1,0 +1,41 @@
+name: OTP2 — essai réel du serveur en ligne
+# Interroge le serveur OTP2 Cloud Run (à la demande) avec le client de l'application : CORS, délais, 12 axes.
+# Lecture seule : ne crée ni ne modifie aucune ressource Cloud. Quelques dizaines de requêtes par exécution.
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/transports-aura-suisse]
+    paths:
+      - '.github/workflows/otp2-serveur-en-ligne.yml'
+      - 'scripts/otp-essai-en-ligne.cjs'
+permissions:
+  contents: write
+concurrency:
+  group: otp2-serveur-en-ligne
+  cancel-in-progress: true
+env:
+  TEST_DATE: '2026-11-24'
+  OTP_BASE: 'https://convoyage-otp2-glqa2uqrtq-od.a.run.app'
+jobs:
+  essai:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Client de l'application contre le serveur en ligne
+        run: OTP_ENDPOINT="$OTP_BASE/otp/gtfs/v1" node scripts/otp-essai-en-ligne.cjs docs/otp2-reel/en-ligne
+      - name: Validation complète des axes
+        run: OTP_URL="$OTP_BASE" node scripts/otp-reel/valider_axes.cjs /nonexistent docs/otp2-reel/en-ligne
+      - name: Publier le rapport
+        if: always()
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/otp2-reel/en-ligne || exit 0
+          git diff --cached --quiet && exit 0
+          git commit -q -m "Rapport OTP2 en ligne (exécution ${GITHUB_RUN_ID}) [skip ci]"
+          for i in 1 2 3; do git pull -q --rebase origin "${GITHUB_REF_NAME}" && git push -q origin "HEAD:${GITHUB_REF_NAME}" && exit 0; sleep 5; done
+          exit 1

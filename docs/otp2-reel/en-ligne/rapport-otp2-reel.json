@@ -1,0 +1,3412 @@
+{
+ "generatedAt": "2026-11-16T19:49:56.731Z",
+ "testDate": "2026-11-24",
+ "departure": "08:00 Europe/Paris",
+ "server": {
+  "info": "{\"cpuName\":\"AMD EPYC 9B14\",\"nCores\":5,\"version\":{\"version\":\"2.10.0\",\"qualifier\":\"\",\"patch\":0,\"major\":2,\"minor\":10},\"versionControl\":{\"dirty\":false,\"commit\":\"521cd5d8acaae628878f43bf5946f4942c118548\",\"branch\":\"master\",\"commitTime\":\"2026-09-09T09:07:23Z\",\"buildTime\":\"2026-09-09T09:23:32Z\"},\"config\":{\"otpConfigVersion\":null,\"buildConfigVersion\":null,\"routerConfigVersion\":null},\"otpSerializationVersionId\":\"277\"}",
+  "graphqlEndpoint": "/otp/gtfs/v1",
+  "feeds": [
+   {
+    "feedId": "0",
+    "agencies": 3
+   },
+   {
+    "feedId": "1",
+    "agencies": 1
+   },
+   {
+    "feedId": "2",
+    "agencies": 1
+   },
+   {
+    "feedId": "3",
+    "agencies": 3
+   },
+   {
+    "feedId": "4",
+    "agencies": 1
+   },
+   {
+    "feedId": "5",
+    "agencies": 1
+   },
+   {
+    "feedId": "6",
+    "agencies": 20
+   },
+   {
+    "feedId": "7",
+    "agencies": 1
+   },
+   {
+    "feedId": "8",
+    "agencies": 1
+   },
+   {
+    "feedId": "9",
+    "agencies": 1
+   },
+   {
+    "feedId": "10",
+    "agencies": 21
+   }
+  ]
+ },
+ "axes": [
+  {
+   "id": "amberieu-lyon",
+   "name": "Ambérieu-en-Bugey gare → Lyon Part-Dieu",
+   "from": {
+    "lat": 45.9542,
+    "lon": 5.3419,
+    "name": "Ambérieu-en-Bugey gare"
+   },
+   "to": {
+    "lat": 45.7606,
+    "lon": 4.8593,
+    "name": "Lyon Part-Dieu"
+   },
+   "when": "2026-11-24T07:00:00.000Z",
+   "raw": 6,
+   "accepted": 6,
+   "itineraries": [
+    {
+     "departure": "2026-11-24T07:00:56.000Z",
+     "arrival": "2026-11-24T07:30:07.000Z",
+     "durationMinutes": 29,
+     "transfers": 0,
+     "walkMeters": 67,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Ambérieu-en-Bugey",
+       "departure": "2026-11-24T07:00:56.000Z",
+       "arrival": "2026-11-24T07:02:00.000Z",
+       "distanceMeters": 59,
+       "walkGeometryPoints": 12,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "K33",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Ambérieu-en-Bugey",
+       "to": "Lyon Part Dieu",
+       "departure": "2026-11-24T07:02:00.000Z",
+       "arrival": "2026-11-24T07:30:00.000Z",
+       "distanceMeters": 43147,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lyon Part Dieu",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T07:30:00.000Z",
+       "arrival": "2026-11-24T07:30:07.000Z",
+       "distanceMeters": 8,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:05:56.000Z",
+     "arrival": "2026-11-24T07:48:07.000Z",
+     "durationMinutes": 42,
+     "transfers": 0,
+     "walkMeters": 67,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Ambérieu-en-Bugey",
+       "departure": "2026-11-24T07:05:56.000Z",
+       "arrival": "2026-11-24T07:07:00.000Z",
+       "distanceMeters": 59,
+       "walkGeometryPoints": 12,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "C18",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Ambérieu-en-Bugey",
+       "to": "Lyon Part Dieu",
+       "departure": "2026-11-24T07:07:00.000Z",
+       "arrival": "2026-11-24T07:48:00.000Z",
+       "distanceMeters": 45165,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lyon Part Dieu",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T07:48:00.000Z",
+       "arrival": "2026-11-24T07:48:07.000Z",
+       "distanceMeters": 8,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:26:56.000Z",
+     "arrival": "2026-11-24T07:52:07.000Z",
+     "durationMinutes": 25,
+     "transfers": 0,
+     "walkMeters": 67,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Ambérieu-en-Bugey",
+       "departure": "2026-11-24T07:26:56.000Z",
+       "arrival": "2026-11-24T07:28:00.000Z",
+       "distanceMeters": 59,
+       "walkGeometryPoints": 12,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "K23",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Ambérieu-en-Bugey",
+       "to": "Lyon Part Dieu",
+       "departure": "2026-11-24T07:28:00.000Z",
+       "arrival": "2026-11-24T07:52:00.000Z",
+       "distanceMeters": 43146,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lyon Part Dieu",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T07:52:00.000Z",
+       "arrival": "2026-11-24T07:52:07.000Z",
+       "distanceMeters": 8,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:35:56.000Z",
+     "arrival": "2026-11-24T08:18:07.000Z",
+     "durationMinutes": 42,
+     "transfers": 0,
+     "walkMeters": 67,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Ambérieu-en-Bugey",
+       "departure": "2026-11-24T07:35:56.000Z",
+       "arrival": "2026-11-24T07:37:00.000Z",
+       "distanceMeters": 59,
+       "walkGeometryPoints": 12,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "C18",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Ambérieu-en-Bugey",
+       "to": "Lyon Part Dieu",
+       "departure": "2026-11-24T07:37:00.000Z",
+       "arrival": "2026-11-24T08:18:00.000Z",
+       "distanceMeters": 45165,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lyon Part Dieu",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:18:00.000Z",
+       "arrival": "2026-11-24T08:18:07.000Z",
+       "distanceMeters": 8,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:55:56.000Z",
+     "arrival": "2026-11-24T08:22:07.000Z",
+     "durationMinutes": 26,
+     "transfers": 0,
+     "walkMeters": 67,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Ambérieu-en-Bugey",
+       "departure": "2026-11-24T07:55:56.000Z",
+       "arrival": "2026-11-24T07:57:00.000Z",
+       "distanceMeters": 59,
+       "walkGeometryPoints": 12,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "K1+",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Ambérieu-en-Bugey",
+       "to": "Lyon Part Dieu",
+       "departure": "2026-11-24T07:57:00.000Z",
+       "arrival": "2026-11-24T08:22:00.000Z",
+       "distanceMeters": 43146,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lyon Part Dieu",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:22:00.000Z",
+       "arrival": "2026-11-24T08:22:07.000Z",
+       "distanceMeters": 8,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T08:00:56.000Z",
+     "arrival": "2026-11-24T08:30:07.000Z",
+     "durationMinutes": 29,
+     "transfers": 0,
+     "walkMeters": 67,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Ambérieu-en-Bugey",
+       "departure": "2026-11-24T08:00:56.000Z",
+       "arrival": "2026-11-24T08:02:00.000Z",
+       "distanceMeters": 59,
+       "walkGeometryPoints": 12,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "P33",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Ambérieu-en-Bugey",
+       "to": "Lyon Part Dieu",
+       "departure": "2026-11-24T08:02:00.000Z",
+       "arrival": "2026-11-24T08:30:00.000Z",
+       "distanceMeters": 43146,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lyon Part Dieu",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:30:00.000Z",
+       "arrival": "2026-11-24T08:30:07.000Z",
+       "distanceMeters": 8,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    }
+   ],
+   "http": 200,
+   "duplicateSegments": []
+  },
+  {
+   "id": "lyon-amberieu",
+   "name": "Lyon Part-Dieu → Ambérieu-en-Bugey gare",
+   "from": {
+    "lat": 45.7606,
+    "lon": 4.8593,
+    "name": "Lyon Part-Dieu"
+   },
+   "to": {
+    "lat": 45.9542,
+    "lon": 5.3419,
+    "name": "Ambérieu-en-Bugey gare"
+   },
+   "when": "2026-11-24T07:00:00.000Z",
+   "raw": 3,
+   "accepted": 3,
+   "itineraries": [
+    {
+     "departure": "2026-11-24T07:07:53.000Z",
+     "arrival": "2026-11-24T07:32:04.000Z",
+     "durationMinutes": 24,
+     "transfers": 0,
+     "walkMeters": 67,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Lyon Part Dieu",
+       "departure": "2026-11-24T07:07:53.000Z",
+       "arrival": "2026-11-24T07:08:00.000Z",
+       "distanceMeters": 8,
+       "walkGeometryPoints": 3,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "K23",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Lyon Part Dieu",
+       "to": "Ambérieu-en-Bugey",
+       "departure": "2026-11-24T07:08:00.000Z",
+       "arrival": "2026-11-24T07:31:00.000Z",
+       "distanceMeters": 43146,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Ambérieu-en-Bugey",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T07:31:00.000Z",
+       "arrival": "2026-11-24T07:32:04.000Z",
+       "distanceMeters": 59,
+       "walkGeometryPoints": 12,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:11:53.000Z",
+     "arrival": "2026-11-24T07:55:04.000Z",
+     "durationMinutes": 43,
+     "transfers": 0,
+     "walkMeters": 67,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Lyon Part Dieu",
+       "departure": "2026-11-24T07:11:53.000Z",
+       "arrival": "2026-11-24T07:12:00.000Z",
+       "distanceMeters": 8,
+       "walkGeometryPoints": 3,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "C18",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Lyon Part Dieu",
+       "to": "Ambérieu-en-Bugey",
+       "departure": "2026-11-24T07:12:00.000Z",
+       "arrival": "2026-11-24T07:54:00.000Z",
+       "distanceMeters": 45164,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Ambérieu-en-Bugey",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T07:54:00.000Z",
+       "arrival": "2026-11-24T07:55:04.000Z",
+       "distanceMeters": 59,
+       "walkGeometryPoints": 12,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:37:53.000Z",
+     "arrival": "2026-11-24T08:03:04.000Z",
+     "durationMinutes": 25,
+     "transfers": 0,
+     "walkMeters": 67,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Lyon Part Dieu",
+       "departure": "2026-11-24T07:37:53.000Z",
+       "arrival": "2026-11-24T07:38:00.000Z",
+       "distanceMeters": 8,
+       "walkGeometryPoints": 3,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "K1+",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Lyon Part Dieu",
+       "to": "Ambérieu-en-Bugey",
+       "departure": "2026-11-24T07:38:00.000Z",
+       "arrival": "2026-11-24T08:02:00.000Z",
+       "distanceMeters": 43146,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Ambérieu-en-Bugey",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:02:00.000Z",
+       "arrival": "2026-11-24T08:03:04.000Z",
+       "distanceMeters": 59,
+       "walkGeometryPoints": 12,
+       "fare": null
+      }
+     ]
+    }
+   ],
+   "http": 200,
+   "duplicateSegments": []
+  },
+  {
+   "id": "chambery-stjulien",
+   "name": "Chambéry gare → Saint-Julien-en-Genevois gare",
+   "from": {
+    "lat": 45.5711,
+    "lon": 5.9196,
+    "name": "Chambéry gare"
+   },
+   "to": {
+    "lat": 46.1446,
+    "lon": 6.0812,
+    "name": "Saint-Julien-en-Genevois gare"
+   },
+   "when": "2026-11-24T07:00:00.000Z",
+   "raw": 5,
+   "accepted": 5,
+   "itineraries": [
+    {
+     "departure": "2026-11-24T07:41:32.000Z",
+     "arrival": "2026-11-24T09:57:35.000Z",
+     "durationMinutes": 136,
+     "transfers": 2,
+     "walkMeters": 248,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Chambéry - Challes-les-Eaux",
+       "departure": "2026-11-24T07:41:32.000Z",
+       "arrival": "2026-11-24T07:42:00.000Z",
+       "distanceMeters": 33,
+       "walkGeometryPoints": 4,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "K11",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Chambéry - Challes-les-Eaux",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T07:42:00.000Z",
+       "arrival": "2026-11-24T09:10:00.000Z",
+       "distanceMeters": 87332,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Genève Cornavin",
+       "to": "Genève, gare Cornavin",
+       "departure": "2026-11-24T09:10:00.000Z",
+       "arrival": "2026-11-24T09:11:53.000Z",
+       "distanceMeters": 101,
+       "walkGeometryPoints": 20,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Tram",
+       "line": "14",
+       "provider": "tpg",
+       "from": "Genève, gare Cornavin",
+       "to": "Genève, Stand",
+       "departure": "2026-11-24T09:15:00.000Z",
+       "arrival": "2026-11-24T09:20:00.000Z",
+       "distanceMeters": 834,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "80",
+       "provider": "tpg",
+       "from": "Genève, Stand",
+       "to": "Saint-Julien, centre",
+       "departure": "2026-11-24T09:25:00.000Z",
+       "arrival": "2026-11-24T09:56:00.000Z",
+       "distanceMeters": 8851,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 4.8,
+        "currency": "EUR",
+        "source": "Léman Pass · billet multizones 10+230, 90 min · https://www.lemanpass.com/points-de-vente/ et https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf (vérifié le 2026-11-15)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Saint-Julien, centre",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:56:00.000Z",
+       "arrival": "2026-11-24T09:57:35.000Z",
+       "distanceMeters": 114,
+       "walkGeometryPoints": 17,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:41:32.000Z",
+     "arrival": "2026-11-24T09:57:35.000Z",
+     "durationMinutes": 136,
+     "transfers": 1,
+     "walkMeters": 1009,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Chambéry - Challes-les-Eaux",
+       "departure": "2026-11-24T07:41:32.000Z",
+       "arrival": "2026-11-24T07:42:00.000Z",
+       "distanceMeters": 33,
+       "walkGeometryPoints": 4,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "K11",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Chambéry - Challes-les-Eaux",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T07:42:00.000Z",
+       "arrival": "2026-11-24T09:10:00.000Z",
+       "distanceMeters": 87332,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Genève Cornavin",
+       "to": "Genève, Stand",
+       "departure": "2026-11-24T09:10:00.000Z",
+       "arrival": "2026-11-24T09:22:47.000Z",
+       "distanceMeters": 862,
+       "walkGeometryPoints": 94,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "80",
+       "provider": "tpg",
+       "from": "Genève, Stand",
+       "to": "Saint-Julien, centre",
+       "departure": "2026-11-24T09:25:00.000Z",
+       "arrival": "2026-11-24T09:56:00.000Z",
+       "distanceMeters": 8851,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 4.8,
+        "currency": "EUR",
+        "source": "Léman Pass · billet multizones 10+230, 90 min · https://www.lemanpass.com/points-de-vente/ et https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf (vérifié le 2026-11-15)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Saint-Julien, centre",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:56:00.000Z",
+       "arrival": "2026-11-24T09:57:35.000Z",
+       "distanceMeters": 114,
+       "walkGeometryPoints": 17,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T08:10:53.000Z",
+     "arrival": "2026-11-24T10:16:10.000Z",
+     "durationMinutes": 125,
+     "transfers": 1,
+     "walkMeters": 987,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Chambéry (Central Bus Station)",
+       "departure": "2026-11-24T08:10:53.000Z",
+       "arrival": "2026-11-24T08:15:00.000Z",
+       "distanceMeters": 292,
+       "walkGeometryPoints": 44,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "FlixBus N706",
+       "provider": "FlixBus-eu",
+       "from": "Chambéry (Central Bus Station)",
+       "to": "Annecy (Central Bus Station)",
+       "departure": "2026-11-24T08:15:00.000Z",
+       "arrival": "2026-11-24T09:00:00.000Z",
+       "distanceMeters": 47029,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Annecy (Central Bus Station)",
+       "to": "Annecy, Gare routière",
+       "departure": "2026-11-24T09:00:00.000Z",
+       "arrival": "2026-11-24T09:09:03.000Z",
+       "distanceMeters": 551,
+       "walkGeometryPoints": 82,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "272",
+       "provider": "Alpbus Fournier",
+       "from": "Annecy, Gare routière",
+       "to": "Saint-Julien, centre",
+       "departure": "2026-11-24T09:15:00.000Z",
+       "arrival": "2026-11-24T10:14:00.000Z",
+       "distanceMeters": 30033,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Saint-Julien, centre",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T10:14:00.000Z",
+       "arrival": "2026-11-24T10:16:10.000Z",
+       "distanceMeters": 144,
+       "walkGeometryPoints": 30,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T08:10:53.000Z",
+     "arrival": "2026-11-24T10:16:49.000Z",
+     "durationMinutes": 126,
+     "transfers": 1,
+     "walkMeters": 502,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Chambéry (Central Bus Station)",
+       "departure": "2026-11-24T08:10:53.000Z",
+       "arrival": "2026-11-24T08:15:00.000Z",
+       "distanceMeters": 292,
+       "walkGeometryPoints": 44,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "FlixBus N706",
+       "provider": "FlixBus-eu",
+       "from": "Chambéry (Central Bus Station)",
+       "to": "Annecy (Central Bus Station)",
+       "departure": "2026-11-24T08:15:00.000Z",
+       "arrival": "2026-11-24T09:00:00.000Z",
+       "distanceMeters": 47029,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Annecy (Central Bus Station)",
+       "to": "Gare Routiere",
+       "departure": "2026-11-24T09:00:00.000Z",
+       "arrival": "2026-11-24T09:00:31.000Z",
+       "distanceMeters": 22,
+       "walkGeometryPoints": 15,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "272",
+       "provider": "Cars Région Haute-Savoie",
+       "from": "Gare Routiere",
+       "to": "Centre",
+       "departure": "2026-11-24T09:15:00.000Z",
+       "arrival": "2026-11-24T10:14:00.000Z",
+       "distanceMeters": 36394,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Centre",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T10:14:00.000Z",
+       "arrival": "2026-11-24T10:16:49.000Z",
+       "distanceMeters": 188,
+       "walkGeometryPoints": 35,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T08:48:32.000Z",
+     "arrival": "2026-11-24T11:26:38.000Z",
+     "durationMinutes": 158,
+     "transfers": 2,
+     "walkMeters": 665,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Chambéry - Challes-les-Eaux",
+       "departure": "2026-11-24T08:48:32.000Z",
+       "arrival": "2026-11-24T08:49:00.000Z",
+       "distanceMeters": 33,
+       "walkGeometryPoints": 4,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "621B",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Chambéry - Challes-les-Eaux",
+       "to": "Annecy",
+       "departure": "2026-11-24T08:49:00.000Z",
+       "arrival": "2026-11-24T09:29:00.000Z",
+       "distanceMeters": 41948,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L2",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Annecy",
+       "to": "Annemasse",
+       "departure": "2026-11-24T09:44:00.000Z",
+       "arrival": "2026-11-24T10:40:00.000Z",
+       "distanceMeters": 40381,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "C43",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Annemasse",
+       "to": "Saint-Julien-en-Genevois",
+       "departure": "2026-11-24T11:05:00.000Z",
+       "arrival": "2026-11-24T11:18:00.000Z",
+       "distanceMeters": 13245,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Saint-Julien-en-Genevois",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T11:18:00.000Z",
+       "arrival": "2026-11-24T11:26:38.000Z",
+       "distanceMeters": 632,
+       "walkGeometryPoints": 59,
+       "fare": null
+      }
+     ]
+    }
+   ],
+   "http": 200,
+   "duplicateSegments": [
+    "Bus|2026-11-24T09:15:00.000Z|2026-11-24T10:14:00.000Z : Alpbus Fournier / Cars Région Haute-Savoie"
+   ]
+  },
+  {
+   "id": "stjulien-chambery",
+   "name": "Saint-Julien-en-Genevois gare → Chambéry gare",
+   "from": {
+    "lat": 46.1446,
+    "lon": 6.0812,
+    "name": "Saint-Julien-en-Genevois gare"
+   },
+   "to": {
+    "lat": 45.5711,
+    "lon": 5.9196,
+    "name": "Chambéry gare"
+   },
+   "when": "2026-11-24T07:00:00.000Z",
+   "raw": 1,
+   "accepted": 1,
+   "itineraries": [
+    {
+     "departure": "2026-11-24T08:11:22.000Z",
+     "arrival": "2026-11-24T10:16:28.000Z",
+     "durationMinutes": 125,
+     "transfers": 1,
+     "walkMeters": 665,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Saint-Julien-en-Genevois",
+       "departure": "2026-11-24T08:11:22.000Z",
+       "arrival": "2026-11-24T08:20:00.000Z",
+       "distanceMeters": 632,
+       "walkGeometryPoints": 59,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "C33",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Saint-Julien-en-Genevois",
+       "to": "Bellegarde",
+       "departure": "2026-11-24T08:20:00.000Z",
+       "arrival": "2026-11-24T08:42:00.000Z",
+       "distanceMeters": 20899,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "K11",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Bellegarde",
+       "to": "Chambéry - Challes-les-Eaux",
+       "departure": "2026-11-24T09:28:00.000Z",
+       "arrival": "2026-11-24T10:16:00.000Z",
+       "distanceMeters": 60330,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Chambéry - Challes-les-Eaux",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T10:16:00.000Z",
+       "arrival": "2026-11-24T10:16:28.000Z",
+       "distanceMeters": 33,
+       "walkGeometryPoints": 4,
+       "fare": null
+      }
+     ]
+    }
+   ],
+   "http": 200,
+   "duplicateSegments": []
+  },
+  {
+   "id": "annecy-geneve",
+   "name": "Annecy gare → Genève Cornavin",
+   "from": {
+    "lat": 45.9017,
+    "lon": 6.1219,
+    "name": "Annecy gare"
+   },
+   "to": {
+    "lat": 46.2102,
+    "lon": 6.1424,
+    "name": "Genève Cornavin"
+   },
+   "when": "2026-11-24T07:00:00.000Z",
+   "raw": 4,
+   "accepted": 4,
+   "itineraries": [
+    {
+     "departure": "2026-11-24T07:10:02.000Z",
+     "arrival": "2026-11-24T08:43:03.000Z",
+     "durationMinutes": 93,
+     "transfers": 1,
+     "walkMeters": 630,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Gare Routiere",
+       "departure": "2026-11-24T07:10:02.000Z",
+       "arrival": "2026-11-24T07:15:00.000Z",
+       "distanceMeters": 283,
+       "walkGeometryPoints": 74,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "272",
+       "provider": "Cars Région Haute-Savoie",
+       "from": "Gare Routiere",
+       "to": "Lancy Pont Rouge Gare-Etoile P+R",
+       "departure": "2026-11-24T07:15:00.000Z",
+       "arrival": "2026-11-24T08:24:00.000Z",
+       "distanceMeters": 51129,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lancy Pont Rouge Gare-Etoile P+R",
+       "to": "Lancy-Pont-Rouge",
+       "departure": "2026-11-24T08:24:00.000Z",
+       "arrival": "2026-11-24T08:29:05.000Z",
+       "distanceMeters": 343,
+       "walkGeometryPoints": 27,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L4",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Lancy-Pont-Rouge",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T08:37:00.000Z",
+       "arrival": "2026-11-24T08:43:00.000Z",
+       "distanceMeters": 2907,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Genève Cornavin",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:43:00.000Z",
+       "arrival": "2026-11-24T08:43:03.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:44:13.000Z",
+     "arrival": "2026-11-24T09:12:03.000Z",
+     "durationMinutes": 88,
+     "transfers": 1,
+     "walkMeters": 335,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Annecy - Bus Station",
+       "departure": "2026-11-24T07:44:13.000Z",
+       "arrival": "2026-11-24T07:45:00.000Z",
+       "distanceMeters": 54,
+       "walkGeometryPoints": 10,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "BlaBlaCar Bus",
+       "provider": "BlaBlaCar Bus",
+       "from": "Annecy - Bus Station",
+       "to": "Geneva - Airport Bus Station",
+       "departure": "2026-11-24T07:45:00.000Z",
+       "arrival": "2026-11-24T08:35:00.000Z",
+       "distanceMeters": 36533,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Geneva - Airport Bus Station",
+       "to": "Genève-Aéroport, Terminal",
+       "departure": "2026-11-24T08:35:00.000Z",
+       "arrival": "2026-11-24T08:37:59.000Z",
+       "distanceMeters": 168,
+       "walkGeometryPoints": 33,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "5",
+       "provider": "tpg",
+       "from": "Genève-Aéroport, Terminal",
+       "to": "Genève, gare Cornavin",
+       "departure": "2026-11-24T08:46:00.000Z",
+       "arrival": "2026-11-24T09:10:00.000Z",
+       "distanceMeters": 4964,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Genève, gare Cornavin",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:10:00.000Z",
+       "arrival": "2026-11-24T09:12:03.000Z",
+       "distanceMeters": 113,
+       "walkGeometryPoints": 12,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:42:39.000Z",
+     "arrival": "2026-11-24T09:13:03.000Z",
+     "durationMinutes": 90,
+     "transfers": 0,
+     "walkMeters": 96,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Annecy",
+       "departure": "2026-11-24T07:42:39.000Z",
+       "arrival": "2026-11-24T07:44:00.000Z",
+       "distanceMeters": 92,
+       "walkGeometryPoints": 17,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L2",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Annecy",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T07:44:00.000Z",
+       "arrival": "2026-11-24T09:13:00.000Z",
+       "distanceMeters": 54339,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Genève Cornavin",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:13:00.000Z",
+       "arrival": "2026-11-24T09:13:03.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T08:10:02.000Z",
+     "arrival": "2026-11-24T09:38:26.000Z",
+     "durationMinutes": 88,
+     "transfers": 1,
+     "walkMeters": 831,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Gare Routiere",
+       "departure": "2026-11-24T08:10:02.000Z",
+       "arrival": "2026-11-24T08:15:00.000Z",
+       "distanceMeters": 283,
+       "walkGeometryPoints": 74,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "272",
+       "provider": "Cars Région Haute-Savoie",
+       "from": "Gare Routiere",
+       "to": "Lancy Pont Rouge Gare-Etoile P+R",
+       "departure": "2026-11-24T08:15:00.000Z",
+       "arrival": "2026-11-24T09:21:00.000Z",
+       "distanceMeters": 51129,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lancy Pont Rouge Gare-Etoile P+R",
+       "to": "Lancy-Pont-Rouge",
+       "departure": "2026-11-24T09:21:00.000Z",
+       "arrival": "2026-11-24T09:27:03.000Z",
+       "distanceMeters": 424,
+       "walkGeometryPoints": 35,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "RE33",
+       "provider": "CFF",
+       "from": "Lancy-Pont-Rouge",
+       "to": "Genève",
+       "departure": "2026-11-24T09:31:00.000Z",
+       "arrival": "2026-11-24T09:36:00.000Z",
+       "distanceMeters": 3044,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Genève",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:36:00.000Z",
+       "arrival": "2026-11-24T09:38:26.000Z",
+       "distanceMeters": 124,
+       "walkGeometryPoints": 16,
+       "fare": null
+      }
+     ]
+    }
+   ],
+   "http": 200,
+   "duplicateSegments": []
+  },
+  {
+   "id": "geneve-annecy",
+   "name": "Genève Cornavin → Annecy gare",
+   "from": {
+    "lat": 46.2102,
+    "lon": 6.1424,
+    "name": "Genève Cornavin"
+   },
+   "to": {
+    "lat": 45.9017,
+    "lon": 6.1219,
+    "name": "Annecy gare"
+   },
+   "when": "2026-11-24T07:00:00.000Z",
+   "raw": 6,
+   "accepted": 6,
+   "itineraries": [
+    {
+     "departure": "2026-11-24T07:20:35.000Z",
+     "arrival": "2026-11-24T09:07:29.000Z",
+     "durationMinutes": 107,
+     "transfers": 2,
+     "walkMeters": 632,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève",
+       "departure": "2026-11-24T07:20:35.000Z",
+       "arrival": "2026-11-24T07:23:00.000Z",
+       "distanceMeters": 123,
+       "walkGeometryPoints": 16,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "RE33",
+       "provider": "CFF",
+       "from": "Genève",
+       "to": "Lancy-Pont-Rouge",
+       "departure": "2026-11-24T07:23:00.000Z",
+       "arrival": "2026-11-24T07:28:00.000Z",
+       "distanceMeters": 3046,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lancy-Pont-Rouge",
+       "to": "Lancy-Pont-Rouge, gare/Etoile",
+       "departure": "2026-11-24T07:28:00.000Z",
+       "arrival": "2026-11-24T07:32:48.000Z",
+       "distanceMeters": 340,
+       "walkGeometryPoints": 33,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "272",
+       "provider": "Alpbus Fournier",
+       "from": "Lancy-Pont-Rouge, gare/Etoile",
+       "to": "Annecy, Eglise Des Fins",
+       "departure": "2026-11-24T07:40:00.000Z",
+       "arrival": "2026-11-24T08:57:00.000Z",
+       "distanceMeters": 35419,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Annecy, Eglise Des Fins",
+       "to": "EGLISE DES FINS",
+       "departure": "2026-11-24T08:57:00.000Z",
+       "arrival": "2026-11-24T08:57:04.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 5,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "2",
+       "provider": "SIBRA",
+       "from": "EGLISE DES FINS",
+       "to": "PAUL GRIMAULT",
+       "departure": "2026-11-24T08:59:43.000Z",
+       "arrival": "2026-11-24T09:05:21.000Z",
+       "distanceMeters": 1012,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 2,
+        "currency": "EUR",
+        "source": "Sibra · 1 voyage (achat digital ou rechargement ; 2,50 € à bord), 1 h correspondances comprises · https://www.sibra.fr/app/uploads/2026/07/Reglement_BUS_CARS_CGV_01072026_3.pdf (vérifié le 2026-11-13)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "PAUL GRIMAULT",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:05:21.000Z",
+       "arrival": "2026-11-24T09:07:29.000Z",
+       "distanceMeters": 165,
+       "walkGeometryPoints": 14,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:20:35.000Z",
+     "arrival": "2026-11-24T09:07:58.000Z",
+     "durationMinutes": 107,
+     "transfers": 1,
+     "walkMeters": 827,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève",
+       "departure": "2026-11-24T07:20:35.000Z",
+       "arrival": "2026-11-24T07:23:00.000Z",
+       "distanceMeters": 123,
+       "walkGeometryPoints": 16,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "RE33",
+       "provider": "CFF",
+       "from": "Genève",
+       "to": "Lancy-Pont-Rouge",
+       "departure": "2026-11-24T07:23:00.000Z",
+       "arrival": "2026-11-24T07:28:00.000Z",
+       "distanceMeters": 3046,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lancy-Pont-Rouge",
+       "to": "Lancy Pont Rouge Gare-Etoile P+R",
+       "departure": "2026-11-24T07:28:00.000Z",
+       "arrival": "2026-11-24T07:34:00.000Z",
+       "distanceMeters": 421,
+       "walkGeometryPoints": 35,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "272",
+       "provider": "Cars Région Haute-Savoie",
+       "from": "Lancy Pont Rouge Gare-Etoile P+R",
+       "to": "Gare Routiere",
+       "departure": "2026-11-24T07:40:00.000Z",
+       "arrival": "2026-11-24T09:03:00.000Z",
+       "distanceMeters": 41978,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Gare Routiere",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:03:00.000Z",
+       "arrival": "2026-11-24T09:07:58.000Z",
+       "distanceMeters": 283,
+       "walkGeometryPoints": 74,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:45:57.000Z",
+     "arrival": "2026-11-24T09:17:21.000Z",
+     "durationMinutes": 91,
+     "transfers": 0,
+     "walkMeters": 96,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T07:45:57.000Z",
+       "arrival": "2026-11-24T07:46:00.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L2",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Genève Cornavin",
+       "to": "Annecy",
+       "departure": "2026-11-24T07:46:00.000Z",
+       "arrival": "2026-11-24T09:16:00.000Z",
+       "distanceMeters": 54339,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Annecy",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:16:00.000Z",
+       "arrival": "2026-11-24T09:17:21.000Z",
+       "distanceMeters": 92,
+       "walkGeometryPoints": 17,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T08:00:57.000Z",
+     "arrival": "2026-11-24T09:36:58.000Z",
+     "durationMinutes": 96,
+     "transfers": 1,
+     "walkMeters": 586,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T08:00:57.000Z",
+       "arrival": "2026-11-24T08:01:00.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L4",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Genève Cornavin",
+       "to": "Lancy-Pont-Rouge",
+       "departure": "2026-11-24T08:01:00.000Z",
+       "arrival": "2026-11-24T08:06:00.000Z",
+       "distanceMeters": 2908,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lancy-Pont-Rouge",
+       "to": "Lancy Pont Rouge Gare-Etoile P+R",
+       "departure": "2026-11-24T08:06:00.000Z",
+       "arrival": "2026-11-24T08:10:11.000Z",
+       "distanceMeters": 299,
+       "walkGeometryPoints": 18,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "272",
+       "provider": "Cars Région Haute-Savoie",
+       "from": "Lancy Pont Rouge Gare-Etoile P+R",
+       "to": "Gare Routiere",
+       "departure": "2026-11-24T08:25:00.000Z",
+       "arrival": "2026-11-24T09:32:00.000Z",
+       "distanceMeters": 43162,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Gare Routiere",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:32:00.000Z",
+       "arrival": "2026-11-24T09:36:58.000Z",
+       "distanceMeters": 283,
+       "walkGeometryPoints": 74,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T08:03:31.000Z",
+     "arrival": "2026-11-24T09:37:59.000Z",
+     "durationMinutes": 94,
+     "transfers": 1,
+     "walkMeters": 534,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève, gare Cornavin",
+       "departure": "2026-11-24T08:03:31.000Z",
+       "arrival": "2026-11-24T08:06:00.000Z",
+       "distanceMeters": 139,
+       "walkGeometryPoints": 18,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Tram",
+       "line": "15",
+       "provider": "tpg",
+       "from": "Genève, gare Cornavin",
+       "to": "Lancy-Pont-Rouge, gare/Etoile",
+       "departure": "2026-11-24T08:06:00.000Z",
+       "arrival": "2026-11-24T08:23:00.000Z",
+       "distanceMeters": 3177,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "272",
+       "provider": "Alpbus Fournier",
+       "from": "Lancy-Pont-Rouge, gare/Etoile",
+       "to": "Annecy, Gare routière",
+       "departure": "2026-11-24T08:25:00.000Z",
+       "arrival": "2026-11-24T09:32:00.000Z",
+       "distanceMeters": 34490,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Annecy, Gare routière",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:32:00.000Z",
+       "arrival": "2026-11-24T09:37:59.000Z",
+       "distanceMeters": 395,
+       "walkGeometryPoints": 36,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T08:15:57.000Z",
+     "arrival": "2026-11-24T09:39:27.000Z",
+     "durationMinutes": 84,
+     "transfers": 1,
+     "walkMeters": 416,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T08:15:57.000Z",
+       "arrival": "2026-11-24T08:16:00.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L4",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Genève Cornavin",
+       "to": "Annemasse",
+       "departure": "2026-11-24T08:16:00.000Z",
+       "arrival": "2026-11-24T08:40:00.000Z",
+       "distanceMeters": 13958,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 4.9,
+        "currency": "EUR",
+        "source": "Léman Pass multizones 10+210 · billet unité plein tarif, 90 min · https://www.lemanpass.com/points-de-vente/ (code 10210) et https://www.tac-mobilites.fr/titres/titres-et-cartes-journalieres-leman-pass (valable jusqu’au 12/12/2026, vérifié le 2026-11-15)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Annemasse",
+       "to": "Annemasse (Bus Station)",
+       "departure": "2026-11-24T08:40:00.000Z",
+       "arrival": "2026-11-24T08:42:11.000Z",
+       "distanceMeters": 151,
+       "walkGeometryPoints": 21,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "FlixBus N1156",
+       "provider": "FlixBus-eu",
+       "from": "Annemasse (Bus Station)",
+       "to": "Annecy (Central Bus Station)",
+       "departure": "2026-11-24T08:55:00.000Z",
+       "arrival": "2026-11-24T09:35:00.000Z",
+       "distanceMeters": 48466,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Annecy (Central Bus Station)",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:35:00.000Z",
+       "arrival": "2026-11-24T09:39:27.000Z",
+       "distanceMeters": 261,
+       "walkGeometryPoints": 62,
+       "fare": null
+      }
+     ]
+    }
+   ],
+   "http": 200,
+   "duplicateSegments": [
+    "Bus|2026-11-24T08:25:00.000Z|2026-11-24T09:32:00.000Z : Cars Région Haute-Savoie / Alpbus Fournier"
+   ]
+  },
+  {
+   "id": "annecy-annemasse",
+   "name": "Annecy gare → Annemasse gare",
+   "from": {
+    "lat": 45.9017,
+    "lon": 6.1219,
+    "name": "Annecy gare"
+   },
+   "to": {
+    "lat": 46.1993,
+    "lon": 6.2366,
+    "name": "Annemasse gare"
+   },
+   "when": "2026-11-24T07:00:00.000Z",
+   "raw": 2,
+   "accepted": 2,
+   "itineraries": [
+    {
+     "departure": "2026-11-24T07:42:39.000Z",
+     "arrival": "2026-11-24T08:42:11.000Z",
+     "durationMinutes": 60,
+     "transfers": 0,
+     "walkMeters": 106,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Annecy",
+       "departure": "2026-11-24T07:42:39.000Z",
+       "arrival": "2026-11-24T07:44:00.000Z",
+       "distanceMeters": 92,
+       "walkGeometryPoints": 17,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L2",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Annecy",
+       "to": "Annemasse",
+       "departure": "2026-11-24T07:44:00.000Z",
+       "arrival": "2026-11-24T08:42:00.000Z",
+       "distanceMeters": 40381,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Annemasse",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:42:00.000Z",
+       "arrival": "2026-11-24T08:42:11.000Z",
+       "distanceMeters": 14,
+       "walkGeometryPoints": 4,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T08:42:39.000Z",
+     "arrival": "2026-11-24T09:40:11.000Z",
+     "durationMinutes": 58,
+     "transfers": 0,
+     "walkMeters": 106,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Annecy",
+       "departure": "2026-11-24T08:42:39.000Z",
+       "arrival": "2026-11-24T08:44:00.000Z",
+       "distanceMeters": 92,
+       "walkGeometryPoints": 17,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L2",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Annecy",
+       "to": "Annemasse",
+       "departure": "2026-11-24T08:44:00.000Z",
+       "arrival": "2026-11-24T09:40:00.000Z",
+       "distanceMeters": 40381,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Annemasse",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:40:00.000Z",
+       "arrival": "2026-11-24T09:40:11.000Z",
+       "distanceMeters": 14,
+       "walkGeometryPoints": 4,
+       "fare": null
+      }
+     ]
+    }
+   ],
+   "http": 200,
+   "duplicateSegments": []
+  },
+  {
+   "id": "annemasse-annecy",
+   "name": "Annemasse gare → Annecy gare",
+   "from": {
+    "lat": 46.1993,
+    "lon": 6.2366,
+    "name": "Annemasse gare"
+   },
+   "to": {
+    "lat": 45.9017,
+    "lon": 6.1219,
+    "name": "Annecy gare"
+   },
+   "when": "2026-11-24T07:00:00.000Z",
+   "raw": 3,
+   "accepted": 3,
+   "itineraries": [
+    {
+     "departure": "2026-11-24T07:01:49.000Z",
+     "arrival": "2026-11-24T08:07:21.000Z",
+     "durationMinutes": 66,
+     "transfers": 1,
+     "walkMeters": 106,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Annemasse",
+       "departure": "2026-11-24T07:01:49.000Z",
+       "arrival": "2026-11-24T07:02:00.000Z",
+       "distanceMeters": 14,
+       "walkGeometryPoints": 4,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "C43",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Annemasse",
+       "to": "La Roche-sur-Foron",
+       "departure": "2026-11-24T07:02:00.000Z",
+       "arrival": "2026-11-24T07:19:00.000Z",
+       "distanceMeters": 15569,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "C13",
+       "provider": "SNCF VOYAGEURS",
+       "from": "La Roche-sur-Foron",
+       "to": "Annecy",
+       "departure": "2026-11-24T07:25:00.000Z",
+       "arrival": "2026-11-24T08:06:00.000Z",
+       "distanceMeters": 24813,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Annecy",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:06:00.000Z",
+       "arrival": "2026-11-24T08:07:21.000Z",
+       "distanceMeters": 92,
+       "walkGeometryPoints": 17,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:18:49.000Z",
+     "arrival": "2026-11-24T08:17:21.000Z",
+     "durationMinutes": 59,
+     "transfers": 0,
+     "walkMeters": 106,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Annemasse",
+       "departure": "2026-11-24T07:18:49.000Z",
+       "arrival": "2026-11-24T07:19:00.000Z",
+       "distanceMeters": 14,
+       "walkGeometryPoints": 4,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L2",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Annemasse",
+       "to": "Annecy",
+       "departure": "2026-11-24T07:19:00.000Z",
+       "arrival": "2026-11-24T08:16:00.000Z",
+       "distanceMeters": 40381,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Annecy",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:16:00.000Z",
+       "arrival": "2026-11-24T08:17:21.000Z",
+       "distanceMeters": 92,
+       "walkGeometryPoints": 17,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T08:17:49.000Z",
+     "arrival": "2026-11-24T09:17:21.000Z",
+     "durationMinutes": 60,
+     "transfers": 0,
+     "walkMeters": 106,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Annemasse",
+       "departure": "2026-11-24T08:17:49.000Z",
+       "arrival": "2026-11-24T08:18:00.000Z",
+       "distanceMeters": 14,
+       "walkGeometryPoints": 4,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L2",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Annemasse",
+       "to": "Annecy",
+       "departure": "2026-11-24T08:18:00.000Z",
+       "arrival": "2026-11-24T09:16:00.000Z",
+       "distanceMeters": 40381,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Annecy",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:16:00.000Z",
+       "arrival": "2026-11-24T09:17:21.000Z",
+       "distanceMeters": 92,
+       "walkGeometryPoints": 17,
+       "fare": null
+      }
+     ]
+    }
+   ],
+   "http": 200,
+   "duplicateSegments": []
+  },
+  {
+   "id": "archamps-geneve",
+   "name": "Archamps Technopole → Genève Cornavin",
+   "from": {
+    "lat": 46.1362,
+    "lon": 6.1328,
+    "name": "Archamps Technopole"
+   },
+   "to": {
+    "lat": 46.2102,
+    "lon": 6.1424,
+    "name": "Genève Cornavin"
+   },
+   "when": "2026-11-24T07:00:00.000Z",
+   "raw": 4,
+   "accepted": 4,
+   "itineraries": [
+    {
+     "departure": "2026-11-24T07:00:21.000Z",
+     "arrival": "2026-11-24T07:43:03.000Z",
+     "durationMinutes": 43,
+     "transfers": 1,
+     "walkMeters": 1301,
+     "priceStatus": "tous les segments ont un tarif vérifié",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Collonges, marché",
+       "departure": "2026-11-24T07:00:21.000Z",
+       "arrival": "2026-11-24T07:13:00.000Z",
+       "distanceMeters": 996,
+       "walkGeometryPoints": 108,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "82",
+       "provider": "tpg",
+       "from": "Collonges, marché",
+       "to": "Lancy-Bachet, gare",
+       "departure": "2026-11-24T07:13:00.000Z",
+       "arrival": "2026-11-24T07:26:00.000Z",
+       "distanceMeters": 4415,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 4.8,
+        "currency": "EUR",
+        "source": "Léman Pass · billet multizones 10+230, 90 min · https://www.lemanpass.com/points-de-vente/ et https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf (vérifié le 2026-11-15)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lancy-Bachet, gare",
+       "to": "Lancy-Bachet",
+       "departure": "2026-11-24T07:26:00.000Z",
+       "arrival": "2026-11-24T07:30:50.000Z",
+       "distanceMeters": 301,
+       "walkGeometryPoints": 32,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L4",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Lancy-Bachet",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T07:34:00.000Z",
+       "arrival": "2026-11-24T07:43:00.000Z",
+       "distanceMeters": 4349,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Genève Cornavin",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T07:43:00.000Z",
+       "arrival": "2026-11-24T07:43:03.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:16:21.000Z",
+     "arrival": "2026-11-24T07:58:03.000Z",
+     "durationMinutes": 42,
+     "transfers": 1,
+     "walkMeters": 1328,
+     "priceStatus": "tous les segments ont un tarif vérifié",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Collonges, marché",
+       "departure": "2026-11-24T07:16:21.000Z",
+       "arrival": "2026-11-24T07:29:00.000Z",
+       "distanceMeters": 996,
+       "walkGeometryPoints": 108,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "82",
+       "provider": "tpg",
+       "from": "Collonges, marché",
+       "to": "Grand-Lancy, Préventorium",
+       "departure": "2026-11-24T07:29:00.000Z",
+       "arrival": "2026-11-24T07:39:00.000Z",
+       "distanceMeters": 4118,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 4.8,
+        "currency": "EUR",
+        "source": "Léman Pass · billet multizones 10+230, 90 min · https://www.lemanpass.com/points-de-vente/ et https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf (vérifié le 2026-11-15)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Grand-Lancy, Préventorium",
+       "to": "Lancy-Bachet",
+       "departure": "2026-11-24T07:39:00.000Z",
+       "arrival": "2026-11-24T07:45:34.000Z",
+       "distanceMeters": 328,
+       "walkGeometryPoints": 26,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L1",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Lancy-Bachet",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T07:49:00.000Z",
+       "arrival": "2026-11-24T07:58:00.000Z",
+       "distanceMeters": 4349,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Genève Cornavin",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T07:58:00.000Z",
+       "arrival": "2026-11-24T07:58:03.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:31:21.000Z",
+     "arrival": "2026-11-24T08:13:03.000Z",
+     "durationMinutes": 42,
+     "transfers": 1,
+     "walkMeters": 1328,
+     "priceStatus": "tous les segments ont un tarif vérifié",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Collonges, marché",
+       "departure": "2026-11-24T07:31:21.000Z",
+       "arrival": "2026-11-24T07:44:00.000Z",
+       "distanceMeters": 996,
+       "walkGeometryPoints": 108,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "82",
+       "provider": "tpg",
+       "from": "Collonges, marché",
+       "to": "Grand-Lancy, Préventorium",
+       "departure": "2026-11-24T07:44:00.000Z",
+       "arrival": "2026-11-24T07:54:00.000Z",
+       "distanceMeters": 4118,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 4.8,
+        "currency": "EUR",
+        "source": "Léman Pass · billet multizones 10+230, 90 min · https://www.lemanpass.com/points-de-vente/ et https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf (vérifié le 2026-11-15)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Grand-Lancy, Préventorium",
+       "to": "Lancy-Bachet",
+       "departure": "2026-11-24T07:54:00.000Z",
+       "arrival": "2026-11-24T08:00:34.000Z",
+       "distanceMeters": 328,
+       "walkGeometryPoints": 26,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L2",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Lancy-Bachet",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T08:04:00.000Z",
+       "arrival": "2026-11-24T08:13:00.000Z",
+       "distanceMeters": 4348,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Genève Cornavin",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:13:00.000Z",
+       "arrival": "2026-11-24T08:13:03.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:47:21.000Z",
+     "arrival": "2026-11-24T08:28:03.000Z",
+     "durationMinutes": 41,
+     "transfers": 1,
+     "walkMeters": 1301,
+     "priceStatus": "tous les segments ont un tarif vérifié",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Collonges, marché",
+       "departure": "2026-11-24T07:47:21.000Z",
+       "arrival": "2026-11-24T08:00:00.000Z",
+       "distanceMeters": 996,
+       "walkGeometryPoints": 108,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "82",
+       "provider": "tpg",
+       "from": "Collonges, marché",
+       "to": "Lancy-Bachet, gare",
+       "departure": "2026-11-24T08:00:00.000Z",
+       "arrival": "2026-11-24T08:11:00.000Z",
+       "distanceMeters": 4415,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 4.8,
+        "currency": "EUR",
+        "source": "Léman Pass · billet multizones 10+230, 90 min · https://www.lemanpass.com/points-de-vente/ et https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf (vérifié le 2026-11-15)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lancy-Bachet, gare",
+       "to": "Lancy-Bachet",
+       "departure": "2026-11-24T08:11:00.000Z",
+       "arrival": "2026-11-24T08:15:50.000Z",
+       "distanceMeters": 301,
+       "walkGeometryPoints": 32,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L3",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Lancy-Bachet",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T08:19:00.000Z",
+       "arrival": "2026-11-24T08:28:00.000Z",
+       "distanceMeters": 4349,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Genève Cornavin",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:28:00.000Z",
+       "arrival": "2026-11-24T08:28:03.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    }
+   ],
+   "http": 200,
+   "duplicateSegments": []
+  },
+  {
+   "id": "geneve-archamps",
+   "name": "Genève Cornavin → Archamps Technopole",
+   "from": {
+    "lat": 46.2102,
+    "lon": 6.1424,
+    "name": "Genève Cornavin"
+   },
+   "to": {
+    "lat": 46.1362,
+    "lon": 6.1328,
+    "name": "Archamps Technopole"
+   },
+   "when": "2026-11-24T07:00:00.000Z",
+   "raw": 5,
+   "accepted": 5,
+   "itineraries": [
+    {
+     "departure": "2026-11-24T07:00:57.000Z",
+     "arrival": "2026-11-24T07:38:29.000Z",
+     "durationMinutes": 38,
+     "transfers": 1,
+     "walkMeters": 1146,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T07:00:57.000Z",
+       "arrival": "2026-11-24T07:01:00.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L4",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Genève Cornavin",
+       "to": "Lancy-Bachet",
+       "departure": "2026-11-24T07:01:00.000Z",
+       "arrival": "2026-11-24T07:10:00.000Z",
+       "distanceMeters": 4349,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lancy-Bachet",
+       "to": "Lancy-Bachet, gare",
+       "departure": "2026-11-24T07:10:00.000Z",
+       "arrival": "2026-11-24T07:14:12.000Z",
+       "distanceMeters": 248,
+       "walkGeometryPoints": 30,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "82",
+       "provider": "tpg",
+       "from": "Lancy-Bachet, gare",
+       "to": "Archamps, Pont de Combe",
+       "departure": "2026-11-24T07:18:00.000Z",
+       "arrival": "2026-11-24T07:27:00.000Z",
+       "distanceMeters": 4469,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Archamps, Pont de Combe",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T07:27:00.000Z",
+       "arrival": "2026-11-24T07:38:29.000Z",
+       "distanceMeters": 894,
+       "walkGeometryPoints": 103,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:15:57.000Z",
+     "arrival": "2026-11-24T07:53:29.000Z",
+     "durationMinutes": 38,
+     "transfers": 1,
+     "walkMeters": 1146,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T07:15:57.000Z",
+       "arrival": "2026-11-24T07:16:00.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L4",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Genève Cornavin",
+       "to": "Lancy-Bachet",
+       "departure": "2026-11-24T07:16:00.000Z",
+       "arrival": "2026-11-24T07:25:00.000Z",
+       "distanceMeters": 4349,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lancy-Bachet",
+       "to": "Lancy-Bachet, gare",
+       "departure": "2026-11-24T07:25:00.000Z",
+       "arrival": "2026-11-24T07:29:12.000Z",
+       "distanceMeters": 248,
+       "walkGeometryPoints": 30,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "82",
+       "provider": "tpg",
+       "from": "Lancy-Bachet, gare",
+       "to": "Archamps, Pont de Combe",
+       "departure": "2026-11-24T07:33:00.000Z",
+       "arrival": "2026-11-24T07:42:00.000Z",
+       "distanceMeters": 4469,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Archamps, Pont de Combe",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T07:42:00.000Z",
+       "arrival": "2026-11-24T07:53:29.000Z",
+       "distanceMeters": 894,
+       "walkGeometryPoints": 103,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:30:57.000Z",
+     "arrival": "2026-11-24T08:09:29.000Z",
+     "durationMinutes": 39,
+     "transfers": 1,
+     "walkMeters": 1146,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T07:30:57.000Z",
+       "arrival": "2026-11-24T07:31:00.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L3",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Genève Cornavin",
+       "to": "Lancy-Bachet",
+       "departure": "2026-11-24T07:31:00.000Z",
+       "arrival": "2026-11-24T07:40:00.000Z",
+       "distanceMeters": 4349,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lancy-Bachet",
+       "to": "Lancy-Bachet, gare",
+       "departure": "2026-11-24T07:40:00.000Z",
+       "arrival": "2026-11-24T07:44:12.000Z",
+       "distanceMeters": 248,
+       "walkGeometryPoints": 30,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "82",
+       "provider": "tpg",
+       "from": "Lancy-Bachet, gare",
+       "to": "Archamps, Pont de Combe",
+       "departure": "2026-11-24T07:48:00.000Z",
+       "arrival": "2026-11-24T07:58:00.000Z",
+       "distanceMeters": 4469,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Archamps, Pont de Combe",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T07:58:00.000Z",
+       "arrival": "2026-11-24T08:09:29.000Z",
+       "distanceMeters": 894,
+       "walkGeometryPoints": 103,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:45:57.000Z",
+     "arrival": "2026-11-24T08:23:29.000Z",
+     "durationMinutes": 38,
+     "transfers": 1,
+     "walkMeters": 1146,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T07:45:57.000Z",
+       "arrival": "2026-11-24T07:46:00.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L2",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Genève Cornavin",
+       "to": "Lancy-Bachet",
+       "departure": "2026-11-24T07:46:00.000Z",
+       "arrival": "2026-11-24T07:55:00.000Z",
+       "distanceMeters": 4349,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lancy-Bachet",
+       "to": "Lancy-Bachet, gare",
+       "departure": "2026-11-24T07:55:00.000Z",
+       "arrival": "2026-11-24T07:59:12.000Z",
+       "distanceMeters": 248,
+       "walkGeometryPoints": 30,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "82",
+       "provider": "tpg",
+       "from": "Lancy-Bachet, gare",
+       "to": "Archamps, Pont de Combe",
+       "departure": "2026-11-24T08:04:00.000Z",
+       "arrival": "2026-11-24T08:12:00.000Z",
+       "distanceMeters": 4469,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Archamps, Pont de Combe",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:12:00.000Z",
+       "arrival": "2026-11-24T08:23:29.000Z",
+       "distanceMeters": 894,
+       "walkGeometryPoints": 103,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T08:00:57.000Z",
+     "arrival": "2026-11-24T08:37:29.000Z",
+     "durationMinutes": 37,
+     "transfers": 1,
+     "walkMeters": 1146,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève Cornavin",
+       "departure": "2026-11-24T08:00:57.000Z",
+       "arrival": "2026-11-24T08:01:00.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 3,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "L4",
+       "provider": "SNCF VOYAGEURS",
+       "from": "Genève Cornavin",
+       "to": "Lancy-Bachet",
+       "departure": "2026-11-24T08:01:00.000Z",
+       "arrival": "2026-11-24T08:10:00.000Z",
+       "distanceMeters": 4349,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lancy-Bachet",
+       "to": "Lancy-Bachet, gare",
+       "departure": "2026-11-24T08:10:00.000Z",
+       "arrival": "2026-11-24T08:14:12.000Z",
+       "distanceMeters": 248,
+       "walkGeometryPoints": 30,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "82",
+       "provider": "tpg",
+       "from": "Lancy-Bachet, gare",
+       "to": "Archamps, Pont de Combe",
+       "departure": "2026-11-24T08:18:00.000Z",
+       "arrival": "2026-11-24T08:26:00.000Z",
+       "distanceMeters": 4469,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Archamps, Pont de Combe",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:26:00.000Z",
+       "arrival": "2026-11-24T08:37:29.000Z",
+       "distanceMeters": 894,
+       "walkGeometryPoints": 103,
+       "fare": null
+      }
+     ]
+    }
+   ],
+   "http": 200,
+   "duplicateSegments": []
+  },
+  {
+   "id": "archamps-annecy",
+   "name": "Archamps Technopole → Annecy gare",
+   "from": {
+    "lat": 46.1362,
+    "lon": 6.1328,
+    "name": "Archamps Technopole"
+   },
+   "to": {
+    "lat": 45.9017,
+    "lon": 6.1219,
+    "name": "Annecy gare"
+   },
+   "when": "2026-11-24T07:00:00.000Z",
+   "raw": 2,
+   "accepted": 2,
+   "itineraries": [
+    {
+     "departure": "2026-11-24T07:24:38.000Z",
+     "arrival": "2026-11-24T09:07:29.000Z",
+     "durationMinutes": 103,
+     "transfers": 2,
+     "walkMeters": 911,
+     "priceStatus": "tarif partiel",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Archamps, Pont de Combe",
+       "departure": "2026-11-24T07:24:38.000Z",
+       "arrival": "2026-11-24T07:34:00.000Z",
+       "distanceMeters": 742,
+       "walkGeometryPoints": 88,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "M",
+       "provider": "tpg",
+       "from": "Archamps, Pont de Combe",
+       "to": "Saint-Julien, gare",
+       "departure": "2026-11-24T07:34:00.000Z",
+       "arrival": "2026-11-24T07:50:00.000Z",
+       "distanceMeters": 3373,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "272",
+       "provider": "Alpbus Fournier",
+       "from": "Saint-Julien, gare",
+       "to": "Annecy, Eglise Des Fins",
+       "departure": "2026-11-24T08:01:00.000Z",
+       "arrival": "2026-11-24T08:57:00.000Z",
+       "distanceMeters": 28642,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Annecy, Eglise Des Fins",
+       "to": "EGLISE DES FINS",
+       "departure": "2026-11-24T08:57:00.000Z",
+       "arrival": "2026-11-24T08:57:04.000Z",
+       "distanceMeters": 4,
+       "walkGeometryPoints": 5,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "2",
+       "provider": "SIBRA",
+       "from": "EGLISE DES FINS",
+       "to": "PAUL GRIMAULT",
+       "departure": "2026-11-24T08:59:43.000Z",
+       "arrival": "2026-11-24T09:05:21.000Z",
+       "distanceMeters": 1012,
+       "walkGeometryPoints": null,
+       "fare": {
+        "amount": 2,
+        "currency": "EUR",
+        "source": "Sibra · 1 voyage (achat digital ou rechargement ; 2,50 € à bord), 1 h correspondances comprises · https://www.sibra.fr/app/uploads/2026/07/Reglement_BUS_CARS_CGV_01072026_3.pdf (vérifié le 2026-11-13)"
+       }
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "PAUL GRIMAULT",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:05:21.000Z",
+       "arrival": "2026-11-24T09:07:29.000Z",
+       "distanceMeters": 165,
+       "walkGeometryPoints": 14,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:24:38.000Z",
+     "arrival": "2026-11-24T09:07:58.000Z",
+     "durationMinutes": 103,
+     "transfers": 1,
+     "walkMeters": 1038,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Archamps, Pont de Combe",
+       "departure": "2026-11-24T07:24:38.000Z",
+       "arrival": "2026-11-24T07:34:00.000Z",
+       "distanceMeters": 742,
+       "walkGeometryPoints": 88,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "M",
+       "provider": "tpg",
+       "from": "Archamps, Pont de Combe",
+       "to": "Saint-Julien, gare",
+       "departure": "2026-11-24T07:34:00.000Z",
+       "arrival": "2026-11-24T07:50:00.000Z",
+       "distanceMeters": 3373,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Saint-Julien, gare",
+       "to": "SNCF",
+       "departure": "2026-11-24T07:50:00.000Z",
+       "arrival": "2026-11-24T07:50:14.000Z",
+       "distanceMeters": 13,
+       "walkGeometryPoints": 6,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Bus",
+       "line": "272",
+       "provider": "Cars Région Haute-Savoie",
+       "from": "SNCF",
+       "to": "Gare Routiere",
+       "departure": "2026-11-24T08:01:00.000Z",
+       "arrival": "2026-11-24T09:03:00.000Z",
+       "distanceMeters": 34750,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Gare Routiere",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T09:03:00.000Z",
+       "arrival": "2026-11-24T09:07:58.000Z",
+       "distanceMeters": 283,
+       "walkGeometryPoints": 74,
+       "fare": null
+      }
+     ]
+    }
+   ],
+   "http": 200,
+   "duplicateSegments": []
+  },
+  {
+   "id": "geneve-lausanne",
+   "name": "Genève Cornavin → Lausanne gare",
+   "from": {
+    "lat": 46.2102,
+    "lon": 6.1424,
+    "name": "Genève Cornavin"
+   },
+   "to": {
+    "lat": 46.5167,
+    "lon": 6.6291,
+    "name": "Lausanne gare"
+   },
+   "when": "2026-11-24T07:00:00.000Z",
+   "raw": 6,
+   "accepted": 6,
+   "itineraries": [
+    {
+     "departure": "2026-11-24T07:02:18.000Z",
+     "arrival": "2026-11-24T07:44:03.000Z",
+     "durationMinutes": 42,
+     "transfers": 0,
+     "walkMeters": 150,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève",
+       "departure": "2026-11-24T07:02:18.000Z",
+       "arrival": "2026-11-24T07:05:00.000Z",
+       "distanceMeters": 147,
+       "walkGeometryPoints": 19,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "IR90",
+       "provider": "CFF",
+       "from": "Genève",
+       "to": "Lausanne",
+       "departure": "2026-11-24T07:05:00.000Z",
+       "arrival": "2026-11-24T07:44:00.000Z",
+       "distanceMeters": 53898,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lausanne",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T07:44:00.000Z",
+       "arrival": "2026-11-24T07:44:03.000Z",
+       "distanceMeters": 3,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:05:35.000Z",
+     "arrival": "2026-11-24T07:59:45.000Z",
+     "durationMinutes": 54,
+     "transfers": 0,
+     "walkMeters": 174,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève",
+       "departure": "2026-11-24T07:05:35.000Z",
+       "arrival": "2026-11-24T07:08:00.000Z",
+       "distanceMeters": 123,
+       "walkGeometryPoints": 16,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "RE33",
+       "provider": "CFF",
+       "from": "Genève",
+       "to": "Lausanne",
+       "departure": "2026-11-24T07:08:00.000Z",
+       "arrival": "2026-11-24T07:59:00.000Z",
+       "distanceMeters": 57302,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lausanne",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T07:59:00.000Z",
+       "arrival": "2026-11-24T07:59:45.000Z",
+       "distanceMeters": 51,
+       "walkGeometryPoints": 7,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:21:18.000Z",
+     "arrival": "2026-11-24T08:10:03.000Z",
+     "durationMinutes": 49,
+     "transfers": 0,
+     "walkMeters": 150,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève",
+       "departure": "2026-11-24T07:21:18.000Z",
+       "arrival": "2026-11-24T07:24:00.000Z",
+       "distanceMeters": 147,
+       "walkGeometryPoints": 19,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "IR95",
+       "provider": "CFF",
+       "from": "Genève",
+       "to": "Lausanne",
+       "departure": "2026-11-24T07:24:00.000Z",
+       "arrival": "2026-11-24T08:10:00.000Z",
+       "distanceMeters": 56510,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lausanne",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:10:00.000Z",
+       "arrival": "2026-11-24T08:10:03.000Z",
+       "distanceMeters": 3,
+       "walkGeometryPoints": 3,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:32:17.000Z",
+     "arrival": "2026-11-24T08:17:15.000Z",
+     "durationMinutes": 45,
+     "transfers": 0,
+     "walkMeters": 356,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève",
+       "departure": "2026-11-24T07:32:17.000Z",
+       "arrival": "2026-11-24T07:35:00.000Z",
+       "distanceMeters": 149,
+       "walkGeometryPoints": 21,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "IC1",
+       "provider": "CFF",
+       "from": "Genève",
+       "to": "Lausanne",
+       "departure": "2026-11-24T07:35:00.000Z",
+       "arrival": "2026-11-24T08:14:00.000Z",
+       "distanceMeters": 53943,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lausanne",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:14:00.000Z",
+       "arrival": "2026-11-24T08:17:15.000Z",
+       "distanceMeters": 207,
+       "walkGeometryPoints": 14,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:35:34.000Z",
+     "arrival": "2026-11-24T08:30:59.000Z",
+     "durationMinutes": 55,
+     "transfers": 0,
+     "walkMeters": 257,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève",
+       "departure": "2026-11-24T07:35:34.000Z",
+       "arrival": "2026-11-24T07:38:00.000Z",
+       "distanceMeters": 124,
+       "walkGeometryPoints": 16,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "RE33",
+       "provider": "CFF",
+       "from": "Genève",
+       "to": "Lausanne",
+       "departure": "2026-11-24T07:38:00.000Z",
+       "arrival": "2026-11-24T08:29:00.000Z",
+       "distanceMeters": 57306,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lausanne",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:29:00.000Z",
+       "arrival": "2026-11-24T08:30:59.000Z",
+       "distanceMeters": 133,
+       "walkGeometryPoints": 12,
+       "fare": null
+      }
+     ]
+    },
+    {
+     "departure": "2026-11-24T07:51:18.000Z",
+     "arrival": "2026-11-24T08:40:15.000Z",
+     "durationMinutes": 49,
+     "transfers": 0,
+     "walkMeters": 354,
+     "priceStatus": "Prix non confirmé",
+     "legs": [
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Point de départ",
+       "to": "Genève",
+       "departure": "2026-11-24T07:51:18.000Z",
+       "arrival": "2026-11-24T07:54:00.000Z",
+       "distanceMeters": 147,
+       "walkGeometryPoints": 19,
+       "fare": null
+      },
+      {
+       "kind": "transit",
+       "mode": "Train",
+       "line": "IR15",
+       "provider": "CFF",
+       "from": "Genève",
+       "to": "Lausanne",
+       "departure": "2026-11-24T07:54:00.000Z",
+       "arrival": "2026-11-24T08:37:00.000Z",
+       "distanceMeters": 55313,
+       "walkGeometryPoints": null,
+       "fare": null
+      },
+      {
+       "kind": "walk",
+       "mode": "Marche",
+       "line": null,
+       "provider": null,
+       "from": "Lausanne",
+       "to": "Point d’arrivée",
+       "departure": "2026-11-24T08:37:00.000Z",
+       "arrival": "2026-11-24T08:40:15.000Z",
+       "distanceMeters": 207,
+       "walkGeometryPoints": 14,
+       "fare": null
+      }
+     ]
+    }
+   ],
+   "http": 200,
+   "duplicateSegments": []
+  }
+ ],
+ "sources": null,
+ "osm": null,
+ "build": null
+}

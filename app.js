@@ -1593,7 +1593,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             const fetcher = (...a) => window.fetch(...a);
             const router = H.cachedRouter(window.CPTransportWalking?.createRouter({ fetcher, maxRequests: 200, intervalMs: 1100 }), { storage: window.localStorage });
             const report = await C.runDiagnostic({ hub: H, router, storage: window.localStorage, host: $('rCouverture'),
-              providers: H.makeProviders(window, { fetcher, regionalEndpoint: window.CP_REGIONAL_ROUTING_ENDPOINT }),
+              providers: H.makeProviders(window, { fetcher, regionalEndpoint: window.CP_REGIONAL_ROUTING_ENDPOINT, nationalGTFSResources: window.CP_NATIONAL_GTFS_RESOURCES || {} }),
               fareFor: leg => { try { return window.CPTransportFareGrids?.fareFor(leg) || null; } catch (_) { return null; } },
               gtfsAgenda: window.CPGTFSAgenda && window.CPGTFSWorker ? window.CPGTFSAgenda : null,
               onProgress: (axis, v) => { out.textContent = 'Diagnostic : ' + axis.name + ' — ' + v.total + ' trajet(s)…'; } });
@@ -2309,7 +2309,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const ojpSession=api?.connecte?{url:api.url,cle:api.cle,accessToken:api.session.access_token}:null;
         const session=Hub.createSession({tasks,router,fareFor,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),
           providers:Hub.makeProviders(window,{fetcher:regionalFetch,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
-            nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{},ojpSession}),
+            nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{},ojpSession,
+            // OTP2 : moteur supplémentaire, actif seulement si un serveur HTTPS est configuré (aucun par défaut).
+            allowOTP:typeof window.CP_OTP_ENDPOINT==='string'&&!!window.CPOTPClient?.buildQuery,
+            otpEndpoint:window.CP_OTP_ENDPOINT,otpQuery:window.CPOTPClient?.buildQuery,otpTimeoutMs:15000}),
           onUpdate:(label,view)=>{
             if(!panel.isConnected||!transportDestinations[label])return;
             let host=hubHosts[label];
