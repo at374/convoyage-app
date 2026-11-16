@@ -35,6 +35,13 @@ function parse(response){
    if(legs.length&&Date.parse(departure)<Date.parse(legs[legs.length-1].arrival))return null;
    const fromPoint=point(raw.from),toPoint=point(raw.to);
    if(!fromPoint||!toPoint)return null;
+   // OTP ne doit pas relier deux segments distants sans marche de correspondance.
+   if(legs.length){
+    const prev=legs[legs.length-1].toPoint;
+    const rad=Math.PI/180,dLat=(fromPoint.lat-prev.lat)*rad,dLon=(fromPoint.lon-prev.lon)*rad;
+    const h=Math.sin(dLat/2)**2+Math.cos(prev.lat*rad)*Math.cos(fromPoint.lat*rad)*Math.sin(dLon/2)**2;
+    if(12742000*Math.asin(Math.min(1,Math.sqrt(h)))>150)return null;
+   }
    const walk=mode==='WALK';
    legs.push({
     kind:walk?'walk':'transit',mode:MODE[mode],
