@@ -75,3 +75,20 @@ test('OTP2 : refuse les marches sans distance ou durée exploitable',()=>{
  ];
  for(const item of cases)assert.deepEqual(parse({plan:{itineraries:[{legs:[item]}]}}),[]);
 });
+
+test('OTP2 : le contrôle hors réseau produit un rapport et conserve le statut non confirmé',()=>{
+ const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+ const {spawnSync}=require('node:child_process');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'otp-smoke-'));
+ try{
+  const file=path.join(dir,'response.json');
+  fs.writeFileSync(file,JSON.stringify({plan:{itineraries:[{legs:[leg()]}]}}));
+  const p=spawnSync(process.execPath,[path.join(__dirname,'../scripts/otp-smoke.cjs'),file],{encoding:'utf8'});
+  assert.equal(p.status,0,p.stderr);
+  const report=JSON.parse(p.stdout);
+  assert.equal(report.itineraries,1);
+  assert.equal(report.confirmedRealtime,0);
+  assert.equal(report.faresVerified,0);
+  assert.match(report.journeys[0].status,/Transport non confirmé/);
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
