@@ -9,12 +9,15 @@ MODE="${2:-build}"
 IMAGE="docker.io/opentripplanner/opentripplanner:2.10.0"
 if [[ "$MODE" == "build" ]]; then
   shopt -s nullglob
-  gtfs=("$DIR"/*gtfs*.zip)
+  gtfs=("$DIR"/*.zip)
   osm=("$DIR"/*.osm.pbf)
   if (( ${#gtfs[@]} == 0 || ${#osm[@]} == 0 )); then
-    echo "Requis : au moins un *gtfs*.zip et un *.osm.pbf dans $DIR" >&2
+    echo "Requis : au moins un fichier .zip GTFS et un *.osm.pbf dans $DIR" >&2
     exit 2
   fi
+  for zip in "${gtfs[@]}"; do
+    if command -v unzip >/dev/null; then unzip -tq "$zip" >/dev/null || { echo "ZIP GTFS corrompu : $zip" >&2; exit 2; }; fi
+  done
   echo "Construction locale du graphe : $IMAGE"
   docker run --rm --memory=12g --cpus=2 -e JAVA_TOOL_OPTIONS="-Xmx9g" \
     -v "$DIR:/var/opentripplanner" "$IMAGE" --build --save
