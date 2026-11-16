@@ -47,7 +47,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: osm-cache
-          key: osm-couloir-${{ env.BBOX }}-${{ env.OSM_WEEK }}
+          key: osm-couloir-lyon-lausanne-v1-${{ env.OSM_WEEK }}
       - name: Reprendre l'extrait OpenStreetMap en cache
         if: steps.osm.outputs.cache-hit == 'true'
         run: cp osm-cache/couloir.osm.pbf osm-cache/osm.json otp-data/
