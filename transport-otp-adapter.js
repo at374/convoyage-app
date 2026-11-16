@@ -25,9 +25,10 @@ function parse(response){
  const plan=response?.data?.plan??response?.plan;
  if(!plan||!Array.isArray(plan.itineraries))return [];
  return plan.itineraries.map(it=>{
-  if(!Array.isArray(it.legs)||!it.legs.length)return null;
+  if(!it||!Array.isArray(it.legs)||!it.legs.length)return null;
   const legs=[];
   for(const raw of it.legs){
+   if(!raw||typeof raw!=='object')return null;
    const mode=String(raw.mode||'').toUpperCase();
    if(FORBIDDEN.test(mode)||!MODE[mode])return null;
    const departure=time(raw.startTime),arrival=time(raw.endTime);
