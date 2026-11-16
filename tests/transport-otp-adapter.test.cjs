@@ -39,14 +39,14 @@ test('OTP2 : rejette les segments qui se chevauchent',()=>{
 });
 test('OTP2 : accepte une correspondance chronologiquement possible',()=>{
  const first={...leg('WALK'),endTime:1794831000000};
- const second={...leg('RAIL'),startTime:1794831600000,endTime:1794835000000};
+ const second={...leg('RAIL'),startTime:1794831600000,endTime:1794835000000,from:to};
  const out=parse({plan:{itineraries:[{legs:[first,second]}]}});
  assert.equal(out.length,1);assert.equal(out[0].legs.length,2);
 });
 
 test('OTP2 : refuse une téléportation entre deux segments',()=>{
  const first={...leg('WALK'),endTime:1794831000000};
- const second={...leg('RAIL'),startTime:1794831600000,endTime:1794835000000,from:{name:'Autre arrêt',lat:46.2,lon:6.14}};
+ const second={...leg('RAIL'),startTime:1794831600000,endTime:1794835000000,from:{name:'Autre arrêt',lat:45.9,lon:6.12}};
  assert.deepEqual(parse({plan:{itineraries:[{legs:[first,second]}]}}),[]);
 });
 test('OTP2 : accepte deux segments avec un arrêt commun',()=>{
