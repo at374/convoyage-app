@@ -1,0 +1,602 @@
+{
+ "generatedAt": "2026-11-16T18:08:06+00:00",
+ "testDate": "2026-11-24",
+ "bbox": {
+  "latMin": 45.4,
+  "lonMin": 4.65,
+  "latMax": 46.6,
+  "lonMax": 6.75
+ },
+ "feeds": [
+  {
+   "id": "oura-agregat",
+   "url": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA",
+   "origin": "data.gouv.fr agregat-oura (modifié 2026-11-15T22:21:33+00:00)",
+   "finalUrl": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA",
+   "bytes": 111473955,
+   "sha256": "676747aaabb21f4b68e41baff39beb1a5de8c6036321933b3efa6a4852d1d66b",
+   "before": {
+    "stops": 30608,
+    "stop_times": 1297939,
+    "trips": 58755
+   },
+   "after": {
+    "stop_times": 851055,
+    "stops": 11824,
+    "trips": 36366,
+    "routes": 661,
+    "bytes": 37327595
+   },
+   "agencies": [
+    {
+     "agency_name": "AIX-LES-BAINS - Ondéa",
+     "routes": 63
+    },
+    {
+     "agency_name": "ANNEMASSE - TAC",
+     "routes": 8
+    },
+    {
+     "agency_name": "ALBERTVILLE - TRA Mobilité",
+     "routes": 11
+    },
+    {
+     "agency_name": "BONNEVILLE-LA ROCHE-REIGNIER-VIUZ - Proxim iTi",
+     "routes": 18
+    },
+    {
+     "agency_name": "BOURGOIN-JALLIEU - Ruban",
+     "routes": 35
+    },
+    {
+     "agency_name": "REGION - cars Région Ain",
+     "routes": 31
+    },
+    {
+     "agency_name": "REGION - cars Région Express",
+     "routes": 6
+    },
+    {
+     "agency_name": "REGION - cars Région Loire",
+     "routes": 31
+    },
+    {
+     "agency_name": "MIRIBEL - Colibri",
+     "routes": 1
+    },
+    {
+     "agency_name": "EVIAN - ÉVA'D",
+     "routes": 10
+    },
+    {
+     "agency_name": "CHAMBERY - Synchro Mobilités",
+     "routes": 24
+    },
+    {
+     "agency_name": "REGION - cars Région Haute-Savoie",
+     "routes": 24
+    },
+    {
+     "agency_name": "REGION - cars Région Isère",
+     "routes": 274
+    },
+    {
+     "agency_name": "VALSERHÔNE - Mobi'Vals",
+     "routes": 12
+    },
+    {
+     "agency_name": "MONTLUEL - TICO 3CM",
+     "routes": 1
+    },
+    {
+     "agency_name": "OYONNAX - DUOBUS",
+     "routes": 8
+    },
+    {
+     "agency_name": "LE-PEAGE-DE-ROUSSILLON - Le 37",
+     "routes": 1
+    },
+    {
+     "agency_name": "BOURG-EN-BRESSE - Rubis",
+     "routes": 10
+    },
+    {
+     "agency_name": "RUMILLY - J'ybus",
+     "routes": 5
+    },
+    {
+     "agency_name": "TREVOUX - Saônibus",
+     "routes": 2
+    },
+    {
+     "agency_name": "REGION - cars Région Savoie",
+     "routes": 8
+    },
+    {
+     "agency_name": "AMBERIEU-EN-BUGEY - Tam",
+     "routes": 4
+    },
+    {
+     "agency_name": "THONON-LES-BAINS - STAR'T",
+     "routes": 25
+    },
+    {
+     "agency_name": "VIENNE - L’va",
+     "routes": 49
+    }
+   ],
+   "validity": {
+    "from": "20261116",
+    "to": "20280630"
+   },
+   "tripsActiveOnTestDate": 8070,
+   "faresInFeed": false,
+   "status": "importé",
+   "file": "oura-agregat.gtfs.zip"
+  },
+  {
+   "id": "sncf",
+   "url": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
+   "origin": "SNCF Open Data (export national)",
+   "finalUrl": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
+   "bytes": 5654542,
+   "sha256": "c7fa334890dad1a0ee200659366e0bac9b8b87effddbcdbe2fc0db1e6e6d72bc",
+   "before": {
+    "stops": 8664,
+    "stop_times": 529281,
+    "trips": 60637
+   },
+   "after": {
+    "stop_times": 48729,
+    "stops": 661,
+    "trips": 7050,
+    "routes": 102,
+    "bytes": 558953
+   },
+   "agencies": [
+    {
+     "agency_name": "CFF",
+     "routes": 1
+    },
+    {
+     "agency_name": "SNCF VOYAGEURS",
+     "routes": 96
+    },
+    {
+     "agency_name": "SNCF Voyageurs BO",
+     "routes": 2
+    },
+    {
+     "agency_name": "OCEdefault",
+     "routes": 3
+    }
+   ],
+   "validity": {
+    "from": "20261115",
+    "to": "20270430"
+   },
+   "tripsActiveOnTestDate": 1448,
+   "faresInFeed": false,
+   "status": "importé",
+   "file": "sncf.gtfs.zip"
+  },
+  {
+   "id": "suisse-ski",
+   "url": "https://data.opentransportdata.swiss/dataset/timetable-2026-gtfs2020/permalink",
+   "origin": "permalien (API CKAN en échec : HTTP Error 403: Forbidden)",
+   "finalUrl": "https://83025b28472d6aa2bf5ae59f3724aa78.eu.r2.cloudflarestorage.com/dx-omd-prod/resources/c19fcd23-d911-4a7d-8f61-2d7d4dff23d1/gtfs_fp2026_20261114.zip?response-content-disposition=attachment%3B%20filename%3Dgtfs_fp2026_20261114.zip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=9bd93e9511bb186699e38b472e825929%2F20261116%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20261116T180903Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&X-Amz-Signature=0517fca997c05c953a7b16b8d7de26d1b1ba9b59788a1997d9b30ebdcb747493",
+   "bytes": 292103653,
+   "sha256": "c221979f0dc36df7c92d3fcd9af799c46140aa2865b271b284030183f0e2ae85",
+   "before": {
+    "stops": 105069,
+    "stop_times": 42564544,
+    "trips": 2618382
+   },
+   "after": {
+    "stop_times": 7580541,
+    "stops": 9526,
+    "trips": 401214,
+    "routes": 493,
+    "bytes": 50457367
+   },
+   "agencies": [
+    {
+     "agency_name": "Schweizerische Bundesbahnen SBB",
+     "routes": 57
+    },
+    {
+     "agency_name": "Transports Publics Genevois",
+     "routes": 87
+    },
+    {
+     "agency_name": "Société Nationale des Chemins de fer Français",
+     "routes": 150
+    },
+    {
+     "agency_name": "Transports publics fribourgeois",
+     "routes": 1
+    },
+    {
+     "agency_name": "Lausanne-Echallens-Bercher",
+     "routes": 1
+    },
+    {
+     "agency_name": "Regionalps",
+     "routes": 3
+    },
+    {
+     "agency_name": "Compagnie du chemin de fer Nyon - St-Cergue - Morez",
+     "routes": 3
+    },
+    {
+     "agency_name": "Transports de la région Morges-Bière-Cossonay",
+     "routes": 2
+    },
+    {
+     "agency_name": "Chemin de fer Nyon - St-Cergue - Morez Ersatzverkehr",
+     "routes": 2
+    },
+    {
+     "agency_name": "Transports Publics de la Région Lausannoise sa",
+     "routes": 55
+    },
+    {
+     "agency_name": "Evian",
+     "routes": 8
+    },
+    {
+     "agency_name": "SIBRA",
+     "routes": 14
+    },
+    {
+     "agency_name": "Réseau de transports de l'Agglomération de Thonon",
+     "routes": 7
+    },
+    {
+     "agency_name": "Alpbus Fournier",
+     "routes": 2
+    },
+    {
+     "agency_name": "Jacquet Autocars",
+     "routes": 1
+    },
+    {
+     "agency_name": "Transports de la région Morges-Bière-Cossonay Ersatzverkehr",
+     "routes": 3
+    },
+    {
+     "agency_name": "Transports Publics de l'agglomération d'Annemasse",
+     "routes": 7
+    },
+    {
+     "agency_name": "Transports Vallée de Joux-Yverdon-Ste-Croix",
+     "routes": 1
+    },
+    {
+     "agency_name": "Autotransports de la Vallée de Joux",
+     "routes": 1
+    },
+    {
+     "agency_name": "Automobiles MBC",
+     "routes": 14
+    },
+    {
+     "agency_name": "Bus Nyon-Prangins",
+     "routes": 3
+    },
+    {
+     "agency_name": "Transports Publics de la Région Nyonnaise",
+     "routes": 6
+    },
+    {
+     "agency_name": "RDTAin",
+     "routes": 6
+    },
+    {
+     "agency_name": "SBB Infrastruktur AG Bahnersatz",
+     "routes": 18
+    },
+    {
+     "agency_name": "CGN SA",
+     "routes": 7
+    },
+    {
+     "agency_name": "Mouettes genevoises SA",
+     "routes": 4
+    },
+    {
+     "agency_name": "PostAuto AG",
+     "routes": 30
+    }
+   ],
+   "validity": {
+    "from": "20251214",
+    "to": "20261212"
+   },
+   "tripsActiveOnTestDate": 25388,
+   "faresInFeed": false,
+   "status": "importé",
+   "file": "suisse-ski.gtfs.zip"
+  },
+  {
+   "id": "flixbus",
+   "url": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
+   "origin": "catalogue PAN (audit-national-operators)",
+   "finalUrl": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
+   "bytes": 32077430,
+   "sha256": "6e07dd3c3a76e297cfae3cea20adbe716f9a79250f38a67945388d3504066f1c",
+   "before": {
+    "stops": 2085,
+    "stop_times": 273100,
+    "trips": 39432
+   },
+   "after": {
+    "stop_times": 4218,
+    "stops": 23,
+    "trips": 1446,
+    "routes": 81,
+    "bytes": 1536120
+   },
+   "agencies": [
+    {
+     "agency_name": "FlixBus-eu",
+     "routes": 81
+    }
+   ],
+   "validity": {
+    "from": "20261115",
+    "to": "20270514"
+   },
+   "tripsActiveOnTestDate": 59,
+   "faresInFeed": false,
+   "status": "importé",
+   "file": "flixbus.gtfs.zip"
+  },
+  {
+   "id": "blablacar-bus",
+   "url": "https://drive.google.com/uc?export=download&id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o",
+   "origin": "catalogue PAN (audit-national-operators)",
+   "finalUrl": "https://drive.usercontent.google.com/download?id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o&export=download",
+   "bytes": 192317,
+   "sha256": "060450e39074e7692b32945c1ff05407662c3fa7a536eca9170e2ea0ae03d6cd",
+   "before": {
+    "stops": 661,
+    "stop_times": 8953,
+    "trips": 1600
+   },
+   "after": {
+    "stop_times": 903,
+    "stops": 17,
+    "trips": 321,
+    "routes": 321,
+    "bytes": 30249
+   },
+   "agencies": [
+    {
+     "agency_name": "BlaBlaCar Bus",
+     "routes": 321
+    }
+   ],
+   "validity": {
+    "from": "20261116",
+    "to": "20270106"
+   },
+   "tripsActiveOnTestDate": 28,
+   "faresInFeed": false,
+   "status": "importé",
+   "file": "blablacar-bus.gtfs.zip"
+  },
+  {
+   "id": "sibra-annecy",
+   "url": "https://static.data.gouv.fr/resources/offre-de-transports-sibra-a-annecy-gtfs/20261112-080150/gtfs-sibra.zip",
+   "origin": "liste validée build_regional_gtfs.py",
+   "finalUrl": "https://static.data.gouv.fr/resources/offre-de-transports-sibra-a-annecy-gtfs/20261112-080150/gtfs-sibra.zip",
+   "bytes": 3415807,
+   "sha256": "f621165ccb9da1c3ac0c55673694ddb9d670a4ae8eb00c942482c7b8aeea8d1e",
+   "before": {
+    "stops": 1862,
+    "stop_times": 269669,
+    "trips": 9204
+   },
+   "after": {
+    "stop_times": 269669,
+    "stops": 1482,
+    "trips": 9204,
+    "routes": 32,
+    "bytes": 3183441
+   },
+   "agencies": [
+    {
+     "agency_name": "SIBRA",
+     "routes": 32
+    }
+   ],
+   "validity": {
+    "from": "20261112",
+    "to": "20261227"
+   },
+   "tripsActiveOnTestDate": 1833,
+   "faresInFeed": false,
+   "status": "importé",
+   "file": "sibra-annecy.gtfs.zip"
+  },
+  {
+   "id": "tac-annemasse",
+   "url": "https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip",
+   "origin": "liste validée build_regional_gtfs.py",
+   "finalUrl": "https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip",
+   "bytes": 712456,
+   "sha256": "fbc644c04aac5460cd96a6c7fd667fc6b588bbb2455bbed0d73cebb4bfaffaa7",
+   "before": {
+    "stops": 280,
+    "stop_times": 29782,
+    "trips": 1357
+   },
+   "after": {
+    "stop_times": 29782,
+    "stops": 280,
+    "trips": 1357,
+    "routes": 8,
+    "bytes": 709511
+   },
+   "agencies": [
+    {
+     "agency_name": "TAC Mobilités",
+     "routes": 8
+    }
+   ],
+   "validity": {
+    "from": "20261103",
+    "to": "20271231"
+   },
+   "tripsActiveOnTestDate": 496,
+   "faresInFeed": false,
+   "status": "importé",
+   "file": "tac-annemasse.gtfs.zip"
+  },
+  {
+   "id": "tcl-lyon",
+   "url": "https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8",
+   "origin": "liste validée build_regional_gtfs.py",
+   "finalUrl": "https://gtech-transit-prod.apigee.net/v1/google/gtfs/odbl/lyon_tcl.zip?apikey=BasyG6OFZXgXnzWdQLTwJFGcGmeOs204&secret=gNo6F5PhQpsGRBCK",
+   "bytes": 48881803,
+   "sha256": "72e89baa74995b592ca4c9e8a85b82e41e952da7175c2b33f01730a9481c5186",
+   "before": {
+    "stops": 8916,
+    "stop_times": 2999819,
+    "trips": 144761
+   },
+   "after": {
+    "stop_times": 2978765,
+    "stops": 6581,
+    "trips": 143781,
+    "routes": 519,
+    "bytes": 38716685
+   },
+   "agencies": [
+    {
+     "agency_name": "TCL",
+     "routes": 191
+    },
+    {
+     "agency_name": "Rhonexpress",
+     "routes": 1
+    },
+    {
+     "agency_name": "TCL",
+     "routes": 327
+    }
+   ],
+   "validity": {
+    "from": "20261016",
+    "to": "20270703"
+   },
+   "tripsActiveOnTestDate": 21320,
+   "faresInFeed": true,
+   "status": "importé",
+   "file": "tcl-lyon.gtfs.zip"
+  },
+  {
+   "id": "synchro-chambery",
+   "url": "https://www.data.gouv.fr/api/1/datasets/r/a81cdf4b-5a70-43c9-8803-cef0430ed170",
+   "origin": "liste validée build_regional_gtfs.py",
+   "finalUrl": "https://chambery.mecatran.com/utw/ws/gtfsfeed/static/chambery?apiKey=223f2f102c1242570d3f0231326a271940774f72&type=gtfs_urbain",
+   "bytes": 1516227,
+   "sha256": "7ed9fe98b45f12c129fad6e22dda0d609a612548337e9e9aeaddc16c29446aeb",
+   "before": {
+    "stops": 1240,
+    "stop_times": 202869,
+    "trips": 6722
+   },
+   "after": {
+    "stop_times": 202869,
+    "stops": 1240,
+    "trips": 6722,
+    "routes": 24,
+    "bytes": 1507332
+   },
+   "agencies": [
+    {
+     "agency_name": "Synchro Bus",
+     "routes": 24
+    }
+   ],
+   "validity": {
+    "from": "20261116",
+    "to": "20261220"
+   },
+   "tripsActiveOnTestDate": 1147,
+   "faresInFeed": false,
+   "status": "importé",
+   "file": "synchro-chambery.gtfs.zip"
+  },
+  {
+   "id": "ondea-grand-lac",
+   "url": "https://www.data.gouv.fr/api/1/datasets/r/b4e8d98c-e17a-4fb0-857f-8cb618039b2a",
+   "origin": "liste validée build_regional_gtfs.py",
+   "finalUrl": "https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/ctlb-aix-les-bains/exports/pan.zip",
+   "bytes": 1084758,
+   "sha256": "a4e636cd3ce782e89280ccb4c4fdc12871d625dc28e26410a39269de6295f341",
+   "before": {
+    "stops": 820,
+    "stop_times": 53948,
+    "trips": 2290
+   },
+   "after": {
+    "stop_times": 53948,
+    "stops": 814,
+    "trips": 2290,
+    "routes": 64,
+    "bytes": 1084075
+   },
+   "agencies": [
+    {
+     "agency_name": "Ondéa Grand Lac",
+     "routes": 64
+    }
+   ],
+   "validity": {
+    "from": "20261017",
+    "to": "20270331"
+   },
+   "tripsActiveOnTestDate": 520,
+   "faresInFeed": false,
+   "status": "importé",
+   "file": "ondea-grand-lac.gtfs.zip"
+  },
+  {
+   "id": "start-thonon",
+   "url": "https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e",
+   "origin": "liste validée build_regional_gtfs.py",
+   "finalUrl": "https://static.data.gouv.fr/resources/thonon-agglomeration-donnees-gtfs/20260831-135752/2026.08.18-2026.12.18-gtfs-start.zip",
+   "bytes": 2463700,
+   "sha256": "0a03088709f15c4dc2d67178eeb225ac3410ee58c15acfbb09f8f6636a79d85f",
+   "before": {
+    "stops": 530,
+    "stop_times": 269027,
+    "trips": 18231
+   },
+   "after": {
+    "stop_times": 269027,
+    "stops": 530,
+    "trips": 18231,
+    "routes": 26,
+    "bytes": 2455445
+   },
+   "agencies": [
+    {
+     "agency_name": "Réseau STAR'T",
+     "routes": 26
+    }
+   ],
+   "validity": {
+    "from": "20260817",
+    "to": "20261220"
+   },
+   "tripsActiveOnTestDate": 743,
+   "faresInFeed": false,
+   "status": "importé",
+   "file": "start-thonon.gtfs.zip"
+  }
+ ]
+}

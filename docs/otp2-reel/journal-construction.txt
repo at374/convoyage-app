@@ -1,0 +1,81 @@
+18:28:59.346 INFO [main]  (OtpStartupInfo.java:41) OTP STARTING UP - Build Street & Transit Graph - Version: 2.10.0, ser.ver.id: 277, commit: 521cd5d8acaae628878f43bf5946f4942c118548, branch: master - Java 25.0.4
+	GtfsGraphQlApi
+	TransmodelGraphQlApi
+	WaitForGraphUpdateInPollingUpdaters
+	AsyncGraphQLFetchers
+18:28:59.623 WARN [main]  (OTPFeature.java:206) FEATURES THAT SHOULD BE TURNED OFF IN PRODUCTION: 
+18:28:59.638 INFO [main]  (GraphBuilderDataSources.java:316) Data source location(s): HTTPS, /var/opentripplanner
+18:28:59.638 INFO [main]  (GraphBuilderDataSources.java:319) Existing files expected to be read or written:
+18:28:59.640 INFO [main]  (GraphBuilderDataSources.java:322) - ⚙️ build-config.json  /var/opentripplanner  2026-11-16 18:28:49  138 bytes
+18:28:59.640 INFO [main]  (GraphBuilderDataSources.java:322) - 🌍 couloir.osm.pbf  /var/opentripplanner  2026-11-16 18:28:49  75.8 MB
+18:28:59.641 INFO [main]  (GraphBuilderDataSources.java:322) - 🚌 sncf.gtfs.zip  /var/opentripplanner  2026-11-16 18:09:01  558 kB
+18:28:59.641 INFO [main]  (GraphBuilderDataSources.java:322) - 🚌 start-thonon.gtfs.zip  /var/opentripplanner  2026-11-16 18:12:23  2.5 MB
+18:28:59.641 INFO [main]  (GraphBuilderDataSources.java:322) - 🚌 tcl-lyon.gtfs.zip  /var/opentripplanner  2026-11-16 18:12:02  38.7 MB
+18:28:59.642 INFO [main]  (GraphBuilderDataSources.java:322) - 🚌 synchro-chambery.gtfs.zip  /var/opentripplanner  2026-11-16 18:12:06  1.5 MB
+18:28:59.642 INFO [main]  (GraphBuilderDataSources.java:322) - 🚌 ondea-grand-lac.gtfs.zip  /var/opentripplanner  2026-11-16 18:12:09  1.1 MB
+18:28:59.643 INFO [main]  (GraphBuilderDataSources.java:322) - 🚌 flixbus.gtfs.zip  /var/opentripplanner  2026-11-16 18:11:19  1.5 MB
+18:28:59.643 INFO [main]  (GraphBuilderDataSources.java:322) - 🚌 blablacar-bus.gtfs.zip  /var/opentripplanner  2026-11-16 18:11:20  30 kB
+18:28:59.643 INFO [main]  (GraphBuilderDataSources.java:322) - 🚌 sibra-annecy.gtfs.zip  /var/opentripplanner  2026-11-16 18:11:32  3.2 MB
+18:28:59.644 INFO [main]  (GraphBuilderDataSources.java:322) - 🚌 oura-agregat.gtfs.zip  /var/opentripplanner  2026-11-16 18:08:58  37.3 MB
+18:28:59.644 INFO [main]  (GraphBuilderDataSources.java:322) - 🚌 suisse-ski.gtfs.zip  /var/opentripplanner  2026-11-16 18:11:15  50.5 MB
+18:28:59.645 INFO [main]  (GraphBuilderDataSources.java:322) - 🚌 tac-annemasse.gtfs.zip  /var/opentripplanner  2026-11-16 18:11:33  709 kB
+18:28:59.645 INFO [main]  (GraphBuilderDataSources.java:327) Files excluded due to command line switches or unknown type:
+18:28:59.646 INFO [main]  (GraphBuilderDataSources.java:330) - ❓ osm.json  /var/opentripplanner  2026-11-16 18:28:49  504 bytes
+18:28:59.646 INFO [main]  (GraphBuilderDataSources.java:330) - ❓ sources.json  /var/opentripplanner  2026-11-16 18:12:23  14 kB
+18:28:59.677 WARN [main]  (ConstructApplication.java:110) Cannot create Raptor data, that requires the graph to have transit data and be indexed.
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::arrayBaseOffset has been called by com.esotericsoftware.kryo.unsafe.UnsafeUtil (file:/app/libs/kryo-5.5.0.jar)
+WARNING: Please consider reporting this to the maintainers of class com.esotericsoftware.kryo.unsafe.UnsafeUtil
+WARNING: sun.misc.Unsafe::arrayBaseOffset will be removed in a future release
+18:29:57.021 WARN [main]  (TransitDataImportBuilder.java:290) Limiting transit service days to time period: [2026-11-14, 2026-12-27)
+18:29:58.531 WARN [main]  (TransitDataImportBuilder.java:290) Limiting transit service days to time period: [2026-11-14, 2026-12-27)
+18:29:59.142 WARN [main]  (StopModelIndex.java:114) The stop index contains holes in it. 397 of 927 is null.
+18:30:13.297 WARN [main]  (TransitDataImportBuilder.java:290) Limiting transit service days to time period: [2026-11-14, 2026-12-27)
+18:30:14.876 WARN [main]  (StopModelIndex.java:114) The stop index contains holes in it. 927 of 7459 is null.
+18:30:16.032 WARN [main]  (TransitDataImportBuilder.java:290) Limiting transit service days to time period: [2026-11-14, 2026-12-27)
+18:30:16.140 WARN [main]  (StopModelIndex.java:114) The stop index contains holes in it. 7459 of 8272 is null.
+18:30:16.932 WARN [main]  (TransitDataImportBuilder.java:290) Limiting transit service days to time period: [2026-11-14, 2026-12-27)
+18:30:17.029 WARN [main]  (StopModelIndex.java:114) The stop index contains holes in it. 8272 of 9086 is null.
+18:30:17.345 WARN [main]  (TransitDataImportBuilder.java:290) Limiting transit service days to time period: [2026-11-14, 2026-12-27)
+18:30:17.589 WARN [main]  (StopModelIndex.java:114) The stop index contains holes in it. 9086 of 9109 is null.
+18:30:17.745 WARN [main]  (TransitDataImportBuilder.java:290) Limiting transit service days to time period: [2026-11-14, 2026-12-27)
+18:30:17.757 WARN [main]  (StopModelIndex.java:114) The stop index contains holes in it. 9109 of 9126 is null.
+18:30:19.093 WARN [main]  (TransitDataImportBuilder.java:290) Limiting transit service days to time period: [2026-11-14, 2026-12-27)
+18:30:19.287 WARN [main]  (StopModelIndex.java:114) The stop index contains holes in it. 9126 of 10113 is null.
+18:30:26.411 WARN [main]  (TransitDataImportBuilder.java:290) Limiting transit service days to time period: [2026-11-14, 2026-12-27)
+18:30:37.002 WARN [main]  (StopModelIndex.java:114) The stop index contains holes in it. 10113 of 21937 is null.
+18:30:37.158 ERROR [main]  (InterlineProcessor.java:201) Trip times within block VF14 are not increasing on after trip 8:BOURGOINxJALLIEU:ServiceJourney:1149x38784:LOC.
+18:31:03.376 WARN [main]  (TransitDataImportBuilder.java:290) Limiting transit service days to time period: [2026-11-14, 2026-12-27)
+18:31:08.405 WARN [main]  (StopModelIndex.java:114) The stop index contains holes in it. 21937 of 28367 is null.
+18:31:16.932 ERROR [main]  (InterlineProcessor.java:201) Trip times within block 72371 are not increasing on after trip 9:.ojp-92-7-M.1.TA.64.j26.
+18:31:16.932 ERROR [main]  (InterlineProcessor.java:201) Trip times within block 72371 are not increasing on after trip 9:.ojp-92-19-C.1.TA.160.j26.
+18:31:16.933 ERROR [main]  (InterlineProcessor.java:201) Trip times within block 72301 are not increasing on after trip 9:.ojp-92-3-P.1.TA.71.j26.
+18:31:16.933 ERROR [main]  (InterlineProcessor.java:201) Trip times within block 72301 are not increasing on after trip 9:.ojp-92-19-C.1.TA.87.j26.
+18:31:16.933 ERROR [main]  (InterlineProcessor.java:201) Trip times within block 72321 are not increasing on after trip 9:.ojp-92-3-P.1.TA.80.j26.
+18:31:16.933 ERROR [main]  (InterlineProcessor.java:201) Trip times within block 72321 are not increasing on after trip 9:.ojp-92-7-M.1.TA.68.j26.
+18:31:16.933 ERROR [main]  (InterlineProcessor.java:201) Trip times within block 72321 are not increasing on after trip 9:.ojp-92-19-C.1.TA.203.j26.
+18:31:16.933 ERROR [main]  (InterlineProcessor.java:201) Trip times within block 72321 are not increasing on after trip 9:.ojp-92-19-C.1.TA.167.j26.
+18:31:17.184 WARN [main]  (TransitDataImportBuilder.java:290) Limiting transit service days to time period: [2026-11-14, 2026-12-27)
+18:31:17.216 WARN [main]  (StopModelIndex.java:114) The stop index contains holes in it. 28367 of 28647 is null.
+18:31:18.669 INFO [main]  (Graph.java:281) Index street model...
+18:31:22.048 INFO [main]  (Graph.java:283) Index street model complete.
+18:33:07.366 INFO [main]  (GraphCoherencyCheckerModule.java:32) checking graph coherency...
+18:33:07.754 INFO [main]  (GraphCoherencyCheckerModule.java:51) edge lists and from/to members are coherent.
+18:33:17.282 INFO [main]  (DataImportIssueSummary.java:71)   - GraphConnectivity                               3
+18:33:17.283 INFO [main]  (DataImportIssueSummary.java:71)   - GraphIslandBICYCLE                          7,373
+18:33:17.283 INFO [main]  (DataImportIssueSummary.java:71)   - GraphIslandBICYCLENoThroughTraffic          5,383
+18:33:17.283 INFO [main]  (DataImportIssueSummary.java:71)   - GraphIslandCAR                              9,220
+18:33:17.283 INFO [main]  (DataImportIssueSummary.java:71)   - GraphIslandCARNoThroughTraffic              4,762
+18:33:17.283 INFO [main]  (DataImportIssueSummary.java:71)   - GraphIslandWALK                             7,510
+18:33:17.283 INFO [main]  (DataImportIssueSummary.java:71)   - GraphIslandWALKNoThroughTraffic             4,828
+18:33:17.473 INFO [main]  (GraphBuilder.java:303) Graph building took 4m17s477ms.
+18:33:17.473 INFO [main]  (GraphBuilder.java:304) Graph built.   |V|=1,588,792 |E|=3,921,100
+18:33:17.473 INFO [main]  (GraphBuilder.java:305) Transit built. |Stops|=28,647 |Patterns|=15,363 |ConstrainedTransfers|=98,200
+18:33:17.475 INFO [main]  (GraphBuilder.java:312) Memory optimized Deduplicator{BitSet: 309(577605), int[]: 638782(1732815), I18NString: 107(1153), I18NString[]: 123(2190), List<BookingInfo>: 51(1155210)}
+18:33:18.026 INFO [main]  (SerializedGraphObject.java:277) Writing graph graph.obj  ...
+18:33:18.027 INFO [main]  (SerializedGraphObject.java:254) Save graph.obj progress tracking started.
+18:33:23.033 INFO [main]  (SerializedGraphObject.java:254) Save graph.obj progress: 232.0 MB done
+18:33:28.040 INFO [main]  (SerializedGraphObject.java:254) Save graph.obj progress: 490.5 MB done
+18:33:31.841 INFO [main]  (SerializedGraphObject.java:254) Save graph.obj progress tracking complete. 624.8 MB done in 13s814ms (45.2 MB per second). 
+18:33:31.841 INFO [main]  (SerializedGraphObject.java:284) Graph written: graph.obj
+18:33:31.842 INFO [server-shutdown-info]  (OtpStartupInfo.java:48) OTP SHUTTING DOWN 4m32s499ms - Build Street & Transit Graph - Version: 2.10.0, ser.ver.id: 277, commit: 521cd5d8acaae628878f43bf5946f4942c118548, branch: master
