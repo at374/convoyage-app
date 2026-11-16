@@ -166,6 +166,18 @@ jobs:
           git commit -q -m "Rapport OTP2 réel : graphe AURA–Suisse et axes (exécution ${GITHUB_RUN_ID})"
           for i in 1 2 3; do git pull -q --rebase origin "${GITHUB_REF_NAME}" && git push -q origin "HEAD:${GITHUB_REF_NAME}" && exit 0; sleep 5; done
           exit 1
+      # Graphe validé mis à disposition du script de déploiement (scripts/otp-reel/deployer-cloud-run.sh).
+      - name: Publier le graphe validé (release otp2-graphe)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test -s otp-data/graph.obj && test -s docs/otp2-reel/rapport-otp2-reel.json
+          (cd otp-data && sha256sum graph.obj > graph.obj.sha256)
+          notes="Graphe OpenTripPlanner ${OTP_IMAGE##*:} AURA–Suisse construit le $(date -u +%Y-%m-%d) (exécution ${GITHUB_RUN_ID}). Données : GTFS officiels (voir docs/otp2-reel/) et © contributeurs OpenStreetMap (ODbL)."
+          gh release view otp2-graphe >/dev/null 2>&1 || gh release create otp2-graphe --prerelease --target "$GITHUB_SHA" --title "Graphe OTP2 AURA–Suisse" --notes "$notes"
+          gh release edit otp2-graphe --notes "$notes"
+          gh release upload otp2-graphe otp-data/graph.obj otp-data/graph.obj.sha256 --clobber
       - name: Conserver le graphe et les journaux
         if: always()
         uses: actions/upload-artifact@v4
