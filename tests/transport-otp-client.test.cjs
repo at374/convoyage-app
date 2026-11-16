@@ -21,3 +21,16 @@ test('OTP2 client : normalise une réponse simulée sans confirmer tarifs ou tem
 test('OTP2 client : refuse les erreurs GraphQL',async()=>{
  await assert.rejects(search({enabled:true,endpoint:'https://otp.example.org/graphql',query:'query Demo { plan { itineraries { legs { mode } } } }',fetch:async()=>({ok:true,json:async()=>({errors:[{message:'bad'}]})})}),/GraphQL/);
 });
+
+test('OTP2 client : abandonne la requête si la mission est annulée',async()=>{
+ const controller=new AbortController();
+ let observed;
+ const pending=search({enabled:true,endpoint:'https://otp.example.org/graphql',query:'query Demo { plan { itineraries { legs { mode } } } }',signal:controller.signal,
+  fetch:async(_url,opts)=>{observed=opts.signal;return new Promise((_resolve,reject)=>{
+   opts.signal.addEventListener('abort',()=>reject(Object.assign(new Error('aborted'),{name:'AbortError'})),{once:true});
+  });}});
+ await new Promise(resolve=>setImmediate(resolve));
+ controller.abort();
+ await assert.rejects(pending,/aborted/);
+ assert.equal(observed.aborted,true);
+});
