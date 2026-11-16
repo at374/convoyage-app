@@ -1,0 +1,42 @@
+name: Android readiness (no build or deployment)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    if: github.ref == 'refs/heads/feature/transports-aura-suisse' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      HAS_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD != '' }}
+      HAS_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS != '' }}
+      HAS_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check web assets and signing secret presence
+        shell: bash
+        run: |
+          set -euo pipefail
+          for path in index.html manifest.webmanifest style.css sw.js; do
+            test -f "$path" || { echo "::error::Missing web asset: $path"; exit 1; }
+          done
+          echo "Web application assets: OK"
+          missing=0
+          for key in HAS_KEYSTORE HAS_STORE_PASSWORD HAS_KEY_ALIAS HAS_KEY_PASSWORD; do
+            if [[ "${!key}" != "true" ]]; then
+              echo "::warning::Android signing configuration is incomplete ($key)"
+              missing=1
+            fi
+          done
+          if [[ "$missing" == 0 ]]; then
+            echo "All four Android signing secrets are present (values not read or printed)."
+          fi
+          if [[ ! -f android/app/build.gradle && ! -f android/app/build.gradle.kts ]]; then
+            echo "::notice::Android Gradle project not yet present; no APK can be built."
+          fi
+          echo "No keystore decoded, no APK built, no deployment performed."
