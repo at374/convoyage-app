@@ -15,8 +15,19 @@ if [[ "$MODE" == "build" ]]; then
     echo "Requis : au moins un fichier .zip GTFS et un *.osm.pbf dans $DIR" >&2
     exit 2
   fi
+  command -v unzip >/dev/null || { echo "unzip requis pour vérifier les archives GTFS" >&2; exit 2; }
+  for file in "${osm[@]}"; do
+    [[ -s "$file" ]] || { echo "Extrait OSM vide : $file" >&2; exit 2; }
+  done
   for zip in "${gtfs[@]}"; do
-    if command -v unzip >/dev/null; then unzip -tq "$zip" >/dev/null || { echo "ZIP GTFS corrompu : $zip" >&2; exit 2; }; fi
+    [[ -s "$zip" ]] || { echo "Archive GTFS vide : $zip" >&2; exit 2; }
+    unzip -tq "$zip" >/dev/null || { echo "ZIP GTFS corrompu : $zip" >&2; exit 2; }
+    listing="$(unzip -Z -1 "$zip")"
+    for required in agency.txt stops.txt routes.txt trips.txt stop_times.txt; do
+      if ! printf '%s\\n' "$listing" | grep -Eq "(^|/)$required$"; then
+        echo "Archive non GTFS : $zip (manque $required)" >&2; exit 2
+      fi
+    done
   done
   echo "Construction locale du graphe : $IMAGE"
   docker run --rm --memory=12g --cpus=2 -e JAVA_TOOL_OPTIONS="-Xmx9g" \
