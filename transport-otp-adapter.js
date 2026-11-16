@@ -43,6 +43,9 @@ function parse(response){
     if(12742000*Math.asin(Math.min(1,Math.sqrt(h)))>150)return null;
    }
    const walk=mode==='WALK';
+   // Une durée de marche n'est pas une preuve de cheminement routable ;
+   // rejeter les distances absurdes plutôt que les afficher comme trajet piéton.
+   if(walk&&(!Number.isFinite(raw.distance)||raw.distance<0||!Number.isFinite(raw.duration)||raw.duration<0))return null;
    legs.push({
     kind:walk?'walk':'transit',mode:MODE[mode],
     line:walk?null:String(raw.route?.shortName||raw.route?.longName||raw.routeShortName||'').trim()||null,
