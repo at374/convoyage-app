@@ -1,0 +1,13 @@
+{
+  "name": "convoyage-ultra-android-twa",
+  "private": true,
+  "description": "Génère et construit l'APK Android (Trusted Web Activity) de Convoyage Ultra à partir du PWA publié sur GitHub Pages.",
+  "scripts": {
+    "generate": "node generate-twa-project.js",
+    "build": "bubblewrap build --manifest=./app/twa-manifest.json --directory=./app"
+  },
+  "dependencies": {
+    "@bubblewrap/cli": "^1.27.0",
+    "@bubblewrap/core": "^1.27.0"
+  }
+}

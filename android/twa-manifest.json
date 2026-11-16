@@ -1,0 +1,26 @@
+{
+  "packageId": "fr.convoyageultra.app",
+  "host": "at374.github.io",
+  "name": "Convoyage Ultra",
+  "launcherName": "Convoyage Ultra",
+  "display": "standalone",
+  "themeColor": "#101827",
+  "navigationColor": "#101827",
+  "backgroundColor": "#101827",
+  "startUrl": "/convoyage-app/index.html",
+  "iconUrl": "https://at374.github.io/convoyage-app/icones/icone-512.png",
+  "maskableIconUrl": "https://at374.github.io/convoyage-app/icones/icone-masquable-512.png",
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://at374.github.io/convoyage-app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "enableNotifications": false,
+  "orientation": "portrait",
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "convoyage-ultra"
+  }
+}
