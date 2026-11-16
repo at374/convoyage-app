@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-11-16T18:43:49+00:00",
+ "generatedAt": "2026-11-16T18:47:07+00:00",
  "testDate": "2026-11-24",
  "bbox": {
   "latMin": 45.4,
@@ -25,7 +25,7 @@
     "stops": 1482,
     "trips": 9204,
     "routes": 32,
-    "bytes": 3183517
+    "bytes": 3183407
    },
    "excludedAgencies": [],
    "excludedTrips": 0,
@@ -61,7 +61,7 @@
     "stops": 280,
     "trips": 1357,
     "routes": 8,
-    "bytes": 709548
+    "bytes": 709547
    },
    "excludedAgencies": [],
    "excludedTrips": 0,
@@ -97,7 +97,7 @@
     "stops": 6581,
     "trips": 143781,
     "routes": 519,
-    "bytes": 38716770
+    "bytes": 38716508
    },
    "excludedAgencies": [],
    "excludedTrips": 0,
@@ -141,7 +141,7 @@
     "stops": 1240,
     "trips": 6722,
     "routes": 24,
-    "bytes": 1507433
+    "bytes": 1507344
    },
    "excludedAgencies": [],
    "excludedTrips": 0,
@@ -177,7 +177,7 @@
     "stops": 814,
     "trips": 2290,
     "routes": 64,
-    "bytes": 1084066
+    "bytes": 1084041
    },
    "excludedAgencies": [],
    "excludedTrips": 0,
@@ -213,7 +213,7 @@
     "stops": 530,
     "trips": 18231,
     "routes": 26,
-    "bytes": 2455435
+    "bytes": 2455406
    },
    "excludedAgencies": [],
    "excludedTrips": 0,
@@ -249,7 +249,7 @@
     "stops": 23,
     "trips": 1446,
     "routes": 81,
-    "bytes": 1536124
+    "bytes": 1536126
    },
    "excludedAgencies": [],
    "excludedTrips": 0,
@@ -285,7 +285,7 @@
     "stops": 17,
     "trips": 321,
     "routes": 321,
-    "bytes": 30255
+    "bytes": 30248
    },
    "excludedAgencies": [],
    "excludedTrips": 0,
@@ -321,7 +321,7 @@
     "stops": 648,
     "trips": 6988,
     "routes": 101,
-    "bytes": 549420
+    "bytes": 549336
    },
    "excludedAgencies": [
     "CFF"
@@ -367,7 +367,7 @@
     "stops": 9416,
     "trips": 22376,
     "routes": 541,
-    "bytes": 32562853
+    "bytes": 32563700
    },
    "excludedAgencies": [
     "AIX-LES-BAINS - Ondéa",
@@ -471,7 +471,7 @@
    "id": "suisse-ski",
    "url": "https://data.opentransportdata.swiss/dataset/timetable-2026-gtfs2020/permalink",
    "origin": "permalien (API CKAN en échec : HTTP Error 403: Forbidden)",
-   "finalUrl": "https://83025b28472d6aa2bf5ae59f3724aa78.eu.r2.cloudflarestorage.com/dx-omd-prod/resources/c19fcd23-d911-4a7d-8f61-2d7d4dff23d1/gtfs_fp2026_20261114.zip?response-content-disposition=attachment%3B%20filename%3Dgtfs_fp2026_20261114.zip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=9bd93e9511bb186699e38b472e825929%2F20261116%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20261116T184452Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&X-Amz-Signature=dd9cff14e46843a1287b37c3ce7013ceea5f0356ae7227d706bb0c74a9b13302",
+   "finalUrl": "https://83025b28472d6aa2bf5ae59f3724aa78.eu.r2.cloudflarestorage.com/dx-omd-prod/resources/c19fcd23-d911-4a7d-8f61-2d7d4dff23d1/gtfs_fp2026_20261114.zip?response-content-disposition=attachment%3B%20filename%3Dgtfs_fp2026_20261114.zip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=9bd93e9511bb186699e38b472e825929%2F20261116%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20261116T184820Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&X-Amz-Signature=3ade51fbf1021d8bbcc3cc4c3d2d86d6c34c33b3f296bc677a7a14e749e92e95",
    "bytes": 292103653,
    "sha256": "c221979f0dc36df7c92d3fcd9af799c46140aa2865b271b284030183f0e2ae85",
    "before": {
@@ -484,7 +484,7 @@
     "stops": 7364,
     "trips": 379864,
     "routes": 301,
-    "bytes": 47134105
+    "bytes": 47133523
    },
    "excludedAgencies": [
     "Société Nationale des Chemins de fer Français",
