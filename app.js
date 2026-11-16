@@ -1593,7 +1593,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             const fetcher = (...a) => window.fetch(...a);
             const router = H.cachedRouter(window.CPTransportWalking?.createRouter({ fetcher, maxRequests: 200, intervalMs: 1100 }), { storage: window.localStorage });
             const report = await C.runDiagnostic({ hub: H, router, storage: window.localStorage, host: $('rCouverture'),
-              providers: H.makeProviders(window, { fetcher, regionalEndpoint: window.CP_REGIONAL_ROUTING_ENDPOINT }),
+              providers: H.makeProviders(window, { fetcher, regionalEndpoint: window.CP_REGIONAL_ROUTING_ENDPOINT, nationalGTFSResources: window.CP_NATIONAL_GTFS_RESOURCES || {} }),
               fareFor: leg => { try { return window.CPTransportFareGrids?.fareFor(leg) || null; } catch (_) { return null; } },
               gtfsAgenda: window.CPGTFSAgenda && window.CPGTFSWorker ? window.CPGTFSAgenda : null,
               onProgress: (axis, v) => { out.textContent = 'Diagnostic : ' + axis.name + ' — ' + v.total + ' trajet(s)…'; } });
