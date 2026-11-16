@@ -25,7 +25,7 @@ if [[ "$MODE" == "build" ]]; then
     unzip -tq "$zip" >/dev/null || { echo "ZIP GTFS corrompu : $zip" >&2; exit 2; }
     listing="$(unzip -Z -1 "$zip")"
     for required in agency.txt stops.txt routes.txt trips.txt stop_times.txt; do
-      if ! printf '%s\\n' "$listing" | grep -Eq "(^|/)$required$"; then
+      if ! printf '%s\n' "$listing" | grep -Eq "(^|/)$required$"; then
         echo "Archive non GTFS : $zip (manque $required)" >&2; exit 2
       fi
     done

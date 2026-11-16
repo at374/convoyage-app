@@ -118,3 +118,20 @@ test('OTP2 : accepte start/end scheduledTime et rejette un horaire manquant',()=
  assert.equal(parse({planConnection:{edges:[{node:{legs:[nested]}}]}}).length,1);
  assert.deepEqual(parse({planConnection:{edges:[{node:{legs:[{...nested,end:null}]}}]}}),[]);
 });
+
+test('OTP2 : tracé piéton décodé seulement s’il est valide et collé aux extrémités',()=>{
+ const {parse,decodePolyline}=require('../transport-otp-adapter.js');
+ // Exemple de référence de l'algorithme : (38.5,-120.2) (40.7,-120.95) (43.252,-126.453).
+ const ref=decodePolyline('_p~iF~ps|U_ulLnnqC_mqNvxq`@');
+ assert.deepEqual(ref,[{lat:38.5,lon:-120.2},{lat:40.7,lon:-120.95},{lat:43.252,lon:-126.453}]);
+ assert.equal(decodePolyline('_p~iF'),null);
+ assert.equal(decodePolyline('\u0001\u0002'),null);
+ assert.equal(decodePolyline(''),null);
+ const walk=points=>({data:{planConnection:{edges:[{node:{legs:[{mode:'WALK',distance:300,duration:240,
+  start:{scheduledTime:'2026-11-24T08:00:00+01:00'},end:{scheduledTime:'2026-11-24T08:04:00+01:00'},
+  from:{name:'A',lat:38.5,lon:-120.2},to:{name:'B',lat:43.252,lon:-126.453},legGeometry:{points}}]}}]}}});
+ const ok=parse(walk('_p~iF~ps|U_ulLnnqC_mqNvxq`@'))[0].legs[0];
+ assert.equal(ok.geometry.length,3);assert.equal(ok.walkSource,'provider');
+ const bad=parse(walk('_p~iF~ps|U_ulLnnqC'))[0].legs[0]; // se termine loin du point d'arrivée
+ assert.equal(bad.geometry,null);assert.equal(bad.walkSource,null);
+});

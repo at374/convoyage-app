@@ -34,3 +34,15 @@ test('OTP2 client : abandonne la requête si la mission est annulée',async()=>{
  await assert.rejects(pending,/aborted/);
  assert.equal(observed.aborted,true);
 });
+
+test('OTP2 client : requête standard de fiche mission depuis les points GPS, sans saisie',()=>{
+ const {buildQuery}=require('../transport-otp-client.js');
+ const q=buildQuery({from:{lat:45.9017,lng:6.1219},to:{lat:46.2102,lon:6.1424}},{when:'2026-11-24T07:00:00.000Z',arriveBy:false});
+ assert.match(q.query,/planConnection\(origin:\{location:\{coordinate:\{latitude:45\.9017,longitude:6\.1219\}\}\}/);
+ assert.match(q.query,/earliestDeparture:"2026-11-24T07:00:00\.000Z"/);
+ assert.match(q.query,/legGeometry\{points\}/);
+ assert.match(buildQuery({from:{lat:1,lon:2},to:{lat:3,lon:4}},{when:'2026-11-24T07:00:00Z',arriveBy:true}).query,/latestArrival/);
+ assert.equal(buildQuery({from:{lat:'x',lon:2},to:{lat:3,lon:4}},{when:'2026-11-24T07:00:00Z'}),null);
+ assert.equal(buildQuery({from:{lat:1,lon:2},to:{lat:3,lon:4}},{when:'pas une date'}),null);
+ assert.equal(buildQuery({from:{lat:1,lon:2}},{when:'2026-11-24T07:00:00Z'}),null);
+});

@@ -21,6 +21,30 @@ function time(v){
  }
  return null;
 }
+// Polyligne encodée (précision 5) fournie par OTP2 : tracé piéton calculé sur OpenStreetMap.
+// Toute anomalie (caractère invalide, point hors bornes, moins de 2 points) → null, jamais de tracé inventé.
+function decodePolyline(text){
+ if(typeof text!=='string'||!text||text.length>200000)return null;
+ const out=[];let i=0,lat=0,lon=0;
+ while(i<text.length){
+  for(const axis of [0,1]){
+   let shift=0,result=0,b;
+   do{
+    if(i>=text.length)return null;
+    b=text.charCodeAt(i++)-63;
+    if(b<0||b>63)return null;
+    result|=(b&31)<<shift;shift+=5;
+   }while(b>=32&&shift<=30);
+   if(b>=32)return null;
+   const delta=result&1?~(result>>1):result>>1;
+   if(axis===0)lat+=delta;else lon+=delta;
+  }
+  const p=point({lat:lat/1e5,lon:lon/1e5});
+  if(!p)return null;
+  out.push(p);
+ }
+ return out.length>=2?out:null;
+}
 function parse(response){
  const rootPlan=response?.data??response;
  const plan=rootPlan?.plan;
@@ -54,6 +78,12 @@ function parse(response){
    // Une durée de marche n'est pas une preuve de cheminement routable ;
    // rejeter les distances absurdes plutôt que les afficher comme trajet piéton.
    if(walk&&(!Number.isFinite(raw.distance)||raw.distance<0||!Number.isFinite(raw.duration)||raw.duration<0))return null;
+   // Tracé piéton OTP2 (OpenStreetMap) : accepté seulement si ses extrémités collent aux points du segment.
+   let geometry=walk?decodePolyline(raw.legGeometry?.points):null;
+   if(geometry){
+    const near=(a,b)=>Math.abs(a.lat-b.lat)<0.003&&Math.abs(a.lon-b.lon)<0.004;
+    if(!near(geometry[0],fromPoint)||!near(geometry[geometry.length-1],toPoint))geometry=null;
+   }
    legs.push({
     kind:walk?'walk':'transit',mode:MODE[mode],
     line:walk?null:String(raw.route?.shortName||raw.route?.longName||raw.routeShortName||'').trim()||null,
@@ -62,8 +92,8 @@ function parse(response){
     fromPoint,toPoint,departure,arrival,
     distanceMeters:Number.isFinite(raw.distance)&&raw.distance>=0?raw.distance:null,
     durationSeconds:Number.isFinite(raw.duration)&&raw.duration>=0?raw.duration:null,
-    // Les géométries OTP doivent être décodées et validées par le moteur piéton existant.
-    walkSource:null,geometry:null,realtime:false,delayMinutes:null,cancelled:false,
+    // Sans tracé OTP valide, la marche reste à vérifier par le moteur piéton existant.
+    walkSource:geometry?'provider':null,geometry,realtime:false,delayMinutes:null,cancelled:false,
     fare:null,ticketUrl:null
    });
   }
@@ -71,7 +101,7 @@ function parse(response){
    alerts:[],realtime:false,dataDate:null};
  }).filter(Boolean);
 }
-const api={parse};
+const api={parse,decodePolyline};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPOTPAdapter=api;
 })(typeof window!=='undefined'?window:globalThis);

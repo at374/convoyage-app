@@ -32,7 +32,23 @@ async function search(config){
   return {journeys,source:'OpenTripPlanner (GTFS)',realtime:false,pricesVerified:false};
  }finally{clearTimeout(timer);c.signal?.removeEventListener?.('abort',abort);}
 }
-const api={search};
+// Requête standard de la fiche mission (API GraphQL GTFS d'OTP2, planConnection) :
+// construite uniquement depuis les points GPS exacts et la fenêtre horaire de la mission, sans saisie.
+const FIELDS='edges{node{start end legs{mode duration distance start{scheduledTime} end{scheduledTime} '+
+ 'from{name lat lon} to{name lat lon} route{shortName longName agency{name}} legGeometry{points}}}}';
+function buildQuery(task,window,count){
+ const ok=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180;
+ const norm=p=>p&&typeof p==='object'&&p.lat!=null&&(p.lon??p.lng)!=null?{lat:Number(p.lat),lon:Number(p.lon??p.lng)}:null;
+ const f=norm(task?.from),t=norm(task?.to);
+ if(!ok(f)||!ok(t)||!window||typeof window.when!=='string')return null;
+ const when=new Date(window.when);
+ if(!Number.isFinite(when.getTime()))return null;
+ const n=Number.isInteger(count)&&count>0&&count<=10?count:6;
+ const at=p=>'{location:{coordinate:{latitude:'+Number(p.lat)+',longitude:'+Number(p.lon)+'}}}';
+ const key=window.arriveBy===true?'latestArrival':'earliestDeparture';
+ return {query:'{planConnection(origin:'+at(f)+',destination:'+at(t)+',dateTime:{'+key+':"'+when.toISOString()+'"},first:'+n+'){'+FIELDS+'}}',variables:{}};
+}
+const api={search,buildQuery};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPOTPClient=api;
 })(typeof window!=='undefined'?window:globalThis);
