@@ -32,6 +32,7 @@ function parse(response){
    if(FORBIDDEN.test(mode)||!MODE[mode])return null;
    const departure=time(raw.startTime),arrival=time(raw.endTime);
    if(!departure||!arrival||Date.parse(arrival)<Date.parse(departure))return null;
+   if(legs.length&&Date.parse(departure)<Date.parse(legs[legs.length-1].arrival))return null;
    const fromPoint=point(raw.from),toPoint=point(raw.to);
    if(!fromPoint||!toPoint)return null;
    const walk=mode==='WALK';
