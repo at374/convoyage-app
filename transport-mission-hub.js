@@ -727,7 +727,7 @@ function makeProviders(r,opts={}){
    if(signal?.aborted)return [];
    const response=await r.CPOTPClient.search({
     enabled:true,endpoint:opts.otpEndpoint,query:request.query,
-    variables:request.variables||{},fetch:fetcher,timeoutMs:opts.otpTimeoutMs
+    variables:request.variables||{},fetch:fetcher,timeoutMs:opts.otpTimeoutMs,signal
    });
    if(signal?.aborted)return [];
    return response.journeys;
