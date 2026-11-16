@@ -12,7 +12,10 @@ function point(p){
  return Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180&&!(lat===0&&lon===0)?{lat,lon}:null;
 }
 function time(v){
- if(typeof v==='number'&&Number.isFinite(v))return new Date(v<1e11?v*1000:v).toISOString();
+ if(typeof v==='number'&&Number.isFinite(v)){
+  const d=new Date(v<1e11?v*1000:v);
+  return Number.isFinite(d.getTime())?d.toISOString():null;
+ }
  if(typeof v==='string'&&/(Z|[+-]\d{2}:\d{2})$/i.test(v)){
   const d=new Date(v);return Number.isFinite(d.getTime())?d.toISOString():null;
  }
