@@ -1,13 +1,13 @@
 {
  "schemaVersion": 1,
- "generatedAt": "2026-11-15T20:16:16.618468+00:00",
+ "generatedAt": "2026-11-16T10:09:22.086792+00:00",
  "scope": "GTFS officiels réduits ou recopiés ; aucun horaire ni tarif créé",
  "networks": {
   "jybus-rumilly": {
    "network": "J'y bus Rumilly",
    "file": "jybus-rumilly.zip",
-   "sha256": "6e277a551b24fdcf4271750434439015386a96d98db07511503d85146444e2f9",
-   "bytes": 62774,
+   "sha256": "30ec204474947ec011b2932e0770d7a90af91175e146a4fe43e84c067a94fe50",
+   "bytes": 62798,
    "bounds": [
     45.8,
     5.85,
@@ -26,8 +26,8 @@
   "tam-amberieu": {
    "network": "TAM Ambérieu-en-Bugey",
    "file": "tam-amberieu.zip",
-   "sha256": "6c8879640d5d2ef64be73f6e3090e8e940070539e489c44e1ef1a445675bcd33",
-   "bytes": 13991,
+   "sha256": "93a808da251f6d5aaabdfcf95acd931fba50438f41765f33929c4e6164d9c05f",
+   "bytes": 13984,
    "bounds": [
     45.9,
     5.28,
@@ -46,8 +46,8 @@
   "cars-region-isere": {
    "network": "Cars Région Isère",
    "file": "cars-region-isere.zip",
-   "sha256": "ebf42131c42353bf618f5488b22ce924e215171206918c10d82e01d0344d3306",
-   "bytes": 691867,
+   "sha256": "97bb9c5f0139a59fd5ec559e4380967f6a96e7599742cb8b049ce1959773bc01",
+   "bytes": 690265,
    "bounds": [
     44.69,
     4.74,
@@ -66,8 +66,8 @@
   "cars-region-savoie": {
    "network": "Cars Région Savoie",
    "file": "cars-region-savoie.zip",
-   "sha256": "94cd204c291e2ce013b084ebf5f6b7ab35cbb1707e45448cc9557c49c3695c2b",
-   "bytes": 20944,
+   "sha256": "b1bf8849d4aaabf81acfe4158f68082b7c886c7a2ee72d09df5368827c9116c1",
+   "bytes": 20948,
    "bounds": [
     45.05,
     5.62,
@@ -86,8 +86,8 @@
   "rubis-bourg": {
    "network": "Rubis Bourg-en-Bresse",
    "file": "rubis-bourg.zip",
-   "sha256": "d471c45ecb90bb569fca8ca553e3273d5ea723d7c0541affae42701689d27024",
-   "bytes": 232221,
+   "sha256": "0ac545a1e897ab89465affeaa42bb42411d26f4a7ae7be5ad33705464fa2d5a8",
+   "bytes": 232201,
    "bounds": [
     46.15,
     5.05,
@@ -106,8 +106,8 @@
   "evad-evian": {
    "network": "ÉVA'D Évian",
    "file": "evad-evian.zip",
-   "sha256": "1146e48a7cbe7a0f428ba23328726edec60082f2906b73c8329faffaa7371ce2",
-   "bytes": 191021,
+   "sha256": "c2ea8a83120a70e090f9ee57d2c3273d19325ad5ea42588b8e42631b520134f5",
+   "bytes": 190959,
    "bounds": [
     46.24,
     6.45,
@@ -126,8 +126,8 @@
   "chamonix-bus": {
    "network": "Chamonix Bus",
    "file": "chamonix-bus.zip",
-   "sha256": "101ef958b1ed2554364c16a540d226ebf12b12f328b2de86b21173767f7415af",
-   "bytes": 178424,
+   "sha256": "b8092d23dcac8534c12229a3ef0947f3e717434dbfe7e436beaccbf334251877",
+   "bytes": 178414,
    "bounds": [
     45.87,
     6.74,
@@ -146,8 +146,8 @@
   "proximiti-bonneville": {
    "network": "Proxim iTi Bonneville – La Roche",
    "file": "proximiti-bonneville.zip",
-   "sha256": "9e4594aa505bea7dbe24d42ecb635e7dcb69903a21fbefaf640f0b15afb120aa",
-   "bytes": 115157,
+   "sha256": "f22e00f5bbebadbf1af55740ee515ba58c7c73885ae43055857b943be9603567",
+   "bytes": 115158,
    "bounds": [
     45.91,
     6.17,
@@ -166,8 +166,8 @@
   "mobivals-valserhone": {
    "network": "Mobi'Vals Valserhône",
    "file": "mobivals-valserhone.zip",
-   "sha256": "2b6ef2016007ba89043c787de67f94114809eb46732e7968f78be1d3083ee938",
-   "bytes": 162431,
+   "sha256": "8178babadabf234dea4994581bc39093009d70ec54c3fe0fd2bb2c64156baf3b",
+   "bytes": 162493,
    "bounds": [
     46.08,
     5.76,
@@ -186,8 +186,8 @@
   "tra-albertville": {
    "network": "TRA Mobilité Albertville",
    "file": "tra-albertville.zip",
-   "sha256": "2a93c98e3c0ba9cdb72b7460c2ff40b632be23273d66ff0331964d7ab0a87684",
-   "bytes": 62816,
+   "sha256": "e063bd0c987685e95a6a2caf7ac8d5973f95e1cda32d99a3edc4ab1f16d92b6b",
+   "bytes": 62806,
    "bounds": [
     45.55,
     6.22,
@@ -206,8 +206,8 @@
   "duobus-oyonnax": {
    "network": "Duobus Oyonnax",
    "file": "duobus-oyonnax.zip",
-   "sha256": "820b76f5176fc41f72b5eae658c4c458e937630468485c164d96f6ab4d70e9ac",
-   "bytes": 35736,
+   "sha256": "e257936cc4efbdae375dd44bd6e1737f06691a619636dca9d2d45c401950ea91",
+   "bytes": 35701,
    "bounds": [
     46.19,
     5.59,
@@ -226,8 +226,8 @@
   "ruban-bourgoin": {
    "network": "Ruban Bourgoin-Jallieu",
    "file": "ruban-bourgoin.zip",
-   "sha256": "64a2983de2289b918d0ac31e942f4a9220ec8fa7f16530517452bf591d7a802b",
-   "bytes": 464372,
+   "sha256": "b1ac8e12743d87b383898e2fe66779bc22dc9775fcbbd156df4cf0503fc4f366",
+   "bytes": 464621,
    "bounds": [
     45.48,
     5.08,
@@ -246,8 +246,8 @@
   "lva-vienne": {
    "network": "L'va Vienne",
    "file": "lva-vienne.zip",
-   "sha256": "6a8456feb6bc86313043f591fa7dda8f4bf0ecddc7933267c8842292734eb7c1",
-   "bytes": 2099906,
+   "sha256": "de9e13bc47309ee940946d28819407591dc6c4a5bdda621ddd2822abe4757df0",
+   "bytes": 2099744,
    "bounds": [
     45.39,
     4.59,
@@ -266,8 +266,8 @@
   "colibri-miribel": {
    "network": "Colibri Miribel",
    "file": "colibri-miribel.zip",
-   "sha256": "54d8bf224df3e9cc25899c56fb828bf1ad8bcfa1f379f55ee5f97d2060ff110b",
-   "bytes": 17080,
+   "sha256": "5f6f68ecd001f2554b595d3991879b2d91768d29b27334d8f49bcfe3e7476183",
+   "bytes": 17066,
    "bounds": [
     45.8,
     4.89,
@@ -286,8 +286,8 @@
   "tico-montluel": {
    "network": "TICO Montluel",
    "file": "tico-montluel.zip",
-   "sha256": "0bd7c62813f60cc88e5b00461207af30b077dac3d2a607a33f0e432b864cc8fa",
-   "bytes": 6981,
+   "sha256": "889ae55cd2d4fe1d4a4139cbaae18355c553c02595f35aceeea0ab83488d16d2",
+   "bytes": 6983,
    "bounds": [
     45.81,
     5.03,
@@ -306,8 +306,8 @@
   "saonibus-trevoux": {
    "network": "Saônibus Trévoux",
    "file": "saonibus-trevoux.zip",
-   "sha256": "ecbea1801e5f706d53e58c01ca81612cc4ea404b08714405da4ec8624539aadc",
-   "bytes": 8996,
+   "sha256": "83f35c0184a4565fc2bc482d7f8027689cb56653199660ecf2ca580766eaaf51",
+   "bytes": 8992,
    "bounds": [
     45.86,
     4.7,
@@ -326,8 +326,8 @@
   "cars-region-express": {
    "network": "Cars Région Express",
    "file": "cars-region-express.zip",
-   "sha256": "207efb71eaf322fb0a16197df3301745ecbeb643219de9f7e076ff5f88f280a4",
-   "bytes": 57808,
+   "sha256": "58a68c13ee04e7c2970d7f5df8517606544930090d8da4fefe169c88300a6014",
+   "bytes": 57870,
    "bounds": [
     44.35,
     2.8,
@@ -346,8 +346,8 @@
   "cars-region-loire": {
    "network": "Cars Région Loire",
    "file": "cars-region-loire.zip",
-   "sha256": "cbc1e22d187ef444873f700fb2d25b36e54eff1a48212bfbfd5db1edfb0dbd60",
-   "bytes": 378250,
+   "sha256": "aca6bde4d9780d0b3fdaa94e4f88519aed0192c5aff43c2868c3a948b30b93ef",
+   "bytes": 377930,
    "bounds": [
     45.23,
     3.68,
@@ -366,8 +366,8 @@
   "cars-region-drome": {
    "network": "Cars Région Drôme",
    "file": "cars-region-drome.zip",
-   "sha256": "b37f96f0ed99bac41a69895b38da0b99cf4c9ffd40ef2e88f4a9459b0f93d3e6",
-   "bytes": 237938,
+   "sha256": "2c847fffd5474eada9f7129e080c059a4ace87ebd6ea5f71416419feb3bf0e68",
+   "bytes": 237663,
    "bounds": [
     44.04,
     4.63,
@@ -386,8 +386,8 @@
   "cars-region-ardeche": {
    "network": "Cars Région Ardèche",
    "file": "cars-region-ardeche.zip",
-   "sha256": "c2c2fd35e27364c6b61ee4ad5425b65829c2a8c5a44ee316d7304cc81073c1ba",
-   "bytes": 336610,
+   "sha256": "8f384cb501dd24da4292079a23d679d51208ddc13a9a1e81d7d9968010fb3784",
+   "bytes": 336680,
    "bounds": [
     44.25,
     3.85,
@@ -406,8 +406,8 @@
   "cars-region-allier": {
    "network": "Cars Région Allier",
    "file": "cars-region-allier.zip",
-   "sha256": "c2fe610970816f283812ab091083e363e3b32a52d942ce5d5b97308cbaa186ac",
-   "bytes": 152026,
+   "sha256": "781d8d9ae929c3d8437a218925ab9fc0f5e1fc696ca95c04890f5485f69be813",
+   "bytes": 151850,
    "bounds": [
     46.02,
     2.18,
@@ -426,8 +426,8 @@
   "cars-region-cantal": {
    "network": "Cars Région Cantal",
    "file": "cars-region-cantal.zip",
-   "sha256": "92cee9ddf17b0ccb110c5eeb80561b57a25385c914ade421050773381da7fe01",
-   "bytes": 50706,
+   "sha256": "5595eb666bc8f21e29f020f4c1fb7c673c754761e6d832b20e168ef9f42c69d2",
+   "bytes": 50659,
    "bounds": [
     44.67,
     2.18,
@@ -446,8 +446,8 @@
   "cars-region-haute-loire": {
    "network": "Cars Région Haute-Loire",
    "file": "cars-region-haute-loire.zip",
-   "sha256": "c23c5e08e83d4484526664f45b38ddd7391ea76b769d379d93cb73354a2ed43e",
-   "bytes": 57501,
+   "sha256": "47eff8f6962de53bac65a2dcc8436c9a6bf7858e41afcfa21c49f86069c98a7b",
+   "bytes": 57425,
    "bounds": [
     44.71,
     3.23,
@@ -466,8 +466,8 @@
   "coqueligo-annonay": {
    "network": "CoqueliGO Annonay",
    "file": "coqueligo-annonay.zip",
-   "sha256": "4210894d65e453a2aae05276a6dea54a1fc5e066f9240f184403c3d62b4e9bc5",
-   "bytes": 67724,
+   "sha256": "879307b58ea7152e44a37856182b79d77eb2a14202e45346bee872903d279559",
+   "bytes": 67719,
    "bounds": [
     45.21,
     4.62,
@@ -486,8 +486,8 @@
   "toutenbus-aubenas": {
    "network": "Tout'enbus Aubenas",
    "file": "toutenbus-aubenas.zip",
-   "sha256": "57ce9a13cc84fe8df950a72cf0b823edcd85d84059999367a7a195e2c219bed3",
-   "bytes": 38679,
+   "sha256": "1b49dbfdd5ed837b88f6f6f08e71c9279044909832d782a1d9b37fd0117da3a0",
+   "bytes": 38675,
    "bounds": [
     44.54,
     4.3,
@@ -506,8 +506,8 @@
   "transcab-aurillac": {
    "network": "Trans'Cab Aurillac",
    "file": "transcab-aurillac.zip",
-   "sha256": "fb7ffb892cf63995e644f2f7b2b35360141e66acaacb749b7d11ae38afa71ad3",
-   "bytes": 205226,
+   "sha256": "4c0bc3d8751785e43bcc73eadc05e1345383a73720e4540d99715de57d9338d0",
+   "bytes": 205183,
    "bounds": [
     44.8,
     2.22,
@@ -526,8 +526,8 @@
   "montelibus-montelimar": {
    "network": "Montélibus Montélimar",
    "file": "montelibus-montelimar.zip",
-   "sha256": "aaa7dff0f3a1eb78d0ab9cadaad4930f1cf53e640292e17de569dafec8ee4487",
-   "bytes": 210731,
+   "sha256": "63e3c8d04a291da9d1581c287c13e48ee32ab03ddd2675e215de53b58de8d8cc",
+   "bytes": 210729,
    "bounds": [
     44.44,
     4.69,
@@ -546,8 +546,8 @@
   "maelis-montlucon": {
    "network": "Maelis Montluçon",
    "file": "maelis-montlucon.zip",
-   "sha256": "e0070401c73bb7a94f4a42dabcba455bd0d02c8d42bf0d3f2fc477442c07d560",
-   "bytes": 169749,
+   "sha256": "4e5afac269b725c97ddec54390ebdde816f275c6e65948e83532fdcaa72d4685",
+   "bytes": 169846,
    "bounds": [
     46.15,
     2.49,
@@ -566,8 +566,8 @@
   "aleo-moulins": {
    "network": "Aléo Moulins",
    "file": "aleo-moulins.zip",
-   "sha256": "bff6de8dccc44b4404b4156a594331386bf7faf644ac572806732342df26167a",
-   "bytes": 177111,
+   "sha256": "2a4803823ea88a2ed0e55871e415244bc0a47864c601d35de7c6d49970173c7f",
+   "bytes": 177095,
    "bounds": [
     46.49,
     3.27,
@@ -586,8 +586,8 @@
   "tcap-privas": {
    "network": "T'CAP Privas",
    "file": "tcap-privas.zip",
-   "sha256": "de9d6270dab4f267eba2e7a1ed56767b1f53eee105758ef7448a08f0ca78d86c",
-   "bytes": 66206,
+   "sha256": "432c0033e8338bbc0dd6b0dfe1894c7d62e1b62099160ce1428c6b2b6fa1a391",
+   "bytes": 66190,
    "bounds": [
     44.68,
     4.52,
@@ -606,8 +606,8 @@
   "velay-le-puy": {
    "network": "Mobilité en Velay (Le Puy)",
    "file": "velay-le-puy.zip",
-   "sha256": "d5e46e419ee64bf7098e6a1c8884b14b69149ccf7935a99765686d9c1c509d73",
-   "bytes": 142117,
+   "sha256": "7718b9f4dc5988779591afd3980288b30c3235d5c17ef3e59077a1264df4c8a7",
+   "bytes": 141922,
    "bounds": [
     44.97,
     3.83,
@@ -626,8 +626,8 @@
   "rlv-riom": {
    "network": "RLV Mobilités Riom",
    "file": "rlv-riom.zip",
-   "sha256": "050817b5dd4557d3afe231e629c35ba557f2724d563949e4ef6595c770e3d74d",
-   "bytes": 89578,
+   "sha256": "7f295cbba95bfd068dc04d45be8a97a971cceb767ac32380d24ca3b3e59f4c64",
+   "bytes": 89571,
    "bounds": [
     45.83,
     3.02,
@@ -646,8 +646,8 @@
   "star-roanne": {
    "network": "Star Roanne",
    "file": "star-roanne.zip",
-   "sha256": "06fb443817bead4cad8f59f33df5446f8fd5781dc0385f63095664d580305fd6",
-   "bytes": 701352,
+   "sha256": "da6114063176292467dfa1f50a999f1a96fccc6a568ce1e15a44092d61e019ef",
+   "bytes": 701237,
    "bounds": [
     45.96,
     3.78,
@@ -666,8 +666,8 @@
   "lebus-tain-tournon": {
    "network": "Le Bus Tain-Tournon",
    "file": "lebus-tain-tournon.zip",
-   "sha256": "1c4ec2ddcec5177705ad134b5fdae990cbefe2502b0252f7abd0336cbea6ec3c",
-   "bytes": 27302,
+   "sha256": "851453ff981166c8fd1da10de6e4ac3561b4587ea76c8ebda6d565397d694cd0",
+   "bytes": 27258,
    "bounds": [
     44.99,
     4.52,
@@ -686,8 +686,8 @@
   "smtut-thiers": {
    "network": "SMTUT Thiers",
    "file": "smtut-thiers.zip",
-   "sha256": "a6a378396c704fcc3c897d6f0ed9e0039b7f889ad57391c285e82f9dbdade9cd",
-   "bytes": 96548,
+   "sha256": "e2724a3f4867e5fa0ff7a0a0ac0a0badc887b21388edfaa9d6f3e80109c208c6",
+   "bytes": 96542,
    "bounds": [
     45.69,
     3.36,
@@ -706,8 +706,8 @@
   "mobivie-vichy": {
    "network": "MobiVie Vichy",
    "file": "mobivie-vichy.zip",
-   "sha256": "bb14fbb1b0cea5ed347b21893d27bb2fab796ca379d9692559045ad30feac99d",
-   "bytes": 159611,
+   "sha256": "babd676d4eb9f6c56f0e5c7ce7670e0560922eb45f4b77579fa78c77bbf356bd",
+   "bytes": 159669,
    "bounds": [
     46.06,
     3.37,
@@ -726,8 +726,8 @@
   "le37-roussillon": {
    "network": "Le 37 Péage-de-Roussillon",
    "file": "le37-roussillon.zip",
-   "sha256": "3f7b41d821b866cbb298af99eb528c42f50a227d607038f76efa7fab6fd93b82",
-   "bytes": 26504,
+   "sha256": "23b8e283ddbe11ca0bda530af88e0d6f26b3cad86d06420a614b4d6751701baa",
+   "bytes": 26494,
    "bounds": [
     45.3,
     4.75,
@@ -802,7 +802,7 @@
   "mreso-grenoble": {
    "network": "M Réso — Métropole grenobloise",
    "file": "mreso-grenoble.zip",
-   "sha256": "f658be4074511aab76778ee1e58f1aa4b602c597ca3a5bb93fbcf9bc4770c24f",
+   "sha256": "80b5de2a519df07cbabe418174ae8264f20c53caff78259e3cef60e61b04e3de",
    "bytes": 6383277,
    "bounds": [
     45.0,
@@ -844,11 +844,11 @@
   "tcl-lyon": {
    "network": "TCL",
    "file": "tcl-lyon.zip",
-   "sha256": "db89e7e9dbdb7909173eb9ca2dbdd2f1c116445d34f07ad6c9e8ea0310b803e8",
-   "bytes": 4656836,
+   "sha256": "2309862bdec394b3a1c15ce10dee2ef69666d742fddfdba3392e5aa4cd8f4cb3",
+   "bytes": 4622416,
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8",
    "routes": 76,
-   "trips": 95559,
+   "trips": 94892,
    "stops": 476,
    "fares": true,
    "bounds": [
@@ -861,7 +861,7 @@
   "citea-valence": {
    "network": "Citéa (Valence Romans Mobilités)",
    "file": "citea-valence.zip",
-   "sha256": "7e4967cc28e5eaeb1c89d9c42f8c433466ab9bd079bbf2205229ff37e79e7b01",
+   "sha256": "a2ff61cc3baa14341cb2bfe0029f4bf02fe1222bb9036f1ccdb78f0f5e3a598f",
    "bytes": 4576816,
    "origin": "https://static.data.gouv.fr/resources/ce-jeu-de-donnees-contient-la-liste-des-arrets-des-horaires-et-des-parcours-theoriques-du-reseau-de-transport-urbain-et-interurbain-de-vrm/20261022-080050/gtfs-nov2026-juin2027-citea.zip",
    "routes": 286,
@@ -878,7 +878,7 @@
   "stas-saint-etienne": {
    "network": "STAS (Saint-Étienne Métropole)",
    "file": "stas-saint-etienne.zip",
-   "sha256": "105d3a94a13b4c989edb70352d0212b5239457371c018b11fd54856c06235285",
+   "sha256": "2cb3789fb55cb606f07a47ed960aa7cba92ee0ca31c51189c051b2627ab924be",
    "bytes": 2977417,
    "origin": "https://bus-prod.saint-etienne-metropole.fr/Public/stas/api/gtfs.aspx",
    "routes": 53,
@@ -895,7 +895,7 @@
   "t2c-clermont": {
    "network": "T2C (Clermont Auvergne Métropole, SMTC)",
    "file": "t2c-clermont.zip",
-   "sha256": "1a5e9bacac695ec39b6c1e201ac9ba83d9f86fc84fed2d3c0e41f1c08522e0de",
+   "sha256": "5b4b1204b59f5ea90078abafd0bfc0701780f7120cc770b189fd85193e879b99",
    "bytes": 1404983,
    "origin": "https://opendata.clermontmetropole.eu/api/v2/catalog/datasets/gtfs-smtc/alternative_exports/gtfs",
    "routes": 46,
@@ -913,6 +913,6 @@
  "errors": {},
  "oura": {
   "source": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA",
-  "version": "2026-11-15T05:36:28+00:00"
+  "version": "2026-11-15T22:21:33+00:00"
  }
 }
