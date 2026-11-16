@@ -1,14 +1,14 @@
 {
- "generatedAt": "2026-11-16T18:34:12.323Z",
+ "generatedAt": "2026-11-16T19:08:26.596Z",
  "testDate": "2026-11-24",
  "departure": "08:00 Europe/Paris",
  "server": {
-  "info": "{\"cpuName\":\"AMD EPYC 7763 64-Core Processor\",\"nCores\":4,\"version\":{\"version\":\"2.10.0\",\"patch\":0,\"qualifier\":\"\",\"major\":2,\"minor\":10},\"versionControl\":{\"dirty\":false,\"commit\":\"521cd5d8acaae628878f43bf5946f4942c118548\",\"branch\":\"master\",\"commitTime\":\"2026-09-09T09:07:23Z\",\"buildTime\":\"2026-09-09T09:23:32Z\"},\"config\":{\"otpConfigVersion\":null,\"buildConfigVersion\":null,\"routerConfigVersion\":null},\"otpSerializationVersionId\":\"277\"}",
+  "info": "{\"cpuName\":\"Intel(R) Xeon(R) 6975P-C\",\"nCores\":4,\"version\":{\"version\":\"2.10.0\",\"patch\":0,\"qualifier\":\"\",\"major\":2,\"minor\":10},\"versionControl\":{\"dirty\":false,\"commit\":\"521cd5d8acaae628878f43bf5946f4942c118548\",\"branch\":\"master\",\"commitTime\":\"2026-09-09T09:07:23Z\",\"buildTime\":\"2026-09-09T09:23:32Z\"},\"config\":{\"otpConfigVersion\":null,\"buildConfigVersion\":null,\"routerConfigVersion\":null},\"otpSerializationVersionId\":\"277\"}",
   "graphqlEndpoint": "/otp/gtfs/v1",
   "feeds": [
    {
     "feedId": "0",
-    "agencies": 4
+    "agencies": 3
    },
    {
     "feedId": "1",
@@ -16,11 +16,11 @@
    },
    {
     "feedId": "2",
-    "agencies": 3
+    "agencies": 1
    },
    {
     "feedId": "3",
-    "agencies": 1
+    "agencies": 3
    },
    {
     "feedId": "4",
@@ -32,7 +32,7 @@
    },
    {
     "feedId": "6",
-    "agencies": 1
+    "agencies": 20
    },
    {
     "feedId": "7",
@@ -40,15 +40,15 @@
    },
    {
     "feedId": "8",
-    "agencies": 24
+    "agencies": 1
    },
    {
     "feedId": "9",
-    "agencies": 27
+    "agencies": 1
    },
    {
     "feedId": "10",
-    "agencies": 1
+    "agencies": 21
    }
   ]
  },
@@ -83,7 +83,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Ambérieu-en-Bugey",
        "departure": "2026-11-24T07:00:56.000Z",
        "arrival": "2026-11-24T07:02:00.000Z",
@@ -110,7 +110,7 @@
        "line": null,
        "provider": null,
        "from": "Lyon Part Dieu",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T07:30:00.000Z",
        "arrival": "2026-11-24T07:30:07.000Z",
        "distanceMeters": 8,
@@ -132,7 +132,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Ambérieu-en-Bugey",
        "departure": "2026-11-24T07:05:56.000Z",
        "arrival": "2026-11-24T07:07:00.000Z",
@@ -159,7 +159,7 @@
        "line": null,
        "provider": null,
        "from": "Lyon Part Dieu",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T07:48:00.000Z",
        "arrival": "2026-11-24T07:48:07.000Z",
        "distanceMeters": 8,
@@ -181,7 +181,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Ambérieu-en-Bugey",
        "departure": "2026-11-24T07:26:56.000Z",
        "arrival": "2026-11-24T07:28:00.000Z",
@@ -208,7 +208,7 @@
        "line": null,
        "provider": null,
        "from": "Lyon Part Dieu",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T07:52:00.000Z",
        "arrival": "2026-11-24T07:52:07.000Z",
        "distanceMeters": 8,
@@ -230,7 +230,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Ambérieu-en-Bugey",
        "departure": "2026-11-24T07:35:56.000Z",
        "arrival": "2026-11-24T07:37:00.000Z",
@@ -257,7 +257,7 @@
        "line": null,
        "provider": null,
        "from": "Lyon Part Dieu",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:18:00.000Z",
        "arrival": "2026-11-24T08:18:07.000Z",
        "distanceMeters": 8,
@@ -279,7 +279,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Ambérieu-en-Bugey",
        "departure": "2026-11-24T07:55:56.000Z",
        "arrival": "2026-11-24T07:57:00.000Z",
@@ -306,7 +306,7 @@
        "line": null,
        "provider": null,
        "from": "Lyon Part Dieu",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:22:00.000Z",
        "arrival": "2026-11-24T08:22:07.000Z",
        "distanceMeters": 8,
@@ -328,7 +328,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Ambérieu-en-Bugey",
        "departure": "2026-11-24T08:00:56.000Z",
        "arrival": "2026-11-24T08:02:00.000Z",
@@ -355,7 +355,7 @@
        "line": null,
        "provider": null,
        "from": "Lyon Part Dieu",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:30:00.000Z",
        "arrival": "2026-11-24T08:30:07.000Z",
        "distanceMeters": 8,
@@ -365,7 +365,8 @@
      ]
     }
    ],
-   "http": 200
+   "http": 200,
+   "duplicateSegments": []
   },
   {
    "id": "lyon-amberieu",
@@ -397,7 +398,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Lyon Part Dieu",
        "departure": "2026-11-24T07:07:53.000Z",
        "arrival": "2026-11-24T07:08:00.000Z",
@@ -424,7 +425,7 @@
        "line": null,
        "provider": null,
        "from": "Ambérieu-en-Bugey",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T07:31:00.000Z",
        "arrival": "2026-11-24T07:32:04.000Z",
        "distanceMeters": 59,
@@ -446,7 +447,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Lyon Part Dieu",
        "departure": "2026-11-24T07:11:53.000Z",
        "arrival": "2026-11-24T07:12:00.000Z",
@@ -473,7 +474,7 @@
        "line": null,
        "provider": null,
        "from": "Ambérieu-en-Bugey",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T07:54:00.000Z",
        "arrival": "2026-11-24T07:55:04.000Z",
        "distanceMeters": 59,
@@ -495,7 +496,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Lyon Part Dieu",
        "departure": "2026-11-24T07:37:53.000Z",
        "arrival": "2026-11-24T07:38:00.000Z",
@@ -522,7 +523,7 @@
        "line": null,
        "provider": null,
        "from": "Ambérieu-en-Bugey",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:02:00.000Z",
        "arrival": "2026-11-24T08:03:04.000Z",
        "distanceMeters": 59,
@@ -532,7 +533,8 @@
      ]
     }
    ],
-   "http": 200
+   "http": 200,
+   "duplicateSegments": []
   },
   {
    "id": "chambery-stjulien",
@@ -557,14 +559,14 @@
      "durationMinutes": 136,
      "transfers": 2,
      "walkMeters": 248,
-     "priceStatus": "Prix non confirmé",
+     "priceStatus": "tarif partiel",
      "legs": [
       {
        "kind": "walk",
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Chambéry - Challes-les-Eaux",
        "departure": "2026-11-24T07:41:32.000Z",
        "arrival": "2026-11-24T07:42:00.000Z",
@@ -602,27 +604,35 @@
        "kind": "transit",
        "mode": "Tram",
        "line": "14",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Genève, gare Cornavin",
        "to": "Genève, Stand",
        "departure": "2026-11-24T09:15:00.000Z",
        "arrival": "2026-11-24T09:20:00.000Z",
        "distanceMeters": 834,
        "walkGeometryPoints": null,
-       "fare": null
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
       },
       {
        "kind": "transit",
        "mode": "Bus",
        "line": "80",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Genève, Stand",
        "to": "Saint-Julien, centre",
        "departure": "2026-11-24T09:25:00.000Z",
        "arrival": "2026-11-24T09:56:00.000Z",
        "distanceMeters": 8851,
        "walkGeometryPoints": null,
-       "fare": null
+       "fare": {
+        "amount": 4.8,
+        "currency": "EUR",
+        "source": "Léman Pass · billet multizones 10+230, 90 min · https://www.lemanpass.com/points-de-vente/ et https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf (vérifié le 2026-11-15)"
+       }
       },
       {
        "kind": "walk",
@@ -630,7 +640,7 @@
        "line": null,
        "provider": null,
        "from": "Saint-Julien, centre",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:56:00.000Z",
        "arrival": "2026-11-24T09:57:35.000Z",
        "distanceMeters": 114,
@@ -645,14 +655,14 @@
      "durationMinutes": 136,
      "transfers": 1,
      "walkMeters": 1009,
-     "priceStatus": "Prix non confirmé",
+     "priceStatus": "tarif partiel",
      "legs": [
       {
        "kind": "walk",
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Chambéry - Challes-les-Eaux",
        "departure": "2026-11-24T07:41:32.000Z",
        "arrival": "2026-11-24T07:42:00.000Z",
@@ -690,14 +700,18 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "80",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Genève, Stand",
        "to": "Saint-Julien, centre",
        "departure": "2026-11-24T09:25:00.000Z",
        "arrival": "2026-11-24T09:56:00.000Z",
        "distanceMeters": 8851,
        "walkGeometryPoints": null,
-       "fare": null
+       "fare": {
+        "amount": 4.8,
+        "currency": "EUR",
+        "source": "Léman Pass · billet multizones 10+230, 90 min · https://www.lemanpass.com/points-de-vente/ et https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf (vérifié le 2026-11-15)"
+       }
       },
       {
        "kind": "walk",
@@ -705,7 +719,7 @@
        "line": null,
        "provider": null,
        "from": "Saint-Julien, centre",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:56:00.000Z",
        "arrival": "2026-11-24T09:57:35.000Z",
        "distanceMeters": 114,
@@ -727,7 +741,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Chambéry (Central Bus Station)",
        "departure": "2026-11-24T08:10:53.000Z",
        "arrival": "2026-11-24T08:15:00.000Z",
@@ -780,7 +794,7 @@
        "line": null,
        "provider": null,
        "from": "Saint-Julien, centre",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T10:14:00.000Z",
        "arrival": "2026-11-24T10:16:10.000Z",
        "distanceMeters": 144,
@@ -802,7 +816,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Chambéry (Central Bus Station)",
        "departure": "2026-11-24T08:10:53.000Z",
        "arrival": "2026-11-24T08:15:00.000Z",
@@ -840,7 +854,7 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "272",
-       "provider": "REGION - cars Région Haute-Savoie",
+       "provider": "Cars Région Haute-Savoie",
        "from": "Gare Routiere",
        "to": "Centre",
        "departure": "2026-11-24T09:15:00.000Z",
@@ -855,7 +869,7 @@
        "line": null,
        "provider": null,
        "from": "Centre",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T10:14:00.000Z",
        "arrival": "2026-11-24T10:16:49.000Z",
        "distanceMeters": 188,
@@ -877,7 +891,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Chambéry - Challes-les-Eaux",
        "departure": "2026-11-24T08:48:32.000Z",
        "arrival": "2026-11-24T08:49:00.000Z",
@@ -930,7 +944,7 @@
        "line": null,
        "provider": null,
        "from": "Saint-Julien-en-Genevois",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T11:18:00.000Z",
        "arrival": "2026-11-24T11:26:38.000Z",
        "distanceMeters": 632,
@@ -940,7 +954,10 @@
      ]
     }
    ],
-   "http": 200
+   "http": 200,
+   "duplicateSegments": [
+    "Bus|2026-11-24T09:15:00.000Z|2026-11-24T10:14:00.000Z : Alpbus Fournier / Cars Région Haute-Savoie"
+   ]
   },
   {
    "id": "stjulien-chambery",
@@ -972,7 +989,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Saint-Julien-en-Genevois",
        "departure": "2026-11-24T08:11:22.000Z",
        "arrival": "2026-11-24T08:20:00.000Z",
@@ -1012,7 +1029,7 @@
        "line": null,
        "provider": null,
        "from": "Chambéry - Challes-les-Eaux",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T10:16:00.000Z",
        "arrival": "2026-11-24T10:16:28.000Z",
        "distanceMeters": 33,
@@ -1022,7 +1039,8 @@
      ]
     }
    ],
-   "http": 200
+   "http": 200,
+   "duplicateSegments": []
   },
   {
    "id": "annecy-geneve",
@@ -1054,7 +1072,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Gare Routiere",
        "departure": "2026-11-24T07:10:02.000Z",
        "arrival": "2026-11-24T07:15:00.000Z",
@@ -1066,7 +1084,7 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "272",
-       "provider": "REGION - cars Région Haute-Savoie",
+       "provider": "Cars Région Haute-Savoie",
        "from": "Gare Routiere",
        "to": "Lancy Pont Rouge Gare-Etoile P+R",
        "departure": "2026-11-24T07:15:00.000Z",
@@ -1111,7 +1129,7 @@
        "line": null,
        "provider": null,
        "from": "Genève Cornavin",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:43:00.000Z",
        "arrival": "2026-11-24T08:43:03.000Z",
        "distanceMeters": 4,
@@ -1126,14 +1144,14 @@
      "durationMinutes": 88,
      "transfers": 1,
      "walkMeters": 335,
-     "priceStatus": "Prix non confirmé",
+     "priceStatus": "tarif partiel",
      "legs": [
       {
        "kind": "walk",
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Annecy - Bus Station",
        "departure": "2026-11-24T07:44:13.000Z",
        "arrival": "2026-11-24T07:45:00.000Z",
@@ -1171,14 +1189,18 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "5",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Genève-Aéroport, Terminal",
        "to": "Genève, gare Cornavin",
        "departure": "2026-11-24T08:46:00.000Z",
        "arrival": "2026-11-24T09:10:00.000Z",
        "distanceMeters": 4964,
        "walkGeometryPoints": null,
-       "fare": null
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
       },
       {
        "kind": "walk",
@@ -1186,7 +1208,7 @@
        "line": null,
        "provider": null,
        "from": "Genève, gare Cornavin",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:10:00.000Z",
        "arrival": "2026-11-24T09:12:03.000Z",
        "distanceMeters": 113,
@@ -1208,7 +1230,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Annecy",
        "departure": "2026-11-24T07:42:39.000Z",
        "arrival": "2026-11-24T07:44:00.000Z",
@@ -1235,7 +1257,7 @@
        "line": null,
        "provider": null,
        "from": "Genève Cornavin",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:13:00.000Z",
        "arrival": "2026-11-24T09:13:03.000Z",
        "distanceMeters": 4,
@@ -1250,14 +1272,14 @@
      "durationMinutes": 88,
      "transfers": 1,
      "walkMeters": 831,
-     "priceStatus": "Prix non confirmé",
+     "priceStatus": "tarif partiel",
      "legs": [
       {
        "kind": "walk",
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Gare Routiere",
        "departure": "2026-11-24T08:10:02.000Z",
        "arrival": "2026-11-24T08:15:00.000Z",
@@ -1269,7 +1291,7 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "272",
-       "provider": "REGION - cars Région Haute-Savoie",
+       "provider": "Cars Région Haute-Savoie",
        "from": "Gare Routiere",
        "to": "Lancy Pont Rouge Gare-Etoile P+R",
        "departure": "2026-11-24T08:15:00.000Z",
@@ -1295,14 +1317,18 @@
        "kind": "transit",
        "mode": "Train",
        "line": "RE33",
-       "provider": "Schweizerische Bundesbahnen SBB",
+       "provider": "CFF",
        "from": "Lancy-Pont-Rouge",
        "to": "Genève",
        "departure": "2026-11-24T09:31:00.000Z",
        "arrival": "2026-11-24T09:36:00.000Z",
        "distanceMeters": 3044,
        "walkGeometryPoints": null,
-       "fare": null
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
       },
       {
        "kind": "walk",
@@ -1310,7 +1336,7 @@
        "line": null,
        "provider": null,
        "from": "Genève",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:36:00.000Z",
        "arrival": "2026-11-24T09:38:26.000Z",
        "distanceMeters": 124,
@@ -1320,7 +1346,8 @@
      ]
     }
    ],
-   "http": 200
+   "http": 200,
+   "duplicateSegments": []
   },
   {
    "id": "geneve-annecy",
@@ -1352,7 +1379,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève",
        "departure": "2026-11-24T07:20:35.000Z",
        "arrival": "2026-11-24T07:23:00.000Z",
@@ -1364,14 +1391,18 @@
        "kind": "transit",
        "mode": "Train",
        "line": "RE33",
-       "provider": "Schweizerische Bundesbahnen SBB",
+       "provider": "CFF",
        "from": "Genève",
        "to": "Lancy-Pont-Rouge",
        "departure": "2026-11-24T07:23:00.000Z",
        "arrival": "2026-11-24T07:28:00.000Z",
        "distanceMeters": 3046,
        "walkGeometryPoints": null,
-       "fare": null
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
       },
       {
        "kind": "walk",
@@ -1435,7 +1466,7 @@
        "line": null,
        "provider": null,
        "from": "PAUL GRIMAULT",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:05:21.000Z",
        "arrival": "2026-11-24T09:07:29.000Z",
        "distanceMeters": 165,
@@ -1450,14 +1481,14 @@
      "durationMinutes": 107,
      "transfers": 1,
      "walkMeters": 827,
-     "priceStatus": "Prix non confirmé",
+     "priceStatus": "tarif partiel",
      "legs": [
       {
        "kind": "walk",
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève",
        "departure": "2026-11-24T07:20:35.000Z",
        "arrival": "2026-11-24T07:23:00.000Z",
@@ -1469,14 +1500,18 @@
        "kind": "transit",
        "mode": "Train",
        "line": "RE33",
-       "provider": "Schweizerische Bundesbahnen SBB",
+       "provider": "CFF",
        "from": "Genève",
        "to": "Lancy-Pont-Rouge",
        "departure": "2026-11-24T07:23:00.000Z",
        "arrival": "2026-11-24T07:28:00.000Z",
        "distanceMeters": 3046,
        "walkGeometryPoints": null,
-       "fare": null
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
       },
       {
        "kind": "walk",
@@ -1495,7 +1530,7 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "272",
-       "provider": "REGION - cars Région Haute-Savoie",
+       "provider": "Cars Région Haute-Savoie",
        "from": "Lancy Pont Rouge Gare-Etoile P+R",
        "to": "Gare Routiere",
        "departure": "2026-11-24T07:40:00.000Z",
@@ -1510,7 +1545,7 @@
        "line": null,
        "provider": null,
        "from": "Gare Routiere",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:03:00.000Z",
        "arrival": "2026-11-24T09:07:58.000Z",
        "distanceMeters": 283,
@@ -1532,7 +1567,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève Cornavin",
        "departure": "2026-11-24T07:45:57.000Z",
        "arrival": "2026-11-24T07:46:00.000Z",
@@ -1559,7 +1594,7 @@
        "line": null,
        "provider": null,
        "from": "Annecy",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:16:00.000Z",
        "arrival": "2026-11-24T09:17:21.000Z",
        "distanceMeters": 92,
@@ -1581,7 +1616,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève Cornavin",
        "departure": "2026-11-24T08:00:57.000Z",
        "arrival": "2026-11-24T08:01:00.000Z",
@@ -1623,7 +1658,7 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "272",
-       "provider": "REGION - cars Région Haute-Savoie",
+       "provider": "Cars Région Haute-Savoie",
        "from": "Lancy Pont Rouge Gare-Etoile P+R",
        "to": "Gare Routiere",
        "departure": "2026-11-24T08:25:00.000Z",
@@ -1638,7 +1673,7 @@
        "line": null,
        "provider": null,
        "from": "Gare Routiere",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:32:00.000Z",
        "arrival": "2026-11-24T09:36:58.000Z",
        "distanceMeters": 283,
@@ -1653,14 +1688,14 @@
      "durationMinutes": 94,
      "transfers": 1,
      "walkMeters": 534,
-     "priceStatus": "Prix non confirmé",
+     "priceStatus": "tarif partiel",
      "legs": [
       {
        "kind": "walk",
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève, gare Cornavin",
        "departure": "2026-11-24T08:03:31.000Z",
        "arrival": "2026-11-24T08:06:00.000Z",
@@ -1672,14 +1707,18 @@
        "kind": "transit",
        "mode": "Tram",
        "line": "15",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Genève, gare Cornavin",
        "to": "Lancy-Pont-Rouge, gare/Etoile",
        "departure": "2026-11-24T08:06:00.000Z",
        "arrival": "2026-11-24T08:23:00.000Z",
        "distanceMeters": 3177,
        "walkGeometryPoints": null,
-       "fare": null
+       "fare": {
+        "amount": 3,
+        "currency": "CHF",
+        "source": "unireso Tout Genève (zone 10) · billet 60 min, 2e classe, prix entier · https://www.unireso.com/titres-de-transport/ (valable jusqu’au 12/12/2026, vérifié le 2026-11-14)"
+       }
       },
       {
        "kind": "transit",
@@ -1700,7 +1739,7 @@
        "line": null,
        "provider": null,
        "from": "Annecy, Gare routière",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:32:00.000Z",
        "arrival": "2026-11-24T09:37:59.000Z",
        "distanceMeters": 395,
@@ -1722,7 +1761,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève Cornavin",
        "departure": "2026-11-24T08:15:57.000Z",
        "arrival": "2026-11-24T08:16:00.000Z",
@@ -1779,7 +1818,7 @@
        "line": null,
        "provider": null,
        "from": "Annecy (Central Bus Station)",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:35:00.000Z",
        "arrival": "2026-11-24T09:39:27.000Z",
        "distanceMeters": 261,
@@ -1789,7 +1828,10 @@
      ]
     }
    ],
-   "http": 200
+   "http": 200,
+   "duplicateSegments": [
+    "Bus|2026-11-24T08:25:00.000Z|2026-11-24T09:32:00.000Z : Cars Région Haute-Savoie / Alpbus Fournier"
+   ]
   },
   {
    "id": "annecy-annemasse",
@@ -1821,7 +1863,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Annecy",
        "departure": "2026-11-24T07:42:39.000Z",
        "arrival": "2026-11-24T07:44:00.000Z",
@@ -1848,7 +1890,7 @@
        "line": null,
        "provider": null,
        "from": "Annemasse",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:42:00.000Z",
        "arrival": "2026-11-24T08:42:11.000Z",
        "distanceMeters": 14,
@@ -1870,7 +1912,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Annecy",
        "departure": "2026-11-24T08:42:39.000Z",
        "arrival": "2026-11-24T08:44:00.000Z",
@@ -1897,7 +1939,7 @@
        "line": null,
        "provider": null,
        "from": "Annemasse",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:40:00.000Z",
        "arrival": "2026-11-24T09:40:11.000Z",
        "distanceMeters": 14,
@@ -1907,7 +1949,8 @@
      ]
     }
    ],
-   "http": 200
+   "http": 200,
+   "duplicateSegments": []
   },
   {
    "id": "annemasse-annecy",
@@ -1939,7 +1982,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Annemasse",
        "departure": "2026-11-24T07:01:49.000Z",
        "arrival": "2026-11-24T07:02:00.000Z",
@@ -1979,7 +2022,7 @@
        "line": null,
        "provider": null,
        "from": "Annecy",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:06:00.000Z",
        "arrival": "2026-11-24T08:07:21.000Z",
        "distanceMeters": 92,
@@ -2001,7 +2044,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Annemasse",
        "departure": "2026-11-24T07:18:49.000Z",
        "arrival": "2026-11-24T07:19:00.000Z",
@@ -2028,7 +2071,7 @@
        "line": null,
        "provider": null,
        "from": "Annecy",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:16:00.000Z",
        "arrival": "2026-11-24T08:17:21.000Z",
        "distanceMeters": 92,
@@ -2050,7 +2093,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Annemasse",
        "departure": "2026-11-24T08:17:49.000Z",
        "arrival": "2026-11-24T08:18:00.000Z",
@@ -2077,7 +2120,7 @@
        "line": null,
        "provider": null,
        "from": "Annecy",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:16:00.000Z",
        "arrival": "2026-11-24T09:17:21.000Z",
        "distanceMeters": 92,
@@ -2087,7 +2130,8 @@
      ]
     }
    ],
-   "http": 200
+   "http": 200,
+   "duplicateSegments": []
   },
   {
    "id": "archamps-geneve",
@@ -2112,14 +2156,14 @@
      "durationMinutes": 43,
      "transfers": 1,
      "walkMeters": 1301,
-     "priceStatus": "tarif partiel",
+     "priceStatus": "tous les segments ont un tarif vérifié",
      "legs": [
       {
        "kind": "walk",
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Collonges, marché",
        "departure": "2026-11-24T07:00:21.000Z",
        "arrival": "2026-11-24T07:13:00.000Z",
@@ -2131,14 +2175,18 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "82",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Collonges, marché",
        "to": "Lancy-Bachet, gare",
        "departure": "2026-11-24T07:13:00.000Z",
        "arrival": "2026-11-24T07:26:00.000Z",
        "distanceMeters": 4415,
        "walkGeometryPoints": null,
-       "fare": null
+       "fare": {
+        "amount": 4.8,
+        "currency": "EUR",
+        "source": "Léman Pass · billet multizones 10+230, 90 min · https://www.lemanpass.com/points-de-vente/ et https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf (vérifié le 2026-11-15)"
+       }
       },
       {
        "kind": "walk",
@@ -2176,7 +2224,7 @@
        "line": null,
        "provider": null,
        "from": "Genève Cornavin",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T07:43:00.000Z",
        "arrival": "2026-11-24T07:43:03.000Z",
        "distanceMeters": 4,
@@ -2191,14 +2239,14 @@
      "durationMinutes": 42,
      "transfers": 1,
      "walkMeters": 1328,
-     "priceStatus": "tarif partiel",
+     "priceStatus": "tous les segments ont un tarif vérifié",
      "legs": [
       {
        "kind": "walk",
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Collonges, marché",
        "departure": "2026-11-24T07:16:21.000Z",
        "arrival": "2026-11-24T07:29:00.000Z",
@@ -2210,14 +2258,18 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "82",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Collonges, marché",
        "to": "Grand-Lancy, Préventorium",
        "departure": "2026-11-24T07:29:00.000Z",
        "arrival": "2026-11-24T07:39:00.000Z",
        "distanceMeters": 4118,
        "walkGeometryPoints": null,
-       "fare": null
+       "fare": {
+        "amount": 4.8,
+        "currency": "EUR",
+        "source": "Léman Pass · billet multizones 10+230, 90 min · https://www.lemanpass.com/points-de-vente/ et https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf (vérifié le 2026-11-15)"
+       }
       },
       {
        "kind": "walk",
@@ -2255,7 +2307,7 @@
        "line": null,
        "provider": null,
        "from": "Genève Cornavin",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T07:58:00.000Z",
        "arrival": "2026-11-24T07:58:03.000Z",
        "distanceMeters": 4,
@@ -2270,14 +2322,14 @@
      "durationMinutes": 42,
      "transfers": 1,
      "walkMeters": 1328,
-     "priceStatus": "tarif partiel",
+     "priceStatus": "tous les segments ont un tarif vérifié",
      "legs": [
       {
        "kind": "walk",
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Collonges, marché",
        "departure": "2026-11-24T07:31:21.000Z",
        "arrival": "2026-11-24T07:44:00.000Z",
@@ -2289,14 +2341,18 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "82",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Collonges, marché",
        "to": "Grand-Lancy, Préventorium",
        "departure": "2026-11-24T07:44:00.000Z",
        "arrival": "2026-11-24T07:54:00.000Z",
        "distanceMeters": 4118,
        "walkGeometryPoints": null,
-       "fare": null
+       "fare": {
+        "amount": 4.8,
+        "currency": "EUR",
+        "source": "Léman Pass · billet multizones 10+230, 90 min · https://www.lemanpass.com/points-de-vente/ et https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf (vérifié le 2026-11-15)"
+       }
       },
       {
        "kind": "walk",
@@ -2334,7 +2390,7 @@
        "line": null,
        "provider": null,
        "from": "Genève Cornavin",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:13:00.000Z",
        "arrival": "2026-11-24T08:13:03.000Z",
        "distanceMeters": 4,
@@ -2349,14 +2405,14 @@
      "durationMinutes": 41,
      "transfers": 1,
      "walkMeters": 1301,
-     "priceStatus": "tarif partiel",
+     "priceStatus": "tous les segments ont un tarif vérifié",
      "legs": [
       {
        "kind": "walk",
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Collonges, marché",
        "departure": "2026-11-24T07:47:21.000Z",
        "arrival": "2026-11-24T08:00:00.000Z",
@@ -2368,14 +2424,18 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "82",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Collonges, marché",
        "to": "Lancy-Bachet, gare",
        "departure": "2026-11-24T08:00:00.000Z",
        "arrival": "2026-11-24T08:11:00.000Z",
        "distanceMeters": 4415,
        "walkGeometryPoints": null,
-       "fare": null
+       "fare": {
+        "amount": 4.8,
+        "currency": "EUR",
+        "source": "Léman Pass · billet multizones 10+230, 90 min · https://www.lemanpass.com/points-de-vente/ et https://www.tpg.ch/sites/default/files/2025-12/LIT_272_Grille_tarifaire_20251214_20261212.pdf (vérifié le 2026-11-15)"
+       }
       },
       {
        "kind": "walk",
@@ -2413,7 +2473,7 @@
        "line": null,
        "provider": null,
        "from": "Genève Cornavin",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:28:00.000Z",
        "arrival": "2026-11-24T08:28:03.000Z",
        "distanceMeters": 4,
@@ -2423,7 +2483,8 @@
      ]
     }
    ],
-   "http": 200
+   "http": 200,
+   "duplicateSegments": []
   },
   {
    "id": "geneve-archamps",
@@ -2439,8 +2500,8 @@
     "name": "Archamps Technopole"
    },
    "when": "2026-11-24T07:00:00.000Z",
-   "raw": 6,
-   "accepted": 6,
+   "raw": 5,
+   "accepted": 5,
    "itineraries": [
     {
      "departure": "2026-11-24T07:00:57.000Z",
@@ -2455,7 +2516,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève Cornavin",
        "departure": "2026-11-24T07:00:57.000Z",
        "arrival": "2026-11-24T07:01:00.000Z",
@@ -2497,7 +2558,7 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "82",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Lancy-Bachet, gare",
        "to": "Archamps, Pont de Combe",
        "departure": "2026-11-24T07:18:00.000Z",
@@ -2512,7 +2573,7 @@
        "line": null,
        "provider": null,
        "from": "Archamps, Pont de Combe",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T07:27:00.000Z",
        "arrival": "2026-11-24T07:38:29.000Z",
        "distanceMeters": 894,
@@ -2534,7 +2595,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève Cornavin",
        "departure": "2026-11-24T07:15:57.000Z",
        "arrival": "2026-11-24T07:16:00.000Z",
@@ -2576,7 +2637,7 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "82",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Lancy-Bachet, gare",
        "to": "Archamps, Pont de Combe",
        "departure": "2026-11-24T07:33:00.000Z",
@@ -2591,7 +2652,7 @@
        "line": null,
        "provider": null,
        "from": "Archamps, Pont de Combe",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T07:42:00.000Z",
        "arrival": "2026-11-24T07:53:29.000Z",
        "distanceMeters": 894,
@@ -2613,7 +2674,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève Cornavin",
        "departure": "2026-11-24T07:30:57.000Z",
        "arrival": "2026-11-24T07:31:00.000Z",
@@ -2655,7 +2716,7 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "82",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Lancy-Bachet, gare",
        "to": "Archamps, Pont de Combe",
        "departure": "2026-11-24T07:48:00.000Z",
@@ -2670,7 +2731,7 @@
        "line": null,
        "provider": null,
        "from": "Archamps, Pont de Combe",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T07:58:00.000Z",
        "arrival": "2026-11-24T08:09:29.000Z",
        "distanceMeters": 894,
@@ -2692,7 +2753,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève Cornavin",
        "departure": "2026-11-24T07:45:57.000Z",
        "arrival": "2026-11-24T07:46:00.000Z",
@@ -2734,7 +2795,7 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "82",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Lancy-Bachet, gare",
        "to": "Archamps, Pont de Combe",
        "departure": "2026-11-24T08:04:00.000Z",
@@ -2749,7 +2810,7 @@
        "line": null,
        "provider": null,
        "from": "Archamps, Pont de Combe",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:12:00.000Z",
        "arrival": "2026-11-24T08:23:29.000Z",
        "distanceMeters": 894,
@@ -2771,7 +2832,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève Cornavin",
        "departure": "2026-11-24T08:00:57.000Z",
        "arrival": "2026-11-24T08:01:00.000Z",
@@ -2813,7 +2874,7 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "82",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Lancy-Bachet, gare",
        "to": "Archamps, Pont de Combe",
        "departure": "2026-11-24T08:18:00.000Z",
@@ -2828,7 +2889,7 @@
        "line": null,
        "provider": null,
        "from": "Archamps, Pont de Combe",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:26:00.000Z",
        "arrival": "2026-11-24T08:37:29.000Z",
        "distanceMeters": 894,
@@ -2836,84 +2897,10 @@
        "fare": null
       }
      ]
-    },
-    {
-     "departure": "2026-11-24T08:20:35.000Z",
-     "arrival": "2026-11-24T08:59:29.000Z",
-     "durationMinutes": 39,
-     "transfers": 1,
-     "walkMeters": 1272,
-     "priceStatus": "Prix non confirmé",
-     "legs": [
-      {
-       "kind": "walk",
-       "mode": "Marche",
-       "line": null,
-       "provider": null,
-       "from": "Origin",
-       "to": "Genève",
-       "departure": "2026-11-24T08:20:35.000Z",
-       "arrival": "2026-11-24T08:23:00.000Z",
-       "distanceMeters": 123,
-       "walkGeometryPoints": 16,
-       "fare": null
-      },
-      {
-       "kind": "transit",
-       "mode": "Train",
-       "line": "RE33",
-       "provider": "Schweizerische Bundesbahnen SBB",
-       "from": "Genève",
-       "to": "Lancy-Bachet",
-       "departure": "2026-11-24T08:23:00.000Z",
-       "arrival": "2026-11-24T08:32:00.000Z",
-       "distanceMeters": 4386,
-       "walkGeometryPoints": null,
-       "fare": null
-      },
-      {
-       "kind": "walk",
-       "mode": "Marche",
-       "line": null,
-       "provider": null,
-       "from": "Lancy-Bachet",
-       "to": "Lancy-Bachet, gare",
-       "departure": "2026-11-24T08:32:00.000Z",
-       "arrival": "2026-11-24T08:36:26.000Z",
-       "distanceMeters": 255,
-       "walkGeometryPoints": 31,
-       "fare": null
-      },
-      {
-       "kind": "transit",
-       "mode": "Bus",
-       "line": "82",
-       "provider": "Transports Publics Genevois",
-       "from": "Lancy-Bachet, gare",
-       "to": "Archamps, Pont de Combe",
-       "departure": "2026-11-24T08:40:00.000Z",
-       "arrival": "2026-11-24T08:48:00.000Z",
-       "distanceMeters": 4469,
-       "walkGeometryPoints": null,
-       "fare": null
-      },
-      {
-       "kind": "walk",
-       "mode": "Marche",
-       "line": null,
-       "provider": null,
-       "from": "Archamps, Pont de Combe",
-       "to": "Destination",
-       "departure": "2026-11-24T08:48:00.000Z",
-       "arrival": "2026-11-24T08:59:29.000Z",
-       "distanceMeters": 894,
-       "walkGeometryPoints": 103,
-       "fare": null
-      }
-     ]
     }
    ],
-   "http": 200
+   "http": 200,
+   "duplicateSegments": []
   },
   {
    "id": "archamps-annecy",
@@ -2945,7 +2932,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Archamps, Pont de Combe",
        "departure": "2026-11-24T07:24:38.000Z",
        "arrival": "2026-11-24T07:34:00.000Z",
@@ -2957,7 +2944,7 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "M",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Archamps, Pont de Combe",
        "to": "Saint-Julien, gare",
        "departure": "2026-11-24T07:34:00.000Z",
@@ -3015,7 +3002,7 @@
        "line": null,
        "provider": null,
        "from": "PAUL GRIMAULT",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:05:21.000Z",
        "arrival": "2026-11-24T09:07:29.000Z",
        "distanceMeters": 165,
@@ -3037,7 +3024,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Archamps, Pont de Combe",
        "departure": "2026-11-24T07:24:38.000Z",
        "arrival": "2026-11-24T07:34:00.000Z",
@@ -3049,7 +3036,7 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "M",
-       "provider": "Transports Publics Genevois",
+       "provider": "tpg",
        "from": "Archamps, Pont de Combe",
        "to": "Saint-Julien, gare",
        "departure": "2026-11-24T07:34:00.000Z",
@@ -3075,7 +3062,7 @@
        "kind": "transit",
        "mode": "Bus",
        "line": "272",
-       "provider": "REGION - cars Région Haute-Savoie",
+       "provider": "Cars Région Haute-Savoie",
        "from": "SNCF",
        "to": "Gare Routiere",
        "departure": "2026-11-24T08:01:00.000Z",
@@ -3090,7 +3077,7 @@
        "line": null,
        "provider": null,
        "from": "Gare Routiere",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T09:03:00.000Z",
        "arrival": "2026-11-24T09:07:58.000Z",
        "distanceMeters": 283,
@@ -3100,7 +3087,8 @@
      ]
     }
    ],
-   "http": 200
+   "http": 200,
+   "duplicateSegments": []
   },
   {
    "id": "geneve-lausanne",
@@ -3132,7 +3120,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève",
        "departure": "2026-11-24T07:02:18.000Z",
        "arrival": "2026-11-24T07:05:00.000Z",
@@ -3144,7 +3132,7 @@
        "kind": "transit",
        "mode": "Train",
        "line": "IR90",
-       "provider": "Schweizerische Bundesbahnen SBB",
+       "provider": "CFF",
        "from": "Genève",
        "to": "Lausanne",
        "departure": "2026-11-24T07:05:00.000Z",
@@ -3159,7 +3147,7 @@
        "line": null,
        "provider": null,
        "from": "Lausanne",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T07:44:00.000Z",
        "arrival": "2026-11-24T07:44:03.000Z",
        "distanceMeters": 3,
@@ -3181,7 +3169,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève",
        "departure": "2026-11-24T07:05:35.000Z",
        "arrival": "2026-11-24T07:08:00.000Z",
@@ -3193,7 +3181,7 @@
        "kind": "transit",
        "mode": "Train",
        "line": "RE33",
-       "provider": "Schweizerische Bundesbahnen SBB",
+       "provider": "CFF",
        "from": "Genève",
        "to": "Lausanne",
        "departure": "2026-11-24T07:08:00.000Z",
@@ -3208,7 +3196,7 @@
        "line": null,
        "provider": null,
        "from": "Lausanne",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T07:59:00.000Z",
        "arrival": "2026-11-24T07:59:45.000Z",
        "distanceMeters": 51,
@@ -3230,7 +3218,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève",
        "departure": "2026-11-24T07:21:18.000Z",
        "arrival": "2026-11-24T07:24:00.000Z",
@@ -3242,7 +3230,7 @@
        "kind": "transit",
        "mode": "Train",
        "line": "IR95",
-       "provider": "Schweizerische Bundesbahnen SBB",
+       "provider": "CFF",
        "from": "Genève",
        "to": "Lausanne",
        "departure": "2026-11-24T07:24:00.000Z",
@@ -3257,7 +3245,7 @@
        "line": null,
        "provider": null,
        "from": "Lausanne",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:10:00.000Z",
        "arrival": "2026-11-24T08:10:03.000Z",
        "distanceMeters": 3,
@@ -3279,7 +3267,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève",
        "departure": "2026-11-24T07:32:17.000Z",
        "arrival": "2026-11-24T07:35:00.000Z",
@@ -3291,7 +3279,7 @@
        "kind": "transit",
        "mode": "Train",
        "line": "IC1",
-       "provider": "Schweizerische Bundesbahnen SBB",
+       "provider": "CFF",
        "from": "Genève",
        "to": "Lausanne",
        "departure": "2026-11-24T07:35:00.000Z",
@@ -3306,7 +3294,7 @@
        "line": null,
        "provider": null,
        "from": "Lausanne",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:14:00.000Z",
        "arrival": "2026-11-24T08:17:15.000Z",
        "distanceMeters": 207,
@@ -3328,7 +3316,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève",
        "departure": "2026-11-24T07:35:34.000Z",
        "arrival": "2026-11-24T07:38:00.000Z",
@@ -3340,7 +3328,7 @@
        "kind": "transit",
        "mode": "Train",
        "line": "RE33",
-       "provider": "Schweizerische Bundesbahnen SBB",
+       "provider": "CFF",
        "from": "Genève",
        "to": "Lausanne",
        "departure": "2026-11-24T07:38:00.000Z",
@@ -3355,7 +3343,7 @@
        "line": null,
        "provider": null,
        "from": "Lausanne",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:29:00.000Z",
        "arrival": "2026-11-24T08:30:59.000Z",
        "distanceMeters": 133,
@@ -3377,7 +3365,7 @@
        "mode": "Marche",
        "line": null,
        "provider": null,
-       "from": "Origin",
+       "from": "Point de départ",
        "to": "Genève",
        "departure": "2026-11-24T07:51:18.000Z",
        "arrival": "2026-11-24T07:54:00.000Z",
@@ -3389,7 +3377,7 @@
        "kind": "transit",
        "mode": "Train",
        "line": "IR15",
-       "provider": "Schweizerische Bundesbahnen SBB",
+       "provider": "CFF",
        "from": "Genève",
        "to": "Lausanne",
        "departure": "2026-11-24T07:54:00.000Z",
@@ -3404,7 +3392,7 @@
        "line": null,
        "provider": null,
        "from": "Lausanne",
-       "to": "Destination",
+       "to": "Point d’arrivée",
        "departure": "2026-11-24T08:37:00.000Z",
        "arrival": "2026-11-24T08:40:15.000Z",
        "distanceMeters": 207,
@@ -3414,11 +3402,12 @@
      ]
     }
    ],
-   "http": 200
+   "http": 200,
+   "duplicateSegments": []
   }
  ],
  "sources": {
-  "generatedAt": "2026-11-16T18:08:06+00:00",
+  "generatedAt": "2026-11-16T18:55:17+00:00",
   "testDate": "2026-11-24",
   "bbox": {
    "latMin": 45.4,
@@ -3427,6 +3416,348 @@
    "lonMax": 6.75
   },
   "feeds": [
+   {
+    "id": "sibra-annecy",
+    "url": "https://static.data.gouv.fr/resources/offre-de-transports-sibra-a-annecy-gtfs/20261112-080150/gtfs-sibra.zip",
+    "origin": "liste validée build_regional_gtfs.py",
+    "finalUrl": "https://static.data.gouv.fr/resources/offre-de-transports-sibra-a-annecy-gtfs/20261112-080150/gtfs-sibra.zip",
+    "bytes": 3415807,
+    "sha256": "f621165ccb9da1c3ac0c55673694ddb9d670a4ae8eb00c942482c7b8aeea8d1e",
+    "before": {
+     "stops": 1862,
+     "stop_times": 269669,
+     "trips": 9204
+    },
+    "after": {
+     "stop_times": 269669,
+     "stops": 1482,
+     "trips": 9204,
+     "routes": 32,
+     "bytes": 3183331
+    },
+    "excludedAgencies": [],
+    "excludedTrips": 0,
+    "agencies": [
+     {
+      "agency_name": "SIBRA",
+      "routes": 32
+     }
+    ],
+    "validity": {
+     "from": "20261112",
+     "to": "20261227"
+    },
+    "tripsActiveOnTestDate": 1833,
+    "faresInFeed": false,
+    "status": "importé",
+    "file": "sibra-annecy.gtfs.zip"
+   },
+   {
+    "id": "tac-annemasse",
+    "url": "https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip",
+    "origin": "liste validée build_regional_gtfs.py",
+    "finalUrl": "https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip",
+    "bytes": 712456,
+    "sha256": "fbc644c04aac5460cd96a6c7fd667fc6b588bbb2455bbed0d73cebb4bfaffaa7",
+    "before": {
+     "stops": 280,
+     "stop_times": 29782,
+     "trips": 1357
+    },
+    "after": {
+     "stop_times": 29782,
+     "stops": 280,
+     "trips": 1357,
+     "routes": 8,
+     "bytes": 709486
+    },
+    "excludedAgencies": [],
+    "excludedTrips": 0,
+    "agencies": [
+     {
+      "agency_name": "TAC Mobilités",
+      "routes": 8
+     }
+    ],
+    "validity": {
+     "from": "20261103",
+     "to": "20271231"
+    },
+    "tripsActiveOnTestDate": 496,
+    "faresInFeed": false,
+    "status": "importé",
+    "file": "tac-annemasse.gtfs.zip"
+   },
+   {
+    "id": "tcl-lyon",
+    "url": "https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8",
+    "origin": "liste validée build_regional_gtfs.py",
+    "finalUrl": "https://gtech-transit-prod.apigee.net/v1/google/gtfs/odbl/lyon_tcl.zip?apikey=BasyG6OFZXgXnzWdQLTwJFGcGmeOs204&secret=gNo6F5PhQpsGRBCK",
+    "bytes": 48881803,
+    "sha256": "72e89baa74995b592ca4c9e8a85b82e41e952da7175c2b33f01730a9481c5186",
+    "before": {
+     "stops": 8916,
+     "stop_times": 2999819,
+     "trips": 144761
+    },
+    "after": {
+     "stop_times": 2978765,
+     "stops": 6581,
+     "trips": 143781,
+     "routes": 519,
+     "bytes": 38716530
+    },
+    "excludedAgencies": [],
+    "excludedTrips": 0,
+    "agencies": [
+     {
+      "agency_name": "TCL",
+      "routes": 191
+     },
+     {
+      "agency_name": "Rhonexpress",
+      "routes": 1
+     },
+     {
+      "agency_name": "TCL",
+      "routes": 327
+     }
+    ],
+    "validity": {
+     "from": "20261016",
+     "to": "20270703"
+    },
+    "tripsActiveOnTestDate": 21320,
+    "faresInFeed": true,
+    "status": "importé",
+    "file": "tcl-lyon.gtfs.zip"
+   },
+   {
+    "id": "synchro-chambery",
+    "url": "https://www.data.gouv.fr/api/1/datasets/r/a81cdf4b-5a70-43c9-8803-cef0430ed170",
+    "origin": "liste validée build_regional_gtfs.py",
+    "finalUrl": "https://chambery.mecatran.com/utw/ws/gtfsfeed/static/chambery?apiKey=223f2f102c1242570d3f0231326a271940774f72&type=gtfs_urbain",
+    "bytes": 1516227,
+    "sha256": "7ed9fe98b45f12c129fad6e22dda0d609a612548337e9e9aeaddc16c29446aeb",
+    "before": {
+     "stops": 1240,
+     "stop_times": 202869,
+     "trips": 6722
+    },
+    "after": {
+     "stop_times": 202869,
+     "stops": 1240,
+     "trips": 6722,
+     "routes": 24,
+     "bytes": 1507426
+    },
+    "excludedAgencies": [],
+    "excludedTrips": 0,
+    "agencies": [
+     {
+      "agency_name": "Synchro Bus",
+      "routes": 24
+     }
+    ],
+    "validity": {
+     "from": "20261116",
+     "to": "20261220"
+    },
+    "tripsActiveOnTestDate": 1147,
+    "faresInFeed": false,
+    "status": "importé",
+    "file": "synchro-chambery.gtfs.zip"
+   },
+   {
+    "id": "ondea-grand-lac",
+    "url": "https://www.data.gouv.fr/api/1/datasets/r/b4e8d98c-e17a-4fb0-857f-8cb618039b2a",
+    "origin": "liste validée build_regional_gtfs.py",
+    "finalUrl": "https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/ctlb-aix-les-bains/exports/pan.zip",
+    "bytes": 1084758,
+    "sha256": "a4e636cd3ce782e89280ccb4c4fdc12871d625dc28e26410a39269de6295f341",
+    "before": {
+     "stops": 820,
+     "stop_times": 53948,
+     "trips": 2290
+    },
+    "after": {
+     "stop_times": 53948,
+     "stops": 814,
+     "trips": 2290,
+     "routes": 64,
+     "bytes": 1084015
+    },
+    "excludedAgencies": [],
+    "excludedTrips": 0,
+    "agencies": [
+     {
+      "agency_name": "Ondéa Grand Lac",
+      "routes": 64
+     }
+    ],
+    "validity": {
+     "from": "20261017",
+     "to": "20270331"
+    },
+    "tripsActiveOnTestDate": 520,
+    "faresInFeed": false,
+    "status": "importé",
+    "file": "ondea-grand-lac.gtfs.zip"
+   },
+   {
+    "id": "start-thonon",
+    "url": "https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e",
+    "origin": "liste validée build_regional_gtfs.py",
+    "finalUrl": "https://static.data.gouv.fr/resources/thonon-agglomeration-donnees-gtfs/20260831-135752/2026.08.18-2026.12.18-gtfs-start.zip",
+    "bytes": 2463700,
+    "sha256": "0a03088709f15c4dc2d67178eeb225ac3410ee58c15acfbb09f8f6636a79d85f",
+    "before": {
+     "stops": 530,
+     "stop_times": 269027,
+     "trips": 18231
+    },
+    "after": {
+     "stop_times": 269027,
+     "stops": 530,
+     "trips": 18231,
+     "routes": 26,
+     "bytes": 2455436
+    },
+    "excludedAgencies": [],
+    "excludedTrips": 0,
+    "agencies": [
+     {
+      "agency_name": "Réseau STAR'T",
+      "routes": 26
+     }
+    ],
+    "validity": {
+     "from": "20260817",
+     "to": "20261220"
+    },
+    "tripsActiveOnTestDate": 743,
+    "faresInFeed": false,
+    "status": "importé",
+    "file": "start-thonon.gtfs.zip"
+   },
+   {
+    "id": "flixbus",
+    "url": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
+    "origin": "catalogue PAN (audit-national-operators)",
+    "finalUrl": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
+    "bytes": 32077430,
+    "sha256": "6e07dd3c3a76e297cfae3cea20adbe716f9a79250f38a67945388d3504066f1c",
+    "before": {
+     "stops": 2085,
+     "stop_times": 273100,
+     "trips": 39432
+    },
+    "after": {
+     "stop_times": 4218,
+     "stops": 23,
+     "trips": 1446,
+     "routes": 81,
+     "bytes": 1536128
+    },
+    "excludedAgencies": [],
+    "excludedTrips": 0,
+    "agencies": [
+     {
+      "agency_name": "FlixBus-eu",
+      "routes": 81
+     }
+    ],
+    "validity": {
+     "from": "20261115",
+     "to": "20270514"
+    },
+    "tripsActiveOnTestDate": 59,
+    "faresInFeed": false,
+    "status": "importé",
+    "file": "flixbus.gtfs.zip"
+   },
+   {
+    "id": "blablacar-bus",
+    "url": "https://drive.google.com/uc?export=download&id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o",
+    "origin": "catalogue PAN (audit-national-operators)",
+    "finalUrl": "https://drive.usercontent.google.com/download?id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o&export=download",
+    "bytes": 192317,
+    "sha256": "060450e39074e7692b32945c1ff05407662c3fa7a536eca9170e2ea0ae03d6cd",
+    "before": {
+     "stops": 661,
+     "stop_times": 8953,
+     "trips": 1600
+    },
+    "after": {
+     "stop_times": 903,
+     "stops": 17,
+     "trips": 321,
+     "routes": 321,
+     "bytes": 30251
+    },
+    "excludedAgencies": [],
+    "excludedTrips": 0,
+    "agencies": [
+     {
+      "agency_name": "BlaBlaCar Bus",
+      "routes": 321
+     }
+    ],
+    "validity": {
+     "from": "20261116",
+     "to": "20270106"
+    },
+    "tripsActiveOnTestDate": 28,
+    "faresInFeed": false,
+    "status": "importé",
+    "file": "blablacar-bus.gtfs.zip"
+   },
+   {
+    "id": "sncf",
+    "url": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
+    "origin": "SNCF Open Data (export national)",
+    "finalUrl": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
+    "bytes": 5654542,
+    "sha256": "c7fa334890dad1a0ee200659366e0bac9b8b87effddbcdbe2fc0db1e6e6d72bc",
+    "before": {
+     "stops": 8664,
+     "stop_times": 529281,
+     "trips": 60637
+    },
+    "after": {
+     "stop_times": 47807,
+     "stops": 648,
+     "trips": 6988,
+     "routes": 101,
+     "bytes": 549318
+    },
+    "excludedAgencies": [
+     "CFF"
+    ],
+    "excludedTrips": 62,
+    "agencies": [
+     {
+      "agency_name": "SNCF VOYAGEURS",
+      "routes": 96
+     },
+     {
+      "agency_name": "SNCF Voyageurs BO",
+      "routes": 2
+     },
+     {
+      "agency_name": "OCEdefault",
+      "routes": 3
+     }
+    ],
+    "validity": {
+     "from": "20261115",
+     "to": "20270430"
+    },
+    "tripsActiveOnTestDate": 1448,
+    "faresInFeed": false,
+    "status": "importé",
+    "file": "sncf.gtfs.zip"
+   },
    {
     "id": "oura-agregat",
     "url": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA",
@@ -3440,21 +3771,20 @@
      "trips": 58755
     },
     "after": {
-     "stop_times": 851055,
-     "stops": 11824,
-     "trips": 36366,
-     "routes": 661,
-     "bytes": 37327595
+     "stop_times": 510544,
+     "stops": 9416,
+     "trips": 22376,
+     "routes": 541,
+     "bytes": 32563881
     },
+    "excludedAgencies": [
+     "AIX-LES-BAINS - Ondéa",
+     "ANNEMASSE - TAC",
+     "CHAMBERY - Synchro Mobilités",
+     "THONON-LES-BAINS - STAR'T"
+    ],
+    "excludedTrips": 13990,
     "agencies": [
-     {
-      "agency_name": "AIX-LES-BAINS - Ondéa",
-      "routes": 63
-     },
-     {
-      "agency_name": "ANNEMASSE - TAC",
-      "routes": 8
-     },
      {
       "agency_name": "ALBERTVILLE - TRA Mobilité",
       "routes": 11
@@ -3486,10 +3816,6 @@
      {
       "agency_name": "EVIAN - ÉVA'D",
       "routes": 10
-     },
-     {
-      "agency_name": "CHAMBERY - Synchro Mobilités",
-      "routes": 24
      },
      {
       "agency_name": "REGION - cars Région Haute-Savoie",
@@ -3536,10 +3862,6 @@
       "routes": 4
      },
      {
-      "agency_name": "THONON-LES-BAINS - STAR'T",
-      "routes": 25
-     },
-     {
       "agency_name": "VIENNE - L’va",
       "routes": 49
      }
@@ -3548,62 +3870,16 @@
      "from": "20261116",
      "to": "20280630"
     },
-    "tripsActiveOnTestDate": 8070,
+    "tripsActiveOnTestDate": 5165,
     "faresInFeed": false,
     "status": "importé",
     "file": "oura-agregat.gtfs.zip"
    },
    {
-    "id": "sncf",
-    "url": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
-    "origin": "SNCF Open Data (export national)",
-    "finalUrl": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
-    "bytes": 5654542,
-    "sha256": "c7fa334890dad1a0ee200659366e0bac9b8b87effddbcdbe2fc0db1e6e6d72bc",
-    "before": {
-     "stops": 8664,
-     "stop_times": 529281,
-     "trips": 60637
-    },
-    "after": {
-     "stop_times": 48729,
-     "stops": 661,
-     "trips": 7050,
-     "routes": 102,
-     "bytes": 558953
-    },
-    "agencies": [
-     {
-      "agency_name": "CFF",
-      "routes": 1
-     },
-     {
-      "agency_name": "SNCF VOYAGEURS",
-      "routes": 96
-     },
-     {
-      "agency_name": "SNCF Voyageurs BO",
-      "routes": 2
-     },
-     {
-      "agency_name": "OCEdefault",
-      "routes": 3
-     }
-    ],
-    "validity": {
-     "from": "20261115",
-     "to": "20270430"
-    },
-    "tripsActiveOnTestDate": 1448,
-    "faresInFeed": false,
-    "status": "importé",
-    "file": "sncf.gtfs.zip"
-   },
-   {
     "id": "suisse-ski",
     "url": "https://data.opentransportdata.swiss/dataset/timetable-2026-gtfs2020/permalink",
     "origin": "permalien (API CKAN en échec : HTTP Error 403: Forbidden)",
-    "finalUrl": "https://83025b28472d6aa2bf5ae59f3724aa78.eu.r2.cloudflarestorage.com/dx-omd-prod/resources/c19fcd23-d911-4a7d-8f61-2d7d4dff23d1/gtfs_fp2026_20261114.zip?response-content-disposition=attachment%3B%20filename%3Dgtfs_fp2026_20261114.zip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=9bd93e9511bb186699e38b472e825929%2F20261116%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20261116T180903Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&X-Amz-Signature=0517fca997c05c953a7b16b8d7de26d1b1ba9b59788a1997d9b30ebdcb747493",
+    "finalUrl": "https://83025b28472d6aa2bf5ae59f3724aa78.eu.r2.cloudflarestorage.com/dx-omd-prod/resources/c19fcd23-d911-4a7d-8f61-2d7d4dff23d1/gtfs_fp2026_20261114.zip?response-content-disposition=attachment%3B%20filename%3Dgtfs_fp2026_20261114.zip&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=9bd93e9511bb186699e38b472e825929%2F20261116%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20261116T185740Z&X-Amz-Expires=60&X-Amz-SignedHeaders=host&X-Amz-Signature=e81e139087dab4a197502d534df10586a17d91048490b6cd81f1ff6a23590c0b",
     "bytes": 292103653,
     "sha256": "c221979f0dc36df7c92d3fcd9af799c46140aa2865b271b284030183f0e2ae85",
     "before": {
@@ -3612,12 +3888,21 @@
      "trips": 2618382
     },
     "after": {
-     "stop_times": 7580541,
-     "stops": 9526,
-     "trips": 401214,
-     "routes": 493,
-     "bytes": 50457367
+     "stop_times": 7244253,
+     "stops": 7364,
+     "trips": 379864,
+     "routes": 301,
+     "bytes": 47133658
     },
+    "excludedAgencies": [
+     "Société Nationale des Chemins de fer Français",
+     "Evian",
+     "SIBRA",
+     "Réseau de transports de l'Agglomération de Thonon",
+     "Transports Publics de l'agglomération d'Annemasse",
+     "RDTAin"
+    ],
+    "excludedTrips": 55926,
     "agencies": [
      {
       "agency_name": "Schweizerische Bundesbahnen SBB",
@@ -3626,10 +3911,6 @@
      {
       "agency_name": "Transports Publics Genevois",
       "routes": 87
-     },
-     {
-      "agency_name": "Société Nationale des Chemins de fer Français",
-      "routes": 150
      },
      {
       "agency_name": "Transports publics fribourgeois",
@@ -3660,18 +3941,6 @@
       "routes": 55
      },
      {
-      "agency_name": "Evian",
-      "routes": 8
-     },
-     {
-      "agency_name": "SIBRA",
-      "routes": 14
-     },
-     {
-      "agency_name": "Réseau de transports de l'Agglomération de Thonon",
-      "routes": 7
-     },
-     {
       "agency_name": "Alpbus Fournier",
       "routes": 2
      },
@@ -3682,10 +3951,6 @@
      {
       "agency_name": "Transports de la région Morges-Bière-Cossonay Ersatzverkehr",
       "routes": 3
-     },
-     {
-      "agency_name": "Transports Publics de l'agglomération d'Annemasse",
-      "routes": 7
      },
      {
       "agency_name": "Transports Vallée de Joux-Yverdon-Ste-Croix",
@@ -3705,10 +3970,6 @@
      },
      {
       "agency_name": "Transports Publics de la Région Nyonnaise",
-      "routes": 6
-     },
-     {
-      "agency_name": "RDTAin",
       "routes": 6
      },
      {
@@ -3732,316 +3993,38 @@
      "from": "20251214",
      "to": "20261212"
     },
-    "tripsActiveOnTestDate": 25388,
+    "tripsActiveOnTestDate": 22853,
     "faresInFeed": false,
     "status": "importé",
     "file": "suisse-ski.gtfs.zip"
-   },
-   {
-    "id": "flixbus",
-    "url": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
-    "origin": "catalogue PAN (audit-national-operators)",
-    "finalUrl": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
-    "bytes": 32077430,
-    "sha256": "6e07dd3c3a76e297cfae3cea20adbe716f9a79250f38a67945388d3504066f1c",
-    "before": {
-     "stops": 2085,
-     "stop_times": 273100,
-     "trips": 39432
-    },
-    "after": {
-     "stop_times": 4218,
-     "stops": 23,
-     "trips": 1446,
-     "routes": 81,
-     "bytes": 1536120
-    },
-    "agencies": [
-     {
-      "agency_name": "FlixBus-eu",
-      "routes": 81
-     }
-    ],
-    "validity": {
-     "from": "20261115",
-     "to": "20270514"
-    },
-    "tripsActiveOnTestDate": 59,
-    "faresInFeed": false,
-    "status": "importé",
-    "file": "flixbus.gtfs.zip"
-   },
-   {
-    "id": "blablacar-bus",
-    "url": "https://drive.google.com/uc?export=download&id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o",
-    "origin": "catalogue PAN (audit-national-operators)",
-    "finalUrl": "https://drive.usercontent.google.com/download?id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o&export=download",
-    "bytes": 192317,
-    "sha256": "060450e39074e7692b32945c1ff05407662c3fa7a536eca9170e2ea0ae03d6cd",
-    "before": {
-     "stops": 661,
-     "stop_times": 8953,
-     "trips": 1600
-    },
-    "after": {
-     "stop_times": 903,
-     "stops": 17,
-     "trips": 321,
-     "routes": 321,
-     "bytes": 30249
-    },
-    "agencies": [
-     {
-      "agency_name": "BlaBlaCar Bus",
-      "routes": 321
-     }
-    ],
-    "validity": {
-     "from": "20261116",
-     "to": "20270106"
-    },
-    "tripsActiveOnTestDate": 28,
-    "faresInFeed": false,
-    "status": "importé",
-    "file": "blablacar-bus.gtfs.zip"
-   },
-   {
-    "id": "sibra-annecy",
-    "url": "https://static.data.gouv.fr/resources/offre-de-transports-sibra-a-annecy-gtfs/20261112-080150/gtfs-sibra.zip",
-    "origin": "liste validée build_regional_gtfs.py",
-    "finalUrl": "https://static.data.gouv.fr/resources/offre-de-transports-sibra-a-annecy-gtfs/20261112-080150/gtfs-sibra.zip",
-    "bytes": 3415807,
-    "sha256": "f621165ccb9da1c3ac0c55673694ddb9d670a4ae8eb00c942482c7b8aeea8d1e",
-    "before": {
-     "stops": 1862,
-     "stop_times": 269669,
-     "trips": 9204
-    },
-    "after": {
-     "stop_times": 269669,
-     "stops": 1482,
-     "trips": 9204,
-     "routes": 32,
-     "bytes": 3183441
-    },
-    "agencies": [
-     {
-      "agency_name": "SIBRA",
-      "routes": 32
-     }
-    ],
-    "validity": {
-     "from": "20261112",
-     "to": "20261227"
-    },
-    "tripsActiveOnTestDate": 1833,
-    "faresInFeed": false,
-    "status": "importé",
-    "file": "sibra-annecy.gtfs.zip"
-   },
-   {
-    "id": "tac-annemasse",
-    "url": "https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip",
-    "origin": "liste validée build_regional_gtfs.py",
-    "finalUrl": "https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip",
-    "bytes": 712456,
-    "sha256": "fbc644c04aac5460cd96a6c7fd667fc6b588bbb2455bbed0d73cebb4bfaffaa7",
-    "before": {
-     "stops": 280,
-     "stop_times": 29782,
-     "trips": 1357
-    },
-    "after": {
-     "stop_times": 29782,
-     "stops": 280,
-     "trips": 1357,
-     "routes": 8,
-     "bytes": 709511
-    },
-    "agencies": [
-     {
-      "agency_name": "TAC Mobilités",
-      "routes": 8
-     }
-    ],
-    "validity": {
-     "from": "20261103",
-     "to": "20271231"
-    },
-    "tripsActiveOnTestDate": 496,
-    "faresInFeed": false,
-    "status": "importé",
-    "file": "tac-annemasse.gtfs.zip"
-   },
-   {
-    "id": "tcl-lyon",
-    "url": "https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8",
-    "origin": "liste validée build_regional_gtfs.py",
-    "finalUrl": "https://gtech-transit-prod.apigee.net/v1/google/gtfs/odbl/lyon_tcl.zip?apikey=BasyG6OFZXgXnzWdQLTwJFGcGmeOs204&secret=gNo6F5PhQpsGRBCK",
-    "bytes": 48881803,
-    "sha256": "72e89baa74995b592ca4c9e8a85b82e41e952da7175c2b33f01730a9481c5186",
-    "before": {
-     "stops": 8916,
-     "stop_times": 2999819,
-     "trips": 144761
-    },
-    "after": {
-     "stop_times": 2978765,
-     "stops": 6581,
-     "trips": 143781,
-     "routes": 519,
-     "bytes": 38716685
-    },
-    "agencies": [
-     {
-      "agency_name": "TCL",
-      "routes": 191
-     },
-     {
-      "agency_name": "Rhonexpress",
-      "routes": 1
-     },
-     {
-      "agency_name": "TCL",
-      "routes": 327
-     }
-    ],
-    "validity": {
-     "from": "20261016",
-     "to": "20270703"
-    },
-    "tripsActiveOnTestDate": 21320,
-    "faresInFeed": true,
-    "status": "importé",
-    "file": "tcl-lyon.gtfs.zip"
-   },
-   {
-    "id": "synchro-chambery",
-    "url": "https://www.data.gouv.fr/api/1/datasets/r/a81cdf4b-5a70-43c9-8803-cef0430ed170",
-    "origin": "liste validée build_regional_gtfs.py",
-    "finalUrl": "https://chambery.mecatran.com/utw/ws/gtfsfeed/static/chambery?apiKey=223f2f102c1242570d3f0231326a271940774f72&type=gtfs_urbain",
-    "bytes": 1516227,
-    "sha256": "7ed9fe98b45f12c129fad6e22dda0d609a612548337e9e9aeaddc16c29446aeb",
-    "before": {
-     "stops": 1240,
-     "stop_times": 202869,
-     "trips": 6722
-    },
-    "after": {
-     "stop_times": 202869,
-     "stops": 1240,
-     "trips": 6722,
-     "routes": 24,
-     "bytes": 1507332
-    },
-    "agencies": [
-     {
-      "agency_name": "Synchro Bus",
-      "routes": 24
-     }
-    ],
-    "validity": {
-     "from": "20261116",
-     "to": "20261220"
-    },
-    "tripsActiveOnTestDate": 1147,
-    "faresInFeed": false,
-    "status": "importé",
-    "file": "synchro-chambery.gtfs.zip"
-   },
-   {
-    "id": "ondea-grand-lac",
-    "url": "https://www.data.gouv.fr/api/1/datasets/r/b4e8d98c-e17a-4fb0-857f-8cb618039b2a",
-    "origin": "liste validée build_regional_gtfs.py",
-    "finalUrl": "https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/ctlb-aix-les-bains/exports/pan.zip",
-    "bytes": 1084758,
-    "sha256": "a4e636cd3ce782e89280ccb4c4fdc12871d625dc28e26410a39269de6295f341",
-    "before": {
-     "stops": 820,
-     "stop_times": 53948,
-     "trips": 2290
-    },
-    "after": {
-     "stop_times": 53948,
-     "stops": 814,
-     "trips": 2290,
-     "routes": 64,
-     "bytes": 1084075
-    },
-    "agencies": [
-     {
-      "agency_name": "Ondéa Grand Lac",
-      "routes": 64
-     }
-    ],
-    "validity": {
-     "from": "20261017",
-     "to": "20270331"
-    },
-    "tripsActiveOnTestDate": 520,
-    "faresInFeed": false,
-    "status": "importé",
-    "file": "ondea-grand-lac.gtfs.zip"
-   },
-   {
-    "id": "start-thonon",
-    "url": "https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e",
-    "origin": "liste validée build_regional_gtfs.py",
-    "finalUrl": "https://static.data.gouv.fr/resources/thonon-agglomeration-donnees-gtfs/20260831-135752/2026.08.18-2026.12.18-gtfs-start.zip",
-    "bytes": 2463700,
-    "sha256": "0a03088709f15c4dc2d67178eeb225ac3410ee58c15acfbb09f8f6636a79d85f",
-    "before": {
-     "stops": 530,
-     "stop_times": 269027,
-     "trips": 18231
-    },
-    "after": {
-     "stop_times": 269027,
-     "stops": 530,
-     "trips": 18231,
-     "routes": 26,
-     "bytes": 2455445
-    },
-    "agencies": [
-     {
-      "agency_name": "Réseau STAR'T",
-      "routes": 26
-     }
-    ],
-    "validity": {
-     "from": "20260817",
-     "to": "20261220"
-    },
-    "tripsActiveOnTestDate": 743,
-    "faresInFeed": false,
-    "status": "importé",
-    "file": "start-thonon.gtfs.zip"
    }
   ]
  },
  "osm": {
   "files": [
    {
-    "url": "https://download.geofabrik.de/europe/france/rhone-alpes-latest.osm.pbf",
-    "bytes": 533137443,
-    "sha256": "b1f395369942a1b5714080036fcb0a50e96f2db0330b22ff3ee5a3191faa4232",
-    "lastModified": "Mon, 16 Nov 2026 05:07:18 GMT"
+    "url": "https://download.openstreetmap.fr/extracts/europe/france/rhone_alpes-latest.osm.pbf",
+    "bytes": 620970463,
+    "sha256": "148436c77e2f8a1489a2472972542dda2ea0074fd4d47378cd47eb2af0439d7d",
+    "lastModified": "Sun, 15 Nov 2026 01:23:29 GMT"
    },
    {
-    "url": "https://download.geofabrik.de/europe/switzerland-latest.osm.pbf",
-    "bytes": 551200641,
-    "sha256": "eece9d61fffd76b88a6e5ff81cf89d662a40b9dae580a567c90220ab103dbab6",
-    "lastModified": "Mon, 16 Nov 2026 00:09:12 GMT"
+    "url": "https://download.openstreetmap.fr/extracts/europe/switzerland-latest.osm.pbf",
+    "bytes": 684877926,
+    "sha256": "c1f6423a299ea2dab8b91fcd782c18f6ce1111a8780283a4d8c8222a364ec4e1",
+    "lastModified": "Sun, 15 Nov 2026 01:21:23 GMT"
    }
   ],
   "bbox": "4.65,45.40,6.75,46.60",
-  "extractBytes": 75756146
+  "extractBytes": 93923093
  },
  "build": {
   "image": "docker.io/opentripplanner/opentripplanner:2.10.0",
-  "buildSeconds": 275,
-  "buildMaxMemory": "9.932GiB",
-  "graphBytes": 624809933,
-  "serveMemory": "6.945GiB"
+  "buildSeconds": 216,
+  "buildMaxMemory": "12.2GiB",
+  "graphBytes": 567397228,
+  "serveMemory": "6.297GiB",
+  "serveHeap": "6g",
+  "serveMemoryAfterQueries": "6.339GiB"
  }
 }
