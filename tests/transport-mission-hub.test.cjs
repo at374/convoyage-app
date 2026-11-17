@@ -391,3 +391,16 @@ test('prix inconnu : lien officiel d’achat par opérateur, jamais pour une por
   price:{status:'unknown',legFares:[{amount:2.1},null,null,null]}};
  assert.deepEqual(hub.ticketLinks(j).map(t=>t.label),['SNCF Connect']);
 });
+
+test('prise en charge : priorité à l’arrivée avec 15 minutes de marge même si départ minimal connu',()=>{
+ const task={earliestDeparture:at(7,30),latestArrival:at(9,0)};
+ assert.deepEqual(H.queryWindow(task),{when:at(8,45),arriveBy:true});
+});
+test('jonction : départ minimal seul reste une recherche après livraison',()=>{
+ const task={earliestDeparture:at(14,10)};
+ assert.deepEqual(H.queryWindow(task),{when:at(14,10),arriveBy:false});
+});
+test('prise en charge : marge paramétrée de 30 minutes respectée',()=>{
+ const task={earliestDeparture:at(7,30),latestArrival:at(9,0),marginMinutes:30};
+ assert.deepEqual(H.queryWindow(task),{when:at(8,30),arriveBy:true});
+});
