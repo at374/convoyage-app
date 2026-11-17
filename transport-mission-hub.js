@@ -943,7 +943,15 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
    for(const t of list){const fresh=walkPairs(t.j,s.task).filter(k=>!seen.has(k));
     if(fresh.length<=budget){budget-=fresh.length;fresh.forEach(k=>seen.add(k));take.push(t);}else rest.push(t);}
    return [take,rest];};
-  let [batch,rest]=select(toWalk,8);
+  // Réserver un petit budget par compagnie de cars : les autres moteurs
+  // arrivent en parallèle et peuvent avoir déjà consommé le quota commun.
+  // Un budget local ne doit pas dépendre de l'ordre des réponses réseau.
+  const coachSource=/(?:flixbus|blablacar\s*(?:bus|coach)|blablacarbus|ouibus)/i.test(source);
+  const coachKey=coachSource?(/flixbus/i.test(source)?'flixbus':'blablacarBus'):null;
+  const coachBudget=coachKey?Math.max(0,4-(s.coachWalkPairs[coachKey]||0)):0;
+  let [batch,rest]=select(toWalk,coachSource?coachBudget:8);
+  if(coachKey)s.coachWalkPairs[coachKey]=(s.coachWalkPairs[coachKey]||0)+
+   batch.reduce((count,t)=>count+walkPairs(t.j,s.task).length,0);
   await walkBatch(batch);
   // Recherche complémentaire : si rien n'est encore réalisable dans cette direction, 8 couples de plus.
   if(!disposed&&rest.length&&!s.items.some(x=>x.feasible)){[batch,rest]=select(rest,8);await walkBatch(batch);}
@@ -953,7 +961,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   if(!disposed)emit(label);
  }
  for(const task of tasks){
-  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},discarded:{},bySignature:new Map(),walkPairs:new Set()};
+  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},discarded:{},bySignature:new Map(),walkPairs:new Set(),coachWalkPairs:{flixbus:0,blablacarBus:0}};
   if(!pt(task.from)||!pt(task.to)){state[label].errors.adresses='adresse GPS manquante';emit(label);continue;}
   // Ne lancer aucun fournisseur ni marche si la fenêtre temporelle est impossible.
   if(!queryWindow(task)){
