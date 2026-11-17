@@ -85,3 +85,9 @@ test('jonction multi-jours : onglet calé sur la prochaine prise en charge',()=>
  assert.match(app,/Jonction:next\?parisServiceDay\(next\.pickup_start\):null/);
  assert.doesNotMatch(app,/Jonction:next\?parisServiceDay\(deliveryDate\):null/);
 });
+
+test('cartes piétonnes : conserver les détails construits après rafraîchissement',()=>{
+ assert.match(hub,/const node=card\(doc,j,labels,expandFirst\|\|\(key&&opened\.has\(key\)\)\)/);
+ assert.match(hub,/if\(key\)node\.setAttribute\('data-journey-key',key\)/);
+ assert.doesNotMatch(hub,/if\(opened\.has\(key\)\)node\.open=true/);
+});
