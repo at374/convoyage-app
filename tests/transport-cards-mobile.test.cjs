@@ -16,7 +16,7 @@ test('fiche mission : moteur automatique raccordé et sans formulaire de recherc
  assert.match(app,/startTransportHub\(\)/);
 });
 test('cartes Android : styles chargés avec cache invalidé et prix mis en évidence',()=>{
- assert.match(html,/style\.css\?v=transport-cards-20261117e/);
+ assert.match(html,/style\.css\?v=transport-cards-20261117f/);
  assert.match(css,/\.cp-hub-card \.cp-hub-price\{[^}]*font-size:1\.28em/);
  assert.match(css,/@media\(max-width:600px\)/);
  assert.match(css,/\.cp-hub-card \.cp-hub-map\{max-width:100%/);
@@ -163,4 +163,10 @@ test('GPS plateforme = centre de commune : le point d’adresse officiel est pr�
  const c=G.coordonnees({...m,origin:{lat:v.lat,lng:v.lng}},'origin');
  assert.equal(c.precision,'adresse');assert.ok(Math.abs(c.lng-6.08768)<1e-6);
  delete G.POINTS[G.cleAdresse(m,'origin')];
+});
+
+test('fluidité : tuiles de carte chargées à l’affichage, cartes hors écran non dessinées',()=>{
+ assert.match(hub,/IntersectionObserver/);
+ assert.match(hub,/const loadTiles=\(\)=>/);
+ assert.match(fs.readFileSync(path.join(__dirname,'..','style.css'),'utf8'),/\.cp-hub-card\{content-visibility:auto/);
 });

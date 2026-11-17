@@ -1220,12 +1220,19 @@ function mapSvg(doc,j){
  const bg=doc.createElementNS(NS,'rect');bg.setAttribute('width',W);bg.setAttribute('height',H);bg.setAttribute('fill','#e8e6df');svg.appendChild(bg);
  // Fond de carte : tuiles OpenStreetMap (gratuites, attribution affichée). Hors ligne, le fond reste uni et le tracé visible.
  const n=Math.pow(2,z),txMin=Math.floor((cx-W/2)/T),txMax=Math.floor((cx+W/2)/T),tyMin=Math.max(0,Math.floor((cy-H/2)/T)),tyMax=Math.min(n-1,Math.floor((cy+H/2)/T));
+ // Tuiles chargées seulement quand la carte arrive à l'écran (des dizaines de cartes par fiche ralentissaient le défilement du téléphone).
+ const tileNodes=[];
  for(let tx=txMin;tx<=txMax;tx++)for(let ty=tyMin;ty<=tyMax;ty++){
   const im=doc.createElementNS(NS,'image');
-  im.setAttribute('href','https://tile.openstreetmap.org/'+z+'/'+(((tx%n)+n)%n)+'/'+ty+'.png');
   im.setAttribute('x',tx*T-cx+W/2);im.setAttribute('y',ty*T-cy+H/2);im.setAttribute('width',T);im.setAttribute('height',T);
-  im.setAttribute('class','cp-hub-tile');svg.appendChild(im);
+  im.setAttribute('class','cp-hub-tile');
+  const url='https://tile.openstreetmap.org/'+z+'/'+(((tx%n)+n)%n)+'/'+ty+'.png';
+  tileNodes.push([im,url]);svg.appendChild(im);
  }
+ const loadTiles=()=>{for(const [im,url] of tileNodes)im.setAttribute('href',url);tileNodes.length=0;};
+ const IO=doc.defaultView&&doc.defaultView.IntersectionObserver;
+ if(IO){try{const io=new IO(es=>{if(es.some(e=>e.isIntersecting)){io.disconnect();loadTiles();}},{rootMargin:'200px'});io.observe(svg);svg.__cpTiles=io;}catch(_){loadTiles();}}
+ else loadTiles();
  for(const l of j.legs){
   const line=l.geometry&&l.geometry.length?l.geometry:(l.kind==='walk'||l.kind==='scooter'?[]:[l.fromPoint,l.toPoint].filter(Boolean));if(line.length<2)continue;
   // Maximum 500 sommets par tronçon à l'écran ; conserver départ et arrivée.

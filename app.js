@@ -2354,7 +2354,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         // Un onglet de jour n'apparaît que si au moins un transport compatible avec le créneau existe (ou si la recherche est en cours).
         updateDayTabs=()=>{
           const empty=day=>{const ls=Object.entries(transportDays).filter(([,d])=>d===day).map(([l])=>l);
-            return ls.length>0&&ls.every(l=>labelState[l]&&labelState[l].done&&!labelState[l].total);};
+            // Seul un jour réservé à la jonction (mission suivante) disparaît s'il n'a aucun transport ; les jours de la fenêtre de la mission restent visibles avec leur diagnostic.
+            return ls.length>0&&ls.every(l=>l.startsWith('Jonction')&&labelState[l]&&labelState[l].done&&!labelState[l].total);};
           let active=null;for(const b of buttons){if(b.classList.contains('active'))active=b.dataset.day;}
           for(const b of buttons)b.hidden=empty(b.dataset.day)&&b.dataset.day!==active;
           if(active&&empty(active)){const alt=buttons.find(b=>!b.hidden&&b.dataset.day!==active);if(alt)selectDay(alt.dataset.day);}

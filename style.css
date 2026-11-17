@@ -700,3 +700,6 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .cp-hub-search-help{display:grid;gap:6px;margin:8px 0;padding:10px;border:1px solid var(--accent,#e0a800);border-radius:10px}
 .cp-hub-copy{min-height:44px;padding:8px 10px;border:1px solid var(--accent,#e0a800);border-radius:10px;background:transparent;color:inherit;font-weight:700;text-align:left}
 #cpTransportMissionDetails .cp-hub-walk-map-link.cp-hub-nav{margin-top:6px}
+/* Défilement fluide : les cartes hors écran ne sont ni mises en page ni dessinées. */
+#cpTransportMissionDetails .cp-hub-card{content-visibility:auto;contain-intrinsic-size:auto 120px}
+#cpTransportMissionDetails .cp-hub-walk-map,#cpTransportMissionDetails .cp-hub-map{contain:layout paint}
