@@ -2872,8 +2872,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         }
       }
       });
-      // TripGo is optional and uses only a private key saved on this device.
-      if (window.CPTripGo) {
+      // TripGo retiré des moteurs (17/11/2026, demande de Laurent) : champ de clé et recherches masqués.
+      if (false && window.CPTripGo) {
         const tripgo=window.CPTripGo,config=document.createElement('div');
         let busRealtime=null;
         try{busRealtime=window.CPBlaBlaRealtime?.createClient({fetcher:regionalFetch,...(window.CP_BLABLACAR_REALTIME_URL?{endpoint:window.CP_BLABLACAR_REALTIME_URL}:{})});}catch(_){}
