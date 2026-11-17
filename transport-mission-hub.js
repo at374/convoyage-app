@@ -551,7 +551,9 @@ function rank(items,task={}){
  const tier=j=>j.feasible||j.scheduled?1:0,confirmedFirst=(a,b)=>Number(b.feasible)-Number(a.feasible);
  const byFeasible=(a,b)=>tier(b)-tier(a);
  const fastest=[...all].sort((a,b)=>byFeasible(a,b)||a.durationMinutes-b.durationMinutes||confirmedFirst(a,b)||priceSortKey(a.price)-priceSortKey(b.price))[0];
- const priced=all.filter(j=>j.price.status==='verified'||j.price.status==='free');
+ // « Moins cher » ne doit jamais recommander un trajet impossible, même si son prix est connu.
+ const priced=all.filter(j=>(j.feasible||j.scheduled)&&
+  (j.price.status==='verified'||j.price.status==='free'));
  const cheapest=[...priced].sort((a,b)=>byFeasible(a,b)||priceSortKey(a.price)-priceSortKey(b.price)||confirmedFirst(a,b)||a.durationMinutes-b.durationMinutes)[0];
  const score=j=>(Number.isFinite(priceSortKey(j.price))?Math.min(priceSortKey(j.price),200):60)+j.durationMinutes/3+j.transfers*8+j.walkMeters/250+
   (j.slackMinutes===null?0:Math.max(0,30-j.slackMinutes));
