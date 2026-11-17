@@ -1055,12 +1055,24 @@ const TAD=[
 function tadFor(task){const pts=[pt(task?.from),pt(task?.to)].filter(Boolean);
  return TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));}
 function render(host,v){
- const doc=host.ownerDocument;host.textContent='';host.setAttribute('data-transport-hub',VERSION);
+ const doc=host.ownerDocument;
+ // Préserver les cartes ouvertes lors des arrivées progressives des moteurs.
+ // Sans cela, chaque résultat réseau referme les détails et recrée les SVG.
+ const opened=new Set(Array.from(host.querySelectorAll('details.cp-hub-card[open]'))
+   .map(node=>node.getAttribute('data-journey-key')).filter(Boolean));
+ const moreOpen=!!host.querySelector('details.cp-hub-more[open]');
+ host.textContent='';host.setAttribute('data-transport-hub',VERSION);
  const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):'Aucun trajet trouvé'):'Recherche en cours… ('+v.total+' trouvée'+(v.total>1?'s':'')+')');
  host.appendChild(head);
- for(const p of v.picks)host.appendChild(card(doc,p.journey,p.labels));
+ const addCard=(parent,j,labels)=>{
+  const node=card(doc,j,labels),key=signature(j);
+  if(key){node.setAttribute('data-journey-key',key);if(opened.has(key))node.open=true;}
+  parent.appendChild(node);
+ };
+ for(const p of v.picks)addCard(host,p.journey,p.labels);
  if(v.others.length){const more=el(doc,'details','cp-hub-more');more.appendChild(el(doc,'summary',null,'Autres propositions ('+v.others.length+')'));
-  for(const j of v.others.slice(0,8))more.appendChild(card(doc,j,null));host.appendChild(more);}
+  for(const j of v.others.slice(0,8))addCard(more,j,null);
+  more.open=moreOpen;host.appendChild(more);}
  const errs=Object.entries(v.errors),skip=Object.entries(v.skipped);
  if(v.done&&(errs.length||skip.length)){
   const d=el(doc,'details','cp-hub-diag');d.appendChild(el(doc,'summary',null,'Moteurs consultés'));
