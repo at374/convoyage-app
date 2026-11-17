@@ -917,7 +917,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   // Le budget de marches est partagé entre les moteurs. Sans priorité dédiée,
   // les premiers TER/bus locaux consomment les huit couples de points et les
   // cars longue distance restent indéfiniment « marches non calculées ».
-  const coachPriority=t=>/(?:flixbus|blablacar\\s*(?:bus|coach)|blablacarbus|ouibus)/i.test(
+  const coachPriority=t=>/(?:flixbus|blablacar\s*(?:bus|coach)|blablacarbus|ouibus)/i.test(
    [t.j.source,...(t.j.sources||[]),...(t.j.legs||[]).map(l=>l.provider||'')].join(' '))?0:1;
   toWalk.sort((a,b)=>coachPriority(a)-coachPriority(b)||
    (pk(a.quick)===pk(b.quick)?0:pk(a.quick)-pk(b.quick)||
