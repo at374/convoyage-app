@@ -93,8 +93,9 @@ test('paramètres : adresse exacte du domicile localisée, gardée en local, pri
 
 test('billet SNCF : gares exactes à coller, boutons copier (SNCF Connect sans lien pré-rempli)',async()=>{
  const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
- assert.match(src,/Copier la gare de départ/);assert.match(src,/Copier la gare d’arrivée/);
- assert.match(src,/ticketLink\(x\.provider\)\?\.label==='SNCF Connect'/);
+ assert.match(src,/'la gare':'l’arrêt'/);assert.match(src,/' d’arrivée'/);
+ assert.match(src,/for\(const netLabel of \['SNCF Connect','Cars Région'\]\)/);
+ assert.match(src,/ticketLink\(x\.provider\)\?\.label===netLabel/);
 });
 
 test('point GPS approximatif : marche longue et détour ne font pas écarter le trajet',()=>{

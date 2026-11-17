@@ -1313,13 +1313,16 @@ function card(doc,j,labels,expanded=false){
   const body=el(doc,'div','cp-hub-body');
   // Aide à la recherche de billet, juste sous le lien SNCF Connect (qui n'accepte pas de lien pré-rempli) :
   // noms exacts des gares à coller. Gare de départ = début du premier trajet SNCF, arrivée = fin du dernier.
-  const sncfLegs=j.legs.filter((x,k)=>x.kind!=='walk'&&x.kind!=='scooter'&&!(j.price.legFares&&j.price.legFares[k])&&ticketLink(x.provider)?.label==='SNCF Connect'&&x.from&&x.to);
-  if(sncfLegs.length&&j.price.status==='unknown'){
-   const from=sncfLegs[0].from,to=sncfLegs[sncfLegs.length-1].to;
+  // Même aide pour Cars Région (pas de lien pré-rempli non plus) : noms des arrêts à coller dans le site qui s'ouvre.
+  for(const netLabel of ['SNCF Connect','Cars Région']){
+   const netLegs=j.legs.filter((x,k)=>x.kind!=='walk'&&x.kind!=='scooter'&&!(j.price.legFares&&j.price.legFares[k])&&ticketLink(x.provider)?.label===netLabel&&x.from&&x.to);
+   if(!netLegs.length||j.price.status!=='unknown')continue;
+   const from=netLegs[0].from,to=netLegs[netLegs.length-1].to;
+   const place=netLabel==='SNCF Connect'?['gare','gares']:['arrêt','arrêts'];
    const box=el(doc,'div','cp-hub-search-help');
-   box.appendChild(el(doc,'strong',null,'🎟️ Chercher le prix sur SNCF Connect'));
-   box.appendChild(el(doc,'small',null,'Départ « '+from+' » · arrivée « '+to+' » · '+dayText(sncfLegs[0].departure)+' vers '+clock(sncfLegs[0].departure)+'.'));
-   for(const [label,text] of [['📋 Copier la gare de départ',from],['📋 Copier la gare d’arrivée',to]]){
+   box.appendChild(el(doc,'strong',null,'🎟️ Chercher le prix sur '+netLabel));
+   box.appendChild(el(doc,'small',null,'Départ « '+from+' » · arrivée « '+to+' » · '+dayText(netLegs[0].departure)+' vers '+clock(netLegs[0].departure)+'.'));
+   for(const [label,text] of [['📋 Copier '+(netLabel==='SNCF Connect'?'la gare':'l’arrêt')+' de départ',from],['📋 Copier '+(netLabel==='SNCF Connect'?'la gare':'l’arrêt')+' d’arrivée',to]]){
     const b=el(doc,'button','cp-hub-copy',label);b.type='button';
     b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();
      try{const w=doc.defaultView,n=w&&w.navigator;
