@@ -2454,9 +2454,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             if(target)target.appendChild(note);
           }
         }
-        const allerBase={from:homePt,to:gp(origin),fromName:homeName,toName:'Prise en charge',fromCity:homeName,toCity:m.from_city||'',marginMinutes:securityMarginMin,exactTarget:exactGps(origin),approximateEndpoint:(!homeExact&&!homeAdrOk)||!exact(origin),allowShortMargin:short};
-        const retourBase={from:gp(dest),to:homePt,fromName:'Livraison',toName:homeName,fromCity:m.to_city||'',toCity:homeName,approximateEndpoint:!exact(dest)||(!homeExact&&!homeAdrOk)};
-        const dayEnd=d=>parisIso(d,23,0);
+        // Noms affichés dans les marches : adresses exactes (pas « Point d'arrivée »).
+        const homeText=(homeAdrOk&&(homeAdr.libelle||homeAdr.texte))||home||homeName;
+        const allerBase={from:homePt,to:gp(origin),fromName:homeText,toName:from||'Prise en charge',fromCity:homeName,toCity:m.from_city||'',marginMinutes:securityMarginMin,exactTarget:exactGps(origin),approximateEndpoint:(!homeExact&&!homeAdrOk)||!exact(origin),allowShortMargin:short};
+        const retourBase={from:gp(dest),to:homePt,fromName:to||'Livraison',toName:homeText,fromCity:m.to_city||'',toCity:homeName,approximateEndpoint:!exact(dest)||(!homeExact&&!homeAdrOk)};
+        const dayEnd=d=>parisIso(d,19,0);   // fin de la journée de voyage (voyager de jour : 05:00–19:00)
         if(pickupDate&&multiAller.length){
           // Chaque jour : arrivées juste avant l'heure d'ouverture du jour (18:00 le premier jour), puis plus tard jusqu'à la fin de la fenêtre.
           for(const d of multiAller){
@@ -2468,7 +2470,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
               windowKind:'arrival',windowStartMs:Date.parse(startIso),windowEndMs:Date.parse(endIso)-securityMarginMin*60000});
           }
         }else if(pickupDate)tasks.push({...allerBase,label:'Aller',latestArrival:pickupEndIso||pickupDate,...(pickupEndIso?{windowKind:'arrival',windowStartMs:Date.parse(pickupDate),windowEndMs:Date.parse(pickupEndIso)-securityMarginMin*60000}:{})});
-        if(next&&deliveryDate&&next.pickup_start)tasks.push({label:'Jonction',from:gp(dest),to:gp(nextOrigin2),fromName:'Livraison',toName:'Mission suivante',fromCity:m.to_city||'',toCity:next.from_city||'',
+        if(next&&deliveryDate&&next.pickup_start)tasks.push({label:'Jonction',from:gp(dest),to:gp(nextOrigin2),fromName:to||'Livraison',toName:nextOrigin||'Mission suivante',fromCity:m.to_city||'',toCity:next.from_city||'',
           earliestDeparture:jonctionEarliest,latestArrival:jonctionLatest,...(jonctionLatest!==next.pickup_start?{windowKind:'arrival',windowStartMs:Date.parse(next.pickup_start),windowEndMs:Date.parse(jonctionLatest)-securityMarginMin*60000}:{}),marginMinutes:securityMarginMin,exactTarget:exactGps(nextOrigin2),approximateEndpoint:!exact(dest)||!exact(nextOrigin2),allowShortMargin:short});
         if(deliveryDate&&multiRetour.length){
           for(const d of multiRetour){

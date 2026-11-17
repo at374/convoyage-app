@@ -175,3 +175,12 @@ test('trottinette en approche : une marche trop longue est remplacée par un tro
  assert.equal(tooFar.legs[0].kind,'walk');
  const a=H.assess(on,task,null);assert.ok(!a.reasons.some(r=>r.startsWith('marche trop longue')));
 });
+
+test('adresses exactes dans les marches, guidage trottinette replié, fin de journée de voyage à 19:00',()=>{
+ const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ assert.match(src,/function renameEnds\(j,task\)/);
+ assert.doesNotMatch(src,/const guide=el\(doc,'details','cp-hub-steps'\);guide\.open=true;\n?\s*guide\.appendChild\(el\(doc,'summary',null,'🧭 Guidage · '/);
+ assert.match(app,/const dayEnd=d=>parisIso\(d,19,0\)/);
+ assert.match(app,/toName:from\|\|'Prise en charge'/);
+});

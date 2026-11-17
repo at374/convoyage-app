@@ -265,6 +265,17 @@ function fromNationalGTFS(rows,operator){
 }
 
 /* ---------- Marches ---------- */
+// Noms génériques des moteurs (« Point d'arrivée », « Origin »…) remplacés par l'adresse exacte de la mission.
+const GENERIC_END=/^(?:point d[’']arrivée|point de départ|origin|destination|adresse d[’']arrivée|adresse de départ|départ|arrivée)$/i;
+function renameEnds(j,task){
+ if(!j||!Array.isArray(j.legs)||!j.legs.length||!task)return j;
+ const legs=j.legs.slice();let changed=false;
+ const a=legs[0],b=legs[legs.length-1];
+ if(task.fromName&&a&&GENERIC_END.test(String(a.from||'').trim())){legs[0]={...a,from:task.fromName};changed=true;}
+ const z=legs[legs.length-1];
+ if(task.toName&&z&&GENERIC_END.test(String(z.to||'').trim())){legs[legs.length-1]={...z,to:task.toName};changed=true;}
+ return changed?{...j,legs}:j;
+}
 function isFoot(l){return !!l&&(l.kind==='walk'||l.kind==='scooter');}
 function walkLeg(route,from,to,fromName,toName,depMs){
  return leg({kind:'walk',mode:'Marche',from:fromName,to:toName,fromPoint:from,toPoint:to,
@@ -341,7 +352,7 @@ async function completeWalks(j,task,router,scooter){
   if(w)legs.push(w);
   else missing.push('marche jusqu’à l’adresse exacte d’arrivée non calculée');
  }
- return {...j,legs,missing};
+ return renameEnds({...j,legs,missing},task);
 }
 // Cache des marches : partagé entre moteurs, directions et fiches (stockage local du téléphone, 30 jours).
 // Clés arrondies au 1/10 000 de degré (≈ 10 m) : deux arrêts « identiques » vus par deux moteurs partagent la marche.
@@ -1090,7 +1101,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   const s=state[label];if(!s||disposed)return;
   s.received[source]=(s.received[source]||0)+(Array.isArray(journeys)?journeys.length:0);
   const cancelled=x=>x&&(x.cancelled===true||x.canceled===true||/^(cancelled|canceled|annul)/i.test(String(x.status||'')));
-  const usable=(Array.isArray(journeys)?journeys:[]).filter(j=>j&&!cancelled(j)&&Array.isArray(j.legs)&&j.legs.length&&
+  const usable=(Array.isArray(journeys)?journeys:[]).map(j=>renameEnds(j,s.task)).filter(j=>j&&!cancelled(j)&&Array.isArray(j.legs)&&j.legs.length&&
    !j.legs.some(l=>cancelled(l)||BOATS.test(l.mode+' '+(l.line||''))));
   // Point d'arrivée ou de départ approximatif (adresse trouvée seulement au niveau de la voie ou de la commune) : le test « marcher
   // directement serait aussi court » n'est pas fiable (l'écart de plusieurs km vient de l'approximation), on garde le trajet.
@@ -1396,7 +1407,7 @@ function card(doc,j,labels,expanded=false){
     link.href='https://www.openstreetmap.org/directions?engine=fossgis_osrm_bike&route='+encodeURIComponent(sa.lat+','+sa.lon+';'+sb.lat+','+sb.lon);
     link.target='_blank';link.rel='noopener noreferrer';li.appendChild(link);
     li.appendChild(navLink(doc,sa,sb,'bicycling'));}
-   if(Array.isArray(l.steps)&&l.steps.length){const guide=el(doc,'details','cp-hub-steps');guide.open=true;
+   if(Array.isArray(l.steps)&&l.steps.length){const guide=el(doc,'details','cp-hub-steps');
     guide.appendChild(el(doc,'summary',null,'🧭 Guidage · '+l.steps.length+' étape'+(l.steps.length>1?'s':'')));
     const st=el(doc,'ol',null);for(const x of l.steps)st.appendChild(el(doc,'li',null,x.text+(x.meters>0?' · '+(x.meters>=1000?(x.meters/1000).toFixed(1).replace('.',',')+' km':x.meters+' m'):'')));
     guide.appendChild(st);li.appendChild(guide);}
