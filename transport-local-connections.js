@@ -12,9 +12,9 @@ function distance(a,b){
  const h=Math.sin(dLat/2)**2+Math.cos(p.lat*rad)*Math.cos(q.lat*rad)*Math.sin(dLon/2)**2;
  return 12742000*Math.asin(Math.min(1,Math.sqrt(h)));
 }
-// Deux segments uniquement si même arrêt ou quais voisins (<=150 m), et marge >=5 min.
+// Deux segments uniquement si arrêts quasi identiques (<=30 m), et marge >=5 min.
 // Au-delà, une marche de correspondance réelle doit être calculée AVANT assemblage.
-function combine(first,second,{minTransferMinutes=5,maxTransferMeters=150}={}){
+function combine(first,second,{minTransferMinutes=5,maxTransferMeters=30}={}){
  if(!Array.isArray(first?.legs)||!first.legs.length||!Array.isArray(second?.legs)||!second.legs.length)return null;
  if(first.legs.some(l=>!l||l.kind==='walk'&&!Number.isFinite(l.durationSeconds))||
     second.legs.some(l=>!l||l.kind==='walk'&&!Number.isFinite(l.durationSeconds)))return null;
