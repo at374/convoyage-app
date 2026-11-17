@@ -1224,8 +1224,9 @@ function render(host,v){
    const count=v.received?.[name];
    return {name,status:error?'Erreur de recherche : '+error:
     skipped?'Moteur non interrogé : '+skipped:
-    Number.isFinite(count)?count+' trajet(s) remonté(s) avant filtrage des horaires et marches':
-    'Moteur non configuré ou aucune réponse'};
+    Number.isFinite(count)?count===0?'Aucun horaire reçu pour ce trajet et cette date':
+     count+' horaire(s) reçu(s) avant filtrage des horaires et marches (prix non fournis par le GTFS)':
+    'Aucune réponse du moteur'};
   });
   if(coachRows.length){
   const info=el(doc,'details','cp-hub-coach-status');
