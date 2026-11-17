@@ -652,6 +652,18 @@ function rank(items,task={}){
   if(already)already.labels.push(name);
   else picks.push({labels:[name],journey:best});
  }
+ // Fenêtre horaire de la mission (prise en charge 11:00–12:30, livraison 14:00–16:00…) : en plus des trois meilleurs choix,
+ // proposer un trajet qui arrive AVANT le début de la fenêtre et un autre qui arrive le plus tard possible dans la fenêtre
+ // (retour : départ dès l'ouverture de la fenêtre, puis le plus tard dans la fenêtre), marge de sécurité comprise.
+ if(Number.isFinite(task.windowStartMs)&&Number.isFinite(task.windowEndMs)&&(task.windowKind==='arrival'||task.windowKind==='departure')){
+  const ok=all.filter(j=>j.feasible||j.scheduled),arr=task.windowKind==='arrival';
+  const at=j=>ms(arr?j.arrival:j.departure);
+  const first=ok.filter(j=>arr?at(j)<=task.windowStartMs:at(j)>=task.windowStartMs&&at(j)<=task.windowStartMs+45*60000).sort((x,y)=>arr?at(y)-at(x):at(x)-at(y))[0];
+  const last=ok.filter(j=>at(j)<=task.windowEndMs&&at(j)>task.windowStartMs).sort((x,y)=>at(y)-at(x))[0];
+  for(const [j,label] of [[first,arr?'Arrive avant '+clock(task.windowStartMs):'Départ dès '+clock(task.windowStartMs)],[last,arr?'Arrive jusqu’à '+clock(task.windowEndMs):'Départ jusqu’à '+clock(task.windowEndMs)]]){
+   if(!j)continue;const already=picks.find(p=>p.journey===j);
+   if(already){if(!already.labels.includes(label))already.labels.push(label);}else picks.push({labels:[label],journey:j});}
+ }
  const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||relevant(a,b)||ms(a.departure)-ms(b.departure)||confirmedFirst(a,b));
  return {picks,others,total:all.length};
 }

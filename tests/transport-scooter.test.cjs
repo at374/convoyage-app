@@ -108,3 +108,15 @@ test('point GPS approximatif : marche longue et détour ne font pas écarter le 
  assert.ok(!approx.reasons.some(r=>r.startsWith('marche trop longue')));
  assert.ok(approx.reasons.some(r=>r.startsWith('marche longue à vérifier')));
 });
+
+test('fenêtre de mission : propositions avant le début et jusqu à la fin de la fenêtre (marge comprise)',()=>{
+ const A={lat:45.9,lon:6.12},B={lat:45.95,lon:6.2};
+ const mk=(dep,arr)=>H.assess({source:'t',sources:['t'],alerts:[],missing:[],legs:[{kind:'transit',mode:'Train',provider:'SNCF',line:'T'+dep,from:'a',to:'b',fromPoint:A,toPoint:B,departure:dep,arrival:arr,durationSeconds:3600}]},task,null);
+ const task={from:A,to:B,latestArrival:'2026-11-18T11:30:00Z',marginMinutes:15,windowKind:'arrival',windowStartMs:Date.parse('2026-11-18T10:00:00Z'),windowEndMs:Date.parse('2026-11-18T11:15:00Z')};
+ const items=[mk('2026-11-18T08:00:00Z','2026-11-18T09:00:00Z'),mk('2026-11-18T09:00:00Z','2026-11-18T09:50:00Z'),mk('2026-11-18T09:50:00Z','2026-11-18T10:40:00Z'),mk('2026-11-18T10:10:00Z','2026-11-18T11:10:00Z'),mk('2026-11-18T10:30:00Z','2026-11-18T11:25:00Z')];
+ const r=H.rank(items,task);
+ const labels=r.picks.flatMap(p=>p.labels).join('|');
+ assert.match(labels,/Arrive avant/);assert.match(labels,/Arrive jusqu/);
+ const av=r.picks.find(p=>p.labels.some(l=>/Arrive avant/.test(l))).journey,jq=r.picks.find(p=>p.labels.some(l=>/Arrive jusqu/.test(l))).journey;
+ assert.ok(Date.parse(av.arrival)<=task.windowStartMs);assert.equal(jq.arrival,'2026-11-18T11:10:00.000Z');
+});

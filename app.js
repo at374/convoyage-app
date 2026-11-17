@@ -2091,6 +2091,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       const pickupDate = Number.isFinite(Date.parse(transportPickup || '')) ? transportPickup : null;
       const deliveryDate = Number.isFinite(Date.parse(transportDelivery || '')) ?
         transportDelivery : null;
+      // Fenêtres de la mission : prise en charge (début–fin) et livraison (début–fin) ; marge de sécurité ajoutée.
+      const orig = (timing && timing.original) || m, okT = v => Number.isFinite(Date.parse(v || ''));
+      const pickupEndIso = okT(orig.pickup_end) && okT(pickupDate) && Date.parse(orig.pickup_end) > Date.parse(pickupDate) ? new Date(Date.parse(orig.pickup_end)).toISOString() : null;
+      const deliveryStartIso = !transportPlannedReturn && okT(orig.delivery_start) && okT(orig.delivery_end) && Date.parse(orig.delivery_end) > Date.parse(orig.delivery_start) ? new Date(Date.parse(orig.delivery_start) + securityMarginMin * 60000).toISOString() : null;
+      const deliveryEndMs = deliveryStartIso ? Date.parse(orig.delivery_end) + securityMarginMin * 60000 : null;
       const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
       const connectionStatus = nextGapMin == null ? '' :
         connectionBudgetMin < 0 ?
@@ -2268,6 +2273,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         Retour:parisServiceDay(deliveryDate)
       };
       const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
+      let updateDayTabs=()=>{};const labelState={};
       if(availableTransportDays.length>1){
         const tabs=document.createElement('nav');
         tabs.className='cp-transport-day-tabs';
@@ -2297,6 +2303,15 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         }
         hero.insertAdjacentElement('afterend',tabs);
         selectDay(transportDays.Aller||availableTransportDays[0]);
+        // Un onglet de jour n'apparaît que si au moins un transport compatible avec le créneau existe (ou si la recherche est en cours).
+        updateDayTabs=()=>{
+          const empty=day=>{const ls=Object.entries(transportDays).filter(([,d])=>d===day).map(([l])=>l);
+            return ls.length>0&&ls.every(l=>labelState[l]&&labelState[l].done&&!labelState[l].total);};
+          let active=null;for(const b of buttons){if(b.classList.contains('active'))active=b.dataset.day;}
+          for(const b of buttons)b.hidden=empty(b.dataset.day)&&b.dataset.day!==active;
+          if(active&&empty(active)){const alt=buttons.find(b=>!b.hidden&&b.dataset.day!==active);if(alt)selectDay(alt.dataset.day);}
+          tabs.hidden=buttons.filter(b=>!b.hidden).length<2;
+        };
       }else if(!next){
         // Sans prochaine mission, ne pas présenter une jonction fictive.
         transportDestinations.Jonction.hidden=true;
@@ -2349,6 +2364,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const exact=gps=>!!gps&&['gps','adresse'].includes(gps.precision);
         const exactGps=gps=>!!gps&&gps.precision==='gps';
         const origin=G.coordonnees(m,'origin'),dest=G.coordonnees(m,'destination'),nextOrigin2=next?G.coordonnees(next,'origin'):null;
+        // Jonction vers la mission suivante : fenêtre de prise en charge (début–fin) ; si elle a lieu un autre jour que la livraison,
+        // les trajets cherchés sont ceux du jour de la mission (départ dès 04:00 ce jour-là, au cas où l'on dormirait sur place).
+        const nextDay=next?parisServiceDay(next.pickup_start):null,delivDay=deliveryDate?parisServiceDay(deliveryDate):null;
+        const jonctionLatest=next&&okT(next.pickup_end)&&Date.parse(next.pickup_end)>Date.parse(next.pickup_start)?new Date(Date.parse(next.pickup_end)).toISOString():(next?next.pickup_start:null);
+        const jonctionEarliest=nextDay&&delivDay&&nextDay>delivDay?new Date(Date.parse(nextDay+'T04:00:00+01:00')).toISOString():deliveryDate;
         const tasks=[];
         // Les messages sont reconstruits sans doublons lors d'une actualisation des moteurs.
         for(const section of Object.values(transportDestinations))section.querySelectorAll('.cp-transport-approx').forEach(n=>n.remove());
@@ -2370,10 +2390,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           }
         }
         if(pickupDate)tasks.push({label:'Aller',from:homePt,to:gp(origin),fromName:homeName,toName:'Prise en charge',fromCity:homeName,toCity:m.from_city||'',
-          latestArrival:pickupDate,marginMinutes:securityMarginMin,exactTarget:exactGps(origin),approximateEndpoint:(!homeExact&&!homeAdrOk)||!exact(origin),allowShortMargin:short});
+          latestArrival:pickupEndIso||pickupDate,...(pickupEndIso?{windowKind:'arrival',windowStartMs:Date.parse(pickupDate),windowEndMs:Date.parse(pickupEndIso)-securityMarginMin*60000}:{}),marginMinutes:securityMarginMin,exactTarget:exactGps(origin),approximateEndpoint:(!homeExact&&!homeAdrOk)||!exact(origin),allowShortMargin:short});
         if(next&&deliveryDate&&next.pickup_start)tasks.push({label:'Jonction',from:gp(dest),to:gp(nextOrigin2),fromName:'Livraison',toName:'Mission suivante',fromCity:m.to_city||'',toCity:next.from_city||'',
-          earliestDeparture:deliveryDate,latestArrival:next.pickup_start,marginMinutes:securityMarginMin,exactTarget:exactGps(nextOrigin2),approximateEndpoint:!exact(dest)||!exact(nextOrigin2),allowShortMargin:short});
-        if(deliveryDate)tasks.push({label:'Retour',from:gp(dest),to:homePt,fromName:'Livraison',toName:homeName,fromCity:m.to_city||'',toCity:homeName,earliestDeparture:deliveryDate,approximateEndpoint:!exact(dest)||(!homeExact&&!homeAdrOk)});
+          earliestDeparture:jonctionEarliest,latestArrival:jonctionLatest,...(jonctionLatest!==next.pickup_start?{windowKind:'arrival',windowStartMs:Date.parse(next.pickup_start),windowEndMs:Date.parse(jonctionLatest)-securityMarginMin*60000}:{}),marginMinutes:securityMarginMin,exactTarget:exactGps(nextOrigin2),approximateEndpoint:!exact(dest)||!exact(nextOrigin2),allowShortMargin:short});
+        if(deliveryDate)tasks.push({label:'Retour',from:gp(dest),to:homePt,fromName:'Livraison',toName:homeName,fromCity:m.to_city||'',toCity:homeName,earliestDeparture:deliveryStartIso||deliveryDate,...(deliveryStartIso?{windowKind:'departure',windowStartMs:Date.parse(deliveryStartIso),windowEndMs:deliveryEndMs}:{}),approximateEndpoint:!exact(dest)||(!homeExact&&!homeAdrOk)});
         const signature=JSON.stringify([tasks,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
         if(transportHub&&transportHub.signatureKey===signature)return;
         transportHub?.dispose();
@@ -2404,6 +2424,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
               const path=transportDestinations[label].querySelector('.cp-transport-route');
               (path||transportDestinations[label].firstChild).insertAdjacentElement('afterend',host);}
             Hub.render(host,view);
+            labelState[label]={done:view.done,total:view.total};updateDayTabs();
           }});
         session.signatureKey=signature;transportHub=session;
       };
