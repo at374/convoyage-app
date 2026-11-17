@@ -60,3 +60,14 @@ test('premiere proposition : carte et marches visibles sans ouverture manuelle',
  assert.match(hub,/for\(const \[i,p\] of v\.picks\.entries\(\)\)addCard\(host,p\.journey,p\.labels,i===0\)/);
  assert.match(hub,/Cartes des trajets piétons/);
 });
+
+test('missions multi-jours : onglets date pickup/livraison et aucun jour inventé',()=>{
+ assert.match(app,/const transportDays=\{/);
+ assert.match(app,/Aller:parisServiceDay\(pickupDate\)/);
+ assert.match(app,/Retour:parisServiceDay\(deliveryDate\)/);
+ assert.match(app,/availableTransportDays\.length>1/);
+ assert.match(app,/button\.addEventListener\('click',\(\)=>selectDay\(day\)\)/);
+ assert.match(app,/section\.hidden=transportDays\[direction\]!==day/);
+ assert.match(css,/\.cp-transport-direction\[hidden\]\{display:none!important\}/);
+ assert.match(css,/\.cp-transport-day-tab\[aria-pressed="true"\]/);
+});
