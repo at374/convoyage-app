@@ -225,3 +225,10 @@ test('suivi arrivée : événements Google Maps / Waze lus via l’APK, validés
  assert.ok(app.includes('Math.abs(at - locAt) > 15 * 60000'));
  assert.ok(app.includes('suiviNavigation();'));
 });
+
+test('fenêtre d’arrivée large : recherche aussi « avant l’ouverture » et arrivées du matin non masquées',()=>{
+ const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.ok(src.includes('_avantOuverture:true'));
+ assert.ok(src.includes('180+windowSpan'));
+ assert.ok(src.includes('p.run(variant,controller.signal)'));
+});

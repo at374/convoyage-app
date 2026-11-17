@@ -521,7 +521,9 @@ function assess(j,task,fareFor){
  if(slack!==null&&slack<margin)reasons.push(slack<0?'arrivée après l’heure de mission':'marge insuffisante ('+slack+' min, '+margin+' min requises)');
  // Ne pas proposer un train arrivant des heures trop tôt comme solution à une prise en charge.
  // La fenêtre peut être élargie explicitement par un futur scénario horaire multi-jours.
- const maxEarly=Number.isFinite(task.maxEarlyArrivalMinutes)?task.maxEarlyArrivalMinutes:180;
+ // Fenêtre de prise en charge (ex. 08:00–19:00) : on peut arriver jusqu'à 3 h AVANT l'ouverture, donc très en avance sur la fin de fenêtre.
+ const windowSpan=task.windowKind==='arrival'&&Number.isFinite(task.windowStartMs)&&Number.isFinite(deadline)?Math.max(0,Math.floor((deadline-task.windowStartMs)/60000)):0;
+ const maxEarly=Number.isFinite(task.maxEarlyArrivalMinutes)?task.maxEarlyArrivalMinutes:180+windowSpan;
  if(slack!==null&&slack>maxEarly)reasons.push('arrivée trop tôt pour le créneau choisi ('+slack+' min d’avance)');
  // Réglage « marche maximale » (3 km par défaut) : appliqué à CHAQUE marche d'approche, de correspondance ou finale,
  // pas seulement aux trajets entièrement à pied. Une marche non calculée (distance inconnue) n'est pas écartée ici.
@@ -1202,14 +1204,21 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    state[label].errors.horaires='créneau impossible : livraison trop tardive pour arriver avec la marge requise, ou horaires absents';
    emit(label);continue;
   }
-  for(const [key,p] of Object.entries(providers)){
-   let ok=false;try{ok=p.enabled(task);}catch(_){}
-   if(!ok){state[label].skipped[p.name]=p.disabledReason||'non applicable';continue;}
+  // Fenêtre d'arrivée large (ex. 08:00–19:00) : une seule recherche « arriver avant 19:00 » ne renvoie que les trajets de l'après-midi.
+  // Une seconde recherche « arriver avant l'ouverture » (08:00) ramène les trajets du matin ; les deux se complètent dans la même liste.
+  const variants=[task];
+  if(task.windowKind==='arrival'&&Number.isFinite(task.windowStartMs)&&Number.isFinite(ms(task.latestArrival))&&ms(task.latestArrival)-task.windowStartMs>3*3600000){
+   const open=parisDayParts(new Date(task.windowStartMs).toISOString());
+   if(open&&open.minute>=375)variants.push({...task,latestArrival:new Date(task.windowStartMs).toISOString(),windowKind:undefined,windowStartMs:undefined,windowEndMs:undefined,_avantOuverture:true});
+  }
+  for(const variant of variants)for(const [key,p] of Object.entries(providers)){
+   let ok=false;try{ok=p.enabled(variant)&&!!queryWindow(variant);}catch(_){}
+   if(!ok){if(variant===task)state[label].skipped[p.name]=p.disabledReason||'non applicable';continue;}
    state[label].pending++;
    // Délai borné par moteur (idée reprise du module ChatGPT transport_mission_search.js).
    const limitMs=Number.isFinite(p.timeoutMs)&&p.timeoutMs>timeoutMs?p.timeoutMs:timeoutMs;
    const bounded=new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(new Error('délai fournisseur dépassé ('+Math.round(limitMs/1000)+' s)')),limitMs);
-    Promise.resolve().then(()=>p.run(task,controller.signal)).then(v=>{clearTimeout(t);resolve(v);},e=>{clearTimeout(t);reject(e);});});
+    Promise.resolve().then(()=>p.run(variant,controller.signal)).then(v=>{clearTimeout(t);resolve(v);},e=>{clearTimeout(t);reject(e);});});
    bounded.then(js=>add(label,p.name,js)).catch(e=>{
     if(!disposed)state[label].errors[p.name]=String(e&&e.message||e).slice(0,140);
    }).finally(()=>{if(disposed)return;state[label].pending--;emit(label);});
