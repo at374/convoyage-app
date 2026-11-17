@@ -923,7 +923,9 @@ function durationText(min){return min>=60?Math.floor(min/60)+' h '+String(min%60
 const ICON={Marche:'🚶',Train:'🚆',Bus:'🚌',Car:'🚍',Tram:'🚊',Métro:'🚇',Funiculaire:'🚡',Transport:'🚏'};
 function el(doc,tag,cls,text){const e=doc.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
 function mapSvg(doc,j){
- const pts=[];for(const l of j.legs){if(l.geometry&&l.geometry.length)pts.push(...l.geometry.map(p=>({...p,w:true})));else{if(l.fromPoint)pts.push(l.fromPoint);if(l.toPoint)pts.push(l.toPoint);}}
+ // Éviter la duplication de milliers de coordonnées GPS pour chaque carte.
+ // Les géométries d'origine restent intactes ; seul le SVG est échantillonné.
+ const pts=[];for(const l of j.legs){if(l.geometry&&l.geometry.length)pts.push(...l.geometry);else{if(l.fromPoint)pts.push(l.fromPoint);if(l.toPoint)pts.push(l.toPoint);}}
  if(pts.length<2)return null;
  let a=Infinity,b=-Infinity,c=Infinity,d=-Infinity;for(const p of pts){a=Math.min(a,p.lat);b=Math.max(b,p.lat);c=Math.min(c,p.lon);d=Math.max(d,p.lon);}
  const W=320,H=180,k=Math.cos((a+b)/2*Math.PI/180),sx=(d-c)*k||1e-4,sy=(b-a)||1e-4,s=Math.min((W-20)/sx,(H-20)/sy);
@@ -932,7 +934,11 @@ function mapSvg(doc,j){
  svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.setAttribute('class','cp-hub-map');svg.setAttribute('role','img');svg.setAttribute('aria-label','Schéma des transports et tracés piétons disponibles, sans marche en ligne droite');
  for(const l of j.legs){
   const line=l.geometry&&l.geometry.length?l.geometry:(l.kind==='walk'?[]:[l.fromPoint,l.toPoint].filter(Boolean));if(line.length<2)continue;
-  const pl=doc.createElementNS(NS,'polyline');pl.setAttribute('points',line.map(p=>X(p).toFixed(1)+','+Y(p).toFixed(1)).join(' '));
+  // Maximum 500 sommets par tronçon à l'écran ; conserver départ et arrivée.
+  const step=Math.max(1,Math.ceil((line.length-1)/499));
+  const rendered=[];for(let i=0;i<line.length-1;i+=step)rendered.push(line[i]);
+  rendered.push(line[line.length-1]);
+  const pl=doc.createElementNS(NS,'polyline');pl.setAttribute('points',rendered.map(p=>X(p).toFixed(1)+','+Y(p).toFixed(1)).join(' '));
   pl.setAttribute('fill','none');pl.setAttribute('stroke',l.kind==='walk'?'#16a34a':'#1d4ed8');pl.setAttribute('stroke-width',l.kind==='walk'?'3':'4');
   if(l.kind==='walk')pl.setAttribute('stroke-dasharray','5 4');svg.appendChild(pl);
  }
