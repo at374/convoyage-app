@@ -949,9 +949,9 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   const coachSource=/(?:flixbus|blablacar\s*(?:bus|coach)|blablacarbus|ouibus)/i.test(source);
   const coachKey=coachSource?(/flixbus/i.test(source)?'flixbus':'blablacarBus'):null;
   const coachBudget=coachKey?Math.max(0,4-(s.coachWalkPairs[coachKey]||0)):0;
+  const before=s.walkPairs.size;
   let [batch,rest]=select(toWalk,coachSource?coachBudget:8);
-  if(coachKey)s.coachWalkPairs[coachKey]=(s.coachWalkPairs[coachKey]||0)+
-   batch.reduce((count,t)=>count+walkPairs(t.j,s.task).length,0);
+  if(coachKey)s.coachWalkPairs[coachKey]=(s.coachWalkPairs[coachKey]||0)+s.walkPairs.size-before;
   await walkBatch(batch);
   // Recherche complémentaire : si rien n'est encore réalisable dans cette direction, 8 couples de plus.
   if(!disposed&&rest.length&&!s.items.some(x=>x.feasible)){[batch,rest]=select(rest,8);await walkBatch(batch);}
