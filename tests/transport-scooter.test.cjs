@@ -90,3 +90,9 @@ test('paramètres : adresse exacte du domicile localisée, gardée en local, pri
  const i=src.indexOf('const v = {');
  assert.ok(!/cp_domicile_exact|rAdr/.test(src.slice(i,i+1500)));
 });
+
+test('billet SNCF : gares exactes à coller, boutons copier (SNCF Connect sans lien pré-rempli)',async()=>{
+ const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.match(src,/Copier la gare de départ/);assert.match(src,/Copier la gare d’arrivée/);
+ assert.match(src,/ticketLink\(l\.provider\)\?\.label==='SNCF Connect'/);
+});
