@@ -930,6 +930,11 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
  for(const task of tasks){
   const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},discarded:{},bySignature:new Map(),walkPairs:new Set()};
   if(!pt(task.from)||!pt(task.to)){state[label].errors.adresses='adresse GPS manquante';emit(label);continue;}
+  // Ne lancer aucun fournisseur ni marche si la fenêtre temporelle est impossible.
+  if(!queryWindow(task)){
+   state[label].errors.horaires='créneau impossible : livraison trop tardive pour arriver avec la marge requise, ou horaires absents';
+   emit(label);continue;
+  }
   for(const [key,p] of Object.entries(providers)){
    let ok=false;try{ok=p.enabled(task);}catch(_){}
    if(!ok){state[label].skipped[p.name]=p.disabledReason||'non applicable';continue;}
