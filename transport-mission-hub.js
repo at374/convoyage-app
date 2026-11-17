@@ -1194,7 +1194,11 @@ function render(host,v){
  // Transparence pour les cars longue distance : l'absence de carte ne doit pas
  // être confondue avec un moteur absent ou un billet indisponible.
  if(v.done){
-  const coachNames=['BlaBlaCar Bus GTFS','FlixBus GTFS'];
+  // Ne pas afficher un moteur hors zone ou non activé : seules les
+  // compagnies réellement consultées (ou en échec après lancement) comptent.
+  const coachNames=['BlaBlaCar Bus GTFS','FlixBus GTFS'].filter(name=>
+   Object.prototype.hasOwnProperty.call(v.received||{},name)||
+   Object.prototype.hasOwnProperty.call(v.errors||{},name));
   const coachRows=coachNames.map(name=>{
    const error=v.errors?.[name];
    const skipped=v.skipped?.[name];
@@ -1204,6 +1208,7 @@ function render(host,v){
     Number.isFinite(count)?count+' trajet(s) remonté(s) avant filtrage des horaires et marches':
     'Moteur non configuré ou aucune réponse'};
   });
+  if(coachRows.length){
   const info=el(doc,'details','cp-hub-coach-status');
   const summary=coachRows.map(entry=>{
    const count=v.received?.[entry.name];
@@ -1213,6 +1218,7 @@ function render(host,v){
   for(const entry of coachRows)info.appendChild(el(doc,'p','cp-hub-note',entry.name+' — '+entry.status));
   info.appendChild(el(doc,'small',null,'Seuls les trajets correspondant aux dates, aux horaires et aux marches vérifiées apparaissent dans les propositions. Aucun tarif n’est inventé.'));
   host.appendChild(info);
+  }
  }
  const tads=tadFor(v.task);
  if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' non affiché'+(v.hidden.tooEarly>1?'s':'')+' : départ avant la fin de la mission précédente (marche jusqu’à l’arrêt comprise).'));
