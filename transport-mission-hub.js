@@ -696,6 +696,10 @@ function rank(items,task={}){
  // proposer un trajet qui arrive AVANT le début de la fenêtre et un autre qui arrive le plus tard possible dans la fenêtre
  // (retour : départ dès l'ouverture de la fenêtre, puis le plus tard dans la fenêtre), marge de sécurité comprise.
  if(Number.isFinite(task.windowStartMs)&&Number.isFinite(task.windowEndMs)&&(task.windowKind==='arrival'||task.windowKind==='departure')){
+  // Jamais de « jusqu'à » au-delà de l'heure de fermeture du site (17:30 par défaut), quelle que soit la façon dont la fenêtre a été construite.
+  const sp=parisDayParts(new Date(task.windowStartMs).toISOString());
+  if(sp&&Number.isFinite(task.siteCloseMinutes)){const cap=task.windowStartMs+(task.siteCloseMinutes-sp.minute)*60000-(task.windowKind==='arrival'?marginFor(task)*60000:0);
+   if(cap>task.windowStartMs&&cap<task.windowEndMs)task={...task,windowEndMs:cap};}
   const ok=all.filter(j=>j.feasible||j.scheduled),arr=task.windowKind==='arrival';
   const at=j=>ms(arr?j.arrival:j.departure);
   const first=ok.filter(j=>arr?at(j)<=task.windowStartMs:at(j)>=task.windowStartMs&&at(j)<=task.windowStartMs+45*60000).sort((x,y)=>arr?at(y)-at(x):at(x)-at(y))[0];

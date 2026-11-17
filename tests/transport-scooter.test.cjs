@@ -277,3 +277,13 @@ test('fenêtre large : recherches supplémentaires en milieu de journée (début
  assert.ok(src.includes('_milieuJournee:true'));
  assert.ok(src.includes('[765,870]:[750,900]'));
 });
+
+test('jamais « Arrive jusqu’à 18:45 » : la fin de fenêtre est plafonnée à la fermeture du site',()=>{
+ const H=require('../transport-mission-hub.js');
+ const T={from:{lat:45,lon:5},to:{lat:45.1,lon:5.1},latestArrival:'2026-11-18T19:00:00+01:00',windowKind:'arrival',windowStartMs:Date.parse('2026-11-18T08:00:00+01:00'),windowEndMs:Date.parse('2026-11-18T18:45:00+01:00'),siteCloseMinutes:1050,marginMinutes:15};
+ const mk=(d,a)=>H.assess({legs:[{kind:'transit',mode:'RAIL',departure:d,arrival:a,from:'A',to:'B'}],departure:d,arrival:a,durationMinutes:120,transfers:0,walkMeters:0,price:{status:'unknown'},sources:['t']},T,null);
+ const r=H.rank([mk('2026-11-18T13:00:00+01:00','2026-11-18T15:00:00+01:00'),mk('2026-11-18T15:00:00+01:00','2026-11-18T17:10:00+01:00')],T);
+ const labels=r.picks.flatMap(p=>p.labels).join('|');
+ assert.ok(labels.includes('Arrive jusqu’à 17:15'));
+ assert.ok(!labels.includes('18:45'));
+});
