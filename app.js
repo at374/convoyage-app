@@ -2254,10 +2254,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const legacyTitle=document.createElement('summary');legacyTitle.textContent='Détail par moteur (justificatifs)';legacy.appendChild(legacyTitle);
         section.appendChild(legacy);legacySources[key]=legacy;
       }      /* V278 : trajet hors zone couverte (AURA + Suisse) : message clair */
+      let coveredZones={};
       { const COUV=new Set(['01','03','07','15','26','38','42','43','63','69','73','74']);
         const depOf=(dep,txt)=>{const d=String(dep||'').trim();if(/^\d{2}/.test(d))return d.slice(0,2);const mm=String(txt||'').match(/\b(\d{2})\d{3}\b/);return mm?mm[1]:'';};
         const okZ=(dep,txt)=>{if(/suisse|switzerland/i.test(String(txt||'')))return true;const d=depOf(dep,txt);return d?COUV.has(d):true;};
         const covered={Aller:okZ(null,home)&&okZ(m.from_department,from),Jonction:!next||(okZ(m.to_department,to)&&okZ(next.from_department,nextOrigin)),Retour:okZ(m.to_department,to)&&okZ(null,home)};
+        coveredZones=covered;
         for(const key of Object.keys(covered)){if(covered[key])continue;const sec=transportDestinations[key];const rt=sec&&sec.querySelector('.cp-transport-route');if(!rt)continue;
           const note=document.createElement('p');note.className='cp-transport-nodata';note.setAttribute('role','status');
           note.style.cssText='margin:6px 0;padding:8px 10px;border-radius:8px;background:#5a2a00;color:#ffd9a8;font-weight:600';
@@ -2307,6 +2309,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const heading=document.createElement('h3');heading.textContent=(dir==='Aller'?'01 · Aller':'03 · Retour')+' · '+new Intl.DateTimeFormat('fr-FR',{timeZone:'UTC',weekday:'short',day:'2-digit',month:'short'}).format(new Date(d+'T12:00:00Z'));
         const path=document.createElement('p');path.className='cp-transport-route';path.textContent=dir==='Aller'?home+' → '+from:to+' → '+home;
         section.append(heading,path);transportDestinations[key]=section;panel.appendChild(section);
+        if(coveredZones[dir]===false){const note=document.createElement('p');note.className='cp-transport-nodata';note.setAttribute('role','status');
+          note.style.cssText='margin:6px 0;padding:8px 10px;border-radius:8px;background:#5a2a00;color:#ffd9a8;font-weight:600';
+          note.textContent='⛔ Non encore disponible dans la base de données : ce trajet sort de la zone couverte (Auvergne-Rhône-Alpes et Suisse). Aucun horaire ni prix n’a été calculé : vérifie par toi-même.';
+          path.insertAdjacentElement('afterend',note);}
       }
       const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
       let updateDayTabs=()=>{};const labelState={};
