@@ -341,7 +341,7 @@ function cachedRouter(router,{storage=null,key='cp_marches_v1',ttlDays=30,maxEnt
   const k=id(a,b);
   if(memory.has(k)){hits++;return memory.get(k);}
   const s=saved[k];
-  if(s){hits++;const r=Promise.resolve({status:'calculated',provider:'Valhalla pedestrian / OpenStreetMap (cache)',durationSeconds:s.d,distanceMeters:s.m,
+  if(s){hits++;const r=Promise.resolve({status:'calculated',provider:(router.mode==='bicycle'?'Valhalla vélo':'Valhalla pedestrian')+' / OpenStreetMap (cache)',durationSeconds:s.d,distanceMeters:s.m,
    geometry:s.g||null,steps:s.s||null,from:{...a},to:{...b},endpointsMatched:true,cached:true});memory.set(k,r);return r;}
   misses++;
   const r=Promise.resolve(router.route(round(a),round(b))).then(x=>{
@@ -373,10 +373,32 @@ async function walkOnly(task,router,maxKm){
  return {...j,walkOnly:true,missing:[]};
 }
 
+// Trajet en trottinette électrique personnelle (réglages : vitesse et distance maximale). Le tracé vient du service
+// d'itinéraires OpenStreetMap (Valhalla, mode vélo : pistes cyclables et rues autorisées) ; la durée est une ESTIMATION
+// calculée à la vitesse réglée par le convoyeur, jamais un horaire confirmé. Gratuit (matériel personnel).
+async function scooterOnly(task,router,{maxKm=8,speedKmh=15}={}){
+ const from=pt(task.from),to=pt(task.to),limit=(finite(maxKm)&&maxKm>0?maxKm:8)*1000,speed=(finite(speedKmh)&&speedKmh>0?Math.min(30,Math.max(5,speedKmh)):15);
+ if(!from||!to||!router)return null;
+ if(meters(from,to)>limit)return null;
+ let r=null;try{r=await router.route(from,to);}catch(_){}
+ if(!r||r.status!=='calculated'||!finite(r.distanceMeters)||r.distanceMeters<0||r.distanceMeters>limit)return null;
+ const seconds=Math.max(60,Math.round(r.distanceMeters/(speed/3.6)));
+ const margin=marginFor(task),deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
+ const latest=Number.isFinite(deadline)?deadline-margin*60000-seconds*1000:NaN;
+ const dep=Number.isFinite(latest)?latest:earliest;
+ if(!Number.isFinite(dep)||Number.isFinite(earliest)&&dep<earliest)return null;
+ const l=leg({kind:'scooter',mode:'Trottinette',from:task.fromName||'Départ',to:task.toName||'Arrivée',fromPoint:from,toPoint:to,
+  departure:new Date(dep).toISOString(),arrival:new Date(dep+seconds*1000).toISOString(),distanceMeters:r.distanceMeters,durationSeconds:seconds,
+  walkSource:'valhalla-bicycle',geometry:r.geometry,steps:r.steps});
+ const j=journey('Trottinette (Valhalla vélo / OpenStreetMap)',[l]);
+ return {...j,scooterOnly:true,scooterSpeedKmh:speed,missing:[]};
+}
+
 /* ---------- Tarifs ---------- */
 function priceOf(j,fareFor){
  // Une marche issue d'un fournisseur tiers peut ne pas avoir le drapeau walkOnly.
  // La tarification doit rester gratuite si toutes les étapes sont piétonnes.
+ if(j.scooterOnly)return {status:'free',amounts:{EUR:0},label:'Gratuit (trottinette personnelle)',missingSources:[]};
  if(j.walkOnly||j.legs?.length>0&&j.legs.every(l=>l.kind==='walk'))
   return {status:'free',amounts:{EUR:0},label:'Gratuit (à pied)',missingSources:[]};
  const amounts={},missingSources=[],sources=[],legFares=[];
@@ -543,9 +565,9 @@ function rank(items,task={}){
   // d'accès et les créneaux peuvent différer d'une proposition à l'autre.
   // Certains moteurs renvoient une marche pure sans positionner walkOnly.
   // Une signature de transports vide fusionnerait alors tous ces itinéraires.
-  const walkingJourney=j.walkOnly||j.legs?.length>0&&j.legs.every(l=>l.kind==='walk');
+  const walkingJourney=j.walkOnly||j.scooterOnly||j.legs?.length>0&&j.legs.every(l=>l.kind==='walk'||l.kind==='scooter');
   const k=walkingJourney?[
-   'walk',String(j.legs?.[0]?.from||'').trim().toLowerCase(),
+   (j.scooterOnly?'scooter':'walk'),String(j.legs?.[0]?.from||'').trim().toLowerCase(),
    String(j.legs?.[j.legs.length-1]?.to||'').trim().toLowerCase(),
    j.legs?.[0]?.fromPoint?.lat,j.legs?.[0]?.fromPoint?.lon,
    j.legs?.[j.legs.length-1]?.toPoint?.lat,j.legs?.[j.legs.length-1]?.toPoint?.lon,
@@ -955,7 +977,7 @@ function makeProviders(r,opts={}){
 }
 
 /* ---------- Session ---------- */
-function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm=3,timeoutMs=25000,onUpdate=()=>{}}={}){
+function createSession({tasks=[],providers={},router=null,scooterRouter=null,scooter=null,fareFor=null,walkMaxKm=3,timeoutMs=25000,onUpdate=()=>{}}={}){
  tasks=tasks.map(t=>({...t,walkMaxMeters:Number.isFinite(t.walkMaxMeters)?t.walkMaxMeters:(Number.isFinite(walkMaxKm)&&walkMaxKm>0?walkMaxKm*1000:undefined)}));
  const state={},controller=new AbortController();let disposed=false;
  const emit=label=>{if(!disposed)try{onUpdate(label,view(label));}catch(_){}};
@@ -1076,6 +1098,11 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   state[label].pending++;
   walkOnly(task,router,walkMaxKm).then(w=>w&&state[label].items.push(assess(w,task,fareFor))).catch(()=>{})
    .finally(()=>{if(disposed)return;state[label].pending--;emit(label);});
+  if(scooter&&scooter.enabled&&scooterRouter){
+   state[label].pending++;
+   scooterOnly(task,scooterRouter,{maxKm:scooter.maxKm,speedKmh:scooter.speedKmh}).then(w=>w&&state[label].items.push(assess(w,task,fareFor))).catch(()=>{})
+    .finally(()=>{if(disposed)return;state[label].pending--;emit(label);});
+  }
   emit(label);
  }
  return {ingest:(label,source,journeys)=>add(label,source,journeys),view,
@@ -1086,7 +1113,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
 function clock(v){const t=ms(v);return Number.isFinite(t)?new Intl.DateTimeFormat('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Paris'}).format(new Date(t)):'?';}
 function durationText(min){return min>=60?Math.floor(min/60)+' h '+String(min%60).padStart(2,'0'):min+' min';}
 function signedDurationText(min){return min<0?'-'+durationText(Math.abs(min)):durationText(min);}
-const ICON={Marche:'🚶',Train:'🚆',Bus:'🚌',Car:'🚍',Tram:'🚊',Métro:'🚇',Funiculaire:'🚡',Transport:'🚏'};
+const ICON={Marche:'🚶',Trottinette:'🛴',Train:'🚆',Bus:'🚌',Car:'🚍',Tram:'🚊',Métro:'🚇',Funiculaire:'🚡',Transport:'🚏'};
 function el(doc,tag,cls,text){const e=doc.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
 function mapSvg(doc,j){
  // Éviter la duplication de milliers de coordonnées GPS pour chaque carte.
@@ -1115,7 +1142,7 @@ function mapSvg(doc,j){
   im.setAttribute('class','cp-hub-tile');svg.appendChild(im);
  }
  for(const l of j.legs){
-  const line=l.geometry&&l.geometry.length?l.geometry:(l.kind==='walk'?[]:[l.fromPoint,l.toPoint].filter(Boolean));if(line.length<2)continue;
+  const line=l.geometry&&l.geometry.length?l.geometry:(l.kind==='walk'||l.kind==='scooter'?[]:[l.fromPoint,l.toPoint].filter(Boolean));if(line.length<2)continue;
   // Maximum 500 sommets par tronçon à l'écran ; conserver départ et arrivée.
   const step=Math.max(1,Math.ceil((line.length-1)/499));
   const rendered=[];for(let i=0;i<line.length-1;i+=step)rendered.push(line[i]);
@@ -1124,8 +1151,8 @@ function mapSvg(doc,j){
   // Liseré blanc sous le tracé pour qu'il reste lisible sur le fond de carte.
   const halo=doc.createElementNS(NS,'polyline');halo.setAttribute('points',coords);halo.setAttribute('fill','none');halo.setAttribute('stroke','#ffffff');halo.setAttribute('stroke-width',l.kind==='walk'?'7':'8');halo.setAttribute('stroke-linecap','round');halo.setAttribute('stroke-linejoin','round');svg.appendChild(halo);
   const pl=doc.createElementNS(NS,'polyline');pl.setAttribute('points',coords);
-  pl.setAttribute('fill','none');pl.setAttribute('stroke',l.kind==='walk'?'#16a34a':'#1d4ed8');pl.setAttribute('stroke-width',l.kind==='walk'?'4':'5');pl.setAttribute('stroke-linecap','round');pl.setAttribute('stroke-linejoin','round');
-  if(l.kind==='walk')pl.setAttribute('stroke-dasharray','7 5');svg.appendChild(pl);
+  pl.setAttribute('fill','none');pl.setAttribute('stroke',l.kind==='walk'?'#16a34a':l.kind==='scooter'?'#d97706':'#1d4ed8');pl.setAttribute('stroke-width',l.kind==='walk'?'4':'5');pl.setAttribute('stroke-linecap','round');pl.setAttribute('stroke-linejoin','round');
+  if(l.kind==='walk'||l.kind==='scooter')pl.setAttribute('stroke-dasharray',l.kind==='walk'?'7 5':'2 6');svg.appendChild(pl);
  }
  for(const [p,color] of [[pts[0],'#16a34a'],[pts[pts.length-1],'#dc2626']]){const ci=doc.createElementNS(NS,'circle');ci.setAttribute('cx',X(p));ci.setAttribute('cy',Y(p));ci.setAttribute('r','7');ci.setAttribute('fill',color);ci.setAttribute('stroke','#ffffff');ci.setAttribute('stroke-width','2');svg.appendChild(ci);}
  const att=doc.createElementNS(NS,'text');att.setAttribute('x',W-4);att.setAttribute('y',H-5);att.setAttribute('text-anchor','end');att.setAttribute('font-size','9');att.setAttribute('fill','#333');att.textContent='© OpenStreetMap';svg.appendChild(att);
@@ -1214,9 +1241,22 @@ function card(doc,j,labels,expanded=false){
   const ol=el(doc,'ol','cp-hub-legs');
  for(const [legIndex,l] of j.legs.entries()){
   const li=el(doc,'li',l.kind==='walk'?'walk':'ride');
-  li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+Math.max(1,Math.round(l.durationSeconds/60))+' min':''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':''].filter(Boolean).join(' '))));
+  li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='scooter'?'Trottinette'+(l.distanceMeters!=null?' '+(l.distanceMeters/1000).toFixed(1).replace('.',',')+' km':'')+(l.durationSeconds!=null?' · '+Math.max(1,Math.round(l.durationSeconds/60))+' min (estimé)':''):l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+Math.max(1,Math.round(l.durationSeconds/60))+' min':''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':''].filter(Boolean).join(' '))));
   li.appendChild(el(doc,'div',null,clock(l.departure)+' '+(l.from||'?')+' → '+clock(l.arrival)+' '+(l.to||'?')+(l.delayMinutes?' · retard annoncé +'+l.delayMinutes+' min':'')));
-  if(l.kind==='walk'){
+  if(l.kind==='scooter'){
+   li.appendChild(el(doc,'small',null,'Tracé calculé (OpenStreetMap, mode vélo) · durée estimée à '+(j.scooterSpeedKmh||15)+' km/h : réglages de l’application'));
+   const sm=mapSvg(doc,{legs:[l]});
+   if(sm){sm.setAttribute('class','cp-hub-map cp-hub-walk-map');sm.setAttribute('aria-label','Carte du trajet en trottinette (OpenStreetMap)');li.appendChild(sm);}
+   const sa=pt(l.fromPoint),sb=pt(l.toPoint);
+   if(sa&&sb){const link=el(doc,'a','cp-hub-walk-map-link','🛴 Voir le trajet en trottinette');
+    link.href='https://www.openstreetmap.org/directions?engine=fossgis_osrm_bike&route='+encodeURIComponent(sa.lat+','+sa.lon+';'+sb.lat+','+sb.lon);
+    link.target='_blank';link.rel='noopener noreferrer';li.appendChild(link);}
+   if(Array.isArray(l.steps)&&l.steps.length){const guide=el(doc,'details','cp-hub-steps');guide.open=true;
+    guide.appendChild(el(doc,'summary',null,'🧭 Guidage · '+l.steps.length+' étape'+(l.steps.length>1?'s':'')));
+    const st=el(doc,'ol',null);for(const x of l.steps)st.appendChild(el(doc,'li',null,x.text+(x.meters>0?' · '+(x.meters>=1000?(x.meters/1000).toFixed(1).replace('.',',')+' km':x.meters+' m'):'')));
+    guide.appendChild(st);li.appendChild(guide);}
+  }
+  else if(l.kind==='walk'){
    li.appendChild(el(doc,'small',null,l.walkSource==='valhalla'?'Itinéraire piéton calculé (OpenStreetMap)':'Marche calculée par '+j.source));
    // Carte dédiée à cette marche, zoomée sur le trajet à pied (la carte d'ensemble est trop large pour voir les marches).
    const wm=mapSvg(doc,{legs:[l]});
@@ -1251,8 +1291,8 @@ function card(doc,j,labels,expanded=false){
  }
  body.appendChild(ol);
  // Accès à une vraie carte pour chaque marche : le schéma SVG n'est pas une carte de rues.
- const svg=mapSvg(doc,j);if(svg)body.appendChild(svg);
- else body.appendChild(el(doc,'p','cp-hub-note','Schéma indisponible : tracé GPS insuffisant.'));
+ const svg=j.scooterOnly?null:mapSvg(doc,j);if(svg)body.appendChild(svg);
+ else if(!j.scooterOnly)body.appendChild(el(doc,'p','cp-hub-note','Schéma indisponible : tracé GPS insuffisant.'));
  if(j.price.status==='unknown')body.appendChild(el(doc,'p','cp-hub-note','Source tarifaire manquante : '+j.price.missingSources.join(', ')+'.'));
  if(j.delays.length)body.appendChild(el(doc,'p','cp-hub-note','Retards signalés : '+j.delays.join(', ')));
  if(j.alerts.length)body.appendChild(el(doc,'p','cp-hub-note','Alertes : '+j.alerts.join(' · ')));
@@ -1369,7 +1409,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,scooterOnly,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
