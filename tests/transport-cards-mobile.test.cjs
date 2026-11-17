@@ -103,5 +103,6 @@ test('BlaBlaCar Bus et FlixBus : diagnostic uniquement si moteur consulté',()=>
  assert.match(hub,/BlaBlaCar Bus GTFS/);
  assert.match(hub,/FlixBus GTFS/);
  assert.match(hub,/Moteur non interrogé/);
- assert.match(hub,/trajet\(s\) remonté\(s\) avant filtrage/);
+ assert.match(hub,/Aucun horaire reçu pour ce trajet et cette date/);
+ assert.match(hub,/prix non fournis par le GTFS/);
 });
