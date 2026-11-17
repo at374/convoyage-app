@@ -1276,6 +1276,12 @@ const TICKET_LINKS=[
  [/\bt2c\b|clermont auvergne m[ée]tropole/i,'T2C','https://www.t2c.fr/'],
  [/cars? r[ée]gion|\btam\b/i,'Cars Région','https://www.laregionvoustransporte.fr/']
 ];
+// Lien « navigation » : ouvre l'application de guidage du téléphone (Google Maps, voix et suivi en direct) avec départ et arrivée déjà remplis.
+function navLink(doc,a,b,mode){
+ const link=el(doc,'a','cp-hub-walk-map-link cp-hub-nav',mode==='bicycling'?'🧭 Guidage vocal (Google Maps, vélo)':'🧭 Guidage vocal (Google Maps, à pied)');
+ link.href='https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(a.lat+','+a.lon)+'&destination='+encodeURIComponent(b.lat+','+b.lon)+'&travelmode='+mode+'&dir_action=navigate';
+ link.target='_blank';link.rel='noopener noreferrer';return link;
+}
 function ticketLink(provider){
  const name=String(provider||'').trim();if(!name)return null;
  // « Star Roanne » avant « Star't » : même racine.
@@ -1344,7 +1350,8 @@ function card(doc,j,labels,expanded=false){
    const sa=pt(l.fromPoint),sb=pt(l.toPoint);
    if(sa&&sb){const link=el(doc,'a','cp-hub-walk-map-link','🛴 Voir le trajet en trottinette');
     link.href='https://www.openstreetmap.org/directions?engine=fossgis_osrm_bike&route='+encodeURIComponent(sa.lat+','+sa.lon+';'+sb.lat+','+sb.lon);
-    link.target='_blank';link.rel='noopener noreferrer';li.appendChild(link);}
+    link.target='_blank';link.rel='noopener noreferrer';li.appendChild(link);
+    li.appendChild(navLink(doc,sa,sb,'bicycling'));}
    if(Array.isArray(l.steps)&&l.steps.length){const guide=el(doc,'details','cp-hub-steps');guide.open=true;
     guide.appendChild(el(doc,'summary',null,'🧭 Guidage · '+l.steps.length+' étape'+(l.steps.length>1?'s':'')));
     const st=el(doc,'ol',null);for(const x of l.steps)st.appendChild(el(doc,'li',null,x.text+(x.meters>0?' · '+(x.meters>=1000?(x.meters/1000).toFixed(1).replace('.',',')+' km':x.meters+' m'):'')));
@@ -1364,6 +1371,7 @@ function card(doc,j,labels,expanded=false){
     const link=el(doc,'a','cp-hub-walk-map-link','🚶 Voir la marche '+walkNo);
     link.href='https://www.openstreetmap.org/directions?engine=fossgis_osrm_foot&route='+encodeURIComponent(wa.lat+','+wa.lon+';'+wb.lat+','+wb.lon);
     link.target='_blank';link.rel='noopener noreferrer';li.appendChild(link);
+    li.appendChild(navLink(doc,wa,wb,'walking'));
    }
    if(Array.isArray(l.steps)&&l.steps.length){
    // Guidage pas à pas fourni par le service piéton OpenStreetMap (jamais reconstruit ni inventé).

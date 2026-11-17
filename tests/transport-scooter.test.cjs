@@ -146,3 +146,10 @@ test('car depuis Lyon : accès trop tardif ou OTP indisponible → aucun accès 
  const err=await H.accessFor(coach(),tk,{enabled:()=>true,run:async()=>{throw new Error('délai dépassé');}},null);
  assert.equal(err.legs.length,1);assert.ok(err.missing.some(m=>/délai/.test(m)));
 });
+
+test('guidage vocal : bouton Google Maps (départ/arrivée remplis) sur marches et trottinette',()=>{
+ const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.match(src,/google\.com\/maps\/dir\/\?api=1&origin=/);
+ assert.match(src,/navLink\(doc,sa,sb,'bicycling'\)/);
+ assert.match(src,/navLink\(doc,wa,wb,'walking'\)/);
+});

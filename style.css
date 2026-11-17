@@ -699,3 +699,4 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .cp-hub-card svg.cp-hub-map,#cpTransportMissionDetails .cp-hub-map{width:100%;max-width:100%;height:auto;box-sizing:border-box}
 .cp-hub-search-help{display:grid;gap:6px;margin:8px 0;padding:10px;border:1px solid var(--accent,#e0a800);border-radius:10px}
 .cp-hub-copy{min-height:44px;padding:8px 10px;border:1px solid var(--accent,#e0a800);border-radius:10px;background:transparent;color:inherit;font-weight:700;text-align:left}
+#cpTransportMissionDetails .cp-hub-walk-map-link.cp-hub-nav{margin-top:6px}
