@@ -1246,7 +1246,12 @@ function render(host,v){
     'aucune réponse');
   }).join(' · ');
   info.appendChild(el(doc,'summary',null,summary));
-  for(const entry of coachRows)info.appendChild(el(doc,'p','cp-hub-note',entry.name+' — '+entry.status));
+  for(const entry of coachRows){
+   info.appendChild(el(doc,'p','cp-hub-note',entry.name+' — '+entry.status));
+   if(entry.visible===0&&(v.received?.[entry.name]||0)>0)
+    info.appendChild(el(doc,'p','cp-hub-note',
+     'Aucune proposition '+entry.name.replace(' GTFS','')+' affichée : les horaires reçus ne constituent pas un trajet validé pour cette mission. Vérifier les dates, les correspondances et les accès piétons.'));
+  }
   info.appendChild(el(doc,'small',null,'Seuls les trajets correspondant aux dates, aux horaires et aux marches vérifiées apparaissent dans les propositions. Aucun tarif n’est inventé.'));
   host.appendChild(info);
   }
