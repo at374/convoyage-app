@@ -582,3 +582,17 @@ test('classement réel : un doublon non réalisable avec tarif ne remplace pas l
  assert.equal(kept.feasible,true);
  assert.deepEqual([...kept.sources].sort(),['Horaire','Tarif isolé']);
 });
+
+test('cars : privilégier le tarif vérifié le moins cher à faisabilité égale',()=>{
+ const task={latestArrival:at(9,0)};
+ const make=(dep,arr,amount)=>H.assess({source:'FlixBus',sources:['FlixBus'],missing:[],
+  legs:[bus(dep,arr,STOP1,STOP2,{provider:'FlixBus',line:'FX',
+   fare:amount===null?null:{amount,currency:'EUR',source:'tarif vérifié'}})]},task);
+ const close=make(at(8,0),at(8,40),25);
+ const cheap=make(at(7,45),at(8,20),9);
+ const unknown=make(at(8,10),at(8,30),null);
+ const ranked=H.rank([close,cheap,unknown],task);
+ const coach=ranked.picks.find(p=>p.labels.includes('FlixBus'));
+ assert.ok(coach);
+ assert.equal(coach.journey.price.label,'9,00 €');
+});
