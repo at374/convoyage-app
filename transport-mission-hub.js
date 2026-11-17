@@ -914,7 +914,13 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   const isReturn=Number.isFinite(ms(s.task.earliestDeparture))&&!Number.isFinite(ms(s.task.latestArrival));
   // Priorité : prix connu d'abord (moins cher en tête), puis le plus utile (retour : départ le plus tôt ; aller : avance la plus juste).
   const pk=q=>q.price.status==='verified'||q.price.status==='free'?priceSortKey(q.price):Infinity;
-  toWalk.sort((a,b)=>(pk(a.quick)===pk(b.quick)?0:pk(a.quick)-pk(b.quick))||
+  // Le budget de marches est partagé entre les moteurs. Sans priorité dédiée,
+  // les premiers TER/bus locaux consomment les huit couples de points et les
+  // cars longue distance restent indéfiniment « marches non calculées ».
+  const coachPriority=t=>/(?:flixbus|blablacar\\s*(?:bus|coach)|blablacarbus|ouibus)/i.test(
+   [t.j.source,...(t.j.sources||[]),...(t.j.legs||[]).map(l=>l.provider||'')].join(' '))?0:1;
+  toWalk.sort((a,b)=>coachPriority(a)-coachPriority(b)||
+   (pk(a.quick)===pk(b.quick)?0:pk(a.quick)-pk(b.quick)||
    (isReturn?ms(a.quick.departure)-ms(b.quick.departure):(a.quick.slackMinutes??0)-(b.quick.slackMinutes??0))||a.quick.durationMinutes-b.quick.durationMinutes);
   // Affichage immédiat : chaque trajet apparaît tout de suite, « marches en cours de calcul », puis est remplacé.
   const pendingCard=new Map();
