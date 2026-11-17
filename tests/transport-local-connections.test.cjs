@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict');
+const {combine}=require('../transport-local-connections.js');
+const at=(h,m)=>'2026-11-18T'+h+':'+m+':00+01:00';
+const p={lat:45.958,lon:5.342};
+const first={source:'TAM',legs:[{kind:'transit',mode:'Bus',line:'TAM',fromPoint:{lat:45.95,lon:5.34},toPoint:p,departure:at('16','00'),arrival:at('16','10')}],missing:['horaire GTFS local non confirmé en temps réel']};
+const second={source:'TER',legs:[{kind:'transit',mode:'Train',line:'TER',fromPoint:p,toPoint:{lat:46.2,lon:5.8},departure:at('16','18'),arrival:at('17','30')}],missing:['horaire GTFS non confirmé en temps réel']};
+const j=combine(first,second);
+assert.ok(j,'TAM et TER connectés avec 8 minutes');
+assert.equal(j.legs.length,2);
+assert.deepEqual(j.sources,['TAM','TER']);
+assert.ok(j.missing.some(x=>x.includes('non confirmée')));
+assert.equal(combine(first,{...second,legs:[{...second.legs[0],departure:at('16','12')}] }),null,'2 minutes ne suffisent pas');
+assert.equal(combine(first,{...second,legs:[{...second.legs[0],fromPoint:{lat:45.97,lon:5.36}}]}),null,'aucune téléportation entre arrêts');
+assert.equal(combine(second,first),null,'ordre chronologique respecté');
+console.log('OK : fusion locale TAM + TER, temps de correspondance, GPS et ordre');
