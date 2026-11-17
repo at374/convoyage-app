@@ -2280,7 +2280,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       const startTransportHub=()=>{
         const Hub=window.CPTransportHub;
         if(!Hub||!panel.isConnected)return;
-        const gp=gps=>transportAddressPoint(gps)?{lat:Number(gps.lat),lon:Number(gps.lng)}:null;
+        const gp=gps=>(gps&&['gps','adresse','rue','ville'].includes(gps.precision)&&
+          gps.lat!=null&&gps.lng!=null&&Number.isFinite(Number(gps.lat))&&Number.isFinite(Number(gps.lng))&&
+          Math.abs(Number(gps.lat))<=90&&Math.abs(Number(gps.lng))<=180&&
+          !(Number(gps.lat)===0&&Number(gps.lng)===0))?{lat:Number(gps.lat),lon:Number(gps.lng)}:null;
         const homeLat=etat.reglages?.domicile_lat,homeLon=etat.reglages?.domicile_lng;
         const homePt=homeLat!=null&&homeLon!=null&&homeLat!==''&&homeLon!==''&&Number.isFinite(Number(homeLat))&&Number.isFinite(Number(homeLon))?{lat:Number(homeLat),lon:Number(homeLon)}:null;
         const homeName=etat.reglages?.domicile_ville||'Domicile';
@@ -2288,6 +2291,16 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const exact=gps=>!!gps&&gps.precision==='gps';
         const origin=G.coordonnees(m,'origin'),dest=G.coordonnees(m,'destination'),nextOrigin2=next?G.coordonnees(next,'origin'):null;
         const tasks=[];
+        // À défaut d'adresse GPS, le centre de la commune permet une recherche indicative.
+        // Ne jamais assimiler ce point approximatif à une adresse exacte ni raccourcir la marge.
+        for(const [direction,point] of [['Aller',origin],['Jonction départ',dest],['Jonction arrivée',nextOrigin2],['Retour',dest]]){
+          if(point?.precision==='ville'){
+            const note=document.createElement('p');note.className='cp-transport-approx';
+            note.textContent='📍 '+direction+' : centre-ville approximatif utilisé (adresse exacte inconnue). Vérifier les marches et la faisabilité avant départ.';
+            const target=direction.startsWith('Jonction')?transportDestinations.Jonction:transportDestinations[direction];
+            if(target)target.appendChild(note);
+          }
+        }
         if(pickupDate)tasks.push({label:'Aller',from:homePt,to:gp(origin),fromName:homeName,toName:'Prise en charge',fromCity:homeName,toCity:m.from_city||'',
           latestArrival:pickupDate,marginMinutes:securityMarginMin,exactTarget:exact(origin),allowShortMargin:short});
         if(next&&deliveryDate&&next.pickup_start)tasks.push({label:'Jonction',from:gp(dest),to:gp(nextOrigin2),fromName:'Livraison',toName:'Mission suivante',fromCity:m.to_city||'',toCity:next.from_city||'',
