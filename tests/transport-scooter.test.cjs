@@ -159,3 +159,19 @@ test('limite de marche : si tout est écarté, les trajets à marche trop longue
  assert.match(src,/const isLongOnly=j=>/);
  assert.match(src,/Aucune proposition ne respecte votre limite de marche/);
 });
+
+test('trottinette en approche : une marche trop longue est remplacée par un tronçon trottinette (réglage activé)',async()=>{
+ const A={lat:45.30,lon:4.80},S={lat:45.33,lon:4.82},B={lat:45.90,lon:6.12};
+ const walkRouter={route:async()=>({status:'calculated',distanceMeters:4200,durationSeconds:3000,geometry:[A,S],steps:[]})};
+ const bikeRouter={route:async()=>({status:'calculated',distanceMeters:4000,durationSeconds:800,geometry:[A,S],steps:[]})};
+ const j={source:'t',sources:['t'],alerts:[],missing:[],legs:[{kind:'transit',mode:'Train',provider:'SNCF',line:'TER',from:'Gare',to:'Annecy',fromPoint:S,toPoint:B,departure:'2026-11-20T09:00:00Z',arrival:'2026-11-20T11:00:00Z',durationSeconds:7200}]};
+ const task={from:A,to:B,earliestDeparture:'2026-11-20T08:00:00Z',marginMinutes:15,walkMaxMeters:3000,fromName:'Domicile',toName:'Arrivée'};
+ const on=await H.completeWalks(j,task,walkRouter,{enabled:true,router:bikeRouter,maxKm:8,speedKmh:15});
+ assert.equal(on.legs[0].kind,'scooter');assert.equal(on.legs[0].speedKmh,15);
+ assert.equal(Date.parse(on.legs[0].arrival),Date.parse('2026-11-20T09:00:00Z'));
+ const off=await H.completeWalks(j,task,walkRouter,{enabled:false});
+ assert.equal(off.legs[0].kind,'walk');
+ const tooFar=await H.completeWalks(j,task,walkRouter,{enabled:true,router:bikeRouter,maxKm:3,speedKmh:15});
+ assert.equal(tooFar.legs[0].kind,'walk');
+ const a=H.assess(on,task,null);assert.ok(!a.reasons.some(r=>r.startsWith('marche trop longue')));
+});

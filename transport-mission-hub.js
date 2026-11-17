@@ -47,7 +47,7 @@ function leg(o){
   walkSource:o.walkSource||null,geometry:Array.isArray(o.geometry)?o.geometry:null,
   steps:Array.isArray(o.steps)&&o.steps.length?o.steps:null,
   realtime:o.realtime===true,delayMinutes:finite(o.delayMinutes)?o.delayMinutes:null,
-  cancelled:o.cancelled===true,fare:o.fare||null,ticketUrl:o.ticketUrl||null};
+  cancelled:o.cancelled===true,fare:o.fare||null,ticketUrl:o.ticketUrl||null,...(finite(o.speedKmh)?{speedKmh:o.speedKmh}:{})};
 }
 function journey(source,legs,extra={}){
  const L=legs.filter(Boolean);
@@ -265,12 +265,13 @@ function fromNationalGTFS(rows,operator){
 }
 
 /* ---------- Marches ---------- */
+function isFoot(l){return !!l&&(l.kind==='walk'||l.kind==='scooter');}
 function walkLeg(route,from,to,fromName,toName,depMs){
  return leg({kind:'walk',mode:'Marche',from:fromName,to:toName,fromPoint:from,toPoint:to,
   departure:new Date(depMs).toISOString(),arrival:new Date(depMs+route.durationSeconds*1000).toISOString(),
   distanceMeters:route.distanceMeters,durationSeconds:route.durationSeconds,walkSource:'valhalla',geometry:route.geometry,steps:route.steps});
 }
-async function completeWalks(j,task,router){
+async function completeWalks(j,task,router,scooter){
  // Keep provider warnings (e.g. GTFS schedules without live confirmation) through walking enrichment.
  const legs=j.legs.slice(),missing=Array.isArray(j.missing)?j.missing.slice():[];
  const from=pt(task.from),to=pt(task.to);
@@ -281,6 +282,25 @@ async function completeWalks(j,task,router){
   try{const r=await router.route(a,b);return r&&r.status==='calculated'&&
    finite(r.durationSeconds)&&r.durationSeconds>=0&&finite(r.distanceMeters)&&r.distanceMeters>=0?r:null;}catch(_){return null;}
  };
+ // Marche entre deux points ; si elle dépasse la limite de marche et que la trottinette est activée (et sous sa distance maximale),
+ // elle est remplacée par un trajet en trottinette (tracé vélo OpenStreetMap, durée estimée à la vitesse réglée).
+ const footLeg=async(a,b,fromName,toName,{startMs,endMs})=>{
+  const r=await call(a,b);if(!r)return null;
+  const walkMax=Number.isFinite(task.walkMaxMeters)?task.walkMaxMeters:null;
+  if(walkMax!==null&&r.distanceMeters>walkMax&&scooter&&scooter.enabled&&scooter.router){
+   let sr=null;try{sr=await scooter.router.route(a,b);}catch(_){}
+   const limit=(finite(scooter.maxKm)&&scooter.maxKm>0?scooter.maxKm:8)*1000,speed=finite(scooter.speedKmh)&&scooter.speedKmh>0?Math.min(30,Math.max(5,scooter.speedKmh)):15;
+   if(sr&&sr.status==='calculated'&&finite(sr.distanceMeters)&&sr.distanceMeters>=0&&sr.distanceMeters<=limit){
+    const seconds=Math.max(60,Math.round(sr.distanceMeters/(speed/3.6)));
+    const start=Number.isFinite(startMs)?startMs:endMs-seconds*1000;
+    return leg({kind:'scooter',mode:'Trottinette',from:fromName,to:toName,fromPoint:a,toPoint:b,
+     departure:new Date(start).toISOString(),arrival:new Date(start+seconds*1000).toISOString(),distanceMeters:sr.distanceMeters,durationSeconds:seconds,
+     walkSource:'valhalla-bicycle',geometry:sr.geometry,steps:sr.steps,speedKmh:speed});
+   }
+  }
+  const start=Number.isFinite(startMs)?startMs:endMs-r.durationSeconds*1000;
+  return walkLeg(r,a,b,fromName,toName,start);
+ };
  // Ne jamais qualifier de « réalisable » une marche moteur sans durée, distance ou horaires cohérents.
  for(const l of legs)if(l.kind==='walk'&&(!finite(l.durationSeconds)||!finite(l.distanceMeters)||
   !Number.isFinite(ms(l.departure))||!Number.isFinite(ms(l.arrival))))
@@ -290,26 +310,25 @@ async function completeWalks(j,task,router){
  if(!from)missing.push('point GPS de départ inconnu');
  else if(!first.fromPoint)missing.push('position du début de la marche ou de l’arrêt inconnue');
  else if(meters(from,first.fromPoint)>SAME_POINT_M){
-  const r=await call(from,first.fromPoint);
   const dep=ms(first.departure);
-  if(r&&Number.isFinite(dep))
-   legs.unshift(walkLeg(r,from,first.fromPoint,task.fromName||'Adresse de départ',first.from,dep-r.durationSeconds*1000));
+  const w=Number.isFinite(dep)?await footLeg(from,first.fromPoint,task.fromName||'Adresse de départ',first.from,{endMs:dep}):null;
+  if(w)legs.unshift(w);
   else missing.push('marche depuis l’adresse exacte de départ non calculée');
  }
  // Correspondances entre deux véhicules sans marche fournie.
  for(let i=1;i<legs.length;i++){
   const a=legs[i-1],b=legs[i];
-  if(a.kind==='walk'||b.kind==='walk')continue;
+  if(isFoot(a)||isFoot(b))continue;
   const gap=(ms(b.departure)-ms(a.arrival))/1000;
   if(a.toPoint&&b.fromPoint){
    if(meters(a.toPoint,b.fromPoint)<=SAME_POINT_M){
     if(gap<TRANSFER_BUFFER_S)missing.push('correspondance trop courte à '+(a.to||'l’arrêt')+' (2 min minimum)');
     continue;
    }
-   const r=await call(a.toPoint,b.fromPoint);
-   if(!r){missing.push('marche de correspondance à '+(a.to||'l’arrêt')+' non calculée');continue;}
-   if(r.durationSeconds+TRANSFER_BUFFER_S>gap)missing.push('correspondance trop courte à '+(a.to||'l’arrêt')+' ('+Math.ceil(r.durationSeconds/60)+' min de marche)');
-   legs.splice(i,0,walkLeg(r,a.toPoint,b.fromPoint,a.to,b.from,ms(a.arrival)));i++;
+   const w=await footLeg(a.toPoint,b.fromPoint,a.to,b.from,{startMs:ms(a.arrival)});
+   if(!w){missing.push('marche de correspondance à '+(a.to||'l’arrêt')+' non calculée');continue;}
+   if(w.durationSeconds+TRANSFER_BUFFER_S>gap)missing.push('correspondance trop courte à '+(a.to||'l’arrêt')+' ('+Math.ceil(w.durationSeconds/60)+' min de '+(w.kind==='scooter'?'trottinette':'marche')+')');
+   legs.splice(i,0,w);i++;
   }else missing.push('positions GPS de correspondance non vérifiées : '+(a.to||'?')+' → '+(b.from||'?'));
  }
  // Dernière marche : dernier point de la proposition vers l'adresse exacte d'arrivée.
@@ -317,10 +336,9 @@ async function completeWalks(j,task,router){
  if(!to)missing.push('point GPS d’arrivée inconnu');
  else if(!last.toPoint)missing.push('position de la fin de la marche ou de l’arrêt inconnue');
  else if(meters(last.toPoint,to)>SAME_POINT_M){
-  const r=await call(last.toPoint,to);
   const arr=ms(last.arrival);
-  if(r&&Number.isFinite(arr))
-   legs.push(walkLeg(r,last.toPoint,to,last.to,task.toName||'Adresse d’arrivée',arr));
+  const w=Number.isFinite(arr)?await footLeg(last.toPoint,to,last.to,task.toName||'Adresse d’arrivée',{startMs:arr}):null;
+  if(w)legs.push(w);
   else missing.push('marche jusqu’à l’adresse exacte d’arrivée non calculée');
  }
  return {...j,legs,missing};
@@ -405,7 +423,7 @@ function priceOf(j,fareFor){
  const amounts={},missingSources=[],sources=[],legFares=[];
  let ticket=null; // titre en cours : {network,validUntilMs} — une correspondance dans la validité ne se repaie pas
  const isVerifiedFare=f=>!!(f&&finite(f.amount)&&f.amount>=0&&/^(EUR|CHF)$/.test(f.currency)&&f.source);
- const found=j.legs.map(l=>{if(l.kind==='walk')return null;
+ const found=j.legs.map(l=>{if(isFoot(l))return null;
   const direct=isVerifiedFare(l.fare)?l.fare:null;return direct||(typeof fareFor==='function'?fareFor(l):null);});
  // Titre combiné officiel (ex. ligne 272 « Parcours + zone 10 », Léman Pass multizones) : quand le même trajet
  // emprunte aussi le réseau que ce titre couvre, on compte le titre combiné une fois et les portions couvertes
@@ -416,7 +434,7 @@ function priceOf(j,fareFor){
   found.forEach((f,i)=>{if(i!==combo&&isVerifiedFare(f)&&(Array.isArray(c.covers)?c.covers.includes(f.network):f.network===c.covers))covered.add(i);});
   if(covered.size)found[combo]={...found[combo],amount:c.amount,validityMinutes:null,source:found[combo].source+' — titre retenu : '+c.label};}
  for(let i=0;i<j.legs.length;i++){const l=j.legs[i];
-  if(l.kind==='walk'){legFares.push(null);continue;}
+  if(isFoot(l)){legFares.push(null);continue;}
   const f=found[i];
   legFares.push(isVerifiedFare(f)?f:null);
   if(covered.has(i)){sources.push(f.network+' : couvert par le titre combiné');continue;}
@@ -514,7 +532,7 @@ function assess(j,task,fareFor){
  const scheduled=!feasible&&reasons.every(r=>ADVISORY.test(r));
  return {...j,scheduled,departure:Number.isFinite(dep)?new Date(dep).toISOString():null,arrival:Number.isFinite(arr)?new Date(arr).toISOString():null,
   durationMinutes:chrono?Math.ceil((arr-dep)/60000):null,slackMinutes:slack,marginMinutes:margin,price,reasons,delays,
-  transfers:Math.max(0,legs.filter(l=>l.kind!=='walk').length-1),
+  transfers:Math.max(0,legs.filter(l=>!isFoot(l)).length-1),
   walkMeters:legs.filter(l=>l.kind==='walk').reduce((s,l)=>s+(l.distanceMeters||0),0),
   feasible,status:feasible?'Réalisable':scheduled?'Horaire programmé — à confirmer le jour J':'Transport non confirmé',
   statusDetail:scheduled?'Horaire officiel publié ; marches, correspondances et marge vérifiées. Reste à confirmer : '+reasons.join(' · '):feasible?(j.realtime?'Horaires temps réel du fournisseur':'Horaires théoriques : retards et annulations à surveiller le jour J'):reasons.join(' · ')};
@@ -526,7 +544,7 @@ function assess(j,task,fareFor){
 // Points GPS absents : le trajet est conservé (aucune élimination sans preuve).
 function walkDetour(j,task){
  const from=pt(task&&task.from),to=pt(task&&task.to);if(!from||!to||!j||!Array.isArray(j.legs))return false;
- const rides=j.legs.filter(l=>l&&l.kind!=='walk');if(!rides.length)return false;
+ const rides=j.legs.filter(l=>l&&!isFoot(l));if(!rides.length)return false;
  const first=pt(rides[0].fromPoint),last=pt(rides[rides.length-1].toPoint);if(!first||!last)return false;
  const direct=meters(from,to);
  return direct>0&&meters(from,first)+meters(last,to)>=direct;
@@ -537,7 +555,7 @@ function walkDetour(j,task){
 // (Annecy → Genève par La Roche-sur-Foron ≈ 1,6 fois) et les petits trajets urbains. GPS absent : trajet conservé.
 function excessiveDetour(j,task){
  const from=pt(task&&task.from),to=pt(task&&task.to);if(!from||!to||!j||!Array.isArray(j.legs))return false;
- const rides=j.legs.filter(l=>l&&l.kind!=='walk');if(!rides.length)return false;
+ const rides=j.legs.filter(l=>l&&!isFoot(l));if(!rides.length)return false;
  let path=0;for(const l of rides){const a=pt(l.fromPoint),b=pt(l.toPoint);if(!a||!b)return false;path+=meters(a,b);}
  const direct=meters(from,to);
  return direct>0&&path>=3*direct&&path-direct>=30000;
@@ -553,7 +571,7 @@ function walkPairs(j,task){
  return out;
 }
 function signature(j){
- return j.legs.filter(l=>l.kind!=='walk').map(l=>[
+ return j.legs.filter(l=>!isFoot(l)).map(l=>[
   String(l.provider||'').replace(/\s+/g,'').toLowerCase(),
   String(l.line||'').replace(/\s+/g,'').toLowerCase(),
   String(l.from||'').trim().toLowerCase(),String(l.to||'').trim().toLowerCase(),
@@ -1118,7 +1136,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   const replace=(t,a)=>{const old=pendingCard.get(t);const i=s.items.indexOf(old);
    if(old)a.sources=[...new Set([...a.sources,...(old.sources||[])])];
    if(i>=0)s.items[i]=a;else s.items.push(a);if(t.key)s.bySignature.set(t.key,a);};
-  const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,router).then(x=>{
+  const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,router,{enabled:!!(scooter&&scooter.enabled&&scooterRouter),router:scooterRouter,maxKm:scooter&&scooter.maxKm,speedKmh:scooter&&scooter.speedKmh}).then(x=>{
    if(disposed)return;replace(t,assess(x,s.task,fareFor));emit(label);
   }).catch(()=>{
    // Ne pas laisser une carte bloquée sur « marches en cours de calcul »
@@ -1370,7 +1388,7 @@ function card(doc,j,labels,expanded=false){
   li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='scooter'?'Trottinette'+(l.distanceMeters!=null?' '+(l.distanceMeters/1000).toFixed(1).replace('.',',')+' km':'')+(l.durationSeconds!=null?' · '+Math.max(1,Math.round(l.durationSeconds/60))+' min (estimé)':''):l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+Math.max(1,Math.round(l.durationSeconds/60))+' min':''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':''].filter(Boolean).join(' '))));
   li.appendChild(el(doc,'div',null,clock(l.departure)+' '+(l.from||'?')+' → '+clock(l.arrival)+' '+(l.to||'?')+(l.delayMinutes?' · retard annoncé +'+l.delayMinutes+' min':'')));
   if(l.kind==='scooter'){
-   li.appendChild(el(doc,'small',null,'Tracé calculé (OpenStreetMap, mode vélo) · durée estimée à '+(j.scooterSpeedKmh||15)+' km/h : réglages de l’application'));
+   li.appendChild(el(doc,'small',null,'Tracé calculé (OpenStreetMap, mode vélo) · durée estimée à '+(l.speedKmh||j.scooterSpeedKmh||15)+' km/h : réglages de l’application'));
    const sm=mapSvg(doc,{legs:[l]});
    if(sm){sm.setAttribute('class','cp-hub-map cp-hub-walk-map');sm.setAttribute('aria-label','Carte du trajet en trottinette (OpenStreetMap)');li.appendChild(sm);}
    const sa=pt(l.fromPoint),sb=pt(l.toPoint);
@@ -1541,7 +1559,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
