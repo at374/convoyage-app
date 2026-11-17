@@ -191,3 +191,10 @@ test('TCL : prix du ticket 1 voyage par zones (grille officielle) à la place du
  assert.match(src,/\['Zones 1 et 2','2,10 €'\]/);
  assert.match(src,/netLabel==='TCL'&&String\(netLegs\[0\]\.departure/);
 });
+
+test('DriiveMe : la livraison ne peut pas commencer avant la prise en charge',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ assert.ok(app.includes('const deliveryStartFloor = '));
+ assert.ok(app.includes('Math.max(d, floor)'));
+ assert.ok(app.includes('const firstStart=deliveryStartFloor!==null'));
+});

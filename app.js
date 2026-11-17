@@ -2093,8 +2093,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         transportDelivery : null;
       // Fenêtres de la mission : prise en charge (début–fin) et livraison (début–fin) ; marge de sécurité ajoutée.
       const orig = (timing && timing.original) || m, okT = v => Number.isFinite(Date.parse(v || ''));
+      // Début de livraison cohérent : on ne peut pas livrer avant la prise en charge (plus la durée du trajet si elle est connue) ;
+      // une plateforme qui annonce une arrivée « dès » une date antérieure au départ est ramenée au départ.
+      const deliveryStartFloor = (() => { const d = Date.parse(orig.delivery_start || ''), p = Date.parse(orig.pickup_start || ''); if (!Number.isFinite(d)) return null;
+        if (!Number.isFinite(p)) return d; const h = Number(orig.duree_h || m.duree_h); const floor = p + (Number.isFinite(h) && h > 0 && h < 24 ? h * 3600000 : 0); return Math.max(d, floor); })();
       const pickupEndIso = okT(orig.pickup_end) && okT(pickupDate) && Date.parse(orig.pickup_end) > Date.parse(pickupDate) ? new Date(Date.parse(orig.pickup_end)).toISOString() : null;
-      const deliveryStartIso = !transportPlannedReturn && okT(orig.delivery_start) && okT(orig.delivery_end) && Date.parse(orig.delivery_end) > Date.parse(orig.delivery_start) ? new Date(Date.parse(orig.delivery_start) + securityMarginMin * 60000).toISOString() : null;
+      const deliveryStartIso = !transportPlannedReturn && deliveryStartFloor !== null && okT(orig.delivery_end) && Date.parse(orig.delivery_end) > deliveryStartFloor ? new Date(deliveryStartFloor + securityMarginMin * 60000).toISOString() : null;
       const deliveryEndMs = deliveryStartIso ? Date.parse(orig.delivery_end) + securityMarginMin * 60000 : null;
       const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
       const connectionStatus = nextGapMin == null ? '' :
@@ -2298,7 +2302,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       // Planifié = jour retenu par le planning ; la fenêtre réelle de la mission (début → fin) peut commencer plus tôt (ex. 18/11 alors que le plan dit 19/11).
       const pPlan=parisServiceDay(pickupDate),dPlan=parisServiceDay(deliveryDate);
       const pDay0=(pPlan&&parisServiceDay(origT.pickup_start)&&parisServiceDay(origT.pickup_start)<pPlan?parisServiceDay(origT.pickup_start):pPlan),pDay1=parisServiceDay(origT.pickup_end)||pPlan;
-      const dDay0=(dPlan&&parisServiceDay(origT.delivery_start)&&parisServiceDay(origT.delivery_start)<dPlan?parisServiceDay(origT.delivery_start):dPlan),dDay1=parisServiceDay(origT.delivery_end)||dPlan;
+      const dDay0=(dPlan&&deliveryStartFloor!==null&&parisServiceDay(new Date(deliveryStartFloor).toISOString())<dPlan?parisServiceDay(new Date(deliveryStartFloor).toISOString()):dPlan),dDay1=parisServiceDay(origT.delivery_end)||dPlan;
       const multiAller=[],multiRetour=[];
       if(pDay0&&pDay1&&pDay1>pDay0){for(let d=pDay0,n=0;d<=pDay1&&n<10;d=dayAfter(d),n++)multiAller.push(d);}
       if(dDay0&&dDay1&&dDay1>dDay0){for(let d=dDay0,n=0;d<=dDay1&&n<10;d=dayAfter(d),n++)multiRetour.push(d);}
@@ -2475,7 +2479,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         if(deliveryDate&&multiRetour.length){
           for(const d of multiRetour){
             const first=d===dDay0,last=d===dDay1;
-            const firstStart=Number.isFinite(Date.parse(origT.delivery_start||''))?new Date(Date.parse(origT.delivery_start)+securityMarginMin*60000).toISOString():(deliveryStartIso||deliveryDate);
+            const firstStart=deliveryStartFloor!==null?new Date(deliveryStartFloor+securityMarginMin*60000).toISOString():(deliveryStartIso||deliveryDate);
             const startIso=first?firstStart:parisIso(d,8,0);
             const endMs=last&&deliveryEndMs?deliveryEndMs:Date.parse(dayEnd(d));
             tasks.push({...retourBase,label:d===dPlan?'Retour':'Retour@'+d,earliestDeparture:first?startIso:parisIso(d,4,0),
