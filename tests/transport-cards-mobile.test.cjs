@@ -52,3 +52,11 @@ test('inventaire : ne plus annoncer Léman Pass entièrement absent',()=>{
  assert.match(coverage.DETAILS.lemanpass.blocage,/autres zones/);
  assert.equal(coverage.DETAILS.lemanpass.tarif,'partiels');
 });
+
+test('premiere proposition : carte et marches visibles sans ouverture manuelle',()=>{
+ assert.match(hub,/function card\(doc,j,labels,expanded=false\)/);
+ assert.match(hub,/if\(expanded\)c\.open=true/);
+ assert.match(hub,/if\(c\.open\)buildBody\(\)/);
+ assert.match(hub,/for\(const \[i,p\] of v\.picks\.entries\(\)\)addCard\(host,p\.journey,p\.labels,i===0\)/);
+ assert.match(hub,/Cartes des trajets piétons/);
+});
