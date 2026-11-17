@@ -493,3 +493,10 @@ test('échec du routage piéton : aucune carte ne reste bloquée en calcul',asyn
  assert.ok([...view.picks.map(p=>p.journey),...view.others].every(j=>!j.computing));
  session.dispose();
 });
+
+test('cars : deuxième lot piéton même si un TER est déjà réalisable',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.match(source,/rest\.length&&\(coachSource\|\|!s\.items\.some\(x=>x\.feasible\)\)/);
+ assert.match(source,/select\(rest,coachSource\?4:8\)/);
+});
