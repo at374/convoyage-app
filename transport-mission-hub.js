@@ -1128,11 +1128,14 @@ function render(host,v){
  if(v.others.length){const more=el(doc,'details','cp-hub-more');more.appendChild(el(doc,'summary',null,'Autres propositions ('+v.others.length+')'));
   for(const j of v.others.slice(0,8))addCard(more,j,null);
   more.open=moreOpen;host.appendChild(more);}
- const errs=Object.entries(v.errors),skip=Object.entries(v.skipped);
- if(v.done&&(errs.length||skip.length)){
-  const d=el(doc,'details','cp-hub-diag');d.appendChild(el(doc,'summary',null,'Moteurs consultés'));
+ // Ne montrer que les moteurs effectivement interrogés sur la direction choisie.
+ // Les réseaux hors zone restent dans le diagnostic interne, pas dans la fiche mission.
+ const errs=Object.entries(v.errors);
+ const consulted=Object.entries(v.received||{}).filter(([n])=>!errs.some(([e])=>e===n));
+ if(v.done&&(errs.length||consulted.length)){
+  const d=el(doc,'details','cp-hub-diag');d.appendChild(el(doc,'summary',null,'Moteurs consultés ('+(errs.length+consulted.length)+')'));
   for(const [n,e] of errs)d.appendChild(el(doc,'div',null,'❌ '+n+' : '+e));
-  for(const [n,e] of skip)d.appendChild(el(doc,'div',null,'⏭️ '+n+' : '+e));
+  for(const [n,count] of consulted)d.appendChild(el(doc,'div',null,'✅ '+n+' : '+count+' proposition'+(count>1?'s':'')+' reçue'+(count>1?'s':'')));
   host.appendChild(d);
  }
  const tads=tadFor(v.task);
