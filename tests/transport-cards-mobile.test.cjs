@@ -71,3 +71,10 @@ test('missions multi-jours : onglets date pickup/livraison et aucun jour invent�
  assert.match(css,/\.cp-transport-direction\[hidden\]\{display:none!important\}/);
  assert.match(css,/\.cp-transport-day-tab\[aria-pressed="true"\]/);
 });
+
+test('onglets des dates : libellés accessibles identifiant prise en charge, retour et jonction',()=>{
+ assert.match(app,/const stages=Object\.entries\(transportDays\)/);
+ assert.match(app,/direction==='Aller'\?'Prise en charge'/);
+ assert.match(app,/direction==='Retour'\?'Retour après livraison':'Jonction'/);
+ assert.match(app,/button\.setAttribute\('aria-label','Afficher les transports du '/);
+});
