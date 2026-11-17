@@ -13,12 +13,13 @@ async function search(config){
  if(url.username||url.password||url.hash||url.port&&url.port!=='443')throw Error('Endpoint OTP2 non autorisé');
  if(!c.query||typeof c.query!=='string'||!c.query.trim())throw Error('Requête GraphQL OTP2 requise');
  if(typeof c.fetch!=='function')throw Error('Fonction fetch explicitement fournie requise');
- const timeout=Number.isFinite(c.timeoutMs)?Math.min(15000,Math.max(1000,c.timeoutMs)):8000;
+ const timeout=Number.isFinite(c.timeoutMs)?Math.min(60000,Math.max(1000,c.timeoutMs)):30000;
  const controller=new AbortController();
+ let timedOut=false;
  const abort=()=>controller.abort();
  if(c.signal?.aborted)controller.abort();
  else c.signal?.addEventListener?.('abort',abort,{once:true});
- const timer=setTimeout(()=>controller.abort(),timeout);
+ const timer=setTimeout(()=>{timedOut=true;controller.abort();},timeout);
  try{
   const response=await c.fetch(url.toString(),{
    method:'POST',headers:{'content-type':'application/json','accept':'application/json'},
@@ -30,6 +31,11 @@ async function search(config){
   if(json?.errors?.length)throw Error('OTP2 GraphQL : réponse en erreur');
   const journeys=adapter.parse(json);
   return {journeys,source:'OpenTripPlanner (GTFS)',realtime:false,pricesVerified:false};
+ }catch(e){
+  if(timedOut)throw Error('OTP2 : délai dépassé ('+Math.round(timeout/1000)+' s), serveur indisponible ou démarrage à froid');
+  if(c.signal?.aborted)throw Error('OTP2 : recherche interrompue (changement de mission ou actualisation)');
+  if(controller.signal.aborted)throw Error('OTP2 : requête interrompue');
+  throw e;
  }finally{clearTimeout(timer);c.signal?.removeEventListener?.('abort',abort);}
 }
 // Requête standard de la fiche mission (API GraphQL GTFS d'OTP2, planConnection) :
