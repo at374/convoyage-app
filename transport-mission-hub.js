@@ -545,8 +545,10 @@ function inSwissArea(p){return !!p&&((p.lat>=SWISS_BOX.minLat&&p.lat<=SWISS_BOX.
  !(p.lat<46.15&&meters(p,GENEVA)>30000))||meters(p,GENEVA)<=30000);}
 function queryWindow(task){
  const margin=marginFor(task),deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
- if(Number.isFinite(earliest))return {when:new Date(earliest).toISOString(),arriveBy:false};
+ // Une prise en charge a une heure limite : chercher d'abord une arrivée avant la marge.
+ // Le départ après une mission précédente reste contrôlé dans assess().
  if(Number.isFinite(deadline))return {when:new Date(deadline-margin*60000).toISOString(),arriveBy:true};
+ if(Number.isFinite(earliest))return {when:new Date(earliest).toISOString(),arriveBy:false};
  return null;
 }
 function makeProviders(r,opts={}){
