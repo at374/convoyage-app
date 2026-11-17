@@ -2295,13 +2295,15 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       const dayAfter=day=>new Date(Date.parse(day+'T12:00:00Z')+86400000).toISOString().slice(0,10);
       // Mission flexible sur plusieurs jours : un onglet par jour, avec Aller et Retour cherchés ce jour-là.
       const origT=(timing&&timing.original)||m;
-      const pDay0=parisServiceDay(pickupDate),pDay1=parisServiceDay(origT.pickup_end)||pDay0;
-      const dDay0=parisServiceDay(deliveryDate),dDay1=parisServiceDay(origT.delivery_end)||dDay0;
+      // Planifié = jour retenu par le planning ; la fenêtre réelle de la mission (début → fin) peut commencer plus tôt (ex. 18/11 alors que le plan dit 19/11).
+      const pPlan=parisServiceDay(pickupDate),dPlan=parisServiceDay(deliveryDate);
+      const pDay0=(pPlan&&parisServiceDay(origT.pickup_start)&&parisServiceDay(origT.pickup_start)<pPlan?parisServiceDay(origT.pickup_start):pPlan),pDay1=parisServiceDay(origT.pickup_end)||pPlan;
+      const dDay0=(dPlan&&parisServiceDay(origT.delivery_start)&&parisServiceDay(origT.delivery_start)<dPlan?parisServiceDay(origT.delivery_start):dPlan),dDay1=parisServiceDay(origT.delivery_end)||dPlan;
       const multiAller=[],multiRetour=[];
       if(pDay0&&pDay1&&pDay1>pDay0){for(let d=pDay0,n=0;d<=pDay1&&n<10;d=dayAfter(d),n++)multiAller.push(d);}
       if(dDay0&&dDay1&&dDay1>dDay0){for(let d=dDay0,n=0;d<=dDay1&&n<10;d=dayAfter(d),n++)multiRetour.push(d);}
-      for(const d of multiAller)if(d!==pDay0)transportDays['Aller@'+d]=d;
-      for(const d of multiRetour)if(d!==dDay0)transportDays['Retour@'+d]=d;
+      for(const d of multiAller)if(d!==pPlan)transportDays['Aller@'+d]=d;
+      for(const d of multiRetour)if(d!==dPlan)transportDays['Retour@'+d]=d;
       for(const key of Object.keys(transportDays)){
         if(transportDestinations[key])continue;
         const [dir,d]=key.split('@');
@@ -2347,7 +2349,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           tabs.appendChild(button);buttons.push(button);
         }
         hero.insertAdjacentElement('afterend',tabs);
-        selectDay(transportDays.Aller||availableTransportDays[0]);
+        {const today=parisServiceDay(new Date().toISOString());selectDay(availableTransportDays.find(d=>d>=today)||transportDays.Aller||availableTransportDays[0]);}
         // Un onglet de jour n'apparaît que si au moins un transport compatible avec le créneau existe (ou si la recherche est en cours).
         updateDayTabs=()=>{
           const empty=day=>{const ls=Object.entries(transportDays).filter(([,d])=>d===day).map(([l])=>l);
@@ -2441,9 +2443,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           // Chaque jour : arrivées juste avant l'heure d'ouverture du jour (18:00 le premier jour), puis plus tard jusqu'à la fin de la fenêtre.
           for(const d of multiAller){
             const first=d===pDay0,last=d===pDay1;
-            const startIso=first?pickupDate:parisIso(d,8,0);
-            const endIso=last&&pickupEndIso?pickupEndIso:dayEnd(d);
-            tasks.push({...allerBase,label:first?'Aller':'Aller@'+d,earliestDeparture:first?undefined:parisIso(d,4,0),latestArrival:endIso,
+            const firstStart=Number.isFinite(Date.parse(origT.pickup_start||''))?new Date(Date.parse(origT.pickup_start)).toISOString():pickupDate;
+            const startIso=first?firstStart:parisIso(d,8,0);
+            const endIso=last&&(origT.pickup_end&&Number.isFinite(Date.parse(origT.pickup_end)))?new Date(Date.parse(origT.pickup_end)).toISOString():dayEnd(d);
+            tasks.push({...allerBase,label:d===pPlan?'Aller':'Aller@'+d,earliestDeparture:first?undefined:parisIso(d,4,0),latestArrival:endIso,
               windowKind:'arrival',windowStartMs:Date.parse(startIso),windowEndMs:Date.parse(endIso)-securityMarginMin*60000});
           }
         }else if(pickupDate)tasks.push({...allerBase,label:'Aller',latestArrival:pickupEndIso||pickupDate,...(pickupEndIso?{windowKind:'arrival',windowStartMs:Date.parse(pickupDate),windowEndMs:Date.parse(pickupEndIso)-securityMarginMin*60000}:{})});
@@ -2452,9 +2455,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         if(deliveryDate&&multiRetour.length){
           for(const d of multiRetour){
             const first=d===dDay0,last=d===dDay1;
-            const startIso=first?(deliveryStartIso||deliveryDate):parisIso(d,8,0);
+            const firstStart=Number.isFinite(Date.parse(origT.delivery_start||''))?new Date(Date.parse(origT.delivery_start)+securityMarginMin*60000).toISOString():(deliveryStartIso||deliveryDate);
+            const startIso=first?firstStart:parisIso(d,8,0);
             const endMs=last&&deliveryEndMs?deliveryEndMs:Date.parse(dayEnd(d));
-            tasks.push({...retourBase,label:first?'Retour':'Retour@'+d,earliestDeparture:first?startIso:parisIso(d,4,0),
+            tasks.push({...retourBase,label:d===dPlan?'Retour':'Retour@'+d,earliestDeparture:first?startIso:parisIso(d,4,0),
               windowKind:'departure',windowStartMs:Date.parse(startIso),windowEndMs:endMs});
           }
         }else if(deliveryDate)tasks.push({...retourBase,label:'Retour',earliestDeparture:deliveryStartIso||deliveryDate,...(deliveryStartIso?{windowKind:'departure',windowStartMs:Date.parse(deliveryStartIso),windowEndMs:deliveryEndMs}:{})});

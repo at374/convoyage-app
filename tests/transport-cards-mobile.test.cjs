@@ -126,8 +126,7 @@ test('autres propositions : annoncer le nombre de cartes réellement rendues',()
 test('mission sur plusieurs jours : un onglet par jour avec Aller et Retour cherchés ce jour-là',()=>{
  assert.match(app,/transportDays\['Aller@'\+d\]=d/);
  assert.match(app,/transportDays\['Retour@'\+d\]=d/);
- assert.match(app,/label:first\?'Aller':'Aller@'\+d/);
- assert.match(app,/const startIso=first\?pickupDate:parisIso\(d,8,0\)/);
+  assert.match(app,/const startIso=first\?firstStart:parisIso\(d,8,0\)/);
  assert.match(app,/const parisIso=\(day,hh,mm\)=>/);
 });
 
@@ -136,4 +135,10 @@ test('OTP2 : deuxième essai après délai dépassé et ordre des sections Aller
  assert.match(hub,/const limitMs=Number\.isFinite\(p\.timeoutMs\)/);
  assert.match(app,/Ordre d'affichage : Aller, Jonction, Retour/);
  assert.match(app,/window\.__cpOtpWarm/);
+});
+
+test('multi-jours : les onglets partent du début réel de la fenêtre, pas du jour planifié',()=>{
+ assert.match(app,/const pPlan=parisServiceDay\(pickupDate\),dPlan=parisServiceDay\(deliveryDate\)/);
+ assert.match(app,/label:d===pPlan\?'Aller':'Aller@'\+d/);
+ assert.match(app,/label:d===dPlan\?'Retour':'Retour@'\+d/);
 });
