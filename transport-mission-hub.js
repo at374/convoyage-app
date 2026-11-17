@@ -565,7 +565,10 @@ function rank(items,task={}){
  // affiché sur chaque carte reste celui du trajet : un horaire programmé n'est jamais présenté comme confirmé.
  const tier=j=>j.feasible||j.scheduled?1:0,confirmedFirst=(a,b)=>Number(b.feasible)-Number(a.feasible);
  const byFeasible=(a,b)=>tier(b)-tier(a);
- const fastest=[...all].sort((a,b)=>byFeasible(a,b)||a.durationMinutes-b.durationMinutes||confirmedFirst(a,b)||compareFares(a.price,b.price))[0];
+ // « Plus rapide » départage uniquement sur la durée, puis la confirmation et la marche.
+ // Un tarif EUR/CHF ne doit pas rendre ce tri non transitif.
+ const fastest=[...all].sort((a,b)=>byFeasible(a,b)||a.durationMinutes-b.durationMinutes||
+  confirmedFirst(a,b)||a.walkMeters-b.walkMeters)[0];
  // « Moins cher » ne doit jamais recommander un trajet impossible, même si son prix est connu.
  const priced=all.filter(j=>(j.feasible||j.scheduled)&&
   (j.price.status==='verified'||j.price.status==='free'));
