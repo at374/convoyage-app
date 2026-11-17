@@ -461,3 +461,11 @@ test('cars longue distance : FlixBus et BlaBlaCar Bus visibles dans les proposit
  assert.ok(ranked.picks.some(p=>p.journey.sources.includes('FlixBus')));
  assert.ok(ranked.picks.some(p=>p.journey.sources.includes('BlaBlaCar Bus')));
 });
+
+test('quota piéton : FlixBus et BlaBlaCar Bus prioritaires avant les bus locaux',()=>{
+ const fs=require('node:fs');
+ const hubSource=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.match(hubSource,/const coachPriority=t=>/);
+ assert.match(hubSource,/toWalk\.sort\(\(a,b\)=>coachPriority\(a\)-coachPriority\(b\)/);
+ assert.match(hubSource,/flixbus\|blablacar/);
+});
