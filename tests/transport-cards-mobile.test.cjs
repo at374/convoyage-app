@@ -98,7 +98,6 @@ test('BlaBlaCar Bus et FlixBus : diagnostic uniquement si moteur consulté',()=>
  assert.match(hub,/Object\.prototype\.hasOwnProperty\.call\(v\.errors\|\|\{\},name\)/);
  assert.match(hub,/if\(coachRows\.length\)\{/);
  assert.match(hub,/entry\.name\.replace\(' GTFS',''\)/);
- assert.match(hub,/count\+' reçu\(s\)'/);
  assert.match(hub,/count===0\?'aucun horaire reçu'/);
  assert.match(hub,/count\+' horaire\(s\) reçu\(s\)'/);
  assert.match(hub,/BlaBlaCar Bus GTFS/);
