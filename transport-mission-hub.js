@@ -1218,7 +1218,10 @@ function render(host,v){
   const coachNames=['BlaBlaCar Bus GTFS','FlixBus GTFS'].filter(name=>
    Object.prototype.hasOwnProperty.call(v.received||{},name)||
    Object.prototype.hasOwnProperty.call(v.errors||{},name));
-  const visibleJourneys=[...(v.picks||[]).map(p=>p.journey),...(v.others||[])];
+  // Le rendu limite « Autres propositions » aux huit premières cartes.
+  // Le compteur doit refléter les cartes réellement présentes, pas toutes
+  // les propositions internes retenues par le classement.
+  const visibleJourneys=[...(v.picks||[]).map(p=>p.journey),...(v.others||[]).slice(0,8)];
   const coachRows=coachNames.map(name=>{
    const operator=name.replace(' GTFS','');
    const visible=visibleJourneys.filter(j=>
