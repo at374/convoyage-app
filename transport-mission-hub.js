@@ -855,7 +855,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   for(const j of clean){
    const key=signature(j),known=key&&s.bySignature.get(key);
    if(known){known.sources=[...new Set([...known.sources,...(j.sources||[j.source])])];continue;}
-   const quick=assess({...j,missing:[]},s.task,fareFor);
+   const quick=assess(j,s.task,fareFor);
    if(quick.reasons.some(r=>/arrivée après|marge insuffisante|départ avant|horaires incohérents|annulée/.test(r))){
     if(key)s.bySignature.set(key,quick);s.items.push(quick);continue;
    }
@@ -869,7 +869,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   // Affichage immédiat : chaque trajet apparaît tout de suite, « marches en cours de calcul », puis est remplacé.
   const pendingCard=new Map();
   for(const t of toWalk){
-   const p=assess({...t.j,missing:['marches en cours de calcul']},s.task,fareFor);p.computing=true;
+   const p=assess({...t.j,missing:[...(t.j.missing||[]),'marches en cours de calcul']},s.task,fareFor);p.computing=true;
    pendingCard.set(t,p);s.items.push(p);if(t.key)s.bySignature.set(t.key,p);
   }
   emit(label);
@@ -892,7 +892,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   // Recherche complémentaire : si rien n'est encore réalisable dans cette direction, 8 couples de plus.
   if(!disposed&&rest.length&&!s.items.some(x=>x.feasible)){[batch,rest]=select(rest,8);await walkBatch(batch);}
   for(const t of rest){ // au-delà : visibles, marches non calculées pour préserver le quota Valhalla
-   replace(t,assess({...t.j,missing:['marches non calculées (quota de la fiche)']},s.task,fareFor));
+   replace(t,assess({...t.j,missing:[...(t.j.missing||[]),'marches non calculées (quota de la fiche)']},s.task,fareFor));
   }
   if(!disposed)emit(label);
  }
