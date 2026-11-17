@@ -1330,6 +1330,10 @@ const TICKET_LINKS=[
  [/\bt2c\b|clermont auvergne m[ée]tropole/i,'T2C','https://www.t2c.fr/'],
  [/cars? r[ée]gion|\btam\b/i,'Cars Région','https://www.laregionvoustransporte.fr/']
 ];
+// Prix officiels du titre « 1 voyage » TCL (ticket rechargeable), à partir du 01/09/2026 : guide tarifaire TCL mai 2026 (tcl.fr).
+// La zone exacte d'un trajet n'est pas connue de l'application : les prix sont présentés par zones, jamais additionnés ni choisis à la place du voyageur.
+const TCL_FARES={from:'2026-09-01',checkedAt:'2026-11-17',source:'https://www.tcl.fr/sites/default/files/2026-05/TCL_Campagne_Unification_Guide_Tarifaire_Mai2026_W.pdf',
+ rows:[['Zones 1 et 2','2,10 €'],['2 zones voisines (sauf zone 1)','1,60 €'],['Toutes zones sauf zone 1','2,50 €'],['Toutes zones','3,70 €']]};
 // Lien « navigation » : ouvre l'application de guidage du téléphone (Google Maps, voix et suivi en direct) avec départ et arrivée déjà remplis.
 function navLink(doc,a,b,mode){
  const link=el(doc,'a','cp-hub-walk-map-link cp-hub-nav',mode==='bicycling'?'🧭 Guidage vocal (Google Maps, vélo)':'🧭 Guidage vocal (Google Maps, à pied)');
@@ -1380,6 +1384,13 @@ function card(doc,j,labels,expanded=false){
    if(!netLegs.length||j.price.status!=='unknown')continue;
    const from=netLegs[0].from,to=netLegs[netLegs.length-1].to;
    const place=netLabel==='SNCF Connect'?['gare','gares']:['arrêt','arrêts'];
+   if(netLabel==='TCL'&&String(netLegs[0].departure||'').slice(0,10)>=TCL_FARES.from){
+    const tbox=el(doc,'div','cp-hub-search-help');
+    tbox.appendChild(el(doc,'strong',null,'🎟️ Ticket TCL « 1 voyage » · prix selon les zones'));
+    for(const [zone,price] of TCL_FARES.rows)tbox.appendChild(el(doc,'small',null,zone+' : '+price));
+    const src=el(doc,'a','cp-hub-ticket','Grille officielle TCL (vérifiée le 17/11/2026)');src.href=TCL_FARES.source;src.target='_blank';src.rel='noopener noreferrer';tbox.appendChild(src);
+    body.appendChild(tbox);continue;
+   }
    const box=el(doc,'div','cp-hub-search-help');
    box.appendChild(el(doc,'strong',null,'🎟️ Chercher le prix sur '+netLabel));
    box.appendChild(el(doc,'small',null,'Départ « '+from+' » · arrivée « '+to+' » · '+dayText(netLegs[0].departure)+' vers '+clock(netLegs[0].departure)+'.'));

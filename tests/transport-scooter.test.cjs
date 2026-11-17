@@ -184,3 +184,10 @@ test('adresses exactes dans les marches, guidage trottinette replié, fin de jou
  assert.match(app,/const dayEnd=d=>parisIso\(d,19,0\)/);
  assert.match(app,/toName:from\|\|'Prise en charge'/);
 });
+
+test('TCL : prix du ticket 1 voyage par zones (grille officielle) à la place du copier-coller',()=>{
+ const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.match(src,/const TCL_FARES=/);
+ assert.match(src,/\['Zones 1 et 2','2,10 €'\]/);
+ assert.match(src,/netLabel==='TCL'&&String\(netLegs\[0\]\.departure/);
+});
