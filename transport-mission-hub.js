@@ -471,6 +471,11 @@ function assess(j,task,fareFor){
  // La fenêtre peut être élargie explicitement par un futur scénario horaire multi-jours.
  const maxEarly=Number.isFinite(task.maxEarlyArrivalMinutes)?task.maxEarlyArrivalMinutes:180;
  if(slack!==null&&slack>maxEarly)reasons.push('arrivée trop tôt pour le créneau choisi ('+slack+' min d’avance)');
+ // Réglage « marche maximale » (3 km par défaut) : appliqué à CHAQUE marche d'approche, de correspondance ou finale,
+ // pas seulement aux trajets entièrement à pied. Une marche non calculée (distance inconnue) n'est pas écartée ici.
+ const walkMax=Number.isFinite(task.walkMaxMeters)?task.walkMaxMeters:null;
+ const longWalk=walkMax===null?null:legs.find(l=>l.kind==='walk'&&finite(l.distanceMeters)&&l.distanceMeters>walkMax);
+ if(longWalk)reasons.push('marche trop longue ('+(longWalk.distanceMeters/1000).toFixed(1).replace('.',',')+' km, limite '+(walkMax/1000).toFixed(1).replace('.',',')+' km)');
  const price=priceOf(j,fareFor);
  const delays=legs.filter(l=>finite(l.delayMinutes)&&l.delayMinutes>0).map(l=>(l.line||l.mode)+' +'+l.delayMinutes+' min');
  const feasible=reasons.length===0;
@@ -558,7 +563,7 @@ function rank(items,task={}){
   const better=firstDifference>=0&&qj[firstDifference]>qo[firstDifference]?j:old;
   seen.set(k,{...better,sources:[...new Set([...(old.sources||[]),...(j.sources||[])])]});
  }
- const all=[...seen.values()].filter(j=>!Array.isArray(j.reasons)||!j.reasons.includes('trajet hors plage de jour ou date de mission'));
+ const all=[...seen.values()].filter(j=>!Array.isArray(j.reasons)||!(j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>String(r).startsWith('marche trop longue'))));
  // Une arrivée des heures avant la prise en charge n'est pas un bon compromis.
  // Garder les alternatives possibles, mais privilégier celles proches de la marge cible.
  const target=ms(task.latestArrival),margin=marginFor(task);
@@ -951,13 +956,14 @@ function makeProviders(r,opts={}){
 
 /* ---------- Session ---------- */
 function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm=3,timeoutMs=25000,onUpdate=()=>{}}={}){
+ tasks=tasks.map(t=>({...t,walkMaxMeters:Number.isFinite(t.walkMaxMeters)?t.walkMaxMeters:(Number.isFinite(walkMaxKm)&&walkMaxKm>0?walkMaxKm*1000:undefined)}));
  const state={},controller=new AbortController();let disposed=false;
  const emit=label=>{if(!disposed)try{onUpdate(label,view(label));}catch(_){}};
  // Un trajet qui part avant la fin de la mission précédente (souvent à cause de la marche d'accès) est impossible,
  // pas « non confirmé » : il n'est plus affiché, seul son nombre est indiqué (178 cartes inutiles sur 1 013 au
  // diagnostic réel du 14/11/2026).
  function view(label){const s=state[label];
-  const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>r.startsWith('arrivée trop tôt pour le créneau choisi'))));
+  const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>r.startsWith('arrivée trop tôt pour le créneau choisi')||r.startsWith('marche trop longue'))));
   return {task:s.task,...rank(tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items,s.task),hidden:{tooEarly:tooEarly.length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0};}
  async function add(label,source,journeys){
   const s=state[label];if(!s||disposed)return;
@@ -1355,7 +1361,7 @@ function render(host,v){
   }
  }
  const tads=tadFor(v.task);
- if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' non affiché'+(v.hidden.tooEarly>1?'s':'')+' : départ avant la fin de la mission précédente (marche jusqu’à l’arrêt comprise).'));
+ if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' non affiché'+(v.hidden.tooEarly>1?'s':'')+' : horaires incompatibles avec la mission (départ avant la fin de la mission précédente, arrivée trop tôt) ou marche plus longue que la limite réglée.'));
  if(v.done&&tads.length){const p=el(doc,'p','cp-hub-note','Transport à la demande possible dans ce secteur (non intégré au classement) : ');
   tads.forEach((t,i)=>{const a=el(doc,'a',null,t.name);a.href=t.url;a.target='_blank';a.rel='noopener noreferrer';p.appendChild(a);p.appendChild(doc.createTextNode(' — '+t.note+(i<tads.length-1?' · ':'.')));});
   host.appendChild(p);}
