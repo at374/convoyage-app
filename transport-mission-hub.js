@@ -1205,7 +1205,11 @@ function render(host,v){
     'Moteur non configuré ou aucune réponse'};
   });
   const info=el(doc,'details','cp-hub-coach-status');
-  info.appendChild(el(doc,'summary',null,'BlaBlaCar Bus / FlixBus : état des recherches'));
+  const summary=coachRows.map(entry=>{
+   const count=v.received?.[entry.name];
+   return entry.name.replace(' GTFS','')+' : '+(Number.isFinite(count)?count+' reçu(s)':v.errors?.[entry.name]?'erreur':v.skipped?.[entry.name]?'non interrogé':'non configuré');
+  }).join(' · ');
+  info.appendChild(el(doc,'summary',null,summary));
   for(const entry of coachRows)info.appendChild(el(doc,'p','cp-hub-note',entry.name+' — '+entry.status));
   info.appendChild(el(doc,'small',null,'Seuls les trajets correspondant aux dates, aux horaires et aux marches vérifiées apparaissent dans les propositions. Aucun tarif n’est inventé.'));
   host.appendChild(info);
