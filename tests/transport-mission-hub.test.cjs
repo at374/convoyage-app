@@ -567,3 +567,18 @@ test('classement réel : deux arrêts GPS distincts ne sont pas fusionnés',()=>
   legs:[bus(at(8,0),at(9,0),shifted,STOP2,{line:'F1',provider:'FlixBus'})]},task);
  assert.equal(H.rank([first,second],task).total,2);
 });
+
+test('classement réel : un doublon non réalisable avec tarif ne remplace pas le trajet réalisable',()=>{
+ const task={latestArrival:at(9,0)};
+ const legs=[bus(at(8,0),at(8,30),STOP1,STOP2,{line:'F2',provider:'FlixBus'})];
+ const valid=H.assess({source:'Horaire',sources:['Horaire'],missing:[],legs},task);
+ const invalid=H.assess({source:'Tarif isolé',sources:['Tarif isolé'],
+  missing:['correspondance non confirmée'],legs:legs.map(l=>({...l,fare:{amount:4,currency:'EUR',source:'grille'}}))},task);
+ assert.equal(valid.feasible,true);
+ assert.equal(invalid.feasible,false);
+ const ranked=H.rank([valid,invalid],task);
+ assert.equal(ranked.total,1);
+ const kept=[...ranked.picks.map(p=>p.journey),...ranked.others][0];
+ assert.equal(kept.feasible,true);
+ assert.deepEqual([...kept.sources].sort(),['Horaire','Tarif isolé']);
+});
