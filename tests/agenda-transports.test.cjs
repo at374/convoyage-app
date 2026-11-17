@@ -758,9 +758,11 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.ok(app.includes("const bt = $('btnTransportsMission')"));
   assert.ok(app.includes("panel.id = 'cpTransportMissionDetails'"));
   assert.ok(app.includes("bt.insertAdjacentElement('afterend', panel)"));
-  assert.ok(app.includes('1. Aller au départ de mission'));
-  assert.ok(app.includes('2. Jonction vers la prochaine mission'));
-  assert.ok(app.includes('3. Retour au domicile'));
+  // Les anciens blocs de liens manuels (Google Maps, SNCF Connect, FlixBus…) sont supprimés : les cartes du hub les remplacent.
+  assert.ok(!app.includes('1. Aller au départ de mission'));
+  assert.ok(!app.includes('2. Jonction vers la prochaine mission'));
+  assert.ok(!app.includes('<strong>3. Retour au domicile</strong>'));
+  assert.ok(app.includes("'01 · Aller'"));
   assert.ok(!app.includes("bk('bkTr', 'TRANSPORTS · ALLER / RETOUR'"));
 }
 

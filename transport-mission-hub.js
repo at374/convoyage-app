@@ -363,15 +363,21 @@ async function walkOnly(task,router,maxKm){
  if(!r||r.status!=='calculated'||!finite(r.distanceMeters)||!finite(r.durationSeconds)||r.distanceMeters<0||r.durationSeconds<0||r.distanceMeters>limit)return null;
  const margin=marginFor(task);
  const deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
- let dep=Number.isFinite(earliest)?earliest:Number.isFinite(deadline)?deadline-margin*60000-r.durationSeconds*1000:NaN;
- if(!Number.isFinite(dep))return null;
+ // Avec deux bornes (jonction), partir le plus tard possible tout en arrivant
+ // avant la marge : partir à earliest peut afficher une marche inutilement tôt.
+ const latestWalkDeparture=Number.isFinite(deadline)?deadline-margin*60000-r.durationSeconds*1000:NaN;
+ const dep=Number.isFinite(latestWalkDeparture)?latestWalkDeparture:earliest;
+ if(!Number.isFinite(dep)||Number.isFinite(earliest)&&dep<earliest)return null;
  const j=journey('Marche (Valhalla / OpenStreetMap)',[walkLeg(r,from,to,task.fromName||'Départ',task.toName||'Arrivée',dep)]);
  return {...j,walkOnly:true,missing:[]};
 }
 
 /* ---------- Tarifs ---------- */
 function priceOf(j,fareFor){
- if(j.walkOnly)return {status:'free',amounts:{EUR:0},label:'Gratuit (à pied)',missingSources:[]};
+ // Une marche issue d'un fournisseur tiers peut ne pas avoir le drapeau walkOnly.
+ // La tarification doit rester gratuite si toutes les étapes sont piétonnes.
+ if(j.walkOnly||j.legs?.length>0&&j.legs.every(l=>l.kind==='walk'))
+  return {status:'free',amounts:{EUR:0},label:'Gratuit (à pied)',missingSources:[]};
  const amounts={},missingSources=[],sources=[],legFares=[];
  let ticket=null; // titre en cours : {network,validUntilMs} — une correspondance dans la validité ne se repaie pas
  const isVerifiedFare=f=>!!(f&&finite(f.amount)&&f.amount>=0&&/^(EUR|CHF)$/.test(f.currency)&&f.source);
@@ -406,6 +412,21 @@ function priceOf(j,fareFor){
 // Valeur de tri en euros : on ne convertit pas les CHF (pas de taux inventé) ; CHF trié après EUR.
 function priceSortKey(p){if(p.status==='free')return 0;if(p.status!=='verified')return Infinity;
  return (p.amounts.EUR||0)+(p.amounts.CHF?1e4+p.amounts.CHF:0);}
+function fareCurrency(p){
+ if(p?.status==='free')return 'free';
+ if(p?.status!=='verified')return null;
+ const currencies=Object.entries(p.amounts||{}).filter(([,v])=>v>0).map(([c])=>c);
+ return currencies.length===1?currencies[0]:currencies.length===0?'free':null;
+}
+// Prix comparable uniquement dans une même devise, ou si un trajet est gratuit.
+function compareFares(a,b){
+ const ca=fareCurrency(a),cb=fareCurrency(b);
+ if(ca==='free'&&cb==='free')return 0;
+ if(ca==='free')return -1;
+ if(cb==='free')return 1;
+ if(!ca||!cb||ca!==cb)return 0;
+ return (a.amounts[ca]||0)-(b.amounts[cb]||0);
+}
 
 /* ---------- Évaluation ---------- */
 function marginFor(task){
@@ -413,19 +434,42 @@ function marginFor(task){
  return task.exactTarget===true&&task.allowShortMargin===true?Math.min(base,5):Math.max(15,base);
 }
 const ADVISORY=/^(?:horaire GTFS(?: local)? non confirmé en temps réel|correspondance programmée non confirmée en temps réel|prix commercial et disponibilité non vérifiés|recherche des correspondances incomplète)$/;
+// Horaires civils français : une arrivée la veille ou un trajet de nuit ne doit
+// jamais apparaître comme une solution normale pour une mission du lendemain.
+function parisDayParts(value){
+ const t=ms(value);if(!Number.isFinite(t))return null;
+ const a=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(t)).map(x=>[x.type,x.value]));
+ return {day:a.year+'-'+a.month+'-'+a.day,minute:Number(a.hour)*60+Number(a.minute)};
+}
+function dayWindowOk(j,task){
+ const dep=parisDayParts(j.legs[0]?.departure),arr=parisDayParts(j.legs[j.legs.length-1]?.arrival);
+ if(!dep||!arr)return false;
+ const first=Number.isFinite(task.dayStartMinutes)?task.dayStartMinutes:360;
+ const last=Number.isFinite(task.dayEndMinutes)?task.dayEndMinutes:1320;
+ if(dep.minute<first||arr.minute>last||dep.day!==arr.day)return false;
+ const reference=parisDayParts(task.latestArrival||task.earliestDeparture);
+ return !reference||dep.day===reference.day;
+}
 function assess(j,task,fareFor){
  const reasons=[...(j.missing||[])];
+ // Un centre-ville permet de chercher, mais ne confirme jamais l'arrivée à l'adresse exacte.
+ if(task.approximateEndpoint===true)reasons.push('point de départ ou d’arrivée approximatif (centre-ville) : adresse exacte à vérifier');
  const legs=j.legs;
  const dep=ms(legs[0]?.departure),arr=ms(legs[legs.length-1]?.arrival);
  let chrono=Number.isFinite(dep)&&Number.isFinite(arr)&&arr>=dep,prev=dep;
  for(const l of legs){const a=ms(l.departure),b=ms(l.arrival);
   if(!Number.isFinite(a)||!Number.isFinite(b)||b<a||a<prev-60000){chrono=false;break;}prev=b;}
  if(!chrono)reasons.push('horaires incohérents');
+ if(!dayWindowOk(j,task))reasons.push('trajet hors plage de jour ou date de mission');
  if(legs.some(l=>l.cancelled))reasons.push('course annulée signalée');
  const margin=marginFor(task),deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
  const slack=Number.isFinite(deadline)&&Number.isFinite(arr)?Math.floor((deadline-arr)/60000):null;
  if(Number.isFinite(earliest)&&Number.isFinite(dep)&&dep<earliest-60000)reasons.push('départ avant la fin de la mission précédente');
  if(slack!==null&&slack<margin)reasons.push(slack<0?'arrivée après l’heure de mission':'marge insuffisante ('+slack+' min, '+margin+' min requises)');
+ // Ne pas proposer un train arrivant des heures trop tôt comme solution à une prise en charge.
+ // La fenêtre peut être élargie explicitement par un futur scénario horaire multi-jours.
+ const maxEarly=Number.isFinite(task.maxEarlyArrivalMinutes)?task.maxEarlyArrivalMinutes:180;
+ if(slack!==null&&slack>maxEarly)reasons.push('arrivée trop tôt pour le créneau choisi ('+slack+' min d’avance)');
  const price=priceOf(j,fareFor);
  const delays=legs.filter(l=>finite(l.delayMinutes)&&l.delayMinutes>0).map(l=>(l.line||l.mode)+' +'+l.delayMinutes+' min');
  const feasible=reasons.length===0;
@@ -478,18 +522,48 @@ function walkPairs(j,task){
  return out;
 }
 function signature(j){
- return j.legs.filter(l=>l.kind!=='walk').map(l=>[String(l.line||'').replace(/\s+/g,'').toLowerCase(),Math.round(ms(l.departure)/60000),Math.round(ms(l.arrival)/60000)].join('|')).join(';');
+ return j.legs.filter(l=>l.kind!=='walk').map(l=>[
+  String(l.provider||'').replace(/\s+/g,'').toLowerCase(),
+  String(l.line||'').replace(/\s+/g,'').toLowerCase(),
+  String(l.from||'').trim().toLowerCase(),String(l.to||'').trim().toLowerCase(),
+  l.fromPoint?.lat,l.fromPoint?.lon,l.toPoint?.lat,l.toPoint?.lon,
+  Math.round(ms(l.departure)/60000),Math.round(ms(l.arrival)/60000)
+ ].join('|')).join(';');
 }
-function rank(items){
+function rank(items,task={}){
  const seen=new Map();
- for(const j of items){if(!j||j.durationMinutes===null)continue;const k=j.walkOnly?'walk':signature(j);
+ for(const j of items){if(!j||j.durationMinutes===null)continue;
+  // Ne pas fusionner toutes les marches sous une clé unique : les points
+  // d'accès et les créneaux peuvent différer d'une proposition à l'autre.
+  // Certains moteurs renvoient une marche pure sans positionner walkOnly.
+  // Une signature de transports vide fusionnerait alors tous ces itinéraires.
+  const walkingJourney=j.walkOnly||j.legs?.length>0&&j.legs.every(l=>l.kind==='walk');
+  const k=walkingJourney?[
+   'walk',String(j.legs?.[0]?.from||'').trim().toLowerCase(),
+   String(j.legs?.[j.legs.length-1]?.to||'').trim().toLowerCase(),
+   j.legs?.[0]?.fromPoint?.lat,j.legs?.[0]?.fromPoint?.lon,
+   j.legs?.[j.legs.length-1]?.toPoint?.lat,j.legs?.[j.legs.length-1]?.toPoint?.lon,
+   Math.round(ms(j.departure)/60000),Math.round(ms(j.arrival)/60000)
+  ].join('|'):signature(j);
   const old=seen.get(k);
   if(!old){seen.set(k,j);continue;}
   // Fusion : garder la version la plus complète (marches, prix, temps réel) et cumuler les sources.
-  const better=(j.feasible&&!old.feasible)||(j.scheduled&&!old.feasible&&!old.scheduled)||(j.reasons.length<old.reasons.length)||(j.price.status==='verified'&&old.price.status!=='verified')?j:old;
-  seen.set(k,{...better,sources:[...new Set([...old.sources,...j.sources])]});
+  // Comparer les critères dans l'ordre : un prix connu ne doit jamais
+  // remplacer un doublon réalisable par une version non réalisable.
+  const quality=x=>[Number(!!x.feasible),Number(!!x.scheduled),
+   -((x.reasons||[]).length),Number(x.price?.status==='verified'||x.price?.status==='free')];
+  const qj=quality(j),qo=quality(old);
+  const firstDifference=qj.findIndex((v,i)=>v!==qo[i]);
+  const better=firstDifference>=0&&qj[firstDifference]>qo[firstDifference]?j:old;
+  seen.set(k,{...better,sources:[...new Set([...(old.sources||[]),...(j.sources||[])])]});
  }
- const all=[...seen.values()];
+ const all=[...seen.values()].filter(j=>!Array.isArray(j.reasons)||!j.reasons.includes('trajet hors plage de jour ou date de mission'));
+ // Une arrivée des heures avant la prise en charge n'est pas un bon compromis.
+ // Garder les alternatives possibles, mais privilégier celles proches de la marge cible.
+ const target=ms(task.latestArrival),margin=marginFor(task);
+ const arrivalGap=j=>Number.isFinite(target)&&Number.isFinite(ms(j.arrival))?
+  Math.abs((target-ms(j.arrival))/60000-margin):0;
+ const relevant=(a,b)=>arrivalGap(a)-arrivalGap(b);
  // Classement : les trajets exploitables (réalisables OU en horaire officiel programmé) passent avant les incomplets,
  // puis le critère (prix, compromis, durée) ; à égalité seulement, le réalisable passe devant le programmé.
  // Avant : tout réalisable passait devant tout programmé, si bien que « Plus rapide » pouvait désigner 30 min de
@@ -497,16 +571,58 @@ function rank(items){
  // affiché sur chaque carte reste celui du trajet : un horaire programmé n'est jamais présenté comme confirmé.
  const tier=j=>j.feasible||j.scheduled?1:0,confirmedFirst=(a,b)=>Number(b.feasible)-Number(a.feasible);
  const byFeasible=(a,b)=>tier(b)-tier(a);
- const fastest=[...all].sort((a,b)=>byFeasible(a,b)||a.durationMinutes-b.durationMinutes||confirmedFirst(a,b)||priceSortKey(a.price)-priceSortKey(b.price))[0];
- const priced=all.filter(j=>j.price.status==='verified'||j.price.status==='free');
- const cheapest=[...priced].sort((a,b)=>byFeasible(a,b)||priceSortKey(a.price)-priceSortKey(b.price)||confirmedFirst(a,b)||a.durationMinutes-b.durationMinutes)[0];
- const score=j=>(Number.isFinite(priceSortKey(j.price))?Math.min(priceSortKey(j.price),200):60)+j.durationMinutes/3+j.transfers*8+j.walkMeters/250+
+ // « Plus rapide » départage uniquement sur la durée, puis la confirmation et la marche.
+ // Un tarif EUR/CHF ne doit pas rendre ce tri non transitif.
+ const fastest=[...all].sort((a,b)=>byFeasible(a,b)||a.durationMinutes-b.durationMinutes||
+  confirmedFirst(a,b)||a.walkMeters-b.walkMeters)[0];
+ // « Moins cher » ne doit jamais recommander un trajet impossible, même si son prix est connu.
+ const priced=all.filter(j=>(j.feasible||j.scheduled)&&
+  (j.price.status==='verified'||j.price.status==='free'));
+ // Ne jamais comparer des montants EUR et CHF sans taux de change fiable.
+ // Un trajet gratuit est comparable à toutes les devises ; sinon, « Moins cher »
+ // n'est affiché que si les offres payantes ont la même devise unique.
+ const currencies=[...new Set(priced.filter(j=>j.price.status!=='free').flatMap(j=>
+  Object.keys(j.price.amounts||{}).filter(c=>j.price.amounts[c]>0)))];
+ const comparable=currencies.length<=1&&priced.every(j=>j.price.status==='free'||
+  Object.keys(j.price.amounts||{}).filter(c=>j.price.amounts[c]>0).length<=1);
+ const cheapest=comparable?[...priced].sort((a,b)=>byFeasible(a,b)||
+  priceSortKey(a.price)-priceSortKey(b.price)||confirmedFirst(a,b)||
+  a.durationMinutes-b.durationMinutes)[0]:undefined;
+ const score=j=>(fareCurrency(j.price)==='EUR'?Math.min(j.price.amounts.EUR||0,200):60)+j.durationMinutes/3+j.transfers*8+j.walkMeters/250+
   (j.slackMinutes===null?0:Math.max(0,30-j.slackMinutes));
- const compromise=[...all].sort((a,b)=>byFeasible(a,b)||score(a)-score(b)||confirmedFirst(a,b))[0];
+ // Un trajet confirmé (réalisable) prime sur un simple horaire programmé ; la proximité de la marge ne départage qu'ensuite.
+  const compromise=[...all].sort((a,b)=>byFeasible(a,b)||confirmedFirst(a,b)||relevant(a,b)||score(a)-score(b))[0];
  const picks=[];
  for(const [label,j] of [['Moins cher',cheapest],['Meilleur compromis',compromise],['Plus rapide',fastest]])
   if(j){const found=picks.find(p=>p.journey===j);if(found)found.labels.push(label);else picks.push({labels:[label],journey:j});}
- const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||ms(a.departure)-ms(b.departure)||confirmedFirst(a,b));
+ // Une offre FlixBus/BlaBlaCar Bus ne doit pas disparaître derrière
+ // « Autres propositions » uniquement parce qu'un TER est plus rapide.
+ // Ne jamais promouvoir une course hors date, annulée ou non exploitable.
+ const coachOperators=[
+  ['FlixBus',/flixbus/i],
+  ['BlaBlaCar Bus',/blablacar\s*(?:bus|coach)|blablacarbus|ouibus/i]
+ ];
+ for(const [name,pattern] of coachOperators){
+  const matches=all.filter(j=>(j.feasible||j.scheduled)&&
+   (j.sources||[]).concat(j.source||'',j.legs.map(l=>l.provider||'')).some(x=>pattern.test(String(x))));
+  // Parmi les cars exploitables, afficher d'abord le tarif total vérifié
+  // le moins cher ; un tarif inconnu ne doit jamais être supposé avantageux.
+  const verifiedCoach=j=>j.price?.status==='verified'||j.price?.status==='free';
+  // Une comparaison paire à paire EUR/CHF n'est pas transitive. Si plusieurs
+  // devises sont présentes, ne pas départager les cars sur leur montant.
+  const coachCurrencies=new Set(matches.map(j=>fareCurrency(j.price)).filter(c=>c&&c!=='free'));
+  const coachPricesComparable=coachCurrencies.size<=1&&matches.every(j=>
+   !verifiedCoach(j)||fareCurrency(j.price)!==null);
+  const best=[...matches].sort((a,b)=>byFeasible(a,b)||
+   (coachPricesComparable?Number(verifiedCoach(b))-Number(verifiedCoach(a)):0)||
+   (coachPricesComparable&&verifiedCoach(a)&&verifiedCoach(b)?compareFares(a.price,b.price):0)||
+   relevant(a,b)||a.durationMinutes-b.durationMinutes||confirmedFirst(a,b))[0];
+  if(!best)continue;
+  const already=picks.find(p=>p.journey===best);
+  if(already)already.labels.push(name);
+  else picks.push({labels:[name],journey:best});
+ }
+ const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||relevant(a,b)||ms(a.departure)-ms(b.departure)||confirmedFirst(a,b));
  return {picks,others,total:all.length};
 }
 
@@ -516,8 +632,12 @@ function inSwissArea(p){return !!p&&((p.lat>=SWISS_BOX.minLat&&p.lat<=SWISS_BOX.
  !(p.lat<46.15&&meters(p,GENEVA)>30000))||meters(p,GENEVA)<=30000);}
 function queryWindow(task){
  const margin=marginFor(task),deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
- if(Number.isFinite(earliest))return {when:new Date(earliest).toISOString(),arriveBy:false};
+ // Une jonction impossible ne doit pas déclencher de recherche réseau inutile.
+ if(Number.isFinite(deadline)&&Number.isFinite(earliest)&&earliest>deadline-margin*60000)return null;
+ // Une prise en charge a une heure limite : chercher d'abord une arrivée avant la marge.
+ // Le départ après une mission précédente reste contrôlé dans assess().
  if(Number.isFinite(deadline))return {when:new Date(deadline-margin*60000).toISOString(),arriveBy:true};
+ if(Number.isFinite(earliest))return {when:new Date(earliest).toISOString(),arriveBy:false};
  return null;
 }
 function makeProviders(r,opts={}){
@@ -691,7 +811,7 @@ function makeProviders(r,opts={}){
      if(needExpanded&&!signal?.aborted&&opts.nationalStopFallback!==false){
       // Un échec du repli ne doit jamais faire perdre les résultats à 3 km (constaté en navigateur réel le 14/11/2026 :
       // le rayon de 6 km était refusé par le moteur, limité à 5 km → « Invalid walking search radius » pour tout le fournisseur).
-      const expanded=await r.CPNationalGTFSJourneys.loadAndSearch({...searchParams,radiusMeters:6000}).catch(e=>{if(signal?.aborted)throw e;return null;});
+      const expanded=await r.CPNationalGTFSJourneys.loadAndSearch({...searchParams,radiusMeters:5000}).catch(e=>{if(signal?.aborted)throw e;return null;});
       if(Array.isArray(expanded?.journeys)&&expanded.journeys.length){
        const seen=new Set(rows.map(j=>JSON.stringify([j.tripId,j.line,j.departure,j.arrival,j.originStop?.stop_id||j.originStop?.name,j.destinationStop?.stop_id||j.destinationStop?.name])));
        for(const j of expanded.journeys){
@@ -836,8 +956,8 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
  // pas « non confirmé » : il n'est plus affiché, seul son nombre est indiqué (178 cartes inutiles sur 1 013 au
  // diagnostic réel du 14/11/2026).
  function view(label){const s=state[label];
-  const tooEarly=s.items.filter(j=>!j.computing&&j.reasons.includes('départ avant la fin de la mission précédente'));
-  return {task:s.task,...rank(tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items),hidden:{tooEarly:tooEarly.length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0};}
+  const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>r.startsWith('arrivée trop tôt pour le créneau choisi'))));
+  return {task:s.task,...rank(tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items,s.task),hidden:{tooEarly:tooEarly.length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0};}
  async function add(label,source,journeys){
   const s=state[label];if(!s||disposed)return;
   s.received[source]=(s.received[source]||0)+(Array.isArray(journeys)?journeys.length:0);
@@ -853,7 +973,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   for(const j of clean){
    const key=signature(j),known=key&&s.bySignature.get(key);
    if(known){known.sources=[...new Set([...known.sources,...(j.sources||[j.source])])];continue;}
-   const quick=assess({...j,missing:[]},s.task,fareFor);
+   const quick=assess(j,s.task,fareFor);
    if(quick.reasons.some(r=>/arrivée après|marge insuffisante|départ avant|horaires incohérents|annulée/.test(r))){
     if(key)s.bySignature.set(key,quick);s.items.push(quick);continue;
    }
@@ -862,12 +982,18 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   const isReturn=Number.isFinite(ms(s.task.earliestDeparture))&&!Number.isFinite(ms(s.task.latestArrival));
   // Priorité : prix connu d'abord (moins cher en tête), puis le plus utile (retour : départ le plus tôt ; aller : avance la plus juste).
   const pk=q=>q.price.status==='verified'||q.price.status==='free'?priceSortKey(q.price):Infinity;
-  toWalk.sort((a,b)=>(pk(a.quick)===pk(b.quick)?0:pk(a.quick)-pk(b.quick))||
+  // Le budget de marches est partagé entre les moteurs. Sans priorité dédiée,
+  // les premiers TER/bus locaux consomment les huit couples de points et les
+  // cars longue distance restent indéfiniment « marches non calculées ».
+  const coachPriority=t=>/(?:flixbus|blablacar\s*(?:bus|coach)|blablacarbus|ouibus)/i.test(
+   [t.j.source,...(t.j.sources||[]),...(t.j.legs||[]).map(l=>l.provider||'')].join(' '))?0:1;
+  toWalk.sort((a,b)=>coachPriority(a)-coachPriority(b)||
+   (pk(a.quick)===pk(b.quick)?0:pk(a.quick)-pk(b.quick))||
    (isReturn?ms(a.quick.departure)-ms(b.quick.departure):(a.quick.slackMinutes??0)-(b.quick.slackMinutes??0))||a.quick.durationMinutes-b.quick.durationMinutes);
   // Affichage immédiat : chaque trajet apparaît tout de suite, « marches en cours de calcul », puis est remplacé.
   const pendingCard=new Map();
   for(const t of toWalk){
-   const p=assess({...t.j,missing:['marches en cours de calcul']},s.task,fareFor);p.computing=true;
+   const p=assess({...t.j,missing:[...(t.j.missing||[]),'marches en cours de calcul']},s.task,fareFor);p.computing=true;
    pendingCard.set(t,p);s.items.push(p);if(t.key)s.bySignature.set(t.key,p);
   }
   emit(label);
@@ -876,7 +1002,13 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
    if(i>=0)s.items[i]=a;else s.items.push(a);if(t.key)s.bySignature.set(t.key,a);};
   const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,router).then(x=>{
    if(disposed)return;replace(t,assess(x,s.task,fareFor));emit(label);
-  }).catch(()=>{})));
+  }).catch(()=>{
+   // Ne pas laisser une carte bloquée sur « marches en cours de calcul »
+   // lorsqu'un fournisseur piéton échoue ou dépasse son délai.
+   if(disposed)return;
+   replace(t,assess({...t.j,missing:[...(t.j.missing||[]),'marche non calculée (erreur du moteur piéton)']},s.task,fareFor));
+   emit(label);
+  })));
   // Quota compté en couples de points réellement à calculer, pas en trajets : les départs successifs d'une même
   // ligne partagent leurs arrêts, donc leurs marches (cache). Avant le 14/11/2026 seuls 8 à 16 trajets par moteur
   // recevaient leurs marches, même quand tous utilisaient les deux mêmes arrêts (diagnostic réel : 53,7 % des
@@ -885,18 +1017,44 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
    for(const t of list){const fresh=walkPairs(t.j,s.task).filter(k=>!seen.has(k));
     if(fresh.length<=budget){budget-=fresh.length;fresh.forEach(k=>seen.add(k));take.push(t);}else rest.push(t);}
    return [take,rest];};
-  let [batch,rest]=select(toWalk,8);
+  // Réserver un petit budget par compagnie de cars : les autres moteurs
+  // arrivent en parallèle et peuvent avoir déjà consommé le quota commun.
+  // Un budget local ne doit pas dépendre de l'ordre des réponses réseau.
+  const coachSource=/(?:flixbus|blablacar\s*(?:bus|coach)|blablacarbus|ouibus)/i.test(source);
+  const coachKey=coachSource?(/flixbus/i.test(source)?'flixbus':'blablacarBus'):null;
+  // Une réserve indépendante doit accepter les couples déjà vus sans
+  // consommer de crédit supplémentaire et ne pas se bloquer après 4 couples.
+  const coachBudget=coachKey?Math.max(0,4-(s.coachWalkPairs[coachKey]||0)):0;
+  const before=s.walkPairs.size;
+  let [batch,rest]=select(toWalk,coachSource?coachBudget:8);
+  if(coachKey)s.coachWalkPairs[coachKey]=(s.coachWalkPairs[coachKey]||0)+s.walkPairs.size-before;
   await walkBatch(batch);
   // Recherche complémentaire : si rien n'est encore réalisable dans cette direction, 8 couples de plus.
-  if(!disposed&&rest.length&&!s.items.some(x=>x.feasible)){[batch,rest]=select(rest,8);await walkBatch(batch);}
+  // Les cars ne doivent pas perdre leur marche parce qu'un TER est déjà
+  // réalisable. Le second lot reste limité, sans dépasser le quota prévu.
+  if(!disposed&&rest.length&&(coachSource||!s.items.some(x=>x.feasible))){
+   // Quota total car : huit nouveaux couples au maximum, deux lots de quatre.
+   // Décompter les couples déjà réservés au premier lot et ceux partagés
+   // avec les autres moteurs, plutôt que réouvrir un quota illimité.
+   const remaining=coachKey?Math.max(0,8-(s.coachWalkPairs[coachKey]||0)):8;
+   const beforeSecond=s.walkPairs.size;
+   [batch,rest]=select(rest,coachSource?Math.min(4,remaining):8);
+   if(coachKey)s.coachWalkPairs[coachKey]=(s.coachWalkPairs[coachKey]||0)+s.walkPairs.size-beforeSecond;
+   await walkBatch(batch);
+  }
   for(const t of rest){ // au-delà : visibles, marches non calculées pour préserver le quota Valhalla
-   replace(t,assess({...t.j,missing:['marches non calculées (quota de la fiche)']},s.task,fareFor));
+   replace(t,assess({...t.j,missing:[...(t.j.missing||[]),'marches non calculées (quota de la fiche)']},s.task,fareFor));
   }
   if(!disposed)emit(label);
  }
  for(const task of tasks){
-  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},discarded:{},bySignature:new Map(),walkPairs:new Set()};
+  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},discarded:{},bySignature:new Map(),walkPairs:new Set(),coachWalkPairs:{flixbus:0,blablacarBus:0}};
   if(!pt(task.from)||!pt(task.to)){state[label].errors.adresses='adresse GPS manquante';emit(label);continue;}
+  // Ne lancer aucun fournisseur ni marche si la fenêtre temporelle est impossible.
+  if(!queryWindow(task)){
+   state[label].errors.horaires='créneau impossible : livraison trop tardive pour arriver avec la marge requise, ou horaires absents';
+   emit(label);continue;
+  }
   for(const [key,p] of Object.entries(providers)){
    let ok=false;try{ok=p.enabled(task);}catch(_){}
    if(!ok){state[label].skipped[p.name]=p.disabledReason||'non applicable';continue;}
@@ -920,10 +1078,13 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
 /* ---------- Affichage (cartes Android) ---------- */
 function clock(v){const t=ms(v);return Number.isFinite(t)?new Intl.DateTimeFormat('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Paris'}).format(new Date(t)):'?';}
 function durationText(min){return min>=60?Math.floor(min/60)+' h '+String(min%60).padStart(2,'0'):min+' min';}
+function signedDurationText(min){return min<0?'-'+durationText(Math.abs(min)):durationText(min);}
 const ICON={Marche:'🚶',Train:'🚆',Bus:'🚌',Car:'🚍',Tram:'🚊',Métro:'🚇',Funiculaire:'🚡',Transport:'🚏'};
 function el(doc,tag,cls,text){const e=doc.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
 function mapSvg(doc,j){
- const pts=[];for(const l of j.legs){if(l.geometry&&l.geometry.length)pts.push(...l.geometry.map(p=>({...p,w:true})));else{if(l.fromPoint)pts.push(l.fromPoint);if(l.toPoint)pts.push(l.toPoint);}}
+ // Éviter la duplication de milliers de coordonnées GPS pour chaque carte.
+ // Les géométries d'origine restent intactes ; seul le SVG est échantillonné.
+ const pts=[];for(const l of j.legs){if(l.geometry&&l.geometry.length)pts.push(...l.geometry);else{if(l.fromPoint)pts.push(l.fromPoint);if(l.toPoint)pts.push(l.toPoint);}}
  if(pts.length<2)return null;
  let a=Infinity,b=-Infinity,c=Infinity,d=-Infinity;for(const p of pts){a=Math.min(a,p.lat);b=Math.max(b,p.lat);c=Math.min(c,p.lon);d=Math.max(d,p.lon);}
  const W=320,H=180,k=Math.cos((a+b)/2*Math.PI/180),sx=(d-c)*k||1e-4,sy=(b-a)||1e-4,s=Math.min((W-20)/sx,(H-20)/sy);
@@ -932,7 +1093,11 @@ function mapSvg(doc,j){
  svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.setAttribute('class','cp-hub-map');svg.setAttribute('role','img');svg.setAttribute('aria-label','Schéma des transports et tracés piétons disponibles, sans marche en ligne droite');
  for(const l of j.legs){
   const line=l.geometry&&l.geometry.length?l.geometry:(l.kind==='walk'?[]:[l.fromPoint,l.toPoint].filter(Boolean));if(line.length<2)continue;
-  const pl=doc.createElementNS(NS,'polyline');pl.setAttribute('points',line.map(p=>X(p).toFixed(1)+','+Y(p).toFixed(1)).join(' '));
+  // Maximum 500 sommets par tronçon à l'écran ; conserver départ et arrivée.
+  const step=Math.max(1,Math.ceil((line.length-1)/499));
+  const rendered=[];for(let i=0;i<line.length-1;i+=step)rendered.push(line[i]);
+  rendered.push(line[line.length-1]);
+  const pl=doc.createElementNS(NS,'polyline');pl.setAttribute('points',rendered.map(p=>X(p).toFixed(1)+','+Y(p).toFixed(1)).join(' '));
   pl.setAttribute('fill','none');pl.setAttribute('stroke',l.kind==='walk'?'#16a34a':'#1d4ed8');pl.setAttribute('stroke-width',l.kind==='walk'?'3':'4');
   if(l.kind==='walk')pl.setAttribute('stroke-dasharray','5 4');svg.appendChild(pl);
  }
@@ -996,8 +1161,9 @@ function ticketLinks(j){
   const t=ticketLink(l.provider);if(t&&!seen.has(t.url))seen.set(t.url,t);});
  return [...seen.values()];
 }
-function card(doc,j,labels){
+function card(doc,j,labels,expanded=false){
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
+ if(expanded)c.open=true;
  const s=el(doc,'summary');
  if(labels&&labels.length)s.appendChild(el(doc,'span','cp-hub-chip',labels.join(' · ')));
  s.appendChild(el(doc,'strong','cp-hub-times',clock(j.departure)+' → '+clock(j.arrival)+' · '+durationText(j.durationMinutes)));
@@ -1008,11 +1174,17 @@ function card(doc,j,labels){
   link.title='Acheter le billet ou consulter le prix : '+t.label;link.setAttribute('aria-label','Acheter le billet sur '+t.label);
   if(link.addEventListener)link.addEventListener('click',e=>e.stopPropagation());s.appendChild(link);}
  s.appendChild(el(doc,'span','cp-hub-modes',j.legs.map(l=>(ICON[l.mode]||'🚏')+(l.kind==='walk'?' '+Math.max(1,Math.round((l.durationSeconds||0)/60))+' min':(l.line?' '+l.line:''))).join(' › ')));
- s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':j.scheduled?'🕒 ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · avance '+j.slackMinutes+' min (marge '+j.marginMinutes+' min)':'')));
+ s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':j.scheduled?'🕒 ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · avance '+signedDurationText(j.slackMinutes)+' (marge '+durationText(j.marginMinutes)+')':'')));
  if(!j.feasible)s.appendChild(el(doc,'small','cp-hub-reason',j.statusDetail));
  c.appendChild(s);
- const body=el(doc,'div','cp-hub-body');
- const ol=el(doc,'ol','cp-hub-legs');
+ // Le détail et les polylignes SVG sont construits uniquement à la première ouverture.
+ // Les cartes fermées restent légères, même si les moteurs renvoient beaucoup de trajets.
+ let bodyBuilt=false;
+ const buildBody=()=>{
+  if(bodyBuilt)return;
+  bodyBuilt=true;
+  const body=el(doc,'div','cp-hub-body');
+  const ol=el(doc,'ol','cp-hub-legs');
  for(const [legIndex,l] of j.legs.entries()){
   const li=el(doc,'li',l.kind==='walk'?'walk':'ride');
   li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+Math.max(1,Math.round(l.durationSeconds/60))+' min':''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':''].filter(Boolean).join(' '))));
@@ -1028,13 +1200,37 @@ function card(doc,j,labels){
   ol.appendChild(li);
  }
  body.appendChild(ol);
+ // Accès à une vraie carte pour chaque marche : le schéma SVG n'est pas une carte de rues.
+ const walks=j.legs.filter(l=>l.kind==='walk');
+ if(walks.length){
+  const maps=el(doc,'div','cp-hub-walk-maps');
+  maps.appendChild(el(doc,'strong',null,'🗺️ Cartes des trajets piétons'));
+  for(const [i,l] of walks.entries()){
+   const a=pt(l.fromPoint),b=pt(l.toPoint);
+   if(!a||!b){maps.appendChild(el(doc,'p','cp-hub-note','Marche '+(i+1)+' : carte indisponible, coordonnées des arrêts manquantes.'));continue;}
+   const link=el(doc,'a','cp-hub-walk-map-link','🚶 Voir la marche '+(i+1)+' sur la carte OpenStreetMap');
+   link.href='https://www.openstreetmap.org/directions?engine=fossgis_osrm_foot&route='+encodeURIComponent(a.lat+','+a.lon+';'+b.lat+','+b.lon);
+   link.target='_blank';link.rel='noopener noreferrer';maps.appendChild(link);
+  }
+  maps.appendChild(el(doc,'small','cp-hub-note','La carte externe recalcule le chemin piéton ; vérifier le tracé avant départ.'));
+  body.appendChild(maps);
+ }
  const svg=mapSvg(doc,j);if(svg)body.appendChild(svg);
+ else body.appendChild(el(doc,'p','cp-hub-note','Schéma indisponible : tracé GPS insuffisant. Utiliser les liens de carte piétonne ci-dessus.'));
  if(j.price.status==='unknown')body.appendChild(el(doc,'p','cp-hub-note','Source tarifaire manquante : '+j.price.missingSources.join(', ')+'.'));
  if(j.delays.length)body.appendChild(el(doc,'p','cp-hub-note','Retards signalés : '+j.delays.join(', ')));
  if(j.alerts.length)body.appendChild(el(doc,'p','cp-hub-note','Alertes : '+j.alerts.join(' · ')));
  if(j.feasible)body.appendChild(el(doc,'p','cp-hub-note',j.statusDetail));
  body.appendChild(el(doc,'small','cp-hub-src','Sources : '+j.sources.join(', ')+(j.dataDate?' · données '+j.dataDate:'')));
- c.appendChild(body);return c;
+  c.appendChild(body);
+ };
+ if(c.addEventListener)c.addEventListener('toggle',()=>{if(c.open)buildBody();});
+ // Environnements DOM sans événement toggle : construction au clic sur le résumé.
+ if(s.addEventListener)s.addEventListener('click',()=>{if(!bodyBuilt)buildBody();});
+ // Une carte déjà ouverte à son insertion ne déclenche pas toujours toggle.
+ // Construire immédiatement le contenu de la première proposition visible.
+ if(c.open)buildBody();
+ return c;
 }
 // Transports à la demande : information seulement (réservation obligatoire, aucun horaire ni prix affiché comme trajet).
 const TAD=[
@@ -1044,18 +1240,89 @@ const TAD=[
 function tadFor(task){const pts=[pt(task?.from),pt(task?.to)].filter(Boolean);
  return TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));}
 function render(host,v){
- const doc=host.ownerDocument;host.textContent='';host.setAttribute('data-transport-hub',VERSION);
+ const doc=host.ownerDocument;
+ // Préserver les cartes ouvertes lors des arrivées progressives des moteurs.
+ // Sans cela, chaque résultat réseau referme les détails et recrée les SVG.
+ const opened=new Set(Array.from(host.querySelectorAll('details.cp-hub-card[open]'))
+   .map(node=>node.getAttribute('data-journey-key')).filter(Boolean));
+ const moreOpen=!!host.querySelector('details.cp-hub-more[open]');
+ host.textContent='';host.setAttribute('data-transport-hub',VERSION);
  const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):'Aucun trajet trouvé'):'Recherche en cours… ('+v.total+' trouvée'+(v.total>1?'s':'')+')');
  host.appendChild(head);
- for(const p of v.picks)host.appendChild(card(doc,p.journey,p.labels));
- if(v.others.length){const more=el(doc,'details','cp-hub-more');more.appendChild(el(doc,'summary',null,'Autres propositions ('+v.others.length+')'));
-  for(const j of v.others.slice(0,8))more.appendChild(card(doc,j,null));host.appendChild(more);}
- const errs=Object.entries(v.errors),skip=Object.entries(v.skipped);
- if(v.done&&(errs.length||skip.length)){
-  const d=el(doc,'details','cp-hub-diag');d.appendChild(el(doc,'summary',null,'Moteurs consultés'));
+ const addCard=(parent,j,labels,expandFirst=false)=>{
+  const key=signature(j)||(j.walkOnly?'walk|'+Math.round(ms(j.departure)/60000)+'|'+Math.round(ms(j.arrival)/60000)+'|'+Math.round(j.durationMinutes||0):'');
+  // Construire immédiatement les détails si cette carte était déjà ouverte :
+  // poser node.open après card() ne construit pas toujours le corps au rendu.
+  const node=card(doc,j,labels,expandFirst||(key&&opened.has(key)));
+  // La première proposition est ouverte, les suivantes restent paresseuses.
+  // Une marche seule n'a pas de ligne de transport : sa signature classique est vide.
+  // Identifier aussi ces trajets pour ne pas refermer leur carte à chaque résultat réseau.
+  if(key)node.setAttribute('data-journey-key',key);
+  parent.appendChild(node);
+ };
+ // Ouvrir automatiquement la première carte une seule fois par fiche.
+ // Si le convoyeur la referme, une mise à jour réseau ne doit pas la rouvrir.
+ const openInitial=v.picks.length>0&&host.dataset.cpInitialCardOpened!=='true';
+ if(openInitial)host.dataset.cpInitialCardOpened='true';
+ for(const [i,p] of v.picks.entries())addCard(host,p.journey,p.labels,openInitial&&i===0);
+ if(v.others.length){const more=el(doc,'details','cp-hub-more');more.appendChild(el(doc,'summary',null,'Autres propositions ('+Math.min(v.others.length,8)+' affichées'+(v.others.length>8?' sur '+v.others.length:'')+')'));
+  for(const j of v.others.slice(0,8))addCard(more,j,null);
+  more.open=moreOpen;host.appendChild(more);}
+ // Ne montrer que les moteurs effectivement interrogés sur la direction choisie.
+ // Les réseaux hors zone restent dans le diagnostic interne, pas dans la fiche mission.
+ const errs=Object.entries(v.errors);
+ const consulted=Object.entries(v.received||{}).filter(([n])=>!errs.some(([e])=>e===n));
+ if(v.done&&(errs.length||consulted.length)){
+  const d=el(doc,'details','cp-hub-diag');d.appendChild(el(doc,'summary',null,'Moteurs consultés ('+(errs.length+consulted.length)+')'));
   for(const [n,e] of errs)d.appendChild(el(doc,'div',null,'❌ '+n+' : '+e));
-  for(const [n,e] of skip)d.appendChild(el(doc,'div',null,'⏭️ '+n+' : '+e));
+  for(const [n,count] of consulted)d.appendChild(el(doc,'div',null,'✅ '+n+' : '+count+' proposition'+(count>1?'s':'')+' reçue'+(count>1?'s':'')));
   host.appendChild(d);
+ }
+ // Transparence pour les cars longue distance : l'absence de carte ne doit pas
+ // être confondue avec un moteur absent ou un billet indisponible.
+ if(v.done){
+  // Ne pas afficher un moteur hors zone ou non activé : seules les
+  // compagnies réellement consultées (ou en échec après lancement) comptent.
+  const coachNames=['BlaBlaCar Bus GTFS','FlixBus GTFS'].filter(name=>
+   Object.prototype.hasOwnProperty.call(v.received||{},name)||
+   Object.prototype.hasOwnProperty.call(v.errors||{},name));
+  // Le rendu limite « Autres propositions » aux huit premières cartes.
+  // Le compteur doit refléter les cartes réellement présentes, pas toutes
+  // les propositions internes retenues par le classement.
+  const visibleJourneys=[...(v.picks||[]).map(p=>p.journey),...(v.others||[]).slice(0,8)];
+  const coachRows=coachNames.map(name=>{
+   const operator=name.replace(' GTFS','');
+   const visible=visibleJourneys.filter(j=>
+    (j.sources||[]).concat(j.source||'',(j.legs||[]).map(l=>l.provider||''))
+     .some(value=>String(value).toLowerCase().includes(operator.toLowerCase()))).length;
+   const error=v.errors?.[name];
+   const skipped=v.skipped?.[name];
+   const count=v.received?.[name];
+   return {name,visible,status:error?'Erreur de recherche : '+error:
+    skipped?'Moteur non interrogé : '+skipped:
+    Number.isFinite(count)?count===0?'Aucun horaire reçu pour ce trajet et cette date':
+     count+' horaire(s) reçu(s) avant filtrage des horaires et marches (prix non fournis par le GTFS)':
+    'Aucune réponse du moteur'};
+  });
+  if(coachRows.length){
+  const info=el(doc,'details','cp-hub-coach-status');
+  const summary=coachRows.map(entry=>{
+   const count=v.received?.[entry.name];
+   return entry.name.replace(' GTFS','')+' : '+(v.errors?.[entry.name]?'erreur':
+    Number.isFinite(count)?count===0?'aucun horaire reçu':
+     entry.visible+' proposition(s) affichée(s) / '+count+' horaire(s) reçu(s)':
+    'aucune réponse');
+  }).join(' · ');
+  info.appendChild(el(doc,'summary',null,summary));
+  for(const entry of coachRows){
+   info.appendChild(el(doc,'p','cp-hub-note',entry.name+' — '+entry.status));
+   if(entry.visible===0&&(v.received?.[entry.name]||0)>0)
+    info.appendChild(el(doc,'p','cp-hub-note',
+     'Aucune proposition '+entry.name.replace(' GTFS','')+' affichée : les horaires reçus ne constituent pas un trajet validé pour cette mission. Vérifier les dates, les correspondances et les accès piétons.'));
+  }
+  info.appendChild(el(doc,'small',null,'Seuls les trajets correspondant aux dates, aux horaires et aux marches vérifiées apparaissent dans les propositions. Aucun tarif n’est inventé.'));
+  host.appendChild(info);
+  }
  }
  const tads=tadFor(v.task);
  if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' non affiché'+(v.hidden.tooEarly>1?'s':'')+' : départ avant la fin de la mission précédente (marche jusqu’à l’arrêt comprise).'));

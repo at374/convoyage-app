@@ -111,7 +111,7 @@ test('tarifs : EUR et CHF séparés, jamais convertis ; tarif manquant => Prix �
 });
 
 test('classement : moins cher / compromis / plus rapide, fusion des doublons entre moteurs',()=>{
- const base=(dep,arr,fare,src)=>H.assess({source:src,sources:[src],legs:[bus(dep,arr,STOP1,STOP2,{line:'X',fare})],missing:[]},{latestArrival:at(12,0)});
+ const base=(dep,arr,fare,src)=>H.assess({source:src,sources:[src],legs:[bus(dep,arr,STOP1,STOP2,{line:'X',fare})],missing:[]},{latestArrival:at(10,0)});
  const cheap=base(at(8,0),at(9,30),{amount:2,currency:'EUR',source:'grille'},'GTFS');
  const fast=base(at(8,0),at(8,30),null,'TripGo');
  const dupFast=base(at(8,0),at(8,30),null,'Suisse');
@@ -143,7 +143,7 @@ test('session : moteurs en parallèle, ingestion GTFS, erreurs et moteurs ignor�
 
 test('fenêtres de requête : aller en heure d’arrivée (limite − marge), retour en heure de départ',()=>{
  assert.deepEqual(H.queryWindow({latestArrival:at(9,0)}),{when:at(8,45),arriveBy:true});
- assert.deepEqual(H.queryWindow({earliestDeparture:at(17,0),latestArrival:at(19,0)}),{when:at(17,0),arriveBy:false});
+ assert.deepEqual(H.queryWindow({earliestDeparture:at(17,0),latestArrival:at(19,0)}),{when:at(18,45),arriveBy:true});
  assert.equal(H.inSwissArea({lat:46.19,lon:6.23}),true,'Annemasse');
  assert.equal(H.inSwissArea({lat:45.76,lon:4.84}),false,'Lyon');
  assert.equal(H.inSwissArea({lat:45.90,lon:6.12}),false,'Annecy');
@@ -390,4 +390,309 @@ test('prix inconnu : lien officiel d’achat par opérateur, jamais pour une por
  const j={legs:[{kind:'transit',provider:'TCL'},{kind:'walk'},{kind:'transit',provider:'SNCF'},{kind:'transit',provider:'SNCF'}],
   price:{status:'unknown',legFares:[{amount:2.1},null,null,null]}};
  assert.deepEqual(hub.ticketLinks(j).map(t=>t.label),['SNCF Connect']);
+});
+
+test('prise en charge : priorité à l’arrivée avec 15 minutes de marge même si départ minimal connu',()=>{
+ const task={earliestDeparture:at(7,30),latestArrival:at(9,0)};
+ assert.deepEqual(H.queryWindow(task),{when:at(8,45),arriveBy:true});
+});
+test('jonction : départ minimal seul reste une recherche après livraison',()=>{
+ const task={earliestDeparture:at(14,10)};
+ assert.deepEqual(H.queryWindow(task),{when:at(14,10),arriveBy:false});
+});
+test('prise en charge : marge paramétrée de 30 minutes respectée',()=>{
+ const task={earliestDeparture:at(7,30),latestArrival:at(9,0),marginMinutes:30};
+ assert.deepEqual(H.queryWindow(task),{when:at(8,30),arriveBy:true});
+});
+
+test('jonction impossible : aucune recherche si la livraison dépasse la limite avec marge',()=>{
+ assert.equal(H.queryWindow({earliestDeparture:at(8,50),latestArrival:at(9,0)}),null);
+ assert.equal(H.queryWindow({earliestDeparture:at(8,45),latestArrival:at(9,0)}).arriveBy,true);
+});
+test('jonction multi-jours : ne pas rejeter un départ la veille si la marge reste possible',()=>{
+ const w=H.queryWindow({earliestDeparture:at(18,0,'2026-11-16'),latestArrival:at(9,0,'2026-11-17')});
+ assert.ok(w);assert.equal(w.arriveBy,true);assert.equal(w.when,at(8,45,'2026-11-17'));
+});
+
+test('jonction impossible : aucune requête fournisseur ni routage piéton',async()=>{
+ let providersCalled=0,walksCalled=0;
+ const provider={name:'Réseau test',enabled:()=>true,run:async()=>{providersCalled++;return [];}};
+ const router={route:async()=>{walksCalled++;return {status:'unavailable'};}};
+ const session=H.createSession({
+  tasks:[{label:'Jonction',from:HOME,to:MISSION,earliestDeparture:at(8,50),latestArrival:at(9,0)}],
+  providers:{test:provider},router
+ });
+ await new Promise(resolve=>setImmediate(resolve));
+ const view=session.view('Jonction');
+ assert.equal(providersCalled,0);
+ assert.equal(walksCalled,0);
+ assert.equal(view.done,true);
+ assert.match(view.errors.horaires,/créneau impossible/);
+ session.dispose();
+});
+
+test('jonction à pied : départ calculé pour arriver exactement avec 15 minutes de marge',async()=>{
+ const router={route:async()=>({status:'calculated',distanceMeters:900,durationSeconds:600,geometry:[HOME,MISSION]})};
+ const task={from:HOME,to:STOP1,earliestDeparture:at(8,0),latestArrival:at(9,0)};
+ const walk=await H.walkOnly(task,router,3);
+ assert.ok(walk);
+ assert.equal(walk.legs[0].departure,at(8,35));
+ assert.equal(walk.legs[0].arrival,at(8,45));
+ assert.equal(H.assess(walk,task).feasible,true);
+});
+test('jonction à pied : rejeter la marche si la livraison est trop tardive',async()=>{
+ const router={route:async()=>({status:'calculated',distanceMeters:900,durationSeconds:600,geometry:[HOME,MISSION]})};
+ const task={from:HOME,to:STOP1,earliestDeparture:at(8,40),latestArrival:at(9,0)};
+ assert.equal(await H.walkOnly(task,router,3),null);
+});
+
+test('cars longue distance : FlixBus et BlaBlaCar Bus visibles dans les propositions principales',()=>{
+ const task={latestArrival:at(12,0)};
+ const candidate=(source,dep,arr,line)=>H.assess({
+  source,sources:[source],legs:[bus(at(dep,0),at(arr,0),STOP1,STOP2,{provider:source,line})],missing:[]
+ },task);
+ const regional=candidate('TER',9,10,'TER1');
+ const flix=candidate('FlixBus',9,11,'F123');
+ const blabla=candidate('BlaBlaCar Bus',8,10,'B456');
+ const ranked=H.rank([regional,flix,blabla],task);
+ const names=ranked.picks.flatMap(p=>p.labels);
+ assert.ok(names.includes('FlixBus'));
+ assert.ok(names.includes('BlaBlaCar Bus'));
+ assert.ok(ranked.picks.some(p=>p.journey.sources.includes('FlixBus')));
+ assert.ok(ranked.picks.some(p=>p.journey.sources.includes('BlaBlaCar Bus')));
+});
+
+test('quota piéton : FlixBus et BlaBlaCar Bus prioritaires avant les bus locaux',()=>{
+ const fs=require('node:fs');
+ const hubSource=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.match(hubSource,/const coachPriority=t=>/);
+ assert.match(hubSource,/toWalk\.sort\(\(a,b\)=>coachPriority\(a\)-coachPriority\(b\)/);
+ assert.match(hubSource,/flixbus\|blablacar/);
+});
+
+test('quotas cars : réserver quatre couples piétons par opérateur indépendamment du quota local',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.match(source,/coachWalkPairs:\{flixbus:0,blablacarBus:0\}/);
+ assert.match(source,/const coachBudget=coachKey\?Math\.max\(0,4-/);
+ assert.match(source,/s\.walkPairs\.size-before/);
+ assert.match(source,/select\(toWalk,coachSource\?coachBudget:8\)/);
+});
+
+test('échec du routage piéton : aucune carte ne reste bloquée en calcul',async()=>{
+ const task={label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)};
+ const brokenRouter={route:async()=>{throw Error('routing unavailable');}};
+ const providers={coach:{name:'FlixBus GTFS',enabled:()=>true,run:async()=>[{
+  source:'FlixBus',sources:['FlixBus'],legs:[bus(at(8,0),at(8,30),STOP1,STOP2,{provider:'FlixBus'})]
+ }]}};
+ let finished;
+ const done=new Promise(resolve=>{finished=resolve;});
+ const session=H.createSession({tasks:[task],providers,router:brokenRouter,
+  onUpdate:(label,view)=>{if(label==='Aller'&&view.done)finished();}});
+ await Promise.race([done,new Promise((_,reject)=>setTimeout(()=>reject(Error('timeout coach test')),3000))]);
+ const view=session.view('Aller');
+ assert.equal(view.pending,0);
+ assert.ok(view.total>=1);
+ assert.ok([...view.picks.map(p=>p.journey),...view.others].every(j=>!j.computing));
+ session.dispose();
+});
+
+test('cars : deuxième lot piéton même si un TER est déjà réalisable',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.match(source,/rest\.length&&\(coachSource\|\|!s\.items\.some\(x=>x\.feasible\)\)/);
+ assert.match(source,/const remaining=coachKey\?Math\.max\(0,8-/);
+ assert.match(source,/select\(rest,coachSource\?Math\.min\(4,remaining\):8\)/);
+ assert.match(source,/s\.walkPairs\.size-beforeSecond/);
+});
+
+test('fusion doublons : faisabilité prioritaire sur prix connu',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.match(source,/const quality=x=>\[Number\(!!x\.feasible\),Number\(!!x\.scheduled\)/);
+ assert.match(source,/const firstDifference=qj\.findIndex/);
+ assert.match(source,/qj\[firstDifference\]>qo\[firstDifference\]/);
+});
+
+test('doublons : la signature distingue les compagnies de cars',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const signature=source.slice(source.indexOf('function signature('),source.indexOf('function rank('));
+ assert.match(signature,/String\(l\.provider\|\|''\)/);
+ assert.match(signature,/String\(l\.line\|\|''\)/);
+});
+
+test('doublons : les arrêts de montée et descente font partie de la signature',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const signature=source.slice(source.indexOf('function signature('),source.indexOf('function rank('));
+ assert.match(signature,/String\(l\.from\|\|''\)\.trim\(\)\.toLowerCase\(\)/);
+ assert.match(signature,/String\(l\.to\|\|''\)\.trim\(\)\.toLowerCase\(\)/);
+});
+
+test('doublons : les marches distinctes ne partagent plus une clé unique',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const rankSource=source.slice(source.indexOf('function rank('),source.indexOf('/* ---------- Requêtes par direction ---------- */'));
+ assert.match(rankSource,/const k=walkingJourney\?\[/);
+ assert.match(rankSource,/String\(j\.legs\?\.\[0\]\?\.from\|\|''\)/);
+ assert.match(rankSource,/Math\.round\(ms\(j\.departure\)\/60000\)/);
+ assert.doesNotMatch(rankSource,/j\.walkOnly\?'walk':signature\(j\)/);
+});
+
+test('doublons piétons : les coordonnées GPS différencient les points homonymes',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const rankSource=source.slice(source.indexOf('function rank('),source.indexOf('/* ---------- Requêtes par direction ---------- */'));
+ assert.match(rankSource,/j\.legs\?\.\[0\]\?\.fromPoint\?\.lat/);
+ assert.match(rankSource,/j\.legs\?\.\[0\]\?\.fromPoint\?\.lon/);
+ assert.match(rankSource,/toPoint\?\.lat/);
+ assert.match(rankSource,/toPoint\?\.lon/);
+});
+
+test('doublons cars et trains : la signature contient les coordonnées GPS des arrêts',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const signature=source.slice(source.indexOf('function signature('),source.indexOf('function rank('));
+ assert.match(signature,/l\.fromPoint\?\.lat,l\.fromPoint\?\.lon/);
+ assert.match(signature,/l\.toPoint\?\.lat,l\.toPoint\?\.lon/);
+});
+
+test('classement réel : deux arrêts GPS distincts ne sont pas fusionnés',()=>{
+ const task={latestArrival:at(12,0)};
+ const first=H.assess({source:'FlixBus',sources:['FlixBus'],missing:[],
+  legs:[bus(at(8,0),at(9,0),STOP1,STOP2,{line:'F1',provider:'FlixBus'})]},task);
+ const shifted={lat:STOP1.lat+0.001,lon:STOP1.lon};
+ const second=H.assess({source:'FlixBus',sources:['FlixBus'],missing:[],
+  legs:[bus(at(8,0),at(9,0),shifted,STOP2,{line:'F1',provider:'FlixBus'})]},task);
+ assert.equal(H.rank([first,second],task).total,2);
+});
+
+test('classement réel : un doublon non réalisable avec tarif ne remplace pas le trajet réalisable',()=>{
+ const task={latestArrival:at(9,0)};
+ const legs=[bus(at(8,0),at(8,30),STOP1,STOP2,{line:'F2',provider:'FlixBus'})];
+ const valid=H.assess({source:'Horaire',sources:['Horaire'],missing:[],legs},task);
+ const invalid=H.assess({source:'Tarif isolé',sources:['Tarif isolé'],
+  missing:['correspondance non confirmée'],legs:legs.map(l=>({...l,fare:{amount:4,currency:'EUR',source:'grille'}}))},task);
+ assert.equal(valid.feasible,true);
+ assert.equal(invalid.feasible,false);
+ const ranked=H.rank([valid,invalid],task);
+ assert.equal(ranked.total,1);
+ const kept=[...ranked.picks.map(p=>p.journey),...ranked.others][0];
+ assert.equal(kept.feasible,true);
+ assert.deepEqual([...kept.sources].sort(),['Horaire','Tarif isolé']);
+});
+
+test('cars : privilégier le tarif vérifié le moins cher à faisabilité égale',()=>{
+ const task={latestArrival:at(9,0)};
+ const make=(dep,arr,amount)=>H.assess({source:'FlixBus',sources:['FlixBus'],missing:[],
+  legs:[bus(dep,arr,STOP1,STOP2,{provider:'FlixBus',line:'FX',
+   fare:amount===null?null:{amount,currency:'EUR',source:'tarif vérifié'}})]},task);
+ const close=make(at(8,0),at(8,40),25);
+ const cheap=make(at(7,45),at(8,20),9);
+ const unknown=make(at(8,10),at(8,30),null);
+ const ranked=H.rank([close,cheap,unknown],task);
+ const coach=ranked.picks.find(p=>p.labels.includes('FlixBus'));
+ assert.ok(coach);
+ assert.equal(coach.journey.price.label,'9,00 €');
+});
+
+test('moins cher : un trajet tarifé mais trop tardif ne reçoit pas cette recommandation',()=>{
+ const task={latestArrival:at(9,0)};
+ const late=H.assess({source:'Tarif tardif',sources:['Tarif tardif'],missing:[],
+  legs:[bus(at(8,30),at(8,55),STOP1,STOP2,{line:'L',
+   fare:{amount:1,currency:'EUR',source:'grille'}})]},task);
+ const onTime=H.assess({source:'Tarif exploitable',sources:['Tarif exploitable'],missing:[],
+  legs:[bus(at(8,0),at(8,30),STOP1,STOP2,{line:'M',
+   fare:{amount:5,currency:'EUR',source:'grille'}})]},task);
+ assert.equal(late.feasible,false);
+ assert.equal(onTime.feasible,true);
+ const ranked=H.rank([late,onTime],task);
+ const cheapest=ranked.picks.find(p=>p.labels.includes('Moins cher'));
+ assert.ok(cheapest);
+ assert.equal(cheapest.journey.source,'Tarif exploitable');
+ const onlyLate=H.rank([late],task);
+ assert.equal(onlyLate.picks.some(p=>p.labels.includes('Moins cher')),false);
+});
+
+test('France–Suisse : aucune recommandation moins cher entre EUR et CHF sans conversion',()=>{
+ const task={latestArrival:at(9,0)};
+ const offer=(currency,amount,line)=>H.assess({source:line,sources:[line],missing:[],
+  legs:[bus(at(8,0),at(8,30),STOP1,STOP2,{line,
+   fare:{amount,currency,source:'grille vérifiée'}})]},task);
+ const euro=offer('EUR',10,'EUR');
+ const franc=offer('CHF',8,'CHF');
+ const ranked=H.rank([euro,franc],task);
+ assert.equal(ranked.total,2);
+ assert.equal(ranked.picks.some(p=>p.labels.includes('Moins cher')),false);
+ const euroOnly=H.rank([euro,offer('EUR',5,'EUR2')],task);
+ assert.equal(euroOnly.picks.find(p=>p.labels.includes('Moins cher')).journey.price.label,'5,00 €');
+});
+
+test('cars transfrontaliers : EUR et CHF non comparables, départage par horaire',()=>{
+ const task={latestArrival:at(9,0)};
+ const offer=(currency,amount,departure,arrival,line)=>H.assess({
+  source:'FlixBus',sources:['FlixBus'],missing:[],
+  legs:[bus(departure,arrival,STOP1,STOP2,{provider:'FlixBus',line,
+   fare:{amount,currency,source:'tarif vérifié'}})]},task);
+ const eur=offer('EUR',5,at(7,45),at(8,15),'E');
+ const chf=offer('CHF',4,at(8,0),at(8,40),'C');
+ const ranked=H.rank([eur,chf],task);
+ const coach=ranked.picks.find(p=>p.labels.includes('FlixBus'));
+ assert.ok(coach);
+ assert.equal(coach.journey.legs[0].line,'C','les prix de devises différentes ne départagent pas les horaires');
+ assert.equal(ranked.picks.some(p=>p.labels.includes('Moins cher')),false);
+});
+
+test('cars : classement stable pour trois offres EUR/CHF mélangées',()=>{
+ const task={latestArrival:at(9,0)};
+ const offer=(currency,amount,line,dep,arr)=>H.assess({source:'FlixBus',sources:['FlixBus'],missing:[],
+  legs:[bus(dep,arr,STOP1,STOP2,{provider:'FlixBus',line,
+   fare:{amount,currency,source:'tarif de test'}})]},task);
+ const rows=[
+  offer('EUR',5,'EUR5',at(7,40),at(8,10)),
+  offer('CHF',1,'CHF1',at(8,0),at(8,40)),
+  offer('EUR',2,'EUR2',at(7,50),at(8,20))
+ ];
+ const winner=items=>H.rank(items,task).picks.find(p=>p.labels.includes('FlixBus')).journey.legs[0].line;
+ assert.equal(winner(rows),'CHF1');
+ assert.equal(winner([rows[2],rows[0],rows[1]]),'CHF1');
+ assert.equal(winner([rows[1],rows[2],rows[0]]),'CHF1');
+});
+
+test('plus rapide : ordre stable avec des prix EUR CHF mélangés',()=>{
+ const task={latestArrival:at(9,0)};
+ const make=(line,currency,amount)=>H.assess({source:line,sources:[line],missing:[],
+  legs:[bus(at(8,0),at(8,30),STOP1,STOP2,{line,provider:'Réseau test',
+   fare:{currency,amount,source:'tarif de test'}})]},task);
+ const rows=[make('EUR5','EUR',5),make('CHF1','CHF',1),make('EUR2','EUR',2)];
+ const fastest=items=>H.rank(items,task).picks.find(p=>p.labels.includes('Plus rapide')).journey.legs[0].line;
+ assert.equal(fastest(rows),'EUR5');
+ assert.equal(fastest([rows[2],rows[0],rows[1]]),'EUR2');
+ // À durée et marche égales, le prix ne sert plus de départage :
+ // le résultat reste la première proposition, sans conversion implicite.
+});
+
+test('marche fournie par un moteur : deux itinéraires sans walkOnly restent distincts',()=>{
+ const task={latestArrival:at(9,0)};
+ const make=(line,fromPoint)=>H.assess({source:line,sources:[line],missing:[],
+  legs:[{kind:'walk',mode:'Marche',from:'Départ',to:'Arrivée',
+   fromPoint,toPoint:STOP2,departure:at(8,0),arrival:at(8,30),
+   distanceMeters:1800,durationSeconds:1800}]},task);
+ const first=make('Moteur A',STOP1);
+ const second=make('Moteur B',{lat:STOP1.lat+0.001,lon:STOP1.lon});
+ assert.equal(first.walkOnly,undefined);
+ assert.equal(second.walkOnly,undefined);
+ assert.equal(H.rank([first,second],task).total,2);
+});
+
+test('marche fournie par un moteur : prix gratuit sans drapeau walkOnly',()=>{
+ const task={latestArrival:at(9,0)};
+ const walking=H.assess({source:'Piéton externe',sources:['Piéton externe'],missing:[],
+  legs:[{kind:'walk',mode:'Marche',from:'Départ',to:'Arrivée',
+   fromPoint:STOP1,toPoint:STOP2,departure:at(8,0),arrival:at(8,30),
+   distanceMeters:1800,durationSeconds:1800}]},task);
+ assert.equal(walking.walkOnly,undefined);
+ assert.equal(walking.price.status,'free');
+ assert.equal(walking.price.label,'Gratuit (à pied)');
 });

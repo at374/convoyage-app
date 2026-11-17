@@ -69,3 +69,24 @@ Rapport publié automatiquement : `docs/otp2-reel/RAPPORT-OTP2-REEL.md` (+ `rapp
   les résultats OTP2 (les autres moteurs restent affichés).
 - À faire : fusion sur `main` uniquement avec l'accord de Laurent ; reconstruction + redéploiement du graphe avant le 26/12/2026
   (fenêtre d'horaires J+40) ; essai dans le navigateur ; doublon ligne 272.
+
+## Signalement du 17/11/2026 (10 h 38) — bouton « Visualisation des transports » sans réaction
+
+Laurent signale que rien ne se passe au clic sur « 🚌 Visualisation des transports » (fiche mission, `#btnTransportsMission`, `app.js` ~l.1846).
+
+Vérifié par Claude :
+- Le site en ligne est à jour : `CP_OTP_ENDPOINT` présent, `CPOTPClient.buildQuery` défini, `app.js?v=hub-20261116b` chargé, aucune erreur JavaScript de l'application au chargement.
+- `node --check app.js` : syntaxe correcte. Le gestionnaire `bt.onclick` insère d'abord le panneau « Chargement des informations de transport… » puis lance le Hub dans un `try`.
+- Non reproduit : l'écran de connexion bloque l'accès aux missions (aucun identifiant à saisir par Claude). Cause non identifiée.
+
+À faire en priorité (avant toute autre chose) : ouvrir une mission réelle, cliquer sur le bouton avec la console ouverte, relever l'erreur. Pistes : exception avant `insertAdjacentElement` ; panneau créé mais masqué par le `MutationObserver` (`$('feuille').hidden`) ; ancien cache du service worker (`sw.js`, cache v57) ; régression venue de la fusion `main` (affichage V277 en ligne alors que `main` contient V278/V279 — à vérifier). Si le défaut vient du moteur OTP2, il suffit de retirer la ligne `window.CP_OTP_ENDPOINT` d'`index.html` pour le désactiver.
+
+## Correctifs du 17/11/2026 (midi) après lecture de la transmission de ChatGPT (`c109548`)
+
+Tests exécutés : 916 au total, 902 réussis, 12 échecs anciens (grilles de péages APRR/AREA/SANEF/UNK, sans lien avec les transports), 2 ignorés.
+
+- **`transport-mission-hub.js` ne se chargeait plus** (SyntaxError ligne ~991, parenthèse manquante dans `toWalk.sort`, commit `5643225` ou voisin). Corrigé : `(pk(a.quick)===pk(b.quick)?0:pk(a.quick)-pk(b.quick))||`.
+- **Meilleur compromis** : un horaire seulement programmé passait devant un trajet réalisable à cause de `relevant()` placé avant la confirmation. Ordre rétabli : `byFeasible || confirmedFirst || relevant || score`.
+- **Tests mis à jour (comportement voulu, tests périmés)** : le test « classement » utilisait une arrivée 3 h 30 avant l'échéance, désormais écartée par la règle « arrivée trop tôt » (180 min) ; le test sur la clé de marche cherchait l'ancien texte `j.walkOnly?[` (maintenant `walkingJourney?[`) ; le test d'annulation OTP2 attendait « aborted » (le client dit maintenant « recherche interrompue » depuis `e0c30b9`).
+- **Anciens tests SNCF gare-à-gare** (`sncf-fallback`, `transport-sncf-agenda`) : le bloc a été désactivé par `if (false && …)` dans `app.js` (commit `67ff295`). Les tests lisent maintenant le nouveau marqueur et réactivent le bloc le temps du test. Si le bloc est supprimé pour de bon, supprimer aussi ces deux fichiers de test.
+- Demande à ChatGPT : lancer `node --test tests/*.test.cjs` avant chaque envoi.

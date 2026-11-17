@@ -18,10 +18,10 @@ function harness(results,opts={}){
  },...opts});
  return {calls,provider:providers.national_flixbus};
 }
-test('national fallback widens from 3 to 6 km only on empty search',async()=>{
+test('national fallback widens from 3 to 5 km only on empty search',async()=>{
  const h=harness([{journeys:[]},{journeys:[]}]);
  await h.provider.run(task);
- assert.deepEqual(h.calls.map(c=>c.radiusMeters),[3000,6000]);
+ assert.deepEqual(h.calls.map(c=>c.radiusMeters),[3000,5000]);
  assert.ok(h.calls.every(c=>c.operator==='flixbus'));
 });
 test('national fallback does not widen when initial candidates exist',async()=>{
@@ -49,7 +49,7 @@ test('expanded search candidates are returned to the mission hub',async()=>{
   destinationStop:{name:'Grenoble Gare',lat:45.191,lon:5.714}};
  const h=harness([{journeys:[]},{journeys:[stop]}]);
  const journeys=await h.provider.run(task);
- assert.deepEqual(h.calls.map(c=>c.radiusMeters),[3000,6000]);
+ assert.deepEqual(h.calls.map(c=>c.radiusMeters),[3000,5000]);
  assert.equal(journeys.length,1);
  assert.equal(journeys[0].legs[0].line,'F99');
  assert.ok(journeys[0].missing.includes('prix commercial et disponibilité non vérifiés'));
@@ -67,7 +67,7 @@ test('indirect nearby coach results trigger search for direct distant coach',asy
   departure:'08:30:00',arrival:'09:40:00',originStop:origin,destinationStop:destination};
  const h=harness([{journeys:[indirect]},{journeys:[indirect,direct]}]);
  const journeys=await h.provider.run(task);
- assert.deepEqual(h.calls.map(c=>c.radiusMeters),[3000,6000]);
+ assert.deepEqual(h.calls.map(c=>c.radiusMeters),[3000,5000]);
  assert.equal(journeys.length,2);
  assert.equal(journeys.filter(j=>j.legs.length===1).length,1);
 });

@@ -59,12 +59,12 @@ assert.equal(api.search([fixture('2026-10-30',[direct,b])],request).itineraries.
  assert(urls.every(url=>!url.includes('private')&&!url.includes('45.9')));
  await assert.rejects(api.plan({from:'Annecy',to:'Grenoble',when:'2030-01-01T08:00:00+01:00',fetcher}),/non publié/);
  const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
- const start=app.indexOf('      // SNCF station-only fallback'),end=app.indexOf('      // Regional return',start);
+ const start=app.indexOf('      // Présentation gare-à-gare historique désactivée'),end=app.indexOf('      // Regional return',start);
  assert(start>=0&&end>start);
  class Element{constructor(){this.style={};this.children=[];this.isConnected=true;this.text='';}setAttribute(){}set textContent(t){this.text=String(t);this.children=[];}get textContent(){return this.text+this.children.map(c=>c.textContent).join('');}appendChild(child){this.children.push(child);}}
  const panel=new Element();
  const context={window:{CPSncfFallback:api},document:{createElement:()=>new Element()},panel,etat:{reglages:{domicile_ville:'Annecy'}},G:{trouverVille:()=>null,coordonnees:()=>null},m:{from_city:'Grenoble',to_city:'Ambérieu-en-Bugey'},pickupDate:target+'T12:00:00+01:00',deliveryDate:target+'T13:30:00+01:00',next:null,securityMarginMin:30,regionalFetch:fetcher,regionalActive:()=>true,regionalSlot:(direction,inputs,render)=>render(panel,new AbortController().signal),Date,formatParis:v=>new Date(v).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})};
- vm.createContext(context);vm.runInContext(app.slice(start,end),context);
+ vm.createContext(context);vm.runInContext(app.slice(start,end).replace('if (false && window.CPSncfFallback','if (window.CPSncfFallback'),context);
  await new Promise(resolve=>setTimeout(resolve,100));
  assert(panel.textContent.includes('Retour — secours SNCF'));
  assert(panel.textContent.includes('Transport non confirmé'));

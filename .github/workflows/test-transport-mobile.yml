@@ -1,10 +1,10 @@
 name: Test mobile transport lifecycle
 on:
   push:
-    branches: [feature/transport-ranking-safe]
-    paths: ['server/**', '*.js', 'index.html', 'style.css', 'tests/browser/**', 'tests/transport-cards-mobile.test.cjs', 'tests/transport-otp-adapter.test.cjs', 'tests/transport-otp-client.test.cjs', 'tests/transport-otp-hub.test.cjs', 'tests/fixtures/**', '.github/workflows/test-transport-mobile.yml']
+    branches: [feature/transport-ranking-safe, feature/transports-aura-suisse]
+    paths: ['server/**', '*.js', 'index.html', 'style.css', 'tests/browser/**', 'tests/transport-cards-mobile.test.cjs', 'tests/transport-profitability-verified-only.test.cjs', 'tests/national-stop-fallback.test.cjs', 'tests/transport-mission-hub.test.cjs', 'tests/transport-otp-adapter.test.cjs', 'tests/transport-otp-client.test.cjs', 'tests/transport-otp-hub.test.cjs', 'tests/fixtures/**', '.github/workflows/test-transport-mobile.yml']
   pull_request:
-    paths: ['server/**', '*.js', 'index.html', 'style.css', 'tests/browser/**', 'tests/fixtures/**', '.github/workflows/test-transport-mobile.yml']
+    paths: ['server/**', '*.js', 'index.html', 'style.css', 'tests/browser/**', 'tests/transport-cards-mobile.test.cjs', 'tests/transport-profitability-verified-only.test.cjs', 'tests/national-stop-fallback.test.cjs', 'tests/transport-mission-hub.test.cjs', 'tests/fixtures/**', '.github/workflows/test-transport-mobile.yml']
 permissions:
   contents: read
 jobs:
@@ -23,7 +23,7 @@ jobs:
           key: playwright-chromium-shell-1.62.1-${{ runner.os }}
       - run: npx playwright install --with-deps --only-shell chromium
         timeout-minutes: 12
-      - run: node --test tests/transport-cards-mobile.test.cjs tests/transport-otp-adapter.test.cjs tests/transport-otp-client.test.cjs tests/transport-otp-hub.test.cjs
+      - run: node --test tests/transport-mission-hub.test.cjs tests/national-stop-fallback.test.cjs tests/transport-profitability-verified-only.test.cjs tests/transport-cards-mobile.test.cjs tests/transport-otp-adapter.test.cjs tests/transport-otp-client.test.cjs tests/transport-otp-hub.test.cjs
       - run: node tests/browser/transport-mobile.cjs
       - uses: actions/upload-artifact@v4
         if: always()
