@@ -596,3 +596,21 @@ test('cars : privilégier le tarif vérifié le moins cher à faisabilité égal
  assert.ok(coach);
  assert.equal(coach.journey.price.label,'9,00 €');
 });
+
+test('moins cher : un trajet tarifé mais trop tardif ne reçoit pas cette recommandation',()=>{
+ const task={latestArrival:at(9,0)};
+ const late=H.assess({source:'Tarif tardif',sources:['Tarif tardif'],missing:[],
+  legs:[bus(at(8,30),at(8,55),STOP1,STOP2,{line:'L',
+   fare:{amount:1,currency:'EUR',source:'grille'}})]},task);
+ const onTime=H.assess({source:'Tarif exploitable',sources:['Tarif exploitable'],missing:[],
+  legs:[bus(at(8,0),at(8,30),STOP1,STOP2,{line:'M',
+   fare:{amount:5,currency:'EUR',source:'grille'}})]},task);
+ assert.equal(late.feasible,false);
+ assert.equal(onTime.feasible,true);
+ const ranked=H.rank([late,onTime],task);
+ const cheapest=ranked.picks.find(p=>p.labels.includes('Moins cher'));
+ assert.ok(cheapest);
+ assert.equal(cheapest.journey.source,'Tarif exploitable');
+ const onlyLate=H.rank([late],task);
+ assert.equal(onlyLate.picks.some(p=>p.labels.includes('Moins cher')),false);
+});
