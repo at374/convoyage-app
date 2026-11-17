@@ -2362,6 +2362,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       startTransportHub();
       const renderLocalCards=({task,itineraries,candidates})=>{
         try{if(transportHub&&window.CPTransportHub)transportHub.ingest(task.label,'GTFS local',window.CPTransportHub.fromGTFS(Array.isArray(candidates)&&candidates.length?candidates:itineraries));}catch(_){}
+        // Le moteur GTFS alimente déjà les cartes unifiées. Ne plus fabriquer de
+        // seconde liste de résultats (ancienne présentation 'horaires locaux').
+        return;
         if(!panel.isConnected||panel.hidden||$('feuille').hidden||!transportDestinations[task.label])return;
         localCards[task.label]?.remove();
         const host=document.createElement('div');host.className='cp-transport-local';localCards[task.label]=host;
