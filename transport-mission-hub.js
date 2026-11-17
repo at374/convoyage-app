@@ -1161,6 +1161,25 @@ function render(host,v){
   for(const [n,count] of consulted)d.appendChild(el(doc,'div',null,'✅ '+n+' : '+count+' proposition'+(count>1?'s':'')+' reçue'+(count>1?'s':'')));
   host.appendChild(d);
  }
+ // Transparence pour les cars longue distance : l'absence de carte ne doit pas
+ // être confondue avec un moteur absent ou un billet indisponible.
+ if(v.done){
+  const coachNames=['BlaBlaCar Bus GTFS','FlixBus GTFS'];
+  const coachRows=coachNames.map(name=>{
+   const error=v.errors?.[name];
+   const skipped=v.skipped?.[name];
+   const count=v.received?.[name];
+   return {name,status:error?'Erreur de recherche : '+error:
+    skipped?'Moteur non interrogé : '+skipped:
+    Number.isFinite(count)?count+' trajet(s) remonté(s) avant filtrage des horaires et marches':
+    'Moteur non configuré ou aucune réponse'};
+  });
+  const info=el(doc,'details','cp-hub-coach-status');
+  info.appendChild(el(doc,'summary',null,'BlaBlaCar Bus / FlixBus : état des recherches'));
+  for(const entry of coachRows)info.appendChild(el(doc,'p','cp-hub-note',entry.name+' — '+entry.status));
+  info.appendChild(el(doc,'small',null,'Seuls les trajets correspondant aux dates, aux horaires et aux marches vérifiées apparaissent dans les propositions. Aucun tarif n’est inventé.'));
+  host.appendChild(info);
+ }
  const tads=tadFor(v.task);
  if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' non affiché'+(v.hidden.tooEarly>1?'s':'')+' : départ avant la fin de la mission précédente (marche jusqu’à l’arrêt comprise).'));
  if(v.done&&tads.length){const p=el(doc,'p','cp-hub-note','Transport à la demande possible dans ce secteur (non intégré au classement) : ');
