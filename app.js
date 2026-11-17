@@ -2313,7 +2313,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           button.dataset.day=day;
           button.textContent=new Intl.DateTimeFormat('fr-FR',{timeZone:'UTC',weekday:'short',day:'2-digit',month:'short'})
             .format(new Date(day+'T12:00:00Z'));
-          button.title='Afficher les transports du '+day;
+          const stages=Object.entries(transportDays).filter(([,d])=>d===day).map(([direction])=>direction==='Aller'?'Prise en charge':direction==='Retour'?'Retour après livraison':'Jonction');
+          button.setAttribute('aria-label','Afficher les transports du '+day+' : '+stages.join(', '));
+          button.title=stages.join(' · ')+' · '+day;
           button.addEventListener('click',()=>selectDay(day));
           tabs.appendChild(button);buttons.push(button);
         }
