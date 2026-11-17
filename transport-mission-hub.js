@@ -720,7 +720,7 @@ function makeProviders(r,opts={}){
      if(needExpanded&&!signal?.aborted&&opts.nationalStopFallback!==false){
       // Un échec du repli ne doit jamais faire perdre les résultats à 3 km (constaté en navigateur réel le 14/11/2026 :
       // le rayon de 6 km était refusé par le moteur, limité à 5 km → « Invalid walking search radius » pour tout le fournisseur).
-      const expanded=await r.CPNationalGTFSJourneys.loadAndSearch({...searchParams,radiusMeters:6000}).catch(e=>{if(signal?.aborted)throw e;return null;});
+      const expanded=await r.CPNationalGTFSJourneys.loadAndSearch({...searchParams,radiusMeters:5000}).catch(e=>{if(signal?.aborted)throw e;return null;});
       if(Array.isArray(expanded?.journeys)&&expanded.journeys.length){
        const seen=new Set(rows.map(j=>JSON.stringify([j.tripId,j.line,j.departure,j.arrival,j.originStop?.stop_id||j.originStop?.name,j.destinationStop?.stop_id||j.destinationStop?.name])));
        for(const j of expanded.journeys){
