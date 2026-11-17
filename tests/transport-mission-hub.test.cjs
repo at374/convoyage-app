@@ -659,3 +659,16 @@ test('cars : classement stable pour trois offres EUR/CHF mélangées',()=>{
  assert.equal(winner([rows[2],rows[0],rows[1]]),'CHF1');
  assert.equal(winner([rows[1],rows[2],rows[0]]),'CHF1');
 });
+
+test('plus rapide : ordre stable avec des prix EUR CHF mélangés',()=>{
+ const task={latestArrival:at(9,0)};
+ const make=(line,currency,amount)=>H.assess({source:line,sources:[line],missing:[],
+  legs:[bus(at(8,0),at(8,30),STOP1,STOP2,{line,provider:'Réseau test',
+   fare:{currency,amount,source:'tarif de test'}})]},task);
+ const rows=[make('EUR5','EUR',5),make('CHF1','CHF',1),make('EUR2','EUR',2)];
+ const fastest=items=>H.rank(items,task).picks.find(p=>p.labels.includes('Plus rapide')).journey.legs[0].line;
+ assert.equal(fastest(rows),'EUR5');
+ assert.equal(fastest([rows[2],rows[0],rows[1]]),'EUR2');
+ // À durée et marche égales, le prix ne sert plus de départage :
+ // le résultat reste la première proposition, sans conversion implicite.
+});
