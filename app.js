@@ -2296,7 +2296,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const homePt=homeExact?{lat:Number(homeLat),lon:Number(homeLon)}:
           homeCity?{lat:Number(homeCity.lat),lon:Number(homeCity.lng)}:null;
         const short=lireLocal('cp_marge_courte_gps',false)===true;
-        const exact=gps=>!!gps&&gps.precision==='gps';
+        const exact=gps=>!!gps&&['gps','adresse'].includes(gps.precision);
+        const exactGps=gps=>!!gps&&gps.precision==='gps';
         const origin=G.coordonnees(m,'origin'),dest=G.coordonnees(m,'destination'),nextOrigin2=next?G.coordonnees(next,'origin'):null;
         const tasks=[];
         // Les messages sont reconstruits sans doublons lors d'une actualisation des moteurs.
@@ -2319,9 +2320,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           }
         }
         if(pickupDate)tasks.push({label:'Aller',from:homePt,to:gp(origin),fromName:homeName,toName:'Prise en charge',fromCity:homeName,toCity:m.from_city||'',
-          latestArrival:pickupDate,marginMinutes:securityMarginMin,exactTarget:exact(origin),approximateEndpoint:!homeExact||!exact(origin),allowShortMargin:short});
+          latestArrival:pickupDate,marginMinutes:securityMarginMin,exactTarget:exactGps(origin),approximateEndpoint:!homeExact||!exact(origin),allowShortMargin:short});
         if(next&&deliveryDate&&next.pickup_start)tasks.push({label:'Jonction',from:gp(dest),to:gp(nextOrigin2),fromName:'Livraison',toName:'Mission suivante',fromCity:m.to_city||'',toCity:next.from_city||'',
-          earliestDeparture:deliveryDate,latestArrival:next.pickup_start,marginMinutes:securityMarginMin,exactTarget:exact(nextOrigin2),approximateEndpoint:!exact(dest)||!exact(nextOrigin2),allowShortMargin:short});
+          earliestDeparture:deliveryDate,latestArrival:next.pickup_start,marginMinutes:securityMarginMin,exactTarget:exactGps(nextOrigin2),approximateEndpoint:!exact(dest)||!exact(nextOrigin2),allowShortMargin:short});
         if(deliveryDate)tasks.push({label:'Retour',from:gp(dest),to:homePt,fromName:'Livraison',toName:homeName,fromCity:m.to_city||'',toCity:homeName,earliestDeparture:deliveryDate,approximateEndpoint:!exact(dest)||!homeExact});
         const signature=JSON.stringify(tasks);
         if(transportHub&&transportHub.signatureKey===signature)return;
