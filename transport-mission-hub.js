@@ -374,7 +374,10 @@ async function walkOnly(task,router,maxKm){
 
 /* ---------- Tarifs ---------- */
 function priceOf(j,fareFor){
- if(j.walkOnly)return {status:'free',amounts:{EUR:0},label:'Gratuit (à pied)',missingSources:[]};
+ // Une marche issue d'un fournisseur tiers peut ne pas avoir le drapeau walkOnly.
+ // La tarification doit rester gratuite si toutes les étapes sont piétonnes.
+ if(j.walkOnly||j.legs?.length>0&&j.legs.every(l=>l.kind==='walk'))
+  return {status:'free',amounts:{EUR:0},label:'Gratuit (à pied)',missingSources:[]};
  const amounts={},missingSources=[],sources=[],legFares=[];
  let ticket=null; // titre en cours : {network,validUntilMs} — une correspondance dans la validité ne se repaie pas
  const isVerifiedFare=f=>!!(f&&finite(f.amount)&&f.amount>=0&&/^(EUR|CHF)$/.test(f.currency)&&f.source);
