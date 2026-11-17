@@ -778,3 +778,9 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 @media(max-width:420px){
  #cpTransportMissionDetails .cp-hub-price:not(.unknown){max-width:150px;font-size:.98em;padding:9px 6px;white-space:nowrap}
 }
+/* Carte OpenStreetMap intégrée et guidage à pied. */
+#cpTransportMissionDetails .cp-hub-map{display:block;width:100%;height:auto;border-radius:12px;border:1px solid var(--accent);background:#e8e6df}
+#cpTransportMissionDetails .cp-hub-steps{margin:8px 0 4px;padding:8px 10px;border:1px solid var(--ligne,#555);border-radius:10px}
+#cpTransportMissionDetails .cp-hub-steps summary{font-weight:700;cursor:pointer}
+#cpTransportMissionDetails .cp-hub-steps ol{margin:8px 0 0;padding-left:22px}
+#cpTransportMissionDetails .cp-hub-steps li{margin:5px 0;line-height:1.35}
