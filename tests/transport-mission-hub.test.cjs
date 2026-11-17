@@ -557,3 +557,13 @@ test('doublons cars et trains : la signature contient les coordonnées GPS des a
  assert.match(signature,/l\.fromPoint\?\.lat,l\.fromPoint\?\.lon/);
  assert.match(signature,/l\.toPoint\?\.lat,l\.toPoint\?\.lon/);
 });
+
+test('classement réel : deux arrêts GPS distincts ne sont pas fusionnés',()=>{
+ const task={latestArrival:at(12,0)};
+ const first=H.assess({source:'FlixBus',sources:['FlixBus'],missing:[],
+  legs:[bus(at(8,0),at(9,0),STOP1,STOP2,{line:'F1',provider:'FlixBus'})]},task);
+ const shifted={lat:STOP1.lat+0.001,lon:STOP1.lon};
+ const second=H.assess({source:'FlixBus',sources:['FlixBus'],missing:[],
+  legs:[bus(at(8,0),at(9,0),shifted,STOP2,{line:'F1',provider:'FlixBus'})]},task);
+ assert.equal(H.rank([first,second],task).total,2);
+});
