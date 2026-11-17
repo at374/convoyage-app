@@ -1141,7 +1141,11 @@ function render(host,v){
   if(key){node.setAttribute('data-journey-key',key);if(opened.has(key))node.open=true;}
   parent.appendChild(node);
  };
- for(const [i,p] of v.picks.entries())addCard(host,p.journey,p.labels,i===0);
+ // Ouvrir automatiquement la première carte une seule fois par fiche.
+ // Si le convoyeur la referme, une mise à jour réseau ne doit pas la rouvrir.
+ const openInitial=v.picks.length>0&&host.dataset.cpInitialCardOpened!=='true';
+ if(openInitial)host.dataset.cpInitialCardOpened='true';
+ for(const [i,p] of v.picks.entries())addCard(host,p.journey,p.labels,openInitial&&i===0);
  if(v.others.length){const more=el(doc,'details','cp-hub-more');more.appendChild(el(doc,'summary',null,'Autres propositions ('+v.others.length+')'));
   for(const j of v.others.slice(0,8))addCard(more,j,null);
   more.open=moreOpen;host.appendChild(more);}
