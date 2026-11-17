@@ -1231,7 +1231,9 @@ function render(host,v){
   const info=el(doc,'details','cp-hub-coach-status');
   const summary=coachRows.map(entry=>{
    const count=v.received?.[entry.name];
-   return entry.name.replace(' GTFS','')+' : '+(Number.isFinite(count)?count+' reçu(s)':v.errors?.[entry.name]?'erreur':v.skipped?.[entry.name]?'non interrogé':'non configuré');
+   return entry.name.replace(' GTFS','')+' : '+(v.errors?.[entry.name]?'erreur':
+    Number.isFinite(count)?count===0?'aucun horaire reçu':count+' horaire(s) reçu(s)':
+    'aucune réponse');
   }).join(' · ');
   info.appendChild(el(doc,'summary',null,summary));
   for(const entry of coachRows)info.appendChild(el(doc,'p','cp-hub-note',entry.name+' — '+entry.status));
