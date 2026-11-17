@@ -96,3 +96,15 @@ test('billet SNCF : gares exactes à coller, boutons copier (SNCF Connect sans l
  assert.match(src,/Copier la gare de départ/);assert.match(src,/Copier la gare d’arrivée/);
  assert.match(src,/ticketLink\(x\.provider\)\?\.label==='SNCF Connect'/);
 });
+
+test('point GPS approximatif : marche longue et détour ne font pas écarter le trajet',()=>{
+ const A={lat:45.9,lon:6.12},B={lat:46.0,lon:6.2};
+ const j={source:'t',sources:['t'],alerts:[],missing:[],legs:[
+  {kind:'walk',mode:'Marche',from:'a',to:'b',fromPoint:A,toPoint:A,departure:'2026-11-20T08:00:00Z',arrival:'2026-11-20T08:50:00Z',distanceMeters:4000,durationSeconds:3000},
+  {kind:'transit',mode:'Train',provider:'SNCF',from:'a',to:'b',fromPoint:A,toPoint:B,departure:'2026-11-20T09:00:00Z',arrival:'2026-11-20T10:00:00Z',durationSeconds:3600}],walkOnly:false};
+ const task=ap=>({from:A,to:B,latestArrival:'2026-11-20T11:00:00Z',marginMinutes:15,walkMaxMeters:3000,approximateEndpoint:ap});
+ const exact=H.assess(j,task(false),null),approx=H.assess(j,task(true),null);
+ assert.ok(exact.reasons.some(r=>r.startsWith('marche trop longue')));
+ assert.ok(!approx.reasons.some(r=>r.startsWith('marche trop longue')));
+ assert.ok(approx.reasons.some(r=>r.startsWith('marche longue à vérifier')));
+});

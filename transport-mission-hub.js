@@ -497,7 +497,9 @@ function assess(j,task,fareFor){
  // pas seulement aux trajets entièrement à pied. Une marche non calculée (distance inconnue) n'est pas écartée ici.
  const walkMax=Number.isFinite(task.walkMaxMeters)?task.walkMaxMeters:null;
  const longWalk=walkMax===null?null:legs.find(l=>l.kind==='walk'&&finite(l.distanceMeters)&&l.distanceMeters>walkMax);
- if(longWalk)reasons.push('marche trop longue ('+(longWalk.distanceMeters/1000).toFixed(1).replace('.',',')+' km, limite '+(walkMax/1000).toFixed(1).replace('.',',')+' km)');
+ // Point approximatif : la marche n'est pas écartée (distance peu fiable), elle reste signalée dans le trajet.
+ if(longWalk&&task.approximateEndpoint)reasons.push('marche longue à vérifier ('+(longWalk.distanceMeters/1000).toFixed(1).replace('.',',')+' km, point GPS approximatif)');
+ else if(longWalk)reasons.push('marche trop longue ('+(longWalk.distanceMeters/1000).toFixed(1).replace('.',',')+' km, limite '+(walkMax/1000).toFixed(1).replace('.',',')+' km)');
  const price=priceOf(j,fareFor);
  const delays=legs.filter(l=>finite(l.delayMinutes)&&l.delayMinutes>0).map(l=>(l.line||l.mode)+' +'+l.delayMinutes+' min');
  const feasible=reasons.length===0;
@@ -986,14 +988,16 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
  // diagnostic réel du 14/11/2026).
  function view(label){const s=state[label];
   const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>r.startsWith('arrivée trop tôt pour le créneau choisi')||r.startsWith('marche trop longue'))));
-  return {task:s.task,...rank(tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items,s.task),hidden:{tooEarly:tooEarly.length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0};}
+  return {task:s.task,...rank(tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items,s.task),hidden:{tooEarly:tooEarly.length,before:tooEarly.filter(j=>j.reasons.includes('départ avant la fin de la mission précédente')).length,early:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('arrivée trop tôt'))).length,longWalk:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('marche trop longue'))).length,night:tooEarly.filter(j=>j.reasons.includes('trajet hors plage de jour ou date de mission')).length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0};}
  async function add(label,source,journeys){
   const s=state[label];if(!s||disposed)return;
   s.received[source]=(s.received[source]||0)+(Array.isArray(journeys)?journeys.length:0);
   const cancelled=x=>x&&(x.cancelled===true||x.canceled===true||/^(cancelled|canceled|annul)/i.test(String(x.status||'')));
   const usable=(Array.isArray(journeys)?journeys:[]).filter(j=>j&&!cancelled(j)&&Array.isArray(j.legs)&&j.legs.length&&
    !j.legs.some(l=>cancelled(l)||BOATS.test(l.mode+' '+(l.line||''))));
-  const clean=usable.filter(j=>!walkDetour(j,s.task)&&!excessiveDetour(j,s.task));
+  // Point d'arrivée ou de départ approximatif (adresse trouvée seulement au niveau de la voie ou de la commune) : le test « marcher
+  // directement serait aussi court » n'est pas fiable (l'écart de plusieurs km vient de l'approximation), on garde le trajet.
+  const clean=usable.filter(j=>(s.task.approximateEndpoint||!walkDetour(j,s.task))&&!excessiveDetour(j,s.task));
   if(clean.length!==usable.length)s.discarded[source]=(s.discarded[source]||0)+usable.length-clean.length;
   // 1) Doublon d'un trajet déjà traité (autre moteur) : on ajoute la source, sans recalculer les marches.
   // 2) Trajet déjà hors délai sur ses seuls horaires : affiché « non confirmé » sans dépenser de marche.
@@ -1421,6 +1425,8 @@ function render(host,v){
  }
  const tads=tadFor(v.task);
  if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' non affiché'+(v.hidden.tooEarly>1?'s':'')+' : horaires incompatibles avec la mission (départ avant la fin de la mission précédente, arrivée trop tôt) ou marche plus longue que la limite réglée.'));
+ if(v.done&&v.hidden&&v.hidden.tooEarly){const h=v.hidden,parts=[];if(h.longWalk)parts.push(h.longWalk+' à cause d’une marche trop longue (réglage Paramètres)');if(h.before)parts.push(h.before+' partent avant la fin de la mission précédente');if(h.early)parts.push(h.early+' arrivent trop tôt');if(h.night)parts.push(h.night+' hors plage de jour');if(parts.length)host.appendChild(el(doc,'p','cp-hub-note','Détail : '+parts.join(' · ')+'.'));}
+ if(v.done&&v.discarded){const n=Object.values(v.discarded).reduce((x,y)=>x+y,0);if(n)host.appendChild(el(doc,'p','cp-hub-note',n+' proposition'+(n>1?'s':'')+' écartée'+(n>1?'s':'')+' (détour excessif ou marche plus directe).'));}
  if(v.done&&tads.length){const p=el(doc,'p','cp-hub-note','Transport à la demande possible dans ce secteur (non intégré au classement) : ');
   tads.forEach((t,i)=>{const a=el(doc,'a',null,t.name);a.href=t.url;a.target='_blank';a.rel='noopener noreferrer';p.appendChild(a);p.appendChild(doc.createTextNode(' — '+t.note+(i<tads.length-1?' · ':'.')));});
   host.appendChild(p);}
