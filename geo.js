@@ -191,9 +191,24 @@
     const e = (pays && l.find(z => String(z.country_code).toUpperCase() === pays)) || (!pays && l[0]) || null;
     return e ? { cle, trouve: true, point: { lat: e.latitude, lng: e.longitude, precision: 'ville' } } : { cle, trouve: false };
   }
+  // Vrai si le point (lat,lng) est (à 400 m près) le centre de la commune de la mission alors qu'une adresse de rue est indiquée.
+  function centreCommune(m, cote, lat, lng) {
+    const x = adresseDe(m, cote); if (!x.a || x.a.length < 4) return false;
+    const pre = cote === 'origin' ? 'from' : 'to', v = trouverVille(m[pre + '_city'] || (m[cote] && m[cote].city), departementMission(m, cote));
+    if (!v || !Number.isFinite(v.lat) || !Number.isFinite(v.lng)) return false;
+    const R = 6371, rad = z => z * Math.PI / 180, dLat = rad(lat - v.lat), dLng = rad(lng - v.lng);
+    const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(v.lat)) * Math.cos(rad(lat)) * Math.sin(dLng / 2) ** 2;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(h))) < 0.4;
+  }
   function coordonnees(m, cote) {
     const p = m[cote]; const pre = cote === 'origin' ? 'from' : 'to';
-    if (p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && p.lat !== null && p.lng !== null && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180 && !(Number(p.lat) === 0 && Number(p.lng) === 0)) return { lat: Number(p.lat), lng: Number(p.lng), precision: 'gps' };
+    if (p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && p.lat !== null && p.lng !== null && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180 && !(Number(p.lat) === 0 && Number(p.lng) === 0)) {
+      // GPS fourni par la plateforme mais qui n'est que le centre de la commune (adresse de rue connue ailleurs dans la commune) :
+      // un point d'adresse trouvé par le service officiel est alors préféré.
+      const cache = POINTS[cleAdresse(m, cote)];
+      if (cache && (cache.precision === 'adresse' || cache.precision === 'rue') && centreCommune(m, cote, Number(p.lat), Number(p.lng))) return { lat: cache.lat, lng: cache.lng, precision: cache.precision };
+      return { lat: Number(p.lat), lng: Number(p.lng), precision: 'gps' };
+    }
     const pt = POINTS[cleAdresse(m, cote)]; if (pt) return { lat: pt.lat, lng: pt.lng, precision: pt.precision };
     const dep = departementMission(m, cote);
     const v = trouverVille(m[pre + '_city'] || (p && p.city), dep); if (v) return { lat: v.lat, lng: v.lng, precision: 'ville' };
@@ -277,7 +292,7 @@
     if (z.type === 'region') return REGIONS[z.code] || z.code;
     return z.nom + (z.dep ? ' (' + z.dep + ')' : '');
   }
-  const api = { POINTS, cleAdresse, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone, chargerVillesFrontalieres };
+  const api = { POINTS, cleAdresse, centreCommune, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone, chargerVillesFrontalieres };
   root.CPGeo = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

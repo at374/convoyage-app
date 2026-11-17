@@ -2393,7 +2393,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             if(!mm)return false;const c=G.coordonnees(mm,cote);
             // Adresse de rue connue mais seul le centre de la commune est disponible (ex. « 25 route de la Salle, Annecy ») : chercher le vrai point.
             const rue=String(mm[cote+'_address']||(mm[cote]&&(mm[cote].address||mm[cote].street))||'').trim();
-            return !c||c.precision==='departement'||(c.precision==='ville'&&rue.length>3&&!!G.cleAdresse(mm,cote)&&!G.POINTS[G.cleAdresse(mm,cote)]);});
+            const cle=G.cleAdresse(mm,cote),cache=G.POINTS[cle];
+            const centre=c&&c.precision==='gps'&&G.centreCommune&&G.centreCommune(mm,cote,Number(c.lat),Number(c.lng));
+            return !c||c.precision==='departement'||(rue.length>3&&!!cle&&(!cache||cache.precision==='ville')&&(c.precision==='ville'||centre));});
           if(manque.length){
             panel.cpGeoTried=true;
             const note=document.createElement('p');note.className='doux cp-transport-geo';note.setAttribute('role','status');

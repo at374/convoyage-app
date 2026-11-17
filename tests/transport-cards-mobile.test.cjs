@@ -150,5 +150,17 @@ test('fluidité : mises à jour regroupées et sections cachées non dessinées'
 });
 
 test('adresse de rue : le point exact est cherché même quand la commune est connue (centre-ville)',()=>{
- assert.match(app,/c\.precision==='ville'&&rue\.length>3&&!!G\.cleAdresse\(mm,cote\)&&!G\.POINTS\[G\.cleAdresse\(mm,cote\)\]/);
+ assert.match(app,/rue\.length>3&&!!cle&&\(!cache\|\|cache\.precision==='ville'\)&&\(c\.precision==='ville'\|\|centre\)/);
+});
+
+test('GPS plateforme = centre de commune : le point d’adresse officiel est préféré',()=>{
+ const G=require('../geo.js');
+ const m={origin_address:'25 route de la salle, 74960 Annecy, France',from_city:'Annecy',from_department:'74',origin:{lat:45.8992,lng:6.1294}};
+ const v=G.trouverVille('Annecy','74');
+ const centre=G.centreCommune({...m,origin:{lat:v.lat,lng:v.lng}},'origin',v.lat,v.lng);
+ assert.equal(centre,true);
+ G.POINTS[G.cleAdresse(m,'origin')]={lat:45.899618,lng:6.08768,precision:'adresse'};
+ const c=G.coordonnees({...m,origin:{lat:v.lat,lng:v.lng}},'origin');
+ assert.equal(c.precision,'adresse');assert.ok(Math.abs(c.lng-6.08768)<1e-6);
+ delete G.POINTS[G.cleAdresse(m,'origin')];
 });
