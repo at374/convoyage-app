@@ -79,8 +79,8 @@ test('missions multi-jours : onglets date pickup/livraison et aucun jour invent�
 
 test('onglets des dates : libellés accessibles identifiant prise en charge, retour et jonction',()=>{
  assert.match(app,/const stages=Object\.entries\(transportDays\)/);
- assert.match(app,/direction==='Aller'\?'Prise en charge'/);
- assert.match(app,/direction==='Retour'\?'Retour après livraison':'Jonction'/);
+ assert.match(app,/direction\.startsWith\('Aller'\)\?'Prise en charge'/);
+ assert.match(app,/direction\.startsWith\('Retour'\)\?'Retour après livraison':'Jonction'/);
  assert.match(app,/button\.setAttribute\('aria-label','Afficher les transports du '/);
 });
 
@@ -121,4 +121,12 @@ test('autres propositions : annoncer le nombre de cartes réellement rendues',()
  assert.match(hub,/Math\.min\(v\.others\.length,8\)/);
  assert.match(hub,/v\.others\.length>8\?' sur '/);
  assert.match(hub,/v\.others\.slice\(0,8\)/);
+});
+
+test('mission sur plusieurs jours : un onglet par jour avec Aller et Retour cherchés ce jour-là',()=>{
+ assert.match(app,/transportDays\['Aller@'\+d\]=d/);
+ assert.match(app,/transportDays\['Retour@'\+d\]=d/);
+ assert.match(app,/label:first\?'Aller':'Aller@'\+d/);
+ assert.match(app,/const startIso=first\?pickupDate:parisIso\(d,8,0\)/);
+ assert.match(app,/const parisIso=\(day,hh,mm\)=>/);
 });
