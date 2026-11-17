@@ -508,6 +508,7 @@ function signature(j){
   String(l.provider||'').replace(/\s+/g,'').toLowerCase(),
   String(l.line||'').replace(/\s+/g,'').toLowerCase(),
   String(l.from||'').trim().toLowerCase(),String(l.to||'').trim().toLowerCase(),
+  l.fromPoint?.lat,l.fromPoint?.lon,l.toPoint?.lat,l.toPoint?.lon,
   Math.round(ms(l.departure)/60000),Math.round(ms(l.arrival)/60000)
  ].join('|')).join(';');
 }
