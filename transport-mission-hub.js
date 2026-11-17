@@ -1239,6 +1239,24 @@ function card(doc,j,labels,expanded=false){
   if(bodyBuilt)return;
   bodyBuilt=true;
   const body=el(doc,'div','cp-hub-body');
+  // Aide à la recherche de billet, juste sous le lien SNCF Connect (qui n'accepte pas de lien pré-rempli) :
+  // noms exacts des gares à coller. Gare de départ = début du premier trajet SNCF, arrivée = fin du dernier.
+  const sncfLegs=j.legs.filter((x,k)=>x.kind!=='walk'&&x.kind!=='scooter'&&!(j.price.legFares&&j.price.legFares[k])&&ticketLink(x.provider)?.label==='SNCF Connect'&&x.from&&x.to);
+  if(sncfLegs.length&&j.price.status==='unknown'){
+   const from=sncfLegs[0].from,to=sncfLegs[sncfLegs.length-1].to;
+   const box=el(doc,'div','cp-hub-search-help');
+   box.appendChild(el(doc,'strong',null,'🎟️ Chercher le prix sur SNCF Connect'));
+   box.appendChild(el(doc,'small',null,'Départ « '+from+' » · arrivée « '+to+' » · '+dayText(sncfLegs[0].departure)+' vers '+clock(sncfLegs[0].departure)+'.'));
+   for(const [label,text] of [['📋 Copier la gare de départ',from],['📋 Copier la gare d’arrivée',to]]){
+    const b=el(doc,'button','cp-hub-copy',label);b.type='button';
+    b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();
+     try{const w=doc.defaultView,n=w&&w.navigator;
+      if(n&&n.clipboard&&n.clipboard.writeText)n.clipboard.writeText(text).then(()=>{b.textContent='✅ Copié';},()=>{b.textContent='Copie impossible';});
+      else{const t=doc.createElement('textarea');t.value=text;doc.body.appendChild(t);t.select();doc.execCommand('copy');t.remove();b.textContent='✅ Copié';}
+     }catch(_){b.textContent='Copie impossible';}});
+    box.appendChild(b);}
+   body.appendChild(box);
+  }
   const ol=el(doc,'ol','cp-hub-legs');
  for(const [legIndex,l] of j.legs.entries()){
   const li=el(doc,'li',l.kind==='walk'?'walk':'ride');
@@ -1282,20 +1300,6 @@ function card(doc,j,labels,expanded=false){
    }
   }
   else{const f=j.price.legFares?.[legIndex]||null;li.appendChild(el(doc,'small',null,f?'Tarif : '+f.amount.toFixed(2).replace('.',',')+(f.currency==='EUR'?' €':' CHF')+' · '+f.source:'Tarif : à confirmer'));
-   // Aide à la recherche de billet : SNCF Connect n'accepte pas de lien pré-rempli, on donne les noms exacts à coller.
-   if(!f&&ticketLink(l.provider)?.label==='SNCF Connect'&&l.from&&l.to){
-    const box=el(doc,'div','cp-hub-search-help');
-    box.appendChild(el(doc,'small',null,'Pour chercher le prix sur SNCF Connect : départ « '+l.from+' », arrivée « '+l.to+' », le '+dayText(l.departure)+' vers '+clock(l.departure)+'.'));
-    for(const [label,text] of [['📋 Copier la gare de départ',l.from],['📋 Copier la gare d’arrivée',l.to]]){
-     const b=el(doc,'button','cp-hub-copy',label);b.type='button';
-     b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();
-      try{const w=doc.defaultView,n=w&&w.navigator;
-       if(n&&n.clipboard&&n.clipboard.writeText)n.clipboard.writeText(text).then(()=>{b.textContent='✅ Copié';},()=>{b.textContent='Copie impossible';});
-       else{const t=doc.createElement('textarea');t.value=text;doc.body.appendChild(t);t.select();doc.execCommand('copy');t.remove();b.textContent='✅ Copié';}
-      }catch(_){b.textContent='Copie impossible';}});
-     box.appendChild(b);}
-    li.appendChild(box);
-   }
    // Le carnet rechargeable Ondéa est utilisable sur les lignes 400–419, contrairement au M-ticket.
    // Ne pas présenter son prix d'achat comme le coût d'un trajet unique.
    if(!f&&/^ond[ée]a\b/i.test(String(l.provider||''))&&/^(?:40\d|41\d)$/.test(String(l.line||'').trim()))
