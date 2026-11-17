@@ -554,7 +554,16 @@ function rank(items,task={}){
  // « Moins cher » ne doit jamais recommander un trajet impossible, même si son prix est connu.
  const priced=all.filter(j=>(j.feasible||j.scheduled)&&
   (j.price.status==='verified'||j.price.status==='free'));
- const cheapest=[...priced].sort((a,b)=>byFeasible(a,b)||priceSortKey(a.price)-priceSortKey(b.price)||confirmedFirst(a,b)||a.durationMinutes-b.durationMinutes)[0];
+ // Ne jamais comparer des montants EUR et CHF sans taux de change fiable.
+ // Un trajet gratuit est comparable à toutes les devises ; sinon, « Moins cher »
+ // n'est affiché que si les offres payantes ont la même devise unique.
+ const currencies=[...new Set(priced.filter(j=>j.price.status!=='free').flatMap(j=>
+  Object.keys(j.price.amounts||{}).filter(c=>j.price.amounts[c]>0)))];
+ const comparable=currencies.length<=1&&priced.every(j=>j.price.status==='free'||
+  Object.keys(j.price.amounts||{}).filter(c=>j.price.amounts[c]>0).length<=1);
+ const cheapest=comparable?[...priced].sort((a,b)=>byFeasible(a,b)||
+  priceSortKey(a.price)-priceSortKey(b.price)||confirmedFirst(a,b)||
+  a.durationMinutes-b.durationMinutes)[0]:undefined;
  const score=j=>(Number.isFinite(priceSortKey(j.price))?Math.min(priceSortKey(j.price),200):60)+j.durationMinutes/3+j.transfers*8+j.walkMeters/250+
   (j.slackMinutes===null?0:Math.max(0,30-j.slackMinutes));
  const compromise=[...all].sort((a,b)=>byFeasible(a,b)||relevant(a,b)||score(a)-score(b)||confirmedFirst(a,b))[0];
