@@ -672,3 +672,16 @@ test('plus rapide : ordre stable avec des prix EUR CHF mélangés',()=>{
  // À durée et marche égales, le prix ne sert plus de départage :
  // le résultat reste la première proposition, sans conversion implicite.
 });
+
+test('marche fournie par un moteur : deux itinéraires sans walkOnly restent distincts',()=>{
+ const task={latestArrival:at(9,0)};
+ const make=(line,fromPoint)=>H.assess({source:line,sources:[line],missing:[],
+  legs:[{kind:'walk',mode:'Marche',from:'Départ',to:'Arrivée',
+   fromPoint,toPoint:STOP2,departure:at(8,0),arrival:at(8,30),
+   distanceMeters:1800,durationSeconds:1800}]},task);
+ const first=make('Moteur A',STOP1);
+ const second=make('Moteur B',{lat:STOP1.lat+0.001,lon:STOP1.lon});
+ assert.equal(first.walkOnly,undefined);
+ assert.equal(second.walkOnly,undefined);
+ assert.equal(H.rank([first,second],task).total,2);
+});
