@@ -1331,8 +1331,9 @@ function card(doc,j,labels,expanded=false){
   const body=el(doc,'div','cp-hub-body');
   // Aide à la recherche de billet, juste sous le lien SNCF Connect (qui n'accepte pas de lien pré-rempli) :
   // noms exacts des gares à coller. Gare de départ = début du premier trajet SNCF, arrivée = fin du dernier.
-  // Même aide pour Cars Région (pas de lien pré-rempli non plus) : noms des arrêts à coller dans le site qui s'ouvre.
-  for(const netLabel of ['SNCF Connect','Cars Région']){
+  // Même aide pour tout réseau dont le billet s'achète sur un site (SNCF Connect, Cars Région, FlixBus, BlaBlaCar Bus…) : noms des arrêts à coller dans le site qui s'ouvre.
+  const helpLabels=[...new Set(j.legs.filter((x,k)=>x.kind!=='walk'&&x.kind!=='scooter'&&!(j.price.legFares&&j.price.legFares[k])&&x.from&&x.to).map(x=>ticketLink(x.provider)?.label).filter(Boolean))];
+  for(const netLabel of helpLabels){
    const netLegs=j.legs.filter((x,k)=>x.kind!=='walk'&&x.kind!=='scooter'&&!(j.price.legFares&&j.price.legFares[k])&&ticketLink(x.provider)?.label===netLabel&&x.from&&x.to);
    if(!netLegs.length||j.price.status!=='unknown')continue;
    const from=netLegs[0].from,to=netLegs[netLegs.length-1].to;
