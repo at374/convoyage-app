@@ -934,7 +934,13 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
    if(i>=0)s.items[i]=a;else s.items.push(a);if(t.key)s.bySignature.set(t.key,a);};
   const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,router).then(x=>{
    if(disposed)return;replace(t,assess(x,s.task,fareFor));emit(label);
-  }).catch(()=>{})));
+  }).catch(()=>{
+   // Ne pas laisser une carte bloquée sur « marches en cours de calcul »
+   // lorsqu'un fournisseur piéton échoue ou dépasse son délai.
+   if(disposed)return;
+   replace(t,assess({...t.j,missing:[...(t.j.missing||[]),'marche non calculée (erreur du moteur piéton)']},s.task,fareFor));
+   emit(label);
+  })));
   // Quota compté en couples de points réellement à calculer, pas en trajets : les départs successifs d'une même
   // ligne partagent leurs arrêts, donc leurs marches (cache). Avant le 14/11/2026 seuls 8 à 16 trajets par moteur
   // recevaient leurs marches, même quand tous utilisaient les deux mêmes arrêts (diagnostic réel : 53,7 % des
