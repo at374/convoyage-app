@@ -69,3 +69,14 @@ Rapport publié automatiquement : `docs/otp2-reel/RAPPORT-OTP2-REEL.md` (+ `rapp
   les résultats OTP2 (les autres moteurs restent affichés).
 - À faire : fusion sur `main` uniquement avec l'accord de Laurent ; reconstruction + redéploiement du graphe avant le 26/12/2026
   (fenêtre d'horaires J+40) ; essai dans le navigateur ; doublon ligne 272.
+
+## Signalement du 17/11/2026 (10 h 38) — bouton « Visualisation des transports » sans réaction
+
+Laurent signale que rien ne se passe au clic sur « 🚌 Visualisation des transports » (fiche mission, `#btnTransportsMission`, `app.js` ~l.1846).
+
+Vérifié par Claude :
+- Le site en ligne est à jour : `CP_OTP_ENDPOINT` présent, `CPOTPClient.buildQuery` défini, `app.js?v=hub-20261116b` chargé, aucune erreur JavaScript de l'application au chargement.
+- `node --check app.js` : syntaxe correcte. Le gestionnaire `bt.onclick` insère d'abord le panneau « Chargement des informations de transport… » puis lance le Hub dans un `try`.
+- Non reproduit : l'écran de connexion bloque l'accès aux missions (aucun identifiant à saisir par Claude). Cause non identifiée.
+
+À faire en priorité (avant toute autre chose) : ouvrir une mission réelle, cliquer sur le bouton avec la console ouverte, relever l'erreur. Pistes : exception avant `insertAdjacentElement` ; panneau créé mais masqué par le `MutationObserver` (`$('feuille').hidden`) ; ancien cache du service worker (`sw.js`, cache v57) ; régression venue de la fusion `main` (affichage V277 en ligne alors que `main` contient V278/V279 — à vérifier). Si le défaut vient du moteur OTP2, il suffit de retirer la ligne `window.CP_OTP_ENDPOINT` d'`index.html` pour le désactiver.
