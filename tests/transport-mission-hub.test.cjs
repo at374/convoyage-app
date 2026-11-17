@@ -521,3 +521,11 @@ test('doublons : la signature distingue les compagnies de cars',()=>{
  assert.match(signature,/String\(l\.provider\|\|''\)/);
  assert.match(signature,/String\(l\.line\|\|''\)/);
 });
+
+test('doublons : les arrêts de montée et descente font partie de la signature',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const signature=source.slice(source.indexOf('function signature('),source.indexOf('function rank('));
+ assert.match(signature,/String\(l\.from\|\|''\)\.trim\(\)\.toLowerCase\(\)/);
+ assert.match(signature,/String\(l\.to\|\|''\)\.trim\(\)\.toLowerCase\(\)/);
+});
