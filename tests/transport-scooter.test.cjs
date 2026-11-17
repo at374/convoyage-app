@@ -153,3 +153,9 @@ test('guidage vocal : bouton Google Maps (départ/arrivée remplis) sur marches 
  assert.match(src,/navLink\(doc,sa,sb,'bicycling'\)/);
  assert.match(src,/navLink\(doc,wa,wb,'walking'\)/);
 });
+
+test('limite de marche : si tout est écarté, les trajets à marche trop longue sont montrés avec un avertissement',()=>{
+ const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.match(src,/const isLongOnly=j=>/);
+ assert.match(src,/Aucune proposition ne respecte votre limite de marche/);
+});

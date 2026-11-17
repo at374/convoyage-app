@@ -1059,7 +1059,13 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
  // diagnostic réel du 14/11/2026).
  function view(label){const s=state[label];
   const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>r.startsWith('arrivée trop tôt pour le créneau choisi')||r.startsWith('marche trop longue'))));
-  return {task:s.task,...rank(tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items,s.task),hidden:{tooEarly:tooEarly.length,before:tooEarly.filter(j=>j.reasons.includes('départ avant la fin de la mission précédente')).length,early:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('arrivée trop tôt'))).length,longWalk:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('marche trop longue'))).length,night:tooEarly.filter(j=>j.reasons.includes('trajet hors plage de jour ou date de mission')).length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0,
+  // Si la limite de marche (Paramètres) écarte TOUTES les propositions, on les montre quand même, clairement marquées « marche supérieure à la limite »,
+  // plutôt qu'« Aucun trajet trouvé » : seul un trajet dont la marche est la seule objection est repris.
+  const isLongOnly=j=>!j.computing&&j.reasons.some(r=>r.startsWith('marche trop longue'))&&!j.reasons.includes('départ avant la fin de la mission précédente')&&!j.reasons.includes('trajet hors plage de jour ou date de mission')&&!j.reasons.some(r=>r.startsWith('arrivée trop tôt pour le créneau choisi'));
+  let shown=tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items;
+  let longShown=0;
+  if(!shown.some(j=>!j.computing)&&s.pending===0){const back=tooEarly.filter(isLongOnly);if(back.length){shown=shown.concat(back);longShown=back.length;}}
+  return {task:s.task,longShown,...rank(shown,s.task),hidden:{tooEarly:tooEarly.length-longShown,before:tooEarly.filter(j=>j.reasons.includes('départ avant la fin de la mission précédente')).length,early:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('arrivée trop tôt'))).length,longWalk:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('marche trop longue'))).length-longShown,night:tooEarly.filter(j=>j.reasons.includes('trajet hors plage de jour ou date de mission')).length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0,
   diag:(()=>{const c={};let noTimes=0;for(const j of s.items){if(j.durationMinutes===null||j.durationMinutes===undefined)noTimes++;for(const r of [...(j.reasons||[]),...(j.missing||[])]){const k=String(r).replace(/\d+/g,'N').slice(0,90);c[k]=(c[k]||0)+1;}}
    return {evaluated:s.items.length,noTimes,reasons:Object.entries(c).sort((x,y)=>y[1]-x[1]).slice(0,5)};})()};}
  async function add(label,source,journeys){
@@ -1447,6 +1453,7 @@ function render(host,v){
  host.textContent='';host.setAttribute('data-transport-hub',VERSION);
  const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):'Aucun trajet trouvé'):'Recherche en cours… ('+v.total+' trouvée'+(v.total>1?'s':'')+')');
  host.appendChild(head);
+ if(v.longShown)host.appendChild(el(doc,'p','cp-hub-note','⚠️ Aucune proposition ne respecte votre limite de marche (Paramètres) : les trajets ci-dessous demandent une marche plus longue que ce réglage. Vérifiez chaque marche avant de partir.'));
  const addCard=(parent,j,labels,expandFirst=false)=>{
   const key=signature(j)||(j.walkOnly?'walk|'+Math.round(ms(j.departure)/60000)+'|'+Math.round(ms(j.arrival)/60000)+'|'+Math.round(j.durationMinutes||0):'');
   // Construire immédiatement les détails si cette carte était déjà ouverte :
