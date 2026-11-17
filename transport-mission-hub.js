@@ -445,6 +445,10 @@ function assess(j,task,fareFor){
  const slack=Number.isFinite(deadline)&&Number.isFinite(arr)?Math.floor((deadline-arr)/60000):null;
  if(Number.isFinite(earliest)&&Number.isFinite(dep)&&dep<earliest-60000)reasons.push('départ avant la fin de la mission précédente');
  if(slack!==null&&slack<margin)reasons.push(slack<0?'arrivée après l’heure de mission':'marge insuffisante ('+slack+' min, '+margin+' min requises)');
+ // Ne pas proposer un train arrivant des heures trop tôt comme solution à une prise en charge.
+ // La fenêtre peut être élargie explicitement par un futur scénario horaire multi-jours.
+ const maxEarly=Number.isFinite(task.maxEarlyArrivalMinutes)?task.maxEarlyArrivalMinutes:180;
+ if(slack!==null&&slack>maxEarly)reasons.push('arrivée trop tôt pour le créneau choisi ('+slack+' min d’avance)');
  const price=priceOf(j,fareFor);
  const delays=legs.filter(l=>finite(l.delayMinutes)&&l.delayMinutes>0).map(l=>(l.line||l.mode)+' +'+l.delayMinutes+' min');
  const feasible=reasons.length===0;
@@ -861,7 +865,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
  // pas « non confirmé » : il n'est plus affiché, seul son nombre est indiqué (178 cartes inutiles sur 1 013 au
  // diagnostic réel du 14/11/2026).
  function view(label){const s=state[label];
-  const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('trajet hors plage de jour ou date de mission')));
+  const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>r.startsWith('arrivée trop tôt pour le créneau choisi'))));
   return {task:s.task,...rank(tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items,s.task),hidden:{tooEarly:tooEarly.length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0};}
  async function add(label,source,journeys){
   const s=state[label];if(!s||disposed)return;
