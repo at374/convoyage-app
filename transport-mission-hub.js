@@ -513,7 +513,14 @@ function signature(j){
 }
 function rank(items,task={}){
  const seen=new Map();
- for(const j of items){if(!j||j.durationMinutes===null)continue;const k=j.walkOnly?'walk':signature(j);
+ for(const j of items){if(!j||j.durationMinutes===null)continue;
+  // Ne pas fusionner toutes les marches sous une clé unique : les points
+  // d'accès et les créneaux peuvent différer d'une proposition à l'autre.
+  const k=j.walkOnly?[
+   'walk',String(j.legs?.[0]?.from||'').trim().toLowerCase(),
+   String(j.legs?.[j.legs.length-1]?.to||'').trim().toLowerCase(),
+   Math.round(ms(j.departure)/60000),Math.round(ms(j.arrival)/60000)
+  ].join('|'):signature(j);
   const old=seen.get(k);
   if(!old){seen.set(k,j);continue;}
   // Fusion : garder la version la plus complète (marches, prix, temps réel) et cumuler les sources.
