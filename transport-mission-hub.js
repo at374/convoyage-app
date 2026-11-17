@@ -1211,6 +1211,13 @@ function card(doc,j,labels,expanded=false){
   li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+Math.max(1,Math.round(l.durationSeconds/60))+' min':''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':''].filter(Boolean).join(' '))));
   li.appendChild(el(doc,'div',null,clock(l.departure)+' '+(l.from||'?')+' → '+clock(l.arrival)+' '+(l.to||'?')+(l.delayMinutes?' · retard annoncé +'+l.delayMinutes+' min':'')));
   if(l.kind==='walk')li.appendChild(el(doc,'small',null,l.walkSource==='valhalla'?'Itinéraire piéton calculé (OpenStreetMap)':'Marche calculée par '+j.source));
+  if(l.kind==='walk'){
+   // Carte dédiée à cette marche, zoomée sur le trajet à pied (la carte d'ensemble est trop large pour voir les marches).
+   const wm=mapSvg(doc,{legs:[l]});
+   if(wm){wm.setAttribute('class','cp-hub-map cp-hub-walk-map');
+    wm.setAttribute('aria-label','Carte de la marche '+(l.from||'départ')+' vers '+(l.to||'arrivée')+' (OpenStreetMap)');
+    li.appendChild(wm);}
+  }
   if(l.kind==='walk'&&Array.isArray(l.steps)&&l.steps.length){
    // Guidage pas à pas fourni par le service piéton OpenStreetMap (jamais reconstruit ni inventé).
    const guide=el(doc,'details','cp-hub-steps');guide.open=true;
