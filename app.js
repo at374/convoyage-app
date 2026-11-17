@@ -2314,6 +2314,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           note.textContent='⛔ Non encore disponible dans la base de données : ce trajet sort de la zone couverte (Auvergne-Rhône-Alpes et Suisse). Aucun horaire ni prix n’a été calculé : vérifie par toi-même.';
           path.insertAdjacentElement('afterend',note);}
       }
+      // Ordre d'affichage : Aller, Jonction, Retour (les sections de jours supplémentaires ne passent plus en dessous).
+      {const rank=k=>k.startsWith('Aller')?0:k.startsWith('Jonction')?1:2;
+        Object.keys(transportDestinations).sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b)).forEach(k=>panel.appendChild(transportDestinations[k]));}
       const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
       let updateDayTabs=()=>{};const labelState={};
       if(availableTransportDays.length>1){
@@ -2494,6 +2497,14 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         if(!panel.isConnected||panel.hidden||$('feuille').hidden){transportHub?.dispose();transportHub=null;hubObserver.disconnect();}
       }):null;
       hubObserver?.observe($('feuille'),{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
+      // Réveil du serveur OTP2 (démarrage à froid) dès l'ouverture des transports : une requête légère, au plus une fois toutes les 5 min.
+      try{
+        const ep=window.CP_OTP_ENDPOINT,now=Date.now();
+        if(typeof ep==='string'&&/^https:\/\//i.test(ep)&&now-(window.__cpOtpWarm||0)>300000){
+          window.__cpOtpWarm=now;
+          fetch(ep,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:'{__typename}'})}).catch(()=>{});
+        }
+      }catch(_){}
       bt.cpRefreshHub=startTransportHub;
       startTransportHub();
       const renderLocalCards=({task,itineraries,candidates})=>{

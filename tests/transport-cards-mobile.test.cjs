@@ -130,3 +130,10 @@ test('mission sur plusieurs jours : un onglet par jour avec Aller et Retour cher
  assert.match(app,/const startIso=first\?pickupDate:parisIso\(d,8,0\)/);
  assert.match(app,/const parisIso=\(day,hh,mm\)=>/);
 });
+
+test('OTP2 : deuxième essai après délai dépassé et ordre des sections Aller/Jonction/Retour',()=>{
+ assert.match(hub,/response=await go\(Math\.min\(60000/);
+ assert.match(hub,/const limitMs=Number\.isFinite\(p\.timeoutMs\)/);
+ assert.match(app,/Ordre d'affichage : Aller, Jonction, Retour/);
+ assert.match(app,/window\.__cpOtpWarm/);
+});

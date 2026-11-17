@@ -903,13 +903,21 @@ function makeProviders(r,opts={}){
    const w=queryWindow(task),request=opts.otpQuery(task,w);
    if(!request||typeof request.query!=='string'||!request.query.trim())return [];
    if(signal?.aborted)return [];
-   const response=await r.CPOTPClient.search({
+   const go=t=>r.CPOTPClient.search({
     enabled:true,endpoint:opts.otpEndpoint,query:request.query,
-    variables:request.variables||{},fetch:fetcher,timeoutMs:opts.otpTimeoutMs,signal
+    variables:request.variables||{},fetch:fetcher,timeoutMs:t,signal
    });
+   let response;
+   try{response=await go(opts.otpTimeoutMs);}
+   catch(e){
+    // Démarrage à froid du serveur : la première requête le réveille, une seconde tentative aboutit souvent.
+    if(signal?.aborted||!/délai dépassé/.test(String(e&&e.message||e)))throw e;
+    response=await go(Math.min(60000,(Number(opts.otpTimeoutMs)||30000)+5000));
+   }
    if(signal?.aborted)return [];
    return response.journeys;
-  }
+  },
+  timeoutMs:(Number(opts.otpTimeoutMs)||30000)*2+10000
  };
  if(r.CPTripGo&&typeof r.CPTripGo.plan==='function')P.tripgo={name:'TripGo',enabled:()=>{try{return opts.allowTripGo===true&&!!r.CPTripGo.getKey();}catch(_){return false;}},
   disabledReason:'TripGo désactivé : accès API entreprise requis ; non disponible pour Convoyage Ultra sans autorisation contractuelle',
@@ -1152,7 +1160,8 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    if(!ok){state[label].skipped[p.name]=p.disabledReason||'non applicable';continue;}
    state[label].pending++;
    // Délai borné par moteur (idée reprise du module ChatGPT transport_mission_search.js).
-   const bounded=new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(new Error('délai fournisseur dépassé ('+Math.round(timeoutMs/1000)+' s)')),timeoutMs);
+   const limitMs=Number.isFinite(p.timeoutMs)&&p.timeoutMs>timeoutMs?p.timeoutMs:timeoutMs;
+   const bounded=new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(new Error('délai fournisseur dépassé ('+Math.round(limitMs/1000)+' s)')),limitMs);
     Promise.resolve().then(()=>p.run(task,controller.signal)).then(v=>{clearTimeout(t);resolve(v);},e=>{clearTimeout(t);reject(e);});});
    bounded.then(js=>add(label,p.name,js)).catch(e=>{
     if(!disposed)state[label].errors[p.name]=String(e&&e.message||e).slice(0,140);
