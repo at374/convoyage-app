@@ -1133,12 +1133,14 @@ function render(host,v){
  const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):'Aucun trajet trouvé'):'Recherche en cours… ('+v.total+' trouvée'+(v.total>1?'s':'')+')');
  host.appendChild(head);
  const addCard=(parent,j,labels,expandFirst=false)=>{
-  const node=card(doc,j,labels,expandFirst);
+  const key=signature(j)||(j.walkOnly?'walk|'+Math.round(ms(j.departure)/60000)+'|'+Math.round(ms(j.arrival)/60000)+'|'+Math.round(j.durationMinutes||0):'');
+  // Construire immédiatement les détails si cette carte était déjà ouverte :
+  // poser node.open après card() ne construit pas toujours le corps au rendu.
+  const node=card(doc,j,labels,expandFirst||(key&&opened.has(key)));
   // La première proposition est ouverte, les suivantes restent paresseuses.
   // Une marche seule n'a pas de ligne de transport : sa signature classique est vide.
   // Identifier aussi ces trajets pour ne pas refermer leur carte à chaque résultat réseau.
-  const key=signature(j)||(j.walkOnly?'walk|'+Math.round(ms(j.departure)/60000)+'|'+Math.round(ms(j.arrival)/60000)+'|'+Math.round(j.durationMinutes||0):'');
-  if(key){node.setAttribute('data-journey-key',key);if(opened.has(key))node.open=true;}
+  if(key)node.setAttribute('data-journey-key',key);
   parent.appendChild(node);
  };
  // Ouvrir automatiquement la première carte une seule fois par fiche.
