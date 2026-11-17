@@ -2092,54 +2092,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         'Des arrêts supplémentaires Y21/Y22 sont précisés dans le règlement. Ne pas étendre cette couverture à toute la ligne. ' +
         '<a href="https://www.sibra.fr/voyages-reguliers/" target="_blank" rel="noopener noreferrer">Périmètre et abonnements</a>. ' +
         'Renseignez les dates de votre abonnement ci-dessous. Sur Y51, seules les portions reconnues d’Annecy à Duingt Église peuvent être incluses ; les autres portions régionales restent à vérifier.</p></details>' +
-        '<div><strong>1. Aller au départ de mission</strong><div>' +
-        esc(home || 'Domicile non renseigné') + ' → ' + esc(from || 'Départ non renseigné') +
-        '</div><div class="doux">Prise en charge : ' + esc(formatParis(pickupDate)) +
-        ' · minimum : 15 min avant prise en charge, marche finale comprise ; 5 min seulement avec GPS exact fiable ; préférence : 30 à 45 min.</div>' +
-        directions(home, from, transportPickup) + '</div>' +
-        '<div style="margin-top:12px"><strong>2. Jonction vers la prochaine mission</strong><div>' +
-        (next ? esc((to || 'Livraison non renseignée') + ' → ' +
-          (nextOrigin || 'Départ suivant non renseigné')) +
-          '</div><div class="doux">Livraison prévue : ' +
-          esc(formatParis(transportDelivery || m.delivery_start)) +
-          ' · prochaine prise en charge : ' + esc(formatParis(next.pickup_start)) +
-          ' · intervalle brut : ' + esc(String(nextGapMin)) +
-          ' min (avant marge et trajet d’approche).</div>' +
-          '<div class="doux">' + esc(connectionStatus) + '</div>' +
-          directions(to, nextOrigin, next.pickup_start) :
-          '</div><span class="doux">Aucune prochaine mission prévue.</span>') + '</div>' +
-        '<div style="margin-top:12px"><strong>3. Retour au domicile</strong><div>' +
-        esc(to || 'Livraison non renseignée') + ' → ' +
-        esc(home || 'Domicile non renseigné') + '</div>' +
-        '<div class="doux">' + (transportPlannedReturn ? 'Livraison prévue pour ce calcul : ' : 'Livraison estimée pour ce calcul (à confirmer) : ') + esc(formatParis(deliveryDate)) +
-        ' · prévoir la marche jusqu’à l’arrêt.</div>' +
-        directions(to, home, transportDelivery || m.delivery_start) +
-        (/albertville/i.test(String(to || '')) ?
-          '<div class="doux" style="margin-top:8px">🚌 Retour Y51 Albertville → Annecy : ' +
-          '<a href="https://annecy.transdev.com/line/ligne-y51/" target="_blank" rel="noopener noreferrer">horaires officiels 2026–2027</a> · ' +
-          '<a href="https://annecy.transdev.com/trafic/" target="_blank" rel="noopener noreferrer">perturbations et mises à jour Transdev</a> · ' +
-          '<a href="https://hawk.hanoverdisplays.com/y51/public/" target="_blank" rel="noopener noreferrer">suivi des départs</a> · ' +
-          '<a href="https://transports.s33d.fr/arret/ecole-saint-francois-73011" target="_blank" rel="noopener noreferrer">horaires de l’arrêt École Saint-François (données régionales)</a> · ' +
-          '<a href="' + esc('https://www.google.com/maps/dir/?api=1&origin=' +
-            encodeURIComponent(to) + '&destination=' +
-            encodeURIComponent('École Saint-François, Albertville') +
-            '&travelmode=walking') +
-          '" target="_blank" rel="noopener noreferrer">marche vers École Saint-François</a>. ' +
-          '<a href="' + esc(y51OfficialPdf) + '" target="_blank" rel="noopener noreferrer">PDF officiel septembre–décembre 2026 (page 2)</a>. ' +
-          esc(y51FeedStatus) + '<div>' + esc(y51Indicative) + '</div>' +
-          '<div>' + esc(y51WorksWarning) + '</div>' +
-          '<div>' + esc(y51CheckDate) + '</div>' +
-          '<div>' + esc(y51WalkingWindow) + '</div>' +
-          '<div>' + esc(y51SummerReference) + '</div></div>' : '') + '</div>' +
-        '<p class="doux">Moteur régional : ' +
-        (regionalEngineReady && regionalEndpointConfigured ?
-          'adaptateur et adresse de service disponibles, itinéraires non encore calculés dans cette fiche.' :
-          regionalEngineReady && regionalProviderReady ?
-          'Mobilités M disponible pour les trajets locaux du secteur Grenoble ; les trajets complets vers Annecy ou Ambérieu ne sont pas encore raccordés.' :
-          regionalEngineReady ? 'aucun fournisseur régional disponible.' :
-          'adaptateur non chargé.') +
-        ' Aucun horaire ni tarif réel n’est actuellement validé dans cette fiche.</p>' +
-        '<p class="doux">Prévoir au minimum 15 min avant la prise en charge, après la marche finale. La marge de 5 min n’est autorisée que si le GPS exact est fiable et vérifié. Une arrivée à la gare ou à l’arrêt ne suffit pas. Ces liens ouvrent une recherche de transports. Horaires, prix, marche d’approche et faisabilité non confirmés — vérifiez vous-même.</p>';
+        // Anciens blocs de recherche manuelle (liens Google Maps, SNCF Connect, FlixBus, BlaBlaCar, texte « moteur régional ») supprimés :
+        // les cartes classées du hub donnent les trajets automatiquement. Seuls restent les tarifs/abonnement SIBRA et le champ « Livraison prévue ».
+        '';
       let sibraPassControls = null;
       if (window.CPSibraPass?.mountControls) {
         let passStorage = null;
