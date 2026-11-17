@@ -57,7 +57,9 @@ test('premiere proposition : carte et marches visibles sans ouverture manuelle',
  assert.match(hub,/function card\(doc,j,labels,expanded=false\)/);
  assert.match(hub,/if\(expanded\)c\.open=true/);
  assert.match(hub,/if\(c\.open\)buildBody\(\)/);
- assert.match(hub,/for\(const \[i,p\] of v\.picks\.entries\(\)\)addCard\(host,p\.journey,p\.labels,i===0\)/);
+ assert.match(hub,/const openInitial=v\.picks\.length>0&&host\.dataset\.cpInitialCardOpened!=='true'/);
+ assert.match(hub,/if\(openInitial\)host\.dataset\.cpInitialCardOpened='true'/);
+ assert.match(hub,/for\(const \[i,p\] of v\.picks\.entries\(\)\)addCard\(host,p\.journey,p\.labels,openInitial&&i===0\)/);
  assert.match(hub,/Cartes des trajets piétons/);
 });
 
