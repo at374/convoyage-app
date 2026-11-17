@@ -78,3 +78,8 @@ test('onglets des dates : libellés accessibles identifiant prise en charge, ret
  assert.match(app,/direction==='Retour'\?'Retour après livraison':'Jonction'/);
  assert.match(app,/button\.setAttribute\('aria-label','Afficher les transports du '/);
 });
+
+test('jonction multi-jours : onglet calé sur la prochaine prise en charge',()=>{
+ assert.match(app,/Jonction:next\?parisServiceDay\(next\.pickup_start\):null/);
+ assert.doesNotMatch(app,/Jonction:next\?parisServiceDay\(deliveryDate\):null/);
+});
