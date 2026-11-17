@@ -413,6 +413,22 @@ function marginFor(task){
  return task.exactTarget===true&&task.allowShortMargin===true?Math.min(base,5):Math.max(15,base);
 }
 const ADVISORY=/^(?:horaire GTFS(?: local)? non confirmé en temps réel|correspondance programmée non confirmée en temps réel|prix commercial et disponibilité non vérifiés|recherche des correspondances incomplète)$/;
+// Horaires civils français : une arrivée la veille ou un trajet de nuit ne doit
+// jamais apparaître comme une solution normale pour une mission du lendemain.
+function parisDayParts(value){
+ const t=ms(value);if(!Number.isFinite(t))return null;
+ const a=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(t)).map(x=>[x.type,x.value]));
+ return {day:a.year+'-'+a.month+'-'+a.day,minute:Number(a.hour)*60+Number(a.minute)};
+}
+function dayWindowOk(j,task){
+ const dep=parisDayParts(j.legs[0]?.departure),arr=parisDayParts(j.legs[j.legs.length-1]?.arrival);
+ if(!dep||!arr)return false;
+ const first=Number.isFinite(task.dayStartMinutes)?task.dayStartMinutes:360;
+ const last=Number.isFinite(task.dayEndMinutes)?task.dayEndMinutes:1320;
+ if(dep.minute<first||arr.minute>last||dep.day!==arr.day)return false;
+ const reference=parisDayParts(task.latestArrival||task.earliestDeparture);
+ return !reference||dep.day===reference.day;
+}
 function assess(j,task,fareFor){
  const reasons=[...(j.missing||[])];
  // Un centre-ville permet de chercher, mais ne confirme jamais l'arrivée à l'adresse exacte.
@@ -423,6 +439,7 @@ function assess(j,task,fareFor){
  for(const l of legs){const a=ms(l.departure),b=ms(l.arrival);
   if(!Number.isFinite(a)||!Number.isFinite(b)||b<a||a<prev-60000){chrono=false;break;}prev=b;}
  if(!chrono)reasons.push('horaires incohérents');
+ if(!dayWindowOk(j,task))reasons.push('trajet hors plage de jour ou date de mission');
  if(legs.some(l=>l.cancelled))reasons.push('course annulée signalée');
  const margin=marginFor(task),deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
  const slack=Number.isFinite(deadline)&&Number.isFinite(arr)?Math.floor((deadline-arr)/60000):null;
@@ -838,7 +855,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
  // pas « non confirmé » : il n'est plus affiché, seul son nombre est indiqué (178 cartes inutiles sur 1 013 au
  // diagnostic réel du 14/11/2026).
  function view(label){const s=state[label];
-  const tooEarly=s.items.filter(j=>!j.computing&&j.reasons.includes('départ avant la fin de la mission précédente'));
+  const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('trajet hors plage de jour ou date de mission')));
   return {task:s.task,...rank(tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items),hidden:{tooEarly:tooEarly.length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0};}
  async function add(label,source,journeys){
   const s=state[label];if(!s||disposed)return;
