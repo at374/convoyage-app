@@ -549,3 +549,11 @@ test('doublons piétons : les coordonnées GPS différencient les points homonym
  assert.match(rankSource,/toPoint\?\.lat/);
  assert.match(rankSource,/toPoint\?\.lon/);
 });
+
+test('doublons cars et trains : la signature contient les coordonnées GPS des arrêts',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const signature=source.slice(source.indexOf('function signature('),source.indexOf('function rank('));
+ assert.match(signature,/l\.fromPoint\?\.lat,l\.fromPoint\?\.lon/);
+ assert.match(signature,/l\.toPoint\?\.lat,l\.toPoint\?\.lon/);
+});
