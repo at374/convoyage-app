@@ -163,13 +163,23 @@
     const PAYS = [['CH', /suisse|switzerland|schweiz|svizzera/i], ['IT', /italie|italy|italia/i], ['ES', /espagne|spain|espa[nñ]a/i], ['BE', /belgique|belgium|belgi[eë]/i], ['DE', /allemagne|germany|deutschland/i], ['LU', /luxembourg/i], ['MC', /monaco/i], ['AD', /andorr/i]];
     let pays = ''; for (const [c, re] of PAYS) if (re.test(txt)) { pays = c; break; } if (!pays && /^(CH|IT|ES|BE|DE|LU|MC|AD)$/i.test(String(x.d).trim())) pays = String(x.d).trim().toUpperCase();
     if (!pays) {
-      const q = [x.a, x.cp || (x.a ? '' : x.d), x.v].filter(Boolean).join(' ');   // commune seule (sans adresse) → on cherche « Commune 74 » comme commune
-      const r = await fetchFn('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(q) + (x.cp ? '&postcode=' + encodeURIComponent(x.cp) : '') + (!x.a && !x.cp ? '&type=municipality' : ''));
-      if (!r || !r.ok) throw new Error('service adresses');
-      const j = await r.json(), f = j && j.features && j.features[0];
-      if (f && f.geometry && f.properties && f.properties.score >= 0.5) {
-        const t = f.properties.type, [lng, lat] = f.geometry.coordinates;
-        if (Number.isFinite(lat) && Number.isFinite(lng)) return { cle, trouve: true, point: { lat, lng, precision: t === 'housenumber' ? 'adresse' : t === 'street' ? 'rue' : t === 'locality' ? 'rue' : 'ville' } };
+      // Requêtes de plus en plus larges (« se rapprocher au mieux », demande du 17/11/2026 : « Aéroport De Genève – Secteur France
+      // Route Douanière, 01210 Ferney-Voltaire » n'était pas trouvée) : 1) adresse complète ; 2) sans nom de lieu avant « – » ou « , » ;
+      // 3) la voie seule avec code postal et commune ; 4) la commune seule. La précision rendue dit ce qui a vraiment été trouvé.
+      const sansLieu = String(x.a || '').split(/\s[–—-]\s/).pop().replace(/^secteur\s+\S+\s+/i, '').replace(/\(.*?\)/g, ' ').trim();
+      const voie = sansLieu.replace(/^.*?\b((?:route|rue|avenue|chemin|boulevard|bd|impasse|allée|allee|place|quai|zone|zi|za|rond-point)\b.*)$/i, '$1');
+      const essais = [];
+      const ajoute = (q, commune) => { if (q && !essais.some(e => e.q === q)) essais.push({ q, commune: !!commune }); };
+      ajoute([x.a, x.cp || (x.a ? '' : x.d), x.v].filter(Boolean).join(' '), !x.a);
+      if (x.a) { ajoute([sansLieu, x.cp, x.v].filter(Boolean).join(' ')); ajoute([voie, x.cp, x.v].filter(Boolean).join(' ')); ajoute([x.cp, x.v].filter(Boolean).join(' '), true); }
+      for (const es of essais) {
+        const r = await fetchFn('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(es.q) + (x.cp ? '&postcode=' + encodeURIComponent(x.cp) : '') + (es.commune ? '&type=municipality' : ''));
+        if (!r || !r.ok) throw new Error('service adresses');
+        const j = await r.json(), f = j && j.features && j.features[0];
+        if (f && f.geometry && f.properties && f.properties.score >= 0.5) {
+          const t = f.properties.type, [lng, lat] = f.geometry.coordinates;
+          if (Number.isFinite(lat) && Number.isFinite(lng)) return { cle, trouve: true, point: { lat, lng, precision: t === 'housenumber' ? 'adresse' : t === 'street' ? 'rue' : t === 'locality' ? 'rue' : 'ville' } };
+        }
       }
       if (codeDepartement(x.d)) return { cle, trouve: false };   // département français connu : pas de recherche à l'étranger
     }
