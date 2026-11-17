@@ -363,8 +363,11 @@ async function walkOnly(task,router,maxKm){
  if(!r||r.status!=='calculated'||!finite(r.distanceMeters)||!finite(r.durationSeconds)||r.distanceMeters<0||r.durationSeconds<0||r.distanceMeters>limit)return null;
  const margin=marginFor(task);
  const deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
- let dep=Number.isFinite(earliest)?earliest:Number.isFinite(deadline)?deadline-margin*60000-r.durationSeconds*1000:NaN;
- if(!Number.isFinite(dep))return null;
+ // Avec deux bornes (jonction), partir le plus tard possible tout en arrivant
+ // avant la marge : partir à earliest peut afficher une marche inutilement tôt.
+ const latestWalkDeparture=Number.isFinite(deadline)?deadline-margin*60000-r.durationSeconds*1000:NaN;
+ const dep=Number.isFinite(latestWalkDeparture)?latestWalkDeparture:earliest;
+ if(!Number.isFinite(dep)||Number.isFinite(earliest)&&dep<earliest)return null;
  const j=journey('Marche (Valhalla / OpenStreetMap)',[walkLeg(r,from,to,task.fromName||'Départ',task.toName||'Arrivée',dep)]);
  return {...j,walkOnly:true,missing:[]};
 }
