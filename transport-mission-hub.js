@@ -415,6 +415,8 @@ function marginFor(task){
 const ADVISORY=/^(?:horaire GTFS(?: local)? non confirmé en temps réel|correspondance programmée non confirmée en temps réel|prix commercial et disponibilité non vérifiés|recherche des correspondances incomplète)$/;
 function assess(j,task,fareFor){
  const reasons=[...(j.missing||[])];
+ // Un centre-ville permet de chercher, mais ne confirme jamais l'arrivée à l'adresse exacte.
+ if(task.approximateEndpoint===true)reasons.push('point de départ ou d’arrivée approximatif (centre-ville) : adresse exacte à vérifier');
  const legs=j.legs;
  const dep=ms(legs[0]?.departure),arr=ms(legs[legs.length-1]?.arrival);
  let chrono=Number.isFinite(dep)&&Number.isFinite(arr)&&arr>=dep,prev=dep;
