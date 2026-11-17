@@ -598,10 +598,15 @@ function rank(items,task={}){
   // Parmi les cars exploitables, afficher d'abord le tarif total vérifié
   // le moins cher ; un tarif inconnu ne doit jamais être supposé avantageux.
   const verifiedCoach=j=>j.price?.status==='verified'||j.price?.status==='free';
+  // Une comparaison paire à paire EUR/CHF n'est pas transitive. Si plusieurs
+  // devises sont présentes, ne pas départager les cars sur leur montant.
+  const coachCurrencies=new Set(matches.map(j=>fareCurrency(j.price)).filter(c=>c&&c!=='free'));
+  const coachPricesComparable=coachCurrencies.size<=1&&matches.every(j=>
+   !verifiedCoach(j)||fareCurrency(j.price)!==null);
   const best=[...matches].sort((a,b)=>byFeasible(a,b)||
-   Number(verifiedCoach(b))-Number(verifiedCoach(a))||
-   (verifiedCoach(a)&&verifiedCoach(b)?compareFares(a.price,b.price):0)||
-   relevant(a,b)||score(a)-score(b))[0];
+   (coachPricesComparable?Number(verifiedCoach(b))-Number(verifiedCoach(a)):0)||
+   (coachPricesComparable&&verifiedCoach(a)&&verifiedCoach(b)?compareFares(a.price,b.price):0)||
+   relevant(a,b)||a.durationMinutes-b.durationMinutes||confirmedFirst(a,b))[0];
   if(!best)continue;
   const already=picks.find(p=>p.journey===best);
   if(already)already.labels.push(name);
