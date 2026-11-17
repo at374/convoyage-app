@@ -732,7 +732,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   }
   // Suivi d'arrivée à la livraison (missions acceptées de l'agenda) : le GPS n'est lu que pendant la fenêtre de la mission et tant que l'application est ouverte.
   // Arrivée = présence de 60 s dans 300 m de l'adresse de livraison (800 m si seule la ville est connue). Les transports retour / jonction partent alors de arrivée + 15 min.
-  let suiviWatch = null, suiviTimer = null, suiviRefus = false; const suiviDedans = new Map();
+  let suiviWatch = null, suiviTimer = null, suiviRefus = false, suiviReprise = false; const suiviDedans = new Map();
   function missionsASuivre() {
     const now = Date.now();
     return (etat.missions || []).filter(m => m.kind === 'acceptee' && m.platform && m.external_id != null).map(m => ({ m, t: missionTiming(m) })).filter(({ m, t }) => {
@@ -745,13 +745,15 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   }
   function suiviTraiter(pos) {
     const acc = Number(pos.coords.accuracy); if (Number.isFinite(acc) && acc > 150) return;
+    const vit = pos.coords.speed; if (typeof vit === 'number' && vit > 3) return;   // en roulement (> ~11 km/h) : pas une arrivée
     const here = { lat: pos.coords.latitude, lng: pos.coords.longitude }, ts = Number(pos.timestamp) || Date.now();
     for (const { m, t } of missionsASuivre()) {
       const d = G.coordonnees(m, 'destination'), rayon = d.precision === 'ville' ? RAYON_ARRIVEE_VILLE_M : RAYON_ARRIVEE_M;
       const dist = G.volOiseauKm(here, d) * 1000;
       if (dist > rayon) { suiviDedans.delete(t.key); continue; }
       if (!suiviDedans.has(t.key)) suiviDedans.set(t.key, ts);
-      if (ts - suiviDedans.get(t.key) >= DUREE_PRESENCE_MS) suiviArrivee(m, t, suiviDedans.get(t.key));
+      // Retour au premier plan (Waze / Google Maps étaient ouverts) : on est déjà sur place, pas besoin d'attendre 60 s ; l'heure retenue est celle du retour dans l'application.
+      if (suiviReprise || ts - suiviDedans.get(t.key) >= DUREE_PRESENCE_MS) suiviArrivee(m, t, suiviDedans.get(t.key));
     }
   }
   function suiviArrivee(m, t, ts) {
@@ -773,7 +775,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       if (e && e.code === 1) { suiviRefus = true; if (suiviWatch !== null) navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; toast('Suivi d’arrivée impossible : localisation refusée (réglages du téléphone)'); }
     }, { enableHighAccuracy: true, maximumAge: 15000, timeout: 60000 });
   }
-  if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', () => { if (document.hidden && suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; suiviDedans.clear(); } else if (!document.hidden) suiviMaj(); });
+  if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', () => { if (document.hidden && suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; suiviDedans.clear(); } else if (!document.hidden) { suiviReprise = true; setTimeout(() => { suiviReprise = false; }, 20000); suiviMaj(); } });
   if (typeof navigator !== 'undefined' && navigator.geolocation) setTimeout(suiviMaj, 3000);
   // Suggestions dès 3 lettres (ou un numéro de département) : villes, départements, régions.
   function montrerSuggestions() {

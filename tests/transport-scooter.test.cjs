@@ -211,3 +211,9 @@ test('suivi GPS : arrivée à la livraison + marge 15 min met à jour retours et
  assert.ok(app.includes("plancher(nextDay&&delivDay"));
  assert.ok(app.includes("const startIso=first?plancher(firstStart)"));
 });
+
+test('suivi GPS : reprise au premier plan sans attente, ignore les relevés en roulant',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ assert.ok(app.includes('suiviReprise ||'));
+ assert.ok(app.includes("vit > 3"));
+});
