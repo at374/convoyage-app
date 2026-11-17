@@ -92,7 +92,11 @@ test('cartes piétonnes : conserver les détails construits après rafraîchisse
  assert.doesNotMatch(hub,/if\(opened\.has\(key\)\)node\.open=true/);
 });
 
-test('BlaBlaCar Bus et FlixBus : diagnostic visible même sans trajet retenu',()=>{
+test('BlaBlaCar Bus et FlixBus : diagnostic uniquement si moteur consulté',()=>{
+ assert.match(hub,/const coachNames=\['BlaBlaCar Bus GTFS','FlixBus GTFS'\]\.filter/);
+ assert.match(hub,/Object\.prototype\.hasOwnProperty\.call\(v\.received\|\|\{\},name\)/);
+ assert.match(hub,/Object\.prototype\.hasOwnProperty\.call\(v\.errors\|\|\{\},name\)/);
+ assert.match(hub,/if\(coachRows\.length\)\{/);
  assert.match(hub,/entry\.name\.replace\(' GTFS',''\)/);
  assert.match(hub,/count\+' reçu\(s\)'/);
  assert.match(hub,/non interrogé':'non configuré/);
