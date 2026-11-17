@@ -517,8 +517,8 @@ function rank(items,task={}){
   const quality=x=>[Number(!!x.feasible),Number(!!x.scheduled),
    -((x.reasons||[]).length),Number(x.price?.status==='verified'||x.price?.status==='free')];
   const qj=quality(j),qo=quality(old);
-  const better=qj.findIndex((v,i)=>v!==qo[i])<0?old:
-   qj[qj.findIndex((v,i)=>v!==qo[i])]>qo[qj.findIndex((v,i)=>v!==qo[i])]?j:old;
+  const firstDifference=qj.findIndex((v,i)=>v!==qo[i]);
+  const better=firstDifference>=0&&qj[firstDifference]>qo[firstDifference]?j:old;
   seen.set(k,{...better,sources:[...new Set([...(old.sources||[]),...(j.sources||[])])]});
  }
  const all=[...seen.values()].filter(j=>!Array.isArray(j.reasons)||!j.reasons.includes('trajet hors plage de jour ou date de mission'));
