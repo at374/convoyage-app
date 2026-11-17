@@ -91,3 +91,11 @@ test('cartes piétonnes : conserver les détails construits après rafraîchisse
  assert.match(hub,/if\(key\)node\.setAttribute\('data-journey-key',key\)/);
  assert.doesNotMatch(hub,/if\(opened\.has\(key\)\)node\.open=true/);
 });
+
+test('BlaBlaCar Bus et FlixBus : diagnostic visible même sans trajet retenu',()=>{
+ assert.match(hub,/BlaBlaCar Bus \/ FlixBus : état des recherches/);
+ assert.match(hub,/BlaBlaCar Bus GTFS/);
+ assert.match(hub,/FlixBus GTFS/);
+ assert.match(hub,/Moteur non interrogé/);
+ assert.match(hub,/trajet\(s\) remonté\(s\) avant filtrage/);
+});
