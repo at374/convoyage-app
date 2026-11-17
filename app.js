@@ -2275,6 +2275,54 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const legacyTitle=document.createElement('summary');legacyTitle.textContent='Détail par moteur (justificatifs)';legacy.appendChild(legacyTitle);
         section.appendChild(legacy);legacySources[key]=legacy;
       }
+      // Missions sur plusieurs jours : afficher les transports par date réelle
+      // de prise en charge, de livraison ou de prochaine mission. Ne pas inventer
+      // d'horaire de transport pour les jours intermédiaires.
+      const parisServiceDay=value=>{
+        const t=Date.parse(value||'');
+        if(!Number.isFinite(t))return null;
+        const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'})
+          .formatToParts(new Date(t));
+        const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+        return p.year+'-'+p.month+'-'+p.day;
+      };
+      const transportDays={
+        Aller:parisServiceDay(pickupDate),
+        Jonction:next?parisServiceDay(deliveryDate):null,
+        Retour:parisServiceDay(deliveryDate)
+      };
+      const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
+      if(availableTransportDays.length>1){
+        const tabs=document.createElement('nav');
+        tabs.className='cp-transport-day-tabs';
+        tabs.setAttribute('aria-label','Jour des transports de la mission');
+        const buttons=[];
+        const selectDay=day=>{
+          for(const [direction,section] of Object.entries(transportDestinations)){
+            section.hidden=transportDays[direction]!==day;
+          }
+          for(const button of buttons){
+            const active=button.dataset.day===day;
+            button.setAttribute('aria-pressed',String(active));
+            button.classList.toggle('active',active);
+          }
+        };
+        for(const day of availableTransportDays){
+          const button=document.createElement('button');
+          button.type='button';button.className='cp-transport-day-tab second';
+          button.dataset.day=day;
+          button.textContent=new Intl.DateTimeFormat('fr-FR',{timeZone:'UTC',weekday:'short',day:'2-digit',month:'short'})
+            .format(new Date(day+'T12:00:00Z'));
+          button.title='Afficher les transports du '+day;
+          button.addEventListener('click',()=>selectDay(day));
+          tabs.appendChild(button);buttons.push(button);
+        }
+        hero.insertAdjacentElement('afterend',tabs);
+        selectDay(transportDays.Aller||availableTransportDays[0]);
+      }else if(!next){
+        // Sans prochaine mission, ne pas présenter une jonction fictive.
+        transportDestinations.Jonction.hidden=true;
+      }
       panel.appendChild(sourcePanel);
       // Keep manual controls available without placing them ahead of automatic results.
       sourcePanel.appendChild(refreshTransport);
