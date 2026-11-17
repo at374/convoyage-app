@@ -2337,6 +2337,22 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       const startTransportHub=()=>{
         const Hub=window.CPTransportHub;
         if(!Hub||!panel.isConnected)return;
+        // Communes absentes de la table intégrée (Archamps, Viviers-du-Lac…) : sans point GPS le moteur refuse de chercher
+        // (« adresse GPS manquante »). On interroge d'abord le service officiel d'adresses (déjà utilisé ailleurs dans
+        // l'application, géocodage au besoin), puis on relance une seule fois. Rien n'est inventé : sans résultat, le comportement reste identique.
+        if(!panel.cpGeoTried){
+          const manque=[[m,'origin'],[m,'destination'],[next,'origin']].filter(([mm,cote])=>{
+            if(!mm)return false;const c=G.coordonnees(mm,cote);return !c||c.precision==='departement';});
+          if(manque.length){
+            panel.cpGeoTried=true;
+            const note=document.createElement('p');note.className='doux cp-transport-geo';note.setAttribute('role','status');
+            note.textContent='📍 Recherche des coordonnées GPS des adresses…';panel.appendChild(note);
+            Promise.all(manque.map(async([mm,cote])=>{
+              try{const r=await G.chercherPoint(mm,cote,u=>fetch(u));if(r&&r.trouve&&r.cle)G.POINTS[r.cle]=r.point;}catch(_){}
+            })).then(()=>{note.remove();if(panel.isConnected)startTransportHub();});
+            return;
+          }
+        }
         const gp=gps=>(gps&&['gps','adresse','rue','ville'].includes(gps.precision)&&
           gps.lat!=null&&gps.lng!=null&&Number.isFinite(Number(gps.lat))&&Number.isFinite(Number(gps.lng))&&
           Math.abs(Number(gps.lat))<=90&&Math.abs(Number(gps.lng))<=180&&
