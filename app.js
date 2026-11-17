@@ -2615,9 +2615,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           }
         }
       }
-      // SNCF station-only fallback runs independently of public routing API availability.
-      // Only dated public files are fetched: addresses/GPS stay in this browser.
-      if (window.CPSncfFallback && typeof window.CPSncfFallback.plan === 'function') {
+      // Présentation gare-à-gare historique désactivée : elle doublonnait les cartes
+      // de la fiche et invitait à chercher manuellement des arrêts. Le moteur SNCF
+      // reste actif via CPTransportMissionHub.makeProviders (sncf_fallback), où ses
+      // résultats sont comparés aux autres modes et marches porte-à-porte.
+      // Conserver temporairement l'ancien code pour retrait après tests de régression.
+      if (false && window.CPSncfFallback && typeof window.CPSncfFallback.plan === 'function') {
         const homeStation = () => {
           const name=String(etat.reglages?.domicile_ville || '').trim();
           return {name,point:etat.reglages?.domicile_lat != null && etat.reglages?.domicile_lng != null ?
