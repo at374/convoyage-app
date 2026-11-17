@@ -532,7 +532,10 @@ function rank(items,task={}){
  for(const j of items){if(!j||j.durationMinutes===null)continue;
   // Ne pas fusionner toutes les marches sous une clé unique : les points
   // d'accès et les créneaux peuvent différer d'une proposition à l'autre.
-  const k=j.walkOnly?[
+  // Certains moteurs renvoient une marche pure sans positionner walkOnly.
+  // Une signature de transports vide fusionnerait alors tous ces itinéraires.
+  const walkingJourney=j.walkOnly||j.legs?.length>0&&j.legs.every(l=>l.kind==='walk');
+  const k=walkingJourney?[
    'walk',String(j.legs?.[0]?.from||'').trim().toLowerCase(),
    String(j.legs?.[j.legs.length-1]?.to||'').trim().toLowerCase(),
    j.legs?.[0]?.fromPoint?.lat,j.legs?.[0]?.fromPoint?.lon,
