@@ -142,3 +142,9 @@ test('multi-jours : les onglets partent du début réel de la fenêtre, pas du j
  assert.match(app,/label:d===pPlan\?'Aller':'Aller@'\+d/);
  assert.match(app,/label:d===dPlan\?'Retour':'Retour@'\+d/);
 });
+
+test('fluidité : mises à jour regroupées et sections cachées non dessinées',()=>{
+ assert.match(hub,/350-\(now-\(lastEmit\[label\]\|\|0\)\)/);
+ assert.match(app,/pendingViews\[label\]=view/);
+ assert.match(app,/renderPending\(\);/);
+});

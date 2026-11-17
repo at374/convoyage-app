@@ -1041,7 +1041,19 @@ async function accessFor(j,task,otp,signal){
 function createSession({tasks=[],providers={},router=null,scooterRouter=null,scooter=null,fareFor=null,walkMaxKm=3,timeoutMs=25000,onUpdate=()=>{}}={}){
  tasks=tasks.map(t=>({...t,walkMaxMeters:Number.isFinite(t.walkMaxMeters)?t.walkMaxMeters:(Number.isFinite(walkMaxKm)&&walkMaxKm>0?walkMaxKm*1000:undefined)}));
  const state={},controller=new AbortController();let disposed=false;
- const emit=label=>{if(!disposed)try{onUpdate(label,view(label));}catch(_){}};
+ // Mises à jour regroupées (au plus une par 350 ms et par direction) : chaque résultat réseau ne reconstruit plus toute la fiche,
+ // ce qui figeait l'écran au défilement quand plusieurs jours sont cherchés en parallèle.
+ const lastEmit={},timers={};
+ const emitNow=label=>{if(!disposed)try{onUpdate(label,view(label));}catch(_){}};
+ const emit=label=>{
+  if(disposed)return;
+  const now=Date.now(),wait=350-(now-(lastEmit[label]||0));
+  const finished=state[label]&&state[label].pending===0;
+  if(finished){if(timers[label]){clearTimeout(timers[label]);timers[label]=null;}lastEmit[label]=now;emitNow(label);return;}
+  if(wait<=0&&!timers[label]){lastEmit[label]=now;emitNow(label);return;}
+  if(timers[label])return;
+  timers[label]=setTimeout(()=>{timers[label]=null;lastEmit[label]=Date.now();emitNow(label);},Math.max(0,wait));
+ };
  // Un trajet qui part avant la fin de la mission précédente (souvent à cause de la marche d'accès) est impossible,
  // pas « non confirmé » : il n'est plus affiché, seul son nombre est indiqué (178 cartes inutiles sur 1 013 au
  // diagnostic réel du 14/11/2026).

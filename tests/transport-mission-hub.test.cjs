@@ -253,7 +253,7 @@ test('performance : doublons entre moteurs et trajets hors délai sans calcul de
  // 14/11/2026 : les 12 trajets partagent les deux mêmes arrêts → tous reçoivent leurs marches (2 couples de points).
  assert.ok(!all.some(j=>/quota/.test(j.statusDetail)),'mêmes arrêts : aucun trajet laissé sans marche');
  assert.ok(all.some(j=>j.legs[0].line==='TARD'&&/marge insuffisante|arrivée après/.test(j.statusDetail)));
- assert.ok(updates.length>=4,'mises à jour progressives : '+updates.length);
+ assert.ok(updates.length>=2,'mises à jour progressives (regroupées par 350 ms) : '+updates.length);
  s.dispose();
 });
 

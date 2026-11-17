@@ -2320,7 +2320,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       {const rank=k=>k.startsWith('Aller')?0:k.startsWith('Jonction')?1:2;
         Object.keys(transportDestinations).sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b)).forEach(k=>panel.appendChild(transportDestinations[k]));}
       const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
-      let updateDayTabs=()=>{};const labelState={};
+      let updateDayTabs=()=>{};const labelState={};const pendingViews={};let renderPending=()=>{};
       if(availableTransportDays.length>1){
         const tabs=document.createElement('nav');
         tabs.className='cp-transport-day-tabs';
@@ -2335,6 +2335,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             button.setAttribute('aria-pressed',String(active));
             button.classList.toggle('active',active);
           }
+          renderPending();
         };
         for(const day of availableTransportDays){
           const button=document.createElement('button');
@@ -2370,6 +2371,17 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       // Hub transports : TripGo, Suisse, Mobilités M, SNCF et GTFS local réunis et classés automatiquement.
       let transportHub=null;
       const hubHosts={};
+      renderPending=()=>{
+        const Hub=window.CPTransportHub;if(!Hub)return;
+        for(const [label,view] of Object.entries(pendingViews)){
+          const sec=transportDestinations[label];if(!sec||sec.hidden)continue;
+          let host=hubHosts[label];
+          if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
+            const path=sec.querySelector('.cp-transport-route');(path||sec.firstChild).insertAdjacentElement('afterend',host);}
+          try{Hub.render(host,view);}catch(_){}
+          delete pendingViews[label];
+        }
+      };
       const startTransportHub=()=>{
         const Hub=window.CPTransportHub;
         if(!Hub||!panel.isConnected)return;
@@ -2488,6 +2500,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             otpEndpoint:window.CP_OTP_ENDPOINT,otpQuery:window.CPOTPClient?.buildQuery,otpTimeoutMs:30000}),
           onUpdate:(label,view)=>{
             if(!panel.isConnected||!transportDestinations[label])return;
+            labelState[label]={done:view.done,total:view.total};
+            // Section d'un autre jour (onglet non affiché) : on garde la dernière vue et on la dessine à l'ouverture de l'onglet.
+            if(transportDestinations[label].hidden){pendingViews[label]=view;updateDayTabs();return;}
+            delete pendingViews[label];
             let host=hubHosts[label];
             if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
               const path=transportDestinations[label].querySelector('.cp-transport-route');
