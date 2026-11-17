@@ -1032,8 +1032,9 @@ function ticketLinks(j){
   const t=ticketLink(l.provider);if(t&&!seen.has(t.url))seen.set(t.url,t);});
  return [...seen.values()];
 }
-function card(doc,j,labels){
+function card(doc,j,labels,expanded=false){
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
+ if(expanded)c.open=true;
  const s=el(doc,'summary');
  if(labels&&labels.length)s.appendChild(el(doc,'span','cp-hub-chip',labels.join(' · ')));
  s.appendChild(el(doc,'strong','cp-hub-times',clock(j.departure)+' → '+clock(j.arrival)+' · '+durationText(j.durationMinutes)));
@@ -1097,6 +1098,9 @@ function card(doc,j,labels){
  if(c.addEventListener)c.addEventListener('toggle',()=>{if(c.open)buildBody();});
  // Environnements DOM sans événement toggle : construction au clic sur le résumé.
  if(s.addEventListener)s.addEventListener('click',()=>{if(!bodyBuilt)buildBody();});
+ // Une carte déjà ouverte à son insertion ne déclenche pas toujours toggle.
+ // Construire immédiatement le contenu de la première proposition visible.
+ if(c.open)buildBody();
  return c;
 }
 // Transports à la demande : information seulement (réservation obligatoire, aucun horaire ni prix affiché comme trajet).
@@ -1116,15 +1120,16 @@ function render(host,v){
  host.textContent='';host.setAttribute('data-transport-hub',VERSION);
  const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):'Aucun trajet trouvé'):'Recherche en cours… ('+v.total+' trouvée'+(v.total>1?'s':'')+')');
  host.appendChild(head);
- const addCard=(parent,j,labels)=>{
-  const node=card(doc,j,labels);
+ const addCard=(parent,j,labels,expandFirst=false)=>{
+  const node=card(doc,j,labels,expandFirst);
+  // La première proposition est ouverte, les suivantes restent paresseuses.
   // Une marche seule n'a pas de ligne de transport : sa signature classique est vide.
   // Identifier aussi ces trajets pour ne pas refermer leur carte à chaque résultat réseau.
   const key=signature(j)||(j.walkOnly?'walk|'+Math.round(ms(j.departure)/60000)+'|'+Math.round(ms(j.arrival)/60000)+'|'+Math.round(j.durationMinutes||0):'');
   if(key){node.setAttribute('data-journey-key',key);if(opened.has(key))node.open=true;}
   parent.appendChild(node);
  };
- for(const p of v.picks)addCard(host,p.journey,p.labels);
+ for(const [i,p] of v.picks.entries())addCard(host,p.journey,p.labels,i===0);
  if(v.others.length){const more=el(doc,'details','cp-hub-more');more.appendChild(el(doc,'summary',null,'Autres propositions ('+v.others.length+')'));
   for(const j of v.others.slice(0,8))addCard(more,j,null);
   more.open=moreOpen;host.appendChild(more);}
