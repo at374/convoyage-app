@@ -512,8 +512,14 @@ function rank(items,task={}){
   const old=seen.get(k);
   if(!old){seen.set(k,j);continue;}
   // Fusion : garder la version la plus complète (marches, prix, temps réel) et cumuler les sources.
-  const better=(j.feasible&&!old.feasible)||(j.scheduled&&!old.feasible&&!old.scheduled)||(j.reasons.length<old.reasons.length)||(j.price.status==='verified'&&old.price.status!=='verified')?j:old;
-  seen.set(k,{...better,sources:[...new Set([...old.sources,...j.sources])]});
+  // Comparer les critères dans l'ordre : un prix connu ne doit jamais
+  // remplacer un doublon réalisable par une version non réalisable.
+  const quality=x=>[Number(!!x.feasible),Number(!!x.scheduled),
+   -((x.reasons||[]).length),Number(x.price?.status==='verified'||x.price?.status==='free')];
+  const qj=quality(j),qo=quality(old);
+  const better=qj.findIndex((v,i)=>v!==qo[i])<0?old:
+   qj[qj.findIndex((v,i)=>v!==qo[i])]>qo[qj.findIndex((v,i)=>v!==qo[i])]?j:old;
+  seen.set(k,{...better,sources:[...new Set([...(old.sources||[]),...(j.sources||[])])]});
  }
  const all=[...seen.values()].filter(j=>!Array.isArray(j.reasons)||!j.reasons.includes('trajet hors plage de jour ou date de mission'));
  // Une arrivée des heures avant la prise en charge n'est pas un bon compromis.
