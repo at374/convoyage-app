@@ -1565,12 +1565,14 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       ${(lireLocal('cp_masquees', []) || []).length ? `<p class="doux">${(lireLocal('cp_masquees', []) || []).length} mission(s) retirée(s) de l’Agenda : <button id="remettre" class="lienBouton" type="button">Tout remettre</button></p>` : ''}
       <label for="rTransport">Transport pour l’aller et le retour (le prix et la durée sont calculés avec ce moyen)</label><select id="rTransport"><option value="moyenne">Moyenne des moyens (train avec ta carte, BlaBlaCar, BlaBlaCar Daily, Flixbus…)</option><option value="general">Estimation générale (coût au km ci-dessous)</option><option value="moins_cher">Le moins cher disponible</option><option value="covoiturage">Covoiturage BlaBlaCar</option><option value="blablacar_daily">BlaBlaCar Daily (trajets du quotidien)</option><option value="flixbus">Flixbus / car longue distance</option><option value="train">Train (avec ta carte de réduction)</option><option value="bus">Bus</option><option value="taxi">Taxi / VTC</option><option value="trottinette">Trottinette (courts trajets)</option></select>
       <label><input id="rBus" type="checkbox" style="width:auto;min-height:0"> Compter les bus dans les liaisons (les bus de villes et villages changent souvent d’horaires et de jours : à cocher seulement si tu as vérifié la ligne)</label>
-      <label for="rMarcheMax">Trajets entièrement à pied proposés jusqu’à (km de marche réelle)</label><input id="rMarcheMax" type="number" step="0.5" min="0" max="10" inputmode="decimal">
+      <label for="rMarcheMax">Marche maximale (km) : appliquée à chaque marche (départ, correspondance, arrivée) et aux trajets entièrement à pied</label><input id="rMarcheMax" type="number" step="0.5" min="0" max="10" inputmode="decimal">
       <label><input id="rMargeCourte" type="checkbox" style="width:auto;min-height:0"> Accepter 5 min de marge (au lieu de 15) quand le point GPS exact de la mission est confirmé</label>
       <details id="rCouverture" class="cp-cov-box"><summary>🧪 Couverture et diagnostic des transports (AURA–Suisse)</summary><div id="rCouvInv"></div>
       <p class="doux">Le diagnostic interroge les vrais moteurs sur 8 axes (départs lundi prochain à 8 h). Il peut durer plusieurs minutes et n’envoie aucune adresse personnelle (points de gare).</p>
       <button id="rDiagLancer" type="button" class="second">Lancer le diagnostic réel</button> <button id="rDiagCopier" type="button" class="second">Copier le rapport</button><pre id="rDiagOut" style="white-space:pre-wrap;font-size:.85em"></pre></details>
-      <label><input id="rTrot" type="checkbox" style="width:auto;min-height:0"> J’ai une trottinette (gratuite, utilisée pour les courts trajets jusqu’à ≈ 8 km)</label>
+      <label><input id="rTrot" type="checkbox" style="width:auto;min-height:0"> J’ai une trottinette électrique (gratuite : un trajet « Trottinette » est calculé en plus des transports)</label>
+      <label for="rTrotVit">Vitesse moyenne de ma trottinette (km/h)</label><input id="rTrotVit" type="number" step="1" min="5" max="30" inputmode="numeric">
+      <label for="rTrotMax">Distance maximale en trottinette (km)</label><input id="rTrotMax" type="number" step="0.5" min="1" max="30" inputmode="decimal">
       <p class="doux">Les retours choisissent le moyen le moins cher qui arrive à temps ; prix et horaires estimés (réduction SNCF ≈ −30 % sur le train), pas des tarifs réels.</p>
       <p class="doux">Valeurs de travail : distances à vol d’oiseau × 1,25 et durées estimées, à ajuster à ton expérience.</p>
       <button id="rOk" style="width:100%;margin-top:12px">Enregistrer</button></div>
@@ -1602,7 +1604,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           b.disabled = false;
         };
       } }
-    $('rBus').checked = window.CP_BUS_ACTIF === true; $('rMarcheMax').value = lireLocal('cp_marche_max_km', 3); $('rMargeCourte').checked = lireLocal('cp_marge_courte_gps', false) === true; $('rTransport').value = window.CP_TRANSPORT_CHOISI || 'general';
+    $('rBus').checked = window.CP_BUS_ACTIF === true; $('rMarcheMax').value = lireLocal('cp_marche_max_km', 3); $('rTrotVit').value = lireLocal('cp_trot_vitesse_kmh', 15); $('rTrotMax').value = lireLocal('cp_trot_max_km', 8); $('rMargeCourte').checked = lireLocal('cp_marge_courte_gps', false) === true; $('rTransport').value = window.CP_TRANSPORT_CHOISI || 'general';
     $('rDom').value = r.domicile_ville || ''; $('rTr').value = r.cout_transport_km; $('rVit').value = r.vitesse_liaison; $('rMarge').value = r.marge_minutes; $('rRayon').value = r.rayon_retour_km; $('rAtt').value = r.attente_max_h; $('rSncf').value = r.carte_sncf || 'aucune'; $('rTrot').checked = r.trottinette === true;
     let domChoisi = r.domicile_ville ? { nom: r.domicile_ville, lat: r.domicile_lat, lng: r.domicile_lng, libelle: r.domicile_ville } : null;
     $('rDom').oninput = () => {
@@ -1622,7 +1624,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         if (!x || x.lat == null) return toast('Ville du domicile non reconnue : choisis-la dans la liste proposée');
         Object.assign(v, { domicile_ville: x.nom, domicile_lat: Math.round(x.lat * 1e5) / 1e5, domicile_lng: Math.round(x.lng * 1e5) / 1e5 });
       }
-      { const km = Number($('rMarcheMax').value); if (!(km >= 0 && km <= 10)) return toast('Distance de marche hors limites (0 à 10 km)'); ecrireLocal('cp_marche_max_km', km); ecrireLocal('cp_marge_courte_gps', $('rMargeCourte').checked); }
+      { const km = Number($('rMarcheMax').value); if (!(km >= 0 && km <= 10)) return toast('Distance de marche hors limites (0 à 10 km)'); { const tv = Number($('rTrotVit').value), tm = Number($('rTrotMax').value); if (!(tv >= 5 && tv <= 30)) return toast('Vitesse de trottinette hors limites (5 à 30 km/h)'); if (!(tm >= 1 && tm <= 30)) return toast('Distance de trottinette hors limites (1 à 30 km)'); ecrireLocal('cp_trot_vitesse_kmh', tv); ecrireLocal('cp_trot_max_km', tm); } ecrireLocal('cp_marche_max_km', km); ecrireLocal('cp_marge_courte_gps', $('rMargeCourte').checked); }
       window.CP_BUS_ACTIF = $('rBus').checked; ecrireLocal('cp_bus_actif', window.CP_BUS_ACTIF); window.CP_TRANSPORT_CHOISI = $('rTransport').value; ecrireLocal('cp_transport', window.CP_TRANSPORT_CHOISI);
       try { await api.enregistrerReglages(v); etat.reglages = { ...r, ...v }; ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe }); toast('Réglages enregistrés'); } catch (e) { toast(e.message); }
     };
@@ -2352,11 +2354,14 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         if(next&&deliveryDate&&next.pickup_start)tasks.push({label:'Jonction',from:gp(dest),to:gp(nextOrigin2),fromName:'Livraison',toName:'Mission suivante',fromCity:m.to_city||'',toCity:next.from_city||'',
           earliestDeparture:deliveryDate,latestArrival:next.pickup_start,marginMinutes:securityMarginMin,exactTarget:exactGps(nextOrigin2),approximateEndpoint:!exact(dest)||!exact(nextOrigin2),allowShortMargin:short});
         if(deliveryDate)tasks.push({label:'Retour',from:gp(dest),to:homePt,fromName:'Livraison',toName:homeName,fromCity:m.to_city||'',toCity:homeName,earliestDeparture:deliveryDate,approximateEndpoint:!exact(dest)||!homeExact});
-        const signature=JSON.stringify(tasks);
+        const signature=JSON.stringify([tasks,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8)]);
         if(transportHub&&transportHub.signatureKey===signature)return;
         transportHub?.dispose();
         let router=null;
         try{router=Hub.cachedRouter(window.CPTransportWalking?.createRouter({fetcher:regionalFetch,maxRequests:150,intervalMs:1100}),{storage:window.localStorage});}catch(_){}
+        const scooterOn = (etat.reglages || {}).trottinette === true;
+        let scooterRouter = null;
+        if (scooterOn) { try { scooterRouter = Hub.cachedRouter(window.CPTransportWalking?.createRouter({ fetcher: regionalFetch, maxRequests: 60, intervalMs: 1100, mode: 'bicycle', cyclingSpeed: Number(lireLocal('cp_trot_vitesse_kmh', 15)) }), { storage: window.localStorage, key: 'cp_trottinette_v1' }); } catch (_) {} }
         const fareFor=leg=>{
           // Tarifs prouvés uniquement (grilles officielles datées), jamais estimés.
           try{const f=window.CPTransportFareGrids?.fareFor(leg);if(f)return f;}catch(_){}
@@ -2366,7 +2371,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         // connecté). Session absente ou expirée : le fournisseur OJP se désactive silencieusement (comme les autres
         // moteurs sans accès), sans message d'erreur ni blocage du reste des fiches.
         const ojpSession=api?.connecte?{url:api.url,cle:api.cle,accessToken:api.session.access_token}:null;
-        const session=Hub.createSession({tasks,router,fareFor,timeoutMs:35000,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),
+        const session=Hub.createSession({tasks,router,fareFor,timeoutMs:35000,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),scooterRouter,scooter:{enabled:scooterOn,maxKm:Number(lireLocal('cp_trot_max_km',8)),speedKmh:Number(lireLocal('cp_trot_vitesse_kmh',15))},
           providers:Hub.makeProviders(window,{fetcher:regionalFetch,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
             nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{},ojpSession,
             // OTP2 : moteur supplémentaire, actif seulement si un serveur HTTPS est configuré (aucun par défaut).

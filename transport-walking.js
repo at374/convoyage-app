@@ -25,12 +25,13 @@ function decodePolyline(text){
  }
  if(points.length<2)throw new Error('Pedestrian geometry missing');return points;
 }
-function validateValhalla(data,from,to,{endpoint=DEFAULT_ENDPOINT,retrievedAt=new Date().toISOString()}={}){
+function validateValhalla(data,from,to,{endpoint=DEFAULT_ENDPOINT,retrievedAt=new Date().toISOString(),mode='pedestrian'}={}){
+ const bike=mode==='bicycle';
  if(!point(from)||!point(to))throw new Error('Invalid pedestrian endpoints');
  const trip=data?.trip,leg=trip?.legs?.[0];
  if(trip?.status!==0||trip.units!=='kilometers'||!Array.isArray(trip.legs)||trip.legs.length!==1||!leg||
     !Array.isArray(leg.maneuvers)||!leg.maneuvers.length||
-    leg.maneuvers.some(m=>m?.travel_mode!=='pedestrian'||m.travel_type!=='foot')||
+    leg.maneuvers.some(m=>bike?m?.travel_mode!=='bicycle':(m?.travel_mode!=='pedestrian'||m.travel_type!=='foot'))||
     trip.summary?.has_ferry!==false||leg.summary?.has_ferry!==false)throw new Error('Pedestrian mode not established');
  const summary=trip.summary;
  if(!Number.isFinite(summary?.time)||summary.time<0||!Number.isFinite(summary?.length)||summary.length<0||
@@ -43,11 +44,11 @@ function validateValhalla(data,from,to,{endpoint=DEFAULT_ENDPOINT,retrievedAt=ne
  let geometryMeters=0;for(let i=1;i<geometry.length;i++)geometryMeters+=distance(geometry[i-1],geometry[i]);
  if(Math.abs(geometryMeters-distanceMeters)>Math.max(30,geometryMeters*0.25)||
     (durationSeconds===0&&distanceMeters>1)||
-    (distanceMeters>10&&(distanceMeters/durationSeconds>4||distanceMeters/durationSeconds<0.1)))throw new Error('Inconsistent pedestrian route');
+    (distanceMeters>10&&(distanceMeters/durationSeconds>(bike?12:4)||distanceMeters/durationSeconds<0.1)))throw new Error('Inconsistent pedestrian route');
  // Étapes guidées (« Tournez à gauche sur… ») telles que publiées par le service piéton ; aucune étape n'est inventée.
  const steps=leg.maneuvers.map(m=>({text:String(m.instruction||'').trim().slice(0,160),
   meters:Math.round((Number(m.length)||0)*1000),seconds:Math.round(Number(m.time)||0)})).filter(x=>x.text).slice(0,40);
- return {status:'calculated',provider:'Valhalla pedestrian / OpenStreetMap',endpoint,retrievedAt,
+ return {status:'calculated',mode:bike?'bicycle':'pedestrian',provider:bike?'Valhalla vélo / OpenStreetMap':'Valhalla pedestrian / OpenStreetMap',endpoint,retrievedAt,
   from:{...from},to:{...to},durationSeconds,distanceMeters,geometry,steps,
   startGapMeters:startGap,endGapMeters:endGap,endpointsMatched:startGap<=10&&endGap<=10,
   realWorldAccessConfirmed:false,timeSpecific:false};
@@ -73,7 +74,8 @@ async function readJSON(response,signal,maxBytes=524288){
  const bytes=new Uint8Array(length);let at=0;for(const chunk of chunks){bytes.set(chunk,at);at+=chunk.byteLength;}
  return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
 }
-function createRouter({fetcher=root.fetch,endpoint=DEFAULT_ENDPOINT,maxRequests=8,intervalMs=1000,timeoutMs=8000,maxFailures=2}={}){
+function createRouter({fetcher=root.fetch,endpoint=DEFAULT_ENDPOINT,maxRequests=8,intervalMs=1000,timeoutMs=8000,maxFailures=2,mode='pedestrian',cyclingSpeed=15}={}){
+ const bike=mode==='bicycle';
  const base=new URL(endpoint);
  if(base.protocol!=='https:'||base.username||base.password||base.search||base.hash||!base.pathname.endsWith('/route')||typeof fetcher!=='function')throw new Error('Invalid pedestrian router');
  for(const n of [maxRequests,timeoutMs,maxFailures])if(!Number.isSafeInteger(n)||n<1)throw new Error('Invalid pedestrian request budget');
@@ -85,7 +87,8 @@ function createRouter({fetcher=root.fetch,endpoint=DEFAULT_ENDPOINT,maxRequests=
   const current=new AbortController();controller=current;let timer,abort;
   const cancellation=new Promise((_,reject)=>{abort=()=>reject(new Error('Pedestrian request cancelled'));current.signal.addEventListener('abort',abort,{once:true});});
   const job=(async()=>{
-   const url=new URL(base.href);url.searchParams.set('json',JSON.stringify({locations:[from,to],costing:'pedestrian',
+   const url=new URL(base.href);url.searchParams.set('json',JSON.stringify({locations:[from,to],costing:bike?'bicycle':'pedestrian',
+    ...(bike?{costing_options:{bicycle:{cycling_speed:Math.min(30,Math.max(5,Number(cyclingSpeed)||15)),use_hills:0.3}}}:{}),
     directions_options:{units:'kilometers',language:'fr-FR'}}));
    const response=await fetcher(url.href,{credentials:'omit',cache:'no-cache',referrerPolicy:'no-referrer',signal:current.signal});
    // Le serveur a répondu (HTTP 200) : une réponse refusée par nos contrôles (itinéraire qui n'aboutit pas à
@@ -94,7 +97,7 @@ function createRouter({fetcher=root.fetch,endpoint=DEFAULT_ENDPOINT,maxRequests=
    // marches des axes suivants. Pannes réseau, délais dépassés et erreurs 5xx restent comptés comme pannes.
    try{
     const data=await readJSON(response,current.signal);if(current.signal.aborted)throw new Error('Pedestrian request cancelled');
-    return validateValhalla(data,from,to,{endpoint:base.href});
+    return validateValhalla(data,from,to,{endpoint:base.href,mode});
    }catch(error){if(response?.ok&&!current.signal.aborted)error.pairUnavailable=true;throw error;}
   })();
   timer=setTimeout(()=>current.abort(),timeoutMs);
@@ -131,7 +134,7 @@ function createRouter({fetcher=root.fetch,endpoint=DEFAULT_ENDPOINT,maxRequests=
   const pending=new Promise(resolve=>queue.push({from:{lat:from.lat,lon:from.lon},to:{lat:to.lat,lon:to.lon},resolve}));
   cache.set(key,pending);pump().catch(()=>{});return pending;
  }
- return {route,dispose:()=>{if(disposed)return;disposed=true;controller?.abort();wake?.();for(const item of queue.splice(0))item.resolve(unavailable('cancelled'));cache.clear();},
+ return {mode:bike?'bicycle':'pedestrian',route,dispose:()=>{if(disposed)return;disposed=true;controller?.abort();wake?.();for(const item of queue.splice(0))item.resolve(unavailable('cancelled'));cache.clear();},
   stats:()=>({requests,failures,queued:queue.length,disposed})};
 }
 function instant(value){
