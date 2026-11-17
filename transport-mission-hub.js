@@ -954,13 +954,19 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   // Un budget local ne doit pas dépendre de l'ordre des réponses réseau.
   const coachSource=/(?:flixbus|blablacar\s*(?:bus|coach)|blablacarbus|ouibus)/i.test(source);
   const coachKey=coachSource?(/flixbus/i.test(source)?'flixbus':'blablacarBus'):null;
+  // Une réserve indépendante doit accepter les couples déjà vus sans
+  // consommer de crédit supplémentaire et ne pas se bloquer après 4 couples.
   const coachBudget=coachKey?Math.max(0,4-(s.coachWalkPairs[coachKey]||0)):0;
   const before=s.walkPairs.size;
   let [batch,rest]=select(toWalk,coachSource?coachBudget:8);
   if(coachKey)s.coachWalkPairs[coachKey]=(s.coachWalkPairs[coachKey]||0)+s.walkPairs.size-before;
   await walkBatch(batch);
   // Recherche complémentaire : si rien n'est encore réalisable dans cette direction, 8 couples de plus.
-  if(!disposed&&rest.length&&!s.items.some(x=>x.feasible)){[batch,rest]=select(rest,8);await walkBatch(batch);}
+  // Les cars ne doivent pas perdre leur marche parce qu'un TER est déjà
+  // réalisable. Le second lot reste limité, sans dépasser le quota prévu.
+  if(!disposed&&rest.length&&(coachSource||!s.items.some(x=>x.feasible))){
+   [batch,rest]=select(rest,coachSource?4:8);await walkBatch(batch);
+  }
   for(const t of rest){ // au-delà : visibles, marches non calculées pour préserver le quota Valhalla
    replace(t,assess({...t.j,missing:[...(t.j.missing||[]),'marches non calculées (quota de la fiche)']},s.task,fareFor));
   }
