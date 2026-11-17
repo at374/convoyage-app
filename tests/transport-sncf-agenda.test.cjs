@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const api=require('../sncf-fallback.js');
 const app=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
 const slotCode=app.slice(app.indexOf('      // Regional refresh slots:'),app.indexOf("      regionalSlot('Jonction', () => [regionalPoint"));
-const railCode=app.slice(app.indexOf('      // SNCF station-only fallback'),app.indexOf('      // Regional return'));
+const railCode=app.slice(app.indexOf('      // Présentation gare-à-gare historique désactivée'),app.indexOf('      // Regional return')).replace('if (false && window.CPSncfFallback','if (window.CPSncfFallback');
 class Element{
  constructor(){this.children=[];this.style={};this.parent=null;this.root=false;this.value='';}
  get isConnected(){return this.root||!!this.parent?.isConnected;}

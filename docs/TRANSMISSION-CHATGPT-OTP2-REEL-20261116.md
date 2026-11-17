@@ -80,3 +80,13 @@ Vérifié par Claude :
 - Non reproduit : l'écran de connexion bloque l'accès aux missions (aucun identifiant à saisir par Claude). Cause non identifiée.
 
 À faire en priorité (avant toute autre chose) : ouvrir une mission réelle, cliquer sur le bouton avec la console ouverte, relever l'erreur. Pistes : exception avant `insertAdjacentElement` ; panneau créé mais masqué par le `MutationObserver` (`$('feuille').hidden`) ; ancien cache du service worker (`sw.js`, cache v57) ; régression venue de la fusion `main` (affichage V277 en ligne alors que `main` contient V278/V279 — à vérifier). Si le défaut vient du moteur OTP2, il suffit de retirer la ligne `window.CP_OTP_ENDPOINT` d'`index.html` pour le désactiver.
+
+## Correctifs du 17/11/2026 (midi) après lecture de la transmission de ChatGPT (`c109548`)
+
+Tests exécutés : 916 au total, 902 réussis, 12 échecs anciens (grilles de péages APRR/AREA/SANEF/UNK, sans lien avec les transports), 2 ignorés.
+
+- **`transport-mission-hub.js` ne se chargeait plus** (SyntaxError ligne ~991, parenthèse manquante dans `toWalk.sort`, commit `5643225` ou voisin). Corrigé : `(pk(a.quick)===pk(b.quick)?0:pk(a.quick)-pk(b.quick))||`.
+- **Meilleur compromis** : un horaire seulement programmé passait devant un trajet réalisable à cause de `relevant()` placé avant la confirmation. Ordre rétabli : `byFeasible || confirmedFirst || relevant || score`.
+- **Tests mis à jour (comportement voulu, tests périmés)** : le test « classement » utilisait une arrivée 3 h 30 avant l'échéance, désormais écartée par la règle « arrivée trop tôt » (180 min) ; le test sur la clé de marche cherchait l'ancien texte `j.walkOnly?[` (maintenant `walkingJourney?[`) ; le test d'annulation OTP2 attendait « aborted » (le client dit maintenant « recherche interrompue » depuis `e0c30b9`).
+- **Anciens tests SNCF gare-à-gare** (`sncf-fallback`, `transport-sncf-agenda`) : le bloc a été désactivé par `if (false && …)` dans `app.js` (commit `67ff295`). Les tests lisent maintenant le nouveau marqueur et réactivent le bloc le temps du test. Si le bloc est supprimé pour de bon, supprimer aussi ces deux fichiers de test.
+- Demande à ChatGPT : lancer `node --test tests/*.test.cjs` avant chaque envoi.

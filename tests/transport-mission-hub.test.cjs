@@ -111,7 +111,7 @@ test('tarifs : EUR et CHF séparés, jamais convertis ; tarif manquant => Prix �
 });
 
 test('classement : moins cher / compromis / plus rapide, fusion des doublons entre moteurs',()=>{
- const base=(dep,arr,fare,src)=>H.assess({source:src,sources:[src],legs:[bus(dep,arr,STOP1,STOP2,{line:'X',fare})],missing:[]},{latestArrival:at(12,0)});
+ const base=(dep,arr,fare,src)=>H.assess({source:src,sources:[src],legs:[bus(dep,arr,STOP1,STOP2,{line:'X',fare})],missing:[]},{latestArrival:at(10,0)});
  const cheap=base(at(8,0),at(9,30),{amount:2,currency:'EUR',source:'grille'},'GTFS');
  const fast=base(at(8,0),at(8,30),null,'TripGo');
  const dupFast=base(at(8,0),at(8,30),null,'Suisse');
@@ -534,7 +534,7 @@ test('doublons : les marches distinctes ne partagent plus une clé unique',()=>{
  const fs=require('node:fs');
  const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
  const rankSource=source.slice(source.indexOf('function rank('),source.indexOf('/* ---------- Requêtes par direction ---------- */'));
- assert.match(rankSource,/const k=j\.walkOnly\?\[/);
+ assert.match(rankSource,/const k=walkingJourney\?\[/);
  assert.match(rankSource,/String\(j\.legs\?\.\[0\]\?\.from\|\|''\)/);
  assert.match(rankSource,/Math\.round\(ms\(j\.departure\)\/60000\)/);
  assert.doesNotMatch(rankSource,/j\.walkOnly\?'walk':signature\(j\)/);

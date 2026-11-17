@@ -31,7 +31,7 @@ test('OTP2 client : abandonne la requête si la mission est annulée',async()=>{
   });}});
  await new Promise(resolve=>setImmediate(resolve));
  controller.abort();
- await assert.rejects(pending,/aborted/);
+ await assert.rejects(pending,/interrompue|aborted/);
  assert.equal(observed.aborted,true);
 });
 

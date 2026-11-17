@@ -590,7 +590,8 @@ function rank(items,task={}){
   a.durationMinutes-b.durationMinutes)[0]:undefined;
  const score=j=>(fareCurrency(j.price)==='EUR'?Math.min(j.price.amounts.EUR||0,200):60)+j.durationMinutes/3+j.transfers*8+j.walkMeters/250+
   (j.slackMinutes===null?0:Math.max(0,30-j.slackMinutes));
- const compromise=[...all].sort((a,b)=>byFeasible(a,b)||relevant(a,b)||score(a)-score(b)||confirmedFirst(a,b))[0];
+ // Un trajet confirmé (réalisable) prime sur un simple horaire programmé ; la proximité de la marge ne départage qu'ensuite.
+  const compromise=[...all].sort((a,b)=>byFeasible(a,b)||confirmedFirst(a,b)||relevant(a,b)||score(a)-score(b))[0];
  const picks=[];
  for(const [label,j] of [['Moins cher',cheapest],['Meilleur compromis',compromise],['Plus rapide',fastest]])
   if(j){const found=picks.find(p=>p.journey===j);if(found)found.labels.push(label);else picks.push({labels:[label],journey:j});}
@@ -987,7 +988,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   const coachPriority=t=>/(?:flixbus|blablacar\s*(?:bus|coach)|blablacarbus|ouibus)/i.test(
    [t.j.source,...(t.j.sources||[]),...(t.j.legs||[]).map(l=>l.provider||'')].join(' '))?0:1;
   toWalk.sort((a,b)=>coachPriority(a)-coachPriority(b)||
-   (pk(a.quick)===pk(b.quick)?0:pk(a.quick)-pk(b.quick)||
+   (pk(a.quick)===pk(b.quick)?0:pk(a.quick)-pk(b.quick))||
    (isReturn?ms(a.quick.departure)-ms(b.quick.departure):(a.quick.slackMinutes??0)-(b.quick.slackMinutes??0))||a.quick.durationMinutes-b.quick.durationMinutes);
   // Affichage immédiat : chaque trajet apparaît tout de suite, « marches en cours de calcul », puis est remplacé.
   const pendingCard=new Map();
