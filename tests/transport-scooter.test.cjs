@@ -79,3 +79,20 @@ test('paramètres : marche et trottinette réglables dans l onglet Paramètres, 
  assert.match(src,/ecrireLocal\('cp_trot_vitesse_kmh'/);assert.match(src,/ecrireLocal\('cp_trot_max_km'/);
  assert.match(src,/mode: 'bicycle'/);
 });
+
+test('paramètres : adresse exacte du domicile localisée, gardée en local, prioritaire pour les transports',()=>{
+ const src=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ assert.match(src,/id="rAdr"/);
+ assert.match(src,/ecrireLocal\('cp_domicile_exact', \{ texte/);
+ assert.match(src,/lireLocal\('cp_domicile_exact',null\)/);
+ assert.match(src,/homeAdrOk\?\{lat:homeAdr\.lat,lon:homeAdr\.lon\}/);
+ // jamais envoyée au serveur : absente de l'objet des réglages synchronisés
+ const i=src.indexOf('const v = {');
+ assert.ok(!/cp_domicile_exact|rAdr/.test(src.slice(i,i+1500)));
+});
+
+test('billet SNCF : gares exactes à coller, boutons copier (SNCF Connect sans lien pré-rempli)',async()=>{
+ const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.match(src,/Copier la gare de départ/);assert.match(src,/Copier la gare d’arrivée/);
+ assert.match(src,/ticketLink\(l\.provider\)\?\.label==='SNCF Connect'/);
+});

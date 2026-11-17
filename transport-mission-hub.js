@@ -1110,6 +1110,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
 }
 
 /* ---------- Affichage (cartes Android) ---------- */
+function dayText(v){const t=ms(v);return Number.isFinite(t)?new Intl.DateTimeFormat('fr-FR',{weekday:'long',day:'numeric',month:'long',timeZone:'Europe/Paris'}).format(new Date(t)):'?';}
 function clock(v){const t=ms(v);return Number.isFinite(t)?new Intl.DateTimeFormat('fr-FR',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Paris'}).format(new Date(t)):'?';}
 function durationText(min){return min>=60?Math.floor(min/60)+' h '+String(min%60).padStart(2,'0'):min+' min';}
 function signedDurationText(min){return min<0?'-'+durationText(Math.abs(min)):durationText(min);}
@@ -1281,6 +1282,20 @@ function card(doc,j,labels,expanded=false){
    }
   }
   else{const f=j.price.legFares?.[legIndex]||null;li.appendChild(el(doc,'small',null,f?'Tarif : '+f.amount.toFixed(2).replace('.',',')+(f.currency==='EUR'?' €':' CHF')+' · '+f.source:'Tarif : à confirmer'));
+   // Aide à la recherche de billet : SNCF Connect n'accepte pas de lien pré-rempli, on donne les noms exacts à coller.
+   if(!f&&ticketLink(l.provider)?.label==='SNCF Connect'&&l.from&&l.to){
+    const box=el(doc,'div','cp-hub-search-help');
+    box.appendChild(el(doc,'small',null,'Pour chercher le prix sur SNCF Connect : départ « '+l.from+' », arrivée « '+l.to+' », le '+dayText(l.departure)+' vers '+clock(l.departure)+'.'));
+    for(const [label,text] of [['📋 Copier la gare de départ',l.from],['📋 Copier la gare d’arrivée',l.to]]){
+     const b=el(doc,'button','cp-hub-copy',label);b.type='button';
+     b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();
+      try{const w=doc.defaultView,n=w&&w.navigator;
+       if(n&&n.clipboard&&n.clipboard.writeText)n.clipboard.writeText(text).then(()=>{b.textContent='✅ Copié';},()=>{b.textContent='Copie impossible';});
+       else{const t=doc.createElement('textarea');t.value=text;doc.body.appendChild(t);t.select();doc.execCommand('copy');t.remove();b.textContent='✅ Copié';}
+      }catch(_){b.textContent='Copie impossible';}});
+     box.appendChild(b);}
+    li.appendChild(box);
+   }
    // Le carnet rechargeable Ondéa est utilisable sur les lignes 400–419, contrairement au M-ticket.
    // Ne pas présenter son prix d'achat comme le coût d'un trajet unique.
    if(!f&&/^ond[ée]a\b/i.test(String(l.provider||''))&&/^(?:40\d|41\d)$/.test(String(l.line||'').trim()))
