@@ -445,3 +445,19 @@ test('jonction à pied : rejeter la marche si la livraison est trop tardive',asy
  const task={from:HOME,to:STOP1,earliestDeparture:at(8,40),latestArrival:at(9,0)};
  assert.equal(await H.walkOnly(task,router,3),null);
 });
+
+test('cars longue distance : FlixBus et BlaBlaCar Bus visibles dans les propositions principales',()=>{
+ const task={latestArrival:at(12,0)};
+ const candidate=(source,dep,arr,line)=>H.assess({
+  source,sources:[source],legs:[bus(at(dep,0),at(arr,0),STOP1,STOP2,{provider:source,line})],missing:[]
+ },task);
+ const regional=candidate('TER',9,10,'TER1');
+ const flix=candidate('FlixBus',9,11,'F123');
+ const blabla=candidate('BlaBlaCar Bus',8,10,'B456');
+ const ranked=H.rank([regional,flix,blabla],task);
+ const names=ranked.picks.flatMap(p=>p.labels);
+ assert.ok(names.includes('FlixBus'));
+ assert.ok(names.includes('BlaBlaCar Bus'));
+ assert.ok(ranked.picks.some(p=>p.journey.sources.includes('FlixBus')));
+ assert.ok(ranked.picks.some(p=>p.journey.sources.includes('BlaBlaCar Bus')));
+});
