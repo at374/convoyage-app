@@ -2285,12 +2285,29 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           Math.abs(Number(gps.lat))<=90&&Math.abs(Number(gps.lng))<=180&&
           !(Number(gps.lat)===0&&Number(gps.lng)===0))?{lat:Number(gps.lat),lon:Number(gps.lng)}:null;
         const homeLat=etat.reglages?.domicile_lat,homeLon=etat.reglages?.domicile_lng;
-        const homePt=homeLat!=null&&homeLon!=null&&homeLat!==''&&homeLon!==''&&Number.isFinite(Number(homeLat))&&Number.isFinite(Number(homeLon))?{lat:Number(homeLat),lon:Number(homeLon)}:null;
         const homeName=etat.reglages?.domicile_ville||'Domicile';
+        const homeExact=homeLat!=null&&homeLon!=null&&homeLat!==''&&homeLon!==''&&
+          Number.isFinite(Number(homeLat))&&Number.isFinite(Number(homeLon))&&
+          Math.abs(Number(homeLat))<=90&&Math.abs(Number(homeLon))<=180&&
+          !(Number(homeLat)===0&&Number(homeLon)===0);
+        // Même repli pour le domicile : ville connue mais coordonnées personnelles absentes.
+        // Ne jamais utiliser le centre du département comme substitut à une commune.
+        const homeCity=homeExact?null:G.trouverVille(homeName,etat.reglages?.domicile_departement||'');
+        const homePt=homeExact?{lat:Number(homeLat),lon:Number(homeLon)}:
+          homeCity?{lat:Number(homeCity.lat),lon:Number(homeCity.lng)}:null;
         const short=lireLocal('cp_marge_courte_gps',false)===true;
         const exact=gps=>!!gps&&gps.precision==='gps';
         const origin=G.coordonnees(m,'origin'),dest=G.coordonnees(m,'destination'),nextOrigin2=next?G.coordonnees(next,'origin'):null;
         const tasks=[];
+        // Les messages sont reconstruits sans doublons lors d'une actualisation des moteurs.
+        for(const section of Object.values(transportDestinations))section.querySelectorAll('.cp-transport-approx').forEach(n=>n.remove());
+        if(!homeExact&&homePt){
+          for(const direction of ['Aller','Retour']){
+            const note=document.createElement('p');note.className='cp-transport-approx';
+            note.textContent='📍 Domicile : centre de '+homeName+' utilisé faute de coordonnées exactes. Marche et faisabilité indicatives.';
+            transportDestinations[direction]?.appendChild(note);
+          }
+        }
         // À défaut d'adresse GPS, le centre de la commune permet une recherche indicative.
         // Ne jamais assimiler ce point approximatif à une adresse exacte ni raccourcir la marge.
         for(const [direction,point] of [['Aller',origin],['Jonction départ',dest],['Jonction arrivée',nextOrigin2],['Retour',dest]]){
