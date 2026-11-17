@@ -1011,8 +1011,14 @@ function card(doc,j,labels){
  s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':j.scheduled?'🕒 ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · avance '+j.slackMinutes+' min (marge '+j.marginMinutes+' min)':'')));
  if(!j.feasible)s.appendChild(el(doc,'small','cp-hub-reason',j.statusDetail));
  c.appendChild(s);
- const body=el(doc,'div','cp-hub-body');
- const ol=el(doc,'ol','cp-hub-legs');
+ // Le détail et les polylignes SVG sont construits uniquement à la première ouverture.
+ // Les cartes fermées restent légères, même si les moteurs renvoient beaucoup de trajets.
+ let bodyBuilt=false;
+ const buildBody=()=>{
+  if(bodyBuilt)return;
+  bodyBuilt=true;
+  const body=el(doc,'div','cp-hub-body');
+  const ol=el(doc,'ol','cp-hub-legs');
  for(const [legIndex,l] of j.legs.entries()){
   const li=el(doc,'li',l.kind==='walk'?'walk':'ride');
   li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+Math.max(1,Math.round(l.durationSeconds/60))+' min':''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':''].filter(Boolean).join(' '))));
@@ -1034,7 +1040,12 @@ function card(doc,j,labels){
  if(j.alerts.length)body.appendChild(el(doc,'p','cp-hub-note','Alertes : '+j.alerts.join(' · ')));
  if(j.feasible)body.appendChild(el(doc,'p','cp-hub-note',j.statusDetail));
  body.appendChild(el(doc,'small','cp-hub-src','Sources : '+j.sources.join(', ')+(j.dataDate?' · données '+j.dataDate:'')));
- c.appendChild(body);return c;
+  c.appendChild(body);
+ };
+ if(c.addEventListener)c.addEventListener('toggle',()=>{if(c.open)buildBody();});
+ // Environnements DOM sans événement toggle : construction au clic sur le résumé.
+ if(s.addEventListener)s.addEventListener('click',()=>{if(!bodyBuilt)buildBody();});
+ return c;
 }
 // Transports à la demande : information seulement (réservation obligatoire, aucun horaire ni prix affiché comme trajet).
 const TAD=[
