@@ -513,3 +513,11 @@ test('fusion doublons : faisabilité prioritaire sur prix connu',()=>{
  assert.match(source,/const firstDifference=qj\.findIndex/);
  assert.match(source,/qj\[firstDifference\]>qo\[firstDifference\]/);
 });
+
+test('doublons : la signature distingue les compagnies de cars',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const signature=source.slice(source.indexOf('function signature('),source.indexOf('function rank('));
+ assert.match(signature,/String\(l\.provider\|\|''\)/);
+ assert.match(signature,/String\(l\.line\|\|''\)/);
+});
