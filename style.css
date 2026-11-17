@@ -764,3 +764,9 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
  #cpTransportMissionDetails .cp-hub-price.unknown{max-width:116px;font-size:11px}
  #cpTransportMissionDetails .cp-transport-direction{padding:11px}
 }
+
+/* Navigation par date : missions de plusieurs jours, lisible sur Android. */
+#cpTransportMissionDetails .cp-transport-direction[hidden]{display:none!important}
+#cpTransportMissionDetails .cp-transport-day-tabs{display:flex;gap:8px;overflow-x:auto;max-width:100%;padding:4px 2px 10px;scrollbar-width:thin}
+#cpTransportMissionDetails .cp-transport-day-tab{flex:0 0 auto;min-height:44px;padding:9px 13px;border-radius:12px;font-weight:800;white-space:nowrap}
+#cpTransportMissionDetails .cp-transport-day-tab[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
