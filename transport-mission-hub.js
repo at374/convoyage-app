@@ -504,7 +504,11 @@ function walkPairs(j,task){
  return out;
 }
 function signature(j){
- return j.legs.filter(l=>l.kind!=='walk').map(l=>[String(l.line||'').replace(/\s+/g,'').toLowerCase(),Math.round(ms(l.departure)/60000),Math.round(ms(l.arrival)/60000)].join('|')).join(';');
+ return j.legs.filter(l=>l.kind!=='walk').map(l=>[
+  String(l.provider||'').replace(/\s+/g,'').toLowerCase(),
+  String(l.line||'').replace(/\s+/g,'').toLowerCase(),
+  Math.round(ms(l.departure)/60000),Math.round(ms(l.arrival)/60000)
+ ].join('|')).join(';');
 }
 function rank(items,task={}){
  const seen=new Map();
