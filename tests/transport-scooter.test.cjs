@@ -217,3 +217,11 @@ test('suivi GPS : reprise au premier plan sans attente, ignore les relevés en r
  assert.ok(app.includes('suiviReprise ||'));
  assert.ok(app.includes("vit > 3"));
 });
+
+test('suivi arrivée : événements Google Maps / Waze lus via l’APK, validés par la position',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ assert.ok(app.includes('window.CPNatif; if (!N || typeof N.prendreNavigation'));
+ assert.ok(app.includes('missionsASuivre(at)'));
+ assert.ok(app.includes('Math.abs(at - locAt) > 15 * 60000'));
+ assert.ok(app.includes('suiviNavigation();'));
+});

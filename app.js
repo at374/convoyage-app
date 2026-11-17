@@ -733,8 +733,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   // Suivi d'arrivée à la livraison (missions acceptées de l'agenda) : le GPS n'est lu que pendant la fenêtre de la mission et tant que l'application est ouverte.
   // Arrivée = présence de 60 s dans 300 m de l'adresse de livraison (800 m si seule la ville est connue). Les transports retour / jonction partent alors de arrivée + 15 min.
   let suiviWatch = null, suiviTimer = null, suiviRefus = false, suiviReprise = false; const suiviDedans = new Map();
-  function missionsASuivre() {
-    const now = Date.now();
+  function missionsASuivre(quand) {
+    const now = Number.isFinite(quand) ? quand : Date.now();
     return (etat.missions || []).filter(m => m.kind === 'acceptee' && m.platform && m.external_id != null).map(m => ({ m, t: missionTiming(m) })).filter(({ m, t }) => {
       if (arriveeGps(t.key)) return false;
       const p = Date.parse(t.pickup || ''); if (!Number.isFinite(p)) return false;
@@ -756,6 +756,23 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       if (suiviReprise || ts - suiviDedans.get(t.key) >= DUREE_PRESENCE_MS) suiviArrivee(m, t, suiviDedans.get(t.key));
     }
   }
+  // Application Android (APK 2.34+) : Google Maps et Waze annoncent l'arrivée (ou la fin du guidage) ; l'heure est celle de la notification, même application en arrière-plan.
+  // L'événement n'est retenu que si la position connue à cet instant (moins de 15 min) est à moins de 500 m de l'adresse de livraison.
+  function suiviNavigation() {
+    try {
+      const N = window.CPNatif; if (!N || typeof N.prendreNavigation !== 'function' || !(etat.missions || []).length) return;
+      const evs = JSON.parse(N.prendreNavigation() || '[]'); if (!Array.isArray(evs)) return;
+      for (const ev of evs) {
+        const at = Number(ev.at); if (!Number.isFinite(at) || Date.now() - at > 24 * 3600000) continue;
+        const lat = Number(ev.lat), lng = Number(ev.lng), locAt = Number(ev.loc_at);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(locAt) || Math.abs(at - locAt) > 15 * 60000) continue;
+        for (const { m, t } of missionsASuivre(at)) {
+          const d = G.coordonnees(m, 'destination'), rayon = d.precision === 'ville' ? 1200 : 500;
+          if (G.volOiseauKm({ lat, lng }, d) * 1000 <= rayon) { suiviArrivee(m, t, at); break; }
+        }
+      }
+    } catch (_) {}
+  }
   function suiviArrivee(m, t, ts) {
     const tous = Object.assign({}, lireLocal('cp_arrivees', {})), cles = Object.keys(tous);
     if (cles.length > 40) delete tous[cles[0]];
@@ -769,6 +786,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   function suiviMaj() {
     clearTimeout(suiviTimer); suiviTimer = setTimeout(suiviMaj, 5 * 60000);
     const actif = !suiviRefus && !document.hidden && navigator.geolocation && missionsASuivre().length > 0;
+    suiviNavigation();
     if (!actif) { if (suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; } suiviDedans.clear(); return; }
     if (suiviWatch !== null) return;
     suiviWatch = navigator.geolocation.watchPosition(suiviTraiter, e => {
