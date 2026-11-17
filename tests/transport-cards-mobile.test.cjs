@@ -113,3 +113,9 @@ test('cars : horaires reçus mais aucune proposition retenue, diagnostic explici
  assert.match(hub,/entry\.visible===0&&\(v\.received\?\.\[entry\.name\]\|\|0\)>0/);
  assert.match(hub,/les horaires reçus ne constituent pas un trajet validé pour cette mission/);
 });
+
+test('autres propositions : annoncer le nombre de cartes réellement rendues',()=>{
+ assert.match(hub,/Math\.min\(v\.others\.length,8\)/);
+ assert.match(hub,/v\.others\.length>8\?' sur '/);
+ assert.match(hub,/v\.others\.slice\(0,8\)/);
+});
