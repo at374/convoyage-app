@@ -529,3 +529,13 @@ test('doublons : les arrêts de montée et descente font partie de la signature'
  assert.match(signature,/String\(l\.from\|\|''\)\.trim\(\)\.toLowerCase\(\)/);
  assert.match(signature,/String\(l\.to\|\|''\)\.trim\(\)\.toLowerCase\(\)/);
 });
+
+test('doublons : les marches distinctes ne partagent plus une clé unique',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const rankSource=source.slice(source.indexOf('function rank('),source.indexOf('/* ---------- Requêtes par direction ---------- */'));
+ assert.match(rankSource,/const k=j\.walkOnly\?\[/);
+ assert.match(rankSource,/String\(j\.legs\?\.\[0\]\?\.from\|\|''\)/);
+ assert.match(rankSource,/Math\.round\(ms\(j\.departure\)\/60000\)/);
+ assert.doesNotMatch(rankSource,/j\.walkOnly\?'walk':signature\(j\)/);
+});
