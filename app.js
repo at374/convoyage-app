@@ -302,7 +302,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     const carte = (e, k) => { const c = e.c, z = e.z, nom = PLATS[c.platform] || c.platform;
       const lien = c.detail_url && /^https:\/\//.test(c.detail_url) ? c.detail_url : LIENS[c.platform];
       const href = lienAppliAutre(c.platform, lien) || lien || '#';
-      const net = z.rentabilite && Number.isFinite(Number(z.rentabilite.net)) ? 'net ≈ ' + euros(z.rentabilite.net) : '';
+      const net = ''; // Pas de net affiché sans coût total des transports vérifié.
       return '<div class="rcCarte" style="' + (k ? 'border-top:3px dashed #16a34a;margin-top:14px;padding-top:12px' : '') + '"><div class="rcPlat">' + esc(nom) + '</div><div class="rcTrajet">' + esc(c.from_city || '?') + ' → ' + esc(c.to_city || '?') + '</div><div class="rcPrix">' + (c.fee !== null && c.fee !== undefined ? esc(euros(c.fee)) : '—') + (net ? ' · ' + esc(net) : '') + '</div><div class="rcInfo">Te rapproche de ' + Math.round(z.rapprocheKm) + ' km · il resterait ' + Math.round(z.retourDomicileKm || 0) + ' km jusqu’à chez toi</div><button class="rcVoir" data-k="' + k + '">👁️ Voir la mission</button><a class="rcLien" href="' + esc(href) + '" target="_blank" rel="noopener"><button class="rcPf">➡️ Aller sur ' + esc(nom) + '</button></a></div>'; };
     d.innerHTML = '<div class="rcBoite" style="max-height:94vh;overflow-y:auto"><div class="rcTitre">🏠 RETOUR VERS TON DOMICILE</div><div class="rcSous">' + (liste.length > 1 ? liste.length + ' nouvelles missions' : 'Nouvelle mission') + ' pendant ta mission en cours</div>' + liste.map(carte).join('') + '<button class="rcFermer" id="rcFermer">Ignorer</button></div>';
     document.body.appendChild(d);
@@ -1755,7 +1755,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       const n = [];
       if (rr && rr.connu) { n.push(ligne('Net', '≈ ' + esc(euros(rr.net)), 'gras')); if (rr.parHeure) n.push(ligne('Par heure', esc(euros(rr.parHeure)) + '/h')); } else n.push(ligne('Net', 'prix inconnu'));
       if (x.rapprocheKm != null) n.push(Math.abs(x.rapprocheKm) < 1 ? ligne('Position', 'même distance de chez toi') : x.rapprocheKm > 0 ? ligne('Position', 'te rapproche de ≈ ' + esc(x.rapprocheKm) + ' km', 'ok') : ligne('Position', 't’éloigne de ≈ ' + esc(-x.rapprocheKm) + ' km', 'ko'));
-      return tr + bk('bkRen', '💶 RENTABILITÉ', n.join(''));
+      // Les liaisons proposées ici sont estimées : masquer net et rentabilité.
+      return tr;
     };
     const quand = (c, z) => bkDates(c, arriveeTxt(c)) + (z.attenteH ? bk('bkTr', '⏱ ATTENTE', '≈ ' + esc(duree(z.attenteH))) : '');
     const tete = c => '<div class="haut"><span><span class="etiq">' + esc(PLATS[c.platform] || c.platform) + '</span></span><span><div class="prix">' + (c.fee != null ? esc(euros(c.fee)) : '?') + '</div></span></div><div class="trajet">' + trajetHtml(c) + '</div>';
@@ -1791,6 +1792,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   const missionPassee = m => { const f = Date.parse(m.delivery_end || m.delivery_start || ''), d = Date.parse(m.pickup_start || ''); return Number.isFinite(f) ? f < Date.now() : (Number.isFinite(d) ? d + 12 * 3600000 < Date.now() : false); };
   // V212 : rentabilité en bloc : prestation, transport (approche, retour), cotisations en gras ; net et par heure en vert (rentable) ou rouge.
   function blocRenta(m, r, frais, dv, depuis) {
+    // Le calcul actuel utilise des coûts kilométriques estimés, pas des billets vérifiés.
+    // Aucun résultat de rentabilité n'est affiché avant raccordement des prix réels
+    // de tous les transports nécessaires (approche, jonction et retour).
+    return '';
     if (!r.connu) return bk('bkRen', 'RENTABILITÉ', '<div class="doux">Prix non connu.</div>');
     const ph = r.parHeure, ok = r.net > 0 && (!ph || ph >= 15);
     const row = (x, y, c) => '<div class="rd' + (c ? ' ' + c : '') + '"><span>' + x + '</span><span>' + y + '</span></div>';
