@@ -93,7 +93,9 @@ test('cartes piétonnes : conserver les détails construits après rafraîchisse
 });
 
 test('BlaBlaCar Bus et FlixBus : diagnostic visible même sans trajet retenu',()=>{
- assert.match(hub,/BlaBlaCar Bus \/ FlixBus : état des recherches/);
+ assert.match(hub,/entry\.name\.replace\(' GTFS',''\)/);
+ assert.match(hub,/count\+' reçu\(s\)'/);
+ assert.match(hub,/non interrogé':'non configuré/);
  assert.match(hub,/BlaBlaCar Bus GTFS/);
  assert.match(hub,/FlixBus GTFS/);
  assert.match(hub,/Moteur non interrogé/);
