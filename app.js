@@ -2288,7 +2288,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       };
       const transportDays={
         Aller:parisServiceDay(pickupDate),
-        Jonction:next?parisServiceDay(deliveryDate):null,
+        // La recherche de jonction vise l'arrivée avant la prochaine prise en charge.
+        // L'onglet suit cette date cible (et non la livraison précédente).
+        Jonction:next?parisServiceDay(next.pickup_start):null,
         Retour:parisServiceDay(deliveryDate)
       };
       const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
