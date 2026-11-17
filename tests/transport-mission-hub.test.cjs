@@ -628,3 +628,18 @@ test('France–Suisse : aucune recommandation moins cher entre EUR et CHF sans c
  const euroOnly=H.rank([euro,offer('EUR',5,'EUR2')],task);
  assert.equal(euroOnly.picks.find(p=>p.labels.includes('Moins cher')).journey.price.label,'5,00 €');
 });
+
+test('cars transfrontaliers : EUR et CHF non comparables, départage par horaire',()=>{
+ const task={latestArrival:at(9,0)};
+ const offer=(currency,amount,departure,arrival,line)=>H.assess({
+  source:'FlixBus',sources:['FlixBus'],missing:[],
+  legs:[bus(departure,arrival,STOP1,STOP2,{provider:'FlixBus',line,
+   fare:{amount,currency,source:'tarif vérifié'}})]},task);
+ const eur=offer('EUR',5,at(7,45),at(8,15),'E');
+ const chf=offer('CHF',4,at(8,0),at(8,40),'C');
+ const ranked=H.rank([eur,chf],task);
+ const coach=ranked.picks.find(p=>p.labels.includes('FlixBus'));
+ assert.ok(coach);
+ assert.equal(coach.journey.legs[0].line,'C','les prix de devises différentes ne départagent pas les horaires');
+ assert.equal(ranked.picks.some(p=>p.labels.includes('Moins cher')),false);
+});
