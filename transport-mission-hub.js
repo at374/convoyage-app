@@ -487,7 +487,7 @@ function dayWindowOk(j,task){
  const dep=parisDayParts(j.legs[0]?.departure),arr=parisDayParts(j.legs[j.legs.length-1]?.arrival);
  if(!dep||!arr)return false;
  const first=Number.isFinite(task.dayStartMinutes)?task.dayStartMinutes:360;
- const last=Number.isFinite(task.dayEndMinutes)?task.dayEndMinutes:1320;
+ const last=Number.isFinite(task.dayEndMinutes)?task.dayEndMinutes:1140;
  if(dep.minute<first||arr.minute>last||dep.day!==arr.day)return false;
  const reference=parisDayParts(task.latestArrival||task.earliestDeparture);
  return !reference||dep.day===reference.day;
