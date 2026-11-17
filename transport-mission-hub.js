@@ -500,6 +500,12 @@ function dayWindowOk(j,task){
  const first=Number.isFinite(task.dayStartMinutes)?task.dayStartMinutes:300;
  const last=Number.isFinite(task.dayEndMinutes)?task.dayEndMinutes:1140;
  if(dep.minute<first||arr.minute>last||dep.day!==arr.day)return false;
+ // Agences et parcs fermés en fin de journée (17:30 par défaut, plus tard si la fenêtre de la plateforme le permet) :
+ // arrivée au site (prise en charge / mission suivante) ou départ du site (retour) après cette heure = proposition écartée.
+ if(Number.isFinite(task.siteCloseMinutes)){
+  const depart=task.windowKind==='departure'||(Number.isFinite(ms(task.earliestDeparture))&&!Number.isFinite(ms(task.latestArrival)));
+  if((depart?dep.minute:arr.minute)>task.siteCloseMinutes)return false;
+ }
  const reference=parisDayParts(task.latestArrival||task.earliestDeparture);
  return !reference||dep.day===reference.day;
 }
@@ -699,7 +705,7 @@ function rank(items,task={}){
    if(already){if(!already.labels.includes(label))already.labels.push(label);}else picks.push({labels:[label],journey:j});}
  }
  picks.sort((a,b)=>(tier(b.journey)-tier(a.journey))||(ms(a.journey.departure)-ms(b.journey.departure))||(ms(a.journey.arrival)-ms(b.journey.arrival)));   // les propositions mises en avant : la plus matinale en premier
- const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||relevant(a,b)||ms(a.departure)-ms(b.departure)||confirmedFirst(a,b));
+ const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||ms(a.departure)-ms(b.departure)||ms(a.arrival)-ms(b.arrival)||confirmedFirst(a,b));   // autres propositions : les plus matinales d'abord
  return {picks,others,total:all.length};
 }
 

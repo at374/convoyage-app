@@ -249,3 +249,18 @@ test('classement : meilleur compromis = arrive le plus tôt, propositions triée
  assert.ok(src.includes('(ms(a.arrival)-ms(b.arrival))||(ms(a.departure)-ms(b.departure))'));
  assert.ok(src.includes('picks.sort((a,b)=>(tier(b.journey)-tier(a.journey))'));
 });
+
+test('fermeture des agences : arrivée/départ du site après 17h30 écartés (sauf fenêtre plus tardive), autres propositions les plus matinales',()=>{
+ const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ assert.ok(src.includes('task.siteCloseMinutes'));
+ assert.ok(app.includes('const closeFor=iso=>'));
+ assert.ok(app.includes('siteCloseMinutes:closeFor('));
+ assert.ok(src.includes("sort((a,b)=>byFeasible(a,b)||ms(a.departure)-ms(b.departure)||ms(a.arrival)-ms(b.arrival)"));
+ const H=require('../transport-mission-hub.js');
+ const mk=(d,a)=>({legs:[{kind:'transit',mode:'RAIL',departure:d,arrival:a,from:'A',to:'B'}],departure:d,arrival:a,durationMinutes:120,transfers:0,walkMeters:0,price:{status:'unknown'},sources:['t']});
+ const tk=close=>({from:{lat:45,lon:5},to:{lat:45.1,lon:5.1},latestArrival:'2026-11-18T19:00:00+01:00',siteCloseMinutes:close,marginMinutes:15});
+ const trajet=mk('2026-11-18T16:19:00+01:00','2026-11-18T18:40:00+01:00');
+ assert.ok(H.assess(trajet,tk(1050),null).reasons.includes('trajet hors plage de jour ou date de mission'));
+ assert.deepEqual(H.assess(trajet,tk(1140),null).reasons,[]);
+});
