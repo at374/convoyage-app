@@ -4,7 +4,7 @@ on:
     branches: [feature/transport-ranking-safe, feature/transports-aura-suisse]
     paths: ['server/**', '*.js', 'index.html', 'style.css', 'tests/browser/**', 'tests/transport-cards-mobile.test.cjs', 'tests/transport-profitability-verified-only.test.cjs', 'tests/national-stop-fallback.test.cjs', 'tests/transport-mission-hub.test.cjs', 'tests/transport-otp-adapter.test.cjs', 'tests/transport-otp-client.test.cjs', 'tests/transport-otp-hub.test.cjs', 'tests/fixtures/**', '.github/workflows/test-transport-mobile.yml']
   pull_request:
-    paths: ['server/**', '*.js', 'index.html', 'style.css', 'tests/browser/**', 'tests/transport-profitability-verified-only.test.cjs', 'tests/national-stop-fallback.test.cjs', 'tests/transport-mission-hub.test.cjs', 'tests/fixtures/**', '.github/workflows/test-transport-mobile.yml']
+    paths: ['server/**', '*.js', 'index.html', 'style.css', 'tests/browser/**', 'tests/transport-cards-mobile.test.cjs', 'tests/transport-profitability-verified-only.test.cjs', 'tests/national-stop-fallback.test.cjs', 'tests/transport-mission-hub.test.cjs', 'tests/fixtures/**', '.github/workflows/test-transport-mobile.yml']
 permissions:
   contents: read
 jobs:
