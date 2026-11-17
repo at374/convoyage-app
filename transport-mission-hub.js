@@ -1218,11 +1218,16 @@ function render(host,v){
   const coachNames=['BlaBlaCar Bus GTFS','FlixBus GTFS'].filter(name=>
    Object.prototype.hasOwnProperty.call(v.received||{},name)||
    Object.prototype.hasOwnProperty.call(v.errors||{},name));
+  const visibleJourneys=[...(v.picks||[]).map(p=>p.journey),...(v.others||[])];
   const coachRows=coachNames.map(name=>{
+   const operator=name.replace(' GTFS','');
+   const visible=visibleJourneys.filter(j=>
+    (j.sources||[]).concat(j.source||'',(j.legs||[]).map(l=>l.provider||''))
+     .some(value=>String(value).toLowerCase().includes(operator.toLowerCase()))).length;
    const error=v.errors?.[name];
    const skipped=v.skipped?.[name];
    const count=v.received?.[name];
-   return {name,status:error?'Erreur de recherche : '+error:
+   return {name,visible,status:error?'Erreur de recherche : '+error:
     skipped?'Moteur non interrogé : '+skipped:
     Number.isFinite(count)?count===0?'Aucun horaire reçu pour ce trajet et cette date':
      count+' horaire(s) reçu(s) avant filtrage des horaires et marches (prix non fournis par le GTFS)':
@@ -1233,7 +1238,8 @@ function render(host,v){
   const summary=coachRows.map(entry=>{
    const count=v.received?.[entry.name];
    return entry.name.replace(' GTFS','')+' : '+(v.errors?.[entry.name]?'erreur':
-    Number.isFinite(count)?count===0?'aucun horaire reçu':count+' horaire(s) reçu(s)':
+    Number.isFinite(count)?count===0?'aucun horaire reçu':
+     entry.visible+' proposition(s) affichée(s) / '+count+' horaire(s) reçu(s)':
     'aucune réponse');
   }).join(' · ');
   info.appendChild(el(doc,'summary',null,summary));
