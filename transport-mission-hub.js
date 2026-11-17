@@ -499,7 +499,7 @@ function walkPairs(j,task){
 function signature(j){
  return j.legs.filter(l=>l.kind!=='walk').map(l=>[String(l.line||'').replace(/\s+/g,'').toLowerCase(),Math.round(ms(l.departure)/60000),Math.round(ms(l.arrival)/60000)].join('|')).join(';');
 }
-function rank(items){
+function rank(items,task={}){
  const seen=new Map();
  for(const j of items){if(!j||j.durationMinutes===null)continue;const k=j.walkOnly?'walk':signature(j);
   const old=seen.get(k);
@@ -508,7 +508,13 @@ function rank(items){
   const better=(j.feasible&&!old.feasible)||(j.scheduled&&!old.feasible&&!old.scheduled)||(j.reasons.length<old.reasons.length)||(j.price.status==='verified'&&old.price.status!=='verified')?j:old;
   seen.set(k,{...better,sources:[...new Set([...old.sources,...j.sources])]});
  }
- const all=[...seen.values()];
+ const all=[...seen.values()].filter(j=>!Array.isArray(j.reasons)||!j.reasons.includes('trajet hors plage de jour ou date de mission'));
+ // Une arrivée des heures avant la prise en charge n'est pas un bon compromis.
+ // Garder les alternatives possibles, mais privilégier celles proches de la marge cible.
+ const target=ms(task.latestArrival),margin=marginFor(task);
+ const arrivalGap=j=>Number.isFinite(target)&&Number.isFinite(ms(j.arrival))?
+  Math.abs((target-ms(j.arrival))/60000-margin):0;
+ const relevant=(a,b)=>arrivalGap(a)-arrivalGap(b);
  // Classement : les trajets exploitables (réalisables OU en horaire officiel programmé) passent avant les incomplets,
  // puis le critère (prix, compromis, durée) ; à égalité seulement, le réalisable passe devant le programmé.
  // Avant : tout réalisable passait devant tout programmé, si bien que « Plus rapide » pouvait désigner 30 min de
@@ -521,11 +527,11 @@ function rank(items){
  const cheapest=[...priced].sort((a,b)=>byFeasible(a,b)||priceSortKey(a.price)-priceSortKey(b.price)||confirmedFirst(a,b)||a.durationMinutes-b.durationMinutes)[0];
  const score=j=>(Number.isFinite(priceSortKey(j.price))?Math.min(priceSortKey(j.price),200):60)+j.durationMinutes/3+j.transfers*8+j.walkMeters/250+
   (j.slackMinutes===null?0:Math.max(0,30-j.slackMinutes));
- const compromise=[...all].sort((a,b)=>byFeasible(a,b)||score(a)-score(b)||confirmedFirst(a,b))[0];
+ const compromise=[...all].sort((a,b)=>byFeasible(a,b)||relevant(a,b)||score(a)-score(b)||confirmedFirst(a,b))[0];
  const picks=[];
  for(const [label,j] of [['Moins cher',cheapest],['Meilleur compromis',compromise],['Plus rapide',fastest]])
   if(j){const found=picks.find(p=>p.journey===j);if(found)found.labels.push(label);else picks.push({labels:[label],journey:j});}
- const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||ms(a.departure)-ms(b.departure)||confirmedFirst(a,b));
+ const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||relevant(a,b)||ms(a.departure)-ms(b.departure)||confirmedFirst(a,b));
  return {picks,others,total:all.length};
 }
 
@@ -856,7 +862,7 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
  // diagnostic réel du 14/11/2026).
  function view(label){const s=state[label];
   const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('trajet hors plage de jour ou date de mission')));
-  return {task:s.task,...rank(tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items),hidden:{tooEarly:tooEarly.length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0};}
+  return {task:s.task,...rank(tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items,s.task),hidden:{tooEarly:tooEarly.length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0};}
  async function add(label,source,journeys){
   const s=state[label];if(!s||disposed)return;
   s.received[source]=(s.received[source]||0)+(Array.isArray(journeys)?journeys.length:0);
