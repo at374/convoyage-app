@@ -478,3 +478,18 @@ test('quotas cars : réserver quatre couples piétons par opérateur indépendam
  assert.match(source,/s\.walkPairs\.size-before/);
  assert.match(source,/select\(toWalk,coachSource\?coachBudget:8\)/);
 });
+
+test('échec du routage piéton : aucune carte ne reste bloquée en calcul',async()=>{
+ const task={label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)};
+ const brokenRouter={route:async()=>{throw Error('routing unavailable');}};
+ const providers={coach:{name:'FlixBus GTFS',enabled:()=>true,run:async()=>[{
+  source:'FlixBus',sources:['FlixBus'],legs:[bus(at(8,0),at(8,30),STOP1,STOP2,{provider:'FlixBus'})]
+ }]}};
+ const session=H.createSession({tasks:[task],providers,router:brokenRouter,onUpdate:()=>{}});
+ await new Promise(resolve=>setTimeout(resolve,60));
+ const view=session.view('Aller');
+ assert.equal(view.pending,0);
+ assert.ok(view.total>=1);
+ assert.ok([...view.picks.map(p=>p.journey),...view.others].every(j=>!j.computing));
+ session.dispose();
+});
