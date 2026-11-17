@@ -494,18 +494,24 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   const dMail = m => { const i = m.mail_info; return i && i.pickup && i.delivery ? { pk: i.pickup, liv: i.delivery } : null; };
   const hfDates = m => m.kind === 'acceptee' && m.platform === 'Hiflow' && !!(dMail(m) || (m.pickup_start && m.delivery_end));
   const hfPk = m => (dMail(m) || { pk: m.pickup_start }).pk, hfLiv = m => (dMail(m) || { liv: m.delivery_end }).liv;
+  // Suivi d'arrivée par GPS (missions de l'agenda) : voir suiviArrivee* plus bas. Données gardées sur ce téléphone uniquement.
+  const MARGE_ARRIVEE_MIN = 15, RAYON_ARRIVEE_M = 300, RAYON_ARRIVEE_VILLE_M = 800, DUREE_PRESENCE_MS = 60000;
+  const arriveeGps = key => { try { const a = (JSON.parse(localStorage.getItem('cp_arrivees') || 'null') || {})[key]; return a && Number.isFinite(Date.parse(a.arrivee)) ? a : null; } catch (_) { return null; } };
   function missionTiming(m) {
     const original = m._cpTimingOriginal || m;
     const pickup = hfDates(original) ? hfPk(original) : original.pickup_start;
     const deadline = original.delivery_end || null;
     const key = JSON.stringify([original.platform, original.external_id]);
     const local = original.platform && original.external_id != null ? transportReturnPlans.get(key) : null;
+    // Arrivée détectée par le GPS du téléphone : livraison réelle + marge de 15 min (démarches), prioritaire sur l'estimation de la plateforme.
+    const gps = original.kind === 'acceptee' && original.platform && original.external_id != null ? arriveeGps(key) : null;
+    const gpsPlanned = gps ? new Date(Date.parse(gps.arrivee) + MARGE_ARRIVEE_MIN * 60000).toISOString() : null;
     const confirmation = original.kind === 'acceptee' && original.platform === 'Hiflow' ? dMail(original)?.liv : null;
-    const candidate = local || (confirmation && Date.parse(confirmation) !== Date.parse(deadline || '') ? confirmation : null);
+    const candidate = local || gpsPlanned || (confirmation && Date.parse(confirmation) !== Date.parse(deadline || '') ? confirmation : null);
     const planned = candidate && Number.isFinite(Date.parse(candidate)) &&
       Number.isFinite(Date.parse(pickup || '')) && Date.parse(candidate) >= Date.parse(pickup) &&
-      (!deadline || !Number.isFinite(Date.parse(deadline)) || Date.parse(candidate) <= Date.parse(deadline)) ? candidate : null;
-    return {original,pickup,deadline,planned,key};
+      (candidate === gpsPlanned && !local || !deadline || !Number.isFinite(Date.parse(deadline)) || Date.parse(candidate) <= Date.parse(deadline)) ? candidate : null;
+    return {original,pickup,deadline,planned,key,gps:planned && planned === gpsPlanned && !local ? gps : null};
   }
   function missionForPlanning(m) {
     if (m.kind !== 'acceptee') return m;
@@ -523,7 +529,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       timing.planned || (finish && new Date(finish.t).toISOString());
     return bk('bkD1','PRISE EN CHARGE',esc(fmtDate(plannedStart == null ? timing.pickup : new Date(plannedStart).toISOString()))) +
       bk('bkD2','LIVRAISON PRÉVUE',delivery ? esc(fmtDate(delivery)) +
-        (!timing.planned || finish?.estimee ? ' (estimée, à confirmer)' : '') : 'À renseigner') +
+        (timing.gps ? ' (arrivée détectée par GPS à ' + esc(heureP(Date.parse(timing.gps.arrivee))) + ' + 15 min)' : !timing.planned || finish?.estimee ? ' (estimée, à confirmer)' : '') : 'À renseigner') +
       (timing.deadline ? bk('bkD2','DATE LIMITE DE LIVRAISON',esc(fmtDate(timing.deadline))) : '');
   }
   function mailBloc(m) {
@@ -724,6 +730,51 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     }, e => { if (manuel || etat.posMax > 0) toast(e && e.code === 1 ? 'Localisation refusée : autorise-la pour Convoyage (réglages du téléphone ou du site)' : 'Position introuvable pour l’instant'); },
     { enableHighAccuracy: false, timeout: 20000, maximumAge: 5 * 60000 });   // une seule lecture, position récente (≤ 5 min) réutilisée
   }
+  // Suivi d'arrivée à la livraison (missions acceptées de l'agenda) : le GPS n'est lu que pendant la fenêtre de la mission et tant que l'application est ouverte.
+  // Arrivée = présence de 60 s dans 300 m de l'adresse de livraison (800 m si seule la ville est connue). Les transports retour / jonction partent alors de arrivée + 15 min.
+  let suiviWatch = null, suiviTimer = null, suiviRefus = false; const suiviDedans = new Map();
+  function missionsASuivre() {
+    const now = Date.now();
+    return (etat.missions || []).filter(m => m.kind === 'acceptee' && m.platform && m.external_id != null).map(m => ({ m, t: missionTiming(m) })).filter(({ m, t }) => {
+      if (arriveeGps(t.key)) return false;
+      const p = Date.parse(t.pickup || ''); if (!Number.isFinite(p)) return false;
+      const fin = Date.parse(t.deadline || ''); const limite = (Number.isFinite(fin) ? fin : p + 48 * 3600000) + 6 * 3600000;
+      const d = G.coordonnees(m, 'destination');
+      return now >= p - 3600000 && now <= limite && !!d && d.precision !== 'departement';
+    });
+  }
+  function suiviTraiter(pos) {
+    const acc = Number(pos.coords.accuracy); if (Number.isFinite(acc) && acc > 150) return;
+    const here = { lat: pos.coords.latitude, lng: pos.coords.longitude }, ts = Number(pos.timestamp) || Date.now();
+    for (const { m, t } of missionsASuivre()) {
+      const d = G.coordonnees(m, 'destination'), rayon = d.precision === 'ville' ? RAYON_ARRIVEE_VILLE_M : RAYON_ARRIVEE_M;
+      const dist = G.volOiseauKm(here, d) * 1000;
+      if (dist > rayon) { suiviDedans.delete(t.key); continue; }
+      if (!suiviDedans.has(t.key)) suiviDedans.set(t.key, ts);
+      if (ts - suiviDedans.get(t.key) >= DUREE_PRESENCE_MS) suiviArrivee(m, t, suiviDedans.get(t.key));
+    }
+  }
+  function suiviArrivee(m, t, ts) {
+    const tous = Object.assign({}, lireLocal('cp_arrivees', {})), cles = Object.keys(tous);
+    if (cles.length > 40) delete tous[cles[0]];
+    tous[t.key] = { arrivee: new Date(ts).toISOString(), detecte: new Date().toISOString() }; ecrireLocal('cp_arrivees', tous);
+    suiviDedans.delete(t.key); transportReturnPlans.delete(t.key); etat.planResultat = null;
+    toast('📍 Arrivée détectée à ' + heureP(ts) + ' : retour calculé à partir de ' + heureP(ts + MARGE_ARRIVEE_MIN * 60000) + ' (marge 15 min)');
+    try { if (etat.onglet === 'agenda') vueAgenda(); } catch (_) {}
+    document.dispatchEvent(new CustomEvent('cp-arrivee', { detail: { key: t.key } }));
+    suiviMaj();
+  }
+  function suiviMaj() {
+    clearTimeout(suiviTimer); suiviTimer = setTimeout(suiviMaj, 5 * 60000);
+    const actif = !suiviRefus && !document.hidden && navigator.geolocation && missionsASuivre().length > 0;
+    if (!actif) { if (suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; } suiviDedans.clear(); return; }
+    if (suiviWatch !== null) return;
+    suiviWatch = navigator.geolocation.watchPosition(suiviTraiter, e => {
+      if (e && e.code === 1) { suiviRefus = true; if (suiviWatch !== null) navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; toast('Suivi d’arrivée impossible : localisation refusée (réglages du téléphone)'); }
+    }, { enableHighAccuracy: true, maximumAge: 15000, timeout: 60000 });
+  }
+  if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', () => { if (document.hidden && suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; suiviDedans.clear(); } else if (!document.hidden) suiviMaj(); });
+  if (typeof navigator !== 'undefined' && navigator.geolocation) setTimeout(suiviMaj, 3000);
   // Suggestions dès 3 lettres (ou un numéro de département) : villes, départements, régions.
   function montrerSuggestions() {
     const box = $('sugg'); if (!box) return;
@@ -2088,6 +2139,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       };
       const nextGapMin = next ? Math.floor((Date.parse(next.pickup_start) - endTime) / 60000) : null;
       const securityMarginMin = 15;
+      // Suivi GPS : les départs ne peuvent pas être antérieurs à l'heure actuelle (arrondie aux 5 min) une fois l'arrivée détectée.
+      const suiviPlancherMs = timing.gps ? Math.ceil(Date.now() / 300000) * 300000 : 0;
+      const plancher = iso => suiviPlancherMs && iso && Date.parse(iso) < suiviPlancherMs ? new Date(suiviPlancherMs).toISOString() : iso;
       const pickupDate = Number.isFinite(Date.parse(transportPickup || '')) ? transportPickup : null;
       const deliveryDate = Number.isFinite(Date.parse(transportDelivery || '')) ?
         transportDelivery : null;
@@ -2149,7 +2203,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       planningStatus.setAttribute('role','status');
       planningStatus.setAttribute('aria-live','polite');
       planningStatus.dataset.planningFeedback = 'true';
-      planningStatus.textContent = transportPlannedReturn ?
+      planningStatus.textContent = timing.gps ?
+        '📍 Arrivée détectée par GPS à ' + formatParis(timing.gps.arrivee) + ' : retour et jonction calculés à partir de ' + formatParis(transportPlannedReturn) + ' (marge de 15 min pour les démarches). Mise à jour automatique avec l’heure qui passe.' : transportPlannedReturn ?
         'Livraison prévue prise en compte : ' + formatParis(transportPlannedReturn) +
         '. Agenda et recherches utilisent cet horaire. Les résultats disponibles apparaissent ci-dessous ; un trajet non raccordé ne peut pas être calculé.' :
         'Indique la date et l’heure prévues de livraison pour recalculer. La date limite reste inchangée. Ce choix est conservé uniquement pendant cette session.';
@@ -2208,6 +2263,25 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         }
       };
       panel.appendChild(planningBox);
+      // Suivi GPS : à l'arrivée détectée, puis toutes les 10 min, les transports sont recalculés à partir de l'heure réelle (les départs passés disparaissent).
+      {
+        const suivreHorloge = () => {
+          if (!panel.isConnected) return false;
+          etat.planResultat = null;
+          try {
+            if (etat.onglet === 'agenda') vueAgenda();
+            detail(timing.original, depuis);
+            const b = $('btnTransportsMission');
+            if (b) { b.dataset.transportRefreshAt = String(Date.now()); b.click(); }
+          } catch (_) {}
+          return true;
+        };
+        const surArrivee = ev => { if (!panel.isConnected) { document.removeEventListener('cp-arrivee', surArrivee); return; } if (ev.detail && ev.detail.key === transportPlanKey) { document.removeEventListener('cp-arrivee', surArrivee); suivreHorloge(); } };
+        if (typeof document.addEventListener === 'function') document.addEventListener('cp-arrivee', surArrivee);
+        if (timing.gps) {
+          const iv = setInterval(() => { if (!panel.isConnected) { clearInterval(iv); return; } if (!document.hidden) { clearInterval(iv); suivreHorloge(); } }, 10 * 60000);
+        }
+      }
       // Allow an explicit fresh check when mobile connectivity has recovered.
       // Reopen the existing transport panel so all date-scoped searches are rerun.
       const refreshTransport = document.createElement('button');
@@ -2437,7 +2511,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         // les trajets cherchés sont ceux du jour de la mission (départ dès 04:00 ce jour-là, au cas où l'on dormirait sur place).
         const nextDay=next?parisServiceDay(next.pickup_start):null,delivDay=deliveryDate?parisServiceDay(deliveryDate):null;
         const jonctionLatest=next&&okT(next.pickup_end)&&Date.parse(next.pickup_end)>Date.parse(next.pickup_start)?new Date(Date.parse(next.pickup_end)).toISOString():(next?next.pickup_start:null);
-        const jonctionEarliest=nextDay&&delivDay&&nextDay>delivDay?parisIso(nextDay,4,0):deliveryDate;
+        const jonctionEarliest=plancher(nextDay&&delivDay&&nextDay>delivDay?parisIso(nextDay,4,0):deliveryDate);
         const tasks=[];
         // Les messages sont reconstruits sans doublons lors d'une actualisation des moteurs.
         for(const section of Object.values(transportDestinations))section.querySelectorAll('.cp-transport-approx').forEach(n=>n.remove());
@@ -2480,12 +2554,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           for(const d of multiRetour){
             const first=d===dDay0,last=d===dDay1;
             const firstStart=deliveryStartFloor!==null?new Date(deliveryStartFloor+securityMarginMin*60000).toISOString():(deliveryStartIso||deliveryDate);
-            const startIso=first?firstStart:parisIso(d,8,0);
+            const startIso=first?plancher(firstStart):parisIso(d,8,0);
             const endMs=last&&deliveryEndMs?deliveryEndMs:Date.parse(dayEnd(d));
             tasks.push({...retourBase,label:d===dPlan?'Retour':'Retour@'+d,earliestDeparture:first?startIso:parisIso(d,4,0),
               windowKind:'departure',windowStartMs:Date.parse(startIso),windowEndMs:endMs});
           }
-        }else if(deliveryDate)tasks.push({...retourBase,label:'Retour',earliestDeparture:deliveryStartIso||deliveryDate,...(deliveryStartIso?{windowKind:'departure',windowStartMs:Date.parse(deliveryStartIso),windowEndMs:deliveryEndMs}:{})});
+        }else if(deliveryDate)tasks.push({...retourBase,label:'Retour',earliestDeparture:plancher(deliveryStartIso||deliveryDate),...(deliveryStartIso?{windowKind:'departure',windowStartMs:Date.parse(plancher(deliveryStartIso)),windowEndMs:deliveryEndMs}:{})});
         const signature=JSON.stringify([tasks,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
         if(transportHub&&transportHub.signatureKey===signature)return;
         transportHub?.dispose();
