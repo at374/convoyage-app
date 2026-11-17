@@ -404,3 +404,12 @@ test('prise en charge : marge paramétrée de 30 minutes respectée',()=>{
  const task={earliestDeparture:at(7,30),latestArrival:at(9,0),marginMinutes:30};
  assert.deepEqual(H.queryWindow(task),{when:at(8,30),arriveBy:true});
 });
+
+test('jonction impossible : aucune recherche si la livraison dépasse la limite avec marge',()=>{
+ assert.equal(H.queryWindow({earliestDeparture:at(8,50),latestArrival:at(9,0)}),null);
+ assert.equal(H.queryWindow({earliestDeparture:at(8,45),latestArrival:at(9,0)}).arriveBy,true);
+});
+test('jonction multi-jours : ne pas rejeter un départ la veille si la marge reste possible',()=>{
+ const w=H.queryWindow({earliestDeparture:at(18,0,'2026-11-16'),latestArrival:at(9,0,'2026-11-17')});
+ assert.ok(w);assert.equal(w.arriveBy,true);assert.equal(w.when,at(8,45,'2026-11-17'));
+});
