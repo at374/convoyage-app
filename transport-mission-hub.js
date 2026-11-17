@@ -44,6 +44,7 @@ function leg(o){
   distanceMeters:finite(o.distanceMeters)&&o.distanceMeters>=0?o.distanceMeters:null,
   durationSeconds:finite(o.durationSeconds)&&o.durationSeconds>=0?o.durationSeconds:null,
   walkSource:o.walkSource||null,geometry:Array.isArray(o.geometry)?o.geometry:null,
+  steps:Array.isArray(o.steps)&&o.steps.length?o.steps:null,
   realtime:o.realtime===true,delayMinutes:finite(o.delayMinutes)?o.delayMinutes:null,
   cancelled:o.cancelled===true,fare:o.fare||null,ticketUrl:o.ticketUrl||null};
 }
@@ -266,7 +267,7 @@ function fromNationalGTFS(rows,operator){
 function walkLeg(route,from,to,fromName,toName,depMs){
  return leg({kind:'walk',mode:'Marche',from:fromName,to:toName,fromPoint:from,toPoint:to,
   departure:new Date(depMs).toISOString(),arrival:new Date(depMs+route.durationSeconds*1000).toISOString(),
-  distanceMeters:route.distanceMeters,durationSeconds:route.durationSeconds,walkSource:'valhalla',geometry:route.geometry});
+  distanceMeters:route.distanceMeters,durationSeconds:route.durationSeconds,walkSource:'valhalla',geometry:route.geometry,steps:route.steps});
 }
 async function completeWalks(j,task,router){
  // Keep provider warnings (e.g. GTFS schedules without live confirmation) through walking enrichment.
@@ -341,13 +342,13 @@ function cachedRouter(router,{storage=null,key='cp_marches_v1',ttlDays=30,maxEnt
   if(memory.has(k)){hits++;return memory.get(k);}
   const s=saved[k];
   if(s){hits++;const r=Promise.resolve({status:'calculated',provider:'Valhalla pedestrian / OpenStreetMap (cache)',durationSeconds:s.d,distanceMeters:s.m,
-   geometry:s.g||null,from:{...a},to:{...b},endpointsMatched:true,cached:true});memory.set(k,r);return r;}
+   geometry:s.g||null,steps:s.s||null,from:{...a},to:{...b},endpointsMatched:true,cached:true});memory.set(k,r);return r;}
   misses++;
   const r=Promise.resolve(router.route(round(a),round(b))).then(x=>{
    if(x&&x.status==='calculated'){
     // géométrie allégée (≤ 40 points) pour le stockage
     const g=Array.isArray(x.geometry)?x.geometry.filter((_,i,arr)=>i%Math.max(1,Math.ceil(arr.length/40))===0||i===arr.length-1).map(round):null;
-    saved[k]={t:Date.now(),d:x.durationSeconds,m:x.distanceMeters,g};persist();
+    saved[k]={t:Date.now(),d:x.durationSeconds,m:x.distanceMeters,g,s:Array.isArray(x.steps)?x.steps.slice(0,25):undefined};persist();
    }else memory.delete(k); // échec : on pourra réessayer plus tard
    return x;
   });
@@ -1086,22 +1087,42 @@ function mapSvg(doc,j){
  // Les géométries d'origine restent intactes ; seul le SVG est échantillonné.
  const pts=[];for(const l of j.legs){if(l.geometry&&l.geometry.length)pts.push(...l.geometry);else{if(l.fromPoint)pts.push(l.fromPoint);if(l.toPoint)pts.push(l.toPoint);}}
  if(pts.length<2)return null;
- let a=Infinity,b=-Infinity,c=Infinity,d=-Infinity;for(const p of pts){a=Math.min(a,p.lat);b=Math.max(b,p.lat);c=Math.min(c,p.lon);d=Math.max(d,p.lon);}
- const W=320,H=180,k=Math.cos((a+b)/2*Math.PI/180),sx=(d-c)*k||1e-4,sy=(b-a)||1e-4,s=Math.min((W-20)/sx,(H-20)/sy);
- const X=p=>10+((p.lon-c)*k)*s+((W-20)-sx*s)/2,Y=p=>H-10-(p.lat-a)*s-((H-20)-sy*s)/2;
+ // Projection Web Mercator, identique à celle des tuiles OpenStreetMap : le tracé se superpose exactement au fond de carte.
+ const W=340,H=250,PAD=16,T=256;
+ const mx=lon=>(lon+180)/360;
+ const my=lat=>{const r=Math.max(-85.0511,Math.min(85.0511,lat))*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2;};
+ let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
+ for(const p of pts){x0=Math.min(x0,mx(p.lon));x1=Math.max(x1,mx(p.lon));y0=Math.min(y0,my(p.lat));y1=Math.max(y1,my(p.lat));}
+ const spanX=Math.max(x1-x0,1e-7),spanY=Math.max(y1-y0,1e-7);
+ const z=Math.max(3,Math.min(17,Math.floor(Math.min(Math.log2((W-2*PAD)/(spanX*T)),Math.log2((H-2*PAD)/(spanY*T))))));
+ const scale=T*Math.pow(2,z),cx=(x0+x1)/2*scale,cy=(y0+y1)/2*scale;
+ const X=p=>W/2+(mx(p.lon)*scale-cx),Y=p=>H/2+(my(p.lat)*scale-cy);
  const NS='http://www.w3.org/2000/svg',svg=doc.createElementNS(NS,'svg');
- svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.setAttribute('class','cp-hub-map');svg.setAttribute('role','img');svg.setAttribute('aria-label','Schéma des transports et tracés piétons disponibles, sans marche en ligne droite');
+ svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.setAttribute('class','cp-hub-map');svg.setAttribute('role','img');svg.setAttribute('aria-label','Carte OpenStreetMap des transports et tracés piétons disponibles, sans marche inventée.');
+ const bg=doc.createElementNS(NS,'rect');bg.setAttribute('width',W);bg.setAttribute('height',H);bg.setAttribute('fill','#e8e6df');svg.appendChild(bg);
+ // Fond de carte : tuiles OpenStreetMap (gratuites, attribution affichée). Hors ligne, le fond reste uni et le tracé visible.
+ const n=Math.pow(2,z),txMin=Math.floor((cx-W/2)/T),txMax=Math.floor((cx+W/2)/T),tyMin=Math.max(0,Math.floor((cy-H/2)/T)),tyMax=Math.min(n-1,Math.floor((cy+H/2)/T));
+ for(let tx=txMin;tx<=txMax;tx++)for(let ty=tyMin;ty<=tyMax;ty++){
+  const im=doc.createElementNS(NS,'image');
+  im.setAttribute('href','https://tile.openstreetmap.org/'+z+'/'+(((tx%n)+n)%n)+'/'+ty+'.png');
+  im.setAttribute('x',tx*T-cx+W/2);im.setAttribute('y',ty*T-cy+H/2);im.setAttribute('width',T);im.setAttribute('height',T);
+  im.setAttribute('class','cp-hub-tile');svg.appendChild(im);
+ }
  for(const l of j.legs){
   const line=l.geometry&&l.geometry.length?l.geometry:(l.kind==='walk'?[]:[l.fromPoint,l.toPoint].filter(Boolean));if(line.length<2)continue;
   // Maximum 500 sommets par tronçon à l'écran ; conserver départ et arrivée.
   const step=Math.max(1,Math.ceil((line.length-1)/499));
   const rendered=[];for(let i=0;i<line.length-1;i+=step)rendered.push(line[i]);
   rendered.push(line[line.length-1]);
-  const pl=doc.createElementNS(NS,'polyline');pl.setAttribute('points',rendered.map(p=>X(p).toFixed(1)+','+Y(p).toFixed(1)).join(' '));
-  pl.setAttribute('fill','none');pl.setAttribute('stroke',l.kind==='walk'?'#16a34a':'#1d4ed8');pl.setAttribute('stroke-width',l.kind==='walk'?'3':'4');
-  if(l.kind==='walk')pl.setAttribute('stroke-dasharray','5 4');svg.appendChild(pl);
+  const coords=rendered.map(p=>X(p).toFixed(1)+','+Y(p).toFixed(1)).join(' ');
+  // Liseré blanc sous le tracé pour qu'il reste lisible sur le fond de carte.
+  const halo=doc.createElementNS(NS,'polyline');halo.setAttribute('points',coords);halo.setAttribute('fill','none');halo.setAttribute('stroke','#ffffff');halo.setAttribute('stroke-width',l.kind==='walk'?'7':'8');halo.setAttribute('stroke-linecap','round');halo.setAttribute('stroke-linejoin','round');svg.appendChild(halo);
+  const pl=doc.createElementNS(NS,'polyline');pl.setAttribute('points',coords);
+  pl.setAttribute('fill','none');pl.setAttribute('stroke',l.kind==='walk'?'#16a34a':'#1d4ed8');pl.setAttribute('stroke-width',l.kind==='walk'?'4':'5');pl.setAttribute('stroke-linecap','round');pl.setAttribute('stroke-linejoin','round');
+  if(l.kind==='walk')pl.setAttribute('stroke-dasharray','7 5');svg.appendChild(pl);
  }
- for(const [p,color] of [[pts[0],'#16a34a'],[pts[pts.length-1],'#dc2626']]){const ci=doc.createElementNS(NS,'circle');ci.setAttribute('cx',X(p));ci.setAttribute('cy',Y(p));ci.setAttribute('r','6');ci.setAttribute('fill',color);svg.appendChild(ci);}
+ for(const [p,color] of [[pts[0],'#16a34a'],[pts[pts.length-1],'#dc2626']]){const ci=doc.createElementNS(NS,'circle');ci.setAttribute('cx',X(p));ci.setAttribute('cy',Y(p));ci.setAttribute('r','7');ci.setAttribute('fill',color);ci.setAttribute('stroke','#ffffff');ci.setAttribute('stroke-width','2');svg.appendChild(ci);}
+ const att=doc.createElementNS(NS,'text');att.setAttribute('x',W-4);att.setAttribute('y',H-5);att.setAttribute('text-anchor','end');att.setAttribute('font-size','9');att.setAttribute('fill','#333');att.textContent='© OpenStreetMap';svg.appendChild(att);
  return svg;
 }
 // Prix non connu : lien vers le site ou l'application officielle où acheter le billet (jamais un prix estimé).
@@ -1190,6 +1211,14 @@ function card(doc,j,labels,expanded=false){
   li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+Math.max(1,Math.round(l.durationSeconds/60))+' min':''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':''].filter(Boolean).join(' '))));
   li.appendChild(el(doc,'div',null,clock(l.departure)+' '+(l.from||'?')+' → '+clock(l.arrival)+' '+(l.to||'?')+(l.delayMinutes?' · retard annoncé +'+l.delayMinutes+' min':'')));
   if(l.kind==='walk')li.appendChild(el(doc,'small',null,l.walkSource==='valhalla'?'Itinéraire piéton calculé (OpenStreetMap)':'Marche calculée par '+j.source));
+  if(l.kind==='walk'&&Array.isArray(l.steps)&&l.steps.length){
+   // Guidage pas à pas fourni par le service piéton OpenStreetMap (jamais reconstruit ni inventé).
+   const guide=el(doc,'details','cp-hub-steps');guide.open=true;
+   guide.appendChild(el(doc,'summary',null,'🧭 Guidage à pied · '+l.steps.length+' étape'+(l.steps.length>1?'s':'')));
+   const steps=el(doc,'ol',null);
+   for(const st of l.steps)steps.appendChild(el(doc,'li',null,st.text+(st.meters>0?' · '+(st.meters>=1000?(st.meters/1000).toFixed(1).replace('.',',')+' km':st.meters+' m'):'')));
+   guide.appendChild(steps);li.appendChild(guide);
+  }
   else{const f=j.price.legFares?.[legIndex]||null;li.appendChild(el(doc,'small',null,f?'Tarif : '+f.amount.toFixed(2).replace('.',',')+(f.currency==='EUR'?' €':' CHF')+' · '+f.source:'Tarif : à confirmer'));
    // Le carnet rechargeable Ondéa est utilisable sur les lignes 400–419, contrairement au M-ticket.
    // Ne pas présenter son prix d'achat comme le coût d'un trajet unique.

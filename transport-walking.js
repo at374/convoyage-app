@@ -44,8 +44,11 @@ function validateValhalla(data,from,to,{endpoint=DEFAULT_ENDPOINT,retrievedAt=ne
  if(Math.abs(geometryMeters-distanceMeters)>Math.max(30,geometryMeters*0.25)||
     (durationSeconds===0&&distanceMeters>1)||
     (distanceMeters>10&&(distanceMeters/durationSeconds>4||distanceMeters/durationSeconds<0.1)))throw new Error('Inconsistent pedestrian route');
+ // Étapes guidées (« Tournez à gauche sur… ») telles que publiées par le service piéton ; aucune étape n'est inventée.
+ const steps=leg.maneuvers.map(m=>({text:String(m.instruction||'').trim().slice(0,160),
+  meters:Math.round((Number(m.length)||0)*1000),seconds:Math.round(Number(m.time)||0)})).filter(x=>x.text).slice(0,40);
  return {status:'calculated',provider:'Valhalla pedestrian / OpenStreetMap',endpoint,retrievedAt,
-  from:{...from},to:{...to},durationSeconds,distanceMeters,geometry,
+  from:{...from},to:{...to},durationSeconds,distanceMeters,geometry,steps,
   startGapMeters:startGap,endGapMeters:endGap,endpointsMatched:startGap<=10&&endGap<=10,
   realWorldAccessConfirmed:false,timeSpecific:false};
 }
