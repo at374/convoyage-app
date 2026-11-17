@@ -785,3 +785,11 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 #cpTransportMissionDetails .cp-hub-steps ol{margin:8px 0 0;padding-left:22px}
 #cpTransportMissionDetails .cp-hub-steps li{margin:5px 0;line-height:1.35}
 #cpTransportMissionDetails .cp-hub-walk-map{margin:8px 0}
+
+/* 17/11/2026 : cartes et lignes qui dépassaient de l'écran (colonnes de grille sans minmax). */
+.cp-hub-card,.cp-hub-card summary,.cp-hub-card .cp-hub-body,.cp-hub-legs,.cp-hub-legs li{min-width:0;max-width:100%}
+.cp-hub-card summary,.cp-hub-legs{grid-template-columns:minmax(0,1fr)}
+.cp-hub-card{overflow:hidden;overflow-wrap:anywhere}
+.cp-hub-card svg.cp-hub-map,#cpTransportMissionDetails .cp-hub-map{width:100%;max-width:100%;height:auto;box-sizing:border-box}
+.cp-hub-search-help{display:grid;gap:6px;margin:8px 0;padding:10px;border:1px solid var(--accent,#e0a800);border-radius:10px}
+.cp-hub-copy{min-height:44px;padding:8px 10px;border:1px solid var(--accent,#e0a800);border-radius:10px;background:transparent;color:inherit;font-weight:700;text-align:left}
