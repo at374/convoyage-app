@@ -1555,7 +1555,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       <h2 style="margin-top:16px">Approche, retours et liaisons</h2>
       <label for="rDom">Ville de ton domicile (point de départ et de retour)</label>
       <div class="recherche"><input id="rDom" autocomplete="off" placeholder="3 lettres puis choisis dans la liste" aria-controls="rDomSugg"><div id="rDomSugg" class="sugg" role="listbox" hidden></div></div>
-      <p class="doux">Seule la ville est enregistrée (jamais ton adresse). Sert à estimer l’approche et le retour.</p>
+      <p class="doux">La ville est enregistrée avec tes réglages. Sert à estimer l’approche et le retour.</p>
+      <label for="rAdr">Adresse exacte du domicile (numéro, rue, code postal, ville) : départs et retours calculés depuis ta porte</label><input id="rAdr" autocomplete="street-address" placeholder="ex. 12 rue de la Gare 74000 Annecy">
+      <p class="doux" id="rAdrEtat">Adresse conservée uniquement sur ce téléphone : elle n’est jamais envoyée à notre serveur. Seul le service public d’adresses (api-adresse.data.gouv.fr) la reçoit pour la localiser.</p>
       <label for="rTr">Coût des transports de liaison (€/km : train, car, covoiturage)</label><input id="rTr" type="number" step="0.01" min="0" max="2" inputmode="decimal">
       <label for="rVit">Vitesse moyenne porte à porte de ces liaisons (km/h)</label><input id="rVit" type="number" step="1" min="10" max="300" inputmode="numeric">
       <label for="rMarge">Marge de sécurité entre deux missions (minutes)</label><input id="rMarge" type="number" step="5" min="0" max="600" inputmode="numeric">
@@ -1605,7 +1607,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         };
       } }
     $('rBus').checked = window.CP_BUS_ACTIF === true; $('rMarcheMax').value = lireLocal('cp_marche_max_km', 3); $('rTrotVit').value = lireLocal('cp_trot_vitesse_kmh', 15); $('rTrotMax').value = lireLocal('cp_trot_max_km', 8); $('rMargeCourte').checked = lireLocal('cp_marge_courte_gps', false) === true; $('rTransport').value = window.CP_TRANSPORT_CHOISI || 'general';
-    $('rDom').value = r.domicile_ville || ''; $('rTr').value = r.cout_transport_km; $('rVit').value = r.vitesse_liaison; $('rMarge').value = r.marge_minutes; $('rRayon').value = r.rayon_retour_km; $('rAtt').value = r.attente_max_h; $('rSncf').value = r.carte_sncf || 'aucune'; $('rTrot').checked = r.trottinette === true;
+    $('rDom').value = r.domicile_ville || ''; { const a = lireLocal('cp_domicile_exact', null); $('rAdr').value = a && a.texte || ''; if (a && a.texte) $('rAdrEtat').textContent = '✅ Adresse localisée (' + (a.precision === 'adresse' ? 'numéro exact' : 'rue') + ') : ' + a.libelle + '. Conservée uniquement sur ce téléphone.'; } $('rTr').value = r.cout_transport_km; $('rVit').value = r.vitesse_liaison; $('rMarge').value = r.marge_minutes; $('rRayon').value = r.rayon_retour_km; $('rAtt').value = r.attente_max_h; $('rSncf').value = r.carte_sncf || 'aucune'; $('rTrot').checked = r.trottinette === true;
     let domChoisi = r.domicile_ville ? { nom: r.domicile_ville, lat: r.domicile_lat, lng: r.domicile_lng, libelle: r.domicile_ville } : null;
     $('rDom').oninput = () => {
       const box = $('rDomSugg'), l = G.suggestions($('rDom').value, { types: ['ville'], villes: villesConnues().filter(v => v.lat != null), max: 6 }); chargerVillesNet($('rDom').value, () => { if ($('rDom')) $('rDom').oninput(); });
@@ -1623,6 +1625,20 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const x = domChoisi && G.norm(domChoisi.nom) === G.norm(texteDom) ? domChoisi : G.trouverVille(texteDom);
         if (!x || x.lat == null) return toast('Ville du domicile non reconnue : choisis-la dans la liste proposée');
         Object.assign(v, { domicile_ville: x.nom, domicile_lat: Math.round(x.lat * 1e5) / 1e5, domicile_lng: Math.round(x.lng * 1e5) / 1e5 });
+      }
+      { const t = $('rAdr').value.trim();
+        if (!t) ecrireLocal('cp_domicile_exact', null);
+        else {
+          const ancien = lireLocal('cp_domicile_exact', null);
+          if (!(ancien && ancien.texte === t)) {
+            let f = null;
+            try { const rr = await fetch('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(t)); if (rr.ok) { const j = await rr.json(); f = j && j.features && j.features[0]; } } catch (_) {}
+            const pr = f && f.properties, ok = f && f.geometry && pr && pr.score >= 0.5 && ['housenumber', 'street'].includes(pr.type);
+            if (!ok) return toast('Adresse non localisée : indique numéro, rue, code postal et ville (France)');
+            const [lng, lat] = f.geometry.coordinates;
+            ecrireLocal('cp_domicile_exact', { texte: t, lat: Math.round(lat * 1e5) / 1e5, lon: Math.round(lng * 1e5) / 1e5, libelle: pr.label, precision: pr.type });
+          }
+        }
       }
       { const km = Number($('rMarcheMax').value); if (!(km >= 0 && km <= 10)) return toast('Distance de marche hors limites (0 à 10 km)'); { const tv = Number($('rTrotVit').value), tm = Number($('rTrotMax').value); if (!(tv >= 5 && tv <= 30)) return toast('Vitesse de trottinette hors limites (5 à 30 km/h)'); if (!(tm >= 1 && tm <= 30)) return toast('Distance de trottinette hors limites (1 à 30 km)'); ecrireLocal('cp_trot_vitesse_kmh', tv); ecrireLocal('cp_trot_max_km', tm); } ecrireLocal('cp_marche_max_km', km); ecrireLocal('cp_marge_courte_gps', $('rMargeCourte').checked); }
       window.CP_BUS_ACTIF = $('rBus').checked; ecrireLocal('cp_bus_actif', window.CP_BUS_ACTIF); window.CP_TRANSPORT_CHOISI = $('rTransport').value; ecrireLocal('cp_transport', window.CP_TRANSPORT_CHOISI);
@@ -2323,7 +2339,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         // Même repli pour le domicile : ville connue mais coordonnées personnelles absentes.
         // Ne jamais utiliser le centre du département comme substitut à une commune.
         const homeCity=homeExact?null:G.trouverVille(homeName,etat.reglages?.domicile_departement||'');
-        const homePt=homeExact?{lat:Number(homeLat),lon:Number(homeLon)}:
+        // Adresse exacte saisie dans Paramètres (stockée seulement sur le téléphone) : prioritaire sur la ville.
+        const homeAdr=lireLocal('cp_domicile_exact',null);
+        const homeAdrOk=!!homeAdr&&Number.isFinite(homeAdr.lat)&&Number.isFinite(homeAdr.lon);
+        const homePt=homeAdrOk?{lat:homeAdr.lat,lon:homeAdr.lon}:homeExact?{lat:Number(homeLat),lon:Number(homeLon)}:
           homeCity?{lat:Number(homeCity.lat),lon:Number(homeCity.lng)}:null;
         const short=lireLocal('cp_marge_courte_gps',false)===true;
         const exact=gps=>!!gps&&['gps','adresse'].includes(gps.precision);
@@ -2332,7 +2351,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const tasks=[];
         // Les messages sont reconstruits sans doublons lors d'une actualisation des moteurs.
         for(const section of Object.values(transportDestinations))section.querySelectorAll('.cp-transport-approx').forEach(n=>n.remove());
-        if(!homeExact&&homePt){
+        if(!homeExact&&!homeAdrOk&&homePt){
           for(const direction of ['Aller','Retour']){
             const note=document.createElement('p');note.className='cp-transport-approx';
             note.textContent='📍 Domicile : centre de '+homeName+' utilisé faute de coordonnées exactes. Marche et faisabilité indicatives.';
@@ -2350,11 +2369,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           }
         }
         if(pickupDate)tasks.push({label:'Aller',from:homePt,to:gp(origin),fromName:homeName,toName:'Prise en charge',fromCity:homeName,toCity:m.from_city||'',
-          latestArrival:pickupDate,marginMinutes:securityMarginMin,exactTarget:exactGps(origin),approximateEndpoint:!homeExact||!exact(origin),allowShortMargin:short});
+          latestArrival:pickupDate,marginMinutes:securityMarginMin,exactTarget:exactGps(origin),approximateEndpoint:(!homeExact&&!homeAdrOk)||!exact(origin),allowShortMargin:short});
         if(next&&deliveryDate&&next.pickup_start)tasks.push({label:'Jonction',from:gp(dest),to:gp(nextOrigin2),fromName:'Livraison',toName:'Mission suivante',fromCity:m.to_city||'',toCity:next.from_city||'',
           earliestDeparture:deliveryDate,latestArrival:next.pickup_start,marginMinutes:securityMarginMin,exactTarget:exactGps(nextOrigin2),approximateEndpoint:!exact(dest)||!exact(nextOrigin2),allowShortMargin:short});
-        if(deliveryDate)tasks.push({label:'Retour',from:gp(dest),to:homePt,fromName:'Livraison',toName:homeName,fromCity:m.to_city||'',toCity:homeName,earliestDeparture:deliveryDate,approximateEndpoint:!exact(dest)||!homeExact});
-        const signature=JSON.stringify([tasks,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8)]);
+        if(deliveryDate)tasks.push({label:'Retour',from:gp(dest),to:homePt,fromName:'Livraison',toName:homeName,fromCity:m.to_city||'',toCity:homeName,earliestDeparture:deliveryDate,approximateEndpoint:!exact(dest)||(!homeExact&&!homeAdrOk)});
+        const signature=JSON.stringify([tasks,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
         if(transportHub&&transportHub.signatureKey===signature)return;
         transportHub?.dispose();
         let router=null;
