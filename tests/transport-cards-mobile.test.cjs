@@ -101,6 +101,7 @@ test('BlaBlaCar Bus et FlixBus : diagnostic uniquement si moteur consulté',()=>
  assert.match(hub,/count===0\?'aucun horaire reçu'/);
  assert.match(hub,/entry\.visible\+' proposition\(s\) affichée\(s\) \/ '\+count\+' horaire\(s\) reçu\(s\)'/);
  assert.match(hub,/const visibleJourneys=/);
+ assert.match(hub,/\(v\.others\|\|\[\]\)\.slice\(0,8\)/);
  assert.match(hub,/BlaBlaCar Bus GTFS/);
  assert.match(hub,/FlixBus GTFS/);
  assert.match(hub,/Moteur non interrogé/);
