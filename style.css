@@ -669,3 +669,97 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 
 
 .cp-cov{width:100%;border-collapse:collapse;font-size:.78em;margin:8px 0;table-layout:fixed}.cp-cov th,.cp-cov td{border:1px solid var(--ligne);padding:3px;text-align:left;overflow-wrap:anywhere;hyphens:auto}.cp-cov th:first-child,.cp-cov td:first-child{width:24%}.cp-cov-list{font-size:.82em;padding-left:18px}.cp-cov-list li{margin:4px 0}
+
+/* Convoyage Ultra — cartes Transports lisibles sur Android, novembre 2026.
+   Couche de présentation uniquement : aucun prix, trajet ou faisabilité inventé. */
+#cpTransportMissionDetails{
+  --cp-tr-blue:#2563eb;--cp-tr-green:#16a34a;--cp-tr-amber:#d97706;
+  --cp-tr-ink:var(--texte);--cp-tr-paper:var(--carte);
+}
+#cpTransportMissionDetails .cp-transport-hero{
+  position:relative;overflow:hidden;border:0;border-radius:20px;
+  background:linear-gradient(125deg,#142d58 0%,#2152a0 65%,#167d9d 100%);
+  color:#fff;padding:20px 18px;box-shadow:0 8px 22px rgba(18,55,110,.19)
+}
+#cpTransportMissionDetails .cp-transport-hero h2,
+#cpTransportMissionDetails .cp-transport-hero .cp-transport-eyebrow,
+#cpTransportMissionDetails .cp-transport-hero p,
+#cpTransportMissionDetails .cp-transport-hero small{color:#fff}
+#cpTransportMissionDetails .cp-transport-hero h2{font-size:clamp(22px,5vw,28px);margin:6px 0 10px}
+#cpTransportMissionDetails .cp-transport-direction{
+  border:1px solid var(--ligne);border-radius:18px;
+  padding:14px;background:var(--carte);box-shadow:0 3px 16px rgba(0,0,0,.05)
+}
+#cpTransportMissionDetails .cp-transport-direction h3{font-size:19px;line-height:1.25}
+#cpTransportMissionDetails .cp-hub{gap:12px}
+#cpTransportMissionDetails .cp-hub-progress{
+  font-weight:800;font-size:13px;padding:8px 11px;
+  border-radius:11px;background:var(--accentDoux);color:var(--texte)
+}
+#cpTransportMissionDetails .cp-hub-card{
+  border:1px solid var(--ligne);border-left:6px solid var(--cp-tr-amber);
+  border-radius:18px;background:var(--carte);padding:0;
+  box-shadow:0 4px 18px rgba(0,0,0,.09);overflow:hidden
+}
+#cpTransportMissionDetails .cp-hub-card.ok{border-left-color:var(--cp-tr-green)}
+#cpTransportMissionDetails .cp-hub-card.sched{border-left-color:var(--cp-tr-blue)}
+#cpTransportMissionDetails .cp-hub-card summary{
+  padding:14px;min-height:0;display:grid;gap:10px;
+  grid-template-columns:minmax(0,1fr) auto;align-items:center
+}
+#cpTransportMissionDetails .cp-hub-card summary::after{
+  content:"Voir le trajet  ▾";grid-column:1/-1;text-align:center;
+  background:var(--accentDoux);border-radius:9px;padding:7px;
+  font-size:12px;font-weight:900;color:var(--texte)
+}
+#cpTransportMissionDetails .cp-hub-card[open] summary::after{content:"Masquer le trajet  ▴"}
+#cpTransportMissionDetails .cp-hub-chip{
+  grid-column:1/-1;justify-self:start;font-size:12px;
+  background:#dbeafe;color:#173e86;border-radius:8px;
+  padding:5px 10px;font-weight:900
+}
+#cpTransportMissionDetails .cp-hub-times{
+  grid-column:1;min-width:0;font-size:clamp(16px,4.4vw,20px);
+  font-weight:900;letter-spacing:-.3px;line-height:1.3;color:var(--texte)
+}
+#cpTransportMissionDetails .cp-hub-price{
+  grid-column:2;justify-self:end;text-align:center;max-width:155px;
+  font-size:clamp(17px,5vw,24px);font-weight:950;line-height:1.1;
+  padding:10px 12px;border-radius:12px;
+  background:#dcfce7;color:#14532d;overflow-wrap:anywhere
+}
+#cpTransportMissionDetails .cp-hub-price.unknown{
+  font-size:12px;line-height:1.3;background:#fff3cd;color:#804600;
+  max-width:150px
+}
+#cpTransportMissionDetails .cp-hub-modes,
+#cpTransportMissionDetails .cp-hub-status,
+#cpTransportMissionDetails .cp-hub-reason{grid-column:1/-1;font-size:13px;line-height:1.45}
+#cpTransportMissionDetails .cp-hub-status{font-weight:850}
+#cpTransportMissionDetails .cp-hub-ticket{
+  grid-column:1/-1;justify-self:start;background:#eff6ff;
+  color:#1e40af;border:1px solid #93c5fd;border-radius:9px;
+  font-weight:800;padding:8px 10px;min-height:40px
+}
+#cpTransportMissionDetails .cp-hub-body{
+  border-top:1px solid var(--ligne);padding:12px 14px 16px
+}
+#cpTransportMissionDetails .cp-hub-legs{padding-left:23px;margin:0 0 12px}
+#cpTransportMissionDetails .cp-hub-legs li{padding:10px 2px;border-bottom:1px dashed var(--ligne)}
+#cpTransportMissionDetails .cp-hub-legs li strong{font-size:14px;font-weight:900}
+#cpTransportMissionDetails .cp-hub-legs li.walk{color:var(--cp-tr-green)}
+#cpTransportMissionDetails .cp-hub-map{
+  width:100%;max-width:none;max-height:280px;
+  background:var(--fond);border:1px solid var(--ligne);border-radius:14px
+}
+#cpTransportMissionDetails .cp-hub-more>summary,
+#cpTransportMissionDetails .cp-hub-diag>summary{
+  background:var(--accentDoux);border-radius:10px;padding:12px;
+  font-weight:850;color:var(--texte)
+}
+@media(max-width:420px){
+ #cpTransportMissionDetails .cp-hub-card summary{padding:12px;column-gap:7px}
+ #cpTransportMissionDetails .cp-hub-price{padding:9px 8px;max-width:120px}
+ #cpTransportMissionDetails .cp-hub-price.unknown{max-width:116px;font-size:11px}
+ #cpTransportMissionDetails .cp-transport-direction{padding:11px}
+}
