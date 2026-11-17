@@ -2390,7 +2390,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         // l'application, géocodage au besoin), puis on relance une seule fois. Rien n'est inventé : sans résultat, le comportement reste identique.
         if(!panel.cpGeoTried){
           const manque=[[m,'origin'],[m,'destination'],[next,'origin']].filter(([mm,cote])=>{
-            if(!mm)return false;const c=G.coordonnees(mm,cote);return !c||c.precision==='departement';});
+            if(!mm)return false;const c=G.coordonnees(mm,cote);
+            // Adresse de rue connue mais seul le centre de la commune est disponible (ex. « 25 route de la Salle, Annecy ») : chercher le vrai point.
+            const rue=String(mm[cote+'_address']||(mm[cote]&&(mm[cote].address||mm[cote].street))||'').trim();
+            return !c||c.precision==='departement'||(c.precision==='ville'&&rue.length>3&&!!G.cleAdresse(mm,cote)&&!G.POINTS[G.cleAdresse(mm,cote)]);});
           if(manque.length){
             panel.cpGeoTried=true;
             const note=document.createElement('p');note.className='doux cp-transport-geo';note.setAttribute('role','status');

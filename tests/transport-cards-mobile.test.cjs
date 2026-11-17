@@ -148,3 +148,7 @@ test('fluidité : mises à jour regroupées et sections cachées non dessinées'
  assert.match(app,/pendingViews\[label\]=view/);
  assert.match(app,/renderPending\(\);/);
 });
+
+test('adresse de rue : le point exact est cherché même quand la commune est connue (centre-ville)',()=>{
+ assert.match(app,/c\.precision==='ville'&&rue\.length>3&&!!G\.cleAdresse\(mm,cote\)&&!G\.POINTS\[G\.cleAdresse\(mm,cote\)\]/);
+});
