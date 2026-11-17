@@ -143,7 +143,7 @@ test('session : moteurs en parallèle, ingestion GTFS, erreurs et moteurs ignor�
 
 test('fenêtres de requête : aller en heure d’arrivée (limite − marge), retour en heure de départ',()=>{
  assert.deepEqual(H.queryWindow({latestArrival:at(9,0)}),{when:at(8,45),arriveBy:true});
- assert.deepEqual(H.queryWindow({earliestDeparture:at(17,0),latestArrival:at(19,0)}),{when:at(17,0),arriveBy:false});
+ assert.deepEqual(H.queryWindow({earliestDeparture:at(17,0),latestArrival:at(19,0)}),{when:at(18,45),arriveBy:true});
  assert.equal(H.inSwissArea({lat:46.19,lon:6.23}),true,'Annemasse');
  assert.equal(H.inSwissArea({lat:45.76,lon:4.84}),false,'Lyon');
  assert.equal(H.inSwissArea({lat:45.90,lon:6.12}),false,'Annecy');
@@ -412,4 +412,21 @@ test('jonction impossible : aucune recherche si la livraison dépasse la limite 
 test('jonction multi-jours : ne pas rejeter un départ la veille si la marge reste possible',()=>{
  const w=H.queryWindow({earliestDeparture:at(18,0,'2026-11-16'),latestArrival:at(9,0,'2026-11-17')});
  assert.ok(w);assert.equal(w.arriveBy,true);assert.equal(w.when,at(8,45,'2026-11-17'));
+});
+
+test('jonction impossible : aucune requête fournisseur ni routage piéton',async()=>{
+ let providersCalled=0,walksCalled=0;
+ const provider={name:'Réseau test',enabled:()=>true,run:async()=>{providersCalled++;return [];}};
+ const router={route:async()=>{walksCalled++;return {status:'unavailable'};}};
+ const session=H.createSession({
+  tasks:[{label:'Jonction',from:HOME,to:MISSION,earliestDeparture:at(8,50),latestArrival:at(9,0)}],
+  providers:{test:provider},router
+ });
+ await new Promise(resolve=>setImmediate(resolve));
+ const view=session.view('Jonction');
+ assert.equal(providersCalled,0);
+ assert.equal(walksCalled,0);
+ assert.equal(view.done,true);
+ assert.match(view.errors.horaires,/créneau impossible/);
+ session.dispose();
 });
