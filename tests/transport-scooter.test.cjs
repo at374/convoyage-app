@@ -264,3 +264,10 @@ test('fermeture des agences : arrivée/départ du site après 17h30 écartés (s
  assert.ok(H.assess(trajet,tk(1050),null).reasons.includes('trajet hors plage de jour ou date de mission'));
  assert.deepEqual(H.assess(trajet,tk(1140),null).reasons,[]);
 });
+
+test('jours intermédiaires : fin de fenêtre au site à 17:30 (plus « jusqu’à 18:45 »)',()=>{
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ assert.ok(app.includes('siteEnd=d=>parisIso(d,17,30)'));
+ assert.ok(app.includes(':siteEnd(d);'));
+ assert.ok(app.includes('Date.parse(siteEnd(d))'));
+});

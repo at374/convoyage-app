@@ -2563,14 +2563,14 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const retourBase={from:gp(dest),to:homePt,fromName:to||'Livraison',toName:homeText,fromCity:m.to_city||'',toCity:homeName,approximateEndpoint:!exact(dest)||(!homeExact&&!homeAdrOk)};
         // Fermeture des agences / parcs : 17:30, ou l'heure de fin de la fenêtre du jour si elle est plus tardive (jamais après 19:00).
         const closeFor=iso=>{const t=Date.parse(iso||'');if(!Number.isFinite(t))return 1050;const q=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(t)).map(x=>[x.type,x.value]));return Math.min(1140,Math.max(1050,Number(q.hour)*60+Number(q.minute)));};
-        const dayEnd=d=>parisIso(d,19,0);   // fin de la journée de voyage (voyager de jour : 05:00–19:00)
+        const dayEnd=d=>parisIso(d,19,0),siteEnd=d=>parisIso(d,17,30);   // siteEnd : heure limite au site (agences/parcs fermés) pour un jour intermédiaire   // fin de la journée de voyage (voyager de jour : 05:00–19:00)
         if(pickupDate&&multiAller.length){
           // Chaque jour : arrivées juste avant l'heure d'ouverture du jour (18:00 le premier jour), puis plus tard jusqu'à la fin de la fenêtre.
           for(const d of multiAller){
             const first=d===pDay0,last=d===pDay1;
             const firstStart=Number.isFinite(Date.parse(origT.pickup_start||''))?new Date(Date.parse(origT.pickup_start)).toISOString():pickupDate;
             const startIso=first?firstStart:parisIso(d,8,0);
-            const endIso=last&&(origT.pickup_end&&Number.isFinite(Date.parse(origT.pickup_end)))?new Date(Date.parse(origT.pickup_end)).toISOString():dayEnd(d);
+            const endIso=last&&(origT.pickup_end&&Number.isFinite(Date.parse(origT.pickup_end)))?new Date(Date.parse(origT.pickup_end)).toISOString():siteEnd(d);
             tasks.push({...allerBase,label:d===pPlan?'Aller':'Aller@'+d,earliestDeparture:first?undefined:parisIso(d,4,0),latestArrival:endIso,siteCloseMinutes:closeFor(last&&origT.pickup_end?endIso:null),
               windowKind:'arrival',windowStartMs:Date.parse(startIso),windowEndMs:Date.parse(endIso)-securityMarginMin*60000});
           }
@@ -2582,7 +2582,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             const first=d===dDay0,last=d===dDay1;
             const firstStart=deliveryStartFloor!==null?new Date(deliveryStartFloor+securityMarginMin*60000).toISOString():(deliveryStartIso||deliveryDate);
             const startIso=first?plancher(firstStart):parisIso(d,8,0);
-            const endMs=last&&deliveryEndMs?deliveryEndMs:Date.parse(dayEnd(d));
+            const endMs=last&&deliveryEndMs?deliveryEndMs:Date.parse(siteEnd(d));
             tasks.push({...retourBase,label:d===dPlan?'Retour':'Retour@'+d,siteCloseMinutes:closeFor(last?origT.delivery_end:null),earliestDeparture:first?startIso:parisIso(d,4,0),
               windowKind:'departure',windowStartMs:Date.parse(startIso),windowEndMs:endMs});
           }
