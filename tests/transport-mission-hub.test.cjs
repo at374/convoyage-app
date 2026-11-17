@@ -539,3 +539,13 @@ test('doublons : les marches distinctes ne partagent plus une clé unique',()=>{
  assert.match(rankSource,/Math\.round\(ms\(j\.departure\)\/60000\)/);
  assert.doesNotMatch(rankSource,/j\.walkOnly\?'walk':signature\(j\)/);
 });
+
+test('doublons piétons : les coordonnées GPS différencient les points homonymes',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const rankSource=source.slice(source.indexOf('function rank('),source.indexOf('/* ---------- Requêtes par direction ---------- */'));
+ assert.match(rankSource,/j\.legs\?\.\[0\]\?\.fromPoint\?\.lat/);
+ assert.match(rankSource,/j\.legs\?\.\[0\]\?\.fromPoint\?\.lon/);
+ assert.match(rankSource,/toPoint\?\.lat/);
+ assert.match(rankSource,/toPoint\?\.lon/);
+});
