@@ -505,3 +505,11 @@ test('cars : deuxième lot piéton même si un TER est déjà réalisable',()=>{
  assert.match(source,/select\(rest,coachSource\?Math\.min\(4,remaining\):8\)/);
  assert.match(source,/s\.walkPairs\.size-beforeSecond/);
 });
+
+test('fusion doublons : faisabilité prioritaire sur prix connu',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.match(source,/const quality=x=>\[Number\(!!x\.feasible\),Number\(!!x\.scheduled\)/);
+ assert.match(source,/const firstDifference=qj\.findIndex/);
+ assert.match(source,/qj\[firstDifference\]>qo\[firstDifference\]/);
+});
