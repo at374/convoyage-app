@@ -1071,7 +1071,10 @@ function render(host,v){
  const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):'Aucun trajet trouvé'):'Recherche en cours… ('+v.total+' trouvée'+(v.total>1?'s':'')+')');
  host.appendChild(head);
  const addCard=(parent,j,labels)=>{
-  const node=card(doc,j,labels),key=signature(j);
+  const node=card(doc,j,labels);
+  // Une marche seule n'a pas de ligne de transport : sa signature classique est vide.
+  // Identifier aussi ces trajets pour ne pas refermer leur carte à chaque résultat réseau.
+  const key=signature(j)||(j.walkOnly?'walk|'+Math.round(ms(j.departure)/60000)+'|'+Math.round(ms(j.arrival)/60000)+'|'+Math.round(j.durationMinutes||0):'');
   if(key){node.setAttribute('data-journey-key',key);if(opened.has(key))node.open=true;}
   parent.appendChild(node);
  };
