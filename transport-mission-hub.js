@@ -1197,7 +1197,7 @@ function render(host,v){
  const openInitial=v.picks.length>0&&host.dataset.cpInitialCardOpened!=='true';
  if(openInitial)host.dataset.cpInitialCardOpened='true';
  for(const [i,p] of v.picks.entries())addCard(host,p.journey,p.labels,openInitial&&i===0);
- if(v.others.length){const more=el(doc,'details','cp-hub-more');more.appendChild(el(doc,'summary',null,'Autres propositions ('+v.others.length+')'));
+ if(v.others.length){const more=el(doc,'details','cp-hub-more');more.appendChild(el(doc,'summary',null,'Autres propositions ('+Math.min(v.others.length,8)+' affichées'+(v.others.length>8?' sur '+v.others.length:'')+')'));
   for(const j of v.others.slice(0,8))addCard(more,j,null);
   more.open=moreOpen;host.appendChild(more);}
  // Ne montrer que les moteurs effectivement interrogés sur la direction choisie.
