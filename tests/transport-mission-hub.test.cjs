@@ -643,3 +643,19 @@ test('cars transfrontaliers : EUR et CHF non comparables, départage par horaire
  assert.equal(coach.journey.legs[0].line,'C','les prix de devises différentes ne départagent pas les horaires');
  assert.equal(ranked.picks.some(p=>p.labels.includes('Moins cher')),false);
 });
+
+test('cars : classement stable pour trois offres EUR/CHF mélangées',()=>{
+ const task={latestArrival:at(9,0)};
+ const offer=(currency,amount,line,dep,arr)=>H.assess({source:'FlixBus',sources:['FlixBus'],missing:[],
+  legs:[bus(dep,arr,STOP1,STOP2,{provider:'FlixBus',line,
+   fare:{amount,currency,source:'tarif de test'}})]},task);
+ const rows=[
+  offer('EUR',5,'EUR5',at(7,40),at(8,10)),
+  offer('CHF',1,'CHF1',at(8,0),at(8,40)),
+  offer('EUR',2,'EUR2',at(7,50),at(8,20))
+ ];
+ const winner=items=>H.rank(items,task).picks.find(p=>p.labels.includes('FlixBus')).journey.legs[0].line;
+ assert.equal(winner(rows),'CHF1');
+ assert.equal(winner([rows[2],rows[0],rows[1]]),'CHF1');
+ assert.equal(winner([rows[1],rows[2],rows[0]]),'CHF1');
+});
