@@ -469,3 +469,12 @@ test('quota piéton : FlixBus et BlaBlaCar Bus prioritaires avant les bus locaux
  assert.match(hubSource,/toWalk\.sort\(\(a,b\)=>coachPriority\(a\)-coachPriority\(b\)/);
  assert.match(hubSource,/flixbus\|blablacar/);
 });
+
+test('quotas cars : réserver quatre couples piétons par opérateur indépendamment du quota local',()=>{
+ const fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.match(source,/coachWalkPairs:\{flixbus:0,blablacarBus:0\}/);
+ assert.match(source,/const coachBudget=coachKey\?Math\.max\(0,4-/);
+ assert.match(source,/s\.walkPairs\.size-before/);
+ assert.match(source,/select\(toWalk,coachSource\?coachBudget:8\)/);
+});
