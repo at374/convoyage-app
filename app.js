@@ -87,6 +87,9 @@
   const LIENS = { Hiflow: 'https://partenaire.expedicar.com/', DriiveMe: 'https://www.driiveme.com/', Otoqi: 'https://drivers.otoqi.com/', PopValet: 'https://www.popvalet.com/' };
   const FRAIS = { hebergement: 'hébergement', exceptionnels: 'frais exceptionnels', peages: 'péages', train: 'train', taxi: 'taxi', toll: 'péage', peage: 'péage', fuel: 'carburant', carburant: 'carburant', gas: 'carburant', parking: 'parking', wash: 'lavage', lavage: 'lavage', bus: 'bus', ticket: 'billet', transport: 'transport' };
   document.addEventListener('change', e => { const c = e.target && e.target.closest && e.target.closest('input[data-verif]'); if (!c) return; const t = lireLocal('cp_verif', {}) || {}; if (c.checked) t[c.dataset.verif] = new Date().toISOString(); else delete t[c.dataset.verif]; ecrireLocal('cp_verif', t); const l = c.closest('label'); if (l) { l.classList.toggle('ok', c.checked); l.lastChild.textContent = c.checked ? ' ✓ Vérifié par toi le ' + new Date().toLocaleDateString('fr-FR') + ' (horaires et prix valables le jour de la mission)' : ' Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'; } });
+  // Dernier défilement (doigt ou molette) : les mises à jour des transports attendent l'arrêt du défilement pour ne pas saccader.
+  let dernierDefilement = 0;
+  if (typeof document.addEventListener === 'function') { const marque = () => { dernierDefilement = Date.now(); }; document.addEventListener('scroll', marque, { capture: true, passive: true }); document.addEventListener('touchmove', marque, { capture: true, passive: true }); }
   const lireLocal = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d; } catch (_) { return d; } };
   // V301 : la copie locale (cp_cache) est plafonnée à ~1,2 Mo : des milliers de missions remplissaient les 5 Mo du téléphone et bloquaient tout enregistrement (choix des plateformes compris).
 const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k, JSON.stringify(x)); return true; } catch (_) { return false; } }; try { if (k === 'cp_cache' && v && Array.isArray(v.missions)) { let ms = v.missions, s = JSON.stringify({ ...v, missions: ms }); while (s.length > 1200000 && ms.length > 50) { ms = ms.slice(0, Math.floor(ms.length / 2)); s = JSON.stringify({ ...v, missions: ms }); } if (ess({ ...v, missions: ms })) return; try { localStorage.removeItem(k); } catch (_) {} for (const m of [400, 150, 50]) if (ess({ ...v, missions: ms.slice(0, m) })) return; return; } ess(v); } catch (_) {} };
@@ -2418,13 +2421,15 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       {const rank=k=>k.startsWith('Aller')?0:k.startsWith('Jonction')?1:2;
         Object.keys(transportDestinations).sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b)).forEach(k=>panel.appendChild(transportDestinations[k]));}
       const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
-      let updateDayTabs=()=>{};const labelState={};const pendingViews={};let renderPending=()=>{};
+      let updateDayTabs=()=>{};const labelState={};const pendingViews={};let renderPending=()=>{};let activeDay=null;let transportHub=null;
+      const startDayLabels=day=>{try{if(!transportHub)return;for(const [l,d] of Object.entries(transportDays))if(d===day)transportHub.start(l);}catch(_){}};
       if(availableTransportDays.length>1){
         const tabs=document.createElement('nav');
         tabs.className='cp-transport-day-tabs';
         tabs.setAttribute('aria-label','Jour des transports de la mission');
         const buttons=[];
         const selectDay=day=>{
+          activeDay=day;
           for(const [direction,section] of Object.entries(transportDestinations)){
             section.hidden=transportDays[direction]!==day;
           }
@@ -2433,6 +2438,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             button.setAttribute('aria-pressed',String(active));
             button.classList.toggle('active',active);
           }
+          startDayLabels(day);
           renderPending();
         };
         for(const day of availableTransportDays){
@@ -2468,7 +2474,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       sourcePanel.appendChild(refreshTransport);
       const localCards={};
       // Hub transports : TripGo, Suisse, Mobilités M, SNCF et GTFS local réunis et classés automatiquement.
-      let transportHub=null;
       const hubHosts={};
       renderPending=()=>{
         const Hub=window.CPTransportHub;if(!Hub)return;
@@ -2580,7 +2585,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
               windowKind:'departure',windowStartMs:Date.parse(startIso),windowEndMs:endMs});
           }
         }else if(deliveryDate)tasks.push({...retourBase,label:'Retour',earliestDeparture:plancher(deliveryStartIso||deliveryDate),...(deliveryStartIso?{windowKind:'departure',windowStartMs:Date.parse(plancher(deliveryStartIso)),windowEndMs:deliveryEndMs}:{})});
-        const signature=JSON.stringify([tasks,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
+        if(availableTransportDays.length>1&&activeDay)for(const t of tasks)t.lazy=transportDays[t.label]!==activeDay;
+        const signature=JSON.stringify([tasks.map(({lazy,...r})=>r),lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
         if(transportHub&&transportHub.signatureKey===signature)return;
         transportHub?.dispose();
         let router=null;
@@ -2609,6 +2615,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             labelState[label]={done:view.done,total:view.total};
             // Section d'un autre jour (onglet non affiché) : on garde la dernière vue et on la dessine à l'ouverture de l'onglet.
             if(transportDestinations[label].hidden){pendingViews[label]=view;updateDayTabs();return;}
+            // Pendant le défilement du doigt, on garde la vue et on la dessine dès l'arrêt (évite les saccades).
+            if(Date.now()-dernierDefilement<250){pendingViews[label]=view;clearTimeout(panel.__cpDefer);panel.__cpDefer=setTimeout(()=>{if(panel.isConnected)renderPending();},300);return;}
             delete pendingViews[label];
             let host=hubHosts[label];
             if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
@@ -2617,7 +2625,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             Hub.render(host,view);
             labelState[label]={done:view.done,total:view.total};updateDayTabs();
           }});
-        session.signatureKey=signature;transportHub=session;
+        session.signatureKey=signature;transportHub=session;startDayLabels(activeDay);
       };
       const hubObserver=typeof MutationObserver==='function'?new MutationObserver(()=>{
         if(!panel.isConnected||panel.hidden||$('feuille').hidden){transportHub?.dispose();transportHub=null;hubObserver.disconnect();}

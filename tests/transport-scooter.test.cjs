@@ -232,3 +232,20 @@ test('fenêtre d’arrivée large : recherche aussi « avant l’ouverture » et
  assert.ok(src.includes('180+windowSpan'));
  assert.ok(src.includes('p.run(variant,controller.signal)'));
 });
+
+test('fluidité : recherches des jours non affichés différées, pas de redessin identique, pas de rendu pendant le défilement',()=>{
+ const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
+ assert.ok(src.includes('lazy[label]=()=>'));
+ assert.ok(src.includes('start:label=>'));
+ assert.ok(src.includes('host.__cpFp===fp'));
+ assert.ok(app.includes('t.lazy=transportDays[t.label]!==activeDay'));
+ assert.ok(app.includes('startDayLabels(day)'));
+ assert.ok(app.includes('Date.now()-dernierDefilement<250'));
+ assert.ok(app.includes('tasks.map(({lazy,...r})=>r)'));
+});
+test('classement : meilleur compromis = arrive le plus tôt, propositions triées par départ',()=>{
+ const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.ok(src.includes('(ms(a.arrival)-ms(b.arrival))||(ms(a.departure)-ms(b.departure))'));
+ assert.ok(src.includes('picks.sort((a,b)=>(tier(b.journey)-tier(a.journey))'));
+});

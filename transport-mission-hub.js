@@ -653,7 +653,9 @@ function rank(items,task={}){
  const score=j=>(fareCurrency(j.price)==='EUR'?Math.min(j.price.amounts.EUR||0,200):60)+j.durationMinutes/3+j.transfers*8+j.walkMeters/250+
   (j.slackMinutes===null?0:Math.max(0,30-j.slackMinutes));
  // Un trajet confirmé (réalisable) prime sur un simple horaire programmé ; la proximité de la marge ne départage qu'ensuite.
-  const compromise=[...all].sort((a,b)=>byFeasible(a,b)||confirmedFirst(a,b)||relevant(a,b)||score(a)-score(b))[0];
+  // Priorité du convoyeur (17/11/2026) : partir et arriver le plus tôt possible. Le « meilleur compromis » est donc, parmi les trajets
+  // exploitables (confirmés d'abord), celui qui arrive le plus tôt, puis part le plus tôt ; le prix et le confort ne départagent qu'ensuite.
+  const compromise=[...all].sort((a,b)=>byFeasible(a,b)||confirmedFirst(a,b)||(ms(a.arrival)-ms(b.arrival))||(ms(a.departure)-ms(b.departure))||score(a)-score(b))[0];
  const picks=[];
  for(const [label,j] of [['Moins cher',cheapest],['Meilleur compromis',compromise],['Plus rapide',fastest]])
   if(j){const found=picks.find(p=>p.journey===j);if(found)found.labels.push(label);else picks.push({labels:[label],journey:j});}
@@ -696,6 +698,7 @@ function rank(items,task={}){
    if(!j)continue;const already=picks.find(p=>p.journey===j);
    if(already){if(!already.labels.includes(label))already.labels.push(label);}else picks.push({labels:[label],journey:j});}
  }
+ picks.sort((a,b)=>(tier(b.journey)-tier(a.journey))||(ms(a.journey.departure)-ms(b.journey.departure))||(ms(a.journey.arrival)-ms(b.journey.arrival)));   // les propositions mises en avant : la plus matinale en premier
  const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||relevant(a,b)||ms(a.departure)-ms(b.departure)||confirmedFirst(a,b));
  return {picks,others,total:all.length};
 }
@@ -1196,13 +1199,15 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   }
   if(!disposed)emit(label);
  }
- for(const task of tasks){
-  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},discarded:{},bySignature:new Map(),walkPairs:new Set(),coachWalkPairs:{flixbus:0,blablacarBus:0}};
-  if(!pt(task.from)||!pt(task.to)){state[label].errors.adresses='adresse GPS manquante';emit(label);continue;}
+ // Jours non affichés (task.lazy) : leurs recherches ne démarrent qu'à l'ouverture de l'onglet (start(label)), pour ne pas saturer le téléphone.
+ const lazy={};
+ const launch=task=>{
+  const label=task.label;
+  if(!pt(task.from)||!pt(task.to)){state[label].errors.adresses='adresse GPS manquante';emit(label);return;}
   // Ne lancer aucun fournisseur ni marche si la fenêtre temporelle est impossible.
   if(!queryWindow(task)){
    state[label].errors.horaires='créneau impossible : livraison trop tardive pour arriver avec la marge requise, ou horaires absents';
-   emit(label);continue;
+   emit(label);return;
   }
   // Fenêtre d'arrivée large (ex. 08:00–19:00) : une seule recherche « arriver avant 19:00 » ne renvoie que les trajets de l'après-midi.
   // Une seconde recherche « arriver avant l'ouverture » (08:00) ramène les trajets du matin ; les deux se complètent dans la même liste.
@@ -1232,8 +1237,13 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
     .finally(()=>{if(disposed)return;state[label].pending--;emit(label);});
   }
   emit(label);
+ };
+ for(const task of tasks){
+  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},discarded:{},bySignature:new Map(),walkPairs:new Set(),coachWalkPairs:{flixbus:0,blablacarBus:0}};
+  if(task.lazy){state[label].pending=1;lazy[label]=()=>{state[label].pending--;launch(task);};continue;}
+  launch(task);
  }
- return {ingest:(label,source,journeys)=>add(label,source,journeys),view,
+ return {start:label=>{const f=lazy[label];if(f){delete lazy[label];if(!disposed)f();}},ingest:(label,source,journeys)=>add(label,source,journeys),view,
   dispose:()=>{disposed=true;controller.abort();},signal:controller.signal};
 }
 
@@ -1492,8 +1502,15 @@ const TAD=[
 ];
 function tadFor(task){const pts=[pt(task?.from),pt(task?.to)].filter(Boolean);
  return TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));}
+function viewFingerprint(v){
+ const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters].join(','):'';
+ return [v.done?1:0,v.total,v.longShown,(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).slice(0,8).map(one).join(';'),v.others&&v.others.length,
+  Object.entries(v.errors||{}).map(([k,e])=>k+e).join('|'),Object.entries(v.received||{}).join('|')].join('#');
+}
 function render(host,v){
  const doc=host.ownerDocument;
+ // Rien de changé depuis le dernier dessin : on ne reconstruit pas la liste (évite saccades et perte de position au défilement).
+ {const fp=viewFingerprint(v);if(host.__cpFp===fp&&host.childNodes.length)return;host.__cpFp=fp;}
  // Préserver les cartes ouvertes lors des arrivées progressives des moteurs.
  // Sans cela, chaque résultat réseau referme les détails et recrée les SVG.
  const opened=new Set(Array.from(host.querySelectorAll('details.cp-hub-card[open]'))
