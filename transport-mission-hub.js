@@ -965,7 +965,14 @@ function createSession({tasks=[],providers={},router=null,fareFor=null,walkMaxKm
   // Les cars ne doivent pas perdre leur marche parce qu'un TER est déjà
   // réalisable. Le second lot reste limité, sans dépasser le quota prévu.
   if(!disposed&&rest.length&&(coachSource||!s.items.some(x=>x.feasible))){
-   [batch,rest]=select(rest,coachSource?4:8);await walkBatch(batch);
+   // Quota total car : huit nouveaux couples au maximum, deux lots de quatre.
+   // Décompter les couples déjà réservés au premier lot et ceux partagés
+   // avec les autres moteurs, plutôt que réouvrir un quota illimité.
+   const remaining=coachKey?Math.max(0,8-(s.coachWalkPairs[coachKey]||0)):8;
+   const beforeSecond=s.walkPairs.size;
+   [batch,rest]=select(rest,coachSource?Math.min(4,remaining):8);
+   if(coachKey)s.coachWalkPairs[coachKey]=(s.coachWalkPairs[coachKey]||0)+s.walkPairs.size-beforeSecond;
+   await walkBatch(batch);
   }
   for(const t of rest){ // au-delà : visibles, marches non calculées pour préserver le quota Valhalla
    replace(t,assess({...t.j,missing:[...(t.j.missing||[]),'marches non calculées (quota de la fiche)']},s.task,fareFor));
