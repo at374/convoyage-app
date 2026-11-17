@@ -538,6 +538,22 @@ function rank(items,task={}){
  const picks=[];
  for(const [label,j] of [['Moins cher',cheapest],['Meilleur compromis',compromise],['Plus rapide',fastest]])
   if(j){const found=picks.find(p=>p.journey===j);if(found)found.labels.push(label);else picks.push({labels:[label],journey:j});}
+ // Une offre FlixBus/BlaBlaCar Bus ne doit pas disparaître derrière
+ // « Autres propositions » uniquement parce qu'un TER est plus rapide.
+ // Ne jamais promouvoir une course hors date, annulée ou non exploitable.
+ const coachOperators=[
+  ['FlixBus',/flixbus/i],
+  ['BlaBlaCar Bus',/blablacar\s*(?:bus|coach)|blablacarbus|ouibus/i]
+ ];
+ for(const [name,pattern] of coachOperators){
+  const matches=all.filter(j=>(j.feasible||j.scheduled)&&
+   (j.sources||[]).concat(j.source||'',j.legs.map(l=>l.provider||'')).some(x=>pattern.test(String(x))));
+  const best=[...matches].sort((a,b)=>byFeasible(a,b)||relevant(a,b)||score(a)-score(b))[0];
+  if(!best)continue;
+  const already=picks.find(p=>p.journey===best);
+  if(already)already.labels.push(name);
+  else picks.push({labels:[name],journey:best});
+ }
  const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||relevant(a,b)||ms(a.departure)-ms(b.departure)||confirmedFirst(a,b));
  return {picks,others,total:all.length};
 }
