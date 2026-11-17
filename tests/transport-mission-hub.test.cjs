@@ -501,5 +501,7 @@ test('cars : deuxième lot piéton même si un TER est déjà réalisable',()=>{
  const fs=require('node:fs');
  const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
  assert.match(source,/rest\.length&&\(coachSource\|\|!s\.items\.some\(x=>x\.feasible\)\)/);
- assert.match(source,/select\(rest,coachSource\?4:8\)/);
+ assert.match(source,/const remaining=coachKey\?Math\.max\(0,8-/);
+ assert.match(source,/select\(rest,coachSource\?Math\.min\(4,remaining\):8\)/);
+ assert.match(source,/s\.walkPairs\.size-beforeSecond/);
 });
