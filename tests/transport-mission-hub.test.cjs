@@ -485,8 +485,11 @@ test('échec du routage piéton : aucune carte ne reste bloquée en calcul',asyn
  const providers={coach:{name:'FlixBus GTFS',enabled:()=>true,run:async()=>[{
   source:'FlixBus',sources:['FlixBus'],legs:[bus(at(8,0),at(8,30),STOP1,STOP2,{provider:'FlixBus'})]
  }]}};
- const session=H.createSession({tasks:[task],providers,router:brokenRouter,onUpdate:()=>{}});
- await new Promise(resolve=>setTimeout(resolve,60));
+ let finished;
+ const done=new Promise(resolve=>{finished=resolve;});
+ const session=H.createSession({tasks:[task],providers,router:brokenRouter,
+  onUpdate:(label,view)=>{if(label==='Aller'&&view.done)finished();}});
+ await Promise.race([done,new Promise((_,reject)=>setTimeout(()=>reject(Error('timeout coach test')),3000))]);
  const view=session.view('Aller');
  assert.equal(view.pending,0);
  assert.ok(view.total>=1);
