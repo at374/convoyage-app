@@ -614,3 +614,17 @@ test('moins cher : un trajet tarifé mais trop tardif ne reçoit pas cette recom
  const onlyLate=H.rank([late],task);
  assert.equal(onlyLate.picks.some(p=>p.labels.includes('Moins cher')),false);
 });
+
+test('France–Suisse : aucune recommandation moins cher entre EUR et CHF sans conversion',()=>{
+ const task={latestArrival:at(9,0)};
+ const offer=(currency,amount,line)=>H.assess({source:line,sources:[line],missing:[],
+  legs:[bus(at(8,0),at(8,30),STOP1,STOP2,{line,
+   fare:{amount,currency,source:'grille vérifiée'}})]},task);
+ const euro=offer('EUR',10,'EUR');
+ const franc=offer('CHF',8,'CHF');
+ const ranked=H.rank([euro,franc],task);
+ assert.equal(ranked.total,2);
+ assert.equal(ranked.picks.some(p=>p.labels.includes('Moins cher')),false);
+ const euroOnly=H.rank([euro,offer('EUR',5,'EUR2')],task);
+ assert.equal(euroOnly.picks.find(p=>p.labels.includes('Moins cher')).journey.price.label,'5,00 €');
+});
