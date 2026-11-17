@@ -53,13 +53,11 @@ test('inventaire : ne plus annoncer Léman Pass entièrement absent',()=>{
  assert.equal(coverage.DETAILS.lemanpass.tarif,'partiels');
 });
 
-test('premiere proposition : carte et marches visibles sans ouverture manuelle',()=>{
+test('aucune carte ouverte d\'office : le convoyeur ouvre celle qu\'il veut ; marches visibles dans la carte ouverte',()=>{
  assert.match(hub,/function card\(doc,j,labels,expanded=false\)/);
  assert.match(hub,/if\(expanded\)c\.open=true/);
  assert.match(hub,/if\(c\.open\)buildBody\(\)/);
- assert.match(hub,/const openInitial=v\.picks\.length>0&&host\.dataset\.cpInitialCardOpened!=='true'/);
- assert.match(hub,/if\(openInitial\)host\.dataset\.cpInitialCardOpened='true'/);
- assert.match(hub,/for\(const \[i,p\] of v\.picks\.entries\(\)\)addCard\(host,p\.journey,p\.labels,openInitial&&i===0\)/);
+ assert.match(hub,/const openInitial=false;/);
  // Bouton « Voir la marche N » sous la carte de chaque marche ; plus de bloc séparé ni de « Tarif à confirmer » sur une marche.
  assert.match(hub,/'🚶 Voir la marche '\+walkNo/);
  assert.doesNotMatch(hub,/Cartes des trajets piétons/);

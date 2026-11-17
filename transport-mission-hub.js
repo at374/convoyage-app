@@ -1555,7 +1555,7 @@ function render(host,v){
  };
  // Ouvrir automatiquement la première carte une seule fois par fiche.
  // Si le convoyeur la referme, une mise à jour réseau ne doit pas la rouvrir.
- const openInitial=v.picks.length>0&&host.dataset.cpInitialCardOpened!=='true';
+ const openInitial=false;   // 17/11/2026 : aucune carte n'est ouverte d'office, c'est le convoyeur qui ouvre celle qu'il veut
  if(openInitial)host.dataset.cpInitialCardOpened='true';
  for(const [i,p] of v.picks.entries())addCard(host,p.journey,p.labels,openInitial&&i===0);
  if(v.others.length){const more=el(doc,'details','cp-hub-more');more.appendChild(el(doc,'summary',null,'Autres propositions ('+Math.min(v.others.length,8)+' affichées'+(v.others.length>8?' sur '+v.others.length:'')+')'));
