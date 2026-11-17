@@ -685,3 +685,14 @@ test('marche fournie par un moteur : deux itinéraires sans walkOnly restent dis
  assert.equal(second.walkOnly,undefined);
  assert.equal(H.rank([first,second],task).total,2);
 });
+
+test('marche fournie par un moteur : prix gratuit sans drapeau walkOnly',()=>{
+ const task={latestArrival:at(9,0)};
+ const walking=H.assess({source:'Piéton externe',sources:['Piéton externe'],missing:[],
+  legs:[{kind:'walk',mode:'Marche',from:'Départ',to:'Arrivée',
+   fromPoint:STOP1,toPoint:STOP2,departure:at(8,0),arrival:at(8,30),
+   distanceMeters:1800,durationSeconds:1800}]},task);
+ assert.equal(walking.walkOnly,undefined);
+ assert.equal(walking.price.status,'free');
+ assert.equal(walking.price.label,'Gratuit (à pied)');
+});
