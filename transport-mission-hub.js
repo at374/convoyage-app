@@ -1210,21 +1210,29 @@ function card(doc,j,labels,expanded=false){
   const li=el(doc,'li',l.kind==='walk'?'walk':'ride');
   li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+Math.max(1,Math.round(l.durationSeconds/60))+' min':''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':''].filter(Boolean).join(' '))));
   li.appendChild(el(doc,'div',null,clock(l.departure)+' '+(l.from||'?')+' → '+clock(l.arrival)+' '+(l.to||'?')+(l.delayMinutes?' · retard annoncé +'+l.delayMinutes+' min':'')));
-  if(l.kind==='walk')li.appendChild(el(doc,'small',null,l.walkSource==='valhalla'?'Itinéraire piéton calculé (OpenStreetMap)':'Marche calculée par '+j.source));
   if(l.kind==='walk'){
+   li.appendChild(el(doc,'small',null,l.walkSource==='valhalla'?'Itinéraire piéton calculé (OpenStreetMap)':'Marche calculée par '+j.source));
    // Carte dédiée à cette marche, zoomée sur le trajet à pied (la carte d'ensemble est trop large pour voir les marches).
    const wm=mapSvg(doc,{legs:[l]});
    if(wm){wm.setAttribute('class','cp-hub-map cp-hub-walk-map');
     wm.setAttribute('aria-label','Carte de la marche '+(l.from||'départ')+' vers '+(l.to||'arrivée')+' (OpenStreetMap)');
     li.appendChild(wm);}
-  }
-  if(l.kind==='walk'&&Array.isArray(l.steps)&&l.steps.length){
+   // Bouton sous la carte de CHAQUE marche : ouvre cette marche en grand.
+   const wa=pt(l.fromPoint),wb=pt(l.toPoint);
+   if(wa&&wb){
+    const walkNo=j.legs.slice(0,legIndex+1).filter(x=>x.kind==='walk').length;
+    const link=el(doc,'a','cp-hub-walk-map-link','🚶 Voir la marche '+walkNo);
+    link.href='https://www.openstreetmap.org/directions?engine=fossgis_osrm_foot&route='+encodeURIComponent(wa.lat+','+wa.lon+';'+wb.lat+','+wb.lon);
+    link.target='_blank';link.rel='noopener noreferrer';li.appendChild(link);
+   }
+   if(Array.isArray(l.steps)&&l.steps.length){
    // Guidage pas à pas fourni par le service piéton OpenStreetMap (jamais reconstruit ni inventé).
    const guide=el(doc,'details','cp-hub-steps');guide.open=true;
    guide.appendChild(el(doc,'summary',null,'🧭 Guidage à pied · '+l.steps.length+' étape'+(l.steps.length>1?'s':'')));
    const steps=el(doc,'ol',null);
    for(const st of l.steps)steps.appendChild(el(doc,'li',null,st.text+(st.meters>0?' · '+(st.meters>=1000?(st.meters/1000).toFixed(1).replace('.',',')+' km':st.meters+' m'):'')));
    guide.appendChild(steps);li.appendChild(guide);
+   }
   }
   else{const f=j.price.legFares?.[legIndex]||null;li.appendChild(el(doc,'small',null,f?'Tarif : '+f.amount.toFixed(2).replace('.',',')+(f.currency==='EUR'?' €':' CHF')+' · '+f.source:'Tarif : à confirmer'));
    // Le carnet rechargeable Ondéa est utilisable sur les lignes 400–419, contrairement au M-ticket.
@@ -1237,22 +1245,8 @@ function card(doc,j,labels,expanded=false){
  }
  body.appendChild(ol);
  // Accès à une vraie carte pour chaque marche : le schéma SVG n'est pas une carte de rues.
- const walks=j.legs.filter(l=>l.kind==='walk');
- if(walks.length){
-  const maps=el(doc,'div','cp-hub-walk-maps');
-  maps.appendChild(el(doc,'strong',null,'🗺️ Cartes des trajets piétons'));
-  for(const [i,l] of walks.entries()){
-   const a=pt(l.fromPoint),b=pt(l.toPoint);
-   if(!a||!b){maps.appendChild(el(doc,'p','cp-hub-note','Marche '+(i+1)+' : carte indisponible, coordonnées des arrêts manquantes.'));continue;}
-   const link=el(doc,'a','cp-hub-walk-map-link','🚶 Voir la marche '+(i+1)+' sur la carte OpenStreetMap');
-   link.href='https://www.openstreetmap.org/directions?engine=fossgis_osrm_foot&route='+encodeURIComponent(a.lat+','+a.lon+';'+b.lat+','+b.lon);
-   link.target='_blank';link.rel='noopener noreferrer';maps.appendChild(link);
-  }
-  maps.appendChild(el(doc,'small','cp-hub-note','La carte externe recalcule le chemin piéton ; vérifier le tracé avant départ.'));
-  body.appendChild(maps);
- }
  const svg=mapSvg(doc,j);if(svg)body.appendChild(svg);
- else body.appendChild(el(doc,'p','cp-hub-note','Schéma indisponible : tracé GPS insuffisant. Utiliser les liens de carte piétonne ci-dessus.'));
+ else body.appendChild(el(doc,'p','cp-hub-note','Schéma indisponible : tracé GPS insuffisant.'));
  if(j.price.status==='unknown')body.appendChild(el(doc,'p','cp-hub-note','Source tarifaire manquante : '+j.price.missingSources.join(', ')+'.'));
  if(j.delays.length)body.appendChild(el(doc,'p','cp-hub-note','Retards signalés : '+j.delays.join(', ')));
  if(j.alerts.length)body.appendChild(el(doc,'p','cp-hub-note','Alertes : '+j.alerts.join(' · ')));

@@ -26,3 +26,14 @@ test('fiche mission : une marche calculée porte ses étapes guidées',()=>{
  const l=H.walkLeg?H.walkLeg({durationSeconds:60,distanceMeters:80,geometry:[{lat:45.9,lon:6.1},{lat:45.901,lon:6.1}],steps:[{text:'Tournez à gauche',meters:80,seconds:60}]},{lat:45.9,lon:6.1},{lat:45.901,lon:6.1},'A','B',Date.now()):null;
  if(l)assert.equal(l.steps[0].text,'Tournez à gauche');
 });
+
+test('rendu : une marche n affiche jamais de tarif, et son bouton est sous sa carte',()=>{
+ const fs=require('node:fs');
+ const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ const i=src.indexOf("if(l.kind==='walk'){\n   li.appendChild(el(doc,'small'");
+ const j=src.indexOf("else{const f=j.price.legFares?.[legIndex]",i);
+ assert.ok(i>=0&&j>i,'le tarif de segment appartient au « sinon » des marches');
+ const bloc=src.slice(i,j);
+ assert.ok(bloc.indexOf('mapSvg(doc,{legs:[l]})')<bloc.indexOf('Voir la marche'),'bouton après la carte');
+ assert.doesNotMatch(bloc,/Tarif/);
+});
