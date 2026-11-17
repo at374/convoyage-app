@@ -108,3 +108,8 @@ test('BlaBlaCar Bus et FlixBus : diagnostic uniquement si moteur consulté',()=>
  assert.match(hub,/Aucun horaire reçu pour ce trajet et cette date/);
  assert.match(hub,/prix non fournis par le GTFS/);
 });
+
+test('cars : horaires reçus mais aucune proposition retenue, diagnostic explicite',()=>{
+ assert.match(hub,/entry\.visible===0&&\(v\.received\?\.\[entry\.name\]\|\|0\)>0/);
+ assert.match(hub,/les horaires reçus ne constituent pas un trajet validé pour cette mission/);
+});
