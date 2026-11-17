@@ -409,6 +409,21 @@ function priceOf(j,fareFor){
 // Valeur de tri en euros : on ne convertit pas les CHF (pas de taux inventé) ; CHF trié après EUR.
 function priceSortKey(p){if(p.status==='free')return 0;if(p.status!=='verified')return Infinity;
  return (p.amounts.EUR||0)+(p.amounts.CHF?1e4+p.amounts.CHF:0);}
+function fareCurrency(p){
+ if(p?.status==='free')return 'free';
+ if(p?.status!=='verified')return null;
+ const currencies=Object.entries(p.amounts||{}).filter(([,v])=>v>0).map(([c])=>c);
+ return currencies.length===1?currencies[0]:currencies.length===0?'free':null;
+}
+// Prix comparable uniquement dans une même devise, ou si un trajet est gratuit.
+function compareFares(a,b){
+ const ca=fareCurrency(a),cb=fareCurrency(b);
+ if(ca==='free'&&cb==='free')return 0;
+ if(ca==='free')return -1;
+ if(cb==='free')return 1;
+ if(!ca||!cb||ca!==cb)return 0;
+ return (a.amounts[ca]||0)-(b.amounts[cb]||0);
+}
 
 /* ---------- Évaluation ---------- */
 function marginFor(task){
@@ -550,7 +565,7 @@ function rank(items,task={}){
  // affiché sur chaque carte reste celui du trajet : un horaire programmé n'est jamais présenté comme confirmé.
  const tier=j=>j.feasible||j.scheduled?1:0,confirmedFirst=(a,b)=>Number(b.feasible)-Number(a.feasible);
  const byFeasible=(a,b)=>tier(b)-tier(a);
- const fastest=[...all].sort((a,b)=>byFeasible(a,b)||a.durationMinutes-b.durationMinutes||confirmedFirst(a,b)||priceSortKey(a.price)-priceSortKey(b.price))[0];
+ const fastest=[...all].sort((a,b)=>byFeasible(a,b)||a.durationMinutes-b.durationMinutes||confirmedFirst(a,b)||compareFares(a.price,b.price))[0];
  // « Moins cher » ne doit jamais recommander un trajet impossible, même si son prix est connu.
  const priced=all.filter(j=>(j.feasible||j.scheduled)&&
   (j.price.status==='verified'||j.price.status==='free'));
@@ -564,7 +579,7 @@ function rank(items,task={}){
  const cheapest=comparable?[...priced].sort((a,b)=>byFeasible(a,b)||
   priceSortKey(a.price)-priceSortKey(b.price)||confirmedFirst(a,b)||
   a.durationMinutes-b.durationMinutes)[0]:undefined;
- const score=j=>(Number.isFinite(priceSortKey(j.price))?Math.min(priceSortKey(j.price),200):60)+j.durationMinutes/3+j.transfers*8+j.walkMeters/250+
+ const score=j=>(fareCurrency(j.price)==='EUR'?Math.min(j.price.amounts.EUR||0,200):60)+j.durationMinutes/3+j.transfers*8+j.walkMeters/250+
   (j.slackMinutes===null?0:Math.max(0,30-j.slackMinutes));
  const compromise=[...all].sort((a,b)=>byFeasible(a,b)||relevant(a,b)||score(a)-score(b)||confirmedFirst(a,b))[0];
  const picks=[];
@@ -585,7 +600,7 @@ function rank(items,task={}){
   const verifiedCoach=j=>j.price?.status==='verified'||j.price?.status==='free';
   const best=[...matches].sort((a,b)=>byFeasible(a,b)||
    Number(verifiedCoach(b))-Number(verifiedCoach(a))||
-   (verifiedCoach(a)&&verifiedCoach(b)?priceSortKey(a.price)-priceSortKey(b.price):0)||
+   (verifiedCoach(a)&&verifiedCoach(b)?compareFares(a.price,b.price):0)||
    relevant(a,b)||score(a)-score(b))[0];
   if(!best)continue;
   const already=picks.find(p=>p.journey===best);
