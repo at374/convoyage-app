@@ -2415,6 +2415,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           providers:Hub.makeProviders(window,{fetcher:regionalFetch,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
             nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{},ojpSession,
             // OTP2 : moteur supplémentaire, actif seulement si un serveur HTTPS est configuré (aucun par défaut).
+            lyonCoachAccess:true,
             allowOTP:typeof window.CP_OTP_ENDPOINT==='string'&&!!window.CPOTPClient?.buildQuery,
             otpEndpoint:window.CP_OTP_ENDPOINT,otpQuery:window.CPOTPClient?.buildQuery,otpTimeoutMs:30000}),
           onUpdate:(label,view)=>{

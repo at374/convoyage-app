@@ -120,3 +120,28 @@ test('fenêtre de mission : propositions avant le début et jusqu à la fin de l
  const av=r.picks.find(p=>p.labels.some(l=>/Arrive avant/.test(l))).journey,jq=r.picks.find(p=>p.labels.some(l=>/Arrive jusqu/.test(l))).journey;
  assert.ok(Date.parse(av.arrival)<=task.windowStartMs);assert.equal(jq.arrival,'2026-11-18T11:10:00.000Z');
 });
+
+test('cars depuis Lyon : gares routières de Part-Dieu, Perrache et Gerland comme points de recherche',()=>{
+ const n=H.LYON_COACH_ANCHORS.map(a=>a.name).join('|');
+ assert.match(n,/Gerland/);assert.match(n,/Perrache/);assert.match(n,/Part-Dieu/);
+});
+
+const CORBAS={lat:45.6667,lon:4.9},GERLAND={lat:45.729,lon:4.83},ANNECY={lat:45.9,lon:6.12};
+const coach=()=>({source:'FlixBus GTFS',sources:['FlixBus GTFS'],alerts:[],missing:[],needsAccess:{side:'from',anchor:'Lyon Gerland'},
+ legs:[{kind:'transit',mode:'Car',provider:'FlixBus',line:'F1',from:'Lyon Gerland',to:'Annecy',fromPoint:GERLAND,toPoint:ANNECY,departure:'2026-11-18T14:00:00Z',arrival:'2026-11-18T16:00:00Z',durationSeconds:7200}]});
+const otpAccess=(arr)=>({enabled:()=>true,run:async()=>[{source:'OTP',sources:['OTP'],legs:[{kind:'transit',mode:'Tram',provider:'TCL',line:'T',from:'Corbas',to:'Lyon Gerland',fromPoint:CORBAS,toPoint:GERLAND,departure:'2026-11-18T13:00:00Z',arrival:arr,durationSeconds:3000}]}]});
+const tk={from:CORBAS,to:ANNECY,fromName:'Livraison',toName:'Domicile',earliestDeparture:'2026-11-18T12:00:00Z',marginMinutes:15};
+
+test('car depuis Lyon : accès calculé par OTP2 ajouté avant le car, avec 10 min de marge',async()=>{
+ const j=await H.accessFor(coach(),tk,otpAccess('2026-11-18T13:50:00Z'),null);
+ assert.equal(j.legs.length,2);assert.equal(j.legs[0].mode,'Tram');assert.equal(j.legs[1].provider,'FlixBus');
+ assert.ok(!j.needsAccess);
+});
+test('car depuis Lyon : accès trop tardif ou OTP indisponible → aucun accès inventé, trajet signalé',async()=>{
+ const late=await H.accessFor(coach(),tk,otpAccess('2026-11-18T13:58:00Z'),null);
+ assert.equal(late.legs.length,1);assert.ok(late.missing.some(m=>/accès/.test(m)));
+ const off=await H.accessFor(coach(),tk,null,null);
+ assert.equal(off.legs.length,1);assert.ok(off.missing.length>0);
+ const err=await H.accessFor(coach(),tk,{enabled:()=>true,run:async()=>{throw new Error('délai dépassé');}},null);
+ assert.equal(err.legs.length,1);assert.ok(err.missing.some(m=>/délai/.test(m)));
+});

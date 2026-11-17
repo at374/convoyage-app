@@ -11,6 +11,7 @@
 const VERSION='hub-20261113';
 const SWISS_BOX={minLat:45.80,maxLat:47.90,minLon:5.90,maxLon:10.60};
 const GENEVA={lat:46.2044,lon:6.1432};
+const LYON_COACH_ANCHORS=[{name:'Lyon Part-Dieu',lat:45.7605,lon:4.8590},{name:'Lyon Perrache',lat:45.7487,lon:4.8262},{name:'Lyon Gerland',lat:45.7290,lon:4.8300}];
 const SAFE_TRANSFER_MIN=10,SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=120;
 
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
@@ -872,7 +873,22 @@ function makeProviders(r,opts={}){
         :{earliestDeparture:afterMidnight})});
       rows=rows.concat(overnight.journeys||[]);
      }
-     return fromNationalGTFS(rows,operator);
+     let out=fromNationalGTFS(rows,operator);
+     // Cars FlixBus / BlaBlaCar Bus depuis les gares routières de Lyon (Part-Dieu, Perrache, Gerland) quand le départ ou l'arrivée
+     // est trop loin pour y aller à pied (Corbas, Saint-Priest…) : l'accès est calculé ensuite par le serveur OTP2 (TCL), jamais estimé.
+     if(operator!=='sncf'&&!signal?.aborted&&opts.lyonCoachAccess===true){
+      for(const side of ['from','to']){
+       const far=pt(task[side]);if(!far)continue;
+       const near=LYON_COACH_ANCHORS.filter(a=>{const d=meters(far,a);return d>3500&&d<=25000;});
+       if(!near.length)continue;
+       const anchor=near.sort((a,b)=>meters(far,a)-meters(far,b))[0];
+       const other=pt(task[side==='from'?'to':'from']);if(!other)continue;
+       const extra=await r.CPNationalGTFSJourneys.loadAndSearch({...searchParams,[side]:{lat:anchor.lat,lon:anchor.lon},radiusMeters:3500}).catch(()=>null);
+       const found=Array.isArray(extra?.journeys)?extra.journeys:[];
+       if(found.length)out=out.concat(fromNationalGTFS(found,operator).map(j=>({...j,needsAccess:{side,anchor:anchor.name}})));
+      }
+     }
+     return out;
     }};
   }
  }
@@ -990,6 +1006,29 @@ function makeProviders(r,opts={}){
  return P;
 }
 
+/* ---------- Accès aux gares routières éloignées (OTP2) ---------- */
+async function accessFor(j,task,otp,signal){
+ const side=j.needsAccess.side,legs=j.legs,gap=10*60000;
+ const first=legs[0],last=legs[legs.length-1],miss=t=>({...j,needsAccess:undefined,missing:[...(j.missing||[]),t]});
+ if(!otp||!otp.run||!(()=>{try{return otp.enabled(task);}catch(_){return false;}})())return miss('accès à la gare routière non calculé (serveur OTP2 non disponible)');
+ let t2;
+ if(side==='from'){const dep=ms(first.departure),target=pt(first.fromPoint);if(!Number.isFinite(dep)||!target||!pt(task.from))return miss('accès à la gare routière non calculable');
+  t2={...task,label:task.label,from:task.from,to:target,toName:first.from,latestArrival:new Date(dep-gap).toISOString(),marginMinutes:10,walkMaxMeters:undefined};delete t2.windowKind;}
+ else{const arr=ms(last.arrival),from=pt(last.toPoint);if(!Number.isFinite(arr)||!from||!pt(task.to))return miss('trajet depuis la gare routière non calculable');
+  t2={...task,from,fromName:last.to,to:task.to,earliestDeparture:new Date(arr+gap).toISOString(),marginMinutes:10,walkMaxMeters:undefined};delete t2.windowKind;
+  if(!Number.isFinite(ms(task.latestArrival)))delete t2.latestArrival;}
+ let list=[];try{list=await otp.run(t2,signal)||[];}catch(e){return miss('accès à la gare routière non calculé ('+String(e&&e.message||e).slice(0,60)+')');}
+ const ok=list.filter(a=>a&&Array.isArray(a.legs)&&a.legs.length&&a.legs.every(l=>l&&Number.isFinite(ms(l.departure))&&Number.isFinite(ms(l.arrival))));
+ let best=null;
+ if(side==='from'){const dep=ms(first.departure);const fit=ok.filter(a=>ms(a.legs[a.legs.length-1].arrival)<=dep-gap&&(!Number.isFinite(ms(task.earliestDeparture))||ms(a.legs[0].departure)>=ms(task.earliestDeparture)));
+  best=fit.sort((a,b)=>ms(b.legs[b.legs.length-1].arrival)-ms(a.legs[a.legs.length-1].arrival))[0];}
+ else{const arr=ms(last.arrival);const fit=ok.filter(a=>ms(a.legs[0].departure)>=arr+gap);best=fit.sort((a,b)=>ms(a.legs[a.legs.length-1].arrival)-ms(b.legs[b.legs.length-1].arrival))[0];}
+ if(!best)return miss('aucun accès à la gare routière trouvé dans les horaires');
+ const merged=side==='from'?[...best.legs,...legs]:[...legs,...best.legs];
+ return {...j,needsAccess:undefined,legs:merged,sources:[...new Set([...(j.sources||[j.source]),...(best.sources||[best.source]).filter(Boolean)])],
+  missing:[...(j.missing||[])],alerts:[...(j.alerts||[]),'Accès à la gare routière calculé par OpenTripPlanner (horaires théoriques).']};
+}
+
 /* ---------- Session ---------- */
 function createSession({tasks=[],providers={},router=null,scooterRouter=null,scooter=null,fareFor=null,walkMaxKm=3,timeoutMs=25000,onUpdate=()=>{}}={}){
  tasks=tasks.map(t=>({...t,walkMaxMeters:Number.isFinite(t.walkMaxMeters)?t.walkMaxMeters:(Number.isFinite(walkMaxKm)&&walkMaxKm>0?walkMaxKm*1000:undefined)}));
@@ -1011,7 +1050,13 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    !j.legs.some(l=>cancelled(l)||BOATS.test(l.mode+' '+(l.line||''))));
   // Point d'arrivée ou de départ approximatif (adresse trouvée seulement au niveau de la voie ou de la commune) : le test « marcher
   // directement serait aussi court » n'est pas fiable (l'écart de plusieurs km vient de l'approximation), on garde le trajet.
-  const clean=usable.filter(j=>(s.task.approximateEndpoint||!walkDetour(j,s.task))&&!excessiveDetour(j,s.task));
+  let clean=usable.filter(j=>(s.task.approximateEndpoint||!walkDetour(j,s.task)||j.needsAccess)&&!excessiveDetour(j,s.task));
+  // Cars depuis une gare routière éloignée : accès (TCL…) calculé par OTP2, 6 cars au plus par moteur ; sans accès calculé, le car reste signalé « accès non calculé ».
+  if(clean.some(j=>j.needsAccess)){
+   const withAccess=clean.filter(j=>j.needsAccess).sort((a,b)=>ms(a.departure||a.legs[0]?.departure)-ms(b.departure||b.legs[0]?.departure)).slice(0,6);
+   const resolved=await Promise.all(withAccess.map(j=>accessFor(j,s.task,providers.otp,controller.signal)));
+   clean=clean.filter(j=>!j.needsAccess).concat(resolved);
+  }
   if(clean.length!==usable.length)s.discarded[source]=(s.discarded[source]||0)+usable.length-clean.length;
   // 1) Doublon d'un trajet déjà traité (autre moteur) : on ajoute la source, sans recalculer les marches.
   // 2) Trajet déjà hors délai sur ses seuls horaires : affiché « non confirmé » sans dépenser de marche.
@@ -1449,7 +1494,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,scooterOnly,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
