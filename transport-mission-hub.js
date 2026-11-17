@@ -569,7 +569,13 @@ function rank(items,task={}){
  for(const [name,pattern] of coachOperators){
   const matches=all.filter(j=>(j.feasible||j.scheduled)&&
    (j.sources||[]).concat(j.source||'',j.legs.map(l=>l.provider||'')).some(x=>pattern.test(String(x))));
-  const best=[...matches].sort((a,b)=>byFeasible(a,b)||relevant(a,b)||score(a)-score(b))[0];
+  // Parmi les cars exploitables, afficher d'abord le tarif total vérifié
+  // le moins cher ; un tarif inconnu ne doit jamais être supposé avantageux.
+  const verifiedCoach=j=>j.price?.status==='verified'||j.price?.status==='free';
+  const best=[...matches].sort((a,b)=>byFeasible(a,b)||
+   Number(verifiedCoach(b))-Number(verifiedCoach(a))||
+   (verifiedCoach(a)&&verifiedCoach(b)?priceSortKey(a.price)-priceSortKey(b.price):0)||
+   relevant(a,b)||score(a)-score(b))[0];
   if(!best)continue;
   const already=picks.find(p=>p.journey===best);
   if(already)already.labels.push(name);
