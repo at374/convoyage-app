@@ -519,6 +519,8 @@ function rank(items,task={}){
   const k=j.walkOnly?[
    'walk',String(j.legs?.[0]?.from||'').trim().toLowerCase(),
    String(j.legs?.[j.legs.length-1]?.to||'').trim().toLowerCase(),
+   j.legs?.[0]?.fromPoint?.lat,j.legs?.[0]?.fromPoint?.lon,
+   j.legs?.[j.legs.length-1]?.toPoint?.lat,j.legs?.[j.legs.length-1]?.toPoint?.lon,
    Math.round(ms(j.departure)/60000),Math.round(ms(j.arrival)/60000)
   ].join('|'):signature(j);
   const old=seen.get(k);
