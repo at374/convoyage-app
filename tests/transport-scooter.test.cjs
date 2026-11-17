@@ -271,3 +271,9 @@ test('jours intermédiaires : fin de fenêtre au site à 17:30 (plus « jusqu’
  assert.ok(app.includes(':siteEnd(d);'));
  assert.ok(app.includes('Date.parse(siteEnd(d))'));
 });
+
+test('fenêtre large : recherches supplémentaires en milieu de journée (début d’après-midi)',()=>{
+ const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
+ assert.ok(src.includes('_milieuJournee:true'));
+ assert.ok(src.includes('[765,870]:[750,900]'));
+});

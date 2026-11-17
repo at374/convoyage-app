@@ -1222,6 +1222,18 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    const open=parisDayParts(new Date(task.windowStartMs).toISOString());
    if(open&&open.minute>=375)variants.push({...task,latestArrival:new Date(task.windowStartMs).toISOString(),windowKind:undefined,windowStartMs:undefined,windowEndMs:undefined,_avantOuverture:true});
   }
+  // Une recherche ne renvoie que les 5 à 10 trajets les plus proches de son heure : pour une fenêtre large, on ajoute des recherches
+  // en milieu de journée (départs à 12:45 et 14:30, ou arrivées avant 12:30 et 15:00) afin que le début d'après-midi ne soit pas absent.
+  if((task.windowKind==='departure'||task.windowKind==='arrival')&&Number.isFinite(task.windowStartMs)&&Number.isFinite(task.windowEndMs)){
+   const startP=parisDayParts(new Date(task.windowStartMs).toISOString());
+   if(startP)for(const minute of task.windowKind==='departure'?[765,870]:[750,900]){
+    const at=task.windowStartMs+(minute-startP.minute)*60000;
+    if(at<=task.windowStartMs+30*60000||at>=task.windowEndMs-30*60000)continue;
+    const iso=new Date(at).toISOString();
+    variants.push(task.windowKind==='departure'?{...task,earliestDeparture:iso,windowKind:undefined,windowStartMs:undefined,windowEndMs:undefined,_milieuJournee:true}
+     :{...task,latestArrival:iso,windowKind:undefined,windowStartMs:undefined,windowEndMs:undefined,_milieuJournee:true});
+   }
+  }
   for(const variant of variants)for(const [key,p] of Object.entries(providers)){
    let ok=false;try{ok=p.enabled(variant)&&!!queryWindow(variant);}catch(_){}
    if(!ok){if(variant===task)state[label].skipped[p.name]=p.disabledReason||'non applicable';continue;}
