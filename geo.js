@@ -203,10 +203,11 @@
   function coordonnees(m, cote) {
     const p = m[cote]; const pre = cote === 'origin' ? 'from' : 'to';
     if (p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && p.lat !== null && p.lng !== null && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180 && !(Number(p.lat) === 0 && Number(p.lng) === 0)) {
+      // V307 : adresse numérotée trouvée par le service officiel à plus de 150 m du GPS de la plateforme (ex. 1040 route de Bellegarde, Epagny) : le point officiel est retenu.
       // GPS fourni par la plateforme mais qui n'est que le centre de la commune (adresse de rue connue ailleurs dans la commune) :
       // un point d'adresse trouvé par le service officiel est alors préféré.
       const cache = POINTS[cleAdresse(m, cote)];
-      if (cache && (cache.precision === 'adresse' || cache.precision === 'rue') && centreCommune(m, cote, Number(p.lat), Number(p.lng))) return { lat: cache.lat, lng: cache.lng, precision: cache.precision };
+      if (cache && ((cache.precision === 'adresse' || cache.precision === 'rue') && centreCommune(m, cote, Number(p.lat), Number(p.lng)) || (cache.precision === 'adresse' && volOiseauKm({ lat: cache.lat, lng: cache.lng }, { lat: Number(p.lat), lng: Number(p.lng) }) * 1000 > 150))) return { lat: cache.lat, lng: cache.lng, precision: cache.precision };
       return { lat: Number(p.lat), lng: Number(p.lng), precision: 'gps' };
     }
     const pt = POINTS[cleAdresse(m, cote)]; if (pt) return { lat: pt.lat, lng: pt.lng, precision: pt.precision };
