@@ -21,3 +21,10 @@ test('Synchro : 1,40 € / 60 min dans la période prouvée (délib. 080-25 C, 7
  assert.match(f.source,/Acte16655|grandchambery/);
  assert.equal(G.fareFor(legS('2027-01-01')),null); // hors période prouvée (recherche à refaire)
 });
+test('Sibra Annecy : le prix du ticket (2,00 €, 1 h) est connu pour le réseau « Sibra Annecy » (plus de copier-coller)',()=>{
+ for(const p of ['Sibra Annecy','SIBRA','Sibra']){
+  const f=G.fareFor(leg('HOPITAL','ARCAL\'OZ','2026-11-19','Bus',p,'2'));
+  assert.equal(f.amount,2);assert.equal(f.validityMinutes,60);assert.match(f.source,/sibra\.fr/);
+ }
+ assert.equal(G.fareFor(leg('HOPITAL','ARCAL\'OZ','2026-11-19','Bus','Sibra Annecyx','2')),null);
+});

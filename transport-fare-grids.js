@@ -20,7 +20,7 @@ const GRIDS=[
  // Sibra (Grand Annecy) : CGV « Règlement bus et cars 2026/2027 », gamme applicable à partir du 01/07/2026
  // sur l'ensemble du réseau : 1 voyage vendu sans support (rechargement / achat digital) 2,00 € ; à bord 2,50 € ;
  // valable 1 h, correspondances comprises. Vérifié le 13/11/2026.
- {network:'Sibra',operatorPattern:'^sibra$',modes:['Bus'],amount:2.00,currency:'EUR',
+ {network:'Sibra',operatorPattern:'^sibra(\\s+annecy)?$',modes:['Bus'],amount:2.00,currency:'EUR',
   product:'1 voyage (achat digital ou rechargement ; 2,50 € à bord), 1 h correspondances comprises',validityMinutes:60,
   validFrom:'2026-07-01',validUntil:'2027-06-30',source:'https://www.sibra.fr/app/uploads/2026/07/Reglement_BUS_CARS_CGV_01072026_3.pdf',
   checkedAt:'2026-11-13',flat:true},
