@@ -2,7 +2,7 @@
 
 Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**187 / 188 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**190 / 191 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -81,6 +81,9 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | lignes_azur_nice (semaine) | lignes-azur-nice.zip | 23761 | OK | 2026-11-19 06:46:00 retrouvée (176 départs proposés) |
 | lignes_azur_nice (samedi) | lignes-azur-nice.zip | 23761 | OK | 2026-11-21 10:55:00 retrouvée (24 départs proposés) |
 | lignes_azur_nice (dimanche) | lignes-azur-nice.zip | 23761 | OK | 2026-11-22 17:05:00 retrouvée (40 départs proposés) |
+| rtm_marseille (semaine) | rtm-marseille.zip | 49030 | OK | 2026-11-19 07:00:00 retrouvée (942 départs proposés) |
+| rtm_marseille (samedi) | rtm-marseille.zip | 49030 | OK | 2026-11-21 07:00:00 retrouvée (615 départs proposés) |
+| rtm_marseille (dimanche) | rtm-marseille.zip | 49030 | OK | 2026-11-22 06:30:00 retrouvée (42 départs proposés) |
 | trema_macon (semaine) | trema-macon.zip | 6264 | OK | 2026-11-19 12:25:00 retrouvée (3 départs proposés) |
 | trema_macon (samedi) | trema-macon.zip | 6264 | OK | 2026-11-21 12:25:00 retrouvée (2 départs proposés) |
 | lio_occitanie_nord (semaine) | lio-occitanie-nord.zip | 452 | OK | 2026-11-19 11:45:00 retrouvée (2 départs proposés) |
