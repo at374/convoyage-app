@@ -149,8 +149,7 @@ MIRROR = [
     {'id': 'tam-montpellier', 'network': 'TaM (Montpellier, urbain et suburbain)', 'url': 'https://gtfsproxy.e-tam.fr/COMMON/GTFS.zip', 'bounds': [43.45, 3.5, 43.95, 4.15]},
     {'id': 'palmbus-cannes', 'network': 'Palmbus (Cannes Pays de Lérins)', 'dataset': 'horaires-theoriques-et-temps-reel-gtfs-gtfs-rt-du-reseau-palmbus-cannes-pays-de-lerins',
      'url': 'https://static.data.gouv.fr/resources/horaires-theoriques-et-temps-reel-gtfs-gtfs-rt-du-reseau-palmbus-cannes-pays-de-lerins/20261027-070043/palmbus-cannes-fr.zip', 'bounds': [43.45, 6.85, 43.7, 7.15]},
-    {'id': 'lignes-azur-nice', 'network': "Lignes d'Azur (Nice)", 'dataset': 'export-quotidien-au-format-gtfs-du-reseau-de-transport-lignes-d-azur',
-     'url': 'http://opendata.nicecotedazur.org/data/storage/f/gtfs1794960901/GTFSExport.zip', 'bounds': [43.63, 7.15, 43.82, 7.4]},
+    # Lignes d'Azur (Nice) : seule URL connue en http (refusée) — à rebrancher dès qu'une adresse https officielle est trouvée.
     {'id': 'start-thonon', 'network': "Star't Thonon", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e', 'bounds': [46.25, 6.3, 46.45, 6.65]},
 ]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
