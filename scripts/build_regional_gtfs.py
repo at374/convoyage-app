@@ -131,6 +131,12 @@ MIRROR = [
      'url': 'https://transport.data.gouv.fr/datasets/reseau-de-transport-du-grand-dole', 'bounds': [47.0, 5.4, 47.2, 5.65]},
     {'id': 'evolity-montbeliard', 'network': 'évolitY (Montbéliard)', 'dataset': 'evolity-horaires-theoriques-de-transport-public',
      'url': 'https://transport.data.gouv.fr/datasets/evolity-horaires-theoriques-de-transport-public', 'bounds': [47.4, 6.65, 47.6, 6.95]},
+    {'id': 'orizo-avignon', 'network': 'Orizo (Grand Avignon)', 'dataset': 'gtfs-et-gtfs-rt-reseau-orizo-grand-avignon',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/40b26c33-9be2-47ea-a46c-8bda9f63273e', 'bounds': [43.85, 4.7, 44.05, 4.95]},
+    {'id': 'agglo-bus-gap', 'network': "L'Agglo en Bus (Gap)", 'dataset': 'horaires-theoriques-et-temps-reels-du-reseau-de-transports-lagglo-en-bus-communaute-dagglomeration-gap-tallard-durance',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/78b7910e-1e31-4f47-b0a8-949647205ffa', 'bounds': [44.4, 5.95, 44.75, 6.25]},
+    {'id': 'altigo-briancon', 'network': 'Altigo (Briançonnais)',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/3ee23301-f454-4175-ba53-4734c30d5245', 'bounds': [44.8, 6.4, 45.15, 6.8]},
     {'id': 'start-thonon', 'network': "Star't Thonon", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e', 'bounds': [46.25, 6.3, 46.45, 6.65]},
 ]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
