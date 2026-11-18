@@ -64,3 +64,7 @@ test('Palm Bus Cannes : ticket 1 voyage 1,80 € / 59 min',()=>{
  const f=G.fareFor(leg('Gare de Cannes','Hôtel de Ville','2026-11-19','Bus','Palmbus (Cannes Pays de Lérins)','1'));
  assert.equal(f.amount,1.8);assert.equal(f.validityMinutes,59);assert.match(f.source,/palmbus/);
 });
+test("Ales'y Alès : ticket unitaire 1,10 € / 60 min",()=>{
+ const f=G.fareFor(leg('Alès gare','Centre','2026-11-19','Bus',"Ales'y (Alès)",'A'));
+ assert.equal(f.amount,1.1);assert.equal(f.validityMinutes,60);assert.match(f.source,/alesy/);
+});
