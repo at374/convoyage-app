@@ -70,3 +70,8 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | stas | stas-saint-etienne.zip | 20409 | OK | 2026-11-19 06:46:00 retrouvée (182 départs proposés) |
 | t2c | t2c-clermont.zip | 8452 | OK | 2026-11-19 06:30:00 retrouvée (414 départs proposés) |
 | sncf_ter | national-sncf-aura.zip | 9522 | OK | 2026-11-19 11:38:00 retrouvée (25 départs proposés) |
+
+
+## Proxim iTi (Bonneville – La Roche) : réseau non couvert (18/11/2026)
+
+Aucun fichier GTFS à jour n'est publié : le jeu « GTFS réseau Proxim iTi au 14-12-2025 » (data.gouv.fr, mis en ligne le 18/05/2026) s'arrête fin avril 2026 ; l'ancien jeu officiel (2024) est vide et date d'avant les changements d'août 2026 (lignes 370/470). Le réseau reste donc exclu des résultats tant qu'un fichier valide n'est pas publié ; à revoir chaque lundi.
