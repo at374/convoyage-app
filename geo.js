@@ -204,14 +204,13 @@
   // le point GPS du parking des loueurs (P21) donné par lui : 46.237722, 6.117667. Prioritaire sur tout autre point.
   // Même point GPS (parking P21) pour prendre en charge et pour livrer. L'entrée des retours (46.232278, 6.110413) n'est pas utilisée.
   const GENEVE_SECTEUR_FRANCE = { lat: 46.237722, lng: 6.117667 };
-  const GENEVE_ENTREE_RETOURS = { lat: 46.232278, lng: 6.110413 };
   const estSecteurFranceGeneve = (m, cote) => {
     const p = (m && m[cote]) || {}, pre = cote === 'origin' ? 'from' : 'to';
     const t = norm([m && m[cote + '_address'], p.address, p.street, p.name, p.label, m && m[pre + '_city'], p.city, m && m[pre + '_name']].filter(x => typeof x === 'string').join(' '));
     return /ferney[\s-]*voltaire/.test(t) || (/secteur\s+france/.test(t) && /geneve/.test(t));
   };
   function coordonnees(m, cote) {
-    if (estSecteurFranceGeneve(m, cote)) { const pt = GENEVE_SECTEUR_FRANCE;   // même point pour la prise en charge et la livraison (précision de Laurent, 18/11/2026) return { lat: pt.lat, lng: pt.lng, precision: 'gps' }; }
+    if (estSecteurFranceGeneve(m, cote)) return { lat: GENEVE_SECTEUR_FRANCE.lat, lng: GENEVE_SECTEUR_FRANCE.lng, precision: 'gps' };
     const p = m[cote]; const pre = cote === 'origin' ? 'from' : 'to';
     if (p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && p.lat !== null && p.lng !== null && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180 && !(Number(p.lat) === 0 && Number(p.lng) === 0)) {
       // V307 : adresse numérotée trouvée par le service officiel à plus de 150 m du GPS de la plateforme (ex. 1040 route de Bellegarde, Epagny) : le point officiel est retenu.
