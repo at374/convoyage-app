@@ -146,7 +146,8 @@ MIRROR = [
     {'id': 'mistral-toulon', 'network': 'Réseau Mistral (Toulon)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b0789d9e-5077-4124-b6b2-773353ada8cf', 'bounds': [43.0, 5.75, 43.25, 6.15]},
     {'id': 'rtm-marseille', 'network': 'RTM (Marseille)', 'url': 'https://transport.data.gouv.fr/resources/39589/download', 'bounds': [43.15, 5.2, 43.45, 5.6]},
     {'id': 'aixenbus-aix', 'network': 'Aix en Bus', 'url': 'https://transport.data.gouv.fr/resources/39603/download', 'bounds': [43.45, 5.35, 43.65, 5.55]},
-    {'id': 'tam-montpellier', 'network': 'TaM (Montpellier)', 'url': 'https://transport.data.gouv.fr/resources/62323/download', 'bounds': [43.5, 3.65, 43.8, 4.05]},
+    {'id': 'tam-montpellier', 'network': 'TaM (Montpellier)', 'url': 'https://data.montpellier3m.fr/GTFS/Urbain/GTFS.zip', 'bounds': [43.5, 3.65, 43.8, 4.05]},
+    {'id': 'tam-suburbain-montpellier', 'network': 'TaM suburbain (Montpellier)', 'url': 'https://data.montpellier3m.fr/GTFS/Suburbain/GTFS.zip', 'bounds': [43.45, 3.5, 43.95, 4.15]},
     {'id': 'start-thonon', 'network': "Star't Thonon", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e', 'bounds': [46.25, 6.3, 46.45, 6.65]},
 ]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']

@@ -2,6 +2,7 @@
 // synchronisées par l'extension ; aucune action n'est faite sur les plateformes.
 (() => {
   'use strict';
+  const dureeHM = min => { min = Math.round(min); return min >= 60 ? Math.floor(min / 60) + ' h ' + String(min % 60).padStart(2, '0') + ' min' : min + ' min'; };
   const regionalFetch = (...args) => window.fetch(...args);
   // Planning data stays in this page session and never updates synchronized missions.
   const transportReturnPlans = new Map();
@@ -982,7 +983,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
                 answer.itineraries.slice(0,5).map((it, index) =>
                   'Trajet ' + (index + 1) + ' — ' +
                   fmt(it.startTime) + ' → ' + fmt(it.endTime) + ' · ' +
-                  Math.round(it.durationSeconds / 60) + ' min · ' +
+                  dureeHM(it.durationSeconds / 60) + ' · ' +
                   it.transfers + ' correspondance(s) · ' +
                   Math.round(it.walkMeters) + ' m à pied' +
                   '\n' + it.legs.map(leg =>
@@ -1112,8 +1113,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
                 boardingChecks.push(clock(ride.departureSeconds) + ' : ' +
                   (walkMinutes === null ? 'marche non vérifiée' :
                     (enoughTime ? 'approche piétonne compatible' : 'départ trop proche') +
-                    ' (' + walkMinutes + ' min à pied + ' +
-                    boardingMarginMinutes + ' min de marge)'));
+                    ' (' + dureeHM(walkMinutes) + ' à pied + ' +
+                    dureeHM(boardingMarginMinutes) + ' de marge)'));
               }
               const boardingStatus = boardingChecks.length ?
                 boardingChecks.join(' ; ') : 'Marche depuis la livraison non vérifiée.';
@@ -1248,7 +1249,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
                         (x.bus.destinationStop && x.bus.destinationStop.name || 'arrêt à vérifier') +
                         ', correspondance : ' +
                         (x.transferWalkMinutes === null ? 'marche non vérifiée' :
-                          x.transferWalkMinutes + ' min à pied, ' +
+                          dureeHM(x.transferWalkMinutes) + ' à pied, ' +
                           (x.transferCompatible ? 'délai théorique suffisant' : 'délai insuffisant')) +
                         ', fin de trajet : ' + (x.estimatedHomeSeconds === null ?
                           'marche non vérifiée' : clock(x.estimatedHomeSeconds) +
@@ -1423,10 +1424,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
               line.textContent = 'SIBRA (horaires programmés) : ' + ranked.slice(0, 3).map(({ journey: j, check }) =>
                 (j.transferStopId ? 'Correspondance à ' +
                   ((result.data.stops.find(stop => String(stop[0]) === j.transferStopId) || [null, j.transferStopId])[1]) +
-                  ' (attente ' + Math.round(j.transferWaitSeconds / 60) + ' min) : ' : 'Direct : ') +
+                  ' (attente ' + dureeHM(j.transferWaitSeconds / 60) + ') : ' : 'Direct : ') +
                 j.originStop.name + stopDistance(j.originStop) + ' ' + formatTime(j.departureSeconds) + ' → ' +
                 j.destinationStop.name + stopDistance(j.destinationStop) + ' ' + formatTime(j.arrivalSeconds) + ' — ' +
-                (check.feasible ? 'marche départ ' + Math.ceil(check.firstWalkSeconds / 60) + ' min, marche arrivée ' + Math.ceil(check.lastWalkSeconds / 60) + ' min, arrivée à l’adresse ' + formatTime(check.arrivalAtNextMissionSeconds) + ', avance ' + Math.floor(check.advanceSeconds / 60) + ' min (horaires théoriques)' :
+                (check.feasible ? 'marche départ ' + dureeHM(Math.ceil(check.firstWalkSeconds / 60)) + ', marche arrivée ' + dureeHM(Math.ceil(check.lastWalkSeconds / 60)) + ', arrivée à l’adresse ' + formatTime(check.arrivalAtNextMissionSeconds) + ', avance ' + dureeHM(Math.floor(check.advanceSeconds / 60)) + ' (horaires théoriques)' :
                   check.status === 'marches_non_verifiees' ? 'marche non vérifiée' :
                   'enchaînement non réalisable avec la marche et la marge de sécurité')
               ).join(' ; ') + '. Transport non confirmé — vérifiez vous-même.';
@@ -1439,10 +1440,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           line.textContent = 'SIBRA (horaires théoriques, approche à pied non vérifiée) : ' +
             journeys.slice(0, 3).map(j => (j.transferStopId ? 'Correspondance à ' +
               ((result.data.stops.find(stop => String(stop[0]) === j.transferStopId) || [null, j.transferStopId])[1]) +
-              ' (attente ' + Math.round(j.transferWaitSeconds / 60) + ' min) : ' : 'Direct : ') +
+              ' (attente ' + dureeHM(j.transferWaitSeconds / 60) + ') : ' : 'Direct : ') +
               j.originStop.name + stopDistance(j.originStop) + ' ' +
               formatTime(j.departureSeconds) + ' → ' + j.destinationStop.name + stopDistance(j.destinationStop) + ' ' +
-              formatTime(j.arrivalSeconds) + ' (écart théorique avant prise en charge : ' + Math.floor((nextSeconds - j.arrivalSeconds) / 60) + ' min, hors marche et marge de sécurité)').join(' ; ') +
+              formatTime(j.arrivalSeconds) + ' (écart théorique avant prise en charge : ' + dureeHM(Math.floor((nextSeconds - j.arrivalSeconds) / 60)) + ', hors marche et marge de sécurité)').join(' ; ') +
             '. Transport non confirmé — vérifiez vous-même.';
           addStopsMapLinks(journeys);
         }).catch(() => {
@@ -1982,7 +1983,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           name.style.display = 'block';
           name.textContent = choice.label === 'Moins cher' && !Number.isFinite(journey.priceEUR) ? 'Tarif inconnu' : choice.label;
           const facts = document.createElement('span');
-          facts.textContent = (Number.isFinite(journey.durationMinutes) ? journey.durationMinutes + ' min' : 'Durée inconnue') + ' · ' +
+          facts.textContent = (Number.isFinite(journey.durationMinutes) ? dureeHM(journey.durationMinutes) : 'Durée inconnue') + ' · ' +
             (Number.isFinite(journey.priceEUR) ? journey.priceEUR.toFixed(2).replace('.', ',') + ' €' : 'Tarif non vérifié');
           const times = document.createElement('span');
           times.style.display = 'block';
