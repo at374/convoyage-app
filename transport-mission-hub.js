@@ -772,6 +772,7 @@ function makeProviders(r,opts={}){
    ['aixenbus_aix','Aix en Bus','aixenbus-aix.zip',[43.45,5.35,43.65,5.55]],
    ['tam_montpellier','TaM (Montpellier, urbain et suburbain)','tam-montpellier.zip',[43.45,3.5,43.95,4.15]],
    ['palmbus_cannes','Palmbus (Cannes Pays de Lérins)','palmbus-cannes.zip',[43.45,6.85,43.7,7.15]],
+   ['lignes_azur_nice',"Lignes d'Azur (Nice)",'lignes-azur-nice.zip',[43.63,7.15,43.82,7.4]],
    ['trema_macon','TréMA (Mâcon)','trema-macon.zip',[46.2,4.7,46.5,5.0]],
    ['lio_occitanie_nord','liO Occitanie (Gard, Lozère)','lio-occitanie-nord.zip',[44.0,3.3,44.95,4.7]],
    ['mobigo_bfc_jura','Mobigo Bourgogne-Franche-Comté (Jura)','mobigo-bfc-jura.zip',[46.2,5.3,47.1,6.3]],
