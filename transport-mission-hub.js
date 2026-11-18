@@ -770,7 +770,7 @@ function makeProviders(r,opts={}){
    ['sankeo_perpignan','Sankéo (Perpignan)','sankeo-perpignan.zip',[42.59,2.59,42.89,3.06]],
    ['beemob_beziers','beeMob (Béziers Méditerranée)','beemob-beziers.zip',[43.22,3.15,43.49,3.4]],
    ['citibus_narbonne','Citibus (Narbonne)','citibus-narbonne.zip',[42.82,2.8,43.34,3.25]],
-   ['lebus_frejus',"Le Bus (Estérel Côte d'Azur : Fréjus, Saint-Raphaël)",'lebus-frejus.zip',[43.3,6.6,43.55,6.9]],
+   ['lebus_frejus',"Le Bus (Estérel Côte d'Azur : Fréjus, Saint-Raphaël)",'lebus-frejus.zip',[43.3,6.6,43.57,6.97]],
    ['rtca_carcassonne','RTCA (Carcassonne Agglo)','rtca-carcassonne.zip',[43.0,2.1,43.45,2.75]],
    ['sam_sete','Sète Agglopôle Mobilité','sam-sete.zip',[43.25,3.45,43.57,3.87]],
    ['tisseo_toulouse','Tisséo (Toulouse)','tisseo-toulouse.zip',[43.37,1.13,43.85,1.71]],

@@ -11,7 +11,7 @@ fare_attributes / fare_rules quand le producteur les publie. Chaque fichier est 
 obligatoires, calendrier, références) et plafonné en taille ; un manifeste daté (SHA-256) est écrit.
 Usage : python3 scripts/build_regional_gtfs.py [--aggregate fichier.zip] [--out data/gtfs] [--offline]
 """
-import argparse, csv, hashlib, io, json, os, re, sys, tempfile, unicodedata, urllib.request, zipfile, datetime
+import time, argparse, csv, hashlib, io, json, os, re, sys, tempfile, unicodedata, urllib.request, zipfile, datetime
 
 UA = {'User-Agent': 'ConvoyageUltra-GTFS/1.0'}
 MAX_OUT = 12 * 1024 * 1024
@@ -154,7 +154,7 @@ MIRROR = [
     {'id': 'citibus-narbonne', 'network': 'Citibus (Narbonne)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/21ca2b77-505b-4c4c-9154-a044e61b8560', 'bounds': [43.1, 2.9, 43.25, 3.1]},
     {'id': 'rtca-carcassonne', 'network': 'RTCA (Carcassonne Agglo)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/941123b0-004e-4f48-81e7-8c62fb4f07aa', 'bounds': [43.0, 2.1, 43.45, 2.75]},
     {'id': 'sam-sete', 'network': 'Sète Agglopôle Mobilité', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/9402f130-ac11-4615-8494-a5c84fcdb78c', 'bounds': [43.25, 3.45, 43.57, 3.87]},
-    {'id': 'lebus-frejus', 'network': "Le Bus (Estérel Côte d'Azur : Fréjus, Saint-Raphaël)", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/11e73e58-edb0-4fab-a220-61a659cf6423', 'bounds': [43.3, 6.6, 43.55, 6.9]},
+    {'id': 'lebus-frejus', 'network': "Le Bus (Estérel Côte d'Azur : Fréjus, Saint-Raphaël)", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/11e73e58-edb0-4fab-a220-61a659cf6423', 'bounds': [43.3, 6.6, 43.57, 6.97]},
     {'id': 'tisseo-toulouse', 'network': 'Tisséo (Toulouse)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/64318177-f5b5-4144-a6be-2d0f22d26c77', 'bounds': [43.45, 1.15, 43.85, 1.7]},
     {'id': 'mistral-toulon', 'network': 'Réseau Mistral (Toulon)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b0789d9e-5077-4124-b6b2-773353ada8cf', 'bounds': [43.0, 5.75, 43.25, 6.15]},
     {'id': 'aixenbus-aix', 'network': 'Aix en Bus', 'url': 'https://transport.data.gouv.fr/resources/39603/download', 'bounds': [43.45, 5.35, 43.65, 5.55]},
@@ -171,6 +171,20 @@ def norm(text):
 
 
 def download(url, limit=400 * 1024 * 1024):
+    # Les serveurs des réseaux coupent parfois la connexion : 3 essais avant d'abandonner.
+    last = None
+    for attempt in range(3):
+        try:
+            return _download_once(url, limit)
+        except SystemExit:
+            raise
+        except Exception as exc:
+            last = exc
+            time.sleep(5 * (attempt + 1))
+    raise last
+
+
+def _download_once(url, limit=400 * 1024 * 1024):
     req = urllib.request.Request(url, headers=UA)
     with urllib.request.urlopen(req, timeout=120) as r, tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp:
         while True:
