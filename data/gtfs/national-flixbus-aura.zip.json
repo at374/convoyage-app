@@ -1,8 +1,8 @@
 {
   "operator": "flixbus",
   "file": "national-flixbus-aura.zip",
-  "sha256": "c4d1d1eca595c11234fbcec8ffd4f5e9998a484df03b47c2189b136075f914dc",
-  "bytes": 133612,
+  "sha256": "39f40604c62eb968ba2a51aaa05c19018cddb2e8b5274083b0f4effe036f0923",
+  "bytes": 141226,
   "bounds": [
     44.0,
     3.6,
@@ -13,8 +13,8 @@
   "scope": "AURA-only static GTFS; no live ticket prices or seat availability",
   "excludedOutOfRegionDetourTrips": 0,
   "details": {
-    "routes": 120,
-    "trips": 2184,
+    "routes": 121,
+    "trips": 2345,
     "stops": 48,
     "fares": false,
     "bounds": [
