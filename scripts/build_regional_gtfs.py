@@ -137,6 +137,16 @@ MIRROR = [
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/78b7910e-1e31-4f47-b0a8-949647205ffa', 'bounds': [44.4, 5.95, 44.75, 6.25]},
     {'id': 'altigo-briancon', 'network': 'Altigo (Briançonnais)',
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/3ee23301-f454-4175-ba53-4734c30d5245', 'bounds': [44.8, 6.4, 45.15, 6.8]},
+    # 18/11/2026 : couronne Sud (Occitanie, PACA) — villes desservies depuis la vallée du Rhône.
+    {'id': 'tango-nimes', 'network': 'Tango (Nîmes Métropole)', 'dataset': 'offre-de-transport-du-reseau-tango-de-nimes-metropole-gtfs-gtfs-rt',
+     'url': 'https://static.data.gouv.fr/resources/offre-de-transport-du-reseau-tango-de-nimes-metropole-gtfs-gtfs-rt/20261116-062814/gtfs-production.zip', 'bounds': [43.7, 4.15, 44.0, 4.55]},
+    {'id': 'alesy-ales', 'network': "Ales'y (Alès)", 'dataset': 'horaires-theoriques-des-lignes-urbaines-et-interurbaines-sur-le-reseau-alesy-gtfs',
+     'url': 'https://static.data.gouv.fr/resources/horaires-theoriques-des-lignes-urbaines-et-interurbaines-sur-le-reseau-alesy-gtfs/20261102-092556/gtfs-is-20261102.zip', 'bounds': [43.95, 3.9, 44.35, 4.4]},
+    {'id': 'tisseo-toulouse', 'network': 'Tisséo (Toulouse)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/64318177-f5b5-4144-a6be-2d0f22d26c77', 'bounds': [43.45, 1.15, 43.85, 1.7]},
+    {'id': 'mistral-toulon', 'network': 'Réseau Mistral (Toulon)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b0789d9e-5077-4124-b6b2-773353ada8cf', 'bounds': [43.0, 5.75, 43.25, 6.15]},
+    {'id': 'rtm-marseille', 'network': 'RTM (Marseille)', 'url': 'https://transport.data.gouv.fr/resources/39589/download', 'bounds': [43.15, 5.2, 43.45, 5.6]},
+    {'id': 'aixenbus-aix', 'network': 'Aix en Bus', 'url': 'https://transport.data.gouv.fr/resources/39603/download', 'bounds': [43.45, 5.35, 43.65, 5.55]},
+    {'id': 'tam-montpellier', 'network': 'TaM (Montpellier)', 'url': 'https://transport.data.gouv.fr/resources/62323/download', 'bounds': [43.5, 3.65, 43.8, 4.05]},
     {'id': 'start-thonon', 'network': "Star't Thonon", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e', 'bounds': [46.25, 6.3, 46.45, 6.65]},
 ]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
