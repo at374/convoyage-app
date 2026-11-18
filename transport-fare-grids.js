@@ -52,6 +52,12 @@ const GRIDS=[
   product:'Ticket 1h30 (4 h : 3,80 € ; 24 h : 6,50 €), tout le réseau TaM',validityMinutes:90,
   validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.tam-voyages.com/ — tickets individuels TaM, Ticket 1h30',
   checkedAt:'2026-11-18',flat:true},
+ // Tango (Nîmes Métropole) : guide tarifaire « tarifs valables à partir du 1er septembre 2025 » (PDF fourni par le convoyeur) :
+ // Pass Unité 1,40 € valable 1 heure après validation ; Pass 2 voyages 2,80 € ; Pass Journée 3,60 €. Vérifié le 18/11/2026.
+ {network:'Tango',operatorPattern:'^tango\\b',modes:['Bus','Tram'],amount:1.40,currency:'EUR',
+  product:'Pass Unité 1 voyage (Pass 2 voyages 2,80 € ; Pass Journée 3,60 €), 1 h après validation',validityMinutes:60,
+  validFrom:'2025-09-01',validUntil:'2026-12-31',source:'https://www.tangobus.fr/ — guide tarifaire Tango, tarifs au 01/09/2025',
+  checkedAt:'2026-11-18',flat:true},
  // M réso (Métropole grenobloise, Grésivaudan, Voironnais) : tarifs au 01/09/2026 (reso-m.fr) :
  // 1 voyage 2,00 € valable 1 h sur tout M réso, correspondances et retours compris ; 2,60 € à bord.
  // 2,00 € est toujours un prix valable ; un trajet entièrement intra-Grésivaudan peut coûter 1,00 €.

@@ -47,3 +47,7 @@ test('TaM Montpellier : Ticket 1h30 2,10 €',()=>{
  for(const m of ['Bus','Tram']){const f=G.fareFor(leg('Odysseum','Comédie','2026-11-19',m,'TaM (Montpellier, urbain et suburbain)','1'));
   assert.equal(f.amount,2.1);assert.equal(f.validityMinutes,90);assert.match(f.source,/tam-voyages/);}
 });
+test('Tango Nîmes : Pass Unité 1,40 € / 60 min',()=>{
+ for(const m of ['Bus','Tram']){const f=G.fareFor(leg('Esplanade','Gare','2026-11-19',m,'Tango (Nîmes Métropole)','T1'));
+  assert.equal(f.amount,1.4);assert.equal(f.validityMinutes,60);assert.match(f.source,/tangobus/);}
+});
