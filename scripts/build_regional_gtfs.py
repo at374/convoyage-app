@@ -102,6 +102,9 @@ FILTERED_MIRROR = [
     {'id': 'zou-proximite-nord', 'network': 'ZOU ! Proximité (Hautes-Alpes, Vaucluse nord — limite Drôme)',
      'url': 'https://www.datasud.fr/fr/dataset/datasets/3745/resource/5016/download/',
      'bounds': [44.0, 5.0, 45.0, 7.0], 'download_limit': 120 * 1024 * 1024},
+    {'id': 'zou-express-nord', 'network': 'ZOU ! Express (Alpes du Sud — limites Isère, Drôme)',
+     'url': 'https://transport.data.gouv.fr/resources/82285/download',
+     'bounds': [44.0, 5.0, 45.2, 7.2], 'download_limit': 120 * 1024 * 1024},
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
