@@ -2,7 +2,7 @@
 
 Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**208 / 209 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**226 / 227 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -75,6 +75,24 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | lebus_frejus (semaine) | lebus-frejus.zip | 3132 | OK | 2026-11-19 07:55:00 retrouvée (172 départs proposés) |
 | lebus_frejus (samedi) | lebus-frejus.zip | 3132 | OK | 2026-11-21 11:00:00 retrouvée (135 départs proposés) |
 | lebus_frejus (dimanche) | lebus-frejus.zip | 3132 | OK | 2026-11-22 15:30:00 retrouvée (47 départs proposés) |
+| envibus_antibes (semaine) | envibus-antibes.zip | 2381 | OK | 2026-11-19 06:35:00 retrouvée (217 départs proposés) |
+| envibus_antibes (samedi) | envibus-antibes.zip | 2381 | OK | 2026-11-21 06:15:00 retrouvée (140 départs proposés) |
+| envibus_antibes (dimanche) | envibus-antibes.zip | 2381 | OK | 2026-11-22 06:30:00 retrouvée (45 départs proposés) |
+| envia_arles (semaine) | envia-arles.zip | 4588 | OK | 2026-11-19 06:00:00 retrouvée (144 départs proposés) |
+| envia_arles (samedi) | envia-arles.zip | 4588 | OK | 2026-11-21 06:00:00 retrouvée (120 départs proposés) |
+| envia_arles (dimanche) | envia-arles.zip | 4588 | OK | 2026-11-22 07:50:00 retrouvée (6 départs proposés) |
+| zest_menton (semaine) | zest-menton.zip | 3627 | OK | 2026-11-19 06:25:00 retrouvée (28 départs proposés) |
+| zest_menton (samedi) | zest-menton.zip | 3627 | OK | 2026-11-21 07:00:00 retrouvée (22 départs proposés) |
+| zest_menton (dimanche) | zest-menton.zip | 3627 | OK | 2026-11-22 07:00:00 retrouvée (22 départs proposés) |
+| libebus_salon (semaine) | libebus-salon.zip | 2392 | OK | 2026-11-19 06:30:00 retrouvée (240 départs proposés) |
+| libebus_salon (samedi) | libebus-salon.zip | 2392 | OK | 2026-11-21 06:30:00 retrouvée (240 départs proposés) |
+| libebus_salon (dimanche) | libebus-salon.zip | 2392 | OK | 2026-11-22 08:50:00 retrouvée (36 départs proposés) |
+| agglobus_aubagne (semaine) | agglobus-aubagne.zip | 4076 | OK | 2026-11-19 06:00:00 retrouvée (107 départs proposés) |
+| agglobus_aubagne (samedi) | agglobus-aubagne.zip | 4076 | OK | 2026-11-21 06:00:00 retrouvée (75 départs proposés) |
+| agglobus_aubagne (dimanche) | agglobus-aubagne.zip | 4076 | OK | 2026-11-22 09:35:00 retrouvée (60 départs proposés) |
+| ulysse_istres (semaine) | ulysse-istres.zip | 16994 | OK | 2026-11-19 06:40:00 retrouvée (56 départs proposés) |
+| ulysse_istres (samedi) | ulysse-istres.zip | 16994 | OK | 2026-11-21 06:58:00 retrouvée (10 départs proposés) |
+| ulysse_istres (dimanche) | ulysse-istres.zip | 16994 | OK | 2026-11-22 08:30:00 retrouvée (7 départs proposés) |
 | rtca_carcassonne (semaine) | rtca-carcassonne.zip | 1183 | OK | 2026-11-19 07:08:00 retrouvée (41 départs proposés) |
 | rtca_carcassonne (samedi) | rtca-carcassonne.zip | 1183 | OK | 2026-11-21 06:43:00 retrouvée (21 départs proposés) |
 | rtca_carcassonne (dimanche) | rtca-carcassonne.zip | 1183 | OK | 2026-11-22 09:15:00 retrouvée (10 départs proposés) |
