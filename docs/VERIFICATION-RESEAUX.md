@@ -170,7 +170,3 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | sncf_ter (semaine) | national-sncf-aura.zip | 9522 | OK | 2026-11-19 11:38:00 retrouvée (25 départs proposés) |
 | sncf_ter (samedi) | national-sncf-aura.zip | 9522 | OK | 2026-11-21 11:38:00 retrouvée (12 départs proposés) |
 | sncf_ter (dimanche) | national-sncf-aura.zip | 9522 | OK | 2026-11-22 17:41:00 retrouvée (6 départs proposés) |
-
-## Proxim iTi (Bonneville – La Roche) : réseau non couvert (18/11/2026)
-
-Aucun fichier GTFS à jour n'est publié : le jeu « GTFS réseau Proxim iTi au 14-12-2025 » (data.gouv.fr, mis en ligne le 18/05/2026) s'arrête fin avril 2026 ; l'ancien jeu officiel (2024) est vide et date d'avant les changements d'août 2026 (lignes 370/470). Le réseau reste exclu tant qu'un fichier valide n'est pas publié ; à revoir chaque lundi.
