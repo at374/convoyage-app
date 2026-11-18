@@ -88,3 +88,9 @@ test('Citibus Narbonne : Citi1 1,20 €, sans durée annoncée',()=>{
  const f=G.fareFor(leg('Gare','Centre','2026-11-19','Bus','Citibus (Narbonne)','1'));
  assert.equal(f.amount,1.2);assert.equal(f.validityMinutes,null);assert.match(f.source,/citibus\.fr/);
 });
+test('Envibus Antibes 1,00 € / 60 min ; Sète Agglopôle 1,30 € / 60 min',()=>{
+ const e=G.fareFor(leg('Antibes gare','Sophia','2026-11-19','Bus','Envibus (Antibes Sophia Antipolis)','A'));
+ assert.equal(e.amount,1);assert.equal(e.validityMinutes,60);assert.match(e.source,/envibus\.fr/);
+ const t=G.fareFor(leg('Sète gare','Mairie','2026-11-19','Bus','Sète Agglopôle Mobilité','1'));
+ assert.equal(t.amount,1.3);assert.equal(t.validityMinutes,60);assert.match(t.source,/agglopole\.fr/);
+});

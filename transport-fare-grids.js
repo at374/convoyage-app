@@ -105,6 +105,19 @@ const GRIDS=[
   product:'Citi1 ticket unité (CitiJour 3,00 €)',
   validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.citibus.fr/titres/les-tickets-citibus/citi1-ticket-unite',
   checkedAt:'2026-11-18',flat:true},
+ // Envibus (Antibes – Sophia Antipolis) : gamme tarifaire Envibus du 04/11/2025 (envibus.fr) : ticket unitaire 1 € (point de vente, distributeur
+ // ou appli Envibus Ticket), 1,50 € à bord, valable 1 h ; pass 10 voyages 8 €, pass journée 3,50 €. Même prix sur antibesjuanlespins.com.
+ // Valable jusqu'au 31/12/2026. Vérifié le 18/11/2026.
+ {network:'Envibus',operatorPattern:'^envibus\\b',modes:['Bus'],amount:1.00,currency:'EUR',
+  product:'Ticket unitaire (appli / distributeur ; 1,50 € à bord ; pass 10 voyages 8 €), 1 h',validityMinutes:60,
+  validFrom:'2025-11-04',validUntil:'2026-12-31',source:'https://www.envibus.fr/fileadmin/user_upload/icila/Dossier_PMR__mai2026.pdf',
+  checkedAt:'2026-11-18',flat:true},
+ // Sète Agglopôle Mobilité (SAMobilité) : page « Retrouvez tous nos titres » (mobilite.agglopole.fr) : ticket unitaire 1,30 € (carte bancaire sur
+ // le valideur, smartphone ou appli), 1,60 € auprès du conducteur, valable 1 h correspondances comprises. Vérifié le 18/11/2026.
+ {network:'Sète',operatorPattern:'^s[èe]te\\b',modes:['Bus'],amount:1.30,currency:'EUR',
+  product:'Ticket unitaire (appli / carte bancaire ; 1,60 € auprès du conducteur), 1 h correspondances comprises',validityMinutes:60,
+  validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.mobilite.agglopole.fr/en/check-your-ticket-and-fare',
+  checkedAt:'2026-11-18',flat:true},
  // M réso (Métropole grenobloise, Grésivaudan, Voironnais) : tarifs au 01/09/2026 (reso-m.fr) :
  // 1 voyage 2,00 € valable 1 h sur tout M réso, correspondances et retours compris ; 2,60 € à bord.
  // 2,00 € est toujours un prix valable ; un trajet entièrement intra-Grésivaudan peut coûter 1,00 €.
