@@ -2,7 +2,7 @@
 
 Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**181 / 182 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**184 / 185 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -75,6 +75,9 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | tam_montpellier (semaine) | tam-montpellier.zip | 47286 | OK | 2026-11-19 08:10:00 retrouvée (15 départs proposés) |
 | tam_montpellier (samedi) | tam-montpellier.zip | 47286 | OK | 2026-11-21 06:13:00 retrouvée (272 départs proposés) |
 | tam_montpellier (dimanche) | tam-montpellier.zip | 47286 | OK | 2026-11-22 06:43:00 retrouvée (156 départs proposés) |
+| palmbus_cannes (semaine) | palmbus-cannes.zip | 28323 | OK | 2026-11-19 06:00:00 retrouvée (325 départs proposés) |
+| palmbus_cannes (samedi) | palmbus-cannes.zip | 28323 | OK | 2026-11-21 06:00:00 retrouvée (326 départs proposés) |
+| palmbus_cannes (dimanche) | palmbus-cannes.zip | 28323 | OK | 2026-11-22 06:24:00 retrouvée (126 départs proposés) |
 | trema_macon (semaine) | trema-macon.zip | 6264 | OK | 2026-11-19 12:25:00 retrouvée (3 départs proposés) |
 | trema_macon (samedi) | trema-macon.zip | 6264 | OK | 2026-11-21 12:25:00 retrouvée (2 départs proposés) |
 | lio_occitanie_nord (semaine) | lio-occitanie-nord.zip | 452 | OK | 2026-11-19 11:45:00 retrouvée (2 départs proposés) |
