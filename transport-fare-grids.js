@@ -58,6 +58,13 @@ const GRIDS=[
   product:'Pass Unité 1 voyage (Pass 2 voyages 2,80 € ; Pass Journée 3,60 €), 1 h après validation',validityMinutes:60,
   validFrom:'2025-09-01',validUntil:'2026-12-31',source:'https://www.tangobus.fr/ — guide tarifaire Tango, tarifs au 01/09/2025',
   checkedAt:'2026-11-18',flat:true},
+ // Mistral (Toulon, bus) : page officielle reseaumistral.com « 1 voyage terrestre » 1,40 € (tout public, occasionnel).
+ // Durée de validité / correspondances non précisées sur la page : chaque trajet en bus est donc compté séparément
+ // (prudent). Bateau-bus (2,00 €) non géré. Vérifié le 18/11/2026.
+ {network:'Mistral',operatorPattern:'^mistral\\b',modes:['Bus'],amount:1.40,currency:'EUR',
+  product:'1 voyage terrestre (bus), tout public',
+  validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.reseaumistral.com/titres/1-voyage/1-voyage-terrestre',
+  checkedAt:'2026-11-18',flat:true},
  // M réso (Métropole grenobloise, Grésivaudan, Voironnais) : tarifs au 01/09/2026 (reso-m.fr) :
  // 1 voyage 2,00 € valable 1 h sur tout M réso, correspondances et retours compris ; 2,60 € à bord.
  // 2,00 € est toujours un prix valable ; un trajet entièrement intra-Grésivaudan peut coûter 1,00 €.

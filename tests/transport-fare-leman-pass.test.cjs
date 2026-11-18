@@ -51,3 +51,7 @@ test('Tango Nîmes : Pass Unité 1,40 € / 60 min',()=>{
  for(const m of ['Bus','Tram']){const f=G.fareFor(leg('Esplanade','Gare','2026-11-19',m,'Tango (Nîmes Métropole)','T1'));
   assert.equal(f.amount,1.4);assert.equal(f.validityMinutes,60);assert.match(f.source,/tangobus/);}
 });
+test('Mistral Toulon : 1 voyage terrestre 1,40 €, sans durée de validité annoncée',()=>{
+ const f=G.fareFor(leg('Toulon gare','Mourillon','2026-11-19','Bus','Mistral (Toulon)','3'));
+ assert.equal(f.amount,1.4);assert.equal(f.validityMinutes,null);assert.match(f.source,/reseaumistral\.com/);
+});
