@@ -81,6 +81,9 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
+    # Nice : le zip d'origine est en ZIP64 (illisible sur le téléphone) → recompressé via le filtre d'emprise.
+    {'id': 'lignes-azur-nice', 'network': "Lignes d'Azur (Nice)", 'url': 'https://transport.data.gouv.fr/resources/83178/download',
+     'bounds': [43.55, 7.0, 43.9, 7.5], 'download_limit': 60 * 1024 * 1024},
     # RTM Marseille retiré le 18/11/2026 : 69 Mo décompressés (51 000 courses), trop lourd pour le téléphone — à alléger avant de le rebrancher.
     {'id': 'tcl-lyon', 'network': 'TCL', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8',
      'bounds': [45.74, 4.81, 45.77, 4.87], 'download_limit': 60 * 1024 * 1024},
@@ -149,7 +152,6 @@ MIRROR = [
     {'id': 'tam-montpellier', 'network': 'TaM (Montpellier, urbain et suburbain)', 'url': 'https://gtfsproxy.e-tam.fr/COMMON/GTFS.zip', 'bounds': [43.45, 3.5, 43.95, 4.15]},
     {'id': 'palmbus-cannes', 'network': 'Palmbus (Cannes Pays de Lérins)', 'dataset': 'horaires-theoriques-et-temps-reel-gtfs-gtfs-rt-du-reseau-palmbus-cannes-pays-de-lerins',
      'url': 'https://static.data.gouv.fr/resources/horaires-theoriques-et-temps-reel-gtfs-gtfs-rt-du-reseau-palmbus-cannes-pays-de-lerins/20261027-070043/palmbus-cannes-fr.zip', 'bounds': [43.45, 6.85, 43.7, 7.15]},
-    {'id': 'lignes-azur-nice', 'network': "Lignes d'Azur (Nice)", 'url': 'https://transport.data.gouv.fr/resources/83178/download', 'bounds': [43.63, 7.15, 43.82, 7.4]},
     {'id': 'start-thonon', 'network': "Star't Thonon", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e', 'bounds': [46.25, 6.3, 46.45, 6.65]},
 ]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
