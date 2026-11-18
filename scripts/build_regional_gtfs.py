@@ -277,12 +277,6 @@ def extract(z, spec):
             if f:
                 write_table(out, cal, f, [r for r in rows if r['service_id'] in service_ids])
         f, rows = read_table(z, 'feed_info.txt')
-        write_table(out, 'stops.txt', sfields, stops)
-        for cal in ('calendar.txt', 'calendar_dates.txt'):
-            f, rows = read_table(z, cal)
-            if f:
-                write_table(out, cal, f, [r for r in rows if r['service_id'] in service_ids])
-        f, rows = read_table(z, 'feed_info.txt')
         if f:
             write_table(out, 'feed_info.txt', f, rows)
         # Tarifs officiels du producteur, limités aux lignes/agences extraites.
