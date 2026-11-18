@@ -92,13 +92,10 @@ FILTERED_MIRROR = [
     {'id': 't2c-clermont', 'network': 'T2C (Clermont Auvergne Métropole, SMTC)',
      'url': 'https://opendata.clermontmetropole.eu/api/v2/catalog/datasets/gtfs-smtc/alternative_exports/gtfs',
      'bounds': [45.72, 3.00, 45.85, 3.20], 'download_limit': 60 * 1024 * 1024},
-    # Régions voisines (étape 18/11/2026) : URL data.gouv.fr officielles, bbox limitées aux départements frontaliers d'AURA.
+    # Régions voisines (étape 18/11/2026 ; Mobigo BFC à rajouter quand l’URL de ressource correcte est connue : l’ancienne donnait 404) : URL data.gouv.fr officielles, bbox limitées aux départements frontaliers d'AURA.
     {'id': 'lio-occitanie-nord', 'network': 'liO Occitanie (Gard, Lozère — limite Ardèche)',
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/d747fe79-2915-4cdd-8cc5-51a810baaca5',
      'bounds': [44.0, 3.3, 44.95, 4.7], 'download_limit': 120 * 1024 * 1024},
-    {'id': 'mobigo-bfc-jura', 'network': 'Mobigo Bourgogne-Franche-Comté (limite Ain, Suisse)',
-     'url': 'https://www.data.gouv.fr/api/1/datasets/r/6c4ac6eb-d6b0-496d-a52a-3e67666997c6',
-     'bounds': [46.2, 5.3, 47.1, 6.3], 'download_limit': 120 * 1024 * 1024},
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [

@@ -967,9 +967,7 @@
    ]
   }
  },
- "errors": {
-  "mobigo-bfc-jura": "erreur : HTTP Error 404: NOT FOUND"
- },
+ "errors": {},
  "oura": {
   "source": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA",
   "version": "2026-11-15T22:21:33+00:00"
