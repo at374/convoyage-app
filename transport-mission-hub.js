@@ -860,6 +860,67 @@ function makeProviders(r,opts={}){
      return fromGTFS(filtered,name);
     }};
   }
+  // V306 : correspondances entre réseaux (ex. Taninges → Cluses en car Région à la demande, puis TER Cluses → Annecy).
+  // Les réseaux qui touchent le départ ou l'arrivée + le flux SNCF sont chargés ; toutes les paires sont combinées (arrêts voisins ≤ 150 m,
+  // 5 min minimum), et chaque réseau cherche aussi ses propres correspondances internes. Horaires théoriques, non confirmés.
+  if(r.CPGTFSFederation?.crossNetworkTrips&&r.CPGTFSTime?.datedTrips&&r.CPGTFSIndex?.nearbyTransferTrips){
+   const sncfFeed=['sncf_ter','SNCF (TER, TGV)','national-sncf-aura.zip',[44.0,3.6,46.7,7.4]];
+   const area=b=>(b[2]-b[0])*(b[3]-b[1]);
+   const feedFor=(id,name,file,date)=>{
+    const key='x|'+id+'|'+date;let promise=cache.get(key);
+    if(!promise){
+     const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
+      'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
+     promise=r.CPGTFSLoader.loadResource({format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1),datasetId:id,network:name},{fetcher,indexServiceDates:[date],retainSourceTables:false});
+     cache.set(key,promise);promise.catch(()=>cache.delete(key));
+    }
+    return promise;
+   };
+   const pickFeeds=task=>{
+    const a=pt(task.from),b=pt(task.to);if(!a||!b)return [];
+    const touching=[...localNetworks,sncfFeed].filter(n=>inBounds(a,n[3])||inBounds(b,n[3]));
+    const score=n=>(n===sncfFeed?1:0)*0+(area(n[3])<0.5?0:1)*10+area(n[3]);
+    return touching.sort((x,y)=>score(x)-score(y)).slice(0,4);
+   };
+   P.local_correspondances={name:'Correspondances entre réseaux (GTFS)',
+    enabled:task=>!!queryWindow(task)&&pickFeeds(task).length>0,
+    disabledReason:'trajet hors zone des réseaux locaux ou horaires manquants',
+    run:async(task,signal)=>{
+     const w=queryWindow(task),when=ms(w.when);
+     if(!Number.isFinite(when))return [];
+     const {date,clock}=dateParts(when);
+     const nets=pickFeeds(task);
+     const loaded=(await Promise.all(nets.map(n=>feedFor(n[0],n[1],n[2],date).catch(()=>null)))).filter(Boolean);
+     if(signal?.aborted||loaded.length<1)return [];
+     const from=pt(task.from),to=pt(task.to);
+     const window={...(Number.isFinite(ms(task.earliestDeparture))?{earliestDeparture:task.earliestDeparture}:{}),
+      ...(Number.isFinite(ms(task.latestArrival))?{latestArrival:task.latestArrival}:{}),marginMinutes:marginFor(task)};
+     if(window.earliestDeparture===undefined&&window.latestArrival===undefined)return [];
+     const rows=[];
+     for(let i=0;i<loaded.length;i++){
+      // Correspondances à l'intérieur d'un même réseau.
+      try{
+       const bounds=r.CPGTFSTime.serviceWindow(loaded[i].files,date,window);
+       const t=r.CPGTFSIndex.nearbyTransferTrips(loaded[i].files,loaded[i].index,date,from,to,700,bounds);
+       const dated=r.CPGTFSTime.datedTransferTrips(loaded[i].files,loaded[i].index,t.journeys,window);
+       rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,legs:x.legs?.map(l=>({...l,network:loaded[i].source.network}))})));
+      }catch(_){}
+      // Correspondances entre deux réseaux différents.
+      for(let j=i+1;j<loaded.length;j++){
+       if(signal?.aborted)return [];
+       try{const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{});rows.push(...c.journeys);}catch(_){}
+      }
+     }
+     const out=rows.filter(x=>x&&x.departure&&x.arrival).map(x=>({...x,onDemand:x.onDemand||!!x.legs?.some(l=>l&&l.onDemand)}))
+      .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
+     // Garder les meilleurs d'abord : arrivée la plus tôt, puis départ le plus tôt ; 30 propositions au plus.
+     const seen=new Set(),uniq=[];
+     for(const x of out.sort((a,b)=>Date.parse(a.arrival)-Date.parse(b.arrival)||Date.parse(a.departure)-Date.parse(b.departure))){
+      const k=String(x.tripId||'')+'|'+x.departure;if(seen.has(k))continue;seen.add(k);uniq.push(x);if(uniq.length>=30)break;
+     }
+     return fromGTFS(uniq.sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)),'Correspondances');
+    }};
+  }
  }
  // National GTFS regional slices must be explicitly supplied by the application/server.
  // No direct download of full national feeds into Android and no invented ticket prices.
