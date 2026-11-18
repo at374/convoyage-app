@@ -120,6 +120,14 @@ MIRROR = [
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/92b18bc7-cd60-41f5-9af7-978eacbe0691', 'bounds': [46.2, 4.7, 46.5, 5.0]},
     {'id': 'divia-dijon', 'network': 'Divia Mobilités (Dijon)', 'dataset': 'gtfs-diviamobilites-1',
      'url': 'https://www.data.gouv.fr/fr/datasets/r/e0dbd217-15cd-4e28-9459-211a27511a34', 'bounds': [47.2, 4.95, 47.45, 5.2]},
+    {'id': 'ginko-besancon', 'network': 'Ginko (Besançon)', 'dataset': 'gtfs-et-siri-du-reseau-ginko-besancon-lignes-urbaines-et-periurbaines',
+     'url': 'https://transport.data.gouv.fr/datasets/gtfs-et-siri-du-reseau-ginko-besancon-lignes-urbaines-et-periurbaines', 'bounds': [47.15, 5.9, 47.35, 6.2]},
+    {'id': 'zoom-chalon', 'network': 'Zoom (Chalon-sur-Saône)', 'dataset': 'horaires-theoriques-du-reseau-zoom-le-grand-chalon',
+     'url': 'https://transport.data.gouv.fr/datasets/horaires-theoriques-du-reseau-zoom-le-grand-chalon', 'bounds': [46.7, 4.75, 46.85, 5.0]},
+    {'id': 'grandole-dole', 'network': 'Grandole Mobilités (Dole)', 'dataset': 'reseau-de-transport-du-grand-dole',
+     'url': 'https://transport.data.gouv.fr/datasets/reseau-de-transport-du-grand-dole', 'bounds': [47.0, 5.4, 47.2, 5.65]},
+    {'id': 'evolity-montbeliard', 'network': 'évolitY (Montbéliard)', 'dataset': 'evolity-horaires-theoriques-de-transport-public',
+     'url': 'https://transport.data.gouv.fr/datasets/evolity-horaires-theoriques-de-transport-public', 'bounds': [47.4, 6.65, 47.6, 6.95]},
     {'id': 'start-thonon', 'network': "Star't Thonon", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e', 'bounds': [46.25, 6.3, 46.45, 6.65]},
 ]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
