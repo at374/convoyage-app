@@ -80,6 +80,31 @@ const GRIDS=[
   checkedAt:'2026-11-18',flat:true},
  // Ales'Y (Alès) : tarif par zone (zone 1 centrale 1,10 € / zone 2 périphérique 1,80 €). Pas d'entrée tant que la liste des
  // communes de la zone 1 n'est pas fournie : un prix unique serait faux pour la zone 2 (voir échange du 18/11/2026).
+ // Orizo (Grand Avignon, bus + tram) : guide « Tarifs ORIZO » (PDF fourni par le convoyeur, tarifs en vigueur en mars 2025,
+ // fichier 07/2025) : Ticket 1 voyage 1,40 €, valable 1 h correspondance comprise (10 voyages 10 €, Pass journée 3,50 €).
+ // Date du guide ancienne : prix retenu jusqu'au 31/12/2026, à rafraîchir si une grille plus récente existe. Vérifié le 18/11/2026.
+ {network:'Orizo',operatorPattern:'^orizo\\b',modes:['Bus','Tram'],amount:1.40,currency:'EUR',
+  product:'Ticket 1 voyage (10 voyages 10 € ; Pass journée 3,50 €), 1 h correspondance comprise',validityMinutes:60,
+  validFrom:'2025-03-01',validUntil:'2026-12-31',source:'https://www.orizo.fr/ — guide des tarifs ORIZO (tarifs en vigueur en mars 2025)',
+  checkedAt:'2026-11-18',flat:true},
+ // Sankéo (Perpignan Méditerranée Métropole) : dépliant « Les tickets » (image fournie par le convoyeur) : Aller simple 1,30 €
+ // (1,50 € à bord), 1 voyage valable 1 h 30, correspondances possibles ; Duo 2,30 € ; Pass 24 h 4,50 ; 10 voyages 10 €. Vérifié le 18/11/2026.
+ {network:'Sankéo',operatorPattern:'^sank[ée]o\\b',modes:['Bus'],amount:1.30,currency:'EUR',
+  product:'Aller simple (1,50 € à bord ; Duo 2,30 € ; 10 voyages 10 €), 1 h 30 correspondances possibles',validityMinutes:90,
+  validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.sankeo.com/ — dépliant tarifs Sankéo, aller simple',
+  checkedAt:'2026-11-18',flat:true},
+ // beeMob (Béziers Méditerranée) : page « Tarifs » du réseau (transmise par le convoyeur) : ticket unité 1,00 € (bus en paiement
+ // sans contact ou appli), correspondance gratuite 1 h après oblitération, aller-retour non autorisé ; ticket journée 3,00 €. Vérifié le 18/11/2026.
+ {network:'beeMob',operatorPattern:'^bee\\s*mob\\b',modes:['Bus'],amount:1.00,currency:'EUR',
+  product:'Ticket unité (ticket journée 3,00 €), correspondance 1 h, aller-retour non autorisé',validityMinutes:60,
+  validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.beemob.fr/ — tarifs beeMob, ticket unité',
+  checkedAt:'2026-11-18',flat:true},
+ // Citibus (Narbonne) : page officielle citibus.fr « Citi1 - Ticket Unité » 1,20 € (CitiJour 3 €). Durée de validité non précisée
+ // sur la page : chaque trajet est compté séparément (prudent). Vérifié le 18/11/2026.
+ {network:'Citibus',operatorPattern:'^citibus\\b',modes:['Bus'],amount:1.20,currency:'EUR',
+  product:'Citi1 ticket unité (CitiJour 3,00 €)',
+  validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.citibus.fr/titres/les-tickets-citibus/citi1-ticket-unite',
+  checkedAt:'2026-11-18',flat:true},
  // M réso (Métropole grenobloise, Grésivaudan, Voironnais) : tarifs au 01/09/2026 (reso-m.fr) :
  // 1 voyage 2,00 € valable 1 h sur tout M réso, correspondances et retours compris ; 2,60 € à bord.
  // 2,00 € est toujours un prix valable ; un trajet entièrement intra-Grésivaudan peut coûter 1,00 €.

@@ -72,3 +72,19 @@ test("Ales'y Alès : zone 1 = 1,10 €, zone 2 ou entre zones = 1,80 € (zones 
  assert.equal(G.fareFor(leg('Inconnu','Mons','2026-11-19','Bus',A,'1')),null);
  assert.equal(G.fareFor(leg('Huit Mai','Mons','2026-11-17','Bus',A,'1')),null);
 });
+test('Orizo Avignon : ticket 1 voyage 1,40 € / 60 min',()=>{
+ for(const m of ['Bus','Tram']){const f=G.fareFor(leg('Avignon gare','Palais des Papes','2026-11-19',m,'Orizo (Grand Avignon)','1'));
+  assert.equal(f.amount,1.4);assert.equal(f.validityMinutes,60);assert.match(f.source,/orizo/);}
+});
+test('Sankéo Perpignan : aller simple 1,30 € / 90 min',()=>{
+ const f=G.fareFor(leg('Gare','Castillet','2026-11-19','Bus','Sankéo (Perpignan)','1'));
+ assert.equal(f.amount,1.3);assert.equal(f.validityMinutes,90);assert.match(f.source,/sankeo/);
+});
+test('beeMob Béziers : ticket unité 1,00 € / 60 min',()=>{
+ const f=G.fareFor(leg('Gare','Les Allées','2026-11-19','Bus','beeMob (Béziers Méditerranée)','1'));
+ assert.equal(f.amount,1);assert.equal(f.validityMinutes,60);assert.match(f.source,/beemob/);
+});
+test('Citibus Narbonne : Citi1 1,20 €, sans durée annoncée',()=>{
+ const f=G.fareFor(leg('Gare','Centre','2026-11-19','Bus','Citibus (Narbonne)','1'));
+ assert.equal(f.amount,1.2);assert.equal(f.validityMinutes,null);assert.match(f.source,/citibus\.fr/);
+});
