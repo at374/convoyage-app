@@ -1,5 +1,5 @@
 """Stage and test a rolling public SNCF dataset before replacing published files."""
-import argparse, hashlib, json, re, shutil, subprocess, tempfile, urllib.request, zipfile
+import argparse, csv, hashlib, io, json, re, shutil, subprocess, tempfile, urllib.request, zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -7,8 +7,7 @@ from build_sncf_days import build, SOURCE
 
 def refresh(root, archive=None, today=None):
     today=today or datetime.now(ZoneInfo('Europe/Paris')).date()
-    start=(today-timedelta(days=1)).isoformat()
-    expected={(today+timedelta(days=i)).isoformat() for i in range(-1,7)}
+    start_day=today-timedelta(days=1)
     target=root/'data'/'sncf'
     current=json.loads((target/'manifest.json').read_text()) if (target/'manifest.json').exists() else {}
     with tempfile.TemporaryDirectory(prefix='convoyage-sncf-') as temp:
@@ -19,6 +18,12 @@ def refresh(root, archive=None, today=None):
             if len(data)>40_000_000:raise ValueError('Source exceeds size limit')
             source.write_bytes(data)
         sha=hashlib.sha256(source.read_bytes()).hexdigest()
+        # Le fichier SNCF peut commencer le jour même : on décale alors le début pour rester dans sa validité.
+        with zipfile.ZipFile(source) as z, z.open('feed_info.txt') as f:
+            feed_start=next(csv.DictReader(io.TextIOWrapper(f,encoding='utf-8-sig')))['feed_start_date']
+        start_day=max(start_day,datetime.strptime(feed_start,'%Y%m%d').date())
+        start=start_day.isoformat()
+        expected={(start_day+timedelta(days=i)).isoformat() for i in range(8)}
         if current.get('sourceSha256')==sha and set(current.get('dates',{}))==expected:
             # Retained files must still match the recorded hashes before skipping.
             for entry in current['dates'].values():
