@@ -2235,6 +2235,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       planningBox.appendChild(planningInput);
       planningBox.appendChild(planningButton);
       planningBox.appendChild(planningStatus);
+      // V303 : si le GPS n'a rien détecté (iPhone, application fermée, GPS coupé…), on peut annoncer soi-même l'arrivée : même effet que la détection GPS (retour recalculé à partir de maintenant + 15 min).
+      if (!timing.gps && m && m.kind === 'acceptee' && m.platform && m.external_id != null && typeof suiviArrivee === 'function') {
+        const bArr = document.createElement('button'); bArr.type = 'button'; bArr.className = 'btn'; bArr.dataset.arriveeManuelle = 'true'; bArr.textContent = '📍 Je suis arrivé à la livraison';
+        bArr.onclick = () => suiviArrivee(m, { key: transportPlanKey }, Date.now());
+        planningBox.appendChild(bArr);
+      }
       refreshPlanValue();
       function refreshPlanValue() {
         if (!transportPlannedReturn) return;
