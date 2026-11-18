@@ -78,12 +78,8 @@ const GRIDS=[
   product:'Ticket 1 voyage (à bord ou carte bancaire), 59 min, correspondance autorisée, aller-retour interdit',validityMinutes:59,
   validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.palmbus.fr/ — tarifs Palm Bus, ticket 1 voyage',
   checkedAt:'2026-11-18',flat:true},
- // Ales'Y (Alès) : page « Titres occasionnels » du réseau (transmise par le convoyeur) : ticket unitaire dématérialisé 1,10 €
- // (1,20 € à bord), valable 1 h, tout public. Les tickets à 1,80 € / 2,00 € (1 h 30) ne sont pas retenus (produit non précisé). Vérifié le 18/11/2026.
- {network:"Ales'Y",operatorPattern:'^ales.?y\\b',modes:['Bus'],amount:1.10,currency:'EUR',
-  product:"Ticket unitaire dématérialisé tout public (1,20 € à bord), 1 h",validityMinutes:60,
-  validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.alesy.fr/ — Ales’Y, titres occasionnels, ticket unitaire',
-  checkedAt:'2026-11-18',flat:true},
+ // Ales'Y (Alès) : tarif par zone (zone 1 centrale 1,10 € / zone 2 périphérique 1,80 €). Pas d'entrée tant que la liste des
+ // communes de la zone 1 n'est pas fournie : un prix unique serait faux pour la zone 2 (voir échange du 18/11/2026).
  // M réso (Métropole grenobloise, Grésivaudan, Voironnais) : tarifs au 01/09/2026 (reso-m.fr) :
  // 1 voyage 2,00 € valable 1 h sur tout M réso, correspondances et retours compris ; 2,60 € à bord.
  // 2,00 € est toujours un prix valable ; un trajet entièrement intra-Grésivaudan peut coûter 1,00 €.
