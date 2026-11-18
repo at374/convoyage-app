@@ -94,3 +94,7 @@ test('Envibus Antibes 1,00 € / 60 min ; Sète Agglopôle 1,30 € / 60 min',()
  const t=G.fareFor(leg('Sète gare','Mairie','2026-11-19','Bus','Sète Agglopôle Mobilité','1'));
  assert.equal(t.amount,1.3);assert.equal(t.validityMinutes,60);assert.match(t.source,/agglopole\.fr/);
 });
+test('RTCA Carcassonne : Ticket Blanc 1 h, 1,00 € (appli)',()=>{
+ const f=G.fareFor(leg('Gare','Cité','2026-11-19','Bus','RTCA (Carcassonne Agglo)','1'));
+ assert.equal(f.amount,1);assert.equal(f.validityMinutes,60);assert.match(f.source,/rtca/);
+});

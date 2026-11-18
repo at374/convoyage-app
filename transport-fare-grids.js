@@ -112,11 +112,17 @@ const GRIDS=[
   product:'Ticket unitaire (appli / distributeur ; 1,50 € à bord ; pass 10 voyages 8 €), 1 h',validityMinutes:60,
   validFrom:'2025-11-04',validUntil:'2026-12-31',source:'https://www.envibus.fr/fileadmin/user_upload/icila/Dossier_PMR__mai2026.pdf',
   checkedAt:'2026-11-18',flat:true},
- // Sète Agglopôle Mobilité (SAMobilité) : page « Retrouvez tous nos titres » (mobilite.agglopole.fr) : ticket unitaire 1,30 € (carte bancaire sur
+ // Sète Agglopôle Mobilité (SAMobilité) : Guide tarifaire 2026 (PDF Keolis fourni par le convoyeur) et page mobilite.agglopole.fr : ticket unitaire 1,30 € (carte bancaire sur
  // le valideur, smartphone ou appli), 1,60 € auprès du conducteur, valable 1 h correspondances comprises. Vérifié le 18/11/2026.
  {network:'Sète',operatorPattern:'^s[èe]te\\b',modes:['Bus'],amount:1.30,currency:'EUR',
   product:'Ticket unitaire (appli / carte bancaire ; 1,60 € auprès du conducteur), 1 h correspondances comprises',validityMinutes:60,
   validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.mobilite.agglopole.fr/en/check-your-ticket-and-fare',
+  checkedAt:'2026-11-18',flat:true},
+ // RTCA (Carcassonne Agglo, réseaux urbain et non urbain) : page tarifs RTCA (transmise par le convoyeur) : Ticket Blanc 1 h
+ // 1,00 € sur l'appli mobile RTCA, 1,20 € à bord des bus. Vérifié le 18/11/2026.
+ {network:'RTCA',operatorPattern:'^rtca\\b',modes:['Bus'],amount:1.00,currency:'EUR',
+  product:'Ticket Blanc 1 h (appli mobile RTCA ; 1,20 € à bord), réseaux urbain et non urbain',validityMinutes:60,
+  validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://rtca.carcassonne-agglo.fr/ — tarifs RTCA, Ticket Blanc 1 h',
   checkedAt:'2026-11-18',flat:true},
  // M réso (Métropole grenobloise, Grésivaudan, Voironnais) : tarifs au 01/09/2026 (reso-m.fr) :
  // 1 voyage 2,00 € valable 1 h sur tout M réso, correspondances et retours compris ; 2,60 € à bord.
