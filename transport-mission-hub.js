@@ -1520,7 +1520,7 @@ function card(doc,j,labels,expanded=false){
 // Transports à la demande : information seulement (réservation obligatoire, aucun horaire ni prix affiché comme trajet).
 const TAD=[
  {name:'Flexi (Synchro mobilités, Grand Chambéry)',bounds:[45.45,5.75,45.65,6.15],url:'https://synchro.grandchambery.fr/',note:'réservation par téléphone (04 79 68 73 73), appli ou site ; même tarif que le bus'},
- {name:'Cars Région Y92 / Y93 / Y94 à la demande (Cluses – Taninges – Morzine / Praz de Lys / Sixt)',bounds:[46.02,6.50,46.22,6.78],url:'https://www.laregionvoustransporte.fr/',note:'réservation obligatoire au plus tard la veille avant 16 h (vendredi 16 h pour un lundi), au 04 8000 7000 ; seuls les horaires de la fiche de ligne existent'},
+ {name:'Cars Région Y92 / Y93 / Y94 à la demande (Cluses – Taninges – Morzine / Praz de Lys / Sixt)',bounds:[46.02,6.50,46.22,6.78],url:'https://www.laregionvoustransporte.fr/',note:'⚠️ à réserver 24 h à l’avance (la veille avant 16 h), 48 h ou plus pour un lundi (réserver le vendredi avant 16 h), 📞 numéro à appeler : 04 8000 7000 ; seuls les horaires de la fiche de ligne existent'},
  {name:'Mobéa (Ondéa Grand Lac)',bounds:[45.65,5.75,45.85,6.05],url:'https://www.ondeagrandlac.fr/',note:'réservation obligatoire'}
 ];
 function tadFor(task){const pts=[pt(task?.from),pt(task?.to)].filter(Boolean);
