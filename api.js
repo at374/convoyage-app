@@ -43,13 +43,17 @@
     }
     // V147 : le serveur ne renvoie que 1000 lignes par requête, et la liste est triée de la plus ancienne à la plus récente : les vieilles missions (passées, acceptées, « plus vues ») remplissaient les 1000 places et les missions récentes n'arrivaient jamais. On lit maintenant toutes les pages.
     async missions() {
-      const tout = [];
-      for (let d = 0; d < 20000; d += 1000) {
-        const page = (await this.requete('missions?select=*&order=pickup_start.asc.nullslast,fee.desc.nullslast,external_id.asc&limit=1000&offset=' + d)) || [];
-        tout.push(...page);
-        if (page.length < 1000) break;
-      }
-      return tout;
+      // V302 : on ne télécharge plus les milliers d'anciennes missions « plus vues » (inutiles) : seules restent celles qui ont un devis Hiflow. Ouverture bien plus rapide. Si le serveur refuse ce filtre, on relit tout comme avant.
+      const lire = async filtre => {
+        const tout = [];
+        for (let d = 0; d < 20000; d += 1000) {
+          const page = (await this.requete('missions?select=*' + filtre + '&order=pickup_start.asc.nullslast,fee.desc.nullslast,external_id.asc&limit=1000&offset=' + d)) || [];
+          tout.push(...page);
+          if (page.length < 1000) break;
+        }
+        return tout;
+      };
+      try { return await lire('&or=(status.neq.plus_vue,fees->>devis_numero.not.is.null)'); } catch (_) { return lire(''); }
     }
     alertes() { return this.requete('alertes?select=*&order=created_at.desc&limit=100'); }
     // V96 : factures validées / payées. Serveur pas encore mis à jour (maj_V96.sql) → liste vide, sans erreur.
