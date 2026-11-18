@@ -61,7 +61,7 @@ const GRIDS=[
  // Mistral (Toulon, bus) : page officielle reseaumistral.com « 1 voyage terrestre » 1,40 € (tout public, occasionnel).
  // Durée de validité / correspondances non précisées sur la page : chaque trajet en bus est donc compté séparément
  // (prudent). Bateau-bus (2,00 €) non géré. Vérifié le 18/11/2026.
- {network:'Mistral',operatorPattern:'^mistral\\b',modes:['Bus'],amount:1.40,currency:'EUR',
+ {network:'Mistral',operatorPattern:'^(r[ée]seau\\s+)?mistral\\b',modes:['Bus'],amount:1.40,currency:'EUR',
   product:'1 voyage terrestre (bus), tout public',
   validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.reseaumistral.com/titres/1-voyage/1-voyage-terrestre',
   checkedAt:'2026-11-18',flat:true},
