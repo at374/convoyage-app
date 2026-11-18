@@ -96,6 +96,12 @@ FILTERED_MIRROR = [
     {'id': 'lio-occitanie-nord', 'network': 'liO Occitanie (Gard, Lozère — limite Ardèche)',
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/d747fe79-2915-4cdd-8cc5-51a810baaca5',
      'bounds': [44.0, 3.3, 44.95, 4.7], 'download_limit': 120 * 1024 * 1024},
+    {'id': 'mobigo-bfc-jura', 'network': 'Mobigo Bourgogne-Franche-Comté (Jura, Ain, Suisse)',
+     'url': 'https://transport.data.gouv.fr/resources/83931/download',
+     'bounds': [46.2, 5.3, 47.1, 6.3], 'download_limit': 120 * 1024 * 1024},
+    {'id': 'zou-proximite-nord', 'network': 'ZOU ! Proximité (Hautes-Alpes, Vaucluse nord — limite Drôme)',
+     'url': 'https://www.datasud.fr/fr/dataset/datasets/3745/resource/5016/download/',
+     'bounds': [44.0, 5.0, 45.0, 7.0], 'download_limit': 120 * 1024 * 1024},
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
