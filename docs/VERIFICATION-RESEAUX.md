@@ -78,9 +78,9 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | palmbus_cannes (semaine) | palmbus-cannes.zip | 28323 | OK | 2026-11-19 06:00:00 retrouvée (325 départs proposés) |
 | palmbus_cannes (samedi) | palmbus-cannes.zip | 28323 | OK | 2026-11-21 06:00:00 retrouvée (326 départs proposés) |
 | palmbus_cannes (dimanche) | palmbus-cannes.zip | 28323 | OK | 2026-11-22 06:24:00 retrouvée (126 départs proposés) |
-| lignes_azur_nice (semaine) | lignes-azur-nice.zip | 24095 | OK | 2026-11-19 06:46:00 retrouvée (176 départs proposés) |
-| lignes_azur_nice (samedi) | lignes-azur-nice.zip | 24095 | OK | 2026-11-21 10:55:00 retrouvée (24 départs proposés) |
-| lignes_azur_nice (dimanche) | lignes-azur-nice.zip | 24095 | OK | 2026-11-22 17:05:00 retrouvée (40 départs proposés) |
+| lignes_azur_nice (semaine) | lignes-azur-nice.zip | 23761 | OK | 2026-11-19 06:46:00 retrouvée (176 départs proposés) |
+| lignes_azur_nice (samedi) | lignes-azur-nice.zip | 23761 | OK | 2026-11-21 10:55:00 retrouvée (24 départs proposés) |
+| lignes_azur_nice (dimanche) | lignes-azur-nice.zip | 23761 | OK | 2026-11-22 17:05:00 retrouvée (40 départs proposés) |
 | trema_macon (semaine) | trema-macon.zip | 6264 | OK | 2026-11-19 12:25:00 retrouvée (3 départs proposés) |
 | trema_macon (samedi) | trema-macon.zip | 6264 | OK | 2026-11-21 12:25:00 retrouvée (2 départs proposés) |
 | lio_occitanie_nord (semaine) | lio-occitanie-nord.zip | 452 | OK | 2026-11-19 11:45:00 retrouvée (2 départs proposés) |
