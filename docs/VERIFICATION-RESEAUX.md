@@ -2,7 +2,7 @@
 
 Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**226 / 228 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**229 / 230 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -93,7 +93,9 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | ulysse_istres (semaine) | ulysse-istres.zip | 16994 | OK | 2026-11-19 06:40:00 retrouvée (56 départs proposés) |
 | ulysse_istres (samedi) | ulysse-istres.zip | 16994 | OK | 2026-11-21 06:58:00 retrouvée (10 départs proposés) |
 | ulysse_istres (dimanche) | ulysse-istres.zip | 16994 | OK | 2026-11-22 08:30:00 retrouvée (7 départs proposés) |
-| tedbus_draguignan | tedbus-draguignan.zip |  | ÉCHEC | fichier absent |
+| tedbus_draguignan (semaine) | tedbus-draguignan.zip | 438 | OK | 2026-11-19 09:27:00 retrouvée (6 départs proposés) |
+| tedbus_draguignan (samedi) | tedbus-draguignan.zip | 438 | OK | 2026-11-21 08:44:00 retrouvée (10 départs proposés) |
+| tedbus_draguignan (dimanche) | tedbus-draguignan.zip | 438 | OK | 2026-11-22 08:55:00 retrouvée (18 départs proposés) |
 | rtca_carcassonne (semaine) | rtca-carcassonne.zip | 1183 | OK | 2026-11-19 07:08:00 retrouvée (41 départs proposés) |
 | rtca_carcassonne (samedi) | rtca-carcassonne.zip | 1183 | OK | 2026-11-21 06:43:00 retrouvée (21 départs proposés) |
 | rtca_carcassonne (dimanche) | rtca-carcassonne.zip | 1183 | OK | 2026-11-22 09:15:00 retrouvée (10 départs proposés) |
