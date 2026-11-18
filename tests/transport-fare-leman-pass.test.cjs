@@ -98,3 +98,7 @@ test('RTCA Carcassonne : Ticket Blanc 1 h, 1,00 € (appli)',()=>{
  const f=G.fareFor(leg('Gare','Cité','2026-11-19','Bus','RTCA (Carcassonne Agglo)','1'));
  assert.equal(f.amount,1);assert.equal(f.validityMinutes,60);assert.match(f.source,/rtca/);
 });
+test('Le Bus Fréjus / Saint-Raphaël : ticket unité 1,50 €, sans durée annoncée',()=>{
+ const f=G.fareFor(leg('Fréjus gare routière','Saint-Raphaël gare','2026-11-19','Bus',"Le Bus (Estérel Côte d'Azur : Fréjus, Saint-Raphaël)",'1'));
+ assert.equal(f.amount,1.5);assert.equal(f.validityMinutes,null);assert.match(f.source,/esterelcotedazur-lebus\.fr/);
+});

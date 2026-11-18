@@ -65,6 +65,12 @@ const GRIDS=[
   product:'1 voyage terrestre (bus), tout public',
   validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.reseaumistral.com/titres/1-voyage/1-voyage-terrestre',
   checkedAt:'2026-11-18',flat:true},
+ // Le Bus (Fréjus / Saint-Raphaël) : « Ticket unité » 1,50 €, 1 voyage (voyageurs occasionnels, tarif fourni par le convoyeur
+ // depuis le site du réseau). Pas de durée de validité indiquée : chaque trajet compté séparément. Vérifié le 18/11/2026.
+ {network:'Le Bus Estérel',operatorPattern:'^le bus \\(est[ée]rel',modes:['Bus'],amount:1.50,currency:'EUR',
+  product:'Ticket unité (1 voyage)',
+  validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.esterelcotedazur-lebus.fr/horaires/',
+  checkedAt:'2026-11-18',flat:true},
  // Aix en Bus (secteur urbain Aix, niveau tarifaire 2 de La Métropole Mobilité) : gamme tarifaire urbaine au 01/11/2026
  // (page fournie par le convoyeur) : 1 voyage & open payment 1,40 €, à bord 1,90 €, 24 h 4,60 €, 10 voyages 11 €.
  // Validité 1 h : durée de la grille Métropole (comme la RTM). Vérifié le 18/11/2026.
