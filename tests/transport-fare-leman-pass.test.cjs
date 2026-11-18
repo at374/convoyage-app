@@ -102,3 +102,7 @@ test('Le Bus Fréjus / Saint-Raphaël : ticket unité 1,50 €, sans durée anno
  const f=G.fareFor(leg('Fréjus gare routière','Saint-Raphaël gare','2026-11-19','Bus',"Le Bus (Estérel Côte d'Azur : Fréjus, Saint-Raphaël)",'1'));
  assert.equal(f.amount,1.5);assert.equal(f.validityMinutes,null);assert.match(f.source,/esterelcotedazur-lebus\.fr/);
 });
+test('Envibus Antibes : ticket unitaire 1,00 € / 60 min',()=>{
+ const f=G.fareFor(leg('Antibes gare','Sophia Antipolis','2026-11-19','Bus','Envibus (Antibes Sophia Antipolis)','2'));
+ assert.equal(f.amount,1);assert.equal(f.validityMinutes,60);
+});
