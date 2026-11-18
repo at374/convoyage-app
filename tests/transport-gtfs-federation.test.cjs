@@ -36,7 +36,7 @@ test('input order does not determine travel direction or collapse network namesp
 });
 test('rejects distant or conditional interchange legs and inactive service dates',()=>{
  assert.equal(search([feed('A','first'),feed('B','second',{offset:0.01})]).journeys.length,0);
- assert.equal(search([feed('A','first'),feed('B','second',{pickup:'2'})]).journeys.length,0);
+ assert.equal(search([feed('A','first'),feed('B','second',{pickup:'2'})]).journeys.length,1);   // à réserver par téléphone : gardé
  assert.equal(search([feed('A','first',{pickup:'1'}),feed('B','second')]).journeys.length,0);
  assert.equal(search([feed('A','first'),feed('B','second',{date:'20261103'})]).journeys.length,0);
 });

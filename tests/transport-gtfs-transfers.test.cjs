@@ -41,13 +41,15 @@ test('does not infer walks between different IDs, even at coincident coordinates
  files['transfers.txt']='from_stop_id,to_stop_id,transfer_type,min_transfer_time\nX,Y,2,300';
  assert.equal(search(files).journeys.length,0);
 });
-test('boarding and alighting restrictions exclude prohibited or conditional legs, also for direct trips',()=>{
+test('boarding and alighting: 1 (interdit) exclut le trajet ; 2 et 3 (à réserver par téléphone) le gardent, marqué à la demande',()=>{
  for(const [old,replacement] of [
   ['09:00:00,09:00:00,0,0','09:00:00,09:00:00,1,0'],
-  ['10:00:00,10:00:00,0,0','10:00:00,10:00:00,0,1'],
+  ['10:00:00,10:00:00,0,0','10:00:00,10:00:00,0,1']
+ ]){const files=fixture();files['stop_times.txt']=files['stop_times.txt'].replace(old,replacement);assert.equal(search(files).journeys.length,0);}
+ for(const [old,replacement] of [
   ['10:08:00,10:08:00,0,0','10:08:00,10:08:00,2,0'],
   ['11:00:00,11:00:00,0,0','11:00:00,11:00:00,0,3']
- ]){const files=fixture();files['stop_times.txt']=files['stop_times.txt'].replace(old,replacement);assert.equal(search(files).journeys.length,0);}
+ ]){const files=fixture();files['stop_times.txt']=files['stop_times.txt'].replace(old,replacement);const r=search(files).journeys;assert.equal(r.length,1);assert.equal(r[0].onDemand,true);}
  const files=fixture();files['stop_times.txt']=files['stop_times.txt'].replace('09:00:00,09:00:00,0,0','09:00:00,09:00:00,1,0');
  assert.equal(gtfs.directTrips(files,gtfs.buildIndex(files),'2026-11-02','A','X').length,0);
 });

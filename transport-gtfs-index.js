@@ -65,7 +65,10 @@ function scheduledTrips(files,index,date){
 }
 // Traverse the active trips once, without copying every stop of every trip for
 // each origin/destination pair. A loop may visit the origin more than once.
-function regularAccess(value){return value===undefined||value===''||value==='0';}
+// V305 : pickup_type / drop_off_type 2 ou 3 = « téléphoner pour réserver » (le petit téléphone des fiches horaires : transport à la demande).
+// Ces passages sont gardés mais marqués onDemand ; 1 (aucune montée / descente) reste écarté.
+function regularAccess(value){return value===undefined||value===''||value==='0'||value==='2'||value==='3';}
+function demandAccess(value){return value==='2'||value==='3';}
 function directCandidates(files,index,date,origins,destinations){
  const services=activeServices(files,date),journeys=[];
  if(!origins.size||!destinations.size)return journeys;
@@ -87,7 +90,7 @@ function directCandidates(files,index,date,origins,destinations){
     if(arrival===null||arrival<minutes(start.departure_time)||!regularAccess(end.drop_off_type))continue;
     journeys.push({tripId,line:route.route_short_name||route.route_long_name||'',date,
      from:start.stop_id,to:end.stop_id,departure:start.departure_time,arrival:end.arrival_time,
-     serviceScheduled:true,serviceConfirmed:false,
+     serviceScheduled:true,serviceConfirmed:false,onDemand:demandAccess(start.pickup_type)||demandAccess(end.drop_off_type),
      exactOrigin:false,exactDestination:false,accessVerified:false,priceEUR:null});
    }
   }
@@ -162,7 +165,7 @@ function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDe
        !(Number(end.stop_sequence)>Number(start.stop_sequence))||!regularAccess(end.drop_off_type)||start.stop_id===end.stop_id)continue;
     const leg={tripId,routeId:trip.route_id,line:route.route_short_name||route.route_long_name||'',
      from:start.stop_id,to:end.stop_id,departure:start.departure_time,arrival:end.arrival_time,
-     departureMinutes,arrivalMinutes,serviceConfirmed:false};
+     departureMinutes,arrivalMinutes,serviceConfirmed:false,onDemand:demandAccess(start.pickup_type)||demandAccess(end.drop_off_type)};
     if(fromOrigin&&!add(firstByStop,{...leg,toTransfer:end.stop_id}))break trips;
     if(destinations.has(end.stop_id)&&!add(secondByStop,{...leg,toTransfer:start.stop_id}))break trips;
    }
@@ -224,7 +227,7 @@ function transferCandidates(files,index,date,origins,destinations,{
      departure:a.departure,arrival:b.arrival,originStop:typeof from==='object'?{...from}:stopInfo(a.from),
      destinationStop:typeof to==='object'?{...to}:stopInfo(b.to),
      accessDistanceMeters:from?.distanceMeters??null,egressDistanceMeters:to?.distanceMeters??null,
-     serviceScheduled:true,serviceConfirmed:false,priceEUR:null,
+     serviceScheduled:true,serviceConfirmed:false,priceEUR:null,onDemand:!!(a.onDemand||b.onDemand),
      exactOrigin:false,exactDestination:false,accessVerified:false,transferVerified:false});
    }
   }

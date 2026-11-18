@@ -209,10 +209,11 @@ function fromGTFS(rows,network='Réseau local'){
    }
    return out;
   });
-  return {...journey((r.network||network)+' (GTFS)',legs),
+  return {...journey((r.network||network)+' (GTFS)'+(r.onDemand?' · à la demande 📞':''),legs),
    // Static GTFS proves a scheduled service, not its live operation.
    // Never label the itinerary as confirmed until a live source validates it.
    missing:['horaire GTFS local non confirmé en temps réel',
+    ...(r.onDemand?['📞 transport à la demande : à réserver 24 h à l’avance (la veille avant 16 h ; le vendredi avant 16 h pour un lundi) au 04 8000 7000']:[]),
     ...(r.searchTruncated?['recherche des correspondances incomplète']:[])]};
  });
 }
