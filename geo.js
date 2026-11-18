@@ -200,7 +200,16 @@
     const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(v.lat)) * Math.cos(rad(lat)) * Math.sin(dLng / 2) ** 2;
     return 2 * R * Math.asin(Math.min(1, Math.sqrt(h))) < 0.4;
   }
+  // Demande de Laurent (18/11/2026) : toute mission « Aéroport de Genève – Secteur France » ou à Ferney-Voltaire utilise
+  // le point GPS du parking des loueurs (P21) donné par lui : 46.237722, 6.117667. Prioritaire sur tout autre point.
+  const GENEVE_SECTEUR_FRANCE = { lat: 46.237722, lng: 6.117667 };
+  const estSecteurFranceGeneve = (m, cote) => {
+    const p = (m && m[cote]) || {}, pre = cote === 'origin' ? 'from' : 'to';
+    const t = norm([m && m[cote + '_address'], p.address, p.street, p.name, p.label, m && m[pre + '_city'], p.city, m && m[pre + '_name']].filter(x => typeof x === 'string').join(' '));
+    return /ferney[\s-]*voltaire/.test(t) || (/secteur\s+france/.test(t) && /geneve/.test(t));
+  };
   function coordonnees(m, cote) {
+    if (estSecteurFranceGeneve(m, cote)) return { lat: GENEVE_SECTEUR_FRANCE.lat, lng: GENEVE_SECTEUR_FRANCE.lng, precision: 'gps' };
     const p = m[cote]; const pre = cote === 'origin' ? 'from' : 'to';
     if (p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && p.lat !== null && p.lng !== null && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180 && !(Number(p.lat) === 0 && Number(p.lng) === 0)) {
       // V307 : adresse numérotée trouvée par le service officiel à plus de 150 m du GPS de la plateforme (ex. 1040 route de Bellegarde, Epagny) : le point officiel est retenu.
@@ -293,7 +302,7 @@
     if (z.type === 'region') return REGIONS[z.code] || z.code;
     return z.nom + (z.dep ? ' (' + z.dep + ')' : '');
   }
-  const api = { POINTS, cleAdresse, centreCommune, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone, chargerVillesFrontalieres };
+  const api = { POINTS, cleAdresse, centreCommune, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, estSecteurFranceGeneve, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone, chargerVillesFrontalieres };
   root.CPGeo = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
