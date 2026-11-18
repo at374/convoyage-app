@@ -1077,23 +1077,6 @@
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e",
    "trips": 18231
   },
-  "rtm-marseille": {
-   "network": "RTM (Marseille)",
-   "file": "rtm-marseille.zip",
-   "sha256": "d76f602ebd5b95e5897c8e9ce9c755226f58c834058ba48ac417bf0fee0c62ab",
-   "bytes": 7238452,
-   "origin": "https://transport.data.gouv.fr/resources/39589/download",
-   "routes": 117,
-   "trips": 51057,
-   "stops": 2356,
-   "fares": false,
-   "bounds": [
-    43.22,
-    5.32,
-    43.36,
-    5.48
-   ]
-  },
   "tcl-lyon": {
    "network": "TCL",
    "file": "tcl-lyon.zip",
@@ -1231,10 +1214,7 @@
    ]
   }
  },
- "errors": {
-  "tam-montpellier": "erreur : HTTP Error 404: Not Found",
-  "tam-suburbain-montpellier": "erreur : HTTP Error 404: Not Found"
- },
+ "errors": {},
  "oura": {
   "source": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA",
   "version": "2026-11-15T22:21:33+00:00"
