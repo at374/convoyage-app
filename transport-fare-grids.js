@@ -65,6 +65,13 @@ const GRIDS=[
   product:'1 voyage terrestre (bus), tout public',
   validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.reseaumistral.com/titres/1-voyage/1-voyage-terrestre',
   checkedAt:'2026-11-18',flat:true},
+ // Aix en Bus (secteur urbain Aix, niveau tarifaire 2 de La Métropole Mobilité) : gamme tarifaire urbaine au 01/11/2026
+ // (page fournie par le convoyeur) : 1 voyage & open payment 1,40 €, à bord 1,90 €, 24 h 4,60 €, 10 voyages 11 €.
+ // Validité 1 h : durée de la grille Métropole (comme la RTM). Vérifié le 18/11/2026.
+ {network:'Aix en Bus',operatorPattern:'^aix en bus$',modes:['Bus'],amount:1.40,currency:'EUR',
+  product:'1 voyage (open payment / appli, 1,90 € à bord), niveau 2 secteur Aix, 1 h',validityMinutes:60,
+  validFrom:'2026-11-01',validUntil:'2027-06-30',source:'https://www.lametropolemobilite.fr/ — gamme tarifaire urbaine au 01/11/2026, niveau 2',
+  checkedAt:'2026-11-18',flat:true},
  // M réso (Métropole grenobloise, Grésivaudan, Voironnais) : tarifs au 01/09/2026 (reso-m.fr) :
  // 1 voyage 2,00 € valable 1 h sur tout M réso, correspondances et retours compris ; 2,60 € à bord.
  // 2,00 € est toujours un prix valable ; un trajet entièrement intra-Grésivaudan peut coûter 1,00 €.

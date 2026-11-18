@@ -55,3 +55,8 @@ test('Mistral Toulon : 1 voyage terrestre 1,40 €, sans durée de validité ann
  const f=G.fareFor(leg('Toulon gare','Mourillon','2026-11-19','Bus','Mistral (Toulon)','3'));
  assert.equal(f.amount,1.4);assert.equal(f.validityMinutes,null);assert.match(f.source,/reseaumistral\.com/);
 });
+test('Aix en Bus : 1 voyage 1,40 € (niveau 2, 01/11/2026)',()=>{
+ const f=G.fareFor(leg('Rotonde','Gare routière','2026-11-19','Bus','Aix en Bus','3'));
+ assert.equal(f.amount,1.4);assert.equal(f.validityMinutes,60);assert.match(f.source,/lametropolemobilite/);
+ assert.equal(G.fareFor(leg('Rotonde','Gare routière','2026-10-30','Bus','Aix en Bus','3')),null);
+});
