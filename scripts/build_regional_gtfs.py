@@ -81,6 +81,9 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
+    # 18/11/2026 : RTM Marseille (brut trop gros pour le téléphone) → emprise resserrée sur le centre de Marseille.
+    {'id': 'rtm-marseille', 'network': 'RTM (Marseille)', 'url': 'https://transport.data.gouv.fr/resources/39589/download',
+     'bounds': [43.22, 5.32, 43.36, 5.48], 'download_limit': 60 * 1024 * 1024},
     {'id': 'tcl-lyon', 'network': 'TCL', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8',
      'bounds': [45.74, 4.81, 45.77, 4.87], 'download_limit': 60 * 1024 * 1024},
     {'id': 'citea-valence', 'network': 'Citéa (Valence Romans Mobilités)',
@@ -144,7 +147,6 @@ MIRROR = [
      'url': 'https://static.data.gouv.fr/resources/horaires-theoriques-des-lignes-urbaines-et-interurbaines-sur-le-reseau-alesy-gtfs/20261102-092556/gtfs-is-20261102.zip', 'bounds': [43.95, 3.9, 44.35, 4.4]},
     {'id': 'tisseo-toulouse', 'network': 'Tisséo (Toulouse)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/64318177-f5b5-4144-a6be-2d0f22d26c77', 'bounds': [43.45, 1.15, 43.85, 1.7]},
     {'id': 'mistral-toulon', 'network': 'Réseau Mistral (Toulon)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b0789d9e-5077-4124-b6b2-773353ada8cf', 'bounds': [43.0, 5.75, 43.25, 6.15]},
-    {'id': 'rtm-marseille', 'network': 'RTM (Marseille)', 'url': 'https://transport.data.gouv.fr/resources/39589/download', 'bounds': [43.15, 5.2, 43.45, 5.6]},
     {'id': 'aixenbus-aix', 'network': 'Aix en Bus', 'url': 'https://transport.data.gouv.fr/resources/39603/download', 'bounds': [43.45, 5.35, 43.65, 5.55]},
     {'id': 'tam-montpellier', 'network': 'TaM (Montpellier)', 'url': 'https://data.montpellier3m.fr/GTFS/Urbain/GTFS.zip', 'bounds': [43.5, 3.65, 43.8, 4.05]},
     {'id': 'tam-suburbain-montpellier', 'network': 'TaM suburbain (Montpellier)', 'url': 'https://data.montpellier3m.fr/GTFS/Suburbain/GTFS.zip', 'bounds': [43.45, 3.5, 43.95, 4.15]},

@@ -769,7 +769,7 @@ function makeProviders(r,opts={}){
    ['alesy_ales',"Ales'y (Alès)",'alesy-ales.zip',[43.95,3.9,44.35,4.4]],
    ['tisseo_toulouse','Tisséo (Toulouse)','tisseo-toulouse.zip',[43.45,1.15,43.85,1.7]],
    ['mistral_toulon','Réseau Mistral (Toulon)','mistral-toulon.zip',[43.0,5.75,43.25,6.15]],
-   ['rtm_marseille','RTM (Marseille)','rtm-marseille.zip',[43.15,5.2,43.45,5.6]],
+   ['rtm_marseille','RTM (Marseille)','rtm-marseille.zip',[43.22,5.32,43.36,5.48]],
    ['aixenbus_aix','Aix en Bus','aixenbus-aix.zip',[43.45,5.35,43.65,5.55]],
    ['tam_montpellier','TaM (Montpellier)','tam-montpellier.zip',[43.5,3.65,43.8,4.05]],
    ['tam_suburbain_montpellier','TaM suburbain (Montpellier)','tam-suburbain-montpellier.zip',[43.45,3.5,43.95,4.15]],
