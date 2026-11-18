@@ -22,6 +22,7 @@ EXTRACT = [
     {'id': 'cars-region-isere', 'network': 'Cars Région Isère', 'pattern': r"cars? region.*isere|\bisere\b", 'bounds': [44.69, 4.74, 45.89, 6.36]},
     # 18/11/2026 : Haute-Savoie (Cluses, Taninges, Morzine, Samoëns : lignes Y92/Y93/Y94 à la demande, Y51…), emprise resserrée pour rester sous MAX_OUT.
     {'id': 'cars-region-haute-savoie', 'network': 'Cars Région Haute-Savoie', 'pattern': r"cars? region.*haute.?savoie", 'bounds': [45.90, 6.30, 46.30, 6.85]},
+    {'id': 'cars-region-ain', 'network': 'Cars Région Ain', 'pattern': r"cars? region.*\bain\b", 'bounds': [45.75, 4.75, 46.5, 6.15]},
     {'id': 'cars-region-savoie', 'network': 'Cars Région Savoie', 'pattern': r"^(?!.*haute).*(cars? region.*savoie|\bsavoie\b)", 'bounds': [45.05, 5.62, 45.80, 7.19]},
     # 15/11/2026 : tous les autres réseaux de l'agrégat régional Oùra (emprises relevées sur les flux officiels).
     {'id': 'rubis-bourg', 'network': 'Rubis Bourg-en-Bresse', 'pattern': '\\brubis\\b', 'bounds': [46.15, 5.05, 46.52, 5.41]},
