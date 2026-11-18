@@ -201,7 +201,8 @@ test('DriiveMe : la livraison ne peut pas commencer avant la prise en charge',()
 
 test('suivi GPS : arrivée à la livraison + marge 15 min met à jour retours et jonctions',()=>{
  const app=fs.readFileSync(require.resolve('../app.js'),'utf8');
- assert.ok(app.includes("RAYON_ARRIVEE_M = 300"));
+ assert.ok(app.includes("RAYON_ARRIVEE_M = 400"));
+ assert.ok(app.includes("arriveeHiflow(original)"));
  assert.ok(app.includes("navigator.geolocation.watchPosition(suiviTraiter"));
  assert.ok(app.includes("MARGE_ARRIVEE_MIN * 60000"));
  assert.ok(app.includes("arriveeGps(key)"));
