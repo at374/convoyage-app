@@ -2,76 +2,175 @@
 
 Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**63 / 64 réseaux vérifiés.**
+**163 / 164 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
-| tac | tac-annemasse.zip | 1357 | OK | 2026-11-19 08:10:00 retrouvée (5 départs proposés) |
-| synchro | synchro-chambery.zip | 6722 | OK | 2026-11-19 16:40:00 retrouvée (27 départs proposés) |
-| tcl | tcl-lyon.zip | 100268 | OK | 2026-11-19 06:00:00 retrouvée (52 départs proposés) |
-| cars_isere | cars-region-isere.zip | 3868 | OK | 2026-11-19 08:40:00 retrouvée (2 départs proposés) |
-| cars_savoie | cars-region-savoie.zip | 111 | OK | 2026-11-19 07:15:00 retrouvée (2 départs proposés) |
-| cars_haute_savoie | cars-region-haute-savoie.zip | 1149 | OK | 2026-11-19 09:15:00 retrouvée (8 départs proposés) |
-| mreso_grenoble | mreso-grenoble.zip | 19362 | OK | 2026-11-19 07:20:00 retrouvée (42 départs proposés) |
-| mreso_gresivaudan | mreso-gresivaudan.zip | 1630 | OK | 2026-11-19 13:30:00 retrouvée (20 départs proposés) |
-| ondea | ondea-grand-lac.zip | 2290 | OK | 2026-11-19 07:40:00 retrouvée (4 départs proposés) |
-| sibra | sibra-annecy.zip | 9204 | OK | 2026-11-19 06:11:00 retrouvée (302 départs proposés) |
-| start_thonon | start-thonon.zip | 18231 | OK | 2026-11-19 07:19:00 retrouvée (15 départs proposés) |
-| ginko_besancon | ginko-besancon.zip | 36665 | OK | 2026-11-19 06:37:00 retrouvée (34 départs proposés) |
-| zoom_chalon | zoom-chalon.zip | 2693 | OK | 2026-11-19 06:00:00 retrouvée (342 départs proposés) |
-| grandole_dole | grandole-dole.zip | 654 | OK | 2026-11-19 06:27:00 retrouvée (124 départs proposés) |
-| evolity_montbeliard | evolity-montbeliard.zip | 2378 | OK | 2026-11-19 13:09:00 retrouvée (8 départs proposés) |
-| orizo_avignon | orizo-avignon.zip | 5781 | OK | 2026-11-19 06:29:00 retrouvée (236 départs proposés) |
-| agglo_bus_gap | agglo-bus-gap.zip | 577 | OK | 2026-11-19 06:59:00 retrouvée (35 départs proposés) |
-| altigo_briancon | altigo-briancon.zip | 288 | OK | 2026-11-19 08:10:00 retrouvée (2 départs proposés) |
-| divia_dijon | divia-dijon.zip | 31251 | OK | 2026-11-19 06:00:00 retrouvée (176 départs proposés) |
-| trema_macon | trema-macon.zip | 6264 | OK | 2026-11-19 12:25:00 retrouvée (3 départs proposés) |
-| lio_occitanie_nord | lio-occitanie-nord.zip | 452 | OK | 2026-11-19 11:45:00 retrouvée (2 départs proposés) |
-| mobigo_bfc_jura | mobigo-bfc-jura.zip | 208 | OK | 2026-11-19 17:20:00 retrouvée (5 départs proposés) |
-| zou_express_nord | zou-express-nord.zip | 673 | OK | 2026-11-19 07:05:46 retrouvée (4 départs proposés) |
-| zou_proximite_nord | zou-proximite-nord.zip | 556 | OK | 2026-11-19 16:30:00 retrouvée (6 départs proposés) |
-| cars_ain | cars-region-ain.zip | 711 | OK | 2026-11-19 14:38:00 retrouvée (28 départs proposés) |
-| jybus | jybus-rumilly.zip | 402 | OK | 2026-11-19 13:44:00 retrouvée (87 départs proposés) |
-| tam | tam-amberieu.zip | 93 | OK | 2026-11-19 11:55:00 retrouvée (6 départs proposés) |
-| rubis | rubis-bourg.zip | 1121 | OK | 2026-11-19 17:32:00 retrouvée (65 départs proposés) |
-| evad | evad-evian.zip | 965 | OK | 2026-11-19 20:00:00 retrouvée (43 départs proposés) |
-| chamonix | chamonix-bus.zip | 1492 | OK | 2026-11-19 14:54:00 retrouvée (66 départs proposés) |
-| proximiti | proximiti-bonneville.zip | 317 | ÉCHEC | aucune course dans l’emprise sur 7 jours |
-| mobivals | mobivals-valserhone.zip | 1200 | OK | 2026-11-19 07:53:00 retrouvée (7 départs proposés) |
-| tra | tra-albertville.zip | 372 | OK | 2026-11-19 06:43:00 retrouvée (19 départs proposés) |
-| duobus | duobus-oyonnax.zip | 225 | OK | 2026-11-19 06:10:00 retrouvée (40 départs proposés) |
-| ruban | ruban-bourgoin.zip | 1898 | OK | 2026-11-19 06:59:00 retrouvée (1 départs proposés) |
-| lva | lva-vienne.zip | 11125 | OK | 2026-11-19 07:09:00 retrouvée (4 départs proposés) |
-| colibri | colibri-miribel.zip | 64 | OK | 2026-11-19 06:01:00 retrouvée (48 départs proposés) |
-| tico | tico-montluel.zip | 22 | OK | 2026-11-19 11:00:00 retrouvée (11 départs proposés) |
-| saonibus | saonibus-trevoux.zip | 55 | OK | 2026-11-19 07:25:00 retrouvée (14 départs proposés) |
-| cars_express | cars-region-express.zip | 450 | OK | 2026-11-19 16:25:00 retrouvée (6 départs proposés) |
-| cars_loire | cars-region-loire.zip | 2169 | OK | 2026-11-19 17:05:00 retrouvée (1 départs proposés) |
-| cars_drome | cars-region-drome.zip | 1414 | OK | 2026-11-19 16:05:00 retrouvée (2 départs proposés) |
-| cars_ardeche | cars-region-ardeche.zip | 1764 | OK | 2026-11-19 13:32:00 retrouvée (4 départs proposés) |
-| cars_allier | cars-region-allier.zip | 928 | OK | 2026-11-19 18:15:00 retrouvée (1 départs proposés) |
-| cars_cantal | cars-region-cantal.zip | 239 | OK | 2026-11-19 18:12:00 retrouvée (4 départs proposés) |
-| cars_haute_loire | cars-region-haute-loire.zip | 247 | OK | 2026-11-19 06:50:00 retrouvée (2 départs proposés) |
-| coqueligo | coqueligo-annonay.zip | 368 | OK | 2026-11-19 08:12:00 retrouvée (28 départs proposés) |
-| toutenbus | toutenbus-aubenas.zip | 209 | OK | 2026-11-19 06:53:00 retrouvée (30 départs proposés) |
-| transcab | transcab-aurillac.zip | 1627 | OK | 2026-11-19 15:18:00 retrouvée (192 départs proposés) |
-| montelibus | montelibus-montelimar.zip | 1250 | OK | 2026-11-19 17:28:00 retrouvée (8 départs proposés) |
-| maelis | maelis-montlucon.zip | 661 | OK | 2026-11-19 06:23:00 retrouvée (116 départs proposés) |
-| aleo | aleo-moulins.zip | 767 | OK | 2026-11-19 18:05:00 retrouvée (16 départs proposés) |
-| tcap | tcap-privas.zip | 272 | OK | 2026-11-19 13:20:00 retrouvée (40 départs proposés) |
-| velay | velay-le-puy.zip | 1196 | OK | 2026-11-19 07:33:00 retrouvée (22 départs proposés) |
-| rlv | rlv-riom.zip | 473 | OK | 2026-11-19 06:31:00 retrouvée (26 départs proposés) |
-| star_roanne | star-roanne.zip | 4153 | OK | 2026-11-19 10:48:00 retrouvée (16 départs proposés) |
-| lebus | lebus-tain-tournon.zip | 99 | OK | 2026-11-19 06:21:00 retrouvée (20 départs proposés) |
-| smtut | smtut-thiers.zip | 355 | OK | 2026-11-19 06:33:00 retrouvée (38 départs proposés) |
-| mobivie | mobivie-vichy.zip | 753 | OK | 2026-11-19 12:26:00 retrouvée (12 départs proposés) |
-| le37 | le37-roussillon.zip | 108 | OK | 2026-11-19 17:45:00 retrouvée (10 départs proposés) |
-| citea | citea-valence.zip | 17672 | OK | 2026-11-19 16:57:00 retrouvée (76 départs proposés) |
-| stas | stas-saint-etienne.zip | 20409 | OK | 2026-11-19 06:46:00 retrouvée (182 départs proposés) |
-| t2c | t2c-clermont.zip | 8452 | OK | 2026-11-19 06:30:00 retrouvée (414 départs proposés) |
-| sncf_ter | national-sncf-aura.zip | 9522 | OK | 2026-11-19 11:38:00 retrouvée (25 départs proposés) |
-
+| tac (semaine) | tac-annemasse.zip | 1357 | OK | 2026-11-19 08:10:00 retrouvée (5 départs proposés) |
+| tac (samedi) | tac-annemasse.zip | 1357 | OK | 2026-11-21 06:35:00 retrouvée (2 départs proposés) |
+| tac (dimanche) | tac-annemasse.zip | 1357 | OK | 2026-11-22 08:30:00 retrouvée (10 départs proposés) |
+| synchro (semaine) | synchro-chambery.zip | 6722 | OK | 2026-11-19 16:40:00 retrouvée (27 départs proposés) |
+| synchro (samedi) | synchro-chambery.zip | 6722 | OK | 2026-11-21 06:15:00 retrouvée (150 départs proposés) |
+| synchro (dimanche) | synchro-chambery.zip | 6722 | OK | 2026-11-22 08:30:00 retrouvée (20 départs proposés) |
+| tcl (semaine) | tcl-lyon.zip | 100268 | OK | 2026-11-19 06:00:00 retrouvée (52 départs proposés) |
+| tcl (samedi) | tcl-lyon.zip | 100268 | OK | 2026-11-21 06:00:00 retrouvée (47 départs proposés) |
+| tcl (dimanche) | tcl-lyon.zip | 100268 | OK | 2026-11-22 07:30:00 retrouvée (21 départs proposés) |
+| cars_isere (semaine) | cars-region-isere.zip | 3868 | OK | 2026-11-19 08:40:00 retrouvée (2 départs proposés) |
+| cars_isere (samedi) | cars-region-isere.zip | 3868 | OK | 2026-11-21 17:30:00 retrouvée (4 départs proposés) |
+| cars_isere (dimanche) | cars-region-isere.zip | 3868 | OK | 2026-11-22 12:55:00 retrouvée (3 départs proposés) |
+| cars_savoie (semaine) | cars-region-savoie.zip | 111 | OK | 2026-11-19 07:15:00 retrouvée (2 départs proposés) |
+| cars_savoie (samedi) | cars-region-savoie.zip | 111 | OK | 2026-11-21 07:10:00 retrouvée (6 départs proposés) |
+| cars_haute_savoie (semaine) | cars-region-haute-savoie.zip | 1149 | OK | 2026-11-19 09:15:00 retrouvée (8 départs proposés) |
+| cars_haute_savoie (samedi) | cars-region-haute-savoie.zip | 1149 | OK | 2026-11-21 09:15:00 retrouvée (4 départs proposés) |
+| mreso_grenoble (semaine) | mreso-grenoble.zip | 19362 | OK | 2026-11-19 07:20:00 retrouvée (42 départs proposés) |
+| mreso_grenoble (samedi) | mreso-grenoble.zip | 19362 | OK | 2026-11-21 08:57:00 retrouvée (298 départs proposés) |
+| mreso_grenoble (dimanche) | mreso-grenoble.zip | 19362 | OK | 2026-11-22 07:44:00 retrouvée (8 départs proposés) |
+| mreso_gresivaudan (semaine) | mreso-gresivaudan.zip | 1630 | OK | 2026-11-19 13:30:00 retrouvée (20 départs proposés) |
+| mreso_gresivaudan (samedi) | mreso-gresivaudan.zip | 1630 | OK | 2026-11-21 11:00:00 retrouvée (17 départs proposés) |
+| mreso_gresivaudan (dimanche) | mreso-gresivaudan.zip | 1630 | OK | 2026-11-22 16:05:00 retrouvée (2 départs proposés) |
+| ondea (semaine) | ondea-grand-lac.zip | 2290 | OK | 2026-11-19 07:40:00 retrouvée (4 départs proposés) |
+| ondea (samedi) | ondea-grand-lac.zip | 2290 | OK | 2026-11-21 06:51:00 retrouvée (54 départs proposés) |
+| ondea (dimanche) | ondea-grand-lac.zip | 2290 | OK | 2026-11-22 09:05:00 retrouvée (11 départs proposés) |
+| sibra (semaine) | sibra-annecy.zip | 9204 | OK | 2026-11-19 06:11:00 retrouvée (302 départs proposés) |
+| sibra (samedi) | sibra-annecy.zip | 9204 | OK | 2026-11-21 06:05:00 retrouvée (248 départs proposés) |
+| sibra (dimanche) | sibra-annecy.zip | 9204 | OK | 2026-11-22 08:10:00 retrouvée (38 départs proposés) |
+| start_thonon (semaine) | start-thonon.zip | 18231 | OK | 2026-11-19 07:19:00 retrouvée (15 départs proposés) |
+| start_thonon (samedi) | start-thonon.zip | 18231 | OK | 2026-11-21 07:56:00 retrouvée (168 départs proposés) |
+| ginko_besancon (semaine) | ginko-besancon.zip | 36665 | OK | 2026-11-19 06:37:00 retrouvée (34 départs proposés) |
+| ginko_besancon (samedi) | ginko-besancon.zip | 36665 | OK | 2026-11-21 06:11:00 retrouvée (22 départs proposés) |
+| ginko_besancon (dimanche) | ginko-besancon.zip | 36665 | OK | 2026-11-22 07:11:00 retrouvée (160 départs proposés) |
+| zoom_chalon (semaine) | zoom-chalon.zip | 2693 | OK | 2026-11-19 06:00:00 retrouvée (342 départs proposés) |
+| zoom_chalon (samedi) | zoom-chalon.zip | 2693 | OK | 2026-11-21 06:00:00 retrouvée (284 départs proposés) |
+| zoom_chalon (dimanche) | zoom-chalon.zip | 2693 | OK | 2026-11-22 09:00:00 retrouvée (20 départs proposés) |
+| grandole_dole (semaine) | grandole-dole.zip | 654 | OK | 2026-11-19 06:27:00 retrouvée (124 départs proposés) |
+| grandole_dole (samedi) | grandole-dole.zip | 654 | OK | 2026-11-21 07:40:00 retrouvée (24 départs proposés) |
+| evolity_montbeliard (semaine) | evolity-montbeliard.zip | 2378 | OK | 2026-11-19 13:09:00 retrouvée (8 départs proposés) |
+| evolity_montbeliard (samedi) | evolity-montbeliard.zip | 2378 | OK | 2026-11-21 17:10:00 retrouvée (224 départs proposés) |
+| evolity_montbeliard (dimanche) | evolity-montbeliard.zip | 2378 | OK | 2026-11-22 12:30:00 retrouvée (80 départs proposés) |
+| orizo_avignon (semaine) | orizo-avignon.zip | 5781 | OK | 2026-11-19 06:29:00 retrouvée (236 départs proposés) |
+| orizo_avignon (samedi) | orizo-avignon.zip | 5781 | OK | 2026-11-21 18:39:00 retrouvée (214 départs proposés) |
+| orizo_avignon (dimanche) | orizo-avignon.zip | 5781 | OK | 2026-11-22 16:43:00 retrouvée (13 départs proposés) |
+| agglo_bus_gap (semaine) | agglo-bus-gap.zip | 577 | OK | 2026-11-19 06:59:00 retrouvée (35 départs proposés) |
+| agglo_bus_gap (samedi) | agglo-bus-gap.zip | 577 | OK | 2026-11-21 06:59:00 retrouvée (2 départs proposés) |
+| altigo_briancon (semaine) | altigo-briancon.zip | 288 | OK | 2026-11-19 08:10:00 retrouvée (2 départs proposés) |
+| altigo_briancon (samedi) | altigo-briancon.zip | 288 | OK | 2026-11-21 06:40:00 retrouvée (66 départs proposés) |
+| divia_dijon (semaine) | divia-dijon.zip | 31251 | OK | 2026-11-19 06:00:00 retrouvée (176 départs proposés) |
+| divia_dijon (samedi) | divia-dijon.zip | 31251 | OK | 2026-11-21 06:00:00 retrouvée (136 départs proposés) |
+| divia_dijon (dimanche) | divia-dijon.zip | 31251 | OK | 2026-11-22 13:29:00 retrouvée (60 départs proposés) |
+| trema_macon (semaine) | trema-macon.zip | 6264 | OK | 2026-11-19 12:25:00 retrouvée (3 départs proposés) |
+| trema_macon (samedi) | trema-macon.zip | 6264 | OK | 2026-11-21 12:25:00 retrouvée (2 départs proposés) |
+| lio_occitanie_nord (semaine) | lio-occitanie-nord.zip | 452 | OK | 2026-11-19 11:45:00 retrouvée (2 départs proposés) |
+| lio_occitanie_nord (samedi) | lio-occitanie-nord.zip | 452 | OK | 2026-11-21 09:00:00 retrouvée (1 départs proposés) |
+| lio_occitanie_nord (dimanche) | lio-occitanie-nord.zip | 452 | OK | 2026-11-22 07:00:00 retrouvée (2 départs proposés) |
+| mobigo_bfc_jura (semaine) | mobigo-bfc-jura.zip | 208 | OK | 2026-11-19 17:20:00 retrouvée (5 départs proposés) |
+| mobigo_bfc_jura (samedi) | mobigo-bfc-jura.zip | 208 | OK | 2026-11-21 19:10:00 retrouvée (3 départs proposés) |
+| mobigo_bfc_jura (dimanche) | mobigo-bfc-jura.zip | 208 | OK | 2026-11-22 16:45:00 retrouvée (2 départs proposés) |
+| zou_express_nord (semaine) | zou-express-nord.zip | 673 | OK | 2026-11-19 07:05:46 retrouvée (4 départs proposés) |
+| zou_express_nord (samedi) | zou-express-nord.zip | 673 | OK | 2026-11-21 09:59:38 retrouvée (3 départs proposés) |
+| zou_express_nord (dimanche) | zou-express-nord.zip | 673 | OK | 2026-11-22 09:59:38 retrouvée (3 départs proposés) |
+| zou_proximite_nord (semaine) | zou-proximite-nord.zip | 556 | OK | 2026-11-19 16:30:00 retrouvée (6 départs proposés) |
+| zou_proximite_nord (samedi) | zou-proximite-nord.zip | 556 | OK | 2026-11-21 16:30:00 retrouvée (6 départs proposés) |
+| zou_proximite_nord (dimanche) | zou-proximite-nord.zip | 556 | OK | 2026-11-22 16:30:00 retrouvée (6 départs proposés) |
+| cars_ain (semaine) | cars-region-ain.zip | 711 | OK | 2026-11-19 14:38:00 retrouvée (28 départs proposés) |
+| cars_ain (samedi) | cars-region-ain.zip | 711 | OK | 2026-11-21 18:10:00 retrouvée (1 départs proposés) |
+| cars_ain (dimanche) | cars-region-ain.zip | 711 | OK | 2026-11-22 19:50:00 retrouvée (8 départs proposés) |
+| jybus (semaine) | jybus-rumilly.zip | 402 | OK | 2026-11-19 13:44:00 retrouvée (87 départs proposés) |
+| jybus (samedi) | jybus-rumilly.zip | 402 | OK | 2026-11-21 06:40:00 retrouvée (64 départs proposés) |
+| tam (semaine) | tam-amberieu.zip | 93 | OK | 2026-11-19 11:55:00 retrouvée (6 départs proposés) |
+| tam (samedi) | tam-amberieu.zip | 93 | OK | 2026-11-21 11:24:00 retrouvée (10 départs proposés) |
+| rubis (semaine) | rubis-bourg.zip | 1121 | OK | 2026-11-19 17:32:00 retrouvée (65 départs proposés) |
+| rubis (samedi) | rubis-bourg.zip | 1121 | OK | 2026-11-21 06:02:00 retrouvée (41 départs proposés) |
+| evad (semaine) | evad-evian.zip | 965 | OK | 2026-11-19 20:00:00 retrouvée (43 départs proposés) |
+| evad (samedi) | evad-evian.zip | 965 | OK | 2026-11-21 06:48:00 retrouvée (42 départs proposés) |
+| evad (dimanche) | evad-evian.zip | 965 | OK | 2026-11-22 09:15:00 retrouvée (10 départs proposés) |
+| chamonix (semaine) | chamonix-bus.zip | 1492 | OK | 2026-11-19 14:54:00 retrouvée (66 départs proposés) |
+| chamonix (samedi) | chamonix-bus.zip | 1492 | OK | 2026-11-21 14:24:00 retrouvée (66 départs proposés) |
+| chamonix (dimanche) | chamonix-bus.zip | 1492 | OK | 2026-11-22 06:33:00 retrouvée (56 départs proposés) |
+| proximiti | proximiti-bonneville.zip | 317 | ÉCHEC | aucune course dans l’emprise sur 8 jours |
+| mobivals (semaine) | mobivals-valserhone.zip | 1200 | OK | 2026-11-19 07:53:00 retrouvée (7 départs proposés) |
+| mobivals (samedi) | mobivals-valserhone.zip | 1200 | OK | 2026-11-21 08:45:00 retrouvée (90 départs proposés) |
+| tra (semaine) | tra-albertville.zip | 372 | OK | 2026-11-19 06:43:00 retrouvée (19 départs proposés) |
+| tra (samedi) | tra-albertville.zip | 372 | OK | 2026-11-21 07:23:00 retrouvée (9 départs proposés) |
+| duobus (semaine) | duobus-oyonnax.zip | 225 | OK | 2026-11-19 06:10:00 retrouvée (40 départs proposés) |
+| duobus (samedi) | duobus-oyonnax.zip | 225 | OK | 2026-11-21 09:15:00 retrouvée (10 départs proposés) |
+| ruban (semaine) | ruban-bourgoin.zip | 1898 | OK | 2026-11-19 06:59:00 retrouvée (1 départs proposés) |
+| ruban (samedi) | ruban-bourgoin.zip | 1898 | OK | 2026-11-21 07:00:00 retrouvée (60 départs proposés) |
+| lva (semaine) | lva-vienne.zip | 11125 | OK | 2026-11-19 07:09:00 retrouvée (4 départs proposés) |
+| lva (samedi) | lva-vienne.zip | 11125 | OK | 2026-11-21 17:21:00 retrouvée (29 départs proposés) |
+| lva (dimanche) | lva-vienne.zip | 11125 | OK | 2026-11-22 08:10:00 retrouvée (7 départs proposés) |
+| colibri (semaine) | colibri-miribel.zip | 64 | OK | 2026-11-19 06:01:00 retrouvée (48 départs proposés) |
+| colibri (samedi) | colibri-miribel.zip | 64 | OK | 2026-11-21 07:23:00 retrouvée (16 départs proposés) |
+| tico (semaine) | tico-montluel.zip | 22 | OK | 2026-11-19 11:00:00 retrouvée (11 départs proposés) |
+| saonibus (semaine) | saonibus-trevoux.zip | 55 | OK | 2026-11-19 07:25:00 retrouvée (14 départs proposés) |
+| cars_express (semaine) | cars-region-express.zip | 450 | OK | 2026-11-19 16:25:00 retrouvée (6 départs proposés) |
+| cars_express (samedi) | cars-region-express.zip | 450 | OK | 2026-11-21 16:25:00 retrouvée (4 départs proposés) |
+| cars_express (dimanche) | cars-region-express.zip | 450 | OK | 2026-11-22 16:25:00 retrouvée (4 départs proposés) |
+| cars_loire (semaine) | cars-region-loire.zip | 2169 | OK | 2026-11-19 17:05:00 retrouvée (1 départs proposés) |
+| cars_loire (samedi) | cars-region-loire.zip | 2169 | OK | 2026-11-21 12:06:00 retrouvée (2 départs proposés) |
+| cars_loire (dimanche) | cars-region-loire.zip | 2169 | OK | 2026-11-22 16:05:00 retrouvée (2 départs proposés) |
+| cars_drome (semaine) | cars-region-drome.zip | 1414 | OK | 2026-11-19 16:05:00 retrouvée (2 départs proposés) |
+| cars_drome (samedi) | cars-region-drome.zip | 1414 | OK | 2026-11-21 12:15:00 retrouvée (2 départs proposés) |
+| cars_drome (dimanche) | cars-region-drome.zip | 1414 | OK | 2026-11-22 09:00:00 retrouvée (6 départs proposés) |
+| cars_ardeche (semaine) | cars-region-ardeche.zip | 1764 | OK | 2026-11-19 13:32:00 retrouvée (4 départs proposés) |
+| cars_ardeche (samedi) | cars-region-ardeche.zip | 1764 | OK | 2026-11-21 13:32:00 retrouvée (2 départs proposés) |
+| cars_ardeche (dimanche) | cars-region-ardeche.zip | 1764 | OK | 2026-11-22 16:15:00 retrouvée (4 départs proposés) |
+| cars_allier (semaine) | cars-region-allier.zip | 928 | OK | 2026-11-19 18:15:00 retrouvée (1 départs proposés) |
+| cars_allier (samedi) | cars-region-allier.zip | 928 | OK | 2026-11-21 10:45:00 retrouvée (1 départs proposés) |
+| cars_allier (dimanche) | cars-region-allier.zip | 928 | OK | 2026-11-22 16:45:00 retrouvée (2 départs proposés) |
+| cars_cantal (semaine) | cars-region-cantal.zip | 239 | OK | 2026-11-19 18:12:00 retrouvée (4 départs proposés) |
+| cars_cantal (samedi) | cars-region-cantal.zip | 239 | OK | 2026-11-21 08:10:00 retrouvée (3 départs proposés) |
+| cars_cantal (dimanche) | cars-region-cantal.zip | 239 | OK | 2026-11-22 10:55:00 retrouvée (2 départs proposés) |
+| cars_haute_loire (semaine) | cars-region-haute-loire.zip | 247 | OK | 2026-11-19 06:50:00 retrouvée (2 départs proposés) |
+| cars_haute_loire (samedi) | cars-region-haute-loire.zip | 247 | OK | 2026-11-21 12:20:00 retrouvée (2 départs proposés) |
+| cars_haute_loire (dimanche) | cars-region-haute-loire.zip | 247 | OK | 2026-11-22 17:00:00 retrouvée (1 départs proposés) |
+| coqueligo (semaine) | coqueligo-annonay.zip | 368 | OK | 2026-11-19 08:12:00 retrouvée (28 départs proposés) |
+| coqueligo (samedi) | coqueligo-annonay.zip | 368 | OK | 2026-11-21 14:05:00 retrouvée (14 départs proposés) |
+| toutenbus (semaine) | toutenbus-aubenas.zip | 209 | OK | 2026-11-19 06:53:00 retrouvée (30 départs proposés) |
+| toutenbus (samedi) | toutenbus-aubenas.zip | 209 | OK | 2026-11-21 06:53:00 retrouvée (26 départs proposés) |
+| transcab (semaine) | transcab-aurillac.zip | 1627 | OK | 2026-11-19 15:18:00 retrouvée (192 départs proposés) |
+| transcab (samedi) | transcab-aurillac.zip | 1627 | OK | 2026-11-21 15:14:00 retrouvée (32 départs proposés) |
+| transcab (dimanche) | transcab-aurillac.zip | 1627 | OK | 2026-11-22 09:05:00 retrouvée (2 départs proposés) |
+| montelibus (semaine) | montelibus-montelimar.zip | 1250 | OK | 2026-11-19 17:28:00 retrouvée (8 départs proposés) |
+| montelibus (samedi) | montelibus-montelimar.zip | 1250 | OK | 2026-11-21 06:25:00 retrouvée (12 départs proposés) |
+| montelibus (dimanche) | montelibus-montelimar.zip | 1250 | OK | 2026-11-22 15:03:00 retrouvée (8 départs proposés) |
+| maelis (semaine) | maelis-montlucon.zip | 661 | OK | 2026-11-19 06:23:00 retrouvée (116 départs proposés) |
+| maelis (samedi) | maelis-montlucon.zip | 661 | OK | 2026-11-21 07:30:00 retrouvée (24 départs proposés) |
+| maelis (dimanche) | maelis-montlucon.zip | 661 | OK | 2026-11-22 19:10:00 retrouvée (21 départs proposés) |
+| aleo (semaine) | aleo-moulins.zip | 767 | OK | 2026-11-19 18:05:00 retrouvée (16 départs proposés) |
+| aleo (samedi) | aleo-moulins.zip | 767 | OK | 2026-11-21 16:06:00 retrouvée (76 départs proposés) |
+| tcap (semaine) | tcap-privas.zip | 272 | OK | 2026-11-19 13:20:00 retrouvée (40 départs proposés) |
+| tcap (samedi) | tcap-privas.zip | 272 | OK | 2026-11-21 18:00:00 retrouvée (14 départs proposés) |
+| velay (semaine) | velay-le-puy.zip | 1196 | OK | 2026-11-19 07:33:00 retrouvée (22 départs proposés) |
+| velay (samedi) | velay-le-puy.zip | 1196 | OK | 2026-11-21 13:55:00 retrouvée (28 départs proposés) |
+| rlv (semaine) | rlv-riom.zip | 473 | OK | 2026-11-19 06:31:00 retrouvée (26 départs proposés) |
+| rlv (samedi) | rlv-riom.zip | 473 | OK | 2026-11-21 08:01:00 retrouvée (13 départs proposés) |
+| rlv (dimanche) | rlv-riom.zip | 473 | OK | 2026-11-22 15:40:00 retrouvée (16 départs proposés) |
+| star_roanne (semaine) | star-roanne.zip | 4153 | OK | 2026-11-19 10:48:00 retrouvée (16 départs proposés) |
+| star_roanne (samedi) | star-roanne.zip | 4153 | OK | 2026-11-21 11:56:00 retrouvée (50 départs proposés) |
+| star_roanne (dimanche) | star-roanne.zip | 4153 | OK | 2026-11-22 09:08:00 retrouvée (3 départs proposés) |
+| lebus (semaine) | lebus-tain-tournon.zip | 99 | OK | 2026-11-19 06:21:00 retrouvée (20 départs proposés) |
+| lebus (samedi) | lebus-tain-tournon.zip | 99 | OK | 2026-11-21 12:20:00 retrouvée (12 départs proposés) |
+| lebus (dimanche) | lebus-tain-tournon.zip | 99 | OK | 2026-11-22 17:44:00 retrouvée (2 départs proposés) |
+| smtut (semaine) | smtut-thiers.zip | 355 | OK | 2026-11-19 06:33:00 retrouvée (38 départs proposés) |
+| smtut (samedi) | smtut-thiers.zip | 355 | OK | 2026-11-21 10:45:00 retrouvée (30 départs proposés) |
+| mobivie (semaine) | mobivie-vichy.zip | 753 | OK | 2026-11-19 12:26:00 retrouvée (12 départs proposés) |
+| mobivie (samedi) | mobivie-vichy.zip | 753 | OK | 2026-11-21 12:26:00 retrouvée (12 départs proposés) |
+| mobivie (dimanche) | mobivie-vichy.zip | 753 | OK | 2026-11-22 10:00:00 retrouvée (10 départs proposés) |
+| le37 (semaine) | le37-roussillon.zip | 108 | OK | 2026-11-19 17:45:00 retrouvée (10 départs proposés) |
+| le37 (samedi) | le37-roussillon.zip | 108 | OK | 2026-11-21 17:45:00 retrouvée (10 départs proposés) |
+| citea (semaine) | citea-valence.zip | 17672 | OK | 2026-11-19 16:57:00 retrouvée (76 départs proposés) |
+| citea (samedi) | citea-valence.zip | 17672 | OK | 2026-11-21 08:46:00 retrouvée (160 départs proposés) |
+| citea (dimanche) | citea-valence.zip | 17672 | OK | 2026-11-22 18:37:00 retrouvée (13 départs proposés) |
+| stas (semaine) | stas-saint-etienne.zip | 20409 | OK | 2026-11-19 06:46:00 retrouvée (182 départs proposés) |
+| stas (samedi) | stas-saint-etienne.zip | 20409 | OK | 2026-11-21 06:10:00 retrouvée (184 départs proposés) |
+| stas (dimanche) | stas-saint-etienne.zip | 20409 | OK | 2026-11-22 09:18:00 retrouvée (40 départs proposés) |
+| t2c (semaine) | t2c-clermont.zip | 8452 | OK | 2026-11-19 06:30:00 retrouvée (414 départs proposés) |
+| t2c (samedi) | t2c-clermont.zip | 8452 | OK | 2026-11-21 17:02:00 retrouvée (414 départs proposés) |
+| t2c (dimanche) | t2c-clermont.zip | 8452 | OK | 2026-11-22 09:35:00 retrouvée (46 départs proposés) |
+| sncf_ter (semaine) | national-sncf-aura.zip | 9522 | OK | 2026-11-19 11:38:00 retrouvée (25 départs proposés) |
+| sncf_ter (samedi) | national-sncf-aura.zip | 9522 | OK | 2026-11-21 11:38:00 retrouvée (12 départs proposés) |
+| sncf_ter (dimanche) | national-sncf-aura.zip | 9522 | OK | 2026-11-22 17:41:00 retrouvée (6 départs proposés) |
 
 ## Proxim iTi (Bonneville – La Roche) : réseau non couvert (18/11/2026)
 
-Aucun fichier GTFS à jour n'est publié : le jeu « GTFS réseau Proxim iTi au 14-12-2025 » (data.gouv.fr, mis en ligne le 18/05/2026) s'arrête fin avril 2026 ; l'ancien jeu officiel (2024) est vide et date d'avant les changements d'août 2026 (lignes 370/470). Le réseau reste donc exclu des résultats tant qu'un fichier valide n'est pas publié ; à revoir chaque lundi.
+Aucun fichier GTFS à jour n'est publié : le jeu « GTFS réseau Proxim iTi au 14-12-2025 » (data.gouv.fr, mis en ligne le 18/05/2026) s'arrête fin avril 2026 ; l'ancien jeu officiel (2024) est vide et date d'avant les changements d'août 2026 (lignes 370/470). Le réseau reste exclu tant qu'un fichier valide n'est pas publié ; à revoir chaque lundi.

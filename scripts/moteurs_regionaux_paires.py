@@ -17,9 +17,10 @@ for id_,file,b in nets:
     trips=rd('trips.txt');st={}
     for t in rd('stop_times.txt'): st.setdefault(t['trip_id'],[]).append(t)
     inb=lambda q:b[0]<=q[0]<=b[2] and b[1]<=q[1]<=b[3]
-    found=None
-    for dd in range(7):
-        d=start+datetime.timedelta(dd)
+    founds={}
+    for dd in range(8):
+        d=start+datetime.timedelta(dd);cls='semaine' if d.weekday()<5 else ('samedi' if d.weekday()==5 else 'dimanche')
+        if cls in founds:continue
         for t in trips:
             if not active(t['service_id'],d):continue
             s=sorted(st.get(t['trip_id'],[]),key=lambda x:int(x['stop_sequence']))
@@ -27,8 +28,8 @@ for id_,file,b in nets:
             a,c=stops[s[0]['stop_id']],stops[s[-1]['stop_id']]
             if not(inb(a) and inb(c)) or abs(a[0]-c[0])+abs(a[1]-c[1])<0.01:continue
             if not('06:00:00'<=s[0]['departure_time']<='20:00:00'):continue
-            found={'date':d.isoformat(),'from':{'lat':a[0],'lon':a[1]},'to':{'lat':c[0],'lon':c[1]},'dep':s[0]['departure_time']};break
-        if found:break
-    out.append({'id':id_,'file':file,'trips':len(trips),**(found or {'error':'aucune course dans l’emprise sur 7 jours'})})
+            founds[cls]={'date':d.isoformat(),'jour':cls,'from':{'lat':a[0],'lon':a[1]},'to':{'lat':c[0],'lon':c[1]},'dep':s[0]['departure_time']};break
+    if not founds: out.append({'id':id_,'file':file,'trips':len(trips),'error':'aucune course dans l’emprise sur 8 jours'})
+    for f in founds.values(): out.append({'id':id_,'file':file,'trips':len(trips),**f})
 json.dump(out,open(sys.argv[1],'w'))
 print(len(out),[o['id']+': '+o['error'] for o in out if 'error' in o])
