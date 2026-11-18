@@ -86,7 +86,7 @@ FILTERED_MIRROR = [
      'bounds': [43.55, 7.0, 43.9, 7.5], 'download_limit': 60 * 1024 * 1024},
     # RTM Marseille : 69 Mo décompressés (51 000 courses) → centre-ville + courses des 45 prochains jours seulement.
     {'id': 'rtm-marseille', 'network': 'RTM (Marseille)', 'url': 'https://transport.data.gouv.fr/resources/39589/download',
-     'bounds': [43.2, 5.3, 43.38, 5.5], 'horizon_days': 45, 'download_limit': 60 * 1024 * 1024},
+     'bounds': [43.25, 5.33, 43.34, 5.46], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
     {'id': 'tcl-lyon', 'network': 'TCL', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8',
      'bounds': [45.74, 4.81, 45.77, 4.87], 'download_limit': 60 * 1024 * 1024},
     {'id': 'citea-valence', 'network': 'Citéa (Valence Romans Mobilités)',
@@ -277,6 +277,12 @@ def extract(z, spec):
             if f:
                 write_table(out, cal, f, [r for r in rows if r['service_id'] in service_ids])
         f, rows = read_table(z, 'feed_info.txt')
+        write_table(out, 'stops.txt', sfields, stops)
+        for cal in ('calendar.txt', 'calendar_dates.txt'):
+            f, rows = read_table(z, cal)
+            if f:
+                write_table(out, cal, f, [r for r in rows if r['service_id'] in service_ids])
+        f, rows = read_table(z, 'feed_info.txt')
         if f:
             write_table(out, 'feed_info.txt', f, rows)
         # Tarifs officiels du producteur, limités aux lignes/agences extraites.
@@ -378,6 +384,12 @@ def filter_by_bounds(z, spec):
         write_table(out, 'agency.txt', afields, keep_ag)
         write_table(out, 'routes.txt', rfields, routes)
         write_table(out, 'trips.txt', tfields, trips)
+        if spec.get('slim'):
+            # Colonnes facultatives vides ou à leur valeur par défaut : retirées pour alléger le flux.
+            defaults = {'pickup_type': {'', '0'}, 'drop_off_type': {'', '0'}, 'timepoint': {'', '1'},
+                        'stop_headsign': {''}, 'shape_dist_traveled': {''}}
+            drop = {c for c, ok in defaults.items() if c in stfields and all((r.get(c) or '') in ok for r in times)}
+            stfields = [c for c in stfields if c not in drop]
         write_table(out, 'stop_times.txt', stfields, times)
         write_table(out, 'stops.txt', sfields, stops)
         for cal in ('calendar.txt', 'calendar_dates.txt'):
