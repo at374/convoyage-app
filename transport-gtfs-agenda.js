@@ -77,6 +77,10 @@ const BASE_RESOURCES=Object.freeze([Object.freeze({
  id:'cars-region-isere',datasetId:'cars-region-isere',network:'Cars Région Isère',format:'GTFS',url:LOCAL_GTFS('cars-region-isere.zip'),broad:true,
  bounds:[44.69,4.74,45.89,6.36],timeZone:'Europe/Paris'
 }),Object.freeze({
+ id:'cars-region-haute-savoie',datasetId:'cars-region-haute-savoie',network:'Cars Région Haute-Savoie',format:'GTFS',url:LOCAL_GTFS('cars-region-haute-savoie.zip'),broad:true,
+ // Faucigny / Giffre / Chablais (Cluses, Taninges, Morzine, Samoëns) : lignes à la demande Y92, Y93, Y94.
+ bounds:[45.90,6.30,46.30,6.85],timeZone:'Europe/Paris'
+}),Object.freeze({
  id:'cars-region-savoie',datasetId:'cars-region-savoie',network:'Cars Région Savoie',format:'GTFS',url:LOCAL_GTFS('cars-region-savoie.zip'),broad:true,
  // Savoie seulement (Annecy et la Haute-Savoie exclues).
  bounds:[45.05,5.62,45.80,7.19],timeZone:'Europe/Paris'

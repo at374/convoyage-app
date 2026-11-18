@@ -53,8 +53,8 @@ class T(unittest.TestCase):
             r = subprocess.run([sys.executable, '-I', os.path.join(ROOT, 'scripts', 'build_regional_gtfs.py'), '--aggregate', agg, '--out', out, '--offline'], capture_output=True, text=True)
             self.assertEqual(r.returncode, 0, r.stderr)
             m = json.load(open(os.path.join(out, 'manifest.json'), encoding='utf-8'))
-            self.assertEqual(sorted(m['networks']), ['cars-region-isere', 'cars-region-savoie', 'jybus-rumilly', 'tam-amberieu'])
-            self.assertEqual(m['networks']['cars-region-savoie']['agencies'], ['Cars Région Savoie'], 'Haute-Savoie exclue')
+            self.assertEqual(sorted(m['networks']), ['cars-region-haute-savoie', 'cars-region-isere', 'cars-region-savoie', 'jybus-rumilly', 'tam-amberieu'])
+            self.assertEqual(m['networks']['cars-region-savoie']['agencies'], ['Cars Région Savoie'], 'Haute-Savoie à part (extraite dans son propre fichier)')
             with zipfile.ZipFile(os.path.join(out, 'jybus-rumilly.zip')) as z:
                 trips = z.read('trips.txt').decode()
                 self.assertIn('T1', trips); self.assertNotIn('T6', trips, 'TCL non recopié')
