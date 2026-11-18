@@ -777,6 +777,7 @@ function makeProviders(r,opts={}){
    ['libebus_salon','Libébus (Salon-de-Provence)','libebus-salon.zip',[43.41,4.93,43.77,5.37]],
    ['agglobus_aubagne',"Lignes de l'Agglo (Aubagne)",'agglobus-aubagne.zip',[43.25,5.48,43.45,5.75]],
    ['ulysse_istres','Ulysse (Istres, Fos, Miramas)','ulysse-istres.zip',[43.31,4.77,43.72,5.46]],
+   ['tedbus_draguignan','TEDbus (Draguignan, Dracénie)','tedbus-draguignan.zip',[43.3,6.2,43.7,6.7]],
    ['rtca_carcassonne','RTCA (Carcassonne Agglo)','rtca-carcassonne.zip',[43.0,2.1,43.45,2.75]],
    ['sam_sete','Sète Agglopôle Mobilité','sam-sete.zip',[43.25,3.45,43.57,3.87]],
    ['tisseo_toulouse','Tisséo (Toulouse)','tisseo-toulouse.zip',[43.37,1.13,43.85,1.71]],

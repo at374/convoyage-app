@@ -160,6 +160,7 @@ MIRROR = [
     {'id': 'libebus-salon', 'network': 'Libébus (Salon-de-Provence)', 'url': 'https://transport.data.gouv.fr/resources/39592/download', 'bounds': [43.41, 4.93, 43.77, 5.37]},
     {'id': 'agglobus-aubagne', 'network': "Lignes de l'Agglo (Aubagne)", 'url': 'https://transport.data.gouv.fr/resources/39598/download', 'bounds': [43.25, 5.48, 43.45, 5.75]},
     {'id': 'ulysse-istres', 'network': 'Ulysse (Istres, Fos, Miramas)', 'url': 'https://transport.data.gouv.fr/resources/39591/download', 'bounds': [43.31, 4.77, 43.72, 5.46]},
+    {'id': 'tedbus-draguignan', 'network': 'TEDbus (Draguignan, Dracénie)', 'url': 'https://transport.data.gouv.fr/resources/81758/download', 'bounds': [43.3, 6.2, 43.7, 6.7]},
     {'id': 'tisseo-toulouse', 'network': 'Tisséo (Toulouse)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/64318177-f5b5-4144-a6be-2d0f22d26c77', 'bounds': [43.45, 1.15, 43.85, 1.7]},
     {'id': 'mistral-toulon', 'network': 'Réseau Mistral (Toulon)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b0789d9e-5077-4124-b6b2-773353ada8cf', 'bounds': [43.0, 5.75, 43.25, 6.15]},
     {'id': 'aixenbus-aix', 'network': 'Aix en Bus', 'url': 'https://transport.data.gouv.fr/resources/39603/download', 'bounds': [43.45, 5.35, 43.65, 5.55]},

@@ -71,6 +71,17 @@ const GRIDS=[
   product:'Ticket unité (1 voyage)',
   validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.esterelcotedazur-lebus.fr/horaires/',
   checkedAt:'2026-11-18',flat:true},
+ // TEDbus (Draguignan) : ticket unitaire 1,40 € (page SNCF Connect du réseau, « même prix qu'au guichet »). Durée de validité non
+ // vérifiée : chaque trajet est compté séparément. Vérifié le 18/11/2026.
+ {network:'TEDbus',operatorPattern:'^tedbus\\b',modes:['Bus'],amount:1.40,currency:'EUR',
+  product:'Ticket unitaire',
+  validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.sncf-connect.com/catalogue/description/reseau-tedbus',
+  checkedAt:'2026-11-18',flat:true},
+ // Lignes de l'Agglo (Aubagne) : réseau (bus, cars, tramway) gratuit pour tous, sans titre ni validation (FAQ officielle du réseau).
+ {network:"Lignes de l'Agglo (Aubagne)",operatorPattern:"^lignes de l.agglo",modes:['Bus','Tram'],amount:0,currency:'EUR',
+  product:'Réseau gratuit (aucun titre requis)',
+  validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://lignes-agglo.fr/foire-aux-questions',
+  checkedAt:'2026-11-18',flat:true},
  // Aix en Bus (secteur urbain Aix, niveau tarifaire 2 de La Métropole Mobilité) : gamme tarifaire urbaine au 01/11/2026
  // (page fournie par le convoyeur) : 1 voyage & open payment 1,40 €, à bord 1,90 €, 24 h 4,60 €, 10 voyages 11 €.
  // Validité 1 h : durée de la grille Métropole (comme la RTM). Vérifié le 18/11/2026.

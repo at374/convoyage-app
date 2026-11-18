@@ -106,3 +106,9 @@ test('Envibus Antibes : ticket unitaire 1,00 € / 60 min',()=>{
  const f=G.fareFor(leg('Antibes gare','Sophia Antipolis','2026-11-19','Bus','Envibus (Antibes Sophia Antipolis)','2'));
  assert.equal(f.amount,1);assert.equal(f.validityMinutes,60);
 });
+test('TEDbus Draguignan 1,40 € et Lignes de l\'Agglo Aubagne gratuit',()=>{
+ const a=G.fareFor(leg('Draguignan gare','Les Arcs','2026-11-19','Bus','TEDbus (Draguignan, Dracénie)','1'));
+ assert.equal(a.amount,1.4);assert.equal(a.validityMinutes,null);
+ for(const m of ['Bus','Tram']){const b=G.fareFor(leg('Aubagne gare','La Bouilladisse','2026-11-19',m,"Lignes de l'Agglo (Aubagne)",'1'));
+  assert.equal(b.amount,0);}
+});
