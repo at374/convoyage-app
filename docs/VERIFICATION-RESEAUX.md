@@ -69,9 +69,9 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | mistral_toulon (semaine) | mistral-toulon.zip | 10559 | OK | 2026-11-19 10:00:00 retrouvée (30 départs proposés) |
 | mistral_toulon (samedi) | mistral-toulon.zip | 10559 | OK | 2026-11-21 10:00:00 retrouvée (30 départs proposés) |
 | mistral_toulon (dimanche) | mistral-toulon.zip | 10559 | OK | 2026-11-22 10:00:00 retrouvée (30 départs proposés) |
-| rtm_marseille (semaine) | rtm-marseille.zip | 51225 | OK | 2026-11-19 07:00:00 retrouvée (942 départs proposés) |
-| rtm_marseille (samedi) | rtm-marseille.zip | 51225 | OK | 2026-11-21 07:00:00 retrouvée (615 départs proposés) |
-| rtm_marseille (dimanche) | rtm-marseille.zip | 51225 | OK | 2026-11-22 06:30:00 retrouvée (42 départs proposés) |
+| rtm_marseille (semaine) | rtm-marseille.zip | 51057 | OK | 2026-11-19 07:00:00 retrouvée (942 départs proposés) |
+| rtm_marseille (samedi) | rtm-marseille.zip | 51057 | OK | 2026-11-21 07:00:00 retrouvée (615 départs proposés) |
+| rtm_marseille (dimanche) | rtm-marseille.zip | 51057 | OK | 2026-11-22 06:30:00 retrouvée (42 départs proposés) |
 | aixenbus_aix (semaine) | aixenbus-aix.zip | 6867 | OK | 2026-11-19 16:03:00 retrouvée (261 départs proposés) |
 | aixenbus_aix (samedi) | aixenbus-aix.zip | 6867 | OK | 2026-11-21 06:00:00 retrouvée (473 départs proposés) |
 | aixenbus_aix (dimanche) | aixenbus-aix.zip | 6867 | OK | 2026-11-22 10:05:00 retrouvée (63 départs proposés) |
