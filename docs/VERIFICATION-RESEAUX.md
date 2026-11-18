@@ -2,7 +2,7 @@
 
 Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**181 / 183 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**181 / 184 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -76,6 +76,7 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | aixenbus_aix (samedi) | aixenbus-aix.zip | 6867 | OK | 2026-11-21 06:00:00 retrouvée (473 départs proposés) |
 | aixenbus_aix (dimanche) | aixenbus-aix.zip | 6867 | OK | 2026-11-22 10:05:00 retrouvée (63 départs proposés) |
 | tam_montpellier | tam-montpellier.zip |  | ÉCHEC | fichier absent |
+| tam_suburbain_montpellier | tam-suburbain-montpellier.zip |  | ÉCHEC | fichier absent |
 | trema_macon (semaine) | trema-macon.zip | 6264 | OK | 2026-11-19 12:25:00 retrouvée (3 départs proposés) |
 | trema_macon (samedi) | trema-macon.zip | 6264 | OK | 2026-11-21 12:25:00 retrouvée (2 départs proposés) |
 | lio_occitanie_nord (semaine) | lio-occitanie-nord.zip | 452 | OK | 2026-11-19 11:45:00 retrouvée (2 départs proposés) |
