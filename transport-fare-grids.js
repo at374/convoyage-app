@@ -72,6 +72,12 @@ const GRIDS=[
   product:'1 voyage (open payment / appli, 1,90 € à bord), niveau 2 secteur Aix, 1 h',validityMinutes:60,
   validFrom:'2026-11-01',validUntil:'2027-06-30',source:'https://www.lametropolemobilite.fr/ — gamme tarifaire urbaine au 01/11/2026, niveau 2',
   checkedAt:'2026-11-18',flat:true},
+ // Palm Bus (Cannes Pays de Lérins) : page tarifs Palm Bus (transmise par le convoyeur) : Ticket 1 voyage 1,80 € (à bord, conducteur
+ // ou carte bancaire), validité 59 min, correspondance autorisée, aller-retour interdit. Vérifié le 18/11/2026.
+ {network:'Palm Bus',operatorPattern:'^palm\\s*bus',modes:['Bus'],amount:1.80,currency:'EUR',
+  product:'Ticket 1 voyage (à bord ou carte bancaire), 59 min, correspondance autorisée, aller-retour interdit',validityMinutes:59,
+  validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.palmbus.fr/ — tarifs Palm Bus, ticket 1 voyage',
+  checkedAt:'2026-11-18',flat:true},
  // M réso (Métropole grenobloise, Grésivaudan, Voironnais) : tarifs au 01/09/2026 (reso-m.fr) :
  // 1 voyage 2,00 € valable 1 h sur tout M réso, correspondances et retours compris ; 2,60 € à bord.
  // 2,00 € est toujours un prix valable ; un trajet entièrement intra-Grésivaudan peut coûter 1,00 €.
