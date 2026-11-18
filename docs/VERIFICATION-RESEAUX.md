@@ -2,7 +2,7 @@
 
 Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**199 / 200 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**205 / 207 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -63,15 +63,22 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | alesy_ales (semaine) | alesy-ales.zip | 1602 | OK | 2026-11-19 06:22:00 retrouvée (117 départs proposés) |
 | alesy_ales (samedi) | alesy-ales.zip | 1602 | OK | 2026-11-21 06:22:00 retrouvée (60 départs proposés) |
 | alesy_ales (dimanche) | alesy-ales.zip | 1602 | OK | 2026-11-22 14:00:00 retrouvée (2 départs proposés) |
-| sankeo_perpignan (semaine) | sankeo-perpignan.zip | 7355 | OK | 2026-11-19 08:05:00 retrouvée (41 départs proposés) |
-| sankeo_perpignan (samedi) | sankeo-perpignan.zip | 7355 | OK | 2026-11-21 07:18:00 retrouvée (18 départs proposés) |
-| sankeo_perpignan (dimanche) | sankeo-perpignan.zip | 7355 | OK | 2026-11-22 09:16:00 retrouvée (16 départs proposés) |
+| sankeo_perpignan (semaine) | sankeo-perpignan.zip | 7355 | OK | 2026-11-19 06:48:00 retrouvée (16 départs proposés) |
+| sankeo_perpignan (samedi) | sankeo-perpignan.zip | 7355 | OK | 2026-11-21 06:51:00 retrouvée (12 départs proposés) |
+| sankeo_perpignan (dimanche) | sankeo-perpignan.zip | 7355 | OK | 2026-11-22 08:59:00 retrouvée (5 départs proposés) |
 | beemob_beziers (semaine) | beemob-beziers.zip | 3382 | OK | 2026-11-19 07:30:00 retrouvée (14 départs proposés) |
 | beemob_beziers (samedi) | beemob-beziers.zip | 3382 | OK | 2026-11-21 06:00:00 retrouvée (48 départs proposés) |
-| beemob_beziers (dimanche) | beemob-beziers.zip | 3382 | OK | 2026-11-22 10:25:05 retrouvée (24 départs proposés) |
+| beemob_beziers (dimanche) | beemob-beziers.zip | 3382 | OK | 2026-11-22 06:40:00 retrouvée (13 départs proposés) |
 | citibus_narbonne (semaine) | citibus-narbonne.zip | 9815 | OK | 2026-11-19 17:20:00 retrouvée (47 départs proposés) |
 | citibus_narbonne (samedi) | citibus-narbonne.zip | 9815 | OK | 2026-11-21 08:18:00 retrouvée (23 départs proposés) |
 | citibus_narbonne (dimanche) | citibus-narbonne.zip | 9815 | OK | 2026-11-22 08:08:00 retrouvée (66 départs proposés) |
+| rtca_carcassonne (semaine) | rtca-carcassonne.zip | 1183 | OK | 2026-11-19 07:08:00 retrouvée (41 départs proposés) |
+| rtca_carcassonne (samedi) | rtca-carcassonne.zip | 1183 | OK | 2026-11-21 06:43:00 retrouvée (21 départs proposés) |
+| rtca_carcassonne (dimanche) | rtca-carcassonne.zip | 1183 | OK | 2026-11-22 09:15:00 retrouvée (10 départs proposés) |
+| sam_sete (semaine) | sam-sete.zip | 1554 | OK | 2026-11-19 06:50:00 retrouvée (6 départs proposés) |
+| sam_sete (samedi) | sam-sete.zip | 1554 | OK | 2026-11-21 07:00:00 retrouvée (114 départs proposés) |
+| sam_sete (dimanche) | sam-sete.zip | 1554 | OK | 2026-11-22 09:20:00 retrouvée (9 départs proposés) |
+| envibus_antibes | envibus-antibes.zip |  | ÉCHEC | fichier absent |
 | tisseo_toulouse (semaine) | tisseo-toulouse.zip | 33790 | OK | 2026-11-19 13:10:27 retrouvée (412 départs proposés) |
 | tisseo_toulouse (samedi) | tisseo-toulouse.zip | 33790 | OK | 2026-11-21 15:19:19 retrouvée (289 départs proposés) |
 | tisseo_toulouse (dimanche) | tisseo-toulouse.zip | 33790 | OK | 2026-11-22 18:05:49 retrouvée (193 départs proposés) |
@@ -87,9 +94,9 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | palmbus_cannes (semaine) | palmbus-cannes.zip | 28323 | OK | 2026-11-19 06:00:00 retrouvée (325 départs proposés) |
 | palmbus_cannes (samedi) | palmbus-cannes.zip | 28323 | OK | 2026-11-21 06:00:00 retrouvée (326 départs proposés) |
 | palmbus_cannes (dimanche) | palmbus-cannes.zip | 28323 | OK | 2026-11-22 06:24:00 retrouvée (126 départs proposés) |
-| lignes_azur_nice (semaine) | lignes-azur-nice.zip | 23761 | OK | 2026-11-19 06:46:00 retrouvée (176 départs proposés) |
-| lignes_azur_nice (samedi) | lignes-azur-nice.zip | 23761 | OK | 2026-11-21 10:55:00 retrouvée (24 départs proposés) |
-| lignes_azur_nice (dimanche) | lignes-azur-nice.zip | 23761 | OK | 2026-11-22 17:05:00 retrouvée (40 départs proposés) |
+| lignes_azur_nice (semaine) | lignes-azur-nice.zip | 23761 | OK | 2026-11-19 10:25:00 retrouvée (72 départs proposés) |
+| lignes_azur_nice (samedi) | lignes-azur-nice.zip | 23761 | OK | 2026-11-21 10:10:00 retrouvée (100 départs proposés) |
+| lignes_azur_nice (dimanche) | lignes-azur-nice.zip | 23761 | OK | 2026-11-22 09:35:00 retrouvée (52 départs proposés) |
 | rtm_marseille (semaine) | rtm-marseille.zip | 48171 | OK | 2026-11-19 07:00:00 retrouvée (357 départs proposés) |
 | rtm_marseille (samedi) | rtm-marseille.zip | 48171 | OK | 2026-11-21 07:00:00 retrouvée (270 départs proposés) |
 | rtm_marseille (dimanche) | rtm-marseille.zip | 48171 | OK | 2026-11-22 06:30:00 retrouvée (42 départs proposés) |
