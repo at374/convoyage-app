@@ -2,7 +2,7 @@
 
 Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**184 / 185 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**187 / 188 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -25,9 +25,9 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | mreso_grenoble (semaine) | mreso-grenoble.zip | 19362 | OK | 2026-11-19 07:20:00 retrouvée (42 départs proposés) |
 | mreso_grenoble (samedi) | mreso-grenoble.zip | 19362 | OK | 2026-11-21 08:57:00 retrouvée (298 départs proposés) |
 | mreso_grenoble (dimanche) | mreso-grenoble.zip | 19362 | OK | 2026-11-22 07:44:00 retrouvée (8 départs proposés) |
-| mreso_gresivaudan (semaine) | mreso-gresivaudan.zip | 1630 | OK | 2026-11-19 13:30:00 retrouvée (20 départs proposés) |
-| mreso_gresivaudan (samedi) | mreso-gresivaudan.zip | 1630 | OK | 2026-11-21 11:00:00 retrouvée (17 départs proposés) |
-| mreso_gresivaudan (dimanche) | mreso-gresivaudan.zip | 1630 | OK | 2026-11-22 16:05:00 retrouvée (2 départs proposés) |
+| mreso_gresivaudan (semaine) | mreso-gresivaudan.zip | 1070 | OK | 2026-11-19 10:00:00 retrouvée (35 départs proposés) |
+| mreso_gresivaudan (samedi) | mreso-gresivaudan.zip | 1070 | OK | 2026-11-21 19:00:00 retrouvée (17 départs proposés) |
+| mreso_gresivaudan (dimanche) | mreso-gresivaudan.zip | 1070 | OK | 2026-11-22 17:35:00 retrouvée (2 départs proposés) |
 | ondea (semaine) | ondea-grand-lac.zip | 2290 | OK | 2026-11-19 07:40:00 retrouvée (4 départs proposés) |
 | ondea (samedi) | ondea-grand-lac.zip | 2290 | OK | 2026-11-21 06:51:00 retrouvée (54 départs proposés) |
 | ondea (dimanche) | ondea-grand-lac.zip | 2290 | OK | 2026-11-22 09:05:00 retrouvée (11 départs proposés) |
@@ -78,6 +78,9 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | palmbus_cannes (semaine) | palmbus-cannes.zip | 28323 | OK | 2026-11-19 06:00:00 retrouvée (325 départs proposés) |
 | palmbus_cannes (samedi) | palmbus-cannes.zip | 28323 | OK | 2026-11-21 06:00:00 retrouvée (326 départs proposés) |
 | palmbus_cannes (dimanche) | palmbus-cannes.zip | 28323 | OK | 2026-11-22 06:24:00 retrouvée (126 départs proposés) |
+| lignes_azur_nice (semaine) | lignes-azur-nice.zip | 24095 | OK | 2026-11-19 06:46:00 retrouvée (176 départs proposés) |
+| lignes_azur_nice (samedi) | lignes-azur-nice.zip | 24095 | OK | 2026-11-21 10:55:00 retrouvée (24 départs proposés) |
+| lignes_azur_nice (dimanche) | lignes-azur-nice.zip | 24095 | OK | 2026-11-22 17:05:00 retrouvée (40 départs proposés) |
 | trema_macon (semaine) | trema-macon.zip | 6264 | OK | 2026-11-19 12:25:00 retrouvée (3 départs proposés) |
 | trema_macon (samedi) | trema-macon.zip | 6264 | OK | 2026-11-21 12:25:00 retrouvée (2 départs proposés) |
 | lio_occitanie_nord (semaine) | lio-occitanie-nord.zip | 452 | OK | 2026-11-19 11:45:00 retrouvée (2 départs proposés) |
