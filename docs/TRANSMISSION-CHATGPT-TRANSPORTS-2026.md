@@ -403,3 +403,12 @@ J'ai aussi fait tourner la suite complète (`node --test tests/*.test.cjs`, 743 
 4. **TCL** : tarifs confirmés (voir ci-dessus), mais reste à vérifier par un diagnostic téléphone réel (ex. Ambérieu → Lyon Part-Dieu) que la bbox Part-Dieu/Bellecour/Perrace est effectivement exercée par une mission utile — au moment du relevé du 13/11, cet axe ne sollicitait pas encore TCL.
 
 Historique complet : commits `2ba2ce6`, `6e6f369`, `54d73ae`, `11775f6`, `8573921`, `201d58e`, `4ad6c97`, `aa5d5c1`, `fc7bd65` sur cette branche.
+
+## Mise à jour du 18/11/2026 — réseaux du sud et prix des billets
+
+Réseaux ajoutés (GTFS dans `data/gtfs`, vérifiés semaine/samedi/dimanche) : Nîmes (Tango), Alès (Ales'y), Toulouse (Tisséo), Toulon (Mistral), Aix en Bus, Montpellier (TaM), Cannes (Palmbus), Nice (Lignes d'Azur), Marseille (RTM, emprise centrale seulement). Proxim iTi (Bonneville) : aucun flux récent, non couvert.
+
+Prix ajoutés dans `transport-fare-grids.js` (grilles officielles fournies par le convoyeur, source + date de contrôle dans chaque entrée) :
+RTM 2,00 € (1 h) ; Lignes d'Azur 1,70 € (74 min) ; Tisséo 1,90 € (1 h) ; TaM 2,10 € (1 h 30) ; Tango 1,40 € (1 h, valable jusqu'au 31/12/2026) ; Mistral bus 1,40 € (validité inconnue, chaque trajet compté séparément) ; Aix en Bus niveau 2 1,40 € (1 h) ; Palm Bus 1,80 € (59 min) ; Ales'y par zone (zone 1 = 1,10 € / 1 h ; zone 2 ou entre zones = 1,80 € / 1 h 30), zones lues dans `zone_id` du GTFS.
+Règle : jamais de prix sans grille officielle ; un prix unique faux (cas Ales'y zone 2) est pire qu'« à confirmer ».
+Durées affichées en « h min » partout (heures et minutes, y compris la marche).
