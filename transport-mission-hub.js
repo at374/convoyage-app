@@ -770,6 +770,7 @@ function makeProviders(r,opts={}){
    ['tisseo_toulouse','Tisséo (Toulouse)','tisseo-toulouse.zip',[43.45,1.15,43.85,1.7]],
    ['mistral_toulon','Réseau Mistral (Toulon)','mistral-toulon.zip',[43.0,5.75,43.25,6.15]],
    ['aixenbus_aix','Aix en Bus','aixenbus-aix.zip',[43.45,5.35,43.65,5.55]],
+   ['tam_montpellier','TaM (Montpellier, urbain et suburbain)','tam-montpellier.zip',[43.45,3.5,43.95,4.15]],
    ['trema_macon','TréMA (Mâcon)','trema-macon.zip',[46.2,4.7,46.5,5.0]],
    ['lio_occitanie_nord','liO Occitanie (Gard, Lozère)','lio-occitanie-nord.zip',[44.0,3.3,44.95,4.7]],
    ['mobigo_bfc_jura','Mobigo Bourgogne-Franche-Comté (Jura)','mobigo-bfc-jura.zip',[46.2,5.3,47.1,6.3]],
