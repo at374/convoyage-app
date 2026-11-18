@@ -170,6 +170,15 @@ function attachGTFSFares(feed,rows,F=root.CPGTFSFares){
  return rows.map(row=>!row?row:Array.isArray(row.legs)&&row.legs.length?{...row,legs:row.legs.map(l=>({...l,gtfsFare:l.gtfsFare||one(l)}))}:
   {...row,gtfsFare:row.gtfsFare||one(row)});
 }
+// Consignes de réservation d'un transport à la demande selon le réseau (sources : fiches horaires et sites des réseaux, 18/11/2026).
+function bookingNote(nets){
+ const n=String(nets||'');
+ if(/ginko/i.test(n))return '📞 transport à la demande Ginko : à réserver jusqu’à la veille avant 18 h, sur ginko.voyage ou au 03 70 27 71 60 (lundi–samedi 7 h–19 h) ; pas de réservation le dimanche et les jours fériés pour le lendemain';
+ if(/divia/i.test(n))return '📞 transport à la demande Divia : compte à créer au préalable (appli « Divia à la demande », divia.fr ou 03 80 11 29 29, lundi–samedi 7 h–19 h) ; délai exact de réservation à confirmer auprès de Divia';
+ if(/mobigo/i.test(n))return '📞 transport à la demande Mobigo : à réserver à l’avance, au plus tard la veille ; renseignements et réservation au 03 80 11 29 29 ; délai et numéro exacts sur la fiche horaire de la ligne';
+ if(/haute[- ]savoie|y9[234]/i.test(n))return '📞 transport à la demande : à réserver 24 h à l’avance (la veille avant 16 h ; le vendredi avant 16 h pour un lundi) au 04 8000 7000';
+ return '📞 transport à la demande : à réserver à l’avance (numéro et délai sur la fiche horaire de la ligne, repérer le petit téléphone)';
+}
 function fromGTFS(rows,network='Réseau local'){
  // A single GTFS vehicle trip may appear through dozens of nearby boarding/alighting
  // stop pairs. Keep the shortest straight-line access + egress candidate per trip
@@ -213,7 +222,7 @@ function fromGTFS(rows,network='Réseau local'){
    // Static GTFS proves a scheduled service, not its live operation.
    // Never label the itinerary as confirmed until a live source validates it.
    missing:['horaire GTFS local non confirmé en temps réel',
-    ...(r.onDemand?['📞 transport à la demande : à réserver 24 h à l’avance (la veille avant 16 h ; le vendredi avant 16 h pour un lundi) au 04 8000 7000']:[]),
+    ...(r.onDemand?[bookingNote([r.network,network,...(r.legs||[]).filter(l=>l&&l.onDemand).map(l=>l.network)].filter(Boolean).join(' '))]:[]),
     ...(r.searchTruncated?['recherche des correspondances incomplète']:[])]};
  });
 }
