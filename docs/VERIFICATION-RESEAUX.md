@@ -2,7 +2,7 @@
 
 Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**190 / 191 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**199 / 200 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -63,6 +63,15 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | alesy_ales (semaine) | alesy-ales.zip | 1602 | OK | 2026-11-19 06:22:00 retrouvée (117 départs proposés) |
 | alesy_ales (samedi) | alesy-ales.zip | 1602 | OK | 2026-11-21 06:22:00 retrouvée (60 départs proposés) |
 | alesy_ales (dimanche) | alesy-ales.zip | 1602 | OK | 2026-11-22 14:00:00 retrouvée (2 départs proposés) |
+| sankeo_perpignan (semaine) | sankeo-perpignan.zip | 7355 | OK | 2026-11-19 08:05:00 retrouvée (41 départs proposés) |
+| sankeo_perpignan (samedi) | sankeo-perpignan.zip | 7355 | OK | 2026-11-21 07:18:00 retrouvée (18 départs proposés) |
+| sankeo_perpignan (dimanche) | sankeo-perpignan.zip | 7355 | OK | 2026-11-22 09:16:00 retrouvée (16 départs proposés) |
+| beemob_beziers (semaine) | beemob-beziers.zip | 3382 | OK | 2026-11-19 07:30:00 retrouvée (14 départs proposés) |
+| beemob_beziers (samedi) | beemob-beziers.zip | 3382 | OK | 2026-11-21 06:00:00 retrouvée (48 départs proposés) |
+| beemob_beziers (dimanche) | beemob-beziers.zip | 3382 | OK | 2026-11-22 10:25:05 retrouvée (24 départs proposés) |
+| citibus_narbonne (semaine) | citibus-narbonne.zip | 9815 | OK | 2026-11-19 17:20:00 retrouvée (47 départs proposés) |
+| citibus_narbonne (samedi) | citibus-narbonne.zip | 9815 | OK | 2026-11-21 08:18:00 retrouvée (23 départs proposés) |
+| citibus_narbonne (dimanche) | citibus-narbonne.zip | 9815 | OK | 2026-11-22 08:08:00 retrouvée (66 départs proposés) |
 | tisseo_toulouse (semaine) | tisseo-toulouse.zip | 33790 | OK | 2026-11-19 13:10:27 retrouvée (412 départs proposés) |
 | tisseo_toulouse (samedi) | tisseo-toulouse.zip | 33790 | OK | 2026-11-21 15:19:19 retrouvée (289 départs proposés) |
 | tisseo_toulouse (dimanche) | tisseo-toulouse.zip | 33790 | OK | 2026-11-22 18:05:49 retrouvée (193 départs proposés) |
