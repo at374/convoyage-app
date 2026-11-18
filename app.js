@@ -2176,7 +2176,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       // une plateforme qui annonce une arrivée « dès » une date antérieure au départ est ramenée au départ.
       const deliveryStartFloor = (() => { const d = Date.parse(orig.delivery_start || ''), p = Date.parse(orig.pickup_start || ''); if (!Number.isFinite(d)) return null;
         if (!Number.isFinite(p)) return d; const h = Number(orig.duree_h || m.duree_h); const floor = p + (Number.isFinite(h) && h > 0 && h < 24 ? h * 3600000 : 0); return Math.max(d, floor); })();
-      const pickupEndIso = okT(orig.pickup_end) && okT(pickupDate) && Date.parse(orig.pickup_end) > Date.parse(pickupDate) ? new Date(Date.parse(orig.pickup_end)).toISOString() : null;
+      // Hiflow n'annonce pas de fin de prise en charge : on peut prendre le véhicule dès l'heure indiquée, et jusqu'à
+      // (fin de livraison − durée du trajet). Sans cela, arriver 4 min après l'heure de début était refusé (18/11/2026).
+      const pickupEndImplicit = (() => { if (okT(orig.pickup_end) || !okT(pickupDate) || !/hiflow/i.test(String(orig.platform || m.platform || '')) || !okT(orig.delivery_end)) return null;
+        const h = Number(orig.duree_h || m.duree_h); if (!(h > 0 && h < 24)) return null;
+        const t = Date.parse(orig.delivery_end) - h * 3600000; return t > Date.parse(pickupDate) + 15 * 60000 ? new Date(t).toISOString() : null; })();
+      const pickupEndIso = okT(orig.pickup_end) && okT(pickupDate) && Date.parse(orig.pickup_end) > Date.parse(pickupDate) ? new Date(Date.parse(orig.pickup_end)).toISOString() : pickupEndImplicit;
       const deliveryStartIso = !transportPlannedReturn && deliveryStartFloor !== null && okT(orig.delivery_end) && Date.parse(orig.delivery_end) > deliveryStartFloor ? new Date(deliveryStartFloor + securityMarginMin * 60000).toISOString() : null;
       const deliveryEndMs = deliveryStartIso ? Date.parse(orig.delivery_end) + securityMarginMin * 60000 : null;
       const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
