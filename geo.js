@@ -202,8 +202,7 @@
   }
   // Demande de Laurent (18/11/2026) : toute mission « Aéroport de Genève – Secteur France » ou à Ferney-Voltaire utilise
   // le point GPS du parking des loueurs (P21) donné par lui : 46.237722, 6.117667. Prioritaire sur tout autre point.
-  // Précision (18/11/2026) : quand le véhicule est livré À l'aéroport (arrivée de la mission), c'est l'entrée directe des retours
-  // des loueurs : 46.232278, 6.110413 ; au départ de la mission, le parking P21.
+  // Même point GPS (parking P21) pour prendre en charge et pour livrer. L'entrée des retours (46.232278, 6.110413) n'est pas utilisée.
   const GENEVE_SECTEUR_FRANCE = { lat: 46.237722, lng: 6.117667 };
   const GENEVE_ENTREE_RETOURS = { lat: 46.232278, lng: 6.110413 };
   const estSecteurFranceGeneve = (m, cote) => {
@@ -212,7 +211,7 @@
     return /ferney[\s-]*voltaire/.test(t) || (/secteur\s+france/.test(t) && /geneve/.test(t));
   };
   function coordonnees(m, cote) {
-    if (estSecteurFranceGeneve(m, cote)) { const pt = cote === 'destination' ? GENEVE_ENTREE_RETOURS : GENEVE_SECTEUR_FRANCE; return { lat: pt.lat, lng: pt.lng, precision: 'gps' }; }
+    if (estSecteurFranceGeneve(m, cote)) { const pt = GENEVE_SECTEUR_FRANCE;   // même point pour la prise en charge et la livraison (précision de Laurent, 18/11/2026) return { lat: pt.lat, lng: pt.lng, precision: 'gps' }; }
     const p = m[cote]; const pre = cote === 'origin' ? 'from' : 'to';
     if (p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng)) && p.lat !== null && p.lng !== null && Math.abs(p.lat) <= 90 && Math.abs(p.lng) <= 180 && !(Number(p.lat) === 0 && Number(p.lng) === 0)) {
       // V307 : adresse numérotée trouvée par le service officiel à plus de 150 m du GPS de la plateforme (ex. 1040 route de Bellegarde, Epagny) : le point officiel est retenu.
