@@ -64,6 +64,11 @@ test('Palm Bus Cannes : ticket 1 voyage 1,80 € / 59 min',()=>{
  const f=G.fareFor(leg('Gare de Cannes','Hôtel de Ville','2026-11-19','Bus','Palmbus (Cannes Pays de Lérins)','1'));
  assert.equal(f.amount,1.8);assert.equal(f.validityMinutes,59);assert.match(f.source,/palmbus/);
 });
-test("Ales'y Alès : pas de prix unique (zone 1 / zone 2 à distinguer)",()=>{
- assert.equal(G.fareFor(leg('Alès gare','Centre','2026-11-19','Bus',"Ales'y (Alès)",'A')),null);
+test("Ales'y Alès : zone 1 = 1,10 €, zone 2 ou entre zones = 1,80 € (zones du GTFS)",()=>{
+ const A="Ales'y (Alès)";
+ const f1=G.fareFor(leg('Huit Mai','Mons','2026-11-19','Bus',A,'1'));assert.equal(f1.amount,1.1);assert.equal(f1.validityMinutes,60);
+ const f2=G.fareFor(leg('Euzet','Euzet','2026-11-19','Bus',A,'410'));assert.equal(f2.amount,1.8);assert.equal(f2.validityMinutes,90);
+ const f3=G.fareFor(leg('Mons','Euzet','2026-11-19','Bus',A,'1'));assert.equal(f3.amount,1.8);
+ assert.equal(G.fareFor(leg('Inconnu','Mons','2026-11-19','Bus',A,'1')),null);
+ assert.equal(G.fareFor(leg('Huit Mai','Mons','2026-11-17','Bus',A,'1')),null);
 });

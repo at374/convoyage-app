@@ -367,9 +367,125 @@ function startInterzoneFare(leg){
  return {amount:2.20,currency:'EUR',network:"STAR'T zones A+B",validityMinutes:60,
   source:"STAR'T · ticket 1 heure tout public A+B · https://www.star-t.fr/titres-abonnements/titres-abonnements (vérifié le 13/11/2026)"};
 }
+// Ales'Y (Alès) : zones tarifaires lues dans le GTFS officiel du réseau (champ zone_id des arrêts, zone 1 = centre, zone 2 = périphérie).
+// Nom d'arrêt homonyme dans les deux zones => zone 2 (prudent). Source : data/gtfs/alesy-ales.zip, vérifié le 18/11/2026.
+const ALESY_Z1=new Set([
+ 'a schenk|abbaye|acacias|alensac|alep|allemandes|alumni|amandiers|ampere|andre gide|arbousset|',
+ 'archives municipales|ardon|artes|aubessas|auvergne|av albert 1er|avene|badaras|bar chateau|barbusse|',
+ 'bartassade|bas bresis|bas pras|bassine|bertine|bilina|billot|blanas|boisset et gaujac|boissier sauvages|',
+ 'bonnefont|boutons or|bouzac|brabo|brigade|brissac|brussieres|bvd louis blanc|c bernard|cabries|cachin|cambons|',
+ 'cameyras|campnebout|camus|cap cevennes|cardonnieres|carmentramen|carnot|carrefour|carride|casanova|castellot|',
+ 'caussonille|cauvas|cauvel|cavalas|cavalerie|cavalier|cazevielle|celas|centr ales|cerisiers|cevennes|',
+ 'cfa mejannes|ch d avene|ch de vales|ch des martyrs|ch des rouves|ch du planas|ch du pont|chabrier|chalets|',
+ 'chanteclair|chantilly|charriere|chataigniers|chene blanc|chenes rouges|chirac|chopin|churchill|cibel|',
+ 'cimetiere 1|cimetiere 2|cite camont|cite peri|city|clair logis|clara|clavieres|clos villard|coiras|',
+ 'college diderot|college dumas|college florian|college moulin|colombier|conilheres|cornadel|coubertin|courlas|',
+ 'courtin|cris ca|croix clementine|croix de bauzon|croix de fauvie|croupillac|cypres|dabias|daudet bellevue|',
+ 'daufes|delaune|dhombres|drulhes|dumas|ecluse|ecole cendras|ecole des mines|ecole rousson|ecole st martin de v|',
+ 'eglantiers|eglise tamaris|entree sud|erables|ermitage|estrangladou|euzieres|faverolles|ferme aux abeilles|',
+ 'feverol|florian|font bastide|font vive|fontaine|fontvieille|forges|freres lumiere|g brassens|g peri|g sand|',
+ 'gagarine|gare routiere|gare routiere quai a|gare routiere quai b|gare routiere quai c|gare routiere quai d|',
+ 'gare routiere quai e|gare sncf|gascut|gatef|gayettes|genets|gevaudan|gibertine|giono|goubert|grabieux|granat|',
+ 'grand rue j moulin|grimoux|guibert|h boucher|halles de l abbaye|hameau du viget|haut bresis|hopital|',
+ 'hotel de ville|huit mai|impots|j brel|j curie|j guesde|j moulin|j perrin|j renard|j vales|j verne|jacquande|',
+ 'jalabert|jardins|jardins de monteze|jeanne d arc|josse|l aire|l escale|l olm|la baronne|la barriere|la baume|',
+ 'la blaquiere|la burguerine|la carride|la colline|la coste|la draille|la fare alais|la foret|la gigaliere|',
+ 'la jasse bernard|la legue|la loubiere|la luquette|la miraillette|la recherche|la royale|la serre|la source|',
+ 'la tourette|labahou|lacan|lacan 2|lafayette|lamourier|landers|lariasse|larnede|las paouzes|laurian|',
+ 'lavabreille|lavoisier|le brouzet|le chateau|le cratere|le deves|le devois|le grand devois|le lionnais|',
+ 'le marche|le mas|le mineur|le plot|le provencal|le puech arnaguet|le quai|le ranquet|le rieu|le soulier|',
+ 'lefebvre|leo lagrange|leprince ringuet|les amandiers|les astries|les blacous|les bleuets|les chenes|',
+ 'les chevaux|les christollines|les combes|les cotes|les elzieres|les escarieux|les espinaux|les frenes|',
+ 'les gourts|les jonquieres|les lauriers|les mares|les muriers|les olivettes|les oliviers|les pensions|',
+ 'les plantiers|les plos|les pras|les pres|les serres|les sorbiers|levreau|liberation|lycee jb dumas|',
+ 'lycee prevert|magnanarelles|mairie prim|maison pour tous|mal juin|maladreries|malataverne|malraux|mandela|',
+ 'mardilhon|marechal|margue|marignac|marmousets|marot|marronniers|mas bedosse|mas bregon|mas bruguier|mas cauvy|',
+ 'mas cevenol|mas chabert|mas clausel|mas d ayrolles|mas d hours|mas d olympie|mas de crante|mas de treve|',
+ 'mas justet|mas la garrigue|mas miger|mas rathier|mas ricaud|mas rouge|mas vidal|mazac|menudiere|mercier|',
+ 'mesanges|mimosas|mistral|monac|mons|montaud|monteze|montmoirac|moulin|moulin cevenol|moulin du juge|moulinet|',
+ 'muriers|myriapole|napoleon|narval|negadis|nicot|notre dame des pins|oliveraie|p a b|pailleras|panissiere|',
+ 'pansera|parc de brueges|parc expo|peguy|pelico|pelloutier|perdrix|perrache|perret|perusse|petit devois|',
+ 'peyremalle|peyrigoux|pierre plantee|pinsons|piscine|pist 4|place st jean|pont avene|pont d arene|pont d avene|',
+ 'pont neuf|pont sncf|pont vieux|poulverel|prairie|pre cevenol|pres rasclaux|prieur|primeveres|promelles|',
+ 'provence|puech long|pyramide|quartier auzas|quatre chemins|racine|raiol|rameau|ravel|redillon|redonnel|',
+ 'republique|rhone|ribot|rocade|rose des vents|roucaute|rouget de lisle|roussel|rouvegues|rouvierette|',
+ 'rue beauteville|rue de la meuniere|rue des mourgues|rue guynemer|rue lamartine|rue michelet|rue pablo picasso|',
+ 'rue sauvages|rue st vincent|rue stalingrad|ruisseau rouge|s allende|saut du loup|sauvagnac|sauve|sauvezon|',
+ 'serre blanc|serre des fonts|seuil d ales|severac|sicard|sidonie|silhol|silot|soleil|sous prefecture|',
+ 'square beltrame|st alban|st etienne|st georges|st raby|ste bernadette|sully|talabot|tamaris|tour vieille|',
+ 'transhumance|traouca|traverse|treillettes|trespaux|tribies|trois chenes|trouillas|val d arias|verau|vermeil|',
+ 'vermeillet|vieilles ecoles|vieux moulin|vignerons|vignette|vigouroux|vincent d indy|viradel|voutins|',
+ 'voutins expo|zephyre|zi traverse'
+].join('|').replace(/\|\|/g,'|').split('|'));
+const ALESY_Z2=new Set([
+ 'a france|a peyric|abeilleres|abribus|affenadou|agniel|aiguebelle|airolet|alauzene|algere|ancienne abbaye|',
+ 'antignargues|argentan|argilliers gare|arlinde|aubignac|aubrias|auzon croix|auzon rte ales|bambouseraie|',
+ 'baralys|barbe|barrage|bas bordezac|bastide mairie|bastides|baudenes|bayssac|beausejour|bedousse|bel air|',
+ 'bellevue|beraud|berbie|berguerolles|besseges|bezouts|blateiras|blateiras generargues|boissille|bordezac|',
+ 'boucherie|bouffaro|boulodrome|bouschets|briqueterie|brousses|brouzet|bruguerolle|bruguiere puech|',
+ 'cabanette bas|cabine telephonique|cabridies|cal|calade|camp figoux|camp long|camp ravin|camplogis|',
+ 'campsoureille|cantonade|carnoules|carreau de la mine|carrefour d39 d21|carrefour rte d ales|carriere|',
+ 'cassagnette|cassagnoles|castagno|castellas|cave|cave diassette|centre|ch de l olm|chambonredon camping|',
+ 'chamborigaud|champ de foire|champagnat|champclauson|charbes|charles bois|chateau|chatenet|cimetiere|',
+ 'cite carriere|cite foret|cite gare|clabades|clairac|clet meyrannes|clet passerelle|col d uglas|col du peras|',
+ 'college castellas|college deparcieux|college lapierre|college ledignan|conboules|condamine|corday 1|corday 2|',
+ 'corday lafayette sud|costes|costettes|cote de long|croisement|croisement bas|croisement haut|croix des vents|',
+ 'crouzet|crouzets|dansadou|danton|deaux|descente|devesoir|ecole affenadou|ecole aujac|ecole auzon|',
+ 'ecole brouzet les a|ecole castelnau v|ecole cruviers l|ecole de mialet|ecole generargues|ecole l affenadou|',
+ 'ecole la vernarede|ecole lasalle|ecole le buis|ecole le pontil|ecole le pradel|ecole massillargues a|',
+ 'ecole mialet|ecole navacelles|ecole petit villard|ecole st just et v|ecole st maurice de c|',
+ 'ecole ste cecile d a|ecole taillades|ecole thoiras corbes|ecole tornac|ecole venarede|ecoles des taillades|',
+ 'entree martgnargues|entree martignargues|epide|escamparas|esfiel|esperandieu|euzet|foirail|',
+ 'fontaine des mamans|fontanels|fontanilles|foussignargues|francisque|frigoule|gai soleil|gammal|gardonnenque|',
+ 'gare|gauzignan|gendarmerie|gornies|gounod|gourret|guillen|hangar des mines|hardy|haute levade e|',
+ 'haute levade o|henri barbusse|horloge|i borne|j callon|j delpuech|j frizon|jeu de paume|jeu du mail|l abrit|',
+ 'l aragon|l arboux|l astreau|l aubradou|l ayrolle|l elze|l hermet|l impostaire|l olivier|la bayte|la begude|',
+ 'la bruyere|la cabane|la canebiere|la cezarenque|la croisee|la droude|la fabrique|la favede lavoir|',
+ 'la font croutade|la frigoule|la grande terre|la jasse|la jasse station|la levade|la montagnette|la montee|',
+ 'la pertuiserie|la pise|la placette|la plaine|la poste|la tavernole|la tour|la valette|la vernarede|la vigere|',
+ 'la vignasse|la vigne|lafayette 2|lafayette 3|lafont croustade|lale|lamelouze|langevin|lardou|larnac|larriget|',
+ 'lascours|lauzette|lauziere|laval eglise|lavol|le buis|le campet|le figuier|le galissard|le lauret|le mathieu|',
+ 'le mazel|le moina|le moulinet|le paulin|le peras|le pistou|le plagnol|le planas|le portanier|le rhode|',
+ 'le rieusset|le roucan|le rouis|le rouvillon|le thau 1|le thau 2|le ventilateur|leo larguier|les abarines|',
+ 'les alegres|les appens|les arnasseaux|les arnauds|les bancels|les baraquettes|les bois|les bouzieres|',
+ 'les bouziges|les champs|les conques|les drouilhedes|les faisses|les fumades|les glycines|les grezes|les oules|',
+ 'les peupliers|les pins|les piolles|les plans|les platanes|les plots|les roches|les sources|lescruvielle|',
+ 'lestanier|liberte|luxeriere|luziers|lycee marie curie|m feydedie|m gonzales|madaspres|magagne|mages|',
+ 'magnanerie|maison de l eau|maisons blanches|malerargues|mallenches frontal|marcet|marronnier|martignargues|',
+ 'martinenches 1|martinet neuf escalier|martinet neuf sortie|maruejols les g|mas amouroux|mas benoit|',
+ 'mas de cardet|mas de l eglise|mas de l eyrolle|mas de lay|mas des chenes|mas flavard|mas icard|mas martinet|',
+ 'mas nadal|mas nicolas|mas pages|mas perche|mas ravin|mas rouveyrac|mas soubeyran|mas ste croix|mas sugier|',
+ 'massanes|massies nord|maternelle genolhac|mayestre|mazel|meilhen|meinquine|mercoiret|mercoirol|meyrannes|',
+ 'mialet|mikunda|montee lascours|monteils|moulin de beaux|moulin neuf|moulinas|musee du desert|nougarede|',
+ 'oree du bois|pallieres|palmesalade|parenove|pasteur|pastres|paussan|pegairolles|perdigones|picapoule|picasso|',
+ 'pied de coste|place|place colombier|place st jean de c|planette|plauzolles|pomier|pommeraie|pont d auzon|',
+ 'pont de l atelier|pont de la gare|pont de rastel 1|pont de rastel 2|pont de salindrenque|pont de salindres|',
+ 'pont des alegres|pont droude|pont troue|portal|portes|poujade|pradinas|puit thomas|quatre routes|quatre vents|',
+ 'r chabalier|r hermitant|ranc|rastel cimetiere|rastel sortie|ravat|raye|reigoux|remise|revety|revolution|rhode|',
+ 'riviere|rompue haute|ron traoucat|roquo peiro|roubarbel|rouvelongue|rouveyrolle|rouvieres|rte de genolhac|',
+ 'saillens haut|salle des fetes|salon de coiffure|sarrasin|savignargues|serre manie|sigoulette|sollier|',
+ 'sorrtie senechas|sortie senechas|souleirol|soustelle|st croix de c|st dezery|st etienne de l o|st julien de c|',
+ 'st paul la c|st sebastien d a|st simon|st theodorit|stade|stribick|suzon|tapet|temple|thelisse|thibon blanc|',
+ 'tilleul|tilleuls|titoune|traslissard|trescol eglise|trescol mosquee|trois ours|trois perdrix|trois routes|',
+ 'v hugo|vacquieres|valat brousses|van gogh|vendras|vernarede|viaduc|vidourle|vieilles fumades|vigiere|',
+ 'vignaners|villa bechard|villaret bas|villaret serre|vivi'
+].join('|').replace(/\|\|/g,'|').split('|'));
+function alesyFare(leg){
+ if(!leg||leg.kind==='walk'||!/^ales.?y\b/i.test(String(leg.provider||'').trim()))return null;
+ const day=typeof leg.departure==='string'?leg.departure.slice(0,10):'';
+ if(day<'2026-11-18'||day>'2027-06-30')return null;
+ const norm=s=>String(typeof s==='string'?s:(s&&typeof s==='object'?(s.name||s.stopName||s.label||''):'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+ const zone=s=>ALESY_Z2.has(s)?2:(ALESY_Z1.has(s)?1:0);
+ const za=zone(norm(leg.from)),zb=zone(norm(leg.to));
+ if(!za||!zb)return null;
+ const src="https://www.alesy.fr/ — Ales’Y, titres occasionnels (zone 1 : 1,10 € 1 h ; zone 2 et trajet entre les 2 zones : 1,80 € 1 h 30)";
+ if(za===1&&zb===1)return {amount:1.10,currency:'EUR',network:"Ales'Y zone 1",validityMinutes:60,source:src};
+ return {amount:1.80,currency:'EUR',network:"Ales'Y zone 2 / entre zones",validityMinutes:90,source:src};
+}
 function fareFor(leg,grids){
  if(!Array.isArray(grids))grids=GRIDS;
  const zoned=officialZoneFare(leg);if(zoned)return zoned;
+ const alesy=alesyFare(leg);if(alesy)return alesy;
  const leman=lemanPassFare(leg);if(leman)return leman;
  const startZ=startZoneFare(leg);if(startZ)return startZ;
  const startAB=startInterzoneFare(leg);if(startAB)return startAB;
