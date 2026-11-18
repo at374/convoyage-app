@@ -28,3 +28,22 @@ test('Sibra Annecy : le prix du ticket (2,00 €, 1 h) est connu pour le réseau
  }
  assert.equal(G.fareFor(leg('HOPITAL','ARCAL\'OZ','2026-11-19','Bus','Sibra Annecyx','2')),null);
 });
+test('RTM Marseille : ticket Solo 2,00 € (grille RTM du 01/11/2026), rien avant la date ni pour un car',()=>{
+ for(const m of ['Bus','Tram','Métro']){const f=G.fareFor(leg('Vieux-Port','Castellane','2026-11-19',m,'RTM (Marseille)','M1'));
+  assert.equal(f.amount,2);assert.equal(f.validityMinutes,60);assert.match(f.source,/DOPEX 11\/26/);}
+ assert.equal(G.fareFor(leg('Vieux-Port','Castellane','2026-10-30','Bus','RTM (Marseille)','21')),null);
+ assert.equal(G.fareFor(leg('Marseille','Aix','2026-11-19','Car','RTM (Marseille)','50')),null);
+});
+test("Lignes d'Azur Nice : Solo 1,70 € / 74 min (guide octobre 2026), rien avant la date",()=>{
+ for(const m of ['Bus','Tram']){const f=G.fareFor(leg('Jean Médecin','Gare Thiers','2026-11-19',m,"Lignes d'Azur (Nice)",'T1'));
+  assert.equal(f.amount,1.7);assert.equal(f.validityMinutes,74);assert.match(f.source,/lignesdazur\.com/);}
+ assert.equal(G.fareFor(leg('Jean Médecin','Gare Thiers','2026-09-20','Tram',"Lignes d'Azur (Nice)",'T1')),null);
+});
+test('Tisséo Toulouse : 1 déplacement 1,90 € / 60 min (e-boutique Tisséo)',()=>{
+ for(const m of ['Bus','Tram','Métro']){const f=G.fareFor(leg('Capitole','Jean Jaurès','2026-11-19',m,'Tisséo (Toulouse)','A'));
+  assert.equal(f.amount,1.9);assert.equal(f.validityMinutes,60);assert.match(f.source,/eboutique\.tisseo\.fr/);}
+});
+test('TaM Montpellier : Ticket 1h30 2,10 €',()=>{
+ for(const m of ['Bus','Tram']){const f=G.fareFor(leg('Odysseum','Comédie','2026-11-19',m,'TaM (Montpellier, urbain et suburbain)','1'));
+  assert.equal(f.amount,2.1);assert.equal(f.validityMinutes,90);assert.match(f.source,/tam-voyages/);}
+});

@@ -24,6 +24,34 @@ const GRIDS=[
   product:'1 voyage (achat digital ou rechargement ; 2,50 € à bord), 1 h correspondances comprises',validityMinutes:60,
   validFrom:'2026-07-01',validUntil:'2027-06-30',source:'https://www.sibra.fr/app/uploads/2026/07/Reglement_BUS_CARS_CGV_01072026_3.pdf',
   checkedAt:'2026-11-13',flat:true},
+ // RTM (Marseille, zone bleue : Marseille, Allauch, Plan-de-Cuques, Septèmes) : grille officielle RTM « DOPEX 11/26 »
+ // en vigueur au 01/11/2026 (PDF fourni par le convoyeur, tout public) : ticket Solo 2,00 € (sans carte), 1,60 € avec
+ // recharge sur lacarte, 2,50 € à bord du bus ; valable 1 h en correspondance (grille RTM : « validable 1h en correspondance »).
+ // Prix retenu : Solo 2,00 € (toujours disponible, sans support). Vérifié le 18/11/2026.
+ {network:'RTM',operatorPattern:'^rtm\\b',modes:['Bus','Tram','Métro'],amount:2.00,currency:'EUR',
+  product:'ticket Solo 1 voyage (1,60 € sur lacarte, 2,50 € à bord), 1 h correspondances comprises, zone bleue',validityMinutes:60,
+  validFrom:'2026-11-01',validUntil:'2027-06-30',source:'https://www.rtm.fr/ — grille tarifaire RTM DOPEX 11/26 en vigueur au 01/11/2026',
+  checkedAt:'2026-11-18',flat:true},
+ // Lignes d'Azur (Nice, tram + bus urbains) : « Guide des tarifs » édition octobre 2026 (PDF fourni par le convoyeur) :
+ // Solo 1 voyage 1,70 € (téléphone / carte), 2,00 € Solo Secours à bord ; correspondances dans les 74 min après la 1re validation.
+ // Hors lignes à tarification spécifique (aéroport, interurbain Ticket Azur 2,50 €). Vérifié le 18/11/2026.
+ {network:"Lignes d'Azur",operatorPattern:'^lignes d.azur\\b',modes:['Bus','Tram'],amount:1.70,currency:'EUR',
+  product:'Solo 1 voyage (2,00 € à bord), correspondances 74 min, lignes urbaines hors tarification spécifique',validityMinutes:74,
+  validFrom:'2026-10-01',validUntil:'2027-06-30',source:'https://www.lignesdazur.com/ — Guide des tarifs Lignes d\u2019Azur, édition octobre 2026',
+  checkedAt:'2026-11-18',flat:true},
+ // Tisséo (Toulouse, métro/tram/bus/téléphérique) : e-boutique Tisséo « 1 déplacement » tout public 1,90 € (ticket, carte ou
+ // carte bancaire) ; 2,50 € « dernière minute ». Un déplacement = jusqu'à 4 lignes en 1 h après la 1re validation
+ // (CGVU Tisséo, art. IV). Vérifié le 18/11/2026 (page transmise par le convoyeur).
+ {network:'Tisséo',operatorPattern:'^tiss[ée]o\\b',modes:['Bus','Tram','Métro'],amount:1.90,currency:'EUR',
+  product:'1 déplacement tout public (2,50 € dernière minute), 1 h, 4 lignes maximum',validityMinutes:60,
+  validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://eboutique.tisseo.fr/fr/produits/1-deplacement-pour-tous-occ',
+  checkedAt:'2026-11-18',flat:true},
+ // TaM (Montpellier, tram + bus) : tickets individuels (page TaM transmise par le convoyeur) : Ticket 1h30 2,10 €,
+ // valable 1h30 dès l'achat sur tout le réseau. Vérifié le 18/11/2026.
+ {network:'TaM',operatorPattern:'^tam\\b',modes:['Bus','Tram'],amount:2.10,currency:'EUR',
+  product:'Ticket 1h30 (4 h : 3,80 € ; 24 h : 6,50 €), tout le réseau TaM',validityMinutes:90,
+  validFrom:'2026-11-18',validUntil:'2027-06-30',source:'https://www.tam-voyages.com/ — tickets individuels TaM, Ticket 1h30',
+  checkedAt:'2026-11-18',flat:true},
  // M réso (Métropole grenobloise, Grésivaudan, Voironnais) : tarifs au 01/09/2026 (reso-m.fr) :
  // 1 voyage 2,00 € valable 1 h sur tout M réso, correspondances et retours compris ; 2,60 € à bord.
  // 2,00 € est toujours un prix valable ; un trajet entièrement intra-Grésivaudan peut coûter 1,00 €.
