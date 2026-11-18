@@ -67,9 +67,13 @@ jobs:
             git commit -m "Update official national AURA GTFS slices (no commercial fares)"
             # Other transport diagnostics may commit while the feed is downloading.
             # Replay this data-only commit on the latest remote tip; never force-push.
-            git fetch origin "${GITHUB_REF_NAME}"
-            git rebase "origin/${GITHUB_REF_NAME}"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
+            for essai in 1 2 3; do
+              git fetch origin "${GITHUB_REF_NAME}"
+              git rebase "origin/${GITHUB_REF_NAME}"
+              git push origin "HEAD:${GITHUB_REF_NAME}" && break
+              [ "$essai" = 3 ] && exit 1
+              sleep 5
+            done
             if [ "${GITHUB_REF_NAME}" = "main" ]; then gh api --method POST "repos/${GITHUB_REPOSITORY}/pages/builds" || true; fi
           fi
       - name: Conserver le rapport et les extraits sans déploiement

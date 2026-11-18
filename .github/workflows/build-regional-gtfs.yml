@@ -41,5 +41,12 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'Refresh regional GTFS extracts and mirrors'
           # Publie sur la branche qui a déclenché la tâche (jamais main depuis une branche de travail).
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          # Une autre tâche de données peut publier en même temps : on se replace sur la dernière version (jamais de force-push).
+          for essai in 1 2 3; do
+            git fetch origin "${GITHUB_REF_NAME}"
+            git rebase "origin/${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}" && break
+            [ "$essai" = 3 ] && exit 1
+            sleep 5
+          done
           if [ "${GITHUB_REF_NAME}" = "main" ]; then gh api --method POST "repos/${GITHUB_REPOSITORY}/pages/builds" || true; fi
