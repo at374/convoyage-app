@@ -84,7 +84,9 @@ FILTERED_MIRROR = [
     # Nice : le zip d'origine est en ZIP64 (illisible sur le téléphone) → recompressé via le filtre d'emprise.
     {'id': 'lignes-azur-nice', 'network': "Lignes d'Azur (Nice)", 'url': 'https://transport.data.gouv.fr/resources/83178/download',
      'bounds': [43.55, 7.0, 43.9, 7.5], 'download_limit': 60 * 1024 * 1024},
-    # RTM Marseille retiré le 18/11/2026 : 69 Mo décompressés (51 000 courses), trop lourd pour le téléphone — à alléger avant de le rebrancher.
+    # RTM Marseille : 69 Mo décompressés (51 000 courses) → centre-ville + courses des 45 prochains jours seulement.
+    {'id': 'rtm-marseille', 'network': 'RTM (Marseille)', 'url': 'https://transport.data.gouv.fr/resources/39589/download',
+     'bounds': [43.2, 5.3, 43.38, 5.5], 'horizon_days': 45, 'download_limit': 60 * 1024 * 1024},
     {'id': 'tcl-lyon', 'network': 'TCL', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8',
      'bounds': [45.74, 4.81, 45.77, 4.87], 'download_limit': 60 * 1024 * 1024},
     {'id': 'citea-valence', 'network': 'Citéa (Valence Romans Mobilités)',
@@ -295,6 +297,30 @@ def extract(z, spec):
     return data, {'agencies': [a.get('agency_name') for a in keep_ag], 'routes': len(routes), 'trips': len(trips), 'stops': len(stops), 'fares': bool(ff)}
 
 
+def trips_active_within(z, days):
+    """Identifiants des courses dont le service circule au moins un jour dans les `days` prochains jours."""
+    today = datetime.date.today()
+    window = {(today + datetime.timedelta(d)).strftime('%Y%m%d') for d in range(days)}
+    weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+    active = set()
+    _, cal = read_table(z, 'calendar.txt')
+    for c in cal:
+        for d in window:
+            if c['start_date'] <= d <= c['end_date']:
+                dt = datetime.datetime.strptime(d, '%Y%m%d')
+                if c.get(weekdays[dt.weekday()]) == '1':
+                    active.add(c['service_id'])
+                    break
+    _, cd = read_table(z, 'calendar_dates.txt')
+    removed = {}
+    for r in cd:
+        if r['date'] in window:
+            if r['exception_type'] == '1':
+                active.add(r['service_id'])
+    _, trips = read_table(z, 'trips.txt')
+    return {t['trip_id'] for t in trips if t['service_id'] in active}
+
+
 def filter_by_bounds(z, spec):
     """Réduit un flux GTFS mono-opérateur à une zone géographique (bbox sur les arrêts), pour les flux
     trop volumineux pour être recopiés tels quels (ex. TCL). Contrairement à extract(), le filtre
@@ -317,8 +343,14 @@ def filter_by_bounds(z, spec):
     if not in_zone:
         return None, 'aucun arrêt dans la zone géographique'
     stfields, times = read_table(z, 'stop_times.txt')
+    active_trips = None
+    if spec.get('horizon_days'):
+        # Flux trop lourd : on ne garde que les courses circulant dans les N prochains jours (rafraîchi chaque semaine).
+        active_trips = trips_active_within(z, int(spec['horizon_days']))
     by_trip = {}
     for t in times:
+        if active_trips is not None and t['trip_id'] not in active_trips:
+            continue
         by_trip.setdefault(t['trip_id'], []).append(t)
     kept_trip_ids, times = set(), []
     for trip_id, rows in by_trip.items():
