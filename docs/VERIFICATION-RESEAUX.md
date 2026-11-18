@@ -2,7 +2,7 @@
 
 Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**163 / 164 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**181 / 183 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -54,9 +54,28 @@ Généré le 2026-11-18 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | agglo_bus_gap (samedi) | agglo-bus-gap.zip | 577 | OK | 2026-11-21 06:59:00 retrouvée (2 départs proposés) |
 | altigo_briancon (semaine) | altigo-briancon.zip | 288 | OK | 2026-11-19 08:10:00 retrouvée (2 départs proposés) |
 | altigo_briancon (samedi) | altigo-briancon.zip | 288 | OK | 2026-11-21 06:40:00 retrouvée (66 départs proposés) |
-| divia_dijon (semaine) | divia-dijon.zip | 31251 | OK | 2026-11-19 06:00:00 retrouvée (176 départs proposés) |
-| divia_dijon (samedi) | divia-dijon.zip | 31251 | OK | 2026-11-21 06:00:00 retrouvée (136 départs proposés) |
-| divia_dijon (dimanche) | divia-dijon.zip | 31251 | OK | 2026-11-22 13:29:00 retrouvée (60 départs proposés) |
+| divia_dijon (semaine) | divia-dijon.zip | 30235 | OK | 2026-11-19 06:00:00 retrouvée (176 départs proposés) |
+| divia_dijon (samedi) | divia-dijon.zip | 30235 | OK | 2026-11-21 06:20:00 retrouvée (120 départs proposés) |
+| divia_dijon (dimanche) | divia-dijon.zip | 30235 | OK | 2026-11-22 13:29:00 retrouvée (60 départs proposés) |
+| tango_nimes (semaine) | tango-nimes.zip | 14445 | OK | 2026-11-19 06:10:00 retrouvée (267 départs proposés) |
+| tango_nimes (samedi) | tango-nimes.zip | 14445 | OK | 2026-11-21 06:10:00 retrouvée (204 départs proposés) |
+| tango_nimes (dimanche) | tango-nimes.zip | 14445 | OK | 2026-11-22 07:00:00 retrouvée (78 départs proposés) |
+| alesy_ales (semaine) | alesy-ales.zip | 1602 | OK | 2026-11-19 06:22:00 retrouvée (117 départs proposés) |
+| alesy_ales (samedi) | alesy-ales.zip | 1602 | OK | 2026-11-21 06:22:00 retrouvée (60 départs proposés) |
+| alesy_ales (dimanche) | alesy-ales.zip | 1602 | OK | 2026-11-22 14:00:00 retrouvée (2 départs proposés) |
+| tisseo_toulouse (semaine) | tisseo-toulouse.zip | 33790 | OK | 2026-11-19 13:10:27 retrouvée (412 départs proposés) |
+| tisseo_toulouse (samedi) | tisseo-toulouse.zip | 33790 | OK | 2026-11-21 15:19:19 retrouvée (289 départs proposés) |
+| tisseo_toulouse (dimanche) | tisseo-toulouse.zip | 33790 | OK | 2026-11-22 18:05:49 retrouvée (193 départs proposés) |
+| mistral_toulon (semaine) | mistral-toulon.zip | 10559 | OK | 2026-11-19 10:00:00 retrouvée (30 départs proposés) |
+| mistral_toulon (samedi) | mistral-toulon.zip | 10559 | OK | 2026-11-21 10:00:00 retrouvée (30 départs proposés) |
+| mistral_toulon (dimanche) | mistral-toulon.zip | 10559 | OK | 2026-11-22 10:00:00 retrouvée (30 départs proposés) |
+| rtm_marseille (semaine) | rtm-marseille.zip | 51225 | OK | 2026-11-19 07:00:00 retrouvée (942 départs proposés) |
+| rtm_marseille (samedi) | rtm-marseille.zip | 51225 | OK | 2026-11-21 07:00:00 retrouvée (615 départs proposés) |
+| rtm_marseille (dimanche) | rtm-marseille.zip | 51225 | OK | 2026-11-22 06:30:00 retrouvée (42 départs proposés) |
+| aixenbus_aix (semaine) | aixenbus-aix.zip | 6867 | OK | 2026-11-19 16:03:00 retrouvée (261 départs proposés) |
+| aixenbus_aix (samedi) | aixenbus-aix.zip | 6867 | OK | 2026-11-21 06:00:00 retrouvée (473 départs proposés) |
+| aixenbus_aix (dimanche) | aixenbus-aix.zip | 6867 | OK | 2026-11-22 10:05:00 retrouvée (63 départs proposés) |
+| tam_montpellier | tam-montpellier.zip |  | ÉCHEC | fichier absent |
 | trema_macon (semaine) | trema-macon.zip | 6264 | OK | 2026-11-19 12:25:00 retrouvée (3 départs proposés) |
 | trema_macon (samedi) | trema-macon.zip | 6264 | OK | 2026-11-21 12:25:00 retrouvée (2 départs proposés) |
 | lio_occitanie_nord (semaine) | lio-occitanie-nord.zip | 452 | OK | 2026-11-19 11:45:00 retrouvée (2 départs proposés) |
