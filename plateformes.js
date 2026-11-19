@@ -108,15 +108,35 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
   // explicite : la case reste vide et la lecture reste manuelle tant qu'elle n'est pas remplie.
   function blocAutoHiflow() {
     return '<h2 style="margin-top:22px">Lecture automatique Hiflow (toutes les 10 min)</h2>' +
+      '<div class="cpPlatMsg" id="cpHfStatut">Vérification de l\'état…</div>' +
       '<p class="doux">Optionnel. Si tu remplis ces deux champs, un robot se connecte à Hiflow toutes les 10 minutes ' +
       '(même quand le téléphone est éteint) et met à jour tes missions sur le serveur. ' +
       '<b>Contrairement au bouton ci-dessus, ton mot de passe est alors enregistré, chiffré, uniquement pour ce robot.</b></p>' +
       '<input type="email" id="cpHfEmail" placeholder="E-mail Hiflow" autocomplete="off" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #3d321c;background:#221c12;color:#f3ead6;margin:6px 0;font-size:16px">' +
       '<input type="password" id="cpHfPass" placeholder="Mot de passe Hiflow" autocomplete="new-password" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #3d321c;background:#221c12;color:#f3ead6;margin:6px 0;font-size:16px">' +
-      '<button type="button" class="cpPlatBtn" id="cpHfActiver">Activer la lecture automatique</button>' +
+      '<button type="button" class="cpPlatBtn" id="cpHfActiver">Activer / mettre à jour</button>' +
+      '<button type="button" class="cpPlatBtn" id="cpHfDesactiver" style="display:none;margin-top:8px;background:#3d321c">Désactiver la lecture automatique</button>' +
       '<div class="cpPlatMsg" id="cpHfMsg"></div>';
   }
-  async function activerAutoHiflow(msgEl) {
+  async function majStatutAutoHiflow(c) {
+    const statutEl = c.querySelector('#cpHfStatut'), btnOff = c.querySelector('#cpHfDesactiver');
+    if (!statutEl) return;
+    try {
+      const rows = await http('/rest/v1/plateforme_identifiants?platform=eq.Hiflow&select=email,active,derniere_sync_at,derniere_sync_statut');
+      const r = rows && rows[0];
+      if (r && r.active) {
+        const sync = r.derniere_sync_at ? ('Dernière synchro : ' + new Date(r.derniere_sync_at).toLocaleString('fr-FR') + (r.derniere_sync_statut ? ' (' + r.derniere_sync_statut + ')' : '')) : 'Pas encore de synchro (première passe à venir, jusqu\'à 10 min).';
+        statutEl.innerHTML = '✅ Activé pour <b>' + r.email.replace(/</g, '&lt;') + '</b>. ' + sync;
+        statutEl.style.color = '#8fd38f';
+        if (btnOff) btnOff.style.display = '';
+      } else {
+        statutEl.textContent = 'Pas encore activé.';
+        statutEl.style.color = '';
+        if (btnOff) btnOff.style.display = 'none';
+      }
+    } catch (e) { statutEl.textContent = ''; }
+  }
+  async function activerAutoHiflow(msgEl, c) {
     const email = (document.getElementById('cpHfEmail') || {}).value || '';
     const pass = (document.getElementById('cpHfPass') || {}).value || '';
     if (!email || !pass) { msgEl.textContent = 'Renseigne l\'e-mail et le mot de passe.'; return; }
@@ -125,6 +145,15 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
       await http('/rest/v1/rpc/enregistrer_identifiant_plateforme', { method: 'POST', body: JSON.stringify({ p_platform: 'Hiflow', p_email: email, p_password: pass }) });
       msgEl.textContent = 'Activé. La première lecture automatique arrive dans les 10 minutes.';
       const pEl = document.getElementById('cpHfPass'); if (pEl) pEl.value = '';
+      if (c) await majStatutAutoHiflow(c);
+    } catch (e) { msgEl.textContent = 'Échec : ' + (e && e.message || 'erreur inconnue'); }
+  }
+  async function desactiverAutoHiflow(msgEl, c) {
+    msgEl.textContent = 'Désactivation…';
+    try {
+      await http('/rest/v1/plateforme_identifiants?platform=eq.Hiflow', { method: 'DELETE' });
+      msgEl.textContent = 'Lecture automatique désactivée.';
+      if (c) await majStatutAutoHiflow(c);
     } catch (e) { msgEl.textContent = 'Échec : ' + (e && e.message || 'erreur inconnue'); }
   }
   function carteReglages() {
@@ -136,7 +165,9 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
     c.innerHTML = '<h2>Mes plateformes</h2><p class="doux">Coche celles que tu utilises : l\'appli ne lit et n\'affiche que celles-là.</p>' + lignes(cur) + '<button class="cpPlatBtn" id="cpPlatSave">Enregistrer mes plateformes</button><div class="cpPlatMsg" id="cpPlatMsg2"></div><div class="cpPlatMsg" id="cpPlatDiag"></div>' + connexions(cur);
     ec.insertBefore(c, ec.firstChild); majDiag();
     c.addEventListener('click', e => { const b = e.target && e.target.closest && e.target.closest('[data-conn]'); if (b) ouvrirConnexion(b.getAttribute('data-conn')); });
-    { const ba = c.querySelector('#cpHfActiver'); if (ba) ba.onclick = () => activerAutoHiflow(c.querySelector('#cpHfMsg')); }
+    { const ba = c.querySelector('#cpHfActiver'); if (ba) ba.onclick = () => activerAutoHiflow(c.querySelector('#cpHfMsg'), c); }
+    { const bo = c.querySelector('#cpHfDesactiver'); if (bo) bo.onclick = () => desactiverAutoHiflow(c.querySelector('#cpHfMsg'), c); }
+    if (c.querySelector('#cpHfStatut')) majStatutAutoHiflow(c);
     const b = c.querySelector('#cpPlatSave'), m = c.querySelector('#cpPlatMsg2');
     c.addEventListener('change', () => { b.disabled = cochees(c).length === 0; m.textContent = b.disabled ? 'Coche au moins une plateforme.' : ''; });
     b.onclick = () => { const v = cochees(c); if (!v.length) return; b.disabled = true; b.textContent = 'Enregistrement…'; enregistrer(v, m); };
