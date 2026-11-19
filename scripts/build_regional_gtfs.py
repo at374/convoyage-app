@@ -244,7 +244,7 @@ MIRROR = [
     {'id': 'kiceo-vannes', 'network': 'KICEO (Vannes)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/565533c0-64ae-44d6-9dfa-169be5b805c6', 'bounds': [47.49, -2.95, 47.83, -2.53]},
     {'id': 'axeo-saint-brieuc', 'network': "Axéo (Baie d'Armor, Saint-Brieuc)", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/9bccfc79-5d35-4fc3-8296-526b791fc950', 'bounds': [48.31, -3.04, 48.67, -2.63]},
     {'id': 'lia-le-havre', 'network': 'LiA (Le Havre Seine Métropole)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/2178bfa8-9fe0-4633-8223-8c151728ef28', 'bounds': [49.35, 0.0, 49.7, 0.5]},
-    {'id': 'fil-bleu-tours', 'network': 'Fil Bleu (Tours Métropole)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/198b7602-5e74-4d88-b6bc-483af85a2430', 'bounds': [47.2, 0.5, 47.6, 0.9]},
+    {'id': 'fil-bleu-tours', 'network': 'Fil Bleu (Tours Métropole)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/198b7602-5e74-4d88-b6bc-483af85a2430', 'bounds': [47.34, 0.62, 47.46, 0.76]},
 ]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
 
