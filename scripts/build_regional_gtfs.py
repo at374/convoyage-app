@@ -194,7 +194,6 @@ MIRROR = [
     {'id': 'ge-linggo-en-ville', 'network': 'Linggo En Ville (PETR du pays de Langres)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/56a0a326-549a-4d50-bfa0-11138946e064', 'bounds': [47.4, 3.5, 50.2, 8.3]},
     {'id': 'ge-riv-connect', 'network': "Riv'Connect (CC Rives de Moselle)", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/2b621a71-38f5-4550-b7c2-0a1a6d8f0b45', 'bounds': [47.4, 3.5, 50.2, 8.3]},
     {'id': 'ge-lulu-en-bus', 'network': 'Lulu en bus (PETR du Pays du Lunevillois)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/ecf92b66-8120-4338-8903-6d2f157afa43', 'bounds': [47.4, 3.5, 50.2, 8.3]},
-    {'id': 'ge-cts', 'network': 'CTS (EuroMétropole de Strasbourg)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/610760a9-4398-4bb4-8362-784436dbf0b1', 'bounds': [47.4, 3.5, 50.2, 8.3]},
     {'id': 'ge-forbus', 'network': 'Forbus (Agglomération de Forbach)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/6dd5ba5d-370e-4320-a7b7-8c5bb388d135', 'bounds': [47.4, 3.5, 50.2, 8.3]},
     {'id': 'ge-ritmo', 'network': 'Ritmo (CA de Haguenau)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/2a30dd89-438e-40e5-bc27-0f9173f11f95', 'bounds': [47.4, 3.5, 50.2, 8.3]},
     {'id': 'ge-tum', 'network': 'TUM (Commune de Sainte-Ménéhould)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/40c9e092-7447-430b-8dc0-8e646af8a999', 'bounds': [47.4, 3.5, 50.2, 8.3]},

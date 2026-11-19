@@ -1651,20 +1651,6 @@
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/ecf92b66-8120-4338-8903-6d2f157afa43",
    "trips": 70
   },
-  "ge-cts": {
-   "network": "CTS (EuroMétropole de Strasbourg)",
-   "file": "ge-cts.zip",
-   "sha256": "ce4ae9f49a70f7f827cd51d24a46c5bb5a5f43d93cbabccfd3fe635aa6ef2b69",
-   "bytes": 8074562,
-   "bounds": [
-    47.4,
-    3.5,
-    50.2,
-    8.3
-   ],
-   "origin": "https://www.data.gouv.fr/api/1/datasets/r/610760a9-4398-4bb4-8362-784436dbf0b1",
-   "trips": 52524
-  },
   "ge-forbus": {
    "network": "Forbus (Agglomération de Forbach)",
    "file": "ge-forbus.zip",
