@@ -126,9 +126,9 @@ Généré le 2026-11-19 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | na_limoges (dimanche) | na-limoges.zip | 12452 | OK | 2026-11-22 17:08:00 retrouvée (1 départs proposés) |
 | na_rochefort (semaine) | na-rochefort.zip | 1030 | OK | 2026-11-20 06:55:00 retrouvée (1 départs proposés) |
 | na_rochefort (samedi) | na-rochefort.zip | 1030 | OK | 2026-11-21 18:05:00 retrouvée (11 départs proposés) |
-| na_perigueux (semaine) | na-perigueux.zip | 1935 | OK | 2026-11-20 07:24:00 retrouvée (117 départs proposés) |
-| na_perigueux (samedi) | na-perigueux.zip | 1935 | OK | 2026-11-21 10:02:00 retrouvée (60 départs proposés) |
-| na_pays_basque (semaine) | na-pays-basque.zip | 329 | OK | 2026-11-20 17:45:00 retrouvée (22 départs proposés) |
+| na_perigueux (semaine) | na-perigueux.zip | 1935 | OK | 2026-11-20 07:00:00 retrouvée (4 départs proposés) |
+| na_perigueux (samedi) | na-perigueux.zip | 1935 | OK | 2026-11-21 07:00:00 retrouvée (4 départs proposés) |
+| na_pays_basque (semaine) | na-pays-basque.zip | 329 | OK | 2026-11-20 06:30:00 retrouvée (10 départs proposés) |
 | na_pays_basque (samedi) | na-pays-basque.zip | 329 | OK | 2026-11-21 17:45:00 retrouvée (22 départs proposés) |
 | na_pays_basque (dimanche) | na-pays-basque.zip | 329 | OK | 2026-11-22 10:00:00 retrouvée (4 départs proposés) |
 | na_grand_dax (semaine) | na-grand-dax.zip | 534 | OK | 2026-11-20 07:04:00 retrouvée (4 départs proposés) |
