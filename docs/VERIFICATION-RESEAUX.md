@@ -2,7 +2,7 @@
 
 Généré le 2026-11-19 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**376 / 377 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**394 / 395 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -166,6 +166,24 @@ Généré le 2026-11-19 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | pastel_saint_quentin (semaine) | pastel-saint-quentin.zip | 3250 | OK | 2026-11-20 06:04:00 retrouvée (108 départs proposés) |
 | pastel_saint_quentin (samedi) | pastel-saint-quentin.zip | 3250 | OK | 2026-11-21 06:04:00 retrouvée (321 départs proposés) |
 | pastel_saint_quentin (dimanche) | pastel-saint-quentin.zip | 3250 | OK | 2026-11-22 09:00:00 retrouvée (20 départs proposés) |
+| bibus_brest (semaine) | bibus-brest.zip | 6080 | OK | 2026-11-20 06:36:00 retrouvée (130 départs proposés) |
+| bibus_brest (samedi) | bibus-brest.zip | 6080 | OK | 2026-11-21 07:01:00 retrouvée (84 départs proposés) |
+| bibus_brest (dimanche) | bibus-brest.zip | 6080 | OK | 2026-11-22 08:20:00 retrouvée (60 départs proposés) |
+| astuce_rouen (semaine) | astuce-rouen.zip | 22637 | OK | 2026-11-20 07:13:00 retrouvée (284 départs proposés) |
+| astuce_rouen (samedi) | astuce-rouen.zip | 22637 | OK | 2026-11-21 16:53:00 retrouvée (112 départs proposés) |
+| astuce_rouen (dimanche) | astuce-rouen.zip | 22637 | OK | 2026-11-22 07:53:00 retrouvée (44 départs proposés) |
+| izilo_lorient (semaine) | izilo-lorient.zip | 3472 | OK | 2026-11-20 13:50:00 retrouvée (3 départs proposés) |
+| izilo_lorient (samedi) | izilo-lorient.zip | 3472 | OK | 2026-11-21 13:45:00 retrouvée (2 départs proposés) |
+| izilo_lorient (dimanche) | izilo-lorient.zip | 3472 | OK | 2026-11-22 14:06:00 retrouvée (2 départs proposés) |
+| tul_laval (semaine) | tul-laval.zip | 5961 | OK | 2026-11-20 17:23:00 retrouvée (80 départs proposés) |
+| tul_laval (samedi) | tul-laval.zip | 5961 | OK | 2026-11-21 06:54:00 retrouvée (4 départs proposés) |
+| tul_laval (dimanche) | tul-laval.zip | 5961 | OK | 2026-11-22 11:27:00 retrouvée (36 départs proposés) |
+| sitac_calais (semaine) | sitac-calais.zip | 5810 | OK | 2026-11-20 06:47:00 retrouvée (33 départs proposés) |
+| sitac_calais (samedi) | sitac-calais.zip | 5810 | OK | 2026-11-21 06:47:00 retrouvée (33 départs proposés) |
+| sitac_calais (dimanche) | sitac-calais.zip | 5810 | OK | 2026-11-22 19:45:00 retrouvée (2 départs proposés) |
+| tic_compiegne (semaine) | tic-compiegne.zip | 1193 | OK | 2026-11-20 06:00:00 retrouvée (180 départs proposés) |
+| tic_compiegne (samedi) | tic-compiegne.zip | 1193 | OK | 2026-11-21 08:31:00 retrouvée (89 départs proposés) |
+| tic_compiegne (dimanche) | tic-compiegne.zip | 1193 | OK | 2026-11-22 13:33:00 retrouvée (12 départs proposés) |
 | envia_arles (semaine) | envia-arles.zip | 4588 | OK | 2026-11-20 06:00:00 retrouvée (144 départs proposés) |
 | envia_arles (samedi) | envia-arles.zip | 4588 | OK | 2026-11-21 06:00:00 retrouvée (120 départs proposés) |
 | envia_arles (dimanche) | envia-arles.zip | 4588 | OK | 2026-11-22 07:50:00 retrouvée (6 départs proposés) |
