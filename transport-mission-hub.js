@@ -742,7 +742,21 @@ function queryWindow(task){
  return null;
 }
 function makeProviders(r,opts={}){
- const fetcher=opts.fetcher||((...a)=>r.fetch(...a));
+ // Vitesse : les fichiers d'horaires (data/gtfs/*.zip) sont gardés sur le téléphone (Cache Storage) pendant 12 h ; au lieu de les retélécharger à chaque recherche.
+ const rawFetch=opts.fetcher||((...a)=>r.fetch(...a));
+ const fetcher=opts.fetcher?rawFetch:async(url,init)=>{
+  const u=typeof url==='string'?url:(url&&url.url)||'';
+  const store=r.caches;
+  if(!store||!/\/data\/gtfs\/[^/?]+\.zip(\?|$)/.test(u))return rawFetch(url,init);
+  try{
+   const c=await store.open('cp-gtfs-zips'),hit=await c.match(u);
+   if(hit){const at=Number(hit.headers.get('x-cp-saved'));if(Number.isFinite(at)&&Date.now()-at<12*3600*1000)return hit;}
+   const resp=await rawFetch(url,init);
+   if(resp&&resp.ok){try{const b=await resp.clone().arrayBuffer();
+    await c.put(u,new Response(b,{status:200,headers:{'content-type':'application/zip','x-cp-saved':String(Date.now())}}));}catch(_){}}
+   return resp;
+  }catch(e){return rawFetch(url,init);}
+ };
  const P={};
  // Regional GTFS archives already hosted by the project. These are scheduled
  // candidates only; the pedestrian router and confirmation checks still apply.
@@ -811,6 +825,8 @@ function makeProviders(r,opts={}){
    ['ge_tcat','TCAT (CA Troyes Champagne Métropole)','ge-tcat.zip',[48.16,3.89,48.42,4.26]],
    ['ge_sylvia','SYLVIA (CA Saint Dié des Vosges)','ge-sylvia.zip',[48.1,6.76,48.53,7.17]],
    ['ge_tub','TUB (CA Bar-le-Duc Sud Meuse)','ge-tub.zip',[48.61,5.01,48.86,5.41]],
+   ['twisto_caen','Twisto (Caen la mer)','twisto-caen.zip',[49.05,-0.58,49.33,-0.15]],
+   ['setram_lemans','SETRAM (Le Mans Métropole)','setram-lemans.zip',[47.89,0.05,48.1,0.37]],
    ['envia_arles','Envia (Arles, Tarascon)','envia-arles.zip',[43.33,4.35,43.89,4.84]],
    ['zest_menton','Zest (Menton, Riviera Française)','zest-menton.zip',[43.71,7.38,44.14,7.69]],
    ['libebus_salon','Libébus (Salon-de-Provence)','libebus-salon.zip',[43.41,4.93,43.77,5.37]],
@@ -908,7 +924,9 @@ function makeProviders(r,opts={}){
   const base='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
   let deployedBase=null;
   try{const l=r.location;if(l&&l.protocol==='https:'&&/(^|\.)github\.io$/.test(l.hostname))deployedBase=new URL('data/gtfs/',l.href).href;}catch(_){}
-  const cache=new Map();
+  // Les réseaux déjà lus restent en mémoire d'une recherche à l'autre (10 au maximum) : la 2e recherche et les actualisations de 5 min sont instantanées.
+  const cache=r.__cpHubFeedCache||(r.__cpHubFeedCache=new Map());
+  if(!cache.__w){const o=cache.set.bind(cache);cache.set=(k,v)=>{o(k,v);while(cache.size>10)cache.delete(cache.keys().next().value);return cache;};cache.__w=true;}
   const inBounds=(p,b)=>p&&p.lat>=b[0]&&p.lon>=b[1]&&p.lat<=b[2]&&p.lon<=b[3];
   const dateParts=when=>{
    const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
@@ -1668,7 +1686,7 @@ function card(doc,j,labels,expanded=false){
    }
    if(Array.isArray(l.steps)&&l.steps.length){
    // Guidage pas à pas fourni par le service piéton OpenStreetMap (jamais reconstruit ni inventé).
-   const guide=el(doc,'details','cp-hub-steps');guide.open=true;
+   const guide=el(doc,'details','cp-hub-steps');
    guide.appendChild(el(doc,'summary',null,'🧭 Guidage à pied · '+l.steps.length+' étape'+(l.steps.length>1?'s':'')));
    const steps=el(doc,'ol',null);
    for(const st of l.steps)steps.appendChild(el(doc,'li',null,st.text+(st.meters>0?' · '+(st.meters>=1000?(st.meters/1000).toFixed(1).replace('.',',')+' km':st.meters+' m'):'')));

@@ -2029,20 +2029,6 @@
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/46055750-4ab2-46f1-b4cf-83900bc071b8",
    "trips": 493
   },
-  "irigo-angers": {
-   "network": "Irigo (Angers Loire Métropole)",
-   "file": "irigo-angers.zip",
-   "sha256": "092c2dc4ff3a0bc2aa0dce16e1e333ba2b62a0e70e815240df9af17cc73b215f",
-   "bytes": 4421102,
-   "bounds": [
-    46.0,
-    -2.0,
-    49.5,
-    2.5
-   ],
-   "origin": "https://www.data.gouv.fr/api/1/datasets/r/32f30b64-33f7-43bb-9b6f-34c21c2f83a3",
-   "trips": 9415
-  },
   "twisto-caen": {
    "network": "Twisto (Caen la mer)",
    "file": "twisto-caen.zip",
@@ -2326,9 +2312,7 @@
    ]
   }
  },
- "errors": {
-  "tao-orleans": "erreur : Archive trop volumineuse : https://www.data.gouv.fr/api/1/datasets/r/b2dfbaa3-47e9-4749-b6a4-750bebd760e7"
- },
+ "errors": {},
  "oura": {
   "source": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA",
   "version": "2026-11-18T22:22:14+00:00"

@@ -2326,7 +2326,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         }
       };
       panel.appendChild(planningBox);
-      // Suivi GPS : à l'arrivée détectée, puis toutes les 10 min, les transports sont recalculés à partir de l'heure réelle (les départs passés disparaissent).
+      // Suivi GPS : à l'arrivée détectée, puis toutes les 5 min, les transports sont recalculés à partir de l'heure réelle (les départs passés disparaissent).
       {
         const suivreHorloge = () => {
           if (!panel.isConnected) return false;
@@ -2341,8 +2341,18 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         };
         const surArrivee = ev => { if (!panel.isConnected) { document.removeEventListener('cp-arrivee', surArrivee); return; } if (ev.detail && ev.detail.key === transportPlanKey) { document.removeEventListener('cp-arrivee', surArrivee); suivreHorloge(); } };
         if (typeof document.addEventListener === 'function') document.addEventListener('cp-arrivee', surArrivee);
-        if (timing.gps) {
-          const iv = setInterval(() => { if (!panel.isConnected) { clearInterval(iv); return; } if (!document.hidden) { clearInterval(iv); suivreHorloge(); } }, 10 * 60000);
+        // Mission en cours (de 2 h avant la prise en charge jusqu'à 6 h après la livraison prévue) ou arrivée détectée : le parcours est actualisé toutes les 5 min (trajet aller, jonction, retour).
+        {
+          const p0 = Date.parse(timing.pickup || ''), f0 = Date.parse(timing.planned || timing.deadline || '');
+          const enCours = () => { const n = Date.now(); return !!timing.gps || (Number.isFinite(p0) && n >= p0 - 2 * 3600000 && n <= (Number.isFinite(f0) ? f0 : p0 + 48 * 3600000) + 6 * 3600000); };
+          if (enCours()) {
+            const iv = setInterval(() => {
+              if (!panel.isConnected) { clearInterval(iv); return; }
+              if (document.hidden || !enCours()) return;
+              const a = document.activeElement; if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return;   // ne pas interrompre une saisie
+              clearInterval(iv); suivreHorloge();
+            }, 5 * 60000);
+          }
         }
       }
       // Allow an explicit fresh check when mobile connectivity has recovered.
