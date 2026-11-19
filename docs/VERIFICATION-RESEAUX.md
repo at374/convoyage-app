@@ -2,7 +2,7 @@
 
 Généré le 2026-11-19 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**242 / 243 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**248 / 249 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -96,15 +96,21 @@ Généré le 2026-11-19 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | tedbus_draguignan (semaine) | tedbus-draguignan.zip | 438 | OK | 2026-11-20 09:27:00 retrouvée (6 départs proposés) |
 | tedbus_draguignan (samedi) | tedbus-draguignan.zip | 438 | OK | 2026-11-21 08:44:00 retrouvée (10 départs proposés) |
 | tedbus_draguignan (dimanche) | tedbus-draguignan.zip | 438 | OK | 2026-11-22 08:55:00 retrouvée (18 départs proposés) |
-| libellus_castres (semaine) | libellus-castres.zip | 771 | OK | 2026-11-20 06:45:00 retrouvée (17 départs proposés) |
-| libellus_castres (samedi) | libellus-castres.zip | 771 | OK | 2026-11-21 06:45:00 retrouvée (17 départs proposés) |
+| libellus_castres (semaine) | libellus-castres.zip | 771 | OK | 2026-11-20 08:42:00 retrouvée (36 départs proposés) |
+| libellus_castres (samedi) | libellus-castres.zip | 771 | OK | 2026-11-21 08:42:00 retrouvée (36 départs proposés) |
 | alliance_auch (semaine) | alliance-auch.zip | 1208 | OK | 2026-11-20 07:00:00 retrouvée (530 départs proposés) |
 | alliance_auch (samedi) | alliance-auch.zip | 1208 | OK | 2026-11-21 07:00:00 retrouvée (490 départs proposés) |
+| tlp_tarbes (semaine) | tlp-tarbes-lourdes.zip | 6736 | OK | 2026-11-20 07:20:00 retrouvée (34 départs proposés) |
+| tlp_tarbes (samedi) | tlp-tarbes-lourdes.zip | 6736 | OK | 2026-11-21 07:05:00 retrouvée (24 départs proposés) |
+| tlp_tarbes (dimanche) | tlp-tarbes-lourdes.zip | 6736 | OK | 2026-11-22 15:05:00 retrouvée (1 départs proposés) |
 | tempo_agen (semaine) | tempo-agen.zip | 1981 | OK | 2026-11-20 16:05:00 retrouvée (20 départs proposés) |
 | tempo_agen (samedi) | tempo-agen.zip | 1981 | OK | 2026-11-21 08:31:00 retrouvée (38 départs proposés) |
 | tempo_agen (dimanche) | tempo-agen.zip | 1981 | OK | 2026-11-22 09:01:00 retrouvée (3 départs proposés) |
 | agglobus_foix (semaine) | agglobus-foix.zip | 319 | OK | 2026-11-20 12:06:00 retrouvée (24 départs proposés) |
 | agglobus_foix (samedi) | agglobus-foix.zip | 319 | OK | 2026-11-21 07:35:00 retrouvée (24 départs proposés) |
+| idelis_pau (semaine) | idelis-pau.zip | 4358 | OK | 2026-11-20 06:52:00 retrouvée (56 départs proposés) |
+| idelis_pau (samedi) | idelis-pau.zip | 4358 | OK | 2026-11-21 07:04:00 retrouvée (52 départs proposés) |
+| idelis_pau (dimanche) | idelis-pau.zip | 4358 | OK | 2026-11-22 14:12:00 retrouvée (60 départs proposés) |
 | libeo_brive (semaine) | libeo-brive.zip | 4179 | OK | 2026-11-20 06:30:00 retrouvée (157 départs proposés) |
 | libeo_brive (samedi) | libeo-brive.zip | 4179 | OK | 2026-11-21 06:30:00 retrouvée (56 départs proposés) |
 | tulle_agglo (semaine) | tulle-agglo.zip | 125 | OK | 2026-11-20 14:45:00 retrouvée (48 départs proposés) |
