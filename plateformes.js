@@ -156,10 +156,30 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
       if (c) await majStatutAutoHiflow(c);
     } catch (e) { msgEl.textContent = 'Échec : ' + (e && e.message || 'erreur inconnue'); }
   }
+  // V321 : petite note « Nouveautés », une fois par changement (identifiant NOUVEAUTE_ID), pour que Laurent
+  // voie ce qui a changé sans avoir à me redemander. Se ferme et ne revient plus tant qu'il n'y a rien de neuf.
+  const NOUVEAUTE_ID = 'hiflow-auto-20261119';
+  const NOUVEAUTE_TEXTE = [
+    '<b>Nouveau : lecture automatique Hiflow.</b> Un robot peut désormais se connecter à Hiflow toutes les 10 minutes, même téléphone éteint, et mettre à jour tes missions sur le serveur (voir le bloc « Lecture automatique Hiflow » plus bas dans cette page).',
+    'Le bloc affiche maintenant l\'état réel (activé ou non, dernière synchro) au lieu de toujours montrer un formulaire vide.',
+  ];
+  function blocNouveautes() {
+    try { if (localStorage.getItem('cp_nouveaute_vue') === NOUVEAUTE_ID) return ''; } catch (_) {}
+    return '<div class="carte cpPlatCard" id="cpNouveauteCard" style="border-color:#e0a030">' +
+      '<h2 style="margin-top:0">Nouveautés</h2>' +
+      NOUVEAUTE_TEXTE.map(t => '<p class="doux">' + t + '</p>').join('') +
+      '<button type="button" class="cpPlatBtn" id="cpNouveauteOk">J\'ai vu</button></div>';
+  }
   function carteReglages() {
     const ec = document.getElementById('ecran');
     if (!ec || document.getElementById('cpPlatCard') || !ec.querySelector('#rOk')) return;
     css();
+    const nv = blocNouveautes();
+    if (nv && !document.getElementById('cpNouveauteCard')) {
+      const d = document.createElement('div'); d.innerHTML = nv; const el = d.firstElementChild;
+      ec.insertBefore(el, ec.firstChild);
+      const bo = el.querySelector('#cpNouveauteOk'); if (bo) bo.onclick = () => { try { localStorage.setItem('cp_nouveaute_vue', NOUVEAUTE_ID); } catch (_) {} el.remove(); };
+    }
     const cur = lireLoc() || ED.toutes;
     const c = document.createElement('div'); c.id = 'cpPlatCard'; c.className = 'carte cpPlatCard';
     c.innerHTML = '<h2>Mes plateformes</h2><p class="doux">Coche celles que tu utilises : l\'appli ne lit et n\'affiche que celles-là.</p>' + lignes(cur) + '<button class="cpPlatBtn" id="cpPlatSave">Enregistrer mes plateformes</button><div class="cpPlatMsg" id="cpPlatMsg2"></div><div class="cpPlatMsg" id="cpPlatDiag"></div>' + connexions(cur);
