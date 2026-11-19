@@ -1,14 +1,12 @@
 name: Prepare verified official SIBRA daily timetables
 
 on:
-  push:
-    paths:
-      - '.github/workflows/sibra-prepare-official.yml'
-  pull_request:
-    paths:
-      - '.github/workflows/sibra-prepare-official.yml'
-  schedule:
-    - cron: '23 4 * * *'
+  # 19/11/2026 : planification, push et PR désactivés. L'archive épinglée (20261001-085638) renvoie 404 depuis le 11/11
+  # (SIBRA a publié une nouvelle version). Les fichiers quotidiens sont produits par « Build SIBRA daily GTFS data »,
+  # qui résout la ressource courante via l'API data.gouv.fr. Ce workflow reste disponible en lancement manuel
+  # (il faudra alors mettre à jour SOURCE_URL et EXPECTED_SHA256).
+  # schedule:
+  #   - cron: '23 4 * * *'
   workflow_dispatch:
     inputs:
       first_day:
