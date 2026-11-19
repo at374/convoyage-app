@@ -2,7 +2,7 @@
 
 Généré le 2026-11-19 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**358 / 359 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**364 / 365 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -148,6 +148,12 @@ Généré le 2026-11-19 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | ge_tub (semaine) | ge-tub.zip | 493 | OK | 2026-11-20 16:30:00 retrouvée (14 départs proposés) |
 | ge_tub (samedi) | ge-tub.zip | 493 | OK | 2026-11-21 08:00:00 retrouvée (19 départs proposés) |
 | ge_tub (dimanche) | ge-tub.zip | 493 | OK | 2026-11-22 09:21:00 retrouvée (3 départs proposés) |
+| twisto_caen (semaine) | twisto-caen.zip | 11212 | OK | 2026-11-20 19:49:04 retrouvée (178 départs proposés) |
+| twisto_caen (samedi) | twisto-caen.zip | 11212 | OK | 2026-11-21 17:41:04 retrouvée (148 départs proposés) |
+| twisto_caen (dimanche) | twisto-caen.zip | 11212 | OK | 2026-11-22 11:22:04 retrouvée (64 départs proposés) |
+| setram_lemans (semaine) | setram-lemans.zip | 13063 | OK | 2026-11-20 06:11:12 retrouvée (163 départs proposés) |
+| setram_lemans (samedi) | setram-lemans.zip | 13063 | OK | 2026-11-21 06:13:21 retrouvée (101 départs proposés) |
+| setram_lemans (dimanche) | setram-lemans.zip | 13063 | OK | 2026-11-22 06:20:00 retrouvée (59 départs proposés) |
 | envia_arles (semaine) | envia-arles.zip | 4588 | OK | 2026-11-20 06:00:00 retrouvée (144 départs proposés) |
 | envia_arles (samedi) | envia-arles.zip | 4588 | OK | 2026-11-21 06:00:00 retrouvée (120 départs proposés) |
 | envia_arles (dimanche) | envia-arles.zip | 4588 | OK | 2026-11-22 07:50:00 retrouvée (6 départs proposés) |
