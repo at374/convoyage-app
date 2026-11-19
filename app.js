@@ -759,7 +759,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       if (dist > rayon) { suiviDedans.delete(t.key); continue; }
       if (!suiviDedans.has(t.key)) suiviDedans.set(t.key, ts);
       // Retour au premier plan (Waze / Google Maps étaient ouverts) : on est déjà sur place, pas besoin d'attendre 60 s ; l'heure retenue est celle du retour dans l'application.
-      if (suiviReprise || ts - suiviDedans.get(t.key) >= DUREE_PRESENCE_MS) suiviArrivee(m, t, suiviDedans.get(t.key));
+      if (suiviReprise || ts - suiviDedans.get(t.key) >= DUREE_PRESENCE_MS) suiviDemander(m, t, suiviDedans.get(t.key), 'gps');
     }
   }
   // Application Android (APK 2.34+) : Google Maps et Waze annoncent l'arrivée (ou la fin du guidage) ; l'heure est celle de la notification, même application en arrière-plan.
@@ -774,10 +774,33 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         if (!Number.isFinite(lat) || !Number.isFinite(lng) || !Number.isFinite(locAt) || Math.abs(at - locAt) > 15 * 60000) continue;
         for (const { m, t } of missionsASuivre(at)) {
           const d = G.coordonnees(m, 'destination'), rayon = d.precision === 'ville' ? 1200 : 500;
-          if (G.volOiseauKm({ lat, lng }, d) * 1000 <= rayon) { suiviArrivee(m, t, at); break; }
+          if (G.volOiseauKm({ lat, lng }, d) * 1000 <= rayon) { suiviDemander(m, t, at, 'nav'); break; }
         }
       }
     } catch (_) {}
+  }
+  // Confirmation d'arrivée : le téléphone DEMANDE « Êtes-vous bien arrivé ? » avant de mettre à jour les transports retour.
+  // Déclenché par le GPS / Waze / Google Maps, ou en secours (GPS muet) quand l'heure de livraison estimée est passée.
+  const suiviReporte = new Map();
+  function suiviDemander(m, t, ts, source) {
+    if (arriveeGps(t.key) || (suiviReporte.get(t.key) || 0) > Date.now()) return;
+    if (document.getElementById('cpArrivee')) return;
+    suiviReporte.set(t.key, Date.now() + 10 * 60000);
+    const d = G.coordonnees(m, 'destination') || {}, lieu = m.to_city || d.ville || m.destination_address || 'la livraison';
+    const bar = document.createElement('div'); bar.id = 'cpArrivee'; bar.setAttribute('role', 'alertdialog');
+    bar.style.cssText = 'position:fixed;left:8px;right:8px;bottom:70px;z-index:9999;background:#14210f;border:2px solid #4caf50;border-radius:12px;padding:12px;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.6)';
+    bar.innerHTML = '<b>📍 Êtes-vous bien arrivé à ' + esc(lieu) + ' ?</b><div class="doux" style="margin:4px 0 8px">' + (source === 'secours' ? 'L’heure de livraison prévue est passée.' : 'Position détectée à ' + esc(heureP(ts)) + '.') + ' Les transports retour seront recalculés à partir de l’arrivée + 15 min.</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="cpArrOui">Oui, arrivé</button><button type="button" id="cpArrNon" class="second">Pas encore</button></div>';
+    document.body.appendChild(bar);
+    $('cpArrOui').onclick = () => { bar.remove(); suiviArrivee(m, t, source === 'secours' ? Date.now() : ts); };
+    $('cpArrNon').onclick = () => { bar.remove(); suiviDedans.delete(t.key); suiviReporte.set(t.key, Date.now() + 30 * 60000); };
+  }
+  function suiviSecours() {
+    if (document.hidden || document.getElementById('cpArrivee')) return;
+    for (const { m, t } of missionsASuivre()) {
+      let f = null; try { f = RT.fin(missionForPlanning(m)); } catch (_) {}
+      const prevu = f && Number.isFinite(f.t) ? f.t : Date.parse(t.deadline || '');
+      if (Number.isFinite(prevu) && Date.now() >= prevu) { suiviDemander(m, t, Date.now(), 'secours'); break; }
+    }
   }
   function suiviArrivee(m, t, ts) {
     const tous = Object.assign({}, lireLocal('cp_arrivees', {})), cles = Object.keys(tous);
@@ -792,7 +815,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   function suiviMaj() {
     clearTimeout(suiviTimer); suiviTimer = setTimeout(suiviMaj, 5 * 60000);
     const actif = !suiviRefus && !document.hidden && navigator.geolocation && missionsASuivre().length > 0;
-    suiviNavigation();
+    suiviNavigation(); suiviSecours();
     if (!actif) { if (suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; } suiviDedans.clear(); return; }
     if (suiviWatch !== null) return;
     suiviWatch = navigator.geolocation.watchPosition(suiviTraiter, e => {
