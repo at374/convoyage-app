@@ -950,6 +950,22 @@ function makeProviders(r,opts={}){
    const offset=(match[1]==='+'?1:-1)*(Number(match[2])*60+Number(match[3]||0));
    return new Date(wall-offset*60000).toISOString();
   };
+  // Web Worker unique (réutilisé) : lecture et recherche des réseaux locaux hors du fil de l'écran.
+  const canWorker=()=>!opts.fetcher&&typeof r.Worker==='function'&&!r.__cpHubWorkerOff;
+  const workerRows=(key,urls,date,from,to,extra)=>new Promise((resolve,reject)=>{
+   let w=r.__cpHubWorker;
+   if(!w){
+    w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js');r.__cpHubWorkerPending=new Map();
+    const fail=e=>{r.__cpHubWorkerOff=true;r.__cpHubWorker=null;for(const q of r.__cpHubWorkerPending.values())q.reject(e);r.__cpHubWorkerPending.clear();try{w.terminate();}catch(_){}};
+    w.onerror=()=>fail(new Error('worker'));w.onmessageerror=()=>fail(new Error('worker'));
+    w.onmessage=({data})=>{const q=r.__cpHubWorkerPending.get(data&&data.id);if(!q)return;r.__cpHubWorkerPending.delete(data.id);clearTimeout(q.t);
+     if(data.error)q.reject(new Error(data.error));else q.resolve(data.rows);};
+   }
+   const id=(r.__cpHubWorkerSeq=(r.__cpHubWorkerSeq||0)+1);
+   const t=setTimeout(()=>{r.__cpHubWorkerPending.delete(id);reject(new Error('timeout'));},90000);
+   r.__cpHubWorkerPending.set(id,{resolve,reject,t});
+   try{w.postMessage({id,key,urls,date,from,to,radius:3000,...extra});}catch(e){r.__cpHubWorkerPending.delete(id);clearTimeout(t);reject(e);}
+  });
   for(const [id,name,file,bounds] of localNetworks){
    P['local_'+id]={name:name+' GTFS',
     enabled:task=>!!queryWindow(task)&&inBounds(pt(task.from),bounds)&&inBounds(pt(task.to),bounds),
@@ -970,15 +986,20 @@ function makeProviders(r,opts={}){
      const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
       'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
      const {date,clock}=dateParts(when),resource={format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1)};
-     let promise=cache.get(id+'|'+date);
-     if(!promise){
-      promise=r.CPGTFSLoader.loadResource(resource,{fetcher,indexServiceDates:[date],retainSourceTables:false});
-      cache.set(id+'|'+date,promise);
-      promise.catch(()=>cache.delete(id+'|'+date));
+     // Calcul hors du fil de l'écran (Web Worker) ; en cas d'échec du worker, ancien calcul sur le fil principal (même résultat).
+     let rows=null;
+     if(canWorker()){try{rows=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to))});}catch(e){if(!r.__cpHubWorkerOff)throw e;rows=null;}}
+     if(rows===null){
+      let promise=cache.get(id+'|'+date);
+      if(!promise){
+       promise=r.CPGTFSLoader.loadResource(resource,{fetcher,indexServiceDates:[date],retainSourceTables:false});
+       cache.set(id+'|'+date,promise);
+       promise.catch(()=>cache.delete(id+'|'+date));
+      }
+      const feed=await promise;
+      rows=attachGTFSFares(feed,r.CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,pt(task.from),pt(task.to),3000),r.CPGTFSFares);
      }
-     const feed=await promise;
      if(signal?.aborted)return [];
-     const rows=attachGTFSFares(feed,r.CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,pt(task.from),pt(task.to),3000),r.CPGTFSFares);
      const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
      // Select the best boarding/alighting stop pair for each actual vehicle
      // BEFORE imposing the mobile card limit. Otherwise 500 stop-pair variants
