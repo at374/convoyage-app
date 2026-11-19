@@ -242,21 +242,21 @@ MIRROR = [
      'url': 'https://static.data.gouv.fr/resources/horaires-theoriques-et-temps-reel-gtfs-gtfs-rt-du-reseau-palmbus-cannes-pays-de-lerins/20261027-070043/palmbus-cannes-fr.zip', 'bounds': [43.45, 6.85, 43.7, 7.15]},
     {'id': 'start-thonon', 'network': "Star't Thonon", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e', 'bounds': [46.25, 6.3, 46.45, 6.65]},
 ],
-    {   'id': 'kiceo-vannes',
+    {'id': 'kiceo-vannes',
         'network': 'KICEO',
         'url': 'https://www.data.gouv.fr/api/1/datasets/r/565533c0-64ae-44d6-9dfa-169be5b805c6',
         'bounds': [47.49, -2.95, 47.83, -2.53]
     },
-    {   'id': 'axeo-saint-brieuc',
+    {'id': 'axeo-saint-brieuc',
         'network': 'BAIE D'ARMOR',
         'url': 'https://www.data.gouv.fr/api/1/datasets/r/9bccfc79-5d35-4fc3-8296-526b791fc950',
         'bounds': [48.31, -3.04, 48.67, -2.63]
     },
-    {   'id': 'lia-le-havre',
+    {'id': 'lia-le-havre',
         'network': 'TRANSDEV LE HAVRE',
         'url': 'https://www.data.gouv.fr/api/1/datasets/r/2178bfa8-9fe0-4633-8223-8c151728ef28'
     },
-    {   'id': 'fil-bleu-tours',
+    {'id': 'fil-bleu-tours',
         'network': 'KEOLIS TOURS',
         'url': 'https://www.data.gouv.fr/api/1/datasets/r/198b7602-5e74-4d88-b6bc-483af85a2430'
     }
