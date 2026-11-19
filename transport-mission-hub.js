@@ -11,6 +11,17 @@
 const VERSION='hub-20261113';
 const SWISS_BOX={minLat:45.80,maxLat:47.90,minLon:5.90,maxLon:10.60};
 const GENEVA={lat:46.2044,lon:6.1432};
+// Parking des loueurs P21 (Genève, secteur France) : point GPS donné par Laurent. Il n'est pas joignable par la route publique :
+// à pied il faut traverser l'aéroport (sécurité puis douane française). Les trajets en transports s'arrêtent donc à l'aéroport
+// (terminal) et la fiche affiche la consigne pour la dernière partie (demande du 19/11/2026).
+const P21_POINT={lat:46.237722,lon:6.117667},GVA_TERMINAL={lat:46.2372,lon:6.1090};
+function nearP21(p){return !!p&&Math.abs(p.lat-P21_POINT.lat)<0.004&&Math.abs(p.lon-P21_POINT.lon)<0.006;}
+function redirectP21(t){
+ const f=pt(t.from),to=pt(t.to);
+ if(nearP21(to))return {...t,to:{...GVA_TERMINAL},toName:'Genève-Aéroport (terminal)',p21:'to',p21Original:t.to};
+ if(nearP21(f))return {...t,from:{...GVA_TERMINAL},fromName:'Genève-Aéroport (terminal)',p21:'from',p21Original:t.from};
+ return t;
+}
 const LYON_COACH_ANCHORS=[{name:'Lyon Part-Dieu',lat:45.7605,lon:4.8590},{name:'Lyon Perrache',lat:45.7487,lon:4.8262},{name:'Lyon Gerland',lat:45.7290,lon:4.8300}];
 const SAFE_TRANSFER_MIN=10,SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=120;
 
@@ -559,7 +570,7 @@ function assess(j,task,fareFor){
  // Sans ce niveau intermédiaire, tout trajet issu d'un horaire GTFS (TER, cars, bus locaux) apparaissait comme
  // « non confirmé » avec le même avertissement qu'un trajet impossible (constaté en navigateur le 14/11/2026).
  const scheduled=!feasible&&reasons.every(r=>ADVISORY.test(r));
- return {...j,scheduled,departure:Number.isFinite(dep)?new Date(dep).toISOString():null,arrival:Number.isFinite(arr)?new Date(arr).toISOString():null,
+ return {...j,p21:task&&task.p21||null,scheduled,departure:Number.isFinite(dep)?new Date(dep).toISOString():null,arrival:Number.isFinite(arr)?new Date(arr).toISOString():null,
   durationMinutes:chrono?Math.ceil((arr-dep)/60000):null,slackMinutes:slack,marginMinutes:margin,price,reasons,delays,
   transfers:Math.max(0,legs.filter(l=>!isFoot(l)).length-1),
   walkMeters:legs.filter(l=>l.kind==='walk').reduce((s,l)=>s+(l.distanceMeters||0),0),
@@ -1206,7 +1217,7 @@ async function accessFor(j,task,otp,signal){
 
 /* ---------- Session ---------- */
 function createSession({tasks=[],providers={},router=null,scooterRouter=null,scooter=null,fareFor=null,walkMaxKm=3,timeoutMs=25000,onUpdate=()=>{}}={}){
- tasks=tasks.map(t=>({...t,walkMaxMeters:Number.isFinite(t.walkMaxMeters)?t.walkMaxMeters:(Number.isFinite(walkMaxKm)&&walkMaxKm>0?walkMaxKm*1000:undefined)}));
+ tasks=tasks.map(redirectP21).map(t=>({...t,walkMaxMeters:Number.isFinite(t.walkMaxMeters)?t.walkMaxMeters:(Number.isFinite(walkMaxKm)&&walkMaxKm>0?walkMaxKm*1000:undefined)}));
  const state={},controller=new AbortController();let disposed=false;
  // Mises à jour regroupées (au plus une par 350 ms et par direction) : chaque résultat réseau ne reconstruit plus toute la fiche,
  // ce qui figeait l'écran au défilement quand plusieurs jours sont cherchés en parallèle.
@@ -1622,6 +1633,16 @@ function card(doc,j,labels,expanded=false){
   ol.appendChild(li);
  }
  body.appendChild(ol);
+
+ // Dernière partie jusqu'au parking P21 : jamais calculée par la route (accès par l'intérieur de l'aéroport).
+ if(j.p21){
+  const n=el(doc,'div','cp-hub-p21',null);
+  n.setAttribute('style','border:1px solid #f5b400;border-radius:10px;padding:8px 10px;margin:8px 0;background:rgba(245,180,0,.12)');
+  n.appendChild(el(doc,'strong',null,'⚠️ '+(j.p21==='from'?'Départ depuis':'Arrivée au')+' parking P21 (Genève, secteur France) : le trajet ci-dessus '+(j.p21==='from'?'commence':'s’arrête')+' à l’aéroport'));
+  n.appendChild(el(doc,'p',null,'À pied : il faut passer à l’intérieur de l’aéroport, par l’agent de sécurité puis la douane française. Montrez impérativement le contrat de convoyage et une pièce d’identité.'));
+  n.appendChild(el(doc,'p',null,'Autre solution, plus coûteuse : prendre un taxi devant l’aéroport, qui vous emmène jusqu’au sous-sol du parking P21.'));
+  body.appendChild(n);
+ }
  // Accès à une vraie carte pour chaque marche : le schéma SVG n'est pas une carte de rues.
  const svg=j.scooterOnly?null:mapSvg(doc,j);if(svg)body.appendChild(svg);
  else if(!j.scooterOnly)body.appendChild(el(doc,'p','cp-hub-note','Schéma indisponible : tracé GPS insuffisant.'));
@@ -1753,7 +1774,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,redirectP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;

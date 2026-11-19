@@ -168,3 +168,16 @@ test('fluidité : tuiles de carte chargées à l’affichage, cartes hors écran
  assert.match(hub,/const loadTiles=\(\)=>/);
  assert.match(fs.readFileSync(path.join(__dirname,'..','style.css'),'utf8'),/\.cp-hub-card\{content-visibility:auto/);
 });
+
+test('parking P21 de Genève : le trajet s’arrête à l’aéroport, consigne sécurité + douane + contrat + pièce d’identité, option taxi',()=>{
+ const H=require('../transport-mission-hub.js');
+ const a=H.redirectP21({from:{lat:46.2,lon:6.14},to:{lat:46.237722,lon:6.117667}});
+ assert.equal(a.p21,'to');assert.ok(Math.abs(a.to.lon-6.1090)<1e-6,'destination ramenée au terminal');
+ const b=H.redirectP21({from:{lat:46.237722,lon:6.117667},to:{lat:46.2,lon:6.14}});
+ assert.equal(b.p21,'from');assert.ok(Math.abs(b.from.lat-46.2372)<1e-6);
+ const c=H.redirectP21({from:{lat:45.9,lon:6.1},to:{lat:46.0,lon:6.2}});
+ assert.equal(c.p21,undefined);
+ assert.match(hub,/agent de sécurité puis la douane française/);
+ assert.match(hub,/contrat de convoyage et une pièce d’identité/);
+ assert.match(hub,/taxi devant l’aéroport/);
+});
