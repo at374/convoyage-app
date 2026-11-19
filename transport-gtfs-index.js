@@ -53,7 +53,7 @@ function scheduledTrips(files,index,date){
   if(!route)continue;
   results.push({
    tripId,serviceId:trip.service_id,routeId:trip.route_id,
-   line:route.route_short_name||route.route_long_name||'',
+   line:route.route_short_name||route.route_long_name||'',headsign:headsignOf(index,trip,times),
    stops:times.map(t=>({
     stopId:t.stop_id,stopName:index.stopById.get(t.stop_id)?.stop_name||'',
     arrival:t.arrival_time,departure:t.departure_time,sequence:Number(t.stop_sequence)
@@ -67,6 +67,13 @@ function scheduledTrips(files,index,date){
 // each origin/destination pair. A loop may visit the origin more than once.
 // V305 : pickup_type / drop_off_type 2 ou 3 = « téléphoner pour réserver » (le petit téléphone des fiches horaires : transport à la demande).
 // Ces passages sont gardés mais marqués onDemand ; 1 (aucune montée / descente) reste écarté.
+// Direction affichée : trip_headsign du flux, sinon nom du dernier arrêt de la course (terminus). Jamais inventé.
+function headsignOf(index,trip,times){
+ const h=String(trip&&trip.trip_headsign||'').trim();
+ if(h)return h;
+ const last=times&&times.length?times[times.length-1]:null;
+ return String(last&&index.stopById.get(last.stop_id)?.stop_name||'').trim();
+}
 function regularAccess(value){return value===undefined||value===''||value==='0'||value==='2'||value==='3';}
 function demandAccess(value){return value==='2'||value==='3';}
 function directCandidates(files,index,date,origins,destinations){
@@ -88,7 +95,7 @@ function directCandidates(files,index,date,origins,destinations){
     found.add(end.stop_id);
     const arrival=minutes(end.arrival_time);
     if(arrival===null||arrival<minutes(start.departure_time)||!regularAccess(end.drop_off_type))continue;
-    journeys.push({tripId,line:route.route_short_name||route.route_long_name||'',date,
+    journeys.push({tripId,line:route.route_short_name||route.route_long_name||'',headsign:headsignOf(index,trip,times),date,
      from:start.stop_id,to:end.stop_id,departure:start.departure_time,arrival:end.arrival_time,
      serviceScheduled:true,serviceConfirmed:false,onDemand:demandAccess(start.pickup_type)||demandAccess(end.drop_off_type),
      exactOrigin:false,exactDestination:false,accessVerified:false,priceEUR:null});
@@ -163,7 +170,7 @@ function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDe
     const arrivalMinutes=minutes(end.arrival_time);
     if(arrivalMinutes===null||Math.round(arrivalMinutes*60)>maxArrivalSeconds||arrivalMinutes<departureMinutes||
        !(Number(end.stop_sequence)>Number(start.stop_sequence))||!regularAccess(end.drop_off_type)||start.stop_id===end.stop_id)continue;
-    const leg={tripId,routeId:trip.route_id,line:route.route_short_name||route.route_long_name||'',
+    const leg={tripId,routeId:trip.route_id,line:route.route_short_name||route.route_long_name||'',headsign:headsignOf(index,trip,times),
      from:start.stop_id,to:end.stop_id,departure:start.departure_time,arrival:end.arrival_time,
      departureMinutes,arrivalMinutes,serviceConfirmed:false,onDemand:demandAccess(start.pickup_type)||demandAccess(end.drop_off_type)};
     if(fromOrigin&&!add(firstByStop,{...leg,toTransfer:end.stop_id}))break trips;

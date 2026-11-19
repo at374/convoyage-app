@@ -104,6 +104,7 @@ function parse(response){
    legs.push({
     kind:walk?'walk':'transit',mode:MODE[mode],
     line:walk?null:String(raw.route?.shortName||raw.route?.longName||raw.routeShortName||'').trim()||null,
+    headsign:walk?null:String(raw.headsign||raw.trip?.tripHeadsign||'').trim()||null,
     provider:walk?null:providerName(raw.agency?.name||raw.route?.agency?.name),
     from:placeName(raw.from?.name),to:placeName(raw.to?.name),
     fromPoint,toPoint,departure,arrival,

@@ -60,7 +60,7 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
  return useful
   .sort((a,b)=>seconds(a.departure)-seconds(b.departure)||seconds(a.arrival)-seconds(b.arrival))
   .slice(0,maxResults).map(x=>({
-   operator,tripId:x.tripId,line:x.line,date:x.date,departure:x.departure,arrival:x.arrival,
+   operator,tripId:x.tripId,line:x.line,headsign:x.headsign||'',date:x.date,departure:x.departure,arrival:x.arrival,
    fromStopId:x.from,toStopId:x.to,originStop:x.originStop,destinationStop:x.destinationStop,
    accessDistanceMeters:x.accessDistanceMeters,egressDistanceMeters:x.egressDistanceMeters,
    serviceScheduled:true,serviceConfirmed:false,priceEUR:null,priceStatus:'unavailable',

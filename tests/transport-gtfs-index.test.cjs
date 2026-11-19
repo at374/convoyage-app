@@ -80,3 +80,13 @@ assert.equal(nearby[0].serviceConfirmed,false);
 assert.equal(nearbyDirectTrips(calendar,doorIndex,'2026-10-30',
  {lat:45.901,lon:6.122},{lat:45.675,lon:6.390}).length,0);
 console.log('GTFS index: 42 assertions passed');
+
+{ // direction (terminus) fournie pour chaque course
+ const files={'stops.txt':'stop_id,stop_name,stop_lat,stop_lon\nA,Gare,45.0,5.0\nB,Mairie,45.01,5.01\nC,Hôpital,45.02,5.02\n',
+  'routes.txt':'route_id,route_short_name\nR1,21\n','trips.txt':'route_id,service_id,trip_id,trip_headsign\nR1,S,T1,\nR1,S,T2,Direction_Plateau\n',
+  'calendar.txt':'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\nS,1,1,1,1,1,1,1,20260101,20271231\n',
+  'stop_times.txt':'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nT1,08:00:00,08:00:00,A,1\nT1,08:10:00,08:10:00,B,2\nT1,08:20:00,08:20:00,C,3\nT2,09:00:00,09:00:00,A,1\nT2,09:10:00,09:10:00,B,2\n'};
+ const index=buildIndex(files);const trips=scheduledTrips(files,index,'2026-11-19');
+ const by=Object.fromEntries(trips.map(t=>[t.tripId,t.headsign]));
+ assert.equal(by.T1,'Hôpital');assert.equal(by.T2,'Direction_Plateau');
+}
