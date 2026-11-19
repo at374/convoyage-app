@@ -2,7 +2,7 @@
 
 Généré le 2026-11-19 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**364 / 365 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**376 / 377 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -154,6 +154,18 @@ Généré le 2026-11-19 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | setram_lemans (semaine) | setram-lemans.zip | 13063 | OK | 2026-11-20 06:11:12 retrouvée (163 départs proposés) |
 | setram_lemans (samedi) | setram-lemans.zip | 13063 | OK | 2026-11-21 06:13:21 retrouvée (101 départs proposés) |
 | setram_lemans (dimanche) | setram-lemans.zip | 13063 | OK | 2026-11-22 06:20:00 retrouvée (59 départs proposés) |
+| transurbain_evreux (semaine) | transurbain-evreux.zip | 3674 | OK | 2026-11-20 12:10:00 retrouvée (22 départs proposés) |
+| transurbain_evreux (samedi) | transurbain-evreux.zip | 3674 | OK | 2026-11-21 16:25:00 retrouvée (52 départs proposés) |
+| transurbain_evreux (dimanche) | transurbain-evreux.zip | 3674 | OK | 2026-11-22 10:20:00 retrouvée (14 départs proposés) |
+| choletbus (semaine) | choletbus.zip | 1791 | OK | 2026-11-20 06:59:00 retrouvée (98 départs proposés) |
+| choletbus (samedi) | choletbus.zip | 1791 | OK | 2026-11-21 07:01:00 retrouvée (52 départs proposés) |
+| choletbus (dimanche) | choletbus.zip | 1791 | OK | 2026-11-22 13:02:00 retrouvée (12 départs proposés) |
+| simouv_valenciennes (semaine) | simouv-valenciennes.zip | 13416 | OK | 2026-11-20 06:43:00 retrouvée (3 départs proposés) |
+| simouv_valenciennes (samedi) | simouv-valenciennes.zip | 13416 | OK | 2026-11-21 06:10:00 retrouvée (15 départs proposés) |
+| simouv_valenciennes (dimanche) | simouv-valenciennes.zip | 13416 | OK | 2026-11-22 08:00:00 retrouvée (20 départs proposés) |
+| pastel_saint_quentin (semaine) | pastel-saint-quentin.zip | 3250 | OK | 2026-11-20 06:04:00 retrouvée (108 départs proposés) |
+| pastel_saint_quentin (samedi) | pastel-saint-quentin.zip | 3250 | OK | 2026-11-21 06:04:00 retrouvée (321 départs proposés) |
+| pastel_saint_quentin (dimanche) | pastel-saint-quentin.zip | 3250 | OK | 2026-11-22 09:00:00 retrouvée (20 départs proposés) |
 | envia_arles (semaine) | envia-arles.zip | 4588 | OK | 2026-11-20 06:00:00 retrouvée (144 départs proposés) |
 | envia_arles (samedi) | envia-arles.zip | 4588 | OK | 2026-11-21 06:00:00 retrouvée (120 départs proposés) |
 | envia_arles (dimanche) | envia-arles.zip | 4588 | OK | 2026-11-22 07:50:00 retrouvée (6 départs proposés) |
