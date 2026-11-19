@@ -791,6 +791,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     bar.style.cssText = 'position:fixed;left:8px;right:8px;bottom:70px;z-index:9999;background:#14210f;border:2px solid #4caf50;border-radius:12px;padding:12px;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.6)';
     bar.innerHTML = '<b>📍 Êtes-vous bien arrivé à ' + esc(lieu) + ' ?</b><div class="doux" style="margin:4px 0 8px">' + (source === 'secours' ? 'L’heure de livraison prévue est passée.' : 'Position détectée à ' + esc(heureP(ts)) + '.') + ' Les transports retour seront recalculés à partir de l’arrivée + 15 min.</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" id="cpArrOui">Oui, arrivé</button><button type="button" id="cpArrNon" class="second">Pas encore</button></div>';
     document.body.appendChild(bar);
+    try { detail(m); } catch (_) { }   // la fiche de la mission s'ouvre toute seule à l'approche du point GPS
     $('cpArrOui').onclick = () => { bar.remove(); suiviArrivee(m, t, source === 'secours' ? Date.now() : ts); };
     $('cpArrNon').onclick = () => { bar.remove(); suiviDedans.delete(t.key); suiviReporte.set(t.key, Date.now() + 30 * 60000); };
   }
@@ -815,6 +816,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   function suiviMaj() {
     clearTimeout(suiviTimer); suiviTimer = setTimeout(suiviMaj, 5 * 60000);
     const actif = !suiviRefus && !document.hidden && navigator.geolocation && missionsASuivre().length > 0;
+    // Le GPS fourni par la plateforme est parfois le centre de la ville (2 km de l'adresse réelle) : on cherche le point officiel de l'adresse de livraison avant de comparer.
+    for (const { m } of missionsASuivre()) { try { pointsMission(m).catch(() => { }); } catch (_) { } }
     suiviNavigation(); suiviSecours();
     if (!actif) { if (suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; } suiviDedans.clear(); return; }
     if (suiviWatch !== null) return;
