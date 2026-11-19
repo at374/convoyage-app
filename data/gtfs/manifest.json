@@ -2127,20 +2127,6 @@
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/42e3ea9d-251e-47c1-988d-f7227f0e2d0f",
    "trips": 3250
   },
-  "tbm-bordeaux": {
-   "network": "TBM (Bordeaux Métropole)",
-   "file": "tbm-bordeaux.zip",
-   "sha256": "538c3df9d60056863b5998cdddc660826276df14eed908beb12b4afc8c010e98",
-   "bytes": 14291,
-   "bounds": [
-    43.0,
-    -5.0,
-    50.5,
-    3.5
-   ],
-   "origin": "https://www.data.gouv.fr/api/1/datasets/r/4cb2f0a9-d3d8-402b-b0bb-afafb741e5f1",
-   "trips": 54
-  },
   "bibus-brest": {
    "network": "Bibus (Brest Métropole)",
    "file": "bibus-brest.zip",
