@@ -27,12 +27,13 @@ openssl rand -hex 24 | gcloud secrets create hiflow-sync-secret --data-file=-
 
 ## 3. Build + déploiement du service
 
-Depuis la racine du dépôt `convoyage-app` :
+Depuis le dossier `server/hiflow-sync-deploy` du dépôt `convoyage-app` (ce dossier est autonome :
+`Dockerfile`, `package.json`, le code du robot et le code repris du robot Android) :
 
 ```bash
+cd server/hiflow-sync-deploy
 gcloud run deploy hiflow-sync \
   --source . \
-  --dockerfile server/Dockerfile.hiflow-sync \
   --region europe-west1 \
   --no-allow-unauthenticated \
   --memory 1Gi --cpu 1 --timeout 900 --concurrency 1 --max-instances 1 \
