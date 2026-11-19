@@ -2,7 +2,7 @@
 
 Généré le 2026-11-19 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**288 / 289 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**358 / 359 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -78,6 +78,76 @@ Généré le 2026-11-19 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | envibus_antibes (semaine) | envibus-antibes.zip | 2381 | OK | 2026-11-20 06:35:00 retrouvée (217 départs proposés) |
 | envibus_antibes (samedi) | envibus-antibes.zip | 2381 | OK | 2026-11-21 06:15:00 retrouvée (140 départs proposés) |
 | envibus_antibes (dimanche) | envibus-antibes.zip | 2381 | OK | 2026-11-22 06:30:00 retrouvée (45 départs proposés) |
+| ge_le_fil (semaine) | ge-le-fil.zip | 178 | OK | 2026-11-20 08:32:00 retrouvée (42 départs proposés) |
+| ge_le_fil (samedi) | ge-le-fil.zip | 178 | OK | 2026-11-21 09:24:00 retrouvée (18 départs proposés) |
+| ge_pays_du_sel_vermois (semaine) | ge-pays-du-sel-vermois.zip | 27 | OK | 2026-11-20 06:45:00 retrouvée (13 départs proposés) |
+| ge_pays_du_sel_vermois (samedi) | ge-pays-du-sel-vermois.zip | 27 | OK | 2026-11-21 06:45:00 retrouvée (13 départs proposés) |
+| ge_le_sit (semaine) | ge-le-sit.zip | 227 | OK | 2026-11-20 13:28:00 retrouvée (20 départs proposés) |
+| ge_le_sit (samedi) | ge-le-sit.zip | 227 | OK | 2026-11-21 13:28:00 retrouvée (16 départs proposés) |
+| ge_bus_pont_a_mousson (semaine) | ge-bus-pont-a-mousson.zip | 259 | OK | 2026-11-20 12:10:00 retrouvée (1 départs proposés) |
+| ge_bus_pont_a_mousson (samedi) | ge-bus-pont-a-mousson.zip | 259 | OK | 2026-11-21 07:00:00 retrouvée (10 départs proposés) |
+| ge_sub (semaine) | ge-sub.zip | 2956 | OK | 2026-11-20 06:00:00 retrouvée (18 départs proposés) |
+| ge_sub (samedi) | ge-sub.zip | 2956 | OK | 2026-11-21 07:45:00 retrouvée (14 départs proposés) |
+| ge_sub (dimanche) | ge-sub.zip | 2956 | OK | 2026-11-22 19:02:00 retrouvée (9 départs proposés) |
+| ge_linggo_en_ville (semaine) | ge-linggo-en-ville.zip | 79 | OK | 2026-11-20 07:11:00 retrouvée (1 départs proposés) |
+| ge_lulu_en_bus (semaine) | ge-lulu-en-bus.zip | 70 | OK | 2026-11-20 06:00:00 retrouvée (8 départs proposés) |
+| ge_lulu_en_bus (samedi) | ge-lulu-en-bus.zip | 70 | OK | 2026-11-21 06:00:00 retrouvée (8 départs proposés) |
+| ge_forbus (semaine) | ge-forbus.zip | 589 | OK | 2026-11-20 07:50:00 retrouvée (1 départs proposés) |
+| ge_forbus (samedi) | ge-forbus.zip | 589 | OK | 2026-11-21 14:00:00 retrouvée (23 départs proposés) |
+| ge_ritmo (semaine) | ge-ritmo.zip | 1622 | OK | 2026-11-20 06:28:00 retrouvée (8 départs proposés) |
+| ge_ritmo (samedi) | ge-ritmo.zip | 1622 | OK | 2026-11-21 06:28:00 retrouvée (8 départs proposés) |
+| ge_tum (semaine) | ge-tum.zip | 50 | OK | 2026-11-20 09:30:00 retrouvée (3 départs proposés) |
+| ge_stan (semaine) | ge-stan.zip | 26138 | OK | 2026-11-20 06:00:00 retrouvée (282 départs proposés) |
+| ge_stan (samedi) | ge-stan.zip | 26138 | OK | 2026-11-21 06:00:00 retrouvée (243 départs proposés) |
+| ge_stan (dimanche) | ge-stan.zip | 26138 | OK | 2026-11-22 07:00:00 retrouvée (105 départs proposés) |
+| ge_cmonbus (semaine) | ge-cmonbus.zip | 201 | OK | 2026-11-20 07:53:00 retrouvée (18 départs proposés) |
+| ge_cmonbus (samedi) | ge-cmonbus.zip | 201 | OK | 2026-11-21 07:53:00 retrouvée (13 départs proposés) |
+| ge_rezo (semaine) | ge-rezo.zip | 476 | OK | 2026-11-20 07:12:00 retrouvée (2 départs proposés) |
+| ge_rezo (samedi) | ge-rezo.zip | 476 | OK | 2026-11-21 12:03:00 retrouvée (12 départs proposés) |
+| ge_colibri (semaine) | ge-colibri.zip | 205 | OK | 2026-11-20 12:10:00 retrouvée (31 départs proposés) |
+| ge_colibri (samedi) | ge-colibri.zip | 205 | OK | 2026-11-21 09:26:00 retrouvée (56 départs proposés) |
+| ge_sitac (semaine) | ge-sitac.zip | 2637 | OK | 2026-11-20 06:18:00 retrouvée (148 départs proposés) |
+| ge_sitac (samedi) | ge-sitac.zip | 2637 | OK | 2026-11-21 07:35:00 retrouvée (4 départs proposés) |
+| ge_isibus (semaine) | ge-isibus.zip | 105 | OK | 2026-11-20 06:09:00 retrouvée (26 départs proposés) |
+| ge_isibus (samedi) | ge-isibus.zip | 105 | OK | 2026-11-21 06:09:00 retrouvée (26 départs proposés) |
+| ge_grand_reims_mobilites (semaine) | ge-grand-reims-mobilites.zip | 6353 | OK | 2026-11-20 15:07:00 retrouvée (143 départs proposés) |
+| ge_grand_reims_mobilites (samedi) | ge-grand-reims-mobilites.zip | 6353 | OK | 2026-11-21 10:55:00 retrouvée (16 départs proposés) |
+| ge_grand_reims_mobilites (dimanche) | ge-grand-reims-mobilites.zip | 6353 | OK | 2026-11-22 10:27:00 retrouvée (53 départs proposés) |
+| ge_mouveo (semaine) | ge-mouveo.zip | 456 | OK | 2026-11-20 06:13:00 retrouvée (252 départs proposés) |
+| ge_mouveo (samedi) | ge-mouveo.zip | 456 | OK | 2026-11-21 11:20:00 retrouvée (222 départs proposés) |
+| ge_ticea (semaine) | ge-ticea.zip | 198 | OK | 2026-11-20 07:20:00 retrouvée (3 départs proposés) |
+| ge_ticea (samedi) | ge-ticea.zip | 198 | OK | 2026-11-21 06:40:00 retrouvée (5 départs proposés) |
+| ge_trace (semaine) | ge-trace.zip | 2442 | OK | 2026-11-20 07:00:00 retrouvée (28 départs proposés) |
+| ge_trace (samedi) | ge-trace.zip | 2442 | OK | 2026-11-21 14:31:00 retrouvée (100 départs proposés) |
+| ge_trace (dimanche) | ge-trace.zip | 2442 | OK | 2026-11-22 09:21:00 retrouvée (11 départs proposés) |
+| ge_elsa (semaine) | ge-elsa.zip | 818 | OK | 2026-11-20 12:08:00 retrouvée (22 départs proposés) |
+| ge_elsa (samedi) | ge-elsa.zip | 818 | OK | 2026-11-21 08:08:00 retrouvée (12 départs proposés) |
+| ge_tac (semaine) | ge-tac.zip | 766 | OK | 2026-11-20 07:44:00 retrouvée (34 départs proposés) |
+| ge_tac (samedi) | ge-tac.zip | 766 | OK | 2026-11-21 07:44:00 retrouvée (34 départs proposés) |
+| ge_tac (dimanche) | ge-tac.zip | 766 | OK | 2026-11-22 12:54:00 retrouvée (5 départs proposés) |
+| ge_cabus (semaine) | ge-cabus.zip | 495 | OK | 2026-11-20 18:28:00 retrouvée (36 départs proposés) |
+| ge_cabus (samedi) | ge-cabus.zip | 495 | OK | 2026-11-21 18:28:00 retrouvée (30 départs proposés) |
+| ge_cabus (dimanche) | ge-cabus.zip | 495 | OK | 2026-11-22 14:45:00 retrouvée (6 départs proposés) |
+| ge_le_met (semaine) | ge-le-met.zip | 23330 | OK | 2026-11-20 06:32:00 retrouvée (36 départs proposés) |
+| ge_le_met (samedi) | ge-le-met.zip | 23330 | OK | 2026-11-21 06:55:00 retrouvée (24 départs proposés) |
+| ge_le_met (dimanche) | ge-le-met.zip | 23330 | OK | 2026-11-22 08:14:00 retrouvée (16 départs proposés) |
+| ge_transavold (semaine) | ge-transavold.zip | 765 | OK | 2026-11-20 13:35:00 retrouvée (6 départs proposés) |
+| ge_transavold (samedi) | ge-transavold.zip | 765 | OK | 2026-11-21 13:35:00 retrouvée (6 départs proposés) |
+| ge_solea (semaine) | ge-solea.zip | 15641 | OK | 2026-11-20 08:38:00 retrouvée (43 départs proposés) |
+| ge_solea (samedi) | ge-solea.zip | 15641 | OK | 2026-11-21 07:00:00 retrouvée (3 départs proposés) |
+| ge_solea (dimanche) | ge-solea.zip | 15641 | OK | 2026-11-22 09:30:00 retrouvée (7 départs proposés) |
+| ge_distribus (semaine) | ge-distribus.zip | 1615 | OK | 2026-11-20 06:56:00 retrouvée (2 départs proposés) |
+| ge_distribus (samedi) | ge-distribus.zip | 1615 | OK | 2026-11-21 16:32:00 retrouvée (122 départs proposés) |
+| ge_distribus (dimanche) | ge-distribus.zip | 1615 | OK | 2026-11-22 16:55:00 retrouvée (90 départs proposés) |
+| ge_tcat (semaine) | ge-tcat.zip | 6122 | OK | 2026-11-20 06:59:00 retrouvée (13 départs proposés) |
+| ge_tcat (samedi) | ge-tcat.zip | 6122 | OK | 2026-11-21 18:26:00 retrouvée (14 départs proposés) |
+| ge_tcat (dimanche) | ge-tcat.zip | 6122 | OK | 2026-11-22 09:26:00 retrouvée (8 départs proposés) |
+| ge_sylvia (semaine) | ge-sylvia.zip | 564 | OK | 2026-11-20 06:40:00 retrouvée (82 départs proposés) |
+| ge_sylvia (samedi) | ge-sylvia.zip | 564 | OK | 2026-11-21 12:40:00 retrouvée (78 départs proposés) |
+| ge_sylvia (dimanche) | ge-sylvia.zip | 564 | OK | 2026-11-22 09:40:00 retrouvée (12 départs proposés) |
+| ge_tub (semaine) | ge-tub.zip | 493 | OK | 2026-11-20 16:30:00 retrouvée (14 départs proposés) |
+| ge_tub (samedi) | ge-tub.zip | 493 | OK | 2026-11-21 08:00:00 retrouvée (19 départs proposés) |
+| ge_tub (dimanche) | ge-tub.zip | 493 | OK | 2026-11-22 09:21:00 retrouvée (3 départs proposés) |
 | envia_arles (semaine) | envia-arles.zip | 4588 | OK | 2026-11-20 06:00:00 retrouvée (144 départs proposés) |
 | envia_arles (samedi) | envia-arles.zip | 4588 | OK | 2026-11-21 06:00:00 retrouvée (120 départs proposés) |
 | envia_arles (dimanche) | envia-arles.zip | 4588 | OK | 2026-11-22 07:50:00 retrouvée (6 départs proposés) |
