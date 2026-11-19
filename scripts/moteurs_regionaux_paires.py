@@ -1,6 +1,6 @@
 import csv,io,json,sys,zipfile,datetime,re,os
 hub=open('transport-mission-hub.js',encoding='utf8').read()
-nets=re.findall(r"\['([a-z_0-9]+)',\s*(?:'[^']*'|\"[^\"]*\"),\s*'([a-z0-9-]+\.zip)',\s*\[([0-9.,]+)\]\]",hub)
+nets=re.findall(r"\['([a-z_0-9]+)',\s*(?:'[^']*'|\"[^\"]*\"),\s*'([a-z0-9-]+\.zip)',\s*\[([-0-9.,]+)\]\]",hub)
 start=datetime.date.today()+datetime.timedelta(1);out=[]
 for id_,file,b in nets:
     b=[float(x) for x in b.split(',')];p='data/gtfs/'+file
