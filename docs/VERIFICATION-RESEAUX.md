@@ -2,7 +2,7 @@
 
 Généré le 2026-11-19 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**248 / 249 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**288 / 289 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -115,6 +115,46 @@ Généré le 2026-11-19 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | libeo_brive (samedi) | libeo-brive.zip | 4179 | OK | 2026-11-21 06:30:00 retrouvée (56 départs proposés) |
 | tulle_agglo (semaine) | tulle-agglo.zip | 125 | OK | 2026-11-20 14:45:00 retrouvée (48 départs proposés) |
 | tulle_agglo (samedi) | tulle-agglo.zip | 125 | OK | 2026-11-21 14:45:00 retrouvée (36 départs proposés) |
+| na_val_de_garonne (semaine) | na-val-de-garonne.zip | 286 | OK | 2026-11-20 07:00:00 retrouvée (35 départs proposés) |
+| na_val_de_garonne (samedi) | na-val-de-garonne.zip | 286 | OK | 2026-11-21 09:12:00 retrouvée (19 départs proposés) |
+| na_bergeracoise (semaine) | na-bergeracoise.zip | 65 | OK | 2026-11-20 07:35:00 retrouvée (42 départs proposés) |
+| na_bergeracoise (samedi) | na-bergeracoise.zip | 65 | OK | 2026-11-21 07:35:00 retrouvée (42 départs proposés) |
+| na_saintes (semaine) | na-saintes.zip | 1382 | OK | 2026-11-20 09:10:00 retrouvée (49 départs proposés) |
+| na_saintes (samedi) | na-saintes.zip | 1382 | OK | 2026-11-21 11:25:00 retrouvée (24 départs proposés) |
+| na_limoges (semaine) | na-limoges.zip | 12452 | OK | 2026-11-20 06:30:00 retrouvée (148 départs proposés) |
+| na_limoges (samedi) | na-limoges.zip | 12452 | OK | 2026-11-21 07:41:00 retrouvée (118 départs proposés) |
+| na_limoges (dimanche) | na-limoges.zip | 12452 | OK | 2026-11-22 17:08:00 retrouvée (1 départs proposés) |
+| na_rochefort (semaine) | na-rochefort.zip | 1030 | OK | 2026-11-20 06:55:00 retrouvée (1 départs proposés) |
+| na_rochefort (samedi) | na-rochefort.zip | 1030 | OK | 2026-11-21 18:05:00 retrouvée (11 départs proposés) |
+| na_perigueux (semaine) | na-perigueux.zip | 1935 | OK | 2026-11-20 07:24:00 retrouvée (117 départs proposés) |
+| na_perigueux (samedi) | na-perigueux.zip | 1935 | OK | 2026-11-21 10:02:00 retrouvée (60 départs proposés) |
+| na_pays_basque (semaine) | na-pays-basque.zip | 329 | OK | 2026-11-20 17:45:00 retrouvée (22 départs proposés) |
+| na_pays_basque (samedi) | na-pays-basque.zip | 329 | OK | 2026-11-21 17:45:00 retrouvée (22 départs proposés) |
+| na_pays_basque (dimanche) | na-pays-basque.zip | 329 | OK | 2026-11-22 10:00:00 retrouvée (4 départs proposés) |
+| na_grand_dax (semaine) | na-grand-dax.zip | 534 | OK | 2026-11-20 07:04:00 retrouvée (4 départs proposés) |
+| na_grand_dax (samedi) | na-grand-dax.zip | 534 | OK | 2026-11-21 08:02:00 retrouvée (14 départs proposés) |
+| na_grand_dax (dimanche) | na-grand-dax.zip | 534 | OK | 2026-11-22 19:15:00 retrouvée (6 départs proposés) |
+| na_libournais (semaine) | na-libournais.zip | 1449 | OK | 2026-11-20 18:15:00 retrouvée (221 départs proposés) |
+| na_libournais (samedi) | na-libournais.zip | 1449 | OK | 2026-11-21 18:15:00 retrouvée (208 départs proposés) |
+| na_grand_cognac (semaine) | na-grand-cognac.zip | 437 | OK | 2026-11-20 07:17:00 retrouvée (24 départs proposés) |
+| na_grand_cognac (samedi) | na-grand-cognac.zip | 437 | OK | 2026-11-21 08:22:00 retrouvée (22 départs proposés) |
+| na_grand_angouleme (semaine) | na-grand-angouleme.zip | 12172 | OK | 2026-11-20 18:46:00 retrouvée (221 départs proposés) |
+| na_grand_angouleme (samedi) | na-grand-angouleme.zip | 12172 | OK | 2026-11-21 07:15:00 retrouvée (178 départs proposés) |
+| na_grand_angouleme (dimanche) | na-grand-angouleme.zip | 12172 | OK | 2026-11-22 10:00:00 retrouvée (36 départs proposés) |
+| na_la_rochelle (semaine) | na-la-rochelle.zip | 4398 | OK | 2026-11-20 07:12:00 retrouvée (18 départs proposés) |
+| na_la_rochelle (samedi) | na-la-rochelle.zip | 4398 | OK | 2026-11-21 10:26:00 retrouvée (138 départs proposés) |
+| na_la_rochelle (dimanche) | na-la-rochelle.zip | 4398 | OK | 2026-11-22 08:32:00 retrouvée (44 départs proposés) |
+| na_chatellerault (semaine) | na-chatellerault.zip | 892 | OK | 2026-11-20 08:58:00 retrouvée (152 départs proposés) |
+| na_chatellerault (samedi) | na-chatellerault.zip | 892 | OK | 2026-11-21 08:58:00 retrouvée (124 départs proposés) |
+| na_chatellerault (dimanche) | na-chatellerault.zip | 892 | OK | 2026-11-22 09:30:00 retrouvée (6 départs proposés) |
+| na_niortais (semaine) | na-niortais.zip | 2792 | OK | 2026-11-20 15:29:00 retrouvée (100 départs proposés) |
+| na_niortais (samedi) | na-niortais.zip | 2792 | OK | 2026-11-21 07:05:00 retrouvée (50 départs proposés) |
+| na_marsan (semaine) | na-marsan.zip | 687 | OK | 2026-11-20 14:45:00 retrouvée (62 départs proposés) |
+| na_marsan (samedi) | na-marsan.zip | 687 | OK | 2026-11-21 14:16:00 retrouvée (42 départs proposés) |
+| na_royan (semaine) | na-royan.zip | 1317 | OK | 2026-11-20 07:30:00 retrouvée (17 départs proposés) |
+| na_royan (samedi) | na-royan.zip | 1317 | OK | 2026-11-21 08:00:00 retrouvée (13 départs proposés) |
+| na_bressuirais (semaine) | na-bressuirais.zip | 369 | OK | 2026-11-20 09:41:00 retrouvée (12 départs proposés) |
+| na_bressuirais (samedi) | na-bressuirais.zip | 369 | OK | 2026-11-21 09:41:00 retrouvée (4 départs proposés) |
 | rtca_carcassonne (semaine) | rtca-carcassonne.zip | 1183 | OK | 2026-11-20 07:08:00 retrouvée (41 départs proposés) |
 | rtca_carcassonne (samedi) | rtca-carcassonne.zip | 1183 | OK | 2026-11-21 06:43:00 retrouvée (21 départs proposés) |
 | rtca_carcassonne (dimanche) | rtca-carcassonne.zip | 1183 | OK | 2026-11-22 09:15:00 retrouvée (10 départs proposés) |
