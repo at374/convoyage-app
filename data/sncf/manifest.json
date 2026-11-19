@@ -2,44 +2,44 @@
   "schemaVersion": 1,
   "source": "SNCF Voyageurs / GTFS",
   "sourceUrl": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
-  "sourceSha256": "ed4b78f89ee146c37464afeb8151b37b884dae49d26262ea09ed52ccc6f5548f",
+  "sourceSha256": "f022273c6e9ca4d657889962af3ed860d0bec40ef966685f065a253ad59d465d",
   "sourceVersion": "2026-11-18",
   "feedValidity": [
     "20261118",
     "20270430"
   ],
-  "generatedAt": "2026-11-18T17:19:48.866746+00:00",
+  "generatedAt": "2026-11-19T11:40:22.973590+00:00",
   "license": "ODbL — SNCF conditions apply",
   "licenseUrl": "https://data.sncf.com/explore/dataset/horaires-sncf/",
   "scope": "scheduled railway station-to-station only; no realtime, fares or walking",
   "dates": {
     "2026-11-18": {
       "file": "sncf-2026-11-18.json",
-      "sha256": "f8d0ec5994ab8431304b676a55274072564bf74c346513b21cd8ba444918832b",
-      "bytes": 3308424,
-      "trips": 9867,
+      "sha256": "f61987b651e734faac0cd6dee6666a946ccf914c6e08b6ac4431655824c87941",
+      "bytes": 3285433,
+      "trips": 9773,
       "stations": 2792,
       "excludedTrips": 0
     },
     "2026-11-19": {
       "file": "sncf-2026-11-19.json",
-      "sha256": "67222beabc5d1dfb9069f0da7a14c6374ea504bffe783960478d9dce11bcdb46",
-      "bytes": 3321431,
-      "trips": 9902,
+      "sha256": "a5295bd72c966c828bce5d2183bee5da0e243b77e00ca9cc71727f11f332fb09",
+      "bytes": 3316769,
+      "trips": 9886,
       "stations": 2792,
       "excludedTrips": 0
     },
     "2026-11-20": {
       "file": "sncf-2026-11-20.json",
-      "sha256": "f849fd0c923081530a6c78e85113e28b41efb4cf8e802285984a756398fc3ad5",
-      "bytes": 3379351,
-      "trips": 10097,
+      "sha256": "4e02eba4cbe0ef51905314b55f9c964b2e8e800997aa98d49d218bf6e75411ae",
+      "bytes": 3370799,
+      "trips": 10072,
       "stations": 2792,
       "excludedTrips": 0
     },
     "2026-11-21": {
       "file": "sncf-2026-11-21.json",
-      "sha256": "59546755a11e843fafe3b7e54deec14f45133a517dd17c99df56d07918c5fa45",
+      "sha256": "7d2cfbb7e0dc3c6a9eca008c40ae3d6faf09db51224824c284907539b239bd29",
       "bytes": 2048114,
       "trips": 5736,
       "stations": 2792,
@@ -47,7 +47,7 @@
     },
     "2026-11-22": {
       "file": "sncf-2026-11-22.json",
-      "sha256": "17b008286765d33c61a056610a1d75188028e3793678a5233649b1d3f7dac886",
+      "sha256": "5f29a04b0ea244bdbbccaf5368695d6e16b3eaf048200de90855d7f97647834c",
       "bytes": 1834085,
       "trips": 5110,
       "stations": 2792,
@@ -55,25 +55,25 @@
     },
     "2026-11-23": {
       "file": "sncf-2026-11-23.json",
-      "sha256": "a3b6ed9c82f3c63f6f51282f2f6c2fe525dcbfc3d0d5ddda08c7cba57ae0d1f4",
-      "bytes": 3317542,
-      "trips": 9899,
+      "sha256": "650eb2235f2378bc892df1fd15c185c17920cd8d7c90202b12ae2e6e875b1c58",
+      "bytes": 3316945,
+      "trips": 9900,
       "stations": 2792,
       "excludedTrips": 0
     },
     "2026-11-24": {
       "file": "sncf-2026-11-24.json",
-      "sha256": "2e15a3fa27ece8cea78b0449124178adb094e7ecb36d2767e19de7d4856ad1da",
-      "bytes": 3304379,
-      "trips": 9865,
+      "sha256": "c8059f375376393abb381c90fdaed543579fbd85c49f191b99f17f43343b5f43",
+      "bytes": 3303782,
+      "trips": 9866,
       "stations": 2792,
       "excludedTrips": 0
     },
     "2026-11-25": {
       "file": "sncf-2026-11-25.json",
-      "sha256": "e7181f0223510621c58f622f3e447d898a4ae6620a48332c186be5a7b86ce3fd",
-      "bytes": 3306953,
-      "trips": 9880,
+      "sha256": "8766d7427c193ac33331a11eea67ed23b36738076de2aa5b6cfa9544a9e17239",
+      "bytes": 3306356,
+      "trips": 9881,
       "stations": 2792,
       "excludedTrips": 0
     }
