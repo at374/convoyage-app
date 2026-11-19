@@ -28,6 +28,8 @@ const BASE_URL = 'https://partenaire.expedicar.com';
 const LOGIN_URL = BASE_URL + '/login';
 const LIST_URL = BASE_URL + '/journey/list#journeys';
 const BOOKING_URL = BASE_URL + '/booking';
+const BILLING_URL = BASE_URL + '/billing';
+const FACTURES_MIN_INTERVAL_MS = 6 * 3600000; // comme le téléphone : les factures changent rarement
 
 // Régions de la liste déroulante « Ville de départ » du site (FR + Belgique).
 const REGIONS = [
@@ -90,40 +92,49 @@ async function loginHiflow(page, email, password) {
   if (/\/login/.test(page.url())) throw new Error('connexion Hiflow refusée');
 }
 
-// Capture passive des réponses JSON, comme HiflowPont côté Android : jamais de requête construite par nous.
-function armerCapture(page, missionsBucket, resaBucket) {
+// Capture passive des réponses JSON, comme côté Android (HiflowPont / cerveau.js) : jamais de requête
+// construite par nous. Chaque parseur de net-core.js vérifie lui-même la forme exacte attendue (clé de
+// tableau différente : response.journeys sans booking, response.booking, response.quotations,
+// response.bills, response.journeys AVEC booking) ; on les essaie donc tous, sans deviner par l'URL.
+function armerCapture(page, missionsBucket, resaBucket, facturesBucket, attenteBucket) {
   page.on('response', async (resp) => {
     try {
       const url = resp.url();
-      if (!/getJourneysOpenToConveyorBooking/i.test(url) || /near/i.test(url)) {
-        if (!/getBooking/i.test(url)) return;
-      }
+      if (/getJourneysOpenToConveyorBooking/i.test(url) && /near/i.test(url)) return; // V85 : jamais les trajets « à proximité »
       const ct = resp.headers()['content-type'] || '';
       if (!/json/i.test(ct)) return;
       const text = await resp.text();
       if (text.length > 2500000) return;
       let json; try { json = JSON.parse(text); } catch (_) { return; }
+      const now = new Date().toISOString();
 
-      if (text.includes('"id_booking"')) {
-        const list = CPNet.reservationsHiflow(json);
-        if (list) {
-          const now = new Date().toISOString();
-          for (const m of list) {
-            const id = String(m.external_id || ''); if (!/^\d{5,10}$/.test(id)) continue;
-            const sr = String(m.status_raw || '');
-            const st = /annul/i.test(sr) ? 'annulee' : /effectu|termin/i.test(sr) ? 'terminee' : 'acceptee';
-            resaBucket[id] = { ...(resaBucket[id] || {}), ...m, status: st, last_seen_at: now };
-          }
+      const resa = CPNet.reservationsHiflow(json);
+      if (resa) {
+        for (const m of resa) {
+          const id = String(m.external_id || ''); if (!/^\d{5,10}$/.test(id)) continue;
+          const sr = String(m.status_raw || '');
+          const st = /annul/i.test(sr) ? 'annulee' : /effectu|termin/i.test(sr) ? 'terminee' : 'acceptee';
+          resaBucket[id] = { ...(resaBucket[id] || {}), ...m, status: st, last_seen_at: now };
         }
         return;
       }
-      const list = CPNet.trajetsHiflow(json);
-      if (!list) return;
-      const now = new Date().toISOString();
-      for (const m of list) {
-        const id = String(m.external_id || ''); if (!/^\d{5,10}$/.test(id) || !m.from || !m.to) continue;
-        const prev = missionsBucket[id] || {};
-        missionsBucket[id] = { ...prev, ...m, platform: 'Hiflow', first_seen_at: prev.first_seen_at || now, last_seen_at: now };
+      const dispo = CPNet.trajetsHiflow(json);
+      if (dispo) {
+        for (const m of dispo) {
+          const id = String(m.external_id || ''); if (!/^\d{5,10}$/.test(id) || !m.from || !m.to) continue;
+          const prev = missionsBucket[id] || {};
+          missionsBucket[id] = { ...prev, ...m, platform: 'Hiflow', first_seen_at: prev.first_seen_at || now, last_seen_at: now };
+        }
+        return;
+      }
+      const factures = CPNet.facturesHiflow(json);
+      if (factures) {
+        for (const f of factures) if (f && f.id) facturesBucket[f.id] = { ...(facturesBucket[f.id] || {}), ...f };
+        return;
+      }
+      const attente = CPNet.attenteHiflow(json);
+      if (attente) {
+        for (const t of attente) if (t && t.id_booking) attenteBucket[t.id_booking] = { ...(attenteBucket[t.id_booking] || {}), ...t };
       }
     } catch (_) { /* une réponse illisible ne doit jamais arrêter la lecture */ }
   });
@@ -163,6 +174,24 @@ async function lireMesTrajets(page, resaBucket) {
   await sleep(4000); // la liste arrive via la réponse JSON capturée passivement
 }
 
+// Comme le téléphone (hf_factures_at) : « Mes factures » change rarement, on ne la relit pas à chaque passage.
+async function fauteDeFacturesRecentes(url, key) {
+  try {
+    const r = await fetch(`${url}/rest/v1/factures?platform=eq.${PLATFORM}&select=maj_le&order=maj_le.desc&limit=1`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+    });
+    if (!r.ok) return true;
+    const rows = await r.json();
+    const dernier = rows && rows[0] && rows[0].maj_le ? Date.parse(rows[0].maj_le) : 0;
+    return !dernier || Date.now() - dernier > FACTURES_MIN_INTERVAL_MS;
+  } catch (_) { return true; }
+}
+
+async function lireMesFactures(page) {
+  await page.goto(BILLING_URL, { waitUntil: 'domcontentloaded' });
+  await sleep(4000);
+}
+
 async function runSync() {
   const SUPABASE_URL = env('SUPABASE_URL');
   const SERVICE_KEY = env('SUPABASE_SERVICE_ROLE_KEY');
@@ -172,13 +201,16 @@ async function runSync() {
   if (!cred || !cred.email || !cred.password) throw new Error('aucun identifiant Hiflow enregistré pour cet utilisateur');
 
   const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
-  const missionsBucket = {}, resaBucket = {};
-  let statut = 'ok', detail = null, regionsOk = 0;
+  const missionsBucket = {}, resaBucket = {}, facturesBucket = {}, attenteBucket = {};
+  let statut = 'ok', detail = null, regionsOk = 0, facturesLues = false;
   try {
     const page = await browser.newPage();
-    armerCapture(page, missionsBucket, resaBucket);
+    armerCapture(page, missionsBucket, resaBucket, facturesBucket, attenteBucket);
     await loginHiflow(page, cred.email, cred.password);
     await lireMesTrajets(page, resaBucket);
+    if (await fauteDeFacturesRecentes(SUPABASE_URL, SERVICE_KEY)) {
+      try { await lireMesFactures(page); facturesLues = true; } catch (e) { statut = 'partiel'; detail = `factures: ${e.message}`; }
+    }
     for (const region of REGIONS) {
       try {
         await scrapeRegion(page, region, missionsBucket, resaBucket);
@@ -199,17 +231,27 @@ async function runSync() {
     cp50_hiflow_missions: missionsBucket,
     cp72_acceptees: { Hiflow: resaBucket },
     cp70_missions_autres: {},
-    cp96_factures: {},
+    cp96_factures: facturesBucket,
     cp95_devis: {},
-    cp98_attente: {},
+    cp98_attente: attenteBucket,
   };
   const rows = CPSync.buildRows(store, USER_ID, { plateformes: ['Hiflow'] }).map((r) => ({ ...r, first_seen_at: undefined }));
 
   await supabaseUpsert(SUPABASE_URL, SERVICE_KEY, 'missions', rows, 'user_id,platform,external_id,kind');
 
-  const filtre = CPSync.filtreOrphelines(rows, PLATFORM);
-  if (filtre) {
-    await supabasePatch(SUPABASE_URL, SERVICE_KEY, 'missions', filtre, { status: 'plus_vue' });
+  // Sécurité (comme purgerApresLecture côté téléphone) : ne JAMAIS marquer « plus_vue » sur une lecture
+  // incomplète (une région en échec = ses missions, pourtant peut-être toujours bien disponibles, seraient
+  // sinon effacées à tort). On ne fait ce ménage que quand les 17 régions ont été lues avec succès.
+  if (regionsOk === REGIONS.length) {
+    const filtre = CPSync.filtreOrphelines(rows, PLATFORM);
+    if (filtre) {
+      await supabasePatch(SUPABASE_URL, SERVICE_KEY, 'missions', filtre, { status: 'plus_vue' });
+    }
+  }
+
+  if (facturesLues) {
+    const factureRows = CPSync.buildFactures(store, USER_ID);
+    if (factureRows.length) await supabaseUpsert(SUPABASE_URL, SERVICE_KEY, 'factures', factureRows, 'user_id,platform,external_id');
   }
 
   await fetch(`${SUPABASE_URL}/rest/v1/sources_etat?on_conflict=user_id,platform`, {
