@@ -827,6 +827,48 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   }
   if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', () => { if (document.hidden && suiviWatch !== null) { navigator.geolocation.clearWatch(suiviWatch); suiviWatch = null; suiviDedans.clear(); } else if (!document.hidden) { suiviReprise = true; setTimeout(() => { suiviReprise = false; }, 20000); suiviMaj(); } });
   if (typeof navigator !== 'undefined' && navigator.geolocation) setTimeout(suiviMaj, 3000);
+  // Préparation à l'avance (application ouverte) : de 12 h à 0 h avant la prise en charge d'une mission ACCEPTÉE de l'agenda, les fichiers d'horaires utiles
+  // (aller, jonction, retour) sont téléchargés d'avance (sans être lus, pour ne pas figer l'écran) et gardés sur le téléphone : « Visualisation des transports » démarre sans attente réseau.
+  const preparees = new Set(); let preparationEnCours = false;
+  async function preparerTransports() {
+    if (preparationEnCours || document.hidden) return;
+    const Hub = window.CPTransportHub; if (!Hub || !Hub.makeProviders) return;
+    preparationEnCours = true;
+    try {
+      const now = Date.now(), reg = etat.reglages || {};
+      const hl = reg.domicile_lat, hn = reg.domicile_lng;
+      const home = hl != null && hn != null && hl !== '' && hn !== '' && Number.isFinite(Number(hl)) && Number.isFinite(Number(hn)) ? { lat: Number(hl), lon: Number(hn) } : null;
+      const liste = (etat.missions || []).filter(m => m.kind === 'acceptee' && m.platform && m.external_id != null && m.status !== 'annulee' && m.status !== 'terminee')
+        .map(m => ({ m, t: missionTiming(m) })).filter(x => Number.isFinite(Date.parse(x.t.pickup || ''))).sort((a, b) => Date.parse(a.t.pickup) - Date.parse(b.t.pickup));
+      const P = Hub.makeProviders(window, {});
+      const pt = g => { const c = g && Number.isFinite(Number(g.lat)) && Number.isFinite(Number(g.lng)) ? g : null; return c ? { lat: Number(c.lat), lon: Number(c.lng) } : null; };
+      for (let i = 0; i < liste.length; i++) {
+        const { m, t } = liste[i], debut = Date.parse(t.pickup);
+        if (debut - now > 12 * 3600000 || debut - now < -6 * 3600000) continue;
+        const cle = t.key + '|' + String(t.pickup).slice(0, 10);
+        if (preparees.has(cle)) continue;
+        preparees.add(cle);
+        const suivante = liste[i + 1] ? liste[i + 1].m : null;
+        try { await pointsMission(m); if (suivante) await pointsMission(suivante); } catch (_) { }
+        const fin = t.planned || t.deadline;
+        const o = pt(G.coordonnees(m, 'origin')), d = pt(G.coordonnees(m, 'destination'));
+        const taches = [];
+        if (home && o) taches.push({ label: 'Aller', from: home, to: o, latestArrival: t.pickup, marginMinutes: 15 });
+        if (home && d && fin) taches.push({ label: 'Retour', from: d, to: home, earliestDeparture: fin });
+        if (suivante && d && fin && suivante.pickup_start) { const so = pt(G.coordonnees(suivante, 'origin')); if (so) taches.push({ label: 'Jonction', from: d, to: so, earliestDeparture: fin, latestArrival: suivante.pickup_start, marginMinutes: 15 }); }
+        for (const tache of taches) {
+          for (const [k, prov] of Object.entries(P)) {
+            if (!/^local_/.test(k)) continue;
+            if (document.hidden) { preparees.delete(cle); return; }
+            try { if (prov.prefetch && prov.enabled(tache)) await prov.prefetch(); } catch (_) { }
+            await new Promise(r => setTimeout(r, 50));   // laisse l'écran respirer
+          }
+        }
+      }
+    } finally { preparationEnCours = false; }
+  }
+  setTimeout(preparerTransports, 8000); setInterval(preparerTransports, 15 * 60000);
+  if (typeof document.addEventListener === 'function') document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(preparerTransports, 3000); });
   // Suggestions dès 3 lettres (ou un numéro de département) : villes, départements, régions.
   function montrerSuggestions() {
     const box = $('sugg'); if (!box) return;

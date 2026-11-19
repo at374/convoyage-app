@@ -954,6 +954,13 @@ function makeProviders(r,opts={}){
    P['local_'+id]={name:name+' GTFS',
     enabled:task=>!!queryWindow(task)&&inBounds(pt(task.from),bounds)&&inBounds(pt(task.to),bounds),
     disabledReason:'trajet hors zone du réseau local ou horaires manquants',
+    // Préparation à l'avance : seulement le téléchargement (gardé sur le téléphone), sans lecture du fichier, pour ne jamais figer l'écran.
+    prefetch:async()=>{
+     const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
+      'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
+     for(const u of urls){try{const x=await fetcher(u);if(x&&x.ok){await x.arrayBuffer();return true;}}catch(_){}}
+     return false;
+    },
     run:async(task,signal)=>{
      const w=queryWindow(task),when=ms(w.when);
      if(!Number.isFinite(when))return [];
