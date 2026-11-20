@@ -562,7 +562,10 @@ function dayWindowOk(j,task){
  const dep=parisDayParts(j.legs[0]?.departure),arr=parisDayParts(j.legs[j.legs.length-1]?.arrival);
  if(!dep||!arr)return false;
  const first=Number.isFinite(task.dayStartMinutes)?task.dayStartMinutes:300;
- const last=Number.isFinite(task.dayEndMinutes)?task.dayEndMinutes:1140;
+ // 20/11/2026 (demande Laurent) : une arrivée après 19h00 reste proposée jusqu'à minuit (23:59), au lieu d'être
+ // exclue dès 19h00. Au-delà de minuit, le trajet change de jour calendaire et reste écarté par dep.day!==arr.day
+ // ci-dessous (jamais présenté comme une arrivée « le jour même »).
+ const last=Number.isFinite(task.dayEndMinutes)?task.dayEndMinutes:1439;
  if(dep.minute<first||arr.minute>last||dep.day!==arr.day)return false;
  // Agences et parcs fermés en fin de journée (17:30 par défaut, plus tard si la fenêtre de la plateforme le permet) :
  // arrivée au site (prise en charge / mission suivante) ou départ du site (retour) après cette heure = proposition écartée.
