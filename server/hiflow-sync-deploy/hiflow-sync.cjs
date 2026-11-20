@@ -10,11 +10,17 @@
  * les identifiants sont lus (chiffrés) dans Supabase Vault juste avant de se connecter, avec un vrai
  * navigateur (Playwright) qui remplit le formulaire visible, exactement comme le ferait Laurent.
  *
+ * 21/11/2026 : multi-convoyeurs — ce service ne sert plus un seul utilisateur figé (HIFLOW_USER_ID).
+ * À chaque appel, il interroge Supabase pour la liste de TOUS les convoyeurs ayant un identifiant
+ * Hiflow actif (plateforme_identifiants, platform='Hiflow', active=true), puis synchronise chacun
+ * avec SES PROPRES identifiants (email + mot de passe), un par un, dans un navigateur neuf à chaque
+ * fois (aucun cookie ni session partagée entre deux convoyeurs). Un convoyeur en échec (mauvais mot
+ * de passe, compte bloqué...) n'empêche jamais la synchro des autres.
+ *
  * Variables d'environnement requises :
  *   SUPABASE_URL              URL du projet Supabase
  *   SUPABASE_SERVICE_ROLE_KEY clé service_role (jamais exposée côté application/client)
  *   HIFLOW_SYNC_SECRET        secret partagé avec Cloud Scheduler (en-tête X-Sync-Secret)
- *   HIFLOW_USER_ID            uuid Supabase (auth.users.id) pour qui on synchronise
  *   PORT                      port HTTP (fourni par Cloud Run)
  */
 'use strict';
@@ -186,9 +192,11 @@ async function lireMesTrajets(page, resaBucket) {
 }
 
 // Comme le téléphone (hf_factures_at) : « Mes factures » change rarement, on ne la relit pas à chaque passage.
-async function fauteDeFacturesRecentes(url, key) {
+// 21/11/2026 (multi-convoyeurs) : filtré par user_id désormais — sans ça, la lecture récente des factures
+// d'UN convoyeur aurait fait sauter celle des autres pendant 6h, alors que chacun a ses propres factures.
+async function fauteDeFacturesRecentes(url, key, userId) {
   try {
-    const r = await fetch(`${url}/rest/v1/factures?platform=eq.${PLATFORM}&select=maj_le&order=maj_le.desc&limit=1`, {
+    const r = await fetch(`${url}/rest/v1/factures?user_id=eq.${userId}&platform=eq.${PLATFORM}&select=maj_le&order=maj_le.desc&limit=1`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
     });
     if (!r.ok) return true;
@@ -203,11 +211,18 @@ async function lireMesFactures(page) {
   await sleep(4000);
 }
 
-async function runSync() {
-  const SUPABASE_URL = env('SUPABASE_URL');
-  const SERVICE_KEY = env('SUPABASE_SERVICE_ROLE_KEY');
-  const USER_ID = env('HIFLOW_USER_ID');
+// 21/11/2026 : liste tous les convoyeurs ayant un identifiant Hiflow actif enregistré — chacun ne
+// sera synchronisé qu'avec SON PROPRE email/mot de passe, lu séparément via lire_identifiant_plateforme.
+async function listerUtilisateursHiflowActifs(url, key) {
+  const r = await fetch(`${url}/rest/v1/plateforme_identifiants?platform=eq.${PLATFORM}&active=eq.true&select=user_id`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+  });
+  if (!r.ok) throw new Error(`lister identifiants Hiflow actifs: ${r.status} ${await r.text()}`);
+  const rows = await r.json();
+  return [...new Set(rows.map((row) => row.user_id))];
+}
 
+async function syncUnUtilisateur(SUPABASE_URL, SERVICE_KEY, USER_ID) {
   const [cred] = await supabaseRpc(SUPABASE_URL, SERVICE_KEY, 'lire_identifiant_plateforme', { p_user_id: USER_ID, p_platform: PLATFORM });
   if (!cred || !cred.email || !cred.password) throw new Error('aucun identifiant Hiflow enregistré pour cet utilisateur');
 
@@ -219,7 +234,7 @@ async function runSync() {
     armerCapture(page, missionsBucket, resaBucket, facturesBucket, attenteBucket);
     await loginHiflow(page, cred.email, cred.password);
     await lireMesTrajets(page, resaBucket);
-    if (await fauteDeFacturesRecentes(SUPABASE_URL, SERVICE_KEY)) {
+    if (await fauteDeFacturesRecentes(SUPABASE_URL, SERVICE_KEY, USER_ID)) {
       try { await lireMesFactures(page); facturesLues = true; } catch (e) { statut = 'partiel'; detail = `factures: ${e.message}`; }
     }
     for (const region of REGIONS) {
@@ -259,7 +274,7 @@ async function runSync() {
   // incomplète (une région en échec = ses missions, pourtant peut-être toujours bien disponibles, seraient
   // sinon effacées à tort). On ne fait ce ménage que quand les 17 régions ont été lues avec succès.
   if (regionsOk === REGIONS.length) {
-    const filtre = CPSync.filtreOrphelines(rows, PLATFORM);
+    const filtre = CPSync.filtreOrphelines(rows, PLATFORM, USER_ID);
     if (filtre) {
       await supabasePatch(SUPABASE_URL, SERVICE_KEY, 'missions', filtre, { status: 'plus_vue' });
     }
@@ -289,8 +304,48 @@ async function runSync() {
       { derniere_sync_at: new Date().toISOString(), derniere_sync_statut: statut });
   } catch (e) { console.error(`[hiflow-sync] écriture plateforme_identifiants échouée : ${e.message}`); }
 
-  console.log(`[hiflow-sync] résumé : statut=${statut} · ${rows.length} missions · régions ${regionsOk}/${REGIONS.length}` + (detail ? ` · ${detail}` : ''));
+  console.log(`[hiflow-sync] [${USER_ID}] résumé : statut=${statut} · ${rows.length} missions · régions ${regionsOk}/${REGIONS.length}` + (detail ? ` · ${detail}` : ''));
   return { statut, nb_missions: rows.length, regions_ok: regionsOk, regions_total: REGIONS.length, detail };
+}
+
+// 21/11/2026 : point d'entrée multi-convoyeurs — remplace l'ancien runSync() mono-utilisateur
+// (qui lisait HIFLOW_USER_ID dans l'environnement). Chaque convoyeur est traité l'un après l'autre
+// (jamais en parallèle : un seul navigateur Chromium à la fois, mémoire Cloud Run limitée) et avec
+// ses propres identifiants Hiflow ; l'échec d'un convoyeur (login refusé, panne réseau...) est
+// consigné et n'empêche jamais la synchro des suivants.
+async function runSync() {
+  const SUPABASE_URL = env('SUPABASE_URL');
+  const SERVICE_KEY = env('SUPABASE_SERVICE_ROLE_KEY');
+
+  const userIds = await listerUtilisateursHiflowActifs(SUPABASE_URL, SERVICE_KEY);
+  if (!userIds.length) {
+    console.log('[hiflow-sync] aucun convoyeur avec identifiant Hiflow actif à synchroniser');
+    return { utilisateurs: 0, resultats: [] };
+  }
+
+  const resultats = [];
+  for (const userId of userIds) {
+    try {
+      const resultat = await syncUnUtilisateur(SUPABASE_URL, SERVICE_KEY, userId);
+      resultats.push({ user_id: userId, ...resultat });
+    } catch (e) {
+      console.error(`[hiflow-sync] [${userId}] échec complet : ${e.message}`);
+      // Même en cas d'échec total avant toute lecture (ex : identifiant Hiflow introuvable/invalide dans
+      // Vault), on remonte le statut dans sources_etat et plateforme_identifiants pour que la pastille et
+      // l'alerte de l'utilisateur concerné réagissent — sans ça, seuls les logs Cloud Run le sauraient.
+      try {
+        await fetch(`${SUPABASE_URL}/rest/v1/sources_etat?on_conflict=user_id,platform`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, Prefer: 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify([{ user_id: userId, platform: PLATFORM, lu_le: new Date().toISOString(), maj_le: new Date().toISOString(), ok: false, message: e.message }]),
+        });
+        await supabasePatch(SUPABASE_URL, SERVICE_KEY, 'plateforme_identifiants', `user_id=eq.${userId}&platform=eq.${PLATFORM}`, { derniere_sync_at: new Date().toISOString(), derniere_sync_statut: 'erreur' });
+      } catch (e2) { console.error(`[hiflow-sync] [${userId}] écriture du statut d'échec impossible : ${e2.message}`); }
+      resultats.push({ user_id: userId, statut: 'erreur', detail: e.message });
+    }
+  }
+  console.log(`[hiflow-sync] terminé : ${resultats.length} convoyeur(s) traité(s)`);
+  return { utilisateurs: resultats.length, resultats };
 }
 
 const server = http.createServer(async (req, res) => {

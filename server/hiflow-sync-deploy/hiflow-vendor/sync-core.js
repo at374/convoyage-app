@@ -146,10 +146,14 @@ if (Array.isArray(v.suites)) { const L = v.suites.slice(0, 8).map(s => ({ id: st
   }
   // V99 : missions encore « disponibles » sur le serveur mais plus dans la liste de l'ordinateur (lignes retirées, anciennes
   // lectures) → à marquer « plus vue ». Renvoie le filtre de la requête, ou null si la liste locale est vide (jamais de masquage à l'aveugle).
-  function filtreOrphelines(rows, platform) {
+  // 21/11/2026 (robot Cloud Run multi-convoyeurs) : userId optionnel, ajouté au filtre quand fourni.
+  // Sans lui, le ménage « plus_vue » d'UN convoyeur aurait pu marquer comme disparues des missions
+  // encore bien visibles chez un AUTRE convoyeur sur la même plateforme (filtre alors partagé par tous).
+  function filtreOrphelines(rows, platform, userId) {
     const ids = [...new Set((rows || []).filter(r => r.platform === platform && r.kind === 'disponible' && r.status === 'disponible' && /^[\w-]{1,64}$/.test(String(r.external_id))).map(r => String(r.external_id)))];
     if (ids.length < 1 || ids.length > 1500) return null;
-    return 'platform=eq.' + platform + '&kind=eq.disponible&status=eq.disponible&external_id=not.in.(' + ids.join(',') + ')';
+    const base = 'platform=eq.' + platform + '&kind=eq.disponible&status=eq.disponible&external_id=not.in.(' + ids.join(',') + ')';
+    return userId ? 'user_id=eq.' + userId + '&' + base : base;
   }
   const keyOf = r => r.platform + '|' + r.kind + '|' + r.external_id;
   function hash(r) { const { last_seen_at, ...rest } = r; const t = JSON.stringify(rest); let h = 2166136261; for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(16); }

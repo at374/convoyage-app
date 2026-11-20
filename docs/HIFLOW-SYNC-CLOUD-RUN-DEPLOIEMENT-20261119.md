@@ -5,12 +5,19 @@ qui se connecte à Hiflow avec un vrai navigateur (Playwright) et met à jour Su
 Il réutilise le code déjà éprouvé du robot Android (`net-core.js` / `sync-core.js`,
 copiés dans `server/hiflow-vendor/`).
 
-## 1. Préalable : enregistrer tes identifiants Hiflow
+## 1. Préalable : chaque convoyeur enregistre SES identifiants Hiflow
 
 Dans l'application Convoyage Ultra → Réglages → Connecter ma plateforme → Hiflow,
-saisis ton e-mail et ton mot de passe. Ils sont chiffrés côté Supabase (Vault) ;
-ni moi ni l'application ne peuvent les relire en clair — seul le robot le peut,
+chaque convoyeur saisit SON e-mail et SON mot de passe. Ils sont chiffrés côté Supabase
+(Vault) ; ni moi ni l'application ne peuvent les relire en clair — seul le robot le peut,
 au moment de se connecter.
+
+**21/11/2026 — multi-convoyeurs :** le robot n'est plus figé sur un seul compte (l'ancienne
+variable `HIFLOW_USER_ID` n'existe plus). À chaque appel, il relit dans Supabase la liste de
+TOUS les convoyeurs ayant un identifiant Hiflow actif, et synchronise chacun avec ses propres
+identifiants — jamais avec ceux d'un autre. Un convoyeur qui saisit juste son email/mot de
+passe dans Réglages est donc automatiquement pris en charge au prochain passage du robot,
+sans aucune action de ta part ni redéploiement.
 
 ## 2. Secrets (une seule fois, dans Cloud Shell)
 
@@ -37,14 +44,21 @@ gcloud run deploy hiflow-sync \
   --region europe-west1 \
   --no-allow-unauthenticated \
   --memory 1Gi --cpu 1 --timeout 900 --concurrency 1 --max-instances 1 \
-  --set-env-vars SUPABASE_URL=https://ozjouxdjhgoprsbefhjq.supabase.co,HIFLOW_USER_ID=<uuid-de-ton-compte> \
+  --set-env-vars SUPABASE_URL=https://ozjouxdjhgoprsbefhjq.supabase.co \
   --set-secrets SUPABASE_SERVICE_ROLE_KEY=hiflow-sync-service-key:latest,HIFLOW_SYNC_SECRET=hiflow-sync-secret:latest
 ```
 
-(`<uuid-de-ton-compte>` : ton `auth.users.id` Supabase — visible dans Authentication → Users.)
-
 `--no-allow-unauthenticated` : le service n'est pas public ; seul Cloud Scheduler
 (avec son propre compte de service) pourra l'appeler.
+
+**Limite à surveiller (`--timeout 900` = 15 min) :** les convoyeurs sont synchronisés un par un
+(jamais en parallèle, pour ne pas partager de cookies/session entre eux et ménager la mémoire).
+Chaque convoyeur prend environ 1 à 3 minutes (17 régions + trajets + éventuellement factures).
+Au-delà d'une dizaine de convoyeurs actifs, le passage risque de dépasser les 15 minutes avant la
+fin du cycle de 10 minutes suivant — si ça arrive (visible dans les logs Cloud Run : un appel qui
+ne se termine jamais, ou un statut 504), il faudra soit espacer Cloud Scheduler (ex. toutes les
+15-20 min), soit augmenter `--timeout`, soit paralléliser par petits groupes. Pas un problème à
+résoudre maintenant, juste à surveiller si le nombre de convoyeurs augmente.
 
 ## 4. Cloud Scheduler (toutes les 10 minutes)
 
