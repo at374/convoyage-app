@@ -191,6 +191,30 @@ FILTERED_MIRROR = [
     {'id': 'eveole-douai', 'network': 'Evéole (Douaisis)',
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/99cf5e2f-87c2-4ff1-bc0d-32f04cc213ab',
      'bounds': [50.25, 2.90, 50.50, 3.20], 'horizon_days': 45, 'slim': True, 'download_limit': 30 * 1024 * 1024},
+    # 20/11/2026 : Île-de-France Mobilités (RATP + bus/tram/métro, dataset « Réseaux urbains et
+    # interurbains d'IDFM »), demandé par Laurent — seule la région Île-de-France n'avait encore aucune
+    # couverture locale, alors que c'est la plus grosse agglomération française (~12 M d'habitants).
+    # Flux officiel disproportionné par rapport à tout ce qui a été câblé jusqu'ici : 130 Mo compressés,
+    # 1 970 lignes, 35 484 arrêts (transport.data.gouv.fr/resources/80921). Première tentative volontairement
+    # prudente (leçon de Rennes/Bordeaux/Orléans : le ratio Mo/jour n'est jamais linéaire sur un gros réseau) :
+    # bbox resserrée à Paris intra-muros (boulevard périphérique) et horizon réduit à 5 jours dès le départ,
+    # au lieu de partir de 45 jours puis de réduire après un premier échec. download_limit relevé à 150 Mo
+    # pour laisser passer le fichier brut avant filtrage (le plafond de sortie MAX_OUT=12 Mo s'applique
+    # après filtrage, comme pour les autres réseaux). À resserrer encore (zone plus petite, ex. cœur +
+    # grandes gares seulement) ou agrandir (petite couronne) selon la taille réelle mesurée après le premier
+    # build réel ; La Défense/Roissy/Orly sont hors de cette première emprise.
+    {'id': 'idfm-paris', 'network': 'Île-de-France Mobilités (Paris intra-muros)',
+     'url': 'https://transport.data.gouv.fr/resources/80921/download',
+     'bounds': [48.81, 2.22, 48.91, 2.43], 'horizon_days': 5, 'slim': True, 'download_limit': 150 * 1024 * 1024},
+    # SNCF Transilien (RER/Transilien/TER opérés par la SNCF en Île-de-France) : dataset distinct d'IDFM,
+    # lien stable publié par SNCF Open Data (« toujours le GTFS en vigueur », comme STAR Rennes). Beaucoup
+    # plus léger qu'IDFM (11,56 Mo compressés, 38 lignes, 3 204 arrêts selon la fiche transport.data.gouv.fr)
+    # malgré une couverture qui dépasse l'Île-de-France (TER inclus) : bbox large sur toute la région pour
+    # ne pas filtrer à tort les correspondances de gares de bordure (Creil, Provins, Chartres...), horizon
+    # par défaut (pas de réduction a priori vu la taille modeste, à revoir si le build réel dépasse le plafond).
+    {'id': 'transilien-idf', 'network': 'SNCF Transilien / RER (Île-de-France)',
+     'url': 'https://eu.ftp.opendatasoft.com/sncf/gtfs/transilien-gtfs.zip',
+     'bounds': [48.05, 1.35, 49.25, 3.60], 'slim': True, 'download_limit': 30 * 1024 * 1024},
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
