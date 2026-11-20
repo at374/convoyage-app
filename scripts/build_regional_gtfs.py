@@ -132,11 +132,12 @@ FILTERED_MIRROR = [
      'bounds': [50.55, 2.85, 50.75, 3.20], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
     # STAR Rennes : lien stable documenté par Keolis Rennes (« toujours le GTFS en cours », rafraîchi chaque nuit),
     # préféré au resource id transport.data.gouv.fr qui change à chaque rupture d'offre.
-    # 20/11/2026 : horizon réduit 45->16j — même diagnostic (« Expanded GTFS exceeds size limit » réel sur
-    # l'archive : stop_times.txt à 115,2 Mo à 45j, ~2,56 Mo/j, au-delà des 64 Mo maxFileBytes du moteur).
+    # 20/11/2026 : horizon réduit 45->16j puis 16->7j — à 16j l'archive réelle décompressait encore à
+    # 89,8 Mo (~5,6 Mo/j, le ratio n'était pas linéaire avec l'estimation à 45j), toujours au-delà des 64 Mo
+    # maxFileBytes du moteur. 7j vise ~39 Mo, avec marge.
     {'id': 'star-rennes', 'network': 'STAR (Rennes Métropole)',
      'url': 'https://eu.ftp.opendatasoft.com/star/gtfs/GTFS_STAR_BUS_METRO_EN_COURS.zip',
-     'bounds': [47.98, -1.85, 48.22, -1.55], 'horizon_days': 16, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+     'bounds': [47.98, -1.85, 48.22, -1.55], 'horizon_days': 7, 'slim': True, 'download_limit': 60 * 1024 * 1024},
     # Naolib/TAN Nantes : resource 8055 est devenue un lien mort (404) ; resource 84101
     # (jeu "tan-arrets-horaires-et-circuits", fichier gtfs_lumidata_id.zip, mis à jour 20/11/2026) le remplace.
     # Horizon réduit à 14 jours (au lieu des 45 habituels) : réseau dense, l'extrait bbox dépassait
@@ -144,11 +145,12 @@ FILTERED_MIRROR = [
     {'id': 'naolib-nantes', 'network': 'Naolib (Nantes Métropole)',
      'url': 'https://transport.data.gouv.fr/resources/84101/download',
      'bounds': [47.13, -1.70, 47.33, -1.40], 'horizon_days': 14, 'slim': True, 'download_limit': 60 * 1024 * 1024},
-    # 20/11/2026 : horizon réduit 45->15j — même diagnostic (stop_times.txt à 131,2 Mo à 45j, ~2,78 Mo/j,
-    # « Expanded GTFS exceeds size limit » réel sur l'archive, au-delà des 64 Mo maxFileBytes du moteur).
+    # 20/11/2026 : horizon réduit 45->15j puis 15->6j — à 15j l'archive réelle décompressait encore à
+    # 89,4 Mo (~5,96 Mo/j, ratio non linéaire avec l'estimation à 45j), toujours au-delà des 64 Mo
+    # maxFileBytes du moteur. 6j vise ~36 Mo, avec marge.
     {'id': 'tbm-bordeaux', 'network': 'TBM (Bordeaux Métropole)',
      'url': 'https://transport.data.gouv.fr/resources/83024/download',
-     'bounds': [44.75, -0.70, 44.95, -0.45], 'horizon_days': 15, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+     'bounds': [44.75, -0.70, 44.95, -0.45], 'horizon_days': 6, 'slim': True, 'download_limit': 60 * 1024 * 1024},
     # Irigo Angers : lien stable data.gouv.fr (toujours le GTFS en vigueur, même adresse à chaque republication).
     # Le réseau comprend un tramway (lignes A/B/C) → même traitement préventif horizon_days/slim que les autres métros.
     {'id': 'irigo-angers', 'network': 'Irigo (Angers Loire Métropole)',
