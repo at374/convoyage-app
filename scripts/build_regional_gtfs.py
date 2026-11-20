@@ -118,6 +118,28 @@ FILTERED_MIRROR = [
     # des 45 prochains jours (rafraîchi chaque semaine).
     {'id': 'fil-bleu-tours', 'network': 'Fil Bleu (Tours Métropole)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/198b7602-5e74-4d88-b6bc-483af85a2430',
      'bounds': [47.34, 0.62, 47.46, 0.76], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+    # 20/11/2026 — 5 grandes métropoles encore absentes (demande : couvrir toute la France). Chacune a un métro/tram
+    # (gros volumes de courses) → horizon_days + slim dès le départ, même traitement préventif que RTM/Fil Bleu
+    # (évite de reproduire le bug du 19-20/11 où une emprise seule ne suffit pas à repasser sous 128 Mo décompressés).
+    {'id': 'cts-strasbourg', 'network': 'CTS (Strasbourg Eurométropole)',
+     'url': 'https://transport.data.gouv.fr/resources/79220/download',
+     'bounds': [48.48, 7.60, 48.68, 7.82], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+    {'id': 'ilevia-lille', 'network': 'ilévia (Métropole Européenne de Lille)',
+     'url': 'https://transport.data.gouv.fr/resources/81995/download',
+     'bounds': [50.55, 2.85, 50.75, 3.20], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+    # STAR Rennes : lien stable documenté par Keolis Rennes (« toujours le GTFS en cours », rafraîchi chaque nuit),
+    # préféré au resource id transport.data.gouv.fr qui change à chaque rupture d'offre.
+    {'id': 'star-rennes', 'network': 'STAR (Rennes Métropole)',
+     'url': 'https://eu.ftp.opendatasoft.com/star/gtfs/GTFS_STAR_BUS_METRO_EN_COURS.zip',
+     'bounds': [47.98, -1.85, 48.22, -1.55], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+    # Naolib/TAN Nantes : resource 8055 explicitement signalé par le producteur comme « nouveau lien à privilégier »
+    # pour le GTFS en vigueur (l'ancien lien devient obsolète).
+    {'id': 'naolib-nantes', 'network': 'Naolib (Nantes Métropole)',
+     'url': 'https://transport.data.gouv.fr/resources/8055/download',
+     'bounds': [47.13, -1.70, 47.33, -1.40], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+    {'id': 'tbm-bordeaux', 'network': 'TBM (Bordeaux Métropole)',
+     'url': 'https://transport.data.gouv.fr/resources/83024/download',
+     'bounds': [44.75, -0.70, 44.95, -0.45], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
