@@ -709,3 +709,16 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 
 /* 20/11/2026 : bouton d'inversion de l'ordre des trajets */
 .cp-hub-ordre{display:block;width:100%;margin:8px 0;padding:10px 12px;border:1px solid #70b7e8;border-radius:10px;background:#cdeaff;color:#123d72;font-weight:600;font-size:.9rem;text-align:left}
+
+/* 20/11/2026 : étapes de trajet en cartes pleines (style C), couleurs liées à la palette choisie en haut de l'application */
+:root{--lg-s:66%;--lg-l:38%;--lg-rot:0}
+html:root[data-style="ultra"]{--lg-s:78%;--lg-l:34%;--lg-rot:18}
+html:root[data-style="braise"]{--lg-s:72%;--lg-l:36%;--lg-rot:-18}
+html:root[data-style="crepuscule"]{--lg-s:60%;--lg-l:42%;--lg-rot:40}
+html:root[data-style="jour"]{--lg-s:72%;--lg-l:34%;--lg-rot:0}
+.etapeC{--c:hsl(calc(var(--lh,200) + var(--lg-rot)),var(--lg-s),var(--lg-l));background:var(--c);color:#fff;border-radius:14px;padding:10px 12px;margin:8px 0;list-style:none;box-shadow:0 2px 8px rgba(0,0,0,.3),0 0 10px var(--lueur,transparent)}
+.etapeC.marche{background:color-mix(in srgb,var(--doux) 55%,var(--carte));color:var(--texte);box-shadow:none}
+.etapeC a{color:inherit;text-decoration:underline}
+.etapeC ol,.etapeC ul{margin:0;padding:0}
+.boiteC{margin:8px 0;border-radius:14px;overflow:hidden;border:1px solid var(--ligne);background:var(--carte);color:var(--texte);box-shadow:var(--ombre)}
+.boiteC>.entC{padding:8px 12px;background:var(--barreFond,var(--barre));color:#fff;font-weight:800}
