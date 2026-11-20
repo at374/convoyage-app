@@ -2835,7 +2835,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           const sec=transportDestinations[label];if(!sec||sec.hidden)continue;
           let host=hubHosts[label];
           if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
-            const path=sec.querySelector('.cp-transport-route');(path||sec.firstChild).insertAdjacentElement('afterend',host);}
+            // 20/11/2026 : « Détail par moteur (justificatifs) » doit rester au-dessus des cartes et des
+            // notes du hub (replié comme les autres blocs techniques), jamais relégué tout en bas.
+            const after=legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);
+            after.insertAdjacentElement('afterend',host);}
           try{Hub.render(host,view);}catch(_){}
           delete pendingViews[label];
         }
@@ -2976,8 +2979,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             delete pendingViews[label];
             let host=hubHosts[label];
             if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
-              const path=transportDestinations[label].querySelector('.cp-transport-route');
-              (path||transportDestinations[label].firstChild).insertAdjacentElement('afterend',host);}
+              // 20/11/2026 : même règle que renderPending — le bloc justificatifs reste au-dessus du hub.
+              const sec=transportDestinations[label];
+              const after=legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);
+              after.insertAdjacentElement('afterend',host);}
             Hub.render(host,view);
             labelState[label]={done:view.done,total:view.total};updateDayTabs();
           }});
