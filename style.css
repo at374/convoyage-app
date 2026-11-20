@@ -729,3 +729,6 @@ html:root[data-style="jour"]{--lg-s:72%;--lg-l:34%;--lg-rot:0}
 .cp-hub-legs>li.walk{background:color-mix(in srgb,var(--doux) 35%,var(--carte));color:var(--texte);box-shadow:none}
 .cp-hub-legs>li small{color:inherit;opacity:.85}
 .cp-hub-legs>li>strong{font-size:1.05em}
+
+/* 20/11/2026 : prix retirés du résumé des trajets (peu sont connus) ; le détail reste dans le trajet déplié */
+.cp-hub-card>summary .cp-hub-price,.cp-hub-card>summary .cp-hub-ticket{display:none!important}
