@@ -15,6 +15,31 @@ const GENEVA={lat:46.2044,lon:6.1432};
 // de l'aéroport (sécurité puis douane française) : la consigne s'affiche sur cette marche uniquement (19/11/2026).
 const P21_POINT={lat:46.237722,lon:6.117667};
 function nearP21(p){return !!p&&Math.abs(p.lat-P21_POINT.lat)<0.004&&Math.abs(p.lon-P21_POINT.lon)<0.006;}
+// Pour P21 (secteur France), l'arrêt passagers est « Genève-Aéroport, Terminal » : au-delà, le bus continue parfois
+// un arrêt de trop derrière la douane (ex. Grand-Saconnex, Fret), chemin non praticable à pied (signalé le 19/11/2026).
+function sansAccents(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'');}
+function estArretAeroportGeneve(nom){return /^gen[e]ve[-\s]+a[e]roport\b/i.test(sansAccents(nom));}
+// Retaille un itinéraire suisse touchant P21 pour qu'il s'arrête (ou reparte) à Genève-Aéroport, Terminal :
+// la marche réelle (complétée ensuite par completeWalks, avec l'avertissement douane/sécurité déjà affiché pour
+// P21) couvre alors la vraie dernière portion, au lieu d'un arrêt supplémentaire inaccessible à pied.
+function retaillerP21(j,task){
+ if(!j||!Array.isArray(j.legs)||!j.legs.length||!task)return j;
+ const versP21=nearP21(pt(task.to)),depuisP21=nearP21(pt(task.from));
+ if(!versP21&&!depuisP21)return j;
+ let legs=j.legs;
+ if(versP21){
+  let coupe=-1;
+  for(let i=0;i<legs.length;i++)if(legs[i]&&estArretAeroportGeneve(legs[i].to))coupe=i;
+  if(coupe>=0&&coupe<legs.length-1)legs=legs.slice(0,coupe+1);
+ }
+ if(depuisP21){
+  let coupe=-1;
+  for(let i=0;i<legs.length;i++)if(legs[i]&&estArretAeroportGeneve(legs[i].from)){coupe=i;break;}
+  if(coupe>0)legs=legs.slice(coupe);
+ }
+ if(legs===j.legs||!legs.length)return j; // rien à couper, ou coupe impossible sans tout retirer : on garde l'original
+ return {...j,legs};
+}
 const LYON_COACH_ANCHORS=[{name:'Lyon Part-Dieu',lat:45.7605,lon:4.8590},{name:'Lyon Perrache',lat:45.7487,lon:4.8262},{name:'Lyon Gerland',lat:45.7290,lon:4.8300}];
 const SAFE_TRANSFER_MIN=10,SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=120;
 // Au-delà de cette distance, une marche « de bord à bord » (ex. gare → commune voisine) doit d'abord être
@@ -301,6 +326,8 @@ function walkLeg(route,from,to,fromName,toName,depMs){
   distanceMeters:route.distanceMeters,durationSeconds:route.durationSeconds,walkSource:'valhalla',geometry:route.geometry,steps:route.steps});
 }
 async function completeWalks(j,task,router,scooter,regional){
+ // Filet de sécurité P21 pour toutes les sources (pas seulement « Suisse ») : cf. retaillerP21 ci-dessus.
+ j=retaillerP21(j,task);
  // Keep provider warnings (e.g. GTFS schedules without live confirmation) through walking enrichment.
  const legs=j.legs.slice(),missing=Array.isArray(j.missing)?j.missing.slice():[];
  const from=pt(task.from),to=pt(task.to);
@@ -1243,7 +1270,7 @@ function makeProviders(r,opts={}){
     const [a,b]=await Promise.all([r.CPSwissTransport.nearestStation(f,fetcher),r.CPSwissTransport.nearestStation(t,fetcher)]);
     if(a&&b&&a.id!==b.id)res=await once({from:a.id,to:b.id,when:w.when,arriveBy:w.arriveBy,limit:8,fetcher});
    }
-   return fromSwiss(res);}};
+   return fromSwiss(res).map(j=>retaillerP21(j,task)).filter(Boolean);}};
  // OJP (opentransportdata.swiss) : relais serveur uniquement (ojp-relais), jeton jamais côté app. Désactivé sans
  // session connectée ou hors zone suisse/Grand Genève. Noms de lieu (task.fromCity/toCity) requis : OJP résout
  // lui-même la référence exacte (StopPlaceRef/StopPointRef) ; aucune référence n'est fabriquée ici.
