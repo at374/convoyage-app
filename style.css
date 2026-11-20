@@ -733,11 +733,9 @@ html:root[data-style="jour"]{--lg-s:72%;--lg-l:34%;--lg-rot:0}
 /* 20/11/2026 : prix retirés du résumé des trajets (peu sont connus) ; le détail reste dans le trajet déplié */
 .cp-hub-card>summary .cp-hub-price,.cp-hub-card>summary .cp-hub-ticket{display:none!important}
 
-/* 20/11/2026 : horaires en cartes pleines colorées (style 3) selon le statut et la palette ; phrase « horaire officiel publié… » retirée du résumé */
+/* 20/11/2026 : horaires en dégradé teinté (style 1) selon le statut et la palette ; phrase « horaire officiel publié… » retirée du résumé */
 .cp-hub-card>summary .cp-hub-reason{display:none!important}
-.cp-hub-card{--st:color-mix(in srgb,var(--alerte) 60%,#000);background:var(--st);color:#fff;border-color:transparent;border-left:0;box-shadow:0 2px 8px rgba(0,0,0,.4),0 0 10px var(--lueur,transparent)}
-.cp-hub-card.ok{--st:color-mix(in srgb,var(--ok) 55%,#000)}
-.cp-hub-card.sched{--st:color-mix(in srgb,#1d4ed8 82%,var(--accent))}
-.cp-hub-card>summary .cp-hub-times,.cp-hub-card>summary .cp-hub-modes,.cp-hub-card>summary .cp-hub-status{color:#fff}
-.cp-hub-card .cp-hub-chip{background:rgba(255,255,255,.22);color:#fff}
-.cp-hub-card .cp-hub-body small,.cp-hub-card .cp-hub-note,.cp-hub-card .cp-hub-src{color:inherit;opacity:.9}
+.cp-hub-card{--st:var(--alerte);background:linear-gradient(135deg,color-mix(in srgb,var(--st) 26%,var(--carte)),color-mix(in srgb,var(--st) 6%,var(--carte)) 80%);border-color:color-mix(in srgb,var(--st) 45%,var(--ligne));border-left-color:var(--st)}
+.cp-hub-card.ok{--st:var(--ok)}
+.cp-hub-card.sched{--st:var(--accent)}
+.cp-hub-card>summary .cp-hub-times{color:var(--texte)}
