@@ -132,10 +132,10 @@ FILTERED_MIRROR = [
     {'id': 'star-rennes', 'network': 'STAR (Rennes Métropole)',
      'url': 'https://eu.ftp.opendatasoft.com/star/gtfs/GTFS_STAR_BUS_METRO_EN_COURS.zip',
      'bounds': [47.98, -1.85, 48.22, -1.55], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
-    # Naolib/TAN Nantes : resource 8055 explicitement signalé par le producteur comme « nouveau lien à privilégier »
-    # pour le GTFS en vigueur (l'ancien lien devient obsolète).
+    # Naolib/TAN Nantes : resource 8055 est devenue un lien mort (404) ; resource 84101
+    # (jeu "tan-arrets-horaires-et-circuits", fichier gtfs_lumidata_id.zip, mis à jour 20/11/2026) le remplace.
     {'id': 'naolib-nantes', 'network': 'Naolib (Nantes Métropole)',
-     'url': 'https://transport.data.gouv.fr/resources/8055/download',
+     'url': 'https://transport.data.gouv.fr/resources/84101/download',
      'bounds': [47.13, -1.70, 47.33, -1.40], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
     {'id': 'tbm-bordeaux', 'network': 'TBM (Bordeaux Métropole)',
      'url': 'https://transport.data.gouv.fr/resources/83024/download',
