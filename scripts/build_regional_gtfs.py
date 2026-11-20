@@ -111,6 +111,13 @@ FILTERED_MIRROR = [
     {'id': 'zou-express-nord', 'network': 'ZOU ! Express (Alpes du Sud — limites Isère, Drôme)',
      'url': 'https://transport.data.gouv.fr/resources/82285/download',
      'bounds': [44.0, 5.0, 45.2, 7.2], 'download_limit': 120 * 1024 * 1024},
+    # Fil Bleu Tours : était à tort dans MIRROR (copie brute, aucun filtrage réel malgré la bbox affichée
+    # — le resserrement du 19/11 n'avait donc rien changé). Toute l'agglomération est déjà dans la bbox
+    # (resserrer davantage exclurait des arrêts réels) ; le flux complet dépasse quand même 128 Mo
+    # décompressés (157 Mo de stop_times.txt) → même traitement que RTM Marseille : limiter aux courses
+    # des 45 prochains jours (rafraîchi chaque semaine).
+    {'id': 'fil-bleu-tours', 'network': 'Fil Bleu (Tours Métropole)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/198b7602-5e74-4d88-b6bc-483af85a2430',
+     'bounds': [47.34, 0.62, 47.46, 0.76], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
@@ -244,7 +251,6 @@ MIRROR = [
     {'id': 'kiceo-vannes', 'network': 'KICEO (Vannes)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/565533c0-64ae-44d6-9dfa-169be5b805c6', 'bounds': [47.49, -2.95, 47.83, -2.53]},
     {'id': 'axeo-saint-brieuc', 'network': "Axéo (Baie d'Armor, Saint-Brieuc)", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/9bccfc79-5d35-4fc3-8296-526b791fc950', 'bounds': [48.31, -3.04, 48.67, -2.63]},
     {'id': 'lia-le-havre', 'network': 'LiA (Le Havre Seine Métropole)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/2178bfa8-9fe0-4633-8223-8c151728ef28', 'bounds': [49.35, 0.0, 49.7, 0.5]},
-    {'id': 'fil-bleu-tours', 'network': 'Fil Bleu (Tours Métropole)', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/198b7602-5e74-4d88-b6bc-483af85a2430', 'bounds': [47.34, 0.62, 47.46, 0.76]},
 ]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
 

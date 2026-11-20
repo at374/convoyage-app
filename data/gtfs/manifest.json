@@ -2340,8 +2340,8 @@
   "fil-bleu-tours": {
    "network": "Fil Bleu (Tours Métropole)",
    "file": "fil-bleu-tours.zip",
-   "sha256": "4e3894d7598214431d3d254f82f942161139e18813fc782bca1e2dcac7a1f025",
-   "bytes": 9044276,
+   "sha256": "47fe037a0c1448444a72d05df2557baa396f7851a82729833eddbbb5b554b0e8",
+   "bytes": 2694505,
    "bounds": [
     47.34,
     0.62,
@@ -2349,7 +2349,10 @@
     0.76
    ],
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/198b7602-5e74-4d88-b6bc-483af85a2430",
-   "trips": 30998
+   "trips": 12007,
+   "routes": 48,
+   "stops": 1717,
+   "fares": false
   },
   "lignes-azur-nice": {
    "network": "Lignes d'Azur (Nice)",
