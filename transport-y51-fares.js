@@ -69,15 +69,19 @@ function fromImportedTables(tables,date,ride){
   return reference(leg);
  }catch(_){return empty();}
 }
-function describe(result){
+function describe(result,opts){
  if(!result?.portions?.some(Boolean))return '';
  const money=n=>n.toFixed(2).replace('.',',')+' €';
- return ' · Référence Y51 : '+result.portions.map((q,i)=>!q?'portion '+(i+1)+' : prix inconnu':
+ const o=opts||{};
+ const body=result.portions.map((q,i)=>!q?'portion '+(i+1)+' : prix inconnu':
   (result.portions.length>1?'portion '+(i+1)+' : ':'')+q.fromArea+' → '+q.toArea+' · '+
   (q.zone==='S'?'SIBRA, '+money(q.amountEUR)+' à bord / '+money(q.digitalAlternativeEUR)+' digital (support éventuel en supplément)':
    (q.zone==='A'?'Arlysère':'zone '+q.zone)+', '+money(q.amountEUR))+' pour 1 voyage plein tarif, hors abonnement').join(' · ')+
-  (result.portions.length>1?' · Total du trajet non calculé ; cumul des titres à vérifier.':'')+
-  ' Barème du 01/03/2026, consulté le 31/10/2026 ; à revérifier avant achat.';
+  (result.portions.length>1?' · Total du trajet non calculé ; cumul des titres à vérifier.':'');
+ // V2.42 : omitLabel/omitCaveat permettent d'afficher ce tarif une seule fois pour plusieurs
+ // courses identiques (même trajet), au lieu de le répéter intégralement sur chaque ligne.
+ return (o.omitLabel?'':' · Référence Y51 : ')+body+
+  (o.omitCaveat?'':' Barème du 01/03/2026, consulté le 31/10/2026 ; à revérifier avant achat.');
 }
 const api={reference,describe,fromImportedTables,importedStopMatches,SOURCE:DATA.source};
 if(typeof module==='object'&&module.exports)module.exports=api;root.CPTY51Fares=api;

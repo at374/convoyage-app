@@ -1178,14 +1178,13 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
                 const enoughTime = walkMinutes !== null &&
                   ride.departureSeconds - earliestY51 >=
                   (walkMinutes + boardingMarginMinutes) * 60;
-                boardingChecks.push(clock(ride.departureSeconds) + ' : ' +
-                  (walkMinutes === null ? 'marche non vérifiée' :
-                    (enoughTime ? 'approche piétonne compatible' : 'départ trop proche') +
-                    ' (' + dureeHM(walkMinutes) + ' à pied + ' +
-                    dureeHM(boardingMarginMinutes) + ' de marge)'));
+                // V2.42 : plus de préfixe horaire ici — chaque statut est maintenant affiché
+                // sur la même ligne de liste que sa course, l'heure n'a donc plus besoin d'être répétée.
+                boardingChecks.push(walkMinutes === null ? 'marche non vérifiée' :
+                  (enoughTime ? 'approche piétonne compatible' : 'départ trop proche') +
+                  ' (' + dureeHM(walkMinutes) + ' à pied + ' +
+                  dureeHM(boardingMarginMinutes) + ' de marge)');
               }
-              const boardingStatus = boardingChecks.length ?
-                boardingChecks.join(' ; ') : 'Marche depuis la livraison non vérifiée.';
               // Show the actual Y51 arrival stop from GTFS for each proposed trip.
               // These map links help locate the SIBRA transfer, without inventing it.
               const arrivalStops = [...new Map(selectedRides.map(ride => {
@@ -1198,24 +1197,65 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
                 Math.abs(Number(stop.stop_lat)) <= 90 &&
                 Math.abs(Number(stop.stop_lon)) <= 180);
               const fareForRide = ride => {
-                try { return window.CPTY51Fares?.describe(window.CPTY51Fares.fromImportedTables(data,requestedDate,ride)) || ''; }
-                catch (_) { return ''; }
+                try {
+                  return window.CPTY51Fares?.describe(
+                    window.CPTY51Fares.fromImportedTables(data, requestedDate, ride),
+                    { omitLabel: true, omitCaveat: true }) || '';
+                } catch (_) { return ''; }
               };
-              y51Result.textContent = 'Y51 du ' + requestedDate + ' :' + trips.length +
+              // V2.42 : présentation revue en liste claire (une course par ligne) au lieu d'un
+              // seul paragraphe dense répétant le même tarif à chaque course — brouillon et
+              // difficile à lire. Le trajet étant toujours identique (même arrêts), le tarif
+              // ne change pas d'une course à l'autre : il n'est donc affiché qu'une seule fois.
+              y51Result.textContent = '';
+              const intro = document.createElement('p');
+              intro.className = 'doux';
+              intro.style.margin = '0 0 6px';
+              intro.textContent = 'Y51 du ' + requestedDate + ' : ' + trips.length +
                 ' courses programmées, ' + times.length + ' passages GTFS. Source vérifiée le ' +
-                stamp + '. ' + (unique.length ?
-                  'École Saint-François → Annecy gare routière : ' +
-                  unique.slice(0, 8).map(ride => clock(ride.departureSeconds) +
-                    ' → ' + clock(ride.arrivalSeconds) +
-                    ' (temps disponible avant le car : ' +
-                    Math.floor((ride.departureSeconds - earliestY51) / 60) +
-                    ' min, trajet piéton et marge à déduire)' +
-                    fareForRide(ride)).join(' ; ') + '.' :
-                  'Aucun départ après la fin de mission identifié entre École Saint-François et Annecy gare routière' +
+                stamp + '.';
+              y51Result.appendChild(intro);
+              if (unique.length) {
+                const titre = document.createElement('p');
+                titre.className = 'doux';
+                titre.style.margin = '0 0 4px';
+                titre.textContent = 'École Saint-François → Annecy gare routière :';
+                y51Result.appendChild(titre);
+                const liste = document.createElement('ul');
+                liste.style.margin = '0 0 6px';
+                liste.style.paddingLeft = '20px';
+                let tarifUnique = '';
+                selectedRides.forEach((ride, i) => {
+                  if (!tarifUnique) tarifUnique = fareForRide(ride);
+                  const li = document.createElement('li');
+                  li.textContent = clock(ride.departureSeconds) + ' → ' + clock(ride.arrivalSeconds) +
+                    ' (' + Math.floor((ride.departureSeconds - earliestY51) / 60) +
+                    ' min avant le car ; ' + (boardingChecks[i] || 'marche non vérifiée') + ')';
+                  liste.appendChild(li);
+                });
+                y51Result.appendChild(liste);
+                if (tarifUnique) {
+                  const tarifP = document.createElement('p');
+                  tarifP.className = 'doux';
+                  tarifP.style.margin = '0 0 4px';
+                  tarifP.textContent = 'Référence Y51 : ' + tarifUnique +
+                    ' Barème du 01/03/2026, consulté le 31/10/2026 ; à revérifier avant achat.';
+                  y51Result.appendChild(tarifP);
+                }
+              } else {
+                const vide = document.createElement('p');
+                vide.className = 'doux';
+                vide.style.margin = '0 0 4px';
+                vide.textContent = 'Aucun départ après la fin de mission identifié entre École Saint-François et Annecy gare routière' +
                   (earliestY51 === null ? ' (heure de fin de mission indisponible)' : '') +
-                  ' : vérifiez les noms exacts des arrêts et les horaires GTFS.') +
-                ' ' + boardingStatus + '. Correspondances et circulation réelle non vérifiées. ' +
-                'Transport non confirmé — vérifiez vous-même.';
+                  ' : vérifiez les noms exacts des arrêts et les horaires GTFS.';
+                y51Result.appendChild(vide);
+              }
+              const caveat = document.createElement('p');
+              caveat.className = 'doux';
+              caveat.style.margin = '0 0 4px';
+              caveat.textContent = 'Correspondances et circulation réelle non vérifiées. Transport non confirmé — vérifiez vous-même.';
+              y51Result.appendChild(caveat);
               // First Y51 -> SIBRA connection: GTFS timetable only. The home
               // coordinates are city-level, so this cannot certify the last walk.
               const sibraFeed = window.CPSibraFeed;
@@ -1305,28 +1345,44 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
                       (a.estimatedHomeSeconds ?? Infinity) -
                         (b.estimatedHomeSeconds ?? Infinity) ||
                       a.bus.arrivalSeconds - b.bus.arrivalSeconds);
-                    sibraLine.textContent = combinations.length ?
-                      'Correspondances théoriques Y51 → SIBRA : ' +
-                      combinations.slice(0, 5).map(x =>
-                        'Y51 ' + clock(x.ride.departureSeconds) + '–' +
-                        clock(x.ride.arrivalSeconds) + ', SIBRA ' +
-                        clock(x.bus.departureSeconds) + '–' +
-                        clock(x.bus.arrivalSeconds) + ' (' +
-                        (x.bus.originStop && x.bus.originStop.name || 'arrêt à vérifier') +
-                        ' → ' +
-                        (x.bus.destinationStop && x.bus.destinationStop.name || 'arrêt à vérifier') +
-                        ', correspondance : ' +
-                        (x.transferWalkMinutes === null ? 'marche non vérifiée' :
-                          dureeHM(x.transferWalkMinutes) + ' à pied, ' +
-                          (x.transferCompatible ? 'délai théorique suffisant' : 'délai insuffisant')) +
-                        ', fin de trajet : ' + (x.estimatedHomeSeconds === null ?
-                          'marche non vérifiée' : clock(x.estimatedHomeSeconds) +
-                          ' estimé au point domicile enregistré (précision ville)') +
-                        ')').join(' ; ') +
-                        '. Marches de correspondance et vers le domicile non vérifiées. ' +
-                        'Transport non confirmé — vérifiez vous-même.' :
-                      'Aucune correspondance SIBRA théorique trouvée près des arrivées Y51. ' +
-                      'Transport non confirmé — vérifiez vous-même.';
+                    // V2.42 : même reprise en liste que le bloc Y51 ci-dessus, au lieu d'une
+                    // seule phrase très longue listant toutes les correspondances à la suite.
+                    sibraLine.textContent = '';
+                    if (combinations.length) {
+                      const titreSibra = document.createElement('p');
+                      titreSibra.className = 'doux';
+                      titreSibra.style.margin = '0 0 4px';
+                      titreSibra.textContent = 'Correspondances théoriques Y51 → SIBRA :';
+                      sibraLine.appendChild(titreSibra);
+                      const listeSibra = document.createElement('ul');
+                      listeSibra.style.margin = '0 0 6px';
+                      listeSibra.style.paddingLeft = '20px';
+                      combinations.slice(0, 5).forEach(x => {
+                        const li = document.createElement('li');
+                        li.textContent = 'Y51 ' + clock(x.ride.departureSeconds) + '–' +
+                          clock(x.ride.arrivalSeconds) + ' → SIBRA ' +
+                          clock(x.bus.departureSeconds) + '–' + clock(x.bus.arrivalSeconds) +
+                          ' (' + (x.bus.originStop && x.bus.originStop.name || 'arrêt à vérifier') +
+                          ' → ' + (x.bus.destinationStop && x.bus.destinationStop.name || 'arrêt à vérifier') +
+                          ') — correspondance : ' +
+                          (x.transferWalkMinutes === null ? 'marche non vérifiée' :
+                            dureeHM(x.transferWalkMinutes) + ' à pied, ' +
+                            (x.transferCompatible ? 'délai théorique suffisant' : 'délai insuffisant')) +
+                          ' — fin de trajet : ' + (x.estimatedHomeSeconds === null ?
+                            'marche non vérifiée' : clock(x.estimatedHomeSeconds) +
+                            ' estimé (domicile, précision ville)');
+                        listeSibra.appendChild(li);
+                      });
+                      sibraLine.appendChild(listeSibra);
+                      const caveatSibra = document.createElement('p');
+                      caveatSibra.className = 'doux';
+                      caveatSibra.style.margin = '0';
+                      caveatSibra.textContent = 'Marches de correspondance et vers le domicile non vérifiées. Transport non confirmé — vérifiez vous-même.';
+                      sibraLine.appendChild(caveatSibra);
+                    } else {
+                      sibraLine.textContent = 'Aucune correspondance SIBRA théorique trouvée près des arrivées Y51. ' +
+                        'Transport non confirmé — vérifiez vous-même.';
+                    }
                   }
                 } catch (_) {
                   sibraLine.textContent = 'Calcul Y51 → SIBRA indisponible — transport non confirmé.';
