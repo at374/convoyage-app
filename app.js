@@ -901,7 +901,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     const P = [], plus = etat.plus || {};
     const add = (cle, txt) => P.push('<button type="button" class="puceFiltre" data-rm="' + esc(cle) + '" aria-label="Retirer ce filtre" style="font-size:.85rem;padding:3px 10px;border-radius:14px;border:1px solid #c9a227;background:#2a2108;color:#f5d26b;cursor:pointer">' + esc(txt) + ' <b>✕</b></button>');
     if (etat.filtre !== 'toutes') add('plateforme', etat.filtre === 'devis' ? 'Filtre : devis envoyés (en attente d’acceptation)' : etat.filtre === 'acceptees' ? 'Filtre : missions acceptées' : 'Plateforme : ' + etat.filtre);
-    etat.zones.forEach((z, i) => add('zone:' + i, (COTES[z.cote || 'tous'] || 'Lieu') + ' : ' + G.libelleZone(z)));
+    { const grp = {}; etat.zones.forEach((z, i) => { const c = z.cote || 'tous'; (grp[c] = grp[c] || []).push([i, G.libelleZone(z)]); });   // V279 : une seule ligne par côté (départ / arrivée / les deux), villes à la suite
+      Object.keys(grp).forEach(c => P.push('<span class="puceFiltre" style="font-size:.85rem;padding:3px 10px;border-radius:14px;border:1px solid #c9a227;background:#2a2108;color:#f5d26b">' + esc(COTES[c] || 'Lieu') + ' : ' + grp[c].map(([i, t]) => '<span data-rm="zone:' + i + '" role="button" aria-label="Retirer ' + esc(t) + '" style="cursor:pointer;white-space:nowrap">' + esc(t) + ' <b>✕</b></span>').join(', ') + '</span>')); }
     if (etat.zones.length && etat.rayon > 0) add('rayon', 'Max ' + etat.rayon + ' km de la ville');
     if (etat.posMax > 0) add('posMax', 'Max ' + etat.posMax + ' km à vol d’oiseau depuis ' + (sourceRecherche() === 'domicile' ? 'mon domicile' : 'ma position'));
     if (q) add('recherche', 'Recherche : ' + etat.recherche);
