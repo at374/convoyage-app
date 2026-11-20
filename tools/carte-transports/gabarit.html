@@ -1,0 +1,68 @@
+<title>Carte des transports</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+:root{--bg:#f6f7f4;--fg:#1c2421;--mut:#5d6a64;--line:#d9dfda;--card:#fff;--land:#e9eee9;--ch:#d3dcd5;--urb:#1f6f5c;--car:#b2541a;--nat:#2b5aa8;--warn:#c77d00;--bad:#b3261e;--ok:#1f7a3f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a17;--fg:#e8ede9;--mut:#9aa8a1;--line:#2c3732;--card:#1b2320;--land:#202a26;--ch:#2f3d37;--urb:#4fc3a5;--car:#f0955a;--nat:#7aa5ee;--warn:#f0b43c;--bad:#ff8a80;--ok:#6fd392;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141a17;--fg:#e8ede9;--mut:#9aa8a1;--line:#2c3732;--card:#1b2320;--land:#202a26;--ch:#2f3d37;--urb:#4fc3a5;--car:#f0955a;--nat:#7aa5ee;--warn:#f0b43c;--bad:#ff8a80;--ok:#6fd392;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 Inter,system-ui,sans-serif;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1000px;margin:auto;display:grid;gap:18px}
+h1{font:600 1.6rem/1.2 "Space Grotesk",system-ui,sans-serif;margin:0;text-wrap:balance}
+h2{font:600 1.05rem "Space Grotesk",system-ui,sans-serif;margin:0 0 8px}
+.sub{color:var(--mut);margin:4px 0 0}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.k b{display:block;font-size:1.6rem;font-variant-numeric:tabular-nums;font-family:"Space Grotesk",system-ui}
+.k span{color:var(--mut);font-size:.85rem}
+.map{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px}
+@media(max-width:760px){.map{grid-template-columns:1fr}}
+svg{width:100%;height:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
+.leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.85rem;color:var(--mut)}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+#info{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;min-height:90px}
+#list{max-height:560px;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
+#list div{padding:6px 12px;border-bottom:1px solid var(--line);font-size:.88rem;display:flex;justify-content:space-between;gap:8px;cursor:pointer}
+#list div span:last-child{color:var(--mut);font-variant-numeric:tabular-nums;white-space:nowrap}
+table{border-collapse:collapse;width:100%;font-size:.9rem}td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.dot{cursor:pointer}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@600&display=swap">
+<main>
+<header><h1>Carte des transports de Convoyage Ultra</h1><p class="sub">Point du __DATE__ · ce qui est construit dans les fichiers horaires de l'application</p></header>
+<section class="row" id="kpi"></section>
+<section class="map">
+<div><svg id="svg" viewBox="0 0 780 710" role="img" aria-label="Carte de France des réseaux de transport couverts"></svg>
+<div class="leg"><span><i style="background:var(--urb)"></i>Réseau urbain / local</span><span><i style="background:var(--car)"></i>Cars régionaux</span><span><i style="background:var(--nat)"></i>Lignes nationales (SNCF, FlixBus, BlaBlaCar Bus)</span><span><i style="background:var(--warn)"></i>Calendrier court (&lt; 14 j)</span></div>
+<p class="sub" style="font-size:.8rem">Positions calculées depuis les arrêts réels de chaque fichier. Contour de la France simplifié. La Suisse (grisée) est couverte par le moteur suisse en direct, sans fichier.</p></div>
+<div style="display:grid;gap:10px;align-content:start"><div id="info">Touchez un point pour voir le réseau.</div><div id="list"></div></div>
+</section>
+<section><h2>Mises à jour automatiques</h2><table id="wf"></table></section>
+<section><h2>À surveiller</h2><div id="watch"></div></section>
+</main>
+<script>
+const D=__DATA__,ERR=__ERR__,WF=__WF__;
+const S=68,X=l=>(l+5.4)*0.695*S,Y=a=>(51.4-a)*S;
+const poly=p=>p.map(([a,l])=>X(l).toFixed(1)+','+Y(a).toFixed(1)).join(' ');
+const FR=[[51.05,2.55],[50.75,1.6],[50.2,1.58],[49.75,0.95],[49.5,0.1],[49.35,-0.4],[49.65,-1.6],[48.85,-1.55],[48.7,-2.5],[48.75,-3.5],[48.65,-4.4],[48.4,-4.75],[48.0,-4.4],[47.8,-3.5],[47.5,-2.8],[47.25,-2.2],[47.0,-2.15],[46.4,-1.5],[45.8,-1.15],[44.7,-1.25],[44.0,-1.3],[43.5,-1.5],[43.3,-1.78],[42.8,-0.3],[42.7,0.7],[42.85,1.4],[42.45,1.75],[42.4,3.15],[43.0,3.0],[43.35,3.3],[43.4,4.8],[43.3,5.4],[43.1,5.9],[43.4,6.75],[43.6,7.1],[43.78,7.5],[44.2,7.0],[44.9,6.75],[45.45,7.1],[45.85,6.85],[46.25,6.05],[46.45,6.1],[47.0,6.9],[47.5,7.5],[47.6,7.55],[48.0,7.55],[48.6,8.2],[49.0,8.2],[49.45,6.35],[49.5,5.8],[49.9,4.85],[50.1,4.2],[50.4,4.15],[50.75,3.2]];
+const CO=[[42.95,9.4],[42.5,9.55],[41.9,9.4],[41.4,9.25],[41.4,8.7],[42.0,8.6],[42.6,8.55]];
+const CH=[[47.6,7.55],[47.7,8.6],[47.5,9.6],[46.9,9.5],[46.8,10.4],[46.3,10.1],[46.0,9.0],[45.85,8.5],[46.1,7.0],[46.25,6.05],[46.45,6.1],[47.0,6.9]];
+const lim=new Date(Date.now()+14*864e5).toISOString().slice(0,10).replace(/-/g,'');
+const fmt=e=>e?e.slice(6)+'/'+e.slice(4,6)+'/'+e.slice(0,4):'inconnue';
+const kind=o=>o.file.startsWith('national-')?'nat':(o.file.startsWith('cars-region')?'car':'urb');
+const col={urb:'var(--urb)',car:'var(--car)',nat:'var(--nat)'};
+let h='<polygon points="'+poly(CH)+'" fill="var(--ch)" stroke="var(--line)"/><polygon points="'+poly(FR)+'" fill="var(--land)" stroke="var(--line)" stroke-width="1.5"/><polygon points="'+poly(CO)+'" fill="var(--land)" stroke="var(--line)" stroke-width="1.5"/>';
+h+='<text x="590" y="440" font-size="13" fill="var(--mut)">SUISSE</text>';
+const L=D.filter(o=>!o.err).sort((a,b)=>(kind(a)=='urb')-(kind(b)=='urb'));
+for(const o of L){const k=kind(o);if(k!='urb'){h+='<rect x="'+X(o.b[1]).toFixed(1)+'" y="'+Y(o.b[2]).toFixed(1)+'" width="'+(X(o.b[3])-X(o.b[1])).toFixed(1)+'" height="'+(Y(o.b[0])-Y(o.b[2])).toFixed(1)+'" fill="'+col[k]+'" fill-opacity=".08" stroke="'+col[k]+'" stroke-opacity=".5" stroke-width="1"/>'}}
+L.forEach((o,i)=>{const k=o.end&&o.end<lim?'warn':null;h+='<circle class="dot" data-i="'+i+'" cx="'+X(o.lon).toFixed(1)+'" cy="'+Y(o.lat).toFixed(1)+'" r="'+(kind(o)=='urb'?4.5:6)+'" fill="'+(k?'var(--warn)':col[kind(o)])+'" stroke="var(--card)" stroke-width="1.5"><title>'+o.name+'</title></circle>'});
+document.getElementById('svg').innerHTML=h;
+const info=document.getElementById('info');
+const show=i=>{const o=L[i];info.innerHTML='<b>'+o.name+'</b><br><span class="sub">'+({urb:'Réseau urbain / local',car:'Cars régionaux',nat:'Ligne nationale'})[kind(o)]+'</span><br>Arrêts : '+o.stops+' · Fichier : '+o.mb+' Mo<br>Horaires jusqu\'au <b class="'+(o.end&&o.end<lim?'warn':'')+'">'+fmt(o.end)+'</b>'};
+document.querySelectorAll('.dot').forEach(c=>c.addEventListener('click',()=>show(+c.dataset.i)));
+const lst=document.getElementById('list');
+L.map((o,i)=>[o,i]).sort((a,b)=>a[0].name.localeCompare(b[0].name,'fr')).forEach(([o,i])=>{const d=document.createElement('div');d.innerHTML='<span>'+o.name+'</span><span class="'+(o.end&&o.end<lim?'warn':'')+'">'+fmt(o.end)+'</span>';d.onclick=()=>show(i);lst.append(d)});
+const n=k=>L.filter(o=>kind(o)==k).length,w=L.filter(o=>o.end&&o.end<lim).length;
+document.getElementById('kpi').innerHTML=[[L.length,'fichiers horaires'],[n('urb'),'réseaux urbains / locaux'],[n('car'),'réseaux de cars régionaux'],[n('nat'),'lignes nationales'],[w,'calendriers qui finissent bientôt']].map(a=>'<div class="k"><b>'+a[0]+'</b><span>'+a[1]+'</span></div>').join('');
+document.getElementById('wf').innerHTML='<tr><th>Mise à jour</th><th>Dernier passage</th><th>État</th></tr>'+WF.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td class="'+(r[2]=='OK'?'ok':'bad')+'">'+r[2]+'</td></tr>').join('');
+document.getElementById('watch').innerHTML='<ul>'+[...ERR.map(e=>'<li class="bad">'+e+'</li>'),...L.filter(o=>o.end&&o.end<lim).map(o=>'<li class="warn">'+o.name+' : horaires jusqu\'au '+fmt(o.end)+'</li>')].join('')+'</ul>';
+</script>
