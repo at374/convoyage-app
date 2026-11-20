@@ -2,7 +2,7 @@
 
 Généré le 2026-11-20 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**445 / 446 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**442 / 443 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -434,21 +434,18 @@ Généré le 2026-11-20 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | t2c (samedi) | t2c-clermont.zip | 8175 | OK | 2026-11-21 18:56:00 retrouvée (78 départs proposés) |
 | t2c (dimanche) | t2c-clermont.zip | 8175 | OK | 2026-11-22 15:09:00 retrouvée (74 départs proposés) |
 | t2c (semaine) | t2c-clermont.zip | 8175 | OK | 2026-11-23 07:40:00 retrouvée (157 départs proposés) |
-| cts_strasbourg (samedi) | cts-strasbourg.zip | 48107 | OK | 2026-11-21 06:07:00 retrouvée (292 départs proposés) |
-| cts_strasbourg (dimanche) | cts-strasbourg.zip | 48107 | OK | 2026-11-22 12:32:00 retrouvée (152 départs proposés) |
-| cts_strasbourg (semaine) | cts-strasbourg.zip | 48107 | OK | 2026-11-23 13:09:00 retrouvée (94 départs proposés) |
+| cts_strasbourg (samedi) | cts-strasbourg.zip | 31628 | OK | 2026-11-21 06:07:00 retrouvée (292 départs proposés) |
+| cts_strasbourg (dimanche) | cts-strasbourg.zip | 31628 | OK | 2026-11-22 12:32:00 retrouvée (152 départs proposés) |
+| cts_strasbourg (semaine) | cts-strasbourg.zip | 31628 | OK | 2026-11-23 13:09:00 retrouvée (94 départs proposés) |
 | ilevia_lille (samedi) | ilevia-lille.zip | 37410 | OK | 2026-11-21 17:20:00 retrouvée (14 départs proposés) |
 | ilevia_lille (dimanche) | ilevia-lille.zip | 37410 | OK | 2026-11-22 09:55:00 retrouvée (39 départs proposés) |
 | ilevia_lille (semaine) | ilevia-lille.zip | 37410 | OK | 2026-11-23 18:49:00 retrouvée (12 départs proposés) |
-| star_rennes (samedi) | star-rennes.zip | 90944 | OK | 2026-11-21 06:02:34 retrouvée (430 départs proposés) |
-| star_rennes (dimanche) | star-rennes.zip | 90944 | OK | 2026-11-22 06:02:00 retrouvée (279 départs proposés) |
-| star_rennes (semaine) | star-rennes.zip | 90944 | OK | 2026-11-23 06:02:34 retrouvée (543 départs proposés) |
-| naolib_nantes (samedi) | naolib-nantes.zip | 62830 | OK | 2026-11-21 10:29:00 retrouvée (5 départs proposés) |
-| naolib_nantes (dimanche) | naolib-nantes.zip | 62830 | OK | 2026-11-22 12:50:00 retrouvée (1 départs proposés) |
-| naolib_nantes (semaine) | naolib-nantes.zip | 62830 | OK | 2026-11-23 12:36:00 retrouvée (22 départs proposés) |
-| tbm_bordeaux (samedi) | tbm-bordeaux.zip | 49478 | OK | 2026-11-21 06:03:01 retrouvée (140 départs proposés) |
-| tbm_bordeaux (dimanche) | tbm-bordeaux.zip | 49478 | OK | 2026-11-22 06:29:01 retrouvée (90 départs proposés) |
-| tbm_bordeaux (semaine) | tbm-bordeaux.zip | 49478 | OK | 2026-11-23 06:07:00 retrouvée (80 départs proposés) |
+| star_rennes (samedi) | star-rennes.zip | 71657 | OK | 2026-11-21 06:02:34 retrouvée (430 départs proposés) |
+| star_rennes (dimanche) | star-rennes.zip | 71657 | OK | 2026-11-22 06:02:00 retrouvée (279 départs proposés) |
+| star_rennes (semaine) | star-rennes.zip | 71657 | OK | 2026-11-23 06:02:34 retrouvée (543 départs proposés) |
+| tbm_bordeaux (samedi) | tbm-bordeaux.zip | 36476 | OK | 2026-11-21 06:03:01 retrouvée (140 départs proposés) |
+| tbm_bordeaux (dimanche) | tbm-bordeaux.zip | 36476 | OK | 2026-11-22 06:29:01 retrouvée (90 départs proposés) |
+| tbm_bordeaux (semaine) | tbm-bordeaux.zip | 36476 | OK | 2026-11-23 06:07:00 retrouvée (80 départs proposés) |
 | sncf_ter (samedi) | national-sncf-aura.zip | 9522 | OK | 2026-11-21 11:38:00 retrouvée (12 départs proposés) |
 | sncf_ter (dimanche) | national-sncf-aura.zip | 9522 | OK | 2026-11-22 17:41:00 retrouvée (6 départs proposés) |
 | sncf_ter (semaine) | national-sncf-aura.zip | 9522 | OK | 2026-11-23 11:38:00 retrouvée (26 départs proposés) |
