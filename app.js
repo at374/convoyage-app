@@ -59,7 +59,7 @@
     if (!/Android/i.test(ua) || !/^(DriiveMe|PopValet|Otoqi)$/.test(plat)) return null;
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
-  const VERSION_APP = 'V277 (2.0.127)';
+  const VERSION_APP = 'V278 (2.0.128)';
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
@@ -1234,17 +1234,37 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
                 titre.style.margin = '0 0 4px';
                 titre.textContent = 'École Saint-François → Annecy gare routière :';
                 y51Result.appendChild(titre);
-                const liste = document.createElement('ul');
-                liste.style.margin = '0 0 6px';
-                liste.style.paddingLeft = '20px';
+                const liste = document.createElement('div');
+                liste.style.cssText = 'margin:0 0 8px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,200,60,.35);background:#1a1d2b;color:#f3f1ea';
+                const entete = document.createElement('div');
+                entete.style.cssText = 'padding:8px 12px;background:linear-gradient(90deg,#0b6e8a,#1b4f9c);color:#fff;font-weight:800';
+                entete.textContent = '🚌 Prochains Y51 vers Annecy';
+                liste.appendChild(entete);
+                const corps = document.createElement('div');
+                corps.style.padding = '6px 12px';
+                liste.appendChild(corps);
                 let tarifUnique = '';
                 selectedRides.forEach((ride, i) => {
                   if (!tarifUnique) tarifUnique = fareForRide(ride);
-                  const li = document.createElement('li');
-                  li.textContent = clock(ride.departureSeconds) + ' → ' + clock(ride.arrivalSeconds) +
-                    ' (' + Math.floor((ride.departureSeconds - earliestY51) / 60) +
-                    ' min avant le car ; ' + (boardingChecks[i] || 'marche non vérifiée') + ')';
-                  liste.appendChild(li);
+                  const statut = boardingChecks[i] || 'marche non vérifiée';
+                  const bon = /compatible/.test(statut), trop = /trop proche/.test(statut);
+                  const coul = bon ? '#1e9e5a' : (trop ? '#d9822b' : '#7a8190');
+                  const ligne = document.createElement('div');
+                  ligne.style.cssText = 'margin:6px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap';
+                  const pastille = document.createElement('span');
+                  pastille.style.cssText = 'display:inline-block;min-width:34px;text-align:center;padding:3px 10px;border-radius:10px;background:#c2410c;color:#fff;font-weight:800;box-shadow:0 1px 4px rgba(0,0,0,.4)';
+                  pastille.textContent = 'Y51';
+                  const heure = document.createElement('b');
+                  heure.style.cssText = 'font-size:1.08em;font-variant-numeric:tabular-nums';
+                  heure.textContent = clock(ride.departureSeconds) + ' → ' + clock(ride.arrivalSeconds);
+                  const etiquette = document.createElement('span');
+                  etiquette.style.cssText = 'padding:2px 8px;border-radius:7px;background:rgba(255,255,255,.1);border-left:4px solid ' + coul + ';font-size:.92em';
+                  etiquette.textContent = (bon ? '✅ ' : (trop ? '⚠️ ' : '❔ ')) + statut;
+                  const attente = document.createElement('span');
+                  attente.style.opacity = '.75';
+                  attente.textContent = Math.floor((ride.departureSeconds - earliestY51) / 60) + ' min après la fin de mission';
+                  ligne.append(pastille, heure, etiquette, attente);
+                  corps.appendChild(ligne);
                 });
                 y51Result.appendChild(liste);
                 if (tarifUnique) {
