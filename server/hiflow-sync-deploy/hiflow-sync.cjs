@@ -271,6 +271,18 @@ async function runSync() {
   }).catch((e) => { console.error(`[hiflow-sync] écriture sources_etat échouée : ${e.message}`); return null; });
   if (etatResp && !etatResp.ok) console.error(`[hiflow-sync] sources_etat refusé (${etatResp.status}) : ${(await etatResp.text()).slice(0, 300)}`);
 
+  // 21/11/2026 : corrige un bug constaté en réel (Laurent) — le robot synchronisait avec succès depuis le
+  // 19/11 (confirmé par sources_etat et par le nombre de missions à jour), mais ne mettait jamais à jour
+  // plateforme_identifiants.derniere_sync_at/derniere_sync_statut, la SEULE chose que l'écran Réglages lit
+  // (majStatutAuto, plateformes.js) : l'app affichait donc « Pas encore de synchro » indéfiniment malgré un
+  // robot parfaitement fonctionnel. sources_etat et plateforme_identifiants sont deux tables distinctes,
+  // jamais synchronisées entre elles jusqu'ici.
+  try {
+    await supabasePatch(SUPABASE_URL, SERVICE_KEY, 'plateforme_identifiants',
+      `user_id=eq.${USER_ID}&platform=eq.${PLATFORM}`,
+      { derniere_sync_at: new Date().toISOString(), derniere_sync_statut: statut });
+  } catch (e) { console.error(`[hiflow-sync] écriture plateforme_identifiants échouée : ${e.message}`); }
+
   console.log(`[hiflow-sync] résumé : statut=${statut} · ${rows.length} missions · régions ${regionsOk}/${REGIONS.length}` + (detail ? ` · ${detail}` : ''));
   return { statut, nb_missions: rows.length, regions_ok: regionsOk, regions_total: REGIONS.length, detail };
 }
