@@ -218,11 +218,16 @@ async function runSync() {
       } catch (e) {
         statut = 'partiel';
         detail = `${region}: ${e.message}`;
+        // Visible dans les logs Cloud Run (le détail précédent n'était gardé qu'en mémoire et écrasé à
+        // chaque région suivante) : signalé le 20/11/2026, plusieurs régions manquantes sans diagnostic possible.
+        console.error(`[hiflow-sync] région en échec : ${region} — ${e.message}`);
       }
     }
+    console.log(`[hiflow-sync] régions : ${regionsOk}/${REGIONS.length} ok · missions en mémoire : ${Object.keys(missionsBucket).length}`);
   } catch (e) {
     statut = 'erreur';
     detail = e.message;
+    console.error(`[hiflow-sync] échec général : ${e.message}`);
   } finally {
     await browser.close();
   }
@@ -254,12 +259,14 @@ async function runSync() {
     if (factureRows.length) await supabaseUpsert(SUPABASE_URL, SERVICE_KEY, 'factures', factureRows, 'user_id,platform,external_id');
   }
 
-  await fetch(`${SUPABASE_URL}/rest/v1/sources_etat?on_conflict=user_id,platform`, {
+  const etatResp = await fetch(`${SUPABASE_URL}/rest/v1/sources_etat?on_conflict=user_id,platform`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}`, Prefer: 'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify([{ user_id: USER_ID, platform: PLATFORM, lu_le: new Date().toISOString(), maj_le: new Date().toISOString(), ok: statut !== 'erreur', message: detail || `${rows.length} missions, ${regionsOk}/${REGIONS.length} régions` }]),
-  }).catch(() => {});
+  }).catch((e) => { console.error(`[hiflow-sync] écriture sources_etat échouée : ${e.message}`); return null; });
+  if (etatResp && !etatResp.ok) console.error(`[hiflow-sync] sources_etat refusé (${etatResp.status}) : ${(await etatResp.text()).slice(0, 300)}`);
 
+  console.log(`[hiflow-sync] résumé : statut=${statut} · ${rows.length} missions · régions ${regionsOk}/${REGIONS.length}` + (detail ? ` · ${detail}` : ''));
   return { statut, nb_missions: rows.length, regions_ok: regionsOk, regions_total: REGIONS.length, detail };
 }
 
