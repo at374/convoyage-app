@@ -66,9 +66,9 @@ Généré le 2026-11-20 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | sankeo_perpignan (samedi) | sankeo-perpignan.zip | 7355 | OK | 2026-11-21 06:51:00 retrouvée (12 départs proposés) |
 | sankeo_perpignan (dimanche) | sankeo-perpignan.zip | 7355 | OK | 2026-11-22 08:59:00 retrouvée (5 départs proposés) |
 | sankeo_perpignan (semaine) | sankeo-perpignan.zip | 7355 | OK | 2026-11-23 06:48:00 retrouvée (16 départs proposés) |
-| beemob_beziers (samedi) | beemob-beziers.zip | 3382 | OK | 2026-11-21 06:00:00 retrouvée (48 départs proposés) |
-| beemob_beziers (dimanche) | beemob-beziers.zip | 3382 | OK | 2026-11-22 06:40:00 retrouvée (13 départs proposés) |
-| beemob_beziers (semaine) | beemob-beziers.zip | 3382 | OK | 2026-11-23 07:30:00 retrouvée (14 départs proposés) |
+| beemob_beziers (samedi) | beemob-beziers.zip | 4200 | OK | 2026-11-21 06:00:00 retrouvée (48 départs proposés) |
+| beemob_beziers (dimanche) | beemob-beziers.zip | 4200 | OK | 2026-11-22 06:40:00 retrouvée (13 départs proposés) |
+| beemob_beziers (semaine) | beemob-beziers.zip | 4200 | OK | 2026-11-23 07:30:00 retrouvée (14 départs proposés) |
 | citibus_narbonne (samedi) | citibus-narbonne.zip | 9815 | OK | 2026-11-21 08:18:00 retrouvée (23 départs proposés) |
 | citibus_narbonne (dimanche) | citibus-narbonne.zip | 9815 | OK | 2026-11-22 08:08:00 retrouvée (66 départs proposés) |
 | citibus_narbonne (semaine) | citibus-narbonne.zip | 9815 | OK | 2026-11-23 16:10:00 retrouvée (2 départs proposés) |
@@ -166,9 +166,9 @@ Généré le 2026-11-20 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | pastel_saint_quentin (samedi) | pastel-saint-quentin.zip | 3250 | OK | 2026-11-21 06:04:00 retrouvée (321 départs proposés) |
 | pastel_saint_quentin (dimanche) | pastel-saint-quentin.zip | 3250 | OK | 2026-11-22 09:00:00 retrouvée (20 départs proposés) |
 | pastel_saint_quentin (semaine) | pastel-saint-quentin.zip | 3250 | OK | 2026-11-23 06:04:00 retrouvée (108 départs proposés) |
-| bibus_brest (samedi) | bibus-brest.zip | 6080 | OK | 2026-11-21 07:01:00 retrouvée (84 départs proposés) |
-| bibus_brest (dimanche) | bibus-brest.zip | 6080 | OK | 2026-11-22 08:20:00 retrouvée (60 départs proposés) |
-| bibus_brest (semaine) | bibus-brest.zip | 6080 | OK | 2026-11-23 06:36:00 retrouvée (126 départs proposés) |
+| bibus_brest (samedi) | bibus-brest.zip | 7418 | OK | 2026-11-21 07:01:00 retrouvée (84 départs proposés) |
+| bibus_brest (dimanche) | bibus-brest.zip | 7418 | OK | 2026-11-22 08:20:00 retrouvée (60 départs proposés) |
+| bibus_brest (semaine) | bibus-brest.zip | 7418 | OK | 2026-11-23 06:36:00 retrouvée (126 départs proposés) |
 | astuce_rouen (samedi) | astuce-rouen.zip | 22637 | OK | 2026-11-21 16:53:00 retrouvée (112 départs proposés) |
 | astuce_rouen (dimanche) | astuce-rouen.zip | 22637 | OK | 2026-11-22 07:53:00 retrouvée (44 départs proposés) |
 | astuce_rouen (semaine) | astuce-rouen.zip | 22637 | OK | 2026-11-23 07:13:00 retrouvée (282 départs proposés) |
