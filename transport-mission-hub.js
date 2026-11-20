@@ -1089,17 +1089,20 @@ function makeProviders(r,opts={}){
       const access=Number(x.accessDistanceMeters),egress=Number(x.egressDistanceMeters);
       if(!key||!Number.isFinite(access)||!Number.isFinite(egress))continue;
       const score=access+egress,previous=best.get(key);
-      // Même règle que walkDetour, appliquée AVANT la limite de 30 : sur un réseau dense (TCL), les 30 premiers
-      // départs tenaient dans la même minute et 24 étaient des lignes sans rapport avec le trajet.
+      // Même règle que walkDetour : le filtre accès+sortie contre la marche directe élimine déjà le bruit
+      // (sur un réseau dense comme TCL, des dizaines de variantes d'arrêt pour le même véhicule).
       if(directMeters>0&&score>=directMeters)continue;
       if(!previous||score<previous.score)best.set(key,{x,score});
      }
+     // 20/11/2026 : demande de Laurent — garder TOUS les départs du jour qui répondent à la mission, pas
+     // seulement les meilleurs (ex. Y51 Albertville→Annecy : 25 départs officiels, l'ancien plafond de 30
+     // suffisait ici mais coupait sur des réseaux plus riches). SAFETY_MAX reste un garde-fou technique très
+     // large, pas une limite métier : l'affichage (render) gère la lisibilité via « Voir plus ».
+     const SAFETY_MAX=300;
      const filtered=[...best.values()].map(({x})=>({...x,network:name,
        departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)}))
       .filter(x=>x.departure&&x.arrival)
-      // « Arriver avant » (Aller) : garder les 30 arrivées les plus proches de l'échéance, pas les 30 premiers
-      // départs de la journée (bus de l'aube inutiles pour une mission à 10 h).
-      .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,30)
+      .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,SAFETY_MAX)
       .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
      return fromGTFS(filtered,name);
     }};
@@ -1124,7 +1127,9 @@ function makeProviders(r,opts={}){
     const a=pt(task.from),b=pt(task.to);if(!a||!b)return [];
     const touching=[...localNetworks,sncfFeed].filter(n=>inBounds(a,n[3])||inBounds(b,n[3]));
     const score=n=>(n===sncfFeed?1:0)*0+(area(n[3])<0.5?0:1)*10+area(n[3]);
-    return touching.sort((x,y)=>score(x)-score(y)).slice(0,4);
+    // 20/11/2026 : 4 réseaux pouvait écarter un réseau local pertinent à la frontière de plusieurs bbox
+    // (couverture nationale élargie = davantage de réseaux voisins qui se chevauchent). Relevé à 8.
+    return touching.sort((x,y)=>score(x)-score(y)).slice(0,8);
    };
    P.local_correspondances={name:'Correspondances entre réseaux (GTFS)',
     enabled:task=>!!queryWindow(task)&&pickFeeds(task).length>0,
@@ -1157,10 +1162,11 @@ function makeProviders(r,opts={}){
      }
      const out=rows.filter(x=>x&&x.departure&&x.arrival).map(x=>({...x,onDemand:x.onDemand||!!x.legs?.some(l=>l&&l.onDemand)}))
       .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
-     // Garder les meilleurs d'abord : arrivée la plus tôt, puis départ le plus tôt ; 30 propositions au plus.
-     const seen=new Set(),uniq=[];
+     // 20/11/2026 : demande de Laurent — toutes les correspondances réalisables du jour, pas seulement les
+     // 30 meilleures ; garde-fou technique très large (SAFETY_MAX), l'affichage gère la lisibilité.
+     const seen=new Set(),uniq=[],SAFETY_MAX=300;
      for(const x of out.sort((a,b)=>Date.parse(a.arrival)-Date.parse(b.arrival)||Date.parse(a.departure)-Date.parse(b.departure))){
-      const k=String(x.tripId||'')+'|'+x.departure;if(seen.has(k))continue;seen.add(k);uniq.push(x);if(uniq.length>=30)break;
+      const k=String(x.tripId||'')+'|'+x.departure;if(seen.has(k))continue;seen.add(k);uniq.push(x);if(uniq.length>=SAFETY_MAX)break;
      }
      return fromGTFS(uniq.sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)),'Correspondances');
     }};
@@ -1286,11 +1292,12 @@ function makeProviders(r,opts={}){
    const wait=ms=>new Promise(res=>setTimeout(res,ms));
    const once=o=>r.CPSwissTransport.plan(o).catch(()=>wait(1500).then(()=>r.CPSwissTransport.plan(o)))
     .catch(()=>wait(4000).then(()=>r.CPSwissTransport.plan(o)));
-   let res=await once({from:f,to:t,when:w.when,arriveBy:w.arriveBy,limit:8,fetcher});
+   // 20/11/2026 : 8 -> 16 (demande de Laurent : ne plus couper les résultats avant le classement).
+   let res=await once({from:f,to:t,when:w.when,arriveBy:w.arriveBy,limit:16,fetcher});
    // Coordonnée non reconnue (fréquent côté France) : nouvelle recherche de gare à gare, gares choisies par l'API elle-même.
    if((!res||!res.length)&&typeof r.CPSwissTransport.nearestStation==='function'){
     const [a,b]=await Promise.all([r.CPSwissTransport.nearestStation(f,fetcher),r.CPSwissTransport.nearestStation(t,fetcher)]);
-    if(a&&b&&a.id!==b.id)res=await once({from:a.id,to:b.id,when:w.when,arriveBy:w.arriveBy,limit:8,fetcher});
+    if(a&&b&&a.id!==b.id)res=await once({from:a.id,to:b.id,when:w.when,arriveBy:w.arriveBy,limit:16,fetcher});
    }
    return fromSwiss(res).map(j=>retaillerP21(j,task)).filter(Boolean);}};
  // OJP (opentransportdata.swiss) : relais serveur uniquement (ojp-relais), jeton jamais côté app. Désactivé sans
@@ -1354,14 +1361,15 @@ function makeProviders(r,opts={}){
    // Trois recherches décalées (+0, +20, +60 min) puis un seul trajet par train de départ (le plus rapide) :
    // évite 8 variantes du même premier train, souvent manqué à cause de la marche jusqu'à la gare.
    const base=ms(w.when),offsets=w.arriveBy?[0,-20,-60]:[0,20,60];
+   // 20/11/2026 : 10 -> 20 (demande de Laurent : ne plus couper les résultats avant le classement).
    const answers=await Promise.all(offsets.map(m=>r.CPSncfFallback.plan({from:{name:task.fromCity||'',point:pt(task.from)},to:{name:task.toCity||'',point:pt(task.to)},
-    when:new Date(base+m*60000).toISOString(),arriveBy:w.arriveBy,limit:10,signal,fetcher}).catch(()=>null)));
+    when:new Date(base+m*60000).toISOString(),arriveBy:w.arriveBy,limit:20,signal,fetcher}).catch(()=>null)));
    const best=new Map();
    for(const a of answers.filter(Boolean))for(const it of a.itineraries||[]){
     const k=(it.legs?.[0]?.tripId||'')+'|'+it.departure,old=best.get(k);
     if(!old||Date.parse(it.arrival)<Date.parse(old.arrival))best.set(k,it);
    }
-   const list=[...best.values()].sort((x,y)=>Date.parse(x.departure)-Date.parse(y.departure)).slice(0,10);
+   const list=[...best.values()].sort((x,y)=>Date.parse(x.departure)-Date.parse(y.departure)).slice(0,20);
    return fromSNCF({itineraries:list,sourceVersion:answers.find(Boolean)?.sourceVersion});}};
  return P;
 }
@@ -1429,9 +1437,10 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   // Point d'arrivée ou de départ approximatif (adresse trouvée seulement au niveau de la voie ou de la commune) : le test « marcher
   // directement serait aussi court » n'est pas fiable (l'écart de plusieurs km vient de l'approximation), on garde le trajet.
   let clean=usable.filter(j=>(s.task.approximateEndpoint||!walkDetour(j,s.task)||j.needsAccess)&&!excessiveDetour(j,s.task));
-  // Cars depuis une gare routière éloignée : accès (TCL…) calculé par OTP2, 6 cars au plus par moteur ; sans accès calculé, le car reste signalé « accès non calculé ».
+  // Cars depuis une gare routière éloignée : accès (TCL…) calculé par OTP2, 12 cars au plus par moteur (20/11/2026 :
+  // 6 -> 12, demande de Laurent) ; sans accès calculé, le car reste signalé « accès non calculé ».
   if(clean.some(j=>j.needsAccess)){
-   const withAccess=clean.filter(j=>j.needsAccess).sort((a,b)=>ms(a.departure||a.legs[0]?.departure)-ms(b.departure||b.legs[0]?.departure)).slice(0,6);
+   const withAccess=clean.filter(j=>j.needsAccess).sort((a,b)=>ms(a.departure||a.legs[0]?.departure)-ms(b.departure||b.legs[0]?.departure)).slice(0,12);
    const resolved=await Promise.all(withAccess.map(j=>accessFor(j,s.task,providers.otp,controller.signal)));
    clean=clean.filter(j=>!j.needsAccess).concat(resolved);
   }
@@ -1887,7 +1896,21 @@ function render(host,v){
   btn.onclick=()=>{ordreInverse=!ordreInverse;try{localStorage.setItem('cp_hub_ordre',ordreInverse?'desc':'asc');}catch(_){}host.__cpFp=null;render(host,v);};
   host.appendChild(btn);
  }
- for(const [i,p] of timeline.entries())addCard(host,p.journey,p.labels,openInitial&&i===0);
+ // 20/11/2026 : demande de Laurent — ne plus couper la liste, mais la replier pour rester fluide sur téléphone :
+ // les premiers trajets restent visibles directement, le reste se déplie au clic sur « Voir plus ».
+ const VISIBLE_FIRST=8;
+ const firstRows=timeline.slice(0,VISIBLE_FIRST),restRows=timeline.slice(VISIBLE_FIRST);
+ for(const [i,p] of firstRows.entries())addCard(host,p.journey,p.labels,openInitial&&i===0);
+ if(restRows.length){
+  // Une carte déjà ouverte par le convoyeur (même au-delà des 8 premières) ne doit pas disparaître de la vue
+  // à la prochaine mise à jour réseau : on déplie alors le bloc « Voir plus » automatiquement.
+  const hasOpenedInside=restRows.some(p=>{const k=signature(p.journey)||(p.journey.walkOnly?'walk|'+Math.round(ms(p.journey.departure)/60000)+'|'+Math.round(ms(p.journey.arrival)/60000)+'|'+Math.round(p.journey.durationMinutes||0):'');return k&&opened.has(k);});
+  const more=el(doc,'details','cp-hub-more');
+  if(moreOpen||hasOpenedInside)more.open=true;
+  more.appendChild(el(doc,'summary',null,'Voir plus ('+restRows.length+' autre'+(restRows.length>1?'s':'')+' trajet'+(restRows.length>1?'s':'')+')'));
+  for(const p of restRows)addCard(more,p.journey,p.labels,false);
+  host.appendChild(more);
+ }
  // Ne montrer que les moteurs effectivement interrogés sur la direction choisie.
  // Les réseaux hors zone restent dans le diagnostic interne, pas dans la fiche mission.
  const errs=Object.entries(v.errors);
