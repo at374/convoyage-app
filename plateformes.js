@@ -99,8 +99,7 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
     if (cur.indexOf('Otoqi') >= 0 || cur.indexOf('PopValet') >= 0) h += '<p class="doux">Pop Valet et Otoqi : ouvrez leur application et connectez-vous-y. Convoyage Ultra les lit ensuite depuis le téléphone, une fois la lecture autorisée avec la roue ⚙ (en haut à droite) de l\'application Android.</p>';
     if (!(window.CPNatif && window.CPNatif.ouvrirConnexion)) h += '<p class="doux">La lecture des plateformes se fait uniquement dans l\'application Android (roue ⚙ en haut à droite).</p>';
     if (cur.indexOf('Hiflow') >= 0) h += blocAutoLecture('Hiflow', '10 min');
-    // V322 : même robot (Cloud Run) que Hiflow, pour DriiveMe — balayage national par rotation de départements.
-    if (cur.indexOf('DriiveMe') >= 0) h += blocAutoLecture('DriiveMe', '5 min');
+    // V323 : lecture automatique DriiveMe retirée — le site détecte et bloque le robot (Cloud Run), impossible à contourner.
     return h;
   }
 
@@ -191,8 +190,8 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
     c.innerHTML = '<h2>Mes plateformes</h2><p class="doux">Coche celles que tu utilises : l\'appli ne lit et n\'affiche que celles-là.</p>' + lignes(cur) + '<button class="cpPlatBtn" id="cpPlatSave">Enregistrer mes plateformes</button><div class="cpPlatMsg" id="cpPlatMsg2"></div><div class="cpPlatMsg" id="cpPlatDiag"></div>' + connexions(cur);
     ec.insertBefore(c, ec.firstChild); majDiag();
     c.addEventListener('click', e => { const b = e.target && e.target.closest && e.target.closest('[data-conn]'); if (b) ouvrirConnexion(b.getAttribute('data-conn')); });
-    // V322 : câblage générique (Hiflow et DriiveMe partagent le même bloc « lecture automatique »).
-    for (const plat of ['Hiflow', 'DriiveMe']) {
+    // V323 : seul Hiflow a encore un robot de lecture automatique fonctionnel.
+    for (const plat of ['Hiflow']) {
       const p = plat.replace(/[^a-zA-Z]/g, '');
       const msgEl = () => c.querySelector('#cpAuto' + p + 'Msg');
       const ba = c.querySelector('[data-auto-on="' + plat + '"]'); if (ba) ba.onclick = () => activerAuto(msgEl(), c, plat);
