@@ -2,7 +2,7 @@
 
 Généré le 2026-11-20 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**442 / 444 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**445 / 446 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -443,7 +443,9 @@ Généré le 2026-11-20 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | star_rennes (samedi) | star-rennes.zip | 90944 | OK | 2026-11-21 06:02:34 retrouvée (430 départs proposés) |
 | star_rennes (dimanche) | star-rennes.zip | 90944 | OK | 2026-11-22 06:02:00 retrouvée (279 départs proposés) |
 | star_rennes (semaine) | star-rennes.zip | 90944 | OK | 2026-11-23 06:02:34 retrouvée (543 départs proposés) |
-| naolib_nantes | naolib-nantes.zip |  | ÉCHEC | fichier absent |
+| naolib_nantes (samedi) | naolib-nantes.zip | 62830 | OK | 2026-11-21 10:29:00 retrouvée (5 départs proposés) |
+| naolib_nantes (dimanche) | naolib-nantes.zip | 62830 | OK | 2026-11-22 12:50:00 retrouvée (1 départs proposés) |
+| naolib_nantes (semaine) | naolib-nantes.zip | 62830 | OK | 2026-11-23 12:36:00 retrouvée (22 départs proposés) |
 | tbm_bordeaux (samedi) | tbm-bordeaux.zip | 49478 | OK | 2026-11-21 06:03:01 retrouvée (140 départs proposés) |
 | tbm_bordeaux (dimanche) | tbm-bordeaux.zip | 49478 | OK | 2026-11-22 06:29:01 retrouvée (90 départs proposés) |
 | tbm_bordeaux (semaine) | tbm-bordeaux.zip | 49478 | OK | 2026-11-23 06:07:00 retrouvée (80 départs proposés) |
