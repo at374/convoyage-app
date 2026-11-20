@@ -159,7 +159,16 @@ const DETAILS={
  'lemanpass':{horaires:'indisponibles',tarif:'partiels',checked:'2026-11-16 · grille TAC 10+210 et matrice officielle ligne 272 intégrées au moteur',blocage:'10+210 à 4,90 € uniquement pour les gares prouvées ; ligne 272 tarifée par identifiants GTFS recoupés ; autres zones et arrêts sans prix certain',action:'Compléter les autres zones et arrêts Léman Pass avec sources officielles'},
  'flexi':{horaires:'indisponibles',tarif:'partiels',checked:'2026-11-13 · communiqué Grand Chambéry 15/05/2025',blocage:'Transport à la demande : réservation obligatoire, pas d’horaires publiés',action:'Information + lien de réservation affichés dans la fiche (13/11) ; rien d’autre possible sans réservation'},
  'mobea':{horaires:'indisponibles',tarif:'partiels',checked:'2026-11-13',blocage:'Transport à la demande : réservation obligatoire',action:'Information + lien affichés dans la fiche (13/11)'},
- 'tpgflex':{horaires:'indisponibles',tarif:'manquants',checked:'2026-11-13',blocage:'Transport à la demande : réservation obligatoire',action:'Afficher le lien de réservation'}
+ 'tpgflex':{horaires:'indisponibles',tarif:'manquants',checked:'2026-11-13',blocage:'Transport à la demande : réservation obligatoire',action:'Afficher le lien de réservation'},
+ // 20/11/2026 : 5 grandes métropoles prévues dans scripts/build_regional_gtfs.py mais jamais câblées dans
+ // transport-mission-hub.js (donc jamais réellement utilisées par une fiche mission). cts-strasbourg et
+ // star-rennes ont déjà une archive réelle dans data/gtfs/ ; ilevia-lille/naolib-nantes/tbm-bordeaux
+ // attendent le prochain passage de build-regional-gtfs.yml pour être téléchargées.
+ 'cts_strasbourg':{horaires:'câblé le 20/11, archive réelle déjà présente (data/gtfs/cts-strasbourg.zip) — à confirmer par scripts/verifier-moteurs-regionaux.cjs',tarif:'manquants',checked:'2026-11-20',blocage:'fare_attributes non vérifié dans ce flux',action:'Diagnostic réel (intra-Strasbourg) à lancer'},
+ 'ilevia_lille':{horaires:'câblé le 20/11, archive pas encore téléchargée (prochain run build-regional-gtfs.yml)',tarif:'manquants',checked:'2026-11-20',blocage:'Archive absente de data/gtfs/ pour l’instant',action:'Déclencher build-regional-gtfs.yml puis vérifier en réel'},
+ 'star_rennes':{horaires:'câblé le 20/11, archive réelle déjà présente (data/gtfs/star-rennes.zip) — à confirmer par scripts/verifier-moteurs-regionaux.cjs',tarif:'manquants',checked:'2026-11-20',blocage:'fare_attributes non vérifié dans ce flux',action:'Diagnostic réel (intra-Rennes) à lancer'},
+ 'naolib_nantes':{horaires:'câblé le 20/11, archive pas encore téléchargée (prochain run build-regional-gtfs.yml)',tarif:'manquants',checked:'2026-11-20',blocage:'Archive absente de data/gtfs/ pour l’instant',action:'Déclencher build-regional-gtfs.yml puis vérifier en réel'},
+ 'tbm_bordeaux':{horaires:'câblé le 20/11, archive pas encore téléchargée (prochain run build-regional-gtfs.yml)',tarif:'manquants',checked:'2026-11-20',blocage:'Archive absente de data/gtfs/ pour l’instant',action:'Déclencher build-regional-gtfs.yml puis vérifier en réel'}
 };
 // Axes de couverture (diagnostic serveur) : tracés sur de vraies lignes des réseaux non vus par les 8 axes principaux.
 const AXES_COUVERTURE=[

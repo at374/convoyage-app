@@ -991,7 +991,15 @@ function makeProviders(r,opts={}){
    // 30 trajets réels chacun via scripts/verifier-moteurs-regionaux.cjs), pas de resserrement nécessaire.
    ['citea', "Citéa (Valence Romans Mobilités)", 'citea-valence.zip', [44.85,4.80,45.10,5.15]],
    ['stas', "STAS (Saint-Étienne Métropole)", 'stas-saint-etienne.zip', [45.38,4.32,45.50,4.45]],
-   ['t2c', "T2C (Clermont Auvergne Métropole)", 't2c-clermont.zip', [45.72,3.00,45.85,3.20]]
+   ['t2c', "T2C (Clermont Auvergne Métropole)", 't2c-clermont.zip', [45.72,3.00,45.85,3.20]],
+   // 20/11/2026 : 5 grandes métropoles encore absentes de ce moteur alors que leur extraction GTFS
+   // était déjà prévue (voire déjà publiée) côté scripts/build_regional_gtfs.py — entrées ajoutées
+   // ici pour que les fiches mission les utilisent réellement (mêmes emprises que le script).
+   ['cts_strasbourg', "CTS (Strasbourg Eurométropole)", 'cts-strasbourg.zip', [48.48,7.60,48.68,7.82]],
+   ['ilevia_lille', "ilévia (Métropole Européenne de Lille)", 'ilevia-lille.zip', [50.55,2.85,50.75,3.20]],
+   ['star_rennes', "STAR (Rennes Métropole)", 'star-rennes.zip', [47.98,-1.85,48.22,-1.55]],
+   ['naolib_nantes', "Naolib (Nantes Métropole)", 'naolib-nantes.zip', [47.13,-1.70,47.33,-1.40]],
+   ['tbm_bordeaux', "TBM (Bordeaux Métropole)", 'tbm-bordeaux.zip', [44.75,-0.70,44.95,-0.45]]
   ];
   // Archives are published on the transport feature branch, not necessarily on
   // the deployed GitHub Pages site. Explicit HTTPS URLs avoid a silent 404
