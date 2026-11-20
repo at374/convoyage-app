@@ -31,9 +31,9 @@ table{border-collapse:collapse;width:100%;font-size:.9rem}td,th{text-align:left;
 <header><h1>Carte des transports de Convoyage Ultra</h1><p class="sub">Dernière mise à jour : <b>__DATE__</b> · ce qui est construit dans les fichiers horaires de l'application</p></header>
 <section class="row" id="kpi"></section>
 <section class="map">
-<div><svg id="svg" viewBox="0 0 780 710" role="img" aria-label="Carte de France des réseaux de transport couverts"></svg>
+<div><button id="zoomR" type="button" hidden style="margin:0 0 8px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg);font:inherit">🔍 Tout voir (revenir à la France entière)</button><svg id="svg" viewBox="0 0 780 710" role="img" aria-label="Carte de France des réseaux de transport couverts"></svg>
 <div class="leg"><span><i style="background:var(--urb)"></i>Réseau urbain / local</span><span><i style="background:var(--car)"></i>Cars régionaux</span><span><i style="background:var(--nat)"></i>Lignes nationales (SNCF, FlixBus, BlaBlaCar Bus)</span><span><i style="background:var(--warn)"></i>Calendrier court (&lt; 14 j)</span></div>
-<p class="sub" style="font-size:.8rem">Positions calculées depuis les arrêts réels de chaque fichier. Contour de la France simplifié. La Suisse (grisée) est couverte par le moteur suisse en direct, sans fichier.</p></div>
+<p class="sub" style="font-size:.8rem">Touchez la carte pour agrandir une zone. Positions calculées depuis les arrêts réels de chaque fichier. Contour de la France simplifié. La Suisse (grisée) est couverte par le moteur suisse en direct, sans fichier.</p></div>
 <div style="display:grid;gap:10px;align-content:start"><div id="info">Touchez un point pour voir le réseau.</div><div id="list"></div></div>
 </section>
 <section><h2>Mises à jour automatiques</h2><table id="wf"></table></section>
@@ -56,6 +56,12 @@ const L=D.filter(o=>!o.err).sort((a,b)=>(kind(a)=='urb')-(kind(b)=='urb'));
 for(const o of L){const k=kind(o);if(k!='urb'){h+='<rect x="'+X(o.b[1]).toFixed(1)+'" y="'+Y(o.b[2]).toFixed(1)+'" width="'+(X(o.b[3])-X(o.b[1])).toFixed(1)+'" height="'+(Y(o.b[0])-Y(o.b[2])).toFixed(1)+'" fill="'+col[k]+'" fill-opacity=".08" stroke="'+col[k]+'" stroke-opacity=".5" stroke-width="1"/>'}}
 L.forEach((o,i)=>{const k=o.end&&o.end<lim?'warn':null;h+='<circle class="dot" data-i="'+i+'" cx="'+X(o.lon).toFixed(1)+'" cy="'+Y(o.lat).toFixed(1)+'" r="'+(kind(o)=='urb'?4.5:6)+'" fill="'+(k?'var(--warn)':col[kind(o)])+'" stroke="var(--card)" stroke-width="1.5"><title>'+o.name+'</title></circle>'});
 document.getElementById('svg').innerHTML=h;
+// Zoom : un clic (ou un toucher) sur la carte agrandit la zone touchée ; « Tout voir » revient à la France entière.
+{const svg=document.getElementById('svg'),rz=document.getElementById('zoomR');let VB=[0,0,780,710];
+const maj=()=>{svg.setAttribute('viewBox',VB.map(v=>+v.toFixed(1)).join(' '));const z=780/VB[2];svg.querySelectorAll('.dot').forEach(c=>{if(!c.dataset.r)c.dataset.r=c.getAttribute('r');c.setAttribute('r',(c.dataset.r/Math.pow(z,.6)).toFixed(1))});rz.hidden=z<1.01};
+svg.style.cursor='zoom-in';
+svg.addEventListener('click',ev=>{if(ev.target.classList&&ev.target.classList.contains('dot'))return;const pt=svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;const p=pt.matrixTransform(svg.getScreenCTM().inverse());const w=VB[2]/2.2,h=VB[3]/2.2;if(w<50)return;VB=[Math.max(0,Math.min(780-w,p.x-w/2)),Math.max(0,Math.min(710-h,p.y-h/2)),w,h];maj()});
+rz.onclick=()=>{VB=[0,0,780,710];maj()};}
 const info=document.getElementById('info');
 const show=i=>{const o=L[i];info.innerHTML='<b>'+o.name+'</b><br><span class="sub">'+({urb:'Réseau urbain / local',car:'Cars régionaux',nat:'Ligne nationale'})[kind(o)]+'</span><br>Moteurs de l\'onglet Transports : <b class="'+(o.moteur===false?'bad':'ok')+'">'+(o.moteur===false?'NON branché':'branché')+'</b><br>Arrêts : '+o.stops+' · Fichier : '+o.mb+' Mo<br>Horaires jusqu\'au <b class="'+(o.end&&o.end<lim?'warn':'')+'">'+fmt(o.end)+'</b>'};
 document.querySelectorAll('.dot').forEach(c=>c.addEventListener('click',()=>show(+c.dataset.i)));
