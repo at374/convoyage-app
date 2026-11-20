@@ -140,6 +140,33 @@ FILTERED_MIRROR = [
     {'id': 'tbm-bordeaux', 'network': 'TBM (Bordeaux Métropole)',
      'url': 'https://transport.data.gouv.fr/resources/83024/download',
      'bounds': [44.75, -0.70, 44.95, -0.45], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+    # Irigo Angers : lien stable data.gouv.fr (toujours le GTFS en vigueur, même adresse à chaque republication).
+    # Le réseau comprend un tramway (lignes A/B/C) → même traitement préventif horizon_days/slim que les autres métros.
+    {'id': 'irigo-angers', 'network': 'Irigo (Angers Loire Métropole)',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/32f30b64-33f7-43bb-9b6f-34c21c2f83a3',
+     'bounds': [47.35, -0.70, 47.55, -0.40], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+    # TAO Orléans Métropole : réseau urbain avec tramway (lignes A/B) → même traitement préventif.
+    {'id': 'tao-orleans', 'network': 'TAO (Orléans Métropole)',
+     'url': 'https://transport.data.gouv.fr/resources/83751/download',
+     'bounds': [47.80, 1.78, 47.95, 2.05], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+    # Ametis Amiens : ressource « pour GTFS-RT » (lignes régulières uniquement, sans TAD/scolaire qui alourdiraient
+    # sans utilité pour un convoyage).
+    {'id': 'ametis-amiens', 'network': 'Ametis (Amiens Métropole)',
+     'url': 'https://transport.data.gouv.fr/resources/80705/download',
+     'bounds': [49.80, 2.20, 49.95, 2.40], 'horizon_days': 45, 'slim': True, 'download_limit': 30 * 1024 * 1024},
+    # Vitalis Grand Poitiers : lien stable data.gouv.fr (Producer URL référencé par MobilityData).
+    {'id': 'vitalis-poitiers', 'network': 'Vitalis (Grand Poitiers)',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/82146378-f019-4048-aa16-7328081b0369',
+     'bounds': [46.50, 0.20, 46.70, 0.45], 'horizon_days': 45, 'slim': True, 'download_limit': 30 * 1024 * 1024},
+    # Filibus Chartres : lien stable data.gouv.fr (Producer URL référencé par MobilityData).
+    {'id': 'filibus-chartres', 'network': 'Filibus (Chartres Métropole)',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/8d4c3e5c-1702-4649-b47a-b16c6016dcc6',
+     'bounds': [48.30, 1.25, 48.60, 1.65], 'horizon_days': 45, 'slim': True, 'download_limit': 30 * 1024 * 1024},
+    # Agglobus Bourges : ressource courante (identifiant susceptible de changer à chaque republication,
+    # comme pour Naolib avant son renouvellement — à surveiller si le téléchargement échoue).
+    {'id': 'agglobus-bourges', 'network': 'Agglobus (Bourges)',
+     'url': 'https://transport.data.gouv.fr/resources/83519/download',
+     'bounds': [47.00, 2.30, 47.15, 2.50], 'horizon_days': 45, 'slim': True, 'download_limit': 30 * 1024 * 1024},
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
