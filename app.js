@@ -63,6 +63,8 @@
 
   // V278 : style commun des étapes de trajet (bande colorée selon la ligne, gris pour marche/attente) — mise en forme seule, texte inchangé.
   window.CPEtapeStyle = (el, nom) => { try { const n = String(nom || 'Transport'); const marche = /marche|attente|correspondance/i.test(n); let h = 7; for (const c of n) h = (h * 31 + c.charCodeAt(0)) % 997; el.classList.add('etapeC'); if (marche) el.classList.add('marche'); else el.style.setProperty('--lh', String((h * 137) % 360)); } catch (_) {} };
+  // V279 : un trajet de transport déplié se replie d'un clic sur une zone vide (hors liens, boutons, cartes et guidage).
+  document.addEventListener('click', e => { try { const t = e.target; if (!t || !t.closest) return; const card = t.closest('details.cp-hub-card[open]'); if (!card) return; if (t.closest('a,button,summary,input,select,textarea,label,[role="button"],iframe,canvas,img,.leaflet-container,.cp-hub-walk-map,.cp-hub-map,details.cp-hub-steps')) return; if (window.getSelection && String(window.getSelection())) return; card.open = false; } catch (_) {} });
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
