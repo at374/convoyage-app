@@ -98,34 +98,39 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
     let h = '<h2 style="margin-top:22px">Connecter mes plateformes</h2><p class="doux">Appuyez sur le bouton : la page de connexion du site s\'ouvre et vous tapez vous-même votre identifiant et votre mot de passe. Convoyage Ultra ne les voit pas et ne les garde pas. Il lit ensuite vos missions sur votre téléphone.</p>' + b.join('');
     if (cur.indexOf('Otoqi') >= 0 || cur.indexOf('PopValet') >= 0) h += '<p class="doux">Pop Valet et Otoqi : ouvrez leur application et connectez-vous-y. Convoyage Ultra les lit ensuite depuis le téléphone, une fois la lecture autorisée avec la roue ⚙ (en haut à droite) de l\'application Android.</p>';
     if (!(window.CPNatif && window.CPNatif.ouvrirConnexion)) h += '<p class="doux">La lecture des plateformes se fait uniquement dans l\'application Android (roue ⚙ en haut à droite).</p>';
-    if (cur.indexOf('Hiflow') >= 0) h += blocAutoHiflow();
+    if (cur.indexOf('Hiflow') >= 0) h += blocAutoLecture('Hiflow', '10 min');
+    // V322 : même robot (Cloud Run) que Hiflow, pour DriiveMe — balayage national par rotation de départements.
+    if (cur.indexOf('DriiveMe') >= 0) h += blocAutoLecture('DriiveMe', '5 min');
     return h;
   }
 
-  // V320 : lecture automatique Hiflow (toutes les 10 min), indépendante du téléphone. Contrairement au
+  // V320 : lecture automatique (toutes les N minutes), indépendante du téléphone. Contrairement au
   // bouton « Me connecter » ci-dessus, cette case ENREGISTRE le mot de passe — chiffré côté serveur
   // (Supabase Vault), jamais en clair ici ni relisible depuis l'application. C'est un choix séparé et
   // explicite : la case reste vide et la lecture reste manuelle tant qu'elle n'est pas remplie.
-  function blocAutoHiflow() {
-    return '<h2 style="margin-top:22px">Lecture automatique Hiflow (toutes les 10 min)</h2>' +
-      '<div class="cpPlatMsg" id="cpHfStatut">Vérification de l\'état…</div>' +
-      '<p class="doux">Optionnel. Si tu remplis ces deux champs, un robot se connecte à Hiflow toutes les 10 minutes ' +
+  // V322 : généralisé (était spécifique à Hiflow) pour servir aussi DriiveMe, sans dupliquer le bloc.
+  function blocAutoLecture(platform, periode) {
+    const p = platform.replace(/[^a-zA-Z]/g, '');
+    return '<h2 style="margin-top:22px">Lecture automatique ' + platform + ' (toutes les ' + periode + ')</h2>' +
+      '<div class="cpPlatMsg" id="cpAuto' + p + 'Statut">Vérification de l\'état…</div>' +
+      '<p class="doux">Optionnel. Si tu remplis ces deux champs, un robot se connecte à ' + platform + ' toutes les ' + periode + ' ' +
       '(même quand le téléphone est éteint) et met à jour tes missions sur le serveur. ' +
       '<b>Contrairement au bouton ci-dessus, ton mot de passe est alors enregistré, chiffré, uniquement pour ce robot.</b></p>' +
-      '<input type="email" id="cpHfEmail" placeholder="E-mail Hiflow" autocomplete="off" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #3d321c;background:#221c12;color:#f3ead6;margin:6px 0;font-size:16px">' +
-      '<input type="password" id="cpHfPass" placeholder="Mot de passe Hiflow" autocomplete="new-password" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #3d321c;background:#221c12;color:#f3ead6;margin:6px 0;font-size:16px">' +
-      '<button type="button" class="cpPlatBtn" id="cpHfActiver">Activer / mettre à jour</button>' +
-      '<button type="button" class="cpPlatBtn" id="cpHfDesactiver" style="display:none;margin-top:8px;background:#3d321c">Désactiver la lecture automatique</button>' +
-      '<div class="cpPlatMsg" id="cpHfMsg"></div>';
+      '<input type="email" id="cpAuto' + p + 'Email" placeholder="E-mail ' + platform + '" autocomplete="off" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #3d321c;background:#221c12;color:#f3ead6;margin:6px 0;font-size:16px">' +
+      '<input type="password" id="cpAuto' + p + 'Pass" placeholder="Mot de passe ' + platform + '" autocomplete="new-password" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #3d321c;background:#221c12;color:#f3ead6;margin:6px 0;font-size:16px">' +
+      '<button type="button" class="cpPlatBtn" data-auto-on="' + platform + '">Activer / mettre à jour</button>' +
+      '<button type="button" class="cpPlatBtn" data-auto-off="' + platform + '" style="display:none;margin-top:8px;background:#3d321c">Désactiver la lecture automatique</button>' +
+      '<div class="cpPlatMsg" id="cpAuto' + p + 'Msg"></div>';
   }
-  async function majStatutAutoHiflow(c) {
-    const statutEl = c.querySelector('#cpHfStatut'), btnOff = c.querySelector('#cpHfDesactiver');
+  async function majStatutAuto(c, platform) {
+    const p = platform.replace(/[^a-zA-Z]/g, '');
+    const statutEl = c.querySelector('#cpAuto' + p + 'Statut'), btnOff = c.querySelector('[data-auto-off="' + platform + '"]');
     if (!statutEl) return;
     try {
-      const rows = await http('/rest/v1/plateforme_identifiants?platform=eq.Hiflow&select=email,active,derniere_sync_at,derniere_sync_statut');
+      const rows = await http('/rest/v1/plateforme_identifiants?platform=eq.' + encodeURIComponent(platform) + '&select=email,active,derniere_sync_at,derniere_sync_statut');
       const r = rows && rows[0];
       if (r && r.active) {
-        const sync = r.derniere_sync_at ? ('Dernière synchro : ' + new Date(r.derniere_sync_at).toLocaleString('fr-FR') + (r.derniere_sync_statut ? ' (' + r.derniere_sync_statut + ')' : '')) : 'Pas encore de synchro (première passe à venir, jusqu\'à 10 min).';
+        const sync = r.derniere_sync_at ? ('Dernière synchro : ' + new Date(r.derniere_sync_at).toLocaleString('fr-FR') + (r.derniere_sync_statut ? ' (' + r.derniere_sync_statut + ')' : '')) : 'Pas encore de synchro (première passe à venir).';
         statutEl.innerHTML = '✅ Activé pour <b>' + r.email.replace(/</g, '&lt;') + '</b>. ' + sync;
         statutEl.style.color = '#8fd38f';
         if (btnOff) btnOff.style.display = '';
@@ -136,24 +141,25 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
       }
     } catch (e) { statutEl.textContent = ''; }
   }
-  async function activerAutoHiflow(msgEl, c) {
-    const email = (document.getElementById('cpHfEmail') || {}).value || '';
-    const pass = (document.getElementById('cpHfPass') || {}).value || '';
+  async function activerAuto(msgEl, c, platform) {
+    const p = platform.replace(/[^a-zA-Z]/g, '');
+    const email = (document.getElementById('cpAuto' + p + 'Email') || {}).value || '';
+    const pass = (document.getElementById('cpAuto' + p + 'Pass') || {}).value || '';
     if (!email || !pass) { msgEl.textContent = 'Renseigne l\'e-mail et le mot de passe.'; return; }
     msgEl.textContent = 'Enregistrement…';
     try {
-      await http('/rest/v1/rpc/enregistrer_identifiant_plateforme', { method: 'POST', body: JSON.stringify({ p_platform: 'Hiflow', p_email: email, p_password: pass }) });
-      msgEl.textContent = 'Activé. La première lecture automatique arrive dans les 10 minutes.';
-      const pEl = document.getElementById('cpHfPass'); if (pEl) pEl.value = '';
-      if (c) await majStatutAutoHiflow(c);
+      await http('/rest/v1/rpc/enregistrer_identifiant_plateforme', { method: 'POST', body: JSON.stringify({ p_platform: platform, p_email: email, p_password: pass }) });
+      msgEl.textContent = 'Activé. La première lecture automatique arrive bientôt.';
+      const pEl = document.getElementById('cpAuto' + p + 'Pass'); if (pEl) pEl.value = '';
+      if (c) await majStatutAuto(c, platform);
     } catch (e) { msgEl.textContent = 'Échec : ' + (e && e.message || 'erreur inconnue'); }
   }
-  async function desactiverAutoHiflow(msgEl, c) {
+  async function desactiverAuto(msgEl, c, platform) {
     msgEl.textContent = 'Désactivation…';
     try {
-      await http('/rest/v1/plateforme_identifiants?platform=eq.Hiflow', { method: 'DELETE' });
+      await http('/rest/v1/plateforme_identifiants?platform=eq.' + encodeURIComponent(platform), { method: 'DELETE' });
       msgEl.textContent = 'Lecture automatique désactivée.';
-      if (c) await majStatutAutoHiflow(c);
+      if (c) await majStatutAuto(c, platform);
     } catch (e) { msgEl.textContent = 'Échec : ' + (e && e.message || 'erreur inconnue'); }
   }
   // V321 : petite note « Nouveautés », une fois par changement (identifiant NOUVEAUTE_ID), pour que Laurent
@@ -185,9 +191,14 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
     c.innerHTML = '<h2>Mes plateformes</h2><p class="doux">Coche celles que tu utilises : l\'appli ne lit et n\'affiche que celles-là.</p>' + lignes(cur) + '<button class="cpPlatBtn" id="cpPlatSave">Enregistrer mes plateformes</button><div class="cpPlatMsg" id="cpPlatMsg2"></div><div class="cpPlatMsg" id="cpPlatDiag"></div>' + connexions(cur);
     ec.insertBefore(c, ec.firstChild); majDiag();
     c.addEventListener('click', e => { const b = e.target && e.target.closest && e.target.closest('[data-conn]'); if (b) ouvrirConnexion(b.getAttribute('data-conn')); });
-    { const ba = c.querySelector('#cpHfActiver'); if (ba) ba.onclick = () => activerAutoHiflow(c.querySelector('#cpHfMsg'), c); }
-    { const bo = c.querySelector('#cpHfDesactiver'); if (bo) bo.onclick = () => desactiverAutoHiflow(c.querySelector('#cpHfMsg'), c); }
-    if (c.querySelector('#cpHfStatut')) majStatutAutoHiflow(c);
+    // V322 : câblage générique (Hiflow et DriiveMe partagent le même bloc « lecture automatique »).
+    for (const plat of ['Hiflow', 'DriiveMe']) {
+      const p = plat.replace(/[^a-zA-Z]/g, '');
+      const msgEl = () => c.querySelector('#cpAuto' + p + 'Msg');
+      const ba = c.querySelector('[data-auto-on="' + plat + '"]'); if (ba) ba.onclick = () => activerAuto(msgEl(), c, plat);
+      const bo = c.querySelector('[data-auto-off="' + plat + '"]'); if (bo) bo.onclick = () => desactiverAuto(msgEl(), c, plat);
+      if (c.querySelector('#cpAuto' + p + 'Statut')) majStatutAuto(c, plat);
+    }
     const b = c.querySelector('#cpPlatSave'), m = c.querySelector('#cpPlatMsg2');
     c.addEventListener('change', () => { b.disabled = cochees(c).length === 0; m.textContent = b.disabled ? 'Coche au moins une plateforme.' : ''; });
     b.onclick = () => { const v = cochees(c); if (!v.length) return; b.disabled = true; b.textContent = 'Enregistrement…'; enregistrer(v, m); };
