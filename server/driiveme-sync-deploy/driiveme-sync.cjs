@@ -84,9 +84,29 @@ async function ecrireCurseur(url, key, userId, position) {
 }
 
 // ---------- Connexion ----------
+// V2 : premier test réel (20/11/2026) en timeout sur #email après 15 s — probablement un bandeau cookies
+// (jamais vu pendant la reconnaissance faite dans un vrai Chrome déjà « consenti ») ou un rendu plus lent
+// en tête froide Cloud Run. On tente de fermer un bandeau cookies courant, on laisse plus de temps, et en
+// cas d'échec on journalise titre/URL de la page pour diagnostiquer sans avoir besoin d'un navigateur live.
+async function fermerBandeauCookies(page) {
+  const textes = ['Tout accepter', 'Accepter', 'J’accepte', "J'accepte", 'Accept all', 'Accept'];
+  for (const t of textes) {
+    try {
+      const bouton = page.getByRole('button', { name: t, exact: false }).first();
+      if (await bouton.isVisible({ timeout: 1000 })) { await bouton.click({ timeout: 2000 }); await sleep(300); return true; }
+    } catch (_) {}
+  }
+  return false;
+}
 async function loginDriiveMe(page, email, password) {
   await page.goto(LOGIN_URL, { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('#email', { state: 'visible', timeout: 15000 });
+  await fermerBandeauCookies(page).catch(() => {});
+  try {
+    await page.waitForSelector('#email', { state: 'visible', timeout: 30000 });
+  } catch (e) {
+    const titre = await page.title().catch(() => '?');
+    throw new Error(`formulaire de connexion introuvable (titre page : « ${titre} », url : ${page.url()}) — ${e.message}`);
+  }
   await page.fill('#email', email);
   await page.fill('#password', password);
   await Promise.all([
