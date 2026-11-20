@@ -126,7 +126,7 @@ try:
         key=(lat,lon)
         if key not in cache:
             try:
-                _,_,g=fetch(f'https://api-adresse.data.gouv.fr/reverse/?lon={lon}&lat={lat}&limit=1')
+                _,_,g=fetch(f'https://data.geopf.fr/geocodage/reverse?lon={lon}&lat={lat}&limit=1')
                 f=(json.loads(g).get('features') or [{}])[0].get('properties',{})
                 cache[key]=(f.get('city','')+((' ('+f.get('oldcity')+')') if f.get('oldcity') else ''),f.get('citycode',''))
             except Exception as e: cache[key]=('erreur '+repr(e)[:60],'')
@@ -141,7 +141,7 @@ def commune(lat,lon,cache={}):
     key=(lat,lon)
     if key not in cache:
         try:
-            _,_,g=fetch(f'https://api-adresse.data.gouv.fr/reverse/?lon={lon}&lat={lat}&limit=1')
+            _,_,g=fetch(f'https://data.geopf.fr/geocodage/reverse?lon={lon}&lat={lat}&limit=1')
             f=(json.loads(g).get('features') or [{}])[0].get('properties',{})
             cache[key]=(f.get('city',''),f.get('citycode',''))
         except Exception as e: cache[key]=('erreur '+repr(e)[:60],'')

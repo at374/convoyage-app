@@ -146,7 +146,7 @@ async function run(){
     return json(route,url.pathname.endsWith('/missions')?backendMissions:url.pathname.endsWith('/reglages')?[backendSettings]:[]);
    }
    if(url.hostname==='gtfs-fixture.invalid')return route.fulfill({status:200,contentType:'application/zip',headers:{'access-control-allow-origin':'*'},body:url.searchParams.has('regionalfare')?regionalFareZip:url.searchParams.has('regional')?regionalZip:url.searchParams.has('sibra')?sibraZip:zip});
-   if(url.hostname==='api-adresse.data.gouv.fr'&&url.pathname.includes('/search')){
+   if(url.hostname==='data.geopf.fr'&&url.pathname.includes('/search')){
     const q=url.searchParams.get('q')||'',match=q.match(/\b(12|14|16|18)\b/),number=match?.[1];
     if(number){
      await new Promise(resolve=>{const list=gates.get(number)||[];list.push(resolve);gates.set(number,list);});

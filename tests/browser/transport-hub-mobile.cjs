@@ -73,7 +73,7 @@ async function run(){
     if(req.method()!=='GET'&&!readPost)writes.push(req.method()+' '+url.pathname);
     return json(route,url.pathname.endsWith('/missions')?missions:url.pathname.endsWith('/reglages')?[settings]:[]);
    }
-   if(url.hostname==='api-adresse.data.gouv.fr'){
+   if(url.hostname==='data.geopf.fr'){
     const q=url.searchParams.get('q')||'';
     if(/\b12\b/.test(q))return json(route,{features:[{geometry:{coordinates:[5.7143,45.1914]},properties:{score:1,type:'housenumber',city:'Grenoble'}}]});
     if(/\b14\b/.test(q))return json(route,{features:[{geometry:{coordinates:[6.1218,45.9019]},properties:{score:1,type:'housenumber',city:'Annecy'}}]});

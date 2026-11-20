@@ -17,6 +17,10 @@ const P21_POINT={lat:46.237722,lon:6.117667};
 function nearP21(p){return !!p&&Math.abs(p.lat-P21_POINT.lat)<0.004&&Math.abs(p.lon-P21_POINT.lon)<0.006;}
 const LYON_COACH_ANCHORS=[{name:'Lyon Part-Dieu',lat:45.7605,lon:4.8590},{name:'Lyon Perrache',lat:45.7487,lon:4.8262},{name:'Lyon Gerland',lat:45.7290,lon:4.8300}];
 const SAFE_TRANSFER_MIN=10,SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=120;
+// Au-delà de cette distance, une marche « de bord à bord » (ex. gare → commune voisine) doit d'abord être
+// comparée à un bus/tram local (Mobilités M à Grenoble…) avant d'être acceptée telle quelle : signalé le
+// 19/11/2026 (marches de 4,7 et 5,4 km vers Seyssins alors que le réseau M dessert la zone).
+const REGIONAL_WALK_THRESHOLD_M=800;
 
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 function pt(p){
@@ -296,7 +300,7 @@ function walkLeg(route,from,to,fromName,toName,depMs){
   departure:new Date(depMs).toISOString(),arrival:new Date(depMs+route.durationSeconds*1000).toISOString(),
   distanceMeters:route.distanceMeters,durationSeconds:route.durationSeconds,walkSource:'valhalla',geometry:route.geometry,steps:route.steps});
 }
-async function completeWalks(j,task,router,scooter){
+async function completeWalks(j,task,router,scooter,regional){
  // Keep provider warnings (e.g. GTFS schedules without live confirmation) through walking enrichment.
  const legs=j.legs.slice(),missing=Array.isArray(j.missing)?j.missing.slice():[];
  const from=pt(task.from),to=pt(task.to);
@@ -309,22 +313,38 @@ async function completeWalks(j,task,router,scooter){
  };
  // Marche entre deux points ; si elle dépasse la limite de marche et que la trottinette est activée (et sous sa distance maximale),
  // elle est remplacée par un trajet en trottinette (tracé vélo OpenStreetMap, durée estimée à la vitesse réglée).
+ // Renvoie toujours un tableau de portions (une marche/trottinette seule, ou la chaîne bus/tram locale trouvée).
  const footLeg=async(a,b,fromName,toName,{startMs,endMs})=>{
   const r=await call(a,b);if(!r)return null;
   const walkMax=Number.isFinite(task.walkMaxMeters)?task.walkMaxMeters:null;
+  // Marche longue dans une zone desservie par un réseau local (Mobilités M à Grenoble…) : comparer d'abord
+  // au bus/tram plutôt que d'imposer silencieusement une marche d'une heure (signalé le 19/11/2026,
+  // marches de 4,7 et 5,4 km vers Seyssins alors que le réseau M dessert la zone).
+  if(r.distanceMeters>REGIONAL_WALK_THRESHOLD_M&&regional&&typeof regional.run==='function'){
+   const subTask=Number.isFinite(endMs)?{from:a,to:b,fromName,toName,latestArrival:new Date(endMs).toISOString(),marginMinutes:0}
+    :Number.isFinite(startMs)?{from:a,to:b,fromName,toName,earliestDeparture:new Date(startMs).toISOString(),marginMinutes:0}:null;
+   if(subTask){
+    let ok=false;try{ok=regional.enabled(subTask);}catch(_){}
+    if(ok){
+     let answer=null;try{answer=await regional.run(subTask);}catch(_){answer=null;}
+     const best=Array.isArray(answer)?answer.find(it=>it&&Array.isArray(it.legs)&&it.legs.length&&it.legs.some(l=>l&&l.kind!=='walk')):null;
+     if(best)return renameEnds({...best,legs:best.legs},{fromName,toName}).legs;
+    }
+   }
+  }
   if(walkMax!==null&&r.distanceMeters>walkMax&&scooter&&scooter.enabled&&scooter.router){
    let sr=null;try{sr=await scooter.router.route(a,b);}catch(_){}
    const limit=(finite(scooter.maxKm)&&scooter.maxKm>0?scooter.maxKm:8)*1000,speed=finite(scooter.speedKmh)&&scooter.speedKmh>0?Math.min(30,Math.max(5,scooter.speedKmh)):15;
    if(sr&&sr.status==='calculated'&&finite(sr.distanceMeters)&&sr.distanceMeters>=0&&sr.distanceMeters<=limit){
     const seconds=Math.max(60,Math.round(sr.distanceMeters/(speed/3.6)));
     const start=Number.isFinite(startMs)?startMs:endMs-seconds*1000;
-    return leg({kind:'scooter',mode:'Trottinette',from:fromName,to:toName,fromPoint:a,toPoint:b,
+    return [leg({kind:'scooter',mode:'Trottinette',from:fromName,to:toName,fromPoint:a,toPoint:b,
      departure:new Date(start).toISOString(),arrival:new Date(start+seconds*1000).toISOString(),distanceMeters:sr.distanceMeters,durationSeconds:seconds,
-     walkSource:'valhalla-bicycle',geometry:sr.geometry,steps:sr.steps,speedKmh:speed});
+     walkSource:'valhalla-bicycle',geometry:sr.geometry,steps:sr.steps,speedKmh:speed})];
    }
   }
   const start=Number.isFinite(startMs)?startMs:endMs-r.durationSeconds*1000;
-  return walkLeg(r,a,b,fromName,toName,start);
+  return [walkLeg(r,a,b,fromName,toName,start)];
  };
  // Ne jamais qualifier de « réalisable » une marche moteur sans durée, distance ou horaires cohérents.
  for(const l of legs)if(l.kind==='walk'&&(!finite(l.durationSeconds)||!finite(l.distanceMeters)||
@@ -337,7 +357,7 @@ async function completeWalks(j,task,router,scooter){
  else if(meters(from,first.fromPoint)>SAME_POINT_M){
   const dep=ms(first.departure);
   const w=Number.isFinite(dep)?await footLeg(from,first.fromPoint,task.fromName||'Adresse de départ',first.from,{endMs:dep}):null;
-  if(w)legs.unshift(w);
+  if(w&&w.length)legs.unshift(...w);
   else missing.push('marche depuis l’adresse exacte de départ non calculée');
  }
  // Correspondances entre deux véhicules sans marche fournie.
@@ -351,9 +371,12 @@ async function completeWalks(j,task,router,scooter){
     continue;
    }
    const w=await footLeg(a.toPoint,b.fromPoint,a.to,b.from,{startMs:ms(a.arrival)});
-   if(!w){missing.push('marche de correspondance à '+(a.to||'l’arrêt')+' non calculée');continue;}
-   if(w.durationSeconds+TRANSFER_BUFFER_S>gap)missing.push('correspondance trop courte à '+(a.to||'l’arrêt')+' ('+Math.ceil(w.durationSeconds/60)+' min de '+(w.kind==='scooter'?'trottinette':'marche')+')');
-   legs.splice(i,0,w);i++;
+   if(!w||!w.length){missing.push('marche de correspondance à '+(a.to||'l’arrêt')+' non calculée');continue;}
+   const wStart=ms(w[0].departure),wEnd=ms(w[w.length-1].arrival),
+    wDurationSeconds=Number.isFinite(wStart)&&Number.isFinite(wEnd)?(wEnd-wStart)/1000:NaN;
+   if(!Number.isFinite(wDurationSeconds)||wDurationSeconds+TRANSFER_BUFFER_S>gap)
+    missing.push('correspondance trop courte à '+(a.to||'l’arrêt')+' ('+(Number.isFinite(wDurationSeconds)?Math.ceil(wDurationSeconds/60)+' min':'durée inconnue')+')');
+   legs.splice(i,0,...w);i+=w.length;
   }else missing.push('positions GPS de correspondance non vérifiées : '+(a.to||'?')+' → '+(b.from||'?'));
  }
  // Dernière marche : dernier point de la proposition vers l'adresse exacte d'arrivée.
@@ -363,7 +386,7 @@ async function completeWalks(j,task,router,scooter){
  else if(meters(last.toPoint,to)>SAME_POINT_M){
   const arr=ms(last.arrival);
   const w=Number.isFinite(arr)?await footLeg(last.toPoint,to,last.to,task.toName||'Adresse d’arrivée',{startMs:arr}):null;
-  if(w)legs.push(w);
+  if(w&&w.length)legs.push(...w);
   else missing.push('marche jusqu’à l’adresse exacte d’arrivée non calculée');
  }
  return renameEnds({...j,legs,missing},task);
@@ -1398,7 +1421,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   const replace=(t,a)=>{const old=pendingCard.get(t);const i=s.items.indexOf(old);
    if(old)a.sources=[...new Set([...a.sources,...(old.sources||[])])];
    if(i>=0)s.items[i]=a;else s.items.push(a);if(t.key)s.bySignature.set(t.key,a);};
-  const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,router,{enabled:!!(scooter&&scooter.enabled&&scooterRouter),router:scooterRouter,maxKm:scooter&&scooter.maxKm,speedKmh:scooter&&scooter.speedKmh}).then(x=>{
+  const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,router,{enabled:!!(scooter&&scooter.enabled&&scooterRouter),router:scooterRouter,maxKm:scooter&&scooter.maxKm,speedKmh:scooter&&scooter.speedKmh},providers&&providers.regional).then(x=>{
    if(disposed)return;replace(t,assess(x,s.task,fareFor));emit(label);
   }).catch(()=>{
    // Ne pas laisser une carte bloquée sur « marches en cours de calcul »

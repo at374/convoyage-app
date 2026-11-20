@@ -452,7 +452,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       d.innerHTML = cadre(dessiner(a, b, meme ? [{ coords: avec.coords, couleur: '#1d4ed8', ep: 4 }] : [sans && { coords: sans.coords, couleur: '#16a34a', ep: 4, pointille: true }, avec && { coords: avec.coords, couleur: '#1d4ed8', ep: 4 }].filter(Boolean)), bas + (meme || !(avec && sans) ? '' : '<p class="doux">Bleu : avec péages · Vert pointillé : sans péage.</p>'));
       const base = avec || sans; if (!base) { const el0 = document.getElementById('popCommunes'); if (el0) el0.textContent = ''; return; }
       const route = base.coords, communes = [], idx = [0.2, 0.4, 0.6, 0.8].map(f => route[Math.min(route.length - 1, Math.round(f * (route.length - 1)))]);
-      for (const q of idx) { try { const r = await fetch('https://api-adresse.data.gouv.fr/reverse/?limit=1&lon=' + q[0] + '&lat=' + q[1]); const j = r.ok ? await r.json() : null, f = j && j.features && j.features[0]; if (f && f.properties && f.properties.city && !communes.includes(f.properties.city)) communes.push(f.properties.city); } catch (_) {} }
+      for (const q of idx) { try { const r = await fetch('https://data.geopf.fr/geocodage/reverse?limit=1&lon=' + q[0] + '&lat=' + q[1]); const j = r.ok ? await r.json() : null, f = j && j.features && j.features[0]; if (f && f.properties && f.properties.city && !communes.includes(f.properties.city)) communes.push(f.properties.city); } catch (_) {} }
       const el = document.getElementById('popCommunes'); if (el) el.textContent = communes.length ? 'Communes sur le trajet (repères) : ' + [m.from_city].concat(communes, [m.to_city]).filter(Boolean).join(' → ') : '';
     };
     pointsMission(m).catch(() => { }).finally(() => rendre().catch(() => { const x = document.getElementById('popVol'); const p = x && Array.from(x.querySelectorAll('p')).find(q => /Calcul des deux/.test(q.textContent)); if (p) p.textContent = 'Le calcul du trajet a échoué sur ce téléphone. Referme et réessaie.'; }));
@@ -1703,7 +1703,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       <div class="recherche"><input id="rDom" autocomplete="off" placeholder="3 lettres puis choisis dans la liste" aria-controls="rDomSugg"><div id="rDomSugg" class="sugg" role="listbox" hidden></div></div>
       <p class="doux">La ville est enregistrée avec tes réglages. Sert à estimer l’approche et le retour.</p>
       <label for="rAdr">Adresse exacte du domicile (numéro, rue, code postal, ville) : départs et retours calculés depuis ta porte</label><input id="rAdr" autocomplete="street-address" placeholder="ex. 12 rue de la Gare 74000 Annecy">
-      <p class="doux" id="rAdrEtat">Adresse conservée uniquement sur ce téléphone : elle n’est jamais envoyée à notre serveur. Seul le service public d’adresses (api-adresse.data.gouv.fr) la reçoit pour la localiser.</p>
+      <p class="doux" id="rAdrEtat">Adresse conservée uniquement sur ce téléphone : elle n’est jamais envoyée à notre serveur. Seul le service public d’adresses (IGN / Géoplateforme) la reçoit pour la localiser.</p>
       <label for="rTr">Coût des transports de liaison (€/km : train, car, covoiturage)</label><input id="rTr" type="number" step="0.01" min="0" max="2" inputmode="decimal">
       <label for="rVit">Vitesse moyenne porte à porte de ces liaisons (km/h)</label><input id="rVit" type="number" step="1" min="10" max="300" inputmode="numeric">
       <label for="rMarge">Marge de sécurité entre deux missions (minutes)</label><input id="rMarge" type="number" step="5" min="0" max="600" inputmode="numeric">
@@ -1778,7 +1778,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           const ancien = lireLocal('cp_domicile_exact', null);
           if (!(ancien && ancien.texte === t)) {
             let f = null;
-            try { const rr = await fetch('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(t)); if (rr.ok) { const j = await rr.json(); f = j && j.features && j.features[0]; } } catch (_) {}
+            try { const rr = await fetch('https://data.geopf.fr/geocodage/search?limit=1&q=' + encodeURIComponent(t)); if (rr.ok) { const j = await rr.json(); f = j && j.features && j.features[0]; } } catch (_) {}
             const pr = f && f.properties, ok = f && f.geometry && pr && pr.score >= 0.5 && ['housenumber', 'street'].includes(pr.type);
             if (!ok) return toast('Adresse non localisée : indique numéro, rue, code postal et ville (France)');
             const [lng, lat] = f.geometry.coordinates;

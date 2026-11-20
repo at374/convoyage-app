@@ -173,7 +173,9 @@
       ajoute([x.a, x.cp || (x.a ? '' : x.d), x.v].filter(Boolean).join(' '), !x.a);
       if (x.a) { ajoute([sansLieu, x.cp, x.v].filter(Boolean).join(' ')); ajoute([voie, x.cp, x.v].filter(Boolean).join(' ')); ajoute([x.cp, x.v].filter(Boolean).join(' '), true); }
       for (const es of essais) {
-        const r = await fetchFn('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(es.q) + (x.cp ? '&postcode=' + encodeURIComponent(x.cp) : '') + (es.commune ? '&type=municipality' : ''));
+        // V279 : ancien service (api-adresse.data.gouv.fr) décommissionné fin janvier 2026, remplacé par l'IGN
+        // (data.geopf.fr/geocodage) — même moteur, mêmes paramètres et même format de réponse GeoJSON (iso-fonctionnel).
+        const r = await fetchFn('https://data.geopf.fr/geocodage/search?limit=1&q=' + encodeURIComponent(es.q) + (x.cp ? '&postcode=' + encodeURIComponent(x.cp) : '') + (es.commune ? '&type=municipality' : ''));
         if (!r || !r.ok) throw new Error('service adresses');
         const j = await r.json(), f = j && j.features && j.features[0];
         if (f && f.geometry && f.properties && f.properties.score >= 0.5) {
