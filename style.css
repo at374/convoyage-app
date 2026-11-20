@@ -735,7 +735,7 @@ html:root[data-style="jour"]{--lg-s:72%;--lg-l:34%;--lg-rot:0}
 
 /* 20/11/2026 : horaires en dégradé teinté (style 1) selon le statut et la palette ; phrase « horaire officiel publié… » retirée du résumé */
 .cp-hub-card>summary .cp-hub-reason{display:none!important}
-.cp-hub-card{--st:var(--alerte);background:linear-gradient(135deg,color-mix(in srgb,var(--st) 26%,var(--carte)),color-mix(in srgb,var(--st) 6%,var(--carte)) 80%);border-color:color-mix(in srgb,var(--st) 45%,var(--ligne));border-left-color:var(--st)}
+.cp-hub-card{--st:var(--alerte);background:linear-gradient(135deg,color-mix(in srgb,var(--st) 42%,var(--carte)),color-mix(in srgb,var(--st) 12%,var(--carte)) 85%);border-color:color-mix(in srgb,var(--st) 60%,var(--ligne));border-left-color:var(--st)}
 .cp-hub-card.ok{--st:var(--ok)}
-.cp-hub-card.sched{--st:var(--accent)}
+.cp-hub-card.sched{--st:#3b82f6}
 .cp-hub-card>summary .cp-hub-times{color:var(--texte)}
