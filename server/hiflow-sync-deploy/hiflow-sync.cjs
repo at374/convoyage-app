@@ -141,9 +141,14 @@ function armerCapture(page, missionsBucket, resaBucket, facturesBucket, attenteB
 }
 
 async function choisirRegion(page, region) {
-  await page.waitForSelector('#start_region', { timeout: 15000 });
-  await page.selectOption('#start_region', region);
-  await page.selectOption('#end_region', '').catch(() => {});
+  // Diagnostic du 20/11/2026 (régions à 0/17, « located to hidden <select id="start_region"> ») : le site a
+  // habillé ce <select> natif d'un composant stylé, le rendant visuellement caché en permanence sans rien
+  // changer à son fonctionnement — attendre sa visibilité ne peut plus aboutir. On attend seulement sa
+  // présence dans le DOM et on force la sélection (selectOption déclenche quand même les événements
+  // input/change attendus par le site).
+  await page.waitForSelector('#start_region', { state: 'attached', timeout: 15000 });
+  await page.selectOption('#start_region', region, { force: true });
+  await page.selectOption('#end_region', '', { force: true }).catch(() => {});
   await sleep(1500);
 }
 
