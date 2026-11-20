@@ -998,7 +998,10 @@ function makeProviders(r,opts={}){
    ['cts_strasbourg', "CTS (Strasbourg Eurométropole)", 'cts-strasbourg.zip', [48.48,7.60,48.68,7.82]],
    ['ilevia_lille', "ilévia (Métropole Européenne de Lille)", 'ilevia-lille.zip', [50.55,2.85,50.75,3.20]],
    ['star_rennes', "STAR (Rennes Métropole)", 'star-rennes.zip', [47.98,-1.85,48.22,-1.55]],
-   ['naolib_nantes', "Naolib (Nantes Métropole)", 'naolib-nantes.zip', [47.13,-1.70,47.33,-1.40]],
+   // naolib_nantes volontairement absent : même avec un horizon réduit à 14 j, l'archive réelle décompresse
+   // à 178 Mo de stop_times.txt (réseau très dense, ~12,7 Mo/j), largement au-delà des 64 Mo maxFileBytes du
+   // moteur — « Expanded GTFS exceeds size limit » constaté en réel le 20/11/2026. La câbler demanderait un
+   // horizon de 4-5 j, trop court pour un cron hebdomadaire (voir transport-coverage.js pour le suivi).
    ['tbm_bordeaux', "TBM (Bordeaux Métropole)", 'tbm-bordeaux.zip', [44.75,-0.70,44.95,-0.45]]
   ];
   // Archives are published on the transport feature branch, not necessarily on

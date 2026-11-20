@@ -160,15 +160,16 @@ const DETAILS={
  'flexi':{horaires:'indisponibles',tarif:'partiels',checked:'2026-11-13 · communiqué Grand Chambéry 15/05/2025',blocage:'Transport à la demande : réservation obligatoire, pas d’horaires publiés',action:'Information + lien de réservation affichés dans la fiche (13/11) ; rien d’autre possible sans réservation'},
  'mobea':{horaires:'indisponibles',tarif:'partiels',checked:'2026-11-13',blocage:'Transport à la demande : réservation obligatoire',action:'Information + lien affichés dans la fiche (13/11)'},
  'tpgflex':{horaires:'indisponibles',tarif:'manquants',checked:'2026-11-13',blocage:'Transport à la demande : réservation obligatoire',action:'Afficher le lien de réservation'},
- // 20/11/2026 : 5 grandes métropoles prévues dans scripts/build_regional_gtfs.py mais jamais câblées dans
- // transport-mission-hub.js (donc jamais réellement utilisées par une fiche mission). cts-strasbourg et
- // star-rennes ont déjà une archive réelle dans data/gtfs/ ; ilevia-lille/naolib-nantes/tbm-bordeaux
- // attendent le prochain passage de build-regional-gtfs.yml pour être téléchargées.
- 'cts_strasbourg':{horaires:'câblé le 20/11, archive réelle déjà présente (data/gtfs/cts-strasbourg.zip) — à confirmer par scripts/verifier-moteurs-regionaux.cjs',tarif:'manquants',checked:'2026-11-20',blocage:'fare_attributes non vérifié dans ce flux',action:'Diagnostic réel (intra-Strasbourg) à lancer'},
- 'ilevia_lille':{horaires:'câblé le 20/11, archive pas encore téléchargée (prochain run build-regional-gtfs.yml)',tarif:'manquants',checked:'2026-11-20',blocage:'Archive absente de data/gtfs/ pour l’instant',action:'Déclencher build-regional-gtfs.yml puis vérifier en réel'},
- 'star_rennes':{horaires:'câblé le 20/11, archive réelle déjà présente (data/gtfs/star-rennes.zip) — à confirmer par scripts/verifier-moteurs-regionaux.cjs',tarif:'manquants',checked:'2026-11-20',blocage:'fare_attributes non vérifié dans ce flux',action:'Diagnostic réel (intra-Rennes) à lancer'},
- 'naolib_nantes':{horaires:'câblé le 20/11, archive pas encore téléchargée (prochain run build-regional-gtfs.yml)',tarif:'manquants',checked:'2026-11-20',blocage:'Archive absente de data/gtfs/ pour l’instant',action:'Déclencher build-regional-gtfs.yml puis vérifier en réel'},
- 'tbm_bordeaux':{horaires:'câblé le 20/11, archive pas encore téléchargée (prochain run build-regional-gtfs.yml)',tarif:'manquants',checked:'2026-11-20',blocage:'Archive absente de data/gtfs/ pour l’instant',action:'Déclencher build-regional-gtfs.yml puis vérifier en réel'}
+ // 20/11/2026 : 5 grandes métropoles prévues dans scripts/build_regional_gtfs.py, câblées dans
+ // transport-mission-hub.js. Diagnostic réel via scripts/verifier-moteurs-regionaux.cjs sur les archives
+ // téléchargées : 3 réseaux dépassaient maxFileBytes (64 Mo) une fois décompressés par le moteur
+ // (« Expanded GTFS exceeds size limit »), horizon_days réduit en conséquence (voir build_regional_gtfs.py) ;
+ // nouvelle archive + nouvelle vérification en attente du prochain passage de build-regional-gtfs.yml.
+ 'cts_strasbourg':{horaires:'câblé le 20/11 ; horizon réduit 45->28j le 20/11 (stop_times.txt dépassait 64 Mo à 45j) — nouvelle vérification en attente du prochain build',tarif:'manquants',checked:'2026-11-20',blocage:'fare_attributes non vérifié dans ce flux',action:'Relancer build-regional-gtfs.yml puis scripts/verifier-moteurs-regionaux.cjs'},
+ 'ilevia_lille':{horaires:'câblé le 20/11, vérifié en réel : OK (154/73/167 trajets sur 3 jours testés)',tarif:'manquants',checked:'2026-11-20',blocage:'fare_attributes non vérifié dans ce flux',action:'Diagnostic tarifaire à lancer'},
+ 'star_rennes':{horaires:'câblé le 20/11 ; horizon réduit 45->16j le 20/11 (stop_times.txt dépassait 64 Mo à 45j) — nouvelle vérification en attente du prochain build',tarif:'manquants',checked:'2026-11-20',blocage:'fare_attributes non vérifié dans ce flux',action:'Relancer build-regional-gtfs.yml puis scripts/verifier-moteurs-regionaux.cjs'},
+ 'naolib_nantes':{horaires:'archive téléchargée mais non câblée dans le moteur : même à horizon 14j, stop_times.txt décompresse à 178 Mo (réseau très dense, ~12,7 Mo/j), loin au-delà des 64 Mo maxFileBytes — un horizon viable (4-5j) serait trop court pour un cron hebdomadaire',tarif:'manquants',checked:'2026-11-20',blocage:'Réseau trop dense pour l’emprise géographique actuelle (toute la métropole)',action:'Redécouper par zone plus fine (ex. centre-ville / lignes tram seules) avant de câbler'},
+ 'tbm_bordeaux':{horaires:'câblé le 20/11 ; horizon réduit 45->15j le 20/11 (stop_times.txt dépassait 64 Mo à 45j) — nouvelle vérification en attente du prochain build',tarif:'manquants',checked:'2026-11-20',blocage:'fare_attributes non vérifié dans ce flux',action:'Relancer build-regional-gtfs.yml puis scripts/verifier-moteurs-regionaux.cjs'}
 };
 // Axes de couverture (diagnostic serveur) : tracés sur de vraies lignes des réseaux non vus par les 8 axes principaux.
 const AXES_COUVERTURE=[
