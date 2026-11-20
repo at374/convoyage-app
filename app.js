@@ -953,20 +953,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     const agendaMissions = planningMissions();
     const A = window.CPAgenda.analyser(agendaMissions, etat.reglages);
     const items = A.items.filter(x => etat.agendaTout || !((x.etat === 'passee' || x.etat === 'terminee') && (x.fin ? x.fin.t : x.debut) != null && Date.now() - (x.fin ? x.fin.t : x.debut) > 7 * 86400000));
-    // Calcule les enchaînements une seule fois par rendu. Les transports ne sont pas vérifiés par ce résumé.
-    const nowChain = Date.now();
-    const futureChainItems = A.items.filter(x => x.etat === 'a_venir' || x.etat === 'en_cours').sort((a, b) => (a.debut ?? Infinity) - (b.debut ?? Infinity));
-    const recentCompleted = A.items.filter(x => (x.etat === 'terminee' || x.etat === 'passee') && x.fin && Number.isFinite(x.fin.t) && nowChain - x.fin.t >= 0 && nowChain - x.fin.t <= 24 * 3600000);
-    const chainItems = [...recentCompleted, ...futureChainItems].sort((a, b) => (a.debut ?? a.fin?.t ?? Infinity) - (b.debut ?? b.fin?.t ?? Infinity));
-    const unknownAccepted = A.items.some(x => x.etat === 'date_inconnue');
-    const chainMap = Object.create(null);
-    for (let ci = 0; ci < chainItems.length; ci++) {
-      const cur = chainItems[ci];
-      const next = chainItems.slice(ci + 1).find(x => x.etat === 'a_venir' || x.etat === 'en_cours') || null;
-      const conflictDetail = next ? A.conflits.find(c => c.a === cur.mission && c.b === next.mission || c.b === cur.mission && c.a === next.mission) || null : null;
-      chainMap[cur.cle] = { next, intervalMin: cur.fin && next && Number.isFinite(next.debut) ? Math.round((next.debut - cur.fin.t) / 60000) : null, intervalEstimated: !!(cur.fin && cur.fin.estimee), conflictType: conflictDetail && conflictDetail.type || null, blocked: unknownAccepted };
-    }
-    window.__cpAgendaChain = chainMap;
     const debutAff = x => { try { if (hfDates(x.mission)) { const t = Date.parse(hfPk(x.mission)); if (Number.isFinite(t)) return t; } } catch (_) {} return x.debut; };   // V241 : la date du groupe = la date de prise en charge affichée sur la fiche
     items.sort((x, y) => (debutAff(y) ?? -1) - (debutAff(x) ?? -1));   // V90 : les plus récentes (dates les plus lointaines) en haut ; date inconnue en bas
     const caches = A.items.length - items.length;
@@ -987,786 +973,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         modifs.map(z => `<div class="modifLigne">✏️ ${esc(window.CPAgenda.libelleModification(z))}</div>`).join('') +
         (nb ? `<div class="retoursBadge">🔁 ${nb} retour${nb > 1 ? 's' : ''} possible${nb > 1 ? 's' : ''} après cette mission</div>` : '');
       html += carteMission(m, i, extra, agendaDateBlocks(m,x.fin)).replace('class="mission', `class="mission etat-${x.etat}${''}`);
-      // Agenda–Transports : résumé prudent de l'enchaînement. Le trajet n'est jamais déclaré confirmé ici.
-      const chain = window.__cpAgendaChain && window.__cpAgendaChain[x.cle];
-      const isAlbertvilleDelivery = /albertville/i.test([
-        m.to_city, m.destination_city, m.to_address, m.destination_address
-      ].filter(Boolean).join(' '));
-      if (chain && (x.etat === 'a_venir' || x.etat === 'en_cours' ||
-          ((x.etat === 'terminee' || x.etat === 'passee') && x.fin &&
-            (Date.now() - x.fin.t <= 24 * 3600000 || isAlbertvilleDelivery)))) {
-        const title = chain.next ? 'Prochaine mission : ' + (chain.next.mission.from_city || chain.next.mission.origin_city || 'départ à préciser') + ' → ' + (chain.next.mission.to_city || chain.next.mission.destination_city || 'arrivée à préciser') : (chain.blocked ? 'Prochaine mission à déterminer' : 'Aucune prochaine mission prévue — retour au domicile à préparer');
-        const y51Origin = [m.to_address, m.destination_address, m.delivery_address].filter(Boolean).join(' ');
-        const y51Gps = G.coordonnees(m, 'destination');
-        const y51GpsAttr = y51Gps && y51Gps.precision === 'gps' &&
-          Number.isFinite(Number(y51Gps.lat)) && Number.isFinite(Number(y51Gps.lng)) ?
-          ' data-y51-lat="' + Number(y51Gps.lat) + '" data-y51-lng="' + Number(y51Gps.lng) + '"' : '';
-        const y51ExactEysseric = /1\s*,?\s*rue\s+(?:du\s+)?lieutenant\s+gustave\s+eysseric/i.test(y51Origin);
-        const y51Reference = /albertville/i.test([m.to_city, m.destination_city, m.to_address, m.destination_address].filter(Boolean).join(' ')) ? '<div class="doux">🚌 Y51 Albertville → Annecy : <a href="https://hawk.hanoverdisplays.com/y51/public/" target="_blank" rel="noopener noreferrer">suivi officiel des départs</a> · <a href="https://annecy.transdev.com/line/ligne-y51/" target="_blank" rel="noopener noreferrer">horaires de ligne</a> · <a href="https://transport.data.gouv.fr/datasets/reseau-interurbain-cars-region-haute-savoie-74" target="_blank" rel="noopener noreferrer">données officielles GTFS Haute-Savoie</a>. Horaires théoriques : vérifiez la date de mise à jour, l’arrêt et les perturbations avant le départ. <a href="https://www.google.com/maps/dir/?api=1&amp;destination=%C3%89cole%20Saint-Fran%C3%A7ois%2C%20Albertville&amp;travelmode=walking" target="_blank" rel="noopener noreferrer">Itinéraire piéton vers École Saint-François</a> (départ à préciser dans Maps).</div>' : '';
-        const y51TrafficDate = x.fin && Number.isFinite(x.fin.t) ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(x.fin.t)) : '';
-        const y51TrafficAlert = y51Reference && y51TrafficDate >= '2026-10-22' && y51TrafficDate <= '2026-10-30'
-          ? '<div class="doux">⚠️ Y51 : du 22 au 30 octobre 2026, l’arrêt Ugine – Rue Derobert n’est pas desservi (report vers Ugine – Les Fontaines). Les express travaux ont aussi été modifiés à partir du 19 octobre. <a href="https://annecy.transdev.com/trafic/" target="_blank" rel="noopener noreferrer">Vérifier les alertes officielles</a>. Transport non confirmé — vérifiez vous-même.</div>'
-          : '';
-        const y51WalkLink = y51ExactEysseric ? y51Reference.replace('destination=%C3%89cole', 'origin=1%20rue%20Lieutenant%20Gustave%20Eysseric%2C%2073200%20Albertville&amp;destination=%C3%89cole').replace('(départ à préciser dans Maps).', '(départ prérempli depuis la rue Lieutenant Gustave Eysseric ; vérifiez l’adresse réelle).') : y51Reference.replace(/ <a href="https:\/\/www\.google\.com\/maps\/dir\/\?api=1[^<]*<\/a> \(départ à préciser dans Maps\)\./, ' Arrêt de départ à déterminer selon l’adresse exacte de la mission.');
-        const interval = Number.isFinite(chain.intervalMin) ? '<div><strong>' + (chain.intervalEstimated ? 'Intervalle estimé entre missions :' : 'Intervalle entre missions :') + '</strong> ' + esc(String(chain.intervalMin)) + ' min</div>' : '';
-        const conflictNote = chain.conflictType === 'chevauchement' ? '⚠️ Chevauchement horaire détecté.' : (chain.conflictType ? '⚠️ Enchaînement potentiellement trop juste : vérifiez le trajet et la marge de sécurité.' : 'Transport non confirmé — vérifiez vous-même. Temps disponible après trajet non déterminé.');
-        const note = chain.blocked ? 'Enchaînement à vérifier : une mission acceptée n’a pas de date exploitable.' : (!chain.next ? 'Retour après la dernière mission : horaires interurbains, correspondances locales et marches à vérifier. Transport non confirmé — vérifiez vous-même.' : conflictNote);
-        html += '<div class="carte cpAgendaChain" data-mission-end-ms="' + (x.fin && Number.isFinite(x.fin.t) ? x.fin.t : '') + '"' + y51GpsAttr + ' data-sibra-date="' + esc(chain.next && Number.isFinite(chain.next.debut) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(chain.next.debut)) : (x.fin && Number.isFinite(x.fin.t) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(x.fin.t)) : '')) + '" style="margin-top:-6px;border-top:0;border-radius:0 0 12px 12px;font-size:.94em"><strong>' + (chain.next ? '↔ Enchaînement des missions' : '🏠 Retour après mission') + '</strong><div>' + esc(title) + '</div>' + interval + '<div class="doux">' + esc(note) + '</div>' + y51WalkLink + y51TrafficAlert + '</div>';
-      }
     });
     if (caches || etat.agendaTout) html += `<button id="agTout" class="second" style="width:100%;margin-top:10px">${etat.agendaTout ? 'Masquer les missions passées' : 'Afficher les ' + caches + ' mission(s) passée(s) de plus de 7 jours'}</button>`;
     $('ecran').innerHTML = html;
-    // SIBRA : consultation volontaire des horaires du jour, hors étiquettes.
-    // Aucun trajet n'est déclaré réalisable sans approche piétonne vérifiée.
-    const todayParis = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });
-    if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
-      const cards = document.querySelectorAll('.cpAgendaChain');
-      cards.forEach(card => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'second';
-        button.style.marginTop = '8px';
-        const requestedDate = card.getAttribute('data-sibra-date');
-        if (!requestedDate) return;
-        // Optional regional multimodal search: use the same engine for every
-        // delivery with exact GPS, never modify platform synchronization.
-        const regional = window.CPRegionalRouting;
-        const regionalEndpoint = window.CP_REGIONAL_ROUTING_URL;
-        const regionalHome = RT.domicile(etat.reglages);
-        const regionalLat = Number(card.getAttribute('data-y51-lat'));
-        const regionalLon = Number(card.getAttribute('data-y51-lng'));
-        const regionalEnd = Number(card.getAttribute('data-mission-end-ms'));
-        if (regional && typeof regional.plan === 'function' &&
-            /^https:\/\//.test(String(regionalEndpoint || '')) &&
-            card.hasAttribute('data-y51-lat') && card.hasAttribute('data-y51-lng') &&
-            regionalHome && Number.isFinite(Number(regionalHome.lat)) &&
-            Number.isFinite(Number(regionalHome.lng)) &&
-            Number.isFinite(regionalLat) && Number.isFinite(regionalLon) &&
-            Number.isFinite(regionalEnd) && regionalEnd > 0) {
-          const regionalButton = document.createElement('button');
-          regionalButton.type = 'button';
-          regionalButton.className = 'second';
-          regionalButton.style.marginTop = '8px';
-          regionalButton.textContent = '🚌 Recherche multimodale régionale';
-          card.appendChild(regionalButton);
-          regionalButton.addEventListener('click', async () => {
-            regionalButton.disabled = true;
-            const result = document.createElement('div');
-            result.className = 'doux';
-            result.textContent = 'Recherche régionale en cours…';
-            card.appendChild(result);
-            try {
-              const answer = await regional.plan({
-                endpoint: regionalEndpoint,
-                from: {lat:regionalLat,lon:regionalLon},
-                to: {lat:regionalHome.lat,lon:regionalHome.lng},
-                departure: new Date(regionalEnd + 15 * 60000).toISOString(),
-                fetcher:regionalFetch
-              });
-              const fmt = ms => new Intl.DateTimeFormat('fr-FR', {
-                timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'
-              }).format(new Date(ms));
-              result.style.whiteSpace = 'pre-line';
-              result.textContent = answer.itineraries.length ?
-                answer.itineraries.slice(0,5).map((it, index) =>
-                  'Trajet ' + (index + 1) + ' — ' +
-                  fmt(it.startTime) + ' → ' + fmt(it.endTime) + ' · ' +
-                  dureeHM(it.durationSeconds / 60) + ' · ' +
-                  it.transfers + ' correspondance(s) · ' +
-                  Math.round(it.walkMeters) + ' m à pied' +
-                  '\n' + it.legs.map(leg =>
-                    '  ' + (leg.route || leg.mode) + ' : ' +
-                    (leg.from || 'départ non précisé') + ' ' + fmt(leg.startTime) +
-                    ' → ' + (leg.to || 'arrivée non précisée') + ' ' +
-                    fmt(leg.endTime)
-                  ).join('\n')
-                ).join('\n\n') +
-                '\\n\\n' + (regionalHome.precision === 'gps' ?
-                  'Destination GPS renseignée.' :
-                  'Destination approximative (centre de ville), pas votre adresse exacte.') +
-                '\\nHoraires théoriques. Transport non confirmé — vérifiez vous-même.' :
-                'Aucun itinéraire régional proposé. Transport non confirmé — vérifiez vous-même.';
-            } catch (error) {
-              result.textContent = 'Recherche régionale indisponible : ' +
-                String(error.message || error) + '. Transport non confirmé — vérifiez vous-même.';
-            } finally {
-              regionalButton.disabled = false;
-            }
-          });
-        }
-        // Y51: read the published official GTFS export on demand, not a guessed timetable.
-        // This panel does not assert live service or walking feasibility.
-        if (/Y51 Albertville/.test(card.textContent || '')) {
-          const y51Button = document.createElement('button');
-          y51Button.type = 'button';
-          y51Button.className = 'second';
-          y51Button.style.marginTop = '8px';
-          y51Button.textContent = '🚌 Vérifier les courses officielles Y51 du ' + requestedDate;
-          const y51Result = document.createElement('div');
-          y51Result.className = 'doux';
-          y51Result.setAttribute('aria-live', 'polite');
-          y51Button.addEventListener('click', async () => {
-            y51Button.disabled = true;
-            y51Result.textContent = 'Chargement des données officielles Y51…';
-            try {
-              const response = await window.fetch('data/interurban/y51-gtfs-source.json', { cache: 'no-cache' });
-              if (!response.ok) throw new Error('GTFS unavailable');
-              const data = await response.json();
-              const planner = window.CPSibraPlanner;
-              if (!planner || typeof planner.activeServiceIds !== 'function' ||
-                  !Array.isArray(data.trips) || !Array.isArray(data.stop_times) ||
-                  !Array.isArray(data.routes) || !Array.isArray(data.stops) ||
-                  !Array.isArray(data.calendar) || !Array.isArray(data.calendar_dates)) {
-                throw new Error('Invalid Y51 data');
-              }
-              const services = planner.activeServiceIds(data.calendar, data.calendar_dates, requestedDate);
-              const routeIds = new Set(data.routes.map(route => String(route.route_id)));
-              const trips = data.trips.filter(trip => routeIds.has(String(trip.route_id)) &&
-                services.has(String(trip.service_id)));
-              const ids = new Set(trips.map(trip => String(trip.trip_id)));
-              const times = data.stop_times.filter(time => ids.has(String(time.trip_id)));
-              const stamp = data.checked_at_utc ? new Date(data.checked_at_utc).toLocaleString('fr-FR') : 'inconnue';
-              // Select real stop IDs, preserving trip order and calendar exceptions.
-              const normalized = value => String(value || '').normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '').toLowerCase();
-              const stopLabel = stop => normalized([stop.stop_name, stop.stop_desc,
-                stop.stop_code, stop.stop_id].filter(Boolean).join(' '));
-              const boarding = data.stops.filter(stop =>
-                /ecole[\s-]*st[\s-]*francois|ecole[\s-]*saint[\s-]*francois/.test(stopLabel(stop)));
-              const annecy = data.stops.filter(stop =>
-                (/annecy/.test(stopLabel(stop)) && /gare|routiere/.test(stopLabel(stop))) ||
-                window.CPTY51Fares?.importedStopMatches(stop,'Annecy','Gare Routiere'));
-              const rides = [];
-              if (typeof planner.datedInterurbanRides === 'function') {
-                for (const route of data.routes) for (const from of boarding) for (const to of annecy) {
-                  rides.push(...planner.datedInterurbanRides(data, requestedDate,
-                    String(route.route_id), String(from.stop_id), String(to.stop_id)));
-                }
-              }
-              // Exclude coaches departing before the delivery has finished.
-              // No walking time is inferred: the remaining margin still needs verification.
-              const endMs = Number(card.getAttribute('data-mission-end-ms'));
-              const endDate = card.getAttribute('data-mission-end-ms') && Number.isFinite(endMs) ?
-                new Date(endMs) : null;
-              const endParts = endDate && Number.isFinite(endDate.getTime()) ?
-                new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
-                  year: 'numeric', month: '2-digit', day: '2-digit',
-                  hour: '2-digit', minute: '2-digit', second: '2-digit',
-                  hourCycle: 'h23' }).formatToParts(endDate) : [];
-              const part = type => (endParts.find(p => p.type === type) || {}).value;
-              const endDay = endParts.length ? part('year') + '-' + part('month') + '-' + part('day') : null;
-              const earliestY51 = endDay === requestedDate ?
-                Number(part('hour')) * 3600 + Number(part('minute')) * 60 + Number(part('second')) : null;
-              const unique = [...new Map(rides.filter(ride =>
-                earliestY51 !== null && ride.departureSeconds > earliestY51)
-                .map(ride => [ride.trip_id + ':' + ride.departureSeconds, ride])).values()]
-                .sort((a, b) => a.departureSeconds - b.departureSeconds);
-              const clock = sec => String(Math.floor(sec / 3600) % 24).padStart(2, '0') +
-                ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0');
-              const missionLat = Number(card.getAttribute('data-y51-lat'));
-              const missionLng = Number(card.getAttribute('data-y51-lng'));
-              const footEndpoint = window.CP_PEDESTRIAN_OSRM_URL;
-              const boardingMarginMinutes = 5;
-              const selectedRides = unique.slice(0, 8);
-              // Every GTFS trip may board at a different platform/stop ID.
-              // Never reuse an unrelated stop's walking time for another trip.
-              const stopById = new Map(data.stops.map(stop => [String(stop.stop_id), stop]));
-              const walkByStopId = new Map();
-              const boardingChecks = [];
-              for (const ride of selectedRides) {
-                const stopId = String(ride.from_stop_id);
-                const stop = stopById.get(stopId);
-                let walkMinutes = walkByStopId.get(stopId);
-                if (walkMinutes === undefined) {
-                  walkMinutes = null;
-                  if (card.hasAttribute('data-y51-lat') && card.hasAttribute('data-y51-lng') &&
-                      stop && Number.isFinite(Number(stop.stop_lat)) &&
-                      Number.isFinite(Number(stop.stop_lon)) &&
-                      typeof planner.requestPedestrianOSRM === 'function' &&
-                      typeof footEndpoint === 'string' && /^https:\/\//.test(footEndpoint)) {
-                    const walk = await planner.requestPedestrianOSRM(
-                      [missionLng, missionLat],
-                      [Number(stop.stop_lon), Number(stop.stop_lat)],
-                      window.fetch.bind(window), footEndpoint);
-                    if (walk && walk.status === 'VERIFIE_PIETON' &&
-                        Number.isFinite(walk.duration_seconds)) {
-                      walkMinutes = Math.ceil(walk.duration_seconds / 60);
-                    }
-                  }
-                  walkByStopId.set(stopId, walkMinutes);
-                }
-                const enoughTime = walkMinutes !== null &&
-                  ride.departureSeconds - earliestY51 >=
-                  (walkMinutes + boardingMarginMinutes) * 60;
-                // V2.42 : plus de préfixe horaire ici — chaque statut est maintenant affiché
-                // sur la même ligne de liste que sa course, l'heure n'a donc plus besoin d'être répétée.
-                boardingChecks.push(walkMinutes === null ? 'marche non vérifiée' :
-                  (enoughTime ? 'approche piétonne compatible' : 'départ trop proche') +
-                  ' (' + dureeHM(walkMinutes) + ' à pied + ' +
-                  dureeHM(boardingMarginMinutes) + ' de marge)');
-              }
-              // Show the actual Y51 arrival stop from GTFS for each proposed trip.
-              // These map links help locate the SIBRA transfer, without inventing it.
-              const arrivalStops = [...new Map(selectedRides.map(ride => {
-                const stop = stopById.get(String(ride.to_stop_id));
-                return [String(ride.to_stop_id), stop];
-              }).filter(entry => entry[1])).values()];
-              const arrivalLinks = arrivalStops.filter(stop =>
-                Number.isFinite(Number(stop.stop_lat)) &&
-                Number.isFinite(Number(stop.stop_lon)) &&
-                Math.abs(Number(stop.stop_lat)) <= 90 &&
-                Math.abs(Number(stop.stop_lon)) <= 180);
-              const fareForRide = ride => {
-                try {
-                  return window.CPTY51Fares?.describe(
-                    window.CPTY51Fares.fromImportedTables(data, requestedDate, ride),
-                    { omitLabel: true, omitCaveat: true }) || '';
-                } catch (_) { return ''; }
-              };
-              // V2.42 : présentation revue en liste claire (une course par ligne) au lieu d'un
-              // seul paragraphe dense répétant le même tarif à chaque course — brouillon et
-              // difficile à lire. Le trajet étant toujours identique (même arrêts), le tarif
-              // ne change pas d'une course à l'autre : il n'est donc affiché qu'une seule fois.
-              y51Result.textContent = '';
-              const intro = document.createElement('p');
-              intro.className = 'doux';
-              intro.style.margin = '0 0 6px';
-              intro.textContent = 'Y51 du ' + requestedDate + ' : ' + trips.length +
-                ' courses programmées, ' + times.length + ' passages GTFS. Source vérifiée le ' +
-                stamp + '.';
-              y51Result.appendChild(intro);
-              if (unique.length) {
-                const titre = document.createElement('p');
-                titre.className = 'doux';
-                titre.style.margin = '0 0 4px';
-                titre.textContent = 'École Saint-François → Annecy gare routière :';
-                y51Result.appendChild(titre);
-                const liste = document.createElement('div');
-                liste.className = 'boiteC';
-                const entete = document.createElement('div');
-                entete.className = 'entC';
-                entete.textContent = '🚌 Prochains Y51 vers Annecy';
-                liste.appendChild(entete);
-                const corps = document.createElement('div');
-                corps.style.padding = '2px 10px 6px';
-                liste.appendChild(corps);
-                let tarifUnique = '';
-                selectedRides.forEach((ride, i) => {
-                  if (!tarifUnique) tarifUnique = fareForRide(ride);
-                  const statut = boardingChecks[i] || 'marche non vérifiée';
-                  const bon = /compatible/.test(statut), trop = /trop proche/.test(statut);
-                  const carte = document.createElement('div');
-                  window.CPEtapeStyle && window.CPEtapeStyle(carte, 'Y51');
-                  const titre = document.createElement('div');
-                  titre.style.fontWeight = '800';
-                  titre.textContent = '🚌 Y51 · ' + clock(ride.departureSeconds) + ' → ' + clock(ride.arrivalSeconds);
-                  const detail = document.createElement('div');
-                  detail.textContent = (bon ? '✅ ' : (trop ? '⚠️ ' : '❔ ')) + statut + ' · ' +
-                    Math.floor((ride.departureSeconds - earliestY51) / 60) + ' min après la fin de mission';
-                  carte.append(titre, detail);
-                  corps.appendChild(carte);
-                });
-                y51Result.appendChild(liste);
-                if (tarifUnique) {
-                  const tarifP = document.createElement('p');
-                  tarifP.className = 'doux';
-                  tarifP.style.margin = '0 0 4px';
-                  tarifP.textContent = 'Référence Y51 : ' + tarifUnique +
-                    ' Barème du 01/03/2026, consulté le 31/10/2026 ; à revérifier avant achat.';
-                  y51Result.appendChild(tarifP);
-                }
-              } else {
-                const vide = document.createElement('p');
-                vide.className = 'doux';
-                vide.style.margin = '0 0 4px';
-                vide.textContent = 'Aucun départ après la fin de mission identifié entre École Saint-François et Annecy gare routière' +
-                  (earliestY51 === null ? ' (heure de fin de mission indisponible)' : '') +
-                  ' : vérifiez les noms exacts des arrêts et les horaires GTFS.';
-                y51Result.appendChild(vide);
-              }
-              const caveat = document.createElement('p');
-              caveat.className = 'doux';
-              caveat.style.margin = '0 0 4px';
-              caveat.textContent = 'Correspondances et circulation réelle non vérifiées. Transport non confirmé — vérifiez vous-même.';
-              y51Result.appendChild(caveat);
-              // First Y51 -> SIBRA connection: GTFS timetable only. The home
-              // coordinates are city-level, so this cannot certify the last walk.
-              const sibraFeed = window.CPSibraFeed;
-              const home = RT.domicile(etat.reglages);
-              if (selectedRides.length && sibraFeed &&
-                  typeof sibraFeed.loadDayCached === 'function' &&
-                  typeof sibraFeed.coordinateDayJourneys === 'function' &&
-                  home && Number.isFinite(home.lat) && Number.isFinite(home.lng)) {
-                const sibraLine = document.createElement('div');
-                sibraLine.className = 'doux';
-                sibraLine.textContent = 'Recherche des correspondances Y51 → SIBRA…';
-                y51Result.appendChild(sibraLine);
-                try {
-                  const local = await sibraFeed.loadDayCached(requestedDate, window.fetch.bind(window));
-                  if (!local.usable) {
-                    sibraLine.textContent = 'SIBRA indisponible à cette date — correspondance non confirmée.';
-                  } else {
-                    const transferCandidates = [];
-                    for (const ride of selectedRides) {
-                      const stop = stopById.get(String(ride.to_stop_id));
-                      if (!stop || !Number.isFinite(Number(stop.stop_lat)) ||
-                          !Number.isFinite(Number(stop.stop_lon))) continue;
-                      const departures = sibraFeed.coordinateDayJourneys(local.data,
-                        Number(stop.stop_lat), Number(stop.stop_lon),
-                        home.lat, home.lng, ride.arrivalSeconds + 300);
-                      for (const bus of departures.slice(0, 3)) {
-                        transferCandidates.push({ ride, bus, stop });
-                      }
-                    }
-                    // Deduplicate walking requests between identical Y51 and SIBRA stops,
-                    // and calculate independent connections concurrently.
-                    const walkCache = new Map();
-                    const footService = window.CP_PEDESTRIAN_OSRM_URL;
-                    const combinations = await Promise.all(transferCandidates.map(async candidate => {
-                      const { ride, bus, stop } = candidate;
-                      const board = bus.originStop;
-                      let transferWalkMinutes = null;
-                      if (board && Number.isFinite(Number(board.latitude)) &&
-                          Number.isFinite(Number(board.longitude)) &&
-                          typeof planner.requestPedestrianOSRM === 'function' &&
-                          typeof footService === 'string' && /^https:\/\//.test(footService)) {
-                        const key = String(ride.to_stop_id) + ':' + String(board.stopId || '') +
-                          ':' + Number(board.latitude) + ':' + Number(board.longitude);
-                        if (!walkCache.has(key)) {
-                          walkCache.set(key, planner.requestPedestrianOSRM(
-                            [Number(stop.stop_lon), Number(stop.stop_lat)],
-                            [Number(board.longitude), Number(board.latitude)],
-                            window.fetch.bind(window), footService).catch(() => null));
-                        }
-                        const walk = await walkCache.get(key);
-                        if (walk && walk.status === 'VERIFIE_PIETON' &&
-                            Number.isFinite(walk.duration_seconds)) {
-                          transferWalkMinutes = Math.ceil(walk.duration_seconds / 60);
-                        }
-                      }
-                      const transferCompatible = transferWalkMinutes !== null &&
-                        bus.departureSeconds - ride.arrivalSeconds >=
-                        (transferWalkMinutes + 5) * 60;
-                      // The saved home location is city-level, not the exact address.
-                      // Calculate the last pedestrian leg as an indicative estimate only.
-                      let lastWalkMinutes = null;
-                      const alight = bus.destinationStop;
-                      if (alight && Number.isFinite(Number(alight.latitude)) &&
-                          Number.isFinite(Number(alight.longitude)) &&
-                          typeof planner.requestPedestrianOSRM === 'function' &&
-                          typeof footService === 'string' && /^https:\/\//.test(footService)) {
-                        const key = 'home:' + Number(alight.latitude) + ':' +
-                          Number(alight.longitude) + ':' + home.lat + ':' + home.lng;
-                        if (!walkCache.has(key)) {
-                          walkCache.set(key, planner.requestPedestrianOSRM(
-                            [Number(alight.longitude), Number(alight.latitude)],
-                            [home.lng, home.lat], window.fetch.bind(window),
-                            footService).catch(() => null));
-                        }
-                        const walk = await walkCache.get(key);
-                        if (walk && walk.status === 'VERIFIE_PIETON' &&
-                            Number.isFinite(walk.duration_seconds)) {
-                          lastWalkMinutes = Math.ceil(walk.duration_seconds / 60);
-                        }
-                      }
-                      return { ride, bus, transferWalkMinutes, transferCompatible,
-                        lastWalkMinutes, estimatedHomeSeconds: lastWalkMinutes === null ?
-                          null : bus.arrivalSeconds + lastWalkMinutes * 60 };
-                    }));
-                    combinations.sort((a, b) =>
-                      Number(b.transferCompatible) - Number(a.transferCompatible) ||
-                      (a.estimatedHomeSeconds ?? Infinity) -
-                        (b.estimatedHomeSeconds ?? Infinity) ||
-                      a.bus.arrivalSeconds - b.bus.arrivalSeconds);
-                    // V2.42 : même reprise en liste que le bloc Y51 ci-dessus, au lieu d'une
-                    // seule phrase très longue listant toutes les correspondances à la suite.
-                    sibraLine.textContent = '';
-                    if (combinations.length) {
-                      const titreSibra = document.createElement('p');
-                      titreSibra.className = 'doux';
-                      titreSibra.style.margin = '0 0 4px';
-                      titreSibra.textContent = 'Correspondances théoriques Y51 → SIBRA :';
-                      sibraLine.appendChild(titreSibra);
-                      const listeSibra = document.createElement('ul');
-                      listeSibra.style.margin = '0 0 6px';
-                      listeSibra.style.paddingLeft = '20px';
-                      combinations.slice(0, 5).forEach(x => {
-                        const li = document.createElement('li');
-                        window.CPEtapeStyle && window.CPEtapeStyle(li, 'Y51');
-                        li.textContent = 'Y51 ' + clock(x.ride.departureSeconds) + '–' +
-                          clock(x.ride.arrivalSeconds) + ' → SIBRA ' +
-                          clock(x.bus.departureSeconds) + '–' + clock(x.bus.arrivalSeconds) +
-                          ' (' + (x.bus.originStop && x.bus.originStop.name || 'arrêt à vérifier') +
-                          ' → ' + (x.bus.destinationStop && x.bus.destinationStop.name || 'arrêt à vérifier') +
-                          ') — correspondance : ' +
-                          (x.transferWalkMinutes === null ? 'marche non vérifiée' :
-                            dureeHM(x.transferWalkMinutes) + ' à pied, ' +
-                            (x.transferCompatible ? 'délai théorique suffisant' : 'délai insuffisant')) +
-                          ' — fin de trajet : ' + (x.estimatedHomeSeconds === null ?
-                            'marche non vérifiée' : clock(x.estimatedHomeSeconds) +
-                            ' estimé (domicile, précision ville)');
-                        listeSibra.appendChild(li);
-                      });
-                      sibraLine.appendChild(listeSibra);
-                      const caveatSibra = document.createElement('p');
-                      caveatSibra.className = 'doux';
-                      caveatSibra.style.margin = '0';
-                      caveatSibra.textContent = 'Marches de correspondance et vers le domicile non vérifiées. Transport non confirmé — vérifiez vous-même.';
-                      sibraLine.appendChild(caveatSibra);
-                    } else {
-                      sibraLine.textContent = 'Aucune correspondance SIBRA théorique trouvée près des arrivées Y51. ' +
-                        'Transport non confirmé — vérifiez vous-même.';
-                    }
-                  }
-                } catch (_) {
-                  sibraLine.textContent = 'Calcul Y51 → SIBRA indisponible — transport non confirmé.';
-                }
-              }
-              for (const stop of arrivalLinks.slice(0, 3)) {
-                const link = document.createElement('a');
-                link.href = 'https://www.google.com/maps/search/?api=1&query=' +
-                  encodeURIComponent(Number(stop.stop_lat) + ',' + Number(stop.stop_lon));
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                link.style.display = 'block';
-                link.textContent = '🗺️ Arrivée Y51 : ' +
-                  (stop.stop_name || stop.stop_id) + ' — localiser pour la correspondance SIBRA';
-                y51Result.appendChild(link);
-              }
-            } catch (_) {
-              y51Result.textContent = 'Données officielles Y51 indisponibles ou non exploitables pour cette date. ' +
-                'Transport non confirmé — vérifiez vous-même.';
-            } finally {
-              y51Button.disabled = false;
-            }
-          });
-          card.appendChild(y51Button);
-          card.appendChild(y51Result);
-          // V280 : fiche « tous les horaires de la journée » Y51 (École Saint-François → Annecy gare routière), sans filtre sur la fin de mission.
-          const y51Jour = document.createElement('button');
-          y51Jour.type = 'button';
-          y51Jour.className = 'second';
-          y51Jour.style.marginTop = '8px';
-          y51Jour.textContent = '🕒 Tous les horaires Y51 du ' + requestedDate;
-          const y51JourRes = document.createElement('div');
-          y51JourRes.className = 'doux';
-          y51JourRes.setAttribute('aria-live', 'polite');
-          y51Jour.addEventListener('click', async () => {
-            y51Jour.disabled = true;
-            y51JourRes.textContent = 'Chargement des horaires Y51…';
-            try {
-              const rep = await window.fetch('data/interurban/y51-gtfs-source.json', { cache: 'no-cache' });
-              if (!rep.ok) throw new Error('GTFS unavailable');
-              const dat = await rep.json();
-              const pl = window.CPSibraPlanner;
-              if (!pl || typeof pl.datedInterurbanRides !== 'function' || !Array.isArray(dat.routes) || !Array.isArray(dat.stops)) throw new Error('Invalid Y51 data');
-              const nz = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-              const lb = st => nz([st.stop_name, st.stop_desc, st.stop_code, st.stop_id].filter(Boolean).join(' '));
-              const montees = dat.stops.filter(st => /ecole[\s-]*st[\s-]*francois|ecole[\s-]*saint[\s-]*francois/.test(lb(st)));
-              const annecyArr = dat.stops.filter(st => (/annecy/.test(lb(st)) && /gare|routiere/.test(lb(st))) || (window.CPTY51Fares && window.CPTY51Fares.importedStopMatches && window.CPTY51Fares.importedStopMatches(st, 'Annecy', 'Gare Routiere')));
-              const toutes = [];
-              for (const route of dat.routes) for (const de of montees) for (const vers of annecyArr) {
-                toutes.push(...pl.datedInterurbanRides(dat, requestedDate, String(route.route_id), String(de.stop_id), String(vers.stop_id)));
-              }
-              const uniques = [...new Map(toutes.map(r => [r.trip_id + ':' + r.departureSeconds, r])).values()].sort((a, b) => a.departureSeconds - b.departureSeconds);
-              const hm = sec => String(Math.floor(sec / 3600) % 24).padStart(2, '0') + ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0');
-              y51JourRes.textContent = '';
-              const boite = document.createElement('div');
-              boite.className = 'boiteC';
-              const ent = document.createElement('div');
-              ent.className = 'entC';
-              ent.textContent = '🚌 Y51 · tous les départs du ' + requestedDate + ' (' + uniques.length + ')';
-              boite.appendChild(ent);
-              const corpsJ = document.createElement('div');
-              corpsJ.style.padding = '2px 10px 6px';
-              boite.appendChild(corpsJ);
-              if (!uniques.length) {
-                const vide = document.createElement('p');
-                vide.className = 'doux';
-                vide.textContent = 'Aucune course Y51 trouvée ce jour entre École Saint-François et Annecy gare routière (données GTFS officielles).';
-                corpsJ.appendChild(vide);
-              }
-              uniques.forEach(r => {
-                const c = document.createElement('div');
-                window.CPEtapeStyle && window.CPEtapeStyle(c, 'Y51');
-                c.style.padding = '6px 12px';
-                c.style.margin = '6px 0';
-                c.style.fontWeight = '800';
-                c.textContent = '🚌 Y51 · ' + hm(r.departureSeconds) + ' → ' + hm(r.arrivalSeconds);
-                corpsJ.appendChild(c);
-              });
-              y51JourRes.appendChild(boite);
-              const note = document.createElement('p');
-              note.className = 'doux';
-              note.textContent = 'Horaires théoriques officiels (GTFS Haute-Savoie). Circulation réelle non vérifiée. Transport non confirmé — vérifiez vous-même.';
-              y51JourRes.appendChild(note);
-            } catch (_) {
-              y51JourRes.textContent = 'Horaires officiels Y51 indisponibles pour cette date. Transport non confirmé — vérifiez vous-même.';
-            } finally {
-              y51Jour.disabled = false;
-            }
-          });
-          card.appendChild(y51Jour);
-          card.appendChild(y51JourRes);
-        }
-        button.textContent = '🚌 Consulter les horaires SIBRA du ' + requestedDate;
-        const result = document.createElement('div');
-        result.className = 'doux';
-        result.setAttribute('aria-live', 'polite');
-        // V2.41 : horaires SIBRA lisibles (lignes colorées, prochains départs par arrêt proche)
-        const renderSibra = (d, ctx) => {
-          const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-          const hue = id => { let h = 7; for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) % 997; return (h * 137) % 360; };
-          const col = id => 'hsl(' + hue(id) + ',66%,40%)';
-          const badge = (id, label) => '<span style="display:inline-block;min-width:34px;text-align:center;padding:3px 10px;border-radius:10px;background:' + col(id) + ';color:#fff;font-weight:800;box-shadow:0 1px 4px rgba(0,0,0,.4)">' + E(label) + '</span>';
-          const hm = sec => String(Math.floor(sec / 3600) % 24).padStart(2, '0') + ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0');
-          const secs = v => { const p = String(v).split(':').map(Number); return p[0] * 3600 + p[1] * 60 + p[2]; };
-          const routeById = new Map(d.routes.map(r => [String(r[0]), r]));
-          const tripById = new Map(d.trips.map(t => [String(t[0]), t]));
-          const short = rid => { const r = routeById.get(String(rid)); return r ? String(r[1] || r[0]) : String(rid); };
-          const longName = rid => { const r = routeById.get(String(rid)); return r ? String(r[2] || '') : ''; };
-          const chip = (t, color) => '<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border-radius:7px;background:rgba(127,127,127,.2);border-left:4px solid ' + color + ';font-weight:700;font-variant-numeric:tabular-nums">' + E(t) + '</span>';
-          const box = (title, inner) => '<div class="boiteC">' +
-            '<div class="entC">' + title + '</div>' +
-            '<div style="padding:8px 12px">' + inner + '</div></div>';
-          const dateFr = String(ctx.date).split('-').reverse().join('/');
-          const from = Number.isFinite(ctx.earliest) ? ctx.earliest : 0;
-          let html = '';
-          const hasPoint = Number.isFinite(ctx.lat) && Number.isFinite(ctx.lng);
-          if (hasPoint) {
-            // 1) Trajets directs vers le domicile (arrêts proches des deux points)
-            const feed = ctx.feed;
-            if (Number.isFinite(ctx.homeLat) && Number.isFinite(ctx.homeLng) && feed && typeof feed.coordinateDayJourneys === 'function') {
-              let rides = [];
-              try { rides = feed.coordinateDayJourneys(d, ctx.lat, ctx.lng, ctx.homeLat, ctx.homeLng, from, { radiusMeters: 800 }); } catch (_) { rides = []; }
-              const stopName = new Map(d.stops.map(s => [String(s[0]), String(s[1])]));
-              const seen = new Set();
-              const rows = rides.filter(r => { const k = r.tripId + ':' + r.departureSeconds; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6).map(r => {
-                const t = tripById.get(String(r.tripId)); const rid = t ? t[1] : '';
-                return '<div style="margin:6px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + badge(rid, short(rid)) +
-                  '<b style="font-size:1.08em">' + hm(r.departureSeconds) + ' → ' + hm(r.arrivalSeconds) + '</b>' +
-                  '<span style="opacity:.8">' + E(stopName.get(String(r.fromStopId)) || '') + ' → ' + E(stopName.get(String(r.toStopId)) || '') + '</span></div>';
-              });
-              html += box('🏠 Directement vers ton domicile', rows.length ? rows.join('') :
-                '<div style="opacity:.85">Aucun bus direct trouvé entre les arrêts proches de la livraison et ceux proches de ton domicile après cette heure.</div>');
-            }
-            // 2) Prochains départs aux arrêts proches de la livraison, par ligne
-            const stops = typeof ctx.feed.nearbyDayStops === 'function' ? ctx.feed.nearbyDayStops(d, ctx.lat, ctx.lng, 800, 12) : [];
-            const named = new Map();
-            for (const st of stops) { const k = st.name; if (!named.has(k)) named.set(k, { name: k, straightLineMeters: st.straightLineMeters, ids: [] }); named.get(k).ids.push(st.stopId); }
-            const places = [...named.values()].slice(0, 4);
-            const ids = new Set(places.flatMap(p => p.ids));
-            const byStop = new Map();
-            for (const r of d.stop_times) { const sid = String(r[1]); if (!ids.has(sid)) continue; if (!byStop.has(sid)) byStop.set(sid, []); byStop.get(sid).push(r); }
-            if (!places.length) html += box('📍 Arrêts proches de la livraison', '<div style="opacity:.85">Aucun arrêt SIBRA à moins de 800 m de l’arrivée de la mission.</div>');
-            for (const st of places) {
-              const groups = new Map();
-              for (const r of st.ids.flatMap(i => byStop.get(i) || [])) {
-                const dep = secs(r[4]); if (dep < from) continue;
-                const t = tripById.get(String(r[0])); if (!t) continue;
-                const key = t[1] + '|' + t[2];
-                if (!groups.has(key)) groups.set(key, { rid: t[1], head: t[2], times: [] });
-                if (!groups.get(key).times.includes(dep)) groups.get(key).times.push(dep);
-              }
-              const list = [...groups.values()].filter(g => g.times.length).map(g => { g.times.sort((a, b) => a - b); return g; })
-                .sort((a, b) => a.times[0] - b.times[0]).slice(0, 6);
-              const inner = list.length ? list.map(g => '<div style="margin:7px 0"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + badge(g.rid, short(g.rid)) +
-                '<span style="font-weight:700">vers ' + E(g.head || longName(g.rid)) + '</span></div><div style="margin-top:3px">' +
-                g.times.slice(0, 6).map(t => chip(hm(t), col(g.rid))).join('') + '</div></div>').join('') :
-                '<div style="opacity:.85">Plus aucun départ ce jour-là à cet arrêt.</div>';
-              html += box('📍 ' + E(st.name) + ' <span style="font-weight:500;opacity:.85">· ≈ ' + st.straightLineMeters + ' m à vol d’oiseau</span>', inner);
-            }
-          } else {
-            // Sans point de livraison précis : vue d'ensemble des lignes du jour
-            const tripSpan = new Map();
-            for (const r of d.stop_times) {
-              const s = secs(r[4]), k = String(r[0]); const x = tripSpan.get(k);
-              if (!x) tripSpan.set(k, { a: s, b: s }); else { if (s < x.a) x.a = s; if (s > x.b) x.b = s; }
-            }
-            const lines = new Map();
-            for (const [tid, sp] of tripSpan) {
-              const t = tripById.get(tid); if (!t) continue;
-              const g = lines.get(t[1]) || { n: 0, first: Infinity, last: -1 };
-              g.n++; if (sp.a < g.first) g.first = sp.a; if (sp.a > g.last) g.last = sp.a; lines.set(t[1], g);
-            }
-            const rows = [...lines.entries()].sort((a, b) => a[0].localeCompare(b[0], 'fr', { numeric: true })).map(([rid, g]) =>
-              '<div style="margin:6px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + badge(rid, short(rid)) +
-              '<span style="flex:1;min-width:140px">' + E(longName(rid)) + '</span>' +
-              '<span style="opacity:.85">' + g.n + ' courses · ' + hm(g.first) + ' → ' + hm(g.last) + '</span></div>');
-            html += box('🚌 Lignes SIBRA en service', rows.join('') + '<div style="opacity:.8;margin-top:6px">Adresse de livraison précise absente : les départs par arrêt ne peuvent pas être proposés.</div>');
-          }
-          html += '<div style="opacity:.85;font-size:.92em">Horaires théoriques du ' + E(dateFr) + ' (GTFS), non confirmés : marche d’approche, correspondances et perturbations à vérifier.</div>';
-          return html;
-        };
-        button.addEventListener('click', async () => {
-          button.disabled = true;
-          result.textContent = 'Chargement des horaires SIBRA…';
-          try {
-            const response = await window.CPSibraFeed.loadDayCached(requestedDate, window.fetch.bind(window));
-            if (!response.usable) {
-              result.textContent = 'Horaires SIBRA indisponibles pour ce jour — transport non confirmé.';
-            } else {
-              const sibEndMs = Number(card.getAttribute('data-mission-end-ms'));
-              let sibEarliest = 0;
-              if (Number.isFinite(sibEndMs) && sibEndMs > 0) {
-                const sp = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(sibEndMs));
-                const sg = t => (sp.find(x => x.type === t) || {}).value;
-                sibEarliest = (sg('year') + '-' + sg('month') + '-' + sg('day')) === requestedDate ? Number(sg('hour')) * 3600 + Number(sg('minute')) * 60 : 0;
-              }
-              result.innerHTML = renderSibra(response.data, {
-                date: requestedDate, earliest: sibEarliest, feed: window.CPSibraFeed,
-                lat: card.hasAttribute('data-y51-lat') ? Number(card.getAttribute('data-y51-lat')) : NaN,
-                lng: card.hasAttribute('data-y51-lng') ? Number(card.getAttribute('data-y51-lng')) : NaN,
-                homeLat: regionalHome ? Number(regionalHome.lat) : NaN, homeLng: regionalHome ? Number(regionalHome.lng) : NaN
-              });
-            }
-          } catch (_) {
-            result.textContent = 'Chargement impossible — transport non confirmé.';
-          } finally {
-            button.disabled = false;
-          }
-        });
-        card.appendChild(button);
-        card.appendChild(result);
-      });
-    }
-    // SIBRA: affichage distinct des étiquettes de missions. Recherche seulement si
-    // deux adresses possèdent des coordonnées GPS précises et des horaires connus.
-    const feed = window.CPSibraFeed;
-    if (feed && typeof feed.loadDayCached === 'function' && typeof feed.coordinateDayJourneys === 'function') {
-      for (const x of items) {
-        const chain = chainMap[x.cle];
-        if (!chain || !chain.next || !x.fin || !Number.isFinite(x.fin.t) ||
-            !Number.isFinite(chain.next.debut) || chain.next.debut <= x.fin.t) continue;
-        const origin = G.coordonnees(x.mission, 'destination');
-        const destination = G.coordonnees(chain.next.mission, 'origin');
-        if (!origin || !destination || origin.precision !== 'gps' || destination.precision !== 'gps') continue;
-        const date = (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(x.fin.t));
-        const timeParts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
-          hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(new Date(x.fin.t)).split(':');
-        const earliest = Number(timeParts[0]) * 3600 + Number(timeParts[1]) * 60 + Number(timeParts[2]);
-        const card = document.querySelectorAll('.mission')[items.indexOf(x)];
-        let panel = card && card.nextElementSibling;
-        while (panel && !panel.classList.contains('mission') && !panel.classList.contains('cpAgendaChain')) panel = panel.nextElementSibling;
-        if (!panel || !panel.classList.contains('cpAgendaChain')) continue;
-        const line = document.createElement('div');
-        line.className = 'doux';
-        line.textContent = 'SIBRA : recherche des horaires programmés…';
-        panel.appendChild(line);
-        feed.loadDayCached(date, window.fetch.bind(window)).then(result => {
-          if (!line.isConnected) return;
-          if (!result.usable) {
-            line.textContent = 'SIBRA : horaires indisponibles pour cette date — transport non confirmé.';
-            return;
-          }
-          const nextDate = (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(chain.next.debut));
-          const nextClock = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
-            hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(new Date(chain.next.debut)).split(':');
-          const nextSeconds = Number(nextClock[0]) * 3600 + Number(nextClock[1]) * 60 + Number(nextClock[2]);
-          const directJourneys = feed.coordinateDayJourneys(result.data,
-            origin.lat, origin.lng, destination.lat, destination.lng, earliest);
-          const transferJourneys = typeof feed.coordinateOneTransferDayJourneys === 'function' ?
-            feed.coordinateOneTransferDayJourneys(result.data,
-              origin.lat, origin.lng, destination.lat, destination.lng, earliest) : [];
-          const journeys = directJourneys.concat(transferJourneys)
-            .filter(j => nextDate === date && j.arrivalSeconds <= nextSeconds - 5 * 60)
-            // Préférer une arrivée à l'arrêt 30–45 min avant la mission, sans
-            // considérer cet écart comme une marge réelle (marche non vérifiée).
-            .sort((a, b) => {
-              const score = j => {
-                const advance = (nextSeconds - j.arrivalSeconds) / 60;
-                return advance >= 30 && advance <= 45 ? 0 :
-                  advance > 45 ? advance - 45 : 30 - advance;
-              };
-              return score(a) - score(b) || a.arrivalSeconds - b.arrivalSeconds;
-            });
-          if (!journeys.length) {
-            line.textContent = 'SIBRA : aucun trajet direct ou avec une correspondance identifié entre arrêts proches — transport non confirmé.';
-            return;
-          }
-          const formatTime = seconds => String(Math.floor(seconds / 3600) % 24).padStart(2, '0') +
-            ':' + String(Math.floor(seconds / 60) % 60).padStart(2, '0');
-          const stopDistance = stop => stop && Number.isFinite(stop.straightLineMeters) ?
-            ' (à ' + stop.straightLineMeters + ' m à vol d’oiseau, marche à vérifier)' : '';
-          // Carte des arrêts de l'option SIBRA (ne valide ni le service ni les marches).
-          const addStopsMapLinks = options => {
-            for (const [index, journey] of options.slice(0, 3).entries()) {
-              if (!journey || !journey.originStop || !journey.destinationStop) continue;
-              const a = journey.originStop, b = journey.destinationStop;
-              if (![a.latitude, a.longitude, b.latitude, b.longitude].every(Number.isFinite)) continue;
-              const transfer = journey.transferStopId && result.data.stops.find(stop => String(stop[0]) === String(journey.transferStopId));
-              const transferLat = transfer && Number(transfer[2]);
-              const transferLon = transfer && Number(transfer[3]);
-              const via = Number.isFinite(transferLat) && Number.isFinite(transferLon) &&
-                Math.abs(transferLat) <= 90 && Math.abs(transferLon) <= 180 ?
-                '&waypoints=' + encodeURIComponent(transferLat + ',' + transferLon) : '';
-            const link = document.createElement('a');
-            link.href = 'https://www.google.com/maps/dir/?api=1&origin=' +
-              encodeURIComponent(a.latitude + ',' + a.longitude) + '&destination=' +
-              encodeURIComponent(b.latitude + ',' + b.longitude) + via + '&travelmode=transit';
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-              link.textContent = '🗺️ Trajet ' + (index + 1) + (via ? ' (avec correspondance)' : '') +
-                ' : voir les arrêts sur la carte (à vérifier)';
-            link.style.display = 'block';
-            link.style.marginTop = '6px';
-            line.appendChild(link);
-            }
-          };
-          // Route piétonne : uniquement un service foot HTTPS configuré explicitement.
-          // Une durée à vol d'oiseau ne valide jamais une correspondance.
-          const planner = window.CPSibraPlanner;
-          const footEndpoint = window.CP_PEDESTRIAN_OSRM_URL;
-          const canCheckWalk = planner && typeof planner.requestPedestrianOSRM === 'function' &&
-            typeof planner.assessScheduledSibraJourney === 'function' &&
-            typeof footEndpoint === 'string' && /^https:\/\//.test(footEndpoint);
-          if (canCheckWalk) {
-            const from = [Number(origin.lng), Number(origin.lat)];
-            const to = [Number(destination.lng), Number(destination.lat)];
-            const selected = journeys.slice(0, 12);
-            Promise.all(selected.map(async j => {
-              const firstStop = [Number(j.originStop.longitude), Number(j.originStop.latitude)];
-              const lastStop = [Number(j.destinationStop.longitude), Number(j.destinationStop.latitude)];
-              const [firstWalk, lastWalk] = await Promise.all([
-                planner.requestPedestrianOSRM(from, firstStop, window.fetch.bind(window), footEndpoint),
-                planner.requestPedestrianOSRM(lastStop, to, window.fetch.bind(window), footEndpoint)
-              ]);
-              return { journey: j, check: planner.assessScheduledSibraJourney(
-                j, earliest, nextSeconds, from, to, firstWalk, lastWalk, 300) };
-            })).then(assessed => {
-              if (!line.isConnected) return;
-              const ranked = assessed.sort((a, b) => Number(b.check.feasible) - Number(a.check.feasible) ||
-                a.journey.arrivalSeconds - b.journey.arrivalSeconds);
-              line.textContent = 'SIBRA (horaires programmés) : ' + ranked.slice(0, 3).map(({ journey: j, check }) =>
-                (j.transferStopId ? 'Correspondance à ' +
-                  ((result.data.stops.find(stop => String(stop[0]) === j.transferStopId) || [null, j.transferStopId])[1]) +
-                  ' (attente ' + dureeHM(j.transferWaitSeconds / 60) + ') : ' : 'Direct : ') +
-                j.originStop.name + stopDistance(j.originStop) + ' ' + formatTime(j.departureSeconds) + ' → ' +
-                j.destinationStop.name + stopDistance(j.destinationStop) + ' ' + formatTime(j.arrivalSeconds) + ' — ' +
-                (check.feasible ? 'marche départ ' + dureeHM(Math.ceil(check.firstWalkSeconds / 60)) + ', marche arrivée ' + dureeHM(Math.ceil(check.lastWalkSeconds / 60)) + ', arrivée à l’adresse ' + formatTime(check.arrivalAtNextMissionSeconds) + ', avance ' + dureeHM(Math.floor(check.advanceSeconds / 60)) + ' (horaires théoriques)' :
-                  check.status === 'marches_non_verifiees' ? 'marche non vérifiée' :
-                  'enchaînement non réalisable avec la marche et la marge de sécurité')
-              ).join(' ; ') + '. Transport non confirmé — vérifiez vous-même.';
-              addStopsMapLinks(ranked.map(x => x.journey));
-            }).catch(() => {
-              if (line.isConnected) line.textContent = 'SIBRA : vérification piétonne indisponible — transport non confirmé.';
-            });
-            return;
-          }
-          line.textContent = 'SIBRA (horaires théoriques, approche à pied non vérifiée) : ' +
-            journeys.slice(0, 3).map(j => (j.transferStopId ? 'Correspondance à ' +
-              ((result.data.stops.find(stop => String(stop[0]) === j.transferStopId) || [null, j.transferStopId])[1]) +
-              ' (attente ' + dureeHM(j.transferWaitSeconds / 60) + ') : ' : 'Direct : ') +
-              j.originStop.name + stopDistance(j.originStop) + ' ' +
-              formatTime(j.departureSeconds) + ' → ' + j.destinationStop.name + stopDistance(j.destinationStop) + ' ' +
-              formatTime(j.arrivalSeconds) + ' (écart théorique avant prise en charge : ' + dureeHM(Math.floor((nextSeconds - j.arrivalSeconds) / 60)) + ', hors marche et marge de sécurité)').join(' ; ') +
-            '. Transport non confirmé — vérifiez vous-même.';
-          addStopsMapLinks(journeys);
-        }).catch(() => {
-          if (line.isConnected) line.textContent = 'SIBRA : recherche indisponible — transport non confirmé.';
-        });
-      }
-    }
     for (const b of document.querySelectorAll('.mission')) b.onclick = () => detail(listeAffichee[Number(b.dataset.i)]);
     const t = $('agTout'); if (t) t.onclick = () => { etat.agendaTout = !etat.agendaTout; afficher(); };
   }
@@ -4044,6 +3253,73 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             'Fin de livraison avant 11 h 43 : indiquer le temps de marche pour vérifier la correspondance.';
         });
         if (input.value !== '') input.dispatchEvent(new Event('input'));
+        // Fiche « tous les horaires de la journée » Y51 (École Saint-François → Annecy gare routière),
+        // données officielles GTFS, sans filtre sur la fin de mission.
+        const y51Jour = document.createElement('button');
+        y51Jour.type = 'button';
+        y51Jour.className = 'second';
+        y51Jour.style.marginTop = '8px';
+        y51Jour.textContent = '🕒 Tous les horaires Y51 du ' + y51ServiceDay;
+        const y51JourRes = document.createElement('div');
+        y51JourRes.className = 'doux';
+        y51JourRes.setAttribute('aria-live', 'polite');
+        y51Jour.addEventListener('click', async () => {
+          y51Jour.disabled = true;
+          y51JourRes.textContent = 'Chargement des horaires Y51…';
+          try {
+            const rep = await window.fetch('data/interurban/y51-gtfs-source.json', { cache: 'no-cache' });
+            if (!rep.ok) throw new Error('GTFS unavailable');
+            const dat = await rep.json();
+            const pl = window.CPSibraPlanner;
+            if (!pl || typeof pl.datedInterurbanRides !== 'function' || !Array.isArray(dat.routes) || !Array.isArray(dat.stops)) throw new Error('Invalid Y51 data');
+            const nz = v => String(v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+            const lb = st => nz([st.stop_name, st.stop_desc, st.stop_code, st.stop_id].filter(Boolean).join(' '));
+            const montees = dat.stops.filter(st => /ecole[\s-]*st[\s-]*francois|ecole[\s-]*saint[\s-]*francois/.test(lb(st)));
+            const annecyArr = dat.stops.filter(st => (/annecy/.test(lb(st)) && /gare|routiere/.test(lb(st))) || (window.CPTY51Fares && window.CPTY51Fares.importedStopMatches && window.CPTY51Fares.importedStopMatches(st, 'Annecy', 'Gare Routiere')));
+            const toutes = [];
+            for (const route of dat.routes) for (const de of montees) for (const vers of annecyArr) {
+              toutes.push(...pl.datedInterurbanRides(dat, y51ServiceDay, String(route.route_id), String(de.stop_id), String(vers.stop_id)));
+            }
+            const uniques = [...new Map(toutes.map(r => [r.trip_id + ':' + r.departureSeconds, r])).values()].sort((a, b) => a.departureSeconds - b.departureSeconds);
+            const hm = sec => String(Math.floor(sec / 3600) % 24).padStart(2, '0') + ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0');
+            y51JourRes.textContent = '';
+            const boite = document.createElement('div');
+            boite.className = 'boiteC';
+            const ent = document.createElement('div');
+            ent.className = 'entC';
+            ent.textContent = '🚌 Y51 · tous les départs du ' + y51ServiceDay + ' (' + uniques.length + ')';
+            boite.appendChild(ent);
+            const corpsJ = document.createElement('div');
+            corpsJ.style.padding = '2px 10px 6px';
+            boite.appendChild(corpsJ);
+            if (!uniques.length) {
+              const vide = document.createElement('p');
+              vide.className = 'doux';
+              vide.textContent = 'Aucune course Y51 trouvée ce jour entre École Saint-François et Annecy gare routière (données GTFS officielles).';
+              corpsJ.appendChild(vide);
+            }
+            uniques.forEach(r => {
+              const c = document.createElement('div');
+              window.CPEtapeStyle && window.CPEtapeStyle(c, 'Y51');
+              c.style.padding = '6px 12px';
+              c.style.margin = '6px 0';
+              c.style.fontWeight = '800';
+              c.textContent = '🚌 Y51 · ' + hm(r.departureSeconds) + ' → ' + hm(r.arrivalSeconds);
+              corpsJ.appendChild(c);
+            });
+            y51JourRes.appendChild(boite);
+            const note = document.createElement('p');
+            note.className = 'doux';
+            note.textContent = 'Horaires théoriques officiels (GTFS Haute-Savoie). Circulation réelle non vérifiée. Transport non confirmé — vérifiez vous-même.';
+            y51JourRes.appendChild(note);
+          } catch (_) {
+            y51JourRes.textContent = 'Horaires officiels Y51 indisponibles pour cette date. Transport non confirmé — vérifiez vous-même.';
+          } finally {
+            y51Jour.disabled = false;
+          }
+        });
+        estimate.appendChild(y51Jour);
+        estimate.appendChild(y51JourRes);
       }
       bt.setAttribute('aria-controls', panel.id);
       bt.setAttribute('aria-expanded', 'true');
