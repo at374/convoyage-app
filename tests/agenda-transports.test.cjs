@@ -65,13 +65,16 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   assert.equal(result.items.length, 1);
 }
 
-// 6. L'interface doit rattacher les missions terminées récemment à la prochaine mission active.
+// 6. La carte « Retour après mission » / « Enchaînement des missions » de l'Agenda est supprimée
+// (demande Laurent du 20/11/2026) : seul reste le bouton "Tous les horaires Y51", relocalisé
+// dans la fiche mission (rubrique Visualisation des transports).
 {
   const fs = require('node:fs');
   const app = fs.readFileSync(require('node:path').join(__dirname, '..', 'app.js'), 'utf8');
-  assert.ok(app.includes('const recentCompleted = A.items.filter'));
-  assert.ok(app.includes('const next = chainItems.slice(ci + 1).find'));
-  assert.ok(app.includes('x.etat === \'terminee\' || x.etat === \'passee\''));
+  assert.ok(!app.includes('cpAgendaChain'));
+  assert.ok(!app.includes('__cpAgendaChain'));
+  assert.ok(!app.includes('Consulter les horaires SIBRA du'));
+  assert.ok(app.includes("y51Jour.textContent = '🕒 Tous les horaires Y51 du '"));
 }
 
 // 7. L'interface ne doit pas annoncer un temps de transport confirmé sans données vérifiées.
@@ -79,7 +82,6 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   const fs = require('node:fs');
   const app = fs.readFileSync(require('node:path').join(__dirname, '..', 'app.js'), 'utf8');
   assert.ok(app.includes('Transport non confirmé — vérifiez vous-même.'));
-  assert.ok(app.includes('Temps disponible après trajet non déterminé.'));
 }
 
 // 8-11. Le garde-fou SIBRA respecte la période de validité et ne confirme jamais seul un trajet.
@@ -329,23 +331,7 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   process.stdout.write('Agenda/SIBRA tests passed: 32 scenarios\\n');
 })().catch(error => { console.error(error); process.exitCode = 1; });
 
-// L'écart théorique à l'arrêt ne doit pas être présenté comme une marge vérifiée.
-{
-  const fs = require('node:fs');
-  const path = require('node:path');
-  const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
-  assert.ok(app.includes('écart théorique avant prise en charge'));
-  assert.ok(app.includes('hors marche et marge de sécurité'));
-}
 
-// L'Agenda privilégie une fenêtre théorique de 30 à 45 minutes à l'arrêt.
-{
-  const fs = require('node:fs');
-  const path = require('node:path');
-  const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
-  assert.ok(app.includes('advance >= 30 && advance <= 45'));
-  assert.ok(app.includes('marche non vérifiée'));
-}
 
 // Une correspondance GTFS doit respecter le même arrêt, l'ordre des bus et le délai minimal.
 {
@@ -381,20 +367,9 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
   const fs = require('node:fs');
   const path = require('node:path');
   const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
-  assert.ok(app.includes('feed.coordinateOneTransferDayJourneys'));
+  assert.ok(app.includes('CPSibraFeed.coordinateOneTransferDayJourneys'));
   assert.ok(app.includes('Correspondance à '));
   assert.ok(app.includes('Transport non confirmé — vérifiez vous-même.'));
-}
-
-// La date SIBRA doit être au format ISO indépendamment des conventions locales du navigateur.
-{
-  const fs = require('node:fs');
-  const path = require('node:path');
-  const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
-  assert.ok(app.includes("formatToParts(date)"));
-  assert.ok(app.includes("get('year') + '-' + get('month') + '-' + get('day')"));
-  assert.ok(app.includes("const date = (date =>"));
-  assert.ok(app.includes("const nextDate = (date =>"));
 }
 
 // Repeated searches of the same GTFS day reuse the normalized tables on mobile.
@@ -568,13 +543,6 @@ const now = Date.parse('2026-10-27T08:00:00+01:00');
 }
 
 
-// Agenda empty state covers both direct and one-transfer SIBRA candidates.
-{
-  const fs = require('node:fs');
-  const path = require('node:path');
-  const app = fs.readFileSync(path.join(__dirname, '..', 'app.js'), 'utf8');
-  assert.match(app, /aucun trajet direct ou avec une correspondance identifié/);
-}
 
 
 // A bus connection is only timetable-compatible when both walking legs are verified.
