@@ -1413,6 +1413,91 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const result = document.createElement('div');
         result.className = 'doux';
         result.setAttribute('aria-live', 'polite');
+        // V2.41 : horaires SIBRA lisibles (lignes colorées, prochains départs par arrêt proche)
+        const renderSibra = (d, ctx) => {
+          const E = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+          const hue = id => { let h = 7; for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) % 997; return (h * 137) % 360; };
+          const col = id => 'hsl(' + hue(id) + ',66%,40%)';
+          const badge = (id, label) => '<span style="display:inline-block;min-width:34px;text-align:center;padding:3px 10px;border-radius:10px;background:' + col(id) + ';color:#fff;font-weight:800;box-shadow:0 1px 4px rgba(0,0,0,.4)">' + E(label) + '</span>';
+          const hm = sec => String(Math.floor(sec / 3600) % 24).padStart(2, '0') + ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0');
+          const secs = v => { const p = String(v).split(':').map(Number); return p[0] * 3600 + p[1] * 60 + p[2]; };
+          const routeById = new Map(d.routes.map(r => [String(r[0]), r]));
+          const tripById = new Map(d.trips.map(t => [String(t[0]), t]));
+          const short = rid => { const r = routeById.get(String(rid)); return r ? String(r[1] || r[0]) : String(rid); };
+          const longName = rid => { const r = routeById.get(String(rid)); return r ? String(r[2] || '') : ''; };
+          const chip = (t, color) => '<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border-radius:7px;background:rgba(255,255,255,.12);border-left:4px solid ' + color + ';font-weight:700;font-variant-numeric:tabular-nums">' + E(t) + '</span>';
+          const box = (title, inner) => '<div style="margin:8px 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,200,60,.35);background:#1a1d2b;color:#f3f1ea">' +
+            '<div style="padding:8px 12px;background:linear-gradient(90deg,#0b6e8a,#1b4f9c);color:#fff;font-weight:800">' + title + '</div>' +
+            '<div style="padding:8px 12px">' + inner + '</div></div>';
+          const dateFr = String(ctx.date).split('-').reverse().join('/');
+          const from = Number.isFinite(ctx.earliest) ? ctx.earliest : 0;
+          let html = '';
+          const hasPoint = Number.isFinite(ctx.lat) && Number.isFinite(ctx.lng);
+          if (hasPoint) {
+            // 1) Trajets directs vers le domicile (arrêts proches des deux points)
+            const feed = ctx.feed;
+            if (Number.isFinite(ctx.homeLat) && Number.isFinite(ctx.homeLng) && feed && typeof feed.coordinateDayJourneys === 'function') {
+              let rides = [];
+              try { rides = feed.coordinateDayJourneys(d, ctx.lat, ctx.lng, ctx.homeLat, ctx.homeLng, from, { radiusMeters: 800 }); } catch (_) { rides = []; }
+              const stopName = new Map(d.stops.map(s => [String(s[0]), String(s[1])]));
+              const seen = new Set();
+              const rows = rides.filter(r => { const k = r.tripId + ':' + r.departureSeconds; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 6).map(r => {
+                const t = tripById.get(String(r.tripId)); const rid = t ? t[1] : '';
+                return '<div style="margin:6px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + badge(rid, short(rid)) +
+                  '<b style="font-size:1.08em">' + hm(r.departureSeconds) + ' → ' + hm(r.arrivalSeconds) + '</b>' +
+                  '<span style="opacity:.8">' + E(stopName.get(String(r.fromStopId)) || '') + ' → ' + E(stopName.get(String(r.toStopId)) || '') + '</span></div>';
+              });
+              html += box('🏠 Directement vers ton domicile', rows.length ? rows.join('') :
+                '<div style="opacity:.85">Aucun bus direct trouvé entre les arrêts proches de la livraison et ceux proches de ton domicile après cette heure.</div>');
+            }
+            // 2) Prochains départs aux arrêts proches de la livraison, par ligne
+            const stops = typeof ctx.feed.nearbyDayStops === 'function' ? ctx.feed.nearbyDayStops(d, ctx.lat, ctx.lng, 800, 12) : [];
+            const named = new Map();
+            for (const st of stops) { const k = st.name; if (!named.has(k)) named.set(k, { name: k, straightLineMeters: st.straightLineMeters, ids: [] }); named.get(k).ids.push(st.stopId); }
+            const places = [...named.values()].slice(0, 4);
+            const ids = new Set(places.flatMap(p => p.ids));
+            const byStop = new Map();
+            for (const r of d.stop_times) { const sid = String(r[1]); if (!ids.has(sid)) continue; if (!byStop.has(sid)) byStop.set(sid, []); byStop.get(sid).push(r); }
+            if (!places.length) html += box('📍 Arrêts proches de la livraison', '<div style="opacity:.85">Aucun arrêt SIBRA à moins de 800 m de l’arrivée de la mission.</div>');
+            for (const st of places) {
+              const groups = new Map();
+              for (const r of st.ids.flatMap(i => byStop.get(i) || [])) {
+                const dep = secs(r[4]); if (dep < from) continue;
+                const t = tripById.get(String(r[0])); if (!t) continue;
+                const key = t[1] + '|' + t[2];
+                if (!groups.has(key)) groups.set(key, { rid: t[1], head: t[2], times: [] });
+                if (!groups.get(key).times.includes(dep)) groups.get(key).times.push(dep);
+              }
+              const list = [...groups.values()].filter(g => g.times.length).map(g => { g.times.sort((a, b) => a - b); return g; })
+                .sort((a, b) => a.times[0] - b.times[0]).slice(0, 6);
+              const inner = list.length ? list.map(g => '<div style="margin:7px 0"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + badge(g.rid, short(g.rid)) +
+                '<span style="font-weight:700">vers ' + E(g.head || longName(g.rid)) + '</span></div><div style="margin-top:3px">' +
+                g.times.slice(0, 6).map(t => chip(hm(t), col(g.rid))).join('') + '</div></div>').join('') :
+                '<div style="opacity:.85">Plus aucun départ ce jour-là à cet arrêt.</div>';
+              html += box('📍 ' + E(st.name) + ' <span style="font-weight:500;opacity:.85">· ≈ ' + st.straightLineMeters + ' m à vol d’oiseau</span>', inner);
+            }
+          } else {
+            // Sans point de livraison précis : vue d'ensemble des lignes du jour
+            const tripSpan = new Map();
+            for (const r of d.stop_times) {
+              const s = secs(r[4]), k = String(r[0]); const x = tripSpan.get(k);
+              if (!x) tripSpan.set(k, { a: s, b: s }); else { if (s < x.a) x.a = s; if (s > x.b) x.b = s; }
+            }
+            const lines = new Map();
+            for (const [tid, sp] of tripSpan) {
+              const t = tripById.get(tid); if (!t) continue;
+              const g = lines.get(t[1]) || { n: 0, first: Infinity, last: -1 };
+              g.n++; if (sp.a < g.first) g.first = sp.a; if (sp.a > g.last) g.last = sp.a; lines.set(t[1], g);
+            }
+            const rows = [...lines.entries()].sort((a, b) => a[0].localeCompare(b[0], 'fr', { numeric: true })).map(([rid, g]) =>
+              '<div style="margin:6px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + badge(rid, short(rid)) +
+              '<span style="flex:1;min-width:140px">' + E(longName(rid)) + '</span>' +
+              '<span style="opacity:.85">' + g.n + ' courses · ' + hm(g.first) + ' → ' + hm(g.last) + '</span></div>');
+            html += box('🚌 Lignes SIBRA en service', rows.join('') + '<div style="opacity:.8;margin-top:6px">Adresse de livraison précise absente : les départs par arrêt ne peuvent pas être proposés.</div>');
+          }
+          html += '<div style="opacity:.85;font-size:.92em">Horaires théoriques du ' + E(dateFr) + ' (GTFS), non confirmés : marche d’approche, correspondances et perturbations à vérifier.</div>';
+          return html;
+        };
         button.addEventListener('click', async () => {
           button.disabled = true;
           result.textContent = 'Chargement des horaires SIBRA…';
@@ -1421,12 +1506,19 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             if (!response.usable) {
               result.textContent = 'Horaires SIBRA indisponibles pour ce jour — transport non confirmé.';
             } else {
-              const d = response.data;
-              result.textContent = 'Horaires programmés SIBRA du ' + requestedDate + ' : ' +
-                d.trips.length.toLocaleString('fr-FR') + ' courses, ' +
-                d.stop_times.length.toLocaleString('fr-FR') + ' passages et ' +
-                d.stops.length.toLocaleString('fr-FR') + ' arrêts. ' +
-                'Trajet vers la mission non calculé : adresses et marche d’approche à vérifier. Transport non confirmé.';
+              const sibEndMs = Number(card.getAttribute('data-mission-end-ms'));
+              let sibEarliest = 0;
+              if (Number.isFinite(sibEndMs) && sibEndMs > 0) {
+                const sp = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(sibEndMs));
+                const sg = t => (sp.find(x => x.type === t) || {}).value;
+                sibEarliest = (sg('year') + '-' + sg('month') + '-' + sg('day')) === requestedDate ? Number(sg('hour')) * 3600 + Number(sg('minute')) * 60 : 0;
+              }
+              result.innerHTML = renderSibra(response.data, {
+                date: requestedDate, earliest: sibEarliest, feed: window.CPSibraFeed,
+                lat: card.hasAttribute('data-y51-lat') ? Number(card.getAttribute('data-y51-lat')) : NaN,
+                lng: card.hasAttribute('data-y51-lng') ? Number(card.getAttribute('data-y51-lng')) : NaN,
+                homeLat: regionalHome ? Number(regionalHome.lat) : NaN, homeLng: regionalHome ? Number(regionalHome.lng) : NaN
+              });
             }
           } catch (_) {
             result.textContent = 'Chargement impossible — transport non confirmé.';
