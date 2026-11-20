@@ -167,6 +167,13 @@ FILTERED_MIRROR = [
     {'id': 'agglobus-bourges', 'network': 'Agglobus (Bourges)',
      'url': 'https://transport.data.gouv.fr/resources/83519/download',
      'bounds': [47.00, 2.30, 47.15, 2.50], 'horizon_days': 45, 'slim': True, 'download_limit': 30 * 1024 * 1024},
+    # Artis Arras et Evéole Douai : liens stables data.gouv.fr (Producer URL référencés par MobilityData).
+    {'id': 'artis-arras', 'network': 'Artis (CU d\'Arras)',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/4ded8fb3-a38d-45c5-b4a7-a2f6ac17ba4f',
+     'bounds': [50.25, 2.70, 50.35, 2.85], 'horizon_days': 45, 'slim': True, 'download_limit': 30 * 1024 * 1024},
+    {'id': 'eveole-douai', 'network': 'Evéole (Douaisis)',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/99cf5e2f-87c2-4ff1-bc0d-32f04cc213ab',
+     'bounds': [50.25, 2.90, 50.50, 3.20], 'horizon_days': 45, 'slim': True, 'download_limit': 30 * 1024 * 1024},
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
