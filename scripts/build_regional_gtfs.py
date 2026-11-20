@@ -134,11 +134,11 @@ FILTERED_MIRROR = [
      'bounds': [47.98, -1.85, 48.22, -1.55], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
     # Naolib/TAN Nantes : resource 8055 est devenue un lien mort (404) ; resource 84101
     # (jeu "tan-arrets-horaires-et-circuits", fichier gtfs_lumidata_id.zip, mis à jour 20/11/2026) le remplace.
-    # Horizon réduit à 21 jours (au lieu des 45 habituels) : réseau dense, l'extrait bbox dépassait
-    # le plafond MAX_OUT (20,1 Mo pour 12 Mo autorisés) ; 21 jours suffit à rester dans la limite.
+    # Horizon réduit à 14 jours (au lieu des 45 habituels) : réseau dense, l'extrait bbox dépassait
+    # le plafond MAX_OUT même à 21 jours (12,74 Mo pour 12,58 Mo autorisés) ; 14 jours passe sous la limite.
     {'id': 'naolib-nantes', 'network': 'Naolib (Nantes Métropole)',
      'url': 'https://transport.data.gouv.fr/resources/84101/download',
-     'bounds': [47.13, -1.70, 47.33, -1.40], 'horizon_days': 21, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+     'bounds': [47.13, -1.70, 47.33, -1.40], 'horizon_days': 14, 'slim': True, 'download_limit': 60 * 1024 * 1024},
     {'id': 'tbm-bordeaux', 'network': 'TBM (Bordeaux Métropole)',
      'url': 'https://transport.data.gouv.fr/resources/83024/download',
      'bounds': [44.75, -0.70, 44.95, -0.45], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
