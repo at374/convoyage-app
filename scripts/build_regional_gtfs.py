@@ -133,11 +133,13 @@ FILTERED_MIRROR = [
     # STAR Rennes : lien stable documenté par Keolis Rennes (« toujours le GTFS en cours », rafraîchi chaque nuit),
     # préféré au resource id transport.data.gouv.fr qui change à chaque rupture d'offre.
     # 20/11/2026 : horizon réduit 45->16j puis 16->7j — à 16j l'archive réelle décompressait encore à
-    # 89,8 Mo (~5,6 Mo/j, le ratio n'était pas linéaire avec l'estimation à 45j), toujours au-delà des 64 Mo
-    # maxFileBytes du moteur. 7j vise ~39 Mo, avec marge.
+    # 89,8 Mo (~5,6 Mo/j, le ratio n'était pas linéaire avec l'estimation à 45j). À 7j (build du cron du
+    # 20/11 au soir), stop_times.txt mesure en réel 67,1 Mo — toujours au-delà des 64 Mo maxFileBytes du
+    # moteur (ratio réel ~9,6 Mo/j, lui-même non linéaire avec l'estimation faite à 16j). Horizon réduit
+    # à 5j pour viser ~48 Mo, avec marge plus large cette fois.
     {'id': 'star-rennes', 'network': 'STAR (Rennes Métropole)',
      'url': 'https://eu.ftp.opendatasoft.com/star/gtfs/GTFS_STAR_BUS_METRO_EN_COURS.zip',
-     'bounds': [47.98, -1.85, 48.22, -1.55], 'horizon_days': 7, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+     'bounds': [47.98, -1.85, 48.22, -1.55], 'horizon_days': 5, 'slim': True, 'download_limit': 60 * 1024 * 1024},
     # Naolib/TAN Nantes : resource 8055 est devenue un lien mort (404) ; resource 84101
     # (jeu "tan-arrets-horaires-et-circuits", fichier gtfs_lumidata_id.zip, mis à jour 20/11/2026) le remplace.
     # Horizon réduit à 14 jours (au lieu des 45 habituels) : réseau dense, l'extrait bbox dépassait
