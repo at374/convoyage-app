@@ -706,3 +706,6 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 /* Défilement fluide : les cartes hors écran ne sont ni mises en page ni dessinées. */
 #cpTransportMissionDetails .cp-hub-card{content-visibility:auto;contain-intrinsic-size:auto 120px}
 #cpTransportMissionDetails .cp-hub-walk-map,#cpTransportMissionDetails .cp-hub-map{contain:layout paint}
+
+/* 20/11/2026 : bouton d'inversion de l'ordre des trajets */
+.cp-hub-ordre{display:block;width:100%;margin:8px 0;padding:10px 12px;border:1px solid #70b7e8;border-radius:10px;background:#cdeaff;color:#123d72;font-weight:600;font-size:.9rem;text-align:left}

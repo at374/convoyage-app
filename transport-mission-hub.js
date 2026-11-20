@@ -1833,10 +1833,11 @@ const TAD=[
 ];
 function tadFor(task){const pts=[pt(task?.from),pt(task?.to)].filter(Boolean);
  return TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));}
+let ordreInverse=false;try{ordreInverse=localStorage.getItem('cp_hub_ordre')==='desc';}catch(_){}
 function viewFingerprint(v){
  const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters].join(','):'';
  return [v.done?1:0,v.total,v.longShown,(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).map(one).join(';'),v.others&&v.others.length,
-  Object.entries(v.errors||{}).map(([k,e])=>k+e).join('|'),Object.entries(v.received||{}).join('|')].join('#');
+  Object.entries(v.errors||{}).map(([k,e])=>k+e).join('|'),Object.entries(v.received||{}).join('|'),ordreInverse?'desc':'asc'].join('#');
 }
 function render(host,v){
  const doc=host.ownerDocument;
@@ -1870,6 +1871,14 @@ function render(host,v){
  // puis heure d'arrivée. Plus d'étiquettes « Moins cher / Meilleur compromis / Plus rapide » : les tarifs réels n'existent plus, tous les horaires trouvés sont listés.
  const timeline=[...(v.picks||[]).map(p=>({journey:p.journey,labels:null})),...(v.others||[]).map(j=>({journey:j,labels:null}))]
   .sort((x,y)=>(ms(x.journey.departure)||0)-(ms(y.journey.departure)||0)||(ms(x.journey.arrival)||0)-(ms(y.journey.arrival)||0));
+ if(ordreInverse)timeline.reverse();
+ if(timeline.length>1){
+  // 20/11/2026 : bouton pour inverser l'ordre (départ le plus tôt en premier ↔ départ le plus tard en premier), choix gardé sur ce téléphone.
+  const btn=el(doc,'button','cp-hub-ordre',ordreInverse?'↕ Ordre décroissant (toucher pour passer en croissant)':'↕ Ordre croissant (toucher pour passer en décroissant)');
+  btn.type='button';
+  btn.onclick=()=>{ordreInverse=!ordreInverse;try{localStorage.setItem('cp_hub_ordre',ordreInverse?'desc':'asc');}catch(_){}host.__cpFp=null;render(host,v);};
+  host.appendChild(btn);
+ }
  for(const [i,p] of timeline.entries())addCard(host,p.journey,p.labels,openInitial&&i===0);
  // Ne montrer que les moteurs effectivement interrogés sur la direction choisie.
  // Les réseaux hors zone restent dans le diagnostic interne, pas dans la fiche mission.
