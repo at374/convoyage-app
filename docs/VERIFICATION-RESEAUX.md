@@ -440,9 +440,9 @@ Généré le 2026-11-20 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | ilevia_lille (samedi) | ilevia-lille.zip | 37410 | OK | 2026-11-21 17:20:00 retrouvée (14 départs proposés) |
 | ilevia_lille (dimanche) | ilevia-lille.zip | 37410 | OK | 2026-11-22 09:55:00 retrouvée (39 départs proposés) |
 | ilevia_lille (semaine) | ilevia-lille.zip | 37410 | OK | 2026-11-23 18:49:00 retrouvée (12 départs proposés) |
-| star_rennes (samedi) | star-rennes.zip | 54159 | OK | 2026-11-21 06:02:34 retrouvée (430 départs proposés) |
-| star_rennes (dimanche) | star-rennes.zip | 54159 | OK | 2026-11-22 06:02:00 retrouvée (279 départs proposés) |
-| star_rennes (semaine) | star-rennes.zip | 54159 | OK | 2026-11-23 06:02:34 retrouvée (543 départs proposés) |
+| star_rennes (samedi) | star-rennes.zip | 33066 | OK | 2026-11-21 06:02:34 retrouvée (430 départs proposés) |
+| star_rennes (dimanche) | star-rennes.zip | 33066 | OK | 2026-11-22 06:02:00 retrouvée (279 départs proposés) |
+| star_rennes (semaine) | star-rennes.zip | 33066 | OK | 2026-11-23 06:02:34 retrouvée (543 départs proposés) |
 | tbm_bordeaux (samedi) | tbm-bordeaux.zip | 22487 | OK | 2026-11-21 06:03:01 retrouvée (140 départs proposés) |
 | tbm_bordeaux (dimanche) | tbm-bordeaux.zip | 22487 | OK | 2026-11-22 06:29:01 retrouvée (90 départs proposés) |
 | tbm_bordeaux (semaine) | tbm-bordeaux.zip | 22487 | OK | 2026-11-23 06:07:00 retrouvée (80 départs proposés) |
