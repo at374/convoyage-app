@@ -60,6 +60,9 @@
     return 'intent://ouvrir/' + plat.toLowerCase() + '#Intent;scheme=convoyagetel;package=fr.convoyagepro.tel;S.browser_fallback_url=' + encodeURIComponent(site) + ';end';
   }
   const VERSION_APP = 'V278 (2.0.128)';
+
+  // V278 : style commun des étapes de trajet (bande colorée selon la ligne, gris pour marche/attente) — mise en forme seule, texte inchangé.
+  window.CPEtapeStyle = (el, nom) => { try { const n = String(nom || 'Transport'); let h = 7; for (const c of n) h = (h * 31 + c.charCodeAt(0)) % 997; const marche = /marche|attente|correspondance/i.test(n); el.style.borderLeft = '5px solid ' + (marche ? '#7a8190' : 'hsl(' + ((h * 137) % 360) + ',66%,45%)'); el.style.padding = '6px 10px'; el.style.margin = '6px 0'; el.style.borderRadius = '8px'; el.style.background = 'rgba(127,127,127,.10)'; el.style.listStylePosition = 'inside'; } catch (_) {} };
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
@@ -1392,6 +1395,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
                       listeSibra.style.paddingLeft = '20px';
                       combinations.slice(0, 5).forEach(x => {
                         const li = document.createElement('li');
+                        window.CPEtapeStyle && window.CPEtapeStyle(li, 'Y51');
                         li.textContent = 'Y51 ' + clock(x.ride.departureSeconds) + '–' +
                           clock(x.ride.arrivalSeconds) + ' → SIBRA ' +
                           clock(x.bus.departureSeconds) + '–' + clock(x.bus.arrivalSeconds) +
@@ -2261,6 +2265,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             const list = document.createElement('ol');
             for (const leg of steps) {
               const step = document.createElement('li');
+              window.CPEtapeStyle && window.CPEtapeStyle(step, leg.line || leg.provider);
               const line = document.createElement('strong');
               line.textContent = [leg.line || leg.provider || 'Transport', leg.from && leg.to ? leg.from + ' → ' + leg.to : ''].filter(Boolean).join(' · ');
               step.appendChild(line);
@@ -3449,7 +3454,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
               const steps=document.createElement('ol');
               const stepTime=value=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',dateStyle:'short',timeStyle:'medium'}).format(new Date(value));
               for(const [legIndex,leg] of result.legs.entries()){
-                const step=document.createElement('li');step.textContent=(leg.mode==='wa_wal'?'Marche':leg.mode==='stationary_wait'?'Attente':leg.mode==='stationary_transfer'?'Correspondance à pied':leg.line||leg.provider||'Transport (ligne non identifiée)')+' · '+
+                const step=document.createElement('li');window.CPEtapeStyle&&window.CPEtapeStyle(step,leg.mode==='wa_wal'?'Marche':leg.mode==='stationary_wait'?'Attente':leg.mode==='stationary_transfer'?'Correspondance':leg.line||leg.provider);step.textContent=(leg.mode==='wa_wal'?'Marche':leg.mode==='stationary_wait'?'Attente':leg.mode==='stationary_transfer'?'Correspondance à pied':leg.line||leg.provider||'Transport (ligne non identifiée)')+' · '+
                   stepTime(leg.departure)+' → '+stepTime(leg.arrival)+' · '+leg.from+' → '+leg.to;
                 if(leg.mode==='wa_wal'&&Number.isFinite(leg.distanceMeters)&&leg.distanceMeters>=0){
                   const walkingDistance=document.createElement('span');walkingDistance.setAttribute('data-tripgo-walk-distance','');
