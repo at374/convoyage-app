@@ -433,3 +433,41 @@ Vérification finale avec `scripts/verifier-moteurs-regionaux.cjs` (moteur réel
 **Nantes (Naolib) volontairement exclue** : même à horizon réduit à 14 jours, `stop_times.txt` décompresse à 178 Mo (réseau très dense, ~12,7 Mo/jour) — largement au-delà des 64 Mo. Un horizon viable (4-5j) serait trop court pour tenir sans risque entre deux passages du cron hebdomadaire. Pour câbler ce réseau, il faudrait d'abord le redécouper par zone plus fine (ex. centre-ville / lignes tram seules) plutôt que l'emprise actuelle (toute la métropole) — pas fait aujourd'hui, documenté dans `transport-coverage.js`.
 
 Par ailleurs, et sans rapport avec le GTFS régional : la fenêtre générique « plage de jour » (`dayWindowOk` dans `transport-mission-hub.js`) a été étendue sur demande de Laurent — une arrivée est désormais acceptée jusqu'à 23:59 (au lieu de 19:00), le seul garde-fou restant étant le changement de jour calendaire (`dep.day!==arr.day`, toujours rejeté). Ceci est indépendant du plafond GTFS ci-dessus et indépendant de l'heuristique de fermeture d'agence (`siteCloseMinutes`, 17:30-19:00, inchangée).
+
+## Mise à jour du 20-21/11/2026 — TAO Orléans câblé, bug Hiflow Cloud Run corrigé
+
+**TAO Orléans** (tramway + bus) câblé dans `transport-mission-hub.js` : horizon réduit à 15 jours d'emblée
+(prudence directe après les trois mésaventures Rennes de la veille, pas d'optimisme a priori sur un gros
+réseau urbain). Archive réelle mesurée à 37,35 Mo/64 Mo, vérifiée en réel (85/39/108 trajets sur 3 jours
+testés). `transport-coverage.js` mis à jour. Avec cet ajout, **seul Naolib Nantes reste non câblé** sur les
+174 réseaux téléchargés par `scripts/build_regional_gtfs.py` (réseau trop dense, documenté).
+
+**Audit de couverture nationale** (demande Laurent, « combien de % de la France ? ») : 172-173 réseaux
+urbains/interurbains câblés sur ~350 AOM françaises avec réseau régulier (source : enquête Cerema 2026).
+Le point faible identifié, et de loin le plus important : **l'Île-de-France (RATP, Transilien, IDF
+Mobilités) n'était absolument pas couverte**, alors qu'elle concentre ~12 M d'habitants, la plus grosse
+agglomération française.
+
+**Câblage Île-de-France lancé** (demande explicite Laurent, emprise/horizon laissés à mon appréciation) :
+- `idfm-paris` : flux IDFM officiel (RATP + bus/tram/métro, transport.data.gouv.fr/resources/80921) —
+  disproportionné par rapport à tout ce qui a été câblé jusqu'ici (130 Mo compressés, 1 970 lignes,
+  35 484 arrêts). Première tentative volontairement prudente dès le départ (bbox Paris intra-muros,
+  horizon 5j) plutôt que de repartir de 45j comme pour les métros précédents.
+- `transilien-idf` : flux SNCF Transilien/RER séparé (eu.ftp.opendatasoft.com, lien stable), beaucoup plus
+  léger (11,56 Mo compressés, 38 lignes), bbox large sur toute la région.
+- Build en cours au moment de ce relevé — résultat (taille réelle, câblage effectif) à documenter à la
+  suite de cette entrée une fois mesuré. Même dans le meilleur cas, cette première couverture ne porte que
+  sur Paris intra-muros (pas Roissy/Orly/La Défense/banlieue) : à agrandir dans un second temps si la
+  taille le permet.
+
+**Bug robot Hiflow Cloud Run corrigé** (constaté en réel par Laurent, sans rapport avec les Transports) :
+le robot `server/hiflow-sync-deploy/hiflow-sync.cjs` synchronisait avec succès toutes les ~5 minutes depuis
+son déploiement le 19/11 (confirmé par les logs Cloud Run et la table `sources_etat` : 17/17 régions,
+~700-720 missions à chaque passage), mais ne mettait jamais à jour
+`plateforme_identifiants.derniere_sync_at`/`derniere_sync_statut` — la seule donnée lue par l'écran
+Réglages (`majStatutAuto`, `plateformes.js`). L'app affichait donc « Pas encore de synchro » indéfiniment
+malgré un robot parfaitement fonctionnel. Corrigé par un `PATCH` supplémentaire vers
+`plateforme_identifiants` après chaque synchro. **Nécessite un redéploiement manuel du service Cloud Run**
+par Laurent (`gcloud run deploy hiflow-sync --source .` depuis `server/hiflow-sync-deploy`, étape 3 de
+`docs/HIFLOW-SYNC-CLOUD-RUN-DEPLOIEMENT-20261119.md`) pour prendre effet — un `git push` seul ne redéploie
+pas un service Cloud Run.

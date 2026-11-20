@@ -932,7 +932,7 @@ function makeProviders(r,opts={}){
    ['tisseo_toulouse','Tisséo (Toulouse)','tisseo-toulouse.zip',[43.37,1.13,43.85,1.71]],
    ['mistral_toulon','Réseau Mistral (Toulon)','mistral-toulon.zip',[43.0,5.75,43.25,6.22]],
    // 20/11/2026 : réseaux urbains présents dans data/gtfs mais absents de ce moteur (audit de couverture).
-   // Pas encore ajoutés (GTFS décompressé > 64 Mo, refusé par le chargeur) : CTS Strasbourg, STAR Rennes, TBM Bordeaux, TAO Orléans.
+   // CTS Strasbourg, STAR Rennes, TBM Bordeaux et TAO Orléans ont depuis été ajoutés plus bas (horizon réduit).
    ['agglobus_bourges',"Agglobus (Bourges)",'agglobus-bourges.zip',[47.035,2.321,47.134,2.459]],
    ['ametis_amiens',"Ametis (Amiens Métropole)",'ametis-amiens.zip',[49.846,2.235,49.939,2.391]],
    ['artis_arras',"Artis (CU d'Arras)",'artis-arras.zip',[50.261,2.714,50.326,2.838]],
@@ -1010,7 +1010,10 @@ function makeProviders(r,opts={}){
    // à 178 Mo de stop_times.txt (réseau très dense, ~12,7 Mo/j), largement au-delà des 64 Mo maxFileBytes du
    // moteur — « Expanded GTFS exceeds size limit » constaté en réel le 20/11/2026. La câbler demanderait un
    // horizon de 4-5 j, trop court pour un cron hebdomadaire (voir transport-coverage.js pour le suivi).
-   ['tbm_bordeaux', "TBM (Bordeaux Métropole)", 'tbm-bordeaux.zip', [44.75,-0.70,44.95,-0.45]]
+   ['tbm_bordeaux', "TBM (Bordeaux Métropole)", 'tbm-bordeaux.zip', [44.75,-0.70,44.95,-0.45]],
+   // TAO Orléans Métropole : horizon réduit à 15 j (scripts/build_regional_gtfs.py) ; archive réelle
+   // mesurée à 37,35 Mo (confortablement sous les 64 Mo maxFileBytes), ajoutée le 20/11/2026.
+   ['tao_orleans', "TAO (Orléans Métropole)", 'tao-orleans.zip', [47.80,1.78,47.95,2.05]]
   ];
   // Archives are published on the transport feature branch, not necessarily on
   // the deployed GitHub Pages site. Explicit HTTPS URLs avoid a silent 404

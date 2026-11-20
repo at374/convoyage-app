@@ -89,7 +89,13 @@ async function loginHiflow(page, email, password) {
     page.waitForURL(/\/schedule|\/journey/, { timeout: 20000 }).catch(() => {}),
     page.click('#button-login-submit'),
   ]);
-  if (/\/login/.test(page.url())) throw new Error('connexion Hiflow refusée');
+  // 21/11/2026 : le texte exact compte — alerteConnexion (app.js) ne déclenche la grosse alerte rouge
+  // « Reconnexion nécessaire » que si le message contient connect/identifi/session/login. « connexion
+  // Hiflow refusée » ne matchait AUCUN de ces mots (ne contient pas « connect », juste « connexion » qui a
+  // un x), donc une vraie déconnexion Hiflow (mot de passe changé, compte bloqué…) ne provoquait qu'un
+  // changement de couleur discret de la pastille, jamais l'alerte visible — constaté en relisant le code
+  // suite à une question de Laurent (« si déconnexion, je le saurai ? »).
+  if (/\/login/.test(page.url())) throw new Error('identifiants Hiflow refusés (connexion impossible)');
 }
 
 // Capture passive des réponses JSON, comme côté Android (HiflowPont / cerveau.js) : jamais de requête
