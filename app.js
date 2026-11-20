@@ -480,8 +480,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     }));
     return n > 0;
   }
+  // 20/11/2026 : certaines adresses de plateforme commencent par un identifiant (suite de lettres et chiffres) : on ne l'affiche plus.
+  function adrNet(a) { return typeof a === 'string' ? a.replace(/\b[0-9a-f]{16,}\b/gi, '').replace(/^[\s,;:\-–]+/, '').replace(/\n\s*\n+/g, '\n').trim() : a; }
   function adresse(m, cote) {
-    const a = m[cote + '_address'] || (m.mail_info && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'] && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'].adresse); if (a) return a;
+    const a = adrNet(m[cote + '_address']) || (m.mail_info && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'] && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'].adresse); if (a) return a;
     if (m.adresses_locales) return (cote === 'origin' ? m.from_city : m.to_city) ? (cote === 'origin' ? m.from_city : m.to_city) + (m[(cote === 'origin' ? 'from' : 'to') + '_department'] ? ' (' + m[(cote === 'origin' ? 'from' : 'to') + '_department'] + ')' : '') + ' — ' + LOCAL : LOCAL;
     // V88 : ville connue → affichée ; l'adresse exacte d'une mission acceptée arrive quand « Mes trajets » Hiflow est ouvert sur l'ordinateur.
     const ville = cote === 'origin' ? m.from_city : m.to_city, dep = m[(cote === 'origin' ? 'from' : 'to') + '_department'];
@@ -556,7 +558,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   // V206 : suites possibles lues sur la fiche DriiveMe, affichées juste sous l'étiquette de la mission (stockées dans vehicle.suites)
   // V212 : rubriques en blocs colorés, titre en étiquette (modèle C)
   const bk = (cls, titre, h) => '<div class="bk bkC ' + cls + '"><div class="bkt">' + titre + '</div>' + h + '</div>';
-  const adrHtml = m => ((m.platform === 'DriiveMe' || m.platform === 'Hiflow') && (m.origin_address || m.destination_address)) ? bk('bkLieu', 'LIEUX', (m.origin_address ? '<div>📍 <b>Départ</b> : ' + esc(m.origin_address) + '</div>' : '') + (m.destination_address ? '<div>🏁 <b>Arrivée</b> : ' + esc(m.destination_address) + '</div>' : '')) : '';
+  const adrHtml = m => ((m.platform === 'DriiveMe' || m.platform === 'Hiflow') && (m.origin_address || m.destination_address)) ? bk('bkLieu', 'LIEUX', (m.origin_address ? '<div>📍 <b>Départ</b> : ' + esc(adrNet(m.origin_address)) + '</div>' : '') + (m.destination_address ? '<div>🏁 <b>Arrivée</b> : ' + esc(adrNet(m.destination_address)) + '</div>' : '')) : '';
   const sugTexte = z => { const p = String(z.t || '').split(/\s*\|\s*/).map(s => s.trim()).filter(Boolean); if (p.length >= 3) { const dm = p[0].match(/^(.+?\(\s*\d+\s*km\s*\))\s*(.+)$/); const tete = dm ? 'Départ : <b>' + esc(dm[1]) + '</b><br>Arrivée : <b>' + esc(dm[2]) + '</b>' : '<b>' + esc(p[0]) + '</b>'; return tete + '<br>' + esc(p.slice(1, -1).join(' · ')) + ' · <b>' + esc(p[p.length - 1].replace(/\s+,/, ',')) + '</b>'; } return esc(p.join(' · ')); };
   // V227 : plaque W (garage) — dessin de la nouvelle plaque rose quand la fiche de la plateforme l'exige.
   const RE_PLAQUE_W = /plaques?[^a-z0-9]{0,3}(?:de\s+|type\s+|d['’]immatriculation\s+)?WW?\b|\bW[\s-]*garage|\bWW\b|immatriculation\s+(?:de\s+)?WW?\b|plaques?\s+(?:garage|professionnelle)/i;
@@ -577,7 +579,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   const bkDates = (m, lv) => { const pk = hfDates(m) ? fmtDate(hfPk(m)) : quand(m); return (pk ? bk('bkD1', 'PRISE EN CHARGE', '🚩 ' + esc(pk)) : '') + (lv ? bk('bkD2', 'LIVRAISON', '🏁 ' + esc(lv)) : ''); };
   const blocKm = (m, avecVol) => { const p = []; if (m.distance_km) p.push('🛣 <b>' + esc(m.distance_km) + ' km</b>' + (m.duree_h ? ' · <b>' + esc(duree(m.duree_h)) + '</b>' : '')); if (m.client) p.push('🏢 <b>' + esc(m.client) + '</b>'); const vol = avecVol && kmVolOiseau(m) != null && etat.posMax > 0 ? '<div>✈️ ≈ ' + esc(kmVolOiseau(m)) + ' km à vol d’oiseau de ' + (sourceRecherche() === 'domicile' ? 'ton domicile' : 'ta position') + ' jusqu’au départ</div>' : ''; if (!p.length && !vol) return ''; return bk('bkKm', 'TRAJET · PRESTATAIRE', (p.length ? '<div>' + p.join(' · ') + '</div>' : '') + vol); };
   // V270 : « Livraison & Reprise » DriiveMe = 2 étapes (A→B puis B→C) et 2 véhicules ; la 2e étape est lue sur la fiche (vehicle.reprise)
-  const repriseHtml = m => { try { const v = vehObj(m); const r = v && typeof v === 'object' && v.reprise; if (!r) return ''; const vv = r.vehicle || {}; const t = [vv.category, vv.model, vv.gearbox].filter(Boolean).join(' · '); return bk('bkLieu', 'ÉTAPE 2 · REPRISE', (r.origin_address ? '<div>📍 <b>Départ</b> : ' + esc(r.origin_address) + '</div>' : '') + (r.destination_address ? '<div>🏁 <b>Arrivée</b> : ' + esc(r.destination_address) + '</div>' : '') + (t ? '<div>🚗 Véhicule repris : ' + esc(t) + '</div>' : '') + (r.total_km ? '<div>🛣 Total de la mission : <b>' + esc(r.total_km) + ' km</b>' + (r.total_duree ? ' · ' + esc(r.total_duree) : '') + '</div>' : '')); } catch (_) { return ''; } };
+  const repriseHtml = m => { try { const v = vehObj(m); const r = v && typeof v === 'object' && v.reprise; if (!r) return ''; const vv = r.vehicle || {}; const t = [vv.category, vv.model, vv.gearbox].filter(Boolean).join(' · '); return bk('bkLieu', 'ÉTAPE 2 · REPRISE', (r.origin_address ? '<div>📍 <b>Départ</b> : ' + esc(adrNet(r.origin_address)) + '</div>' : '') + (r.destination_address ? '<div>🏁 <b>Arrivée</b> : ' + esc(adrNet(r.destination_address)) + '</div>' : '') + (t ? '<div>🚗 Véhicule repris : ' + esc(t) + '</div>' : '') + (r.total_km ? '<div>🛣 Total de la mission : <b>' + esc(r.total_km) + ' km</b>' + (r.total_duree ? ' · ' + esc(r.total_duree) : '') + '</div>' : '')); } catch (_) { return ''; } };
   const titreVeh = m => { try { const v = vehObj(m); return v && typeof v === 'object' && v.reprise ? 'VÉHICULE À LIVRER' : 'VÉHICULE'; } catch (_) { return 'VÉHICULE'; } };
   const vehHtml = m => {
     const { type, en } = vehInfo(m); const n = en.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); let ic = '⛽', cl = 'inc';
@@ -783,7 +785,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   // Déclenché par le GPS / Waze / Google Maps, ou en secours (GPS muet) quand l'heure de livraison estimée est passée.
   const suiviReporte = new Map();
   function suiviDemander(m, t, ts, source) {
-    if (arriveeGps(t.key) || (suiviReporte.get(t.key) || 0) > Date.now()) return;
+    if (arriveeGps(t.key)) return;
+    // 20/11/2026 : plus aucune question « Êtes-vous bien arrivé ? ». Dès que le GPS (ou Waze / Google Maps) constate la présence sur place,
+    // l'arrivée est enregistrée tout de suite avec l'heure réelle constatée. L'ancien secours (heure prévue dépassée) ne demandait rien de fiable : supprimé.
+    if (source !== 'secours') { suiviArrivee(m, t, ts); return; }
+    return;
+    if ((suiviReporte.get(t.key) || 0) > Date.now()) return;
     if (document.getElementById('cpArrivee')) return;
     suiviReporte.set(t.key, Date.now() + 10 * 60000);
     const d = G.coordonnees(m, 'destination') || {}, lieu = m.to_city || d.ville || m.destination_address || 'la livraison';
@@ -2146,7 +2153,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       ${blocKm(m, false)}
       <button id="btnVol" class="btnVert" type="button" aria-label="Visualisation trajet voiture">🚗 Visualisation trajet voiture</button>
       <button id="btnTransportsMission" class="second" type="button" style="width:100%;margin-top:8px;background:#cdeaff;color:#123d72;border:1px solid #70b7eb;font-weight:600" aria-label="Visualisation des transports aller, jonction mission et retour">🚌 Visualisation des transports<span style="display:block;font-size:.9em;font-weight:500;margin-top:3px">Aller / Jonction mission / Retour</span></button>
-      ${bk('bkLieu', 'LIEUX', `<div>📍 <b>Départ</b> : ${esc(adresse(m, 'origin'))}</div><div id="gpsO">${mentionGps(m, 'origin')}</div>${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}<div style="margin-top:8px">🏁 <b>Arrivée</b> : ${esc(adresse(m, 'destination'))}</div><div id="gpsD">${mentionGps(m, 'destination')}</div>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}`)}
+      ${bk('bkLieu', 'LIEUX', `<div>📍 <b>Départ</b> : ${esc(adresse(m, 'origin'))}</div><div id="gpsO">${mentionGps(m, 'origin')}</div>${(m.origin_address || m.from_city) ? `<a href="${esc(itin(adrNet(m.origin_address) || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}<div style="margin-top:8px">🏁 <b>Arrivée</b> : ${esc(adresse(m, 'destination'))}</div><div id="gpsD">${mentionGps(m, 'destination')}</div>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(adrNet(m.destination_address) || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}`)}
       ${mailBloc(m)}
       ${blocRenta(m, r, frais, dv, depuis)}
       ${m.kind === 'acceptee' ? blocHistorique(m) : ''}

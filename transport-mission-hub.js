@@ -1835,7 +1835,7 @@ function tadFor(task){const pts=[pt(task?.from),pt(task?.to)].filter(Boolean);
  return TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));}
 function viewFingerprint(v){
  const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters].join(','):'';
- return [v.done?1:0,v.total,v.longShown,(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).slice(0,8).map(one).join(';'),v.others&&v.others.length,
+ return [v.done?1:0,v.total,v.longShown,(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).map(one).join(';'),v.others&&v.others.length,
   Object.entries(v.errors||{}).map(([k,e])=>k+e).join('|'),Object.entries(v.received||{}).join('|')].join('#');
 }
 function render(host,v){
@@ -1866,10 +1866,11 @@ function render(host,v){
  // Si le convoyeur la referme, une mise à jour réseau ne doit pas la rouvrir.
  const openInitial=false;   // 17/11/2026 : aucune carte n'est ouverte d'office, c'est le convoyeur qui ouvre celle qu'il veut
  if(openInitial)host.dataset.cpInitialCardOpened='true';
- for(const [i,p] of v.picks.entries())addCard(host,p.journey,p.labels,openInitial&&i===0);
- if(v.others.length){const more=el(doc,'details','cp-hub-more');more.appendChild(el(doc,'summary',null,'Autres propositions ('+Math.min(v.others.length,8)+' affichées'+(v.others.length>8?' sur '+v.others.length:'')+')'));
-  for(const j of v.others.slice(0,8))addCard(more,j,null);
-  more.open=moreOpen;host.appendChild(more);}
+ // 20/11/2026 : une seule liste, tous les trajets (choix recommandés + autres propositions) par heure de départ croissante,
+ // puis heure d'arrivée. Plus d'étiquettes « Moins cher / Meilleur compromis / Plus rapide » : les tarifs réels n'existent plus, tous les horaires trouvés sont listés.
+ const timeline=[...(v.picks||[]).map(p=>({journey:p.journey,labels:null})),...(v.others||[]).map(j=>({journey:j,labels:null}))]
+  .sort((x,y)=>(ms(x.journey.departure)||0)-(ms(y.journey.departure)||0)||(ms(x.journey.arrival)||0)-(ms(y.journey.arrival)||0));
+ for(const [i,p] of timeline.entries())addCard(host,p.journey,p.labels,openInitial&&i===0);
  // Ne montrer que les moteurs effectivement interrogés sur la direction choisie.
  // Les réseaux hors zone restent dans le diagnostic interne, pas dans la fiche mission.
  const errs=Object.entries(v.errors);
@@ -1888,10 +1889,8 @@ function render(host,v){
   const coachNames=['BlaBlaCar Bus GTFS','FlixBus GTFS'].filter(name=>
    Object.prototype.hasOwnProperty.call(v.received||{},name)||
    Object.prototype.hasOwnProperty.call(v.errors||{},name));
-  // Le rendu limite « Autres propositions » aux huit premières cartes.
-  // Le compteur doit refléter les cartes réellement présentes, pas toutes
-  // les propositions internes retenues par le classement.
-  const visibleJourneys=[...(v.picks||[]).map(p=>p.journey),...(v.others||[]).slice(0,8)];
+  // Toutes les propositions sont affichées (liste unique triée par heure de départ).
+  const visibleJourneys=[...(v.picks||[]).map(p=>p.journey),...(v.others||[])];
   const coachRows=coachNames.map(name=>{
    const operator=name.replace(' GTFS','');
    const visible=visibleJourneys.filter(j=>

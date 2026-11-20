@@ -102,7 +102,7 @@ test('BlaBlaCar Bus et FlixBus : diagnostic uniquement si moteur consulté',()=>
  assert.match(hub,/count===0\?'aucun horaire reçu'/);
  assert.match(hub,/entry\.visible\+' proposition\(s\) affichée\(s\) \/ '\+count\+' horaire\(s\) reçu\(s\)'/);
  assert.match(hub,/const visibleJourneys=/);
- assert.match(hub,/\(v\.others\|\|\[\]\)\.slice\(0,8\)/);
+ assert.match(hub,/\.\.\.\(v\.others\|\|\[\]\)\]/);
  assert.match(hub,/BlaBlaCar Bus GTFS/);
  assert.match(hub,/FlixBus GTFS/);
  assert.match(hub,/Moteur non interrogé/);
@@ -115,10 +115,10 @@ test('cars : horaires reçus mais aucune proposition retenue, diagnostic explici
  assert.match(hub,/les horaires reçus ne constituent pas un trajet validé pour cette mission/);
 });
 
-test('autres propositions : annoncer le nombre de cartes réellement rendues',()=>{
- assert.match(hub,/Math\.min\(v\.others\.length,8\)/);
- assert.match(hub,/v\.others\.length>8\?' sur '/);
- assert.match(hub,/v\.others\.slice\(0,8\)/);
+test('liste unique : toutes les propositions, triées par heure de départ croissante (Aller, Jonction, Retour)',()=>{
+ assert.match(hub,/const timeline=/);
+ assert.match(hub,/ms\(x\.journey\.departure\)\|\|0\)-\(ms\(y\.journey\.departure\)/);
+ assert.doesNotMatch(hub,/v\.others\.slice\(0,8\)/);
 });
 
 test('mission sur plusieurs jours : un onglet par jour avec Aller et Retour cherchés ce jour-là',()=>{
