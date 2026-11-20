@@ -3,6 +3,7 @@ R='data/gtfs/'
 man=json.load(open(R+'manifest.json'))
 names={}
 for k,v in man['networks'].items(): names[v['file']]=(v['network'],v.get('origin',''))
+hub=open('transport-mission-hub.js',encoding='utf-8').read()
 out=[]
 for f in sorted(glob.glob(R+'*.zip')):
     b=os.path.basename(f)
@@ -27,7 +28,7 @@ for f in sorted(glob.glob(R+'*.zip')):
         la.sort();lo.sort();n=len(la)
         out.append(dict(file=b,name=nm,lat=round(statistics.median(la),4),lon=round(statistics.median(lo),4),
           b=[round(la[int(n*.03)],3),round(lo[int(n*.03)],3),round(la[int(n*.97)],3),round(lo[int(n*.97)],3)],
-          stops=len(st),end=end,mb=round(os.path.getsize(f)/1e6,1)))
+          stops=len(st),end=end,moteur=(b in hub or b.startswith('national-')),mb=round(os.path.getsize(f)/1e6,1)))
     except Exception as e: out.append(dict(file=b,err=str(e)[:60]))
 json.dump(out,open(sys.argv[1] if len(sys.argv)>1 else 'scan.json','w'),ensure_ascii=False)
 print(len(out),[o for o in out if 'err' in o][:5])

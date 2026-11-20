@@ -57,12 +57,12 @@ for(const o of L){const k=kind(o);if(k!='urb'){h+='<rect x="'+X(o.b[1]).toFixed(
 L.forEach((o,i)=>{const k=o.end&&o.end<lim?'warn':null;h+='<circle class="dot" data-i="'+i+'" cx="'+X(o.lon).toFixed(1)+'" cy="'+Y(o.lat).toFixed(1)+'" r="'+(kind(o)=='urb'?4.5:6)+'" fill="'+(k?'var(--warn)':col[kind(o)])+'" stroke="var(--card)" stroke-width="1.5"><title>'+o.name+'</title></circle>'});
 document.getElementById('svg').innerHTML=h;
 const info=document.getElementById('info');
-const show=i=>{const o=L[i];info.innerHTML='<b>'+o.name+'</b><br><span class="sub">'+({urb:'Réseau urbain / local',car:'Cars régionaux',nat:'Ligne nationale'})[kind(o)]+'</span><br>Arrêts : '+o.stops+' · Fichier : '+o.mb+' Mo<br>Horaires jusqu\'au <b class="'+(o.end&&o.end<lim?'warn':'')+'">'+fmt(o.end)+'</b>'};
+const show=i=>{const o=L[i];info.innerHTML='<b>'+o.name+'</b><br><span class="sub">'+({urb:'Réseau urbain / local',car:'Cars régionaux',nat:'Ligne nationale'})[kind(o)]+'</span><br>Moteurs de l\'onglet Transports : <b class="'+(o.moteur===false?'bad':'ok')+'">'+(o.moteur===false?'NON branché':'branché')+'</b><br>Arrêts : '+o.stops+' · Fichier : '+o.mb+' Mo<br>Horaires jusqu\'au <b class="'+(o.end&&o.end<lim?'warn':'')+'">'+fmt(o.end)+'</b>'};
 document.querySelectorAll('.dot').forEach(c=>c.addEventListener('click',()=>show(+c.dataset.i)));
 const lst=document.getElementById('list');
 L.map((o,i)=>[o,i]).sort((a,b)=>a[0].name.localeCompare(b[0].name,'fr')).forEach(([o,i])=>{const d=document.createElement('div');d.innerHTML='<span>'+o.name+'</span><span class="'+(o.end&&o.end<lim?'warn':'')+'">'+fmt(o.end)+'</span>';d.onclick=()=>show(i);lst.append(d)});
 const n=k=>L.filter(o=>kind(o)==k).length,w=L.filter(o=>o.end&&o.end<lim).length;
-document.getElementById('kpi').innerHTML=[[L.length,'fichiers horaires'],[n('urb'),'réseaux urbains / locaux'],[n('car'),'réseaux de cars régionaux'],[n('nat'),'lignes nationales'],[w,'calendriers qui finissent bientôt']].map(a=>'<div class="k"><b>'+a[0]+'</b><span>'+a[1]+'</span></div>').join('');
+document.getElementById('kpi').innerHTML=[[L.length,'fichiers horaires'],[n('urb'),'réseaux urbains / locaux'],[n('car'),'réseaux de cars régionaux'],[n('nat'),'lignes nationales'],[L.filter(o=>o.moteur!==false).length,'branchés aux moteurs Transports'],[w,'calendriers qui finissent bientôt']].map(a=>'<div class="k"><b>'+a[0]+'</b><span>'+a[1]+'</span></div>').join('');
 document.getElementById('wf').innerHTML='<tr><th>Mise à jour</th><th>Dernier passage</th><th>État</th></tr>'+WF.map(r=>'<tr><td>'+r[0]+'</td><td>'+r[1]+'</td><td class="'+(r[2]=='OK'?'ok':'bad')+'">'+r[2]+'</td></tr>').join('');
 document.getElementById('watch').innerHTML='<ul>'+[...ERR.map(e=>'<li class="bad">'+e+'</li>'),...L.filter(o=>o.end&&o.end<lim).map(o=>'<li class="warn">'+o.name+' : horaires jusqu\'au '+fmt(o.end)+'</li>')].join('')+'</ul>';
 </script>
