@@ -1002,7 +1002,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           Number.isFinite(Number(y51Gps.lat)) && Number.isFinite(Number(y51Gps.lng)) ?
           ' data-y51-lat="' + Number(y51Gps.lat) + '" data-y51-lng="' + Number(y51Gps.lng) + '"' : '';
         const y51ExactEysseric = /1\s*,?\s*rue\s+(?:du\s+)?lieutenant\s+gustave\s+eysseric/i.test(y51Origin);
-        const y51Reference = !chain.next && !chain.blocked && /albertville/i.test([m.to_city, m.destination_city, m.to_address, m.destination_address].filter(Boolean).join(' ')) ? '<div class="doux">🚌 Y51 Albertville → Annecy : <a href="https://hawk.hanoverdisplays.com/y51/public/" target="_blank" rel="noopener noreferrer">suivi officiel des départs</a> · <a href="https://annecy.transdev.com/line/ligne-y51/" target="_blank" rel="noopener noreferrer">horaires de ligne</a> · <a href="https://transport.data.gouv.fr/datasets/reseau-interurbain-cars-region-haute-savoie-74" target="_blank" rel="noopener noreferrer">données officielles GTFS Haute-Savoie</a>. Horaires théoriques : vérifiez la date de mise à jour, l’arrêt et les perturbations avant le départ. <a href="https://www.google.com/maps/dir/?api=1&amp;destination=%C3%89cole%20Saint-Fran%C3%A7ois%2C%20Albertville&amp;travelmode=walking" target="_blank" rel="noopener noreferrer">Itinéraire piéton vers École Saint-François</a> (départ à préciser dans Maps).</div>' : '';
+        const y51Reference = /albertville/i.test([m.to_city, m.destination_city, m.to_address, m.destination_address].filter(Boolean).join(' ')) ? '<div class="doux">🚌 Y51 Albertville → Annecy : <a href="https://hawk.hanoverdisplays.com/y51/public/" target="_blank" rel="noopener noreferrer">suivi officiel des départs</a> · <a href="https://annecy.transdev.com/line/ligne-y51/" target="_blank" rel="noopener noreferrer">horaires de ligne</a> · <a href="https://transport.data.gouv.fr/datasets/reseau-interurbain-cars-region-haute-savoie-74" target="_blank" rel="noopener noreferrer">données officielles GTFS Haute-Savoie</a>. Horaires théoriques : vérifiez la date de mise à jour, l’arrêt et les perturbations avant le départ. <a href="https://www.google.com/maps/dir/?api=1&amp;destination=%C3%89cole%20Saint-Fran%C3%A7ois%2C%20Albertville&amp;travelmode=walking" target="_blank" rel="noopener noreferrer">Itinéraire piéton vers École Saint-François</a> (départ à préciser dans Maps).</div>' : '';
         const y51TrafficDate = x.fin && Number.isFinite(x.fin.t) ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(x.fin.t)) : '';
         const y51TrafficAlert = y51Reference && y51TrafficDate >= '2026-10-22' && y51TrafficDate <= '2026-10-30'
           ? '<div class="doux">⚠️ Y51 : du 22 au 30 octobre 2026, l’arrêt Ugine – Rue Derobert n’est pas desservi (report vers Ugine – Les Fontaines). Les express travaux ont aussi été modifiés à partir du 19 octobre. <a href="https://annecy.transdev.com/trafic/" target="_blank" rel="noopener noreferrer">Vérifier les alertes officielles</a>. Transport non confirmé — vérifiez vous-même.</div>'
@@ -1442,6 +1442,72 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           });
           card.appendChild(y51Button);
           card.appendChild(y51Result);
+          // V280 : fiche « tous les horaires de la journée » Y51 (École Saint-François → Annecy gare routière), sans filtre sur la fin de mission.
+          const y51Jour = document.createElement('button');
+          y51Jour.type = 'button';
+          y51Jour.className = 'second';
+          y51Jour.style.marginTop = '8px';
+          y51Jour.textContent = '🕒 Tous les horaires Y51 du ' + requestedDate;
+          const y51JourRes = document.createElement('div');
+          y51JourRes.className = 'doux';
+          y51JourRes.setAttribute('aria-live', 'polite');
+          y51Jour.addEventListener('click', async () => {
+            y51Jour.disabled = true;
+            y51JourRes.textContent = 'Chargement des horaires Y51…';
+            try {
+              const rep = await window.fetch('data/interurban/y51-gtfs-source.json', { cache: 'no-cache' });
+              if (!rep.ok) throw new Error('GTFS unavailable');
+              const dat = await rep.json();
+              const pl = window.CPSibraPlanner;
+              if (!pl || typeof pl.datedInterurbanRides !== 'function' || !Array.isArray(dat.routes) || !Array.isArray(dat.stops)) throw new Error('Invalid Y51 data');
+              const nz = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+              const lb = st => nz([st.stop_name, st.stop_desc, st.stop_code, st.stop_id].filter(Boolean).join(' '));
+              const montees = dat.stops.filter(st => /ecole[\s-]*st[\s-]*francois|ecole[\s-]*saint[\s-]*francois/.test(lb(st)));
+              const annecyArr = dat.stops.filter(st => (/annecy/.test(lb(st)) && /gare|routiere/.test(lb(st))) || (window.CPTY51Fares && window.CPTY51Fares.importedStopMatches && window.CPTY51Fares.importedStopMatches(st, 'Annecy', 'Gare Routiere')));
+              const toutes = [];
+              for (const route of dat.routes) for (const de of montees) for (const vers of annecyArr) {
+                toutes.push(...pl.datedInterurbanRides(dat, requestedDate, String(route.route_id), String(de.stop_id), String(vers.stop_id)));
+              }
+              const uniques = [...new Map(toutes.map(r => [r.trip_id + ':' + r.departureSeconds, r])).values()].sort((a, b) => a.departureSeconds - b.departureSeconds);
+              const hm = sec => String(Math.floor(sec / 3600) % 24).padStart(2, '0') + ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0');
+              y51JourRes.textContent = '';
+              const boite = document.createElement('div');
+              boite.className = 'boiteC';
+              const ent = document.createElement('div');
+              ent.className = 'entC';
+              ent.textContent = '🚌 Y51 · tous les départs du ' + requestedDate + ' (' + uniques.length + ')';
+              boite.appendChild(ent);
+              const corpsJ = document.createElement('div');
+              corpsJ.style.padding = '2px 10px 6px';
+              boite.appendChild(corpsJ);
+              if (!uniques.length) {
+                const vide = document.createElement('p');
+                vide.className = 'doux';
+                vide.textContent = 'Aucune course Y51 trouvée ce jour entre École Saint-François et Annecy gare routière (données GTFS officielles).';
+                corpsJ.appendChild(vide);
+              }
+              uniques.forEach(r => {
+                const c = document.createElement('div');
+                window.CPEtapeStyle && window.CPEtapeStyle(c, 'Y51');
+                c.style.padding = '6px 12px';
+                c.style.margin = '6px 0';
+                c.style.fontWeight = '800';
+                c.textContent = '🚌 Y51 · ' + hm(r.departureSeconds) + ' → ' + hm(r.arrivalSeconds);
+                corpsJ.appendChild(c);
+              });
+              y51JourRes.appendChild(boite);
+              const note = document.createElement('p');
+              note.className = 'doux';
+              note.textContent = 'Horaires théoriques officiels (GTFS Haute-Savoie). Circulation réelle non vérifiée. Transport non confirmé — vérifiez vous-même.';
+              y51JourRes.appendChild(note);
+            } catch (_) {
+              y51JourRes.textContent = 'Horaires officiels Y51 indisponibles pour cette date. Transport non confirmé — vérifiez vous-même.';
+            } finally {
+              y51Jour.disabled = false;
+            }
+          });
+          card.appendChild(y51Jour);
+          card.appendChild(y51JourRes);
         }
         button.textContent = '🚌 Consulter les horaires SIBRA du ' + requestedDate;
         const result = document.createElement('div');
