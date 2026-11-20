@@ -62,7 +62,7 @@
   const VERSION_APP = 'V278 (2.0.128)';
 
   // V278 : style commun des étapes de trajet (bande colorée selon la ligne, gris pour marche/attente) — mise en forme seule, texte inchangé.
-  window.CPEtapeStyle = (el, nom) => { try { const n = String(nom || 'Transport'); let h = 7; for (const c of n) h = (h * 31 + c.charCodeAt(0)) % 997; const marche = /marche|attente|correspondance/i.test(n); el.style.borderLeft = '5px solid ' + (marche ? '#7a8190' : 'hsl(' + ((h * 137) % 360) + ',66%,45%)'); el.style.padding = '6px 10px'; el.style.margin = '6px 0'; el.style.borderRadius = '8px'; el.style.background = 'rgba(127,127,127,.10)'; el.style.listStylePosition = 'inside'; } catch (_) {} };
+  window.CPEtapeStyle = (el, nom) => { try { const n = String(nom || 'Transport'); const marche = /marche|attente|correspondance/i.test(n); let h = 7; for (const c of n) h = (h * 31 + c.charCodeAt(0)) % 997; el.classList.add('etapeC'); if (marche) el.classList.add('marche'); else el.style.setProperty('--lh', String((h * 137) % 360)); } catch (_) {} };
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
@@ -1238,36 +1238,29 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
                 titre.textContent = 'École Saint-François → Annecy gare routière :';
                 y51Result.appendChild(titre);
                 const liste = document.createElement('div');
-                liste.style.cssText = 'margin:0 0 8px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,200,60,.35);background:#1a1d2b;color:#f3f1ea';
+                liste.className = 'boiteC';
                 const entete = document.createElement('div');
-                entete.style.cssText = 'padding:8px 12px;background:linear-gradient(90deg,#0b6e8a,#1b4f9c);color:#fff;font-weight:800';
+                entete.className = 'entC';
                 entete.textContent = '🚌 Prochains Y51 vers Annecy';
                 liste.appendChild(entete);
                 const corps = document.createElement('div');
-                corps.style.padding = '6px 12px';
+                corps.style.padding = '2px 10px 6px';
                 liste.appendChild(corps);
                 let tarifUnique = '';
                 selectedRides.forEach((ride, i) => {
                   if (!tarifUnique) tarifUnique = fareForRide(ride);
                   const statut = boardingChecks[i] || 'marche non vérifiée';
                   const bon = /compatible/.test(statut), trop = /trop proche/.test(statut);
-                  const coul = bon ? '#1e9e5a' : (trop ? '#d9822b' : '#7a8190');
-                  const ligne = document.createElement('div');
-                  ligne.style.cssText = 'margin:6px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap';
-                  const pastille = document.createElement('span');
-                  pastille.style.cssText = 'display:inline-block;min-width:34px;text-align:center;padding:3px 10px;border-radius:10px;background:#c2410c;color:#fff;font-weight:800;box-shadow:0 1px 4px rgba(0,0,0,.4)';
-                  pastille.textContent = 'Y51';
-                  const heure = document.createElement('b');
-                  heure.style.cssText = 'font-size:1.08em;font-variant-numeric:tabular-nums';
-                  heure.textContent = clock(ride.departureSeconds) + ' → ' + clock(ride.arrivalSeconds);
-                  const etiquette = document.createElement('span');
-                  etiquette.style.cssText = 'padding:2px 8px;border-radius:7px;background:rgba(255,255,255,.1);border-left:4px solid ' + coul + ';font-size:.92em';
-                  etiquette.textContent = (bon ? '✅ ' : (trop ? '⚠️ ' : '❔ ')) + statut;
-                  const attente = document.createElement('span');
-                  attente.style.opacity = '.75';
-                  attente.textContent = Math.floor((ride.departureSeconds - earliestY51) / 60) + ' min après la fin de mission';
-                  ligne.append(pastille, heure, etiquette, attente);
-                  corps.appendChild(ligne);
+                  const carte = document.createElement('div');
+                  window.CPEtapeStyle && window.CPEtapeStyle(carte, 'Y51');
+                  const titre = document.createElement('div');
+                  titre.style.fontWeight = '800';
+                  titre.textContent = '🚌 Y51 · ' + clock(ride.departureSeconds) + ' → ' + clock(ride.arrivalSeconds);
+                  const detail = document.createElement('div');
+                  detail.textContent = (bon ? '✅ ' : (trop ? '⚠️ ' : '❔ ')) + statut + ' · ' +
+                    Math.floor((ride.departureSeconds - earliestY51) / 60) + ' min après la fin de mission';
+                  carte.append(titre, detail);
+                  corps.appendChild(carte);
                 });
                 y51Result.appendChild(liste);
                 if (tarifUnique) {
@@ -1462,9 +1455,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           const tripById = new Map(d.trips.map(t => [String(t[0]), t]));
           const short = rid => { const r = routeById.get(String(rid)); return r ? String(r[1] || r[0]) : String(rid); };
           const longName = rid => { const r = routeById.get(String(rid)); return r ? String(r[2] || '') : ''; };
-          const chip = (t, color) => '<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border-radius:7px;background:rgba(255,255,255,.12);border-left:4px solid ' + color + ';font-weight:700;font-variant-numeric:tabular-nums">' + E(t) + '</span>';
-          const box = (title, inner) => '<div style="margin:8px 0;border-radius:12px;overflow:hidden;border:1px solid rgba(255,200,60,.35);background:#1a1d2b;color:#f3f1ea">' +
-            '<div style="padding:8px 12px;background:linear-gradient(90deg,#0b6e8a,#1b4f9c);color:#fff;font-weight:800">' + title + '</div>' +
+          const chip = (t, color) => '<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;border-radius:7px;background:rgba(127,127,127,.2);border-left:4px solid ' + color + ';font-weight:700;font-variant-numeric:tabular-nums">' + E(t) + '</span>';
+          const box = (title, inner) => '<div class="boiteC">' +
+            '<div class="entC">' + title + '</div>' +
             '<div style="padding:8px 12px">' + inner + '</div></div>';
           const dateFr = String(ctx.date).split('-').reverse().join('/');
           const from = Number.isFinite(ctx.earliest) ? ctx.earliest : 0;
