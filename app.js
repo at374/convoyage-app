@@ -2136,8 +2136,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             const first=d===pDay0,last=d===pDay1;
             const firstStart=Number.isFinite(Date.parse(origT.pickup_start||''))?new Date(Date.parse(origT.pickup_start)).toISOString():pickupDate;
             const startIso=first?firstStart:parisIso(d,8,0);
-            const endIso=last&&(origT.pickup_end&&Number.isFinite(Date.parse(origT.pickup_end)))?new Date(Date.parse(origT.pickup_end)).toISOString():siteEnd(d);
+            const endIsRealPickupEnd=last&&origT.pickup_end&&Number.isFinite(Date.parse(origT.pickup_end));
+            const endIso=endIsRealPickupEnd?new Date(Date.parse(origT.pickup_end)).toISOString():siteEnd(d);
+            // Jour intermédiaire (ou dernier jour sans pickup_end exploitable) : l'heure limite n'est pas celle
+            // annoncée par la plateforme mais une estimation (agence/parc supposé fermé) — à signaler dans l'UI (20/11/2026).
             tasks.push({...allerBase,label:d===pPlan?'Aller':'Aller@'+d,earliestDeparture:first?undefined:parisIso(d,4,0),latestArrival:endIso,siteCloseMinutes:closeFor(last&&origT.pickup_end?endIso:null),
+              deadlineEstimated:!endIsRealPickupEnd,
               windowKind:'arrival',windowStartMs:Date.parse(startIso),windowEndMs:Date.parse(endIso)-securityMarginMin*60000});
           }
         }else if(pickupDate)tasks.push({...allerBase,label:'Aller',latestArrival:pickupEndIso||pickupDate,siteCloseMinutes:closeFor(pickupEndIso||pickupDate),...(pickupEndIso?{windowKind:'arrival',windowStartMs:Date.parse(pickupDate),windowEndMs:Date.parse(pickupEndIso)-securityMarginMin*60000}:{})});

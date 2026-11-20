@@ -614,7 +614,12 @@ function assess(j,task,fareFor){
  // « non confirmé » avec le même avertissement qu'un trajet impossible (constaté en navigateur le 14/11/2026).
  const scheduled=!feasible&&reasons.every(r=>ADVISORY.test(r));
  return {...j,scheduled,departure:Number.isFinite(dep)?new Date(dep).toISOString():null,arrival:Number.isFinite(arr)?new Date(arr).toISOString():null,
-  durationMinutes:chrono?Math.ceil((arr-dep)/60000):null,slackMinutes:slack,marginMinutes:margin,price,reasons,delays,
+  durationMinutes:chrono?Math.ceil((arr-dep)/60000):null,slackMinutes:slack,marginMinutes:margin,
+  // 20/11/2026 : pour une fenêtre de prise en charge/livraison étalée sur plusieurs jours, un jour intermédiaire
+  // utilise une heure limite ESTIMÉE (agence/parc supposé fermé, jamais après 19:00), pas l'heure réelle de fin de
+  // fenêtre annoncée par la plateforme. Garder trace de cette estimation pour ne pas afficher une marge comme si
+  // elle était calculée par rapport à l'horaire officiel.
+  deadlineEstimated:task.deadlineEstimated===true,deadlineMs:Number.isFinite(deadline)?deadline:null,price,reasons,delays,
   transfers:Math.max(0,legs.filter(l=>!isFoot(l)).length-1),
   walkMeters:legs.filter(l=>l.kind==='walk').reduce((s,l)=>s+(l.distanceMeters||0),0),
   feasible,status:feasible?'Réalisable':scheduled?'Horaire programmé — à confirmer le jour J':'Transport non confirmé',
@@ -1726,7 +1731,7 @@ function card(doc,j,labels,expanded=false){
   link.title='Acheter le billet ou consulter le prix : '+t.label;link.setAttribute('aria-label','Acheter le billet sur '+t.label);
   if(link.addEventListener)link.addEventListener('click',e=>e.stopPropagation());s.appendChild(link);}
  s.appendChild(el(doc,'span','cp-hub-modes',j.legs.map(l=>(ICON[l.mode]||'🚏')+(l.kind==='walk'?' '+durationText(Math.max(1,Math.round((l.durationSeconds||0)/60))):(l.line?' '+l.line:''))).join(' › ')));
- s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':j.scheduled?'🕒 ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · avance '+signedDurationText(j.slackMinutes)+' (marge '+durationText(j.marginMinutes)+')':'')));
+ s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':j.scheduled?'🕒 ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · '+(j.deadlineEstimated?'avance avant fermeture estimée de l’agence ('+clock(j.deadlineMs)+')':'avance')+' '+signedDurationText(j.slackMinutes)+' (marge '+durationText(j.marginMinutes)+')':'')));
  if(!j.feasible)s.appendChild(el(doc,'small','cp-hub-reason',j.statusDetail));
  c.appendChild(s);
  // Le détail et les polylignes SVG sont construits uniquement à la première ouverture.
