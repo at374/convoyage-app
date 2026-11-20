@@ -722,3 +722,10 @@ html:root[data-style="jour"]{--lg-s:72%;--lg-l:34%;--lg-rot:0}
 .etapeC ol,.etapeC ul{margin:0;padding:0}
 .boiteC{margin:8px 0;border-radius:14px;overflow:hidden;border:1px solid var(--ligne);background:var(--carte);color:var(--texte);box-shadow:var(--ombre)}
 .boiteC>.entC{padding:8px 12px;background:var(--barreFond,var(--barre));color:#fff;font-weight:800}
+
+/* 20/11/2026 : trajets de transport (cp-hub) en cartes pleines style C, couleurs liées à la palette */
+.cp-hub-legs{list-style:none;padding-left:0;gap:10px}
+.cp-hub-legs>li{--c:hsl(calc(var(--lh,200) + var(--lg-rot)),var(--lg-s),var(--lg-l));background:var(--c);color:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,.3),0 0 10px var(--lueur,transparent)}
+.cp-hub-legs>li.walk{background:color-mix(in srgb,var(--doux) 35%,var(--carte));color:var(--texte);box-shadow:none}
+.cp-hub-legs>li small{color:inherit;opacity:.85}
+.cp-hub-legs>li>strong{font-size:1.05em}
