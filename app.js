@@ -692,18 +692,23 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     const dispo = etat.missions.filter(estDisponible);
     const puces = (EDITION.plateformes.length > 1 ? ['toutes'].concat(EDITION.plateformes) : []).map(p => `<button class="puce${etat.filtre === p ? ' actif' : ''}" data-filtre="${p}">${p === 'toutes' ? 'Toutes' : esc(PLATS[p])} ${p === 'toutes' ? dispo.length : dispo.filter(m => m.platform === p).length}</button>`).join('');
     const aVille = etat.zones.some(z => z.type === 'ville');
-    $('ecran').innerHTML = `<div class="puces" role="group" aria-label="Plateformes">${puces}<div style="grid-column:1/-1;display:flex;gap:6px"><button class="puce${etat.filtre === 'acceptees' ? ' actif' : ''}" data-filtre="acceptees" style="flex:1">✅ Acceptées ${listeDevis('acceptees').length}</button><button class="puce${etat.filtre === 'devis' ? ' actif' : ''}" data-filtre="devis" style="flex:1">📝 Devis envoyés ${listeDevis('devis').length}</button></div></div>
+    const rapAct = (['acceptees', 'devis'].includes(etat.filtre) ? 1 : 0) + ((etat.plus || {}).dateDeb ? 1 : 0) + ((etat.plus || {}).dateFin ? 1 : 0) + (etat.cote && etat.cote !== 'tous' ? 1 : 0) + (etat.rayon > 0 ? 1 : 0) + (etat.posMax > 0 ? 1 : 0);
+    $('ecran').innerHTML = `<div class="puces" role="group" aria-label="Plateformes">${puces}</div>
       <div class="filtres"><div class="recherche"><input id="recherche" type="search" placeholder="Ville, département ou région (3 lettres)" value="${esc(etat.recherche)}" aria-label="Rechercher un lieu" autocomplete="off" aria-autocomplete="list" aria-controls="sugg">
       <div id="sugg" class="sugg" role="listbox" hidden></div></div>
       <select id="tri" aria-label="Trier"><option value="recent">Plus récentes</option><option value="date">Date de départ</option><option value="prix">Prix</option><option value="heure">€/heure</option><option value="proche">Les plus proches de moi</option></select></div>
+      <details class="plusFiltres" id="filtresRapides"${etat.rapidesOuvert ? ' open' : ''}><summary>Filtres : acceptées, devis, dates, lieu, distance, position${rapAct ? ' · <b>' + rapAct + ' actif' + (rapAct > 1 ? 's' : '') + '</b>' : ''}</summary>
+      <div style="display:flex;gap:6px;margin:6px 0"><button class="puce${etat.filtre === 'acceptees' ? ' actif' : ''}" data-filtre="acceptees" style="flex:1">✅ Acceptées ${listeDevis('acceptees').length}</button><button class="puce${etat.filtre === 'devis' ? ' actif' : ''}" data-filtre="devis" style="flex:1">📝 Devis envoyés ${listeDevis('devis').length}</button></div>
       <div class="ligneFiltres"><label>Date début<input id="fDateDeb" type="date" value="${esc((etat.plus || {}).dateDeb || '')}"></label><label>Date fin<input id="fDateFin" type="date" value="${esc((etat.plus || {}).dateFin || '')}"></label></div>
       <div class="ligneFiltres"><select id="cote" aria-label="Lieu cherché">${Object.entries(COTES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
       <select id="rayon" aria-label="Autour de la ville"${aVille ? '' : ' disabled'}><option value="0">Ville exacte</option><option value="20">Max 20 km de la ville</option><option value="50">Max 50 km de la ville</option><option value="100">Max 100 km de la ville</option></select></div>
       <div class="lignePos"><select id="posSource" aria-label="Chercher depuis"><option value="position">Depuis ma position GPS</option><option value="domicile">Depuis mon domicile</option></select><button id="btnPos" class="second" type="button">📍 Ma position</button><select id="posMax" aria-label="Distance maximale depuis ma position"><option value="0">Distance max à vol d’oiseau : sans limite</option>${[20, 50, 100, 150, 200, 300].map(k => `<option value="${k}">Max ${k} km à vol d’oiseau</option>`).join('')}</select><span class="doux" id="posInfo"></span></div>
+      </details>
       ${blocPlusFiltres(dispo)}
       <div class="zones" id="zones"></div>
       ${etat.erreur ? `<p class="erreur">${esc(etat.erreur)}</p>` : ''}<div id="liste"></div>`;
     $('tri').value = etat.tri; $('cote').value = etat.cote; $('rayon').value = String(etat.rayon);
+    { const dr = $('filtresRapides'); if (dr) dr.ontoggle = () => { etat.rapidesOuvert = dr.open; }; }
     for (const b of document.querySelectorAll('[data-filtre]')) b.onclick = () => { etat.filtre = b.dataset.filtre; memoriser(); afficher(); };
     for (const b of document.querySelectorAll('[data-zone]')) b.onclick = () => { etat.zones.splice(Number(b.dataset.zone), 1); memoriser(); afficher(); };
     $('tri').onchange = ev => { etat.tri = ev.target.value; memoriser(); listeMissions(); };
