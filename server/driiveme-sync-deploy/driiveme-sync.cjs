@@ -105,7 +105,16 @@ async function loginDriiveMe(page, email, password) {
     await page.waitForSelector('#email', { state: 'visible', timeout: 30000 });
   } catch (e) {
     const titre = await page.title().catch(() => '?');
-    throw new Error(`formulaire de connexion introuvable (titre page : « ${titre} », url : ${page.url()}) — ${e.message}`);
+    // V3 : diagnostic — vérifié le 20/11/2026 dans un vrai Chrome que #email existe bel et bien et est
+    // visible sans aucune action (pas de bandeau à fermer). Donc si ça échoue ici en tête sans interaction,
+    // c'est soit une détection anti-robot (Cloudflare distingue souvent Chromium headless), soit un souci de
+    // rendu propre à ce conteneur — on journalise de quoi distinguer les deux sans avoir besoin d'un navigateur live.
+    const diag = await page.evaluate(() => ({
+      presentDansLeDom: !!document.querySelector('#email'),
+      aperçuTexte: (document.body && document.body.innerText || '').slice(0, 400),
+      estHeadlessDetecte: navigator.webdriver === true,
+    })).catch((err) => ({ erreurDiag: err.message }));
+    throw new Error(`formulaire de connexion introuvable (titre page : « ${titre} », url : ${page.url()}) — ${e.message} — diagnostic : ${JSON.stringify(diag)}`);
   }
   await page.fill('#email', email);
   await page.fill('#password', password);
