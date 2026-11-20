@@ -159,9 +159,13 @@ FILTERED_MIRROR = [
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/32f30b64-33f7-43bb-9b6f-34c21c2f83a3',
      'bounds': [47.35, -0.70, 47.55, -0.40], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
     # TAO Orléans Métropole : réseau urbain avec tramway (lignes A/B) → même traitement préventif.
+    # 20/11/2026 : horizon réduit 45->15j — l'archive réelle à 45j décompresse stop_times.txt à 100,7 Mo
+    # (~2,24 Mo/j en apparence linéaire), au-delà des 64 Mo maxFileBytes du moteur. Par prudence (le ratio
+    # Mo/j s'est révélé non linéaire sur Rennes à chaque réduction), 15j vise une marge confortable (~34 Mo
+    # en linéaire, encore sous 64 Mo même avec un écart de +70 % comme constaté sur Rennes).
     {'id': 'tao-orleans', 'network': 'TAO (Orléans Métropole)',
      'url': 'https://transport.data.gouv.fr/resources/83751/download',
-     'bounds': [47.80, 1.78, 47.95, 2.05], 'horizon_days': 45, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+     'bounds': [47.80, 1.78, 47.95, 2.05], 'horizon_days': 15, 'slim': True, 'download_limit': 60 * 1024 * 1024},
     # Ametis Amiens : ressource « pour GTFS-RT » (lignes régulières uniquement, sans TAD/scolaire qui alourdiraient
     # sans utilité pour un convoyage).
     {'id': 'ametis-amiens', 'network': 'Ametis (Amiens Métropole)',
