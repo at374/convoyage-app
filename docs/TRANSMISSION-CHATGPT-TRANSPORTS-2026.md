@@ -412,3 +412,24 @@ Prix ajoutés dans `transport-fare-grids.js` (grilles officielles fournies par l
 RTM 2,00 € (1 h) ; Lignes d'Azur 1,70 € (74 min) ; Tisséo 1,90 € (1 h) ; TaM 2,10 € (1 h 30) ; Tango 1,40 € (1 h, valable jusqu'au 31/12/2026) ; Mistral bus 1,40 € (validité inconnue, chaque trajet compté séparément) ; Aix en Bus niveau 2 1,40 € (1 h) ; Palm Bus 1,80 € (59 min) ; Ales'y par zone (zone 1 = 1,10 € / 1 h ; zone 2 ou entre zones = 1,80 € / 1 h 30), zones lues dans `zone_id` du GTFS.
 Règle : jamais de prix sans grille officielle ; un prix unique faux (cas Ales'y zone 2) est pire qu'« à confirmer ».
 Durées affichées en « h min » partout (heures et minutes, y compris la marche).
+
+## Mise à jour du 20/11/2026 — 5 métropoles câblées, deux plafonds GTFS distincts
+
+Cinq grandes métropoles avaient déjà leur extraction GTFS prévue (voire publiée) côté `scripts/build_regional_gtfs.py` mais n'étaient jamais ajoutées à `localNetworks` dans `transport-mission-hub.js` : les fiches mission ne les utilisaient donc jamais réellement. Ajoutées aujourd'hui : **Strasbourg (CTS)**, **Lille (ilévia)**, **Rennes (STAR)**, **Bordeaux (TBM)**. **Nantes (Naolib)** reste volontairement absente (voir ci-dessous).
+
+**Deux plafonds GTFS distincts, à ne pas confondre** :
+- Plafond **build-time** (`MAX_OUT=12 Mo`, zip compressé filtré, `build_regional_gtfs.py`) : contrôle la taille de l'archive publiée.
+- Plafond **runtime** (`maxFileBytes=64 Mo` par fichier décompressé, `maxExpandedBytes=128 Mo` au total, `transport-gtfs-loader.js`) : contrôle la taille une fois le zip décompressé en mémoire par le moteur. Un zip qui passe le premier plafond peut échouer le second, car le texte CSV GTFS compresse très fort (ratios 8 à 18x observés) — `stop_times.txt` est systématiquement le fichier le plus volumineux.
+
+Le ratio Mo/jour de `stop_times.txt` **n'est pas linéaire** avec `horizon_days` (dépend du mélange jours de semaine/week-end capturé dans la fenêtre) : pour Rennes, trois réductions successives ont chacune été invalidées par la mesure réelle suivante (45j→16j→7j→5j, avec un passage à 67,1 Mo encore au-dessus de 64 Mo à 7j alors que l'extrapolation depuis 16j annonçait ~39 Mo). Leçon retenue : ne jamais se fier à une extrapolation, toujours remesurer l'archive réellement reconstruite par le cron avant de valider un `horizon_days`.
+
+`horizon_days` finaux retenus (après mesure réelle de l'archive reconstruite) :
+- Strasbourg (CTS), Lille (ilévia) : horizon par défaut, aucune réduction nécessaire.
+- Rennes (STAR) : **5 jours** (40,9 Mo/64 Mo), après 45→16→7→5.
+- Bordeaux (TBM) : **6 jours** (51,5 Mo/64 Mo), après 45→15→6.
+
+Vérification finale avec `scripts/verifier-moteurs-regionaux.cjs` (moteur réel, pas une simulation) sur 3 jours de test consécutifs : **Rennes 300/300/300 trajets réels**, **Bordeaux 155/103/180 trajets réels**. `transport-coverage.js` mis à jour en conséquence (texte « vérification en attente » remplacé par le résumé de succès).
+
+**Nantes (Naolib) volontairement exclue** : même à horizon réduit à 14 jours, `stop_times.txt` décompresse à 178 Mo (réseau très dense, ~12,7 Mo/jour) — largement au-delà des 64 Mo. Un horizon viable (4-5j) serait trop court pour tenir sans risque entre deux passages du cron hebdomadaire. Pour câbler ce réseau, il faudrait d'abord le redécouper par zone plus fine (ex. centre-ville / lignes tram seules) plutôt que l'emprise actuelle (toute la métropole) — pas fait aujourd'hui, documenté dans `transport-coverage.js`.
+
+Par ailleurs, et sans rapport avec le GTFS régional : la fenêtre générique « plage de jour » (`dayWindowOk` dans `transport-mission-hub.js`) a été étendue sur demande de Laurent — une arrivée est désormais acceptée jusqu'à 23:59 (au lieu de 19:00), le seul garde-fou restant étant le changement de jour calendaire (`dep.day!==arr.day`, toujours rejeté). Ceci est indépendant du plafond GTFS ci-dessus et indépendant de l'heuristique de fermeture d'agence (`siteCloseMinutes`, 17:30-19:00, inchangée).
