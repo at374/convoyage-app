@@ -2,7 +2,7 @@
 
 Généré le 2026-11-20 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**442 / 443 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**445 / 446 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -318,9 +318,9 @@ Généré le 2026-11-20 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | palmbus_cannes (samedi) | palmbus-cannes.zip | 28323 | OK | 2026-11-21 06:00:00 retrouvée (326 départs proposés) |
 | palmbus_cannes (dimanche) | palmbus-cannes.zip | 28323 | OK | 2026-11-22 06:24:00 retrouvée (126 départs proposés) |
 | palmbus_cannes (semaine) | palmbus-cannes.zip | 28323 | OK | 2026-11-23 06:00:00 retrouvée (325 départs proposés) |
-| lignes_azur_nice (samedi) | lignes-azur-nice.zip | 25382 | OK | 2026-11-21 10:10:00 retrouvée (100 départs proposés) |
-| lignes_azur_nice (dimanche) | lignes-azur-nice.zip | 25382 | OK | 2026-11-22 09:35:00 retrouvée (52 départs proposés) |
-| lignes_azur_nice (semaine) | lignes-azur-nice.zip | 25382 | OK | 2026-11-23 10:25:00 retrouvée (72 départs proposés) |
+| lignes_azur_nice (samedi) | lignes-azur-nice.zip | 25189 | OK | 2026-11-21 10:10:00 retrouvée (100 départs proposés) |
+| lignes_azur_nice (dimanche) | lignes-azur-nice.zip | 25189 | OK | 2026-11-22 09:35:00 retrouvée (52 départs proposés) |
+| lignes_azur_nice (semaine) | lignes-azur-nice.zip | 25189 | OK | 2026-11-23 10:25:00 retrouvée (72 départs proposés) |
 | rtm_marseille (samedi) | rtm-marseille.zip | 49767 | OK | 2026-11-21 07:00:00 retrouvée (270 départs proposés) |
 | rtm_marseille (dimanche) | rtm-marseille.zip | 49767 | OK | 2026-11-22 06:30:00 retrouvée (42 départs proposés) |
 | rtm_marseille (semaine) | rtm-marseille.zip | 49767 | OK | 2026-11-23 07:00:00 retrouvée (357 départs proposés) |
@@ -446,6 +446,9 @@ Généré le 2026-11-20 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | tbm_bordeaux (samedi) | tbm-bordeaux.zip | 22487 | OK | 2026-11-21 06:03:01 retrouvée (140 départs proposés) |
 | tbm_bordeaux (dimanche) | tbm-bordeaux.zip | 22487 | OK | 2026-11-22 06:29:01 retrouvée (90 départs proposés) |
 | tbm_bordeaux (semaine) | tbm-bordeaux.zip | 22487 | OK | 2026-11-23 06:07:00 retrouvée (80 départs proposés) |
+| tao_orleans (samedi) | tao-orleans.zip | 13704 | OK | 2026-11-21 06:20:00 retrouvée (140 départs proposés) |
+| tao_orleans (dimanche) | tao-orleans.zip | 13704 | OK | 2026-11-22 07:40:00 retrouvée (68 départs proposés) |
+| tao_orleans (semaine) | tao-orleans.zip | 13704 | OK | 2026-11-23 09:18:00 retrouvée (180 départs proposés) |
 | sncf_ter (samedi) | national-sncf-aura.zip | 9522 | OK | 2026-11-21 11:38:00 retrouvée (12 départs proposés) |
 | sncf_ter (dimanche) | national-sncf-aura.zip | 9522 | OK | 2026-11-22 17:41:00 retrouvée (6 départs proposés) |
 | sncf_ter (semaine) | national-sncf-aura.zip | 9522 | OK | 2026-11-23 11:38:00 retrouvée (26 départs proposés) |
