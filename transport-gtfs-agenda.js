@@ -154,8 +154,12 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
  const {resource,partners}=chooseResources(resourceList,taskList);
  if(!resource)return {dispose,done:Promise.resolve()};
  const eligible=task=>selected(resource,task)||partners.some(r=>crossEnvelopePair(resource,r,task)||selected(r,task));
- const section=doc.createElement('div');section.className='bk';section.setAttribute('data-gtfs-agenda','');
- const heading=doc.createElement('h3');heading.textContent=resource.network+' — horaires aux arrêts';section.appendChild(heading);
+ // V2.42 : <details> replié par défaut au lieu d'un <div> toujours déplié — demandé à l'échelle
+ // nationale (ce moteur sert tous les réseaux, pas seulement Y51/Haute-Savoie) pour ne pas encombrer
+ // l'écran : les horaires ne s'affichent qu'au clic sur le nom du réseau, sans rien changer à la
+ // recherche ni aux vérifications elles-mêmes.
+ const section=doc.createElement('details');section.className='bk';section.setAttribute('data-gtfs-agenda','');
+ const heading=doc.createElement('summary');heading.textContent=resource.network+' — horaires aux arrêts';section.appendChild(heading);
  const sourceStatus=doc.createElement('p');sourceStatus.className='doux';sourceStatus.setAttribute('role','status');
  sourceStatus.textContent='Vérification du flux officiel…';section.appendChild(sourceStatus);
  const source=doc.createElement('a');source.href=resource.url;source.target='_blank';source.rel='noopener noreferrer';
@@ -278,10 +282,13 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      status.textContent=task.label+' : '+(shown.length?shown.length+' horaire(s) aux arrêts, accès à vérifier.':incomplete?'aucun trajet dans les résultats partiels ; recherche incomplète (réseau ou horaires manquants), d’autres horaires peuvent exister.':'aucun trajet direct ou avec une correspondance dans la fenêtre consultée ; cela ne prouve pas l’absence de transport.' )+marginNote+coverageNote+(invalidJourneys?' '+invalidJourneys+' horaire(s) incohérent(s) écarté(s) ; recherche partielle.':'');
      const dateInfo=doc.createElement('p');dateInfo.textContent='Jours de service consultés : '+dates.join(', ');status.appendChild(dateInfo);
      if(truncated||distinct.length>shown.length){const note=doc.createElement('p');note.textContent='Affichage limité : d’autres horaires peuvent exister.';status.appendChild(note);}
+     // V2.42 : une liste à puces (une course par ligne) au lieu d'un <p> par horaire directement
+     // enchaîné dans le bloc de statut — même lisibilité que pour Y51, sans toucher au contenu.
+     const liste=doc.createElement('ul');status.appendChild(liste);
      for(const row of shown){
       let tariff=null,tariffDescription='';
       try{tariff=root.CPTY51Fares;tariffDescription=tariff?.describe(tariff?.reference(row))||'';}catch(_){}
-      const line=doc.createElement('p');
+      const line=doc.createElement('li');
       const safeZone=(()=>{try{new Intl.DateTimeFormat('fr-FR',{timeZone:row.timeZone||resource.timeZone});return row.timeZone||resource.timeZone;}catch(_){return resource.timeZone;}})();
       const format=iso=>new Intl.DateTimeFormat('fr-FR',{timeZone:safeZone,dateStyle:'short',timeStyle:'short'}).format(new Date(iso));
       line.textContent=format(row.departure)+' → '+format(row.arrival)+' · '+(!row.interNetwork&&row.network?row.network+' ':'')+row.line+' · '+
@@ -311,7 +318,7 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
        const walking=doc.createElement('span');walking.textContent=' · Marche : en attente du calcul';line.appendChild(walking);
        walkChecks.push({row,task,element:walking});
       }
-      status.appendChild(line);
+      liste.appendChild(line);
      }
     }catch(error){if(active())status.textContent=task.label+' : recherche indisponible pour ces coordonnées ou horaires. Transport non confirmé — vérifiez vous-même.';}
    }
