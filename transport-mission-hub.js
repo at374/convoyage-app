@@ -706,8 +706,10 @@ function rank(items,task={}){
  // avec plusieurs kilomètres de marche en trop, alors qu'il s'agit du même choix (monter dans CE bus) en moins
  // bon. On ne garde, par course GTFS réellement empruntée en premier, que celle qui arrive le plus tôt (marche
  // totale la plus courte à égalité) ; les versions strictement moins bonnes du même véhicule disparaissent.
- const boardingKey=j=>{const g=j.legs?.[0]?.gtfsRaw;
-  return g&&g.tripId?[String(g.network||j.legs[0].provider||'').trim().toLowerCase(),String(g.tripId),String(g.date||'')].join('|'):null;};
+ // Le premier élément de j.legs est souvent une marche d'approche ajoutée par completeWalks() (de l'adresse
+ // exacte jusqu'à l'arrêt) : c'est le premier véhicule (isFoot==false) qu'il faut identifier, pas legs[0].
+ const boardingKey=j=>{const first=(j.legs||[]).find(l=>!isFoot(l)),g=first?.gtfsRaw;
+  return g&&g.tripId?[String(g.network||first.provider||'').trim().toLowerCase(),String(g.tripId),String(g.date||'')].join('|'):null;};
  const byBoarding=new Map(),unboarded=[];
  for(const j of all){
   const k=boardingKey(j);
