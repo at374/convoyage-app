@@ -868,7 +868,14 @@ function rank(items,task={}){
  // métier. ATTENTION : 40 coupait déjà les départs Y51 Albertville→Annecy de l'après-midi (le tri garde
  // les plus matinaux en premier), régression repérée et corrigée le jour même — ne jamais redescendre ce
  // chiffre sans compter d'abord les trajets réels d'une ligne dense sur une journée complète.
- const MAX_OTHERS=300,othersOverflow=Math.max(0,others.length-MAX_OTHERS);
+ // 21/11/2026 (Laurent : « Y51 après 13h01 s'affiche au début puis disparaît ») : une fois les correspondances
+ // entre réseaux réellement opérationnelles (bug d'identifiant réseau corrigé le même jour), le nombre réel de
+ // candidats pour UNE SEULE relation peut dépasser 300 sur une journée complète (une correspondance distincte
+ // par paire de courses Y51 × Sibra effectivement enchaînable, pas des doublons). Le tri garde les plus
+ // matinaux, donc tout dépassement de 300 coupait déjà l'après-midi en silence. Comme les cartes repliées
+ // dans « Voir plus » ne sont construites qu'à l'ouverture (depuis le 21/11/2026), ce plafond ne coûte plus
+ // rien en affichage : relevé à 1000, large marge au-dessus du cas réel observé.
+ const MAX_OTHERS=1000,othersOverflow=Math.max(0,others.length-MAX_OTHERS);
  return {picks,others:others.slice(0,MAX_OTHERS),othersOverflow,total:all.length};
 }
 
@@ -1396,7 +1403,10 @@ function makeProviders(r,opts={}){
      }
      // 20/11/2026 : demande de Laurent — toutes les correspondances réalisables du jour, pas seulement les
      // 30 meilleures ; garde-fou technique très large (SAFETY_MAX), l'affichage gère la lisibilité.
-     const seen=new Set(),uniq=[],SAFETY_MAX=300;
+     // 21/11/2026 : même règle que MAX_OTHERS dans rank() — 300 coupait déjà l'après-midi d'une relation dense
+     // une fois les correspondances Y51×Sibra réellement enchaînées (une entrée par paire de courses
+     // effectivement correspondante, pas des doublons). Relevé à 1000 pour la même raison.
+     const seen=new Set(),uniq=[],SAFETY_MAX=1000;
      for(const {x} of [...best.values()].sort((a,b)=>Date.parse(a.x.arrival)-Date.parse(b.x.arrival)||Date.parse(a.x.departure)-Date.parse(b.x.departure))){
       const k=String(x.tripId||'')+'|'+x.departure;if(seen.has(k))continue;seen.add(k);uniq.push(x);if(uniq.length>=SAFETY_MAX)break;
      }
