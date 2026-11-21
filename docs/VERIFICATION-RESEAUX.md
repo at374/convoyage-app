@@ -2,7 +2,7 @@
 
 Généré le 2026-11-21 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau, une vraie course est redemandée au moteur de recherche.
 
-**450 / 451 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
+**451 / 452 contrôles réussis (un par réseau et par type de jour : semaine, samedi, dimanche quand le réseau circule).**
 
 | Réseau | Fichier | Courses | Statut | Détail |
 |---|---|---|---|---|
@@ -20,8 +20,9 @@ Généré le 2026-11-21 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | cars_isere (samedi) | cars-region-isere.zip | 3868 | OK | 2026-11-28 10:15:00 retrouvée (18 départs proposés) |
 | cars_savoie (semaine) | cars-region-savoie.zip | 111 | OK | 2026-11-23 07:15:00 retrouvée (2 départs proposés) |
 | cars_savoie (samedi) | cars-region-savoie.zip | 111 | OK | 2026-11-28 07:10:00 retrouvée (6 départs proposés) |
-| cars_haute_savoie (semaine) | cars-region-haute-savoie.zip | 1149 | OK | 2026-11-23 11:45:00 retrouvée (9 départs proposés) |
-| cars_haute_savoie (samedi) | cars-region-haute-savoie.zip | 1149 | OK | 2026-11-28 16:24:00 retrouvée (6 départs proposés) |
+| cars_haute_savoie (dimanche) | cars-region-haute-savoie.zip | 1149 | OK | 2026-11-22 08:10:00 retrouvée (4 départs proposés) |
+| cars_haute_savoie (semaine) | cars-region-haute-savoie.zip | 1149 | OK | 2026-11-23 15:40:00 retrouvée (8 départs proposés) |
+| cars_haute_savoie (samedi) | cars-region-haute-savoie.zip | 1149 | OK | 2026-11-28 15:40:00 retrouvée (6 départs proposés) |
 | mreso_grenoble (dimanche) | mreso-grenoble.zip | 19362 | OK | 2026-11-22 07:44:00 retrouvée (8 départs proposés) |
 | mreso_grenoble (semaine) | mreso-grenoble.zip | 19362 | OK | 2026-11-23 07:20:00 retrouvée (42 départs proposés) |
 | mreso_grenoble (samedi) | mreso-grenoble.zip | 19362 | OK | 2026-11-28 08:57:00 retrouvée (298 départs proposés) |
@@ -29,7 +30,7 @@ Généré le 2026-11-21 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | mreso_gresivaudan (semaine) | mreso-gresivaudan.zip | 1070 | OK | 2026-11-23 10:00:00 retrouvée (35 départs proposés) |
 | mreso_gresivaudan (samedi) | mreso-gresivaudan.zip | 1070 | OK | 2026-11-28 19:00:00 retrouvée (17 départs proposés) |
 | ondea (dimanche) | ondea-grand-lac.zip | 2290 | OK | 2026-11-22 09:05:00 retrouvée (11 départs proposés) |
-| ondea (semaine) | ondea-grand-lac.zip | 2290 | OK | 2026-11-23 07:10:00 retrouvée (80 départs proposés) |
+| ondea (semaine) | ondea-grand-lac.zip | 2290 | OK | 2026-11-23 06:55:00 retrouvée (1 départs proposés) |
 | ondea (samedi) | ondea-grand-lac.zip | 2290 | OK | 2026-11-28 06:51:00 retrouvée (54 départs proposés) |
 | sibra (dimanche) | sibra-annecy.zip | 9204 | OK | 2026-11-22 08:10:00 retrouvée (38 départs proposés) |
 | sibra (semaine) | sibra-annecy.zip | 9204 | OK | 2026-11-23 06:11:00 retrouvée (302 départs proposés) |
@@ -42,7 +43,7 @@ Généré le 2026-11-21 par `scripts/verifier-reseaux.cjs`. Pour chaque réseau,
 | zoom_chalon (dimanche) | zoom-chalon.zip | 2693 | OK | 2026-11-22 09:00:00 retrouvée (20 départs proposés) |
 | zoom_chalon (semaine) | zoom-chalon.zip | 2693 | OK | 2026-11-23 06:00:00 retrouvée (342 départs proposés) |
 | zoom_chalon (samedi) | zoom-chalon.zip | 2693 | OK | 2026-11-28 06:00:00 retrouvée (284 départs proposés) |
-| grandole_dole (semaine) | grandole-dole.zip | 654 | OK | 2026-11-23 06:27:00 retrouvée (124 départs proposés) |
+| grandole_dole (semaine) | grandole-dole.zip | 654 | OK | 2026-11-23 07:08:00 retrouvée (4 départs proposés) |
 | grandole_dole (samedi) | grandole-dole.zip | 654 | OK | 2026-11-28 07:40:00 retrouvée (24 départs proposés) |
 | evolity_montbeliard (dimanche) | evolity-montbeliard.zip | 2378 | OK | 2026-11-22 12:30:00 retrouvée (80 départs proposés) |
 | evolity_montbeliard (semaine) | evolity-montbeliard.zip | 2378 | OK | 2026-11-23 13:09:00 retrouvée (8 départs proposés) |
