@@ -1300,14 +1300,19 @@ function makeProviders(r,opts={}){
      // 21/11/2026 : bug Y51/correspondances — un même véhicule (A) relié à un même véhicule (B) peut
      // techniquement « correspondre » à n'importe quel arrêt commun qu'ils desservent tous les deux (des
      // dizaines, le long de toute la ligne), ce qui produit des milliers de doublons du MÊME trajet logique
-     // (même paire de courses, même horaires), seul l'arrêt de correspondance affiché change. Le dédoublonnage
-     // par tripId+horaires gardait jusqu'ici un candidat arbitraire (ex. Thénésol, 6,4 km de marche) alors
-     // qu'un strict équivalent existait via un arrêt bien plus proche (ex. Gare Routière, 1,3 km). On choisit
-     // désormais, pour chaque trajet logique identique, celui dont la marche totale (accès + sortie) est la
-     // plus courte, avant le dédoublonnage final — même logique que le moteur direct (ligne ~1140).
+     // (même paire de courses, même horaires), seul l'arrêt de montée/correspondance/descente affiché change.
+     // Un premier correctif (même date) dédoublonnait par tripId+horaires — mais l'horaire affiché (departure/
+     // arrival du trajet complet) DÉPEND justement de l'arrêt de montée/descente choisi : Hôtel de Ville
+     // (43 m de l'adresse réelle, car Y51 s'y arrête 10 min avant Thénésol) et Thénésol (6,4 km) donnent deux
+     // horaires de départ différents pour LE MÊME bus, donc deux clés différentes — aucun des deux n'écrasait
+     // l'autre et le candidat à 6,4 km de marche pouvait rester seul affiché. L'identité stable d'un même choix
+     // de véhicule est son (ses) trip_id GTFS + la date de service, pas l'horaire dérivé de l'arrêt choisi. On
+     // choisit désormais, pour chaque PAIRE DE VÉHICULES réellement empruntée, celui dont la marche totale
+     // (accès + sortie) est la plus courte, avant le dédoublonnage final — même logique que le moteur direct
+     // (ligne ~1140).
      const best=new Map();
      for(const x of out){
-      const key=String(x.tripId||'')+'|'+x.departure+'|'+x.arrival;
+      const key=String(x.tripId||'')+'|'+(x.date||x.serviceDate||'');
       const access=Number(x.accessDistanceMeters),egress=Number(x.egressDistanceMeters);
       const score=Number.isFinite(access)&&Number.isFinite(egress)?access+egress:Infinity;
       const previous=best.get(key);
