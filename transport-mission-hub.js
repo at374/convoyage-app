@@ -602,8 +602,17 @@ function assess(j,task,fareFor){
  // pas seulement aux trajets entièrement à pied. Une marche non calculée (distance inconnue) n'est pas écartée ici.
  const walkMax=Number.isFinite(task.walkMaxMeters)?task.walkMaxMeters:null;
  const longWalk=walkMax===null?null:legs.find(l=>l.kind==='walk'&&finite(l.distanceMeters)&&l.distanceMeters>walkMax);
- // Point approximatif : la marche n'est pas écartée (distance peu fiable), elle reste signalée dans le trajet.
- if(longWalk&&task.approximateEndpoint)reasons.push('marche longue à vérifier ('+(longWalk.distanceMeters/1000).toFixed(1).replace('.',',')+' km, point GPS approximatif)');
+ // 21/11/2026 : un point « approximatif » (centre-ville en guise d'adresse) désactivait complètement la limite de
+ // marche, quelle que soit la distance — un trajet à 6,5 km de marche passait alors comme « à vérifier » et pouvait
+ // être choisi comme meilleur compromis (il arrive plus tôt qu'une correspondance de bus), alors qu'une correspondance
+ // bien plus courte à pied existait. Repéré avec une adresse de livraison Hiflow dont les coordonnées sont en réalité
+ // le centre-ville (réutilisées à l'identique sur plusieurs adresses différentes d'Albertville). Une imprécision GPS
+ // n'explique que quelques centaines de mètres d'écart, pas plusieurs kilomètres : au-delà d'une marge de tolérance
+ // (1,5 km de plus que la limite réglée), la marche reste « trop longue » et le trajet est écarté même si le point
+ // de départ ou d'arrivée est approximatif.
+ const APPROX_TOLERANCE_M=1500;
+ const longWalkTolerated=longWalk&&task.approximateEndpoint&&longWalk.distanceMeters<=walkMax+APPROX_TOLERANCE_M;
+ if(longWalk&&longWalkTolerated)reasons.push('marche longue à vérifier ('+(longWalk.distanceMeters/1000).toFixed(1).replace('.',',')+' km, point GPS approximatif)');
  else if(longWalk)reasons.push('marche trop longue ('+(longWalk.distanceMeters/1000).toFixed(1).replace('.',',')+' km, limite '+(walkMax/1000).toFixed(1).replace('.',',')+' km)');
  const price=priceOf(j,fareFor);
  const delays=legs.filter(l=>finite(l.delayMinutes)&&l.delayMinutes>0).map(l=>(l.line||l.mode)+' +'+l.delayMinutes+' min');
