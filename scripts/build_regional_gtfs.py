@@ -98,6 +98,11 @@ FILTERED_MIRROR = [
     {'id': 't2c-clermont', 'network': 'T2C (Clermont Auvergne Métropole, SMTC)',
      'url': 'https://opendata.clermontmetropole.eu/api/v2/catalog/datasets/gtfs-smtc/alternative_exports/gtfs',
      'bounds': [45.72, 3.00, 45.85, 3.20], 'download_limit': 60 * 1024 * 1024},
+    # 21/11/2026 : trouvé manquant dans AURA elle-même (vérification « toutes les petites lignes, même locales
+    # et à la demande ») — réseau Cherpa (Agglo Pays d'Issoire, Puy-de-Dôme), navette urbaine + TAD par pass annuel.
+    {'id': 'cherpa-issoire', 'network': "Cherpa (Agglo Pays d'Issoire)",
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/7d54a219-8fe7-4635-a9fc-cefe5e57462e',
+     'bounds': [45.42, 3.05, 45.68, 3.45], 'download_limit': 30 * 1024 * 1024},
     # Régions voisines (étape 18/11/2026 ; Mobigo BFC à rajouter quand l’URL de ressource correcte est connue : l’ancienne donnait 404) : URL data.gouv.fr officielles, bbox limitées aux départements frontaliers d'AURA.
     {'id': 'lio-occitanie-nord', 'network': 'liO Occitanie (Gard, Lozère — limite Ardèche)',
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/d747fe79-2915-4cdd-8cc5-51a810baaca5',
