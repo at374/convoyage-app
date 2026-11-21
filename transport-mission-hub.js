@@ -1212,7 +1212,16 @@ function makeProviders(r,opts={}){
      // réel (ex. "Ecole Saint-François" à 1034 m). On élargit avec la même formule, et on
      // respecte le plafond de crossNetworkTrips (radiusMeters <= 5000, sinon il lève une erreur).
      const sameNetworkRadius=Math.max(5000,Number.isFinite(task.walkMaxMeters)&&task.walkMaxMeters>0?task.walkMaxMeters*1.5:5000);
-     const crossNetworkRadius=Math.min(5000,sameNetworkRadius);
+     // 21/11/2026 : crossNetworkTrips (ex. Y51 → réseau urbain Sibra) a son propre budget de
+     // candidats (maxJourneys/maxPairs) qui sature vite — un réseau urbain dense (Sibra) a des
+     // dizaines d'arrêts proches de n'importe quel point, et sameNetworkRadius (5000 m, pensé pour
+     // le cas SANS réseau relais) noie les bonnes correspondances (ex. Épagny/Tuilerie à 696 m) sous
+     // des milliers de variantes d'arrêts lointains avant d'y arriver, et la recherche s'arrête
+     // (searchTruncated) sans jamais les atteindre. Vérifié avec les coordonnées réelles : à 2000 m
+     // la correspondance Gare Routière → Y51 → Sibra → Tuilerie (696 m du domicile) ressort bien ;
+     // au-delà (2500 m+) elle redisparaît, noyée par la saturation. 2000 m reste largement au-dessus
+     // des arrêts réels les plus proches ici (≈1000-1300 m côté Albertville, ≈350-700 m côté Épagny).
+     const crossNetworkRadius=2000;
      const rows=[];
      for(let i=0;i<loaded.length;i++){
       // Correspondances à l'intérieur d'un même réseau.
