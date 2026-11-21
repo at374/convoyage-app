@@ -2039,9 +2039,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       // le blocage persiste et n'est pas reproduit ici — on affiche directement la mesure des blocages
       // réels du téléphone (déjà utilisée pour « Voiture et péages ») dans l'onglet Transports lui-même,
       // pour savoir enfin QUAND et COMBIEN de temps ça bloque, au lieu de continuer à deviner.
+      // 22/11/2026 : posé par erreur DANS sourcePanel, un <details> replié par défaut — invisible sans
+      // le déplier. Posé directement dans panel (juste après), visible sans rien ouvrir.
       {
-        const diag=document.createElement('p');diag.className='doux';diag.style.fontSize='.68rem';diag.style.marginTop='4px';
-        sourcePanel.appendChild(diag);
+        const diag=document.createElement('p');diag.className='doux';diag.style.fontSize='.68rem';diag.style.margin='4px 0 0';
+        panel.insertBefore(diag,sourcePanel.nextSibling);
         const majDiag=()=>{if(!diag.isConnected)return;
          const g=window.__cpGaps||[];
          diag.textContent='🩺 '+(g.length?'blocages mesurés sur ce téléphone : '+g.slice(-6).join(' | '):'aucun blocage mesuré pour l’instant');
