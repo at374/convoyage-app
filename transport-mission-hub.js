@@ -1111,9 +1111,17 @@ function makeProviders(r,opts={}){
      const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
       'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
      const {date,clock}=dateParts(when),resource={format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1)};
+     // 21/11/2026 : bug Y51/Albertville réel — l'adresse de livraison exacte et le domicile sont tous deux
+     // à plus de 3 km à vol d'oiseau du plus proche arrêt Y51 (confirmé : 0 candidat à 3000 m, 126 à 5000 m,
+     // sur les coordonnées réelles de la mission), alors que la marche réelle (calculée plus tard par le
+     // routeur) reste dans la limite réglée par l'utilisateur. Ce rayon n'est qu'un PRÉ-FILTRE large et
+     // approximatif (vol d'oiseau) ; le filtre de marche réelle (completeWalks/walkDetour/excessiveDetour)
+     // s'applique ensuite et reste la seule limite qui compte pour l'affichage. Aligné sur le rayon de
+     // 5000 m déjà utilisé par OpenTripPlanner (ligne ~1270), qui lui trouvait bien ce trajet.
+     const radiusMeters=Math.max(5000,Number.isFinite(task.walkMaxMeters)&&task.walkMaxMeters>0?task.walkMaxMeters*1.5:5000);
      // Calcul hors du fil de l'écran (Web Worker) ; en cas d'échec du worker, ancien calcul sur le fil principal (même résultat).
      let rows=null,_viaWorker=false,_feedInfo=null;
-     if(canWorker()){_viaWorker=true;try{rows=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to))});}catch(e){if(!r.__cpHubWorkerOff)throw e;rows=null;}}
+     if(canWorker()){_viaWorker=true;try{rows=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to)),radius:radiusMeters});}catch(e){if(!r.__cpHubWorkerOff)throw e;rows=null;}}
      if(rows===null){
       _viaWorker=false;
       let promise=cache.get(id+'|'+date);
@@ -1124,11 +1132,11 @@ function makeProviders(r,opts={}){
       }
       const feed=await promise;
       _feedInfo={archiveBytes:feed.archiveBytes,expandedBytes:feed.expandedBytes,trips:feed.files?.trips?.length??null,stopTimes:feed.files?.stop_times?.length??null};
-      rows=attachGTFSFares(feed,r.CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,pt(task.from),pt(task.to),3000),r.CPGTFSFares);
+      rows=attachGTFSFares(feed,r.CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,pt(task.from),pt(task.to),radiusMeters),r.CPGTFSFares);
      }
      // 21/11/2026 : diagnostic temporaire (bug Y51 « 0 proposition reçue » en direct, non reproduit en simulation) —
      // capture la taille réelle du flux et le nombre de candidats bruts pour voir où ça diverge sur le téléphone.
-     try{(r.__cpGtfsDebug||(r.__cpGtfsDebug=new Map())).set(name+' GTFS',{at:Date.now(),date,clock,from:pt(task.from),to:pt(task.to),url:urls[0],viaWorker:_viaWorker,rawCandidates:Array.isArray(rows)?rows.length:null,feed:_feedInfo});}catch(_){}
+     try{(r.__cpGtfsDebug||(r.__cpGtfsDebug=new Map())).set(name+' GTFS',{at:Date.now(),date,clock,from:pt(task.from),to:pt(task.to),radiusMeters,url:urls[0],viaWorker:_viaWorker,rawCandidates:Array.isArray(rows)?rows.length:null,feed:_feedInfo});}catch(_){}
      if(signal?.aborted)return [];
      const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
      // Select the best boarding/alighting stop pair for each actual vehicle
@@ -2052,7 +2060,7 @@ function render(host,v){
    let detail='';
    if(count===0){
     const dbg=root.__cpGtfsDebug&&root.__cpGtfsDebug.get(n);
-    if(dbg)detail=' [diag : date '+(dbg.date??'?')+' '+(dbg.clock??'?')+' · de '+(dbg.from?dbg.from.lat+','+dbg.from.lon:'?')+' à '+(dbg.to?dbg.to.lat+','+dbg.to.lon:'?')+' · '+(dbg.viaWorker?'worker':'fil principal')+(dbg.feed?' · flux '+(dbg.feed.archiveBytes??'?')+' o compressé / '+(dbg.feed.expandedBytes??'?')+' o décompressé, '+(dbg.feed.trips??'?')+' trips':'')+' · candidats bruts : '+(dbg.rawCandidates??'?')+']';
+    if(dbg)detail=' [diag : date '+(dbg.date??'?')+' '+(dbg.clock??'?')+' · de '+(dbg.from?dbg.from.lat+','+dbg.from.lon:'?')+' à '+(dbg.to?dbg.to.lat+','+dbg.to.lon:'?')+' · rayon '+(dbg.radiusMeters??'?')+' m · '+(dbg.viaWorker?'worker':'fil principal')+(dbg.feed?' · flux '+(dbg.feed.archiveBytes??'?')+' o compressé / '+(dbg.feed.expandedBytes??'?')+' o décompressé, '+(dbg.feed.trips??'?')+' trips':'')+' · candidats bruts : '+(dbg.rawCandidates??'?')+']';
    }
    d.appendChild(el(doc,'div',null,'✅ '+n+' : '+count+' proposition'+(count>1?'s':'')+' reçue'+(count>1?'s':'')+detail));
   }
