@@ -1208,19 +1208,24 @@ function makeProviders(r,opts={}){
      const window={...(Number.isFinite(ms(task.earliestDeparture))?{earliestDeparture:task.earliestDeparture}:{}),
       ...(Number.isFinite(ms(task.latestArrival))?{latestArrival:task.latestArrival}:{}),marginMinutes:marginFor(task)};
      if(window.earliestDeparture===undefined&&window.latestArrival===undefined)return [];
+     // 21/11/2026 : même bug que le moteur direct Y51 — 700 m était trop juste pour l'arrêt
+     // réel (ex. "Ecole Saint-François" à 1034 m). On élargit avec la même formule, et on
+     // respecte le plafond de crossNetworkTrips (radiusMeters <= 5000, sinon il lève une erreur).
+     const sameNetworkRadius=Math.max(5000,Number.isFinite(task.walkMaxMeters)&&task.walkMaxMeters>0?task.walkMaxMeters*1.5:5000);
+     const crossNetworkRadius=Math.min(5000,sameNetworkRadius);
      const rows=[];
      for(let i=0;i<loaded.length;i++){
       // Correspondances à l'intérieur d'un même réseau.
       try{
        const bounds=r.CPGTFSTime.serviceWindow(loaded[i].files,date,window);
-       const t=r.CPGTFSIndex.nearbyTransferTrips(loaded[i].files,loaded[i].index,date,from,to,700,bounds);
+       const t=r.CPGTFSIndex.nearbyTransferTrips(loaded[i].files,loaded[i].index,date,from,to,sameNetworkRadius,bounds);
        const dated=r.CPGTFSTime.datedTransferTrips(loaded[i].files,loaded[i].index,t.journeys,window);
        rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,legs:x.legs?.map(l=>({...l,network:loaded[i].source.network}))})));
       }catch(_){}
       // Correspondances entre deux réseaux différents.
       for(let j=i+1;j<loaded.length;j++){
        if(signal?.aborted)return [];
-       try{const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{});rows.push(...c.journeys);}catch(_){}
+       try{const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius});rows.push(...c.journeys);}catch(_){}
       }
      }
      const out=rows.filter(x=>x&&x.departure&&x.arrival).map(x=>({...x,onDemand:x.onDemand||!!x.legs?.some(l=>l&&l.onDemand)}))
