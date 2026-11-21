@@ -1563,6 +1563,38 @@ async function accessFor(j,task,otp,signal){
 function createSession({tasks=[],providers={},router=null,scooterRouter=null,scooter=null,fareFor=null,walkMaxKm=3,timeoutMs=25000,onUpdate=()=>{}}={}){
  tasks=tasks.map(t=>({...t,walkMaxMeters:Number.isFinite(t.walkMaxMeters)?t.walkMaxMeters:(Number.isFinite(walkMaxKm)&&walkMaxKm>0?walkMaxKm*1000:undefined)}));
  const state={},controller=new AbortController();let disposed=false;
+ // 21/11/2026 : une longue marche d'approche/sortie n'était comparée à un bus/tram local que dans
+ // l'agglomération grenobloise (Mobilités M, providers.regional) — ailleurs (Thonon/Star't, Annecy/Sibra…),
+ // completeWalks() ne proposait jamais qu'une marche pure, même quand le réseau local dessert exactement
+ // les deux bouts de cette marche (ex. marche de 3,4 km en bout de trajet SNCF à Thonon-les-Bains, alors que
+ // Star't Thonon dessert la gare et l'adresse de livraison). Les moteurs locaux (providers['local_<id>'])
+ // existent déjà et savent répondre à un couple de points + une fenêtre horaire (mêmes enabled()/run() que
+ // pour une mission complète) : on les réutilise ici pour UNE SEULE marche, sans les ajouter comme moteurs
+ // de premier niveau (ce qui les ferait apparaître en double dans « Moteurs consultés »). Mobilités M reste
+ // essayé en premier (compatibilité), les réseaux locaux ne sont tentés que si aucun résultat exploitable
+ // n'en est ressorti.
+ const localNetworkIds=Object.keys(providers).filter(k=>k.startsWith('local_')&&k!=='local_correspondances');
+ const hasTransit=list=>Array.isArray(list)&&list.some(it=>it&&Array.isArray(it.legs)&&it.legs.length&&it.legs.some(l=>l&&l.kind!=='walk'));
+ const anyLocalBus={
+  enabled:task=>{
+   try{if(providers.regional&&providers.regional.enabled(task))return true;}catch(_){}
+   return localNetworkIds.some(k=>{try{return providers[k].enabled(task);}catch(_){return false;}});
+  },
+  run:async task=>{
+   try{
+    if(providers.regional&&providers.regional.enabled(task)){
+     const out=await providers.regional.run(task);
+     if(hasTransit(out))return out;
+    }
+   }catch(_){}
+   for(const k of localNetworkIds){
+    let ok=false;try{ok=providers[k].enabled(task);}catch(_){ok=false;}
+    if(!ok)continue;
+    try{const out=await providers[k].run(task);if(hasTransit(out))return out;}catch(_){}
+   }
+   return [];
+  }
+ };
  // Mises à jour regroupées (au plus une par 350 ms et par direction) : chaque résultat réseau ne reconstruit plus toute la fiche,
  // ce qui figeait l'écran au défilement quand plusieurs jours sont cherchés en parallèle.
  const lastEmit={},timers={};
@@ -1644,7 +1676,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   const replace=(t,a)=>{const old=pendingCard.get(t);const i=s.items.indexOf(old);
    if(old)a.sources=[...new Set([...a.sources,...(old.sources||[])])];
    if(i>=0)s.items[i]=a;else s.items.push(a);if(t.key)s.bySignature.set(t.key,a);};
-  const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,router,{enabled:!!(scooter&&scooter.enabled&&scooterRouter),router:scooterRouter,maxKm:scooter&&scooter.maxKm,speedKmh:scooter&&scooter.speedKmh},providers&&providers.regional).then(x=>{
+  const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,router,{enabled:!!(scooter&&scooter.enabled&&scooterRouter),router:scooterRouter,maxKm:scooter&&scooter.maxKm,speedKmh:scooter&&scooter.speedKmh},providers?anyLocalBus:null).then(x=>{
    if(disposed)return;replace(t,assess(x,s.task,fareFor));emit(label);
   }).catch(()=>{
    // Ne pas laisser une carte bloquée sur « marches en cours de calcul »

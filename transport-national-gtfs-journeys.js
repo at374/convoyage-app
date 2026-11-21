@@ -38,11 +38,19 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
  // Sécheron, puis des correspondances inutiles) et les départs suivants n'apparaissaient jamais (réel, 14/11/2026).
  // Par véhicule de départ on garde : le direct dont la descente est la plus proche de la destination, et une
  // correspondance seulement si elle rapproche d'au moins 1 km de plus (ou s'il n'existe aucun direct).
+ // 21/11/2026 : même défaut que pour les correspondances locales (Y51/Albertville) — la clé incluait aussi
+ // l'arrêt de montée (x.from) et l'horaire de départ, qui DÉPENDENT de l'arrêt choisi pour monter dans CE
+ // véhicule. Un même train/car desservant plusieurs arrêts proches de l'adresse (gare principale ET halte
+ // voisine, par exemple) produisait alors un groupe par arrêt de montée, et celui à la marche la plus longue
+ // pouvait rester seul affiché si aucun autre direct ne le dominait déjà. L'identité stable d'un véhicule
+ // emprunté est son trip_id + la date de service ; la meilleure variante se choisit sur la marche totale
+ // (accès + sortie), pas seulement la sortie.
+ const access=x=>Number.isFinite(x.accessDistanceMeters)?x.accessDistanceMeters:Infinity;
  const egress=x=>Number.isFinite(x.egressDistanceMeters)?x.egressDistanceMeters:Infinity;
- const better=(a,b)=>egress(a)-egress(b)||seconds(a.arrival)-seconds(b.arrival);
+ const better=(a,b)=>(access(a)+egress(a))-(access(b)+egress(b))||seconds(a.arrival)-seconds(b.arrival);
  const groups=new Map();
  for(const x of candidates.filter(x=>seconds(x.departure)>=min&&seconds(x.arrival)<=max)){
-  const key=[x.legs?.[0]?.tripId||x.tripId||'',x.departure,x.from||''].join('|');
+  const key=[x.legs?.[0]?.tripId||x.tripId||'',x.date||''].join('|');
   const g=groups.get(key)||{direct:null,transfer:null};
   const slot=x.legs?'transfer':'direct';
   if(!g[slot]||better(x,g[slot])<0)g[slot]=x;
