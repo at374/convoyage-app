@@ -205,9 +205,11 @@ FILTERED_MIRROR = [
     # build réel ; La Défense/Roissy/Orly sont hors de cette première emprise.
     {'id': 'idfm-paris', 'network': 'Île-de-France Mobilités (Paris intra-muros)',
      'url': 'https://transport.data.gouv.fr/resources/80921/download',
-     # 21/11/2026 : horizon réduit 5->2j — premier essai réel à 24,47 Mo (plus de 2x MAX_OUT=12Mo),
-     # Paris intra-muros restant très dense (métro+bus+RER malgré la bbox déjà resserrée).
-     'bounds': [48.81, 2.22, 48.91, 2.43], 'horizon_days': 2, 'slim': True, 'download_limit': 150 * 1024 * 1024},
+     # 21/11/2026 : horizon réduit 5->2j (24,47 Mo -> 11,96 Mo compressés, sous MAX_OUT=12Mo), puis
+     # encore 2->1j : à 2j, stop_times.txt décompressé pesait 106,54 Mo, au-dessus du plafond runtime
+     # maxFileBytes=64 Mo (même si le zip compressé, lui, passait sous les deux plafonds). Paris
+     # intra-muros reste très dense (métro+bus+RER) malgré la bbox déjà resserrée.
+     'bounds': [48.81, 2.22, 48.91, 2.43], 'horizon_days': 1, 'slim': True, 'download_limit': 150 * 1024 * 1024},
     # SNCF Transilien (RER/Transilien/TER opérés par la SNCF en Île-de-France) : dataset distinct d'IDFM,
     # lien stable publié par SNCF Open Data (« toujours le GTFS en vigueur », comme STAR Rennes). Beaucoup
     # plus léger qu'IDFM (11,56 Mo compressés, 38 lignes, 3 204 arrêts selon la fiche transport.data.gouv.fr)
