@@ -2232,9 +2232,20 @@ function render(host,v){
   // à la prochaine mise à jour réseau : on déplie alors le bloc « Voir plus » automatiquement.
   const hasOpenedInside=restRows.some(p=>{const k=signature(p.journey)||(p.journey.walkOnly?'walk|'+Math.round(ms(p.journey.departure)/60000)+'|'+Math.round(ms(p.journey.arrival)/60000)+'|'+Math.round(p.journey.durationMinutes||0):'');return k&&opened.has(k);});
   const more=el(doc,'details','cp-hub-more');
-  if(moreOpen||hasOpenedInside)more.open=true;
-  more.appendChild(el(doc,'summary',null,'Voir plus ('+restRows.length+' autre'+(restRows.length>1?'s':'')+' trajet'+(restRows.length>1?'s':'')+')'));
-  for(const p of restRows)addCard(more,p.journey,p.labels,false);
+  const moreSummary=el(doc,'summary',null,'Voir plus ('+restRows.length+' autre'+(restRows.length>1?'s':'')+' trajet'+(restRows.length>1?'s':'')+')');
+  more.appendChild(moreSummary);
+  // 21/11/2026 (Laurent : « le défilement bloque encore ») : ces cartes étaient construites à CHAQUE mise à
+  // jour réseau même repliées (invisibles) — sur une ligne dense (Y51…), jusqu'à 300 cartes reconstruites
+  // plusieurs fois par seconde pendant que la recherche tourne, rien que pour rester cachées dans « Voir
+  // plus ». Construites maintenant seulement à l'ouverture (ou immédiatement si déjà ouvertes/une carte à
+  // l'intérieur était ouverte) : repliées, cette section ne coûte quasiment plus rien à chaque rafraîchissement.
+  let built=false;
+  const buildMore=()=>{if(built)return;built=true;for(const p of restRows)addCard(more,p.journey,p.labels,false);};
+  if(moreOpen||hasOpenedInside){more.open=true;buildMore();}
+  else{
+   if(more.addEventListener)more.addEventListener('toggle',()=>{if(more.open)buildMore();});
+   if(moreSummary.addEventListener)moreSummary.addEventListener('click',()=>{if(!built)buildMore();});
+  }
   host.appendChild(more);
  }
  // 21/11/2026 : trajets au-delà de la limite MAX_OTHERS de rank() — jamais construits, juste comptés,
