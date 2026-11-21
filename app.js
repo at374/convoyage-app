@@ -2125,8 +2125,13 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         }
         // Noms affichés dans les marches : adresses exactes (pas « Point d'arrivée »).
         const homeText=(homeAdrOk&&(homeAdr.libelle||homeAdr.texte))||home||homeName;
-        const allerBase={from:homePt,to:gp(origin),fromName:homeText,toName:from||'Prise en charge',fromCity:homeName,toCity:m.from_city||'',marginMinutes:securityMarginMin,exactTarget:exactGps(origin),approximateEndpoint:(!homeExact&&!homeAdrOk)||!exact(origin),allowShortMargin:short};
-        const retourBase={from:gp(dest),to:homePt,fromName:to||'Livraison',toName:homeText,fromCity:m.to_city||'',toCity:homeName,approximateEndpoint:!exact(dest)||(!homeExact&&!homeAdrOk)};
+        // 21/11/2026 : approximateEndpoint ne disait pas QUEL côté (départ ou arrivée) est approximatif, et la
+        // tolérance de marche s'appliquait alors à n'importe quelle jambe du trajet — y compris la marche finale
+        // vers une adresse pourtant exacte (le domicile), laissant passer une marche de 6,5 km bien réelle juste
+        // parce que l'autre bout (adresse de livraison Hiflow, en fait un centre-ville) était approximatif.
+        // approximateFrom/approximateTo permettent désormais de ne tolérer que la jambe concernée.
+        const allerBase={from:homePt,to:gp(origin),fromName:homeText,toName:from||'Prise en charge',fromCity:homeName,toCity:m.from_city||'',marginMinutes:securityMarginMin,exactTarget:exactGps(origin),approximateFrom:!homeExact&&!homeAdrOk,approximateTo:!exact(origin),approximateEndpoint:(!homeExact&&!homeAdrOk)||!exact(origin),allowShortMargin:short};
+        const retourBase={from:gp(dest),to:homePt,fromName:to||'Livraison',toName:homeText,fromCity:m.to_city||'',toCity:homeName,approximateFrom:!exact(dest),approximateTo:!homeExact&&!homeAdrOk,approximateEndpoint:!exact(dest)||(!homeExact&&!homeAdrOk)};
         // Fermeture des agences / parcs : 17:30, ou l'heure de fin de la fenêtre du jour si elle est plus tardive (jamais après 19:00).
         const closeFor=iso=>{const t=Date.parse(iso||'');if(!Number.isFinite(t))return 1050;const q=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(t)).map(x=>[x.type,x.value]));return Math.min(1140,Math.max(1050,Number(q.hour)*60+Number(q.minute)));};
         const dayEnd=d=>parisIso(d,19,0),siteEnd=d=>parisIso(d,17,30);   // siteEnd : heure limite au site (agences/parcs fermés) pour un jour intermédiaire   // fin de la journée de voyage (voyager de jour : 05:00–19:00)
@@ -2146,7 +2151,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           }
         }else if(pickupDate)tasks.push({...allerBase,label:'Aller',latestArrival:pickupEndIso||pickupDate,siteCloseMinutes:closeFor(pickupEndIso||pickupDate),...(pickupEndIso?{windowKind:'arrival',windowStartMs:Date.parse(pickupDate),windowEndMs:Date.parse(pickupEndIso)-securityMarginMin*60000}:{})});
         if(next&&deliveryDate&&next.pickup_start)tasks.push({label:'Jonction',from:gp(dest),to:gp(nextOrigin2),fromName:to||'Livraison',toName:nextOrigin||'Mission suivante',fromCity:m.to_city||'',toCity:next.from_city||'',
-          earliestDeparture:jonctionEarliest,latestArrival:jonctionLatest,siteCloseMinutes:closeFor(jonctionLatest),...(jonctionLatest!==next.pickup_start?{windowKind:'arrival',windowStartMs:Date.parse(next.pickup_start),windowEndMs:Date.parse(jonctionLatest)-securityMarginMin*60000}:{}),marginMinutes:securityMarginMin,exactTarget:exactGps(nextOrigin2),approximateEndpoint:!exact(dest)||!exact(nextOrigin2),allowShortMargin:short});
+          earliestDeparture:jonctionEarliest,latestArrival:jonctionLatest,siteCloseMinutes:closeFor(jonctionLatest),...(jonctionLatest!==next.pickup_start?{windowKind:'arrival',windowStartMs:Date.parse(next.pickup_start),windowEndMs:Date.parse(jonctionLatest)-securityMarginMin*60000}:{}),marginMinutes:securityMarginMin,exactTarget:exactGps(nextOrigin2),approximateFrom:!exact(dest),approximateTo:!exact(nextOrigin2),approximateEndpoint:!exact(dest)||!exact(nextOrigin2),allowShortMargin:short});
         if(deliveryDate&&multiRetour.length){
           for(const d of multiRetour){
             const first=d===dDay0,last=d===dDay1;

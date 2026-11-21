@@ -610,8 +610,17 @@ function assess(j,task,fareFor){
  // n'explique que quelques centaines de mètres d'écart, pas plusieurs kilomètres : au-delà d'une marge de tolérance
  // (1,5 km de plus que la limite réglée), la marche reste « trop longue » et le trajet est écarté même si le point
  // de départ ou d'arrivée est approximatif.
+ // 21/11/2026 : approximateEndpoint ne distinguait pas QUEL bout (départ ou arrivée) est approximatif, et la
+ // tolérance s'appliquait alors à n'importe quelle marche du trajet — y compris la marche finale vers une adresse
+ // pourtant exacte (le domicile), laissant passer une vraie marche de 6,5 km uniquement parce que l'AUTRE bout
+ // (ex. adresse de livraison Hiflow, en réalité un centre-ville) était approximatif. On ne tolère plus que la
+ // marche adjacente au bout réellement approximatif (première jambe = départ, dernière = arrivée) ; une marche de
+ // correspondance au milieu du trajet (entre deux arrêts GTFS connus) n'est jamais approximative.
  const APPROX_TOLERANCE_M=1500;
- const longWalkTolerated=longWalk&&task.approximateEndpoint&&longWalk.distanceMeters<=walkMax+APPROX_TOLERANCE_M;
+ const walkIndex=longWalk?legs.indexOf(longWalk):-1;
+ const approxHere=longWalk&&((walkIndex===0&&task.approximateFrom)||(walkIndex===legs.length-1&&task.approximateTo)||
+  (task.approximateFrom===undefined&&task.approximateTo===undefined&&task.approximateEndpoint));
+ const longWalkTolerated=longWalk&&approxHere&&longWalk.distanceMeters<=walkMax+APPROX_TOLERANCE_M;
  if(longWalk&&longWalkTolerated)reasons.push('marche longue à vérifier ('+(longWalk.distanceMeters/1000).toFixed(1).replace('.',',')+' km, point GPS approximatif)');
  else if(longWalk)reasons.push('marche trop longue ('+(longWalk.distanceMeters/1000).toFixed(1).replace('.',',')+' km, limite '+(walkMax/1000).toFixed(1).replace('.',',')+' km)');
  const price=priceOf(j,fareFor);
