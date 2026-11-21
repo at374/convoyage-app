@@ -702,6 +702,11 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .cp-hub-card svg.cp-hub-map,#cpTransportMissionDetails .cp-hub-map{width:100%;max-width:100%;height:auto;box-sizing:border-box}
 .cp-hub-search-help{display:grid;gap:6px;margin:8px 0;padding:10px;border:1px solid var(--accent,#e0a800);border-radius:10px}
 .cp-hub-copy{min-height:44px;padding:8px 10px;border:1px solid var(--accent,#e0a800);border-radius:10px;background:transparent;color:inherit;font-weight:700;text-align:left}
+/* 21/11/2026 : bouton « tous les horaires de la ligne » générique (toute fiche mission, toute ligne GTFS locale/régionale). */
+#cpTransportMissionDetails .cp-hub-dayline{min-height:44px;padding:8px 10px;margin-top:6px;border:1px solid var(--accent,#e0a800);border-radius:10px;background:transparent;color:inherit;font-weight:700;text-align:left;display:block;width:100%}
+#cpTransportMissionDetails .cp-hub-dayline-result{margin:6px 0 2px;font-size:.95em}
+#cpTransportMissionDetails .cp-hub-dayline-result ul{margin:6px 0;padding-left:22px}
+#cpTransportMissionDetails .cp-hub-dayline-result li{margin:3px 0}
 #cpTransportMissionDetails .cp-hub-walk-map-link.cp-hub-nav{margin-top:6px}
 /* Défilement fluide : les cartes hors écran ne sont ni mises en page ni dessinées. */
 #cpTransportMissionDetails .cp-hub-card{content-visibility:auto;contain-intrinsic-size:auto 120px}

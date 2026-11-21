@@ -1121,7 +1121,10 @@ function makeProviders(r,opts={}){
      // suffisait ici mais coupait sur des réseaux plus riches). SAFETY_MAX reste un garde-fou technique très
      // large, pas une limite métier : l'affichage (render) gère la lisibilité via « Voir plus ».
      const SAFETY_MAX=300;
-     const filtered=[...best.values()].map(({x})=>({...x,network:name,
+     // 21/11/2026 (demande Laurent) : networkId/networkUrls/serviceDate conservés sur chaque ligne —
+     // nécessaires pour le bouton « Tous les horaires » (dayScheduleForLeg) qui refait une requête GTFS
+     // complète sur CE réseau précis, pour CETTE ligne et CES arrêts, sans le filtre « après maintenant ».
+     const filtered=[...best.values()].map(({x})=>({...x,network:name,networkId:id,networkUrls:urls,serviceDate:date,
        departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)}))
       .filter(x=>x.departure&&x.arrival)
       .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,SAFETY_MAX)
@@ -1735,6 +1738,46 @@ function ticketLinks(j){
   const t=ticketLink(l.provider);if(t&&!seen.has(t.url))seen.set(t.url,t);});
  return [...seen.values()];
 }
+// 21/11/2026 (demande Laurent) : « pour chaque ligne régionale ou locale qui apparaît dans un trajet, une
+// icône doit montrer tous ses horaires de la journée de mission » — généralise le bouton qui n'existait
+// jusqu'ici que pour Y51 Albertville (fiche mission, app.js, données préparées à part). Fonctionne pour
+// toute ligne dont les horaires viennent d'un réseau GTFS local/régional câblé (localNetworks) : SNCF,
+// FlixBus, BlaBlaCar Bus, l'API suisse, TripGo/OJP et les correspondances inter-réseaux n'ont pas cette
+// métadonnée et n'affichent donc pas ce bouton (portée assumée, pas un oubli).
+const dayScheduleTablesCache=new Map();
+async function gtfsTablesForDaySchedule(raw){
+ const key=(raw.networkUrls||[])[0]+'|'+raw.serviceDate;
+ let promise=dayScheduleTablesCache.get(key);
+ if(!promise){
+  promise=(async()=>{
+   const loader=root.CPGTFSLoader,pl=root.CPSibraPlanner;
+   if(!loader||typeof loader.loadResource!=='function'||!pl||typeof pl.parseGtfsCsv!=='function')return null;
+   const feed=await loader.loadResource({format:'GTFS',url:raw.networkUrls[0],fallbackUrls:raw.networkUrls.slice(1)},
+    {indexServiceDates:[raw.serviceDate],retainSourceTables:true});
+   const csv=name=>pl.parseGtfsCsv(feed.files?.[name]||'')||[];
+   return {stops:csv('stops.txt'),trips:csv('trips.txt'),routes:csv('routes.txt'),
+    stop_times:csv('stop_times.txt'),calendar:csv('calendar.txt'),calendar_dates:csv('calendar_dates.txt')};
+  })();
+  dayScheduleTablesCache.set(key,promise);
+  promise.catch(()=>dayScheduleTablesCache.delete(key));
+ }
+ return promise;
+}
+// Tous les départs du jour de CETTE ligne entre les DEUX arrêts de CETTE étape — même mécanique que le
+// bouton Y51 historique (sibra-planner.js::datedInterurbanRides), généralisée à tout réseau GTFS câblé.
+async function dayScheduleForLeg(raw){
+ if(!raw||!Array.isArray(raw.networkUrls)||!raw.networkUrls.length||!raw.routeId||!raw.from||!raw.to||!raw.serviceDate)return [];
+ const tables=await gtfsTablesForDaySchedule(raw);
+ const pl=root.CPSibraPlanner;
+ if(!tables||!pl||typeof pl.datedInterurbanRides!=='function')return [];
+ const rows=pl.datedInterurbanRides(tables,raw.serviceDate,String(raw.routeId),String(raw.from),String(raw.to));
+ return [...new Map(rows.map(r=>[r.trip_id+':'+r.departureSeconds,r])).values()]
+  .sort((a,b)=>a.departureSeconds-b.departureSeconds);
+}
+function hmFromSeconds(sec){
+ if(!Number.isFinite(sec))return '?';
+ return String(Math.floor(sec/3600)%24).padStart(2,'0')+':'+String(Math.floor(sec/60)%60).padStart(2,'0');
+}
 function card(doc,j,labels,expanded=false){
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
  if(expanded)c.open=true;
@@ -1844,6 +1887,31 @@ function card(doc,j,labels,expanded=false){
    if(!f&&/^ond[ée]a\b/i.test(String(l.provider||''))&&/^(?:40\d|41\d)$/.test(String(l.line||'').trim()))
     {const note=el(doc,'small','cp-hub-fare-option','Option : carnet de 10 voyages à 14,50 € sur carte Pass Ondéa. QR/M-ticket non acceptés sur ces lignes. ');
      const link=el(doc,'a',null,'Conditions officielles Ondéa');link.href='https://www.ondeagrandlac.fr/titres/titres-pour-tous-tarifs-applicables-du-1er-juillet-2026/titre-10-voyages';link.target='_blank';link.rel='noopener noreferrer';note.appendChild(link);li.appendChild(note);}
+   // 21/11/2026 (demande Laurent) : bouton « tous les horaires » pour chaque ligne régionale/locale GTFS —
+   // généralisé à toute fiche mission, plus seulement Y51 Albertville. Nécessite les métadonnées GTFS
+   // brutes (networkUrls/routeId/arrêts/date) posées par fromGTFS() sur les trajets locaux (localNetworks).
+   const raw=l.gtfsRaw;
+   if(raw&&Array.isArray(raw.networkUrls)&&raw.networkUrls.length&&raw.routeId&&raw.from&&raw.to&&raw.serviceDate){
+    const dayBtn=el(doc,'button','cp-hub-dayline','🕒 Tous les horaires '+(l.line||l.mode)+' du '+dayText(l.departure||raw.serviceDate));
+    dayBtn.type='button';
+    const dayRes=el(doc,'div','cp-hub-dayline-result');dayRes.setAttribute('aria-live','polite');
+    dayBtn.addEventListener('click',e=>{
+     e.preventDefault();e.stopPropagation();
+     if(dayBtn.disabled)return;
+     dayBtn.disabled=true;dayRes.textContent='Chargement des horaires…';
+     dayScheduleForLeg(raw).then(rows=>{
+      dayRes.textContent='';
+      if(!rows.length){dayRes.textContent='Aucune autre course trouvée ce jour entre ces deux arrêts (données GTFS officielles).';return;}
+      dayRes.appendChild(el(doc,'strong',null,rows.length+' départ'+(rows.length>1?'s':'')+' le '+raw.serviceDate+' :'));
+      const ul=el(doc,'ul',null);
+      for(const row of rows)ul.appendChild(el(doc,'li',null,hmFromSeconds(row.departureSeconds)+' → '+hmFromSeconds(row.arrivalSeconds)));
+      dayRes.appendChild(ul);
+      dayRes.appendChild(el(doc,'small',null,'Horaires théoriques officiels (GTFS '+(l.provider||raw.network||'')+'). Circulation réelle non vérifiée.'));
+     }).catch(()=>{dayRes.textContent='Horaires indisponibles pour cette date.';})
+      .finally(()=>{dayBtn.disabled=false;});
+    });
+    li.appendChild(dayBtn);li.appendChild(dayRes);
+   }
   }
   ol.appendChild(li);
  }
@@ -2006,7 +2074,7 @@ function render(host,v){
 }
 
 const api={VERSION,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
- marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
+ marginFor,queryWindow,inSwissArea,makeProviders,createSession,render,dayScheduleForLeg,gtfsTablesForDaySchedule,hmFromSeconds};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
 })(typeof window!=='undefined'?window:globalThis);
