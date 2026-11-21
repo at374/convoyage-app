@@ -143,10 +143,14 @@ FILTERED_MIRROR = [
     # Naolib/TAN Nantes : resource 8055 est devenue un lien mort (404) ; resource 84101
     # (jeu "tan-arrets-horaires-et-circuits", fichier gtfs_lumidata_id.zip, mis à jour 20/11/2026) le remplace.
     # Horizon réduit à 14 jours (au lieu des 45 habituels) : réseau dense, l'extrait bbox dépassait
-    # le plafond MAX_OUT même à 21 jours (12,74 Mo pour 12,58 Mo autorisés) ; 14 jours passe sous la limite.
+    # le plafond MAX_OUT même à 21 jours (12,74 Mo pour 12,58 Mo autorisés) ; 14 jours passe sous la limite
+    # côté build (compressé). Mais stop_times.txt décompressé pèse ~178 Mo à 14j (~12,7 Mo/j), très
+    # au-dessus du plafond runtime maxFileBytes=64 Mo (jamais câblé dans localNetworks jusqu'ici, voir
+    # transport-coverage.js). 21/11/2026 : essai à 5j (~63,5 Mo estimés, même méthode qu'IDFM Paris la veille)
+    # pour tenter un premier câblage, même à très court horizon.
     {'id': 'naolib-nantes', 'network': 'Naolib (Nantes Métropole)',
      'url': 'https://transport.data.gouv.fr/resources/84101/download',
-     'bounds': [47.13, -1.70, 47.33, -1.40], 'horizon_days': 14, 'slim': True, 'download_limit': 60 * 1024 * 1024},
+     'bounds': [47.13, -1.70, 47.33, -1.40], 'horizon_days': 5, 'slim': True, 'download_limit': 60 * 1024 * 1024},
     # 20/11/2026 : horizon réduit 45->15j puis 15->6j — à 15j l'archive réelle décompressait encore à
     # 89,4 Mo (~5,96 Mo/j, ratio non linéaire avec l'estimation à 45j), toujours au-delà des 64 Mo
     # maxFileBytes du moteur. 6j vise ~36 Mo, avec marge.
@@ -236,8 +240,12 @@ MIRROR = [
     {'id': 'mreso-grenoble', 'network': 'M Réso — Métropole grenobloise', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b6ec7ba4-09bc-46df-b9a1-79a2c2668cf2', 'bounds': [45.0, 5.5, 45.45, 6.0]},
     {'id': 'mreso-gresivaudan', 'network': 'M Réso — Grésivaudan', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2', 'bounds': [45.15, 5.7, 45.5, 6.15]},
     # TréMA (Mâcon) : réseau urbain voisin de l'Ain ; la ressource change à chaque publication → résolution par jeu.
+    # 21/11/2026 : repli précédent (92b18bc7...) devenu un 404 permanent (ressource supprimée côté data.gouv.fr),
+    # ce qui a fait échouer le build du 20/11 quand la résolution dynamique par jeu a transitoirement échoué dans
+    # le run CI et qu'il est retombé sur ce repli mort. Repli mis à jour vers la ressource actuellement publiée
+    # (vérifiée le 21/11/2026, HTTP 200) ; la résolution dynamique reste prioritaire à chaque build.
     {'id': 'trema-macon', 'network': 'TréMA (Mâcon)', 'dataset': 'offre-de-transport-du-reseau-trema-gtfs',
-     'url': 'https://www.data.gouv.fr/api/1/datasets/r/92b18bc7-cd60-41f5-9af7-978eacbe0691', 'bounds': [46.2, 4.7, 46.5, 5.0]},
+     'url': 'https://static.data.gouv.fr/resources/offre-de-transport-du-reseau-trema-gtfs/20260821-115049/trema-gtfs-2026-08-21.zip', 'bounds': [46.2, 4.7, 46.5, 5.0]},
     {'id': 'divia-dijon', 'network': 'Divia Mobilités (Dijon)', 'dataset': 'gtfs-diviamobilites-1',
      'url': 'https://www.data.gouv.fr/fr/datasets/r/e0dbd217-15cd-4e28-9459-211a27511a34', 'bounds': [47.2, 4.95, 47.45, 5.2]},
     {'id': 'ginko-besancon', 'network': 'Ginko (Besançon)', 'dataset': 'gtfs-et-siri-du-reseau-ginko-besancon-lignes-urbaines-et-periurbaines',
