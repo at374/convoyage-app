@@ -1263,7 +1263,11 @@ function makeProviders(r,opts={}){
      // seulement les meilleurs (ex. Y51 Albertville→Annecy : 25 départs officiels, l'ancien plafond de 30
      // suffisait ici mais coupait sur des réseaux plus riches). SAFETY_MAX reste un garde-fou technique très
      // large, pas une limite métier : l'affichage (render) gère la lisibilité via « Voir plus ».
-     const SAFETY_MAX=300;
+     // 22/11/2026 : ce plafond-ci porte sur TOUT le flux GTFS du réseau dans le rayon de marche (donc
+     // potentiellement plusieurs lignes mélangées), pas seulement sur Y51 — 300 candidats/jour pour tout
+     // un réseau est vite dépassé et coupait encore les départs Y51 de l'après-midi malgré les deux autres
+     // plafonds déjà relevés (rank() et local_correspondances). Relevé à 1000 pour la même raison.
+     const SAFETY_MAX=1000;
      // 21/11/2026 (demande Laurent) : networkId/networkUrls/serviceDate conservés sur chaque ligne —
      // nécessaires pour le bouton « Tous les horaires » (dayScheduleForLeg) qui refait une requête GTFS
      // complète sur CE réseau précis, pour CETTE ligne et CES arrêts, sans le filtre « après maintenant ».
