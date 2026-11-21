@@ -697,7 +697,25 @@ function rank(items,task={}){
   const better=firstDifference>=0&&qj[firstDifference]>qo[firstDifference]?j:old;
   seen.set(k,{...better,sources:[...new Set([...(old.sources||[]),...(j.sources||[])])]});
  }
- const all=[...seen.values()].filter(j=>!Array.isArray(j.reasons)||!(j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>String(r).startsWith('marche trop longue'))));
+ let all=[...seen.values()].filter(j=>!Array.isArray(j.reasons)||!(j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>String(r).startsWith('marche trop longue'))));
+ // 21/11/2026 : un même véhicule réel (même ligne GTFS, même course, même date) ressort parfois de
+ // plusieurs moteurs à la fois (trajet direct, correspondance même réseau, correspondance inter-réseaux),
+ // chacun avec sa propre fiche — signature() les traite comme des itinéraires différents puisque la suite
+ // du trajet diffère. Repéré avec le Y51 d'Albertville : la version « direct » et la version « correspondance
+ // même réseau » du MÊME départ Y51 s'affichaient toutes les deux à côté de la version « correspondance Sibra »,
+ // avec plusieurs kilomètres de marche en trop, alors qu'il s'agit du même choix (monter dans CE bus) en moins
+ // bon. On ne garde, par course GTFS réellement empruntée en premier, que celle qui arrive le plus tôt (marche
+ // totale la plus courte à égalité) ; les versions strictement moins bonnes du même véhicule disparaissent.
+ const boardingKey=j=>{const g=j.legs?.[0]?.gtfsRaw;
+  return g&&g.tripId?[String(g.network||j.legs[0].provider||'').trim().toLowerCase(),String(g.tripId),String(g.date||'')].join('|'):null;};
+ const byBoarding=new Map(),unboarded=[];
+ for(const j of all){
+  const k=boardingKey(j);
+  if(!k){unboarded.push(j);continue;}
+  const old=byBoarding.get(k);
+  if(!old||ms(j.arrival)<ms(old.arrival)||(ms(j.arrival)===ms(old.arrival)&&(j.walkMeters||0)<(old.walkMeters||0)))byBoarding.set(k,j);
+ }
+ all=[...byBoarding.values(),...unboarded];
  // Une arrivée des heures avant la prise en charge n'est pas un bon compromis.
  // Garder les alternatives possibles, mais privilégier celles proches de la marge cible.
  const target=ms(task.latestArrival),margin=marginFor(task);
