@@ -826,7 +826,12 @@ function makeProviders(r,opts={}){
    ['cars_isere','Cars Région Isère','cars-region-isere.zip',[44.69,4.74,45.89,6.36]],
    ['cars_savoie','Cars Région Savoie','cars-region-savoie.zip',[45.05,5.62,45.80,7.19]],
    // 18/11/2026 : Cars Région Haute-Savoie (Y02, Y51, Y91-Y94 à la demande…) découpé sur Faucigny / Giffre / Chablais.
-   ['cars_haute_savoie','Cars Région Haute-Savoie','cars-region-haute-savoie.zip',[45.90,6.30,46.30,6.85]],
+   // 21/11/2026 : bbox élargie vers le sud/ouest — la ligne Y51 (Albertville ↔ Annecy) a son terminus à
+   // Albertville (lat ≈ 45,675), hors de l'ancienne emprise (min lat 45,90) : le fournisseur n'était donc
+   // jamais activé (enabled exige task.from ET task.to dans bounds) pour toute mission touchant Albertville,
+   // malgré un GTFS cars-region-haute-savoie.zip qui contient bien la ligne en entier (extract() ne filtre
+   // pas par bbox, seulement par agence). Nouvelle limite sud alignée sur celle de TRA Albertville.
+   ['cars_haute_savoie','Cars Région Haute-Savoie','cars-region-haute-savoie.zip',[45.55,6.20,46.30,6.85]],
    // 18/11/2026 : réseaux présents dans data/gtfs mais absents de ce moteur (audit de couverture).
    ['mreso_grenoble','M Réso Grenoble','mreso-grenoble.zip',[45.0,5.5,45.45,6.0]],
    ['mreso_gresivaudan','M Réso Grésivaudan','mreso-gresivaudan.zip',[45.15,5.7,45.5,6.15]],
@@ -1895,9 +1900,14 @@ function card(doc,j,labels,expanded=false){
     const dayBtn=el(doc,'button','cp-hub-dayline','🕒 Tous les horaires '+(l.line||l.mode)+' du '+dayText(l.departure||raw.serviceDate));
     dayBtn.type='button';
     const dayRes=el(doc,'div','cp-hub-dayline-result');dayRes.setAttribute('aria-live','polite');
+    let dayOpen=false;
     dayBtn.addEventListener('click',e=>{
      e.preventDefault();e.stopPropagation();
      if(dayBtn.disabled)return;
+     // 21/11/2026 : deuxième clic doit replier (le clic ne faisait que relancer la même requête sans jamais
+     // vider dayRes, donc le bouton semblait ne « rien faire » au second clic — signalé par Laurent).
+     if(dayOpen){dayOpen=false;dayRes.textContent='';dayRes.replaceChildren();return;}
+     dayOpen=true;
      dayBtn.disabled=true;dayRes.textContent='Chargement des horaires…';
      dayScheduleForLeg(raw).then(rows=>{
       dayRes.textContent='';
