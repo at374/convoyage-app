@@ -1112,9 +1112,10 @@ function makeProviders(r,opts={}){
       'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
      const {date,clock}=dateParts(when),resource={format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1)};
      // Calcul hors du fil de l'écran (Web Worker) ; en cas d'échec du worker, ancien calcul sur le fil principal (même résultat).
-     let rows=null;
-     if(canWorker()){try{rows=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to))});}catch(e){if(!r.__cpHubWorkerOff)throw e;rows=null;}}
+     let rows=null,_viaWorker=false,_feedInfo=null;
+     if(canWorker()){_viaWorker=true;try{rows=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to))});}catch(e){if(!r.__cpHubWorkerOff)throw e;rows=null;}}
      if(rows===null){
+      _viaWorker=false;
       let promise=cache.get(id+'|'+date);
       if(!promise){
        promise=r.CPGTFSLoader.loadResource(resource,{fetcher,indexServiceDates:[date],retainSourceTables:false});
@@ -1122,8 +1123,12 @@ function makeProviders(r,opts={}){
        promise.catch(()=>cache.delete(id+'|'+date));
       }
       const feed=await promise;
+      _feedInfo={archiveBytes:feed.archiveBytes,expandedBytes:feed.expandedBytes,trips:feed.files?.trips?.length??null,stopTimes:feed.files?.stop_times?.length??null};
       rows=attachGTFSFares(feed,r.CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,pt(task.from),pt(task.to),3000),r.CPGTFSFares);
      }
+     // 21/11/2026 : diagnostic temporaire (bug Y51 « 0 proposition reçue » en direct, non reproduit en simulation) —
+     // capture la taille réelle du flux et le nombre de candidats bruts pour voir où ça diverge sur le téléphone.
+     try{(r.__cpGtfsDebug||(r.__cpGtfsDebug=new Map())).set(name+' GTFS',{at:Date.now(),date,url:urls[0],viaWorker:_viaWorker,rawCandidates:Array.isArray(rows)?rows.length:null,feed:_feedInfo});}catch(_){}
      if(signal?.aborted)return [];
      const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
      // Select the best boarding/alighting stop pair for each actual vehicle
@@ -2041,7 +2046,16 @@ function render(host,v){
  if(v.done&&(errs.length||consulted.length)){
   const d=el(doc,'details','cp-hub-diag');d.appendChild(el(doc,'summary',null,'Moteurs consultés ('+(errs.length+consulted.length)+')'));
   for(const [n,e] of errs)d.appendChild(el(doc,'div',null,'❌ '+n+' : '+e));
-  for(const [n,count] of consulted)d.appendChild(el(doc,'div',null,'✅ '+n+' : '+count+' proposition'+(count>1?'s':'')+' reçue'+(count>1?'s':'')));
+  for(const [n,count] of consulted){
+   // 21/11/2026 : diagnostic temporaire — détail du téléchargement GTFS affiché seulement quand un
+   // moteur local renvoie 0 proposition, pour voir en direct où ça bloque (taille du flux, candidats bruts).
+   let detail='';
+   if(count===0){
+    const dbg=root.__cpGtfsDebug&&root.__cpGtfsDebug.get(n);
+    if(dbg)detail=' [diag : '+(dbg.viaWorker?'worker':'fil principal')+(dbg.feed?' · flux '+(dbg.feed.archiveBytes??'?')+' o compressé / '+(dbg.feed.expandedBytes??'?')+' o décompressé, '+(dbg.feed.trips??'?')+' trips':'')+' · candidats bruts : '+(dbg.rawCandidates??'?')+']';
+   }
+   d.appendChild(el(doc,'div',null,'✅ '+n+' : '+count+' proposition'+(count>1?'s':'')+' reçue'+(count>1?'s':'')+detail));
+  }
   host.appendChild(d);
  }
  // Transparence pour les cars longue distance : l'absence de carte ne doit pas
