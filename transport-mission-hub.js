@@ -1228,12 +1228,27 @@ function makeProviders(r,opts={}){
        try{const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius});rows.push(...c.journeys);}catch(_){}
       }
      }
-     const out=rows.filter(x=>x&&x.departure&&x.arrival).map(x=>({...x,onDemand:x.onDemand||!!x.legs?.some(l=>l&&l.onDemand)}))
-      .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
+     const out=rows.filter(x=>x&&x.departure&&x.arrival).map(x=>({...x,onDemand:x.onDemand||!!x.legs?.some(l=>l&&l.onDemand)}));
+     // 21/11/2026 : bug Y51/correspondances — un même véhicule (A) relié à un même véhicule (B) peut
+     // techniquement « correspondre » à n'importe quel arrêt commun qu'ils desservent tous les deux (des
+     // dizaines, le long de toute la ligne), ce qui produit des milliers de doublons du MÊME trajet logique
+     // (même paire de courses, même horaires), seul l'arrêt de correspondance affiché change. Le dédoublonnage
+     // par tripId+horaires gardait jusqu'ici un candidat arbitraire (ex. Thénésol, 6,4 km de marche) alors
+     // qu'un strict équivalent existait via un arrêt bien plus proche (ex. Gare Routière, 1,3 km). On choisit
+     // désormais, pour chaque trajet logique identique, celui dont la marche totale (accès + sortie) est la
+     // plus courte, avant le dédoublonnage final — même logique que le moteur direct (ligne ~1140).
+     const best=new Map();
+     for(const x of out){
+      const key=String(x.tripId||'')+'|'+x.departure+'|'+x.arrival;
+      const access=Number(x.accessDistanceMeters),egress=Number(x.egressDistanceMeters);
+      const score=Number.isFinite(access)&&Number.isFinite(egress)?access+egress:Infinity;
+      const previous=best.get(key);
+      if(!previous||score<previous.score)best.set(key,{x,score});
+     }
      // 20/11/2026 : demande de Laurent — toutes les correspondances réalisables du jour, pas seulement les
      // 30 meilleures ; garde-fou technique très large (SAFETY_MAX), l'affichage gère la lisibilité.
      const seen=new Set(),uniq=[],SAFETY_MAX=300;
-     for(const x of out.sort((a,b)=>Date.parse(a.arrival)-Date.parse(b.arrival)||Date.parse(a.departure)-Date.parse(b.departure))){
+     for(const {x} of [...best.values()].sort((a,b)=>Date.parse(a.x.arrival)-Date.parse(b.x.arrival)||Date.parse(a.x.departure)-Date.parse(b.x.departure))){
       const k=String(x.tripId||'')+'|'+x.departure;if(seen.has(k))continue;seen.add(k);uniq.push(x);if(uniq.length>=SAFETY_MAX)break;
      }
      return fromGTFS(uniq.sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)),'Correspondances');
