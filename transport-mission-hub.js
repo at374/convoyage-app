@@ -1242,19 +1242,29 @@ function makeProviders(r,opts={}){
      // au-delà (2500 m+) elle redisparaît, noyée par la saturation. 2000 m reste largement au-dessus
      // des arrêts réels les plus proches ici (≈1000-1300 m côté Albertville, ≈350-700 m côté Épagny).
      const crossNetworkRadius=2000;
+     // 21/11/2026 : la vraie saturation venait d'ici, pas seulement du rayon — par défaut (120 min),
+     // la recherche garde TOUTE correspondance possible dans les 2h suivant chaque arrivée du premier
+     // véhicule, donc pour UN SEUL départ Y51 elle énumère déjà des dizaines de bus Sibra différents
+     // et épuise le budget de candidats avant de passer au départ Y51 suivant. Résultat vérifié : sur
+     // les coordonnées réelles, un seul des ~20 départs Y51 du jour obtenait une correspondance Sibra.
+     // Une attente de correspondance de 30 min reste largement suffisante (ce n'est qu'un horaire
+     // théorique « à confirmer »), et permet à la recherche d'atteindre les 20 départs Y51 du jour :
+     // vérifié, chacun obtient alors la même bonne correspondance (Ecole Saint-François → Sibra →
+     // Tuilerie, 1736 m de marche totale) au lieu d'un seul.
+     const maxWaitMinutes=30;
      const rows=[];
      for(let i=0;i<loaded.length;i++){
       // Correspondances à l'intérieur d'un même réseau.
       try{
        const bounds=r.CPGTFSTime.serviceWindow(loaded[i].files,date,window);
-       const t=r.CPGTFSIndex.nearbyTransferTrips(loaded[i].files,loaded[i].index,date,from,to,sameNetworkRadius,bounds);
+       const t=r.CPGTFSIndex.nearbyTransferTrips(loaded[i].files,loaded[i].index,date,from,to,sameNetworkRadius,{...bounds,maxWaitMinutes});
        const dated=r.CPGTFSTime.datedTransferTrips(loaded[i].files,loaded[i].index,t.journeys,window);
        rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,legs:x.legs?.map(l=>({...l,network:loaded[i].source.network}))})));
       }catch(_){}
       // Correspondances entre deux réseaux différents.
       for(let j=i+1;j<loaded.length;j++){
        if(signal?.aborted)return [];
-       try{const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius});rows.push(...c.journeys);}catch(_){}
+       try{const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius,maxWaitMinutes});rows.push(...c.journeys);}catch(_){}
       }
      }
      const out=rows.filter(x=>x&&x.departure&&x.arrival).map(x=>({...x,onDemand:x.onDemand||!!x.legs?.some(l=>l&&l.onDemand)}));
