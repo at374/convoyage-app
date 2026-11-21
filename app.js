@@ -3268,6 +3268,12 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         y51JourRes.className = 'doux';
         y51JourRes.setAttribute('aria-live', 'polite');
         y51Jour.addEventListener('click', async () => {
+          // 21/11/2026 : un deuxième appui replie l'affichage au lieu de relancer le chargement.
+          if (y51JourRes.dataset.cpOuvert === '1') {
+            y51JourRes.textContent = '';
+            y51JourRes.dataset.cpOuvert = '0';
+            return;
+          }
           y51Jour.disabled = true;
           y51JourRes.textContent = 'Chargement des horaires Y51…';
           try {
@@ -3316,8 +3322,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             note.className = 'doux';
             note.textContent = 'Horaires théoriques officiels (GTFS Haute-Savoie). Circulation réelle non vérifiée. Transport non confirmé — vérifiez vous-même.';
             y51JourRes.appendChild(note);
+            y51JourRes.dataset.cpOuvert = '1';
           } catch (_) {
             y51JourRes.textContent = 'Horaires officiels Y51 indisponibles pour cette date. Transport non confirmé — vérifiez vous-même.';
+            y51JourRes.dataset.cpOuvert = '1';
           } finally {
             y51Jour.disabled = false;
           }
