@@ -95,7 +95,7 @@ function directCandidates(files,index,date,origins,destinations){
     found.add(end.stop_id);
     const arrival=minutes(end.arrival_time);
     if(arrival===null||arrival<minutes(start.departure_time)||!regularAccess(end.drop_off_type))continue;
-    journeys.push({tripId,line:route.route_short_name||route.route_long_name||'',headsign:headsignOf(index,trip,times),date,
+    journeys.push({tripId,routeId:trip.route_id,line:route.route_short_name||route.route_long_name||'',headsign:headsignOf(index,trip,times),date,
      from:start.stop_id,to:end.stop_id,departure:start.departure_time,arrival:end.arrival_time,
      serviceScheduled:true,serviceConfirmed:false,onDemand:demandAccess(start.pickup_type)||demandAccess(end.drop_off_type),
      exactOrigin:false,exactDestination:false,accessVerified:false,priceEUR:null});
