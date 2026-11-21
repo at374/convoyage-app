@@ -45,26 +45,37 @@ async function downloadGTFS(resource,fetcher,limitBytes=20*1024*1024,{signal}={}
   if(/text\/html/i.test(contentType))throw new Error('GTFS resource returned HTML');
   const declared=Number(response.headers?.get?.('content-length'));
   if(Number.isFinite(declared)&&declared>limitBytes)throw new Error('GTFS exceeds size limit');
-  if(!response.body?.getReader)throw new Error('Streaming response required');
-  const reader=response.body.getReader(),chunks=[];
-  const cancel=()=>{reader.cancel().catch(()=>{});};
-  signal?.addEventListener('abort',cancel,{once:true});
-  let size=0;
-  try{
-    while(true){
-      if(signal?.aborted)throw new DOMException('GTFS download cancelled','AbortError');
-      const {done,value}=await reader.read();
-      if(signal?.aborted)throw new DOMException('GTFS download cancelled','AbortError');
-      if(done)break;
-      size+=value.byteLength;
-      if(size>limitBytes)throw new Error('GTFS exceeds size limit');
-      chunks.push(value);
-    }
-  }catch(error){await reader.cancel().catch(()=>{});throw error;}
-  finally{signal?.removeEventListener('abort',cancel);reader.releaseLock?.();}
-  const bytes=new Uint8Array(size);
-  let offset=0;
-  for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+  let bytes;
+  if(response.body?.getReader){
+    const reader=response.body.getReader(),chunks=[];
+    const cancel=()=>{reader.cancel().catch(()=>{});};
+    signal?.addEventListener('abort',cancel,{once:true});
+    let size=0;
+    try{
+      while(true){
+        if(signal?.aborted)throw new DOMException('GTFS download cancelled','AbortError');
+        const {done,value}=await reader.read();
+        if(signal?.aborted)throw new DOMException('GTFS download cancelled','AbortError');
+        if(done)break;
+        size+=value.byteLength;
+        if(size>limitBytes)throw new Error('GTFS exceeds size limit');
+        chunks.push(value);
+      }
+    }catch(error){await reader.cancel().catch(()=>{});throw error;}
+    finally{signal?.removeEventListener('abort',cancel);reader.releaseLock?.();}
+    bytes=new Uint8Array(size);
+    let offset=0;
+    for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+  }else{
+    // Certains WebView Android n'exposent pas de corps de réponse flux (response.body.getReader).
+    // On bascule sur arrayBuffer() complet, avec la même limite de taille appliquée après coup.
+    if(signal?.aborted)throw new DOMException('GTFS download cancelled','AbortError');
+    const buffer=await response.arrayBuffer();
+    if(signal?.aborted)throw new DOMException('GTFS download cancelled','AbortError');
+    if(buffer.byteLength>limitBytes)throw new Error('GTFS exceeds size limit');
+    bytes=new Uint8Array(buffer);
+  }
+  const size=bytes.byteLength;
   if(size<4||bytes[0]!==0x50||bytes[1]!==0x4b||
     !((bytes[2]===3&&bytes[3]===4)||(bytes[2]===5&&bytes[3]===6)))
     throw new Error('GTFS is not a ZIP archive');
