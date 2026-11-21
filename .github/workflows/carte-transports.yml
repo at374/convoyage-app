@@ -1,0 +1,58 @@
+name: Carte des transports (mise à jour automatique)
+# Régénère carte-transports.html dès que les données horaires ou le module Transports changent
+# (publiée avec le site : https://at374.github.io/convoyage-app/carte-transports.html).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'data/gtfs/**'
+      - 'transport-mission-hub.js'
+      - 'scripts/build_regional_gtfs.py'
+      - 'tools/carte-transports/**'
+  workflow_run:
+    workflows: ['Build regional GTFS (Oùra extracts + official mirrors)', 'Construire GTFS nationaux AURA (chaque semaine + manuel)', 'Build SIBRA daily GTFS data', 'Audit regional GTFS Oura']
+    types: [completed]
+  schedule:
+    - cron: '17 */6 * * *'
+permissions:
+  contents: write
+  pages: write
+  actions: read
+concurrency:
+  group: carte-transports
+  cancel-in-progress: false
+jobs:
+  carte:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Générer la carte
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 -I tools/carte-transports/generer.py carte-transports.html
+      - name: Publier si changé
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Seule la ligne « Dernière mise à jour » change à chaque passage : on ne publie que si le contenu utile a changé.
+          git add carte-transports.html
+          if git diff --cached --quiet; then exit 0; fi
+          if git show HEAD:carte-transports.html >/dev/null 2>&1; then
+            diff <(git show HEAD:carte-transports.html | sed 's/Dernière mise à jour : <b>[^<]*<\/b>//') <(sed 's/Dernière mise à jour : <b>[^<]*<\/b>//' carte-transports.html) >/dev/null && exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Carte des transports : mise à jour automatique'
+          for i in 1 2 3 4; do
+            git fetch origin main
+            git rebase origin/main && git push origin HEAD:main && break
+            sleep 5
+          done
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/pages/builds" || true

@@ -5,3 +5,6 @@
 
 ## Règle (demandée par Laurent le 20/11/2026)
 La carte doit être republiée À CHAQUE CHANGEMENT du module Transports (moteurs, makeProviders, scripts GTFS, workflows de données, tri/affichage des trajets), pas seulement chaque jour. Après un tel commit : relancer scan.py, remplir le gabarit et republier sur le même artefact. scan.py marque chaque réseau « moteur » (branché ou non à transport-mission-hub.js).
+
+## Mise à jour automatique (21/11/2026)
+`.github/workflows/carte-transports.yml` lance `generer.py` à chaque changement de data/gtfs, de transport-mission-hub.js, des scripts GTFS ou de ce dossier, à la fin de chaque workflow de données, et toutes les 6 h. Il publie `carte-transports.html` avec le site : https://at374.github.io/convoyage-app/carte-transports.html (la carte « temps réel » ; l'artefact Claude reste republié à la main/chaque jour).
