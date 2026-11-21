@@ -363,7 +363,27 @@ async function completeWalks(j,task,router,scooter,regional){
     if(ok){
      let answer=null;try{answer=await regional.run(subTask);}catch(_){answer=null;}
      const best=Array.isArray(answer)?answer.find(it=>it&&Array.isArray(it.legs)&&it.legs.length&&it.legs.some(l=>l&&l.kind!=='walk')):null;
-     if(best)return renameEnds({...best,legs:best.legs},{fromName,toName}).legs;
+     if(best){
+      let chosen=best.legs.slice();
+      const headLeg=chosen[0],tailLeg=chosen[chosen.length-1];
+      // 21/11/2026 (Laurent : le bus EVA'D 02 dépose à Thuyset Ouest, à 1,5-2 km du 89 avenue de
+      // Saint-Disdille, sans aucune marche ensuite jusqu'à l'adresse réelle) : le bus/tram de
+      // substitution dessert SON arrêt le plus proche de a/b, pas forcément a ou b exactement —
+      // contrairement à une marche directe, qui elle arrive toujours pile au point visé. Ajouter les
+      // marches résiduelles aux deux bouts quand elles existent, au lieu de laisser le trajet s'arrêter
+      // à l'arrêt de bus/tram.
+      if(tailLeg&&tailLeg.toPoint&&meters(tailLeg.toPoint,b)>SAME_POINT_M){
+       const tailArr=ms(tailLeg.arrival);
+       if(Number.isFinite(tailArr)){let tail=null;try{tail=await call(tailLeg.toPoint,b);}catch(_){}
+        if(tail)chosen=[...chosen,walkLeg(tail,tailLeg.toPoint,b,tailLeg.to||fromName,toName,tailArr)];}
+      }
+      if(headLeg&&headLeg.fromPoint&&meters(a,headLeg.fromPoint)>SAME_POINT_M){
+       const headDep=ms(headLeg.departure);
+       if(Number.isFinite(headDep)){let head=null;try{head=await call(a,headLeg.fromPoint);}catch(_){}
+        if(head)chosen=[walkLeg(head,a,headLeg.fromPoint,fromName,headLeg.from||toName,headDep-head.durationSeconds*1000),...chosen];}
+      }
+      return renameEnds({...best,legs:chosen},{fromName,toName}).legs;
+     }
     }
    }
   }
@@ -841,12 +861,14 @@ function rank(items,task={}){
  const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||ms(a.departure)-ms(b.departure)||ms(a.arrival)-ms(b.arrival)||confirmedFirst(a,b));   // autres propositions : les plus matinales d'abord
  // 21/11/2026 (Laurent : "l'affichage bloque pendant la lecture et le défilement") : depuis que la recherche
  // de bus local couvre tout le territoire (et pas seulement Grenoble), une même fiche peut légitimement
- // trouver des dizaines, voire des centaines, de trajets différents. render() reconstruit TOUTE la liste à
- // chaque mise à jour réseau (plusieurs fois par seconde) — même les cartes repliées dans « Voir plus »
- // étaient reconstruites en entier. Au-delà de la cinquantaine de propositions, l'écran se figeait au
- // défilement. On garde les plus pertinentes (déjà triées : réalisables puis programmées, plus matinales
- // d'abord) et on compte le reste sans le construire.
- const MAX_OTHERS=40,othersOverflow=Math.max(0,others.length-MAX_OTHERS);
+ // trouver des dizaines de trajets différents. render() reconstruit TOUTE la liste à chaque mise à jour
+ // réseau (plusieurs fois par seconde) — même les cartes repliées dans « Voir plus » étaient reconstruites
+ // en entier. La cause principale (le calcul des correspondances sur le fil principal) est maintenant
+ // déplacée dans le Web Worker ; ce plafond ne reste qu'un garde-fou technique très large, pas une limite
+ // métier. ATTENTION : 40 coupait déjà les départs Y51 Albertville→Annecy de l'après-midi (le tri garde
+ // les plus matinaux en premier), régression repérée et corrigée le jour même — ne jamais redescendre ce
+ // chiffre sans compter d'abord les trajets réels d'une ligne dense sur une journée complète.
+ const MAX_OTHERS=300,othersOverflow=Math.max(0,others.length-MAX_OTHERS);
  return {picks,others:others.slice(0,MAX_OTHERS),othersOverflow,total:all.length};
 }
 
@@ -1142,7 +1164,7 @@ function makeProviders(r,opts={}){
   };
   // Web Worker unique (réutilisé) : lecture et recherche des réseaux locaux hors du fil de l'écran.
   const canWorker=()=>!opts.fetcher&&typeof r.Worker==='function'&&!r.__cpHubWorkerOff;
-  const workerRows=(key,urls,date,from,to,extra)=>new Promise((resolve,reject)=>{
+  const workerCall=payload=>new Promise((resolve,reject)=>{
    let w=r.__cpHubWorker;
    if(!w){
     w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js');r.__cpHubWorkerPending=new Map();
@@ -1154,8 +1176,14 @@ function makeProviders(r,opts={}){
    const id=(r.__cpHubWorkerSeq=(r.__cpHubWorkerSeq||0)+1);
    const t=setTimeout(()=>{r.__cpHubWorkerPending.delete(id);reject(new Error('timeout'));},90000);
    r.__cpHubWorkerPending.set(id,{resolve,reject,t});
-   try{w.postMessage({id,key,urls,date,from,to,radius:3000,...extra});}catch(e){r.__cpHubWorkerPending.delete(id);clearTimeout(t);reject(e);}
+   try{w.postMessage({id,...payload});}catch(e){r.__cpHubWorkerPending.delete(id);clearTimeout(t);reject(e);}
   });
+  const workerRows=(key,urls,date,from,to,extra)=>workerCall({key,urls,date,from,to,radius:3000,...extra});
+  // 21/11/2026 (Laurent : « l'écran se fige pendant la recherche ») : la recherche de correspondances
+  // (nearbyTransferTrips même réseau + CPGTFSFederation.crossNetworkTrips entre réseaux, jusqu'à 28 paires
+  // de réseaux) est le calcul le plus lourd de toute la recherche transport et tournait sur le fil principal.
+  // Déplacée dans le même worker que les trajets directs (local_<id>) : voir transport-hub-local-worker.js.
+  const workerCorrespondances=payload=>workerCall({op:'correspondances',...payload});
   for(const [id,name,file,bounds] of localNetworks){
    P['local_'+id]={name:name+' GTFS',
     enabled:task=>!!queryWindow(task)&&inBounds(pt(task.from),bounds)&&inBounds(pt(task.to),bounds),
@@ -1241,11 +1269,12 @@ function makeProviders(r,opts={}){
   if(r.CPGTFSFederation?.crossNetworkTrips&&r.CPGTFSTime?.datedTrips&&r.CPGTFSIndex?.nearbyTransferTrips){
    const sncfFeed=['sncf_ter','SNCF (TER, TGV)','national-sncf-aura.zip',[44.0,3.6,46.7,7.4]];
    const area=b=>(b[2]-b[0])*(b[3]-b[1]);
+   const urlsFor=file=>[...new Set([deployedBase?deployedBase+file:null,base+file,
+     'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
    const feedFor=(id,name,file,date)=>{
     const key='x|'+id+'|'+date;let promise=cache.get(key);
     if(!promise){
-     const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
-      'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
+     const urls=urlsFor(file);
      promise=r.CPGTFSLoader.loadResource({format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1),datasetId:id,network:name},{fetcher,indexServiceDates:[date],retainSourceTables:false});
      cache.set(key,promise);promise.catch(()=>cache.delete(key));
     }
@@ -1267,8 +1296,6 @@ function makeProviders(r,opts={}){
      if(!Number.isFinite(when))return [];
      const {date,clock}=dateParts(when);
      const nets=pickFeeds(task);
-     const loaded=(await Promise.all(nets.map(n=>feedFor(n[0],n[1],n[2],date).catch(()=>null)))).filter(Boolean);
-     if(signal?.aborted||loaded.length<1)return [];
      const from=pt(task.from),to=pt(task.to);
      const window={...(Number.isFinite(ms(task.earliestDeparture))?{earliestDeparture:task.earliestDeparture}:{}),
       ...(Number.isFinite(ms(task.latestArrival))?{latestArrival:task.latestArrival}:{}),marginMinutes:marginFor(task)};
@@ -1297,21 +1324,37 @@ function makeProviders(r,opts={}){
      // vérifié, chacun obtient alors la même bonne correspondance (Ecole Saint-François → Sibra →
      // Tuilerie, 1736 m de marche totale) au lieu d'un seul.
      const maxWaitMinutes=30;
-     const rows=[];
-     for(let i=0;i<loaded.length;i++){
-      // Correspondances à l'intérieur d'un même réseau.
-      try{
-       const bounds=r.CPGTFSTime.serviceWindow(loaded[i].files,date,window);
-       const t=r.CPGTFSIndex.nearbyTransferTrips(loaded[i].files,loaded[i].index,date,from,to,sameNetworkRadius,{...bounds,maxWaitMinutes});
-       const dated=r.CPGTFSTime.datedTransferTrips(loaded[i].files,loaded[i].index,t.journeys,window);
-       rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,legs:x.legs?.map(l=>({...l,network:loaded[i].source.network}))})));
-      }catch(_){}
-      // Correspondances entre deux réseaux différents.
-      for(let j=i+1;j<loaded.length;j++){
-       if(signal?.aborted)return [];
-       try{const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius,maxWaitMinutes});rows.push(...c.journeys);}catch(_){}
+     // 21/11/2026 (Laurent : « l'écran se fige pendant la recherche ») : cette double boucle (jusqu'à 28
+     // paires de réseaux, chacune examinant jusqu'à 100 000 combinaisons d'horaires via crossNetworkTrips)
+     // est le calcul le plus lourd de toute la recherche transport. Elle tournait entièrement sur le fil
+     // principal et figeait l'affichage pendant son exécution. Calcul hors du fil de l'écran (Web Worker,
+     // même worker que les trajets directs locaux) ; en cas d'échec du worker, ancien calcul sur le fil
+     // principal (même résultat) en secours.
+     let rows=null;
+     if(canWorker()){
+      try{rows=await workerCorrespondances({nets:nets.map(n=>({id:n[0],name:n[1],urls:urlsFor(n[2])})),date,from,to,window,sameNetworkRadius,crossNetworkRadius,maxWaitMinutes});}
+      catch(e){if(!r.__cpHubWorkerOff)throw e;rows=null;}
+     }
+     if(rows===null){
+      const loaded=(await Promise.all(nets.map(n=>feedFor(n[0],n[1],n[2],date).catch(()=>null)))).filter(Boolean);
+      if(signal?.aborted||loaded.length<1)return [];
+      rows=[];
+      for(let i=0;i<loaded.length;i++){
+       // Correspondances à l'intérieur d'un même réseau.
+       try{
+        const bounds=r.CPGTFSTime.serviceWindow(loaded[i].files,date,window);
+        const t=r.CPGTFSIndex.nearbyTransferTrips(loaded[i].files,loaded[i].index,date,from,to,sameNetworkRadius,{...bounds,maxWaitMinutes});
+        const dated=r.CPGTFSTime.datedTransferTrips(loaded[i].files,loaded[i].index,t.journeys,window);
+        rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,legs:x.legs?.map(l=>({...l,network:loaded[i].source.network}))})));
+       }catch(_){}
+       // Correspondances entre deux réseaux différents.
+       for(let j=i+1;j<loaded.length;j++){
+        if(signal?.aborted)return [];
+        try{const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius,maxWaitMinutes});rows.push(...c.journeys);}catch(_){}
+       }
       }
      }
+     if(signal?.aborted)return [];
      const out=rows.filter(x=>x&&x.departure&&x.arrival).map(x=>({...x,onDemand:x.onDemand||!!x.legs?.some(l=>l&&l.onDemand)}));
      // 21/11/2026 : bug Y51/correspondances — un même véhicule (A) relié à un même véhicule (B) peut
      // techniquement « correspondre » à n'importe quel arrêt commun qu'ils desservent tous les deux (des
