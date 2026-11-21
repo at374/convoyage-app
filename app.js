@@ -2069,6 +2069,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           delete pendingViews[label];
         }
         try{updateDayTabs?.();}catch(_){}
+        // 22/11/2026 : l'étiquette de diagnostic restait « collée » à la dernière phase connue (ex.
+        // « transports:rendu ») même longtemps après la fin du rendu, attribuant à tort tout blocage
+        // ultérieur (sans rapport) au rendu — ce qui a fait perdre du temps à chercher au mauvais endroit.
+        // Remise à « idle » juste après : un blocage étiqueté « idle » n'est PAS pendant un rendu.
+        window.CPPh?.('transports:idle');
       };
       const startTransportHub=()=>{
         window.CPPh?.('transports:ouverture');
@@ -2227,7 +2232,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
               const sec=transportDestinations[label];
               const after=legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);
               after.insertAdjacentElement('afterend',host);}
+            window.CPPh?.('transports:rendu');
             Hub.render(host,view);
+            window.CPPh?.('transports:idle');
             labelState[label]={done:view.done,total:view.total};updateDayTabs();
           }});
         session.signatureKey=signature;transportHub=session;startDayLabels(activeDay);
