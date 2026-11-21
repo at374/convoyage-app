@@ -2,7 +2,10 @@
 (function () {
   'use strict';
   // V254 : mesure des blocages sur le téléphone (affichée en bas de la fenêtre du trajet) : chaque arrêt de l'écran de plus de 0,3 s est noté avec l'étape en cours.
-  const GAPS = []; let dernier = performance.now();
+  // 21/11/2026 : Laurent signale un blocage persistant à l'ouverture des transports, non expliqué par les
+  // correctifs déjà faits (recherche hors fil, rendus regroupés). Exposé sur window pour afficher la même
+  // mesure directement dans l'onglet Transports (app.js) au lieu de deviner encore à l'aveugle.
+  const GAPS = window.__cpGaps = []; let dernier = performance.now();
   window.CPPh = x => { window.__ph = x; };
   const TPS = []; window.CPT = (n, t0) => { TPS.push(n + ' ' + Math.round(performance.now() - t0) + ' ms'); if (TPS.length > 8) TPS.shift(); };
   const LAY = n => { const t0 = performance.now(); void document.body.offsetHeight; window.CPT('mise en page ' + n, t0); };   // V257 : coût d'un recalcul de mise en page sur ce téléphone

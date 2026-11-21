@@ -2035,11 +2035,26 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       panel.appendChild(sourcePanel);
       // Keep manual controls available without placing them ahead of automatic results.
       sourcePanel.appendChild(refreshTransport);
+      // 21/11/2026 (Laurent : « ça se fige toujours ») : malgré le calcul hors fil et les rendus regroupés,
+      // le blocage persiste et n'est pas reproduit ici — on affiche directement la mesure des blocages
+      // réels du téléphone (déjà utilisée pour « Voiture et péages ») dans l'onglet Transports lui-même,
+      // pour savoir enfin QUAND et COMBIEN de temps ça bloque, au lieu de continuer à deviner.
+      {
+        const diag=document.createElement('p');diag.className='doux';diag.style.fontSize='.68rem';diag.style.marginTop='4px';
+        sourcePanel.appendChild(diag);
+        const majDiag=()=>{if(!diag.isConnected)return;
+         const g=window.__cpGaps||[];
+         diag.textContent='🩺 '+(g.length?'blocages mesurés sur ce téléphone : '+g.slice(-6).join(' | '):'aucun blocage mesuré pour l’instant');
+        };
+        const iv=setInterval(()=>{if(!diag.isConnected){clearInterval(iv);return;}majDiag();},1000);
+        majDiag();
+      }
       const localCards={};
       // Hub transports : TripGo, Suisse, Mobilités M, SNCF et GTFS local réunis et classés automatiquement.
       const hubHosts={};
       renderPending=()=>{
         const Hub=window.CPTransportHub;if(!Hub)return;
+        window.CPPh?.('transports:rendu');
         for(const [label,view] of Object.entries(pendingViews)){
           const sec=transportDestinations[label];if(!sec||sec.hidden)continue;
           let host=hubHosts[label];
@@ -2054,6 +2069,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         try{updateDayTabs?.();}catch(_){}
       };
       const startTransportHub=()=>{
+        window.CPPh?.('transports:ouverture');
         const Hub=window.CPTransportHub;
         if(!Hub||!panel.isConnected)return;
         // Communes absentes de la table intégrée (Archamps, Viviers-du-Lac…) : sans point GPS le moteur refuse de chercher
