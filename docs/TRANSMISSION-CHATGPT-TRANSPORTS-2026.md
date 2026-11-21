@@ -471,3 +471,53 @@ malgré un robot parfaitement fonctionnel. Corrigé par un `PATCH` supplémentai
 par Laurent (`gcloud run deploy hiflow-sync --source .` depuis `server/hiflow-sync-deploy`, étape 3 de
 `docs/HIFLOW-SYNC-CLOUD-RUN-DEPLOIEMENT-20261119.md`) pour prendre effet — un `git push` seul ne redéploie
 pas un service Cloud Run.
+
+## Mise à jour du 21/11/2026 — IDFM Paris + Transilien câblés, robot Hiflow multi-convoyeurs
+
+**Île-de-France câblée** (suite de l'entrée précédente). Trois itérations d'horizon nécessaires pour
+`idfm-paris` (réseau métro+bus+RER le plus dense câblé jusqu'ici, malgré une bbox déjà resserrée à Paris
+intra-muros) :
+- 5j → 24,47 Mo compressés (plafond build 12 Mo dépassé de plus de 2x)
+- 2j → 11,96 Mo compressés (OK) mais `stop_times.txt` décompressé à 106,54 Mo (plafond runtime 64 Mo
+  largement dépassé — rappel : le plafond build (compressé) et le plafond runtime (décompressé, par
+  fichier) sont deux limites indépendantes, déjà vu avec les autres métros mais jamais un tel écart)
+- 1j → 61,72 Mo décompressés : **OK, mais marge serrée (2,3 Mo sur 64)**. Vérifié en réel : 226/156/300
+  trajets sur 3 jours testés.
+
+`transilien-idf` (flux SNCF distinct, bbox large région) n'avait au départ aucun horizon (tout le
+calendrier gardé) : 9,4 Mo compressés mais `stop_times.txt` à 66,53 Mo, au-dessus du plafond runtime.
+Horizon réduit à 21j → 30,01 Mo décompressés, largement sous le plafond. Vérifié en réel : 102/73/59
+trajets sur 3 jours testés.
+
+Les deux câblés dans `transport-mission-hub.js` (`idfm_paris`, `transilien_idf`), `transport-coverage.js`
+mis à jour avec le détail des itérations.
+
+**Deux limites à garder en tête** :
+1. `idfm_paris` ne couvre que **Paris intra-muros** — pas Roissy, Orly, La Défense ni la banlieue. Une
+   vraie couverture Île-de-France demanderait un second passage (bbox élargie) si la taille le permet,
+   ou un découpage par zone plus fin.
+2. La marge de `idfm_paris` (2,3 Mo sur 64) est la plus faible de tous les réseaux câblés cette session :
+   si le flux grossit légèrement au prochain cron hebdomadaire (lundi), `stop_times.txt` pourrait
+   repasser au-dessus du plafond et faire échouer le chargement silencieusement. À surveiller via
+   `transport-coverage.js` ; si ça se reproduit, resserrer la bbox (ex. rive droite/rive gauche séparément)
+   plutôt que de redescendre l'horizon sous 1 jour (en dessous, la couverture deviendrait quasi inutile :
+   aucun trajet au-delà de demain ne serait trouvé).
+
+**Robot Hiflow Cloud Run : passage multi-convoyeurs** (demande explicite Laurent, après qu'il a remarqué
+que le service ne synchronisait qu'un seul compte via `HIFLOW_USER_ID`). Le robot
+(`server/hiflow-sync-deploy/hiflow-sync.cjs`) interroge désormais Supabase à chaque passage pour la liste
+de tous les convoyeurs ayant un identifiant Hiflow actif (`plateforme_identifiants`, `active=true`), et
+synchronise chacun avec **ses propres** email/mot de passe, dans un navigateur neuf à chaque fois (aucune
+session partagée). L'échec d'un convoyeur n'empêche jamais les autres. Bug latent corrigé au passage :
+`filtreOrphelines()` (ménage des missions « plus vues ») et `fauteDeFacturesRecentes()` ne filtraient pas
+par utilisateur — avec plusieurs convoyeurs actifs, le ménage de l'un aurait pu affecter les missions/
+factures d'un autre. **Nécessite un redéploiement manuel du service Cloud Run** pour prendre effet (même
+commande que d'habitude, mais `HIFLOW_USER_ID` n'est plus un argument requis).
+
+**Alerte de déconnexion Hiflow corrigée** (même session, question de Laurent « si déconnexion, je le
+saurai ? ») : le message d'erreur du robot en cas de login refusé (`'connexion Hiflow refusée'`) ne
+matchait pas la regex de déclenchement de la grande alerte rouge dans `app.js`
+(`/connect|identifi|session|login/i` — « connexion » ne contient pas « connect », à cause du x). Une vraie
+déconnexion Hiflow n'aurait donc fait changer que la pastille colorée, jamais déclenché l'alerte visible
+pourtant conçue pour ce cas précis. Reformulé pour inclure « identifi ». Même redéploiement requis que
+ci-dessus (un seul redéploiement suffit pour les deux fixes).

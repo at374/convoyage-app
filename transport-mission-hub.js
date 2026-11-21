@@ -1013,7 +1013,15 @@ function makeProviders(r,opts={}){
    ['tbm_bordeaux', "TBM (Bordeaux Métropole)", 'tbm-bordeaux.zip', [44.75,-0.70,44.95,-0.45]],
    // TAO Orléans Métropole : horizon réduit à 15 j (scripts/build_regional_gtfs.py) ; archive réelle
    // mesurée à 37,35 Mo (confortablement sous les 64 Mo maxFileBytes), ajoutée le 20/11/2026.
-   ['tao_orleans', "TAO (Orléans Métropole)", 'tao-orleans.zip', [47.80,1.78,47.95,2.05]]
+   ['tao_orleans', "TAO (Orléans Métropole)", 'tao-orleans.zip', [47.80,1.78,47.95,2.05]],
+   // Île-de-France Mobilités (Paris intra-muros UNIQUEMENT — pas Roissy/Orly/La Défense/banlieue) :
+   // réseau si dense (métro+bus+RER) qu'il a fallu descendre l'horizon à 1 seul jour (après 5j puis 2j,
+   // tous deux encore au-dessus des 64 Mo maxFileBytes) pour que stop_times.txt tienne à 61,72 Mo — marge
+   // serrée (2,3 Mo), à resurveiller si le cron hebdomadaire fait grossir l'extrait. Ajouté le 21/11/2026.
+   ['idfm_paris', "Île-de-France Mobilités (Paris intra-muros)", 'idfm-paris.zip', [48.81,2.22,48.91,2.43]],
+   // SNCF Transilien/RER Île-de-France : dataset distinct d'IDFM, horizon réduit à 21 j (pas de limite au
+   // départ, stop_times.txt dépassait les 64 Mo à 66,53 Mo) ; mesuré ensuite à 30,01 Mo. Ajouté le 21/11/2026.
+   ['transilien_idf', "SNCF Transilien / RER (Île-de-France)", 'transilien-idf.zip', [48.05,1.35,49.25,3.60]]
   ];
   // Archives are published on the transport feature branch, not necessarily on
   // the deployed GitHub Pages site. Explicit HTTPS URLs avoid a silent 404
