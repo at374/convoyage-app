@@ -1530,9 +1530,15 @@ async function accessFor(j,task,otp,signal){
  let list=[];try{list=await otp.run(t2,signal)||[];}catch(e){return miss('accès à la gare routière non calculé ('+String(e&&e.message||e).slice(0,60)+')');}
  const ok=list.filter(a=>a&&Array.isArray(a.legs)&&a.legs.length&&a.legs.every(l=>l&&Number.isFinite(ms(l.departure))&&Number.isFinite(ms(l.arrival))));
  let best=null;
+ // 21/11/2026 : parmi les accès compatibles avec l'horaire, le plus proche de l'heure limite était toujours choisi —
+ // ce qui favorise mécaniquement une longue marche (qui consomme toute la marge) plutôt qu'un bus local (Sibra…)
+ // arrivant plus tôt avec de la marge. Repéré en réel : 37 min de marche proposées au départ du domicile alors
+ // qu'un bus Sibra existait. On choisit maintenant l'option qui marche le moins, l'heure ne servant qu'à départager
+ // les options à marche égale.
+ const walkOf=a=>(a.legs||[]).filter(isFoot).reduce((s,l)=>s+(Number(l.distanceMeters)||0),0);
  if(side==='from'){const dep=ms(first.departure);const fit=ok.filter(a=>ms(a.legs[a.legs.length-1].arrival)<=dep-gap&&(!Number.isFinite(ms(task.earliestDeparture))||ms(a.legs[0].departure)>=ms(task.earliestDeparture)));
-  best=fit.sort((a,b)=>ms(b.legs[b.legs.length-1].arrival)-ms(a.legs[a.legs.length-1].arrival))[0];}
- else{const arr=ms(last.arrival);const fit=ok.filter(a=>ms(a.legs[0].departure)>=arr+gap);best=fit.sort((a,b)=>ms(a.legs[a.legs.length-1].arrival)-ms(b.legs[b.legs.length-1].arrival))[0];}
+  best=fit.sort((a,b)=>walkOf(a)-walkOf(b)||ms(b.legs[b.legs.length-1].arrival)-ms(a.legs[a.legs.length-1].arrival))[0];}
+ else{const arr=ms(last.arrival);const fit=ok.filter(a=>ms(a.legs[0].departure)>=arr+gap);best=fit.sort((a,b)=>walkOf(a)-walkOf(b)||ms(a.legs[a.legs.length-1].arrival)-ms(b.legs[b.legs.length-1].arrival))[0];}
  if(!best)return miss('aucun accès à la gare routière trouvé dans les horaires');
  const merged=side==='from'?[...best.legs,...legs]:[...legs,...best.legs];
  return {...j,needsAccess:undefined,legs:merged,sources:[...new Set([...(j.sources||[j.source]),...(best.sources||[best.source]).filter(Boolean)])],
