@@ -2,7 +2,7 @@
    se font ICI, hors du fil de l'écran (l'application ne se fige plus pendant le calcul). Résultat identique au calcul
    sur le fil principal : mêmes fonctions (transport-gtfs-loader / -index / -fares). */
 'use strict';
-importScripts('transport-catalogue.js','transport-gtfs-index.js','transport-gtfs-time.js','transport-gtfs-federation.js','transport-gtfs-loader.js','transport-gtfs-fares.js');
+importScripts('transport-catalogue.js','transport-gtfs-index.js','transport-gtfs-time.js','transport-gtfs-federation.js','transport-gtfs-loader.js','transport-gtfs-fares.js','transport-national-gtfs-journeys.js');
 const feeds=new Map();   // «id|date» -> promesse du flux (6 au maximum)
 const cacheFetch=async(url,init)=>{
  if(!self.caches||!/\/data\/gtfs\/[^/?]+\.zip(\?|$)/.test(String(url)))return fetch(url,init);
@@ -38,29 +38,55 @@ const feedFor=async(key,urls,date)=>{
 // toute la recherche de transport, et il bloquait l'affichage/le défilement pendant qu'il tournait. Il est
 // désormais fait ICI, hors du fil de l'écran, comme les trajets directs (local_<id>) le sont déjà.
 const runCorrespondances=async data=>{
- const {nets,date,from,to,window,sameNetworkRadius,crossNetworkRadius,maxWaitMinutes,signalAborted}=data;
+ const {nets,date,from,to,window,sameNetworkRadius,crossNetworkRadius,maxWaitMinutes}=data;
  const loaded=(await Promise.all(nets.map(async n=>{
-  try{const feed=await feedFor(n.id+'|'+date,n.urls,date);return {...feed,source:{network:n.name}};}catch(_){return null;}
+  try{
+   const feed=await feedFor(n.id+'|'+date,n.urls,date);
+   // 21/11/2026 : datasetId doit être propagé dans source (CPGTFSFederation.crossNetworkTrips exige des
+   // identifiants distincts par réseau), et networkUrls/serviceDate sont attachés à chaque trajet/correspondance
+   // ci-dessous pour que le bouton « Tous les horaires » fonctionne aussi sur les résultats de correspondance (Y22).
+   return {...feed,source:{...feed.source,network:n.name,datasetId:n.id},__urls:n.urls};
+  }catch(_){return null;}
  }))).filter(Boolean);
- if(signalAborted||loaded.length<1)return [];
+ if(loaded.length<1)return [];
  const rows=[];
  for(let i=0;i<loaded.length;i++){
   try{
    const bounds=CPGTFSTime.serviceWindow(loaded[i].files,date,window);
    const t=CPGTFSIndex.nearbyTransferTrips(loaded[i].files,loaded[i].index,date,from,to,sameNetworkRadius,{...bounds,maxWaitMinutes});
    const dated=CPGTFSTime.datedTransferTrips(loaded[i].files,loaded[i].index,t.journeys,window);
-   rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,legs:x.legs?.map(l=>({...l,network:loaded[i].source.network}))})));
+   rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,
+    legs:x.legs?.map(l=>({...l,network:loaded[i].source.network,networkUrls:loaded[i].__urls,serviceDate:l.date||date}))})));
   }catch(_){}
   for(let j=i+1;j<loaded.length;j++){
-   try{const c=CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius,maxWaitMinutes});rows.push(...c.journeys);}catch(_){}
+   try{
+    const c=CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius,maxWaitMinutes});
+    rows.push(...c.journeys.map(x=>({...x,legs:x.legs.map(l=>({...l,
+     networkUrls:(l.networkId===loaded[j].source.datasetId?loaded[j].__urls:loaded[i].__urls),
+     serviceDate:l.date||date}))})));
+   }catch(_){}
   }
  }
  return rows;
+};
+// 21/11/2026 (Laurent : « ça bloque toujours ») : SNCF (TER/TGV), FlixBus et BlaBlaCar Bus (national_sncf,
+// national_blablacarBus, national_flixbus dans transport-mission-hub.js) appelaient CPNationalGTFSJourneys.
+// loadAndSearch() directement sur le fil principal — jusqu'à 4 recherches par mission (fenêtre normale,
+// élargie à 5 km, nuit, ancrage) sur le plus gros flux de tous (SNCF national). Fait ICI désormais ; en cas
+// d'échec du worker, ancien calcul sur le fil principal (même résultat).
+const runNational=async data=>{
+ const {operator,resource,searchOptions}=data;
+ return self.CPNationalGTFSJourneys.loadAndSearch({operator,resource,fetcher:cacheFetch,...searchOptions});
 };
 self.onmessage=async({data})=>{
  const {id,op}=data||{};
  if(op==='correspondances'){
   try{self.postMessage({id,rows:await runCorrespondances(data)});}
+  catch(e){self.postMessage({id,error:String(e&&e.message||e)});}
+  return;
+ }
+ if(op==='national'){
+  try{self.postMessage({id,result:await runNational(data)});}
   catch(e){self.postMessage({id,error:String(e&&e.message||e)});}
   return;
  }

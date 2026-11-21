@@ -903,6 +903,32 @@ function makeProviders(r,opts={}){
   }catch(e){return rawFetch(url,init);}
  };
  const P={};
+ const canWorker=()=>!opts.fetcher&&typeof r.Worker==='function'&&!r.__cpHubWorkerOff;
+ const workerCall=payload=>new Promise((resolve,reject)=>{
+  let w=r.__cpHubWorker;
+  if(!w){
+   w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js');r.__cpHubWorkerPending=new Map();
+   const fail=e=>{r.__cpHubWorkerOff=true;r.__cpHubWorker=null;for(const q of r.__cpHubWorkerPending.values())q.reject(e);r.__cpHubWorkerPending.clear();try{w.terminate();}catch(_){}};
+   w.onerror=()=>fail(new Error('worker'));w.onmessageerror=()=>fail(new Error('worker'));
+   w.onmessage=({data})=>{const q=r.__cpHubWorkerPending.get(data&&data.id);if(!q)return;r.__cpHubWorkerPending.delete(data.id);clearTimeout(q.t);
+    if(data.error)q.reject(new Error(data.error));else q.resolve(data);};
+  }
+  const id=(r.__cpHubWorkerSeq=(r.__cpHubWorkerSeq||0)+1);
+  const t=setTimeout(()=>{r.__cpHubWorkerPending.delete(id);reject(new Error('timeout'));},90000);
+  r.__cpHubWorkerPending.set(id,{resolve,reject,t});
+  try{w.postMessage({id,...payload});}catch(e){r.__cpHubWorkerPending.delete(id);clearTimeout(t);reject(e);}
+ });
+ const workerRows=(key,urls,date,from,to,extra)=>workerCall({key,urls,date,from,to,radius:3000,...extra}).then(d=>d.rows);
+ // 21/11/2026 (Laurent : « l'écran se fige pendant la recherche ») : la recherche de correspondances
+ // (nearbyTransferTrips même réseau + CPGTFSFederation.crossNetworkTrips entre réseaux, jusqu'à 28 paires
+ // de réseaux) est le calcul le plus lourd de toute la recherche transport et tournait sur le fil principal.
+ // Déplacée dans le même worker que les trajets directs (local_<id>) : voir transport-hub-local-worker.js.
+ const workerCorrespondances=payload=>workerCall({op:'correspondances',...payload}).then(d=>d.rows);
+ // 21/11/2026 (Laurent : « ça bloque toujours ») : SNCF (TER/TGV)/FlixBus/BlaBlaCar Bus (national_<id>
+ // plus bas) appelaient CPNationalGTFSJourneys.loadAndSearch directement sur le fil principal — jusqu'à
+ // 4 recherches par mission sur le plus gros flux GTFS de tous (réseau SNCF national). Déplacée dans le
+ // même worker (transport-hub-local-worker.js importe aussi transport-national-gtfs-journeys.js).
+ const workerNationalSearch=(operator,resource,searchOptions)=>workerCall({op:'national',operator,resource,searchOptions}).then(d=>d.result);
  // Regional GTFS archives already hosted by the project. These are scheduled
  // candidates only; the pedestrian router and confirmation checks still apply.
  if(r.CPGTFSLoader?.loadResource&&r.CPGTFSIndex?.nearbyDirectTrips){
@@ -1163,27 +1189,6 @@ function makeProviders(r,opts={}){
    return new Date(wall-offset*60000).toISOString();
   };
   // Web Worker unique (réutilisé) : lecture et recherche des réseaux locaux hors du fil de l'écran.
-  const canWorker=()=>!opts.fetcher&&typeof r.Worker==='function'&&!r.__cpHubWorkerOff;
-  const workerCall=payload=>new Promise((resolve,reject)=>{
-   let w=r.__cpHubWorker;
-   if(!w){
-    w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js');r.__cpHubWorkerPending=new Map();
-    const fail=e=>{r.__cpHubWorkerOff=true;r.__cpHubWorker=null;for(const q of r.__cpHubWorkerPending.values())q.reject(e);r.__cpHubWorkerPending.clear();try{w.terminate();}catch(_){}};
-    w.onerror=()=>fail(new Error('worker'));w.onmessageerror=()=>fail(new Error('worker'));
-    w.onmessage=({data})=>{const q=r.__cpHubWorkerPending.get(data&&data.id);if(!q)return;r.__cpHubWorkerPending.delete(data.id);clearTimeout(q.t);
-     if(data.error)q.reject(new Error(data.error));else q.resolve(data.rows);};
-   }
-   const id=(r.__cpHubWorkerSeq=(r.__cpHubWorkerSeq||0)+1);
-   const t=setTimeout(()=>{r.__cpHubWorkerPending.delete(id);reject(new Error('timeout'));},90000);
-   r.__cpHubWorkerPending.set(id,{resolve,reject,t});
-   try{w.postMessage({id,...payload});}catch(e){r.__cpHubWorkerPending.delete(id);clearTimeout(t);reject(e);}
-  });
-  const workerRows=(key,urls,date,from,to,extra)=>workerCall({key,urls,date,from,to,radius:3000,...extra});
-  // 21/11/2026 (Laurent : « l'écran se fige pendant la recherche ») : la recherche de correspondances
-  // (nearbyTransferTrips même réseau + CPGTFSFederation.crossNetworkTrips entre réseaux, jusqu'à 28 paires
-  // de réseaux) est le calcul le plus lourd de toute la recherche transport et tournait sur le fil principal.
-  // Déplacée dans le même worker que les trajets directs (local_<id>) : voir transport-hub-local-worker.js.
-  const workerCorrespondances=payload=>workerCall({op:'correspondances',...payload});
   for(const [id,name,file,bounds] of localNetworks){
    P['local_'+id]={name:name+' GTFS',
     enabled:task=>!!queryWindow(task)&&inBounds(pt(task.from),bounds)&&inBounds(pt(task.to),bounds),
@@ -1338,6 +1343,11 @@ function makeProviders(r,opts={}){
      if(rows===null){
       const loaded=(await Promise.all(nets.map(n=>feedFor(n[0],n[1],n[2],date).catch(()=>null)))).filter(Boolean);
       if(signal?.aborted||loaded.length<1)return [];
+      // 21/11/2026 : « Tous les horaires » (Y22) manquait sur les trajets de correspondance — fromGTFS()
+      // lit networkUrls/serviceDate par JAMBE (r.legs[i]), jamais attachés ici (seul le moteur direct le
+      // faisait). On les attache désormais, par réseau réel de chaque jambe (une correspondance entre deux
+      // réseaux a deux jambes de réseaux différents, chacune avec ses propres URLs GTFS).
+      const netUrls=new Map(nets.map(n=>[n[0],urlsFor(n[2])]));
       rows=[];
       for(let i=0;i<loaded.length;i++){
        // Correspondances à l'intérieur d'un même réseau.
@@ -1345,12 +1355,19 @@ function makeProviders(r,opts={}){
         const bounds=r.CPGTFSTime.serviceWindow(loaded[i].files,date,window);
         const t=r.CPGTFSIndex.nearbyTransferTrips(loaded[i].files,loaded[i].index,date,from,to,sameNetworkRadius,{...bounds,maxWaitMinutes});
         const dated=r.CPGTFSTime.datedTransferTrips(loaded[i].files,loaded[i].index,t.journeys,window);
-        rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,legs:x.legs?.map(l=>({...l,network:loaded[i].source.network}))})));
+        const urls=netUrls.get(nets[i][0])||[];
+        rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,
+         legs:x.legs?.map(l=>({...l,network:loaded[i].source.network,networkUrls:urls,serviceDate:l.date||date}))})));
        }catch(_){}
        // Correspondances entre deux réseaux différents.
        for(let j=i+1;j<loaded.length;j++){
         if(signal?.aborted)return [];
-        try{const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius,maxWaitMinutes});rows.push(...c.journeys);}catch(_){}
+        try{
+         const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius,maxWaitMinutes});
+         const uI=netUrls.get(nets[i][0])||[],uJ=netUrls.get(nets[j][0])||[];
+         rows.push(...c.journeys.map(x=>({...x,legs:x.legs.map(l=>({...l,
+          networkUrls:(l.networkId===loaded[j].source.datasetId?uJ:uI),serviceDate:l.date||date}))})));
+        }catch(_){}
        }
       }
      }
@@ -1395,6 +1412,18 @@ function makeProviders(r,opts={}){
    const resource=resources[operator];
    if(!resource||!/^https:\/\//i.test(resource.url||''))continue;
    const name={sncf:'SNCF GTFS',blablacarBus:'BlaBlaCar Bus GTFS',flixbus:'FlixBus GTFS'}[operator];
+   // Calcul hors du fil de l'écran (Web Worker) ; fetcher/signal ne sont pas clonables vers le worker
+   // (le worker utilise son propre cache hors ligne, et n'a jamais pris en charge l'annulation, comme
+   // pour les trajets directs locaux ci-dessus) ; en cas d'échec du worker, ancien calcul sur le fil
+   // principal (même résultat).
+   const nationalSearch=async params=>{
+    const {operator:op,resource:res,fetcher:_f,signal:_s,...rest}=params;
+    if(canWorker()){
+     try{return await workerNationalSearch(op,res,rest);}
+     catch(e){if(!r.__cpHubWorkerOff)throw e;}
+    }
+    return r.CPNationalGTFSJourneys.loadAndSearch(params);
+   };
    P['national_'+operator]={name,enabled:task=>!!pt(task.from)&&!!pt(task.to)&&!!queryWindow(task),
     disabledReason:'adresse GPS ou horaire de mission manquant',
     run:async(task,signal)=>{
@@ -1411,7 +1440,7 @@ function makeProviders(r,opts={}){
      const base={operator,resource:{...resource,format:'GTFS'},fetcher,signal,
       from:pt(task.from),to:pt(task.to),radiusMeters:3000,maxResults:20,includeTransfers:true};
      const searchParams={...base,date,...(window.arriveBy?{latestArrival:clock}:{earliestDeparture:clock})};
-     let result=await r.CPNationalGTFSJourneys.loadAndSearch(searchParams);
+     let result=await nationalSearch(searchParams);
      // A second, bounded stop search is useful when the closest coach terminal
      // is outside 3 km (e.g. Lyon Perrache/Gerland vs Part-Dieu).
      // Candidate radius is NOT a validated pedestrian distance: completeWalks
@@ -1427,7 +1456,7 @@ function makeProviders(r,opts={}){
      if(needExpanded&&!signal?.aborted&&opts.nationalStopFallback!==false){
       // Un échec du repli ne doit jamais faire perdre les résultats à 3 km (constaté en navigateur réel le 14/11/2026 :
       // le rayon de 6 km était refusé par le moteur, limité à 5 km → « Invalid walking search radius » pour tout le fournisseur).
-      const expanded=await r.CPNationalGTFSJourneys.loadAndSearch({...searchParams,radiusMeters:5000}).catch(e=>{if(signal?.aborted)throw e;return null;});
+      const expanded=await nationalSearch({...searchParams,radiusMeters:5000}).catch(e=>{if(signal?.aborted)throw e;return null;});
       if(Array.isArray(expanded?.journeys)&&expanded.journeys.length){
        const seen=new Set(rows.map(j=>JSON.stringify([j.tripId,j.line,j.departure,j.arrival,j.originStop?.stop_id||j.originStop?.name,j.destinationStop?.stop_id||j.destinationStop?.name])));
        for(const j of expanded.journeys){
@@ -1441,7 +1470,7 @@ function makeProviders(r,opts={}){
      if(Number(p.hour)<6){
       const previous=new Date(Date.parse(date+'T00:00:00Z')-86400000).toISOString().slice(0,10);
       const afterMidnight=(Number(p.hour)+24)+':'+p.minute+':00';
-      const overnight=await r.CPNationalGTFSJourneys.loadAndSearch({
+      const overnight=await nationalSearch({
        ...base,date:previous,...(window.arriveBy?{earliestDeparture:'24:00:00',latestArrival:afterMidnight}
         :{earliestDeparture:afterMidnight})});
       rows=rows.concat(overnight.journeys||[]);
@@ -1456,7 +1485,7 @@ function makeProviders(r,opts={}){
        if(!near.length)continue;
        const anchor=near.sort((a,b)=>meters(far,a)-meters(far,b))[0];
        const other=pt(task[side==='from'?'to':'from']);if(!other)continue;
-       const extra=await r.CPNationalGTFSJourneys.loadAndSearch({...searchParams,[side]:{lat:anchor.lat,lon:anchor.lon},radiusMeters:3500}).catch(()=>null);
+       const extra=await nationalSearch({...searchParams,[side]:{lat:anchor.lat,lon:anchor.lon},radiusMeters:3500}).catch(()=>null);
        const found=Array.isArray(extra?.journeys)?extra.journeys:[];
        if(found.length)out=out.concat(fromNationalGTFS(found,operator).map(j=>({...j,needsAccess:{side,anchor:anchor.name}})));
       }

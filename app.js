@@ -2051,6 +2051,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           try{Hub.render(host,view);}catch(_){}
           delete pendingViews[label];
         }
+        try{updateDayTabs?.();}catch(_){}
       };
       const startTransportHub=()=>{
         const Hub=window.CPTransportHub;
@@ -2194,15 +2195,15 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             if(transportDestinations[label].hidden){pendingViews[label]=view;updateDayTabs();return;}
             // Pendant le défilement du doigt, on garde la vue et on la dessine dès l'arrêt (évite les saccades).
             if(Date.now()-dernierDefilement<250){pendingViews[label]=view;clearTimeout(panel.__cpDefer);panel.__cpDefer=setTimeout(()=>{if(panel.isConnected)renderPending();},300);return;}
-            delete pendingViews[label];
-            let host=hubHosts[label];
-            if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
-              // 20/11/2026 : même règle que renderPending — le bloc justificatifs reste au-dessus du hub.
-              const sec=transportDestinations[label];
-              const after=legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);
-              after.insertAdjacentElement('afterend',host);}
-            Hub.render(host,view);
-            labelState[label]={done:view.done,total:view.total};updateDayTabs();
+            // 21/11/2026 (Laurent : « ça bloque toujours pendant le défilement ») : jusqu'à une dizaine de
+            // moteurs (correspondances, SNCF, FlixBus, BlaBlaCar, lignes locales, OTP, TripGo, Suisse…)
+            // répondent désormais en parallèle (hors du fil principal), donc plusieurs onUpdate arrivent
+            // souvent dans la même poignée de millisecondes. Chacun déclenchait un classement (rank) et un
+            // rendu DOM complet du bloc — rendre N fois dans la même image au lieu d'une seule fige l'écran
+            // même hors défilement actif. On regroupe désormais toutes les mises à jour d'une même image dans
+            // un seul passage de rendu (requestAnimationFrame), sans changer les données affichées.
+            pendingViews[label]=view;
+            if(!panel.__cpRaf){panel.__cpRaf=requestAnimationFrame(()=>{panel.__cpRaf=null;if(panel.isConnected)renderPending();});}
           }});
         session.signatureKey=signature;transportHub=session;startDayLabels(activeDay);
       };
