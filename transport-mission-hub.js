@@ -819,11 +819,18 @@ function makeProviders(r,opts={}){
  // Regional GTFS archives already hosted by the project. These are scheduled
  // candidates only; the pedestrian router and confirmation checks still apply.
  if(r.CPGTFSLoader?.loadResource&&r.CPGTFSIndex?.nearbyDirectTrips){
+  // 21/11/2026 : audit systématique après le bug Y51/Albertville (bounds trop étroites qui désactivaient
+  // silencieusement tout un réseau pour une mission touchant son propre terminus). 13 réseaux avaient le même
+  // défaut (zone déclarée ne couvrant pas un bout réel de ligne, écart >8 km mesuré sur les arrêts réels du
+  // GTFS) : synchro, cars_isere, cars_haute_savoie, ondea, ginko_besancon, zoom_chalon, grandole_dole,
+  // altigo_briancon, fil_bleu_tours, lia_le_havre, trema_macon, cars_ain, cars_ardeche — bounds recalculées
+  // sur l'étendue réelle des arrêts (marge ~3 km). Les réseaux urbains « 5 métropoles / villes de France »
+  // ajoutés le 20/11 ont un écart résiduel de 10-12 % (quelques km, suburbs) jugé mineur, non corrigé ici.
   const localNetworks=[
    ['tac','TAC Annemasse','tac-annemasse.zip',[46.1,5.98,46.27,6.42]],
-   ['synchro','Synchro Chambéry','synchro-chambery.zip',[45.48,5.75,45.72,6.04]],
+   ['synchro','Synchro Chambéry','synchro-chambery.zip',[45.494,5.814,45.779,6.196]],
    ['tcl','TCL Lyon','tcl-lyon.zip',[45.55,4.6,46.02,5.1]],
-   ['cars_isere','Cars Région Isère','cars-region-isere.zip',[44.69,4.74,45.89,6.36]],
+   ['cars_isere','Cars Région Isère','cars-region-isere.zip',[44.534,4.728,45.913,6.308]],
    ['cars_savoie','Cars Région Savoie','cars-region-savoie.zip',[45.05,5.62,45.80,7.19]],
    // 18/11/2026 : Cars Région Haute-Savoie (Y02, Y51, Y91-Y94 à la demande…) découpé sur Faucigny / Giffre / Chablais.
    // 21/11/2026 : bbox élargie vers le sud/ouest — la ligne Y51 (Albertville ↔ Annecy) a son terminus à
@@ -831,20 +838,20 @@ function makeProviders(r,opts={}){
    // jamais activé (enabled exige task.from ET task.to dans bounds) pour toute mission touchant Albertville,
    // malgré un GTFS cars-region-haute-savoie.zip qui contient bien la ligne en entier (extract() ne filtre
    // pas par bbox, seulement par agence). Nouvelle limite sud alignée sur celle de TRA Albertville.
-   ['cars_haute_savoie','Cars Région Haute-Savoie','cars-region-haute-savoie.zip',[45.55,6.20,46.30,6.85]],
+   ['cars_haute_savoie','Cars Région Haute-Savoie','cars-region-haute-savoie.zip',[45.639,5.792,46.409,6.957]],
    // 18/11/2026 : réseaux présents dans data/gtfs mais absents de ce moteur (audit de couverture).
    ['mreso_grenoble','M Réso Grenoble','mreso-grenoble.zip',[45.0,5.5,45.45,6.0]],
    ['mreso_gresivaudan','M Réso Grésivaudan','mreso-gresivaudan.zip',[45.15,5.7,45.5,6.15]],
-   ['ondea','Ondéa Aix-les-Bains (Grand Lac)','ondea-grand-lac.zip',[45.6,5.75,45.85,6.05]],
+   ['ondea','Ondéa Aix-les-Bains (Grand Lac)','ondea-grand-lac.zip',[45.54,5.749,45.989,6.042]],
    ['sibra','Sibra Annecy','sibra-annecy.zip',[45.7,5.9,46.1,6.5]],
    ['start_thonon','Star’t Thonon','start-thonon.zip',[46.25,6.3,46.45,6.65]],
-   ['ginko_besancon','Ginko (Besançon)','ginko-besancon.zip',[47.15,5.9,47.35,6.2]],
-   ['zoom_chalon','Zoom (Chalon-sur-Saône)','zoom-chalon.zip',[46.7,4.75,46.85,5.0]],
-   ['grandole_dole','Grandole Mobilités (Dole)','grandole-dole.zip',[47.0,5.4,47.2,5.65]],
+   ['ginko_besancon','Ginko (Besançon)','ginko-besancon.zip',[47.086,5.76,47.402,6.231]],
+   ['zoom_chalon','Zoom (Chalon-sur-Saône)','zoom-chalon.zip',[46.625,4.604,46.986,5.024]],
+   ['grandole_dole','Grandole Mobilités (Dole)','grandole-dole.zip',[46.92,5.295,47.315,5.681]],
    ['evolity_montbeliard','évolitY (Montbéliard)','evolity-montbeliard.zip',[47.4,6.65,47.6,6.95]],
    ['orizo_avignon','Orizo (Grand Avignon)','orizo-avignon.zip',[43.85,4.65,44.07,5.05]],
    ['agglo_bus_gap','L’Agglo en Bus (Gap)','agglo-bus-gap.zip',[44.4,5.95,44.75,6.25]],
-   ['altigo_briancon','Altigo (Briançonnais)','altigo-briancon.zip',[44.8,6.4,45.15,6.8]],
+   ['altigo_briancon','Altigo (Briançonnais)','altigo-briancon.zip',[44.827,6.253,45.087,6.756]],
    ['divia_dijon','Divia Mobilités (Dijon)','divia-dijon.zip',[47.2,4.95,47.45,5.2]],
    ['tango_nimes','Tango (Nîmes Métropole)','tango-nimes.zip',[43.65,4.11,44.0,4.59]],
    ['alesy_ales',"Ales'y (Alès)",'alesy-ales.zip',[43.89,3.81,44.42,4.4]],
@@ -943,24 +950,24 @@ function makeProviders(r,opts={}){
    ['artis_arras',"Artis (CU d'Arras)",'artis-arras.zip',[50.261,2.714,50.326,2.838]],
    ['axeo_saint_brieuc',"Axéo (Saint-Brieuc)",'axeo-saint-brieuc.zip',[48.369,-2.982,48.631,-2.664]],
    ['eveole_douai',"Evéole (Douaisis)",'eveole-douai.zip',[50.281,3.037,50.431,3.188]],
-   ['fil_bleu_tours',"Fil Bleu (Tours)",'fil-bleu-tours.zip',[47.344,0.634,47.449,0.75]],
+   ['fil_bleu_tours',"Fil Bleu (Tours)",'fil-bleu-tours.zip',[47.31,0.591,47.489,0.878]],
    ['filibus_chartres',"Filibus (Chartres)",'filibus-chartres.zip',[48.344,1.337,48.545,1.602]],
    ['ilevia_lille',"ilévia (Lille)",'ilevia-lille.zip',[50.569,2.876,50.74,3.193]],
    ['irigo_angers',"Irigo (Angers)",'irigo-angers.zip',[47.396,-0.667,47.537,-0.428]],
    ['kiceo_vannes',"KICEO (Vannes)",'kiceo-vannes.zip',[47.524,-2.922,47.788,-2.57]],
-   ['lia_le_havre',"LiA (Le Havre)",'lia-le-havre.zip',[49.477,0.085,49.639,0.323]],
+   ['lia_le_havre',"LiA (Le Havre)",'lia-le-havre.zip',[49.429,0.039,49.735,0.463]],
    ['vitalis_poitiers',"Vitalis (Poitiers)",'vitalis-poitiers.zip',[46.522,0.263,46.682,0.434]],
    ['aixenbus_aix','Aix en Bus','aixenbus-aix.zip',[43.41,5.29,43.65,5.56]],
    ['tam_montpellier','TaM (Montpellier, urbain et suburbain)','tam-montpellier.zip',[43.45,3.5,43.95,4.15]],
    ['palmbus_cannes','Palmbus (Cannes Pays de Lérins)','palmbus-cannes.zip',[43.45,6.85,43.7,7.15]],
    ['lignes_azur_nice',"Lignes d'Azur (Nice)",'lignes-azur-nice.zip',[43.63,7.06,43.9,7.4]],
    ['rtm_marseille','RTM (Marseille)','rtm-marseille.zip',[43.23,5.33,43.36,5.48]],
-   ['trema_macon','TréMA (Mâcon)','trema-macon.zip',[46.2,4.7,46.5,5.0]],
+   ['trema_macon','TréMA (Mâcon)','trema-macon.zip',[46.092,4.401,46.537,4.945]],
    ['lio_occitanie_nord','liO Occitanie (Gard, Lozère)','lio-occitanie-nord.zip',[44.0,3.3,44.95,4.7]],
    ['mobigo_bfc_jura','Mobigo Bourgogne-Franche-Comté (Jura)','mobigo-bfc-jura.zip',[46.2,5.3,47.1,6.3]],
    ['zou_express_nord','ZOU ! Express (Alpes du Sud)','zou-express-nord.zip',[44.0,5.0,45.2,7.2]],
    ['zou_proximite_nord','ZOU ! Proximité (Hautes-Alpes, Vaucluse nord)','zou-proximite-nord.zip',[44.0,5.0,45.0,7.0]],
-   ['cars_ain','Cars Région Ain','cars-region-ain.zip',[45.75,4.75,46.5,6.15]],
+   ['cars_ain','Cars Région Ain','cars-region-ain.zip',[45.535,4.688,46.527,6.09]],
    ['jybus','J’y bus Rumilly','jybus-rumilly.zip',[45.80,5.85,45.93,6.05]],
    ['tam','TAM Ambérieu','tam-amberieu.zip',[45.90,5.28,46.04,5.43]],
    // 15/11/2026 : autres réseaux de l'agrégat officiel Oùra (extraits par la tâche serveur, emprises relevées).
@@ -979,7 +986,7 @@ function makeProviders(r,opts={}){
    ['cars_express', "Cars Région Express", 'cars-region-express.zip', [44.35,2.8,46.78,6.15]],
    ['cars_loire', "Cars Région Loire", 'cars-region-loire.zip', [45.23,3.68,46.22,4.88]],
    ['cars_drome', "Cars Région Drôme", 'cars-region-drome.zip', [44.04,4.63,45.38,6.1]],
-   ['cars_ardeche', "Cars Région Ardèche", 'cars-region-ardeche.zip', [44.25,3.85,45.4,4.95]],
+   ['cars_ardeche', "Cars Région Ardèche", 'cars-region-ardeche.zip', [43.893,3.824,45.402,4.925]],
    ['cars_allier', "Cars Région Allier", 'cars-region-allier.zip', [46.02,2.18,46.85,4.07]],
    ['cars_cantal', "Cars Région Cantal", 'cars-region-cantal.zip', [44.67,2.18,45.79,3.32]],
    ['cars_haute_loire', "Cars Région Haute-Loire", 'cars-region-haute-loire.zip', [44.71,3.23,45.56,4.41]],
