@@ -41,7 +41,10 @@ function retaillerP21(j,task){
  return {...j,legs};
 }
 const LYON_COACH_ANCHORS=[{name:'Lyon Part-Dieu',lat:45.7605,lon:4.8590},{name:'Lyon Perrache',lat:45.7487,lon:4.8262},{name:'Lyon Gerland',lat:45.7290,lon:4.8300}];
-const SAFE_TRANSFER_MIN=10,SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=120;
+// 21/11/2026 (demande Laurent) : 2 minutes de battement était trop court pour descendre d'un véhicule,
+// marcher jusqu'à un arrêt voisin et monter dans le suivant (vu réel : SNCF bus L1 arrivée Thonon-les-Bains
+// 08:29 → Star't Thonon ligne T départ Les Arts 08:30, un seul écart de 1 min). Minimum porté à 5 minutes.
+const SAFE_TRANSFER_MIN=10,SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=300;
 // Au-delà de cette distance, une marche « de bord à bord » (ex. gare → commune voisine) doit d'abord être
 // comparée à un bus/tram local (Mobilités M à Grenoble…) avant d'être acceptée telle quelle : signalé le
 // 19/11/2026 (marches de 4,7 et 5,4 km vers Seyssins alors que le réseau M dessert la zone).
@@ -348,8 +351,13 @@ async function completeWalks(j,task,router,scooter,regional){
   // au bus/tram plutôt que d'imposer silencieusement une marche d'une heure (signalé le 19/11/2026,
   // marches de 4,7 et 5,4 km vers Seyssins alors que le réseau M dessert la zone).
   if(r.distanceMeters>REGIONAL_WALK_THRESHOLD_M&&regional&&typeof regional.run==='function'){
-   const subTask=Number.isFinite(endMs)?{from:a,to:b,fromName,toName,latestArrival:new Date(endMs).toISOString(),marginMinutes:0}
-    :Number.isFinite(startMs)?{from:a,to:b,fromName,toName,earliestDeparture:new Date(startMs).toISOString(),marginMinutes:0}:null;
+   // 21/11/2026 : la fenêtre de recherche du bus/tram de substitution partait pile de l'heure d'arrivée
+   // précédente (ou pile avant l'heure limite), sans tenir compte du temps de descendre et de rejoindre
+   // l'arrêt suivant — un bus dont les horaires tombaient 1 min après était accepté tel quel. On décale
+   // la fenêtre du même battement minimal que pour une correspondance ordinaire (TRANSFER_BUFFER_S).
+   const bufferMs=TRANSFER_BUFFER_S*1000;
+   const subTask=Number.isFinite(endMs)?{from:a,to:b,fromName,toName,latestArrival:new Date(endMs-bufferMs).toISOString(),marginMinutes:0}
+    :Number.isFinite(startMs)?{from:a,to:b,fromName,toName,earliestDeparture:new Date(startMs+bufferMs).toISOString(),marginMinutes:0}:null;
    if(subTask){
     let ok=false;try{ok=regional.enabled(subTask);}catch(_){}
     if(ok){
@@ -831,7 +839,15 @@ function rank(items,task={}){
  }
  picks.sort((a,b)=>(tier(b.journey)-tier(a.journey))||(ms(a.journey.departure)-ms(b.journey.departure))||(ms(a.journey.arrival)-ms(b.journey.arrival)));   // les propositions mises en avant : la plus matinale en premier
  const others=all.filter(j=>!picks.some(p=>p.journey===j)).sort((a,b)=>byFeasible(a,b)||ms(a.departure)-ms(b.departure)||ms(a.arrival)-ms(b.arrival)||confirmedFirst(a,b));   // autres propositions : les plus matinales d'abord
- return {picks,others,total:all.length};
+ // 21/11/2026 (Laurent : "l'affichage bloque pendant la lecture et le défilement") : depuis que la recherche
+ // de bus local couvre tout le territoire (et pas seulement Grenoble), une même fiche peut légitimement
+ // trouver des dizaines, voire des centaines, de trajets différents. render() reconstruit TOUTE la liste à
+ // chaque mise à jour réseau (plusieurs fois par seconde) — même les cartes repliées dans « Voir plus »
+ // étaient reconstruites en entier. Au-delà de la cinquantaine de propositions, l'écran se figeait au
+ // défilement. On garde les plus pertinentes (déjà triées : réalisables puis programmées, plus matinales
+ // d'abord) et on compte le reste sans le construire.
+ const MAX_OTHERS=40,othersOverflow=Math.max(0,others.length-MAX_OTHERS);
+ return {picks,others:others.slice(0,MAX_OTHERS),othersOverflow,total:all.length};
 }
 
 /* ---------- Requêtes par direction ---------- */
@@ -2178,6 +2194,9 @@ function render(host,v){
   for(const p of restRows)addCard(more,p.journey,p.labels,false);
   host.appendChild(more);
  }
+ // 21/11/2026 : trajets au-delà de la limite MAX_OTHERS de rank() — jamais construits, juste comptés,
+ // pour que l'écran reste fluide même quand des dizaines de bus locaux sont trouvés.
+ if(v.othersOverflow)host.appendChild(el(doc,'p','cp-hub-note',v.othersOverflow+' autre'+(v.othersOverflow>1?'s':'')+' trajet'+(v.othersOverflow>1?'s':'')+' trouvé'+(v.othersOverflow>1?'s':'')+(v.othersOverflow>1?', non affichés':', non affiché')+' pour garder l’affichage fluide.'));
  // Ne montrer que les moteurs effectivement interrogés sur la direction choisie.
  // Les réseaux hors zone restent dans le diagnostic interne, pas dans la fiche mission.
  const errs=Object.entries(v.errors);
