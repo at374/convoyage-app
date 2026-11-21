@@ -1033,7 +1033,20 @@ function makeProviders(r,opts={}){
    ['idfm_paris', "Île-de-France Mobilités (Paris intra-muros)", 'idfm-paris.zip', [48.81,2.22,48.91,2.43]],
    // SNCF Transilien/RER Île-de-France : dataset distinct d'IDFM, horizon réduit à 21 j (pas de limite au
    // départ, stop_times.txt dépassait les 64 Mo à 66,53 Mo) ; mesuré ensuite à 30,01 Mo. Ajouté le 21/11/2026.
-   ['transilien_idf', "SNCF Transilien / RER (Île-de-France)", 'transilien-idf.zip', [48.05,1.35,49.25,3.60]]
+   ['transilien_idf', "SNCF Transilien / RER (Île-de-France)", 'transilien-idf.zip', [48.05,1.35,49.25,3.60]],
+   // 21/11/2026 : 10 réseaux Bourgogne-Franche-Comté / Cherpa (escargot AURA→BFC), GTFS déjà publiés par
+   // build-regional-gtfs.yml (commit 0224953). Emprises calculées directement depuis l'extension réelle de
+   // stops.txt de chaque archive (min/max lat/lon, arrondi au millième vers l'extérieur), pas d'estimation.
+   ['cherpa_issoire', "Cherpa (Issoire)", 'cherpa-issoire.zip', [45.541,3.215,45.551,3.267]],
+   ['cotebus_beaune', "Côt'Bus (Beaune)", 'cotebus-beaune.zip', [46.904,4.626,47.078,4.890]],
+   ['intercom_sens', "Intercom'Sens (Sens)", 'intercom-sens.zip', [48.044,3.210,48.260,3.463]],
+   ['leo_auxerre', "Léo (Auxerre)", 'leo-auxerre.zip', [47.697,3.418,47.881,3.694]],
+   ['monrezo_creusot', "Monrézo (Le Creusot – Montceau-les-Mines)", 'monrezo-creusot.zip', [46.641,4.289,46.811,4.499]],
+   ['moova_vesoul', "Moova (Vesoul)", 'moova-vesoul.zip', [47.523,6.034,47.670,6.241]],
+   ['optymo_belfort', "Optymo (Belfort)", 'optymo-belfort.zip', [47.445,6.771,47.821,7.118]],
+   ['tallis_lons', "Tallis (Lons-le-Saunier)", 'tallis-lons.zip', [46.664,5.524,46.692,5.584]],
+   ['taneo_nevers', "Taneo (Nevers)", 'taneo-nevers.zip', [46.903,3.037,47.107,3.228]],
+   ['tea_autun', "TEA (Autun)", 'tea-autun.zip', [46.948,4.284,46.967,4.316]]
   ];
   // Archives are published on the transport feature branch, not necessarily on
   // the deployed GitHub Pages site. Explicit HTTPS URLs avoid a silent 404
