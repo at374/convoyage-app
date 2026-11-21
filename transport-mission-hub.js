@@ -652,13 +652,24 @@ function walkDetour(j,task){
 // Détour manifestement excessif : le chemin parcouru en véhicule (somme des distances à vol d'oiseau des portions)
 // fait au moins 3 fois la distance directe ET au moins 30 km de plus (ex. réel du 14/11/2026 : Annecy → Saint-Étienne
 // → Genève en car pour 35 km directs). Les deux conditions ensemble épargnent les détours ferroviaires normaux
-// (Annecy → Genève par La Roche-sur-Foron ≈ 1,6 fois) et les petits trajets urbains. GPS absent : trajet conservé.
+// (Annecy → Genève par La Roche-sur-Foron ≈ 1,6 fois) et les petits trajets urbains. GPS absent : trajet conservé
+// (sauf repli durée ci-dessous).
 function excessiveDetour(j,task){
  const from=pt(task&&task.from),to=pt(task&&task.to);if(!from||!to||!j||!Array.isArray(j.legs))return false;
  const rides=j.legs.filter(l=>l&&!isFoot(l));if(!rides.length)return false;
- let path=0;for(const l of rides){const a=pt(l.fromPoint),b=pt(l.toPoint);if(!a||!b)return false;path+=meters(a,b);}
- const direct=meters(from,to);
- return direct>0&&path>=3*direct&&path-direct>=30000;
+ const direct=meters(from,to);if(direct<=0)return false;
+ let path=0,pointsOk=true;
+ for(const l of rides){const a=pt(l.fromPoint),b=pt(l.toPoint);if(!a||!b){pointsOk=false;break;}path+=meters(a,b);}
+ if(pointsOk)return path>=3*direct&&path-direct>=30000;
+ // 21/11/2026 : sans coordonnées sur chaque jambe (GTFS national, correspondances inter-réseaux), le détour
+ // n'était jamais détecté. Constaté en réel : Annecy → Aix-les-Bains (~30 km, moins de 2 h normalement)
+ // proposé en ~5 h via un aller-retour par Genève. Repli : comparer la durée programmée totale à une durée
+ // raisonnable pour la distance à vol d'oiseau (20 km/h de moyenne, large pour ne pas écarter de vraies
+ // correspondances longues) ; au moins 3 fois cette durée ET au moins 90 min de plus.
+ const dep=ms(j.legs[0]?.departure),arr=ms(j.legs[j.legs.length-1]?.arrival);
+ if(!Number.isFinite(dep)||!Number.isFinite(arr)||arr<=dep)return false;
+ const durationMinutes=(arr-dep)/60000,reasonableMinutes=Math.max(30,(direct/1000)*3);
+ return durationMinutes>=3*reasonableMinutes&&durationMinutes-reasonableMinutes>=90;
 }
 // Couples de points dont la marche doit être calculée pour un trajet (accès et sortie) : sert à compter le coût réel
 // en requêtes piétonnes, les trajets d'une même ligne partageant presque toujours les mêmes arrêts.
