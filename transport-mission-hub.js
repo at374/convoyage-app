@@ -1260,7 +1260,14 @@ function makeProviders(r,opts={}){
      }
      // 21/11/2026 : diagnostic temporaire (bug Y51 « 0 proposition reçue » en direct, non reproduit en simulation) —
      // capture la taille réelle du flux et le nombre de candidats bruts pour voir où ça diverge sur le téléphone.
-     try{(r.__cpGtfsDebug||(r.__cpGtfsDebug=new Map())).set(name+' GTFS',{at:Date.now(),date,clock,from:pt(task.from),to:pt(task.to),radiusMeters,url:urls[0],viaWorker:_viaWorker,rawCandidates:Array.isArray(rows)?rows.length:null,feed:_feedInfo});}catch(_){}
+     // 22/11/2026 (Laurent : « 8 propositions reçues » mais « kept=0 » dans le diagnostic — contradiction trouvée) :
+     // launch() appelle CE moteur plusieurs fois pour la MÊME mission (une fois par « variante » de fenêtre horaire —
+     // milieu de journée, avant ouverture…), et le total « propositions reçues » additionne tous les appels
+     // (s.received[source]+=…), alors que ce diagnostic REMPLAÇAIT l'entrée à chaque appel : la dernière variante
+     // (parfois vide) écrasait le kept d'une variante précédente qui avait pourtant trouvé des trajets. On conserve
+     // maintenant le kept cumulé de TOUTES les variantes pour ce réseau, comme le fait déjà le total affiché.
+     try{const map=r.__cpGtfsDebug||(r.__cpGtfsDebug=new Map());const prev=map.get(name+' GTFS');
+      map.set(name+' GTFS',{at:Date.now(),date,clock,from:pt(task.from),to:pt(task.to),radiusMeters,url:urls[0],viaWorker:_viaWorker,rawCandidates:Array.isArray(rows)?rows.length:null,feed:_feedInfo,kept:(prev&&Array.isArray(prev.kept))?prev.kept:[]});}catch(_){}
      if(signal?.aborted)return [];
      const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
      // Select the best boarding/alighting stop pair for each actual vehicle
@@ -1300,7 +1307,7 @@ function makeProviders(r,opts={}){
      // réellement après le filtre géographique (meilleur arrêt par véhicule), seulement leur nombre. On garde
      // maintenant la liste des départs retenus, pour voir s'ils sont bien après midi ou si le filtre
      // géographique/horaire les élimine déjà à cette étape, avant même la vérification de marge.
-     try{const dbg=r.__cpGtfsDebug&&r.__cpGtfsDebug.get(name+' GTFS');if(dbg)dbg.kept=filtered.map(x=>x.departure);}catch(_){}
+     try{const dbg=r.__cpGtfsDebug&&r.__cpGtfsDebug.get(name+' GTFS');if(dbg)dbg.kept=(Array.isArray(dbg.kept)?dbg.kept:[]).concat(filtered.map(x=>x.departure));}catch(_){}
      return fromGTFS(filtered,name);
     }};
   }
