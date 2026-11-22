@@ -2001,7 +2001,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         Object.keys(transportDestinations).sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b)).forEach(k=>panel.appendChild(transportDestinations[k]));}
       const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
       let updateDayTabs=()=>{};const labelState={};const pendingViews={};let renderPending=()=>{};let activeDay=null;let transportHub=null;
-      const startDayLabels=day=>{try{if(!transportHub)return;for(const [l,d] of Object.entries(transportDays))if(d===day)transportHub.start(l);}catch(_){}};
+      const startDayLabels=day=>{try{if(!transportHub)return;for(const [l,d] of Object.entries(transportDays))if(d===day){if(!(labelState[l]&&labelState[l].done))afficherRecherche(l);transportHub.start(l);}}catch(_){}};
       if(availableTransportDays.length>1){
         const tabs=document.createElement('nav');
         tabs.className='cp-transport-day-tabs';
@@ -2070,6 +2070,29 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       const localCards={};
       // Hub transports : TripGo, Suisse, Mobilités M, SNCF et GTFS local réunis et classés automatiquement.
       const hubHosts={};
+      // 22/11/2026 (Laurent : éviter le blocage systématique) : pendant qu'une recherche est en cours,
+      // on n'affiche plus les résultats au fur et à mesure (chaque arrivée reconstruisait la liste de
+      // cartes, suspecté de figer le défilement) — seulement un badge clignotant « Recherche en cours ».
+      // Le rendu réel des cartes n'a lieu qu'une seule fois, quand TOUT est trouvé (view.done).
+      const rechercheBadges={};
+      const pointInsertion=label=>{const sec=transportDestinations[label];if(!sec)return null;
+        return legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);};
+      const afficherRecherche=label=>{
+        const sec=transportDestinations[label];if(!sec||sec.hidden)return;
+        let b=rechercheBadges[label];
+        if(!b||!b.isConnected){
+          b=document.createElement('p');b.className='cp-hub-recherche';b.setAttribute('role','status');
+          b.textContent='Recherche en cours, patientez…';
+          rechercheBadges[label]=b;
+          const apres=pointInsertion(label);
+          if(apres)apres.insertAdjacentElement('afterend',b);else sec.appendChild(b);
+        }
+        const host=hubHosts[label];if(host)host.hidden=true;   // masque un ancien résultat pendant la nouvelle recherche
+      };
+      const masquerRecherche=label=>{
+        const b=rechercheBadges[label];if(b&&b.isConnected)b.remove();
+        const host=hubHosts[label];if(host)host.hidden=false;
+      };
       renderPending=()=>{
         const Hub=window.CPTransportHub;if(!Hub)return;
         window.CPPh?.('transports:rendu');
@@ -2081,6 +2104,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             // notes du hub (replié comme les autres blocs techniques), jamais relégué tout en bas.
             const after=legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);
             after.insertAdjacentElement('afterend',host);}
+          masquerRecherche(label);
           try{Hub.render(host,view);}catch(_){}
           delete pendingViews[label];
         }
@@ -2235,6 +2259,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           return;
         }
         transportHub?.dispose();
+        // Badge visible dès le lancement (avant même la première réponse d'un moteur), pour ne jamais
+        // laisser un ancien résultat ou un vide pendant que la nouvelle recherche démarre.
+        for(const t of tasks)if(!t.lazy)afficherRecherche(t.label);
         let router=null;
         try{router=Hub.cachedRouter(window.CPTransportWalking?.createRouter({fetcher:regionalFetch,maxRequests:150,intervalMs:1100}),{storage:window.localStorage});}catch(_){}
         const scooterOn = (etat.reglages || {}).trottinette === true;
@@ -2259,7 +2286,17 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           onUpdate:(label,view)=>{
             if(!panel.isConnected||!transportDestinations[label])return;
             labelState[label]={done:view.done,total:view.total};
-            // Section d'un autre jour (onglet non affiché) : on garde la dernière vue et on la dessine à l'ouverture de l'onglet.
+            // 22/11/2026 (Laurent : éviter le blocage systématique) : mémoriser la vue à chaque mise à jour
+            // (même inachevée) comme avant, mais ne plus RECONSTRUIRE la liste de cartes tant que la recherche
+            // n'est pas terminée — chaque arrivée de résultat reconstruisait tout l'affichage, suspecté de
+            // figer le défilement. Tant que view.done est faux, seul le badge « Recherche en cours » reste visible.
+            {const entry=transportViewCache.get(missionKey)||{signature,views:{}};entry.signature=signature;entry.views[label]=view;transportViewCache.set(missionKey,entry);}
+            if(!view.done){
+              afficherRecherche(label);
+              updateDayTabs();
+              return;
+            }
+            // Section d'un autre jour (onglet non affiché) : on garde la vue finale et on la dessine à l'ouverture de l'onglet.
             if(transportDestinations[label].hidden){pendingViews[label]=view;updateDayTabs();return;}
             // Pendant le défilement du doigt, on garde la vue et on la dessine dès l'arrêt (évite les saccades).
             if(Date.now()-dernierDefilement<250){pendingViews[label]=view;clearTimeout(panel.__cpDefer);panel.__cpDefer=setTimeout(()=>{if(panel.isConnected)renderPending();},300);return;}
@@ -2271,6 +2308,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             // revienne derrière pour réessayer). Reparti sur le rendu immédiat d'origine : jamais de donnée
             // correcte perdue, même si cela rend la piste du blocage à investiguer avec le diagnostic ajouté.
             delete pendingViews[label];
+            masquerRecherche(label);
             let host=hubHosts[label];
             if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
               // 20/11/2026 : même règle que renderPending — le bloc justificatifs reste au-dessus du hub.
@@ -2281,10 +2319,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             Hub.render(host,view);
             window.CPPh?.('transports:idle');
             labelState[label]={done:view.done,total:view.total};updateDayTabs();
-            // 22/11/2026 : mémoriser cette vue (qu'elle soit terminée ou encore en cours) pour un réaffichage
-            // instantané au prochain clic — seule une vue où TOUTES les directions sont done sera réutilisée
-            // sans recalcul (cf. cacheComplete ci-dessus).
-            {const entry=transportViewCache.get(missionKey)||{signature,views:{}};entry.signature=signature;entry.views[label]=view;transportViewCache.set(missionKey,entry);}
           }});
         session.signatureKey=signature;transportHub=session;startDayLabels(activeDay);
       };

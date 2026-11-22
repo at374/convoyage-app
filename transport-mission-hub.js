@@ -2402,33 +2402,9 @@ function card(doc,j,labels,expanded=false,task=null){
   }
   else if(l.kind==='walk'){
    li.appendChild(el(doc,'small',null,l.walkSource==='valhalla'?'Itinéraire piéton calculé (OpenStreetMap)':'Marche calculée par '+j.source));
-   // 22/11/2026 (Laurent : « tout trajet de marche doit avoir indiqué à la fin du trajet l'adresse exacte
-   // d'arrivée sur toutes les fiches », puis « on met aussi l'adresse exacte du départ ») : élargi depuis la
-   // version précédente qui ne le faisait que sur la toute première/dernière marche du trajet, et seulement
-   // si l'adresse de la mission était approximative. Demande explicite : CHAQUE marche (y compris les marches
-   // de correspondance entre deux arrêts), départ ET arrivée, pour éviter toute erreur de trajet — même
-   // quand l'arrêt a déjà un nom (ex. « Thonon-les-Bains, 74 » ne dit pas où se trouve l'arrêt exactement).
-   for(const [side,point] of [['départ',pt(l.fromPoint)],['arrivée',pt(l.toPoint)]]){
-    if(!point)continue;
-    const win=doc.defaultView;
-    if(!win)continue;
-    // 22/11/2026 (Laurent : « enlever toutes les mentions adresse précise estimée etc ») : texte raccourci,
-    // sans préambule/mise en garde répétée à chaque marche — juste « Départ/Arrivée : <adresse> ».
-    const note=el(doc,'p','cp-hub-note','');
-    li.appendChild(note);
-    // 22/11/2026 (Laurent : « ça bloque le défilement quand on clique sur Visualisation des transports ») :
-    // ce fetch de géocodage inverse partait pour CHAQUE marche de CHAQUE carte dès la construction de la
-    // fiche — plusieurs dizaines d'appels réseau simultanés à l'ouverture, en plus des tuiles de carte déjà
-    // différées pour la même raison (cf. mapSvg ci-dessus). Même traitement : différé tant que la marche
-    // n'est pas visible à l'écran (IntersectionObserver), pour ne pas tout déclencher d'un coup à l'ouverture.
-    const resolveNote=()=>reverseGeocodeFR(win,point.lat,point.lon).then(r=>{
-     if(!li.isConnected)return;
-     note.textContent=r?(side==='départ'?'Départ':'Arrivée')+' : '+r.label:'';
-    }).catch(()=>{note.textContent='';});
-    const IO=win.IntersectionObserver;
-    if(IO){try{const io=new IO(es=>{if(es.some(e=>e.isIntersecting)){io.disconnect();resolveNote();}},{rootMargin:'200px'});io.observe(note);}catch(_){resolveNote();}}
-    else resolveNote();
-   }
+   // 22/11/2026 (Laurent : « enlever tout le texte à partir de Départ jusqu'à la carte ») : le bloc
+   // Départ/Arrivée (géocodage inverse de chaque extrémité de marche) est supprimé — on passe directement
+   // à la carte ci-dessous, qui montre déjà le trajet exact.
    if(nearP21(pt(l.toPoint))||nearP21(pt(l.fromPoint))){
     const n=el(doc,'div','cp-hub-p21',null);
     n.setAttribute('style','border:1px solid #f5b400;border-radius:10px;padding:8px 10px;margin:8px 0;background:rgba(245,180,0,.12)');
