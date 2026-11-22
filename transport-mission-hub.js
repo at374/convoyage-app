@@ -2362,7 +2362,12 @@ function render(host,v){
  if(v.done&&v.hidden&&v.hidden.tooEarly){const h=v.hidden,parts=[];if(h.longWalk)parts.push(h.longWalk+' à cause d’une marche trop longue (réglage Paramètres)');if(h.before)parts.push(h.before+' partent avant la fin de la mission précédente');if(h.early)parts.push(h.early+' arrivent trop tôt');if(h.night)parts.push(h.night+' hors plage de jour');
   // 20/11/2026 (demande Laurent) : si des trajets sont écartés pour une marche trop longue et que la trottinette
   // électrique n'est pas déjà activée, le suggérer explicitement plutôt que de laisser "Aucun trajet trouvé" sans piste.
-  if(parts.length)host.appendChild(el(doc,'p','cp-hub-note','Détail : '+parts.join(' · ')+'.'+(h.longWalk&&!v.scooterEnabled?' Une partie du trajet pourrait être couverte en trottinette électrique : activez-la dans Paramètres pour l’essayer.':'')));}
+  if(parts.length)host.appendChild(el(doc,'p','cp-hub-note','Détail : '+parts.join(' · ')+'.'+(h.longWalk&&!v.scooterEnabled?' Une partie du trajet pourrait être couverte en trottinette électrique : activez-la dans Paramètres pour l’essayer.':'')));
+  // 22/11/2026 (Laurent : « toujours pas de Y51 après 13h01 », quasi tous les trajets reçus écartés comme
+  // « avant la fin de la mission précédente ») : affiche la fenêtre earliestDeparture/latestArrival réellement
+  // utilisée pour CETTE recherche, pour voir directement si elle est décalée (mauvais jour, mauvaise heure)
+  // au lieu de deviner encore.
+  if(h.before)host.appendChild(el(doc,'p','cp-hub-note','🩺 fenêtre utilisée pour cette recherche : départ au plus tôt '+(v.task&&v.task.earliestDeparture?new Date(v.task.earliestDeparture).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}):'—')+' · arrivée au plus tard '+(v.task&&v.task.latestArrival?new Date(v.task.latestArrival).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}):'—')));}
  if(v.done&&!v.total&&v.diag&&v.diag.evaluated){const d=v.diag;host.appendChild(el(doc,'p','cp-hub-note','Diagnostic (version 17/11 k) : '+d.evaluated+' proposition'+(d.evaluated>1?'s':'')+' évaluée'+(d.evaluated>1?'s':'')+(d.noTimes?', dont '+d.noTimes+' sans horaires exploitables':'')+(d.reasons.length?' · motifs : '+d.reasons.map(r=>r[0]+' ('+r[1]+')').join(' ; '):'')+'.'));}
  if(v.done&&v.discarded){const n=Object.values(v.discarded).reduce((x,y)=>x+y,0);if(n)host.appendChild(el(doc,'p','cp-hub-note',n+' proposition'+(n>1?'s':'')+' écartée'+(n>1?'s':'')+' (détour excessif ou marche plus directe).'));}
  if(v.done&&tads.length){const p=el(doc,'p','cp-hub-note','Transport à la demande possible dans ce secteur (non intégré au classement) : ');
