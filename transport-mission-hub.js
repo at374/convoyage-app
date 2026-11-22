@@ -1276,6 +1276,12 @@ function makeProviders(r,opts={}){
       .filter(x=>x.departure&&x.arrival)
       .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,SAFETY_MAX)
       .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
+     // 22/11/2026 (Laurent : Y51 a bien des départs l'après-midi dans le flux officiel — 12h15, 12h30, 13h30…
+     // vérifiés — mais aucun n'atteint l'affichage) : on ne savait pas QUELS horaires ce moteur retenait
+     // réellement après le filtre géographique (meilleur arrêt par véhicule), seulement leur nombre. On garde
+     // maintenant la liste des départs retenus, pour voir s'ils sont bien après midi ou si le filtre
+     // géographique/horaire les élimine déjà à cette étape, avant même la vérification de marge.
+     try{const dbg=r.__cpGtfsDebug&&r.__cpGtfsDebug.get(name+' GTFS');if(dbg)dbg.kept=filtered.map(x=>x.departure);}catch(_){}
      return fromGTFS(filtered,name);
     }};
   }
@@ -2308,6 +2314,13 @@ function render(host,v){
    if(count===0){
     const dbg=root.__cpGtfsDebug&&root.__cpGtfsDebug.get(n);
     if(dbg)detail=' [diag : date '+(dbg.date??'?')+' '+(dbg.clock??'?')+' · de '+(dbg.from?dbg.from.lat+','+dbg.from.lon:'?')+' à '+(dbg.to?dbg.to.lat+','+dbg.to.lon:'?')+' · rayon '+(dbg.radiusMeters??'?')+' m · '+(dbg.viaWorker?'worker':'fil principal')+(dbg.feed?' · flux '+(dbg.feed.archiveBytes??'?')+' o compressé / '+(dbg.feed.expandedBytes??'?')+' o décompressé, '+(dbg.feed.trips??'?')+' trips':'')+' · candidats bruts : '+(dbg.rawCandidates??'?')+']';
+   }
+   // 22/11/2026 : même quand count>0, afficher les départs réellement retenus par ce moteur (avant assess()) —
+   // sert à voir si les trajets de l'après-midi existent déjà à ce stade ou sont déjà absents avant la
+   // vérification de marge/mission précédente.
+   if(count>0){
+    const dbg=root.__cpGtfsDebug&&root.__cpGtfsDebug.get(n);
+    if(dbg&&Array.isArray(dbg.kept)&&dbg.kept.length)detail+=' [départs retenus : '+dbg.kept.map(t=>{const d=new Date(t);return Number.isFinite(d.getTime())?d.toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}):'?';}).join(', ')+']';
    }
    d.appendChild(el(doc,'div',null,'✅ '+n+' : '+count+' proposition'+(count>1?'s':'')+' reçue'+(count>1?'s':'')+detail));
   }
