@@ -25,6 +25,11 @@ function crossNetworkTrips(feeds,date,origin,destination,window,options={}){
   throw new Error('Invalid federation feed');
  const ids=feeds.map(feed=>feed.source.datasetId||feed.source.resourceId);
  if(ids.some(id=>!id)||new Set(ids).size!==2)throw new Error('Distinct GTFS network identifiers required');
+ // 22/11/2026 (Laurent : « ça bloque toujours ») : mêmes plafonds en NOMBRE que nearbyTransferTrips, même
+ // limite : ils ne bornent pas le TEMPS. Budget de temps réel ajouté (voir transport-gtfs-index.js) pour que
+ // cette fonction ne puisse jamais bloquer le fil principal plus de ~1,2 s d'affilée, quel que soit le volume
+ // de données du réseau interrogé.
+ const startedAt=Date.now(),timeBudgetMs=Number.isFinite(options.timeBudgetMs)&&options.timeBudgetMs>0?options.timeBudgetMs:1200;
  let searchTruncated=false,pairs=0,lookups=0;const journeys=[];
  const prepared=feeds.map((feed,i)=>{
   if(feed.indexServiceDates&&dates.some(day=>!feed.indexServiceDates.includes(day)))throw new Error('Date outside GTFS index scope');
@@ -62,7 +67,7 @@ function crossNetworkTrips(feeds,date,origin,destination,window,options={}){
   if(!a.first.size||!b.second.size)continue;
   for(const [stopId,first] of a.first){
    const stop=stopInfo(a.feed.index,stopId);if(!stop)continue;
-   if(++lookups>maxStopLookups){searchTruncated=true;break directions;}
+   if(++lookups>maxStopLookups||(lookups%50===0&&Date.now()-startedAt>timeBudgetMs)){searchTruncated=true;break directions;}
    const nearby=g.nearbyStops(b.feed.index,stop.lat,stop.lon,transferRadiusMeters);
    for(const peer of nearby){
     const second=b.second.get(peer.stopId)||[];
@@ -74,7 +79,7 @@ function crossNetworkTrips(feeds,date,origin,destination,window,options={}){
      for(let i=low;i<second.length;i++){
       const y=second[i],interval=Date.parse(y.departure)-Date.parse(x.arrival);
       if(interval>maxWaitMinutes*60000)break;
-      if(++pairs>maxPairs||journeys.length>=maxJourneys){searchTruncated=true;break directions;}
+      if(++pairs>maxPairs||journeys.length>=maxJourneys||(pairs%500===0&&Date.now()-startedAt>timeBudgetMs)){searchTruncated=true;break directions;}
       journeys.push({tripId:JSON.stringify([[x.networkId,x.tripId],[y.networkId,y.tripId]]),
        networkId:JSON.stringify([x.networkId,y.networkId]),network:x.network+' → '+y.network,
        date,serviceDate:date,serviceDates:[x.serviceDate,y.serviceDate],timeZone:x.timeZone,from:x.from,to:y.to,legs:[x,y],

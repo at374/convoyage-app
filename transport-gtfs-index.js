@@ -143,12 +143,16 @@ function nearbyDirectTrips(files,index,date,origin,destination,radiusMeters=700)
    accessDistanceMeters:from.distanceMeters,egressDistanceMeters:to.distanceMeters};
  });
 }
-function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDepartureSeconds=-Infinity,maxArrivalSeconds=Infinity}={}){
+function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDepartureSeconds=-Infinity,maxArrivalSeconds=Infinity,timeBudgetMs}={}){
  if(!Number.isSafeInteger(maxLegs)||maxLegs<1)throw new Error('Invalid transfer budget');
  if([minDepartureSeconds,maxArrivalSeconds].some(n=>typeof n!=='number'||Number.isNaN(n)))throw new Error('Invalid transfer time bounds');
  const services=activeServices(files,date),firstByStop=new Map(),secondByStop=new Map();
  if(!origins.size&&!destinations.size)return {firstByStop,secondByStop,searchTruncated:false};
  let legCount=0,searchTruncated=false;
+ // 22/11/2026 (Laurent : « ça bloque toujours ») : cette boucle parcourt TOUS les trajets du flux GTFS (même
+ // filtrés rapidement) — sur un gros flux régional, le nombre de trajets à parcourir reste élevé même avec
+ // une fenêtre horaire étroite. Même garde-fou de temps que transferCandidates/crossNetworkTrips.
+ const startedAt=Date.now(),budgetMs=Number.isFinite(timeBudgetMs)&&timeBudgetMs>0?timeBudgetMs:1200;let tripsSeen=0;
  const add=(map,leg)=>{
   if(legCount>=maxLegs){searchTruncated=true;return false;}
   if(!map.has(leg.toTransfer))map.set(leg.toTransfer,[]);
@@ -156,6 +160,7 @@ function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDe
  };
  // Keep only legs starting near the origin or ending near the destination.
  trips: for(const [tripId,trip] of index.tripById){
+  if(++tripsSeen%2000===0&&Date.now()-startedAt>budgetMs){searchTruncated=true;break trips;}
   if(!services.has(trip.service_id))continue;
   const route=index.routeById.get(trip.route_id);if(!route)continue;
   const times=index.timesByTrip.get(tripId)||[];
@@ -182,13 +187,20 @@ function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDe
 }
 function transferCandidates(files,index,date,origins,destinations,{
  minTransferMinutes=5,maxWaitMinutes=120,maxLegs=50000,maxCandidates=5000,maxExaminedPairs=100000,
- minDepartureSeconds=-Infinity,maxArrivalSeconds=Infinity
+ minDepartureSeconds=-Infinity,maxArrivalSeconds=Infinity,timeBudgetMs
 }={}){
  if(!Number.isFinite(minTransferMinutes)||minTransferMinutes<0||
     !Number.isFinite(maxWaitMinutes)||maxWaitMinutes<minTransferMinutes)throw new Error('Invalid transfer interval');
  for(const limit of [maxLegs,maxCandidates,maxExaminedPairs])if(!Number.isSafeInteger(limit)||limit<1)throw new Error('Invalid transfer budget');
  const {firstByStop,secondByStop,searchTruncated:legTruncated}=boundaryLegs(files,index,date,origins,destinations,{maxLegs,minDepartureSeconds,maxArrivalSeconds});
  const rules=parseCSV(files['transfers.txt']||'');let searchTruncated=legTruncated,examined=0;
+ // 22/11/2026 (Laurent : « ça bloque toujours », blocage prolongé au défilement pendant la recherche) : les
+ // plafonds existants (maxExaminedPairs, etc.) bornent le NOMBRE de combinaisons, mais pas le TEMPS — sur un
+ // réseau dense (beaucoup d'arrêts proches, beaucoup de passages), une seule recherche pouvait rester bien en
+ // dessous de ces plafonds tout en prenant plusieurs secondes d'affilée sur le fil principal. On ajoute un
+ // budget de temps réel (par défaut 1,2 s) : au-delà, on arrête proprement (searchTruncated=true) comme pour
+ // les autres plafonds, plutôt que de laisser l'écran figé jusqu'à la fin du calcul.
+ const startedAt=Date.now(),budgetMs=Number.isFinite(timeBudgetMs)&&timeBudgetMs>0?timeBudgetMs:1200;
  const scope=(ruleStop,id)=>!ruleStop||ruleStop===id||ruleStop===index.stopById.get(id)?.parent_station;
  const rulesByStop=new Map();
  for(const stopId of firstByStop.keys())rulesByStop.set(stopId,rules.filter(r=>scope(r.from_stop_id,stopId)&&scope(r.to_stop_id,stopId)));
@@ -221,7 +233,7 @@ function transferCandidates(files,index,date,origins,destinations,{
    for(let i=low;i<second.length;i++){
     const b=second[i],waitSeconds=Math.round(b.departureMinutes*60)-Math.round(a.arrivalMinutes*60),waitMinutes=waitSeconds/60;
     if(waitSeconds>maxWaitMinutes*60)break;
-    if(++examined>maxExaminedPairs){searchTruncated=true;break pairs;}
+    if(++examined>maxExaminedPairs||(examined%500===0&&Date.now()-startedAt>budgetMs)){searchTruncated=true;break pairs;}
     if(a.tripId===b.tripId||a.from===b.to)continue;
     const seconds=required(stopId,a,b);
     if(seconds===null||waitSeconds<seconds)continue;
