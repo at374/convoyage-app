@@ -1269,8 +1269,15 @@ function makeProviders(r,opts={}){
      // (s.received[source]+=…), alors que ce diagnostic REMPLAÇAIT l'entrée à chaque appel : la dernière variante
      // (parfois vide) écrasait le kept d'une variante précédente qui avait pourtant trouvé des trajets. On conserve
      // maintenant le kept cumulé de TOUTES les variantes pour ce réseau, comme le fait déjà le total affiché.
-     try{const map=r.__cpGtfsDebug||(r.__cpGtfsDebug=new Map());const prev=map.get(name+' GTFS');
-      map.set(name+' GTFS',{at:Date.now(),date,clock,from:pt(task.from),to:pt(task.to),radiusMeters,url:urls[0],viaWorker:_viaWorker,rawCandidates:Array.isArray(rows)?rows.length:null,feed:_feedInfo,kept:(prev&&Array.isArray(prev.kept))?prev.kept:[]});}catch(_){}
+     // 22/11/2026 (Laurent : liste « départs retenus » incohérente, mélangeant des horaires d'une tout autre
+     // recherche) : la clé n'était QUE le nom du réseau, jamais remise à zéro — ce diagnostic accumulait donc
+     // pour toujours, sur toute la durée de la session, les départs de TOUTES les recherches passées (autres
+     // missions, autres dates), au lieu des seules variantes de LA recherche en cours. On préfixe désormais la
+     // clé par le label de la mission (label|réseau), et launch() vide l'entrée au DÉBUT de chaque nouvelle
+     // recherche pour ce label (voir plus bas) — seules les variantes de la recherche en cours s'accumulent.
+     const dbgKey=task.label+'|'+name+' GTFS';
+     try{const map=r.__cpGtfsDebug||(r.__cpGtfsDebug=new Map());const prev=map.get(dbgKey);
+      map.set(dbgKey,{at:Date.now(),date,clock,from:pt(task.from),to:pt(task.to),radiusMeters,url:urls[0],viaWorker:_viaWorker,rawCandidates:Array.isArray(rows)?rows.length:null,feed:_feedInfo,kept:(prev&&Array.isArray(prev.kept))?prev.kept:[]});}catch(_){}
      if(signal?.aborted)return [];
      const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
      // Select the best boarding/alighting stop pair for each actual vehicle
@@ -1310,7 +1317,7 @@ function makeProviders(r,opts={}){
      // réellement après le filtre géographique (meilleur arrêt par véhicule), seulement leur nombre. On garde
      // maintenant la liste des départs retenus, pour voir s'ils sont bien après midi ou si le filtre
      // géographique/horaire les élimine déjà à cette étape, avant même la vérification de marge.
-     try{const dbg=r.__cpGtfsDebug&&r.__cpGtfsDebug.get(name+' GTFS');if(dbg)dbg.kept=(Array.isArray(dbg.kept)?dbg.kept:[]).concat(filtered.map(x=>x.departure));}catch(_){}
+     try{const dbg=r.__cpGtfsDebug&&r.__cpGtfsDebug.get(dbgKey);if(dbg)dbg.kept=(Array.isArray(dbg.kept)?dbg.kept:[]).concat(filtered.map(x=>x.departure));}catch(_){}
      return fromGTFS(filtered,name);
     }};
   }
@@ -1901,6 +1908,10 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
  const lazy={};
  const launch=task=>{
   const label=task.label;
+  // 22/11/2026 : vide le diagnostic « départs retenus » de CE label avant de relancer sa recherche, pour qu'il
+  // ne mélange plus les horaires d'une recherche précédente (autre heure, autre jour) avec celle en cours —
+  // voir le commentaire détaillé sur dbgKey plus haut dans ce fichier.
+  try{if(r.__cpGtfsDebug)for(const k of [...r.__cpGtfsDebug.keys()])if(k.startsWith(label+'|'))r.__cpGtfsDebug.delete(k);}catch(_){}
   if(!pt(task.from)||!pt(task.to)){state[label].errors.adresses='adresse GPS manquante';emit(label);return;}
   // Ne lancer aucun fournisseur ni marche si la fenêtre temporelle est impossible.
   if(!queryWindow(task)){
@@ -2384,15 +2395,16 @@ function render(host,v){
    // 21/11/2026 : diagnostic temporaire — détail du téléchargement GTFS affiché seulement quand un
    // moteur local renvoie 0 proposition, pour voir en direct où ça bloque (taille du flux, candidats bruts).
    let detail='';
+   const dbgN=v.task&&v.task.label?v.task.label+'|'+n:n;
    if(count===0){
-    const dbg=root.__cpGtfsDebug&&root.__cpGtfsDebug.get(n);
+    const dbg=root.__cpGtfsDebug&&root.__cpGtfsDebug.get(dbgN);
     if(dbg)detail=' [diag : date '+(dbg.date??'?')+' '+(dbg.clock??'?')+' · de '+(dbg.from?dbg.from.lat+','+dbg.from.lon:'?')+' à '+(dbg.to?dbg.to.lat+','+dbg.to.lon:'?')+' · rayon '+(dbg.radiusMeters??'?')+' m · '+(dbg.viaWorker?'worker':'fil principal')+(dbg.feed?' · flux '+(dbg.feed.archiveBytes??'?')+' o compressé / '+(dbg.feed.expandedBytes??'?')+' o décompressé, '+(dbg.feed.trips??'?')+' trips':'')+' · candidats bruts : '+(dbg.rawCandidates??'?')+']';
    }
    // 22/11/2026 : même quand count>0, afficher les départs réellement retenus par ce moteur (avant assess()) —
    // sert à voir si les trajets de l'après-midi existent déjà à ce stade ou sont déjà absents avant la
    // vérification de marge/mission précédente.
    if(count>0){
-    const dbg=root.__cpGtfsDebug&&root.__cpGtfsDebug.get(n);
+    const dbg=root.__cpGtfsDebug&&root.__cpGtfsDebug.get(dbgN);
     // 22/11/2026 (Laurent : « rien de changé », le diagnostic précédent restait invisible même après plusieurs
     // essais espacés de 10+ min — trop long pour un simple décalage de mise en ligne) : on affiche maintenant
     // TOUJOURS ce diagnostic quand count>0, même sans aucun départ retenu ou sans entrée dbg du tout, pour
