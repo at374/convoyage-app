@@ -1039,7 +1039,16 @@ function makeProviders(r,opts={}){
  // Le diagnostic confirmait d'ailleurs « fil principal » sur un des moteurs. Un incident réseau isolé ne doit
  // pas condamner tout le reste de la session au calcul synchrone : on retente un nouveau worker à chaque
  // appel, avec juste un court répit (10 s) après un échec pour éviter de boucler sur un worker réellement cassé.
- const canWorker=()=>!opts.fetcher&&typeof r.Worker==='function'&&!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil);
+ // 22/11/2026 (Laurent : « ça bloque encore », mesuré en direct dans le navigateur — tâches synchrones de
+ // 400 ms à 3 s répétées, cohérent avec un calcul GTFS sur le fil principal) : la cause RÉELLE trouvée ici,
+ // jamais corrigée jusqu'à présent — cette condition excluait le worker dès qu'un « fetcher » personnalisé
+ // était fourni à makeProviders(), et app.js en fournit TOUJOURS un (regionalFetch) à chaque recherche réelle.
+ // Résultat : le worker n'a jamais tourné une seule fois en production, malgré toute la logique de reprise et
+ // de diagnostic ci-dessous — chaque recherche retombait systématiquement sur le calcul synchrone qui bloque
+ // l'écran. Le worker ne reçoit de toute façon jamais ce fetcher (non clonable vers un Worker ; il utilise son
+ // propre fetch et son propre cache hors ligne) — regionalFetch n'étant qu'un simple relais de window.fetch
+ // sans aucune logique propre, rien n'empêche le worker de s'activer même quand un fetcher est fourni.
+ const canWorker=()=>typeof r.Worker==='function'&&!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil);
  // 22/11/2026 (Laurent : blocage encore à ~40 s après le correctif du répit de 10 s, sans amélioration visible) :
  // le code précédent remplaçait systématiquement la vraie erreur du worker par un message générique ('worker'),
  // impossible à diagnostiquer à distance. On garde maintenant la vraie raison (message du navigateur, ou
