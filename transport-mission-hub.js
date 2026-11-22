@@ -2339,27 +2339,23 @@ function card(doc,j,labels,expanded=false,task=null){
   }
   else if(l.kind==='walk'){
    li.appendChild(el(doc,'small',null,l.walkSource==='valhalla'?'Itinéraire piéton calculé (OpenStreetMap)':'Marche calculée par '+j.source));
-   // 22/11/2026 (Laurent : « toujours indiquer l'adresse exacte de la fin de marche ») : seule l'extrémité de la
-   // TOUTE première ou TOUTE dernière marche du trajet touche réellement l'adresse de la mission (les marches
-   // intermédiaires relient deux arrêts déjà nommés). On ne cherche une adresse précise que là, et seulement si
-   // l'adresse de la mission est elle-même marquée approximative (ville seule) — jamais pour remplacer une
-   // adresse déjà précise.
-   const isFirstLeg=legIndex===0,isLastLeg=legIndex===j.legs.length-1;
-   const wantFrom=isFirstLeg&&task&&task.approximateFrom&&pt(l.fromPoint);
-   const wantTo=isLastLeg&&task&&task.approximateTo&&pt(l.toPoint);
-   if(wantFrom||wantTo){
+   // 22/11/2026 (Laurent : « tout trajet de marche doit avoir indiqué à la fin du trajet l'adresse exacte
+   // d'arrivée sur toutes les fiches », puis « on met aussi l'adresse exacte du départ ») : élargi depuis la
+   // version précédente qui ne le faisait que sur la toute première/dernière marche du trajet, et seulement
+   // si l'adresse de la mission était approximative. Demande explicite : CHAQUE marche (y compris les marches
+   // de correspondance entre deux arrêts), départ ET arrivée, pour éviter toute erreur de trajet — même
+   // quand l'arrêt a déjà un nom (ex. « Thonon-les-Bains, 74 » ne dit pas où se trouve l'arrêt exactement).
+   for(const [side,point] of [['départ',pt(l.fromPoint)],['arrivée',pt(l.toPoint)]]){
+    if(!point)continue;
     const win=doc.defaultView;
-    if(win){
-     const note=el(doc,'p','cp-hub-note','📍 Recherche de l’adresse précise à partir du point GPS…');
-     li.appendChild(note);
-     const point=wantTo?pt(l.toPoint):pt(l.fromPoint);
-     const side=wantTo?'arrivée':'départ';
-     reverseGeocodeFR(win,point.lat,point.lon).then(r=>{
-      if(!li.isConnected)return;
-      note.textContent=r?'📍 Adresse précise estimée (point GPS, pas l’adresse officielle de la mission) — '+side+' réel de la marche : '+r.label+(Number.isFinite(r.distanceMeters)?' (± '+r.distanceMeters+' m)':''):
-       'Adresse précise introuvable pour ce point GPS : vérifier la carte ci-dessous avant de partir.';
-     }).catch(()=>{note.textContent='Adresse précise introuvable pour ce point GPS : vérifier la carte ci-dessous avant de partir.';});
-    }
+    if(!win)continue;
+    const note=el(doc,'p','cp-hub-note','📍 Recherche de l’adresse précise de '+side+' à partir du point GPS…');
+    li.appendChild(note);
+    reverseGeocodeFR(win,point.lat,point.lon).then(r=>{
+     if(!li.isConnected)return;
+     note.textContent=r?'📍 Adresse précise estimée (point GPS, pas forcément l’adresse officielle) — '+side+' réel de la marche : '+r.label+(Number.isFinite(r.distanceMeters)?' (± '+r.distanceMeters+' m)':''):
+      'Adresse précise introuvable pour ce point GPS ('+side+') : vérifier la carte ci-dessous avant de partir.';
+    }).catch(()=>{note.textContent='Adresse précise introuvable pour ce point GPS ('+side+') : vérifier la carte ci-dessous avant de partir.';});
    }
    if(nearP21(pt(l.toPoint))||nearP21(pt(l.fromPoint))){
     const n=el(doc,'div','cp-hub-p21',null);
