@@ -1375,56 +1375,76 @@ function makeProviders(r,opts={}){
      // vérifié, chacun obtient alors la même bonne correspondance (Ecole Saint-François → Sibra →
      // Tuilerie, 1736 m de marche totale) au lieu d'un seul.
      const maxWaitMinutes=30;
-     // 21/11/2026 (Laurent : « l'écran se fige pendant la recherche ») : cette double boucle (jusqu'à 28
-     // paires de réseaux, chacune examinant jusqu'à 100 000 combinaisons d'horaires via crossNetworkTrips)
-     // est le calcul le plus lourd de toute la recherche transport. Elle tournait entièrement sur le fil
-     // principal et figeait l'affichage pendant son exécution. Calcul hors du fil de l'écran (Web Worker,
-     // même worker que les trajets directs locaux) ; en cas d'échec du worker, ancien calcul sur le fil
-     // principal (même résultat) en secours.
-     let rows=null;
-     if(canWorker()){
-      try{rows=await workerCorrespondances({nets:nets.map(n=>({id:n[0],name:n[1],urls:urlsFor(n[2])})),date,from,to,window,sameNetworkRadius,crossNetworkRadius,maxWaitMinutes});}
-      catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}
-     }
-     if(rows===null){
-      const loaded=(await Promise.all(nets.map(n=>feedFor(n[0],n[1],n[2],date).catch(()=>null)))).filter(Boolean);
-      if(signal?.aborted||loaded.length<1)return [];
-      // 21/11/2026 : « Tous les horaires » (Y22) manquait sur les trajets de correspondance — fromGTFS()
-      // lit networkUrls/serviceDate par JAMBE (r.legs[i]), jamais attachés ici (seul le moteur direct le
-      // faisait). On les attache désormais, par réseau réel de chaque jambe (une correspondance entre deux
-      // réseaux a deux jambes de réseaux différents, chacune avec ses propres URLs GTFS).
-      const netUrls=new Map(nets.map(n=>[n[0],urlsFor(n[2])]));
-      rows=[];
-      for(let i=0;i<loaded.length;i++){
-       // Correspondances à l'intérieur d'un même réseau.
-       try{
-        const bounds=r.CPGTFSTime.serviceWindow(loaded[i].files,date,window);
-        const t=r.CPGTFSIndex.nearbyTransferTrips(loaded[i].files,loaded[i].index,date,from,to,sameNetworkRadius,{...bounds,maxWaitMinutes});
-        const dated=r.CPGTFSTime.datedTransferTrips(loaded[i].files,loaded[i].index,t.journeys,window);
-        const urls=netUrls.get(nets[i][0])||[];
-        rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,
-         legs:x.legs?.map(l=>({...l,network:loaded[i].source.network,networkUrls:urls,serviceDate:l.date||date}))})));
-       }catch(_){}
-       // Correspondances entre deux réseaux différents.
-       for(let j=i+1;j<loaded.length;j++){
-        if(signal?.aborted)return [];
-        // 22/11/2026 (Laurent : « ça se fige », blocage ~40 s qui persiste même après le correctif du worker —
-        // le worker échoue peut-être systématiquement ici, quelle qu'en soit la raison) : cette boucle peut
-        // enchaîner jusqu'à 28 paires de réseaux sur le fil principal sans jamais rendre la main au navigateur,
-        // d'où un seul blocage continu de plusieurs dizaines de secondes. On rend la main avant CHAQUE paire
-        // (même coût total, mais le navigateur peut peindre/réagir entre deux) : l'écran ne doit plus se figer
-        // d'un bloc, que le worker fonctionne ou non.
-        await new Promise(res=>setTimeout(res,0));
-        if(signal?.aborted)return [];
+     // 22/11/2026 (Laurent : « ça bloque toujours », et les horaires Y51 qui disparaissent par intermittence) :
+     // sans heure limite d'arrivée (ex. « retour au domicile » après une mission, sans contrainte derrière),
+     // window.latestArrival restait absent → missionBounds()/serviceWindow() bornent alors la recherche à
+     // l'INFINI (toute la journée de service, parfois 20h+). nearbyTransferTrips/crossNetworkTrips scannent
+     // alors des dizaines de départs Y51 et des milliers de combinaisons d'arrêts Sibra avant d'atteindre leur
+     // plafond de candidats (maxPairs/maxJourneys) — c'est là le calcul le plus lourd de toute la recherche,
+     // ET la cause du classement instable (quels départs survivent dépend de l'ordre de scan, pas de la
+     // pertinence). On borne d'abord la recherche à un créneau glissant de quelques heures après le départ au
+     // plus tôt — largement suffisant pour plusieurs départs Y51 (toutes les heures) — et on ne retombe sur la
+     // recherche complète (non bornée) que si ce créneau ne donne RIEN (ex. tôt le matin avant le 1er bus).
+     const CORRESPONDANCE_HORIZON_MS=3*3600000;
+     const scanWindow=(window.latestArrival===undefined&&Number.isFinite(ms(window.earliestDeparture)))
+      ?{...window,latestArrival:new Date(ms(window.earliestDeparture)+CORRESPONDANCE_HORIZON_MS).toISOString()}
+      :window;
+     const runPass=async(scanW)=>{
+      // 21/11/2026 (Laurent : « l'écran se fige pendant la recherche ») : cette double boucle (jusqu'à 28
+      // paires de réseaux, chacune examinant jusqu'à 100 000 combinaisons d'horaires via crossNetworkTrips)
+      // est le calcul le plus lourd de toute la recherche transport. Elle tournait entièrement sur le fil
+      // principal et figeait l'affichage pendant son exécution. Calcul hors du fil de l'écran (Web Worker,
+      // même worker que les trajets directs locaux) ; en cas d'échec du worker, ancien calcul sur le fil
+      // principal (même résultat) en secours.
+      let rows=null;
+      if(canWorker()){
+       try{rows=await workerCorrespondances({nets:nets.map(n=>({id:n[0],name:n[1],urls:urlsFor(n[2])})),date,from,to,window:scanW,realWindow:window,sameNetworkRadius,crossNetworkRadius,maxWaitMinutes});}
+       catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}
+      }
+      if(rows===null){
+       const loaded=(await Promise.all(nets.map(n=>feedFor(n[0],n[1],n[2],date).catch(()=>null)))).filter(Boolean);
+       if(signal?.aborted||loaded.length<1)return [];
+       // 21/11/2026 : « Tous les horaires » (Y22) manquait sur les trajets de correspondance — fromGTFS()
+       // lit networkUrls/serviceDate par JAMBE (r.legs[i]), jamais attachés ici (seul le moteur direct le
+       // faisait). On les attache désormais, par réseau réel de chaque jambe (une correspondance entre deux
+       // réseaux a deux jambes de réseaux différents, chacune avec ses propres URLs GTFS).
+       const netUrls=new Map(nets.map(n=>[n[0],urlsFor(n[2])]));
+       rows=[];
+       for(let i=0;i<loaded.length;i++){
+        // Correspondances à l'intérieur d'un même réseau.
         try{
-         const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius,maxWaitMinutes});
-         const uI=netUrls.get(nets[i][0])||[],uJ=netUrls.get(nets[j][0])||[];
-         rows.push(...c.journeys.map(x=>({...x,legs:x.legs.map(l=>({...l,
-          networkUrls:(l.networkId===loaded[j].source.datasetId?uJ:uI),serviceDate:l.date||date}))})));
+         const bounds=r.CPGTFSTime.serviceWindow(loaded[i].files,date,scanW);
+         const t=r.CPGTFSIndex.nearbyTransferTrips(loaded[i].files,loaded[i].index,date,from,to,sameNetworkRadius,{...bounds,maxWaitMinutes});
+         const dated=r.CPGTFSTime.datedTransferTrips(loaded[i].files,loaded[i].index,t.journeys,window);
+         const urls=netUrls.get(nets[i][0])||[];
+         rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,
+          legs:x.legs?.map(l=>({...l,network:loaded[i].source.network,networkUrls:urls,serviceDate:l.date||date}))})));
         }catch(_){}
+        // Correspondances entre deux réseaux différents.
+        for(let j=i+1;j<loaded.length;j++){
+         if(signal?.aborted)return [];
+         // 22/11/2026 (Laurent : « ça se fige », blocage ~40 s qui persiste même après le correctif du worker —
+         // le worker échoue peut-être systématiquement ici, quelle qu'en soit la raison) : cette boucle peut
+         // enchaîner jusqu'à 28 paires de réseaux sur le fil principal sans jamais rendre la main au navigateur,
+         // d'où un seul blocage continu de plusieurs dizaines de secondes. On rend la main avant CHAQUE paire
+         // (même coût total, mais le navigateur peut peindre/réagir entre deux) : l'écran ne doit plus se figer
+         // d'un bloc, que le worker fonctionne ou non.
+         await new Promise(res=>setTimeout(res,0));
+         if(signal?.aborted)return [];
+         try{
+          const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,scanW,{radiusMeters:crossNetworkRadius,maxWaitMinutes});
+          const uI=netUrls.get(nets[i][0])||[],uJ=netUrls.get(nets[j][0])||[];
+          rows.push(...c.journeys.map(x=>({...x,legs:x.legs.map(l=>({...l,
+           networkUrls:(l.networkId===loaded[j].source.datasetId?uJ:uI),serviceDate:l.date||date}))})));
+         }catch(_){}
+        }
        }
       }
-     }
+      return rows;
+     };
+     let rows=await runPass(scanWindow);
+     if(signal?.aborted)return [];
+     if((!Array.isArray(rows)||rows.length===0)&&scanWindow!==window)rows=await runPass(window);
      if(signal?.aborted)return [];
      const out=rows.filter(x=>x&&x.departure&&x.arrival).map(x=>({...x,onDemand:x.onDemand||!!x.legs?.some(l=>l&&l.onDemand)}));
      // 21/11/2026 : bug Y51/correspondances — un même véhicule (A) relié à un même véhicule (B) peut

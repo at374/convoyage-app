@@ -38,7 +38,12 @@ const feedFor=async(key,urls,date)=>{
 // toute la recherche de transport, et il bloquait l'affichage/le défilement pendant qu'il tournait. Il est
 // désormais fait ICI, hors du fil de l'écran, comme les trajets directs (local_<id>) le sont déjà.
 const runCorrespondances=async data=>{
- const {nets,date,from,to,window,sameNetworkRadius,crossNetworkRadius,maxWaitMinutes}=data;
+ // 22/11/2026 : « window » ici est la fenêtre de SCAN (peut être bornée à quelques heures par l'appelant,
+ // voir transport-mission-hub.js) ; « realWindow » (repli sur window si absent, compat anciens appels) est la
+ // vraie fenêtre de mission, utilisée uniquement pour datedTransferTrips (marge affichée) afin de ne jamais
+ // faire croire à une heure limite artificielle qui ne serait due qu'à la borne de scan.
+ const {nets,date,from,to,window,realWindow,sameNetworkRadius,crossNetworkRadius,maxWaitMinutes}=data;
+ const marginWindow=realWindow||window;
  const loaded=(await Promise.all(nets.map(async n=>{
   try{
    const feed=await feedFor(n.id+'|'+date,n.urls,date);
@@ -54,7 +59,7 @@ const runCorrespondances=async data=>{
   try{
    const bounds=CPGTFSTime.serviceWindow(loaded[i].files,date,window);
    const t=CPGTFSIndex.nearbyTransferTrips(loaded[i].files,loaded[i].index,date,from,to,sameNetworkRadius,{...bounds,maxWaitMinutes});
-   const dated=CPGTFSTime.datedTransferTrips(loaded[i].files,loaded[i].index,t.journeys,window);
+   const dated=CPGTFSTime.datedTransferTrips(loaded[i].files,loaded[i].index,t.journeys,marginWindow);
    rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,
     legs:x.legs?.map(l=>({...l,network:loaded[i].source.network,networkUrls:loaded[i].__urls,serviceDate:l.date||date}))})));
   }catch(_){}
