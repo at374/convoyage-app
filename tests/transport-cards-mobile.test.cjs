@@ -54,7 +54,7 @@ test('inventaire : ne plus annoncer Léman Pass entièrement absent',()=>{
 });
 
 test('aucune carte ouverte d\'office : le convoyeur ouvre celle qu\'il veut ; marches visibles dans la carte ouverte',()=>{
- assert.match(hub,/function card\(doc,j,labels,expanded=false\)/);
+ assert.match(hub,/function card\(doc,j,labels,expanded=false,task=null\)/);
  assert.match(hub,/if\(expanded\)c\.open=true/);
  assert.match(hub,/if\(c\.open\)buildBody\(\)/);
  assert.match(hub,/const openInitial=false;/);
@@ -88,7 +88,7 @@ test('jonction multi-jours : onglet calé sur la prochaine prise en charge',()=>
 });
 
 test('cartes piétonnes : conserver les détails construits après rafraîchissement',()=>{
- assert.match(hub,/const node=card\(doc,j,labels,expandFirst\|\|\(key&&opened\.has\(key\)\)\)/);
+ assert.match(hub,/const node=card\(doc,j,labels,expandFirst\|\|\(key&&opened\.has\(key\)\),v\.task\)/);
  assert.match(hub,/if\(key\)node\.setAttribute\('data-journey-key',key\)/);
  assert.doesNotMatch(hub,/if\(opened\.has\(key\)\)node\.open=true/);
 });

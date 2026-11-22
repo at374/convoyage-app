@@ -90,6 +90,40 @@ function journey(source,legs,extra={}){
  return {source,sources:[source],legs:L,alerts:Array.isArray(extra.alerts)?extra.alerts.slice(0,10):[],
   realtime:extra.realtime===true,dataDate:extra.dataDate||null,raw:undefined};
 }
+// 22/11/2026 (Laurent : « toujours indiquer l'adresse exacte de la fin de marche, pour qu'il n'y ait pas
+// d'erreur ») : quand l'adresse de la mission est absente (approximateFrom/approximateTo), l'extrémité d'une
+// marche d'approche ou finale n'affiche qu'un nom de ville (ex. « Thonon-les-Bains, 74 ») alors que le point GPS
+// réellement utilisé pour calculer la marche est, lui, précis. On interroge la Base Adresse Nationale (IGN,
+// même API déjà utilisée ailleurs dans l'appli pour retrouver une commune) pour obtenir l'adresse la plus proche
+// de ce point GPS et l'afficher, en la marquant clairement comme estimée (reverse-geocoding, jamais l'adresse
+// officielle de la mission). Résultat mis en cache (mémoire + ce téléphone) par coordonnée arrondie au mètre
+// pour ne pas réinterroger à chaque ouverture de carte.
+const reverseGeocodeCache=new Map();
+async function reverseGeocodeFR(win,lat,lon){
+ if(!Number.isFinite(lat)||!Number.isFinite(lon))return null;
+ const key=lat.toFixed(5)+','+lon.toFixed(5);
+ if(reverseGeocodeCache.has(key))return reverseGeocodeCache.get(key);
+ const promise=(async()=>{
+  try{
+   let cached=null;try{cached=win.localStorage.getItem('cp_revgeo_'+key);}catch(_){}
+   if(cached)return JSON.parse(cached);
+   const fetcher=win&&win.fetch?win.fetch.bind(win):null;
+   if(!fetcher)return null;
+   const resp=await fetcher('https://data.geopf.fr/geocodage/reverse?limit=1&lon='+lon+'&lat='+lat);
+   if(!resp||!resp.ok)return null;
+   const data=await resp.json();
+   const f=data&&Array.isArray(data.features)?data.features[0]:null,p=f&&f.properties;
+   if(!p)return null;
+   const label=p.label||[p.housenumber,p.street||p.name].filter(Boolean).join(' ')+
+    (p.postcode||p.city?' '+[p.postcode,p.city].filter(Boolean).join(' '):'');
+   const out=label&&label.trim()?{label:label.trim(),distanceMeters:Number.isFinite(p.distance)?Math.round(p.distance):null}:null;
+   if(out){try{win.localStorage.setItem('cp_revgeo_'+key,JSON.stringify(out));}catch(_){}}
+   return out;
+  }catch(_){return null;}
+ })();
+ reverseGeocodeCache.set(key,promise);
+ return promise;
+}
 function swissMode(category){
  const c=String(category||'').toUpperCase();
  if(!c||c==='WALK')return 'walk';
@@ -2181,12 +2215,21 @@ function hmFromSeconds(sec){
  if(!Number.isFinite(sec))return '?';
  return String(Math.floor(sec/3600)%24).padStart(2,'0')+':'+String(Math.floor(sec/60)%60).padStart(2,'0');
 }
-function card(doc,j,labels,expanded=false){
+function card(doc,j,labels,expanded=false,task=null){
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
  if(expanded)c.open=true;
  const s=el(doc,'summary');
  if(labels&&labels.length)s.appendChild(el(doc,'span','cp-hub-chip',labels.join(' · ')));
  s.appendChild(el(doc,'strong','cp-hub-times',clock(j.departure)+' → '+clock(j.arrival)+' · '+durationText(j.durationMinutes)));
+ // 22/11/2026 (Laurent : « marquer en petit en dessous de l'heure l'adresse exacte de départ et d'arrivée, pour
+ // éviter toute erreur de trajet ») : jusqu'ici le nom des extrémités n'apparaissait que dans le détail de
+ // chaque étape, une fois la carte ouverte. On le reprend ici, visible dès le titre de la carte (fermée ou
+ // non) — c'est déjà l'adresse la plus précise connue (celle de la mission, ou la marche GPS précise ci-dessous
+ // si l'adresse de la mission est approximative).
+ if(j.legs&&j.legs.length){
+  const startName=j.legs[0]&&j.legs[0].from,endName=j.legs[j.legs.length-1]&&j.legs[j.legs.length-1].to;
+  if(startName||endName)s.appendChild(el(doc,'small','cp-hub-endpoints',(startName||'?')+' → '+(endName||'?')));
+ }
  // Prix affiché seulement s'il est réellement connu et vérifié : plus de mention « Prix à confirmer » ni de prix partiel.
  if(j.price.status!=='unknown')s.appendChild(el(doc,'span','cp-hub-price',j.price.label));
  if(j.price.status==='unknown')for(const t of ticketLinks(j)){
@@ -2254,6 +2297,28 @@ function card(doc,j,labels,expanded=false){
   }
   else if(l.kind==='walk'){
    li.appendChild(el(doc,'small',null,l.walkSource==='valhalla'?'Itinéraire piéton calculé (OpenStreetMap)':'Marche calculée par '+j.source));
+   // 22/11/2026 (Laurent : « toujours indiquer l'adresse exacte de la fin de marche ») : seule l'extrémité de la
+   // TOUTE première ou TOUTE dernière marche du trajet touche réellement l'adresse de la mission (les marches
+   // intermédiaires relient deux arrêts déjà nommés). On ne cherche une adresse précise que là, et seulement si
+   // l'adresse de la mission est elle-même marquée approximative (ville seule) — jamais pour remplacer une
+   // adresse déjà précise.
+   const isFirstLeg=legIndex===0,isLastLeg=legIndex===j.legs.length-1;
+   const wantFrom=isFirstLeg&&task&&task.approximateFrom&&pt(l.fromPoint);
+   const wantTo=isLastLeg&&task&&task.approximateTo&&pt(l.toPoint);
+   if(wantFrom||wantTo){
+    const win=doc.defaultView;
+    if(win){
+     const note=el(doc,'p','cp-hub-note','📍 Recherche de l’adresse précise à partir du point GPS…');
+     li.appendChild(note);
+     const point=wantTo?pt(l.toPoint):pt(l.fromPoint);
+     const side=wantTo?'arrivée':'départ';
+     reverseGeocodeFR(win,point.lat,point.lon).then(r=>{
+      if(!li.isConnected)return;
+      note.textContent=r?'📍 Adresse précise estimée (point GPS, pas l’adresse officielle de la mission) — '+side+' réel de la marche : '+r.label+(Number.isFinite(r.distanceMeters)?' (± '+r.distanceMeters+' m)':''):
+       'Adresse précise introuvable pour ce point GPS : vérifier la carte ci-dessous avant de partir.';
+     }).catch(()=>{note.textContent='Adresse précise introuvable pour ce point GPS : vérifier la carte ci-dessous avant de partir.';});
+    }
+   }
    if(nearP21(pt(l.toPoint))||nearP21(pt(l.fromPoint))){
     const n=el(doc,'div','cp-hub-p21',null);
     n.setAttribute('style','border:1px solid #f5b400;border-radius:10px;padding:8px 10px;margin:8px 0;background:rgba(245,180,0,.12)');
@@ -2381,7 +2446,7 @@ function render(host,v){
   const key=signature(j)||(j.walkOnly?'walk|'+Math.round(ms(j.departure)/60000)+'|'+Math.round(ms(j.arrival)/60000)+'|'+Math.round(j.durationMinutes||0):'');
   // Construire immédiatement les détails si cette carte était déjà ouverte :
   // poser node.open après card() ne construit pas toujours le corps au rendu.
-  const node=card(doc,j,labels,expandFirst||(key&&opened.has(key)));
+  const node=card(doc,j,labels,expandFirst||(key&&opened.has(key)),v.task);
   // La première proposition est ouverte, les suivantes restent paresseuses.
   // Une marche seule n'a pas de ligne de transport : sa signature classique est vide.
   // Identifier aussi ces trajets pour ne pas refermer leur carte à chaque résultat réseau.
@@ -2529,7 +2594,13 @@ function render(host,v){
  // avant), pour savoir enfin si le worker échoue systématiquement ici (réseau, sécurité, autre) plutôt que de
  // deviner encore — un échec systématique expliquerait un blocage constant malgré le répit de 10 s.
  if(v.done&&root.__cpHubWorkerLastError)host.appendChild(el(doc,'p','cp-hub-note','🔧 worker de calcul : en échec ('+root.__cpHubWorkerFailCount+' fois) — dernière raison : '+root.__cpHubWorkerLastError+(root.__cpHubWorkerOffUntil&&Date.now()<root.__cpHubWorkerOffUntil?' · désactivé encore '+Math.ceil((root.__cpHubWorkerOffUntil-Date.now())/1000)+' s':'')));
- if(v.done&&!v.total&&v.diag&&v.diag.evaluated){const d=v.diag;host.appendChild(el(doc,'p','cp-hub-note','Diagnostic (version 17/11 k) : '+d.evaluated+' proposition'+(d.evaluated>1?'s':'')+' évaluée'+(d.evaluated>1?'s':'')+(d.noTimes?', dont '+d.noTimes+' sans horaires exploitables':'')+(d.reasons.length?' · motifs : '+d.reasons.map(r=>r[0]+' ('+r[1]+')').join(' ; '):'')+'.'));}
+ // 22/11/2026 (Laurent : Y51 après 13h toujours invisible alors que certains trajets S'AFFICHENT pour la
+ // même mission) : ce diagnostic complet (tous les motifs de rejet, pas seulement « avant la fin de la
+ // mission précédente ») ne s'affichait QUE quand AUCUN trajet n'était affiché du tout (!v.total). Si ne
+ // serait-ce qu'un seul trajet passe (ex. un car de nuit), Y51 peut être écarté pour un AUTRE motif
+ // (marge insuffisante, correspondance manquante…) sans que ce diagnostic ne le révèle jamais. On l'affiche
+ // désormais aussi dès qu'il reste des trajets non affichés, même quand d'autres trajets sont visibles.
+ if(v.done&&(!v.total||(v.hidden&&v.hidden.tooEarly))&&v.diag&&v.diag.evaluated){const d=v.diag;host.appendChild(el(doc,'p','cp-hub-note','Diagnostic (version 17/11 k) : '+d.evaluated+' proposition'+(d.evaluated>1?'s':'')+' évaluée'+(d.evaluated>1?'s':'')+(d.noTimes?', dont '+d.noTimes+' sans horaires exploitables':'')+(d.reasons.length?' · motifs : '+d.reasons.map(r=>r[0]+' ('+r[1]+')').join(' ; '):'')+'.'));}
  if(v.done&&v.discarded){const n=Object.values(v.discarded).reduce((x,y)=>x+y,0);if(n)host.appendChild(el(doc,'p','cp-hub-note',n+' proposition'+(n>1?'s':'')+' écartée'+(n>1?'s':'')+' (détour excessif ou marche plus directe).'));}
  if(v.done&&tads.length){const p=el(doc,'p','cp-hub-note','Transport à la demande possible dans ce secteur (non intégré au classement) : ');
   tads.forEach((t,i)=>{const a=el(doc,'a',null,t.name);a.href=t.url;a.target='_blank';a.rel='noopener noreferrer';p.appendChild(a);p.appendChild(doc.createTextNode(' — '+t.note+(i<tads.length-1?' · ':'.')));});
