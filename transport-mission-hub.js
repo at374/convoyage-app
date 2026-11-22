@@ -2412,13 +2412,14 @@ function card(doc,j,labels,expanded=false,task=null){
     if(!point)continue;
     const win=doc.defaultView;
     if(!win)continue;
-    const note=el(doc,'p','cp-hub-note','📍 Recherche de l’adresse précise de '+side+' à partir du point GPS…');
+    // 22/11/2026 (Laurent : « enlever toutes les mentions adresse précise estimée etc ») : texte raccourci,
+    // sans préambule/mise en garde répétée à chaque marche — juste « Départ/Arrivée : <adresse> ».
+    const note=el(doc,'p','cp-hub-note','');
     li.appendChild(note);
     reverseGeocodeFR(win,point.lat,point.lon).then(r=>{
      if(!li.isConnected)return;
-     note.textContent=r?'📍 Adresse précise estimée (point GPS, pas forcément l’adresse officielle) — '+side+' réel de la marche : '+r.label+(Number.isFinite(r.distanceMeters)?' (± '+r.distanceMeters+' m)':''):
-      'Adresse précise introuvable pour ce point GPS ('+side+') : vérifier la carte ci-dessous avant de partir.';
-    }).catch(()=>{note.textContent='Adresse précise introuvable pour ce point GPS ('+side+') : vérifier la carte ci-dessous avant de partir.';});
+     note.textContent=r?(side==='départ'?'Départ':'Arrivée')+' : '+r.label:'';
+    }).catch(()=>{note.textContent='';});
    }
    if(nearP21(pt(l.toPoint))||nearP21(pt(l.fromPoint))){
     const n=el(doc,'div','cp-hub-p21',null);
