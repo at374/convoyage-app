@@ -1909,24 +1909,30 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
  // n'en est ressorti.
  const localNetworkIds=Object.keys(providers).filter(k=>k.startsWith('local_')&&k!=='local_correspondances');
  const hasTransit=list=>Array.isArray(list)&&list.some(it=>it&&Array.isArray(it.legs)&&it.legs.length&&it.legs.some(l=>l&&l.kind!=='walk'));
+ // 22/11/2026 (Laurent : « tous les moteurs et fichiers locaux doivent être complémentaires… et se contrôler
+ // les uns les autres ») : run() s'arrêtait au PREMIER réseau local renvoyant un résultat exploitable,
+ // sans comparer aux autres réseaux locaux pertinents pour la même tâche — à la frontière de deux réseaux
+ // (ex. Thonon/Star't et un réseau voisin desservant tous les deux la même zone), le réseau essayé en
+ // premier pouvait masquer une correspondance bien meilleure trouvée par un autre. pickClosest(), appelé
+ // ensuite par trySubstituteLongWalk(), compare déjà toutes les options d'une même liste sur la marche
+ // totale puis l'horaire : on lui fournit maintenant l'union de TOUS les réseaux locaux pertinents (+
+ // Mobilités M) au lieu de s'arrêter au premier qui répond.
  const anyLocalBus={
   enabled:task=>{
    try{if(providers.regional&&providers.regional.enabled(task))return true;}catch(_){}
    return localNetworkIds.some(k=>{try{return providers[k].enabled(task);}catch(_){return false;}});
   },
   run:async task=>{
-   try{
-    if(providers.regional&&providers.regional.enabled(task)){
-     const out=await providers.regional.run(task);
-     if(hasTransit(out))return out;
-    }
-   }catch(_){}
+   const runners=[];
+   try{if(providers.regional&&providers.regional.enabled(task))runners.push(providers.regional.run(task).catch(()=>[]));}catch(_){}
    for(const k of localNetworkIds){
     let ok=false;try{ok=providers[k].enabled(task);}catch(_){ok=false;}
-    if(!ok)continue;
-    try{const out=await providers[k].run(task);if(hasTransit(out))return out;}catch(_){}
+    if(ok)runners.push(providers[k].run(task).catch(()=>[]));
    }
-   return [];
+   if(!runners.length)return [];
+   const results=await Promise.all(runners);
+   const merged=results.flat().filter(it=>it&&Array.isArray(it.legs)&&it.legs.length);
+   return hasTransit(merged)?merged:[];
   }
  };
  // Mises à jour regroupées (au plus une par 350 ms et par direction) : chaque résultat réseau ne reconstruit plus toute la fiche,
