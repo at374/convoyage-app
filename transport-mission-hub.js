@@ -1636,6 +1636,14 @@ function makeProviders(r,opts={}){
    };
    P['national_'+operator]={name,enabled:task=>!!pt(task.from)&&!!pt(task.to)&&!!queryWindow(task),
     disabledReason:'adresse GPS ou horaire de mission manquant',
+    // 22/11/2026 (Laurent : « SNCF GTFS : délai fournisseur dépassé (35 s) », puis FlixBus/BlaBlaCar Bus
+    // en erreur sur la même mission) : délai global (35 s) pensé pour un calcul bloquant l'écran — ce n'est
+    // plus le cas depuis le badge « Recherche en cours » (le reste de l'appli continue pendant l'attente).
+    // Mesuré ici : flux de 850 Ko (SNCF AURA), 138 Ko (FlixBus) et 36 Ko (BlaBlaCar Bus) — rien d'énorme,
+    // mais sur le réseau de Laurent (0,06 à 1,7 Ko/s vu sur ses captures), même 138 Ko dépasse largement
+    // 35 s au premier chargement. Une fois téléchargé, le flux est mis en cache 12 h (cp-gtfs-zips, cf.
+    // cacheFetch plus haut et dans le worker) : la patience n'est à demander qu'une fois par demi-journée.
+    timeoutMs:150000,
     run:async(task,signal)=>{
      const window=queryWindow(task),when=ms(window.when);
      if(!Number.isFinite(when))return [];
