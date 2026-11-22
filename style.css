@@ -642,6 +642,8 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .cp-hub-modes{font-size:.95em;word-break:break-word}
 .cp-hub-status{font-size:.9em}
 .cp-hub-reason{color:var(--alerte)}
+/* 22/11/2026 : raison d'un trajet "Transport non confirmé", affichée dans le corps déplié (voir transport-mission-hub.js, card()) — distincte de .cp-hub-reason qui reste masquée dans le résumé. */
+.cp-hub-reason-body{color:var(--alerte);font-weight:600}
 .cp-hub-legs{margin:8px 0;padding-left:20px;display:grid;gap:6px}
 .cp-hub-legs li.walk{color:var(--ok)}
 .cp-hub-legs small,.cp-hub-src{color:var(--doux);display:block}

@@ -2252,6 +2252,13 @@ function card(doc,j,labels,expanded=false){
  if(j.delays.length)body.appendChild(el(doc,'p','cp-hub-note','Retards signalés : '+j.delays.join(', ')));
  if(j.alerts.length)body.appendChild(el(doc,'p','cp-hub-note','Alertes : '+j.alerts.join(' · ')));
  if(j.feasible)body.appendChild(el(doc,'p','cp-hub-note',j.statusDetail));
+ // 22/11/2026 (Laurent : aucun moyen de voir pourquoi un trajet est « Transport non confirmé » — le résumé
+ // masque volontairement cp-hub-reason depuis le 20/11/2026 (style.css : .cp-hub-card>summary .cp-hub-reason
+ // {display:none!important}), et jusqu'ici la raison n'était montrée dans le corps déplié QUE pour un trajet
+ // réalisable. Résultat : un trajet non confirmé n'affichait sa raison NULLE PART dans l'interface, même
+ // déplié — obligeant à deviner. On l'affiche maintenant dans le corps déplié pour un trajet non confirmé
+ // aussi, clairement préfixé pour ne pas le confondre avec les horaires théoriques/temps réel.
+ else if(!j.scheduled&&j.statusDetail)body.appendChild(el(doc,'p','cp-hub-note cp-hub-reason-body','⚠️ Non confirmé : '+j.statusDetail));
  body.appendChild(el(doc,'small','cp-hub-src','Sources : '+j.sources.join(', ')+(j.dataDate?' · données '+j.dataDate:'')));
   c.appendChild(body);
  };
