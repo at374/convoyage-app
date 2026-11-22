@@ -910,12 +910,21 @@ function makeProviders(r,opts={}){
   }catch(e){return rawFetch(url,init);}
  };
  const P={};
- const canWorker=()=>!opts.fetcher&&typeof r.Worker==='function'&&!r.__cpHubWorkerOff;
+ // 22/11/2026 (Laurent : blocages répétés de 30-40 s mesurés sur son téléphone, réseau très lent — 0 à 5 Ko/s
+ // vu sur ses captures) : un seul incident du worker (erreur réseau pendant un téléchargement GTFS sur une
+ // connexion instable, par exemple) mettait __cpHubWorkerOff à true DÉFINITIVEMENT pour le reste de la
+ // session. Chaque recherche suivante retombait alors sur le calcul synchrone sur le fil principal — et
+ // décompresser/analyser un flux GTFS de plusieurs Mo en JS bloque réellement l'écran plusieurs dizaines de
+ // secondes, ce qui correspond exactement aux mesures (toujours ~36-41 s, cohérent avec la taille des flux).
+ // Le diagnostic confirmait d'ailleurs « fil principal » sur un des moteurs. Un incident réseau isolé ne doit
+ // pas condamner tout le reste de la session au calcul synchrone : on retente un nouveau worker à chaque
+ // appel, avec juste un court répit (10 s) après un échec pour éviter de boucler sur un worker réellement cassé.
+ const canWorker=()=>!opts.fetcher&&typeof r.Worker==='function'&&!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil);
  const workerCall=payload=>new Promise((resolve,reject)=>{
   let w=r.__cpHubWorker;
   if(!w){
    w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js');r.__cpHubWorkerPending=new Map();
-   const fail=e=>{r.__cpHubWorkerOff=true;r.__cpHubWorker=null;for(const q of r.__cpHubWorkerPending.values())q.reject(e);r.__cpHubWorkerPending.clear();try{w.terminate();}catch(_){}};
+   const fail=e=>{r.__cpHubWorkerOffUntil=Date.now()+10000;r.__cpHubWorker=null;for(const q of r.__cpHubWorkerPending.values())q.reject(e);r.__cpHubWorkerPending.clear();try{w.terminate();}catch(_){}};
    w.onerror=()=>fail(new Error('worker'));w.onmessageerror=()=>fail(new Error('worker'));
    w.onmessage=({data})=>{const q=r.__cpHubWorkerPending.get(data&&data.id);if(!q)return;r.__cpHubWorkerPending.delete(data.id);clearTimeout(q.t);
     if(data.error)q.reject(new Error(data.error));else q.resolve(data);};
@@ -1226,7 +1235,7 @@ function makeProviders(r,opts={}){
      const radiusMeters=Math.max(5000,Number.isFinite(task.walkMaxMeters)&&task.walkMaxMeters>0?task.walkMaxMeters*1.5:5000);
      // Calcul hors du fil de l'écran (Web Worker) ; en cas d'échec du worker, ancien calcul sur le fil principal (même résultat).
      let rows=null,_viaWorker=false,_feedInfo=null;
-     if(canWorker()){_viaWorker=true;try{rows=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to)),radius:radiusMeters});}catch(e){if(!r.__cpHubWorkerOff)throw e;rows=null;}}
+     if(canWorker()){_viaWorker=true;try{rows=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to)),radius:radiusMeters});}catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}}
      if(rows===null){
       _viaWorker=false;
       let promise=cache.get(id+'|'+date);
@@ -1355,7 +1364,7 @@ function makeProviders(r,opts={}){
      let rows=null;
      if(canWorker()){
       try{rows=await workerCorrespondances({nets:nets.map(n=>({id:n[0],name:n[1],urls:urlsFor(n[2])})),date,from,to,window,sameNetworkRadius,crossNetworkRadius,maxWaitMinutes});}
-      catch(e){if(!r.__cpHubWorkerOff)throw e;rows=null;}
+      catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}
      }
      if(rows===null){
       const loaded=(await Promise.all(nets.map(n=>feedFor(n[0],n[1],n[2],date).catch(()=>null)))).filter(Boolean);
@@ -1440,7 +1449,7 @@ function makeProviders(r,opts={}){
     const {operator:op,resource:res,fetcher:_f,signal:_s,...rest}=params;
     if(canWorker()){
      try{return await workerNationalSearch(op,res,rest);}
-     catch(e){if(!r.__cpHubWorkerOff)throw e;}
+     catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;}
     }
     return r.CPNationalGTFSJourneys.loadAndSearch(params);
    };
