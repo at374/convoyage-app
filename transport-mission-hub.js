@@ -1774,8 +1774,16 @@ function makeProviders(r,opts={}){
 }
 
 /* ---------- Accès aux gares routières éloignées (OTP2) ---------- */
+// 22/11/2026 (Laurent : un trajet d'accès à un car longue distance — ex. marche+Y22 arrivant 06:11 à la gare
+// routière d'Annecy pour un BlaBlaCar Bus à 09:45, soit 3h34 d'attente — était proposé comme « programmé »
+// alors que ce n'est pas praticable pour le convoyeur. Le choix « marche minimale » du 21/11/2026 reste
+// nécessaire (évite de préférer une longue marche à un bus local), mais sans plafond sur l'attente, l'option
+// la moins marchante peut être un bus arrivant des heures trop tôt. On borne maintenant la fenêtre d'accès
+// acceptable à [dep-gap-COACH_ACCESS_MAX_WAIT_MIN, dep-gap] (et symétriquement pour la sortie du car) : au-delà,
+// l'accès n'est plus considéré comme trouvé plutôt que de proposer une attente démesurée.
+const COACH_ACCESS_MAX_WAIT_MIN=20;
 async function accessFor(j,task,otp,signal){
- const side=j.needsAccess.side,legs=j.legs,gap=10*60000;
+ const side=j.needsAccess.side,legs=j.legs,gap=10*60000,maxWait=COACH_ACCESS_MAX_WAIT_MIN*60000;
  const first=legs[0],last=legs[legs.length-1],miss=t=>({...j,needsAccess:undefined,missing:[...(j.missing||[]),t]});
  if(!otp||!otp.run||!(()=>{try{return otp.enabled(task);}catch(_){return false;}})())return miss('accès à la gare routière non calculé (serveur OTP2 non disponible)');
  let t2;
@@ -1793,10 +1801,20 @@ async function accessFor(j,task,otp,signal){
  // qu'un bus Sibra existait. On choisit maintenant l'option qui marche le moins, l'heure ne servant qu'à départager
  // les options à marche égale.
  const walkOf=a=>(a.legs||[]).filter(isFoot).reduce((s,l)=>s+(Number(l.distanceMeters)||0),0);
- if(side==='from'){const dep=ms(first.departure);const fit=ok.filter(a=>ms(a.legs[a.legs.length-1].arrival)<=dep-gap&&(!Number.isFinite(ms(task.earliestDeparture))||ms(a.legs[0].departure)>=ms(task.earliestDeparture)));
+ if(side==='from'){const dep=ms(first.departure);
+  const fit=ok.filter(a=>{const arr=ms(a.legs[a.legs.length-1].arrival);return arr<=dep-gap&&arr>=dep-gap-maxWait&&(!Number.isFinite(ms(task.earliestDeparture))||ms(a.legs[0].departure)>=ms(task.earliestDeparture));});
   best=fit.sort((a,b)=>walkOf(a)-walkOf(b)||ms(b.legs[b.legs.length-1].arrival)-ms(a.legs[a.legs.length-1].arrival))[0];}
- else{const arr=ms(last.arrival);const fit=ok.filter(a=>ms(a.legs[0].departure)>=arr+gap);best=fit.sort((a,b)=>walkOf(a)-walkOf(b)||ms(a.legs[a.legs.length-1].arrival)-ms(b.legs[b.legs.length-1].arrival))[0];}
- if(!best)return miss('aucun accès à la gare routière trouvé dans les horaires');
+ else{const arr=ms(last.arrival);
+  const fit=ok.filter(a=>{const dep=ms(a.legs[0].departure);return dep>=arr+gap&&dep<=arr+gap+maxWait;});
+  best=fit.sort((a,b)=>walkOf(a)-walkOf(b)||ms(a.legs[a.legs.length-1].arrival)-ms(b.legs[b.legs.length-1].arrival))[0];}
+ // 22/11/2026 : attente excessive (au-delà de COACH_ACCESS_MAX_WAIT_MIN) plutôt qu'aucun accès du tout — message
+ // distinct pour que le convoyeur comprenne que la ligne existe mais n'offre aucune correspondance praticable,
+ // au lieu de croire qu'aucun transport n'existe pour cette portion.
+ if(!best){
+  const anyArriving=side==='from'?ok.some(a=>Number.isFinite(ms(a.legs[a.legs.length-1].arrival))&&ms(a.legs[a.legs.length-1].arrival)<=ms(first.departure)-gap):
+   ok.some(a=>Number.isFinite(ms(a.legs[0].departure))&&ms(a.legs[0].departure)>=ms(last.arrival)+gap);
+  return miss(anyArriving?'accès à la gare routière trouvé mais avec une attente de plus de '+COACH_ACCESS_MAX_WAIT_MIN+' min (correspondance trop lâche)':'aucun accès à la gare routière trouvé dans les horaires');
+ }
  const merged=side==='from'?[...best.legs,...legs]:[...legs,...best.legs];
  return {...j,needsAccess:undefined,legs:merged,sources:[...new Set([...(j.sources||[j.source]),...(best.sources||[best.source]).filter(Boolean)])],
   missing:[...(j.missing||[])],alerts:[...(j.alerts||[]),'Accès à la gare routière calculé par OpenTripPlanner (horaires théoriques).']};
