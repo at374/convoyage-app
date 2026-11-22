@@ -1828,7 +1828,19 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   let shown=tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items;
   let longShown=0;
   if(!shown.some(j=>!j.computing)&&s.pending===0){const back=tooEarly.filter(isLongOnly);if(back.length){shown=shown.concat(back);longShown=back.length;}}
-  return {task:s.task,longShown,...rank(shown,s.task),hidden:{tooEarly:tooEarly.length-longShown,before:tooEarly.filter(j=>j.reasons.includes('départ avant la fin de la mission précédente')).length,early:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('arrivée trop tôt'))).length,longWalk:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('marche trop longue'))).length-longShown,night:tooEarly.filter(j=>j.reasons.includes('trajet hors plage de jour ou date de mission')).length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0,
+  // 22/11/2026 (Laurent : « toujours pas de Y51 après 13h01 », quasi tous les trajets écartés comme « avant la fin
+  // de la mission précédente » malgré une fenêtre earliestDeparture cohérente affichée) : le seul compteur ne
+  // permettait pas de savoir SUR QUEL calcul ce rejet se basait réellement (horaire du véhicule lui-même, ou
+  // horaire de la marche d'accès prépendue, parfois faussée par une distance de marche aberrante). On garde un
+  // échantillon (source + horaire du véhicule + horaire retenu après marche) des trajets rejetés pour cette seule
+  // raison, pour voir directement où l'écart se situe au lieu de deviner encore.
+  const beforeList=tooEarly.filter(j=>j.reasons.includes('départ avant la fin de la mission précédente'));
+  const beforeSamples=beforeList.slice(0,6).map(j=>{
+   const vehicleLeg=(j.legs||[]).find(l=>l&&l.kind!=='walk');
+   return (j.source||j.sources?.[0]||'?')+' : véhicule '+(vehicleLeg?.departure?new Date(vehicleLeg.departure).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}):'—')+
+    ' → départ retenu (après marche) '+(j.departure?new Date(j.departure).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}):'—');
+  });
+  return {task:s.task,longShown,...rank(shown,s.task),hidden:{tooEarly:tooEarly.length-longShown,before:beforeList.length,beforeSamples,early:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('arrivée trop tôt'))).length,longWalk:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('marche trop longue'))).length-longShown,night:tooEarly.filter(j=>j.reasons.includes('trajet hors plage de jour ou date de mission')).length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0,
   // 20/11/2026 (demande Laurent) : pouvoir suggérer la trottinette électrique quand des trajets sont écartés
   // uniquement pour une marche trop longue — seulement si l'option n'est pas déjà activée dans les Réglages.
   scooterEnabled:!!(scooter&&scooter.enabled),
@@ -2507,7 +2519,11 @@ function render(host,v){
   // « avant la fin de la mission précédente ») : affiche la fenêtre earliestDeparture/latestArrival réellement
   // utilisée pour CETTE recherche, pour voir directement si elle est décalée (mauvais jour, mauvaise heure)
   // au lieu de deviner encore.
-  if(h.before)host.appendChild(el(doc,'p','cp-hub-note','🩺 fenêtre utilisée pour cette recherche : départ au plus tôt '+(v.task&&v.task.earliestDeparture?new Date(v.task.earliestDeparture).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}):'—')+' · arrivée au plus tard '+(v.task&&v.task.latestArrival?new Date(v.task.latestArrival).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}):'—')));}
+  if(h.before)host.appendChild(el(doc,'p','cp-hub-note','🩺 fenêtre utilisée pour cette recherche : départ au plus tôt '+(v.task&&v.task.earliestDeparture?new Date(v.task.earliestDeparture).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}):'—')+' · arrivée au plus tard '+(v.task&&v.task.latestArrival?new Date(v.task.latestArrival).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}):'—')));
+  // 22/11/2026 (suite) : échantillon des trajets réellement écartés pour ce motif — horaire du véhicule lui-même
+  // vs horaire retenu après ajout de la marche d'accès, pour voir si l'écart vient du véhicule (horaire GTFS
+  // incohérent) ou de la marche (distance/durée aberrante calculée par le routeur piéton).
+  if(h.before&&Array.isArray(h.beforeSamples)&&h.beforeSamples.length)host.appendChild(el(doc,'p','cp-hub-note','🩺 exemples écartés : '+h.beforeSamples.join(' · ')));}
  // 22/11/2026 (Laurent : blocage toujours ~40 s malgré le correctif du répit de 10 s après échec du worker) :
  // on affiche la vraie raison du dernier échec du worker de calcul (au lieu du message générique 'worker' affiché
  // avant), pour savoir enfin si le worker échoue systématiquement ici (réseau, sécurité, autre) plutôt que de
