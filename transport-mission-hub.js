@@ -422,7 +422,10 @@ async function completeWalks(j,task,router,scooter,regional){
   const gap=(ms(b.departure)-ms(a.arrival))/1000;
   if(a.toPoint&&b.fromPoint){
    if(meters(a.toPoint,b.fromPoint)<=SAME_POINT_M){
-    if(gap<TRANSFER_BUFFER_S)missing.push('correspondance trop courte à '+(a.to||'l’arrêt')+' (2 min minimum)');
+    // 22/11/2026 : le message disait « 2 min minimum » alors que TRANSFER_BUFFER_S exige 5 min (300 s) — texte
+    // corrigé pour refléter le vrai seuil appliqué (trouvé en expliquant à Laurent pourquoi une correspondance
+    // bus→train à 2 min de marche restait « non confirmée » malgré des départs Y51 bien présents l'après-midi).
+    if(gap<TRANSFER_BUFFER_S)missing.push('correspondance trop courte à '+(a.to||'l’arrêt')+' ('+Math.round(TRANSFER_BUFFER_S/60)+' min minimum)');
     continue;
    }
    const w=await footLeg(a.toPoint,b.fromPoint,a.to,b.from,{startMs:ms(a.arrival)});
