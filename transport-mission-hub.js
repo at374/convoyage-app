@@ -2347,7 +2347,12 @@ function render(host,v){
    // vérification de marge/mission précédente.
    if(count>0){
     const dbg=root.__cpGtfsDebug&&root.__cpGtfsDebug.get(n);
+    // 22/11/2026 (Laurent : « rien de changé », le diagnostic précédent restait invisible même après plusieurs
+    // essais espacés de 10+ min — trop long pour un simple décalage de mise en ligne) : on affiche maintenant
+    // TOUJOURS ce diagnostic quand count>0, même sans aucun départ retenu ou sans entrée dbg du tout, pour
+    // distinguer enfin « le code n'est pas encore en ligne », « dbg absent » et « kept vide » au lieu de deviner.
     if(dbg&&Array.isArray(dbg.kept)&&dbg.kept.length)detail+=' [départs retenus : '+dbg.kept.map(t=>{const d=new Date(t);return Number.isFinite(d.getTime())?d.toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}):'?';}).join(', ')+']';
+    else detail+=' [diag retenus : '+(dbg?('dbg ok, kept='+(Array.isArray(dbg.kept)?dbg.kept.length:typeof dbg.kept)):'dbg absent')+']';
    }
    d.appendChild(el(doc,'div',null,'✅ '+n+' : '+count+' proposition'+(count>1?'s':'')+' reçue'+(count>1?'s':'')+detail));
   }
