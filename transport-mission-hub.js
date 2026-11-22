@@ -1908,6 +1908,13 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
  // essayé en premier (compatibilité), les réseaux locaux ne sont tentés que si aucun résultat exploitable
  // n'en est ressorti.
  const localNetworkIds=Object.keys(providers).filter(k=>k.startsWith('local_')&&k!=='local_correspondances');
+ // 22/11/2026 (Laurent : « tu vérifies avec les moteurs de la Suisse aussi ») : providers.swiss (transport.opendata.ch)
+ // et providers.ojp (OJP opentransportdata.swiss) ont la même interface enabled(task)/run(task) qu'un réseau
+ // local — mais leurs clés ne commencent pas par « local_ », donc localNetworkIds (filtre sur ce préfixe) les
+ // ignorait complètement : une marche longue ou un accès de car près de la frontière (Grand Genève, Chablais,
+ // Jura, Bâle…) n'était jamais comparée aux transports suisses. On les ajoute explicitement à la liste des
+ // sources complémentaires.
+ const complementIds=[...localNetworkIds,...['swiss','ojp'].filter(k=>providers[k])];
  const hasTransit=list=>Array.isArray(list)&&list.some(it=>it&&Array.isArray(it.legs)&&it.legs.length&&it.legs.some(l=>l&&l.kind!=='walk'));
  // 22/11/2026 (Laurent : « tous les moteurs et fichiers locaux doivent être complémentaires… et se contrôler
  // les uns les autres ») : run() s'arrêtait au PREMIER réseau local renvoyant un résultat exploitable,
@@ -1915,17 +1922,18 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
  // (ex. Thonon/Star't et un réseau voisin desservant tous les deux la même zone), le réseau essayé en
  // premier pouvait masquer une correspondance bien meilleure trouvée par un autre. pickClosest(), appelé
  // ensuite par trySubstituteLongWalk(), compare déjà toutes les options d'une même liste sur la marche
- // totale puis l'horaire : on lui fournit maintenant l'union de TOUS les réseaux locaux pertinents (+
- // Mobilités M) au lieu de s'arrêter au premier qui répond.
+ // totale puis l'horaire : on lui fournit maintenant l'union de TOUTES les sources locales pertinentes
+ // (Mobilités M, réseaux locaux français, et Suisse/OJP près de la frontière) au lieu de s'arrêter au
+ // premier qui répond.
  const anyLocalBus={
   enabled:task=>{
    try{if(providers.regional&&providers.regional.enabled(task))return true;}catch(_){}
-   return localNetworkIds.some(k=>{try{return providers[k].enabled(task);}catch(_){return false;}});
+   return complementIds.some(k=>{try{return providers[k].enabled(task);}catch(_){return false;}});
   },
   run:async task=>{
    const runners=[];
    try{if(providers.regional&&providers.regional.enabled(task))runners.push(providers.regional.run(task).catch(()=>[]));}catch(_){}
-   for(const k of localNetworkIds){
+   for(const k of complementIds){
     let ok=false;try{ok=providers[k].enabled(task);}catch(_){ok=false;}
     if(ok)runners.push(providers[k].run(task).catch(()=>[]));
    }
