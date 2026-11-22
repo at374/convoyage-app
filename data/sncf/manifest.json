@@ -2,79 +2,79 @@
   "schemaVersion": 1,
   "source": "SNCF Voyageurs / GTFS",
   "sourceUrl": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
-  "sourceSha256": "04fbfab569ca370204854ada3c075d3f1572986a97edd5d43340e743f1d0a8d1",
-  "sourceVersion": "2026-11-20",
+  "sourceSha256": "2057533648512c26d5a42aa228a5a6b8041a84d764693b08217a4c5dfad0a229",
+  "sourceVersion": "2026-11-21",
   "feedValidity": [
-    "20261120",
+    "20261121",
     "20270430"
   ],
-  "generatedAt": "2026-11-21T11:02:03.617861+00:00",
+  "generatedAt": "2026-11-22T11:25:33.683865+00:00",
   "license": "ODbL — SNCF conditions apply",
   "licenseUrl": "https://data.sncf.com/explore/dataset/horaires-sncf/",
   "scope": "scheduled railway station-to-station only; no realtime, fares or walking",
   "dates": {
-    "2026-11-20": {
-      "file": "sncf-2026-11-20.json",
-      "sha256": "44c5262e60846c007c4b28b8a1b662258ab5e4b712359657dbf4acac377601ed",
-      "bytes": 3348333,
-      "trips": 9984,
-      "stations": 2791,
-      "excludedTrips": 0
-    },
     "2026-11-21": {
       "file": "sncf-2026-11-21.json",
-      "sha256": "3cd6ac4dbccc50c0593bf3cac26f8452590e5e22bd4a24e72503b3fea09a606c",
-      "bytes": 2049775,
-      "trips": 5752,
-      "stations": 2791,
+      "sha256": "a046ad4a9153596f6c437793f4b738d4aec8c6c13890f66c38cd9b6a3d5f784e",
+      "bytes": 2029370,
+      "trips": 5668,
+      "stations": 2792,
       "excludedTrips": 0
     },
     "2026-11-22": {
       "file": "sncf-2026-11-22.json",
-      "sha256": "4c17452221eb995b63796bdbbe6d08f32f5bbac86a56e28033ec9c9e968f7f4e",
-      "bytes": 1835445,
+      "sha256": "18c5fa8130aeda3d11f6c058263ea8bb73edea3e9fe7298223ff2e72731c0a99",
+      "bytes": 1835507,
       "trips": 5120,
-      "stations": 2791,
+      "stations": 2792,
       "excludedTrips": 0
     },
     "2026-11-23": {
       "file": "sncf-2026-11-23.json",
-      "sha256": "3fdf549975a3cbfd242c33acebfed063a66cdc0fdc291fdec55400d80d205466",
-      "bytes": 3300914,
-      "trips": 9847,
-      "stations": 2791,
+      "sha256": "cf7e479b722bfa4c4a2e803d05bb9804ba76693fae91309764ae1b5bc45c354b",
+      "bytes": 3301162,
+      "trips": 9848,
+      "stations": 2792,
       "excludedTrips": 0
     },
     "2026-11-24": {
       "file": "sncf-2026-11-24.json",
-      "sha256": "597e576bfafd18a31f03d63b07b4852336aa0d2b17286adf6d9058e3ddf4d5b1",
-      "bytes": 3298650,
-      "trips": 9849,
-      "stations": 2791,
+      "sha256": "6c11d57520cd41490849e742dc8bfff3bab52d1b73ea93172d49334c4938be75",
+      "bytes": 3299039,
+      "trips": 9851,
+      "stations": 2792,
       "excludedTrips": 0
     },
     "2026-11-25": {
       "file": "sncf-2026-11-25.json",
-      "sha256": "2d78eae6682c3cca0a68f5627efd057f1b6b8ba735b397b303c2d231d74800e6",
-      "bytes": 3301224,
-      "trips": 9864,
-      "stations": 2791,
+      "sha256": "096c5c41b4d412d9e46763d5340e7ea0762472b2565d19678fa5f8504030b4f1",
+      "bytes": 3301613,
+      "trips": 9866,
+      "stations": 2792,
       "excludedTrips": 0
     },
     "2026-11-26": {
       "file": "sncf-2026-11-26.json",
-      "sha256": "bb90ec032e1150739d219c0f70948c351c9008d5eecae8fd4458e6ea47037351",
-      "bytes": 3313015,
-      "trips": 9897,
-      "stations": 2791,
+      "sha256": "a1d639f1802d63502cf50f759b9de691c94f0a9b6b447ec1256a3e3b56b18ca4",
+      "bytes": 3313404,
+      "trips": 9899,
+      "stations": 2792,
       "excludedTrips": 0
     },
     "2026-11-27": {
       "file": "sncf-2026-11-27.json",
-      "sha256": "5f51f7af222cdba3be5ff840c63752ebd4c0ac6d807bb92b9bb3d4825dfc277d",
-      "bytes": 3378977,
-      "trips": 10062,
-      "stations": 2791,
+      "sha256": "1220da9541711e5feedb4cf82de664032af0fb8f9ed5c793c68284288f6b2d85",
+      "bytes": 3379366,
+      "trips": 10064,
+      "stations": 2792,
+      "excludedTrips": 0
+    },
+    "2026-11-28": {
+      "file": "sncf-2026-11-28.json",
+      "sha256": "b117e6c50ce31f1b759fc0a669d2d66315c677a293d75faebff13078e6a44da3",
+      "bytes": 2078967,
+      "trips": 5726,
+      "stations": 2792,
       "excludedTrips": 0
     }
   }
