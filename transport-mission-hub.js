@@ -920,19 +920,29 @@ function makeProviders(r,opts={}){
  // pas condamner tout le reste de la session au calcul synchrone : on retente un nouveau worker à chaque
  // appel, avec juste un court répit (10 s) après un échec pour éviter de boucler sur un worker réellement cassé.
  const canWorker=()=>!opts.fetcher&&typeof r.Worker==='function'&&!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil);
+ // 22/11/2026 (Laurent : blocage encore à ~40 s après le correctif du répit de 10 s, sans amélioration visible) :
+ // le code précédent remplaçait systématiquement la vraie erreur du worker par un message générique ('worker'),
+ // impossible à diagnostiquer à distance. On garde maintenant la vraie raison (message du navigateur, ou
+ // exception de construction si le Worker est bloqué d'emblée — ex. CSP — ce qui ne déclenchait même pas
+ // onerror et n'était donc jamais compté comme un échec) dans un diagnostic visible, pour savoir enfin si le
+ // worker échoue à chaque recherche (et pourquoi) ou seulement de temps en temps.
+ const noteWorkerFail=reason=>{r.__cpHubWorkerLastError=reason+' ('+new Date().toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'})+')';r.__cpHubWorkerFailCount=(r.__cpHubWorkerFailCount||0)+1;};
  const workerCall=payload=>new Promise((resolve,reject)=>{
   let w=r.__cpHubWorker;
   if(!w){
-   w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js');r.__cpHubWorkerPending=new Map();
+   try{w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js');}
+   catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
+   r.__cpHubWorkerPending=new Map();
    const fail=e=>{r.__cpHubWorkerOffUntil=Date.now()+10000;r.__cpHubWorker=null;for(const q of r.__cpHubWorkerPending.values())q.reject(e);r.__cpHubWorkerPending.clear();try{w.terminate();}catch(_){}};
-   w.onerror=()=>fail(new Error('worker'));w.onmessageerror=()=>fail(new Error('worker'));
+   w.onerror=e=>{noteWorkerFail('erreur: '+(e&&(e.message||e.type)||'?'));fail(new Error('worker'));};
+   w.onmessageerror=()=>{noteWorkerFail('message illisible');fail(new Error('worker'));};
    w.onmessage=({data})=>{const q=r.__cpHubWorkerPending.get(data&&data.id);if(!q)return;r.__cpHubWorkerPending.delete(data.id);clearTimeout(q.t);
     if(data.error)q.reject(new Error(data.error));else q.resolve(data);};
   }
   const id=(r.__cpHubWorkerSeq=(r.__cpHubWorkerSeq||0)+1);
-  const t=setTimeout(()=>{r.__cpHubWorkerPending.delete(id);reject(new Error('timeout'));},90000);
+  const t=setTimeout(()=>{r.__cpHubWorkerPending.delete(id);noteWorkerFail('délai dépassé (90 s)');reject(new Error('timeout'));},90000);
   r.__cpHubWorkerPending.set(id,{resolve,reject,t});
-  try{w.postMessage({id,...payload});}catch(e){r.__cpHubWorkerPending.delete(id);clearTimeout(t);reject(e);}
+  try{w.postMessage({id,...payload});}catch(e){r.__cpHubWorkerPending.delete(id);clearTimeout(t);noteWorkerFail('postMessage: '+(e&&e.message||e));reject(e);}
  });
  const workerRows=(key,urls,date,from,to,extra)=>workerCall({key,urls,date,from,to,radius:3000,...extra}).then(d=>d.rows);
  // 21/11/2026 (Laurent : « l'écran se fige pendant la recherche ») : la recherche de correspondances
@@ -1387,6 +1397,14 @@ function makeProviders(r,opts={}){
        }catch(_){}
        // Correspondances entre deux réseaux différents.
        for(let j=i+1;j<loaded.length;j++){
+        if(signal?.aborted)return [];
+        // 22/11/2026 (Laurent : « ça se fige », blocage ~40 s qui persiste même après le correctif du worker —
+        // le worker échoue peut-être systématiquement ici, quelle qu'en soit la raison) : cette boucle peut
+        // enchaîner jusqu'à 28 paires de réseaux sur le fil principal sans jamais rendre la main au navigateur,
+        // d'où un seul blocage continu de plusieurs dizaines de secondes. On rend la main avant CHAQUE paire
+        // (même coût total, mais le navigateur peut peindre/réagir entre deux) : l'écran ne doit plus se figer
+        // d'un bloc, que le worker fonctionne ou non.
+        await new Promise(res=>setTimeout(res,0));
         if(signal?.aborted)return [];
         try{
          const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius,maxWaitMinutes});
@@ -2390,6 +2408,11 @@ function render(host,v){
   // utilisée pour CETTE recherche, pour voir directement si elle est décalée (mauvais jour, mauvaise heure)
   // au lieu de deviner encore.
   if(h.before)host.appendChild(el(doc,'p','cp-hub-note','🩺 fenêtre utilisée pour cette recherche : départ au plus tôt '+(v.task&&v.task.earliestDeparture?new Date(v.task.earliestDeparture).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}):'—')+' · arrivée au plus tard '+(v.task&&v.task.latestArrival?new Date(v.task.latestArrival).toLocaleString('fr-FR',{timeZone:'Europe/Paris'}):'—')));}
+ // 22/11/2026 (Laurent : blocage toujours ~40 s malgré le correctif du répit de 10 s après échec du worker) :
+ // on affiche la vraie raison du dernier échec du worker de calcul (au lieu du message générique 'worker' affiché
+ // avant), pour savoir enfin si le worker échoue systématiquement ici (réseau, sécurité, autre) plutôt que de
+ // deviner encore — un échec systématique expliquerait un blocage constant malgré le répit de 10 s.
+ if(v.done&&root.__cpHubWorkerLastError)host.appendChild(el(doc,'p','cp-hub-note','🔧 worker de calcul : en échec ('+root.__cpHubWorkerFailCount+' fois) — dernière raison : '+root.__cpHubWorkerLastError+(root.__cpHubWorkerOffUntil&&Date.now()<root.__cpHubWorkerOffUntil?' · désactivé encore '+Math.ceil((root.__cpHubWorkerOffUntil-Date.now())/1000)+' s':'')));
  if(v.done&&!v.total&&v.diag&&v.diag.evaluated){const d=v.diag;host.appendChild(el(doc,'p','cp-hub-note','Diagnostic (version 17/11 k) : '+d.evaluated+' proposition'+(d.evaluated>1?'s':'')+' évaluée'+(d.evaluated>1?'s':'')+(d.noTimes?', dont '+d.noTimes+' sans horaires exploitables':'')+(d.reasons.length?' · motifs : '+d.reasons.map(r=>r[0]+' ('+r[1]+')').join(' ; '):'')+'.'));}
  if(v.done&&v.discarded){const n=Object.values(v.discarded).reduce((x,y)=>x+y,0);if(n)host.appendChild(el(doc,'p','cp-hub-note',n+' proposition'+(n>1?'s':'')+' écartée'+(n>1?'s':'')+' (détour excessif ou marche plus directe).'));}
  if(v.done&&tads.length){const p=el(doc,'p','cp-hub-note','Transport à la demande possible dans ce secteur (non intégré au classement) : ');
