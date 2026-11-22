@@ -381,100 +381,108 @@ async function completeWalks(j,task,router,scooter,regional){
  // Marche entre deux points ; si elle dépasse la limite de marche et que la trottinette est activée (et sous sa distance maximale),
  // elle est remplacée par un trajet en trottinette (tracé vélo OpenStreetMap, durée estimée à la vitesse réglée).
  // Renvoie toujours un tableau de portions (une marche/trottinette seule, ou la chaîne bus/tram locale trouvée).
+ // 22/11/2026 (Laurent : marche de 39 min en fin de trajet OTP2 à Thonon-les-Bains alors que le réseau
+ // local Star't Thonon dessert un arrêt à 2 min de l'adresse — cette comparaison avec le bus/tram local
+ // n'était tentée QUE sur les marches que completeWalks() calcule elle-même (approche, correspondance,
+ // sortie) ; une marche déjà fournie telle quelle par un moteur (OTP2, correspondances entre réseaux…)
+ // n'était jamais réévaluée. Extrait en fonction indépendante pour pouvoir aussi l'appliquer à ces
+ // marches déjà présentes dans j.legs (cf. boucle juste après la définition de footLeg).
+ const trySubstituteLongWalk=async(a,b,fromName,toName,{startMs,endMs})=>{
+  if(!regional||typeof regional.run!=='function')return null;
+  // 21/11/2026 : la fenêtre de recherche du bus/tram de substitution partait pile de l'heure d'arrivée
+  // précédente (ou pile avant l'heure limite), sans tenir compte du temps de descendre et de rejoindre
+  // l'arrêt suivant — un bus dont les horaires tombaient 1 min après était accepté tel quel. On décale
+  // la fenêtre du même battement minimal que pour une correspondance ordinaire (TRANSFER_BUFFER_S).
+  const bufferMs=TRANSFER_BUFFER_S*1000;
+  const subTask=Number.isFinite(endMs)?{from:a,to:b,fromName,toName,latestArrival:new Date(endMs-bufferMs).toISOString(),marginMinutes:0}
+   :Number.isFinite(startMs)?{from:a,to:b,fromName,toName,earliestDeparture:new Date(startMs+bufferMs).toISOString(),marginMinutes:0}:null;
+  if(!subTask)return null;
+  // 22/11/2026 (Laurent : correspondance bus à Thonon-les-Bains — la ligne C part de l'arrêt « Les Arts »,
+  // à 100 m de la gare, directement vers Saint-Disdille (la zone de l'adresse de livraison), mais .find()
+  // retenait le PREMIER itinéraire renvoyé par le moteur local, souvent un bus à 1 km de marche d'approche
+  // sur un arrêt sans rapport (ex. « Église des Vallées ») simplement parce qu'il arrivait en tête de liste)
+  // : on ne garde plus le premier itinéraire avec un transport, mais celui qui minimise la marche totale
+  // (accès + sortie) vers les deux points réels, à égalité le plus tôt arrivé.
+  const pickClosest=list=>{
+   const candidates=(Array.isArray(list)?list:[]).filter(it=>it&&Array.isArray(it.legs)&&it.legs.length&&it.legs.some(l=>l&&l.kind!=='walk'));
+   if(!candidates.length)return null;
+   const walkTotal=it=>{
+    const head=it.legs[0],tail=it.legs[it.legs.length-1];
+    const access=head&&head.fromPoint?meters(a,head.fromPoint):Infinity;
+    const egress=tail&&tail.toPoint?meters(tail.toPoint,b):Infinity;
+    return access+egress;
+   };
+   const arrivalOf=it=>ms(it.legs[it.legs.length-1]?.arrival);
+   return candidates.sort((x,y)=>walkTotal(x)-walkTotal(y)||arrivalOf(x)-arrivalOf(y))[0];
+  };
+  let ok=false;try{ok=regional.enabled(subTask);}catch(_){}
+  if(!ok)return null;
+  let answer=null;try{answer=await regional.run(subTask);}catch(_){answer=null;}
+  let best=pickClosest(answer);
+  let tight=false;
+  // 22/11/2026 (Laurent : train réel arrivant 08h29 à Thonon, correspondance bus T réelle à 08h30 juste à
+  // côté — disparue de l'appli) : quand AUCUN départ n'existe après le battement de sécurité, on ne
+  // retombe plus directement sur la marche complète sans revérifier : on retente sans le battement, pour
+  // distinguer « aucun bus avant longtemps » (marche justifiée) de « un bus existe mais la fenêtre de
+  // sécurité l'exclut de justesse » (correspondance tendue à signaler, pas un trajet à faire disparaître).
+  if(!best){
+   const tightTask=Number.isFinite(endMs)?{from:a,to:b,fromName,toName,latestArrival:new Date(endMs).toISOString(),marginMinutes:0}
+    :Number.isFinite(startMs)?{from:a,to:b,fromName,toName,earliestDeparture:new Date(startMs).toISOString(),marginMinutes:0}:null;
+   if(tightTask){
+    let tightOk=false;try{tightOk=regional.enabled(tightTask);}catch(_){}
+    if(tightOk){
+     let tightAnswer=null;try{tightAnswer=await regional.run(tightTask);}catch(_){tightAnswer=null;}
+     best=pickClosest(tightAnswer);
+     if(best)tight=true;
+    }
+   }
+  }
+  // 22/11/2026 (Laurent : Y51 l'après-midi — 12:18, 13:58, 14:48… — toujours écartés « avant la fin de la
+  // mission précédente » malgré un earliestDeparture cohérent) : pickClosest() ne borne que le WALK total
+  // (accès+sortie), jamais l'ATTENTE à l'arrêt. Si la seule ligne locale desservant cet arrêt ne passe
+  // qu'une fois par jour très tôt (ex. 06:59), elle était retenue pour CHAQUE départ Y51 de la journée
+  // (12:18 comme 18:48), avec plusieurs heures d'attente avant d'embarquer — et legs[0].departure (la
+  // marche/le bus avant ce même 06:59) tombait alors bien avant midi, faisant passer des Y51 parfaitement
+  // réalisables pour « avant la fin de la mission précédente ». On plafonne maintenant l'attente à l'arrêt
+  // de correspondance : au-delà, on revient à la marche directe (signalée « trop longue » si besoin, un
+  // motif déjà géré et visible) plutôt que de chaîner un bus local sans rapport avec un trou de plusieurs
+  // heures avant le vrai transport recherché.
+  if(best){
+   const waitS=Number.isFinite(endMs)?(endMs-ms(best.legs[best.legs.length-1].arrival))/1000:
+    Number.isFinite(startMs)?(ms(best.legs[0].departure)-startMs)/1000:0;
+   if(!(waitS<=REGIONAL_ACCESS_MAX_WAIT_S))best=null;
+  }
+  if(!best)return null;
+  if(tight)missing.push('correspondance tendue à '+(fromName||'l’arrêt')+' avec le bus/tram local (moins de '+Math.round(TRANSFER_BUFFER_S/60)+' min) : à vérifier le jour J');
+  let chosen=best.legs.slice();
+  const headLeg=chosen[0],tailLeg=chosen[chosen.length-1];
+  // 21/11/2026 (Laurent : le bus EVA'D 02 dépose à Thuyset Ouest, à 1,5-2 km du 89 avenue de
+  // Saint-Disdille, sans aucune marche ensuite jusqu'à l'adresse réelle) : le bus/tram de
+  // substitution dessert SON arrêt le plus proche de a/b, pas forcément a ou b exactement —
+  // contrairement à une marche directe, qui elle arrive toujours pile au point visé. Ajouter les
+  // marches résiduelles aux deux bouts quand elles existent, au lieu de laisser le trajet s'arrêter
+  // à l'arrêt de bus/tram.
+  if(tailLeg&&tailLeg.toPoint&&meters(tailLeg.toPoint,b)>SAME_POINT_M){
+   const tailArr=ms(tailLeg.arrival);
+   if(Number.isFinite(tailArr)){let tail=null;try{tail=await call(tailLeg.toPoint,b);}catch(_){}
+    if(tail)chosen=[...chosen,walkLeg(tail,tailLeg.toPoint,b,tailLeg.to||fromName,toName,tailArr)];}
+  }
+  if(headLeg&&headLeg.fromPoint&&meters(a,headLeg.fromPoint)>SAME_POINT_M){
+   const headDep=ms(headLeg.departure);
+   if(Number.isFinite(headDep)){let head=null;try{head=await call(a,headLeg.fromPoint);}catch(_){}
+    if(head)chosen=[walkLeg(head,a,headLeg.fromPoint,fromName,headLeg.from||toName,headDep-head.durationSeconds*1000),...chosen];}
+  }
+  return renameEnds({...best,legs:chosen},{fromName,toName}).legs;
+ };
  const footLeg=async(a,b,fromName,toName,{startMs,endMs})=>{
   const r=await call(a,b);if(!r)return null;
   const walkMax=Number.isFinite(task.walkMaxMeters)?task.walkMaxMeters:null;
   // Marche longue dans une zone desservie par un réseau local (Mobilités M à Grenoble…) : comparer d'abord
   // au bus/tram plutôt que d'imposer silencieusement une marche d'une heure (signalé le 19/11/2026,
   // marches de 4,7 et 5,4 km vers Seyssins alors que le réseau M dessert la zone).
-  if(r.distanceMeters>REGIONAL_WALK_THRESHOLD_M&&regional&&typeof regional.run==='function'){
-   // 21/11/2026 : la fenêtre de recherche du bus/tram de substitution partait pile de l'heure d'arrivée
-   // précédente (ou pile avant l'heure limite), sans tenir compte du temps de descendre et de rejoindre
-   // l'arrêt suivant — un bus dont les horaires tombaient 1 min après était accepté tel quel. On décale
-   // la fenêtre du même battement minimal que pour une correspondance ordinaire (TRANSFER_BUFFER_S).
-   const bufferMs=TRANSFER_BUFFER_S*1000;
-   const subTask=Number.isFinite(endMs)?{from:a,to:b,fromName,toName,latestArrival:new Date(endMs-bufferMs).toISOString(),marginMinutes:0}
-    :Number.isFinite(startMs)?{from:a,to:b,fromName,toName,earliestDeparture:new Date(startMs+bufferMs).toISOString(),marginMinutes:0}:null;
-   // 22/11/2026 (Laurent : correspondance bus à Thonon-les-Bains — la ligne C part de l'arrêt « Les Arts »,
-   // à 100 m de la gare, directement vers Saint-Disdille (la zone de l'adresse de livraison), mais .find()
-   // retenait le PREMIER itinéraire renvoyé par le moteur local, souvent un bus à 1 km de marche d'approche
-   // sur un arrêt sans rapport (ex. « Église des Vallées ») simplement parce qu'il arrivait en tête de liste)
-   // : on ne garde plus le premier itinéraire avec un transport, mais celui qui minimise la marche totale
-   // (accès + sortie) vers les deux points réels, à égalité le plus tôt arrivé.
-   const pickClosest=list=>{
-    const candidates=(Array.isArray(list)?list:[]).filter(it=>it&&Array.isArray(it.legs)&&it.legs.length&&it.legs.some(l=>l&&l.kind!=='walk'));
-    if(!candidates.length)return null;
-    const walkTotal=it=>{
-     const head=it.legs[0],tail=it.legs[it.legs.length-1];
-     const access=head&&head.fromPoint?meters(a,head.fromPoint):Infinity;
-     const egress=tail&&tail.toPoint?meters(tail.toPoint,b):Infinity;
-     return access+egress;
-    };
-    const arrivalOf=it=>ms(it.legs[it.legs.length-1]?.arrival);
-    return candidates.sort((x,y)=>walkTotal(x)-walkTotal(y)||arrivalOf(x)-arrivalOf(y))[0];
-   };
-   if(subTask){
-    let ok=false;try{ok=regional.enabled(subTask);}catch(_){}
-    if(ok){
-     let answer=null;try{answer=await regional.run(subTask);}catch(_){answer=null;}
-     let best=pickClosest(answer);
-     let tight=false;
-     // 22/11/2026 (Laurent : train réel arrivant 08h29 à Thonon, correspondance bus T réelle à 08h30 juste à
-     // côté — disparue de l'appli) : quand AUCUN départ n'existe après le battement de sécurité, on ne
-     // retombe plus directement sur la marche complète sans revérifier : on retente sans le battement, pour
-     // distinguer « aucun bus avant longtemps » (marche justifiée) de « un bus existe mais la fenêtre de
-     // sécurité l'exclut de justesse » (correspondance tendue à signaler, pas un trajet à faire disparaître).
-     if(!best){
-      const tightTask=Number.isFinite(endMs)?{from:a,to:b,fromName,toName,latestArrival:new Date(endMs).toISOString(),marginMinutes:0}
-       :Number.isFinite(startMs)?{from:a,to:b,fromName,toName,earliestDeparture:new Date(startMs).toISOString(),marginMinutes:0}:null;
-      if(tightTask){
-       let tightOk=false;try{tightOk=regional.enabled(tightTask);}catch(_){}
-       if(tightOk){
-        let tightAnswer=null;try{tightAnswer=await regional.run(tightTask);}catch(_){tightAnswer=null;}
-        best=pickClosest(tightAnswer);
-        if(best)tight=true;
-       }
-      }
-     }
-     // 22/11/2026 (Laurent : Y51 l'après-midi — 12:18, 13:58, 14:48… — toujours écartés « avant la fin de la
-     // mission précédente » malgré un earliestDeparture cohérent) : pickClosest() ne borne que le WALK total
-     // (accès+sortie), jamais l'ATTENTE à l'arrêt. Si la seule ligne locale desservant cet arrêt ne passe
-     // qu'une fois par jour très tôt (ex. 06:59), elle était retenue pour CHAQUE départ Y51 de la journée
-     // (12:18 comme 18:48), avec plusieurs heures d'attente avant d'embarquer — et legs[0].departure (la
-     // marche/le bus avant ce même 06:59) tombait alors bien avant midi, faisant passer des Y51 parfaitement
-     // réalisables pour « avant la fin de la mission précédente ». On plafonne maintenant l'attente à l'arrêt
-     // de correspondance : au-delà, on revient à la marche directe (signalée « trop longue » si besoin, un
-     // motif déjà géré et visible) plutôt que de chaîner un bus local sans rapport avec un trou de plusieurs
-     // heures avant le vrai transport recherché.
-     if(best){
-      const waitS=Number.isFinite(endMs)?(endMs-ms(best.legs[best.legs.length-1].arrival))/1000:
-       Number.isFinite(startMs)?(ms(best.legs[0].departure)-startMs)/1000:0;
-      if(!(waitS<=REGIONAL_ACCESS_MAX_WAIT_S))best=null;
-     }
-     if(best){
-      if(tight)missing.push('correspondance tendue à '+(fromName||'l’arrêt')+' avec le bus/tram local (moins de '+Math.round(TRANSFER_BUFFER_S/60)+' min) : à vérifier le jour J');
-      let chosen=best.legs.slice();
-      const headLeg=chosen[0],tailLeg=chosen[chosen.length-1];
-      // 21/11/2026 (Laurent : le bus EVA'D 02 dépose à Thuyset Ouest, à 1,5-2 km du 89 avenue de
-      // Saint-Disdille, sans aucune marche ensuite jusqu'à l'adresse réelle) : le bus/tram de
-      // substitution dessert SON arrêt le plus proche de a/b, pas forcément a ou b exactement —
-      // contrairement à une marche directe, qui elle arrive toujours pile au point visé. Ajouter les
-      // marches résiduelles aux deux bouts quand elles existent, au lieu de laisser le trajet s'arrêter
-      // à l'arrêt de bus/tram.
-      if(tailLeg&&tailLeg.toPoint&&meters(tailLeg.toPoint,b)>SAME_POINT_M){
-       const tailArr=ms(tailLeg.arrival);
-       if(Number.isFinite(tailArr)){let tail=null;try{tail=await call(tailLeg.toPoint,b);}catch(_){}
-        if(tail)chosen=[...chosen,walkLeg(tail,tailLeg.toPoint,b,tailLeg.to||fromName,toName,tailArr)];}
-      }
-      if(headLeg&&headLeg.fromPoint&&meters(a,headLeg.fromPoint)>SAME_POINT_M){
-       const headDep=ms(headLeg.departure);
-       if(Number.isFinite(headDep)){let head=null;try{head=await call(a,headLeg.fromPoint);}catch(_){}
-        if(head)chosen=[walkLeg(head,a,headLeg.fromPoint,fromName,headLeg.from||toName,headDep-head.durationSeconds*1000),...chosen];}
-      }
-      return renameEnds({...best,legs:chosen},{fromName,toName}).legs;
-     }
-    }
-   }
+  if(r.distanceMeters>REGIONAL_WALK_THRESHOLD_M){
+   const sub=await trySubstituteLongWalk(a,b,fromName,toName,{startMs,endMs});
+   if(sub)return sub;
   }
   if(walkMax!==null&&r.distanceMeters>walkMax&&scooter&&scooter.enabled&&scooter.router){
    let sr=null;try{sr=await scooter.router.route(a,b);}catch(_){}
@@ -490,6 +498,26 @@ async function completeWalks(j,task,router,scooter,regional){
   const start=Number.isFinite(startMs)?startMs:endMs-r.durationSeconds*1000;
   return [walkLeg(r,a,b,fromName,toName,start)];
  };
+ // 22/11/2026 (Laurent : trajet 07h12→10h07 via OTP2 avec une marche finale de 39 min, alors qu'un trajet
+ // voisin montre que le bus « C » de Star't Thonon dépose à 2 min de la même adresse) : une marche déjà
+ // fournie par un moteur (OTP2, correspondances entre réseaux…) n'était jamais comparée au bus/tram local
+ // — seules les marches que completeWalks() calcule elle-même (approche/correspondance/sortie) l'étaient.
+ // On réévalue maintenant chaque marche déjà présente et trop longue, avant toute autre étape, en
+ // l'ancrant sur le véhicule voisin (arrivée du précédent, ou départ du suivant) pour garder la même
+ // fenêtre horaire que le trajet d'origine.
+ for(let i=0;i<legs.length;i++){
+  const l=legs[i];
+  if(l.kind!=='walk'||!finite(l.distanceMeters)||l.distanceMeters<=REGIONAL_WALK_THRESHOLD_M)continue;
+  if(!l.fromPoint||!l.toPoint)continue;
+  const prev=legs[i-1],next=legs[i+1];
+  const anchor=prev&&prev.kind!=='walk'&&Number.isFinite(ms(prev.arrival))?{startMs:ms(prev.arrival)}:
+   next&&next.kind!=='walk'&&Number.isFinite(ms(next.departure))?{endMs:ms(next.departure)}:
+   Number.isFinite(ms(l.departure))?{startMs:ms(l.departure)}:
+   Number.isFinite(ms(l.arrival))?{endMs:ms(l.arrival)}:null;
+  if(!anchor)continue;
+  let sub=null;try{sub=await trySubstituteLongWalk(l.fromPoint,l.toPoint,l.from,l.to,anchor);}catch(_){sub=null;}
+  if(sub&&sub.length){legs.splice(i,1,...sub);i+=sub.length-1;}
+ }
  // Ne jamais qualifier de « réalisable » une marche moteur sans durée, distance ou horaires cohérents.
  for(const l of legs)if(l.kind==='walk'&&(!finite(l.durationSeconds)||!finite(l.distanceMeters)||
   !Number.isFinite(ms(l.departure))||!Number.isFinite(ms(l.arrival))))
