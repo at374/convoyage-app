@@ -499,10 +499,16 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   // 20/11/2026 : certaines adresses de plateforme commencent par un identifiant (suite de lettres et chiffres) : on ne l'affiche plus.
   function adrNet(a) { return typeof a === 'string' ? a.replace(/\b[0-9a-f]{16,}\b/gi, '').replace(/^[\s,;:\-–]+/, '').replace(/\n\s*\n+/g, '\n').trim() : a; }
   function adresse(m, cote) {
-    const a = adrNet(m[cote + '_address']) || (m.mail_info && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'] && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'].adresse); if (a) return a;
-    if (m.adresses_locales) return (cote === 'origin' ? m.from_city : m.to_city) ? (cote === 'origin' ? m.from_city : m.to_city) + (m[(cote === 'origin' ? 'from' : 'to') + '_department'] ? ' (' + m[(cote === 'origin' ? 'from' : 'to') + '_department'] + ')' : '') + ' — ' + LOCAL : LOCAL;
+    // 22/11/2026 (Laurent : « point GPS de la rue (vérifié) » affiché dans LIEUX, mais seule la ville apparaît
+    // au-dessus) : la géolocalisation (geo.js, adresseDe) utilise m[côté].address / m[côté].street en repli de
+    // m[côté+'_address'], et c'est bien ce qui donnait une précision « rue » — mais l'affichage ici ne regardait
+    // que m[côté+'_address'], jamais ces champs, donc retombait sur la ville seule alors qu'une rue était connue.
+    const p = m[cote] || {}, ville = cote === 'origin' ? m.from_city : m.to_city, dep = m[(cote === 'origin' ? 'from' : 'to') + '_department'];
+    const rue = adrNet(p.address || p.street);
+    const a = adrNet(m[cote + '_address']) || (rue && (rue + (ville && !new RegExp(ville.replace(/[.*+?^${}()|[\]\\]/i, '\\$&'), 'i').test(rue) ? ', ' + ville : '') + (dep && !rue.includes(dep) ? ' (' + dep + ')' : ''))) ||
+     (m.mail_info && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'] && m.mail_info[cote === 'origin' ? 'depart' : 'arrivee'].adresse); if (a) return a;
+    if (m.adresses_locales) return ville ? ville + (dep ? ' (' + dep + ')' : '') + ' — ' + LOCAL : LOCAL;
     // V88 : ville connue → affichée ; l'adresse exacte d'une mission acceptée arrive quand « Mes trajets » Hiflow est ouvert sur l'ordinateur.
-    const ville = cote === 'origin' ? m.from_city : m.to_city, dep = m[(cote === 'origin' ? 'from' : 'to') + '_department'];
     if (ville) return ville + (dep ? ' (' + dep + ')' : '') + (m.kind === 'acceptee' && m.platform === 'Hiflow' ? ' — adresse exacte : ouvre « Mes trajets » Hiflow sur l’ordinateur' : '');
     return cote === 'origin' ? 'Adresse de départ non encore connue' : 'Adresse d’arrivée non encore connue';
   }
