@@ -49,6 +49,9 @@ const SAFE_TRANSFER_MIN=10,SAME_POINT_M=30,PROVIDER_JOIN_M=60,TRANSFER_BUFFER_S=
 // comparée à un bus/tram local (Mobilités M à Grenoble…) avant d'être acceptée telle quelle : signalé le
 // 19/11/2026 (marches de 4,7 et 5,4 km vers Seyssins alors que le réseau M dessert la zone).
 const REGIONAL_WALK_THRESHOLD_M=800;
+// 22/11/2026 : attente maximale acceptable à l'arrêt de correspondance avant/après un bus/tram local de
+// substitution (voir footLeg ci-dessous) — au-delà, la marche directe est préférée à une attente démesurée.
+const REGIONAL_ACCESS_MAX_WAIT_S=45*60;
 
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 function pt(p){
@@ -432,6 +435,21 @@ async function completeWalks(j,task,router,scooter,regional){
         if(best)tight=true;
        }
       }
+     }
+     // 22/11/2026 (Laurent : Y51 l'après-midi — 12:18, 13:58, 14:48… — toujours écartés « avant la fin de la
+     // mission précédente » malgré un earliestDeparture cohérent) : pickClosest() ne borne que le WALK total
+     // (accès+sortie), jamais l'ATTENTE à l'arrêt. Si la seule ligne locale desservant cet arrêt ne passe
+     // qu'une fois par jour très tôt (ex. 06:59), elle était retenue pour CHAQUE départ Y51 de la journée
+     // (12:18 comme 18:48), avec plusieurs heures d'attente avant d'embarquer — et legs[0].departure (la
+     // marche/le bus avant ce même 06:59) tombait alors bien avant midi, faisant passer des Y51 parfaitement
+     // réalisables pour « avant la fin de la mission précédente ». On plafonne maintenant l'attente à l'arrêt
+     // de correspondance : au-delà, on revient à la marche directe (signalée « trop longue » si besoin, un
+     // motif déjà géré et visible) plutôt que de chaîner un bus local sans rapport avec un trou de plusieurs
+     // heures avant le vrai transport recherché.
+     if(best){
+      const waitS=Number.isFinite(endMs)?(endMs-ms(best.legs[best.legs.length-1].arrival))/1000:
+       Number.isFinite(startMs)?(ms(best.legs[0].departure)-startMs)/1000:0;
+      if(!(waitS<=REGIONAL_ACCESS_MAX_WAIT_S))best=null;
      }
      if(best){
       if(tight)missing.push('correspondance tendue à '+(fromName||'l’arrêt')+' avec le bus/tram local (moins de '+Math.round(TRANSFER_BUFFER_S/60)+' min) : à vérifier le jour J');
