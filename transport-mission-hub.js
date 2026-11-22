@@ -1793,7 +1793,16 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   const toWalk=[];
   for(const j of clean){
    const key=signature(j),known=key&&s.bySignature.get(key);
-   if(known){known.sources=[...new Set([...known.sources,...(j.sources||[j.source])])];continue;}
+   if(known){known.sources=[...new Set([...known.sources,...(j.sources||[j.source])])];
+    // 22/11/2026 (Laurent : le bouton « Tous les horaires » manque sur certaines lignes d'un trajet, alors
+    // qu'il existe pour d'autres lignes identiques ailleurs) : quand le MÊME trajet est retrouvé par plusieurs
+    // moteurs (ex. OpenTripPlanner ET le moteur GTFS de correspondances), seul le premier arrivé était gardé —
+    // si ce premier moteur ne pose pas gtfsRaw/routeId sur ses jambes (OTP ne le fait pas), le bouton restait
+    // absent même quand un AUTRE moteur avait bien ces métadonnées pour le même trajet. On complète maintenant
+    // les jambes déjà affichées avec le gtfsRaw d'un doublon plus tard, quand celui qui est déjà affiché n'en a pas.
+    if(Array.isArray(known.legs)&&Array.isArray(j.legs)&&known.legs.length===j.legs.length)
+     for(let i=0;i<known.legs.length;i++)if(!known.legs[i].gtfsRaw&&j.legs[i]&&j.legs[i].gtfsRaw)known.legs[i].gtfsRaw=j.legs[i].gtfsRaw;
+    continue;}
    const quick=assess(j,s.task,fareFor);
    if(quick.reasons.some(r=>/arrivée après|marge insuffisante|départ avant|horaires incohérents|annulée/.test(r))){
     if(key)s.bySignature.set(key,quick);s.items.push(quick);continue;
