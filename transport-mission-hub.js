@@ -358,12 +358,49 @@ async function completeWalks(j,task,router,scooter,regional){
    const bufferMs=TRANSFER_BUFFER_S*1000;
    const subTask=Number.isFinite(endMs)?{from:a,to:b,fromName,toName,latestArrival:new Date(endMs-bufferMs).toISOString(),marginMinutes:0}
     :Number.isFinite(startMs)?{from:a,to:b,fromName,toName,earliestDeparture:new Date(startMs+bufferMs).toISOString(),marginMinutes:0}:null;
+   // 22/11/2026 (Laurent : correspondance bus à Thonon-les-Bains — la ligne C part de l'arrêt « Les Arts »,
+   // à 100 m de la gare, directement vers Saint-Disdille (la zone de l'adresse de livraison), mais .find()
+   // retenait le PREMIER itinéraire renvoyé par le moteur local, souvent un bus à 1 km de marche d'approche
+   // sur un arrêt sans rapport (ex. « Église des Vallées ») simplement parce qu'il arrivait en tête de liste)
+   // : on ne garde plus le premier itinéraire avec un transport, mais celui qui minimise la marche totale
+   // (accès + sortie) vers les deux points réels, à égalité le plus tôt arrivé.
+   const pickClosest=list=>{
+    const candidates=(Array.isArray(list)?list:[]).filter(it=>it&&Array.isArray(it.legs)&&it.legs.length&&it.legs.some(l=>l&&l.kind!=='walk'));
+    if(!candidates.length)return null;
+    const walkTotal=it=>{
+     const head=it.legs[0],tail=it.legs[it.legs.length-1];
+     const access=head&&head.fromPoint?meters(a,head.fromPoint):Infinity;
+     const egress=tail&&tail.toPoint?meters(tail.toPoint,b):Infinity;
+     return access+egress;
+    };
+    const arrivalOf=it=>ms(it.legs[it.legs.length-1]?.arrival);
+    return candidates.sort((x,y)=>walkTotal(x)-walkTotal(y)||arrivalOf(x)-arrivalOf(y))[0];
+   };
    if(subTask){
     let ok=false;try{ok=regional.enabled(subTask);}catch(_){}
     if(ok){
      let answer=null;try{answer=await regional.run(subTask);}catch(_){answer=null;}
-     const best=Array.isArray(answer)?answer.find(it=>it&&Array.isArray(it.legs)&&it.legs.length&&it.legs.some(l=>l&&l.kind!=='walk')):null;
+     let best=pickClosest(answer);
+     let tight=false;
+     // 22/11/2026 (Laurent : train réel arrivant 08h29 à Thonon, correspondance bus T réelle à 08h30 juste à
+     // côté — disparue de l'appli) : quand AUCUN départ n'existe après le battement de sécurité, on ne
+     // retombe plus directement sur la marche complète sans revérifier : on retente sans le battement, pour
+     // distinguer « aucun bus avant longtemps » (marche justifiée) de « un bus existe mais la fenêtre de
+     // sécurité l'exclut de justesse » (correspondance tendue à signaler, pas un trajet à faire disparaître).
+     if(!best){
+      const tightTask=Number.isFinite(endMs)?{from:a,to:b,fromName,toName,latestArrival:new Date(endMs).toISOString(),marginMinutes:0}
+       :Number.isFinite(startMs)?{from:a,to:b,fromName,toName,earliestDeparture:new Date(startMs).toISOString(),marginMinutes:0}:null;
+      if(tightTask){
+       let tightOk=false;try{tightOk=regional.enabled(tightTask);}catch(_){}
+       if(tightOk){
+        let tightAnswer=null;try{tightAnswer=await regional.run(tightTask);}catch(_){tightAnswer=null;}
+        best=pickClosest(tightAnswer);
+        if(best)tight=true;
+       }
+      }
+     }
      if(best){
+      if(tight)missing.push('correspondance tendue à '+(fromName||'l’arrêt')+' avec le bus/tram local (moins de '+Math.round(TRANSFER_BUFFER_S/60)+' min) : à vérifier le jour J');
       let chosen=best.legs.slice();
       const headLeg=chosen[0],tailLeg=chosen[chosen.length-1];
       // 21/11/2026 (Laurent : le bus EVA'D 02 dépose à Thuyset Ouest, à 1,5-2 km du 89 avenue de
