@@ -1828,10 +1828,19 @@ function makeProviders(r,opts={}){
 // acceptable à [dep-gap-COACH_ACCESS_MAX_WAIT_MIN, dep-gap] (et symétriquement pour la sortie du car) : au-delà,
 // l'accès n'est plus considéré comme trouvé plutôt que de proposer une attente démesurée.
 const COACH_ACCESS_MAX_WAIT_MIN=20;
-async function accessFor(j,task,otp,signal){
+// 22/11/2026 (Laurent : « tous les moteurs et fichiers locaux doivent être complémentaires… et se contrôler
+// les uns les autres ») : l'accès à la gare routière d'un car longue distance ne passait que par OTP2, jamais
+// par les réseaux locaux (Sibra, Star't Thonon…) déjà utilisés ailleurs (completeWalks) pour la même tâche —
+// un OTP2 absent/lent/sans la bonne ligne faisait manquer un accès qu'un moteur local aurait trouvé, et
+// inversement. accessFor() interroge maintenant les deux familles de sources en parallèle et garde la
+// meilleure option tous horizons confondus (comme pickClosest/trySubstituteLongWalk le font déjà pour les
+// marches de substitution).
+async function accessFor(j,task,otp,localAccess,signal){
  const side=j.needsAccess.side,legs=j.legs,gap=10*60000,maxWait=COACH_ACCESS_MAX_WAIT_MIN*60000;
  const first=legs[0],last=legs[legs.length-1],miss=t=>({...j,needsAccess:undefined,missing:[...(j.missing||[]),t]});
- if(!otp||!otp.run||!(()=>{try{return otp.enabled(task);}catch(_){return false;}})())return miss('accès à la gare routière non calculé (serveur OTP2 non disponible)');
+ const otpOk=!!(otp&&otp.run&&(()=>{try{return otp.enabled(task);}catch(_){return false;}})());
+ const localOk=!!(localAccess&&localAccess.run&&(()=>{try{return localAccess.enabled(task);}catch(_){return false;}})());
+ if(!otpOk&&!localOk)return miss('accès à la gare routière non calculé (ni serveur OTP2 ni réseau local disponible)');
  let t2;
  // 22/11/2026 (suite, demande Laurent : « la recherche doit obligatoirement trouver un bus qui arrive 10 min
  // max avant le départ du car ») : marginFor() impose un plancher de 15 min dès que exactTarget/allowShortMargin
@@ -1844,7 +1853,18 @@ async function accessFor(j,task,otp,signal){
  else{const arr=ms(last.arrival),from=pt(last.toPoint);if(!Number.isFinite(arr)||!from||!pt(task.to))return miss('trajet depuis la gare routière non calculable');
   t2={...task,from,fromName:last.to,to:task.to,earliestDeparture:new Date(arr+gap).toISOString(),marginMinutes:5,exactTarget:true,allowShortMargin:true,walkMaxMeters:undefined};delete t2.windowKind;
   if(!Number.isFinite(ms(task.latestArrival)))delete t2.latestArrival;}
- let list=[];try{list=await otp.run(t2,signal)||[];}catch(e){return miss('accès à la gare routière non calculé ('+String(e&&e.message||e).slice(0,60)+')');}
+ let otpErr=null,localErr=null;
+ const [otpList,localList]=await Promise.all([
+  otpOk?otp.run(t2,signal).catch(e=>{otpErr=e;return [];}):Promise.resolve([]),
+  localOk?localAccess.run(t2).catch(e=>{localErr=e;return [];}):Promise.resolve([])
+ ]);
+ const list=[...(Array.isArray(otpList)?otpList:[]),...(Array.isArray(localList)?localList:[])];
+ // Une source qui échoue (délai dépassé, erreur réseau…) ne doit pas faire taire l'autre : on ne signale
+ // l'erreur que si, au final, aucune des deux n'a produit de proposition exploitable.
+ if(!list.length&&(otpErr||localErr)){
+  const e=otpErr||localErr;
+  return miss('accès à la gare routière non calculé ('+String(e&&e.message||e).slice(0,60)+')');
+ }
  const ok=list.filter(a=>a&&Array.isArray(a.legs)&&a.legs.length&&a.legs.every(l=>l&&Number.isFinite(ms(l.departure))&&Number.isFinite(ms(l.arrival))));
  let best=null;
  // 21/11/2026 : parmi les accès compatibles avec l'horaire, le plus proche de l'heure limite était toujours choisi —
@@ -1868,8 +1888,9 @@ async function accessFor(j,task,otp,signal){
   return miss(anyArriving?'accès à la gare routière trouvé mais avec une attente de plus de '+COACH_ACCESS_MAX_WAIT_MIN+' min (correspondance trop lâche)':'aucun accès à la gare routière trouvé dans les horaires');
  }
  const merged=side==='from'?[...best.legs,...legs]:[...legs,...best.legs];
+ const accessSource=best.sources?.[0]||best.source||'un moteur local';
  return {...j,needsAccess:undefined,legs:merged,sources:[...new Set([...(j.sources||[j.source]),...(best.sources||[best.source]).filter(Boolean)])],
-  missing:[...(j.missing||[])],alerts:[...(j.alerts||[]),'Accès à la gare routière calculé par OpenTripPlanner (horaires théoriques).']};
+  missing:[...(j.missing||[])],alerts:[...(j.alerts||[]),'Accès à la gare routière calculé par '+accessSource+' (horaires théoriques).']};
 }
 
 /* ---------- Session ---------- */
@@ -1963,7 +1984,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   // 6 -> 12, demande de Laurent) ; sans accès calculé, le car reste signalé « accès non calculé ».
   if(clean.some(j=>j.needsAccess)){
    const withAccess=clean.filter(j=>j.needsAccess).sort((a,b)=>ms(a.departure||a.legs[0]?.departure)-ms(b.departure||b.legs[0]?.departure)).slice(0,12);
-   const resolved=await Promise.all(withAccess.map(j=>accessFor(j,s.task,providers.otp,controller.signal)));
+   const resolved=await Promise.all(withAccess.map(j=>accessFor(j,s.task,providers.otp,anyLocalBus,controller.signal)));
    clean=clean.filter(j=>!j.needsAccess).concat(resolved);
   }
   if(clean.length!==usable.length)s.discarded[source]=(s.discarded[source]||0)+usable.length-clean.length;
