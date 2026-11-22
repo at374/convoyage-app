@@ -1842,9 +1842,16 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const surArrivee = ev => { if (!panel.isConnected) { document.removeEventListener('cp-arrivee', surArrivee); return; } if (ev.detail && ev.detail.key === transportPlanKey) { document.removeEventListener('cp-arrivee', surArrivee); suivreHorloge(); } };
         if (typeof document.addEventListener === 'function') document.addEventListener('cp-arrivee', surArrivee);
         // Mission en cours (de 2 h avant la prise en charge jusqu'à 6 h après la livraison prévue) ou arrivée détectée : le parcours est actualisé toutes les 5 min (trajet aller, jonction, retour).
+        // 22/11/2026 (Laurent : « Y51 après 13h01 s'affiche puis se fige puis disparaît ») : ce rafraîchissement
+        // relance un rendu complet de la fiche (detail()) PUIS toute la recherche transport (clic simulé sur
+        // btnTransportsMission) — un recalcul lourd, pas un simple filtrage des départs passés. Avec la fenêtre
+        // large (2 h avant → 6 h après livraison + 48 h de marge), cela se déclenchait pour toute mission du jour
+        // simplement consultée, même sans suivi GPS réel : blocage visible, et une deuxième recherche qui peut
+        // légitimement retrouver un résultat différent de la première (ordre/état async non garanti identique).
+        // Restreint maintenant au suivi GPS réellement actif (timing.gps) — cas où « retirer les départs déjà
+        // passés » a un sens concret — et non à une simple consultation de mission à venir.
         {
-          const p0 = Date.parse(timing.pickup || ''), f0 = Date.parse(timing.planned || timing.deadline || '');
-          const enCours = () => { const n = Date.now(); return !!timing.gps || (Number.isFinite(p0) && n >= p0 - 2 * 3600000 && n <= (Number.isFinite(f0) ? f0 : p0 + 48 * 3600000) + 6 * 3600000); };
+          const enCours = () => !!timing.gps;
           if (enCours()) {
             const iv = setInterval(() => {
               if (!panel.isConnected) { clearInterval(iv); return; }
