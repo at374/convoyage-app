@@ -1942,31 +1942,22 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
  // totale puis l'horaire : on lui fournit maintenant l'union de TOUTES les sources locales pertinentes
  // (Mobilités M, réseaux locaux français, et Suisse/OJP près de la frontière) au lieu de s'arrêter au
  // premier qui répond.
- // 22/11/2026 (Laurent : « ça bloque encore », mesure en direct : un seul bloc de ~4,9 s restant après
- // l'activation du worker GTFS) : diagnostic temporaire pour localiser précisément où passe ce temps
- // (nombre d'appels à anyLocalBus.run, durée de chacun, durée du merge synchrone) — retiré une fois la
- // vraie cause isolée.
- const profRun=(label,ms)=>{try{(window.__cpHubProf=window.__cpHubProf||[]).push(label+' : '+Math.round(ms)+' ms');}catch(_){}};
  const anyLocalBus={
   enabled:task=>{
    try{if(providers.regional&&providers.regional.enabled(task))return true;}catch(_){}
    return complementIds.some(k=>{try{return providers[k].enabled(task);}catch(_){return false;}});
   },
   run:async task=>{
-   const t0=typeof performance!=='undefined'?performance.now():0;
    const runners=[];
    try{if(providers.regional&&providers.regional.enabled(task))runners.push(providers.regional.run(task).catch(()=>[]));}catch(_){}
    for(const k of complementIds){
     let ok=false;try{ok=providers[k].enabled(task);}catch(_){ok=false;}
     if(ok)runners.push(providers[k].run(task).catch(()=>[]));
    }
-   if(!runners.length){profRun('anyLocalBus.run (0 moteur)',performance.now()-t0);return [];}
+   if(!runners.length)return [];
    const results=await Promise.all(runners);
-   const tMerge=performance.now();
    const merged=results.flat().filter(it=>it&&Array.isArray(it.legs)&&it.legs.length);
-   const out=hasTransit(merged)?merged:[];
-   profRun('anyLocalBus.run ('+runners.length+' moteurs, attente '+Math.round(tMerge-t0)+' ms, fusion '+Math.round(performance.now()-tMerge)+' ms)',performance.now()-t0);
-   return out;
+   return hasTransit(merged)?merged:[];
   }
  };
  // Mises à jour regroupées (au plus une par 350 ms et par direction) : chaque résultat réseau ne reconstruit plus toute la fiche,
@@ -2013,11 +2004,6 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    return {evaluated:s.items.length,noTimes,reasons:Object.entries(c).sort((x,y)=>y[1]-x[1]).slice(0,5)};})()};}
  async function add(label,source,journeys){
   const s=state[label];if(!s||disposed)return;
-  // 22/11/2026 : instrumentation temporaire (voir window.__cpHubProf) — localiser le blocage de 3-5 s
-  // restant après l'activation du worker, pressenti ici (filtrage synchrone pouvant porter sur des
-  // centaines de trajets bruts, ex. jusqu'à 1000 pour les correspondances). Retiré une fois la cause isolée.
-  const __t0add=typeof performance!=='undefined'?performance.now():0;
-  const __nRaw=Array.isArray(journeys)?journeys.length:0;
   s.received[source]=(s.received[source]||0)+(Array.isArray(journeys)?journeys.length:0);
   const cancelled=x=>x&&(x.cancelled===true||x.canceled===true||/^(cancelled|canceled|annul)/i.test(String(x.status||'')));
   const usable=(Array.isArray(journeys)?journeys:[]).map(j=>renameEnds(j,s.task)).filter(j=>j&&!cancelled(j)&&Array.isArray(j.legs)&&j.legs.length&&
@@ -2025,7 +2011,6 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   // Point d'arrivée ou de départ approximatif (adresse trouvée seulement au niveau de la voie ou de la commune) : le test « marcher
   // directement serait aussi court » n'est pas fiable (l'écart de plusieurs km vient de l'approximation), on garde le trajet.
   let clean=usable.filter(j=>(s.task.approximateEndpoint||!walkDetour(j,s.task)||j.needsAccess)&&!excessiveDetour(j,s.task));
-  profRun('add ('+label+', '+source+', '+__nRaw+' bruts, '+clean.length+' retenus) — filtrage',performance.now()-__t0add);
   // Cars depuis une gare routière éloignée : accès (TCL…) calculé par OTP2, 12 cars au plus par moteur (20/11/2026 :
   // 6 -> 12, demande de Laurent) ; sans accès calculé, le car reste signalé « accès non calculé ».
   if(clean.some(j=>j.needsAccess)){
@@ -2034,7 +2019,6 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    clean=clean.filter(j=>!j.needsAccess).concat(resolved);
   }
   if(clean.length!==usable.length)s.discarded[source]=(s.discarded[source]||0)+usable.length-clean.length;
-  const __t1add=typeof performance!=='undefined'?performance.now():0;
   // 1) Doublon d'un trajet déjà traité (autre moteur) : on ajoute la source, sans recalculer les marches.
   // 2) Trajet déjà hors délai sur ses seuls horaires : affiché « non confirmé » sans dépenser de marche.
   // 3) Les autres (8 au plus, les plus utiles d'abord) reçoivent leurs marches et s'affichent dès qu'ils sont prêts.
@@ -2068,7 +2052,6 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   toWalk.sort((a,b)=>coachPriority(a)-coachPriority(b)||
    (pk(a.quick)===pk(b.quick)?0:pk(a.quick)-pk(b.quick))||
    (isReturn?ms(a.quick.departure)-ms(b.quick.departure):(a.quick.slackMinutes??0)-(b.quick.slackMinutes??0))||a.quick.durationMinutes-b.quick.durationMinutes);
-  profRun('add ('+label+', '+source+') — assess/tri ('+toWalk.length+' à marcher)',performance.now()-__t1add);
   // Affichage immédiat : chaque trajet apparaît tout de suite, « marches en cours de calcul », puis est remplacé.
   const pendingCard=new Map();
   for(const t of toWalk){
@@ -2079,10 +2062,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   const replace=(t,a)=>{const old=pendingCard.get(t);const i=s.items.indexOf(old);
    if(old)a.sources=[...new Set([...a.sources,...(old.sources||[])])];
    if(i>=0)s.items[i]=a;else s.items.push(a);if(t.key)s.bySignature.set(t.key,a);};
-  const walkBatch=batch=>Promise.all(batch.map(t=>{
-   const __t0=typeof performance!=='undefined'?performance.now():0;
-   return completeWalks(t.j,s.task,router,{enabled:!!(scooter&&scooter.enabled&&scooterRouter),router:scooterRouter,maxKm:scooter&&scooter.maxKm,speedKmh:scooter&&scooter.speedKmh},providers?anyLocalBus:null).then(x=>{
-   profRun('completeWalks ('+label+')',performance.now()-__t0);
+  const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,router,{enabled:!!(scooter&&scooter.enabled&&scooterRouter),router:scooterRouter,maxKm:scooter&&scooter.maxKm,speedKmh:scooter&&scooter.speedKmh},providers?anyLocalBus:null).then(x=>{
    if(disposed)return;replace(t,assess(x,s.task,fareFor));emit(label);
   }).catch(()=>{
    // Ne pas laisser une carte bloquée sur « marches en cours de calcul »
@@ -2090,8 +2070,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    if(disposed)return;
    replace(t,assess({...t.j,missing:[...(t.j.missing||[]),'marche non calculée (erreur du moteur piéton)']},s.task,fareFor));
    emit(label);
-  });
-  }));
+  })));
   // Quota compté en couples de points réellement à calculer, pas en trajets : les départs successifs d'une même
   // ligne partagent leurs arrêts, donc leurs marches (cache). Avant le 14/11/2026 seuls 8 à 16 trajets par moteur
   // recevaient leurs marches, même quand tous utilisaient les deux mêmes arrêts (diagnostic réel : 53,7 % des
