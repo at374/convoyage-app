@@ -1787,10 +1787,16 @@ async function accessFor(j,task,otp,signal){
  const first=legs[0],last=legs[legs.length-1],miss=t=>({...j,needsAccess:undefined,missing:[...(j.missing||[]),t]});
  if(!otp||!otp.run||!(()=>{try{return otp.enabled(task);}catch(_){return false;}})())return miss('accès à la gare routière non calculé (serveur OTP2 non disponible)');
  let t2;
+ // 22/11/2026 (suite, demande Laurent : « la recherche doit obligatoirement trouver un bus qui arrive 10 min
+ // max avant le départ du car ») : marginFor() impose un plancher de 15 min dès que exactTarget/allowShortMargin
+ // ne sont pas tous deux vrais — avec marginMinutes:10 ici, la requête OTP demandait donc une arrivée au plus
+ // tard dep-gap-15min (25 min avant le car), au lieu de dep-gap-10min visée, ratant les correspondances qui
+ // arrivent entre ces deux bornes. exactTarget+allowShortMargin ramène ce plancher à 5 min (marginFor gère le
+ // min(base,5)), pour que la fenêtre réellement demandée à OTP colle à celle qu'accessFor() accepte ensuite.
  if(side==='from'){const dep=ms(first.departure),target=pt(first.fromPoint);if(!Number.isFinite(dep)||!target||!pt(task.from))return miss('accès à la gare routière non calculable');
-  t2={...task,label:task.label,from:task.from,to:target,toName:first.from,latestArrival:new Date(dep-gap).toISOString(),marginMinutes:10,walkMaxMeters:undefined};delete t2.windowKind;}
+  t2={...task,label:task.label,from:task.from,to:target,toName:first.from,latestArrival:new Date(dep-gap).toISOString(),marginMinutes:5,exactTarget:true,allowShortMargin:true,walkMaxMeters:undefined};delete t2.windowKind;}
  else{const arr=ms(last.arrival),from=pt(last.toPoint);if(!Number.isFinite(arr)||!from||!pt(task.to))return miss('trajet depuis la gare routière non calculable');
-  t2={...task,from,fromName:last.to,to:task.to,earliestDeparture:new Date(arr+gap).toISOString(),marginMinutes:10,walkMaxMeters:undefined};delete t2.windowKind;
+  t2={...task,from,fromName:last.to,to:task.to,earliestDeparture:new Date(arr+gap).toISOString(),marginMinutes:5,exactTarget:true,allowShortMargin:true,walkMaxMeters:undefined};delete t2.windowKind;
   if(!Number.isFinite(ms(task.latestArrival)))delete t2.latestArrival;}
  let list=[];try{list=await otp.run(t2,signal)||[];}catch(e){return miss('accès à la gare routière non calculé ('+String(e&&e.message||e).slice(0,60)+')');}
  const ok=list.filter(a=>a&&Array.isArray(a.legs)&&a.legs.length&&a.legs.every(l=>l&&Number.isFinite(ms(l.departure))&&Number.isFinite(ms(l.arrival))));
