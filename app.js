@@ -2262,11 +2262,17 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         // Badge visible dès le lancement (avant même la première réponse d'un moteur), pour ne jamais
         // laisser un ancien résultat ou un vide pendant que la nouvelle recherche démarre.
         for(const t of tasks)if(!t.lazy)afficherRecherche(t.label);
+        // 22/11/2026 : diagnostic temporaire (voir transport-mission-hub.js) pour isoler le bloc d'env. 4,5 s
+        // mesuré en direct APRÈS l'activation du worker GTFS (donc ailleurs que dans anyLocalBus.run/completeWalks,
+        // qui eux ne montraient rien d'anormal dans window.__cpHubProf).
+        const __prof=(label,t0)=>{try{(window.__cpHubProf=window.__cpHubProf||[]).push(label+' : '+Math.round(performance.now()-t0)+' ms');}catch(_){}};
         let router=null;
+        {const __t0=performance.now();
         try{router=Hub.cachedRouter(window.CPTransportWalking?.createRouter({fetcher:regionalFetch,maxRequests:150,intervalMs:1100}),{storage:window.localStorage});}catch(_){}
+        __prof('cachedRouter (marche)',__t0);}
         const scooterOn = (etat.reglages || {}).trottinette === true;
         let scooterRouter = null;
-        if (scooterOn) { try { scooterRouter = Hub.cachedRouter(window.CPTransportWalking?.createRouter({ fetcher: regionalFetch, maxRequests: 60, intervalMs: 1100, mode: 'bicycle', cyclingSpeed: Number(lireLocal('cp_trot_vitesse_kmh', 15)) }), { storage: window.localStorage, key: 'cp_trottinette_v1' }); } catch (_) {} }
+        if (scooterOn) { const __t0=performance.now(); try { scooterRouter = Hub.cachedRouter(window.CPTransportWalking?.createRouter({ fetcher: regionalFetch, maxRequests: 60, intervalMs: 1100, mode: 'bicycle', cyclingSpeed: Number(lireLocal('cp_trot_vitesse_kmh', 15)) }), { storage: window.localStorage, key: 'cp_trottinette_v1' }); } catch (_) {} __prof('cachedRouter (trottinette)',__t0); }
         const fareFor=leg=>{
           // Tarifs prouvés uniquement (grilles officielles datées), jamais estimés.
           try{const f=window.CPTransportFareGrids?.fareFor(leg);if(f)return f;}catch(_){}
@@ -2276,13 +2282,17 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         // connecté). Session absente ou expirée : le fournisseur OJP se désactive silencieusement (comme les autres
         // moteurs sans accès), sans message d'erreur ni blocage du reste des fiches.
         const ojpSession=api?.connecte?{url:api.url,cle:api.cle,accessToken:api.session.access_token}:null;
-        const session=Hub.createSession({tasks,router,fareFor,timeoutMs:35000,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),scooterRouter,scooter:{enabled:scooterOn,maxKm:Number(lireLocal('cp_trot_max_km',8)),speedKmh:Number(lireLocal('cp_trot_vitesse_kmh',15))},
-          providers:Hub.makeProviders(window,{fetcher:regionalFetch,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
+        const __t0Providers=performance.now();
+        const __providers=Hub.makeProviders(window,{fetcher:regionalFetch,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
             nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{},ojpSession,
             // OTP2 : moteur supplémentaire, actif seulement si un serveur HTTPS est configuré (aucun par défaut).
             lyonCoachAccess:true,
             allowOTP:typeof window.CP_OTP_ENDPOINT==='string'&&!!window.CPOTPClient?.buildQuery,
-            otpEndpoint:window.CP_OTP_ENDPOINT,otpQuery:window.CPOTPClient?.buildQuery,otpTimeoutMs:30000}),
+            otpEndpoint:window.CP_OTP_ENDPOINT,otpQuery:window.CPOTPClient?.buildQuery,otpTimeoutMs:30000});
+        __prof('makeProviders',__t0Providers);
+        const __t0Session=performance.now();
+        const session=Hub.createSession({tasks,router,fareFor,timeoutMs:35000,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),scooterRouter,scooter:{enabled:scooterOn,maxKm:Number(lireLocal('cp_trot_max_km',8)),speedKmh:Number(lireLocal('cp_trot_vitesse_kmh',15))},
+          providers:__providers,
           onUpdate:(label,view)=>{
             if(!panel.isConnected||!transportDestinations[label])return;
             labelState[label]={done:view.done,total:view.total};
@@ -2320,6 +2330,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             window.CPPh?.('transports:idle');
             labelState[label]={done:view.done,total:view.total};updateDayTabs();
           }});
+        __prof('createSession (partie synchrone)',__t0Session);
         session.signatureKey=signature;transportHub=session;startDayLabels(activeDay);
       };
       const hubObserver=typeof MutationObserver==='function'?new MutationObserver(()=>{
