@@ -2416,10 +2416,18 @@ function card(doc,j,labels,expanded=false,task=null){
     // sans préambule/mise en garde répétée à chaque marche — juste « Départ/Arrivée : <adresse> ».
     const note=el(doc,'p','cp-hub-note','');
     li.appendChild(note);
-    reverseGeocodeFR(win,point.lat,point.lon).then(r=>{
+    // 22/11/2026 (Laurent : « ça bloque le défilement quand on clique sur Visualisation des transports ») :
+    // ce fetch de géocodage inverse partait pour CHAQUE marche de CHAQUE carte dès la construction de la
+    // fiche — plusieurs dizaines d'appels réseau simultanés à l'ouverture, en plus des tuiles de carte déjà
+    // différées pour la même raison (cf. mapSvg ci-dessus). Même traitement : différé tant que la marche
+    // n'est pas visible à l'écran (IntersectionObserver), pour ne pas tout déclencher d'un coup à l'ouverture.
+    const resolveNote=()=>reverseGeocodeFR(win,point.lat,point.lon).then(r=>{
      if(!li.isConnected)return;
      note.textContent=r?(side==='départ'?'Départ':'Arrivée')+' : '+r.label:'';
     }).catch(()=>{note.textContent='';});
+    const IO=win.IntersectionObserver;
+    if(IO){try{const io=new IO(es=>{if(es.some(e=>e.isIntersecting)){io.disconnect();resolveNote();}},{rootMargin:'200px'});io.observe(note);}catch(_){resolveNote();}}
+    else resolveNote();
    }
    if(nearP21(pt(l.toPoint))||nearP21(pt(l.fromPoint))){
     const n=el(doc,'div','cp-hub-p21',null);

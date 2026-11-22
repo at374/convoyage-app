@@ -6,6 +6,15 @@
   const regionalFetch = (...args) => window.fetch(...args);
   // Planning data stays in this page session and never updates synchronized missions.
   const transportReturnPlans = new Map();
+  // 22/11/2026 (Laurent : « les trajets déjà visualisés doivent s'enregistrer quelque part pour que quand on
+  // reclique dessus ils s'affichent instantanément », « ils seront seulement actualisés quand le point gps
+  // d'arrivée sera déclenché ») : dernière vue « Visualisation des transports » calculée par mission (toutes
+  // directions confondues), gardée pour cette session de l'appli (pas au-delà d'un rechargement complet).
+  // Un nouveau clic sur le bouton réaffiche directement cette vue (aucun recalcul, aucune requête réseau)
+  // tant que rien de pertinent n'a changé (même signature de recherche) ; suiviArrivee() la vide explicitement
+  // dès qu'une arrivée GPS est détectée pour cette mission, en plus du changement de signature que cela
+  // entraîne de toute façon (l'heure de retour recalculée change la fenêtre de recherche).
+  const transportViewCache = new Map(); // clé : mission (missionTiming().key) -> {signature, views:{label:view}}
   let gtfsAgendaSession = null;
   function stopGTFSTransports() { gtfsAgendaSession?.dispose(); gtfsAgendaSession = null; }
   function transportParisDate(value) {
@@ -826,7 +835,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     const tous = Object.assign({}, lireLocal('cp_arrivees', {})), cles = Object.keys(tous);
     if (cles.length > 40) delete tous[cles[0]];
     tous[t.key] = { arrivee: new Date(ts).toISOString(), detecte: new Date().toISOString() }; ecrireLocal('cp_arrivees', tous);
-    suiviDedans.delete(t.key); transportReturnPlans.delete(t.key); etat.planResultat = null;
+    suiviDedans.delete(t.key); transportReturnPlans.delete(t.key); transportViewCache.delete(t.key); etat.planResultat = null;
     toast('📍 Arrivée détectée à ' + heureP(ts) + ' : retour calculé à partir de ' + heureP(ts + MARGE_ARRIVEE_MIN * 60000) + ' (marge 15 min)');
     try { if (etat.onglet === 'agenda') vueAgenda(); } catch (_) {}
     document.dispatchEvent(new CustomEvent('cp-arrivee', { detail: { key: t.key } }));
@@ -2196,6 +2205,35 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         if(availableTransportDays.length>1&&activeDay)for(const t of tasks)t.lazy=transportDays[t.label]!==activeDay;
         const signature=JSON.stringify([tasks.map(({lazy,...r})=>r),lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
         if(transportHub&&transportHub.signatureKey===signature)return;
+        // 22/11/2026 (cache « visualisé une fois, instantané ensuite ») : une vue déjà calculée pour cette
+        // mission existe et rien de pertinent n'a changé (même signature) — on la réaffiche directement,
+        // sans recalcul ni requête réseau, au lieu de relancer une recherche complète à chaque clic.
+        const missionKey=missionTiming(m).key;
+        const cachedEntry=transportViewCache.get(missionKey);
+        // Cache utilisable seulement si TOUTES les directions attendues (Aller/Jonction/Retour, ou leurs
+        // variantes par jour) sont présentes ET entièrement calculées (view.done) — sinon on relance une
+        // recherche complète comme avant, pour ne jamais figer un résultat partiel.
+        // Mission sur plusieurs jours (onglets de jour, tâches « lazy » démarrées à la demande via
+        // startDayLabels, qui a besoin d'une session active) : le cache ne s'applique pas, pour ne pas
+        // bloquer le calcul des autres jours — recherche complète comme avant dans ce cas précis.
+        const cacheComplete=!tasks.some(t=>t.lazy)&&cachedEntry&&cachedEntry.signature===signature&&
+          tasks.every(t=>cachedEntry.views[t.label]&&cachedEntry.views[t.label].done);
+        if(cacheComplete){
+          transportHub?.dispose();transportHub=null;
+          for(const [label,view] of Object.entries(cachedEntry.views)){
+            if(!transportDestinations[label])continue;
+            if(transportDestinations[label].hidden){pendingViews[label]=view;continue;}
+            let host=hubHosts[label];
+            if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
+              const sec=transportDestinations[label];
+              const after=legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);
+              after.insertAdjacentElement('afterend',host);}
+            Hub.render(host,view);
+            labelState[label]={done:view.done,total:view.total};
+          }
+          updateDayTabs();
+          return;
+        }
         transportHub?.dispose();
         let router=null;
         try{router=Hub.cachedRouter(window.CPTransportWalking?.createRouter({fetcher:regionalFetch,maxRequests:150,intervalMs:1100}),{storage:window.localStorage});}catch(_){}
@@ -2243,6 +2281,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             Hub.render(host,view);
             window.CPPh?.('transports:idle');
             labelState[label]={done:view.done,total:view.total};updateDayTabs();
+            // 22/11/2026 : mémoriser cette vue (qu'elle soit terminée ou encore en cours) pour un réaffichage
+            // instantané au prochain clic — seule une vue où TOUTES les directions sont done sera réutilisée
+            // sans recalcul (cf. cacheComplete ci-dessus).
+            {const entry=transportViewCache.get(missionKey)||{signature,views:{}};entry.signature=signature;entry.views[label]=view;transportViewCache.set(missionKey,entry);}
           }});
         session.signatureKey=signature;transportHub=session;startDayLabels(activeDay);
       };
