@@ -128,3 +128,13 @@ test('GTFS fare amount must be an ordinary decimal, not JS numeric syntax',()=>{
   assert.equal(F.legFare(F.prepare(files),idx(files),{tripId:'T1',from:'A',to:'B'}).amount,Number(price),price);
  }
 });
+
+test('unsupported contains-zone rules remain blocking even when their fare row is invalid',()=>{
+ const files={...base,
+  'fare_attributes.txt':'fare_id,price,currency_type\nU,2.00,EUR\nX,invalid,EUR',
+  'fare_rules.txt':'fare_id,route_id,origin_id,destination_id,contains_id\nU,R1,,,\nX,R1,,,Z2'};
+ const prepared=F.prepare(files);
+ assert.equal(prepared.rules.length,1);
+ assert.equal(prepared.unsupportedContainsRule,true);
+ assert.equal(F.legFare(prepared,idx(files),{tripId:'T1',from:'A',to:'C'}),null);
+});
