@@ -68,7 +68,7 @@ test('activeWithinDays trouve un service actif dans la fenêtre et aucun hors fe
 test('activeWithinDays ignore un calendrier actif sans courses associées', () => {
   const withoutTrips = {
     ...baseFiles,
-    'trips.txt': 'route_id,service_id,trip_id\\nR1,OTHER,T1\\n'
+    'trips.txt': 'route_id,service_id,trip_id\nR1,OTHER,T1\n'
   };
   assert.equal(collector.activeWithinDays(withoutTrips, 30, new Date('2026-06-01T00:00:00Z')), false);
 });
