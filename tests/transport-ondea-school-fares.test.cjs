@@ -7,7 +7,7 @@ test('Ondea 102 and 419 use the onboard fare, not the QR/M-ticket product',()=>{
  for(const line of ['102','419']){
   const fare=fareFor(leg(line));
   assert.equal(fare?.amount,1.70);
-  assert.match(fare.product||fare.source,/conducteur/i);
+  assert.match(fare.source,/conducteur/i);
  }
 });
 test('no automatic onboard fare on unverified school lines',()=>{
