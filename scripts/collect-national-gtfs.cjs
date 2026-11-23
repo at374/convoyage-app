@@ -344,13 +344,21 @@ async function collect({
 } = {}) {
   const datasets = await catalogue.fetchCatalogue(fetcher);
   let resources = catalogue.gtfsResources(datasets);
-  const seen = new Set();
-  resources = resources.filter((r) => {
-    const key = r.datasetId + '|' + r.id + '|' + r.url;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  // Une même ressource PAN peut apparaître plusieurs fois avec des URL
+  // différentes. Sa clé métier est datasetId + id, et non son URL :
+  // conserver la version la plus récente pour éviter deux entrées concurrentes.
+  const unique = new Map();
+  for (const resource of resources) {
+    const key = dedupKey(resource);
+    const previous = unique.get(key);
+    const currentDate = Date.parse(resource.updatedAt || '');
+    const previousDate = Date.parse(previous?.updatedAt || '');
+    if (!previous || (Number.isFinite(currentDate) &&
+        (!Number.isFinite(previousDate) || currentDate > previousDate))) {
+      unique.set(key, resource);
+    }
+  }
+  resources = [...unique.values()];
   if (Number.isInteger(limit) && limit > 0) resources = resources.slice(0, limit);
   const previousByKey = new Map((previousManifest?.networks ? Object.values(previousManifest.networks) : []).map((e) => [dedupKey(e), e]));
   const entries = await pool(resources, concurrency, async (resource) => {
