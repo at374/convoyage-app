@@ -77,9 +77,11 @@ jobs:
             docs/gtfs-national/manifest.csv
             docs/gtfs-national-sample/manifest.json
             docs/gtfs-national-sample/manifest.csv
+            gtfs-release/*.zip
           if-no-files-found: warn
           retention-days: 7
       - name: Publier les ZIP validés dans la Release
+        if: ${{ steps.scope.outputs.limit == '0' }}
         shell: bash
         run: |
           set -euo pipefail
