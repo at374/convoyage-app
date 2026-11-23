@@ -110,7 +110,7 @@ test('collect() : découvre, télécharge, valide et classe un flux réel simul�
   };
   const previousManifest = {
     networks: {
-      'tac-annemasse-r2': { id: 'tac-annemasse-r2', datasetId: '43', resourceId: 'r2', status: 'ok', url: 'https://example.org/tac.zip', updatedAt: '2026-09-01T00:00:00Z', sha256: 'x' },
+      'tac-annemasse-r2': { id: 'tac-annemasse-r2', datasetId: '43', resourceId: 'r2', status: 'ok', url: 'https://example.org/tac.zip', updatedAt: '2026-09-01T00:00:00Z', lastValidatedAt: '2026-11-22T00:00:00Z', lastServiceDate: '2027-12-31', sha256: 'x' },
     },
   };
   const { manifest, uploads } = await collector.collect({ fetcher, previousManifest, now: '2026-11-23T00:00:00Z' });
@@ -162,6 +162,7 @@ test('collect() : une archive absente de la Release est retéléchargée même s
   const prior = { networks: { 'reseau-test-r1': {
     id: 'reseau-test-r1', datasetId: 'd1', resourceId: 'r1',
     status: 'unchanged', url: resource.url, updatedAt: resource.updated_at,
+    lastValidatedAt: '2026-11-22T00:00:00Z', lastServiceDate: '2027-12-31',
     sha256: collector.sha256(good)
   } } };
   const missing = await collector.collect({
@@ -519,4 +520,23 @@ test('processResource revalide si URL PAN change même avec une archive identiqu
   assert.equal(entry.url, resource.url);
   assert.equal(entry.lastValidatedAt, '2026-11-23T00:00:00Z');
   assert.equal(entry.activeNext30Days, true);
+});
+
+test('collect dédoublonne une même ressource PAN malgré deux URL', async () => {
+  const resources = [
+    { id: 'r1', format: 'GTFS', url: 'https://example.org/old.zip', updated_at: '2026-11-01T00:00:00Z' },
+    { id: 'r1', format: 'GTFS', url: 'https://example.org/new.zip', updated_at: '2026-11-22T00:00:00Z' }
+  ];
+  const requested = [];
+  const fetcher = async url => {
+    if (String(url).includes('transport.data.gouv.fr')) return {
+      ok: true, json: async () => [{ id: 'dataset', title: 'Réseau Test', resources }]
+    };
+    requested.push(String(url));
+    return new Response(zip(baseFiles), { headers: { 'content-type': 'application/zip' } });
+  };
+  const { manifest } = await collector.collect({ fetcher, now: '2026-11-23T00:00:00Z' });
+  assert.equal(manifest.totals.found, 1);
+  assert.deepEqual(requested, ['https://example.org/new.zip']);
+  assert.equal(Object.values(manifest.networks)[0].url, 'https://example.org/new.zip');
 });
