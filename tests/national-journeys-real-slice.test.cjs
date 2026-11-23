@@ -23,3 +23,13 @@ test('Lyon Part-Dieu → Grenoble : pas de correspondance Perrache → Part-Dieu
  assert.ok(rows.filter(r=>!r.legs).length>=5);
  assert.ok(!rows.some(r=>r.legs&&/Perrache/.test(r.originStop?.name||r.originStop?.stop_name||'')));
 });
+
+test('coordonnées GPS hors bornes : aucun téléchargement national lancé',async()=>{
+ let requests=0;
+ const badFetch=async()=>{requests++;throw Error('download should not start');};
+ await assert.rejects(journeys.loadAndSearch({
+  operator:'sncf',resource:{url:'https://example.org/national-sncf-aura.zip',format:'GTFS'},
+  fetcher:badFetch,date:'2026-11-16',from:{lat:91,lon:6.1},to:{lat:46.2,lon:6.2}
+ }),/Valid exact coordinates/);
+ assert.equal(requests,0);
+});
