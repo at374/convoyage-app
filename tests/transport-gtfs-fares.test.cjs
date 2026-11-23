@@ -61,3 +61,13 @@ test('explicit empty fare_rules never means network-wide fare',()=>{
  assert.equal(prepared.rules.length,0);
  assert.equal(F.legFare(prepared,idx(files),{tripId:'T1',from:'A',to:'B'}),null);
 });
+
+test('duplicate GTFS fare IDs cannot silently overwrite an official price',()=>{
+ const files={...base,
+  'fare_attributes.txt':'fare_id,price,currency_type,payment_method,transfers\nU,2.00,EUR,0,0\nU,3.00,EUR,0,0'};
+ const prepared=F.prepare(files);
+ assert.equal(prepared.fares.has('U'),false);
+ assert.equal(F.legFare(prepared,idx(files),{tripId:'T1',from:'A',to:'B'}),null);
+ const same={...files,'fare_attributes.txt':'fare_id,price,currency_type\nU,2.00,EUR\nU,2.00,EUR'};
+ assert.equal(F.legFare(F.prepare(same),idx(same),{tripId:'T1',from:'A',to:'B'}),null);
+});
