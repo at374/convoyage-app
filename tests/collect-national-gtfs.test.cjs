@@ -683,3 +683,30 @@ test('processResource repère une liaison régulière après un premier arrêt r
   assert.equal(entry.regularConnectedTrip, true);
   assert.equal(entry.activeRegularNext30Days, true);
 });
+
+test('processResource revalide les manifestes anciens sans indicateurs TAD', async () => {
+  const bytes = zip(baseFiles);
+  const resource = {
+    id: 'r17', datasetId: 'd17', network: 'Réseau migration',
+    format: 'GTFS', url: 'https://example.org/migration.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  };
+  let downloads = 0;
+  const entry = await collector.processResource(resource, {
+    fetcher: async () => {
+      downloads++;
+      return new Response(bytes, { headers: { 'content-type': 'application/zip' } });
+    },
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    now: '2026-11-23T00:00:00Z',
+    previousEntry: {
+      status: 'ok', url: resource.url, updatedAt: resource.updatedAt,
+      lastValidatedAt: '2026-11-22T00:00:00Z',
+      lastServiceDate: '2027-12-31', sha256: collector.sha256(bytes)
+    }
+  });
+  assert.equal(downloads, 1);
+  assert.equal(entry.status, 'ok', entry.error);
+  assert.equal(entry.regularConnectedTrip, true);
+  assert.equal(entry.activeRegularNext30Days, true);
+});
