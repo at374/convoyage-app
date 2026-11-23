@@ -293,8 +293,8 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     agencies: agencies.map(a => ({ id: a.agency_id || null, name: a.agency_name, url: a.agency_url || null })),
     lastServiceDate: publishedLastServiceDate,
     // GTFS Fares v1 et v2 : au moins un produit/attribut réel, pas prix de trajet vérifié.
-    fares: gtfs.csvRows(files['fare_attributes.txt'] || '').some(() => true) ||
-      gtfs.csvRows(files['fare_products.txt'] || '').some(() => true),
+    fares: gtfs.parseCSV(files['fare_attributes.txt'] || '').length > 0 ||
+      gtfs.parseCSV(files['fare_products.txt'] || '').length > 0,
     activeNext30Days,
     lines,
     bytes, // retiré avant écriture du manifeste ; utilisé par l'appelant pour la publication.
