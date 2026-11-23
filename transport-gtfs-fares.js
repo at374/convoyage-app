@@ -11,14 +11,14 @@ function rows(files,name){
 }
 function prepare(files){
  const attrs=rows(files,'fare_attributes.txt'),rules=rows(files,'fare_rules.txt');
- const fares=new Map(),duplicateIds=new Set();
+ const fares=new Map(),duplicateIds=new Set(),seenIds=new Set();
  for(const a of attrs){
+  if(a.fare_id){if(seenIds.has(a.fare_id))duplicateIds.add(a.fare_id);seenIds.add(a.fare_id);}
   const price=Number(a.price),currency=String(a.currency_type||'').toUpperCase();
   if(!a.fare_id||!Number.isFinite(price)||price<0||!/^(EUR|CHF)$/.test(currency))continue;
   const cents=Math.round(price*100);if(Math.abs(price*100-cents)>1e-6)continue;
   const duration=a.transfer_duration===undefined||a.transfer_duration===''?null:Number(a.transfer_duration);
   const transfers=a.transfers===undefined||a.transfers===''?null:Number(a.transfers); // vide = illimité
-  if(fares.has(a.fare_id))duplicateIds.add(a.fare_id);
   fares.set(a.fare_id,{fareId:a.fare_id,amount:cents/100,currency,
    transferMinutes:Number.isFinite(duration)&&duration>0?Math.floor(duration/60):null,
    transfers:Number.isInteger(transfers)?transfers:null,agencyId:a.agency_id||null});
