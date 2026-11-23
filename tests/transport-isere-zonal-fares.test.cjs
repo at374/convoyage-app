@@ -63,7 +63,7 @@ test('Isere: GTFS audit counts only served stops, never infers zones',()=>{
  const index={stopById:new Map([['A',{}],['B',{}],['C',{}],['UNUSED',{}]]),
   timesByTrip:new Map([['T1',[{stop_id:'A'},{stop_id:'B'}]],['T2',[{stop_id:'B'},{stop_id:'C'}]]])};
  assert.deepEqual(auditGTFSZones(index,{A:'A',B:'?',UNUSED:'C'}),{
-  total:3,covered:1,missing:['C'],invalid:['B'],coveragePercent:33.33});
+  total:3,covered:1,missing:['C'],invalid:['B'],orphan:[],coveragePercent:33.33});
  assert.equal(auditGTFSZones(null,{}),null);
 });
 
@@ -94,4 +94,13 @@ test('Isere: imported official reference rejects unknown GTFS stop and invalid z
  assert.equal(validateOfficialStopZones(index,{...reference,stopZones:{}}).valid,false);
  assert.equal(validateOfficialStopZones(index,{...reference,source:'https://example.com/zones'}),null);
  assert.equal(validateOfficialStopZones(index,{...reference,verified:false}),null);
+});
+
+
+test('Isere GTFS audit does not certify orphan stop IDs absent from stops.txt',()=>{
+ const {auditGTFSZones}=require('../transport-isere-zonal-fares.js');
+ const index={stopById:new Map([['known',{}]]),timesByTrip:new Map([['trip',[
+  {stop_id:'known'},{stop_id:'orphan'}]]])};
+ const audit=auditGTFSZones(index,{known:'A',orphan:'B'});
+ assert.deepEqual(audit,{total:2,covered:1,missing:['orphan'],invalid:[],orphan:['orphan'],coveragePercent:50});
 });
