@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test');
 const assert=require('node:assert/strict');
-const {evidenceFromStops,quote,quoteFromStops}=require('../transport-isere-zonal-fares.js');
+const {evidenceFromStops,quote,quoteFromStops,evidenceFromGTFS}=require('../transport-isere-zonal-fares.js');
 const source='https://carsisere.auvergnerhonealpes.fr/referentiel-zones';
 const stops=['stop-1','stop-2'];
 const zones={'stop-1':'A','stop-2':'B'};
@@ -33,4 +33,17 @@ test('Isere GTFS stop-sequence adapter fails closed without complete official zo
  assert.equal(quoteFromStops({...params,complete:false}),null);
  assert.equal(quoteFromStops({...params,complete:true,stopIds:['stop-1','missing','stop-2']}),null);
  assert.equal(quoteFromStops({...params,complete:true,source:'https://example.com/zones'}),null);
+});
+
+test('Isere: GTFS trip extracts all intermediate zones, rejects loops and missing mapping',()=>{
+ const index={timesByTrip:new Map([['T1',[
+  {stop_id:'A',stop_sequence:'1'},{stop_id:'M',stop_sequence:'2'},
+  {stop_id:'B',stop_sequence:'3'}]]])};
+ const params={tripId:'T1',fromStopId:'A',toStopId:'B',source,
+  stopZones:{A:'A',M:'B',B:'C'}};
+ assert.deepEqual(evidenceFromGTFS(index,params).traversedZones,['A','B','C']);
+ assert.equal(evidenceFromGTFS(index,{...params,stopZones:{A:'A',B:'C'}}),null);
+ assert.equal(evidenceFromGTFS(index,{...params,fromStopId:'B',toStopId:'A'}),null);
+ index.timesByTrip.get('T1').push({stop_id:'A',stop_sequence:'4'});
+ assert.equal(evidenceFromGTFS(index,params),null);
 });
