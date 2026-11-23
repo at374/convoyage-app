@@ -954,3 +954,24 @@ test('processResource GTFS-Flex accepte des zones qui partagent un arrêt mais d
   assert.equal(entry.status, 'ok', entry.error);
   assert.equal(entry.flexServiceCount, 1);
 });
+
+test('processResource GTFS-Flex refuse arrêt A vers groupe contenant uniquement A', async () => {
+  const files = {
+    ...baseFiles,
+    'stop_times.txt': 'trip_id,stop_sequence,stop_id,location_group_id,start_pickup_drop_off_window,end_pickup_drop_off_window\n' +
+      'T1,1,A,,09:00:00,10:00:00\n' +
+      'T1,2,,G1,09:30:00,11:00:00\n',
+    'location_groups.txt': 'location_group_id,location_group_name\nG1,Zone A\n',
+    'location_group_stops.txt': 'location_group_id,stop_id\nG1,A\n'
+  };
+  const entry = await collector.processResource({
+    id: 'flex-stop-group-same', datasetId: 'flex', network: 'TAD sans déplacement',
+    format: 'GTFS', url: 'https://example.org/flex-stop-group-same.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher: async () => new Response(zip(files), { headers: { 'content-type': 'application/zip' } }),
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'error');
+});
