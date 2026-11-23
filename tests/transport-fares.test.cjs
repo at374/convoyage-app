@@ -238,3 +238,19 @@ test('GTFS after midnight validates fare against actual boarding day',()=>{
  assert.equal(fare([{...leg,departure:'49:10:00',fareValidUntil:'2026-12-01'}],{travelDate:'2026-11-30'}).known,false);
  assert.equal(fare([leg],{travelDate:'2026-11-30T08:00:00+01:00'}).known,false);
 });
+
+test('conflicting walking/scooter metadata cannot make public transport free',()=>{
+ for(const leg of [
+  {kind:'walk',mode:'pt_pub_train',provider:'SNCF'},
+  {kind:'walk',mode:'Bus',provider:'SIBRA'},
+  {kind:'scooter',scooterPersonal:true,mode:'pt_pub_bus',provider:'TAC'},
+  {mode:'stationary_transfer',kind:'walk',provider:'Bus',fareVerified:false}
+ ]){
+  const result=fare([leg]);
+  if(leg.mode==='stationary_transfer')assert.equal(result.totalEUR,0);
+  else{
+   assert.equal(result.known,false);
+   assert.equal(result.totalEUR,null);
+  }
+ }
+});
