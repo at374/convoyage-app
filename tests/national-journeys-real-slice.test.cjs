@@ -47,3 +47,17 @@ test('fenêtre horaire impossible : aucune recherche nationale coûteuse',()=>{
   assert.equal(calls,0);
  }finally{indexer.nearbyDirectTrips=original;}
 });
+
+test('paramètres de recherche invalides : aucun téléchargement national',async()=>{
+ let requests=0;
+ const fetcher=async()=>{requests++;throw Error('unexpected download');};
+ const base={operator:'sncf',resource:{url:'https://example.org/gtfs.zip',format:'GTFS'},
+  fetcher,date:'2026-11-30',from:{lat:45.9,lon:6.12},to:{lat:45.76,lon:4.86}};
+ for(const options of [
+  {radiusMeters:9000},{maxResults:0},{maxResults:101},
+  {earliestDeparture:'08:xx'},{latestArrival:'24:99'}
+ ]){
+  await assert.rejects(journeys.loadAndSearch({...base,...options}),/before GTFS download/);
+ }
+ assert.equal(requests,0);
+});
