@@ -103,12 +103,15 @@ function classifyRoutes(files) {
 
 // Identifiants de service actifs au moins un jour dans les `days` prochains jours (fenêtre glissante
 // à partir de `today`, calendar.txt + calendar_dates.txt pris en compte via gtfs.activeServices).
-function activeWithinDays(files, days, today = new Date()) {
+function activeWithinDays(files, days, today = new Date(), eligibleServices = null) {
   // Parse les calendriers une seule fois : un gros flux peut contenir des centaines
   // de milliers de lignes et la fenêtre de 30 jours ne doit pas les reparcourir 30 fois.
   const usedServices = new Set();
   for (const trip of gtfs.csvRows(files['trips.txt'] || '')) {
     if (trip.service_id) usedServices.add(trip.service_id);
+  }
+  if (eligibleServices !== null) {
+    for (const service of usedServices) if (!eligibleServices.has(service)) usedServices.delete(service);
   }
   if (!usedServices.size) return false;
   const calendar = gtfs.parseCSV(files['calendar.txt'] || '').filter(r => usedServices.has(r.service_id));
@@ -262,6 +265,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   }
   let index;
   let lines;
+  let eligibleServices;
   try {
     index = gtfs.buildIndex(files);
     if (!index.counts.routes || !index.counts.trips || !index.counts.stops || !index.counts.stopTimes) {
@@ -272,6 +276,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     // à une ligne connue et à deux arrêts distincts avec horaires valides.
     const timePattern = /^\d{1,3}:[0-5]\d:[0-5]\d$/;
     let connectedTrip = false;
+    const connectedServices = new Set();
     const seconds = value => {
       const [h, m, sec] = value.split(':').map(Number);
       return h * 3600 + m * 60 + sec;
@@ -290,12 +295,13 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
         if (first && time.stop_id !== first.stopId &&
             sequence > first.sequence && arrival >= first.departure) {
           connectedTrip = true;
+          if (trip.service_id) connectedServices.add(trip.service_id);
           break;
         }
         if (!first) first = { stopId: time.stop_id, sequence, departure };
       }
-      if (connectedTrip) break;
     }
+    eligibleServices = connectedServices;
     if (!connectedTrip) {
       return { ...base, status: 'error', error: 'aucune course avec ligne, deux arrêts distincts et horaires valides' };
     }
@@ -306,7 +312,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   let activeNext30Days;
   let publishedLastServiceDate;
   try {
-    activeNext30Days = activeWithinDays(files, ACTIVE_WINDOW_DAYS, new Date(now));
+    activeNext30Days = activeWithinDays(files, ACTIVE_WINDOW_DAYS, new Date(now), eligibleServices);
     publishedLastServiceDate = lastServiceDate(files);
   } catch (error) {
     return { ...base, status: 'error', error: 'calendrier : ' + error.message };
