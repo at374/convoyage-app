@@ -191,12 +191,24 @@ async function loadResource(resource,{fetcher=root.fetch,signal,timeoutMs=30000,
   }
   const index=gtfs.buildIndex(extracted.files,{serviceIds});
   const indexedStopTimes=[...index.timesByTrip.values()].reduce((total,rows)=>total+rows.length,0);
-  const hasFlexWindows=!!(extracted.files['stop_times.txt']||'').includes('start_pickup_drop_off_window') &&
-    (!!extracted.files['location_group_stops.txt'] || !!extracted.files['location_groups.txt']);
+  const rawStopTimes=extracted.files['stop_times.txt']||'';
+  const headers=rawStopTimes.slice(0,rawStopTimes.indexOf('\n')<0?rawStopTimes.length:rawStopTimes.indexOf('\n'))
+   .replace(/\r$/,'').replace(/^\uFEFF/,'').split(',');
+  const hasFlexWindows=headers.includes('start_pickup_drop_off_window')&&headers.includes('end_pickup_drop_off_window');
   if(!index.counts.stops||!index.counts.routes||!index.sourceTrips||!index.counts.stopTimes||
     (!indexedStopTimes&&!index.skippedStopTimes&&!hasFlexWindows))
     throw new Error('Empty or disconnected GTFS index');
   const files=retainSourceTables?extracted.files:Object.fromEntries(Object.entries(extracted.files).filter(([name])=>['agency.txt','calendar.txt','calendar_dates.txt','transfers.txt','feed_info.txt','fare_attributes.txt','fare_rules.txt','fare_products.txt','fare_leg_rules.txt','fare_transfer_rules.txt','fare_media.txt','rider_categories.txt','timeframes.txt','location_groups.txt','location_group_stops.txt','booking_rules.txt','locations.geojson'].includes(name)));
+  // Keep only Flex window rows in compact mode, not the entire national / regional
+  // stop_times table in Android memory. Serialize parsed rows to preserve valid CSV.
+  if(!retainSourceTables&&hasFlexWindows){
+   const quote=v=>{const x=String(v??'');return /[,"\r\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x;};
+   const rows=[headers.map(quote).join(',')];
+   for(const row of gtfs.csvRows(rawStopTimes))
+    if(row.start_pickup_drop_off_window||row.end_pickup_drop_off_window)
+     rows.push(headers.map(key=>quote(row[key])).join(','));
+   files['stop_times.txt']=rows.join('\n')+'\n';
+  }
   return {...extracted,files,index,indexServiceDates:dates,source:{datasetId:resolved.datasetId||null,resourceId:resolved.id||null,
    network:resolved.network||resource.network||null,url:resolved.url,updatedAt:resolved.updatedAt||null,loadedAt:new Date().toISOString()},
    indexedStopTimes,skippedStopTimes:index.skippedStopTimes,rejectedStopTimes:index.counts.stopTimes-indexedStopTimes-index.skippedStopTimes,
