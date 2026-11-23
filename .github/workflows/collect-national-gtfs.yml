@@ -41,7 +41,7 @@ jobs:
           set -euo pipefail
           limit="${INPUT_LIMIT:-5}"
           [[ "$limit" =~ ^[0-9]+$ ]] || { echo "Limite invalide"; exit 1; }
-          if (( limit > 10000 )); then echo "Limite trop élevée"; exit 1; fi
+          if (( limit > 5 )); then echo "Validation limitée à 5 ressources maximum tant que la collecte complète est désactivée"; exit 1; fi
           if (( limit == 0 )); then echo "Collecte complète désactivée jusqu’à validation des tests réels et quotas"; exit 1; fi
           echo "limit=$limit" >> "$GITHUB_OUTPUT"
       - name: Inventorier les archives présentes dans la Release
