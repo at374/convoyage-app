@@ -229,7 +229,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     return { ...base, status: 'error', error: 'téléchargement : ' + error.message };
   }
   const hash = sha256(bytes);
-  if (archiveAvailable && previousEntry && ['ok', 'unchanged'].includes(previousEntry.status) && previousEntry.sha256 === hash) {
+  if (archiveAvailable && !expiredCalendar && previousEntry && ['ok', 'unchanged'].includes(previousEntry.status) && previousEntry.sha256 === hash) {
     return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now };
   }
   let extracted;
