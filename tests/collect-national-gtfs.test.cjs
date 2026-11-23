@@ -106,7 +106,7 @@ test('collect() : découvre, télécharge, valide et classe un flux réel simul�
   };
   const previousManifest = {
     networks: {
-      'tac-annemasse-r2': { id: 'tac-annemasse-r2', datasetId: '43', resourceId: 'r2', status: 'ok', updatedAt: '2026-09-01T00:00:00Z', sha256: 'x' },
+      'tac-annemasse-r2': { id: 'tac-annemasse-r2', datasetId: '43', resourceId: 'r2', status: 'ok', url: 'https://example.org/tac.zip', updatedAt: '2026-09-01T00:00:00Z', sha256: 'x' },
     },
   };
   const { manifest, uploads } = await collector.collect({ fetcher, previousManifest, now: '2026-11-23T00:00:00Z' });
@@ -157,7 +157,7 @@ test('collect() : une archive absente de la Release est retéléchargée même s
   };
   const prior = { networks: { 'reseau-test-r1': {
     id: 'reseau-test-r1', datasetId: 'd1', resourceId: 'r1',
-    status: 'unchanged', updatedAt: resource.updated_at,
+    status: 'unchanged', url: resource.url, updatedAt: resource.updated_at,
     sha256: collector.sha256(good)
   } } };
   const missing = await collector.collect({
@@ -383,4 +383,12 @@ test('lastServiceDate respecte les années bissextiles', () => {
     'calendar_dates.txt': 'service_id,date,exception_type\nWK,20260229,1\n'
   };
   assert.equal(collector.lastServiceDate(files), '2024-02-29');
+});
+
+test('shouldSkip retélécharge si l’URL PAN change sans modification de date', () => {
+  const resource = { datasetId: 'd1', id: 'r1', url: 'https://example.org/new.zip', updatedAt: '2026-11-01T00:00:00Z' };
+  const previous = { status: 'ok', url: 'https://example.org/old.zip', updatedAt: resource.updatedAt };
+  assert.equal(collector.shouldSkip(resource, previous), false);
+  assert.equal(collector.shouldSkip(resource, { ...previous, url: resource.url }), true);
+  assert.equal(collector.shouldSkip(resource, { ...previous, url: undefined }), false);
 });
