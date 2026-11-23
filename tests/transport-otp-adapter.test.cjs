@@ -136,6 +136,31 @@ test('OTP2 : tracé piéton décodé seulement s’il est valide et collé aux e
  assert.equal(bad.geometry,null);assert.equal(bad.walkSource,null);
 });
 
+test('OTP2 : capture les identifiants GTFS bruts (route/arrêts/date) sur une étape en transport',()=>{
+ const withIds={...leg(),route:{shortName:'10',agency:{name:'SIBRA'},gtfsId:'SIBRA:10'},
+  from:{...from,stop:{gtfsId:'SIBRA:1234'}},to:{...to,stop:{gtfsId:'SIBRA:5678'}},trip:{serviceDate:'20261123'}};
+ const out=parse({plan:{itineraries:[{legs:[withIds]}]}});
+ assert.equal(out[0].legs[0].otpRouteGtfsId,'SIBRA:10');
+ assert.equal(out[0].legs[0].otpFromStopGtfsId,'SIBRA:1234');
+ assert.equal(out[0].legs[0].otpToStopGtfsId,'SIBRA:5678');
+ assert.equal(out[0].legs[0].otpServiceDate,'20261123');
+});
+test('OTP2 : une marche n a jamais d identifiants GTFS, même si des champs trip/route trainent dans la réponse',()=>{
+ const walkWithJunk={...leg('WALK'),route:{gtfsId:'SIBRA:10'},trip:{serviceDate:'20261123'}};
+ const out=parse({plan:{itineraries:[{legs:[walkWithJunk]}]}});
+ assert.equal(out[0].legs[0].otpRouteGtfsId,null);
+ assert.equal(out[0].legs[0].otpFromStopGtfsId,null);
+ assert.equal(out[0].legs[0].otpServiceDate,null);
+});
+test('OTP2 : identifiants GTFS absents ou mal formés (pas de ":", date non numérique) : rien n est inventé',()=>{
+ const sansIds=leg();
+ assert.equal(parse({plan:{itineraries:[{legs:[sansIds]}]}})[0].legs[0].otpRouteGtfsId,null);
+ const malFormes={...leg(),route:{...leg().route,gtfsId:'sansDeuxPoints'},trip:{serviceDate:'23-11-2026'}};
+ const out=parse({plan:{itineraries:[{legs:[malFormes]}]}})[0].legs[0];
+ assert.equal(out.otpRouteGtfsId,null);
+ assert.equal(out.otpServiceDate,null);
+});
+
 test('OTP2 : exploitants ramenés aux noms connus des grilles tarifaires, sans toucher aux autres',()=>{
  const {providerName}=require('../transport-otp-adapter.js');
  assert.equal(providerName('REGION - cars Région Haute-Savoie'),'Cars Région Haute-Savoie');

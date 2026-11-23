@@ -40,8 +40,13 @@ async function search(config){
 }
 // Requête standard de la fiche mission (API GraphQL GTFS d'OTP2, planConnection) :
 // construite uniquement depuis les points GPS exacts et la fenêtre horaire de la mission, sans saisie.
+// 23/11/2026 (Laurent : bouton « Tous les horaires » absent sur les étapes calculées par OTP2) : gtfsId
+// (route/arrêts) et date de service du voyage ajoutés, pour retrouver ensuite la ligne exacte dans nos
+// propres fichiers GTFS locaux (même mécanisme que pour les moteurs locaux). Champs standards du schéma
+// GraphQL GTFS d'OTP2 (docs.opentripplanner.org) ; aucun changement aux champs déjà utilisés.
 const FIELDS='edges{node{start end legs{mode duration distance start{scheduledTime} end{scheduledTime} '+
- 'from{name lat lon} to{name lat lon} route{shortName longName agency{name}} legGeometry{points}}}}';
+ 'from{name lat lon stop{gtfsId}} to{name lat lon stop{gtfsId}} route{shortName longName agency{name} gtfsId} '+
+ 'trip{serviceDate} legGeometry{points}}}}';
 function buildQuery(task,window,count){
  const ok=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180;
  const norm=p=>p&&typeof p==='object'&&p.lat!=null&&(p.lon??p.lng)!=null?{lat:Number(p.lat),lon:Number(p.lon??p.lng)}:null;

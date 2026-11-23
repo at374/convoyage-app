@@ -1093,6 +1093,11 @@ function makeProviders(r,opts={}){
  const workerNationalSearch=(operator,resource,searchOptions)=>workerCall({op:'national',operator,resource,searchOptions}).then(d=>d.result);
  // Regional GTFS archives already hosted by the project. These are scheduled
  // candidates only; the pedestrian router and confirmation checks still apply.
+ // 23/11/2026 : localNetworks/base/deployedBase hissés au niveau de makeProviders (au lieu d'être internes au
+ // bloc GTFS ci-dessous) pour que l'enrichissement des étapes OTP2 (P.otp, plus bas) puisse aussi s'en servir,
+ // même avant que ce bloc ne s'exécute. Valeurs par défaut sûres (liste vide/chaîne vide/null) si les
+ // bibliothèques GTFS locales ne sont pas chargées : aucun comportement existant ne change.
+ let localNetworks=[],base='',deployedBase=null;
  if(r.CPGTFSLoader?.loadResource&&r.CPGTFSIndex?.nearbyDirectTrips){
   // 21/11/2026 : audit systématique après le bug Y51/Albertville (bounds trop étroites qui désactivaient
   // silencieusement tout un réseau pour une mission touchant son propre terminus). 13 réseaux avaient le même
@@ -1101,7 +1106,7 @@ function makeProviders(r,opts={}){
   // altigo_briancon, fil_bleu_tours, lia_le_havre, trema_macon, cars_ain, cars_ardeche — bounds recalculées
   // sur l'étendue réelle des arrêts (marge ~3 km). Les réseaux urbains « 5 métropoles / villes de France »
   // ajoutés le 20/11 ont un écart résiduel de 10-12 % (quelques km, suburbs) jugé mineur, non corrigé ici.
-  const localNetworks=[
+  localNetworks=[
    ['tac','TAC Annemasse','tac-annemasse.zip',[46.1,5.98,46.27,6.42]],
    ['synchro','Synchro Chambéry','synchro-chambery.zip',[45.494,5.814,45.779,6.196]],
    ['tcl','TCL Lyon','tcl-lyon.zip',[45.55,4.6,46.02,5.1]],
@@ -1326,8 +1331,8 @@ function makeProviders(r,opts={}){
   // Archives are published on the transport feature branch, not necessarily on
   // the deployed GitHub Pages site. Explicit HTTPS URLs avoid a silent 404
   // when the Android app is served from another origin or an older deployment.
-  const base='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
-  let deployedBase=null;
+  base='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
+  deployedBase=null;
   try{const l=r.location;if(l&&l.protocol==='https:'&&/(^|\.)github\.io$/.test(l.hostname))deployedBase=new URL('data/gtfs/',l.href).href;}catch(_){}
   // Les réseaux déjà lus restent en mémoire d'une recherche à l'autre (10 au maximum) : la 2e recherche et les actualisations de 5 min sont instantanées.
   const cache=r.__cpHubFeedCache||(r.__cpHubFeedCache=new Map());
@@ -1731,6 +1736,36 @@ function makeProviders(r,opts={}){
  }
  // OTP2 : uniquement si le propriétaire a configuré et activé son serveur HTTPS.
  // La requête GraphQL dépend du schéma exact de l'instance ; elle est fournie explicitement.
+ // 23/11/2026 (Laurent : bouton « Tous les horaires » absent sur les étapes OTP2, ex. Bus 10 SIBRA) : OTP2
+ // identifie ses lignes/arrêts par « idFlux:idEntité » (gtfsId, demandé depuis transport-otp-client.js).
+ // On essaie de relier ce idFlux à l'un de nos réseaux locaux déjà connus (localNetworks) pour poser les
+ // mêmes métadonnées (networkUrls/routeId/from/to/serviceDate) que fromGTFS() — seul moyen d'activer le
+ // bouton. Sans correspondance trouvée, l'étape reste inchangée (pas de régression, juste pas de bouton,
+ // comme aujourd'hui) : jamais d'horaire inventé ni de ligne mal identifiée.
+ const normId=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]/g,'');
+ const otpUrlsFor=file=>[...new Set([deployedBase?deployedBase+file:null,base+file,
+   'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
+ const reseauOtp=feedId=>{
+  const n=normId(feedId);if(!n)return null;
+  for(const [id,nom,fichier] of localNetworks){
+   if(n===normId(id)||n===normId(nom)||n===normId(fichier.replace(/\.zip$/,'')))return {id,nom,fichier};
+  }
+  return null;
+ };
+ const enrichirLegsOtp=journeys=>{
+  for(const j of Array.isArray(journeys)?journeys:[]){
+   for(const l of Array.isArray(j?.legs)?j.legs:[]){
+    if(!l||l.kind==='walk'||!l.otpRouteGtfsId||!l.otpFromStopGtfsId||!l.otpToStopGtfsId||!l.otpServiceDate)continue;
+    const iFeed=l.otpRouteGtfsId.indexOf(':');if(iFeed<=0)continue;
+    const reseau=reseauOtp(l.otpRouteGtfsId.slice(0,iFeed));if(!reseau)continue;
+    const bare=s=>{const i=s.indexOf(':');return i>0?s.slice(i+1):null;};
+    const routeId=bare(l.otpRouteGtfsId),from=bare(l.otpFromStopGtfsId),to=bare(l.otpToStopGtfsId);
+    const sd=l.otpServiceDate,serviceDate=sd.slice(0,4)+'-'+sd.slice(4,6)+'-'+sd.slice(6,8);
+    if(routeId&&from&&to)l.gtfsRaw={networkUrls:otpUrlsFor(reseau.fichier),routeId,from,to,serviceDate,network:reseau.nom};
+   }
+  }
+  return journeys;
+ };
  if(r.CPOTPClient&&typeof r.CPOTPClient.search==='function')P.otp={
   name:'OpenTripPlanner (GTFS)',
   enabled:task=>opts.allowOTP===true&&typeof opts.otpEndpoint==='string'&&
@@ -1752,7 +1787,7 @@ function makeProviders(r,opts={}){
     response=await go(Math.min(60000,(Number(opts.otpTimeoutMs)||30000)+5000));
    }
    if(signal?.aborted)return [];
-   return response.journeys;
+   return enrichirLegsOtp(response.journeys);
   },
   timeoutMs:(Number(opts.otpTimeoutMs)||30000)*2+10000
  };

@@ -101,6 +101,10 @@ function parse(response){
     const near=(a,b)=>Math.abs(a.lat-b.lat)<0.003&&Math.abs(a.lon-b.lon)<0.004;
     if(!near(geometry[0],fromPoint)||!near(geometry[geometry.length-1],toPoint))geometry=null;
    }
+   // 23/11/2026 (Laurent : bouton « Tous les horaires » absent sur les étapes OTP2) : identifiants GTFS bruts
+   // conservés tels quels (forme « idFlux:idEntité » du schéma OTP2) ; c'est transport-mission-hub.js (qui
+   // connaît déjà nos propres fichiers GTFS locaux) qui tentera de les relier à une ligne connue, jamais ici.
+   const gtfsId=v=>typeof v==='string'&&v.includes(':')?v:null;
    legs.push({
     kind:walk?'walk':'transit',mode:MODE[mode],
     line:walk?null:String(raw.route?.shortName||raw.route?.longName||raw.routeShortName||'').trim()||null,
@@ -112,7 +116,11 @@ function parse(response){
     durationSeconds:Number.isFinite(raw.duration)&&raw.duration>=0?raw.duration:null,
     // Sans tracé OTP valide, la marche reste à vérifier par le moteur piéton existant.
     walkSource:geometry?'provider':null,geometry,realtime:false,delayMinutes:null,cancelled:false,
-    fare:null,ticketUrl:null
+    fare:null,ticketUrl:null,
+    otpRouteGtfsId:walk?null:gtfsId(raw.route?.gtfsId),
+    otpFromStopGtfsId:walk?null:gtfsId(raw.from?.stop?.gtfsId),
+    otpToStopGtfsId:walk?null:gtfsId(raw.to?.stop?.gtfsId),
+    otpServiceDate:walk?null:(/^\d{8}$/.test(String(raw.trip?.serviceDate||''))?String(raw.trip.serviceDate):null)
    });
   }
   return {source:'OpenTripPlanner (GTFS)',sources:['OpenTripPlanner (GTFS)'],legs,
