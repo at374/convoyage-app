@@ -112,6 +112,19 @@ function activeWithinDays(files, days, today = new Date()) {
   return false;
 }
 
+function lastServiceDate(files) {
+  const dates = [];
+  for (const row of gtfs.csvRows(files['calendar.txt'] || '')) {
+    if (/^\\d{8}$/.test(row.end_date || '')) dates.push(row.end_date);
+  }
+  for (const row of gtfs.csvRows(files['calendar_dates.txt'] || '')) {
+    if (/^\\d{8}$/.test(row.date || '') && row.exception_type === '1') dates.push(row.date);
+  }
+  if (!dates.length) return null;
+  const latest = dates.sort().at(-1);
+  return latest.slice(0, 4) + '-' + latest.slice(4, 6) + '-' + latest.slice(6, 8);
+}
+
 function sha256(bytes) {
   return crypto.createHash('sha256').update(bytes).digest('hex');
 }
@@ -222,6 +235,8 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     trips: index.counts.trips,
     stops: index.counts.stops,
     stopTimes: index.counts.stopTimes,
+    agencies: agencies.map(a => ({ id: a.agency_id || null, name: a.agency_name, url: a.agency_url || null })),
+    lastServiceDate: lastServiceDate(files),
     fares: Boolean(files['fare_attributes.txt']),
     activeNext30Days,
     lines,
@@ -273,7 +288,7 @@ async function collect({
 }
 
 function toCSV(manifest) {
-  const header = ['id', 'network', 'status', 'routes', 'trips', 'stops', 'fares', 'activeNext30Days', 'lines_regular', 'lines_school', 'lines_demandResponsive', 'lines_unknown', 'aggregateSuspected', 'sha256', 'url', 'error'];
+  const header = ['id', 'network', 'status', 'routes', 'trips', 'stops', 'fares', 'activeNext30Days', 'lastServiceDate', 'lines_regular', 'lines_school', 'lines_demandResponsive', 'lines_unknown', 'aggregateSuspected', 'sha256', 'url', 'error'];
   const rows = [header.join(',')];
   const esc = (v) => {
     const s = v === undefined || v === null ? '' : String(v);
@@ -290,6 +305,7 @@ function toCSV(manifest) {
         entry.stops ?? '',
         entry.fares ?? '',
         entry.activeNext30Days ?? '',
+        entry.lastServiceDate ?? '',
         entry.lines?.regular ?? '',
         entry.lines?.school ?? '',
         entry.lines?.demandResponsive ?? '',
@@ -312,6 +328,7 @@ module.exports = {
   classifyRoutes,
   activeWithinDays,
   sha256,
+  lastServiceDate,
   slugify,
   dedupKey,
   shouldSkip,
