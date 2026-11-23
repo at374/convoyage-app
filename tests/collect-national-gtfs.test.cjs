@@ -355,3 +355,24 @@ test('processResource signale les produits tarifaires GTFS Fares v2 sans invente
   assert.equal(entry.fares, true);
   assert.equal(Object.hasOwn(entry, 'price'), false);
 });
+
+test('processResource ne déclare pas de tarifs quand Fares v1/v2 ne contient que des en-têtes', async () => {
+  const emptyFares = {
+    ...baseFiles,
+    'fare_attributes.txt': 'fare_id,price,currency_type,payment_method,transfers\n',
+    'fare_products.txt': 'fare_product_id,fare_product_name,amount,currency\n'
+  };
+  const fetcher = async () => new Response(zip(emptyFares), {
+    headers: { 'content-type': 'application/zip' }
+  });
+  const entry = await collector.processResource({
+    id: 'r8', datasetId: 'd8', network: 'Réseau tarifs vides',
+    format: 'GTFS', url: 'https://example.org/empty-fares.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher, maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    previousEntry: null, now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'ok', entry.error);
+  assert.equal(entry.fares, false);
+});
