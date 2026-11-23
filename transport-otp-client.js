@@ -40,13 +40,14 @@ async function search(config){
 }
 // Requête standard de la fiche mission (API GraphQL GTFS d'OTP2, planConnection) :
 // construite uniquement depuis les points GPS exacts et la fenêtre horaire de la mission, sans saisie.
-// 23/11/2026 (Laurent : bouton « Tous les horaires » absent sur les étapes calculées par OTP2) : gtfsId
-// (route/arrêts) et date de service du voyage ajoutés, pour retrouver ensuite la ligne exacte dans nos
-// propres fichiers GTFS locaux (même mécanisme que pour les moteurs locaux). Champs standards du schéma
-// GraphQL GTFS d'OTP2 (docs.opentripplanner.org) ; aucun changement aux champs déjà utilisés.
+// 23/11/2026 (Laurent : « OTP2 GraphQL : réponse en erreur », plus aucun résultat OTP2 du tout, peu après
+// l'ajout de gtfsId/trip{serviceDate} ci-dessous pour le bouton « Tous les horaires ») : le risque annoncé
+// avant ce changement (champ invalide pour le schéma réellement déployé → le client lève une exception sur
+// toute réponse GraphQL en erreur → tous les résultats OTP2 disparaissent, pas seulement le bouton) s'est
+// matérialisé. On revient immédiatement aux champs dont on sait qu'ils fonctionnent, le temps de vérifier
+// les noms exacts acceptés par ce serveur OTP2 avant de retenter l'enrichissement gtfsId séparément.
 const FIELDS='edges{node{start end legs{mode duration distance start{scheduledTime} end{scheduledTime} '+
- 'from{name lat lon stop{gtfsId}} to{name lat lon stop{gtfsId}} route{shortName longName agency{name} gtfsId} '+
- 'trip{serviceDate} legGeometry{points}}}}';
+ 'from{name lat lon} to{name lat lon} route{shortName longName agency{name}} legGeometry{points}}}}';
 function buildQuery(task,window,count){
  const ok=p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180;
  const norm=p=>p&&typeof p==='object'&&p.lat!=null&&(p.lon??p.lng)!=null?{lat:Number(p.lat),lon:Number(p.lon??p.lng)}:null;
