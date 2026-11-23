@@ -334,3 +334,24 @@ test('lastServiceDate ignore les dates impossibles et les exceptions de suppress
     'calendar_dates.txt': 'service_id,date,exception_type\nWK,20261301,1\n'
   }), null);
 });
+
+test('processResource signale les produits tarifaires GTFS Fares v2 sans inventer de prix', async () => {
+  const fareV2 = {
+    ...baseFiles,
+    'fare_products.txt': 'fare_product_id,fare_product_name,amount,currency\nFP1,Billet,2.50,EUR\n'
+  };
+  const fetcher = async () => new Response(zip(fareV2), {
+    headers: { 'content-type': 'application/zip' }
+  });
+  const entry = await collector.processResource({
+    id: 'r7', datasetId: 'd7', network: 'Réseau Fares v2',
+    format: 'GTFS', url: 'https://example.org/fare-v2.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher, maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    previousEntry: null, now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'ok', entry.error);
+  assert.equal(entry.fares, true);
+  assert.equal(Object.hasOwn(entry, 'price'), false);
+});
