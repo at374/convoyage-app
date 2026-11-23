@@ -42,6 +42,10 @@ function legFare(prepared,index,leg){
    (!r.destination_id||(destination&&r.destination_id===destination));
   candidates=[...new Set(prepared.rules.filter(match).map(r=>r.fare_id))].map(id=>prepared.fares.get(id));
  }
+ // Agency-scoped fares must match the operator of the boarded route.
+ // A missing route agency is not sufficient proof of a scoped ticket's eligibility.
+ const routeAgency=index.routeById?.get(routeId)?.agency_id||null;
+ if(candidates.some(f=>f.agencyId&&f.agencyId!==routeAgency))return null;
  const distinct=new Set(candidates.map(f=>JSON.stringify([f.amount,f.currency,f.transferMinutes,f.transfers,f.agencyId])));
  if(!candidates.length||distinct.size!==1)return null;
  const f=candidates[0];
