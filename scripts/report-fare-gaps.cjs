@@ -30,7 +30,7 @@ function build(d){
   lines.push('','## Priorité : portions bloquant les trajets partiellement tarifés','',
    'Ces occurrences sont déjà incluses dans les manques par opérateur ; elles ne doivent pas être additionnées aux autres comptes.','',
    '| Opérateur | Occurrences bloquantes |','|---|---:|');
-  for(const [name,n] of partial)lines.push('| '+String(name).replace(/[|\\r\\n]/g,' ')+' | '+n+' |');
+  for(const [name,n] of partial)lines.push('| '+String(name).replace(/[|\r\n]/g,' ')+' | '+n+' |');
  }
  lines.push('','Aucun montant manquant ne doit être remplacé par une estimation. La rentabilité de mission reste masquée tant que le prix total du transport n’est pas vérifié.','');
  return lines.join('\n');
