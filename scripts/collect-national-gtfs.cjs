@@ -285,6 +285,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     // à une ligne connue et à deux arrêts distincts avec horaires valides.
     const timePattern = /^\d{1,3}:[0-5]\d:[0-5]\d$/;
     let connectedTrip = false;
+    let regularConnectedTrip = false;
     const connectedServices = new Set();
     const seconds = value => {
       const [h, m, sec] = value.split(':').map(Number);
@@ -301,20 +302,22 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
         const arrival = seconds(time.arrival_time);
         const departure = seconds(time.departure_time);
         if (arrival > departure) continue;
-        // Une liaison n'est utilisable que si la montée au premier arrêt
-        // et la descente au second sont autorisées par stop_times.txt.
-        // Les codes 2/3 sont des prises en charge sur réservation/coordination :
-        // ne pas les compter comme des départs réguliers confirmés.
+        // 1 = montée/descente interdite ; 2/3 = réservation ou coordination.
+        // Un TAD reste un GTFS valide, mais ne devient jamais un départ régulier.
+        const accessAllowed = value => value === undefined || value === '' ||
+          value === '0' || value === '2' || value === '3';
         const regularAccess = value => value === undefined || value === '' || value === '0';
         if (first && time.stop_id !== first.stopId &&
             sequence > first.sequence && arrival >= first.departure &&
-            regularAccess(time.drop_off_type)) {
+            accessAllowed(time.drop_off_type)) {
           connectedTrip = true;
           if (trip.service_id) connectedServices.add(trip.service_id);
+          if (first.regular && regularAccess(time.drop_off_type)) regularConnectedTrip = true;
           break;
         }
-        if (!first && regularAccess(time.pickup_type)) {
-          first = { stopId: time.stop_id, sequence, departure };
+        if (!first && accessAllowed(time.pickup_type)) {
+          first = { stopId: time.stop_id, sequence, departure,
+            regular: regularAccess(time.pickup_type) };
         }
       }
     }
@@ -350,6 +353,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     fares: gtfs.parseCSV(files['fare_attributes.txt'] || '').length > 0 ||
       gtfs.parseCSV(files['fare_products.txt'] || '').length > 0,
     activeNext30Days,
+    regularConnectedTrip,
     lines,
     bytes, // retiré avant écriture du manifeste ; utilisé par l'appelant pour la publication.
   };
