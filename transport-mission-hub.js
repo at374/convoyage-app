@@ -852,6 +852,14 @@ function makeProviders(r,opts={}){
      // fournit une table officielle explicitement attestée (jamais GTFS zone_id supposé).
      const iz=r.CPIsereZonalFares;
      const zoneRef=feed.isereOfficialZones;
+     if(name==='Cars Région Isère'&&iz&&typeof iz.auditGTFSJourneys==='function'&&
+      typeof opts.onIsereZoneAudit==='function'){
+      const audit=iz.auditGTFSJourneys(feed.index,rows,{
+       stopZones:zoneRef?.verified===true?zoneRef.stopZones:null,
+       source:zoneRef?.verified===true?zoneRef.source:null});
+      try{opts.onIsereZoneAudit({network:name,date,audit,officialReferenceAvailable:zoneRef?.verified===true});}
+      catch(_){/* observability must never block journeys */}
+     }
      if(name==='Cars Région Isère'&&iz&&typeof iz.evidenceFromGTFS==='function'&&
       zoneRef&&zoneRef.verified===true&&zoneRef.stopZones&&zoneRef.source){
       for(let i=0;i<rows.length;i++){
