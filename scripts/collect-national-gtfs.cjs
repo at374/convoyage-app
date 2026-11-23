@@ -301,13 +301,21 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
         const arrival = seconds(time.arrival_time);
         const departure = seconds(time.departure_time);
         if (arrival > departure) continue;
+        // Une liaison n'est utilisable que si la montée au premier arrêt
+        // et la descente au second sont autorisées par stop_times.txt.
+        // Les codes 2/3 sont des prises en charge sur réservation/coordination :
+        // ne pas les compter comme des départs réguliers confirmés.
+        const regularAccess = value => value === undefined || value === '' || value === '0';
         if (first && time.stop_id !== first.stopId &&
-            sequence > first.sequence && arrival >= first.departure) {
+            sequence > first.sequence && arrival >= first.departure &&
+            regularAccess(time.drop_off_type)) {
           connectedTrip = true;
           if (trip.service_id) connectedServices.add(trip.service_id);
           break;
         }
-        if (!first) first = { stopId: time.stop_id, sequence, departure };
+        if (!first && regularAccess(time.pickup_type)) {
+          first = { stopId: time.stop_id, sequence, departure };
+        }
       }
     }
     eligibleServices = connectedServices;
