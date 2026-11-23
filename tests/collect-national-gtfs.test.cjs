@@ -645,4 +645,16 @@ test('processResource conserve le TAD avec réservation sans déclarer de trajet
   assert.equal(entry.status, 'ok', entry.error);
   assert.equal(entry.activeNext30Days, true);
   assert.equal(entry.regularConnectedTrip, false);
+  assert.equal(entry.activeRegularNext30Days, false);
+});
+
+test('toCSV expose séparément les services actifs réguliers et sur réservation', () => {
+  const csv = collector.toCSV({ networks: {
+    tad: { id: 'tad', network: 'TAD', status: 'ok',
+      activeNext30Days: true, activeRegularNext30Days: false,
+      regularConnectedTrip: false }
+  } });
+  assert.match(csv, /activeRegularNext30Days/);
+  assert.match(csv, /regularConnectedTrip/);
+  assert.match(csv, /true,false,false/);
 });
