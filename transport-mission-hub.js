@@ -852,24 +852,27 @@ function makeProviders(r,opts={}){
      // fournit une table officielle explicitement attestée (jamais GTFS zone_id supposé).
      const iz=r.CPIsereZonalFares;
      const zoneRef=feed.isereOfficialZones;
+     const checkedZones=name==='Cars Région Isère'&&iz&&typeof iz.validateOfficialStopZones==='function'
+      ?iz.validateOfficialStopZones(feed.index,zoneRef):null;
+     const trustedZones=checkedZones?.valid===true?checkedZones:null;
      if(name==='Cars Région Isère'&&iz&&typeof iz.auditGTFSJourneys==='function'&&
       typeof opts.onIsereZoneAudit==='function'){
       const audit=iz.auditGTFSJourneys(feed.index,rows,{
-       stopZones:zoneRef?.verified===true?zoneRef.stopZones:null,
-       source:zoneRef?.verified===true?zoneRef.source:null});
-      try{opts.onIsereZoneAudit({network:name,date,audit,officialReferenceAvailable:zoneRef?.verified===true});}
+       stopZones:trustedZones?.stopZones||null,
+       source:trustedZones?.source||null});
+      try{opts.onIsereZoneAudit({network:name,date,audit,officialReferenceAvailable:!!trustedZones});}
       catch(_){/* observability must never block journeys */}
      }
      if(name==='Cars Région Isère'&&iz&&typeof iz.evidenceFromGTFS==='function'&&
-      zoneRef&&zoneRef.verified===true&&zoneRef.stopZones&&zoneRef.source){
+      trustedZones){
       for(let i=0;i<rows.length;i++){
        const x=rows[i];
        const fromId=x?.originStop?.stopId||x?.originStop?.stop_id||x?.fromStopId||x?.from;
        const toId=x?.destinationStop?.stopId||x?.destinationStop?.stop_id||x?.toStopId||x?.to;
        const ev=iz.evidenceFromGTFS(feed.index,{tripId:x?.tripId,fromStopId:fromId,toStopId:toId,
-        stopZones:zoneRef.stopZones,source:zoneRef.source});
+        stopZones:trustedZones.stopZones,source:trustedZones.source});
        if(ev)rows[i]={...x,isereZoneEvidence:{complete:true,stopIds:ev.stopIds,
-        stopZones:zoneRef.stopZones,source:ev.source}};
+        stopZones:trustedZones.stopZones,source:ev.source}};
       }
      }
      const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
