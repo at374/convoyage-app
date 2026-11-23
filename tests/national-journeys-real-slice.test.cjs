@@ -73,4 +73,7 @@ test('fenêtre impossible : téléchargement national évité et aucun trajet',a
  assert.equal(requests,0);
  assert.deepEqual(result.journeys,[]);
  assert.equal(result.skippedDownload,'impossible-time-window');
+ assert.equal(result.counts.stops,0);
+ assert.equal(result.counts.routes,0);
+ assert.equal(result.counts.trips,0);
 });
