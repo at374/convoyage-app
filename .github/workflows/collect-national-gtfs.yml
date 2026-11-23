@@ -1,0 +1,84 @@
+name: Collecte GTFS nationale (PAN)
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Nombre maximum de ressources (1-5 pour validation; 0 = catalogue complet)"
+        required: true
+        default: "5"
+        type: string
+  schedule:
+    - cron: '23 5 * * 1'
+permissions:
+  contents: write
+concurrency:
+  group: gtfs-national
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/transports-aura-suisse
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Tests complets avant collecte
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s globstar nullglob
+          node --test tests/**/*.test.cjs
+      - name: Déterminer la limite de collecte
+        id: scope
+        shell: bash
+        env:
+          INPUT_LIMIT: ${{ inputs.limit }}
+        run: |
+          set -euo pipefail
+          limit="${INPUT_LIMIT:-5}"
+          [[ "$limit" =~ ^[0-9]+$ ]] || { echo "Limite invalide"; exit 1; }
+          if (( limit > 10000 )); then echo "Limite trop élevée"; exit 1; fi
+          echo "limit=$limit" >> "$GITHUB_OUTPUT"
+      - name: Collecter et valider les GTFS
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p gtfs-release docs/gtfs-national
+          if [ "${{ steps.scope.outputs.limit }}" = "0" ]; then
+            node scripts/collect-national-gtfs.cjs --out docs/gtfs-national --release-dir gtfs-release
+          else
+            node scripts/collect-national-gtfs.cjs --out docs/gtfs-national --release-dir gtfs-release --limit "${{ steps.scope.outputs.limit }}"
+          fi
+          node -e 'const m=require("./docs/gtfs-national/manifest.json"); if(!m.totals.found) process.exit(1); console.log(m.totals)'
+      - name: Publier les ZIP validés dans la Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(gtfs-release/*.zip)
+          if (( ${#files[@]} == 0 )); then
+            echo "Aucune nouvelle archive valide à publier"
+            exit 0
+          fi
+          gh release view gtfs-national >/dev/null 2>&1 || gh release create gtfs-national --target "$GITHUB_SHA" --title "GTFS nationaux validés" --notes "Archives GTFS publiques, sans garantie de tarif ni de service temps réel."
+          gh release upload gtfs-national "${files[@]}" --clobber
+      - name: Versionner uniquement les manifestes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/gtfs-national/manifest.json docs/gtfs-national/manifest.csv
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "GTFS national: manifeste de collecte ${GITHUB_RUN_ID}"
+          for attempt in 1 2 3; do
+            git pull --rebase origin feature/transports-aura-suisse && git push origin HEAD:feature/transports-aura-suisse && exit 0
+            sleep 5
+          done
+          exit 1
