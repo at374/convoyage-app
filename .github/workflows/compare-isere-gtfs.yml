@@ -1,0 +1,45 @@
+name: Comparer GTFS officiel Isère
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/transports-aura-suisse]
+    paths:
+      - 'scripts/compare_isere_gtfs.py'
+      - '.github/workflows/compare-isere-gtfs.yml'
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Télécharger le GTFS officiel courant (sans modifier le dépôt)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp
+          curl --fail --location --retry 3 --max-time 180 \
+            --output tmp/isere-officiel.zip \
+            'https://transport.data.gouv.fr/resources/40287/download'
+          python3 - <<'PY'
+          import zipfile
+          with zipfile.ZipFile('tmp/isere-officiel.zip') as z:
+              assert z.testzip() is None, 'Corrupt official GTFS ZIP'
+          PY
+      - name: Comparer les identifiants exacts et les calendriers
+        run: |
+          python3 scripts/compare_isere_gtfs.py \
+            data/gtfs/cars-region-isere.zip \
+            tmp/isere-officiel.zip \
+            --output tmp/isere-gtfs-comparison.json
+      - name: Publier le rapport de comparaison
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isere-gtfs-official-comparison
+          path: tmp/isere-gtfs-comparison.json
+          retention-days: 14
