@@ -15,6 +15,15 @@ test('fiche mission : moteur automatique raccordé et sans formulaire de recherc
  assert.match(app,/Hub\.render\(host,\{\.\.\.view,flexCandidates:flexFor\(label\)\}\)/);
  assert.match(app,/startTransportHub\(\)/);
 });
+test('géocodage : une requête bloquée ne doit pas empêcher le hub de démarrer',()=>{
+ assert.match(app,/const geoAbort=new AbortController\(\)/);
+ assert.match(app,/const geoDeadline=setTimeout\(\(\)=>\{/);
+ assert.match(app,/geoAbort\.abort\(\)/);
+ assert.match(app,/\},4000\)/);
+ assert.match(app,/if\(panel\.isConnected\)startTransportHub\(\)/);
+ assert.match(app,/if\(!geoFinished&&!geoAbort\.signal\.aborted&&r&&r\.trouve&&r\.cle\)/);
+});
+
 test('cartes Android : styles chargés avec cache invalidé et prix mis en évidence',()=>{
  assert.match(html,/style\.css\?v=transport-cards-20261117d/);
  assert.match(css,/\.cp-hub-card \.cp-hub-price\{[^}]*font-size:1\.28em/);
