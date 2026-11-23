@@ -215,7 +215,11 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   };
   // Si la Release a perdu son ZIP, ne jamais déclarer la ressource inchangée.
   const archiveAvailable = availableAssets === null || availableAssets.has(base.id + '.zip');
-  if (archiveAvailable && shouldSkip(resource, previousEntry)) {
+  // Le calendrier est une donnée glissante : une ancienne validation ne doit
+  // jamais annoncer des services actifs lorsque la dernière date publiée est passée.
+  const expiredCalendar = previousEntry?.lastServiceDate &&
+    previousEntry.lastServiceDate < String(now).slice(0, 10);
+  if (archiveAvailable && !expiredCalendar && shouldSkip(resource, previousEntry)) {
     return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now };
   }
   let bytes;
