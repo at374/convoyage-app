@@ -20,6 +20,18 @@ function build(d){
   'Les nombres ci-dessous sont des **occurrences par axe**, pas des billets uniques ni des trajets distincts.','',
   '| Opérateur | Occurrences |','|---|---:|');
  for(const [name,n] of [...byOperator].sort((a,b)=>b[1]-a[1]))lines.push('| '+String(name).replace(/[|\r\n]/g,' ')+' | '+n+' |');
+ const totals=d.totals||{};
+ if(Number.isFinite(totals.trips)&&Number.isFinite(totals.priced)&&totals.trips>=0&&totals.priced>=0&&totals.priced<=totals.trips){
+  const pct=totals.trips?(100*totals.priced/totals.trips).toFixed(1):'0.0';
+  lines.push('','## Couverture globale','',totals.priced+' trajets entièrement tarifés sur '+totals.trips+' ('+pct+' %).');
+ }
+ const partial=Object.entries(totals.partialMissingByOperator||{}).filter(([,n])=>Number.isFinite(n)&&n>0).sort((a,b)=>b[1]-a[1]);
+ if(partial.length){
+  lines.push('','## Priorité : portions bloquant les trajets partiellement tarifés','',
+   'Ces occurrences sont déjà incluses dans les manques par opérateur ; elles ne doivent pas être additionnées aux autres comptes.','',
+   '| Opérateur | Occurrences bloquantes |','|---|---:|');
+  for(const [name,n] of partial)lines.push('| '+String(name).replace(/[|\\r\\n]/g,' ')+' | '+n+' |');
+ }
  lines.push('','Aucun montant manquant ne doit être remplacé par une estimation. La rentabilité de mission reste masquée tant que le prix total du transport n’est pas vérifié.','');
  return lines.join('\n');
 }
