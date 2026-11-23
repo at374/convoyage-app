@@ -308,6 +308,11 @@ async function collect({
   const uploads = [];
   for (const entry of entries) {
     const { bytes, ...toStore } = entry;
+    if (Object.prototype.hasOwnProperty.call(manifest.networks, entry.id)) {
+      const previous = manifest.networks[entry.id];
+      throw new Error('Collision identifiant GTFS : ' + entry.id +
+        ' (' + dedupKey(previous) + ' / ' + dedupKey(entry) + ')');
+    }
     manifest.networks[entry.id] = toStore;
     manifest.totals[entry.status] = (manifest.totals[entry.status] || 0) + 1;
     if (entry.status === 'error') manifest.errors[entry.id] = entry.error;
