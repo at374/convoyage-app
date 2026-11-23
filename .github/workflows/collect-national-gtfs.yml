@@ -7,8 +7,6 @@ on:
         required: true
         default: "5"
         type: string
-  schedule:
-    - cron: '23 5 * * 1'
 permissions:
   contents: write
 concurrency:
@@ -44,6 +42,7 @@ jobs:
           limit="${INPUT_LIMIT:-5}"
           [[ "$limit" =~ ^[0-9]+$ ]] || { echo "Limite invalide"; exit 1; }
           if (( limit > 10000 )); then echo "Limite trop élevée"; exit 1; fi
+          if (( limit == 0 )); then echo "Collecte complète désactivée jusqu’à validation des tests réels et quotas"; exit 1; fi
           echo "limit=$limit" >> "$GITHUB_OUTPUT"
       - name: Inventorier les archives présentes dans la Release
         shell: bash
