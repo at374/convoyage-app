@@ -300,3 +300,25 @@ test('processResource refuse une course avec séquences d’arrêts identiques',
   assert.equal(entry.status, 'error');
   assert.match(entry.error, /aucune course/);
 });
+
+test('processResource accepte une course cohérente avec des horaires après minuit', async () => {
+  const overnight = {
+    ...baseFiles,
+    'stop_times.txt': 'trip_id,arrival_time,departure_time,stop_id,stop_sequence\n' +
+      'T1,24:10:00,24:10:00,A,1\n' +
+      'T1,25:05:00,25:05:00,B,2\n'
+  };
+  const fetcher = async () => new Response(zip(overnight), {
+    headers: { 'content-type': 'application/zip' }
+  });
+  const entry = await collector.processResource({
+    id: 'r6', datasetId: 'd6', network: 'Réseau de nuit',
+    format: 'GTFS', url: 'https://example.org/overnight.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher, maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    previousEntry: null, now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'ok', entry.error);
+  assert.equal(entry.stops, 2);
+});
