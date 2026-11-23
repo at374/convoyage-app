@@ -106,3 +106,14 @@ test('malformed GTFS transfer limits cannot become unlimited transfers',()=>{
   assert.equal(F.legFare(F.prepare(files),idx(files),{tripId:'T1',from:'A',to:'B'}),null,duration);
  }
 });
+
+test('agency-scoped GTFS fare is not valid on another operator route',()=>{
+ const files={...base,
+  'routes.txt':'route_id,route_short_name,route_type,agency_id\nR1,1,3,AGENCY_A\nR2,2,3,AGENCY_B',
+  'fare_attributes.txt':'fare_id,price,currency_type,payment_method,transfers,agency_id\nTICKET,2.00,EUR,0,0,AGENCY_A'};
+ const p=F.prepare(files),i=idx(files);
+ assert.equal(F.legFare(p,i,{tripId:'T1',from:'A',to:'B'}).amount,2);
+ assert.equal(F.legFare(p,i,{tripId:'T2',from:'B',to:'C'}),null);
+ const unknown={...files,'routes.txt':base['routes.txt']};
+ assert.equal(F.legFare(F.prepare(unknown),idx(unknown),{tripId:'T1',from:'A',to:'B'}),null);
+});
