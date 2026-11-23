@@ -230,6 +230,24 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     if (!index.counts.routes || !index.counts.trips || !index.counts.stops || !index.counts.stopTimes) {
       return { ...base, status: 'error', error: 'flux sans ligne, course, arrêt ou horaire exploitable' };
     }
+    // Les compteurs bruts peuvent être positifs même si stop_times.txt ne
+    // référence aucun trajet/arrêt valide. Exiger au moins une course reliée
+    // à une ligne connue et à deux arrêts distincts avec horaires valides.
+    const timePattern = /^\\d{1,3}:[0-5]\\d:[0-5]\\d$/;
+    let connectedTrip = false;
+    for (const [tripId, trip] of index.tripById) {
+      if (!index.routeById.has(trip.route_id)) continue;
+      const stops = new Set();
+      for (const time of index.timesByTrip.get(tripId) || []) {
+        if (timePattern.test(time.arrival_time || '') &&
+            timePattern.test(time.departure_time || '')) stops.add(time.stop_id);
+        if (stops.size >= 2) { connectedTrip = true; break; }
+      }
+      if (connectedTrip) break;
+    }
+    if (!connectedTrip) {
+      return { ...base, status: 'error', error: 'aucune course avec ligne, deux arrêts distincts et horaires valides' };
+    }
     lines = classifyRoutes(files);
   } catch (error) {
     return { ...base, status: 'error', error: 'indexation ou classification : ' + error.message };
