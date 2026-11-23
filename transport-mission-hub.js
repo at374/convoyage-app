@@ -407,8 +407,8 @@ function priceOf(j,fareFor){
  // Un indicateur hérité ne suffit pas à déclarer gratuit un trajet multimodal.
  // Les étapes réelles doivent toutes être piétonnes ou en trottinette personnelle.
  const allWalk=Array.isArray(j.legs)&&j.legs.length>0&&j.legs.every(l=>l.kind==='walk');
- const allScooter=Array.isArray(j.legs)&&j.legs.length>0&&j.legs.every(l=>l.kind==='scooter');
- if(j.scooterOnly&&allScooter)return {status:'free',amounts:{EUR:0},label:'Gratuit (trottinette personnelle)',missingSources:[]};
+ const allPersonal=Array.isArray(j.legs)&&j.legs.length>0&&j.legs.every(l=>l.kind==='scooter'||l.kind==='walk');
+ if(j.scooterOnly&&allPersonal)return {status:'free',amounts:{EUR:0},label:'Gratuit (trottinette personnelle / à pied)',missingSources:[]};
  if(allWalk)return {status:'free',amounts:{EUR:0},label:'Gratuit (à pied)',missingSources:[]};
  const amounts={},missingSources=[],sources=[],legFares=[];
  let ticket=null; // titre en cours : {network,validUntilMs} — une correspondance dans la validité ne se repaie pas
