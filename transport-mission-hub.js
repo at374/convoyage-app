@@ -413,7 +413,7 @@ function priceOf(j,fareFor){
  const amounts={},missingSources=[],sources=[],legFares=[];
  let ticket=null; // titre en cours : {network,validUntilMs} — une correspondance dans la validité ne se repaie pas
  const isVerifiedFare=f=>!!(f&&finite(f.amount)&&f.amount>=0&&/^(EUR|CHF)$/.test(f.currency)&&f.source);
- const found=j.legs.map(l=>{if(l.kind==='walk')return null;
+ const found=j.legs.map(l=>{if(l.kind==='walk'||l.kind==='scooter'&&j.scooterOnly)return null;
   const direct=isVerifiedFare(l.fare)?l.fare:null;return direct||(typeof fareFor==='function'?fareFor(l):null);});
  // Titre combiné officiel (ex. ligne 272 « Parcours + zone 10 », Léman Pass multizones) : quand le même trajet
  // emprunte aussi le réseau que ce titre couvre, on compte le titre combiné une fois et les portions couvertes
@@ -424,7 +424,7 @@ function priceOf(j,fareFor){
   found.forEach((f,i)=>{if(i!==combo&&isVerifiedFare(f)&&(Array.isArray(c.covers)?c.covers.includes(f.network):f.network===c.covers))covered.add(i);});
   if(covered.size)found[combo]={...found[combo],amount:c.amount,validityMinutes:null,source:found[combo].source+' — titre retenu : '+c.label};}
  for(let i=0;i<j.legs.length;i++){const l=j.legs[i];
-  if(l.kind==='walk'){legFares.push(null);continue;}
+  if(l.kind==='walk'||l.kind==='scooter'&&j.scooterOnly){legFares.push(null);continue;}
   const f=found[i];
   legFares.push(isVerifiedFare(f)?f:null);
   if(covered.has(i)){sources.push(f.network+' : couvert par le titre combiné');continue;}
