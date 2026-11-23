@@ -34,3 +34,18 @@ test('lists observed missing fare lines without inferring prices',()=>{
  assert.match(report,/Annecy → Genève \| SNCF \| B L2 \|/);
  assert.doesNotMatch(report,/274, 274/);
 });
+
+test('reports verified prices separately from feasibility and partial journeys',()=>{
+ const report=build({axes:[{name:'Chambéry → Aix',trips:65,priced:45,feasible:0}],totals:{trips:965,priced:379,feasible:93,partialPricedJourneys:64}});
+ assert.match(report,/379 trajets entièrement tarifés sur 965 \(39\.3 %\)/);
+ assert.match(report,/Trajets déclarés faisables par le diagnostic : 93 \/ 965/);
+ assert.match(report,/64 trajets possèdent au moins un tarif/);
+ assert.match(report,/Ces deux compteurs sont indépendants/);
+ assert.match(report,/Leur intersection n’est pas calculée ici/);
+});
+
+test('does not invent feasibility when it is absent from a diagnostic',()=>{
+ const report=build({axes:[{name:'A',trips:3,priced:1}],totals:{trips:3,priced:1}});
+ assert.doesNotMatch(report,/Trajets déclarés faisables/);
+ assert.doesNotMatch(report,/Trajets partiellement tarifés/);
+});
