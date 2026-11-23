@@ -186,8 +186,8 @@ test('processResource : calendrier impossible isolé comme erreur sans interromp
 
 test('lastServiceDate inclut les ajouts calendar_dates sans confondre les suppressions', () => {
   const files = {
-    'calendar.txt': 'service_id,end_date\\nWK,20261130\\n',
-    'calendar_dates.txt': 'service_id,date,exception_type\\nWK,20261202,2\\nWK,20261201,1\\n'
+    'calendar.txt': 'service_id,end_date\nWK,20261130\n',
+    'calendar_dates.txt': 'service_id,date,exception_type\nWK,20261202,2\nWK,20261201,1\n'
   };
   assert.equal(collector.lastServiceDate(files), '2026-12-01');
   assert.equal(collector.lastServiceDate({}), null);
@@ -196,7 +196,7 @@ test('lastServiceDate inclut les ajouts calendar_dates sans confondre les suppre
 test('processResource : CSV agency.txt malformé est une erreur isolée', async () => {
   const badFiles = {
     ...baseFiles,
-    'agency.txt': 'agency_name,agency_timezone\\n"Agence non terminée,Europe/Paris\\n'
+    'agency.txt': 'agency_name,agency_timezone\n"Agence non terminée,Europe/Paris\n'
   };
   const fetcher = async () => new Response(zip(badFiles), {
     headers: { 'content-type': 'application/zip' }
