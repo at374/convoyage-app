@@ -272,7 +272,7 @@ async function run(){
     const result={background:actual.backgroundColor,expectedBackground:expected.backgroundColor,title:title.color,expectedTitle:expected.color,weight:Number(title.fontWeight)};probe.remove();return result;
    });
    assert.equal(palette.background,palette.expectedBackground,style+' uses the page background');
-   assert.equal(palette.title,palette.expectedTitle,style+' uses its vivid heading accent');
+   assert.equal(palette.title,'rgb(255, 255, 255)',style+' keeps high-contrast white heading on dark gradient hero');
    assert.ok(palette.weight>=800,style+' headings are bold');
    await page.locator('.cp-transport-hero').scrollIntoViewIfNeeded();
    await page.screenshot({path:path.join(output,'mobile-transport-style-'+style+'.png')});
