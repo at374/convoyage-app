@@ -68,6 +68,18 @@ jobs:
             node scripts/collect-national-gtfs.cjs --out docs/gtfs-national-sample --release-dir gtfs-release --limit "${{ steps.scope.outputs.limit }}"
           fi
           node -e 'const p=process.env.LIMIT==="0"?"./docs/gtfs-national/manifest.json":"./docs/gtfs-national-sample/manifest.json";const m=require(p);if(!m.totals.found)process.exit(1);console.log(m.totals)'
+      - name: Conserver le rapport de collecte pour audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gtfs-national-rapport-${{ github.run_id }}
+          path: |
+            docs/gtfs-national/manifest.json
+            docs/gtfs-national/manifest.csv
+            docs/gtfs-national-sample/manifest.json
+            docs/gtfs-national-sample/manifest.csv
+          if-no-files-found: warn
+          retention-days: 7
       - name: Publier les ZIP validés dans la Release
         shell: bash
         run: |
