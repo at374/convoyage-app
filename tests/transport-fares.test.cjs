@@ -227,3 +227,14 @@ test('GTFS time-only departure requires dated itinerary for verified fare',()=>{
  assert.equal(fare([leg],{travelDate:'2028-11-30'}).known,false);
  assert.equal(fare([{...leg,departure:'2026-11-30T09:15:00+01:00'}],{travelDate:'2028-11-30'}).totalEUR,2);
 });
+
+test('GTFS after midnight validates fare against actual boarding day',()=>{
+ const leg={provider:'TER',departure:'25:10:00',fareVerified:true,
+  fareSource:'Source officielle',verifiedPriceEUR:4.2,
+  fareValidFrom:'2026-11-30',fareValidUntil:'2026-11-30'};
+ assert.equal(fare([leg],{travelDate:'2026-11-30'}).known,false,
+  'ticket valid only on Nov 30 must not cover Dec 1 boarding');
+ assert.equal(fare([{...leg,fareValidUntil:'2026-12-01'}],{travelDate:'2026-11-30'}).totalEUR,4.2);
+ assert.equal(fare([{...leg,departure:'49:10:00',fareValidUntil:'2026-12-01'}],{travelDate:'2026-11-30'}).known,false);
+ assert.equal(fare([leg],{travelDate:'2026-11-30T08:00:00+01:00'}).known,false);
+});
