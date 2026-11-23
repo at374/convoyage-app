@@ -161,7 +161,26 @@ function lastServiceDate(files, eligibleServices = null) {
     // Un intervalle inversé ou une date de début impossible ne peut pas
     // justifier une couverture future. Tolérer les fixtures sans start_date.
     if (row.start_date && (!validDate(row.start_date) || row.start_date > row.end_date)) continue;
-    if (validDate(row.end_date) && (!latest || row.end_date > latest)) latest = row.end_date;
+    if (!validDate(row.end_date)) continue;
+    // Ne pas publier la fin théorique d'une période sans aucun jour
+    // réellement actif (ex. calendrier du lundi limité à mardi-mercredi).
+    let finalDay = row.end_date;
+    if (row.start_date && weekdays.some(day => Object.hasOwn(row, day))) {
+      finalDay = null;
+      const end = Date.UTC(Number(row.end_date.slice(0, 4)),
+        Number(row.end_date.slice(4, 6)) - 1, Number(row.end_date.slice(6, 8)));
+      const start = Date.UTC(Number(row.start_date.slice(0, 4)),
+        Number(row.start_date.slice(4, 6)) - 1, Number(row.start_date.slice(6, 8)));
+      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+      for (let offset = 0; offset < 7 && end - offset * 86400000 >= start; offset++) {
+        const candidate = new Date(end - offset * 86400000);
+        if (row[dayNames[candidate.getUTCDay()]] === '1') {
+          finalDay = candidate.toISOString().slice(0, 10).replace(/-/g, '');
+          break;
+        }
+      }
+    }
+    if (finalDay && (!latest || finalDay > latest)) latest = finalDay;
   }
   for (const row of gtfs.csvRows(files['calendar_dates.txt'] || '')) {
     if (eligibleServices !== null && !eligibleServices.has(row.service_id)) continue;
