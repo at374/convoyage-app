@@ -245,7 +245,7 @@ async function run(){
   const hubText=await page.locator('#cpTransportMissionDetails [data-transport-hub]').allInnerTexts();
   assert.ok(hubText.length>=2,'hub affiché dans les directions');
   for(const block of hubText)for(const m of block.matchAll(/Réalisable · avance (\d+) min \(marge (\d+) min\)/g))assert.ok(Number(m[1])>=Number(m[2]),'Réalisable avec marge respectée');
-  assert.match(text,/C11/);assert.match(text,/Crolles Mairie/);assert.match(text,/minimum : 15 min/);assert.doesNotMatch(text,/\bRéalisable\b/);
+  assert.match(text,/C11/);assert.match(text,/Crolles Mairie/);assert.match(text,/(?:minimum\s*:\s*15\s*min|Arrivée\s*:\s*15\s*min\s+minimum)/);assert.doesNotMatch(text,/\bRéalisable\b/);
   assert.ok(requests.some(r=>r.arriveBy==='true'&&r.time==='08:45'),'Outbound applies mission margin');
   assert.ok(requests.some(r=>r.fromPlace===official.request.fromPlace&&r.toPlace===official.request.toPlace),'Official regional response is rendered after late geocoding');
   // Verify the actual mobile DOM and interaction, not only the source code.
