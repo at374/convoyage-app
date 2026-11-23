@@ -76,8 +76,10 @@ async function loadAndSearch({operator,resource,fetcher,signal,loadOptions={},..
   !Number.isFinite(Date.parse(searchOptions.date+'T00:00:00Z'))||
   new Date(searchOptions.date+'T00:00:00Z').toISOString().slice(0,10)!==searchOptions.date)
   throw new Error('Invalid service date before GTFS download');
- if(![searchOptions.from?.lat,searchOptions.from?.lon,searchOptions.to?.lat,searchOptions.to?.lon].every(Number.isFinite))
-  throw new Error('Exact coordinates required before GTFS download');
+ if(![searchOptions.from?.lat,searchOptions.from?.lon,searchOptions.to?.lat,searchOptions.to?.lon].every(Number.isFinite)||
+  Math.abs(searchOptions.from.lat)>90||Math.abs(searchOptions.to.lat)>90||
+  Math.abs(searchOptions.from.lon)>180||Math.abs(searchOptions.to.lon)>180)
+  throw new Error('Valid exact coordinates required before GTFS download');
  // Never download unbounded national GTFS archives into a phone; use a server-prepared regional slice.
  const {maxArchiveBytes=20*1024*1024,...rest}=loadOptions;
  if(!Number.isSafeInteger(maxArchiveBytes)||maxArchiveBytes<=0||maxArchiveBytes>20*1024*1024)
