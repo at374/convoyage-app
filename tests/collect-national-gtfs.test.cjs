@@ -748,3 +748,30 @@ test('lastServiceDate retourne le dernier lundi circulé et non la fin théoriqu
   };
   assert.equal(collector.lastServiceDate(files), '2026-11-23');
 });
+
+test('lastServiceDate recule quand le dernier service régulier est supprimé', () => {
+  const files = {
+    'calendar.txt': 'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n' +
+      'WK,1,0,0,0,0,0,0,20261116,20261130\n',
+    'calendar_dates.txt': 'service_id,date,exception_type\nWK,20261130,2\n'
+  };
+  assert.equal(collector.lastServiceDate(files), '2026-11-23');
+});
+
+test('lastServiceDate ne conserve pas un service dont toutes les dates sont annulées', () => {
+  const files = {
+    'calendar.txt': 'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n' +
+      'WK,1,0,0,0,0,0,0,20261123,20261130\n',
+    'calendar_dates.txt': 'service_id,date,exception_type\nWK,20261123,2\nWK,20261130,2\n'
+  };
+  assert.equal(collector.lastServiceDate(files), null);
+});
+
+test('lastServiceDate conserve un ajout exceptionnel après les suppressions', () => {
+  const files = {
+    'calendar.txt': 'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n' +
+      'WK,1,0,0,0,0,0,0,20261123,20261130\n',
+    'calendar_dates.txt': 'service_id,date,exception_type\nWK,20261130,2\nWK,20261202,1\n'
+  };
+  assert.equal(collector.lastServiceDate(files), '2026-12-02');
+});
