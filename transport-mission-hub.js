@@ -1482,6 +1482,16 @@ function makeProviders(r,opts={}){
    P.local_correspondances={name:'Correspondances entre réseaux (GTFS)',
     enabled:task=>!!queryWindow(task)&&pickFeeds(task).length>0,
     disabledReason:'trajet hors zone des réseaux locaux ou horaires manquants',
+    // 23/11/2026 (Laurent : « Correspondances entre réseaux (GTFS) : délai fournisseur dépassé (35 s) »,
+    // Epagny Metz-Tessy → Thonon-les-Bains, tous les autres moteurs répondent) : même bug que les moteurs
+    // nationaux (SNCF/FlixBus/BlaBlaCar) corrigé le 22/11 — ce moteur-ci n'avait jamais reçu le même
+    // relevé de délai, alors qu'il est encore plus exposé : pickFeeds() charge jusqu'à 8 réseaux (contre 1
+    // flux pour un moteur national), PUIS calcule jusqu'à 28 paires de réseaux (crossNetworkTrips, jusqu'à
+    // 100 000 combinaisons chacune) avant de répondre. Sur le réseau de Laurent (0,06 à 1,7 Ko/s déjà
+    // mesuré), le seul téléchargement de 8 flux GTFS au premier chargement dépasse largement 35 s, avant
+    // même le calcul des correspondances. Comme pour les moteurs nationaux : chaque flux est mis en cache
+    // 12 h (feedFor/cacheFetch), donc la patience n'est à demander qu'une fois par demi-journée et par zone.
+    timeoutMs:150000,
     run:async(task,signal)=>{
      const w=queryWindow(task),when=ms(w.when);
      if(!Number.isFinite(when))return [];
