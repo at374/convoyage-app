@@ -732,3 +732,19 @@ test('processResource accepte une boucle avec arrêt de départ répété', asyn
   assert.equal(entry.regularConnectedTrip, true);
   assert.equal(entry.activeRegularNext30Days, true);
 });
+
+test('lastServiceDate ignore une période sans jour de circulation effectif', () => {
+  const files = {
+    'calendar.txt': 'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n' +
+      'WK,1,0,0,0,0,0,0,20261124,20261125\n'
+  };
+  assert.equal(collector.lastServiceDate(files), null);
+});
+
+test('lastServiceDate retourne le dernier lundi circulé et non la fin théorique', () => {
+  const files = {
+    'calendar.txt': 'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n' +
+      'WK,1,0,0,0,0,0,0,20261123,20261125\n'
+  };
+  assert.equal(collector.lastServiceDate(files), '2026-11-23');
+});
