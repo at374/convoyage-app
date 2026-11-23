@@ -104,10 +104,19 @@ function classifyRoutes(files) {
 // Identifiants de service actifs au moins un jour dans les `days` prochains jours (fenêtre glissante
 // à partir de `today`, calendar.txt + calendar_dates.txt pris en compte via gtfs.activeServices).
 function activeWithinDays(files, days, today = new Date()) {
+  // Un service déclaré dans calendar.txt sans aucun trajet dans trips.txt
+  // ne suffit pas pour annoncer un réseau exploitable.
+  const usedServices = new Set();
+  for (const trip of gtfs.csvRows(files['trips.txt'] || '')) {
+    if (trip.service_id) usedServices.add(trip.service_id);
+  }
+  if (!usedServices.size) return false;
   for (let offset = 0; offset < days; offset++) {
     const date = new Date(today.getTime() + offset * 86400000);
-    const stamp = date.toISOString().slice(0, 10); // activeServices attend AAAA-MM-JJ, pas AAAAMMJJ.
-    if (gtfs.activeServices(files, stamp).size > 0) return true;
+    const stamp = date.toISOString().slice(0, 10);
+    for (const serviceId of gtfs.activeServices(files, stamp)) {
+      if (usedServices.has(serviceId)) return true;
+    }
   }
   return false;
 }
