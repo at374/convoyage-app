@@ -20,6 +20,9 @@ test('Isere fare rejects incomplete stop evidence and out-of-range dates',()=>{
  assert.equal(evidenceFromStops({stopIds:stops,stopZones:zones,source:'https://example.com/zone',complete:true}),null);
  const evidence=evidenceFromStops({stopIds:stops,stopZones:zones,source,complete:true});
  assert.equal(quote({zones:2,departure:'2026-02-28',zoneEvidence:evidence}),null);
+ assert.equal(quote({zones:2,departure:'2026-12-31',zoneEvidence:evidence}).amount,6);
+ assert.equal(quote({zones:2,departure:'2027-01-01',zoneEvidence:evidence}),null);
+ assert.equal(quoteFromStops({stopIds:stops,stopZones:zones,source,complete:true,departure:'2027-01-01'}),null);
  assert.equal(quote({zones:7,departure:'2026-11-30',zoneEvidence:evidence}),null);
  assert.equal(quote({zones:2,departure:'2026-11-30',zoneEvidence:evidence,profile:'eco'}),null);
  assert.equal(quote({zones:2,departure:'2026-11-30',zoneEvidence:evidence,profile:'eco',ecoEligible:true}).amount,4.40);
