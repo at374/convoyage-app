@@ -5,6 +5,7 @@ on:
     branches: [feature/transports-aura-suisse]
     paths:
       - 'scripts/compare_isere_gtfs.py'
+      - 'scripts/compare_isere_service_dates.py'
       - 'tests/python/test_compare_isere_gtfs.py'
       - '.github/workflows/compare-isere-gtfs.yml'
 permissions:
@@ -39,10 +40,18 @@ jobs:
             data/gtfs/cars-region-isere.zip \
             tmp/isere-officiel.zip \
             --output tmp/isere-gtfs-comparison.json
+      - name: Comparer les jours effectifs de circulation
+        run: |
+          python3 scripts/compare_isere_service_dates.py \\
+            data/gtfs/cars-region-isere.zip \\
+            tmp/isere-officiel.zip \\
+            --output tmp/isere-service-dates-comparison.json
       - name: Publier le rapport de comparaison
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: isere-gtfs-official-comparison
-          path: tmp/isere-gtfs-comparison.json
+          path: |
+            tmp/isere-gtfs-comparison.json
+            tmp/isere-service-dates-comparison.json
           retention-days: 14
