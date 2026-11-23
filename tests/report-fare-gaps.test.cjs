@@ -26,3 +26,11 @@ test('highlights partially priced journeys without double counting fare gaps',()
  assert.match(report,/SNCF \| 2 \|/);
  assert.match(report,/ne doivent pas être additionnées/);
 });
+
+test('lists observed missing fare lines without inferring prices',()=>{
+ const report=build({axes:[{name:'Annecy → Genève',trips:4,priced:0,partialMissingLineSamples:{'Cars Région Haute-Savoie':['274','274'],'SNCF':['B L2']}}]});
+ assert.match(report,/Lignes à rechercher en priorité/);
+ assert.match(report,/Annecy → Genève \| Cars Région Haute-Savoie \| 274 \|/);
+ assert.match(report,/Annecy → Genève \| SNCF \| B L2 \|/);
+ assert.doesNotMatch(report,/274, 274/);
+});
