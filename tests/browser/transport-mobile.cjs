@@ -351,8 +351,17 @@ async function run(){
     'Legacy station-only SNCF comparison must remain disabled');
   assert.equal(await page.getByLabel('Clé TripGo privée sur cet appareil').count(),0,
     'Enterprise-gated TripGo input must remain absent');
-  assert.equal(await page.locator('#cpTransportMissionDetails .cp-hub').count()>0,true,
-    'Unified mission hub must be mounted instead');
+  try {
+    await page.locator('#cpTransportMissionDetails .cp-hub').first().waitFor({timeout:12000});
+  } catch(error) {
+    const state=await page.evaluate(()=>({
+      hubScript:!!window.CPTransportHub,
+      panel:!!document.querySelector('#cpTransportMissionDetails'),
+      geoPending:!!document.querySelector('#cpTransportMissionDetails .cp-transport-geo'),
+      panelText:document.querySelector('#cpTransportMissionDetails')?.innerText.slice(0,2500)
+    }));
+    throw new Error('Unified mission hub did not mount: '+JSON.stringify(state),{cause:error});
+  }
   await page.locator('#fermer').click();
   await until(()=>activeWorkers.size===0,'Unified mission worker must stop on close');
   // Synthetic SIBRA feed identity exercises the real worker and pass controls.
