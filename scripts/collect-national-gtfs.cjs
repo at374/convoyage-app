@@ -233,7 +233,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     // Les compteurs bruts peuvent être positifs même si stop_times.txt ne
     // référence aucun trajet/arrêt valide. Exiger au moins une course reliée
     // à une ligne connue et à deux arrêts distincts avec horaires valides.
-    const timePattern = /^\\d{1,3}:[0-5]\\d:[0-5]\\d$/;
+    const timePattern = /^\d{1,3}:[0-5]\d:[0-5]\d$/;
     let connectedTrip = false;
     const seconds = value => {
       const [h, m, sec] = value.split(':').map(Number);
