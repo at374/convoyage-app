@@ -36,7 +36,7 @@ const DEFAULT_MAX_ARCHIVE_BYTES = 200 * 1024 * 1024;
 const DEFAULT_MAX_FILE_BYTES = 350 * 1024 * 1024;
 const DEFAULT_MAX_EXPANDED_BYTES = 700 * 1024 * 1024;
 const DEFAULT_MAX_ENTRIES = 256;
-const DEFAULT_CONCURRENCY = 6;
+const DEFAULT_CONCURRENCY = 2; // Limite mémoire sur runner GitHub hébergé
 const DEFAULT_TIMEOUT_MS = 90000;
 const ACTIVE_WINDOW_DAYS = 30;
 
@@ -87,16 +87,13 @@ function classifyRoutes(files) {
   const counts = { regular: 0, school: 0, demandResponsive: 0, unknown: 0 };
   for (const route of routes) {
     const label = norm([route.route_short_name, route.route_long_name, route.route_desc].filter(Boolean).join(' '));
-    const knownRegularType = typeof route.route_type === 'string' && /^(0|1|2|3|4|5|6|7|11|12)$/.test(route.route_type.trim());
     let kind;
     if (DEMAND_ROUTE_TYPES.has(String(route.route_type || '').trim()) || demandRouteIds.has(route.route_id)) {
       kind = 'demandResponsive';
     } else if (SCHOOL_HINTS.test(label)) {
       kind = 'school';
-    } else if (knownRegularType) {
-      // Le mode GTFS (bus, train...) ne prouve pas qu'une ligne est publique et régulière.
-      kind = 'unknown';
     } else {
+      // Le mode GTFS seul ne prouve pas une ligne régulière ouverte au public.
       kind = 'unknown';
     }
     counts[kind] += 1;
@@ -138,7 +135,9 @@ function dedupKey(resource) {
 function shouldSkip(resource, previousEntry) {
   if (!previousEntry || !['ok', 'unchanged'].includes(previousEntry.status)) return false;
   if (!resource.updatedAt || !previousEntry.updatedAt) return false;
-  return new Date(resource.updatedAt).getTime() === new Date(previousEntry.updatedAt).getTime();
+  const current = Date.parse(resource.updatedAt);
+  const previous = Date.parse(previousEntry.updatedAt);
+  return Number.isFinite(current) && Number.isFinite(previous) && current === previous;
 }
 
 async function pool(items, concurrency, worker) {
