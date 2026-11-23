@@ -71,3 +71,36 @@ test('An operator booking with confirmed pickup and arrival becomes a hub row, n
  assert.equal(assessed.scheduled,true,'static GTFS does not certify realtime operational execution');
  assert.equal(assessed.price.status,'unknown');
 });
+
+
+test('Mission provider discovers Flex course by GPS but never emits an unbooked timetable',async()=>{
+ const hub=require('../transport-mission-hub.js');
+ const feed={files,index:G.buildIndex(files)};
+ const root={CPGTFSLoader:{loadResource:async()=>feed},CPGTFSIndex:{nearbyDirectTrips:()=>[]},CPGTFSFlexCourses:F};
+ const task={from:{lat:45.875,lon:6.1},to:{lat:45.8,lon:6.2},latestArrival:'2026-11-23T10:00:00+01:00'};
+ const seen=[];
+ const providers=hub.makeProviders(root,{fetcher:async()=>{},onFlexCandidates:x=>seen.push(x)});
+ const p=providers.local_cars_isere;
+ assert.equal(p.enabled(task),true);
+ const unbooked=await p.run(task);
+ assert.deepEqual(unbooked,[]);
+ assert.equal(seen.length,1);
+ assert.equal(seen[0].network,'Cars Région Isère');
+ assert.equal(seen[0].candidates[0].status,'Transport non confirmé');
+});
+test('Mission provider includes only operator-confirmed Flex journey, preserving TAD controls',async()=>{
+ const hub=require('../transport-mission-hub.js');
+ const feed={files,index:G.buildIndex(files)};
+ const root={CPGTFSLoader:{loadResource:async()=>feed},CPGTFSIndex:{nearbyDirectTrips:()=>[]},CPGTFSFlexCourses:F};
+ const booking={tripId:'T1',date:'2026-11-23',fromStopId:'A',toStopId:'B',
+  reservationConfirmed:true,pickupTimeConfirmed:true,requestedPickup:'2026-11-23T08:30:00+01:00',
+  arrivalConfirmed:true,confirmedArrival:'2026-11-23T09:30:00+01:00'};
+ const task={from:{lat:45.875,lon:6.1},to:{lat:45.8,lon:6.2},latestArrival:'2026-11-23T10:00:00+01:00'};
+ const providers=hub.makeProviders(root,{fetcher:async()=>{},flexBookings:[booking]});
+ const journeys=await providers.local_cars_isere.run(task);
+ assert.equal(journeys.length,1);
+ assert.equal(journeys[0].flexBooking.reservationConfirmed,true);
+ assert.equal(journeys[0].flexBooking.pickupTimeConfirmed,true);
+ assert.ok(journeys[0].legs[0].departure);
+ assert.equal(journeys[0].legs[0].fare,null);
+});
