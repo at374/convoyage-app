@@ -887,3 +887,27 @@ test('toCSV distingue activité GTFS-Flex et régulière', () => {
   assert.equal(fields[headers.indexOf('activeFlexNext30Days')], 'true');
   assert.equal(fields[headers.indexOf('activeRegularNext30Days')], 'false');
 });
+
+test('processResource GTFS-Flex accepte une fenêtre sur arrêt précis et zone', async () => {
+  const files = {
+    ...baseFiles,
+    'stop_times.txt': 'trip_id,stop_sequence,stop_id,location_group_id,start_pickup_drop_off_window,end_pickup_drop_off_window\n' +
+      'T1,1,A,,09:00:00,10:00:00\n' +
+      'T1,2,,G2,09:30:00,11:00:00\n',
+    'location_groups.txt': 'location_group_id,location_group_name\nG2,Zone B\n',
+    'location_group_stops.txt': 'location_group_id,stop_id\nG2,B\n'
+  };
+  const entry = await collector.processResource({
+    id: 'flex-mixed', datasetId: 'flex', network: 'TAD mixte',
+    format: 'GTFS', url: 'https://example.org/flex-mixed.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher: async () => new Response(zip(files), { headers: { 'content-type': 'application/zip' } }),
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'ok', entry.error);
+  assert.equal(entry.flexServiceCount, 1);
+  assert.equal(entry.activeFlexNext30Days, true);
+  assert.equal(entry.activeRegularNext30Days, false);
+});
