@@ -322,3 +322,15 @@ test('processResource accepte une course cohérente avec des horaires après min
   assert.equal(entry.status, 'ok', entry.error);
   assert.equal(entry.stops, 2);
 });
+
+test('lastServiceDate ignore les dates impossibles et les exceptions de suppression', () => {
+  const files = {
+    'calendar.txt': 'service_id,end_date\nWK,20260230\nWK,20261231\n',
+    'calendar_dates.txt': 'service_id,date,exception_type\nWK,20261301,1\nWK,20270103,2\nWK,20270102,1\n'
+  };
+  assert.equal(collector.lastServiceDate(files), '2027-01-02');
+  assert.equal(collector.lastServiceDate({
+    'calendar.txt': 'service_id,end_date\nWK,20260230\n',
+    'calendar_dates.txt': 'service_id,date,exception_type\nWK,20261301,1\n'
+  }), null);
+});
