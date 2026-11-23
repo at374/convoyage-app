@@ -124,10 +124,10 @@ function activeWithinDays(files, days, today = new Date()) {
 function lastServiceDate(files) {
   const dates = [];
   for (const row of gtfs.csvRows(files['calendar.txt'] || '')) {
-    if (/^\\d{8}$/.test(row.end_date || '')) dates.push(row.end_date);
+    if (/^\d{8}$/.test(row.end_date || '')) dates.push(row.end_date);
   }
   for (const row of gtfs.csvRows(files['calendar_dates.txt'] || '')) {
-    if (/^\\d{8}$/.test(row.date || '') && row.exception_type === '1') dates.push(row.date);
+    if (/^\d{8}$/.test(row.date || '') && row.exception_type === '1') dates.push(row.date);
   }
   if (!dates.length) return null;
   const latest = dates.sort().at(-1);
