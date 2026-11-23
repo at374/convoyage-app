@@ -192,3 +192,23 @@ test('lastServiceDate inclut les ajouts calendar_dates sans confondre les suppre
   assert.equal(collector.lastServiceDate(files), '2026-12-01');
   assert.equal(collector.lastServiceDate({}), null);
 });
+
+test('processResource : CSV agency.txt malformé est une erreur isolée', async () => {
+  const badFiles = {
+    ...baseFiles,
+    'agency.txt': 'agency_name,agency_timezone\\n"Agence non terminée,Europe/Paris\\n'
+  };
+  const fetcher = async () => new Response(zip(badFiles), {
+    headers: { 'content-type': 'application/zip' }
+  });
+  const entry = await collector.processResource({
+    id: 'r2', datasetId: 'd2', network: 'Agence test',
+    format: 'GTFS', url: 'https://example.org/feed.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher, maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    previousEntry: null, now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'error');
+  assert.match(entry.error, /agency.txt/);
+});
