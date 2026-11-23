@@ -159,8 +159,11 @@ function flexServices(files, index) {
     : new Set([key.slice(5)]);
   const distinctStops = (origin, destination) => {
     const from = locations(origin), to = locations(destination);
-    for (const a of from) for (const b of to) if (a !== b) return true;
-    return false;
+    if (!from.size || !to.size) return false;
+    // Deux ensembles non vides ne permettent aucun déplacement distinct
+    // uniquement lorsqu'ils contiennent le même et unique arrêt.
+    return from.size !== 1 || to.size !== 1 ||
+      from.values().next().value !== to.values().next().value;
   };
   const timePattern = /^\d{1,3}:[0-5]\d:[0-5]\d$/;
   const byTrip = new Map();
@@ -198,11 +201,24 @@ function flexServices(files, index) {
     const trip = index.tripById.get(tripId);
     if (!index.routeById.has(trip.route_id)) continue;
     rows.sort((a, b) => a.sequence - b.sequence);
-    if (rows.some((row, i) => row.pickup && rows.slice(i + 1).some(next =>
-      next.dropoff && next.sequence > row.sequence &&
-      distinctStops(row.locationKey, next.locationKey) && next.end >= row.start))) {
-      if (trip.service_id) services.add(trip.service_id);
+    // Parcours en séquence, sans créer de sous-tableaux pour chaque arrêt.
+    // La condition de fenêtre reste volontairement prudente : elle atteste
+    // une possibilité théorique, jamais une réservation confirmée.
+    let connected = false;
+    for (let i = 0; i < rows.length && !connected; i++) {
+      const origin = rows[i];
+      if (!origin.pickup) continue;
+      for (let j = i + 1; j < rows.length; j++) {
+        const destination = rows[j];
+        if (destination.dropoff && destination.sequence > origin.sequence &&
+            destination.end >= origin.start &&
+            distinctStops(origin.locationKey, destination.locationKey)) {
+          connected = true;
+          break;
+        }
+      }
     }
+    if (connected && trip.service_id) services.add(trip.service_id);
   }
   return services;
 }
