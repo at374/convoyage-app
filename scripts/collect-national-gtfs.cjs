@@ -158,6 +158,9 @@ function lastServiceDate(files, eligibleServices = null) {
     const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     if (weekdays.some(day => Object.hasOwn(row, day)) &&
         !weekdays.some(day => row[day] === '1')) continue;
+    // Un intervalle inversé ou une date de début impossible ne peut pas
+    // justifier une couverture future. Tolérer les fixtures sans start_date.
+    if (row.start_date && (!validDate(row.start_date) || row.start_date > row.end_date)) continue;
     if (validDate(row.end_date) && (!latest || row.end_date > latest)) latest = row.end_date;
   }
   for (const row of gtfs.csvRows(files['calendar_dates.txt'] || '')) {
