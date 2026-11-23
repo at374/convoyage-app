@@ -2456,9 +2456,21 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         // connecté). Session absente ou expirée : le fournisseur OJP se désactive silencieusement (comme les autres
         // moteurs sans accès), sans message d'erreur ni blocage du reste des fiches.
         const ojpSession=api?.connecte?{url:api.url,cle:api.cle,accessToken:api.session.access_token}:null;
+        // Les GTFS-Flex sont affichés comme informations de service, jamais comme trajets datés inventés.
+        const flexByLabel=new Map();
+        const flexFor=label=>[...(flexByLabel.get(label)?.values()||[])].flat();
         const session=Hub.createSession({tasks,router,fareFor,timeoutMs:35000,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),scooterRouter,scooter:{enabled:scooterOn,maxKm:Number(lireLocal('cp_trot_max_km',8)),speedKmh:Number(lireLocal('cp_trot_vitesse_kmh',15))},
           providers:Hub.makeProviders(window,{fetcher:regionalFetch,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
             nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{},ojpSession,
+            onFlexCandidates:({task:gtfsTask,network,candidates})=>{
+              const label=gtfsTask?.label;
+              if(!label||!panel.isConnected||transportHub?.signatureKey!==signature)return;
+              let byNetwork=flexByLabel.get(label);
+              if(!byNetwork){byNetwork=new Map();flexByLabel.set(label,byNetwork);}
+              byNetwork.set(network,(Array.isArray(candidates)?candidates:[]).map(c=>({...c,network})));
+              const host=hubHosts[label];
+              if(host?.isConnected)Hub.render(host,{...transportHub.view(label),flexCandidates:flexFor(label)});
+            },
             // OTP2 : moteur supplémentaire, actif seulement si un serveur HTTPS est configuré (aucun par défaut).
             lyonCoachAccess:true,
             allowOTP:typeof window.CP_OTP_ENDPOINT==='string'&&!!window.CPOTPClient?.buildQuery,
@@ -2469,7 +2481,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
               const path=transportDestinations[label].querySelector('.cp-transport-route');
               (path||transportDestinations[label].firstChild).insertAdjacentElement('afterend',host);}
-            Hub.render(host,view);
+            Hub.render(host,{...view,flexCandidates:flexFor(label)});
             labelState[label]={done:view.done,total:view.total};updateDayTabs();
           }});
         session.signatureKey=signature;transportHub=session;
