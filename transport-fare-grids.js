@@ -38,13 +38,14 @@ const GRIDS=[
   product:'1 voyage M-Ticket (application Ondéa Grand Lac), 1 h',validityMinutes:60,
   validFrom:'2026-07-01',validUntil:'2027-06-30',source:'https://www.ondeagrandlac.fr/tarifs/choisir-son-titre',
   checkedAt:'2026-11-13',flat:true},
- // Ondéa cars scolaires : vente à bord distincte du M-Ticket/QR.
- // Le calendrier et l'accès des adultes restent à vérifier séparément.
+ // Ondéa : titre conducteur 1 voyage sur les lignes scolaires 102/419.
+ // Ne prouve pas l'éligibilité d'un adulte à chaque course.
  {network:'Ondéa (conducteur, lignes 102/419)',operatorPattern:'^ond[ée]a\\b',modes:['Bus'],
-  includeLines:'^(?:102|419) : « Guide des tarifs », TARIFS EN VIGUEUR AU 14/12/2025 (PDF de mars 2026,
- // files.tac-mobilites.fr, texte relu le 13/11/2026) : ticket unité valable 60 minutes 1,70 € (carte bancaire sans contact,
- // application, ou conducteur toutes lignes) ; 2,00 € auprès du conducteur à bord de la T1 ; tous transports de la zone 210
- // (bus, tram, TAD). Fin de validité prudente : 12/12/2026 (changement de service annuel).
+  includeLines:'^(?:102|419)$',amount:1.70,currency:'EUR',
+  product:'1 voyage conducteur, sans QR/M-Ticket sur car scolaire',validityMinutes:60,
+  validFrom:'2026-07-01',validUntil:'2027-06-30',
+  source:'https://www.ondeagrandlac.fr/tarifs/choisir-son-titre',checkedAt:'2026-11-23',flat:true},
+ // TAC Mobilités : ticket unité zone 210 (guide officiel mars 2026).
  {network:'TAC',operatorPattern:'^tac\\b',modes:['Bus','Tram'],amount:1.70,currency:'EUR',
   product:'ticket unité 60 min, zone 210 (2,00 € auprès du conducteur de la T1)',validityMinutes:60,
   validFrom:'2025-12-14',validUntil:'2026-12-12',
