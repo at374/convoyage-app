@@ -805,6 +805,9 @@ test('processResource reconnaît GTFS-Flex sans fabriquer de départ régulier',
   });
   assert.equal(entry.status, 'ok', entry.error);
   assert.equal(entry.flexServiceCount, 1);
+  assert.equal(entry.flexBookingRuleCount, 0);
+  assert.equal(entry.flexBookingNoticeMinMinutes, null);
+  assert.equal(entry.flexBookingNoticeComplete, false);
   assert.equal(entry.activeFlexNext30Days, true);
   assert.equal(entry.activeNext30Days, true);
   assert.equal(entry.regularConnectedTrip, false);
@@ -996,4 +999,19 @@ test('processResource GTFS-Flex refuse une règle de réservation absente', asyn
     now: '2026-11-23T00:00:00Z'
   });
   assert.equal(entry.status, 'error');
+});
+
+test('toCSV exporte les préavis Flex sans les interpréter comme réservation confirmée', () => {
+  const csv = collector.toCSV({ networks: { flex: {
+    id: 'flex', network: 'TAD', status: 'ok', flexServiceCount: 1,
+    flexBookingRuleCount: 2, flexBookingNoticeMinMinutes: 60,
+    flexBookingNoticeMaxMinutes: 120, flexBookingNoticeComplete: true
+  } } });
+  const [header, values] = csv.trim().split('\n').map(row => row.split(','));
+  for (const [column, expected] of [
+    ['flexBookingRuleCount', '2'],
+    ['flexBookingNoticeMinMinutes', '60'],
+    ['flexBookingNoticeMaxMinutes', '120'],
+    ['flexBookingNoticeComplete', 'true']
+  ]) assert.equal(values[header.indexOf(column)], expected);
 });
