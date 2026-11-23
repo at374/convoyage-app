@@ -37,7 +37,11 @@ function quote({zones,departure,profile='full',zoneEvidence,ecoEligible=false,ne
  // Le profil Éco est réservé aux moins de 26 ans ; ne jamais l'appliquer par défaut.
  if(profile==='eco'&&ecoEligible!==true)return null;
  const date=typeof departure==='string'?departure.slice(0,10):'';
- if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<VALID_FROM||date>VALID_THROUGH)return null;
+ // N'accepter qu'une date ISO complète ou une date-heure ISO, jamais un préfixe arbitraire.
+ if(typeof departure!=='string'||!/^\d{4}-\d{2}-\d{2}(?:$|T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$)/.test(departure)||
+  !Number.isFinite(Date.parse(date+'T00:00:00Z'))||
+  new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date||
+  date<VALID_FROM||date>VALID_THROUGH)return null;
  // Preuve obligatoire : liste ordonnée des zones effectivement traversées, issue d'un référentiel.
  if(!zoneEvidence||zoneEvidence.verified!==true||!Array.isArray(zoneEvidence.traversedZones)||
   zoneEvidence.traversedZones.length!==zones||
