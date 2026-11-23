@@ -19,6 +19,8 @@ function prepare(files){
   const cents=Math.round(price*100);if(Math.abs(price*100-cents)>1e-6)continue;
   const duration=a.transfer_duration===undefined||a.transfer_duration===''?null:Number(a.transfer_duration);
   const transfers=a.transfers===undefined||a.transfers===''?null:Number(a.transfers); // vide = illimité
+  if(a.transfers!==undefined&&a.transfers!==''&&(!Number.isInteger(transfers)||transfers<0||transfers>2))continue;
+  if(a.transfer_duration!==undefined&&a.transfer_duration!==''&&(!Number.isInteger(duration)||duration<0))continue;
   fares.set(a.fare_id,{fareId:a.fare_id,amount:cents/100,currency,
    transferMinutes:Number.isFinite(duration)&&duration>0?Math.floor(duration/60):null,
    transfers:Number.isInteger(transfers)?transfers:null,agencyId:a.agency_id||null});
@@ -40,7 +42,7 @@ function legFare(prepared,index,leg){
    (!r.destination_id||(destination&&r.destination_id===destination));
   candidates=[...new Set(prepared.rules.filter(match).map(r=>r.fare_id))].map(id=>prepared.fares.get(id));
  }
- const distinct=new Set(candidates.map(f=>f.amount+' '+f.currency));
+ const distinct=new Set(candidates.map(f=>JSON.stringify([f.amount,f.currency,f.transferMinutes,f.transfers,f.agencyId])));
  if(!candidates.length||distinct.size!==1)return null;
  const f=candidates[0];
  return {amount:f.amount,currency:f.currency,fareId:f.fareId,transferMinutes:f.transferMinutes,transfers:f.transfers,
