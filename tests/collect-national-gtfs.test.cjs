@@ -550,3 +550,13 @@ test('activeWithinDays ignore les services sans courses reliées éligibles', ()
   assert.equal(collector.activeWithinDays(files, 30, today, new Set(['ACTIVE'])), true);
   assert.equal(collector.activeWithinDays(files, 30, today, new Set(['UNKNOWN'])), false);
 });
+
+test('lastServiceDate exclut les services sans courses connectées', () => {
+  const files = {
+    'calendar.txt': 'service_id,end_date\nCONNECTED,20261231\nORPHAN,20291231\n',
+    'calendar_dates.txt': 'service_id,date,exception_type\nORPHAN,20300101,1\nCONNECTED,20270115,1\n'
+  };
+  assert.equal(collector.lastServiceDate(files), '2030-01-01');
+  assert.equal(collector.lastServiceDate(files, new Set(['CONNECTED'])), '2027-01-15');
+  assert.equal(collector.lastServiceDate(files, new Set(['UNKNOWN'])), null);
+});
