@@ -687,9 +687,11 @@ jobs:
           assert.match(hubSource,/Option : carnet de 10 voyages à 14,50 €/);
           assert.match(hubSource,/\^ond\[ée\]a\\b\/i/,'Motif Ondéa correctement échappé');
           assert.match(hubSource,/\(\?:40\\d\|41\\d\)/,'Motif lignes 400–419 correctement échappé');
-          // Ondéa 419 : ligne de proximité scolaire, ne jamais y appliquer le M-Ticket urbain.
+          // Ondéa 419 : tarif conducteur vérifié ; le M-Ticket/QR reste exclu.
+          // La possibilité pour un adulte d'emprunter une course scolaire reste un contrôle distinct.
           const ondea={kind:'transit',mode:'Bus',provider:'Ondéa Aix-les-Bains',line:'419',departure:'2026-11-16T08:00:00+01:00'};
-          assert.equal(fareFor(ondea),null,'Ondéa 419 : tarif unitaire non prouvé');
+          assert.equal(fareFor(ondea)?.amount,1.70,'Ondéa 419 : titre unitaire conducteur');
+          assert.match(fareFor(ondea)?.source||'',/conducteur/i,'Ondéa 419 : pas de M-Ticket scolaire');
           assert.equal(fareFor({...ondea,line:'400'}),null,'Ondéa 400 : exclusion scolaire');
           assert.equal(fareFor({...ondea,line:'1'})?.amount,1.70,'Ondéa 1 : tarif urbain');
           // Régressions : zones, dates et opérateurs doivent rester strictement contrôlés.
