@@ -783,3 +783,50 @@ test('lastServiceDate accepte les dates GTFS AAAAMMJJ valides', () => {
   };
   assert.equal(collector.lastServiceDate(files), '2026-11-30');
 });
+
+test('processResource reconnaît GTFS-Flex sans fabriquer de départ régulier', async () => {
+  const files = {
+    ...baseFiles,
+    'stop_times.txt': 'trip_id,stop_sequence,location_group_id,start_pickup_drop_off_window,end_pickup_drop_off_window\n' +
+      'T1,1,G1,09:00:00,10:00:00\n' +
+      'T1,2,G2,09:30:00,11:00:00\n',
+    'location_groups.txt': 'location_group_id,location_group_name\nG1,Zone A\nG2,Zone B\n',
+    'location_group_stops.txt': 'location_group_id,stop_id\nG1,A\nG2,B\n',
+    'booking_rules.txt': 'booking_rule_id,booking_type\nBR1,1\n'
+  };
+  const entry = await collector.processResource({
+    id: 'flex1', datasetId: 'flex', network: 'Réseau TAD',
+    format: 'GTFS', url: 'https://example.org/flex.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher: async () => new Response(zip(files), { headers: { 'content-type': 'application/zip' } }),
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'ok', entry.error);
+  assert.equal(entry.flexServiceCount, 1);
+  assert.equal(entry.activeNext30Days, true);
+  assert.equal(entry.regularConnectedTrip, false);
+  assert.equal(entry.activeRegularNext30Days, false);
+});
+
+test('processResource rejette une fenêtre GTFS-Flex sans groupe desservi', async () => {
+  const files = {
+    ...baseFiles,
+    'stop_times.txt': 'trip_id,stop_sequence,location_group_id,start_pickup_drop_off_window,end_pickup_drop_off_window\n' +
+      'T1,1,G1,09:00:00,10:00:00\n' +
+      'T1,2,G2,09:30:00,11:00:00\n',
+    'location_groups.txt': 'location_group_id,location_group_name\nG1,Zone A\nG2,Zone B\n',
+    'location_group_stops.txt': 'location_group_id,stop_id\nG1,A\n'
+  };
+  const entry = await collector.processResource({
+    id: 'flex2', datasetId: 'flex', network: 'TAD incomplet',
+    format: 'GTFS', url: 'https://example.org/flex-invalid.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher: async () => new Response(zip(files), { headers: { 'content-type': 'application/zip' } }),
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'error');
+});
