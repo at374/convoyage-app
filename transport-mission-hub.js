@@ -403,9 +403,12 @@ async function scooterOnly(task,router,{maxKm=8,speedKmh=15}={}){
 function priceOf(j,fareFor){
  // Une marche issue d'un fournisseur tiers peut ne pas avoir le drapeau walkOnly.
  // La tarification doit rester gratuite si toutes les étapes sont piétonnes.
- if(j.scooterOnly)return {status:'free',amounts:{EUR:0},label:'Gratuit (trottinette personnelle)',missingSources:[]};
- if(j.walkOnly||j.legs?.length>0&&j.legs.every(l=>l.kind==='walk'))
-  return {status:'free',amounts:{EUR:0},label:'Gratuit (à pied)',missingSources:[]};
+ // Un indicateur hérité ne suffit pas à déclarer gratuit un trajet multimodal.
+ // Les étapes réelles doivent toutes être piétonnes ou en trottinette personnelle.
+ const allWalk=Array.isArray(j.legs)&&j.legs.length>0&&j.legs.every(l=>l.kind==='walk');
+ const allScooter=Array.isArray(j.legs)&&j.legs.length>0&&j.legs.every(l=>l.kind==='scooter');
+ if(j.scooterOnly&&allScooter)return {status:'free',amounts:{EUR:0},label:'Gratuit (trottinette personnelle)',missingSources:[]};
+ if(allWalk)return {status:'free',amounts:{EUR:0},label:'Gratuit (à pied)',missingSources:[]};
  const amounts={},missingSources=[],sources=[],legFares=[];
  let ticket=null; // titre en cours : {network,validUntilMs} — une correspondance dans la validité ne se repaie pas
  const isVerifiedFare=f=>!!(f&&finite(f.amount)&&f.amount>=0&&/^(EUR|CHF)$/.test(f.currency)&&f.source);
