@@ -143,10 +143,11 @@ function activeWithinDays(files, days, today = new Date(), eligibleServices = nu
 
 // Détection structurelle GTFS-Flex : ne fournit jamais de départ confirmé.
 function flexServices(files, index) {
-  const bookingRules = new Set();
+  const bookingRules = new Map();
   for (const row of gtfs.csvRows(files['booking_rules.txt'] || '')) {
-    if (row.booking_rule_id) bookingRules.add(row.booking_rule_id);
+    if (row.booking_rule_id) bookingRules.set(row.booking_rule_id, row);
   }
+  const usedBookingRules = new Set();
   const groups = new Set();
   for (const row of gtfs.csvRows(files['location_groups.txt'] || '')) {
     if (row.location_group_id) groups.add(row.location_group_id);
@@ -193,6 +194,8 @@ function flexServices(files, index) {
     if (seconds(row.end_pickup_drop_off_window) < seconds(row.start_pickup_drop_off_window)) continue;
     const sequence = Number(row.stop_sequence);
     if (!Number.isSafeInteger(sequence) || sequence < 0) continue;
+    if (row.pickup_booking_rule_id) usedBookingRules.add(row.pickup_booking_rule_id);
+    if (row.drop_off_booking_rule_id) usedBookingRules.add(row.drop_off_booking_rule_id);
     if (!byTrip.has(row.trip_id)) byTrip.set(row.trip_id, []);
     byTrip.get(row.trip_id).push({
       sequence, locationKey,
@@ -228,7 +231,16 @@ function flexServices(files, index) {
     }
     if (connected && trip.service_id) services.add(trip.service_id);
   }
-  return services;
+  // Préavis informatif seulement : ne prouve pas qu'une réservation est possible.
+  const notices = [...usedBookingRules].map(id => Number(bookingRules.get(id)?.prior_notice_duration_min))
+    .filter(value => Number.isFinite(value) && value >= 0);
+  return {
+    services,
+    bookingRuleCount: usedBookingRules.size,
+    bookingNoticeMinMinutes: notices.length ? Math.min(...notices) : null,
+    bookingNoticeMaxMinutes: notices.length ? Math.max(...notices) : null,
+    bookingNoticeComplete: notices.length === usedBookingRules.size && notices.length > 0
+  };
 }
 
 function lastServiceDate(files, eligibleServices = null) {
@@ -396,6 +408,10 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   let lines;
   let eligibleServices;
   let flexServiceCount = 0;
+  let flexBookingRuleCount = 0;
+  let flexBookingNoticeMinMinutes = null;
+  let flexBookingNoticeMaxMinutes = null;
+  let flexBookingNoticeComplete = false;
   let flexEligibleServices = new Set();
   let regularConnectedTrip = false;
   const regularServices = new Set();
@@ -458,10 +474,14 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
       }
     }
     const flex = flexServices(files, index);
-    flexServiceCount = flex.size;
-    flexEligibleServices = flex;
-    eligibleServices = new Set([...connectedServices, ...flex]);
-    if (!connectedTrip && !flex.size) {
+    flexServiceCount = flex.services.size;
+    flexBookingRuleCount = flex.bookingRuleCount;
+    flexBookingNoticeMinMinutes = flex.bookingNoticeMinMinutes;
+    flexBookingNoticeMaxMinutes = flex.bookingNoticeMaxMinutes;
+    flexBookingNoticeComplete = flex.bookingNoticeComplete;
+    flexEligibleServices = flex.services;
+    eligibleServices = new Set([...connectedServices, ...flex.services]);
+    if (!connectedTrip && !flex.services.size) {
       return { ...base, status: 'error', error: 'aucune course régulière ou GTFS-Flex structurée exploitable' };
     }
     lines = classifyRoutes(files);
@@ -498,6 +518,10 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     activeNext30Days,
     regularConnectedTrip,
     flexServiceCount,
+    flexBookingRuleCount,
+    flexBookingNoticeMinMinutes,
+    flexBookingNoticeMaxMinutes,
+    flexBookingNoticeComplete,
     activeFlexNext30Days,
     activeRegularNext30Days,
     lines,
