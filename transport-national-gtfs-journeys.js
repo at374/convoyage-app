@@ -82,6 +82,15 @@ async function loadAndSearch({operator,resource,fetcher,signal,loadOptions={},..
   Math.abs(searchOptions.from.lat)>90||Math.abs(searchOptions.to.lat)>90||
   Math.abs(searchOptions.from.lon)>180||Math.abs(searchOptions.to.lon)>180)
   throw new Error('Valid exact coordinates required before GTFS download');
+ // Reject invalid mission search settings before fetching potentially large GTFS archives.
+ const {radiusMeters=1200,maxResults=30,earliestDeparture=null,latestArrival=null}=searchOptions;
+ if(!Number.isFinite(radiusMeters)||radiusMeters<100||radiusMeters>6000)
+  throw new Error('Invalid walking search radius before GTFS download');
+ if(!Number.isSafeInteger(maxResults)||maxResults<1||maxResults>100)
+  throw new Error('Invalid result limit before GTFS download');
+ const validTime=value=>value===null||(typeof value==='string'&&/^\\d{1,3}:[0-5]\\d(?::[0-5]\\d)?$/.test(value));
+ if(!validTime(earliestDeparture))throw new Error('Invalid departure threshold before GTFS download');
+ if(!validTime(latestArrival))throw new Error('Invalid arrival threshold before GTFS download');
  // Never download unbounded national GTFS archives into a phone; use a server-prepared regional slice.
  const {maxArchiveBytes=20*1024*1024,...rest}=loadOptions;
  if(!Number.isSafeInteger(maxArchiveBytes)||maxArchiveBytes<=0||maxArchiveBytes>20*1024*1024)
