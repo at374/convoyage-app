@@ -178,7 +178,7 @@ test('processResource : calendrier impossible isolé comme erreur sans interromp
   const fetcher = async () => new Response(archive, { headers: { 'content-type': 'application/zip' } });
   const entry = await collector.processResource({
     id: 'r1', datasetId: 'd1', network: 'Réseau test',
-    url: 'https://example.org/feed.zip', updatedAt: '2026-11-01T00:00:00Z'
+    format: 'GTFS', url: 'https://example.org/feed.zip', updatedAt: '2026-11-01T00:00:00Z'
   }, { fetcher, maxBytes: 200 * 1024 * 1024, timeoutMs: 3000, previousEntry: null, now: 'invalid-date' });
   assert.equal(entry.status, 'error');
   assert.match(entry.error, /calendrier/);
