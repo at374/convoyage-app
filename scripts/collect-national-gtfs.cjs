@@ -155,7 +155,7 @@ async function pool(items, concurrency, worker) {
   return results;
 }
 
-async function processResource(resource, { fetcher, maxBytes, timeoutMs, previousEntry, now }) {
+async function processResource(resource, { fetcher, maxBytes, timeoutMs, previousEntry, now, availableAssets = null }) {
   const base = {
     id: slugify(resource.network) + '-' + slugify(resource.id).slice(0, 12),
     datasetId: resource.datasetId,
@@ -166,7 +166,9 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     aggregateSuspected: isAggregateSuspect(resource.network),
     lastCheckedAt: now,
   };
-  if (shouldSkip(resource, previousEntry)) {
+  // Si la Release a perdu son ZIP, ne jamais déclarer la ressource inchangée.
+  const archiveAvailable = availableAssets === null || availableAssets.has(base.id + '.zip');
+  if (archiveAvailable && shouldSkip(resource, previousEntry)) {
     return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now };
   }
   let bytes;
@@ -176,7 +178,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     return { ...base, status: 'error', error: 'téléchargement : ' + error.message };
   }
   const hash = sha256(bytes);
-  if (previousEntry && ['ok', 'unchanged'].includes(previousEntry.status) && previousEntry.sha256 === hash) {
+  if (archiveAvailable && previousEntry && ['ok', 'unchanged'].includes(previousEntry.status) && previousEntry.sha256 === hash) {
     return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now };
   }
   let extracted;
@@ -228,6 +230,7 @@ async function collect({
   concurrency = DEFAULT_CONCURRENCY,
   timeoutMs = DEFAULT_TIMEOUT_MS,
   previousManifest = null,
+  availableAssets = null,
   now = new Date().toISOString(),
 } = {}) {
   const datasets = await catalogue.fetchCatalogue(fetcher);
@@ -242,7 +245,7 @@ async function collect({
   if (Number.isInteger(limit) && limit > 0) resources = resources.slice(0, limit);
   const previousByKey = new Map((previousManifest?.networks ? Object.values(previousManifest.networks) : []).map((e) => [dedupKey(e), e]));
   const entries = await pool(resources, concurrency, (resource) =>
-    processResource(resource, { fetcher, maxBytes, timeoutMs, previousEntry: previousByKey.get(dedupKey(resource)), now })
+    processResource(resource, { fetcher, maxBytes, timeoutMs, previousEntry: previousByKey.get(dedupKey(resource)), now, availableAssets })
   );
   const manifest = {
     schemaVersion: SCHEMA_VERSION,
@@ -326,6 +329,10 @@ if (require.main === module) {
     const limit = flag('limit', null);
     const releaseDir = flag('release-dir', null); // dossier local où déposer les ZIP validés pour la publication (gh release upload).
     const dryRun = args.includes('--dry-run');
+    const availableAssetsFile = flag('available-assets', null);
+    const availableAssets = availableAssetsFile
+      ? new Set(JSON.parse(fs.readFileSync(availableAssetsFile, 'utf8')))
+      : null;
     let previousManifest = null;
     const manifestPath = path.join(outDir, 'manifest.json');
     if (fs.existsSync(manifestPath)) {
@@ -339,6 +346,7 @@ if (require.main === module) {
       limit: limit ? Number(limit) : null,
       // Une collecte limitée ne doit pas remplacer le manifeste national complet.
       previousManifest,
+      availableAssets,
     });
     fs.mkdirSync(outDir, { recursive: true });
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 1) + '\n');
