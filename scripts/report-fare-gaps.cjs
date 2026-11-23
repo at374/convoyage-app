@@ -49,6 +49,13 @@ function build(d){
   lines.push('','## Trajets partiellement tarifés','',
    totals.partialPricedJourneys+' trajets possèdent au moins un tarif, mais pas de prix total vérifié. Ils restent exclus du calcul de rentabilité.');
  }
+ const rankedAxes=axes.filter(a=>a.partial!==null&&a.partial>0).sort((a,b)=>b.partial-a.partial);
+ if(rankedAxes.length){
+  lines.push('','## Axes prioritaires : trajets déjà partiellement tarifés','',
+   'Classement par nombre de trajets ayant au moins un tarif mais pas de total vérifié. Un trajet partiel n’est jamais compté comme entièrement tarifé.','',
+   '| Axe | Partiellement tarifés | Entièrement tarifés | Total trajets |','|---|---:|---:|---:|');
+  for(const a of rankedAxes)lines.push('| '+a.name+' | '+a.partial+' | '+a.priced+' | '+a.trips+' |');
+ }
  const partial=Object.entries(totals.partialMissingByOperator||{}).filter(([,n])=>Number.isFinite(n)&&n>0).sort((a,b)=>b[1]-a[1]);
  if(partial.length){
   lines.push('','## Priorité : portions bloquant les trajets partiellement tarifés','',
