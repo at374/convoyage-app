@@ -219,7 +219,13 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   // jamais annoncer des services actifs lorsque la dernière date publiée est passée.
   const expiredCalendar = previousEntry?.lastServiceDate &&
     previousEntry.lastServiceDate < String(now).slice(0, 10);
-  if (archiveAvailable && !expiredCalendar && shouldSkip(resource, previousEntry)) {
+  // activeNext30Days est une projection glissante : ne pas conserver indéfiniment
+  // un résultat calculé à une date ancienne, même si le catalogue PAN n'a pas changé.
+  const checkedAt = Date.parse(previousEntry?.lastCheckedAt || '');
+  const currentTime = Date.parse(now);
+  const staleActivity = Number.isFinite(checkedAt) && Number.isFinite(currentTime) &&
+    (currentTime < checkedAt || currentTime - checkedAt >= 7 * 86400000);
+  if (archiveAvailable && !expiredCalendar && !staleActivity && shouldSkip(resource, previousEntry)) {
     return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now };
   }
   let bytes;
@@ -229,7 +235,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     return { ...base, status: 'error', error: 'téléchargement : ' + error.message };
   }
   const hash = sha256(bytes);
-  if (archiveAvailable && !expiredCalendar && previousEntry && ['ok', 'unchanged'].includes(previousEntry.status) && previousEntry.sha256 === hash) {
+  if (archiveAvailable && !expiredCalendar && !staleActivity && previousEntry && ['ok', 'unchanged'].includes(previousEntry.status) && previousEntry.sha256 === hash) {
     return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now };
   }
   let extracted;
