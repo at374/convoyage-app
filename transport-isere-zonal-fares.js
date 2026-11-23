@@ -94,7 +94,29 @@ function auditGTFSZones(index,stopZones){
  return {total:used.size,covered:covered.length,missing,invalid,
   coveragePercent:used.size?Math.round(10000*covered.length/used.size)/100:0};
 }
-const api={quote,quoteFromStops,evidenceFromStops,evidenceFromGTFS,auditGTFSZones,SOURCE,FULL,ECO,VALID_FROM};
+// Audit par course et par paire d'arrêts : la couverture des arrêts isolés
+// ne suffit pas à prouver qu'un voyage complet est tarifable.
+function auditGTFSJourneys(index,journeys,{stopZones,source}={}){
+ if(!Array.isArray(journeys))return null;
+ const result={total:0,priced:0,missingZone:0,ambiguous:0,invalidJourney:0};
+ for(const row of journeys){
+  result.total++;
+  const tripId=row?.tripId,fromStopId=row?.fromStopId||row?.originStop?.stopId||row?.originStop?.stop_id||row?.from;
+  const toStopId=row?.toStopId||row?.destinationStop?.stopId||row?.destinationStop?.stop_id||row?.to;
+  if(typeof tripId!=='string'||typeof fromStopId!=='string'||typeof toStopId!=='string'){
+   result.invalidJourney++;continue;
+  }
+  const times=index?.timesByTrip instanceof Map?index.timesByTrip.get(tripId):null;
+  if(!Array.isArray(times)||times.length<2){result.invalidJourney++;continue;}
+  const starts=times.map((t,i)=>t?.stop_id===fromStopId?i:-1).filter(i=>i>=0);
+  const ends=times.map((t,i)=>t?.stop_id===toStopId?i:-1).filter(i=>i>=0);
+  if(starts.length!==1||ends.length!==1||starts[0]>=ends[0]){result.ambiguous++;continue;}
+  if(evidenceFromGTFS(index,{tripId,fromStopId,toStopId,stopZones,source}))result.priced++;
+  else result.missingZone++;
+ }
+ return {...result,coveragePercent:result.total?Math.round(10000*result.priced/result.total)/100:0};
+}
+const api={quote,quoteFromStops,evidenceFromStops,evidenceFromGTFS,auditGTFSZones,auditGTFSJourneys,SOURCE,FULL,ECO,VALID_FROM};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPIsereZonalFares=api;
 })(typeof window!=='undefined'?window:globalThis);
