@@ -596,3 +596,14 @@ test('lastServiceDate ne prolonge pas un calendrier sans aucun jour actif', () =
   assert.equal(collector.lastServiceDate(files), '2027-12-31');
   assert.equal(collector.lastServiceDate(files, new Set(['DORMANT'])), null);
 });
+
+test('lastServiceDate ignore les périodes inversées ou les débuts impossibles', () => {
+  const files = {
+    'calendar.txt': 'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n' +
+      'INVERSE,1,1,1,1,1,1,1,20300101,20291231\n' +
+      'IMPOSSIBLE,1,1,1,1,1,1,1,20260230,20311231\n' +
+      'VALID,1,1,1,1,1,1,1,20260101,20271231\n'
+  };
+  assert.equal(collector.lastServiceDate(files), '2027-12-31');
+  assert.equal(collector.lastServiceDate(files, new Set(['INVERSE', 'IMPOSSIBLE'])), null);
+});
