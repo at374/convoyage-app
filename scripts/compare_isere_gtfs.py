@@ -25,9 +25,22 @@ def inspect(path):
         ids = [row.get('stop_id') for row in stops]
         if any(not i for i in ids) or len(ids) != len(set(ids)):
             raise ValueError('Empty or duplicate stop_id')
-        used = {row.get('stop_id') for row in read('stop_times.txt')}
+        stop_times = read('stop_times.txt')
+        used = {row.get('stop_id') for row in stop_times}
         if None in used or '' in used or not used.issubset(ids):
             raise ValueError('Invalid or orphan stop_id in stop_times.txt')
+        trips = read('trips.txt')
+        routes = read('routes.txt')
+        trip_ids = {row.get('trip_id') for row in trips}
+        route_ids = {row.get('route_id') for row in routes}
+        if any(not t for t in trip_ids) or len(trip_ids) != len(trips):
+            raise ValueError('Empty or duplicate trip_id')
+        if any(not r for r in route_ids) or len(route_ids) != len(routes):
+            raise ValueError('Empty or duplicate route_id')
+        if any(row.get('trip_id') not in trip_ids for row in stop_times):
+            raise ValueError('Orphan trip_id in stop_times.txt')
+        if any(row.get('route_id') not in route_ids for row in trips):
+            raise ValueError('Orphan route_id in trips.txt')
         end_dates = []
         for name, field in [('calendar.txt', 'end_date'), ('calendar_dates.txt', 'date')]:
             if name in names:
@@ -38,11 +51,14 @@ def inspect(path):
             'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
             'agency': sorted({a.get('agency_name', '') for a in agencies}),
             'stops': len(ids), 'served_stops': len(used),
+            'routes': len(route_ids), 'trips': len(trip_ids),
+            'stop_time_rows': len(stop_times),
+            'unserved_stops': len(set(ids) - used),
             'calendar_last_date': max(end_dates),
             'fare_tables': sorted(required_name for required_name in
                 ('fare_attributes.txt', 'fare_rules.txt', 'fare_products.txt', 'fare_media.txt')
                 if required_name in names),
-        }, set(ids)
+        }, set(ids), used
 
 
 def main():
@@ -51,16 +67,19 @@ def main():
     parser.add_argument('new_zip', type=Path)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    old, old_ids = inspect(args.old_zip)
-    new, new_ids = inspect(args.new_zip)
+    old, old_ids, old_served = inspect(args.old_zip)
+    new, new_ids, new_served = inspect(args.new_zip)
     result = {'old': old, 'new': new, 'added_stop_ids': sorted(new_ids-old_ids),
               'removed_stop_ids': sorted(old_ids-new_ids),
               'stop_id_intersection': len(old_ids & new_ids),
+              'added_served_stop_ids': sorted(new_served - old_served),
+              'removed_served_stop_ids': sorted(old_served - new_served),
+              'served_stop_id_intersection': len(old_served & new_served),
               'zones_verified': 0, 'fares_verified': 0,
               'safe_to_auto_replace': False}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
-    print(json.dumps({k: v for k, v in result.items() if k not in ('added_stop_ids','removed_stop_ids')}, ensure_ascii=False))
+    print(json.dumps({k: v for k, v in result.items() if k not in ('added_stop_ids','removed_stop_ids','added_served_stop_ids','removed_served_stop_ids')}, ensure_ascii=False))
 
 
 if __name__ == '__main__':
