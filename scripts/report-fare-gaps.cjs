@@ -7,13 +7,13 @@ function build(d){
  if(!d||!Array.isArray(d.axes))throw Error('Invalid diagnostic: axes missing');
  const axes=d.axes.map(a=>{
   const missing=Object.entries(a.missingFareByOperator||{}).filter(([,n])=>Number.isFinite(n)&&n>0).sort((a,b)=>b[1]-a[1]);
-  return {name:String(a.name||a.id||'?').replace(/[|\r\n]/g,' '),trips:Number(a.trips)||0,priced:Number(a.priced)||0,missing};
+  return {name:String(a.name||a.id||'?').replace(/[|\r\n]/g,' '),trips:Number(a.trips)||0,priced:Number(a.priced)||0,partial:Number.isFinite(a.partialPricedJourneys)?a.partialPricedJourneys:null,missing};
  }).sort((a,b)=>(b.trips-b.priced)-(a.trips-a.priced));
  const lines=['# Couverture tarifaire — diagnostic automatique','',
   'Source : '+String(d.source||'diagnostic').replace(/[\r\n]/g,' ')+' ; relevé : '+String(d.at||'inconnu')+' ; scénario : '+String(d.when||'inconnu')+'.','',
   'Ce rapport est un **instantané de diagnostic**, pas une confirmation de tarifs ou de disponibilité commerciale.','',
-  '| Axe | Trajets | Entièrement tarifés | À compléter | Opérateurs sans prix |','|---|---:|---:|---:|---|'];
- for(const a of axes)lines.push('| '+a.name+' | '+a.trips+' | '+a.priced+' | '+Math.max(0,a.trips-a.priced)+' | '+(a.missing.map(([k,v])=>String(k).replace(/[|\r\n]/g,' ')+' ('+v+' portions)').join(', ')||'—')+' |');
+  '| Axe | Trajets | Entièrement tarifés | Partiellement tarifés | À compléter | Opérateurs sans prix |','|---|---:|---:|---:|---:|---|'];
+ for(const a of axes)lines.push('| '+a.name+' | '+a.trips+' | '+a.priced+' | '+(a.partial===null?'—':a.partial)+' | '+Math.max(0,a.trips-a.priced)+' | '+(a.missing.map(([k,v])=>String(k).replace(/[|\r\n]/g,' ')+' ('+v+' portions)').join(', ')||'—')+' |');
  const byOperator=new Map();
  for(const a of axes)for(const [name,n] of a.missing)byOperator.set(name,(byOperator.get(name)||0)+n);
  lines.push('','## Portions sans prix par opérateur','',
