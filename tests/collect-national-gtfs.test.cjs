@@ -607,3 +607,22 @@ test('lastServiceDate ignore les périodes inversées ou les débuts impossibles
   assert.equal(collector.lastServiceDate(files), '2027-12-31');
   assert.equal(collector.lastServiceDate(files, new Set(['INVERSE', 'IMPOSSIBLE'])), null);
 });
+
+test('processResource rejette une liaison où montée et descente sont interdites', async () => {
+  const files = {
+    ...baseFiles,
+    'stop_times.txt': 'trip_id,arrival_time,departure_time,stop_id,stop_sequence,pickup_type,drop_off_type\n' +
+      'T1,10:00:00,10:00:00,A,1,1,0\nT1,11:00:00,11:00:00,B,2,0,1\n'
+  };
+  const entry = await collector.processResource({
+    id: 'r14', datasetId: 'd14', network: 'Réseau accès interdits',
+    format: 'GTFS', url: 'https://example.org/forbidden.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher: async () => new Response(zip(files), { headers: { 'content-type': 'application/zip' } }),
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'error');
+  assert.match(entry.error, /aucune course/);
+});
