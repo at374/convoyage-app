@@ -26,6 +26,8 @@ function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=
  if(Number.isNaN(min))throw new Error('Invalid departure threshold');
  const max=latestArrival===null?Infinity:seconds(latestArrival);
  if(Number.isNaN(max))throw new Error('Invalid arrival threshold');
+ // Impossible window: avoid a costly national direct/transfer search.
+ if(max<min)return [];
  const direct=indexer.nearbyDirectTrips(files,index,date,from,to,radiusMeters);
  // Apply the mission time window inside the transfer search, not only afterwards.
  // This avoids scanning irrelevant departures across a full national timetable.
