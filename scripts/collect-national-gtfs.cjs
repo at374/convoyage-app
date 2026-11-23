@@ -237,11 +237,27 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     let connectedTrip = false;
     for (const [tripId, trip] of index.tripById) {
       if (!index.routeById.has(trip.route_id)) continue;
-      const stops = new Set();
+      let firstStop = null;
+      let firstDeparture = null;
       for (const time of index.timesByTrip.get(tripId) || []) {
-        if (timePattern.test(time.arrival_time || '') &&
-            timePattern.test(time.departure_time || '')) stops.add(time.stop_id);
-        if (stops.size >= 2) { connectedTrip = true; break; }
+        if (!timePattern.test(time.arrival_time || '') ||
+            !timePattern.test(time.departure_time || '')) continue;
+        const seconds = value => {
+          const [h, m, sec] = value.split(':').map(Number);
+          return h * 3600 + m * 60 + sec;
+        };
+        const arrival = seconds(time.arrival_time);
+        const departure = seconds(time.departure_time);
+        if (arrival > departure) continue;
+        if (firstStop !== null && time.stop_id !== firstStop &&
+            arrival >= firstDeparture) {
+          connectedTrip = true;
+          break;
+        }
+        if (firstStop === null) {
+          firstStop = time.stop_id;
+          firstDeparture = departure;
+        }
       }
       if (connectedTrip) break;
     }
