@@ -238,7 +238,11 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   const currentTime = Date.parse(now);
   const staleActivity = !Number.isFinite(checkedAt) || !Number.isFinite(currentTime) ||
     currentTime < checkedAt || currentTime - checkedAt >= 7 * 86400000;
-  if (archiveAvailable && !expiredCalendar && !staleActivity && shouldSkip(resource, previousEntry)) {
+  // Les anciens manifestes ne contiennent pas encore la distinction TAD/régulier.
+  // Les revalider même si la ressource PAN et son ZIP semblent inchangés.
+  const missingRegularClassification = typeof previousEntry?.regularConnectedTrip !== 'boolean' ||
+    typeof previousEntry?.activeRegularNext30Days !== 'boolean';
+  if (archiveAvailable && !expiredCalendar && !staleActivity && !missingRegularClassification && shouldSkip(resource, previousEntry)) {
     return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now, lastValidatedAt: validatedAt };
   }
   let bytes;
@@ -248,7 +252,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     return { ...base, status: 'error', error: 'téléchargement : ' + error.message };
   }
   const hash = sha256(bytes);
-  if (archiveAvailable && !expiredCalendar && !staleActivity && shouldSkip(resource, previousEntry) && previousEntry.sha256 === hash) {
+  if (archiveAvailable && !expiredCalendar && !staleActivity && !missingRegularClassification && shouldSkip(resource, previousEntry) && previousEntry.sha256 === hash) {
     return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now, lastValidatedAt: validatedAt };
   }
   let extracted;
