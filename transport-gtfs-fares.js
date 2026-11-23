@@ -11,17 +11,19 @@ function rows(files,name){
 }
 function prepare(files){
  const attrs=rows(files,'fare_attributes.txt'),rules=rows(files,'fare_rules.txt');
- const fares=new Map();
+ const fares=new Map(),duplicateIds=new Set();
  for(const a of attrs){
   const price=Number(a.price),currency=String(a.currency_type||'').toUpperCase();
   if(!a.fare_id||!Number.isFinite(price)||price<0||!/^(EUR|CHF)$/.test(currency))continue;
   const cents=Math.round(price*100);if(Math.abs(price*100-cents)>1e-6)continue;
   const duration=a.transfer_duration===undefined||a.transfer_duration===''?null:Number(a.transfer_duration);
   const transfers=a.transfers===undefined||a.transfers===''?null:Number(a.transfers); // vide = illimité
+  if(fares.has(a.fare_id))duplicateIds.add(a.fare_id);
   fares.set(a.fare_id,{fareId:a.fare_id,amount:cents/100,currency,
    transferMinutes:Number.isFinite(duration)&&duration>0?Math.floor(duration/60):null,
    transfers:Number.isInteger(transfers)?transfers:null,agencyId:a.agency_id||null});
  }
+ for(const id of duplicateIds)fares.delete(id); // Duplicate GTFS fare IDs are invalid, even when amounts agree.
  return {fares,rules:rules.filter(r=>r.fare_id&&fares.has(r.fare_id)),hasRulesFile:typeof files?.['fare_rules.txt']==='string'};
 }
 // Prix d'une portion (montée tripId/from → descente to) ; null si non déterminable sans ambiguïté.
