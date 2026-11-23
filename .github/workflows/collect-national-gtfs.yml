@@ -46,6 +46,8 @@ jobs:
           if (( limit > 10000 )); then echo "Limite trop élevée"; exit 1; fi
           echo "limit=$limit" >> "$GITHUB_OUTPUT"
       - name: Collecter et valider les GTFS
+        env:
+          LIMIT: ${{ steps.scope.outputs.limit }}
         shell: bash
         run: |
           set -euo pipefail
@@ -53,9 +55,9 @@ jobs:
           if [ "${{ steps.scope.outputs.limit }}" = "0" ]; then
             node scripts/collect-national-gtfs.cjs --out docs/gtfs-national --release-dir gtfs-release
           else
-            node scripts/collect-national-gtfs.cjs --out docs/gtfs-national --release-dir gtfs-release --limit "${{ steps.scope.outputs.limit }}"
+            node scripts/collect-national-gtfs.cjs --out docs/gtfs-national-sample --release-dir gtfs-release --limit "${{ steps.scope.outputs.limit }}"
           fi
-          node -e 'const m=require("./docs/gtfs-national/manifest.json"); if(!m.totals.found) process.exit(1); console.log(m.totals)'
+          node -e 'const p=process.env.LIMIT==="0"?"./docs/gtfs-national/manifest.json":"./docs/gtfs-national-sample/manifest.json";const m=require(p);if(!m.totals.found)process.exit(1);console.log(m.totals)'
       - name: Publier les ZIP validés dans la Release
         shell: bash
         run: |
@@ -74,6 +76,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if [ "${{ steps.scope.outputs.limit }}" != "0" ]; then echo "Test limité : manifeste national inchangé"; exit 0; fi
           git add docs/gtfs-national/manifest.json docs/gtfs-national/manifest.csv
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "GTFS national: manifeste de collecte ${GITHUB_RUN_ID}"
