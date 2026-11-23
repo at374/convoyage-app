@@ -51,3 +51,13 @@ test('hub : tarif GTFS repris comme prix fournisseur, correspondance couverte pe
  const [k]=H.fromGTFS([{...row,legs:row.legs.map(l=>({...l,gtfsFare:{...g,transfers:0}}))}]);
  assert.equal(H.priceOf(k).label,'3,20 €','transfers=0 : chaque montée payée');
 });
+
+test('explicit empty fare_rules never means network-wide fare',()=>{
+ const files={...base,
+  'fare_attributes.txt':'fare_id,price,currency_type,payment_method,transfers\nU,2.00,EUR,0,0',
+  'fare_rules.txt':'fare_id,route_id,origin_id,destination_id\n'};
+ const prepared=F.prepare(files);
+ assert.equal(prepared.hasRulesFile,true);
+ assert.equal(prepared.rules.length,0);
+ assert.equal(F.legFare(prepared,idx(files),{tripId:'T1',from:'A',to:'B'}),null);
+});
