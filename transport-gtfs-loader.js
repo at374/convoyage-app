@@ -196,7 +196,7 @@ async function loadResource(resource,{fetcher=root.fetch,signal,timeoutMs=30000,
   if(!index.counts.stops||!index.counts.routes||!index.sourceTrips||!index.counts.stopTimes||
     (!indexedStopTimes&&!index.skippedStopTimes&&!hasFlexWindows))
     throw new Error('Empty or disconnected GTFS index');
-  const files=retainSourceTables?extracted.files:Object.fromEntries(Object.entries(extracted.files).filter(([name])=>['agency.txt','calendar.txt','calendar_dates.txt','transfers.txt','feed_info.txt','fare_attributes.txt','fare_rules.txt'].includes(name)));
+  const files=retainSourceTables?extracted.files:Object.fromEntries(Object.entries(extracted.files).filter(([name])=>['agency.txt','calendar.txt','calendar_dates.txt','transfers.txt','feed_info.txt','fare_attributes.txt','fare_rules.txt','location_groups.txt','location_group_stops.txt','booking_rules.txt','locations.geojson'].includes(name)));
   return {...extracted,files,index,indexServiceDates:dates,source:{datasetId:resolved.datasetId||null,resourceId:resolved.id||null,
    network:resolved.network||resource.network||null,url:resolved.url,updatedAt:resolved.updatedAt||null,loadedAt:new Date().toISOString()},
    indexedStopTimes,skippedStopTimes:index.skippedStopTimes,rejectedStopTimes:index.counts.stopTimes-indexedStopTimes-index.skippedStopTimes,
