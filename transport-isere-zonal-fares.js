@@ -7,6 +7,8 @@
 'use strict';
 const SOURCE='https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_isere_tarifs_20260301.pdf';
 const VALID_FROM='2026-03-01';
+// Fin de validité de cette grille millésimée : ne jamais extrapoler les prix 2026.
+const VALID_THROUGH='2026-12-31';
 const FULL=[null,4.30,6.00,7.70,9.40,11.10,12.80];
 const ECO=[null,3.20,4.40,5.60,6.80,8.00,9.20];
 // Prépare une preuve depuis la séquence COMPLÈTE des arrêts réellement parcourus.
@@ -35,7 +37,7 @@ function quote({zones,departure,profile='full',zoneEvidence,ecoEligible=false,ne
  // Le profil Éco est réservé aux moins de 26 ans ; ne jamais l'appliquer par défaut.
  if(profile==='eco'&&ecoEligible!==true)return null;
  const date=typeof departure==='string'?departure.slice(0,10):'';
- if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<VALID_FROM)return null;
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||date<VALID_FROM||date>VALID_THROUGH)return null;
  // Preuve obligatoire : liste ordonnée des zones effectivement traversées, issue d'un référentiel.
  if(!zoneEvidence||zoneEvidence.verified!==true||!Array.isArray(zoneEvidence.traversedZones)||
   zoneEvidence.traversedZones.length!==zones||
@@ -46,7 +48,7 @@ function quote({zones,departure,profile='full',zoneEvidence,ecoEligible=false,ne
  if(!table)return null;
  return {amount:table[zones],currency:'EUR',zones,profile,validityMinutes:zones===1?60:zones===2?90:120,
   product:'Cars Région Isère · 1 voyage · '+zones+' zone'+(zones>1?'s':'')+(profile==='eco'?' · Éco moins de 26 ans':''),
-  source:SOURCE,zoneSource:zoneEvidence.source,validFrom:VALID_FROM};
+  source:SOURCE,zoneSource:zoneEvidence.source,validFrom:VALID_FROM,validThrough:VALID_THROUGH};
 }
 // Ne calcule que sur une séquence de tous les arrêts parcourus, fournie par le moteur GTFS.
 // Si le moteur ne peut pas garantir l'exhaustivité, aucune tarification n'est produite.
@@ -137,7 +139,7 @@ function validateOfficialStopZones(index,reference){
  if(unknown.length||invalid.length)return {valid:false,unknown,invalid,stopZones:null};
  return {valid:true,unknown:[],invalid:[],stopZones:clean,source:reference.source};
 }
-const api={quote,quoteFromStops,evidenceFromStops,evidenceFromGTFS,auditGTFSZones,auditGTFSJourneys,validateOfficialStopZones,SOURCE,FULL,ECO,VALID_FROM};
+const api={quote,quoteFromStops,evidenceFromStops,evidenceFromGTFS,auditGTFSZones,auditGTFSJourneys,validateOfficialStopZones,SOURCE,FULL,ECO,VALID_FROM,VALID_THROUGH};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPIsereZonalFares=api;
 })(typeof window!=='undefined'?window:globalThis);
