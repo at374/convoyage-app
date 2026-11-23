@@ -140,7 +140,7 @@ function validateTables(files){
  }
  // GTFS classique : horaires fixes et arrêt précis. GTFS-Flex : fenêtres
  // horaires et localisation par arrêt ou groupe, sans départ garanti.
- const stopTimesHeader=files['stop_times.txt'].split('\n',1)[0].replace(/^\\uFEFF/,'').trim().split(',');
+ const stopTimesHeader=files['stop_times.txt'].split('\n',1)[0].replace(/^\uFEFF/,'').trim().split(',');
  const has=(column)=>stopTimesHeader.includes(column);
  const scheduled=has('arrival_time')&&has('departure_time')&&has('stop_id');
  const flex=has('start_pickup_drop_off_window')&&has('end_pickup_drop_off_window')&&
