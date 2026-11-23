@@ -109,6 +109,11 @@ test('tarifs : indicateurs marche et trottinette périmés ne rendent jamais un 
  assert.equal(H.priceOf({scooterOnly:true,legs:[{kind:'scooter'}]}).status,'free');
  assert.equal(H.priceOf({scooterOnly:true,legs:[{kind:'walk'},{kind:'scooter'}]}).status,'free');
  assert.equal(H.priceOf({scooterOnly:true,legs:[{kind:'walk'},{kind:'scooter'},transit]}).status,'unknown');
+ const priced={...transit,fare:{amount:4.5,currency:'EUR',source:'tarif officiel de test'}};
+ const mixed=H.priceOf({scooterOnly:true,legs:[{kind:'walk'},{kind:'scooter'},priced]});
+ assert.equal(mixed.status,'verified');
+ assert.equal(mixed.amounts.EUR,4.5,'la trottinette personnelle ne rajoute pas un faux billet');
+ assert.equal(H.priceOf({legs:[{kind:'scooter'},priced]}).status,'unknown','une trottinette non identifiée personnelle ne doit pas être gratuite par défaut');
  assert.equal(H.priceOf({walkOnly:true,legs:[]}).status,'unknown');
 });
 
