@@ -315,7 +315,8 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     currentTime < checkedAt || currentTime - checkedAt >= 7 * 86400000;
   // Les anciens manifestes ne contiennent pas encore la distinction TAD/régulier.
   // Les revalider même si la ressource PAN et son ZIP semblent inchangés.
-  const missingRegularClassification = typeof previousEntry?.flexServiceCount !== 'number' ||
+  const missingRegularClassification = typeof previousEntry?.activeFlexNext30Days !== 'boolean' ||
+    typeof previousEntry?.flexServiceCount !== 'number' ||
     typeof previousEntry?.regularConnectedTrip !== 'boolean' ||
     typeof previousEntry?.activeRegularNext30Days !== 'boolean';
   if (archiveAvailable && !expiredCalendar && !staleActivity && !missingRegularClassification && shouldSkip(resource, previousEntry)) {
@@ -356,6 +357,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   let lines;
   let eligibleServices;
   let flexServiceCount = 0;
+  let flexEligibleServices = new Set();
   let regularConnectedTrip = false;
   const regularServices = new Set();
   try {
@@ -418,6 +420,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     }
     const flex = flexServices(files, index);
     flexServiceCount = flex.size;
+    flexEligibleServices = flex;
     eligibleServices = new Set([...connectedServices, ...flex]);
     if (!connectedTrip && !flex.size) {
       return { ...base, status: 'error', error: 'aucune course régulière ou GTFS-Flex structurée exploitable' };
@@ -428,10 +431,12 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   }
   let activeNext30Days;
   let activeRegularNext30Days;
+  let activeFlexNext30Days;
   let publishedLastServiceDate;
   try {
     activeNext30Days = activeWithinDays(files, ACTIVE_WINDOW_DAYS, new Date(now), eligibleServices);
     activeRegularNext30Days = activeWithinDays(files, ACTIVE_WINDOW_DAYS, new Date(now), regularServices);
+    activeFlexNext30Days = activeWithinDays(files, ACTIVE_WINDOW_DAYS, new Date(now), flexEligibleServices);
     publishedLastServiceDate = lastServiceDate(files, eligibleServices);
   } catch (error) {
     return { ...base, status: 'error', error: 'calendrier : ' + error.message };
@@ -454,6 +459,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     activeNext30Days,
     regularConnectedTrip,
     flexServiceCount,
+    activeFlexNext30Days,
     activeRegularNext30Days,
     lines,
     bytes, // retiré avant écriture du manifeste ; utilisé par l'appelant pour la publication.
@@ -530,7 +536,7 @@ async function collect({
 }
 
 function toCSV(manifest) {
-  const header = ['id', 'network', 'status', 'routes', 'trips', 'stops', 'fares', 'activeNext30Days', 'activeRegularNext30Days', 'regularConnectedTrip', 'flexServiceCount', 'lastServiceDate', 'lines_regular', 'lines_school', 'lines_demandResponsive', 'lines_unknown', 'aggregateSuspected', 'sha256', 'url', 'agencyCount', 'agencyNames', 'agencyTimezones', 'error'];
+  const header = ['id', 'network', 'status', 'routes', 'trips', 'stops', 'fares', 'activeNext30Days', 'activeRegularNext30Days', 'regularConnectedTrip', 'flexServiceCount', 'activeFlexNext30Days', 'lastServiceDate', 'lines_regular', 'lines_school', 'lines_demandResponsive', 'lines_unknown', 'aggregateSuspected', 'sha256', 'url', 'agencyCount', 'agencyNames', 'agencyTimezones', 'error'];
   const rows = [header.join(',')];
   const esc = (v) => {
     const s = v === undefined || v === null ? '' : String(v);
@@ -550,6 +556,7 @@ function toCSV(manifest) {
         entry.activeRegularNext30Days ?? '',
         entry.regularConnectedTrip ?? '',
         entry.flexServiceCount ?? '',
+        entry.activeFlexNext30Days ?? '',
         entry.lastServiceDate ?? '',
         entry.lines?.regular ?? '',
         entry.lines?.school ?? '',
