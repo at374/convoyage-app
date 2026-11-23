@@ -14,3 +14,15 @@ test('Isere fare requires certified complete stop-level zones',()=>{
  assert.equal(quote({zones:2,departure:'2026-11-30',zoneEvidence:{...evidence,traversedZones:['A']}}),null);
  assert.equal(evidenceFromStops({stopIds:stops,stopZones:zones,source,complete:false}),null);
 });
+
+test('Isere fare rejects incomplete stop evidence and out-of-range dates',()=>{
+ assert.equal(evidenceFromStops({stopIds:stops,stopZones:{'stop-1':'A'},source,complete:true}),null);
+ assert.equal(evidenceFromStops({stopIds:stops,stopZones:zones,source:'https://example.com/zone',complete:true}),null);
+ const evidence=evidenceFromStops({stopIds:stops,stopZones:zones,source,complete:true});
+ assert.equal(quote({zones:2,departure:'2026-02-28',zoneEvidence:evidence}),null);
+ assert.equal(quote({zones:7,departure:'2026-11-30',zoneEvidence:evidence}),null);
+ assert.equal(quote({zones:2,departure:'2026-11-30',zoneEvidence:evidence,profile:'eco'}),null);
+ assert.equal(quote({zones:2,departure:'2026-11-30',zoneEvidence:evidence,profile:'eco',ecoEligible:true}).amount,4.40);
+ assert.equal(quote({zones:2,departure:'2026-11-30',zoneEvidence:evidence,network:'Cars Région Savoie'}),null);
+ assert.equal(quote({zones:2,departure:'2026-11-30',zoneEvidence:evidence,line:'Transaltitude'}),null);
+});
