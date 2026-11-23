@@ -1,6 +1,6 @@
 # Couverture tarifaire — diagnostic automatique
 
-Source : diagnostic serveur (GitHub Actions) ; relevé : 2026-11-23T18:11:41.753Z ; scénario : 2026-11-30T08:00:00+01:00.
+Source : diagnostic serveur (GitHub Actions) ; relevé : 2026-11-23T18:34:13.007Z ; scénario : 2026-11-30T08:00:00+01:00.
 
 Ce rapport est un **instantané de diagnostic**, pas une confirmation de tarifs ou de disponibilité commerciale.
 
