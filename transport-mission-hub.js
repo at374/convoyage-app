@@ -1063,7 +1063,14 @@ function makeProviders(r,opts={}){
  // onerror et n'était donc jamais compté comme un échec) dans un diagnostic visible, pour savoir enfin si le
  // worker échoue à chaque recherche (et pourquoi) ou seulement de temps en temps.
  const noteWorkerFail=reason=>{r.__cpHubWorkerLastError=reason+' ('+new Date().toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris'})+')';r.__cpHubWorkerFailCount=(r.__cpHubWorkerFailCount||0)+1;};
- const workerCall=payload=>new Promise((resolve,reject)=>{
+ // 23/11/2026 (Laurent : « Correspondances entre réseaux (GTFS) : timeout » après le correctif de cession
+ // entre paires — les autres moteurs (SNCF/FlixBus/BlaBlaCar Bus, trajets directs) n'échouaient plus, mais
+ // celui-ci continuait d'échouer à 90 s pile) : P.local_correspondances et P['national_'+operator] ont
+ // volontairement un budget de 150 s chacun (timeoutMs, plus bas dans ce fichier — pensé pour le cas où
+ // plusieurs flux GTFS doivent d'abord être téléchargés sur une connexion lente), mais ce délai interne au
+ // worker était figé à 90 s pour TOUT appel, quel que soit le calcul demandé — il coupait donc court avant
+ // même que le budget de 150 s prévu par l'appelant ne soit atteint. Rendu configurable par appel.
+ const workerCall=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
   let w=r.__cpHubWorker;
   if(!w){
    // 23/11/2026 : version ajoutée à l'URL du worker (jusqu'ici absente) pour que le correctif de
@@ -1079,7 +1086,7 @@ function makeProviders(r,opts={}){
     if(data.error)q.reject(new Error(data.error));else q.resolve(data);};
   }
   const id=(r.__cpHubWorkerSeq=(r.__cpHubWorkerSeq||0)+1);
-  const t=setTimeout(()=>{r.__cpHubWorkerPending.delete(id);noteWorkerFail('délai dépassé (90 s)');reject(new Error('timeout'));},90000);
+  const t=setTimeout(()=>{r.__cpHubWorkerPending.delete(id);noteWorkerFail('délai dépassé ('+Math.round(timeoutMs/1000)+' s)');reject(new Error('timeout'));},timeoutMs);
   r.__cpHubWorkerPending.set(id,{resolve,reject,t});
   try{w.postMessage({id,...payload});}catch(e){r.__cpHubWorkerPending.delete(id);clearTimeout(t);noteWorkerFail('postMessage: '+(e&&e.message||e));reject(e);}
  });
@@ -1088,12 +1095,12 @@ function makeProviders(r,opts={}){
  // (nearbyTransferTrips même réseau + CPGTFSFederation.crossNetworkTrips entre réseaux, jusqu'à 28 paires
  // de réseaux) est le calcul le plus lourd de toute la recherche transport et tournait sur le fil principal.
  // Déplacée dans le même worker que les trajets directs (local_<id>) : voir transport-hub-local-worker.js.
- const workerCorrespondances=payload=>workerCall({op:'correspondances',...payload}).then(d=>d.rows);
+ const workerCorrespondances=payload=>workerCall({op:'correspondances',...payload},150000).then(d=>d.rows);
  // 21/11/2026 (Laurent : « ça bloque toujours ») : SNCF (TER/TGV)/FlixBus/BlaBlaCar Bus (national_<id>
  // plus bas) appelaient CPNationalGTFSJourneys.loadAndSearch directement sur le fil principal — jusqu'à
  // 4 recherches par mission sur le plus gros flux GTFS de tous (réseau SNCF national). Déplacée dans le
  // même worker (transport-hub-local-worker.js importe aussi transport-national-gtfs-journeys.js).
- const workerNationalSearch=(operator,resource,searchOptions)=>workerCall({op:'national',operator,resource,searchOptions}).then(d=>d.result);
+ const workerNationalSearch=(operator,resource,searchOptions)=>workerCall({op:'national',operator,resource,searchOptions},150000).then(d=>d.result);
  // Regional GTFS archives already hosted by the project. These are scheduled
  // candidates only; the pedestrian router and confirmation checks still apply.
  // 23/11/2026 : localNetworks/base/deployedBase hissés au niveau de makeProviders (au lieu d'être internes au
