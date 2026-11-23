@@ -6,6 +6,7 @@ on:
     paths:
       - 'scripts/collect-national-gtfs.cjs'
       - 'tests/collect-national-gtfs.test.cjs'
+      - 'tests/transport-gtfs-loader.test.cjs'
       - 'transport-catalogue.js'
       - 'transport-gtfs-loader.js'
       - 'transport-gtfs-index.js'
@@ -23,4 +24,4 @@ jobs:
         with:
           node-version: '22'
       - name: Tests du collecteur national
-        run: node --test tests/collect-national-gtfs.test.cjs
+        run: node --test tests/collect-national-gtfs.test.cjs tests/transport-gtfs-loader.test.cjs
