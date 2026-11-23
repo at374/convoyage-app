@@ -32,7 +32,7 @@ class CompareTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / 'a.zip'
             feed(path, ['A', 'B', 'PARENT'], ['A', 'B'])
-            metadata, listed, served, signatures = module.inspect(path)
+            metadata, listed, served, signatures, timetables = module.inspect(path)
             self.assertEqual(metadata['stops'], 3)
             self.assertEqual(metadata['served_stops'], 2)
             self.assertEqual(metadata['unserved_stops'], 1)
@@ -43,8 +43,8 @@ class CompareTests(unittest.TestCase):
             a, b = Path(temp) / 'a.zip', Path(temp) / 'b.zip'
             feed(a, ['A', 'B'], ['A', 'B'], trip='T1')
             feed(b, ['A', 'B'], ['A', 'B'], trip='T2')
-            _, _, _, old = module.inspect(a)
-            _, _, _, new = module.inspect(b)
+            _, _, _, old, _ = module.inspect(a)
+            _, _, _, new, _ = module.inspect(b)
             self.assertEqual(old, new)
 
     def test_schedule_signature_detects_stop_change(self):
