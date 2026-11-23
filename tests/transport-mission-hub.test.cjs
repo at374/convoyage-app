@@ -163,6 +163,25 @@ test('moteur trop lent : délai borné, les autres résultats restent affichés 
  assert.equal(v.total,1);s.dispose();
 });
 
+test('fenêtre large : Correspondances/national GTFS ne sont appelés qu’une fois par label, pas une fois par variante d’heure (23/11/2026 : « 4 ou 5 minutes » — ces moteurs parcourent déjà toute la fenêtre en un seul appel, contrairement aux moteurs classiques)',async()=>{
+ const calls={ok:0,corr:0,sncf:0};
+ const providers={
+  ok:{name:'Classique',enabled:()=>true,run:async()=>{calls.ok++;return [];}},
+  local_correspondances:{name:'Correspondances entre réseaux (GTFS)',enabled:()=>true,run:async()=>{calls.corr++;return [];}},
+  national_sncf:{name:'SNCF GTFS',enabled:()=>true,run:async()=>{calls.sncf++;return [];}}
+ };
+ // Fenêtre d'arrivée large (7h00 → 19h30, arrivée au plus tard 20h00) : déclenche les 4 variantes
+ // (tâche principale + avant-ouverture + 2 variantes de milieu de journée, voir launch()).
+ const windowStartMs=Date.parse(at(7,0)),windowEndMs=Date.parse(at(19,30));
+ const task={label:'Aller',from:HOME,to:MISSION,latestArrival:at(20,0),windowKind:'arrival',windowStartMs,windowEndMs};
+ const s=H.createSession({tasks:[task],providers,router:fakeRouter()});
+ await new Promise(r=>setTimeout(r,20));
+ assert.equal(calls.ok,4,'le moteur classique doit être relancé pour chaque variante d’heure');
+ assert.equal(calls.corr,1,'les correspondances ne doivent être calculées qu’une seule fois, pas une fois par variante');
+ assert.equal(calls.sncf,1,'la recherche nationale SNCF ne doit être lancée qu’une seule fois, pas une fois par variante');
+ s.dispose();
+});
+
 test('tarif Y51 officiel appliqué via la grille du dépôt (zones prouvées) ; autre ligne => Prix à confirmer',()=>{
  globalThis.CPTY51Fares=require('../transport-y51-fares.js');
  const Grids=require('../transport-fare-grids.js');

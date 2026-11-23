@@ -2225,7 +2225,18 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   // pour chaque moteur encore en attente, l'instant où son propre délai expirera au plus tard (limitMs) — le
   // temps restant affiché est le plus grand de ces instants moins maintenant : une vraie borne supérieure
   // garantie par les timeouts déjà en place, pas une estimation inventée.
+  // 23/11/2026 (Laurent : « 4 ou 5 minutes », bien au-delà du budget de 150 s d'un seul appel) : les variantes
+  // d'heure ci-dessus existent pour des moteurs qui ne renvoient que les 5 à 10 trajets les plus proches d'un
+  // instant donné (OTP2, TripGo…) — répéter l'appel avec une heure cible différente permet de couvrir toute la
+  // journée. Correspondances entre réseaux et SNCF/FlixBus/BlaBlaCar Bus (GTFS) n'ont pas cette limite : ils
+  // parcourent déjà TOUTE la fenêtre donnée en un seul appel (crossNetworkTrips/loadAndSearch, avec leur propre
+  // logique de bornage — voir scanWindow dans local_correspondances). Les relancer pour chaque variante
+  // d'heure ne trouve rien de plus, mais pouvait multiplier par jusqu'à 4 (ici) le nombre d'appels aux moteurs
+  // les plus lourds de toute la recherche, tous sérialisés sur le même worker partagé (mono-thread) — exactement
+  // la cause d'un total de plusieurs minutes même après le correctif du budget par appel (90 s → 150 s).
+  const heavyOncePerLabel=key=>key==='local_correspondances'||key.startsWith('national_');
   for(const variant of variants)for(const [key,p] of Object.entries(providers)){
+   if(variant!==task&&heavyOncePerLabel(key))continue;
    let ok=false;try{ok=p.enabled(variant)&&!!queryWindow(variant);}catch(_){}
    if(!ok){if(variant===task)state[label].skipped[p.name]=p.disabledReason||'non applicable';continue;}
    state[label].pending++;state[label].total=(state[label].total||0)+1;
