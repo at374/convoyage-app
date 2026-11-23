@@ -696,3 +696,22 @@ test('marche fournie par un moteur : prix gratuit sans drapeau walkOnly',()=>{
  assert.equal(walking.price.status,'free');
  assert.equal(walking.price.label,'Gratuit (à pied)');
 });
+
+test('fromSNCF : correspondance serrée (< 10 min) signalée par une alerte',()=>{
+ const answer={itineraries:[{legs:[
+  {tripId:'L2',line:'L2',from:'Pringy',to:'La Roche-sur-Foron',fromPoint:STOP1,toPoint:STOP2,departure:'2026-11-23T05:50:00.000Z',arrival:'2026-11-23T06:19:00.000Z'},
+  {tripId:'C44',line:'C44',from:'La Roche-sur-Foron',to:'Bonneville',fromPoint:STOP2,toPoint:STOP1,departure:'2026-11-23T06:24:00.000Z',arrival:'2026-11-23T06:36:00.000Z'}
+ ]}]};
+ const [j]=H.fromSNCF(answer);
+ assert.equal(j.alerts.length,1);
+ assert.match(j.alerts[0],/Correspondance serrée.*La Roche-sur-Foron.*5 min/);
+});
+
+test('fromSNCF : correspondance large (>= 10 min) sans alerte',()=>{
+ const answer={itineraries:[{legs:[
+  {tripId:'L2',line:'L2',from:'Pringy',to:'La Roche-sur-Foron',fromPoint:STOP1,toPoint:STOP2,departure:'2026-11-23T05:50:00.000Z',arrival:'2026-11-23T06:19:00.000Z'},
+  {tripId:'C43',line:'C43',from:'La Roche-sur-Foron',to:'Bonneville',fromPoint:STOP2,toPoint:STOP1,departure:'2026-11-23T07:24:00.000Z',arrival:'2026-11-23T07:36:00.000Z'}
+ ]}]};
+ const [j]=H.fromSNCF(answer);
+ assert.equal(j.alerts.length,0);
+});

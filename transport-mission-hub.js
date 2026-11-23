@@ -228,9 +228,16 @@ function fromRegional(itineraries,source='Mobilités M'){
  })));
 }
 function fromSNCF(answer){
- return (answer&&Array.isArray(answer.itineraries)?answer.itineraries:[]).map(it=>journey('SNCF (GTFS officiel)',(it.legs||[]).map(l=>leg({
-  mode:/car|bus/i.test(l.line||'')?'Car':'Train',line:[l.line,l.trainNumber].filter(Boolean).join(' '),provider:'SNCF',
-  from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.departure,arrival:l.arrival})),{dataDate:answer.sourceVersion||null}));
+ // 23/11/2026 : la correspondance la plus serrée autorisée (5 min, voir appel ci-dessus) n'est pas vérifiée
+ // marche/quai : on prévient le convoyeur plutôt que de la présenter comme une correspondance ordinaire.
+ const tightTransferAlert=l=>{const wait=Date.parse(l.departure)-Date.parse(l.arrival);
+  return Number.isFinite(wait)&&wait>0&&wait<10*60000?'⚠ Correspondance serrée à '+l.from+' : '+Math.round(wait/60000)+' min (horaire officiel SNCF, changement de quai non vérifié).':null;};
+ return (answer&&Array.isArray(answer.itineraries)?answer.itineraries:[]).map(it=>{
+  const legs=it.legs||[],alerts=legs.slice(1).map((l,i)=>tightTransferAlert({...l,arrival:legs[i].arrival})).filter(Boolean);
+  return journey('SNCF (GTFS officiel)',legs.map(l=>leg({
+   mode:/car|bus/i.test(l.line||'')?'Car':'Train',line:[l.line,l.trainNumber].filter(Boolean).join(' '),provider:'SNCF',
+   from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.departure,arrival:l.arrival})),{dataDate:answer.sourceVersion||null,alerts});
+ });
 }
 // Tarif publié dans le flux GTFS lui-même (fare_attributes / fare_rules), attaché à chaque portion comme le fait
 // transport-gtfs-worker.js. Sans cela, les fournisseurs GTFS des fiches mission (hors worker) perdaient ce prix
@@ -1824,11 +1831,21 @@ function makeProviders(r,opts={}){
    // évite 8 variantes du même premier train, souvent manqué à cause de la marche jusqu'à la gare.
    const base=ms(w.when),offsets=w.arriveBy?[0,-20,-60]:[0,20,60];
    // 20/11/2026 : 10 -> 20 (demande de Laurent : ne plus couper les résultats avant le classement).
+   // 23/11/2026 (Laurent : une correspondance à 5 min, réellement proposée par la SNCF dans son propre horaire,
+   // n'apparaissait jamais) : sncf-fallback.js rejette toute correspondance sous sa marge par défaut de 10 min
+   // (search() : wait<margin*60000). 5 min est le minimum accepté par cette fonction (margin<5 lève une erreur) ;
+   // en-dessous, aucune garantie de faisabilité réelle (quai différent, etc.), donc on ne descend pas plus bas.
    const answers=await Promise.all(offsets.map(m=>r.CPSncfFallback.plan({from:{name:task.fromCity||'',point:pt(task.from)},to:{name:task.toCity||'',point:pt(task.to)},
-    when:new Date(base+m*60000).toISOString(),arriveBy:w.arriveBy,limit:20,signal,fetcher}).catch(()=>null)));
+    when:new Date(base+m*60000).toISOString(),arriveBy:w.arriveBy,limit:20,transferMinutes:5,signal,fetcher}).catch(()=>null)));
    const best=new Map();
    for(const a of answers.filter(Boolean))for(const it of a.itineraries||[]){
-    const k=(it.legs?.[0]?.tripId||'')+'|'+it.departure,old=best.get(k);
+    // 23/11/2026 : la clé ne retenait que le premier train + son départ, donc deux combinaisons partageant ce
+    // même premier train (une correspondance serrée à 5 min, une autre après une longue attente) s'écrasaient
+    // l'une l'autre — seule l'arrivée la plus rapide survivait, faisant disparaître l'option avec la plus longue
+    // marge que Laurent voit pourtant réellement proposée par ailleurs. La clé couvre maintenant toute la
+    // séquence de trains (chaque tripId + son départ) : les deux correspondances restent visibles séparément,
+    // seuls les doublons exacts retrouvés par plusieurs recherches décalées sont encore fusionnés.
+    const k=(it.legs||[]).map(l=>l.tripId+'@'+l.departure).join('>'),old=best.get(k);
     if(!old||Date.parse(it.arrival)<Date.parse(old.arrival))best.set(k,it);
    }
    const list=[...best.values()].sort((x,y)=>Date.parse(x.departure)-Date.parse(y.departure)).slice(0,20);
