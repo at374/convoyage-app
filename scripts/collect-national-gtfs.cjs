@@ -154,6 +154,9 @@ function lastServiceDate(files, eligibleServices = null) {
   let latest = null;
   for (const row of gtfs.csvRows(files['calendar.txt'] || '')) {
     if (eligibleServices !== null && !eligibleServices.has(row.service_id)) continue;
+    // Un calendrier sans aucun jour de circulation ne prolonge pas la couverture.
+    if (!['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+      .some(day => row[day] === '1')) continue;
     if (validDate(row.end_date) && (!latest || row.end_date > latest)) latest = row.end_date;
   }
   for (const row of gtfs.csvRows(files['calendar_dates.txt'] || '')) {
