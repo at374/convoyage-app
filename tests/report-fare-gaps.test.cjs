@@ -61,3 +61,13 @@ test('prioritizes axes by partially priced journeys, not by total unpriced journ
  const section=report.split('## Axes prioritaires : trajets déjà partiellement tarifés')[1];
  assert.ok(section.indexOf('| B | 15 | 1 | 20 |')<section.indexOf('| A | 2 | 0 | 100 |'));
 });
+
+test('ignores impossible partial counts rather than ranking corrupted data',()=>{
+ const report=build({axes:[{name:'Impossible',trips:3,priced:2,partialPricedJourneys:9},{name:'Negative',trips:5,priced:0,partialPricedJourneys:-1},{name:'Fraction',trips:5,priced:0,partialPricedJourneys:1.5},{name:'Valid',trips:3,priced:1,partialPricedJourneys:2}]});
+ assert.match(report,/Impossible \| 3 \| 2 \| — \| 1 \|/);
+ assert.match(report,/Negative \| 5 \| 0 \| — \| 5 \|/);
+ assert.match(report,/Fraction \| 5 \| 0 \| — \| 5 \|/);
+ const ranking=report.split('## Axes prioritaires : trajets déjà partiellement tarifés')[1].split('## ')[0];
+ assert.match(ranking,/\| Valid \| 2 \| 1 \| 3 \|/);
+ assert.doesNotMatch(ranking,/Impossible|Negative|Fraction/);
+});
