@@ -143,7 +143,7 @@ function activeWithinDays(files, days, today = new Date(), eligibleServices = nu
 
 function lastServiceDate(files, eligibleServices = null) {
   const validDate = value => {
-    if (!/^\\d{8}$/.test(value || '')) return false;
+    if (!/^\d{8}$/.test(value || '')) return false;
     const year = Number(value.slice(0, 4));
     const month = Number(value.slice(4, 6));
     const day = Number(value.slice(6, 8));
