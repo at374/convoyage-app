@@ -1,6 +1,6 @@
 # Couverture tarifaire — diagnostic automatique
 
-Source : diagnostic serveur (GitHub Actions) ; relevé : 2026-11-23T18:34:13.007Z ; scénario : 2026-11-30T08:00:00+01:00.
+Source : diagnostic serveur (GitHub Actions) ; relevé : 2026-11-23T18:40:33.256Z ; scénario : 2026-11-30T08:00:00+01:00.
 
 Ce rapport est un **instantané de diagnostic**, pas une confirmation de tarifs ou de disponibilité commerciale.
 
@@ -19,14 +19,14 @@ Ce rapport est un **instantané de diagnostic**, pas une confirmation de tarifs 
 | Rumilly → Annecy | 21 | 1 | 20 | SNCF (20 portions) |
 | Genève → Lausanne | 20 | 0 | 20 | FlixBus (10 portions), SBB (8 portions), BlaBlaCar Bus (4 portions) |
 | Lyon → Grenoble | 20 | 0 | 20 | SNCF (20 portions) |
-| Thonon → Bons-en-Chablais (Star’t 142) | 50 | 31 | 19 | SNCF (16 portions), But (2 portions), Star't Thonon (1 portions) |
 | Ambérieu-en-Bugey → Lyon Part-Dieu | 18 | 0 | 18 | SNCF (18 portions) |
-| Thonon-les-Bains → Genève | 16 | 0 | 16 | SNCF (11 portions), But (8 portions), AFO (4 portions), FlixBus (2 portions) |
+| Thonon → Bons-en-Chablais (Star’t 142) | 48 | 31 | 17 | SNCF (16 portions), Star't Thonon (1 portions) |
 | Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 16 | 1 | 15 | SNCF (13 portions), Cars Région Ain (2 portions) |
 | Annemasse → Saint-Julien-en-Genevois | 52 | 38 | 14 | SNCF (14 portions), TPG (1 portions) |
 | Lyon Part-Dieu → Bellecour (TCL) | 56 | 43 | 13 | SNCF (7 portions), Cars Région Express (5 portions) |
 | Chambéry → Saint-Julien-en-Genevois | 11 | 0 | 11 | SNCF (19 portions), AFO (3 portions) |
 | Chambéry → Chamoux-sur-Gelon (Cars Savoie S05) | 10 | 0 | 10 | SNCF (8 portions), Cars Région Savoie (2 portions) |
+| Thonon-les-Bains → Genève | 8 | 0 | 8 | SNCF (7 portions), FlixBus (2 portions) |
 | Grenoble → Crolles | 8 | 5 | 3 | BlaBlaCar Bus (3 portions) |
 | Aix-les-Bains gare → Technolac (Ondéa 01) | 19 | 18 | 1 | Ondéa Aix-les-Bains (1 portions) |
 | Rumilly Hôpital → Base de loisirs (J’y bus 1) | 60 | 60 | 0 | — |
@@ -40,7 +40,7 @@ Les nombres ci-dessous sont des **occurrences par axe**, pas des billets uniques
 
 | Opérateur | Occurrences |
 |---|---:|
-| SNCF | 327 |
+| SNCF | 323 |
 | Cars Région Isère | 99 |
 | Cars Région Haute-Savoie | 48 |
 | Ondéa Aix-les-Bains | 40 |
@@ -49,14 +49,31 @@ Les nombres ci-dessous sont des **occurrences par axe**, pas des billets uniques
 | ÉVA'D Évian | 29 |
 | Rubis Bourg-en-Bresse | 29 |
 | Cars Région Ain | 29 |
-| But | 14 |
 | Evian | 12 |
 | Mobilités M - SNCF | 8 |
 | SBB | 8 |
-| AFO | 7 |
 | Cars Région Express | 5 |
+| But | 4 |
+| AFO | 3 |
 | Cars Région Savoie | 2 |
 | Star't Thonon | 1 |
 | TPG | 1 |
+
+## Couverture globale
+
+339 trajets entièrement tarifés sur 955 (35.5 %).
+
+## Priorité : portions bloquant les trajets partiellement tarifés
+
+Ces occurrences sont déjà incluses dans les manques par opérateur ; elles ne doivent pas être additionnées aux autres comptes.
+
+| Opérateur | Occurrences bloquantes |
+|---|---:|
+| Ca s Régio  Haute-Savoie | 48 |
+| O déa Aix-les-Bai s | 39 |
+| SNCF | 8 |
+| Ca s Régio  Ai  | 2 |
+| Sta 't Tho o  | 1 |
+| Mobilités M - SNCF | 1 |
 
 Aucun montant manquant ne doit être remplacé par une estimation. La rentabilité de mission reste masquée tant que le prix total du transport n’est pas vérifié.
