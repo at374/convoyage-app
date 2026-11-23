@@ -848,6 +848,22 @@ function makeProviders(r,opts={}){
       }catch(_){/* Flex metadata unavailable: normal GTFS search remains operational. */}
      }
      const rows=attachGTFSFares(feed,r.CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,pt(task.from),pt(task.to),3000),r.CPGTFSFares);
+     // Isère : extraire les zones réellement traversées uniquement si le collecteur
+     // fournit une table officielle explicitement attestée (jamais GTFS zone_id supposé).
+     const iz=r.CPIsereZonalFares;
+     const zoneRef=feed.isereOfficialZones;
+     if(name==='Cars Région Isère'&&iz&&typeof iz.evidenceFromGTFS==='function'&&
+      zoneRef&&zoneRef.verified===true&&zoneRef.stopZones&&zoneRef.source){
+      for(let i=0;i<rows.length;i++){
+       const x=rows[i];
+       const fromId=x?.originStop?.stopId||x?.originStop?.stop_id||x?.fromStopId||x?.from;
+       const toId=x?.destinationStop?.stopId||x?.destinationStop?.stop_id||x?.toStopId||x?.to;
+       const ev=iz.evidenceFromGTFS(feed.index,{tripId:x?.tripId,fromStopId:fromId,toStopId:toId,
+        stopZones:zoneRef.stopZones,source:zoneRef.source});
+       if(ev)rows[i]={...x,isereZoneEvidence:{complete:true,stopIds:ev.stopIds,
+        stopZones:zoneRef.stopZones,source:ev.source}};
+      }
+     }
      const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
      // Select the best boarding/alighting stop pair for each actual vehicle
      // BEFORE imposing the mobile card limit. Otherwise 500 stop-pair variants
