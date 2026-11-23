@@ -585,3 +585,14 @@ test('processResource ne déclare pas actif un service dont seules les courses s
   assert.equal(entry.activeNext30Days, false);
   assert.equal(entry.lastServiceDate, '2026-01-31');
 });
+
+test('lastServiceDate ne prolonge pas un calendrier sans aucun jour actif', () => {
+  const files = {
+    'calendar.txt': 'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n' +
+      'DORMANT,0,0,0,0,0,0,0,20260101,20301231\n' +
+      'ACTIF,1,0,0,0,0,0,0,20260101,20271231\n',
+    'calendar_dates.txt': 'service_id,date,exception_type\n'
+  };
+  assert.equal(collector.lastServiceDate(files), '2027-12-31');
+  assert.equal(collector.lastServiceDate(files, new Set(['DORMANT'])), null);
+});
