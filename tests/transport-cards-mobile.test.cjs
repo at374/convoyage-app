@@ -12,7 +12,7 @@ const hub=fs.readFileSync(path.join(root,'transport-mission-hub.js'),'utf8');
 test('fiche mission : moteur automatique raccordé et sans formulaire de recherche manuel',()=>{
  assert.match(html,/transport-mission-hub\.js\?v=/);
  assert.match(app,/window\.CPTransportHub/);
- assert.match(app,/Hub\.render\(host,view\)/);
+ assert.match(app,/Hub\.render\(host,\{\.\.\.view,flexCandidates:flexFor\(label\)\}\)/);
  assert.match(app,/startTransportHub\(\)/);
 });
 test('cartes Android : styles chargés avec cache invalidé et prix mis en évidence',()=>{
