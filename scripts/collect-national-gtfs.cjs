@@ -276,6 +276,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   let lines;
   let eligibleServices;
   let regularConnectedTrip = false;
+  const regularServices = new Set();
   try {
     index = gtfs.buildIndex(files);
     if (!index.counts.routes || !index.counts.trips || !index.counts.stops || !index.counts.stopTimes) {
@@ -312,7 +313,10 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
             accessAllowed(time.drop_off_type)) {
           connectedTrip = true;
           if (trip.service_id) connectedServices.add(trip.service_id);
-          if (first.regular && regularAccess(time.drop_off_type)) regularConnectedTrip = true;
+          if (first.regular && regularAccess(time.drop_off_type)) {
+            regularConnectedTrip = true;
+            if (trip.service_id) regularServices.add(trip.service_id);
+          }
           break;
         }
         if (!first && accessAllowed(time.pickup_type)) {
@@ -330,9 +334,11 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     return { ...base, status: 'error', error: 'indexation ou classification : ' + error.message };
   }
   let activeNext30Days;
+  let activeRegularNext30Days;
   let publishedLastServiceDate;
   try {
     activeNext30Days = activeWithinDays(files, ACTIVE_WINDOW_DAYS, new Date(now), eligibleServices);
+    activeRegularNext30Days = activeWithinDays(files, ACTIVE_WINDOW_DAYS, new Date(now), regularServices);
     publishedLastServiceDate = lastServiceDate(files, eligibleServices);
   } catch (error) {
     return { ...base, status: 'error', error: 'calendrier : ' + error.message };
@@ -354,6 +360,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
       gtfs.parseCSV(files['fare_products.txt'] || '').length > 0,
     activeNext30Days,
     regularConnectedTrip,
+    activeRegularNext30Days,
     lines,
     bytes, // retiré avant écriture du manifeste ; utilisé par l'appelant pour la publication.
   };
