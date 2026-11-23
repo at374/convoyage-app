@@ -830,3 +830,45 @@ test('processResource rejette une fenêtre GTFS-Flex sans groupe desservi', asyn
   });
   assert.equal(entry.status, 'error');
 });
+
+test('processResource GTFS-Flex refuse une montée interdite', async () => {
+  const files = {
+    ...baseFiles,
+    'stop_times.txt': 'trip_id,stop_sequence,location_group_id,start_pickup_drop_off_window,end_pickup_drop_off_window,pickup_type,drop_off_type\n' +
+      'T1,1,G1,09:00:00,10:00:00,1,0\n' +
+      'T1,2,G2,09:30:00,11:00:00,0,0\n',
+    'location_groups.txt': 'location_group_id,location_group_name\nG1,Zone A\nG2,Zone B\n',
+    'location_group_stops.txt': 'location_group_id,stop_id\nG1,A\nG2,B\n'
+  };
+  const entry = await collector.processResource({
+    id: 'flex3', datasetId: 'flex', network: 'TAD montée interdite',
+    format: 'GTFS', url: 'https://example.org/flex-no-pickup.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher: async () => new Response(zip(files), { headers: { 'content-type': 'application/zip' } }),
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'error');
+});
+
+test('processResource GTFS-Flex refuse une destination avant le départ', async () => {
+  const files = {
+    ...baseFiles,
+    'stop_times.txt': 'trip_id,stop_sequence,location_group_id,start_pickup_drop_off_window,end_pickup_drop_off_window,pickup_type,drop_off_type\n' +
+      'T1,1,G1,11:00:00,12:00:00,0,0\n' +
+      'T1,2,G2,09:00:00,10:00:00,0,0\n',
+    'location_groups.txt': 'location_group_id,location_group_name\nG1,Zone A\nG2,Zone B\n',
+    'location_group_stops.txt': 'location_group_id,stop_id\nG1,A\nG2,B\n'
+  };
+  const entry = await collector.processResource({
+    id: 'flex4', datasetId: 'flex', network: 'TAD fenêtres inversées',
+    format: 'GTFS', url: 'https://example.org/flex-inverted.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher: async () => new Response(zip(files), { headers: { 'content-type': 'application/zip' } }),
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'error');
+});
