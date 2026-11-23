@@ -79,7 +79,7 @@ test('buildRows : une mission de l\'Agenda (acceptée) reçoit fees.devis_accept
 
 test('hiflow-sync.cjs : « Mes devis » est bien lu à chaque synchro et branché dans armerCapture/store', () => {
   const src = fs.readFileSync(require.resolve('../server/hiflow-sync-deploy/hiflow-sync.cjs'), 'utf8');
-  assert.match(src, /async function lireMesDevis\(page\)/);
+  assert.match(src, /async function lireMesDevis\(page, ?devisBucket\)/);
   assert.match(src, /#quotations/);
   assert.match(src, /CPNet\.devisHiflow\(json\)/);
   assert.match(src, /cp95_devis:\s*devisBucket/);

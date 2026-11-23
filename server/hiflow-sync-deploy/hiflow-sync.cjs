@@ -206,10 +206,21 @@ async function lireMesTrajets(page, resaBucket) {
 // d'abord le même composant que « Missions disponibles » (pagination-tableJourneyList), puis un sélecteur
 // générique par préfixe de classe, sans jamais bloquer si aucun des deux n'existe (quelques devis tiennent
 // peut-être sur une seule page, sans pagination visible).
-async function lireMesDevis(page) {
+async function lireMesDevis(page, devisBucket) {
   await page.goto(LIST_URL.replace('#journeys', '#quotations'), { waitUntil: 'domcontentloaded' });
-  const onglet = await page.$('a[href="#quotations"]');
-  if (onglet) await onglet.click().catch(() => {});
+  // 23/11/2026 (diagnostic : premier déploiement sans effet visible, mission n°1290066 toujours sans
+  // devis_numero après une synchro « ok ») : on ne sait pas encore si #quotations est un vrai onglet cliquable
+  // (comme #journeys) ou juste une ancre d'URL ignorée par le site tant qu'aucun clic réel n'a eu lieu — un
+  // changement d'URL par goto() seul ne déclenche pas forcément le JS de l'appli (SPA) qui va chercher les
+  // données. On essaie plusieurs sélecteurs plausibles et on log clairement lequel (s'il y en a un) a marché,
+  // visible dans les logs Cloud Run, pour ne plus avoir à deviner à l'aveugle au prochain essai.
+  const SELECTEURS_ONGLET = ['a[href="#quotations"]', '[data-target="#quotations"]', 'a[href*="quotations"]', '[href="#quotations"]'];
+  let cliqueSur = null;
+  for (const sel of SELECTEURS_ONGLET) {
+    const onglet = await page.$(sel).catch(() => null);
+    if (onglet) { await onglet.click().catch(() => {}); cliqueSur = sel; break; }
+  }
+  console.log(`[hiflow-sync] onglet devis : ${cliqueSur ? 'cliqué (' + cliqueSur + ')' : 'AUCUN sélecteur trouvé — page restée sur l’onglet par défaut'}`);
   await sleep(4000);
   for (let i = 0; i < 60; i++) {
     if (/\/login/.test(page.url())) throw new Error('déconnecté en cours de lecture');
@@ -269,7 +280,8 @@ async function syncUnUtilisateur(SUPABASE_URL, SERVICE_KEY, USER_ID) {
     await lireMesTrajets(page, resaBucket);
     // 23/11/2026 : « Mes devis » lu à chaque passage (pas de mise en cache comme les factures) — c'est
     // justement ce qui détermine si une mission disponible garde son badge « Devis envoyé » ou disparaît.
-    try { await lireMesDevis(page); } catch (e) { statut = 'partiel'; detail = `devis: ${e.message}`; }
+    try { await lireMesDevis(page, devisBucket); } catch (e) { statut = 'partiel'; detail = `devis: ${e.message}`; }
+    console.log(`[hiflow-sync] devis captés : ${Object.keys(devisBucket).length}`);
     if (await fauteDeFacturesRecentes(SUPABASE_URL, SERVICE_KEY, USER_ID)) {
       try { await lireMesFactures(page); facturesLues = true; } catch (e) { statut = 'partiel'; detail = `factures: ${e.message}`; }
     }
