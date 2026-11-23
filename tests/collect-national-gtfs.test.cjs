@@ -65,6 +65,14 @@ test('activeWithinDays trouve un service actif dans la fenêtre et aucun hors fe
   assert.equal(collector.activeWithinDays(expired, 30, new Date('2026-06-01T00:00:00Z')), false);
 });
 
+test('activeWithinDays ignore un calendrier actif sans courses associées', () => {
+  const withoutTrips = {
+    ...baseFiles,
+    'trips.txt': 'route_id,service_id,trip_id\\nR1,OTHER,T1\\n'
+  };
+  assert.equal(collector.activeWithinDays(withoutTrips, 30, new Date('2026-06-01T00:00:00Z')), false);
+});
+
 test('shouldSkip ne retélécharge pas quand la date de mise à jour PAN est inchangée', () => {
   const resource = { datasetId: 'd1', id: 'r1', updatedAt: '2026-11-01T00:00:00Z' };
   assert.equal(collector.shouldSkip(resource, { status: 'ok', updatedAt: '2026-11-01T00:00:00Z' }), true);
