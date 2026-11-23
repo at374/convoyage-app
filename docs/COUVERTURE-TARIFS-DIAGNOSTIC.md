@@ -1,6 +1,6 @@
 # Couverture tarifaire — diagnostic automatique
 
-Source : diagnostic serveur (GitHub Actions) ; relevé : 2026-11-23T19:14:51.927Z ; scénario : 2026-11-30T08:00:00+01:00.
+Source : diagnostic serveur (GitHub Actions) ; relevé : 2026-11-23T19:25:05.171Z ; scénario : 2026-11-30T08:00:00+01:00.
 
 Ce rapport est un **instantané de diagnostic**, pas une confirmation de tarifs ou de disponibilité commerciale.
 
@@ -21,12 +21,12 @@ Ce rapport est un **instantané de diagnostic**, pas une confirmation de tarifs 
 | Lyon → Grenoble | 20 | 0 | 0 | 20 | SNCF (20 portions) |
 | Thonon → Bons-en-Chablais (Star’t 142) | 50 | 31 | 1 | 19 | SNCF (16 portions), But (2 portions), Star't Thonon (1 portions) |
 | Ambérieu-en-Bugey → Lyon Part-Dieu | 18 | 0 | 0 | 18 | SNCF (18 portions) |
+| Thonon-les-Bains → Genève | 16 | 0 | 4 | 16 | SNCF (11 portions), But (8 portions), AFO (4 portions), FlixBus (2 portions) |
 | Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 16 | 1 | 2 | 15 | SNCF (13 portions), Cars Région Ain (2 portions) |
 | Annemasse → Saint-Julien-en-Genevois | 52 | 38 | 0 | 14 | SNCF (14 portions), TPG (1 portions) |
 | Lyon Part-Dieu → Bellecour (TCL) | 56 | 43 | 0 | 13 | SNCF (7 portions), Cars Région Express (5 portions) |
 | Chambéry → Saint-Julien-en-Genevois | 11 | 0 | 1 | 11 | SNCF (19 portions), AFO (3 portions) |
 | Chambéry → Chamoux-sur-Gelon (Cars Savoie S05) | 10 | 0 | 0 | 10 | SNCF (8 portions), Cars Région Savoie (2 portions) |
-| Thonon-les-Bains → Genève | 8 | 0 | 0 | 8 | SNCF (7 portions), FlixBus (2 portions) |
 | Grenoble → Crolles | 8 | 5 | 0 | 3 | BlaBlaCar Bus (3 portions) |
 | Aix-les-Bains gare → Technolac (Ondéa 01) | 19 | 19 | 0 | 0 | — |
 | Rumilly Hôpital → Base de loisirs (J’y bus 1) | 60 | 60 | 0 | 0 | — |
@@ -40,7 +40,7 @@ Les nombres ci-dessous sont des **occurrences par axe**, pas des billets uniques
 
 | Opérateur | Occurrences |
 |---|---:|
-| SNCF | 323 |
+| SNCF | 327 |
 | Cars Région Isère | 99 |
 | Cars Région Haute-Savoie | 48 |
 | FlixBus | 35 |
@@ -48,12 +48,12 @@ Les nombres ci-dessous sont des **occurrences par axe**, pas des billets uniques
 | ÉVA'D Évian | 29 |
 | Rubis Bourg-en-Bresse | 29 |
 | Cars Région Ain | 29 |
+| But | 14 |
 | Evian | 12 |
 | Mobilités M - SNCF | 8 |
 | SBB | 8 |
-| But | 6 |
+| AFO | 7 |
 | Cars Région Express | 5 |
-| AFO | 3 |
 | Cars Région Savoie | 2 |
 | Star't Thonon | 1 |
 | TPG | 1 |
@@ -66,6 +66,9 @@ Exemples observés sur des trajets partiellement tarifés : liste non exhaustive
 |---|---|---|
 | Annecy → Genève | SNCF | B L2 |
 | Annecy → Genève | Cars Région Haute-Savoie | 274 |
+| Thonon-les-Bains → Genève | But | B 002278, B 002283, B 002289 |
+| Thonon-les-Bains → Genève | SNCF | TER C33 |
+| Thonon-les-Bains → Genève | AFO | B 271 |
 | Thonon → Bons-en-Chablais (Star’t 142) | Star't Thonon | SMAR |
 | Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | Cars Région Ain | A32 |
 | Saint-Julien-en-Genevois → Genève | SNCF | C33 |
@@ -75,17 +78,17 @@ Exemples observés sur des trajets partiellement tarifés : liste non exhaustive
 
 ## Couverture globale
 
-379 trajets entièrement tarifés sur 957 (39.6 %).
+379 trajets entièrement tarifés sur 965 (39.3 %).
 
 ## Distinction indispensable : prix et faisabilité
 
-Trajets avec prix complet : 379 / 957.
-Trajets déclarés faisables par le diagnostic : 86 / 957.
+Trajets avec prix complet : 379 / 965.
+Trajets déclarés faisables par le diagnostic : 93 / 965.
 Ces deux compteurs sont indépendants : un trajet tarifé peut rester non réalisable (horaires, correspondances, confirmation). Leur intersection n’est pas calculée ici ; ne pas présenter 379 comme le nombre de trajets réalisables.
 
 ## Trajets partiellement tarifés
 
-60 trajets possèdent au moins un tarif, mais pas de prix total vérifié. Ils restent exclus du calcul de rentabilité.
+64 trajets possèdent au moins un tarif, mais pas de prix total vérifié. Ils restent exclus du calcul de rentabilité.
 
 ## Axes prioritaires : trajets déjà partiellement tarifés
 
@@ -95,6 +98,7 @@ Classement par nombre de trajets ayant au moins un tarif mais pas de total véri
 |---|---:|---:|---:|
 | Saint-Julien-en-Genevois → Genève | 37 | 8 | 45 |
 | Annecy → Genève | 18 | 0 | 49 |
+| Thonon-les-Bains → Genève | 4 | 0 | 16 |
 | Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 2 | 1 | 16 |
 | Voiron → Voreppe (M réso Voironnais) | 1 | 2 | 31 |
 | Thonon → Bons-en-Chablais (Star’t 142) | 1 | 31 | 50 |
@@ -107,8 +111,10 @@ Ces occurrences sont déjà incluses dans les manques par opérateur ; elles ne 
 | Opérateur | Occurrences bloquantes |
 |---|---:|
 | Cars Région Haute-Savoie | 48 |
-| SNCF | 8 |
+| SNCF | 11 |
+| But | 4 |
 | Cars Région Ain | 2 |
+| AFO | 1 |
 | Star't Thonon | 1 |
 | Mobilités M - SNCF | 1 |
 
