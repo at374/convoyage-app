@@ -321,7 +321,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     trips: index.counts.trips,
     stops: index.counts.stops,
     stopTimes: index.counts.stopTimes,
-    agencies: agencies.map(a => ({ id: a.agency_id || null, name: a.agency_name, url: a.agency_url || null })),
+    agencies: agencies.map(a => ({ id: a.agency_id || null, name: a.agency_name, url: a.agency_url || null, timezone: a.agency_timezone })),
     lastServiceDate: publishedLastServiceDate,
     // GTFS Fares v1 et v2 : au moins un produit/attribut réel, pas prix de trajet vérifié.
     fares: gtfs.parseCSV(files['fare_attributes.txt'] || '').length > 0 ||
@@ -402,7 +402,7 @@ async function collect({
 }
 
 function toCSV(manifest) {
-  const header = ['id', 'network', 'status', 'routes', 'trips', 'stops', 'fares', 'activeNext30Days', 'lastServiceDate', 'lines_regular', 'lines_school', 'lines_demandResponsive', 'lines_unknown', 'aggregateSuspected', 'sha256', 'url', 'error'];
+  const header = ['id', 'network', 'status', 'routes', 'trips', 'stops', 'fares', 'activeNext30Days', 'lastServiceDate', 'lines_regular', 'lines_school', 'lines_demandResponsive', 'lines_unknown', 'aggregateSuspected', 'sha256', 'url', 'agencyCount', 'agencyNames', 'agencyTimezones', 'error'];
   const rows = [header.join(',')];
   const esc = (v) => {
     const s = v === undefined || v === null ? '' : String(v);
@@ -427,6 +427,9 @@ function toCSV(manifest) {
         entry.aggregateSuspected ?? '',
         entry.sha256 ?? '',
         entry.url ?? '',
+        entry.agencies?.length ?? '',
+        entry.agencies?.map(a => a.name).join(' | ') ?? '',
+        entry.agencies?.map(a => a.timezone).join(' | ') ?? '',
         entry.error ?? '',
       ]
         .map(esc)
