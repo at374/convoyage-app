@@ -124,6 +124,8 @@ function validateOfficialStopZones(index,reference){
   !/^https:\/\/(?:www\.)?(?:laregionvoustransporte\.fr|carsisere\.auvergnerhonealpes\.fr|data\.auvergnerhonealpes\.fr)(?:\/|$)/i.test(reference.source)||
   !reference.stopZones||typeof reference.stopZones!=='object'||Array.isArray(reference.stopZones))return null;
  const clean=Object.create(null),unknown=[],invalid=[];
+ // Un référentiel vide n'atteste aucune zone et ne doit pas être déclaré disponible.
+ if(Object.keys(reference.stopZones).length===0)return {valid:false,unknown:[],invalid:[],stopZones:null};
  for(const [id,zone] of Object.entries(reference.stopZones)){
   if(!index.stopById.has(id)){unknown.push(id);continue;}
   if(typeof zone!=='string'||!/^(A|B|C|D|E|RH|S|HT1|HT2)$/.test(zone)){
