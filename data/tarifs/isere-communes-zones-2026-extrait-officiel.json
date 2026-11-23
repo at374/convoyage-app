@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "title": "Cars Région Isère — extrait vérifié des communes par zone au 1er mars 2026",
+  "source": "https://storage.googleapis.com/is-wp-170-prod/uploads-prod/2026/03/cars_region_isere_liste_communes_zones_20260301.pdf",
+  "sourcePage": "https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lisere/infos-et-services-cars-region-de-lisere/titres-et-tarifs-de-lisere/",
+  "validFrom": "2026-03-01",
+  "validThrough": "2026-12-31",
+  "scope": "Extrait littéral partiel : pages 1 à 4 du PDF officiel, sélection de communes inspectées ; ne représente pas toutes les communes de l'Isère.",
+  "complete": false,
+  "usableAsGTFSStopZoneReference": false,
+  "caution": "La commune n'est pas un stop_id GTFS. Aucune affectation automatique d'arrêts ou tarification de voyages ne doit découler de ce fichier seul. Les zones intermédiaires d'un trajet doivent aussi être attestées.",
+  "communeZones": [
+    {
+      "commune": "ADRETS (LES)",
+      "zone": "B"
+    },
+    {
+      "commune": "AGNIN",
+      "zone": "D"
+    },
+    {
+      "commune": "ALBENC (L')",
+      "zone": "C"
+    },
+    {
+      "commune": "ALLEMONT",
+      "zone": "C"
+    },
+    {
+      "commune": "ALLEVARD",
+      "zone": "B"
+    },
+    {
+      "commune": "AMBEL",
+      "zone": "C"
+    },
+    {
+      "commune": "ANJOU",
+      "zone": "D"
+    },
+    {
+      "commune": "ANNOISIN CHATELANS",
+      "zone": "E"
+    },
+    {
+      "commune": "ANTHON",
+      "zone": "E"
+    },
+    {
+      "commune": "AOSTE",
+      "zone": "C"
+    },
+    {
+      "commune": "APPRIEU",
+      "zone": "C"
+    },
+    {
+      "commune": "ARANDON-PASSINS",
+      "zone": "D"
+    },
+    {
+      "commune": "ARTAS",
+      "zone": "E"
+    },
+    {
+      "commune": "ARZAY",
+      "zone": "D"
+    },
+    {
+      "commune": "ASSIEU",
+      "zone": "D"
+    },
+    {
+      "commune": "AUBERIVES EN ROYANS",
+      "zone": "D"
+    },
+    {
+      "commune": "AUBERIVES SUR VAREZE",
+      "zone": "D"
+    },
+    {
+      "commune": "AURIS EN OISANS",
+      "zone": "C"
+    },
+    {
+      "commune": "AUTRANS-MEAUDRES EN VERCORS",
+      "zone": "C"
+    },
+    {
+      "commune": "AVENIERES VEYRINS-THUELLIN (LES)",
+      "zone": "D"
+    },
+    {
+      "commune": "AVIGNONET",
+      "zone": "C"
+    },
+    {
+      "commune": "BALME LES GROTTES (LA)",
+      "zone": "D"
+    },
+    {
+      "commune": "BARRAUX",
+      "zone": "B"
+    },
+    {
+      "commune": "BATIE MONTGASCON (LA)",
+      "zone": "C"
+    },
+    {
+      "commune": "BEAUCROISSANT",
+      "zone": "B"
+    },
+    {
+      "commune": "BEAUFIN",
+      "zone": "C"
+    },
+    {
+      "commune": "BEAUFORT",
+      "zone": "D"
+    },
+    {
+      "commune": "BEAULIEU",
+      "zone": "C"
+    },
+    {
+      "commune": "BEAUREPAIRE",
+      "zone": "D"
+    },
+    {
+      "commune": "BEAUVOIR DE MARC",
+      "zone": "D"
+    },
+    {
+      "commune": "BEAUVOIR EN ROYANS",
+      "zone": "D"
+    },
+    {
+      "commune": "BERNIN",
+      "zone": "B"
+    },
+    {
+      "commune": "BOURGOIN JALLIEU",
+      "zone": "E"
+    },
+    {
+      "commune": "CROLLES",
+      "zone": "B"
+    },
+    {
+      "commune": "ECHIROLLES",
+      "zone": "A"
+    },
+    {
+      "commune": "GIERES",
+      "zone": "A"
+    },
+    {
+      "commune": "GRENOBLE",
+      "zone": "A"
+    },
+    {
+      "commune": "ISLE D'ABEAU (L')",
+      "zone": "E"
+    },
+    {
+      "commune": "MEYLAN",
+      "zone": "A"
+    },
+    {
+      "commune": "MOIRANS",
+      "zone": "B"
+    }
+  ]
+}
