@@ -56,3 +56,15 @@ test('Isere: GTFS audit counts only served stops, never infers zones',()=>{
   total:3,covered:1,missing:['C'],invalid:['B'],coveragePercent:33.33});
  assert.equal(auditGTFSZones(null,{}),null);
 });
+
+test('Isere: journey coverage requires all intermediate stop zones',()=>{
+ const {auditGTFSJourneys}=require('../transport-isere-zonal-fares.js');
+ const index={timesByTrip:new Map([['T1',[{stop_id:'A',stop_sequence:'1'},
+  {stop_id:'M',stop_sequence:'2'},{stop_id:'B',stop_sequence:'3'}]]])};
+ const journeys=[{tripId:'T1',from:'A',to:'B'},
+  {tripId:'T1',from:'A',to:'M'},{tripId:'T1',from:'B',to:'A'},
+  {tripId:'MISSING',from:'A',to:'B'}];
+ const report=auditGTFSJourneys(index,journeys,{source:'https://www.laregionvoustransporte.fr/',
+  stopZones:{A:'A',M:'B'}});
+ assert.deepEqual(report,{total:4,priced:1,missingZone:1,ambiguous:1,invalidJourney:1,coveragePercent:25});
+});
