@@ -207,6 +207,18 @@ function fromGTFS(rows,network='Réseau local'){
      validityMinutes:g.transfers===0?null:(finite(g.transferMinutes)?g.transferMinutes:null),
      source:net+' · tarif publié dans le GTFS officiel (fare_id '+g.fareId+(g.originZone||g.destinationZone?', zones '+(g.originZone||'?')+' → '+(g.destinationZone||'?'):'')+')'};
    }
+   // Isère : uniquement si un fournisseur apporte une preuve officielle complète
+   // de la séquence d'arrêts ET des zones ; aucun prix depuis les seules coordonnées.
+   const iz=root.CPIsereZonalFares;
+   const raw=out.gtfsRaw;
+   if(!out.fare&&out.provider==='Cars Région Isère'&&iz&&typeof iz.quoteFromStops==='function'&&
+    raw&&raw.isereZoneEvidence&&raw.isereZoneEvidence.complete===true){
+    const z=raw.isereZoneEvidence;
+    const priced=iz.quoteFromStops({stopIds:z.stopIds,stopZones:z.stopZones,source:z.source,
+     complete:true,departure:out.departure,network:out.provider,line:out.line});
+    if(priced)out.fare={amount:priced.amount,currency:priced.currency,network:out.provider,
+     validityMinutes:priced.validityMinutes,source:priced.source+' ; zones : '+priced.zoneSource};
+   }
    return out;
   });
   return {...journey((r.network||network)+' (GTFS)',legs),
