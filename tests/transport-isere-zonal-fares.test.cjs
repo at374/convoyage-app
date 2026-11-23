@@ -68,3 +68,20 @@ test('Isere: journey coverage requires all intermediate stop zones',()=>{
   stopZones:{A:'A',M:'B'}});
  assert.deepEqual(report,{total:4,priced:1,missingZone:1,ambiguous:1,invalidJourney:1,coveragePercent:25});
 });
+
+
+test('Isere: imported official reference rejects unknown GTFS stop and invalid zone atomically',()=>{
+ const {validateOfficialStopZones}=require('../transport-isere-zonal-fares.js');
+ const index={stopById:new Map([['stop-1',{}],['stop-2',{}]])};
+ const reference={verified:true,source,stopZones:{'stop-1':'A','stop-2':'B'}};
+ const valid=validateOfficialStopZones(index,reference);
+ assert.equal(valid.valid,true);
+ assert.equal(valid.stopZones['stop-1'],'A');
+ assert.equal(validateOfficialStopZones(index,{...reference,stopZones:{...reference.stopZones,'unknown':'C'}}).valid,false);
+ const invalid=validateOfficialStopZones(index,{...reference,stopZones:{'stop-1':'A','stop-2':'?'}});
+ assert.equal(invalid.valid,false);
+ assert.equal(invalid.stopZones,null);
+ assert.equal(validateOfficialStopZones(index,{...reference,stopZones:{}}).valid,false);
+ assert.equal(validateOfficialStopZones(index,{...reference,source:'https://example.com/zones'}),null);
+ assert.equal(validateOfficialStopZones(index,{...reference,verified:false}),null);
+});
