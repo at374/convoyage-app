@@ -775,3 +775,11 @@ test('lastServiceDate conserve un ajout exceptionnel après les suppressions', (
   };
   assert.equal(collector.lastServiceDate(files), '2026-12-02');
 });
+
+test('lastServiceDate accepte les dates GTFS AAAAMMJJ valides', () => {
+  const files = {
+    'calendar.txt': 'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n' +
+      'WK,1,1,1,1,1,1,1,20261123,20261130\n'
+  };
+  assert.equal(collector.lastServiceDate(files), '2026-11-30');
+});
