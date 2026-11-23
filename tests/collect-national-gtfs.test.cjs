@@ -164,3 +164,9 @@ test('collect() : une archive absente de la Release est retéléchargée même s
   assert.equal(downloads, 0);
   assert.equal(present.manifest.totals.unchanged, 1);
 });
+
+test('shouldSkip refuse les dates de catalogue invalides', () => {
+  assert.equal(collector.shouldSkip(
+    { updatedAt: 'invalid' }, { status: 'ok', updatedAt: 'also invalid' }
+  ), false);
+});
