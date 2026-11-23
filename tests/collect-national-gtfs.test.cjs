@@ -73,13 +73,17 @@ test('activeWithinDays ignore un calendrier actif sans courses associées', () =
   assert.equal(collector.activeWithinDays(withoutTrips, 30, new Date('2026-06-01T00:00:00Z')), false);
 });
 
-test('shouldSkip ne retélécharge pas quand la date de mise à jour PAN est inchangée', () => {
-  const resource = { datasetId: 'd1', id: 'r1', updatedAt: '2026-11-01T00:00:00Z' };
-  assert.equal(collector.shouldSkip(resource, { status: 'ok', updatedAt: '2026-11-01T00:00:00Z' }), true);
-  assert.equal(collector.shouldSkip(resource, { status: 'unchanged', updatedAt: '2026-11-01T00:00:00Z' }), true);
-  assert.equal(collector.shouldSkip(resource, { status: 'ok', updatedAt: '2026-10-01T00:00:00Z' }), false);
+test('shouldSkip ne retélécharge que si URL et date PAN sont inchangées', () => {
+  const url = 'https://example.org/feed.zip';
+  const updatedAt = '2026-11-01T00:00:00Z';
+  const resource = { datasetId: 'd1', id: 'r1', url, updatedAt };
+  assert.equal(collector.shouldSkip(resource, { status: 'ok', url, updatedAt }), true);
+  assert.equal(collector.shouldSkip(resource, { status: 'unchanged', url, updatedAt }), true);
+  assert.equal(collector.shouldSkip(resource, { status: 'ok', url, updatedAt: '2026-10-01T00:00:00Z' }), false);
+  assert.equal(collector.shouldSkip(resource, { status: 'ok', updatedAt }), false);
+  assert.equal(collector.shouldSkip({ ...resource, url: undefined }, { status: 'ok', updatedAt }), false);
   assert.equal(collector.shouldSkip(resource, null), false);
-  assert.equal(collector.shouldSkip(resource, { status: 'error', updatedAt: '2026-11-01T00:00:00Z' }), false);
+  assert.equal(collector.shouldSkip(resource, { status: 'error', url, updatedAt }), false);
 });
 
 test('toCSV produit un en-tête et une ligne par réseau, avec échappement des virgules', () => {
