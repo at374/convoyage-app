@@ -32,7 +32,7 @@ class CompareTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / 'a.zip'
             feed(path, ['A', 'B', 'PARENT'], ['A', 'B'])
-            metadata, listed, served = module.inspect(path)
+            metadata, listed, served, signatures = module.inspect(path)
             self.assertEqual(metadata['stops'], 3)
             self.assertEqual(metadata['served_stops'], 2)
             self.assertEqual(metadata['unserved_stops'], 1)
