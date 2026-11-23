@@ -93,7 +93,7 @@ async function loadAndSearch({operator,resource,fetcher,signal,loadOptions={},..
  if(!validTime(latestArrival))throw new Error('Invalid arrival threshold before GTFS download');
  const toSeconds=value=>{const [h,m,sec='0']=value.split(':').map(Number);return h*3600+m*60+Number(sec);};
  if(earliestDeparture!==null&&latestArrival!==null&&toSeconds(latestArrival)<toSeconds(earliestDeparture))
-  return {source:'official-gtfs',counts:null,journeys:[],skippedDownload:'impossible-time-window'};
+  return {source:'official-gtfs',counts:{stops:0,routes:0,trips:0},journeys:[],skippedDownload:'impossible-time-window'};
  // Never download unbounded national GTFS archives into a phone; use a server-prepared regional slice.
  const {maxArchiveBytes=20*1024*1024,...rest}=loadOptions;
  if(!Number.isSafeInteger(maxArchiveBytes)||maxArchiveBytes<=0||maxArchiveBytes>20*1024*1024)
