@@ -396,3 +396,20 @@ test('shouldSkip retélécharge si l’URL PAN change sans modification de date'
   assert.equal(collector.shouldSkip(resource, { ...previous, url: resource.url }), true);
   assert.equal(collector.shouldSkip(resource, { ...previous, url: undefined }), false);
 });
+
+test('activeWithinDays respecte les suppressions et ajouts de service', () => {
+  const today = new Date('2026-06-01T00:00:00Z');
+  const removed = {
+    ...baseFiles,
+    'calendar_dates.txt': 'service_id,date,exception_type\nWK,20260601,2\n'
+  };
+  assert.equal(collector.activeWithinDays(removed, 1, today), false);
+  assert.equal(collector.activeWithinDays(removed, 2, today), true);
+  const added = {
+    ...baseFiles,
+    'calendar.txt': 'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\nWK,0,0,0,0,0,0,0,20260101,20271231\n',
+    'calendar_dates.txt': 'service_id,date,exception_type\nWK,20260601,1\n'
+  };
+  assert.equal(collector.activeWithinDays(added, 1, today), true);
+  assert.equal(collector.activeWithinDays({ ...added, 'calendar_dates.txt': 'service_id,date,exception_type\n' }, 1, today), false);
+});
