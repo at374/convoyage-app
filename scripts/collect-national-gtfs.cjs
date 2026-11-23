@@ -141,6 +141,48 @@ function activeWithinDays(files, days, today = new Date(), eligibleServices = nu
   return false;
 }
 
+// Détection structurelle GTFS-Flex : ne fournit jamais de départ confirmé.
+function flexServices(files, index) {
+  const groups = new Set();
+  for (const row of gtfs.csvRows(files['location_groups.txt'] || '')) {
+    if (row.location_group_id) groups.add(row.location_group_id);
+  }
+  const groupStops = new Set();
+  for (const row of gtfs.csvRows(files['location_group_stops.txt'] || '')) {
+    if (groups.has(row.location_group_id) && index.stopById.has(row.stop_id)) {
+      groupStops.add(row.location_group_id);
+    }
+  }
+  const timePattern = /^\\d{1,3}:[0-5]\\d:[0-5]\\d$/;
+  const byTrip = new Map();
+  for (const row of gtfs.csvRows(files['stop_times.txt'] || '')) {
+    if (!index.tripById.has(row.trip_id)) continue;
+    if (!row.location_group_id || !groupStops.has(row.location_group_id)) continue;
+    if (!timePattern.test(row.start_pickup_drop_off_window || '') ||
+        !timePattern.test(row.end_pickup_drop_off_window || '')) continue;
+    const seconds = value => {
+      const [h, m, sec] = value.split(':').map(Number);
+      return h * 3600 + m * 60 + sec;
+    };
+    if (seconds(row.end_pickup_drop_off_window) < seconds(row.start_pickup_drop_off_window)) continue;
+    const sequence = Number(row.stop_sequence);
+    if (!Number.isSafeInteger(sequence) || sequence < 0) continue;
+    if (!byTrip.has(row.trip_id)) byTrip.set(row.trip_id, []);
+    byTrip.get(row.trip_id).push({ sequence, group: row.location_group_id });
+  }
+  const services = new Set();
+  for (const [tripId, rows] of byTrip) {
+    const trip = index.tripById.get(tripId);
+    if (!index.routeById.has(trip.route_id)) continue;
+    rows.sort((a, b) => a.sequence - b.sequence);
+    if (rows.some((row, i) => rows.slice(i + 1).some(next =>
+      next.sequence > row.sequence && next.group !== row.group))) {
+      if (trip.service_id) services.add(trip.service_id);
+    }
+  }
+  return services;
+}
+
 function lastServiceDate(files, eligibleServices = null) {
   const validDate = value => {
     if (!/^\d{8}$/.test(value || '')) return false;
@@ -264,7 +306,8 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     currentTime < checkedAt || currentTime - checkedAt >= 7 * 86400000;
   // Les anciens manifestes ne contiennent pas encore la distinction TAD/régulier.
   // Les revalider même si la ressource PAN et son ZIP semblent inchangés.
-  const missingRegularClassification = typeof previousEntry?.regularConnectedTrip !== 'boolean' ||
+  const missingRegularClassification = typeof previousEntry?.flexServiceCount !== 'number' ||
+    typeof previousEntry?.regularConnectedTrip !== 'boolean' ||
     typeof previousEntry?.activeRegularNext30Days !== 'boolean';
   if (archiveAvailable && !expiredCalendar && !staleActivity && !missingRegularClassification && shouldSkip(resource, previousEntry)) {
     return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now, lastValidatedAt: validatedAt };
@@ -303,6 +346,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   let index;
   let lines;
   let eligibleServices;
+  let flexServiceCount = 0;
   let regularConnectedTrip = false;
   const regularServices = new Set();
   try {
@@ -363,9 +407,11 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
         if (connectedServices.has(trip.service_id) && regularServices.has(trip.service_id)) break;
       }
     }
-    eligibleServices = connectedServices;
-    if (!connectedTrip) {
-      return { ...base, status: 'error', error: 'aucune course avec ligne, deux arrêts distincts et horaires valides' };
+    const flex = flexServices(files, index);
+    flexServiceCount = flex.size;
+    eligibleServices = new Set([...connectedServices, ...flex]);
+    if (!connectedTrip && !flex.size) {
+      return { ...base, status: 'error', error: 'aucune course régulière ou GTFS-Flex structurée exploitable' };
     }
     lines = classifyRoutes(files);
   } catch (error) {
@@ -398,6 +444,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
       gtfs.parseCSV(files['fare_products.txt'] || '').length > 0,
     activeNext30Days,
     regularConnectedTrip,
+    flexServiceCount,
     activeRegularNext30Days,
     lines,
     bytes, // retiré avant écriture du manifeste ; utilisé par l'appelant pour la publication.
@@ -474,7 +521,7 @@ async function collect({
 }
 
 function toCSV(manifest) {
-  const header = ['id', 'network', 'status', 'routes', 'trips', 'stops', 'fares', 'activeNext30Days', 'activeRegularNext30Days', 'regularConnectedTrip', 'lastServiceDate', 'lines_regular', 'lines_school', 'lines_demandResponsive', 'lines_unknown', 'aggregateSuspected', 'sha256', 'url', 'agencyCount', 'agencyNames', 'agencyTimezones', 'error'];
+  const header = ['id', 'network', 'status', 'routes', 'trips', 'stops', 'fares', 'activeNext30Days', 'activeRegularNext30Days', 'regularConnectedTrip', 'flexServiceCount', 'lastServiceDate', 'lines_regular', 'lines_school', 'lines_demandResponsive', 'lines_unknown', 'aggregateSuspected', 'sha256', 'url', 'agencyCount', 'agencyNames', 'agencyTimezones', 'error'];
   const rows = [header.join(',')];
   const esc = (v) => {
     const s = v === undefined || v === null ? '' : String(v);
@@ -493,6 +540,7 @@ function toCSV(manifest) {
         entry.activeNext30Days ?? '',
         entry.activeRegularNext30Days ?? '',
         entry.regularConnectedTrip ?? '',
+        entry.flexServiceCount ?? '',
         entry.lastServiceDate ?? '',
         entry.lines?.regular ?? '',
         entry.lines?.school ?? '',
