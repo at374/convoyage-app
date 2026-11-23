@@ -467,3 +467,26 @@ test('processResource actualise le statut glissant après sept jours malgré un 
   assert.equal(entry.status, 'ok', entry.error);
   assert.equal(entry.activeNext30Days, true);
 });
+
+test('processResource conserve la date de validation lors des simples passages du cache', async () => {
+  const resource = {
+    id: 'r11', datasetId: 'd11', network: 'Réseau cache',
+    format: 'GTFS', url: 'https://example.org/cache.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  };
+  const previousEntry = {
+    status: 'ok', url: resource.url, updatedAt: resource.updatedAt,
+    lastCheckedAt: '2026-11-22T00:00:00Z',
+    lastValidatedAt: '2026-11-20T00:00:00Z',
+    lastServiceDate: '2027-12-31', activeNext30Days: true,
+    sha256: 'previous-hash'
+  };
+  const entry = await collector.processResource(resource, {
+    fetcher: async () => { throw new Error('ne doit pas télécharger'); },
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    previousEntry, now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'unchanged');
+  assert.equal(entry.lastCheckedAt, '2026-11-23T00:00:00Z');
+  assert.equal(entry.lastValidatedAt, '2026-11-20T00:00:00Z');
+});
