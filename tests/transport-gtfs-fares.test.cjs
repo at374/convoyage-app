@@ -71,3 +71,11 @@ test('duplicate GTFS fare IDs cannot silently overwrite an official price',()=>{
  const same={...files,'fare_attributes.txt':'fare_id,price,currency_type\nU,2.00,EUR\nU,2.00,EUR'};
  assert.equal(F.legFare(F.prepare(same),idx(same),{tripId:'T1',from:'A',to:'B'}),null);
 });
+
+test('duplicate fare ID with invalid row cannot launder a valid ticket price',()=>{
+ const files={...base,
+  'fare_attributes.txt':'fare_id,price,currency_type\nU,2.00,EUR\nU,not-a-price,EUR'};
+ assert.equal(F.legFare(F.prepare(files),idx(files),{tripId:'T1',from:'A',to:'B'}),null);
+ const reversed={...files,'fare_attributes.txt':'fare_id,price,currency_type\nU,not-a-price,EUR\nU,2.00,EUR'};
+ assert.equal(F.legFare(F.prepare(reversed),idx(reversed),{tripId:'T1',from:'A',to:'B'}),null);
+});
