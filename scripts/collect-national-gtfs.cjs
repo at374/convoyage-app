@@ -94,7 +94,8 @@ function classifyRoutes(files) {
     } else if (SCHOOL_HINTS.test(label)) {
       kind = 'school';
     } else if (knownRegularType) {
-      kind = 'regular';
+      // Le mode GTFS (bus, train...) ne prouve pas qu'une ligne est publique et régulière.
+      kind = 'unknown';
     } else {
       kind = 'unknown';
     }
@@ -135,7 +136,7 @@ function dedupKey(resource) {
 // On ne retélécharge que ce qui a changé : si la date de mise à jour publiée par le catalogue PAN
 // n'a pas bougé depuis le dernier manifeste, on réutilise l'entrée précédente sans retoucher au réseau.
 function shouldSkip(resource, previousEntry) {
-  if (!previousEntry || previousEntry.status !== 'ok') return false;
+  if (!previousEntry || !['ok', 'unchanged'].includes(previousEntry.status)) return false;
   if (!resource.updatedAt || !previousEntry.updatedAt) return false;
   return new Date(resource.updatedAt).getTime() === new Date(previousEntry.updatedAt).getTime();
 }
@@ -175,7 +176,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     return { ...base, status: 'error', error: 'téléchargement : ' + error.message };
   }
   const hash = sha256(bytes);
-  if (previousEntry && previousEntry.status === 'ok' && previousEntry.sha256 === hash) {
+  if (previousEntry && ['ok', 'unchanged'].includes(previousEntry.status) && previousEntry.sha256 === hash) {
     return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now };
   }
   let extracted;
@@ -336,6 +337,7 @@ if (require.main === module) {
     }
     const { manifest, uploads } = await collect({
       limit: limit ? Number(limit) : null,
+      // Une collecte limitée ne doit pas remplacer le manifeste national complet.
       previousManifest,
     });
     fs.mkdirSync(outDir, { recursive: true });
