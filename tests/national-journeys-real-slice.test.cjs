@@ -33,3 +33,17 @@ test('coordonnées GPS hors bornes : aucun téléchargement national lancé',asy
  }),/Valid exact coordinates/);
  assert.equal(requests,0);
 });
+
+test('fenêtre horaire impossible : aucune recherche nationale coûteuse',()=>{
+ const indexer=require('../transport-gtfs-index.js');
+ const original=indexer.nearbyDirectTrips;
+ let calls=0;
+ indexer.nearbyDirectTrips=()=>{calls++;throw Error('should not scan');};
+ try{
+  const rows=journeys.search({operator:'sncf',files:{},index:{},date:'2026-11-30',
+   from:{lat:45.9,lon:6.12},to:{lat:45.76,lon:4.86},
+   earliestDeparture:'12:00:00',latestArrival:'11:00:00',includeTransfers:true});
+  assert.deepEqual(rows,[]);
+  assert.equal(calls,0);
+ }finally{indexer.nearbyDirectTrips=original;}
+});
