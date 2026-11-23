@@ -108,7 +108,7 @@ async function loginHiflow(page, email, password) {
 // construite par nous. Chaque parseur de net-core.js vérifie lui-même la forme exacte attendue (clé de
 // tableau différente : response.journeys sans booking, response.booking, response.quotations,
 // response.bills, response.journeys AVEC booking) ; on les essaie donc tous, sans deviner par l'URL.
-function armerCapture(page, missionsBucket, resaBucket, facturesBucket, attenteBucket) {
+function armerCapture(page, missionsBucket, resaBucket, facturesBucket, attenteBucket, devisBucket) {
   page.on('response', async (resp) => {
     try {
       const url = resp.url();
@@ -147,6 +147,16 @@ function armerCapture(page, missionsBucket, resaBucket, facturesBucket, attenteB
       const attente = CPNet.attenteHiflow(json);
       if (attente) {
         for (const t of attente) if (t && t.id_booking) attenteBucket[t.id_booking] = { ...(attenteBucket[t.id_booking] || {}), ...t };
+        return;
+      }
+      // 23/11/2026 (Laurent : un devis Hiflow envoyé — « en attente », n°1290066, Chambéry → Albertville —
+      // n'apparaissait nulle part dans Convoyage Ultra, ni dans « Missions disponibles » ni avec le badge
+      // « Devis envoyé ») : le parseur devisHiflow (getConveyorJourneyQuotation) existe dans net-core.js
+      // depuis le 01/10/2026, mais aucun bucket ne le recevait jamais ici — cp95_devis restait un objet
+      // vide codé en dur plus bas, pour TOUS les convoyeurs Hiflow depuis que ce robot existe. Branché.
+      const devis = CPNet.devisHiflow(json);
+      if (devis) {
+        for (const q of devis) if (q && q.id_quotation) devisBucket[q.id_quotation] = { ...(devisBucket[q.id_quotation] || {}), ...q };
       }
     } catch (_) { /* une réponse illisible ne doit jamais arrêter la lecture */ }
   });
@@ -191,6 +201,29 @@ async function lireMesTrajets(page, resaBucket) {
   await sleep(4000); // la liste arrive via la réponse JSON capturée passivement
 }
 
+// 23/11/2026 : onglet « Mes devis » — URL confirmée par Laurent (LIST_URL + #quotations, comme #journeys
+// pour « Missions disponibles »). Pagination éventuelle non confirmée pour cet onglet précis : on tente
+// d'abord le même composant que « Missions disponibles » (pagination-tableJourneyList), puis un sélecteur
+// générique par préfixe de classe, sans jamais bloquer si aucun des deux n'existe (quelques devis tiennent
+// peut-être sur une seule page, sans pagination visible).
+async function lireMesDevis(page) {
+  await page.goto(LIST_URL.replace('#journeys', '#quotations'), { waitUntil: 'domcontentloaded' });
+  const onglet = await page.$('a[href="#quotations"]');
+  if (onglet) await onglet.click().catch(() => {});
+  await sleep(4000);
+  for (let i = 0; i < 60; i++) {
+    if (/\/login/.test(page.url())) throw new Error('déconnecté en cours de lecture');
+    const pag = (await page.$('.pagination-tableJourneyList')) || (await page.$('[class*="pagination-table"]'));
+    if (!pag) break;
+    const next = await pag.$('[data-action="next"]');
+    if (!next) break;
+    const disabled = await next.evaluate((n) => n.disabled || n.getAttribute('aria-disabled') === 'true' || /disabled/i.test(n.className || ''));
+    if (disabled) break;
+    await sleep(jitter(3500, 1800));
+    await next.click();
+  }
+}
+
 // Comme le téléphone (hf_factures_at) : « Mes factures » change rarement, on ne la relit pas à chaque passage.
 // 21/11/2026 (multi-convoyeurs) : filtré par user_id désormais — sans ça, la lecture récente des factures
 // d'UN convoyeur aurait fait sauter celle des autres pendant 6h, alors que chacun a ses propres factures.
@@ -227,13 +260,16 @@ async function syncUnUtilisateur(SUPABASE_URL, SERVICE_KEY, USER_ID) {
   if (!cred || !cred.email || !cred.password) throw new Error('aucun identifiant Hiflow enregistré pour cet utilisateur');
 
   const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
-  const missionsBucket = {}, resaBucket = {}, facturesBucket = {}, attenteBucket = {};
+  const missionsBucket = {}, resaBucket = {}, facturesBucket = {}, attenteBucket = {}, devisBucket = {};
   let statut = 'ok', detail = null, regionsOk = 0, facturesLues = false;
   try {
     const page = await browser.newPage();
-    armerCapture(page, missionsBucket, resaBucket, facturesBucket, attenteBucket);
+    armerCapture(page, missionsBucket, resaBucket, facturesBucket, attenteBucket, devisBucket);
     await loginHiflow(page, cred.email, cred.password);
     await lireMesTrajets(page, resaBucket);
+    // 23/11/2026 : « Mes devis » lu à chaque passage (pas de mise en cache comme les factures) — c'est
+    // justement ce qui détermine si une mission disponible garde son badge « Devis envoyé » ou disparaît.
+    try { await lireMesDevis(page); } catch (e) { statut = 'partiel'; detail = `devis: ${e.message}`; }
     if (await fauteDeFacturesRecentes(SUPABASE_URL, SERVICE_KEY, USER_ID)) {
       try { await lireMesFactures(page); facturesLues = true; } catch (e) { statut = 'partiel'; detail = `factures: ${e.message}`; }
     }
@@ -263,7 +299,7 @@ async function syncUnUtilisateur(SUPABASE_URL, SERVICE_KEY, USER_ID) {
     cp72_acceptees: { Hiflow: resaBucket },
     cp70_missions_autres: {},
     cp96_factures: facturesBucket,
-    cp95_devis: {},
+    cp95_devis: devisBucket,
     cp98_attente: attenteBucket,
   };
   const rows = CPSync.buildRows(store, USER_ID, { plateformes: ['Hiflow'] }).map((r) => ({ ...r, first_seen_at: undefined }));
