@@ -15,6 +15,8 @@ on:
       - 'transport-fares.js'
       - 'transport-gtfs-fares.js'
       - 'tests/transport-gtfs-fares.test.cjs'
+      - 'scripts/report-fare-gaps.cjs'
+      - 'tests/report-fare-gaps.test.cjs'
       - 'tests/transport-fares.test.cjs'
       - 'transport-national-gtfs-journeys.js'
       - 'tests/national-journeys-real-slice.test.cjs'
@@ -35,4 +37,4 @@ jobs:
         with:
           node-version: '22'
       - name: Tests du collecteur national
-        run: node --test tests/transport-catalogue.test.cjs tests/collect-national-gtfs.test.cjs tests/transport-gtfs-loader.test.cjs tests/transport-mission-hub.test.cjs tests/transport-gtfs-flex-courses.test.cjs tests/national-journeys-real-slice.test.cjs tests/transport-fares.test.cjs tests/transport-gtfs-fares.test.cjs
+        run: node --test tests/transport-catalogue.test.cjs tests/collect-national-gtfs.test.cjs tests/transport-gtfs-loader.test.cjs tests/transport-mission-hub.test.cjs tests/transport-gtfs-flex-courses.test.cjs tests/national-journeys-real-slice.test.cjs tests/transport-fares.test.cjs tests/transport-gtfs-fares.test.cjs tests/report-fare-gaps.test.cjs
