@@ -1,0 +1,26 @@
+name: Tests collecteur GTFS national
+on:
+  push:
+    branches:
+      - feature/transports-aura-suisse
+    paths:
+      - 'scripts/collect-national-gtfs.cjs'
+      - 'tests/collect-national-gtfs.test.cjs'
+      - 'transport-catalogue.js'
+      - 'transport-gtfs-loader.js'
+      - 'transport-gtfs-index.js'
+      - '.github/workflows/gtfs-national-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Tests du collecteur national
+        run: node --test tests/collect-national-gtfs.test.cjs
