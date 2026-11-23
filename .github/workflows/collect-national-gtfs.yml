@@ -45,6 +45,15 @@ jobs:
           [[ "$limit" =~ ^[0-9]+$ ]] || { echo "Limite invalide"; exit 1; }
           if (( limit > 10000 )); then echo "Limite trop élevée"; exit 1; fi
           echo "limit=$limit" >> "$GITHUB_OUTPUT"
+      - name: Inventorier les archives présentes dans la Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view gtfs-national >/dev/null 2>&1; then
+            gh api --paginate "repos/${GITHUB_REPOSITORY}/releases/tags/gtfs-national" --jq '.assets[].name' | jq -R -s 'split("\\n") | map(select(length > 0))' > gtfs-assets.json
+          else
+            printf '[]\\n' > gtfs-assets.json
+          fi
       - name: Collecter et valider les GTFS
         env:
           LIMIT: ${{ steps.scope.outputs.limit }}
@@ -53,7 +62,7 @@ jobs:
           set -euo pipefail
           mkdir -p gtfs-release docs/gtfs-national
           if [ "${{ steps.scope.outputs.limit }}" = "0" ]; then
-            node scripts/collect-national-gtfs.cjs --out docs/gtfs-national --release-dir gtfs-release
+            node scripts/collect-national-gtfs.cjs --out docs/gtfs-national --release-dir gtfs-release --available-assets gtfs-assets.json
           else
             node scripts/collect-national-gtfs.cjs --out docs/gtfs-national-sample --release-dir gtfs-release --limit "${{ steps.scope.outputs.limit }}"
           fi
