@@ -30,7 +30,7 @@ function legFare(prepared,index,leg){
  const trip=index?.tripById?.get(leg.tripId);if(!trip)return null;
  const routeId=trip.route_id,origin=index.stopById?.get(leg.from)?.zone_id||'',destination=index.stopById?.get(leg.to)?.zone_id||'';
  let candidates;
- if(!prepared.hasRulesFile||!prepared.rules.length){
+ if(!prepared.hasRulesFile){
   candidates=prepared.fares.size===1?[...prepared.fares.values()]:[];
  }else{
   if(prepared.rules.some(r=>r.contains_id))return null;
