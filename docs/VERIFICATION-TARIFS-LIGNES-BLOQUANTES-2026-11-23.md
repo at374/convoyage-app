@@ -27,3 +27,11 @@
 Une ligne identifiée dans le diagnostic n'est **pas** une preuve de tarif. N'attribuer un prix qu'après vérification du produit, du périmètre géographique, de la période de validité et de l'éligibilité au trajet. Sinon : « Prix à confirmer », rentabilité masquée.
 
 Cette note documente la recherche ; elle **n'ajoute aucun tarif** et ne revendique aucune hausse de couverture.
+
+## Contrôle complémentaire : éligibilité des courses scolaires
+
+Le site officiel Ondéa classe les **lignes 100 à 108** (dont 102) et **400 à 419** (dont 419) parmi les lignes de proximité qui circulent **en période scolaire uniquement**, en direction des établissements scolaires : https://www.ondeagrandlac.fr/services/bus
+
+Le plan 2026 et les fiches horaires permettent de retrouver les arrêts, mais **ne suffisent pas à démontrer qu'un convoyeur adulte sans statut scolaire peut emprunter chaque course**. La documentation officielle distingue en outre les supports de titres acceptés : https://www.ondeagrandlac.fr/nos-points-de-vente
+
+**Règle produit :** avant de marquer une proposition « réalisable » ou de lui affecter un prix, vérifier séparément (1) que le service circule le jour demandé, (2) que la course est ouverte au public visé, (3) que le support de titre est accepté, (4) que le tarif est applicable. En l'absence de preuve, conserver « Conditions d'accès / prix à confirmer » et masquer la rentabilité.
