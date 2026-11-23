@@ -12,6 +12,8 @@ on:
       - 'transport-gtfs-index.js'
       - 'transport-mission-hub.js'
       - 'tests/transport-mission-hub.test.cjs'
+      - 'transport-gtfs-flex-courses.js'
+      - 'tests/transport-gtfs-flex-courses.test.cjs'
       - '.github/workflows/gtfs-national-tests.yml'
   workflow_dispatch:
 permissions:
@@ -26,4 +28,4 @@ jobs:
         with:
           node-version: '22'
       - name: Tests du collecteur national
-        run: node --test tests/collect-national-gtfs.test.cjs tests/transport-gtfs-loader.test.cjs tests/transport-mission-hub.test.cjs
+        run: node --test tests/collect-national-gtfs.test.cjs tests/transport-gtfs-loader.test.cjs tests/transport-mission-hub.test.cjs tests/transport-gtfs-flex-courses.test.cjs
