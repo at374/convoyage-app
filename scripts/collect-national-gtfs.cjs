@@ -141,7 +141,7 @@ function activeWithinDays(files, days, today = new Date(), eligibleServices = nu
   return false;
 }
 
-function lastServiceDate(files) {
+function lastServiceDate(files, eligibleServices = null) {
   const validDate = value => {
     if (!/^\d{8}$/.test(value || '')) return false;
     const year = Number(value.slice(0, 4));
@@ -153,9 +153,11 @@ function lastServiceDate(files) {
   };
   let latest = null;
   for (const row of gtfs.csvRows(files['calendar.txt'] || '')) {
+    if (eligibleServices !== null && !eligibleServices.has(row.service_id)) continue;
     if (validDate(row.end_date) && (!latest || row.end_date > latest)) latest = row.end_date;
   }
   for (const row of gtfs.csvRows(files['calendar_dates.txt'] || '')) {
+    if (eligibleServices !== null && !eligibleServices.has(row.service_id)) continue;
     if (row.exception_type === '1' && validDate(row.date) && (!latest || row.date > latest)) latest = row.date;
   }
   return latest ? latest.slice(0, 4) + '-' + latest.slice(4, 6) + '-' + latest.slice(6, 8) : null;
@@ -313,7 +315,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   let publishedLastServiceDate;
   try {
     activeNext30Days = activeWithinDays(files, ACTIVE_WINDOW_DAYS, new Date(now), eligibleServices);
-    publishedLastServiceDate = lastServiceDate(files);
+    publishedLastServiceDate = lastServiceDate(files, eligibleServices);
   } catch (error) {
     return { ...base, status: 'error', error: 'calendrier : ' + error.message };
   }
