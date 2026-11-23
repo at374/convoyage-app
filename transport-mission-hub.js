@@ -210,10 +210,10 @@ function fromGTFS(rows,network='Réseau local'){
    // Isère : uniquement si un fournisseur apporte une preuve officielle complète
    // de la séquence d'arrêts ET des zones ; aucun prix depuis les seules coordonnées.
    const iz=root.CPIsereZonalFares;
-   const raw=out.gtfsRaw;
+   const isereRaw=out.gtfsRaw;
    if(!out.fare&&out.provider==='Cars Région Isère'&&iz&&typeof iz.quoteFromStops==='function'&&
-    raw&&raw.isereZoneEvidence&&raw.isereZoneEvidence.complete===true){
-    const z=raw.isereZoneEvidence;
+    isereRaw&&isereRaw.isereZoneEvidence&&isereRaw.isereZoneEvidence.complete===true){
+    const z=isereRaw.isereZoneEvidence;
     const priced=iz.quoteFromStops({stopIds:z.stopIds,stopZones:z.stopZones,source:z.source,
      complete:true,departure:out.departure,network:out.provider,line:out.line});
     if(priced)out.fare={amount:priced.amount,currency:priced.currency,network:out.provider,
