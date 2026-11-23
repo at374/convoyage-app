@@ -50,7 +50,8 @@ jobs:
         run: |
           set -euo pipefail
           if gh release view gtfs-national >/dev/null 2>&1; then
-            gh api --paginate "repos/${GITHUB_REPOSITORY}/releases/tags/gtfs-national" --jq '.assets[].name' | jq -R -s 'split("\\n") | map(select(length > 0))' > gtfs-assets.json
+            release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/gtfs-national" --jq .id)"
+            gh api --paginate "repos/${GITHUB_REPOSITORY}/releases/${release_id}/assets?per_page=100" --jq '.[].name' | jq -R -s 'split("\\n") | map(select(length > 0))' > gtfs-assets.json
           else
             printf '[]\\n' > gtfs-assets.json
           fi
