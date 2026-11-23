@@ -192,6 +192,11 @@ function flexServices(files, index) {
       return h * 3600 + m * 60 + sec;
     };
     if (seconds(row.end_pickup_drop_off_window) < seconds(row.start_pickup_drop_off_window)) continue;
+    // GTFS: 0 (ordinaire), 1 (interdit), 2 (sur réservation), 3 (coordination).
+    // Une valeur inconnue ne doit jamais être traitée comme un accès autorisé.
+    const allowedTypes = new Set(['', '0', '1', '2', '3']);
+    if (!allowedTypes.has(row.pickup_type || '') ||
+        !allowedTypes.has(row.drop_off_type || '')) continue;
     const sequence = Number(row.stop_sequence);
     if (!Number.isSafeInteger(sequence) || sequence < 0) continue;
     if (!byTrip.has(row.trip_id)) byTrip.set(row.trip_id, []);
