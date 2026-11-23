@@ -138,3 +138,16 @@ test('unsupported contains-zone rules remain blocking even when their fare row i
  assert.equal(prepared.unsupportedContainsRule,true);
  assert.equal(F.legFare(prepared,idx(files),{tripId:'T1',from:'A',to:'C'}),null);
 });
+
+test('unresolved fare rule for a route blocks false certainty, without blocking unrelated routes',()=>{
+ const files={...base,
+  'fare_attributes.txt':'fare_id,price,currency_type\nU,2.00,EUR',
+  'fare_rules.txt':'fare_id,route_id\nU,R1\nMISSING,R1'};
+ const p=F.prepare(files),i=idx(files);
+ assert.equal(p.unresolvedRules.length,1);
+ assert.equal(F.legFare(p,i,{tripId:'T1',from:'A',to:'B'}),null);
+ const other={...files,'fare_rules.txt':'fare_id,route_id\nU,R1\nMISSING,R2'};
+ const p2=F.prepare(other);
+ assert.equal(F.legFare(p2,idx(other),{tripId:'T1',from:'A',to:'B'}).amount,2);
+ assert.equal(F.legFare(p2,idx(other),{tripId:'T2',from:'B',to:'C'}),null);
+});
