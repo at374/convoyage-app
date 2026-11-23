@@ -345,7 +345,18 @@ async function run(){
   await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await release('12');
   const rail=page.getByRole('heading',{name:'Aller SNCF · comparer (gare à gare)',exact:true}).locator('..');
-  await rail.waitFor();
+  try { await rail.waitFor({timeout:12000}); }
+  catch(error){
+    const snapshot=await page.locator('#cpTransportMissionDetails').innerText().catch(()=>'(panel absent)');
+    const state=await page.evaluate(()=>({
+      fallback:!!window.CPSncfFallback,
+      ranking:!!window.CPTransportRanking,
+      adapters:!!window.CPTransportAdapters,
+      panel:!!document.querySelector('#cpTransportMissionDetails'),
+      headings:[...document.querySelectorAll('#cpTransportMissionDetails h1,#cpTransportMissionDetails h2,#cpTransportMissionDetails h3,#cpTransportMissionDetails h4')].map(e=>e.textContent)
+    }));
+    throw new Error('SNCF rail comparison missing: '+JSON.stringify({state,panelText:snapshot.slice(0,6000)}),{cause:error});
+  }
   const railText=await rail.textContent();
   assert.match(railText,/proposition\(s\) de gare à gare/);
   assert.match(railText,/Annecy/);assert.match(railText,/Grenoble/);
