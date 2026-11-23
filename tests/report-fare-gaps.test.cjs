@@ -55,3 +55,9 @@ test('shows per-axis partial journeys without counting them as fully priced',()=
  assert.match(report,/Annecy → Genève \| 49 \| 0 \| 18 \| 49 \|/);
  assert.match(report,/Other \| 3 \| 1 \| — \| 2 \|/);
 });
+
+test('prioritizes axes by partially priced journeys, not by total unpriced journeys',()=>{
+ const report=build({axes:[{name:'A',trips:100,priced:0,partialPricedJourneys:2},{name:'B',trips:20,priced:1,partialPricedJourneys:15}]});
+ const section=report.split('## Axes prioritaires : trajets déjà partiellement tarifés')[1];
+ assert.ok(section.indexOf('| B | 15 | 1 | 20 |')<section.indexOf('| A | 2 | 0 | 100 |'));
+});
