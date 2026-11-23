@@ -7,7 +7,7 @@ function build(d){
  if(!d||!Array.isArray(d.axes))throw Error('Invalid diagnostic: axes missing');
  const axes=d.axes.map(a=>{
   const missing=Object.entries(a.missingFareByOperator||{}).filter(([,n])=>Number.isFinite(n)&&n>0).sort((a,b)=>b[1]-a[1]);
-  return {name:String(a.name||a.id||'?').replace(/[|\r\n]/g,' '),trips:Number(a.trips)||0,priced:Number(a.priced)||0,partial:Number.isFinite(a.partialPricedJourneys)?a.partialPricedJourneys:null,missing};
+  return {name:String(a.name||a.id||'?').replace(/[|\r\n]/g,' '),trips:Number(a.trips)||0,priced:Number(a.priced)||0,partial:Number.isInteger(a.partialPricedJourneys)&&a.partialPricedJourneys>=0&&a.partialPricedJourneys<=Math.max(0,(Number(a.trips)||0)-(Number(a.priced)||0))?a.partialPricedJourneys:null,missing};
  }).sort((a,b)=>(b.trips-b.priced)-(a.trips-a.priced));
  const lines=['# Couverture tarifaire — diagnostic automatique','',
   'Source : '+String(d.source||'diagnostic').replace(/[\r\n]/g,' ')+' ; relevé : '+String(d.at||'inconnu')+' ; scénario : '+String(d.when||'inconnu')+'.','',
