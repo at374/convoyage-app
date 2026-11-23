@@ -29,3 +29,29 @@ Les flux multi-opérateurs ou régionaux sont signalés comme suspects d'agréga
 - Les archives ZIP64 et certains flux GTFS de très grande taille peuvent être rejetés par les limites actuelles du chargeur.
 - La disponibilité d'une archive dans la Release est contrôlée par son nom ; son contenu n'est pas retéléchargé pour vérifier son SHA à chaque exécution.
 - La planification et la collecte nationale complète ne sont pas encore validées en production.
+
+## GTFS-Flex et dédoublonnage (audit local du 23 novembre 2026)
+
+L'audit local de 22 archives ZIP a identifié **20 empreintes SHA-256 distinctes** :
+18 archives distinctes avec trajets réguliers actifs sur la fenêtre étudiée,
+et deux archives GTFS-Flex de transport à la demande (AXO TAD et Le Bus TAD).
+Deux copies locales (Hobus et Ficibus) possèdent exactement la même empreinte
+SHA-256 que leur archive d'origine ; elles ne doivent pas compter comme deux réseaux.
+
+Les archives `PT_TAD_OFFER_AXO_gtfs_20261122_1351.zip` et
+`PT_TAD_OFFER_LEBUS_gtfs_20261122_1351.zip` contiennent
+`booking_rules.txt`, `location_groups.txt` et
+`location_group_stops.txt`. Leur `stop_times.txt` utilise des colonnes
+`start_pickup_drop_off_window` / `end_pickup_drop_off_window` et
+`location_group_id` à la place d'horaires fixes par `stop_id`.
+
+**Ne pas classer ces flux comme invalides** sous prétexte que le détecteur
+de courses régulières ne trouve pas deux arrêts à heures fixes.
+Ils nécessitent un traitement GTFS-Flex spécifique : plages de réservation,
+zones et règles de prise en charge, et confirmation par l'opérateur.
+**Ne pas convertir les fenêtres de réservation en heures de départ garanties.**
+
+Les archives locales ne prouvent ni la disponibilité actuelle d'une URL
+de téléchargement ni la disponibilité commerciale d'un billet. Aucun tarif
+de transport n'a été vérifié dans cet audit. La rentabilité d'une mission
+reste masquée jusqu'à obtention du prix total réellement confirmé.
