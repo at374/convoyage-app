@@ -55,3 +55,29 @@ Les archives locales ne prouvent ni la disponibilité actuelle d'une URL
 de téléchargement ni la disponibilité commerciale d'un billet. Aucun tarif
 de transport n'a été vérifié dans cet audit. La rentabilité d'une mission
 reste masquée jusqu'à obtention du prix total réellement confirmé.
+
+
+## Audit des archives GTFS-Flex AXO et Le Bus (23 novembre 2026)
+
+Contrôle réalisé sur les archives locales `PT_TAD_OFFER_AXO_gtfs_20261122_1351.zip` et
+`PT_TAD_OFFER_LEBUS_gtfs_20261122_1351.zip` (publication du 22 novembre 2026).
+Le contrôle a ouvert les ZIP et recoupé `trips.txt`, `stop_times.txt`,
+`location_groups.txt`, `location_group_stops.txt`, `stops.txt` et
+`booking_rules.txt`. Les 24 courses possèdent une liaison théorique entre
+arrêts distincts, une fenêtre horaire compatible et des références de règles
+de réservation existantes.
+
+| Réseau | Courses | Courses structurellement valides | Règles | Préavis de réservation indiqué |
+| --- | ---: | ---: | ---: | ---: |
+| AXO – Agglo Creil Sud Oise | 20 | 20 | 10 | 60 minutes |
+| Le Bus – C.C. du Clermontois | 4 | 4 | 2 | 120 minutes |
+
+Ces valeurs proviennent du champ `prior_notice_duration_min` des règles
+présentes dans les archives. Elles ne démontrent **ni** qu'une réservation
+est acceptée **ni** qu'un véhicule peut arriver à une heure exacte.
+Les fenêtres `start_pickup_drop_off_window` et
+`end_pickup_drop_off_window` ne sont **pas** des horaires de passage
+confirmés. Aucun tarif de billet vérifié n'a été obtenu par cet audit.
+Ne pas utiliser ces courses pour confirmer une arrivée à l'adresse exacte
+avec 15 minutes de marge ni pour calculer une rentabilité nette sans
+confirmation du transport et de son prix total.
