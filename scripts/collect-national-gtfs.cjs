@@ -272,9 +272,22 @@ async function collect({
   });
   if (Number.isInteger(limit) && limit > 0) resources = resources.slice(0, limit);
   const previousByKey = new Map((previousManifest?.networks ? Object.values(previousManifest.networks) : []).map((e) => [dedupKey(e), e]));
-  const entries = await pool(resources, concurrency, (resource) =>
-    processResource(resource, { fetcher, maxBytes, timeoutMs, previousEntry: previousByKey.get(dedupKey(resource)), now, availableAssets })
-  );
+  const entries = await pool(resources, concurrency, async (resource) => {
+    try {
+      return await processResource(resource, {
+        fetcher, maxBytes, timeoutMs, previousEntry: previousByKey.get(dedupKey(resource)), now, availableAssets
+      });
+    } catch (error) {
+      // Une ressource imprévue ne doit pas annuler l'analyse des autres réseaux.
+      return {
+        id: slugify(resource.network) + '-' + slugify(resource.id).slice(0, 12),
+        datasetId: resource.datasetId, resourceId: resource.id,
+        network: resource.network, url: resource.url,
+        updatedAt: resource.updatedAt || null, lastCheckedAt: now,
+        status: 'error', error: 'traitement : ' + (error?.message || String(error))
+      };
+    }
+  });
   const manifest = {
     schemaVersion: SCHEMA_VERSION,
     generatedAt: now,
