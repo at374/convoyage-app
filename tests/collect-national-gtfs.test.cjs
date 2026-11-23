@@ -413,3 +413,30 @@ test('activeWithinDays respecte les suppressions et ajouts de service', () => {
   assert.equal(collector.activeWithinDays(added, 1, today), true);
   assert.equal(collector.activeWithinDays({ ...added, 'calendar_dates.txt': 'service_id,date,exception_type\n' }, 1, today), false);
 });
+
+test('processResource revalide un calendrier expiré même si la date PAN et le ZIP sont identiques', async () => {
+  const good = zip(baseFiles);
+  let downloads = 0;
+  const resource = {
+    id: 'r9', datasetId: 'd9', network: 'Réseau calendrier',
+    format: 'GTFS', url: 'https://example.org/calendar.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  };
+  const previousEntry = {
+    status: 'ok', url: resource.url, updatedAt: resource.updatedAt,
+    lastServiceDate: '2026-11-20', activeNext30Days: true,
+    sha256: collector.sha256(good)
+  };
+  const fetcher = async () => {
+    downloads++;
+    return new Response(good, { headers: { 'content-type': 'application/zip' } });
+  };
+  const entry = await collector.processResource(resource, {
+    fetcher, maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    previousEntry, now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(downloads, 1);
+  assert.equal(entry.status, 'ok', entry.error);
+  assert.equal(entry.activeNext30Days, true);
+  assert.equal(entry.lastServiceDate, '2027-12-31');
+});
