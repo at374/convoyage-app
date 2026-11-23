@@ -196,15 +196,16 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   if (!agencies.length || agencies.some((a) => !a.agency_name || !a.agency_timezone)) {
     return { ...base, status: 'error', error: 'agency.txt invalide (nom ou fuseau horaire manquant)' };
   }
-  const index = gtfs.buildIndex(files);
-  if (!index.counts.routes || !index.counts.trips) {
-    return { ...base, status: 'error', error: 'flux sans ligne ou sans course exploitable' };
-  }
+  let index;
   let lines;
   try {
+    index = gtfs.buildIndex(files);
+    if (!index.counts.routes || !index.counts.trips) {
+      return { ...base, status: 'error', error: 'flux sans ligne ou sans course exploitable' };
+    }
     lines = classifyRoutes(files);
   } catch (error) {
-    return { ...base, status: 'error', error: 'classification : ' + error.message };
+    return { ...base, status: 'error', error: 'indexation ou classification : ' + error.message };
   }
   return {
     ...base,
