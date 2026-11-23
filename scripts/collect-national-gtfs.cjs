@@ -298,8 +298,11 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     };
     for (const [tripId, trip] of index.tripById) {
       if (!index.routeById.has(trip.route_id)) continue;
-      let first = null;
-      let firstRegular = null;
+      // Le premier arrêt accessible peut réapparaître plus loin dans une boucle.
+      // Conserver les origines distinctes jusqu'à trouver une destination
+      // différente, plutôt que d'écarter une course valide A -> A -> B.
+      const origins = new Map();
+      const regularOrigins = new Map();
       for (const time of index.timesByTrip.get(tripId) || []) {
         if (!timePattern.test(time.arrival_time || '') ||
             !timePattern.test(time.departure_time || '')) continue;
@@ -312,24 +315,26 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
         const accessAllowed = value => value === undefined || value === '' ||
           value === '0' || value === '2' || value === '3';
         const regularAccess = value => value === undefined || value === '' || value === '0';
-        const connected = origin => origin && time.stop_id !== origin.stopId &&
-          sequence > origin.sequence && arrival >= origin.departure;
-        if (accessAllowed(time.drop_off_type) && connected(first)) {
+        const connected = candidates => {
+          for (const [stopId, origin] of candidates) {
+            if (stopId !== time.stop_id && sequence > origin.sequence &&
+                arrival >= origin.departure) return true;
+          }
+          return false;
+        };
+        if (accessAllowed(time.drop_off_type) && connected(origins)) {
           connectedTrip = true;
           if (trip.service_id) connectedServices.add(trip.service_id);
         }
-        if (regularAccess(time.drop_off_type) && connected(firstRegular)) {
+        if (regularAccess(time.drop_off_type) && connected(regularOrigins)) {
           regularConnectedTrip = true;
           if (trip.service_id) regularServices.add(trip.service_id);
         }
-        // Garder aussi le premier arrêt autorisant une montée ordinaire :
-        // le premier arrêt de la course peut être réservé, mais un arrêt
-        // suivant peut permettre une montée et une descente ordinaires.
-        if (!first && accessAllowed(time.pickup_type)) {
-          first = { stopId: time.stop_id, sequence, departure };
+        if (accessAllowed(time.pickup_type) && !origins.has(time.stop_id)) {
+          origins.set(time.stop_id, { sequence, departure });
         }
-        if (!firstRegular && regularAccess(time.pickup_type)) {
-          firstRegular = { stopId: time.stop_id, sequence, departure };
+        if (regularAccess(time.pickup_type) && !regularOrigins.has(time.stop_id)) {
+          regularOrigins.set(time.stop_id, { sequence, departure });
         }
         if (connectedServices.has(trip.service_id) && regularServices.has(trip.service_id)) break;
       }
