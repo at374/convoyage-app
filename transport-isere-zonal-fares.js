@@ -94,14 +94,18 @@ function auditGTFSZones(index,stopZones){
  for(const times of index.timesByTrip.values())for(const t of times||[]){
   if(typeof t?.stop_id==='string'&&t.stop_id)used.add(t.stop_id);
  }
+ // Un arrêt référencé par un voyage mais absent de stops.txt bloque le référentiel.
+ // Ne jamais compter un identifiant orphelin comme couvert par une zone fournie.
+ const orphan=[...used].filter(id=>!index.stopById.has(id)).sort();
  const covered=[],missing=[],invalid=[];
  for(const id of [...used].sort()){
   const value=Object.prototype.hasOwnProperty.call(stopZones,id)?stopZones[id]:undefined;
+  if(!index.stopById.has(id)){missing.push(id);continue;}
   if(value===undefined)missing.push(id);
   else if(typeof value!=='string'||!/^(A|B|C|D|E|RH|S|HT1|HT2)$/.test(value))invalid.push(id);
   else covered.push(id);
  }
- return {total:used.size,covered:covered.length,missing,invalid,
+ return {total:used.size,covered:covered.length,missing,invalid,orphan,
   coveragePercent:used.size?Math.round(10000*covered.length/used.size)/100:0};
 }
 // Audit par course et par paire d'arrêts : la couverture des arrêts isolés
