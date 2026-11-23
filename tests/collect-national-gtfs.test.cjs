@@ -110,6 +110,8 @@ test('collect() : découvre, télécharge, valide et classe un flux réel simul�
   assert.equal(okEntry.routes, 4);
   assert.deepEqual(okEntry.lines, { regular: 0, school: 1, demandResponsive: 1, unknown: 2 });
   assert.equal(okEntry.fares, false);
+  assert.equal(okEntry.lastServiceDate, '2027-12-31');
+  assert.equal(okEntry.agencies[0].name, 'SIBRA');
   assert.equal(uploads.length, 1);
   assert.equal(uploads[0].id, okEntry.id);
   const skipped = Object.values(manifest.networks).find((e) => e.status === 'unchanged');
@@ -180,4 +182,13 @@ test('processResource : calendrier impossible isolé comme erreur sans interromp
   }, { fetcher, maxBytes: 200 * 1024 * 1024, timeoutMs: 3000, previousEntry: null, now: 'invalid-date' });
   assert.equal(entry.status, 'error');
   assert.match(entry.error, /calendrier/);
+});
+
+test('lastServiceDate inclut les ajouts calendar_dates sans confondre les suppressions', () => {
+  const files = {
+    'calendar.txt': 'service_id,end_date\\nWK,20261130\\n',
+    'calendar_dates.txt': 'service_id,date,exception_type\\nWK,20261202,2\\nWK,20261201,1\\n'
+  };
+  assert.equal(collector.lastServiceDate(files), '2026-12-01');
+  assert.equal(collector.lastServiceDate({}), null);
 });
