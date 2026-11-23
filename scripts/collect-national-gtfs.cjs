@@ -234,8 +234,13 @@ function flexServices(files, index) {
     if (connected && trip.service_id) services.add(trip.service_id);
   }
   // Préavis informatif seulement : ne prouve pas qu'une réservation est possible.
-  const notices = [...usedBookingRules].map(id => Number(bookingRules.get(id)?.prior_notice_duration_min))
-    .filter(value => Number.isFinite(value) && value >= 0);
+  const notices = [...usedBookingRules].map(id => {
+    const raw = bookingRules.get(id)?.prior_notice_duration_min;
+    // Une cellule absente ou vide signifie "préavis inconnu", jamais zéro.
+    if (raw === undefined || raw === null || String(raw).trim() === '') return null;
+    const value = Number(raw);
+    return Number.isFinite(value) && value >= 0 ? value : null;
+  }).filter(value => value !== null);
   return {
     services,
     bookingRuleCount: usedBookingRules.size,
