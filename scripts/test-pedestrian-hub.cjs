@@ -58,6 +58,6 @@ const checked=async(j,t=task,r=mock)=>assess(await completeWalks(j,t,r),t,()=>nu
  assert.equal(cached.geometry,null,'Ne jamais dessiner un faux tracé piéton rectiligne depuis le cache');
  const fs=require('node:fs');
  const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
- assert.match(source,/\(l\.kind==='walk'\|\|l\.kind==='scooter'\)\?\[\]:\[l\.fromPoint,l\.toPoint\]\.filter\(Boolean\)/,'Le SVG ne doit pas inventer de polyligne piétonne ou trottinette');
+ assert.match(source,/l\.geometry&&l\.geometry\.length\?l\.geometry:\(l\.kind==='walk'\|\|l\.kind==='scooter'\?\[\]:\[l\.fromPoint,l\.toPoint\]\.filter\(Boolean\)\)/,'Le SVG ne doit pas inventer de polyligne piétonne ou trottinette');
  console.log('10 contrôles piétons : raccordement GPS, correspondances, métriques, cache et SVG OK');
 })().catch(error=>{console.error(error);process.exitCode=1;});
