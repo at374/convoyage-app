@@ -560,3 +560,28 @@ test('lastServiceDate exclut les services sans courses connectées', () => {
   assert.equal(collector.lastServiceDate(files, new Set(['CONNECTED'])), '2027-01-15');
   assert.equal(collector.lastServiceDate(files, new Set(['UNKNOWN'])), null);
 });
+
+test('processResource ne déclare pas actif un service dont seules les courses sont déconnectées', async () => {
+  const files = {
+    ...baseFiles,
+    'trips.txt': 'route_id,service_id,trip_id\nR1,EXPIRED,T1\nR1,CURRENT,T2\n',
+    'stop_times.txt': 'trip_id,arrival_time,departure_time,stop_id,stop_sequence\n' +
+      'T1,10:00:00,10:00:00,A,1\nT1,11:00:00,11:00:00,B,2\n' +
+      'T2,10:00:00,10:00:00,A,1\nT2,11:00:00,11:00:00,INCONNU,2\n',
+    'calendar.txt': 'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\n' +
+      'EXPIRED,1,1,1,1,1,1,1,20260101,20260131\n' +
+      'CURRENT,1,1,1,1,1,1,1,20260101,20271231\n'
+  };
+  const entry = await collector.processResource({
+    id: 'r13', datasetId: 'd13', network: 'Réseau service orphelin',
+    format: 'GTFS', url: 'https://example.org/orphan.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher: async () => new Response(zip(files), { headers: { 'content-type': 'application/zip' } }),
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'ok', entry.error);
+  assert.equal(entry.activeNext30Days, false);
+  assert.equal(entry.lastServiceDate, '2026-01-31');
+});
