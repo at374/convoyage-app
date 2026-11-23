@@ -110,7 +110,7 @@ test('collect() : découvre, télécharge, valide et classe un flux réel simul�
   };
   const previousManifest = {
     networks: {
-      'tac-annemasse-r2': { id: 'tac-annemasse-r2', datasetId: '43', resourceId: 'r2', status: 'ok', url: 'https://example.org/tac.zip', updatedAt: '2026-09-01T00:00:00Z', lastValidatedAt: '2026-11-22T00:00:00Z', lastServiceDate: '2027-12-31', regularConnectedTrip: true, activeRegularNext30Days: true, sha256: 'x' },
+      'tac-annemasse-r2': { id: 'tac-annemasse-r2', datasetId: '43', resourceId: 'r2', status: 'ok', url: 'https://example.org/tac.zip', updatedAt: '2026-09-01T00:00:00Z', lastValidatedAt: '2026-11-22T00:00:00Z', lastServiceDate: '2027-12-31', regularConnectedTrip: true, activeRegularNext30Days: true, flexServiceCount: 0, activeFlexNext30Days: false, sha256: 'x' },
     },
   };
   const { manifest, uploads } = await collector.collect({ fetcher, previousManifest, now: '2026-11-23T00:00:00Z' });
@@ -163,7 +163,7 @@ test('collect() : une archive absente de la Release est retéléchargée même s
     id: 'reseau-test-r1', datasetId: 'd1', resourceId: 'r1',
     status: 'unchanged', url: resource.url, updatedAt: resource.updated_at,
     lastValidatedAt: '2026-11-22T00:00:00Z', lastServiceDate: '2027-12-31',
-    regularConnectedTrip: true, activeRegularNext30Days: true,
+    regularConnectedTrip: true, activeRegularNext30Days: true, flexServiceCount: 0, activeFlexNext30Days: false,
     sha256: collector.sha256(good)
   } } };
   const missing = await collector.collect({
@@ -481,7 +481,7 @@ test('processResource conserve la date de validation lors des simples passages d
     lastCheckedAt: '2026-11-22T00:00:00Z',
     lastValidatedAt: '2026-11-20T00:00:00Z',
     lastServiceDate: '2027-12-31', activeNext30Days: true,
-    regularConnectedTrip: true, activeRegularNext30Days: true,
+    regularConnectedTrip: true, activeRegularNext30Days: true, flexServiceCount: 0, activeFlexNext30Days: false,
     sha256: 'previous-hash'
   };
   const entry = await collector.processResource(resource, {
@@ -805,6 +805,7 @@ test('processResource reconnaît GTFS-Flex sans fabriquer de départ régulier',
   });
   assert.equal(entry.status, 'ok', entry.error);
   assert.equal(entry.flexServiceCount, 1);
+  assert.equal(entry.activeFlexNext30Days, true);
   assert.equal(entry.activeNext30Days, true);
   assert.equal(entry.regularConnectedTrip, false);
   assert.equal(entry.activeRegularNext30Days, false);
@@ -871,4 +872,18 @@ test('processResource GTFS-Flex refuse une destination avant le départ', async 
     now: '2026-11-23T00:00:00Z'
   });
   assert.equal(entry.status, 'error');
+});
+
+test('toCSV distingue activité GTFS-Flex et régulière', () => {
+  const csv = collector.toCSV({ networks: {
+    flex: { id: 'flex', network: 'TAD', status: 'ok', activeNext30Days: true,
+      activeRegularNext30Days: false, regularConnectedTrip: false,
+      flexServiceCount: 1, activeFlexNext30Days: true }
+  } });
+  const lines = csv.trim().split('\n');
+  const headers = lines[0].split(',');
+  const fields = lines[1].split(',');
+  assert.equal(fields[headers.indexOf('flexServiceCount')], '1');
+  assert.equal(fields[headers.indexOf('activeFlexNext30Days')], 'true');
+  assert.equal(fields[headers.indexOf('activeRegularNext30Days')], 'false');
 });
