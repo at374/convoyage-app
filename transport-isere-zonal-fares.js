@@ -55,7 +55,27 @@ function quoteFromStops({stopIds,stopZones,source,complete=false,departure,profi
  if(!zoneEvidence)return null;
  return quote({zones:zoneEvidence.traversedZones.length,departure,profile,ecoEligible,network,line,zoneEvidence});
 }
-const api={quote,quoteFromStops,evidenceFromStops,SOURCE,FULL,ECO,VALID_FROM};
+// Extrait la séquence parcourue d'un index GTFS réel : ne pas confondre
+// arrêts d'origine/destination et toutes les zones intermédiaires.
+function evidenceFromGTFS(index,{tripId,fromStopId,toStopId,stopZones,source}={}){
+ if(!index||!(index.timesByTrip instanceof Map)||typeof tripId!=='string'||
+  typeof fromStopId!=='string'||typeof toStopId!=='string'||fromStopId===toStopId)return null;
+ const times=index.timesByTrip.get(tripId);
+ if(!Array.isArray(times)||times.length<2)return null;
+ const origins=[],destinations=[];
+ for(let i=0;i<times.length;i++){
+  if(times[i]?.stop_id===fromStopId)origins.push(i);
+  if(times[i]?.stop_id===toStopId)destinations.push(i);
+ }
+ // Boucles GTFS : sans indices d'embarquement/débarquement non ambigus, refuser.
+ if(origins.length!==1||destinations.length!==1||origins[0]>=destinations[0])return null;
+ const slice=times.slice(origins[0],destinations[0]+1);
+ if(slice.some((t,i)=>!t||typeof t.stop_id!=='string'||
+  !Number.isFinite(Number(t.stop_sequence))||
+  (i>0&&Number(t.stop_sequence)<=Number(slice[i-1].stop_sequence))))return null;
+ return evidenceFromStops({stopIds:slice.map(t=>t.stop_id),stopZones,source,complete:true});
+}
+const api={quote,quoteFromStops,evidenceFromStops,evidenceFromGTFS,SOURCE,FULL,ECO,VALID_FROM};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPIsereZonalFares=api;
 })(typeof window!=='undefined'?window:globalThis);
