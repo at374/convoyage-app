@@ -13,6 +13,15 @@
 - Le transporteur confirme la validité de la grille jusqu'au **12 décembre 2026**, et précise qu'un trajet transfrontalier doit être couvert par un titre unique adapté à l'ensemble du déplacement : https://jacquet-autocars.com/ligne-274/
 - **Décision** : pas de prix forfaitaire unique sur toute la ligne 274. Vérifier communes/arrêts d'origine et destination, zone 10 et date avant attribution.
 
+
+## Complément vérifié : support du billet Ondéa (23 novembre 2026)
+
+- Le site officiel distingue **le prix** et **le support** : le M-Ticket/QR code n'est pas accepté dans les cars affectés à certaines lignes scolaires, dont les **400 à 419**. Source : https://www.ondeagrandlac.fr/acheter-son-titre-sur-internet
+- La vente à bord est explicitement annoncée **dans les cars sur les lignes de transports scolaires**, auprès du conducteur, avec préparation de monnaie. Source : https://www.ondeagrandlac.fr/tarifs/vente-bord
+- La page « Titres pour tous » affiche le **titre 1 voyage à bord à 1,70 €** à compter du 1er juillet 2026. Source : https://www.ondeagrandlac.fr/tarifs/choisir-son-titre
+- Le réseau propose également une carte **Pass Ondéa avec 10 voyages pour 14,50 €**, utilisable sur les lignes scolaires ; les versions QR/M-Ticket du même produit ne le sont pas. Source : https://www.ondeagrandlac.fr/titres/titres-pour-tous-tarifs-applicables-du-1er-juillet-2026/titre-10-voyages
+- **Décision d'intégration** : ne pas utiliser le prix M-Ticket comme billet disponible sur la 419 ; vérifier le titre conducteur applicable à la course et les conditions d'accès du public avant de faire évoluer le moteur. Ne pas diviser automatiquement un carnet de 10 voyages pour présenter 1,45 € comme prix d'achat d'un billet unique.
+
 ## Règle d'intégration
 
 Une ligne identifiée dans le diagnostic n'est **pas** une preuve de tarif. N'attribuer un prix qu'après vérification du produit, du périmètre géographique, de la période de validité et de l'éligibilité au trajet. Sinon : « Prix à confirmer », rentabilité masquée.
