@@ -79,3 +79,13 @@ test('duplicate fare ID with invalid row cannot launder a valid ticket price',()
  const reversed={...files,'fare_attributes.txt':'fare_id,price,currency_type\nU,not-a-price,EUR\nU,2.00,EUR'};
  assert.equal(F.legFare(F.prepare(reversed),idx(reversed),{tripId:'T1',from:'A',to:'B'}),null);
 });
+
+test('missing GTFS fare price is unknown, not a free ticket',()=>{
+ for(const price of ['', '   ']){
+  const files={...base,'fare_attributes.txt':'fare_id,price,currency_type\nU,"'+price+'",EUR'};
+  const result=F.legFare(F.prepare(files),idx(files),{tripId:'T1',from:'A',to:'B'});
+  assert.equal(result,null,'blank amount must not become EUR 0');
+ }
+ const zero={...base,'fare_attributes.txt':'fare_id,price,currency_type\nU,0,EUR'};
+ assert.equal(F.legFare(F.prepare(zero),idx(zero),{tripId:'T1',from:'A',to:'B'}).amount,0,'explicit zero is distinct from missing price');
+});
