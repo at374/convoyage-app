@@ -14,7 +14,7 @@
 //   - transport-gtfs-index.js (parseCSV, activeServices) : lecture des tables et calcul des services
 //     actifs sur une date donnée.
 //
-// Aucun tarif n'est jamais inventé : on se contente de noter si un flux publie fare_attributes.txt.
+// Aucun tarif n'est jamais inventé : on note uniquement la présence de fare_attributes.txt (v1) ou fare_products.txt (v2).
 // La rentabilité d'une mission reste masquée tant que le coût complet du transport n'est pas connu
 // (décision déjà en vigueur ailleurs dans l'application).
 //
@@ -292,7 +292,8 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     stopTimes: index.counts.stopTimes,
     agencies: agencies.map(a => ({ id: a.agency_id || null, name: a.agency_name, url: a.agency_url || null })),
     lastServiceDate: publishedLastServiceDate,
-    fares: Boolean(files['fare_attributes.txt']),
+    // GTFS Fares v1 et v2 : présence de données tarifaires, pas prix vérifié d'un trajet.
+    fares: Boolean(files['fare_attributes.txt'] || files['fare_products.txt']),
     activeNext30Days,
     lines,
     bytes, // retiré avant écriture du manifeste ; utilisé par l'appelant pour la publication.
