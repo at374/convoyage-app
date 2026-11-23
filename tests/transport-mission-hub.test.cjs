@@ -774,3 +774,20 @@ test('TAD réservé : expiration du préavis ne révoque pas une réservation co
  const assessed=H.assess(j,{latestArrival:at(10,0),now});
  assert.equal(assessed.feasible,true);
 });
+
+test('mission GTFS Isere: official complete stop zones price journey, missing proof stays unknown',()=>{
+ const previous=globalThis.CPIsereZonalFares;
+ globalThis.CPIsereZonalFares=require('../transport-isere-zonal-fares.js');
+ try{
+  const base={network:'Cars Région Isère',line:'T40',tripId:'test-isere-1',date:'2026-11-30',
+   originStop:{name:'Départ',lat:45.90,lon:5.70},destinationStop:{name:'Arrivée',lat:45.91,lon:5.72},
+   departure:at(8,0,'2026-11-30'),arrival:at(8,30,'2026-11-30')};
+  const evidence={complete:true,stopIds:['A','B'],stopZones:{A:'A',B:'B'},source:'https://carsisere.auvergnerhonealpes.fr/referentiel-zones'};
+  const priced=H.fromGTFS([{...base,isereZoneEvidence:evidence}])[0];
+  assert.equal(priced.legs[0].fare.amount,6);
+  assert.equal(H.priceOf(priced,()=>null).status,'verified');
+  const unpriced=H.fromGTFS([{...base,tripId:'test-isere-2',isereZoneEvidence:{...evidence,complete:false}}])[0];
+  assert.equal(unpriced.legs[0].fare??null,null);
+  assert.equal(H.priceOf(unpriced,()=>null).status,'unknown');
+ }finally{globalThis.CPIsereZonalFares=previous;}
+});
