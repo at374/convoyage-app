@@ -975,3 +975,25 @@ test('processResource GTFS-Flex refuse arrêt A vers groupe contenant uniquement
   });
   assert.equal(entry.status, 'error');
 });
+
+test('processResource GTFS-Flex refuse une règle de réservation absente', async () => {
+  const files = {
+    ...baseFiles,
+    'stop_times.txt': 'trip_id,stop_sequence,location_group_id,start_pickup_drop_off_window,end_pickup_drop_off_window,pickup_booking_rule_id,drop_off_booking_rule_id\n' +
+      'T1,1,G1,09:00:00,10:00:00,MISSING,\n' +
+      'T1,2,G2,09:30:00,11:00:00,,MISSING\n',
+    'location_groups.txt': 'location_group_id,location_group_name\nG1,Zone A\nG2,Zone B\n',
+    'location_group_stops.txt': 'location_group_id,stop_id\nG1,A\nG2,B\n',
+    'booking_rules.txt': 'booking_rule_id,booking_type\nOTHER,1\n'
+  };
+  const entry = await collector.processResource({
+    id: 'flex-rule-missing', datasetId: 'flex', network: 'TAD réservation inconnue',
+    format: 'GTFS', url: 'https://example.org/flex-rule-missing.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher: async () => new Response(zip(files), { headers: { 'content-type': 'application/zip' } }),
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'error');
+});
