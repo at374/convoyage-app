@@ -38,13 +38,9 @@ const GRIDS=[
   product:'1 voyage M-Ticket (application Ondéa Grand Lac), 1 h',validityMinutes:60,
   validFrom:'2026-07-01',validUntil:'2027-06-30',source:'https://www.ondeagrandlac.fr/tarifs/choisir-son-titre',
   checkedAt:'2026-11-13',flat:true},
- // Ondéa lignes scolaires 102 et 419 : titre UNITAIRE acheté auprès du conducteur,
- // à distinguer du M-Ticket/QR refusé sur les cars scolaires. Les CGV Ondéa
- // indiquent que les titres ordinaires sont valables sur toutes les lignes
- // (hors Pass Circuit Scolaire) ; la FAQ scolaire autorise le titre conducteur.
- // Cette grille ne certifie PAS l'ouverture de chaque course à un adulte :
- // l'éligibilité et le calendrier restent des contrôles indépendants.
- {network:'Ondéa (titre conducteur, lignes 102/419)',operatorPattern:'^ond[ée]a\\b',modes:['Bus'],
+ // Ondéa cars scolaires : vente à bord distincte du M-Ticket/QR.
+ // Le calendrier et l'accès des adultes restent à vérifier séparément.
+ {network:'Ondéa (conducteur, lignes 102/419)',operatorPattern:'^ond[ée]a\\b',modes:['Bus'],
   includeLines:'^(?:102|419) : « Guide des tarifs », TARIFS EN VIGUEUR AU 14/12/2025 (PDF de mars 2026,
  // files.tac-mobilites.fr, texte relu le 13/11/2026) : ticket unité valable 60 minutes 1,70 € (carte bancaire sans contact,
  // application, ou conducteur toutes lignes) ; 2,00 € auprès du conducteur à bord de la T1 ; tous transports de la zone 210
@@ -350,9 +346,9 @@ if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportFareGrids=api;
 })(typeof window!=='undefined'?window:globalThis);
 ,amount:1.70,currency:'EUR',
-  product:'1 voyage auprès du conducteur, 1 h ; support papier, pas M-Ticket/QR sur car scolaire',validityMinutes:60,
+  product:'1 voyage auprès du conducteur, pas de QR/M-Ticket sur car scolaire',validityMinutes:60,
   validFrom:'2026-07-01',validUntil:'2027-06-30',
-  source:'https://www.ondeagrandlac.fr/tarifs/abonnements-scolaires',checkedAt:'2026-11-23',flat:true},
+  source:'https://www.ondeagrandlac.fr/tarifs/choisir-son-titre',checkedAt:'2026-11-23',flat:true},
  // TAC Mobilités (Annemasse Agglo, zone 210) : « Guide des tarifs », TARIFS EN VIGUEUR AU 14/12/2025 (PDF de mars 2026,
  // files.tac-mobilites.fr, texte relu le 13/11/2026) : ticket unité valable 60 minutes 1,70 € (carte bancaire sans contact,
  // application, ou conducteur toutes lignes) ; 2,00 € auprès du conducteur à bord de la T1 ; tous transports de la zone 210
