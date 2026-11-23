@@ -42,6 +42,10 @@ function quote({zones,departure,profile='full',zoneEvidence,ecoEligible=false,ne
   !Number.isFinite(Date.parse(date+'T00:00:00Z'))||
   new Date(date+'T00:00:00Z').toISOString().slice(0,10)!==date||
   date<VALID_FROM||date>VALID_THROUGH)return null;
+ // Date.parse du jour seul ne valide pas les heures : contrôler séparément HH:mm:ss et fuseau.
+ const clock=/T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(?:Z|([+-])(\d{2}):(\d{2}))?$/.exec(departure);
+ if(clock&&(Number(clock[1])>23||Number(clock[2])>59||Number(clock[3]||0)>59||
+  (clock[5]!==undefined&&(Number(clock[5])>23||Number(clock[6])>59))))return null;
  // Preuve obligatoire : liste ordonnée des zones effectivement traversées, issue d'un référentiel.
  if(!zoneEvidence||zoneEvidence.verified!==true||!Array.isArray(zoneEvidence.traversedZones)||
   zoneEvidence.traversedZones.length!==zones||
