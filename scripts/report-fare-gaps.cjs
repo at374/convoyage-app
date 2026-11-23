@@ -39,6 +39,16 @@ function build(d){
   const pct=totals.trips?(100*totals.priced/totals.trips).toFixed(1):'0.0';
   lines.push('','## Couverture globale','',totals.priced+' trajets entièrement tarifés sur '+totals.trips+' ('+pct+' %).');
  }
+ if(Number.isFinite(totals.trips)&&Number.isFinite(totals.priced)&&Number.isFinite(totals.feasible)){
+  lines.push('','## Distinction indispensable : prix et faisabilité','',
+   'Trajets avec prix complet : '+totals.priced+' / '+totals.trips+'.',
+   'Trajets déclarés faisables par le diagnostic : '+totals.feasible+' / '+totals.trips+'.',
+   'Ces deux compteurs sont indépendants : un trajet tarifé peut rester non réalisable (horaires, correspondances, confirmation). Leur intersection n’est pas calculée ici ; ne pas présenter '+totals.priced+' comme le nombre de trajets réalisables.');
+ }
+ if(Number.isFinite(totals.partialPricedJourneys)){
+  lines.push('','## Trajets partiellement tarifés','',
+   totals.partialPricedJourneys+' trajets possèdent au moins un tarif, mais pas de prix total vérifié. Ils restent exclus du calcul de rentabilité.');
+ }
  const partial=Object.entries(totals.partialMissingByOperator||{}).filter(([,n])=>Number.isFinite(n)&&n>0).sort((a,b)=>b[1]-a[1]);
  if(partial.length){
   lines.push('','## Priorité : portions bloquant les trajets partiellement tarifés','',
