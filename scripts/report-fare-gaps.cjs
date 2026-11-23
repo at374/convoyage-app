@@ -20,6 +20,20 @@ function build(d){
   'Les nombres ci-dessous sont des **occurrences par axe**, pas des billets uniques ni des trajets distincts.','',
   '| Opérateur | Occurrences |','|---|---:|');
  for(const [name,n] of [...byOperator].sort((a,b)=>b[1]-a[1]))lines.push('| '+String(name).replace(/[|\r\n]/g,' ')+' | '+n+' |');
+ const blockers=[];
+ for(const a of d.axes){
+  for(const [operator,rawLines] of Object.entries(a.partialMissingLineSamples||{})){
+   if(!Array.isArray(rawLines)||!rawLines.length)continue;
+   const names=[...new Set(rawLines.filter(v=>typeof v==='string'&&v.trim()).map(v=>v.trim().replace(/[|\r\n]/g,' ')))];
+   if(names.length)blockers.push({axis:String(a.name||a.id||'?').replace(/[|\r\n]/g,' '),operator:String(operator).replace(/[|\r\n]/g,' '),lines:names});
+  }
+ }
+ if(blockers.length){
+  lines.push('','## Lignes à rechercher en priorité','',
+   'Exemples observés sur des trajets partiellement tarifés : liste non exhaustive, sans tarif présumé.','',
+   '| Axe | Opérateur | Lignes sans tarif vérifié |','|---|---|---|');
+  for(const item of blockers)lines.push('| '+item.axis+' | '+item.operator+' | '+item.lines.join(', ')+' |');
+ }
  const totals=d.totals||{};
  if(Number.isFinite(totals.trips)&&Number.isFinite(totals.priced)&&totals.trips>=0&&totals.priced>=0&&totals.priced<=totals.trips){
   const pct=totals.trips?(100*totals.priced/totals.trips).toFixed(1):'0.0';
