@@ -1994,6 +1994,8 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
  // pas « non confirmé » : il n'est plus affiché, seul son nombre est indiqué (178 cartes inutiles sur 1 013 au
  // diagnostic réel du 14/11/2026).
  function view(label){const s=state[label];
+  const percent=s.total?Math.min(100,Math.round((s.total-s.pending)/s.total*100)):(s.pending===0?100:0);
+  const remainingMs=s.pending&&Array.isArray(s.deadlines)&&s.deadlines.length?Math.max(0,Math.max(...s.deadlines)-Date.now()):0;
   const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>r.startsWith('arrivée trop tôt pour le créneau choisi')||r.startsWith('marche trop longue'))));
   // Si la limite de marche (Paramètres) écarte TOUTES les propositions, on les montre quand même, clairement marquées « marche supérieure à la limite »,
   // plutôt qu'« Aucun trajet trouvé » : seul un trajet dont la marche est la seule objection est repris.
@@ -2013,7 +2015,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    return (j.source||j.sources?.[0]||'?')+' : véhicule '+(vehicleLeg?.departure?new Date(vehicleLeg.departure).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}):'—')+
     ' → départ retenu (après marche) '+(j.departure?new Date(j.departure).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}):'—');
   });
-  return {task:s.task,longShown,...rank(shown,s.task),hidden:{tooEarly:tooEarly.length-longShown,before:beforeList.length,beforeSamples,early:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('arrivée trop tôt'))).length,longWalk:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('marche trop longue'))).length-longShown,night:tooEarly.filter(j=>j.reasons.includes('trajet hors plage de jour ou date de mission')).length},pending:s.pending,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0,
+  return {task:s.task,longShown,...rank(shown,s.task),hidden:{tooEarly:tooEarly.length-longShown,before:beforeList.length,beforeSamples,early:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('arrivée trop tôt'))).length,longWalk:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('marche trop longue'))).length-longShown,night:tooEarly.filter(j=>j.reasons.includes('trajet hors plage de jour ou date de mission')).length},pending:s.pending,percent,remainingMs,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0,
   // 20/11/2026 (demande Laurent) : pouvoir suggérer la trottinette électrique quand des trajets sont écartés
   // uniquement pour une marche trop longue — seulement si l'option n'est pas déjà activée dans les Réglages.
   scooterEnabled:!!(scooter&&scooter.enabled),
@@ -2159,23 +2161,31 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
      :{...task,latestArrival:iso,windowKind:undefined,windowStartMs:undefined,windowEndMs:undefined,_milieuJournee:true});
    }
   }
+  // 23/11/2026 (Laurent : pourcentage + temps restant dans le badge « Recherche en cours ») : total = nombre
+  // de recherches asynchrones réellement lancées pour ce label (connu en entier à la fin de cette boucle
+  // synchrone, donc stable), jamais décrémenté ; pending (déjà existant) baisse à chaque fin. deadlines garde,
+  // pour chaque moteur encore en attente, l'instant où son propre délai expirera au plus tard (limitMs) — le
+  // temps restant affiché est le plus grand de ces instants moins maintenant : une vraie borne supérieure
+  // garantie par les timeouts déjà en place, pas une estimation inventée.
   for(const variant of variants)for(const [key,p] of Object.entries(providers)){
    let ok=false;try{ok=p.enabled(variant)&&!!queryWindow(variant);}catch(_){}
    if(!ok){if(variant===task)state[label].skipped[p.name]=p.disabledReason||'non applicable';continue;}
-   state[label].pending++;
+   state[label].pending++;state[label].total=(state[label].total||0)+1;
    // Délai borné par moteur (idée reprise du module ChatGPT transport_mission_search.js).
    const limitMs=Number.isFinite(p.timeoutMs)&&p.timeoutMs>timeoutMs?p.timeoutMs:timeoutMs;
+   const deadline=Date.now()+limitMs;(state[label].deadlines=state[label].deadlines||[]).push(deadline);
    const bounded=new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(new Error('délai fournisseur dépassé ('+Math.round(limitMs/1000)+' s)')),limitMs);
     Promise.resolve().then(()=>p.run(variant,controller.signal)).then(v=>{clearTimeout(t);resolve(v);},e=>{clearTimeout(t);reject(e);});});
    bounded.then(js=>add(label,p.name,js)).catch(e=>{
     if(!disposed)state[label].errors[p.name]=String(e&&e.message||e).slice(0,140);
-   }).finally(()=>{if(disposed)return;state[label].pending--;emit(label);});
+   }).finally(()=>{if(disposed)return;state[label].pending--;
+    const idx=state[label].deadlines.indexOf(deadline);if(idx>=0)state[label].deadlines.splice(idx,1);emit(label);});
   }
-  state[label].pending++;
+  state[label].pending++;state[label].total=(state[label].total||0)+1;
   walkOnly(task,router,walkMaxKm).then(w=>w&&state[label].items.push(assess(w,task,fareFor))).catch(()=>{})
    .finally(()=>{if(disposed)return;state[label].pending--;emit(label);});
   if(scooter&&scooter.enabled&&scooterRouter){
-   state[label].pending++;
+   state[label].pending++;state[label].total=(state[label].total||0)+1;
    scooterOnly(task,scooterRouter,{maxKm:scooter.maxKm,speedKmh:scooter.speedKmh}).then(w=>w&&state[label].items.push(assess(w,task,fareFor))).catch(()=>{})
     .finally(()=>{if(disposed)return;state[label].pending--;emit(label);});
   }

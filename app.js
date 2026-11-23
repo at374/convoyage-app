@@ -2083,16 +2083,25 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       const rechercheBadges={};
       const pointInsertion=label=>{const sec=transportDestinations[label];if(!sec)return null;
         return legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);};
-      const afficherRecherche=label=>{
+      // 23/11/2026 (Laurent : « indiquer le pourcentage de 0 à 100 % pour voir en temps réel l'avancée de la
+      // recherche et le temps restant ») : view.percent/view.remainingMs (transport-mission-hub.js, view())
+      // sont déjà recalculés à chaque mise à jour groupée (au plus une par 350 ms, voir emit()) — pas besoin
+      // d'un minuteur séparé ici, juste de réécrire le texte du badge existant à chaque passage.
+      const texteRecherche=view=>{
+        if(!view||!Number.isFinite(view.percent))return 'Recherche en cours, patientez…';
+        const reste=view.remainingMs>500?' (encore '+(view.remainingMs>=1000?Math.round(view.remainingMs/1000)+' s':'1 s')+' au plus)':'';
+        return 'Recherche en cours… '+view.percent+' %'+reste;
+      };
+      const afficherRecherche=(label,view)=>{
         const sec=transportDestinations[label];if(!sec||sec.hidden)return;
         let b=rechercheBadges[label];
         if(!b||!b.isConnected){
           b=document.createElement('p');b.className='cp-hub-recherche';b.setAttribute('role','status');
-          b.textContent='Recherche en cours, patientez…';
           rechercheBadges[label]=b;
           const apres=pointInsertion(label);
           if(apres)apres.insertAdjacentElement('afterend',b);else sec.appendChild(b);
         }
+        b.textContent=texteRecherche(view);
         const host=hubHosts[label];if(host)host.hidden=true;   // masque un ancien résultat pendant la nouvelle recherche
       };
       const masquerRecherche=label=>{
@@ -2298,7 +2307,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             // figer le défilement. Tant que view.done est faux, seul le badge « Recherche en cours » reste visible.
             {const entry=transportViewCache.get(missionKey)||{signature,views:{}};entry.signature=signature;entry.views[label]=view;transportViewCache.set(missionKey,entry);}
             if(!view.done){
-              afficherRecherche(label);
+              afficherRecherche(label,view);
               updateDayTabs();
               return;
             }

@@ -715,3 +715,26 @@ test('fromSNCF : correspondance large (>= 10 min) sans alerte',()=>{
  const [j]=H.fromSNCF(answer);
  assert.equal(j.alerts.length,0);
 });
+
+test('session : pourcentage d\'avancée et temps restant estimé dans view()',async()=>{
+ let resolveSlow;
+ const providers={
+  rapide:{name:'Rapide',enabled:()=>true,run:async()=>[]},
+  lent:{name:'Lent',enabled:()=>true,run:()=>new Promise(r=>{resolveSlow=r;})}
+ };
+ const s=H.createSession({tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers,router:fakeRouter(),timeoutMs:5000});
+ // 3 recherches async attendues au départ : Rapide, Lent, et la marche pure (walkOnly) toujours lancée.
+ let v=s.view('Aller');
+ assert.equal(v.done,false);
+ assert.ok(v.percent>=0&&v.percent<100,'pourcentage initial entre 0 et 100 : '+v.percent);
+ assert.ok(v.remainingMs>0,'temps restant positif tant qu\'un moteur borné par timeout est en attente');
+ await new Promise(r=>setTimeout(r,20));// laisse Rapide et la marche se terminer
+ v=s.view('Aller');
+ assert.equal(v.done,false,'Lent ne s\'est pas encore résolu');
+ assert.ok(v.percent>0,'le pourcentage doit avoir progressé : '+v.percent);
+ resolveSlow([]);
+ await new Promise(r=>setTimeout(r,20));
+ v=s.view('Aller');
+ assert.equal(v.done,true);assert.equal(v.percent,100);assert.equal(v.remainingMs,0);
+ s.dispose();
+});
