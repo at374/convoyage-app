@@ -540,3 +540,13 @@ test('collect dédoublonne une même ressource PAN malgré deux URL', async () =
   assert.deepEqual(requested, ['https://example.org/new.zip']);
   assert.equal(Object.values(manifest.networks)[0].url, 'https://example.org/new.zip');
 });
+
+test('activeWithinDays ignore les services sans courses reliées éligibles', () => {
+  const files = {
+    'trips.txt': 'route_id,service_id,trip_id\nR1,ACTIVE,T1\nR1,UNLINKED,T2\n',
+    'calendar.txt': 'service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date\nACTIVE,1,1,1,1,1,1,1,20260101,20271231\nUNLINKED,1,1,1,1,1,1,1,20260101,20271231\n'
+  };
+  const today = new Date('2026-11-23T00:00:00Z');
+  assert.equal(collector.activeWithinDays(files, 30, today, new Set(['ACTIVE'])), true);
+  assert.equal(collector.activeWithinDays(files, 30, today, new Set(['UNKNOWN'])), false);
+});
