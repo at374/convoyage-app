@@ -401,6 +401,7 @@ async function scooterOnly(task,router,{maxKm=8,speedKmh=15}={}){
 
 /* ---------- Tarifs ---------- */
 function priceOf(j,fareFor){
+ if(!Array.isArray(j?.legs)||j.legs.length===0)return {status:'unknown',amounts:{},label:'Prix à confirmer',missingSources:['trajet sans étape vérifiable']};
  // Une marche issue d'un fournisseur tiers peut ne pas avoir le drapeau walkOnly.
  // La tarification doit rester gratuite si toutes les étapes sont piétonnes.
  // Un indicateur hérité ne suffit pas à déclarer gratuit un trajet multimodal.
