@@ -220,6 +220,16 @@
       // un point d'adresse trouvé par le service officiel est alors préféré.
       const cache = POINTS[cleAdresse(m, cote)];
       if (cache && ((cache.precision === 'adresse' || cache.precision === 'rue') && centreCommune(m, cote, Number(p.lat), Number(p.lng)) || (cache.precision === 'adresse' && volOiseauKm({ lat: cache.lat, lng: cache.lng }, { lat: Number(p.lat), lng: Number(p.lng) }) * 1000 > 150))) return { lat: cache.lat, lng: cache.lng, precision: cache.precision };
+      // 23/11/2026 (Laurent : arrivée GPS jamais détectée à une livraison Albertville) : certaines plateformes (Hiflow)
+      // donnent pour « destination » le centre de la commune, même quand une adresse de rue précise est fournie à côté
+      // (deux missions avec des rues différentes à Albertville partageaient exactement le même point). Faute d'un
+      // meilleur point mis en cache (adresse/rue), ce centre-ville était jusqu'ici étiqueté « gps » (point exact) :
+      // le suivi d'arrivée appliquait alors le rayon serré (300 m) autour d'un point qui peut être à plus de 300 m
+      // de la vraie adresse, et l'arrivée n'était jamais détectée. On le requalifie en « ville » (rayon large,
+      // 800 m) quand il n'a rien de plus qu'un centre de commune, sans toucher aux coordonnées elles-mêmes.
+      if (!(cache && (cache.precision === 'adresse' || cache.precision === 'rue')) && centreCommune(m, cote, Number(p.lat), Number(p.lng))) {
+        return { lat: Number(p.lat), lng: Number(p.lng), precision: 'ville' };
+      }
       return { lat: Number(p.lat), lng: Number(p.lng), precision: 'gps' };
     }
     const pt = POINTS[cleAdresse(m, cote)]; if (pt) return { lat: pt.lat, lng: pt.lng, precision: pt.precision };
