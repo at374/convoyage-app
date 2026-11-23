@@ -50,9 +50,9 @@ jobs:
           set -euo pipefail
           if gh release view gtfs-national >/dev/null 2>&1; then
             release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/gtfs-national" --jq .id)"
-            gh api --paginate "repos/${GITHUB_REPOSITORY}/releases/${release_id}/assets?per_page=100" --jq '.[].name' | jq -R -s 'split("\\n") | map(select(length > 0))' > gtfs-assets.json
+            gh api --paginate "repos/${GITHUB_REPOSITORY}/releases/${release_id}/assets?per_page=100" --jq '.[].name' | jq -R -s 'split("\n") | map(select(length > 0))' > gtfs-assets.json
           else
-            printf '[]\\n' > gtfs-assets.json
+            printf '[]\n' > gtfs-assets.json
           fi
       - name: Collecter et valider les GTFS
         env:
@@ -89,7 +89,7 @@ jobs:
             echo "Aucune nouvelle archive valide à publier"
             exit 0
           fi
-          gh release view gtfs-national >/dev/null 2>&1 || gh release create gtfs-national --target "$GITHUB_SHA" --title "GTFS nationaux validés" --notes "Archives GTFS publiques, sans garantie de tarif ni de service temps réel."
+          gh release view gtfs-national >/dev/null 2>&1 || gh release create gtfs-national --target "$(git rev-parse HEAD)" --title "GTFS nationaux validés" --notes "Archives GTFS publiques, sans garantie de tarif ni de service temps réel."
           gh release upload gtfs-national "${files[@]}" --clobber
       - name: Versionner uniquement les manifestes
         shell: bash
