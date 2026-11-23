@@ -220,3 +220,17 @@ test('processResource : CSV agency.txt malformé est une erreur isolée', async 
   assert.equal(entry.status, 'error');
   assert.match(entry.error, /agency.txt/);
 });
+
+test('collect refuse les collisions de noms ZIP au lieu de perdre un réseau', async () => {
+  const resources = [
+    { id: 'abcdef123456-A', format: 'GTFS', url: 'https://example.org/a.zip' },
+    { id: 'abcdef123456-B', format: 'GTFS', url: 'https://example.org/b.zip' }
+  ];
+  const fetcher = async url => {
+    if (String(url).includes('transport.data.gouv.fr')) return {
+      ok: true, json: async () => [{ id: 'dataset', title: 'Réseau Test', resources }]
+    };
+    return new Response(Buffer.from('invalid ZIP'), { headers: { 'content-type': 'application/zip' } });
+  };
+  await assert.rejects(collector.collect({ fetcher }), /Collision identifiant GTFS/);
+});
