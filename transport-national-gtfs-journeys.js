@@ -88,7 +88,7 @@ async function loadAndSearch({operator,resource,fetcher,signal,loadOptions={},..
   throw new Error('Invalid walking search radius before GTFS download');
  if(!Number.isSafeInteger(maxResults)||maxResults<1||maxResults>100)
   throw new Error('Invalid result limit before GTFS download');
- const validTime=value=>value===null||(typeof value==='string'&&/^\\d{1,3}:[0-5]\\d(?::[0-5]\\d)?$/.test(value));
+ const validTime=value=>value===null||(typeof value==='string'&&/^\d{1,3}:[0-5]\d(?::[0-5]\d)?$/.test(value));
  if(!validTime(earliestDeparture))throw new Error('Invalid departure threshold before GTFS download');
  if(!validTime(latestArrival))throw new Error('Invalid arrival threshold before GTFS download');
  // Never download unbounded national GTFS archives into a phone; use a server-prepared regional slice.
