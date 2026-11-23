@@ -168,15 +168,24 @@ function flexServices(files, index) {
     const sequence = Number(row.stop_sequence);
     if (!Number.isSafeInteger(sequence) || sequence < 0) continue;
     if (!byTrip.has(row.trip_id)) byTrip.set(row.trip_id, []);
-    byTrip.get(row.trip_id).push({ sequence, group: row.location_group_id });
+    byTrip.get(row.trip_id).push({
+      sequence, group: row.location_group_id,
+      // 1 interdit l'embarquement / débarquement. 2 et 3 nécessitent
+      // réservation ou coordination, et ne constituent pas un départ garanti.
+      pickup: row.pickup_type !== '1',
+      dropoff: row.drop_off_type !== '1',
+      start: seconds(row.start_pickup_drop_off_window),
+      end: seconds(row.end_pickup_drop_off_window)
+    });
   }
   const services = new Set();
   for (const [tripId, rows] of byTrip) {
     const trip = index.tripById.get(tripId);
     if (!index.routeById.has(trip.route_id)) continue;
     rows.sort((a, b) => a.sequence - b.sequence);
-    if (rows.some((row, i) => rows.slice(i + 1).some(next =>
-      next.sequence > row.sequence && next.group !== row.group))) {
+    if (rows.some((row, i) => row.pickup && rows.slice(i + 1).some(next =>
+      next.dropoff && next.sequence > row.sequence &&
+      next.group !== row.group && next.end >= row.start))) {
       if (trip.service_id) services.add(trip.service_id);
     }
   }
