@@ -376,3 +376,11 @@ test('processResource ne déclare pas de tarifs quand Fares v1/v2 ne contient qu
   assert.equal(entry.status, 'ok', entry.error);
   assert.equal(entry.fares, false);
 });
+
+test('lastServiceDate respecte les années bissextiles', () => {
+  const files = {
+    'calendar.txt': 'service_id,end_date\nWK,20240229\nWK,20250229\n',
+    'calendar_dates.txt': 'service_id,date,exception_type\nWK,20260229,1\n'
+  };
+  assert.equal(collector.lastServiceDate(files), '2024-02-29');
+});
