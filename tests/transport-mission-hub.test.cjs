@@ -713,3 +713,20 @@ test('GTFS-Flex : préavis absent, dépassé et réservation non confirmée bloq
  assert.equal(checked.status,'Transport non confirmé');
  assert.match(checked.statusDetail,/réservation et heure/);
 });
+
+test('GTFS local conserve le préavis Flex après normalisation et bloque la fausse faisabilité',()=>{
+ const rows=[{
+  network:'TAD exemple',tripId:'FLEX-1',
+  originStop:{name:'A',...STOP1},destinationStop:{name:'B',...STOP2},
+  departure:at(8,30),arrival:at(9,0),
+  flexBooking:{noticeMinutes:60,requestedPickup:at(8,30),
+   reservationConfirmed:false,pickupTimeConfirmed:false}
+ }];
+ const [j]=H.fromGTFS(rows,'TAD exemple');
+ assert.equal(j.flexBooking.noticeMinutes,60);
+ assert.equal(j.flexBooking.reservationConfirmed,false);
+ const assessed=H.assess(j,{latestArrival:at(10,0),now:at(8,0)});
+ assert.equal(assessed.feasible,false);
+ assert.equal(assessed.scheduled,false);
+ assert.match(assessed.statusDetail,/transport à la demande/);
+});
