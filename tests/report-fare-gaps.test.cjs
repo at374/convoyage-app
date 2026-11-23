@@ -15,7 +15,7 @@ test('ranks unpriced journeys and labels fare occurrences accurately',()=>{
 test('rejects invalid diagnostics and does not invent prices',()=>{
  assert.throws(()=>build({}),/axes missing/);
  const report=build({axes:[{name:'Sans prix',trips:3,priced:0}]});
- assert.match(report,/Sans prix \| 3 \| 0 \| 3/);
+ assert.match(report,/Sans prix \| 3 \| 0 \| — \| 3 \|/);
  assert.doesNotMatch(report,/\d+[,.]\d{2} €/);
 });
 
