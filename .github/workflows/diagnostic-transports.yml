@@ -522,11 +522,11 @@ jobs:
             from:{lat:45.901,lon:6.121},to:{lat:45.761,lon:4.861},
             earliestDeparture:'2026-11-17T00:00:00Z'
           }).then(items=>{
-            // 14/11/2026 : depuis le repli borné à 6 km (recherche vide à 3 km), trois appels : 3 km, 6 km, puis veille.
+            // 14/11/2026 : depuis le repli borné à 5 km (recherche vide à 3 km), trois appels : 3 km, 5 km, puis veille.
             // Cette assertion attendait encore 2 appels et faisait échouer tout le diagnostic réel depuis 65b617c.
             assert.equal(overnightCalls.length,3);
             assert.equal(overnightCalls[0].date,'2026-11-17');assert.equal(overnightCalls[0].radiusMeters,3000);
-            assert.equal(overnightCalls[1].date,'2026-11-17');assert.equal(overnightCalls[1].radiusMeters,6000);
+            assert.equal(overnightCalls[1].date,'2026-11-17');assert.equal(overnightCalls[1].radiusMeters,5000);
             assert.equal(overnightCalls[2].date,'2026-11-16');
             assert.equal(overnightCalls[2].earliestDeparture,'25:00:00');
             assert.equal(items.length,1);
