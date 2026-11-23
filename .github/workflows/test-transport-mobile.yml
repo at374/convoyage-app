@@ -21,7 +21,9 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-chromium-shell-1.62.1-${{ runner.os }}
-      - run: npx playwright install --with-deps --only-shell chromium
+      # Ubuntu 24.04 runner already provides Chromium runtime libraries; --with-deps
+      # invokes apt and can hang on unavailable Microsoft font packages.
+      - run: npx playwright install --only-shell chromium
         timeout-minutes: 12
       - run: node --test tests/transport-mission-hub.test.cjs tests/national-stop-fallback.test.cjs tests/transport-profitability-verified-only.test.cjs tests/transport-cards-mobile.test.cjs tests/transport-otp-adapter.test.cjs tests/transport-otp-client.test.cjs tests/transport-otp-hub.test.cjs
       - run: node tests/browser/transport-mobile.cjs
