@@ -55,7 +55,9 @@
       }
       // A numerical amount is not evidence: require an explicit verified source.
       // Walking and stationary transfer/wait legs are not ticketed rides.
-      const nonTicketed=leg?.kind==='walk'||leg?.mode==='walk'||leg?.mode==='walking'||leg?.mode==='wa_wal'||leg?.mode==='stationary_transfer'||leg?.mode==='stationary_wait'||(leg?.kind==='scooter'&&leg?.scooterPersonal===true);
+      // Contradictory mode metadata must not turn a train/bus ticket into a free walking leg.
+      const publicTransport=typeof leg?.mode==='string'&&/^(?:pt_|bus$|tram$|train$|rail$|metro$|ferry$)/i.test(leg.mode);
+      const nonTicketed=!publicTransport&&(leg?.kind==='walk'||leg?.mode==='walk'||leg?.mode==='walking'||leg?.mode==='wa_wal'||leg?.mode==='stationary_transfer'||leg?.mode==='stationary_wait'||(leg?.kind==='scooter'&&leg?.scooterPersonal===true));
       const price=!nonTicketed&&leg?.fareVerified===true && typeof leg?.fareSource==='string' && leg.fareSource.trim() && validForTravel(leg,travelDate)?money(leg.verifiedPriceEUR):null;
       const covered=!nonTicketed&&Boolean((travelDate==null || (leg?.passValidFrom && leg?.passValidUntil && validForTravel({fareValidFrom:leg.passValidFrom,fareValidUntil:leg.passValidUntil},travelDate)))&&leg?.passAccepted===true&&
         leg?.passProduct==='SIBRA'&&options.sibraPassActive===true&&
