@@ -18,3 +18,11 @@ test('rejects invalid diagnostics and does not invent prices',()=>{
  assert.match(report,/Sans prix \| 3 \| 0 \| 3/);
  assert.doesNotMatch(report,/\d+[,.]\d{2} €/);
 });
+
+test('highlights partially priced journeys without double counting fare gaps',()=>{
+ const report=build({axes:[{name:'A',trips:10,priced:3,missingFareByOperator:{SNCF:7}}],totals:{trips:10,priced:3,partialMissingByOperator:{SNCF:2,'Cars Région':1}}});
+ assert.match(report,/3 trajets entièrement tarifés sur 10 \(30\.0 %\)/);
+ assert.match(report,/Priorité : portions bloquant les trajets partiellement tarifés/);
+ assert.match(report,/SNCF \| 2 \|/);
+ assert.match(report,/ne doivent pas être additionnées/);
+});
