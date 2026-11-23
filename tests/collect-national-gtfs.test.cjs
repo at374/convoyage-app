@@ -440,3 +440,30 @@ test('processResource revalide un calendrier expiré même si la date PAN et le 
   assert.equal(entry.activeNext30Days, true);
   assert.equal(entry.lastServiceDate, '2027-12-31');
 });
+
+test('processResource actualise le statut glissant après sept jours malgré un ZIP identique', async () => {
+  const good = zip(baseFiles);
+  let downloads = 0;
+  const resource = {
+    id: 'r10', datasetId: 'd10', network: 'Réseau statut glissant',
+    format: 'GTFS', url: 'https://example.org/rolling.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  };
+  const previousEntry = {
+    status: 'ok', url: resource.url, updatedAt: resource.updatedAt,
+    lastCheckedAt: '2026-11-15T00:00:00Z',
+    lastServiceDate: '2027-12-31', activeNext30Days: false,
+    sha256: collector.sha256(good)
+  };
+  const fetcher = async () => {
+    downloads++;
+    return new Response(good, { headers: { 'content-type': 'application/zip' } });
+  };
+  const entry = await collector.processResource(resource, {
+    fetcher, maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    previousEntry, now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(downloads, 1);
+  assert.equal(entry.status, 'ok', entry.error);
+  assert.equal(entry.activeNext30Days, true);
+});
