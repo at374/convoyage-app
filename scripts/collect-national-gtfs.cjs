@@ -205,9 +205,14 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     return { ...base, status: 'error', error: 'validation : ' + error.message };
   }
   const { files } = extracted;
-  const agencies = gtfs.parseCSV(files['agency.txt'] || '');
-  if (!agencies.length || agencies.some((a) => !a.agency_name || !a.agency_timezone)) {
-    return { ...base, status: 'error', error: 'agency.txt invalide (nom ou fuseau horaire manquant)' };
+  let agencies;
+  try {
+    agencies = gtfs.parseCSV(files['agency.txt'] || '');
+    if (!agencies.length || agencies.some((a) => !a.agency_name || !a.agency_timezone)) {
+      return { ...base, status: 'error', error: 'agency.txt invalide (nom ou fuseau horaire manquant)' };
+    }
+  } catch (error) {
+    return { ...base, status: 'error', error: 'agency.txt : ' + error.message };
   }
   let index;
   let lines;
@@ -221,8 +226,10 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     return { ...base, status: 'error', error: 'indexation ou classification : ' + error.message };
   }
   let activeNext30Days;
+  let publishedLastServiceDate;
   try {
     activeNext30Days = activeWithinDays(files, ACTIVE_WINDOW_DAYS, new Date(now));
+    publishedLastServiceDate = lastServiceDate(files);
   } catch (error) {
     return { ...base, status: 'error', error: 'calendrier : ' + error.message };
   }
@@ -236,7 +243,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     stops: index.counts.stops,
     stopTimes: index.counts.stopTimes,
     agencies: agencies.map(a => ({ id: a.agency_id || null, name: a.agency_name, url: a.agency_url || null })),
-    lastServiceDate: lastServiceDate(files),
+    lastServiceDate: publishedLastServiceDate,
     fares: Boolean(files['fare_attributes.txt']),
     activeNext30Days,
     lines,
