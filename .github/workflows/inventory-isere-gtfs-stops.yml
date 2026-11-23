@@ -1,0 +1,34 @@
+name: Inventaire arrêts GTFS Isère (sans zones supposées)
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/transports-aura-suisse]
+    paths:
+      - 'scripts/inventory-isere-gtfs-stops.py'
+      - '.github/workflows/inventory-isere-gtfs-stops.yml'
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Extraire les identifiants réellement desservis
+        run: |
+          python3 scripts/inventory-isere-gtfs-stops.py \
+            data/gtfs/cars-region-isere.zip \
+            tmp/isere-gtfs-served-stops.csv \
+            tmp/isere-gtfs-inventory-summary.json
+      - name: Publier l'inventaire pour contrôle officiel
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isere-gtfs-stop-inventory
+          path: |
+            tmp/isere-gtfs-served-stops.csv
+            tmp/isere-gtfs-inventory-summary.json
+          retention-days: 14
