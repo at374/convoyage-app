@@ -22,6 +22,9 @@ test('Isere fare rejects incomplete stop evidence and out-of-range dates',()=>{
  assert.equal(quote({zones:2,departure:'2026-02-28',zoneEvidence:evidence}),null);
  assert.equal(quote({zones:2,departure:'2026-12-31',zoneEvidence:evidence}).amount,6);
  assert.equal(quote({zones:2,departure:'2027-01-01',zoneEvidence:evidence}),null);
+ assert.equal(quote({zones:2,departure:'2026-11-31',zoneEvidence:evidence}),null);
+ assert.equal(quote({zones:2,departure:'2026-11-30not-a-time',zoneEvidence:evidence}),null);
+ assert.equal(quote({zones:2,departure:'2026-11-30T09:00:00+01:00',zoneEvidence:evidence}).amount,6);
  assert.equal(quoteFromStops({stopIds:stops,stopZones:zones,source,complete:true,departure:'2027-01-01'}),null);
  assert.equal(quote({zones:7,departure:'2026-11-30',zoneEvidence:evidence}),null);
  assert.equal(quote({zones:2,departure:'2026-11-30',zoneEvidence:evidence,profile:'eco'}),null);
