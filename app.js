@@ -2362,9 +2362,35 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             panel.cpGeoTried=true;
             const note=document.createElement('p');note.className='doux cp-transport-geo';note.setAttribute('role','status');
             note.textContent='📍 Recherche des coordonnées GPS des adresses…';panel.appendChild(note);
+            // Le géocodage est facultatif : un service externe lent ou bloqué ne doit
+            // jamais immobiliser les cartes de transports de la fiche de mission.
+            const geoAbort=new AbortController();
+            let geoFinished=false;
+            const geoDeadline=setTimeout(()=>{
+              if(geoFinished)return;
+              geoFinished=true;
+              geoAbort.abort();
+              note.remove();
+              if(panel.isConnected)startTransportHub();
+            },4000);
             Promise.all(manque.map(async([mm,cote])=>{
-              try{const r=await G.chercherPoint(mm,cote,u=>fetch(u));if(r&&r.trouve&&r.cle)G.POINTS[r.cle]=r.point;}catch(_){}
-            })).then(()=>{note.remove();if(panel.isConnected)startTransportHub();});
+              try{
+                const r=await G.chercherPoint(mm,cote,u=>fetch(u,{signal:geoAbort.signal}));
+                if(!geoFinished&&!geoAbort.signal.aborted&&r&&r.trouve&&r.cle)G.POINTS[r.cle]=r.point;
+              }catch(_){}
+            })).then(()=>{
+              if(geoFinished)return;
+              geoFinished=true;
+              clearTimeout(geoDeadline);
+              note.remove();
+              if(panel.isConnected)startTransportHub();
+            }).catch(()=>{
+              if(geoFinished)return;
+              geoFinished=true;
+              clearTimeout(geoDeadline);
+              note.remove();
+              if(panel.isConnected)startTransportHub();
+            });
             return;
           }
         }
