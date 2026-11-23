@@ -337,117 +337,24 @@ async function run(){
   await (await lateSibra).finished();
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   assert.equal(await page.locator('#cpTransportMissionDetails').textContent(),pendingText,'Late responses cannot rewrite a closed panel');
-  // Second mission scenario replays a recorded subset of the published SNCF files.
-  // No external routing response substitutes for its station search.
-  holdRegional=false;railScenario=true;
-  await page.goto(origin+'?rail=1',{waitUntil:'domcontentloaded'});
-  await page.locator('.mission').first().click();
-  await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
-  await release('12');
-  const rail=page.getByRole('heading',{name:'Aller SNCF · comparer (gare à gare)',exact:true}).locator('..');
-  try { await rail.waitFor({timeout:12000}); }
-  catch(error){
-    const snapshot=await page.locator('#cpTransportMissionDetails').innerText().catch(()=>'(panel absent)');
-    const state=await page.evaluate(()=>({
-      fallback:!!window.CPSncfFallback,
-      ranking:!!window.CPTransportRanking,
-      adapters:!!window.CPTransportAdapters,
-      panel:!!document.querySelector('#cpTransportMissionDetails'),
-      headings:[...document.querySelectorAll('#cpTransportMissionDetails h1,#cpTransportMissionDetails h2,#cpTransportMissionDetails h3,#cpTransportMissionDetails h4')].map(e=>e.textContent)
-    }));
-    throw new Error('SNCF rail comparison missing: '+JSON.stringify({state,panelText:snapshot.slice(0,6000)}),{cause:error});
-  }
-  const railText=await rail.textContent();
-  assert.match(railText,/proposition\(s\) de gare à gare/);
-  assert.match(railText,/Annecy/);assert.match(railText,/Grenoble/);
-  assert.match(railText,/Transport non confirmé/);assert.doesNotMatch(railText,/Réalisable/);
-  await rail.getByRole('heading',{name:'Aller SNCF · comparer (gare à gare)',exact:true}).waitFor();
-  const railCards=rail.locator('details');
-  assert.ok(await railCards.count()>0&&await railCards.count()<=3,'SNCF ranking renders comparison cards');
-  const railCard=railCards.first();
-  await railCard.locator('summary').click();
-  assert.equal(await railCard.evaluate(node=>node.open),true,'SNCF card opens');
-  assert.match(await railCard.innerText(),/Annecy/);assert.match(await railCard.innerText(),/Grenoble/);
-  assert.match(await railCard.innerText(),/Tarif non vérifié/);
-  assert.ok(await railCard.locator('ol li').count()>0,'SNCF card shows recorded train legs');
-  assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'SNCF card fits mobile width');
-  await railCard.screenshot({path:path.join(output,'mobile-annecy-grenoble.png')});
-  await railCard.locator('summary').click();
-  assert.equal(await railCard.evaluate(node=>node.open),false,'SNCF card closes');
-  await page.locator('#fermer').click();
-  await until(()=>activeWorkers.size===0,'Rail scenario worker must stop on close');
-  // Configure the new client through the real UI, using a dummy key and public fixture.
-  railScenario=false;tripgoScenario=true;
-  await page.goto(origin+'?tripgo=1',{waitUntil:'domcontentloaded'});
-  await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
-  await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
-  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
-  await page.getByLabel('Clé TripGo privée sur cet appareil').fill('a'.repeat(32));
-  await page.getByRole('button',{name:'Activer TripGo sur cet appareil',exact:true}).click();
-  await release('14');
-  const tripStatus=page.getByText(/^Retour TripGo : 2 proposition/);await tripStatus.waitFor();
-  const tripText=await tripStatus.innerText();assert.match(tripText,/FlixBus 1789/);assert.match(tripText,/BlaBlaCar Bus/);
-  await tripStatus.getByRole('heading',{name:'Retour TripGo · comparer',exact:true}).waitFor();
-  const tripCards=tripStatus.locator('[data-tripgo-details]');
-  assert.equal(await tripCards.count(),2,'Each recorded TripGo proposal has its own comparison card');
-  const steps=tripCards.first();
-  assert.equal(await steps.evaluate(node=>node.open),false,'TripGo card starts collapsed');
-  assert.match(await steps.locator('summary').innerText(),/min · marches comprises/);
-  assert.match(await steps.locator('summary').innerText(),/Transport non confirmé/);
-  assert.match(await steps.locator('summary').innerText(),/Tarifs/);
-  await steps.locator('summary').click();
-  assert.equal(await steps.evaluate(node=>node.open),true,'TripGo card opens');
-  assert.ok(await steps.locator('li').count()>=3,'Walking and transit legs have separate dated steps');
-  const maps=await steps.locator('a').evaluateAll(nodes=>nodes.map(x=>({href:x.href,target:x.target,rel:x.rel})));
-  assert.ok(maps.some(x=>new URL(x.href).searchParams.get('travelmode')==='walking'));
-  assert.ok(maps.every(x=>new URL(x.href).hostname==='www.google.com'&&x.target==='_blank'&&x.rel.includes('noopener')));
-  assert.ok(maps.every(x=>!x.href.includes('TripGo-Key')&&!x.href.includes('aaaaaaaa')));
-  assert.match(await steps.innerText(),/nouveau calcul/);
-  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-  await page.getByText(/Prévisions BlaBlaCar Bus indisponibles sur cet appareil/).waitFor();
-  assert.match(tripText,/Preuves manquantes/);assert.match(tripText,/prix du transport/);assert.doesNotMatch(tripText,/Réalisable/);
-  await steps.locator('summary').click();
-  assert.equal(await steps.evaluate(node=>node.open),false,'TripGo card closes');
-  assert.match(await tripStatus.innerText(),/Preuves manquantes/,'Missing evidence remains visible when collapsed');
-  await page.locator('#toast').waitFor({state:'hidden'});
-  await steps.screenshot({path:path.join(output,'mobile-tripgo.png')});
-  const flixCard=tripCards.nth(1);
-  assert.match(await flixCard.locator('summary').innerText(),/FlixBus/);
-  assert.equal(await flixCard.evaluate(node=>node.open),false,'FlixBus card starts collapsed');
-  await flixCard.locator('summary').click();
-  assert.equal(await flixCard.evaluate(node=>node.open),true,'FlixBus card opens');
-  assert.ok(await flixCard.locator('ol li').count()>0,'FlixBus card has dated steps');
-  assert.match(await flixCard.innerText(),/Transport non confirmé/);
-  assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'FlixBus card fits mobile width');
-  await flixCard.locator('summary').click();
-  assert.equal(await flixCard.evaluate(node=>node.open),false,'FlixBus card closes');
-  await flixCard.screenshot({path:path.join(output,'mobile-tripgo-flixbus.png')});
-  await page.getByRole('button',{name:'Retirer la clé TripGo de cet appareil',exact:true}).click();
-  assert.equal(await page.evaluate(()=>localStorage.getItem('cp_tripgo_key')),null);
-  assert.equal(await page.getByText(/^Retour TripGo : 2 proposition/).count(),0);
-  await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'TripGo scenario worker must stop on close');
-  // Positive operating-day replay, followed by expiry of the operator's validity.
-  await page.close();busLiveScenario=true;
+  // SNCF station-only fallback and TripGo were intentionally retired from the UI.
+  // The unified transport hub covers SNCF and coaches and never accepts invented
+  // fares or station-only results as a complete mission journey.
+  await page.close();
+  railScenario=false;tripgoScenario=false;busLiveScenario=false;
   page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   page.on('worker',worker=>{workers.push(worker.url());activeWorkers.add(worker);worker.on('close',()=>activeWorkers.delete(worker));});
-  await page.clock.install({time:new Date(siriFixture.testNow)});
-  await page.goto(origin+'?buslive=1',{waitUntil:'domcontentloaded'});
-  await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
-  await page.locator('#cpTransportPlannedReturn').fill('2026-10-31T10:00');
-  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
-  await page.getByLabel('Clé TripGo privée sur cet appareil').fill('a'.repeat(32));
-  await page.getByRole('button',{name:'Activer TripGo sur cet appareil',exact:true}).click();
-  await release('14');await page.getByText(/circulation observée par l’opérateur/).waitFor();
-  const observed=page.getByText(/^Retour TripGo : 1 proposition/);
-  assert.equal(await observed.locator('[data-tripgo-details]').first().evaluate(node=>node.open),false,'Live operator information is visible on a collapsed TripGo card');
-  const observedText=await observed.innerText();assert.match(observedText,/arrivée estimée après la marche finale/);
-  assert.match(observedText,/11:45/);assert.doesNotMatch(observedText,/Preuves manquantes : circulation/);assert.doesNotMatch(observedText,/Réalisable/);
-  await page.clock.fastForward(3500);
-  await page.locator('#toast').waitFor({state:'hidden'});
-  await observed.locator('[data-tripgo-details]').first().screenshot({path:path.join(output,'mobile-blablacar-observed.png')});
-  await page.clock.fastForward(61000);await page.getByText(/Prévisions BlaBlaCar Bus expirées/).waitFor();
-  assert.match(await observed.innerText(),/Preuves manquantes : circulation/);
-  await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'Operating-day worker must stop on close');
+  await page.goto(origin+'?rail=1',{waitUntil:'domcontentloaded'});
+  await page.locator('.mission').first().click();
+  await page.locator('#btnTransportsMission').click();
+  assert.equal(await page.getByRole('heading',{name:'Aller SNCF · comparer (gare à gare)',exact:true}).count(),0,
+    'Legacy station-only SNCF comparison must remain disabled');
+  assert.equal(await page.getByLabel('Clé TripGo privée sur cet appareil').count(),0,
+    'Enterprise-gated TripGo input must remain absent');
+  assert.equal(await page.locator('#cpTransportMissionDetails .cp-hub').count()>0,true,
+    'Unified mission hub must be mounted instead');
+  await page.locator('#fermer').click();
+  await until(()=>activeWorkers.size===0,'Unified mission worker must stop on close');
   // Synthetic SIBRA feed identity exercises the real worker and pass controls.
   await page.close();busLiveScenario=false;tripgoScenario=false;railScenario=false;
   page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
