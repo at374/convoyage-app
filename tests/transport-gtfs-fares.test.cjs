@@ -89,3 +89,20 @@ test('missing GTFS fare price is unknown, not a free ticket',()=>{
  const zero={...base,'fare_attributes.txt':'fare_id,price,currency_type\nU,0,EUR'};
  assert.equal(F.legFare(F.prepare(zero),idx(zero),{tripId:'T1',from:'A',to:'B'}).amount,0,'explicit zero is distinct from missing price');
 });
+
+test('same price with different transfer rights is ambiguous',()=>{
+ const files={...base,
+  'fare_attributes.txt':'fare_id,price,currency_type,payment_method,transfers,transfer_duration\nA,2.00,EUR,0,0,0\nB,2.00,EUR,0,1,3600',
+  'fare_rules.txt':'fare_id,route_id\nA,R1\nB,R1'};
+ assert.equal(F.legFare(F.prepare(files),idx(files),{tripId:'T1',from:'A',to:'B'}),null);
+});
+test('malformed GTFS transfer limits cannot become unlimited transfers',()=>{
+ for(const transfers of ['-1','3','abc','1.5']){
+  const files={...base,'fare_attributes.txt':'fare_id,price,currency_type,payment_method,transfers\nU,2.00,EUR,0,'+transfers};
+  assert.equal(F.legFare(F.prepare(files),idx(files),{tripId:'T1',from:'A',to:'B'}),null,transfers);
+ }
+ for(const duration of ['-30','abc','1.5']){
+  const files={...base,'fare_attributes.txt':'fare_id,price,currency_type,payment_method,transfers,transfer_duration\nU,2.00,EUR,0,1,'+duration};
+  assert.equal(F.legFare(F.prepare(files),idx(files),{tripId:'T1',from:'A',to:'B'}),null,duration);
+ }
+});
