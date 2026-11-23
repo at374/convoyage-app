@@ -47,3 +47,12 @@ test('Isere: GTFS trip extracts all intermediate zones, rejects loops and missin
  index.timesByTrip.get('T1').push({stop_id:'A',stop_sequence:'4'});
  assert.equal(evidenceFromGTFS(index,params),null);
 });
+
+test('Isere: GTFS audit counts only served stops, never infers zones',()=>{
+ const {auditGTFSZones}=require('../transport-isere-zonal-fares.js');
+ const index={stopById:new Map([['A',{}],['B',{}],['C',{}],['UNUSED',{}]]),
+  timesByTrip:new Map([['T1',[{stop_id:'A'},{stop_id:'B'}]],['T2',[{stop_id:'B'},{stop_id:'C'}]]])};
+ assert.deepEqual(auditGTFSZones(index,{A:'A',B:'?',UNUSED:'C'}),{
+  total:3,covered:1,missing:['C'],invalid:['B'],coveragePercent:33.33});
+ assert.equal(auditGTFSZones(null,{}),null);
+});
