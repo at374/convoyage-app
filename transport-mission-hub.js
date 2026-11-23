@@ -1066,7 +1066,10 @@ function makeProviders(r,opts={}){
  const workerCall=payload=>new Promise((resolve,reject)=>{
   let w=r.__cpHubWorker;
   if(!w){
-   try{w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js');}
+   // 23/11/2026 : version ajoutée à l'URL du worker (jusqu'ici absente) pour que le correctif de
+   // cession entre paires de réseaux (runCorrespondances, transport-hub-local-worker.js) soit bien
+   // rechargé par les navigateurs/service worker en cache, au même titre que les autres fichiers.
+   try{w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js?v=worker-yield-correspondances-20261123a');}
    catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
    r.__cpHubWorkerPending=new Map();
    const fail=e=>{r.__cpHubWorkerOffUntil=Date.now()+10000;r.__cpHubWorker=null;for(const q of r.__cpHubWorkerPending.values())q.reject(e);r.__cpHubWorkerPending.clear();try{w.terminate();}catch(_){}};

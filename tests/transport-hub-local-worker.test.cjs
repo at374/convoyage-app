@@ -2,7 +2,7 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('fs');
 const hub=fs.readFileSync(__dirname+'/../transport-mission-hub.js','utf8'),w=fs.readFileSync(__dirname+'/../transport-hub-local-worker.js','utf8'),sw=fs.readFileSync(__dirname+'/../sw.js','utf8');
 test('le hub calcule les réseaux locaux dans un Web Worker, avec repli',()=>{
- assert.match(hub,/new r\.Worker\('transport-hub-local-worker\.js'\)/);
+ assert.match(hub,/new r\.Worker\('transport-hub-local-worker\.js(\?v=[^']+)?'\)/);
  assert.match(hub,/if\(rows===null\)\{/);
  assert.match(hub,/__cpHubWorkerOff/);
 });
@@ -15,7 +15,7 @@ test('le worker charge les mêmes bibliothèques et est mis en cache hors ligne'
  assert.match(w,/nearbyTransferTrips/);
  assert.match(w,/CPGTFSFederation\.crossNetworkTrips/);
  assert.match(w,/CPNationalGTFSJourneys\.loadAndSearch/);
- assert.ok(sw.includes("'transport-hub-local-worker.js'"));
+ assert.match(sw,/'transport-hub-local-worker\.js(\?v=[^']+)?'/);
  assert.ok(sw.includes('transport-gtfs-time.js'));
  assert.ok(sw.includes('transport-gtfs-federation.js'));
  assert.ok(sw.includes('transport-national-gtfs-journeys.js'));
@@ -27,4 +27,13 @@ test('local_correspondances calcule aussi hors du fil de l’écran, avec repli'
 test('la recherche nationale (SNCF/FlixBus/BlaBlaCar Bus) calcule aussi hors du fil de l’écran, avec repli',()=>{
  assert.match(hub,/workerNationalSearch/);
  assert.match(hub,/op:'national'/);
+});
+test('runCorrespondances rend la main entre deux paires de réseaux (23/11/2026 : « worker en échec » répété — un calcul de correspondances long bloquait le worker mono-thread et faisait expirer à 90 s toutes les autres demandes en attente, SNCF/FlixBus/BlaBlaCar Bus et trajets locaux compris)',()=>{
+ assert.match(w,/yieldToOtherPendingRequests\s*=\s*\(\)\s*=>\s*new Promise\(resolve=>setTimeout\(resolve,0\)\)/);
+ const body=w.slice(w.indexOf('const runCorrespondances'),w.indexOf('const runNational'));
+ const yields=(body.match(/await yieldToOtherPendingRequests\(\)/g)||[]).length;
+ assert.ok(yields>=2,'au moins une cession après le traitement même-réseau et une après chaque paire inter-réseaux');
+});
+test('le worker est chargé avec une version d’URL (cache-busting), alignée avec sw.js',()=>{
+ assert.match(hub,/new r\.Worker\('transport-hub-local-worker\.js\?v=[^']+'\)/);
 });

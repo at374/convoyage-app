@@ -37,6 +37,18 @@ const feedFor=async(key,urls,date)=>{
 // de réseaux, chacune examinant jusqu'à 100 000 combinaisons d'horaires. C'est le calcul le plus lourd de
 // toute la recherche de transport, et il bloquait l'affichage/le défilement pendant qu'il tournait. Il est
 // désormais fait ICI, hors du fil de l'écran, comme les trajets directs (local_<id>) le sont déjà.
+// 23/11/2026 (Laurent : « worker en échec », 148 fois de suite, SNCF/FlixBus/BlaBlaCar Bus et les trajets
+// locaux en erreur en même temps sur une mission longue distance) : runCorrespondances peut examiner
+// jusqu'à 28 paires de réseaux, chacune jusqu'à 100 000 combinaisons d'horaires (cf. commentaire ci-dessous)
+// — entièrement en code synchrone, sans jamais rendre la main. Un worker JS est mono-thread : tant que ce
+// calcul tourne, AUCUN autre message en attente dans la même file (recherche nationale, trajet direct local,
+// même une autre mission) ne peut être traité, et expire donc à son propre délai de 90 s (workerCall,
+// transport-mission-hub.js) même si son propre calcul est rapide — ce qui correspond exactement au symptôme
+// observé (toutes les sources en échec ensemble, répété à chaque rafraîchissement). On rend la main entre
+// deux paires de réseaux pour que le worker reste disponible pour les autres demandes en attente ; cela
+// n'allonge pas le calcul lui-même (juste un passage par la file d'événements, pas une pause), seulement
+// l'ordre dans lequel le worker traite les demandes en attente.
+const yieldToOtherPendingRequests=()=>new Promise(resolve=>setTimeout(resolve,0));
 const runCorrespondances=async data=>{
  // 22/11/2026 : « window » ici est la fenêtre de SCAN (peut être bornée à quelques heures par l'appelant,
  // voir transport-mission-hub.js) ; « realWindow » (repli sur window si absent, compat anciens appels) est la
@@ -63,6 +75,7 @@ const runCorrespondances=async data=>{
    rows.push(...dated.map(x=>({...x,network:loaded[i].source.network,
     legs:x.legs?.map(l=>({...l,network:loaded[i].source.network,networkUrls:loaded[i].__urls,serviceDate:l.date||date}))})));
   }catch(_){}
+  await yieldToOtherPendingRequests();
   for(let j=i+1;j<loaded.length;j++){
    try{
     const c=CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius,maxWaitMinutes});
@@ -70,6 +83,7 @@ const runCorrespondances=async data=>{
      networkUrls:(l.networkId===loaded[j].source.datasetId?loaded[j].__urls:loaded[i].__urls),
      serviceDate:l.date||date}))})));
    }catch(_){}
+   await yieldToOtherPendingRequests();
   }
  }
  return rows;
