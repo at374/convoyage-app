@@ -234,3 +234,25 @@ test('collect refuse les collisions de noms ZIP au lieu de perdre un réseau', a
   };
   await assert.rejects(collector.collect({ fetcher }), /Collision identifiant GTFS/);
 });
+
+test('processResource refuse des horaires non reliés à deux arrêts connus', async () => {
+  const disconnected = {
+    ...baseFiles,
+    'stop_times.txt': 'trip_id,arrival_time,departure_time,stop_id,stop_sequence\n' +
+      'T1,10:30:00,10:30:00,INCONNU,1\n' +
+      'T1,11:00:00,11:00:00,A,2\n'
+  };
+  const fetcher = async () => new Response(zip(disconnected), {
+    headers: { 'content-type': 'application/zip' }
+  });
+  const entry = await collector.processResource({
+    id: 'r3', datasetId: 'd3', network: 'Réseau incohérent',
+    format: 'GTFS', url: 'https://example.org/disconnected.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher, maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    previousEntry: null, now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'error');
+  assert.match(entry.error, /aucune course/);
+});
