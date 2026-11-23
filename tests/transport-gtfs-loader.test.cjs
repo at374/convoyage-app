@@ -180,3 +180,19 @@ test('GTFS-Flex: conserve les tables de réservation et accepte les fenêtres sa
  assert.match(feed.files['booking_rules.txt'],/BR1,1/);
  assert.match(feed.files['stop_times.txt'],/start_pickup_drop_off_window/);
 });
+
+test('GTFS-Flex: mode compact conserve les règles et groupes de réservation', async () => {
+ const flex={
+  ...files,
+  'stop_times.txt':'trip_id,stop_sequence,location_group_id,start_pickup_drop_off_window,end_pickup_drop_off_window\nT,1,G1,09:00:00,10:00:00\nT,2,G2,09:30:00,11:00:00\n',
+  'location_groups.txt':'location_group_id,location_group_name\nG1,Zone A\nG2,Zone B\n',
+  'location_group_stops.txt':'location_group_id,stop_id\nG1,A\nG2,B\n',
+  'booking_rules.txt':'booking_rule_id,booking_type\nBR1,1\n'
+ };
+ const feed=await loader.loadResource(resource,{
+  fetcher:fetcher(zip(flex)),retainSourceTables:false
+ });
+ assert.match(feed.files['location_groups.txt'],/G1,Zone A/);
+ assert.match(feed.files['location_group_stops.txt'],/G2,B/);
+ assert.match(feed.files['booking_rules.txt'],/BR1,1/);
+});
