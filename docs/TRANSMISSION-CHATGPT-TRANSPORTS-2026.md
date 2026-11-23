@@ -403,3 +403,13 @@ J'ai aussi fait tourner la suite complète (`node --test tests/*.test.cjs`, 743 
 4. **TCL** : tarifs confirmés (voir ci-dessus), mais reste à vérifier par un diagnostic téléphone réel (ex. Ambérieu → Lyon Part-Dieu) que la bbox Part-Dieu/Bellecour/Perrace est effectivement exercée par une mission utile — au moment du relevé du 13/11, cet axe ne sollicitait pas encore TCL.
 
 Historique complet : commits `2ba2ce6`, `6e6f369`, `54d73ae`, `11775f6`, `8573921`, `201d58e`, `4ad6c97`, `aa5d5c1`, `fc7bd65` sur cette branche.
+
+## Relais diagnostic réel du 23 novembre 2026 — mesures et priorités
+
+Exécution GitHub Actions **45242417560** : **succès**, rapport publié dans `docs/diagnostic-serveur.json` et `docs/COUVERTURE-TARIFS-DIAGNOSTIC.md` (commit automatique `16a4895`). Scénario du **30/11/2026 à 08:00**. Résultat **965 trajets, 379 entièrement tarifés (39,3 %), 64 partiellement tarifés, 93 déclarés faisables**. Attention : les 379 trajets tarifés ne sont **pas** 379 trajets faisables ; l'intersection n'est pas mesurée. Les tarifs manquants restent inconnus et ne doivent pas produire de rentabilité.
+
+Gains constatés depuis le diagnostic précédent : **339 → 379** entièrement tarifés ; Chambéry → Aix-les-Bains **45/65**, Aix-les-Bains gare → Technolac **19/19**. Ces nombres mesurent des options calculées, non des billets commercialement disponibles.
+
+Blocages les plus utiles sur les trajets **partiellement** tarifés : Cars Région Haute-Savoie **48 occurrences** (ligne 274, notamment portions **Aéroport → Poste / Mont-Blanc** internes à Genève), SNCF **11**, But **4**, Cars Région Ain **2**, AFO **1**, Star't **1**, Mobilités M - SNCF **1**. Le tarif transfrontalier de la ligne 274 ne doit pas être appliqué à un déplacement interne à Genève ; le billet zone 10 n'y est pas automatiquement applicable non plus. Ne pas étendre les grilles sans preuve d'acceptation du titre sur cette ligne et cette portion. Le test de non-régression de la ligne 274 est validé (GitHub Actions **45243992363**).
+
+La couverture des lignes Ondéa **102/419** utilise le titre conducteur vérifié à **1,70 €** à partir de juillet 2026, avec conditions de vente propres aux cars scolaires ; vérifier la circulation GTFS à la date demandée. Tests GTFS et mobiles passés. Les rapports tarifaires distinguent désormais prix et faisabilité (commits `5ad8de5e`, `efc6a527`).
