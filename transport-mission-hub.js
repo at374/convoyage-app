@@ -474,8 +474,26 @@ function dayWindowOk(j,task){
  const reference=parisDayParts(task.latestArrival||task.earliestDeparture);
  return !reference||dep.day===reference.day;
 }
+// Un GTFS-Flex publie une fenêtre de service, pas un horaire ni une réservation.
+function flexBookingCheck(booking,now=Date.now()){
+ if(!booking||typeof booking!=='object')return null;
+ const notice=booking.noticeMinutes;
+ const hasNotice=typeof notice==='number'&&Number.isFinite(notice)&&notice>=0;
+ const requested=ms(booking.requestedPickup);
+ const current=ms(now);
+ const deadline=Number.isFinite(requested)&&hasNotice?requested-notice*60000:null;
+ const noticeMet=deadline!==null&&Number.isFinite(current)&&current<=deadline;
+ const confirmed=booking.reservationConfirmed===true&&booking.pickupTimeConfirmed===true;
+ return {noticeMinutes:hasNotice?notice:null,noticeMet,confirmed,
+  reason:!hasNotice?'transport à la demande : préavis de réservation inconnu':
+   !Number.isFinite(requested)?'transport à la demande : heure de prise en charge non confirmée':
+   !noticeMet?'transport à la demande : délai de réservation dépassé':
+   !confirmed?'transport à la demande : réservation et heure de prise en charge non confirmées':null};
+}
 function assess(j,task,fareFor){
  const reasons=[...(j.missing||[])];
+ const flex=j.flexBooking?flexBookingCheck(j.flexBooking,task.now??Date.now()):null;
+ if(flex?.reason)reasons.push(flex.reason);
  // Un centre-ville permet de chercher, mais ne confirme jamais l'arrivée à l'adresse exacte.
  if(task.approximateEndpoint===true)reasons.push('point de départ ou d’arrivée approximatif (centre-ville) : adresse exacte à vérifier');
  const legs=j.legs;
@@ -1494,7 +1512,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,flexBookingCheck,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
