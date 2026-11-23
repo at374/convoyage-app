@@ -696,3 +696,20 @@ test('marche fournie par un moteur : prix gratuit sans drapeau walkOnly',()=>{
  assert.equal(walking.price.status,'free');
  assert.equal(walking.price.label,'Gratuit (à pied)');
 });
+
+test('GTFS-Flex : préavis absent, dépassé et réservation non confirmée bloquent Réalisable',()=>{
+ const now=at(8,0);
+ const base={requestedPickup:at(10,0),noticeMinutes:60};
+ assert.match(H.flexBookingCheck({...base,noticeMinutes:null},now).reason,/inconnu/);
+ assert.match(H.flexBookingCheck({...base,noticeMinutes:180},now).reason,/dépassé/);
+ assert.match(H.flexBookingCheck(base,now).reason,/non confirmées/);
+ assert.equal(H.flexBookingCheck({...base,reservationConfirmed:true,pickupTimeConfirmed:true},now).reason,null);
+ const j={source:'TAD',sources:['TAD'],legs:[bus(at(8,30),at(9,0),STOP1,STOP2)],
+  flexBooking:base};
+ const task={latestArrival:at(10,0),now};
+ const checked=H.assess(j,task);
+ assert.equal(checked.feasible,false);
+ assert.equal(checked.scheduled,false);
+ assert.equal(checked.status,'Transport non confirmé');
+ assert.match(checked.statusDetail,/réservation et heure/);
+});
