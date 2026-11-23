@@ -44,7 +44,7 @@ const GRIDS=[
   includeLines:'^(?:102|419)$',amount:1.70,currency:'EUR',
   product:'1 voyage conducteur, sans QR/M-Ticket sur car scolaire',validityMinutes:60,
   validFrom:'2026-07-01',validUntil:'2027-06-30',
-  source:'https://www.ondeagrandlac.fr/tarifs/choisir-son-titre',checkedAt:'2026-11-23',flat:true},
+  source:'https://www.ondeagrandlac.fr/tarifs/vente-bord',checkedAt:'2026-11-23',flat:true},
  // TAC Mobilités : ticket unité zone 210 (guide officiel mars 2026).
  {network:'TAC',operatorPattern:'^tac\\b',modes:['Bus','Tram'],amount:1.70,currency:'EUR',
   product:'ticket unité 60 min, zone 210 (2,00 € auprès du conducteur de la T1)',validityMinutes:60,
