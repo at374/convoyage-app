@@ -19,8 +19,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Tests du comparateur hors ligne
-        run: python3 -I tests/python/test_compare_isere_gtfs.py
+      - name: Tests des comparateurs hors ligne
+        run: |
+          python3 -I tests/python/test_compare_isere_gtfs.py
+          python3 -I tests/python/test_compare_isere_service_dates.py
       - name: Télécharger le GTFS officiel courant (sans modifier le dépôt)
         shell: bash
         run: |
@@ -42,9 +44,9 @@ jobs:
             --output tmp/isere-gtfs-comparison.json
       - name: Comparer les jours effectifs de circulation
         run: |
-          python3 scripts/compare_isere_service_dates.py \\
-            data/gtfs/cars-region-isere.zip \\
-            tmp/isere-officiel.zip \\
+          python3 scripts/compare_isere_service_dates.py \
+            data/gtfs/cars-region-isere.zip \
+            tmp/isere-officiel.zip \
             --output tmp/isere-service-dates-comparison.json
       - name: Publier le rapport de comparaison
         if: always()
