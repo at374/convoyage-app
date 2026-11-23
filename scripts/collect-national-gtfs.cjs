@@ -295,6 +295,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     for (const [tripId, trip] of index.tripById) {
       if (!index.routeById.has(trip.route_id)) continue;
       let first = null;
+      let firstRegular = null;
       for (const time of index.timesByTrip.get(tripId) || []) {
         if (!timePattern.test(time.arrival_time || '') ||
             !timePattern.test(time.departure_time || '')) continue;
@@ -303,26 +304,30 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
         const arrival = seconds(time.arrival_time);
         const departure = seconds(time.departure_time);
         if (arrival > departure) continue;
-        // 1 = montée/descente interdite ; 2/3 = réservation ou coordination.
-        // Un TAD reste un GTFS valide, mais ne devient jamais un départ régulier.
+        // GTFS: 1 = interdit, 2/3 = réservation/coordination.
         const accessAllowed = value => value === undefined || value === '' ||
           value === '0' || value === '2' || value === '3';
         const regularAccess = value => value === undefined || value === '' || value === '0';
-        if (first && time.stop_id !== first.stopId &&
-            sequence > first.sequence && arrival >= first.departure &&
-            accessAllowed(time.drop_off_type)) {
+        const connected = origin => origin && time.stop_id !== origin.stopId &&
+          sequence > origin.sequence && arrival >= origin.departure;
+        if (accessAllowed(time.drop_off_type) && connected(first)) {
           connectedTrip = true;
           if (trip.service_id) connectedServices.add(trip.service_id);
-          if (first.regular && regularAccess(time.drop_off_type)) {
-            regularConnectedTrip = true;
-            if (trip.service_id) regularServices.add(trip.service_id);
-          }
-          break;
         }
+        if (regularAccess(time.drop_off_type) && connected(firstRegular)) {
+          regularConnectedTrip = true;
+          if (trip.service_id) regularServices.add(trip.service_id);
+        }
+        // Garder aussi le premier arrêt autorisant une montée ordinaire :
+        // le premier arrêt de la course peut être réservé, mais un arrêt
+        // suivant peut permettre une montée et une descente ordinaires.
         if (!first && accessAllowed(time.pickup_type)) {
-          first = { stopId: time.stop_id, sequence, departure,
-            regular: regularAccess(time.pickup_type) };
+          first = { stopId: time.stop_id, sequence, departure };
         }
+        if (!firstRegular && regularAccess(time.pickup_type)) {
+          firstRegular = { stopId: time.stop_id, sequence, departure };
+        }
+        if (connectedServices.has(trip.service_id) && regularServices.has(trip.service_id)) break;
       }
     }
     eligibleServices = connectedServices;
