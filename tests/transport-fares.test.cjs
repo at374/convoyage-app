@@ -207,3 +207,13 @@ test('mixed SIBRA, TER and TPG itinerary never presents a partial fare as a comp
   assert.match(describe(result),/Sous-total vérifié : 12,40 €/);
   assert.match(describe(result),/TPG : prix inconnu/);
 });
+
+test('walking access and explicitly personal scooter do not create phantom tickets',()=>{
+ const bus={provider:'TAM',mode:'pt_pub_bus',fareVerified:true,fareSource:'Tarif officiel de test',verifiedPriceEUR:1.2};
+ const route=fare([{kind:'walk',provider:'Accès piéton'},bus,{mode:'walking',provider:'Sortie à pied'}]);
+ assert.equal(route.known,true);
+ assert.equal(route.totalEUR,1.2);
+ assert.equal(route.unknownLegCount,0);
+ assert.equal(fare([{kind:'scooter',scooterPersonal:true},bus]).totalEUR,1.2);
+ assert.equal(fare([{kind:'scooter'},bus]).known,false,'trottinette sans preuve de propriété : prix non vérifié');
+});
