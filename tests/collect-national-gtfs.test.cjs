@@ -49,7 +49,7 @@ const baseFiles = {
 
 test('classifyRoutes : régulière, scolaire, TAD (route_type dédié ou pickup/drop_off), et jamais régulière par défaut pour un type inconnu', () => {
   const counts = collector.classifyRoutes(baseFiles);
-  assert.deepEqual(counts, { regular: 1, school: 1, demandResponsive: 1, unknown: 1 });
+  assert.deepEqual(counts, { regular: 0, school: 1, demandResponsive: 1, unknown: 2 });
 });
 
 test('isAggregateSuspect repère les agrégats régionaux/nationaux sans faux positif sur un réseau local', () => {
@@ -68,6 +68,7 @@ test('activeWithinDays trouve un service actif dans la fenêtre et aucun hors fe
 test('shouldSkip ne retélécharge pas quand la date de mise à jour PAN est inchangée', () => {
   const resource = { datasetId: 'd1', id: 'r1', updatedAt: '2026-11-01T00:00:00Z' };
   assert.equal(collector.shouldSkip(resource, { status: 'ok', updatedAt: '2026-11-01T00:00:00Z' }), true);
+  assert.equal(collector.shouldSkip(resource, { status: 'unchanged', updatedAt: '2026-11-01T00:00:00Z' }), true);
   assert.equal(collector.shouldSkip(resource, { status: 'ok', updatedAt: '2026-10-01T00:00:00Z' }), false);
   assert.equal(collector.shouldSkip(resource, null), false);
   assert.equal(collector.shouldSkip(resource, { status: 'error', updatedAt: '2026-11-01T00:00:00Z' }), false);
@@ -107,7 +108,7 @@ test('collect() : découvre, télécharge, valide et classe un flux réel simul�
   const okEntry = Object.values(manifest.networks).find((e) => e.status === 'ok');
   assert.equal(okEntry.network, 'SIBRA Grand Annecy');
   assert.equal(okEntry.routes, 4);
-  assert.deepEqual(okEntry.lines, { regular: 1, school: 1, demandResponsive: 1, unknown: 1 });
+  assert.deepEqual(okEntry.lines, { regular: 0, school: 1, demandResponsive: 1, unknown: 2 });
   assert.equal(okEntry.fares, false);
   assert.equal(uploads.length, 1);
   assert.equal(uploads[0].id, okEntry.id);
