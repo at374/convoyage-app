@@ -275,6 +275,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   let index;
   let lines;
   let eligibleServices;
+  let regularConnectedTrip = false;
   try {
     index = gtfs.buildIndex(files);
     if (!index.counts.routes || !index.counts.trips || !index.counts.stops || !index.counts.stopTimes) {
@@ -285,7 +286,6 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     // à une ligne connue et à deux arrêts distincts avec horaires valides.
     const timePattern = /^\d{1,3}:[0-5]\d:[0-5]\d$/;
     let connectedTrip = false;
-    let regularConnectedTrip = false;
     const connectedServices = new Set();
     const seconds = value => {
       const [h, m, sec] = value.split(':').map(Number);
