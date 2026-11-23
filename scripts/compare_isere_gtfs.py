@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Compare exact stop IDs and GTFS metadata; never infer fares or zones."""
 import argparse
+from collections import Counter, defaultdict
 import csv
 import hashlib
 import io
@@ -41,6 +42,26 @@ def inspect(path):
             raise ValueError('Orphan trip_id in stop_times.txt')
         if any(row.get('route_id') not in route_ids for row in trips):
             raise ValueError('Orphan route_id in trips.txt')
+        # Schedule signatures avoid assuming trip_id stability across exports.
+        times_by_trip = defaultdict(list)
+        for row in stop_times:
+            times_by_trip[row['trip_id']].append(row)
+        trip_by_id = {row['trip_id']: row for row in trips}
+        signatures = Counter()
+        for trip_id, sequence in times_by_trip.items():
+            trip = trip_by_id[trip_id]
+            ordered = sorted(sequence, key=lambda row: int(row['stop_sequence']))
+            signature = json.dumps([
+                trip['route_id'], trip.get('service_id', ''),
+                trip.get('direction_id', ''),
+                [[row['stop_id'], row.get('arrival_time', ''), row.get('departure_time', '')]
+                 for row in ordered]
+            ], ensure_ascii=False, separators=(',', ':'))
+            signatures[signature] += 1
+        calendar_rows = {name: read(name) for name in ('calendar.txt', 'calendar_dates.txt') if name in names}
+        calendar_digest = hashlib.sha256(json.dumps(
+            {name: sorted(json.dumps(row, sort_keys=True) for row in rows)
+             for name, rows in calendar_rows.items()}, sort_keys=True).encode()).hexdigest()
         end_dates = []
         for name, field in [('calendar.txt', 'end_date'), ('calendar_dates.txt', 'date')]:
             if name in names:
@@ -55,10 +76,12 @@ def inspect(path):
             'stop_time_rows': len(stop_times),
             'unserved_stops': len(set(ids) - used),
             'calendar_last_date': max(end_dates),
+            'calendar_sha256': calendar_digest,
+            'scheduled_trip_signatures': sum(signatures.values()),
             'fare_tables': sorted(required_name for required_name in
                 ('fare_attributes.txt', 'fare_rules.txt', 'fare_products.txt', 'fare_media.txt')
                 if required_name in names),
-        }, set(ids), used
+        }, set(ids), used, signatures
 
 
 def main():
@@ -67,14 +90,18 @@ def main():
     parser.add_argument('new_zip', type=Path)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    old, old_ids, old_served = inspect(args.old_zip)
-    new, new_ids, new_served = inspect(args.new_zip)
+    old, old_ids, old_served, old_signatures = inspect(args.old_zip)
+    new, new_ids, new_served, new_signatures = inspect(args.new_zip)
     result = {'old': old, 'new': new, 'added_stop_ids': sorted(new_ids-old_ids),
               'removed_stop_ids': sorted(old_ids-new_ids),
               'stop_id_intersection': len(old_ids & new_ids),
               'added_served_stop_ids': sorted(new_served - old_served),
               'removed_served_stop_ids': sorted(old_served - new_served),
               'served_stop_id_intersection': len(old_served & new_served),
+              'scheduled_trips_unchanged': sum((old_signatures & new_signatures).values()),
+              'scheduled_trips_added_or_changed': sum((new_signatures - old_signatures).values()),
+              'scheduled_trips_removed_or_changed': sum((old_signatures - new_signatures).values()),
+              'calendar_tables_identical': old['calendar_sha256'] == new['calendar_sha256'],
               'zones_verified': 0, 'fares_verified': 0,
               'safe_to_auto_replace': False}
     args.output.parent.mkdir(parents=True, exist_ok=True)
