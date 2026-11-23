@@ -18,3 +18,13 @@ test('no onboard school fare outside validity dates or on unrelated operator',()
  assert.equal(fareFor({...leg('419'),departure:'2026-06-30T08:00:00+02:00'}),null);
  assert.equal(fareFor({...leg('419'),provider:'Autre réseau'}),null);
 });
+
+test('fare registry is a single complete module with no appended fragments',()=>{
+ const fs=require('node:fs');
+ const path=require('node:path');
+ const source=fs.readFileSync(path.join(__dirname,'../transport-fare-grids.js'),'utf8');
+ assert.equal((source.match(/CPTransportFareGrids=api/g)||[]).length,1);
+ assert.match(source,/\}\)\(typeof window!=='undefined'\?window:globalThis\);\s*$/);
+ assert.equal((source.match(/network:'TAC'/g)||[]).length,1);
+ assert.equal((source.match(/network:'Ondéa \(conducteur, lignes 102\/419\)'/g)||[]).length,1);
+});
