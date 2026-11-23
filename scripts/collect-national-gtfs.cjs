@@ -227,8 +227,8 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   let lines;
   try {
     index = gtfs.buildIndex(files);
-    if (!index.counts.routes || !index.counts.trips) {
-      return { ...base, status: 'error', error: 'flux sans ligne ou sans course exploitable' };
+    if (!index.counts.routes || !index.counts.trips || !index.counts.stops || !index.counts.stopTimes) {
+      return { ...base, status: 'error', error: 'flux sans ligne, course, arrêt ou horaire exploitable' };
     }
     lines = classifyRoutes(files);
   } catch (error) {
