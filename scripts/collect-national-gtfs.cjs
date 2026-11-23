@@ -599,7 +599,7 @@ async function collect({
 }
 
 function toCSV(manifest) {
-  const header = ['id', 'network', 'status', 'routes', 'trips', 'stops', 'fares', 'activeNext30Days', 'activeRegularNext30Days', 'regularConnectedTrip', 'flexServiceCount', 'activeFlexNext30Days', 'lastServiceDate', 'lines_regular', 'lines_school', 'lines_demandResponsive', 'lines_unknown', 'aggregateSuspected', 'sha256', 'url', 'agencyCount', 'agencyNames', 'agencyTimezones', 'error'];
+  const header = ['id', 'network', 'status', 'routes', 'trips', 'stops', 'fares', 'activeNext30Days', 'activeRegularNext30Days', 'regularConnectedTrip', 'flexServiceCount', 'activeFlexNext30Days', 'flexBookingRuleCount', 'flexBookingNoticeMinMinutes', 'flexBookingNoticeMaxMinutes', 'flexBookingNoticeComplete', 'lastServiceDate', 'lines_regular', 'lines_school', 'lines_demandResponsive', 'lines_unknown', 'aggregateSuspected', 'sha256', 'url', 'agencyCount', 'agencyNames', 'agencyTimezones', 'error'];
   const rows = [header.join(',')];
   const esc = (v) => {
     const s = v === undefined || v === null ? '' : String(v);
@@ -620,6 +620,10 @@ function toCSV(manifest) {
         entry.regularConnectedTrip ?? '',
         entry.flexServiceCount ?? '',
         entry.activeFlexNext30Days ?? '',
+        entry.flexBookingRuleCount ?? '',
+        entry.flexBookingNoticeMinMinutes ?? '',
+        entry.flexBookingNoticeMaxMinutes ?? '',
+        entry.flexBookingNoticeComplete ?? '',
         entry.lastServiceDate ?? '',
         entry.lines?.regular ?? '',
         entry.lines?.school ?? '',
