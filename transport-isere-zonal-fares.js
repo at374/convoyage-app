@@ -41,7 +41,7 @@ function quote({zones,departure,profile='full',zoneEvidence,ecoEligible=false,ne
   zoneEvidence.traversedZones.length!==zones||
   new Set(zoneEvidence.traversedZones).size!==zones||
   !zoneEvidence.traversedZones.every(z=>typeof z==='string'&&/^(A|B|C|D|E|RH|S|HT1|HT2)$/.test(z))||
-  typeof zoneEvidence.source!=='string'||!/^https:\/\//.test(zoneEvidence.source))return null;
+  typeof zoneEvidence.source!=='string'||!/^https:\/\/(?:www\.)?(?:laregionvoustransporte\.fr|carsisere\.auvergnerhonealpes\.fr|data\.auvergnerhonealpes\.fr)(?:\/|$)/i.test(zoneEvidence.source)||!Array.isArray(zoneEvidence.stopIds)||zoneEvidence.stopIds.length<2||!zoneEvidence.stopIds.every(id=>typeof id==='string'&&id.trim()))return null;
  const table=profile==='full'?FULL:profile==='eco'?ECO:null;
  if(!table)return null;
  return {amount:table[zones],currency:'EUR',zones,profile,validityMinutes:zones===1?60:zones===2?90:120,
