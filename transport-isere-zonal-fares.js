@@ -75,7 +75,26 @@ function evidenceFromGTFS(index,{tripId,fromStopId,toStopId,stopZones,source}={}
   (i>0&&Number(t.stop_sequence)<=Number(slice[i-1].stop_sequence))))return null;
  return evidenceFromStops({stopIds:slice.map(t=>t.stop_id),stopZones,source,complete:true});
 }
-const api={quote,quoteFromStops,evidenceFromStops,evidenceFromGTFS,SOURCE,FULL,ECO,VALID_FROM};
+// Audit des arrêts réellement nécessaires : prépare l'import du référentiel officiel
+// sans jamais transformer les communes, les coordonnées ou zone_id GTFS en tarifs.
+function auditGTFSZones(index,stopZones){
+ if(!index||!(index.timesByTrip instanceof Map)||!(index.stopById instanceof Map)||
+  !stopZones||typeof stopZones!=='object'||Array.isArray(stopZones))return null;
+ const used=new Set();
+ for(const times of index.timesByTrip.values())for(const t of times||[]){
+  if(typeof t?.stop_id==='string'&&t.stop_id)used.add(t.stop_id);
+ }
+ const covered=[],missing=[],invalid=[];
+ for(const id of [...used].sort()){
+  const value=Object.prototype.hasOwnProperty.call(stopZones,id)?stopZones[id]:undefined;
+  if(value===undefined)missing.push(id);
+  else if(typeof value!=='string'||!/^(A|B|C|D|E|RH|S|HT1|HT2)$/.test(value))invalid.push(id);
+  else covered.push(id);
+ }
+ return {total:used.size,covered:covered.length,missing,invalid,
+  coveragePercent:used.size?Math.round(10000*covered.length/used.size)/100:0};
+}
+const api={quote,quoteFromStops,evidenceFromStops,evidenceFromGTFS,auditGTFSZones,SOURCE,FULL,ECO,VALID_FROM};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPIsereZonalFares=api;
 })(typeof window!=='undefined'?window:globalThis);
