@@ -116,7 +116,26 @@ function auditGTFSJourneys(index,journeys,{stopZones,source}={}){
  }
  return {...result,coveragePercent:result.total?Math.round(10000*result.priced/result.total)/100:0};
 }
-const api={quote,quoteFromStops,evidenceFromStops,evidenceFromGTFS,auditGTFSZones,auditGTFSJourneys,SOURCE,FULL,ECO,VALID_FROM};
+// Référentiel importé : chaque ligne doit être rattachée à un stop_id GTFS exact.
+// Ne jamais fabriquer une correspondance par rapprochement du nom d'une commune.
+function validateOfficialStopZones(index,reference){
+ if(!index||!(index.stopById instanceof Map)||!reference||reference.verified!==true||
+  typeof reference.source!=='string'||
+  !/^https:\/\/(?:www\.)?(?:laregionvoustransporte\.fr|carsisere\.auvergnerhonealpes\.fr|data\.auvergnerhonealpes\.fr)(?:\/|$)/i.test(reference.source)||
+  !reference.stopZones||typeof reference.stopZones!=='object'||Array.isArray(reference.stopZones))return null;
+ const clean=Object.create(null),unknown=[],invalid=[];
+ for(const [id,zone] of Object.entries(reference.stopZones)){
+  if(!index.stopById.has(id)){unknown.push(id);continue;}
+  if(typeof zone!=='string'||!/^(A|B|C|D|E|RH|S|HT1|HT2)$/.test(zone)){
+   invalid.push(id);continue;
+  }
+  clean[id]=zone;
+ }
+ // Rejeter intégralement un fichier contenant des identifiants inconnus ou des zones erronées.
+ if(unknown.length||invalid.length)return {valid:false,unknown,invalid,stopZones:null};
+ return {valid:true,unknown:[],invalid:[],stopZones:clean,source:reference.source};
+}
+const api={quote,quoteFromStops,evidenceFromStops,evidenceFromGTFS,auditGTFSZones,auditGTFSJourneys,validateOfficialStopZones,SOURCE,FULL,ECO,VALID_FROM};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPIsereZonalFares=api;
 })(typeof window!=='undefined'?window:globalThis);
