@@ -743,3 +743,18 @@ test('GTFS-Flex signalé sans métadonnées de réservation reste non confirmé'
  assert.equal(x.scheduled,false);
  assert.match(x.statusDetail,/préavis de réservation inconnu/);
 });
+
+test('TAD réservé : expiration du préavis ne révoque pas une réservation confirmée',()=>{
+ const now=at(8,0);
+ const booking={requestedPickup:at(8,30),noticeMinutes:60,
+  reservationConfirmed:true,pickupTimeConfirmed:true};
+ const checked=H.flexBookingCheck(booking,now);
+ assert.equal(checked.noticeMet,false);
+ assert.equal(checked.confirmed,true);
+ assert.equal(checked.reason,null);
+ const pending=H.flexBookingCheck({...booking,reservationConfirmed:false},now);
+ assert.match(pending.reason,/délai de réservation dépassé/);
+ const j={source:'TAD',sources:['TAD'],legs:[bus(at(8,30),at(9,0),STOP1,STOP2)],flexBooking:booking};
+ const assessed=H.assess(j,{latestArrival:at(10,0),now});
+ assert.equal(assessed.feasible,true);
+});
