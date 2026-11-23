@@ -254,3 +254,13 @@ test('conflicting walking/scooter metadata cannot make public transport free',()
   }
  }
 });
+
+test('national coaches and rail modes cannot be zeroed by stale walk flags',()=>{
+ for(const mode of ['Car','Coach','Autocar','TER','TGV','RER','Subway']){
+  const leg={kind:'walk',mode,provider:'Opérateur national'};
+  const result=fare([leg]);
+  assert.equal(result.known,false,mode+' cannot be free');
+  assert.equal(result.totalEUR,null,mode+' must keep total unknown');
+ }
+ assert.equal(fare([{kind:'walk',mode:'walking'}]).totalEUR,0);
+});
