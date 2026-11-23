@@ -37,9 +37,9 @@ function legFare(prepared,index,leg){
  if(!prepared.hasRulesFile){
   candidates=prepared.fares.size===1?[...prepared.fares.values()]:[];
  }else{
-  if(prepared.unsupportedContainsRule||prepared.rules.some(r=>r.contains_id))return null;
   const match=r=>(!r.route_id||r.route_id===routeId)&&(!r.origin_id||(origin&&r.origin_id===origin))&&
    (!r.destination_id||(destination&&r.destination_id===destination));
+  if((prepared.unresolvedRules||[]).some(r=>r.contains_id&&match(r))||prepared.rules.some(r=>r.contains_id&&match(r)))return null;
   if((prepared.unresolvedRules||[]).some(match))return null;
   candidates=[...new Set(prepared.rules.filter(match).map(r=>r.fare_id))].map(id=>prepared.fares.get(id));
  }
