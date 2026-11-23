@@ -38,6 +38,24 @@ class CompareTests(unittest.TestCase):
             self.assertEqual(metadata['unserved_stops'], 1)
             self.assertEqual(listed - served, {'PARENT'})
 
+    def test_schedule_signature_stable_across_trip_ids(self):
+        with tempfile.TemporaryDirectory() as temp:
+            a, b = Path(temp) / 'a.zip', Path(temp) / 'b.zip'
+            feed(a, ['A', 'B'], ['A', 'B'], trip='T1')
+            feed(b, ['A', 'B'], ['A', 'B'], trip='T2')
+            _, _, _, old = module.inspect(a)
+            _, _, _, new = module.inspect(b)
+            self.assertEqual(old, new)
+
+    def test_schedule_signature_detects_stop_change(self):
+        with tempfile.TemporaryDirectory() as temp:
+            a, b = Path(temp) / 'a.zip', Path(temp) / 'b.zip'
+            feed(a, ['A', 'B', 'C'], ['A', 'B'])
+            feed(b, ['A', 'B', 'C'], ['A', 'C'])
+            _, _, _, old = module.inspect(a)
+            _, _, _, new = module.inspect(b)
+            self.assertNotEqual(old, new)
+
     def test_orphan_trip_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / 'a.zip'
