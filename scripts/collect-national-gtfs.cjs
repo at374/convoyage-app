@@ -207,6 +207,12 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   } catch (error) {
     return { ...base, status: 'error', error: 'indexation ou classification : ' + error.message };
   }
+  let activeNext30Days;
+  try {
+    activeNext30Days = activeWithinDays(files, ACTIVE_WINDOW_DAYS, new Date(now));
+  } catch (error) {
+    return { ...base, status: 'error', error: 'calendrier : ' + error.message };
+  }
   return {
     ...base,
     status: 'ok',
@@ -217,7 +223,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     stops: index.counts.stops,
     stopTimes: index.counts.stopTimes,
     fares: Boolean(files['fare_attributes.txt']),
-    activeNext30Days: activeWithinDays(files, ACTIVE_WINDOW_DAYS, new Date(now)),
+    activeNext30Days,
     lines,
     bytes, // retiré avant écriture du manifeste ; utilisé par l'appelant pour la publication.
   };
