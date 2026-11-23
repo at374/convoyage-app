@@ -595,7 +595,7 @@ test('lastServiceDate ne prolonge pas un calendrier sans aucun jour actif', () =
       'ACTIF,1,0,0,0,0,0,0,20260101,20271231\n',
     'calendar_dates.txt': 'service_id,date,exception_type\n'
   };
-  assert.equal(collector.lastServiceDate(files), '2027-12-31');
+  assert.equal(collector.lastServiceDate(files), '2027-12-27'); // dernier lundi réellement actif
   assert.equal(collector.lastServiceDate(files, new Set(['DORMANT'])), null);
 });
 
