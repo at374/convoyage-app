@@ -1527,6 +1527,43 @@ function render(host,v){
   host.appendChild(info);
   }
  }
+ // A GTFS-Flex window describes where/when a TAD can be REQUESTED.
+ // It must never appear among ranked scheduled routes until a real booking
+ // and concrete pickup/drop-off times are confirmed by the operator.
+ if(Array.isArray(v.flexCandidates)&&v.flexCandidates.length){
+  const safe=v.flexCandidates.filter(c=>c?.kind==='gtfs-flex-candidate'&&c.pickupWindow);
+  const seen=new Set(),selected=[];
+  for(const c of safe){
+   const k=[c.network,c.tripId,c.pickupWindow.startSeconds,c.pickupWindow.endSeconds].join('|');
+   if(seen.has(k))continue;seen.add(k);selected.push(c);
+  }
+  if(selected.length){
+   const group=el(doc,'section','cp-hub-flex-info');
+   group.appendChild(el(doc,'p','cp-hub-note','Transport à la demande GTFS-Flex : services détectés pour cette zone et cette date, mais aucun départ ni tarif confirmé.'));
+   const asClock=n=>{if(!Number.isFinite(n))return '?';const h=Math.floor(n/3600),m=Math.floor(n%3600/60);return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');};
+   for(const c of selected.slice(0,5)){
+    const card=el(doc,'details','cp-hub-flex-card');
+    const network=String(c.network||c.line||'Réseau TAD');
+    const title=network+' · '+(c.line||'TAD')+' · '+asClock(c.pickupWindow.startSeconds)+'–'+asClock(c.pickupWindow.endSeconds)+' (fenêtre, non départ)';
+    card.appendChild(el(doc,'summary',null,title));
+    card.appendChild(el(doc,'p','cp-hub-note','Transport non confirmé · Prix à confirmer · Réservation et heure de prise en charge à confirmer. Trajet piéton non calculable sans heure et arrêts confirmés.'));
+    const rule=c.pickupRule;
+    if(rule?.bookingType==='1'&&Number.isFinite(rule.noticeMinutes))
+     card.appendChild(el(doc,'p','cp-hub-note','Préavis minimum : '+rule.noticeMinutes+' min avant la course.'));
+    else if(rule?.bookingType==='2'&&Number.isFinite(rule.priorNoticeLastDay)&&rule.priorNoticeLastTime)
+     card.appendChild(el(doc,'p','cp-hub-note','Réservation au plus tard '+rule.priorNoticeLastDay+' jour(s) avant, à '+rule.priorNoticeLastTime+'.'));
+    else card.appendChild(el(doc,'p','cp-hub-note','Conditions de réservation à vérifier auprès de l’opérateur.'));
+    if(rule?.bookingUrl&&/^https:\/\//i.test(rule.bookingUrl)){
+     const link=el(doc,'a',null,'Réserver sur le site de l’opérateur');
+     link.href=rule.bookingUrl;link.target='_blank';link.rel='noopener noreferrer';card.appendChild(link);
+    }else if(rule?.phoneNumber)
+     card.appendChild(el(doc,'p','cp-hub-note','Réservation : '+rule.phoneNumber));
+    group.appendChild(card);
+   }
+   if(selected.length>5)group.appendChild(el(doc,'p','cp-hub-note',selected.length-5+' autre(s) course(s) TAD dans cette zone.'));
+   host.appendChild(group);
+  }
+ }
  const tads=tadFor(v.task);
  if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' non affiché'+(v.hidden.tooEarly>1?'s':'')+' : horaires incompatibles avec la mission (départ avant la fin de la mission précédente, arrivée trop tôt) ou marche plus longue que la limite réglée.'));
  if(v.done&&v.hidden&&v.hidden.tooEarly){const h=v.hidden,parts=[];if(h.longWalk)parts.push(h.longWalk+' à cause d’une marche trop longue (réglage Paramètres)');if(h.before)parts.push(h.before+' partent avant la fin de la mission précédente');if(h.early)parts.push(h.early+' arrivent trop tôt');if(h.night)parts.push(h.night+' hors plage de jour');if(parts.length)host.appendChild(el(doc,'p','cp-hub-note','Détail : '+parts.join(' · ')+'.'));}
