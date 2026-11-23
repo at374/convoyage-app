@@ -34,7 +34,12 @@
     const breakdown=items.map(leg=>{
       // A later boarding can fall on another day (or after a pass expires).
       // The itinerary's date is only a fallback for legs without a departure.
-      const travelDate=leg?.departure??options.travelDate;
+      // GTFS legs often expose HH:MM:SS rather than an ISO timestamp.
+      // Use the itinerary's dated service day only for these time-only departures.
+      // Without that date, the fare validity cannot be established.
+      const departure=leg?.departure;
+      const timeOnly=typeof departure==='string'&&/^\d{1,3}:[0-5]\d(?::[0-5]\d)?$/.test(departure);
+      const travelDate=timeOnly?options.travelDate??null:departure??options.travelDate;
       // A numerical amount is not evidence: require an explicit verified source.
       // Walking and stationary transfer/wait legs are not ticketed rides.
       const nonTicketed=leg?.kind==='walk'||leg?.mode==='walk'||leg?.mode==='walking'||leg?.mode==='wa_wal'||leg?.mode==='stationary_transfer'||leg?.mode==='stationary_wait'||(leg?.kind==='scooter'&&leg?.scooterPersonal===true);
