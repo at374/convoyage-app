@@ -122,16 +122,23 @@ function activeWithinDays(files, days, today = new Date()) {
 }
 
 function lastServiceDate(files) {
-  const dates = [];
+  const validDate = value => {
+    if (!/^\d{8}$/.test(value || '')) return false;
+    const year = Number(value.slice(0, 4));
+    const month = Number(value.slice(4, 6));
+    const day = Number(value.slice(6, 8));
+    if (year < 2000 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) return false;
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+  };
+  let latest = null;
   for (const row of gtfs.csvRows(files['calendar.txt'] || '')) {
-    if (/^\d{8}$/.test(row.end_date || '')) dates.push(row.end_date);
+    if (validDate(row.end_date) && (!latest || row.end_date > latest)) latest = row.end_date;
   }
   for (const row of gtfs.csvRows(files['calendar_dates.txt'] || '')) {
-    if (/^\d{8}$/.test(row.date || '') && row.exception_type === '1') dates.push(row.date);
+    if (row.exception_type === '1' && validDate(row.date) && (!latest || row.date > latest)) latest = row.date;
   }
-  if (!dates.length) return null;
-  const latest = dates.sort().at(-1);
-  return latest.slice(0, 4) + '-' + latest.slice(4, 6) + '-' + latest.slice(6, 8);
+  return latest ? latest.slice(0, 4) + '-' + latest.slice(4, 6) + '-' + latest.slice(6, 8) : null;
 }
 
 function sha256(bytes) {
