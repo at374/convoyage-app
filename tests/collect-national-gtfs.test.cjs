@@ -278,3 +278,25 @@ test('processResource refuse une course dont le deuxième arrêt précède le pr
   assert.equal(entry.status, 'error');
   assert.match(entry.error, /aucune course/);
 });
+
+test('processResource refuse une course avec séquences d’arrêts identiques', async () => {
+  const invalidSequence = {
+    ...baseFiles,
+    'stop_times.txt': 'trip_id,arrival_time,departure_time,stop_id,stop_sequence\n' +
+      'T1,10:00:00,10:00:00,A,1\n' +
+      'T1,11:00:00,11:00:00,B,1\n'
+  };
+  const fetcher = async () => new Response(zip(invalidSequence), {
+    headers: { 'content-type': 'application/zip' }
+  });
+  const entry = await collector.processResource({
+    id: 'r5', datasetId: 'd5', network: 'Réseau séquences invalides',
+    format: 'GTFS', url: 'https://example.org/sequence.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher, maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    previousEntry: null, now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'error');
+  assert.match(entry.error, /aucune course/);
+});
