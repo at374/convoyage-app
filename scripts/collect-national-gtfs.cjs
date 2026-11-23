@@ -104,19 +104,36 @@ function classifyRoutes(files) {
 // Identifiants de service actifs au moins un jour dans les `days` prochains jours (fenêtre glissante
 // à partir de `today`, calendar.txt + calendar_dates.txt pris en compte via gtfs.activeServices).
 function activeWithinDays(files, days, today = new Date()) {
-  // Un service déclaré dans calendar.txt sans aucun trajet dans trips.txt
-  // ne suffit pas pour annoncer un réseau exploitable.
+  // Parse les calendriers une seule fois : un gros flux peut contenir des centaines
+  // de milliers de lignes et la fenêtre de 30 jours ne doit pas les reparcourir 30 fois.
   const usedServices = new Set();
   for (const trip of gtfs.csvRows(files['trips.txt'] || '')) {
     if (trip.service_id) usedServices.add(trip.service_id);
   }
   if (!usedServices.size) return false;
+  const calendar = gtfs.parseCSV(files['calendar.txt'] || '').filter(r => usedServices.has(r.service_id));
+  const exceptions = new Map();
+  for (const row of gtfs.csvRows(files['calendar_dates.txt'] || '')) {
+    if (!usedServices.has(row.service_id)) continue;
+    if (!exceptions.has(row.date)) exceptions.set(row.date, []);
+    exceptions.get(row.date).push(row);
+  }
+  const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
   for (let offset = 0; offset < days; offset++) {
     const date = new Date(today.getTime() + offset * 86400000);
-    const stamp = date.toISOString().slice(0, 10);
-    for (const serviceId of gtfs.activeServices(files, stamp)) {
-      if (usedServices.has(serviceId)) return true;
+    const compact = date.toISOString().slice(0, 10).replace(/-/g, '');
+    const weekday = weekdays[date.getUTCDay()];
+    const active = new Set();
+    for (const row of calendar) {
+      if (row.start_date <= compact && compact <= row.end_date && row[weekday] === '1') {
+        active.add(row.service_id);
+      }
     }
+    for (const row of exceptions.get(compact) || []) {
+      if (row.exception_type === '1') active.add(row.service_id);
+      else if (row.exception_type === '2') active.delete(row.service_id);
+    }
+    if (active.size) return true;
   }
   return false;
 }
