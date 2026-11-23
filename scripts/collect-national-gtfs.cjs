@@ -143,6 +143,10 @@ function activeWithinDays(files, days, today = new Date(), eligibleServices = nu
 
 // Détection structurelle GTFS-Flex : ne fournit jamais de départ confirmé.
 function flexServices(files, index) {
+  const bookingRules = new Set();
+  for (const row of gtfs.csvRows(files['booking_rules.txt'] || '')) {
+    if (row.booking_rule_id) bookingRules.add(row.booking_rule_id);
+  }
   const groups = new Set();
   for (const row of gtfs.csvRows(files['location_groups.txt'] || '')) {
     if (row.location_group_id) groups.add(row.location_group_id);
@@ -176,6 +180,10 @@ function flexServices(files, index) {
       : row.stop_id && index.stopById.has(row.stop_id)
         ? 'stop:' + row.stop_id : null;
     if (!locationKey) continue;
+    // Une règle de réservation explicitement référencée doit exister.
+    // L'absence de référence n'est pas une preuve de réservation garantie.
+    if ((row.pickup_booking_rule_id && !bookingRules.has(row.pickup_booking_rule_id)) ||
+        (row.drop_off_booking_rule_id && !bookingRules.has(row.drop_off_booking_rule_id))) continue;
     if (!timePattern.test(row.start_pickup_drop_off_window || '') ||
         !timePattern.test(row.end_pickup_drop_off_window || '')) continue;
     const seconds = value => {
