@@ -117,3 +117,14 @@ test('agency-scoped GTFS fare is not valid on another operator route',()=>{
  const unknown={...files,'routes.txt':base['routes.txt']};
  assert.equal(F.legFare(F.prepare(unknown),idx(unknown),{tripId:'T1',from:'A',to:'B'}),null);
 });
+
+test('GTFS fare amount must be an ordinary decimal, not JS numeric syntax',()=>{
+ for(const price of ['0x10','1e2','Infinity','+2','02','2.999','NaN']){
+  const files={...base,'fare_attributes.txt':'fare_id,price,currency_type\nU,'+price+',EUR'};
+  assert.equal(F.legFare(F.prepare(files),idx(files),{tripId:'T1',from:'A',to:'B'}),null,price);
+ }
+ for(const price of ['0','0.00','2','2.5','2.50']){
+  const files={...base,'fare_attributes.txt':'fare_id,price,currency_type\nU,'+price+',EUR'};
+  assert.equal(F.legFare(F.prepare(files),idx(files),{tripId:'T1',from:'A',to:'B'}).amount,Number(price),price);
+ }
+});
