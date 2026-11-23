@@ -35,3 +35,11 @@ Le site officiel Ondéa classe les **lignes 100 à 108** (dont 102) et **400 à 
 Le plan 2026 et les fiches horaires permettent de retrouver les arrêts, mais **ne suffisent pas à démontrer qu'un convoyeur adulte sans statut scolaire peut emprunter chaque course**. La documentation officielle distingue en outre les supports de titres acceptés : https://www.ondeagrandlac.fr/nos-points-de-vente
 
 **Règle produit :** avant de marquer une proposition « réalisable » ou de lui affecter un prix, vérifier séparément (1) que le service circule le jour demandé, (2) que la course est ouverte au public visé, (3) que le support de titre est accepté, (4) que le tarif est applicable. En l'absence de preuve, conserver « Conditions d'accès / prix à confirmer » et masquer la rentabilité.
+
+## Confirmation officielle : accès des adultes aux lignes de proximité Ondéa
+
+La page officielle https://www.ondeagrandlac.fr/services/decouvrez-loffre-du-reseau-ondea-grand-lac indique explicitement que les lignes de proximité **100 à 511 sont accessibles à toute personne munie d'un titre de transport valide**, même si elles ne circulent **qu'en période scolaire**. Cela inclut les lignes 102 et 419. Le statut de convoyeur adulte n'est donc pas, à lui seul, un obstacle d'accès.
+
+La vente d'un titre unitaire auprès du conducteur est explicitement prévue dans les cars des lignes scolaires : https://www.ondeagrandlac.fr/tarifs/vente-bord . La gamme officielle au 1er juillet 2026 affiche **1,70 €** pour le titre 1 voyage à bord : https://www.ondeagrandlac.fr/titres/titres-pour-tous-tarifs-applicables-du-1er-juillet-2026 .
+
+**Conséquence :** ne pas bloquer une course 102/419 pour le seul motif « ligne scolaire » ; conserver les contrôles GTFS du calendrier, des arrêts, de l'horaire et des correspondances. Ne pas présenter le QR/M-Ticket comme utilisable sur les cars scolaires. Le tarif de 1,70 € ne rend pas une course réalisable si celle-ci ne circule pas.
