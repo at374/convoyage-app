@@ -49,3 +49,9 @@ test('does not invent feasibility when it is absent from a diagnostic',()=>{
  assert.doesNotMatch(report,/Trajets déclarés faisables/);
  assert.doesNotMatch(report,/Trajets partiellement tarifés/);
 });
+
+test('shows per-axis partial journeys without counting them as fully priced',()=>{
+ const report=build({axes:[{name:'Annecy → Genève',trips:49,priced:0,partialPricedJourneys:18},{name:'Other',trips:3,priced:1}]});
+ assert.match(report,/Annecy → Genève \| 49 \| 0 \| 18 \| 49 \|/);
+ assert.match(report,/Other \| 3 \| 1 \| — \| 2 \|/);
+});
