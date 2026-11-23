@@ -235,29 +235,27 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     // à une ligne connue et à deux arrêts distincts avec horaires valides.
     const timePattern = /^\\d{1,3}:[0-5]\\d:[0-5]\\d$/;
     let connectedTrip = false;
+    const seconds = value => {
+      const [h, m, sec] = value.split(':').map(Number);
+      return h * 3600 + m * 60 + sec;
+    };
     for (const [tripId, trip] of index.tripById) {
       if (!index.routeById.has(trip.route_id)) continue;
-      let firstStop = null;
-      let firstDeparture = null;
+      let first = null;
       for (const time of index.timesByTrip.get(tripId) || []) {
         if (!timePattern.test(time.arrival_time || '') ||
             !timePattern.test(time.departure_time || '')) continue;
-        const seconds = value => {
-          const [h, m, sec] = value.split(':').map(Number);
-          return h * 3600 + m * 60 + sec;
-        };
+        const sequence = Number(time.stop_sequence);
+        if (!Number.isSafeInteger(sequence) || sequence < 0) continue;
         const arrival = seconds(time.arrival_time);
         const departure = seconds(time.departure_time);
         if (arrival > departure) continue;
-        if (firstStop !== null && time.stop_id !== firstStop &&
-            arrival >= firstDeparture) {
+        if (first && time.stop_id !== first.stopId &&
+            sequence > first.sequence && arrival >= first.departure) {
           connectedTrip = true;
           break;
         }
-        if (firstStop === null) {
-          firstStop = time.stop_id;
-          firstDeparture = departure;
-        }
+        if (!first) first = { stopId: time.stop_id, sequence, departure };
       }
       if (connectedTrip) break;
     }
