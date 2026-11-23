@@ -15,7 +15,7 @@ function prepare(files){
  for(const a of attrs){
   if(a.fare_id){if(seenIds.has(a.fare_id))duplicateIds.add(a.fare_id);seenIds.add(a.fare_id);}
   const price=Number(a.price),currency=String(a.currency_type||'').toUpperCase();
-  if(!a.fare_id||typeof a.price!=='string'||!a.price.trim()||!Number.isFinite(price)||price<0||!/^(EUR|CHF)$/.test(currency))continue;
+  if(!a.fare_id||typeof a.price!=='string'||!a.price.trim()||!/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(a.price.trim())||!Number.isFinite(price)||price<0||!/^(EUR|CHF)$/.test(currency))continue;
   const cents=Math.round(price*100);if(Math.abs(price*100-cents)>1e-6)continue;
   const duration=a.transfer_duration===undefined||a.transfer_duration===''?null:Number(a.transfer_duration);
   const transfers=a.transfers===undefined||a.transfers===''?null:Number(a.transfers); // vide = illimité
