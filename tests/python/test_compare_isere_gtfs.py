@@ -52,8 +52,8 @@ class CompareTests(unittest.TestCase):
             a, b = Path(temp) / 'a.zip', Path(temp) / 'b.zip'
             feed(a, ['A', 'B', 'C'], ['A', 'B'])
             feed(b, ['A', 'B', 'C'], ['A', 'C'])
-            _, _, _, old = module.inspect(a)
-            _, _, _, new = module.inspect(b)
+            _, _, _, old, _ = module.inspect(a)
+            _, _, _, new, _ = module.inspect(b)
             self.assertNotEqual(old, new)
 
     def test_orphan_trip_rejected(self):
