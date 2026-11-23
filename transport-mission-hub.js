@@ -210,6 +210,9 @@ function fromGTFS(rows,network='Réseau local'){
    return out;
   });
   return {...journey((r.network||network)+' (GTFS)',legs),
+   // Les données Flex doivent traverser la normalisation : sans ce champ,
+   // assess() perdrait les exigences de réservation et pourrait surévaluer le trajet.
+   ...(r.flexBooking&&typeof r.flexBooking==='object'?{flexBooking:{...r.flexBooking}}:{}),
    // Static GTFS proves a scheduled service, not its live operation.
    // Never label the itinerary as confirmed until a live source validates it.
    missing:['horaire GTFS local non confirmé en temps réel',
