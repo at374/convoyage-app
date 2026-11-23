@@ -490,3 +490,33 @@ test('processResource conserve la date de validation lors des simples passages d
   assert.equal(entry.lastCheckedAt, '2026-11-23T00:00:00Z');
   assert.equal(entry.lastValidatedAt, '2026-11-20T00:00:00Z');
 });
+
+test('processResource revalide si URL PAN change même avec une archive identique', async () => {
+  const good = zip(baseFiles);
+  const resource = {
+    id: 'r12', datasetId: 'd12', network: 'Réseau URL changée',
+    format: 'GTFS', url: 'https://example.org/new.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  };
+  const previousEntry = {
+    status: 'ok', url: 'https://example.org/old.zip',
+    updatedAt: resource.updatedAt,
+    lastValidatedAt: '2026-11-22T00:00:00Z',
+    lastServiceDate: '2027-12-31', activeNext30Days: false,
+    sha256: collector.sha256(good)
+  };
+  let downloads = 0;
+  const entry = await collector.processResource(resource, {
+    fetcher: async () => {
+      downloads++;
+      return new Response(good, { headers: { 'content-type': 'application/zip' } });
+    },
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    previousEntry, now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(downloads, 1);
+  assert.equal(entry.status, 'ok', entry.error);
+  assert.equal(entry.url, resource.url);
+  assert.equal(entry.lastValidatedAt, '2026-11-23T00:00:00Z');
+  assert.equal(entry.activeNext30Days, true);
+});
