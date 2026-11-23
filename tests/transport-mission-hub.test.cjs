@@ -107,6 +107,8 @@ test('tarifs : indicateurs marche et trottinette périmés ne rendent jamais un 
  assert.equal(H.priceOf({scooterOnly:true,legs:[{kind:'scooter'},transit]}).status,'unknown');
  assert.equal(H.priceOf({walkOnly:true,legs:[{kind:'walk'}]}).status,'free');
  assert.equal(H.priceOf({scooterOnly:true,legs:[{kind:'scooter'}]}).status,'free');
+ assert.equal(H.priceOf({scooterOnly:true,legs:[{kind:'walk'},{kind:'scooter'}]}).status,'free');
+ assert.equal(H.priceOf({scooterOnly:true,legs:[{kind:'walk'},{kind:'scooter'},transit]}).status,'unknown');
  assert.equal(H.priceOf({walkOnly:true,legs:[]}).status,'unknown');
 });
 
