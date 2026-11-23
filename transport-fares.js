@@ -39,7 +39,7 @@
       // Without that date, the fare validity cannot be established.
       const departure=leg?.departure;
       const timeOnly=typeof departure==='string'&&/^\d{1,3}:[0-5]\d(?::[0-5]\d)?$/.test(departure);
-      const travelDate=timeOnly?options.travelDate??null:departure??options.travelDate;
+      const travelDate=timeOnly?(options.travelDate??'invalid-undated-GTFS-departure'):departure??options.travelDate;
       // A numerical amount is not evidence: require an explicit verified source.
       // Walking and stationary transfer/wait legs are not ticketed rides.
       const nonTicketed=leg?.kind==='walk'||leg?.mode==='walk'||leg?.mode==='walking'||leg?.mode==='wa_wal'||leg?.mode==='stationary_transfer'||leg?.mode==='stationary_wait'||(leg?.kind==='scooter'&&leg?.scooterPersonal===true);
