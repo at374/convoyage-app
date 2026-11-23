@@ -658,3 +658,26 @@ test('toCSV expose séparément les services actifs réguliers et sur réservati
   assert.match(csv, /regularConnectedTrip/);
   assert.match(csv, /true,false,false/);
 });
+
+test('processResource repère une liaison régulière après un premier arrêt réservé', async () => {
+  const files = {
+    ...baseFiles,
+    'stops.txt': 'stop_id,stop_name,stop_lat,stop_lon\nA,Départ,45.9,6.1\nB,Intermédiaire,45.8,6.2\nC,Arrivée,45.7,6.3\n',
+    'stop_times.txt': 'trip_id,arrival_time,departure_time,stop_id,stop_sequence,pickup_type,drop_off_type\n' +
+      'T1,09:00:00,09:00:00,A,1,2,0\n' +
+      'T1,09:15:00,09:15:00,B,2,0,0\n' +
+      'T1,09:30:00,09:30:00,C,3,0,0\n'
+  };
+  const entry = await collector.processResource({
+    id: 'r16', datasetId: 'd16', network: 'Réseau mixte',
+    format: 'GTFS', url: 'https://example.org/mixed.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher: async () => new Response(zip(files), { headers: { 'content-type': 'application/zip' } }),
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'ok', entry.error);
+  assert.equal(entry.regularConnectedTrip, true);
+  assert.equal(entry.activeRegularNext30Days, true);
+});
