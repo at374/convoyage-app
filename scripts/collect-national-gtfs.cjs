@@ -153,7 +153,7 @@ function flexServices(files, index) {
       groupStops.add(row.location_group_id);
     }
   }
-  const timePattern = /^\\d{1,3}:[0-5]\\d:[0-5]\\d$/;
+  const timePattern = /^\d{1,3}:[0-5]\d:[0-5]\d$/;
   const byTrip = new Map();
   for (const row of gtfs.csvRows(files['stop_times.txt'] || '')) {
     if (!index.tripById.has(row.trip_id)) continue;
