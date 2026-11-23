@@ -1,0 +1,47 @@
+name: Audit ponctuel Isere GTFS archives
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/transports-aura-suisse]
+    paths:
+      - '.github/workflows/audit-isere-archives-once.yml'
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recuperer les deux GTFS sans modifier la production
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p tmp
+          cp data/gtfs/cars-region-isere.zip tmp/isere-ancien.zip
+          curl --fail --location --retry 3 --max-time 180 --output tmp/isere-officiel.zip 'https://transport.data.gouv.fr/resources/40287/download'
+          python3 - <<'PY'
+          import zipfile
+          for path in ('tmp/isere-ancien.zip','tmp/isere-officiel.zip'):
+              with zipfile.ZipFile(path) as z:
+                  assert z.testzip() is None, path
+                  required={'agency.txt','stops.txt','routes.txt','trips.txt','stop_times.txt'}
+                  names={x.rsplit('/',1)[-1] for x in z.namelist()}
+                  assert required.issubset(names), (path,required-names)
+          PY
+      - name: Comparer dates et horaires
+        run: |
+          python3 scripts/compare_isere_gtfs.py tmp/isere-ancien.zip tmp/isere-officiel.zip --output tmp/isere-gtfs-comparison.json
+          python3 scripts/compare_isere_service_dates.py tmp/isere-ancien.zip tmp/isere-officiel.zip --output tmp/isere-service-dates-comparison.json
+      - name: Publier les archives et rapports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: isere-archives-et-audit
+          path: |
+            tmp/isere-ancien.zip
+            tmp/isere-officiel.zip
+            tmp/isere-gtfs-comparison.json
+            tmp/isere-service-dates-comparison.json
+          if-no-files-found: warn
+          retention-days: 2
