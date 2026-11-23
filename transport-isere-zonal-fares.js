@@ -48,7 +48,14 @@ function quote({zones,departure,profile='full',zoneEvidence,ecoEligible=false,ne
   product:'Cars Région Isère · 1 voyage · '+zones+' zone'+(zones>1?'s':'')+(profile==='eco'?' · Éco moins de 26 ans':''),
   source:SOURCE,zoneSource:zoneEvidence.source,validFrom:VALID_FROM};
 }
-const api={quote,evidenceFromStops,SOURCE,FULL,ECO,VALID_FROM};
+// Ne calcule que sur une séquence de tous les arrêts parcourus, fournie par le moteur GTFS.
+// Si le moteur ne peut pas garantir l'exhaustivité, aucune tarification n'est produite.
+function quoteFromStops({stopIds,stopZones,source,complete=false,departure,profile='full',ecoEligible=false,network='Cars Région Isère',line=null}={}){
+ const zoneEvidence=evidenceFromStops({stopIds,stopZones,source,complete});
+ if(!zoneEvidence)return null;
+ return quote({zones:zoneEvidence.traversedZones.length,departure,profile,ecoEligible,network,line,zoneEvidence});
+}
+const api={quote,quoteFromStops,evidenceFromStops,SOURCE,FULL,ECO,VALID_FROM};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPIsereZonalFares=api;
 })(typeof window!=='undefined'?window:globalThis);
