@@ -98,7 +98,7 @@ test('collect() : découvre, télécharge, valide et classe un flux réel simul�
   };
   const previousManifest = {
     networks: {
-      'tac-annemasse-r2': { id: 'tac-annemasse-r2', datasetId: 43, resourceId: 'r2', status: 'ok', updatedAt: '2026-09-01T00:00:00Z', sha256: 'x' },
+      'tac-annemasse-r2': { id: 'tac-annemasse-r2', datasetId: '43', resourceId: 'r2', status: 'ok', updatedAt: '2026-09-01T00:00:00Z', sha256: 'x' },
     },
   };
   const { manifest, uploads } = await collector.collect({ fetcher, previousManifest, now: '2026-11-23T00:00:00Z' });
