@@ -143,7 +143,7 @@ function activeWithinDays(files, days, today = new Date(), eligibleServices = nu
 
 function lastServiceDate(files, eligibleServices = null) {
   const validDate = value => {
-    if (!/^\d{8}$/.test(value || '')) return false;
+    if (!/^\\d{8}$/.test(value || '')) return false;
     const year = Number(value.slice(0, 4));
     const month = Number(value.slice(4, 6));
     const day = Number(value.slice(6, 8));
@@ -151,40 +151,45 @@ function lastServiceDate(files, eligibleServices = null) {
     const date = new Date(Date.UTC(year, month - 1, day));
     return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
   };
+  const asUTC = value => Date.UTC(Number(value.slice(0, 4)),
+    Number(value.slice(4, 6)) - 1, Number(value.slice(6, 8)));
+  const compact = ms => new Date(ms).toISOString().slice(0, 10).replace(/-/g, '');
+  const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const exceptions = new Map();
+  for (const row of gtfs.csvRows(files['calendar_dates.txt'] || '')) {
+    if (eligibleServices !== null && !eligibleServices.has(row.service_id)) continue;
+    if (!validDate(row.date) || !['1', '2'].includes(row.exception_type)) continue;
+    if (!exceptions.has(row.service_id)) exceptions.set(row.service_id, new Map());
+    exceptions.get(row.service_id).set(row.date, row.exception_type);
+  }
   let latest = null;
   for (const row of gtfs.csvRows(files['calendar.txt'] || '')) {
     if (eligibleServices !== null && !eligibleServices.has(row.service_id)) continue;
-    // Un calendrier sans aucun jour de circulation ne prolonge pas la couverture.
-    const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-    if (weekdays.some(day => Object.hasOwn(row, day)) &&
-        !weekdays.some(day => row[day] === '1')) continue;
-    // Un intervalle inversé ou une date de début impossible ne peut pas
-    // justifier une couverture future. Tolérer les fixtures sans start_date.
-    if (row.start_date && (!validDate(row.start_date) || row.start_date > row.end_date)) continue;
     if (!validDate(row.end_date)) continue;
-    // Ne pas publier la fin théorique d'une période sans aucun jour
-    // réellement actif (ex. calendrier du lundi limité à mardi-mercredi).
-    let finalDay = row.end_date;
-    if (row.start_date && weekdays.some(day => Object.hasOwn(row, day))) {
-      finalDay = null;
-      const end = Date.UTC(Number(row.end_date.slice(0, 4)),
-        Number(row.end_date.slice(4, 6)) - 1, Number(row.end_date.slice(6, 8)));
-      const start = Date.UTC(Number(row.start_date.slice(0, 4)),
-        Number(row.start_date.slice(4, 6)) - 1, Number(row.start_date.slice(6, 8)));
-      const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-      for (let offset = 0; offset < 7 && end - offset * 86400000 >= start; offset++) {
-        const candidate = new Date(end - offset * 86400000);
-        if (row[dayNames[candidate.getUTCDay()]] === '1') {
-          finalDay = candidate.toISOString().slice(0, 10).replace(/-/g, '');
-          break;
-        }
+    if (row.start_date && (!validDate(row.start_date) || row.start_date > row.end_date)) continue;
+    const specifiedDays = weekdays.some(day => Object.hasOwn(row, day));
+    if (specifiedDays && !weekdays.some(day => row[day] === '1')) continue;
+    const end = asUTC(row.end_date);
+    const start = row.start_date ? asUTC(row.start_date) : end;
+    const removed = exceptions.get(row.service_id);
+    // Au plus sept jours par suppression de service : recherche bornée même
+    // sur un calendrier pluriannuel. Les ajouts sont traités ci-dessous.
+    const limit = specifiedDays ? 7 * ((removed?.size || 0) + 1) : 1;
+    for (let offset = 0; offset < limit && end - offset * 86400000 >= start; offset++) {
+      const day = end - offset * 86400000;
+      const key = compact(day);
+      if (removed?.get(key) === '2') continue;
+      if (!specifiedDays || row[weekdays[new Date(day).getUTCDay()]] === '1') {
+        if (!latest || key > latest) latest = key;
+        break;
       }
     }
-    if (finalDay && (!latest || finalDay > latest)) latest = finalDay;
   }
-  for (const row of gtfs.csvRows(files['calendar_dates.txt'] || '')) {
-    if (eligibleServices !== null && !eligibleServices.has(row.service_id)) continue;
-    if (row.exception_type === '1' && validDate(row.date) && (!latest || row.date > latest)) latest = row.date;
+  for (const [serviceId, dates] of exceptions) {
+    if (eligibleServices !== null && !eligibleServices.has(serviceId)) continue;
+    for (const [date, type] of dates) {
+      if (type === '1' && (!latest || date > latest)) latest = date;
+    }
   }
   return latest ? latest.slice(0, 4) + '-' + latest.slice(4, 6) + '-' + latest.slice(6, 8) : null;
 }
