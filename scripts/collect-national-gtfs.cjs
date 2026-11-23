@@ -194,11 +194,11 @@ function flexServices(files, index) {
     if (seconds(row.end_pickup_drop_off_window) < seconds(row.start_pickup_drop_off_window)) continue;
     const sequence = Number(row.stop_sequence);
     if (!Number.isSafeInteger(sequence) || sequence < 0) continue;
-    if (row.pickup_booking_rule_id) usedBookingRules.add(row.pickup_booking_rule_id);
-    if (row.drop_off_booking_rule_id) usedBookingRules.add(row.drop_off_booking_rule_id);
     if (!byTrip.has(row.trip_id)) byTrip.set(row.trip_id, []);
     byTrip.get(row.trip_id).push({
       sequence, locationKey,
+      pickupBookingRuleId: row.pickup_booking_rule_id || null,
+      dropoffBookingRuleId: row.drop_off_booking_rule_id || null,
       // 1 interdit l'embarquement / débarquement. 2 et 3 nécessitent
       // réservation ou coordination, et ne constituent pas un départ garanti.
       pickup: row.pickup_type !== '1',
@@ -224,6 +224,8 @@ function flexServices(files, index) {
         if (destination.dropoff && destination.sequence > origin.sequence &&
             destination.end >= origin.start &&
             distinctStops(origin.locationKey, destination.locationKey)) {
+          if (origin.pickupBookingRuleId) usedBookingRules.add(origin.pickupBookingRuleId);
+          if (destination.dropoffBookingRuleId) usedBookingRules.add(destination.dropoffBookingRuleId);
           connected = true;
           break;
         }
