@@ -157,7 +157,13 @@ function flexServices(files, index) {
   const byTrip = new Map();
   for (const row of gtfs.csvRows(files['stop_times.txt'] || '')) {
     if (!index.tripById.has(row.trip_id)) continue;
-    if (!row.location_group_id || !groupStops.has(row.location_group_id)) continue;
+    // GTFS-Flex accepte une zone (location_group_id) ou un arrêt précis
+    // (stop_id) avec fenêtre de prise en charge. Ne pas ignorer les flux mixtes.
+    const locationKey = row.location_group_id && groupStops.has(row.location_group_id)
+      ? 'group:' + row.location_group_id
+      : row.stop_id && index.stopById.has(row.stop_id)
+        ? 'stop:' + row.stop_id : null;
+    if (!locationKey) continue;
     if (!timePattern.test(row.start_pickup_drop_off_window || '') ||
         !timePattern.test(row.end_pickup_drop_off_window || '')) continue;
     const seconds = value => {
@@ -169,7 +175,7 @@ function flexServices(files, index) {
     if (!Number.isSafeInteger(sequence) || sequence < 0) continue;
     if (!byTrip.has(row.trip_id)) byTrip.set(row.trip_id, []);
     byTrip.get(row.trip_id).push({
-      sequence, group: row.location_group_id,
+      sequence, locationKey,
       // 1 interdit l'embarquement / débarquement. 2 et 3 nécessitent
       // réservation ou coordination, et ne constituent pas un départ garanti.
       pickup: row.pickup_type !== '1',
@@ -185,7 +191,7 @@ function flexServices(files, index) {
     rows.sort((a, b) => a.sequence - b.sequence);
     if (rows.some((row, i) => row.pickup && rows.slice(i + 1).some(next =>
       next.dropoff && next.sequence > row.sequence &&
-      next.group !== row.group && next.end >= row.start))) {
+      next.locationKey !== row.locationKey && next.end >= row.start))) {
       if (trip.service_id) services.add(trip.service_id);
     }
   }
