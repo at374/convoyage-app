@@ -163,6 +163,8 @@ function dedupKey(resource) {
 // n'a pas bougé depuis le dernier manifeste, on réutilise l'entrée précédente sans retoucher au réseau.
 function shouldSkip(resource, previousEntry) {
   if (!previousEntry || !['ok', 'unchanged'].includes(previousEntry.status)) return false;
+  // Un lien de téléchargement modifié impose une nouvelle validation, même si la date PAN reste identique.
+  if (resource.url !== previousEntry.url) return false;
   if (!resource.updatedAt || !previousEntry.updatedAt) return false;
   const current = Date.parse(resource.updatedAt);
   const previous = Date.parse(previousEntry.updatedAt);
