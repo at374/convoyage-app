@@ -710,3 +710,25 @@ test('processResource revalide les manifestes anciens sans indicateurs TAD', asy
   assert.equal(entry.regularConnectedTrip, true);
   assert.equal(entry.activeRegularNext30Days, true);
 });
+
+test('processResource accepte une boucle avec arrêt de départ répété', async () => {
+  const files = {
+    ...baseFiles,
+    'stop_times.txt': 'trip_id,arrival_time,departure_time,stop_id,stop_sequence,pickup_type,drop_off_type\n' +
+      'T1,09:00:00,09:00:00,A,1,0,0\n' +
+      'T1,09:15:00,09:15:00,A,2,0,0\n' +
+      'T1,09:30:00,09:30:00,B,3,0,0\n'
+  };
+  const entry = await collector.processResource({
+    id: 'r18', datasetId: 'd18', network: 'Réseau circulaire',
+    format: 'GTFS', url: 'https://example.org/loop.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher: async () => new Response(zip(files), { headers: { 'content-type': 'application/zip' } }),
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'ok', entry.error);
+  assert.equal(entry.regularConnectedTrip, true);
+  assert.equal(entry.activeRegularNext30Days, true);
+});
