@@ -132,3 +132,35 @@ test('collect() : une archive invalide pour un réseau ne bloque pas les autres 
   assert.equal(uploads.length, 0);
   assert.match(Object.values(manifest.errors)[0], /téléchargement|validation/);
 });
+
+
+test('collect() : une archive absente de la Release est retéléchargée même si PAN indique inchangé', async () => {
+  const good = zip(baseFiles);
+  let downloads = 0;
+  const resource = { id: 'r1', format: 'GTFS', url: 'https://example.org/reseau.zip', updated_at: '2026-11-01T00:00:00Z' };
+  const fetcher = async (url) => {
+    if (String(url).includes('transport.data.gouv.fr')) return {
+      ok: true, json: async () => [{ id: 'd1', title: 'Réseau Test', resources: [resource] }]
+    };
+    downloads++;
+    return new Response(good, { headers: { 'content-type': 'application/zip' } });
+  };
+  const prior = { networks: { 'reseau-test-r1': {
+    id: 'reseau-test-r1', datasetId: 'd1', resourceId: 'r1',
+    status: 'unchanged', updatedAt: resource.updated_at,
+    sha256: collector.sha256(good)
+  } } };
+  const missing = await collector.collect({
+    fetcher, previousManifest: prior, availableAssets: new Set(), now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(downloads, 1);
+  assert.equal(missing.manifest.totals.ok, 1);
+  assert.equal(missing.uploads.length, 1);
+  downloads = 0;
+  const present = await collector.collect({
+    fetcher, previousManifest: prior, availableAssets: new Set(['reseau-test-r1.zip']),
+    now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(downloads, 0);
+  assert.equal(present.manifest.totals.unchanged, 1);
+});
