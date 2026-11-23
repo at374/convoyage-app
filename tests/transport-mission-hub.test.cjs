@@ -101,6 +101,15 @@ test('trajet à pied : proposé ≤ 3 km de marche réelle, refusé si le chemin
  const far=fakeRouter();assert.equal(await H.walkOnly({...task,to:STOP2},far,3),null);assert.equal(far.calls.length,0,'pas de requête inutile');
 });
 
+test('tarifs : indicateurs marche et trottinette périmés ne rendent jamais un bus gratuit',()=>{
+ const transit={kind:'transit',provider:'SNCF',line:'TER'};
+ assert.equal(H.priceOf({walkOnly:true,legs:[{kind:'walk'},transit]}).status,'unknown');
+ assert.equal(H.priceOf({scooterOnly:true,legs:[{kind:'scooter'},transit]}).status,'unknown');
+ assert.equal(H.priceOf({walkOnly:true,legs:[{kind:'walk'}]}).status,'free');
+ assert.equal(H.priceOf({scooterOnly:true,legs:[{kind:'scooter'}]}).status,'free');
+ assert.equal(H.priceOf({walkOnly:true,legs:[]}).status,'verified');
+});
+
 test('tarifs : EUR et CHF séparés, jamais convertis ; tarif manquant => Prix à confirmer + source',()=>{
  const mk=legs=>({legs});
  const p=H.priceOf(mk([{kind:'transit',provider:'TPG',fare:{amount:3,currency:'CHF',source:'tpg.ch'}},{kind:'transit',provider:'TAC',fare:{amount:1.6,currency:'EUR',source:'tac'}}]));
