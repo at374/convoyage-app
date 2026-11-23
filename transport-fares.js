@@ -39,7 +39,20 @@
       // Without that date, the fare validity cannot be established.
       const departure=leg?.departure;
       const timeOnly=typeof departure==='string'&&/^\d{1,3}:[0-5]\d(?::[0-5]\d)?$/.test(departure);
-      const travelDate=timeOnly?(options.travelDate??'invalid-undated-GTFS-departure'):departure??options.travelDate;
+      let travelDate=timeOnly?(options.travelDate??'invalid-undated-GTFS-departure'):departure??options.travelDate;
+      if(timeOnly&&Number(departure.split(':')[0])>=24){
+        // GTFS 24:xx/25:xx board on a later calendar day than the service date.
+        // Only a date-only service day is unambiguous; otherwise fail closed.
+        const serviceDay=options.travelDate;
+        if(typeof serviceDay==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(serviceDay)){
+          const base=Date.parse(serviceDay+'T00:00:00Z');
+          const days=Math.floor(Number(departure.split(':')[0])/24);
+          const next=base+days*86400000;
+          travelDate=Number.isFinite(base)&&Number.isFinite(next)&&
+            new Date(base).toISOString().slice(0,10)===serviceDay?
+            new Date(next).toISOString().slice(0,10):'invalid-undated-GTFS-departure';
+        }else travelDate='invalid-undated-GTFS-departure';
+      }
       // A numerical amount is not evidence: require an explicit verified source.
       // Walking and stationary transfer/wait legs are not ticketed rides.
       const nonTicketed=leg?.kind==='walk'||leg?.mode==='walk'||leg?.mode==='walking'||leg?.mode==='wa_wal'||leg?.mode==='stationary_transfer'||leg?.mode==='stationary_wait'||(leg?.kind==='scooter'&&leg?.scooterPersonal===true);
