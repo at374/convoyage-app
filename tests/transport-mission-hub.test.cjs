@@ -730,3 +730,16 @@ test('GTFS local conserve le préavis Flex après normalisation et bloque la fau
  assert.equal(assessed.scheduled,false);
  assert.match(assessed.statusDetail,/transport à la demande/);
 });
+
+test('GTFS-Flex signalé sans métadonnées de réservation reste non confirmé',()=>{
+ const [j]=H.fromGTFS([{
+  network:'TAD exemple',isFlex:true,tripId:'FLEX-2',
+  originStop:{name:'A',...STOP1},destinationStop:{name:'B',...STOP2},
+  departure:at(8,30),arrival:at(9,0)
+ }],'TAD exemple');
+ assert.equal(j.flexBooking.noticeMinutes,null);
+ const x=H.assess(j,{latestArrival:at(10,0),now:at(8,0)});
+ assert.equal(x.feasible,false);
+ assert.equal(x.scheduled,false);
+ assert.match(x.statusDetail,/préavis de réservation inconnu/);
+});
