@@ -1,6 +1,6 @@
 # Couverture tarifaire — diagnostic automatique
 
-Source : diagnostic serveur (GitHub Actions) ; relevé : 2026-11-23T18:50:26.615Z ; scénario : 2026-11-30T08:00:00+01:00.
+Source : diagnostic serveur (GitHub Actions) ; relevé : 2026-11-23T19:00:46.848Z ; scénario : 2026-11-30T08:00:00+01:00.
 
 Ce rapport est un **instantané de diagnostic**, pas une confirmation de tarifs ou de disponibilité commerciale.
 
@@ -79,6 +79,16 @@ Exemples observés sur des trajets partiellement tarifés : liste non exhaustive
 ## Couverture globale
 
 379 trajets entièrement tarifés sur 965 (39.3 %).
+
+## Distinction indispensable : prix et faisabilité
+
+Trajets avec prix complet : 379 / 965.
+Trajets déclarés faisables par le diagnostic : 93 / 965.
+Ces deux compteurs sont indépendants : un trajet tarifé peut rester non réalisable (horaires, correspondances, confirmation). Leur intersection n’est pas calculée ici ; ne pas présenter 379 comme le nombre de trajets réalisables.
+
+## Trajets partiellement tarifés
+
+64 trajets possèdent au moins un tarif, mais pas de prix total vérifié. Ils restent exclus du calcul de rentabilité.
 
 ## Priorité : portions bloquant les trajets partiellement tarifés
 
