@@ -66,7 +66,7 @@ jobs:
           else
             node scripts/collect-national-gtfs.cjs --out docs/gtfs-national-sample --release-dir gtfs-release --limit "${{ steps.scope.outputs.limit }}"
           fi
-          node -e 'const p=process.env.LIMIT==="0"?"./docs/gtfs-national/manifest.json":"./docs/gtfs-national-sample/manifest.json";const m=require(p);console.log(m.totals);if(!m.totals.found)throw Error("Catalogue PAN vide");if(!(m.totals.ok>0||m.totals.unchanged>0))throw Error("Aucun GTFS validé : collecte en échec");if(m.totals.error)console.error("Réseaux en erreur :",Object.values(m.errors));'
+          node -e 'const p=process.env.LIMIT==="0"?"./docs/gtfs-national/manifest.json":"./docs/gtfs-national-sample/manifest.json";const m=require(p);console.log(m.totals);if(!m.totals.found)throw Error("Catalogue PAN vide");const valid=Object.values(m.networks).filter(n=>["ok","unchanged"].includes(n.status));const active=valid.filter(n=>n.activeNext30Days===true);console.log("GTFS valides :",valid.length,"; avec service dans 30 jours :",active.length);if(!valid.length)throw Error("Aucun GTFS validé : collecte en échec");if(!active.length)throw Error("Aucun GTFS avec service confirmé dans les 30 prochains jours");if(m.totals.error)console.error("Réseaux en erreur :",Object.values(m.errors));'
       - name: Conserver le rapport de collecte pour audit
         if: always()
         uses: actions/upload-artifact@v4
