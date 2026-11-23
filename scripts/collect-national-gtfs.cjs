@@ -147,12 +147,21 @@ function flexServices(files, index) {
   for (const row of gtfs.csvRows(files['location_groups.txt'] || '')) {
     if (row.location_group_id) groups.add(row.location_group_id);
   }
-  const groupStops = new Set();
+  const groupStops = new Map();
   for (const row of gtfs.csvRows(files['location_group_stops.txt'] || '')) {
     if (groups.has(row.location_group_id) && index.stopById.has(row.stop_id)) {
-      groupStops.add(row.location_group_id);
+      if (!groupStops.has(row.location_group_id)) groupStops.set(row.location_group_id, new Set());
+      groupStops.get(row.location_group_id).add(row.stop_id);
     }
   }
+  const locations = key => key.startsWith('group:')
+    ? groupStops.get(key.slice(6)) || new Set()
+    : new Set([key.slice(5)]);
+  const distinctStops = (origin, destination) => {
+    const from = locations(origin), to = locations(destination);
+    for (const a of from) for (const b of to) if (a !== b) return true;
+    return false;
+  };
   const timePattern = /^\d{1,3}:[0-5]\d:[0-5]\d$/;
   const byTrip = new Map();
   for (const row of gtfs.csvRows(files['stop_times.txt'] || '')) {
@@ -191,7 +200,7 @@ function flexServices(files, index) {
     rows.sort((a, b) => a.sequence - b.sequence);
     if (rows.some((row, i) => row.pickup && rows.slice(i + 1).some(next =>
       next.dropoff && next.sequence > row.sequence &&
-      next.locationKey !== row.locationKey && next.end >= row.start))) {
+      distinctStops(row.locationKey, next.locationKey) && next.end >= row.start))) {
       if (trip.service_id) services.add(trip.service_id);
     }
   }
