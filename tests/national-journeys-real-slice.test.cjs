@@ -61,3 +61,16 @@ test('paramètres de recherche invalides : aucun téléchargement national',asyn
  }
  assert.equal(requests,0);
 });
+
+test('fenêtre impossible : téléchargement national évité et aucun trajet',async()=>{
+ let requests=0;
+ const result=await journeys.loadAndSearch({
+  operator:'sncf',resource:{url:'https://example.org/gtfs.zip',format:'GTFS'},
+  fetcher:async()=>{requests++;throw Error('download should not start');},
+  date:'2026-11-30',from:{lat:45.9,lon:6.12},to:{lat:45.76,lon:4.86},
+  earliestDeparture:'13:00',latestArrival:'12:59:59'
+ });
+ assert.equal(requests,0);
+ assert.deepEqual(result.journeys,[]);
+ assert.equal(result.skippedDownload,'impossible-time-window');
+});
