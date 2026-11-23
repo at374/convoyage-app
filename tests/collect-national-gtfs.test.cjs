@@ -1065,3 +1065,23 @@ test('GTFS-Flex: un préavis vide reste inconnu et non égal à zéro', async ()
   assert.equal(entry.flexBookingNoticeMaxMinutes, null);
   assert.equal(entry.flexBookingNoticeComplete, false);
 });
+
+test('GTFS-Flex refuse les types embarquement et débarquement inconnus', async () => {
+  const files = {
+    ...baseFiles,
+    'stop_times.txt': 'trip_id,stop_sequence,stop_id,start_pickup_drop_off_window,end_pickup_drop_off_window,pickup_type,drop_off_type\n' +
+      'T1,1,A,09:00:00,10:00:00,9,1\n' +
+      'T1,2,B,09:30:00,11:00:00,1,9\n'
+  };
+  const entry = await collector.processResource({
+    id: 'flex-invalid-types', datasetId: 'flex', network: 'TAD types invalides',
+    format: 'GTFS', url: 'https://example.org/flex-invalid-types.zip',
+    updatedAt: '2026-11-01T00:00:00Z'
+  }, {
+    fetcher: async () => new Response(zip(files), { headers: { 'content-type': 'application/zip' } }),
+    maxBytes: 200 * 1024 * 1024, timeoutMs: 3000,
+    now: '2026-11-23T00:00:00Z'
+  });
+  assert.equal(entry.status, 'error');
+  assert.match(entry.error, /aucune course régulière ou GTFS-Flex structurée exploitable/);
+});
