@@ -812,6 +812,25 @@ function makeProviders(r,opts={}){
      }
      const feed=await promise;
      if(signal?.aborted)return [];
+     // GTFS-Flex metadata: course and booking windows are discovered automatically
+     // from the same regional feed, never converted into invented fixed departures.
+     // Only a separately supplied, operator-confirmed pickup AND arrival may yield a journey.
+     const flexRows=[];
+     if(r.CPGTFSFlexCourses?.extract&&feed.files?.['stop_times.txt']){
+      try{
+       const origin=pt(task.from),destination=pt(task.to);
+       const candidates=r.CPGTFSFlexCourses.extract(feed.files,feed.index,date,{limit:2000})
+        .filter(c=>c.fromStops?.some(s=>s.point&&meters(origin,s.point)<=3000)&&
+                   c.toStops?.some(s=>s.point&&meters(destination,s.point)<=3000));
+       if(typeof opts.onFlexCandidates==='function'&&candidates.length&&!signal?.aborted)
+        opts.onFlexCandidates({task,network:name,candidates});
+       const bookings=Array.isArray(opts.flexBookings)?opts.flexBookings:[];
+       for(const c of candidates)for(const booking of bookings){
+        const confirmed=r.CPGTFSFlexCourses.toHubRow(c,booking);
+        if(confirmed){flexRows.push(confirmed);break;}
+       }
+      }catch(_){/* Flex metadata unavailable: normal GTFS search remains operational. */}
+     }
      const rows=attachGTFSFares(feed,r.CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,pt(task.from),pt(task.to),3000),r.CPGTFSFares);
      const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
      // Select the best boarding/alighting stop pair for each actual vehicle
@@ -836,7 +855,7 @@ function makeProviders(r,opts={}){
       // départs de la journée (bus de l'aube inutiles pour une mission à 10 h).
       .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,30)
       .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
-     return fromGTFS(filtered,name);
+     return fromGTFS(filtered.concat(flexRows),name);
     }};
   }
  }
