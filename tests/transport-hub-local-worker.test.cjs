@@ -37,3 +37,11 @@ test('runCorrespondances rend la main entre deux paires de réseaux (23/11/2026 
 test('le worker est chargé avec une version d’URL (cache-busting), alignée avec sw.js',()=>{
  assert.match(hub,/new r\.Worker\('transport-hub-local-worker\.js\?v=[^']+'\)/);
 });
+test('les paires de réseaux non adjacentes sont filtrées avant crossNetworkTrips, worker et repli sur le fil principal (23/11/2026 : « toutes les recherches sont trop longues »)',()=>{
+ // bbox transmise au worker, pour que bboxesNear puisse filtrer les paires non pertinentes là-bas.
+ assert.match(hub,/nets:nets\.map\(n=>\(\{id:n\[0\],name:n\[1\],urls:urlsFor\(n\[2\]\),bbox:n\[3\]\}\)\)/);
+ // Filtre appliqué aussi dans le repli sur le fil principal, avant l'appel coûteux.
+ assert.match(hub,/if\(!r\.CPGTFSFederation\.bboxesNear\(nets\[i\]\[3\],nets\[j\]\[3\]\)\)continue;/);
+ // Filtre appliqué dans le worker, avant crossNetworkTrips, avec repli sûr (true) si bbox absente.
+ assert.match(w,/if\(!CPGTFSFederation\.bboxesNear\(loaded\[i\]\.__bbox,loaded\[j\]\.__bbox\)\)/);
+});

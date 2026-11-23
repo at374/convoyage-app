@@ -1,7 +1,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const g=require('../transport-gtfs-index.js');
-const {crossNetworkTrips}=require('../transport-gtfs-federation.js');
+const {crossNetworkTrips,bboxesNear}=require('../transport-gtfs-federation.js');
 function feed(network,side,{date='20261102',pickup='0',offset=0}={}){
  const files={
   'agency.txt':'agency_id,agency_name,agency_timezone\nAgency,Fixture,Europe/Paris',
@@ -190,4 +190,20 @@ test('federation never spends more than the shared leg budget across multiple da
  assert.ok(result.journeys.length<=1);
  // A second date must not be queried with a negative remaining maxLegs.
  assert.equal(typeof result.searchTruncated,'boolean');
+});
+
+test('bboxesNear exclut les réseaux dont les emprises ne se touchent nulle part (23/11/2026 : « toutes les recherches sont trop longues » — filtrer les paires de réseaux non adjacentes avant le calcul coûteux de crossNetworkTrips)',()=>{
+ const tcl=[45.55,4.6,46.02,5.1],sibra=[45.7,5.9,46.1,6.5];              // TCL Lyon / Sibra Annecy : > 60 km d'écart réel
+ assert.equal(bboxesNear(tcl,sibra),false);
+ const carsHauteSavoie=[45.639,5.792,46.409,6.957];                      // Cars Région Haute-Savoie : chevauche bien Sibra
+ assert.equal(bboxesNear(sibra,carsHauteSavoie),true);
+ const sncf=[44.0,3.6,46.7,7.4];                                          // emprise régionale large : touche tout
+ assert.equal(bboxesNear(tcl,sncf),true);assert.equal(bboxesNear(sibra,sncf),true);
+});
+test('bboxesNear respecte la marge fournie et ne filtre jamais sans emprise valide',()=>{
+ assert.equal(bboxesNear([0,0,1,1],[1.05,0,2,1],0.1),true);    // juste adjacentes avec la marge
+ assert.equal(bboxesNear([0,0,1,1],[1.2,0,2,1],0.1),false);    // nettement séparées même avec la marge
+ assert.equal(bboxesNear(null,[0,0,1,1]),true);
+ assert.equal(bboxesNear([0,0,1,1],undefined),true);
+ assert.equal(bboxesNear([0,0,1,'x'],[0,0,1,1]),true);
 });

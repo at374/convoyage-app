@@ -62,7 +62,7 @@ const runCorrespondances=async data=>{
    // 21/11/2026 : datasetId doit être propagé dans source (CPGTFSFederation.crossNetworkTrips exige des
    // identifiants distincts par réseau), et networkUrls/serviceDate sont attachés à chaque trajet/correspondance
    // ci-dessous pour que le bouton « Tous les horaires » fonctionne aussi sur les résultats de correspondance (Y22).
-   return {...feed,source:{...feed.source,network:n.name,datasetId:n.id},__urls:n.urls};
+   return {...feed,source:{...feed.source,network:n.name,datasetId:n.id},__urls:n.urls,__bbox:n.bbox};
   }catch(_){return null;}
  }))).filter(Boolean);
  if(loaded.length<1)return [];
@@ -77,6 +77,11 @@ const runCorrespondances=async data=>{
   }catch(_){}
   await yieldToOtherPendingRequests();
   for(let j=i+1;j<loaded.length;j++){
+   // 23/11/2026 (Laurent : « toutes les recherches sont trop longues ») : deux réseaux dont les emprises ne se
+   // touchent nulle part ne peuvent produire aucune correspondance à transferRadiusMeters (150 m par défaut) —
+   // voir le commentaire de bboxesNear (transport-gtfs-federation.js). On évite alors le calcul (jusqu'à 1,2 s,
+   // budget de temps propre à crossNetworkTrips) pour cette paire.
+   if(!CPGTFSFederation.bboxesNear(loaded[i].__bbox,loaded[j].__bbox)){await yieldToOtherPendingRequests();continue;}
    try{
     const c=CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,window,{radiusMeters:crossNetworkRadius,maxWaitMinutes});
     rows.push(...c.journeys.map(x=>({...x,legs:x.legs.map(l=>({...l,

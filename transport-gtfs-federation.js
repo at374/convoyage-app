@@ -8,6 +8,21 @@ function connectionServiceDates(date,days=[date]){
  for(const day of days)clock.serviceTimestamp(day,'12:00:00','UTC');
  return [date,...new Set(days.filter(day=>day!==date))];
 }
+// 23/11/2026 (Laurent : « toutes les recherches sont trop longues » — jusqu'à 28 paires de réseaux passées
+// à crossNetworkTrips, chacune bornée à ~1,2 s par son propre budget de temps, soit jusqu'à ~34 s de calcul
+// pur rien que pour les paires : beaucoup de ces paires concernent deux réseaux locaux dont les emprises
+// géographiques ne se touchent nulle part (ex. TCL Lyon et Sibra Annecy, séparés de plus de 60 km) — aucune
+// correspondance à moins de transferRadiusMeters (150 m par défaut) n'est alors possible, quel que soit le
+// contenu réel des flux. bboxesNear() filtre ces paires AVANT le calcul coûteux, sur la seule base des
+// emprises [minLat,minLon,maxLat,maxLon] déjà connues (transport-mission-hub.js, localNetworks), avec une
+// marge généreuse (0,1° ≈ 8-11 km en France) par rapport aux rayons réels utilisés (≤ 5 km) : par prudence,
+// une emprise manquante ou invalide ne filtre jamais (on calcule la paire comme avant).
+function bboxesNear(a,b,marginDeg=0.1){
+ if(!Array.isArray(a)||a.length!==4||!Array.isArray(b)||b.length!==4)return true;
+ const [aMinLat,aMinLon,aMaxLat,aMaxLon]=a,[bMinLat,bMinLon,bMaxLat,bMaxLon]=b;
+ if([aMinLat,aMinLon,aMaxLat,aMaxLon,bMinLat,bMinLon,bMaxLat,bMaxLon].some(n=>!Number.isFinite(n)))return true;
+ return aMinLat-marginDeg<=bMaxLat&&bMinLat-marginDeg<=aMaxLat&&aMinLon-marginDeg<=bMaxLon&&bMinLon-marginDeg<=aMaxLon;
+}
 function crossNetworkTrips(feeds,date,origin,destination,window,options={}){
  if(!options||typeof options!=='object'||Array.isArray(options))throw new Error('Invalid federation options');
  const {radiusMeters=700,transferRadiusMeters=150,minTransferMinutes=5,maxWaitMinutes=120,
@@ -98,7 +113,7 @@ function crossNetworkTrips(feeds,date,origin,destination,window,options={}){
  }
  return {journeys:journeys.sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure)),searchTruncated};
 }
-const api={crossNetworkTrips,connectionServiceDates};
+const api={crossNetworkTrips,connectionServiceDates,bboxesNear};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPGTFSFederation=api;
 })(typeof window!=='undefined'?window:globalThis);

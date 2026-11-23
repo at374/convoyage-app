@@ -787,7 +787,9 @@ test('Android PWA offline cache retains the transport worker and app shell',()=>
  for(const asset of ['transport-gtfs-worker.js','transport-gtfs-loader.js',
   'transport-gtfs-federation.js','transport-gtfs-index.js','transport-gtfs-time.js',
   'transport-gtfs-worker-client.js','transport-walking.js','manifest.webmanifest']){
-  assert.ok(worker.includes("'"+asset+"'"),'Missing offline transport asset: '+asset);
+  // 23/11/2026 : transport-gtfs-federation.js porte désormais un suffixe ?v=... de cache-busting ; les autres
+  // fichiers de cette liste n'en ont jamais eu (asset non versionné) — on tolère les deux cas ici.
+  assert.ok(new RegExp("'"+asset.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+"(\\?v=[^']+)?'").test(worker),'Missing offline transport asset: '+asset);
  }
  assert.match(worker,/e\.request\.method !== 'GET'/);
  assert.match(worker,/u\.origin !== location\.origin/);

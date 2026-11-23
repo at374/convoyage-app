@@ -1076,7 +1076,7 @@ function makeProviders(r,opts={}){
    // 23/11/2026 : version ajoutée à l'URL du worker (jusqu'ici absente) pour que le correctif de
    // cession entre paires de réseaux (runCorrespondances, transport-hub-local-worker.js) soit bien
    // rechargé par les navigateurs/service worker en cache, au même titre que les autres fichiers.
-   try{w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js?v=worker-yield-correspondances-20261123a');}
+   try{w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js?v=bboxesnear-correspondances-20261123a');}
    catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
    r.__cpHubWorkerPending=new Map();
    const fail=e=>{r.__cpHubWorkerOffUntil=Date.now()+10000;r.__cpHubWorker=null;for(const q of r.__cpHubWorkerPending.values())q.reject(e);r.__cpHubWorkerPending.clear();try{w.terminate();}catch(_){}};
@@ -1563,7 +1563,7 @@ function makeProviders(r,opts={}){
       // principal (même résultat) en secours.
       let rows=null;
       if(canWorker()){
-       try{rows=await workerCorrespondances({nets:nets.map(n=>({id:n[0],name:n[1],urls:urlsFor(n[2])})),date,from,to,window:scanW,realWindow:window,sameNetworkRadius,crossNetworkRadius,maxWaitMinutes});}
+       try{rows=await workerCorrespondances({nets:nets.map(n=>({id:n[0],name:n[1],urls:urlsFor(n[2]),bbox:n[3]})),date,from,to,window:scanW,realWindow:window,sameNetworkRadius,crossNetworkRadius,maxWaitMinutes});}
        catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}
       }
       if(rows===null){
@@ -1596,6 +1596,9 @@ function makeProviders(r,opts={}){
          // d'un bloc, que le worker fonctionne ou non.
          await new Promise(res=>setTimeout(res,0));
          if(signal?.aborted)return [];
+         // 23/11/2026 : même filtre géographique que le worker (voir bboxesNear, transport-gtfs-federation.js)
+         // — deux réseaux dont les emprises ne se touchent nulle part ne peuvent produire aucune correspondance.
+         if(!r.CPGTFSFederation.bboxesNear(nets[i][3],nets[j][3]))continue;
          try{
           const c=r.CPGTFSFederation.crossNetworkTrips([loaded[i],loaded[j]],date,from,to,scanW,{radiusMeters:crossNetworkRadius,maxWaitMinutes});
           const uI=netUrls.get(nets[i][0])||[],uJ=netUrls.get(nets[j][0])||[];
