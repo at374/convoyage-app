@@ -217,3 +217,13 @@ test('walking access and explicitly personal scooter do not create phantom ticke
  assert.equal(fare([{kind:'scooter',scooterPersonal:true},bus]).totalEUR,1.2);
  assert.equal(fare([{kind:'scooter'},bus]).known,false,'trottinette sans preuve de propriété : prix non vérifié');
 });
+
+test('GTFS time-only departure requires dated itinerary for verified fare',()=>{
+ const leg={provider:'SIBRA',mode:'pt_pub_bus',departure:'09:15:00',
+  fareVerified:true,fareSource:'Tarif officiel',verifiedPriceEUR:2,
+  fareValidFrom:'2026-07-01',fareValidUntil:'2027-06-30'};
+ assert.equal(fare([leg]).known,false,'sans date de mission : ne pas valider un tarif');
+ assert.equal(fare([leg],{travelDate:'2026-11-30'}).totalEUR,2);
+ assert.equal(fare([leg],{travelDate:'2028-11-30'}).known,false);
+ assert.equal(fare([{...leg,departure:'2026-11-30T09:15:00+01:00'}],{travelDate:'2028-11-30'}).totalEUR,2);
+});
