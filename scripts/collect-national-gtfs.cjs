@@ -221,12 +221,13 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     previousEntry.lastServiceDate < String(now).slice(0, 10);
   // activeNext30Days est une projection glissante : ne pas conserver indéfiniment
   // un résultat calculé à une date ancienne, même si le catalogue PAN n'a pas changé.
-  const checkedAt = Date.parse(previousEntry?.lastCheckedAt || '');
+  const validatedAt = previousEntry?.lastValidatedAt || previousEntry?.lastCheckedAt;
+  const checkedAt = Date.parse(validatedAt || '');
   const currentTime = Date.parse(now);
-  const staleActivity = Number.isFinite(checkedAt) && Number.isFinite(currentTime) &&
-    (currentTime < checkedAt || currentTime - checkedAt >= 7 * 86400000);
+  const staleActivity = !Number.isFinite(checkedAt) || !Number.isFinite(currentTime) ||
+    currentTime < checkedAt || currentTime - checkedAt >= 7 * 86400000;
   if (archiveAvailable && !expiredCalendar && !staleActivity && shouldSkip(resource, previousEntry)) {
-    return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now };
+    return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now, lastValidatedAt: validatedAt };
   }
   let bytes;
   try {
@@ -236,7 +237,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   }
   const hash = sha256(bytes);
   if (archiveAvailable && !expiredCalendar && !staleActivity && previousEntry && ['ok', 'unchanged'].includes(previousEntry.status) && previousEntry.sha256 === hash) {
-    return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now };
+    return { ...previousEntry, ...base, status: 'unchanged', lastCheckedAt: now, lastValidatedAt: validatedAt };
   }
   let extracted;
   try {
@@ -313,6 +314,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   return {
     ...base,
     status: 'ok',
+    lastValidatedAt: now,
     sha256: hash,
     sizeBytes: bytes.length,
     routes: index.counts.routes,
