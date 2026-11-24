@@ -136,6 +136,18 @@ MIRROR = [
     {'id': 'moova-vesoul', 'network': 'moova Vesoul',
      'dataset': 'horaires-theoriques-du-reseau-moova-communaute-dagglomeration-de-vesoul-gtfs',
      'url': 'https://transport.data.gouv.fr/resources/81222/download', 'bounds': [47.59, 6.10, 47.68, 6.19]},
+    {'id': 'ca-roule-autun', 'network': 'ça roule Autun',
+     'dataset': 'arrets-lignes-regulieres-reseau-de-transport-urbain-a-autun',
+     'url': 'https://static.data.gouv.fr/resources/arrets-lignes-regulieres-reseau-de-transport-urbain-a-autun/20251030-071946/ligne-a-autun-ca-roule.zip',
+     'bounds': [46.90, 4.24, 47.02, 4.39],
+     'license': 'ODbL 1.0 + conditions particulières PAN',
+     'publisher': 'Communauté de communes du Grand Autunois Morvan'},
+    {'id': 'papillon-cosne', 'network': 'Papillon Cosne-Cours-sur-Loire',
+     'dataset': 'donnees-du-reseau-de-bus-papillon-a-cosne-cours-sur-loire',
+     'url': 'https://transport.data.gouv.fr/resources/83859/download',
+     'bounds': [47.36, 2.85, 47.46, 3.00],
+     'license': 'Licence Ouverte 2.0',
+     'publisher': 'Communauté de communes Cœur de Loire'},
     {'id': 'tac-annemasse', 'network': 'TAC Annemasse', 'url': 'https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip', 'bounds': [46.1, 5.98, 46.27, 6.42]},
     {'id': 'synchro-chambery', 'network': 'Synchro Bus Chambéry', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/a81cdf4b-5a70-43c9-8803-cef0430ed170', 'bounds': [45.45, 5.75, 45.75, 6.15]},
     {'id': 'ondea-grand-lac', 'network': 'Ondéa Aix-les-Bains', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b4e8d98c-e17a-4fb0-857f-8cb618039b2a', 'bounds': [45.6, 5.75, 45.85, 6.05]},
@@ -420,7 +432,8 @@ def main():
                 with open(os.path.join(args.out, name), 'wb') as f:
                     f.write(data)
                 manifest['networks'][spec['id']] = {'network': spec['network'], 'file': name, 'sha256': hashlib.sha256(data).hexdigest(),
-                                                    'bytes': len(data), 'bounds': spec['bounds'], 'origin': origin, 'trips': trips}
+                                                    'bytes': len(data), 'bounds': spec['bounds'], 'origin': origin, 'trips': trips,
+                                                    **{key: spec[key] for key in ('license', 'publisher') if spec.get(key)}}
             except BaseException as e:
                 manifest['errors'][spec['id']] = 'erreur : %s' % e
         for spec in FILTERED_MIRROR:

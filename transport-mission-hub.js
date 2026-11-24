@@ -767,6 +767,8 @@ function makeProviders(r,opts={}){
    ['grandole', 'Grandole Mobilités', 'grandole-dole.zip', [47.02,5.42,47.12,5.53]],
    ['cote_bus', 'Côte&Bus Beaune', 'cote-bus-beaune.zip', [46.98,4.78,47.08,4.90]],
    ['moova', 'moova Vesoul', 'moova-vesoul.zip', [47.59,6.10,47.68,6.19]],
+   ['ca_roule', 'ça roule Autun', 'ca-roule-autun.zip', [46.90,4.24,47.02,4.39]],
+   ['papillon', 'Papillon Cosne-Cours-sur-Loire', 'papillon-cosne.zip', [47.36,2.85,47.46,3.00]],
    ['ruban', "Ruban Bourgoin-Jallieu", 'ruban-bourgoin.zip', [45.48,5.08,45.71,5.4]],
    ['lva', "L'va Vienne", 'lva-vienne.zip', [45.39,4.59,45.69,5.49]],
    ['colibri', "Colibri Miribel", 'colibri-miribel.zip', [45.8,4.89,45.85,5.04]],
