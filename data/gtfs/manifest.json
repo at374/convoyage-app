@@ -2921,6 +2921,22 @@
     49.25,
     3.6
    ]
+  },
+  "mreso-voironnais": {
+   "network": "M Réso — Pays Voironnais",
+   "file": "mreso-voironnais.zip",
+   "sha256": "5ccba65a22d9062bf078010d067ef75729dd74f2ae362497c166815bc7e9a13a",
+   "bytes": 873035,
+   "bounds": [
+    45.25469,
+    5.48328,
+    45.53061,
+    5.71009
+   ],
+   "origin": "https://data.mobilites-m.fr/api/gtfs/TPV",
+   "trips": 822,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Syndicat Mixte des Mobilités de l’Aire Grenobloise"
   }
  },
  "errors": {},
