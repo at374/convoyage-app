@@ -259,7 +259,7 @@ MIRROR = [
      'dataset': 'arrets-lignes-regulieres-reseau-de-transport-urbain-a-autun',
      'url': 'https://static.data.gouv.fr/resources/arrets-lignes-regulieres-reseau-de-transport-urbain-a-autun/20251030-071946/ligne-a-autun-ca-roule.zip',
      'bounds': [46.90, 4.24, 47.02, 4.39],
-     'license': 'ODbL 1.0 + conditions particulières PAN',
+     'license': 'ODbL 1.0 + conditions particulières PAN', 'allow_mobile_sharding': True,
      'publisher': 'Communauté de communes du Grand Autunois Morvan'},
     {'id': 'papillon-cosne', 'network': 'Papillon Cosne-Cours-sur-Loire',
      'dataset': 'donnees-du-reseau-de-bus-papillon-a-cosne-cours-sur-loire',
@@ -509,7 +509,7 @@ def agencies_report(z):
     return [{'agency_id': a.get('agency_id'), 'agency_name': a.get('agency_name'), 'routes': count.get(a.get('agency_id') or '', 0)} for a in agencies]
 
 
-def extract(z, spec):
+def extract(z, spec, allow_oversize=False):
     pat = re.compile(spec['pattern'])
     afields, agencies = read_table(z, 'agency.txt')
     keep_ag = [a for a in agencies if pat.search(norm(a.get('agency_name'))) or pat.search(norm(a.get('agency_id')))]
@@ -567,9 +567,99 @@ def extract(z, spec):
                 fares = [x for x in fares if (x.get('agency_id') or '') in ag_ids or len(fares) == 1]
             write_table(out, 'fare_attributes.txt', ff, fares)
     data = buf.getvalue()
-    if len(data) > MAX_OUT:
+    if len(data) > MAX_OUT and not allow_oversize:
         return None, 'extrait trop volumineux (%d octets)' % len(data)
     return data, {'agencies': [a.get('agency_name') for a in keep_ag], 'routes': len(routes), 'trips': len(trips), 'stops': len(stops), 'fares': bool(ff)}
+
+
+
+def archive_needs_sharding(data):
+    """True si une archive dépasserait les limites standard du chargeur mobile."""
+    with zipfile.ZipFile(io.BytesIO(data)) as z:
+        entries = [item for item in z.infolist() if not item.is_dir()]
+        return (sum(item.file_size for item in entries) > 128 * 1024 * 1024 or
+                any(item.file_size > 64 * 1024 * 1024 for item in entries))
+
+
+def iter_gtfs_shards(data, target_stop_times_bytes=35 * 1024 * 1024):
+    """Émet des archives GTFS complètes par groupes de courses, sans scinder une course."""
+    with zipfile.ZipFile(io.BytesIO(data)) as source:
+        af, agencies = read_table(source, 'agency.txt')
+        rf, routes = read_table(source, 'routes.txt')
+        tf, trips = read_table(source, 'trips.txt')
+        sf, stops = read_table(source, 'stops.txt')
+        stf, times = read_table(source, 'stop_times.txt')
+        if not trips or not times:
+            raise ValueError('aucune course à segmenter')
+        route_by_id = {row['route_id']: row for row in routes}
+        trip_by_id = {row['trip_id']: row for row in trips}
+        times_by_trip = {}
+        for row in times:
+            times_by_trip.setdefault(row['trip_id'], []).append(row)
+        stop_by_id = {row['stop_id']: row for row in stops}
+        parent_ids = {stop_by_id[row['stop_id']].get('parent_station')
+                      for rows in times_by_trip.values() for row in rows
+                      if row.get('stop_id') in stop_by_id and stop_by_id[row['stop_id']].get('parent_station')}
+        stop_ids_by_trip = {trip_id: {row.get('stop_id') for row in rows}
+                            for trip_id, rows in times_by_trip.items()}
+        # Regroupe d'abord les courses entières ; les tables de référence sont répliquées par fragment.
+        chunks, current, size = [], [], 0
+        for trip in trips:
+            trip_id = trip.get('trip_id')
+            rows = times_by_trip.get(trip_id, [])
+            row_size = sum(len((',' .join(str(row.get(field) or '') for field in stf) + '\\n').encode('utf-8')) for row in rows)
+            if current and size + row_size > target_stop_times_bytes:
+                chunks.append(current); current, size = [], 0
+            current.append(trip_id); size += row_size
+        if current:
+            chunks.append(current)
+        _, calendars = {}, {}
+        calendar_tables = {}
+        for cal in ('calendar.txt', 'calendar_dates.txt'):
+            fields, rows = read_table(source, cal)
+            if fields:
+                calendar_tables[cal] = (fields, rows)
+        ff, fares = read_table(source, 'fare_attributes.txt')
+        fare_rules_fields, fare_rules = read_table(source, 'fare_rules.txt')
+        feed_fields, feed_rows = read_table(source, 'feed_info.txt')
+        for trip_ids in chunks:
+            trip_set = set(trip_ids)
+            trip_rows = [trip_by_id[trip_id] for trip_id in trip_ids if trip_id in trip_by_id]
+            route_ids = {row.get('route_id') for row in trip_rows}
+            service_ids = {row.get('service_id') for row in trip_rows}
+            shard_times = [row for trip_id in trip_ids for row in times_by_trip.get(trip_id, [])]
+            shard_stop_ids = {row.get('stop_id') for row in shard_times}
+            shard_parents = {stop_by_id[sid].get('parent_station') for sid in shard_stop_ids
+                             if sid in stop_by_id and stop_by_id[sid].get('parent_station')}
+            shard_stops = [row for row in stops if row.get('stop_id') in shard_stop_ids | shard_parents]
+            buf = io.BytesIO()
+            with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as out:
+                write_table(out, 'agency.txt', af, agencies)
+                write_table(out, 'routes.txt', rf, [row for row in routes if row.get('route_id') in route_ids])
+                write_table(out, 'trips.txt', tf, trip_rows)
+                write_table(out, 'stop_times.txt', stf, shard_times)
+                write_table(out, 'stops.txt', sf, shard_stops)
+                for cal, (fields, rows) in calendar_tables.items():
+                    write_table(out, cal, fields, [row for row in rows if row.get('service_id') in service_ids])
+                if feed_fields:
+                    write_table(out, 'feed_info.txt', feed_fields, feed_rows)
+                if ff:
+                    relevant_rules = [row for row in (fare_rules or []) if not row.get('route_id') or row.get('route_id') in route_ids]
+                    fare_ids = {row.get('fare_id') for row in relevant_rules}
+                    relevant_fares = [row for row in fares if row.get('fare_id') in fare_ids]
+                    if fare_rules_fields:
+                        write_table(out, 'fare_rules.txt', fare_rules_fields, relevant_rules)
+                    write_table(out, 'fare_attributes.txt', ff, relevant_fares or fares)
+            shard = buf.getvalue()
+            with zipfile.ZipFile(io.BytesIO(shard)) as check:
+                validate(check)
+                expanded = sum(item.file_size for item in check.infolist() if not item.is_dir())
+                largest = max((item.file_size for item in check.infolist() if not item.is_dir()), default=0)
+            if expanded > 128 * 1024 * 1024 or largest > 64 * 1024 * 1024 or len(shard) > MAX_OUT:
+                raise ValueError('fragment GTFS toujours supérieur aux limites du chargeur')
+            yield shard, {'trips': len(trip_rows), 'stop_times': len(shard_times),
+                          'routes': len(route_ids), 'stops': len(shard_stops)}
+
 
 
 def filter_by_bounds(z, spec):
@@ -750,24 +840,44 @@ def main():
                         spec = {'pattern': agency.get('agency_pattern') or re.escape(norm(agency['agency_name'])),
                                 'exclude_route_types': bundle.get('exclude_route_types', [])}
                         try:
-                            data, info = extract(source_zip, spec)
+                            data, info = extract(source_zip, spec, allow_oversize=bool(bundle.get('allow_mobile_sharding')))
                             if data is None:
                                 manifest['errors'][agency['id']] = info
                                 continue
                             with zipfile.ZipFile(io.BytesIO(data)) as extracted:
                                 trips, stop_times = validate(extracted)
                                 bounds = stop_bounds(extracted)
-                            name = agency['id'] + '.zip'
-                            with open(os.path.join(args.out, name), 'wb') as output:
-                                output.write(data)
-                            manifest['networks'][agency['id']] = {
-                                'network': agency['network'], 'file': name,
-                                'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data),
-                                'bounds': bounds, 'origin': origin,
-                                'routes': info['routes'], 'trips': trips, 'stop_times': stop_times,
-                                'stops': info['stops'], 'agencies': info['agencies'],
-                                'fares': info['fares'], 'license': bundle['license'],
-                                'publisher': bundle['publisher']}
+                            if bundle.get('allow_mobile_sharding') and archive_needs_sharding(data):
+                                shard_iter = iter_gtfs_shards(data)
+                                shard_files, shard_hashes, total_bytes = [], [], 0
+                                for part, (shard_data, shard_info) in enumerate(shard_iter, 1):
+                                    name = '%s-part-%02d.zip' % (agency['id'], part)
+                                    with open(os.path.join(args.out, name), 'wb') as output:
+                                        output.write(shard_data)
+                                    shard_files.append(name); shard_hashes.append(hashlib.sha256(shard_data).hexdigest())
+                                    total_bytes += len(shard_data)
+                                    del shard_data
+                                if not shard_files:
+                                    raise ValueError('le découpage n’a produit aucun fragment')
+                                entry = {'network': agency['network'], 'file': shard_files[0], 'files': shard_files,
+                                         'sha256': shard_hashes[0], 'sha256_files': shard_hashes,
+                                         'bytes': total_bytes, 'bounds': bounds, 'origin': origin,
+                                         'routes': info['routes'], 'trips': trips, 'stop_times': stop_times,
+                                         'stops': info['stops'], 'agencies': info['agencies'], 'fares': info['fares'],
+                                         'license': bundle['license'], 'publisher': bundle['publisher'],
+                                         'sharded': True}
+                            else:
+                                name = agency['id'] + '.zip'
+                                with open(os.path.join(args.out, name), 'wb') as output:
+                                    output.write(data)
+                                entry = {'network': agency['network'], 'file': name,
+                                         'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data),
+                                         'bounds': bounds, 'origin': origin,
+                                         'routes': info['routes'], 'trips': trips, 'stop_times': stop_times,
+                                         'stops': info['stops'], 'agencies': info['agencies'],
+                                         'fares': info['fares'], 'license': bundle['license'],
+                                         'publisher': bundle['publisher']}
+                            manifest['networks'][agency['id']] = entry
                             del data
                         except Exception as e:  # échec isolé : poursuivre les autres agences
                             manifest['errors'][agency['id']] = 'erreur : %s' % e
