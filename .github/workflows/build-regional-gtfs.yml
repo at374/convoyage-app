@@ -23,6 +23,7 @@ on:
       - 'tests/pays-de-la-loire-real-feeds.test.cjs'
       - 'tests/bretagne-real-agency-feeds.test.cjs'
       - 'tests/idfm-real-agency-feeds.test.cjs'
+      - 'tests/paca-zou-express-real-feed.test.cjs'
       - 'tests/paca-zou-proximity-real-feed.test.cjs'
       - 'tests/occitanie-lio-real-feed.test.cjs'
       - 'tests/occitanie-urban-real-feeds.test.cjs'
@@ -115,6 +116,10 @@ jobs:
         env:
           REQUIRE_REAL_GTFS: '1'
         run: node --test tests/paca-zou-proximity-real-feed.test.cjs
+      - name: Vérifier les cars ZOU Express sans trains ni lignes frontalières
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/paca-zou-express-real-feed.test.cjs
       - name: Vérifier les fragments et horaires liO Occitanie dans l’indexeur GTFS
         env:
           REQUIRE_REAL_GTFS: '1'

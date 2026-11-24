@@ -302,6 +302,16 @@ MIRROR = [
      'exclude_route_patterns': ['monaco|monte.?carlo|ital(?:ie|y|ia)|ventimiglia|vintimille|san.?remo|bordighera'],
      'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
      'publisher': 'Région Sud — Provence-Alpes-Côte d’Azur'},
+    # ZOU Express agrège cars régionaux et TER : ne garder que l'agence bus et exclure
+    # les trains (déjà servis par SNCF) et les lignes dont le parcours franchit la frontière.
+    {'id': 'zou-express-paca', 'network': 'ZOU Express (cars régionaux PACA)',
+     'dataset': 'lignes-des-reseaux-transport-zou-provence-alpes-cote-d-azur-express-3-3',
+     'url': 'https://transport.data.gouv.fr/resources/82285/download',
+     'download_limit': 100 * 1024 * 1024, 'agency_pattern': 'express bus',
+     'exclude_route_types': ['2'],
+     'exclude_route_patterns': ['oulx|vintimiglia|vintimille|menton|monaco|monte.?carlo'],
+     'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Région Sud — Provence-Alpes-Côte d’Azur'},
     # Occitanie urbain : GTFS réguliers; les offres TAD omises par les producteurs ne sont pas inventées.
     {'id': 'tisseo-toulouse', 'network': 'Tisséo Toulouse', 'dataset': 'tisseo-reseau-transport-urbain-toulousain',
      'url': 'https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/',
