@@ -93,6 +93,10 @@ jobs:
         env:
           REQUIRE_REAL_GTFS: '1'
         run: node --test tests/centre-val-de-loire-real-feeds.test.cjs
+      - name: Vérifier les horaires ZOU Proximité PACA dans l’indexeur GTFS
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/paca-zou-proximity-real-feed.test.cjs
       - name: Publier les flux validés
         env:
           GH_TOKEN: ${{ github.token }}
