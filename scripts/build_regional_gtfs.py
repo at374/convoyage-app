@@ -213,17 +213,30 @@ def download(url, limit=400 * 1024 * 1024):
         return tmp.name
 
 
+def select_dataset_gtfs_url(meta, fallback):
+    """Select an explicitly identified GTFS ZIP, never a newer NeTEx ZIP."""
+    resources = []
+    for item in meta.get('resources', []):
+        url = str(item.get('url') or '')
+        fmt = str(item.get('format') or '').lower()
+        if url.lower().endswith('.zip') or fmt in ('gtfs', 'zip'):
+            resources.append(item)
+    gtfs = []
+    for item in resources:
+        evidence = ' '.join(str(item.get(k) or '') for k in ('format', 'title', 'name', 'url')).lower()
+        if 'gtfs' in evidence and 'netex' not in evidence:
+            gtfs.append(item)
+    gtfs.sort(key=lambda x: str(x.get('last_modified') or ''), reverse=True)
+    return (gtfs[0].get('url') if gtfs and gtfs[0].get('url') else fallback)
+
+
 def current_dataset_zip(slug, fallback):
-    """Adresse de l'archive GTFS la plus récente d'un jeu data.gouv.fr ; repli sur l'adresse stable fournie."""
+    """Adresse de la ressource GTFS la plus récente d'un jeu data.gouv.fr ; repli stable."""
     try:
         api = 'https://www.data.gouv.fr/api/1/datasets/%s/' % slug
         with urllib.request.urlopen(urllib.request.Request(api, headers=UA), timeout=90) as r:
             meta = json.load(r)
-        res = [x for x in meta.get('resources', []) if str(x.get('url', '')).lower().endswith('.zip')
-               or str(x.get('format', '')).lower() in ('gtfs', 'zip')]
-        res.sort(key=lambda x: str(x.get('last_modified') or ''), reverse=True)
-        if res and res[0].get('url'):
-            return res[0]['url']
+        return select_dataset_gtfs_url(meta, fallback)
     except Exception:
         pass
     return fallback

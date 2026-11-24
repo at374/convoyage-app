@@ -121,6 +121,27 @@ class TNestedPackage(unittest.TestCase):
             self.assertIn('agency_name', fields)
             self.assertEqual(len(agencies), 1)
 
+class TDatasetResourceSelection(unittest.TestCase):
+    def test_latest_gtfs_wins_over_newer_netex_zip(self):
+        m = load_module()
+        fallback = 'https://example.test/gtfs-fallback.zip'
+        metadata = {'resources': [
+            {'format': 'GTFS', 'title': 'Horaires Grand Reims (GTFS)',
+             'url': 'https://example.test/grand-reims-gtfs.zip', 'last_modified': '2026-11-20'},
+            {'format': 'zip', 'title': 'Horaires Grand Reims (NeTEx)',
+             'url': 'https://example.test/grand-reims-netex.zip', 'last_modified': '2026-11-21'},
+        ]}
+        self.assertEqual(m.select_dataset_gtfs_url(metadata, fallback),
+                         'https://example.test/grand-reims-gtfs.zip')
+
+    def test_unidentified_zip_uses_explicit_gtfs_fallback(self):
+        m = load_module()
+        fallback = 'https://example.test/gtfs-fallback.zip'
+        metadata = {'resources': [{'format': 'zip', 'title': 'Other export',
+                                   'url': 'https://example.test/other.zip'}]}
+        self.assertEqual(m.select_dataset_gtfs_url(metadata, fallback), fallback)
+
+
 class TMirrorConfig(unittest.TestCase):
     """Vérifie la forme des entrées MIRROR/FILTERED_MIRROR (pas de téléchargement réel) : URL https,
     bbox cohérente (min < max), identifiant unique — pour détecter une erreur de configuration avant le
