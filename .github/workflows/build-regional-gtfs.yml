@@ -9,6 +9,7 @@ on:
       - '.github/workflows/build-regional-gtfs.yml'
       - 'scripts/build_regional_gtfs.py'
       - 'tests/mobigo-bfc-real-slices.test.cjs'
+      - 'tests/optymo-gtfs-access.test.cjs'
       - 'transport-mission-hub.js'
   schedule:
     - cron: '41 2 * * 1'   # chaque lundi (consommation GitHub Actions : quelques minutes par semaine)
@@ -35,6 +36,10 @@ jobs:
         env:
           REQUIRE_REAL_GTFS: '1'
         run: node --test tests/mobigo-bfc-real-slices.test.cjs
+      - name: Vérifier les règles de montée Optymo avant raccordement
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/optymo-gtfs-access.test.cjs
       - name: Publier les flux validés
         env:
           GH_TOKEN: ${{ github.token }}
