@@ -740,3 +740,8 @@ Le run 145 (commit `b853a63`) a validé la collecte puis s’est arrêté sur l�
 ## Diagnostic du run régional 146 — 24/11/2026
 
 Le commit `83a1f66` a passé la collecte réelle, le test mission BFC, Optymo et les validations GTFS de Grand Est, Forbus, TeMo’b, Hauts-de-France, Normandie, JVMALIN, ZOU, liO, Occitanie urbaine et les 18 réseaux Pays de la Loire. Il s’est arrêté sur la dernière assertion du test Nouvelle-Aquitaine, qui exigeait `entry.sharded === true` alors que le flux courant passe dans une archive de **1 407 052 octets**. Reproduction avec le vrai GTFS téléchargé : **279 lignes, 4 778 courses, 81 408 stop_times**, emprise française, test corrigé réussi **1/1**. L’assertion accepte désormais une archive unique ou plusieurs fragments cohérents avec le manifeste. Aucune archive n'a été publiée par le run 146 échoué ; la collecte complète doit être relancée.
+
+
+## Grand Est — quatre fournisseurs mission supplémentaires (24/11/2026)
+
+Base distante 4d8b0eb vérifiée. Soléa Mulhouse, STAN Nancy, Grand Reims et Fluo Grand Est raccordés dans le hub avec les emprises du manifeste. Le nouveau test réel appelle les quatre fournisseurs avec leurs vrais ZIP : départ, arrivée avant échéance et désactivation hors zone. Résultat local strict : 4/4 réussis, zéro ignoré, 16,4 s. Le test est ajouté à l’étape Grand Est du workflow existant. Code préparé pour la branche fonctionnelle ; ni Android ni main déployés, tarifs et marche de bout en bout non certifiés. La carte publique ne doit pas compter ce lot comme déployé.

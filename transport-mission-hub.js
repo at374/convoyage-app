@@ -732,6 +732,10 @@ function makeProviders(r,opts={}){
  // candidates only; the pedestrian router and confirmation checks still apply.
  if(r.CPGTFSLoader?.loadResource&&r.CPGTFSIndex?.nearbyDirectTrips){
   const localNetworks=[
+   ["fluo_grand_est", "Fluo Grand Est (interurbain)", "fluo-grand-est.zip", [47.3, 3.2, 50.35, 8.45]],
+   ["grand_reims", "Grand Reims Mobilités", "grand-reims.zip", [49.1, 3.8, 49.4, 4.3]],
+   ["stan_nancy", "STAN Nancy", "stan-nancy.zip", [48.6, 6.09, 48.74, 6.29]],
+   ["solea_mulhouse", "Soléa Mulhouse", "solea-mulhouse.zip", [47.62, 7.1, 47.85, 7.55]],
    // Grand Est : archives validées, emprises GPS du manifeste régional.
    ["sub_nancy", "SUB Nancy", "sub-nancy.zip", [48.599643, 6.076771, 48.794576, 6.352883]],
    ["trace_colmar", "TRACE Colmar", "trace-colmar.zip", [48.002982, 7.223971, 48.127668, 7.448601]],

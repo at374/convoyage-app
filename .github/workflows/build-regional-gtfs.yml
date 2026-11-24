@@ -85,7 +85,7 @@ jobs:
       - name: Vérifier les flux urbains Grand Est dans l’indexeur GTFS
         env:
           REQUIRE_REAL_GTFS: '1'
-        run: node --test tests/grand-est-urban-real-feeds.test.cjs
+        run: node --test tests/grand-est-urban-real-feeds.test.cjs tests/grand-est-mission-providers-real.test.cjs
       - name: Vérifier Forbus sans sa ligne transfrontalière dans l’indexeur GTFS
         env:
           REQUIRE_REAL_GTFS: '1'
