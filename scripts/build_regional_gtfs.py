@@ -244,6 +244,10 @@ MIRROR = [
     # M réso (Grenoble) : même besoin que SIBRA — data.gouv.fr échoue par intermittence depuis les téléphones.
     {'id': 'mreso-grenoble', 'network': 'M Réso — Métropole grenobloise', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b6ec7ba4-09bc-46df-b9a1-79a2c2668cf2', 'bounds': [45.0, 5.5, 45.45, 6.0]},
     {'id': 'mreso-gresivaudan', 'network': 'M Réso — Grésivaudan', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2', 'bounds': [45.15, 5.7, 45.5, 6.15]},
+    {'id': 'mreso-voironnais', 'network': 'M Réso — Pays Voironnais',
+     'url': 'https://data.mobilites-m.fr/api/gtfs/TPV', 'download_limit': 12 * 1024 * 1024,
+     'bounds': [45.22, 5.44, 45.57, 5.75], 'license': 'ODbL 1.0 + conditions particulières PAN',
+     'publisher': 'Syndicat Mixte des Mobilités de l’Aire Grenobloise'},
     # TréMA (Mâcon) : réseau urbain voisin de l'Ain ; la ressource change à chaque publication → résolution par jeu.
     # 21/11/2026 : repli précédent (92b18bc7...) devenu un 404 permanent (ressource supprimée côté data.gouv.fr),
     # ce qui a fait échouer le build du 20/11 quand la résolution dynamique par jeu a transitoirement échoué dans

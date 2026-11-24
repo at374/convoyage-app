@@ -1176,6 +1176,7 @@ function makeProviders(r,opts={}){
    // 18/11/2026 : réseaux présents dans data/gtfs mais absents de ce moteur (audit de couverture).
    ['mreso_grenoble','M Réso Grenoble','mreso-grenoble.zip',[45.0,5.5,45.45,6.0]],
    ['mreso_gresivaudan','M Réso Grésivaudan','mreso-gresivaudan.zip',[45.15,5.7,45.5,6.15]],
+   ['mreso_voironnais','M Réso Pays Voironnais','mreso-voironnais.zip',[45.22,5.44,45.57,5.75]],
    ['ondea','Ondéa Aix-les-Bains (Grand Lac)','ondea-grand-lac.zip',[45.54,5.749,45.989,6.042]],
    ['sibra','Sibra Annecy','sibra-annecy.zip',[45.7,5.9,46.1,6.5]],
    ['start_thonon','Star’t Thonon','start-thonon.zip',[46.25,6.3,46.45,6.65]],
