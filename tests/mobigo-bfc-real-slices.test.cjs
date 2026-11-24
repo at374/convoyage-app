@@ -9,7 +9,11 @@ const feeds=[
  ['mobigo89','mobigo-89-yonne.zip'],['mobigo70','mobigo-70-haute-saone.zip'],
  ['mobigo71','mobigo-71-saone-et-loire.zip'],
  ['divia','divia-dijon.zip'],['ginko','ginko-besancon.zip'],
- ['evolity','evolity-montbeliard.zip']
+ ['evolity','evolity-montbeliard.zip'],
+ ['zoom','zoom-chalon.zip'],['monrezo','monrezo-creusot-montceau.zip'],
+ ['leo','leo-auxerre.zip'],['taneo','taneo-nevers.zip'],
+ ['intercom','intercom-sens.zip'],['grandole','grandole-dole.zip'],
+ ['cote_bus','cote-bus-beaune.zip'],['moova','moova-vesoul.zip']
 ];
 const bounds={
  mobigo39:[46.25,5.2,47.0,6.25],mobigo58:[46.55,2.75,47.75,4.35],
@@ -17,7 +21,11 @@ const bounds={
  mobigo89:[47.2,2.75,48.45,4.5],mobigo70:[47.15,5.25,48.05,7.15],
  mobigo71:[46.1,3.55,47.05,5.55],
  divia:[47.24,4.96,47.39,5.12],ginko:[47.15,5.90,47.32,6.10],
- evolity:[47.40,6.70,47.60,6.95]
+ evolity:[47.40,6.70,47.60,6.95],zoom:[46.74,4.78,46.86,4.92],
+ monrezo:[46.61,4.30,46.85,4.49],leo:[47.76,3.48,47.88,3.64],
+ taneo:[46.96,3.07,47.06,3.20],intercom:[48.16,3.23,48.23,3.34],
+ grandole:[47.02,5.42,47.12,5.53],cote_bus:[46.98,4.78,47.08,4.90],
+ moova:[47.59,6.10,47.68,6.19]
 };
 const requireArchives=process.env.REQUIRE_REAL_GTFS==='1';
 
