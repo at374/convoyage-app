@@ -19,6 +19,7 @@ on:
       - 'tests/temob-real-feed.test.cjs'
       - 'tests/hauts-de-france-urban-real-feeds.test.cjs'
       - 'tests/normandie-real-agency-feeds.test.cjs'
+      - 'tests/centre-val-de-loire-real-feeds.test.cjs'
       - 'transport-mission-hub.js'
   schedule:
     - cron: '41 2 * * 1'   # chaque lundi (consommation GitHub Actions : quelques minutes par semaine)
@@ -31,7 +32,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -87,6 +88,10 @@ jobs:
         env:
           REQUIRE_REAL_GTFS: '1'
         run: node --test tests/normandie-real-agency-feeds.test.cjs
+      - name: Vérifier les 19 réseaux JVMALIN dans l’indexeur GTFS
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/centre-val-de-loire-real-feeds.test.cjs
       - name: Publier les flux validés
         env:
           GH_TOKEN: ${{ github.token }}

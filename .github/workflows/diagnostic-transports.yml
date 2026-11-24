@@ -605,7 +605,8 @@ jobs:
           assert.equal(mixedNational.blablacarBus[0].id,'bb','Pas de contamination par les autres ressources');
           assert.equal(mixedNational.flixbus.length,0,'Aucun FlixBus inventé');
 
-          for(const operator of ['sncf','blablacarBus','flixbus','eurostar','trenitalia']){
+          // Exiger les opérateurs nationaux ciblés ; destinations étrangères suspendues hors Suisse.
+          for(const operator of ['sncf','blablacarBus','flixbus']){
             assert.equal(national[operator].length,1,'Flux officiel découvert : '+operator);
             assert.equal(national[operator][0].providesLiveFares,false,'Aucun prix commercial supposé : '+operator);
             assert.equal(national[operator][0].timetableOnly,true,'GTFS horaire uniquement : '+operator);

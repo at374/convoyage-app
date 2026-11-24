@@ -333,6 +333,34 @@ BUNDLED_AGENCY_FEEDS = [{
         {'id': 'atoumod-nomad-car', 'network': 'Nomad Car Normandie', 'agency_name': 'Nomad Car (Région Normandie)'},
         {'id': 'atoumod-moca-caux-austreberthe', 'network': 'MOCA Caux-Austreberthe', 'agency_name': 'MOCA (Communauté de Communes Caux Austreberthe)'},
     ],
+}, {
+    'dataset': 'arrets-itineraires-et-horaires-theoriques-des-reseaux-de-transport-des-membres-de-jvmalin',
+    'url': 'https://transport.data.gouv.fr/resources/83521/download',
+    'download_limit': 60 * 1024 * 1024,
+    'exclude_route_types': [],
+    'license': 'ODbL 1.0 + conditions particulières PAN',
+    'publisher': 'JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires',
+    'networks': [
+        {'id': 'jvmalin-amelys-montargis', 'network': 'Amelys Montargis', 'agency_name': 'Amelys', 'agency_pattern': 'amelys'},
+        {'id': 'jvmalin-azalys-blois', 'network': 'Azalys Blois', 'agency_name': 'Azalys', 'agency_pattern': 'azalys'},
+        {'id': 'jvmalin-agglobus-bourges', 'network': 'Agglobus Bourges', 'agency_name': 'Agglobus', 'agency_pattern': 'agglobus'},
+        {'id': 'jvmalin-fil-bleu-tours', 'network': 'Fil Bleu Tours', 'agency_name': 'Fil Bleu', 'agency_pattern': 'fil ?bleu'},
+        {'id': 'jvmalin-filibus-chartres', 'network': 'Filibus Chartres', 'agency_name': 'Filibus', 'agency_pattern': 'filibus'},
+        {'id': 'jvmalin-horizon-chateauroux', 'network': 'HORIZON Châteauroux', 'agency_name': 'HORIZON', 'agency_pattern': 'horizon'},
+        {'id': 'jvmalin-linead-dreux', 'network': 'Linéad Dreux', 'agency_name': 'Linéad', 'agency_pattern': 'linead'},
+        {'id': 'jvmalin-vib-vierzon', 'network': "Le VIB Vierzon", 'agency_name': 'Le VIB', 'agency_pattern': '\\bvib\\b'},
+        {'id': 'jvmalin-move-vendomois', 'network': 'MOVE Vendômois', 'agency_name': 'MOVE', 'agency_pattern': '\\bmove\\b'},
+        {'id': 'jvmalin-nosbus-nogent', 'network': 'Nosbus Nogent-le-Rotrou', 'agency_name': 'Nosbus', 'agency_pattern': 'nosbus'},
+        {'id': 'jvmalin-remi-18', 'network': 'Rémi Car 18', 'agency_name': 'Rémi 18', 'agency_pattern': 'remi.*18'},
+        {'id': 'jvmalin-remi-28', 'network': 'Rémi Car 28', 'agency_name': 'Rémi 28', 'agency_pattern': 'remi.*28'},
+        {'id': 'jvmalin-remi-36', 'network': 'Rémi Car 36', 'agency_name': 'Rémi 36', 'agency_pattern': 'remi.*36'},
+        {'id': 'jvmalin-remi-37', 'network': 'Rémi Car 37', 'agency_name': 'Rémi 37', 'agency_pattern': 'remi.*37'},
+        {'id': 'jvmalin-remi-41', 'network': 'Rémi Car 41', 'agency_name': 'Rémi 41', 'agency_pattern': 'remi.*41'},
+        {'id': 'jvmalin-remi-45', 'network': 'Rémi Car 45', 'agency_name': 'Rémi 45', 'agency_pattern': 'remi.*45'},
+        {'id': 'jvmalin-tao-orleans', 'network': 'TAO Orléans', 'agency_name': 'TAO', 'agency_pattern': '\\btao\\b'},
+        {'id': 'jvmalin-tigr-issoudun', 'network': 'TIG+R Issoudun', 'agency_name': 'TIG+R', 'agency_pattern': 'tig.*r|issoudun'},
+        {'id': 'jvmalin-le-bus-amboise', 'network': 'Le Bus Amboise', 'agency_name': 'Le Bus', 'agency_pattern': 'amboise|le bus'},
+    ],
 }]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
 
@@ -719,7 +747,7 @@ def main():
                 source_path = download(origin, bundle.get('download_limit', 80 * 1024 * 1024))
                 with zipfile.ZipFile(source_path) as source_zip:
                     for agency in bundle['networks']:
-                        spec = {'pattern': re.escape(norm(agency['agency_name'])),
+                        spec = {'pattern': agency.get('agency_pattern') or re.escape(norm(agency['agency_name'])),
                                 'exclude_route_types': bundle.get('exclude_route_types', [])}
                         try:
                             data, info = extract(source_zip, spec)

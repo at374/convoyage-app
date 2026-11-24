@@ -1,5 +1,5 @@
 """Tests hors ligne de scripts/build_regional_gtfs.py sur un agrégat Oùra de test."""
-import importlib.util, io, json, os, subprocess, sys, tempfile, unittest, zipfile
+import importlib.util, io, json, os, re, subprocess, sys, tempfile, unittest, zipfile
 from unittest import mock
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -340,9 +340,9 @@ class TMirrorConfig(unittest.TestCase):
         self.assertIn('stas-saint-etienne', ids)
         self.assertIn('t2c-clermont', ids)
 
-    def test_bundled_normandy_agencies_are_unique_and_licensed(self):
+    def test_bundled_agency_feeds_are_unique_and_licensed(self):
         m = load_module()
-        self.assertEqual(len(m.BUNDLED_AGENCY_FEEDS), 1)
+        self.assertEqual(len(m.BUNDLED_AGENCY_FEEDS), 2)
         bundle = m.BUNDLED_AGENCY_FEEDS[0]
         self.assertEqual(bundle['license'], 'Licence Ouverte 2.0')
         self.assertLessEqual(bundle['download_limit'], 80 * 1024 * 1024)
@@ -351,6 +351,17 @@ class TMirrorConfig(unittest.TestCase):
         self.assertEqual(len(ids), len(set(ids)))
         self.assertEqual(len(ids), 28)
         self.assertTrue(all(agency.get('agency_name') and agency.get('network') for agency in bundle['networks']))
+        jvmalin = m.BUNDLED_AGENCY_FEEDS[1]
+        self.assertEqual(jvmalin['license'], 'ODbL 1.0 + conditions particulières PAN')
+        self.assertIn('/resources/83521/download', jvmalin['url'])
+        self.assertEqual(len(jvmalin['networks']), 19)
+        self.assertEqual(len({agency['id'] for agency in jvmalin['networks']}), 19)
+        self.assertLessEqual(jvmalin['download_limit'], 60 * 1024 * 1024)
+        self.assertEqual(len({agency['id'] for b in m.BUNDLED_AGENCY_FEEDS for agency in b['networks']}), 47)
+        for agency in jvmalin['networks']:
+            with self.subTest(network=agency['id']):
+                re.compile(agency['agency_pattern'])
+                self.assertRegex(agency['id'], r'^jvmalin-')
 
     def test_bundle_extraction_excludes_ferries(self):
         m = load_module()
