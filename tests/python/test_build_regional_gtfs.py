@@ -168,6 +168,11 @@ class TMirrorConfig(unittest.TestCase):
         reims = next(s for s in m.MIRROR if s['id'] == 'grand-reims')
         self.assertEqual(reims['dataset'], 'offre-de-transport-du-reseau-grand-reims-mobilites-communaute-urbaine-du-grand-reims')
         self.assertEqual(reims['license'], 'Licence Ouverte 2.0')
+        stan = next(s for s in m.MIRROR if s['id'] == 'stan-nancy')
+        self.assertEqual(stan['dataset'], 'fr-200052264-t0034-0000-1')
+        self.assertIn('/resources/83710/download', stan['url'])
+        self.assertEqual(stan['bounds'], [48.60, 6.09, 48.74, 6.29])
+        self.assertEqual(stan['license'], 'Licence Ouverte 2.0')
 
     def test_filtered_mirror_entries_well_formed(self):
         m = load_module()

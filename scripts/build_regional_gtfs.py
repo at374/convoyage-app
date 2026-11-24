@@ -110,6 +110,13 @@ MIRROR = [
      'url': 'https://transport.data.gouv.fr/resources/80594/download',
      'bounds': [49.10, 3.80, 49.40, 4.30], 'license': 'Licence Ouverte 2.0',
      'publisher': 'Fluo Grand Est / CU du Grand Reims'},
+    # Source urbaine publique STAN Nancy, actualisée par Fluo Grand Est sur data.gouv.fr.
+    # Résolution dynamique par slug; le repli PAN reste stable si l'API data.gouv est indisponible.
+    {'id': 'stan-nancy', 'network': 'STAN Nancy',
+     'dataset': 'fr-200052264-t0034-0000-1',
+     'url': 'https://transport.data.gouv.fr/resources/83710/download',
+     'bounds': [48.60, 6.09, 48.74, 6.29], 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Fluo Grand Est / Métropole du Grand Nancy'},
     # Première région dans la progression en escargot au départ d'AURA : Bourgogne-Franche-Comté.
     # Les ressources départementales Mobigo sont publiées individuellement par la Région sous Licence Ouverte 2.0.
     # Elles restent séparées pour conserver les calendriers et éviter de fusionner des identifiants GTFS homonymes.

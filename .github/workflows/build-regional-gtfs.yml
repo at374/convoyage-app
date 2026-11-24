@@ -12,6 +12,7 @@ on:
       - 'tests/optymo-gtfs-access.test.cjs'
       - 'tests/fluo-grand-est-real-feed.test.cjs'
       - 'tests/solea-mulhouse-real-feed.test.cjs'
+      - 'tests/stan-nancy-real-feed.test.cjs'
       - 'tests/grand-reims-real-feed.test.cjs'
       - 'transport-mission-hub.js'
   schedule:
@@ -51,6 +52,10 @@ jobs:
         env:
           REQUIRE_REAL_GTFS: '1'
         run: node --test tests/solea-mulhouse-real-feed.test.cjs
+      - name: Vérifier les horaires actifs STAN dans l’indexeur GTFS
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/stan-nancy-real-feed.test.cjs
       - name: Vérifier les horaires actifs Grand Reims dans l’indexeur GTFS
         env:
           REQUIRE_REAL_GTFS: '1'
