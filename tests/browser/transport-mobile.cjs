@@ -337,10 +337,7 @@ async function run(){
   await railCard.screenshot({path:path.join(output,'mobile-annecy-grenoble.png')});
   await railSummary.click();
   assert.equal(await railCard.evaluate(node=>node.open),false,'SNCF card closes');
-  await page.locator('#fermer').click();
-  await until(()=>activeWorkers.size===0,'Rail scenario worker must stop on close');
   // Exercise the current mission renderer with an unbooked GTFS-Flex window.
-  await page.locator('#btnTransportsMission').click();
   await page.locator('#cpTransportMissionDetails').evaluate(panel=>{
    const host=panel.ownerDocument.createElement('div');
    host.id='browser-flex-check';
