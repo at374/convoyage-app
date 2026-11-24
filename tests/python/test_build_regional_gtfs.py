@@ -148,6 +148,34 @@ class TDatasetResourceSelection(unittest.TestCase):
         self.assertEqual(m.select_dataset_gtfs_url(metadata, fallback), fallback)
 
 
+class TRouteExclusions(unittest.TestCase):
+    def test_extract_removes_cross_border_route_and_its_trips(self):
+        m = load_module()
+        source = io.BytesIO()
+        with zipfile.ZipFile(source, 'w') as z:
+            z.writestr('agency.txt', 'agency_id,agency_name,agency_timezone\nFB,Forbus,Europe/Paris\n')
+            z.writestr('routes.txt', 'route_id,agency_id,route_short_name,route_long_name,route_type\n'
+                       'R-FR,FB,1,Forbach - Centre,3\nR-DE,FB,H,Ligne H Forbach - Schoeneck,3\n')
+            z.writestr('trips.txt', 'route_id,service_id,trip_id\nR-FR,S,T-FR\nR-DE,S,T-DE\n')
+            z.writestr('stop_times.txt', 'trip_id,arrival_time,departure_time,stop_id,stop_sequence\n'
+                       'T-FR,08:00:00,08:00:00,FR1,1\nT-FR,08:10:00,08:10:00,FR2,2\n'
+                       'T-DE,09:00:00,09:00:00,FR1,1\nT-DE,09:20:00,09:20:00,DE1,2\n')
+            z.writestr('stops.txt', 'stop_id,stop_name,stop_lat,stop_lon\n'
+                       'FR1,Forbach,49.19,6.90\nFR2,Stiring-Wendel,49.20,6.93\nDE1,Schoeneck,49.18,6.92\n')
+            z.writestr('calendar_dates.txt', 'service_id,date,exception_type\nS,20261124,1\n')
+        with zipfile.ZipFile(io.BytesIO(source.getvalue())) as z:
+            data, info = m.extract(z, {'pattern': 'forbus', 'exclude_route_patterns': ['schoeneck']})
+        self.assertIsNotNone(data, info)
+        self.assertEqual(info['routes'], 1)
+        self.assertEqual(info['trips'], 1)
+        with zipfile.ZipFile(io.BytesIO(data)) as out:
+            self.assertIn('R-FR', out.read('routes.txt').decode())
+            self.assertNotIn('R-DE', out.read('routes.txt').decode())
+            self.assertIn('T-FR', out.read('trips.txt').decode())
+            self.assertNotIn('T-DE', out.read('trips.txt').decode())
+            self.assertNotIn('DE1', out.read('stops.txt').decode())
+
+
 class TMirrorConfig(unittest.TestCase):
     """Vérifie la forme des entrées MIRROR/FILTERED_MIRROR (pas de téléchargement réel) : URL https,
     bbox cohérente (min < max), identifiant unique — pour détecter une erreur de configuration avant le
@@ -177,6 +205,10 @@ class TMirrorConfig(unittest.TestCase):
         reims = next(s for s in m.MIRROR if s['id'] == 'grand-reims')
         self.assertEqual(reims['dataset'], 'offre-de-transport-du-reseau-grand-reims-mobilites-communaute-urbaine-du-grand-reims')
         self.assertEqual(reims['license'], 'Licence Ouverte 2.0')
+        forbus = next(s for s in m.MIRROR if s['id'] == 'forbus-forbach')
+        self.assertEqual(forbus['dataset'], 'fr-200052264-t0007-0000-1')
+        self.assertEqual(forbus['exclude_route_patterns'], ['schoeneck'])
+        self.assertEqual(forbus['license'], 'Licence Ouverte 2.0')
         stan = next(s for s in m.MIRROR if s['id'] == 'stan-nancy')
         self.assertEqual(stan['dataset'], 'fr-200052264-t0034-0000-1')
         self.assertIn('/resources/83710/download', stan['url'])

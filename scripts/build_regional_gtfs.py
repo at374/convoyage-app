@@ -99,6 +99,14 @@ FILTERED_MIRROR = [
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
+    # Forbus: retain the French network but remove the line H whose route ends in Germany.
+    # The official feed is refreshed via the public PAN dataset slug; the fixed resource is fallback.
+    {'id': 'forbus-forbach', 'network': 'Forbus Forbach',
+     'dataset': 'fr-200052264-t0007-0000-1',
+     'url': 'https://transport.data.gouv.fr/resources/80467/download',
+     'agency_pattern': 'forbus', 'exclude_route_patterns': ['schoeneck'],
+     'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Fluo Grand Est / CA de Forbach Porte de France'},
     # Source urbaine Grand Est indépendante de l'agrégat Fluo. 4,36 Mo, 48 lignes,
     # et calendrier valide au 25/06/2027 selon la ressource PAN 80787.
     {'id': 'solea-mulhouse', 'network': 'Soléa Mulhouse',
@@ -373,6 +381,11 @@ def extract(z, spec):
     single = len(agencies) == 1
     rfields, routes = read_table(z, 'routes.txt')
     routes = [r for r in routes if (r.get('agency_id') or '') in ag_ids or (single and not r.get('agency_id'))]
+    excluded_route_patterns = [re.compile(norm(pattern)) for pattern in spec.get('exclude_route_patterns', ())]
+    if excluded_route_patterns:
+        routes = [r for r in routes if not any(pattern.search(norm(' '.join(
+            r.get(field) or '' for field in ('route_id', 'route_short_name', 'route_long_name'))))
+            for pattern in excluded_route_patterns)]
     route_ids = {r['route_id'] for r in routes}
     tfields, trips = read_table(z, 'trips.txt')
     trips = [t for t in trips if t['route_id'] in route_ids]
@@ -543,14 +556,24 @@ def main():
                 origin = current_dataset_zip(spec['dataset'], spec['url']) if spec.get('dataset') else spec['url']
                 p = download(origin, MAX_OUT)
                 with zipfile.ZipFile(p) as z:
-                    trips, times = validate(z)
-                    bounds = stop_bounds(z) if spec.get('derive_bounds') else spec['bounds']
-                data = open(p, 'rb').read()
+                    if spec.get('agency_pattern'):
+                        data, info = extract(z, {'pattern': spec['agency_pattern'],
+                                                 'exclude_route_patterns': spec.get('exclude_route_patterns', [])})
+                        if data is None:
+                            raise ValueError(info)
+                        with zipfile.ZipFile(io.BytesIO(data)) as extracted:
+                            validate(extracted)
+                            bounds = stop_bounds(extracted) if spec.get('derive_bounds') else spec.get('bounds')
+                    else:
+                        trips, times = validate(z)
+                        bounds = stop_bounds(z) if spec.get('derive_bounds') else spec['bounds']
+                        data = open(p, 'rb').read()
+                        info = {'trips': trips}
                 name = spec['id'] + '.zip'
                 with open(os.path.join(args.out, name), 'wb') as f:
                     f.write(data)
                 manifest['networks'][spec['id']] = {'network': spec['network'], 'file': name, 'sha256': hashlib.sha256(data).hexdigest(),
-                                                    'bytes': len(data), 'bounds': bounds, 'origin': origin, 'trips': trips,
+                                                    'bytes': len(data), 'bounds': bounds, 'origin': origin, **info,
                                                     **{key: spec[key] for key in ('license', 'publisher') if spec.get(key)}}
             except BaseException as e:
                 manifest['errors'][spec['id']] = 'erreur : %s' % e

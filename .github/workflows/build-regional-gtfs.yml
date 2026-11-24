@@ -15,6 +15,7 @@ on:
       - 'tests/stan-nancy-real-feed.test.cjs'
       - 'tests/grand-reims-real-feed.test.cjs'
       - 'tests/grand-est-urban-real-feeds.test.cjs'
+      - 'tests/forbus-real-feed.test.cjs'
       - 'transport-mission-hub.js'
   schedule:
     - cron: '41 2 * * 1'   # chaque lundi (consommation GitHub Actions : quelques minutes par semaine)
@@ -65,6 +66,10 @@ jobs:
         env:
           REQUIRE_REAL_GTFS: '1'
         run: node --test tests/grand-est-urban-real-feeds.test.cjs
+      - name: Vérifier Forbus sans sa ligne transfrontalière dans l’indexeur GTFS
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/forbus-real-feed.test.cjs
       - name: Publier les flux validés
         env:
           GH_TOKEN: ${{ github.token }}
