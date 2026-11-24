@@ -684,3 +684,14 @@ Après vérification de la fiche data.gouv.fr, TaM urbain/suburbain est sous Ope
 Le PAN recense un agrégat GTFS officiel de Nouvelle-Aquitaine Mobilités réunissant les réseaux urbains et interurbains de ses AOM. La ressource actuelle annoncée au 23/11/2026 couvre jusqu’au 23/11/2027. L’agrégat est sous ODbL avec Conditions Particulières PAN : les obligations de source, partage ouvert et repartage éventuel des bases dérivées doivent rester visibles.
 
 Le collecteur extrait uniquement les agences GTFS explicitement nommées « Cars Régionaux », exclut les ferries, et filtre les libellés indiquant scolaire ou une destination étrangère. Il segmente l’archive en fragments mobiles. Le contrôle strict de CI doit confirmer l’agence réelle, l’intégrité des fragments, l’absence de doublons et au moins une course active française. Pas de carte ni statut de réseau déployé avant cette validation et le raccordement fiche mission.
+
+
+## État consolidé des collectes (24/11/2026)
+
+Contrôles locaux après le lot liO/urbain/Nouvelle-Aquitaine : **23/23** tests hors ligne Python réussis; les quatre fichiers de tests GTFS réels ont passé `node --check`. L’exécution locale des tests réels sans les archives attendues les marque ignorés; elle ne compte pas comme validation d’un flux.
+
+Le run réel sur la version antérieure a validé les **19/19** tests JVMALIN, incluant Fil Bleu Tours et TAO Orléans désormais lus en fragments par l’indexeur standard. Son run global a échoué ensuite sur le test ZOU car celui-ci passait 30 dates au chargeur, dont la limite documentée est sept. Les tests PACA et Occitanie utilisent maintenant sept dates. Cette correction n’a pas encore eu sa collecte réelle.
+
+Le workflow 144 (commit `be324357013bdacd4bf37585e10fd325eb288333`) attend derrière une collecte précédente toujours active. Il doit valider les nouveaux réseaux et produire les flux; avant résultat vert, aucun d’eux n’est classé « GTFS validé », raccordé au moteur mission ou publié sur la carte.
+
+La carte publique est régénérée automatiquement toutes les six heures sur `main`; elle ne montrera ces ajouts de la branche transports qu’après leur validation, raccordement au moteur et intégration sur `main`. Les transports hors de France restent exclus, avec la Suisse comme exception utilisateur déjà en place.
