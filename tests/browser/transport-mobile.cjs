@@ -342,7 +342,7 @@ async function run(){
    const host=panel.ownerDocument.createElement('div');
    host.id='browser-flex-check';
    panel.appendChild(host);
-   window.CPTransportHub.render(host,{done:true,total:0,picks:[],others:[],flexCandidates:[
+   window.CPTransportHub.render(host,{done:true,total:0,picks:[],others:[],errors:{},flexCandidates:[
     {kind:'gtfs-flex-candidate',network:'Réseau de test',line:'TAD 31',tripId:'flex-31',
      pickupWindow:{startSeconds:28800,endSeconds:32400},
      pickupRule:{bookingType:'1',noticeMinutes:60,phoneNumber:'04 00 00 00 00',bookingUrl:'https://reservation.example/'}
