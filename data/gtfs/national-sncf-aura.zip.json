@@ -1,7 +1,7 @@
 {
   "operator": "sncf",
   "file": "national-sncf-aura.zip",
-  "sha256": "0183e5dbe4c6e2875f291cdbbc74a66ee7280f5a776995aa5dac993e4196e8bb",
+  "sha256": "b8cc63b7b11ccb1937459fafe0135ed265f0a2582e398f2d10e08b90677d23a1",
   "bytes": 864100,
   "bounds": [
     44.0,
