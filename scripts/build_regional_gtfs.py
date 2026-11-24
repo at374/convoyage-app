@@ -78,11 +78,12 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
-    # CTS inclut la desserte tram transfrontalière de Kehl. L'extrait limité à l'ouest de 7,80°E
-    # ne conserve que les arrêts et horaires dans l'emprise française strasbourgeoise.
+    # CTS inclut la desserte tram transfrontalière de Kehl. Cette première tranche teste le cœur
+    # strasbourgeois [48.52,7.66,48.62,7.78] : elle est volontairement resserrée pour respecter
+    # la limite d'expansion GTFS du chargeur mobile et ne conserve aucun arrêt de Kehl.
     {'id': 'cts-strasbourg', 'network': 'CTS Strasbourg (extrait France)',
      'url': 'https://opendata.cts-strasbourg.eu/google_transit.zip',
-     'bounds': [48.45, 7.60, 48.70, 7.80], 'download_limit': 60 * 1024 * 1024,
+     'bounds': [48.52, 7.66, 48.62, 7.78], 'download_limit': 60 * 1024 * 1024,
      'license': 'Licence Ouverte 2.0', 'publisher': 'Compagnie des Transports Strasbourgeois'},
     # Couronne suivant la BFC : première tranche interurbaine Fluo Grand Est. La source agrège
     # les lignes départementales ; le découpage garde les parcours ayant au moins deux arrêts

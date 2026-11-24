@@ -127,7 +127,7 @@ class TMirrorConfig(unittest.TestCase):
         cts = next(s for s in m.FILTERED_MIRROR if s['id'] == 'cts-strasbourg')
         self.assertIn('opendata.cts-strasbourg.eu', cts['url'])
         self.assertEqual(cts['license'], 'Licence Ouverte 2.0')
-        self.assertEqual(cts['bounds'][3], 7.80, 'les arrêts de Kehl restent hors de l’extrait France')
+        self.assertEqual(cts['bounds'], [48.52, 7.66, 48.62, 7.78], 'tranche centrale française, hors Kehl')
 
     def test_filtered_mirror_entries_well_formed(self):
         m = load_module()
