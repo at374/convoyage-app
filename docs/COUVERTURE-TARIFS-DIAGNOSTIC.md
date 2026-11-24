@@ -1,6 +1,6 @@
 # Couverture tarifaire — diagnostic automatique
 
-Source : diagnostic serveur (GitHub Actions) ; relevé : 2026-11-23T19:25:05.171Z ; scénario : 2026-11-30T08:00:00+01:00.
+Source : diagnostic serveur (GitHub Actions) ; relevé : 2026-11-24T15:14:12.261Z ; scénario : 2026-11-30T08:00:00+01:00.
 
 Ce rapport est un **instantané de diagnostic**, pas une confirmation de tarifs ou de disponibilité commerciale.
 
@@ -20,11 +20,11 @@ Ce rapport est un **instantané de diagnostic**, pas une confirmation de tarifs 
 | Genève → Lausanne | 20 | 0 | 0 | 20 | FlixBus (10 portions), SBB (8 portions), BlaBlaCar Bus (4 portions) |
 | Lyon → Grenoble | 20 | 0 | 0 | 20 | SNCF (20 portions) |
 | Thonon → Bons-en-Chablais (Star’t 142) | 50 | 31 | 1 | 19 | SNCF (16 portions), But (2 portions), Star't Thonon (1 portions) |
+| Lyon Part-Dieu → Bellecour (TCL) | 63 | 44 | 0 | 19 | SNCF (7 portions), Trenitalia (6 portions), Cars Région Express (5 portions) |
 | Ambérieu-en-Bugey → Lyon Part-Dieu | 18 | 0 | 0 | 18 | SNCF (18 portions) |
 | Thonon-les-Bains → Genève | 16 | 0 | 4 | 16 | SNCF (11 portions), But (8 portions), AFO (4 portions), FlixBus (2 portions) |
 | Bourg-en-Bresse → Ambérieu (Cars Ain / TER) | 16 | 1 | 2 | 15 | SNCF (13 portions), Cars Région Ain (2 portions) |
 | Annemasse → Saint-Julien-en-Genevois | 52 | 38 | 0 | 14 | SNCF (14 portions), TPG (1 portions) |
-| Lyon Part-Dieu → Bellecour (TCL) | 56 | 43 | 0 | 13 | SNCF (7 portions), Cars Région Express (5 portions) |
 | Chambéry → Saint-Julien-en-Genevois | 11 | 0 | 1 | 11 | SNCF (19 portions), AFO (3 portions) |
 | Chambéry → Chamoux-sur-Gelon (Cars Savoie S05) | 10 | 0 | 0 | 10 | SNCF (8 portions), Cars Région Savoie (2 portions) |
 | Grenoble → Crolles | 8 | 5 | 0 | 3 | BlaBlaCar Bus (3 portions) |
@@ -53,6 +53,7 @@ Les nombres ci-dessous sont des **occurrences par axe**, pas des billets uniques
 | Mobilités M - SNCF | 8 |
 | SBB | 8 |
 | AFO | 7 |
+| Trenitalia | 6 |
 | Cars Région Express | 5 |
 | Cars Région Savoie | 2 |
 | Star't Thonon | 1 |
@@ -78,13 +79,13 @@ Exemples observés sur des trajets partiellement tarifés : liste non exhaustive
 
 ## Couverture globale
 
-379 trajets entièrement tarifés sur 965 (39.3 %).
+380 trajets entièrement tarifés sur 972 (39.1 %).
 
 ## Distinction indispensable : prix et faisabilité
 
-Trajets avec prix complet : 379 / 965.
-Trajets déclarés faisables par le diagnostic : 93 / 965.
-Ces deux compteurs sont indépendants : un trajet tarifé peut rester non réalisable (horaires, correspondances, confirmation). Leur intersection n’est pas calculée ici ; ne pas présenter 379 comme le nombre de trajets réalisables.
+Trajets avec prix complet : 380 / 972.
+Trajets déclarés faisables par le diagnostic : 93 / 972.
+Ces deux compteurs sont indépendants : un trajet tarifé peut rester non réalisable (horaires, correspondances, confirmation). Leur intersection n’est pas calculée ici ; ne pas présenter 380 comme le nombre de trajets réalisables.
 
 ## Trajets partiellement tarifés
 
