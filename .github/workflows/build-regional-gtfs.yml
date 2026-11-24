@@ -21,6 +21,7 @@ on:
       - 'tests/normandie-real-agency-feeds.test.cjs'
       - 'tests/centre-val-de-loire-real-feeds.test.cjs'
       - 'tests/pays-de-la-loire-real-feeds.test.cjs'
+      - 'tests/bretagne-real-agency-feeds.test.cjs'
       - 'tests/paca-zou-proximity-real-feed.test.cjs'
       - 'tests/occitanie-lio-real-feed.test.cjs'
       - 'tests/occitanie-urban-real-feeds.test.cjs'
@@ -77,6 +78,10 @@ jobs:
         env:
           REQUIRE_REAL_GTFS: '1'
         run: node --test tests/pays-de-la-loire-real-feeds.test.cjs
+      - name: Vérifier les 24 réseaux terrestres de Bretagne dans l’indexeur GTFS
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/bretagne-real-agency-feeds.test.cjs
       - name: Vérifier les flux urbains Grand Est dans l’indexeur GTFS
         env:
           REQUIRE_REAL_GTFS: '1'

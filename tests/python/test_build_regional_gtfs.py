@@ -354,7 +354,7 @@ class TMirrorConfig(unittest.TestCase):
 
     def test_bundled_agency_feeds_are_unique_and_licensed(self):
         m = load_module()
-        self.assertEqual(len(m.BUNDLED_AGENCY_FEEDS), 5)
+        self.assertEqual(len(m.BUNDLED_AGENCY_FEEDS), 6)
         bundle = m.BUNDLED_AGENCY_FEEDS[0]
         self.assertEqual(bundle['license'], 'Licence Ouverte 2.0')
         self.assertLessEqual(bundle['download_limit'], 80 * 1024 * 1024)
@@ -369,7 +369,7 @@ class TMirrorConfig(unittest.TestCase):
         self.assertEqual(len(jvmalin['networks']), 19)
         self.assertEqual(len({agency['id'] for agency in jvmalin['networks']}), 19)
         self.assertLessEqual(jvmalin['download_limit'], 60 * 1024 * 1024)
-        self.assertEqual(len({agency['id'] for b in m.BUNDLED_AGENCY_FEEDS for agency in b['networks']}), 67)
+        self.assertEqual(len({agency['id'] for b in m.BUNDLED_AGENCY_FEEDS for agency in b['networks']}), 91)
         for agency in jvmalin['networks']:
             with self.subTest(network=agency['id']):
                 re.compile(agency['agency_pattern'])
@@ -487,6 +487,21 @@ class TPaysDeLaLoireConfig(unittest.TestCase):
         self.assertNotIn('pdl-aleop-yeu', ids)
         self.assertNotIn('pdl-sncf-voyageurs', ids)
         self.assertNotIn('pdl-aleop-ter', ids)
+        self.assertTrue(all(n.get('agency_name') for n in bundle['networks']))
+
+class TBretagneConfig(unittest.TestCase):
+    def test_korrigo_bundle_excludes_air_and_ferries_and_keeps_land_agencies(self):
+        m = load_module()
+        bundle = next(b for b in m.BUNDLED_AGENCY_FEEDS
+                      if any(n['id'] == 'bretagne-star-rennes' for n in b['networks']))
+        ids = {n['id'] for n in bundle['networks']}
+        self.assertEqual(bundle['dataset'], 'base-de-donnees-multimodale-transports-publics-en-bretagne-korrigo-gtfs')
+        self.assertEqual(bundle['url'], 'https://transport.data.gouv.fr/resources/81559/download')
+        self.assertEqual(bundle['exclude_route_types'], ['4', '1100'])
+        self.assertEqual(bundle['license'], 'ODbL 1.0 + conditions particulières PAN')
+        self.assertEqual(len(ids), 24)
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertNotIn('bretagne-ter', ids)
         self.assertTrue(all(n.get('agency_name') for n in bundle['networks']))
 
 if __name__ == '__main__':

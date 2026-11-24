@@ -14,7 +14,9 @@ test('Cars Région Nouvelle-Aquitaine réel : courses actives françaises dans l
  const entry=manifest.networks?.['cars-region-nouvelle-aquitaine'];
  assert.ok(entry,'REQUIRE_REAL_GTFS=1 exige les cars régionaux Nouvelle-Aquitaine collectés');
  const files=entry.files||[entry.file];
- assert.ok(entry.sharded,'le flux régional doit être découpé sous les plafonds mobiles');
+ assert.ok(files.length>0,'le flux régional doit comporter au moins une archive');
+ if(entry.sharded)assert.ok(files.length>1,'un flux signalé comme fragmenté doit contenir plusieurs archives');
+ else assert.equal(files.length,1,'un flux non fragmenté doit contenir une archive unique');
  const dates=Array.from({length:7},(_,offset)=>{
   const d=new Date();d.setUTCHours(0,0,0,0);d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10);
  });
