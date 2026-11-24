@@ -381,7 +381,7 @@ BUNDLED_AGENCY_FEEDS = [{
     'publisher': 'Région Occitanie',
     'networks': [{'id': 'lio-interurbain-occitanie', 'network': 'liO — cars interurbains Occitanie', 'agency_pattern': '.*'}],
 }
-}]
+]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
 
 
