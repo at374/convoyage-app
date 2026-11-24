@@ -57,6 +57,7 @@ for(const [id,file] of feeds){
    };
    assert.equal(provider.enabled(task),true,`${id}: paire de test hors de l'emprise activée`);
    const results=await provider.run(task);
-   assert.ok(results.some(j=>j.legs?.some(l=>l.provider===provider.name)),`${id}: trajet non proposé à la fiche mission`);
+   const expectedNetwork=provider.name.replace(/ GTFS$/,'');
+   assert.ok(results.some(j=>j.legs?.some(l=>l.provider===expectedNetwork)),`${id}: trajet Mobigo non proposé à la fiche mission`);
   });
 }
