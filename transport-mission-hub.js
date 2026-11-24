@@ -198,7 +198,7 @@ function fromGTFS(rows,network='Réseau local'){
    const out=leg({mode:'Bus',line:l.line||r.line,provider:l.network||r.network||network,from:start?.name||l.from,to:end?.name||l.to,
     fromPoint:start,toPoint:end,departure:l.departure,arrival:l.arrival});
    // Ligne GTFS brute conservée pour les grilles tarifaires officielles (ex. Y51 : zones par arrêt).
-   out.gtfsRaw=Array.isArray(r.legs)&&r.legs.length?l:r;
+   out.gtfsRaw=Array.isArray(r.legs)&&r.legs.length?{...l,date:l.date||r.date,networkId:l.networkId||r.networkId,originStop:l.originStop||{stopId:l.from},destinationStop:l.destinationStop||{stopId:l.to}}:r;
    // Tarif publié par l'autorité dans le flux GTFS lui-même (fare_attributes / fare_rules).
    const g=out.gtfsRaw&&out.gtfsRaw.gtfsFare;
    if(g&&finite(g.amount)&&g.amount>=0&&/^(EUR|CHF)$/.test(g.currency)){
@@ -258,10 +258,16 @@ function fromNationalGTFS(rows,operator){
    r.legs.every(l=>l&&l.departure&&l.arrival)))).map(r=>{
   const a=r.originStop,b=r.destinationStop;
   const point=s=>({lat:s?.lat??s?.stop_lat,lon:s?.lon??s?.stop_lon});
-  const makeLeg=(from,to,line,departure,arrival)=>leg({mode:['sncf','eurostar','trenitalia'].includes(operator)?'Train':'Car',
-   provider:names[operator],line,from:from?.name||from?.stop_name||'',
-   to:to?.name||to?.stop_name||'',fromPoint:point(from),toPoint:point(to),
-   departure:localTime(r.date,departure),arrival:localTime(r.date,arrival)});
+  const makeLeg=(from,to,line,departure,arrival)=>{
+   const item=leg({mode:['sncf','eurostar','trenitalia'].includes(operator)?'Train':'Car',
+    provider:names[operator],line,from:from?.name||from?.stop_name||'',
+    to:to?.name||to?.stop_name||'',fromPoint:point(from),toPoint:point(to),
+    departure:localTime(r.date,departure),arrival:localTime(r.date,arrival)});
+   item.gtfsRaw={operator,networkId:'national:'+operator,date:r.date,
+    fromStopId:from?.stop_id||from?.stopId||null,toStopId:to?.stop_id||to?.stopId||null,
+    fromPoint:point(from),toPoint:point(to)};
+   return item;
+  };
   const transit=Array.isArray(r.legs)&&r.legs.length===2&&r.transferStop?
    [makeLeg(a,r.transferStop,r.legs[0].line,r.legs[0].departure,r.legs[0].arrival),
     makeLeg(r.transferStop,b,r.legs[1].line,r.legs[1].departure,r.legs[1].arrival)]:
@@ -940,11 +946,11 @@ function makeProviders(r,opts={}){
      }
      const filtered=[...best.values()].map(({x})=>({...x,network:name,
        departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)}))
-      .filter(x=>x.departure&&x.arrival)
+     .filter(x=>x.departure&&x.arrival)
       // « Arriver avant » (Aller) : garder les 30 arrivées les plus proches de l'échéance, pas les 30 premiers
       // départs de la journée (bus de l'aube inutiles pour une mission à 10 h).
       .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,30)
-      .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
+     .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
      return fromGTFS(filtered.concat(flexRows),name);
     }};
   }
@@ -1417,7 +1423,7 @@ function ticketLinks(j){
   const t=ticketLink(l.provider);if(t&&!seen.has(t.url))seen.set(t.url,t);});
  return [...seen.values()];
 }
-function card(doc,j,labels,expanded=false){
+function card(doc,j,labels,expanded=false,loadDaySchedules=null){
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
  if(expanded)c.open=true;
  const s=el(doc,'summary');
@@ -1463,6 +1469,34 @@ function card(doc,j,labels,expanded=false){
   const li=el(doc,'li',l.kind==='walk'?'walk':'ride');
   li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='scooter'?'Trottinette'+(l.distanceMeters!=null?' '+(l.distanceMeters/1000).toFixed(1).replace('.',',')+' km':'')+(l.durationSeconds!=null?' · '+Math.max(1,Math.round(l.durationSeconds/60))+' min (estimé)':''):l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+Math.max(1,Math.round(l.durationSeconds/60))+' min':''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':''].filter(Boolean).join(' '))));
   li.appendChild(el(doc,'div',null,clock(l.departure)+' '+(l.from||'?')+' → '+clock(l.arrival)+' '+(l.to||'?')+(l.delayMinutes?' · retard annoncé +'+l.delayMinutes+' min':'')));
+  const raw=l.gtfsRaw,originId=raw?.originStop?.stopId||raw?.originStop?.stop_id||raw?.fromStopId||raw?.from,
+   destinationId=raw?.destinationStop?.stopId||raw?.destinationStop?.stop_id||raw?.toStopId||raw?.to,
+   networkId=raw?.networkId||raw?.datasetId||raw?.resourceId,date=raw?.date;
+  if(l.kind!=='walk'&&typeof loadDaySchedules==='function'){
+   const disclosure=el(doc,'details','cp-hub-day-schedules');
+   disclosure.appendChild(el(doc,'summary',null,'🕒 Voir tous les horaires du jour pour ce transport local'));
+   const rowsBox=el(doc,'div','cp-hub-day-schedule-rows');disclosure.appendChild(rowsBox);
+   let requested=false;
+   disclosure.addEventListener('toggle',async()=>{
+    if(!disclosure.open||requested)return;requested=true;rowsBox.textContent='Chargement des horaires GTFS…';
+    try{
+     const rows=await loadDaySchedules({networkId,fromStopId:originId,toStopId:destinationId,date,
+      operator:raw?.operator||null,fromPoint:l.fromPoint||raw?.fromPoint||null,toPoint:l.toPoint||raw?.toPoint||null,
+      from:l.from,to:l.to,provider:l.provider});
+     rowsBox.replaceChildren();
+     if(!rows.length){rowsBox.textContent='Aucun horaire publié pour ces deux arrêts à cette date.';return;}
+     rowsBox.appendChild(el(doc,'small',null,'Horaires théoriques publiés pour ce transport, le '+date+'.'+(rows.truncated||rows.length>=100?' Liste limitée par la source : d’autres horaires peuvent exister.':'')));
+     const list=el(doc,'ol');
+     for(const row of rows){
+      const time=value=>{const m=String(value||'').match(/^(\d{1,3}):(\d{2})(?::\d{2})?$/);return m?String(Number(m[1])).padStart(2,'0')+':'+m[2]:'—';};
+      const line=row.line||row.routeShortName||row.route_short_name||l.line||'ligne locale';
+      list.appendChild(el(doc,'li',null,line+' · '+time(row.departure)+' → '+time(row.arrival)));
+     }
+     rowsBox.appendChild(list);
+    }catch(_){rowsBox.textContent='La source de ce transport ne permet pas de récupérer ici tous les horaires de la journée.';}
+   });
+   li.appendChild(disclosure);
+  }
   if(l.kind==='scooter'){
    li.appendChild(el(doc,'small',null,'Tracé calculé (OpenStreetMap, mode vélo) · durée estimée à '+(j.scooterSpeedKmh||15)+' km/h : réglages de l’application'));
    const sm=mapSvg(doc,{legs:[l]});
@@ -1549,7 +1583,7 @@ function render(host,v){
   const key=signature(j)||(j.walkOnly?'walk|'+Math.round(ms(j.departure)/60000)+'|'+Math.round(ms(j.arrival)/60000)+'|'+Math.round(j.durationMinutes||0):'');
   // Construire immédiatement les détails si cette carte était déjà ouverte :
   // poser node.open après card() ne construit pas toujours le corps au rendu.
-  const node=card(doc,j,labels,expandFirst||(key&&opened.has(key)));
+  const node=card(doc,j,labels,expandFirst||(key&&opened.has(key)),v.loadDaySchedules);
   // La première proposition est ouverte, les suivantes restent paresseuses.
   // Une marche seule n'a pas de ligne de transport : sa signature classique est vide.
   // Identifier aussi ces trajets pour ne pas refermer leur carte à chaque résultat réseau.

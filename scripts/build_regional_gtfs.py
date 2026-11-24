@@ -293,6 +293,11 @@ MIRROR = [
     # M réso (Grenoble) : même besoin que SIBRA — data.gouv.fr échoue par intermittence depuis les téléphones.
     {'id': 'mreso-grenoble', 'network': 'M Réso — Métropole grenobloise', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b6ec7ba4-09bc-46df-b9a1-79a2c2668cf2', 'bounds': [45.0, 5.5, 45.45, 6.0]},
     {'id': 'mreso-gresivaudan', 'network': 'M Réso — Grésivaudan', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2', 'bounds': [45.15, 5.7, 45.5, 6.15]},
+    # Flux officiel M Réso — Pays Voironnais, directement servi par Mobilités M (GTFS courant 2026–2027).
+    {'id': 'mreso-voironnais', 'network': 'M Réso — Pays Voironnais',
+     'url': 'https://data.mobilites-m.fr/api/gtfs/TPV', 'download_limit': 12 * 1024 * 1024,
+     'derive_bounds': True, 'license': 'ODbL 1.0 + conditions particulières PAN',
+     'publisher': 'Syndicat Mixte des Mobilités de l’Aire Grenobloise'},
     # ZOU Proximité : horaires bus régionaux et courses avec marqueurs TAD. Filtrage de libellés
     # frontaliers pour conserver le périmètre France; le ZIP réel reste soumis au test strict PACA.
     {'id': 'zou-proximite-paca', 'network': 'ZOU Proximité (cars régionaux PACA)',
@@ -312,6 +317,13 @@ MIRROR = [
      'exclude_route_patterns': ['oulx|vintimiglia|vintimille|menton|monaco|monte.?carlo'],
      'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
      'publisher': 'Région Sud — Provence-Alpes-Côte d’Azur'},
+    # Réseau urbain Lignes d'Azur : publication GTFS statique réutilisable sans API SIRI.
+    {'id': 'lignes-azur-nice', 'network': "Lignes d'Azur Nice",
+     'dataset': 'donnees-statiques-et-dynamiques-du-reseau-de-transport-lignes-dazur',
+     'url': 'https://transport.data.gouv.fr/resources/83178/download',
+     'download_limit': 24 * 1024 * 1024, 'agency_pattern': 'lignes d.?azur',
+     'exclude_route_types': ['4'], 'derive_bounds': True,
+     'license': 'Licence Ouverte 2.0', 'publisher': 'Métropole Nice Côte d’Azur'},
     # Occitanie urbain : GTFS réguliers; les offres TAD omises par les producteurs ne sont pas inventées.
     {'id': 'tisseo-toulouse', 'network': 'Tisséo Toulouse', 'dataset': 'tisseo-reseau-transport-urbain-toulousain',
      'url': 'https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/',
@@ -327,6 +339,18 @@ MIRROR = [
 # Un flux agrégé peut contenir de nombreux opérateurs. On le télécharge une seule fois puis
 # on produit un ZIP autonome par agence. Ferries exclus (route_type=4), conformément au périmètre.
 BUNDLED_AGENCY_FEEDS = [{
+    # Le flux Mistral est un agrégat à deux agences; isoler le réseau de bus et le téléphérique.
+    'dataset': 'reseau-de-transport-urbain-de-la-metropole-toulon-provence-mediterranee',
+    'url': 'https://transport.data.gouv.fr/resources/79560/download',
+    'download_limit': 24 * 1024 * 1024,
+    'exclude_route_types': ['4'],
+    'license': 'Licence Ouverte 2.0',
+    'publisher': 'Métropole Toulon-Provence-Méditerranée',
+    'networks': [
+        {'id': 'mistral-toulon', 'network': 'Réseau Mistral Toulon', 'agency_name': 'Réseau Mistral'},
+        {'id': 'mistral-telepherique-faron', 'network': 'Téléphérique du Faron', 'agency_name': 'Téléphérique Faron'},
+    ],
+}, {
     'dataset': 'base-de-donnees-multimodale-des-reseaux-de-transport-public-normands',
     'url': 'https://transport.data.gouv.fr/resources/81942/download',
     'download_limit': 80 * 1024 * 1024,

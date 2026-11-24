@@ -65,7 +65,9 @@ self.onmessage=async({data})=>{
    result=type==='load'?summary(valid[0].feed):{networks:entries.map(e=>e.feed?summary(e.feed):e),partial:valid.length!==entries.length};
   }else if(type==='query'){
    if(!feedsPromise)throw new Error('Load a network before querying');
-   const feeds=(await feedsPromise).filter(e=>e.feed).map(e=>e.feed),feed=feeds[0];
+   const feeds=(await feedsPromise).filter(e=>e.feed).map(e=>e.feed);
+   const requestedNetwork=query.networkId==null?null:String(query.networkId);
+   const feed=requestedNetwork?feeds.find(f=>String(f.source.datasetId||f.source.resourceId)===requestedNetwork):feeds[0];
    if(!feed)throw new Error('No GTFS network loaded');
    const limit=query.limit??100;
    if(!Number.isInteger(limit)||limit<1||limit>500)throw new Error('Invalid GTFS result limit');
@@ -80,7 +82,11 @@ self.onmessage=async({data})=>{
     connectionDates=CPGTFSFederation.connectionServiceDates(query.date,query.connectionDates);
     for(const current of feeds)for(const day of connectionDates)scope(current,day);
    }
-   if(query.method==='directTrips')rows=CPGTFSIndex.directTrips(feed.files,feed.index,query.date,query.from,query.to);
+   if(query.method==='directTrips'){
+    scope(feed,query.date);
+    rows=CPGTFSIndex.directTrips(feed.files,feed.index,query.date,query.from,query.to)
+     .map(row=>({...row,networkId:feed.source.datasetId||feed.source.resourceId,network:feed.source.network}));
+   }
    else if(['nearbyDirectTrips','missionDirectTrips','missionJourneys'].includes(query.method)){
     const radius=query.radiusMeters??700;
     if(!Number.isFinite(radius)||radius<=0||radius>5000)throw new Error('Invalid GTFS search radius');

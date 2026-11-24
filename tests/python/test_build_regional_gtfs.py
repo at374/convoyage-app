@@ -324,6 +324,11 @@ class TMirrorConfig(unittest.TestCase):
         self.assertIn('/resources/83710/download', stan['url'])
         self.assertEqual(stan['bounds'], [48.60, 6.09, 48.74, 6.29])
         self.assertEqual(stan['license'], 'Licence Ouverte 2.0')
+        voironnais = next(s for s in m.MIRROR if s['id'] == 'mreso-voironnais')
+        self.assertEqual(voironnais['url'], 'https://data.mobilites-m.fr/api/gtfs/TPV')
+        self.assertTrue(voironnais['derive_bounds'])
+        self.assertEqual(voironnais['license'], 'ODbL 1.0 + conditions particulières PAN')
+        self.assertEqual(voironnais['publisher'], 'Syndicat Mixte des Mobilités de l’Aire Grenobloise')
         regional = {s['id']: s for s in m.MIRROR}
         expected = {
             'sub-nancy': 'fr-200052264-t0039-0000-1',
@@ -354,8 +359,14 @@ class TMirrorConfig(unittest.TestCase):
 
     def test_bundled_agency_feeds_are_unique_and_licensed(self):
         m = load_module()
-        self.assertEqual(len(m.BUNDLED_AGENCY_FEEDS), 6)
-        bundle = m.BUNDLED_AGENCY_FEEDS[0]
+        self.assertEqual(len(m.BUNDLED_AGENCY_FEEDS), 7)
+        mistral = next(bundle for bundle in m.BUNDLED_AGENCY_FEEDS if any(
+            network['id'] == 'mistral-toulon' for network in bundle['networks']))
+        self.assertEqual(mistral['exclude_route_types'], ['4'])
+        self.assertEqual({network['agency_name'] for network in mistral['networks']},
+                         {'Réseau Mistral', 'Téléphérique Faron'})
+        bundle = next(bundle for bundle in m.BUNDLED_AGENCY_FEEDS if any(
+            network['id'] == 'atoumod-altobus-alencon' for network in bundle['networks']))
         self.assertEqual(bundle['license'], 'Licence Ouverte 2.0')
         self.assertLessEqual(bundle['download_limit'], 80 * 1024 * 1024)
         self.assertEqual(bundle['exclude_route_types'], ['4'])
@@ -363,13 +374,14 @@ class TMirrorConfig(unittest.TestCase):
         self.assertEqual(len(ids), len(set(ids)))
         self.assertEqual(len(ids), 28)
         self.assertTrue(all(agency.get('agency_name') and agency.get('network') for agency in bundle['networks']))
-        jvmalin = m.BUNDLED_AGENCY_FEEDS[1]
+        jvmalin = next(bundle for bundle in m.BUNDLED_AGENCY_FEEDS if any(
+            network['id'] == 'jvmalin-amelys-montargis' for network in bundle['networks']))
         self.assertEqual(jvmalin['license'], 'ODbL 1.0 + conditions particulières PAN')
         self.assertIn('/resources/83521/download', jvmalin['url'])
         self.assertEqual(len(jvmalin['networks']), 19)
         self.assertEqual(len({agency['id'] for agency in jvmalin['networks']}), 19)
         self.assertLessEqual(jvmalin['download_limit'], 60 * 1024 * 1024)
-        self.assertEqual(len({agency['id'] for b in m.BUNDLED_AGENCY_FEEDS for agency in b['networks']}), 91)
+        self.assertEqual(len({agency['id'] for b in m.BUNDLED_AGENCY_FEEDS for agency in b['networks']}), 93)
         for agency in jvmalin['networks']:
             with self.subTest(network=agency['id']):
                 re.compile(agency['agency_pattern'])

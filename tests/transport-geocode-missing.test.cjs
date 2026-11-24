@@ -15,6 +15,19 @@ test('communes absentes de la table : coordonnées inconnues avant géocodage, a
  assert.equal(apres.precision,'adresse');assert.equal(apres.lat,46.1);
 });
 
+test('adresse de rue sans numéro : le géocodeur reçoit aussi les champs to_address/from_address',async()=>{
+ const m={to_city:'Annecy',to_department:'74',to_address:"94 avenue d'Aix-les-Bains"};
+ assert.equal(geo.aAdresseRue(m,'destination'),true);
+ assert.ok(geo.cleAdresse(m,'destination'),'la clé de cache doit inclure l’adresse et la ville');
+ const r=await geo.chercherPoint(m,'destination',fakeFetch(45.870166,6.083469,'street'));
+ assert.equal(r.trouve,true);assert.equal(r.point.precision,'rue');
+ geo.POINTS[r.cle]=r.point;
+ assert.deepEqual(geo.coordonnees(m,'destination'),{lat:45.870166,lng:6.083469,precision:'rue'});
+ const from={from_city:'Voiron',from_address:'Rue Louis Armand'};
+ assert.equal(geo.aAdresseRue(from,'origin'),true);
+ assert.ok(geo.cleAdresse(from,'origin'));
+});
+
 test('service d adresses sans résultat : aucun point inventé',async()=>{
  const m={from_city:'Viviers-du-Lac',origin:{city:'Viviers-du-Lac',zip:'73420'}};
  const r=await geo.chercherPoint(m,'origin',async()=>({ok:true,json:async()=>({features:[]})}));
@@ -28,4 +41,8 @@ test('fiche mission : le géocodage des points manquants précède la recherche 
  const bloc=app.slice(i,app.indexOf('const gp=gps=>',i));
  assert.match(bloc,/G\.chercherPoint\(mm,cote/);
  assert.match(bloc,/panel\.cpGeoTried/);
+ assert.match(bloc,/c\.precision==='ville'&&G\.aAdresseRue\?\.\(mm,cote\)/,
+  'une rue présente ne doit pas rester bloquée sur le centre de la commune');
+ assert.match(app,/streetNeedsLookup = G\.aAdresseRue/,
+  'le cache de la liste doit pouvoir remplacer un ancien centre-ville par le point de rue');
 });

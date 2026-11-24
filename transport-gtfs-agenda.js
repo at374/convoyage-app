@@ -51,6 +51,11 @@ const BASE_RESOURCES=Object.freeze([Object.freeze({
  url:LOCAL_GTFS('mreso-gresivaudan.zip'),fallbackUrls:['https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2'],
  bounds:[45.1,5.7,45.39,6.2],timeZone:'Europe/Paris'
 }),Object.freeze({
+ // Flux M Réso — Pays Voironnais actuel, relayé pour éviter de dépendre du téléchargement mobile direct.
+ id:'mreso-voironnais',datasetId:'mreso-voironnais',network:'M Réso — Pays Voironnais',format:'GTFS',federate:true,
+ url:LOCAL_GTFS('mreso-voironnais.zip'),fallbackUrls:['https://data.mobilites-m.fr/api/gtfs/TPV'],
+ bounds:[45.24,5.4,45.55,5.72],timeZone:'Europe/Paris'
+}),Object.freeze({
  // Ajouts 13/11/2026 (flux officiels du Point d'accès national ; à valider en conditions réelles sur téléphone).
  // TAC Annemasse : jeu 5ca4bcec634f4125a78fad26, Licence Ouverte 2.0, offre 31/08/2026 → 31/08/2027.
  id:'76779',datasetId:'5ca4bcec634f4125a78fad26',network:'TAC Annemasse',format:'GTFS',federate:true,
@@ -267,7 +272,14 @@ function mount(panel,{tasks=[],resources=DEFAULT_RESOURCES,clientFactory=()=>roo
      // Sur un réseau fréquent, les 20 premiers tiennent dans quelques minutes : 10 premiers + 10 répartis sur le reste.
      const rest=distinct.slice(10),step=Math.max(1,Math.ceil(rest.length/10));
      const candidates=[...distinct.slice(0,10),...rest.filter((_,i)=>i%step===0).slice(0,10)];
-     if(active())onResults({task,itineraries:shown,candidates});
+     const queryDay=async({networkId,fromStopId,toStopId,date})=>{
+      if(!active())throw new Error('GTFS agenda closed');
+      const result=await client.query({method:'directTrips',networkId,from:fromStopId,to:toStopId,date,limit:500});
+      if(!result||!Array.isArray(result.rows))throw new Error('Invalid GTFS daily timetable response');
+      result.rows.truncated=result.truncated===true;
+      return result.rows;
+     };
+     if(active())onResults({task,itineraries:shown,candidates,queryDay});
      const marginNote=Number.isFinite(Date.parse(task.latestArrival))?' Marge avant mission : '+window.marginMinutes+' min minimum (marche et circulation à vérifier).':'';
      const incomplete=truncated||partialNetworks||invalidJourneys>0;
      const coverageNote=incomplete?' Recherche partielle : certains horaires ou réseaux n’ont pas pu être vérifiés.':'';

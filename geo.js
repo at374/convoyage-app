@@ -154,7 +154,14 @@
   // Coordonnées : GPS fourni par la plateforme > ville connue > chef-lieu du département. précision indiquée.
   // V138 : points GPS d'adresses cherchés via le service officiel d'adresses (api-adresse.data.gouv.fr), gardés sur l'appareil. Précision : 'adresse' | 'rue' | 'ville'.
   const POINTS = {};
-  const adresseDe = (m, cote) => { const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to'; const a = String(m[cote + '_address'] || p.address || p.street || '').trim(), v = String(m[pre + '_city'] || p.city || '').trim(); const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim(); return { a, v, cp, d: m[pre + '_department'] || '' }; };
+  const adresseDe = (m, cote) => { const p = m[cote] || {}, pre = cote === 'origin' ? 'from' : 'to';
+    // Les intégrations de plateformes n'emploient pas toutes les mêmes noms : certaines donnent
+    // origin/destination_address, d'autres from/to_address ou pickup/delivery_address.
+    const champs = cote === 'origin' ? [m.origin_address, m.from_address, m.pickup_address, m.pickup?.address, p.address, p.street] :
+      [m.destination_address, m.to_address, m.delivery_address, m.dropoff_address, m.dropoff?.address, p.address, p.street];
+    const a = String(champs.find(v => typeof v === 'string' && v.trim()) || '').trim(), v = String(m[pre + '_city'] || p.city || '').trim();
+    const cp = String(p.postal_code || (/\b(\d{5})\b/.exec(a) || [])[1] || '').trim(); return { a, v, cp, d: m[pre + '_department'] || '' }; };
+  const aAdresseRue = (m, cote) => /\b(?:rue|avenue|av\.?|boulevard|bd\.?|route|rte\.?|chemin|ch\.?|impasse|all[ée]e|place|quai|cours|passage|sentier|voie|zone|zi|za)\b/i.test(adresseDe(m, cote).a);
   const cleAdresse = (m, cote) => { const x = adresseDe(m, cote); return x.v ? [x.a, x.cp || x.d, x.v].map(y => String(y).toLowerCase()).join('|') : ''; };
   async function chercherPoint(m, cote, fetchFn) {
     const cle = cleAdresse(m, cote); if (!cle) return null;
@@ -277,7 +284,7 @@
     if (z.type === 'region') return REGIONS[z.code] || z.code;
     return z.nom + (z.dep ? ' (' + z.dep + ')' : '');
   }
-  const api = { POINTS, cleAdresse, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone, chargerVillesFrontalieres };
+  const api = { POINTS, cleAdresse, aAdresseRue, chercherPoint, REGIONS, DEPARTEMENTS, VILLES, norm, codeDepartement, departementDuCodePostal, trouverVille, departementMission, coordonnees, volOiseauKm, routeKm, COEF_ROUTE, villesDesMissions, suggestions, correspond, filtrer, libelleZone, chargerVillesFrontalieres };
   root.CPGeo = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

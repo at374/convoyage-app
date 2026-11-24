@@ -12,7 +12,7 @@ const hub=fs.readFileSync(path.join(root,'transport-mission-hub.js'),'utf8');
 test('fiche mission : moteur automatique raccordé et sans formulaire de recherche manuel',()=>{
  assert.match(html,/transport-mission-hub\.js\?v=/);
  assert.match(app,/window\.CPTransportHub/);
- assert.match(app,/Hub\.render\(host,\{\.\.\.view,flexCandidates:flexFor\(label\)\}\)/);
+ assert.match(app,/Hub\.render\(host,\{\.\.\.view,flexCandidates:flexFor\(label\),loadDaySchedules:request=>dayScheduleQuery\(label,request\)\}\)/);
  assert.match(app,/startTransportHub\(\)/);
 });
 test('géocodage : une requête bloquée ne doit pas empêcher le hub de démarrer',()=>{
@@ -25,7 +25,7 @@ test('géocodage : une requête bloquée ne doit pas empêcher le hub de démarr
 });
 
 test('cartes Android : styles chargés avec cache invalidé et prix mis en évidence',()=>{
- assert.match(html,/style\.css\?v=transport-cards-20261117d/);
+ assert.match(html,/style\.css\?v=transport-cards-20261124a/);
  assert.match(css,/\.cp-hub-card \.cp-hub-price\{[^}]*font-size:1\.28em/);
  assert.match(css,/@media\(max-width:600px\)/);
  assert.match(css,/\.cp-hub-card \.cp-hub-map\{max-width:100%/);
@@ -63,7 +63,7 @@ test('inventaire : ne plus annoncer Léman Pass entièrement absent',()=>{
 });
 
 test('premiere proposition : carte et marches visibles sans ouverture manuelle',()=>{
- assert.match(hub,/function card\(doc,j,labels,expanded=false\)/);
+ assert.match(hub,/function card\(doc,j,labels,expanded=false,loadDaySchedules=null\)/);
  assert.match(hub,/if\(expanded\)c\.open=true/);
  assert.match(hub,/if\(c\.open\)buildBody\(\)/);
  assert.match(hub,/const openInitial=v\.picks\.length>0&&host\.dataset\.cpInitialCardOpened!=='true'/);
@@ -73,6 +73,14 @@ test('premiere proposition : carte et marches visibles sans ouverture manuelle',
  assert.match(hub,/'🚶 Voir la marche '\+walkNo/);
  assert.doesNotMatch(hub,/Cartes des trajets piétons/);
  assert.doesNotMatch(hub,/Voir la marche '\+\(i\+1\)\+' sur la carte OpenStreetMap/);
+});
+
+test('horaires de la journée : étiquette commune, requête GTFS locale et opérateurs nationaux',()=>{
+ assert.match(hub,/Voir tous les horaires du jour pour ce transport local/);
+ assert.match(hub,/item\.gtfsRaw=\{operator,networkId:'national:'\+operator,date:r\.date/);
+ assert.match(app,/earliestDeparture:'00:00:00',latestArrival:'47:59:59'/);
+ assert.match(app,/maxResults:100,includeTransfers:true/);
+ assert.match(css,/\.cp-hub-day-schedules/);
 });
 
 test('missions multi-jours : onglets date pickup/livraison et aucun jour inventé',()=>{
@@ -99,7 +107,7 @@ test('jonction multi-jours : onglet calé sur la prochaine prise en charge',()=>
 });
 
 test('cartes piétonnes : conserver les détails construits après rafraîchissement',()=>{
- assert.match(hub,/const node=card\(doc,j,labels,expandFirst\|\|\(key&&opened\.has\(key\)\)\)/);
+ assert.match(hub,/const node=card\(doc,j,labels,expandFirst\|\|\(key&&opened\.has\(key\)\),v\.loadDaySchedules\)/);
  assert.match(hub,/if\(key\)node\.setAttribute\('data-journey-key',key\)/);
  assert.doesNotMatch(hub,/if\(opened\.has\(key\)\)node\.open=true/);
 });

@@ -304,6 +304,9 @@ test('correspondance GTFS : ≥ 10 min programmées = réserve à confirmer ; pl
  const row=(arr1,dep2)=>({operator:'sncf',date:'2026-11-16',originStop:A,destinationStop:B,transferStop:T,departure:'08:00',arrival:'10:00',
   legs:[{line:'K1',departure:'08:00',arrival:arr1},{line:'K2',departure:dep2,arrival:'10:00'}]});
  const long=H.fromNationalGTFS([row('08:40','08:55')],'sncf')[0],short=H.fromNationalGTFS([row('08:40','08:44')],'sncf')[0];
+ assert.equal(long.legs[0].gtfsRaw.operator,'sncf');
+ assert.equal(long.legs[0].gtfsRaw.networkId,'national:sncf');
+ assert.equal(long.legs[0].gtfsRaw.date,'2026-11-16');
  assert.ok(long.missing.includes('correspondance programmée non confirmée en temps réel'));
  assert.ok(short.missing.includes('correspondance GTFS non confirmée'));
  const task={from:{lat:A.lat,lon:A.lon},to:{lat:B.lat,lon:B.lon},earliestDeparture:'2026-11-16T06:00:00Z'};

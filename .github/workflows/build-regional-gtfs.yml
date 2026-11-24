@@ -24,6 +24,8 @@ on:
       - 'tests/bretagne-real-agency-feeds.test.cjs'
       - 'tests/idfm-real-agency-feeds.test.cjs'
       - 'tests/paca-zou-express-real-feed.test.cjs'
+      - 'tests/paca-urban-real-feeds.test.cjs'
+      - 'tests/mreso-voironnais-real-feed.test.cjs'
       - 'tests/paca-zou-proximity-real-feed.test.cjs'
       - 'tests/occitanie-lio-real-feed.test.cjs'
       - 'tests/occitanie-urban-real-feeds.test.cjs'
@@ -120,6 +122,14 @@ jobs:
         env:
           REQUIRE_REAL_GTFS: '1'
         run: node --test tests/paca-zou-express-real-feed.test.cjs
+      - name: Vérifier Lignes d’Azur et les deux services terrestres Mistral
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/paca-urban-real-feeds.test.cjs
+      - name: Vérifier le bus M Réso de Voiron jusqu’à l’arrêt Louis Néel
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/mreso-voironnais-real-feed.test.cjs
       - name: Vérifier les fragments et horaires liO Occitanie dans l’indexeur GTFS
         env:
           REQUIRE_REAL_GTFS: '1'

@@ -793,3 +793,8 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .cp-hub-card svg.cp-hub-map,#cpTransportMissionDetails .cp-hub-map{width:100%;max-width:100%;height:auto;box-sizing:border-box}
 .cp-hub-search-help{display:grid;gap:6px;margin:8px 0;padding:10px;border:1px solid var(--accent,#e0a800);border-radius:10px}
 .cp-hub-copy{min-height:44px;padding:8px 10px;border:1px solid var(--accent,#e0a800);border-radius:10px;background:transparent;color:inherit;font-weight:700;text-align:left}
+.cp-hub-day-schedules{margin:8px 0;padding:8px 10px;border:1px solid var(--accent,#e0a800);border-radius:10px;background:color-mix(in srgb,var(--accent,#e0a800) 8%,transparent)}
+.cp-hub-day-schedules summary{font-weight:800;cursor:pointer}
+.cp-hub-day-schedule-rows{margin-top:7px}
+.cp-hub-day-schedule-rows ol{margin:6px 0;padding-left:22px}
+.cp-hub-day-schedule-rows li{margin:4px 0}
