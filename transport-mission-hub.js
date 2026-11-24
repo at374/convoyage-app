@@ -234,9 +234,9 @@ function fromSNCF(answer){
   return Number.isFinite(wait)&&wait>0&&wait<10*60000?'⚠ Correspondance serrée à '+l.from+' : '+Math.round(wait/60000)+' min (horaire officiel SNCF, changement de quai non vérifié).':null;};
  return (answer&&Array.isArray(answer.itineraries)?answer.itineraries:[]).map(it=>{
   const legs=it.legs||[],alerts=legs.slice(1).map((l,i)=>tightTransferAlert({...l,arrival:legs[i].arrival})).filter(Boolean);
-  return journey('SNCF (GTFS officiel)',legs.map(l=>leg({
+  return {...journey('SNCF (GTFS officiel)',legs.map(l=>leg({
    mode:/car|bus/i.test(l.line||'')?'Car':'Train',line:[l.line,l.trainNumber].filter(Boolean).join(' '),provider:'SNCF',
-   from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.departure,arrival:l.arrival})),{dataDate:answer.sourceVersion||null,alerts});
+   from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.departure,arrival:l.arrival})),{dataDate:answer.sourceVersion||null,alerts}),missing:['horaire GTFS non confirmé en temps réel']};
  });
 }
 // Tarif publié dans le flux GTFS lui-même (fare_attributes / fare_rules), attaché à chaque portion comme le fait

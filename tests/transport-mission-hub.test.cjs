@@ -841,5 +841,9 @@ test('le fournisseur SNCF charge le TER K21 avec la limite des fiches mission',a
   from:{lat:45.902047,lon:6.121826},to:{lat:45.1914,lon:5.7143},
   latestArrival:'2026-11-02T16:00:00+01:00',marginMinutes:15
  });
- assert.ok(journeys.some(j=>j.legs.some(l=>l.line==='K21'&&l.from==='Annecy'&&l.to==='Grenoble')));
+ const direct=journeys.find(j=>j.legs.some(l=>l.line==='K21'&&l.from==='Annecy'&&l.to==='Grenoble'));
+ assert.ok(direct);
+ const assessed=H.assess(direct,{latestArrival:'2026-11-02T16:00:00+01:00',marginMinutes:15});
+ assert.equal(assessed.feasible,false);
+ assert.ok(assessed.reasons.includes('horaire GTFS non confirmé en temps réel'));
 });
