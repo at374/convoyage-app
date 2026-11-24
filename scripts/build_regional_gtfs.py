@@ -307,7 +307,7 @@ MIRROR = [
      'derive_bounds': True, 'license': 'ODbL', 'publisher': 'Tisséo Collectivités'},
     {'id': 'tam-montpellier', 'network': 'TaM Montpellier', 'dataset': 'offre-de-transport-tam-en-temps-reel-gtfs-rt-urbain-et-suburbain',
      'url': 'https://gtfsproxy.e-tam.fr/COMMON/GTFS.zip',
-     'derive_bounds': True, 'license': 'Licence Ouverte 2.0', 'publisher': 'Montpellier Méditerranée Métropole'},
+     'derive_bounds': True, 'license': 'ODbL', 'publisher': 'Montpellier Méditerranée Métropole'},
     {'id': 'tango-nimes', 'network': 'Tango Nîmes', 'dataset': 'offre-de-transport-du-reseau-tango-de-nimes-metropole-gtfs-gtfs-rt',
      'url': 'https://www.data.gouv.fr/api/1/datasets/r/15aeb8a5-1cca-4bb9-ae5f-b6e67e4ff2ab',
      'derive_bounds': True, 'license': 'Licence Ouverte 2.0', 'publisher': 'CA de Nîmes Métropole'},

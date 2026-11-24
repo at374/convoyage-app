@@ -672,3 +672,8 @@ Limites connues par les producteurs : Tisséo n’inclut pas ses services TAD zo
 ## Correctif des fenêtres d’indexation des essais régionaux (24/11/2026)
 
 Le chargeur GTFS limite l’indexation explicite à sept dates par appel. Les trois nouveaux tests de trajet PACA/Occitanie utilisent désormais une fenêtre de sept jours, cohérente avec cette limite. La collecte réelle ZOU et les contrôles JVMALIN ont bien été atteints dans le run précédent; l’échec ZOU était uniquement lié à la fenêtre de 30 dates fournie au chargeur. Une nouvelle collecte est nécessaire pour confirmer le ZIP et les trajets après correction.
+
+
+## Licence TaM vérifiée (24/11/2026)
+
+Après vérification de la fiche data.gouv.fr, TaM urbain/suburbain est sous Open Data Commons Open Database License (ODbL), comme Tisséo. La configuration du miroir et son test local reflètent cette licence; le GTFS de référence fait environ 7 Mo selon la fiche publique. Aucun tarif n’est considéré vérifié par ce raccordement.

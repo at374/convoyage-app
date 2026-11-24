@@ -437,7 +437,7 @@ class TOccitanieUrbanConfig(unittest.TestCase):
         by_id = {entry['id']: entry for entry in m.MIRROR}
         expected = {
             'tisseo-toulouse': ('tisseo-reseau-transport-urbain-toulousain', 'ODbL'),
-            'tam-montpellier': ('offre-de-transport-tam-en-temps-reel-gtfs-rt-urbain-et-suburbain', 'Licence Ouverte 2.0'),
+            'tam-montpellier': ('offre-de-transport-tam-en-temps-reel-gtfs-rt-urbain-et-suburbain', 'ODbL'),
             'tango-nimes': ('offre-de-transport-du-reseau-tango-de-nimes-metropole-gtfs-gtfs-rt', 'Licence Ouverte 2.0'),
         }
         for network_id, (dataset, license_name) in expected.items():
