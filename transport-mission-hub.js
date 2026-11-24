@@ -1096,25 +1096,43 @@ function makeProviders(r,opts={}){
  // plusieurs flux GTFS doivent d'abord être téléchargés sur une connexion lente), mais ce délai interne au
  // worker était figé à 90 s pour TOUT appel, quel que soit le calcul demandé — il coupait donc court avant
  // même que le budget de 150 s prévu par l'appelant ne soit atteint. Rendu configurable par appel.
+ let worker=null,workerSequence=0,workerDisposed=false;
+ const workerPending=new Map();
+ const stopWorker=error=>{
+  const current=worker;worker=null;
+  for(const request of workerPending.values()){clearTimeout(request.t);request.reject(error);}
+  workerPending.clear();
+  current?.terminate();
+ };
+ Object.defineProperty(P,'dispose',{value:()=>{
+  workerDisposed=true;
+  stopWorker(new Error('Recherche transport annulée'));
+ }});
  const workerCall=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
-  let w=r.__cpHubWorker;
-  if(!w){
-   // 23/11/2026 : version ajoutée à l'URL du worker (jusqu'ici absente) pour que le correctif de
-   // cession entre paires de réseaux (runCorrespondances, transport-hub-local-worker.js) soit bien
-   // rechargé par les navigateurs/service worker en cache, au même titre que les autres fichiers.
-   try{w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js?v=tad-main-20261124a');}
+  if(workerDisposed){reject(new Error('Recherche transport annulée'));return;}
+  if(!worker){
+   try{worker=new r.Worker('transport-hub-local-worker.js?v=tad-main-20261124a');}
    catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
-   r.__cpHubWorkerPending=new Map();
-   const fail=e=>{r.__cpHubWorkerOffUntil=Date.now()+10000;r.__cpHubWorker=null;for(const q of r.__cpHubWorkerPending.values())q.reject(e);r.__cpHubWorkerPending.clear();try{w.terminate();}catch(_){}};
-   w.onerror=e=>{noteWorkerFail('erreur: '+(e&&(e.message||e.type)||'?'));fail(new Error('worker'));};
-   w.onmessageerror=()=>{noteWorkerFail('message illisible');fail(new Error('worker'));};
-   w.onmessage=({data})=>{const q=r.__cpHubWorkerPending.get(data&&data.id);if(!q)return;r.__cpHubWorkerPending.delete(data.id);clearTimeout(q.t);
-    if(data.error)q.reject(new Error(data.error));else q.resolve(data);};
+   const activeWorker=worker;
+   const fail=(reason)=>{
+    if(worker!==activeWorker)return;
+    noteWorkerFail(reason);
+    r.__cpHubWorkerOffUntil=Date.now()+10000;
+    stopWorker(new Error('worker'));
+   };
+   worker.onerror=e=>fail('erreur: '+(e&&(e.message||e.type)||'?'));
+   worker.onmessageerror=()=>fail('message illisible');
+   worker.onmessage=({data})=>{
+    if(worker!==activeWorker)return;
+    const q=workerPending.get(data?.id);if(!q)return;
+    workerPending.delete(data.id);clearTimeout(q.t);
+    if(data.error)q.reject(new Error(data.error));else q.resolve(data);
+   };
   }
-  const id=(r.__cpHubWorkerSeq=(r.__cpHubWorkerSeq||0)+1);
-  const t=setTimeout(()=>{r.__cpHubWorkerPending.delete(id);noteWorkerFail('délai dépassé ('+Math.round(timeoutMs/1000)+' s)');reject(new Error('timeout'));},timeoutMs);
-  r.__cpHubWorkerPending.set(id,{resolve,reject,t});
-  try{w.postMessage({id,...payload});}catch(e){r.__cpHubWorkerPending.delete(id);clearTimeout(t);noteWorkerFail('postMessage: '+(e&&e.message||e));reject(e);}
+  const id=++workerSequence;
+  const t=setTimeout(()=>{workerPending.delete(id);noteWorkerFail('délai dépassé ('+Math.round(timeoutMs/1000)+' s)');reject(new Error('timeout'));},timeoutMs);
+  workerPending.set(id,{resolve,reject,t});
+  try{worker.postMessage({id,...payload});}catch(e){workerPending.delete(id);clearTimeout(t);noteWorkerFail('postMessage: '+(e&&e.message||e));reject(e);}
  });
  const workerRows=(key,urls,date,from,to,extra)=>workerCall({key,urls,date,from,to,radius:3000,...extra});
  // 21/11/2026 (Laurent : « l'écran se fige pendant la recherche ») : la recherche de correspondances
@@ -2308,7 +2326,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   launch(task);
  }
  return {start:label=>{const f=lazy[label];if(f){delete lazy[label];if(!disposed)f();}},ingest:(label,source,journeys)=>add(label,source,journeys),view,
-  dispose:()=>{disposed=true;controller.abort();},signal:controller.signal};
+  dispose:()=>{if(disposed)return;disposed=true;controller.abort();providers.dispose?.();},signal:controller.signal};
 }
 
 /* ---------- Affichage (cartes Android) ---------- */

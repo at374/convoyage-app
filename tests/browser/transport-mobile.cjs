@@ -332,7 +332,8 @@ async function run(){
    const r=node.getBoundingClientRect();
    return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===node;
   }),true,'Install launcher is accessible again after closing the sheet');
-  await until(()=>abortedRequests.length>=abortedBefore+3&&activeWorkers.size===0,'Closing the mission sheet must abort regional fetches and terminate its GTFS worker');
+  await until(()=>abortedRequests.length>=abortedBefore+3,'Closing the mission sheet must abort regional fetches');
+  await until(()=>activeWorkers.size===0,'Closing the mission sheet must terminate its GTFS workers');
   const pendingText=await page.locator('#cpTransportMissionDetails').textContent();
   for(const resolve of regionalGates.splice(0))resolve();
   const lateSibra=page.waitForResponse(response=>new URL(response.url()).pathname==='/data/sibra/sibra-2026-11-02.json');
