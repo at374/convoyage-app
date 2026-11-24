@@ -194,11 +194,12 @@ class TMirrorConfig(unittest.TestCase):
             'rezo-verdun': 'fr-200052264-t0011-0000-1',
             'tcat-troyes': 'donnees-tcat-troyes-champagne-metropole-1',
         }
+        expected_license = {'tcat-troyes': 'ODbL'}
         for network_id, dataset in expected.items():
             with self.subTest(network_id=network_id):
                 self.assertEqual(regional[network_id]['dataset'], dataset)
                 self.assertTrue(regional[network_id]['derive_bounds'])
-                self.assertEqual(regional[network_id]['license'], 'Licence Ouverte 2.0')
+                self.assertEqual(regional[network_id]['license'], expected_license.get(network_id, 'Licence Ouverte 2.0'))
 
     def test_filtered_mirror_entries_well_formed(self):
         m = load_module()

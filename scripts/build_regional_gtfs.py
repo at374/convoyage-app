@@ -146,7 +146,7 @@ MIRROR = [
      'license': 'Licence Ouverte 2.0'},
     {'id': 'tcat-troyes', 'network': 'TCAT Troyes', 'dataset': 'donnees-tcat-troyes-champagne-metropole-1',
      'url': 'https://transport.data.gouv.fr/resources/79847/download', 'derive_bounds': True,
-     'license': 'Licence Ouverte 2.0'},
+     'license': 'ODbL', 'publisher': 'Troyes Champagne Métropole'},
     # Première région dans la progression en escargot au départ d'AURA : Bourgogne-Franche-Comté.
     # Les ressources départementales Mobigo sont publiées individuellement par la Région sous Licence Ouverte 2.0.
     # Elles restent séparées pour conserver les calendriers et éviter de fusionner des identifiants GTFS homonymes.
