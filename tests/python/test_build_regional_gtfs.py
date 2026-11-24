@@ -105,6 +105,12 @@ class TFilterByBounds(unittest.TestCase):
         finally:
             m.MAX_OUT = old_max
 
+class TDerivedStopBounds(unittest.TestCase):
+    def test_bounds_are_calculated_from_valid_gtfs_stop_coordinates(self):
+        m = load_module()
+        with zipfile.ZipFile(io.BytesIO(tcl_like_feed())) as z:
+            self.assertEqual(m.stop_bounds(z), [45.749, 4.826, 46.3, 5.3])
+
 class TNestedPackage(unittest.TestCase):
     def test_required_gtfs_tables_under_one_directory_are_read_and_validated(self):
         m = load_module()
@@ -153,6 +159,9 @@ class TMirrorConfig(unittest.TestCase):
             seen.add(spec['id'])
             self.assertTrue(spec.get('url', '').startswith('https://'), spec['id'] + ' : URL non https')
             bounds = spec.get('bounds')
+            if bounds is None:
+                self.assertTrue(spec.get('derive_bounds'), spec['id'] + ' : emprise non fournie ni calculée')
+                continue
             self.assertEqual(len(bounds), 4, spec['id'] + ' : bbox incomplète')
             lat_min, lon_min, lat_max, lon_max = bounds
             self.assertLess(lat_min, lat_max, spec['id'] + ' : latitudes inversées')
@@ -173,6 +182,23 @@ class TMirrorConfig(unittest.TestCase):
         self.assertIn('/resources/83710/download', stan['url'])
         self.assertEqual(stan['bounds'], [48.60, 6.09, 48.74, 6.29])
         self.assertEqual(stan['license'], 'Licence Ouverte 2.0')
+        regional = {s['id']: s for s in m.MIRROR}
+        expected = {
+            'sub-nancy': 'fr-200052264-t0039-0000-1',
+            'trace-colmar': 'fr-200052264-t0004-0000-1',
+            'imagine-epinal': 'fr-200052264-t0009-0000-1',
+            'ticea-saint-dizier': 'fr-200052264-t0010-0000-1',
+            'transavold-saint-avold': 'fr-200052264-t0015-0000-1',
+            'cmonbus-chaumont': 'offre-de-transport-du-reseau-cmonbus-communaute-dagglomeration-de-chaumont',
+            'tub-bar-le-duc': 'fr-200052264-t0003-0000-1',
+            'rezo-verdun': 'fr-200052264-t0011-0000-1',
+            'tcat-troyes': 'donnees-tcat-troyes-champagne-metropole-1',
+        }
+        for network_id, dataset in expected.items():
+            with self.subTest(network_id=network_id):
+                self.assertEqual(regional[network_id]['dataset'], dataset)
+                self.assertTrue(regional[network_id]['derive_bounds'])
+                self.assertEqual(regional[network_id]['license'], 'Licence Ouverte 2.0')
 
     def test_filtered_mirror_entries_well_formed(self):
         m = load_module()

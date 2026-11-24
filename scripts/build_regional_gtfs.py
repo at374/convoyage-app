@@ -11,7 +11,7 @@ fare_attributes / fare_rules quand le producteur les publie. Chaque fichier est 
 obligatoires, calendrier, références) et plafonné en taille ; un manifeste daté (SHA-256) est écrit.
 Usage : python3 scripts/build_regional_gtfs.py [--aggregate fichier.zip] [--out data/gtfs] [--offline]
 """
-import argparse, csv, hashlib, io, json, os, re, sys, tempfile, unicodedata, urllib.request, zipfile, datetime
+import argparse, csv, hashlib, io, json, math, os, re, sys, tempfile, unicodedata, urllib.request, zipfile, datetime
 
 UA = {'User-Agent': 'ConvoyageUltra-GTFS/1.0'}
 MAX_OUT = 12 * 1024 * 1024
@@ -117,6 +117,36 @@ MIRROR = [
      'url': 'https://transport.data.gouv.fr/resources/83710/download',
      'bounds': [48.60, 6.09, 48.74, 6.29], 'license': 'Licence Ouverte 2.0',
      'publisher': 'Fluo Grand Est / Métropole du Grand Nancy'},
+    # Prochaine tranche Grand Est. Les emprises sont mesurées dans stops.txt au moment de la collecte
+    # (derive_bounds), jamais estimées à partir du nom de la ville.
+    {'id': 'sub-nancy', 'network': 'SUB Nancy', 'dataset': 'fr-200052264-t0039-0000-1',
+     'url': 'https://transport.data.gouv.fr/resources/80431/download', 'derive_bounds': True,
+     'license': 'Licence Ouverte 2.0'},
+    {'id': 'trace-colmar', 'network': 'TRACE Colmar', 'dataset': 'fr-200052264-t0004-0000-1',
+     'url': 'https://transport.data.gouv.fr/resources/80479/download', 'derive_bounds': True,
+     'license': 'Licence Ouverte 2.0'},
+    {'id': 'imagine-epinal', 'network': 'Imagine Épinal', 'dataset': 'fr-200052264-t0009-0000-1',
+     'url': 'https://transport.data.gouv.fr/resources/80461/download', 'derive_bounds': True,
+     'license': 'Licence Ouverte 2.0'},
+    {'id': 'ticea-saint-dizier', 'network': 'Ticéa Saint-Dizier', 'dataset': 'fr-200052264-t0010-0000-1',
+     'url': 'https://transport.data.gouv.fr/resources/80477/download', 'derive_bounds': True,
+     'license': 'Licence Ouverte 2.0'},
+    {'id': 'transavold-saint-avold', 'network': 'Transavold Saint-Avold', 'dataset': 'fr-200052264-t0015-0000-1',
+     'url': 'https://transport.data.gouv.fr/resources/82413/download', 'derive_bounds': True,
+     'license': 'Licence Ouverte 2.0'},
+    {'id': 'cmonbus-chaumont', 'network': 'Cmonbus Chaumont',
+     'dataset': 'offre-de-transport-du-reseau-cmonbus-communaute-dagglomeration-de-chaumont',
+     'url': 'https://transport.data.gouv.fr/resources/80410/download', 'derive_bounds': True,
+     'license': 'Licence Ouverte 2.0'},
+    {'id': 'tub-bar-le-duc', 'network': 'TUB Bar-le-Duc', 'dataset': 'fr-200052264-t0003-0000-1',
+     'url': 'https://transport.data.gouv.fr/resources/80441/download', 'derive_bounds': True,
+     'license': 'Licence Ouverte 2.0'},
+    {'id': 'rezo-verdun', 'network': 'Rézo Verdun', 'dataset': 'fr-200052264-t0011-0000-1',
+     'url': 'https://transport.data.gouv.fr/resources/80772/download', 'derive_bounds': True,
+     'license': 'Licence Ouverte 2.0'},
+    {'id': 'tcat-troyes', 'network': 'TCAT Troyes', 'dataset': 'donnees-tcat-troyes-champagne-metropole-1',
+     'url': 'https://transport.data.gouv.fr/resources/79847/download', 'derive_bounds': True,
+     'license': 'Licence Ouverte 2.0'},
     # Première région dans la progression en escargot au départ d'AURA : Bourgogne-Franche-Comté.
     # Les ressources départementales Mobigo sont publiées individuellement par la Région sous Licence Ouverte 2.0.
     # Elles restent séparées pour conserver les calendriers et éviter de fusionner des identifiants GTFS homonymes.
@@ -275,6 +305,26 @@ def read_table(z, name):
     with z.open(matches[0]) as s:
         reader = csv.DictReader(io.TextIOWrapper(s, encoding='utf-8-sig', newline=''))
         return reader.fieldnames, list(reader)
+
+
+def stop_bounds(z):
+    """Emprise réelle issue des coordonnées GTFS, utile aux flux miroir sans bbox manuelle."""
+    _, stops = read_table(z, 'stops.txt')
+    points = []
+    for stop in stops:
+        try:
+            lat, lon = float(stop.get('stop_lat') or 'nan'), float(stop.get('stop_lon') or 'nan')
+        except ValueError:
+            continue
+        if -90 <= lat <= 90 and -180 <= lon <= 180:
+            points.append((lat, lon))
+    if not points:
+        raise ValueError('aucun arrêt avec coordonnées GPS valides')
+    # Arrondir vers l'extérieur : un arrondi au plus proche pouvait repousser un point valide de < 0,5 m.
+    return [math.floor(min(p[0] for p in points) * 1_000_000) / 1_000_000,
+            math.floor(min(p[1] for p in points) * 1_000_000) / 1_000_000,
+            math.ceil(max(p[0] for p in points) * 1_000_000) / 1_000_000,
+            math.ceil(max(p[1] for p in points) * 1_000_000) / 1_000_000]
 
 
 def write_table(out, name, fields, rows):
@@ -494,12 +544,13 @@ def main():
                 p = download(origin, MAX_OUT)
                 with zipfile.ZipFile(p) as z:
                     trips, times = validate(z)
+                    bounds = stop_bounds(z) if spec.get('derive_bounds') else spec['bounds']
                 data = open(p, 'rb').read()
                 name = spec['id'] + '.zip'
                 with open(os.path.join(args.out, name), 'wb') as f:
                     f.write(data)
                 manifest['networks'][spec['id']] = {'network': spec['network'], 'file': name, 'sha256': hashlib.sha256(data).hexdigest(),
-                                                    'bytes': len(data), 'bounds': spec['bounds'], 'origin': origin, 'trips': trips,
+                                                    'bytes': len(data), 'bounds': bounds, 'origin': origin, 'trips': trips,
                                                     **{key: spec[key] for key in ('license', 'publisher') if spec.get(key)}}
             except BaseException as e:
                 manifest['errors'][spec['id']] = 'erreur : %s' % e
