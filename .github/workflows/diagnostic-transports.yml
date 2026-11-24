@@ -8,6 +8,7 @@ on:
     paths:
       - '.github/workflows/diagnostic-transports.yml'
       - 'scripts/diagnostic-transports-reel.cjs'
+      - 'scripts/moteurs_regionaux_paires.py'
       - 'scripts/test-pedestrian-hub.cjs'
       - 'transport-tripgo.js'
       - 'transport-mission-hub.js'

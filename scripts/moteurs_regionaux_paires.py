@@ -23,11 +23,20 @@ for id_,file,b in nets:
         for t in trips:
             if not active(t['service_id'],d):continue
             s=sorted(st.get(t['trip_id'],[]),key=lambda x:int(x['stop_sequence']))
-            if len(s)<2 or s[0]['stop_id'] not in stops or s[-1]['stop_id'] not in stops:continue
-            a,c=stops[s[0]['stop_id']],stops[s[-1]['stop_id']]
-            if not(inb(a) and inb(c)) or abs(a[0]-c[0])+abs(a[1]-c[1])<0.01:continue
-            if not('06:00:00'<=s[0]['departure_time']<='20:00:00'):continue
-            found={'date':d.isoformat(),'from':{'lat':a[0],'lon':a[1]},'to':{'lat':c[0],'lon':c[1]},'dep':s[0]['departure_time']};break
+            # A route may begin or end outside the operator's useful local area while
+            # still serving valid stop pairs inside it. Sample actual ordered pairs,
+            # rather than requiring the course's terminal stops to be in the bbox.
+            for i,origin in enumerate(s[:-1]):
+                if origin['stop_id'] not in stops or not('06:00:00'<=origin['departure_time']<='20:00:00'):continue
+                a=stops[origin['stop_id']]
+                if not inb(a):continue
+                for destination in s[i+1:]:
+                    if destination['stop_id'] not in stops:continue
+                    c=stops[destination['stop_id']]
+                    if not inb(c) or abs(a[0]-c[0])+abs(a[1]-c[1])<0.01:continue
+                    found={'date':d.isoformat(),'from':{'lat':a[0],'lon':a[1]},'to':{'lat':c[0],'lon':c[1]},'dep':origin['departure_time']};break
+                if found:break
+            if found:break
         if found:break
     out.append({'id':id_,'file':file,'trips':len(trips),**(found or {'error':'aucune course dans l’emprise sur 7 jours'})})
 json.dump(out,open(sys.argv[1],'w'))
