@@ -1,5 +1,6 @@
 """Tests hors ligne de scripts/build_regional_gtfs.py sur un agrégat Oùra de test."""
 import importlib.util, io, json, os, subprocess, sys, tempfile, unittest, zipfile
+from unittest import mock
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def load_module():
@@ -222,6 +223,38 @@ class TRouteExclusions(unittest.TestCase):
             self.assertNotIn('BOAT', out.read('routes.txt').decode())
             self.assertNotIn('T-BOAT', out.read('trips.txt').decode())
             self.assertNotIn('UK1', out.read('stops.txt').decode())
+
+
+class TDownloadCleanup(unittest.TestCase):
+    def test_temporary_archive_is_removed_after_size_limit_failure(self):
+        m = load_module()
+        with tempfile.TemporaryDirectory() as directory:
+            real_temp = tempfile.NamedTemporaryFile
+            factory = lambda delete, suffix: real_temp(delete=delete, suffix=suffix, dir=directory)
+            with mock.patch.object(m.urllib.request, 'urlopen', return_value=io.BytesIO(b'123456')):
+                with mock.patch.object(m.tempfile, 'NamedTemporaryFile', side_effect=factory):
+                    with self.assertRaises(SystemExit):
+                        m.download('https://example.test/feed.zip', limit=4)
+            self.assertEqual(os.listdir(directory), [])
+
+    def test_temporary_archive_is_removed_after_interrupted_stream(self):
+        m = load_module()
+        class BrokenStream:
+            def __init__(self): self.calls = 0
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def read(self, _size):
+                self.calls += 1
+                if self.calls == 1: return b'partial'
+                raise OSError('connection interrupted')
+        with tempfile.TemporaryDirectory() as directory:
+            real_temp = tempfile.NamedTemporaryFile
+            factory = lambda delete, suffix: real_temp(delete=delete, suffix=suffix, dir=directory)
+            with mock.patch.object(m.urllib.request, 'urlopen', return_value=BrokenStream()):
+                with mock.patch.object(m.tempfile, 'NamedTemporaryFile', side_effect=factory):
+                    with self.assertRaisesRegex(OSError, 'interrupted'):
+                        m.download('https://example.test/feed.zip')
+            self.assertEqual(os.listdir(directory), [])
 
 
 class TMirrorConfig(unittest.TestCase):

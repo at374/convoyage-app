@@ -303,15 +303,25 @@ def norm(text):
 
 def download(url, limit=400 * 1024 * 1024):
     req = urllib.request.Request(url, headers=UA)
-    with urllib.request.urlopen(req, timeout=120) as r, tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp:
-        while True:
-            chunk = r.read(1 << 20)
-            if not chunk:
-                break
-            tmp.write(chunk)
-            if tmp.tell() > limit:
-                raise SystemExit('Archive trop volumineuse : ' + url)
-        return tmp.name
+    path = None
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r, tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp:
+            path = tmp.name
+            while True:
+                chunk = r.read(1 << 20)
+                if not chunk:
+                    break
+                tmp.write(chunk)
+                if tmp.tell() > limit:
+                    raise SystemExit('Archive trop volumineuse : ' + url)
+        return path
+    except BaseException:
+        if path:
+            try:
+                os.unlink(path)
+            except FileNotFoundError:
+                pass
+        raise
 
 
 def select_dataset_gtfs_url(meta, fallback, required_keywords=()):
