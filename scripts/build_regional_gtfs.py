@@ -577,7 +577,8 @@ def archive_needs_sharding(data):
     """True si une archive dépasserait les limites standard du chargeur mobile."""
     with zipfile.ZipFile(io.BytesIO(data)) as z:
         entries = [item for item in z.infolist() if not item.is_dir()]
-        return (sum(item.file_size for item in entries) > 128 * 1024 * 1024 or
+        return (len(data) > MAX_OUT or
+                sum(item.file_size for item in entries) > 128 * 1024 * 1024 or
                 any(item.file_size > 64 * 1024 * 1024 for item in entries))
 
 
