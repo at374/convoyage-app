@@ -154,6 +154,15 @@ MIRROR = [
      'bounds': [46.63, 5.48, 46.72, 5.64],
      'license': 'Licence Ouverte 2.0',
      'publisher': 'CA ECLA (Espace Communautaire Lons Agglomération)'},
+    # Archive intégrale volontairement conservée sans modification. Le GTFS mélange lignes urbaines,
+    # suburbaines et scolaires : son ajout à makeProviders attend l'inspection des lignes et un filtre
+    # testé afin de ne jamais proposer une desserte scolaire comme service public ordinaire.
+    {'id': 'optymo-belfort', 'network': 'Optymo Territoire de Belfort',
+     'dataset': 'arrets-circuits-et-horaires-du-reseau-optymo-de-belfort',
+     'url': 'https://transport.data.gouv.fr/resources/79374/download',
+     'bounds': [47.40, 6.80, 47.80, 7.15],
+     'license': 'ODbL 1.0 + conditions particulières PAN',
+     'publisher': 'Optymo - Belfort / SM des transports en commun du Territoire-de-Belfort'},
     {'id': 'tac-annemasse', 'network': 'TAC Annemasse', 'url': 'https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip', 'bounds': [46.1, 5.98, 46.27, 6.42]},
     {'id': 'synchro-chambery', 'network': 'Synchro Bus Chambéry', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/a81cdf4b-5a70-43c9-8803-cef0430ed170', 'bounds': [45.45, 5.75, 45.75, 6.15]},
     {'id': 'ondea-grand-lac', 'network': 'Ondéa Aix-les-Bains', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b4e8d98c-e17a-4fb0-857f-8cb618039b2a', 'bounds': [45.6, 5.75, 45.85, 6.05]},
