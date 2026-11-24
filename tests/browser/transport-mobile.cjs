@@ -244,6 +244,7 @@ async function run(){
   // Le hub unifié peut déclarer « Réalisable » quand horaires, marches et marge sont prouvés ;
   // les blocs historiques par moteur restent soumis à l'ancienne règle (jamais « Réalisable »).
   const text=await page.locator('#cpTransportMissionDetails').evaluate(node=>{const c=node.cloneNode(true);c.querySelectorAll('[data-transport-hub]').forEach(h=>h.remove());document.body.appendChild(c);const t=c.innerText;c.remove();return t;});
+  await page.waitForFunction(()=>document.querySelectorAll('#cpTransportMissionDetails [data-transport-hub]').length>=2,null,{timeout:45000});
   const hubText=await page.locator('#cpTransportMissionDetails [data-transport-hub]').allInnerTexts();
   assert.ok(hubText.length>=2,'hub affiché dans les directions');
   for(const block of hubText)for(const m of block.matchAll(/Réalisable · avance (\d+) min \(marge (\d+) min\)/g))assert.ok(Number(m[1])>=Number(m[2]),'Réalisable avec marge respectée');
