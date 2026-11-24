@@ -10,6 +10,7 @@ on:
       - 'scripts/build_regional_gtfs.py'
       - 'tests/mobigo-bfc-real-slices.test.cjs'
       - 'tests/optymo-gtfs-access.test.cjs'
+      - 'tests/fluo-grand-est-real-feed.test.cjs'
       - 'transport-mission-hub.js'
   schedule:
     - cron: '41 2 * * 1'   # chaque lundi (consommation GitHub Actions : quelques minutes par semaine)
@@ -40,6 +41,10 @@ jobs:
         env:
           REQUIRE_REAL_GTFS: '1'
         run: node --test tests/optymo-gtfs-access.test.cjs
+      - name: Vérifier les horaires actifs Fluo Grand Est dans l’indexeur GTFS
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/fluo-grand-est-real-feed.test.cjs
       - name: Publier les flux validés
         env:
           GH_TOKEN: ${{ github.token }}
