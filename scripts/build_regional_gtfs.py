@@ -270,8 +270,11 @@ def select_dataset_gtfs_url(meta, fallback):
     resources = []
     for item in meta.get('resources', []):
         url = str(item.get('url') or '')
+        parsed = urllib.parse.urlsplit(url)
+        if parsed.scheme != 'https' or not parsed.hostname or parsed.username or parsed.password:
+            continue
         fmt = str(item.get('format') or '').lower()
-        if url.lower().endswith('.zip') or fmt in ('gtfs', 'zip'):
+        if parsed.path.lower().endswith('.zip') or fmt in ('gtfs', 'zip'):
             resources.append(item)
     gtfs = []
     for item in resources:
