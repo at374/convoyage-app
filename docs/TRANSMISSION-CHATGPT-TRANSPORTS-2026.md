@@ -714,3 +714,8 @@ Le workflow régional garde un seul groupe de collecte et annule désormais un r
 ## Limite observée de la règle d’annulation (24/11/2026)
 
 Le commit `b853a63` active `cancel-in-progress: true` pour les futurs nouveaux runs. En pratique, GitHub a remplacé le run en attente 144, mais n’a pas annulé le run 140 déjà actif sous l’ancienne configuration. Le run 145 (tête `b853a63`) est le seul en attente derrière lui; la collecte 140 ne doit pas être considérée terminée ou annulée avant son état final.
+
+
+## Run courant lancé (24/11/2026, 16:33 UTC)
+
+Après le commit `b853a63`, GitHub a annulé l’ancien run 140 ainsi que le run 144 en attente. Le run 145, SHA `b853a63ec6e4e3bf47cf73a03697d40c727f8a75`, a démarré et se trouve à l’étape « Télécharger, extraire et valider ». Il n’a pas encore atteint les tests réels ni publié de données; statut final à vérifier.
