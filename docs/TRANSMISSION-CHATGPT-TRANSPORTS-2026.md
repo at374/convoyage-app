@@ -549,3 +549,8 @@ Le workflow régional est entièrement réussi : **74 archives GTFS produites, z
 - TCAT Troyes conserve l’attribution ODbL; les autres flux du lot sont annoncés sous Licence Ouverte 2.0. Aucun prix n’est certifié par ces tests.
 - Statut à ne pas surévaluer : téléchargés, structure/calendriers validés, indexés et trajets actifs testés dans l’indexeur. Ces neuf sources ne sont pas encore raccordées aux fournisseurs de fiches mission; elles ne sont donc pas comptées comme trajets mission opérationnels et la carte publique n’est pas modifiée.
 - Le premier workflow 45391357913 avait réussi les validations mais échoué à la publication par rejet Git non-fast-forward après une avance concurrente de la branche. La relance ci-dessus, faite sur la tête corrigée 4eb22598, a publié les fichiers avec succès.
+
+
+## Collecteur régional — validation URL du 24 novembre
+
+Le run régional 45385474334 a terminé avec succès (vérifié via API GitHub). Sur la base distante d73f991, le sélecteur GTFS accepte désormais les ZIP HTTPS avec paramètres et ignore les liens HTTP ou contenant des identifiants. Les 12 tests Python locaux du collecteur passent. Code et régression publiés dans 54f4fbb et 2a41075 ; la CI déclenchée après ces commits reste à vérifier. Aucun nouveau réseau n'est déclaré opérationnel par cette correction.
