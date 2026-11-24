@@ -1,8 +1,8 @@
 {
   "operator": "sncf",
   "file": "national-sncf-aura.zip",
-  "sha256": "74674b9e2cea7d007e4ee35f4419f7e59ef8876c40aa5928e678224ce5e5feab",
-  "bytes": 869850,
+  "sha256": "f8bf85ab4a3b386d118a4d8596e579a5b728a50a5895a902ffce5ff4c2751bea",
+  "bytes": 864100,
   "bounds": [
     44.0,
     3.6,
@@ -13,9 +13,9 @@
   "scope": "AURA-only static GTFS; no live ticket prices or seat availability",
   "excludedOutOfRegionDetourTrips": 0,
   "details": {
-    "routes": 160,
-    "trips": 9522,
-    "stops": 1335,
+    "routes": 153,
+    "trips": 9427,
+    "stops": 1332,
     "fares": false,
     "bounds": [
       44.0,
