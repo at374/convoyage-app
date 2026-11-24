@@ -554,3 +554,14 @@ Le workflow régional est entièrement réussi : **74 archives GTFS produites, z
 ## Collecteur régional — validation URL du 24 novembre
 
 Le run régional 45385474334 a terminé avec succès (vérifié via API GitHub). Sur la base distante d73f991, le sélecteur GTFS accepte désormais les ZIP HTTPS avec paramètres et ignore les liens HTTP ou contenant des identifiants. Les 12 tests Python locaux du collecteur passent. Code et régression publiés dans 54f4fbb et 2a41075 ; la CI déclenchée après ces commits reste à vérifier. Aucun nouveau réseau n'est déclaré opérationnel par cette correction.
+
+
+## SESSION CHATGPT DU 24/11/2026 — Forbus et TeMo’b filtrés, testés et publiés
+
+- Workflow régional 45395810945 réussi : collecte, validations régionales et tests GTFS réels Forbus et TeMo’b tous passés; publication réussie.
+- Le manifeste généré le 2026-11-24T12:40:48.738919+00:00 contient 85 réseaux.
+- Forbus Forbach : 30 lignes, 574 courses, 866 arrêts, 175680 octets après filtrage; la ligne H vers Schoeneck a été retirée de même que ses courses associées. Le test réel confirme des courses domestiques actives et aucune route avec “Schoeneck”.
+- TeMo’b Thionville-Fensch : 53 lignes, 4980 courses, 1569 arrêts, 757005 octets après filtrage; la ligne 052 vers Redange a été retirée de même que ses courses associées. Le test réel confirme des courses françaises actives et aucune route avec “Redange”.
+- Les deux sources sont sous Licence Ouverte 2.0; aucun prix n’est certifié par l’indexeur. Statut : archives téléchargées, filtrées, validées, publiées et testées dans l’indexeur; toujours pas de raccordement déclaré au moteur des fiches mission.
+- La carte publique reste inchangée jusqu’à l’intégration mission vérifiée.
+- Suite de la progression en escargot : inventaire officiel Hauts-de-France repéré (réseaux urbains distincts et flux interurbains/scolaires). TADAO est une source GTFS publique valide mais son archive entière mesure 18,24 Mo, au-dessus du plafond de 12 Mo du constructeur; il faudra un découpage géographique mesuré avant intégration. Le flux urbain ilévia, lui, est de 9,35 Mo et comporte des attributs tarifaires GTFS ainsi que des marqueurs de TAD, à vérifier sans en déduire à lui seul un tarif complet ou une réservation.
