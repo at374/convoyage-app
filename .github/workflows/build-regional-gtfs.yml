@@ -16,6 +16,7 @@ on:
       - 'tests/grand-reims-real-feed.test.cjs'
       - 'tests/grand-est-urban-real-feeds.test.cjs'
       - 'tests/forbus-real-feed.test.cjs'
+      - 'tests/temob-real-feed.test.cjs'
       - 'transport-mission-hub.js'
   schedule:
     - cron: '41 2 * * 1'   # chaque lundi (consommation GitHub Actions : quelques minutes par semaine)
@@ -70,6 +71,10 @@ jobs:
         env:
           REQUIRE_REAL_GTFS: '1'
         run: node --test tests/forbus-real-feed.test.cjs
+      - name: Vérifier TeMo’b sans sa ligne transfrontalière dans l’indexeur GTFS
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/temob-real-feed.test.cjs
       - name: Publier les flux validés
         env:
           GH_TOKEN: ${{ github.token }}

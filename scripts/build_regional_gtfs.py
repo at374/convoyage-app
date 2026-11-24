@@ -107,6 +107,13 @@ MIRROR = [
      'agency_pattern': 'forbus', 'exclude_route_patterns': ['schoeneck'],
      'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
      'publisher': 'Fluo Grand Est / CA de Forbach Porte de France'},
+    # TeMo'b's route 052 continues from France to Redange in Luxembourg; retain its French routes only.
+    {'id': 'temob-thionville', 'network': "TeMo'b Thionville-Fensch",
+     'dataset': 'offre-de-transport-du-reseau-temob-syndicat-mixte-des-transports-urbains-thionville-fensch',
+     'url': 'https://transport.data.gouv.fr/resources/80459/download',
+     'agency_pattern': 'thionville fensch', 'exclude_route_patterns': ['redange'],
+     'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Fluo Grand Est / SM des transports urbains Thionville Fensch'},
     # Source urbaine Grand Est indépendante de l'agrégat Fluo. 4,36 Mo, 48 lignes,
     # et calendrier valide au 25/06/2027 selon la ressource PAN 80787.
     {'id': 'solea-mulhouse', 'network': 'Soléa Mulhouse',
