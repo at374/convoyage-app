@@ -105,6 +105,11 @@ MIRROR = [
      'url': 'https://transport.data.gouv.fr/resources/80787/download',
      'bounds': [47.62, 7.10, 47.85, 7.55], 'license': 'Licence Ouverte 2.0',
      'publisher': 'Mulhouse Alsace Agglomération'},
+    {'id': 'grand-reims', 'network': 'Grand Reims Mobilités',
+     'dataset': 'offre-de-transport-du-reseau-grand-reims-mobilites-communaute-urbaine-du-grand-reims',
+     'url': 'https://transport.data.gouv.fr/resources/80594/download',
+     'bounds': [49.10, 3.80, 49.40, 4.30], 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Fluo Grand Est / CU du Grand Reims'},
     # Première région dans la progression en escargot au départ d'AURA : Bourgogne-Franche-Comté.
     # Les ressources départementales Mobigo sont publiées individuellement par la Région sous Licence Ouverte 2.0.
     # Elles restent séparées pour conserver les calendriers et éviter de fusionner des identifiants GTFS homonymes.

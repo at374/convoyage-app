@@ -128,6 +128,9 @@ class TMirrorConfig(unittest.TestCase):
         self.assertIn('/resources/80787/download', solea['url'])
         self.assertEqual(solea['license'], 'Licence Ouverte 2.0')
         self.assertIn('solea-mulhouse', {s['id'] for s in m.MIRROR})
+        reims = next(s for s in m.MIRROR if s['id'] == 'grand-reims')
+        self.assertEqual(reims['dataset'], 'offre-de-transport-du-reseau-grand-reims-mobilites-communaute-urbaine-du-grand-reims')
+        self.assertEqual(reims['license'], 'Licence Ouverte 2.0')
 
     def test_filtered_mirror_entries_well_formed(self):
         m = load_module()
