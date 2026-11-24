@@ -27,6 +27,7 @@ on:
       - 'tests/national-european-slices.test.cjs'
       - 'data/gtfs/national-eurostar-aura.zip'
       - 'data/gtfs/national-trenitalia-aura.zip'
+      - 'data/gtfs/national-renfe-aura.zip'
       - 'scripts/build_national_from_catalogue.py'
       - 'scripts/build_national_gtfs_aura.py'
       - 'tests/transport-mission-hub.test.cjs'

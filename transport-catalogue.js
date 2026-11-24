@@ -121,7 +121,8 @@ const NATIONAL_OPERATORS=Object.freeze({
  blablacarBus:/blablacar[\s-]*bus/i,
  flixbus:/\bflix(?:bus|train)\b/i,
  eurostar:/\beurostar\b/i,
- trenitalia:/\btrenitalia\b/i
+ trenitalia:/\btrenitalia\b/i,
+ renfe:/\brenfe\b/i
 });
 function nationalOperatorGTFS(datasets){
  const rows=Array.isArray(datasets)?datasets:[];

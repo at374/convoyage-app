@@ -39,6 +39,7 @@ def main():
         result=json.loads(subprocess.check_output(cmd,text=True))
         assert result['operator']=='sncf'
         assert result['excludedOutOfRegionDetourTrips']==0
+        assert result['excludedForeignStops']==0
         with zipfile.ZipFile(os.path.join(temp,result['file'])) as z:
             stops=list(csv.DictReader(io.StringIO(z.read('stops.txt').decode())))
             times=list(csv.DictReader(io.StringIO(z.read('stop_times.txt').decode())))
@@ -82,6 +83,27 @@ const archive = process.argv[1];
                                  os.path.join(temp,result['file'])],
                                 capture_output=True,text=True)
         assert engine.returncode == 0, engine.stderr or engine.stdout
+        # Oulx falls inside the broad AURA rectangle but is in Italy. Domestic
+        # Trenitalia slices must neither expose it nor shorten a cross-border trip.
+        data['stops.txt'] = table(['stop_id','stop_name','stop_lat','stop_lon'],[
+            ['a','Annecy','45.901','6.121'],['b','Lyon','45.761','4.861'],['c','Paris','48.8566','2.3522'],
+            ['oulx','Oulx Cesana Claviere Sestriere','45.03','6.85']])
+        data['trips.txt'] = table(['route_id','service_id','trip_id'],[['r','s','t'],['r','s','foreign']])
+        data['stop_times.txt'] = table(['trip_id','arrival_time','departure_time','stop_id','stop_sequence'],[
+            ['t','08:00:00','08:00:00','a','1'],['t','10:00:00','10:00:00','b','2'],
+            ['t','13:00:00','13:00:00','c','3'],['foreign','08:00:00','08:00:00','b','1'],
+            ['foreign','11:00:00','11:00:00','oulx','2'],['foreign','13:00:00','13:00:00','a','3']])
+        with zipfile.ZipFile(source,'w',zipfile.ZIP_DEFLATED) as z:
+            for name, text in data.items():
+                z.writestr(name,text)
+        italian_cmd=[sys.executable,os.path.join(os.path.dirname(__file__),'build_national_gtfs_aura.py'),
+             '--input',source,'--operator','trenitalia','--out',temp,'--source-url','https://example.org/operator.zip']
+        italian=json.loads(subprocess.check_output(italian_cmd,text=True))
+        assert italian['excludedForeignStops']==1,italian
+        assert italian['excludedOutOfRegionDetourTrips']==1,italian
+        with zipfile.ZipFile(os.path.join(temp,italian['file'])) as z:
+            stops=list(csv.DictReader(io.StringIO(z.read('stops.txt').decode())))
+            assert 'oulx' not in {s['stop_id'] for s in stops},stops
         # A second trip leaves AURA between Annecy and Lyon. It must not be
         # shortened to a fake direct Annecy–Lyon service.
         data['trips.txt'] = table(['route_id','service_id','trip_id'],[

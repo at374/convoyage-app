@@ -3,7 +3,7 @@
 'use strict';
 const indexer=typeof module==='object'&&module.exports?require('./transport-gtfs-index.js'):root.CPGTFSIndex;
 const loader=typeof module==='object'&&module.exports?require('./transport-gtfs-loader.js'):root.CPGTFSLoader;
-const OPERATORS=new Set(['sncf','blablacarBus','flixbus','eurostar','trenitalia']);
+const OPERATORS=new Set(['sncf','blablacarBus','flixbus','eurostar','trenitalia','renfe']);
 function search({operator,files,index,date,from,to,radiusMeters=1200,maxResults=30,earliestDeparture=null,latestArrival=null,includeTransfers=false}={}){
  if(!OPERATORS.has(operator))throw new Error('Unsupported national operator');
  if(!files||!index)throw new Error('Prebuilt GTFS files and index required');

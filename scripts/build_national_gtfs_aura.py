@@ -14,7 +14,10 @@ sys.path.insert(0, os.path.dirname(__file__))
 from build_regional_gtfs import filter_by_bounds, validate
 
 BOUNDS = (44.0, 3.6, 46.7, 7.4)
-OPERATORS = ('sncf', 'blablacarBus', 'flixbus', 'eurostar', 'trenitalia')
+OPERATORS = ('sncf', 'blablacarBus', 'flixbus', 'eurostar', 'trenitalia', 'renfe')
+# The broad AURA rectangle includes a few neighbouring-country stops. Switzerland
+# is handled by its dedicated engine; never expose Italian destinations in this slice.
+FOREIGN_STOP_NAME_PARTS = {'trenitalia': ('oulx',)}
 MAX_OUTPUT = 12 * 1024 * 1024
 
 
@@ -45,11 +48,15 @@ def main():
         # removing intermediate stops would falsely present an out-of-area detour as local.
         from build_regional_gtfs import read_table
         _, stops = read_table(source, 'stops.txt')
+        excluded_stop_ids = {stop['stop_id'] for stop in stops
+                             if stop.get('stop_id') and any(
+                                 part in (stop.get('stop_name') or '').strip().casefold()
+                                 for part in FOREIGN_STOP_NAME_PARTS.get(args.operator, ()))}
         inside = set()
         for stop in stops:
             try:
                 lat, lon = float(stop.get('stop_lat') or 'nan'), float(stop.get('stop_lon') or 'nan')
-                if BOUNDS[0] <= lat <= BOUNDS[2] and BOUNDS[1] <= lon <= BOUNDS[3]:
+                if stop.get('stop_id') not in excluded_stop_ids and BOUNDS[0] <= lat <= BOUNDS[2] and BOUNDS[1] <= lon <= BOUNDS[3]:
                     inside.add(stop['stop_id'])
             except (TypeError, ValueError, KeyError):
                 pass
@@ -80,9 +87,9 @@ def main():
                         safe.writestr(name, source.read(name))
             filtered.seek(0)
             with zipfile.ZipFile(filtered) as safe:
-                data, info = filter_by_bounds(safe, {'bounds': BOUNDS})
+                data, info = filter_by_bounds(safe, {'bounds': BOUNDS, 'exclude_stop_ids': excluded_stop_ids})
         else:
-            data, info = filter_by_bounds(source, {'bounds': BOUNDS})
+            data, info = filter_by_bounds(source, {'bounds': BOUNDS, 'exclude_stop_ids': excluded_stop_ids})
     if data is None:
         raise SystemExit('No AURA trips: ' + str(info))
     if len(data) > MAX_OUTPUT:
@@ -98,6 +105,7 @@ def main():
               'bytes': len(data), 'bounds': BOUNDS, 'source': args.source_url,
               'scope': 'AURA-only static GTFS; no live ticket prices or seat availability',
               'excludedOutOfRegionDetourTrips': excluded_detour_count,
+              'excludedForeignStops': len(excluded_stop_ids),
               'details': info}
     with open(target + '.json', 'w', encoding='utf-8') as output:
         json.dump(result, output, ensure_ascii=False, indent=2)

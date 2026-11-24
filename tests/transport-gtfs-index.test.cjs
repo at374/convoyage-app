@@ -3,6 +3,7 @@ const {parseCSV,activeServices,buildIndex,scheduledTrips,directTrips,transferTri
 assert.deepEqual(parseCSV('id,name\n1,"Annecy, Gare"\n2,"Stop ""A"""\n'),[
  {id:'1',name:'Annecy, Gare'},{id:'2',name:'Stop "A"'}]);
 assert.deepEqual(parseCSV(''),[]);
+assert.deepEqual(parseCSV('\uFEFFservice_id,end_date     \nS,20261231     \n'),[{service_id:'S',end_date:'20261231'}]);
 assert.throws(()=>parseCSV('a\n"unfinished'),/Unclosed/);
 const index=buildIndex({
  'stops.txt':'stop_id,stop_name\nS1,Annecy\nS2,Albertville\n',

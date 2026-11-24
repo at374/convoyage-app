@@ -5,8 +5,8 @@ function* csvRows(text){
  if(typeof text!=='string')throw new TypeError('CSV text required');
  let names=null,row=[],field='',quoted=false;
  const record=values=>{
-  if(!names){names=values.map((h,i)=>i===0?h.replace(/^\uFEFF/,''):h);return null;}
-  return values.some(v=>v!=='')?Object.fromEntries(names.map((h,i)=>[h,values[i]??''])):null;
+  if(!names){names=values.map((h,i)=>(i===0?h.replace(/^\uFEFF/,''):h).trim());return null;}
+  return values.some(v=>v.trim()!=='')?Object.fromEntries(names.map((h,i)=>[h,(values[i]??'').trim()])):null;
  };
  for(let i=0;i<text.length;i++){
   const c=text[i];

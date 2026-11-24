@@ -1,0 +1,61 @@
+'use strict';
+// End-to-end checks run in the regional feed workflow immediately after the
+// seven official Mobigo departmental archives have been refreshed.
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const loader=require('../transport-gtfs-loader.js'),indexer=require('../transport-gtfs-index.js');
+const hub=require('../transport-mission-hub.js');
+const feeds=[
+ ['mobigo39','mobigo-39-jura.zip'],['mobigo58','mobigo-58-nievre.zip'],
+ ['mobigo21','mobigo-21-cote-dor.zip'],['mobigo25','mobigo-25-doubs.zip'],
+ ['mobigo89','mobigo-89-yonne.zip'],['mobigo70','mobigo-70-haute-saone.zip'],
+ ['mobigo71','mobigo-71-saone-et-loire.zip']
+];
+const bounds={
+ mobigo39:[46.25,5.2,47.0,6.25],mobigo58:[46.55,2.75,47.75,4.35],
+ mobigo21:[46.65,3.95,48.0,5.65],mobigo25:[46.6,5.55,47.75,7.15],
+ mobigo89:[47.2,2.75,48.45,4.5],mobigo70:[47.15,5.25,48.05,7.15],
+ mobigo71:[46.1,3.55,47.05,5.55]
+};
+
+for(const [id,file] of feeds){
+ test(`${id}: l'extrait Mobigo trouve un horaire réel par le fournisseur de mission`,
+  {skip:!fs.existsSync(path.join(__dirname,'..','data','gtfs',file))},async()=>{
+   const archive=fs.readFileSync(path.join(__dirname,'..','data','gtfs',file));
+   const dates=Array.from({length:30},(_,offset)=>{
+    const d=new Date();d.setUTCHours(0,0,0,0);d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10);
+   });
+   const feed=await loader.loadResource({format:'GTFS',url:'https://example.org/'+file},
+    {fetcher:async()=>new Response(archive),indexServiceDates:dates,retainSourceTables:true});
+   let sample=null;
+   for(const date of dates){
+    const trips=indexer.scheduledTrips(feed.files,feed.index,date);
+    for(const trip of trips){
+     const stops=trip.stops.map(s=>{const stop=feed.index.stopById.get(s.stopId);return {...s,lat:Number(stop?.stop_lat),lon:Number(stop?.stop_lon)};})
+      .filter(s=>Number.isFinite(s.lat)&&Number.isFinite(s.lon));
+     for(let i=0;i<stops.length&&!sample;i++)for(let j=i+1;j<stops.length;j++){
+      if(stops[i].stopId===stops[j].stopId)continue;
+      const b=bounds[id],inside=s=>s.lat>=b[0]&&s.lat<=b[2]&&s.lon>=b[1]&&s.lon<=b[3];
+      if(!inside(stops[i])||!inside(stops[j]))continue;
+      const journeys=indexer.nearbyDirectTrips(feed.files,feed.index,date,
+       {lat:stops[i].lat,lon:stops[i].lon},{lat:stops[j].lat,lon:stops[j].lon},100);
+      if(journeys.length){sample={date,from:stops[i],to:stops[j],row:journeys[0]};break;}
+     }
+     if(sample)break;
+    }
+    if(sample)break;
+   }
+   assert.ok(sample,`${id}: aucun trajet actif et indexable trouvé dans les 30 prochains jours`);
+   const providers=hub.makeProviders({CPGTFSLoader:loader,CPGTFSIndex:indexer},{
+    fetcher:async()=>new Response(archive,{headers:{'content-type':'application/zip'}})
+   });
+   const provider=providers['local_'+id];
+   assert.ok(provider,`${id}: fournisseur non raccordé à makeProviders()`);
+   const task={
+    from:{lat:sample.from.lat,lon:sample.from.lon},to:{lat:sample.to.lat,lon:sample.to.lon},
+    earliestDeparture:sample.date+'T00:00:00Z'
+   };
+   assert.equal(provider.enabled(task),true,`${id}: paire de test hors de l'emprise activée`);
+   const results=await provider.run(task);
+   assert.ok(results.some(j=>j.legs?.some(l=>l.provider===provider.name)),`${id}: trajet non proposé à la fiche mission`);
+  });
+}

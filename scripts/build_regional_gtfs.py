@@ -92,6 +92,16 @@ FILTERED_MIRROR = [
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
+    # Première région dans la progression en escargot au départ d'AURA : Bourgogne-Franche-Comté.
+    # Les ressources départementales Mobigo sont publiées individuellement par la Région sous Licence Ouverte 2.0.
+    # Elles restent séparées pour conserver les calendriers et éviter de fusionner des identifiants GTFS homonymes.
+    {'id': 'mobigo-39-jura', 'network': 'Mobigo Jura (39)', 'url': 'https://transport.data.gouv.fr/resources/84076/download', 'bounds': [46.25, 5.2, 47.0, 6.25]},
+    {'id': 'mobigo-58-nievre', 'network': 'Mobigo Nièvre (58)', 'url': 'https://transport.data.gouv.fr/resources/84075/download', 'bounds': [46.55, 2.75, 47.75, 4.35]},
+    {'id': 'mobigo-21-cote-dor', 'network': "Mobigo Côte-d'Or (21)", 'url': 'https://transport.data.gouv.fr/resources/84078/download', 'bounds': [46.65, 3.95, 48.0, 5.65]},
+    {'id': 'mobigo-25-doubs', 'network': 'Mobigo Doubs (25)', 'url': 'https://transport.data.gouv.fr/resources/84077/download', 'bounds': [46.6, 5.55, 47.75, 7.15]},
+    {'id': 'mobigo-89-yonne', 'network': 'Mobigo Yonne (89)', 'url': 'https://transport.data.gouv.fr/resources/84072/download', 'bounds': [47.2, 2.75, 48.45, 4.5]},
+    {'id': 'mobigo-70-haute-saone', 'network': 'Mobigo Haute-Saône (70)', 'url': 'https://transport.data.gouv.fr/resources/84074/download', 'bounds': [47.15, 5.25, 48.05, 7.15]},
+    {'id': 'mobigo-71-saone-et-loire', 'network': 'Mobigo Saône-et-Loire (71)', 'url': 'https://transport.data.gouv.fr/resources/84073/download', 'bounds': [46.1, 3.55, 47.05, 5.55]},
     {'id': 'tac-annemasse', 'network': 'TAC Annemasse', 'url': 'https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/tp2a/exports/medias.zip', 'bounds': [46.1, 5.98, 46.27, 6.42]},
     {'id': 'synchro-chambery', 'network': 'Synchro Bus Chambéry', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/a81cdf4b-5a70-43c9-8803-cef0430ed170', 'bounds': [45.45, 5.75, 45.75, 6.15]},
     {'id': 'ondea-grand-lac', 'network': 'Ondéa Aix-les-Bains', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b4e8d98c-e17a-4fb0-857f-8cb618039b2a', 'bounds': [45.6, 5.75, 45.85, 6.05]},
@@ -257,7 +267,11 @@ def filter_by_bounds(z, spec):
     if not stops:
         return None, 'aucun arrêt dans le flux source'
 
+    excluded_stop_ids = set(spec.get('exclude_stop_ids', ()))
+
     def in_bounds(s):
+        if s.get('stop_id') in excluded_stop_ids:
+            return False
         try:
             lat, lon = float(s.get('stop_lat') or 'nan'), float(s.get('stop_lon') or 'nan')
         except ValueError:
