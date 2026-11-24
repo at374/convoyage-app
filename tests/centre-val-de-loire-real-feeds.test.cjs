@@ -34,8 +34,17 @@ for (const [id,name] of NETWORKS) {
    assert.ok(entry && entry.license === 'ODbL 1.0 + conditions particulières PAN', `${id}: entrée/licence manquante`);
    assert.ok(bytes.length < 12*1024*1024, `${id}: archive dépasse 12 Mio`);
    assert.ok(Array.isArray(entry.bounds) && entry.bounds.length === 4, `${id}: emprise manquante`);
-   const feed = await loader.loadResource({format:'GTFS',url:`https://example.org/${id}.zip`},
-    {fetcher:async()=>new Response(bytes),retainSourceTables:true});
+   let feed;
+   try{
+    feed = await loader.loadResource({format:'GTFS',url:`https://example.org/${id}.zip`},
+     {fetcher:async()=>new Response(bytes),retainSourceTables:true});
+   }catch(error){
+    const profile=loader.inspectZip(bytes,{...loader.DEFAULT_LIMITS,maxFileBytes:512*1024*1024,maxExpandedBytes:1024*1024*1024});
+    const tables=profile.entries.map(entry=>({table:entry.table,bytes:entry.uncompressedSize})).sort((a,b)=>b.bytes-a.bytes);
+    const detail=`archive=${profile.archiveBytes} expanded=${profile.expandedBytes} largestTables=${JSON.stringify(tables.slice(0,6))}`;
+    console.error(`GTFS size profile ${id}: ${detail}`);
+    throw new Error(`${error.message}; ${detail}`);
+   }
    assert.ok(feed.index.counts.routes > 0, `${id}: aucune ligne indexée`);
    assert.ok(feed.index.counts.stops > 0, `${id}: aucun arrêt indexé`);
    let candidate = null;
