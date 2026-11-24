@@ -1,7 +1,7 @@
 {
   "operator": "eurostar",
   "file": "national-eurostar-aura.zip",
-  "sha256": "048cbeb64f8932a1d20fd85fde2040fdadd95716ccb77ec07665468263a2c9ec",
+  "sha256": "15078ca302d53b5d2d088396f0001b7e024d894695611ec5ae2b980dc7673626",
   "bytes": 4566,
   "bounds": [
     44.0,
@@ -12,6 +12,7 @@
   "source": "https://integration-storage.dm.eurostar.com/gtfs-prod/gtfs_static_commercial_v2.zip",
   "scope": "AURA-only static GTFS; no live ticket prices or seat availability",
   "excludedOutOfRegionDetourTrips": 0,
+  "excludedForeignStops": 0,
   "details": {
     "routes": 4,
     "trips": 70,

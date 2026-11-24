@@ -1,8 +1,8 @@
 {
   "operator": "trenitalia",
   "file": "national-trenitalia-aura.zip",
-  "sha256": "54700b1241fa2a87b78f365a182ae0340d07dc83f479ef8ef70309d27c31ab32",
-  "bytes": 7017,
+  "sha256": "3095659ab40d7ed74f231ffe7e0e3297a573d493a565798e0a2dc2ecfb814d04",
+  "bytes": 6822,
   "bounds": [
     44.0,
     3.6,
@@ -11,11 +11,12 @@
   ],
   "source": "https://thello.axelor.com/public/gtfs/gtfs.zip",
   "scope": "AURA-only static GTFS; no live ticket prices or seat availability",
-  "excludedOutOfRegionDetourTrips": 4,
+  "excludedOutOfRegionDetourTrips": 0,
+  "excludedForeignStops": 1,
   "details": {
-    "routes": 18,
-    "trips": 280,
-    "stops": 9,
+    "routes": 19,
+    "trips": 284,
+    "stops": 8,
     "fares": false,
     "bounds": [
       44.0,

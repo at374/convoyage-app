@@ -1,7 +1,7 @@
 {
   "operator": "renfe",
   "file": "national-renfe-aura.zip",
-  "sha256": "dda7da023466a3973c47b51c3d04b83b32587fb3e8cae452004681027c1aaab9",
+  "sha256": "af3762e711dfc96b7d4bdcd821c240fc3618b76df894aa92873982b45aac5e14",
   "bytes": 2103,
   "bounds": [
     44.0,
@@ -12,6 +12,7 @@
   "source": "https://ssl.renfe.com/gtransit/Fichero_AV_INT/Renfe_AVE_Int.zip",
   "scope": "AURA-only static GTFS; no live ticket prices or seat availability",
   "excludedOutOfRegionDetourTrips": 0,
+  "excludedForeignStops": 0,
   "details": {
     "routes": 4,
     "trips": 12,
