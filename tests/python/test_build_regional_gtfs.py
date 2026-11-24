@@ -129,6 +129,7 @@ class TMirrorConfig(unittest.TestCase):
         m = load_module()
         self._check(m.FILTERED_MIRROR)
         ids = {s['id'] for s in m.FILTERED_MIRROR}
+        self.assertIn('fluo-grand-est', ids)
         self.assertIn('citea-valence', ids)
         self.assertIn('stas-saint-etienne', ids)
         self.assertIn('t2c-clermont', ids)

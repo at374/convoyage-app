@@ -78,6 +78,13 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
+    # Couronne suivant la BFC : première tranche interurbaine Fluo Grand Est. La source agrège
+    # les lignes départementales ; le découpage garde les parcours ayant au moins deux arrêts
+    # dans l'emprise régionale et n'annonce pas un raccordement moteur.
+    {'id': 'fluo-grand-est', 'network': 'Fluo Grand Est (interurbain)',
+     'url': 'https://transport.data.gouv.fr/resources/83635/download',
+     'bounds': [47.3, 3.2, 50.35, 8.45], 'download_limit': 60 * 1024 * 1024,
+     'license': 'Licence Ouverte 2.0', 'publisher': 'Région Grand Est / Fluo Grand Est'},
     {'id': 'tcl-lyon', 'network': 'TCL', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8',
      'bounds': [45.74, 4.81, 45.77, 4.87], 'download_limit': 60 * 1024 * 1024},
     {'id': 'citea-valence', 'network': 'Citéa (Valence Romans Mobilités)',
@@ -466,7 +473,8 @@ def main():
                 with open(os.path.join(args.out, name), 'wb') as f:
                     f.write(data)
                 manifest['networks'][spec['id']] = {'network': spec['network'], 'file': name, 'sha256': hashlib.sha256(data).hexdigest(),
-                                                    'bytes': len(data), 'origin': spec['url'], **info}
+                                                    'bytes': len(data), 'origin': spec['url'], **info,
+                                                    **{key: spec[key] for key in ('license', 'publisher') if spec.get(key)}}
             except BaseException as e:
                 manifest['errors'][spec['id']] = 'erreur : %s' % e
     with open(os.path.join(args.out, 'manifest.json'), 'w', encoding='utf-8') as f:

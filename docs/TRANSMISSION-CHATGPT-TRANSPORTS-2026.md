@@ -488,3 +488,11 @@ Le contrôle `tests/optymo-gtfs-access.test.cjs` est lancé dans le workflow apr
 ## Validation locale BFC avec échéance — 24 novembre 2026
 
 Après récupération de ff6e9a7, les 21 archives BFC passent le test strict des fournisseurs de mission, sans omission (21/21, 27,6 s). Le test inclut désormais un appel « arriver avant » et le contrôle de l'heure d'arrivée de chaque résultat. Le test Optymo passe aussi (1/1) et maintient son exclusion tant que les accès demandent une coordination conducteur. Ces résultats sont des parcours GTFS statiques proposés par les fournisseurs, sans validation Android, temps réel ou prix. Test publié dans bc66eac.
+
+## Grand Est — préparation de la couronne suivante (24/11/2026)
+
+Le PAN répertorie un flux GTFS interurbain Fluo Grand Est gratuit en Licence Ouverte 2.0, valide selon sa fiche du 28/09/2026 au 29/08/2027. La ressource indique 2 165 lignes, 10 226 arrêts et ne publie aucun tarif GTFS. Le fichier source de 41,91 Mo contient plusieurs délégations/agences départementales et relève de la Région Grand Est. Source : ressource PAN `83635`.
+
+Une entrée de collecte a été préparée dans `scripts/build_regional_gtfs.py` sous `fluo-grand-est`. Le filtre géographique conserve les courses ayant au moins deux arrêts dans l'emprise de la région et plafonne l'extrait comme les autres archives mobiles. **Statut en attente du prochain run CI réel** : source découverte et déclarée au collecteur ; téléchargement, validation de l'extrait et test d'un trajet par un moteur restent à confirmer. Ce fichier n'est pas raccordé à `makeProviders` et ne doit pas être affiché comme réseau disponible.
+
+La sélection actuelle repose sur une boîte géographique et peut contenir des arrêts transfrontaliers. Avant tout raccordement, le moteur devra appliquer le périmètre demandé par Laurent — trajets en France uniquement, Suisse restant gérée par son moteur existant — puis un test réel devra prouver qu'un parcours local est proposé. Le grand agrégat urbain/interurbain PAN `83634` contient aussi tramways et TER mais ne fait pas partie de cette première tranche ; il faudra éviter de compter deux fois les cars Fluo lorsque cette source sera auditée.
