@@ -611,3 +611,18 @@ Le diagnostic AURA/Suisse **45419719915** a confirmé le résultat d’échantil
 Le diagnostic réel **45421887337** a passé ses validations nationales, les archives HTTPS, les trajets GTFS SNCF et les moteurs régionaux contrôlés, puis a échoué sur l’étape de prix TCL. La recherche fiche-mission de cette étape utilisait la date passée codée en dur `2026-11-16`, qui n’est plus une date de service future au moment du contrôle. Le commit **3595495f1290cf30f8d69809d93c3c2b0edba16e** remplace cette date par la première date à venir, dans les 45 jours, où les courses TCL des lignes 31, 125 ou 108 sont actives selon `calendar.txt`/`calendar_dates.txt`. Le test continue ensuite à exiger un trajet réel Part-Dieu–Bellecour et un prix GTFS transmis à la fiche mission. Le diagnostic corrigé n’a pas encore fourni de résultat au moment de cette mise à jour.
 
 Le workflow régional **45421887093** collecte JVMALIN et valide ses 19 extraits : il est encore en cours. Aucun des statuts Centre-Val de Loire n’est considéré validé avant la fin des tests réels CI.\n
+
+## PACA — inventaire officiel pour la prochaine couronne (24/11/2026)
+
+Le catalogue PAN officiel [PACA — jeux sous licence ouverte](https://transport.data.gouv.fr/datasets/region/93?licence=licence-ouverte&locale=fr&modes=) expose des sources GTFS publiques sans authentification d’entreprise. Avant toute publication, vérifier la ressource active, son ZIP réel, son agence, ses calendriers et sa licence de ressource.
+
+**Ordre à traiter après la validation JVMALIN :**
+
+1. Interurbain : ZOU Express, ZOU Proximité, puis ZOU scolaire en distinguant explicitement les courses non accessibles au public général.
+2. Trains régionaux ZOU : comparer agences, lignes, arrêts et courses au flux SNCF déjà intégré avant de garder une source distincte ; n’ajouter aucune course dupliquée.
+3. Réseaux urbains et d’agglomération : Métropole Aix-Marseille-Provence, Lignes d’Azur (Nice), Mistral (Toulon), Orizo (Avignon), Palmbus (Cannes), Le Bus (Estérel), TEDbus, Mouv’enbus, Sillages, Envia, Zest, Trans’CoVe, Sud Sainte Baume, Trans’Agglo, ToPAz, Cmonbus, L’Agglo en Bus (Gap), TUD, TACO, OZ’CAR et Altigo (Briançonnais).
+4. Navettes saisonnières : Chorges–Chanteloube, réseau Vaï hivernal, Vaï Embrun, Cogolin, Guillestrois–Queyras, Cavalaire été/hiver, Pays des Écrins, Grimaud, La Croix-Valmer, Saint-Tropez, Ramatuelle et Rayol-Canadel. Les calendriers doivent déterminer si un trajet est réellement actif à la date demandée.
+
+Le PAN décrit ZOU Express comme une offre régionale interurbaine, données mises à jour quotidiennement ; sa ressource GTFS courante est annoncée valide du 20/11/2026 au 22/05/2027. Le GTFS ZOU Proximité est annoncé valide du 19/11/2026 au 19/05/2027. Les deux pages indiquent une Licence Ouverte 2.0. Les tarifs Express dépendant du kilométrage, les absences de grille tarifaire ne bloquent pas l’intégration des horaires. Les flux en temps réel ayant des erreurs de validation PAN ne seront pas utilisés sans contrôle distinct.
+
+Le périmètre reste terrestre : exclure les ferries et autres bateaux, même s’ils apparaissent dans des flux urbains. Cet inventaire prouve la découverte dans le catalogue, pas le téléchargement, la validation, le raccordement moteur ou l’existence d’un trajet testé. Références officielles : [ZOU Express](https://transport.data.gouv.fr/datasets/lignes-des-reseaux-transport-zou-provence-alpes-cote-d-azur-express-3-3), [ZOU Proximité](https://transport.data.gouv.fr/datasets/lignes-des-reseaux-transport-zou-provence-alpes-cote-d-azur-proximite-3-3).\n
