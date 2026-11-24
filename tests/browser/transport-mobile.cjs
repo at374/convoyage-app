@@ -236,7 +236,9 @@ async function run(){
   await page.getByText(/Jonction régionale : 4 proposition/).waitFor();
   await release('12');
   await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('Aller régional'));
+  const openGtfsAgenda=()=>page.locator('[data-gtfs-agenda] > summary').click();
   await page.getByText('Réseau de test — horaires aux arrêts',{exact:true}).waitFor();
+  await openGtfsAgenda();
   await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('TEST'));
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   // Le hub unifié peut déclarer « Réalisable » quand horaires, marches et marge sont prouvés ;
@@ -446,7 +448,9 @@ async function run(){
   await page.locator('.mission').filter({hasText:'Grenoble'}).first().click();await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
   await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
-  await release('14');await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('4'));
+  await release('14');
+  await openGtfsAgenda();
+  await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('4'));
   await page.locator('#cpSibraFareReference summary').click();
   await page.locator('#cpSibraPassFrom').fill('2026-01-01');await page.locator('#cpSibraPassThrough').fill('2026-12-31');
   await page.getByRole('button',{name:'Utiliser mon abonnement SIBRA',exact:true}).click();
@@ -470,7 +474,9 @@ async function run(){
   await page.locator('.mission').filter({hasText:'Duingt'}).first().click();await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
   await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
-  await release('14');await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('Y51'));
+  await release('14');
+  await openGtfsAgenda();
+  await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('Y51'));
   await page.locator('#cpSibraFareReference summary').click();
   await page.locator('#cpSibraPassFrom').fill('2026-01-01');await page.locator('#cpSibraPassThrough').fill('2026-12-31');
   await page.getByRole('button',{name:'Utiliser mon abonnement SIBRA',exact:true}).click();
