@@ -292,6 +292,15 @@ MIRROR = [
     # M réso (Grenoble) : même besoin que SIBRA — data.gouv.fr échoue par intermittence depuis les téléphones.
     {'id': 'mreso-grenoble', 'network': 'M Réso — Métropole grenobloise', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/b6ec7ba4-09bc-46df-b9a1-79a2c2668cf2', 'bounds': [45.0, 5.5, 45.45, 6.0]},
     {'id': 'mreso-gresivaudan', 'network': 'M Réso — Grésivaudan', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2', 'bounds': [45.15, 5.7, 45.5, 6.15]},
+    # ZOU Proximité : horaires bus régionaux et courses avec marqueurs TAD. Filtrage de libellés
+    # frontaliers pour conserver le périmètre France; le ZIP réel reste soumis au test strict PACA.
+    {'id': 'zou-proximite-paca', 'network': 'ZOU Proximité (cars régionaux PACA)',
+     'dataset': 'lignes-des-reseaux-transport-zou-provence-alpes-cote-d-azur-proximite-3-3',
+     'url': 'https://transport.data.gouv.fr/resources/82137/download',
+     'download_limit': 32 * 1024 * 1024, 'agency_pattern': '.*',
+     'exclude_route_patterns': ['monaco|monte.?carlo|ital(?:ie|y|ia)|ventimiglia|vintimille|san.?remo|bordighera'],
+     'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Région Sud — Provence-Alpes-Côte d’Azur'},
     {'id': 'start-thonon', 'network': "Star't Thonon", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e', 'bounds': [46.25, 6.3, 46.45, 6.65]},
 ]
 # Un flux agrégé peut contenir de nombreux opérateurs. On le télécharge une seule fois puis

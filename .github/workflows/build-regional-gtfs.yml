@@ -20,6 +20,7 @@ on:
       - 'tests/hauts-de-france-urban-real-feeds.test.cjs'
       - 'tests/normandie-real-agency-feeds.test.cjs'
       - 'tests/centre-val-de-loire-real-feeds.test.cjs'
+      - 'tests/paca-zou-proximity-real-feed.test.cjs'
       - 'transport-mission-hub.js'
   schedule:
     - cron: '41 2 * * 1'   # chaque lundi (consommation GitHub Actions : quelques minutes par semaine)

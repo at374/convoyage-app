@@ -382,6 +382,19 @@ class TMirrorConfig(unittest.TestCase):
             self.assertNotIn('BOAT', result.read('routes.txt').decode())
 
 
+
+class TPACAConfig(unittest.TestCase):
+    def test_zou_proximity_source_is_dynamic_open_and_excludes_cross_border_labels(self):
+        m = load_module()
+        source = next(item for item in m.MIRROR if item['id'] == 'zou-proximite-paca')
+        self.assertEqual(source['dataset'], 'lignes-des-reseaux-transport-zou-provence-alpes-cote-d-azur-proximite-3-3')
+        self.assertEqual(source['url'], 'https://transport.data.gouv.fr/resources/82137/download')
+        self.assertEqual(source['license'], 'Licence Ouverte 2.0')
+        self.assertTrue(source['derive_bounds'])
+        self.assertTrue(source['agency_pattern'])
+        self.assertIn('monaco', '|'.join(source['exclude_route_patterns']))
+        self.assertIn('ventimiglia', '|'.join(source['exclude_route_patterns']))
+
 class TMobileSharding(unittest.TestCase):
     def test_oversized_gtfs_is_split_without_splitting_or_duplicating_trips(self):
         m = load_module()
