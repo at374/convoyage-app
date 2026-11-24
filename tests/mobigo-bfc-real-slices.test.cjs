@@ -73,6 +73,15 @@ for(const [id,file] of feeds){
    assert.equal(provider.enabled(task),true,`${id}: paire de test hors de l'emprise activée`);
    const results=await provider.run(task);
    const expectedNetwork=provider.name.replace(/ GTFS$/,'');
+   const deadline=sample.date+'T22:00:00Z';
+   const arrivalTask={from:task.from,to:task.to,latestArrival:deadline,marginMinutes:0};
+   assert.equal(provider.enabled(arrivalTask),true);
+   const arrivals=await provider.run(arrivalTask);
+   assert.ok(arrivals.length>0, id+': aucun résultat arriver avant');
+   for(const journey of arrivals){
+    assert.ok(Date.parse(journey.legs.at(-1).arrival)<=Date.parse(deadline),
+     id+': arrivée après échéance');
+   }
    assert.ok(results.some(j=>j.legs?.some(l=>l.provider===expectedNetwork)),`${id}: trajet non proposé à la fiche mission`);
   });
 }
