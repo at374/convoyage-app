@@ -847,3 +847,34 @@ test('le fournisseur SNCF charge le TER K21 avec la limite des fiches mission',a
  assert.equal(assessed.feasible,false);
  assert.ok(assessed.reasons.includes('horaire GTFS non confirmé en temps réel'));
 });
+
+test('les budgets locaux GTFS tiennent compte du poids de chaque archive',()=>{
+ const feedSizes=new Map([['mreso-gresivaudan.zip',239*1024],['mreso-grenoble.zip',6*1024*1024]]);
+ const providers=H.makeProviders({CPGTFSLoader:{loadResource(){}},CPGTFSIndex:{nearbyDirectTrips(){}}},{feedSizes});
+ assert.equal(providers.local_mreso_gresivaudan.timeoutMs,25000);
+ assert.equal(providers.local_mreso_grenoble.timeoutMs,65000);
+ assert.equal(providers.local_mreso_voironnais.timeoutMs,undefined);
+});
+
+test('un trajet local est disponible pendant le calcul du moteur lent',async()=>{
+ let finishSlow;
+ const finished=new Promise(resolve=>{finishSlow=resolve;});
+ let showPartial;
+ const partial=new Promise(resolve=>{showPartial=resolve;});
+ const providers={
+  local:{name:'Local',enabled:()=>true,run:async()=>[{source:'Local',legs:[bus(at(8,0),at(8,25),STOP1,STOP2)]}]},
+  long:{name:'Long',enabled:()=>true,run:()=>finished}
+ };
+ const session=H.createSession({
+  tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,0)}],providers,
+  router:fakeRouter(),timeoutMs:1000,
+  onUpdate:(_,view)=>{if(view.total>0)showPartial(view);}
+ });
+ try{
+  const view=await partial;
+  assert.ok(view.picks.length||view.others.length);
+  assert.equal(view.done,false);
+ }finally{
+  finishSlow([]);session.dispose();
+ }
+});
