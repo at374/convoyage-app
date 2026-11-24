@@ -21,7 +21,8 @@ for(const [id,file] of feeds){
  test(`${id}: l'extrait Mobigo trouve un horaire réel par le fournisseur de mission`,
   {skip:!fs.existsSync(path.join(__dirname,'..','data','gtfs',file))},async()=>{
    const archive=fs.readFileSync(path.join(__dirname,'..','data','gtfs',file));
-   const dates=Array.from({length:30},(_,offset)=>{
+   // The loader caps indexed service dates at seven; test the next service week.
+   const dates=Array.from({length:7},(_,offset)=>{
     const d=new Date();d.setUTCHours(0,0,0,0);d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10);
    });
    const feed=await loader.loadResource({format:'GTFS',url:'https://example.org/'+file},
@@ -44,7 +45,7 @@ for(const [id,file] of feeds){
     }
     if(sample)break;
    }
-   assert.ok(sample,`${id}: aucun trajet actif et indexable trouvé dans les 30 prochains jours`);
+   assert.ok(sample,`${id}: aucun trajet actif et indexable trouvé dans les 7 prochains jours`);
    const providers=hub.makeProviders({CPGTFSLoader:loader,CPGTFSIndex:indexer},{
     fetcher:async()=>new Response(archive,{headers:{'content-type':'application/zip'}})
    });
