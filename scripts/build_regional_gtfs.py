@@ -78,13 +78,6 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
-    # CTS inclut la desserte tram transfrontalière de Kehl. Cette première tranche teste le cœur
-    # strasbourgeois [48.52,7.66,48.62,7.78] : elle est volontairement resserrée pour respecter
-    # la limite d'expansion GTFS du chargeur mobile et ne conserve aucun arrêt de Kehl.
-    {'id': 'cts-strasbourg', 'network': 'CTS Strasbourg (extrait France)',
-     'url': 'https://opendata.cts-strasbourg.eu/google_transit.zip',
-     'bounds': [48.52, 7.66, 48.62, 7.78], 'download_limit': 60 * 1024 * 1024,
-     'license': 'Licence Ouverte 2.0', 'publisher': 'Compagnie des Transports Strasbourgeois'},
     # Couronne suivant la BFC : première tranche interurbaine Fluo Grand Est. La source agrège
     # les lignes départementales ; le découpage garde les parcours ayant au moins deux arrêts
     # dans l'emprise régionale et n'annonce pas un raccordement moteur.
@@ -106,6 +99,12 @@ FILTERED_MIRROR = [
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
+    # Source urbaine Grand Est indépendante de l'agrégat Fluo. 4,36 Mo, 48 lignes,
+    # et calendrier valide au 25/06/2027 selon la ressource PAN 80787.
+    {'id': 'solea-mulhouse', 'network': 'Soléa Mulhouse',
+     'url': 'https://transport.data.gouv.fr/resources/80787/download',
+     'bounds': [47.62, 7.10, 47.85, 7.55], 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Mulhouse Alsace Agglomération'},
     # Première région dans la progression en escargot au départ d'AURA : Bourgogne-Franche-Comté.
     # Les ressources départementales Mobigo sont publiées individuellement par la Région sous Licence Ouverte 2.0.
     # Elles restent séparées pour conserver les calendriers et éviter de fusionner des identifiants GTFS homonymes.

@@ -124,10 +124,10 @@ class TMirrorConfig(unittest.TestCase):
     def test_mirror_entries_well_formed(self):
         m = load_module()
         self._check(m.MIRROR)
-        cts = next(s for s in m.FILTERED_MIRROR if s['id'] == 'cts-strasbourg')
-        self.assertIn('opendata.cts-strasbourg.eu', cts['url'])
-        self.assertEqual(cts['license'], 'Licence Ouverte 2.0')
-        self.assertEqual(cts['bounds'], [48.52, 7.66, 48.62, 7.78], 'tranche centrale française, hors Kehl')
+        solea = next(s for s in m.MIRROR if s['id'] == 'solea-mulhouse')
+        self.assertIn('/resources/80787/download', solea['url'])
+        self.assertEqual(solea['license'], 'Licence Ouverte 2.0')
+        self.assertIn('solea-mulhouse', {s['id'] for s in m.MIRROR})
 
     def test_filtered_mirror_entries_well_formed(self):
         m = load_module()
