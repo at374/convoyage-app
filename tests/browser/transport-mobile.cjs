@@ -422,6 +422,7 @@ async function run(){
   await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
   await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await release('14');
+  await openGtfsAgenda();
   await page.waitForFunction(()=>document.querySelector('[data-y51-fare-reference]')?.innerText.includes('8,90 €'));
   const fareRef=page.locator('[data-y51-fare-reference]').first();
   assert.match(await fareRef.innerText(),/Albertville → Annecy.*zone 4.*hors abonnement/);
