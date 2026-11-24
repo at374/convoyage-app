@@ -419,3 +419,17 @@ class TMobileSharding(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TOccitanieConfig(unittest.TestCase):
+    def test_lio_interurban_feed_is_current_dynamic_and_sharded(self):
+        m = load_module()
+        bundle = next(b for b in m.BUNDLED_AGENCY_FEEDS
+                      if any(n['id'] == 'lio-interurbain-occitanie' for n in b['networks']))
+        network = next(n for n in bundle['networks'] if n['id'] == 'lio-interurbain-occitanie')
+        self.assertEqual(bundle['dataset'], 'reseau-lio-occitanie')
+        self.assertEqual(bundle['url'], 'https://transport.data.gouv.fr/resources/81026/download')
+        self.assertTrue(bundle['allow_mobile_sharding'])
+        self.assertEqual(network['agency_pattern'], '.*')
+        self.assertIn('license', bundle)
+

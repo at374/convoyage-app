@@ -306,6 +306,17 @@ MIRROR = [
 # Un flux agrégé peut contenir de nombreux opérateurs. On le télécharge une seule fois puis
 # on produit un ZIP autonome par agence. Ferries exclus (route_type=4), conformément au périmètre.
 BUNDLED_AGENCY_FEEDS = [{
+    # Occitanie, progression régionale depuis AURA. Flux officiel cars liO; le rail SNCF reste séparé.
+    'dataset': 'reseau-lio-occitanie',
+    'url': 'https://transport.data.gouv.fr/resources/81026/download',
+    'download_limit': 64 * 1024 * 1024,
+    'allow_mobile_sharding': True,
+    'exclude_route_types': ['4'],
+    'license': 'Licence Ouverte 2.0',
+    'publisher': 'Région Occitanie',
+    'networks': [{'id': 'lio-interurbain-occitanie', 'network': 'liO — cars interurbains Occitanie', 'agency_pattern': '.*'}],
+}, {
+
     'dataset': 'base-de-donnees-multimodale-des-reseaux-de-transport-public-normands',
     'url': 'https://transport.data.gouv.fr/resources/81942/download',
     'download_limit': 80 * 1024 * 1024,
