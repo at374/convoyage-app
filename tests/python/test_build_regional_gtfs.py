@@ -430,5 +430,21 @@ class TOccitanieConfig(unittest.TestCase):
         self.assertIn('license', bundle)
 
 
+
+class TOccitanieUrbanConfig(unittest.TestCase):
+    def test_official_urban_feeds_are_dynamic_and_licensed(self):
+        m = load_module()
+        by_id = {entry['id']: entry for entry in m.MIRROR}
+        expected = {
+            'tisseo-toulouse': ('tisseo-reseau-transport-urbain-toulousain', 'ODbL'),
+            'tam-montpellier': ('offre-de-transport-tam-en-temps-reel-gtfs-rt-urbain-et-suburbain', 'Licence Ouverte 2.0'),
+            'tango-nimes': ('offre-de-transport-du-reseau-tango-de-nimes-metropole-gtfs-gtfs-rt', 'Licence Ouverte 2.0'),
+        }
+        for network_id, (dataset, license_name) in expected.items():
+            with self.subTest(network=network_id):
+                self.assertEqual(by_id[network_id]['dataset'], dataset)
+                self.assertTrue(by_id[network_id]['derive_bounds'])
+                self.assertEqual(by_id[network_id]['license'], license_name)
+
 if __name__ == '__main__':
     unittest.main()

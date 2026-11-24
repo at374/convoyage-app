@@ -22,6 +22,7 @@ on:
       - 'tests/centre-val-de-loire-real-feeds.test.cjs'
       - 'tests/paca-zou-proximity-real-feed.test.cjs'
       - 'tests/occitanie-lio-real-feed.test.cjs'
+      - 'tests/occitanie-urban-real-feeds.test.cjs'
       - 'transport-mission-hub.js'
   schedule:
     - cron: '41 2 * * 1'   # chaque lundi (consommation GitHub Actions : quelques minutes par semaine)
@@ -102,6 +103,10 @@ jobs:
         env:
           REQUIRE_REAL_GTFS: '1'
         run: node --test tests/occitanie-lio-real-feed.test.cjs
+      - name: Vérifier Tisséo, TaM et Tango dans l’indexeur GTFS
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/occitanie-urban-real-feeds.test.cjs
       - name: Publier les flux validés
         env:
           GH_TOKEN: ${{ github.token }}

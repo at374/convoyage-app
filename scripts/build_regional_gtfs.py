@@ -301,6 +301,16 @@ MIRROR = [
      'exclude_route_patterns': ['monaco|monte.?carlo|ital(?:ie|y|ia)|ventimiglia|vintimille|san.?remo|bordighera'],
      'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
      'publisher': 'Région Sud — Provence-Alpes-Côte d’Azur'},
+    # Occitanie urbain : GTFS réguliers; les offres TAD omises par les producteurs ne sont pas inventées.
+    {'id': 'tisseo-toulouse', 'network': 'Tisséo Toulouse', 'dataset': 'tisseo-reseau-transport-urbain-toulousain',
+     'url': 'https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/',
+     'derive_bounds': True, 'license': 'ODbL', 'publisher': 'Tisséo Collectivités'},
+    {'id': 'tam-montpellier', 'network': 'TaM Montpellier', 'dataset': 'offre-de-transport-tam-en-temps-reel-gtfs-rt-urbain-et-suburbain',
+     'url': 'https://gtfsproxy.e-tam.fr/COMMON/GTFS.zip',
+     'derive_bounds': True, 'license': 'Licence Ouverte 2.0', 'publisher': 'Montpellier Méditerranée Métropole'},
+    {'id': 'tango-nimes', 'network': 'Tango Nîmes', 'dataset': 'offre-de-transport-du-reseau-tango-de-nimes-metropole-gtfs-gtfs-rt',
+     'url': 'https://www.data.gouv.fr/api/1/datasets/r/15aeb8a5-1cca-4bb9-ae5f-b6e67e4ff2ab',
+     'derive_bounds': True, 'license': 'Licence Ouverte 2.0', 'publisher': 'CA de Nîmes Métropole'},
     {'id': 'start-thonon', 'network': "Star't Thonon", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e', 'bounds': [46.25, 6.3, 46.45, 6.65]},
 ]
 # Un flux agrégé peut contenir de nombreux opérateurs. On le télécharge une seule fois puis
