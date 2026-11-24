@@ -16,7 +16,7 @@ test('liO interurbain Occitanie réel : fragments chargés, courses actives et e
  const files=entry.files||[entry.file];
  assert.ok(files.length>1,'le gros GTFS liO doit être livré en fragments pour respecter le plafond mobile');
  assert.ok(entry.sharded,'le manifeste doit signaler le découpage');
- const dates=Array.from({length:30},(_,offset)=>{
+ const dates=Array.from({length:7},(_,offset)=>{
   const d=new Date();d.setUTCHours(0,0,0,0);d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10);
  });
  const seenTrips=new Set();
@@ -55,7 +55,7 @@ test('liO interurbain Occitanie réel : fragments chargés, courses actives et e
  assert.ok(seenTrips.size>0,'aucune course reconstruite');
  assert.equal(seenTrips.size,entry.trips,'total de courses différent du manifeste');
  assert.ok(routeCount>0&&stopCount>0,'lignes ou arrêts absents des fragments chargés');
- assert.ok(activeSample,'aucune course active avec horaires et arrêts GPS dans les 30 jours');
+ assert.ok(activeSample,'aucune course active avec horaires et arrêts GPS dans les 7 jours');
  for(const s of [activeSample.start,activeSample.end]){
   const lat=Number(s.stop_lat),lon=Number(s.stop_lon);
   assert.ok(lat>=41&&lat<=52&&lon>=-6&&lon<=10,'coordonnées actives hors de France métropolitaine');

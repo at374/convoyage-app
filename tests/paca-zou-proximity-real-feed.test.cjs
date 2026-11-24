@@ -18,7 +18,7 @@ test('ZOU Proximité réel : bus actif, emprise PACA et marqueurs GTFS TAD', {
  assert.ok(Array.isArray(entry.bounds)&&entry.bounds.length===4,'emprise réelle des arrêts absente');
  const bytes=fs.readFileSync(archive);
  assert.ok(bytes.length<12*1024*1024,'archive dépasse le plafond mobile');
- const dates=Array.from({length:30},(_,offset)=>{
+ const dates=Array.from({length:7},(_,offset)=>{
   const d=new Date();d.setUTCHours(0,0,0,0);d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10);
  });
  const feed=await loader.loadResource({format:'GTFS',url:'https://example.org/zou-proximite-paca.zip'},
@@ -45,7 +45,7 @@ test('ZOU Proximité réel : bus actif, emprise PACA et marqueurs GTFS TAD', {
   }
   if(sample)break;
  }
- assert.ok(sample,'aucune course ZOU active avec deux arrêts et heures exactes dans les 30 jours');
+ assert.ok(sample,'aucune course ZOU active avec deux arrêts et heures exactes dans les 7 jours');
  for(const [lat,lon] of sample.coords){
   assert.ok(lat>=entry.bounds[0]&&lat<=entry.bounds[2]&&lon>=entry.bounds[1]&&lon<=entry.bounds[3],
    'arrêt du trajet actif hors emprise du manifeste');

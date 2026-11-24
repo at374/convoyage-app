@@ -667,3 +667,8 @@ L’ajout autorise uniquement ce flux à être fragmenté selon le mécanisme ex
 Les flux officiels des horaires réguliers Tisséo Toulouse, TaM Montpellier (urbain et suburbain) et Tango Nîmes sont ajoutés au miroir dynamique des jeux GTFS PAN, avec repli vers leur téléchargement officiel et emprise GPS calculée depuis les arrêts. Un test CI strict doit charger chaque ZIP dans l’indexeur, vérifier des horaires actifs à court terme et la géolocalisation. Aucun résultat de recherche mission n’est revendiqué avant ce contrôle réel puis l’intégration au consommateur de Claude.
 
 Limites connues par les producteurs : Tisséo n’inclut pas ses services TAD zonaux; Tango n’inclut pas le TAD ni TEMPO. TaM publie le GTFS de référence urbain/suburbain, rafraîchi fréquemment. Sankéo reste en attente de séparation fiable entre ses services réguliers et scolaires. Références officielles : [Tisséo](https://transport.data.gouv.fr/datasets/tisseo-reseau-transport-urbain-toulousain), [TaM](https://transport.data.gouv.fr/datasets/offre-de-transport-tam-en-temps-reel-gtfs-rt-urbain-et-suburbain), [Tango](https://transport.data.gouv.fr/datasets/offre-de-transport-du-reseau-tango-de-nimes-metropole-gtfs-gtfs-rt).
+
+
+## Correctif des fenêtres d’indexation des essais régionaux (24/11/2026)
+
+Le chargeur GTFS limite l’indexation explicite à sept dates par appel. Les trois nouveaux tests de trajet PACA/Occitanie utilisent désormais une fenêtre de sept jours, cohérente avec cette limite. La collecte réelle ZOU et les contrôles JVMALIN ont bien été atteints dans le run précédent; l’échec ZOU était uniquement lié à la fenêtre de 30 dates fournie au chargeur. Une nouvelle collecte est nécessaire pour confirmer le ZIP et les trajets après correction.

@@ -8,7 +8,7 @@ const indexer=require('../transport-gtfs-index.js');
 
 const DATA=process.env.GTFS_TEST_DATA_DIR||path.join(__dirname,'..','data','gtfs');
 const NETWORKS=['tisseo-toulouse','tam-montpellier','tango-nimes'];
-const dates=Array.from({length:14},(_,offset)=>{
+const dates=Array.from({length:7},(_,offset)=>{
  const d=new Date();d.setUTCHours(0,0,0,0);d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10);
 });
 for(const id of NETWORKS){
@@ -36,7 +36,7 @@ for(const id of NETWORKS){
     sample={trip,first,last};break;
    }
   }
-  assert.ok(sample,`aucune course avec heures et GPS dans les 14 jours pour ${id}`);
+  assert.ok(sample,`aucune course avec heures et GPS dans les 7 jours pour ${id}`);
   for(const s of [sample.first,sample.last]){
    assert.ok(Number(s.stop_lat)>=41&&Number(s.stop_lat)<=52&&Number(s.stop_lon)>=-6&&Number(s.stop_lon)<=10,
     `coordonnée hors de France métropolitaine pour ${id}`);
