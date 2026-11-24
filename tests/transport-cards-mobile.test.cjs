@@ -12,7 +12,7 @@ const hub=fs.readFileSync(path.join(root,'transport-mission-hub.js'),'utf8');
 test('fiche mission : moteur automatique raccordé et sans formulaire de recherche manuel',()=>{
  assert.match(html,/transport-mission-hub\.js\?v=/);
  assert.match(app,/window\.CPTransportHub/);
- assert.match(app,/Hub\.render\(host,\{\.\.\.view,flexCandidates:flexFor\(label\)\}\)/);
+ assert.match(app,/view=\{\.\.\.view,flexCandidates:flexFor\(label\)\}/);
  assert.match(app,/startTransportHub\(\)/);
 });
 test('cartes Android : styles chargés avec cache invalidé et prix mis en évidence',()=>{
@@ -130,7 +130,7 @@ test('mission sur plusieurs jours : un onglet par jour avec Aller et Retour cher
 
 test('OTP2 : deuxième essai après délai dépassé et ordre des sections Aller/Jonction/Retour',()=>{
  assert.match(hub,/response=await go\(Math\.min\(60000/);
- assert.match(hub,/const limitMs=Number\.isFinite\(p\.timeoutMs\)/);
+ assert.match(hub,/const limitMs=Number\.isFinite\(providerTimeout\)/);
  assert.match(app,/Ordre d'affichage : Aller, Jonction, Retour/);
  assert.match(app,/window\.__cpOtpWarm/);
 });

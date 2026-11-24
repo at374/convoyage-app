@@ -4,6 +4,16 @@
   'use strict';
   const dureeHM = min => { min = Math.round(min); return min >= 60 ? Math.floor(min / 60) + ' h ' + String(min % 60).padStart(2, '0') + ' min' : min + ' min'; };
   const regionalFetch = (...args) => window.fetch(...args);
+  const transportFeedSizes = new Map();
+  // Charger les tailles une fois, en parallèle du démarrage de l’application.
+  regionalFetch('data/gtfs/manifest.json')
+    .then(response => response.ok ? response.json() : null)
+    .then(manifest => {
+      for (const feed of Object.values(manifest?.networks || {})) {
+        if (feed.file && Number.isFinite(feed.bytes) && feed.bytes > 0) transportFeedSizes.set(feed.file, feed.bytes);
+      }
+    }).catch(() => {});
+
   // Planning data stays in this page session and never updates synchronized missions.
   const transportReturnPlans = new Map();
   // 22/11/2026 (Laurent : « les trajets déjà visualisés doivent s'enregistrer quelque part pour que quand on
@@ -2007,7 +2017,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         Object.keys(transportDestinations).sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b)).forEach(k=>panel.appendChild(transportDestinations[k]));}
       const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
       let updateDayTabs=()=>{};const labelState={};const pendingViews={};let renderPending=()=>{};let activeDay=null;let transportHub=null;
-      const startDayLabels=day=>{try{if(!transportHub)return;for(const [l,d] of Object.entries(transportDays))if(d===day){if(!(labelState[l]&&labelState[l].done))afficherRecherche(l);transportHub.start(l);}}catch(_){}};
+      const startDayLabels=day=>{try{if(!transportHub)return;for(const [l,d] of Object.entries(transportDays))if(d===day){if(!labelState[l]?.done&&!labelState[l]?.total)afficherRecherche(l);transportHub.start(l);}}catch(_){}};
       if(availableTransportDays.length>1){
         const tabs=document.createElement('nav');
         tabs.className='cp-transport-day-tabs';
@@ -2295,7 +2305,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const flexByLabel=new Map();
         const flexFor=label=>[...(flexByLabel.get(label)?.values()||[])].flat();
         const session=Hub.createSession({tasks,router,fareFor,timeoutMs:35000,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),scooterRouter,scooter:{enabled:scooterOn,maxKm:Number(lireLocal('cp_trot_max_km',8)),speedKmh:Number(lireLocal('cp_trot_vitesse_kmh',15))},
-          providers:Hub.makeProviders(window,{fetcher:regionalFetch,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
+          providers:Hub.makeProviders(window,{fetcher:regionalFetch,feedSizes:transportFeedSizes,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
             nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{},ojpSession,
             onFlexCandidates:({task:gtfsTask,network,candidates})=>{
               const label=gtfsTask?.label;
@@ -2313,39 +2323,24 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
           onUpdate:(label,view)=>{
             if(!panel.isConnected||!transportDestinations[label])return;
             labelState[label]={done:view.done,total:view.total};
-            // 22/11/2026 (Laurent : éviter le blocage systématique) : mémoriser la vue à chaque mise à jour
-            // (même inachevée) comme avant, mais ne plus RECONSTRUIRE la liste de cartes tant que la recherche
-            // n'est pas terminée — chaque arrivée de résultat reconstruisait tout l'affichage, suspecté de
-            // figer le défilement. Tant que view.done est faux, seul le badge « Recherche en cours » reste visible.
-            {const entry=transportViewCache.get(missionKey)||{signature,views:{}};entry.signature=signature;entry.views[label]=view;transportViewCache.set(missionKey,entry);}
-            if(!view.done){
+            view={...view,flexCandidates:flexFor(label)};
+            const entry=transportViewCache.get(missionKey)||{signature,views:{}};
+            entry.signature=signature;entry.views[label]=view;transportViewCache.set(missionKey,entry);
+            const hasResults=view.picks.length>0 || view.others.length>0 || view.flexCandidates.length>0;
+            if(!view.done&&!hasResults){
+              delete pendingViews[label];
               afficherRecherche(label,view);
               updateDayTabs();
               return;
             }
-            // Section d'un autre jour (onglet non affiché) : on garde la vue finale et on la dessine à l'ouverture de l'onglet.
-            if(transportDestinations[label].hidden){pendingViews[label]=view;updateDayTabs();return;}
-            // Pendant le défilement du doigt, on garde la vue et on la dessine dès l'arrêt (évite les saccades).
-            if(Date.now()-dernierDefilement<250){pendingViews[label]=view;clearTimeout(panel.__cpDefer);panel.__cpDefer=setTimeout(()=>{if(panel.isConnected)renderPending();},300);return;}
-            // 21/11/2026 : un regroupement des rendus par image (requestAnimationFrame) avait été tenté ici
-            // pour la plainte « ça bloque pendant le défilement », mais Laurent a ensuite constaté des
-            // trajets qui s'affichaient puis disparaissaient (Y51 après 13h01, Thonon après 9h) — un rendu
-            // final a pu rester bloqué dans pendingViews sans jamais être redessiné (panel.isConnected pouvait
-            // être faux au moment précis où l'image suivante s'exécutait, sans qu'aucun nouveau onUpdate ne
-            // revienne derrière pour réessayer). Reparti sur le rendu immédiat d'origine : jamais de donnée
-            // correcte perdue, même si cela rend la piste du blocage à investiguer avec le diagnostic ajouté.
-            delete pendingViews[label];
-            masquerRecherche(label);
-            let host=hubHosts[label];
-            if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
-              // 20/11/2026 : même règle que renderPending — le bloc justificatifs reste au-dessus du hub.
-              const sec=transportDestinations[label];
-              const after=legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);
-              after.insertAdjacentElement('afterend',host);}
-            window.CPPh?.('transports:rendu');
-            Hub.render(host,{...view,flexCandidates:flexFor(label)});
-            window.CPPh?.('transports:idle');
-            labelState[label]={done:view.done,total:view.total};updateDayTabs();
+            pendingViews[label]=view;
+            if(transportDestinations[label].hidden){updateDayTabs();return;}
+            if(Date.now()-dernierDefilement<250){
+              clearTimeout(panel.__cpDefer);
+              panel.__cpDefer=setTimeout(()=>{if(panel.isConnected)renderPending();},300);
+              return;
+            }
+            renderPending();
           }});
         session.signatureKey=signature;transportHub=session;startDayLabels(activeDay);
       };

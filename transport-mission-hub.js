@@ -1096,44 +1096,53 @@ function makeProviders(r,opts={}){
  // plusieurs flux GTFS doivent d'abord être téléchargés sur une connexion lente), mais ce délai interne au
  // worker était figé à 90 s pour TOUT appel, quel que soit le calcul demandé — il coupait donc court avant
  // même que le budget de 150 s prévu par l'appelant ne soit atteint. Rendu configurable par appel.
- let worker=null,workerSequence=0,workerDisposed=false;
- const workerPending=new Map();
- const stopWorker=error=>{
-  const current=worker;worker=null;
-  for(const request of workerPending.values()){clearTimeout(request.t);request.reject(error);}
-  workerPending.clear();
-  current?.terminate();
+ const makeWorker=()=>{
+  let worker=null,workerSequence=0,workerDisposed=false;
+  const workerPending=new Map();
+  const stopWorker=error=>{
+   const current=worker;worker=null;
+   for(const request of workerPending.values()){clearTimeout(request.t);request.reject(error);}
+   workerPending.clear();
+   current?.terminate();
+  };
+  const dispose=()=>{
+   workerDisposed=true;
+   stopWorker(new Error('Recherche transport annulée'));
+  };
+  const run=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
+   if(workerDisposed){reject(new Error('Recherche transport annulée'));return;}
+   if(!worker){
+    try{worker=new r.Worker('transport-hub-local-worker.js?v=tad-main-20261124a');}
+    catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
+    const activeWorker=worker;
+    const fail=(reason)=>{
+     if(worker!==activeWorker)return;
+     noteWorkerFail(reason);
+     r.__cpHubWorkerOffUntil=Date.now()+10000;
+     stopWorker(new Error('worker'));
+    };
+    worker.onerror=e=>fail('erreur: '+(e&&(e.message||e.type)||'?'));
+    worker.onmessageerror=()=>fail('message illisible');
+    worker.onmessage=({data})=>{
+     if(worker!==activeWorker)return;
+     const q=workerPending.get(data?.id);if(!q)return;
+     workerPending.delete(data.id);clearTimeout(q.t);
+     if(data.error)q.reject(new Error(data.error));else q.resolve(data);
+    };
+   }
+   const id=++workerSequence;
+   const t=setTimeout(()=>{workerPending.delete(id);noteWorkerFail('délai dépassé ('+Math.round(timeoutMs/1000)+' s)');
+    const error=new Error('timeout');
+    if(!workerPending.size)stopWorker(error);
+    reject(error);},timeoutMs);
+   workerPending.set(id,{resolve,reject,t});
+   try{worker.postMessage({id,...payload});}catch(e){workerPending.delete(id);clearTimeout(t);noteWorkerFail('postMessage: '+(e&&e.message||e));reject(e);}
+  });
+  return {run,dispose};
  };
- Object.defineProperty(P,'dispose',{value:()=>{
-  workerDisposed=true;
-  stopWorker(new Error('Recherche transport annulée'));
- }});
- const workerCall=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
-  if(workerDisposed){reject(new Error('Recherche transport annulée'));return;}
-  if(!worker){
-   try{worker=new r.Worker('transport-hub-local-worker.js?v=tad-main-20261124a');}
-   catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
-   const activeWorker=worker;
-   const fail=(reason)=>{
-    if(worker!==activeWorker)return;
-    noteWorkerFail(reason);
-    r.__cpHubWorkerOffUntil=Date.now()+10000;
-    stopWorker(new Error('worker'));
-   };
-   worker.onerror=e=>fail('erreur: '+(e&&(e.message||e.type)||'?'));
-   worker.onmessageerror=()=>fail('message illisible');
-   worker.onmessage=({data})=>{
-    if(worker!==activeWorker)return;
-    const q=workerPending.get(data?.id);if(!q)return;
-    workerPending.delete(data.id);clearTimeout(q.t);
-    if(data.error)q.reject(new Error(data.error));else q.resolve(data);
-   };
-  }
-  const id=++workerSequence;
-  const t=setTimeout(()=>{workerPending.delete(id);noteWorkerFail('délai dépassé ('+Math.round(timeoutMs/1000)+' s)');reject(new Error('timeout'));},timeoutMs);
-  workerPending.set(id,{resolve,reject,t});
-  try{worker.postMessage({id,...payload});}catch(e){workerPending.delete(id);clearTimeout(t);noteWorkerFail('postMessage: '+(e&&e.message||e));reject(e);}
- });
+ const localWorker=makeWorker(),complexWorker=makeWorker();
+ Object.defineProperty(P,'dispose',{value:()=>{localWorker.dispose();complexWorker.dispose();}});
+ const workerCall=(payload,timeoutMs)=>(payload.op?complexWorker:localWorker).run(payload,timeoutMs);
  const workerRows=(key,urls,date,from,to,extra)=>workerCall({key,urls,date,from,to,radius:3000,...extra});
  // 21/11/2026 (Laurent : « l'écran se fige pendant la recherche ») : la recherche de correspondances
  // (nearbyTransferTrips même réseau + CPGTFSFederation.crossNetworkTrips entre réseaux, jusqu'à 28 paires
@@ -1413,6 +1422,14 @@ function makeProviders(r,opts={}){
   // Web Worker unique (réutilisé) : lecture et recherche des réseaux locaux hors du fil de l'écran.
   for(const [id,name,file,bounds] of localNetworks){
    P['local_'+id]={name:name+' GTFS',
+    get timeoutMs(){
+     const bytes=opts.feedSizes?.get(file);
+     if(!Number.isFinite(bytes)||bytes<=0)return undefined;
+     if(bytes<=512*1024)return 25000;
+     if(bytes<=2*1024*1024)return 35000;
+     if(bytes<=8*1024*1024)return 65000;
+     return 85000;
+    },
     enabled:task=>!!queryWindow(task)&&inBounds(pt(task.from),bounds)&&inBounds(pt(task.to),bounds),
     disabledReason:'trajet hors zone du réseau local ou horaires manquants',
     // Préparation à l'avance : seulement le téléchargement (gardé sur le téléphone), sans lecture du fichier, pour ne jamais figer l'écran.
@@ -2302,7 +2319,8 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    if(!ok){if(variant===task)state[label].skipped[p.name]=p.disabledReason||'non applicable';continue;}
    state[label].pending++;state[label].total=(state[label].total||0)+1;
    // Délai borné par moteur (idée reprise du module ChatGPT transport_mission_search.js).
-   const limitMs=Number.isFinite(p.timeoutMs)&&p.timeoutMs>timeoutMs?p.timeoutMs:timeoutMs;
+   const providerTimeout=p.timeoutMs;
+   const limitMs=Number.isFinite(providerTimeout)&&providerTimeout>0?providerTimeout:timeoutMs;
    const deadline=Date.now()+limitMs;(state[label].deadlines=state[label].deadlines||[]).push(deadline);
    const bounded=new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(new Error('délai fournisseur dépassé ('+Math.round(limitMs/1000)+' s)')),limitMs);
     Promise.resolve().then(()=>p.run(variant,controller.signal)).then(v=>{clearTimeout(t);resolve(v);},e=>{clearTimeout(t);reject(e);});});
