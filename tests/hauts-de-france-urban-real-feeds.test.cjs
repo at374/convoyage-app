@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const loader=require('../transport-gtfs-loader.js');
 const indexer=require('../transport-gtfs-index.js');
+const hub=require('../transport-mission-hub.js');
 
 const ROOT=path.join(__dirname,'..');
 const DATA_DIR=process.env.GTFS_TEST_DATA_DIR||path.join(ROOT,'data','gtfs');
@@ -55,6 +56,18 @@ for(const [id,name] of NETWORKS){
    assert.ok(sample,`${id}: aucun trajet direct actif dans les sept prochains jours`);
    assert.ok(sample.journey.departure&&sample.journey.arrival,`${id}: horaires exacts manquants`);
    assert.equal(sample.journey.date,sample.date);
+   const point=stopId=>{
+    const stop=feed.index.stopById.get(stopId);
+    return {lat:Number(stop.stop_lat),lon:Number(stop.stop_lon)};
+   };
+   const provider=hub.makeProviders({CPGTFSLoader:loader,CPGTFSIndex:indexer},{
+    fetcher:async()=>new Response(bytes)
+   })['local_'+id.replace(/-/g,'_')];
+   assert.ok(provider, id+': fournisseur mission absent');
+   const task={from:point(sample.from),to:point(sample.to),earliestDeparture:sample.date+'T00:00:00Z'};
+   assert.equal(provider.enabled(task),true);
+   const results=await provider.run(task);
+   assert.ok(results.length>0,id+': aucun résultat mission');
    for(const stopId of [sample.from,sample.to]){
     const stop=feed.index.stopById.get(stopId);
     assert.ok(stop,`${id}: arrêt candidat absent de l’index`);
