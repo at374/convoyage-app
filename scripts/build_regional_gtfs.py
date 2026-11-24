@@ -78,6 +78,12 @@ EXTRACT = [
 # flux réel. Si le premier passage CI réel échoue (« aucun arrêt dans la zone ») ou produit un flux
 # anormalement petit/gros, élargir ou resserrer avant de considérer le réseau comme fiable.
 FILTERED_MIRROR = [
+    # CTS inclut la desserte tram transfrontalière de Kehl. L'extrait limité à l'ouest de 7,80°E
+    # ne conserve que les arrêts et horaires dans l'emprise française strasbourgeoise.
+    {'id': 'cts-strasbourg', 'network': 'CTS Strasbourg (extrait France)',
+     'url': 'https://opendata.cts-strasbourg.eu/google_transit.zip',
+     'bounds': [48.45, 7.60, 48.70, 7.80], 'download_limit': 60 * 1024 * 1024,
+     'license': 'Licence Ouverte 2.0', 'publisher': 'Compagnie des Transports Strasbourgeois'},
     # Couronne suivant la BFC : première tranche interurbaine Fluo Grand Est. La source agrège
     # les lignes départementales ; le découpage garde les parcours ayant au moins deux arrêts
     # dans l'emprise régionale et n'annonce pas un raccordement moteur.
@@ -99,12 +105,6 @@ FILTERED_MIRROR = [
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
-    # GTFS CTS publié ouvertement au PAN : l’archive complète (7,84 Mo) reste sous le plafond
-    # téléphone/MAX_OUT, sans découpage géographique ni mélange avec l’agrégat Grand Est.
-    {'id': 'cts-strasbourg', 'network': 'CTS Strasbourg',
-     'url': 'https://opendata.cts-strasbourg.eu/google_transit.zip',
-     'bounds': [48.45, 7.60, 48.70, 7.90],
-     'license': 'Licence ouverte (publication PAN)', 'publisher': 'Compagnie des Transports Strasbourgeois'},
     # Première région dans la progression en escargot au départ d'AURA : Bourgogne-Franche-Comté.
     # Les ressources départementales Mobigo sont publiées individuellement par la Région sous Licence Ouverte 2.0.
     # Elles restent séparées pour conserver les calendriers et éviter de fusionner des identifiants GTFS homonymes.

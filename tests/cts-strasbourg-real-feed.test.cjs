@@ -25,8 +25,8 @@ test('CTS Strasbourg réel : horaires actifs indexables dans le flux officiel',
     const fromInfo=feed.index.stopById.get(from.stopId),toInfo=feed.index.stopById.get(to.stopId);
     const coords=[Number(fromInfo?.stop_lat),Number(fromInfo?.stop_lon),Number(toInfo?.stop_lat),Number(toInfo?.stop_lon)];
     if(!coords.every(Number.isFinite))continue;
-    if(!(coords[0]>=48.45&&coords[0]<=48.70&&coords[1]>=7.60&&coords[1]<=7.90&&
-         coords[2]>=48.45&&coords[2]<=48.70&&coords[3]>=7.60&&coords[3]<=7.90))continue;
+    if(!(coords[0]>=48.45&&coords[0]<=48.70&&coords[1]>=7.60&&coords[1]<=7.80&&
+         coords[2]>=48.45&&coords[2]<=48.70&&coords[3]>=7.60&&coords[3]<=7.80))continue;
     const journeys=indexer.directTrips(feed.files,feed.index,date,from.stopId,to.stopId);
     if(journeys.length)sample={date,from,to,journey:journeys[0]};
    }
