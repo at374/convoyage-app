@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const loader=require('../transport-gtfs-loader.js');
 const indexer=require('../transport-gtfs-index.js');
+const hub=require('../transport-mission-hub.js');
 
 const ROOT=path.join(__dirname,'..');
 const DATA_DIR=process.env.GTFS_TEST_DATA_DIR||path.join(ROOT,'data','gtfs');
@@ -21,7 +22,7 @@ const NETWORKS=[
 ];
 
 for(const [id,name] of NETWORKS){
- test(`${name} réel : candidat direct actif, horaires exacts et emprise calculée depuis le GTFS`,
+ test(`${name} réel : fournisseur mission actif, départ et arrivée avant échéance`,
   {skip:!fs.existsSync(path.join(DATA_DIR,`${id}.zip`))&&process.env.REQUIRE_REAL_GTFS!=='1'},async()=>{
    const archive=path.join(DATA_DIR,`${id}.zip`);
    assert.ok(fs.existsSync(archive),`REQUIRE_REAL_GTFS=1 exige data/gtfs/${id}.zip`);
@@ -51,6 +52,28 @@ for(const [id,name] of NETWORKS){
    assert.ok(sample,`${id}: aucun trajet direct actif trouvé sur les sept prochains jours`);
    assert.ok(sample.journey.departure&&sample.journey.arrival,`${id}: horaires manquants`);
    assert.equal(sample.journey.date,sample.date);
+   const point=stopId=>{
+    const stop=feed.index.stopById.get(stopId);
+    return {lat:Number(stop.stop_lat),lon:Number(stop.stop_lon)};
+   };
+   const provider=hub.makeProviders({CPGTFSLoader:loader,CPGTFSIndex:indexer},{
+    fetcher:async()=>new Response(bytes)
+   })['local_'+id.replace(/-/g,'_')];
+   assert.ok(provider,`${id}: fournisseur mission absent`);
+   const task={from:point(sample.from),to:point(sample.to),earliestDeparture:sample.date+'T00:00:00Z'};
+   assert.equal(provider.enabled(task),true);
+   const results=await provider.run(task);
+   assert.ok(results.length>0,`${id}: aucun résultat mission après départ`);
+   const deadline=sample.date+'T22:00:00Z';
+   const arriveTask={from:task.from,to:task.to,arriveBy:deadline,latestArrival:deadline};
+   assert.equal(provider.enabled(arriveTask),true);
+   const arrivals=await provider.run(arriveTask);
+   assert.ok(arrivals.length>0,`${id}: aucun résultat mission avant échéance`);
+   for(const row of arrivals){
+    const last=row.legs.at(-1);
+    assert.ok(Date.parse(last.arrival)<=Date.parse(deadline),`${id}: arrivée après échéance`);
+   }
+   assert.equal(!!provider.enabled({...task,from:{lat:48,lon:2}}),false);
    for(const stopId of [sample.from,sample.to]){
     const stop=feed.index.stopById.get(stopId);
     assert.ok(stop,`${id}: arrêt candidat absent de l’index`);

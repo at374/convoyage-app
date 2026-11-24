@@ -587,3 +587,12 @@ Claude a ensuite ajouté les neuf fournisseurs dans `makeProviders` (commit `952
 Les workflows **45405976706** et **45405980465** ont passé les contrôles de collecte et les tests HDF ; leur seule erreur est le push du commit bot, rejeté car la branche avait avancé durant l’exécution. Correctif du workflow régional : récupération de l’historique Git, rebase du commit de données sur la tête distante, puis push non forcé avec trois tentatives bornées. Le scénario de course entre commit code et commit GTFS a été simulé en dépôt Git temporaire : les deux changements sont conservés. La CI de cette correction reste à confirmer.
 
 Ces fournisseurs sont raccordés à la branche fonctionnelle, mais celle-ci n’est pas publiée sur `main` ; la carte publique n’est donc pas encore mise à jour ni comptée comme déploiement. Prochaine couronne : inventaire des réseaux de Normandie, puis collecte/filtrage et tests réels.
+
+
+## Grand Est — neuf fournisseurs mission raccordés et testés (24/11/2026)
+
+Base distante vérifiée avant modification : d93a894. Les archives déjà collectées sont réutilisées sans nouveau collecteur : SUB Nancy, TRACE Colmar, Imagine Épinal, Ticéa Saint-Dizier, Transavold Saint-Avold, Cmonbus Chaumont, TUB Bar-le-Duc, Rézo Verdun et TCAT Troyes. Leurs fournisseurs `local_*` sont ajoutés à `transport-mission-hub.js` avec les emprises GPS exactes du manifeste régional.
+
+Le test existant `tests/grand-est-urban-real-feeds.test.cjs`, déjà exécuté par le workflow régional, appelle maintenant chaque vrai fournisseur après chargement de son ZIP : résultats après départ, résultats avant échéance, contrôle de chaque dernière arrivée et désactivation hors zone. Validation locale stricte sur archives réelles : Grand Est + HDF + BFC **39/39 réussis, zéro ignoré**, 29,0 s. Non-régression du hub et des correspondances locales : **67/67 réussis**, 3,7 s.
+
+Statuts : sources découvertes, archives téléchargées et validées, indexation et neuf fournisseurs mission testés localement. Publication du code sur la branche fonctionnelle seulement ; ni main ni Android déployés par ce lot. Marche de bout en bout, correspondances propres à ces neuf réseaux, couverture exhaustive et tarifs non certifiés. Aucun prix inventé. La carte publique conserve les statuts de main ; aucune cadence ajoutée (workflow existant : `17 */6 * * *`). Le run régional 45414375152 sur d93a894 était encore en cours lors du contrôle ; aucune réussite CI de ce nouveau lot n'est présumée.

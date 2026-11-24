@@ -732,6 +732,16 @@ function makeProviders(r,opts={}){
  // candidates only; the pedestrian router and confirmation checks still apply.
  if(r.CPGTFSLoader?.loadResource&&r.CPGTFSIndex?.nearbyDirectTrips){
   const localNetworks=[
+   // Grand Est : archives validées, emprises GPS du manifeste régional.
+   ["sub_nancy", "SUB Nancy", "sub-nancy.zip", [48.599643, 6.076771, 48.794576, 6.352883]],
+   ["trace_colmar", "TRACE Colmar", "trace-colmar.zip", [48.002982, 7.223971, 48.127668, 7.448601]],
+   ["imagine_epinal", "Imagine Épinal", "imagine-epinal.zip", [47.948099, 6.039117, 48.408799, 6.542488]],
+   ["ticea_saint_dizier", "Ticéa Saint-Dizier", "ticea-saint-dizier.zip", [48.493327, 4.866097, 48.656067, 4.990069]],
+   ["transavold_saint_avold", "Transavold Saint-Avold", "transavold-saint-avold.zip", [48.923328, 6.58078, 49.168911, 6.784939]],
+   ["cmonbus_chaumont", "Cmonbus Chaumont", "cmonbus-chaumont.zip", [48.073095, 5.003199, 48.125, 5.160135]],
+   ["tub_bar_le_duc", "TUB Bar-le-Duc", "tub-bar-le-duc.zip", [48.627414, 5.026029, 48.837461, 5.387178]],
+   ["rezo_verdun", "Rézo Verdun", "rezo-verdun.zip", [49.123269, 5.295421, 49.184138, 5.423343]],
+   ["tcat_troyes", "TCAT Troyes", "tcat-troyes.zip", [48.183986, 3.905314, 48.398879, 4.244121]],
    ["ilevia_lille", "ilévia Lille", "ilevia-lille.zip", [50.510731, 2.800832, 50.788235, 3.273467]],
    ["transvilles_valenciennes", "Transvilles Valenciennes", "transvilles-valenciennes.zip", [50.24471, 3.254264, 50.513608, 3.686519]],
    ["tadao_lens", "TADAO Lens-Liévin", "tadao-lens.zip", [50.368141, 2.321316, 50.632855, 3.070861]],
