@@ -732,6 +732,16 @@ function makeProviders(r,opts={}){
  // candidates only; the pedestrian router and confirmation checks still apply.
  if(r.CPGTFSLoader?.loadResource&&r.CPGTFSIndex?.nearbyDirectTrips){
   const localNetworks=[
+   ["ilevia_lille", "ilévia Lille", "ilevia-lille.zip", [50.510731, 2.800832, 50.788235, 3.273467]],
+   ["transvilles_valenciennes", "Transvilles Valenciennes", "transvilles-valenciennes.zip", [50.24471, 3.254264, 50.513608, 3.686519]],
+   ["tadao_lens", "TADAO Lens-Liévin", "tadao-lens.zip", [50.368141, 2.321316, 50.632855, 3.070861]],
+   ["dkbus_dunkerque", "DK’BUS Dunkerque", "dkbus-dunkerque.zip", [50.940872, 2.099884, 51.082111, 2.601023]],
+   ["ametis_amiens", "Ametis Amiens", "ametis-amiens.zip", [49.782146, 2.107003, 49.970084, 2.436031]],
+   ["eveole_douai", "Évéole Douai", "eveole-douai.zip", [50.257587, 3.00059, 50.443732, 3.340375]],
+   ["marineo_boulogne", "Marinéo Boulogne-sur-Mer", "marineo-boulogne.zip", [50.58513, 1.57011, 50.786881, 1.737789]],
+   ["artis_arras", "Artis Arras", "artis-arras.zip", [50.200292, 2.64385, 50.366026, 2.902618]],
+   ["sitac_calais", "SITAC Calais", "sitac-calais.zip", [50.862352, 1.713064, 50.985678, 1.979026]],
+
    ['tac','TAC Annemasse','tac-annemasse.zip',[46.1,5.98,46.27,6.42]],
    ['synchro','Synchro Chambéry','synchro-chambery.zip',[45.48,5.75,45.72,6.04]],
    ['tcl','TCL Lyon','tcl-lyon.zip',[45.55,4.6,46.02,5.1]],
