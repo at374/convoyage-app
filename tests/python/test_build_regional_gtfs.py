@@ -417,10 +417,6 @@ class TMobileSharding(unittest.TestCase):
                 self.assertTrue(m.read_table(archive, 'calendar_dates.txt')[1])
         self.assertEqual(seen, {'T1', 'T2', 'T3'})
 
-if __name__ == '__main__':
-    unittest.main()
-
-
 class TOccitanieConfig(unittest.TestCase):
     def test_lio_interurban_feed_is_current_dynamic_and_sharded(self):
         m = load_module()
@@ -433,3 +429,6 @@ class TOccitanieConfig(unittest.TestCase):
         self.assertEqual(network['agency_pattern'], '.*')
         self.assertIn('license', bundle)
 
+
+if __name__ == '__main__':
+    unittest.main()

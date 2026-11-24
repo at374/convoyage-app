@@ -31,9 +31,12 @@ test('liO interurbain Occitanie réel : fragments chargés, courses actives et e
   assert.ok(feed.index.counts.trips>0,`fragment vide : ${name}`);
   routeCount+=feed.index.counts.routes;stopCount+=feed.index.counts.stops;
   const tripText=feed.files['trips.txt']||'';
-  const tripRows=tripText.trim().split(/\r?\n/).slice(1);
-  for(const row of tripRows){
-   const id=row.split(',')[2];
+  const tripLines=tripText.trim().split(/\r?\n/);
+  const tripHeader=tripLines.shift().split(',');
+  const tripIdColumn=tripHeader.indexOf('trip_id');
+  assert.ok(tripIdColumn>=0,'colonne trip_id absente');
+  for(const row of tripLines){
+   const id=row.split(',')[tripIdColumn];
    assert.ok(id&&!seenTrips.has(id),`course dupliquée entre fragments : ${id}`);
    seenTrips.add(id);
   }
