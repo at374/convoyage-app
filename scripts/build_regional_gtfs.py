@@ -294,6 +294,46 @@ MIRROR = [
     {'id': 'mreso-gresivaudan', 'network': 'M Réso — Grésivaudan', 'url': 'https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2', 'bounds': [45.15, 5.7, 45.5, 6.15]},
     {'id': 'start-thonon', 'network': "Star't Thonon", 'url': 'https://www.data.gouv.fr/api/1/datasets/r/7cbb883b-d0cb-4bc7-b2e0-7537afdbc86e', 'bounds': [46.25, 6.3, 46.45, 6.65]},
 ]
+# Un flux agrégé peut contenir de nombreux opérateurs. On le télécharge une seule fois puis
+# on produit un ZIP autonome par agence. Ferries exclus (route_type=4), conformément au périmètre.
+BUNDLED_AGENCY_FEEDS = [{
+    'dataset': 'base-de-donnees-multimodale-des-reseaux-de-transport-public-normands',
+    'url': 'https://transport.data.gouv.fr/resources/81942/download',
+    'download_limit': 80 * 1024 * 1024,
+    'exclude_route_types': ['4'],
+    'license': 'Licence Ouverte 2.0',
+    'publisher': 'Syndicat mixte Atoumod',
+    'networks': [
+        {'id': 'atoumod-altobus-alencon', 'network': 'Altobus Alençon', 'agency_name': "Altobus (Communauté Urbaine d'Alençon)"},
+        {'id': 'atoumod-tiva-vire-noireau', 'network': 'Tiva Vire au Noireau', 'agency_name': 'Tiva (Intercom de la Vire au Noireau)'},
+        {'id': 'atoumod-argentanbus', 'network': 'ArgentanBus', 'agency_name': 'ArgentanBus (Argentan Intercom)'},
+        {'id': 'atoumod-astrobus-lisieux', 'network': 'Astrobus Lisieux', 'agency_name': 'Astrobus (Lisieux Normandie)'},
+        {'id': 'atoumod-bagnoles', 'network': 'Bagnoles de l’Orne', 'agency_name': "Bagnoles de l'Orne"},
+        {'id': 'atoumod-ibus-bernay', 'network': 'I’BUS Bernay', 'agency_name': "I'BUS (Intercom Bernay Terres de Normandie)"},
+        {'id': 'atoumod-bybus-bayeux', 'network': 'Bybus Bayeux', 'agency_name': 'Bybus (Bayeux Intercom)'},
+        {'id': 'atoumod-cosibus-coutances', 'network': 'Cosibus Coutances', 'agency_name': 'Cosibus (Coutances Mer et Bocage)'},
+        {'id': 'atoumod-deep-mob-dieppe', 'network': 'Deep Mob Dieppe', 'agency_name': 'Deep Mob (Dieppe-Maritime)'},
+        {'id': 'atoumod-ficibus-fecamp', 'network': 'Ficibus Fécamp', 'agency_name': 'Ficibus (Fécamp Caux Littoral)'},
+        {'id': 'atoumod-hobus-honfleur', 'network': 'Hobus Honfleur', 'agency_name': 'Hobus (Honfleur)'},
+        {'id': 'atoumod-le-bus-pont-audemer', 'network': 'Le Bus Pont-Audemer', 'agency_name': 'Le Bus (Pont-Audemer/Val de Risle)'},
+        {'id': 'atoumod-lia-le-havre', 'network': 'LiA Le Havre', 'agency_name': 'LiA (Le Havre Seine Métropole)'},
+        {'id': 'atoumod-navette-pontorson', 'network': 'Navette Pontorson–Mont-Saint-Michel', 'agency_name': 'Navette Pontorson - Le Mont St Michel'},
+        {'id': 'atoumod-nemus-flers', 'network': 'Némus Flers', 'agency_name': 'Némus (Flers Agglo)'},
+        {'id': 'atoumod-neva-granville', 'network': 'Néva Granville', 'agency_name': 'Néva (Granville Terre et Mer)'},
+        {'id': 'atoumod-rezobus-caux-seine', 'network': 'Rézo’Bus Caux Seine', 'agency_name': "Rézo'Bus (Bolbec, Lillebonne, Port-Jérôme, Caux Seine Agglo)"},
+        {'id': 'atoumod-semo-seine-eure', 'network': 'Semo Seine-Eure', 'agency_name': 'Semo (Val-de-Reuil, Louviers, Seine Eure Agglo)'},
+        {'id': 'atoumod-slam-saint-lo', 'network': 'SLAM Saint-Lô', 'agency_name': 'SLAM (Saint-Lô Agglo)'},
+        {'id': 'atoumod-nomad-train', 'network': 'Nomad Train Normandie', 'agency_name': 'Nomad Train (SNCF, Région Normandie)'},
+        {'id': 'atoumod-sngo-vernon', 'network': 'SN’go Vernon–Les Andelys', 'agency_name': "SN'go! (Vernon, Les Andelys, Seine Normandie Agglo)"},
+        {'id': 'atoumod-astuce-rouen', 'network': 'Astuce Rouen', 'agency_name': 'Astuce (Métropole Rouen Normandie)'},
+        {'id': 'atoumod-transurbain-evreux', 'network': 'Transurbain Évreux', 'agency_name': 'Transurbain (Evreux Portes de Normandie)'},
+        {'id': 'atoumod-twisto-caen', 'network': 'Twisto Caen', 'agency_name': 'Twisto (Caen la mer)'},
+        {'id': 'atoumod-vikibus-yvetot', 'network': 'Vikibus Yvetot', 'agency_name': 'Vikibus (Yvetot Normandie)'},
+        {'id': 'atoumod-cap-cotentin', 'network': 'Cap Cotentin', 'agency_name': 'Cap Cotentin (Cherbourg, Agglo. du Cotentin)'},
+        {'id': 'atoumod-nomad-car', 'network': 'Nomad Car Normandie', 'agency_name': 'Nomad Car (Région Normandie)'},
+        {'id': 'atoumod-moca-caux-austreberthe', 'network': 'MOCA Caux-Austreberthe', 'agency_name': 'MOCA (Communauté de Communes Caux Austreberthe)'},
+    ],
+}]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
 
 
@@ -670,6 +710,48 @@ def main():
                                                     **{key: spec[key] for key in ('license', 'publisher') if spec.get(key)}}
             except BaseException as e:
                 manifest['errors'][spec['id']] = 'erreur : %s' % e
+        # Les agrégats multi-opérateurs (ex. Atoumod) sont téléchargés une fois sur disque,
+        # puis extraits agence par agence. Une seule archive d'agence reste en mémoire à la fois.
+        for bundle in BUNDLED_AGENCY_FEEDS:
+            source_path = None
+            try:
+                origin = current_dataset_zip(bundle['dataset'], bundle['url'])
+                source_path = download(origin, bundle.get('download_limit', 80 * 1024 * 1024))
+                with zipfile.ZipFile(source_path) as source_zip:
+                    for agency in bundle['networks']:
+                        spec = {'pattern': re.escape(norm(agency['agency_name'])),
+                                'exclude_route_types': bundle.get('exclude_route_types', [])}
+                        try:
+                            data, info = extract(source_zip, spec)
+                            if data is None:
+                                manifest['errors'][agency['id']] = info
+                                continue
+                            with zipfile.ZipFile(io.BytesIO(data)) as extracted:
+                                trips, stop_times = validate(extracted)
+                                bounds = stop_bounds(extracted)
+                            name = agency['id'] + '.zip'
+                            with open(os.path.join(args.out, name), 'wb') as output:
+                                output.write(data)
+                            manifest['networks'][agency['id']] = {
+                                'network': agency['network'], 'file': name,
+                                'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data),
+                                'bounds': bounds, 'origin': origin,
+                                'routes': info['routes'], 'trips': trips, 'stop_times': stop_times,
+                                'stops': info['stops'], 'agencies': info['agencies'],
+                                'fares': info['fares'], 'license': bundle['license'],
+                                'publisher': bundle['publisher']}
+                            del data
+                        except Exception as e:  # échec isolé : poursuivre les autres agences
+                            manifest['errors'][agency['id']] = 'erreur : %s' % e
+            except Exception as e:
+                for agency in bundle['networks']:
+                    manifest['errors'][agency['id']] = 'erreur agrégat %s : %s' % (bundle['dataset'], e)
+            finally:
+                if source_path:
+                    try:
+                        os.unlink(source_path)
+                    except FileNotFoundError:
+                        pass
     with open(os.path.join(args.out, 'manifest.json'), 'w', encoding='utf-8') as f:
         json.dump(manifest, f, ensure_ascii=False, indent=1)
     print(json.dumps({'networks': list(manifest['networks']), 'errors': manifest['errors']}, ensure_ascii=False))

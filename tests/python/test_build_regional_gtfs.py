@@ -340,5 +340,35 @@ class TMirrorConfig(unittest.TestCase):
         self.assertIn('stas-saint-etienne', ids)
         self.assertIn('t2c-clermont', ids)
 
+    def test_bundled_normandy_agencies_are_unique_and_licensed(self):
+        m = load_module()
+        self.assertEqual(len(m.BUNDLED_AGENCY_FEEDS), 1)
+        bundle = m.BUNDLED_AGENCY_FEEDS[0]
+        self.assertEqual(bundle['license'], 'Licence Ouverte 2.0')
+        self.assertLessEqual(bundle['download_limit'], 80 * 1024 * 1024)
+        self.assertEqual(bundle['exclude_route_types'], ['4'])
+        ids = [agency['id'] for agency in bundle['networks']]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(len(ids), 28)
+        self.assertTrue(all(agency.get('agency_name') and agency.get('network') for agency in bundle['networks']))
+
+    def test_bundle_extraction_excludes_ferries(self):
+        m = load_module()
+        archive = io.BytesIO()
+        with zipfile.ZipFile(archive, 'w') as z:
+            z.writestr('agency.txt', 'agency_id,agency_name,agency_timezone\nA,Astuce (Métropole Rouen Normandie),Europe/Paris\nB,Autre,Europe/Paris\n')
+            z.writestr('routes.txt', 'route_id,agency_id,route_short_name,route_type\nBUS,A,1,3\nBOAT,A,F,4\nOTHER,B,2,3\n')
+            z.writestr('trips.txt', 'route_id,service_id,trip_id\nBUS,S,TB\nBOAT,S,TF\nOTHER,S,TO\n')
+            z.writestr('stop_times.txt', 'trip_id,arrival_time,departure_time,stop_id,stop_sequence\nTB,08:00:00,08:00:00,S1,1\nTB,08:10:00,08:10:00,S2,2\nTF,09:00:00,09:00:00,S1,1\nTF,09:10:00,09:10:00,S2,2\nTO,10:00:00,10:00:00,S1,1\nTO,10:10:00,10:10:00,S2,2\n')
+            z.writestr('stops.txt', 'stop_id,stop_name,stop_lat,stop_lon\nS1,Rouen,49.44,1.09\nS2,Rouen 2,49.45,1.10\n')
+            z.writestr('calendar_dates.txt', 'service_id,date,exception_type\nS,20261124,1\n')
+        with zipfile.ZipFile(archive) as source:
+            data, info = m.extract(source, {'pattern': 'astuce \\(metropole rouen normandie\\)', 'exclude_route_types': ['4']})
+        self.assertIsNotNone(data, info)
+        with zipfile.ZipFile(io.BytesIO(data)) as result:
+            self.assertEqual(m.validate(result)[0], 1)
+            self.assertEqual(m.stop_bounds(result), [49.44, 1.09, 49.45, 1.1])
+            self.assertNotIn('BOAT', result.read('routes.txt').decode())
+
 if __name__ == '__main__':
     unittest.main()
