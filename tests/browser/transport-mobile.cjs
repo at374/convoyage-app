@@ -348,6 +348,7 @@ async function run(){
   await page.locator('.mission').first().click();
   await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await release('12');
+  await release('14');
   const railCard=page.locator('#cpTransportMissionDetails [data-transport-hub] details.cp-hub-card')
    .filter({has:page.locator('summary').filter({hasText:/\bK21\b/})}).first();
   await railCard.waitFor({timeout:45000});
