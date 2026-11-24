@@ -5,12 +5,8 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs/promises'),path=require('node:path'),http=require('node:http'),zlib=require('node:zlib');
 const {chromium,devices}=require('playwright');
 const {crc32}=require('../../transport-gtfs-loader');
-const {createRelay,PATH:relayPath}=require('../../server/transport-realtime-relay.cjs');
 const official=require('../fixtures/mobilites-m-grenoble-crolles-2026-10-30.json');
 const railFixture=require('../fixtures/sncf-annecy-grenoble-2026-11-02.json');
-const tripgoFixture=require('../fixtures/tripgo-annecy-grenoble-2026-10-31.json');
-const siriFixture=require('../fixtures/blablacar-siri-2026-10-31.json');
-const tripgoToday=require('../fixtures/tripgo-blablacar-2026-10-31.json');
 const root=path.resolve(__dirname,'../..');
 const output=path.resolve(process.env.TRANSPORT_BROWSER_OUTPUT||path.join(root,'tmp/transport-browser'));
 const missions=[
@@ -59,7 +55,7 @@ async function run(){
  await fs.mkdir(output,{recursive:true});
  const zip=archive(),sibraZip=archive('4'),regionalZip=archive('Y51',true),regionalFareZip=archive('Y51','full'),errors=[],requests=[],gates=new Map(),workers=[],blockedWrites=[],regionalGates=[],activeWorkers=new Set(),abortedRequests=[];
  const sibraGates=[];let holdSibra=false;
- let holdRegional=false,railScenario=false,tripgoScenario=false,busLiveScenario=false,regionalPassScenario=false,regionalFareScenario=false;
+ let holdRegional=false,railScenario=false,regionalPassScenario=false,regionalFareScenario=false;
  const until=async(predicate,message)=>{const end=Date.now()+10000;while(!predicate()){if(Date.now()>end)throw Error(message);await new Promise(resolve=>setTimeout(resolve,20));}};
  const server=http.createServer(async(req,res)=>{
   try{
@@ -74,13 +70,6 @@ async function run(){
  });
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const origin='http://127.0.0.1:'+server.address().port;
- let relayUpstreamRequests=0;
- const relayServer=createRelay({allowedOrigins:[origin],now:()=>Date.parse(siriFixture.testNow),fetcher:async(url,init)=>{
-  assert.equal(url,siriFixture.source);assert.deepEqual(init.headers,{Accept:'application/json'});relayUpstreamRequests++;
-  return new Response(JSON.stringify(siriFixture.response),{headers:{'Content-Type':'application/json'}});
- }});
- await new Promise(resolve=>relayServer.listen(0,'127.0.0.1',resolve));
- const relayOrigin='http://127.0.0.1:'+relayServer.address().port,relayURL=relayOrigin+relayPath;
  let browser,context,page;
  const json=(route,value)=>route.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(value)});
  try{
@@ -89,8 +78,7 @@ async function run(){
   // Les anciens blocs par moteur sont désormais repliés sous « Détail par moteur » : ce test vérifie leur contenu, il les ouvre.
   await context.addInitScript(()=>{new MutationObserver(()=>document.querySelectorAll('details.cp-transport-sources:not([open])').forEach(d=>{d.open=true;}))
    .observe(document,{childList:true,subtree:true});});
-  await context.addInitScript(({missions,settings,origin,relayURL})=>{
-   if(new URL(location.href).searchParams.has('buslive'))window.CP_BLABLACAR_REALTIME_URL=relayURL;
+  await context.addInitScript(({missions,settings})=>{
    // An invalid optional relay must never block SNCF or the other engines.
    if(new URL(location.href).searchParams.has('rail'))window.CP_BLABLACAR_REALTIME_URL='http://external.invalid/transport-realtime/blablacar';
    if(new URL(location.href).searchParams.has('rail')){
@@ -98,13 +86,6 @@ async function run(){
     missions[0].delivery_end='2026-11-02T18:00:00+01:00';
     settings.domicile_ville='Annecy';settings.domicile_lat=45.902047;settings.domicile_lng=6.121826;
     localStorage.removeItem('cp_gps');
-   }
-   if(new URL(location.href).searchParams.has('tripgo')||new URL(location.href).searchParams.has('buslive')){
-    const day=new URL(location.href).searchParams.has('buslive')?'2026-10-31':'2026-11-02';
-    missions=missions.slice(0,1);missions[0].pickup_start=missions[0].pickup_end=day+'T08:00:00+01:00';missions[0].delivery_end=day+'T10:00:00+01:00';
-    missions[0].to_city='Annecy';missions[0].destination_address='14 rue Exemple 74000 Annecy';
-    settings.domicile_ville='Grenoble';settings.domicile_lat=45.1914;settings.domicile_lng=5.7143;
-    localStorage.removeItem('cp_gps');localStorage.removeItem('cp_tripgo_key');
    }
    for(const [key,value] of Object.entries({cp_session:{access_token:'browser-test-only',user_id:'browser-fixture',expires_at:Date.now()+86400000},
     cp_cache:{missions,alertes:[],reglages:settings,chargeLe:new Date().toISOString()},cp_preferences:{onglet:'agenda'},cp_plats_choisies:['DriiveMe'],cp_pause:{choix:'non'},cp_notif:{on:false,son:false}}))localStorage.setItem(key,JSON.stringify(value));
@@ -123,10 +104,9 @@ async function run(){
     window.CP_GTFS_AGENDA_RESOURCES[0].url+='?sibra=1';
     localStorage.removeItem('cp_gps');localStorage.removeItem('cp_tripgo_key');
    }
-  },{missions,settings,origin,relayURL});
+  },{missions,settings});
   await context.route('**/*',async route=>{
    const request=route.request(),url=new URL(request.url());
-   if(url.origin===relayOrigin)return route.continue(); // Real cross-origin HTTP relay, not a mocked response.
    if(url.origin===origin){
     if(holdSibra&&url.pathname.startsWith('/data/sibra/'))await new Promise(resolve=>sibraGates.push(resolve));
     if(railScenario&&url.pathname.startsWith('/data/sncf/'))return json(route,url.pathname.endsWith('/manifest.json')?railFixture.manifest:railFixture.day);
@@ -140,9 +120,8 @@ async function run(){
     if(url.pathname.startsWith('/functions/'))return route.fulfill({status:404,headers:{'access-control-allow-origin':'*'},body:'No notification backend in browser fixtures'});
     const readPost=request.method()==='POST'&&['/rest/v1/rpc/mon_statut','/storage/v1/object/sign/apk/version.json'].includes(url.pathname);
     if(request.method()!=='GET'&&!readPost)blockedWrites.push({method:request.method(),path:url.pathname});
-    const tripDay=busLiveScenario?'2026-10-31':'2026-11-02';
-    const backendMissions=regionalPassScenario?[{...missions[0],from_city:'Annecy',to_city:regionalFareScenario?'Albertville':'Duingt',origin_address:'12 rue Exemple 74000 Annecy',destination_address:regionalFareScenario?'14 rue Exemple 73200 Albertville':'14 rue Exemple 74410 Duingt'}]:tripgoScenario?[{...missions[0],pickup_start:tripDay+'T08:00:00+01:00',pickup_end:tripDay+'T08:00:00+01:00',delivery_end:tripDay+'T10:00:00+01:00',to_city:'Annecy',destination_address:'14 rue Exemple 74000 Annecy'}]:railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
-    const backendSettings=regionalPassScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.9016985,domicile_lng:6.1201612}:tripgoScenario?{...settings,domicile_lat:45.1914,domicile_lng:5.7143}:railScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}:settings;
+    const backendMissions=regionalPassScenario?[{...missions[0],from_city:'Annecy',to_city:regionalFareScenario?'Albertville':'Duingt',origin_address:'12 rue Exemple 74000 Annecy',destination_address:regionalFareScenario?'14 rue Exemple 73200 Albertville':'14 rue Exemple 74410 Duingt'}]:railScenario?[{...missions[0],pickup_start:'2026-11-02T16:00:00+01:00',pickup_end:'2026-11-02T16:00:00+01:00',delivery_end:'2026-11-02T18:00:00+01:00'}]:missions;
+    const backendSettings=regionalPassScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.9016985,domicile_lng:6.1201612}:railScenario?{...settings,domicile_ville:'Annecy',domicile_lat:45.902047,domicile_lng:6.121826}:settings;
     return json(route,url.pathname.endsWith('/missions')?backendMissions:url.pathname.endsWith('/reglages')?[backendSettings]:[]);
    }
    if(url.hostname==='gtfs-fixture.invalid')return route.fulfill({status:200,contentType:'application/zip',headers:{'access-control-allow-origin':'*'},body:url.searchParams.has('regionalfare')?regionalFareZip:url.searchParams.has('regional')?regionalZip:url.searchParams.has('sibra')?sibraZip:zip});
@@ -150,8 +129,8 @@ async function run(){
     const q=url.searchParams.get('q')||'',match=q.match(/\b(12|14|16|18)\b/),number=match?.[1];
     if(number){
      await new Promise(resolve=>{const list=gates.get(number)||[];list.push(resolve);gates.set(number,list);});
-     const point=regionalFareScenario&&number==='14'?[6.3897282,45.6693897]:regionalPassScenario&&number==='14'?[6.2018053,45.827708]:tripgoScenario&&number==='14'?[6.1218,45.9019]:['16','18'].includes(number)?[5.88224,45.28364]:[5.7143,45.1914];
-     return json(route,{features:[{geometry:{coordinates:point},properties:{score:1,type:'housenumber',city:number==='16'?'Crolles':tripgoScenario&&number==='14'?'Annecy':'Grenoble'}}]}).catch(()=>{});
+     const point=regionalFareScenario&&number==='14'?[6.3897282,45.6693897]:regionalPassScenario&&number==='14'?[6.2018053,45.827708]:['16','18'].includes(number)?[5.88224,45.28364]:[5.7143,45.1914];
+     return json(route,{features:[{geometry:{coordinates:point},properties:{score:1,type:'housenumber',city:number==='16'?'Crolles':'Grenoble'}}]}).catch(()=>{});
     }
     return json(route,{features:[]});
    }
@@ -169,12 +148,7 @@ async function run(){
     return json(route,actual?official.response:synthetic).catch(()=>{});
    }
    if(url.hostname==='open-data.bus.blablacar.com')return route.abort('failed');
-   if(url.hostname==='api.tripgo.com'){
-    assert.equal(request.headers()['x-tripgo-key'],'a'.repeat(32),'Only a dummy browser-fixture key is used');
-    if(busLiveScenario&&url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793437200')return json(route,tripgoToday.response);
-    if(url.searchParams.get('from')==='(45.9019,6.1218)'&&url.searchParams.get('to')==='(45.1914,5.7143)'&&url.searchParams.get('departAfter')==='1793610000')return json(route,tripgoFixture.response);
-    return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Outside recorded test query'});
-   }
+   if(url.hostname==='api.tripgo.com'){errors.push('Unexpected request to retired TripGo');return route.abort();}
    if(url.hostname==='transport.opendata.ch')return json(route,{connections:[]});
    if(/valhalla/.test(url.hostname))return route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Unavailable in deterministic browser test'});
    return json(route,{features:[],results:[]});
@@ -236,16 +210,19 @@ async function run(){
   await page.getByText(/Jonction régionale : 4 proposition/).waitFor();
   await release('12');
   await page.waitForFunction(()=>document.querySelector('#cpTransportMissionDetails')?.textContent.includes('Aller régional'));
+  const openGtfsAgenda=()=>page.locator('[data-gtfs-agenda] > summary').click();
   await page.getByText('Réseau de test — horaires aux arrêts',{exact:true}).waitFor();
+  await openGtfsAgenda();
   await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('TEST'));
   await page.locator('.cp-transport-evidence').evaluateAll(nodes=>nodes.forEach(node=>{node.open=true;}));
   // Le hub unifié peut déclarer « Réalisable » quand horaires, marches et marge sont prouvés ;
   // les blocs historiques par moteur restent soumis à l'ancienne règle (jamais « Réalisable »).
   const text=await page.locator('#cpTransportMissionDetails').evaluate(node=>{const c=node.cloneNode(true);c.querySelectorAll('[data-transport-hub]').forEach(h=>h.remove());document.body.appendChild(c);const t=c.innerText;c.remove();return t;});
+  await page.waitForFunction(()=>document.querySelectorAll('#cpTransportMissionDetails [data-transport-hub]').length>=2,null,{timeout:45000});
   const hubText=await page.locator('#cpTransportMissionDetails [data-transport-hub]').allInnerTexts();
   assert.ok(hubText.length>=2,'hub affiché dans les directions');
   for(const block of hubText)for(const m of block.matchAll(/Réalisable · avance (\d+) min \(marge (\d+) min\)/g))assert.ok(Number(m[1])>=Number(m[2]),'Réalisable avec marge respectée');
-  assert.match(text,/C11/);assert.match(text,/Crolles Mairie/);assert.match(text,/minimum : 15 min/);assert.doesNotMatch(text,/\bRéalisable\b/);
+  assert.match(text,/C11/);assert.match(text,/Crolles Mairie/);assert.match(text,/(?:minimum\s*:\s*15\s*min|Arrivée\s*:\s*15\s*min\s+minimum)/);assert.doesNotMatch(text,/\bRéalisable\b/);
   assert.ok(requests.some(r=>r.arriveBy==='true'&&r.time==='08:45'),'Outbound applies mission margin');
   assert.ok(requests.some(r=>r.fromPlace===official.request.fromPlace&&r.toPlace===official.request.toPlace),'Official regional response is rendered after late geocoding');
   // Verify the actual mobile DOM and interaction, not only the source code.
@@ -329,7 +306,8 @@ async function run(){
    const r=node.getBoundingClientRect();
    return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===node;
   }),true,'Install launcher is accessible again after closing the sheet');
-  await until(()=>abortedRequests.length>=abortedBefore+3&&activeWorkers.size===0,'Closing the mission sheet must abort regional fetches and terminate its GTFS worker');
+  await until(()=>abortedRequests.length>=abortedBefore+3,'Closing the mission sheet must abort regional fetches');
+  await until(()=>activeWorkers.size===0,'Closing the mission sheet must terminate its GTFS workers');
   const pendingText=await page.locator('#cpTransportMissionDetails').textContent();
   for(const resolve of regionalGates.splice(0))resolve();
   const lateSibra=page.waitForResponse(response=>new URL(response.url()).pathname==='/data/sibra/sibra-2026-11-02.json');
@@ -344,101 +322,51 @@ async function run(){
   await page.locator('.mission').first().click();
   await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await release('12');
-  const rail=page.getByRole('heading',{name:'Aller SNCF · comparer (gare à gare)',exact:true}).locator('..');
-  await rail.waitFor();
-  const railText=await rail.textContent();
-  assert.match(railText,/proposition\(s\) de gare à gare/);
-  assert.match(railText,/Annecy/);assert.match(railText,/Grenoble/);
-  assert.match(railText,/Transport non confirmé/);assert.doesNotMatch(railText,/Réalisable/);
-  await rail.getByRole('heading',{name:'Aller SNCF · comparer (gare à gare)',exact:true}).waitFor();
-  const railCards=rail.locator('details');
-  assert.ok(await railCards.count()>0&&await railCards.count()<=3,'SNCF ranking renders comparison cards');
-  const railCard=railCards.first();
-  await railCard.locator('summary').click();
+  await release('14');
+  const railCard=page.locator('#cpTransportMissionDetails [data-transport-hub] details.cp-hub-card')
+   .filter({has:page.locator('summary').filter({hasText:/\bK21\b/})}).first();
+  await railCard.waitFor({timeout:45000});
+  const railSummary=railCard.locator(':scope > summary');
+  await railSummary.click();
   assert.equal(await railCard.evaluate(node=>node.open),true,'SNCF card opens');
-  assert.match(await railCard.innerText(),/Annecy/);assert.match(await railCard.innerText(),/Grenoble/);
-  assert.match(await railCard.innerText(),/Tarif non vérifié/);
-  assert.ok(await railCard.locator('ol li').count()>0,'SNCF card shows recorded train legs');
+  const railLegs=await railCard.locator('.cp-hub-legs').innerText();
+  assert.match(railLegs,/K21/);assert.match(railLegs,/Annecy/i);assert.match(railLegs,/Grenoble/i);
+  assert.match(await railCard.innerText(),/Source tarifaire manquante/);
+  assert.doesNotMatch(await railSummary.innerText(),/Réalisable/);
   assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'SNCF card fits mobile width');
   await railCard.screenshot({path:path.join(output,'mobile-annecy-grenoble.png')});
-  await railCard.locator('summary').click();
+  await railSummary.click();
   assert.equal(await railCard.evaluate(node=>node.open),false,'SNCF card closes');
+  // Exercise the current mission renderer with an unbooked GTFS-Flex window.
+  await page.locator('#cpTransportMissionDetails').evaluate(panel=>{
+   const host=panel.ownerDocument.createElement('div');
+   host.id='browser-flex-check';
+   panel.appendChild(host);
+   window.CPTransportHub.render(host,{done:true,total:0,picks:[],others:[],errors:{},flexCandidates:[
+    {kind:'gtfs-flex-candidate',network:'Réseau de test',line:'TAD 31',tripId:'flex-31',
+     pickupWindow:{startSeconds:28800,endSeconds:32400},
+     pickupRule:{bookingType:'1',noticeMinutes:60,phoneNumber:'04 00 00 00 00',bookingUrl:'https://reservation.example/'}
+    },
+    {kind:'gtfs-flex-candidate',network:'Réseau de test',line:'TAD 32',tripId:'flex-32',
+     pickupWindow:{startSeconds:32400,endSeconds:36000}}
+   ]});
+  });
+  const flexPanel=page.locator('#browser-flex-check');
+  await flexPanel.getByRole('heading',{name:'Résultats de transport à la demande'}).waitFor();
+  const bookedRequired=flexPanel.locator('details').filter({hasText:'TAD 31'});
+  await bookedRequired.locator('summary').click();
+  assert.match(await bookedRequired.innerText(),/Préavis minimum : 60 min/);
+  assert.match(await bookedRequired.innerText(),/04 00 00 00 00/);
+  assert.equal(await bookedRequired.getByRole('link',{name:/Réserver/}).getAttribute('href'),'https://reservation.example/');
+  const unknownNotice=flexPanel.locator('details').filter({hasText:'TAD 32'});
+  await unknownNotice.locator('summary').click();
+  assert.match(await unknownNotice.innerText(),/Conditions de réservation à vérifier/);
+  assert.doesNotMatch(await flexPanel.innerText(),/Réalisable/);
+  assert.equal(await flexPanel.locator('.cp-hub-card').count(),0,'Unbooked windows stay outside ranked journeys');
   await page.locator('#fermer').click();
-  await until(()=>activeWorkers.size===0,'Rail scenario worker must stop on close');
-  // Configure the new client through the real UI, using a dummy key and public fixture.
-  railScenario=false;tripgoScenario=true;
-  await page.goto(origin+'?tripgo=1',{waitUntil:'domcontentloaded'});
-  await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
-  await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
-  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
-  await page.getByLabel('Clé TripGo privée sur cet appareil').fill('a'.repeat(32));
-  await page.getByRole('button',{name:'Activer TripGo sur cet appareil',exact:true}).click();
-  await release('14');
-  const tripStatus=page.getByText(/^Retour TripGo : 2 proposition/);await tripStatus.waitFor();
-  const tripText=await tripStatus.innerText();assert.match(tripText,/FlixBus 1789/);assert.match(tripText,/BlaBlaCar Bus/);
-  await tripStatus.getByRole('heading',{name:'Retour TripGo · comparer',exact:true}).waitFor();
-  const tripCards=tripStatus.locator('[data-tripgo-details]');
-  assert.equal(await tripCards.count(),2,'Each recorded TripGo proposal has its own comparison card');
-  const steps=tripCards.first();
-  assert.equal(await steps.evaluate(node=>node.open),false,'TripGo card starts collapsed');
-  assert.match(await steps.locator('summary').innerText(),/min · marches comprises/);
-  assert.match(await steps.locator('summary').innerText(),/Transport non confirmé/);
-  assert.match(await steps.locator('summary').innerText(),/Tarifs/);
-  await steps.locator('summary').click();
-  assert.equal(await steps.evaluate(node=>node.open),true,'TripGo card opens');
-  assert.ok(await steps.locator('li').count()>=3,'Walking and transit legs have separate dated steps');
-  const maps=await steps.locator('a').evaluateAll(nodes=>nodes.map(x=>({href:x.href,target:x.target,rel:x.rel})));
-  assert.ok(maps.some(x=>new URL(x.href).searchParams.get('travelmode')==='walking'));
-  assert.ok(maps.every(x=>new URL(x.href).hostname==='www.google.com'&&x.target==='_blank'&&x.rel.includes('noopener')));
-  assert.ok(maps.every(x=>!x.href.includes('TripGo-Key')&&!x.href.includes('aaaaaaaa')));
-  assert.match(await steps.innerText(),/nouveau calcul/);
-  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-  await page.getByText(/Prévisions BlaBlaCar Bus indisponibles sur cet appareil/).waitFor();
-  assert.match(tripText,/Preuves manquantes/);assert.match(tripText,/prix du transport/);assert.doesNotMatch(tripText,/Réalisable/);
-  await steps.locator('summary').click();
-  assert.equal(await steps.evaluate(node=>node.open),false,'TripGo card closes');
-  assert.match(await tripStatus.innerText(),/Preuves manquantes/,'Missing evidence remains visible when collapsed');
-  await page.locator('#toast').waitFor({state:'hidden'});
-  await steps.screenshot({path:path.join(output,'mobile-tripgo.png')});
-  const flixCard=tripCards.nth(1);
-  assert.match(await flixCard.locator('summary').innerText(),/FlixBus/);
-  assert.equal(await flixCard.evaluate(node=>node.open),false,'FlixBus card starts collapsed');
-  await flixCard.locator('summary').click();
-  assert.equal(await flixCard.evaluate(node=>node.open),true,'FlixBus card opens');
-  assert.ok(await flixCard.locator('ol li').count()>0,'FlixBus card has dated steps');
-  assert.match(await flixCard.innerText(),/Transport non confirmé/);
-  assert.equal(await page.locator('.feuilleBoite').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true,'FlixBus card fits mobile width');
-  await flixCard.locator('summary').click();
-  assert.equal(await flixCard.evaluate(node=>node.open),false,'FlixBus card closes');
-  await flixCard.screenshot({path:path.join(output,'mobile-tripgo-flixbus.png')});
-  await page.getByRole('button',{name:'Retirer la clé TripGo de cet appareil',exact:true}).click();
-  assert.equal(await page.evaluate(()=>localStorage.getItem('cp_tripgo_key')),null);
-  assert.equal(await page.getByText(/^Retour TripGo : 2 proposition/).count(),0);
-  await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'TripGo scenario worker must stop on close');
-  // Positive operating-day replay, followed by expiry of the operator's validity.
-  await page.close();busLiveScenario=true;
-  page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
-  page.on('worker',worker=>{workers.push(worker.url());activeWorkers.add(worker);worker.on('close',()=>activeWorkers.delete(worker));});
-  await page.clock.install({time:new Date(siriFixture.testNow)});
-  await page.goto(origin+'?buslive=1',{waitUntil:'domcontentloaded'});
-  await page.locator('.mission').first().click();await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
-  await page.locator('#cpTransportPlannedReturn').fill('2026-10-31T10:00');
-  await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
-  await page.getByLabel('Clé TripGo privée sur cet appareil').fill('a'.repeat(32));
-  await page.getByRole('button',{name:'Activer TripGo sur cet appareil',exact:true}).click();
-  await release('14');await page.getByText(/circulation observée par l’opérateur/).waitFor();
-  const observed=page.getByText(/^Retour TripGo : 1 proposition/);
-  assert.equal(await observed.locator('[data-tripgo-details]').first().evaluate(node=>node.open),false,'Live operator information is visible on a collapsed TripGo card');
-  const observedText=await observed.innerText();assert.match(observedText,/arrivée estimée après la marche finale/);
-  assert.match(observedText,/11:45/);assert.doesNotMatch(observedText,/Preuves manquantes : circulation/);assert.doesNotMatch(observedText,/Réalisable/);
-  await page.clock.fastForward(3500);
-  await page.locator('#toast').waitFor({state:'hidden'});
-  await observed.locator('[data-tripgo-details]').first().screenshot({path:path.join(output,'mobile-blablacar-observed.png')});
-  await page.clock.fastForward(61000);await page.getByText(/Prévisions BlaBlaCar Bus expirées/).waitFor();
-  assert.match(await observed.innerText(),/Preuves manquantes : circulation/);
-  await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'Operating-day worker must stop on close');
+  await until(()=>activeWorkers.size===0,'TAD scenario workers must stop on close');
   // Synthetic SIBRA feed identity exercises the real worker and pass controls.
-  await page.close();busLiveScenario=false;tripgoScenario=false;railScenario=false;
+  await page.close();railScenario=false;
   page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
   page.on('worker',worker=>{workers.push(worker.url());activeWorkers.add(worker);worker.on('close',()=>activeWorkers.delete(worker));});
   await page.clock.install({time:new Date('2026-11-02T07:00:00Z')});
@@ -446,7 +374,9 @@ async function run(){
   await page.locator('.mission').filter({hasText:'Grenoble'}).first().click();await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
   await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
-  await release('14');await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('4'));
+  await release('14');
+  await openGtfsAgenda();
+  await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('4'));
   await page.locator('#cpSibraFareReference summary').click();
   await page.locator('#cpSibraPassFrom').fill('2026-01-01');await page.locator('#cpSibraPassThrough').fill('2026-12-31');
   await page.getByRole('button',{name:'Utiliser mon abonnement SIBRA',exact:true}).click();
@@ -470,7 +400,9 @@ async function run(){
   await page.locator('.mission').filter({hasText:'Duingt'}).first().click();await page.locator('#btnTransportsMission').click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
   await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
-  await release('14');await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('Y51'));
+  await release('14');
+  await openGtfsAgenda();
+  await page.waitForFunction(()=>document.querySelector('[data-gtfs-agenda]')?.innerText.includes('Y51'));
   await page.locator('#cpSibraFareReference summary').click();
   await page.locator('#cpSibraPassFrom').fill('2026-01-01');await page.locator('#cpSibraPassThrough').fill('2026-12-31');
   await page.getByRole('button',{name:'Utiliser mon abonnement SIBRA',exact:true}).click();
@@ -490,6 +422,7 @@ async function run(){
   await page.locator('#cpTransportPlannedReturn').fill('2026-11-02T10:00');
   await page.getByRole('button',{name:'Calculer avec cette livraison prévue',exact:true}).click();await page.locator('#cpTransportSettings').evaluate(node=>{node.open=true;});
   await release('14');
+  await openGtfsAgenda();
   await page.waitForFunction(()=>document.querySelector('[data-y51-fare-reference]')?.innerText.includes('8,90 €'));
   const fareRef=page.locator('[data-y51-fare-reference]').first();
   assert.match(await fareRef.innerText(),/Albertville → Annecy.*zone 4.*hors abonnement/);
@@ -499,30 +432,13 @@ async function run(){
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await fareRef.scrollIntoViewIfNeeded();await page.screenshot({path:path.join(output,'mobile-y51-full-fare.png')});
   await page.locator('#fermer').click();await until(()=>activeWorkers.size===0,'Y51 fare worker must stop on close');
-  const legacyY51=page.getByRole('button',{name:/Vérifier les courses officielles Y51 du/}).first();
-  await legacyY51.click();
-  const legacyResult=page.getByText(/^Y51 du 2026-11-02/).first();await legacyResult.waitFor();
-  const legacyText=await legacyResult.innerText();
-  // Les données officielles peuvent ne plus contenir de courses pour cette date historique.
-  if(/0 courses programmées, 0 passages GTFS/.test(legacyText)){
-   assert.match(legacyText,/Aucun départ après la fin de mission identifié/);
-   assert.match(legacyText,/Transport non confirmé/);
-  }else{
-   assert.match(legacyText,/11:48.*13:15/);
-  }
-  assert.doesNotMatch(await legacyResult.innerText(),/Référence Y51.*8,90 €/, 'Legacy Y51 must not invent a fare when imported stops cannot be matched to the priced corridor');
-  assert.match(await legacyResult.innerText(),/Source vérifiée le/);
-  assert.doesNotMatch(await legacyResult.innerText(),/Réalisable/);
-
-
-  assert.equal(relayUpstreamRequests,1,'Operator feed is read through the real relay once');
   assert.deepEqual(errors,[],'No uncaught browser script errors');
   assert.deepEqual(blockedWrites,[],'No account or mission writes');
   const report={browser:browser.version(),viewport:devices['Pixel 7'].viewport,locale:'fr-FR',timezone:'Europe/Paris',
    comparisonChecks,missionData:'Synthetic fixtures only',network:'All external requests mocked; no user account or live mission sent',
    scenarios:['actual Agenda and mission sheet','install launcher stays behind mission sheet and becomes accessible after closing','two separate buttons','late independent geocoding','Aller / Jonction / Retour',
-    '15-minute pickup margin by default; five minutes only with reliable exact GPS and final walk','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded official SNCF subset and expandable station-to-station ranking cards','private TripGo key entry/removal','TripGo BlaBlaCar Bus and FlixBus with missing evidence','dated TripGo step details and safe coordinate map links','operator feed unavailable without losing alternatives','same-day operator observation and final walk','expired observation loses confirmation','actual cross-origin relay HTTP and CORS','invalid optional relay preserves other engines','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display','Y51 Albertville–Annecy shows dated full-fare reference; SIBRA pass does not make the journey free','legacy Agenda Y51 button reports recorded service or zero official services without inventing an unmatched fare'],
-   relay:{crossOriginHttp:true,upstreamFixture:true,upstreamRequests:relayUpstreamRequests},regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
+    '15-minute pickup margin by default; five minutes only with reliable exact GPS and final walk','official SIBRA fare reference opens with product prices, coverage limits and source links','recorded Mobilités M C11 response','real GTFS browser worker','manual refresh','sheet close','in-flight network cancellation','late responses ignored','no horizontal overflow','Annecy–Grenoble with recorded SNCF schedules in unified mission cards','GTFS-Flex notice, operator contact and unconfirmed status','SIBRA pass dates saved and removed locally; real worker fixture shows conditional portion cost','Y51 portion with recorded stop identifiers and coordinates traverses worker scope proof and conditional Agenda display','Y51 Albertville–Annecy shows dated full-fare reference; SIBRA pass does not make the journey free'],
+   regionalRequests:requests.length,workerInstances:workers.length,abortedRequests:abortedRequests.length,remainingWorkers:activeWorkers.size,buttonColour,uncaughtErrors:errors,androidDeviceTested:false};
   await fs.writeFile(path.join(output,'report.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));
  }catch(error){
   if(page&&!page.isClosed()){
@@ -534,7 +450,7 @@ async function run(){
   for(const list of gates.values())for(const resolve of list)resolve();
   for(const resolve of regionalGates.splice(0))resolve();
   holdSibra=false;for(const resolve of sibraGates.splice(0))resolve();
-  await context?.close();await browser?.close();relayServer.closeAllConnections();await new Promise(resolve=>relayServer.close(resolve));await new Promise(resolve=>server.close(resolve));
+  await context?.close();await browser?.close();await new Promise(resolve=>server.close(resolve));
  }
 }
 run().catch(error=>{console.error(error);process.exitCode=1;});

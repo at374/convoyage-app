@@ -2,7 +2,7 @@
    se font ICI, hors du fil de l'écran (l'application ne se fige plus pendant le calcul). Résultat identique au calcul
    sur le fil principal : mêmes fonctions (transport-gtfs-loader / -index / -fares). */
 'use strict';
-importScripts('transport-catalogue.js','transport-gtfs-index.js','transport-gtfs-time.js','transport-gtfs-federation.js','transport-gtfs-loader.js','transport-gtfs-fares.js','transport-national-gtfs-journeys.js');
+importScripts('transport-catalogue.js','transport-gtfs-index.js','transport-gtfs-time.js','transport-gtfs-federation.js','transport-gtfs-loader.js','transport-gtfs-fares.js','transport-national-gtfs-journeys.js','transport-gtfs-flex-courses.js');
 const feeds=new Map();   // «id|date» -> promesse du flux (6 au maximum)
 const cacheFetch=async(url,init)=>{
  if(!self.caches||!/\/data\/gtfs\/[^/?]+\.zip(\?|$)/.test(String(url)))return fetch(url,init);
@@ -114,7 +114,7 @@ self.onmessage=async({data})=>{
   catch(e){self.postMessage({id,error:String(e&&e.message||e)});}
   return;
  }
- const {key,urls,date,from,to,radius,clock,arriveBy,directMeters}=data||{};
+ const {key,urls,date,from,to,radius,clock,arriveBy,directMeters,includeFlex}=data||{};
  try{
   const feed=await feedFor(key,urls,date);
   // Pré-sélection (même règle que le fil principal) : un seul passage par véhicule (le plus proche à pied), avant d'envoyer le résultat à l'écran.
@@ -129,6 +129,10 @@ self.onmessage=async({data})=>{
    if(!prev||score<prev.score)best.set(k,{x,score});
   }
   const rows=attachFares(feed,[...best.values()].map(v=>v.x));
-  self.postMessage({id,rows});
+  let candidates=[];
+  if(includeFlex){
+   try{candidates=CPGTFSFlexCourses.nearby(feed,date,from,to,radius||3000);}catch(_){/* Keep scheduled results. */}
+  }
+  self.postMessage({id,rows,candidates});
  }catch(e){self.postMessage({id,error:String(e&&e.message||e)});}
 };

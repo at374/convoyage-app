@@ -7,13 +7,14 @@ const gtfs=node?require('./transport-gtfs-index.js'):root.CPGTFSIndex;
 const DEFAULT_LIMITS=Object.freeze({maxArchiveBytes:20*1024*1024,maxFileBytes:64*1024*1024,
  maxExpandedBytes:128*1024*1024,maxEntries:128});
 const TABLES=new Set(['agency.txt','stops.txt','routes.txt','trips.txt','stop_times.txt',
- 'calendar.txt','calendar_dates.txt','transfers.txt','feed_info.txt','fare_attributes.txt','fare_rules.txt']);
+ 'calendar.txt','calendar_dates.txt','transfers.txt','feed_info.txt','fare_attributes.txt','fare_rules.txt','fare_products.txt','fare_leg_rules.txt','fare_transfer_rules.txt','fare_media.txt','rider_categories.txt','timeframes.txt',
+ 'location_groups.txt','location_group_stops.txt','booking_rules.txt','locations.geojson']);
 const REQUIRED={
  'agency.txt':['agency_name','agency_timezone'],
  'stops.txt':['stop_id','stop_name','stop_lat','stop_lon'],
  'routes.txt':['route_id','route_type'],
  'trips.txt':['route_id','service_id','trip_id'],
- 'stop_times.txt':['trip_id','arrival_time','departure_time','stop_id','stop_sequence']
+ 'stop_times.txt':['trip_id','stop_sequence']
 };
 const crcTable=Uint32Array.from({length:256},(_,n)=>{for(let k=0;k<8;k++)n=n&1?0xedb88320^(n>>>1):n>>>1;return n>>>0;});
 function crc32(bytes){let crc=0xffffffff;for(const b of bytes)crc=crcTable[(crc^b)&255]^(crc>>>8);return (crc^0xffffffff)>>>0;}
@@ -137,6 +138,17 @@ function validateTables(files){
   const names=files[name].split('\n',1)[0].replace(/^\uFEFF/,'').trim().split(',').map(s=>s.replace(/^"|"$/g,''));
   if(columns.some(column=>!names.includes(column)))throw new Error('Missing GTFS column in '+name);
  }
+ // GTFS classique : horaires fixes et arrêt précis. GTFS-Flex : fenêtres
+ // horaires et localisation par arrêt ou groupe, sans départ garanti.
+ const stopTimesHeader=files['stop_times.txt'].split('\n',1)[0].replace(/^\uFEFF/,'').trim().split(',');
+ const has=(column)=>stopTimesHeader.includes(column);
+ const scheduled=has('arrival_time')&&has('departure_time')&&has('stop_id');
+ const flex=has('start_pickup_drop_off_window')&&has('end_pickup_drop_off_window')&&
+   (has('location_group_id')||has('stop_id'));
+ if(!scheduled&&!flex)throw new Error('Missing scheduled or GTFS-Flex stop_times columns');
+ if(has('location_group_id')&&flex&&files['location_groups.txt']!==undefined&&
+    files['location_group_stops.txt']===undefined)
+   throw new Error('Missing GTFS-Flex location_group_stops.txt');
  const agencies=gtfs.parseCSV(files['agency.txt']);
  if(!agencies.length)throw new Error('Missing GTFS agency');
  for(const agency of agencies){
@@ -179,8 +191,24 @@ async function loadResource(resource,{fetcher=root.fetch,signal,timeoutMs=30000,
   }
   const index=gtfs.buildIndex(extracted.files,{serviceIds});
   const indexedStopTimes=[...index.timesByTrip.values()].reduce((total,rows)=>total+rows.length,0);
-  if(!index.counts.stops||!index.counts.routes||!index.sourceTrips||!index.counts.stopTimes||(!indexedStopTimes&&!index.skippedStopTimes))throw new Error('Empty or disconnected GTFS index');
-  const files=retainSourceTables?extracted.files:Object.fromEntries(Object.entries(extracted.files).filter(([name])=>['agency.txt','calendar.txt','calendar_dates.txt','transfers.txt','feed_info.txt','fare_attributes.txt','fare_rules.txt'].includes(name)));
+  const rawStopTimes=extracted.files['stop_times.txt']||'';
+  const headers=rawStopTimes.slice(0,rawStopTimes.indexOf('\n')<0?rawStopTimes.length:rawStopTimes.indexOf('\n'))
+   .replace(/\r$/,'').replace(/^\uFEFF/,'').split(',');
+  const hasFlexWindows=headers.includes('start_pickup_drop_off_window')&&headers.includes('end_pickup_drop_off_window');
+  if(!index.counts.stops||!index.counts.routes||!index.sourceTrips||!index.counts.stopTimes||
+    (!indexedStopTimes&&!index.skippedStopTimes&&!hasFlexWindows))
+    throw new Error('Empty or disconnected GTFS index');
+  const files=retainSourceTables?extracted.files:Object.fromEntries(Object.entries(extracted.files).filter(([name])=>['agency.txt','calendar.txt','calendar_dates.txt','transfers.txt','feed_info.txt','fare_attributes.txt','fare_rules.txt','fare_products.txt','fare_leg_rules.txt','fare_transfer_rules.txt','fare_media.txt','rider_categories.txt','timeframes.txt','location_groups.txt','location_group_stops.txt','booking_rules.txt','locations.geojson'].includes(name)));
+  // Keep only Flex window rows in compact mode, not the entire national / regional
+  // stop_times table in Android memory. Serialize parsed rows to preserve valid CSV.
+  if(!retainSourceTables&&hasFlexWindows){
+   const quote=v=>{const x=String(v??'');return /[,"\r\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x;};
+   const rows=[headers.map(quote).join(',')];
+   for(const row of gtfs.csvRows(rawStopTimes))
+    if(row.start_pickup_drop_off_window||row.end_pickup_drop_off_window)
+     rows.push(headers.map(key=>quote(row[key])).join(','));
+   files['stop_times.txt']=rows.join('\n')+'\n';
+  }
   return {...extracted,files,index,indexServiceDates:dates,source:{datasetId:resolved.datasetId||null,resourceId:resolved.id||null,
    network:resolved.network||resource.network||null,url:resolved.url,updatedAt:resolved.updatedAt||null,loadedAt:new Date().toISOString()},
    indexedStopTimes,skippedStopTimes:index.skippedStopTimes,rejectedStopTimes:index.counts.stopTimes-indexedStopTimes-index.skippedStopTimes,

@@ -749,3 +749,10 @@ html:root[data-style="jour"]{--lg-s:72%;--lg-l:34%;--lg-rot:0}
 .cp-hub-card.ok{--st:var(--ok)}
 .cp-hub-card.sched{--st:#3b82f6}
 .cp-hub-card>summary .cp-hub-times{color:var(--texte)}
+
+.cp-hub-tad-results{margin:12px 0;padding:10px;border:1px solid var(--ligne);border-left:4px solid var(--alerte);border-radius:10px;background:var(--carte)}
+.cp-hub-tad-heading{margin:0 0 8px;font-size:1.05em}
+.cp-hub-tad-card{padding:9px;margin:8px 0;border:1px solid var(--ligne);border-radius:9px;background:var(--fond)}
+.cp-hub-tad-card strong{display:block;margin-bottom:5px}
+.cp-hub-tad-card a{display:inline-block;padding:5px 4px;font-weight:650}
+.cp-hub-tad-caveat{display:block;color:var(--doux);margin-top:5px}

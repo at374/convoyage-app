@@ -165,3 +165,50 @@ test('newer producer resources replace the former catalogue resource and retain 
  const feed=await loader.loadResource({...resource,resolveFromCatalogue:true},{fetcher:fake});
  assert.equal(feed.source.resourceId,'new-id');assert.equal(feed.source.url,latest);
 });
+
+
+test('GTFS-Flex: conserve les tables de réservation et accepte les fenêtres sans horaires fixes', async () => {
+ const flex={
+  ...files,
+  'stop_times.txt':'trip_id,stop_sequence,location_group_id,start_pickup_drop_off_window,end_pickup_drop_off_window\nT,1,G1,09:00:00,10:00:00\nT,2,G2,09:30:00,11:00:00\n',
+  'location_groups.txt':'location_group_id,location_group_name\nG1,Zone A\nG2,Zone B\n',
+  'location_group_stops.txt':'location_group_id,stop_id\nG1,A\nG2,B\n',
+  'booking_rules.txt':'booking_rule_id,booking_type\nBR1,1\n'
+ };
+ const feed=await loader.loadResource(resource,{fetcher:fetcher(zip(flex))});
+ assert.match(feed.files['location_groups.txt'],/G1,Zone A/);
+ assert.match(feed.files['location_group_stops.txt'],/G2,B/);
+ assert.match(feed.files['booking_rules.txt'],/BR1,1/);
+ assert.match(feed.files['stop_times.txt'],/start_pickup_drop_off_window/);
+});
+
+test('GTFS-Flex: mode compact conserve les règles et groupes de réservation', async () => {
+ const flex={
+  ...files,
+  'stop_times.txt':'trip_id,stop_sequence,location_group_id,start_pickup_drop_off_window,end_pickup_drop_off_window\nT,1,G1,09:00:00,10:00:00\nT,2,G2,09:30:00,11:00:00\n',
+  'location_groups.txt':'location_group_id,location_group_name\nG1,Zone A\nG2,Zone B\n',
+  'location_group_stops.txt':'location_group_id,stop_id\nG1,A\nG2,B\n',
+  'booking_rules.txt':'booking_rule_id,booking_type\nBR1,1\n'
+ };
+ const feed=await loader.loadResource(resource,{
+  fetcher:fetcher(zip(flex)),retainSourceTables:false
+ });
+ assert.match(feed.files['location_groups.txt'],/G1,Zone A/);
+ assert.match(feed.files['location_group_stops.txt'],/G2,B/);
+ assert.match(feed.files['booking_rules.txt'],/BR1,1/);
+});
+
+
+test('GTFS-Flex compact: keeps only window rows, not the complete regional stop_times file',async()=>{
+ const flex={...files,
+  'stop_times.txt':'trip_id,stop_sequence,stop_id,location_group_id,arrival_time,departure_time,start_pickup_drop_off_window,end_pickup_drop_off_window\nT,1,A,,08:00:00,08:00:00,,\nT,2,,G1,,,09:00:00,10:00:00\n',
+  'location_groups.txt':'location_group_id,location_group_name\nG1,Zone test\n',
+  'location_group_stops.txt':'location_group_id,stop_id\nG1,B\n'
+ };
+ const feed=await loader.loadResource(resource,{fetcher:fetcher(zip(flex)),retainSourceTables:false});
+ const rows=require('../transport-gtfs-index.js').parseCSV(feed.files['stop_times.txt']);
+ assert.equal(rows.length,1);
+ assert.equal(rows[0].location_group_id,'G1');
+ assert.equal(rows[0].start_pickup_drop_off_window,'09:00:00');
+ assert.ok(!feed.files['stop_times.txt'].includes('08:00:00'));
+});

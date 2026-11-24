@@ -172,6 +172,7 @@
       const ajoute = (q, commune) => { if (q && !essais.some(e => e.q === q)) essais.push({ q, commune: !!commune }); };
       ajoute([x.a, x.cp || (x.a ? '' : x.d), x.v].filter(Boolean).join(' '), !x.a);
       if (x.a) { ajoute([sansLieu, x.cp, x.v].filter(Boolean).join(' ')); ajoute([voie, x.cp, x.v].filter(Boolean).join(' ')); ajoute([x.cp, x.v].filter(Boolean).join(' '), true); }
+      let meilleur = null;
       for (const es of essais) {
         // V279 : ancien service (api-adresse.data.gouv.fr) décommissionné fin janvier 2026, remplacé par l'IGN
         // (data.geopf.fr/geocodage) — même moteur, mêmes paramètres et même format de réponse GeoJSON (iso-fonctionnel).
@@ -180,9 +181,14 @@
         const j = await r.json(), f = j && j.features && j.features[0];
         if (f && f.geometry && f.properties && f.properties.score >= 0.5) {
           const t = f.properties.type, [lng, lat] = f.geometry.coordinates;
-          if (Number.isFinite(lat) && Number.isFinite(lng)) return { cle, trouve: true, point: { lat, lng, precision: t === 'housenumber' ? 'adresse' : t === 'street' ? 'rue' : t === 'locality' ? 'rue' : 'ville' } };
+          if (!Number.isFinite(lat) || !Number.isFinite(lng)) continue;
+          const precision = t === 'housenumber' ? 'adresse' : t === 'street' || t === 'locality' ? 'rue' : 'ville';
+          const point = { lat, lng, precision };
+          if (precision === 'adresse' || !x.a) return { cle, trouve: true, point };
+          if (!meilleur || (meilleur.precision === 'ville' && precision === 'rue')) meilleur = point;
         }
       }
+      if (meilleur) return { cle, trouve: true, point: meilleur };
       if (codeDepartement(x.d)) return { cle, trouve: false };   // département français connu : pas de recherche à l'étranger
     }
     if (!x.v) return { cle, trouve: false };
