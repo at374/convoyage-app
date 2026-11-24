@@ -839,9 +839,21 @@ jobs:
             const hub=require('./transport-mission-hub.js');
             const providers=hub.makeProviders({CPGTFSLoader:loader,CPGTFSIndex:gtfsIndex,CPGTFSFares},
               {fetcher:async()=>new Response(buf,{status:200,headers:{'content-type':'application/zip'}})});
+            // Choisir une date à venir où l'une des lignes testées a réellement un service
+            // programmé. Une date figée finit par expirer et donne un faux échec du contrôle.
+            const parisParts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+            const parisToday=`${parisParts.find(p=>p.type==='year').value}-${parisParts.find(p=>p.type==='month').value}-${parisParts.find(p=>p.type==='day').value}`;
+            const dateCursor=new Date(parisToday+'T12:00:00Z');
+            let activeDate=null;
+            for(let offset=1;offset<=45&&!activeDate;offset++){
+              const candidate=new Date(dateCursor.getTime()+offset*86400000).toISOString().slice(0,10);
+              const scheduled=gtfsIndex.scheduledTrips(extracted.files,index,candidate);
+              if(scheduled.some(t=>['31','125','108'].includes(String(t.routeId))))activeDate=candidate;
+            }
+            assert.ok(activeDate,'Aucun service futur actif pour les lignes TCL contrôlées');
             const journeys=await providers.local_tcl.run({from:{lat:45.7606,lon:4.8594},to:{lat:45.7578,lon:4.8322},
-              earliestDeparture:'2026-11-16T08:00:00+01:00'});
-            assert.ok(journeys.length>0,'Aucun trajet TCL Part-Dieu → Bellecour');
+              earliestDeparture:activeDate+'T08:00:00+01:00'});
+            assert.ok(journeys.length>0,'Aucun trajet TCL Part-Dieu → Bellecour pour '+activeDate);
             const prices=journeys.map(j=>hub.priceOf(j,null));
             const verified=prices.filter(p=>p.status==='verified');
             assert.ok(verified.length>0,'Le tarif GTFS TCL doit atteindre les fiches mission');
