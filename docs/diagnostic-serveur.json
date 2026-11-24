@@ -1,5 +1,5 @@
 {
- "at": "2026-11-24T15:14:12.261Z",
+ "at": "2026-11-24T19:48:02.530Z",
  "when": "2026-11-30T08:00:00+01:00",
  "source": "diagnostic serveur (GitHub Actions)",
  "tripgo": false,
@@ -119,15 +119,15 @@
    "walked": 49,
    "feasible": 8,
    "scheduled": 41,
-   "firstResultMs": 199,
-   "totalMs": 9883,
+   "firstResultMs": 174,
+   "totalMs": 9400,
    "received": {
     "SNCF": 0,
     "BlaBlaCar Bus GTFS": 4,
-    "Cars Région Express GTFS": 0,
-    "Eurostar GTFS": 0,
     "Trenitalia GTFS": 0,
+    "Eurostar GTFS": 0,
     "FlixBus GTFS": 12,
+    "Cars Région Express GTFS": 0,
     "SNCF GTFS": 15,
     "Suisse": 8,
     "GTFS local": 16
@@ -147,6 +147,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -365,17 +369,17 @@
    "walked": 52,
    "feasible": 8,
    "scheduled": 44,
-   "firstResultMs": 457,
-   "totalMs": 23851,
+   "firstResultMs": 371,
+   "totalMs": 23552,
    "received": {
     "SNCF": 0,
     "GTFS local": 40,
-    "BlaBlaCar Bus GTFS": 0,
     "Eurostar GTFS": 0,
     "Trenitalia GTFS": 0,
     "FlixBus GTFS": 0,
-    "TAC Annemasse GTFS": 13,
+    "BlaBlaCar Bus GTFS": 0,
     "SNCF GTFS": 13,
+    "TAC Annemasse GTFS": 13,
     "Suisse": 8
    },
    "discarded": {},
@@ -388,6 +392,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -576,14 +584,14 @@
    "walked": 18,
    "feasible": 0,
    "scheduled": 18,
-   "firstResultMs": 905,
-   "totalMs": 1408,
+   "firstResultMs": 663,
+   "totalMs": 1165,
    "received": {
     "GTFS local": 0,
     "Cars Région Express GTFS": 0,
     "SNCF": 0,
-    "Eurostar GTFS": 0,
     "Trenitalia GTFS": 0,
+    "Eurostar GTFS": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
     "SNCF GTFS": 20
@@ -598,6 +606,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -764,19 +776,19 @@
    "walked": 65,
    "feasible": 0,
    "scheduled": 65,
-   "firstResultMs": 242,
-   "totalMs": 10913,
+   "firstResultMs": 662,
+   "totalMs": 10865,
    "received": {
     "Cars Région Express GTFS": 0,
     "SNCF": 0,
     "BlaBlaCar Bus GTFS": 0,
-    "Cars Région Savoie GTFS": 0,
     "Eurostar GTFS": 0,
     "Trenitalia GTFS": 0,
+    "Cars Région Savoie GTFS": 0,
     "FlixBus GTFS": 4,
     "Cars Région Isère GTFS": 0,
-    "SNCF GTFS": 20,
     "GTFS local": 43,
+    "SNCF GTFS": 20,
     "Synchro Chambéry GTFS": 2
    },
    "discarded": {
@@ -792,6 +804,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -980,8 +996,8 @@
    "walked": 8,
    "feasible": 5,
    "scheduled": 3,
-   "firstResultMs": 114,
-   "totalMs": 3874,
+   "firstResultMs": 96,
+   "totalMs": 4124,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Savoie GTFS": 0,
@@ -991,9 +1007,9 @@
     "BlaBlaCar Bus GTFS": 4,
     "Trenitalia GTFS": 0,
     "FlixBus GTFS": 0,
-    "Cars Région Drôme GTFS": 0,
     "SNCF GTFS": 16,
     "GTFS local": 0,
+    "Cars Région Drôme GTFS": 0,
     "Mobilités M": 5
    },
    "discarded": {
@@ -1008,6 +1024,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -1191,16 +1211,16 @@
    "walked": 21,
    "feasible": 0,
    "scheduled": 21,
-   "firstResultMs": 147,
-   "totalMs": 4671,
+   "firstResultMs": 124,
+   "totalMs": 4547,
    "received": {
     "Cars Région Express GTFS": 0,
     "GTFS local": 1,
     "SNCF": 0,
-    "Eurostar GTFS": 0,
-    "Trenitalia GTFS": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
+    "Eurostar GTFS": 0,
+    "Trenitalia GTFS": 0,
     "SNCF GTFS": 20
    },
    "discarded": {},
@@ -1214,6 +1234,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -1461,8 +1485,8 @@
    "walked": 15,
    "feasible": 7,
    "scheduled": 8,
-   "firstResultMs": 774,
-   "totalMs": 7769,
+   "firstResultMs": 751,
+   "totalMs": 7699,
    "received": {
     "SNCF": 0,
     "Eurostar GTFS": 0,
@@ -1485,6 +1509,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -1726,8 +1754,8 @@
    "walked": 39,
    "feasible": 5,
    "scheduled": 34,
-   "firstResultMs": 198,
-   "totalMs": 10053,
+   "firstResultMs": 180,
+   "totalMs": 10032,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Express GTFS": 0,
@@ -1735,8 +1763,8 @@
     "GTFS local": 8,
     "SNCF": 0,
     "BlaBlaCar Bus GTFS": 10,
-    "Trenitalia GTFS": 0,
     "Eurostar GTFS": 0,
+    "Trenitalia GTFS": 0,
     "FlixBus GTFS": 1,
     "SNCF GTFS": 20,
     "Mobilités M": 5
@@ -1754,6 +1782,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -1929,8 +1961,8 @@
    "walked": 19,
    "feasible": 0,
    "scheduled": 19,
-   "firstResultMs": 337,
-   "totalMs": 11050,
+   "firstResultMs": 348,
+   "totalMs": 10983,
    "received": {
     "Synchro Chambéry GTFS": 0,
     "Cars Région Isère GTFS": 0,
@@ -1938,8 +1970,8 @@
     "Cars Région Express GTFS": 0,
     "SNCF": 0,
     "GTFS local": 40,
-    "Eurostar GTFS": 0,
     "Trenitalia GTFS": 0,
+    "Eurostar GTFS": 0,
     "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
     "SNCF GTFS": 14
@@ -1952,6 +1984,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -2135,14 +2171,14 @@
    "walked": 50,
    "feasible": 2,
    "scheduled": 48,
-   "firstResultMs": 274,
-   "totalMs": 16803,
+   "firstResultMs": 246,
+   "totalMs": 16810,
    "received": {
     "GTFS local": 37,
     "SNCF": 0,
+    "BlaBlaCar Bus GTFS": 0,
     "Eurostar GTFS": 0,
     "Trenitalia GTFS": 0,
-    "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
     "SNCF GTFS": 18,
     "Suisse": 8
@@ -2158,6 +2194,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -2333,18 +2373,18 @@
    "walked": 60,
    "feasible": 0,
    "scheduled": 60,
-   "firstResultMs": 389,
-   "totalMs": 11472,
+   "firstResultMs": 322,
+   "totalMs": 11162,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Express GTFS": 0,
     "SNCF": 0,
     "GTFS local": 38,
-    "Eurostar GTFS": 0,
     "Trenitalia GTFS": 0,
+    "Eurostar GTFS": 0,
     "BlaBlaCar Bus GTFS": 0,
-    "FlixBus GTFS": 0,
     "J’y bus Rumilly GTFS": 30,
+    "FlixBus GTFS": 0,
     "SNCF GTFS": 0
    },
    "discarded": {},
@@ -2355,6 +2395,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -2501,8 +2545,8 @@
    "walked": 83,
    "feasible": 0,
    "scheduled": 83,
-   "firstResultMs": 281,
-   "totalMs": 16179,
+   "firstResultMs": 231,
+   "totalMs": 16091,
    "received": {
     "Cars Région Express GTFS": 0,
     "SNCF": 0,
@@ -2524,6 +2568,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -2686,8 +2734,8 @@
    "walked": 10,
    "feasible": 0,
    "scheduled": 10,
-   "firstResultMs": 47,
-   "totalMs": 2272,
+   "firstResultMs": 32,
+   "totalMs": 2208,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Savoie GTFS": 2,
@@ -2709,6 +2757,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -2910,8 +2962,8 @@
    "walked": 16,
    "feasible": 0,
    "scheduled": 16,
-   "firstResultMs": 35,
-   "totalMs": 5607,
+   "firstResultMs": 25,
+   "totalMs": 5672,
    "received": {
     "GTFS local": 3,
     "Cars Région Express GTFS": 0,
@@ -2934,6 +2986,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -3147,8 +3203,8 @@
    "walked": 57,
    "feasible": 1,
    "scheduled": 56,
-   "firstResultMs": 46,
-   "totalMs": 11507,
+   "firstResultMs": 39,
+   "totalMs": 12525,
    "received": {
     "GTFS local": 38,
     "Cars Région Express GTFS": 0,
@@ -3174,6 +3230,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -3349,16 +3409,16 @@
    "walked": 23,
    "feasible": 7,
    "scheduled": 16,
-   "firstResultMs": 769,
-   "totalMs": 4273,
+   "firstResultMs": 702,
+   "totalMs": 4207,
    "received": {
     "GTFS local": 0,
     "SNCF": 0,
-    "Eurostar GTFS": 0,
     "Trenitalia GTFS": 0,
+    "Eurostar GTFS": 0,
     "BlaBlaCar Bus GTFS": 0,
-    "Proxim iTi Bonneville – La Roche GTFS": 0,
     "FlixBus GTFS": 0,
+    "Proxim iTi Bonneville – La Roche GTFS": 0,
     "SNCF GTFS": 17,
     "Suisse": 8
    },
@@ -3372,6 +3432,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -3594,18 +3658,18 @@
    "walked": 52,
    "feasible": 7,
    "scheduled": 45,
-   "firstResultMs": 414,
-   "totalMs": 12367,
+   "firstResultMs": 708,
+   "totalMs": 12231,
    "received": {
     "GTFS local": 0,
     "SNCF": 0,
-    "BlaBlaCar Bus GTFS": 0,
     "Eurostar GTFS": 0,
     "Trenitalia GTFS": 0,
+    "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
-    "ÉVA'D Évian GTFS": 30,
     "SNCF GTFS": 16,
-    "Suisse": 8
+    "Suisse": 8,
+    "ÉVA'D Évian GTFS": 30
    },
    "discarded": {},
    "hiddenTooEarly": 1,
@@ -3619,6 +3683,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -3841,17 +3909,17 @@
    "walked": 20,
    "feasible": 8,
    "scheduled": 12,
-   "firstResultMs": 113,
-   "totalMs": 5836,
+   "firstResultMs": 131,
+   "totalMs": 6120,
    "received": {
     "GTFS local": 0,
     "SNCF": 0,
     "Eurostar GTFS": 0,
     "Trenitalia GTFS": 0,
-    "BlaBlaCar Bus GTFS": 4,
     "FlixBus GTFS": 14,
-    "Suisse": 8,
-    "SNCF GTFS": 0
+    "BlaBlaCar Bus GTFS": 4,
+    "SNCF GTFS": 0,
+    "Suisse": 8
    },
    "discarded": {},
    "hiddenTooEarly": 6,
@@ -3863,6 +3931,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -4037,14 +4109,14 @@
    "walked": 26,
    "feasible": 6,
    "scheduled": 20,
-   "firstResultMs": 855,
-   "totalMs": 3366,
+   "firstResultMs": 692,
+   "totalMs": 3202,
    "received": {
     "TAC Annemasse GTFS": 0,
     "GTFS local": 0,
     "SNCF": 0,
-    "Trenitalia GTFS": 0,
     "Eurostar GTFS": 0,
+    "Trenitalia GTFS": 0,
     "BlaBlaCar Bus GTFS": 2,
     "FlixBus GTFS": 1,
     "SNCF GTFS": 20,
@@ -4064,6 +4136,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -4250,8 +4326,8 @@
    "walked": 45,
    "feasible": 8,
    "scheduled": 37,
-   "firstResultMs": 103,
-   "totalMs": 6608,
+   "firstResultMs": 67,
+   "totalMs": 6551,
    "received": {
     "TAC Annemasse GTFS": 0,
     "Cars Région Express GTFS": 0,
@@ -4276,6 +4352,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -4442,19 +4522,19 @@
    "walked": 8,
    "feasible": 8,
    "scheduled": 0,
-   "firstResultMs": 765,
-   "totalMs": 4796,
+   "firstResultMs": 1089,
+   "totalMs": 5142,
    "received": {
     "TAC Annemasse GTFS": 0,
     "Cars Région Express GTFS": 0,
     "GTFS local": 0,
     "SNCF": 0,
-    "BlaBlaCar Bus GTFS": 0,
-    "Eurostar GTFS": 0,
     "Trenitalia GTFS": 0,
+    "Eurostar GTFS": 0,
+    "BlaBlaCar Bus GTFS": 0,
     "FlixBus GTFS": 0,
-    "Suisse": 8,
-    "SNCF GTFS": 20
+    "SNCF GTFS": 20,
+    "Suisse": 8
    },
    "discarded": {},
    "hiddenTooEarly": 20,
@@ -4462,6 +4542,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -4644,8 +4728,8 @@
    "walked": 11,
    "feasible": 7,
    "scheduled": 4,
-   "firstResultMs": 796,
-   "totalMs": 4302,
+   "firstResultMs": 728,
+   "totalMs": 4233,
    "received": {
     "Cars Région Express GTFS": 0,
     "GTFS local": 0,
@@ -4667,6 +4751,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -4879,16 +4967,16 @@
    "walked": 35,
    "feasible": 0,
    "scheduled": 33,
-   "firstResultMs": 203,
-   "totalMs": 2145,
+   "firstResultMs": 225,
+   "totalMs": 2123,
    "received": {
     "Cars Région Express GTFS": 0,
     "GTFS local": 0,
     "SNCF": 0,
     "BlaBlaCar Bus GTFS": 8,
-    "Trenitalia GTFS": 0,
     "Eurostar GTFS": 0,
     "SNCF GTFS": 20,
+    "Trenitalia GTFS": 0,
     "FlixBus GTFS": 7
    },
    "discarded": {},
@@ -4903,6 +4991,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -5088,8 +5180,8 @@
    "walked": 20,
    "feasible": 0,
    "scheduled": 20,
-   "firstResultMs": 241,
-   "totalMs": 2356,
+   "firstResultMs": 131,
+   "totalMs": 2114,
    "received": {
     "GTFS local": 0,
     "Cars Région Isère GTFS": 0,
@@ -5111,6 +5203,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -5325,8 +5421,8 @@
    "walked": 72,
    "feasible": 0,
    "scheduled": 72,
-   "firstResultMs": 58,
-   "totalMs": 10934,
+   "firstResultMs": 50,
+   "totalMs": 10851,
    "received": {
     "Cars Région Isère GTFS": 4,
     "Cars Région Savoie GTFS": 0,
@@ -5352,6 +5448,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -5571,15 +5671,15 @@
    "walked": 37,
    "feasible": 1,
    "scheduled": 36,
-   "firstResultMs": 15,
-   "totalMs": 29004,
+   "firstResultMs": 14,
+   "totalMs": 28609,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Express GTFS": 5,
     "SNCF": 0,
     "Trenitalia GTFS": 10,
-    "Eurostar GTFS": 0,
     "BlaBlaCar Bus GTFS": 0,
+    "Eurostar GTFS": 0,
     "FlixBus GTFS": 1,
     "SNCF GTFS": 20,
     "Cars Région Loire GTFS": 0,
@@ -5602,6 +5702,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -5821,17 +5925,17 @@
    "walked": 31,
    "feasible": 5,
    "scheduled": 26,
-   "firstResultMs": 144,
-   "totalMs": 3599,
+   "firstResultMs": 102,
+   "totalMs": 3510,
    "received": {
     "Cars Région Isère GTFS": 0,
     "Cars Région Express GTFS": 0,
     "Cars Région Drôme GTFS": 0,
     "GTFS local": 6,
     "SNCF": 0,
-    "Trenitalia GTFS": 0,
-    "Eurostar GTFS": 0,
     "BlaBlaCar Bus GTFS": 0,
+    "Eurostar GTFS": 0,
+    "Trenitalia GTFS": 0,
     "FlixBus GTFS": 0,
     "SNCF GTFS": 20,
     "Mobilités M": 5
@@ -5848,6 +5952,10 @@
    "engines": {
     "errors": {},
     "skipped": {
+     "Fluo Grand Est (interurbain) GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Grand Reims Mobilités GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "STAN Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
+     "Soléa Mulhouse GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "SUB Nancy GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "TRACE Colmar GTFS": "trajet hors zone du réseau local ou horaires manquants",
      "Imagine Épinal GTFS": "trajet hors zone du réseau local ou horaires manquants",
@@ -5991,7 +6099,7 @@
    "trips": 272,
    "priced": 1,
    "walked": 272,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -6021,7 +6129,7 @@
    "trips": 63,
    "priced": 0,
    "walked": 63,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "annecy-geneve",
     "grenoble-crolles",
@@ -6037,7 +6145,7 @@
    "trips": 62,
    "priced": 19,
    "walked": 62,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "annecy-geneve",
     "thonon-geneve",
@@ -6053,7 +6161,7 @@
    "trips": 36,
    "priced": 22,
    "walked": 34,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "annecy-geneve",
     "annemasse-stjulien",
@@ -6070,7 +6178,7 @@
    "trips": 48,
    "priced": 0,
    "walked": 48,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "annecy-geneve",
     "stjulien-geneve"
@@ -6081,7 +6189,7 @@
    "trips": 32,
    "priced": 32,
    "walked": 32,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "annemasse-stjulien"
    ],
@@ -6091,7 +6199,7 @@
    "trips": 27,
    "priced": 24,
    "walked": 24,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "annemasse-stjulien",
     "thonon-geneve",
@@ -6106,7 +6214,7 @@
    "trips": 27,
    "priced": 24,
    "walked": 24,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "annemasse-stjulien",
     "thonon-geneve",
@@ -6121,7 +6229,7 @@
    "trips": 6,
    "priced": 6,
    "walked": 6,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "chambery-aix"
    ],
@@ -6131,7 +6239,7 @@
    "trips": 58,
    "priced": 58,
    "walked": 58,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "chambery-aix",
     "aix-technolac"
@@ -6142,7 +6250,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -6152,7 +6260,7 @@
    "trips": 5,
    "priced": 5,
    "walked": 5,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "grenoble-crolles"
    ],
@@ -6162,7 +6270,7 @@
    "trips": 1,
    "priced": 1,
    "walked": 1,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "rumilly-annecy"
    ],
@@ -6172,7 +6280,7 @@
    "trips": 52,
    "priced": 0,
    "walked": 52,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "voiron-grenoble",
     "chambery-grenoble",
@@ -6184,7 +6292,7 @@
    "trips": 32,
    "priced": 31,
    "walked": 32,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "thonon-bons"
    ],
@@ -6194,7 +6302,7 @@
    "trips": 60,
    "priced": 60,
    "walked": 60,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "rumilly-intra"
    ],
@@ -6204,7 +6312,7 @@
    "trips": 66,
    "priced": 66,
    "walked": 66,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "amberieu-intra"
    ],
@@ -6214,7 +6322,7 @@
    "trips": 43,
    "priced": 25,
    "walked": 43,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "amberieu-intra",
     "bourg-amberieu",
@@ -6226,7 +6334,7 @@
    "trips": 2,
    "priced": 0,
    "walked": 2,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "chambery-chamoux"
    ],
@@ -6236,7 +6344,7 @@
    "trips": 44,
    "priced": 44,
    "walked": 18,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "lyon-intra"
    ],
@@ -6246,7 +6354,7 @@
    "trips": 3,
    "priced": 2,
    "walked": 3,
-   "at": "2026-11-24T15:14:12.261Z",
+   "at": "2026-11-24T19:48:02.530Z",
    "axes": [
     "voiron-voreppe"
    ],
