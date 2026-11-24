@@ -240,10 +240,19 @@ def find_oura_aggregate():
     return best['url'], best.get('last_modified')
 
 
+def table_paths(z, name):
+    """Return matching GTFS table paths at root or under a single packaging directory."""
+    return [p for p in z.namelist() if not p.endswith('/') and
+            p.replace('\\\\', '/').rsplit('/', 1)[-1].lower() == name.lower()]
+
+
 def read_table(z, name):
-    if name not in z.namelist():
+    matches = table_paths(z, name)
+    if not matches:
         return None, []
-    with z.open(name) as s:
+    if len(matches) != 1:
+        raise ValueError('table GTFS ambiguë : ' + name)
+    with z.open(matches[0]) as s:
         reader = csv.DictReader(io.TextIOWrapper(s, encoding='utf-8-sig', newline=''))
         return reader.fieldnames, list(reader)
 
@@ -257,12 +266,17 @@ def write_table(out, name, fields, rows):
 
 
 def validate(z):
-    names = set(z.namelist())
-    missing = [t for t in REQUIRED if t not in names]
+    missing = [t for t in REQUIRED if not table_paths(z, t)]
+    ambiguous = [t for t in REQUIRED if len(table_paths(z, t)) > 1]
     if missing:
         raise ValueError('tables manquantes : ' + ', '.join(missing))
-    if not ({'calendar.txt', 'calendar_dates.txt'} & names):
+    if ambiguous:
+        raise ValueError('tables GTFS ambiguës : ' + ', '.join(ambiguous))
+    calendars = [t for t in ('calendar.txt', 'calendar_dates.txt') if table_paths(z, t)]
+    if not calendars:
         raise ValueError('calendrier absent')
+    if any(len(table_paths(z, t)) > 1 for t in calendars):
+        raise ValueError('tables calendrier GTFS ambiguës')
     _, trips = read_table(z, 'trips.txt')
     _, times = read_table(z, 'stop_times.txt')
     if not trips or not times:

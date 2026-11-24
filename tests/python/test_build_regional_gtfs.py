@@ -105,6 +105,22 @@ class TFilterByBounds(unittest.TestCase):
         finally:
             m.MAX_OUT = old_max
 
+class TNestedPackage(unittest.TestCase):
+    def test_required_gtfs_tables_under_one_directory_are_read_and_validated(self):
+        m = load_module()
+        source = zipfile.ZipFile(io.BytesIO(tcl_like_feed()))
+        packed = io.BytesIO()
+        with source, zipfile.ZipFile(packed, 'w', zipfile.ZIP_DEFLATED) as z:
+            for name in source.namelist():
+                z.writestr('feed/' + name, source.read(name))
+        with zipfile.ZipFile(io.BytesIO(packed.getvalue())) as z:
+            trips, times = m.validate(z)
+            self.assertEqual(trips, 3)
+            self.assertEqual(times, 6)
+            fields, agencies = m.read_table(z, 'agency.txt')
+            self.assertIn('agency_name', fields)
+            self.assertEqual(len(agencies), 1)
+
 class TMirrorConfig(unittest.TestCase):
     """Vérifie la forme des entrées MIRROR/FILTERED_MIRROR (pas de téléchargement réel) : URL https,
     bbox cohérente (min < max), identifiant unique — pour détecter une erreur de configuration avant le

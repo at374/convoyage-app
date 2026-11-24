@@ -514,3 +514,8 @@ La tranche suivante, **Soléa Mulhouse**, a été collectée par le run régiona
 ## Grand Est — Grand Reims ajouté au lot de validation (24/11/2026)
 
 Le GTFS actuel du réseau Grand Reims Mobilités (CITURA), ressource PAN `80594`, fait 3,01 Mo, couvre bus et tram, compte 28 lignes et 794 arrêts et est annoncé valide du 20/11/2026 au 03/01/2027. Licence Ouverte 2.0 ; aucun tarif GTFS V1. L’archive est ajoutée au miroir avec résolution dynamique de la ressource du jeu PAN et un contrôle strict par l’indexeur, car le flux n’est pas encore testé par le moteur de fiches mission. Le calendrier actuel permet un peu plus d’un mois de recherche ; les rafraîchissements devront vérifier la date de fin à chaque version.
+
+
+### Grand Reims — correctif du format d’archive (24/11/2026)
+
+Le run **45383162861** a téléchargé le flux Grand Reims mais l’a rejeté car les tables GTFS n’étaient pas trouvées à la racine (`agency.txt`, `stops.txt`, `routes.txt`, `trips.txt`, `stop_times.txt`). Le collecteur lisait seulement les noms racine, alors que ce flux place ses tables sous un répertoire interne. Le lecteur accepte désormais les tables à la racine ou sous un unique chemin non ambigu ; un test Python hors ligne couvre cet emballage. Le prochain run doit encore valider la ressource réelle et un candidat indexable avant de la compter comme flux opérationnel.
