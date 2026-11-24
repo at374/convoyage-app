@@ -342,7 +342,7 @@ class TMirrorConfig(unittest.TestCase):
 
     def test_bundled_agency_feeds_are_unique_and_licensed(self):
         m = load_module()
-        self.assertEqual(len(m.BUNDLED_AGENCY_FEEDS), 2)
+        self.assertEqual(len(m.BUNDLED_AGENCY_FEEDS), 3)
         bundle = m.BUNDLED_AGENCY_FEEDS[0]
         self.assertEqual(bundle['license'], 'Licence Ouverte 2.0')
         self.assertLessEqual(bundle['download_limit'], 80 * 1024 * 1024)
@@ -357,7 +357,7 @@ class TMirrorConfig(unittest.TestCase):
         self.assertEqual(len(jvmalin['networks']), 19)
         self.assertEqual(len({agency['id'] for agency in jvmalin['networks']}), 19)
         self.assertLessEqual(jvmalin['download_limit'], 60 * 1024 * 1024)
-        self.assertEqual(len({agency['id'] for b in m.BUNDLED_AGENCY_FEEDS for agency in b['networks']}), 47)
+        self.assertEqual(len({agency['id'] for b in m.BUNDLED_AGENCY_FEEDS for agency in b['networks']}), 48)
         for agency in jvmalin['networks']:
             with self.subTest(network=agency['id']):
                 re.compile(agency['agency_pattern'])
