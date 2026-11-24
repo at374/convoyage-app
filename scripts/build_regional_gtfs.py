@@ -114,6 +114,54 @@ MIRROR = [
      'agency_pattern': 'thionville fensch', 'exclude_route_patterns': ['redange'],
      'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
      'publisher': 'Fluo Grand Est / SM des transports urbains Thionville Fensch'},
+    # Première couronne Hauts-de-France : flux urbains officiels. Ceux-ci restent au stade
+    # indexeur GTFS tant qu'ils ne sont pas raccordés et éprouvés dans un fournisseur mission.
+    {'id': 'ilevia-lille', 'network': 'ilévia Lille',
+     'dataset': 'ilevia-localisation-des-arrets-bus-metro-et-tram-gtfs',
+     'url': 'https://transport.data.gouv.fr/resources/81995/download',
+     'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Métropole Européenne de Lille'},
+    {'id': 'transvilles-valenciennes', 'network': 'Transvilles Valenciennes',
+     'dataset': 'simouv-horaires-theoriques-format-gtfs-et-temps-reel-format-siri-transvilles-valenciennes',
+     'url': 'https://transport.data.gouv.fr/resources/84121/download',
+     'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Syndicat Intercommunal de Mobilité et d’Organisation Urbaine du Valenciennois'},
+    # Le ZIP TADAO brut dépasse 12 Mo ; l'extraction mono-agence retire les tables inutiles
+    # tout en gardant routes, courses, calendriers, arrêts et coordonnées.
+    {'id': 'tadao-lens', 'network': 'TADAO Lens-Liévin',
+     'dataset': 'gtfs-tadao', 'url': 'https://transport.data.gouv.fr/resources/83643/download',
+     'download_limit': 60 * 1024 * 1024,
+     'agency_pattern': 'tadao', 'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Syndicat Mixte des Transports Artois-Gohelle'},
+    {'id': 'dkbus-dunkerque', 'network': 'DK’BUS Dunkerque',
+     'dataset': 'offre-de-transports-reseau-dk-bus-de-la-communaute-urbaine-de-dunkerque-gtfs',
+     'url': 'https://transport.data.gouv.fr/resources/82683/download',
+     'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Communauté urbaine de Dunkerque'},
+    {'id': 'ametis-amiens', 'network': 'Ametis Amiens', 'url': 'https://transport.data.gouv.fr/resources/80223/download',
+     'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Amiens Métropole'},
+    {'id': 'eveole-douai', 'network': 'Évéole Douai',
+     'dataset': 'eveole-douai-reseau-bus-du-syndicat-mixte-des-transports-du-douaisis-smtd',
+     'url': 'https://transport.data.gouv.fr/resources/79544/download',
+     'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Syndicat Mixte des Transports du Douaisis'},
+    {'id': 'marineo-boulogne', 'network': 'Marinéo Boulogne-sur-Mer',
+     'dataset': 'horaires-theoriques-et-temps-reel-du-reseau-de-transport-marineo',
+     'url': 'https://transport.data.gouv.fr/resources/51449/download',
+     'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Communauté d’agglomération du Boulonnais'},
+    {'id': 'artis-arras', 'network': 'Artis Arras', 'dataset': 'reseau-de-transport-artis',
+     'url': 'https://transport.data.gouv.fr/resources/83372/download',
+     'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
+     'publisher': 'Communauté urbaine d’Arras'},
+    # Le GTFS SITAC contient aussi des traversées en ferry (route_type=4), exclues ici :
+    # Convoyage Ultra ne recherche pas les bateaux.
+    {'id': 'sitac-calais', 'network': 'SITAC Calais',
+     'dataset': 'horaires-theoriques-et-temps-reel-aux-formats-gtfs-et-gtfs-rt-du-reseau-sitac',
+     'url': 'https://transport.data.gouv.fr/resources/83807/download',
+     'agency_pattern': 'sitac', 'exclude_route_types': ['4'], 'derive_bounds': True,
+     'license': 'Licence Ouverte 2.0', 'publisher': 'Grand Calais Terres et Mers'},
     # Source urbaine Grand Est indépendante de l'agrégat Fluo. 4,36 Mo, 48 lignes,
     # et calendrier valide au 25/06/2027 selon la ressource PAN 80787.
     {'id': 'solea-mulhouse', 'network': 'Soléa Mulhouse',
@@ -391,6 +439,9 @@ def extract(z, spec):
     single = len(agencies) == 1
     rfields, routes = read_table(z, 'routes.txt')
     routes = [r for r in routes if (r.get('agency_id') or '') in ag_ids or (single and not r.get('agency_id'))]
+    excluded_route_types = {str(route_type) for route_type in spec.get('exclude_route_types', ())}
+    if excluded_route_types:
+        routes = [r for r in routes if str(r.get('route_type') or '') not in excluded_route_types]
     excluded_route_patterns = [re.compile(norm(pattern)) for pattern in spec.get('exclude_route_patterns', ())]
     if excluded_route_patterns:
         routes = [r for r in routes if not any(pattern.search(norm(' '.join(
@@ -568,7 +619,8 @@ def main():
                 with zipfile.ZipFile(p) as z:
                     if spec.get('agency_pattern'):
                         data, info = extract(z, {'pattern': spec['agency_pattern'],
-                                                 'exclude_route_patterns': spec.get('exclude_route_patterns', [])})
+                                                 'exclude_route_patterns': spec.get('exclude_route_patterns', []),
+                                                 'exclude_route_types': spec.get('exclude_route_types', [])})
                         if data is None:
                             raise ValueError(info)
                         with zipfile.ZipFile(io.BytesIO(data)) as extracted:

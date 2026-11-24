@@ -186,6 +186,31 @@ class TRouteExclusions(unittest.TestCase):
             self.assertNotIn('T-DE', out.read('trips.txt').decode())
             self.assertNotIn('DE1', out.read('stops.txt').decode())
 
+    def test_extract_removes_non_requested_route_types_and_dependent_rows(self):
+        m = load_module()
+        source = io.BytesIO()
+        with zipfile.ZipFile(source, 'w') as z:
+            z.writestr('agency.txt', 'agency_id,agency_name,agency_timezone\nS,SITAC,Europe/Paris\n')
+            z.writestr('routes.txt', 'route_id,agency_id,route_short_name,route_long_name,route_type\n'
+                       'BUS,S,1,Calais - Centre,3\nBOAT,S,F1,Calais - Dover,4\n')
+            z.writestr('trips.txt', 'route_id,service_id,trip_id\nBUS,S,T-BUS\nBOAT,S,T-BOAT\n')
+            z.writestr('stop_times.txt', 'trip_id,arrival_time,departure_time,stop_id,stop_sequence\n'
+                       'T-BUS,08:00:00,08:00:00,FR1,1\nT-BUS,08:10:00,08:10:00,FR2,2\n'
+                       'T-BOAT,09:00:00,09:00:00,FR1,1\nT-BOAT,09:30:00,09:30:00,UK1,2\n')
+            z.writestr('stops.txt', 'stop_id,stop_name,stop_lat,stop_lon\n'
+                       'FR1,Calais,50.95,1.85\nFR2,Coquelles,50.94,1.80\nUK1,Dover,51.13,1.31\n')
+            z.writestr('calendar_dates.txt', 'service_id,date,exception_type\nS,20261124,1\n')
+        with zipfile.ZipFile(io.BytesIO(source.getvalue())) as z:
+            data, info = m.extract(z, {'pattern': 'sitac', 'exclude_route_types': ['4']})
+        self.assertIsNotNone(data, info)
+        self.assertEqual(info['routes'], 1)
+        self.assertEqual(info['trips'], 1)
+        with zipfile.ZipFile(io.BytesIO(data)) as out:
+            self.assertIn('BUS', out.read('routes.txt').decode())
+            self.assertNotIn('BOAT', out.read('routes.txt').decode())
+            self.assertNotIn('T-BOAT', out.read('trips.txt').decode())
+            self.assertNotIn('UK1', out.read('stops.txt').decode())
+
 
 class TMirrorConfig(unittest.TestCase):
     """Vérifie la forme des entrées MIRROR/FILTERED_MIRROR (pas de téléchargement réel) : URL https,
@@ -218,6 +243,13 @@ class TMirrorConfig(unittest.TestCase):
         self.assertEqual(reims['license'], 'Licence Ouverte 2.0')
         forbus = next(s for s in m.MIRROR if s['id'] == 'forbus-forbach')
         self.assertEqual(forbus['dataset'], 'fr-200052264-t0007-0000-1')
+        hdf = {s['id']: s for s in m.MIRROR if s['id'] in {
+            'ilevia-lille', 'transvilles-valenciennes', 'tadao-lens', 'dkbus-dunkerque',
+            'ametis-amiens', 'eveole-douai', 'marineo-boulogne', 'artis-arras', 'sitac-calais'}}
+        self.assertEqual(len(hdf), 9)
+        self.assertEqual(hdf['ilevia-lille']['dataset'], 'ilevia-localisation-des-arrets-bus-metro-et-tram-gtfs')
+        self.assertEqual(hdf['sitac-calais']['exclude_route_types'], ['4'])
+        self.assertTrue(hdf['tadao-lens']['agency_pattern'])
         self.assertEqual(forbus['exclude_route_patterns'], ['schoeneck'])
         self.assertEqual(forbus['license'], 'Licence Ouverte 2.0')
         temob = next(s for s in m.MIRROR if s['id'] == 'temob-thionville')
