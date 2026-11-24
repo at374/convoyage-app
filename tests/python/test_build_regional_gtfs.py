@@ -128,6 +128,17 @@ class TNestedPackage(unittest.TestCase):
             self.assertEqual(len(agencies), 1)
 
 class TDatasetResourceSelection(unittest.TestCase):
+    def test_gtfs_selection_requires_public_https_and_accepts_query(self):
+        m = load_module()
+        fallback = 'https://example.test/fallback.zip'
+        metadata = {'resources': [
+            {'format': 'GTFS', 'url': 'http://example.test/new.zip', 'last_modified': '2026-11-24'},
+            {'format': 'GTFS', 'url': 'https://user:secret@example.test/new.zip', 'last_modified': '2026-11-24'},
+            {'format': '', 'title': 'GTFS export', 'url': 'https://example.test/feed.zip?download=1', 'last_modified': '2026-11-23'}
+        ]}
+        self.assertEqual(m.select_dataset_gtfs_url(metadata, fallback),
+                         'https://example.test/feed.zip?download=1')
+
     def test_latest_gtfs_wins_over_newer_netex_zip(self):
         m = load_module()
         fallback = 'https://example.test/gtfs-fallback.zip'
