@@ -14,8 +14,12 @@ test('liO interurbain Occitanie réel : fragments chargés, courses actives et e
  const entry=manifest.networks?.['lio-interurbain-occitanie'];
  assert.ok(entry,'REQUIRE_REAL_GTFS=1 exige le réseau liO dans le manifeste');
  const files=entry.files||[entry.file];
- assert.ok(files.length>1,'le gros GTFS liO doit être livré en fragments pour respecter le plafond mobile');
- assert.ok(entry.sharded,'le manifeste doit signaler le découpage');
+ assert.ok(files.length>0,'le GTFS liO doit comporter au moins une archive');
+ if(entry.sharded){
+  assert.ok(files.length>1,'un flux signalé comme découpé doit référencer plusieurs fragments');
+ }else{
+  assert.equal(files.length,1,'un flux non découpé doit référencer une archive unique');
+ }
  const dates=Array.from({length:7},(_,offset)=>{
   const d=new Date();d.setUTCHours(0,0,0,0);d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10);
  });

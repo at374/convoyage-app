@@ -112,6 +112,18 @@ class TDerivedStopBounds(unittest.TestCase):
         with zipfile.ZipFile(io.BytesIO(tcl_like_feed())) as z:
             self.assertEqual(m.stop_bounds(z), [45.749, 4.826, 46.3, 5.3])
 
+    def test_extract_reuses_source_tables_across_agencies(self):
+        m = load_module()
+        cache = {}
+        spec = {'pattern': 'tcl'}
+        with zipfile.ZipFile(io.BytesIO(tcl_like_feed())) as z:
+            first, _ = m.extract(z, spec, table_cache=cache)
+            second, _ = m.extract(z, spec, table_cache=cache)
+        self.assertEqual(first, second)
+        self.assertIn('agency.txt', cache)
+        self.assertIn('stop_times.txt', cache)
+        self.assertIn('stops.txt', cache)
+
 class TNestedPackage(unittest.TestCase):
     def test_required_gtfs_tables_under_one_directory_are_read_and_validated(self):
         m = load_module()
@@ -342,7 +354,7 @@ class TMirrorConfig(unittest.TestCase):
 
     def test_bundled_agency_feeds_are_unique_and_licensed(self):
         m = load_module()
-        self.assertEqual(len(m.BUNDLED_AGENCY_FEEDS), 4)
+        self.assertEqual(len(m.BUNDLED_AGENCY_FEEDS), 5)
         bundle = m.BUNDLED_AGENCY_FEEDS[0]
         self.assertEqual(bundle['license'], 'Licence Ouverte 2.0')
         self.assertLessEqual(bundle['download_limit'], 80 * 1024 * 1024)
@@ -357,7 +369,7 @@ class TMirrorConfig(unittest.TestCase):
         self.assertEqual(len(jvmalin['networks']), 19)
         self.assertEqual(len({agency['id'] for agency in jvmalin['networks']}), 19)
         self.assertLessEqual(jvmalin['download_limit'], 60 * 1024 * 1024)
-        self.assertEqual(len({agency['id'] for b in m.BUNDLED_AGENCY_FEEDS for agency in b['networks']}), 49)
+        self.assertEqual(len({agency['id'] for b in m.BUNDLED_AGENCY_FEEDS for agency in b['networks']}), 67)
         for agency in jvmalin['networks']:
             with self.subTest(network=agency['id']):
                 re.compile(agency['agency_pattern'])
@@ -459,6 +471,23 @@ class TNouvelleAquitaineConfig(unittest.TestCase):
         self.assertIn('cars regionaux', network['agency_pattern'])
         self.assertTrue(network['exclude_route_patterns'])
         self.assertIn('Conditions Particulières PAN', bundle['license'])
+
+class TPaysDeLaLoireConfig(unittest.TestCase):
+    def test_destineo_bundle_keeps_land_agencies_only_with_pan_license(self):
+        m = load_module()
+        bundle = next(b for b in m.BUNDLED_AGENCY_FEEDS
+                      if any(n['id'] == 'pdl-naolib-nantes' for n in b['networks']))
+        ids = {n['id'] for n in bundle['networks']}
+        self.assertEqual(bundle['dataset'], 'arrets-horaires-et-circuits-des-lignes-de-transports-en-commun-en-pays-de-la-loire-gtfs-destineo-reseaux-aom-aleop-1')
+        self.assertEqual(bundle['url'], 'https://transport.data.gouv.fr/resources/79818/download')
+        self.assertEqual(bundle['exclude_route_types'], ['4'])
+        self.assertEqual(bundle['license'], 'ODbL 1.0 + conditions particulières PAN')
+        self.assertEqual(len(ids), 18)
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertNotIn('pdl-aleop-yeu', ids)
+        self.assertNotIn('pdl-sncf-voyageurs', ids)
+        self.assertNotIn('pdl-aleop-ter', ids)
+        self.assertTrue(all(n.get('agency_name') for n in bundle['networks']))
 
 if __name__ == '__main__':
     unittest.main()

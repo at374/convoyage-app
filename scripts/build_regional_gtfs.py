@@ -406,6 +406,37 @@ BUNDLED_AGENCY_FEEDS = [{
         'agency_pattern': 'cars regionaux',
         'exclude_route_patterns': ['scolaire|scolaires|school', 'ital(?:ie|y|ia)|espagne|spain|andorre|andorra|portugal|irun|san.?sebastian'],
     }],
+}, {
+    # Pays de la Loire : agrégat Destinéo public, isolé par agence pour éviter les collisions.
+    # L'ODbL et les conditions PAN sont conservées; les traversées maritimes (Yeu/Continent) et
+    # les deux opérateurs ferroviaires restent exclus ici (SNCF est déjà desservi par le moteur national).
+    'dataset': 'arrets-horaires-et-circuits-des-lignes-de-transports-en-commun-en-pays-de-la-loire-gtfs-destineo-reseaux-aom-aleop-1',
+    'url': 'https://transport.data.gouv.fr/resources/79818/download',
+    'download_limit': 80 * 1024 * 1024,
+    'allow_mobile_sharding': True,
+    'exclude_route_types': ['4'],
+    'license': 'ODbL 1.0 + conditions particulières PAN',
+    'publisher': 'Région des Pays de la Loire et autorités organisatrices participantes',
+    'networks': [
+        {'id': 'pdl-irigo-angers', 'network': 'IRIGO Angers', 'agency_name': 'IRIGO'},
+        {'id': 'pdl-brevibus', 'network': 'Brévibus', 'agency_name': 'Brévibus'},
+        {'id': 'pdl-tul-laval', 'network': 'TUL Laval', 'agency_name': 'TUL'},
+        {'id': 'pdl-naolib-nantes', 'network': 'Naolib Nantes', 'agency_name': 'Naolib'},
+        {'id': 'pdl-choletbus', 'network': 'Choletbus', 'agency_name': 'Choletbus'},
+        {'id': 'pdl-oleane-les-sables', 'network': 'OLEANE Les Sables-d’Olonne', 'agency_name': 'OLEANE'},
+        {'id': 'pdl-illygo', 'network': 'illyGO', 'agency_name': 'illyGO'},
+        {'id': 'pdl-sovetours', 'network': 'SOVETOURS', 'agency_name': 'SOVETOURS'},
+        {'id': 'pdl-yceo-saint-nazaire', 'network': 'Ycéo Saint-Nazaire', 'agency_name': 'Ycéo'},
+        {'id': 'pdl-impulsyon-la-roche', 'network': 'Impulsyon La Roche-sur-Yon', 'agency_name': 'Impulsyon'},
+        {'id': 'pdl-aleop-sarthe', 'network': 'Aléop en Sarthe', 'agency_name': 'Aléop en Sarthe'},
+        {'id': 'pdl-aleop-vendee', 'network': 'Aléop en Vendée', 'agency_name': 'Aléop en Vendée'},
+        {'id': 'pdl-aleop-ler', 'network': 'Aléop Lignes Express régionales', 'agency_name': 'Aléop Lignes Express régionales'},
+        {'id': 'pdl-aleop-mayenne', 'network': 'Aléop en Mayenne', 'agency_name': 'Aléop en Mayenne'},
+        {'id': 'pdl-aleop-loire-atlantique', 'network': 'Aléop en Loire-Atlantique', 'agency_name': 'Aléop en Loire-Atlantique'},
+        {'id': 'pdl-aleop-maine-et-loire', 'network': 'Aléop en Maine-et-Loire', 'agency_name': 'Aléop en Maine-et-Loire'},
+        {'id': 'pdl-reso-sable', 'network': 'Réso Sablé-sur-Sarthe', 'agency_name': 'Réso'},
+        {'id': 'pdl-heoh-clisson', 'network': 'héoh Clisson', 'agency_name': 'héoh'},
+    ],
 }
 ]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
@@ -555,15 +586,22 @@ def agencies_report(z):
     return [{'agency_id': a.get('agency_id'), 'agency_name': a.get('agency_name'), 'routes': count.get(a.get('agency_id') or '', 0)} for a in agencies]
 
 
-def extract(z, spec, allow_oversize=False):
+def extract(z, spec, allow_oversize=False, table_cache=None):
+    def read(name):
+        if table_cache is None:
+            return read_table(z, name)
+        if name not in table_cache:
+            table_cache[name] = read_table(z, name)
+        return table_cache[name]
+
     pat = re.compile(spec['pattern'])
-    afields, agencies = read_table(z, 'agency.txt')
+    afields, agencies = read('agency.txt')
     keep_ag = [a for a in agencies if pat.search(norm(a.get('agency_name'))) or pat.search(norm(a.get('agency_id')))]
     if not keep_ag:
         return None, 'aucune agence correspondante'
     ag_ids = {a.get('agency_id') or '' for a in keep_ag}
     single = len(agencies) == 1
-    rfields, routes = read_table(z, 'routes.txt')
+    rfields, routes = read('routes.txt')
     routes = [r for r in routes if (r.get('agency_id') or '') in ag_ids or (single and not r.get('agency_id'))]
     excluded_route_types = {str(route_type) for route_type in spec.get('exclude_route_types', ())}
     if excluded_route_types:
@@ -574,14 +612,14 @@ def extract(z, spec, allow_oversize=False):
             r.get(field) or '' for field in ('route_id', 'route_short_name', 'route_long_name'))))
             for pattern in excluded_route_patterns)]
     route_ids = {r['route_id'] for r in routes}
-    tfields, trips = read_table(z, 'trips.txt')
+    tfields, trips = read('trips.txt')
     trips = [t for t in trips if t['route_id'] in route_ids]
     trip_ids = {t['trip_id'] for t in trips}
     service_ids = {t['service_id'] for t in trips}
-    stfields, times = read_table(z, 'stop_times.txt')
+    stfields, times = read('stop_times.txt')
     times = [t for t in times if t['trip_id'] in trip_ids]
     stop_ids = {t['stop_id'] for t in times}
-    sfields, stops = read_table(z, 'stops.txt')
+    sfields, stops = read('stops.txt')
     parents = {s.get('parent_station') for s in stops if s['stop_id'] in stop_ids and s.get('parent_station')}
     stops = [s for s in stops if s['stop_id'] in stop_ids or s['stop_id'] in parents]
     if not trips or not times:
@@ -594,15 +632,15 @@ def extract(z, spec, allow_oversize=False):
         write_table(out, 'stop_times.txt', stfields, times)
         write_table(out, 'stops.txt', sfields, stops)
         for cal in ('calendar.txt', 'calendar_dates.txt'):
-            f, rows = read_table(z, cal)
+            f, rows = read(cal)
             if f:
                 write_table(out, cal, f, [r for r in rows if r['service_id'] in service_ids])
-        f, rows = read_table(z, 'feed_info.txt')
+        f, rows = read('feed_info.txt')
         if f:
             write_table(out, 'feed_info.txt', f, rows)
         # Tarifs officiels du producteur, limités aux lignes/agences extraites.
-        ff, fares = read_table(z, 'fare_attributes.txt')
-        rf, rules = read_table(z, 'fare_rules.txt')
+        ff, fares = read('fare_attributes.txt')
+        rf, rules = read('fare_rules.txt')
         if ff:
             if rf:
                 rules = [r for r in rules if not r.get('route_id') or r['route_id'] in route_ids]
@@ -883,12 +921,16 @@ def main():
                 origin = current_dataset_zip(bundle['dataset'], bundle['url'])
                 source_path = download(origin, bundle.get('download_limit', 80 * 1024 * 1024))
                 with zipfile.ZipFile(source_path) as source_zip:
+                    # Les grosses tables GTFS sont analysées une fois par agrégat, puis
+                    # réutilisées pour chaque agence; le ZIP source reste toujours sur disque.
+                    table_cache = {}
                     for agency in bundle['networks']:
                         spec = {'pattern': agency.get('agency_pattern') or re.escape(norm(agency['agency_name'])),
                                 'exclude_route_patterns': agency.get('exclude_route_patterns', bundle.get('exclude_route_patterns', [])),
                                 'exclude_route_types': bundle.get('exclude_route_types', [])}
                         try:
-                            data, info = extract(source_zip, spec, allow_oversize=bool(bundle.get('allow_mobile_sharding')))
+                            data, info = extract(source_zip, spec, allow_oversize=bool(bundle.get('allow_mobile_sharding')),
+                                                 table_cache=table_cache)
                             if data is None:
                                 manifest['errors'][agency['id']] = info
                                 continue
@@ -929,6 +971,7 @@ def main():
                             del data
                         except Exception as e:  # échec isolé : poursuivre les autres agences
                             manifest['errors'][agency['id']] = 'erreur : %s' % e
+                    del table_cache
             except Exception as e:
                 for agency in bundle['networks']:
                     manifest['errors'][agency['id']] = 'erreur agrégat %s : %s' % (bundle['dataset'], e)
