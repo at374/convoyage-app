@@ -158,6 +158,18 @@ class TDatasetResourceSelection(unittest.TestCase):
                                    'url': 'https://example.test/other.zip'}]}
         self.assertEqual(m.select_dataset_gtfs_url(metadata, fallback), fallback)
 
+    def test_resource_keywords_select_the_gtfs_variant_with_tad_and_school_services(self):
+        m = load_module()
+        fallback = 'https://example.test/full-tad-feed.zip'
+        metadata = {'resources': [
+            {'format': 'GTFS', 'title': 'GTFS - Réseau urbain',
+             'url': 'https://example.test/urban.zip', 'last_modified': '2026-11-20'},
+            {'format': 'GTFS', 'title': 'GTFS - Horaires + TAD + Scolaire + Shapes',
+             'url': 'https://example.test/full-tad-feed.zip', 'last_modified': '2026-11-19'},
+        ]}
+        self.assertEqual(m.select_dataset_gtfs_url(metadata, fallback, ['tad', 'scolaire', 'shapes']),
+                         'https://example.test/full-tad-feed.zip')
+
 
 class TRouteExclusions(unittest.TestCase):
     def test_extract_removes_cross_border_route_and_its_trips(self):
@@ -249,7 +261,10 @@ class TMirrorConfig(unittest.TestCase):
         self.assertEqual(len(hdf), 9)
         self.assertEqual(hdf['ilevia-lille']['dataset'], 'ilevia-localisation-des-arrets-bus-metro-et-tram-gtfs')
         self.assertEqual(hdf['sitac-calais']['exclude_route_types'], ['4'])
+        self.assertEqual(hdf['sitac-calais']['agency_pattern'], 'zenbus')
         self.assertTrue(hdf['tadao-lens']['agency_pattern'])
+        self.assertEqual(hdf['ametis-amiens']['dataset'], 'ametis')
+        self.assertEqual(hdf['ametis-amiens']['resource_keywords'], ['tad', 'scolaire', 'shapes'])
         self.assertEqual(hdf['tadao-lens']['license'], 'ODbL')
         self.assertEqual(hdf['dkbus-dunkerque']['license'], 'ODbL')
         self.assertEqual(hdf['eveole-douai']['license'], 'ODbL')

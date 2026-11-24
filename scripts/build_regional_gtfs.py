@@ -138,7 +138,8 @@ MIRROR = [
      'url': 'https://transport.data.gouv.fr/resources/82683/download',
      'derive_bounds': True, 'license': 'ODbL',
      'publisher': 'Communauté urbaine de Dunkerque'},
-    {'id': 'ametis-amiens', 'network': 'Ametis Amiens', 'url': 'https://transport.data.gouv.fr/resources/80223/download',
+    {'id': 'ametis-amiens', 'network': 'Ametis Amiens', 'dataset': 'ametis',
+     'resource_keywords': ['tad', 'scolaire', 'shapes'], 'url': 'https://transport.data.gouv.fr/resources/80223/download',
      'derive_bounds': True, 'license': 'Licence Ouverte 2.0',
      'publisher': 'Amiens Métropole'},
     {'id': 'eveole-douai', 'network': 'Évéole Douai',
@@ -160,7 +161,7 @@ MIRROR = [
     {'id': 'sitac-calais', 'network': 'SITAC Calais',
      'dataset': 'horaires-theoriques-et-temps-reel-aux-formats-gtfs-et-gtfs-rt-du-reseau-sitac',
      'url': 'https://transport.data.gouv.fr/resources/83807/download',
-     'agency_pattern': 'sitac', 'exclude_route_types': ['4'], 'derive_bounds': True,
+     'agency_pattern': 'zenbus', 'exclude_route_types': ['4'], 'derive_bounds': True,
      'license': 'Licence Ouverte 2.0', 'publisher': 'Grand Calais Terres et Mers'},
     # Source urbaine Grand Est indépendante de l'agrégat Fluo. 4,36 Mo, 48 lignes,
     # et calendrier valide au 25/06/2027 selon la ressource PAN 80787.
@@ -313,7 +314,7 @@ def download(url, limit=400 * 1024 * 1024):
         return tmp.name
 
 
-def select_dataset_gtfs_url(meta, fallback):
+def select_dataset_gtfs_url(meta, fallback, required_keywords=()):
     """Select an explicitly identified GTFS ZIP, never a newer NeTEx ZIP."""
     resources = []
     for item in meta.get('resources', []):
@@ -327,19 +328,20 @@ def select_dataset_gtfs_url(meta, fallback):
     gtfs = []
     for item in resources:
         evidence = ' '.join(str(item.get(k) or '') for k in ('format', 'title', 'name', 'url')).lower()
-        if 'gtfs' in evidence and 'netex' not in evidence:
+        if ('gtfs' in evidence and 'netex' not in evidence and
+                all(str(keyword).lower() in evidence for keyword in required_keywords)):
             gtfs.append(item)
     gtfs.sort(key=lambda x: str(x.get('last_modified') or ''), reverse=True)
     return (gtfs[0].get('url') if gtfs and gtfs[0].get('url') else fallback)
 
 
-def current_dataset_zip(slug, fallback):
+def current_dataset_zip(slug, fallback, required_keywords=()):
     """Adresse de la ressource GTFS la plus récente d'un jeu data.gouv.fr ; repli stable."""
     try:
         api = 'https://www.data.gouv.fr/api/1/datasets/%s/' % slug
         with urllib.request.urlopen(urllib.request.Request(api, headers=UA), timeout=90) as r:
             meta = json.load(r)
-        return select_dataset_gtfs_url(meta, fallback)
+        return select_dataset_gtfs_url(meta, fallback, required_keywords)
     except Exception:
         pass
     return fallback
@@ -614,8 +616,8 @@ def main():
     if not args.offline:
         for spec in MIRROR:
             try:
-                origin = current_dataset_zip(spec['dataset'], spec['url']) if spec.get('dataset') else spec['url']
-                p = download(origin, MAX_OUT)
+                origin = current_dataset_zip(spec['dataset'], spec['url'], spec.get('resource_keywords', [])) if spec.get('dataset') else spec['url']
+                p = download(origin, spec.get('download_limit', MAX_OUT))
                 with zipfile.ZipFile(p) as z:
                     if spec.get('agency_pattern'):
                         data, info = extract(z, {'pattern': spec['agency_pattern'],
