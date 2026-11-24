@@ -22,7 +22,7 @@ WORKFLOWS = [('Build regional GTFS (lundi)', 'build-regional-gtfs.yml'), ('GTFS 
 repo, tok = os.environ.get('GITHUB_REPOSITORY'), os.environ.get('GITHUB_TOKEN')
 paris = ZoneInfo('Europe/Paris'); WF = []
 for nom, f in WORKFLOWS:
-    ligne = [nom, 'inconnu', 'OK']
+    ligne = [nom, 'inconnu', 'INCONNU']
     try:
         r = urllib.request.Request('https://api.github.com/repos/%s/actions/workflows/%s/runs?per_page=5&status=completed' % (repo, f), headers={'Authorization': 'Bearer ' + tok, 'Accept': 'application/vnd.github+json'})
         runs = json.load(urllib.request.urlopen(r, timeout=20))['workflow_runs']
@@ -31,7 +31,8 @@ for nom, f in WORKFLOWS:
             x = runs[0]; d = datetime.datetime.fromisoformat(x['updated_at'].replace('Z', '+00:00')).astimezone(paris)
             ligne = [nom, d.strftime('%d/%m %H:%M'), 'OK' if x['conclusion'] == 'success' else 'ÉCHEC']
             if x['conclusion'] != 'success': ERR.append('%s : dernier passage en échec (%s)' % (nom, d.strftime('%d/%m %H:%M')))
-    except Exception: pass
+    except Exception:
+        ERR.append('%s : état de la mise à jour non vérifié' % nom)
     WF.append(ligne)
 t = open('tools/carte-transports/gabarit.html', encoding='utf-8').read()
 maintenant = datetime.datetime.now(paris).strftime('%d/%m/%Y à %H:%M')
