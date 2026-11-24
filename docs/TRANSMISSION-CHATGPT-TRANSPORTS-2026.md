@@ -709,3 +709,8 @@ Ressources officielles : [agrégat Destineo](https://transport.data.gouv.fr/data
 ## Collectes obsolètes remplacées par le run courant (24/11/2026)
 
 Le workflow régional garde un seul groupe de collecte et annule désormais un run antérieur lorsqu’un nouveau commit arrive sur la branche. Ce choix évite de bloquer les corrections derrière des collectes anciennes; seul le run déclenché par la tête de branche la plus récente peut publier. Le workflow carte reste indépendant et conserve son calendrier de mise à jour.
+
+
+## Limite observée de la règle d’annulation (24/11/2026)
+
+Le commit `b853a63` active `cancel-in-progress: true` pour les futurs nouveaux runs. En pratique, GitHub a remplacé le run en attente 144, mais n’a pas annulé le run 140 déjà actif sous l’ancienne configuration. Le run 145 (tête `b853a63`) est le seul en attente derrière lui; la collecte 140 ne doit pas être considérée terminée ou annulée avant son état final.
