@@ -2197,7 +2197,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         for(const [direction,point] of [['Aller',origin],['Jonction départ',dest],['Jonction arrivée',nextOrigin2],['Retour',dest]]){
           if(point?.precision==='ville'){
             const note=document.createElement('p');note.className='cp-transport-approx';
-            note.textContent='📍 '+direction+' : centre-ville approximatif utilisé (adresse exacte inconnue). Vérifier les marches et la faisabilité avant départ.';
+            note.textContent='📍 '+direction+' : point GPS de centre-ville utilisé faute de coordonnées précises. Vérifier les marches et la faisabilité avant départ.';
             const target=direction.startsWith('Jonction')?transportDestinations.Jonction:transportDestinations[direction];
             if(target)target.appendChild(note);
           }

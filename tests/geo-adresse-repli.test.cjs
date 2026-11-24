@@ -19,3 +19,14 @@ test('aucun résultat : rien d inventé',async()=>{
  const a=fetcher([]);const r=await G.chercherPoint(mission,'origin',a.f);
  assert.equal(!!(r&&r.trouve),false);
 });
+
+test('un résultat centre-ville ne masque pas le numéro de rue trouvé ensuite',async()=>{
+ const adresse={from_city:'Voiron',from_department:'38',origin_address:'Dépôt – 12 rue Exemple 38500 Voiron'};
+ const a=fetcher([
+  {contient:'Dépôt',type:'municipality',lat:45.36,lng:5.59},
+  {contient:'12 rue Exemple',type:'housenumber',lat:45.38,lng:5.58}
+ ]);
+ const r=await G.chercherPoint(adresse,'origin',a.f);
+ assert.deepEqual(r.point,{lat:45.38,lng:5.58,precision:'adresse'});
+ assert.equal(a.urls.length,2);
+});
