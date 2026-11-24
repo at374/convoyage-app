@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 33538)
-Total output lines: 1754
-
 /* Convoyage Ultra — Hub transports de mission.
  * Interroge automatiquement les sources GTFS, la Suisse (transport.opendata.ch), Mobilités M et le
  * secours SNCF, reçoit les horaires GTFS locaux, complète les marches réelles (Valhalla/OSM)
@@ -819,7 +816,207 @@ function makeProviders(r,opts={}){
    ['toutenbus', "Tout'enbus Aubenas", 'toutenbus-aubenas.zip', [44.54,4.3,44.69,4.47]],
    ['transcab', "Trans'Cab Aurillac", 'transcab-aurillac.zip', [44.8,2.22,45.09,2.68]],
    ['montelibus', "Montélibus Montélimar", 'montelibus-montelimar.zip', [44.44,4.69,44.73,5.02]],
-   ['mael…3538 tokens truncated…OTP2 (TCL), jamais estimé.
+   ['maelis', "Maelis Montluçon", 'maelis-montlucon.zip', [46.15,2.49,46.42,2.74]],
+   ['aleo', "Aléo Moulins", 'aleo-moulins.zip', [46.49,3.27,46.65,3.46]],
+   ['tcap', "T'CAP Privas", 'tcap-privas.zip', [44.68,4.52,44.84,4.82]],
+   ['velay', "Mobilité en Velay (Le Puy)", 'velay-le-puy.zip', [44.97,3.83,45.09,4.01]],
+   ['rlv', "RLV Mobilités Riom", 'rlv-riom.zip', [45.83,3.02,45.98,3.24]],
+   ['star_roanne', "Star Roanne", 'star-roanne.zip', [45.96,3.78,46.22,4.26]],
+   ['lebus', "Le Bus Tain-Tournon", 'lebus-tain-tournon.zip', [44.99,4.52,45.16,5.07]],
+   ['smtut', "SMTUT Thiers", 'smtut-thiers.zip', [45.69,3.36,46.03,3.74]],
+   ['mobivie', "MobiVie Vichy", 'mobivie-vichy.zip', [46.06,3.37,46.17,3.49]],
+   ['le37', "Le 37 Péage-de-Roussillon", 'le37-roussillon.zip', [45.3,4.75,45.47,5.07]],
+   // 15/11/2026 (soir) : trois réseaux confirmés par le sondage PAN mais absents de l'agrégat Oùra
+   // (chacun un GTFS officiel à part). citea : bbox testée contre le flux réel avant câblage. stas/t2c :
+   // bbox provisoire (cœur urbain estimé, flux non téléchargeable depuis le poste de développement) —
+   // confirmée correcte par le premier passage réel de build-regional-gtfs.yml (21 h 20, run 43757097623 :
+   // 30 trajets réels chacun via scripts/verifier-moteurs-regionaux.cjs), pas de resserrement nécessaire.
+   ['citea', "Citéa (Valence Romans Mobilités)", 'citea-valence.zip', [44.85,4.80,45.10,5.15]],
+   ['stas', "STAS (Saint-Étienne Métropole)", 'stas-saint-etienne.zip', [45.38,4.32,45.50,4.45]],
+   ['t2c', "T2C (Clermont Auvergne Métropole)", 't2c-clermont.zip', [45.72,3.00,45.85,3.20]]
+  ];
+  // Archives are published on the transport feature branch, not necessarily on
+  // the deployed GitHub Pages site. Explicit HTTPS URLs avoid a silent 404
+  // when the Android app is served from another origin or an older deployment.
+  const base='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
+  let deployedBase=null;
+  try{const l=r.location;if(l&&l.protocol==='https:'&&/(^|\.)github\.io$/.test(l.hostname))deployedBase=new URL('data/gtfs/',l.href).href;}catch(_){}
+  const cache=new Map();
+  const inBounds=(p,b)=>p&&p.lat>=b[0]&&p.lon>=b[1]&&p.lat<=b[2]&&p.lon<=b[3];
+  const dateParts=when=>{
+   const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(when));
+   const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+   return {date:p.year+'-'+p.month+'-'+p.day,clock:p.hour+':'+p.minute+':00'};
+  };
+  const toISO=(date,clock)=>{
+   if(!/^\d{1,3}:[0-5]\d:[0-5]\d$/.test(clock||''))return null;
+   const [h,m,s]=clock.split(':').map(Number);
+   const wall=Date.parse(date+'T00:00:00Z')+(h*3600+m*60+s)*1000;
+   const tz=new Intl.DateTimeFormat('en-US',{timeZone:'Europe/Paris',timeZoneName:'shortOffset'})
+    .formatToParts(new Date(wall)).find(x=>x.type==='timeZoneName')?.value||'';
+   const match=/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/.exec(tz);
+   if(!match)return null;
+   const offset=(match[1]==='+'?1:-1)*(Number(match[2])*60+Number(match[3]||0));
+   return new Date(wall-offset*60000).toISOString();
+  };
+  for(const [id,name,file,bounds] of localNetworks){
+   P['local_'+id]={name:name+' GTFS',
+    enabled:task=>!!queryWindow(task)&&inBounds(pt(task.from),bounds)&&inBounds(pt(task.to),bounds),
+    disabledReason:'trajet hors zone du réseau local ou horaires manquants',
+    run:async(task,signal)=>{
+     const w=queryWindow(task),when=ms(w.when);
+     if(!Number.isFinite(when))return [];
+     // Publication sans retouche : sur le site déployé (GitHub Pages), la copie du site passe en premier (c'est elle
+     // que les tâches hebdomadaires de la branche publiée rafraîchissent) ; sinon la branche Transports, puis la
+     // branche principale et le site déployé en secours.
+     const urls=[...new Set([deployedBase?deployedBase+file:null,base+file,
+      'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,'https://at374.github.io/convoyage-app/data/gtfs/'+file].filter(Boolean))];
+     const {date,clock}=dateParts(when),resource={format:'GTFS',url:urls[0],fallbackUrls:urls.slice(1)};
+     let promise=cache.get(id+'|'+date);
+     if(!promise){
+      promise=r.CPGTFSLoader.loadResource(resource,{fetcher,indexServiceDates:[date],retainSourceTables:false});
+      cache.set(id+'|'+date,promise);
+      promise.catch(()=>cache.delete(id+'|'+date));
+     }
+     const feed=await promise;
+     if(signal?.aborted)return [];
+     // GTFS-Flex metadata: course and booking windows are discovered automatically
+     // from the same regional feed, never converted into invented fixed departures.
+     // Only a separately supplied, operator-confirmed pickup AND arrival may yield a journey.
+     const flexRows=[];
+     if(r.CPGTFSFlexCourses?.extract&&feed.files?.['stop_times.txt']){
+      try{
+       const origin=pt(task.from),destination=pt(task.to);
+       const candidates=r.CPGTFSFlexCourses.extract(feed.files,feed.index,date,{limit:2000})
+        .filter(c=>c.fromStops?.some(s=>s.point&&meters(origin,s.point)<=3000)&&
+                   c.toStops?.some(s=>s.point&&meters(destination,s.point)<=3000));
+       if(typeof opts.onFlexCandidates==='function'&&candidates.length&&!signal?.aborted)
+        opts.onFlexCandidates({task,network:name,candidates});
+       const bookings=Array.isArray(opts.flexBookings)?opts.flexBookings:[];
+       for(const c of candidates)for(const booking of bookings){
+        const confirmed=r.CPGTFSFlexCourses.toHubRow(c,booking);
+        if(confirmed){flexRows.push(confirmed);break;}
+       }
+      }catch(_){/* Flex metadata unavailable: normal GTFS search remains operational. */}
+     }
+     const rows=attachGTFSFares(feed,r.CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,pt(task.from),pt(task.to),3000),r.CPGTFSFares);
+     // Isère : extraire les zones réellement traversées uniquement si le collecteur
+     // fournit une table officielle explicitement attestée (jamais GTFS zone_id supposé).
+     const iz=r.CPIsereZonalFares;
+     const zoneRef=feed.isereOfficialZones;
+     const checkedZones=name==='Cars Région Isère'&&iz&&typeof iz.validateOfficialStopZones==='function'
+      ?iz.validateOfficialStopZones(feed.index,zoneRef):null;
+     const trustedZones=checkedZones?.valid===true?checkedZones:null;
+     if(name==='Cars Région Isère'&&iz&&typeof iz.auditGTFSJourneys==='function'&&
+      typeof opts.onIsereZoneAudit==='function'){
+      const audit=iz.auditGTFSJourneys(feed.index,rows,{
+       stopZones:trustedZones?.stopZones||null,
+       source:trustedZones?.source||null});
+      try{opts.onIsereZoneAudit({network:name,date,audit,officialReferenceAvailable:!!trustedZones});}
+      catch(_){/* observability must never block journeys */}
+     }
+     if(name==='Cars Région Isère'&&iz&&typeof iz.evidenceFromGTFS==='function'&&
+      trustedZones){
+      for(let i=0;i<rows.length;i++){
+       const x=rows[i];
+       const fromId=x?.originStop?.stopId||x?.originStop?.stop_id||x?.fromStopId||x?.from;
+       const toId=x?.destinationStop?.stopId||x?.destinationStop?.stop_id||x?.toStopId||x?.to;
+       const ev=iz.evidenceFromGTFS(feed.index,{tripId:x?.tripId,fromStopId:fromId,toStopId:toId,
+        stopZones:trustedZones.stopZones,source:trustedZones.source});
+       if(ev)rows[i]={...x,isereZoneEvidence:{complete:true,stopIds:ev.stopIds,
+        stopZones:trustedZones.stopZones,source:ev.source}};
+      }
+     }
+     const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
+     // Select the best boarding/alighting stop pair for each actual vehicle
+     // BEFORE imposing the mobile card limit. Otherwise 500 stop-pair variants
+     // from a few vehicles can hide later distinct departures.
+     const best=new Map(),directMeters=meters(pt(task.from),pt(task.to));
+     for(const x of rows){
+      if(!(w.arriveBy?sec(x.arrival)<=sec(clock):sec(x.departure)>=sec(clock)))continue;
+      const key=String(x.tripId||'')+'|'+date;
+      const access=Number(x.accessDistanceMeters),egress=Number(x.egressDistanceMeters);
+      if(!key||!Number.isFinite(access)||!Number.isFinite(egress))continue;
+      const score=access+egress,previous=best.get(key);
+      // Même règle que walkDetour, appliquée AVANT la limite de 30 : sur un réseau dense (TCL), les 30 premiers
+      // départs tenaient dans la même minute et 24 étaient des lignes sans rapport avec le trajet.
+      if(directMeters>0&&score>=directMeters)continue;
+      if(!previous||score<previous.score)best.set(key,{x,score});
+     }
+     const filtered=[...best.values()].map(({x})=>({...x,network:name,
+       departure:toISO(date,x.departure),arrival:toISO(date,x.arrival)}))
+     .filter(x=>x.departure&&x.arrival)
+      // « Arriver avant » (Aller) : garder les 30 arrivées les plus proches de l'échéance, pas les 30 premiers
+      // départs de la journée (bus de l'aube inutiles pour une mission à 10 h).
+      .sort((a,b)=>w.arriveBy?Date.parse(b.arrival)-Date.parse(a.arrival):Date.parse(a.departure)-Date.parse(b.departure)).slice(0,30)
+     .sort((a,b)=>Date.parse(a.departure)-Date.parse(b.departure));
+     return fromGTFS(filtered.concat(flexRows),name);
+    }};
+  }
+ }
+ // National GTFS regional slices must be explicitly supplied by the application/server.
+ // No direct download of full national feeds into Android and no invented ticket prices.
+ if(r.CPNationalGTFSJourneys&&typeof r.CPNationalGTFSJourneys.loadAndSearch==='function'){
+  const resources=opts.nationalGTFSResources||{};
+  for(const operator of ['sncf','blablacarBus','flixbus','eurostar','trenitalia']){
+   const resource=resources[operator];
+   if(!resource||!/^https:\/\//i.test(resource.url||''))continue;
+   const name={sncf:'SNCF GTFS',blablacarBus:'BlaBlaCar Bus GTFS',flixbus:'FlixBus GTFS',eurostar:'Eurostar GTFS',trenitalia:'Trenitalia GTFS'}[operator];
+   P['national_'+operator]={name,enabled:task=>!!pt(task.from)&&!!pt(task.to)&&!!queryWindow(task),
+    disabledReason:'adresse GPS ou horaire de mission manquant',
+    run:async(task,signal)=>{
+     const window=queryWindow(task),when=ms(window.when);
+     if(!Number.isFinite(when))return [];
+     const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(when));
+     const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+     const date=p.year+'-'+p.month+'-'+p.day;
+     const clock=p.hour+':'+p.minute+':00';
+     // Match the 3 km walking-search envelope used in the AURA coverage audit.
+     // These are straight-line candidate stops, not verified pedestrian routes:
+     // completeWalks must still calculate exact walking distances and times.
+     const base={operator,resource:{...resource,format:'GTFS'},fetcher,signal,
+      from:pt(task.from),to:pt(task.to),radiusMeters:3000,maxResults:20,includeTransfers:true};
+     const searchParams={...base,date,...(window.arriveBy?{latestArrival:clock}:{earliestDeparture:clock})};
+     let result=await r.CPNationalGTFSJourneys.loadAndSearch(searchParams);
+     // A second, bounded stop search is useful when the closest coach terminal
+     // is outside 3 km (e.g. Lyon Perrache/Gerland vs Part-Dieu).
+     // Candidate radius is NOT a validated pedestrian distance: completeWalks
+     // still verifies walking geometry, timing and mission margin.
+     const initialRows=Array.isArray(result?.journeys)?result.journeys:[];
+     // Coaches can have a distant terminal even when nearby indirect services
+     // exist. Search farther for a DIRECT coach, not just when results are empty.
+     // SNCF keeps the cheaper empty-only fallback to limit GTFS query load.
+     const hasDirect=initialRows.some(j=>j&&(!Array.isArray(j.legs)||j.legs.length<=1));
+     const needExpanded=!initialRows.length||
+      (operator!=='sncf'&&!hasDirect);
+     let rows=initialRows;
+     if(needExpanded&&!signal?.aborted&&opts.nationalStopFallback!==false){
+      // Un échec du repli ne doit jamais faire perdre les résultats à 3 km (constaté en navigateur réel le 14/11/2026 :
+      // le rayon de 6 km était refusé par le moteur, limité à 5 km → « Invalid walking search radius » pour tout le fournisseur).
+      const expanded=await r.CPNationalGTFSJourneys.loadAndSearch({...searchParams,radiusMeters:5000}).catch(e=>{if(signal?.aborted)throw e;return null;});
+      if(Array.isArray(expanded?.journeys)&&expanded.journeys.length){
+       const seen=new Set(rows.map(j=>JSON.stringify([j.tripId,j.line,j.departure,j.arrival,j.originStop?.stop_id||j.originStop?.name,j.destinationStop?.stop_id||j.destinationStop?.name])));
+       for(const j of expanded.journeys){
+        const key=JSON.stringify([j.tripId,j.line,j.departure,j.arrival,j.originStop?.stop_id||j.originStop?.name,j.destinationStop?.stop_id||j.destinationStop?.name]);
+        if(!seen.has(key)){seen.add(key);rows.push(j);}
+       }
+      }
+     }
+     // After midnight, a service with GTFS time 24:30 belongs to yesterday's service date.
+     // Query the previous service day as well, without inventing a new train or bus.
+     if(Number(p.hour)<6){
+      const previous=new Date(Date.parse(date+'T00:00:00Z')-86400000).toISOString().slice(0,10);
+      const afterMidnight=(Number(p.hour)+24)+':'+p.minute+':00';
+      const overnight=await r.CPNationalGTFSJourneys.loadAndSearch({
+       ...base,date:previous,...(window.arriveBy?{earliestDeparture:'24:00:00',latestArrival:afterMidnight}
+        :{earliestDeparture:afterMidnight})});
+      rows=rows.concat(overnight.journeys||[]);
+     }
+     let out=fromNationalGTFS(rows,operator);
+     // Cars FlixBus / BlaBlaCar Bus depuis les gares routières de Lyon (Part-Dieu, Perrache, Gerland) quand le départ ou l'arrivée
+     // est trop loin pour y aller à pied (Corbas, Saint-Priest…) : l'accès est calculé ensuite par le serveur OTP2 (TCL), jamais estimé.
      if(operator!=='sncf'&&!signal?.aborted&&opts.lyonCoachAccess===true){
       for(const side of ['from','to']){
        const far=pt(task[side]);if(!far)continue;
