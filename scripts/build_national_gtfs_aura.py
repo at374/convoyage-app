@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from build_regional_gtfs import filter_by_bounds, validate
 
 BOUNDS = (44.0, 3.6, 46.7, 7.4)
-OPERATORS = ('sncf', 'blablacarBus', 'flixbus', 'eurostar', 'trenitalia', 'renfe')
+OPERATORS = ('sncf', 'blablacarBus', 'flixbus', 'eurostar', 'trenitalia')
 # The broad AURA rectangle includes a few neighbouring-country stops. Switzerland
 # is handled by its dedicated engine; never expose Italian destinations in this slice.
 FOREIGN_STOP_NAME_PARTS = {'trenitalia': ('oulx',)}

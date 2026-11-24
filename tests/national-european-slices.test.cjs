@@ -43,15 +43,3 @@ test('mission hub exposes Eurostar and Trenitalia only when their feeds are supp
  assert.equal(providers.national_trenitalia.name,'Trenitalia GTFS');
  assert.equal(providers.national_sncf,undefined);
 });
-
-test('Renfe padded GTFS headers and calendar dates produce Lyon → Valence train service',async()=>{
- const rows=await search('renfe','2026-12-10',{lat:45.7603,lon:4.8598},{lat:44.9915,lon:4.9787});
- assert.ok(rows.length>0);
- assert.equal(rows[0].departure,'14:35:00');
- assert.equal(rows[0].arrival,'15:08:00');
- assert.equal(rows[0].serviceConfirmed,false);
- assert.equal(rows[0].priceEUR,null);
- const mission=hub.fromNationalGTFS(rows,'renfe')[0];
- assert.equal(mission.legs[0].mode,'Train');
- assert.equal(hub.ticketLinks(mission)[0].url,'https://www.renfe.com/');
-});

@@ -236,7 +236,7 @@ function fromGTFS(rows,network='Réseau local'){
 /* National GTFS provides scheduled candidates, not live service or ticket inventory.
  * GTFS service day is Europe/Paris, including 24+:xx overnight times. */
 function fromNationalGTFS(rows,operator){
- const names={sncf:'SNCF',blablacarBus:'BlaBlaCar Bus',flixbus:'FlixBus',eurostar:'Eurostar',trenitalia:'Trenitalia',renfe:'Renfe'};
+ const names={sncf:'SNCF',blablacarBus:'BlaBlaCar Bus',flixbus:'FlixBus',eurostar:'Eurostar',trenitalia:'Trenitalia'};
  if(!Object.prototype.hasOwnProperty.call(names,operator))return [];
  const localTime=(date,time)=>{
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date||'')||!/^\d{1,3}:[0-5]\d(?::[0-5]\d)?$/.test(time||''))return null;
@@ -258,7 +258,7 @@ function fromNationalGTFS(rows,operator){
    r.legs.every(l=>l&&l.departure&&l.arrival)))).map(r=>{
   const a=r.originStop,b=r.destinationStop;
   const point=s=>({lat:s?.lat??s?.stop_lat,lon:s?.lon??s?.stop_lon});
-  const makeLeg=(from,to,line,departure,arrival)=>leg({mode:['sncf','eurostar','trenitalia','renfe'].includes(operator)?'Train':'Car',
+  const makeLeg=(from,to,line,departure,arrival)=>leg({mode:['sncf','eurostar','trenitalia'].includes(operator)?'Train':'Car',
    provider:names[operator],line,from:from?.name||from?.stop_name||'',
    to:to?.name||to?.stop_name||'',fromPoint:point(from),toPoint:point(to),
    departure:localTime(r.date,departure),arrival:localTime(r.date,arrival)});
@@ -914,10 +914,10 @@ function makeProviders(r,opts={}){
  // No direct download of full national feeds into Android and no invented ticket prices.
  if(r.CPNationalGTFSJourneys&&typeof r.CPNationalGTFSJourneys.loadAndSearch==='function'){
   const resources=opts.nationalGTFSResources||{};
-  for(const operator of ['sncf','blablacarBus','flixbus','eurostar','trenitalia','renfe']){
+  for(const operator of ['sncf','blablacarBus','flixbus','eurostar','trenitalia']){
    const resource=resources[operator];
    if(!resource||!/^https:\/\//i.test(resource.url||''))continue;
-   const name={sncf:'SNCF GTFS',blablacarBus:'BlaBlaCar Bus GTFS',flixbus:'FlixBus GTFS',eurostar:'Eurostar GTFS',trenitalia:'Trenitalia GTFS',renfe:'Renfe GTFS'}[operator];
+   const name={sncf:'SNCF GTFS',blablacarBus:'BlaBlaCar Bus GTFS',flixbus:'FlixBus GTFS',eurostar:'Eurostar GTFS',trenitalia:'Trenitalia GTFS'}[operator];
    P['national_'+operator]={name,enabled:task=>!!pt(task.from)&&!!pt(task.to)&&!!queryWindow(task),
     disabledReason:'adresse GPS ou horaire de mission manquant',
     run:async(task,signal)=>{
@@ -1326,7 +1326,6 @@ const TICKET_LINKS=[
  [/flixbus/i,'FlixBus','https://www.flixbus.fr/'],
  [/eurostar/i,'Eurostar','https://www.eurostar.com/'],
  [/trenitalia/i,'Trenitalia','https://www.trenitalia.com/'],
- [/renfe/i,'Renfe','https://www.renfe.com/'],
  [/mobigo/i,'Mobigo','https://www.viamobigo.fr/'],
  [/blablacar(?:\s+bus|bus)|ouibus/i,'BlaBlaCar Bus','https://www.blablacar.fr/bus'],
  [/blablacar|covoiturage|carpool/i,'BlaBlaCar covoiturage','https://www.blablacar.fr/'],

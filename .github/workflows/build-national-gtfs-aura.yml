@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       operator:
-        description: 'Opérateur à vérifier (all = les six)'
+        description: 'Opérateur à vérifier (all = les cinq)'
         required: true
         default: all
         type: choice
@@ -23,7 +23,6 @@ on:
           - flixbus
           - eurostar
           - trenitalia
-          - renfe
 
 permissions:
   contents: write

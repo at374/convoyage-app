@@ -11,13 +11,13 @@ import tempfile
 import urllib.request
 import urllib.parse
 
-OPERATORS = ('sncf', 'blablacarBus', 'flixbus', 'eurostar', 'trenitalia', 'renfe')
+OPERATORS = ('sncf', 'blablacarBus', 'flixbus', 'eurostar', 'trenitalia')
 MAX_DOWNLOAD = 250 * 1024 * 1024
 
 
 ALLOWED_SOURCE_HOSTS = {
     'eu.ftp.opendatasoft.com', 'drive.google.com', 'gtfs.gis.flix.tech',
-    'integration-storage.dm.eurostar.com', 'thello.axelor.com', 'ssl.renfe.com'
+    'integration-storage.dm.eurostar.com', 'thello.axelor.com'
 }
 
 
