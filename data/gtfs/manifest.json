@@ -1,12 +1,12 @@
 {
  "schemaVersion": 1,
- "generatedAt": "2026-11-24T14:50:21.085676+00:00",
+ "generatedAt": "2026-11-24T17:31:59.327160+00:00",
  "scope": "GTFS officiels réduits ou recopiés ; aucun horaire ni tarif créé",
  "networks": {
   "jybus-rumilly": {
    "network": "J'y bus Rumilly",
    "file": "jybus-rumilly.zip",
-   "sha256": "7f34d159c63d0ea6784fb18d7c67da37d5a65b2e07f95370cb2f6c17f34d17a0",
+   "sha256": "070fd398155973afa378455f60c26d7c826d648883d17745bbd8e585158a42c0",
    "bytes": 62766,
    "bounds": [
     45.8,
@@ -26,7 +26,7 @@
   "tam-amberieu": {
    "network": "TAM Ambérieu-en-Bugey",
    "file": "tam-amberieu.zip",
-   "sha256": "2ae58198b28bf1fd3549540f92f0dffb0192e913e2d0b9027bf89a484cc27d62",
+   "sha256": "ee8e9f691362ac5a42a2b0c880b67df579cb4be740b63e60d88e5b11be290314",
    "bytes": 13898,
    "bounds": [
     45.9,
@@ -46,7 +46,7 @@
   "cars-region-isere": {
    "network": "Cars Région Isère",
    "file": "cars-region-isere.zip",
-   "sha256": "2ccf21a7d48c87866ca4b1d5c9b6bbb0992527286c879aaa621f022be18569be",
+   "sha256": "8d88925eeb98ce0e95dd715539657e3d0a661f4cda7a47398a5c678fa00f2b61",
    "bytes": 690560,
    "bounds": [
     44.69,
@@ -66,7 +66,7 @@
   "cars-region-savoie": {
    "network": "Cars Région Savoie",
    "file": "cars-region-savoie.zip",
-   "sha256": "97f81e0ed48cf7eebc425c0ff506bd793b69357b8eee8f7404a118f946b7ab40",
+   "sha256": "764cd19e0180899f038317ba48346d856eed618099a7b9fa43d9d2fb7fe08253",
    "bytes": 20836,
    "bounds": [
     45.05,
@@ -86,7 +86,7 @@
   "rubis-bourg": {
    "network": "Rubis Bourg-en-Bresse",
    "file": "rubis-bourg.zip",
-   "sha256": "9b955ed982c12dce70c540b52234e5d4f2dc8f4904a17b2cf7aadabd60b985ec",
+   "sha256": "40ab340cb63aae21c90cc128b7f8cde8004fa42773a17699636097b51a6f97b7",
    "bytes": 232148,
    "bounds": [
     46.15,
@@ -106,7 +106,7 @@
   "evad-evian": {
    "network": "ÉVA'D Évian",
    "file": "evad-evian.zip",
-   "sha256": "511ff56d62e26971834ebf7df80c459b3c54f0d202b32c27062cab0fc6d9ba65",
+   "sha256": "8be1af4b68454081684b43961b4bd2d9736097535aec8098cc956be6647a307c",
    "bytes": 185295,
    "bounds": [
     46.24,
@@ -126,7 +126,7 @@
   "chamonix-bus": {
    "network": "Chamonix Bus",
    "file": "chamonix-bus.zip",
-   "sha256": "5645df8ad27339b3f9a4ef376810e6ec097450c224c94204609b0064b89a0905",
+   "sha256": "5591e177c96438869c09fc30781058c6f5097eb222bb765aac7f239d6cfac7df",
    "bytes": 178398,
    "bounds": [
     45.87,
@@ -146,7 +146,7 @@
   "proximiti-bonneville": {
    "network": "Proxim iTi Bonneville – La Roche",
    "file": "proximiti-bonneville.zip",
-   "sha256": "63ef201a81c57db454f159af714ec6ed31ebe75e34f3acb432519c18b10b2a3a",
+   "sha256": "4482c0f05c5f28288fd3457a1456a2ca2d5f85be8ff021539b4c03fa4b89b06e",
    "bytes": 115157,
    "bounds": [
     45.91,
@@ -166,7 +166,7 @@
   "mobivals-valserhone": {
    "network": "Mobi'Vals Valserhône",
    "file": "mobivals-valserhone.zip",
-   "sha256": "d8897a4e4e814de3e575663d341992ae401bdf3b83393bb1c201fe8e5d38df2d",
+   "sha256": "ed1c50deb7f4bef8ab054308d8fd006270817a48c20fb8ebc9b51c9390c38418",
    "bytes": 162397,
    "bounds": [
     46.08,
@@ -186,7 +186,7 @@
   "tra-albertville": {
    "network": "TRA Mobilité Albertville",
    "file": "tra-albertville.zip",
-   "sha256": "508627a212f3e8dd0703bad61c0ac4450779a452beb55c4fe3b1cd9250729167",
+   "sha256": "54bf99eb605e2fdb52cfd03e03ea15251edffdf2317af45ce1fbf516ab7f061a",
    "bytes": 62759,
    "bounds": [
     45.55,
@@ -206,7 +206,7 @@
   "duobus-oyonnax": {
    "network": "Duobus Oyonnax",
    "file": "duobus-oyonnax.zip",
-   "sha256": "d7aac8c716cff104f6d7c1b0fd683c8fc948a68b2f9e59dcf0b29e0e6e322234",
+   "sha256": "a78869d59e32481d28219ffdfafd69a5a683351e6b7edbd5b56e47050577dbba",
    "bytes": 35688,
    "bounds": [
     46.19,
@@ -226,7 +226,7 @@
   "ruban-bourgoin": {
    "network": "Ruban Bourgoin-Jallieu",
    "file": "ruban-bourgoin.zip",
-   "sha256": "fa05cb219ab1eb51929df5dcd5f2d3d9e85b99f6cd3b73b9af492b738d2c23b6",
+   "sha256": "ad6662e5de3fc3a1478fa4ac2e4e06610005b1b453777d80393e83e45701cf76",
    "bytes": 464328,
    "bounds": [
     45.48,
@@ -246,7 +246,7 @@
   "lva-vienne": {
    "network": "L'va Vienne",
    "file": "lva-vienne.zip",
-   "sha256": "f06297bdeebc3816a39de63bb99f36e2cbff0a68bded91ba9e21f4de39b592f0",
+   "sha256": "8b730eb0e578e1f2fdaf3d0d4aa9ed06a1aaefa77db218f1cda659ac11602dcd",
    "bytes": 2099633,
    "bounds": [
     45.39,
@@ -266,7 +266,7 @@
   "colibri-miribel": {
    "network": "Colibri Miribel",
    "file": "colibri-miribel.zip",
-   "sha256": "fd667f433de091fe4e8402d05c66ca694cd59383fd4546a62ccd9bcca5340800",
+   "sha256": "1bd5af7550edbcf3fc0f6fca1633b918830c28d85e44aa3a13401e630d6add68",
    "bytes": 17054,
    "bounds": [
     45.8,
@@ -286,7 +286,7 @@
   "tico-montluel": {
    "network": "TICO Montluel",
    "file": "tico-montluel.zip",
-   "sha256": "0e97754db294edc1001b6bcbb2440a1f620883a8836ed19142efc89ee81ba84e",
+   "sha256": "459d8041a6999a331925dac102921604dad3837e449790f39ad588bf99fa0f7e",
    "bytes": 6938,
    "bounds": [
     45.81,
@@ -306,7 +306,7 @@
   "saonibus-trevoux": {
    "network": "Saônibus Trévoux",
    "file": "saonibus-trevoux.zip",
-   "sha256": "002525d2b42363756f8afe9e9ccd64ecdd9300bc0a6bb07122e7e3a9700c72b7",
+   "sha256": "ed1295432d0b211aefa7d6ced9cf22b26f625655696698a9a74242539d7167fa",
    "bytes": 8954,
    "bounds": [
     45.86,
@@ -326,7 +326,7 @@
   "cars-region-express": {
    "network": "Cars Région Express",
    "file": "cars-region-express.zip",
-   "sha256": "cd1fabae7c847bd1b30c98305e2609a48fecc9a4ddd8315d0f12e469177bcef0",
+   "sha256": "119138f6e86f671390569858d64e185a315b2d98b487e9bbbf98b3a79ebe4888",
    "bytes": 57708,
    "bounds": [
     44.35,
@@ -346,7 +346,7 @@
   "cars-region-loire": {
    "network": "Cars Région Loire",
    "file": "cars-region-loire.zip",
-   "sha256": "cde0247ad2359133d514e9ea349661952b664acfda8478101a123c1a9127d191",
+   "sha256": "22c9773ccb26cd45c61d92cddd2d0fb9c452dc4594b60055827789a112c5d4f2",
    "bytes": 377725,
    "bounds": [
     45.23,
@@ -366,7 +366,7 @@
   "cars-region-drome": {
    "network": "Cars Région Drôme",
    "file": "cars-region-drome.zip",
-   "sha256": "df0fb66f7204589cf561c65f46c21a66cb42224eedee5fce39bc0880690f3ff4",
+   "sha256": "9bab9a8912f1d735dba606e1aa389d35e631ce743dd7c4a5afa85f98fb867547",
    "bytes": 237209,
    "bounds": [
     44.04,
@@ -386,7 +386,7 @@
   "cars-region-ardeche": {
    "network": "Cars Région Ardèche",
    "file": "cars-region-ardeche.zip",
-   "sha256": "63f0eee40292624c9669a98944970fa140d49a9634c257013079d19b1b33cf4b",
+   "sha256": "fd76522e1aa081865020ba2558c5c1d11824621b0f304b31b23e3f3803ca8466",
    "bytes": 334329,
    "bounds": [
     44.25,
@@ -406,7 +406,7 @@
   "cars-region-allier": {
    "network": "Cars Région Allier",
    "file": "cars-region-allier.zip",
-   "sha256": "92373bc70bf56aa6431c102ced776063a662c36ff9e6d705b5ed30e8c0d4caf2",
+   "sha256": "bceded9711b05131c6a7928a9ba73d2207249cbea2648f464f949e740c0eef2e",
    "bytes": 151575,
    "bounds": [
     46.02,
@@ -426,7 +426,7 @@
   "cars-region-cantal": {
    "network": "Cars Région Cantal",
    "file": "cars-region-cantal.zip",
-   "sha256": "13943dec85751a9e3fd7a665a54a9d22f735fdd7c5682a9f5c58dbfede8fb101",
+   "sha256": "4fe6266e0d840fa7f9c773d88a6452805877258a83d156e0394b56626dfd8178",
    "bytes": 50287,
    "bounds": [
     44.67,
@@ -446,7 +446,7 @@
   "cars-region-haute-loire": {
    "network": "Cars Région Haute-Loire",
    "file": "cars-region-haute-loire.zip",
-   "sha256": "fb42c977920d522df0aca6c5838018d2fab539451378313fcfccc405af77fb76",
+   "sha256": "3fdaf95709fa98190ccadcbb796229c2ba955e60a9e23f07db1154c484003a80",
    "bytes": 57365,
    "bounds": [
     44.71,
@@ -466,7 +466,7 @@
   "coqueligo-annonay": {
    "network": "CoqueliGO Annonay",
    "file": "coqueligo-annonay.zip",
-   "sha256": "e092ebbb697ec1e1c155a5b234a50e2535c884ab150203b0a6e61b90c4cc9507",
+   "sha256": "b73f3e0ac41d8274799bd42faf706dd5830198603aa89e6a63ed4fd86c766366",
    "bytes": 67692,
    "bounds": [
     45.21,
@@ -486,7 +486,7 @@
   "toutenbus-aubenas": {
    "network": "Tout'enbus Aubenas",
    "file": "toutenbus-aubenas.zip",
-   "sha256": "ecbd3d3705ec8ae2f552ed0d10bcc4231c83c6e6573ca75f7a9c4d354533a632",
+   "sha256": "99e3d16f4f69225721f9ac24e769f2c3a49b44b41a95b32ef09287b26bf11ed9",
    "bytes": 38607,
    "bounds": [
     44.54,
@@ -506,7 +506,7 @@
   "transcab-aurillac": {
    "network": "Trans'Cab Aurillac",
    "file": "transcab-aurillac.zip",
-   "sha256": "4b0dcc67ccbfbb9ea334ce7d0b95e99918abe7c1a28bb93d4b3a408aece2dfb9",
+   "sha256": "16ed4586aa4cb6282dfd3d4c46c11af4d9e35fda78c88bf76dac632f27f84b2c",
    "bytes": 205190,
    "bounds": [
     44.8,
@@ -526,7 +526,7 @@
   "montelibus-montelimar": {
    "network": "Montélibus Montélimar",
    "file": "montelibus-montelimar.zip",
-   "sha256": "6202cf837a1f77e2f78167e32457ea7ec47cfbb97f386d18de6957f8c4e09000",
+   "sha256": "f09a88cc7ac17617f6b96418dbb10e3ac1f336bcd9262b3872cc08d80a6acc01",
    "bytes": 210570,
    "bounds": [
     44.44,
@@ -546,7 +546,7 @@
   "maelis-montlucon": {
    "network": "Maelis Montluçon",
    "file": "maelis-montlucon.zip",
-   "sha256": "9420239bab411c0bcbe48956ef6e7dd368b75047c1652f65847ebdc120cfdc38",
+   "sha256": "d1b79175d8ed6b9ca4cd901e1dae0b7d978244beb8d3478d04ee4bbe26586cab",
    "bytes": 169740,
    "bounds": [
     46.15,
@@ -566,7 +566,7 @@
   "aleo-moulins": {
    "network": "Aléo Moulins",
    "file": "aleo-moulins.zip",
-   "sha256": "fd4c036c04e01f00d5d9406cda74a541fec54251325a34b2ff42f567f3d3d5c2",
+   "sha256": "afa516679c3abef9befc0b4ab17c551c6884ea3b3dd197894e00949ec55e678f",
    "bytes": 177050,
    "bounds": [
     46.49,
@@ -586,7 +586,7 @@
   "tcap-privas": {
    "network": "T'CAP Privas",
    "file": "tcap-privas.zip",
-   "sha256": "1e3664f0fc9b713cd509fbb577fc342b6dbc69a1a5e488a9aa7339f826239268",
+   "sha256": "45cc0cd8b3650893e227b6ef3035601c940e028ab661a57ec386f7fdf72a64a9",
    "bytes": 66167,
    "bounds": [
     44.68,
@@ -606,7 +606,7 @@
   "velay-le-puy": {
    "network": "Mobilité en Velay (Le Puy)",
    "file": "velay-le-puy.zip",
-   "sha256": "39368f4225661c1b0c6c44533431990cdbfcb381b9a15ccce54097922c3093c8",
+   "sha256": "d8c8370157cd7909bd454341f912a2017159423ac95b53065ac3d2adf6aec5af",
    "bytes": 142023,
    "bounds": [
     44.97,
@@ -626,7 +626,7 @@
   "rlv-riom": {
    "network": "RLV Mobilités Riom",
    "file": "rlv-riom.zip",
-   "sha256": "d538c26e08f931cdf6db5c4e55a2e32aa9c742db89c27ca29bc579c9344595b9",
+   "sha256": "73b4b9757ecde0a0919b6cfb6aa63dd83f237d1e5cc03743cca61ed02d422481",
    "bytes": 89543,
    "bounds": [
     45.83,
@@ -646,7 +646,7 @@
   "star-roanne": {
    "network": "Star Roanne",
    "file": "star-roanne.zip",
-   "sha256": "6158053c7d8f6482cef7a95dde5edeb07c2b85dfbfa59363493e647391962601",
+   "sha256": "cf5e0d2e460b321e92cfccdc2f5bc636f6d7184b40f267a94b6019b8ba7a9012",
    "bytes": 700751,
    "bounds": [
     45.96,
@@ -666,7 +666,7 @@
   "lebus-tain-tournon": {
    "network": "Le Bus Tain-Tournon",
    "file": "lebus-tain-tournon.zip",
-   "sha256": "d59595cdf37ad8ce698ffb0a0d6a78e3753fa3aec9458b2d004f60f33a73399f",
+   "sha256": "98f85715c9a979aa7df3dc4778e7cd902b35eea754e878612d5b1d3943d41c13",
    "bytes": 27199,
    "bounds": [
     44.99,
@@ -686,7 +686,7 @@
   "smtut-thiers": {
    "network": "SMTUT Thiers",
    "file": "smtut-thiers.zip",
-   "sha256": "eea5529574fdf1f778a4363ef3f794e49599beadbdd917871d140ccc71dda4f8",
+   "sha256": "a41ec4bbb354ec7c0f0ecca43aeac0b32a0776f337b1155531218d8c9dc9e624",
    "bytes": 96496,
    "bounds": [
     45.69,
@@ -706,7 +706,7 @@
   "mobivie-vichy": {
    "network": "MobiVie Vichy",
    "file": "mobivie-vichy.zip",
-   "sha256": "d165b15fec615e6180118167ac10eebf55dec304b949393ad960d91b45475290",
+   "sha256": "8e670de5c300f423872f7c3582ea59c395536df13f24d3f210508601dd25a660",
    "bytes": 159482,
    "bounds": [
     46.06,
@@ -726,7 +726,7 @@
   "le37-roussillon": {
    "network": "Le 37 Péage-de-Roussillon",
    "file": "le37-roussillon.zip",
-   "sha256": "1c34ed8947f46465e28f112b28c860e6212b47b767f2adbd4f47b6c4116763d7",
+   "sha256": "7ba2e08ca79162b8d54851143ba8576016b2064786a52d31d044ca06214a96fa",
    "bytes": 26439,
    "bounds": [
     45.3,
@@ -746,7 +746,7 @@
   "forbus-forbach": {
    "network": "Forbus Forbach",
    "file": "forbus-forbach.zip",
-   "sha256": "3a0366838bcb3f252d6713f882e0f17d688f718f7c5a2640b21b5ae088455d63",
+   "sha256": "b3aef51f502eaf709186c58d3af7bfad1b20d22502eac627f66bf312634a8118",
    "bytes": 175680,
    "bounds": [
     49.032498,
@@ -768,7 +768,7 @@
   "temob-thionville": {
    "network": "TeMo'b Thionville-Fensch",
    "file": "temob-thionville.zip",
-   "sha256": "c43b3ddbf67f960766025aac9419ed30b166af464b5b3672928238a5fc41d4da",
+   "sha256": "3503ac735e0afce0599d169661e1dd45f224e5f8021c8a3f875e65e069726ae2",
    "bytes": 757005,
    "bounds": [
     49.286631,
@@ -822,7 +822,7 @@
   "tadao-lens": {
    "network": "TADAO Lens-Liévin",
    "file": "tadao-lens.zip",
-   "sha256": "0784399417ced0fd59f86ad40a387c349e0f18b704f0f691fa61c8015ade4ff4",
+   "sha256": "a5324524d2bca28993ca08fb8f8ee09b37557db314f0cccde9e2406ea32182e3",
    "bytes": 1677963,
    "bounds": [
     50.368141,
@@ -925,7 +925,7 @@
   "sitac-calais": {
    "network": "SITAC Calais",
    "file": "sitac-calais.zip",
-   "sha256": "f78efd901ee6592415745da7cbd93966bdffc1729ddc87f9d4489ad1f05833fa",
+   "sha256": "0c8e9348821128755e8c42211023f19644299cff6280728335bec81c5a20cb46",
    "bytes": 946600,
    "bounds": [
     50.862352,
@@ -1399,7 +1399,7 @@
   "papillon-cosne": {
    "network": "Papillon Cosne-Cours-sur-Loire",
    "file": "papillon-cosne.zip",
-   "sha256": "65537ff9d1597b104bbe54ce191216bc6dcebdb5d863d0fdc23c1f11b369a121",
+   "sha256": "7d87b2b897c00d1de3b6f31b0f24ff8961639ee4a3b9b1d627f8b92220ef5915",
    "bytes": 77296,
    "bounds": [
     47.36,
@@ -1514,19 +1514,75 @@
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/b6ec7ba4-09bc-46df-b9a1-79a2c2668cf2",
    "trips": 19362
   },
-  "mreso-gresivaudan": {
-   "network": "M Réso — Grésivaudan",
-   "file": "mreso-gresivaudan.zip",
-   "sha256": "ceeba09a7da494671a1db03ba6b7f74f1ced40d42923cbd60a8a8efc838868e4",
-   "bytes": 244450,
+  "zou-proximite-paca": {
+   "network": "ZOU Proximité (cars régionaux PACA)",
+   "file": "zou-proximite-paca.zip",
+   "sha256": "32c38811aba31d4f035fc38803051a85bf083cff6feae9c71f1fc7f47c90340f",
+   "bytes": 983309,
    "bounds": [
-    45.15,
-    5.7,
-    45.5,
-    6.15
+    43.09314,
+    4.61792,
+    44.8984,
+    7.49791
    ],
-   "origin": "https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2",
-   "trips": 1070
+   "origin": "https://www.datasud.fr/fr/dataset/datasets/3745/resource/5016/download/",
+   "agencies": [
+    "ZOU ! Proximité"
+   ],
+   "routes": 120,
+   "trips": 3155,
+   "stops": 6043,
+   "fares": false,
+   "license": "Licence Ouverte 2.0",
+   "publisher": "Région Sud — Provence-Alpes-Côte d’Azur"
+  },
+  "tisseo-toulouse": {
+   "network": "Tisséo Toulouse",
+   "file": "tisseo-toulouse.zip",
+   "sha256": "505d2ae44214282103282929260c8383e6b13bd3254b83839e9a5a97723120b9",
+   "bytes": 11126190,
+   "bounds": [
+    43.39124,
+    1.151046,
+    43.749902,
+    1.690543
+   ],
+   "origin": "https://data.toulouse-metropole.fr/explore/dataset/tisseo-gtfs/files/fc1dda89077cf37e4f7521760e0ef4e9/download/",
+   "trips": 32477,
+   "license": "ODbL",
+   "publisher": "Tisséo Collectivités"
+  },
+  "tam-montpellier": {
+   "network": "TaM Montpellier",
+   "file": "tam-montpellier.zip",
+   "sha256": "a4291510b89a7000067bde06a411fe8b3096eb6ced91b709ce8458a73e4b4714",
+   "bytes": 6750955,
+   "bounds": [
+    43.524286,
+    3.700952,
+    43.751809,
+    4.040798
+   ],
+   "origin": "https://gtfsproxy.e-tam.fr/COMMON/GTFS.zip",
+   "trips": 44285,
+   "license": "ODbL",
+   "publisher": "Montpellier Méditerranée Métropole"
+  },
+  "tango-nimes": {
+   "network": "Tango Nîmes",
+   "file": "tango-nimes.zip",
+   "sha256": "c5b4f10fb198c475e58dca789471c60e3aff92b448bf9bf5565b76fe171af4ea",
+   "bytes": 4176793,
+   "bounds": [
+    43.67123,
+    4.125444,
+    43.976132,
+    4.565333
+   ],
+   "origin": "https://static.data.gouv.fr/resources/offre-de-transport-du-reseau-tango-de-nimes-metropole-gtfs-gtfs-rt/20261119-155657/gtfs-production.zip",
+   "trips": 20487,
+   "license": "Licence Ouverte 2.0",
+   "publisher": "CA de Nîmes Métropole"
   },
   "start-thonon": {
    "network": "Star't Thonon",
@@ -1545,7 +1601,7 @@
   "fluo-grand-est": {
    "network": "Fluo Grand Est (interurbain)",
    "file": "fluo-grand-est.zip",
-   "sha256": "4390ef4d90f848614468c562033c4c6c8b4d9505c3b23cde0b6c32a4ced52c60",
+   "sha256": "8149a016fa7f709c159812d5a4dbfb0274a93137472e462d27896d0a43f2edf4",
    "bytes": 2090480,
    "origin": "https://transport.data.gouv.fr/resources/83635/download",
    "routes": 2162,
@@ -1564,7 +1620,7 @@
   "tcl-lyon": {
    "network": "TCL",
    "file": "tcl-lyon.zip",
-   "sha256": "562af4b28dd1246ba4d2ef838622bfc2bedb7fb3c0c8092e031c059247ad3e8a",
+   "sha256": "417b63ba171ae92490f3d1ec4457d9969d09adb274b72e3de1013b98a7b28d97",
    "bytes": 5423015,
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8",
    "routes": 75,
@@ -1581,7 +1637,7 @@
   "citea-valence": {
    "network": "Citéa (Valence Romans Mobilités)",
    "file": "citea-valence.zip",
-   "sha256": "d66e87fb18a0fafd44fb64ff5287473b4ad704710af48a1e6b7bab6a3ba8dc24",
+   "sha256": "d2fa1756cfec0f7b0ee3933ec454eb89bc8fa4807fd884ac9bf45ace71b1c057",
    "bytes": 4576816,
    "origin": "https://static.data.gouv.fr/resources/ce-jeu-de-donnees-contient-la-liste-des-arrets-des-horaires-et-des-parcours-theoriques-du-reseau-de-transport-urbain-et-interurbain-de-vrm/20261022-080050/gtfs-nov2026-juin2027-citea.zip",
    "routes": 286,
@@ -1598,7 +1654,7 @@
   "stas-saint-etienne": {
    "network": "STAS (Saint-Étienne Métropole)",
    "file": "stas-saint-etienne.zip",
-   "sha256": "cf7230fbb2d529d0d22b6040cea59ed7f38710b0b792a36fdd2a452fcab3188f",
+   "sha256": "dcaf86079372128c6b4de659b620eb71fe48d50046f9c5ffaed816e71434b0d0",
    "bytes": 2858047,
    "origin": "https://bus-prod.saint-etienne-metropole.fr/Public/stas/api/gtfs.aspx",
    "routes": 53,
@@ -1615,7 +1671,7 @@
   "t2c-clermont": {
    "network": "T2C (Clermont Auvergne Métropole, SMTC)",
    "file": "t2c-clermont.zip",
-   "sha256": "69807c0840c846b9b50b30cd0680eb3b766002df482870f2ee6c530e328cd913",
+   "sha256": "6ab9067a6ee37f7d60e8dfbacfd813e26ae9cb263bfa82812829af2c8be0c1fa",
    "bytes": 2575872,
    "origin": "https://opendata.clermontmetropole.eu/api/v2/catalog/datasets/gtfs-smtc/alternative_exports/gtfs",
    "routes": 46,
@@ -1632,7 +1688,7 @@
   "atoumod-altobus-alencon": {
    "network": "Altobus Alençon",
    "file": "atoumod-altobus-alencon.zip",
-   "sha256": "9fc54a08539ea76efade17441ffac908e31fabcb585f87a1f37f1932d7c9f5b1",
+   "sha256": "e038ed4c85ae84b5a312db848b340b133a0f5fed1e96aaac03013ae4ab9e10d7",
    "bytes": 845016,
    "bounds": [
     48.389889,
@@ -1655,7 +1711,7 @@
   "atoumod-tiva-vire-noireau": {
    "network": "Tiva Vire au Noireau",
    "file": "atoumod-tiva-vire-noireau.zip",
-   "sha256": "803c4a45f12146333ed3995015890d28c58885deb7141ec926783dbf0d6f1b8f",
+   "sha256": "1eafaf0b8299804bfe3f93145bac56f2e748aa411ed575ea8543081042e05894",
    "bytes": 7437,
    "bounds": [
     48.830491,
@@ -1678,7 +1734,7 @@
   "atoumod-argentanbus": {
    "network": "ArgentanBus",
    "file": "atoumod-argentanbus.zip",
-   "sha256": "60a9e0fb347b3dee630f9ac94b8ba95dd1217bf1316348ddd698973db1df0936",
+   "sha256": "c78340c011aa2440ead670403faa8fcc59cea72f17187e7fb9e73338c42846c2",
    "bytes": 28670,
    "bounds": [
     48.702751,
@@ -1701,7 +1757,7 @@
   "atoumod-astrobus-lisieux": {
    "network": "Astrobus Lisieux",
    "file": "atoumod-astrobus-lisieux.zip",
-   "sha256": "7a12de22c3d8ab82d77de39e054a6dad7ff61efee1bdc7bb9419dbbf3118fe0f",
+   "sha256": "7fe8761119aa58d31b4fc797e8b00430e2753f6a76a5e3ec0c90a87cef143dd2",
    "bytes": 152160,
    "bounds": [
     48.916253,
@@ -1724,7 +1780,7 @@
   "atoumod-bagnoles": {
    "network": "Bagnoles de l’Orne",
    "file": "atoumod-bagnoles.zip",
-   "sha256": "069b2abc22bb2f432287e04481d9ac6a78f3daacae49a00d3092986c36f78fc9",
+   "sha256": "e6a03969eb2a44383f072e9472b74b23bc3e7c761871bbaaf68143ce3b68b411",
    "bytes": 9002,
    "bounds": [
     48.544596,
@@ -1747,7 +1803,7 @@
   "atoumod-ibus-bernay": {
    "network": "I’BUS Bernay",
    "file": "atoumod-ibus-bernay.zip",
-   "sha256": "94f1033d4862c7af1af72c236770ae4d898d30700b0f4566acc082f43e935bb2",
+   "sha256": "f7ccc9c0a2c623086948c455f31f4b09b07a2a47f8750336a9801971a7c5a5d1",
    "bytes": 7768,
    "bounds": [
     49.068666,
@@ -1770,7 +1826,7 @@
   "atoumod-bybus-bayeux": {
    "network": "Bybus Bayeux",
    "file": "atoumod-bybus-bayeux.zip",
-   "sha256": "f073194a07ecc5f0095492cb2e5f547157f036f251402e7ca42bd2ead2e820a4",
+   "sha256": "db7a589c55e49441033a454365ff7c95987b98c7549b0b0b83d80d18cf0f9ff7",
    "bytes": 8568,
    "bounds": [
     49.267287,
@@ -1793,7 +1849,7 @@
   "atoumod-cosibus-coutances": {
    "network": "Cosibus Coutances",
    "file": "atoumod-cosibus-coutances.zip",
-   "sha256": "33276ac4dd17197d349d01521e213c9d19d30b91d1f5af86493832ba304c415f",
+   "sha256": "2c6b013c1c072c9f8a419fa62ba2925d5fec0f6cc6df98cc9eceb262655d5b22",
    "bytes": 7596,
    "bounds": [
     49.033392,
@@ -1816,7 +1872,7 @@
   "atoumod-deep-mob-dieppe": {
    "network": "Deep Mob Dieppe",
    "file": "atoumod-deep-mob-dieppe.zip",
-   "sha256": "6981b5c7d51ecff79e23519fc7ba3e9498373efbfb80d1540befe09877d7f7bb",
+   "sha256": "d8ea0e6983d91bf47b38eda4291694bd897a3bdd749150f4cb42ecba63984949",
    "bytes": 144924,
    "bounds": [
     49.86508,
@@ -1839,7 +1895,7 @@
   "atoumod-ficibus-fecamp": {
    "network": "Ficibus Fécamp",
    "file": "atoumod-ficibus-fecamp.zip",
-   "sha256": "b2c830fc0859c93479937c3b4bd507380694c11ee05d95cd9b9bca91d6057cf6",
+   "sha256": "7c592291eab983fbb0e7a5bfab4a8782b3e76f0b2c9a9bc99ace579b7844c29f",
    "bytes": 50166,
    "bounds": [
     49.743522,
@@ -1862,7 +1918,7 @@
   "atoumod-hobus-honfleur": {
    "network": "Hobus Honfleur",
    "file": "atoumod-hobus-honfleur.zip",
-   "sha256": "18e50103f7bc199730d08a8f71d04e14e408254e568b21510606608c7c28e2f6",
+   "sha256": "679ee8dff83a4851bae27495bc68588d20271d935c2c4416acc5e5759ab6003d",
    "bytes": 28719,
    "bounds": [
     49.383285,
@@ -1885,7 +1941,7 @@
   "atoumod-le-bus-pont-audemer": {
    "network": "Le Bus Pont-Audemer",
    "file": "atoumod-le-bus-pont-audemer.zip",
-   "sha256": "7cb3b057bb318ff3e067ec0900c9c0f0c2036ec132a47468e5ee1492b6c70705",
+   "sha256": "b133ffe621c66ed310807a6166503c80715f43607368aac35fc4a6b72223e5ca",
    "bytes": 6074,
    "bounds": [
     49.341263,
@@ -1908,7 +1964,7 @@
   "atoumod-lia-le-havre": {
    "network": "LiA Le Havre",
    "file": "atoumod-lia-le-havre.zip",
-   "sha256": "68a657df09c9b8c19ab256d03210612a4fb36b92fc9e0f2a38e5884b06344c09",
+   "sha256": "75e474e1119292f40a2273edf68b054c940ffe7cde7530cb7cb1f186f68a158b",
    "bytes": 1699864,
    "bounds": [
     49.459106,
@@ -1931,7 +1987,7 @@
   "atoumod-navette-pontorson": {
    "network": "Navette Pontorson–Mont-Saint-Michel",
    "file": "atoumod-navette-pontorson.zip",
-   "sha256": "a5695937568e5b80717421f1a15927c1a74e135f56f8d30fc1209080988d16dc",
+   "sha256": "9dd6c90bfe469b44cb5753cdc56373132d1f1ba1cd9597d62e53afa7d8654c4e",
    "bytes": 8198,
    "bounds": [
     48.55235,
@@ -1954,7 +2010,7 @@
   "atoumod-nemus-flers": {
    "network": "Némus Flers",
    "file": "atoumod-nemus-flers.zip",
-   "sha256": "b23372579f7b3a9facd3380e1eedeb6b67d8092c1cd10039281a19a8c738aa0d",
+   "sha256": "98c02c5ae9ba46228ee636010c9018e23932902d2732c7e535f71459e04e20fc",
    "bytes": 34822,
    "bounds": [
     48.726472,
@@ -1977,7 +2033,7 @@
   "atoumod-neva-granville": {
    "network": "Néva Granville",
    "file": "atoumod-neva-granville.zip",
-   "sha256": "6e50584969695ed54d15f01a60e7fffb56c62c437c933ea7ff5276dbc2035a0c",
+   "sha256": "3588d0a9ed42363b6307ed350ff1142b10df920628d3ce4be629d180f9515361",
    "bytes": 94892,
    "bounds": [
     48.797412,
@@ -2000,7 +2056,7 @@
   "atoumod-rezobus-caux-seine": {
    "network": "Rézo’Bus Caux Seine",
    "file": "atoumod-rezobus-caux-seine.zip",
-   "sha256": "8f427736d4d0a6f6fdb5b5e0ad51438e1a0a10a8abd24c5792a97444d31a6d2d",
+   "sha256": "a5fc6ee78b82164ff9d3d0468877a95e356a6196559aa11e9a974f722478790e",
    "bytes": 64091,
    "bounds": [
     49.460448,
@@ -2023,7 +2079,7 @@
   "atoumod-semo-seine-eure": {
    "network": "Semo Seine-Eure",
    "file": "atoumod-semo-seine-eure.zip",
-   "sha256": "cb2961696d85c922e02b0ae6e68dc9491debe070d191fb343a702f2cb1a1966a",
+   "sha256": "76951f4c18c918c3508e65312cb398c92494de7359ac39a11aebd064ca424e53",
    "bytes": 1071148,
    "bounds": [
     49.154514,
@@ -2046,7 +2102,7 @@
   "atoumod-slam-saint-lo": {
    "network": "SLAM Saint-Lô",
    "file": "atoumod-slam-saint-lo.zip",
-   "sha256": "ebc71286a69c165b3c39d884d2c46c3d6baadddb0d28ccbf7d36a6f90d64cd84",
+   "sha256": "9db96d19061e4f4cea36a1f16f004da7421ff46244e23e315ca42514c3f6bb1a",
    "bytes": 80098,
    "bounds": [
     48.983294,
@@ -2069,7 +2125,7 @@
   "atoumod-nomad-train": {
    "network": "Nomad Train Normandie",
    "file": "atoumod-nomad-train.zip",
-   "sha256": "b4777b037a63293a5b5da48aeea8cdd15619f7373afba9901ca1d0e0ce7be4cc",
+   "sha256": "0507978a7ef0ab9c77a2ebdc18ef8ffca3c173058e14e929c6dc9e041d8f58c1",
    "bytes": 194497,
    "bounds": [
     43.302666,
@@ -2092,7 +2148,7 @@
   "atoumod-sngo-vernon": {
    "network": "SN’go Vernon–Les Andelys",
    "file": "atoumod-sngo-vernon.zip",
-   "sha256": "890d7f86e0e2bff9470e7b210597ea4365d019a7cb952367d5154b8981a5e676",
+   "sha256": "50171ece336bda6d9945c16691cc9ef0efa47de2b7ce7217cab2e75f4b3c87b4",
    "bytes": 159448,
    "bounds": [
     49.010406,
@@ -2115,7 +2171,7 @@
   "atoumod-astuce-rouen": {
    "network": "Astuce Rouen",
    "file": "atoumod-astuce-rouen.zip",
-   "sha256": "ac8a005c607613ef63acf9b9b2a6eb908d8878377996e8e3ff9f2b6f8b6004d9",
+   "sha256": "4d77a97cdd39968d43153fee74444813cf90e7fc7b8e411c3c9d7bbbbb3aac68",
    "bytes": 4217745,
    "bounds": [
     49.262402,
@@ -2138,7 +2194,7 @@
   "atoumod-transurbain-evreux": {
    "network": "Transurbain Évreux",
    "file": "atoumod-transurbain-evreux.zip",
-   "sha256": "e1887e1f2dd08b8d21d35e8daca10d974e1460930063fb2fbf668fead83ab2c9",
+   "sha256": "2508c1d42100900e030187b2969e90bc2ca3134fe02a69a07e7c25dd6dff45ac",
    "bytes": 597235,
    "bounds": [
     48.96367,
@@ -2161,7 +2217,7 @@
   "atoumod-twisto-caen": {
    "network": "Twisto Caen",
    "file": "atoumod-twisto-caen.zip",
-   "sha256": "8936fb1f6b5cc8ce3892ed1a9adc37d1b7f9ec86154f3127f13509aef61c2d01",
+   "sha256": "6b3d8fb2ce930069869729d776aaf2e27e6c0c67fc4baf93b599f22f5d95e3dd",
    "bytes": 1752488,
    "bounds": [
     49.074348,
@@ -2184,7 +2240,7 @@
   "atoumod-vikibus-yvetot": {
    "network": "Vikibus Yvetot",
    "file": "atoumod-vikibus-yvetot.zip",
-   "sha256": "b268d5827281d70a0ba5ba5d02abf6ad8e805225e7f40297c72307b3aae6049a",
+   "sha256": "9eb5a2b4abf7577a76d4f0fd2e9f5a619b2a87c1fccba4c1d653c1a030fdfb32",
    "bytes": 16656,
    "bounds": [
     49.606407,
@@ -2207,7 +2263,7 @@
   "atoumod-cap-cotentin": {
    "network": "Cap Cotentin",
    "file": "atoumod-cap-cotentin.zip",
-   "sha256": "508385b0ee54fabad2a2ec17e4b595c99d6f8b5ae332809c17e2560f6470e1a7",
+   "sha256": "66540a4359c79b732e34078643ce4fc6755290d1433bac0fc19aad243b90ed2a",
    "bytes": 1047192,
    "bounds": [
     48.104003,
@@ -2230,7 +2286,7 @@
   "atoumod-nomad-car": {
    "network": "Nomad Car Normandie",
    "file": "atoumod-nomad-car.zip",
-   "sha256": "31a766fa5abe9a9cf7c7a8600a79cf67872d8906ddbc4da855cb023de7996334",
+   "sha256": "a21528627ba165bec4209f9c2bbd4cb14b28c5eba72391bfb36e4da9cfba8cb2",
    "bytes": 750442,
    "bounds": [
     48.226366,
@@ -2253,7 +2309,7 @@
   "atoumod-moca-caux-austreberthe": {
    "network": "MOCA Caux-Austreberthe",
    "file": "atoumod-moca-caux-austreberthe.zip",
-   "sha256": "f2e24f1b3cfac7265f43e94729198dcbeb58e47df102813b5ce36d9ddb98fde9",
+   "sha256": "ae0a739a363a8ea4020852676ecb51b412e5429478bafa3e6194fc191804ade6",
    "bytes": 10648,
    "bounds": [
     49.527376,
@@ -2272,11 +2328,1543 @@
    "fares": false,
    "license": "Licence Ouverte 2.0",
    "publisher": "Syndicat mixte Atoumod"
+  },
+  "jvmalin-amelys-montargis": {
+   "network": "Amelys Montargis",
+   "file": "jvmalin-amelys-montargis.zip",
+   "sha256": "5f06d392667ff996c3af2724847e0142a7d1c8bd78fddaa798fe73667a604d17",
+   "bytes": 308377,
+   "bounds": [
+    47.905998,
+    2.609757,
+    48.051132,
+    2.81328
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 26,
+   "trips": 1311,
+   "stop_times": 39700,
+   "stops": 790,
+   "agencies": [
+    "Amelys (Montargis)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-azalys-blois": {
+   "network": "Azalys Blois",
+   "file": "jvmalin-azalys-blois.zip",
+   "sha256": "8da17764c2dc0ebeefacf1b569e60f004a98e6eb04fcde74b72d1222ce0d12c3",
+   "bytes": 432664,
+   "bounds": [
+    47.460381,
+    1.030837,
+    47.732346,
+    1.500264
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 73,
+   "trips": 2330,
+   "stop_times": 51492,
+   "stops": 1167,
+   "agencies": [
+    "Azalys (Blois)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-agglobus-bourges": {
+   "network": "Agglobus Bourges",
+   "file": "jvmalin-agglobus-bourges.zip",
+   "sha256": "9128fed0d87779a903b25792a4d0a5439775243743b5b81f7f494a6d84bb75f8",
+   "bytes": 676419,
+   "bounds": [
+    46.944756,
+    2.204658,
+    47.176311,
+    2.535418
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 101,
+   "trips": 3043,
+   "stop_times": 88626,
+   "stops": 1273,
+   "agencies": [
+    "Agglobus (Bourges)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-fil-bleu-tours": {
+   "network": "Fil Bleu Tours",
+   "file": "jvmalin-fil-bleu-tours-part-01.zip",
+   "files": [
+    "jvmalin-fil-bleu-tours-part-01.zip",
+    "jvmalin-fil-bleu-tours-part-02.zip",
+    "jvmalin-fil-bleu-tours-part-03.zip"
+   ],
+   "sha256": "ff8b011ecdeea4a5ce264e2a7810dbcac1662c2706a3fa0edaff7acbe86a86e0",
+   "sha256_files": [
+    "ff8b011ecdeea4a5ce264e2a7810dbcac1662c2706a3fa0edaff7acbe86a86e0",
+    "56933dd707abc0e31ebe6de4ae6bfa5ddf44f04ca61814f53c1557a6e37e11fa",
+    "50010b8b2edfa8655ddf76b627a96b25ae2c852feb55f11413fc3f06bc8fd1e7"
+   ],
+   "bytes": 5797926,
+   "bounds": [
+    47.315681,
+    0.486719,
+    47.493298,
+    0.850187
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 44,
+   "trips": 22406,
+   "stop_times": 739124,
+   "stops": 2141,
+   "agencies": [
+    "Fil Bleu (Tours)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires",
+   "sharded": true
+  },
+  "jvmalin-filibus-chartres": {
+   "network": "Filibus Chartres",
+   "file": "jvmalin-filibus-chartres.zip",
+   "sha256": "3465f7c1a59aef0e17a05607c27c16b9724aea4b10a06f8c99c0e83742e0fc35",
+   "bytes": 1962932,
+   "bounds": [
+    48.26432,
+    1.23771,
+    48.58905,
+    1.707792
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 80,
+   "trips": 11015,
+   "stop_times": 255903,
+   "stops": 1245,
+   "agencies": [
+    "Filibus (Chartres)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-horizon-chateauroux": {
+   "network": "HORIZON Châteauroux",
+   "file": "jvmalin-horizon-chateauroux.zip",
+   "sha256": "5db2596c085e42bf0ff6a457defac4f2fdd569dcef1982a57164215b42ac7cfe",
+   "bytes": 304540,
+   "bounds": [
+    46.673225,
+    1.559362,
+    46.894806,
+    1.893637
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 14,
+   "trips": 1392,
+   "stop_times": 37954,
+   "stops": 782,
+   "agencies": [
+    "HORIZON (CHATEAUROUX)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-linead-dreux": {
+   "network": "Linéad Dreux",
+   "file": "jvmalin-linead-dreux.zip",
+   "sha256": "df68bca091a198beef614b701f60a6c326ee2db79a5928d99e433d615bdc62cb",
+   "bytes": 207872,
+   "bounds": [
+    48.525814,
+    0.9005,
+    48.933815,
+    1.555579
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 118,
+   "trips": 910,
+   "stop_times": 19925,
+   "stops": 1300,
+   "agencies": [
+    "Linéad (Dreux)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-vib-vierzon": {
+   "network": "Le VIB Vierzon",
+   "file": "jvmalin-vib-vierzon.zip",
+   "sha256": "c68a2462a20c803a87937534fc3e721b0fc35496d471a667f50049454cce93e5",
+   "bytes": 52185,
+   "bounds": [
+    47.199833,
+    2.038361,
+    47.240067,
+    2.109879
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 8,
+   "trips": 333,
+   "stop_times": 5326,
+   "stops": 281,
+   "agencies": [
+    "Le VIB (Vierzon)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-move-vendomois": {
+   "network": "MOVE Vendômois",
+   "file": "jvmalin-move-vendomois.zip",
+   "sha256": "4da8bb86a15922dbc2d0405959d795ec4869f81dd636479a82577896c06ac123",
+   "bytes": 62980,
+   "bounds": [
+    47.744907,
+    0.686523,
+    47.829418,
+    1.101814
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 11,
+   "trips": 640,
+   "stop_times": 9832,
+   "stops": 261,
+   "agencies": [
+    "MOVE"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-nosbus-nogent": {
+   "network": "Nosbus Nogent-le-Rotrou",
+   "file": "jvmalin-nosbus-nogent.zip",
+   "sha256": "63f6a2a93b863e7d70e78e17f21c6d740c4cdfa79ac2153339d7ce6d3c909775",
+   "bytes": 36281,
+   "bounds": [
+    48.31118,
+    0.798079,
+    48.331253,
+    0.842601
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 3,
+   "trips": 148,
+   "stop_times": 3941,
+   "stops": 106,
+   "agencies": [
+    "Nosbus (Nogent-le-Rotrou)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-remi-18": {
+   "network": "Rémi Car 18",
+   "file": "jvmalin-remi-18.zip",
+   "sha256": "50728367132ae06485fbc3db31cf44be9c5d40c2fe1b9eefd99276dcf7e6da05",
+   "bytes": 117419,
+   "bounds": [
+    46.547497,
+    1.81039,
+    47.559483,
+    3.02381
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 11,
+   "trips": 1723,
+   "stop_times": 20136,
+   "stops": 387,
+   "agencies": [
+    "Rémi 18"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-remi-28": {
+   "network": "Rémi Car 28",
+   "file": "jvmalin-remi-28.zip",
+   "sha256": "2264efe410d0bedccb79a7aa3fe4076a08d4744cf3ec1dee223319b526a84461",
+   "bytes": 153396,
+   "bounds": [
+    47.390167,
+    0.692893,
+    48.867382,
+    2.00821
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 27,
+   "trips": 1014,
+   "stop_times": 12368,
+   "stops": 1163,
+   "agencies": [
+    "Rémi 28"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-remi-36": {
+   "network": "Rémi Car 36",
+   "file": "jvmalin-remi-36.zip",
+   "sha256": "3fd59438a914160786225177053eacecfca07271c0fc4ea30642673df37877ac",
+   "bytes": 240428,
+   "bounds": [
+    46.434139,
+    0.335014,
+    47.390419,
+    2.393877
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 11,
+   "trips": 2830,
+   "stop_times": 41383,
+   "stops": 411,
+   "agencies": [
+    "Rémi 36"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-remi-37": {
+   "network": "Rémi Car 37",
+   "file": "jvmalin-remi-37.zip",
+   "sha256": "6a5b68b2f87d42361667323ffbb29aba72432012e41febfe1410433ee7e10bec",
+   "bytes": 266522,
+   "bounds": [
+    46.734516,
+    -0.083938,
+    47.668812,
+    1.354189
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 25,
+   "trips": 1516,
+   "stop_times": 30977,
+   "stops": 1424,
+   "agencies": [
+    "Rémi 37"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-remi-41": {
+   "network": "Rémi Car 41",
+   "file": "jvmalin-remi-41.zip",
+   "sha256": "83f781828259dd471e99f38f65890c1dac021ba9349dd146ff5fa2f45c2955f9",
+   "bytes": 159631,
+   "bounds": [
+    47.221279,
+    0.853137,
+    48.082188,
+    2.066522
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 28,
+   "trips": 1074,
+   "stop_times": 13792,
+   "stops": 1002,
+   "agencies": [
+    "Rémi 41"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-remi-45": {
+   "network": "Rémi Car 45",
+   "file": "jvmalin-remi-45.zip",
+   "sha256": "9fcfb1a5d1f9746cf0c823432ad6b46df38f759c0c9ede4dbda1ea2a8ccbee96",
+   "bytes": 423394,
+   "bounds": [
+    47.49054,
+    1.530112,
+    48.436848,
+    3.085756
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 51,
+   "trips": 1535,
+   "stop_times": 19560,
+   "stops": 1451,
+   "agencies": [
+    "Rémi 45"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-tao-orleans": {
+   "network": "TAO Orléans",
+   "file": "jvmalin-tao-orleans-part-01.zip",
+   "files": [
+    "jvmalin-tao-orleans-part-01.zip",
+    "jvmalin-tao-orleans-part-02.zip",
+    "jvmalin-tao-orleans-part-03.zip",
+    "jvmalin-tao-orleans-part-04.zip",
+    "jvmalin-tao-orleans-part-05.zip"
+   ],
+   "sha256": "09f9d81f9ab1d82b197dbdba9c990a6c1fec96fab8220138cc4d09b311b561ae",
+   "sha256_files": [
+    "09f9d81f9ab1d82b197dbdba9c990a6c1fec96fab8220138cc4d09b311b561ae",
+    "e095ac2d1764d93ea848185fdc35c7a5fe869815ecd7242b41129d359ed700e6",
+    "e65774623f054911b83065dde62172691384cec5a59eda0c7f4bd8a3634c1ec9",
+    "da4652e03a79f227ed8b4359b95abdbaa986c9de42870811a34b15c9d52b1d85",
+    "aac75d9ad761f09aa5afbe9f98d71ba932af94646e3fb99bb05d502dc8cae4a9"
+   ],
+   "bytes": 8622320,
+   "bounds": [
+    47.804367,
+    1.801197,
+    47.972282,
+    2.0709
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 41,
+   "trips": 37479,
+   "stop_times": 1193124,
+   "stops": 2119,
+   "agencies": [
+    "TAO (Orléans)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires",
+   "sharded": true
+  },
+  "jvmalin-tigr-issoudun": {
+   "network": "TIG+R Issoudun",
+   "file": "jvmalin-tigr-issoudun.zip",
+   "sha256": "823513b6176c8fa0f56734d7d8f33c3b3ec54a7d033cc525eb8b593e511809e3",
+   "bytes": 7645,
+   "bounds": [
+    46.826035,
+    1.91983,
+    47.08519,
+    2.124172
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 4,
+   "trips": 15,
+   "stop_times": 345,
+   "stops": 114,
+   "agencies": [
+    "TIG+R (Issoudun)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "jvmalin-le-bus-amboise": {
+   "network": "Le Bus Amboise",
+   "file": "jvmalin-le-bus-amboise.zip",
+   "sha256": "c70b7653694ed009fce14915f972ede2b25966ce8696cbf7f4583976528c7282",
+   "bytes": 6143,
+   "bounds": [
+    47.400944,
+    0.980935,
+    47.421532,
+    1.026225
+   ],
+   "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
+   "routes": 1,
+   "trips": 20,
+   "stop_times": 356,
+   "stops": 47,
+   "agencies": [
+    "Le Bus (Amboise)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires"
+  },
+  "lio-interurbain-occitanie": {
+   "network": "liO — cars interurbains Occitanie",
+   "file": "lio-interurbain-occitanie.zip",
+   "sha256": "f89436c13301feb77d1209f465bba6e223717bae40705847846ab67be9f89ecd",
+   "bytes": 1456975,
+   "bounds": [
+    42.367208,
+    -0.368846,
+    45.778791,
+    4.80963
+   ],
+   "origin": "https://transport.data.gouv.fr/resources/81026/download",
+   "routes": 304,
+   "trips": 7168,
+   "stop_times": 124172,
+   "stops": 12086,
+   "agencies": [
+    ".liO 09",
+    ".liO 11",
+    ".liO 12",
+    ".liO 30",
+    ".liO 31",
+    ".liO 32",
+    ".liO 46",
+    ".liO 48",
+    ".liO 65",
+    ".liO 66",
+    ".liO 81",
+    ".liO 82",
+    ".liO TIL",
+    "Herault Transport"
+   ],
+   "fares": false,
+   "license": "Licence Ouverte 2.0",
+   "publisher": "Région Occitanie"
+  },
+  "cars-region-nouvelle-aquitaine": {
+   "network": "Cars Région Nouvelle-Aquitaine",
+   "file": "cars-region-nouvelle-aquitaine.zip",
+   "sha256": "5d88f56a889fecf0bb79f18087d2edc87348b0c09104efb989db07ddc89f2aae",
+   "bytes": 1407052,
+   "bounds": [
+    42.751541,
+    -1.555172,
+    47.217964,
+    3.100622
+   ],
+   "origin": "https://www.pigma.org/public/opendata/nouvelle_aquitaine_mobilites/publication/naq-aggregated-gtfs.zip",
+   "routes": 279,
+   "trips": 4778,
+   "stop_times": 81408,
+   "stops": 13443,
+   "agencies": [
+    "Cars Régionaux 19 - Correze",
+    "Cars Régionaux 16 - Charente",
+    "Cars Régionaux 64 - Pyrénées Atlantiques",
+    "Cars Régionaux 40 - Landes  (RRTL)",
+    "Cars Régionaux 47 - Lot et Garonne",
+    "Cars Régionaux 23 - Creuse",
+    "Cars Régionaux 86 - Vienne",
+    "Cars régionaux 24 - Dordogne",
+    "Cars Régionaux 17 - Charente Maritime",
+    "Cars régionaux 79 - Deux Sèvres",
+    "Cars Régionaux 33 - Gironde",
+    "Cars Régionaux 87 - Haute Vienne"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + Conditions Particulières PAN",
+   "publisher": "Nouvelle-Aquitaine Mobilités"
+  },
+  "pdl-irigo-angers": {
+   "network": "IRIGO Angers",
+   "file": "pdl-irigo-angers.zip",
+   "sha256": "4c537532ec351fd0c260c955cc321b7df249d1e18b9928ede2acbe41a944978c",
+   "bytes": 2428818,
+   "bounds": [
+    47.34288,
+    -0.751186,
+    47.616505,
+    -0.296042
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 104,
+   "trips": 8196,
+   "stop_times": 275922,
+   "stops": 2846,
+   "agencies": [
+    "IRIGO"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-brevibus": {
+   "network": "Brévibus",
+   "file": "pdl-brevibus.zip",
+   "sha256": "7c6ff9cc67d1c407b16a15b2e07a9c4f1f3faa58980fc1b52e465abf5af70839",
+   "bytes": 15067,
+   "bounds": [
+    47.20343,
+    -2.175259,
+    47.268318,
+    -2.042087
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 3,
+   "trips": 76,
+   "stop_times": 1248,
+   "stops": 123,
+   "agencies": [
+    "Brévibus"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-tul-laval": {
+   "network": "TUL Laval",
+   "file": "pdl-tul-laval.zip",
+   "sha256": "af9a618293c173bf83bf454dc3de2c5c6c2f80aeacad8e1380979cbc121da711",
+   "bytes": 920122,
+   "bounds": [
+    47.986195,
+    -1.067463,
+    48.182369,
+    -0.630723
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 23,
+   "trips": 4674,
+   "stop_times": 139721,
+   "stops": 1188,
+   "agencies": [
+    "TUL"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-naolib-nantes": {
+   "network": "Naolib Nantes",
+   "file": "pdl-naolib-nantes-part-01.zip",
+   "files": [
+    "pdl-naolib-nantes-part-01.zip",
+    "pdl-naolib-nantes-part-02.zip",
+    "pdl-naolib-nantes-part-03.zip",
+    "pdl-naolib-nantes-part-04.zip",
+    "pdl-naolib-nantes-part-05.zip",
+    "pdl-naolib-nantes-part-06.zip",
+    "pdl-naolib-nantes-part-07.zip",
+    "pdl-naolib-nantes-part-08.zip",
+    "pdl-naolib-nantes-part-09.zip",
+    "pdl-naolib-nantes-part-10.zip",
+    "pdl-naolib-nantes-part-11.zip",
+    "pdl-naolib-nantes-part-12.zip",
+    "pdl-naolib-nantes-part-13.zip"
+   ],
+   "sha256": "630b138d1d9267478e1d17d29d013f000da6de5b5905eae449442358c7c595cb",
+   "sha256_files": [
+    "630b138d1d9267478e1d17d29d013f000da6de5b5905eae449442358c7c595cb",
+    "eb377a8452e92a4fb0ff41f884112129dbd14981d7a4686d940e043385818c2a",
+    "9690b0123859b240b76c529a01c5a5460e1177aadf1c84410653dcccf8f51789",
+    "2d4f8a95a51c4a2b3f0825581b5effecafe10fcb6cb9d1257d8ce3c2256db66e",
+    "164584c3ed78b63b6ef5fd6cb254aea82298a12336bad0932ad92a7e230d5c22",
+    "11f4e716c007da8023a5bb1b4471875d0714ace29daa594dc53664a708654a11",
+    "2bd83eca6251f4edb57b2972b925ddc84bf8605b7631d43745c1df71ac701fad",
+    "5f057c610d9363db8a11f9236cbc94c2b69d526a6e78e12dc8bb5fa0bd3b39a8",
+    "39bc61dc2e82e6c9bdde9fefb23199395dfd048fe0172ef2ccc251e38da13b51",
+    "8cfa995b1b504a267ef99489b31e0c4454f03ad2a7e1031c4977ad8389bcdbd4",
+    "74acffd7dbb0111e626597a232354caad669d36d69d821536822f130b8f4d026",
+    "30b02d382086a09dc5ebb80e8548539c017e0ff7dc0caa4c9793ed2a8f6c61de",
+    "4251f230f5ad34530977499951d081d2c9fbb623057dba55e9b4fd6bda87e466"
+   ],
+   "bytes": 20364353,
+   "bounds": [
+    47.122986,
+    -1.778301,
+    47.339466,
+    -1.347233
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 93,
+   "trips": 134110,
+   "stop_times": 3548916,
+   "stops": 3585,
+   "agencies": [
+    "Naolib"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes",
+   "sharded": true
+  },
+  "pdl-choletbus": {
+   "network": "Choletbus",
+   "file": "pdl-choletbus.zip",
+   "sha256": "fd96465c329cf17da37ea64a9310fc45770923d83508d9236cecb6d4b68679a9",
+   "bytes": 212303,
+   "bounds": [
+    46.996525,
+    -1.025293,
+    47.200306,
+    -0.365312
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 19,
+   "trips": 1490,
+   "stop_times": 24973,
+   "stops": 659,
+   "agencies": [
+    "Choletbus"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-oleane-les-sables": {
+   "network": "OLEANE Les Sables-d’Olonne",
+   "file": "pdl-oleane-les-sables.zip",
+   "sha256": "ee0346b5cdc87fa617ebec01b882884ba3163e919c632d48f9da4b6a35c18d88",
+   "bytes": 86335,
+   "bounds": [
+    46.476704,
+    -1.81103,
+    46.606007,
+    -1.669963
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 11,
+   "trips": 498,
+   "stop_times": 9448,
+   "stops": 392,
+   "agencies": [
+    "OLEANE"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-illygo": {
+   "network": "illyGO",
+   "file": "pdl-illygo.zip",
+   "sha256": "4375c2c9e7f91db0dd18a6f71a0f807d546db1ed1b9707543d6545320b4bd869",
+   "bytes": 20888,
+   "bounds": [
+    47.817245,
+    -0.150787,
+    48.194958,
+    0.5391
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 9,
+   "trips": 196,
+   "stop_times": 1604,
+   "stops": 157,
+   "agencies": [
+    "illyGO"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-sovetours": {
+   "network": "SOVETOURS",
+   "file": "pdl-sovetours.zip",
+   "sha256": "b010006a10c33a8d7bca59832bf7b5bedfd9a13f919335e11a4a73f36975d49c",
+   "bytes": 8181,
+   "bounds": [
+    46.44981,
+    -0.825715,
+    46.476505,
+    -0.782197
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 2,
+   "trips": 33,
+   "stop_times": 591,
+   "stops": 76,
+   "agencies": [
+    "SOVETOURS"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-yceo-saint-nazaire": {
+   "network": "Ycéo Saint-Nazaire",
+   "file": "pdl-yceo-saint-nazaire.zip",
+   "sha256": "0469f784c307f8e447f7d7793b6f6539332d731a5eb9acf474aae8263ed8f2b9",
+   "bytes": 648537,
+   "bounds": [
+    47.236698,
+    -2.34973,
+    47.455299,
+    -2.01425
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 123,
+   "trips": 2607,
+   "stop_times": 80144,
+   "stops": 1551,
+   "agencies": [
+    "Ycéo"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-impulsyon-la-roche": {
+   "network": "Impulsyon La Roche-sur-Yon",
+   "file": "pdl-impulsyon-la-roche.zip",
+   "sha256": "57f12c9753bf1faf2cf2c21df841cb4fe07ed4aed4cee8ad02e1144806f8de14",
+   "bytes": 816294,
+   "bounds": [
+    46.573444,
+    -1.571489,
+    46.745117,
+    -1.230544
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 20,
+   "trips": 4312,
+   "stop_times": 121645,
+   "stops": 808,
+   "agencies": [
+    "Impulsyon"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-aleop-sarthe": {
+   "network": "Aléop en Sarthe",
+   "file": "pdl-aleop-sarthe.zip",
+   "sha256": "8e9a44f25331edf10de2f8a20f5523298f168b8b1b750a796e2184d947fb2a86",
+   "bytes": 146744,
+   "bounds": [
+    47.643642,
+    -0.34185,
+    48.439854,
+    0.799541
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 18,
+   "trips": 536,
+   "stop_times": 8129,
+   "stops": 1212,
+   "agencies": [
+    "Aléop en Sarthe"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-aleop-vendee": {
+   "network": "Aléop en Vendée",
+   "file": "pdl-aleop-vendee.zip",
+   "sha256": "ff77c992fb13541d6f0cfa03b340fde56274b01d4a3de2eb9788f9508f7a27bd",
+   "bytes": 45820,
+   "bounds": [
+    46.152397,
+    -2.299102,
+    47.075844,
+    -0.808353
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 13,
+   "trips": 183,
+   "stop_times": 2475,
+   "stops": 563,
+   "agencies": [
+    "Aléop en Vendée"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-aleop-ler": {
+   "network": "Aléop Lignes Express régionales",
+   "file": "pdl-aleop-ler.zip",
+   "sha256": "f283b2a0436f751299bfa8dd74ad86b03bc965d7c7f294940ce6de7d0cc494bd",
+   "bytes": 52262,
+   "bounds": [
+    46.152397,
+    -2.26441,
+    48.001759,
+    0.335553
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 7,
+   "trips": 495,
+   "stop_times": 4446,
+   "stops": 262,
+   "agencies": [
+    "Aléop Lignes Express régionales"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-aleop-mayenne": {
+   "network": "Aléop en Mayenne",
+   "file": "pdl-aleop-mayenne.zip",
+   "sha256": "6e557dd36fd6ffe4eb17f7aa03a245548bdbf7726afc6ebee3954c47ea6934f9",
+   "bytes": 110654,
+   "bounds": [
+    47.464859,
+    -1.374651,
+    48.480667,
+    0.099065
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 38,
+   "trips": 613,
+   "stop_times": 5127,
+   "stops": 943,
+   "agencies": [
+    "Aléop en Mayenne"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-aleop-loire-atlantique": {
+   "network": "Aléop en Loire-Atlantique",
+   "file": "pdl-aleop-loire-atlantique.zip",
+   "sha256": "134a628709314f6c40191313586509a0c1edd423c71527609cca3bf3f282bcef",
+   "bytes": 295860,
+   "bounds": [
+    46.861324,
+    -2.219055,
+    47.68713,
+    -1.017468
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 29,
+   "trips": 1404,
+   "stop_times": 27750,
+   "stops": 1696,
+   "agencies": [
+    "Aléop en Loire-Atlantique"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-aleop-maine-et-loire": {
+   "network": "Aléop en Maine-et-Loire",
+   "file": "pdl-aleop-maine-et-loire.zip",
+   "sha256": "890568b9426d47bb3ec592945aa461e51095c6b96eebea5a6ff8608527dd938b",
+   "bytes": 185412,
+   "bounds": [
+    47.012371,
+    -1.372049,
+    47.83136,
+    0.161452
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 35,
+   "trips": 949,
+   "stop_times": 15494,
+   "stops": 1490,
+   "agencies": [
+    "Aléop en Maine-et-Loire"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-reso-sable": {
+   "network": "Réso Sablé-sur-Sarthe",
+   "file": "pdl-reso-sable.zip",
+   "sha256": "dea5abd37f08b4980dffaec830106894843a1384836283ef36be729ba950f7ec",
+   "bytes": 23906,
+   "bounds": [
+    47.822269,
+    -0.362821,
+    47.857777,
+    -0.295294
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 4,
+   "trips": 86,
+   "stop_times": 2096,
+   "stops": 110,
+   "agencies": [
+    "Réso"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "pdl-heoh-clisson": {
+   "network": "héoh Clisson",
+   "file": "pdl-heoh-clisson.zip",
+   "sha256": "ddb8a5a6132e4b0e81ca133825b33924c439747edfec1b706fc76ab161efc979",
+   "bytes": 7191,
+   "bounds": [
+    47.076775,
+    -1.286229,
+    47.09597,
+    -1.239642
+   ],
+   "origin": "https://mobi-iti-pdl.okina.fr/static/mobiiti_technique/gtfs_global.zip",
+   "routes": 1,
+   "trips": 66,
+   "stop_times": 648,
+   "stops": 25,
+   "agencies": [
+    "héoh"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région des Pays de la Loire et autorités organisatrices participantes"
+  },
+  "bretagne-star-rennes": {
+   "network": "STAR Rennes",
+   "file": "bretagne-star-rennes.zip",
+   "sha256": "c4f5a4154a745c0d382e5db87a580941a6b5b84bc1d9df21131491f34dab4768",
+   "bytes": 6229220,
+   "bounds": [
+    47.939335,
+    -1.946498,
+    48.299796,
+    -1.478292
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 154,
+   "trips": 39572,
+   "stop_times": 835646,
+   "stops": 3529,
+   "agencies": [
+    "STAR (Rennes Métropole)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-qub-quimper": {
+   "network": "QUB Quimper",
+   "file": "bretagne-qub-quimper.zip",
+   "sha256": "3f5f687ed4aab491dbb4dd4bd18b65fbf919849f44daee6c13e436b6db308a1d",
+   "bytes": 467573,
+   "bounds": [
+    47.911367,
+    -4.229707,
+    48.151912,
+    -3.869734
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 60,
+   "trips": 1961,
+   "stop_times": 54719,
+   "stops": 1968,
+   "agencies": [
+    "QUB (Quimper urbain)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-tub-saint-brieuc": {
+   "network": "TUB Saint-Brieuc",
+   "file": "bretagne-tub-saint-brieuc.zip",
+   "sha256": "97cd6ab3cc4363af81d7eecbe0dbdb312534c9ec52c67da65da87235296edd9c",
+   "bytes": 436272,
+   "bounds": [
+    48.307588,
+    -3.03629,
+    48.666517,
+    -2.631844
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 91,
+   "trips": 1654,
+   "stop_times": 50009,
+   "stops": 2604,
+   "agencies": [
+    "TUB (St Brieuc Agglomération)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-mat-saint-malo": {
+   "network": "MAT Saint-Malo",
+   "file": "bretagne-mat-saint-malo.zip",
+   "sha256": "eb130d0f2d136e77bc6a038436245e4e4da021d242b69ed40706ee69923cf006",
+   "bytes": 818664,
+   "bounds": [
+    48.486236,
+    -2.02638,
+    48.705359,
+    -1.795744
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 67,
+   "trips": 4475,
+   "stop_times": 110761,
+   "stops": 1127,
+   "agencies": [
+    "MAT (St Malo Agglomération)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-kiceo-vannes": {
+   "network": "Kicéo Vannes",
+   "file": "bretagne-kiceo-vannes.zip",
+   "sha256": "241ecd5f08206fb7405459b3344400ee05714080fb4789783871be14f2df930b",
+   "bytes": 592481,
+   "bounds": [
+    47.490644,
+    -2.952535,
+    47.825011,
+    -2.525686
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 199,
+   "trips": 2579,
+   "stop_times": 65019,
+   "stops": 2607,
+   "agencies": [
+    "Kicéo (Vannes Agglomération)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-aleop-finistere": {
+   "network": "BreizhGo en Finistère",
+   "file": "bretagne-aleop-finistere.zip",
+   "sha256": "44d82684c749a0b2f11cd9ecfe35387678e498eb279dbfe47688f9f0cf3eb5ab",
+   "bytes": 650597,
+   "bounds": [
+    47.795987,
+    -4.780532,
+    48.723448,
+    -3.55058
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 79,
+   "trips": 3432,
+   "stop_times": 38739,
+   "stops": 2106,
+   "agencies": [
+    "BreizhGo en Finistère"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-bibus-brest": {
+   "network": "Bibus Brest",
+   "file": "bretagne-bibus-brest.zip",
+   "sha256": "f9cb7ba6722069b4eb653fba41229d07fb17838fd956d95a7c67a75b02605fbd",
+   "bytes": 1367627,
+   "bounds": [
+    48.341685,
+    -4.622326,
+    48.457162,
+    -4.339396
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 69,
+   "trips": 7808,
+   "stop_times": 156867,
+   "stops": 2128,
+   "agencies": [
+    "Bibus (Brest Métropole)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-izilo-lorient": {
+   "network": "Izilo Lorient",
+   "file": "bretagne-izilo-lorient.zip",
+   "sha256": "7dbd3002f114896978b13b45f40976a666d0e8b8323faad73e31e0caed053270",
+   "bytes": 822890,
+   "bounds": [
+    47.627059,
+    -3.526621,
+    48.018682,
+    -3.065159
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 128,
+   "trips": 3074,
+   "stop_times": 93569,
+   "stops": 4142,
+   "agencies": [
+    "Izilo (Lorient Agglomération)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-aleop-cotes-armor": {
+   "network": "BreizhGo en Côtes d’Armor",
+   "file": "bretagne-aleop-cotes-armor.zip",
+   "sha256": "a1e237f47d0091e31cec5ffefdd96681420a15b0a6fdd55973b5e89772a0de26",
+   "bytes": 163102,
+   "bounds": [
+    48.18864,
+    -3.561181,
+    48.863939,
+    -1.928488
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 17,
+   "trips": 791,
+   "stop_times": 13252,
+   "stops": 1584,
+   "agencies": [
+    "BreizhGo en Côtes d'Armor"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-distribus-lamballe": {
+   "network": "Distribus Lamballe",
+   "file": "bretagne-distribus-lamballe.zip",
+   "sha256": "07ca0830cb25468facd51734140961e4a0aae0e446eff892426457d268cc1f81",
+   "bytes": 35069,
+   "bounds": [
+    48.453294,
+    -2.562996,
+    48.636547,
+    -2.436293
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 5,
+   "trips": 278,
+   "stop_times": 3718,
+   "stops": 155,
+   "agencies": [
+    "Distribus (Lamballe Terre & Mer)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-tbk-quimperle": {
+   "network": "TBK Quimperlé",
+   "file": "bretagne-tbk-quimperle.zip",
+   "sha256": "0fa8698d61555fde909eea4dbaa9356f964b74336d528d7ac0d7d8b5522b77d0",
+   "bytes": 103486,
+   "bounds": [
+    47.76648,
+    -3.805557,
+    48.086078,
+    -3.332212
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 52,
+   "trips": 391,
+   "stop_times": 8096,
+   "stops": 1292,
+   "agencies": [
+    "TBK (Quimperlé)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-arbus-landerneau": {
+   "network": "Ar Bus Landerneau",
+   "file": "bretagne-arbus-landerneau.zip",
+   "sha256": "57ff1ea85631c216fc1b80153bc52e1f77f153dbe5ccc7a3deda8f38121fbebe",
+   "bytes": 49134,
+   "bounds": [
+    48.436129,
+    -4.289596,
+    48.466082,
+    -4.228516
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 6,
+   "trips": 195,
+   "stop_times": 5782,
+   "stops": 250,
+   "agencies": [
+    "Ar Bus (Communauté de Communes du Pays de Landerneau-Daoulas)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-guingamp-paimpol": {
+   "network": "Guingamp-Paimpol Mobilité",
+   "file": "bretagne-guingamp-paimpol.zip",
+   "sha256": "df734f305865dca309a04a5a2eb23f3af91aab8910b97132e8a0869bd930980a",
+   "bytes": 55608,
+   "bounds": [
+    48.543272,
+    -3.196483,
+    48.821057,
+    -2.967586
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 6,
+   "trips": 259,
+   "stop_times": 5784,
+   "stops": 232,
+   "agencies": [
+    "Guingamp-Paimpol Mobilité"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-coralie-concarneau": {
+   "network": "Coralie Concarneau",
+   "file": "bretagne-coralie-concarneau.zip",
+   "sha256": "a6ddbaa03d7be250dfbc8429712f1affe42d68495ec79cb017cb70119039ea25",
+   "bytes": 387375,
+   "bounds": [
+    47.788605,
+    -3.973887,
+    48.043617,
+    -3.694708
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 42,
+   "trips": 2566,
+   "stop_times": 47114,
+   "stops": 988,
+   "agencies": [
+    "Réseau Coralie (Concarneau Cornouaille Agglomération)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-tudbus-douarnenez": {
+   "network": "Tud’Bus Douarnenez",
+   "file": "bretagne-tudbus-douarnenez.zip",
+   "sha256": "5ca62f898b50a05a3895788f3bcb90fb522dc6ee664ae9bdff5aca8453b8606e",
+   "bytes": 34204,
+   "bounds": [
+    48.039771,
+    -4.416537,
+    48.100424,
+    -4.257099
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 9,
+   "trips": 191,
+   "stop_times": 3678,
+   "stops": 200,
+   "agencies": [
+    "Tud'Bus (Douarnenez Communauté)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-auraybus": {
+   "network": "Auray Bus",
+   "file": "bretagne-auraybus.zip",
+   "sha256": "ba88591d6afe66e9754069b7b3b827d1a964454dfcf7e5b2683e60eeffbced31",
+   "bytes": 62569,
+   "bounds": [
+    47.660061,
+    -3.02625,
+    47.689668,
+    -2.959164
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 13,
+   "trips": 302,
+   "stop_times": 7152,
+   "stops": 160,
+   "agencies": [
+    "Auray Bus (Auray)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-pondibus-pontivy": {
+   "network": "PondiBUS et MOOVI",
+   "file": "bretagne-pondibus-pontivy.zip",
+   "sha256": "fde0d5b5ed5c2f954f3d7619b8a7abb48449731fa58b75d9ffbbf670cfcaa9b6",
+   "bytes": 31919,
+   "bounds": [
+    48.037738,
+    -2.986288,
+    48.087405,
+    -2.886475
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 5,
+   "trips": 183,
+   "stop_times": 3097,
+   "stops": 127,
+   "agencies": [
+    "PondiBUS et MOOVI (Pontivy)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-aleop-ille-et-vilaine": {
+   "network": "BreizhGo en Ille-et-Vilaine",
+   "file": "bretagne-aleop-ille-et-vilaine.zip",
+   "sha256": "f73b50b956855d36752f093a4980d1678abc4213274f542bc348f6cb3f91624b",
+   "bytes": 256252,
+   "bounds": [
+    47.721656,
+    -3.562317,
+    48.649071,
+    -1.125251
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 27,
+   "trips": 1829,
+   "stop_times": 22891,
+   "stops": 1302,
+   "agencies": [
+    "BreizhGo en Ille-et-Vilaine"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-tilt-lannion": {
+   "network": "TILT Lannion",
+   "file": "bretagne-tilt-lannion.zip",
+   "sha256": "b53218029c1144b4e8ba8f7c7f3171e1c63761b60a4cb21156539e97e6e2dacb",
+   "bytes": 46277,
+   "bounds": [
+    48.577213,
+    -3.834531,
+    48.836352,
+    -3.297218
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 10,
+   "trips": 173,
+   "stop_times": 3537,
+   "stops": 642,
+   "agencies": [
+    "TILT (Lannion)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-surf-fougeres": {
+   "network": "SURF Fougères",
+   "file": "bretagne-surf-fougeres.zip",
+   "sha256": "06e9f1a2250eddfa7e085e6f01d476953af9bd60f779724b73794bbcfb4aa4a4",
+   "bytes": 75181,
+   "bounds": [
+    48.319667,
+    -1.234321,
+    48.37095,
+    -1.147296
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 8,
+   "trips": 580,
+   "stop_times": 8185,
+   "stops": 240,
+   "agencies": [
+    "SURF (Fougères)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-riv-ploermel": {
+   "network": "RIV Ploërmel",
+   "file": "bretagne-riv-ploermel.zip",
+   "sha256": "2c2531cc771dd5dce140932c3225a5b3b0ff8ce23b389ed8f354728d684a532d",
+   "bytes": 9085,
+   "bounds": [
+    47.864667,
+    -2.563861,
+    48.084417,
+    -2.282444
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 5,
+   "trips": 50,
+   "stop_times": 512,
+   "stops": 116,
+   "agencies": [
+    "RIV (Ploërmel)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-lineotim-morlaix": {
+   "network": "Linéotim Morlaix urbain",
+   "file": "bretagne-lineotim-morlaix.zip",
+   "sha256": "0fee850b06c4a2874f4bea7c98cef851ad7b55473f9ad267511ec3885369778c",
+   "bytes": 72027,
+   "bounds": [
+    0.0,
+    -3.866818,
+    48.612128,
+    0.0
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 9,
+   "trips": 350,
+   "stop_times": 6745,
+   "stops": 310,
+   "agencies": [
+    "Linéotim (Morlaix urbain)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-aleop-morbihan": {
+   "network": "BreizhGo en Morbihan",
+   "file": "bretagne-aleop-morbihan.zip",
+   "sha256": "bf34553042ccfbc1e918e0ff9234ce3e113ba58a13657580370cf67c0e035c94",
+   "bytes": 136134,
+   "bounds": [
+    47.478376,
+    -3.606616,
+    48.514088,
+    -2.056498
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 18,
+   "trips": 540,
+   "stop_times": 7782,
+   "stops": 884,
+   "agencies": [
+    "BreizhGo en Morbihan"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
+  },
+  "bretagne-lineotim-periurbain": {
+   "network": "Linéotim Morlaix périurbain",
+   "file": "bretagne-lineotim-periurbain.zip",
+   "sha256": "b6c84362fb163554d38ed3270eb00fd3762617acc643c80d033df19df0a4e891",
+   "bytes": 21079,
+   "bounds": [
+    0.0,
+    -3.9692,
+    48.71194,
+    0.0
+   ],
+   "origin": "https://www.korrigo.bzh/ftp/OPENDATA/KORRIGOBRET.gtfs.zip",
+   "routes": 13,
+   "trips": 96,
+   "stop_times": 1277,
+   "stops": 273,
+   "agencies": [
+    "Linéotim (Morlaix périurbain)"
+   ],
+   "fares": false,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Région Bretagne et autorités organisatrices participantes"
   }
  },
- "errors": {},
+ "errors": {
+  "mreso-gresivaudan": "erreur : HTTP Error 502: Bad Gateway"
+ },
  "oura": {
   "source": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA",
-  "version": "2026-11-24T03:25:58+00:00"
+  "version": "2026-11-24T05:36:09+00:00"
  }
 }
