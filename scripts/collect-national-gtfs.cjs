@@ -36,7 +36,9 @@ const DEFAULT_MAX_ARCHIVE_BYTES = 200 * 1024 * 1024;
 const DEFAULT_MAX_FILE_BYTES = 350 * 1024 * 1024;
 const DEFAULT_MAX_EXPANDED_BYTES = 700 * 1024 * 1024;
 const DEFAULT_MAX_ENTRIES = 256;
-const DEFAULT_CONCURRENCY = 2; // Limite mémoire sur runner GitHub hébergé
+// Un seul ZIP est traité à la fois. Chaque archive peut être volumineuse et son extraction
+// conserve aussi temporairement les tables décompressées en mémoire.
+const DEFAULT_CONCURRENCY = 1;
 const DEFAULT_TIMEOUT_MS = 90000;
 const ACTIVE_WINDOW_DAYS = 30;
 
@@ -352,7 +354,10 @@ async function pool(items, concurrency, worker) {
   return results;
 }
 
-async function processResource(resource, { fetcher, maxBytes, timeoutMs, previousEntry, now, availableAssets = null }) {
+async function processResource(resource, {
+  fetcher, maxBytes, timeoutMs, previousEntry, now, availableAssets = null,
+  onValidatedArchive = null, retainArchiveBytes = true,
+}) {
   const base = {
     id: slugify(resource.network) + '-' + slugify(resource.id).slice(0, 12),
     datasetId: resource.datasetId,
@@ -512,6 +517,9 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
   } catch (error) {
     return { ...base, status: 'error', error: 'calendrier : ' + error.message };
   }
+  // Permet au CLI d'écrire l'archive validée immédiatement sur disque, au lieu de garder tous les
+  // ZIP téléchargés en mémoire jusqu'à la fin de la collecte nationale.
+  if (onValidatedArchive) await onValidatedArchive({ id: base.id, bytes, entry: base });
   return {
     ...base,
     status: 'ok',
@@ -537,7 +545,7 @@ async function processResource(resource, { fetcher, maxBytes, timeoutMs, previou
     activeFlexNext30Days,
     activeRegularNext30Days,
     lines,
-    bytes, // retiré avant écriture du manifeste ; utilisé par l'appelant pour la publication.
+    ...(retainArchiveBytes ? { bytes } : {}), // compatibilité API ; désactivé par le CLI en mode mémoire bornée.
   };
 }
 
@@ -549,6 +557,8 @@ async function collect({
   timeoutMs = DEFAULT_TIMEOUT_MS,
   previousManifest = null,
   availableAssets = null,
+  onValidatedArchive = null,
+  retainUploads = true,
   now = new Date().toISOString(),
 } = {}) {
   const datasets = await catalogue.fetchCatalogue(fetcher);
@@ -573,7 +583,9 @@ async function collect({
   const entries = await pool(resources, concurrency, async (resource) => {
     try {
       return await processResource(resource, {
-        fetcher, maxBytes, timeoutMs, previousEntry: previousByKey.get(dedupKey(resource)), now, availableAssets
+        fetcher, maxBytes, timeoutMs, previousEntry: previousByKey.get(dedupKey(resource)), now, availableAssets,
+        onValidatedArchive,
+        retainArchiveBytes: retainUploads,
       });
     } catch (error) {
       // Une ressource imprévue ne doit pas annuler l'analyse des autres réseaux.
@@ -699,19 +711,23 @@ if (require.main === module) {
         previousManifest = null;
       }
     }
-    const { manifest, uploads } = await collect({
+    // Archives are written as soon as each one is fully validated. Keep only metadata in memory
+    // for CLI runs; collect() retains uploads by default for existing callers and tests.
+    if (!dryRun && releaseDir) fs.mkdirSync(releaseDir, { recursive: true });
+    const onValidatedArchive = !dryRun && releaseDir
+      ? ({ id, bytes }) => fs.writeFileSync(path.join(releaseDir, id + '.zip'), bytes)
+      : null;
+    const { manifest } = await collect({
       limit: limit ? Number(limit) : null,
       // Une collecte limitée ne doit pas remplacer le manifeste national complet.
       previousManifest,
       availableAssets,
+      onValidatedArchive,
+      retainUploads: false,
     });
     fs.mkdirSync(outDir, { recursive: true });
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 1) + '\n');
     fs.writeFileSync(path.join(outDir, 'manifest.csv'), toCSV(manifest));
-    if (!dryRun && releaseDir && uploads.length) {
-      fs.mkdirSync(releaseDir, { recursive: true });
-      for (const { id, bytes } of uploads) fs.writeFileSync(path.join(releaseDir, id + '.zip'), bytes);
-    }
     const summary = `Catalogue PAN : ${manifest.totals.found} flux GTFS, ${manifest.totals.ok || 0} téléchargés/validés, ${manifest.totals.unchanged || 0} inchangés, ${manifest.totals.error || 0} en erreur.`;
     console.log(summary);
     if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, '## Collecteur GTFS national\n\n' + summary + '\n');

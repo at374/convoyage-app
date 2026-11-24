@@ -130,6 +130,30 @@ test('collect() : découvre, télécharge, valide et classe un flux réel simul�
   assert.equal(skipped.sha256, 'x');
 });
 
+test('collect() : publie chaque archive validée immédiatement sans conserver les ZIP en mémoire', async () => {
+  const good = zip(baseFiles);
+  const network = {
+    id: 'memory-test', title: 'Réseau mémoire',
+    resources: [{ id: 'resource-1', format: 'GTFS', url: 'https://example.org/memory.zip', updated_at: '2026-11-23T00:00:00Z' }],
+  };
+  const fetcher = async url => {
+    if (String(url).includes('transport.data.gouv.fr')) return { ok: true, json: async () => [network] };
+    return new Response(good, { headers: { 'content-type': 'application/zip' } });
+  };
+  const written = [];
+  const result = await collector.collect({
+    fetcher,
+    retainUploads: false,
+    concurrency: 1,
+    onValidatedArchive: async archive => written.push({ id: archive.id, sha256: collector.sha256(archive.bytes) }),
+    now: '2026-11-23T00:00:00Z',
+  });
+  const entry = Object.values(result.manifest.networks)[0];
+  assert.equal(result.manifest.totals.ok, 1);
+  assert.deepEqual(result.uploads, []);
+  assert.deepEqual(written, [{ id: entry.id, sha256: entry.sha256 }]);
+});
+
 test('collect() : une archive invalide pour un réseau ne bloque pas les autres (statut error isolé)', async () => {
   const bad = Buffer.from('ceci n’est pas un zip');
   const network = {

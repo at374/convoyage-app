@@ -1,5 +1,27 @@
 # Transmission à ChatGPT — module Transports AURA + Suisse de Convoyage Ultra
 
+## SESSION CHATGPT DU 24/11/2026 — collecteur national : mémoire bornée et validation réelle
+
+### Consignes Claude récentes relues avant modification
+
+- Branche observée : `feature/transports-aura-suisse`, tête `1af9e40b` (23/11/2026). Les commits récents portent principalement sur l'audit GTFS Isère.
+- L'audit officiel Isère a trouvé **135 dates de circulation différentes sur 293** et **5 414 courses-jour ajoutées/modifiées**. Décision documentée : ne pas remplacer automatiquement le GTFS de production avant analyse et validation fonctionnelle. Cette session n'a modifié ni les données Isère, ni les tarifs/zones, ni les moteurs AURA/Suisse.
+- Le bilan détaillé des moteurs reste dans les sections historiques ci-dessous ; elles décrivent des mesures antérieures et ne sont pas présentées comme une mesure nationale actuelle.
+
+### Correctif du collecteur
+
+- `scripts/collect-national-gtfs.cjs` traitait les ressources avec deux workers par défaut, puis retenait les octets de toutes les archives validées dans `uploads` jusqu'à la fin de la collecte. Une collecte nationale pouvait donc accumuler plusieurs gros ZIP en RAM.
+- Le traitement par défaut est maintenant séquentiel (`concurrency = 1`). Le CLI utilise un callback `onValidatedArchive` pour écrire chaque ZIP sur disque immédiatement après sa validation et ne conserve que les métadonnées. L'API `collect()` conserve son comportement historique par défaut pour ses appelants ; `retainUploads: false` désactive explicitement cette rétention.
+- Le workflow national reste volontairement limité à cinq ressources maximum et ne déclenche aucune collecte nationale complète. Aucun service payant ni nouvelle source fournisseur n'a été ajouté.
+
+### Vérifications au 24/11
+
+- `node --test tests/collect-national-gtfs.test.cjs` : **61/61 réussis**, dont le nouveau test de publication immédiate sans ZIP conservé dans `uploads`.
+- Suite complète `node --test tests/**/*.test.cjs` : **1 050 réussis, 13 échoués, 2 ignorés sur 1 065**. Les échecs sont hors des fichiers modifiés : assertions de péages (données/fichiers de travail absents ou référentiel local différent) et une assertion de cache hors ligne Android (`transport-gtfs-flex-courses.js?v=20261123`).
+- Collecte réelle PAN, échantillon de cinq ressources : **5 téléchargées et validées, 0 erreur, 5 archives écrites**. Quatre ont un service dans les 30 jours ; le flux Renfe valide n'en a pas et n'est donc pas considéré actif pour cette fenêtre.
+- L'échantillon comprenait BlaBlaCar Bus (1 590 lignes, 1 590 courses, 661 arrêts), Eurostar (27, 9 916, 173), FlixBus/FlixTrain (1 224, 41 333, 2 072), Trenitalia (31, 482, 16) et Renfe (10, 80, 16). Ces statuts signifient **découvert/téléchargé/validé/calendrier contrôlé uniquement** : cette session n'a pas testé leur raccordement effectif au moteur de recherche ni leurs trajets ou tarifs.
+- À compléter : intégrer prudemment les ressources nationales déjà prises en charge par les moteurs, vérifier les parcours réels du moteur à partir de ces archives et mesurer la couverture réseau par réseau. Un ZIP valide seul ne prouve pas le raccordement ni la disponibilité d'un trajet.
+
 ## BILAN CLAUDE DU 15/11/2026 (22 h) — mission « terminer Transports », réponse à la section 5 de Laurent
 
 Suite à la mission prioritaire de Laurent (« terminer le travail, ça doit marcher les trajets automatiques »), voici le bilan chiffré demandé, structuré exactement selon les 6 points de sa section 5.
