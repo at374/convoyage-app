@@ -755,6 +755,10 @@ function makeProviders(r,opts={}){
    ['mobigo89', 'Mobigo Yonne (89)', 'mobigo-89-yonne.zip', [47.2,2.75,48.45,4.5]],
    ['mobigo70', 'Mobigo Haute-Saône (70)', 'mobigo-70-haute-saone.zip', [47.15,5.25,48.05,7.15]],
    ['mobigo71', 'Mobigo Saône-et-Loire (71)', 'mobigo-71-saone-et-loire.zip', [46.1,3.55,47.05,5.55]],
+   // Première tranche des réseaux urbains BFC, ajoutés depuis des GTFS PAN ouverts.
+   ['divia', 'DiviaMobilités Dijon', 'divia-dijon.zip', [47.24,4.96,47.39,5.12]],
+   ['ginko', 'Ginko Besançon', 'ginko-besancon.zip', [47.15,5.90,47.32,6.10]],
+   ['evolity', 'évolitY Montbéliard', 'evolity-montbeliard.zip', [47.40,6.70,47.60,6.95]],
    ['ruban', "Ruban Bourgoin-Jallieu", 'ruban-bourgoin.zip', [45.48,5.08,45.71,5.4]],
    ['lva', "L'va Vienne", 'lva-vienne.zip', [45.39,4.59,45.69,5.49]],
    ['colibri', "Colibri Miribel", 'colibri-miribel.zip', [45.8,4.89,45.85,5.04]],

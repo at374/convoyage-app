@@ -1,6 +1,5 @@
 'use strict';
-// End-to-end checks run in the regional feed workflow immediately after the
-// seven official Mobigo departmental archives have been refreshed.
+// End-to-end checks run after official Mobigo and first-ring urban BFC feeds refresh.
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const loader=require('../transport-gtfs-loader.js'),indexer=require('../transport-gtfs-index.js');
 const hub=require('../transport-mission-hub.js');
@@ -8,17 +7,21 @@ const feeds=[
  ['mobigo39','mobigo-39-jura.zip'],['mobigo58','mobigo-58-nievre.zip'],
  ['mobigo21','mobigo-21-cote-dor.zip'],['mobigo25','mobigo-25-doubs.zip'],
  ['mobigo89','mobigo-89-yonne.zip'],['mobigo70','mobigo-70-haute-saone.zip'],
- ['mobigo71','mobigo-71-saone-et-loire.zip']
+ ['mobigo71','mobigo-71-saone-et-loire.zip'],
+ ['divia','divia-dijon.zip'],['ginko','ginko-besancon.zip'],
+ ['evolity','evolity-montbeliard.zip']
 ];
 const bounds={
  mobigo39:[46.25,5.2,47.0,6.25],mobigo58:[46.55,2.75,47.75,4.35],
  mobigo21:[46.65,3.95,48.0,5.65],mobigo25:[46.6,5.55,47.75,7.15],
  mobigo89:[47.2,2.75,48.45,4.5],mobigo70:[47.15,5.25,48.05,7.15],
- mobigo71:[46.1,3.55,47.05,5.55]
+ mobigo71:[46.1,3.55,47.05,5.55],
+ divia:[47.24,4.96,47.39,5.12],ginko:[47.15,5.90,47.32,6.10],
+ evolity:[47.40,6.70,47.60,6.95]
 };
 
 for(const [id,file] of feeds){
- test(`${id}: l'extrait Mobigo trouve un horaire réel par le fournisseur de mission`,
+ test(`${id}: un horaire GTFS réel est proposé par le fournisseur de mission`,
   {skip:!fs.existsSync(path.join(__dirname,'..','data','gtfs',file))},async()=>{
    const archive=fs.readFileSync(path.join(__dirname,'..','data','gtfs',file));
    // The loader caps indexed service dates at seven; test the next service week.
@@ -58,6 +61,6 @@ for(const [id,file] of feeds){
    assert.equal(provider.enabled(task),true,`${id}: paire de test hors de l'emprise activée`);
    const results=await provider.run(task);
    const expectedNetwork=provider.name.replace(/ GTFS$/,'');
-   assert.ok(results.some(j=>j.legs?.some(l=>l.provider===expectedNetwork)),`${id}: trajet Mobigo non proposé à la fiche mission`);
+   assert.ok(results.some(j=>j.legs?.some(l=>l.provider===expectedNetwork)),`${id}: trajet non proposé à la fiche mission`);
   });
 }

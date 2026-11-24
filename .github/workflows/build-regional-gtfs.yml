@@ -31,7 +31,7 @@ jobs:
         run: python3 -I tests/python/test_build_regional_gtfs.py
       - name: Télécharger, extraire et valider
         run: python3 -I scripts/build_regional_gtfs.py --out data/gtfs
-      - name: Vérifier les trajets Mobigo BFC dans le moteur de mission
+      - name: Vérifier les trajets réels de BFC dans le moteur de mission
         run: node --test tests/mobigo-bfc-real-slices.test.cjs
       - name: Publier les flux validés
         env:
