@@ -45,6 +45,43 @@ def main():
             assert {s['stop_id'] for s in stops}=={'a','b'},stops
             assert {t['stop_id'] for t in times}=={'a','b'},times
             assert len(times)==2
+        # Verify the generated slice through the same JavaScript journey engine
+        # used by mission providers. A valid ZIP alone does not prove the route
+        # engine can find the scheduled Annecy -> Lyon itinerary.
+        engine_test = r'''
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const journeys = require('./transport-national-gtfs-journeys.js');
+const archive = process.argv[1];
+(async () => {
+  const result = await journeys.loadAndSearch({
+    operator: 'sncf',
+    resource: { url: 'https://example.org/synthetic-aura.zip', format: 'GTFS' },
+    fetcher: async () => new Response(fs.readFileSync(archive), {
+      headers: { 'content-type': 'application/zip' }
+    }),
+    date: '2026-12-10',
+    from: { lat: 45.901, lon: 6.121 },
+    to: { lat: 45.761, lon: 4.861 },
+    radiusMeters: 3000,
+    earliestDeparture: '07:00:00',
+    maxResults: 20
+  });
+  assert.ok(result.journeys.length > 0, 'the mission engine must return a route');
+  const row = result.journeys.find(x => x.tripId === 't');
+  assert.ok(row, 'the Annecy -> Lyon GTFS trip must survive slicing');
+  assert.equal(row.departure, '08:00:00');
+  assert.equal(row.arrival, '10:00:00');
+  assert.equal(row.serviceScheduled, true);
+  assert.equal(row.serviceConfirmed, false);
+  assert.equal(row.priceEUR, null);
+  assert.equal(row.priceStatus, 'unavailable');
+})().catch(error => { console.error(error); process.exitCode = 1; });
+'''
+        engine = subprocess.run(['node', '-e', engine_test,
+                                 os.path.join(temp,result['file'])],
+                                capture_output=True,text=True)
+        assert engine.returncode == 0, engine.stderr or engine.stdout
         # A second trip leaves AURA between Annecy and Lyon. It must not be
         # shortened to a fake direct Annecy–Lyon service.
         data['trips.txt'] = table(['route_id','service_id','trip_id'],[
@@ -67,7 +104,7 @@ def main():
             z.writestr('../unsafe.txt','should not be processed')
         rejected=subprocess.run(cmd,capture_output=True,text=True)
         assert rejected.returncode!=0 and 'Unsafe GTFS archive' in rejected.stderr,rejected.stderr
-        print('Découpage national AURA vérifié : arrêt hors zone et faux trajet direct exclus')
+        print('Découpage AURA + moteur vérifiés : trajet Annecy -> Lyon retourné, détour hors zone exclu')
 
 if __name__=='__main__':
     main()

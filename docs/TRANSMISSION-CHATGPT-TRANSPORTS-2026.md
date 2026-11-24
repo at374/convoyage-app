@@ -13,6 +13,7 @@
 - `scripts/collect-national-gtfs.cjs` traitait les ressources avec deux workers par défaut, puis retenait les octets de toutes les archives validées dans `uploads` jusqu'à la fin de la collecte. Une collecte nationale pouvait donc accumuler plusieurs gros ZIP en RAM.
 - Le traitement par défaut est maintenant séquentiel (`concurrency = 1`). Le CLI utilise un callback `onValidatedArchive` pour écrire chaque ZIP sur disque immédiatement après sa validation et ne conserve que les métadonnées. L'API `collect()` conserve son comportement historique par défaut pour ses appelants ; `retainUploads: false` désactive explicitement cette rétention.
 - Le workflow national reste volontairement limité à cinq ressources maximum et ne déclenche aucune collecte nationale complète. Aucun service payant ni nouvelle source fournisseur n'a été ajouté.
+- `scripts/test_national_gtfs_aura.py` vérifie maintenant le trajet de bout en bout : GTFS de test → extrait AURA produit par le vrai constructeur → recherche avec `transport-national-gtfs-journeys.js`. Il exige les horaires exacts, un service seulement programmé et un prix inconnu explicite.
 
 ### Vérifications au 24/11
 
@@ -20,7 +21,8 @@
 - Suite complète `node --test tests/**/*.test.cjs` : **1 050 réussis, 13 échoués, 2 ignorés sur 1 065**. Les échecs sont hors des fichiers modifiés : assertions de péages (données/fichiers de travail absents ou référentiel local différent) et une assertion de cache hors ligne Android (`transport-gtfs-flex-courses.js?v=20261123`).
 - Collecte réelle PAN, échantillon de cinq ressources : **5 téléchargées et validées, 0 erreur, 5 archives écrites**. Quatre ont un service dans les 30 jours ; le flux Renfe valide n'en a pas et n'est donc pas considéré actif pour cette fenêtre.
 - L'échantillon comprenait BlaBlaCar Bus (1 590 lignes, 1 590 courses, 661 arrêts), Eurostar (27, 9 916, 173), FlixBus/FlixTrain (1 224, 41 333, 2 072), Trenitalia (31, 482, 16) et Renfe (10, 80, 16). Ces statuts signifient **découvert/téléchargé/validé/calendrier contrôlé uniquement** : cette session n'a pas testé leur raccordement effectif au moteur de recherche ni leurs trajets ou tarifs.
-- À compléter : intégrer prudemment les ressources nationales déjà prises en charge par les moteurs, vérifier les parcours réels du moteur à partir de ces archives et mesurer la couverture réseau par réseau. Un ZIP valide seul ne prouve pas le raccordement ni la disponibilité d'un trajet.
+- Vérification réelle du flux complet FlixBus/FlixTrain de 33 378 713 octets : le découpeur AURA existant a produit un extrait valide de 145 415 octets ; le moteur national a retourné **9 candidats Annecy → Genève pour le 10/12/2026**. Aucun tarif GTFS n'était fourni. Ce contrôle valide l'extrait AURA avec le moteur existant ; il ne vérifie pas la marche, la faisabilité complète de mission ou les autres nouveaux flux.
+- Le test de construction AURA passe avec la nouvelle assertion d'itinéraire ; les tests Node `national-journeys-real-slice` et `national-stop-fallback` passent **12/12**. L'intégration des autres ressources au moteur et leur couverture de trajets restent à vérifier. Un ZIP valide seul ne prouve pas le raccordement ni la disponibilité d'un trajet.
 
 ## BILAN CLAUDE DU 15/11/2026 (22 h) — mission « terminer Transports », réponse à la section 5 de Laurent
 
