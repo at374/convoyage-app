@@ -646,6 +646,12 @@ html:root[data-style]:not([data-style="classique"]) #ecran[data-vue="reglages"] 
 .cp-hub-note{margin:4px 0;font-size:.9em}
 .cp-hub-more>summary,.cp-hub-diag>summary{cursor:pointer;font-weight:600;padding:6px 0}
 .cp-hub-none{color:var(--alerte);font-weight:600;margin:0}
+.cp-hub-tad-results{margin:12px 0;padding:10px;border:1px solid var(--ligne);border-left:4px solid var(--alerte);border-radius:10px;background:var(--carte)}
+.cp-hub-tad-heading{margin:0 0 8px;font-size:1.05em}
+.cp-hub-tad-card{padding:9px;margin:8px 0;border:1px solid var(--ligne);border-radius:9px;background:var(--fond)}
+.cp-hub-tad-card strong{display:block;margin-bottom:5px}
+.cp-hub-tad-card a{display:inline-block;padding:5px 4px;font-weight:650}
+.cp-hub-tad-caveat{display:block;color:var(--doux);margin-top:5px}
 
 /* Fiche mission — cartes transports Android : prix immédiatement lisible,
    catégories visuelles et itinéraire piéton sans moteur de recherche manuel. */

@@ -393,6 +393,16 @@ test('transport à la demande : information affichée seulement dans le secteur 
  assert.equal(H.tadFor({from:HOME,to:MISSION}).length,0,'Annecy : aucun');
 });
 
+test('TAD PIPA : A10 Ambérieu et A11 Meximieux proposés selon les lieux, avec réservation obligatoire',()=>{
+ const a10=H.tadFor({from:{city:'Ambérieu-en-Bugey',lat:45.95,lon:5.34},to:{address:'PIPA, Saint-Vulbas'}});
+ assert.equal(a10.length,1);assert.match(a10[0].name,/A10/);assert.equal(a10[0].phone,'04 8000 7000');
+ assert.match(a10[0].note,/veille avant 12 h/);assert.match(a10[0].status,/non confirmés/);
+ const a11=H.tadFor({from:{city:'Meximieux'},to:{city:'PIPA'}});
+ assert.equal(a11.length,1);assert.match(a11[0].name,/A11/);
+ const reverse=H.tadFor({from:{city:'PIPA'},to:{city:'Ambérieu-en-Bugey'}});
+ assert.equal(reverse.length,1);assert.match(reverse[0].name,/A10/);
+});
+
 test('prix inconnu : lien officiel d’achat par opérateur, jamais pour une portion déjà tarifée',()=>{
  const hub=require('../transport-mission-hub.js');
  assert.equal(hub.ticketLink('SNCF').url,'https://www.sncf-connect.com/');
