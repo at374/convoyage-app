@@ -677,3 +677,10 @@ Le chargeur GTFS limite l’indexation explicite à sept dates par appel. Les tr
 ## Licence TaM vérifiée (24/11/2026)
 
 Après vérification de la fiche data.gouv.fr, TaM urbain/suburbain est sous Open Data Commons Open Database License (ODbL), comme Tisséo. La configuration du miroir et son test local reflètent cette licence; le GTFS de référence fait environ 7 Mo selon la fiche publique. Aucun tarif n’est considéré vérifié par ce raccordement.
+
+
+## Nouvelle-Aquitaine — cars régionaux repérés (24/11/2026)
+
+Le PAN recense un agrégat GTFS officiel de Nouvelle-Aquitaine Mobilités réunissant les réseaux urbains et interurbains de ses AOM. La ressource actuelle annoncée au 23/11/2026 couvre jusqu’au 23/11/2027. L’agrégat est sous ODbL avec Conditions Particulières PAN : les obligations de source, partage ouvert et repartage éventuel des bases dérivées doivent rester visibles.
+
+Le collecteur extrait uniquement les agences GTFS explicitement nommées « Cars Régionaux », exclut les ferries, et filtre les libellés indiquant scolaire ou une destination étrangère. Il segmente l’archive en fragments mobiles. Le contrôle strict de CI doit confirmer l’agence réelle, l’intégrité des fragments, l’absence de doublons et au moins une course active française. Pas de carte ni statut de réseau déployé avant cette validation et le raccordement fiche mission.

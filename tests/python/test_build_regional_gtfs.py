@@ -342,7 +342,7 @@ class TMirrorConfig(unittest.TestCase):
 
     def test_bundled_agency_feeds_are_unique_and_licensed(self):
         m = load_module()
-        self.assertEqual(len(m.BUNDLED_AGENCY_FEEDS), 3)
+        self.assertEqual(len(m.BUNDLED_AGENCY_FEEDS), 4)
         bundle = m.BUNDLED_AGENCY_FEEDS[0]
         self.assertEqual(bundle['license'], 'Licence Ouverte 2.0')
         self.assertLessEqual(bundle['download_limit'], 80 * 1024 * 1024)
@@ -357,7 +357,7 @@ class TMirrorConfig(unittest.TestCase):
         self.assertEqual(len(jvmalin['networks']), 19)
         self.assertEqual(len({agency['id'] for agency in jvmalin['networks']}), 19)
         self.assertLessEqual(jvmalin['download_limit'], 60 * 1024 * 1024)
-        self.assertEqual(len({agency['id'] for b in m.BUNDLED_AGENCY_FEEDS for agency in b['networks']}), 48)
+        self.assertEqual(len({agency['id'] for b in m.BUNDLED_AGENCY_FEEDS for agency in b['networks']}), 49)
         for agency in jvmalin['networks']:
             with self.subTest(network=agency['id']):
                 re.compile(agency['agency_pattern'])
@@ -445,6 +445,20 @@ class TOccitanieUrbanConfig(unittest.TestCase):
                 self.assertEqual(by_id[network_id]['dataset'], dataset)
                 self.assertTrue(by_id[network_id]['derive_bounds'])
                 self.assertEqual(by_id[network_id]['license'], license_name)
+
+
+class TNouvelleAquitaineConfig(unittest.TestCase):
+    def test_regional_coach_feed_is_filtered_sharded_and_licensed(self):
+        m = load_module()
+        bundle = next(b for b in m.BUNDLED_AGENCY_FEEDS
+                      if any(n['id'] == 'cars-region-nouvelle-aquitaine' for n in b['networks']))
+        network = bundle['networks'][0]
+        self.assertEqual(bundle['dataset'], 'arrets-horaires-et-parcours-theoriques-des-reseaux-nva-mobilite-agreges-1')
+        self.assertTrue(bundle['allow_mobile_sharding'])
+        self.assertEqual(bundle['exclude_route_types'], ['4'])
+        self.assertIn('cars regionaux', network['agency_pattern'])
+        self.assertTrue(network['exclude_route_patterns'])
+        self.assertIn('Conditions Particulières PAN', bundle['license'])
 
 if __name__ == '__main__':
     unittest.main()

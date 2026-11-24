@@ -23,6 +23,7 @@ on:
       - 'tests/paca-zou-proximity-real-feed.test.cjs'
       - 'tests/occitanie-lio-real-feed.test.cjs'
       - 'tests/occitanie-urban-real-feeds.test.cjs'
+      - 'tests/nouvelle-aquitaine-regional-cars-real-feed.test.cjs'
       - 'transport-mission-hub.js'
   schedule:
     - cron: '41 2 * * 1'   # chaque lundi (consommation GitHub Actions : quelques minutes par semaine)
@@ -107,6 +108,10 @@ jobs:
         env:
           REQUIRE_REAL_GTFS: '1'
         run: node --test tests/occitanie-urban-real-feeds.test.cjs
+      - name: Vérifier les Cars Région Nouvelle-Aquitaine dans l’indexeur GTFS
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/nouvelle-aquitaine-regional-cars-real-feed.test.cjs
       - name: Publier les flux validés
         env:
           GH_TOKEN: ${{ github.token }}

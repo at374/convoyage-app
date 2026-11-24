@@ -391,6 +391,22 @@ BUNDLED_AGENCY_FEEDS = [{
     'publisher': 'Région Occitanie',
     'networks': [{'id': 'lio-interurbain-occitanie', 'network': 'liO — cars interurbains Occitanie', 'agency_pattern': '.*'}],
 }
+, {
+    # Nouvelle-Aquitaine Mobilités : seulement cars régionaux déclarés, hors bateaux et libellés scolaires/étrangers.
+    'dataset': 'arrets-horaires-et-parcours-theoriques-des-reseaux-nva-mobilite-agreges-1',
+    'url': 'https://transport.data.gouv.fr/resources/82321/download',
+    'download_limit': 128 * 1024 * 1024,
+    'allow_mobile_sharding': True,
+    'exclude_route_types': ['4'],
+    'license': 'ODbL 1.0 + Conditions Particulières PAN',
+    'publisher': 'Nouvelle-Aquitaine Mobilités',
+    'networks': [{
+        'id': 'cars-region-nouvelle-aquitaine',
+        'network': 'Cars Région Nouvelle-Aquitaine',
+        'agency_pattern': 'cars regionaux',
+        'exclude_route_patterns': ['scolaire|scolaires|school', 'ital(?:ie|y|ia)|espagne|spain|andorre|andorra|portugal|irun|san.?sebastian'],
+    }],
+}
 ]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
 
@@ -869,6 +885,7 @@ def main():
                 with zipfile.ZipFile(source_path) as source_zip:
                     for agency in bundle['networks']:
                         spec = {'pattern': agency.get('agency_pattern') or re.escape(norm(agency['agency_name'])),
+                                'exclude_route_patterns': agency.get('exclude_route_patterns', bundle.get('exclude_route_patterns', [])),
                                 'exclude_route_types': bundle.get('exclude_route_types', [])}
                         try:
                             data, info = extract(source_zip, spec, allow_oversize=bool(bundle.get('allow_mobile_sharding')))
