@@ -259,7 +259,7 @@ MIRROR = [
      'dataset': 'arrets-lignes-regulieres-reseau-de-transport-urbain-a-autun',
      'url': 'https://static.data.gouv.fr/resources/arrets-lignes-regulieres-reseau-de-transport-urbain-a-autun/20251030-071946/ligne-a-autun-ca-roule.zip',
      'bounds': [46.90, 4.24, 47.02, 4.39],
-     'license': 'ODbL 1.0 + conditions particulières PAN', 'allow_mobile_sharding': True,
+     'license': 'ODbL 1.0 + conditions particulières PAN',
      'publisher': 'Communauté de communes du Grand Autunois Morvan'},
     {'id': 'papillon-cosne', 'network': 'Papillon Cosne-Cours-sur-Loire',
      'dataset': 'donnees-du-reseau-de-bus-papillon-a-cosne-cours-sur-loire',
@@ -338,7 +338,7 @@ BUNDLED_AGENCY_FEEDS = [{
     'url': 'https://transport.data.gouv.fr/resources/83521/download',
     'download_limit': 60 * 1024 * 1024,
     'exclude_route_types': [],
-    'license': 'ODbL 1.0 + conditions particulières PAN',
+    'license': 'ODbL 1.0 + conditions particulières PAN', 'allow_mobile_sharding': True,
     'publisher': 'JVMALIN / Région Centre-Val de Loire et autorités organisatrices partenaires',
     'networks': [
         {'id': 'jvmalin-amelys-montargis', 'network': 'Amelys Montargis', 'agency_name': 'Amelys', 'agency_pattern': 'amelys'},
