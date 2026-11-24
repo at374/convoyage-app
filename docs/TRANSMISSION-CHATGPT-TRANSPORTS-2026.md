@@ -704,3 +704,8 @@ Le PAN publie un GTFS Destineo courant couvrant Aléop et plusieurs réseaux urb
 La ressource GTFS-Flex TAD est distincte. Sa page officielle indique une validité affichée du 27/08/2026 au 18/09/2026, une dernière modification le 30/08/2026 et 147 707 erreurs de validation. Elle est donc **découverte seulement et périmée au 24/11** : ne pas la proposer comme horaire disponible. Rechercher une ressource TAD fraîche ou un autre flux avant toute intégration.
 
 Ressources officielles : [agrégat Destineo](https://transport.data.gouv.fr/datasets/arrets-horaires-et-circuits-des-lignes-de-transports-en-commun-en-pays-de-la-loire-gtfs-destineo-reseaux-aom-aleop-1), [TAD GTFS-Flex Aléop](https://transport.data.gouv.fr/datasets/transports-a-la-demande-en-pays-de-la-loire-gtfs-flex-aleop).
+
+
+## Collectes obsolètes remplacées par le run courant (24/11/2026)
+
+Le workflow régional garde un seul groupe de collecte et annule désormais un run antérieur lorsqu’un nouveau commit arrive sur la branche. Ce choix évite de bloquer les corrections derrière des collectes anciennes; seul le run déclenché par la tête de branche la plus récente peut publier. Le workflow carte reste indépendant et conserve son calendrier de mise à jour.
