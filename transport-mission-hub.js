@@ -8,7 +8,7 @@
  */
 (function(root){
 'use strict';
-const VERSION='hub-20261113';
+const VERSION='hub-20261124-tad-main';
 const SWISS_BOX={minLat:45.80,maxLat:47.90,minLon:5.90,maxLon:10.60};
 const GENEVA={lat:46.2044,lon:6.1432};
 // Parking des loueurs P21 (Genève, secteur France) : point GPS donné par Laurent. Seule la MARCHE vers/depuis P21 passe par l'intérieur
@@ -299,6 +299,10 @@ function fromGTFS(rows,network='Réseau local'){
    return out;
   });
   return {...journey((r.network||network)+' (GTFS)'+(r.onDemand?' · à la demande 📞':''),legs),
+   // Les données Flex doivent traverser la normalisation : sans ce champ,
+   // assess() perdrait les exigences de réservation et pourrait surévaluer le trajet.
+   ...(r.flexBooking&&typeof r.flexBooking==='object'?{flexBooking:{...r.flexBooking}}:
+    r.isFlex===true||r.gtfsFlex===true?{flexBooking:{noticeMinutes:null,reservationConfirmed:false,pickupTimeConfirmed:false}}:{}),
    // Static GTFS proves a scheduled service, not its live operation.
    // Never label the itinerary as confirmed until a live source validates it.
    missing:['horaire GTFS local non confirmé en temps réel',
@@ -731,8 +735,30 @@ function dayWindowOk(j,task){
  const reference=parisDayParts(task.latestArrival||task.earliestDeparture);
  return !reference||dep.day===reference.day;
 }
+// Un GTFS-Flex publie une fenêtre de service, pas un horaire ni une réservation.
+function flexBookingCheck(booking,now=Date.now()){
+ if(!booking||typeof booking!=='object')return null;
+ const notice=booking.noticeMinutes;
+ const hasNotice=typeof notice==='number'&&Number.isFinite(notice)&&notice>=0;
+ const requested=ms(booking.requestedPickup);
+ const current=ms(now);
+ const deadline=Number.isFinite(requested)&&hasNotice?requested-notice*60000:null;
+ const noticeMet=deadline!==null&&Number.isFinite(current)&&current<=deadline;
+ const confirmed=booking.reservationConfirmed===true&&booking.pickupTimeConfirmed===true;
+ // Une réservation déjà confirmée reste valable même après l'échéance
+ // de préavis, sous réserve que l'heure de prise en charge soit confirmée.
+ // Le préavis sert à déterminer si une NOUVELLE demande est encore possible.
+ return {noticeMinutes:hasNotice?notice:null,noticeMet,confirmed,
+  reason:confirmed?null:
+   !hasNotice?'transport à la demande : préavis de réservation inconnu':
+   !Number.isFinite(requested)?'transport à la demande : heure de prise en charge non confirmée':
+   !noticeMet?'transport à la demande : délai de réservation dépassé':
+   'transport à la demande : réservation et heure de prise en charge non confirmées'};
+}
 function assess(j,task,fareFor){
  const reasons=[...(j.missing||[])];
+ const flex=j.flexBooking?flexBookingCheck(j.flexBooking,task.now??Date.now()):null;
+ if(flex?.reason)reasons.push(flex.reason);
  // Un centre-ville permet de chercher, mais ne confirme jamais l'arrivée à l'adresse exacte.
  if(task.approximateEndpoint===true)reasons.push('point de départ ou d’arrivée approximatif (centre-ville) : adresse exacte à vérifier');
  const legs=j.legs;
@@ -1076,7 +1102,7 @@ function makeProviders(r,opts={}){
    // 23/11/2026 : version ajoutée à l'URL du worker (jusqu'ici absente) pour que le correctif de
    // cession entre paires de réseaux (runCorrespondances, transport-hub-local-worker.js) soit bien
    // rechargé par les navigateurs/service worker en cache, au même titre que les autres fichiers.
-   try{w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js?v=bboxesnear-correspondances-20261123a');}
+   try{w=r.__cpHubWorker=new r.Worker('transport-hub-local-worker.js?v=tad-main-20261124a');}
    catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
    r.__cpHubWorkerPending=new Map();
    const fail=e=>{r.__cpHubWorkerOffUntil=Date.now()+10000;r.__cpHubWorker=null;for(const q of r.__cpHubWorkerPending.values())q.reject(e);r.__cpHubWorkerPending.clear();try{w.terminate();}catch(_){}};
@@ -1090,7 +1116,7 @@ function makeProviders(r,opts={}){
   r.__cpHubWorkerPending.set(id,{resolve,reject,t});
   try{w.postMessage({id,...payload});}catch(e){r.__cpHubWorkerPending.delete(id);clearTimeout(t);noteWorkerFail('postMessage: '+(e&&e.message||e));reject(e);}
  });
- const workerRows=(key,urls,date,from,to,extra)=>workerCall({key,urls,date,from,to,radius:3000,...extra}).then(d=>d.rows);
+ const workerRows=(key,urls,date,from,to,extra)=>workerCall({key,urls,date,from,to,radius:3000,...extra});
  // 21/11/2026 (Laurent : « l'écran se fige pendant la recherche ») : la recherche de correspondances
  // (nearbyTransferTrips même réseau + CPGTFSFederation.crossNetworkTrips entre réseaux, jusqu'à 28 paires
  // de réseaux) est le calcul le plus lourd de toute la recherche transport et tournait sur le fil principal.
@@ -1395,8 +1421,8 @@ function makeProviders(r,opts={}){
      // 5000 m déjà utilisé par OpenTripPlanner (ligne ~1270), qui lui trouvait bien ce trajet.
      const radiusMeters=Math.max(5000,Number.isFinite(task.walkMaxMeters)&&task.walkMaxMeters>0?task.walkMaxMeters*1.5:5000);
      // Calcul hors du fil de l'écran (Web Worker) ; en cas d'échec du worker, ancien calcul sur le fil principal (même résultat).
-     let rows=null,_viaWorker=false,_feedInfo=null;
-     if(canWorker()){_viaWorker=true;try{rows=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to)),radius:radiusMeters});}catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}}
+     let rows=null,_viaWorker=false,_feedInfo=null,localFeed=null,workerCandidates=null;
+     if(canWorker()){_viaWorker=true;try{({rows,candidates:workerCandidates}=await workerRows(id+'|'+date,urls,date,pt(task.from),pt(task.to),{clock,arriveBy:!!w.arriveBy,directMeters:meters(pt(task.from),pt(task.to)),radius:radiusMeters,includeFlex:typeof opts.onFlexCandidates==='function'||!!opts.flexBookings}));}catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;rows=null;}}
      if(rows===null){
       _viaWorker=false;
       let promise=cache.get(id+'|'+date);
@@ -1405,7 +1431,7 @@ function makeProviders(r,opts={}){
        cache.set(id+'|'+date,promise);
        promise.catch(()=>cache.delete(id+'|'+date));
       }
-      const feed=await promise;
+      const feed=localFeed=await promise;
       _feedInfo={archiveBytes:feed.archiveBytes,expandedBytes:feed.expandedBytes,trips:feed.files?.trips?.length??null,stopTimes:feed.files?.stop_times?.length??null};
       rows=attachGTFSFares(feed,r.CPGTFSIndex.nearbyDirectTrips(feed.files,feed.index,date,pt(task.from),pt(task.to),radiusMeters),r.CPGTFSFares);
      }
@@ -1427,6 +1453,22 @@ function makeProviders(r,opts={}){
      try{const map=r.__cpGtfsDebug||(r.__cpGtfsDebug=new Map());const prev=map.get(dbgKey);
       map.set(dbgKey,{at:Date.now(),date,clock,from:pt(task.from),to:pt(task.to),radiusMeters,url:urls[0],viaWorker:_viaWorker,rawCandidates:Array.isArray(rows)?rows.length:null,feed:_feedInfo,kept:(prev&&Array.isArray(prev.kept))?prev.kept:[]});}catch(_){}
      if(signal?.aborted)return [];
+     // GTFS-Flex metadata: course and booking windows are discovered automatically
+     // from the same regional feed, never converted into invented fixed departures.
+     // Only a separately supplied, operator-confirmed pickup AND arrival may yield a journey.
+     const flexRows=[];
+     if(r.CPGTFSFlexCourses?.nearby && (workerCandidates || localFeed)){
+      try{
+       const candidates=workerCandidates||r.CPGTFSFlexCourses.nearby(localFeed,date,pt(task.from),pt(task.to),radiusMeters);
+       if(typeof opts.onFlexCandidates==='function'&&candidates.length&&!signal?.aborted)
+        opts.onFlexCandidates({task,network:name,candidates});
+       const bookings=Array.isArray(opts.flexBookings)?opts.flexBookings:[];
+       for(const c of candidates)for(const booking of bookings){
+        const confirmed=r.CPGTFSFlexCourses.toHubRow(c,booking);
+        if(confirmed){flexRows.push(confirmed);break;}
+       }
+      }catch(_){/* Flex metadata unavailable: normal GTFS search remains operational. */}
+     }
      const sec=t=>{const a=String(t||'').split(':').map(Number);return a.length===3&&a.every(Number.isFinite)?a[0]*3600+a[1]*60+a[2]:NaN;};
      // Select the best boarding/alighting stop pair for each actual vehicle
      // BEFORE imposing the mobile card limit. Otherwise 500 stop-pair variants
@@ -1466,7 +1508,7 @@ function makeProviders(r,opts={}){
      // maintenant la liste des départs retenus, pour voir s'ils sont bien après midi ou si le filtre
      // géographique/horaire les élimine déjà à cette étape, avant même la vérification de marge.
      try{const dbg=r.__cpGtfsDebug&&r.__cpGtfsDebug.get(dbgKey);if(dbg)dbg.kept=(Array.isArray(dbg.kept)?dbg.kept:[]).concat(filtered.map(x=>x.departure));}catch(_){}
-     return fromGTFS(filtered,name);
+     return fromGTFS(filtered.concat(flexRows),name);
     }};
   }
   // V306 : correspondances entre réseaux (ex. Taninges → Cluses en car Région à la demande, puis TER Cluses → Annecy).
@@ -2616,17 +2658,41 @@ function card(doc,j,labels,expanded=false,task=null){
 }
 // Transports à la demande : information seulement (réservation obligatoire, aucun horaire ni prix affiché comme trajet).
 const TAD=[
- {name:'Flexi (Synchro mobilités, Grand Chambéry)',bounds:[45.45,5.75,45.65,6.15],url:'https://synchro.grandchambery.fr/',note:'réservation par téléphone (04 79 68 73 73), appli ou site ; même tarif que le bus'},
- {name:'Cars Région Y92 / Y93 / Y94 à la demande (Cluses – Taninges – Morzine / Praz de Lys / Sixt)',bounds:[46.02,6.50,46.22,6.78],url:'https://www.laregionvoustransporte.fr/',note:'⚠️ à réserver 24 h à l’avance (la veille avant 16 h), 48 h ou plus pour un lundi (réserver le vendredi avant 16 h), 📞 numéro à appeler : 04 8000 7000 ; seuls les horaires de la fiche de ligne existent'},
- {name:'Mobéa (Ondéa Grand Lac)',bounds:[45.65,5.75,45.85,6.05],url:'https://www.ondeagrandlac.fr/',note:'réservation obligatoire'}
+ {name:'Flexi (Synchro mobilités, Grand Chambéry)',bounds:[45.45,5.75,45.65,6.15],url:'https://synchro.grandchambery.fr/',note:'Réservation obligatoire par téléphone (04 79 68 73 73), application ou site. Préavis : à vérifier auprès de l’opérateur.',bookingUrl:'https://synchro.grandchambery.fr/',phone:'04 79 68 73 73'},
+ {name:'Cars Région Y92 / Y93 / Y94 à la demande (Cluses – Taninges – Morzine / Praz de Lys / Sixt)',bounds:[46.02,6.50,46.22,6.78],url:'https://www.laregionvoustransporte.fr/',phone:'04 8000 7000',note:'⚠️ à réserver 24 h à l’avance (la veille avant 16 h), 48 h ou plus pour un lundi (réserver le vendredi avant 16 h), 📞 numéro à appeler : 04 8000 7000 ; seuls les horaires de la fiche de ligne existent'},
+ {name:'Mobéa (Ondéa Grand Lac)',bounds:[45.65,5.75,45.85,6.05],url:'https://www.ondeagrandlac.fr/',note:'Réservation obligatoire. Préavis et disponibilité à confirmer auprès de l’opérateur.',bookingUrl:'https://www.ondeagrandlac.fr/'}
 ];
-function tadFor(task){const pts=[pt(task?.from),pt(task?.to)].filter(Boolean);
- return TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));}
+const PIPA_TAD=[
+ {name:'Cars Région A10 · Ambérieu-en-Bugey ↔ Lagnieu ↔ PIPA',line:'A10',url:'https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/ligne/a10-amberieu-en-bugey-lagnieu-pipa/',
+  bookingUrl:'https://aura.manett-ondemand.cityway.fr/',timetableUrl:'https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/ligne/a10-amberieu-en-bugey-lagnieu-pipa/',phone:'04 8000 7000',
+  note:'TAD sur horaires et arrêts précis publiés. Réservation obligatoire au plus tard la veille avant 12 h (hors week-ends et jours fériés). Service lundi–samedi hors jours fériés. Le trajet et l’heure de prise en charge doivent être confirmés par l’opérateur.',status:'À réserver — horaire et prise en charge non confirmés'},
+ {name:'Cars Région A11 · Meximieux ↔ PIPA',line:'A11',url:'https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/ligne/a11-meximieux-pipa/',
+  bookingUrl:'https://aura.manett-ondemand.cityway.fr/',timetableUrl:'https://www.laregionvoustransporte.fr/cars-region/cars-region-de-lain/ligne/a11-meximieux-pipa/',phone:'04 8000 7000',
+  note:'TAD sur horaires et arrêts précis publiés. Réservation obligatoire au plus tard la veille avant 12 h (hors week-ends et jours fériés). Service lundi–samedi hors jours fériés. Le trajet et l’heure de prise en charge doivent être confirmés par l’opérateur.',status:'À réserver — horaire et prise en charge non confirmés'}
+];
+function endpointText(x){
+ if(typeof x==='string')return x;
+ if(!x||typeof x!=='object')return '';
+ return [x.address,x.label,x.name,x.city,x.town,x.from,x.to,x.from_address,x.to_address].filter(v=>typeof v==='string').join(' ');
+}
+function tadFor(task){
+ const pts=[pt(task?.from),pt(task?.to)].filter(Boolean),base=TAD.filter(t=>pts.some(p=>p.lat>=t.bounds[0]&&p.lat<=t.bounds[2]&&p.lon>=t.bounds[1]&&p.lon<=t.bounds[3]));
+ const a=endpointText(task?.from)+' '+String(task?.fromName||task?.fromCity||task?.origin||''),b=endpointText(task?.to)+' '+String(task?.toName||task?.toCity||task?.destination||'');
+ const pipa=/pipa|parc industriel de la plaine de l.?ain|saint[- ]?vulbas/i.test(a+' '+b);
+ if(pipa){
+  if(/amb[ée]rieu/i.test(a+' '+b))base.push(PIPA_TAD[0]);
+  if(/meximieux/i.test(a+' '+b))base.push(PIPA_TAD[1]);
+  // La fiche mission peut ne contenir que l’adresse d’arrivée. Afficher les deux accès PIPA
+  // dans ce cas, sans prétendre qu’un départ depuis une ville précise a été trouvé.
+  if(!/amb[ée]rieu|meximieux/i.test(a+' '+b))base.push(...PIPA_TAD);
+ }
+ return [...new Map(base.map(t=>[t.name,t])).values()];
+}
 let ordreInverse=false;try{ordreInverse=localStorage.getItem('cp_hub_ordre')==='desc';}catch(_){}
 function viewFingerprint(v){
  const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters].join(','):'';
  return [v.done?1:0,v.total,v.longShown,(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).map(one).join(';'),v.others&&v.others.length,
-  Object.entries(v.errors||{}).map(([k,e])=>k+e).join('|'),Object.entries(v.received||{}).join('|'),ordreInverse?'desc':'asc'].join('#');
+  (v.flexCandidates||[]).map(c=>JSON.stringify([c.network,c.tripId,c.pickupWindow,c.pickupRule])).join('|'),Object.entries(v.errors||{}).map(([k,e])=>k+e).join('|'),Object.entries(v.received||{}).join('|'),ordreInverse?'desc':'asc'].join('#');
 }
 function render(host,v){
  const doc=host.ownerDocument;
@@ -2773,6 +2839,48 @@ function render(host,v){
   host.appendChild(info);
   }
  }
+ // A GTFS-Flex window describes where/when a TAD can be REQUESTED.
+ // It must never appear among ranked scheduled routes until a real booking
+ // and concrete pickup/drop-off times are confirmed by the operator.
+ if(Array.isArray(v.flexCandidates)&&v.flexCandidates.length){
+  const safe=v.flexCandidates.filter(c=>c?.kind==='gtfs-flex-candidate'&&c.pickupWindow);
+  const seen=new Set(),selected=[];
+  for(const c of safe){
+   const k=[c.network,c.tripId,c.pickupWindow.startSeconds,c.pickupWindow.endSeconds].join('|');
+   if(seen.has(k))continue;seen.add(k);selected.push(c);
+  }
+  if(selected.length){
+   const group=el(doc,'section','cp-hub-flex-info cp-hub-tad-results');
+   group.appendChild(el(doc,'h3','cp-hub-tad-heading','Résultats de transport à la demande'));
+   group.appendChild(el(doc,'p','cp-hub-note','Services TAD détectés pour cette zone et cette date. Une fenêtre GTFS n’est pas un départ : la réservation et l’heure de prise en charge doivent être confirmées avant de déclarer le trajet réalisable.'));
+   const asClock=n=>{if(!Number.isFinite(n))return '?';const h=Math.floor(n/3600),m=Math.floor(n%3600/60);return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');};
+   for(const c of selected.slice(0,5)){
+    const card=el(doc,'details','cp-hub-flex-card');
+    const network=String(c.network||c.line||'Réseau TAD');
+    const title=network+' · '+(c.line||'TAD')+' · '+asClock(c.pickupWindow.startSeconds)+'–'+asClock(c.pickupWindow.endSeconds)+' (fenêtre, non départ)';
+    card.appendChild(el(doc,'summary',null,title));
+    card.appendChild(el(doc,'p','cp-hub-note','Transport non confirmé · Prix à confirmer · Réservation et heure de prise en charge à confirmer. Trajet piéton non calculable sans heure et arrêts confirmés.'));
+    const rule=c.pickupRule;
+    if(rule?.bookingType==='1'&&Number.isFinite(rule.noticeMinutes))
+     card.appendChild(el(doc,'p','cp-hub-note','Préavis minimum : '+rule.noticeMinutes+' min avant la course.'));
+    else if(rule?.bookingType==='2'&&Number.isFinite(rule.priorNoticeLastDay)&&rule.priorNoticeLastTime)
+     card.appendChild(el(doc,'p','cp-hub-note','Réservation au plus tard '+rule.priorNoticeLastDay+' jour(s) avant, à '+rule.priorNoticeLastTime+'.'));
+    else card.appendChild(el(doc,'p','cp-hub-note','Conditions de réservation à vérifier auprès de l’opérateur.'));
+    if(rule?.bookingUrl&&/^https:\/\//i.test(rule.bookingUrl)){
+     const link=el(doc,'a',null,'Réserver sur le site de l’opérateur');
+     link.href=rule.bookingUrl;link.target='_blank';link.rel='noopener noreferrer';card.appendChild(link);
+    }
+    if(rule?.phoneNumber)card.appendChild(el(doc,'p','cp-hub-note','Réservation par téléphone : '+rule.phoneNumber));
+    if(rule?.message)card.appendChild(el(doc,'p','cp-hub-note','Information opérateur : '+String(rule.message).slice(0,300)));
+    if(rule?.infoUrl&&/^https:\/\//i.test(rule.infoUrl)){
+     const link=el(doc,'a',null,'Informations de réservation');link.href=rule.infoUrl;link.target='_blank';link.rel='noopener noreferrer';card.appendChild(link);
+    }
+    group.appendChild(card);
+   }
+   if(selected.length>5)group.appendChild(el(doc,'p','cp-hub-note',selected.length-5+' autre(s) course(s) TAD dans cette zone.'));
+   host.appendChild(group);
+  }
+ }
  const tads=tadFor(v.task);
  if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' non affiché'+(v.hidden.tooEarly>1?'s':'')+' : horaires incompatibles avec la mission (départ avant la fin de la mission précédente, arrivée trop tôt) ou marche plus longue que la limite réglée.'));
  if(v.done&&v.hidden&&v.hidden.tooEarly){const h=v.hidden,parts=[];if(h.longWalk)parts.push(h.longWalk+' à cause d’une marche trop longue (réglage Paramètres)');if(h.before)parts.push(h.before+' partent avant la fin de la mission précédente');if(h.early)parts.push(h.early+' arrivent trop tôt');if(h.night)parts.push(h.night+' hors plage de jour');
@@ -2801,14 +2909,29 @@ function render(host,v){
  // désormais aussi dès qu'il reste des trajets non affichés, même quand d'autres trajets sont visibles.
  if(v.done&&(!v.total||(v.hidden&&v.hidden.tooEarly))&&v.diag&&v.diag.evaluated){const d=v.diag;host.appendChild(el(doc,'p','cp-hub-note','Diagnostic (version 17/11 k) : '+d.evaluated+' proposition'+(d.evaluated>1?'s':'')+' évaluée'+(d.evaluated>1?'s':'')+(d.noTimes?', dont '+d.noTimes+' sans horaires exploitables':'')+(d.reasons.length?' · motifs : '+d.reasons.map(r=>r[0]+' ('+r[1]+')').join(' ; '):'')+'.'));}
  if(v.done&&v.discarded){const n=Object.values(v.discarded).reduce((x,y)=>x+y,0);if(n)host.appendChild(el(doc,'p','cp-hub-note',n+' proposition'+(n>1?'s':'')+' écartée'+(n>1?'s':'')+' (détour excessif ou marche plus directe).'));}
- if(v.done&&tads.length){const p=el(doc,'p','cp-hub-note','Transport à la demande possible dans ce secteur (non intégré au classement) : ');
-  tads.forEach((t,i)=>{const a=el(doc,'a',null,t.name);a.href=t.url;a.target='_blank';a.rel='noopener noreferrer';p.appendChild(a);p.appendChild(doc.createTextNode(' — '+t.note+(i<tads.length-1?' · ':'.')));});
-  host.appendChild(p);}
+ if(v.done&&tads.length){
+  const group=el(doc,'section','cp-hub-tad-results');
+  group.appendChild(el(doc,'h3','cp-hub-tad-heading','Autres résultats TAD à réserver'));
+  for(const t of tads){
+   const item=el(doc,'article','cp-hub-tad-card');
+   item.appendChild(el(doc,'strong',null,t.name));
+   item.appendChild(el(doc,'p','cp-hub-note',t.status||'Transport à la demande · disponibilité à confirmer auprès de l’opérateur.'));
+   item.appendChild(el(doc,'p','cp-hub-note',t.note));
+   if(t.phone){const tel=el(doc,'a','cp-hub-tad-phone','☎ Réserver par téléphone : '+t.phone);tel.href='tel:'+t.phone.replace(/\s/g,'');item.appendChild(tel);}
+   const links=el(doc,'p','cp-hub-tad-links');
+   if(t.bookingUrl){const a=el(doc,'a',null,'Réserver en ligne');a.href=t.bookingUrl;a.target='_blank';a.rel='noopener noreferrer';links.appendChild(a);}
+   if(t.url){if(links.childNodes.length)links.appendChild(doc.createTextNode(' · '));const a=el(doc,'a',null,'Conditions et horaires officiels');a.href=t.url;a.target='_blank';a.rel='noopener noreferrer';links.appendChild(a);}
+   item.appendChild(links);
+   item.appendChild(el(doc,'small','cp-hub-tad-caveat','Résultat indicatif, séparé du classement des trajets confirmés. Le coût total de transport et la prise en charge ne sont pas confirmés ici.'));
+   group.appendChild(item);
+  }
+  host.appendChild(group);
+ }
  if(v.done&&!v.picks.some(p=>p.journey.feasible)&&v.picks.some(p=>p.journey.scheduled))host.appendChild(el(doc,'p','cp-hub-note','Aucun trajet confirmé en temps réel pour l’instant. Les propositions « Horaire programmé » suivent les horaires officiels publiés, avec marches et marge vérifiées : à confirmer le jour J.'));
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render,dayScheduleForLeg,gtfsTablesForDaySchedule,hmFromSeconds};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;

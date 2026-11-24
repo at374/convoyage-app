@@ -757,3 +757,75 @@ test('session : pourcentage d\'avancée et temps restant estimé dans view()',as
  assert.equal(v.done,true);assert.equal(v.percent,100);assert.equal(v.remainingMs,0);
  s.dispose();
 });
+
+test('GTFS-Flex : préavis absent, dépassé et réservation non confirmée bloquent Réalisable',()=>{
+ const now=at(8,0);
+ const base={requestedPickup:at(10,0),noticeMinutes:60};
+ assert.match(H.flexBookingCheck({...base,noticeMinutes:null},now).reason,/inconnu/);
+ assert.match(H.flexBookingCheck({...base,noticeMinutes:180},now).reason,/dépassé/);
+ assert.match(H.flexBookingCheck(base,now).reason,/non confirmées/);
+ assert.equal(H.flexBookingCheck({...base,reservationConfirmed:true,pickupTimeConfirmed:true},now).reason,null);
+ const j={source:'TAD',sources:['TAD'],legs:[bus(at(8,30),at(9,0),STOP1,STOP2)],
+  flexBooking:base};
+ const task={latestArrival:at(10,0),now};
+ const checked=H.assess(j,task);
+ assert.equal(checked.feasible,false);
+ assert.equal(checked.scheduled,false);
+ assert.equal(checked.status,'Transport non confirmé');
+ assert.match(checked.statusDetail,/réservation et heure/);
+});
+
+test('GTFS local conserve le préavis Flex après normalisation et bloque la fausse faisabilité',()=>{
+ const rows=[{
+  network:'TAD exemple',tripId:'FLEX-1',
+  originStop:{name:'A',...STOP1},destinationStop:{name:'B',...STOP2},
+  departure:at(8,30),arrival:at(9,0),
+  flexBooking:{noticeMinutes:60,requestedPickup:at(8,30),
+   reservationConfirmed:false,pickupTimeConfirmed:false}
+ }];
+ const [j]=H.fromGTFS(rows,'TAD exemple');
+ assert.equal(j.flexBooking.noticeMinutes,60);
+ assert.equal(j.flexBooking.reservationConfirmed,false);
+ const assessed=H.assess(j,{latestArrival:at(10,0),now:at(8,0)});
+ assert.equal(assessed.feasible,false);
+ assert.equal(assessed.scheduled,false);
+ assert.match(assessed.statusDetail,/transport à la demande/);
+});
+
+test('GTFS-Flex signalé sans métadonnées de réservation reste non confirmé',()=>{
+ const [j]=H.fromGTFS([{
+  network:'TAD exemple',isFlex:true,tripId:'FLEX-2',
+  originStop:{name:'A',...STOP1},destinationStop:{name:'B',...STOP2},
+  departure:at(8,30),arrival:at(9,0)
+ }],'TAD exemple');
+ assert.equal(j.flexBooking.noticeMinutes,null);
+ const x=H.assess(j,{latestArrival:at(10,0),now:at(8,0)});
+ assert.equal(x.feasible,false);
+ assert.equal(x.scheduled,false);
+ assert.match(x.statusDetail,/préavis de réservation inconnu/);
+});
+
+test('TAD réservé : expiration du préavis ne révoque pas une réservation confirmée',()=>{
+ const now=at(8,0);
+ const booking={requestedPickup:at(8,30),noticeMinutes:60,
+  reservationConfirmed:true,pickupTimeConfirmed:true};
+ const checked=H.flexBookingCheck(booking,now);
+ assert.equal(checked.noticeMet,false);
+ assert.equal(checked.confirmed,true);
+ assert.equal(checked.reason,null);
+ const pending=H.flexBookingCheck({...booking,reservationConfirmed:false},now);
+ assert.match(pending.reason,/délai de réservation dépassé/);
+ const j={source:'TAD',sources:['TAD'],legs:[bus(at(8,30),at(9,0),STOP1,STOP2)],flexBooking:booking};
+ const assessed=H.assess(j,{latestArrival:at(10,0),now});
+ assert.equal(assessed.feasible,true);
+});
+
+test('TAD PIPA : A10 Ambérieu et A11 Meximieux proposés selon les lieux, avec réservation obligatoire',()=>{
+ const a10=H.tadFor({from:{city:'Ambérieu-en-Bugey',lat:45.95,lon:5.34},to:{address:'PIPA, Saint-Vulbas'}});
+ assert.equal(a10.length,1);assert.match(a10[0].name,/A10/);assert.equal(a10[0].phone,'04 8000 7000');
+ assert.match(a10[0].note,/veille avant 12 h/);assert.match(a10[0].status,/non confirmés/);
+ const a11=H.tadFor({from:{city:'Meximieux'},to:{city:'PIPA'}});
+ assert.equal(a11.length,1);assert.match(a11[0].name,/A11/);
+ const reverse=H.tadFor({from:{city:'PIPA'},to:{city:'Ambérieu-en-Bugey'}});
+ assert.equal(reverse.length,1);assert.match(reverse[0].name,/A10/);
+});
