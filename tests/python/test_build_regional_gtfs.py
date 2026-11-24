@@ -381,5 +381,28 @@ class TMirrorConfig(unittest.TestCase):
             self.assertEqual(m.stop_bounds(result), [49.44, 1.09, 49.45, 1.1])
             self.assertNotIn('BOAT', result.read('routes.txt').decode())
 
+
+class TMobileSharding(unittest.TestCase):
+    def test_oversized_gtfs_is_split_without_splitting_or_duplicating_trips(self):
+        m = load_module()
+        with zipfile.ZipFile(io.BytesIO(tcl_like_feed())) as source:
+            data, info = m.extract(source, {'pattern': 'tcl'})
+        self.assertIsNotNone(data, info)
+        shards = list(m.iter_gtfs_shards(data, target_stop_times_bytes=1))
+        self.assertEqual(len(shards), 3)
+        seen = set()
+        for shard, shard_info in shards:
+            with zipfile.ZipFile(io.BytesIO(shard)) as archive:
+                trips, stop_times = m.validate(archive)
+                self.assertEqual(trips, 1)
+                _, rows = m.read_table(archive, 'trips.txt')
+                ids = {row['trip_id'] for row in rows}
+                self.assertEqual(len(ids), 1)
+                self.assertTrue(seen.isdisjoint(ids), 'une course ne doit pas apparaître dans plusieurs fragments')
+                seen.update(ids)
+                self.assertEqual(stop_times, shard_info['stop_times'])
+                self.assertTrue(m.read_table(archive, 'calendar_dates.txt')[1])
+        self.assertEqual(seen, {'T1', 'T2', 'T3'})
+
 if __name__ == '__main__':
     unittest.main()
