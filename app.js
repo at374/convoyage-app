@@ -1,6 +1,3 @@
-Warning: truncated output (original token count: 89842)
-Total output lines: 3753
-
 // Convoyage Ultra — application téléphone (Android, iPhone, ordinateur). Lecture seule des missions
 // synchronisées par l'extension ; aucune action n'est faite sur les plateformes.
 (() => {
@@ -651,7 +648,2113 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     const lieu = (v, d) => esc(v || '?') + (d ? ' (' + esc(String(d).toUpperCase()) + ')' : '');
     const blocAttente = attente.length ? `<div class="carte" id="aFacturer"><h2>À facturer — pas encore dans une facture validée</h2>` + attente.map(g => `<h3>${esc(nomMois(g.mois))}</h3><table class="tableau">
         ${ligne('Missions effectuées — prestations', esc(euros(g.prestation)))}${g.frais ? ligne('Frais à rembourser', esc(euros(g.frais))) : ''}${g.annulees ? ligne(g.annulees + ' mission' + (g.annulees > 1 ? 's' : '') + ' annulée' + (g.annulees > 1 ? 's' : '') + ' — montant prévu', esc(euros(g.prestationAnnulees))) : ''}</table>
-        ${g.lignes.map(x => `<div class="factureLigne" data-afacturer="${esc(x.mission.external_id)}"><span><b>${lieu(x.mission.from_city, x.mission.from_department)} → ${lieu(x.mission.to_city, x.mission.to_department)}</b> · ${x.date != null ? esc(jour(new Date(x.date).toISOString())) : 'date ?'}</span><span>${x.mission.annulee_par_moi ? '' : esc(euros(x.prestation))} <span class="etiq ${x.annulee ? 'ko' : 'nv'}">${x.annulee ? (x.mission.annulee_par_moi ? 'annulée par toi — pénalité possible : ' + (x.mission.penalite_plateforme != null ? esc(euros(x.mission.penalite_plateforme)) : 'montant à confirmer') : x.confirme ? 'annulée — payée' : 'annulée — payée si annulation tardive') : 'effectuée'}</span>${x.etat === 1 ? ' <span class="etiq nv">à valider sur Hiflow</span>' : x.etat === 2 ? ' <…49842 tokens truncated…arriveBy,limit:6})
+        ${g.lignes.map(x => `<div class="factureLigne" data-afacturer="${esc(x.mission.external_id)}"><span><b>${lieu(x.mission.from_city, x.mission.from_department)} → ${lieu(x.mission.to_city, x.mission.to_department)}</b> · ${x.date != null ? esc(jour(new Date(x.date).toISOString())) : 'date ?'}</span><span>${x.mission.annulee_par_moi ? '' : esc(euros(x.prestation))} <span class="etiq ${x.annulee ? 'ko' : 'nv'}">${x.annulee ? (x.mission.annulee_par_moi ? 'annulée par toi — pénalité possible : ' + (x.mission.penalite_plateforme != null ? esc(euros(x.mission.penalite_plateforme)) : 'montant à confirmer') : x.confirme ? 'annulée — payée' : 'annulée — payée si annulation tardive') : 'effectuée'}</span>${x.etat === 1 ? ' <span class="etiq nv">à valider sur Hiflow</span>' : x.etat === 2 ? ' <span class="etiq ok">facture en préparation</span>' : ''}</span></div>`).join('')}`).join('') +
+      '<p class="doux">Ces montants ne sont pas comptés dans les totaux ni dans le bénéfice tant que Hiflow n’a pas validé la facture. « annulée — payée » : montant réellement dû, lu dans « Mes factures » de Hiflow (il compte dans les prestations ci-dessus). « payée si annulation tardive » : montant prévu, pas encore confirmé par Hiflow.</p></div>' : '';
+    if (!mois.length) { $('ecran').innerHTML = blocAttente + '<div class="vide">Aucune facture reçue. Ouvre « Mes factures » sur Hiflow (ordinateur), onglets « Factures en cours de paiement » et « Factures payées » : elles arrivent ici automatiquement.</div>'; return; }
+    $('ecran').innerHTML = blocAttente + annees.map(a => `<div class="carte" data-annee="${esc(a.annee)}"><h2>Année ${esc(a.annee)} — ${a.nb} facture${a.nb > 1 ? 's' : ''} validée${a.nb > 1 ? 's' : ''}</h2><table class="tableau">
+        ${ligne('Prestations facturées (HT)', esc(euros(a.prestation)))}${ligne('Frais remboursés', esc(euros(a.frais)))}${ligne('Total facturé', '<b>' + esc(euros(a.total)) + '</b>')}
+        ${ligne('Payées — ' + esc(nbM(a.trajetsPayes)), esc(euros(a.paye)))}${ligne('Facturées, non payées — ' + esc(nbM(a.trajetsEnAttente)), esc(euros(a.enAttente)))}
+        ${ligne('− Cotisations estimées (' + String(taux).replace('.', ',') + ' %)', '− ' + esc(euros(a.cotisations)))}${ligne('= Bénéfice estimé', '<b>' + esc(euros(a.benefice)) + '</b>')}</table></div>`).join('') +
+      mois.map(g => `<div class="carte mois" data-mois="${esc(g.mois)}"><h2>${esc(nomMois(g.mois))}</h2><table class="tableau">
+        ${ligne('Prestations (HT)', esc(euros(g.prestation)))}${ligne('Frais remboursés', esc(euros(g.frais)))}${ligne('Total facturé', '<b>' + esc(euros(g.total)) + '</b>')}
+        ${ligne('Missions facturées', esc(nbM(g.trajets)))}${ligne('Payées — ' + esc(nbM(g.trajetsPayes)), '<b>' + esc(euros(g.paye)) + '</b>')}${ligne('Facturées, non payées — ' + esc(nbM(g.trajetsEnAttente)), '<b>' + esc(euros(g.enAttente)) + '</b>')}${ligne('= Bénéfice estimé', '<b>' + esc(euros(g.benefice)) + '</b>')}</table>
+        ${g.factures.map(f => `<div class="factureLigne" data-fact="${esc(f.external_id)}"><span><b>Facture n° ${esc(f.numero || f.external_id)}</b> · ${esc(jour(f.emise_le))} · ${esc(f.nb_trajets || 0)} trajet${f.nb_trajets > 1 ? 's' : ''}</span><span>${esc(euros(f.total))} <span class="etiq ${f.statut === 'payee' ? 'ok' : 'nv'}">${f.statut === 'payee' ? 'payée' + (f.payee_le ? ' le ' + esc(jour(f.payee_le)) : '') : 'validée, en attente'}</span></span></div>`).join('')}</div>`).join('') +
+      '<p class="doux">Seules les factures validées par Hiflow sont comptées. Bénéfice estimé = prestations − cotisations (taux des Réglages) ; les frais sont avancés puis remboursés. Estimation à vérifier selon ta situation.</p>';
+    if (window.CPFact) window.CPFact.monter({ ecran: $('ecran'), factures: etat.factures, missions: etat.missions, feuille: $('feuille'), contenu: $('feuilleContenu'), toast, rafraichir: vueFactures });   // V224
+  }
+  // V99 : mission réellement disponible = statut disponible, date non dépassée depuis plus d'un jour, pas une ligne de « Mes trajets » (plaque devant la ville).
+  const PLAQUE_VILLE = /^\s*[A-Z]{1,2}-?\d{3}-?[A-Z]{2}\b/;
+  // V122 : « passée » = la FIN de la période est dépassée (une mission DriiveMe ouverte du 05/10 au 15/10 reste claire jusqu'au 15/10).
+  const estPassee = m => { const t = Date.parse((m.platform === 'DriiveMe' ? (m.delivery_end || m.pickup_end || m.pickup_start) : m.pickup_start) || ''); return Number.isFinite(t) && t < Date.now() - (m.platform === 'DriiveMe' ? 0 : 86400000); };
+  // V240 : un devis Hiflow accepté devient une mission de l'Agenda : il ne reste plus dans la liste des missions disponibles.
+  let _accRef = null, _accSet = new Set(), _devRef = null, _devSet = new Set();
+  const clesAcceptees = () => { if (_accRef !== etat.missions) { _accRef = etat.missions; _accSet = new Set(etat.missions.filter(x => x && x.kind === 'acceptee' && !(x.platform === 'Hiflow' && x.status === 'annulee')).map(x => x.platform + '|' + x.external_id)); } return _accSet; };
+  const clesDevis = () => { if (_devRef !== etat.missions) { _devRef = etat.missions; _devSet = new Set(etat.missions.filter(x => x && x.kind === 'disponible' && x.fees && x.fees.devis_numero).map(x => x.platform + '|' + x.external_id)); } return _devSet; };
+  const devisAccepte = m => !!m && m.platform === 'Hiflow' && (m.kind === 'acceptee' || !!(m.fees && m.fees.devis_accepte === 1));   // V241 : toute mission Hiflow de l'Agenda vient d'un devis accepté
+  const estDisponible = m => { if (!m || m.kind !== 'disponible' || (m.status !== 'disponible' && !(m.status === 'plus_vue' && m.platform === 'Hiflow' && m.fees && m.fees.devis_numero))) return false;
+    if (clesAcceptees().has(m.platform + '|' + m.external_id) || (m.fees && m.fees.devis_accepte === 1)) return false;
+    if (m.platform === 'Hiflow' && m.fees && Number(m.fees.devis_refuse) === 1) return false;   // devis refusé / expiré / annulé (marqué par le téléphone, APK 2.33)
+    if (PLAQUE_VILLE.test(String(m.from_city || '')) || PLAQUE_VILLE.test(String(m.to_city || ''))) return false;
+    const d = Date.parse(m.delivery_end || m.delivery_start || m.pickup_start || ''); return !(Number.isFinite(d) && d < Date.now()); };   // V123 : plus aucune marge — une mission dont l'heure est dépassée disparaît toute seule   // V122 : une mission DriiveMe dont la période est finie (ex. « ven. 09/10 00:00-23:59 » vue le 10/10) n'est plus disponible
+  // V278 : filtre « Devis / acceptées » : missions disponibles avec devis envoyé + missions acceptées à venir
+  const listeDevis = () => deLEdition(etat.missions).filter(m => { if (!m) return false; if (m.kind === 'disponible') return estDisponible(m) && !!(m.fees && m.fees.devis_numero); if (m.kind === 'acceptee') { if (m.status === 'annulee' || m.status === 'terminee') return false; const d = Date.parse(m.delivery_end || m.delivery_start || m.pickup_start || ''); return !(Number.isFinite(d) && d < Date.now()); } return false; });
+  function vueMissions() {
+    const dispo = etat.missions.filter(estDisponible);
+    const puces = (EDITION.plateformes.length > 1 ? ['toutes'].concat(EDITION.plateformes) : []).map(p => `<button class="puce${etat.filtre === p ? ' actif' : ''}" data-filtre="${p}">${p === 'toutes' ? 'Toutes' : esc(PLATS[p])} ${p === 'toutes' ? dispo.length : dispo.filter(m => m.platform === p).length}</button>`).join('');
+    const aVille = etat.zones.some(z => z.type === 'ville');
+    $('ecran').innerHTML = `<div class="puces" role="group" aria-label="Plateformes">${puces}<button class="puce${etat.filtre === 'devis' ? ' actif' : ''}" data-filtre="devis">📝 Devis / acceptées ${listeDevis().length}</button></div>
+      <div class="filtres"><div class="recherche"><input id="recherche" type="search" placeholder="Ville, département ou région (3 lettres)" value="${esc(etat.recherche)}" aria-label="Rechercher un lieu" autocomplete="off" aria-autocomplete="list" aria-controls="sugg">
+      <div id="sugg" class="sugg" role="listbox" hidden></div></div>
+      <select id="tri" aria-label="Trier"><option value="recent">Plus récentes</option><option value="date">Date de départ</option><option value="prix">Prix</option><option value="heure">€/heure</option><option value="proche">Les plus proches de moi</option></select></div>
+      <div class="ligneFiltres"><label>Date début<input id="fDateDeb" type="date" value="${esc((etat.plus || {}).dateDeb || '')}"></label><label>Date fin<input id="fDateFin" type="date" value="${esc((etat.plus || {}).dateFin || '')}"></label></div>
+      <div class="ligneFiltres"><select id="cote" aria-label="Lieu cherché">${Object.entries(COTES).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select>
+      <select id="rayon" aria-label="Autour de la ville"${aVille ? '' : ' disabled'}><option value="0">Ville exacte</option><option value="20">Ville + 20 km</option><option value="50">Ville + 50 km</option><option value="100">Ville + 100 km</option></select></div>
+      <div class="lignePos"><select id="posSource" aria-label="Chercher depuis"><option value="position">Depuis ma position GPS</option><option value="domicile">Depuis mon domicile</option></select><button id="btnPos" class="second" type="button">📍 Ma position</button><select id="posMax" aria-label="Distance maximale depuis ma position"><option value="0">Distance max à vol d’oiseau : sans limite</option>${[20, 50, 100, 150, 200, 300].map(k => `<option value="${k}">Max ${k} km à vol d’oiseau</option>`).join('')}</select><span class="doux" id="posInfo"></span></div>
+      ${blocPlusFiltres(dispo)}
+      <div class="zones" id="zones"></div>
+      ${etat.erreur ? `<p class="erreur">${esc(etat.erreur)}</p>` : ''}<div id="liste"></div>`;
+    $('tri').value = etat.tri; $('cote').value = etat.cote; $('rayon').value = String(etat.rayon);
+    for (const b of document.querySelectorAll('[data-filtre]')) b.onclick = () => { etat.filtre = b.dataset.filtre; memoriser(); afficher(); };
+    for (const b of document.querySelectorAll('[data-zone]')) b.onclick = () => { etat.zones.splice(Number(b.dataset.zone), 1); memoriser(); afficher(); };
+    $('tri').onchange = ev => { etat.tri = ev.target.value; memoriser(); listeMissions(); };
+    $('cote').onchange = ev => { etat.cote = ev.target.value; memoriser(); };
+    for (const id of ['fDateDeb', 'fDateFin']) $(id).onchange = () => { etat.plus = { ...etat.plus, dateDeb: $('fDateDeb').value, dateFin: $('fDateFin').value }; memoriser(); listeMissions(); };
+    $('rayon').onchange = ev => { etat.rayon = Number(ev.target.value); memoriser(); listeMissions(); };
+    $('posMax').value = String(etat.posMax); $('posSource').value = sourceRecherche(); $('posSource').onchange = ev => { ecrireLocal('cp_depuis', ev.target.value); if (ev.target.value === 'domicile' && !RT.domicile(etat.reglages)) toast('Renseigne ton domicile dans les Réglages'); listeMissions(); }; infoPosition();
+    $('btnPos').onclick = () => localiser(true);
+    $('posMax').onchange = ev => { etat.posMax = Number(ev.target.value); memoriser(); if (etat.posMax > 0 && sourceRecherche() === 'position' && !positionRecente(60)) localiser(false); else listeMissions(); };
+    brancherPlusFiltres();
+    const champ = $('recherche');
+    champ.oninput = () => { etat.recherche = champ.value; memoriser(); montrerSuggestions(); clearTimeout(vueMissions.t); vueMissions.t = setTimeout(listeMissions, 250); };
+    champ.onkeydown = ev => { if (ev.key === 'Enter') { const p = document.querySelector('#sugg button'); if (p && !$('sugg').hidden) { ev.preventDefault(); p.click(); } } else if (ev.key === 'Escape') $('sugg').hidden = true; };
+    listeMissions();
+  }
+  // V137 : position du téléphone (service de localisation de Google sur Android), demandée UNE FOIS quand on touche « Ma position » ou qu'on choisit une distance — jamais en continu. Gardée seulement sur ce téléphone (jamais envoyée au serveur).
+  // V138 : on cherche depuis « ma position » (GPS) ou depuis le domicile habituel (réglages) — au choix, gardé sur ce téléphone.
+  const sourceRecherche = () => lireLocal('cp_depuis', 'position') === 'domicile' ? 'domicile' : 'position';
+  const pointRecherche = () => sourceRecherche() === 'domicile' ? RT.domicile(etat.reglages) : etat.pos;
+  const kmVolOiseau = m => { const p = pointRecherche(), c = p ? G.coordonnees(m, 'origin') : null; return c ? Math.round(G.volOiseauKm(p, c)) : null; };
+  const positionRecente = minutes => !!(etat.pos && Date.now() - etat.pos.at < minutes * 60000);
+  function infoPosition() {
+    const i = $('posInfo'); if (!i) return;
+    i.textContent = etat.pos ? 'Position prise il y a ' + (Math.max(1, Math.round((Date.now() - etat.pos.at) / 60000)) < 60 ? Math.max(1, Math.round((Date.now() - etat.pos.at) / 60000)) + ' min' : Math.round((Date.now() - etat.pos.at) / 3600000) + ' h') : (etat.posMax > 0 ? 'Position inconnue : touche « Ma position ».' : '');
+  }
+  function localiser(manuel) {
+    if (!navigator.geolocation) { if (manuel) toast('Ce téléphone ne permet pas la localisation'); return; }
+    if (manuel) toast('Localisation…');
+    navigator.geolocation.getCurrentPosition(p => {
+      etat.pos = { lat: Math.round(p.coords.latitude * 1000) / 1000, lng: Math.round(p.coords.longitude * 1000) / 1000, at: Date.now() };
+      ecrireLocal('cp_position', etat.pos); infoPosition(); if ($('liste')) listeMissions(); if (manuel) toast('Position mise à jour');
+    }, e => { if (manuel || etat.posMax > 0) toast(e && e.code === 1 ? 'Localisation refusée : autorise-la pour Convoyage (réglages du téléphone ou du site)' : 'Position introuvable pour l’instant'); },
+    { enableHighAccuracy: false, timeout: 20000, maximumAge: 5 * 60000 });   // une seule lecture, position récente (≤ 5 min) réutilisée
+  }
+  // Suggestions dès 3 lettres (ou un numéro de département) : villes, départements, régions.
+  function montrerSuggestions() {
+    const box = $('sugg'); if (!box) return;
+    const l = G.suggestions(etat.recherche, { villes: villesConnues(), max: 7 }); chargerVillesNet(etat.recherche, montrerSuggestions);
+    if (!l.length) { box.hidden = true; box.innerHTML = ''; return; }
+    box.innerHTML = l.map((s, i) => `<button role="option" data-sugg="${i}">${esc(s.libelle)}<small>${esc(s.detail)}</small></button>`).join('');
+    box.hidden = false;
+    for (const b of box.querySelectorAll('[data-sugg]')) b.onclick = () => {
+      const s = l[Number(b.dataset.sugg)];
+      const z = s.type === 'ville' ? { type: 'ville', nom: s.nom, dep: s.dep, lat: s.lat, lng: s.lng } : { type: s.type, code: s.code };
+      z.cote = etat.cote;
+      if (!etat.zones.some(x => x.type === z.type && x.cote === z.cote && (x.code || x.nom + x.dep) === (z.code || z.nom + z.dep))) etat.zones.push(z);
+      etat.recherche = ''; memoriser(); afficher();
+    };
+  }
+  // V274 : lignes des filtres appliqués au-dessus de la liste, avec une croix pour retirer chaque filtre
+  function puces(q) {
+    const P = [], plus = etat.plus || {};
+    const add = (cle, txt) => P.push('<button type="button" class="puceFiltre" data-rm="' + esc(cle) + '" aria-label="Retirer ce filtre" style="font-size:.85rem;padding:3px 10px;border-radius:14px;border:1px solid #c9a227;background:#2a2108;color:#f5d26b;cursor:pointer">' + esc(txt) + ' <b>✕</b></button>');
+    if (etat.filtre !== 'toutes') add('plateforme', etat.filtre === 'devis' ? 'Filtre : devis envoyé / mission acceptée' : 'Plateforme : ' + etat.filtre);
+    etat.zones.forEach((z, i) => add('zone:' + i, (COTES[z.cote || 'tous'] || 'Lieu') + ' : ' + G.libelleZone(z)));
+    if (etat.zones.length && etat.rayon > 0) add('rayon', 'Autour : ville + ' + etat.rayon + ' km');
+    if (etat.posMax > 0) add('posMax', 'Max ' + etat.posMax + ' km à vol d’oiseau depuis ' + (sourceRecherche() === 'domicile' ? 'mon domicile' : 'ma position'));
+    if (q) add('recherche', 'Recherche : ' + etat.recherche);
+    const dj = s => { const m = /^(\d{4})-(\d\d)-(\d\d)/.exec(String(s || '')); return m ? m[3] + '/' + m[2] : String(s); };
+    [['client', 'Client : ', ''], ['type', 'Véhicule : ', ''], ['energie', 'Motorisation : ', ''], ['marque', 'Marque : ', ''], ['kmMin', 'Longueur min : ', ' km'], ['kmMax', 'Longueur max : ', ' km'], ['dureeMax', 'Durée max : ', ' h'], ['dateDeb', 'Départ à partir du ', ''], ['dateFin', 'Livraison jusqu’au ', '']].forEach(([k, pre, suf]) => { const v = plus[k]; if (v !== null && v !== undefined && v !== '') add('plus:' + k, pre + (k === 'dateDeb' || k === 'dateFin' ? dj(v) : v) + suf); });
+    return { n: P.length, h: P.join('') };
+  }
+  const retirerPuce = cle => { if (cle === 'plateforme') etat.filtre = 'toutes'; else if (cle === 'rayon') etat.rayon = 0; else if (cle === 'posMax') etat.posMax = 0; else if (cle === 'recherche') etat.recherche = ''; else if (cle.startsWith('zone:')) etat.zones.splice(Number(cle.slice(5)), 1); else if (cle.startsWith('plus:')) { etat.plus = Object.assign({}, etat.plus); delete etat.plus[cle.slice(5)]; } memoriser(); afficher(); };
+  function listeMissions() {
+    planifierGps();
+    const zoneListe = $('liste'); if (!zoneListe) return;
+    const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const q = norm(etat.recherche);
+    let l = etat.missions.filter(estDisponible);
+    const total = l.length;
+    if (etat.filtre === 'devis') l = listeDevis(); else if (etat.filtre !== 'toutes') l = l.filter(m => m.platform === etat.filtre);
+    l = G.filtrer(l, etat.zones, etat.rayon);
+    l = FI.appliquer(l, etat.plus, m => CALC.dureeEstimee(m).heures);   // V96 : client, véhicule, distance, durée
+    // V137/V138 : distance maximale DEPUIS MA POSITION, comptée À VOL D'OISEAU ; départ de position inconnue → gardé.
+    const kmDeMoi = m => { const p = pointRecherche(), c = p ? G.coordonnees(m, 'origin') : null; return c ? G.volOiseauKm(p, c) : null; };
+    if (etat.posMax > 0 && pointRecherche()) l = l.filter(m => { const d = kmDeMoi(m); return d == null || d <= etat.posMax; });
+    // Texte libre (sans choisir de suggestion) : recherche simple, comme avant.
+    if (q) l = l.filter(m => q.split(/[\s,]+/).filter(Boolean).some(t => [m.from_city, m.to_city, m.from_department, m.to_department, m.origin_address, m.destination_address].some(v => norm(v).includes(t))));
+    const cache = new Map(), ph = m => { if (!cache.has(m)) cache.set(m, renta(m)); return cache.get(m); };
+    if (etat.tri === 'prix') l.sort((a, b) => (b.fee || 0) - (a.fee || 0));
+    else if (etat.tri === 'heure') l.sort((a, b) => (ph(b).parHeure || 0) - (ph(a).parHeure || 0));
+    else if (etat.tri === 'proche' && pointRecherche()) l.sort((a, b) => (kmDeMoi(a) ?? 1e9) - (kmDeMoi(b) ?? 1e9));
+    else if (etat.tri === 'date') { const t = m => { const d = Date.parse(m.pickup_start || ''); return Number.isFinite(d) ? d : Infinity; }; l.sort((a, b) => { const x = t(a), y = t(b); return x === y ? 0 : x < y ? -1 : 1; }); }   // V146 : date ET heure de départ (la plus proche en haut), toutes plateformes mélangées ; sans date → en bas
+    else l.sort((a, b) => String(b.first_seen_at || '').localeCompare(String(a.first_seen_at || '')) || String(a.pickup_start || '9').localeCompare(String(b.pickup_start || '9')));   // V99 : les plus récemment parues en haut
+    listeAffichee = l;
+    const lesPuces = puces(q);
+    zoneListe.innerHTML = `${lesPuces.n ? `<div id="puces" style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0">${lesPuces.h}</div><p class="doux" id="compte">${l.length} mission(s) sur ${total} correspondent à tes filtres <button id="toutVoir" class="lienBouton">Tout afficher</button></p>` : ''}` +
+      (l.length ? (() => { let jr = ''; return l.map((m, i) => { let h = ''; { const d = Date.parse(m.pickup_start || ''); const j = Number.isFinite(d) ? new Date(d).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Date à préciser'; if (j !== jr) { h = '<div class="jour">' + esc(j) + '</div>'; jr = j; } } return h + carteMission(m, i); }).join(''); })() : `<div class="vide">${total ? 'Aucune mission ne correspond à tes filtres.' : 'Aucune mission reçue pour l’instant. Vérifie que l’extension de ton ordinateur est connectée à ton compte (Sources → Application téléphone).'}</div>`);
+    for (const b of zoneListe.querySelectorAll('.mission')) b.onclick = () => detail(listeAffichee[Number(b.dataset.i)]);
+    for (const b of zoneListe.querySelectorAll('[data-rm]')) b.onclick = ev => { ev.stopPropagation(); retirerPuce(b.dataset.rm); };
+    const tv = $('toutVoir'); if (tv) tv.onclick = () => { etat.zones = []; etat.recherche = ''; etat.plus = {}; etat.filtre = 'toutes'; memoriser(); afficher(); };   // V99 : retirer tous les filtres d'un coup
+  }
+  // V79 : Agenda complet — états (à venir, en cours, passée, annulée ?, terminée), conflits horaires, modifications.
+  const ETATS = { en_cours: ['en cours', 'ok'], annulee: ['annulée ? à vérifier', 'ko'], terminee: ['terminée', ''], passee: ['passée', ''], date_inconnue: ['date à préciser', 'nv'] };
+  function vueAgenda() {
+    const agendaMissions = planningMissions();
+    const A = window.CPAgenda.analyser(agendaMissions, etat.reglages);
+    const items = A.items.filter(x => etat.agendaTout || !((x.etat === 'passee' || x.etat === 'terminee') && x.fin && Date.now() - x.fin.t > 7 * 86400000));
+    // Calcule les enchaînements une seule fois par rendu. Les transports ne sont pas vérifiés par ce résumé.
+    const nowChain = Date.now();
+    const futureChainItems = A.items.filter(x => x.etat === 'a_venir' || x.etat === 'en_cours').sort((a, b) => (a.debut ?? Infinity) - (b.debut ?? Infinity));
+    const recentCompleted = A.items.filter(x => (x.etat === 'terminee' || x.etat === 'passee') && x.fin && Number.isFinite(x.fin.t) && nowChain - x.fin.t >= 0 && nowChain - x.fin.t <= 24 * 3600000);
+    const chainItems = [...recentCompleted, ...futureChainItems].sort((a, b) => (a.debut ?? a.fin?.t ?? Infinity) - (b.debut ?? b.fin?.t ?? Infinity));
+    const unknownAccepted = A.items.some(x => x.etat === 'date_inconnue');
+    const chainMap = Object.create(null);
+    for (let ci = 0; ci < chainItems.length; ci++) {
+      const cur = chainItems[ci];
+      const next = chainItems.slice(ci + 1).find(x => x.etat === 'a_venir' || x.etat === 'en_cours') || null;
+      const conflictDetail = next ? A.conflits.find(c => c.a === cur.mission && c.b === next.mission || c.b === cur.mission && c.a === next.mission) || null : null;
+      chainMap[cur.cle] = { next, intervalMin: cur.fin && next && Number.isFinite(next.debut) ? Math.round((next.debut - cur.fin.t) / 60000) : null, intervalEstimated: !!(cur.fin && cur.fin.estimee), conflictType: conflictDetail && conflictDetail.type || null, blocked: unknownAccepted };
+    }
+    window.__cpAgendaChain = chainMap;
+    const debutAff = x => { try { if (hfDates(x.mission)) { const t = Date.parse(hfPk(x.mission)); if (Number.isFinite(t)) return t; } } catch (_) {} return x.debut; };   // V241 : la date du groupe = la date de prise en charge affichée sur la fiche
+    items.sort((x, y) => (debutAff(y) ?? -1) - (debutAff(x) ?? -1));   // V90 : les plus récentes (dates les plus lointaines) en haut ; date inconnue en bas
+    const caches = A.items.length - items.length;
+    listeAffichee = items.map(x => x.mission);
+    if (!A.items.length) { $('ecran').innerHTML = '<div class="vide">Aucune mission acceptée. Elles arrivent automatiquement depuis « Mes trajets » (Hiflow), « Mes réservations » (DriiveMe), « Missions réservées » (Otoqi) et « Propositions réservées » (Pop Valet), ou d’un e-mail de confirmation Hiflow collé dans l’extension.</div>'; return; }
+    const resume = RT.resumeAgenda(agendaMissions, etat.reglages);
+    // V139 : plus de bandeau « N conflits » dans l'Agenda (les estimations produisaient des dizaines de faux conflits).
+    let html = false && A.conflits.length ? `<div class="carte conflit" id="conflits"><h2>⚠️ ${A.conflits.length} conflit${A.conflits.length > 1 ? 's' : ''} dans ton agenda</h2>${A.conflits.map(c => `<p>${esc(window.CPAgenda.libelleConflit(c))}</p>`).join('')}<p class="doux">Estimation (durées et liaisons approximatives) : vérifie sur les plateformes.</p></div>` : '';
+    let jour = '';
+    items.forEach((x, i) => {
+      const m = x.mission, te = debutAff(x), d = te != null ? new Date(te) : null;
+      const j = d ? d.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : 'Date à préciser';
+      if (j !== jour) { html += `<div class="jour">${esc(j)}</div>`; jour = j; }
+      const nb = (x.etat === 'a_venir' || x.etat === 'en_cours') ? resume[x.cle] : 0;
+      const e = ETATS[x.etat];
+      const modifs = (m.modifications || []).filter(z => z.champ !== 'statut').slice(-2);
+      const extra = (e ? `<div><span class="etiq ${e[1]}">${esc(e[0])}</span></div>` : '') +
+        modifs.map(z => `<div class="modifLigne">✏️ ${esc(window.CPAgenda.libelleModification(z))}</div>`).join('') +
+        (nb ? `<div class="retoursBadge">🔁 ${nb} retour${nb > 1 ? 's' : ''} possible${nb > 1 ? 's' : ''} après cette mission</div>` : '');
+      html += carteMission(m, i, extra, agendaDateBlocks(m,x.fin)).replace('class="mission', `class="mission etat-${x.etat}${''}`);
+      // Agenda–Transports : résumé prudent de l'enchaînement. Le trajet n'est jamais déclaré confirmé ici.
+      const chain = window.__cpAgendaChain && window.__cpAgendaChain[x.cle];
+      const isAlbertvilleDelivery = /albertville/i.test([
+        m.to_city, m.destination_city, m.to_address, m.destination_address
+      ].filter(Boolean).join(' '));
+      if (chain && (x.etat === 'a_venir' || x.etat === 'en_cours' ||
+          ((x.etat === 'terminee' || x.etat === 'passee') && x.fin &&
+            (Date.now() - x.fin.t <= 24 * 3600000 || isAlbertvilleDelivery)))) {
+        const title = chain.next ? 'Prochaine mission : ' + (chain.next.mission.from_city || chain.next.mission.origin_city || 'départ à préciser') + ' → ' + (chain.next.mission.to_city || chain.next.mission.destination_city || 'arrivée à préciser') : (chain.blocked ? 'Prochaine mission à déterminer' : 'Aucune prochaine mission prévue — retour au domicile à préparer');
+        const y51Origin = [m.to_address, m.destination_address, m.delivery_address].filter(Boolean).join(' ');
+        const y51Gps = G.coordonnees(m, 'destination');
+        const y51GpsAttr = y51Gps && y51Gps.precision === 'gps' &&
+          Number.isFinite(Number(y51Gps.lat)) && Number.isFinite(Number(y51Gps.lng)) ?
+          ' data-y51-lat="' + Number(y51Gps.lat) + '" data-y51-lng="' + Number(y51Gps.lng) + '"' : '';
+        const y51ExactEysseric = /1\s*,?\s*rue\s+(?:du\s+)?lieutenant\s+gustave\s+eysseric/i.test(y51Origin);
+        const y51Reference = !chain.next && !chain.blocked && /albertville/i.test([m.to_city, m.destination_city, m.to_address, m.destination_address].filter(Boolean).join(' ')) ? '<div class="doux">🚌 Y51 Albertville → Annecy : <a href="https://hawk.hanoverdisplays.com/y51/public/" target="_blank" rel="noopener noreferrer">suivi officiel des départs</a> · <a href="https://annecy.transdev.com/line/ligne-y51/" target="_blank" rel="noopener noreferrer">horaires de ligne</a> · <a href="https://transport.data.gouv.fr/datasets/reseau-interurbain-cars-region-haute-savoie-74" target="_blank" rel="noopener noreferrer">données officielles GTFS Haute-Savoie</a>. Horaires théoriques : vérifiez la date de mise à jour, l’arrêt et les perturbations avant le départ. <a href="https://www.google.com/maps/dir/?api=1&amp;destination=%C3%89cole%20Saint-Fran%C3%A7ois%2C%20Albertville&amp;travelmode=walking" target="_blank" rel="noopener noreferrer">Itinéraire piéton vers École Saint-François</a> (départ à préciser dans Maps).</div>' : '';
+        const y51TrafficDate = x.fin && Number.isFinite(x.fin.t) ? new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(x.fin.t)) : '';
+        const y51TrafficAlert = y51Reference && y51TrafficDate >= '2026-10-22' && y51TrafficDate <= '2026-10-30'
+          ? '<div class="doux">⚠️ Y51 : du 22 au 30 octobre 2026, l’arrêt Ugine – Rue Derobert n’est pas desservi (report vers Ugine – Les Fontaines). Les express travaux ont aussi été modifiés à partir du 19 octobre. <a href="https://annecy.transdev.com/trafic/" target="_blank" rel="noopener noreferrer">Vérifier les alertes officielles</a>. Transport non confirmé — vérifiez vous-même.</div>'
+          : '';
+        const y51WalkLink = y51ExactEysseric ? y51Reference.replace('destination=%C3%89cole', 'origin=1%20rue%20Lieutenant%20Gustave%20Eysseric%2C%2073200%20Albertville&amp;destination=%C3%89cole').replace('(départ à préciser dans Maps).', '(départ prérempli depuis la rue Lieutenant Gustave Eysseric ; vérifiez l’adresse réelle).') : y51Reference.replace(/ <a href="https:\/\/www\.google\.com\/maps\/dir\/\?api=1[^<]*<\/a> \(départ à préciser dans Maps\)\./, ' Arrêt de départ à déterminer selon l’adresse exacte de la mission.');
+        const interval = Number.isFinite(chain.intervalMin) ? '<div><strong>' + (chain.intervalEstimated ? 'Intervalle estimé entre missions :' : 'Intervalle entre missions :') + '</strong> ' + esc(String(chain.intervalMin)) + ' min</div>' : '';
+        const conflictNote = chain.conflictType === 'chevauchement' ? '⚠️ Chevauchement horaire détecté.' : (chain.conflictType ? '⚠️ Enchaînement potentiellement trop juste : vérifiez le trajet et la marge de sécurité.' : 'Transport non confirmé — vérifiez vous-même. Temps disponible après trajet non déterminé.');
+        const note = chain.blocked ? 'Enchaînement à vérifier : une mission acceptée n’a pas de date exploitable.' : (!chain.next ? 'Retour après la dernière mission : horaires interurbains, correspondances locales et marches à vérifier. Transport non confirmé — vérifiez vous-même.' : conflictNote);
+        html += '<div class="carte cpAgendaChain" data-mission-end-ms="' + (x.fin && Number.isFinite(x.fin.t) ? x.fin.t : '') + '"' + y51GpsAttr + ' data-sibra-date="' + esc(chain.next && Number.isFinite(chain.next.debut) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(chain.next.debut)) : (x.fin && Number.isFinite(x.fin.t) ? (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(x.fin.t)) : '')) + '" style="margin-top:-6px;border-top:0;border-radius:0 0 12px 12px;font-size:.94em"><strong>' + (chain.next ? '↔ Enchaînement des missions' : '🏠 Retour après mission') + '</strong><div>' + esc(title) + '</div>' + interval + '<div class="doux">' + esc(note) + '</div>' + y51WalkLink + y51TrafficAlert + '</div>';
+      }
+    });
+    if (caches || etat.agendaTout) html += `<button id="agTout" class="second" style="width:100%;margin-top:10px">${etat.agendaTout ? 'Masquer les missions passées' : 'Afficher les ' + caches + ' mission(s) passée(s) de plus de 7 jours'}</button>`;
+    $('ecran').innerHTML = html;
+    // SIBRA : consultation volontaire des horaires du jour, hors étiquettes.
+    // Aucun trajet n'est déclaré réalisable sans approche piétonne vérifiée.
+    const todayParis = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });
+    if (window.CPSibraFeed && typeof window.CPSibraFeed.loadDay === 'function') {
+      const cards = document.querySelectorAll('.cpAgendaChain');
+      cards.forEach(card => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'second';
+        button.style.marginTop = '8px';
+        const requestedDate = card.getAttribute('data-sibra-date');
+        if (!requestedDate) return;
+        // Optional regional multimodal search: use the same engine for every
+        // delivery with exact GPS, never modify platform synchronization.
+        const regional = window.CPRegionalRouting;
+        const regionalEndpoint = window.CP_REGIONAL_ROUTING_URL;
+        const regionalHome = RT.domicile(etat.reglages);
+        const regionalLat = Number(card.getAttribute('data-y51-lat'));
+        const regionalLon = Number(card.getAttribute('data-y51-lng'));
+        const regionalEnd = Number(card.getAttribute('data-mission-end-ms'));
+        if (regional && typeof regional.plan === 'function' &&
+            /^https:\/\//.test(String(regionalEndpoint || '')) &&
+            card.hasAttribute('data-y51-lat') && card.hasAttribute('data-y51-lng') &&
+            regionalHome && Number.isFinite(Number(regionalHome.lat)) &&
+            Number.isFinite(Number(regionalHome.lng)) &&
+            Number.isFinite(regionalLat) && Number.isFinite(regionalLon) &&
+            Number.isFinite(regionalEnd) && regionalEnd > 0) {
+          const regionalButton = document.createElement('button');
+          regionalButton.type = 'button';
+          regionalButton.className = 'second';
+          regionalButton.style.marginTop = '8px';
+          regionalButton.textContent = '🚌 Recherche multimodale régionale';
+          card.appendChild(regionalButton);
+          regionalButton.addEventListener('click', async () => {
+            regionalButton.disabled = true;
+            const result = document.createElement('div');
+            result.className = 'doux';
+            result.textContent = 'Recherche régionale en cours…';
+            card.appendChild(result);
+            try {
+              const answer = await regional.plan({
+                endpoint: regionalEndpoint,
+                from: {lat:regionalLat,lon:regionalLon},
+                to: {lat:regionalHome.lat,lon:regionalHome.lng},
+                departure: new Date(regionalEnd + 15 * 60000).toISOString(),
+                fetcher:regionalFetch
+              });
+              const fmt = ms => new Intl.DateTimeFormat('fr-FR', {
+                timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'
+              }).format(new Date(ms));
+              result.style.whiteSpace = 'pre-line';
+              result.textContent = answer.itineraries.length ?
+                answer.itineraries.slice(0,5).map((it, index) =>
+                  'Trajet ' + (index + 1) + ' — ' +
+                  fmt(it.startTime) + ' → ' + fmt(it.endTime) + ' · ' +
+                  Math.round(it.durationSeconds / 60) + ' min · ' +
+                  it.transfers + ' correspondance(s) · ' +
+                  Math.round(it.walkMeters) + ' m à pied' +
+                  '\n' + it.legs.map(leg =>
+                    '  ' + (leg.route || leg.mode) + ' : ' +
+                    (leg.from || 'départ non précisé') + ' ' + fmt(leg.startTime) +
+                    ' → ' + (leg.to || 'arrivée non précisée') + ' ' +
+                    fmt(leg.endTime)
+                  ).join('\n')
+                ).join('\n\n') +
+                '\\n\\n' + (regionalHome.precision === 'gps' ?
+                  'Destination GPS renseignée.' :
+                  'Destination approximative (centre de ville), pas votre adresse exacte.') +
+                '\\nHoraires théoriques. Transport non confirmé — vérifiez vous-même.' :
+                'Aucun itinéraire régional proposé. Transport non confirmé — vérifiez vous-même.';
+            } catch (error) {
+              result.textContent = 'Recherche régionale indisponible : ' +
+                String(error.message || error) + '. Transport non confirmé — vérifiez vous-même.';
+            } finally {
+              regionalButton.disabled = false;
+            }
+          });
+        }
+        // Y51: read the published official GTFS export on demand, not a guessed timetable.
+        // This panel does not assert live service or walking feasibility.
+        if (/Y51 Albertville/.test(card.textContent || '')) {
+          const y51Button = document.createElement('button');
+          y51Button.type = 'button';
+          y51Button.className = 'second';
+          y51Button.style.marginTop = '8px';
+          y51Button.textContent = '🚌 Vérifier les courses officielles Y51 du ' + requestedDate;
+          const y51Result = document.createElement('div');
+          y51Result.className = 'doux';
+          y51Result.setAttribute('aria-live', 'polite');
+          y51Button.addEventListener('click', async () => {
+            y51Button.disabled = true;
+            y51Result.textContent = 'Chargement des données officielles Y51…';
+            try {
+              const response = await window.fetch('data/interurban/y51-gtfs-source.json', { cache: 'no-cache' });
+              if (!response.ok) throw new Error('GTFS unavailable');
+              const data = await response.json();
+              const planner = window.CPSibraPlanner;
+              if (!planner || typeof planner.activeServiceIds !== 'function' ||
+                  !Array.isArray(data.trips) || !Array.isArray(data.stop_times) ||
+                  !Array.isArray(data.routes) || !Array.isArray(data.stops) ||
+                  !Array.isArray(data.calendar) || !Array.isArray(data.calendar_dates)) {
+                throw new Error('Invalid Y51 data');
+              }
+              const services = planner.activeServiceIds(data.calendar, data.calendar_dates, requestedDate);
+              const routeIds = new Set(data.routes.map(route => String(route.route_id)));
+              const trips = data.trips.filter(trip => routeIds.has(String(trip.route_id)) &&
+                services.has(String(trip.service_id)));
+              const ids = new Set(trips.map(trip => String(trip.trip_id)));
+              const times = data.stop_times.filter(time => ids.has(String(time.trip_id)));
+              const stamp = data.checked_at_utc ? new Date(data.checked_at_utc).toLocaleString('fr-FR') : 'inconnue';
+              // Select real stop IDs, preserving trip order and calendar exceptions.
+              const normalized = value => String(value || '').normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '').toLowerCase();
+              const stopLabel = stop => normalized([stop.stop_name, stop.stop_desc,
+                stop.stop_code, stop.stop_id].filter(Boolean).join(' '));
+              const boarding = data.stops.filter(stop =>
+                /ecole[\s-]*st[\s-]*francois|ecole[\s-]*saint[\s-]*francois/.test(stopLabel(stop)));
+              const annecy = data.stops.filter(stop =>
+                (/annecy/.test(stopLabel(stop)) && /gare|routiere/.test(stopLabel(stop))) ||
+                window.CPTY51Fares?.importedStopMatches(stop,'Annecy','Gare Routiere'));
+              const rides = [];
+              if (typeof planner.datedInterurbanRides === 'function') {
+                for (const route of data.routes) for (const from of boarding) for (const to of annecy) {
+                  rides.push(...planner.datedInterurbanRides(data, requestedDate,
+                    String(route.route_id), String(from.stop_id), String(to.stop_id)));
+                }
+              }
+              // Exclude coaches departing before the delivery has finished.
+              // No walking time is inferred: the remaining margin still needs verification.
+              const endMs = Number(card.getAttribute('data-mission-end-ms'));
+              const endDate = card.getAttribute('data-mission-end-ms') && Number.isFinite(endMs) ?
+                new Date(endMs) : null;
+              const endParts = endDate && Number.isFinite(endDate.getTime()) ?
+                new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
+                  year: 'numeric', month: '2-digit', day: '2-digit',
+                  hour: '2-digit', minute: '2-digit', second: '2-digit',
+                  hourCycle: 'h23' }).formatToParts(endDate) : [];
+              const part = type => (endParts.find(p => p.type === type) || {}).value;
+              const endDay = endParts.length ? part('year') + '-' + part('month') + '-' + part('day') : null;
+              const earliestY51 = endDay === requestedDate ?
+                Number(part('hour')) * 3600 + Number(part('minute')) * 60 + Number(part('second')) : null;
+              const unique = [...new Map(rides.filter(ride =>
+                earliestY51 !== null && ride.departureSeconds > earliestY51)
+                .map(ride => [ride.trip_id + ':' + ride.departureSeconds, ride])).values()]
+                .sort((a, b) => a.departureSeconds - b.departureSeconds);
+              const clock = sec => String(Math.floor(sec / 3600) % 24).padStart(2, '0') +
+                ':' + String(Math.floor(sec / 60) % 60).padStart(2, '0');
+              const missionLat = Number(card.getAttribute('data-y51-lat'));
+              const missionLng = Number(card.getAttribute('data-y51-lng'));
+              const footEndpoint = window.CP_PEDESTRIAN_OSRM_URL;
+              const boardingMarginMinutes = 5;
+              const selectedRides = unique.slice(0, 8);
+              // Every GTFS trip may board at a different platform/stop ID.
+              // Never reuse an unrelated stop's walking time for another trip.
+              const stopById = new Map(data.stops.map(stop => [String(stop.stop_id), stop]));
+              const walkByStopId = new Map();
+              const boardingChecks = [];
+              for (const ride of selectedRides) {
+                const stopId = String(ride.from_stop_id);
+                const stop = stopById.get(stopId);
+                let walkMinutes = walkByStopId.get(stopId);
+                if (walkMinutes === undefined) {
+                  walkMinutes = null;
+                  if (card.hasAttribute('data-y51-lat') && card.hasAttribute('data-y51-lng') &&
+                      stop && Number.isFinite(Number(stop.stop_lat)) &&
+                      Number.isFinite(Number(stop.stop_lon)) &&
+                      typeof planner.requestPedestrianOSRM === 'function' &&
+                      typeof footEndpoint === 'string' && /^https:\/\//.test(footEndpoint)) {
+                    const walk = await planner.requestPedestrianOSRM(
+                      [missionLng, missionLat],
+                      [Number(stop.stop_lon), Number(stop.stop_lat)],
+                      window.fetch.bind(window), footEndpoint);
+                    if (walk && walk.status === 'VERIFIE_PIETON' &&
+                        Number.isFinite(walk.duration_seconds)) {
+                      walkMinutes = Math.ceil(walk.duration_seconds / 60);
+                    }
+                  }
+                  walkByStopId.set(stopId, walkMinutes);
+                }
+                const enoughTime = walkMinutes !== null &&
+                  ride.departureSeconds - earliestY51 >=
+                  (walkMinutes + boardingMarginMinutes) * 60;
+                boardingChecks.push(clock(ride.departureSeconds) + ' : ' +
+                  (walkMinutes === null ? 'marche non vérifiée' :
+                    (enoughTime ? 'approche piétonne compatible' : 'départ trop proche') +
+                    ' (' + walkMinutes + ' min à pied + ' +
+                    boardingMarginMinutes + ' min de marge)'));
+              }
+              const boardingStatus = boardingChecks.length ?
+                boardingChecks.join(' ; ') : 'Marche depuis la livraison non vérifiée.';
+              // Show the actual Y51 arrival stop from GTFS for each proposed trip.
+              // These map links help locate the SIBRA transfer, without inventing it.
+              const arrivalStops = [...new Map(selectedRides.map(ride => {
+                const stop = stopById.get(String(ride.to_stop_id));
+                return [String(ride.to_stop_id), stop];
+              }).filter(entry => entry[1])).values()];
+              const arrivalLinks = arrivalStops.filter(stop =>
+                Number.isFinite(Number(stop.stop_lat)) &&
+                Number.isFinite(Number(stop.stop_lon)) &&
+                Math.abs(Number(stop.stop_lat)) <= 90 &&
+                Math.abs(Number(stop.stop_lon)) <= 180);
+              const fareForRide = ride => {
+                try { return window.CPTY51Fares?.describe(window.CPTY51Fares.fromImportedTables(data,requestedDate,ride)) || ''; }
+                catch (_) { return ''; }
+              };
+              y51Result.textContent = 'Y51 du ' + requestedDate + ' :' + trips.length +
+                ' courses programmées, ' + times.length + ' passages GTFS. Source vérifiée le ' +
+                stamp + '. ' + (unique.length ?
+                  'École Saint-François → Annecy gare routière : ' +
+                  unique.slice(0, 8).map(ride => clock(ride.departureSeconds) +
+                    ' → ' + clock(ride.arrivalSeconds) +
+                    ' (temps disponible avant le car : ' +
+                    Math.floor((ride.departureSeconds - earliestY51) / 60) +
+                    ' min, trajet piéton et marge à déduire)' +
+                    fareForRide(ride)).join(' ; ') + '.' :
+                  'Aucun départ après la fin de mission identifié entre École Saint-François et Annecy gare routière' +
+                  (earliestY51 === null ? ' (heure de fin de mission indisponible)' : '') +
+                  ' : vérifiez les noms exacts des arrêts et les horaires GTFS.') +
+                ' ' + boardingStatus + '. Correspondances et circulation réelle non vérifiées. ' +
+                'Transport non confirmé — vérifiez vous-même.';
+              // First Y51 -> SIBRA connection: GTFS timetable only. The home
+              // coordinates are city-level, so this cannot certify the last walk.
+              const sibraFeed = window.CPSibraFeed;
+              const home = RT.domicile(etat.reglages);
+              if (selectedRides.length && sibraFeed &&
+                  typeof sibraFeed.loadDayCached === 'function' &&
+                  typeof sibraFeed.coordinateDayJourneys === 'function' &&
+                  home && Number.isFinite(home.lat) && Number.isFinite(home.lng)) {
+                const sibraLine = document.createElement('div');
+                sibraLine.className = 'doux';
+                sibraLine.textContent = 'Recherche des correspondances Y51 → SIBRA…';
+                y51Result.appendChild(sibraLine);
+                try {
+                  const local = await sibraFeed.loadDayCached(requestedDate, window.fetch.bind(window));
+                  if (!local.usable) {
+                    sibraLine.textContent = 'SIBRA indisponible à cette date — correspondance non confirmée.';
+                  } else {
+                    const transferCandidates = [];
+                    for (const ride of selectedRides) {
+                      const stop = stopById.get(String(ride.to_stop_id));
+                      if (!stop || !Number.isFinite(Number(stop.stop_lat)) ||
+                          !Number.isFinite(Number(stop.stop_lon))) continue;
+                      const departures = sibraFeed.coordinateDayJourneys(local.data,
+                        Number(stop.stop_lat), Number(stop.stop_lon),
+                        home.lat, home.lng, ride.arrivalSeconds + 300);
+                      for (const bus of departures.slice(0, 3)) {
+                        transferCandidates.push({ ride, bus, stop });
+                      }
+                    }
+                    // Deduplicate walking requests between identical Y51 and SIBRA stops,
+                    // and calculate independent connections concurrently.
+                    const walkCache = new Map();
+                    const footService = window.CP_PEDESTRIAN_OSRM_URL;
+                    const combinations = await Promise.all(transferCandidates.map(async candidate => {
+                      const { ride, bus, stop } = candidate;
+                      const board = bus.originStop;
+                      let transferWalkMinutes = null;
+                      if (board && Number.isFinite(Number(board.latitude)) &&
+                          Number.isFinite(Number(board.longitude)) &&
+                          typeof planner.requestPedestrianOSRM === 'function' &&
+                          typeof footService === 'string' && /^https:\/\//.test(footService)) {
+                        const key = String(ride.to_stop_id) + ':' + String(board.stopId || '') +
+                          ':' + Number(board.latitude) + ':' + Number(board.longitude);
+                        if (!walkCache.has(key)) {
+                          walkCache.set(key, planner.requestPedestrianOSRM(
+                            [Number(stop.stop_lon), Number(stop.stop_lat)],
+                            [Number(board.longitude), Number(board.latitude)],
+                            window.fetch.bind(window), footService).catch(() => null));
+                        }
+                        const walk = await walkCache.get(key);
+                        if (walk && walk.status === 'VERIFIE_PIETON' &&
+                            Number.isFinite(walk.duration_seconds)) {
+                          transferWalkMinutes = Math.ceil(walk.duration_seconds / 60);
+                        }
+                      }
+                      const transferCompatible = transferWalkMinutes !== null &&
+                        bus.departureSeconds - ride.arrivalSeconds >=
+                        (transferWalkMinutes + 5) * 60;
+                      // The saved home location is city-level, not the exact address.
+                      // Calculate the last pedestrian leg as an indicative estimate only.
+                      let lastWalkMinutes = null;
+                      const alight = bus.destinationStop;
+                      if (alight && Number.isFinite(Number(alight.latitude)) &&
+                          Number.isFinite(Number(alight.longitude)) &&
+                          typeof planner.requestPedestrianOSRM === 'function' &&
+                          typeof footService === 'string' && /^https:\/\//.test(footService)) {
+                        const key = 'home:' + Number(alight.latitude) + ':' +
+                          Number(alight.longitude) + ':' + home.lat + ':' + home.lng;
+                        if (!walkCache.has(key)) {
+                          walkCache.set(key, planner.requestPedestrianOSRM(
+                            [Number(alight.longitude), Number(alight.latitude)],
+                            [home.lng, home.lat], window.fetch.bind(window),
+                            footService).catch(() => null));
+                        }
+                        const walk = await walkCache.get(key);
+                        if (walk && walk.status === 'VERIFIE_PIETON' &&
+                            Number.isFinite(walk.duration_seconds)) {
+                          lastWalkMinutes = Math.ceil(walk.duration_seconds / 60);
+                        }
+                      }
+                      return { ride, bus, transferWalkMinutes, transferCompatible,
+                        lastWalkMinutes, estimatedHomeSeconds: lastWalkMinutes === null ?
+                          null : bus.arrivalSeconds + lastWalkMinutes * 60 };
+                    }));
+                    combinations.sort((a, b) =>
+                      Number(b.transferCompatible) - Number(a.transferCompatible) ||
+                      (a.estimatedHomeSeconds ?? Infinity) -
+                        (b.estimatedHomeSeconds ?? Infinity) ||
+                      a.bus.arrivalSeconds - b.bus.arrivalSeconds);
+                    sibraLine.textContent = combinations.length ?
+                      'Correspondances théoriques Y51 → SIBRA : ' +
+                      combinations.slice(0, 5).map(x =>
+                        'Y51 ' + clock(x.ride.departureSeconds) + '–' +
+                        clock(x.ride.arrivalSeconds) + ', SIBRA ' +
+                        clock(x.bus.departureSeconds) + '–' +
+                        clock(x.bus.arrivalSeconds) + ' (' +
+                        (x.bus.originStop && x.bus.originStop.name || 'arrêt à vérifier') +
+                        ' → ' +
+                        (x.bus.destinationStop && x.bus.destinationStop.name || 'arrêt à vérifier') +
+                        ', correspondance : ' +
+                        (x.transferWalkMinutes === null ? 'marche non vérifiée' :
+                          x.transferWalkMinutes + ' min à pied, ' +
+                          (x.transferCompatible ? 'délai théorique suffisant' : 'délai insuffisant')) +
+                        ', fin de trajet : ' + (x.estimatedHomeSeconds === null ?
+                          'marche non vérifiée' : clock(x.estimatedHomeSeconds) +
+                          ' estimé au point domicile enregistré (précision ville)') +
+                        ')').join(' ; ') +
+                        '. Marches de correspondance et vers le domicile non vérifiées. ' +
+                        'Transport non confirmé — vérifiez vous-même.' :
+                      'Aucune correspondance SIBRA théorique trouvée près des arrivées Y51. ' +
+                      'Transport non confirmé — vérifiez vous-même.';
+                  }
+                } catch (_) {
+                  sibraLine.textContent = 'Calcul Y51 → SIBRA indisponible — transport non confirmé.';
+                }
+              }
+              for (const stop of arrivalLinks.slice(0, 3)) {
+                const link = document.createElement('a');
+                link.href = 'https://www.google.com/maps/search/?api=1&query=' +
+                  encodeURIComponent(Number(stop.stop_lat) + ',' + Number(stop.stop_lon));
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.style.display = 'block';
+                link.textContent = '🗺️ Arrivée Y51 : ' +
+                  (stop.stop_name || stop.stop_id) + ' — localiser pour la correspondance SIBRA';
+                y51Result.appendChild(link);
+              }
+            } catch (_) {
+              y51Result.textContent = 'Données officielles Y51 indisponibles ou non exploitables pour cette date. ' +
+                'Transport non confirmé — vérifiez vous-même.';
+            } finally {
+              y51Button.disabled = false;
+            }
+          });
+          card.appendChild(y51Button);
+          card.appendChild(y51Result);
+        }
+        button.textContent = '🚌 Consulter les horaires SIBRA du ' + requestedDate;
+        const result = document.createElement('div');
+        result.className = 'doux';
+        result.setAttribute('aria-live', 'polite');
+        button.addEventListener('click', async () => {
+          button.disabled = true;
+          result.textContent = 'Chargement des horaires SIBRA…';
+          try {
+            const response = await window.CPSibraFeed.loadDayCached(requestedDate, window.fetch.bind(window));
+            if (!response.usable) {
+              result.textContent = 'Horaires SIBRA indisponibles pour ce jour — transport non confirmé.';
+            } else {
+              const d = response.data;
+              result.textContent = 'Horaires programmés SIBRA du ' + requestedDate + ' : ' +
+                d.trips.length.toLocaleString('fr-FR') + ' courses, ' +
+                d.stop_times.length.toLocaleString('fr-FR') + ' passages et ' +
+                d.stops.length.toLocaleString('fr-FR') + ' arrêts. ' +
+                'Trajet vers la mission non calculé : adresses et marche d’approche à vérifier. Transport non confirmé.';
+            }
+          } catch (_) {
+            result.textContent = 'Chargement impossible — transport non confirmé.';
+          } finally {
+            button.disabled = false;
+          }
+        });
+        card.appendChild(button);
+        card.appendChild(result);
+      });
+    }
+    // SIBRA: affichage distinct des étiquettes de missions. Recherche seulement si
+    // deux adresses possèdent des coordonnées GPS précises et des horaires connus.
+    const feed = window.CPSibraFeed;
+    if (feed && typeof feed.loadDayCached === 'function' && typeof feed.coordinateDayJourneys === 'function') {
+      for (const x of items) {
+        const chain = chainMap[x.cle];
+        if (!chain || !chain.next || !x.fin || !Number.isFinite(x.fin.t) ||
+            !Number.isFinite(chain.next.debut) || chain.next.debut <= x.fin.t) continue;
+        const origin = G.coordonnees(x.mission, 'destination');
+        const destination = G.coordonnees(chain.next.mission, 'origin');
+        if (!origin || !destination || origin.precision !== 'gps' || destination.precision !== 'gps') continue;
+        const date = (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(x.fin.t));
+        const timeParts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(new Date(x.fin.t)).split(':');
+        const earliest = Number(timeParts[0]) * 3600 + Number(timeParts[1]) * 60 + Number(timeParts[2]);
+        const card = document.querySelectorAll('.mission')[items.indexOf(x)];
+        let panel = card && card.nextElementSibling;
+        while (panel && !panel.classList.contains('mission') && !panel.classList.contains('cpAgendaChain')) panel = panel.nextElementSibling;
+        if (!panel || !panel.classList.contains('cpAgendaChain')) continue;
+        const line = document.createElement('div');
+        line.className = 'doux';
+        line.textContent = 'SIBRA : recherche des horaires programmés…';
+        panel.appendChild(line);
+        feed.loadDayCached(date, window.fetch.bind(window)).then(result => {
+          if (!line.isConnected) return;
+          if (!result.usable) {
+            line.textContent = 'SIBRA : horaires indisponibles pour cette date — transport non confirmé.';
+            return;
+          }
+          const nextDate = (date => { const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date); const get = type => parts.find(p => p.type === type).value; return get('year') + '-' + get('month') + '-' + get('day'); })(new Date(chain.next.debut));
+          const nextClock = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris',
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(new Date(chain.next.debut)).split(':');
+          const nextSeconds = Number(nextClock[0]) * 3600 + Number(nextClock[1]) * 60 + Number(nextClock[2]);
+          const directJourneys = feed.coordinateDayJourneys(result.data,
+            origin.lat, origin.lng, destination.lat, destination.lng, earliest);
+          const transferJourneys = typeof feed.coordinateOneTransferDayJourneys === 'function' ?
+            feed.coordinateOneTransferDayJourneys(result.data,
+              origin.lat, origin.lng, destination.lat, destination.lng, earliest) : [];
+          const journeys = directJourneys.concat(transferJourneys)
+            .filter(j => nextDate === date && j.arrivalSeconds <= nextSeconds - 5 * 60)
+            // Préférer une arrivée à l'arrêt 30–45 min avant la mission, sans
+            // considérer cet écart comme une marge réelle (marche non vérifiée).
+            .sort((a, b) => {
+              const score = j => {
+                const advance = (nextSeconds - j.arrivalSeconds) / 60;
+                return advance >= 30 && advance <= 45 ? 0 :
+                  advance > 45 ? advance - 45 : 30 - advance;
+              };
+              return score(a) - score(b) || a.arrivalSeconds - b.arrivalSeconds;
+            });
+          if (!journeys.length) {
+            line.textContent = 'SIBRA : aucun trajet direct ou avec une correspondance identifié entre arrêts proches — transport non confirmé.';
+            return;
+          }
+          const formatTime = seconds => String(Math.floor(seconds / 3600) % 24).padStart(2, '0') +
+            ':' + String(Math.floor(seconds / 60) % 60).padStart(2, '0');
+          const stopDistance = stop => stop && Number.isFinite(stop.straightLineMeters) ?
+            ' (à ' + stop.straightLineMeters + ' m à vol d’oiseau, marche à vérifier)' : '';
+          // Carte des arrêts de l'option SIBRA (ne valide ni le service ni les marches).
+          const addStopsMapLinks = options => {
+            for (const [index, journey] of options.slice(0, 3).entries()) {
+              if (!journey || !journey.originStop || !journey.destinationStop) continue;
+              const a = journey.originStop, b = journey.destinationStop;
+              if (![a.latitude, a.longitude, b.latitude, b.longitude].every(Number.isFinite)) continue;
+              const transfer = journey.transferStopId && result.data.stops.find(stop => String(stop[0]) === String(journey.transferStopId));
+              const transferLat = transfer && Number(transfer[2]);
+              const transferLon = transfer && Number(transfer[3]);
+              const via = Number.isFinite(transferLat) && Number.isFinite(transferLon) &&
+                Math.abs(transferLat) <= 90 && Math.abs(transferLon) <= 180 ?
+                '&waypoints=' + encodeURIComponent(transferLat + ',' + transferLon) : '';
+            const link = document.createElement('a');
+            link.href = 'https://www.google.com/maps/dir/?api=1&origin=' +
+              encodeURIComponent(a.latitude + ',' + a.longitude) + '&destination=' +
+              encodeURIComponent(b.latitude + ',' + b.longitude) + via + '&travelmode=transit';
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+              link.textContent = '🗺️ Trajet ' + (index + 1) + (via ? ' (avec correspondance)' : '') +
+                ' : voir les arrêts sur la carte (à vérifier)';
+            link.style.display = 'block';
+            link.style.marginTop = '6px';
+            line.appendChild(link);
+            }
+          };
+          // Route piétonne : uniquement un service foot HTTPS configuré explicitement.
+          // Une durée à vol d'oiseau ne valide jamais une correspondance.
+          const planner = window.CPSibraPlanner;
+          const footEndpoint = window.CP_PEDESTRIAN_OSRM_URL;
+          const canCheckWalk = planner && typeof planner.requestPedestrianOSRM === 'function' &&
+            typeof planner.assessScheduledSibraJourney === 'function' &&
+            typeof footEndpoint === 'string' && /^https:\/\//.test(footEndpoint);
+          if (canCheckWalk) {
+            const from = [Number(origin.lng), Number(origin.lat)];
+            const to = [Number(destination.lng), Number(destination.lat)];
+            const selected = journeys.slice(0, 12);
+            Promise.all(selected.map(async j => {
+              const firstStop = [Number(j.originStop.longitude), Number(j.originStop.latitude)];
+              const lastStop = [Number(j.destinationStop.longitude), Number(j.destinationStop.latitude)];
+              const [firstWalk, lastWalk] = await Promise.all([
+                planner.requestPedestrianOSRM(from, firstStop, window.fetch.bind(window), footEndpoint),
+                planner.requestPedestrianOSRM(lastStop, to, window.fetch.bind(window), footEndpoint)
+              ]);
+              return { journey: j, check: planner.assessScheduledSibraJourney(
+                j, earliest, nextSeconds, from, to, firstWalk, lastWalk, 300) };
+            })).then(assessed => {
+              if (!line.isConnected) return;
+              const ranked = assessed.sort((a, b) => Number(b.check.feasible) - Number(a.check.feasible) ||
+                a.journey.arrivalSeconds - b.journey.arrivalSeconds);
+              line.textContent = 'SIBRA (horaires programmés) : ' + ranked.slice(0, 3).map(({ journey: j, check }) =>
+                (j.transferStopId ? 'Correspondance à ' +
+                  ((result.data.stops.find(stop => String(stop[0]) === j.transferStopId) || [null, j.transferStopId])[1]) +
+                  ' (attente ' + Math.round(j.transferWaitSeconds / 60) + ' min) : ' : 'Direct : ') +
+                j.originStop.name + stopDistance(j.originStop) + ' ' + formatTime(j.departureSeconds) + ' → ' +
+                j.destinationStop.name + stopDistance(j.destinationStop) + ' ' + formatTime(j.arrivalSeconds) + ' — ' +
+                (check.feasible ? 'marche départ ' + Math.ceil(check.firstWalkSeconds / 60) + ' min, marche arrivée ' + Math.ceil(check.lastWalkSeconds / 60) + ' min, arrivée à l’adresse ' + formatTime(check.arrivalAtNextMissionSeconds) + ', avance ' + Math.floor(check.advanceSeconds / 60) + ' min (horaires théoriques)' :
+                  check.status === 'marches_non_verifiees' ? 'marche non vérifiée' :
+                  'enchaînement non réalisable avec la marche et la marge de sécurité')
+              ).join(' ; ') + '. Transport non confirmé — vérifiez vous-même.';
+              addStopsMapLinks(ranked.map(x => x.journey));
+            }).catch(() => {
+              if (line.isConnected) line.textContent = 'SIBRA : vérification piétonne indisponible — transport non confirmé.';
+            });
+            return;
+          }
+          line.textContent = 'SIBRA (horaires théoriques, approche à pied non vérifiée) : ' +
+            journeys.slice(0, 3).map(j => (j.transferStopId ? 'Correspondance à ' +
+              ((result.data.stops.find(stop => String(stop[0]) === j.transferStopId) || [null, j.transferStopId])[1]) +
+              ' (attente ' + Math.round(j.transferWaitSeconds / 60) + ' min) : ' : 'Direct : ') +
+              j.originStop.name + stopDistance(j.originStop) + ' ' +
+              formatTime(j.departureSeconds) + ' → ' + j.destinationStop.name + stopDistance(j.destinationStop) + ' ' +
+              formatTime(j.arrivalSeconds) + ' (écart théorique avant prise en charge : ' + Math.floor((nextSeconds - j.arrivalSeconds) / 60) + ' min, hors marche et marge de sécurité)').join(' ; ') +
+            '. Transport non confirmé — vérifiez vous-même.';
+          addStopsMapLinks(journeys);
+        }).catch(() => {
+          if (line.isConnected) line.textContent = 'SIBRA : recherche indisponible — transport non confirmé.';
+        });
+      }
+    }
+    for (const b of document.querySelectorAll('.mission')) b.onclick = () => detail(listeAffichee[Number(b.dataset.i)]);
+    const t = $('agTout'); if (t) t.onclick = () => { etat.agendaTout = !etat.agendaTout; afficher(); };
+  }
+  // ---------- V80 : planning sur plusieurs jours ----------
+  const PL = window.CPPlanning;
+  const demainParis = () => { const d = new Date(Date.now() + 86400000); return d.toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' }); };
+  function vuePlanning() {
+    const p = etat.plan = { date: demainParis(), heure: '06:00', jours: 3, nuits: 2, hotel: 60, hotelOn: false, seuil: 150, zones: [], rayon: 50, acc: true, tri: 'net', ...(etat.plan || {}) };
+    if (!p.date || p.date < new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' })) p.date = demainParis();
+    const opt = (l, v, f) => l.map(x => `<option value="${x}"${String(x) === String(v) ? ' selected' : ''}>${f(x)}</option>`).join('');
+    const dom = RT.domicile(etat.reglages);
+    $('ecran').innerHTML = `<div class="carte plusFiltres"><h2>🗺️ Préparer plusieurs jours</h2>
+      ${dom ? `<p class="doux">Départ et retour : ${esc(etat.reglages.domicile_ville)} (Réglages). Liaisons, marge et attente maximale : tes réglages.</p>` : '<p class="erreur">Renseigne d’abord la ville de ton domicile dans Réglages → « Approche, retours et liaisons ».</p>'}
+      <div class="grilleFiltres"><div><label for="pDate">Départ le</label><input id="pDate" type="date" value="${esc(p.date)}"></div><div><label for="pHeure">à partir de</label><input id="pHeure" type="time" value="${esc(p.heure)}"></div>
+      <div><label for="pJours">Durée</label><select id="pJours">${opt([1, 2, 3, 4, 5, 6, 7], p.jours, x => x + ' jour' + (x > 1 ? 's' : ''))}</select></div>
+      <div><label for="pNuits">Nuits hors de chez toi (max)</label><select id="pNuits">${opt([0, 1, 2, 3, 4, 5, 6], p.nuits, x => x ? x + ' nuit' + (x > 1 ? 's' : '') : 'aucune')}</select></div>
+      <div><label for="pHotelOn">Frais d’hôtel</label><label style="margin:0;display:flex;align-items:center;gap:8px;min-height:44px;color:var(--texte)"><input id="pHotelOn" type="checkbox" style="width:auto;min-height:0"${p.hotelOn ? ' checked' : ''}> à compter</label></div>
+      <div><label for="pHotel">Budget hôtel par nuit (€)</label><input id="pHotel" type="number" min="0" max="500" step="5" inputmode="numeric" value="${esc(p.hotel)}"${p.hotelOn ? '' : ' disabled'}></div>
+      <div><label for="pSeuil">Nuit à ton domicile si moins de (km par la route)</label><input id="pSeuil" type="number" min="0" max="2000" value="${esc(p.seuil != null ? p.seuil : 150)}"></div>
+      <div><label for="pTri">Priorité</label><select id="pTri"><option value="net"${p.tri === 'net' ? ' selected' : ''}>Gagner le plus</option><option value="heure"${p.tri === 'heure' ? ' selected' : ''}>Meilleur €/heure</option></select></div></div>
+      <label for="pZone">Zones de travail (vide = toute la France)</label>
+      <div class="recherche"><input id="pZone" autocomplete="off" placeholder="Région, département ou ville (3 lettres)" aria-controls="pSugg"><div id="pSugg" class="sugg" role="listbox" hidden></div></div>
+      <div class="zones" id="pZones">${p.zones.map((z, i) => `<button class="zone" data-pzone="${i}" aria-label="Retirer cette zone">${esc(G.libelleZone(z))} ✕</button>`).join('')}</div>
+      <label><input id="pAcc" type="checkbox" style="width:auto;min-height:0"${p.acc ? ' checked' : ''}> Inclure obligatoirement mes missions déjà acceptées</label>
+      <button id="pGo" style="width:100%;margin-top:12px"${dom ? '' : ' disabled'}>Calculer les meilleurs enchaînements</button></div>
+      <div id="pRes"></div>`;
+    const lire = () => Object.assign(p, { date: $('pDate').value, heure: $('pHeure').value || '06:00', jours: Number($('pJours').value), nuits: Number($('pNuits').value), hotel: Math.max(0, Math.min(500, Number($('pHotel').value) || 0)), hotelOn: $('pHotelOn').checked, seuil: Math.max(0, Math.min(2000, Number($('pSeuil').value) || 150)), acc: $('pAcc').checked, tri: $('pTri').value });
+    for (const id of ['pDate', 'pHeure', 'pJours', 'pNuits', 'pHotel', 'pSeuil', 'pAcc', 'pTri']) $(id).onchange = () => { lire(); memoriser(); };
+    $('pHotelOn').onchange = () => { lire(); memoriser(); $('pHotel').disabled = !p.hotelOn; };   // frais d'hôtel en option (coche)
+    for (const b of document.querySelectorAll('[data-pzone]')) b.onclick = () => { lire(); p.zones.splice(Number(b.dataset.pzone), 1); memoriser(); afficher(); };
+    $('pZone').oninput = () => {
+      const box = $('pSugg'), l = G.suggestions($('pZone').value, { villes: villesConnues(), max: 6 }); chargerVillesNet($('pZone').value, () => { if ($('pZone')) $('pZone').oninput(); });
+      box.innerHTML = l.map((x, i) => `<button role="option" data-pz="${i}">${esc(x.libelle)}<small>${esc(x.detail)}</small></button>`).join(''); box.hidden = !l.length;
+      for (const b of box.querySelectorAll('[data-pz]')) b.onclick = () => { const x = l[Number(b.dataset.pz)]; lire(); p.zones.push(x.type === 'ville' ? { type: 'ville', nom: x.nom, dep: x.dep, lat: x.lat, lng: x.lng } : { type: x.type, code: x.code }); memoriser(); afficher(); };
+    };
+    $('pGo').onclick = () => { lire(); memoriser(); calculerPlanning(); };
+    if (etat.planResultat) afficherPlans(etat.planResultat);
+  }
+  function calculerPlanning() {
+    const p = etat.plan, debut = PL.parisVersMs(p.date, p.heure);
+    if (debut == null) return toast('Date ou heure invalide');
+    const res = PL.planifier(planningMissions(), etat.reglages, { debut, jours: p.jours, nuits_max: p.nuits, budget_hotel: p.hotelOn ? p.hotel : 0, seuil_dom: p.seuil, zones: p.zones, rayon: p.rayon, inclureAcceptees: p.acc, tri: p.tri });
+    etat.planResultat = res; afficherPlans(res);
+    const r = $('pRes'); if (r) r.scrollIntoView({ block: 'start' });
+  }
+  function afficherPlans(res) {
+    const box = $('pRes'); if (!box) return;
+    if (res.erreurs.includes('domicile')) { box.innerHTML = ''; return; }
+    const e = res.ecartees, ecartes = [[e.horsPeriode, 'hors période'], [e.horsZone, 'hors zones'], [e.sansDate, 'sans horaire'], [e.sansLieu, 'lieu inconnu']].filter(([k]) => k).map(([k, t]) => k + ' ' + t).join(', ');
+    if (!res.plans.length) {
+      box.innerHTML = `<div class="carte" id="pAucun"><h2>Aucun enchaînement possible</h2><p>${res.erreurs.includes('acceptees_incompatibles') ? 'Tes missions déjà acceptées ne peuvent pas être toutes enchaînées dans cette période avec ces contraintes (nuits, retour au domicile). Allonge la période, autorise plus de nuits ou décoche l’inclusion des missions acceptées.' : 'Essaie une période plus longue, plus de nuits ou des zones plus larges.'}</p><p class="doux">${res.candidates || 0} mission(s) utilisable(s)${ecartes ? ' · écartées : ' + esc(ecartes) : ''}.</p></div>`;
+      return;
+    }
+    const duree = h => { const t = Math.round(h * 60); return t < 60 ? t + ' min' : Math.floor(t / 60) + ' h' + (t % 60 ? String(t % 60).padStart(2, '0') : ''); };
+    const hm = t => new Date(t).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Paris' });
+    const domNom = (etat.reglages && etat.reglages.domicile_ville) || 'domicile';
+    box.innerHTML = res.plans.map((pl, ip) => {
+      let nuit = 0;
+      const jours = PL.parJour(pl).map((j, ij, tous) => {
+        const lignes = j.lignes.map(l => {
+          if (l.type === 'depart') { const e0 = pl.etapes[0]; return bk('bkTr', '🏠 DÉPART', '<b>' + hm(l.t) + '</b> départ de ' + esc(domNom) + (e0.liaison.km >= 2 ? '<br>🚆 liaison ≈ ' + esc(e0.liaison.km) + ' km · ' + esc(duree(e0.liaison.heures)) + ' · ' + esc(euros(e0.liaison.cout)) : '')); }
+          if (l.type === 'retour') return bk('bkTr', '🏠 RETOUR', '<b>' + hm(l.t) + '</b> retour à ' + esc(domNom) + (pl.retour.km >= 2 ? '<br>🚆 ≈ ' + esc(pl.retour.km) + ' km · ' + esc(duree(pl.retour.heures)) + ' · ' + esc(euros(pl.retour.cout)) : ''));
+          const et = l.etape, m = et.mission, ie = pl.etapes.indexOf(et);
+          const nlM = (pl.nuitsLiaison || []).find(x => x && x.cle === et.cle && x.matin);
+          const lienPlan = nlM ? bk('bkTr', '🚆 LE MATIN', '<b>Domicile → ' + esc(m.from_city || '?') + '</b><br>≈ ' + esc(Math.round(nlM.matin.km)) + ' km · ' + esc(duree(nlM.matin.heures)) + ' · ' + esc(euros(nlM.matin.cout))) : (ie > 0 && et.liaison.km >= 2 && !(pl.nuitsLiaison || []).some(x => x && x.cle === et.cle)) ? bk('bkTr', '🚆 TRANSPORT', '<b>' + esc(et.depuis) + ' → ' + esc(m.from_city || '?') + '</b><br>≈ ' + esc(et.liaison.km) + ' km · ' + esc(duree(et.liaison.heures)) + ' · ' + esc(euros(et.liaison.cout)) + (et.attenteH ? ' · attente ' + esc(duree(et.attenteH)) : '')) : '';
+          return lienPlan + `<button class="mission${clsPlat(m.platform)}" data-plan="${ip}" data-etape="${ie}"><div class="haut"><span><span class="etiq">${esc(PLATS[m.platform] || m.platform)}</span>${et.acceptee ? ' <span class="etiq ok">déjà acceptée</span>' : ''}</span><span><div class="prix">${m.fee != null ? esc(euros(m.fee)) : '—'}</div><div class="net">net ≈ ${esc(euros(et.net))}</div></span></div><div class="trajet">${trajetHtml(m)}</div><div class="meta">${agendaDateBlocks(m,{t:et.fin,estimee:et.finEstimee},et.debut)}</div></button>`;
+        }).join('');
+        const dort = ij < tous.length - 1 && nuit < pl.nuits ? `${(pl.nuitsLiaison || [])[nuit] && pl.nuitsLiaison[nuit].km >= 2 ? bk('bkTr', '🚆 EN SOIRÉE', '<b>' + esc(pl.nuitsLiaison[nuit].depuis) + ' → ' + esc(pl.nuitsLiaison[nuit].soir ? 'Domicile' : pl.lieuxNuits[nuit]) + '</b><br>≈ ' + esc(Math.round((pl.nuitsLiaison[nuit].soir || pl.nuitsLiaison[nuit]).km)) + ' km · ' + esc(duree((pl.nuitsLiaison[nuit].soir || pl.nuitsLiaison[nuit]).heures)) + ' · ' + esc(euros((pl.nuitsLiaison[nuit].soir || pl.nuitsLiaison[nuit]).cout))) : ''}<div class="bk bkC bkSuite nuit"><div class="bkt">🌙 NUIT</div>${(() => { const nd = (pl.nuitsDom || [])[nuit]; const vl = pl.lieuxNuits[nuit++]; return nd && nd.domicile ? 'Nuit à ton domicile' + (nd.km != null && nd.km >= nd.seuil * 0.6 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km par la route)</span>' : '') : 'Nuit à ' + esc(vl) + (nd && nd.km != null && nd.km < nd.seuil * 1.4 ? ' <span class="doux">(≈ ' + esc(Math.round(nd.km)) + ' km du domicile)</span>' : ''); })()}${pl.coutHotel > 0 ? ' (hôtel ≈ ' + esc(euros(pl.coutHotel / pl.nuits)) + ')' : ''}</div>` : '';
+        return `<div class="jour">${esc(new Date(j.t).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Paris' }))}</div>${lignes}${dort}`;
+      }).join('');
+      return `<div class="carte plan propC" id="plan${ip}"><div class="propBandeau">Proposition ${ip + 1}</div>
+        <div class="resume">≈ ${esc(euros(pl.net))} net${pl.parHeure != null ? ' · ' + esc(euros(pl.parHeure)) + '/h' : ''} · ${pl.etapes.length} mission${pl.etapes.length > 1 ? 's' : ''} · ${pl.nuits ? pl.nuits + ' nuit' + (pl.nuits > 1 ? 's' : '') : 'sans nuit'}</div>
+        <div class="bk bkC bkRen bilan"><div class="bkt">💶 BILAN</div>Prestations ${esc(euros(pl.prestations))} → net des missions ${esc(euros(pl.netMissions))} (cotisations et liaisons déduites)${pl.coutHotel > 0 ? ' − hôtel ' + esc(euros(pl.coutHotel)) : ''} − retour ${esc(euros(pl.retour.cout))} · ${esc(duree(pl.heures))} de travail et de trajets · ≈ ${esc(pl.liaisonKm)} km de liaisons</div>
+        ${jours}</div>`;
+    }).join('') + `<p class="doux">Estimation (distances à vol d’oiseau × 1,25, durées approximatives)${ecartes ? ' · écartées : ' + esc(ecartes) : ''}. Rien n’est réservé : prends chaque mission sur sa plateforme, en commençant par la plus proche.</p>`;
+    for (const b of box.querySelectorAll('[data-plan]')) b.onclick = () => { const pl = res.plans[Number(b.dataset.plan)], i = Number(b.dataset.etape); detail(pl.etapes[i].mission, i > 0 ? G.coordonnees(pl.etapes[i - 1].mission, 'destination') : null); };
+  }
+  // V90 : alerte → sa mission (fiche avec « Faire le devis »).
+  const missionDeAlerte = a => a && a.external_id ? etat.missions.find(m => m.platform === a.platform && String(m.external_id) === String(a.external_id) && (a.type === 'mission_acceptee' || a.type === 'mission_modifiee' || a.type === 'mission_annulee' ? m.kind === 'acceptee' : m.kind !== 'acceptee')) || null : null;
+  function vueAlertes() {
+    const l = etat.alertes;
+    $('ecran').innerHTML = (l.some(a => !a.lue) ? '<button id="toutLu" class="second" style="width:100%">Tout marquer comme lu</button>' : '') +
+      (l.length ? l.map(a => `<div class="carte alerte${clsPlat(a.platform)}${a.lue ? '' : ' nonlue'}${missionDeAlerte(a) ? ' cliquable' : ''}" data-alerte="${esc(a.id)}"><span>${({ hausse_prix: '📈', mission_acceptee: '✅', mission_modifiee: '✏️', mission_annulee: '❌' })[a.type] || '🆕'}</span><div><div class="msg">${a.lue ? '' : '<span class="etiq nv pNouveau">NOUVEAU</span> '}${esc(a.message)}</div><div class="doux">${esc(fmtDate(a.created_at))}${a.lue ? ' · ✓ déjà lue' : ''}</div></div></div>`).join('')
+        : '<div class="vide">Aucune alerte. Tu seras prévenu des nouvelles missions.</div>');
+    // V142 : toucher une alerte (nouvelle mission…) la marque aussitôt comme lue : couleur atténuée, étiquette « NOUVEAU » retirée, compteur mis à jour, et enregistré sur le compte.
+    const lireAlerte = (el, a) => {
+      if (!a || a.lue) return; a.lue = true; el.classList.remove('nonlue'); const e = el.querySelector('.pNouveau'); if (e) e.remove();
+      const d = el.querySelector('.doux'); if (d && !/déjà lue/.test(d.textContent)) d.textContent += ' · ✓ déjà lue';
+      const nb = etat.alertes.filter(x => !x.lue).length, bd = $('badge'); if (bd) { bd.hidden = !nb; bd.textContent = nb > 99 ? '99+' : nb; }
+      if (!nb) { const t = $('toutLu'); if (t) t.remove(); }
+      try { const r = api.marquerLue && api.marquerLue(a.id); if (r && r.catch) r.catch(() => { a.lue = false; }); } catch (_) {}
+    };
+    for (const el of document.querySelectorAll('[data-alerte]')) { const a = l.find(x => String(x.id) === el.dataset.alerte), m = missionDeAlerte(a); el.onclick = () => { lireAlerte(el, a); if (m) detail(m); }; }
+    const b = $('toutLu'); if (b) b.onclick = async () => { try { await api.marquerLues(); etat.alertes.forEach(a => { a.lue = true; }); afficher(); } catch (e) { toast(e.message); } };
+  }
+  // V243 : mise à jour des péages (fichiers peages-aprr.json + peages-overlay.json), avec indicateur d'avancement
+  // (nombre de barrières/gares traitées) et déclenchement automatique quand une nouvelle grille tarifaire entre
+  // en vigueur (chaque 1er février), sans attendre que Laurent clique lui-même sur le bouton des Réglages.
+  async function executerMajPeages(onProgress) {
+    const [r1, r2] = await Promise.all([fetch('peages-aprr.json', { cache: 'reload' }), fetch('peages-overlay.json', { cache: 'reload' })]);
+    const [j1, j2] = await Promise.all([r1.json(), r2.json()]);
+    if (!j1 || !j1.p || !j1.g) throw new Error('peages-aprr.json vide ou invalide');
+    if (!j2 || !j2.paires) throw new Error('peages-overlay.json vide ou invalide');
+    // Vérification des tarifs : un même couple de gares normalisé ne doit pas
+    // présenter deux montants contradictoires. Les noms complets et abrégés
+    // sont rapprochés sans modifier les données sources.
+    const normaliserGarePeage = nom => String(nom || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase().replace(/\s+N°\d+/g, '')
+      .replace(/\s*\(PEAGE[^)]*\)/g, '')
+      .replace(/\s*\(A\d+\)/g, '')
+      .replace(/[^A-Z0-9]/g, '');
+    const tarifsParRelation = new Map();
+    const contradictions = [];
+    for (const paire of j2.paires) {
+      if (!Array.isArray(paire) || paire.length < 4 ||
+          !Number.isFinite(paire[2]) || !Number.isFinite(paire[3])) {
+        throw new Error('relation péage invalide dans peages-overlay.json');
+      }
+      const cle = normaliserGarePeage(paire[0]) + '|' + normaliserGarePeage(paire[1]);
+      const precedent = tarifsParRelation.get(cle);
+      if (precedent && (precedent[2] !== paire[2] || precedent[3] !== paire[3])) {
+        contradictions.push(cle);
+      } else if (!precedent) {
+        tarifsParRelation.set(cle, paire);
+      }
+    }
+    if (contradictions.length) {
+      throw new Error('Mise à jour péages non validée : ' + contradictions.length +
+        ' relations à tarifs contradictoires (ex. ' + contradictions[0] + ')');
+    }
+    try {
+      const ks = await caches.keys();
+      for (const k of ks) {
+        const c = await caches.open(k);
+        for (const nom of ['peages-aprr.json', 'peages-overlay.json']) { await c.delete(nom); await c.delete(new URL(nom, location.href).href); }
+      }
+    } catch (_) {}
+    // Parcours réel de toutes les barrières/gares des deux fichiers (pas une simple barre animée) : chaque entrée
+    // traitée fait avancer le compteur affiché, par lots pour laisser l'écran se rafraîchir.
+    const points = (j1.g || []).concat(j2.barrieres || [], j2.gares || []);
+    const total = points.length;
+    let fait = 0;
+    for (let i = 0; i < total; i += 40) {
+      fait = Math.min(total, i + 40);
+      for (let k = i; k < fait; k++) if (!points[k]) throw new Error('entrée péage invalide (#' + k + ')');
+      if (onProgress) onProgress(fait, total);
+      if (i + 40 < total) await new Promise(ok => setTimeout(ok, 0));
+    }
+    const versions = [j1.v, j2.v].filter(Boolean).join(' · ');
+    const resultat = { total, versions, le: new Date().toISOString() };
+    try { localStorage.setItem('cp_peages_maj', resultat.le); } catch (_) {}
+    ecrireLocal('cp_peages_maj_detail', resultat);   // persisté (pas qu'en mémoire) : reste affiché après un rechargement ou un redémarrage de l'appli
+    return resultat;
+  }
+  // Déclenchement automatique : dès qu'une nouvelle grille (1er février) est détectée ET qu'elle n'a pas déjà
+  // été appliquée automatiquement pour cette revalorisation, on lance la mise à jour sans intervention de Laurent.
+  async function autoMajPeagesSiNecessaire() {
+    try {
+      const r = await fetch('peages-aprr.json'); const j = await r.json();
+      const ms = (String(j.v || '').match(/\d{4}-\d{2}/g) || []).sort(); if (!ms.length) return;
+      const [a, m] = ms[0].split('-').map(Number);
+      const n = new Date(); let an = n.getFullYear(); if (n.getMonth() < 1) an -= 1;
+      if (a * 12 + (m - 1) >= an * 12 + 1) return;   // déjà à jour pour la revalorisation en cours
+      const cle = 'cp_peages_maj_auto_' + an; if (lireLocal(cle, false)) return;   // déjà tenté/réussi cette année
+      const res = await executerMajPeages(null);
+      ecrireLocal(cle, true);
+      toast('Péages mis à jour automatiquement : ' + res.total + ' barrières/gares (' + res.versions.slice(0, 70) + ')');
+    } catch (_) { /* pas de connexion ou fichier indisponible : on retentera au prochain démarrage */ }
+  }
+  function vueReglages() {
+    const r = { statut: 'micro', taux_cotisations: 21.2, cout_km: 0, prix_minimum: 0, alertes_nouvelles: true, alertes_prix: true, domicile_ville: null, domicile_lat: null, domicile_lng: null, cout_transport_km: 0.12, vitesse_liaison: 60, marge_minutes: 60, rayon_retour_km: 60, attente_max_h: 24, carte_sncf: 'aucune', trottinette: false, ...(etat.reglages || {}) };
+    $('ecran').innerHTML = `<div class="carte plusFiltres"><h2>Rentabilité</h2>
+      <label for="rStatut">Statut</label><select id="rStatut"><option value="micro">Micro-entrepreneur</option><option value="autre">Autre statut</option></select>
+      <label for="rTaux">Taux de cotisations (%)</label><input id="rTaux" type="number" step="0.1" min="0" max="60" inputmode="decimal">
+      <p class="doux">Valeur de travail à vérifier selon ta situation : ce taux n’est pas une valeur légale fixe.</p>
+      <label for="rKm">Coût à ta charge par km (€/km, 0 si remboursé)</label><input id="rKm" type="number" step="0.01" min="0" max="5" inputmode="decimal">
+      <label for="rMin">Prix minimum pour être alerté (€)</label><input id="rMin" type="number" step="1" min="0" inputmode="numeric">
+      <label><input id="rNv" type="checkbox" style="width:auto;min-height:0"> Alerte nouvelles missions</label>
+      <h2 style="margin-top:16px">Approche, retours et liaisons</h2>
+      <label for="rDom">Ville de ton domicile (point de départ et de retour)</label>
+      <div class="recherche"><input id="rDom" autocomplete="off" placeholder="3 lettres puis choisis dans la liste" aria-controls="rDomSugg"><div id="rDomSugg" class="sugg" role="listbox" hidden></div></div>
+      <p class="doux">La ville est enregistrée avec tes réglages. Sert à estimer l’approche et le retour.</p>
+      <label for="rAdr">Adresse exacte du domicile (numéro, rue, code postal, ville) : départs et retours calculés depuis ta porte</label><input id="rAdr" autocomplete="street-address" placeholder="ex. 12 rue de la Gare 74000 Annecy">
+      <p class="doux" id="rAdrEtat">Adresse conservée uniquement sur ce téléphone : elle n’est jamais envoyée à notre serveur. Seul le service public d’adresses (api-adresse.data.gouv.fr) la reçoit pour la localiser.</p>
+      <label for="rTr">Coût des transports de liaison (€/km : train, car, covoiturage)</label><input id="rTr" type="number" step="0.01" min="0" max="2" inputmode="decimal">
+      <label for="rVit">Vitesse moyenne porte à porte de ces liaisons (km/h)</label><input id="rVit" type="number" step="1" min="10" max="300" inputmode="numeric">
+      <label for="rMarge">Marge de sécurité entre deux missions (minutes)</label><input id="rMarge" type="number" step="5" min="0" max="600" inputmode="numeric">
+      <label for="rRayon">Chercher les retours jusqu’à (km du lieu de livraison)</label><input id="rRayon" type="number" step="5" min="1" max="500" inputmode="numeric">
+      <label for="rAtt">Attente maximale avant le retour (heures)</label><input id="rAtt" type="number" step="1" min="1" max="96" inputmode="numeric">
+      <label for="rSncf">Carte de réduction SNCF</label><select id="rSncf">${Object.entries(CALC.CARTES_SNCF).map(([k, v]) => `<option value="${k}">${esc(v.nom)}</option>`).join('')}</select>
+      ${(lireLocal('cp_masquees', []) || []).length ? `<p class="doux">${(lireLocal('cp_masquees', []) || []).length} mission(s) retirée(s) de l’Agenda : <button id="remettre" class="lienBouton" type="button">Tout remettre</button></p>` : ''}
+      <label for="rTransport">Transport pour l’aller et le retour (le prix et la durée sont calculés avec ce moyen)</label><select id="rTransport"><option value="moyenne">Moyenne des moyens (train avec ta carte, BlaBlaCar, BlaBlaCar Daily, Flixbus…)</option><option value="general">Estimation générale (coût au km ci-dessous)</option><option value="moins_cher">Le moins cher disponible</option><option value="covoiturage">Covoiturage BlaBlaCar</option><option value="blablacar_daily">BlaBlaCar Daily (trajets du quotidien)</option><option value="flixbus">Flixbus / car longue distance</option><option value="train">Train (avec ta carte de réduction)</option><option value="bus">Bus</option><option value="taxi">Taxi / VTC</option><option value="trottinette">Trottinette (courts trajets)</option></select>
+      <label><input id="rBus" type="checkbox" style="width:auto;min-height:0"> Compter les bus dans les liaisons (les bus de villes et villages changent souvent d’horaires et de jours : à cocher seulement si tu as vérifié la ligne)</label>
+      <label for="rMarcheMax">Marche maximale (km) : appliquée à chaque marche (départ, correspondance, arrivée) et aux trajets entièrement à pied</label><input id="rMarcheMax" type="number" step="0.5" min="0" max="10" inputmode="decimal">
+      <label><input id="rMargeCourte" type="checkbox" style="width:auto;min-height:0"> Accepter 5 min de marge (au lieu de 15) quand le point GPS exact de la mission est confirmé</label>
+      <details id="rCouverture" class="cp-cov-box"><summary>🧪 Couverture et diagnostic des transports (AURA–Suisse)</summary><div id="rCouvInv"></div>
+      <p class="doux">Le diagnostic interroge les vrais moteurs sur 8 axes (départs lundi prochain à 8 h). Il peut durer plusieurs minutes et n’envoie aucune adresse personnelle (points de gare).</p>
+      <button id="rDiagLancer" type="button" class="second">Lancer le diagnostic réel</button> <button id="rDiagCopier" type="button" class="second">Copier le rapport</button><pre id="rDiagOut" style="white-space:pre-wrap;font-size:.85em"></pre></details>
+      <label><input id="rTrot" type="checkbox" style="width:auto;min-height:0"> J’ai une trottinette électrique (gratuite : un trajet « Trottinette » est calculé en plus des transports)</label>
+      <label for="rTrotVit">Vitesse moyenne de ma trottinette (km/h)</label><input id="rTrotVit" type="number" step="1" min="5" max="30" inputmode="numeric">
+      <label for="rTrotMax">Distance maximale en trottinette (km)</label><input id="rTrotMax" type="number" step="0.5" min="1" max="30" inputmode="decimal">
+      <p class="doux">Les retours choisissent le moyen le moins cher qui arrive à temps ; prix et horaires estimés (réduction SNCF ≈ −30 % sur le train), pas des tarifs réels.</p>
+      <p class="doux">Valeurs de travail : distances à vol d’oiseau × 1,25 et durées estimées, à ajuster à ton expérience.</p>
+      <button id="rOk" style="width:100%;margin-top:12px">Enregistrer</button></div>
+      <div class="carte plusFiltres" id="cartePause"><h2>Heures de désactivation</h2><p class="doux">La nuit, la lecture des plateformes, la mise à jour et les alertes peuvent s’arrêter.</p>
+        <label><input id="pzOn" type="checkbox" style="width:auto;min-height:0"> Désactiver la nuit</label>
+        <label for="pzDeb">Arrêt à</label><input id="pzDeb" type="time"><label for="pzFin">Reprise à</label><input id="pzFin" type="time"></div>
+      <div class="carte plusFiltres" id="carteNotif"><h2>Notifications</h2><label><input id="nPrefOn" type="checkbox" style="width:auto;min-height:0"> Recevoir les notifications</label><label><input id="nPrefSon" type="checkbox" style="width:auto;min-height:0"> Son et vibration des notifications</label><p class="doux" id="notifEtat">Vérification…</p><div id="notifBoutons" class="boutons"></div></div>
+      <div class="carte plusFiltres"><h2>Compte</h2><p class="doux">${esc(api?.session?.email || '')}</p>
+      <div class="boutons"><button id="dOk" class="second">Se déconnecter</button><button id="eOk" class="danger">Effacer mes données</button></div></div>
+      <p class="doux" style="text-align:center">Convoyage Ultra · outil d’aide à la décision : aucune mission n’est acceptée à ta place.</p>`;
+    $('rStatut').value = r.statut; $('rTaux').value = r.taux_cotisations; $('rKm').value = r.cout_km; $('rMin').value = r.prix_minimum; $('rNv').checked = !!r.alertes_nouvelles;
+    { const C = window.CPTransportCoverage, H = window.CPTransportHub, inv = $('rCouvInv');
+      if (C && inv) { C.renderInventory(inv, C.inventory(window.localStorage));
+        try { const last = JSON.parse(localStorage.getItem(C.STORE) || '{}').lastReport; if (last) $('rDiagOut').textContent = C.reportText(last, C.inventory(window.localStorage)); } catch (_) {}
+        $('rDiagCopier').onclick = () => { try { navigator.clipboard.writeText($('rDiagOut').textContent || ''); toast('Rapport copié'); } catch (_) { toast('Copie impossible'); } };
+        $('rDiagLancer').onclick = async () => {
+          if (!H) return toast('Hub transports indisponible');
+          const b = $('rDiagLancer'); b.disabled = true; const out = $('rDiagOut'); out.textContent = 'Diagnostic en cours…';
+          try {
+            const fetcher = (...a) => window.fetch(...a);
+            const router = H.cachedRouter(window.CPTransportWalking?.createRouter({ fetcher, maxRequests: 200, intervalMs: 1100 }), { storage: window.localStorage });
+            const report = await C.runDiagnostic({ hub: H, router, storage: window.localStorage, host: $('rCouverture'),
+              providers: H.makeProviders(window, { fetcher, regionalEndpoint: window.CP_REGIONAL_ROUTING_ENDPOINT, nationalGTFSResources: window.CP_NATIONAL_GTFS_RESOURCES || {} }),
+              fareFor: leg => { try { return window.CPTransportFareGrids?.fareFor(leg) || null; } catch (_) { return null; } },
+              gtfsAgenda: window.CPGTFSAgenda && window.CPGTFSWorker ? window.CPGTFSAgenda : null,
+              onProgress: (axis, v) => { out.textContent = 'Diagnostic : ' + axis.name + ' — ' + v.total + ' trajet(s)…'; } });
+            const invNow = C.inventory(window.localStorage); C.renderInventory(inv, invNow); out.textContent = C.reportText(report, invNow);
+          } catch (e) { out.textContent = 'Diagnostic interrompu : ' + (e && e.message || e); }
+          b.disabled = false;
+        };
+      } }
+    $('rBus').checked = window.CP_BUS_ACTIF === true; $('rMarcheMax').value = lireLocal('cp_marche_max_km', 3); $('rTrotVit').value = lireLocal('cp_trot_vitesse_kmh', 15); $('rTrotMax').value = lireLocal('cp_trot_max_km', 8); $('rMargeCourte').checked = lireLocal('cp_marge_courte_gps', false) === true; $('rTransport').value = window.CP_TRANSPORT_CHOISI || 'general';
+    $('rDom').value = r.domicile_ville || ''; { const a = lireLocal('cp_domicile_exact', null); $('rAdr').value = a && a.texte || ''; if (a && a.texte) $('rAdrEtat').textContent = '✅ Adresse localisée (' + (a.precision === 'adresse' ? 'numéro exact' : 'rue') + ') : ' + a.libelle + '. Conservée uniquement sur ce téléphone.'; } $('rTr').value = r.cout_transport_km; $('rVit').value = r.vitesse_liaison; $('rMarge').value = r.marge_minutes; $('rRayon').value = r.rayon_retour_km; $('rAtt').value = r.attente_max_h; $('rSncf').value = r.carte_sncf || 'aucune'; $('rTrot').checked = r.trottinette === true;
+    let domChoisi = r.domicile_ville ? { nom: r.domicile_ville, lat: r.domicile_lat, lng: r.domicile_lng, libelle: r.domicile_ville } : null;
+    $('rDom').oninput = () => {
+      const box = $('rDomSugg'), l = G.suggestions($('rDom').value, { types: ['ville'], villes: villesConnues().filter(v => v.lat != null), max: 6 }); chargerVillesNet($('rDom').value, () => { if ($('rDom')) $('rDom').oninput(); });
+      box.innerHTML = l.map((x, i) => `<button role="option" data-dom="${i}">${esc(x.libelle)}<small>${esc(x.detail)}</small></button>`).join(''); box.hidden = !l.length;
+      for (const b of box.querySelectorAll('[data-dom]')) b.onclick = () => { const x = l[Number(b.dataset.dom)]; domChoisi = { nom: x.nom, lat: x.lat, lng: x.lng, libelle: x.nom }; $('rDom').value = x.nom; box.hidden = true; };
+    };
+    $('rOk').onclick = async () => {
+      const v = { statut: $('rStatut').value, taux_cotisations: Number($('rTaux').value), cout_km: Number($('rKm').value), prix_minimum: Number($('rMin').value), alertes_nouvelles: $('rNv').checked, alertes_prix: false,
+        cout_transport_km: Number($('rTr').value), vitesse_liaison: Number($('rVit').value), marge_minutes: Math.round(Number($('rMarge').value)), rayon_retour_km: Math.round(Number($('rRayon').value)), attente_max_h: Math.round(Number($('rAtt').value)), carte_sncf: $('rSncf').value, trottinette: $('rTrot').checked };
+      if (!(v.taux_cotisations >= 0 && v.taux_cotisations <= 60) || !(v.cout_km >= 0 && v.cout_km <= 5) || !(v.prix_minimum >= 0)) return toast('Valeurs hors limites');
+      if (!(v.cout_transport_km >= 0 && v.cout_transport_km <= 2) || !(v.vitesse_liaison >= 10 && v.vitesse_liaison <= 300) || !(v.marge_minutes >= 0 && v.marge_minutes <= 600) || !(v.rayon_retour_km >= 1 && v.rayon_retour_km <= 500) || !(v.attente_max_h >= 1 && v.attente_max_h <= 96)) return toast('Valeurs de liaison hors limites');
+      const texteDom = $('rDom').value.trim();
+      if (!texteDom) Object.assign(v, { domicile_ville: null, domicile_lat: null, domicile_lng: null });
+      else {
+        const x = domChoisi && G.norm(domChoisi.nom) === G.norm(texteDom) ? domChoisi : G.trouverVille(texteDom);
+        if (!x || x.lat == null) return toast('Ville du domicile non reconnue : choisis-la dans la liste proposée');
+        Object.assign(v, { domicile_ville: x.nom, domicile_lat: Math.round(x.lat * 1e5) / 1e5, domicile_lng: Math.round(x.lng * 1e5) / 1e5 });
+      }
+      { const t = $('rAdr').value.trim();
+        if (!t) ecrireLocal('cp_domicile_exact', null);
+        else {
+          const ancien = lireLocal('cp_domicile_exact', null);
+          if (!(ancien && ancien.texte === t)) {
+            let f = null;
+            try { const rr = await fetch('https://api-adresse.data.gouv.fr/search/?limit=1&q=' + encodeURIComponent(t)); if (rr.ok) { const j = await rr.json(); f = j && j.features && j.features[0]; } } catch (_) {}
+            const pr = f && f.properties, ok = f && f.geometry && pr && pr.score >= 0.5 && ['housenumber', 'street'].includes(pr.type);
+            if (!ok) return toast('Adresse non localisée : indique numéro, rue, code postal et ville (France)');
+            const [lng, lat] = f.geometry.coordinates;
+            ecrireLocal('cp_domicile_exact', { texte: t, lat: Math.round(lat * 1e5) / 1e5, lon: Math.round(lng * 1e5) / 1e5, libelle: pr.label, precision: pr.type });
+          }
+        }
+      }
+      { const km = Number($('rMarcheMax').value); if (!(km >= 0 && km <= 10)) return toast('Distance de marche hors limites (0 à 10 km)'); { const tv = Number($('rTrotVit').value), tm = Number($('rTrotMax').value); if (!(tv >= 5 && tv <= 30)) return toast('Vitesse de trottinette hors limites (5 à 30 km/h)'); if (!(tm >= 1 && tm <= 30)) return toast('Distance de trottinette hors limites (1 à 30 km)'); ecrireLocal('cp_trot_vitesse_kmh', tv); ecrireLocal('cp_trot_max_km', tm); } ecrireLocal('cp_marche_max_km', km); ecrireLocal('cp_marge_courte_gps', $('rMargeCourte').checked); }
+      window.CP_BUS_ACTIF = $('rBus').checked; ecrireLocal('cp_bus_actif', window.CP_BUS_ACTIF); window.CP_TRANSPORT_CHOISI = $('rTransport').value; ecrireLocal('cp_transport', window.CP_TRANSPORT_CHOISI);
+      try { await api.enregistrerReglages(v); etat.reglages = { ...r, ...v }; ecrireLocal('cp_cache', { missions: etat.missions, alertes: etat.alertes, reglages: etat.reglages, chargeLe: etat.chargeLe }); toast('Réglages enregistrés'); } catch (e) { toast(e.message); }
+    };
+    etatNotifications(); brancherPrefsNotif();
+    { const p = lirePause(); $('pzOn').checked = p.choix === 'oui'; $('pzDeb').value = p.debut; $('pzFin').value = p.fin;
+      const maj = () => { enregistrerPause($('pzOn').checked ? 'oui' : 'non', $('pzDeb').value, $('pzFin').value); toast($('pzOn').checked ? 'Désactivation la nuit : activée' : 'Toujours actif'); };
+      $('pzOn').onchange = maj; $('pzDeb').onchange = $('pzFin').onchange = () => { if ($('pzOn').checked) maj(); }; }
+    { const bloc = document.createElement('div'); bloc.className = 'doux'; bloc.style.textAlign = 'center'; bloc.style.margin = '12px 0';
+      let der = null; try { der = localStorage.getItem('cp_peages_maj'); if (!der) { der = new Date().toISOString(); localStorage.setItem('cp_peages_maj', der); } } catch (_) { der = null; }
+      const jours = der ? Math.floor((Date.now() - Date.parse(der)) / 86400000) : 0;
+      const info = document.createElement('p'); info.id = 'infoPeages'; info.textContent = 'Péages : dernière mise à jour il y a ' + jours + ' jour(s)' + (jours >= 183 ? ' — mise à jour conseillée (tous les 6 mois).' : '.'); if (jours >= 183) info.style.color = '#b45309';
+      fetch('peages-aprr.json').then(r => r.json()).then(j => { const ms = (String(j.v || '').match(/\d{4}-\d{2}/g) || []).sort(); if (!ms.length) return; const [a, m] = ms[0].split('-').map(Number); const n = new Date(); let an = n.getFullYear(); if (n.getMonth() < 1) an -= 1; const mois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']; if (a * 12 + (m - 1) < an * 12 + 1) { info.textContent = 'Nouveaux tarifs de péage en vigueur depuis le 1er février ' + an + ' : mise à jour à faire.'; info.style.color = '#b45309'; } else { info.textContent = 'Péages à jour (tarifs de ' + mois[m - 1] + ' ' + a + '). Prochaine revalorisation prévue le 1er février ' + (an + 1) + '.'; info.style.color = ''; } }).catch(() => { });
+      const bt = document.createElement('button'); bt.type = 'button'; bt.id = 'majPeages'; bt.textContent = 'Mettre à jour les péages';
+      const prog = document.createElement('div'); prog.id = 'majPeagesProgression'; prog.hidden = true; prog.style.margin = '8px 0';
+      const barre = document.createElement('progress'); barre.id = 'majPeagesBarre'; barre.style.width = '100%'; barre.max = 1;
+      const texteProg = document.createElement('p'); texteProg.className = 'doux'; texteProg.id = 'majPeagesTexte';
+      prog.appendChild(barre); prog.appendChild(texteProg);
+      const detailInfo = document.createElement('p'); detailInfo.className = 'doux'; detailInfo.id = 'infoPeagesDetail';
+      const d = lireLocal('cp_peages_maj_detail', null);
+      if (d) { detailInfo.textContent = d.total + ' barrières/gares mises à jour le ' + new Date(d.le).toLocaleString('fr-FR') + (d.versions ? ' · sources : ' + d.versions : '') + '.'; }
+      bt.onclick = async () => {
+        bt.disabled = true; prog.hidden = false; barre.removeAttribute('value'); texteProg.textContent = 'Mise à jour en cours…';
+        try {
+          const res = await executerMajPeages((fait, total) => { barre.max = total; barre.value = fait; texteProg.textContent = fait + ' / ' + total + ' barrières de péage mises à jour'; });
+          texteProg.textContent = res.total + ' / ' + res.total + ' barrières de péage mises à jour';
+          toast('Péages à jour : ' + res.total + ' barrières/gares (' + res.versions.slice(0, 70) + ')');
+          setTimeout(() => location.reload(), 1500);
+        } catch (e) { toast('Mise à jour impossible : ' + e.message); bt.disabled = false; prog.hidden = true; }
+      };
+      bloc.appendChild(info); bloc.appendChild(detailInfo); bloc.appendChild(prog); bloc.appendChild(bt); $('ecran').appendChild(bloc); }
+    { const p = document.createElement('p'); p.className = 'doux'; p.id = 'versionReglages'; p.style.textAlign = 'center'; p.textContent = 'Convoyage Ultra — version ' + VERSION_APP + versionApk(); $('ecran').appendChild(p); }
+    { const bm = $('remettre'); if (bm) bm.onclick = () => { ecrireLocal('cp_masquees', []); toast('Missions remises : actualisation…'); charger(); }; }
+    $('dOk').onclick = () => { api.deconnexion(); localStorage.removeItem('cp_cache'); Object.assign(etat, { missions: [], alertes: [], reglages: null }); ecranConnexion(); };
+    $('eOk').onclick = async () => {
+      if (!confirm('Effacer définitivement toutes tes missions, alertes et réglages du serveur ? L’extension renverra les missions à sa prochaine synchronisation si elle reste connectée.')) return;
+      try { await api.effacerMesDonnees(); localStorage.removeItem('cp_cache'); Object.assign(etat, { missions: [], alertes: [], reglages: null }); toast('Données effacées'); afficher(); } catch (e) { toast(e.message); }
+    };
+  }
+  const duree = h => { const t = Math.round(h * 60); return t < 60 ? t + ' min' : Math.floor(t / 60) + ' h' + (t % 60 ? String(t % 60).padStart(2, '0') : ''); };
+  // V129 : liens « transports » prêts à cliquer (rien n'est lu ni réservé) : Google Maps (bus, train, tram dans la ville) et Rome2rio (train, car, covoiturage… avec prix réels sur leurs sites).
+  const lieuTr = (ville, dep) => String(ville || '').trim() + (dep ? ' ' + dep : '') + ', France';
+  // V130 : pages « trajet » des opérateurs (adresses relevées sur leurs sites : SNCF Connect /train/horaires/A/B, Flixbus /voyages-car/A-B, BlaBlaCar /ride-sharing/A/B). Elles affichent les horaires et prix À JOUR ;
+  // si la ligne n'existe pas ou plus, le site le dit (l'appli ne peut pas le vérifier elle-même). Cars Région / TER / bus d'Auvergne-Rhône-Alpes : calculateur OùRA, seulement si les deux bouts sont dans la région.
+  const slugVille = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\(.*?\)/g, ' ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const DEP_ARA = ['01', '03', '07', '15', '26', '38', '42', '43', '63', '69', '73', '74'];
+  const RESEAUX_VILLES = [
+    { slugs: ['lyon', 'villeurbanne', 'venissieux', 'vaulx-en-velin', 'bron', 'caluire-et-cuire', 'saint-fons'], dep: '69', liens: [['🚇 TCL (Lyon)', 'https://www.tcl.fr/'], ['🏙️ Citymapper', 'https://citymapper.com/']] },
+    { slugs: ['grenoble', 'echirolles', 'saint-martin-d-heres', 'fontaine', 'meylan'], dep: '38', liens: [['🚋 M réso (Grenoble)', 'https://www.reso-m.fr/']] },
+    { slugs: ['annecy', 'seynod', 'cran-gevrier', 'meythet', 'annecy-le-vieux', 'pringy'], dep: '74', liens: [['🚌 Sibra (Annecy)', 'https://www.sibra.fr/']] },
+    { slugs: ['chambery', 'la-motte-servolex', 'cognin', 'bassens', 'barberaz'], dep: '73', liens: [['🚌 Synchro (Chambéry)', 'https://www.synchro-bus.fr/']] },
+    { slugs: ['amberieu-en-bugey'], dep: '01', liens: [['🚌 Moovit (Ambérieu-en-Bugey)', 'https://moovitapp.com/']] },
+    { slugs: ['geneve', 'carouge', 'lancy', 'meyrin', 'vernier', 'onex', 'annemasse', 'ferney-voltaire', 'saint-julien-en-genevois', 'gaillard', 'thonex'], dep: '', liens: [['🚌 tpg (Genève et alentours)', 'https://www.tpg.ch/']] },
+    { slugs: ['paris'], dep: '75', liens: [['🏙️ Citymapper (Paris)', 'https://citymapper.com/']] },
+    { slugs: ['marseille'], dep: '13', liens: [['🏙️ Citymapper (Marseille)', 'https://citymapper.com/']] },
+    { slugs: ['toulouse'], dep: '31', liens: [['🏙️ Citymapper (Toulouse)', 'https://citymapper.com/']] }];
+  // V137 : réseau régional (cars + trains) de la région de chaque bout, d'après la liste donnée par Laurent (liens des sites officiels).
+  const RESEAUX_REGION = {
+    ARA: ['🚍 La Région vous transporte (Cars Région)', 'https://www.laregionvoustransporte.fr/'], BFC: ['🚍 Mobigo (Bourgogne-Franche-Comté)', 'https://www.viamobigo.fr/'],
+    BRE: ['🚍 BreizhGo (Bretagne)', 'https://www.breizhgo.bzh/'], CVL: ['🚍 Rémi (Centre-Val de Loire)', 'https://www.remi-centrevaldeloire.fr/'],
+    GES: ['🚍 Fluo (Grand Est)', 'https://www.fluo.grandest.fr/'], HDF: ['🚍 Transports Hauts-de-France', 'https://transports.hautsdefrance.fr/'],
+    IDF: ['🚍 Île-de-France Mobilités', 'https://www.iledefrance-mobilites.fr/'], NOR: ['🚍 Nomad (Normandie)', 'https://nomad.normandie.fr/'],
+    NAQ: ['🚍 Transports Nouvelle-Aquitaine', 'https://transports.nouvelle-aquitaine.fr/'], OCC: ['🚍 liO (Occitanie)', 'https://www.lio-occitanie.fr/'],
+    PDL: ['🚍 Aléop (Pays de la Loire)', 'https://aleop.paysdelaloire.fr/'], PAC: ['🚍 ZOU ! (Provence-Alpes-Côte d’Azur)', 'https://zou.maregionsud.fr/'],
+    COR: ['🚍 Transports de Corse', 'https://www.isula.corsica/']
+  };
+  const reseauRegion = dep => { const d = G.DEPARTEMENTS && G.DEPARTEMENTS[String(dep || '')]; return d && RESEAUX_REGION[d.region] ? [RESEAUX_REGION[d.region]] : []; };
+  const reseauxLocaux = (ville, dep) => { const sl = slugVille(ville), d = String(dep || ''); const r = RESEAUX_VILLES.find(x => x.slugs.includes(sl) && (!d || x.dep === d)); return r ? r.liens : []; };
+  function liensTransports(deVille, deDep, versVille, versDep, cleVerif) {
+    if (!deVille || !versVille) return '';
+    const a = slugVille(deVille), b = slugVille(versVille); if (!a || !b || a === b) return '';
+    const gm = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(lieuTr(deVille, deDep)) + '&destination=' + encodeURIComponent(lieuTr(versVille, versDep)) + '&travelmode=transit';
+    const r2 = 'https://www.rome2rio.com/map/' + encodeURIComponent(String(deVille).trim()) + '/' + encodeURIComponent(String(versVille).trim());
+    const L = [['🚆 SNCF Connect', 'https://www.sncf-connect.com/billet-train'], ['🚌 Flixbus', 'https://www.flixbus.fr/voyages-car/' + a + '-' + b], ['🚗 BlaBlaCar', 'https://www.blablacar.fr/ride-sharing/' + a + '/' + b], ['🚙 BlaBlaCar Daily', 'https://www.blablacar.fr/blablacar-daily']];
+    if (DEP_ARA.includes(String(deDep || '')) || DEP_ARA.includes(String(versDep || ''))) L.push(['🚍 Cars Région / TER (OùRA)', 'https://www.oura.com/']);
+    // V137 : OùRA dès qu'un des deux bouts est dans la région (voir plus haut) ; réseaux de la ville de départ ou d'arrivée (bus, tram, métro de la ville) + Citymapper dans les grandes villes.
+    for (const x of reseauxLocaux(deVille, deDep).concat(reseauxLocaux(versVille, versDep), reseauRegion(deDep), reseauRegion(versDep))) if (!L.some(y => y[1] === x[1]) && !(/laregionvoustransporte/.test(x[1]) && L.some(y => /oura\.com/.test(y[1])))) L.push(x);
+    L.unshift(['🚆 Rome2rio', r2]); L.push(['🗺️ Maps bus/train', gm]);
+    const v = cleVerif ? (lireLocal('cp_verif', {}) || {})[cleVerif] : null;
+    const caseV = cleVerif ? `<label class="liensVerif${v ? ' ok' : ''}"><input type="checkbox" data-verif="${esc(cleVerif)}"${v ? ' checked' : ''}> ${v ? '✓ Vérifié par toi le ' + esc(new Date(v).toLocaleDateString('fr-FR')) + ' (horaires et prix valables le jour de la mission)' : 'Je coche quand j’ai vérifié que ce transport circule et son prix le jour de la mission'}</label>` : '';
+    return `<span class="liensTr">${L.map(([t, u]) => `<a href="${esc(u)}">${t}</a>`).join('')}</span><span class="doux liensNote">⚠ Horaires et prix NON vérifiés par l’application : ouvre le site, contrôle-les pour le jour de la mission (le bouton retour te ramène ici).</span>${caseV}`;
+  }
+  // V215 : exposé à la fenêtre « Trajet réel » (onglet Transports) : Rome2rio en premier, sites de transport seulement, sans les outils d'itinéraire routier.
+  window.CPLiensTr = (a, ad, b, bd) => { const h = liensTransports(a, ad, b, bd, ''); return h ? h.replace(/<a href="[^"]*travelmode=transit[^"]*">[^<]*<\/a>/, '') : ''; };
+  // V78 : retours possibles après cette mission (toutes plateformes), estimés.
+  function blocRetours(m) {
+    const acceptees = etat.missions.filter(x => x.kind === 'acceptee');
+    const res = RT.retours(m, etat.missions.filter(x => x.kind === 'disponible'), etat.reglages, { acceptees: m.kind === 'acceptee' ? acceptees : acceptees.concat([m]) });
+    // V223 : une mission « à la suite » doit pouvoir démarrer le MÊME JOUR que la fin de la mission précédente ; les jours suivants relèvent du Planning sur plusieurs jours
+    const jP = ms => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(new Date(ms));
+    const jSrc = (res.finSource && res.finSource.t) ? jP(res.finSource.t) : (Number.isFinite(Date.parse(m.delivery_end || m.delivery_start || '')) ? jP(Date.parse(m.delivery_end || m.delivery_start)) : '');
+    const jMis = z => { const q = Date.parse(z.pickup_start || z.pickup_end || z.delivery_start || ''); return Number.isFinite(q) ? jP(q) : ''; };
+    const memeJour = (r0, x) => { if (!jSrc) return true; if (x.arrivee != null && jP(x.arrivee) !== jSrc) return false; const jm = jMis(x.mission || {}); return jm ? jm === jSrc : x.arrivee != null; };   // V231 : sans preuve du même jour -> retiré (étapes 2 et 3 comprises) ; le reste va dans Planning sur plusieurs jours
+    res.compatibles = res.compatibles.filter(x => memeJour(res, x));
+    res.dateInconnue = jSrc ? [] : (res.dateInconnue || []);   // V231 : sans horaire on ne peut pas prouver que c'est le même jour -> on les retire
+    detail.retours = res.compatibles.concat(res.dateInconnue);
+    const sugIds = new Set(m.platform === 'DriiveMe' ? sugListe(m).map(z => String(z.id)) : []);
+    const estSug = x => sugIds.has(String(x.mission.external_id)) && x.mission.platform === m.platform;
+    res.compatibles.concat(res.dateInconnue).forEach(x => { if (estSug(x)) x.sug = true; });
+    const extras = [];
+    if (false && sugIds.size && res.arriveeSource) {   // V223 : les suites DriiveMe hors critères (autre jour, trop loin) ne sont plus ajoutées : même règle que les autres missions
+      const dejaC = new Set(res.compatibles.concat(res.dateInconnue).map(x => RT.cle(x.mission)));
+      const rg = etat.reglages || {}, dom = (rg.domicile_lat != null && rg.domicile_lat !== '' && rg.domicile_lng != null && rg.domicile_lng !== '' && Number.isFinite(Number(rg.domicile_lat)) && Number.isFinite(Number(rg.domicile_lng))) ? { lat: Number(rg.domicile_lat), lng: Number(rg.domicile_lng) } : null;
+      for (const c of etat.missions) {
+        if (c.platform !== m.platform || !sugIds.has(String(c.external_id)) || dejaC.has(RT.cle(c)) || c.kind === 'acceptee' || RT.cle(c) === RT.cle(m)) continue;
+        try {
+          const o = G.coordonnees(c, 'origin'); if (!o) continue;
+          const km = G.routeKm(res.arriveeSource, o), cd = G.coordonnees(c, 'destination'), lien = CALC.liaisonMoinsChere(km, rg); if (!lien) continue;
+          const dk = dom ? G.routeKm(res.arriveeSource, dom) : null, rk = dom && cd ? G.routeKm(cd, dom) : null;
+          const rr = CALC.rentabiliteComplete(c, rg, { approcheKm: km, retourKm: rk, approcheLiaison: lien });
+          extras.push({ mission: c, liaison: lien, rentabilite: rr, rapprocheKm: dk != null && rk != null ? dk - rk : null, retourDomicileKm: rk, estimations: [], sug: true, horsCriteres: true });
+        } catch (_) {}
+      }
+    }
+    const baseIdx = detail.retours.length; detail.retours = detail.retours.concat(extras);
+    const estProche = x => x.retourDomicileKm != null && x.retourDomicileKm <= 50;   // V221 : « retour vers le domicile » = la mission arrive à 50 km ou moins du domicile
+    if (res.raison === 'lieu_arrivee_inconnu') return '<div class="carte" id="retours"><h2>🔁 Retours possibles</h2><p class="doux">Lieu d’arrivée non localisable : recherche impossible.</p></div>';
+    // V159 : chaînage — pour chaque retour proposé, les suites possibles après lui (2 niveaux), avec distance et durée de liaison.
+    const dispoR = etat.missions.filter(z => z.kind === 'disponible');
+    const suites = (src, deja, prof) => {
+      if (prof > 2) return [];
+      let r2; try { r2 = RT.retours(src, dispoR, etat.reglages, { acceptees: acceptees.concat(deja) }); } catch (_) { return []; }
+      return r2.compatibles.filter(z => memeJour(r2, z) && !deja.some(d => RT.cle(d) === RT.cle(z.mission))).slice(0, 2).map(z => ({ x: z, src, suite: suites(z.mission, deja.concat([z.mission]), prof + 1) }));
+    };
+    // V179 : étiquettes titrées, sections encadrées (Quand / Transport / Rentabilité), une carte par suggestion.
+    const ICO = { covoiturage: '🚗', bus: '🚌', train: '🚆', taxi: '🚕' };
+    const ligne = (l, v, c) => '<div class="rd' + (c ? ' ' + c : '') + '"><span>' + l + '</span><b>' + v + '</b></div>';
+    const puces = (x, c, p) => {
+      const lia = x.liaison, rr = x.rentabilite, ic = ICO[lia.mode] || '🚆';
+      const tr = bk('bkTr', ic + ' TRANSPORT POUR Y ALLER', ligne('Moyen', esc(lia.mode || 'liaison')) + ligne('De → À', esc(p.to_city || 'arrivée') + ' → ' + esc(c.from_city || 'départ')) + ligne('Distance', '≈ ' + esc(lia.km) + ' km') + ligne('Durée', esc(duree(lia.heures))) + ligne('Coût', esc(euros(lia.cout))));
+      const n = [];
+      if (rr && rr.connu) { n.push(ligne('Net', '≈ ' + esc(euros(rr.net)), 'gras')); if (rr.parHeure) n.push(ligne('Par heure', esc(euros(rr.parHeure)) + '/h')); } else n.push(ligne('Net', 'prix inconnu'));
+      if (x.rapprocheKm != null) n.push(Math.abs(x.rapprocheKm) < 1 ? ligne('Position', 'même distance de chez toi') : x.rapprocheKm > 0 ? ligne('Position', 'te rapproche de ≈ ' + esc(x.rapprocheKm) + ' km', 'ok') : ligne('Position', 't’éloigne de ≈ ' + esc(-x.rapprocheKm) + ' km', 'ko'));
+      // Les liaisons proposées ici sont estimées : masquer net et rentabilité.
+      return tr;
+    };
+    const quand = (c, z) => bkDates(c, arriveeTxt(c)) + (z.attenteH ? bk('bkTr', '⏱ ATTENTE', '≈ ' + esc(duree(z.attenteH))) : '');
+    const tete = c => '<div class="haut"><span><span class="etiq">' + esc(PLATS[c.platform] || c.platform) + '</span></span><span><div class="prix">' + (c.fee != null ? esc(euros(c.fee)) : '?') + '</div></span></div><div class="trajet">' + trajetHtml(c) + '</div>';
+    const suiteHtml = (s, prof) => { const z = s.x, c = z.mission, p = s.src; return '<div class="retour retourSuite' + clsPlat(c.platform) + '" style="margin-left:' + (prof * 8) + 'px"><div class="suiteT2">↪ ÉTAPE ' + (prof + 1) + ' : MISSION POSSIBLE ENSUITE</div>' + tete(c) + quand(c, z) + puces(z, c, p) + '</div>' + s.suite.map(u => suiteHtml(u, prof + 1)).join(''); };
+    const chaine = (x, c, i) => (i < 4 && x.statut === 'compatible') ? suites(c, [m, c], 1).map(s => suiteHtml(s, 1)).join('') : '';
+    const dernLiens = (() => { let k = -1; res.compatibles.slice(0, 6).forEach((z, q) => { if (z.liaison && z.liaison.km >= 2) k = q; }); return k; })();   // V211 : sites de transport une seule fois, sous la dernière étiquette
+    // V271 : logo W et bandeau « Devis envoyé » aussi sur les cartes Retour / Suite possible
+    const devisProp = c => (c && c.fees && c.fees.devis_numero && c.kind !== 'acceptee' && c.fees.devis_accepte !== 1) ? '<div style="background:#ffe8a3;color:#222;border-radius:8px;padding:4px 8px;margin:4px 0;font-weight:600">📝 Devis envoyé</div>' : '';
+    const item = (x, i) => { const c = x.mission; return '<div class="retourBloc"><button class="retour' + clsPlat(c.platform) + '" data-retour="' + i + '">' + (x.sug ? bk('bkSuite', '↪ SUITE PROPOSÉE PAR DRIIVEME', 'Cette mission figure dans les suites de la fiche DriiveMe' + (x.horsCriteres ? ' (hors des critères de l’application : distance, jour ou délai).' : '.')) : '') + plaqueW(c) + tete(c) + '<div class="verifLigne"><span class="verif">' + esc(verifPast(c)) + '</span></div>' + devisProp(c) + quand(c, x) + puces(x, c, m) + (x.estimations.length ? bk('bkTr', 'ESTIMATION', esc(x.estimations.join(', '))) : '') + '</button>' + (i === dernLiens && x.liaison && x.liaison.km >= 2 ? liensTransports(m.to_city, m.to_department, c.from_city, c.from_department, 'r|' + (m.id || m.external_id) + '|' + (c.id || c.external_id)) : '') + chaine(x, c, i) + '</div>'; };
+    const dP = Date.parse(m.pickup_start || ''), dF = Date.parse(m.delivery_end || m.delivery_start || ''), multi = Number.isFinite(dP) && Number.isFinite(dF) && new Date(dP).toDateString() !== new Date(dF).toDateString();
+    const n = res.compatibles.length, r = etat.reglages || {};
+    const ecartes = [[res.autreJour, 'un autre jour'], [res.tropTot, 'partent trop tôt'], [res.conflits, 'chevauchent ton agenda'], [res.horsZone, 'trop loin'], [res.tropTard, 'attente trop longue'], [res.passees, 'déjà passées']].filter(([k]) => k).map(([k, t]) => k + ' ' + t).join(', ');
+    return `<div class="carte" id="retours">
+      <p class="doux">Départ à moins de ${esc(r.rayon_retour_km ?? 60)} km de ${esc(m.to_city ? lieu(m, 'destination') : 'l’arrivée')}, même jour que l’arrivée, moyen de transport le moins cher qui arrive à temps (covoiturage, bus, train…, estimations), marge de sécurité ${esc(r.marge_minutes ?? 60)} min${res.finSource && res.finSource.estimee ? ', heure de livraison estimée' : ''}. Toutes plateformes.</p>
+      ${(n || extras.length) ? (() => { const L = res.compatibles.slice(0, 6).map((x, i) => [x, i]).concat(extras.map((x, k) => [x, baseIdx + k])), prox = L.filter(([x]) => estProche(x)), suite = L.filter(([x]) => !estProche(x)), T = s => '<h2>' + s + '</h2>'; return (prox.length ? T('Retour possible vers le domicile') + prox.map(([x, i]) => item(x, i)).join('') : '') + (suite.length ? T('Mission à la suite possible') + suite.map(([x, i]) => item(x, i)).join('') : ''); })() : '<p>Aucun retour compatible pour l’instant.</p>'}
+      ${res.dateInconnue.length ? `<p class="doux">À vérifier (horaire non fourni) :</p>${res.dateInconnue.slice(0, 3).map((x, i) => item(x, n + i)).join('')}` : ''}
+      ${ecartes ? `<p class="doux">Écartées : ${esc(ecartes)}.</p>` : ''}
+      <p class="doux">Rien n’est réservé : ouvre la mission sur sa plateforme pour la prendre.</p></div>`;
+  }
+  function blocHistorique(m) {
+    const A = window.CPAgenda.analyser(etat.missions, etat.reglages), x = A.parCle[RT.cle(m)] || { conflits: [], etat: '' };
+    // V138 : journal lisible — mêmes changements répétés regroupés, 5 plus récents visibles, le reste dans « Voir les N autres ».
+    const toutes = (m.modifications || []).slice().reverse(), vues = new Set(), mods = toutes.filter(z => { const k = [z.champ, z.de, z.a].join('|'); if (vues.has(k)) return false; vues.add(k); return true; });
+    const kAn = m.platform + '|' + m.external_id, ovA = (lireLocal('cp_annul', {}) || {})[kAn];
+    const e = ovA ? null : ETATS[x.etat];
+    const manu = m.status === 'terminee' ? '' : ovA ? `<p><span class="etiq ko">Annulée par toi</span> Pénalité possible de la plateforme : montant à confirmer par toi si elle est retenue.<br><input id="inPenAnn" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Montant (€)" value="${ovA.pen != null ? esc(String(ovA.pen)) : ''}" style="width:120px"> <button id="btnPenAnn" class="second" type="button">Enregistrer</button> <button id="btnAnnRetire" class="second" type="button">Annuler l’annulation</button></p>` : (m.status === 'annulee' ? '' : '<p><button id="btnAnnMoi" class="second" type="button">❌ J’ai annulé cette mission</button></p>');
+    if (!mods.length && !e && !manu) return '';
+    return `<div class="carte" id="historique"><h2>📋 Suivi de la mission</h2>${manu}
+      ${e ? `<p><span class="etiq ${e[1]}">${esc(e[0])}</span>${x.etat === 'annulee' ? ' Elle n’apparaît plus dans tes missions acceptées sur ' + esc(PLATS[m.platform] || m.platform) + '. Vérifie sur le site avant de t’organiser autrement.' : ''}</p>` : ''}
+      ${mods.length ? '<p class="doux">Modifications relevées :</p>' + (l => l(mods.slice(0, 5)) + (mods.length > 5 ? `<details><summary class="doux">Voir les ${mods.length - 5} autres</summary>${l(mods.slice(5))}</details>` : ''))(zs => zs.map(z => `<div class="modifLigne">✏️ ${esc(window.CPAgenda.libelleModification(z))}${z.le ? ' <span class="doux">(' + esc(fmtDate(z.le)) + ')</span>' : ''}</div>`).join('')) + (toutes.length > mods.length ? `<p class="doux">${toutes.length - mods.length} répétition(s) du même changement masquée(s).</p>` : '') : ''}</div>`;
+  }
+  // V95 : mission acceptée déjà livrée (fin passée) → plus de retours proposés.
+  const missionPassee = m => { const f = Date.parse(m.delivery_end || m.delivery_start || ''), d = Date.parse(m.pickup_start || ''); return Number.isFinite(f) ? f < Date.now() : (Number.isFinite(d) ? d + 12 * 3600000 < Date.now() : false); };
+  // V212 : rentabilité en bloc : prestation, transport (approche, retour), cotisations en gras ; net et par heure en vert (rentable) ou rouge.
+  function blocRenta(m, r, frais, dv, depuis) {
+    // Le calcul actuel utilise des coûts kilométriques estimés, pas des billets vérifiés.
+    // Aucun résultat de rentabilité n'est affiché avant raccordement des prix réels
+    // de tous les transports nécessaires (approche, jonction et retour).
+    return '';
+    if (!r.connu) return bk('bkRen', 'RENTABILITÉ', '<div class="doux">Prix non connu.</div>');
+    const ph = r.parHeure, ok = r.net > 0 && (!ph || ph >= 15);
+    const row = (x, y, c) => '<div class="rd' + (c ? ' ' + c : '') + '"><span>' + x + '</span><span>' + y + '</span></div>';
+    const L = [];
+    if (dv) L.push('<div class="petit">📄 Montants de ton devis Hiflow n° ' + esc(dv.n) + ' (' + (dv.accepte ? 'accepté' : 'envoyé, en attente') + ')' + (dv.total != null ? ' — total ' + esc(euros(dv.total)) : '') + '</div>');
+    L.push(row('Prestation', esc(euros(r.prestation)), 'gras'));
+    if (frais.length) { L.push(row(dv ? '+ Frais remboursés (devis)' : '+ Remboursements prévus', esc(frais.map(([k, v]) => (FRAIS[k.toLowerCase()] || k) + ' ' + euros(v)).join(' · ')))); L.push(row('− Frais avancés (remboursés après)', '− ' + esc(euros(r.fraisAvances)))); }
+    if (m.kind === 'acceptee' && m.platform === 'Hiflow' && !dv) L.push(row('Frais du devis Hiflow', '<span class="doux">montant du devis non lu</span>'));
+    if (r.peageCharge > 0) L.push(row('− Péage à ta charge (non remboursé)', '− ' + esc(euros(r.peageCharge)))); else if (r.peageAbsent && m.kind === 'acceptee') L.push(row('Péage (non remboursé)', '<span class="doux">à renseigner</span>'));
+    L.push(r.coutTransport ? (r.transportRembourse ? row('Transport', '≈ ' + esc(euros(r.coutTransport)) + ' <span class="petit">avancé puis remboursé par Hiflow</span>', 'gras') : row('Transport à ta charge', '− ' + esc(euros(r.transportNonCouvert)), 'gras')) : row('Transport', '<span class="doux">inconnu</span>', 'gras'));
+    L.push(row('↳ Approche' + (depuis ? ' depuis la livraison précédente' : ' depuis ton domicile'), r.approche ? (r.approche.mode ? esc(r.approche.mode) + ' ' : '') + '≈ ' + esc(r.approche.km) + ' km · ' + esc(duree(r.approche.heures)) + ' · ' + esc(euros(r.approche.cout)) : '<span class="doux">inconnue — renseigne ta ville dans Réglages</span>', 'sub'));
+    L.push(row('↳ Retour à ton domicile', r.retour ? '≈ ' + esc(r.retour.km) + ' km · ' + esc(duree(r.retour.heures)) + ' · ' + esc(euros(r.retour.cout)) : '<span class="doux">inconnu</span>', 'sub'));
+    if (r.rembTransport && r.coutTransport) L.push(row('↳ Couvert par le remboursement prévu', esc(euros(Math.min(r.rembTransport, r.coutTransport))), 'sub'));
+    L.push(row('Cotisations (' + String(r.taux).replace('.', ',') + ' %)', '− ' + esc(euros(r.cotisations)), 'gras'));
+    L.push(row('Net estimé', esc(euros(r.net)), 'gras gros ' + (ok ? 'ok' : 'ko')));
+    L.push(row('Par heure', ph ? esc(euros(ph)) + '/h <span class="petit">(' + esc(duree(r.heures)) + (r.liaisonsConnues ? ', approche et retour compris' : ', hors liaisons inconnues') + ')</span>' : 'durée inconnue', 'gras ' + (ph ? (ph >= 15 ? 'ok' : 'ko') : (ok ? 'ok' : 'ko'))));
+    L.push('<div class="petit" style="margin-top:4px">Vert : rentable (net positif et au moins 15 €/h). Rouge : non rentable. Estimation' + (r.dureeEstimee && r.heuresMission ? ', durée de conduite estimée d’après la distance' : '') + ' · distances à vol d’oiseau × 1,25 · cotisations sur la prestation seule.</div>');
+    return bk('bkRen ' + (ok ? 'bkRenOk' : 'bkRenKo'), 'RENTABILITÉ', L.join(''));
+  }
+  function detail(m, depuis) {
+    if (!m) return;
+    stopGTFSTransports();
+    const r = renta(m, depuis);
+    const itin = a => a ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a)}` : '';
+    const frais = window.CPCalc.fraisRembourses(m);
+    const dv = m.fees && m.fees.devis_numero ? { n: m.fees.devis_numero, total: m.fees.devis_total, accepte: m.fees.devis_accepte === 1 } : null;   // V95 : montants du devis Hiflow
+    const lien = m.detail_url && /^https:\/\//.test(m.detail_url) ? m.detail_url : LIENS[m.platform];
+    const ligne = (a, b) => { const t = String(a); const c = /^= /.test(t) ? 'net' : /^Rentabilit/.test(t) ? 'horaire' : /^[−-] /.test(t) ? 'neg' : /^(Prestation|\+)/.test(t) ? 'pos' : ''; return `<tr${c ? ' class="r-' + c + '"' : ''}><td>${esc(a)}</td><td>${b}</td></tr>`; };   // V146 : rangées colorées dans « Rentabilité estimée »
+    $('feuilleContenu').innerHTML = `<div class="doux"><span class="etiq">${esc(PLATS[m.platform])}</span> <span class="verif">${esc(verifPast(m))}</span> n° ${esc(m.external_id)}${m.validation === 'non_validee' ? ' · lecture non validée : vérifie sur le site' : ''}${verifFiche(m) ? '<br>🕒 ' + esc(verifFiche(m)) : ''}</div>
+      <h2 id="feuilleTitre" class="trajet" style="font-size:20px">${esc(trajet(m))}</h2>
+      ${dv && !dv.accepte && m.kind !== 'acceptee' ? `<div style="background:#ffe8a3;color:#222;border-radius:8px;padding:6px 10px;margin:6px 0;font-weight:600">📝 Devis envoyé · n° ${esc(dv.n)} (envoyé, en attente)${dv.total != null ? ' · total ' + esc(euros(dv.total)) : ''}</div>` : ''}
+      ${m.kind === 'acceptee' ? '<button id="btnRetirer" class="second" type="button">🚫 Pas acceptée : retirer de l’Agenda</button>' : ''}
+      ${lienDevis(m) ? `<a href="${esc(lienAppliHiflow() || lienDevis(m))}"${lienAppliHiflow() ? '' : ' target="_blank" rel="noopener"'} id="lienDevis" data-numero="${esc(m.external_id)}"><button style="width:100%;margin:4px 0 2px">📱 Faire le devis dans l’application Hiflow</button></a><p class="doux" style="margin:0 0 8px">Mission n° <b>${esc(m.external_id)}</b> (copié en touchant le bouton) · ${esc(trajet(m))}</p>` : ''}
+      ${m.kind === 'acceptee' ? agendaDateBlocks(m) : bkDates(m, arriveeTxt(m))}
+      ${vehHtml(m)}${repriseHtml(m)}${plaqueW(m)}${compHtml(m)}
+      ${blocKm(m, false)}
+      <button id="btnVol" class="btnVert" type="button" aria-label="Visualisation trajet voiture">🚗 Visualisation trajet voiture</button>
+      <button id="btnTransportsMission" class="second" type="button" style="width:100%;margin-top:8px;background:#cdeaff;color:#123d72;border:1px solid #70b7eb;font-weight:600" aria-label="Visualisation des transports aller, jonction mission et retour">🚌 Visualisation des transports<span style="display:block;font-size:.9em;font-weight:500;margin-top:3px">Aller / Jonction mission / Retour</span></button>
+      ${bk('bkLieu', 'LIEUX', `<div>📍 <b>Départ</b> : ${esc(adresse(m, 'origin'))}</div><div id="gpsO">${mentionGps(m, 'origin')}</div>${(m.origin_address || m.from_city) ? `<a href="${esc(itin(m.origin_address || m.from_city + (m.from_department ? ' ' + m.from_department : '')))}" target="_blank" rel="noopener">Itinéraire vers le départ${m.origin_address ? '' : ' (ville)'}</a>` : ''}<div style="margin-top:8px">🏁 <b>Arrivée</b> : ${esc(adresse(m, 'destination'))}</div><div id="gpsD">${mentionGps(m, 'destination')}</div>${(m.destination_address || m.to_city) ? `<a href="${esc(itin(m.destination_address || m.to_city + (m.to_department ? ' ' + m.to_department : '')))}" target="_blank" rel="noopener">Itinéraire vers l’arrivée${m.destination_address ? '' : ' (ville)'}</a>` : ''}`)}
+      ${mailBloc(m)}
+      ${blocRenta(m, r, frais, dv, depuis)}
+      ${m.kind === 'acceptee' ? blocHistorique(m) : ''}
+      ${m.status === 'annulee' || m.status === 'terminee' || (m.kind === 'acceptee' && missionPassee(m)) ? '' : blocRetours(m)}
+      ${m.vehicle && /[ée]lectri|\bev\b|\bbev\b/i.test(String(m.vehicle.energy || '')) ? `<div class="carte"><b>🔌 Véhicule électrique : calculer la charge</b><p class="doux" style="margin:4px 0">Le prix et le temps de charge dépendent de la voiture, de la borne et de l’itinéraire : ces sites les calculent (l’appli ne les connaît pas).</p><span class="liensTr"><a href="https://abetterrouteplanner.com/">⚡ A Better Routeplanner</a><a href="https://fr.chargemap.com/">🗺️ Chargemap (bornes et prix)</a>${(m.origin_address || m.from_city) && (m.destination_address || m.to_city) ? `<a href="${esc('https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(m.origin_address || m.from_city + ' ' + (m.from_department || '')) + '&destination=' + encodeURIComponent(m.destination_address || m.to_city + ' ' + (m.to_department || '')))}">📍 Itinéraire Google Maps</a>` : ''}</span></div>` : ''}
+      ${(m.price_history || []).length ? bk('bkKm', 'PRIX', 'Premier prix : <b>' + esc(euros(m.price_history[0].de)) + '</b> · dernier prix : <b>' + esc(euros(m.price_history[m.price_history.length - 1].a)) + '</b>') : ''}
+      ${m.platform === 'Hiflow' && lienAppliHiflow() ? `<a href="${esc(lienAppliHiflow())}" class="lienAppli" data-numero="${esc(m.external_id)}"><button style="width:100%;margin-top:6px">📱 Ouvrir l’application Hiflow</button></a>` : (lienAppliAutre(m.platform, lien) ? `<a href="${esc(lienAppliAutre(m.platform, lien))}"><button style="width:100%;margin-top:6px">📱 Ouvrir l’application ${esc(PLATS[m.platform])}</button></a>` : `<a href="${esc(lien)}" target="_blank" rel="noopener"><button style="width:100%;margin-top:6px">Ouvrir sur ${esc(PLATS[m.platform])}</button></a>`)}`;
+    for (const a of document.querySelectorAll('#feuilleContenu [data-numero]')) a.addEventListener('click', () => { try { navigator.clipboard && navigator.clipboard.writeText(a.dataset.numero).then(() => toast('N° ' + a.dataset.numero + ' copié : colle-le dans la recherche de l’application Hiflow'), () => {}); } catch (_) {} });
+    for (const b of document.querySelectorAll('#feuilleContenu [data-suite]')) b.addEventListener('click', () => { const z = etat.missions.find(x => x.platform === m.platform && String(x.external_id) === b.dataset.suite); if (z) detail(z); });
+    $('feuille').hidden = false; $('feuille').querySelector('.feuilleBoite').scrollTop = 0;
+    const suivants = detail.retours || [], dest = G.coordonnees(m, 'destination');
+    for (const b of document.querySelectorAll('[data-retour]')) b.onclick = () => detail(suivants[Number(b.dataset.retour)].mission, dest);
+    { const bv = $('btnVol'); if (bv) bv.onclick = () => { try { const g = document.querySelector('[data-rmode="voiture"]'); if (g) { g.scrollIntoView({ block: 'center' }); g.click(); return; } } catch (_) {} popupVol(m); }; }
+    { const bt = $('btnTransportsMission'); if (bt) bt.onclick = () => {
+      const existing = $('cpTransportMissionDetails');
+      if (existing) {
+        if (!existing.hidden) {
+          existing.scrollIntoView({behavior:'smooth',block:'start'});
+          return;
+        }
+        stopGTFSTransports();
+        existing.remove();
+      }
+      const panel = document.createElement('section');
+      panel.id = 'cpTransportMissionDetails';
+      panel.className = 'bk bkC bkTr';
+      panel.style.marginTop = '10px';
+      panel.setAttribute('role', 'region');
+      panel.setAttribute('aria-label', 'Détails des transports de la mission');
+      panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div><p class="doux" role="status">Chargement des informations de transport…</p>';
+      // Compact comparison cards for regional options; keep existing detailed legs below.
+      const showRegionalChoices = (host, ranked, heading) => {
+        if (!ranked.length) return;
+        host.setAttribute('data-transport-cards','true');
+        const evidence=document.createElement('details');evidence.className='cp-transport-evidence';
+        const evidenceTitle=document.createElement('summary');evidenceTitle.textContent='Informations de la source';evidence.appendChild(evidenceTitle);
+        for(const node of Array.from(host.childNodes))evidence.appendChild(node);
+        const title = document.createElement('h4');
+        title.textContent = heading;
+        host.appendChild(title);
+        const grid = document.createElement('div');
+        grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px;margin:10px 0';
+        for (const choice of ranked.slice(0, 3)) {
+          const journey = choice.journey || {};
+          const card = document.createElement('details');
+          card.style.cssText = 'padding:12px;border:1px solid #94a3b8;border-radius:12px;line-height:1.5;min-width:0';
+          const summary = document.createElement('summary');
+          summary.style.cursor = 'pointer';
+          const name = document.createElement('strong');
+          name.style.display = 'block';
+          name.textContent = choice.label === 'Moins cher' && !Number.isFinite(journey.priceEUR) ? 'Tarif inconnu' : choice.label;
+          const facts = document.createElement('span');
+          facts.textContent = (Number.isFinite(journey.durationMinutes) ? journey.durationMinutes + ' min' : 'Durée inconnue') + ' · ' +
+            (Number.isFinite(journey.priceEUR) ? journey.priceEUR.toFixed(2).replace('.', ',') + ' €' : 'Tarif non vérifié');
+          const times = document.createElement('span');
+          times.style.display = 'block';
+          const clock = value => {
+            const ms = typeof value === 'number' ? value : Date.parse(value);
+            return Number.isFinite(ms) ? new Intl.DateTimeFormat('fr-FR', {hour:'2-digit',minute:'2-digit',timeZone:'Europe/Paris'}).format(new Date(ms)) : null;
+          };
+          const departure = clock(journey.departure), arrival = clock(journey.arrival);
+          times.textContent = departure && arrival ? departure + ' → ' + arrival : 'Horaires non disponibles';
+          const legs = document.createElement('small');
+          legs.style.display = 'block';
+          legs.textContent = Array.isArray(journey.legs) && journey.legs.length ?
+            journey.legs.map(leg => [leg.line || leg.provider, leg.from && leg.to ? leg.from + ' → ' + leg.to : ''].filter(Boolean).join(' ')).join(' · ') :
+            'Étapes non disponibles';
+          const warning = document.createElement('small');
+          warning.style.display = 'block';
+          warning.textContent = 'Transport non confirmé';
+          summary.append(name, times, facts, legs, warning);
+          card.appendChild(summary);
+          const detail = document.createElement('div');
+          const intro = document.createElement('p');
+          intro.textContent = 'Étapes théoriques · horaires et circulation à vérifier avant de partir.';
+          detail.appendChild(intro);
+          const steps = Array.isArray(journey.legs) ? journey.legs : [];
+          if (steps.length) {
+            const list = document.createElement('ol');
+            for (const leg of steps) {
+              const step = document.createElement('li');
+              const line = document.createElement('strong');
+              line.textContent = [leg.line || leg.provider || 'Transport', leg.from && leg.to ? leg.from + ' → ' + leg.to : ''].filter(Boolean).join(' · ');
+              step.appendChild(line);
+              const fromTime = clock(leg.departure), toTime = clock(leg.arrival);
+              if (fromTime || toTime) {
+                const schedule = document.createElement('div');
+                schedule.textContent = (fromTime || '?') + ' → ' + (toTime || '?');
+                step.appendChild(schedule);
+              }
+              for (const stop of [leg.from, leg.to]) {
+                if (typeof stop !== 'string' || !stop.trim()) continue;
+                const link = document.createElement('a');
+                link.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(stop);
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = '📍 Rechercher arrêt : ' + stop;
+                link.style.display = 'block';
+                step.appendChild(link);
+              }
+              list.appendChild(step);
+            }
+            detail.appendChild(list);
+          } else {
+            const missing = document.createElement('p');
+            missing.textContent = 'Détail des arrêts indisponible pour cet itinéraire.';
+            detail.appendChild(missing);
+          }
+          const caution = document.createElement('small');
+          caution.textContent = 'Les liens cartographiques recherchent le nom de l’arrêt : position exacte non vérifiée.';
+          detail.appendChild(caution);
+          card.appendChild(detail);
+          grid.appendChild(card);
+        }
+        host.appendChild(grid);
+        host.appendChild(evidence);
+      };
+      bt.insertAdjacentElement('afterend', panel);
+      bt.setAttribute('aria-controls', panel.id);
+      bt.setAttribute('aria-expanded', 'true');
+      try {
+      // Use the same confirmed Hiflow schedule as the mission header; read only.
+      const timing = missionTiming(m);
+      const transportPickup = timing.pickup;
+      const transportPlanKey = timing.key;
+      const transportPlannedReturn = timing.planned;
+      const transportFinish = RT.fin(missionForPlanning(m));
+      const transportDelivery = transportPlannedReturn ||
+        (transportFinish ? new Date(transportFinish.t).toISOString() : null);
+      const home = etat.reglages && (etat.reglages.domicile_adresse ||
+        etat.reglages.adresse_domicile || etat.reglages.domicile_ville);
+      const locationText = (address, city, department) => {
+        const a = String(address || '').trim(), c = String(city || '').trim();
+        if (!a) return [c, department].filter(Boolean).join(', ');
+        return c && !a.toLocaleLowerCase('fr').includes(c.toLocaleLowerCase('fr')) ?
+          [a, c, department].filter(Boolean).join(', ') : a;
+      };
+      const from = locationText(m.origin_address || m.from_address, m.from_city, m.from_department);
+      const to = locationText(m.destination_address || m.to_address, m.to_city, m.to_department);
+      const directions = (a, b, when) => {
+        if (!a || !b) return '<span class="doux">Adresse manquante — trajet non calculable.</span>';
+        const base = 'https://www.google.com/maps/dir/?api=1&origin=' +
+          encodeURIComponent(a) + '&destination=' + encodeURIComponent(b);
+        const link = (mode, label) => '<a href="' + esc(base + '&travelmode=' + mode) +
+          '" target="_blank" rel="noopener noreferrer">' + label + '</a>';
+        const transitExtra = '<a href="' + esc('https://www.sncf-connect.com/app/home/search' ) +
+          '" target="_blank" rel="noopener noreferrer">🚆 SNCF Connect</a>' +
+          '<a href="https://www.flixbus.fr/" target="_blank" rel="noopener noreferrer">🚌 FlixBus</a>' +
+          '<a href="https://www.blablacar.fr/bus" target="_blank" rel="noopener noreferrer">🚌 BlaBlaCar Bus</a>';
+        return '<div class="liensTr">' +
+          link('transit', '🚌 Bus / train') +
+          transitExtra +
+          link('walking', '🚶 Marche') +
+          link('bicycling', '🚲 Vélo (repère trottinette, à vérifier)') +
+          '</div>' +
+          (when ? '<div class="doux">Heure de référence : ' + esc(formatParis(when)) +
+          ' · sélectionner la date et l’heure exactes dans le calculateur externe.</div>' : '');
+      };
+      // Moteur régional : coordonnées et fournisseur existant, ou endpoint explicitement configuré.
+      // Ne jamais transformer une recherche externe en trajet prétendument confirmé.
+      const regionalEngineReady = !!(window.CPRegionalRouting &&
+        typeof window.CPRegionalRouting.plan === 'function');
+      // A configured endpoint has priority; the public M provider is geographically gated.
+      const regionalEndpointConfigured = !!(window.CP_REGIONAL_ROUTING_ENDPOINT &&
+        /^https:\/\/[^\s/]+/i.test(String(window.CP_REGIONAL_ROUTING_ENDPOINT)));
+      const regionalPointsReady = (from,to) => regionalEndpointConfigured ||
+        !!(window.CPRegionalRouting?.supportsPublic && window.CPRegionalRouting.supportsPublic(from,to));
+      const regionalProviderReady = regionalEndpointConfigured ||
+        typeof window.CPRegionalRouting?.supportsPublic === 'function';
+      const y51FeedStatus = 'Source horaire Y51 non chargée dans cette fiche : départs non confirmés.';
+      const y51ServiceDay = (() => {
+        const d = new Date(transportDelivery || m.delivery_start || '');
+        if (!Number.isFinite(d.getTime())) return '';
+        const parts = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit'
+        }).formatToParts(d);
+        const val = type => parts.find(x => x.type === type)?.value || '';
+        return val('year') + '-' + val('month') + '-' + val('day');
+      })();
+      const y51WorksWarning = y51ServiceDay >= '2026-09-14' && y51ServiceDay <= '2026-12-18' ?
+        '⚠️ Travaux rive est du lac du 14 septembre au 18 décembre 2026 : certains départs matinaux Y51 sont avancés de 15 min (05h40, 06h10 et 06h20 au départ d’Albertville notamment). Les autres horaires, dont un éventuel 11h48 à École Saint-François, ne doivent pas être déduits de cette mesure. Vérifier la fiche officielle et le suivi temps réel.' :
+        'Vérifier la fiche horaire officielle en vigueur et les éventuelles perturbations.';
+      const y51OfficialPdf = 'https://www.mobilites-arlysere.fr/wp-content/uploads/2026/07/FHY51-sept-dec-2026.pdf';
+      const y51DayOfWeek = y51ServiceDay ?
+        new Date(y51ServiceDay + 'T12:00:00Z').getUTCDay() : -1;
+      const y51Weekday = y51DayOfWeek >= 1 && y51DayOfWeek <= 5;
+      // Les jours fériés français ne peuvent pas être assimilés aux services du lundi au vendredi.
+      const y51FrenchHolidays = new Set(['2026-11-01', '2026-11-11', '2026-12-25']);
+      const y51Holiday = y51FrenchHolidays.has(y51ServiceDay);
+      const y51ScheduleApplies = y51ServiceDay >= '2026-09-01' &&
+        y51ServiceDay <= '2026-12-31' && y51Weekday && !y51Holiday;
+      const y51Indicative = y51ScheduleApplies ?
+        'Grille officielle septembre–décembre 2026, page 2 : École Saint-François, direction Annecy, 11 h 48 (lundi à vendredi). ' +
+        'Se présenter au moins 5 min avant, soit 11 h 43. Horaires théoriques : perturbations possibles, marche et circulation non vérifiées.' :
+        (y51Holiday ? 'Jour férié : le service du lundi au vendredi ne peut pas être présumé. ' : '') +
+        'Le service de 11 h 48 à École Saint-François n’est pas validé pour cette date et ce type de jour. Vérifier la grille applicable.';
+      const y51WalkingWindow = (() => {
+        if (!y51ScheduleApplies) return '';
+        const end = new Date(transportDelivery || '');
+        if (!Number.isFinite(end.getTime())) return 'Heure de fin de livraison absente : temps d’approche impossible à calculer.';
+        const parts = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+        }).formatToParts(end);
+        const minute = type => Number(parts.find(x => x.type === type)?.value || 0);
+        const available = 11 * 60 + 43 - (minute('hour') * 60 + minute('minute'));
+        return available <= 0 ?
+          '⚠️ Arrivée recommandée à l’arrêt (11 h 43) déjà dépassée à la livraison.' :
+          'Temps théorique entre livraison et arrivée recommandée à l’arrêt (11 h 43) : ' +
+          available + ' min. Durée de marche exacte non mesurée ; transport non confirmé — vérifiez vous-même.';
+      })();
+      const y51SummerReference = y51ServiceDay >= '2026-07-04' && y51ServiceDay <= '2026-08-31' ?
+        'Grille officielle été 2026 : École Saint-François → Annecy à 11 h 47 du lundi au vendredi (hors jours fériés). ' +
+        'Horaire théorique historique de cette période uniquement ; aucune confirmation temps réel.' :
+        'La grille été 2026 ne doit pas être utilisée pour cette date : consulter la grille 2026–2027.';
+      const y51CheckDate = y51ServiceDay ?
+        'Date de service à vérifier : ' + y51ServiceDay + ' (heure locale Europe/Paris).' :
+        'Date de livraison absente : impossible de choisir le bon calendrier de circulation.';
+      const endTime = Date.parse(transportDelivery || ''); // Une heure de début de livraison n'est pas une heure de fin.
+      const next = Number.isFinite(endTime) ? planningMissions()
+        .filter(x => x && RT.cle(x) !== RT.cle(m) && (x.kind === 'acceptee' || x.status === 'acceptee') &&
+          !['annulee', 'cancelled', 'canceled', 'refusee'].includes(String(x.status || '').toLowerCase()) &&
+          Number.isFinite(Date.parse(x.pickup_start || '')) &&
+          Date.parse(x.pickup_start) > endTime)
+        .sort((a,b) => Date.parse(a.pickup_start) - Date.parse(b.pickup_start))[0] : null;
+      const formatParis = value => {
+        if (value === null || value === undefined || value === '') return 'heure non renseignée';
+        const date = new Date(value);
+        return Number.isFinite(date.getTime()) ?
+          new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris',
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit' }).format(date) : 'heure non renseignée';
+      };
+      const nextGapMin = next ? Math.floor((Date.parse(next.pickup_start) - endTime) / 60000) : null;
+      const securityMarginMin = 15;
+      const pickupDate = Number.isFinite(Date.parse(transportPickup || '')) ? transportPickup : null;
+      const deliveryDate = Number.isFinite(Date.parse(transportDelivery || '')) ?
+        transportDelivery : null;
+      // Fenêtres de la mission : prise en charge (début–fin) et livraison (début–fin) ; marge de sécurité ajoutée.
+      const orig = (timing && timing.original) || m, okT = v => Number.isFinite(Date.parse(v || ''));
+      const pickupEndIso = okT(orig.pickup_end) && okT(pickupDate) && Date.parse(orig.pickup_end) > Date.parse(pickupDate) ? new Date(Date.parse(orig.pickup_end)).toISOString() : null;
+      const deliveryStartIso = !transportPlannedReturn && okT(orig.delivery_start) && okT(orig.delivery_end) && Date.parse(orig.delivery_end) > Date.parse(orig.delivery_start) ? new Date(Date.parse(orig.delivery_start) + securityMarginMin * 60000).toISOString() : null;
+      const deliveryEndMs = deliveryStartIso ? Date.parse(orig.delivery_end) + securityMarginMin * 60000 : null;
+      const connectionBudgetMin = nextGapMin == null ? null : nextGapMin - securityMarginMin;
+      const connectionStatus = nextGapMin == null ? '' :
+        connectionBudgetMin < 0 ?
+          '⚠️ Jonction non réalisable avec une marge minimale de 15 min, même sans trajet d’approche.' :
+          'Temps maximum théorique pour transport et approche : ' +
+          connectionBudgetMin + ' min, après réservation d’une marge minimale de 15 min. ' +
+          'Transport non confirmé — vérifiez vous-même.';
+      const nextOrigin = next && locationText(next.origin_address || next.from_address,
+        next.from_city, next.from_department);
+      panel.innerHTML = '<div class="bkt">🚌 TRANSPORTS DE LA MISSION</div>' +
+        '<details id="cpSibraFareReference" class="doux" style="margin:8px 0"><summary>Tarifs et abonnement SIBRA — secteur Annecy</summary>' +
+        '<p>Repères consultés le 31/10/2026 : 1 voyage à 2,50 € à bord ou 2,00 € en achat digital / rechargement (support éventuel en supplément). ' +
+        'Ce sont des prix de titres, pas le prix total de cet itinéraire. ' +
+        '<a href="https://www.sibra.fr/voyages-occasionnels/" target="_blank" rel="noopener noreferrer">Titres et conditions actuels</a> · ' +
+        '<a href="https://www.sibra.fr/app/uploads/2026/07/Reglement_BUS_CARS_CGV_01072026_3.pdf" target="_blank" rel="noopener noreferrer">Barème officiel, pages 4 et 6</a>.</p>' +
+        '<p>Un abonnement SIBRA personnel valide évite un billet supplémentaire sur les portions éligibles. ' +
+        'Les lignes régionales Y21, Y22, Y51, Y62, Y63 et 272 acceptent les titres SIBRA pour les trajets dans le Grand Annecy (hors SMS). ' +
+        'Des arrêts supplémentaires Y21/Y22 sont précisés dans le règlement. Ne pas étendre cette couverture à toute la ligne. ' +
+        '<a href="https://www.sibra.fr/voyages-reguliers/" target="_blank" rel="noopener noreferrer">Périmètre et abonnements</a>. ' +
+        'Renseignez les dates de votre abonnement ci-dessous. Sur Y51, seules les portions reconnues d’Annecy à Duingt Église peuvent être incluses ; les autres portions régionales restent à vérifier.</p></details>' +
+        // Anciens blocs de recherche manuelle (liens Google Maps, SNCF Connect, FlixBus, BlaBlaCar, texte « moteur régional ») supprimés :
+        // les cartes classées du hub donnent les trajets automatiquement. Seuls restent les tarifs/abonnement SIBRA et le champ « Livraison prévue ».
+        '';
+      let sibraPassControls = null;
+      if (window.CPSibraPass?.mountControls) {
+        let passStorage = null;
+        try { passStorage = window.localStorage; } catch (_) {}
+        sibraPassControls = window.CPSibraPass.mountControls(panel.querySelector('#cpSibraFareReference'), {
+          storage: passStorage, onChange: () => gtfsAgendaSession?.refreshFares?.()
+        });
+      }
+      const planningBox = document.createElement('div');
+      planningBox.className = 'doux';
+      planningBox.style.marginTop = '10px';
+      const planningLabel = document.createElement('label');
+      planningLabel.textContent = 'Livraison prévue pour préparer le retour (heure de Paris)';
+      const planningInput = document.createElement('input');
+      planningInput.type = 'datetime-local';
+      planningInput.required = true;
+      planningInput.id = 'cpTransportPlannedReturn';
+      planningLabel.htmlFor = planningInput.id;
+      const planningButton = document.createElement('button');
+      planningButton.type = 'button';
+      planningButton.className = 'second';
+      planningButton.textContent = 'Calculer avec cette livraison prévue';
+      const planningStatus = document.createElement('p');
+      planningStatus.setAttribute('role','status');
+      planningStatus.setAttribute('aria-live','polite');
+      planningStatus.dataset.planningFeedback = 'true';
+      planningStatus.textContent = transportPlannedReturn ?
+        'Livraison prévue prise en compte : ' + formatParis(transportPlannedReturn) +
+        '. Agenda et recherches utilisent cet horaire. Les résultats disponibles apparaissent ci-dessous ; un trajet non raccordé ne peut pas être calculé.' :
+        'Indique la date et l’heure prévues de livraison pour recalculer. La date limite reste inchangée. Ce choix est conservé uniquement pendant cette session.';
+      planningBox.appendChild(planningLabel);
+      planningBox.appendChild(planningInput);
+      planningBox.appendChild(planningButton);
+      planningBox.appendChild(planningStatus);
+      refreshPlanValue();
+      function refreshPlanValue() {
+        if (!transportPlannedReturn) return;
+        const p = Object.fromEntries(new Intl.DateTimeFormat('sv-SE', {
+          timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
+          hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+        }).formatToParts(new Date(transportPlannedReturn)).map(part => [part.type,part.value]));
+        planningInput.value = p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute;
+      }
+      const planningError = message => {
+        planningStatus.textContent = message;
+        planningStatus.setAttribute('role','alert');
+        planningInput.focus();
+        planningStatus.scrollIntoView({behavior:'smooth',block:'nearest'});
+      };
+      planningButton.onclick = () => {
+        const chosen = transportParisDate(planningInput.value);
+        if (!chosen || !m.platform || m.external_id == null ||
+            !Number.isFinite(Date.parse(transportPickup || '')) ||
+            Date.parse(chosen) < Date.parse(transportPickup)) {
+          planningError('Indiquer une date et une heure valides après la prise en charge. Une heure ambiguë au changement d’heure doit être évitée.');
+          return;
+        }
+        if (timing.deadline && Number.isFinite(Date.parse(timing.deadline)) &&
+            Date.parse(chosen) > Date.parse(timing.deadline)) {
+          planningError('Cette livraison prévue dépasse la date limite de la plateforme.');
+          return;
+        }
+        if (transportReturnPlans.size >= 64) transportReturnPlans.delete(transportReturnPlans.keys().next().value);
+        transportReturnPlans.set(transportPlanKey,chosen);
+        etat.planResultat = null;
+        planningButton.disabled = true;
+        planningStatus.textContent = 'Livraison prévue prise en compte. Actualisation des informations…';
+        try {
+          if (etat.onglet === 'agenda') vueAgenda();
+          // Rebuild the visible mission header too, rather than clicking its old button.
+          detail(timing.original, depuis);
+          const updatedButton = $('btnTransportsMission');
+          if (!updatedButton) throw new Error('Bouton transports indisponible');
+          updatedButton.dataset.transportRefreshAt = String(Date.now());
+          updatedButton.click();
+          const feedback = $('cpTransportMissionDetails')?.querySelector('[data-planning-feedback]');
+          if (feedback) feedback.scrollIntoView({behavior:'smooth',block:'center'});
+          toast('Livraison prévue prise en compte : ' + formatParis(chosen));
+        } catch (_) {
+          planningButton.disabled = false;
+          planningError('Livraison prévue retenue, mais affichage non actualisé. Ferme puis rouvre la fiche pour réessayer.');
+          toast('Affichage des transports non actualisé. Ferme puis rouvre la fiche.');
+        }
+      };
+      panel.appendChild(planningBox);
+      // Allow an explicit fresh check when mobile connectivity has recovered.
+      // Reopen the existing transport panel so all date-scoped searches are rerun.
+      const refreshTransport = document.createElement('button');
+      refreshTransport.type = 'button';
+      refreshTransport.className = 'second';
+      refreshTransport.textContent = '🔄 Actualiser maintenant';
+      refreshTransport.setAttribute('aria-label', 'Actualiser maintenant les transports de cette mission');
+      refreshTransport.style.marginTop = '8px';
+      refreshTransport.onclick = () => {
+        if (!panel.isConnected) return;
+        // Explicit user refresh must bypass browser HTTP caches for day JSON.
+        // The timestamp is scoped to this panel only; mission sync is untouched.
+        bt.dataset.transportRefreshAt = String(Date.now());
+        stopGTFSTransports();
+        panel.remove();
+        bt.setAttribute('aria-expanded', 'false');
+        bt.removeAttribute('aria-controls');
+        bt.click();
+      };
+      panel.appendChild(refreshTransport);
+      if (bt.dataset.transportRefreshAt) {
+        const refreshed = document.createElement('p');
+        refreshed.className = 'doux';
+        refreshed.setAttribute('role', 'status');
+        refreshed.textContent = 'Actualisation réseau demandée : si les données sont indisponibles, aucun horaire récent ne sera confirmé.';
+        panel.appendChild(refreshed);
+      }
+      // The mobile workspace shows journeys first; setup and source documents stay secondary.
+      const sourcePanel=document.createElement('details');sourcePanel.className='cp-transport-settings';
+      sourcePanel.id='cpTransportSettings';
+      const sourceTitle=document.createElement('summary');sourceTitle.textContent='Réglages, abonnements et autres recherches';
+      sourcePanel.appendChild(sourceTitle);
+      for(const child of Array.from(panel.childNodes))sourcePanel.appendChild(child);
+      const hero=document.createElement('header');hero.className='cp-transport-hero';
+      const eyebrow=document.createElement('span');eyebrow.className='cp-transport-eyebrow';eyebrow.textContent='CONVOYAGE ULTRA · TRANSPORTS';
+      const title=document.createElement('h2');title.textContent='Tes trajets, au même endroit';
+      const lead=document.createElement('p');lead.textContent='Recherche automatique à partir des adresses de ta mission.';
+      const margin=document.createElement('small');margin.textContent='Arrivée : 15 min minimum avant la prise en charge. Horaires et prix à vérifier avant de partir.';
+      hero.append(eyebrow,title,lead,margin);panel.appendChild(hero);
+      const transportDestinations={},legacySources={};
+      for(const [key,label,route] of [['Aller','01 · Aller',home+' → '+from],['Jonction','02 · Mission suivante',next?to+' → '+nextOrigin:'Aucune prochaine mission prévue'],['Retour','03 · Retour',to+' → '+home]]){
+        const section=document.createElement('section');section.className='cp-transport-direction';section.dataset.transportDirection=key;
+        const heading=document.createElement('h3');heading.textContent=label;
+        const path=document.createElement('p');path.className='cp-transport-route';path.textContent=route;
+        section.append(heading,path);transportDestinations[key]=section;panel.appendChild(section);
+        // Un seul affichage des trajets : les cartes classées du hub. Les anciens blocs par moteur restent consultables, repliés.
+        const legacy=document.createElement('details');legacy.className='cp-transport-sources';legacy.dataset.transportSources=key;
+        const legacyTitle=document.createElement('summary');legacyTitle.textContent='Détail par moteur (justificatifs)';legacy.appendChild(legacyTitle);
+        section.appendChild(legacy);legacySources[key]=legacy;
+      }
+      // Missions sur plusieurs jours : afficher les transports par date réelle
+      // de prise en charge, de livraison ou de prochaine mission. Ne pas inventer
+      // d'horaire de transport pour les jours intermédiaires.
+      const parisServiceDay=value=>{
+        const t=Date.parse(value||'');
+        if(!Number.isFinite(t))return null;
+        const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'})
+          .formatToParts(new Date(t));
+        const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
+        return p.year+'-'+p.month+'-'+p.day;
+      };
+      const transportDays={
+        Aller:parisServiceDay(pickupDate),
+        // La recherche de jonction vise l'arrivée avant la prochaine prise en charge.
+        // L'onglet suit cette date cible (et non la livraison précédente).
+        Jonction:next?parisServiceDay(next.pickup_start):null,
+        Retour:parisServiceDay(deliveryDate)
+      };
+      // Heure de Paris (hiver/été) pour un jour AAAA-MM-JJ et une heure HH:MM.
+      const parisIso=(day,hh,mm)=>{
+        const guess=Date.parse(day+'T'+String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0')+':00Z');
+        const f=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).formatToParts(new Date(guess));
+        const q=Object.fromEntries(f.map(x=>[x.type,x.value]));
+        const asUtc=Date.UTC(+q.year,+q.month-1,+q.day,+q.hour,+q.minute);
+        return new Date(guess-(asUtc-guess)).toISOString();
+      };
+      const dayAfter=day=>new Date(Date.parse(day+'T12:00:00Z')+86400000).toISOString().slice(0,10);
+      // Mission flexible sur plusieurs jours : un onglet par jour, avec Aller et Retour cherchés ce jour-là.
+      const origT=(timing&&timing.original)||m;
+      const pDay0=parisServiceDay(pickupDate),pDay1=parisServiceDay(origT.pickup_end)||pDay0;
+      const dDay0=parisServiceDay(deliveryDate),dDay1=parisServiceDay(origT.delivery_end)||dDay0;
+      const multiAller=[],multiRetour=[];
+      if(pDay0&&pDay1&&pDay1>pDay0){for(let d=pDay0,n=0;d<=pDay1&&n<10;d=dayAfter(d),n++)multiAller.push(d);}
+      if(dDay0&&dDay1&&dDay1>dDay0){for(let d=dDay0,n=0;d<=dDay1&&n<10;d=dayAfter(d),n++)multiRetour.push(d);}
+      for(const d of multiAller)if(d!==pDay0)transportDays['Aller@'+d]=d;
+      for(const d of multiRetour)if(d!==dDay0)transportDays['Retour@'+d]=d;
+      for(const key of Object.keys(transportDays)){
+        if(transportDestinations[key])continue;
+        const [dir,d]=key.split('@');
+        const section=document.createElement('section');section.className='cp-transport-direction';section.dataset.transportDirection=key;
+        const heading=document.createElement('h3');heading.textContent=(dir==='Aller'?'01 · Aller':'03 · Retour')+' · '+new Intl.DateTimeFormat('fr-FR',{timeZone:'UTC',weekday:'short',day:'2-digit',month:'short'}).format(new Date(d+'T12:00:00Z'));
+        const path=document.createElement('p');path.className='cp-transport-route';path.textContent=dir==='Aller'?home+' → '+from:to+' → '+home;
+        section.append(heading,path);transportDestinations[key]=section;panel.appendChild(section);
+      }
+      const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
+      let updateDayTabs=()=>{};const labelState={};
+      if(availableTransportDays.length>1){
+        const tabs=document.createElement('nav');
+        tabs.className='cp-transport-day-tabs';
+        tabs.setAttribute('aria-label','Jour des transports de la mission');
+        const buttons=[];
+        const selectDay=day=>{
+          for(const [direction,section] of Object.entries(transportDestinations)){
+            section.hidden=transportDays[direction]!==day;
+          }
+          for(const button of buttons){
+            const active=button.dataset.day===day;
+            button.setAttribute('aria-pressed',String(active));
+            button.classList.toggle('active',active);
+          }
+        };
+        for(const day of availableTransportDays){
+          const button=document.createElement('button');
+          button.type='button';button.className='cp-transport-day-tab second';
+          button.dataset.day=day;
+          button.textContent=new Intl.DateTimeFormat('fr-FR',{timeZone:'UTC',weekday:'short',day:'2-digit',month:'short'})
+            .format(new Date(day+'T12:00:00Z'));
+          const stages=Object.entries(transportDays).filter(([,d])=>d===day).map(([direction])=>direction.startsWith('Aller')?'Prise en charge':direction.startsWith('Retour')?'Retour après livraison':'Jonction');
+          button.setAttribute('aria-label','Afficher les transports du '+day+' : '+stages.join(', '));
+          button.title=stages.join(' · ')+' · '+day;
+          button.addEventListener('click',()=>selectDay(day));
+          tabs.appendChild(button);buttons.push(button);
+        }
+        hero.insertAdjacentElement('afterend',tabs);
+        selectDay(transportDays.Aller||availableTransportDays[0]);
+        // Un onglet de jour n'apparaît que si au moins un transport compatible avec le créneau existe (ou si la recherche est en cours).
+        updateDayTabs=()=>{
+          const empty=day=>{const ls=Object.entries(transportDays).filter(([,d])=>d===day).map(([l])=>l);
+            return ls.length>0&&ls.every(l=>labelState[l]&&labelState[l].done&&!labelState[l].total);};
+          let active=null;for(const b of buttons){if(b.classList.contains('active'))active=b.dataset.day;}
+          for(const b of buttons)b.hidden=empty(b.dataset.day)&&b.dataset.day!==active;
+          if(active&&empty(active)){const alt=buttons.find(b=>!b.hidden&&b.dataset.day!==active);if(alt)selectDay(alt.dataset.day);}
+          tabs.hidden=buttons.filter(b=>!b.hidden).length<2;
+        };
+      }else if(!next){
+        // Sans prochaine mission, ne pas présenter une jonction fictive.
+        transportDestinations.Jonction.hidden=true;
+      }
+      panel.appendChild(sourcePanel);
+      // Keep manual controls available without placing them ahead of automatic results.
+      sourcePanel.appendChild(refreshTransport);
+      const localCards={};
+      const localDayQueries={};
+      const dayScheduleQuery=async(label,request)=>{
+        const operator=request.operator||(/^national:(.+)$/.exec(String(request.networkId||''))||[])[1];
+        if(operator&&request.fromPoint&&request.toPoint&&window.CPNationalGTFSJourneys?.loadAndSearch){
+          const resource=(window.CP_NATIONAL_GTFS_RESOURCES||{})[operator];
+          if(!resource)throw new Error('GTFS national absent pour cet opérateur');
+          const result=await window.CPNationalGTFSJourneys.loadAndSearch({operator,resource:{...resource,format:'GTFS'},fetcher:regionalFetch,
+            date:request.date,from:request.fromPoint,to:request.toPoint,radiusMeters:3000,maxResults:100,includeTransfers:true,
+            earliestDeparture:'00:00:00',latestArrival:'47:59:59'});
+          const rows=Array.isArray(result?.journeys)?result.journeys:[];rows.truncated=rows.length>=100;return rows;
+        }
+        const queryDay=localDayQueries[label];
+        if(typeof queryDay==='function'&&request.networkId&&request.fromStopId&&request.toStopId&&request.date)return queryDay(request);
+        throw new Error('Grille complète non disponible pour cette source');
+      };
+      // Hub transports : TripGo, Suisse, Mobilités M, SNCF et GTFS local réunis et classés automatiquement.
+      let transportHub=null;
+      const hubHosts={};
+      const startTransportHub=()=>{
+        const Hub=window.CPTransportHub;
+        if(!Hub||!panel.isConnected)return;
+        // Communes absentes de la table intégrée (Archamps, Viviers-du-Lac…) : sans point GPS le moteur refuse de chercher
+        // (« adresse GPS manquante »). On interroge d'abord le service officiel d'adresses (déjà utilisé ailleurs dans
+        // l'application, géocodage au besoin), puis on relance une seule fois. Rien n'est inventé : sans résultat, le comportement reste identique.
+        if(!panel.cpGeoTried){
+          const manque=[[m,'origin'],[m,'destination'],[next,'origin']].filter(([mm,cote])=>{
+            if(!mm)return false;const c=G.coordonnees(mm,cote);return !c||c.precision==='departement'||
+              (c.precision==='ville'&&G.aAdresseRue?.(mm,cote));});
+          if(manque.length){
+            panel.cpGeoTried=true;
+            const note=document.createElement('p');note.className='doux cp-transport-geo';note.setAttribute('role','status');
+            note.textContent='📍 Recherche des coordonnées GPS des adresses…';panel.appendChild(note);
+            // Le géocodage est facultatif : un service externe lent ou bloqué ne doit
+            // jamais immobiliser les cartes de transports de la fiche de mission.
+            const geoAbort=new AbortController();
+            let geoFinished=false;
+            const geoDeadline=setTimeout(()=>{
+              if(geoFinished)return;
+              geoFinished=true;
+              geoAbort.abort();
+              note.remove();
+              if(panel.isConnected)startTransportHub();
+            },4000);
+            Promise.all(manque.map(async([mm,cote])=>{
+              try{
+                const r=await G.chercherPoint(mm,cote,u=>fetch(u,{signal:geoAbort.signal}));
+                if(!geoFinished&&!geoAbort.signal.aborted&&r&&r.trouve&&r.cle)G.POINTS[r.cle]=r.point;
+              }catch(_){}
+            })).then(()=>{
+              if(geoFinished)return;
+              geoFinished=true;
+              clearTimeout(geoDeadline);
+              note.remove();
+              if(panel.isConnected)startTransportHub();
+            }).catch(()=>{
+              if(geoFinished)return;
+              geoFinished=true;
+              clearTimeout(geoDeadline);
+              note.remove();
+              if(panel.isConnected)startTransportHub();
+            });
+            return;
+          }
+        }
+        const gp=gps=>(gps&&['gps','adresse','rue','ville'].includes(gps.precision)&&
+          gps.lat!=null&&gps.lng!=null&&Number.isFinite(Number(gps.lat))&&Number.isFinite(Number(gps.lng))&&
+          Math.abs(Number(gps.lat))<=90&&Math.abs(Number(gps.lng))<=180&&
+          !(Number(gps.lat)===0&&Number(gps.lng)===0))?{lat:Number(gps.lat),lon:Number(gps.lng)}:null;
+        const homeLat=etat.reglages?.domicile_lat,homeLon=etat.reglages?.domicile_lng;
+        const homeName=etat.reglages?.domicile_ville||'Domicile';
+        const homeExact=homeLat!=null&&homeLon!=null&&homeLat!==''&&homeLon!==''&&
+          Number.isFinite(Number(homeLat))&&Number.isFinite(Number(homeLon))&&
+          Math.abs(Number(homeLat))<=90&&Math.abs(Number(homeLon))<=180&&
+          !(Number(homeLat)===0&&Number(homeLon)===0);
+        // Même repli pour le domicile : ville connue mais coordonnées personnelles absentes.
+        // Ne jamais utiliser le centre du département comme substitut à une commune.
+        const homeCity=homeExact?null:G.trouverVille(homeName,etat.reglages?.domicile_departement||'');
+        // Adresse exacte saisie dans Paramètres (stockée seulement sur le téléphone) : prioritaire sur la ville.
+        const homeAdr=lireLocal('cp_domicile_exact',null);
+        const homeAdrOk=!!homeAdr&&Number.isFinite(homeAdr.lat)&&Number.isFinite(homeAdr.lon);
+        const homePt=homeAdrOk?{lat:homeAdr.lat,lon:homeAdr.lon}:homeExact?{lat:Number(homeLat),lon:Number(homeLon)}:
+          homeCity?{lat:Number(homeCity.lat),lon:Number(homeCity.lng)}:null;
+        const short=lireLocal('cp_marge_courte_gps',false)===true;
+        // Un point de rue géocodé est le meilleur repère public disponible sans numéro.
+        // Il sert aux itinéraires réels, tout en gardant la marge standard de 15 min (seul un GPS plateforme permet 5 min).
+        const exact=gps=>!!gps&&['gps','adresse','rue'].includes(gps.precision);
+        const exactGps=gps=>!!gps&&gps.precision==='gps';
+        const origin=G.coordonnees(m,'origin'),dest=G.coordonnees(m,'destination'),nextOrigin2=next?G.coordonnees(next,'origin'):null;
+        // Jonction vers la mission suivante : fenêtre de prise en charge (début–fin) ; si elle a lieu un autre jour que la livraison,
+        // les trajets cherchés sont ceux du jour de la mission (départ dès 04:00 ce jour-là, au cas où l'on dormirait sur place).
+        const nextDay=next?parisServiceDay(next.pickup_start):null,delivDay=deliveryDate?parisServiceDay(deliveryDate):null;
+        const jonctionLatest=next&&okT(next.pickup_end)&&Date.parse(next.pickup_end)>Date.parse(next.pickup_start)?new Date(Date.parse(next.pickup_end)).toISOString():(next?next.pickup_start:null);
+        const jonctionEarliest=nextDay&&delivDay&&nextDay>delivDay?parisIso(nextDay,4,0):deliveryDate;
+        const tasks=[];
+        // Les messages sont reconstruits sans doublons lors d'une actualisation des moteurs.
+        for(const section of Object.values(transportDestinations))section.querySelectorAll('.cp-transport-approx').forEach(n=>n.remove());
+        if(!homeExact&&!homeAdrOk&&homePt){
+          for(const direction of ['Aller','Retour']){
+            const note=document.createElement('p');note.className='cp-transport-approx';
+            note.textContent='📍 Domicile : centre de '+homeName+' utilisé faute de coordonnées exactes. Marche et faisabilité indicatives.';
+            transportDestinations[direction]?.appendChild(note);
+          }
+        }
+        // À défaut d'adresse GPS, le centre de la commune permet une recherche indicative.
+        // Ne jamais assimiler ce point approximatif à une adresse exacte ni raccourcir la marge.
+        for(const [direction,point] of [['Aller',origin],['Jonction départ',dest],['Jonction arrivée',nextOrigin2],['Retour',dest]]){
+          if(point?.precision==='ville'){
+            const note=document.createElement('p');note.className='cp-transport-approx';
+            note.textContent='📍 '+direction+' : centre-ville approximatif utilisé (adresse exacte inconnue). Vérifier les marches et la faisabilité avant départ.';
+            const target=direction.startsWith('Jonction')?transportDestinations.Jonction:transportDestinations[direction];
+            if(target)target.appendChild(note);
+          }
+        }
+        const allerBase={from:homePt,to:gp(origin),fromName:homeName,toName:'Prise en charge',fromCity:homeName,toCity:m.from_city||'',marginMinutes:securityMarginMin,exactTarget:exactGps(origin),approximateEndpoint:(!homeExact&&!homeAdrOk)||!exact(origin),allowShortMargin:short};
+        const retourBase={from:gp(dest),to:homePt,fromName:'Livraison',toName:homeName,fromCity:m.to_city||'',toCity:homeName,approximateEndpoint:!exact(dest)||(!homeExact&&!homeAdrOk)};
+        const dayEnd=d=>parisIso(d,23,0);
+        if(pickupDate&&multiAller.length){
+          // Chaque jour : arrivées juste avant l'heure d'ouverture du jour (18:00 le premier jour), puis plus tard jusqu'à la fin de la fenêtre.
+          for(const d of multiAller){
+            const first=d===pDay0,last=d===pDay1;
+            const startIso=first?pickupDate:parisIso(d,8,0);
+            const endIso=last&&pickupEndIso?pickupEndIso:dayEnd(d);
+            tasks.push({...allerBase,label:first?'Aller':'Aller@'+d,earliestDeparture:first?undefined:parisIso(d,4,0),latestArrival:endIso,
+              windowKind:'arrival',windowStartMs:Date.parse(startIso),windowEndMs:Date.parse(endIso)-securityMarginMin*60000});
+          }
+        }else if(pickupDate)tasks.push({...allerBase,label:'Aller',latestArrival:pickupEndIso||pickupDate,...(pickupEndIso?{windowKind:'arrival',windowStartMs:Date.parse(pickupDate),windowEndMs:Date.parse(pickupEndIso)-securityMarginMin*60000}:{})});
+        if(next&&deliveryDate&&next.pickup_start)tasks.push({label:'Jonction',from:gp(dest),to:gp(nextOrigin2),fromName:'Livraison',toName:'Mission suivante',fromCity:m.to_city||'',toCity:next.from_city||'',
+          earliestDeparture:jonctionEarliest,latestArrival:jonctionLatest,...(jonctionLatest!==next.pickup_start?{windowKind:'arrival',windowStartMs:Date.parse(next.pickup_start),windowEndMs:Date.parse(jonctionLatest)-securityMarginMin*60000}:{}),marginMinutes:securityMarginMin,exactTarget:exactGps(nextOrigin2),approximateEndpoint:!exact(dest)||!exact(nextOrigin2),allowShortMargin:short});
+        if(deliveryDate&&multiRetour.length){
+          for(const d of multiRetour){
+            const first=d===dDay0,last=d===dDay1;
+            const startIso=first?(deliveryStartIso||deliveryDate):parisIso(d,8,0);
+            const endMs=last&&deliveryEndMs?deliveryEndMs:Date.parse(dayEnd(d));
+            tasks.push({...retourBase,label:first?'Retour':'Retour@'+d,earliestDeparture:first?startIso:parisIso(d,4,0),
+              windowKind:'departure',windowStartMs:Date.parse(startIso),windowEndMs:endMs});
+          }
+        }else if(deliveryDate)tasks.push({...retourBase,label:'Retour',earliestDeparture:deliveryStartIso||deliveryDate,...(deliveryStartIso?{windowKind:'departure',windowStartMs:Date.parse(deliveryStartIso),windowEndMs:deliveryEndMs}:{})});
+        const signature=JSON.stringify([tasks,lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
+        if(transportHub&&transportHub.signatureKey===signature)return;
+        transportHub?.dispose();
+        let router=null;
+        try{router=Hub.cachedRouter(window.CPTransportWalking?.createRouter({fetcher:regionalFetch,maxRequests:150,intervalMs:1100}),{storage:window.localStorage});}catch(_){}
+        const scooterOn = (etat.reglages || {}).trottinette === true;
+        let scooterRouter = null;
+        if (scooterOn) { try { scooterRouter = Hub.cachedRouter(window.CPTransportWalking?.createRouter({ fetcher: regionalFetch, maxRequests: 60, intervalMs: 1100, mode: 'bicycle', cyclingSpeed: Number(lireLocal('cp_trot_vitesse_kmh', 15)) }), { storage: window.localStorage, key: 'cp_trottinette_v1' }); } catch (_) {} }
+        const fareFor=leg=>{
+          // Tarifs prouvés uniquement (grilles officielles datées), jamais estimés.
+          try{const f=window.CPTransportFareGrids?.fareFor(leg);if(f)return f;}catch(_){}
+          return null;
+        };
+        // OJP Suisse : relais serveur uniquement, jamais de jeton côté app (api.session reste privé à l'utilisateur
+        // connecté). Session absente ou expirée : le fournisseur OJP se désactive silencieusement (comme les autres
+        // moteurs sans accès), sans message d'erreur ni blocage du reste des fiches.
+        const ojpSession=api?.connecte?{url:api.url,cle:api.cle,accessToken:api.session.access_token}:null;
+        // Les GTFS-Flex sont affichés comme informations de service, jamais comme trajets datés inventés.
+        const flexByLabel=new Map();
+        const flexFor=label=>[...(flexByLabel.get(label)?.values()||[])].flat();
+        const session=Hub.createSession({tasks,router,fareFor,timeoutMs:35000,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),scooterRouter,scooter:{enabled:scooterOn,maxKm:Number(lireLocal('cp_trot_max_km',8)),speedKmh:Number(lireLocal('cp_trot_vitesse_kmh',15))},
+          providers:Hub.makeProviders(window,{fetcher:regionalFetch,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
+            nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{},ojpSession,
+            onFlexCandidates:({task:gtfsTask,network,candidates})=>{
+              const label=gtfsTask?.label;
+              if(!label||!panel.isConnected||transportHub?.signatureKey!==signature)return;
+              let byNetwork=flexByLabel.get(label);
+              if(!byNetwork){byNetwork=new Map();flexByLabel.set(label,byNetwork);}
+              byNetwork.set(network,(Array.isArray(candidates)?candidates:[]).map(c=>({...c,network})));
+              const host=hubHosts[label];
+              if(host?.isConnected)Hub.render(host,{...transportHub.view(label),flexCandidates:flexFor(label),loadDaySchedules:request=>dayScheduleQuery(label,request)});
+            },
+            // OTP2 : moteur supplémentaire, actif seulement si un serveur HTTPS est configuré (aucun par défaut).
+            lyonCoachAccess:true,
+            allowOTP:typeof window.CP_OTP_ENDPOINT==='string'&&!!window.CPOTPClient?.buildQuery,
+            otpEndpoint:window.CP_OTP_ENDPOINT,otpQuery:window.CPOTPClient?.buildQuery,otpTimeoutMs:30000}),
+          onUpdate:(label,view)=>{
+            if(!panel.isConnected||!transportDestinations[label])return;
+            let host=hubHosts[label];
+            if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
+              const path=transportDestinations[label].querySelector('.cp-transport-route');
+              (path||transportDestinations[label].firstChild).insertAdjacentElement('afterend',host);}
+            Hub.render(host,{...view,flexCandidates:flexFor(label),loadDaySchedules:request=>dayScheduleQuery(label,request)});
+            labelState[label]={done:view.done,total:view.total};updateDayTabs();
+          }});
+        session.signatureKey=signature;transportHub=session;
+      };
+      const hubObserver=typeof MutationObserver==='function'?new MutationObserver(()=>{
+        if(!panel.isConnected||panel.hidden||$('feuille').hidden){transportHub?.dispose();transportHub=null;hubObserver.disconnect();}
+      }):null;
+      hubObserver?.observe($('feuille'),{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
+      bt.cpRefreshHub=startTransportHub;
+      startTransportHub();
+      const renderLocalCards=({task,itineraries,candidates,queryDay})=>{
+        if(typeof queryDay==='function')localDayQueries[task.label]=queryDay;
+        try{if(transportHub&&window.CPTransportHub)transportHub.ingest(task.label,'GTFS local',window.CPTransportHub.fromGTFS(Array.isArray(candidates)&&candidates.length?candidates:itineraries));}catch(_){}
+        // Le moteur GTFS alimente déjà les cartes unifiées. Ne plus fabriquer de
+        // seconde liste de résultats (ancienne présentation 'horaires locaux').
+        return;
+        if(!panel.isConnected||panel.hidden||$('feuille').hidden||!transportDestinations[task.label])return;
+        localCards[task.label]?.remove();
+        const host=document.createElement('div');host.className='cp-transport-local';localCards[task.label]=host;
+        (legacySources[task.label]||transportDestinations[task.label]).appendChild(host);
+        if(!itineraries.length){host.textContent='Pas d’horaire local compatible dans les données consultées.';return;}
+        const rows=itineraries.map(row=>({...row,legs:Array.isArray(row.legs)&&row.legs.length?row.legs:[{line:row.line,from:row.originStop?.name||row.from,to:row.destinationStop?.name||row.to,departure:row.departure,arrival:row.arrival}]}));
+        const normalized=window.CPTransportAdapters?.adaptGTFS(rows,'Réseau local')||[];
+        const ranked=window.CPTransportRanking?.rank(normalized,{direction:task.label==='Retour'?'return':'outbound',deadline:task.latestArrival,earliestDeparture:task.earliestDeparture,marginMinutes:15})||[];
+        showRegionalChoices(host,ranked,task.label+' · horaires locaux');
+      };
+      // GTFS candidate search: one worker for the open panel, no mission writes.
+      if (window.CPGTFSAgenda && window.CPGTFSWorker) {
+        let gtfsTaskSignature = null;
+        const runGTFS = () => {
+        if (!panel.isConnected || panel.hidden || $('feuille').hidden) return;
+        const point = gps => transportAddressPoint(gps) ?
+          {lat:Number(gps.lat),lon:Number(gps.lng)} : null;
+        const homeLat = etat.reglages?.domicile_lat, homeLon = etat.reglages?.domicile_lng;
+        const homePoint = homeLat != null && homeLon != null && homeLat !== '' && homeLon !== '' &&
+          Number.isFinite(Number(homeLat)) && Number.isFinite(Number(homeLon)) ?
+          {lat:Number(homeLat),lon:Number(homeLon)} : null;
+        const gtfsTasks = [];
+        if (pickupDate) gtfsTasks.push({label:'Aller',from:homePoint,
+          to:point(G.coordonnees(m,'origin')),latestArrival:pickupDate,marginMinutes:securityMarginMin});
+        if (deliveryDate) gtfsTasks.push({label:'Retour',from:point(G.coordonnees(m,'destination')),
+          to:homePoint,earliestDeparture:deliveryDate});
+        if (next && deliveryDate && next.pickup_start) gtfsTasks.push({label:'Jonction',
+          from:point(G.coordonnees(m,'destination')),to:point(G.coordonnees(next,'origin')),
+          earliestDeparture:deliveryDate,latestArrival:next.pickup_start,marginMinutes:securityMarginMin});
+        const signature = JSON.stringify(gtfsTasks);
+        if (signature === gtfsTaskSignature) return;
+        stopGTFSTransports();
+        for(const host of Object.values(localCards))host.remove();
+        panel.querySelector('[data-gtfs-agenda]')?.remove();
+        gtfsAgendaSession = window.CPGTFSAgenda.mount(sourcePanel,{tasks:gtfsTasks,onResults:renderLocalCards,
+          getSibraPass:()=>sibraPassControls?.getPass()||null,
+          ...(Array.isArray(window.CP_GTFS_AGENDA_RESOURCES) ? {resources:window.CP_GTFS_AGENDA_RESOURCES} : {})});
+        gtfsTaskSignature = signature;
+        };
+        bt.cpRefreshGTFS = runGTFS;
+        runGTFS();
+      }
+      if (next) pointsMission(next, () => {
+        if (!panel.isConnected || panel.hidden || $('feuille').hidden || $('btnTransportsMission') !== bt) return;
+        bt.cpRefreshGTFS?.();
+        bt.cpRefreshRegional?.();
+        bt.cpRefreshHub?.();
+      });
+      // Swiss public transport connections for an accepted mission junction.
+      // Results are advisory until realtime validity and exact walking approaches are checked.
+      if (window.CPSwissTransport && next && deliveryDate && next.pickup_start) {
+        const swissFrom = G.coordonnees(m, 'destination');
+        const swissTo = G.coordonnees(next, 'origin');
+        const nextPickupMs = Date.parse(next.pickup_start);
+        const swissZone = p => !window.CPTransportHub?.inSwissArea || (p && window.CPTransportHub.inSwissArea({lat:Number(p.lat),lon:Number(p.lng)}));
+        if (transportAddressPoint(swissFrom) && transportAddressPoint(swissTo) && (swissZone(swissFrom) || swissZone(swissTo)) &&
+            Number.isFinite(nextPickupMs) && nextPickupMs > Date.parse(deliveryDate)) {
+          const swissStatus = document.createElement('div');
+          swissStatus.className = 'doux';
+          swissStatus.setAttribute('role', 'status');
+          swissStatus.textContent = 'Jonction suisse : recherche des bus, trams et trains…';
+          sourcePanel.appendChild(swissStatus);
+          window.CPSwissTransport.plan({
+            from: {lat:swissFrom.lat, lon:swissFrom.lng},
+            to: {lat:swissTo.lat, lon:swissTo.lng},
+            when: deliveryDate,
+            limit: 6
+          }).then(options => {
+            if (!swissStatus.isConnected) return;
+            const departureMs = Date.parse(deliveryDate);
+            const compatible = options.filter(option => {
+              const start = Date.parse(option.departure);
+              const end = Date.parse(option.arrival);
+              return Number.isFinite(start) && Number.isFinite(end) &&
+                start >= departureMs && end <= nextPickupMs - securityMarginMin * 60000;
+            }).slice(0, 5);
+            const diagnostic = options.diagnostic;
+            const diagnosticLabel = diagnostic && diagnostic.status === 'success' ? ' (API : ' + diagnostic.valid + '/' + diagnostic.received + ' horaires valides)' : '';
+            swissStatus.textContent = compatible.length ?
+              'Jonction suisse : ' + compatible.length +
+              ' proposition(s) indicatives' + diagnosticLabel + '. Prix et circulation non confirmés :' :
+              'Jonction suisse : aucune proposition compatible' + diagnosticLabel + '. Transport non confirmé — vérifiez vous-même.';
+            compatible.forEach(option => {
+              const line = document.createElement('p');
+              const legs = option.sections.map(s => [s.mode === 'WALK' ? '🚶 Marche' : s.mode,s.line,s.from && s.to ? s.from+' → '+s.to : '',s.mode === 'WALK' && Number.isFinite(s.walkSeconds) ? Math.ceil(s.walkSeconds/60)+' min à pied' : ''].filter(Boolean).join(' ')).join(' · ');
+              line.textContent = formatParis(option.departure) + ' → ' +
+                formatParis(option.arrival) + ' · ' + legs +
+                ' · avance avant prochaine mission : ' + Math.max(0,Math.floor((nextPickupMs-Date.parse(option.arrival))/60000)) + ' min (marge de sécurité requise : ' + securityMarginMin + ' min, approche exacte non vérifiée)' +
+                ' · tarif non communiqué · Transport non confirmé — vérifiez vous-même.';
+              swissStatus.appendChild(line);
+            });
+          }).catch(() => {
+            if (swissStatus.isConnected) swissStatus.textContent =
+              'Jonction suisse : service indisponible. Transport non confirmé — vérifiez vous-même.';
+          });
+        }
+      }
+      // Regional refresh slots: rerun only the tasks whose precise inputs change.
+      const regionalRefreshers = [];
+      const regionalActive = () => panel.isConnected && !panel.hidden &&
+        !$('feuille').hidden && $('btnTransportsMission') === bt;
+      const regionalControllers=new Set();
+      const regionalObserver=typeof MutationObserver==='function'?new MutationObserver(()=>{
+        if(!regionalActive()){
+          for(const controller of regionalControllers)controller.abort();
+          regionalControllers.clear();regionalObserver.disconnect();
+        }
+      }):null;
+      regionalObserver?.observe($('feuille'),{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
+      const regionalPoint = gps => transportAddressPoint(gps) ?
+        {lat:Number(gps.lat),lon:Number(gps.lng)} : null;
+      const regionalHome = () => {
+        const lat = etat.reglages?.domicile_lat, lon = etat.reglages?.domicile_lng;
+        return lat != null && lon != null && lat !== '' && lon !== '' ?
+          {lat:Number(lat),lon:Number(lon)} : null;
+      };
+      const regionalSlot = (direction, inputs, render) => {
+        let signature = null, previous = null, controller = null;
+        const refresh = () => {
+          if (!regionalActive()) return;
+          const key = JSON.stringify(inputs());
+          if (key === signature) return;
+          signature = key;
+          controller?.abort();regionalControllers.delete(controller);
+          controller=new AbortController();regionalControllers.add(controller);
+          previous?.remove();
+          previous = document.createElement('div');
+          previous.setAttribute('data-regional-slot', '');
+          (legacySources[direction]||transportDestinations[direction]||sourcePanel).appendChild(previous);
+          render(previous,controller.signal);
+        };
+        regionalRefreshers.push(refresh);
+        refresh();
+      };
+      bt.cpRefreshRegional = () => regionalRefreshers.forEach(refresh => refresh());
+      regionalSlot('Jonction', () => [regionalPoint(G.coordonnees(m,'destination')),regionalPoint(next && G.coordonnees(next,'origin')),deliveryDate,next?.pickup_start,securityMarginMin], (panel,signal) => {
+      // Regional journeys use a configured endpoint or the public M provider,
+      // only when both mission endpoints have exact GPS.
+      if (regionalEngineReady && regionalProviderReady && next && deliveryDate) {
+        const finishGps = G.coordonnees(m, 'destination');
+        const nextGps = G.coordonnees(next, 'origin');
+        if (transportAddressPoint(finishGps) && transportAddressPoint(nextGps) &&
+            regionalPointsReady({lat:finishGps.lat,lon:finishGps.lng},{lat:nextGps.lat,lon:nextGps.lng})) {
+          const regionalStatus = document.createElement('div');
+          regionalStatus.className = 'doux';
+          regionalStatus.setAttribute('role', 'status');
+          regionalStatus.textContent = 'Jonction régionale : recherche des correspondances…';
+          panel.appendChild(regionalStatus);
+          window.CPRegionalRouting.plan({
+            signal,
+            endpoint: window.CP_REGIONAL_ROUTING_ENDPOINT,
+            from: {lat: finishGps.lat, lon: finishGps.lng},
+            to: {lat: nextGps.lat, lon: nextGps.lng},
+            departure: deliveryDate,
+            refresh: !!bt.dataset.transportRefreshAt,
+            fetcher: regionalFetch
+          }).then(answer => {
+            if (!regionalActive() || !regionalStatus.isConnected) return;
+            const options = window.CPRegionalRouting.feasibleBetween(
+              answer.itineraries, deliveryDate, next.pickup_start, securityMarginMin);
+            regionalStatus.textContent = options.length ?
+              'Jonction régionale : ' + options.length +
+              ' proposition(s) théoriques, horaires et circulation à vérifier :' :
+              'Jonction régionale : aucune correspondance compatible avec la marge minimale de 15 min. Transport non confirmé — vérifiez vous-même.';
+            if (window.CPTransportAdapters && window.CPTransportRanking && options.length) {
+              const ranked = window.CPTransportRanking.rank(
+                window.CPTransportAdapters.withVerifiedFares(window.CPTransportAdapters.adaptRegional(options,'Régional')),
+                {deadline:next.pickup_start,earliestDeparture:deliveryDate,marginMinutes:securityMarginMin});
+              if (ranked.length) {
+                showRegionalChoices(regionalStatus, ranked, 'Jonction mission · comparer');
+              }
+            }
+            options.slice(0, 5).forEach(option => {
+              const line = document.createElement('p');
+              const legs = option.legs.map(leg => [
+                leg.mode, leg.route, leg.from + ' → ' + leg.to
+              ].filter(Boolean).join(' ')).join(' · ');
+              line.textContent = formatParis(option.startTime) + ' → ' +
+                formatParis(option.endTime) + ' · ' + legs +
+                ' · horaire théorique, transport non confirmé.';
+              regionalStatus.appendChild(line);
+            });
+          }).catch(() => {
+            if (regionalActive() && regionalStatus.isConnected) regionalStatus.textContent =
+              'Service régional indisponible ou incompatible. Transport non confirmé — vérifiez vous-même.';
+          });
+        }
+      }
+      });
+      // Swiss API: outbound and return suggestions. Home coordinates may be a city centre.
+      // Only show indicative options; never imply door-to-door or realtime confirmation.
+      if (window.CPSwissTransport) {
+        const homeLat = Number(etat.reglages?.domicile_lat);
+        const homeLon = Number(etat.reglages?.domicile_lng);
+        const homeReady = etat.reglages?.domicile_lat != null &&
+          etat.reglages?.domicile_lng != null &&
+          window.CPSwissTransport.point({lat:homeLat,lon:homeLon});
+        // Ne pas interroger l'API suisse pour un trajet entièrement hors Suisse / Grand Genève.
+        const swissRelevant = (a, b) => !window.CPTransportHub?.inSwissArea ||
+          window.CPTransportHub.inSwissArea({lat:Number(a.lat),lon:Number(a.lon)}) ||
+          window.CPTransportHub.inSwissArea({lat:Number(b.lat),lon:Number(b.lon)});
+        const swissSuggestions = (label, from, to, when, arriveBy, accept) => {
+          if (!swissRelevant(from, to)) return;
+          const status = document.createElement('div');
+          status.className = 'doux';
+          status.setAttribute('role', 'status');
+          status.textContent = label + ' suisse : recherche des correspondances…';
+          sourcePanel.appendChild(status);
+          window.CPSwissTransport.plan({from,to,when,arriveBy,limit:6})
             .then(results => {
               if (!status.isConnected) return;
               const valid = results.filter(accept).slice(0,5);
