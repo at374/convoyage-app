@@ -19,10 +19,11 @@ const bounds={
  divia:[47.24,4.96,47.39,5.12],ginko:[47.15,5.90,47.32,6.10],
  evolity:[47.40,6.70,47.60,6.95]
 };
+const requireArchives=process.env.REQUIRE_REAL_GTFS==='1';
 
 for(const [id,file] of feeds){
  test(`${id}: un horaire GTFS réel est proposé par le fournisseur de mission`,
-  {skip:!fs.existsSync(path.join(__dirname,'..','data','gtfs',file))},async()=>{
+  {skip:!requireArchives&&!fs.existsSync(path.join(__dirname,'..','data','gtfs',file))},async()=>{
    const archive=fs.readFileSync(path.join(__dirname,'..','data','gtfs',file));
    // The loader caps indexed service dates at seven; test the next service week.
    const dates=Array.from({length:7},(_,offset)=>{

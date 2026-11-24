@@ -32,6 +32,8 @@ jobs:
       - name: Télécharger, extraire et valider
         run: python3 -I scripts/build_regional_gtfs.py --out data/gtfs
       - name: Vérifier les trajets réels de BFC dans le moteur de mission
+        env:
+          REQUIRE_REAL_GTFS: '1'
         run: node --test tests/mobigo-bfc-real-slices.test.cjs
       - name: Publier les flux validés
         env:
