@@ -38,8 +38,10 @@ for (const [id,name] of NETWORKS) {
    assert.ok(entry && entry.license === 'Licence Ouverte 2.0', `${id}: entrée/licence manquante`);
    assert.ok(bytes.length < 12*1024*1024, `${id}: archive dépasse 12 Mio`);
    assert.ok(Array.isArray(entry.bounds) && entry.bounds.length === 4, `${id}: emprise manquante`);
+   // Indexer par archive entière : le chargeur limite l'indexation ciblée à 7 dates,
+   // tandis que ce contrôle vérifie réellement un horizon de 30 jours via le calendrier GTFS.
    const feed = await loader.loadResource({format:'GTFS',url:`https://example.org/${id}.zip`},
-    {fetcher:async()=>new Response(bytes),indexServiceDates:dates,retainSourceTables:true});
+    {fetcher:async()=>new Response(bytes),retainSourceTables:true});
    assert.ok(feed.index.counts.routes > 0, `${id}: aucune ligne indexée`);
    assert.ok(feed.index.counts.stops > 0, `${id}: aucun arrêt indexé`);
    const routes = indexer.parseCSV(feed.files['routes.txt'] || '');
