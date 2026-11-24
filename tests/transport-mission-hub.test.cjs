@@ -829,3 +829,17 @@ test('TAD PIPA : A10 Ambérieu et A11 Meximieux proposés selon les lieux, avec 
  const reverse=H.tadFor({from:{city:'PIPA'},to:{city:'Ambérieu-en-Bugey'}});
  assert.equal(reverse.length,1);assert.match(reverse[0].name,/A10/);
 });
+
+test('le fournisseur SNCF charge le TER K21 avec la limite des fiches mission',async()=>{
+ const fallback=require('../sncf-fallback.js');
+ const fixture=require('./fixtures/sncf-annecy-grenoble-2026-11-02.json');
+ const {sncf}=H.makeProviders({CPSncfFallback:fallback},{
+  fetcher:async url=>new Response(JSON.stringify(String(url).includes('manifest')?fixture.manifest:fixture.day))
+ });
+ const journeys=await sncf.run({
+  fromName:'Annecy',fromCity:'Annecy',toName:'Grenoble',toCity:'Grenoble',
+  from:{lat:45.902047,lon:6.121826},to:{lat:45.1914,lon:5.7143},
+  latestArrival:'2026-11-02T16:00:00+01:00',marginMinutes:15
+ });
+ assert.ok(journeys.some(j=>j.legs.some(l=>l.line==='K21'&&l.from==='Annecy'&&l.to==='Grenoble')));
+});
