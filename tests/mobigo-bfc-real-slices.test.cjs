@@ -14,7 +14,8 @@ const feeds=[
  ['leo','leo-auxerre.zip'],['taneo','taneo-nevers.zip'],
  ['intercom','intercom-sens.zip'],['grandole','grandole-dole.zip'],
  ['cote_bus','cote-bus-beaune.zip'],['moova','moova-vesoul.zip'],
- ['ca_roule','ca-roule-autun.zip'],['papillon','papillon-cosne.zip']
+ ['ca_roule','ca-roule-autun.zip'],['papillon','papillon-cosne.zip'],
+ ['ecla','ecla-lons.zip']
 ];
 const bounds={
  mobigo39:[46.25,5.2,47.0,6.25],mobigo58:[46.55,2.75,47.75,4.35],
@@ -27,7 +28,7 @@ const bounds={
  taneo:[46.96,3.07,47.06,3.20],intercom:[48.16,3.23,48.23,3.34],
  grandole:[47.02,5.42,47.12,5.53],cote_bus:[46.98,4.78,47.08,4.90],
  moova:[47.59,6.10,47.68,6.19],ca_roule:[46.90,4.24,47.02,4.39],
- papillon:[47.36,2.85,47.46,3.00]
+ papillon:[47.36,2.85,47.46,3.00],ecla:[46.63,5.48,46.72,5.64]
 };
 const requireArchives=process.env.REQUIRE_REAL_GTFS==='1';
 
