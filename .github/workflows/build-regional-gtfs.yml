@@ -11,6 +11,7 @@ on:
       - 'tests/mobigo-bfc-real-slices.test.cjs'
       - 'tests/optymo-gtfs-access.test.cjs'
       - 'tests/fluo-grand-est-real-feed.test.cjs'
+      - 'tests/cts-strasbourg-real-feed.test.cjs'
       - 'transport-mission-hub.js'
   schedule:
     - cron: '41 2 * * 1'   # chaque lundi (consommation GitHub Actions : quelques minutes par semaine)
@@ -45,6 +46,10 @@ jobs:
         env:
           REQUIRE_REAL_GTFS: '1'
         run: node --test tests/fluo-grand-est-real-feed.test.cjs
+      - name: Vérifier les horaires actifs CTS dans l’indexeur GTFS
+        env:
+          REQUIRE_REAL_GTFS: '1'
+        run: node --test tests/cts-strasbourg-real-feed.test.cjs
       - name: Publier les flux validés
         env:
           GH_TOKEN: ${{ github.token }}

@@ -124,6 +124,9 @@ class TMirrorConfig(unittest.TestCase):
     def test_mirror_entries_well_formed(self):
         m = load_module()
         self._check(m.MIRROR)
+        cts = next(s for s in m.MIRROR if s['id'] == 'cts-strasbourg')
+        self.assertIn('opendata.cts-strasbourg.eu', cts['url'])
+        self.assertEqual(cts['license'], 'Licence ouverte (publication PAN)')
 
     def test_filtered_mirror_entries_well_formed(self):
         m = load_module()

@@ -501,3 +501,9 @@ La sélection actuelle repose sur une boîte géographique et peut contenir des 
 ## Correction de publication et statut Fluo Grand Est — 24/11/2026
 
 Le commit `a6da7cb8` a accidentellement publié une copie tronquée de ce document à cause d’une limite de lecture. Le document complet a été restauré depuis son parent `2887db41` et cette note conserve l’état réel. Le test `tests/fluo-grand-est-real-feed.test.cjs` et son étape CI restent bien présents dans le commit `a6da7cb8`. L’archive réelle Fluo avait déjà fourni un candidat indexable (8912, Chavannes-sur-l’Étang → Montreux-Vieux, 08:10–08:20 le 24/11), mais aucun fournisseur de fiche mission ni tarif vérifié n’est déclaré.
+
+## Extension en cours — CTS Strasbourg, première source urbaine Grand Est
+
+Le PAN expose le GTFS statique CTS à `https://opendata.cts-strasbourg.eu/google_transit.zip`, en téléchargement direct. Sa fiche actuelle annonce une archive de 7,84 Mo couvrant le 18/11/2026–17/05/2027, 47 lignes et 1 349 arrêts ; le flux inclut bus et tram, mais exclut Flex’hop/Taxibus et ne publie pas de Fares V1. La ressource indique les produits tarifaires GTFS séparés, qui ne suffisent pas ici à confirmer un prix exact.
+
+L’entrée `cts-strasbourg` a été ajoutée au miroir régional séparé de l’agrégat Fluo, avec un test strict qui exige un candidat direct actif entre deux arrêts géolocalisés dans l’emprise française de Strasbourg. La source est découverte et sa licence ouverte est documentée par le PAN ; en attente du run CI de téléchargement/validation réelle, aucun statut « téléchargé », « raccordé au moteur de mission » ou « trajets testés par fournisseur » n’est déclaré. Pas de tarif certifié et pas de modification de la carte publique.

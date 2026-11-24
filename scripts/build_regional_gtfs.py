@@ -99,6 +99,12 @@ FILTERED_MIRROR = [
 ]
 # Flux propres recopiés tels quels (après validation).
 MIRROR = [
+    # GTFS CTS publié ouvertement au PAN : l’archive complète (7,84 Mo) reste sous le plafond
+    # téléphone/MAX_OUT, sans découpage géographique ni mélange avec l’agrégat Grand Est.
+    {'id': 'cts-strasbourg', 'network': 'CTS Strasbourg',
+     'url': 'https://opendata.cts-strasbourg.eu/google_transit.zip',
+     'bounds': [48.45, 7.60, 48.70, 7.90],
+     'license': 'Licence ouverte (publication PAN)', 'publisher': 'Compagnie des Transports Strasbourgeois'},
     # Première région dans la progression en escargot au départ d'AURA : Bourgogne-Franche-Comté.
     # Les ressources départementales Mobigo sont publiées individuellement par la Région sous Licence Ouverte 2.0.
     # Elles restent séparées pour conserver les calendriers et éviter de fusionner des identifiants GTFS homonymes.
