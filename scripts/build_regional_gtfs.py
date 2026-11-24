@@ -12,6 +12,7 @@ obligatoires, calendrier, références) et plafonné en taille ; un manifeste da
 Usage : python3 scripts/build_regional_gtfs.py [--aggregate fichier.zip] [--out data/gtfs] [--offline]
 """
 import argparse, csv, hashlib, io, json, math, os, re, sys, tempfile, unicodedata, urllib.request, zipfile, datetime
+from contextlib import ExitStack
 
 UA = {'User-Agent': 'ConvoyageUltra-GTFS/1.0'}
 MAX_OUT = 12 * 1024 * 1024
@@ -475,6 +476,9 @@ BUNDLED_AGENCY_FEEDS = [{
 }
 ]
 REQUIRED = ['agency.txt', 'stops.txt', 'routes.txt', 'trips.txt', 'stop_times.txt']
+IDFM_DATASET = 'reseau-urbain-et-interurbain-dile-de-france-mobilites'
+IDFM_URL = 'https://eu.ftp.opendatasoft.com/stif/GTFS/IDFM-gtfs.zip'
+IDFM_DOWNLOAD_LIMIT = 160 * 1024 * 1024
 
 
 def norm(text):
@@ -689,6 +693,228 @@ def extract(z, spec, allow_oversize=False, table_cache=None):
     if len(data) > MAX_OUT and not allow_oversize:
         return None, 'extrait trop volumineux (%d octets)' % len(data)
     return data, {'agencies': [a.get('agency_name') for a in keep_ag], 'routes': len(routes), 'trips': len(trips), 'stops': len(stops), 'fares': bool(ff)}
+
+
+def extract_idfm_agencies(source_zip, out_dir, origin):
+    """Split the 1.1 GB expanded IDFM feed by operator without materializing stop_times in RAM."""
+    agency_fields, agencies = read_table(source_zip, 'agency.txt')
+    route_fields, routes = read_table(source_zip, 'routes.txt')
+    agency_for_id = {}
+    agency_by_id = {}
+    for agency in agencies:
+        agency_id = agency.get('agency_id') or ''
+        safe_id = re.sub(r'[^a-z0-9]+', '-', norm(agency_id)).strip('-')
+        if not safe_id:
+            raise ValueError('agency_id IDFM vide ou non normalisable')
+        agency_for_id[agency_id] = 'idfm-' + safe_id
+        agency_by_id[agency_id] = agency
+
+    route_rows, route_fields_by_id, route_labels = {}, {}, {}
+    route_network = {}
+    for route in routes:
+        agency_id = route.get('agency_id') or ''
+        base_id = agency_for_id.get(agency_id)
+        # Le moteur ferroviaire national traite les trains régionaux/Transilien; cet agrégat
+        # ajoute les réseaux routiers, métros, trams et assimilés sans dupliquer les trains.
+        if base_id and str(route.get('route_type') or '') != '2':
+            agency_name = agency_by_id.get(agency_id, {}).get('agency_name') or ''
+            # RATP est le seul opérateur IDFM dont une table stop_times dépasse le plafond
+            # individuel du chargeur mobile. Le découpage par route conserve une agence et
+            # des calendriers valides dans chaque ZIP, sans relever les limites globales.
+            if 'ratp' in norm(agency_name):
+                route_id = route.get('route_id') or ''
+                route_slug = re.sub(r'[^a-z0-9]+', '-', norm(route_id)).strip('-')
+                if not route_slug:
+                    raise ValueError('route_id RATP vide ou non normalisable')
+                network_id = base_id + '-route-' + route_slug
+                public_line = route.get('route_short_name') or route.get('route_long_name') or route_slug
+                mode_label = {'0': 'tram', '1': 'métro', '3': 'bus', '7': 'funiculaire'}.get(str(route.get('route_type') or ''))
+                suffix = ' (' + mode_label + ')' if mode_label else ''
+                route_labels[network_id] = (agency_name + ' — ligne ' + public_line + suffix)[:120]
+            else:
+                network_id = base_id
+                route_labels.setdefault(network_id, agency_name or agency_id)
+            route_rows.setdefault(network_id, []).append(route)
+            route_network[route['route_id']] = network_id
+            route_fields_by_id[network_id] = route_fields
+
+    network_agencies = {}
+    agency_names = {}
+    for network_id, rows in route_rows.items():
+        agency = agency_by_id[rows[0].get('agency_id') or '']
+        network_agencies[network_id] = [agency]
+        agency_names[network_id] = route_labels[network_id]
+    if not network_agencies:
+        raise ValueError('aucune agence IDFM terrestre après exclusion des routes ferroviaires')
+
+    temp_root = tempfile.mkdtemp(prefix='idfm-gtfs-')
+    paths = {}
+    for network_id in network_agencies:
+        folder = os.path.join(temp_root, network_id)
+        os.makedirs(folder)
+        paths[network_id] = folder
+
+    def writer_group(table, fields_by_id):
+        stack = ExitStack()
+        writers = {}
+        for network_id, fields in fields_by_id.items():
+            stream = stack.enter_context(open(os.path.join(paths[network_id], table), 'w', encoding='utf-8', newline=''))
+            writer = csv.DictWriter(stream, fieldnames=fields, lineterminator='\n', extrasaction='ignore')
+            writer.writeheader()
+            writers[network_id] = writer
+        return stack, writers
+
+    network_fields = {network_id: agency_fields for network_id in network_agencies}
+    stack, writers = writer_group('agency.txt', network_fields)
+    for network_id, rows in network_agencies.items():
+        writers[network_id].writerows(rows)
+    stack.close()
+    stack, writers = writer_group('routes.txt', route_fields_by_id)
+    for network_id, rows in route_rows.items():
+        writers[network_id].writerows(rows)
+    stack.close()
+
+    trip_map, service_ids = {}, {network_id: set() for network_id in network_agencies}
+    trips_count = {network_id: 0 for network_id in network_agencies}
+    trip_headers = {}
+    with source_zip.open('trips.txt') as source, io.TextIOWrapper(source, encoding='utf-8-sig', newline='') as text:
+        reader = csv.DictReader(text)
+        trip_headers = reader.fieldnames
+        stack, writers = writer_group('trips.txt', {network_id: trip_headers for network_id in route_rows})
+        for trip in reader:
+            network_id = route_network.get(trip.get('route_id') or '')
+            if not network_id:
+                continue
+            trip_id = trip.get('trip_id') or ''
+            if not trip_id or trip_id in trip_map:
+                raise ValueError('trip_id IDFM vide ou dupliqué: ' + trip_id)
+            trip_map[trip_id] = network_id
+            service_ids[network_id].add(trip.get('service_id') or '')
+            writers[network_id].writerow(trip)
+            trips_count[network_id] += 1
+        stack.close()
+
+    stop_time_rows = {network_id: 0 for network_id in network_agencies}
+    used_stops = {network_id: set() for network_id in network_agencies}
+    booking_rule_ids = {network_id: set() for network_id in network_agencies}
+    with source_zip.open('stop_times.txt') as source, io.TextIOWrapper(source, encoding='utf-8-sig', newline='') as text:
+        reader = csv.DictReader(text)
+        stop_time_fields = reader.fieldnames
+        stack, writers = writer_group('stop_times.txt', {network_id: stop_time_fields for network_id in route_rows})
+        for stop_time in reader:
+            network_id = trip_map.get(stop_time.get('trip_id') or '')
+            if not network_id:
+                continue
+            writers[network_id].writerow(stop_time)
+            used_stops[network_id].add(stop_time.get('stop_id') or '')
+            for field in ('pickup_booking_rule_id', 'drop_off_booking_rule_id'):
+                if stop_time.get(field):
+                    booking_rule_ids[network_id].add(stop_time[field])
+            stop_time_rows[network_id] += 1
+        stack.close()
+
+    # Les références GTFS-Flex dans stop_times.txt sont inutilisables sans leurs
+    # règles de réservation. Ne copier que les règles référencées par chaque extrait.
+    booking_matches = table_paths(source_zip, 'booking_rules.txt')
+    if booking_matches:
+        with source_zip.open(booking_matches[0]) as source, io.TextIOWrapper(source, encoding='utf-8-sig', newline='') as text:
+            reader = csv.DictReader(text)
+            fields = reader.fieldnames
+            stack, writers = writer_group('booking_rules.txt', {network_id: fields for network_id in route_rows})
+            for rule in reader:
+                rule_id = rule.get('booking_rule_id') or ''
+                if not rule_id:
+                    continue
+                for network_id, ids in booking_rule_ids.items():
+                    if rule_id in ids:
+                        writers[network_id].writerow(rule)
+            stack.close()
+
+    stop_fields, all_stops = read_table(source_zip, 'stops.txt')
+    stop_by_id = {stop.get('stop_id') or '': stop for stop in all_stops}
+    network_stop_rows = {}
+    stop_networks = {}
+    for network_id, used in used_stops.items():
+        selected = set(used)
+        for stop_id in tuple(used):
+            row = stop_by_id.get(stop_id)
+            parent = row.get('parent_station') if row else None
+            if parent:
+                selected.add(parent)
+        network_stop_rows[network_id] = [stop_by_id[stop_id] for stop_id in selected if stop_id in stop_by_id]
+        for stop_id in selected:
+            stop_networks.setdefault(stop_id, set()).add(network_id)
+    stack, writers = writer_group('stops.txt', {network_id: stop_fields for network_id in route_rows})
+    for network_id, rows in network_stop_rows.items():
+        writers[network_id].writerows(rows)
+    stack.close()
+
+    for calendar_name in ('calendar.txt', 'calendar_dates.txt'):
+        matches = table_paths(source_zip, calendar_name)
+        if not matches:
+            continue
+        with source_zip.open(matches[0]) as source, io.TextIOWrapper(source, encoding='utf-8-sig', newline='') as text:
+            reader = csv.DictReader(text)
+            fields = reader.fieldnames
+            stack, writers = writer_group(calendar_name, {network_id: fields for network_id in route_rows})
+            for row in reader:
+                service_id = row.get('service_id') or ''
+                for network_id, ids in service_ids.items():
+                    if service_id in ids:
+                        writers[network_id].writerow(row)
+            stack.close()
+
+    transfer_matches = table_paths(source_zip, 'transfers.txt')
+    if transfer_matches:
+        with source_zip.open(transfer_matches[0]) as source, io.TextIOWrapper(source, encoding='utf-8-sig', newline='') as text:
+            reader = csv.DictReader(text)
+            fields = reader.fieldnames
+            stack, writers = writer_group('transfers.txt', {network_id: fields for network_id in route_rows})
+            for transfer in reader:
+                a = stop_networks.get(transfer.get('from_stop_id') or '', set())
+                b = stop_networks.get(transfer.get('to_stop_id') or '', set())
+                for network_id in a.intersection(b):
+                    writers[network_id].writerow(transfer)
+            stack.close()
+
+    entries, errors = {}, {}
+    try:
+        for network_id in route_network.values():
+            if network_id in entries or network_id in errors:
+                continue
+            if trips_count.get(network_id, 0) == 0 or stop_time_rows.get(network_id, 0) == 0:
+                errors[network_id] = 'agence IDFM sans courses ou horaires terrestres'
+                continue
+            archive_path = os.path.join(out_dir, network_id + '.zip')
+            with zipfile.ZipFile(archive_path, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
+                for name in ('agency.txt', 'routes.txt', 'trips.txt', 'stop_times.txt', 'stops.txt',
+                             'calendar.txt', 'calendar_dates.txt', 'transfers.txt', 'booking_rules.txt'):
+                    path = os.path.join(paths[network_id], name)
+                    if os.path.exists(path):
+                        archive.write(path, name)
+            size = os.path.getsize(archive_path)
+            if size > MAX_OUT:
+                os.unlink(archive_path)
+                errors[network_id] = 'archive IDFM supérieure au plafond mobile (%d octets)' % size
+                continue
+            with zipfile.ZipFile(archive_path) as extracted:
+                validate(extracted)
+                bounds = stop_bounds(extracted)
+            digest = hashlib.sha256()
+            with open(archive_path, 'rb') as f:
+                for chunk in iter(lambda: f.read(1024 * 1024), b''):
+                    digest.update(chunk)
+            entries[network_id] = {'network': agency_names[network_id], 'file': network_id + '.zip',
+                                   'sha256': digest.hexdigest(), 'bytes': size, 'bounds': bounds,
+                                   'origin': origin, 'routes': len(route_rows.get(network_id, [])),
+                                   'trips': trips_count[network_id], 'stop_times': stop_time_rows[network_id],
+                                   'stops': len(network_stop_rows[network_id]), 'fares': False,
+                                   'license': 'Licence Mobilités',
+                                   'publisher': 'Île-de-France Mobilités'}
+    finally:
+        import shutil
+        shutil.rmtree(temp_root, ignore_errors=True)
+    return entries, errors
 
 
 
@@ -948,6 +1174,24 @@ def main():
                                                     **{key: spec[key] for key in ('license', 'publisher') if spec.get(key)}}
             except BaseException as e:
                 manifest['errors'][spec['id']] = 'erreur : %s' % e
+        # IDFM publie 1,1 Go décompressé. Split par agency_id en flux, sans charger
+        # stop_times.txt en mémoire ni conserver les ZIP de tous les opérateurs.
+        idfm_path = None
+        try:
+            origin = current_dataset_zip(IDFM_DATASET, IDFM_URL, ['horaires au format gtfs'])
+            idfm_path = download(origin, IDFM_DOWNLOAD_LIMIT)
+            with zipfile.ZipFile(idfm_path) as source_zip:
+                entries, errors = extract_idfm_agencies(source_zip, args.out, origin)
+            manifest['networks'].update(entries)
+            manifest['errors'].update(errors)
+        except Exception as e:
+            manifest['errors']['idfm-aggregate'] = 'erreur agrégat IDFM : %s' % e
+        finally:
+            if idfm_path:
+                try:
+                    os.unlink(idfm_path)
+                except FileNotFoundError:
+                    pass
         # Les agrégats multi-opérateurs (ex. Atoumod) sont téléchargés une fois sur disque,
         # puis extraits agence par agence. Une seule archive d'agence reste en mémoire à la fois.
         for bundle in BUNDLED_AGENCY_FEEDS:

@@ -504,5 +504,41 @@ class TBretagneConfig(unittest.TestCase):
         self.assertNotIn('bretagne-ter', ids)
         self.assertTrue(all(n.get('agency_name') for n in bundle['networks']))
 
+class TIDFMStreamingExtract(unittest.TestCase):
+    def test_splits_by_agency_and_omits_train_routes_without_loading_big_table(self):
+        m = load_module()
+        source = io.BytesIO()
+        tables = {
+            'agency.txt': 'agency_id,agency_name,agency_timezone\nIDFM:BUS,Bus,Europe/Paris\nIDFM:RAIL,Train,Europe/Paris\n',
+            'routes.txt': 'route_id,agency_id,route_type\nBUS1,IDFM:BUS,3\nRAIL1,IDFM:RAIL,2\n',
+            'trips.txt': 'route_id,service_id,trip_id\nBUS1,S,BT1\nRAIL1,S,RT1\n',
+            'stop_times.txt': 'trip_id,arrival_time,departure_time,start_pickup_drop_off_window,end_pickup_drop_off_window,stop_id,stop_sequence,pickup_type,drop_off_type,pickup_booking_rule_id,drop_off_booking_rule_id\nBT1,08:00:00,08:00:00,08:00:00,08:15:00,A,1,0,0,BR1,BR1\nBT1,08:10:00,08:10:00,08:10:00,08:25:00,B,2,0,0,BR1,BR1\nRT1,09:00:00,09:00:00,,,,A,1,0,0,,\nRT1,09:10:00,09:10:00,,,,B,2,0,0,,\n',
+            'stops.txt': 'stop_id,stop_name,stop_lat,stop_lon\nA,A,48.85,2.35\nB,B,48.86,2.36\n',
+            'calendar_dates.txt': 'service_id,date,exception_type\nS,20261124,1\n',
+            'booking_rules.txt': 'booking_rule_id,booking_type,prior_notice_duration_min,booking_url\nBR1,1,30,https://example.org/book\nUNUSED,0,,\n',
+        }
+        with zipfile.ZipFile(source, 'w') as z:
+            for name, content in tables.items(): z.writestr(name, content)
+        with tempfile.TemporaryDirectory() as out, zipfile.ZipFile(io.BytesIO(source.getvalue())) as z:
+            entries, errors = m.extract_idfm_agencies(z, out, 'https://example.org/idfm.zip')
+            self.assertFalse(errors)
+            self.assertEqual(len(entries), 1)
+            entry = next(iter(entries.values()))
+            self.assertEqual(entry['network'], 'Bus')
+            self.assertEqual(entry['routes'], 1)
+            self.assertEqual(entry['trips'], 1)
+            with zipfile.ZipFile(os.path.join(out, entry['file'])) as extracted:
+                self.assertNotIn('RAIL1', extracted.read('routes.txt').decode())
+                self.assertIn('BT1', extracted.read('trips.txt').decode())
+                rules = extracted.read('booking_rules.txt').decode()
+                self.assertIn('BR1', rules)
+                self.assertNotIn('UNUSED', rules)
+
+    def test_idfm_public_static_feed_metadata_is_currently_named(self):
+        m = load_module()
+        self.assertEqual(m.IDFM_DATASET, 'reseau-urbain-et-interurbain-dile-de-france-mobilites')
+        self.assertEqual(m.IDFM_URL, 'https://eu.ftp.opendatasoft.com/stif/GTFS/IDFM-gtfs.zip')
+        self.assertLessEqual(m.IDFM_DOWNLOAD_LIMIT, 200 * 1024 * 1024)
+
 if __name__ == '__main__':
     unittest.main()
