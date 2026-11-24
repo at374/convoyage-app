@@ -695,3 +695,12 @@ Le run réel sur la version antérieure a validé les **19/19** tests JVMALIN, i
 Le workflow 144 (commit `be324357013bdacd4bf37585e10fd325eb288333`) attend derrière une collecte précédente toujours active. Il doit valider les nouveaux réseaux et produire les flux; avant résultat vert, aucun d’eux n’est classé « GTFS validé », raccordé au moteur mission ou publié sur la carte.
 
 La carte publique est régénérée automatiquement toutes les six heures sur `main`; elle ne montrera ces ajouts de la branche transports qu’après leur validation, raccordement au moteur et intégration sur `main`. Les transports hors de France restent exclus, avec la Suisse comme exception utilisateur déjà en place.
+
+
+## Étape suivante en escargot — Pays de la Loire repérés (24/11/2026)
+
+Le PAN publie un GTFS Destineo courant couvrant Aléop et plusieurs réseaux urbains; l’inventaire source inclut aussi SNCF/TER, des services SNCF TAD et YEUCONTINENT. À l’extraction, garder les réseaux terrestres français utiles, écarter les lignes ferroviaires déjà traitées par SNCF et exclure les bateaux et destinations hors France.
+
+La ressource GTFS-Flex TAD est distincte. Sa page officielle indique une validité affichée du 27/08/2026 au 18/09/2026, une dernière modification le 30/08/2026 et 147 707 erreurs de validation. Elle est donc **découverte seulement et périmée au 24/11** : ne pas la proposer comme horaire disponible. Rechercher une ressource TAD fraîche ou un autre flux avant toute intégration.
+
+Ressources officielles : [agrégat Destineo](https://transport.data.gouv.fr/datasets/arrets-horaires-et-circuits-des-lignes-de-transports-en-commun-en-pays-de-la-loire-gtfs-destineo-reseaux-aom-aleop-1), [TAD GTFS-Flex Aléop](https://transport.data.gouv.fr/datasets/transports-a-la-demande-en-pays-de-la-loire-gtfs-flex-aleop).
