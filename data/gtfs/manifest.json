@@ -1,12 +1,12 @@
 {
  "schemaVersion": 1,
- "generatedAt": "2026-11-24T20:08:03.371214+00:00",
+ "generatedAt": "2026-11-24T21:02:48.281513+00:00",
  "scope": "GTFS officiels réduits ou recopiés ; aucun horaire ni tarif créé",
  "networks": {
   "jybus-rumilly": {
    "network": "J'y bus Rumilly",
    "file": "jybus-rumilly.zip",
-   "sha256": "f0017277c4d151d8b315ce525f8f19ef22424d38a34679b8cd41503579573704",
+   "sha256": "34b109c0e5b118e117f14e06728dab637704fed1d9146b0922809cfd2bab14c5",
    "bytes": 62766,
    "bounds": [
     45.8,
@@ -26,7 +26,7 @@
   "tam-amberieu": {
    "network": "TAM Ambérieu-en-Bugey",
    "file": "tam-amberieu.zip",
-   "sha256": "48213f8fa1549ccea5762cd1d754fbdae9c3cdf17a7e93ca1b6e80dc35131e15",
+   "sha256": "3c1007eea8118584e943400bb68dbb5a4a7b248ef506e521735a231a25075ae8",
    "bytes": 13898,
    "bounds": [
     45.9,
@@ -46,7 +46,7 @@
   "cars-region-isere": {
    "network": "Cars Région Isère",
    "file": "cars-region-isere.zip",
-   "sha256": "e03abe81a9a630e594a497305a4e5804f4767cc5e40ff7714f1ad3e010df3969",
+   "sha256": "ea2aac702f6ca4a37a4faa0a269af6c15687a17a5e53dcd7b0d8bee3da04d3d1",
    "bytes": 690560,
    "bounds": [
     44.69,
@@ -66,7 +66,7 @@
   "cars-region-savoie": {
    "network": "Cars Région Savoie",
    "file": "cars-region-savoie.zip",
-   "sha256": "7c2f2170338388b42b309fa99f85f8f22f81a2c4c1d20665f25d8992ebcafe56",
+   "sha256": "78a9eb76e8d7aaa8b2779147f0b29870383e1f7e456eee010e7e29213626b48d",
    "bytes": 20836,
    "bounds": [
     45.05,
@@ -86,7 +86,7 @@
   "rubis-bourg": {
    "network": "Rubis Bourg-en-Bresse",
    "file": "rubis-bourg.zip",
-   "sha256": "2e5e7be6ab8553db381708f7f1f619e2115a28b26806d7c82a7c0818e9524506",
+   "sha256": "b3aafe2eaa4640565a6829af178568159b6201f679bd93bbee13bf64f6306139",
    "bytes": 232148,
    "bounds": [
     46.15,
@@ -106,7 +106,7 @@
   "evad-evian": {
    "network": "ÉVA'D Évian",
    "file": "evad-evian.zip",
-   "sha256": "dc9a7a194e142f8b79fdfda886e4b072d0029e43d7cb538cbdce40fd56baf9bf",
+   "sha256": "5bfd5a13d7ec91bbf7ff4bdc037fe1d9c5d1631f8ecac9a3ebc8948e8bebed1f",
    "bytes": 185295,
    "bounds": [
     46.24,
@@ -126,7 +126,7 @@
   "chamonix-bus": {
    "network": "Chamonix Bus",
    "file": "chamonix-bus.zip",
-   "sha256": "79b2ef6c64550a38792cefcc1d299dc41b03233638e37be1aa285ed3a513b62b",
+   "sha256": "fec96dcb5b83cfa75a1df0db49daa4af3971c54c2e7e55293218ba73bafb4737",
    "bytes": 178398,
    "bounds": [
     45.87,
@@ -146,7 +146,7 @@
   "proximiti-bonneville": {
    "network": "Proxim iTi Bonneville – La Roche",
    "file": "proximiti-bonneville.zip",
-   "sha256": "b53b5f2c10e52b885baf9ed11070d23f13df68874a66529f6d91e462be021b02",
+   "sha256": "1b6b751ff2b049ea0ca050d3a310e5a35b937ffaeebf8fd7c756b273aa31c3de",
    "bytes": 115157,
    "bounds": [
     45.91,
@@ -166,7 +166,7 @@
   "mobivals-valserhone": {
    "network": "Mobi'Vals Valserhône",
    "file": "mobivals-valserhone.zip",
-   "sha256": "bf4bee071925cf3f3683daaee8b95a53c37c8cdef42dd2b4b484547c7401b5a2",
+   "sha256": "9f3c70098605df977c0833277d139460e02dd205d7ea349b33fd0646cdc97585",
    "bytes": 162397,
    "bounds": [
     46.08,
@@ -186,7 +186,7 @@
   "tra-albertville": {
    "network": "TRA Mobilité Albertville",
    "file": "tra-albertville.zip",
-   "sha256": "17addac64937c3e53841a0c3a04ce645956531fdcaccbe0b92689d360c9158f2",
+   "sha256": "8f485e093841ff8e192d447a24c9de2029eab01f3086a8187b9f70ebb4f4af33",
    "bytes": 62759,
    "bounds": [
     45.55,
@@ -206,7 +206,7 @@
   "duobus-oyonnax": {
    "network": "Duobus Oyonnax",
    "file": "duobus-oyonnax.zip",
-   "sha256": "f19068121940e0ebc9ebcc9607c8f8b7aa129bb41a353a6d4d5d5195f7f3673e",
+   "sha256": "5885170753790512f1a560f530fef3532adaa7532204b19a37bfd53c09285809",
    "bytes": 35688,
    "bounds": [
     46.19,
@@ -226,7 +226,7 @@
   "ruban-bourgoin": {
    "network": "Ruban Bourgoin-Jallieu",
    "file": "ruban-bourgoin.zip",
-   "sha256": "5d4eadf9672a7675368d992ae9fea535eeae4bf616ef6d02980d6bee49900446",
+   "sha256": "cb81452bea7fece950b0e48a3a7d81370cf36f1e3e5118f14c6dc52b6baaf970",
    "bytes": 464328,
    "bounds": [
     45.48,
@@ -246,7 +246,7 @@
   "lva-vienne": {
    "network": "L'va Vienne",
    "file": "lva-vienne.zip",
-   "sha256": "acfd5b78ac8382fd47daa318101949f2230082e4b4748f800672286198009f74",
+   "sha256": "6269bc916073fcfe12a9ca2e4148249c2529811daa5cce24d467b9edf0be6554",
    "bytes": 2099633,
    "bounds": [
     45.39,
@@ -266,7 +266,7 @@
   "colibri-miribel": {
    "network": "Colibri Miribel",
    "file": "colibri-miribel.zip",
-   "sha256": "812aaee89ff7edfd9ad4ab9dab6d4f4522f9f398b13877caf30dea8bf19c36e2",
+   "sha256": "5e081a421652943720ef1aa076d848a95562461831ec31793e66b70dcc3f5f4c",
    "bytes": 17054,
    "bounds": [
     45.8,
@@ -286,7 +286,7 @@
   "tico-montluel": {
    "network": "TICO Montluel",
    "file": "tico-montluel.zip",
-   "sha256": "1583f70a76a1757bbb23bcb8c2fa67499f8adb3a7999e78f42ee73f2226a5d3e",
+   "sha256": "0bf4e29ef33d8bc2232d2bb3aa3a70ecc1aeab1835b0fe0df4fc07fa2f356193",
    "bytes": 6938,
    "bounds": [
     45.81,
@@ -306,7 +306,7 @@
   "saonibus-trevoux": {
    "network": "Saônibus Trévoux",
    "file": "saonibus-trevoux.zip",
-   "sha256": "28dff99de24c220885bf348c4fc95097e0d87555f54af3bc16be9ae8abb09a9f",
+   "sha256": "be4ad2e4bf59a74e9220c5a0bbba7e92d2ed97704f02e3a515392b490436e39c",
    "bytes": 8954,
    "bounds": [
     45.86,
@@ -326,7 +326,7 @@
   "cars-region-express": {
    "network": "Cars Région Express",
    "file": "cars-region-express.zip",
-   "sha256": "0764680cc8c45c0969fdea076774450055dc6a4f4aaf1af5db16e6a42e23c109",
+   "sha256": "f231934c849766a1756d9c321303c66c582f0d4267368dc59f515fcdf2743647",
    "bytes": 57708,
    "bounds": [
     44.35,
@@ -346,7 +346,7 @@
   "cars-region-loire": {
    "network": "Cars Région Loire",
    "file": "cars-region-loire.zip",
-   "sha256": "bfcf26e416f6828e6263b1f319d3a49d81df371e4c4440eb5dbff9e4715574ff",
+   "sha256": "1567c3e8b6590c600d7541be88a7d9db4e514d5a8cae665b3c72fda77e59c696",
    "bytes": 377725,
    "bounds": [
     45.23,
@@ -366,7 +366,7 @@
   "cars-region-drome": {
    "network": "Cars Région Drôme",
    "file": "cars-region-drome.zip",
-   "sha256": "c9ce07e0daa038071dcebf65dc65ecdeb00c1845442cb0af26d7f97b366569d9",
+   "sha256": "e08e9a6bd9b375e4c0fa45d813f16c6024c3bcb49b7d088152771a1db9be32b3",
    "bytes": 237209,
    "bounds": [
     44.04,
@@ -386,7 +386,7 @@
   "cars-region-ardeche": {
    "network": "Cars Région Ardèche",
    "file": "cars-region-ardeche.zip",
-   "sha256": "4ffbdec36fe9b0ef771dcccb23d087e1da60eacd698b055414d25ca9eab78820",
+   "sha256": "02088ed80ce66537d25e39b040a9ab835fa6c5f552ffb4e440d2bf178052d7ed",
    "bytes": 334329,
    "bounds": [
     44.25,
@@ -406,7 +406,7 @@
   "cars-region-allier": {
    "network": "Cars Région Allier",
    "file": "cars-region-allier.zip",
-   "sha256": "fec35ace89f2d8952be861cc1a2a16a8d350d7122712441f682594b48abb2a03",
+   "sha256": "69cf688c65f963cca3a19fec0c47d555b895fd532d58708f9a34062f29485d61",
    "bytes": 151575,
    "bounds": [
     46.02,
@@ -426,7 +426,7 @@
   "cars-region-cantal": {
    "network": "Cars Région Cantal",
    "file": "cars-region-cantal.zip",
-   "sha256": "902087b311b74d3e27d8b790572be59b6ad8355a3c1d2ba9bcd6c408865071cf",
+   "sha256": "1fce66cfd56b99c7ce8a8c4c3c5949c916d3c9dcc7f2bb377e0294747664bbc9",
    "bytes": 50287,
    "bounds": [
     44.67,
@@ -446,7 +446,7 @@
   "cars-region-haute-loire": {
    "network": "Cars Région Haute-Loire",
    "file": "cars-region-haute-loire.zip",
-   "sha256": "c9f5774d75c1c5843701c726caccd9e461a0919f3905430f816ddf45c828cc3d",
+   "sha256": "2a7c302ee3d5e84dc38203e1524ddbdfcd3d3b73d1143fdb6d72cbe419c511a9",
    "bytes": 57365,
    "bounds": [
     44.71,
@@ -466,7 +466,7 @@
   "coqueligo-annonay": {
    "network": "CoqueliGO Annonay",
    "file": "coqueligo-annonay.zip",
-   "sha256": "0abcc624d6cf3ccaa62a5cebc2b71d35f85f4e5c04d4f219b438a21164b45f79",
+   "sha256": "cf64f25aefc583bde1093efc12f738188fdaa936634481d899d23d1b99745c55",
    "bytes": 67692,
    "bounds": [
     45.21,
@@ -486,7 +486,7 @@
   "toutenbus-aubenas": {
    "network": "Tout'enbus Aubenas",
    "file": "toutenbus-aubenas.zip",
-   "sha256": "e7630f355134f2e46864eddf4bb721c083ca93e4ee8ce56c460a6bb9de8876f4",
+   "sha256": "d105978fb5b4d4a411532a02f35ab5c00b13a7311d3be186ca9877c3d6565bbf",
    "bytes": 38607,
    "bounds": [
     44.54,
@@ -506,7 +506,7 @@
   "transcab-aurillac": {
    "network": "Trans'Cab Aurillac",
    "file": "transcab-aurillac.zip",
-   "sha256": "717d9a76320ed2bf0b7b8202081360d5368c17e2133a81ad056fa54ef9962389",
+   "sha256": "a30ceea913b94724547c48e74b162ba0fb679aaa3078904e8348d13183708f85",
    "bytes": 205190,
    "bounds": [
     44.8,
@@ -526,7 +526,7 @@
   "montelibus-montelimar": {
    "network": "Montélibus Montélimar",
    "file": "montelibus-montelimar.zip",
-   "sha256": "2b791a6762e7e1a6d9b280f7a9e1acabf4b156edb2a9a6000f8bb228ff2ba93d",
+   "sha256": "574ac24ce1def0936bc936d6eb2ece011c4191b11197cb60d763aef92cb62df1",
    "bytes": 210570,
    "bounds": [
     44.44,
@@ -546,7 +546,7 @@
   "maelis-montlucon": {
    "network": "Maelis Montluçon",
    "file": "maelis-montlucon.zip",
-   "sha256": "6e34ec7890029ef6bc01344fca46fe74667bbc46f239c7ba803a69102faaf141",
+   "sha256": "39a301202143cefdee138ceb01b54bf8719f39a54044eaf998d16e9766e3d88b",
    "bytes": 169740,
    "bounds": [
     46.15,
@@ -566,7 +566,7 @@
   "aleo-moulins": {
    "network": "Aléo Moulins",
    "file": "aleo-moulins.zip",
-   "sha256": "11428d3a012d3f4e5978092ffa1c3c921f3b922f8dbd208492104adbea0f7ce8",
+   "sha256": "73fe3f6dde8e7934847445eb67386070ec3f24cc2d38fb529be258409c4da61f",
    "bytes": 177050,
    "bounds": [
     46.49,
@@ -586,7 +586,7 @@
   "tcap-privas": {
    "network": "T'CAP Privas",
    "file": "tcap-privas.zip",
-   "sha256": "2c4582cf803a2b4e011f21a11b2696d5a9c17ab980a61274e1101b130d216cc3",
+   "sha256": "aed73130ab02a531a1fcf39f5bef4b487ff5def642975a9e63679cbf8af92621",
    "bytes": 66167,
    "bounds": [
     44.68,
@@ -606,7 +606,7 @@
   "velay-le-puy": {
    "network": "Mobilité en Velay (Le Puy)",
    "file": "velay-le-puy.zip",
-   "sha256": "8caf876ecacad5388524b5edca96e23b0062e8307043098dd723bbef531f06a1",
+   "sha256": "9623c898f389e333c0144a590cd1670ddbcde069a53fae6434940796cb32748e",
    "bytes": 142023,
    "bounds": [
     44.97,
@@ -626,7 +626,7 @@
   "rlv-riom": {
    "network": "RLV Mobilités Riom",
    "file": "rlv-riom.zip",
-   "sha256": "36483f29afa2425585d9969d6b22808a4436b5027ec946346baab3b4f4d82546",
+   "sha256": "9d396ecb4937467ff79ec470cdc73390c66e8d8bd7efc3d4e727398c38731e62",
    "bytes": 89543,
    "bounds": [
     45.83,
@@ -646,7 +646,7 @@
   "star-roanne": {
    "network": "Star Roanne",
    "file": "star-roanne.zip",
-   "sha256": "a46519fd14ac7a4597d846a739f3c1f1b4b6ac009e7331b260cacb10df51ef8c",
+   "sha256": "538461263f2dac62e54bf6c619122e25ae829103f2a3ce116dae4212c9cc9210",
    "bytes": 700751,
    "bounds": [
     45.96,
@@ -666,7 +666,7 @@
   "lebus-tain-tournon": {
    "network": "Le Bus Tain-Tournon",
    "file": "lebus-tain-tournon.zip",
-   "sha256": "7de799aa2f2fcd5d9ee23023a5981cf57e146e24c162adec65a1a1fafa76a0a7",
+   "sha256": "66e5836b41dd1165cb0b9053474faf1a268af166b7241b8a12191729fe28dc7c",
    "bytes": 27199,
    "bounds": [
     44.99,
@@ -686,7 +686,7 @@
   "smtut-thiers": {
    "network": "SMTUT Thiers",
    "file": "smtut-thiers.zip",
-   "sha256": "ea5f3b95293a22b45b6f8243aec889dc2bf6127d38d50ade9b0c295396c10f70",
+   "sha256": "c67029194da19a06940b25208e06096eb0bd9bd84cdcd0d2bc7d8b3b1d4a74ed",
    "bytes": 96496,
    "bounds": [
     45.69,
@@ -706,7 +706,7 @@
   "mobivie-vichy": {
    "network": "MobiVie Vichy",
    "file": "mobivie-vichy.zip",
-   "sha256": "387dd0ac5fa9cc7880d87c0f392ab4670c789b4e9476be882d42ea7fa7212500",
+   "sha256": "17c964d7e5ba93b92977d4be0ee6841cadaa552de77c07531538974315649411",
    "bytes": 159482,
    "bounds": [
     46.06,
@@ -726,7 +726,7 @@
   "le37-roussillon": {
    "network": "Le 37 Péage-de-Roussillon",
    "file": "le37-roussillon.zip",
-   "sha256": "7157af8a66238dda75f0603f0144758197e3a3f9fde3fabe18b058c887cc8820",
+   "sha256": "53c0524db8e0956c4c7d13deeaf07f267e47487b31c68053cfedd276c4a5656a",
    "bytes": 26439,
    "bounds": [
     45.3,
@@ -746,7 +746,7 @@
   "forbus-forbach": {
    "network": "Forbus Forbach",
    "file": "forbus-forbach.zip",
-   "sha256": "bc527bd3dcac054639ad4aecd3ace35529131ed299595a9d1b5f09c42748087d",
+   "sha256": "57d88e118d4efc69fc60cf1acb14cc184ea85f56db560b2eeed179cb91d426a8",
    "bytes": 175680,
    "bounds": [
     49.032498,
@@ -768,7 +768,7 @@
   "temob-thionville": {
    "network": "TeMo'b Thionville-Fensch",
    "file": "temob-thionville.zip",
-   "sha256": "1cf99c1c9b41f8dab85044f540f3dbd4eb5064b62cc8f9251b652f216ead989e",
+   "sha256": "1d69169df8f2bf437a223a5d8c937212498d405d88154db9e4c9d2cf763c9a2e",
    "bytes": 757005,
    "bounds": [
     49.286631,
@@ -822,7 +822,7 @@
   "tadao-lens": {
    "network": "TADAO Lens-Liévin",
    "file": "tadao-lens.zip",
-   "sha256": "17e873ad8af4062b12a0fe0765ced9742cd683321ae87424529055a6ebb2e495",
+   "sha256": "7822d8f8198c8fd067b0d2eb54b7b10554db5c36103fe7711d4ea0f54ac14f9d",
    "bytes": 1677963,
    "bounds": [
     50.368141,
@@ -925,7 +925,7 @@
   "sitac-calais": {
    "network": "SITAC Calais",
    "file": "sitac-calais.zip",
-   "sha256": "274b04f8935d44019039771747646993967d3f56d9f88a1927bf4792bced53c6",
+   "sha256": "dd2d9c5969642e863f2095fc834aaa41888cf9aff434bf1bcf24c79fa47d57f0",
    "bytes": 946600,
    "bounds": [
     50.862352,
@@ -1399,7 +1399,7 @@
   "papillon-cosne": {
    "network": "Papillon Cosne-Cours-sur-Loire",
    "file": "papillon-cosne.zip",
-   "sha256": "960e4232e36e862db8084547024c43e0f9601eea88ba2e1e7be94c75e3d8b611",
+   "sha256": "6ffec6a996ec0ac23305d7403be59d01e0c7caa7bb56550988afc2afe66fac97",
    "bytes": 77296,
    "bounds": [
     47.36,
@@ -1528,10 +1528,26 @@
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/c1067233-c35e-4c53-93b3-050f707bf6a2",
    "trips": 1070
   },
+  "mreso-voironnais": {
+   "network": "M Réso — Pays Voironnais",
+   "file": "mreso-voironnais.zip",
+   "sha256": "5ccba65a22d9062bf078010d067ef75729dd74f2ae362497c166815bc7e9a13a",
+   "bytes": 873035,
+   "bounds": [
+    45.25469,
+    5.48328,
+    45.53061,
+    5.71009
+   ],
+   "origin": "https://data.mobilites-m.fr/api/gtfs/TPV",
+   "trips": 822,
+   "license": "ODbL 1.0 + conditions particulières PAN",
+   "publisher": "Syndicat Mixte des Mobilités de l’Aire Grenobloise"
+  },
   "zou-proximite-paca": {
    "network": "ZOU Proximité (cars régionaux PACA)",
    "file": "zou-proximite-paca.zip",
-   "sha256": "d1301483844a820494c8bb547c29304a57fe8d2424a0480de963784363f911b0",
+   "sha256": "6057221d8ebda13bf4f0758887ea4de601c3d3c410632d487b9f09cab04c3ea8",
    "bytes": 983309,
    "bounds": [
     43.09314,
@@ -1553,7 +1569,7 @@
   "zou-express-paca": {
    "network": "ZOU Express (cars régionaux PACA)",
    "file": "zou-express-paca.zip",
-   "sha256": "d92865ff4c6530190f7692b7df8d6247fbda0550e4c23c9b8c60c7537bf2b1db",
+   "sha256": "e1313291abc58b3de95d92312c2d9a1b9fbcedec82f42e0284e33fbab6c706e2",
    "bytes": 52642,
    "bounds": [
     43.12723,
@@ -1571,6 +1587,28 @@
    "fares": false,
    "license": "Licence Ouverte 2.0",
    "publisher": "Région Sud — Provence-Alpes-Côte d’Azur"
+  },
+  "lignes-azur-nice": {
+   "network": "Lignes d'Azur Nice",
+   "file": "lignes-azur-nice.zip",
+   "sha256": "ec5715dd1c063d8f836852a211c470c3808bd809a53fbff27fb0038c16aef886",
+   "bytes": 4937915,
+   "bounds": [
+    43.651165,
+    6.866431,
+    44.28372,
+    7.382698
+   ],
+   "origin": "https://chouette.enroute.mobi/api/v1/datas/OpendataRLA/gtfs.zip",
+   "agencies": [
+    "Lignes d'Azur"
+   ],
+   "routes": 109,
+   "trips": 23620,
+   "stops": 4497,
+   "fares": true,
+   "license": "Licence Ouverte 2.0",
+   "publisher": "Métropole Nice Côte d’Azur"
   },
   "tisseo-toulouse": {
    "network": "Tisséo Toulouse",
@@ -1637,7 +1675,7 @@
   "fluo-grand-est": {
    "network": "Fluo Grand Est (interurbain)",
    "file": "fluo-grand-est.zip",
-   "sha256": "c8762279104e2b0f95c43126e95c22954b657e2fc56ffbf4f18404e8444aa0f2",
+   "sha256": "72b2d4353c99f491428abc9e8b897235c4a0fe9234285a80c97be36c6ffd26c6",
    "bytes": 2093758,
    "origin": "https://transport.data.gouv.fr/resources/83635/download",
    "routes": 2162,
@@ -1656,7 +1694,7 @@
   "tcl-lyon": {
    "network": "TCL",
    "file": "tcl-lyon.zip",
-   "sha256": "00ed07615fc2e63a31bcf4400a847061016e79c3b3a1cbb1e8572d9cb58494e1",
+   "sha256": "4523b5690f2eb86f1e6a19393e46ca9e4fd8345098f871e426d97d8f90438a3e",
    "bytes": 5423015,
    "origin": "https://www.data.gouv.fr/api/1/datasets/r/abebedc6-28cf-4e2e-9c64-db57a40156f8",
    "routes": 75,
@@ -1673,7 +1711,7 @@
   "citea-valence": {
    "network": "Citéa (Valence Romans Mobilités)",
    "file": "citea-valence.zip",
-   "sha256": "9d5e677b8acc90c64a89986a8f6732800718a7db179d9f8b7a3bb8306fb652b0",
+   "sha256": "ce65fffc275bbd0b353d7ec59d51353bac5699aee6caacf780d413231c515df0",
    "bytes": 4576816,
    "origin": "https://static.data.gouv.fr/resources/ce-jeu-de-donnees-contient-la-liste-des-arrets-des-horaires-et-des-parcours-theoriques-du-reseau-de-transport-urbain-et-interurbain-de-vrm/20261022-080050/gtfs-nov2026-juin2027-citea.zip",
    "routes": 286,
@@ -1687,27 +1725,10 @@
     5.15
    ]
   },
-  "stas-saint-etienne": {
-   "network": "STAS (Saint-Étienne Métropole)",
-   "file": "stas-saint-etienne.zip",
-   "sha256": "23a5a628acd8ef8451fa2a0514901a538c67d1d8cb86f1ff506814b69dd62455",
-   "bytes": 2858047,
-   "origin": "https://bus-prod.saint-etienne-metropole.fr/Public/stas/api/gtfs.aspx",
-   "routes": 53,
-   "trips": 22609,
-   "stops": 1069,
-   "fares": false,
-   "bounds": [
-    45.38,
-    4.32,
-    45.5,
-    4.45
-   ]
-  },
   "t2c-clermont": {
    "network": "T2C (Clermont Auvergne Métropole, SMTC)",
    "file": "t2c-clermont.zip",
-   "sha256": "d61268ee7e51a4efb3a4505d85013caea456abedcc23ef9cc95ff1c1bb37caf6",
+   "sha256": "0de89eb414f391b28dc28420153cef7c3b57bca008c4ff0516da5c9f55cb3eb4",
    "bytes": 2575872,
    "origin": "https://opendata.clermontmetropole.eu/api/v2/catalog/datasets/gtfs-smtc/alternative_exports/gtfs",
    "routes": 46,
@@ -1724,8 +1745,8 @@
   "idfm-idfm-1080": {
    "network": "Evry Centre Essonne",
    "file": "idfm-idfm-1080.zip",
-   "sha256": "2fe9253f60960bfbcd629aa074030bc37930d1b1fec119464d3f0aaab29eaba8",
-   "bytes": 1613236,
+   "sha256": "a50dbf85cd4b310d5568d5df3f89f65f0eca99a05391d64f424faf4f1803aa03",
+   "bytes": 1613439,
    "bounds": [
     48.485118,
     2.267506,
@@ -1744,8 +1765,8 @@
   "idfm-idfm-1081": {
    "network": "Centre et Sud Yvelines",
    "file": "idfm-idfm-1081.zip",
-   "sha256": "0d15925fa858bdc27e9c6a1b37ceefd489e2155d62fd315e6e0e4e83e2a63f51",
-   "bytes": 671138,
+   "sha256": "aedb7792d3ca7a3566cdf023ee009462f5a48edac8e995cc64752f0d787fc492",
+   "bytes": 671473,
    "bounds": [
     48.441636,
     1.520999,
@@ -1764,8 +1785,8 @@
   "idfm-idfm-1087": {
    "network": "Marne et Brie",
    "file": "idfm-idfm-1087.zip",
-   "sha256": "41fd5dada37c304627b2cca6050a4f897196ba466ade3ca9c42557a9600c96aa",
-   "bytes": 1857608,
+   "sha256": "678ffcb2d0932dc26b7b526ec67e33db35a055e5b03e389c72efef5c84c192d6",
+   "bytes": 1858087,
    "bounds": [
     48.756813,
     2.493908,
@@ -1784,8 +1805,8 @@
   "idfm-idfm-64": {
    "network": "Marne-la-Vallée",
    "file": "idfm-idfm-64.zip",
-   "sha256": "26273f317085a032a590d3d1589df3d625561db259a6cbc08a71f84d016ddb8a",
-   "bytes": 560656,
+   "sha256": "3409431584c01bf9d990212ca7247cbd37229ccd46efef56eb29c42278e3632e",
+   "bytes": 560580,
    "bounds": [
     48.739185,
     2.575705,
@@ -1804,8 +1825,8 @@
   "idfm-idfm-1052": {
    "network": "Mantois",
    "file": "idfm-idfm-1052.zip",
-   "sha256": "b4215464b422813919624bf438bc2cb1557c77779bdce98bac5322792d3219e2",
-   "bytes": 527219,
+   "sha256": "320b16a040d8088fbb205926652b9bab98ca94824b3b732cffc7ef3765a760f9",
+   "bytes": 527172,
    "bounds": [
     48.725521,
     1.347402,
@@ -1824,8 +1845,8 @@
   "idfm-idfm-1098": {
    "network": "Seine Orly",
    "file": "idfm-idfm-1098.zip",
-   "sha256": "c77d64c38aceef70b7dd2fecc6d097e45c52d1283afae252bf76567008546f64",
-   "bytes": 4199457,
+   "sha256": "13187fb60749a9fd13c5acffa6a8c4147162404863386905428425e9566fdb9e",
+   "bytes": 4199250,
    "bounds": [
     48.689061,
     2.157601,
@@ -1844,8 +1865,8 @@
   "idfm-idfm-operator-1042": {
    "network": "STRETTO",
    "file": "idfm-idfm-operator-1042.zip",
-   "sha256": "1b6c06124a0da85da57f1faa926a63ebb46b58ad571d3c13fb92f27a763515a9",
-   "bytes": 523251,
+   "sha256": "bd47891d8e22472aad65c63be6de4c9422e6bed545ca687d4e688bdee5a142f9",
+   "bytes": 523249,
    "bounds": [
     48.859379,
     2.30155,
@@ -1864,8 +1885,8 @@
   "idfm-idfm-1060": {
    "network": "Paris Saclay",
    "file": "idfm-idfm-1060.zip",
-   "sha256": "d3bb8a0551f581649072b2ebcfb1d2dfe6b528981b90334a61045ff1ca3fea49",
-   "bytes": 1053178,
+   "sha256": "dfdf3b5e4c62f930893e4884b4db778b9c696f79f61a2786517acc08418b1439",
+   "bytes": 1053143,
    "bounds": [
     48.579615,
     2.09823,
@@ -1884,8 +1905,8 @@
   "idfm-idfm-1054": {
    "network": "Argenteuil - Boucles de Seine",
    "file": "idfm-idfm-1054.zip",
-   "sha256": "8b76c8865142dfb9ea670335f6f199dfd754edc267f6ff3bdfc6263e1e1bdbba",
-   "bytes": 1139277,
+   "sha256": "79ac4d99ce26d70bc0723906b949f4821bc4d982c29c5fb055ab12cec1efa398",
+   "bytes": 1139228,
    "bounds": [
     48.818259,
     2.06162,
@@ -1904,8 +1925,8 @@
   "idfm-idfm-operator-1044": {
    "network": "Origami / Paris Seine Mobilités",
    "file": "idfm-idfm-operator-1044.zip",
-   "sha256": "b8ecfc6ccbfe2db1f1426626072d8a2b9460f94b6191b028a134c13c7316ba82",
-   "bytes": 101777,
+   "sha256": "33d7dd86a61fd14e1243876293ffa456a3dce96938f45f7ee21bc0ab9fef7815",
+   "bytes": 102054,
    "bounds": [
     48.749871,
     2.180359,
@@ -1924,8 +1945,8 @@
   "idfm-idfm-1099": {
    "network": "Rive Droite",
    "file": "idfm-idfm-1099.zip",
-   "sha256": "a987ea6bf166eb59ef09a31f7e7bfad56b8faaa1db777ac39d762560f3f84bcd",
-   "bytes": 4222980,
+   "sha256": "fcdb11904ac284054e1efed700678830b9bf4c55664084e39a1cee7d81aff1f6",
+   "bytes": 4222650,
    "bounds": [
     48.808096,
     2.182588,
@@ -1944,8 +1965,8 @@
   "idfm-idfm-1069": {
    "network": "Terres d'Envol",
    "file": "idfm-idfm-1069.zip",
-   "sha256": "248b0cf8cd2ff122d571111169945ecdc11ee9dc55cdd37a6e6c93b3fb1f0c4f",
-   "bytes": 1525770,
+   "sha256": "171b061d883ebb3dd61d34e2c40c41d9c9e13c2099da18b3267f3cc1c9ed6086",
+   "bytes": 1525930,
    "bounds": [
     48.852397,
     2.40351,
@@ -1964,8 +1985,8 @@
   "idfm-idfm-1077": {
    "network": "Grand Versailles",
    "file": "idfm-idfm-1077.zip",
-   "sha256": "85c6c8f489f2a0032b1a4eb3be8bbc4d12d90c7fa28adccb546166cda79dd6f1",
-   "bytes": 1199988,
+   "sha256": "7c3cf6efb2fd075d2e6f3121f1d95fc60b9b97b4947e11ab6eb341df60aa1781",
+   "bytes": 1200053,
    "bounds": [
     48.769089,
     2.00432,
@@ -1984,8 +2005,8 @@
   "idfm-idfm-1058": {
    "network": "Essonne Sud Est",
    "file": "idfm-idfm-1058.zip",
-   "sha256": "94e6bfc8b73efb6a6fa4684b59dad60e98a2bd663e057efb9de74df894213e4a",
-   "bytes": 246422,
+   "sha256": "9d501fbf37fce000f04d74e21dca0f2b00e7e4e5a7882951b124bbb4e86ea049",
+   "bytes": 246373,
    "bounds": [
     48.313217,
     2.137886,
@@ -2004,8 +2025,8 @@
   "idfm-idfm-1049": {
    "network": "Vallée de Montmorency",
    "file": "idfm-idfm-1049.zip",
-   "sha256": "88978239ff63466e13ab3cb1a6d5a0d376232cf2b01ee2ee1ce6ffb92ef28376",
-   "bytes": 555529,
+   "sha256": "16ae74cc4ed2d35649a8a4e5d7d1fe3984d2bfa1b9888fbdd9407ceb30cdc6ec",
+   "bytes": 555700,
    "bounds": [
     48.94642,
     2.253587,
@@ -2024,8 +2045,8 @@
   "idfm-idfm-1074": {
    "network": "Fontainebleau - Moret",
    "file": "idfm-idfm-1074.zip",
-   "sha256": "5ec565b09c58b60b11e95498649b880c1b8bee08d36f6e125f1988b0eb84a9e1",
-   "bytes": 229736,
+   "sha256": "84ccfba1d63a36d64961b1a0b3c187189e7d2415955a97cb795e7122f86af6c3",
+   "bytes": 229751,
    "bounds": [
     48.267074,
     2.371678,
@@ -2044,8 +2065,8 @@
   "idfm-idfm-1096": {
    "network": "La Défense - Saint Cloud",
    "file": "idfm-idfm-1096.zip",
-   "sha256": "2b0267f4fee33299c1aa219ff94ab1471ddd565b60910be94e4712a3be437e45",
-   "bytes": 4699138,
+   "sha256": "72510a1919999fede8c1fa146c2388d3b26c7900748ba0cb12abc182effd8e11",
+   "bytes": 4699079,
    "bounds": [
     48.807748,
     2.095182,
@@ -2064,8 +2085,8 @@
   "idfm-idfm-1061": {
    "network": "Vélizy Vallées",
    "file": "idfm-idfm-1061.zip",
-   "sha256": "e6550dfc53503d74491a949e0c00ee7cef55868f1e9b2f5baf3b3284cf0686fd",
-   "bytes": 361183,
+   "sha256": "9eb823c3e2ea1d05c0237effd0bae2e1405010b2c2ce6a5842af1903cd431fd7",
+   "bytes": 361250,
    "bounds": [
     48.70283,
     2.037543,
@@ -2084,8 +2105,8 @@
   "idfm-idfm-1057": {
    "network": "Val d'Yerres Val de Seine",
    "file": "idfm-idfm-1057.zip",
-   "sha256": "12f8691e4abc46d811e00df34b7519f7c328731b25f10267cd2ac818ca523888",
-   "bytes": 642334,
+   "sha256": "b52de2869c50e02a9cf2570b28f55f7a8c73d57eddc3b7a8a18522d5791801a8",
+   "bytes": 642268,
    "bounds": [
     48.613568,
     2.357797,
@@ -2104,8 +2125,8 @@
   "idfm-idfm-1055": {
    "network": "Meaux et Ourcq",
    "file": "idfm-idfm-1055.zip",
-   "sha256": "c6aad05c184d8749f48ebfae3b606b1035c27135cc9cd46f8037f126676d7d13",
-   "bytes": 422284,
+   "sha256": "6dd1346e2c196b0582602e72e1bb93e6d8b96743cf783dad69d816e40c7c014d",
+   "bytes": 422420,
    "bounds": [
     48.525851,
     2.35758,
@@ -2124,8 +2145,8 @@
   "idfm-idfm-1056": {
    "network": "Brie et 2 Morin",
    "file": "idfm-idfm-1056.zip",
-   "sha256": "0628f994e5479a6e70400355dab0a02a9f7819939e5f24218888fd8b8be36da6",
-   "bytes": 295618,
+   "sha256": "f30132802dcfafb1672c24a6fefea20be17761cf0b759982f7d44c0d7799ab06",
+   "bytes": 295274,
    "bounds": [
     48.526177,
     2.371678,
@@ -2144,8 +2165,8 @@
   "idfm-idfm-1088": {
    "network": "Grand Paris Seine Ouest",
    "file": "idfm-idfm-1088.zip",
-   "sha256": "6d15b94a1a1b06941dd3ae48b3eb299c9bdc315730e3a6de9c7e2196adccad46",
-   "bytes": 237640,
+   "sha256": "f573d52d69994dedb8048dd6960431719cd13266ff17b573fd149da96835675f",
+   "bytes": 237653,
    "bounds": [
     48.7974,
     2.157385,
@@ -2164,8 +2185,8 @@
   "idfm-idfm-1070": {
    "network": "Pays Briard",
    "file": "idfm-idfm-1070.zip",
-   "sha256": "f4afe4d71bfb666c99c4caabc0e16b4dce511334e2fe512be403e37308e61fde",
-   "bytes": 283209,
+   "sha256": "64dd897f68d6994cccea5ee9037ec4c0c07977d137c6d9a3153c103057f671ae",
+   "bytes": 283309,
    "bounds": [
     48.526092,
     2.357026,
@@ -2184,8 +2205,8 @@
   "idfm-idfm-1073": {
    "network": "Pays de Montereau",
    "file": "idfm-idfm-1073.zip",
-   "sha256": "0bd95861b4bb20191d9240e494662bca1117be3bc90236532d3abee30656962e",
-   "bytes": 146816,
+   "sha256": "0072a4b30a5ce9a23e6ccae3c0395f48950f694178fe94b77695e837c156583b",
+   "bytes": 146857,
    "bounds": [
     48.176773,
     2.653339,
@@ -2204,8 +2225,8 @@
   "idfm-idfm-1059": {
    "network": "Essonne Sud Ouest",
    "file": "idfm-idfm-1059.zip",
-   "sha256": "45213538b26525c8382c620986c52aac53d8148c4ccef3e87f36f1b54a3e52d8",
-   "bytes": 213890,
+   "sha256": "7ce6978b75c6cd8704b0a58663c36706ec8476ca4143e641c7f50a08703ac699",
+   "bytes": 214160,
    "bounds": [
     48.303632,
     1.848538,
@@ -2224,8 +2245,8 @@
   "idfm-idfm-1082": {
    "network": "Cergy-Pontoise Confluence",
    "file": "idfm-idfm-1082.zip",
-   "sha256": "6575f3e1714e2408d1439e0c448bf2c4e442c7a09a2fdfc92d4ea7fc721b616b",
-   "bytes": 987297,
+   "sha256": "a1fcb500d59089677f6b262c444b73837b3a3ca82d8f302ae41476d248160887",
+   "bytes": 987184,
    "bounds": [
     48.891946,
     1.972144,
@@ -2244,8 +2265,8 @@
   "idfm-idfm-1083": {
    "network": "Haut Val d'Oise",
    "file": "idfm-idfm-1083.zip",
-   "sha256": "b9aaa12a632562bf2729d680c97b1e4172658b86c73df47898728973ef8f228f",
-   "bytes": 166252,
+   "sha256": "05154f7d59a911922737e1f80a2f8e5b293125f92e61d2aad53f0b10e98661e4",
+   "bytes": 166311,
    "bounds": [
     48.876301,
     2.078183,
@@ -2264,8 +2285,8 @@
   "idfm-idfm-1078": {
    "network": "Provinois - Brie et Seine",
    "file": "idfm-idfm-1078.zip",
-   "sha256": "cb5f0332dfd77ed315b98143b6b6d68c2d9ec9df32de7382bc753579b4923c80",
-   "bytes": 184942,
+   "sha256": "1d65602d6f917fe28f678c8962a0595b8aef0036a88d0b8815a3b151b77fa149",
+   "bytes": 184856,
    "bounds": [
     48.366674,
     2.567875,
@@ -2284,8 +2305,8 @@
   "idfm-idfm-1068": {
    "network": "Saint-Quentin-en-Yvelines",
    "file": "idfm-idfm-1068.zip",
-   "sha256": "a954d210bdd19910d43b246d063bcf8971866b3cf02d077329df186d8fa06fd2",
-   "bytes": 883815,
+   "sha256": "1f576e01291667e5ce6e4817719b6c66369bbf10684dde050be5357930502a79",
+   "bytes": 883826,
    "bounds": [
     48.70283,
     1.908911,
@@ -2304,8 +2325,8 @@
   "idfm-idfm-1048": {
    "network": "Vexin",
    "file": "idfm-idfm-1048.zip",
-   "sha256": "e4bcf257d4915cba00747375d66797dc0a626d8a0264fa838bdcf8ae62221796",
-   "bytes": 246857,
+   "sha256": "2eee230ca9c645f43999b7d3b91218c6a9bdff37153049a63302b337477fdd54",
+   "bytes": 246803,
    "bounds": [
     48.875502,
     1.622248,
@@ -2324,8 +2345,8 @@
   "idfm-idfm-1076": {
    "network": "Cœur d’Essonne",
    "file": "idfm-idfm-1076.zip",
-   "sha256": "68475811ca50d7e6a048ee251f07788b0d6de833b8b4c5e1ea663515e4382eb0",
-   "bytes": 1130122,
+   "sha256": "af23c306090842edcc0f5d8cf897c42935f99324bff302ecf54c5041f305de8b",
+   "bytes": 1129982,
    "bounds": [
     48.530304,
     2.121425,
@@ -2344,8 +2365,8 @@
   "idfm-idfm-1051": {
    "network": "Poissy - Les Mureaux",
    "file": "idfm-idfm-1051.zip",
-   "sha256": "4aa3384d7cb0e2e16277b28540732150e20d0dae11a0bcbe6d441f39e2c16c1c",
-   "bytes": 617207,
+   "sha256": "73c3bdbaf36c350d6a073711a00defa856039a591ca40be96d349e7abf754a38",
+   "bytes": 617242,
    "bounds": [
     48.780751,
     1.800696,
@@ -2364,8 +2385,8 @@
   "idfm-idfm-1062": {
    "network": "Saint Germain Boucles de Seine",
    "file": "idfm-idfm-1062.zip",
-   "sha256": "3ecfb84e298f09e6a01484f6e27c52726315930cf25017030784bb6066784e39",
-   "bytes": 367667,
+   "sha256": "9edf819838798c0e7231db8e3f500f11125341449883835f16f30ae0d6ac7d92",
+   "bytes": 367646,
    "bounds": [
     48.795532,
     2.020449,
@@ -2384,8 +2405,8 @@
   "idfm-idfm-1065": {
    "network": "Marne et Seine",
    "file": "idfm-idfm-1065.zip",
-   "sha256": "da58379b33dd6af0953a9b43fa87410b4f41c1fbcb3a9d3fd803814f769c1dcd",
-   "bytes": 880337,
+   "sha256": "9b9d6bc44e31dcb76157fa86fd54f9956186aa0f9c2d59cb96011d6dedc68b2c",
+   "bytes": 880558,
    "bounds": [
     48.697284,
     2.435314,
@@ -2404,8 +2425,8 @@
   "idfm-idfm-1071": {
    "network": "Roissy Ouest",
    "file": "idfm-idfm-1071.zip",
-   "sha256": "a38980c266e1747c8cf83588c4f34f8e67d14c5718641141a50fce39d6a1d4e5",
-   "bytes": 1143227,
+   "sha256": "028dee34f05ffc08e6850f6b24e82e95bc89cb79eb0fe746b6428125ae09e7e0",
+   "bytes": 1142891,
    "bounds": [
     48.876301,
     2.320012,
@@ -2424,8 +2445,8 @@
   "idfm-idfm-1092": {
    "network": "Massy-Juvisy",
    "file": "idfm-idfm-1092.zip",
-   "sha256": "48f6efb027f0bdc67f3300c10e53ec963140a23a3004fbe04e8a68836d8d8ef1",
-   "bytes": 1870921,
+   "sha256": "a37426ff6cc4b9b81f2274c75be799f59c63afe58baff50393cbe2bf0d172729",
+   "bytes": 1870851,
    "bounds": [
     48.669907,
     2.160202,
@@ -2444,8 +2465,8 @@
   "idfm-idfm-1091": {
    "network": "Bord de Marne",
    "file": "idfm-idfm-1091.zip",
-   "sha256": "b4fcfdeebef40327a338e88a1c1d6ac60186948de03378a7e4e7853d35059e86",
-   "bytes": 3268436,
+   "sha256": "636ad83da9dc12f2a7b981dd72c8732ed72623d9b134b2b5a1b7db883a59561a",
+   "bytes": 3268572,
    "bounds": [
     48.752854,
     2.258759,
@@ -2464,8 +2485,8 @@
   "idfm-idfm-885": {
    "network": "Paris-Saclay Mobilités",
    "file": "idfm-idfm-885.zip",
-   "sha256": "aeefa1704ef56359492adc4e95f4d2d46ca5a538aa113953c509cde5e945f49e",
-   "bytes": 62402,
+   "sha256": "1c9d83a1f2d8cc5c8395d04231c2aa4a974fe32bcd1c39c9e856b066988b987c",
+   "bytes": 62377,
    "bounds": [
     48.623229,
     2.103619,
@@ -2484,8 +2505,8 @@
   "idfm-idfm-1064": {
    "network": "Vallée Sud Grand Paris",
    "file": "idfm-idfm-1064.zip",
-   "sha256": "0edf276ce129e389bbe5c750a002c694dd5ef26c6709d6cae9b6dbf4d6df5ca7",
-   "bytes": 157839,
+   "sha256": "7aa9388ab6acca505d4be06348c106a146d383df20edc9a6e810ee3634f3cf98",
+   "bytes": 157898,
    "bounds": [
     48.734964,
     2.23033,
@@ -2504,8 +2525,8 @@
   "idfm-idfm-1093": {
    "network": "Croix du Sud",
    "file": "idfm-idfm-1093.zip",
-   "sha256": "4dbca02ece057028c4572809a422d089d53a9a7603496ec8fbbe56aa666b3099",
-   "bytes": 1752574,
+   "sha256": "9500a84f9f6f80ad14a83a78de7f58f40cf1de11e0d4daaed7ebf8e3b21c3f3b",
+   "bytes": 1752597,
    "bounds": [
     48.709779,
     2.166222,
@@ -2524,8 +2545,8 @@
   "idfm-idfm-operator-100-route-idfm-c01388": {
    "network": "RATP — ligne ORLYVAL (tram)",
    "file": "idfm-idfm-operator-100-route-idfm-c01388.zip",
-   "sha256": "7bd21e98ce340f12204ee5aaeeb020b6765d2d0db4148adb2cbc758f8fbf3a56",
-   "bytes": 12490,
+   "sha256": "8c04faa7f951a22d5e401772789ef456d193df67c6c2b877fa757ec2917b8670",
+   "bytes": 12492,
    "bounds": [
     48.728457,
     2.300756,
@@ -2544,8 +2565,8 @@
   "idfm-idfm-1050": {
    "network": "Grand Melun",
    "file": "idfm-idfm-1050.zip",
-   "sha256": "cda681c6c4651905a6c44b1779c7d9bff21bede1476f8e1c3735399669e7f0d5",
-   "bytes": 377753,
+   "sha256": "a43b7f0abe0bc09370879cb6c43bdbe4a956dfbdd804c8b5e5a117cb4ff63769",
+   "bytes": 377810,
    "bounds": [
     48.472467,
     2.511977,
@@ -2564,8 +2585,8 @@
   "idfm-idfm-1075": {
    "network": "Vallée du Loing - Nemours",
    "file": "idfm-idfm-1075.zip",
-   "sha256": "c50a2557bf9e9cf75a0a13f8fd5b78c03729f2359eee6d830358d3051bb68707",
-   "bytes": 145611,
+   "sha256": "e70e4e41add4d72ffc2e673bc3f7994ea7339490c7e9bece97ad7eebd8b75825",
+   "bytes": 145637,
    "bounds": [
     48.131031,
     2.417056,
@@ -2584,8 +2605,8 @@
   "idfm-idfm-1072": {
    "network": "Roissy Est",
    "file": "idfm-idfm-1072.zip",
-   "sha256": "885afd03ffb0f3c8e5ceafae7dc9e791ed75617628a268c8465e380fe22ae909",
-   "bytes": 517718,
+   "sha256": "981f7f0863500b2b052d76ba71d755e871b0ae3c0fcf4ff24ad2959d795523c3",
+   "bytes": 517636,
    "bounds": [
     48.894546,
     2.478376,
@@ -2604,8 +2625,8 @@
   "idfm-idfm-1090": {
    "network": "Boucles Nord de Seine",
    "file": "idfm-idfm-1090.zip",
-   "sha256": "02a8fab519a65fc453e3203901c67f8d708f9491fd858bb83bc307f933189cb9",
-   "bytes": 2178534,
+   "sha256": "fa69b9a5ba6a2587f2a8cd91db28c5e1dbb1f14c29b61d49516d32342264563d",
+   "bytes": 2178759,
    "bounds": [
     48.833718,
     2.220906,
@@ -2624,8 +2645,8 @@
   "idfm-idfm-1094": {
    "network": "Ourcq",
    "file": "idfm-idfm-1094.zip",
-   "sha256": "91527c9c4d6dd84ab30f803090d2751de311ae656cc6d6a9d5c6ab5884c74e63",
-   "bytes": 3472629,
+   "sha256": "0a43618927de908d21df837debdc7eb1a2ac3609984002c332830a36dc1b5879",
+   "bytes": 3472380,
    "bounds": [
     48.82976,
     2.343684,
@@ -2644,8 +2665,8 @@
   "idfm-idfm-1100": {
    "network": "Rive Gauche",
    "file": "idfm-idfm-1100.zip",
-   "sha256": "1b7813316cc484262bf6459095bf7c48e03aa3fbf7a18546e750fe26230e8663",
-   "bytes": 4936836,
+   "sha256": "5b92dc1046a85aa21b4a7f01513974e8b01be106d0498f8bbe252cd3b1351d48",
+   "bytes": 4936576,
    "bounds": [
     48.778672,
     2.127377,
@@ -2664,8 +2685,8 @@
   "idfm-idfm-1097": {
    "network": "Pompadour",
    "file": "idfm-idfm-1097.zip",
-   "sha256": "145289b44ce670f3f634116fd01a96da65b1f08ced29cd536c108f233f3774a4",
-   "bytes": 4155579,
+   "sha256": "c9510725246751d4c5d0b8ac39ce312469e287905b6561029c8ef17f3060413c",
+   "bytes": 4155565,
    "bounds": [
     48.728185,
     2.280914,
@@ -2684,8 +2705,8 @@
   "idfm-idfm-1095": {
    "network": "Plaine Saint-Denis",
    "file": "idfm-idfm-1095.zip",
-   "sha256": "c1709c7c7a3180eb0d8d3f554e254e359860f90210c5cd146f7635d804ca451d",
-   "bytes": 3411081,
+   "sha256": "462c75d797b147bdbad2198b5d668368cfdf8b1b36dab5465bd897142c89759e",
+   "bytes": 3411190,
    "bounds": [
     48.824976,
     2.224759,
@@ -2704,8 +2725,8 @@
   "idfm-idfm-1063": {
    "network": "Bièvre",
    "file": "idfm-idfm-1063.zip",
-   "sha256": "941060f3976a877f9623aff76c46731a988561acc3d375846c707db10f186055",
-   "bytes": 290581,
+   "sha256": "79fb1dd4e0b5f3c3c326aa88baae5b7d8140a9afcf6583cf2d3e7c666d75095d",
+   "bytes": 290556,
    "bounds": [
     48.721264,
     2.249641,
@@ -2724,8 +2745,8 @@
   "idfm-idfm-78": {
    "network": "Sénart",
    "file": "idfm-idfm-78.zip",
-   "sha256": "53d6100d111ebde0ce48733e631abe9f9292429200d75d0d583347b040aa43b5",
-   "bytes": 595906,
+   "sha256": "53476478d51f10005837cc1f200d808f4371f600fdeaa25f7c8777d250d6252d",
+   "bytes": 595887,
    "bounds": [
     48.530987,
     2.257159,
@@ -2744,8 +2765,8 @@
   "idfm-idfm-1086": {
    "network": "Val Parisis",
    "file": "idfm-idfm-1086.zip",
-   "sha256": "9ac84c811182a8b43c71941e1adb9c60151c3f381289fd60c30f2cc3642a2e81",
-   "bytes": 792484,
+   "sha256": "6b69a4afad5e16fc891cddbfa9ae2707f7da19c3b72708aa02a336f98df4336c",
+   "bytes": 792533,
    "bounds": [
     48.876301,
     2.080128,
@@ -2764,8 +2785,8 @@
   "idfm-idfm-1079": {
    "network": "Lignes Île-de-France Ouest",
    "file": "idfm-idfm-1079.zip",
-   "sha256": "84055befe8c104de30bbc54606acb4125283083ab65a30fae3e2ccbc1c91520f",
-   "bytes": 272012,
+   "sha256": "dd92d2d06a6221d1746ab60e0efb0665c115e1334601055ebcde973afe888985",
+   "bytes": 272021,
    "bounds": [
     48.709779,
     1.703417,
@@ -2784,8 +2805,8 @@
   "idfm-idfm-operator-100-route-idfm-c01371": {
    "network": "RATP — ligne 1 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01371.zip",
-   "sha256": "f7f068d57b512ade4ef61baceec279bfdbef8501d721fc09e7e944a023943a37",
-   "bytes": 831186,
+   "sha256": "475c949788ed30947e6252d35261fd307f0d86432c8367f7e9abfe01980f9dd3",
+   "bytes": 831200,
    "bounds": [
     48.84427,
     2.237015,
@@ -2804,8 +2825,8 @@
   "idfm-idfm-operator-100-route-idfm-c01372": {
    "network": "RATP — ligne 2 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01372.zip",
-   "sha256": "d39be267a3fc08d92058caac5c473a88794a70245298794ac03b2c91f8400f87",
-   "bytes": 603211,
+   "sha256": "93014e41a974df8727a48fc1a87229955e354bf7ad09da8455b17219f378d55b",
+   "bytes": 603216,
    "bounds": [
     48.848452,
     2.276084,
@@ -2824,8 +2845,8 @@
   "idfm-idfm-operator-100-route-idfm-c01373": {
    "network": "RATP — ligne 3 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01373.zip",
-   "sha256": "d65f9d91c794bf5c1d658042eafa7652fec60f56285bde38e37619bcf20a0f97",
-   "bytes": 536260,
+   "sha256": "4ffe5670efa0983c509e6343de5cd0c5a502cd3c0855b6892688cf0f75cd711e",
+   "bytes": 536250,
    "bounds": [
     48.862687,
     2.279627,
@@ -2844,8 +2865,8 @@
   "idfm-idfm-operator-100-route-idfm-c01384": {
    "network": "RATP — ligne 14 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01384.zip",
-   "sha256": "fe8d791a18f5aaa0ff0dafae37e8505b9a3b2f419f2b5b325764145626c632ec",
-   "bytes": 766546,
+   "sha256": "3c361e2f9dcf9ec409c01a0f1b831ccdfa05bded20ac6b26bd43023bd60c8376",
+   "bytes": 766539,
    "bounds": [
     48.728245,
     2.312617,
@@ -2864,8 +2885,8 @@
   "idfm-idfm-operator-100-route-idfm-c01386": {
    "network": "RATP — ligne 3B (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01386.zip",
-   "sha256": "c827ea92ab80c3615920738e0f9fe2cd9d9398527085d0fdc29c607038c8ae90",
-   "bytes": 68976,
+   "sha256": "5417c3677b15fb1bfb067db30f6cf25b28b53ad98a50348db210de97b8277903",
+   "bytes": 68974,
    "bounds": [
     48.865055,
     2.39868,
@@ -2884,8 +2905,8 @@
   "idfm-idfm-operator-100-route-idfm-c01387": {
    "network": "RATP — ligne 7B (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01387.zip",
-   "sha256": "29c4754518e47a1178733ec466b878e0df6659e950825f4039275f4aa23daa5a",
-   "bytes": 96969,
+   "sha256": "0399452b2f2b39de8bea41ae311bbc1743ab16ce45cd05f897d74d3e2bf58075",
+   "bytes": 96959,
    "bounds": [
     48.876912,
     2.364365,
@@ -2904,8 +2925,8 @@
   "idfm-idfm-operator-100-route-idfm-c01377": {
    "network": "RATP — ligne 7 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01377.zip",
-   "sha256": "3221ecc49454de3d5450a93d02603e9f028b227a57ad08138036ffe7ebd15b35",
-   "bytes": 824263,
+   "sha256": "553c4e2613acd103567375f97e618ebe70b070b20ba4e3808bc01250cf9a20bc",
+   "bytes": 824280,
    "bounds": [
     48.787537,
     2.332003,
@@ -2924,7 +2945,7 @@
   "idfm-idfm-operator-1054": {
    "network": "Grisel",
    "file": "idfm-idfm-operator-1054.zip",
-   "sha256": "a64c9a5629ade011040c07c65cc2568060fa559f330a868bd181f15b882c1b56",
+   "sha256": "4367bee0b906f996c442bc343041607f6fe246f1598326dd92cd4def5f7cdf90",
    "bytes": 144144,
    "bounds": [
     48.821901,
@@ -2944,7 +2965,7 @@
   "idfm-idfm-operator-100-route-idfm-c01684": {
    "network": "RATP — ligne T5 (tram)",
    "file": "idfm-idfm-operator-100-route-idfm-c01684.zip",
-   "sha256": "170cb5aaa653f8b2968054ad0f399dc624b56ad5b81889d97832e29c6fce074d",
+   "sha256": "0e97b79faa8cd94532a824e1f0553298e42623dfefba359d245ee392eafeab11",
    "bytes": 246398,
    "bounds": [
     48.938708,
@@ -2964,8 +2985,8 @@
   "idfm-idfm-1089": {
    "network": "Express Roissy",
    "file": "idfm-idfm-1089.zip",
-   "sha256": "187cdec6a6d78389cf6c9d3dfd17d5a18891a82395c84cd62475936a9a1db55c",
-   "bytes": 132582,
+   "sha256": "f6ce54bd657147846c18487b24871ac022c8efd0eacab4b038de048a4819de56",
+   "bytes": 132583,
    "bounds": [
     48.846978,
     2.255212,
@@ -2984,8 +3005,8 @@
   "idfm-idfm-operator-1057": {
    "network": "Bluestation",
    "file": "idfm-idfm-operator-1057.zip",
-   "sha256": "1fdfb60dfbf9331373b210b83104c52c6f48b3902eef60d333420066c493eeef",
-   "bytes": 40186,
+   "sha256": "b7f6f30724c4a76da14d654903f187a72fbc95fa8209df2f7770d7d5a1a913c2",
+   "bytes": 40197,
    "bounds": [
     48.871497,
     2.227264,
@@ -3004,8 +3025,8 @@
   "idfm-idfm-operator-231": {
    "network": "Magical Shuttle",
    "file": "idfm-idfm-operator-231.zip",
-   "sha256": "6720266f2fd838b76a0a45dcff6d4ca6019cf0a9a89f3eac7c35436c1583dcfd",
-   "bytes": 6219,
+   "sha256": "ace6f6d6deffc37214afb8f211d677976f55e7a5ee5f4f19141d91523250832e",
+   "bytes": 6211,
    "bounds": [
     48.728867,
     2.360727,
@@ -3024,8 +3045,8 @@
   "idfm-idfm-operator-100-route-idfm-c01794": {
    "network": "RATP — ligne T6 (tram)",
    "file": "idfm-idfm-operator-100-route-idfm-c01794.zip",
-   "sha256": "5f1d5b3932733a21b6824df274cac773b56b2341bf95b186d3cc2ae9d7fd27c5",
-   "bytes": 134667,
+   "sha256": "876e2b9de63d3d1af85be9caa865898e06800a973b62131f1d0011cd7a355724",
+   "bytes": 134658,
    "bounds": [
     48.780017,
     2.16827,
@@ -3044,7 +3065,7 @@
   "idfm-idfm-operator-100-route-idfm-c01795": {
    "network": "RATP — ligne T8 (tram)",
    "file": "idfm-idfm-operator-100-route-idfm-c01795.zip",
-   "sha256": "fac021f8e2c38c237095cb600dd9c0a4b36d73a81f0b800cfc34989235bcaeed",
+   "sha256": "34a76e92b8b7053b133fa3b8904d85cd6fb4e6819e955d5d7f92466b7382d078",
    "bytes": 132124,
    "bounds": [
     48.929635,
@@ -3064,8 +3085,8 @@
   "idfm-idfm-operator-043": {
    "network": "ADP",
    "file": "idfm-idfm-operator-043.zip",
-   "sha256": "c37a30c46de947d02de54d61b760b707796e1f09d87a4259778aad42918f7a7b",
-   "bytes": 44910,
+   "sha256": "bc20c011277e414caa0cd21fab80741f1986640641c1cc8ce4ce4c6d2680bb8a",
+   "bytes": 44913,
    "bounds": [
     49.002917,
     2.54176,
@@ -3084,8 +3105,8 @@
   "idfm-idfm-operator-100-route-idfm-c01679": {
    "network": "RATP — ligne T3b (tram)",
    "file": "idfm-idfm-operator-100-route-idfm-c01679.zip",
-   "sha256": "eaf9555ed7c39aa9bab14ec50805944609c83051c96a974059ebdb02b3d18d15",
-   "bytes": 337587,
+   "sha256": "8bb2de54c8a673f920a7c6907bfe944c22e7e21aa8721872a279a275893d2037",
+   "bytes": 337592,
    "bounds": [
     48.847152,
     2.274634,
@@ -3104,7 +3125,7 @@
   "idfm-idfm-1085": {
    "network": "Aérobus",
    "file": "idfm-idfm-1085.zip",
-   "sha256": "68c9ff19b02fa7d224ffc19be45c5eaa6094f0b447d83c4b529f363b8b5390a8",
+   "sha256": "0f9976781486964edc563780ceebb7a9483690fcb714f9238136c8237c3b4cf6",
    "bytes": 6062,
    "bounds": [
     48.878064,
@@ -3124,8 +3145,8 @@
   "idfm-idfm-operator-100-route-idfm-c01391": {
    "network": "RATP — ligne T3a (tram)",
    "file": "idfm-idfm-operator-100-route-idfm-c01391.zip",
-   "sha256": "613a9b2d9cf931c8f578292e92cba0a66b83aa175e3eb8705691d42915c212ab",
-   "bytes": 321040,
+   "sha256": "db44e9dd1860475d65834df63beec8f5cab81463dadcdfaa32fe0e6d4aeaa668",
+   "bytes": 321050,
    "bounds": [
     48.818766,
     2.270608,
@@ -3144,8 +3165,8 @@
   "idfm-idfm-operator-100-route-idfm-c01774": {
    "network": "RATP — ligne T7 (tram)",
    "file": "idfm-idfm-operator-100-route-idfm-c01774.zip",
-   "sha256": "27248f3aed80bf9a5ca06536bfe079c24a965a111fd8f095a4cbc4be855f7f40",
-   "bytes": 102814,
+   "sha256": "f4b1ab1b59eb27a569ff216e9dba19252283e8183334e193041e3d4780e46837",
+   "bytes": 102816,
    "bounds": [
     48.714395,
     2.352434,
@@ -3164,8 +3185,8 @@
   "idfm-idfm-operator-100-route-idfm-c01383": {
    "network": "RATP — ligne 13 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01383.zip",
-   "sha256": "489ee8612af38cf635a1adb18e490d8db13f71cf2aab471ec060cf467b073818",
-   "bytes": 759865,
+   "sha256": "06c64e0fde56bc41804120e86579ca4dec7b7e2cfc3c145ee5df909e439c5a8d",
+   "bytes": 759867,
    "bounds": [
     48.810622,
     2.283655,
@@ -3184,8 +3205,8 @@
   "idfm-idfm-operator-100-route-idfm-c01385": {
    "network": "RATP — ligne FUN (funiculaire)",
    "file": "idfm-idfm-operator-100-route-idfm-c01385.zip",
-   "sha256": "3e0c2859790d23b06d0e6f6898909b99d654460de2f5f040547265bf9426beef",
-   "bytes": 22178,
+   "sha256": "47c19347beee67cc5afefbccd0fd70ff23c1567cb8562d7be88cf9ee22e2c45a",
+   "bytes": 22177,
    "bounds": [
     48.884519,
     2.341883,
@@ -3204,8 +3225,8 @@
   "idfm-idfm-operator-100-route-idfm-c01374": {
    "network": "RATP — ligne 4 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01374.zip",
-   "sha256": "4979034d1464c7b549083d349d4992a3740b95e40729820c70de86acfe9f6284",
-   "bytes": 712968,
+   "sha256": "16774746631f0b7e114e8043a16110e4539d26d53356a55005d4a7ef9a035858",
+   "bytes": 712943,
    "bounds": [
     48.803532,
     2.317417,
@@ -3224,8 +3245,8 @@
   "idfm-idfm-operator-100-route-idfm-c01375": {
    "network": "RATP — ligne 5 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01375.zip",
-   "sha256": "9a061158241e4ff5e316f677c1c82aca84b95431e0b7c611c8ebb1918d651483",
-   "bytes": 626507,
+   "sha256": "1ba552c587a8007190044bca19f905de15c621e5b651ed861e01379e23b799cd",
+   "bytes": 626502,
    "bounds": [
     48.830965,
     2.355501,
@@ -3244,8 +3265,8 @@
   "idfm-idfm-operator-100-route-idfm-c01376": {
    "network": "RATP — ligne 6 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01376.zip",
-   "sha256": "90f1801fc4c565771b86f5f02cd1145de344e359e721280dc32ba5092ba08276",
-   "bytes": 671950,
+   "sha256": "030edbe2f02b6a48480e0c402832aec8f0d336a91beaefae350b4819739cfe74",
+   "bytes": 671947,
    "bounds": [
     48.829769,
     2.285371,
@@ -3264,8 +3285,8 @@
   "idfm-idfm-operator-100-route-idfm-c01378": {
    "network": "RATP — ligne 8 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01378.zip",
-   "sha256": "3944eb8747708fecd9d34f733b49f50e4e1b12a98fa50fbfd0b3a0220b98fd63",
-   "bytes": 810439,
+   "sha256": "f3e823f5f3da15171e820ad2030b8098a25aee16cf2af35f12318c328643f865",
+   "bytes": 810461,
    "bounds": [
     48.768752,
     2.278102,
@@ -3284,8 +3305,8 @@
   "idfm-idfm-operator-100-route-idfm-c01379": {
    "network": "RATP — ligne 9 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01379.zip",
-   "sha256": "f01d046bd4fef517c960a48847e547c9ebbe64103710571a024d432eeb76b2e7",
-   "bytes": 963337,
+   "sha256": "489bd8d468bab11d2e59dbada34f5eec9e9f7bfdaffc6fa1ebe481e29a98f713",
+   "bytes": 963332,
    "bounds": [
     48.829669,
     2.230505,
@@ -3304,8 +3325,8 @@
   "idfm-idfm-operator-100-route-idfm-c01380": {
    "network": "RATP — ligne 10 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01380.zip",
-   "sha256": "0fb24dd53d4fd2cbcd4ec42f6955e0ae8b78432aa375379e49d2d908082854be",
-   "bytes": 324765,
+   "sha256": "a6bf027019e550f29c1167baf06f51fbddb2ac9172665635f9440acca0b8abef",
+   "bytes": 324778,
    "bounds": [
     48.840695,
     2.228387,
@@ -3324,8 +3345,8 @@
   "idfm-idfm-operator-100-route-idfm-c01382": {
    "network": "RATP — ligne 12 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01382.zip",
-   "sha256": "c8dcd2fbe696e3c1923cc7365d156b381570a2378f09162124091ce20827a391",
-   "bytes": 713232,
+   "sha256": "1e8b6055b5d0de9a60e538e4db406704f71aae0e026b79df65660385fa861edd",
+   "bytes": 713220,
    "bounds": [
     48.8243,
     2.273636,
@@ -3344,8 +3365,8 @@
   "idfm-idfm-operator-100-route-idfm-c01381": {
    "network": "RATP — ligne 11 (métro)",
    "file": "idfm-idfm-operator-100-route-idfm-c01381.zip",
-   "sha256": "f722fc1005e2e8d2e0dfc292cfeed30c30a2a5cec8745c14a3fd73d9ac065a6d",
-   "bytes": 344453,
+   "sha256": "0eb625badb3384ca4e059a55be753eca1bd36161799947cbc72208dce6631111",
+   "bytes": 344461,
    "bounds": [
     48.856621,
     2.348071,
@@ -3364,8 +3385,8 @@
   "idfm-idfm-operator-100-route-idfm-c01389": {
    "network": "RATP — ligne T1 (tram)",
    "file": "idfm-idfm-operator-100-route-idfm-c01389.zip",
-   "sha256": "fe7134e4dbcf0f5add54954daada58b017d155423a5279512127021190ce239d",
-   "bytes": 422443,
+   "sha256": "a557b9c69f0391f92319181975d16c00b6b06f931843345597ea4ae61bc12d90",
+   "bytes": 422468,
    "bounds": [
     48.895904,
     2.274386,
@@ -3384,8 +3405,8 @@
   "idfm-idfm-operator-100-route-idfm-c01390": {
    "network": "RATP — ligne T2 (tram)",
    "file": "idfm-idfm-operator-100-route-idfm-c01390.zip",
-   "sha256": "400c3823bbdcc7c7ca0e1b84afcec6a9a74eff1f7370c6f207e57c32b84973eb",
-   "bytes": 218520,
+   "sha256": "27f044a04ffc0341db1fc350a172618c56757828e46ca14fdb0b0ad08eeb6729",
+   "bytes": 218521,
    "bounds": [
     48.818954,
     2.21752,
@@ -3404,8 +3425,8 @@
   "idfm-idfm-593": {
    "network": "Titus",
    "file": "idfm-idfm-593.zip",
-   "sha256": "df0492b0344c19e86ff914893bfe0551bbb7996cfc8d2a00eb60d6c314972d13",
-   "bytes": 27816,
+   "sha256": "c2d115a637c470407162d7642c3bc213f75bbc8256231edccfc09623769e2dac",
+   "bytes": 27819,
    "bounds": [
     48.861286,
     2.454764,
@@ -3424,8 +3445,8 @@
   "idfm-idfm-operator-1047-route-idfm-c02344": {
    "network": "RATP Cap Arc Sud et Ouest — ligne T13 (tram)",
    "file": "idfm-idfm-operator-1047-route-idfm-c02344.zip",
-   "sha256": "4faceb430e1d0f8449ae99b83782c0954d9a12479853b72667cd2d30682be171",
-   "bytes": 228824,
+   "sha256": "8e17ce61e0e8cf4fff2ef857558ac74fab27d7118fdabda488c4a4fe123edcd6",
+   "bytes": 228826,
    "bounds": [
     48.798992,
     2.050612,
@@ -3444,8 +3465,8 @@
   "idfm-idfm-operator-1047-route-idfm-c02469": {
    "network": "RATP Cap Arc Sud et Ouest — ligne T13 (bus)",
    "file": "idfm-idfm-operator-1047-route-idfm-c02469.zip",
-   "sha256": "3c718d8562425d8abb43ff1b0d482fe5057e8ab5427ed900088990971ee5d5eb",
-   "bytes": 6860,
+   "sha256": "34ace9d7aa67c656214edd35771c2ab92cf63d13a187e8bdfa429b450855b095",
+   "bytes": 6866,
    "bounds": [
     48.799517,
     2.050907,
@@ -3464,8 +3485,8 @@
   "idfm-idfm-operator-1047-route-idfm-c02529": {
    "network": "RATP Cap Arc Sud et Ouest — ligne T12 (tram)",
    "file": "idfm-idfm-operator-1047-route-idfm-c02529.zip",
-   "sha256": "67e571041f9b7ac266bc1ea7a6fc676cea0f14a68a1d5c0b6509597c90586b63",
-   "bytes": 410320,
+   "sha256": "3a4827e3888d0a37ebde98c4c9a84a39406b60564f8f756195cb9367a320b2a8",
+   "bytes": 410306,
    "bounds": [
     48.621692,
     2.25654,
@@ -3484,8 +3505,8 @@
   "idfm-idfm-operator-100-route-idfm-c02534": {
    "network": "RATP — ligne 13 (bus)",
    "file": "idfm-idfm-operator-100-route-idfm-c02534.zip",
-   "sha256": "584bf55d1d4a5174d476fab9ca00c878b2f65c04aa88aa73b182e40293757c2f",
-   "bytes": 11761,
+   "sha256": "57199ed0fbe7f2e88e58a3a40e16c39689a47cb71dda11f84a9344aaeaa755d7",
+   "bytes": 11755,
    "bounds": [
     48.894479,
     2.283532,
@@ -3504,8 +3525,8 @@
   "idfm-idfm-operator-1055-route-idfm-c02896": {
    "network": "RATP Cap Défense Seine Ouest — ligne 426R (bus)",
    "file": "idfm-idfm-operator-1055-route-idfm-c02896.zip",
-   "sha256": "995fa3bae1c23c0f3a32f5821ddd332b1296f77172f126a2d120afc5b04fdb96",
-   "bytes": 4949,
+   "sha256": "144862acd2eaa052b35601951feeb0f38ddf69489184d24d22d0fb4e5946c8a0",
+   "bytes": 4942,
    "bounds": [
     48.825417,
     2.174303,
@@ -3524,8 +3545,8 @@
   "idfm-idfm-1046": {
    "network": "Transilien",
    "file": "idfm-idfm-1046.zip",
-   "sha256": "a6a277d3421da0cc1e783fe7c74ed4ec933b66017c4f0faecdf9d9d9f03b6818",
-   "bytes": 251006,
+   "sha256": "d0d788087dae51b84d068bd8d8e4f41170cf45807678225e487b97ac6d9441f5",
+   "bytes": 251008,
    "bounds": [
     48.006727,
     1.371062,
@@ -3544,8 +3565,8 @@
   "idfm-idfm-71": {
    "network": "RER",
    "file": "idfm-idfm-71.zip",
-   "sha256": "0d99a76e776c049d4a6a063c73123f4003d9a2e71f411d48b15f83f3e615cd8f",
-   "bytes": 641973,
+   "sha256": "1f2f0d1a1c20ef17ff035d8e7c439d6a9558f1d1368511376948dc28ad28b8c1",
+   "bytes": 641984,
    "bounds": [
     48.293523,
     2.007537,
@@ -3561,10 +3582,56 @@
    "license": "Licence Mobilités",
    "publisher": "Île-de-France Mobilités"
   },
+  "mistral-toulon": {
+   "network": "Réseau Mistral Toulon",
+   "file": "mistral-toulon.zip",
+   "sha256": "e6551a744d5cb13d278afe8e49c76e8faf31dbb6e6df37f57d5352ed9ade46b2",
+   "bytes": 2488441,
+   "bounds": [
+    43.027769,
+    5.794589,
+    43.195558,
+    6.199596
+   ],
+   "origin": "https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rd-toulon/exports/gtfs-complet.zip",
+   "routes": 93,
+   "trips": 10324,
+   "stop_times": 376753,
+   "stops": 2003,
+   "agencies": [
+    "Réseau Mistral"
+   ],
+   "fares": false,
+   "license": "Licence Ouverte 2.0",
+   "publisher": "Métropole Toulon-Provence-Méditerranée"
+  },
+  "mistral-telepherique-faron": {
+   "network": "Téléphérique du Faron",
+   "file": "mistral-telepherique-faron.zip",
+   "sha256": "f5873791b529f6361a4ac8b5b4641d326ffb51d0cd07e56d9a0849207058c362",
+   "bytes": 2626,
+   "bounds": [
+    43.137293,
+    5.930214,
+    43.149344,
+    5.93441
+   ],
+   "origin": "https://s3.eu-west-1.amazonaws.com/files.orchestra.ratpdev.com/networks/rd-toulon/exports/gtfs-complet.zip",
+   "routes": 1,
+   "trips": 60,
+   "stop_times": 120,
+   "stops": 2,
+   "agencies": [
+    "Téléphérique Faron"
+   ],
+   "fares": false,
+   "license": "Licence Ouverte 2.0",
+   "publisher": "Métropole Toulon-Provence-Méditerranée"
+  },
   "atoumod-altobus-alencon": {
    "network": "Altobus Alençon",
    "file": "atoumod-altobus-alencon.zip",
-   "sha256": "5f59ebb09196761dea8ca6c6a863756e28bee211c3e6c8e2dbabc6318a7a7c88",
+   "sha256": "bb39eaf02450f385b82db63bcd7d095568ad54098e750dfb46cf44e7143258f3",
    "bytes": 845016,
    "bounds": [
     48.389889,
@@ -3587,7 +3654,7 @@
   "atoumod-tiva-vire-noireau": {
    "network": "Tiva Vire au Noireau",
    "file": "atoumod-tiva-vire-noireau.zip",
-   "sha256": "ee6463cbdd7eb447a0f3f7d32f60a2c9cd4a8ea42b7d72d5605070e167e00b78",
+   "sha256": "6584a1bc7ccc7d2d81152a1d0c0560dc312d48e450aac15bf8297e7237a56654",
    "bytes": 7437,
    "bounds": [
     48.830491,
@@ -3610,7 +3677,7 @@
   "atoumod-argentanbus": {
    "network": "ArgentanBus",
    "file": "atoumod-argentanbus.zip",
-   "sha256": "e20b38fdf47d85f5fa61947099925934e3c88f12e2cf007053a39f5f2f7f8457",
+   "sha256": "b059e719a68a2aac8fa93800b052eae891ec8809d98c63086b560631f009f9c2",
    "bytes": 28670,
    "bounds": [
     48.702751,
@@ -3633,7 +3700,7 @@
   "atoumod-astrobus-lisieux": {
    "network": "Astrobus Lisieux",
    "file": "atoumod-astrobus-lisieux.zip",
-   "sha256": "a60cf4f5143ec87169c2fc582f0b2fdcf539ba939f0204aab7aa507314ccdf1a",
+   "sha256": "74686b801528128a729e4548d6ed9c6fa64cefc63962945875b49b91e2b08c28",
    "bytes": 152160,
    "bounds": [
     48.916253,
@@ -3656,7 +3723,7 @@
   "atoumod-bagnoles": {
    "network": "Bagnoles de l’Orne",
    "file": "atoumod-bagnoles.zip",
-   "sha256": "f010376b7882d847cfe4bf55c63f0eda772894c0757851c03acd5c2922a163c3",
+   "sha256": "2523409c27af4803445dbb83e0cd52aed5ca87535b3ba8a1e449124223ece552",
    "bytes": 9002,
    "bounds": [
     48.544596,
@@ -3679,7 +3746,7 @@
   "atoumod-ibus-bernay": {
    "network": "I’BUS Bernay",
    "file": "atoumod-ibus-bernay.zip",
-   "sha256": "3dccd5848e1efa23b3aeeaef13832a8986b542f9954c1ca1bf7f1ca9bd8f65ec",
+   "sha256": "f3a28102d49159b791d35013cf83b7150e787da9c045ae8e3e7a85a7377c5f32",
    "bytes": 7768,
    "bounds": [
     49.068666,
@@ -3702,7 +3769,7 @@
   "atoumod-bybus-bayeux": {
    "network": "Bybus Bayeux",
    "file": "atoumod-bybus-bayeux.zip",
-   "sha256": "22274f90aad17004bf2afa1795d90b937f211bec4801ed0409404a6369728ac9",
+   "sha256": "f3798e51df651a818fdb6dc61ece462e536a9bcc309b6b8edca71b4a98515b49",
    "bytes": 8568,
    "bounds": [
     49.267287,
@@ -3725,7 +3792,7 @@
   "atoumod-cosibus-coutances": {
    "network": "Cosibus Coutances",
    "file": "atoumod-cosibus-coutances.zip",
-   "sha256": "586dde0a64d5df6919ecc24449eac5982d93300acf916af08f242980f0a107f8",
+   "sha256": "ce76c460477cd22c472ebb1d357ed1a51b1483b700ec9118675a34842d044eb6",
    "bytes": 7596,
    "bounds": [
     49.033392,
@@ -3748,7 +3815,7 @@
   "atoumod-deep-mob-dieppe": {
    "network": "Deep Mob Dieppe",
    "file": "atoumod-deep-mob-dieppe.zip",
-   "sha256": "815a22d5ac36792e210aed85ee8c100dc78dc524f21c6a20d191206642479944",
+   "sha256": "cb8e23c9b2ebfbc84a29cb36f590ac3361745eaa6947bfe83450d4f43965b5e5",
    "bytes": 144924,
    "bounds": [
     49.86508,
@@ -3771,7 +3838,7 @@
   "atoumod-ficibus-fecamp": {
    "network": "Ficibus Fécamp",
    "file": "atoumod-ficibus-fecamp.zip",
-   "sha256": "2693389869296f675cb70fd08e8fe50d216305f9013716000ce72d7e1f06df35",
+   "sha256": "5a1b997de59662f370d5b1c2e415078327c26b4c3d94fc4bacf9c235b2446ca2",
    "bytes": 50166,
    "bounds": [
     49.743522,
@@ -3794,7 +3861,7 @@
   "atoumod-hobus-honfleur": {
    "network": "Hobus Honfleur",
    "file": "atoumod-hobus-honfleur.zip",
-   "sha256": "ffe238adf347ba8141d2e20aa7d28d35c97f1fe0d4eb033e1ed5ed9df1acc7dd",
+   "sha256": "7d89df307ff6822fa5c9a88f95b442ce12ef2f06217a689d7edc306274605103",
    "bytes": 28719,
    "bounds": [
     49.383285,
@@ -3817,7 +3884,7 @@
   "atoumod-le-bus-pont-audemer": {
    "network": "Le Bus Pont-Audemer",
    "file": "atoumod-le-bus-pont-audemer.zip",
-   "sha256": "79df6edfb9fb4164efdfc74294df73272816491728d84561bd332ed81a738530",
+   "sha256": "7831e44c11c2baf5fe3531a53e11817e772d814a28e273ceb95f924884c08c66",
    "bytes": 6074,
    "bounds": [
     49.341263,
@@ -3840,7 +3907,7 @@
   "atoumod-lia-le-havre": {
    "network": "LiA Le Havre",
    "file": "atoumod-lia-le-havre.zip",
-   "sha256": "daf9b583e8dcaaf19b9623f9061986f3f1191f5f82953a9635efa60114790315",
+   "sha256": "e2c2fa6fe02f270655d343b833aff938f8a39214f40e9d840c1d229a74d01572",
    "bytes": 1699864,
    "bounds": [
     49.459106,
@@ -3863,7 +3930,7 @@
   "atoumod-navette-pontorson": {
    "network": "Navette Pontorson–Mont-Saint-Michel",
    "file": "atoumod-navette-pontorson.zip",
-   "sha256": "1485b9abdfd31c2e3959a79a9e25e16d2f9a5b05f35a4fdddc8f52ed65400cd2",
+   "sha256": "9f94477939be993e68f5f9d7105dc5574a8e871666da88eaf5df82b57c2f54a0",
    "bytes": 8198,
    "bounds": [
     48.55235,
@@ -3886,7 +3953,7 @@
   "atoumod-nemus-flers": {
    "network": "Némus Flers",
    "file": "atoumod-nemus-flers.zip",
-   "sha256": "97fb16f8e23dee4e363850b9fc03f8525c661c872f23aa478ddb58869bfb9867",
+   "sha256": "29a613a72f3c63d17e16564e8d0a7f10a5caafb414299c2d6dbba13e7e01564a",
    "bytes": 34822,
    "bounds": [
     48.726472,
@@ -3909,7 +3976,7 @@
   "atoumod-neva-granville": {
    "network": "Néva Granville",
    "file": "atoumod-neva-granville.zip",
-   "sha256": "81c27bc02a1d37a81a815d9c6b9d86987a58a9784921e0f10363628bb00c537b",
+   "sha256": "91315985c1dcd7fe9d6a1a084b35f92e097bacef6c38bd7ed9e807e722b0932b",
    "bytes": 94892,
    "bounds": [
     48.797412,
@@ -3932,7 +3999,7 @@
   "atoumod-rezobus-caux-seine": {
    "network": "Rézo’Bus Caux Seine",
    "file": "atoumod-rezobus-caux-seine.zip",
-   "sha256": "3f16b006652311f52681662fa1a932832eb091beff8898632733e4902b0fdd1a",
+   "sha256": "563ebf894d2531a5de052bfb52ba3cab75fdf22e2e7c4885a86fe41ac2e76908",
    "bytes": 64091,
    "bounds": [
     49.460448,
@@ -3955,7 +4022,7 @@
   "atoumod-semo-seine-eure": {
    "network": "Semo Seine-Eure",
    "file": "atoumod-semo-seine-eure.zip",
-   "sha256": "81e94ee1996017a5b58b407b91b76268d476c7edbaf3e479ebdc2f46122409d1",
+   "sha256": "d3d4241ba9619fb3a662d3a92e79d257af25212b9ad133491b0ce8264a1c91f6",
    "bytes": 1071148,
    "bounds": [
     49.154514,
@@ -3978,7 +4045,7 @@
   "atoumod-slam-saint-lo": {
    "network": "SLAM Saint-Lô",
    "file": "atoumod-slam-saint-lo.zip",
-   "sha256": "ba32b1efe0390d7538e00add812db8a5335a30203199aafcda13545e19a1f4bf",
+   "sha256": "20ae0cad7c91426733c1026cf46b6a66413188484cdc260cea08d7acb0632a43",
    "bytes": 80098,
    "bounds": [
     48.983294,
@@ -4001,7 +4068,7 @@
   "atoumod-nomad-train": {
    "network": "Nomad Train Normandie",
    "file": "atoumod-nomad-train.zip",
-   "sha256": "5085a385f0f0c033ac372a18524a71f60ec8bd44bc127c69370453da9ed58d82",
+   "sha256": "629839535d3497cc0c9720d680063d27302f9855338476e110f45a1a8eb9e457",
    "bytes": 194497,
    "bounds": [
     43.302666,
@@ -4024,7 +4091,7 @@
   "atoumod-sngo-vernon": {
    "network": "SN’go Vernon–Les Andelys",
    "file": "atoumod-sngo-vernon.zip",
-   "sha256": "730ef8b4c398ed9d4dafd81d2040c8d99e07147317ee11f3e086d0cfd9033c5c",
+   "sha256": "3a6e57a5175d8f58595bd209db37001efef49b0ac092282384b55d686562ac72",
    "bytes": 159448,
    "bounds": [
     49.010406,
@@ -4047,7 +4114,7 @@
   "atoumod-astuce-rouen": {
    "network": "Astuce Rouen",
    "file": "atoumod-astuce-rouen.zip",
-   "sha256": "fad99a7bab0b304b6778429895ae49742931398bea753515fd416e0cf0d0d050",
+   "sha256": "54666da6a515feea1cd18f60569ecd18ff879969ea6155a0c5166940ac2979a2",
    "bytes": 4217745,
    "bounds": [
     49.262402,
@@ -4070,7 +4137,7 @@
   "atoumod-transurbain-evreux": {
    "network": "Transurbain Évreux",
    "file": "atoumod-transurbain-evreux.zip",
-   "sha256": "678c51cec43c7eb3c1b32bf55f680449f6110b65b8ac07fd5df8a3ede7b983d3",
+   "sha256": "8789bf0f4fc698a1107b91a06bb3cddee1ba6ccd5e2c0a144f4adf35dcd2e407",
    "bytes": 597235,
    "bounds": [
     48.96367,
@@ -4093,7 +4160,7 @@
   "atoumod-twisto-caen": {
    "network": "Twisto Caen",
    "file": "atoumod-twisto-caen.zip",
-   "sha256": "da59dd456e6eba9f11c2ff07904d4dac6fe2751de3205fb52fbca3e182ff9c38",
+   "sha256": "76fdcdd48c36438c1386c2e3d2aa5089a5d653485b6f5a1ad8d86b0f5cd4d358",
    "bytes": 1752488,
    "bounds": [
     49.074348,
@@ -4116,7 +4183,7 @@
   "atoumod-vikibus-yvetot": {
    "network": "Vikibus Yvetot",
    "file": "atoumod-vikibus-yvetot.zip",
-   "sha256": "73228a373a3ee37f719a99bebef8d7c795ee241ab8b9d5ec2dd1a5a932c11519",
+   "sha256": "04203183a5373ce429c0ae20e7f37c80c14059ee0b753b7921841213bc5e234d",
    "bytes": 16656,
    "bounds": [
     49.606407,
@@ -4139,7 +4206,7 @@
   "atoumod-cap-cotentin": {
    "network": "Cap Cotentin",
    "file": "atoumod-cap-cotentin.zip",
-   "sha256": "7012d5bb8451ec0bfb7dc15ac58447889823e2b175937e34d3301ee0778d2c6d",
+   "sha256": "c5307dae9e2866de2b2d6c9c0e34b333add518a64987a2c7227171da0a85a09a",
    "bytes": 1047192,
    "bounds": [
     48.104003,
@@ -4162,7 +4229,7 @@
   "atoumod-nomad-car": {
    "network": "Nomad Car Normandie",
    "file": "atoumod-nomad-car.zip",
-   "sha256": "bfdf85d5b523b6ae05da046879dd164e7652c127ac909e5ef876d40b7bab1d25",
+   "sha256": "09aea60a77056ded7df141332046770240f2704102247f223eb37cace6b23a2f",
    "bytes": 750442,
    "bounds": [
     48.226366,
@@ -4185,7 +4252,7 @@
   "atoumod-moca-caux-austreberthe": {
    "network": "MOCA Caux-Austreberthe",
    "file": "atoumod-moca-caux-austreberthe.zip",
-   "sha256": "3f9c0b9a91bbd6e9382234c84c581bf0e232384fafbf39793eb9ea647cb0e796",
+   "sha256": "c7b3ba1be3004339a710887846a2a05bdcaeae3f86de9d0374f9e04a179ef60f",
    "bytes": 10648,
    "bounds": [
     49.527376,
@@ -4208,7 +4275,7 @@
   "jvmalin-amelys-montargis": {
    "network": "Amelys Montargis",
    "file": "jvmalin-amelys-montargis.zip",
-   "sha256": "73b3bbef787426c64c4e10a33f66ee564bbeedf9f5471a0994a9e52ac4d65161",
+   "sha256": "14bda8048f4bf7c49fe18cf6f362426056838ee7b61dbd253d282a2e58774aee",
    "bytes": 308377,
    "bounds": [
     47.905998,
@@ -4231,8 +4298,8 @@
   "jvmalin-azalys-blois": {
    "network": "Azalys Blois",
    "file": "jvmalin-azalys-blois.zip",
-   "sha256": "fd8a5bba6c8a72382a9405b97ea24f552c01e5cb5fb5e6fcc713df32574eaa00",
-   "bytes": 432664,
+   "sha256": "d84da0443fa008b9a8816766f3f9c8c0da36a8395ddc47504fb7ee0581c10297",
+   "bytes": 433055,
    "bounds": [
     47.460381,
     1.030837,
@@ -4254,8 +4321,8 @@
   "jvmalin-agglobus-bourges": {
    "network": "Agglobus Bourges",
    "file": "jvmalin-agglobus-bourges.zip",
-   "sha256": "26a341587507cdfeefc8020c59db799088e4f182ca352874f7c93d90d28239d6",
-   "bytes": 676419,
+   "sha256": "5c7f2774a6da352bca52ad2c47ddf0b333440d89d1d3949888e37270c3a565b4",
+   "bytes": 794091,
    "bounds": [
     46.944756,
     2.204658,
@@ -4264,9 +4331,9 @@
    ],
    "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
    "routes": 101,
-   "trips": 3043,
-   "stop_times": 88626,
-   "stops": 1273,
+   "trips": 3548,
+   "stop_times": 105384,
+   "stops": 1276,
    "agencies": [
     "Agglobus (Bourges)"
    ],
@@ -4282,13 +4349,13 @@
     "jvmalin-fil-bleu-tours-part-02.zip",
     "jvmalin-fil-bleu-tours-part-03.zip"
    ],
-   "sha256": "e98f07acb86f586cfb6743374e37ae8581949bb5bccce11da9b975be1e637fa6",
+   "sha256": "8316e19b608b760564cf0f717eb97aaa3e9d45160f7bf1e6f77df19aaaa42fe2",
    "sha256_files": [
-    "e98f07acb86f586cfb6743374e37ae8581949bb5bccce11da9b975be1e637fa6",
-    "4afeb2abd68f2cee729e98c171b9759726bdb584a0bda130c0820fd929b91ae9",
-    "0c26fca5c581516d7e01240c84883f831279f1ca9af0181d8aba5843c070c41e"
+    "8316e19b608b760564cf0f717eb97aaa3e9d45160f7bf1e6f77df19aaaa42fe2",
+    "fa000a24c113f8cc7241f62bf462e9e6c69ad7f731a9adc2f48b54b281800c27",
+    "b783d518afbc1868ccb9ec3ec221dc3dcb1af64d9554cd277efc999276beb95d"
    ],
-   "bytes": 5797926,
+   "bytes": 5805412,
    "bounds": [
     47.315681,
     0.486719,
@@ -4311,8 +4378,8 @@
   "jvmalin-filibus-chartres": {
    "network": "Filibus Chartres",
    "file": "jvmalin-filibus-chartres.zip",
-   "sha256": "0d57fcfa2d8915164daaf7090c4a2b71028a5f1980aea3c08dabd587ac605b53",
-   "bytes": 1962932,
+   "sha256": "706eceee75ba94c6c2387e71e8c2766ebd95ac8781614da0cee1f48f41fb9724",
+   "bytes": 1962927,
    "bounds": [
     48.26432,
     1.23771,
@@ -4334,7 +4401,7 @@
   "jvmalin-horizon-chateauroux": {
    "network": "HORIZON Châteauroux",
    "file": "jvmalin-horizon-chateauroux.zip",
-   "sha256": "c466aeddcea40a60e8a7397181dbc1322b41f3e48348b67ac9b470645b0a2b04",
+   "sha256": "328c2d30f048402a5411f46dbb3a91efc1aa05ebccd4278a9f0e4ab6ce87654f",
    "bytes": 304540,
    "bounds": [
     46.673225,
@@ -4357,8 +4424,8 @@
   "jvmalin-linead-dreux": {
    "network": "Linéad Dreux",
    "file": "jvmalin-linead-dreux.zip",
-   "sha256": "925293d9d8c3745c33919cc8c165a8d3ceaadf60d7eec8fdfe277c8e93a2ecbf",
-   "bytes": 207872,
+   "sha256": "ff01ccdc3dbcacd2dc61569704a38e315172172ea676cba064d0f821e06e974c",
+   "bytes": 207783,
    "bounds": [
     48.525814,
     0.9005,
@@ -4380,8 +4447,8 @@
   "jvmalin-vib-vierzon": {
    "network": "Le VIB Vierzon",
    "file": "jvmalin-vib-vierzon.zip",
-   "sha256": "7d0f016c1d4ecc8eb467c464840c95d93e026e40ddf26e01a6570e8ab334bcb5",
-   "bytes": 52185,
+   "sha256": "0f478ea4c20264fb1f0e5df52e722a836f8e875be446e12b3ba9c4c131f608e7",
+   "bytes": 52212,
    "bounds": [
     47.199833,
     2.038361,
@@ -4403,8 +4470,8 @@
   "jvmalin-move-vendomois": {
    "network": "MOVE Vendômois",
    "file": "jvmalin-move-vendomois.zip",
-   "sha256": "8417c1ae81b440bb370826fb0beabb16fc9c1a87db92d4ea55fecb21994089a1",
-   "bytes": 62980,
+   "sha256": "6b6bf8bd3c0a7a350232a435cce57b3d46c029ae668a1fbfa61daf4d497b8c77",
+   "bytes": 63011,
    "bounds": [
     47.744907,
     0.686523,
@@ -4426,8 +4493,8 @@
   "jvmalin-nosbus-nogent": {
    "network": "Nosbus Nogent-le-Rotrou",
    "file": "jvmalin-nosbus-nogent.zip",
-   "sha256": "470cba4901da976b0d6d86b828e7c18c2d028a96e53cd5dc412488a9da3aa75a",
-   "bytes": 36281,
+   "sha256": "3e402d5289390eaef1c566a8ae8a13eeb444e1e7487d177ac98fa765b62dde8b",
+   "bytes": 36263,
    "bounds": [
     48.31118,
     0.798079,
@@ -4449,8 +4516,8 @@
   "jvmalin-remi-18": {
    "network": "Rémi Car 18",
    "file": "jvmalin-remi-18.zip",
-   "sha256": "b8a6e629e23ff4903337e8ce49bf3baa85341cae0e71408024b374c322fabe94",
-   "bytes": 117419,
+   "sha256": "e0fec186736f37c7efd4c3cc30b23cae12a2b6df070eed39aa3a5e9970e8d37b",
+   "bytes": 117862,
    "bounds": [
     46.547497,
     1.81039,
@@ -4472,8 +4539,8 @@
   "jvmalin-remi-28": {
    "network": "Rémi Car 28",
    "file": "jvmalin-remi-28.zip",
-   "sha256": "5db6cb2e029ac9e31801c28aa5558a3cff4e7516c9fde7e781be9cf2374c3ecb",
-   "bytes": 153396,
+   "sha256": "2e4f6607607505589aa751b4fba479b8ee11f090be3b4d5a2cf22a718505cbcb",
+   "bytes": 153328,
    "bounds": [
     47.390167,
     0.692893,
@@ -4495,8 +4562,8 @@
   "jvmalin-remi-36": {
    "network": "Rémi Car 36",
    "file": "jvmalin-remi-36.zip",
-   "sha256": "e1273653580859b5abb6ffe7bfb51de74c8a6ddc59e534b20ae7fabf55125b27",
-   "bytes": 240428,
+   "sha256": "7beb867e469eec9a976daf2fc1282374161842b25c12a75f1d3cb34e6ad7951a",
+   "bytes": 244506,
    "bounds": [
     46.434139,
     0.335014,
@@ -4518,8 +4585,8 @@
   "jvmalin-remi-37": {
    "network": "Rémi Car 37",
    "file": "jvmalin-remi-37.zip",
-   "sha256": "8f3f92329de2b8feaea0b12fd788254b4bebc0156b8ff6da97aadf4194bde0fd",
-   "bytes": 266522,
+   "sha256": "9a579e3b16e9121cad06c3403a039fc5f672f51ecfedfe013ad5c572e5bfaade",
+   "bytes": 266438,
    "bounds": [
     46.734516,
     -0.083938,
@@ -4541,8 +4608,8 @@
   "jvmalin-remi-41": {
    "network": "Rémi Car 41",
    "file": "jvmalin-remi-41.zip",
-   "sha256": "bfedb1fffa4479917f1f4862ce1b07b486a64f92b0719d13cb80322920e5550d",
-   "bytes": 159631,
+   "sha256": "6c46644acde418cee3f9036e39e9740f1588e34fe61784c6c45ce9c12ae7df5f",
+   "bytes": 159530,
    "bounds": [
     47.221279,
     0.853137,
@@ -4564,8 +4631,8 @@
   "jvmalin-remi-45": {
    "network": "Rémi Car 45",
    "file": "jvmalin-remi-45.zip",
-   "sha256": "c3028c7106257ecd3e6a025c19d8ea298303cd51626ae386127bc817d281ae3b",
-   "bytes": 423394,
+   "sha256": "d258f35abfdb8fc00faa5fe54828ea6f7ad1c3615a658755644d7e030ce25c07",
+   "bytes": 421138,
    "bounds": [
     47.49054,
     1.530112,
@@ -4592,17 +4659,19 @@
     "jvmalin-tao-orleans-part-02.zip",
     "jvmalin-tao-orleans-part-03.zip",
     "jvmalin-tao-orleans-part-04.zip",
-    "jvmalin-tao-orleans-part-05.zip"
+    "jvmalin-tao-orleans-part-05.zip",
+    "jvmalin-tao-orleans-part-06.zip"
    ],
-   "sha256": "66550f14805a7adccff9fe78fae8e729ac2f739270f786d5b32ac56f2a8af474",
+   "sha256": "be81ceaf8c4f60daef109407b9d9674c47fc23964d811a205a5d8c4f081f79f1",
    "sha256_files": [
-    "66550f14805a7adccff9fe78fae8e729ac2f739270f786d5b32ac56f2a8af474",
-    "69d8ba6dde2830c2921e4b2e362b194a5f59795f38ae6e4afc623ae61f5a1659",
-    "677e9203b15c7c59e71d7bf6e498f2c0c6fe61dc65ba4e5d3f5f83ff7356bef4",
-    "045e4aefe03e1f4935b951e411aa5eaf15233e527cb6b9b0ade8d7fc932a464d",
-    "79b0eb55bca3662e0388efa26cc2a91e97f9ccf047882d16cc7914cfd3da876c"
+    "be81ceaf8c4f60daef109407b9d9674c47fc23964d811a205a5d8c4f081f79f1",
+    "d39712cba37f0ab9e3eebff76ee9b3fc2600c94307c5be10a92ab371687f0567",
+    "deed9f7783de7170d9bc3d246525a292a596639e5e6830795933207952638d35",
+    "25cbf51dbd982d11577903127dc1e1f5384ae8781ebac10fe13013ec49d9dfbd",
+    "dc47b20372b3336f086b1bb6f0fd3409d3f09d85c55a99a2f84a82b045e6cea9",
+    "dd1d47b6d0e0353ba670611aef936ac8da8e6a34b91206df246590f4afd5fbb0"
    ],
-   "bytes": 8622320,
+   "bytes": 11300435,
    "bounds": [
     47.804367,
     1.801197,
@@ -4611,9 +4680,9 @@
    ],
    "origin": "https://fr.ftp.opendatasoft.com/centrevaldeloire/OKINAGTFS/GTFS_AGREGE/JVMALIN.zip",
    "routes": 41,
-   "trips": 37479,
-   "stop_times": 1193124,
-   "stops": 2119,
+   "trips": 45004,
+   "stop_times": 1467467,
+   "stops": 2098,
    "agencies": [
     "TAO (Orléans)"
    ],
@@ -4625,7 +4694,7 @@
   "jvmalin-tigr-issoudun": {
    "network": "TIG+R Issoudun",
    "file": "jvmalin-tigr-issoudun.zip",
-   "sha256": "6a0ae38bfaeeea3561ad00da67af444923207a6897c6031c9229976c638d5076",
+   "sha256": "8bb0f0096299344b9e1634124d086ed517dd1d3c696941dc8b7192775cdf898c",
    "bytes": 7645,
    "bounds": [
     46.826035,
@@ -4648,8 +4717,8 @@
   "jvmalin-le-bus-amboise": {
    "network": "Le Bus Amboise",
    "file": "jvmalin-le-bus-amboise.zip",
-   "sha256": "9e5c92ac9bdb3eefbda8db971f45c40dfd430d6f3ac10e9b965bb51dac8df66f",
-   "bytes": 6143,
+   "sha256": "da0679a8242349811b06567f2425a2f492045a4e3fe579b8ea96977e08930669",
+   "bytes": 6141,
    "bounds": [
     47.400944,
     0.980935,
@@ -4671,7 +4740,7 @@
   "lio-interurbain-occitanie": {
    "network": "liO — cars interurbains Occitanie",
    "file": "lio-interurbain-occitanie.zip",
-   "sha256": "ac6f8b80dc2709a75b42e9245430db4873a17d80febc8240219b62662b37457b",
+   "sha256": "36c79199eeb53f488a74ae0091678a035365ecd097e0f196b92f61409d2e6223",
    "bytes": 1456975,
    "bounds": [
     42.367208,
@@ -4707,7 +4776,7 @@
   "cars-region-nouvelle-aquitaine": {
    "network": "Cars Région Nouvelle-Aquitaine",
    "file": "cars-region-nouvelle-aquitaine.zip",
-   "sha256": "42a39acd6271fb2394c1a53ab8d29ac7879d688f8fe8f5b6de00fa1033684da1",
+   "sha256": "579ba1e5efdb1cb23c5a5d95cf2d7eaee53e9eeed3c3d5c6b193d8ce5b40eca0",
    "bytes": 1407052,
    "bounds": [
     42.751541,
@@ -4741,7 +4810,7 @@
   "pdl-irigo-angers": {
    "network": "IRIGO Angers",
    "file": "pdl-irigo-angers.zip",
-   "sha256": "a6270b039aa5af6e55ad549c95a313270b50053de320e29faa16c51f12b382a9",
+   "sha256": "041fc409306340bc6281e144b73f60e772766030f33ed123a39593ad0aff4063",
    "bytes": 2428818,
    "bounds": [
     47.34288,
@@ -4764,7 +4833,7 @@
   "pdl-brevibus": {
    "network": "Brévibus",
    "file": "pdl-brevibus.zip",
-   "sha256": "b3a05ca4996911bdaa501ca0fd51d2cf8452293d12a271deabc7551f5fce4068",
+   "sha256": "6a4ea68820afff7d20d014d2a50faeba51e894e745552db359230ce2e976b8dd",
    "bytes": 15067,
    "bounds": [
     47.20343,
@@ -4787,7 +4856,7 @@
   "pdl-tul-laval": {
    "network": "TUL Laval",
    "file": "pdl-tul-laval.zip",
-   "sha256": "bb68b40e21e0679d568ba94effdf3298f05af357653b72b334e6a9df7c0cf76b",
+   "sha256": "5199da1302437bf52c39b5faa4336ed3badf3649f5c021a50321a730cfc59f16",
    "bytes": 920122,
    "bounds": [
     47.986195,
@@ -4825,21 +4894,21 @@
     "pdl-naolib-nantes-part-12.zip",
     "pdl-naolib-nantes-part-13.zip"
    ],
-   "sha256": "fa26ece26a5c33a796eee7d7e3e7b254da369b16c3413f9556c2599cee68d9d0",
+   "sha256": "fa0dab85da95d7d1f5930b5806404d39477d5231366ecabc4dfe43831a7774fb",
    "sha256_files": [
-    "fa26ece26a5c33a796eee7d7e3e7b254da369b16c3413f9556c2599cee68d9d0",
-    "7475ed9a4cad7b742f90302c94c828ce1adcf205804e8f144dbb9307923a727a",
-    "f8ed536ada41f3341dc28e60fbaeb9b49e7c887018e46cdcf28037175bf85b98",
-    "7b999effd7344f133a9dcc9217fa322109b6e2cecdefc55191fe0df4fcefb38d",
-    "8108cb1368746532663b15ddcd11b57e07a751808afc3156b3c198c2a5f8fae6",
-    "aa823195979944b9c539dedbe70f4f47f25c4e99fa4ee7785ff826c4205b78df",
-    "9b7b80d39aa3323e882d57ace95af696148619a8a94b735aadc427aa24e5c071",
-    "696607f35868add1e489c251ae8df14775695d38ab5c0995ebf82d04fb272cb2",
-    "9a7cfa46179489852b3c63821218aa19898bfd937e5b982190e26931a4c8f3cf",
-    "9372486b6702f235c9647719d7a85d08a001ff04a2cb69ea2c916fff82290a90",
-    "43bffdd93462c86ca9dc33e9a6ac8fadaaa0a5084b4250bb8d96afe7d7236bfe",
-    "8624927f3c0be2172ccc00a52bcc4776b3eb6b7fb9ef7febd6aaac0be5eacfd9",
-    "327dd441a2fd27f450e8f265d52ed12adbdd3c147bcae186a69b02f52188889c"
+    "fa0dab85da95d7d1f5930b5806404d39477d5231366ecabc4dfe43831a7774fb",
+    "f7d099b424fdfe79fd9a889167bedbc6e176b19237964cdf9817195adaa76e5b",
+    "8d103c0673f47f7420db98f9549261ea65ae969767fc87af7393e4172dcdd98c",
+    "17001b12eb2a565dea9763e05498b6caeab4da0afabc09a2a1ded4799b48c9b8",
+    "f2ce4e6b3a6b2dd4aae4a1f3cd07ef53547ea66d5774338a98178799f321258a",
+    "bc04c8f29086511bb46a9612bc0f2dfb72e106732e221bff6bd0030ca5c13a4d",
+    "821d1eb580737049e8c4c619d09c0d19f935b1fb47f5489c6fd021ecf653d2db",
+    "5756d7046950456e9f1eda7477c18bce7c3a34d3a271e2955fde676c220c94a5",
+    "b08c4d8c1156551d059d3fad9ddd850daa797eb580327beab77367bf1e73003f",
+    "18ccbd7f36646e83fd0241404f7d62bd307b80dd38d2a08ca8ede964ca88a364",
+    "bf1d5314726eac2b259ea7fd3dcc3e83e65cc1d9b0521a9ee423ab5b1b6aad9e",
+    "1b8458daf7ac1f1471484d78da99a519d17f4d78a2baf735ba761a2e7f794b11",
+    "eb73e76ec34849528a07d7e412e31e7a15d63f978b611a503e8ccfe6197c4e15"
    ],
    "bytes": 20364353,
    "bounds": [
@@ -4864,7 +4933,7 @@
   "pdl-choletbus": {
    "network": "Choletbus",
    "file": "pdl-choletbus.zip",
-   "sha256": "3d91a019b52f98e48650155d092bef52aae795f5a13420868fe6cf9581c20626",
+   "sha256": "b156dd4687dff8f22a665682edce9f38841910f5c789537f1d642106057f7bae",
    "bytes": 212303,
    "bounds": [
     46.996525,
@@ -4887,7 +4956,7 @@
   "pdl-oleane-les-sables": {
    "network": "OLEANE Les Sables-d’Olonne",
    "file": "pdl-oleane-les-sables.zip",
-   "sha256": "32cc9bae5da6969b3f74a1332beb61206df71f38c83094184c3be5e6d266abd4",
+   "sha256": "b793d0d498961de50dea0a4edee991760fc903dd60f52b69f108f47cd9c127de",
    "bytes": 86335,
    "bounds": [
     46.476704,
@@ -4910,7 +4979,7 @@
   "pdl-illygo": {
    "network": "illyGO",
    "file": "pdl-illygo.zip",
-   "sha256": "95aa4ff177263b2ecfed4bb1e75b76fa3b7d9e4db021a8fa214f0f9c9913bb35",
+   "sha256": "14386017e53e163cf9ccee8a873ccbed82e74f1cbf25d60ce5e600df9b2cdb1e",
    "bytes": 20888,
    "bounds": [
     47.817245,
@@ -4933,7 +5002,7 @@
   "pdl-sovetours": {
    "network": "SOVETOURS",
    "file": "pdl-sovetours.zip",
-   "sha256": "3cd6fd163f4b865dc7acd6cab615b8b575e2150022117f516efc1aed4ba497c4",
+   "sha256": "4505fc21fc9bc3ce490acc06614906fd5087b4a2f1e8f88e3f8ba648b0178064",
    "bytes": 8181,
    "bounds": [
     46.44981,
@@ -4956,7 +5025,7 @@
   "pdl-yceo-saint-nazaire": {
    "network": "Ycéo Saint-Nazaire",
    "file": "pdl-yceo-saint-nazaire.zip",
-   "sha256": "b2f04be78c97cd08da23e096b9403ac29c20f51ffb59c686d0b0ea7e05cd9d15",
+   "sha256": "41645b763a49ce42196ff17a50d60e3cca707700c743d3c5b994c43b3864ed96",
    "bytes": 648537,
    "bounds": [
     47.236698,
@@ -4979,7 +5048,7 @@
   "pdl-impulsyon-la-roche": {
    "network": "Impulsyon La Roche-sur-Yon",
    "file": "pdl-impulsyon-la-roche.zip",
-   "sha256": "6001cd7c906c78d1926dcc624f536dd4e8e1aca5013c056382f9b5cf727126cb",
+   "sha256": "184869143e11657dd016c3745f0264c816042a7118c80d13b575f957e016e796",
    "bytes": 816294,
    "bounds": [
     46.573444,
@@ -5002,7 +5071,7 @@
   "pdl-aleop-sarthe": {
    "network": "Aléop en Sarthe",
    "file": "pdl-aleop-sarthe.zip",
-   "sha256": "0efcf97db08bdbe6520da926903bfaaaee2120e510bfbf9a6ec23b6991159adb",
+   "sha256": "3ca278e847578af1c9f0c0a1713762f783ae882c3833900d6adc7bf901889a6c",
    "bytes": 146744,
    "bounds": [
     47.643642,
@@ -5025,7 +5094,7 @@
   "pdl-aleop-vendee": {
    "network": "Aléop en Vendée",
    "file": "pdl-aleop-vendee.zip",
-   "sha256": "ee248a92bcd774d66105818d169c4d04b31e23ae43d12340e4f2164a090a730d",
+   "sha256": "0b4de59df3bf1cb705331744a4bf2d989dcf6b754ad6f25a21b59e306df4f81c",
    "bytes": 45820,
    "bounds": [
     46.152397,
@@ -5048,7 +5117,7 @@
   "pdl-aleop-ler": {
    "network": "Aléop Lignes Express régionales",
    "file": "pdl-aleop-ler.zip",
-   "sha256": "09c140c2f9b1006411c67c2f8311923c04deb5c3a6416a59bd87c37147afdc92",
+   "sha256": "5de6309cf517e2b6ba3c7f52ac9394612f34be907d70b16a974f65250445c899",
    "bytes": 52262,
    "bounds": [
     46.152397,
@@ -5071,7 +5140,7 @@
   "pdl-aleop-mayenne": {
    "network": "Aléop en Mayenne",
    "file": "pdl-aleop-mayenne.zip",
-   "sha256": "d85ced848cc0be2ba22312d00d9628412c2c11ad764413e3fabc6fec31be4b8e",
+   "sha256": "3691451f250eb0dceab9a14ad4ee0d358eca4c4af28e6300030a9b60dced8fe0",
    "bytes": 110654,
    "bounds": [
     47.464859,
@@ -5094,7 +5163,7 @@
   "pdl-aleop-loire-atlantique": {
    "network": "Aléop en Loire-Atlantique",
    "file": "pdl-aleop-loire-atlantique.zip",
-   "sha256": "5a0f5d8a4658c0c79187e0661daa24247f93c5a67f30df11c8ec6617bb1ee29a",
+   "sha256": "3d70dc58840ca1513725259a65baa102b91d50530a2862274817756c237b17c2",
    "bytes": 295860,
    "bounds": [
     46.861324,
@@ -5117,7 +5186,7 @@
   "pdl-aleop-maine-et-loire": {
    "network": "Aléop en Maine-et-Loire",
    "file": "pdl-aleop-maine-et-loire.zip",
-   "sha256": "ebf94d5d105f80376f27108309cb8730632bbd593abdef14a7e5d5eea5788704",
+   "sha256": "3f8c4fafb645a9f614a5976ddc5f5989e228c955a3295a1a365b339c9660faa0",
    "bytes": 185412,
    "bounds": [
     47.012371,
@@ -5140,7 +5209,7 @@
   "pdl-reso-sable": {
    "network": "Réso Sablé-sur-Sarthe",
    "file": "pdl-reso-sable.zip",
-   "sha256": "e47b88fa73eaf9a98653ff54dd251fc6e14782bae56f8490410431747339cb67",
+   "sha256": "480f1826357922cbc6a905ab52cb22481398da1bc51ab97eea1becd3012f4e9d",
    "bytes": 23906,
    "bounds": [
     47.822269,
@@ -5163,7 +5232,7 @@
   "pdl-heoh-clisson": {
    "network": "héoh Clisson",
    "file": "pdl-heoh-clisson.zip",
-   "sha256": "d02676148c1394ea3e0fece95edd974589337f1eaa60edd072503ee2d35b9bde",
+   "sha256": "8dee28faed6339157cf921f96379d37d78fd7acf953221e0d94beb120833f1e8",
    "bytes": 7191,
    "bounds": [
     47.076775,
@@ -5186,7 +5255,7 @@
   "bretagne-star-rennes": {
    "network": "STAR Rennes",
    "file": "bretagne-star-rennes.zip",
-   "sha256": "2c999b562d99336af4d7d779e1d57d482ce109a1b316b9e8ece3676292be02e7",
+   "sha256": "f53294191ca07deccac3de84a47683671dea3f75a1ab46463e5149a5d34f4154",
    "bytes": 6229220,
    "bounds": [
     47.939335,
@@ -5209,7 +5278,7 @@
   "bretagne-qub-quimper": {
    "network": "QUB Quimper",
    "file": "bretagne-qub-quimper.zip",
-   "sha256": "568e501fd97702688c94cf75be845ecce45b33aae12f06cb8484cea4afd28a8d",
+   "sha256": "a59c89c5cf930d8171facd5c2f44163eb680abaa8337fc48f0ee710c2efa838d",
    "bytes": 467573,
    "bounds": [
     47.911367,
@@ -5232,7 +5301,7 @@
   "bretagne-tub-saint-brieuc": {
    "network": "TUB Saint-Brieuc",
    "file": "bretagne-tub-saint-brieuc.zip",
-   "sha256": "675f4090976977f3614594fac1b616a14596d58bfbe0dd7dc2cd21daebf9de36",
+   "sha256": "9b6d9b7600dc1c6a5a85b041af351ca95c7718bfe2fbc6368590f1e32f0d56eb",
    "bytes": 436272,
    "bounds": [
     48.307588,
@@ -5255,7 +5324,7 @@
   "bretagne-mat-saint-malo": {
    "network": "MAT Saint-Malo",
    "file": "bretagne-mat-saint-malo.zip",
-   "sha256": "21499b1d8a63ad0c3e629a8f9ab130d6d07c635ecde235e027a790d58dd69d79",
+   "sha256": "442a0835ef3d4fcb278b1e19f736fa9f8d2da6f9f64364384cbb5f70a01db5a3",
    "bytes": 818664,
    "bounds": [
     48.486236,
@@ -5278,7 +5347,7 @@
   "bretagne-kiceo-vannes": {
    "network": "Kicéo Vannes",
    "file": "bretagne-kiceo-vannes.zip",
-   "sha256": "a0a281c4907148bfdeb695878e42fd7d3b09c07700227a3181938b775349d371",
+   "sha256": "db6a8d64872225bbabe58a96996eb976391447e684ec2ab20921ba9b51c25e3a",
    "bytes": 592481,
    "bounds": [
     47.490644,
@@ -5301,7 +5370,7 @@
   "bretagne-aleop-finistere": {
    "network": "BreizhGo en Finistère",
    "file": "bretagne-aleop-finistere.zip",
-   "sha256": "f2543392f2261b85fbabaf3f2eed6bf3b7a1a299a24af5c35a0d1d42ef7c37d1",
+   "sha256": "296e7c66694cf16d66b8a24af12203e779244be06ff4ebbe11f57c1152e82cfa",
    "bytes": 650597,
    "bounds": [
     47.795987,
@@ -5324,7 +5393,7 @@
   "bretagne-bibus-brest": {
    "network": "Bibus Brest",
    "file": "bretagne-bibus-brest.zip",
-   "sha256": "f3c30558ef28632d12750054f513f2fe5dc15a3b4b1d543dcadb7cdc4bf363ce",
+   "sha256": "164c7b96732cd3dd15c4b2990159ec90ac8381eae9898b8f864f702ae0bc245d",
    "bytes": 1367627,
    "bounds": [
     48.341685,
@@ -5347,7 +5416,7 @@
   "bretagne-izilo-lorient": {
    "network": "Izilo Lorient",
    "file": "bretagne-izilo-lorient.zip",
-   "sha256": "0c6ef21d1d2c93fdbc887e4b595743ca98ccbf4c0100ef183ea26b484515a1b6",
+   "sha256": "4ce2e9a8caf1b9dc2c0f409e7344574beedbc8dac9e987f2c89e31c361e625ff",
    "bytes": 822890,
    "bounds": [
     47.627059,
@@ -5370,7 +5439,7 @@
   "bretagne-aleop-cotes-armor": {
    "network": "BreizhGo en Côtes d’Armor",
    "file": "bretagne-aleop-cotes-armor.zip",
-   "sha256": "4600a56edf50839ad5a166801154cee7dcf795de467d978361a61e800a8f9133",
+   "sha256": "3d8e48d07f000b3d8cf1a0c9aa7aa2a2af726443bcd17db20159dfe65cee6068",
    "bytes": 163102,
    "bounds": [
     48.18864,
@@ -5393,7 +5462,7 @@
   "bretagne-distribus-lamballe": {
    "network": "Distribus Lamballe",
    "file": "bretagne-distribus-lamballe.zip",
-   "sha256": "63ad4e683d3cb519a880ed815eb21a014b9fce439d501f9b21c85cbfedd1fbd0",
+   "sha256": "657421599c36642dff97c5537afe5e88bddd0c80e52eac3c01803510384f53f5",
    "bytes": 35069,
    "bounds": [
     48.453294,
@@ -5416,7 +5485,7 @@
   "bretagne-tbk-quimperle": {
    "network": "TBK Quimperlé",
    "file": "bretagne-tbk-quimperle.zip",
-   "sha256": "0d5f971e00bd8c77f180e0ac4fb9b3026bb434211813964dc819615b396b8959",
+   "sha256": "5aafc435b5c29793fc9e93c7bff2d55efb0b18f6efcf246f20e18d0c7c411056",
    "bytes": 103486,
    "bounds": [
     47.76648,
@@ -5439,7 +5508,7 @@
   "bretagne-arbus-landerneau": {
    "network": "Ar Bus Landerneau",
    "file": "bretagne-arbus-landerneau.zip",
-   "sha256": "6b90955c261ceb386e346b57ef7d54c7fcca289a5b65519d52db814b8cd44bda",
+   "sha256": "749fab052113333e885b4a1e46afdccfee6a84646f693b66a4a05db2b5eabda2",
    "bytes": 49134,
    "bounds": [
     48.436129,
@@ -5462,7 +5531,7 @@
   "bretagne-guingamp-paimpol": {
    "network": "Guingamp-Paimpol Mobilité",
    "file": "bretagne-guingamp-paimpol.zip",
-   "sha256": "fbe3e18d357b875b9c6ece56e1be30490167760cdaa5326c4fbfab475fe8a435",
+   "sha256": "988ef1e113af81abfa9edb1c7840ad36686c33b9ceaf6710831442f7e9afe9c4",
    "bytes": 55608,
    "bounds": [
     48.543272,
@@ -5485,7 +5554,7 @@
   "bretagne-coralie-concarneau": {
    "network": "Coralie Concarneau",
    "file": "bretagne-coralie-concarneau.zip",
-   "sha256": "993c57adfda5b14ef4ab2744c2297c8cf7495c648ed8ca8044dc2da41b1f1562",
+   "sha256": "dd7eb587d02eaac2f853cd95523053aea4e05d4eb1b0a7663544f77c38d4020a",
    "bytes": 387375,
    "bounds": [
     47.788605,
@@ -5508,7 +5577,7 @@
   "bretagne-tudbus-douarnenez": {
    "network": "Tud’Bus Douarnenez",
    "file": "bretagne-tudbus-douarnenez.zip",
-   "sha256": "c6c681c1862b33736dc603184c9b096572a7178b3a7030f0af0f649d184a63be",
+   "sha256": "dbc414624116b8ead67ec32d578e64eaf8640faeacfe90079f172125bc363a46",
    "bytes": 34204,
    "bounds": [
     48.039771,
@@ -5531,7 +5600,7 @@
   "bretagne-auraybus": {
    "network": "Auray Bus",
    "file": "bretagne-auraybus.zip",
-   "sha256": "4701e58fb2caf573d36c2eda0f20b813316975ad990a5e2b631c137e1f34a30a",
+   "sha256": "771d82fdf298011a40236fe13df1d2258b483a59cd4ff2e2a700f0f8f6081b67",
    "bytes": 62569,
    "bounds": [
     47.660061,
@@ -5554,7 +5623,7 @@
   "bretagne-pondibus-pontivy": {
    "network": "PondiBUS et MOOVI",
    "file": "bretagne-pondibus-pontivy.zip",
-   "sha256": "357cce8444568867ea576d3426c784ab5d7207a8885e78f30d74cd5d8cc99843",
+   "sha256": "d8feef5b119195d298ab7445740e0afee79103a2c324b59c44bdea790cc8e71c",
    "bytes": 31919,
    "bounds": [
     48.037738,
@@ -5577,7 +5646,7 @@
   "bretagne-aleop-ille-et-vilaine": {
    "network": "BreizhGo en Ille-et-Vilaine",
    "file": "bretagne-aleop-ille-et-vilaine.zip",
-   "sha256": "0ca0ab59843df0866be91d0a144fb1e6a2654cafca1178f4573e84815af20d11",
+   "sha256": "a21e470e30d9d068535454d821d937246c0f7d6fa0cc9f36721a10413674a38b",
    "bytes": 256252,
    "bounds": [
     47.721656,
@@ -5600,7 +5669,7 @@
   "bretagne-tilt-lannion": {
    "network": "TILT Lannion",
    "file": "bretagne-tilt-lannion.zip",
-   "sha256": "e61f0c1783a1036dd88afcea1c18882d99e2668b1e895db39460c3b220beb7a7",
+   "sha256": "5b247e86a246d8a82e3c6eb140e64a878447ea22b7d945ea969a17141e876562",
    "bytes": 46277,
    "bounds": [
     48.577213,
@@ -5623,7 +5692,7 @@
   "bretagne-surf-fougeres": {
    "network": "SURF Fougères",
    "file": "bretagne-surf-fougeres.zip",
-   "sha256": "f7cedf2bf0ac02b82bdc23738b40ebbec0e42a220a42bf60a4332070e2c58d89",
+   "sha256": "3789212ee4cce2513d946ee355b0bef83e76a273dc206d0fa90a3ee767333593",
    "bytes": 75181,
    "bounds": [
     48.319667,
@@ -5646,7 +5715,7 @@
   "bretagne-riv-ploermel": {
    "network": "RIV Ploërmel",
    "file": "bretagne-riv-ploermel.zip",
-   "sha256": "c2b56cab0558322ba59ac3828971f9267f2bf55ab268ea121f96c514244cf800",
+   "sha256": "e56776ffeabb2f60ce881e91c4150e88e5f98d1f2821df5a622f0ddde1032758",
    "bytes": 9085,
    "bounds": [
     47.864667,
@@ -5669,7 +5738,7 @@
   "bretagne-lineotim-morlaix": {
    "network": "Linéotim Morlaix urbain",
    "file": "bretagne-lineotim-morlaix.zip",
-   "sha256": "a7c804029a304a0016cb8cb4ebd5084acf6e6d466ec548fb2ba9b8f86b44b1b0",
+   "sha256": "0594bd89faa090c2f1690d6a40efc6879d952d9d4e4c3b7ebc054150c41f2863",
    "bytes": 72027,
    "bounds": [
     0.0,
@@ -5692,7 +5761,7 @@
   "bretagne-aleop-morbihan": {
    "network": "BreizhGo en Morbihan",
    "file": "bretagne-aleop-morbihan.zip",
-   "sha256": "6a2914ce500c09914a849de9477a6821a84977c3d4c891aafd3965feb809c49e",
+   "sha256": "629a9e06559638f143d17a5b0f0a5ec87975ea368aa8048a17b2c7f75ef94629",
    "bytes": 136134,
    "bounds": [
     47.478376,
@@ -5715,7 +5784,7 @@
   "bretagne-lineotim-periurbain": {
    "network": "Linéotim Morlaix périurbain",
    "file": "bretagne-lineotim-periurbain.zip",
-   "sha256": "f181425ec4cffb65158b67d1205786d215ea5dd68c296e34149807744434e7d6",
+   "sha256": "0035b706b5c4a510e7c5a22edcb612a2df1afcf6acd2418437c6e36491067e17",
    "bytes": 21079,
    "bounds": [
     0.0,
@@ -5736,7 +5805,9 @@
    "publisher": "Région Bretagne et autorités organisatrices participantes"
   }
  },
- "errors": {},
+ "errors": {
+  "stas-saint-etienne": "erreur : Remote end closed connection without response"
+ },
  "oura": {
   "source": "https://api.oura3.cityway.fr/dataflow/offre-tc/download?provider=OURA&dataFormat=GTFS&dataProfil=OPENDATA",
   "version": "2026-11-24T05:36:09+00:00"
