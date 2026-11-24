@@ -529,3 +529,22 @@ Source PAN `fr-200052264-t0034-0000-1`, ressource GTFS `83710`, Licence Ouverte 
 ### STAN Nancy — validation CI réelle terminée (run 45387942823, 24/11/2026)
 
 Le workflow régional est entièrement réussi : **74 archives GTFS produites, zéro erreur** ; BFC (fournisseurs de mission), contrôle d’accès Optymo et les tests d’indexeur Fluo, Soléa, STAN et Grand Reims ont tous passé leurs étapes obligatoires. `data/gtfs/stan-nancy.zip` est publié : 6 184 468 octets, 26 138 courses, SHA-256 `1e59f1bc8859ed56be3dafbe76a4926ee809bd8820cae245d2774ae82266925f` ; l’origine résolue est l’export public Cityway `OperatorCode=STAN`. Le test réel chargé par l’indexeur retrouve un candidat actif et ses horaires exacts. **Cela confirme le flux et l’indexeur, pas un fournisseur de fiche mission** : STAN n’est pas ajouté à `makeProviders`, aucun itinéraire mission ni tarif n’a été validé ; la carte publique n’est donc pas modifiée.
+
+
+## SESSION CHATGPT DU 24/11/2026 — 9 flux urbains Grand Est validés et publiés
+
+- Le workflow régional 45392057935 a réussi sur la branche feature/transports-aura-suisse : collecte complète, validations précédentes BFC/Optymo/Fluo/Soléa/STAN/Grand Reims et validation réelle des neuf nouveaux flux dans l’indexeur GTFS, puis publication.
+- Les neuf flux sont présents dans data/gtfs/manifest.json (2026-11-24T12:18:40.202436+00:00); le manifeste contient 83 réseaux au total. Métadonnées publiées :
+  - sub-nancy: undefined lignes, 3736 courses, undefined arrêts, 1712517 octets, tarifs GTFS=undefined
+  - trace-colmar: undefined lignes, 2442 courses, undefined arrêts, 600305 octets, tarifs GTFS=undefined
+  - imagine-epinal: undefined lignes, 1244 courses, undefined arrêts, 733685 octets, tarifs GTFS=undefined
+  - ticea-saint-dizier: undefined lignes, 198 courses, undefined arrêts, 245783 octets, tarifs GTFS=undefined
+  - transavold-saint-avold: undefined lignes, 765 courses, undefined arrêts, 383384 octets, tarifs GTFS=undefined
+  - cmonbus-chaumont: undefined lignes, 201 courses, undefined arrêts, 42135 octets, tarifs GTFS=undefined
+  - tub-bar-le-duc: undefined lignes, 493 courses, undefined arrêts, 78846 octets, tarifs GTFS=undefined
+  - rezo-verdun: undefined lignes, 476 courses, undefined arrêts, 391363 octets, tarifs GTFS=undefined
+  - tcat-troyes: undefined lignes, 5375 courses, undefined arrêts, 2368284 octets, tarifs GTFS=undefined
+- Tests locaux après publication : tests/grand-est-urban-real-feeds.test.cjs 9/9 réussis, avec ZIP réels obligatoires; tests/python/test_build_regional_gtfs.py 10/10 réussis. Les neuf tests retrouvent un candidat direct actif, ses horaires exacts et des arrêts dans l’emprise calculée.
+- TCAT Troyes conserve l’attribution ODbL; les autres flux du lot restent sous Licence Ouverte 2.0. Le manifeste indique si un GTFS contient des données tarifaires; aucun prix réseau n’est certifié par ces tests.
+- Statut à ne pas surévaluer : téléchargés, structure/calendriers validés, indexés et trajets actifs testés dans l’indexeur. Ces neuf sources ne sont pas encore raccordées aux fournisseurs de fiches mission; elles ne sont donc pas comptées comme trajets mission opérationnels et la carte publique n’est pas modifiée.
+- Le premier workflow 45391357913 avait réussi les validations mais échoué à la publication par rejet Git non-fast-forward après une avance concurrente de la branche. La relance ci-dessus, faite sur la tête corrigée 4eb22598, a publié les fichiers avec succès.
