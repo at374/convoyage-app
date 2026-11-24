@@ -393,6 +393,8 @@ test('transport à la demande : information affichée seulement dans le secteur 
 test('prix inconnu : lien officiel d’achat par opérateur, jamais pour une portion déjà tarifée',()=>{
  const hub=require('../transport-mission-hub.js');
  assert.equal(hub.ticketLink('SNCF').url,'https://www.sncf-connect.com/');
+ assert.equal(hub.ticketLink('Eurostar GTFS').url,'https://www.eurostar.com/');
+ assert.equal(hub.ticketLink('Trenitalia GTFS').url,'https://www.trenitalia.com/');
  assert.equal(hub.ticketLink('FlixBus').label,'FlixBus');
  assert.equal(hub.ticketLink('BlaBlaCar Bus').url,'https://www.blablacar.fr/bus');
  assert.equal(hub.ticketLink('Cars Région Haute-Savoie').url,'https://www.laregionvoustransporte.fr/');

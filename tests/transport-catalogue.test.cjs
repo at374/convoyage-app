@@ -70,12 +70,16 @@ const nationalFixture=normalize([
   {id:'bus',format:'GTFS',url:'https://example.org/blabla.zip'}]},
  {id:'flix-feed',title:'FlixBus',resources:[
   {id:'bus',format:'GTFS',url:'https://example.org/flix.zip'}]},
+ {id:'eurostar-feed',title:'Eurostar',resources:[
+  {id:'train',format:'GTFS',url:'https://example.org/eurostar.zip'}]},
+ {id:'trenitalia-feed',title:'Trenitalia France',resources:[
+  {id:'train',format:'GTFS',url:'https://example.org/trenitalia.zip'}]},
  {id:'unrelated',title:'Réseau SIBRA',resources:[
   {id:'local',format:'GTFS',url:'https://example.org/sibra.zip'}]}
 ]);
 const national=nationalOperatorGTFS(nationalFixture);
 assert.deepEqual(Object.fromEntries(Object.entries(national).map(([k,v])=>[k,v.length])),
- {sncf:1,blablacarBus:1,flixbus:1});
+ {sncf:1,blablacarBus:1,flixbus:1,eurostar:1,trenitalia:1});
 for(const entries of Object.values(national)){
  assert.equal(entries[0].timetableOnly,true);
  assert.equal(entries[0].providesLiveFares,false);

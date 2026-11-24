@@ -119,7 +119,9 @@ async function fetchSwissGTFSResources(fetcher,{signal}={}){
 const NATIONAL_OPERATORS=Object.freeze({
  sncf:/\b(?:sncf|tgv|intercit[eé]s|ter)\b/i,
  blablacarBus:/blablacar[\s-]*bus/i,
- flixbus:/\bflix(?:bus|train)\b/i
+ flixbus:/\bflix(?:bus|train)\b/i,
+ eurostar:/\beurostar\b/i,
+ trenitalia:/\btrenitalia\b/i
 });
 function nationalOperatorGTFS(datasets){
  const rows=Array.isArray(datasets)?datasets:[];

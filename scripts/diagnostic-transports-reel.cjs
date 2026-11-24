@@ -63,7 +63,7 @@ async function gtfsRows(axis,when){
  const router=H.cachedRouter(g.CPTransportWalking.createRouter({fetcher,maxRequests:800,intervalMs:1100,timeoutMs:15000}));
  // Mêmes tranches nationales AURA (SNCF, BlaBlaCar Bus, FlixBus) que celles déclarées par index.html pour les fiches mission.
  const NATIONAL='https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/';
- const nationalGTFSResources=Object.fromEntries(['sncf','blablacarBus','flixbus'].map(o=>[o,{url:NATIONAL+'national-'+o+'-aura.zip',format:'GTFS'}]));
+ const nationalGTFSResources=Object.fromEntries(['sncf','blablacarBus','flixbus','eurostar','trenitalia'].map(o=>[o,{url:NATIONAL+'national-'+o+'-aura.zip',format:'GTFS'}]));
  const providers=H.makeProviders(g,{fetcher,nationalGTFSResources});
  const report={at:new Date().toISOString(),when,source:'diagnostic serveur (GitHub Actions)',tripgo:providers.tripgo?.enabled?.()===true,axes:[],networks:{}};
  for(const axis of [...C.AXES,...C.AXES_COUVERTURE.map(a=>({...a,coverage:true}))]){

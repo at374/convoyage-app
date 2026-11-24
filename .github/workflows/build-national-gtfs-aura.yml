@@ -1,14 +1,18 @@
 name: Construire GTFS nationaux AURA (manuel)
 on:
+  schedule:
+    - cron: '43 3 * * *'
   push:
     branches: [feature/transports-aura-suisse]
     paths:
       - '.github/workflows/build-national-gtfs-aura.yml'
       - 'scripts/build_national_from_catalogue.py'
+      - 'scripts/build_national_gtfs_aura.py'
+      - 'transport-catalogue.js'
   workflow_dispatch:
     inputs:
       operator:
-        description: 'Opérateur à vérifier (all = les trois)'
+    description: 'Opérateur à vérifier (all = les cinq)'
         required: true
         default: all
         type: choice
@@ -17,6 +21,8 @@ on:
           - sncf
           - blablacarBus
           - flixbus
+          - eurostar
+          - trenitalia
 
 permissions:
   contents: write

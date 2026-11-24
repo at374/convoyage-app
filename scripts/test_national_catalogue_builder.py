@@ -35,7 +35,7 @@ def main():
     empty=run({'source':SOURCE,'operators':{}})
     assert empty.returncode==2,empty.stderr
     result=json.loads(empty.stdout)
-    assert set(result['results'])=={'sncf','blablacarBus','flixbus'}
+    assert set(result['results'])=={'sncf','blablacarBus','flixbus','eurostar','trenitalia'}
     assert all(x['status']=='unavailable' and x['attempts']==0 for x in result['results'].values())
     malformed=run({'source':SOURCE,'operators':{'sncf':{'feeds':'not-a-list'}}})
     assert malformed.returncode==2,malformed.stderr

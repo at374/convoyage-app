@@ -11,12 +11,13 @@ import tempfile
 import urllib.request
 import urllib.parse
 
-OPERATORS = ('sncf', 'blablacarBus', 'flixbus')
+OPERATORS = ('sncf', 'blablacarBus', 'flixbus', 'eurostar', 'trenitalia')
 MAX_DOWNLOAD = 250 * 1024 * 1024
 
 
 ALLOWED_SOURCE_HOSTS = {
-    'eu.ftp.opendatasoft.com', 'drive.google.com', 'gtfs.gis.flix.tech'
+    'eu.ftp.opendatasoft.com', 'drive.google.com', 'gtfs.gis.flix.tech',
+    'integration-storage.dm.eurostar.com', 'thello.axelor.com'
 }
 
 
@@ -117,7 +118,9 @@ def main():
         else:
             report['results'][operator] = {'status': 'unavailable', 'attempts': len(feeds), 'errors': errors}
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    if any(x['status'] != 'built' for x in report['results'].values()):
+    # A transient or missing source must not block the feeds that did validate.
+    # CI reports each unavailable operator; fail only when nothing was produced.
+    if not any(x['status'] == 'built' for x in report['results'].values()):
         raise SystemExit(2)
 
 

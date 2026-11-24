@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from build_regional_gtfs import filter_by_bounds, validate
 
 BOUNDS = (44.0, 3.6, 46.7, 7.4)
-OPERATORS = ('sncf', 'blablacarBus', 'flixbus')
+OPERATORS = ('sncf', 'blablacarBus', 'flixbus', 'eurostar', 'trenitalia')
 MAX_OUTPUT = 12 * 1024 * 1024
 
 
