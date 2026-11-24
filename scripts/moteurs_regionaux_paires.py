@@ -18,7 +18,8 @@ for id_,file,b in nets:
     for t in rd('stop_times.txt'): st.setdefault(t['trip_id'],[]).append(t)
     inb=lambda q:b[0]<=q[0]<=b[2] and b[1]<=q[1]<=b[3]
     found=None
-    for dd in range(7):
+    # A seven-day probe misclassified seasonal services (e.g. Chamonix, service from Friday).
+    for dd in range(30):
         d=start+datetime.timedelta(dd)
         for t in trips:
             if not active(t['service_id'],d):continue
@@ -28,16 +29,20 @@ for id_,file,b in nets:
             # rather than requiring the course's terminal stops to be in the bbox.
             for i,origin in enumerate(s[:-1]):
                 if origin['stop_id'] not in stops or not('06:00:00'<=origin['departure_time']<='20:00:00'):continue
+                if origin.get('pickup_type','') not in ('','0'):continue
                 a=stops[origin['stop_id']]
                 if not inb(a):continue
                 for destination in s[i+1:]:
                     if destination['stop_id'] not in stops:continue
+                    if destination.get('drop_off_type','') not in ('','0'):continue
                     c=stops[destination['stop_id']]
-                    if not inb(c) or abs(a[0]-c[0])+abs(a[1]-c[1])<0.01:continue
+                    # Skip extremely short pairs: the mission provider deliberately prefers
+                    # a walk-only result there and may return no transit itinerary.
+                    if not inb(c) or abs(a[0]-c[0])+abs(a[1]-c[1])<0.03:continue
                     found={'date':d.isoformat(),'from':{'lat':a[0],'lon':a[1]},'to':{'lat':c[0],'lon':c[1]},'dep':origin['departure_time']};break
                 if found:break
             if found:break
         if found:break
-    out.append({'id':id_,'file':file,'trips':len(trips),**(found or {'error':'aucune course dans l’emprise sur 7 jours'})})
+    out.append({'id':id_,'file':file,'trips':len(trips),**(found or {'error':'aucune course dans l’emprise sur 30 jours'})})
 json.dump(out,open(sys.argv[1],'w'))
 print(len(out),[o['id']+': '+o['error'] for o in out if 'error' in o])

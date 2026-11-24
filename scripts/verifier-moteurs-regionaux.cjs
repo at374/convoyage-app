@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Vérifie, sur les archives réelles data/gtfs, que chaque moteur régional des fiches mission rend des trajets
-// pour un couple départ/arrivée tiré d'une course officielle des 7 prochains jours (scripts/moteurs_regionaux_paires.py).
+// pour un couple départ/arrivée tiré d'une course officielle des 30 prochains jours (scripts/moteurs_regionaux_paires.py).
 // Usage : python3 -I scripts/moteurs_regionaux_paires.py paires.json && node scripts/verifier-moteurs-regionaux.cjs paires.json
 const fs=require('node:fs'),path=require('node:path'),root=path.join(__dirname,'..');
 const hub=require(path.join(root,'transport-mission-hub.js')),loader=require(path.join(root,'transport-gtfs-loader.js')),index=require(path.join(root,'transport-gtfs-index.js'));
