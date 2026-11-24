@@ -33,6 +33,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -91,6 +93,18 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'Refresh regional GTFS extracts and mirrors'
-          # Publie sur la branche qui a déclenché la tâche (jamais main depuis une branche de travail).
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          # Les commits de code peuvent arriver pendant les téléchargements. Rejoue le commit
+          # de données sur la tête courante, sans push forcé ni écrasement des changements concurrents.
+          for attempt in 1 2 3; do
+            git fetch --no-tags origin "${GITHUB_REF_NAME}"
+            git rebase "origin/${GITHUB_REF_NAME}"
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo 'Publication refusée après trois tentatives de synchronisation' >&2
+              exit 1
+            fi
+            echo "La branche a encore avancé ; nouvelle tentative $((attempt + 1))/3"
+          done
           if [ "${GITHUB_REF_NAME}" = "main" ]; then gh api --method POST "repos/${GITHUB_REPOSITORY}/pages/builds" || true; fi
