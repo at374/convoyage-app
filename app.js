@@ -2286,6 +2286,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const refresh=!!bt.dataset.transportRefreshAt;
         if(refresh)transportViewCache.delete(memoryKey);
         const cachedViews=!refresh&&stored?.signature===signature?Object.fromEntries(Object.entries(stored.views||{}).filter(([,view])=>view.total>0||view.flexCandidates?.length)):{};
+        const olderJonction=stored?.views?.Jonction||stored?.olderJonction;
+        const recalculatedJonction=tasks.find(t=>t.label==='Jonction'&&!cachedViews.Jonction);
+        const previousArrival=recalculatedJonction?Hub.previousArrivalJourneys(recalculatedJonction,olderJonction):[];
         for(const label of Object.keys(labelState))delete labelState[label];
         for(const label of Object.keys(pendingViews))delete pendingViews[label];
         for(const [label,view] of Object.entries(cachedViews)){
@@ -2293,12 +2296,13 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           pendingViews[label]={...view,savedAt};
           labelState[label]={done:true,total:view.total};
         }
+        if(previousArrival.length)pendingViews.Jonction={task:recalculatedJonction,total:0,done:false,previousArrival};
         renderPending();
         const remainingTasks=tasks.filter(t=>!cachedViews[t.label]);
         transportHub?.dispose();transportHub=null;
         if(!remainingTasks.length)return;
         for(const t of remainingTasks){
-          if(hubHosts[t.label])hubHosts[t.label].hidden=true;
+          if(hubHosts[t.label]&&!pendingViews[t.label]?.previousArrival?.length)hubHosts[t.label].hidden=true;
           if(!t.lazy)afficherRecherche(t.label);
         }
         let router=null;
@@ -2336,18 +2340,22 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             if(!panel.isConnected||!transportDestinations[label])return;
             labelState[label]={done:view.done,total:view.total};
             view={...view,flexCandidates:flexFor(label)};
+            if(label==='Jonction'&&previousArrival.length){
+              view.previousArrival=Hub.previousOnly(previousArrival,view);
+              if(view.previousArrival.length&&!view.total)labelState[label].total=view.previousArrival.length;
+            }
             if(view.done&&(view.total>0||view.flexCandidates.length)){
               const previous=transportViewCache.get(memoryKey);
               const views=previous?.signature===signature?previous.views:{...cachedViews};
               const savedAt=Date.now();
               views[label]={...view,savedAt};
-              const entry={signature,views,savedAt};
+              const entry={signature,views,savedAt,...(olderJonction&&!views.Jonction?{olderJonction}:{})};
               transportViewCache.set(memoryKey,entry);
               saveTransportViews(cacheKey,missionKey,entry);
             }
             if(!view.done){
               afficherRecherche(label,view);
-              if(!view.total&&!view.flexCandidates.length){updateDayTabs();return;}
+              if(!view.total&&!view.flexCandidates.length&&!view.previousArrival?.length){updateDayTabs();return;}
             }
             pendingViews[label]=view;
             if(transportDestinations[label].hidden){updateDayTabs();return;}

@@ -986,3 +986,20 @@ test('une marche trop longue et une arrivée trop tôt donnent une alternative h
   assert.equal(v.hidden.before,1);
  }finally{session.dispose();}
 });
+
+test('jonction : changement de GPS final conserve le train de 11 h 22 sans la marche précédente',()=>{
+ const newTask={label:'Jonction',fromCity:'Albertville',toCity:'Voiron',from:HOME,to:MISSION,
+  earliestDeparture:at(11,0),latestArrival:at(15,0),toPrecision:'adresse',exactTarget:true};
+ const train={...bus(at(11,22),at(13,58),STOP1,STOP2,{fromName:'Albertville',toName:'Voiron'}),mode:'Train'};
+ const prior={task:{...newTask,to:STOP2,toPrecision:'ville',approximateTo:true,walkMaxMeters:3000},
+  picks:[{journey:{legs:[train,{kind:'walk',mode:'Marche'}]}}]};
+ const saved=H.previousArrivalJourneys(newTask,prior);
+ assert.equal(saved.length,1);
+ assert.equal(saved[0].length,1);
+ assert.equal(saved[0][0].departure,at(11,22));
+ assert.equal(H.previousArrivalJourneys({...newTask,earliestDeparture:at(11,30)},prior).length,1);
+ assert.deepEqual(H.previousArrivalJourneys({...newTask,latestArrival:at(14,30)},prior),[]);
+ assert.equal(H.previousOnly(saved,{others:[{legs:[train],computing:true}]}).length,1);
+ assert.equal(H.previousOnly(saved,{others:[{legs:[train]}]}).length,0);
+ assert.equal(H.previousOnly(saved,{others:[]}).length,1);
+});

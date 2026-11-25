@@ -2845,9 +2845,32 @@ function tadFor(task){
  return [...new Map(base.map(t=>[t.name,t])).values()];
 }
 let ordreInverse=false;try{ordreInverse=(globalThis.CPAccount?.storage || globalThis.localStorage)?.getItem('cp_hub_ordre')==='desc';}catch(_){}
+function previousArrivalJourneys(task,view){
+ if(task?.label!=='Jonction'||view?.task?.label!==task.label||
+    !['gps','adresse','rue'].includes(task.toPrecision)||!pt(task.to))return [];
+ const unchanged=({to,toPrecision,exactTarget,approximateTo,approximateEndpoint,lazy,walkMaxMeters,earliestDeparture,...rest})=>
+  Object.entries(rest).filter(([,value])=>value!==undefined).sort(([a],[b])=>a.localeCompare(b));
+ if(JSON.stringify(unchanged(task))!==JSON.stringify(unchanged(view.task)))return [];
+ const oldStart=parisDayParts(view.task.earliestDeparture),newStart=parisDayParts(task.earliestDeparture);
+ if(!oldStart||!newStart||oldStart.day!==newStart.day)return [];
+ const prior=pt(view.task.to);
+ if(prior&&prior.lat===task.to.lat&&prior.lon===task.to.lon&&view.task.toPrecision===task.toPrecision)return [];
+ return [...(view.picks||[]).map(p=>p.journey),...(view.others||[]),...(view.alternatives||[])]
+  .map(j=>j.legs.filter(l=>!isFoot(l)).map(({mode,line,from,to,departure,arrival})=>({mode,line,from,to,departure,arrival})))
+  .filter(legs=>legs.length);
+}
+function previousOnly(previous,view){
+ const key=legs=>JSON.stringify(legs.filter(l=>!isFoot(l)).map(l=>[l.mode,l.line,l.from,l.to,ms(l.departure),ms(l.arrival)]));
+ const seen=new Set([...(view.picks||[]).map(p=>p.journey),...(view.others||[])].filter(j=>!j.computing).map(j=>key(j.legs)));
+ return previous.filter(legs=>{
+  const id=key(legs);
+  if(seen.has(id))return false;
+  seen.add(id);return true;
+ });
+}
 function viewFingerprint(v){
  const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters].join(','):'';
- return [v.savedAt||0,v.done?1:0,v.total,(v.alternatives||[]).map(one).join(';'),(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).map(one).join(';'),v.others&&v.others.length,
+ return [v.savedAt||0,v.done?1:0,v.total,JSON.stringify(v.previousArrival||[]),(v.alternatives||[]).map(one).join(';'),(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).map(one).join(';'),v.others&&v.others.length,
   (v.flexCandidates||[]).map(c=>JSON.stringify([c.network,c.tripId,c.pickupWindow,c.pickupRule])).join('|'),Object.entries(v.errors||{}).map(([k,e])=>k+e).join('|'),Object.entries(v.received||{}).join('|'),ordreInverse?'desc':'asc'].join('#');
 }
 function render(host,v){
@@ -2860,8 +2883,23 @@ function render(host,v){
    .map(node=>node.getAttribute('data-journey-key')).filter(Boolean));
  const moreOpen=!!host.querySelector('details.cp-hub-more[open]');
  host.textContent='';host.setAttribute('data-transport-hub',VERSION);
- const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):(v.alternatives?.length?'Aucun trajet ne respecte tous les critères':Object.keys(v.errors||{}).length?'Aucun trajet trouvé avec les moteurs qui ont répondu':'Aucun trajet trouvé')):v.total+' proposition'+(v.total>1?'s':'')+' provisoire'+(v.total>1?'s':''));
+ const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):(v.previousArrival?.length?'Aucun nouveau trajet complet trouvé':v.alternatives?.length?'Aucun trajet ne respecte tous les critères':Object.keys(v.errors||{}).length?'Aucun trajet trouvé avec les moteurs qui ont répondu':'Aucun trajet trouvé')):v.total+' proposition'+(v.total>1?'s':'')+' provisoire'+(v.total>1?'s':''));
  host.appendChild(head);
+ if(v.previousArrival?.length){
+  const prior=el(doc,'section','cp-hub-previous-arrival');
+  prior.appendChild(el(doc,'h3',null,'Transports trouvés précédemment'));
+  prior.appendChild(el(doc,'p','cp-hub-note',v.done?
+   'Horaires de la recherche précédente. Marche finale vers le nouveau point GPS non confirmée.':
+   'Horaires de la recherche précédente. Recalcul en cours vers le nouveau point GPS.'));
+  const list=el(doc,'ul');
+  for(const legs of v.previousArrival){
+   const text=legs.map(l=>[l.mode,l.line,clock(l.departure)+' '+l.from+' → '+clock(l.arrival)+' '+l.to].filter(Boolean).join(' ')).join(' · ');
+   const dep=ms(legs[0].departure);
+   const note=dep<Date.now()?' — départ passé':dep<ms(v.task?.earliestDeparture)?' — départ avant le nouveau créneau':'';
+   list.appendChild(el(doc,'li',null,text+note));
+  }
+  prior.appendChild(list);host.appendChild(prior);
+ }
  if(v.savedAt)host.appendChild(el(doc,'p','cp-hub-note','Recherche enregistrée le '+new Date(v.savedAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+'. Actualise pour vérifier les horaires et la circulation.'));
  const addCard=(parent,j,labels,expandFirst=false)=>{
   const key=signature(j)||(j.walkOnly?'walk|'+Math.round(ms(j.departure)/60000)+'|'+Math.round(ms(j.arrival)/60000)+'|'+Math.round(j.durationMinutes||0):'');
@@ -2929,7 +2967,7 @@ function render(host,v){
  if(v.othersOverflow)host.appendChild(el(doc,'p','cp-hub-note',v.othersOverflow+' autre'+(v.othersOverflow>1?'s':'')+' trajet'+(v.othersOverflow>1?'s':'')+' trouvé'+(v.othersOverflow>1?'s':'')+(v.othersOverflow>1?', non affichés':', non affiché')+' pour garder l’affichage fluide.'));
  // Ne montrer que les moteurs effectivement interrogés sur la direction choisie.
  // Les réseaux hors zone restent dans le diagnostic interne, pas dans la fiche mission.
- const errs=Object.entries(v.errors);
+ const errs=Object.entries(v.errors||{});
  const consulted=Object.entries(v.received||{}).filter(([n])=>!errs.some(([e])=>e===n));
  if(v.done&&(errs.length||consulted.length)){
   const d=el(doc,'details','cp-hub-diag');d.appendChild(el(doc,'summary',null,'Moteurs consultés ('+(errs.length+consulted.length)+')'));
@@ -3094,7 +3132,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,previousArrivalJourneys,previousOnly,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render,scheduleSourceForLeg,dayScheduleForLeg,gtfsTablesForDaySchedule,hmFromSeconds};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
