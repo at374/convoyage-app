@@ -5,6 +5,7 @@
 (function(root){
 'use strict';
 const adapter=typeof module==='object'&&module.exports?require('./transport-otp-adapter.js'):root.CPOTPAdapter;
+const noHeadsign=new Set();
 async function search(config){
  const c=config||{};
  if(c.enabled!==true)throw Error('OTP2 désactivé : activation explicite requise');
@@ -21,13 +22,23 @@ async function search(config){
  else c.signal?.addEventListener?.('abort',abort,{once:true});
  const timer=setTimeout(()=>{timedOut=true;controller.abort();},timeout);
  try{
-  const response=await c.fetch(url.toString(),{
-   method:'POST',headers:{'content-type':'application/json','accept':'application/json'},
-   body:JSON.stringify({query:c.query,variables:c.variables||{}}),
-   signal:controller.signal,redirect:'error'
-  });
-  if(!response||!response.ok)throw Error('OTP2 HTTP '+(response?.status??'inconnu'));
-  const json=await response.json();
+  const send=async query=>{
+   const response=await c.fetch(url.toString(),{
+    method:'POST',headers:{'content-type':'application/json','accept':'application/json'},
+    body:JSON.stringify({query,variables:c.variables||{}}),
+    signal:controller.signal,redirect:'error'
+   });
+   if(!response?.ok&&!(response?.status===400&&c.fallbackQuery))throw Error('OTP2 HTTP '+(response?.status??'inconnu'));
+   return response.json();
+  };
+  const endpoint=url.toString();
+  const query=c.fallbackQuery&&noHeadsign.has(endpoint)?c.fallbackQuery:c.query;
+  let json=await send(query);
+  if(query!==c.fallbackQuery&&c.fallbackQuery&&json?.errors?.some(error=>
+   /headsign/i.test(error.message||'')&&/field|champ/i.test(error.message||''))){
+   noHeadsign.add(endpoint);
+   json=await send(c.fallbackQuery);
+  }
   if(json?.errors?.length)throw Error('OTP2 GraphQL : réponse en erreur');
   const journeys=adapter.parse(json);
   return {journeys,source:'OpenTripPlanner (GTFS)',realtime:false,pricesVerified:false};
@@ -58,7 +69,8 @@ function buildQuery(task,window,count){
  const n=Number.isInteger(count)&&count>0&&count<=10?count:6;
  const at=p=>'{location:{coordinate:{latitude:'+Number(p.lat)+',longitude:'+Number(p.lon)+'}}}';
  const key=window.arriveBy===true?'latestArrival':'earliestDeparture';
- return {query:'{planConnection(origin:'+at(f)+',destination:'+at(t)+',dateTime:{'+key+':"'+when.toISOString()+'"},first:'+n+'){'+FIELDS+'}}',variables:{}};
+ const fallbackQuery='{planConnection(origin:'+at(f)+',destination:'+at(t)+',dateTime:{'+key+':"'+when.toISOString()+'"},first:'+n+'){'+FIELDS+'}}';
+ return {query:fallbackQuery.replace('legs{mode','legs{headsign mode'),fallbackQuery,variables:{}};
 }
 const api={search,buildQuery};
 if(typeof module==='object'&&module.exports)module.exports=api;

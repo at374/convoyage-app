@@ -78,7 +78,7 @@ const BOATS=/ferry|bateau|boat|ship|cgn|navette lacustre|^bat$|^ms$/i;
 
 /* ---------- Normalisation par fournisseur ---------- */
 function leg(o){
- return {kind:o.kind||'transit',mode:o.mode||'',line:o.line||null,headsign:String(o.headsign||'').replace(/_/g,' ').replace(/^\s*direction\s*[:\-]?\s*/i,'').replace(/\s+/g,' ').trim()||null,provider:o.provider||null,
+ return {kind:o.kind||'transit',mode:o.mode||'',line:o.line||null,headsign:String(o.headsign||'').replace(/_/g,' ').replace(/^\s*direction\s*[:\-]?\s*/i,'').replace(/\s+/g,' ').trim()||null,provider:o.provider||null,terminus:String(o.terminus||'').trim()||null,
   from:o.from||'',to:o.to||'',fromPoint:pt(o.fromPoint),toPoint:pt(o.toPoint),
   departure:iso(o.departure),arrival:iso(o.arrival),
   distanceMeters:finite(o.distanceMeters)&&o.distanceMeters>=0?o.distanceMeters:null,
@@ -225,7 +225,7 @@ function fromRegional(itineraries,source='Mobilités M'){
   const mode=map[l.mode]||'Transport';
   return mode==='walk'?leg({kind:'walk',mode:'Marche',from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,
     departure:l.startTime,arrival:l.endTime,distanceMeters:l.distanceMeters,durationSeconds:(l.endTime-l.startTime)/1000,walkSource:'provider',geometry:l.geometry}):
-   leg({mode,line:l.route||null,provider:l.agency||source,from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.startTime,arrival:l.endTime});
+   leg({mode,line:l.route||null,headsign:l.headsign,terminus:l.terminus,provider:l.agency||source,from:l.from,to:l.to,fromPoint:l.fromPoint,toPoint:l.toPoint,departure:l.startTime,arrival:l.endTime});
  })));
 }
 function fromSNCF(answer){
@@ -285,7 +285,7 @@ function fromGTFS(rows,network='Réseau local'){
   const legs=raw.map((l,i)=>{
    const start=i===0?r.originStop:(r.legs?.length===2?(r.interNetwork?r.transferDestinationStop:r.transferStop):null);
    const end=i===raw.length-1?r.destinationStop:(r.transferStop||null);
-   const out=leg({mode:'Bus',line:l.line||r.line,headsign:l.headsign||(r.legs?.length?'':r.headsign),provider:l.network||r.network||network,from:start?.name||l.from,to:end?.name||l.to,
+   const out=leg({mode:'Bus',line:l.line||r.line,headsign:l.headsign||(r.legs?.length?'':r.headsign),terminus:l.terminus||(r.legs?.length?'':r.terminus),provider:l.network||r.network||network,from:start?.name||l.from,to:end?.name||l.to,
     fromPoint:start,toPoint:end,departure:l.departure,arrival:l.arrival});
    // Ligne GTFS brute conservée pour les grilles tarifaires officielles (ex. Y51 : zones par arrêt).
    out.gtfsRaw=Array.isArray(r.legs)&&r.legs.length?l:r;
@@ -1136,7 +1136,7 @@ function makeProviders(r,opts={}){
   const run=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
    if(workerDisposed){reject(new Error('Recherche transport annulée'));return;}
    if(!worker){
-    try{worker=new r.Worker('transport-hub-local-worker.js?v=transport-budget-20261125');}
+    try{worker=new r.Worker('transport-hub-local-worker.js?v=terminus-bus-20261125');}
     catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
     const activeWorker=worker;
     const fail=(reason)=>{
@@ -1907,7 +1907,7 @@ function makeProviders(r,opts={}){
    if(signal?.aborted)return [];
    const go=t=>r.CPOTPClient.search({
     enabled:true,endpoint:opts.otpEndpoint,query:request.query,
-    variables:request.variables||{},fetch:fetcher,timeoutMs:t,signal
+    variables:request.variables||{},fallbackQuery:request.fallbackQuery,fetch:fetcher,timeoutMs:t,signal
    });
    let response;
    try{response=await go(opts.otpTimeoutMs);}
@@ -2250,7 +2250,11 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
     // absent même quand un AUTRE moteur avait bien ces métadonnées pour le même trajet. On complète maintenant
     // les jambes déjà affichées avec le gtfsRaw d'un doublon plus tard, quand celui qui est déjà affiché n'en a pas.
     if(Array.isArray(known.legs)&&Array.isArray(j.legs)&&known.legs.length===j.legs.length)
-     for(let i=0;i<known.legs.length;i++)if(!known.legs[i].gtfsRaw&&j.legs[i]&&j.legs[i].gtfsRaw)known.legs[i].gtfsRaw=j.legs[i].gtfsRaw;
+     for(let i=0;i<known.legs.length;i++){
+      const current=known.legs[i],other=j.legs[i];
+      if(!current.gtfsRaw&&other?.gtfsRaw)current.gtfsRaw=other.gtfsRaw;
+      if(!current.terminus&&other?.terminus)current.terminus=other.terminus;
+     }
     continue;}
    const quick=assess(j,s.task,fareFor);
    if(quick.reasons.some(r=>immediateRejection.test(r))){
@@ -2621,12 +2625,18 @@ function walkingEndpoint(leg,task,side){
  const approximate=atMission&&(side==='from'?task.approximateFrom:task.approximateTo);
  return {point,name,address,approximate:!!approximate};
 }
-function directionForLeg(leg){
- const direction=String(leg.headsign||'').trim();
- if(leg.kind!=='transit'||String(leg.line)!=='31')return direction;
+function directionForLeg(leg,task){
+ const terminal=String(leg.terminus||'').trim();
+ const direction=String((leg.mode==='Bus'&&terminal)||leg.headsign||'').trim();
+ if(leg.kind!=='transit'||leg.mode!=='Bus')return direction;
+ const normalized=s=>String(s||'').trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ const cityOnly=!terminal&&!!direction&&[task?.fromCity,task?.toCity,leg.from?.split(',')[0],leg.to?.split(',')[0]]
+  .some(city=>city&&normalized(city)===normalized(direction)&&
+   (city===task?.fromCity||city===task?.toCity||leg.from?.includes(',')||leg.to?.includes(',')));
+ if(String(leg.line)!=='31')return cityOnly?'':direction;
  const known=/^Voiron[, ]+Leprince Ringuet$/i;
  if(known.test(direction))return 'Leprince Ringuet';
- if(direction&&!/^Voiron$/i.test(direction))return direction;
+ if(direction&&!/^Voiron$/i.test(direction))return cityOnly?'':direction;
  // Dans le GTFS voironnais, les courses de la gare vers ces arrêts
  // circulent toutes vers Leprince Ringuet. Le trajet inverse a plusieurs terminus.
  const name=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
@@ -2635,7 +2645,7 @@ function directionForLeg(leg){
  if(inVoiron(pt(leg.fromPoint))&&inVoiron(pt(leg.toPoint))&&
   /^(?:sncf|gare(?: sncf| routiere(?: nord)?)?)$/.test(name(leg.from))&&
   /^(?:louis neel|blanchisseries?|leprince ringuet)$/.test(name(leg.to)))return 'Leprince Ringuet';
- return direction;
+ return cityOnly?'':direction;
 }
 function card(doc,j,labels,expanded=false,task=null){
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
@@ -2700,9 +2710,9 @@ function card(doc,j,labels,expanded=false,task=null){
   }
   const ol=el(doc,'ol','cp-hub-legs');
  for(const [legIndex,l] of j.legs.entries()){
-  const direction=directionForLeg(l);
+  const direction=directionForLeg(l,task);
   const li=el(doc,'li',l.kind==='walk'?'walk':'ride');
-  li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='scooter'?'Trottinette'+(l.distanceMeters!=null?' '+(l.distanceMeters/1000).toFixed(1).replace('.',',')+' km':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60)))+' (estimé)':''):l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60))):''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':'',direction&&direction!==l.line?'→ direction '+direction:''].filter(Boolean).join(' '))));
+  li.appendChild(el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='scooter'?'Trottinette'+(l.distanceMeters!=null?' '+(l.distanceMeters/1000).toFixed(1).replace('.',',')+' km':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60)))+' (estimé)':''):l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60))):''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':'',direction&&direction!==l.line?'→ direction '+direction:l.mode==='Bus'?'→ terminus non renseigné':''].filter(Boolean).join(' '))));
   li.appendChild(el(doc,'div',null,clock(l.departure)+' '+(l.from||'?')+' → '+clock(l.arrival)+' '+(l.to||'?')+(l.delayMinutes?' · retard annoncé +'+durationText(l.delayMinutes):'')));
   if(l.kind==='scooter'){
    li.appendChild(el(doc,'small',null,'Tracé calculé (OpenStreetMap, mode vélo) · durée estimée à '+(l.speedKmh||j.scooterSpeedKmh||15)+' km/h : réglages de l’application'));
@@ -2907,7 +2917,7 @@ function nextDepartureAfterMiss(view,now=Date.now()){
   .sort((a,b)=>ms(a.departure)-ms(b.departure)||ms(a.arrival)-ms(b.arrival))[0]||null;
 }
 function viewFingerprint(v){
- const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters].join(','):'';
+ const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters,j.legs?.map(l=>directionForLeg(l,v.task)).join('|')].join(','):'';
  return [v.savedAt||0,v.done?1:0,v.total,JSON.stringify(v.previousArrival||[]),(v.alternatives||[]).map(one).join(';'),(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).map(one).join(';'),v.others&&v.others.length,
   (v.flexCandidates||[]).map(c=>JSON.stringify([c.network,c.tripId,c.pickupWindow,c.pickupRule])).join('|'),Object.entries(v.errors||{}).map(([k,e])=>k+e).join('|'),Object.entries(v.received||{}).join('|'),ordreInverse?'desc':'asc'].join('#');
 }

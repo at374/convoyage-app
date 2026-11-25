@@ -89,4 +89,5 @@ console.log('GTFS index: 42 assertions passed');
  const index=buildIndex(files);const trips=scheduledTrips(files,index,'2026-11-19');
  const by=Object.fromEntries(trips.map(t=>[t.tripId,t.headsign]));
  assert.equal(by.T1,'Hôpital');assert.equal(by.T2,'Direction_Plateau');
+ assert.equal(trips.find(t=>t.tripId==='T2').terminus,'Mairie');
 }

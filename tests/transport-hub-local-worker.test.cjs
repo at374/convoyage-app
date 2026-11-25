@@ -10,7 +10,7 @@ test('le worker charge les mêmes bibliothèques et est mis en cache hors ligne'
  // 21/11/2026 : le worker calcule aussi les correspondances (nearbyTransferTrips + crossNetworkTrips)
  // et la recherche nationale (SNCF/FlixBus/BlaBlaCar Bus), il lui faut donc transport-gtfs-time.js,
  // transport-gtfs-federation.js et transport-national-gtfs-journeys.js en plus des trajets directs.
- assert.match(w,/importScripts\('transport-catalogue\.js','transport-gtfs-index\.js','transport-gtfs-time\.js','transport-gtfs-federation\.js','transport-gtfs-loader\.js','transport-gtfs-fares\.js','transport-national-gtfs-journeys\.js','transport-gtfs-flex-courses\.js'\)/);
+ assert.match(w,/importScripts\('transport-catalogue\.js','transport-gtfs-index\.js(?:\?v=[^']+)?','transport-gtfs-time\.js','transport-gtfs-federation\.js','transport-gtfs-loader\.js','transport-gtfs-fares\.js','transport-national-gtfs-journeys\.js','transport-gtfs-flex-courses\.js'\)/);
  assert.match(w,/nearbyDirectTrips/);
  assert.match(w,/nearbyTransferTrips/);
  assert.match(w,/CPGTFSFederation\.crossNetworkTrips/);

@@ -1062,5 +1062,6 @@ test('Voiron ligne 31 : afficher Leprince Ringuet de la gare à Louis Néel, san
  assert.equal(H.directionForLeg({...leg,headsign:'Voiron'}),'Leprince Ringuet');
  assert.equal(H.directionForLeg({...leg,headsign:'Voiron, LEPRINCE RINGUET'}),'Leprince Ringuet');
  assert.equal(H.directionForLeg({...leg,from:leg.to,to:leg.from,headsign:'Paviot'}),'Paviot');
- assert.equal(H.directionForLeg({...leg,line:'32',headsign:'Voiron'}),'Voiron');
+ assert.equal(H.directionForLeg({...leg,line:'32',headsign:'Voiron'}),'');
+ assert.equal(H.directionForLeg({...leg,line:'32',headsign:'Voiron',terminus:'Mairie'}),'Mairie');
 });

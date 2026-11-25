@@ -38,7 +38,9 @@
       distanceMeters: leg.distance === null || leg.distance === undefined || leg.distance === '' ? NaN : Number(leg.distance),
       route: leg.route && (leg.route.shortName || leg.route.longName) || '',
       fromPoint: place(leg.from), toPoint: place(leg.to),
-      agency: leg.agencyName || null
+      agency: leg.agencyName || null,
+      headsign: leg.headsign || leg.tripHeadsign || null,
+      terminus: typeof leg.terminus === 'string' ? leg.terminus : null
     };
   }
   function parseItinerary(itinerary) {
