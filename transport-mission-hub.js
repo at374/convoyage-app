@@ -108,7 +108,7 @@ async function reverseGeocodeFR(win,lat,lon){
  if(reverseGeocodeCache.has(key))return reverseGeocodeCache.get(key);
  const promise=(async()=>{
   try{
-   let cached=null;try{cached=win.localStorage.getItem('cp_revgeo_'+key);}catch(_){}
+   let cached=null;try{cached=(win.CPAccount?.storage || win.localStorage)?.getItem('cp_revgeo_'+key);}catch(_){}
    if(cached)return JSON.parse(cached);
    const fetcher=win&&win.fetch?win.fetch.bind(win):null;
    if(!fetcher)return null;
@@ -120,7 +120,7 @@ async function reverseGeocodeFR(win,lat,lon){
    const label=p.label||[p.housenumber,p.street||p.name].filter(Boolean).join(' ')+
     (p.postcode||p.city?' '+[p.postcode,p.city].filter(Boolean).join(' '):'');
    const out=label&&label.trim()?{label:label.trim(),distanceMeters:Number.isFinite(p.distance)?Math.round(p.distance):null}:null;
-   if(out){try{win.localStorage.setItem('cp_revgeo_'+key,JSON.stringify(out));}catch(_){}}
+   if(out){try{(win.CPAccount?.storage || win.localStorage)?.setItem('cp_revgeo_'+key,JSON.stringify(out));}catch(_){}}
    return out;
   }catch(_){return null;}
  })();
@@ -2815,7 +2815,7 @@ function tadFor(task){
  }
  return [...new Map(base.map(t=>[t.name,t])).values()];
 }
-let ordreInverse=false;try{ordreInverse=localStorage.getItem('cp_hub_ordre')==='desc';}catch(_){}
+let ordreInverse=false;try{ordreInverse=(globalThis.CPAccount?.storage || globalThis.localStorage)?.getItem('cp_hub_ordre')==='desc';}catch(_){}
 function viewFingerprint(v){
  const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters].join(','):'';
  return [v.savedAt||0,v.done?1:0,v.total,v.longShown,(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).map(one).join(';'),v.others&&v.others.length,
@@ -2859,7 +2859,7 @@ function render(host,v){
   // 20/11/2026 : bouton pour inverser l'ordre (départ le plus tôt en premier ↔ départ le plus tard en premier), choix gardé sur ce téléphone.
   const btn=el(doc,'button','cp-hub-ordre',ordreInverse?'↕ Ordre décroissant (toucher pour passer en croissant)':'↕ Ordre croissant (toucher pour passer en décroissant)');
   btn.type='button';
-  btn.onclick=()=>{ordreInverse=!ordreInverse;try{localStorage.setItem('cp_hub_ordre',ordreInverse?'desc':'asc');}catch(_){}host.__cpFp=null;render(host,v);};
+  btn.onclick=()=>{ordreInverse=!ordreInverse;try{(globalThis.CPAccount?.storage || globalThis.localStorage)?.setItem('cp_hub_ordre',ordreInverse?'desc':'asc');}catch(_){}host.__cpFp=null;render(host,v);};
   host.appendChild(btn);
  }
  // 20/11/2026 : demande de Laurent — ne plus couper la liste, mais la replier pour rester fluide sur téléphone :

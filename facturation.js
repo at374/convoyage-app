@@ -2,8 +2,8 @@
 // Règles : jamais de plaque ici ; Abby = brouillon seulement (jamais finalisé ni encaissé) ; livre = factures PAYÉES, à leur date de paiement.
 (function (root) {
   'use strict';
-  const L = (k, d) => { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (_) { return d; } };
-  const E = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
+  const L = (k, d) => { try { const v = globalThis.CPAccount?.storage?.getItem(k); return v == null ? d : JSON.parse(v); } catch (_) { return d; } };
+  const E = (k, v) => { try { globalThis.CPAccount?.storage?.setItem(k, JSON.stringify(v)); } catch (_) {} };
   const arr = x => Math.round((x + Number.EPSILON) * 100) / 100;
   const num = v => { const x = Number(String(v == null ? '' : v).replace(',', '.')); return Number.isFinite(x) ? x : null; };
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

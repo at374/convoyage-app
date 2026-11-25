@@ -33,6 +33,7 @@
     };
   };
   async function renewToken(opts) {
+    if (root.CPAuthenticatedApi) return root.CPAuthenticatedApi.jeton();
     const stillValid = !opts.expiresAt || Date.now() < Number(opts.expiresAt) - 60000;
     if (stillValid || !opts.refreshToken || !opts.supabaseUrl) return opts.accessToken;
     const res = await fetch(String(opts.supabaseUrl).replace(/\/+$/, '') + '/auth/v1/token?grant_type=refresh_token', {
@@ -42,9 +43,7 @@
     });
     if (!res.ok) throw new Error('Reconnecte-toi puis réessaie');
     const j = await res.json();
-    const next = { access_token: j.access_token, refresh_token: j.refresh_token || opts.refreshToken, expires_at: Date.now() + (Number(j.expires_in) || 3600) * 1000, email: opts.email || '', user_id: opts.userId || '' };
-    try { localStorage.setItem('cp_session', JSON.stringify(next)); } catch (_) {}
-    return next.access_token;
+    return j.access_token;
   }
   async function estimate(opts) {
     if (!opts || !/^https:\/\//.test(opts.endpoint || '')) throw new Error('Service itinéraires non configuré');

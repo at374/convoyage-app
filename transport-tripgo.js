@@ -14,10 +14,10 @@ function time(value){
 const epoch=value=>Number.isSafeInteger(value)&&value>0&&value<4102444800?value*1000:NaN;
 function gap(a,b){const rad=Math.PI/180,x=(b.lat-a.lat)*rad,y=(b.lon-a.lon)*rad;
  return 12742000*Math.asin(Math.min(1,Math.sqrt(Math.sin(x/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(y/2)**2)));}
-function getKey(){try{return root.localStorage?.getItem(KEY)||'';}catch(_){return '';}}
+function getKey(){try{return (root.CPAccount?.storage || root.localStorage)?.getItem(KEY)||'';}catch(_){return '';}}
 function setKey(value){const key=String(value||'').trim();if(key&&!/^[A-Za-z0-9_-]{16,128}$/.test(key))throw Error('Clé TripGo invalide');
- if(!root.localStorage)throw Error('Stockage de cet appareil indisponible');
- if(key)root.localStorage.setItem(KEY,key);else root.localStorage.removeItem(KEY);cache.clear();}
+ if(!(root.CPAccount?.storage || root.localStorage))throw Error('Stockage de cet appareil indisponible');
+ if(key)(root.CPAccount?.storage || root.localStorage)?.setItem(KEY,key);else (root.CPAccount?.storage || root.localStorage)?.removeItem(KEY);cache.clear();}
 function parse(data,{from,to,when,arriveBy=false,latestArrival,receivedAt=new Date().toISOString()}={}){
  if(!point(from)||!point(to)||!Number.isFinite(time(when))||latestArrival!==undefined&&(!Number.isFinite(time(latestArrival))||(!arriveBy&&time(latestArrival)<time(when))||(arriveBy&&time(latestArrival)>time(when))))throw Error('Fenêtre TripGo invalide');
  if(!data||typeof data!=='object')throw Error('Réponse TripGo invalide (vide)');

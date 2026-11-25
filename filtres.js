@@ -10,7 +10,7 @@
   const LIBELLES = { energy: { plugin_hybrid: 'Hybride rechargeable', plug_in_hybrid: 'Hybride rechargeable', hybrid_plugin: 'Hybride rechargeable' }, category: { particular: 'Particulière' } };
   function francais(missions) {
     // V285 : missions que Laurent a annulées lui-même (liste locale « cp_annul ») : statut « annulée », hors revenus ; pénalité possible de la plateforme, montant à confirmer par lui.
-    try { const ov = JSON.parse((root.localStorage && root.localStorage.getItem('cp_annul')) || '{}') || {}; for (const m of missions || []) { const o = m && m.kind === 'acceptee' && ov[m.platform + '|' + m.external_id]; if (o) { if (m.status !== 'annulee') m._statutOrig = m.status || 'acceptee'; m.status = 'annulee'; m.annulee_par_moi = true; m.penalite_plateforme = (o.pen === null || o.pen === undefined) ? null : Number(o.pen); } } } catch (_) {}
+    try { const ov = JSON.parse((root.CPAccount?.storage || root.localStorage)?.getItem('cp_annul') || '{}') || {}; for (const m of missions || []) { const o = m && m.kind === 'acceptee' && ov[m.platform + '|' + m.external_id]; if (o) { if (m.status !== 'annulee') m._statutOrig = m.status || 'acceptee'; m.status = 'annulee'; m.annulee_par_moi = true; m.penalite_plateforme = (o.pen === null || o.pen === undefined) ? null : Number(o.pen); } } } catch (_) {}
     for (const m of missions || []) { const v = m && m.vehicle; if (!v || typeof v !== 'object') continue;
       for (const k of ['energy', 'category']) { const t = LIBELLES[k][String(v[k] || '').trim().toLowerCase()]; if (t) v[k] = t; } }
     return missions || [];

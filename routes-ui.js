@@ -13,22 +13,16 @@
   setInterval(() => { const n = performance.now(), g = n - dernier - 250; dernier = n; if (g > 300) { GAPS.push(Math.round(g) + ' ms · ' + (window.__ph || '?')); if (GAPS.length > 12) GAPS.shift(); } }, 250);
   const endpoint = 'https://convoyage-routes-691310598055.europe-west1.run.app/api/routes/estimate';
   const euro = v => Number(v).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
-  const lireNatif = () => { try { return window.CPNatif && window.CPNatif.session ? JSON.parse(window.CPNatif.session() || '{}') : null; } catch (_) { return null; } };
-  const lireLocal = () => { try { return JSON.parse(localStorage.getItem('cp_session') || 'null'); } catch (_) { return null; } };
-  const valide = s => { if (!s || !s.access_token) return false; let e = Number(s.expires_at) || 0; if (e && e < 1e12) e *= 1000; return !e || e > Date.now() + 30000; };
-  // V174 : on prend la session encore valable (celle de l'application Android si elle marche, sinon celle de la page).
   const session = () => {
-    const n = lireNatif(), l = lireLocal();
-    if (valide(n)) return n;
-    if (valide(l)) return l;
-    return (n && n.access_token) ? n : l;
+    const api = window.CPAuthenticatedApi;
+    return api?.connecte ? api.session : null;
   };
   const config = () => {
     try {
       if (window.CP_CONFIG?.anonKey) return window.CP_CONFIG;
       if (window.CP_CONFIG_ACTIVE?.anonKey) return window.CP_CONFIG_ACTIVE;
       const nativeConfig = window.CPNatif?.configuration ? JSON.parse(window.CPNatif.configuration() || '{}') : null;
-      return nativeConfig?.anonKey ? nativeConfig : JSON.parse(localStorage.getItem('cp_config') || 'null');
+      return nativeConfig?.anonKey ? nativeConfig : JSON.parse(globalThis.CPAccount?.storage?.getItem('cp_config') || 'null');
     } catch (_) { return null; }
   };
   const missionActive = () => {
@@ -480,10 +474,10 @@ if (best && Math.abs(best.km - fast.km) <= Math.max(1, fast.km * 0.01) && Math.a
   const VOISIN = { '5008': '3008', 'partner': 'rifter', 'berlingo': 'rifter', 'expert': 'traveller', '5008 ii': '3008', 'c5 aircross': '3008' };
   const PRIX_DEF = { gazole: 2.36, essence: 2.14 };
   // V275 : plus de réglages carburant / consommation : consommation = ADEME ; prix = moyenne nationale officielle (data.economie.gouv.fr, flux instantané des stations), actualisée toutes les 6 h
-  const lireConso = () => { let p = Object.assign({}, PRIX_DEF); try { const j = JSON.parse(localStorage.getItem('cp_prix_carb') || 'null'); if (j && j.gazole > 0 && j.essence > 0) p = { gazole: j.gazole, essence: j.essence }; } catch (_) {} return { c: Object.assign({}, CONSO_DEF), p }; };
+  const lireConso = () => { let p = Object.assign({}, PRIX_DEF); try { const j = JSON.parse(globalThis.CPAccount?.storage?.getItem('cp_prix_carb') || 'null'); if (j && j.gazole > 0 && j.essence > 0) p = { gazole: j.gazole, essence: j.essence }; } catch (_) {} return { c: Object.assign({}, CONSO_DEF), p }; };
   const PRIX_URL = 'https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/prix-des-carburants-en-france-flux-instantane-v2/records?select=' + encodeURIComponent('avg(gazole_prix) as gazole, avg(e10_prix) as e10, count(*) as n') + '&limit=1';
   let prixEnCours = false;
-  const prixMaj = async () => { try { const j = JSON.parse(localStorage.getItem('cp_prix_carb') || 'null'); if (j && Date.now() - j.t < 6 * 3600000) return; } catch (_) {} if (prixEnCours) return; prixEnCours = true; try { const r = await fetch(PRIX_URL); if (!r.ok) throw new Error('prix'); const x = ((await r.json()).results || [])[0]; if (x && x.gazole > 1 && x.gazole < 4 && x.e10 > 1 && x.e10 < 4 && x.n > 1000) { localStorage.setItem('cp_prix_carb', JSON.stringify({ gazole: Math.round(x.gazole * 1000) / 1000, essence: Math.round(x.e10 * 1000) / 1000, t: Date.now() })); majConso(); } } catch (_) { /* hors ligne : on garde le dernier prix connu */ } finally { prixEnCours = false; } };
+  const prixMaj = async () => { try { const j = JSON.parse(globalThis.CPAccount?.storage?.getItem('cp_prix_carb') || 'null'); if (j && Date.now() - j.t < 6 * 3600000) return; } catch (_) {} if (prixEnCours) return; prixEnCours = true; try { const r = await fetch(PRIX_URL); if (!r.ok) throw new Error('prix'); const x = ((await r.json()).results || [])[0]; if (x && x.gazole > 1 && x.gazole < 4 && x.e10 > 1 && x.e10 < 4 && x.n > 1000) { globalThis.CPAccount?.storage?.setItem('cp_prix_carb', JSON.stringify({ gazole: Math.round(x.gazole * 1000) / 1000, essence: Math.round(x.e10 * 1000) / 1000, t: Date.now() })); majConso(); } } catch (_) { /* hors ligne : on garde le dernier prix connu */ } finally { prixEnCours = false; } };
   const sansAcc = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const CAT = [
     ['utilitaire', /master|transit|trafic|boxer|jumper|ducato|sprinter|vito|kangoo|partner|berlingo|expert|jumpy|movano|crafter|daily|fourgon|utilitaire|camion|doblo|combo|caddy|talento|vivaro|proace|nv ?200|nv ?300/],
@@ -497,7 +491,7 @@ if (best && Math.abs(best.km - fast.km) <= Math.max(1, fast.km * 0.01) && Math.a
   const sgn = (v, u) => (v >= 0 ? '+' : '−') + Math.abs(Math.round(v * 10) / 10).toLocaleString('fr-FR') + ' ' + u;
   const sgnMin = v => (v >= 0 ? '+' : '−') + (Math.abs(v) >= 60 ? hm(Math.abs(v)) : Math.abs(v) + ' min');
   const ADK = 'cp_ademe3', ADU = 'https://data.ademe.fr/data-fair/api/v1/datasets/ademe-car-labelling/lines?size=200&select=Energie,Conso_vitesse_mixte_Min,Conso_vitesse_mixte_Max,Conso_basse_vitesse_Min,Conso_basse_vitesse_Max,Conso_moyenne_vitesse_Min,Conso_moyenne_vitesse_Max,Conso_haute_vitesse_Min,Conso_haute_vitesse_Max,Conso_T-haute_vitesse_Min,Conso_T-haute_vitesse_Max,Puissance_maximale&qs=';
-  const ademeLire = () => { try { return JSON.parse(localStorage.getItem(ADK) || '{}') || {}; } catch (_) { return {}; } };
+  const ademeLire = () => { try { return JSON.parse(globalThis.CPAccount?.storage?.getItem(ADK) || '{}') || {}; } catch (_) { return {}; } };
   const ademeCle = V => [V.mod, V.mod2, V.nrj, V.ch].join('|');
   const ademeEnCours = {};
   const txtConso = (km, mn) => {
@@ -533,7 +527,7 @@ if (best && Math.abs(best.km - fast.km) <= Math.max(1, fast.km * 0.01) && Math.a
         if (gz.length && es.length) { const a = ph(gz), b = ph(es); P = {}; for (const q of Object.keys(a)) P[q] = (a[q] !== null && b[q] !== null) ? (a[q] + b[q]) / 2 : (a[q] !== null ? a[q] : b[q]); en = 'moy'; } else { P = ph(rows); en = gz.length ? 'gazole' : 'essence'; }
         if (P.mix > 0) { const o = { l: Math.round(P.mix * 1.15 * fk * 100) / 100, e: en }; for (const q of ['b', 'm', 'h', 't']) if (P[q] > 0) o[q] = Math.round(P[q] * 1.15 * fk * 100) / 100; c[k] = o; } else c[k] = { l: 0 };
       } else c[k] = { l: 0 };
-      try { localStorage.setItem(ADK, JSON.stringify(c)); } catch (_) {}
+      try { globalThis.CPAccount?.storage?.setItem(ADK, JSON.stringify(c)); } catch (_) {}
       majConso();
     } catch (_) { /* hors ligne : on garde la valeur par défaut */ } finally { delete ademeEnCours[k]; }
   };
@@ -548,9 +542,9 @@ if (best && Math.abs(best.km - fast.km) <= Math.max(1, fast.km * 0.01) && Math.a
     const L = [['petite', 'Petite voiture (Twingo, Yaris…)'], ['moyenne', 'Voiture de taille moyenne (Clio, Scénic, Golf…)'], ['routiere', 'Véhicule routier (5008, Espace…)'], ['sport', 'Véhicule sport (BMW, Mercedes, Audi Sport…)'], ['utilitaire', 'Utilitaire fourgon (Master, Transit…)']];
     d.innerHTML = '<b>⛽ Consommation moyenne aux 100 km</b><p class="doux">Valeurs de départ : moyennes constatées en conduite réelle (autoroute et route), à ajuster. Elles servent à estimer litres et coût sur chaque trajet quand le modèle du véhicule est reconnu.</p>' + L.map(([k, t]) => '<label>' + t + '</label><input type="number" step="0.1" min="2" max="30" inputmode="decimal" data-conso="' + k + '" value="' + C.c[k] + '"> <span class="doux">L/100 km</span>').join('') + '<label>Prix du gazole (€/L)</label><input type="number" step="0.01" min="0.5" max="5" inputmode="decimal" data-prix="gazole" value="' + C.p.gazole + '"><label>Prix de l’essence SP95-E10 (€/L)</label><input type="number" step="0.01" min="0.5" max="5" inputmode="decimal" data-prix="essence" value="' + C.p.essence + '"><p class="doux">Prix moyens nationaux au 3 octobre 2026 : gazole 2,363 €, SP95-E10 2,144 € (prix-carburant.eu).</p><button type="button" data-conso-reset>Remettre les valeurs de départ</button>';
     ec.appendChild(d);
-    const sauver = () => { const j = { c: {}, p: {} }; d.querySelectorAll('[data-conso]').forEach(i => { const v = Number(String(i.value).replace(',', '.')); if (v > 0) j.c[i.dataset.conso] = v; }); d.querySelectorAll('[data-prix]').forEach(i => { const v = Number(String(i.value).replace(',', '.')); if (v > 0) j.p[i.dataset.prix] = v; }); try { localStorage.setItem('cp_conso', JSON.stringify(j)); } catch (_) { } };
+    const sauver = () => { const j = { c: {}, p: {} }; d.querySelectorAll('[data-conso]').forEach(i => { const v = Number(String(i.value).replace(',', '.')); if (v > 0) j.c[i.dataset.conso] = v; }); d.querySelectorAll('[data-prix]').forEach(i => { const v = Number(String(i.value).replace(',', '.')); if (v > 0) j.p[i.dataset.prix] = v; }); try { globalThis.CPAccount?.storage?.setItem('cp_conso', JSON.stringify(j)); } catch (_) { } };
     d.addEventListener('change', sauver);
-    d.querySelector('[data-conso-reset]').onclick = () => { try { localStorage.removeItem('cp_conso'); } catch (_) { } d.remove(); addConsoReglages(); };
+    d.querySelector('[data-conso-reset]').onclick = () => { try { globalThis.CPAccount?.storage?.removeItem('cp_conso'); } catch (_) { } d.remove(); addConsoReglages(); };
   };
   const render = (target, r, mode) => {
     const prix = mode === 'DRIVE' ? r.toll : r.fare;

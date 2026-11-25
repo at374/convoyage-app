@@ -91,8 +91,8 @@
   const versionApk = () => { try { const n = window.CPNatif && typeof window.CPNatif.versionApp === 'function' ? String(window.CPNatif.versionApp() || '').replace(/[^0-9.]/g, '') : ''; return n ? ' · APK ' + n : ''; } catch (_) { return ''; } };   // V242 : version de l'APK installé (dans l'application Android)   // affichée dans l'en-tête et les Réglages
   // V154 : taille du texte de toute l'application (A− / A+), mémorisée.
   (function () {
-    const lire = () => { try { return Math.min(150, Math.max(80, Number(localStorage.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
-    const poser = p => { try { localStorage.setItem('cp_zoom', String(p)); } catch (_) {} document.body.style.zoom = ''; for (const sel of ['#ecran', 'header.barre']) { const el = document.querySelector(sel); if (el) el.style.zoom = p / 100; } };   // le zoom ne touche pas la barre du bas (sinon elle sort de l'écran)
+    const lire = () => { try { return Math.min(150, Math.max(80, Number(globalThis.CPAccount?.storage?.getItem('cp_zoom')) || 100)); } catch (_) { return 100; } };
+    const poser = p => { try { globalThis.CPAccount?.storage?.setItem('cp_zoom', String(p)); } catch (_) {} document.body.style.zoom = ''; for (const sel of ['#ecran', 'header.barre']) { const el = document.querySelector(sel); if (el) el.style.zoom = p / 100; } };   // le zoom ne touche pas la barre du bas (sinon elle sort de l'écran)
     const monter = () => { const ref = document.getElementById('policeBtn'); if (!ref || document.getElementById('zoomMoins')) return; const mk = (id, txt, delta, titre) => { const b = document.createElement('button'); b.id = id; b.className = 'icone'; b.textContent = txt; b.title = titre; b.setAttribute('aria-label', titre); b.onclick = () => poser(Math.min(150, Math.max(80, lire() + delta))); return b; }; ref.parentNode.insertBefore(mk('zoomMoins', 'A−', -10, 'Réduire le texte'), ref); ref.parentNode.insertBefore(mk('zoomPlus', 'A+', 10, 'Agrandir le texte'), ref); };
     const demarrer = () => { poser(lire()); monter(); };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', demarrer); else demarrer();
@@ -119,9 +119,9 @@
   // Dernier défilement (doigt ou molette) : les mises à jour des transports attendent l'arrêt du défilement pour ne pas saccader.
   let dernierDefilement = 0;
   if (typeof document.addEventListener === 'function') { const marque = () => { dernierDefilement = Date.now(); }; document.addEventListener('scroll', marque, { capture: true, passive: true }); document.addEventListener('touchmove', marque, { capture: true, passive: true }); }
-  const lireLocal = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? d; } catch (_) { return d; } };
+  const lireLocal = (k, d) => { try { return JSON.parse(globalThis.CPAccount?.storage?.getItem(k) || 'null') ?? d; } catch (_) { return d; } };
   // V301 : la copie locale (cp_cache) est plafonnée à ~1,2 Mo : des milliers de missions remplissaient les 5 Mo du téléphone et bloquaient tout enregistrement (choix des plateformes compris).
-const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k, JSON.stringify(x)); return true; } catch (_) { return false; } }; try { if (k === 'cp_cache' && v && Array.isArray(v.missions)) { let ms = v.missions; { const now = Date.now(), vivante = x => { const d = Date.parse((x && (x.delivery_end || x.delivery_start || x.pickup_start)) || ''); return !Number.isFinite(d) || d >= now ? 0 : 1; }; ms = ms.map((x, i) => [x, i]).sort((a, b) => vivante(a[0]) - vivante(b[0]) || a[1] - b[1]).map(a => a[0]); } let s = JSON.stringify({ ...v, missions: ms }); while (s.length > 1200000 && ms.length > 50) { ms = ms.slice(0, Math.floor(ms.length / 2)); s = JSON.stringify({ ...v, missions: ms }); } if (ess({ ...v, missions: ms })) return; try { localStorage.removeItem(k); } catch (_) {} for (const m of [400, 150, 50]) if (ess({ ...v, missions: ms.slice(0, m) })) return; return; } ess(v); } catch (_) {} };
+const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.storage?.setItem(k, JSON.stringify(x)); return true; } catch (_) { return false; } }; try { if (k === 'cp_cache' && v && Array.isArray(v.missions)) { let ms = v.missions; { const now = Date.now(), vivante = x => { const d = Date.parse((x && (x.delivery_end || x.delivery_start || x.pickup_start)) || ''); return !Number.isFinite(d) || d >= now ? 0 : 1; }; ms = ms.map((x, i) => [x, i]).sort((a, b) => vivante(a[0]) - vivante(b[0]) || a[1] - b[1]).map(a => a[0]); } let s = JSON.stringify({ ...v, missions: ms }); while (s.length > 1200000 && ms.length > 50) { ms = ms.slice(0, Math.floor(ms.length / 2)); s = JSON.stringify({ ...v, missions: ms }); } if (ess({ ...v, missions: ms })) return; try { globalThis.CPAccount?.storage?.removeItem(k); } catch (_) {} for (const m of [400, 150, 50]) if (ess({ ...v, missions: ms.slice(0, m) })) return; return; } ess(v); } catch (_) {} };
   window.CP_BUS_ACTIF = lireLocal('cp_bus_actif', false) === true;   // V131 : bus locaux comptés dans les liaisons seulement si tu le demandes (réglage sur cet appareil)
 
   // ---------- Configuration du serveur ----------
@@ -209,7 +209,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       try {
         if (creer) { const r = await api.creerCompte(e, p); if (r === 'confirmation') { $('lMdp').value = ''; err.textContent = 'Compte créé : confirme ton e-mail avec le lien reçu, puis connecte-toi.'; err.hidden = false; return; } }
         else await api.connexion(e, p);
-        $('lMdp').value = ''; demarrer();
+        $('lMdp').value = ''; location.reload();
       } catch (x) { err.textContent = String(x.message || x); err.hidden = false; }
       finally { const a = $('lOk'), b = $('lCree'); if (a) a.disabled = false; if (b) b.disabled = false; }
     };
@@ -226,7 +226,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       } catch (x) { err.textContent = String(x.message || x); err.hidden = false; }
       finally { const b = $('lOubli'); if (b) b.disabled = false; }
     };
-    const s = $('lServeur'); if (s) s.onclick = ev => { ev.preventDefault(); localStorage.removeItem('cp_config'); cfg = null; api = null; ecranConfiguration(); };
+    const s = $('lServeur'); if (s) s.onclick = ev => { ev.preventDefault(); globalThis.CPAccount?.storage?.removeItem('cp_config'); cfg = null; api = null; ecranConfiguration(); };
   }
 
   // V88 : « https://xxxx.supabase.co/rest/v1/ » ou adresse sans « https:// » → https://xxxx.supabase.co
@@ -269,8 +269,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     if (silencieux && pauseActive()) return;   // V146 : heures de désactivation
     try {
       const [missions, alertes, reglages, factures] = await Promise.all([api.missions(), api.alertes(), api.reglages(), api.factures()]);
+      if (!api.connecte) return;
       etat.facturesServeur = factures !== null; if (factures) etat.factures = factures;   // V96
       try { etat.sources = await api.sourcesEtat(); } catch (_) { etat.sources = null; }   // V114
+      if (!api.connecte) return;
       const alertesNouv = seulesNouvelles(alertes);
       const avant = new Set(etat.alertes.map(a => a.id));
       const nouvelles = alertesNouv.filter(a => !a.lue && !avant.has(a.id));
@@ -283,7 +285,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       if (!silencieux) toast('Missions à jour');
     } catch (e) {
       etat.erreur = String(e.message || e); majPastille();
-      if (!api.connecte) return ecranConnexion(etat.erreur);
+      if (!api.connecte) return verrouillerEcran();
       if (!silencieux) toast('Hors connexion : dernières données affichées');
     }
     afficher(); ouvrirMissionDemandee();
@@ -539,7 +541,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   const hfPk = m => (dMail(m) || { pk: m.pickup_start }).pk, hfLiv = m => (dMail(m) || { liv: m.delivery_end }).liv;
   // Suivi d'arrivée par GPS (missions de l'agenda) : voir suiviArrivee* plus bas. Données gardées sur ce téléphone uniquement.
   const MARGE_ARRIVEE_MIN = 15, RAYON_ARRIVEE_M = 400, RAYON_ARRIVEE_VILLE_M = 800, DUREE_PRESENCE_MS = 30000;   // V304 : 400 m / 30 s (étaient 300 m / 60 s : l'arrivée à Taninges n'avait rien déclenché)
-  const arriveeGps = key => { try { const a = (JSON.parse(localStorage.getItem('cp_arrivees') || 'null') || {})[key]; return a && Number.isFinite(Date.parse(a.arrivee)) ? a : null; } catch (_) { return null; } };
+  const arriveeGps = key => { try { const a = (JSON.parse(globalThis.CPAccount?.storage?.getItem('cp_arrivees') || 'null') || {})[key]; return a && Number.isFinite(Date.parse(a.arrivee)) ? a : null; } catch (_) { return null; } };
   // V304 : secours si le GPS n'a rien détecté : Hiflow passe la mission en « terminée » (E-PV fait sur place) ; cette heure est retenue comme arrivée.
   const arriveeHiflow = m => { try { if (!m || m.kind !== 'acceptee' || m.platform !== 'Hiflow' || m.status !== 'terminee') return null; const mod = (Array.isArray(m.modifications) ? m.modifications : []).filter(x => x && x.champ === 'statut' && x.a === 'terminee').pop(); const le = mod && Date.parse(mod.le); return Number.isFinite(le) && Date.now() - le < 36 * 3600000 ? { arrivee: new Date(le).toISOString(), source: 'hiflow' } : null; } catch (_) { return null; } };
   function missionTiming(m) {
@@ -628,10 +630,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   const prixVar = m => {
     try {
       if (m.fee == null || m.kind === 'acceptee') return '';
-      const k = m.platform + '|' + m.external_id; let mem = {}; try { mem = JSON.parse(localStorage.getItem('cp_prix') || '{}'); } catch (_) {}
+      const k = m.platform + '|' + m.external_id; let mem = {}; try { mem = JSON.parse(globalThis.CPAccount?.storage?.getItem('cp_prix') || '{}'); } catch (_) {}
       const e = mem[k]; const fee = Number(m.fee); let x = e;
       if (!e) x = { fee }; else if (e.fee !== fee) x = { fee, avant: e.fee, at: Date.now() };
-      if (JSON.stringify(x) !== JSON.stringify(e)) { mem[k] = x; const cles = Object.keys(mem); if (cles.length > 3000) for (const c of cles.slice(0, cles.length - 3000)) delete mem[c]; try { localStorage.setItem('cp_prix', JSON.stringify(mem)); } catch (_) {} }
+      if (JSON.stringify(x) !== JSON.stringify(e)) { mem[k] = x; const cles = Object.keys(mem); if (cles.length > 3000) for (const c of cles.slice(0, cles.length - 3000)) delete mem[c]; try { globalThis.CPAccount?.storage?.setItem('cp_prix', JSON.stringify(mem)); } catch (_) {} }
       if (x.avant == null) return '';
       return '<div class="pvar ' + (fee > x.avant ? 'up' : 'down') + '">' + (fee > x.avant ? '↑' : '↓') + ' avant ' + esc(euros(x.avant)) + '</div>';
     } catch (_) { return ''; }
@@ -1158,7 +1160,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     }
     const versions = [j1.v, j2.v].filter(Boolean).join(' · ');
     const resultat = { total, versions, le: new Date().toISOString() };
-    try { localStorage.setItem('cp_peages_maj', resultat.le); } catch (_) {}
+    try { globalThis.CPAccount?.storage?.setItem('cp_peages_maj', resultat.le); } catch (_) {}
     ecrireLocal('cp_peages_maj_detail', resultat);   // persisté (pas qu'en mémoire) : reste affiché après un rechargement ou un redémarrage de l'appli
     return resultat;
   }
@@ -1221,21 +1223,21 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       <p class="doux" style="text-align:center">Convoyage Ultra · outil d’aide à la décision : aucune mission n’est acceptée à ta place.</p>`;
     $('rStatut').value = r.statut; $('rTaux').value = r.taux_cotisations; $('rKm').value = r.cout_km; $('rMin').value = r.prix_minimum; $('rNv').checked = !!r.alertes_nouvelles;
     { const C = window.CPTransportCoverage, H = window.CPTransportHub, inv = $('rCouvInv');
-      if (C && inv) { C.renderInventory(inv, C.inventory(window.localStorage));
-        try { const last = JSON.parse(localStorage.getItem(C.STORE) || '{}').lastReport; if (last) $('rDiagOut').textContent = C.reportText(last, C.inventory(window.localStorage)); } catch (_) {}
+      if (C && inv) { C.renderInventory(inv, C.inventory(window.CPAccount?.storage));
+        try { const last = JSON.parse(globalThis.CPAccount?.storage?.getItem(C.STORE) || '{}').lastReport; if (last) $('rDiagOut').textContent = C.reportText(last, C.inventory(window.CPAccount?.storage)); } catch (_) {}
         $('rDiagCopier').onclick = () => { try { navigator.clipboard.writeText($('rDiagOut').textContent || ''); toast('Rapport copié'); } catch (_) { toast('Copie impossible'); } };
         $('rDiagLancer').onclick = async () => {
           if (!H) return toast('Hub transports indisponible');
           const b = $('rDiagLancer'); b.disabled = true; const out = $('rDiagOut'); out.textContent = 'Diagnostic en cours…';
           try {
             const fetcher = (...a) => window.fetch(...a);
-            const router = H.cachedRouter(window.CPTransportWalking?.createRouter({ fetcher, maxRequests: 200, intervalMs: 1100 }), { storage: window.localStorage });
-            const report = await C.runDiagnostic({ hub: H, router, storage: window.localStorage, host: $('rCouverture'),
+            const router = H.cachedRouter(window.CPTransportWalking?.createRouter({ fetcher, maxRequests: 200, intervalMs: 1100 }), { storage: window.CPAccount?.storage });
+            const report = await C.runDiagnostic({ hub: H, router, storage: window.CPAccount?.storage, host: $('rCouverture'),
               providers: H.makeProviders(window, { fetcher, regionalEndpoint: window.CP_REGIONAL_ROUTING_ENDPOINT, nationalGTFSResources: window.CP_NATIONAL_GTFS_RESOURCES || {} }),
               fareFor: leg => { try { return window.CPTransportFareGrids?.fareFor(leg) || null; } catch (_) { return null; } },
               gtfsAgenda: window.CPGTFSAgenda && window.CPGTFSWorker ? window.CPGTFSAgenda : null,
               onProgress: (axis, v) => { out.textContent = 'Diagnostic : ' + axis.name + ' — ' + v.total + ' trajet(s)…'; } });
-            const invNow = C.inventory(window.localStorage); C.renderInventory(inv, invNow); out.textContent = C.reportText(report, invNow);
+            const invNow = C.inventory(window.CPAccount?.storage); C.renderInventory(inv, invNow); out.textContent = C.reportText(report, invNow);
           } catch (e) { out.textContent = 'Diagnostic interrompu : ' + (e && e.message || e); }
           b.disabled = false;
         };
@@ -1283,7 +1285,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       const maj = () => { enregistrerPause($('pzOn').checked ? 'oui' : 'non', $('pzDeb').value, $('pzFin').value); toast($('pzOn').checked ? 'Désactivation la nuit : activée' : 'Toujours actif'); };
       $('pzOn').onchange = maj; $('pzDeb').onchange = $('pzFin').onchange = () => { if ($('pzOn').checked) maj(); }; }
     { const bloc = document.createElement('div'); bloc.className = 'doux'; bloc.style.textAlign = 'center'; bloc.style.margin = '12px 0';
-      let der = null; try { der = localStorage.getItem('cp_peages_maj'); if (!der) { der = new Date().toISOString(); localStorage.setItem('cp_peages_maj', der); } } catch (_) { der = null; }
+      let der = null; try { der = globalThis.CPAccount?.storage?.getItem('cp_peages_maj'); if (!der) { der = new Date().toISOString(); globalThis.CPAccount?.storage?.setItem('cp_peages_maj', der); } } catch (_) { der = null; }
       const jours = der ? Math.floor((Date.now() - Date.parse(der)) / 86400000) : 0;
       const info = document.createElement('p'); info.id = 'infoPeages'; info.textContent = 'Péages : dernière mise à jour il y a ' + jours + ' jour(s)' + (jours >= 183 ? ' — mise à jour conseillée (tous les 6 mois).' : '.'); if (jours >= 183) info.style.color = '#b45309';
       fetch('peages-aprr.json').then(r => r.json()).then(j => { const ms = (String(j.v || '').match(/\d{4}-\d{2}/g) || []).sort(); if (!ms.length) return; const [a, m] = ms[0].split('-').map(Number); const n = new Date(); let an = n.getFullYear(); if (n.getMonth() < 1) an -= 1; const mois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']; if (a * 12 + (m - 1) < an * 12 + 1) { info.textContent = 'Nouveaux tarifs de péage en vigueur depuis le 1er février ' + an + ' : mise à jour à faire.'; info.style.color = '#b45309'; } else { info.textContent = 'Péages à jour (tarifs de ' + mois[m - 1] + ' ' + a + '). Prochaine revalorisation prévue le 1er février ' + (an + 1) + '.'; info.style.color = ''; } }).catch(() => { });
@@ -1307,10 +1309,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       bloc.appendChild(info); bloc.appendChild(detailInfo); bloc.appendChild(prog); bloc.appendChild(bt); $('ecran').appendChild(bloc); }
     { const p = document.createElement('p'); p.className = 'doux'; p.id = 'versionReglages'; p.style.textAlign = 'center'; p.textContent = 'Convoyage Ultra — version ' + VERSION_APP + versionApk(); $('ecran').appendChild(p); }
     { const bm = $('remettre'); if (bm) bm.onclick = () => { ecrireLocal('cp_masquees', []); toast('Missions remises : actualisation…'); charger(); }; }
-    $('dOk').onclick = () => { api.deconnexion(); localStorage.removeItem('cp_cache'); Object.assign(etat, { missions: [], alertes: [], reglages: null }); ecranConnexion(); };
+    $('dOk').onclick = deconnecter;
     $('eOk').onclick = async () => {
       if (!confirm('Effacer définitivement toutes tes missions, alertes et réglages du serveur ? L’extension renverra les missions à sa prochaine synchronisation si elle reste connectée.')) return;
-      try { await api.effacerMesDonnees(); localStorage.removeItem('cp_cache'); Object.assign(etat, { missions: [], alertes: [], reglages: null }); toast('Données effacées'); afficher(); } catch (e) { toast(e.message); }
+      try { await api.effacerMesDonnees(); globalThis.CPAccount?.storage?.removeItem('cp_cache'); Object.assign(etat, { missions: [], alertes: [], reglages: null }); toast('Données effacées'); afficher(); } catch (e) { toast(e.message); }
     };
   }
   const duree = h => { const t = Math.round(h * 60); return t < 60 ? t + ' min' : Math.floor(t / 60) + ' h' + (t % 60 ? String(t % 60).padStart(2, '0') : ''); };
@@ -1768,7 +1770,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
       let sibraPassControls = null;
       if (window.CPSibraPass?.mountControls) {
         let passStorage = null;
-        try { passStorage = window.localStorage; } catch (_) {}
+        try { passStorage = window.CPAccount?.storage; } catch (_) {}
         sibraPassControls = window.CPSibraPass.mountControls(panel.querySelector('#cpSibraFareReference'), {
           storage: passStorage, onChange: () => gtfsAgendaSession?.refreshFares?.()
         });
@@ -2289,10 +2291,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         if(!remainingTasks.length)return;
         for(const t of remainingTasks)if(!t.lazy)afficherRecherche(t.label);
         let router=null;
-        try{router=Hub.cachedRouter(window.CPTransportWalking?.createRouter({fetcher:regionalFetch,maxRequests:150,intervalMs:1100}),{storage:window.localStorage});}catch(_){}
+        try{router=Hub.cachedRouter(window.CPTransportWalking?.createRouter({fetcher:regionalFetch,maxRequests:150,intervalMs:1100}),{storage:window.CPAccount?.storage});}catch(_){}
         const scooterOn = (etat.reglages || {}).trottinette === true;
         let scooterRouter = null;
-        if (scooterOn) { try { scooterRouter = Hub.cachedRouter(window.CPTransportWalking?.createRouter({ fetcher: regionalFetch, maxRequests: 60, intervalMs: 1100, mode: 'bicycle', cyclingSpeed: Number(lireLocal('cp_trot_vitesse_kmh', 15)) }), { storage: window.localStorage, key: 'cp_trottinette_v1' }); } catch (_) {} }
+        if (scooterOn) { try { scooterRouter = Hub.cachedRouter(window.CPTransportWalking?.createRouter({ fetcher: regionalFetch, maxRequests: 60, intervalMs: 1100, mode: 'bicycle', cyclingSpeed: Number(lireLocal('cp_trot_vitesse_kmh', 15)) }), { storage: window.CPAccount?.storage, key: 'cp_trottinette_v1' }); } catch (_) {} }
         const fareFor=leg=>{
           // Tarifs prouvés uniquement (grilles officielles datées), jamais estimés.
           try{const f=window.CPTransportFareGrids?.fareFor(leg);if(f)return f;}catch(_){}
@@ -3294,7 +3296,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const walkCacheKey = to ?
           'cp_y51_walk_' + encodeURIComponent(String(to).trim().toLowerCase()) : null;
         try {
-          const cached = walkCacheKey ? window.localStorage.getItem(walkCacheKey) : null;
+          const cached = walkCacheKey ? window.CPAccount?.storage?.getItem(walkCacheKey) : null;
           if (cached !== null && /^\d{1,3}$/.test(cached) && Number(cached) <= 120) {
             input.value = cached;
           }
@@ -3304,7 +3306,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         clearWalk.className = 'btnSec';
         clearWalk.textContent = 'Effacer l’estimation enregistrée';
         clearWalk.addEventListener('click', () => {
-          try { if (walkCacheKey) window.localStorage.removeItem(walkCacheKey); } catch (_) {}
+          try { if (walkCacheKey) window.CPAccount?.storage?.removeItem(walkCacheKey); } catch (_) {}
           input.value = '';
           result.textContent = 'Estimation effacée. Saisir un temps de marche vérifié pour recalculer.';
         });
@@ -3312,7 +3314,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         input.addEventListener('input', () => {
           const n = Number(input.value);
           if (input.value === '') {
-            try { if (walkCacheKey) window.localStorage.removeItem(walkCacheKey); } catch (_) {}
+            try { if (walkCacheKey) window.CPAccount?.storage?.removeItem(walkCacheKey); } catch (_) {}
             result.textContent = 'Temps de marche non renseigné : aucune correspondance validée.';
             return;
           }
@@ -3320,7 +3322,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             result.textContent = 'Indiquer une durée de marche entière entre 0 et 120 minutes.';
             return;
           }
-          try { if (walkCacheKey) window.localStorage.setItem(walkCacheKey, String(n)); } catch (_) {}
+          try { if (walkCacheKey) window.CPAccount?.storage?.setItem(walkCacheKey, String(n)); } catch (_) {}
           const delivery = new Date(transportDelivery || m.delivery_start || '');
           if (!Number.isFinite(delivery.getTime())) {
             result.textContent = 'Livraison sans horaire : comparaison impossible.';
@@ -3581,15 +3583,15 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
   window.addEventListener('hashchange', () => { if (location.hash === '#alertes') { etat.onglet = 'alertes'; afficher(); } lireLien(); ouvrirMissionDemandee(); });
   // V122 : styles de l'application (couleurs + polices), inspirés de l'icône : noir & or, rouge, crépuscule, jour contrasté. Le bouton 🎨 fait défiler les styles.
   const STYLES = [['classique', 'Classique'], ['ultra', 'Ultra (noir & or)'], ['braise', 'Braise (noir & rouge)'], ['crepuscule', 'Crépuscule (violet & orange)'], ['jour', 'Jour contrasté (bleu & jaune)']];
-  const styleCourant = () => { try { const v = localStorage.getItem('cp_style'); return STYLES.some(x => x[0] === v) ? v : 'ultra'; } catch (_) { return 'ultra'; } };
+  const styleCourant = () => { try { const v = globalThis.CPAccount?.storage?.getItem('cp_style'); return STYLES.some(x => x[0] === v) ? v : 'ultra'; } catch (_) { return 'ultra'; } };
   const appliquerStyle = v => { document.documentElement.dataset.style = v; const c = { ultra: '#0a0a0a', braise: '#1a0608', crepuscule: '#1b1030', jour: '#0c4a6e', classique: '#101827' }[v]; const m = document.querySelector('meta[name="theme-color"]'); if (m && c) m.content = c; };
   appliquerStyle(styleCourant());
   // V138 : polices au choix (polices du téléphone, aucune ne se télécharge) ; le bouton « Aa » les fait défiler.
   const POLICES = [['standard', 'Standard'], ['lisible', 'Lisible (Verdana)'], ['classique', 'Classique (Georgia)'], ['arrondie', 'Arrondie'], ['machine', 'Machine (chiffres alignés)'], ['grande', 'Grande taille']];
-  const policeCourante = () => { try { const v = localStorage.getItem('cp_police'); return POLICES.some(x => x[0] === v) ? v : 'standard'; } catch (_) { return 'standard'; } };
+  const policeCourante = () => { try { const v = globalThis.CPAccount?.storage?.getItem('cp_police'); return POLICES.some(x => x[0] === v) ? v : 'standard'; } catch (_) { return 'standard'; } };
   document.documentElement.dataset.police = policeCourante();
-  { const b = document.getElementById('policeBtn'); if (b) b.onclick = () => { const i = POLICES.findIndex(x => x[0] === policeCourante()), n = POLICES[(i + 1) % POLICES.length]; try { localStorage.setItem('cp_police', n[0]); } catch (_) {} document.documentElement.dataset.police = n[0]; const t = document.getElementById('sousTitre'); if (t) t.textContent = 'Police : ' + n[1]; }; }
-  { const b = document.getElementById('styleBtn'); if (b) b.onclick = () => { const i = STYLES.findIndex(x => x[0] === styleCourant()), n = STYLES[(i + 1) % STYLES.length]; try { localStorage.setItem('cp_style', n[0]); } catch (_) {} appliquerStyle(n[0]); const t = document.getElementById('sousTitre'); if (t) t.textContent = 'Style : ' + n[1]; }; }
+  { const b = document.getElementById('policeBtn'); if (b) b.onclick = () => { const i = POLICES.findIndex(x => x[0] === policeCourante()), n = POLICES[(i + 1) % POLICES.length]; try { globalThis.CPAccount?.storage?.setItem('cp_police', n[0]); } catch (_) {} document.documentElement.dataset.police = n[0]; const t = document.getElementById('sousTitre'); if (t) t.textContent = 'Police : ' + n[1]; }; }
+  { const b = document.getElementById('styleBtn'); if (b) b.onclick = () => { const i = STYLES.findIndex(x => x[0] === styleCourant()), n = STYLES[(i + 1) % STYLES.length]; try { globalThis.CPAccount?.storage?.setItem('cp_style', n[0]); } catch (_) {} appliquerStyle(n[0]); const t = document.getElementById('sousTitre'); if (t) t.textContent = 'Style : ' + n[1]; }; }
   // V242 : lien reçu par e-mail (invitation ou mot de passe oublié) → l'adresse contient une connexion temporaire : on demande de choisir un mot de passe.
   function lienAcces() {
     try {
@@ -3607,7 +3609,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     return '';
   }
   function ecranMotDePasse(lien) {
-    try { api.deconnexion(); } catch (_) {}
     $('onglets').hidden = true; $('actualiser').hidden = true; $('pastille').hidden = true; $('sousTitre').textContent = lien.type === 'invite' ? 'Bienvenue' : 'Nouveau mot de passe';
     $('ecran').innerHTML = `<div class="carte"><h2>${lien.type === 'invite' ? 'Bienvenue sur Convoyage Ultra' : 'Nouveau mot de passe'}</h2>
       <p class="doux">Choisissez votre mot de passe (8 caractères minimum). Vous l’utiliserez pour vous connecter ensuite.</p>
@@ -3624,9 +3625,9 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         const r = await fetch(api.url + '/auth/v1/user', { method: 'PUT', headers: { apikey: api.cle, authorization: 'Bearer ' + lien.token, 'content-type': 'application/json' }, body: JSON.stringify({ password: a }) });
         let j = null; try { j = await r.json(); } catch (_) {}
         if (!r.ok) throw new Error((j && (j.msg || j.message || j.error_description)) || ('Erreur ' + r.status));
-        api._garder({ access_token: lien.token, refresh_token: lien.refresh, expires_in: lien.exp, user: j });
+        api._ouvrir({ access_token: lien.token, refresh_token: lien.refresh, expires_in: lien.exp, user: j });
         history.replaceState(null, '', location.pathname + location.search);
-        demarrer();
+        location.reload();
       } catch (x) { err.textContent = 'Impossible : ' + String(x.message || x); err.hidden = false; $('mpOk').disabled = false; }
     };
   }
@@ -3634,6 +3635,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     if (!api) return ecranConfiguration();
     const lien = lienAcces(); if (lien) return ecranMotDePasse(lien);
     if (!api.connecte) return ecranConnexion(erreurLien());
+    appliquerPrefsNotif(prefNotif());
     afficher(); charger(true); setTimeout(questionPause, 1200);
     setTimeout(autoMajPeagesSiNecessaire, 4000);   // V243 : après l'affichage, sans gêner le démarrage ; indépendant de la connexion aux plateformes
     // V246 (demande de Laurent) : communes des pays limitrophes (Suisse, Belgique, Luxembourg, Allemagne, Italie,
@@ -3642,7 +3644,35 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     setTimeout(() => { G.chargerVillesFrontalieres(u => fetch(u)).then(n => { if (n) try { listeMissions(); } catch (_) {} }).catch(() => {}); }, 2000);
   }
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) { try { navigator.serviceWorker.register('sw.js'); } catch (_) {} }
-  window.__cp = { etat, charger };
+  function verrouillerEcran() {
+    document.documentElement.style.visibility = 'hidden';
+    location.reload();
+  }
+  window.addEventListener('storage', event => {
+    if ((event.key === window.CPAccount.sessionKey || event.key === null) && !window.CPAccount.current()) verrouillerEcran();
+  });
+  window.addEventListener('pageshow', event => {
+    if (event.persisted && !window.CPAccount.current()) verrouillerEcran();
+  });
+  async function deconnecter() {
+    if (!api?.connecte) return verrouillerEcran();
+    document.documentElement.style.visibility = 'hidden';
+    const tasks = [];
+    if (navigator.serviceWorker) {
+      tasks.push(navigator.serviceWorker.getRegistration().then(async registration => {
+        if (!registration) return;
+        const [sub, notifications] = await Promise.all([registration.pushManager?.getSubscription(), registration.getNotifications()]);
+        notifications.forEach(notification => notification.close());
+        if (sub) await sub.unsubscribe();
+      }));
+    }
+    if (window.caches) tasks.push(caches.delete('cp-prefs'));
+    try { window.CPNatif?.reglerNotifs(JSON.stringify({ on: false })); } catch (_) {}
+    tasks.push(api.deconnexion());
+    await Promise.race([Promise.allSettled(tasks), new Promise(resolve => setTimeout(resolve, 1500))]);
+    location.reload();
+  }
+  window.__cp = { etat, charger, deconnecter };
   demarrer();
 })();
  

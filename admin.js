@@ -5,24 +5,16 @@
 (function () {
   'use strict';
   const FN = '/functions/v1/inviter-convoyeur';
-  const cfg = () => { try { if (window.CP_CONFIG && window.CP_CONFIG.anonKey) return window.CP_CONFIG; if (window.CP_CONFIG_ACTIVE && window.CP_CONFIG_ACTIVE.anonKey) return window.CP_CONFIG_ACTIVE; return JSON.parse(localStorage.getItem('cp_config') || 'null') || {}; } catch (_) { return {}; } };
-  const lire = () => { try { const n = window.CPNatif && window.CPNatif.session ? JSON.parse(window.CPNatif.session() || 'null') : null; if (n && n.access_token && (!n.expires_at || Date.now() < Number(n.expires_at) - 30000)) return n; } catch (_) {} try { return JSON.parse(localStorage.getItem('cp_session') || 'null'); } catch (_) { return null; } };
+  const cfg = () => { try { if (window.CP_CONFIG && window.CP_CONFIG.anonKey) return window.CP_CONFIG; if (window.CP_CONFIG_ACTIVE && window.CP_CONFIG_ACTIVE.anonKey) return window.CP_CONFIG_ACTIVE; return JSON.parse(globalThis.CPAccount?.storage?.getItem('cp_config') || 'null') || {}; } catch (_) { return {}; } };
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const jour = d => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Paris' }).format(d || new Date());
   const fr = s => { if (!s) return '—'; const m = String(s).slice(0, 10).split('-'); return m.length === 3 ? m[2] + '/' + m[1] + '/' + m[0] : s; };
 
-  async function jeton() {
-    let s = lire();
-    if (!s || !s.access_token) return null;
-    if (s.expires_at && Date.now() > Number(s.expires_at) - 60000 && s.refresh_token) {
-      try {
-        const c = cfg();
-        const r = await fetch(String(c.url).replace(/\/+$/, '') + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: { apikey: c.anonKey, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: s.refresh_token }) });
-        if (r.ok) { const j = await r.json(); s = { ...s, access_token: j.access_token, refresh_token: j.refresh_token || s.refresh_token, expires_at: Date.now() + (Number(j.expires_in) || 3600) * 1000 }; try { localStorage.setItem('cp_session', JSON.stringify(s)); } catch (_) {} }
-      } catch (_) {}
-    }
-    return s.access_token;
-  }
+  const session = () => {
+    const api = window.CPAuthenticatedApi;
+    return api?.connecte ? api.session : null;
+  };
+  const jeton = () => window.CPAuthenticatedApi?.jeton();
   async function http(chemin, opt) {
     const c = cfg(), t = await jeton();
     if (!c.url || !c.anonKey || !t) throw new Error('Non connecté');
@@ -76,7 +68,7 @@
     const sans = st && st.existe === false;
     d.innerHTML = '<h2>' + (sans ? 'Compte pas encore activé' : 'Abonnement terminé') + '</h2><p>' + (sans ? 'Ton compte existe mais l\'administrateur ne l\'a pas encore activé.' : 'Ton accès à Convoyage Ultra est arrivé à son terme' + (st && st.fin ? ' (le ' + esc(fr(st.fin)) + ')' : '') + '. Tes données sont conservées.') + '</p><p>Contacte l\'administrateur pour renouveler ton accès.</p><button id="cpAboSortir" class="gris">Se déconnecter</button><button id="cpAboRetest">Vérifier à nouveau</button>';
     document.body.appendChild(d);
-    document.getElementById('cpAboSortir').onclick = () => { try { localStorage.removeItem('cp_session'); } catch (_) {} location.reload(); };
+    document.getElementById('cpAboSortir').onclick = () => { window.__cp?.deconnecter(); };
     document.getElementById('cpAboRetest').onclick = () => { location.reload(); };
   }
 
@@ -95,7 +87,7 @@
       '<button id="cpAdEnvoi">Envoyer l\'invitation</button><div class="msg" id="cpAdMsg"></div></div>' +
       '<div class="bloc"><b>Convoyeurs</b><div id="cpAdListe">Chargement…</div></div>' +
       '<div class="bloc"><b>Diagnostic (ce téléphone)</b><div id="cpAdErr" style="font-size:12px;white-space:pre-wrap;margin-top:6px"></div></div>';
-    try { const er = JSON.parse(localStorage.getItem('cp_erreurs') || '[]'); d.querySelector('#cpAdErr').textContent = er.length ? er.slice().reverse().join('\n') : 'Aucune erreur ni gel enregistré.'; } catch (_) {}
+    try { const er = JSON.parse(globalThis.CPAccount?.storage?.getItem('cp_erreurs') || '[]'); d.querySelector('#cpAdErr').textContent = er.length ? er.slice().reverse().join('\n') : 'Aucune erreur ni gel enregistré.'; } catch (_) {}
     document.body.appendChild(d);
     const $ = id => document.getElementById(id);
     $('cpAdFermer').onclick = () => d.remove();
@@ -166,7 +158,7 @@
         '<p><a href="' + esc(u) + '" style="display:inline-block;background:#b8860b;color:#fff;padding:12px 16px;border-radius:10px;font-weight:700;text-decoration:none">⬇️ Télécharger l\'APK</a></p>' +
         '<h3 style="color:#e0b84c;margin:14px 0 4px">Installer en 5 étapes</h3><ol style="padding-left:20px;line-height:1.7"><li>Appuie sur <b>« Télécharger l\'APK »</b> ci-dessus. Si Android prévient que ce type de fichier peut être dangereux, appuie sur <b>« Télécharger quand même »</b>.</li><li>Une fois le fichier téléchargé, ouvre-le (notification « Téléchargement terminé », ou application <b>Fichiers</b> puis dossier <b>Téléchargements</b>).</li><li>Android demande d\'<b>autoriser l\'installation des applications inconnues</b> : appuie sur <b>« Paramètres »</b>, active <b>« Autoriser depuis cette source »</b> (la source est ton navigateur, par exemple Chrome), puis reviens en arrière.</li><li>Appuie sur <b>« Installer »</b>. Si Play Protect affiche un avertissement, choisis <b>« Installer quand même »</b>.</li><li>Appuie sur <b>« Ouvrir »</b> et connecte-toi avec ton compte Convoyage Ultra. Autorise les <b>notifications</b> quand l\'appli le demande.</li></ol><p>Pour les mises à jour : reviens ici, télécharge la nouvelle version et installe-la par-dessus (tes données sont conservées).</p>' +
         '<p>Le lien est valable 1 heure. Ne le partage pas : l\'accès est réservé aux convoyeurs inscrits.</p>';
-      try { if (ver) localStorage.setItem('cp_apk_vue', ver); } catch (_) {}
+      try { if (ver) globalThis.CPAccount?.storage?.setItem('cp_apk_vue', ver); } catch (_) {}
       const b = document.getElementById('cpApkBtn'); if (b) b.textContent = '📲 Android';
     } catch (e) { C.textContent = 'Erreur : ' + e.message; }
   }
@@ -219,7 +211,7 @@
     if (!b) { b = document.createElement('button'); b.id = 'cpApkBtn'; b.textContent = '📲 Android'; b.onclick = ouvrirApk; b.style.bottom = admin ? '130px' : '84px'; document.body.appendChild(b); }
     try {
       const v = await signer('version.json');
-      if (v) { const j = await (await fetch(v)).json(); const vu = localStorage.getItem('cp_apk_vue'); if (j && j.version && vu && vu !== String(j.version)) b.textContent = '📲 Nouvelle version !'; }
+      if (v) { const j = await (await fetch(v)).json(); const vu = globalThis.CPAccount?.storage?.getItem('cp_apk_vue'); if (j && j.version && vu && vu !== String(j.version)) b.textContent = '📲 Nouvelle version !'; }
     } catch (_) {}
   }
 
@@ -258,7 +250,7 @@
     };
   }
   // V240 : diagnostic — erreurs et gels de l'appli gardés sur ce téléphone (visibles dans Admin) + écran vide → bouton Recharger.
-  const noterErreur = m => { try { const a = JSON.parse(localStorage.getItem('cp_erreurs') || '[]'); a.push(new Date().toISOString().slice(5, 19).replace('T', ' ') + ' ' + String(m).slice(0, 260)); localStorage.setItem('cp_erreurs', JSON.stringify(a.slice(-25))); } catch (_) {} };
+  const noterErreur = m => { try { const a = JSON.parse(globalThis.CPAccount?.storage?.getItem('cp_erreurs') || '[]'); a.push(new Date().toISOString().slice(5, 19).replace('T', ' ') + ' ' + String(m).slice(0, 260)); globalThis.CPAccount?.storage?.setItem('cp_erreurs', JSON.stringify(a.slice(-25))); } catch (_) {} };
   window.addEventListener('error', e => noterErreur('erreur: ' + (e.message || '') + ' @' + String(e.filename || '').split('/').pop() + ':' + (e.lineno || '')));
   window.addEventListener('unhandledrejection', e => noterErreur('promesse: ' + ((e.reason && e.reason.message) || e.reason)));
   (function () {
@@ -277,7 +269,7 @@
 
   let dernier = '';
   async function verifier() {
-    const s = lire();
+    const s = session();
     const cle = s && s.access_token ? (s.user_id || s.email || 'x') : '';
     if (!cle) { dernier = ''; const b = document.getElementById('cpAdminBtn'); if (b) b.remove(); const k = document.getElementById('cpApkBtn'); if (k) k.remove(); const a = document.getElementById('cpAbo'); if (a) a.remove(); return; }
     if (cle === dernier) return;

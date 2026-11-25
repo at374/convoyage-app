@@ -10,32 +10,23 @@
   const CODES = TOUTES.map(t => t[0]);
   ED.toutes = (ED.toutes || ED.plateformes || CODES).slice();
 
-  // V301 : la mémoire du téléphone (localStorage, 5 Mo) peut être pleine : le choix est aussi gardé dans un petit cookie (hors quota)
-const ckGet = () => { try { const m = document.cookie.match(/(?:^|; )cp_plats=([^;]*)/); return m ? decodeURIComponent(m[1]).split('.').filter(Boolean) : null; } catch (_) { return null; } };
-const ckSet = v => { try { document.cookie = 'cp_plats=' + encodeURIComponent(v.join('.')) + '; max-age=31536000; path=/; SameSite=Lax'; } catch (_) {} };
-const lireLoc = () => { try { const v = ckGet() || JSON.parse(localStorage.getItem(CLE) || 'null'); if (!Array.isArray(v)) return null; const f = v.filter(x => CODES.indexOf(x) >= 0); return f.length ? f : null; } catch (_) { return null; } };
-  const ecrireLoc = v => { ckSet(v); try { localStorage.setItem(CLE, JSON.stringify(v)); if (localStorage.getItem(CLE) !== JSON.stringify(v)) DG.err = 'stockage : relecture différente'; } catch (e) { try { DG.err = 'stockage : ' + (e && e.name); } catch (_) {} } };
+const lireLoc = () => { try { const v = JSON.parse(globalThis.CPAccount?.storage?.getItem(CLE) || 'null'); if (!Array.isArray(v)) return null; const f = v.filter(x => CODES.indexOf(x) >= 0); return f.length ? f : null; } catch (_) { return null; } };
+  const ecrireLoc = v => { try { globalThis.CPAccount?.storage?.setItem(CLE, JSON.stringify(v)); if (globalThis.CPAccount?.storage?.getItem(CLE) !== JSON.stringify(v)) DG.err = 'stockage : relecture différente'; } catch (e) { try { DG.err = 'stockage : ' + (e && e.name); } catch (_) {} } };
   const memes = (a, b) => JSON.stringify((a || []).slice().sort()) === JSON.stringify((b || []).slice().sort());
   const natif = v => { try { if (window.CPNatif && typeof window.CPNatif.reglerPlateformes === 'function') window.CPNatif.reglerPlateformes(JSON.stringify(v || ED.toutes)); } catch (_) {} };
   // Met la liste à jour SUR PLACE : l'application garde la même référence.
   const appliquer = v => { const liste = v && v.length ? ED.toutes.filter(x => v.indexOf(x) >= 0) : ED.toutes.slice(); ED.plateformes.splice(0, ED.plateformes.length, ...liste); };
 
-  appliquer(lireLoc());
-  natif(lireLoc());
+  const plateformesLocales = lireLoc();
+  appliquer(plateformesLocales);
+  if (plateformesLocales) natif(plateformesLocales);
 
-  const cfg = () => { try { if (window.CP_CONFIG && window.CP_CONFIG.anonKey) return window.CP_CONFIG; if (window.CP_CONFIG_ACTIVE && window.CP_CONFIG_ACTIVE.anonKey) return window.CP_CONFIG_ACTIVE; return JSON.parse(localStorage.getItem('cp_config') || 'null') || {}; } catch (_) { return {}; } };
-  const session = () => { try { const n = window.CPNatif && window.CPNatif.session ? JSON.parse(window.CPNatif.session() || 'null') : null; if (n && n.access_token && (!n.expires_at || Date.now() < Number(n.expires_at) - 30000)) return n; } catch (_) {} try { return JSON.parse(localStorage.getItem('cp_session') || 'null'); } catch (_) { return null; } };
-  async function jeton() {
-    let s = session(); if (!s || !s.access_token) return null;
-    if (s.expires_at && Date.now() > Number(s.expires_at) - 60000 && s.refresh_token) {
-      try {
-        const c = cfg();
-        const r = await fetch(String(c.url).replace(/\/+$/, '') + '/auth/v1/token?grant_type=refresh_token', { method: 'POST', headers: { apikey: c.anonKey, 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: s.refresh_token }) });
-        if (r.ok) { const j = await r.json(); s = { ...s, access_token: j.access_token, refresh_token: j.refresh_token || s.refresh_token, expires_at: Date.now() + (Number(j.expires_in) || 3600) * 1000 }; try { localStorage.setItem('cp_session', JSON.stringify(s)); } catch (_) {} }
-      } catch (_) {}
-    }
-    return s.access_token;
-  }
+  const cfg = () => { try { if (window.CP_CONFIG && window.CP_CONFIG.anonKey) return window.CP_CONFIG; if (window.CP_CONFIG_ACTIVE && window.CP_CONFIG_ACTIVE.anonKey) return window.CP_CONFIG_ACTIVE; return JSON.parse(globalThis.CPAccount?.storage?.getItem('cp_config') || 'null') || {}; } catch (_) { return {}; } };
+  const session = () => {
+    const api = window.CPAuthenticatedApi;
+    return api?.connecte ? api.session : null;
+  };
+  const jeton = () => window.CPAuthenticatedApi?.jeton();
   async function http(chemin, opt) {
     const c = cfg(), t = await jeton();
     if (!c.url || !c.anonKey || !t) throw new Error('Non connecté');
@@ -47,10 +38,10 @@ const lireLoc = () => { try { const v = ckGet() || JSON.parse(localStorage.getIt
   // V300 : l'identifiant vient aussi du jeton de connexion (la session du téléphone n'a pas toujours user_id) ; sans identifiant on signale l'échec au lieu de croire que c'est enregistré
 const idUtilisateur = () => { const s = session(); if (s && s.user_id) return s.user_id; try { return JSON.parse(atob(String(s.access_token).split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub || null; } catch (_) { return null; } };
 const DG = { serv: '?', err: '' };
-const majDiag = () => { try { const d = document.getElementById('cpPlatDiag'); const s = session(); if (d) d.textContent = 'Diagnostic — téléphone : ' + (lireLoc() || []).join(',') + ' · en ligne : ' + DG.serv + (DG.err ? ' · erreur : ' + DG.err : '') + ' · connecté : ' + (s && s.access_token ? 'oui' : 'non') + ' · mémoire : ' + (() => { try { const g = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); g.push([k, k.length + (localStorage.getItem(k) || '').length]); } g.sort((a, b) => b[1] - a[1]); return g.slice(0, 3).map(x => x[0].slice(0, 24) + ' ' + Math.round(x[1] / 1024) + ' Ko').join(', '); } catch (e) { return 'illisible'; } })() + ' · total : ' + (() => { try { let n = 0; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); n += k.length + (localStorage.getItem(k) || '').length; } return Math.round(n / 1024) + ' Ko'; } catch (e) { return 'illisible'; } })(); } catch (_) {} };
+const majDiag = () => { try { const d = document.getElementById('cpPlatDiag'); const s = session(); if (d) d.textContent = 'Diagnostic — téléphone : ' + (lireLoc() || []).join(',') + ' · en ligne : ' + DG.serv + (DG.err ? ' · erreur : ' + DG.err : '') + ' · connecté : ' + (s && s.access_token ? 'oui' : 'non') + ' · mémoire : ' + (() => { try { const g = []; for (let i = 0; i < globalThis.CPAccount?.storage?.length; i++) { const k = globalThis.CPAccount?.storage?.key(i); g.push([k, k.length + (globalThis.CPAccount?.storage?.getItem(k) || '').length]); } g.sort((a, b) => b[1] - a[1]); return g.slice(0, 3).map(x => x[0].slice(0, 24) + ' ' + Math.round(x[1] / 1024) + ' Ko').join(', '); } catch (e) { return 'illisible'; } })() + ' · total : ' + (() => { try { let n = 0; for (let i = 0; i < globalThis.CPAccount?.storage?.length; i++) { const k = globalThis.CPAccount?.storage?.key(i); n += k.length + (globalThis.CPAccount?.storage?.getItem(k) || '').length; } return Math.round(n / 1024) + ' Ko'; } catch (e) { return 'illisible'; } })(); } catch (_) {} };
 const NS = 'cp_plats_nonsync';
-const marquerNonSync = on => { try { if (on) localStorage.setItem(NS, '1'); else localStorage.removeItem(NS); } catch (_) {} };
-const nonSync = () => { try { return localStorage.getItem(NS) === '1'; } catch (_) { return false; } };
+const marquerNonSync = on => { try { if (on) globalThis.CPAccount?.storage?.setItem(NS, '1'); else globalThis.CPAccount?.storage?.removeItem(NS); } catch (_) {} };
+const nonSync = () => { try { return globalThis.CPAccount?.storage?.getItem(NS) === '1'; } catch (_) { return false; } };
 const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw new Error('Pas d\'identifiant'); await http('/rest/v1/reglages?on_conflict=user_id', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify([{ user_id: uid, plateformes_choisies: v }]) }); marquerNonSync(false); };
 
   async function enregistrer(v, msgEl) {
@@ -169,7 +160,7 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
     'Le bloc affiche maintenant l\'état réel (activé ou non, dernière synchro) au lieu de toujours montrer un formulaire vide.',
   ];
   function blocNouveautes() {
-    try { if (localStorage.getItem('cp_nouveaute_vue') === NOUVEAUTE_ID) return ''; } catch (_) {}
+    try { if (globalThis.CPAccount?.storage?.getItem('cp_nouveaute_vue') === NOUVEAUTE_ID) return ''; } catch (_) {}
     return '<div class="carte cpPlatCard" id="cpNouveauteCard" style="border-color:#e0a030">' +
       '<h2 style="margin-top:0">Nouveautés</h2>' +
       NOUVEAUTE_TEXTE.map(t => '<p class="doux">' + t + '</p>').join('') +
@@ -183,7 +174,7 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
     if (nv && !document.getElementById('cpNouveauteCard')) {
       const d = document.createElement('div'); d.innerHTML = nv; const el = d.firstElementChild;
       ec.insertBefore(el, ec.firstChild);
-      const bo = el.querySelector('#cpNouveauteOk'); if (bo) bo.onclick = () => { try { localStorage.setItem('cp_nouveaute_vue', NOUVEAUTE_ID); } catch (_) {} el.remove(); };
+      const bo = el.querySelector('#cpNouveauteOk'); if (bo) bo.onclick = () => { try { globalThis.CPAccount?.storage?.setItem('cp_nouveaute_vue', NOUVEAUTE_ID); } catch (_) {} el.remove(); };
     }
     const cur = lireLoc() || ED.toutes;
     const c = document.createElement('div'); c.id = 'cpPlatCard'; c.className = 'carte cpPlatCard';
@@ -210,10 +201,12 @@ const ecrireServeur = async v => { const uid = idUtilisateur(); if (!uid) throw 
     if (k === cle || enCours) return;
     enCours = true;
     try {
-      const serv = await lireServeur(), loc = lireLoc(); DG.serv = serv ? serv.join(',') : 'vide'; majDiag();
+      const serv = await lireServeur();
+      if (session()?.stamp !== s.stamp) return;
+      const loc = lireLoc(); DG.serv = serv ? serv.join(',') : 'vide'; majDiag();
       cle = k;
       if (serv && nonSync() && loc) { try { await ecrireServeur(loc); } catch (_) {} } else if (serv) {
-        if (!memes(serv, loc)) { ecrireLoc(serv); appliquer(serv); natif(serv); try { if (!sessionStorage.getItem('cp_plat_rl')) { sessionStorage.setItem('cp_plat_rl', '1'); location.reload(); return; } } catch (_) {} }
+        if (!memes(serv, loc)) { ecrireLoc(serv); appliquer(serv); natif(serv); try { if (!sessionStorage.getItem('cp_plat_rl:' + s.stamp)) { sessionStorage.setItem('cp_plat_rl:' + s.stamp, '1'); location.reload(); return; } } catch (_) {} }
       } else if (loc) { try { await ecrireServeur(loc); } catch (_) {} }
       else modalChoix();
     } catch (e0) { DG.err = 'lecture : ' + (e0 && e0.message); majDiag(); /* hors ligne ou colonne absente : le choix local reste utilisé ; sans choix local on demande */ if (!lireLoc() && s && s.access_token) { cle = k; modalChoix(); } }
