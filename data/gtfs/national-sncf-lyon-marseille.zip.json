@@ -1,0 +1,27 @@
+{
+  "operator": "sncf",
+  "file": "national-sncf-lyon-marseille.zip",
+  "sha256": "4e5d959cf2712ae630a7f17e67cfa38032d36319f71716e25c9db13690fd3b74",
+  "bytes": 808124,
+  "bounds": [
+    43.1,
+    3.65,
+    46.15,
+    5.85
+  ],
+  "source": "https://eu.ftp.opendatasoft.com/sncf/plandata/Export_OpenData_SNCF_GTFS_NewTripId.zip",
+  "scope": "Static GTFS slice for lyon-marseille; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 149,
+  "details": {
+    "routes": 147,
+    "trips": 9850,
+    "stops": 1032,
+    "fares": false,
+    "bounds": [
+      43.1,
+      3.65,
+      46.15,
+      5.85
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "operator": "flixbus",
+  "file": "national-flixbus-lyon-marseille.zip",
+  "sha256": "1e4796c5779b176dc26ddaa393c377fd2a473418793757af991de1b65d775e25",
+  "bytes": 119431,
+  "bounds": [
+    43.1,
+    3.65,
+    46.15,
+    5.85
+  ],
+  "source": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
+  "scope": "Static GTFS slice for lyon-marseille; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "details": {
+    "routes": 116,
+    "trips": 2161,
+    "stops": 24,
+    "fares": false,
+    "bounds": [
+      43.1,
+      3.65,
+      46.15,
+      5.85
+    ]
+  }
+}

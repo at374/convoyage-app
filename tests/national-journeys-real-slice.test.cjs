@@ -67,12 +67,18 @@ for(const operator of ['blablacarBus','flixbus']){
  });
 }
 
-test('Paris–Lyon charge un seul extrait par opérateur et fournit la grille du trajet',async()=>{
+const lyon={lat:45.7504,lon:4.829};
+const marseille={lat:43.303,lon:5.380};
+for(const [slug,bounds,from,to] of [
+ ['paris-lyon',[45.55,2.15,49.05,5.45],{lat:48.8443,lon:2.373},lyon],
+ ['lyon-marseille',[43.10,3.65,46.15,5.85],lyon,marseille]
+]){
+test(slug+' charge un seul extrait par opérateur et fournit la grille du trajet',async()=>{
  globalThis.CPGTFSLoader=require('../transport-gtfs-loader.js');
  globalThis.CPSibraPlanner=require('../sibra-planner.js');
  const hub=require('../transport-mission-hub.js');
- const lyon={lat:45.7504,lon:4.829};
- const task={from:{lat:48.8443,lon:2.373},to:lyon,earliestDeparture:'2026-11-27T06:00:00+01:00'};
+ const task={from,to,earliestDeparture:'2026-11-27T06:00:00+01:00'};
+ const suffix='_'+slug.replaceAll('-','_');
  const operators=['sncf','blablacarBus','flixbus'];
  const loads=[];
  const fetcher=async url=>{
@@ -81,28 +87,29 @@ test('Paris–Lyon charge un seul extrait par opérateur et fournit la grille du
  };
  const nationalGTFSResources=Object.fromEntries(operators.flatMap(operator=>[
   [operator,{url:'https://example.org/national-'+operator+'-aura.zip',bounds:[44,3.6,46.7,7.4]}],
-  [operator+'_paris_lyon',{operator,url:'https://example.org/national-'+operator+'-paris-lyon.zip',
-   bounds:[45.55,2.15,49.05,5.45]}]
+  [operator+suffix,{operator,url:'https://example.org/national-'+operator+'-'+slug+'.zip',
+   bounds}]
  ]));
  const providers=hub.makeProviders({CPNationalGTFSJourneys:journeys},{nationalGTFSResources,fetcher});
  const previousFetch=globalThis.fetch;
  try{
   globalThis.fetch=fetcher;
   for(const operator of operators){
-   const aura=providers['national_'+operator],corridor=providers['national_'+operator+'_paris_lyon'];
+   const aura=providers['national_'+operator],corridor=providers['national_'+operator+suffix];
    assert.equal(aura.enabled(task),false);
    assert.equal(corridor.enabled(task),true);
-   assert.equal(corridor.enabled({...task,to:{lat:43.30,lon:5.38}}),false);
+   assert.equal(corridor.enabled({...task,to:{lat:47.22,lon:-1.55}}),false);
    const [trip]=await corridor.run(task);
    assert.ok(trip);
    for(const leg of trip.legs){
     const source=hub.scheduleSourceForLeg(leg);
-    assert.ok(source?.networkUrls[0].endsWith('-paris-lyon.zip'));
+    assert.ok(source?.networkUrls[0].endsWith('-'+slug+'.zip'));
     const schedule=await hub.dayScheduleForLeg(source);
     const time=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}).format(new Date(leg.departure));
     assert.ok(schedule.some(row=>hub.hmFromSeconds(row.departureSeconds)===time));
    }
   }
-  assert.ok(loads.every(url=>url.endsWith('-paris-lyon.zip')));
+  assert.ok(loads.every(url=>url.endsWith('-'+slug+'.zip')));
  }finally{globalThis.fetch=previousFetch;}
 });
+}

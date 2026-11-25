@@ -16,6 +16,7 @@ from build_regional_gtfs import filter_by_bounds, validate
 REGIONS = {
     'aura': (44.0, 3.6, 46.7, 7.4),
     'paris-lyon': (45.55, 2.15, 49.05, 5.45),
+    'lyon-marseille': (43.10, 3.65, 46.15, 5.85),
 }
 OPERATORS = ('sncf', 'blablacarBus', 'flixbus')
 MAX_OUTPUT = 12 * 1024 * 1024

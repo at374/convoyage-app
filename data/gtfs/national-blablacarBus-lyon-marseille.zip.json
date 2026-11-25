@@ -1,0 +1,27 @@
+{
+  "operator": "blablacarBus",
+  "file": "national-blablacarBus-lyon-marseille.zip",
+  "sha256": "6594eb8ea23150f921f10e0ded5f5e7acf93323256e86cd7d740eb5e13234e3d",
+  "bytes": 39537,
+  "bounds": [
+    43.1,
+    3.65,
+    46.15,
+    5.85
+  ],
+  "source": "https://drive.google.com/uc?export=download&id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o",
+  "scope": "Static GTFS slice for lyon-marseille; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 0,
+  "details": {
+    "routes": 433,
+    "trips": 433,
+    "stops": 15,
+    "fares": false,
+    "bounds": [
+      43.1,
+      3.65,
+      46.15,
+      5.85
+    ]
+  }
+}
