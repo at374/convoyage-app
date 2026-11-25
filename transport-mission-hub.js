@@ -1313,6 +1313,20 @@ const LOCAL_GTFS_NETWORKS=[
  ['taneo_nevers', "Taneo (Nevers)", 'taneo-nevers.zip', [46.903,3.037,47.107,3.228]],
  ['tea_autun', "TEA (Autun)", 'tea-autun.zip', [46.948,4.284,46.967,4.316]]
 ];
+async function gtfsCacheFetch(r,url,init){
+ const key=typeof url==='string'?url:url?.url||'';
+ if(!r.caches||!/\/data\/gtfs\/[^/?]+\.zip(\?|$)/.test(key))return r.fetch(url,init);
+ const cache=await r.caches.open('cp-gtfs-zips').catch(()=>null);
+ const hit=await cache?.match(key).catch(()=>null);
+ if(hit&&Date.now()-Number(hit.headers.get('x-cp-saved'))<12*3600*1000)return hit;
+ const response=await r.fetch(url,init);
+ if(cache&&response.ok){
+  const copy=response.clone(),headers=new Headers(copy.headers);
+  headers.set('x-cp-saved',String(Date.now()));
+  await cache.put(key,new Response(copy.body,{status:copy.status,headers})).catch(()=>{});
+ }
+ return response;
+}
 function makeProviders(r,opts={}){
   const dateParts=when=>{
    const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',
@@ -1321,21 +1335,7 @@ function makeProviders(r,opts={}){
    return {date:p.year+'-'+p.month+'-'+p.day,clock:p.hour+':'+p.minute+':00'};
   };
 
- // Vitesse : les fichiers d'horaires (data/gtfs/*.zip) sont gardés sur le téléphone (Cache Storage) pendant 12 h ; au lieu de les retélécharger à chaque recherche.
- const rawFetch=opts.fetcher||((...a)=>r.fetch(...a));
- const fetcher=opts.fetcher?rawFetch:async(url,init)=>{
-  const u=typeof url==='string'?url:(url&&url.url)||'';
-  const store=r.caches;
-  if(!store||!/\/data\/gtfs\/[^/?]+\.zip(\?|$)/.test(u))return rawFetch(url,init);
-  try{
-   const c=await store.open('cp-gtfs-zips'),hit=await c.match(u);
-   if(hit){const at=Number(hit.headers.get('x-cp-saved'));if(Number.isFinite(at)&&Date.now()-at<12*3600*1000)return hit;}
-   const resp=await rawFetch(url,init);
-   if(resp&&resp.ok){try{const b=await resp.clone().arrayBuffer();
-    await c.put(u,new Response(b,{status:200,headers:{'content-type':'application/zip','x-cp-saved':String(Date.now())}}));}catch(_){}}
-   return resp;
-  }catch(e){return rawFetch(url,init);}
- };
+ const fetcher=opts.fetcher||((url,init)=>gtfsCacheFetch(r,url,init));
  const P={};
  // 22/11/2026 (Laurent : blocages répétés de 30-40 s mesurés sur son téléphone, réseau très lent — 0 à 5 Ko/s
  // vu sur ses captures) : un seul incident du worker (erreur réseau pendant un téléchargement GTFS sur une
@@ -2615,24 +2615,29 @@ function ticketLinks(j){
  return [...seen.values()];
 }
 const dayScheduleTablesCache=new Map();
-async function gtfsTablesForDaySchedule(raw){
- const key=(raw.networkUrls||[])[0]+'|'+raw.serviceDate;
+async function gtfsFeedForDaySchedule(raw){
+ const key=raw.networkUrls[0]+'|'+raw.serviceDate;
  let promise=dayScheduleTablesCache.get(key);
  if(!promise){
-  promise=(async()=>{
-   const loader=root.CPGTFSLoader,pl=root.CPSibraPlanner;
-   if(!loader||typeof loader.loadResource!=='function'||!pl||typeof pl.parseGtfsCsv!=='function')return null;
-   const feed=await loader.loadResource({format:'GTFS',url:raw.networkUrls[0],fallbackUrls:raw.networkUrls.slice(1)},
-    {indexServiceDates:[raw.serviceDate],retainSourceTables:true});
-   const csv=name=>pl.parseGtfsCsv(feed.files?.[name]||'')||[];
-   return {stops:csv('stops.txt'),trips:csv('trips.txt'),routes:csv('routes.txt'),
-    stop_times:csv('stop_times.txt'),calendar:csv('calendar.txt'),calendar_dates:csv('calendar_dates.txt')};
-  })();
+  const loader=root.CPGTFSLoader;
+  if(typeof loader?.loadResource!=='function')return null;
+  promise=loader.loadResource({format:'GTFS',url:raw.networkUrls[0],fallbackUrls:raw.networkUrls.slice(1)},
+   {fetcher:(url,init)=>gtfsCacheFetch(root,url,init),indexServiceDates:[raw.serviceDate],retainSourceTables:true});
   dayScheduleTablesCache.set(key,promise);
   while(dayScheduleTablesCache.size>4)dayScheduleTablesCache.delete(dayScheduleTablesCache.keys().next().value);
   promise.catch(()=>{if(dayScheduleTablesCache.get(key)===promise)dayScheduleTablesCache.delete(key);});
  }
  return promise;
+}
+async function gtfsTablesForDaySchedule(raw){
+ const feed=await gtfsFeedForDaySchedule(raw),pl=root.CPSibraPlanner;
+ if(!feed||typeof pl?.parseGtfsCsv!=='function')return null;
+ if(!feed.dayScheduleTables){
+  const csv=name=>pl.parseGtfsCsv(feed.files?.[name]||'')||[];
+  feed.dayScheduleTables={stops:csv('stops.txt'),trips:csv('trips.txt'),routes:csv('routes.txt'),
+   stop_times:csv('stop_times.txt'),calendar:csv('calendar.txt'),calendar_dates:csv('calendar_dates.txt')};
+ }
+ return feed.dayScheduleTables;
 }
 // Tous les départs du jour de CETTE ligne entre les DEUX arrêts de CETTE étape — même mécanique que le
 // bouton Y51 historique (sibra-planner.js::datedInterurbanRides), généralisée à tout réseau GTFS câblé.
@@ -2674,6 +2679,17 @@ function scheduleLabel(value){
 }
 async function dayScheduleForLeg(raw){
  if(!raw?.networkUrls?.length||!raw.serviceDate)return [];
+ const indexer=root.CPGTFSIndex;
+ if(raw.routeId&&raw.from&&raw.to&&typeof indexer?.directTrips==='function'){
+  const feed=await gtfsFeedForDaySchedule(raw);
+  if(feed?.index){
+   const seconds=time=>time.split(':').reduce((sum,part)=>sum*60+Number(part),0);
+   const rows=indexer.directTrips(feed.files,feed.index,raw.serviceDate,String(raw.from),String(raw.to))
+    .filter(ride=>String(ride.routeId)===String(raw.routeId))
+    .map(ride=>({trip_id:ride.tripId,departureSeconds:seconds(ride.departure),arrivalSeconds:seconds(ride.arrival)}));
+   return uniqueDayScheduleRows(rows);
+  }
+ }
  const tables=await gtfsTablesForDaySchedule(raw);
  const pl=root.CPSibraPlanner;
  if(!tables||!pl||typeof pl.datedInterurbanRides!=='function')return [];
@@ -2706,6 +2722,9 @@ async function dayScheduleForLeg(raw){
    }
   }
  }
+ return uniqueDayScheduleRows(rows);
+}
+function uniqueDayScheduleRows(rows){
  return [...new Map(rows.map(r=>[r.departureSeconds+':'+r.arrivalSeconds,r])).values()]
   .sort((a,b)=>a.departureSeconds-b.departureSeconds||a.arrivalSeconds-b.arrivalSeconds);
 }

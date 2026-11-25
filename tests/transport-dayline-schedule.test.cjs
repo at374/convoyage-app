@@ -25,18 +25,23 @@ test('source : datedInterurbanRides de sibra-planner.js réutilisé (pas réinve
 
 const gtfsZip=path.join(__dirname,'..','data','gtfs','tao-orleans.zip');
 test('réel : dayScheduleForLeg retrouve les vrais départs du jour (TAO Orléans, ligne A)',{skip:!fs.existsSync(gtfsZip)&&'archive TAO Orléans absente (data/gtfs non généré)'},async()=>{
- const previousFetch=globalThis.fetch,previousCPSibra=globalThis.CPSibraPlanner,previousCPIndex=globalThis.CPGTFSIndex,previousCPLoader=globalThis.CPGTFSLoader;
+ const previousFetch=globalThis.fetch,previousCPSibra=globalThis.CPSibraPlanner,previousCPIndex=globalThis.CPGTFSIndex,previousCPLoader=globalThis.CPGTFSLoader,previousCache=globalThis.caches;
  try{
   globalThis.CPGTFSIndex=require('../transport-gtfs-index.js');
   globalThis.CPGTFSLoader=require('../transport-gtfs-loader.js');
   globalThis.CPSibraPlanner=require('../sibra-planner.js');
   const bytes=fs.readFileSync(gtfsZip);
-  globalThis.fetch=async()=>new Response(bytes,{status:200,headers:{'content-type':'application/zip'}});
+  let network=0,cacheReads=0;
+  globalThis.fetch=async()=>{network++;throw Error('archive déjà en cache');};
+  globalThis.caches={open:async name=>{
+   assert.equal(name,'cp-gtfs-zips');
+   return {match:async()=>{cacheReads++;return new Response(bytes,{headers:{'content-type':'application/zip','x-cp-saved':String(Date.now())}});}};
+  }};
   delete require.cache[require.resolve('../transport-mission-hub.js')];
   const hub=require('../transport-mission-hub.js');
   // Arrêts et ligne réels, vérifiés directement dans l'archive (trips.txt/stop_times.txt/calendar.txt) :
   // trajet ORLEANS:VehicleJourney:A_A_467_12_A01_7_063500 de la ligne A, actif le 22/11/2026 (dimanche).
-  const raw={networkUrls:['https://local.test/tao-orleans.zip'],routeId:'ORLEANS:Line:A',
+  const raw={networkUrls:['https://local.test/data/gtfs/tao-orleans.zip'],routeId:'ORLEANS:Line:A',
    from:'ORLEANS:StopArea:THOPIT1',to:'ORLEANS:StopArea:TFLORA1',serviceDate:'2026-11-22'};
   const rows=await hub.dayScheduleForLeg(raw);
   assert.ok(rows.length>10,'plusieurs dizaines de départs attendus sur une ligne urbaine toute la journée, trouvé '+rows.length);
@@ -46,7 +51,14 @@ test('réel : dayScheduleForLeg retrouve les vrais départs du jour (TAO Orléan
   assert.equal(hub.hmFromSeconds(rows[0].departureSeconds),'06:35');
   // Rejoué : doit réutiliser le cache (réseau+jour), pas re-télécharger ni re-planter.
   const rows2=await hub.dayScheduleForLeg(raw);
-  assert.equal(rows2.length,rows.length);
+  assert.deepEqual(rows2,rows);
+  assert.equal(cacheReads,1);
+  assert.equal(network,0);
+  globalThis.CPGTFSIndex=null;
+  const legacy=await hub.dayScheduleForLeg(raw);
+  const slots=list=>list.map(({departureSeconds,arrivalSeconds})=>[departureSeconds,arrivalSeconds]);
+  assert.deepEqual(slots(rows),slots(legacy));
+  globalThis.CPGTFSIndex=require('../transport-gtfs-index.js');
   // Ligne/arrêts absents du flux (ou date hors calendrier) : aucune invention, liste vide.
   const absent=await hub.dayScheduleForLeg({...raw,routeId:'LIGNE-INEXISTANTE'});
   assert.deepEqual(absent,[]);
@@ -55,7 +67,7 @@ test('réel : dayScheduleForLeg retrouve les vrais départs du jour (TAO Orléan
   assert.deepEqual(await hub.dayScheduleForLeg({routeId:'X'}),[]);
  } finally {
   globalThis.fetch=previousFetch;globalThis.CPSibraPlanner=previousCPSibra;
-  globalThis.CPGTFSIndex=previousCPIndex;globalThis.CPGTFSLoader=previousCPLoader;
+  globalThis.CPGTFSIndex=previousCPIndex;globalThis.CPGTFSLoader=previousCPLoader;globalThis.caches=previousCache;
   delete require.cache[require.resolve('../transport-mission-hub.js')];
  }
 });
