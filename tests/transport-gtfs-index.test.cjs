@@ -106,3 +106,9 @@ console.log('GTFS index: 42 assertions passed');
  assert.equal(nearbyStops(index,0,179.999,1200)[0].name,'');
  assert.deepEqual(nearbyStops(index,0,179.999,500).map(stop=>stop.stopId),['opposite']);
 }
+
+const specialHeader=parseCSV('__proto__,name,name\nvalue,first,last')[0];
+assert.equal(Object.getPrototypeOf(specialHeader),Object.prototype);
+assert.equal(Object.hasOwn(specialHeader,'__proto__'),true);
+assert.equal(specialHeader.__proto__,'value');
+assert.equal(specialHeader.name,'last');

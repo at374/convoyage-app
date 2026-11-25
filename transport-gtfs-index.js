@@ -6,7 +6,14 @@ function* csvRows(text){
  let names=null,row=[],field='',quoted=false;
  const record=values=>{
   if(!names){names=values.map((h,i)=>i===0?h.replace(/^\uFEFF/,''):h);return null;}
-  return values.some(v=>v!=='')?Object.fromEntries(names.map((h,i)=>[h,values[i]??''])):null;
+  if(!values.some(value=>value!==''))return null;
+  const item={};
+  for(let i=0;i<names.length;i++){
+   const name=names[i],value=values[i]??'';
+   if(name==='__proto__')Object.defineProperty(item,name,{value,writable:true,enumerable:true,configurable:true});
+   else item[name]=value;
+  }
+  return item;
  };
  for(let i=0;i<text.length;i++){
   const c=text[i];
