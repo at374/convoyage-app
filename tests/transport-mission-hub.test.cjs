@@ -921,3 +921,46 @@ test('à Voiron, une marche vers le centre est recalculée depuis Louis Néel ve
  assert.deepEqual(result.legs.at(-1).toPoint,rue);
  assert.equal(result.legs.at(-1).to,'Rue Louis Armand');
 });
+
+test('un routeur piéton muet laisse le trajet visible et termine la recherche',async()=>{
+ const never=new Promise(()=>{});
+ const providers={local:{name:'Local',enabled:()=>true,run:async()=>[{
+  source:'Local',legs:[bus(at(8,0),at(8,25),STOP1,STOP2)]
+ }]}};
+ let finished;
+ const final=new Promise(resolve=>{finished=resolve;});
+ const session=H.createSession({
+  tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],
+  providers,router:{route:()=>never},enrichmentMs:35,
+  onUpdate:(_,view)=>{if(view.done)finished(view);}
+ });
+ const timer=setTimeout(()=>finished(null),1000);
+ try{
+  const view=await final;
+  assert.ok(view?.done);
+  const journeys=[...view.picks.map(p=>p.journey),...view.others];
+  assert.ok(journeys.length);
+  assert.ok(journeys.every(j=>!j.computing&&!j.feasible),JSON.stringify(journeys.map(j=>[j.computing,j.feasible,j.missing,j.reasons])));
+ }finally{clearTimeout(timer);session.dispose();}
+});
+
+test('le délai maximum annule un fournisseur muet et conserve les propositions déjà reçues',async()=>{
+ let signal,finish;
+ const final=new Promise(resolve=>{finish=resolve;});
+ const providers={
+  quick:{name:'Rapide',enabled:()=>true,run:async()=>[{source:'Rapide',legs:[bus(at(8,0),at(8,25),STOP1,STOP2)]}]},
+  slow:{name:'Lent',enabled:()=>true,timeoutMs:1000,run:(_,s)=>{signal=s;return new Promise(()=>{});}}
+ };
+ const session=H.createSession({
+  tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],
+  providers,router:fakeRouter(),maxProviderMs:35,
+  onUpdate:(_,view)=>{if(view.done)finish(view);}
+ });
+ const timer=setTimeout(()=>finish(null),1000);
+ try{
+  const view=await final;
+  assert.ok(view?.done&&view.total>0);
+  assert.equal(signal.aborted,true);
+  assert.match(view.errors.Lent,/délai fournisseur dépassé/);
+ }finally{clearTimeout(timer);session.dispose();}
+});

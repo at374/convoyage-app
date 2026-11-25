@@ -2103,9 +2103,15 @@ async function accessFor(j,task,otp,localAccess,signal){
 }
 
 /* ---------- Session ---------- */
-function createSession({tasks=[],providers={},router=null,scooterRouter=null,scooter=null,fareFor=null,walkMaxKm=3,timeoutMs=25000,onUpdate=()=>{}}={}){
+// Include time spent waiting in the routing queue, even when the provider ignores cancellation.
+function until(promise,deadline,fallback){
+ let timer;
+ return Promise.race([promise,new Promise(resolve=>{timer=setTimeout(()=>resolve(fallback),Math.max(0,deadline-Date.now()));})])
+  .finally(()=>clearTimeout(timer));
+}
+function createSession({tasks=[],providers={},router=null,scooterRouter=null,scooter=null,fareFor=null,walkMaxKm=3,timeoutMs=25000,enrichmentMs=14000,maxProviderMs=Infinity,onUpdate=()=>{}}={}){
  tasks=tasks.map(t=>({...t,walkMaxMeters:Number.isFinite(t.walkMaxMeters)?t.walkMaxMeters:(Number.isFinite(walkMaxKm)&&walkMaxKm>0?walkMaxKm*1000:undefined)}));
- const state={},controller=new AbortController();let disposed=false;
+ const state={},controller=new AbortController(),requests=new Set();let disposed=false;
  // 21/11/2026 : une longue marche d'approche/sortie n'était comparée à un bus/tram local que dans
  // l'agglomération grenobloise (Mobilités M, providers.regional) — ailleurs (Thonon/Star't, Annecy/Sibra…),
  // completeWalks() ne proposait jamais qu'une marche pure, même quand le réseau local dessert exactement
@@ -2139,16 +2145,19 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    try{if(providers.regional&&providers.regional.enabled(task))return true;}catch(_){}
    return complementIds.some(k=>{try{return providers[k].enabled(task);}catch(_){return false;}});
   },
-  run:async task=>{
+  run:async (task,deadline=Date.now()+5000)=>{
+   const rows=[];
    const runners=[];
-   try{if(providers.regional&&providers.regional.enabled(task))runners.push(providers.regional.run(task).catch(()=>[]));}catch(_){}
-   for(const k of complementIds){
-    let ok=false;try{ok=providers[k].enabled(task);}catch(_){ok=false;}
-    if(ok)runners.push(providers[k].run(task).catch(()=>[]));
-   }
+   const run=p=>{
+    try{if(p?.enabled(task))runners.push(Promise.resolve(p.run(task,controller.signal)).then(list=>{
+     if(Array.isArray(list))rows.push(...list);
+    }).catch(()=>{}));}catch(_){}
+   };
+   run(providers.regional);
+   complementIds.forEach(k=>run(providers[k]));
    if(!runners.length)return [];
-   const results=await Promise.all(runners);
-   const merged=results.flat().filter(it=>it&&Array.isArray(it.legs)&&it.legs.length);
+   await until(Promise.all(runners),Math.min(deadline,Date.now()+5000),null);
+   const merged=rows.filter(it=>it&&Array.isArray(it.legs)&&it.legs.length);
    return hasTransit(merged)?merged:[];
   }
  };
@@ -2196,7 +2205,12 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   scooterEnabled:!!(scooter&&scooter.enabled),
   diag:(()=>{const c={};let noTimes=0;for(const j of s.items){if(j.durationMinutes===null||j.durationMinutes===undefined)noTimes++;for(const r of [...(j.reasons||[]),...(j.missing||[])]){const k=String(r).replace(/\d+/g,'N').slice(0,90);c[k]=(c[k]||0)+1;}}
    return {evaluated:s.items.length,noTimes,reasons:Object.entries(c).sort((x,y)=>y[1]-x[1]).slice(0,5)};})()};}
- async function add(label,source,journeys){
+ async function add(label,source,journeys,deadline=Date.now()+enrichmentMs){
+  const boundedRouter=engine=>engine&&({route:(a,b)=>Date.now()>=deadline||controller.signal.aborted?
+   Promise.resolve(null):until(engine.route(a,b),deadline,null)});
+  const walking=boundedRouter(router),cycling=boundedRouter(scooterRouter);
+  const nearby={enabled:anyLocalBus.enabled,run:task=>Date.now()>=deadline||controller.signal.aborted?
+   Promise.resolve([]):anyLocalBus.run(task,deadline)};
   const s=state[label];if(!s||disposed)return;
   s.received[source]=(s.received[source]||0)+(Array.isArray(journeys)?journeys.length:0);
   const cancelled=x=>x&&(x.cancelled===true||x.canceled===true||/^(cancelled|canceled|annul)/i.test(String(x.status||'')));
@@ -2209,7 +2223,8 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   // 6 -> 12, demande de Laurent) ; sans accès calculé, le car reste signalé « accès non calculé ».
   if(clean.some(j=>j.needsAccess)){
    const withAccess=clean.filter(j=>j.needsAccess).sort((a,b)=>ms(a.departure||a.legs[0]?.departure)-ms(b.departure||b.legs[0]?.departure)).slice(0,12);
-   const resolved=await Promise.all(withAccess.map(j=>accessFor(j,s.task,providers.otp,anyLocalBus,controller.signal)));
+   const resolved=await Promise.all(withAccess.map(j=>until(accessFor(j,s.task,providers.otp,nearby,controller.signal),Math.min(deadline,Date.now()+5000),
+    {...j,needsAccess:undefined,missing:[...(j.missing||[]),'accès à la gare routière non calculé (délai dépassé)']})));
    clean=clean.filter(j=>!j.needsAccess).concat(resolved);
   }
   if(clean.length!==usable.length)s.discarded[source]=(s.discarded[source]||0)+usable.length-clean.length;
@@ -2254,9 +2269,9 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   }
   emit(label);
   const replace=(t,a)=>{const old=pendingCard.get(t);const i=s.items.indexOf(old);
-   if(old)a.sources=[...new Set([...a.sources,...(old.sources||[])])];
+   if(old)a.sources=[...new Set([...(a.sources||[]),...(old.sources||[])])];
    if(i>=0)s.items[i]=a;else s.items.push(a);if(t.key)s.bySignature.set(t.key,a);};
-  const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,router,{enabled:!!(scooter&&scooter.enabled&&scooterRouter),router:scooterRouter,maxKm:scooter&&scooter.maxKm,speedKmh:scooter&&scooter.speedKmh},providers?anyLocalBus:null).then(x=>{
+  const walkBatch=batch=>Promise.all(batch.map(t=>completeWalks(t.j,s.task,walking,{enabled:!!(scooter&&scooter.enabled&&cycling),router:cycling,maxKm:scooter&&scooter.maxKm,speedKmh:scooter&&scooter.speedKmh},nearby).then(x=>{
    if(disposed)return;replace(t,assess(x,s.task,fareFor));emit(label);
   }).catch(()=>{
    // Ne pas laisser une carte bloquée sur « marches en cours de calcul »
@@ -2359,21 +2374,33 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    state[label].pending++;state[label].total=(state[label].total||0)+1;
    // Délai borné par moteur (idée reprise du module ChatGPT transport_mission_search.js).
    const providerTimeout=typeof p.timeoutMs==='function'?p.timeoutMs(variant):p.timeoutMs;
-   const limitMs=Number.isFinite(providerTimeout)&&providerTimeout>0?providerTimeout:timeoutMs;
+   const limitMs=Number.isFinite(providerTimeout)&&providerTimeout>0?Math.min(maxProviderMs,providerTimeout):Math.min(maxProviderMs,timeoutMs);
    const deadline=Date.now()+limitMs;(state[label].deadlines=state[label].deadlines||[]).push(deadline);
-   const bounded=new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(new Error('délai fournisseur dépassé ('+Math.round(limitMs/1000)+' s)')),limitMs);
-    Promise.resolve().then(()=>p.run(variant,controller.signal)).then(v=>{clearTimeout(t);resolve(v);},e=>{clearTimeout(t);reject(e);});});
-   bounded.then(js=>add(label,p.name,js)).catch(e=>{
+   const request=new AbortController();
+   const abort=()=>request.abort();
+   requests.add(request);
+   let requestTimer;
+   const bounded=new Promise((resolve,reject)=>{
+    requestTimer=setTimeout(()=>{reject(new Error('délai fournisseur dépassé ('+Math.round(limitMs/1000)+' s)'));abort();},limitMs);
+    Promise.resolve().then(()=>p.run(variant,request.signal)).then(resolve,reject);
+   }).finally(()=>{clearTimeout(requestTimer);requests.delete(request);});
+   let activeDeadline=deadline;
+   bounded.then(js=>{
+    const idx=state[label].deadlines.indexOf(activeDeadline);
+    activeDeadline=Date.now()+enrichmentMs;
+    if(idx>=0)state[label].deadlines[idx]=activeDeadline;
+    return add(label,p.name,js,activeDeadline);
+   }).catch(e=>{
     if(!disposed)state[label].errors[p.name]=String(e&&e.message||e).slice(0,140);
    }).finally(()=>{if(disposed)return;state[label].pending--;
-    const idx=state[label].deadlines.indexOf(deadline);if(idx>=0)state[label].deadlines.splice(idx,1);emit(label);});
+    const idx=state[label].deadlines.indexOf(activeDeadline);if(idx>=0)state[label].deadlines.splice(idx,1);emit(label);});
   }
   state[label].pending++;state[label].total=(state[label].total||0)+1;
-  walkOnly(task,router,walkMaxKm).then(w=>w&&state[label].items.push(assess(w,task,fareFor))).catch(()=>{})
+  until(walkOnly(task,router,walkMaxKm),Date.now()+enrichmentMs,null).then(w=>w&&state[label].items.push(assess(w,task,fareFor))).catch(()=>{})
    .finally(()=>{if(disposed)return;state[label].pending--;emit(label);});
   if(scooter&&scooter.enabled&&scooterRouter){
    state[label].pending++;state[label].total=(state[label].total||0)+1;
-   scooterOnly(task,scooterRouter,{maxKm:scooter.maxKm,speedKmh:scooter.speedKmh}).then(w=>w&&state[label].items.push(assess(w,task,fareFor))).catch(()=>{})
+   until(scooterOnly(task,scooterRouter,{maxKm:scooter.maxKm,speedKmh:scooter.speedKmh}),Date.now()+enrichmentMs,null).then(w=>w&&state[label].items.push(assess(w,task,fareFor))).catch(()=>{})
     .finally(()=>{if(disposed)return;state[label].pending--;emit(label);});
   }
   emit(label);
@@ -2384,7 +2411,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   launch(task);
  }
  return {start:label=>{const f=lazy[label];if(f){delete lazy[label];if(!disposed)f();}},ingest:(label,source,journeys)=>add(label,source,journeys),view,
-  dispose:()=>{if(disposed)return;disposed=true;controller.abort();providers.dispose?.();},signal:controller.signal};
+  dispose:()=>{if(disposed)return;disposed=true;controller.abort();requests.forEach(request=>request.abort());providers.dispose?.();router?.dispose?.();scooterRouter?.dispose?.();},signal:controller.signal};
 }
 
 /* ---------- Affichage (cartes Android) ---------- */
@@ -2831,7 +2858,7 @@ function render(host,v){
    .map(node=>node.getAttribute('data-journey-key')).filter(Boolean));
  const moreOpen=!!host.querySelector('details.cp-hub-more[open]');
  host.textContent='';host.setAttribute('data-transport-hub',VERSION);
- const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):'Aucun trajet trouvé'):'Recherche en cours… ('+v.total+' trouvée'+(v.total>1?'s':'')+')');
+ const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):(Object.keys(v.errors||{}).length?'Aucun trajet trouvé avec les moteurs qui ont répondu':'Aucun trajet trouvé')):v.total+' proposition'+(v.total>1?'s':'')+' provisoire'+(v.total>1?'s':''));
  host.appendChild(head);
  if(v.savedAt)host.appendChild(el(doc,'p','cp-hub-note','Recherche enregistrée le '+new Date(v.savedAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+'. Actualise pour vérifier les horaires et la circulation.'));
  if(v.longShown)host.appendChild(el(doc,'p','cp-hub-note','⚠️ Aucune proposition ne respecte votre limite de marche (Paramètres) : les trajets ci-dessous demandent une marche plus longue que ce réglage. Vérifiez chaque marche avant de partir.'+(v.scooterEnabled?'':' Vous pouvez aussi activer la trottinette électrique (Paramètres) pour couvrir une partie du trajet à sa place.')));

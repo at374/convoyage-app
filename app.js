@@ -2101,10 +2101,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       const localCards={};
       // Hub transports : TripGo, Suisse, Mobilités M, SNCF et GTFS local réunis et classés automatiquement.
       const hubHosts={};
-      // 22/11/2026 (Laurent : éviter le blocage systématique) : pendant qu'une recherche est en cours,
-      // on n'affiche plus les résultats au fur et à mesure (chaque arrivée reconstruisait la liste de
-      // cartes, suspecté de figer le défilement) — seulement un badge clignotant « Recherche en cours ».
-      // Le rendu réel des cartes n'a lieu qu'une seule fois, quand TOUT est trouvé (view.done).
+      // Les premières propositions s’affichent pendant que les autres moteurs répondent.
       const rechercheBadges={};
       const pointInsertion=label=>{const sec=transportDestinations[label];if(!sec)return null;
         return legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);};
@@ -2127,7 +2124,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           if(apres)apres.insertAdjacentElement('afterend',b);else sec.appendChild(b);
         }
         b.textContent=texteRecherche(view);
-        const host=hubHosts[label];if(host)host.hidden=true;   // masque un ancien résultat pendant la nouvelle recherche
       };
       const masquerRecherche=label=>{
         const b=rechercheBadges[label];if(b&&b.isConnected)b.remove();
@@ -2144,7 +2140,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             // notes du hub (replié comme les autres blocs techniques), jamais relégué tout en bas.
             const after=legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);
             after.insertAdjacentElement('afterend',host);}
-          masquerRecherche(label);
+          if(view.done)masquerRecherche(label);else host.hidden=false;
           try{Hub.render(host,view);}catch(_){}
           delete pendingViews[label];
         }
@@ -2174,15 +2170,21 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             panel.cpGeoTried=true;
             const note=document.createElement('p');note.className='doux cp-transport-geo';note.setAttribute('role','status');
             note.textContent='📍 Recherche des coordonnées GPS des adresses…';panel.appendChild(note);
-            Promise.all(manque.map(async([mm,cote])=>{
-              try{const r=await G.chercherPoint(mm,cote,u=>fetch(u));if(r&&r.trouve&&r.cle){
+            const gpsAbort=new AbortController();
+            let gpsTimer;
+            const limit=new Promise(resolve=>{gpsTimer=setTimeout(()=>{gpsAbort.abort();resolve();},5500);});
+            const geocoding=Promise.all(manque.map(async([mm,cote])=>{
+              try{const r=await G.chercherPoint(mm,cote,u=>fetch(u,{signal:gpsAbort.signal}));if(!gpsAbort.signal.aborted&&r&&r.trouve&&r.cle){
                 const current=G.POINTS[r.cle];
                 if(!current||current.precision==='ville'||r.point.precision==='adresse'){
                   G.POINTS[r.cle]=r.point;gpsMem.pts[r.cle]=r.point;
                   ecrireLocal('cp_gps',gpsMem);
                 }
               }}catch(_){}
-            })).then(()=>{note.remove();if(panel.isConnected)startTransportHub();});
+            }));
+            Promise.race([geocoding,limit]).finally(()=>clearTimeout(gpsTimer)).then(()=>{
+              note.remove();if(panel.isConnected&&!panel.hidden)startTransportHub();
+            });
             return;
           }
         }
@@ -2283,7 +2285,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const stored=transportViewCache.get(memoryKey)||(cacheKey?lireLocal(cacheKey,{})[missionKey]:null);
         const refresh=!!bt.dataset.transportRefreshAt;
         if(refresh)transportViewCache.delete(memoryKey);
-        const cachedViews=!refresh&&stored?.signature===signature?stored.views:{};
+        const cachedViews=!refresh&&stored?.signature===signature?Object.fromEntries(Object.entries(stored.views||{}).filter(([,view])=>view.total>0||view.flexCandidates?.length)):{};
         for(const label of Object.keys(labelState))delete labelState[label];
         for(const label of Object.keys(pendingViews))delete pendingViews[label];
         for(const [label,view] of Object.entries(cachedViews)){
@@ -2295,7 +2297,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const remainingTasks=tasks.filter(t=>!cachedViews[t.label]);
         transportHub?.dispose();transportHub=null;
         if(!remainingTasks.length)return;
-        for(const t of remainingTasks)if(!t.lazy)afficherRecherche(t.label);
+        for(const t of remainingTasks){
+          if(hubHosts[t.label])hubHosts[t.label].hidden=true;
+          if(!t.lazy)afficherRecherche(t.label);
+        }
         let router=null;
         try{router=Hub.cachedRouter(window.CPTransportWalking?.createRouter({fetcher:regionalFetch,maxRequests:150,intervalMs:1100}),{storage:window.CPAccount?.storage});}catch(_){}
         const scooterOn = (etat.reglages || {}).trottinette === true;
@@ -2313,7 +2318,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         // Les GTFS-Flex sont affichés comme informations de service, jamais comme trajets datés inventés.
         const flexByLabel=new Map();
         const flexFor=label=>[...(flexByLabel.get(label)?.values()||[])].flat();
-        const session=Hub.createSession({tasks:remainingTasks,router,fareFor,timeoutMs:35000,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),scooterRouter,scooter:{enabled:scooterOn,maxKm:Number(lireLocal('cp_trot_max_km',8)),speedKmh:Number(lireLocal('cp_trot_vitesse_kmh',15))},
+        const session=Hub.createSession({tasks:remainingTasks,router,fareFor,timeoutMs:35000,maxProviderMs:90000,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),scooterRouter,scooter:{enabled:scooterOn,maxKm:Number(lireLocal('cp_trot_max_km',8)),speedKmh:Number(lireLocal('cp_trot_vitesse_kmh',15))},
           providers:Hub.makeProviders(window,{fetcher:regionalFetch,feedSizes:transportFeedSizes,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
             nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{},ojpSession,
             onFlexCandidates:({task:gtfsTask,network,candidates})=>{
@@ -2331,7 +2336,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             if(!panel.isConnected||!transportDestinations[label])return;
             labelState[label]={done:view.done,total:view.total};
             view={...view,flexCandidates:flexFor(label)};
-            if(view.done){
+            if(view.done&&(view.total>0||view.flexCandidates.length)){
               const previous=transportViewCache.get(memoryKey);
               const views=previous?.signature===signature?previous.views:{...cachedViews};
               const savedAt=Date.now();
@@ -2341,10 +2346,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
               saveTransportViews(cacheKey,missionKey,entry);
             }
             if(!view.done){
-              delete pendingViews[label];
               afficherRecherche(label,view);
-              updateDayTabs();
-              return;
+              if(!view.total&&!view.flexCandidates.length){updateDayTabs();return;}
             }
             pendingViews[label]=view;
             if(transportDestinations[label].hidden){updateDayTabs();return;}
