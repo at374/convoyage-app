@@ -150,3 +150,24 @@ test('le repli national à 5 km réutilise l’archive indexée à 3 km',async()
  await journeys.loadAndSearch({...options,date:'2026-11-28'});
  assert.equal(downloads,2);
 });
+
+test('deux créneaux sans worker partagent le chargement même si le premier est annulé',async()=>{
+ const hub=require('../transport-mission-hub.js');
+ const controller=new AbortController();
+ let downloads=0,release;
+ const gate=new Promise(resolve=>{release=resolve;});
+ const providers=hub.makeProviders({CPNationalGTFSJourneys:journeys},{
+  fetcher:async()=>{downloads++;await gate;return fetcher();},
+  nationalGTFSResources:{sncf:{url:'https://example.org/national-sncf-aura.zip'}}
+ });
+ const task={from:{lat:45.7606,lon:4.8593},to:{lat:45.1914,lon:5.7143},earliestDeparture:'2026-11-27T08:00:00+01:00'};
+ try{
+  const first=providers.national_sncf.run(task,controller.signal);
+  const second=providers.national_sncf.run({...task,earliestDeparture:'2026-11-27T13:00:00+01:00'});
+  controller.abort();
+  await assert.rejects(first,{name:'AbortError'});
+  release();
+  assert.ok((await second).length);
+  assert.equal(downloads,1);
+ }finally{release();providers.dispose();}
+});

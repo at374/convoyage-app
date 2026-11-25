@@ -1386,7 +1386,7 @@ function makeProviders(r,opts={}){
   const run=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
    if(workerDisposed){reject(new Error('Recherche transport annulée'));return;}
    if(!worker){
-    try{worker=new r.Worker('transport-hub-local-worker.js?v=repli-gtfs-20261125');}
+    try{worker=new r.Worker('transport-hub-local-worker.js?v=index-mission-20261125');}
     catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
     const activeWorker=worker;
     const fail=(reason)=>{
@@ -1415,7 +1415,9 @@ function makeProviders(r,opts={}){
   return {run,dispose};
  };
  const localWorker=makeWorker(),connectionWorker=makeWorker(),nationalWorker=makeWorker();
- Object.defineProperty(P,'dispose',{value:()=>{localWorker.dispose();connectionWorker.dispose();nationalWorker.dispose();}});
+ const nationalLoads=new AbortController();
+ const nationalFeedCaches=[];
+ Object.defineProperty(P,'dispose',{value:()=>{nationalLoads.abort();nationalFeedCaches.forEach(cache=>cache.clear());localWorker.dispose();connectionWorker.dispose();nationalWorker.dispose();}});
  const workerCall=(payload,timeoutMs)=>(payload.op==='national'?nationalWorker:payload.op==='correspondances'?connectionWorker:localWorker).run(payload,timeoutMs);
  const workerRows=(key,urls,date,from,to,extra)=>workerCall({key,urls,date,from,to,radius:3000,...extra});
  // 21/11/2026 (Laurent : « l'écran se fige pendant la recherche ») : la recherche de correspondances
@@ -1795,13 +1797,15 @@ function makeProviders(r,opts={}){
    // (le worker utilise son propre cache hors ligne, et n'a jamais pris en charge l'annulation, comme
    // pour les trajets directs locaux ci-dessus) ; en cas d'échec du worker, ancien calcul sur le fil
    // principal (même résultat).
+   const feedByDate=new Map();
+   nationalFeedCaches.push(feedByDate);
    const nationalSearch=async params=>{
-    const {operator:op,resource:res,fetcher:_f,signal:_s,feedByDate:_feeds,...rest}=params;
+    const {operator:op,resource:res,fetcher:_f,signal:_s,...rest}=params;
     if(canWorker()){
      try{return await workerNationalSearch(op,res,rest,budget);}
      catch(e){if(!(r.__cpHubWorkerOffUntil&&Date.now()<r.__cpHubWorkerOffUntil))throw e;}
     }
-    return r.CPNationalGTFSJourneys.loadAndSearch(params);
+    return r.CPNationalGTFSJourneys.loadAndSearch({...params,feedByDate,feedSignal:nationalLoads.signal});
    };
    const coversTrip=task=>!!queryWindow(task)&&nationalResourceForTrip(resources,operator,pt(task.from),pt(task.to))===resource;
    P['national_'+key]={name,enabled:coversTrip,
@@ -1826,7 +1830,7 @@ function makeProviders(r,opts={}){
      // Match the 3 km walking-search envelope used in the AURA coverage audit.
      // These are straight-line candidate stops, not verified pedestrian routes:
      // completeWalks must still calculate exact walking distances and times.
-     const base={operator,resource:{...resource,format:'GTFS'},fetcher,signal,feedByDate:new Map(),
+     const base={operator,resource:{...resource,format:'GTFS'},fetcher,signal,
       from:pt(task.from),to:pt(task.to),radiusMeters:3000,maxResults:20,includeTransfers:true};
      const earliest=ms(task.earliestDeparture);
      const start=Number.isFinite(earliest)?dateParts(earliest):null;

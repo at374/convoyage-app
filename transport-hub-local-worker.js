@@ -2,7 +2,7 @@
    se font ICI, hors du fil de l'écran (l'application ne se fige plus pendant le calcul). Résultat identique au calcul
    sur le fil principal : mêmes fonctions (transport-gtfs-loader / -index / -fares). */
 'use strict';
-importScripts('transport-catalogue.js','transport-gtfs-index.js?v=directs-gtfs-20261125','transport-gtfs-time.js','transport-gtfs-federation.js','transport-gtfs-loader.js','transport-gtfs-fares.js','transport-national-gtfs-journeys.js?v=repli-gtfs-20261125','transport-gtfs-flex-courses.js');
+importScripts('transport-catalogue.js','transport-gtfs-index.js?v=directs-gtfs-20261125','transport-gtfs-time.js','transport-gtfs-federation.js','transport-gtfs-loader.js','transport-gtfs-fares.js','transport-national-gtfs-journeys.js?v=index-mission-20261125','transport-gtfs-flex-courses.js');
 const feeds=new Map();
 const downloads=new Map();
 const cacheFetch=async(url,init)=>{
