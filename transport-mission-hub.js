@@ -314,7 +314,7 @@ function fromGTFS(rows,network='Réseau local'){
 
 /* National GTFS provides scheduled candidates, not live service or ticket inventory.
  * GTFS service day is Europe/Paris, including 24+:xx overnight times. */
-function fromNationalGTFS(rows,operator){
+function fromNationalGTFS(rows,operator,resource){
  const names={sncf:'SNCF',blablacarBus:'BlaBlaCar Bus',flixbus:'FlixBus'};
  if(!Object.prototype.hasOwnProperty.call(names,operator))return [];
  const localTime=(date,time)=>{
@@ -337,10 +337,20 @@ function fromNationalGTFS(rows,operator){
    r.legs.every(l=>l&&l.departure&&l.arrival)))).map(r=>{
   const a=r.originStop,b=r.destinationStop;
   const point=s=>({lat:s?.lat??s?.stop_lat,lon:s?.lon??s?.stop_lon});
-  const makeLeg=(from,to,{line,headsign,terminus,departure,arrival})=>leg({mode:operator==='sncf'?'Train':'Car',
-   provider:names[operator],line,headsign,terminus,from:from?.name||from?.stop_name||'',
-   to:to?.name||to?.stop_name||'',fromPoint:point(from),toPoint:point(to),
-   departure:localTime(r.date,departure),arrival:localTime(r.date,arrival)});
+  const makeLeg=(from,to,segment)=>{
+   const {line,headsign,terminus,departure,arrival,routeId,tripId}=segment;
+   const result=leg({mode:operator==='sncf'?'Train':'Car',
+    provider:names[operator],line,headsign,terminus,from:from?.name||from?.stop_name||'',
+    to:to?.name||to?.stop_name||'',fromPoint:point(from),toPoint:point(to),
+    departure:localTime(r.date,departure),arrival:localTime(r.date,arrival)});
+   const fromId=segment.fromStopId||segment.from;
+   const toId=segment.toStopId||segment.to;
+   if(resource?.url&&routeId&&fromId&&toId)result.gtfsRaw={
+    network:names[operator],tripId,routeId,from:fromId,to:toId,serviceDate:r.date,
+    networkUrls:[resource.url,...(resource.fallbackUrls||[])]
+   };
+   return result;
+  };
   const transit=Array.isArray(r.legs)&&r.legs.length===2&&r.transferStop?
    [makeLeg(a,r.transferStop,r.legs[0]),
     makeLeg(r.transferStop,b,r.legs[1])]:
@@ -1369,7 +1379,7 @@ function makeProviders(r,opts={}){
   const run=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
    if(workerDisposed){reject(new Error('Recherche transport annulée'));return;}
    if(!worker){
-    try{worker=new r.Worker('transport-hub-local-worker.js?v=terminus-national-20261125');}
+    try{worker=new r.Worker('transport-hub-local-worker.js?v=grilles-nationales-20261125');}
     catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
     const activeWorker=worker;
     const fail=(reason)=>{
@@ -1849,7 +1859,7 @@ function makeProviders(r,opts={}){
         :{earliestDeparture:afterMidnight})});
       rows=rows.concat(overnight.journeys||[]);
      }
-     let out=fromNationalGTFS(rows,operator);
+     let out=fromNationalGTFS(rows,operator,resource);
      // Cars FlixBus / BlaBlaCar Bus depuis les gares routières de Lyon (Part-Dieu, Perrache, Gerland) quand le départ ou l'arrivée
      // est trop loin pour y aller à pied (Corbas, Saint-Priest…) : l'accès est calculé ensuite par le serveur OTP2 (TCL), jamais estimé.
      if(operator!=='sncf'&&!signal?.aborted&&opts.lyonCoachAccess===true){
@@ -1861,7 +1871,7 @@ function makeProviders(r,opts={}){
        const other=pt(task[side==='from'?'to':'from']);if(!other)continue;
        const extra=await nationalSearch({...searchParams,[side]:{lat:anchor.lat,lon:anchor.lon},radiusMeters:3500}).catch(()=>null);
        const found=Array.isArray(extra?.journeys)?extra.journeys:[];
-       if(found.length)out=out.concat(fromNationalGTFS(found,operator).map(j=>({...j,needsAccess:{side,anchor:anchor.name}})));
+       if(found.length)out=out.concat(fromNationalGTFS(found,operator,resource).map(j=>({...j,needsAccess:{side,anchor:anchor.name}})));
       }
      }
      return out;
