@@ -1113,8 +1113,19 @@ test('une relance piétonne calcule les approches ignorées par quota',async()=>
 test('la sélection de huit trajets privilégie le créneau et réserve une place au départ de secours',()=>{
  const task={from:HOME,to:MISSION,latestArrival:at(15,0)};
  const others=Array.from({length:12},(_,i)=>({feasible:true,slackMinutes:15+i*20,marginMinutes:15,
-  durationMinutes:25,legs:[bus(at(8,0),at(8,25),HOME,MISSION)]})).reverse();
+  durationMinutes:25,legs:[bus(at(8,i),at(8,25+i),HOME,MISSION)]})).reverse();
  assert.equal(H.selectJourneyCards({task,others}).length,8);
  assert.equal(H.selectJourneyCards({task,others})[0].slackMinutes,15);
  assert.equal(H.selectJourneyCards({task,others},others[0]).length,7);
+});
+
+test('deux marches ou correspondances pour le même premier bus ne prennent qu’une place',()=>{
+ const task={from:HOME,to:MISSION,latestArrival:at(15,0)};
+ const first=bus(at(8,0),at(8,25),HOME,STOP2);
+ const candidate=(ride,walk,slack)=>({feasible:true,slackMinutes:slack,marginMinutes:15,durationMinutes:25,legs:[ride,walk]});
+ const walk={kind:'walk',fromPoint:STOP2,toPoint:MISSION};
+ const best=candidate(first,walk,15),duplicate=candidate(first,{...walk,durationSeconds:420},45);
+ const next=candidate({...first,departure:at(9,0),arrival:at(9,25)},walk,20);
+ assert.deepEqual(H.selectJourneyCards({task,others:[duplicate,next,best]}),[best,next]);
+ assert.deepEqual(H.selectJourneyCards({task,others:[duplicate,next,best]},best),[next]);
 });

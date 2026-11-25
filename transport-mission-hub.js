@@ -2990,11 +2990,26 @@ function selectJourneyCards(view,next,limit=8){
  const quality=j=>j.feasible?0:j.scheduled?1:j.computing?3:2;
  const gap=j=>Number.isFinite(j.slackMinutes)?Math.abs(j.slackMinutes-(j.marginMinutes||0)):0;
  const deadline=Number.isFinite(ms(view.task?.latestArrival));
- const selected=others.map(journey=>({journey,missing:missingWalkLabels(journey,view.task).length}))
+ const ranked=others.map(journey=>({journey,missing:missingWalkLabels(journey,view.task).length}))
   .sort((a,b)=>quality(a.journey)-quality(b.journey)||a.missing-b.missing||
    (deadline?gap(a.journey)-gap(b.journey):ms(a.journey.departure)-ms(b.journey.departure))||
-   a.journey.durationMinutes-b.journey.durationMinutes)
-  .slice(0,Math.max(0,limit-(next?1:0))).map(({journey})=>journey);
+   a.journey.durationMinutes-b.journey.durationMinutes);
+ const boardingKey=j=>{
+  const ride=j?.legs?.find(l=>!isFoot(l));
+  if(!ride||!Number.isFinite(ms(ride.departure)))return null;
+  const norm=s=>String(s||'').toLowerCase().trim();
+  return JSON.stringify([ride.mode,norm(ride.gtfsRaw?.network||ride.provider),norm(ride.line),
+   norm(ride.from),Math.floor(ms(ride.departure)/60000)]);
+ };
+ const seen=new Set([boardingKey(next)]),selected=[];
+ const available=Math.max(0,limit-(next?1:0));
+ for(const {journey} of ranked){
+  if(selected.length>=available)break;
+  const key=boardingKey(journey);
+  if(key&&seen.has(key))continue;
+  if(key)seen.add(key);
+  selected.push(journey);
+ }
  return selected;
 }
 function viewFingerprint(v){
