@@ -965,9 +965,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     const q = norm(etat.recherche);
     let l = etat.missions.filter(estDisponible);
-    const source = deliveryCarSource();
-    // Le dénominateur doit compter le même ensemble vérifié que le badge « Toutes ».
-    const total = l.filter(m => !FI.deliveryCarNonRevue(m, source)).length;
+    const total = l.length;
     if (etat.filtre === 'devis' || etat.filtre === 'acceptees') l = listeDevis(etat.filtre); else if (etat.filtre !== 'toutes') l = l.filter(m => m.platform === etat.filtre);
     l = G.filtrer(l, etat.zones, etat.rayon);
     l = FI.appliquer(l, etat.plus, m => CALC.dureeEstimee(m).heures);   // V96 : client, véhicule, distance, durée
@@ -982,6 +980,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
     else if (etat.tri === 'proche' && pointRecherche()) l.sort((a, b) => (kmDeMoi(a) ?? 1e9) - (kmDeMoi(b) ?? 1e9));
     else if (etat.tri === 'date') { const t = m => { const d = Date.parse(m.pickup_start || ''); return Number.isFinite(d) ? d : Infinity; }; l.sort((a, b) => { const x = t(a), y = t(b); return x === y ? 0 : x < y ? -1 : 1; }); }   // V146 : date ET heure de départ (la plus proche en haut), toutes plateformes mélangées ; sans date → en bas
     else l.sort((a, b) => String(b.first_seen_at || '').localeCompare(String(a.first_seen_at || '')) || String(a.pickup_start || '9').localeCompare(String(b.pickup_start || '9')));   // V99 : les plus récemment parues en haut
+    const source = deliveryCarSource();
     const anciennes = l.filter(m => FI.deliveryCarNonRevue(m, source));
     l = l.filter(m => !FI.deliveryCarNonRevue(m, source));
     listeAffichee = l.concat(anciennes);
@@ -1973,32 +1972,6 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         };
         legacySources.Jonction.insertAdjacentElement('beforebegin',missed);
       }
-      /* V278 : trajet hors zone couverte (AURA + Suisse) : message clair */
-      let coveredZones={},zoneNotes={};
-      { const COUV=new Set(['01','03','07','15','26','38','42','43','63','69','73','74']);
-        // Sud (réseaux urbains GTFS ajoutés le 18/11/2026) : département → villes dont le réseau de bus est couvert (horaires + prix).
-        const SUD={'83':'Toulon (Mistral)','13':'Marseille (RTM) et Aix en Bus','06':'Nice (Lignes d’Azur) et Cannes (Palm Bus)','84':'Avignon (Orizo)',
-         '30':'Nîmes (Tango) et Alès (Ales’y)','34':'Montpellier (TaM) et Béziers (beeMob)','31':'Toulouse (Tisséo)','11':'Narbonne (Citibus)','66':'Perpignan (Sankéo)'};
-        const depOf=(dep,txt)=>{const d=String(dep||'').trim();if(/^\d{2}/.test(d))return d.slice(0,2);const mm=String(txt||'').match(/\b(\d{2})\d{3}\b/);return mm?mm[1]:'';};
-        // 'aura' = zone historique (AURA + Suisse), 'sud' = réseaux urbains du sud, 'non' = hors base ; '' (département inconnu) = on laisse chercher
-        const zoneOf=(dep,txt)=>{if(/suisse|switzerland/i.test(String(txt||'')))return {z:'aura'};const d=depOf(dep,txt);if(!d)return {z:'aura'};return COUV.has(d)?{z:'aura'}:(SUD[d]?{z:'sud',d,v:SUD[d]}:{z:'non'});};
-        const verdict=(pts)=>{const zs=pts.map(([a,b])=>zoneOf(a,b));
-          if(zs.some(x=>x.z==='non'))return {ok:false};
-          const sud=zs.filter(x=>x.z==='sud');if(!sud.length)return {ok:true};
-          // tout dans le même département du sud : le moteur local cherche tout seul, pas de message
-          if(zs.every(x=>x.z==='sud'&&x.d===sud[0].d))return {ok:true};
-          return {ok:'partiel',villes:[...new Set(sud.map(x=>x.v))].join(' ; ')};};
-        const res={Aller:verdict([[null,home],[m.from_department,from]]),
-         Jonction:next?verdict([[m.to_department,to],[next.from_department,nextOrigin]]):{ok:true},
-         Retour:verdict([[m.to_department,to],[null,home]])};
-        for(const k of Object.keys(res)){coveredZones[k]=res[k].ok;
-          if(res[k].ok==='partiel')zoneNotes[k]='⚠️ Trajet longue distance : la partie en train n’est pas calculée (hors base). Seul le bus de la ville d’arrivée est couvert, avec ses horaires et son prix : '+res[k].villes+'. Vérifie le reste par toi-même.';}
-        for(const key of Object.keys(res)){if(res[key].ok===true)continue;const sec=transportDestinations[key];const rt=sec&&sec.querySelector('.cp-transport-route');if(!rt)continue;
-          const note=document.createElement('p');note.className='cp-transport-nodata';note.setAttribute('role','status');
-          note.style.cssText='margin:6px 0;padding:8px 10px;border-radius:8px;background:#5a2a00;color:#ffd9a8;font-weight:600';
-          note.textContent=res[key].ok==='partiel'?zoneNotes[key]:'⛔ Non encore disponible dans la base de données : ce trajet sort de la zone couverte (Auvergne-Rhône-Alpes, Suisse et grandes villes du sud). Aucun horaire ni prix n’a été calculé : vérifie par toi-même.';
-          rt.insertAdjacentElement('afterend',note);} }
-
       // Missions sur plusieurs jours : afficher les transports par date réelle
       // de prise en charge, de livraison ou de prochaine mission. Ne pas inventer
       // d'horaire de transport pour les jours intermédiaires.
@@ -2044,10 +2017,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const heading=document.createElement('h3');heading.textContent=(dir==='Aller'?'01 · Aller':'03 · Retour')+' · '+new Intl.DateTimeFormat('fr-FR',{timeZone:'UTC',weekday:'short',day:'2-digit',month:'short'}).format(new Date(d+'T12:00:00Z'));
         const path=document.createElement('p');path.className='cp-transport-route';path.textContent=dir==='Aller'?home+' → '+from:to+' → '+home;
         section.append(heading,path);transportDestinations[key]=section;panel.appendChild(section);
-        if(coveredZones[dir]!==true&&coveredZones[dir]!==undefined){const note=document.createElement('p');note.className='cp-transport-nodata';note.setAttribute('role','status');
-          note.style.cssText='margin:6px 0;padding:8px 10px;border-radius:8px;background:#5a2a00;color:#ffd9a8;font-weight:600';
-          note.textContent=coveredZones[dir]==='partiel'?zoneNotes[dir]:'⛔ Non encore disponible dans la base de données : ce trajet sort de la zone couverte (Auvergne-Rhône-Alpes, Suisse et grandes villes du sud). Aucun horaire ni prix n’a été calculé : vérifie par toi-même.';
-          path.insertAdjacentElement('afterend',note);}
+
       }
       // Ordre d'affichage : Aller, Jonction, Retour (les sections de jours supplémentaires ne passent plus en dessous).
       {const rank=k=>k.startsWith('Aller')?0:k.startsWith('Jonction')?1:2;
