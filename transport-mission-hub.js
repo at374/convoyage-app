@@ -1076,6 +1076,11 @@ function nearTransportBounds(point,bounds,radiusMeters){
   lon:Math.min(east,Math.max(west,point.lon))
  })<=radiusMeters;
 }
+function nationalResourceForTrip(resources,operator,from,to){
+ if(!operator)return null;
+ return Object.entries(resources||{}).find(([key,resource])=>resource?.url&&
+  (resource.operator||key)===operator&&[from,to].every(point=>nearTransportBounds(point,resource.bounds,5000)))?.[1]||null;
+}
 // 21/11/2026 : audit systématique après le bug Y51/Albertville (bounds trop étroites qui désactivaient
 // silencieusement tout un réseau pour une mission touchant son propre terminus). 13 réseaux avaient le même
 // défaut (zone déclarée ne couvrant pas un bout réel de ligne, écart >8 km mesuré sur les arrêts réels du
@@ -1775,10 +1780,12 @@ function makeProviders(r,opts={}){
  // No direct download of full national feeds into Android and no invented ticket prices.
  if(r.CPNationalGTFSJourneys&&typeof r.CPNationalGTFSJourneys.loadAndSearch==='function'){
   const resources=opts.nationalGTFSResources||{};
-  for(const operator of ['sncf','blablacarBus','flixbus']){
-   const resource=resources[operator];
+  for(const [key,resource] of Object.entries(resources)){
+   const operator=resource?.operator||key;
+   if(!['sncf','blablacarBus','flixbus'].includes(operator))continue;
    if(!resource||!/^https:\/\//i.test(resource.url||''))continue;
-   const name={sncf:'SNCF GTFS',blablacarBus:'BlaBlaCar Bus GTFS',flixbus:'FlixBus GTFS'}[operator];
+   const name={sncf:'SNCF GTFS',blablacarBus:'BlaBlaCar Bus GTFS',flixbus:'FlixBus GTFS'}[operator]+
+    (resource.area?' · '+resource.area:'');
    const file=new URL(resource.url).pathname.split('/').pop();
    const bytes=opts.feedSizes?.get(file)||resource.bytes||({sncf:1024*1024,flixbus:256*1024,blablacarBus:128*1024})[operator];
    const budget=bytes<=512*1024?35000:bytes<=2*1024*1024?55000:bytes<=8*1024*1024?85000:120000;
@@ -1794,9 +1801,8 @@ function makeProviders(r,opts={}){
     }
     return r.CPNationalGTFSJourneys.loadAndSearch(params);
    };
-   const coversTrip=task=>!!queryWindow(task)&&nearTransportBounds(pt(task.from),resource.bounds,5000)&&
-    nearTransportBounds(pt(task.to),resource.bounds,5000);
-   P['national_'+operator]={name,enabled:coversTrip,
+   const coversTrip=task=>!!queryWindow(task)&&nationalResourceForTrip(resources,operator,pt(task.from),pt(task.to))===resource;
+   P['national_'+key]={name,enabled:coversTrip,
     disabledReason:'trajet hors zone de ce flux GTFS ou adresse GPS ou horaire manquant',
     // 22/11/2026 (Laurent : « SNCF GTFS : délai fournisseur dépassé (35 s) », puis FlixBus/BlaBlaCar Bus
     // en erreur sur la même mission) : délai global (35 s) pensé pour un calcul bloquant l'écran — ce n'est
@@ -2595,7 +2601,8 @@ function scheduleSourceForLeg(l,useRaw=true){
  if(!date||!l.line)return null;
  const name=String(l.provider||'');
  const national=/sncf|\bter\b/i.test(name)?'sncf':/flixbus/i.test(name)?'flixbus':/blablacar.*bus/i.test(name)?'blablacarBus':null;
- const resource=root.CP_NATIONAL_GTFS_RESOURCES?.[national];
+ const resource=nationalResourceForTrip(root.CP_NATIONAL_GTFS_RESOURCES,national,fromPoint,toPoint)||
+  root.CP_NATIONAL_GTFS_RESOURCES?.[national];
  const voiron={lat:45.373,lon:5.589};
  const isVoiron31=String(l.line).trim()==='31'&&[fromPoint,toPoint].every(point=>point&&meters(point,voiron)<=5000);
  const provider=scheduleLabel(name);

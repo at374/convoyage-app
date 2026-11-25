@@ -1,0 +1,27 @@
+{
+  "operator": "blablacarBus",
+  "file": "national-blablacarBus-paris-lyon.zip",
+  "sha256": "40654e697db4c39989b76523869d49a484a6e638ea4a6022497070db212e6ff3",
+  "bytes": 54067,
+  "bounds": [
+    45.55,
+    2.15,
+    49.05,
+    5.45
+  ],
+  "source": "https://drive.google.com/uc?export=download&id=1VXd01yQl2Mb67C9bkrx0P8sqNIL532_o",
+  "scope": "Static GTFS slice for paris-lyon; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 16,
+  "details": {
+    "routes": 615,
+    "trips": 615,
+    "stops": 19,
+    "fares": false,
+    "bounds": [
+      45.55,
+      2.15,
+      49.05,
+      5.45
+    ]
+  }
+}

@@ -82,7 +82,15 @@ const nationalAuraBounds = Object.freeze([44.0,3.6,46.7,7.4]);
 window.CP_NATIONAL_GTFS_RESOURCES = Object.freeze({
   sncf: Object.freeze({bounds:nationalAuraBounds,url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-sncf-aura.zip',format:'GTFS',fallbackUrls:Object.freeze(['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/national-sncf-aura.zip','https://at374.github.io/convoyage-app/data/gtfs/national-sncf-aura.zip'])}),
   blablacarBus: Object.freeze({bounds:nationalAuraBounds,url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-blablacarBus-aura.zip',format:'GTFS',fallbackUrls:Object.freeze(['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/national-blablacarBus-aura.zip','https://at374.github.io/convoyage-app/data/gtfs/national-blablacarBus-aura.zip'])}),
-  flixbus: Object.freeze({bounds:nationalAuraBounds,url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-flixbus-aura.zip',format:'GTFS',fallbackUrls:Object.freeze(['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/national-flixbus-aura.zip','https://at374.github.io/convoyage-app/data/gtfs/national-flixbus-aura.zip'])})
+  flixbus: Object.freeze({bounds:nationalAuraBounds,url:'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/national-flixbus-aura.zip',format:'GTFS',fallbackUrls:Object.freeze(['https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/national-flixbus-aura.zip','https://at374.github.io/convoyage-app/data/gtfs/national-flixbus-aura.zip'])}),
+  ...Object.fromEntries(['sncf','blablacarBus','flixbus'].map(operator=>{
+    const file='national-'+operator+'-paris-lyon.zip';
+    return [operator+'_paris_lyon',Object.freeze({operator,area:'Paris–Lyon',
+      bounds:Object.freeze([45.55,2.15,49.05,5.45]),format:'GTFS',
+      url:'https://raw.githubusercontent.com/at374/convoyage-app/main/data/gtfs/'+file,
+      fallbackUrls:Object.freeze(['https://at374.github.io/convoyage-app/data/gtfs/'+file])
+    })];
+  }))
 });
 // Publication sans retouche : sur le site déployé (GitHub Pages), la copie du site lui-même passe en premier —
 // c'est celle que les tâches hebdomadaires de la branche publiée rafraîchissent. Les adresses ci-dessus restent en secours.
@@ -101,7 +109,7 @@ window.CP_NATIONAL_GTFS_RESOURCES = Object.freeze({
 <script src="transport-ojp.js?v=ojp-20261115a"></script>
 <script src="transport-otp-adapter.js?v=otp-gtfsid-horaires-20261123a"></script>
 <script src="transport-otp-client.js?v=terminus-bus-20261125"></script>
-<script src="transport-mission-hub.js?v=grilles-nationales-20261125"></script>
+<script src="transport-mission-hub.js?v=grilles-paris-lyon-20261125"></script>
 <script src="transport-coverage.js?v=p35-bfc-cherpa-20261121a"></script>
 <script src="app.js?v=transport-couverture-reelle-20261125"></script>
 <script src="sanef-gps-protection.js"></script>

@@ -1,4 +1,4 @@
-name: Construire GTFS nationaux AURA (chaque semaine + manuel)
+name: Construire les extraits GTFS des opérateurs nationaux
 on:
   schedule:
     - cron: '17 3 * * 2'   # chaque mardi : SNCF, FlixBus, BlaBlaCar Bus (extraits AURA) restent à jour
@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/build-national-gtfs-aura.yml'
       - 'scripts/build_national_from_catalogue.py'
+      - 'scripts/build_national_gtfs_aura.py'
   workflow_dispatch:
     inputs:
       operator:
@@ -50,21 +51,37 @@ jobs:
           else
             python3 scripts/build_national_from_catalogue.py --audit docs/audit-national-operators.json --out data/gtfs --operator "${{ inputs.operator || 'all' }}" | tee national-build-report.json
           fi
+      - name: Actualiser Paris–Lyon sur la branche publiée
+        id: paris_lyon
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        env:
+          OPERATOR: ${{ inputs.operator || 'all' }}
+        run: |
+          set -o pipefail
+          args=()
+          if [ "$OPERATOR" != all ]; then args+=(--operator "$OPERATOR"); fi
+          python3 scripts/build_national_from_catalogue.py --audit docs/audit-national-operators.json --region paris-lyon --out data/gtfs "${args[@]}" | tee national-paris-lyon-report.json
       - name: Publier les extraits officiels sur la branche transports (sans déploiement Android)
-        if: steps.build.outcome == 'success' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/transports-aura-suisse')
+        if: (steps.build.outcome == 'success' || steps.paris_lyon.outcome == 'success') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/transports-aura-suisse')
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          AURA_BUILD: ${{ steps.build.outcome }}
+          PARIS_LYON_BUILD: ${{ steps.paris_lyon.outcome }}
         run: |
           set -euo pipefail
-          test -s data/gtfs/national-sncf-aura.zip
-          test -s data/gtfs/national-blablacarBus-aura.zip
-          test -s data/gtfs/national-flixbus-aura.zip
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/gtfs/national-*-aura.zip data/gtfs/national-*-aura.zip.json
+          if [ "$AURA_BUILD" = success ]; then
+            git add data/gtfs/national-*-aura.zip data/gtfs/national-*-aura.zip.json
+          fi
+          if [ "$PARIS_LYON_BUILD" = success ]; then
+            git add data/gtfs/national-*-paris-lyon.zip data/gtfs/national-*-paris-lyon.zip.json
+          fi
           if ! git diff --cached --quiet; then
-            git commit -m "Update official national AURA GTFS slices (no commercial fares)"
+            git commit -m "Update official national GTFS slices (no commercial fares)"
             # Other transport diagnostics may commit while the feed is downloading.
             # Replay this data-only commit on the latest remote tip; never force-push.
             for essai in 1 2 3; do
@@ -84,12 +101,13 @@ jobs:
           path: |
             docs/audit-national-operators.json
             national-build-report.json
+            national-paris-lyon-report.json
             data/gtfs/national-*.zip
             data/gtfs/national-*.zip.json
           if-no-files-found: warn
           retention-days: 7
       - name: Signaler les opérateurs indisponibles
-        if: steps.build.outcome != 'success'
+        if: steps.build.outcome != 'success' || steps.paris_lyon.outcome == 'failure'
         run: |
           echo 'Certains flux nationaux sont absents ou non exploitables : consulter le rapport, aucun tarif inventé.' >> "$GITHUB_STEP_SUMMARY"
           exit 1

@@ -1,0 +1,27 @@
+{
+  "operator": "flixbus",
+  "file": "national-flixbus-paris-lyon.zip",
+  "sha256": "a3d68121d43bc2060b1179d50661e55667bfab9242c19a29f04e389dc937fd64",
+  "bytes": 199040,
+  "bounds": [
+    45.55,
+    2.15,
+    49.05,
+    5.45
+  ],
+  "source": "https://gtfs.gis.flix.tech/gtfs_generic_eu.zip",
+  "scope": "Static GTFS slice for paris-lyon; no live ticket prices or seat availability",
+  "excludedOutOfRegionDetourTrips": 91,
+  "details": {
+    "routes": 179,
+    "trips": 3884,
+    "stops": 40,
+    "fares": false,
+    "bounds": [
+      45.55,
+      2.15,
+      49.05,
+      5.45
+    ]
+  }
+}

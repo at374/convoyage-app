@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepare AURA national GTFS slices from audited public resources, server-side only.
+"""Prepare regional national-operator GTFS slices from audited public resources, server-side only.
 Never invent fares, schedules or feeds. Failed operators are reported, not silently omitted.
 """
 import argparse
@@ -10,6 +10,8 @@ import sys
 import tempfile
 import urllib.request
 import urllib.parse
+
+from build_national_gtfs_aura import REGIONS
 
 OPERATORS = ('sncf', 'blablacarBus', 'flixbus')
 MAX_DOWNLOAD = 250 * 1024 * 1024
@@ -66,6 +68,7 @@ def fetch(url, destination):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--audit', default='docs/audit-national-operators.json')
+    parser.add_argument('--region', choices=REGIONS, default='aura')
     parser.add_argument('--out', default='data/gtfs')
     parser.add_argument('--operator', choices=OPERATORS, help='Build only this operator')
     args = parser.parse_args()
@@ -106,7 +109,7 @@ def main():
                     archive = os.path.join(directory, 'source.zip')
                     fetch(url, archive)
                     command = [sys.executable, os.path.join(os.path.dirname(__file__), 'build_national_gtfs_aura.py'),
-                               '--input', archive, '--operator', operator, '--out', args.out, '--source-url', url]
+                               '--input', archive, '--operator', operator, '--region', args.region, '--out', args.out, '--source-url', url]
                     output = subprocess.run(command, capture_output=True, text=True, timeout=180)
                     if output.returncode:
                         raise RuntimeError(output.stderr.strip() or output.stdout.strip() or 'GTFS slice failed')
