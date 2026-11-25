@@ -2503,12 +2503,6 @@ function ticketLinks(j){
   const t=ticketLink(l.provider);if(t&&!seen.has(t.url))seen.set(t.url,t);});
  return [...seen.values()];
 }
-// 21/11/2026 (demande Laurent) : « pour chaque ligne régionale ou locale qui apparaît dans un trajet, une
-// icône doit montrer tous ses horaires de la journée de mission » — généralise le bouton qui n'existait
-// jusqu'ici que pour Y51 Albertville (fiche mission, app.js, données préparées à part). Fonctionne pour
-// toute ligne dont les horaires viennent d'un réseau GTFS local/régional câblé (localNetworks) : SNCF,
-// FlixBus, BlaBlaCar Bus, l'API suisse, TripGo/OJP et les correspondances inter-réseaux n'ont pas cette
-// métadonnée et n'affichent donc pas ce bouton (portée assumée, pas un oubli).
 const dayScheduleTablesCache=new Map();
 async function gtfsTablesForDaySchedule(raw){
  const key=(raw.networkUrls||[])[0]+'|'+raw.serviceDate;
@@ -2530,12 +2524,44 @@ async function gtfsTablesForDaySchedule(raw){
 }
 // Tous les départs du jour de CETTE ligne entre les DEUX arrêts de CETTE étape — même mécanique que le
 // bouton Y51 historique (sibra-planner.js::datedInterurbanRides), généralisée à tout réseau GTFS câblé.
+function scheduleSourceForLeg(l,useRaw=true){
+ const raw=l.gtfsRaw;
+ if(useRaw&&raw?.networkUrls?.length&&raw.routeId&&raw.from&&raw.to&&raw.serviceDate)return raw;
+ const date=parisDayParts(l.departure)?.day;
+ const fromPoint=pt(l.fromPoint),toPoint=pt(l.toPoint);
+ if(!date||!fromPoint||!toPoint||!l.line)return null;
+ const name=String(l.provider||'');
+ const national=/sncf|\bter\b/i.test(name)?'sncf':/flixbus/i.test(name)?'flixbus':/blablacar.*bus/i.test(name)?'blablacarBus':null;
+ const resource=root.CP_NATIONAL_GTFS_RESOURCES?.[national];
+ const voiron={lat:45.373,lon:5.589};
+ const isVoiron31=String(l.line).trim()==='31'&&[fromPoint,toPoint].every(point=>meters(point,voiron)<=5000);
+ const networkUrls=isVoiron31?[
+  'https://at374.github.io/convoyage-app/data/gtfs/mreso-voironnais.zip',
+  'https://raw.githubusercontent.com/at374/convoyage-app/feature/transports-aura-suisse/data/gtfs/mreso-voironnais.zip'
+ ]:resource?[resource.url,...(resource.fallbackUrls||[])]:null;
+ return networkUrls?{networkUrls,serviceDate:date,line:String(l.line),fromPoint,toPoint}:null;
+}
 async function dayScheduleForLeg(raw){
- if(!raw||!Array.isArray(raw.networkUrls)||!raw.networkUrls.length||!raw.routeId||!raw.from||!raw.to||!raw.serviceDate)return [];
+ if(!raw?.networkUrls?.length||!raw.serviceDate)return [];
  const tables=await gtfsTablesForDaySchedule(raw);
  const pl=root.CPSibraPlanner;
  if(!tables||!pl||typeof pl.datedInterurbanRides!=='function')return [];
- const rows=pl.datedInterurbanRides(tables,raw.serviceDate,String(raw.routeId),String(raw.from),String(raw.to));
+ const rides=(route,from,to)=>pl.datedInterurbanRides(tables,raw.serviceDate,String(route),String(from),String(to));
+ let rows=[];
+ if(raw.routeId&&raw.from&&raw.to)rows=rides(raw.routeId,raw.from,raw.to);
+ else if(raw.line&&raw.fromPoint&&raw.toPoint){
+  const nearby=point=>tables.stops.map(stop=>({id:stop.stop_id,point:pt({lat:stop.stop_lat,lon:stop.stop_lon})}))
+   .filter(stop=>stop.point).map(stop=>({...stop,distance:meters(point,stop.point)}))
+   .filter(stop=>stop.distance<=200).sort((a,b)=>a.distance-b.distance).slice(0,4);
+  const routes=tables.routes.filter(route=>[route.route_short_name,route.route_long_name]
+   .some(name=>name&&raw.line.trim().toLowerCase()===name.trim().toLowerCase()));
+  const pairs=nearby(raw.fromPoint).flatMap(from=>nearby(raw.toPoint).map(to=>({from,to})))
+   .filter(({from,to})=>from.id!==to.id).sort((a,b)=>a.from.distance+a.to.distance-b.from.distance-b.to.distance);
+  for(const {from,to} of pairs){
+   rows=routes.flatMap(route=>rides(route.route_id,from.id,to.id));
+   if(rows.length)break;
+  }
+ }
  return [...new Map(rows.map(r=>[r.trip_id+':'+r.departureSeconds,r])).values()]
   .sort((a,b)=>a.departureSeconds-b.departureSeconds);
 }
@@ -2681,9 +2707,9 @@ function card(doc,j,labels,expanded=false,task=null){
    // 21/11/2026 (demande Laurent) : bouton « tous les horaires » pour chaque ligne régionale/locale GTFS —
    // généralisé à toute fiche mission, plus seulement Y51 Albertville. Nécessite les métadonnées GTFS
    // brutes (networkUrls/routeId/arrêts/date) posées par fromGTFS() sur les trajets locaux (localNetworks).
-   const raw=l.gtfsRaw;
-   if(raw&&Array.isArray(raw.networkUrls)&&raw.networkUrls.length&&raw.routeId&&raw.from&&raw.to&&raw.serviceDate){
-    const dayBtn=el(doc,'button','cp-hub-dayline','🕒 Tous les horaires '+(l.line||l.mode)+' du '+dayText(l.departure||raw.serviceDate));
+   const raw=scheduleSourceForLeg(l);
+   {
+    const dayBtn=el(doc,'button','cp-hub-dayline','🕒 Tous les horaires '+(l.line||l.mode)+' du '+dayText(l.departure||raw?.serviceDate));
     dayBtn.type='button';
     const dayRes=el(doc,'div','cp-hub-dayline-result');dayRes.setAttribute('aria-live','polite');
     let dayOpen=false;
@@ -2695,15 +2721,26 @@ function card(doc,j,labels,expanded=false,task=null){
      if(dayOpen){dayOpen=false;dayRes.textContent='';dayRes.replaceChildren();return;}
      dayOpen=true;
      dayBtn.disabled=true;dayRes.textContent='Chargement des horaires…';
-     dayScheduleForLeg(raw).then(rows=>{
+     const showSource=()=>{
+      dayRes.textContent='Grille complète indisponible dans la fiche. ';
+      const source=ticketLink(l.provider);
+      if(source){
+       const link=el(doc,'a',null,'Consulter les horaires sur '+source.label);
+       link.href=source.url;link.target='_blank';link.rel='noopener noreferrer';dayRes.appendChild(link);
+      }
+     };
+     dayScheduleForLeg(raw).catch(()=>[]).then(rows=>{
+      if(rows.length||!raw?.routeId)return rows;
+      return dayScheduleForLeg(scheduleSourceForLeg(l,false));
+     }).then(rows=>{
       dayRes.textContent='';
-      if(!rows.length){dayRes.textContent='Aucune autre course trouvée ce jour entre ces deux arrêts (données GTFS officielles).';return;}
+      if(!rows.length){showSource();return;}
       dayRes.appendChild(el(doc,'strong',null,rows.length+' départ'+(rows.length>1?'s':'')+' le '+raw.serviceDate+' :'));
       const ul=el(doc,'ul',null);
       for(const row of rows)ul.appendChild(el(doc,'li',null,hmFromSeconds(row.departureSeconds)+' → '+hmFromSeconds(row.arrivalSeconds)));
       dayRes.appendChild(ul);
       dayRes.appendChild(el(doc,'small',null,'Horaires théoriques officiels (GTFS '+(l.provider||raw.network||'')+'). Circulation réelle non vérifiée.'));
-     }).catch(()=>{dayRes.textContent='Horaires indisponibles pour cette date.';})
+     }).catch(showSource)
       .finally(()=>{dayBtn.disabled=false;});
     });
     li.appendChild(dayBtn);li.appendChild(dayRes);
@@ -2773,7 +2810,7 @@ function tadFor(task){
 let ordreInverse=false;try{ordreInverse=localStorage.getItem('cp_hub_ordre')==='desc';}catch(_){}
 function viewFingerprint(v){
  const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters].join(','):'';
- return [v.done?1:0,v.total,v.longShown,(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).map(one).join(';'),v.others&&v.others.length,
+ return [v.savedAt||0,v.done?1:0,v.total,v.longShown,(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).map(one).join(';'),v.others&&v.others.length,
   (v.flexCandidates||[]).map(c=>JSON.stringify([c.network,c.tripId,c.pickupWindow,c.pickupRule])).join('|'),Object.entries(v.errors||{}).map(([k,e])=>k+e).join('|'),Object.entries(v.received||{}).join('|'),ordreInverse?'desc':'asc'].join('#');
 }
 function render(host,v){
@@ -2788,6 +2825,7 @@ function render(host,v){
  host.textContent='';host.setAttribute('data-transport-hub',VERSION);
  const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):'Aucun trajet trouvé'):'Recherche en cours… ('+v.total+' trouvée'+(v.total>1?'s':'')+')');
  host.appendChild(head);
+ if(v.savedAt)host.appendChild(el(doc,'p','cp-hub-note','Recherche enregistrée le '+new Date(v.savedAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+'. Actualise pour vérifier les horaires et la circulation.'));
  if(v.longShown)host.appendChild(el(doc,'p','cp-hub-note','⚠️ Aucune proposition ne respecte votre limite de marche (Paramètres) : les trajets ci-dessous demandent une marche plus longue que ce réglage. Vérifiez chaque marche avant de partir.'+(v.scooterEnabled?'':' Vous pouvez aussi activer la trottinette électrique (Paramètres) pour couvrir une partie du trajet à sa place.')));
  const addCard=(parent,j,labels,expandFirst=false)=>{
   const key=signature(j)||(j.walkOnly?'walk|'+Math.round(ms(j.departure)/60000)+'|'+Math.round(ms(j.arrival)/60000)+'|'+Math.round(j.durationMinutes||0):'');
@@ -3014,7 +3052,7 @@ function render(host,v){
 }
 
 const api={VERSION,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
- marginFor,queryWindow,inSwissArea,makeProviders,createSession,render,dayScheduleForLeg,gtfsTablesForDaySchedule,hmFromSeconds};
+ marginFor,queryWindow,inSwissArea,makeProviders,createSession,render,scheduleSourceForLeg,dayScheduleForLeg,gtfsTablesForDaySchedule,hmFromSeconds};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
 })(typeof window!=='undefined'?window:globalThis);

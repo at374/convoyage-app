@@ -13,13 +13,14 @@ const hubSrc=fs.readFileSync(path.join(__dirname,'..','transport-mission-hub.js'
 test('source : chaque ligne locale GTFS porte networkId/networkUrls/serviceDate pour le bouton horaires du jour',()=>{
  assert.match(hubSrc,/networkId:id,networkUrls:urls,serviceDate:date/);
 });
-test('source : le bouton « tous les horaires » exige networkUrls+routeId+arrêts+date avant de s\'afficher',()=>{
- assert.match(hubSrc,/Array\.isArray\(raw\.networkUrls\)&&raw\.networkUrls\.length&&raw\.routeId&&raw\.from&&raw\.to&&raw\.serviceDate/);
+test('source : chaque étape motorisée a un bouton, même sans identifiants GTFS',()=>{
+ assert.match(hubSrc,/scheduleSourceForLeg\(l\)/);
+ assert.match(hubSrc,/\.catch\(showSource\)/);
  assert.match(hubSrc,/cp-hub-dayline/);
  assert.match(hubSrc,/dayScheduleForLeg\(raw\)/);
 });
 test('source : datedInterurbanRides de sibra-planner.js réutilisé (pas réinventé) pour la requête générique',()=>{
- assert.match(hubSrc,/pl\.datedInterurbanRides\(tables,raw\.serviceDate,String\(raw\.routeId\),String\(raw\.from\),String\(raw\.to\)\)/);
+ assert.match(hubSrc,/pl\.datedInterurbanRides\(tables,raw\.serviceDate,String\(route\),String\(from\),String\(to\)\)/);
 });
 
 const gtfsZip=path.join(__dirname,'..','data','gtfs','tao-orleans.zip');
@@ -56,5 +57,24 @@ test('réel : dayScheduleForLeg retrouve les vrais départs du jour (TAO Orléan
   globalThis.fetch=previousFetch;globalThis.CPSibraPlanner=previousCPSibra;
   globalThis.CPGTFSIndex=previousCPIndex;globalThis.CPGTFSLoader=previousCPLoader;
   delete require.cache[require.resolve('../transport-mission-hub.js')];
+ }
+});
+
+test('Voiron : horaires du bus 31 même sans identifiants GTFS dans la fiche',async()=>{
+ const bytes=fs.readFileSync(path.join(__dirname,'..','data','gtfs','mreso-voironnais.zip'));
+ const previous=[globalThis.fetch,globalThis.CPGTFSLoader,globalThis.CPSibraPlanner];
+ try{
+  globalThis.fetch=async()=>new Response(bytes);
+  globalThis.CPGTFSLoader=require('../transport-gtfs-loader.js');
+  globalThis.CPSibraPlanner=require('../sibra-planner.js');
+  const hub=require('../transport-mission-hub.js');
+  const source=hub.scheduleSourceForLeg({line:'31',departure:'2026-11-25T13:59:00+01:00',
+   fromPoint:{lat:45.364034,lon:5.594959},toPoint:{lat:45.38283,lon:5.57852}});
+  assert.ok(source?.networkUrls[0].endsWith('mreso-voironnais.zip'));
+  const rows=await hub.dayScheduleForLeg(source);
+  assert.ok(rows.length>1);
+  assert.ok(rows.some(row=>hub.hmFromSeconds(row.departureSeconds)==='13:59'));
+ }finally{
+  [globalThis.fetch,globalThis.CPGTFSLoader,globalThis.CPSibraPlanner]=previous;
  }
 });

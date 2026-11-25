@@ -148,7 +148,7 @@ test('fluidité : mises à jour regroupées et sections cachées non dessinées'
 });
 
 test('adresse de rue : le point exact est cherché même quand la commune est connue (centre-ville)',()=>{
- assert.match(app,/rue\.length>3&&!!cle&&\(!cache\|\|cache\.precision==='ville'\)&&\(c\.precision==='ville'\|\|centre\)/);
+ assert.match(app,/rue\.length>3&&!!cle&&\(!cache\|\|cache\.precision==='ville'\)&&\(c\.precision==='ville'\|\|c\.precision==='gps'\|\|centre\)/);
 });
 
 test('GPS plateforme = centre de commune : le point d’adresse officiel est préféré',()=>{

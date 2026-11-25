@@ -14,17 +14,19 @@
       }
     }).catch(() => {});
 
-  // Planning data stays in this page session and never updates synchronized missions.
+  // Les estimations et résultats de transport sont conservés sur cet appareil.
   const transportReturnPlans = new Map();
-  // 22/11/2026 (Laurent : « les trajets déjà visualisés doivent s'enregistrer quelque part pour que quand on
-  // reclique dessus ils s'affichent instantanément », « ils seront seulement actualisés quand le point gps
-  // d'arrivée sera déclenché ») : dernière vue « Visualisation des transports » calculée par mission (toutes
-  // directions confondues), gardée pour cette session de l'appli (pas au-delà d'un rechargement complet).
-  // Un nouveau clic sur le bouton réaffiche directement cette vue (aucun recalcul, aucune requête réseau)
-  // tant que rien de pertinent n'a changé (même signature de recherche) ; suiviArrivee() la vide explicitement
-  // dès qu'une arrivée GPS est détectée pour cette mission, en plus du changement de signature que cela
-  // entraîne de toute façon (l'heure de retour recalculée change la fenêtre de recherche).
-  const transportViewCache = new Map(); // clé : mission (missionTiming().key) -> {signature, views:{label:view}}
+  const transportViewCache = new Map();
+  const transportCacheKey = () => api?.session?.user_id ? 'cp_transport_views_v1:' + api.session.user_id : '';
+  function saveTransportViews(key, missionKey, entry) {
+    if (!key) return;
+    const saved = lireLocal(key, {});
+    delete saved[missionKey];
+    if(entry) saved[missionKey] = entry;
+    const missions = Object.keys(saved);
+    while (JSON.stringify(saved).length > 1500000 && missions.length > 1) delete saved[missions.shift()];
+    ecrireLocal(key, saved);
+  }
   let gtfsAgendaSession = null;
   function stopGTFSTransports() { gtfsAgendaSession?.dispose(); gtfsAgendaSession = null; }
   function transportParisDate(value) {
@@ -545,7 +547,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     const pickup = hfDates(original) ? hfPk(original) : original.pickup_start;
     const deadline = original.delivery_end || null;
     const key = JSON.stringify([original.platform, original.external_id]);
-    const local = original.platform && original.external_id != null ? transportReturnPlans.get(key) : null;
+    const planKey=transportCacheKey();
+    const local = original.platform && original.external_id != null ? (transportReturnPlans.get(key)||(planKey?lireLocal(planKey+':plans',{})[key]:null)) : null;
     // Arrivée détectée par le GPS du téléphone : livraison réelle + marge de 15 min (démarches), prioritaire sur l'estimation de la plateforme.
     const gps = original.kind === 'acceptee' && original.platform && original.external_id != null ? (arriveeGps(key) || arriveeHiflow(original)) : null;
     const gpsPlanned = gps ? new Date(Date.parse(gps.arrivee) + MARGE_ARRIVEE_MIN * 60000).toISOString() : null;
@@ -854,7 +857,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
     const tous = Object.assign({}, lireLocal('cp_arrivees', {})), cles = Object.keys(tous);
     if (cles.length > 40) delete tous[cles[0]];
     tous[t.key] = { arrivee: new Date(ts).toISOString(), detecte: new Date().toISOString() }; ecrireLocal('cp_arrivees', tous);
-    suiviDedans.delete(t.key); transportReturnPlans.delete(t.key); transportViewCache.delete(t.key); etat.planResultat = null;
+    suiviDedans.delete(t.key); transportReturnPlans.delete(t.key); if(transportCacheKey())saveTransportViews(transportCacheKey()+':plans',t.key,null); transportViewCache.delete(transportCacheKey()+'|'+t.key); saveTransportViews(transportCacheKey(),t.key,null); etat.planResultat = null;
     toast('📍 Arrivée détectée à ' + heureP(ts) + ' : retour calculé à partir de ' + heureP(ts + MARGE_ARRIVEE_MIN * 60000) + ' (marge 15 min)');
     try { if (etat.onglet === 'agenda') vueAgenda(); } catch (_) {}
     document.dispatchEvent(new CustomEvent('cp-arrivee', { detail: { key: t.key } }));
@@ -1792,7 +1795,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         (timing.gps.source === 'hiflow' ? '📍 Fin de mission Hiflow à ' : '📍 Arrivée détectée par GPS à ') + formatParis(timing.gps.arrivee) + ' : retour et jonction calculés à partir de ' + formatParis(transportPlannedReturn) + ' (marge de 15 min pour les démarches). Mise à jour automatique avec l’heure qui passe.' : transportPlannedReturn ?
         'Livraison prévue prise en compte : ' + formatParis(transportPlannedReturn) +
         '. Agenda et recherches utilisent cet horaire. Les résultats disponibles apparaissent ci-dessous ; un trajet non raccordé ne peut pas être calculé.' :
-        'Indique la date et l’heure prévues de livraison pour recalculer. La date limite reste inchangée. Ce choix est conservé uniquement pendant cette session.';
+        'Indique la date et l’heure prévues de livraison pour recalculer. La date limite reste inchangée. Ce choix est conservé sur cet appareil.';
       planningBox.appendChild(planningLabel);
       planningBox.appendChild(planningInput);
       planningBox.appendChild(planningButton);
@@ -1833,6 +1836,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         }
         if (transportReturnPlans.size >= 64) transportReturnPlans.delete(transportReturnPlans.keys().next().value);
         transportReturnPlans.set(transportPlanKey,chosen);
+        if(transportCacheKey())saveTransportViews(transportCacheKey()+':plans',transportPlanKey,chosen);
         etat.planResultat = null;
         planningButton.disabled = true;
         planningStatus.textContent = 'Livraison prévue prise en compte. Actualisation des informations…';
@@ -2020,7 +2024,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         Object.keys(transportDestinations).sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b)).forEach(k=>panel.appendChild(transportDestinations[k]));}
       const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
       let updateDayTabs=()=>{};const labelState={};const pendingViews={};let renderPending=()=>{};let activeDay=null;let transportHub=null;
-      const startDayLabels=day=>{try{if(!transportHub)return;for(const [l,d] of Object.entries(transportDays))if(d===day){if(!labelState[l]?.done)afficherRecherche(l,transportHub.view(l));transportHub.start(l);}}catch(_){}};
+      const startDayLabels=day=>{try{if(!transportHub)return;for(const [l,d] of Object.entries(transportDays))if(d===day){if(labelState[l]?.done)continue;afficherRecherche(l,transportHub.view(l));transportHub.start(l);}}catch(_){}};
       if(availableTransportDays.length>1){
         const tabs=document.createElement('nav');
         tabs.className='cp-transport-day-tabs';
@@ -2267,35 +2271,23 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         // mission existe et rien de pertinent n'a changé (même signature) — on la réaffiche directement,
         // sans recalcul ni requête réseau, au lieu de relancer une recherche complète à chaque clic.
         const missionKey=missionTiming(m).key;
-        const cachedEntry=transportViewCache.get(missionKey);
-        // Cache utilisable seulement si TOUTES les directions attendues (Aller/Jonction/Retour, ou leurs
-        // variantes par jour) sont présentes ET entièrement calculées (view.done) — sinon on relance une
-        // recherche complète comme avant, pour ne jamais figer un résultat partiel.
-        // Mission sur plusieurs jours (onglets de jour, tâches « lazy » démarrées à la demande via
-        // startDayLabels, qui a besoin d'une session active) : le cache ne s'applique pas, pour ne pas
-        // bloquer le calcul des autres jours — recherche complète comme avant dans ce cas précis.
-        const cacheComplete=!tasks.some(t=>t.lazy)&&cachedEntry&&cachedEntry.signature===signature&&
-          tasks.every(t=>cachedEntry.views[t.label]&&cachedEntry.views[t.label].done);
-        if(cacheComplete){
-          transportHub?.dispose();transportHub=null;
-          for(const [label,view] of Object.entries(cachedEntry.views)){
-            if(!transportDestinations[label])continue;
-            if(transportDestinations[label].hidden){pendingViews[label]=view;continue;}
-            let host=hubHosts[label];
-            if(!host||!host.isConnected){host=document.createElement('div');host.className='cp-hub';hubHosts[label]=host;
-              const sec=transportDestinations[label];
-              const after=legacySources[label]&&legacySources[label].isConnected?legacySources[label]:(sec.querySelector('.cp-transport-route')||sec.firstChild);
-              after.insertAdjacentElement('afterend',host);}
-            Hub.render(host,view);
-            labelState[label]={done:view.done,total:view.total};
-          }
-          updateDayTabs();
-          return;
+        const cacheKey=transportCacheKey(), memoryKey=cacheKey+'|'+missionKey;
+        const stored=transportViewCache.get(memoryKey)||(cacheKey?lireLocal(cacheKey,{})[missionKey]:null);
+        const refresh=!!bt.dataset.transportRefreshAt;
+        if(refresh)transportViewCache.delete(memoryKey);
+        const cachedViews=!refresh&&stored?.signature===signature?stored.views:{};
+        for(const label of Object.keys(labelState))delete labelState[label];
+        for(const label of Object.keys(pendingViews))delete pendingViews[label];
+        for(const [label,view] of Object.entries(cachedViews)){
+          const savedAt=view.savedAt||stored.savedAt;
+          pendingViews[label]={...view,savedAt};
+          labelState[label]={done:true,total:view.total};
         }
-        transportHub?.dispose();
-        // Badge visible dès le lancement (avant même la première réponse d'un moteur), pour ne jamais
-        // laisser un ancien résultat ou un vide pendant que la nouvelle recherche démarre.
-        for(const t of tasks)if(!t.lazy)afficherRecherche(t.label);
+        renderPending();
+        const remainingTasks=tasks.filter(t=>!cachedViews[t.label]);
+        transportHub?.dispose();transportHub=null;
+        if(!remainingTasks.length)return;
+        for(const t of remainingTasks)if(!t.lazy)afficherRecherche(t.label);
         let router=null;
         try{router=Hub.cachedRouter(window.CPTransportWalking?.createRouter({fetcher:regionalFetch,maxRequests:150,intervalMs:1100}),{storage:window.localStorage});}catch(_){}
         const scooterOn = (etat.reglages || {}).trottinette === true;
@@ -2313,7 +2305,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
         // Les GTFS-Flex sont affichés comme informations de service, jamais comme trajets datés inventés.
         const flexByLabel=new Map();
         const flexFor=label=>[...(flexByLabel.get(label)?.values()||[])].flat();
-        const session=Hub.createSession({tasks,router,fareFor,timeoutMs:35000,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),scooterRouter,scooter:{enabled:scooterOn,maxKm:Number(lireLocal('cp_trot_max_km',8)),speedKmh:Number(lireLocal('cp_trot_vitesse_kmh',15))},
+        const session=Hub.createSession({tasks:remainingTasks,router,fareFor,timeoutMs:35000,walkMaxKm:Number(lireLocal('cp_marche_max_km',3)),scooterRouter,scooter:{enabled:scooterOn,maxKm:Number(lireLocal('cp_trot_max_km',8)),speedKmh:Number(lireLocal('cp_trot_vitesse_kmh',15))},
           providers:Hub.makeProviders(window,{fetcher:regionalFetch,feedSizes:transportFeedSizes,regionalEndpoint:window.CP_REGIONAL_ROUTING_ENDPOINT,
             nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{},ojpSession,
             onFlexCandidates:({task:gtfsTask,network,candidates})=>{
@@ -2331,8 +2323,15 @@ const ecrireLocal = (k, v) => { const ess = x => { try { localStorage.setItem(k,
             if(!panel.isConnected||!transportDestinations[label])return;
             labelState[label]={done:view.done,total:view.total};
             view={...view,flexCandidates:flexFor(label)};
-            const entry=transportViewCache.get(missionKey)||{signature,views:{}};
-            entry.signature=signature;entry.views[label]=view;transportViewCache.set(missionKey,entry);
+            if(view.done){
+              const previous=transportViewCache.get(memoryKey);
+              const views=previous?.signature===signature?previous.views:{...cachedViews};
+              const savedAt=Date.now();
+              views[label]={...view,savedAt};
+              const entry={signature,views,savedAt};
+              transportViewCache.set(memoryKey,entry);
+              saveTransportViews(cacheKey,missionKey,entry);
+            }
             if(!view.done){
               delete pendingViews[label];
               afficherRecherche(label,view);
