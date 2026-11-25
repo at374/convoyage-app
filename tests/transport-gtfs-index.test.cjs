@@ -91,3 +91,18 @@ console.log('GTFS index: 42 assertions passed');
  assert.equal(by.T1,'Hôpital');assert.equal(by.T2,'Direction_Plateau');
  assert.equal(trips.find(t=>t.tripId==='T2').terminus,'Mairie');
 }
+
+{
+ const stations=[
+  ['south','-0.01','179.999'],['north','0.01','179.999'],
+  ['opposite','0','-179.999'],['far','0.10','179.999'],
+  ['invalid','95','179.999']
+ ];
+ const entries=new Map(stations.map(([id,lat,lon])=>[id,{stop_id:id,stop_lat:lat,stop_lon:lon}]));
+ const index={stopById:entries};
+ const nearby=nearbyStops(index,0,179.999,1200);
+ assert.deepEqual(nearby.map(stop=>stop.stopId),['opposite','south','north']);
+ nearby[0].name='changed';
+ assert.equal(nearbyStops(index,0,179.999,1200)[0].name,'');
+ assert.deepEqual(nearbyStops(index,0,179.999,500).map(stop=>stop.stopId),['opposite']);
+}

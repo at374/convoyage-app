@@ -117,24 +117,45 @@ function minutes(time){
  const [h,m,sec]=time.split(':').map(Number);
  return h*60+m+sec/60;
 }
+const stopLocations=new WeakMap();
+function locationsFor(index){
+ let locations=stopLocations.get(index);
+ if(locations)return locations;
+ locations=[];
+ for(const stop of index.stopById.values()){
+  const lat=Number(stop.stop_lat),lon=Number(stop.stop_lon);
+  if(!stop.stop_lat||!stop.stop_lon||!Number.isFinite(lat)||!Number.isFinite(lon)||
+   Math.abs(lat)>90||Math.abs(lon)>180)continue;
+  locations.push({stop,lat,lon,order:locations.length});
+ }
+ locations.sort((a,b)=>a.lat-b.lat);
+ stopLocations.set(index,locations);
+ return locations;
+}
 function nearbyStops(index,lat,lon,radiusMeters=700){
  if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||
    Math.abs(lon)>180||!Number.isFinite(radiusMeters)||radiusMeters<=0)return [];
  const rad=Math.PI/180,earth=6371000,results=[];
- for(const stop of index.stopById.values()){
-  const a=Number(stop.stop_lat),b=Number(stop.stop_lon);
-  if(!stop.stop_lat||!stop.stop_lon||!Number.isFinite(a)||!Number.isFinite(b)||
-    Math.abs(a)>90||Math.abs(b)>180)continue;
+ const span=radiusMeters/earth/rad+1e-9;
+ const south=lat-span,north=lat+span,locations=locationsFor(index);
+ let start=0,end=locations.length;
+ while(start<end){
+  const middle=Math.floor((start+end)/2);
+  if(locations[middle].lat<south)start=middle+1;
+  else end=middle;
+ }
+ const cosLat=Math.cos(lat*rad);
+ for(let i=start;i<locations.length&&locations[i].lat<=north;i++){
+  const {stop,lat:a,lon:b,order}=locations[i];
   const dLat=(a-lat)*rad,dLon=(b-lon)*rad;
-  const h=Math.sin(dLat/2)**2+Math.cos(lat*rad)*Math.cos(a*rad)*Math.sin(dLon/2)**2;
+  const h=Math.sin(dLat/2)**2+cosLat*Math.cos(a*rad)*Math.sin(dLon/2)**2;
   const distanceMeters=2*earth*Math.asin(Math.min(1,Math.sqrt(h)));
   if(distanceMeters<=radiusMeters)results.push({
     stopId:stop.stop_id,name:stop.stop_name||'',lat:a,lon:b,description:stop.stop_desc||null,
-    distanceMeters:Math.round(distanceMeters),
-    accessVerified:false
+    distanceMeters:Math.round(distanceMeters),accessVerified:false,order
   });
  }
- return results.sort((a,b)=>a.distanceMeters-b.distanceMeters);
+ return results.sort((a,b)=>a.distanceMeters-b.distanceMeters||a.order-b.order).map(({order,...stop})=>stop);
 }
 function nearbyDirectTrips(files,index,date,origin,destination,radiusMeters=700){
  if(!origin||!destination)return [];
