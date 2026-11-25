@@ -1953,12 +1953,17 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const legacyTitle=document.createElement('summary');legacyTitle.textContent='Détail par moteur (justificatifs)';legacy.appendChild(legacyTitle);
         section.appendChild(legacy);legacySources[key]=legacy;
       }
-      const missedAt=Number(bt.dataset.transportMissedAt)||0;
+      let missedAt=Number(bt.dataset.transportMissedAt)||0;
       if(next&&deliveryDate&&next.pickup_start){
         const missed=document.createElement('button');
         missed.type='button';missed.className='second';
         missed.textContent='Train raté · chercher le suivant';
-        missed.onclick=()=>{bt.dataset.transportMissedAt=String(Date.now());reopenTransport();};
+        missed.onclick=()=>{
+          missedAt=Date.now();
+          bt.dataset.transportMissedAt=String(missedAt);
+          afficherRecherche('Jonction');
+          startTransportHub();
+        };
         legacySources.Jonction.insertAdjacentElement('beforebegin',missed);
       }
       /* V278 : trajet hors zone couverte (AURA + Suisse) : message clair */
@@ -2294,7 +2299,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const missionKey=missionTiming(m).key;
         const cacheKey=transportCacheKey(), memoryKey=cacheKey+'|'+missionKey;
         const stored=transportViewCache.get(memoryKey)||(cacheKey?lireLocal(cacheKey,{})[missionKey]:null);
-        const refresh=!!bt.dataset.transportRefreshAt;
+        const refresh=!!bt.dataset.transportRefreshAt||!!missedAt;
         if(refresh)transportViewCache.delete(memoryKey);
         const cachedViews=!refresh&&stored?.signature===signature?Object.fromEntries(Object.entries(stored.views||{}).filter(([,view])=>view.total>0||view.flexCandidates?.length)):{};
         const olderJonction=stored?.views?.Jonction||stored?.olderJonction;

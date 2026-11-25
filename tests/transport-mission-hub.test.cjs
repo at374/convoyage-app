@@ -1033,3 +1033,13 @@ test('relance après la limite : le moteur cherche en départ et la fiche conser
   assert.equal(next.feasible,false);
  }finally{session.dispose();}
 });
+
+test('en relance un départ après fermeture reste visible avec un avertissement',()=>{
+ const task={label:'Jonction',afterMissedTransport:true,from:HOME,to:MISSION,
+  earliestDeparture:at(17,15),latestArrival:at(17,0),siteCloseMinutes:17*60+30};
+ const journey=H.assess({source:'TER',legs:[bus(at(17,35),at(18,40),HOME,MISSION)]},task);
+ assert.ok(journey.reasons.some(r=>r.includes('fermeture prévue du site')));
+ assert.ok(!journey.reasons.includes('trajet hors plage de jour ou date de mission'));
+ assert.equal(journey.feasible,false);
+ assert.equal(H.nextDepartureAfterMiss({task,others:[journey]},Date.parse(at(17,15))),journey);
+});

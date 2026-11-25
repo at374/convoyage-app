@@ -732,11 +732,11 @@ function dayWindowOk(j,task){
  if(dep.minute<first||arr.minute>last||dep.day!==arr.day)return false;
  // Agences et parcs fermés en fin de journée (17:30 par défaut, plus tard si la fenêtre de la plateforme le permet) :
  // arrivée au site (prise en charge / mission suivante) ou départ du site (retour) après cette heure = proposition écartée.
- if(Number.isFinite(task.siteCloseMinutes)){
+ if(!task.afterMissedTransport&&Number.isFinite(task.siteCloseMinutes)){
   const depart=task.windowKind==='departure'||(Number.isFinite(ms(task.earliestDeparture))&&!Number.isFinite(ms(task.latestArrival)));
   if((depart?dep.minute:arr.minute)>task.siteCloseMinutes)return false;
  }
- const reference=parisDayParts(task.latestArrival||task.earliestDeparture);
+ const reference=parisDayParts(task.afterMissedTransport?task.earliestDeparture:task.latestArrival||task.earliestDeparture);
  return !reference||dep.day===reference.day;
 }
 // Un GTFS-Flex publie une fenêtre de service, pas un horaire ni une réservation.
@@ -772,6 +772,8 @@ function assess(j,task,fareFor){
   if(!Number.isFinite(a)||!Number.isFinite(b)||b<a||a<prev-60000){chrono=false;break;}prev=b;}
  if(!chrono)reasons.push('horaires incohérents');
  if(!dayWindowOk(j,task))reasons.push('trajet hors plage de jour ou date de mission');
+ if(task.afterMissedTransport&&Number.isFinite(task.siteCloseMinutes)&&parisDayParts(arr)?.minute>task.siteCloseMinutes)
+  reasons.push('arrivée après la fermeture prévue du site : accès à vérifier');
  if(legs.some(l=>l.cancelled))reasons.push('course annulée signalée');
  const margin=marginFor(task),deadline=ms(task.latestArrival),earliest=ms(task.earliestDeparture);
  const slack=Number.isFinite(deadline)&&Number.isFinite(arr)?Math.floor((deadline-arr)/60000):null;
