@@ -2628,24 +2628,27 @@ function walkingEndpoint(leg,task,side){
 function directionForLeg(leg,task){
  const terminal=String(leg.terminus||'').trim();
  const direction=String((leg.mode==='Bus'&&terminal)||leg.headsign||'').trim();
- if(leg.kind!=='transit'||leg.mode!=='Bus')return direction;
- const normalized=s=>String(s||'').trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
- const cityOnly=!terminal&&!!direction&&[task?.fromCity,task?.toCity,leg.from?.split(',')[0],leg.to?.split(',')[0]]
-  .some(city=>city&&normalized(city)===normalized(direction)&&
-   (city===task?.fromCity||city===task?.toCity||leg.from?.includes(',')||leg.to?.includes(',')));
- if(String(leg.line)!=='31')return cityOnly?'':direction;
- const known=/^Voiron[, ]+Leprince Ringuet$/i;
- if(known.test(direction))return 'Leprince Ringuet';
- if(direction&&!/^Voiron$/i.test(direction))return cityOnly?'':direction;
- // Dans le GTFS voironnais, les courses de la gare vers ces arrêts
- // circulent toutes vers Leprince Ringuet. Le trajet inverse a plusieurs terminus.
- const name=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
-  .replace(/^voiron[ ,–-]+/,'').replace(/[’'-]/g,' ').trim().replace(/\s+/g,' ');
- const inVoiron=p=>p&&p.lat>=45.34&&p.lat<=45.40&&p.lon>=5.55&&p.lon<=5.62;
- if(inVoiron(pt(leg.fromPoint))&&inVoiron(pt(leg.toPoint))&&
-  /^(?:sncf|gare(?: sncf| routiere(?: nord)?)?)$/.test(name(leg.from))&&
-  /^(?:louis neel|blanchisseries?|leprince ringuet)$/.test(name(leg.to)))return 'Leprince Ringuet';
- return cityOnly?'':direction;
+ if(leg.kind==='walk'||leg.mode!=='Bus')return direction;
+ const normalized=s=>String(s||'').trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+  .replace(/[^a-z0-9]+/g,' ').trim();
+ const d=normalized(direction);
+ const cities=[task?.fromCity,task?.toCity,...[leg.from,leg.to].filter(x=>String(x).includes(',')).map(x=>String(x).split(',')[0])];
+ const cityOnly=!terminal&&!!d&&cities.some(city=>normalized(city)===d);
+ if(!/^(?:(?:bus|ligne) )?0?31(?: voiron)?$/.test(normalized(leg.line)))return cityOnly?'':direction;
+ if(/^(?:voiron )?leprince ringuet$/.test(d))return 'Leprince Ringuet';
+ const generic=!d||/^(?:direction )?voiron(?: 38| 38500)?$/.test(d)||cityOnly;
+ if(!generic)return direction;
+
+ // Sens vérifié dans le GTFS voironnais : gare → Louis Néel → Leprince Ringuet.
+ // Les variantes du libellé des arrêts ne changent pas l’ordre de la course.
+ const stop=value=>normalized(value).replace(/(?:^| )(?:de )?voiron(?= |$)/g,' ').trim().replace(/ +/g,' ');
+ const points=[pt(leg.fromPoint),pt(leg.toPoint)].filter(Boolean);
+ const inVoiron=p=>p.lat>=45.34&&p.lat<=45.40&&p.lon>=5.55&&p.lon<=5.62;
+ const local=points.length>0||[task?.fromCity,task?.toCity,leg.from,leg.to,d].some(v=>/\bvoiron\b/.test(normalized(v)));
+ if(local&&points.every(inVoiron)&&
+  /^(?:sncf|gare(?: routiere)?(?: sncf)?(?: nord)?|gare nord)$/.test(stop(leg.from))&&
+  /^(?:louis neel|blanchisseries?|leprince ringuet)$/.test(stop(leg.to)))return 'Leprince Ringuet';
+ return /^voiron(?: 38| 38500)?$/.test(d)||cityOnly?'':direction;
 }
 function card(doc,j,labels,expanded=false,task=null){
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
@@ -2669,6 +2672,12 @@ function card(doc,j,labels,expanded=false,task=null){
   link.title='Acheter le billet ou consulter le prix : '+t.label;link.setAttribute('aria-label','Acheter le billet sur '+t.label);
   if(link.addEventListener)link.addEventListener('click',e=>e.stopPropagation());s.appendChild(link);}
  s.appendChild(el(doc,'span','cp-hub-modes',j.legs.map(l=>(ICON[l.mode]||'🚏')+(l.kind==='walk'?' '+durationText(Math.max(1,Math.round((l.durationSeconds||0)/60))):(l.line?' '+l.line:''))).join(' › ')));
+ for(const l of j.legs){
+  if(l.mode!=='Bus'||l.kind==='walk')continue;
+  const direction=directionForLeg(l,task);
+  if(direction&&direction!==l.line)
+   s.appendChild(el(doc,'small','cp-hub-endpoints',['Bus',l.line,'· Direction',direction].filter(Boolean).join(' ')));
+ }
  s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':j.scheduled?'🕒 ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · '+(j.deadlineEstimated?'avance avant fermeture estimée de l’agence ('+clock(j.deadlineMs)+')':'avance')+' '+signedDurationText(j.slackMinutes)+' (marge '+durationText(j.marginMinutes)+')':'')));
  if(!j.feasible)s.appendChild(el(doc,'small','cp-hub-reason',j.statusDetail));
  c.appendChild(s);

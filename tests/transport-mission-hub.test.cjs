@@ -1065,3 +1065,13 @@ test('Voiron ligne 31 : afficher Leprince Ringuet de la gare à Louis Néel, san
  assert.equal(H.directionForLeg({...leg,line:'32',headsign:'Voiron'}),'');
  assert.equal(H.directionForLeg({...leg,line:'32',headsign:'Voiron',terminus:'Mairie'}),'Mairie');
 });
+
+test('ligne 31 : variantes Gare de Voiron et coordonnées absentes dans une fiche enregistrée',()=>{
+ const task={toCity:'Voiron'};
+ const leg={mode:'Bus',line:'Bus 31',headsign:'Voiron (38)',from:'Gare SNCF de Voiron',to:'Voiron - Louis Néel'};
+ assert.equal(H.directionForLeg(leg,task),'Leprince Ringuet');
+ assert.equal(H.directionForLeg({...leg,from:'Gare SNCF - Voiron'},task),'Leprince Ringuet');
+ assert.equal(H.directionForLeg({...leg,from:'Voiron Gare Routière Nord'},task),'Leprince Ringuet');
+ assert.equal(H.directionForLeg({...leg,from:leg.to,to:leg.from},task),'');
+ assert.equal(H.directionForLeg({...leg,headsign:'Voiron, Paviot'},task),'Voiron, Paviot');
+});
