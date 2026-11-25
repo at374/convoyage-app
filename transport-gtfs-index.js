@@ -102,7 +102,7 @@ function demandAccess(value){return value==='2'||value==='3';}
 function directCandidates(files,index,date,origins,destinations){
  const services=servicesForDate(files,date),journeys=[];
  if(!origins.size||!destinations.size)return journeys;
- for(const [tripId,trip] of index.tripById){
+ for(const [tripId,trip] of tripsAtStops(index,origins.keys())){
   if(!services.has(trip.service_id))continue;
   const route=index.routeById.get(trip.route_id);
   if(!route)continue;
@@ -192,7 +192,7 @@ function nearbyDirectTrips(files,index,date,origin,destination,radiusMeters=700)
  });
 }
 const tripsServingStops=new WeakMap();
-function boundaryTrips(index,origins,destinations){
+function tripsAtStops(index,...stopGroups){
  let lookup=tripsServingStops.get(index);
  if(!lookup){
   const trips=[...index.tripById],byStop=new Map();
@@ -207,7 +207,7 @@ function boundaryTrips(index,origins,destinations){
   lookup={trips,byStop};tripsServingStops.set(index,lookup);
  }
  const positions=new Set();
- for(const stopId of new Set([...origins.keys(),...destinations.keys()]))
+ for(const stopIds of stopGroups)for(const stopId of stopIds)
   for(const position of lookup.byStop.get(stopId)||[])positions.add(position);
  return [...positions].sort((a,b)=>a-b).map(position=>lookup.trips[position]);
 }
@@ -217,7 +217,7 @@ function boundaryLegs(files,index,date,origins,destinations,{maxLegs=50000,minDe
  const services=servicesForDate(files,date),firstByStop=new Map(),secondByStop=new Map();
  if(!origins.size&&!destinations.size)return {firstByStop,secondByStop,searchTruncated:false};
  let legCount=0,searchTruncated=false;
- const trips=boundaryTrips(index,origins,destinations);
+ const trips=tripsAtStops(index,origins.keys(),destinations.keys());
  const startedAt=Date.now(),budgetMs=Number.isFinite(timeBudgetMs)&&timeBudgetMs>0?timeBudgetMs:1200;let tripsSeen=0;
  const add=(map,leg)=>{
   if(legCount>=maxLegs){searchTruncated=true;return false;}
