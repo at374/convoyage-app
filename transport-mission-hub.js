@@ -8,7 +8,7 @@
  */
 (function(root){
 'use strict';
-const VERSION='hub-20261125-marches-auto';
+const VERSION='hub-20261125-marches-partagees';
 const SWISS_BOX={minLat:45.80,maxLat:47.90,minLon:5.90,maxLon:10.60};
 const GENEVA={lat:46.2044,lon:6.1432};
 // Parking des loueurs P21 (Genève, secteur France) : point GPS donné par Laurent. Seule la MARCHE vers/depuis P21 passe par l'intérieur
@@ -883,10 +883,12 @@ function excessiveDetour(j,task){
 function walkPairs(j,task){
  const from=pt(task&&task.from),to=pt(task&&task.to),legs=j.legs||[],out=[];
  const k=(a,b)=>[a.lat,a.lon,b.lat,b.lon].map(v=>Math.round(v*1e4)).join(',');
- const first=legs[0],last=legs[legs.length-1];
- if(from&&first&&pt(first.fromPoint)&&meters(from,first.fromPoint)>SAME_POINT_M)out.push(k(from,first.fromPoint));
- if(to&&last&&pt(last.toPoint)&&meters(last.toPoint,to)>SAME_POINT_M)out.push(k(last.toPoint,to));
- return out;
+ const add=(a,b)=>{const start=pt(a),end=pt(b);if(start&&end&&meters(start,end)>SAME_POINT_M)out.push(k(start,end));};
+ add(from,legs[0]?.fromPoint);
+ for(let i=1;i<legs.length;i++)if(!isFoot(legs[i-1])&&!isFoot(legs[i]))
+  add(legs[i-1].toPoint,legs[i].fromPoint);
+ add(legs.at(-1)?.toPoint,to);
+ return [...new Set(out)];
 }
 function signature(j){
  return j.legs.filter(l=>!isFoot(l)).map(l=>[
@@ -2199,7 +2201,13 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   if(!router||s.walkCompletionStarted||!visibleWithMissingWalks(label,attempted).length)return false;
   s.walkCompletionStarted=true;
   const deadline=Date.now()+Math.min(25000,enrichmentMs*2);
-  const primary={route:(a,b)=>Date.now()<deadline&&!disposed?until(router.route(a,b),deadline,null):null};
+  const pendingRoutes=new Map();
+  const primary={route:(a,b)=>{
+   if(Date.now()>=deadline||disposed)return null;
+   const key=[a.lat,a.lon,b.lat,b.lon].join(',');
+   if(!pendingRoutes.has(key))pendingRoutes.set(key,until(router.route(a,b),deadline,null));
+   return pendingRoutes.get(key);
+  }};
   s.pending++;s.total++;(s.deadlines||=[]).push(deadline);
   emitNow(label);
   (async()=>{
@@ -2363,24 +2371,21 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   // Un budget local ne doit pas dépendre de l'ordre des réponses réseau.
   const coachSource=/(?:flixbus|blablacar\s*(?:bus|coach)|blablacarbus|ouibus)/i.test(source);
   const coachKey=coachSource?(/flixbus/i.test(source)?'flixbus':'blablacarBus'):null;
-  // Une réserve indépendante doit accepter les couples déjà vus sans
-  // consommer de crédit supplémentaire et ne pas se bloquer après 4 couples.
-  const coachBudget=coachKey?Math.max(0,4-(s.coachWalkPairs[coachKey]||0)):0;
-  const before=s.walkPairs.size;
-  let [batch,rest]=select(toWalk,coachSource?coachBudget:8);
-  if(coachKey)s.coachWalkPairs[coachKey]=(s.coachWalkPairs[coachKey]||0)+s.walkPairs.size-before;
+  // Les compteurs sont communs à toute la section, même quand plusieurs fournisseurs
+  // répondent en parallèle. Un couple déjà réservé peut être réutilisé gratuitement.
+  const selectWithinBudget=(list,limit)=>{
+   const used=coachKey?s.coachWalkPairs[coachKey]:s.regularWalkPairs;
+   const before=s.walkPairs.size;
+   const selected=select(list,Math.max(0,limit-used));
+   const added=s.walkPairs.size-before;
+   if(coachKey)s.coachWalkPairs[coachKey]+=added;
+   else s.regularWalkPairs+=added;
+   return selected;
+  };
+  let [batch,rest]=selectWithinBudget(toWalk,coachSource?4:8);
   await walkBatch(batch);
-  // Recherche complémentaire : si rien n'est encore réalisable dans cette direction, 8 couples de plus.
-  // Les cars ne doivent pas perdre leur marche parce qu'un TER est déjà
-  // réalisable. Le second lot reste limité, sans dépasser le quota prévu.
   if(!disposed&&rest.length&&(coachSource||!s.items.some(x=>x.feasible))){
-   // Quota total car : huit nouveaux couples au maximum, deux lots de quatre.
-   // Décompter les couples déjà réservés au premier lot et ceux partagés
-   // avec les autres moteurs, plutôt que réouvrir un quota illimité.
-   const remaining=coachKey?Math.max(0,8-(s.coachWalkPairs[coachKey]||0)):8;
-   const beforeSecond=s.walkPairs.size;
-   [batch,rest]=select(rest,coachSource?Math.min(4,remaining):8);
-   if(coachKey)s.coachWalkPairs[coachKey]=(s.coachWalkPairs[coachKey]||0)+s.walkPairs.size-beforeSecond;
+   [batch,rest]=selectWithinBudget(rest,coachSource?8:16);
    await walkBatch(batch);
   }
   for(const t of rest){ // au-delà : visibles, marches non calculées pour préserver le quota Valhalla
@@ -2477,7 +2482,7 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   emit(label);
  };
  for(const task of tasks){
-  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},discarded:{},bySignature:new Map(),walkPairs:new Set(),coachWalkPairs:{flixbus:0,blablacarBus:0}};
+  const label=task.label;state[label]={task,items:[],pending:0,errors:{},skipped:{},received:{},discarded:{},bySignature:new Map(),walkPairs:new Set(),regularWalkPairs:0,coachWalkPairs:{flixbus:0,blablacarBus:0}};
   if(task.lazy){state[label].pending=1;lazy[label]=()=>{state[label].pending--;launch(task);};continue;}
   launch(task);
  }

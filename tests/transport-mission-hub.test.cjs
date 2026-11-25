@@ -493,9 +493,9 @@ test('quotas cars : réserver quatre couples piétons par opérateur indépendam
  const fs=require('node:fs');
  const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
  assert.match(source,/coachWalkPairs:\{flixbus:0,blablacarBus:0\}/);
- assert.match(source,/const coachBudget=coachKey\?Math\.max\(0,4-/);
+ assert.match(source,/selectWithinBudget\(toWalk,coachSource\?4:8\)/);
  assert.match(source,/s\.walkPairs\.size-before/);
- assert.match(source,/select\(toWalk,coachSource\?coachBudget:8\)/);
+ assert.match(source,/coachKey\?s\.coachWalkPairs\[coachKey\]:s\.regularWalkPairs/);
 });
 
 test('échec du routage piéton : aucune carte ne reste bloquée en calcul',async()=>{
@@ -520,9 +520,9 @@ test('cars : deuxième lot piéton même si un TER est déjà réalisable',()=>{
  const fs=require('node:fs');
  const source=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
  assert.match(source,/rest\.length&&\(coachSource\|\|!s\.items\.some\(x=>x\.feasible\)\)/);
- assert.match(source,/const remaining=coachKey\?Math\.max\(0,8-/);
- assert.match(source,/select\(rest,coachSource\?Math\.min\(4,remaining\):8\)/);
- assert.match(source,/s\.walkPairs\.size-beforeSecond/);
+ assert.match(source,/select\(list,Math\.max\(0,limit-used\)\)/);
+ assert.match(source,/selectWithinBudget\(rest,coachSource\?8:16\)/);
+ assert.match(source,/s\.regularWalkPairs\+=added/);
 });
 
 test('fusion doublons : faisabilité prioritaire sur prix connu',()=>{
@@ -1156,5 +1156,27 @@ test('la recherche termine automatiquement les marches du trajet proposé après
   assert.ok(proposal);
   assert.deepEqual(H.missingWalkLabels(proposal,v.task),[]);
   assert.ok(proposal.legs.some(leg=>leg.kind==='walk'));
+ }finally{session.dispose();}
+});
+
+test('trois moteurs partagent le budget piéton de la section',async()=>{
+ let finish,calls=0;
+ const final=new Promise(resolve=>{finish=resolve;});
+ const providers=Object.fromEntries(['A','B','C'].map((name,group)=>[name,{
+  name,enabled:()=>true,run:async()=>Array.from({length:12},(_,i)=>({
+   source:name,legs:[bus(at(7,i*2),at(7,20+i*2),
+    {lat:STOP1.lat+(i+12*group)*0.0002,lon:STOP1.lon},
+    {lat:STOP2.lat+(i+12*group)*0.0002,lon:STOP2.lon},{line:name+i})]
+  }))
+ }]));
+ const session=H.createSession({
+  tasks:[{label:'Aller',from:HOME,to:MISSION,latestArrival:at(9,30)}],providers,
+  router:{route:async()=>{calls++;return {status:'unavailable'};}},
+  onUpdate:(_,view)=>{if(view.done)finish(view);}
+ });
+ try{
+  const v=await final;
+  assert.ok(H.selectJourneyCards(v,null).length>0);
+  assert.ok(calls<=29,'appels marche : '+calls);
  }finally{session.dispose();}
 });
