@@ -907,3 +907,17 @@ test('jonction à 11 h : un bus d’approche trop tôt ne masque pas le train de
  assert.deepEqual(result.legs.map(l=>[l.kind,l.line]),[['walk',null],['transit','P41']]);
  assert.ok(H.ms(result.legs[0].departure)>=H.ms(task.earliestDeparture));
 });
+
+test('à Voiron, une marche vers le centre est recalculée depuis Louis Néel vers la prise en charge',async()=>{
+ const gare={lat:45.364034,lon:5.594959},arret={lat:45.380,lon:5.580};
+ const centre={lat:45.36715,lon:5.59166},rue={lat:45.381682,lon:5.579257};
+ const trajet={source:'GTFS',legs:[
+  bus(at(13,59),at(14,9),gare,arret,{line:'31',toName:'Louis Néel'}),
+  {...bus(at(14,9),at(14,25),arret,centre),kind:'walk',mode:'Marche'}
+ ]};
+ const router=fakeRouter();
+ const result=await H.completeWalks(trajet,{from:gare,to:rue,toName:'Rue Louis Armand',toPrecision:'rue'},router);
+ assert.deepEqual(router.calls,[[arret,rue]]);
+ assert.deepEqual(result.legs.at(-1).toPoint,rue);
+ assert.equal(result.legs.at(-1).to,'Rue Louis Armand');
+});

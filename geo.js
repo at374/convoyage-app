@@ -237,7 +237,7 @@
       // GPS fourni par la plateforme mais qui n'est que le centre de la commune (adresse de rue connue ailleurs dans la commune) :
       // un point d'adresse trouvé par le service officiel est alors préféré.
       const cache = POINTS[cleAdresse(m, cote)];
-      if (cache && ((cache.precision === 'adresse' || cache.precision === 'rue') && centreCommune(m, cote, Number(p.lat), Number(p.lng)) || (cache.precision === 'adresse' && volOiseauKm({ lat: cache.lat, lng: cache.lng }, { lat: Number(p.lat), lng: Number(p.lng) }) * 1000 > 150))) return { lat: cache.lat, lng: cache.lng, precision: cache.precision };
+      if (cache && ((cache.precision === 'adresse' || cache.precision === 'rue') && centreCommune(m, cote, Number(p.lat), Number(p.lng)) || (['adresse','rue'].includes(cache.precision) && volOiseauKm(cache, { lat: Number(p.lat), lng: Number(p.lng) }) * 1000 > (cache.precision==='adresse'?150:400)))) return { lat: cache.lat, lng: cache.lng, precision: cache.precision };
       // 23/11/2026 (Laurent : arrivée GPS jamais détectée à une livraison Albertville) : certaines plateformes (Hiflow)
       // donnent pour « destination » le centre de la commune, même quand une adresse de rue précise est fournie à côté
       // (deux missions avec des rues différentes à Albertville partageaient exactement le même point). Faute d'un

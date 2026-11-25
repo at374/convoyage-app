@@ -384,6 +384,12 @@ async function completeWalks(j,task,router,scooter,regional){
  const from=pt(task.from),to=pt(task.to);
  const transit=legs.filter(l=>l.kind!=='walk');
  if(!transit.length)return {...j,legs,missing:['aucun transport public dans la proposition']};
+ const lastRide=transit.at(-1),lastLeg=legs.at(-1),providerEnd=pt(lastLeg.toPoint);
+ // Une marche fournie vers un autre point doit être recalculée depuis le dernier arrêt.
+ if(to&&['gps','adresse','rue'].includes(task.toPrecision)&&lastLeg.kind==='walk'&&
+    pt(lastRide.toPoint)&&(!providerEnd||meters(providerEnd,to)>SAME_POINT_M))
+  legs.splice(legs.indexOf(lastRide)+1);
+
  const call=async(a,b)=>{
   if(!router||!a||!b)return null;
   try{const r=await router.route(a,b);return r&&r.status==='calculated'&&
