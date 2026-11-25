@@ -337,14 +337,14 @@ function fromNationalGTFS(rows,operator){
    r.legs.every(l=>l&&l.departure&&l.arrival)))).map(r=>{
   const a=r.originStop,b=r.destinationStop;
   const point=s=>({lat:s?.lat??s?.stop_lat,lon:s?.lon??s?.stop_lon});
-  const makeLeg=(from,to,line,departure,arrival)=>leg({mode:operator==='sncf'?'Train':'Car',
-   provider:names[operator],line,from:from?.name||from?.stop_name||'',
+  const makeLeg=(from,to,{line,headsign,terminus,departure,arrival})=>leg({mode:operator==='sncf'?'Train':'Car',
+   provider:names[operator],line,headsign,terminus,from:from?.name||from?.stop_name||'',
    to:to?.name||to?.stop_name||'',fromPoint:point(from),toPoint:point(to),
    departure:localTime(r.date,departure),arrival:localTime(r.date,arrival)});
   const transit=Array.isArray(r.legs)&&r.legs.length===2&&r.transferStop?
-   [makeLeg(a,r.transferStop,r.legs[0].line,r.legs[0].departure,r.legs[0].arrival),
-    makeLeg(r.transferStop,b,r.legs[1].line,r.legs[1].departure,r.legs[1].arrival)]:
-   [makeLeg(a,b,r.line,r.departure,r.arrival)];
+   [makeLeg(a,r.transferStop,r.legs[0]),
+    makeLeg(r.transferStop,b,r.legs[1])]:
+   [makeLeg(a,b,r)];
   return {...journey(names[operator]+' (GTFS)',transit),
    missing:['horaire GTFS non confirmé en temps réel','prix commercial et disponibilité non vérifiés',
     // Correspondance au même arrêt d'après l'horaire officiel : avec au moins 10 min de battement programmé, c'est
@@ -1136,7 +1136,7 @@ function makeProviders(r,opts={}){
   const run=(payload,timeoutMs=90000)=>new Promise((resolve,reject)=>{
    if(workerDisposed){reject(new Error('Recherche transport annulée'));return;}
    if(!worker){
-    try{worker=new r.Worker('transport-hub-local-worker.js?v=terminus-bus-20261125');}
+    try{worker=new r.Worker('transport-hub-local-worker.js?v=terminus-national-20261125');}
     catch(e){r.__cpHubWorkerOffUntil=Date.now()+10000;noteWorkerFail('construction: '+(e&&e.message||e));reject(e);return;}
     const activeWorker=worker;
     const fail=(reason)=>{
@@ -2651,6 +2651,17 @@ function directionForLeg(leg,task){
   /^(?:louis neel|blanchisseries?|leprince ringuet)$/.test(stop(leg.to)))return 'Leprince Ringuet';
  return /^voiron(?: 38| 38500)?$/.test(d)||cityOnly?'':direction;
 }
+function missingWalkLabels(journey,task){
+ const legs=journey.legs||[];
+ if(!legs.length)return [];
+ const uncovered=(a,b)=>!pt(a)||!pt(b)||meters(pt(a),pt(b))>SAME_POINT_M;
+ const labels=[];
+ if(task?.from&&uncovered(task.from,legs[0].fromPoint))labels.push('Approche à pied non calculée');
+ if(task?.to&&uncovered(legs.at(-1).toPoint,task.to))labels.push('Marche finale non calculée');
+ if(legs.some((l,i)=>i>0&&!isFoot(l)&&!isFoot(legs[i-1])&&uncovered(legs[i-1].toPoint,l.fromPoint)))
+  labels.push('Marche de correspondance non calculée');
+ return labels;
+}
 function card(doc,j,labels,expanded=false,task=null){
  const c=el(doc,'details','cp-hub-card'+(j.feasible?' ok':j.scheduled?' sched':' warn'));
  if(expanded)c.open=true;
@@ -2680,6 +2691,8 @@ function card(doc,j,labels,expanded=false,task=null){
    s.appendChild(el(doc,'small','cp-hub-endpoints',['Bus',l.line,'· Direction',direction].filter(Boolean).join(' ')));
  }
  s.appendChild(el(doc,'span','cp-hub-status',(j.feasible?'✅ ':j.scheduled?'🕒 ':'⚠️ ')+j.status+(j.slackMinutes!=null?' · '+(j.deadlineEstimated?'avance avant fermeture estimée de l’agence ('+clock(j.deadlineMs)+')':'avance')+' '+signedDurationText(j.slackMinutes)+' (marge '+durationText(j.marginMinutes)+')':'')));
+ const walkLabels=missingWalkLabels(j,task);
+ if(walkLabels.length)s.appendChild(el(doc,'small','cp-hub-endpoints','🚶 '+(j.computing?'Marches en cours de calcul':walkLabels.join(' · '))));
  if(!j.feasible)s.appendChild(el(doc,'small','cp-hub-reason',j.statusDetail));
  c.appendChild(s);
  // Le détail et les polylignes SVG sont construits uniquement à la première ouverture.
@@ -2722,7 +2735,7 @@ function card(doc,j,labels,expanded=false,task=null){
  for(const [legIndex,l] of j.legs.entries()){
   const direction=directionForLeg(l,task);
   const li=el(doc,'li',l.kind==='walk'?'walk':'ride');
-  const legTitle=el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='scooter'?'Trottinette'+(l.distanceMeters!=null?' '+(l.distanceMeters/1000).toFixed(1).replace('.',',')+' km':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60)))+' (estimé)':''):l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60))):''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':'',direction&&direction!==l.line?'→ direction '+direction:l.mode==='Bus'||l.mode==='Train'?'→ terminus non renseigné':''].filter(Boolean).join(' ')));
+  const legTitle=el(doc,'strong',null,(ICON[l.mode]||'🚏')+' '+(l.kind==='scooter'?'Trottinette'+(l.distanceMeters!=null?' '+(l.distanceMeters/1000).toFixed(1).replace('.',',')+' km':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60)))+' (estimé)':''):l.kind==='walk'?'Marche'+(l.distanceMeters!=null?' '+Math.round(l.distanceMeters)+' m':'')+(l.durationSeconds!=null?' · '+durationText(Math.max(1,Math.round(l.durationSeconds/60))):''):[l.mode,l.line,l.provider&&l.provider!==l.line?'('+l.provider+')':'',direction&&direction!==l.line?'→ direction '+direction:['Bus','Train','Car'].includes(l.mode)?'→ terminus non renseigné':''].filter(Boolean).join(' ')));
   li.appendChild(legTitle);
   if(!direction&&l.mode==='Train'&&/SNCF/i.test(l.provider||'')&&/^\d+$/.test(String(l.headsign||'').trim())){
    root.CPSncfFallback?.terminusForLeg?.(l).then(value=>{
@@ -3207,7 +3220,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,walkingEndpoint,directionForLeg,previousArrivalJourneys,previousOnly,nextDepartureAfterMiss,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,missingWalkLabels,walkingEndpoint,directionForLeg,previousArrivalJourneys,previousOnly,nextDepartureAfterMiss,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render,scheduleSourceForLeg,dayScheduleForLeg,gtfsTablesForDaySchedule,hmFromSeconds};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;

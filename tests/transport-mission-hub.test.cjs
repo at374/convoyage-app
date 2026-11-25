@@ -1075,3 +1075,19 @@ test('ligne 31 : variantes Gare de Voiron et coordonnées absentes dans une fich
  assert.equal(H.directionForLeg({...leg,from:leg.to,to:leg.from},task),'');
  assert.equal(H.directionForLeg({...leg,headsign:'Voiron, Paviot'},task),'Voiron, Paviot');
 });
+
+test('GTFS national : chaque portion conserve son propre terminus',()=>{
+ const row={operator:'sncf',date:'2026-11-30',originStop:{name:'Ambérieu'},destinationStop:{name:'Annecy'},transferStop:{name:'Aix'},
+  legs:[{line:'K23',headsign:'17984',terminus:'Aix-les-Bains le Revard',departure:'16:33:00',arrival:'17:18:00'},
+   {line:'K21',headsign:'17580',terminus:'Annecy',departure:'17:33:00',arrival:'18:15:00'}]};
+ const result=H.fromNationalGTFS([row],'sncf')[0];
+ assert.deepEqual(result.legs.map(l=>H.directionForLeg(l)),['Aix-les-Bains le Revard','Annecy']);
+});
+
+test('un trajet arrêt à arrêt distingue les deux marches manquantes',()=>{
+ const task={from:HOME,to:MISSION};
+ const ride=bus(at(8,0),at(8,25),STOP1,STOP2);
+ assert.deepEqual(H.missingWalkLabels({legs:[ride]},task),['Approche à pied non calculée','Marche finale non calculée']);
+ assert.deepEqual(H.missingWalkLabels({legs:[{kind:'walk',fromPoint:HOME,toPoint:STOP1},ride]},task),['Marche finale non calculée']);
+ assert.deepEqual(H.missingWalkLabels({legs:[ride]},{from:STOP1,to:STOP2}),[]);
+});
