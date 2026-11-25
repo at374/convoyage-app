@@ -42,15 +42,18 @@
   }
   const abortError=()=>new DOMException('Recherche SNCF annulée','AbortError');
   function checkSignal(signal){if(signal?.aborted)throw abortError();}
-  async function json(url,fetcher,signal){
+  async function json(url,fetcher,signal,timeoutMs=8000){
     checkSignal(signal);
     const controller=new AbortController(),cancel=()=>controller.abort();
     signal?.addEventListener('abort',cancel,{once:true});
-    const timer=setTimeout(cancel,8000);
+    const timer=setTimeout(cancel,timeoutMs);
     try{
       const r=await fetcher(url,{signal:controller.signal,cache:'no-cache',credentials:'omit',referrerPolicy:'no-referrer'});
       checkSignal(controller.signal);if(!r.ok)throw Error('Index SNCF indisponible ('+r.status+')');
       const data=await r.json();checkSignal(controller.signal);return data;
+    }catch(error){
+      if(controller.signal.aborted&&!signal?.aborted)throw Error('Délai de chargement SNCF dépassé');
+      throw error;
     }finally{clearTimeout(timer);signal?.removeEventListener('abort',cancel);}
   }
   async function loadDay(day,manifest,fetcher,signal){
@@ -61,7 +64,8 @@
     let entry=pending.get(key);
     if(!entry||entry.controller.signal.aborted){
       entry={controller:new AbortController(),users:new Set(),settled:false};const current=entry;
-      current.promise=json(BASE+resource.file+'?v='+resource.sha256.slice(0,16),fetcher,current.controller.signal).then(value=>{
+      const timeoutMs=resource.bytes>2097152?60000:25000;
+      current.promise=json(BASE+resource.file+'?v='+resource.sha256.slice(0,16),fetcher,current.controller.signal,timeoutMs).then(value=>{
         checkSignal(current.controller.signal);
         const data=validateDay(value,day,manifest.sourceSha256);
         if(cache.size>=16)cache.delete(cache.keys().next().value);cache.set(key,data);return data;
@@ -129,9 +133,9 @@
     const day=localDate(options.when);if(!manifest.dates[day])throw Error('Calendrier SNCF non publié pour '+day);
     const previous=new Date(Date.parse(day+'T12:00:00Z')-86400000).toISOString().slice(0,10);
     const dates=[...(manifest.dates[previous]?[previous]:[]),day];
-    const days=await Promise.all(dates.map(d=>loadDay(d,manifest,fetcher,options.signal)));
+    const days=await Promise.all(dates.map(d=>d===day?loadDay(d,manifest,fetcher,options.signal):loadDay(d,manifest,fetcher,options.signal).catch(()=>null)));
     checkSignal(options.signal);
-    return {...search(days,options),sourceVersion:manifest.sourceVersion,sourceSha256:manifest.sourceSha256,licenseUrl:manifest.licenseUrl};
+    return {...search(days.filter(Boolean),options),sourceVersion:manifest.sourceVersion,sourceSha256:manifest.sourceSha256,licenseUrl:manifest.licenseUrl};
   }
   const api={plan,search,stationsFor,validateDay,serviceBase};root.CPSncfFallback=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;

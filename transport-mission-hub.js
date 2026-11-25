@@ -1975,7 +1975,7 @@ function makeProviders(r,opts={}){
    const answer=await r.CPRegionalRouting.plan({signal,endpoint:opts.regionalEndpoint,from:pt(task.from),to:pt(task.to),
     departure:w.arriveBy?undefined:w.when,arrivalDeadline:w.arriveBy?w.when:undefined,fetcher});
    return fromRegional(answer.itineraries,answer.source||'Mobilités M');}};
- if(r.CPSncfFallback&&typeof r.CPSncfFallback.plan==='function')P.sncf={name:'SNCF',
+ if(r.CPSncfFallback&&typeof r.CPSncfFallback.plan==='function')P.sncf={name:'SNCF',timeoutMs:75000,
   enabled:task=>!!(task.fromName||pt(task.from))&&!!(task.toName||pt(task.to)),disabledReason:'communes inconnues',
   run:async(task,signal)=>{const w=queryWindow(task);if(!w)return [];
    // Trois recherches décalées (+0, +20, +60 min) puis un seul trajet par train de départ (le plus rapide) :
@@ -1987,10 +1987,12 @@ function makeProviders(r,opts={}){
    // n'apparaissait jamais) : sncf-fallback.js rejette toute correspondance sous sa marge par défaut de 10 min
    // (search() : wait<margin*60000). 5 min est le minimum accepté par cette fonction (margin<5 lève une erreur) ;
    // en-dessous, aucune garantie de faisabilité réelle (quai différent, etc.), donc on ne descend pas plus bas.
-   const answers=await Promise.all(offsets.map(m=>r.CPSncfFallback.plan({from:{name:task.fromCity||'',point:pt(task.from)},to:{name:task.toCity||'',point:pt(task.to)},
-    when:new Date(base+m*60000).toISOString(),arriveBy:w.arriveBy,earliestDeparture:Number.isFinite(earliest)?new Date(earliest).toISOString():undefined,limit:20,transferMinutes:5,signal,fetcher}).catch(()=>null)));
+   const answers=await Promise.allSettled(offsets.map(m=>r.CPSncfFallback.plan({from:{name:task.fromCity||'',point:pt(task.from)},to:{name:task.toCity||'',point:pt(task.to)},
+    when:new Date(base+m*60000).toISOString(),arriveBy:w.arriveBy,earliestDeparture:Number.isFinite(earliest)?new Date(earliest).toISOString():undefined,limit:20,transferMinutes:5,signal,fetcher})));
+   const successful=answers.filter(a=>a.status==='fulfilled').map(a=>a.value);
+   if(!successful.length)throw answers[0].reason;
    const best=new Map();
-   for(const a of answers.filter(Boolean))for(const it of a.itineraries||[]){
+   for(const a of successful)for(const it of a.itineraries||[]){
     // 23/11/2026 : la clé ne retenait que le premier train + son départ, donc deux combinaisons partageant ce
     // même premier train (une correspondance serrée à 5 min, une autre après une longue attente) s'écrasaient
     // l'une l'autre — seule l'arrivée la plus rapide survivait, faisant disparaître l'option avec la plus longue
@@ -2001,7 +2003,7 @@ function makeProviders(r,opts={}){
     if(!old||Date.parse(it.arrival)<Date.parse(old.arrival))best.set(k,it);
    }
    const list=[...best.values()].sort((x,y)=>Date.parse(x.departure)-Date.parse(y.departure)).slice(0,20);
-   return fromSNCF({itineraries:list,sourceVersion:answers.find(Boolean)?.sourceVersion});}};
+   return fromSNCF({itineraries:list,sourceVersion:successful[0]?.sourceVersion});}};
  return P;
 }
 
