@@ -884,7 +884,7 @@ function signature(j){
   Math.round(ms(l.departure)/60000),Math.round(ms(l.arrival)/60000)
  ].join('|')).join(';');
 }
-function rank(items,task={}){
+function rank(items,task={},includeLongWalk=false){
  const seen=new Map();
  for(const j of items){if(!j||j.durationMinutes===null)continue;
   // Ne pas fusionner toutes les marches sous une clé unique : les points
@@ -911,7 +911,7 @@ function rank(items,task={}){
   const better=firstDifference>=0&&qj[firstDifference]>qo[firstDifference]?j:old;
   seen.set(k,{...better,sources:[...new Set([...(old.sources||[]),...(j.sources||[])])]});
  }
- let all=[...seen.values()].filter(j=>!Array.isArray(j.reasons)||!(j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>String(r).startsWith('marche trop longue'))));
+ let all=[...seen.values()].filter(j=>!Array.isArray(j.reasons)||!(j.reasons.includes('trajet hors plage de jour ou date de mission')||!includeLongWalk&&j.reasons.some(r=>String(r).startsWith('marche trop longue'))));
  // 21/11/2026 : un même véhicule réel (même ligne GTFS, même course, même date) ressort parfois de
  // plusieurs moteurs à la fois (trajet direct, correspondance même réseau, correspondance inter-réseaux),
  // chacun avec sa propre fiche — signature() les traite comme des itinéraires différents puisque la suite
@@ -2181,12 +2181,14 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   const percent=s.total?Math.min(100,Math.round((s.total-s.pending)/s.total*100)):(s.pending===0?100:0);
   const remainingMs=s.pending&&Array.isArray(s.deadlines)&&s.deadlines.length?Math.max(0,Math.max(...s.deadlines)-Date.now()):0;
   const tooEarly=s.items.filter(j=>!j.computing&&(j.reasons.includes('départ avant la fin de la mission précédente')||j.reasons.includes('trajet hors plage de jour ou date de mission')||j.reasons.some(r=>r.startsWith('arrivée trop tôt pour le créneau choisi')||r.startsWith('marche trop longue'))));
-  // Si la limite de marche (Paramètres) écarte TOUTES les propositions, on les montre quand même, clairement marquées « marche supérieure à la limite »,
-  // plutôt qu'« Aucun trajet trouvé » : seul un trajet dont la marche est la seule objection est repris.
-  const isLongOnly=j=>!j.computing&&j.reasons.some(r=>r.startsWith('marche trop longue'))&&!j.reasons.includes('départ avant la fin de la mission précédente')&&!j.reasons.includes('trajet hors plage de jour ou date de mission')&&!j.reasons.some(r=>r.startsWith('arrivée trop tôt pour le créneau choisi'));
-  let shown=tooEarly.length?s.items.filter(j=>!tooEarly.includes(j)):s.items;
-  let longShown=0;
-  if(!shown.some(j=>!j.computing)&&s.pending===0){const back=tooEarly.filter(isLongOnly);if(back.length){shown=shown.concat(back);longShown=back.length;}}
+  const ranked=rank(s.items.filter(j=>!tooEarly.includes(j)),s.task);
+  const alternativeCandidates=s.pending===0&&!ranked.total?tooEarly.filter(j=>
+   !j.reasons.includes('départ avant la fin de la mission précédente')&&
+   !j.reasons.includes('trajet hors plage de jour ou date de mission')&&
+   (j.slackMinutes===null||j.slackMinutes>=j.marginMinutes)):[];
+  const alternateRank=rank(alternativeCandidates,s.task,true);
+  const alternatives=[...alternateRank.picks.map(p=>p.journey),...alternateRank.others]
+   .sort((a,b)=>a.slackMinutes-b.slackMinutes||a.walkMeters-b.walkMeters).slice(0,5);
   // 22/11/2026 (Laurent : « toujours pas de Y51 après 13h01 », quasi tous les trajets écartés comme « avant la fin
   // de la mission précédente » malgré une fenêtre earliestDeparture cohérente affichée) : le seul compteur ne
   // permettait pas de savoir SUR QUEL calcul ce rejet se basait réellement (horaire du véhicule lui-même, ou
@@ -2199,11 +2201,11 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
    return (j.source||j.sources?.[0]||'?')+' : véhicule '+(vehicleLeg?.departure?new Date(vehicleLeg.departure).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}):'—')+
     ' → départ retenu (après marche) '+(j.departure?new Date(j.departure).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}):'—');
   });
-  return {task:s.task,longShown,...rank(shown,s.task),hidden:{tooEarly:tooEarly.length-longShown,before:beforeList.length,beforeSamples,early:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('arrivée trop tôt'))).length,longWalk:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('marche trop longue'))).length-longShown,night:tooEarly.filter(j=>j.reasons.includes('trajet hors plage de jour ou date de mission')).length},pending:s.pending,percent,remainingMs,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0,
+  return {task:s.task,...ranked,alternatives,hidden:{tooEarly:tooEarly.length,before:beforeList.length,beforeSamples,early:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('arrivée trop tôt'))).length,longWalk:tooEarly.filter(j=>j.reasons.some(r=>r.startsWith('marche trop longue'))).length,night:tooEarly.filter(j=>j.reasons.includes('trajet hors plage de jour ou date de mission')).length},pending:s.pending,percent,remainingMs,errors:{...s.errors},skipped:{...s.skipped},received:{...s.received},discarded:{...s.discarded},done:s.pending===0,
   // 20/11/2026 (demande Laurent) : pouvoir suggérer la trottinette électrique quand des trajets sont écartés
   // uniquement pour une marche trop longue — seulement si l'option n'est pas déjà activée dans les Réglages.
   scooterEnabled:!!(scooter&&scooter.enabled),
-  diag:(()=>{const c={};let noTimes=0;for(const j of s.items){if(j.durationMinutes===null||j.durationMinutes===undefined)noTimes++;for(const r of [...(j.reasons||[]),...(j.missing||[])]){const k=String(r).replace(/\d+/g,'N').slice(0,90);c[k]=(c[k]||0)+1;}}
+  diag:(()=>{const c={};let noTimes=0;for(const j of s.items){if(j.durationMinutes===null||j.durationMinutes===undefined)noTimes++;for(const r of new Set([...(j.reasons||[]),...(j.missing||[])].map(r=>String(r).replace(/\d+/g,'N').slice(0,90))))c[r]=(c[r]||0)+1;}
    return {evaluated:s.items.length,noTimes,reasons:Object.entries(c).sort((x,y)=>y[1]-x[1]).slice(0,5)};})()};}
  async function add(label,source,journeys,deadline=Date.now()+enrichmentMs){
   const boundedRouter=engine=>engine&&({route:(a,b)=>Date.now()>=deadline||controller.signal.aborted?
@@ -2845,7 +2847,7 @@ function tadFor(task){
 let ordreInverse=false;try{ordreInverse=(globalThis.CPAccount?.storage || globalThis.localStorage)?.getItem('cp_hub_ordre')==='desc';}catch(_){}
 function viewFingerprint(v){
  const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters].join(','):'';
- return [v.savedAt||0,v.done?1:0,v.total,v.longShown,(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).map(one).join(';'),v.others&&v.others.length,
+ return [v.savedAt||0,v.done?1:0,v.total,(v.alternatives||[]).map(one).join(';'),(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).map(one).join(';'),v.others&&v.others.length,
   (v.flexCandidates||[]).map(c=>JSON.stringify([c.network,c.tripId,c.pickupWindow,c.pickupRule])).join('|'),Object.entries(v.errors||{}).map(([k,e])=>k+e).join('|'),Object.entries(v.received||{}).join('|'),ordreInverse?'desc':'asc'].join('#');
 }
 function render(host,v){
@@ -2858,10 +2860,9 @@ function render(host,v){
    .map(node=>node.getAttribute('data-journey-key')).filter(Boolean));
  const moreOpen=!!host.querySelector('details.cp-hub-more[open]');
  host.textContent='';host.setAttribute('data-transport-hub',VERSION);
- const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):(Object.keys(v.errors||{}).length?'Aucun trajet trouvé avec les moteurs qui ont répondu':'Aucun trajet trouvé')):v.total+' proposition'+(v.total>1?'s':'')+' provisoire'+(v.total>1?'s':''));
+ const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):(v.alternatives?.length?'Aucun trajet ne respecte tous les critères':Object.keys(v.errors||{}).length?'Aucun trajet trouvé avec les moteurs qui ont répondu':'Aucun trajet trouvé')):v.total+' proposition'+(v.total>1?'s':'')+' provisoire'+(v.total>1?'s':''));
  host.appendChild(head);
  if(v.savedAt)host.appendChild(el(doc,'p','cp-hub-note','Recherche enregistrée le '+new Date(v.savedAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris'})+'. Actualise pour vérifier les horaires et la circulation.'));
- if(v.longShown)host.appendChild(el(doc,'p','cp-hub-note','⚠️ Aucune proposition ne respecte votre limite de marche (Paramètres) : les trajets ci-dessous demandent une marche plus longue que ce réglage. Vérifiez chaque marche avant de partir.'+(v.scooterEnabled?'':' Vous pouvez aussi activer la trottinette électrique (Paramètres) pour couvrir une partie du trajet à sa place.')));
  const addCard=(parent,j,labels,expandFirst=false)=>{
   const key=signature(j)||(j.walkOnly?'walk|'+Math.round(ms(j.departure)/60000)+'|'+Math.round(ms(j.arrival)/60000)+'|'+Math.round(j.durationMinutes||0):'');
   // Construire immédiatement les détails si cette carte était déjà ouverte :
@@ -2879,6 +2880,14 @@ function render(host,v){
  if(openInitial)host.dataset.cpInitialCardOpened='true';
  // 20/11/2026 : une seule liste, tous les trajets (choix recommandés + autres propositions) par heure de départ croissante,
  // puis heure d'arrivée. Plus d'étiquettes « Moins cher / Meilleur compromis / Plus rapide » : les tarifs réels n'existent plus, tous les horaires trouvés sont listés.
+ if(v.alternatives?.length){
+  const group=el(doc,'details','cp-hub-alternatives');
+  group.open=true;
+  group.appendChild(el(doc,'summary',null,'Trajets hors critères ('+v.alternatives.length+')'));
+  group.appendChild(el(doc,'p','cp-hub-note','Ces horaires restent à vérifier. Les écarts de marche ou de créneau sont indiqués sur chaque trajet.'));
+  for(const journey of v.alternatives)addCard(group,journey,null);
+  host.appendChild(group);
+ }
  const timeline=[...(v.picks||[]).map(p=>({journey:p.journey,labels:null})),...(v.others||[]).map(j=>({journey:j,labels:null}))]
   .sort((x,y)=>(ms(x.journey.departure)||0)-(ms(y.journey.departure)||0)||(ms(x.journey.arrival)||0)-(ms(y.journey.arrival)||0));
  if(ordreInverse)timeline.reverse();
@@ -2944,7 +2953,6 @@ function render(host,v){
     // TOUJOURS ce diagnostic quand count>0, même sans aucun départ retenu ou sans entrée dbg du tout, pour
     // distinguer enfin « le code n'est pas encore en ligne », « dbg absent » et « kept vide » au lieu de deviner.
     if(dbg&&Array.isArray(dbg.kept)&&dbg.kept.length)detail+=' [départs retenus : '+dbg.kept.map(t=>{const d=new Date(t);return Number.isFinite(d.getTime())?d.toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}):'?';}).join(', ')+']';
-    else detail+=' [diag retenus : '+(dbg?('dbg ok, kept='+(Array.isArray(dbg.kept)?dbg.kept.length:typeof dbg.kept)):'dbg absent')+']';
    }
    d.appendChild(el(doc,'div',null,'✅ '+n+' : '+count+' proposition'+(count>1?'s':'')+' reçue'+(count>1?'s':'')+detail));
   }
@@ -3037,7 +3045,7 @@ function render(host,v){
   }
  }
  const tads=tadFor(v.task);
- if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' non affiché'+(v.hidden.tooEarly>1?'s':'')+' : horaires incompatibles avec la mission (départ avant la fin de la mission précédente, arrivée trop tôt) ou marche plus longue que la limite réglée.'));
+ if(v.done&&v.hidden&&v.hidden.tooEarly)host.appendChild(el(doc,'p','cp-hub-note',v.hidden.tooEarly+' trajet'+(v.hidden.tooEarly>1?'s':'')+' écarté'+(v.hidden.tooEarly>1?'s':'')+' de la sélection'+' : horaires incompatibles avec la mission (départ avant la fin de la mission précédente, arrivée trop tôt) ou marche plus longue que la limite réglée.'));
  if(v.done&&v.hidden&&v.hidden.tooEarly){const h=v.hidden,parts=[];if(h.longWalk)parts.push(h.longWalk+' à cause d’une marche trop longue (réglage Paramètres)');if(h.before)parts.push(h.before+' partent avant la fin de la mission précédente');if(h.early)parts.push(h.early+' arrivent trop tôt');if(h.night)parts.push(h.night+' hors plage de jour');
   // 20/11/2026 (demande Laurent) : si des trajets sont écartés pour une marche trop longue et que la trottinette
   // électrique n'est pas déjà activée, le suggérer explicitement plutôt que de laisser "Aucun trajet trouvé" sans piste.
@@ -3062,7 +3070,7 @@ function render(host,v){
  // serait-ce qu'un seul trajet passe (ex. un car de nuit), Y51 peut être écarté pour un AUTRE motif
  // (marge insuffisante, correspondance manquante…) sans que ce diagnostic ne le révèle jamais. On l'affiche
  // désormais aussi dès qu'il reste des trajets non affichés, même quand d'autres trajets sont visibles.
- if(v.done&&(!v.total||(v.hidden&&v.hidden.tooEarly))&&v.diag&&v.diag.evaluated){const d=v.diag;host.appendChild(el(doc,'p','cp-hub-note','Diagnostic (version 17/11 k) : '+d.evaluated+' proposition'+(d.evaluated>1?'s':'')+' évaluée'+(d.evaluated>1?'s':'')+(d.noTimes?', dont '+d.noTimes+' sans horaires exploitables':'')+(d.reasons.length?' · motifs : '+d.reasons.map(r=>r[0]+' ('+r[1]+')').join(' ; '):'')+'.'));}
+ if(v.done&&(!v.total||(v.hidden&&v.hidden.tooEarly))&&v.diag&&v.diag.evaluated){const d=v.diag;host.appendChild(el(doc,'p','cp-hub-note','Diagnostic : '+d.evaluated+' proposition'+(d.evaluated>1?'s':'')+' évaluée'+(d.evaluated>1?'s':'')+(d.noTimes?', dont '+d.noTimes+' sans horaires exploitables':'')+(d.reasons.length?' · motifs : '+d.reasons.map(r=>r[0]+' ('+r[1]+')').join(' ; '):'')+'.'));}
  if(v.done&&v.discarded){const n=Object.values(v.discarded).reduce((x,y)=>x+y,0);if(n)host.appendChild(el(doc,'p','cp-hub-note',n+' proposition'+(n>1?'s':'')+' écartée'+(n>1?'s':'')+' (détour excessif ou marche plus directe).'));}
  if(v.done&&tads.length){
   const group=el(doc,'section','cp-hub-tad-results');

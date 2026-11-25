@@ -156,8 +156,8 @@ test('guidage vocal : bouton Google Maps (départ/arrivée remplis) sur marches 
 
 test('limite de marche : si tout est écarté, les trajets à marche trop longue sont montrés avec un avertissement',()=>{
  const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
- assert.match(src,/const isLongOnly=j=>/);
- assert.match(src,/Aucune proposition ne respecte votre limite de marche/);
+ assert.match(src,/const alternativeCandidates=/);
+ assert.match(src,/Trajets hors critères/);
 });
 
 test('trottinette en approche : une marche trop longue est remplacée par un tronçon trottinette (réglage activé)',async()=>{
@@ -231,7 +231,7 @@ test('fenêtre d’arrivée large : recherche aussi « avant l’ouverture » et
  const src=fs.readFileSync(require.resolve('../transport-mission-hub.js'),'utf8');
  assert.ok(src.includes('_avantOuverture:true'));
  assert.ok(src.includes('180+windowSpan'));
- assert.ok(src.includes('p.run(variant,controller.signal)'));
+ assert.ok(src.includes('p.run(variant,request.signal)'));
 });
 
 test('fluidité : recherches des jours non affichés différées, pas de redessin identique, pas de rendu pendant le défilement',()=>{

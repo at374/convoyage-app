@@ -964,3 +964,25 @@ test('le délai maximum annule un fournisseur muet et conserve les propositions 
   assert.match(view.errors.Lent,/délai fournisseur dépassé/);
  }finally{clearTimeout(timer);session.dispose();}
 });
+
+test('une marche trop longue et une arrivée trop tôt donnent une alternative hors critères',async()=>{
+ const task={label:'Aller',from:HOME,to:MISSION,earliestDeparture:at(7,55),latestArrival:at(9,30),maxEarlyArrivalMinutes:30};
+ const router={route:async()=>({status:'calculated',distanceMeters:4000,durationSeconds:300})};
+ const providers={test:{name:'Réseau',enabled:()=>true,run:async()=>[
+  {source:'Réseau',legs:[bus(at(8,10),at(8,25),STOP1,STOP2)]},
+  {source:'Réseau',legs:[bus(at(7,15),at(8,35),STOP1,STOP2)]}
+ ]}};
+ let complete;
+ const done=new Promise(resolve=>{complete=resolve;});
+ const session=H.createSession({tasks:[task],providers,router,onUpdate:(_,v)=>{if(v.done)complete(v);}});
+ try{
+  const v=await done;
+  assert.equal(v.total,0);
+  assert.equal(v.alternatives.length,1);
+  const [alternative]=v.alternatives;
+  assert.equal(alternative.feasible,false);
+  assert.ok(alternative.reasons.some(r=>r.startsWith('marche trop longue')));
+  assert.ok(alternative.reasons.some(r=>r.startsWith('arrivée trop tôt')));
+  assert.equal(v.hidden.before,1);
+ }finally{session.dispose();}
+});
