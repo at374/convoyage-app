@@ -1046,6 +1046,16 @@ function queryWindow(task){
  if(Number.isFinite(earliest))return {when:new Date(earliest).toISOString(),arriveBy:false};
  return null;
 }
+function nearTransportBounds(point,bounds,radiusMeters){
+ if(!point)return false;
+ if(!Array.isArray(bounds)||bounds.length!==4||!bounds.every(Number.isFinite))return true;
+ const [south,west,north,east]=bounds;
+ if(south>north||west>east)return true;
+ return meters(point,{
+  lat:Math.min(north,Math.max(south,point.lat)),
+  lon:Math.min(east,Math.max(west,point.lon))
+ })<=radiusMeters;
+}
 function makeProviders(r,opts={}){
  // Vitesse : les fichiers d'horaires (data/gtfs/*.zip) sont gardés sur le téléphone (Cache Storage) pendant 12 h ; au lieu de les retélécharger à chaque recherche.
  const rawFetch=opts.fetcher||((...a)=>r.fetch(...a));
@@ -1566,11 +1576,16 @@ function makeProviders(r,opts={}){
    };
    const pickFeeds=task=>{
     const a=pt(task.from),b=pt(task.to);if(!a||!b)return [];
-    const touching=[...localNetworks,sncfFeed].filter(n=>inBounds(a,n[3])||inBounds(b,n[3]));
-    const score=n=>(n===sncfFeed?1:0)*0+(area(n[3])<0.5?0:1)*10+area(n[3]);
-    // 20/11/2026 : 4 réseaux pouvait écarter un réseau local pertinent à la frontière de plusieurs bbox
-    // (couverture nationale élargie = davantage de réseaux voisins qui se chevauchent). Relevé à 8.
-    return touching.sort((x,y)=>score(x)-score(y)).slice(0,8);
+    const radius=Math.max(5000,(task.walkMaxMeters||0)*1.5);
+    const endpoints=point=>[...localNetworks,sncfFeed].filter(n=>nearTransportBounds(point,n[3],radius));
+    const departure=endpoints(a),arrival=endpoints(b);
+    const reachesOtherEnd=(network,others)=>others.some(other=>other===network||
+     r.CPGTFSFederation.bboxesNear?.(network[3],other[3])!==false);
+    const candidates=new Set([
+     ...departure.filter(network=>reachesOtherEnd(network,arrival)),
+     ...arrival.filter(network=>reachesOtherEnd(network,departure))
+    ]);
+    return [...candidates].sort((x,y)=>area(x[3])-area(y[3])).slice(0,8);
    };
    P.local_correspondances={name:'Correspondances entre réseaux (GTFS)',
     enabled:task=>!!queryWindow(task)&&pickFeeds(task).length>0,
@@ -1747,8 +1762,10 @@ function makeProviders(r,opts={}){
     }
     return r.CPNationalGTFSJourneys.loadAndSearch(params);
    };
-   P['national_'+operator]={name,enabled:task=>!!pt(task.from)&&!!pt(task.to)&&!!queryWindow(task),
-    disabledReason:'adresse GPS ou horaire de mission manquant',
+   const coversTrip=task=>!!queryWindow(task)&&nearTransportBounds(pt(task.from),resource.bounds,5000)&&
+    nearTransportBounds(pt(task.to),resource.bounds,5000);
+   P['national_'+operator]={name,enabled:coversTrip,
+    disabledReason:'trajet hors zone de ce flux GTFS ou adresse GPS ou horaire manquant',
     // 22/11/2026 (Laurent : « SNCF GTFS : délai fournisseur dépassé (35 s) », puis FlixBus/BlaBlaCar Bus
     // en erreur sur la même mission) : délai global (35 s) pensé pour un calcul bloquant l'écran — ce n'est
     // plus le cas depuis le badge « Recherche en cours » (le reste de l'appli continue pendant l'attente).
@@ -1758,6 +1775,7 @@ function makeProviders(r,opts={}){
     // cacheFetch plus haut et dans le worker) : la patience n'est à demander qu'une fois par demi-journée.
     timeoutMs:150000,
     run:async(task,signal)=>{
+     if(!coversTrip(task)||signal?.aborted)return [];
      const window=queryWindow(task),when=ms(window.when);
      if(!Number.isFinite(when))return [];
      const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',

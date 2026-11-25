@@ -878,3 +878,18 @@ test('un trajet local est disponible pendant le calcul du moteur lent',async()=>
   finishSlow([]);session.dispose();
  }
 });
+
+test('le GTFS régional évite un téléchargement hors zone et accepte une gare en bordure',async()=>{
+ let calls=0;
+ const app={CPNationalGTFSJourneys:{loadAndSearch:async()=>{calls++;return {journeys:[]};}}};
+ const resource={url:'https://example.org/region.zip',bounds:[44,3.6,46.7,7.4]};
+ const provider=H.makeProviders(app,{nationalGTFSResources:{sncf:resource},nationalStopFallback:false}).national_sncf;
+ const task={from:{lat:45.9,lon:6.12},to:{lat:48.86,lon:2.35},latestArrival:at(12,0)};
+ assert.equal(provider.enabled(task),false);
+ await provider.run(task);
+ assert.equal(calls,0);
+ const borderTrip={...task,to:{lat:46.72,lon:6.9}};
+ assert.equal(provider.enabled(borderTrip),true);
+ await provider.run(borderTrip);
+ assert.equal(calls,1);
+});
