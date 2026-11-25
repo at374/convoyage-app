@@ -1109,3 +1109,12 @@ test('une relance piétonne calcule les approches ignorées par quota',async()=>
  assert.equal(result.missing.length,0);
  assert.equal(result.price,original.price);
 });
+
+test('la sélection de huit trajets privilégie le créneau et réserve une place au départ de secours',()=>{
+ const task={from:HOME,to:MISSION,latestArrival:at(15,0)};
+ const others=Array.from({length:12},(_,i)=>({feasible:true,slackMinutes:15+i*20,marginMinutes:15,
+  durationMinutes:25,legs:[bus(at(8,0),at(8,25),HOME,MISSION)]})).reverse();
+ assert.equal(H.selectJourneyCards({task,others}).length,8);
+ assert.equal(H.selectJourneyCards({task,others})[0].slackMinutes,15);
+ assert.equal(H.selectJourneyCards({task,others},others[0]).length,7);
+});

@@ -115,10 +115,10 @@ test('cars : horaires reçus mais aucune proposition retenue, diagnostic explici
  assert.match(hub,/les horaires reçus ne constituent pas un trajet validé pour cette mission/);
 });
 
-test('liste unique : toutes les propositions, triées par heure de départ croissante (Aller, Jonction, Retour)',()=>{
+test('liste unique : sélection limitée puis triée par heure de départ (Aller, Jonction, Retour)',()=>{
  assert.match(hub,/const timeline=/);
- assert.match(hub,/ms\(x\.journey\.departure\)\|\|0\)-\(ms\(y\.journey\.departure\)/);
- assert.doesNotMatch(hub,/v\.others\.slice\(0,8\)/);
+ assert.match(hub,/ms\(x\.journey\.departure\)-ms\(y\.journey\.departure\)/);
+ assert.match(hub,/const timeline=selectJourneyCards\(v,next\)/);
 });
 
 test('mission sur plusieurs jours : un onglet par jour avec Aller et Retour cherchés ce jour-là',()=>{

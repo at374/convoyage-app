@@ -2271,8 +2271,8 @@ function createSession({tasks=[],providers={},router=null,scooterRouter=null,sco
   const coachPriority=t=>/(?:flixbus|blablacar\s*(?:bus|coach)|blablacarbus|ouibus)/i.test(
    [t.j.source,...(t.j.sources||[]),...(t.j.legs||[]).map(l=>l.provider||'')].join(' '))?0:1;
   toWalk.sort((a,b)=>coachPriority(a)-coachPriority(b)||
-   (pk(a.quick)===pk(b.quick)?0:pk(a.quick)-pk(b.quick))||
-   (isReturn?ms(a.quick.departure)-ms(b.quick.departure):(a.quick.slackMinutes??0)-(b.quick.slackMinutes??0))||a.quick.durationMinutes-b.quick.durationMinutes);
+   (isReturn?ms(a.quick.departure)-ms(b.quick.departure):Math.abs((a.quick.slackMinutes??0)-(a.quick.marginMinutes||0))-Math.abs((b.quick.slackMinutes??0)-(b.quick.marginMinutes||0)))||
+   (pk(a.quick)===pk(b.quick)?0:pk(a.quick)-pk(b.quick))||a.quick.durationMinutes-b.quick.durationMinutes);
   // Affichage immédiat : chaque trajet apparaît tout de suite, « marches en cours de calcul », puis est remplacé.
   const pendingCard=new Map();
   for(const t of toWalk){
@@ -2985,6 +2985,18 @@ function nextDepartureAfterMiss(view,now=Date.now()){
    !(j.reasons||[]).some(r=>/horaires incohérents|annulée|hors plage de jour/.test(r)))
   .sort((a,b)=>ms(a.departure)-ms(b.departure)||ms(a.arrival)-ms(b.arrival))[0]||null;
 }
+function selectJourneyCards(view,next,limit=8){
+ const others=[...(view.picks||[]).map(p=>p.journey),...(view.others||[])].filter(j=>j!==next);
+ const quality=j=>j.feasible?0:j.scheduled?1:j.computing?3:2;
+ const gap=j=>Number.isFinite(j.slackMinutes)?Math.abs(j.slackMinutes-(j.marginMinutes||0)):0;
+ const deadline=Number.isFinite(ms(view.task?.latestArrival));
+ const selected=others.map(journey=>({journey,missing:missingWalkLabels(journey,view.task).length}))
+  .sort((a,b)=>quality(a.journey)-quality(b.journey)||a.missing-b.missing||
+   (deadline?gap(a.journey)-gap(b.journey):ms(a.journey.departure)-ms(b.journey.departure))||
+   a.journey.durationMinutes-b.journey.durationMinutes)
+  .slice(0,Math.max(0,limit-(next?1:0))).map(({journey})=>journey);
+ return selected;
+}
 function viewFingerprint(v){
  const one=j=>j?[signature(j)||'',ms(j.departure),ms(j.arrival),j.computing?1:0,j.feasible?1:0,j.scheduled?1:0,(j.reasons||[]).length,(j.missing||[]).length,j.price&&j.price.status,(j.sources||[]).length,j.walkMeters,j.legs?.map(l=>directionForLeg(l,v.task)).join('|'),walkStatusLabel(j,missingWalkLabels(j,v.task))].join(','):'';
  return [v.savedAt||0,v.done?1:0,v.total,JSON.stringify(v.previousArrival||[]),(v.alternatives||[]).map(one).join(';'),(v.picks||[]).map(p=>(p.labels||[]).join('+')+':'+one(p.journey)).join(';'),(v.others||[]).map(one).join(';'),v.others&&v.others.length,
@@ -2998,7 +3010,6 @@ function render(host,v){
  // Sans cela, chaque résultat réseau referme les détails et recrée les SVG.
  const opened=new Set(Array.from(host.querySelectorAll('details.cp-hub-card[open]'))
    .map(node=>node.getAttribute('data-journey-key')).filter(Boolean));
- const moreOpen=!!host.querySelector('details.cp-hub-more[open]');
  host.textContent='';host.setAttribute('data-transport-hub',VERSION);
  const head=el(doc,'p','cp-hub-progress',v.done?(v.total?v.total+' proposition'+(v.total>1?'s':'')+' comparée'+(v.total>1?'s':''):(v.previousArrival?.length?'Aucun nouveau trajet complet trouvé':v.alternatives?.length?'Aucun trajet ne respecte tous les critères':Object.keys(v.errors||{}).length?'Aucun trajet trouvé avec les moteurs qui ont répondu':'Aucun trajet trouvé')):v.total+' proposition'+(v.total>1?'s':'')+' provisoire'+(v.total>1?'s':''));
  host.appendChild(head);
@@ -3043,13 +3054,11 @@ function render(host,v){
   for(const journey of v.alternatives)addCard(group,journey,null);
   host.appendChild(group);
  }
- const timeline=[...(v.picks||[]).map(p=>({journey:p.journey,labels:null})),...(v.others||[]).map(j=>({journey:j,labels:null}))]
-  .sort((x,y)=>(ms(x.journey.departure)||0)-(ms(y.journey.departure)||0)||(ms(x.journey.arrival)||0)-(ms(y.journey.arrival)||0));
- if(ordreInverse)timeline.reverse();
  const next=nextDepartureAfterMiss(v);
+ const timeline=selectJourneyCards(v,next).map(journey=>({journey,labels:null}))
+  .sort((x,y)=>ms(x.journey.departure)-ms(y.journey.departure)||ms(x.journey.arrival)-ms(y.journey.arrival));
+ if(ordreInverse)timeline.reverse();
  if(next){
-  const index=timeline.findIndex(item=>item.journey===next);
-  timeline.splice(index,1);
   const late=Number.isFinite(next.slackMinutes)&&next.slackMinutes<0;
   const label=late?'Prochain départ · arrivée '+durationText(-next.slackMinutes)+' après l’heure de mission':
    (next.feasible||next.scheduled?'Prochain départ compatible':'Prochain départ · trajet à vérifier');
@@ -3064,35 +3073,9 @@ function render(host,v){
   btn.onclick=()=>{ordreInverse=!ordreInverse;try{(globalThis.CPAccount?.storage || globalThis.localStorage)?.setItem('cp_hub_ordre',ordreInverse?'desc':'asc');}catch(_){}host.__cpFp=null;render(host,v);};
   host.appendChild(btn);
  }
- // 20/11/2026 : demande de Laurent — ne plus couper la liste, mais la replier pour rester fluide sur téléphone :
- // les premiers trajets restent visibles directement, le reste se déplie au clic sur « Voir plus ».
- const VISIBLE_FIRST=8;
- const firstRows=timeline.slice(0,VISIBLE_FIRST),restRows=timeline.slice(VISIBLE_FIRST);
- for(const [i,p] of firstRows.entries())addCard(host,p.journey,p.labels,openInitial&&i===0);
- if(restRows.length){
-  // Une carte déjà ouverte par le convoyeur (même au-delà des 8 premières) ne doit pas disparaître de la vue
-  // à la prochaine mise à jour réseau : on déplie alors le bloc « Voir plus » automatiquement.
-  const hasOpenedInside=restRows.some(p=>{const k=signature(p.journey)||(p.journey.walkOnly?'walk|'+Math.round(ms(p.journey.departure)/60000)+'|'+Math.round(ms(p.journey.arrival)/60000)+'|'+Math.round(p.journey.durationMinutes||0):'');return k&&opened.has(k);});
-  const more=el(doc,'details','cp-hub-more');
-  const moreSummary=el(doc,'summary',null,'Voir plus ('+restRows.length+' autre'+(restRows.length>1?'s':'')+' trajet'+(restRows.length>1?'s':'')+')');
-  more.appendChild(moreSummary);
-  // 21/11/2026 (Laurent : « le défilement bloque encore ») : ces cartes étaient construites à CHAQUE mise à
-  // jour réseau même repliées (invisibles) — sur une ligne dense (Y51…), jusqu'à 300 cartes reconstruites
-  // plusieurs fois par seconde pendant que la recherche tourne, rien que pour rester cachées dans « Voir
-  // plus ». Construites maintenant seulement à l'ouverture (ou immédiatement si déjà ouvertes/une carte à
-  // l'intérieur était ouverte) : repliées, cette section ne coûte quasiment plus rien à chaque rafraîchissement.
-  let built=false;
-  const buildMore=()=>{if(built)return;built=true;for(const p of restRows)addCard(more,p.journey,p.labels,false);};
-  if(moreOpen||hasOpenedInside){more.open=true;buildMore();}
-  else{
-   if(more.addEventListener)more.addEventListener('toggle',()=>{if(more.open)buildMore();});
-   if(moreSummary.addEventListener)moreSummary.addEventListener('click',()=>{if(!built)buildMore();});
-  }
-  host.appendChild(more);
- }
- // 21/11/2026 : trajets au-delà de la limite MAX_OTHERS de rank() — jamais construits, juste comptés,
- // pour que l'écran reste fluide même quand des dizaines de bus locaux sont trouvés.
- if(v.othersOverflow)host.appendChild(el(doc,'p','cp-hub-note',v.othersOverflow+' autre'+(v.othersOverflow>1?'s':'')+' trajet'+(v.othersOverflow>1?'s':'')+' trouvé'+(v.othersOverflow>1?'s':'')+(v.othersOverflow>1?', non affichés':', non affiché')+' pour garder l’affichage fluide.'));
+ for(const item of timeline)addCard(host,item.journey,item.labels);
+ if(v.done&&v.total>timeline.length&&timeline.length)
+  host.appendChild(el(doc,'p','cp-hub-note',timeline.length+' trajets affichés sur '+v.total+' propositions comparées.'));
  // Ne montrer que les moteurs effectivement interrogés sur la direction choisie.
  // Les réseaux hors zone restent dans le diagnostic interne, pas dans la fiche mission.
  const errs=Object.entries(v.errors||{});
@@ -3260,7 +3243,7 @@ function render(host,v){
  else if(v.done&&!v.picks.some(p=>p.journey.feasible))host.appendChild(el(doc,'p','cp-hub-none','Transport non confirmé : aucune proposition ne permet d’arriver avec la marge requise, ou une marche/correspondance n’a pas pu être calculée.'));
 }
 
-const api={VERSION,missingWalkLabels,walkStatusLabel,retryMissingWalks,walkingEndpoint,directionForLeg,previousArrivalJourneys,previousOnly,nextDepartureAfterMiss,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
+const api={VERSION,selectJourneyCards,missingWalkLabels,walkStatusLabel,retryMissingWalks,walkingEndpoint,directionForLeg,previousArrivalJourneys,previousOnly,nextDepartureAfterMiss,flexBookingCheck,nearP21,completeWalks,scooterOnly,accessFor,LYON_COACH_ANCHORS,ticketLink,ticketLinks,tadFor,cachedRouter,pt,meters,ms,fromSwiss,fromTripGo,fromRegional,fromSNCF,fromGTFS,ojpMode,fromOJP,attachGTFSFares,walkDetour,excessiveDetour,fromNationalGTFS,completeWalks,walkOnly,priceOf,assess,rank,
  marginFor,queryWindow,inSwissArea,makeProviders,createSession,render,scheduleSourceForLeg,dayScheduleForLeg,gtfsTablesForDaySchedule,hmFromSeconds};
 if(typeof module==='object'&&module.exports)module.exports=api;
 root.CPTransportHub=api;
