@@ -1962,7 +1962,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
           missedAt=Date.now();
           bt.dataset.transportMissedAt=String(missedAt);
           afficherRecherche('Jonction');
-          startTransportHub();
+          startTransportHub(true);
         };
         legacySources.Jonction.insertAdjacentElement('beforebegin',missed);
       }
@@ -2046,8 +2046,10 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       {const rank=k=>k.startsWith('Aller')?0:k.startsWith('Jonction')?1:2;
         Object.keys(transportDestinations).sort((a,b)=>rank(a)-rank(b)||a.localeCompare(b)).forEach(k=>panel.appendChild(transportDestinations[k]));}
       const availableTransportDays=[...new Set(Object.values(transportDays).filter(Boolean))].sort();
-      let updateDayTabs=()=>{};const labelState={};const pendingViews={};let renderPending=()=>{};let activeDay=null;let transportHub=null;
-      const startDayLabels=day=>{try{if(!transportHub)return;for(const [l,d] of Object.entries(transportDays))if(d===day){if(labelState[l]?.done)continue;afficherRecherche(l,transportHub.view(l));transportHub.start(l);}}catch(_){}};
+      let updateDayTabs=()=>{};const labelState={};const pendingViews={};let renderPending=()=>{};let activeDay=null;let transportHub=null,junctionHub=null,junctionOverride=false;
+      const lastViews={};
+      const hubFor=label=>label==='Jonction'&&junctionOverride?junctionHub:transportHub;
+      const startDayLabels=day=>{try{for(const [l,d] of Object.entries(transportDays))if(d===day){const hub=hubFor(l);if(!hub||labelState[l]?.done)continue;afficherRecherche(l,hub.view(l));hub.start(l);}}catch(_){}};
       if(availableTransportDays.length>1){
         const tabs=document.createElement('nav');
         tabs.className='cp-transport-day-tabs';
@@ -2166,14 +2168,14 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         // Remise à « idle » juste après : un blocage étiqueté « idle » n'est PAS pendant un rendu.
         window.CPPh?.('transports:idle');
       };
-      const startTransportHub=()=>{
+      const startTransportHub=(onlyJonction=false)=>{
         window.CPPh?.('transports:ouverture');
         const Hub=window.CPTransportHub;
         if(!Hub||!panel.isConnected)return;
         // Communes absentes de la table intégrée (Archamps, Viviers-du-Lac…) : sans point GPS le moteur refuse de chercher
         // (« adresse GPS manquante »). On interroge d'abord le service officiel d'adresses (déjà utilisé ailleurs dans
         // l'application, géocodage au besoin), puis on relance une seule fois. Rien n'est inventé : sans résultat, le comportement reste identique.
-        if(!panel.cpGeoTried){
+        if(!onlyJonction&&!panel.cpGeoTried){
           const manque=[[m,'origin'],[m,'destination'],[next,'origin']].filter(([mm,cote])=>{
             if(!mm)return false;const c=G.coordonnees(mm,cote);
             // Adresse de rue connue mais seul le centre de la commune est disponible (ex. « 25 route de la Salle, Annecy ») : chercher le vrai point.
@@ -2233,8 +2235,8 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         const jonctionEarliest=missedAt&&jonctionStart?new Date(Math.max(missedAt,Date.parse(jonctionStart))).toISOString():jonctionStart;
         const tasks=[];
         // Les messages sont reconstruits sans doublons lors d'une actualisation des moteurs.
-        for(const section of Object.values(transportDestinations))section.querySelectorAll('.cp-transport-approx').forEach(n=>n.remove());
-        if(!homeExact&&!homeAdrOk&&homePt){
+        if(!onlyJonction)for(const section of Object.values(transportDestinations))section.querySelectorAll('.cp-transport-approx').forEach(n=>n.remove());
+        if(!onlyJonction&&!homeExact&&!homeAdrOk&&homePt){
           for(const direction of ['Aller','Retour']){
             const note=document.createElement('p');note.className='cp-transport-approx';
             note.textContent='📍 Domicile : centre de '+homeName+' utilisé faute de coordonnées exactes. Marche et faisabilité indicatives.';
@@ -2244,7 +2246,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
         // À défaut d'adresse GPS, le centre de la commune permet une recherche indicative.
         // Ne jamais assimiler ce point approximatif à une adresse exacte ni raccourcir la marge.
         for(const [direction,point] of [['Aller',origin],['Jonction départ',dest],['Jonction arrivée',nextOrigin2],['Retour',dest]]){
-          if(point?.precision==='ville'){
+          if(!onlyJonction&&point?.precision==='ville'){
             const note=document.createElement('p');note.className='cp-transport-approx';
             note.textContent='📍 '+direction+' : point GPS de centre-ville utilisé faute de coordonnées précises. Vérifier les marches et la faisabilité avant départ.';
             const target=direction.startsWith('Jonction')?transportDestinations.Jonction:transportDestinations[direction];
@@ -2301,32 +2303,41 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
               windowKind:'departure',windowStartMs:Date.parse(startIso),windowEndMs:endMs});
           }
         }else if(deliveryDate)tasks.push({...retourBase,label:'Retour',siteCloseMinutes:closeFor(origT.delivery_end),earliestDeparture:plancher(deliveryStartIso||deliveryDate),...(deliveryStartIso?{windowKind:'departure',windowStartMs:Date.parse(plancher(deliveryStartIso)),windowEndMs:deliveryEndMs}:{})});
+        if(onlyJonction){
+          const junction=tasks.find(t=>t.label==='Jonction');
+          if(!junction)return;
+          tasks.splice(0,tasks.length,junction);
+        }else if(junctionOverride){
+          const index=tasks.findIndex(t=>t.label==='Jonction');
+          if(index>=0)tasks.splice(index,1);
+        }
         if(availableTransportDays.length>1&&activeDay)for(const t of tasks)t.lazy=transportDays[t.label]!==activeDay;
         const signature=JSON.stringify([tasks.map(({lazy,...r})=>r),lireLocal('cp_marche_max_km',3),(etat.reglages||{}).trottinette===true,lireLocal('cp_trot_vitesse_kmh',15),lireLocal('cp_trot_max_km',8),lireLocal('cp_domicile_exact',null)]);
-        if(transportHub&&transportHub.signatureKey===signature)return;
+        if((onlyJonction?junctionHub:transportHub)?.signatureKey===signature)return;
         // 22/11/2026 (cache « visualisé une fois, instantané ensuite ») : une vue déjà calculée pour cette
         // mission existe et rien de pertinent n'a changé (même signature) — on la réaffiche directement,
         // sans recalcul ni requête réseau, au lieu de relancer une recherche complète à chaque clic.
         const missionKey=missionTiming(m).key;
         const cacheKey=transportCacheKey(), memoryKey=cacheKey+'|'+missionKey;
         const stored=transportViewCache.get(memoryKey)||(cacheKey?lireLocal(cacheKey,{})[missionKey]:null);
-        const refresh=!!bt.dataset.transportRefreshAt||!!missedAt;
-        if(refresh)transportViewCache.delete(memoryKey);
-        const cachedViews=!refresh&&stored?.signature===signature?Object.fromEntries(Object.entries(stored.views||{}).filter(([,view])=>view.total>0||view.flexCandidates?.length)):{};
-        const olderJonction=stored?.views?.Jonction||stored?.olderJonction;
+        const refresh=!!bt.dataset.transportRefreshAt;
+        if(refresh&&!onlyJonction)transportViewCache.delete(memoryKey);
+        const cachedViews=!onlyJonction&&!refresh&&stored?.signature===signature?Object.fromEntries(Object.entries(stored.views||{}).filter(([,view])=>view.total>0||view.flexCandidates?.length)):{};
+        const olderJonction=lastViews.Jonction||stored?.views?.Jonction||stored?.olderJonction;
         const recalculatedJonction=tasks.find(t=>t.label==='Jonction'&&!cachedViews.Jonction);
         const previousArrival=recalculatedJonction?Hub.previousArrivalJourneys(recalculatedJonction,olderJonction):[];
-        for(const label of Object.keys(labelState))delete labelState[label];
-        for(const label of Object.keys(pendingViews))delete pendingViews[label];
+        const resetLabels=onlyJonction?['Jonction']:Object.keys(transportDestinations).filter(label=>label!=='Jonction'||!junctionOverride);
+        for(const label of resetLabels){delete labelState[label];delete pendingViews[label];}
         for(const [label,view] of Object.entries(cachedViews)){
           const savedAt=view.savedAt||stored.savedAt;
-          pendingViews[label]={...view,savedAt};
+          lastViews[label]=pendingViews[label]={...view,savedAt};
           labelState[label]={done:true,total:view.total};
         }
         if(previousArrival.length)pendingViews.Jonction={task:recalculatedJonction,total:0,done:false,previousArrival};
         renderPending();
         const remainingTasks=tasks.filter(t=>!cachedViews[t.label]);
-        transportHub?.dispose();transportHub=null;
+        if(onlyJonction){junctionOverride=true;junctionHub?.dispose();junctionHub=null;}
+        else{transportHub?.dispose();transportHub=null;}
         if(!remainingTasks.length)return;
         for(const t of remainingTasks){
           if(hubHosts[t.label]&&!pendingViews[t.label]?.previousArrival?.length)hubHosts[t.label].hidden=true;
@@ -2354,7 +2365,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             nationalGTFSResources:window.CP_NATIONAL_GTFS_RESOURCES||{},ojpSession,
             onFlexCandidates:({task:gtfsTask,network,candidates})=>{
               const label=gtfsTask?.label;
-              if(!label||!panel.isConnected||transportHub?.signatureKey!==signature)return;
+              if(!label||!panel.isConnected||hubFor(label)?.signatureKey!==signature)return;
               let byNetwork=flexByLabel.get(label);
               if(!byNetwork){byNetwork=new Map();flexByLabel.set(label,byNetwork);}
               byNetwork.set(network,(Array.isArray(candidates)?candidates:[]).map(c=>({...c,network})));
@@ -2364,14 +2375,14 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             allowOTP:typeof window.CP_OTP_ENDPOINT==='string'&&!!window.CPOTPClient?.buildQuery,
             otpEndpoint:window.CP_OTP_ENDPOINT,otpQuery:window.CPOTPClient?.buildQuery,otpTimeoutMs:30000}),
           onUpdate:(label,view)=>{
-            if(!panel.isConnected||!transportDestinations[label])return;
+            if(!panel.isConnected||!transportDestinations[label]||(!onlyJonction&&junctionOverride&&label==='Jonction'))return;
             labelState[label]={done:view.done,total:view.total};
             view={...view,flexCandidates:flexFor(label)};
             if(label==='Jonction'&&previousArrival.length){
               view.previousArrival=Hub.previousOnly(previousArrival,view);
               if(view.previousArrival.length&&!view.total)labelState[label].total=view.previousArrival.length;
             }
-            if(view.done&&(view.total>0||view.flexCandidates.length)){
+            if(!onlyJonction&&view.done&&(view.total>0||view.flexCandidates.length)){
               const previous=transportViewCache.get(memoryKey);
               const views=previous?.signature===signature?previous.views:{...cachedViews};
               const savedAt=Date.now();
@@ -2384,6 +2395,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
               afficherRecherche(label,view);
               if(!view.total&&!view.flexCandidates.length&&!view.previousArrival?.length){updateDayTabs();return;}
             }
+            if(view.total>0)lastViews[label]=view;
             pendingViews[label]=view;
             if(transportDestinations[label].hidden){updateDayTabs();return;}
             if(Date.now()-dernierDefilement<250){
@@ -2393,10 +2405,11 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
             }
             renderPending();
           }});
-        session.signatureKey=signature;transportHub=session;startDayLabels(activeDay);
+        session.signatureKey=signature;if(onlyJonction)junctionHub=session;else transportHub=session;
+        if(!onlyJonction)startDayLabels(activeDay);
       };
       const hubObserver=typeof MutationObserver==='function'?new MutationObserver(()=>{
-        if(!panel.isConnected||panel.hidden||$('feuille').hidden){transportHub?.dispose();transportHub=null;hubObserver.disconnect();}
+        if(!panel.isConnected||panel.hidden||$('feuille').hidden){transportHub?.dispose();junctionHub?.dispose();transportHub=null;junctionHub=null;hubObserver.disconnect();}
       }):null;
       hubObserver?.observe($('feuille'),{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
       // Réveil du serveur OTP2 (démarrage à froid) dès l'ouverture des transports : une requête légère, au plus une fois toutes les 5 min.
@@ -2410,7 +2423,7 @@ const ecrireLocal = (k, v) => { const ess = x => { try { globalThis.CPAccount?.s
       bt.cpRefreshHub=startTransportHub;
       startTransportHub();
       const renderLocalCards=({task,itineraries,candidates})=>{
-        try{if(transportHub&&window.CPTransportHub)transportHub.ingest(task.label,'GTFS local',window.CPTransportHub.fromGTFS(Array.isArray(candidates)&&candidates.length?candidates:itineraries));}catch(_){}
+        try{if(hubFor(task.label)&&window.CPTransportHub&&!(junctionOverride&&task.label==='Jonction'))hubFor(task.label).ingest(task.label,'GTFS local',window.CPTransportHub.fromGTFS(Array.isArray(candidates)&&candidates.length?candidates:itineraries));}catch(_){}
         // Le moteur GTFS alimente déjà les cartes unifiées. Ne plus fabriquer de
         // seconde liste de résultats (ancienne présentation 'horaires locaux').
         return;

@@ -179,3 +179,12 @@ test('parking P21 de Genève : la consigne ne s’affiche que sur la marche (sé
  assert.match(hub,/contrat de convoyage et une pièce d’identité/);
  assert.match(hub,/taxi devant l’aéroport/);
 });
+
+test('le bouton Train raté relance uniquement la jonction sans réinitialiser les autres directions',()=>{
+ const click=app.slice(app.indexOf('missed.onclick='),app.indexOf("legacySources.Jonction.insertAdjacentElement"));
+ assert.match(click,/startTransportHub\(true\)/);
+ assert.doesNotMatch(click,/reopenTransport\(/);
+ assert.match(app,/tasks\.splice\(0,tasks\.length,junction\)/);
+ assert.match(app,/const resetLabels=onlyJonction\?\['Jonction'\]/);
+ assert.match(app,/if\(onlyJonction\)\{junctionOverride=true;junctionHub\?\.dispose\(\)/);
+});
