@@ -928,11 +928,14 @@ function rank(items,task={},includeLongWalk=false){
  const boardingKey=j=>{const first=(j.legs||[]).find(l=>!isFoot(l)),g=first?.gtfsRaw;
   return g&&g.tripId?[String(g.network||first.provider||'').trim().toLowerCase(),String(g.tripId),String(g.date||'')].join('|'):null;};
  const byBoarding=new Map(),unboarded=[];
+ const boardingQuality=j=>j.feasible?2:j.scheduled?1:0;
  for(const j of all){
   const k=boardingKey(j);
   if(!k){unboarded.push(j);continue;}
   const old=byBoarding.get(k);
-  if(!old||ms(j.arrival)<ms(old.arrival)||(ms(j.arrival)===ms(old.arrival)&&(j.walkMeters||0)<(old.walkMeters||0)))byBoarding.set(k,j);
+  if(!old||boardingQuality(j)>boardingQuality(old)||
+     (boardingQuality(j)===boardingQuality(old)&&(ms(j.arrival)<ms(old.arrival)||
+      (ms(j.arrival)===ms(old.arrival)&&(j.walkMeters||0)<(old.walkMeters||0)))))byBoarding.set(k,j);
  }
  all=[...byBoarding.values(),...unboarded];
  // Une arrivée des heures avant la prise en charge n'est pas un bon compromis.
@@ -2998,7 +3001,10 @@ function selectJourneyCards(view,next,limit=8){
   const ride=j?.legs?.find(l=>!isFoot(l));
   if(!ride||!Number.isFinite(ms(ride.departure)))return null;
   const norm=s=>String(s||'').toLowerCase().trim();
-  return JSON.stringify([ride.mode,norm(ride.gtfsRaw?.network||ride.provider),norm(ride.line),
+  const raw=ride.gtfsRaw;
+  if(raw?.tripId)return JSON.stringify([ride.mode,norm(raw.networkId||raw.network||ride.provider),raw.tripId,
+   raw.date||raw.serviceDate||parisDayParts(ride.departure)?.day]);
+  return JSON.stringify([ride.mode,norm(raw?.network||ride.provider),norm(ride.line),
    norm(ride.from),Math.floor(ms(ride.departure)/60000)]);
  };
  const seen=new Set([boardingKey(next)]),selected=[];

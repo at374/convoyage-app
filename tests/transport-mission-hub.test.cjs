@@ -1129,3 +1129,12 @@ test('deux marches ou correspondances pour le même premier bus ne prennent qu�
  assert.deepEqual(H.selectJourneyCards({task,others:[duplicate,next,best]}),[best,next]);
  assert.deepEqual(H.selectJourneyCards({task,others:[duplicate,next,best]},best),[next]);
 });
+
+test('une même course GTFS depuis deux arrêts ne masque pas une autre course',()=>{
+ const task={from:HOME,to:MISSION,latestArrival:at(15,0)};
+ const candidate=(from,minute,tripId,feasible)=>({feasible,slackMinutes:30,marginMinutes:15,durationMinutes:25,
+  legs:[{...bus(at(8,minute),at(8,25),HOME,MISSION,{fromName:from}),gtfsRaw:{tripId,network:'Test',date:'2026-11-16'}}]});
+ const first=candidate('Gare',0,'A',false),second=candidate('Mairie',5,'A',true);
+ const other=candidate('Gare',0,'B',true);
+ assert.deepEqual(H.selectJourneyCards({task,others:[first,second,other]}),[second,other]);
+});
